@@ -1,0 +1,12 @@
+namespace ppl { namespace nn {
+
+const char* GetVersionString() {
+    static const char* commit_tag = "@PPLNN_COMMIT_TAG@";
+    static const char* commit_hash = "@PPLNN_COMMIT_HASH@";
+    if (commit_tag[0] != '\0') {
+        return commit_tag;
+    }
+    return commit_hash;
+}
+
+}}

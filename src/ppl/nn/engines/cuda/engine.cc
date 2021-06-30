@@ -1,0 +1,278 @@
+#include "ppl/nn/engines/cuda/engine.h"
+
+#include <stdarg.h>
+
+#include "ppl/nn/engines/cuda/engine_context.h"
+#include "ppl/nn/engines/cuda/optimizer/opt_kernel_creator_manager.h"
+#include "ppl/nn/utils/utils.h"
+#include "ppl/nn/engines/cuda/optimizer/opt_graph.h"
+#include "ppl/nn/common/logger.h"
+
+using namespace std;
+using namespace ppl::common;
+
+namespace ppl { namespace nn { namespace cuda {
+
+RetCode CudaEngine::Init() {
+    // TODO implement other options
+    return device_.Init(MM_LESS_MEMORY);
+}
+
+EngineContext* CudaEngine::CreateEngineContext(const string&, const EngineContextOptions& options) {
+    auto ctx = unique_ptr<CudaEngineContext>(new CudaEngineContext(GetName()));
+    auto status = ctx->Init(options);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "init CudaEngineContext failed: " << GetRetCodeStr(status);
+        return nullptr;
+    }
+
+    return ctx.release();
+}
+
+bool CudaEngine::CanRunOp(const ir::Node* node) const {
+    auto& type = node->GetType();
+    return (OptKernelCreatorManager::Instance()->Find(type.domain, type.name) != nullptr);
+}
+
+RetCode CudaEngine::DoOptimize(ir::Graph* graph, utils::SharedResource* resource, RuntimePartitionInfo* info) {
+    OptGraph opt_graph(graph, info, resource, &cuda_flags_);
+    auto status = opt_graph.DoOptimize(&device_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "OptGraph DoOptimeize failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    return RC_SUCCESS;
+}
+
+RetCode CudaEngine::ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
+    auto status = DoOptimize(graph, resource, info);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "DoOptimize failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    status = utils::LoadConstants(*graph, &device_, &info->constants);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "LoadConstants failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    return RC_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+
+RetCode CudaEngine::SetOutputFormat(CudaEngine* engine, va_list args) {
+    const char* edge_formats = va_arg(args, const char*);
+    std::string temp_name[2] = {"", ""};
+    uint32_t flag = 0;
+
+    if (edge_formats[0] == '\0')
+        return RC_SUCCESS;
+
+    for (uint32_t i = 0;; i++) {
+        if (edge_formats[i] == ',') {
+            flag = 1;
+        } else if (edge_formats[i] == ';' || edge_formats[i] == '\0') {
+            datatype_t temp_type = DATATYPE_UNKNOWN;
+            for (int j = 1; j < DATATYPE_MAX; ++j) {
+                if (temp_name[1] == GetDataTypeStr(j)) {
+                    temp_type = j;
+                }
+            }
+            if (temp_type == DATATYPE_UNKNOWN) {
+                LOG(ERROR) << "Incorrect data type.";
+                return RC_INVALID_VALUE;
+            }
+
+            engine->cuda_flags_.output_formats.emplace(temp_name[0], temp_type);
+            temp_name[0] = "";
+            temp_name[1] = "";
+            flag = 0;
+
+            if (edge_formats[i] == '\0') {
+                break;
+            }
+        } else {
+            temp_name[flag] = temp_name[flag] + edge_formats[i];
+        }
+    }
+
+    if (temp_name[0] != "" || temp_name[1] != "") {
+        LOG(ERROR) << "The sizes of edge name and data format are not equal.";
+        return RC_INVALID_VALUE;
+    }
+    return RC_SUCCESS;
+}
+
+RetCode CudaEngine::SetOutputType(CudaEngine* engine, va_list args) {
+    const char* edge_types = va_arg(args, const char*);
+    std::string temp_name[2] = {"", ""};
+    uint32_t flag = 0;
+
+    if (edge_types[0] == '\0')
+        return RC_SUCCESS;
+
+    for (uint32_t i = 0;; i++) {
+        if (edge_types[i] == ',') {
+            flag = 1;
+        } else if (edge_types[i] == ';' || edge_types[i] == '\0') {
+            datatype_t temp_type = DATATYPE_UNKNOWN;
+            for (int j = 1; j < DATATYPE_MAX; ++j) {
+                if (temp_name[1] == GetDataTypeStr(j)) {
+                    temp_type = j;
+                }
+            }
+            if (temp_type == DATATYPE_UNKNOWN) {
+                LOG(ERROR) << "Incorrect data type.";
+                return RC_INVALID_VALUE;
+            }
+
+            engine->cuda_flags_.output_types.emplace(temp_name[0], temp_type);
+            temp_name[0] = "";
+            temp_name[1] = "";
+            flag = 0;
+
+            if (edge_types[i] == '\0') {
+                break;
+            }
+        } else {
+            temp_name[flag] = temp_name[flag] + edge_types[i];
+        }
+    }
+
+    if (temp_name[0] != "" || temp_name[1] != "") {
+        LOG(ERROR) << "The sizes of edge name and data type are not equal.";
+        return RC_INVALID_VALUE;
+    }
+    return RC_SUCCESS;
+}
+
+RetCode CudaEngine::SetCompilerInputDims(CudaEngine* engine, va_list args) {
+    const char* str = va_arg(args, const char*);
+    int count = 0;
+    bool load_dims = true;
+    std::string temp_name = "";
+    std::vector<uint32_t> temp_dims;
+
+    for (uint32_t i = 0; str[i] != '\0'; i++) {
+        if (str[i] == ',') { // has input edge name
+            load_dims = false;
+            break;
+        }
+    }
+
+    for (uint32_t i = 0; str[i] != '\0'; i++) {
+        if (str[i] == ';') {
+            engine->cuda_flags_.input_dims.emplace(temp_name, temp_dims);
+            temp_name = "";
+            temp_dims.clear();
+            load_dims = false;
+            count = 0;
+        }
+        if (str[i] == '_') {
+            temp_dims.push_back(count);
+            count = 0;
+        } else if (str[i] == ',') { // swap to load dims
+            load_dims = true;
+        } else if (load_dims) {
+            if (str[i] < '0' || str[i] > '9') {
+                LOG(ERROR) << "Invalid input dims";
+                return RC_INVALID_VALUE;
+            }
+            count = count * 10 + (uint32_t)(str[i] - '0');
+        } else {
+            temp_name = temp_name + str[i];
+        }
+    }
+    temp_dims.push_back(count);
+
+    if (temp_dims.size() == 1 && temp_dims[0] == 0) {
+        LOG(WARNING) << "Default input dims for dynamic graph are 1_3_224_224, we recommend using '--dims' to set a "
+                        "suitable training shape.";
+        std::vector<uint32_t> default_dims{1, 3, 224, 224};
+        engine->cuda_flags_.input_dims.emplace("", default_dims);
+    } else {
+        engine->cuda_flags_.input_dims.emplace(temp_name, temp_dims);
+    }
+    return RC_SUCCESS;
+}
+
+RetCode CudaEngine::SetKernelDefaultType(CudaEngine* engine, va_list args) {
+    engine->cuda_flags_.kernel_default_type = va_arg(args, datatype_t);
+    return RC_SUCCESS;
+}
+
+RetCode CudaEngine::SetAlgorithm(CudaEngine* engine, va_list args) {
+    engine->cuda_flags_.quick_select = va_arg(args, uint32_t);
+    return RC_SUCCESS;
+}
+
+RetCode CudaEngine::SetNodeType(CudaEngine* engine, va_list args) {
+    const char* node_types = va_arg(args, const char*);
+    std::string temp_name[2] = {"", ""};
+    uint32_t flag = 0;
+
+    if (node_types[0] == '\0')
+        return RC_SUCCESS;
+
+    for (uint32_t i = 0;; i++) {
+        if (node_types[i] == ',') {
+            flag = 1;
+        } else if (node_types[i] == ';' || node_types[i] == '\0') {
+            datatype_t temp_type = DATATYPE_UNKNOWN;
+            for (int j = 1; j < DATATYPE_MAX; ++j) {
+                if (temp_name[1] == GetDataTypeStr(j)) {
+                    temp_type = j;
+                }
+            }
+            if (temp_type == DATATYPE_UNKNOWN) {
+                LOG(ERROR) << "Incorrect data type.";
+                return RC_INVALID_VALUE;
+            }
+
+            engine->cuda_flags_.node_types.emplace(temp_name[0], temp_type);
+            temp_name[0] = "";
+            temp_name[1] = "";
+            flag = 0;
+
+            if (node_types[i] == '\0') {
+                break;
+            }
+        } else {
+            temp_name[flag] = temp_name[flag] + node_types[i];
+        }
+    }
+
+    if (temp_name[0] != "" || temp_name[1] != "") {
+        LOG(ERROR) << "The sizes of node name and data type are not equal.";
+        return RC_INVALID_VALUE;
+    }
+    return RC_SUCCESS;
+}
+
+CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
+    CudaEngine::SetOutputFormat, // CUDA_CONF_SET_OUTPUT_DATA_FORMAT
+    CudaEngine::SetOutputType, // CUDA_CONF_SET_OUTPUT_TYPE
+    CudaEngine::SetCompilerInputDims, // CUDA_CONF_SET_COMPILER_INPUT_SHAPE
+    CudaEngine::SetKernelDefaultType, // CUDA_CONF_SET_KERNEL_DEFAULT_TYPE
+    CudaEngine::SetAlgorithm, // CUDA_CONF_SET_DEFAULT_ALGORITHMS
+    CudaEngine::SetNodeType, // CUDA_CONF_SET_NODE_DATA_TYPE
+};
+
+RetCode CudaEngine::Configure(uint32_t option, ...) {
+    if (option >= CUDA_CONF_MAX) {
+        LOG(ERROR) << "invalid option[" << option << "] >= [" << CUDA_CONF_MAX << "]";
+        return RC_INVALID_VALUE;
+    }
+
+    va_list args;
+    va_start(args, option);
+    auto status = conf_handlers_[option](this, args);
+    va_end(args);
+
+    return status;
+}
+
+}}} // namespace ppl::nn::cuda

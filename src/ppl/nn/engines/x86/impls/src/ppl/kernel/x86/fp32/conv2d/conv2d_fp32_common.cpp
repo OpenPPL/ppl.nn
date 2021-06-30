@@ -1,0 +1,275 @@
+#include <new>
+
+#include "ppl/kernel/x86/fp32/conv2d.h"
+
+#include "ppl/kernel/x86/fp32/conv2d/implicit_gemm/fma/conv2d_n16cx_implicit_gemm_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/gemm_direct/fma/conv2d_n16cx_gemm_direct_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/winograd/fma/conv2d_n16cx_winograd_b4f3_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/depthwise/fma/conv2d_n16cx_depthwise_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/fma/conv2d_im2col_gemm_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/direct/fma/conv2d_n16cx_direct_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/fma/conv2d_n16cx_direct_ndarray_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/gemm_direct/fma/conv2d_n16cx_gemm_direct_v2_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/direct/fma/conv2d_n16cx_direct_v2_fp32_fma.h"
+
+#include "ppl/kernel/x86/fp32/conv2d/direct/avx512/conv2d_n16cx_direct_fp32_avx512.h"
+#include "ppl/kernel/x86/fp32/conv2d/gemm_direct/avx512/conv2d_n16cx_gemm_direct_fp32_avx512.h"
+#include "ppl/kernel/x86/fp32/conv2d/depthwise/avx512/conv2d_n16cx_depthwise_fp32_avx512.h"
+#include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/avx512/conv2d_n16cx_direct_ndarray_fp32_avx512.h"
+#include "ppl/kernel/x86/fp32/conv2d/winograd/avx512/conv2d_n16cx_winograd_b4f3_fp32_avx512.h"
+
+namespace ppl { namespace kernel { namespace x86 {
+
+conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataformat_t src_format, const conv2d_fp32_param &param, const ppl::common::isa_t isa_flags)
+{
+    static conv2d_fp32_algo_info unknown_info = {
+        .algo_type     = conv2d_fp32_algo::unknown,
+        .isa           = ppl::common::ISA_undef,
+        .input_format  = ppl::common::DATAFORMAT_UNKNOWN,
+        .output_format = ppl::common::DATAFORMAT_UNKNOWN};
+
+    static conv2d_fp32_algo_info fma_fallback_info = {
+            .algo_type     = conv2d_fp32_algo::im2col_gemm,
+            .isa           = ppl::common::ISA_X86_FMA,
+            .input_format  = ppl::common::DATAFORMAT_NDARRAY,
+            .output_format = ppl::common::DATAFORMAT_NDARRAY};
+
+    if (isa_flags & ppl::common::ISA_X86_AVX512) {
+        if (src_format == ppl::common::DATAFORMAT_NDARRAY) {
+            auto direct_ndarray_mgr = new conv2d_n16cx_direct_ndarray_fp32_avx512_manager(param, nullptr);
+            bool supported = direct_ndarray_mgr->is_supported();
+            delete direct_ndarray_mgr;
+            if (supported) {
+                return (conv2d_fp32_algo_info){
+                    .algo_type     = conv2d_fp32_algo::direct,
+                    .isa           = ppl::common::ISA_X86_AVX512,
+                    .input_format  = ppl::common::DATAFORMAT_NDARRAY,
+                    .output_format = ppl::common::DATAFORMAT_N16CX};
+            }
+        }
+
+        if (param.is_depthwise()) {
+            auto dw_mgr = new conv2d_n16cx_depthwise_fp32_avx512_manager(param, nullptr);
+            bool supported = dw_mgr->is_supported();
+            delete dw_mgr;
+            if (supported) {
+                return (conv2d_fp32_algo_info){
+                    .algo_type     = conv2d_fp32_algo::depthwise,
+                    .isa           = ppl::common::ISA_X86_AVX512,
+                    .input_format  = ppl::common::DATAFORMAT_N16CX,
+                    .output_format = ppl::common::DATAFORMAT_N16CX};
+            }
+        }
+
+        if (param.is_pointwise()) {
+            auto gd_mgr = new conv2d_n16cx_gemm_direct_fp32_avx512_manager(param, nullptr);
+            bool supported = gd_mgr->is_supported();
+            delete gd_mgr;
+            if (supported) {
+                return (conv2d_fp32_algo_info){
+                    .algo_type     = conv2d_fp32_algo::gemm_direct,
+                    .isa           = ppl::common::ISA_X86_AVX512,
+                    .input_format  = ppl::common::DATAFORMAT_N16CX,
+                    .output_format = ppl::common::DATAFORMAT_N16CX};
+            }
+        }
+
+        if (!param.is_depthwise() &&
+            param.kernel_h == 3 && param.kernel_w == 3 &&
+            param.stride_h == 1 && param.stride_w == 1 &&
+            param.dilation_h == 1 && param.dilation_w == 1) {
+            auto wg_mgr = new conv2d_n16cx_winograd_b4f3_fp32_avx512_manager(param, nullptr);
+            bool supported = wg_mgr->is_supported();
+            delete wg_mgr;
+            if (supported) {
+                return (conv2d_fp32_algo_info){
+                    .algo_type     = conv2d_fp32_algo::winograd_b4f3,
+                    .isa           = ppl::common::ISA_X86_AVX512,
+                    .input_format  = ppl::common::DATAFORMAT_N16CX,
+                    .output_format = ppl::common::DATAFORMAT_N16CX};
+            }
+        }
+
+        {
+            auto direct_mgr = new conv2d_n16cx_direct_fp32_avx512_manager(param, nullptr);
+            bool supported = direct_mgr->is_supported();
+            delete direct_mgr;
+            if (supported) {
+                return (conv2d_fp32_algo_info){
+                    .algo_type     = conv2d_fp32_algo::direct,
+                    .isa           = ppl::common::ISA_X86_AVX512,
+                    .input_format  = ppl::common::DATAFORMAT_N16CX,
+                    .output_format = ppl::common::DATAFORMAT_N16CX};
+            }
+        }
+    }
+
+    if (isa_flags & ppl::common::ISA_X86_FMA) {
+        if (src_format == ppl::common::DATAFORMAT_NDARRAY) {
+            auto direct_ndarray_mgr = new conv2d_n16cx_direct_ndarray_fp32_fma_manager(param, nullptr);
+            bool supported = direct_ndarray_mgr->is_supported();
+            delete direct_ndarray_mgr;
+            if (supported) {
+                return (conv2d_fp32_algo_info){
+                    .algo_type     = conv2d_fp32_algo::direct,
+                    .isa           = ppl::common::ISA_X86_FMA,
+                    .input_format  = ppl::common::DATAFORMAT_NDARRAY,
+                    .output_format = ppl::common::DATAFORMAT_N16CX};
+            }
+        }
+
+        if (param.is_depthwise()) {
+            auto dw_mgr = new conv2d_n16cx_depthwise_fp32_fma_manager(param, nullptr);
+            bool supported = dw_mgr->is_supported();
+            delete dw_mgr;
+            if (!supported) {
+                return fma_fallback_info;
+            } else {
+                return (conv2d_fp32_algo_info){
+                    .algo_type     = conv2d_fp32_algo::depthwise,
+                    .isa           = ppl::common::ISA_X86_FMA,
+                    .input_format  = ppl::common::DATAFORMAT_N16CX,
+                    .output_format = ppl::common::DATAFORMAT_N16CX};
+            }
+        }
+
+        if (param.is_pointwise()) {
+            auto gd_mgr = new conv2d_n16cx_gemm_direct_v2_fp32_fma_manager(param, nullptr);
+            bool supported = gd_mgr->is_supported();
+            delete gd_mgr;
+            if (supported) {
+                return (conv2d_fp32_algo_info){
+                    .algo_type     = conv2d_fp32_algo::gemm_direct_v2,
+                    .isa           = ppl::common::ISA_X86_FMA,
+                    .input_format  = ppl::common::DATAFORMAT_N16CX,
+                    .output_format = ppl::common::DATAFORMAT_N16CX};
+            }
+        }
+
+        if (!param.is_depthwise() &&
+            param.kernel_h == 3 && param.kernel_w == 3 &&
+            param.stride_h == 1 && param.stride_w == 1 &&
+            param.dilation_h == 1 && param.dilation_w == 1) {
+            auto wg_mgr = new conv2d_n16cx_winograd_b4f3_fp32_fma_manager(param, nullptr);
+            bool supported = wg_mgr->is_supported();
+            delete wg_mgr;
+            if (supported) {
+                return (conv2d_fp32_algo_info){
+                    .algo_type     = conv2d_fp32_algo::winograd_b4f3,
+                    .isa           = ppl::common::ISA_X86_FMA,
+                    .input_format  = ppl::common::DATAFORMAT_N16CX,
+                    .output_format = ppl::common::DATAFORMAT_N16CX};
+            }
+        }
+
+        {
+            auto direct_mgr = new conv2d_n16cx_direct_v2_fp32_fma_manager(param, nullptr);
+            bool supported = direct_mgr->is_supported();
+            delete direct_mgr;
+            if (!supported) {
+                return fma_fallback_info;
+            } else {
+                return (conv2d_fp32_algo_info){
+                    .algo_type     = conv2d_fp32_algo::direct_v2,
+                    .isa           = ppl::common::ISA_X86_FMA,
+                    .input_format  = ppl::common::DATAFORMAT_N16CX,
+                    .output_format = ppl::common::DATAFORMAT_N16CX};
+            }
+        }
+    } else {
+        return unknown_info;
+    }
+}
+
+conv2d_fp32_manager *conv2d_algo_selector::gen_algo(const conv2d_fp32_param &param, const conv2d_fp32_algo_info &algo_info, ppl::common::Allocator *allocator)
+{
+    conv2d_fp32_manager *conv_mgr = nullptr;
+    if (algo_info.algo_type == conv2d_fp32_algo::implicit_gemm &&
+        algo_info.isa == ppl::common::ISA_X86_FMA &&
+        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+        conv_mgr = new conv2d_n16cx_implicit_gemm_fp32_fma_manager(param, allocator);
+    }
+    if (algo_info.algo_type == conv2d_fp32_algo::gemm_direct &&
+        algo_info.isa == ppl::common::ISA_X86_FMA &&
+        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+        conv_mgr = new conv2d_n16cx_gemm_direct_fp32_fma_manager(param, allocator);
+    }
+    if (algo_info.algo_type == conv2d_fp32_algo::gemm_direct_v2 &&
+        algo_info.isa == ppl::common::ISA_X86_FMA &&
+        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+        conv_mgr = new conv2d_n16cx_gemm_direct_v2_fp32_fma_manager(param, allocator);
+    }
+    if (algo_info.algo_type == conv2d_fp32_algo::depthwise &&
+        algo_info.isa == ppl::common::ISA_X86_FMA &&
+        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+        conv_mgr = new conv2d_n16cx_depthwise_fp32_fma_manager(param, allocator);
+    }
+    if (algo_info.algo_type == conv2d_fp32_algo::winograd_b4f3 &&
+        algo_info.isa == ppl::common::ISA_X86_FMA &&
+        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+        conv_mgr = new conv2d_n16cx_winograd_b4f3_fp32_fma_manager(param, allocator);
+    }
+    if (algo_info.algo_type == conv2d_fp32_algo::winograd_b4f3 &&
+        algo_info.isa == ppl::common::ISA_X86_AVX512 &&
+        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+        conv_mgr = new conv2d_n16cx_winograd_b4f3_fp32_avx512_manager(param, allocator);
+    }
+    if (algo_info.algo_type == conv2d_fp32_algo::direct &&
+        algo_info.isa == ppl::common::ISA_X86_FMA &&
+        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+        conv_mgr = new conv2d_n16cx_direct_fp32_fma_manager(param, allocator);
+    }
+    if (algo_info.algo_type == conv2d_fp32_algo::direct_v2 &&
+        algo_info.isa == ppl::common::ISA_X86_FMA &&
+        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+        conv_mgr = new conv2d_n16cx_direct_v2_fp32_fma_manager(param, allocator);
+    }
+    if (algo_info.algo_type == conv2d_fp32_algo::direct &&
+        algo_info.isa == ppl::common::ISA_X86_FMA &&
+        algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+        conv_mgr = new conv2d_n16cx_direct_ndarray_fp32_fma_manager(param, allocator);
+    }
+    if (algo_info.algo_type == conv2d_fp32_algo::im2col_gemm &&
+        algo_info.isa == ppl::common::ISA_X86_FMA &&
+        algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
+        algo_info.output_format == ppl::common::DATAFORMAT_NDARRAY) {
+        conv_mgr = new conv2d_im2col_gemm_fp32_fma_manager(param, allocator);
+    }
+    if (algo_info.algo_type == conv2d_fp32_algo::direct &&
+        algo_info.isa == ppl::common::ISA_X86_AVX512 &&
+        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+        conv_mgr = new conv2d_n16cx_direct_fp32_avx512_manager(param, allocator);
+    }
+    if (algo_info.algo_type == conv2d_fp32_algo::direct &&
+        algo_info.isa == ppl::common::ISA_X86_AVX512 &&
+        algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+        conv_mgr = new conv2d_n16cx_direct_ndarray_fp32_avx512_manager(param, allocator);
+    }
+    if (algo_info.algo_type == conv2d_fp32_algo::gemm_direct &&
+        algo_info.isa == ppl::common::ISA_X86_AVX512 &&
+        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+        conv_mgr = new conv2d_n16cx_gemm_direct_fp32_avx512_manager(param, allocator);
+    }
+    if (algo_info.algo_type == conv2d_fp32_algo::depthwise &&
+        algo_info.isa == ppl::common::ISA_X86_AVX512 &&
+        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+        conv_mgr = new conv2d_n16cx_depthwise_fp32_avx512_manager(param, allocator);
+    }
+
+    return conv_mgr;
+}
+
+}}}; // namespace ppl::kernel::x86

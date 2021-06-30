@@ -1,0 +1,10 @@
+#ifndef PPLCUDA_COMMON_CUDA_ARCH_H_
+#define PPLCUDA_COMMON_CUDA_ARCH_H_
+
+#if defined(__CUDACC_VER_MAJOR__)
+#define PPL_CUDA_NVCC_VERSION ((__CUDACC_VER_MAJOR__ * 10000) + (__CUDACC_VER_MINOR__ * 100))
+#else
+#define PPL_CUDA_NVCC_VERSION 0
+#endif
+
+#endif

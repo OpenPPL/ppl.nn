@@ -1,0 +1,83 @@
+#include "ppl/nn/engines/cuda/default_cuda_allocator.h"
+
+#include "ppl/nn/common/logger.h"
+#include "ppl/nn/engines/cuda/buffered_cuda_device.h"
+#include "ppl/nn/engines/cuda/buffered_cuda_allocator.h"
+#include "ppl/nn/utils/stack_buffer_manager.h"
+#include "ppl/nn/utils/compact_buffer_manager.h"
+
+using namespace std;
+using namespace ppl::common;
+
+namespace ppl { namespace nn { namespace cuda {
+
+#define DEFAULT_BLOCK_SIZE 1048576
+
+RetCode BufferedCudaDevice::Init(MemoryManagementPolicy mm_policy) {
+    if (mm_policy == MM_BETTER_PERFORMANCE) {
+        allocator_.reset(new DefaultCudaAllocator());
+        buffer_manager_.reset(new utils::StackBufferManager(allocator_.get(), true));
+    } else if (mm_policy == MM_LESS_MEMORY) {
+        auto device_id = GetDeviceId();
+
+        size_t granularity = 0;
+        CUmemAllocationProp prop = {};
+        prop.type = CU_MEM_ALLOCATION_TYPE_PINNED;
+        prop.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
+        prop.location.id = device_id;
+        cuMemGetAllocationGranularity(&granularity, &prop, CU_MEM_ALLOC_GRANULARITY_MINIMUM);
+
+        auto allocator = new BufferedCudaAllocator();
+        auto status = allocator->Init(device_id, granularity);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "init BufferedCudaAllocator failed: " << GetRetCodeStr(status);
+            delete allocator;
+            return RC_OTHER_ERROR;
+        }
+        allocator_.reset(allocator);
+
+        uint64_t block_size = DEFAULT_BLOCK_SIZE;
+        if (granularity > DEFAULT_BLOCK_SIZE) {
+            block_size = granularity;
+        }
+        buffer_manager_.reset(new utils::CompactBufferManager(allocator, block_size));
+    }
+
+    return RC_SUCCESS;
+}
+
+BufferedCudaDevice::~BufferedCudaDevice() {
+    LOG(DEBUG) << "buffer manager[" << buffer_manager_->GetName() << "] allocates ["
+               << buffer_manager_->GetAllocatedBytes() << "] bytes.";
+    buffer_manager_->Free(&shared_tmp_buffer_);
+    buffer_manager_.reset();
+    allocator_.reset();
+}
+
+RetCode BufferedCudaDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {
+    return buffer_manager_->Realloc(bytes, buffer);
+}
+
+void BufferedCudaDevice::Free(BufferDesc* buffer) {
+    if (buffer->addr) {
+        buffer_manager_->Free(buffer);
+    }
+}
+
+RetCode BufferedCudaDevice::AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
+    if (bytes > tmp_buffer_size_) {
+        auto status = buffer_manager_->Realloc(bytes, &shared_tmp_buffer_);
+        if (status == RC_SUCCESS) {
+            tmp_buffer_size_ = bytes;
+            *buffer = shared_tmp_buffer_;
+        }
+        return status;
+    }
+
+    *buffer = shared_tmp_buffer_;
+    return RC_SUCCESS;
+}
+
+void BufferedCudaDevice::FreeTmpBuffer(BufferDesc*) {}
+
+}}} // namespace ppl::nn::cuda

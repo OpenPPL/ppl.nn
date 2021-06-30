@@ -1,0 +1,226 @@
+#include "ppl/nn/ir/graph_topo.h"
+#include "ppl/nn/utils/vector_utils.h"
+using namespace std;
+using namespace ppl::common;
+
+namespace ppl { namespace nn { namespace ir {
+
+static edgeid_t FindEdgeId(const string& name, const vector<edgeid_t>& edge_ids, const GraphTopo* topo) {
+    for (uint32_t i = 0; i < edge_ids.size(); ++i) {
+        auto eid = edge_ids[i];
+        auto edge = topo->GetEdgeById(eid);
+        if (edge && edge->GetName() == name) {
+            return eid;
+        }
+    }
+    return INVALID_EDGEID;
+}
+
+Edge* GraphTopo::GetEdgeByName(const std::string& name) {
+    for (auto it = CreateEdgeIter(); it->IsValid(); it->Forward()) {
+        auto edge = it->Get();
+        if (edge->GetName() == name) {
+            return edge;
+        }
+    }
+    return nullptr;
+}
+
+const Edge* GraphTopo::GetEdgeByName(const std::string& name) const {
+    for (auto it = CreateEdgeIter(); it->IsValid(); it->Forward()) {
+        auto edge = it->Get();
+        if (edge->GetName() == name) {
+            return edge;
+        }
+    }
+    return nullptr;
+}
+
+edgeid_t GraphTopo::GetInput(const string& name) const {
+    return FindEdgeId(name, inputs_, this);
+}
+
+edgeid_t GraphTopo::GetConstant(const string& name) const {
+    return FindEdgeId(name, constants_, this);
+}
+
+edgeid_t GraphTopo::GetOutput(const string& name) const {
+    return FindEdgeId(name, outputs_, this);
+}
+
+edgeid_t GraphTopo::GetExtraInput(const string& name) const {
+    return FindEdgeId(name, extra_inputs_, this);
+}
+
+void GraphTopo::MarkAsInput(edgeid_t eid) {
+    utils::VectorAddUnique(inputs_, eid);
+}
+
+void GraphTopo::MarkAsOutput(edgeid_t eid) {
+    utils::VectorAddUnique(outputs_, eid);
+}
+
+void GraphTopo::MarkAsExtraInput(edgeid_t eid) {
+    utils::VectorAddUnique(extra_inputs_, eid);
+}
+
+void GraphTopo::MarkAsConstant(edgeid_t eid) {
+    utils::VectorAddUnique(constants_, eid);
+}
+
+RetCode GraphTopo::ReplaceWithNode(const string& node_name, const Node::Type& node_type) {
+    auto ret_pair = AddNode(node_name);
+    if (!ret_pair.second) {
+        return RC_EXISTS;
+    }
+    auto node = ret_pair.first;
+
+    node->SetType(node_type);
+
+    for (auto it = inputs_.begin(); it != inputs_.end(); ++it) {
+        GetEdgeById(*it)->ClearConsumer();
+    }
+    for (auto it = extra_inputs_.begin(); it != extra_inputs_.end(); ++it) {
+        GetEdgeById(*it)->ClearConsumer();
+    }
+    for (auto it = constants_.begin(); it != constants_.end(); ++it) {
+        GetEdgeById(*it)->ClearConsumer();
+    }
+    // some outputs may be constants or intermediate edges
+    for (auto it = outputs_.begin(); it != outputs_.end(); ++it) {
+        GetEdgeById(*it)->ClearConsumer();
+    }
+
+    vector<bool> reserved_edges(GetMaxEdgeId(), false);
+
+    for (auto it = inputs_.begin(); it != inputs_.end(); ++it) {
+        auto edge = GetEdgeById(*it);
+        node->AddInput(*it);
+        edge->AddConsumer(node->GetId());
+        reserved_edges[*it] = true;
+    }
+    for (auto it = extra_inputs_.begin(); it != extra_inputs_.end(); ++it) {
+        auto edge = GetEdgeById(*it);
+        node->AddInput(*it); // all extra inputs are treated as normal inputs
+        edge->AddConsumer(node->GetId());
+        reserved_edges[*it] = true;
+    }
+    for (auto it = constants_.begin(); it != constants_.end(); ++it) {
+        auto edge = GetEdgeById(*it);
+        node->AddInput(*it); // all constants are treated as normal inputs
+        edge->AddConsumer(node->GetId());
+        reserved_edges[*it] = true;
+    }
+    for (auto it = outputs_.begin(); it != outputs_.end(); ++it) {
+        auto edge = GetEdgeById(*it);
+        node->AddOutput(*it);
+        edge->SetProducer(node->GetId());
+        reserved_edges[*it] = true;
+    }
+
+    for (edgeid_t i = 0; i < reserved_edges.size(); ++i) {
+        if (!reserved_edges[i]) {
+            DelEdgeById(i);
+        }
+    }
+
+    for (nodeid_t i = 0; i < node->GetId(); ++i) {
+        DelNodeById(i);
+    }
+
+    return RC_SUCCESS;
+}
+
+static void DoFindPredecessors(edgeid_t eid, const GraphTopo* topo, vector<nodeid_t>* res) {
+    auto edge = topo->GetEdgeById(eid);
+    auto pid = edge->GetProducer();
+    if (pid != INVALID_NODEID) {
+        if (std::find(res->begin(), res->end(), pid) == res->end()) {
+            res->push_back(pid);
+        }
+    }
+}
+
+vector<nodeid_t> GraphTopo::FindPredecessors(nodeid_t nid) const {
+    auto node = GetNodeById(nid);
+
+    vector<nodeid_t> res;
+    for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
+        auto eid = node->GetInput(i); // INVALID_EDGEID means nil input
+        if (eid != INVALID_EDGEID) {
+            DoFindPredecessors(eid, this, &res);
+        }
+    }
+    for (uint32_t i = 0; i < node->GetExtraInputCount(); ++i) {
+        auto eid = node->GetExtraInput(i); // INVALID_EDGEID means nil input
+        if (eid != INVALID_EDGEID) {
+            DoFindPredecessors(eid, this, &res);
+        }
+    }
+    return res;
+}
+
+vector<nodeid_t> GraphTopo::FindSuccessors(nodeid_t nid) const {
+    auto node = GetNodeById(nid);
+
+    vector<nodeid_t> res;
+    for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
+        auto eid = node->GetOutput(i);
+        auto edge = GetEdgeById(eid);
+        for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
+            auto nid = it.Get();
+            if (std::find(res.begin(), res.end(), nid) == res.end()) {
+                res.push_back(nid);
+            }
+        }
+    }
+    return res;
+}
+
+struct NodeItem {
+    NodeItem(nodeid_t nid = INVALID_NODEID, bool r = false) : id(nid), resolved(r) {}
+    nodeid_t id;
+    bool resolved;
+};
+
+void GraphTopo::TopologicalSort(const function<void(nodeid_t)>& callback) const {
+    vector<NodeItem> node_stack;
+    vector<bool> node_is_valid(GetMaxNodeId(), false);
+
+    node_stack.reserve(GetMaxNodeId());
+    for (auto it = CreateNodeIter(); it->IsValid(); it->Forward()) {
+        auto nid = it->Get()->GetId();
+        node_is_valid[nid] = true;
+        node_stack.push_back(NodeItem(nid, false));
+    }
+
+    vector<bool> node_is_visited(GetMaxNodeId(), false);
+
+    while (!node_stack.empty()) {
+        auto item = node_stack.back();
+        node_stack.pop_back();
+
+        auto nid = item.id;
+        if (item.resolved) {
+            callback(nid);
+            continue;
+        }
+
+        if (node_is_visited[nid]) {
+            continue;
+        }
+
+        node_is_visited[nid] = true;
+        item.resolved = true;
+        node_stack.push_back(item);
+
+        auto prev_ids = FindPredecessors(item.id);
+        for (auto it = prev_ids.begin(); it != prev_ids.end(); ++it) {
+            if (node_is_valid[*it]) {
+                node_stack.push_back(NodeItem(*it, false));
+            }
+        }
+    }
+}
+
+}}} // namespace ppl::nn::ir

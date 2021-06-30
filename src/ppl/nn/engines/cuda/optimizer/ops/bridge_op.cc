@@ -1,0 +1,124 @@
+#include "ppl/nn/engines/cuda/optimizer/ops/bridge_op.h"
+
+#include "ppl/nn/engines/cuda/kernels/bridge_kernel.h"
+#include "ppl/nn/common/logger.h"
+
+using namespace std;
+using namespace ppl::common;
+
+namespace ppl { namespace nn { namespace cuda {
+
+RetCode BridgeOp::Init(const OptKernelOptions& options) {
+    infer_type_func_ = [this](InputOutputInfo* info, datatype_t type) -> RetCode {
+        auto in_shape = &info->GetInput<TensorImpl>(0)->GetShape();
+        auto out_shape = &info->GetOutput<TensorImpl>(0)->GetShape();
+        out_shape->SetDataType(in_shape->GetDataType());
+        return RC_SUCCESS;
+    };
+
+    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        if (info->GetInputCount() != 1 || info->GetOutputCount() != 1) {
+            LOG(ERROR) << "1 input/output required.";
+            return RC_INVALID_VALUE;
+        }
+        auto& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
+        info->GetOutput<TensorImpl>(0)->GetShape().Reshape(in_shape0.GetDims(), in_shape0.GetRealDimCount());
+        // info->GetOutput<TensorImpl>(0)->GetShape().CalcPadding();
+        return RC_SUCCESS;
+    };
+
+    return RC_SUCCESS;
+}
+
+RetCode BridgeOp::Finalize(const OptKernelOptions& options) {
+    auto status = SetCommonParam(options);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load common param failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    return RC_SUCCESS;
+}
+
+KernelImpl* BridgeOp::CreateKernelImpl() const {
+    return CreateKernelImplWithoutParam<BridgeKernel>();
+}
+
+RetCode BridgeOp::AddInternalBridgeNode(ir::Node* node, ir::Node* new_node, ir::Edge* edge, ir::Graph* graph) {
+    auto topo = graph->topo.get();
+    auto ret_pair = topo->AddEdge("Bridge_Edge_" + edge->GetName() + "_" + node->GetName());
+    auto new_edge = ret_pair.first;
+
+    edge->DelConsumer(node->GetId());
+    edge->AddConsumer(new_node->GetId());
+    new_node->AddInput(edge->GetId());
+    new_node->AddOutput(new_edge->GetId());
+    new_edge->SetProducer(new_node->GetId());
+    new_edge->AddConsumer(node->GetId());
+    node->ReplaceInput(edge->GetId(), new_edge->GetId());
+
+    return RC_SUCCESS;
+}
+
+RetCode BridgeOp::AddFinalBridgeNode(ir::Node* node, ir::Node* new_node, ir::Edge* edge, ir::Graph* graph) {
+    auto topo = graph->topo.get();
+    auto ret_pair = topo->AddEdge("Bridge_Final_Edge_" + edge->GetName() + "_" + node->GetName());
+    auto new_edge = ret_pair.first;
+
+    edge->SetProducer(new_node->GetId());
+    new_node->AddInput(new_edge->GetId());
+    new_node->AddOutput(edge->GetId());
+    new_edge->SetProducer(node->GetId());
+    new_edge->AddConsumer(new_node->GetId());
+    node->ReplaceOutput(edge->GetId(), new_edge->GetId());
+
+    for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
+        auto node_id = it.Get();
+        auto node = topo->GetNodeById(node_id);
+        node->ReplaceInput(edge->GetId(), new_edge->GetId());
+        new_edge->AddConsumer(node_id);
+    }
+    edge->ClearConsumer();
+
+    return RC_SUCCESS;
+}
+
+RetCode BridgeOp::DeleteBridgeNode(ir::Node* node, ir::Graph* graph,
+                                   std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors) {
+    auto topo = graph->topo.get();
+
+    auto preedge_id = node->GetInput(0);
+    auto postedge_id = node->GetOutput(0);
+
+    if (topo->GetEdgeById(postedge_id)->CalcConsumerCount() == 0) { // final bridge node
+        return RC_UNSUPPORTED;
+    }
+
+    auto nextnode_id = topo->GetEdgeById(postedge_id)->CreateConsumerIter().Get(); // consumer0
+    auto preshape = tensors->find(preedge_id)->second.get()->GetShape();
+    auto postshape = tensors->find(postedge_id)->second.get()->GetShape();
+
+    auto preedge = topo->GetEdgeById(preedge_id);
+    auto nextnode = topo->GetNodeById(nextnode_id);
+
+    if (preshape.GetDataFormat() == postshape.GetDataFormat() &&
+        preshape.GetDataType() == postshape.GetDataType() && // two edge has the same shape
+        topo->GetInput(topo->GetEdgeById(preedge_id)->GetName()) == INVALID_EDGEID && // and preedge is not graph input
+        topo->GetExtraInput(topo->GetEdgeById(preedge_id)->GetName()) ==
+            INVALID_EDGEID && // and preedge is not graph extrainput
+        topo->GetOutput(topo->GetEdgeById(postedge_id)->GetName()) ==
+            INVALID_EDGEID) { // and postedge is not graph output
+
+        preedge->DelConsumer(node->GetId());
+        preedge->AddConsumer(nextnode_id);
+        nextnode->ReplaceInput(postedge_id, preedge_id);
+
+        topo->DelEdgeById(postedge_id);
+        topo->DelNodeById(node->GetId());
+
+        return RC_SUCCESS;
+    }
+    return RC_UNSUPPORTED;
+}
+
+}}} // namespace ppl::nn::cuda

@@ -1,0 +1,60 @@
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/tile_op.h"
+
+#include "ppl/nn/common/logger.h"
+#include "ppl/nn/engines/cuda/kernels/onnx/tile_kernel.h"
+#include "ppl/nn/oputils/onnx/reshape_tile.h"
+
+using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
+
+namespace ppl { namespace nn { namespace cuda {
+
+RetCode TileOp::Init(const OptKernelOptions& options) {
+    infer_type_func_ = [this](InputOutputInfo* info, datatype_t type) -> RetCode {
+        auto status = type != DATATYPE_UNKNOWN ? InferDefaultType(info, type) : InferInheritedType(info);
+        auto shape = &info->GetInput<TensorImpl>(1)->GetShape();
+        shape->SetDataType(ppl::common::DATATYPE_INT64);
+        return status;
+    };
+
+    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        const TensorShape& shape = info->GetInput<TensorImpl>(0)->GetShape();
+        uint32_t dim_count = shape.GetDimCount();
+        auto repeat = info->GetInput<TensorImpl>(1);
+        if (repeat->GetBufferPtr<void>() == nullptr) {
+            return RC_NOT_FOUND;
+        }
+        if (repeat->GetShape().GetDimCount() != 1 || repeat->GetShape().GetDim(0) != dim_count ||
+            repeat->GetShape().GetDataType() != DATATYPE_INT64) {
+            return RC_INVALID_VALUE;
+        }
+
+        unique_ptr<int64_t[]> repeat_data(new int64_t[repeat->GetShape().GetElementsIncludingPadding()]);
+        auto status = repeat->CopyToHost(repeat_data.get());
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "Copy repeat data failed: " << GetRetCodeStr(status);
+            return status;
+        }
+
+        return oputils::ReshapeTile(info, nullptr, repeat_data.get());
+    };
+
+    return RC_SUCCESS;
+}
+
+RetCode TileOp::Finalize(const OptKernelOptions& options) {
+    auto status = SetCommonParam(options);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load common param failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    return RC_SUCCESS;
+}
+
+KernelImpl* TileOp::CreateKernelImpl() const {
+    return CreateKernelImplWithoutParam<TileKernel>();
+}
+
+}}} // namespace ppl::nn::cuda

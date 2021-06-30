@@ -1,0 +1,44 @@
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/and_op.h"
+
+#include "ppl/nn/common/logger.h"
+#include "ppl/nn/engines/cuda/kernels/onnx/and_kernel.h"
+#include "ppl/nn/oputils/onnx/reshape_and.h"
+
+using namespace std;
+using namespace ppl::common;
+
+namespace ppl { namespace nn { namespace cuda {
+
+RetCode AndOp::Init(const OptKernelOptions& options) {
+    infer_type_func_ = [this](InputOutputInfo* info, datatype_t type) -> RetCode {
+        for (uint32_t i = 0; i < info->GetInputCount(); ++i) {
+            auto in_shape = &info->GetInput<TensorImpl>(i)->GetShape();
+            in_shape->SetDataType(DATATYPE_BOOL);
+        }
+        auto shape = &info->GetOutput<TensorImpl>(0)->GetShape();
+        shape->SetDataType(DATATYPE_BOOL);
+        return RC_SUCCESS;
+    };
+
+    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        return oputils::ReshapeAnd(info, nullptr);
+    };
+
+    return RC_SUCCESS;
+}
+
+RetCode AndOp::Finalize(const OptKernelOptions& options) {
+    auto status = SetCommonParam(options);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load common param failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    return RC_SUCCESS;
+}
+
+KernelImpl* AndOp::CreateKernelImpl() const {
+    return CreateKernelImplWithoutParam<AndKernel>();
+}
+
+}}} // namespace ppl::nn::cuda

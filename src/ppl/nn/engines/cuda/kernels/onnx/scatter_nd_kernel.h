@@ -1,0 +1,20 @@
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_ONNX_SCATTER_ND_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_ONNX_SCATTER_ND_KERNEL_H_
+
+#include "ppl/nn/engines/cuda/kernel.h"
+
+namespace ppl { namespace nn { namespace cuda {
+
+class ScatterNdKernel : public CudaKernel {
+public:
+    ScatterNdKernel(const ir::Node* node) : CudaKernel(node) {}
+
+private:
+    uint64_t CalcTmpBufferSize(const KernelExecContext& ctx) const override;
+    ppl::common::RetCode DoExecute(KernelExecContext*) override;
+    bool CanDoExecute(const KernelExecContext&) const override;
+};
+
+}}} // namespace ppl::nn::cuda
+
+#endif

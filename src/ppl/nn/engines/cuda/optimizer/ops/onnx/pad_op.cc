@@ -1,0 +1,68 @@
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/pad_op.h"
+
+#include "ppl/nn/common/logger.h"
+#include "ppl/nn/engines/cuda/kernels/onnx/pad_kernel.h"
+#include "ppl/nn/oputils/onnx/reshape_pad.h"
+
+using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
+
+namespace ppl { namespace nn { namespace cuda {
+
+RetCode PadOp::Init(const OptKernelOptions& options) {
+    auto status = GenericLoadParam<PadParam>(options, &param_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    infer_type_func_ = [this](InputOutputInfo* info, datatype_t type) -> RetCode {
+        auto status = type != DATATYPE_UNKNOWN ? InferDefaultType(info, type) : InferInheritedType(info);
+        auto shape = &info->GetInput<TensorImpl>(1)->GetShape();
+        shape->SetDataType(DATATYPE_INT64);
+        return status;
+    };
+
+    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        const TensorShape& shape = info->GetInput<TensorImpl>(0)->GetShape();
+        uint32_t dim_count = shape.GetDimCount();
+        auto pad = info->GetInput<TensorImpl>(1);
+        if (pad->GetShape().GetDimCount() != 1 || pad->GetShape().GetDim(0) != 2 * dim_count ||
+            pad->GetShape().GetDataType() != DATATYPE_INT64) {
+            return RC_INVALID_VALUE;
+        }
+
+        int pad_elems = pad->GetShape().GetElementsIncludingPadding();
+        unique_ptr<int64_t[]> pad_data(new int64_t[pad_elems]);
+        for (int it = 0; it < pad_elems; pad_data[it] = 0, ++it)
+            ;
+        if (pad->GetBufferPtr() != nullptr) {
+            auto status = pad->CopyToHost(pad_data.get());
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "Copy pad data failed: " << GetRetCodeStr(status);
+                return status;
+            }
+        }
+
+        return oputils::ReshapePad(info, &param_, pad_data.get(), pad_data.get() + dim_count);
+    };
+
+    return RC_SUCCESS;
+}
+
+RetCode PadOp::Finalize(const OptKernelOptions& options) {
+    auto status = SetCommonParam(options);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load common param failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    return RC_SUCCESS;
+}
+
+KernelImpl* PadOp::CreateKernelImpl() const {
+    return CreateKernelImplWithParam<PadKernel>(&param_);
+}
+
+}}} // namespace ppl::nn::cuda

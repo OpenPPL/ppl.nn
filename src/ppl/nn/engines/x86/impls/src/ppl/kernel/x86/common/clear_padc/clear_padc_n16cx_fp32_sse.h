@@ -1,0 +1,65 @@
+#ifndef __ST_PPL_KERNEL_X86_COMMON_CLEAR_PADC_N16CX_FP32_SSE_H_
+#define __ST_PPL_KERNEL_X86_COMMON_CLEAR_PADC_N16CX_FP32_SSE_H_
+
+#include <xmmintrin.h>
+#include "ppl/kernel/x86/common/internal_include.h"
+
+namespace ppl { namespace kernel { namespace x86 {
+
+static void clear_padc_n16cx_fp32_sse(const ppl::nn::TensorShape *shape, float *data, const int64_t c_dim_idx = 1)
+{
+    if (shape->GetDataFormat() == ppl::common::DATAFORMAT_N16CX && shape->GetDim(c_dim_idx) % 16 != 0) { // clear padding channels to 0
+        const int64_t simd_w = 4;
+        const int64_t c_blk  = 16;
+
+        int64_t outer_dims = 1;
+        int64_t inner_dims = 1;
+        for (int64_t i = 0; i < c_dim_idx; i++) {
+            outer_dims *= shape->GetDim(i);
+        }
+        for (int64_t i = c_dim_idx + 1; i < shape->GetDimCount(); i++) {
+            inner_dims *= shape->GetDim(i);
+        }
+        const int64_t channels = shape->GetDim(c_dim_idx);
+        const int64_t pad_c    = round_up(channels, c_blk);
+
+        uint32_t mask[c_blk] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        for (int64_t c = 0; c < channels - round(channels, c_blk); c++) {
+            mask[c] = 0xffffffff;
+        }
+        const __m128 v_mask_0 = _mm_loadu_ps((float*)mask + 0 * simd_w);
+        const __m128 v_mask_1 = _mm_loadu_ps((float*)mask + 1 * simd_w);
+        const __m128 v_mask_2 = _mm_loadu_ps((float*)mask + 2 * simd_w);
+        const __m128 v_mask_3 = _mm_loadu_ps((float*)mask + 3 * simd_w);
+
+#ifdef PPL_USE_X86_OMP_COLLAPSE
+        PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)
+#endif
+        for (int64_t od = 0; od < outer_dims; od++) {
+#ifndef PPL_USE_X86_OMP_COLLAPSE
+            PRAGMA_OMP_PARALLEL_FOR()
+#endif
+            for (int64_t id = 0; id < inner_dims; id++) {
+                float* p_data   = data + od * pad_c * inner_dims + (pad_c - c_blk) * inner_dims + id * c_blk;
+                __m128 v_data_0 = _mm_loadu_ps(p_data + 0 * simd_w);
+                __m128 v_data_1 = _mm_loadu_ps(p_data + 1 * simd_w);
+                __m128 v_data_2 = _mm_loadu_ps(p_data + 2 * simd_w);
+                __m128 v_data_3 = _mm_loadu_ps(p_data + 3 * simd_w);
+
+                v_data_0 = _mm_and_ps(v_data_0, v_mask_0);
+                v_data_1 = _mm_and_ps(v_data_1, v_mask_1);
+                v_data_2 = _mm_and_ps(v_data_2, v_mask_2);
+                v_data_3 = _mm_and_ps(v_data_3, v_mask_3);
+
+                _mm_storeu_ps(p_data + 0 * simd_w, v_data_0);
+                _mm_storeu_ps(p_data + 1 * simd_w, v_data_1);
+                _mm_storeu_ps(p_data + 2 * simd_w, v_data_2);
+                _mm_storeu_ps(p_data + 3 * simd_w, v_data_3);
+            }
+        }
+    }
+}
+
+}}} // namespace ppl::kernel::x86
+
+#endif

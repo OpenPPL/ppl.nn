@@ -1,0 +1,54 @@
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/expand_op.h"
+
+#include "ppl/nn/common/logger.h"
+#include "ppl/nn/engines/cuda/kernels/onnx/expand_kernel.h"
+#include "ppl/nn/oputils/onnx/reshape_expand.h"
+
+using namespace std;
+using namespace ppl::common;
+
+namespace ppl { namespace nn { namespace cuda {
+
+RetCode ExpandOp::Init(const OptKernelOptions& options) {
+    infer_type_func_ = [this](InputOutputInfo* info, datatype_t type) -> RetCode {
+        return type != DATATYPE_UNKNOWN ? InferDefaultType(info, type) : InferInheritedType(info);
+    };
+
+    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        if (info->GetInputCount() != 2 || info->GetOutputCount() != 1) {
+            return RC_INVALID_VALUE;
+        }
+
+        auto shape = info->GetInput<TensorImpl>(1);
+        if (!shape->GetBufferPtr()) {
+            return RC_NOT_FOUND;
+        }
+
+        std::unique_ptr<int64_t[]> shape_ptr(new int64_t[shape->GetShape().GetElementsIncludingPadding()]);
+        auto status = shape->CopyToHost(shape_ptr.get());
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "Copy shape failed: " << GetRetCodeStr(status);
+            return status;
+        }
+
+        return oputils::ReshapeExpand(info, nullptr, shape_ptr.get());
+    };
+
+    return RC_SUCCESS;
+}
+
+RetCode ExpandOp::Finalize(const OptKernelOptions& options) {
+    auto status = SetCommonParam(options);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load common param failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    return RC_SUCCESS;
+}
+
+KernelImpl* ExpandOp::CreateKernelImpl() const {
+    return CreateKernelImplWithoutParam<ExpandKernel>();
+}
+
+}}} // namespace ppl::nn::cuda
