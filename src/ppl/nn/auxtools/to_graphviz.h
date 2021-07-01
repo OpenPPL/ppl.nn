@@ -7,6 +7,16 @@ using namespace std;
 
 namespace ppl { namespace nn { namespace utils {
 
+static inline string GetGraphvizNodeName(const ir::Node* node) {
+    string type_str;
+    if (node->GetType().domain.empty()) {
+        type_str = node->GetType().name;
+    } else {
+        type_str = node->GetType().domain + "." + node->GetType().name;
+    }
+    return node->GetName() + "[" + type_str + "][" + std::to_string(node->GetId()) + "]";
+}
+
 static string ToGraphviz(const ir::GraphTopo* topo) {
     string content = "digraph NetGraph {\n";
 
@@ -15,22 +25,31 @@ static string ToGraphviz(const ir::GraphTopo* topo) {
 
         string begin_node_name;
         if (edge->GetProducer() == INVALID_NODEID) {
-            begin_node_name = "NIL-BEGIN";
+            if (topo->GetInput(edge->GetName()) != INVALID_EDGEID) {
+                begin_node_name = "input:" + edge->GetName();
+            } else if (topo->GetExtraInput(edge->GetName()) != INVALID_EDGEID) {
+                begin_node_name = "extra_input:" + edge->GetName();
+            }
         } else {
             auto node = topo->GetNodeById(edge->GetProducer());
-            begin_node_name = node->GetName();
+            begin_node_name = GetGraphvizNodeName(node);
         }
 
         auto edge_iter = edge->CreateConsumerIter();
         if (edge_iter.IsValid()) {
             do {
                 auto node = topo->GetNodeById(edge_iter.Get());
-                content +=
-                    "\"" + begin_node_name + "\" -> \"" + node->GetName() + "\" [label=\"" + edge->GetName() + "\"]\n";
+                if (!begin_node_name.empty()) {
+                    content += "\"" + begin_node_name + "\" -> \"" + GetGraphvizNodeName(node) + "\" [label=\"" +
+                        edge->GetName() + "\"]\n";
+                }
                 edge_iter.Forward();
             } while (edge_iter.IsValid());
         } else {
-            content += "\"" + begin_node_name + "\" -> \"NIL-END\" [label=\"" + edge->GetName() + "\"]\n";
+            if (!begin_node_name.empty()) {
+                content += "\"" + begin_node_name + "\" -> \"output:" + edge->GetName() + "\" [label=\"" +
+                    edge->GetName() + "\"]\n";
+            }
             edge_iter.Forward();
         }
     }
