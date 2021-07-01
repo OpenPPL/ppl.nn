@@ -9,6 +9,11 @@ set(FETCHCONTENT_QUIET OFF)
 
 # --------------------------------------------------------------------------- #
 
+find_package(Git QUIET)
+if(NOT Git_FOUND)
+    message(FATAL_ERROR "git is required.")
+endif()
+
 FetchContent_Declare(hpcc
     GIT_REPOSITORY https://github.com/openppl-public/hpcc.git
     GIT_TAG v0.1.0
