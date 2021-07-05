@@ -20,7 +20,7 @@
 
 #include "ppl/nn/runtime/runtime_graph_info.h"
 #include "ppl/nn/runtime/runtime_aux_info.h"
-#include "ppl/nn/models/onnx/params/if_param.h"
+#include "ppl/nn/params/onnx/if_param.h"
 
 namespace ppl { namespace nn { namespace utils {
 struct SharedResource;
@@ -31,7 +31,7 @@ namespace ppl { namespace nn { namespace common {
 class IfOp final {
 public:
     IfOp(const ir::Node* node) : node_(node), resource_(nullptr) {}
-    ppl::common::RetCode Init(utils::SharedResource*, ppl::nn::onnx::IfParam*);
+    ppl::common::RetCode Init(utils::SharedResource*, IfParam*);
     KernelImpl* CreateKernelImpl() const;
 
 private:

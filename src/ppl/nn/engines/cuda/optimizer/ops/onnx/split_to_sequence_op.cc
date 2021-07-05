@@ -32,7 +32,7 @@ RetCode SplitToSequenceOp::Init(const OptKernelOptions& options) {
         return RC_NOT_FOUND;
     }
 
-    auto param = static_cast<ppl::nn::onnx::SplitToSequenceParam*>(attr_ref->second.get());
+    auto param = static_cast<SplitToSequenceParam*>(attr_ref->second.get());
     op_.Init(param->axis, param->keepdims, common::SplitToSequenceOp::GenericSplitFunc);
 
     infer_type_func_ = [this](InputOutputInfo* info, datatype_t type) -> RetCode {

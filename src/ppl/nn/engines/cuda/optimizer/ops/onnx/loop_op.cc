@@ -68,7 +68,7 @@ RetCode LoopOp::Init(const OptKernelOptions& options) {
         return RC_NOT_FOUND;
     }
 
-    auto loop_param = static_cast<ppl::nn::onnx::LoopParam*>(attr_ref->second.get());
+    auto loop_param = static_cast<LoopParam*>(attr_ref->second.get());
     return op_.Init(options.resource, loop_param, ConcatOutputs);
 }
 

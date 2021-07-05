@@ -17,7 +17,7 @@
 
 #include "ppl/nn/engines/common/onnx/loop_op.h"
 #include "ppl/nn/engines/common/onnx/loop_kernel.h"
-#include "ppl/nn/models/onnx/params/loop_param.h"
+#include "ppl/nn/params/onnx/loop_param.h"
 #include "ppl/nn/optimizers/utils.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
@@ -25,7 +25,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace common {
 
-RetCode LoopOp::Init(utils::SharedResource* resource, onnx::LoopParam* loop_param,
+RetCode LoopOp::Init(utils::SharedResource* resource, LoopParam* loop_param,
                      LoopConcatOutputFunc concat_output_func) {
     auto status = utils::ProcessGraph(resource, &loop_param->graph, &graph_info_);
     if (status != RC_SUCCESS) {

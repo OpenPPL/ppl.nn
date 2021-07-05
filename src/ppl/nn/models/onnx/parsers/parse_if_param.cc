@@ -58,7 +58,7 @@ static RetCode CollectExtraInputIndices(const ir::GraphTopo* current, const ir::
 }
 
 RetCode ParseIfParam(const ::onnx::NodeProto& pb_node, void* arg, ir::Node* node, ir::GraphTopo* topo) {
-    auto param = (IfParam*)arg;
+    auto param = (ppl::nn::common::IfParam*)arg;
     for (int i = 0; i < pb_node.attribute_size(); ++i) {
         auto& attr = pb_node.attribute(i);
         if (attr.type() != ::onnx::AttributeProto_AttributeType_GRAPH) {

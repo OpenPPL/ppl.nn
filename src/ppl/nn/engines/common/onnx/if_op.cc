@@ -17,7 +17,7 @@
 
 #include "ppl/nn/engines/common/onnx/if_kernel.h"
 #include "ppl/nn/engines/common/onnx/if_op.h"
-#include "ppl/nn/models/onnx/params/if_param.h"
+#include "ppl/nn/params/onnx/if_param.h"
 #include "ppl/nn/optimizers/utils.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
@@ -25,7 +25,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace common {
 
-RetCode IfOp::Init(utils::SharedResource* resource, onnx::IfParam* if_param) {
+RetCode IfOp::Init(utils::SharedResource* resource, IfParam* if_param) {
     extra_inputs_of_then_graph_ = if_param->then_extra_input_indices_in_parent_node;
     extra_inputs_of_else_graph_ = if_param->else_extra_input_indices_in_parent_node;
 

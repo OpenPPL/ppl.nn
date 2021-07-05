@@ -20,7 +20,7 @@
 
 #include "ppl/common/retcode.h"
 #include "ppl/nn/ir/graph.h"
-#include "ppl/nn/models/onnx/params/split_to_sequence_param.h"
+#include "ppl/nn/params/onnx/split_to_sequence_param.h"
 #include "ppl/nn/models/onnx/generated/onnx.pb.h"
 
 namespace ppl { namespace nn { namespace onnx {

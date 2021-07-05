@@ -53,7 +53,7 @@ RetCode IfOp::Init(const OptKernelOptions& options) {
         return RC_NOT_FOUND;
     }
 
-    auto if_param = static_cast<ppl::nn::onnx::IfParam*>(attr_ref->second.get());
+    auto if_param = static_cast<IfParam*>(attr_ref->second.get());
     return op_.Init(options.resource, if_param);
 }
 

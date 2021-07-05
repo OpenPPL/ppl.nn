@@ -140,10 +140,10 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITH_PARAM("", "GlobalAveragePool", ppl::nn::common::PoolingParam, ParsePoolingParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Greater");
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Identity");
-    PPL_REGISTER_OP_WITH_PARAM("", "If", IfParam, ParseIfParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "If", ppl::nn::common::IfParam, ParseIfParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Less");
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Log");
-    PPL_REGISTER_OP_WITH_PARAM("", "Loop", LoopParam, ParseLoopParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Loop", ppl::nn::common::LoopParam, ParseLoopParam);
     PPL_REGISTER_OP_WITH_PARAM("", "LeakyRelu", ppl::nn::common::LeakyReLUParam, ParseLeakyReLUParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "MatMul");
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Max");
@@ -175,7 +175,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Slice");
     PPL_REGISTER_OP_WITH_PARAM("", "Softmax", ppl::nn::common::SoftmaxParam, ParseSoftmaxParam);
     PPL_REGISTER_OP_WITH_PARAM("", "Split", ppl::nn::common::SplitParam, ParseSplitParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "SplitToSequence", SplitToSequenceParam, ParseSplitToSequenceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "SplitToSequence", ppl::nn::common::SplitToSequenceParam, ParseSplitToSequenceParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Sqrt");
     PPL_REGISTER_OP_WITH_PARAM("", "Squeeze", ppl::nn::common::SqueezeParam, ParseSqueezeParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Sub");

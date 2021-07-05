@@ -24,7 +24,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseLoopParam(const ::onnx::NodeProto& pb_node, void* arg, ir::Node* node, ir::GraphTopo* topo) {
-    auto param = static_cast<LoopParam*>(arg);
+    auto param = static_cast<ppl::nn::common::LoopParam*>(arg);
     if (pb_node.attribute_size() != 1) {
         LOG(ERROR) << "invalid attribute size[" << pb_node.attribute_size() << "] != 1.";
         return RC_INVALID_VALUE;

@@ -20,7 +20,7 @@
 
 #include "ppl/nn/runtime/runtime_graph_info.h"
 #include "ppl/nn/engines/common/onnx/loop_kernel.h"
-#include "ppl/nn/models/onnx/params/loop_param.h"
+#include "ppl/nn/params/onnx/loop_param.h"
 
 namespace ppl { namespace nn { namespace utils {
 struct SharedResource;
@@ -31,7 +31,7 @@ namespace ppl { namespace nn { namespace common {
 class LoopOp final {
 public:
     LoopOp(const ir::Node* node) : node_(node), resource_(nullptr) {}
-    ppl::common::RetCode Init(utils::SharedResource*, ppl::nn::onnx::LoopParam*, LoopConcatOutputFunc);
+    ppl::common::RetCode Init(utils::SharedResource*, LoopParam*, LoopConcatOutputFunc);
     KernelImpl* CreateKernelImpl() const;
 
 private:

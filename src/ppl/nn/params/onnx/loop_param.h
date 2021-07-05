@@ -15,22 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARAMS_SPLIT_TO_SEQUENCE_PARAM_H_
-#define _ST_HPC_PPL_NN_MODELS_ONNX_PARAMS_SPLIT_TO_SEQUENCE_PARAM_H_
+#ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_LOOP_PARAM_H_
+#define _ST_HPC_PPL_NN_PARAMS_ONNX_LOOP_PARAM_H_
 
-#include <stdint.h>
+#include "ppl/nn/ir/graph.h"
 
-namespace ppl { namespace nn { namespace onnx {
+namespace ppl { namespace nn { namespace common {
 
-struct SplitToSequenceParam {
-    int32_t axis;
-    int32_t keepdims;
+struct LoopParam {
+    ir::Graph graph;
 
-    bool operator==(const SplitToSequenceParam& p) const {
-        return ((axis == p.axis) && (keepdims == p.keepdims));
+    bool operator==(const LoopParam& p) const {
+        return false; // has subgraph
     }
 };
 
-}}} // namespace ppl::nn::onnx
+}}} // namespace ppl::nn::common
 
 #endif

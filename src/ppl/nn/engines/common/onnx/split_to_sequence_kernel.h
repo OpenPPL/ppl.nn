@@ -19,7 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_COMMON_ONNX_SPLIT_TO_SEQUENCE_KERNEL_H_
 
 #include "ppl/nn/engines/common/common_kernel_impl.h"
-#include "ppl/nn/models/onnx/params/split_to_sequence_param.h"
+#include "ppl/nn/params/onnx/split_to_sequence_param.h"
 
 namespace ppl { namespace nn { namespace common {
 
