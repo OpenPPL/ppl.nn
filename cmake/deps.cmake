@@ -2,6 +2,20 @@ if(NOT HPCC_DEPS_DIR)
     set(HPCC_DEPS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps)
 endif()
 
+# --------------------------------------------------------------------------- #
+
+if(CMAKE_COMPILER_IS_GNUCC)
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9.0)
+        message(FATAL_ERROR "gcc >= 4.9.0 is required.")
+    endif()
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0.0)
+        message(FATAL_ERROR "clang >= 6.0.0 is required.")
+    endif()
+endif()
+
+# --------------------------------------------------------------------------- #
+
 include(FetchContent)
 
 set(FETCHCONTENT_BASE_DIR ${HPCC_DEPS_DIR})
