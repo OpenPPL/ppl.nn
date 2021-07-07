@@ -25,7 +25,7 @@ ppl::common::RetCode equal_eltwise_int64(
     const int64_t *src1,
     uint8_t *dst)
 {
-    return relation_eltwise_binary_op_int64<RELATION_LESS>(dst_shape, src0, src1, dst);
+    return relation_eltwise_binary_op_int64<RELATION_EQUAL>(dst_shape, src0, src1, dst);
 }
 
 ppl::common::RetCode equal_ndarray_int64(
