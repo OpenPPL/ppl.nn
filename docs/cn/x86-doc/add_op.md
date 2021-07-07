@@ -25,10 +25,10 @@ PPLNN在x86架构上添加自定义算子的步骤如下：
 
 若算子无需参数，则跳过此步骤。
 
-在ppl.common/src/ppl/common/params目录下创建\<opname\>_param.h，用于定义参数结构体。
+在ppl.nn/src/ppl/nn/params目录下创建\<domain_name\>/\<opname\>_param.h，用于定义参数结构体。
 定义参数结构体时需要重载==运算符来支持框架上的图优化操作。
 
-以LeakyReLU为例，其参数定义在ppl.common/src/ppl/common/params/leaky_relu_op.h：
+以LeakyReLU为例，其参数定义在ppl.nn/src/ppl/nn/params/onnx/leaky_relu_param.h：
 
 ```c++
 struct LeakyReLUParam {

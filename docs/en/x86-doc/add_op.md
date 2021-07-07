@@ -25,10 +25,10 @@ If the operator parameter definition and its parsing function have been added, s
 
 If the operator does not require parameters, skip this step.
 
-Create file \<opname\>_param.h in the ppl.common/src/ppl/common/params directory to define the parameter struct.
+Create file \<domain_name\>/\<opname\>_param.h in the ppl.nn/src/ppl/nn/params directory to define the parameter struct.
 The `==` operator needs to be overloaded to support graph optimization.
 
-Take LeakyReLU as an example, its parameter is defined in ppl.common/src/ppl/common/params/leaky_relu_op.h:
+Take LeakyReLU as an example, its parameter is defined in ppl.nn/src/ppl/nn/params/onnx/leaky_relu_param.h:
 
 ```c++
 struct LeakyReLUParam {
