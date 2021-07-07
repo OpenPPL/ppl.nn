@@ -25,9 +25,7 @@ namespace ppl { namespace nn { namespace onnx {
 
 class ModelParser final {
 public:
-    static ppl::common::RetCode Parse(const char* model_buf, size_t buf_len, ir::Graph* graph);
-
-    static ppl::common::RetCode Parse(const char* model_file, ir::Graph* graph);
+    static ppl::common::RetCode Parse(const char* model_buf, uint64_t buf_len, ir::Graph* graph);
 };
 
 }}} // namespace ppl::nn::onnx

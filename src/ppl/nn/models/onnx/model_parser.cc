@@ -30,7 +30,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-static bool ParseFromBinaryBuffer(const char* buf, size_t buf_len, google::protobuf::MessageLite* pb_model) {
+static bool ParseFromBinaryBuffer(const char* buf, uint64_t buf_len, google::protobuf::MessageLite* pb_model) {
     if (!buf) {
         LOG(ERROR) << "buf ptr is nullptr.";
         return false;
@@ -43,12 +43,10 @@ static bool ParseFromBinaryBuffer(const char* buf, size_t buf_len, google::proto
 
     google::protobuf::io::CodedInputStream cis((uint8_t*)buf, buf_len);
     cis.SetTotalBytesLimit(INT_MAX, INT_MAX);
-    bool ok = pb_model->ParseFromCodedStream(&cis);
-
-    return ok;
+    return pb_model->ParseFromCodedStream(&cis);
 }
 
-RetCode ModelParser::Parse(const char* buf, size_t buf_len, ir::Graph* graph) {
+RetCode ModelParser::Parse(const char* buf, uint64_t buf_len, ir::Graph* graph) {
     ::onnx::ModelProto pb_model;
     if (!ParseFromBinaryBuffer(buf, buf_len, &pb_model)) {
         LOG(ERROR) << "load onnx model from model buffer failed.";
@@ -87,17 +85,6 @@ RetCode ModelParser::Parse(const char* buf, size_t buf_len, ir::Graph* graph) {
     }
 
     return RC_SUCCESS;
-}
-
-RetCode ModelParser::Parse(const char* model_file, ir::Graph* graph) {
-    ppl::common::FileMapping fm;
-    if (fm.Init(model_file) != RC_SUCCESS) {
-        LOG(ERROR) << "Init filemapping from file [" << model_file << "] error.";
-        return RC_INVALID_VALUE;
-    }
-    const char* model_buf = fm.Data();
-    uint64_t buf_len = fm.Size();
-    return ModelParser::Parse(model_buf, buf_len, graph);
 }
 
 }}} // namespace ppl::nn::onnx

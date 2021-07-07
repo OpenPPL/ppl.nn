@@ -20,7 +20,7 @@ for entry in ${filelist[@]}; do
     filetype=${entry##*.}
     if [[ "$filetype" == "cpp" || "$filetype" == "cc" || "$filetype" == "h" || "$filetype" == "hpp" ]]; then
         echo -n "formatting [$entry]..."
-        clang-format-12 -i $entry
+        $formatter -i $entry
         if [ $? -eq 0 ]; then
             echo " done"
         else

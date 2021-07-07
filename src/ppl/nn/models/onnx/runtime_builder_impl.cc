@@ -20,7 +20,6 @@
 #include "ppl/nn/runtime/runtime_impl.h"
 #include "ppl/nn/models/onnx/model_parser.h"
 #include "ppl/nn/models/onnx/runtime_builder_impl.h"
-#include "ppl/common/file_mapping.h"
 using namespace std;
 using namespace ppl::common;
 
@@ -38,7 +37,7 @@ RuntimeBuilderImpl::~RuntimeBuilderImpl() {
     resource_.reset();
 }
 
-RetCode RuntimeBuilderImpl::Init(vector<unique_ptr<EngineImpl>>&& engines, const char* model_buf, size_t buf_len) {
+RetCode RuntimeBuilderImpl::Init(const char* model_buf, size_t buf_len, vector<unique_ptr<EngineImpl>>&& engines) {
     resource_->engines.reserve(engines.size());
     for (auto e = engines.begin(); e != engines.end(); ++e) {
         auto impl = unique_ptr<EngineImpl>(static_cast<EngineImpl*>(e->release()));
@@ -64,15 +63,6 @@ RetCode RuntimeBuilderImpl::Init(vector<unique_ptr<EngineImpl>>&& engines, const
     }
 
     return RC_SUCCESS;
-}
-
-RetCode RuntimeBuilderImpl::Init(vector<unique_ptr<EngineImpl>>&& engines, const char* model_file) {
-    ppl::common::FileMapping fm;
-    if (fm.Init(model_file) != RC_SUCCESS) {
-        LOG(ERROR) << "Init filemapping from file [" << model_file << "] error.";
-        return RC_INVALID_VALUE;
-    }
-    return Init(std::move(engines), fm.Data(), fm.Size());
 }
 
 Runtime* RuntimeBuilderImpl::CreateRuntime(const RuntimeOptions& options) {

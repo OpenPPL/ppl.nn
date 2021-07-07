@@ -29,7 +29,6 @@ namespace ppl { namespace nn {
 class PPLNN_PUBLIC OnnxRuntimeBuilderFactory final {
 public:
     static OnnxRuntimeBuilder* Create(const char* model_file, std::vector<std::unique_ptr<Engine>>&&);
-
     static OnnxRuntimeBuilder* Create(const char* model_buf, uint64_t buf_len, std::vector<std::unique_ptr<Engine>>&&);
 };
 

@@ -54,7 +54,7 @@ OnnxRuntimeBuilder* OnnxRuntimeBuilderFactory::Create(const char* model_buf, uin
 
     auto builder = new onnx::RuntimeBuilderImpl();
     if (builder) {
-        auto status = builder->Init(std::move(engine_impls), model_buf, buf_len);
+        auto status = builder->Init(model_buf, buf_len, std::move(engine_impls));
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "init OnnxRuntimeBuilder failed: " << GetRetCodeStr(status);
             delete builder;

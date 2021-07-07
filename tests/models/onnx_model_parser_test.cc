@@ -16,16 +16,20 @@
 // under the License.
 
 #include "ppl/nn/models/onnx/model_parser.h"
+#include "ppl/common/file_mapping.h"
 #include "gtest/gtest.h"
 #include <string>
-
 using namespace std;
 using namespace ppl::nn;
+using namespace ppl::common;
+
 class ModelParserTest : public testing::Test {};
 
 TEST_F(ModelParserTest, TestModelParser) {
     ir::Graph graph;
     const string onnx_file = PPLNN_TESTDATA_DIR + string("/conv.onnx");
-    auto res = onnx::ModelParser::Parse(onnx_file.c_str(), &graph);
-    EXPECT_EQ(res, ppl::common::RC_SUCCESS);
+    FileMapping fm;
+    EXPECT_EQ(RC_SUCCESS, fm.Init(onnx_file.c_str()));
+    auto res = onnx::ModelParser::Parse(fm.Data(), fm.Size(), &graph);
+    EXPECT_EQ(RC_SUCCESS, res);
 }
