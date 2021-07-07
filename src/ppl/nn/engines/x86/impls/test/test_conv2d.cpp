@@ -68,22 +68,22 @@
                             use_ort_fp16 = use_ort_fp16_flag)\n\
 "
 
-Define_bool_opt(--help, Flag_help, false, "show these help information");
-Define_string(cfg, "", "(required) conv config file, format:" CASE_STRING_FMT())
-Define_string(algo, "", "(required) conv algorithm string")
-Define_int32(loop_cfg, 1, "(1) loop config file times")
-Define_int32(mb, 0, "(0) custom batch")
-Define_int32(warm_up, 2, "(2) warm up iterations")
-Define_int32(min_iter, 4, "(4) min benchmark iterations")
-Define_float(min_second, 0.5, "(0.5) min benchmark seconds")
-Define_int32(relu, 0, "(0) fuse relu, 0,1 or 6 for relu6")
-Define_bool(sum, false, "(false) fuse eltwise sum")
-Define_bool(validate, false, "(false) do result validation")
-Define_float(eps, 1e-6, "(1e-6) rel error trunk for validation")
-Define_bool(dynamic, false, "(false) prepare and alloc temp buffer for each run")
-Define_bool(profile, false, "(false) do profile and dump profile info")
-Define_bool(export_onnx_op_test, false, "(false) export cfg to ppl onnx op test format")
-Define_bool(disable_avx512, false, "(false) disable avx512 for auto select algo")
+Define_bool_opt("--help", Flag_help, false, "show these help information");
+Define_string(cfg, "", "(required) conv config file, format:" CASE_STRING_FMT());
+Define_string(algo, "", "(required) conv algorithm string");
+Define_int32(loop_cfg, 1, "(1) loop config file times");
+Define_int32(mb, 0, "(0) custom batch");
+Define_int32(warm_up, 2, "(2) warm up iterations");
+Define_int32(min_iter, 4, "(4) min benchmark iterations");
+Define_float(min_second, 0.5, "(0.5) min benchmark seconds");
+Define_int32(relu, 0, "(0) fuse relu, 0,1 or 6 for relu6");
+Define_bool(sum, false, "(false) fuse eltwise sum");
+Define_bool(validate, false, "(false) do result validation");
+Define_float(eps, 1e-6, "(1e-6) rel error trunk for validation");
+Define_bool(dynamic, false, "(false) prepare and alloc temp buffer for each run");
+Define_bool(profile, false, "(false) do profile and dump profile info");
+Define_bool(export_onnx_op_test, false, "(false) export cfg to ppl onnx op test format");
+Define_bool(disable_avx512, false, "(false) disable avx512 for auto select algo");
 
 /*
 

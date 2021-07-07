@@ -37,34 +37,33 @@ using namespace std;
 
 #include "simple_flags.h"
 
-Define_bool_opt(--help, g_flag_help, false, "show these help information");
-Define_bool_opt(--version, g_flag_version, false, "show version info");
+Define_bool_opt("--help", g_flag_help, false, "show these help information");
+Define_bool_opt("--version", g_flag_version, false, "show version info");
 
-Define_string_opt(--onnx-model, g_flag_onnx_model, "", "onnx model file");
+Define_string_opt("--onnx-model", g_flag_onnx_model, "", "onnx model file");
 
-Define_string_opt(--mm-policy, g_flag_mm_policy, "mem",
+Define_string_opt("--mm-policy", g_flag_mm_policy, "mem",
                   "\"perf\" => better performance, or \"mem\" => less memory usage");
 
-Define_bool_opt(--enable-profiling, g_flag_enable_profiling, false, "enable profiling and print profiling info");
-Define_float_opt(--min-profiling-time, g_flag_min_profiling_time, 1.0f,
-                 "min execute time by seconds for profiling");
-Define_uint32_opt(--warmuptimes, g_flag_warmup_times, 0, "declare warmup times");
+Define_bool_opt("--enable-profiling", g_flag_enable_profiling, false, "enable profiling and print profiling info");
+Define_float_opt("--min-profiling-time", g_flag_min_profiling_time, 1.0f, "min execute time by seconds for profiling");
+Define_uint32_opt("--warmuptimes", g_flag_warmup_times, 0, "declare warmup times");
 
-Define_string_opt(--input, g_flag_input, "", "binary input file containing all tensors' data");
-Define_string_opt(--inputs, g_flag_inputs, "", "binary input files separated by comma");
-Define_string_opt(--reshaped-inputs, g_flag_reshaped_inputs, "",
+Define_string_opt("--input", g_flag_input, "", "binary input file containing all tensors' data");
+Define_string_opt("--inputs", g_flag_inputs, "", "binary input files separated by comma");
+Define_string_opt("--reshaped-inputs", g_flag_reshaped_inputs, "",
                   "binary input files separated by comma."
                   " file name format: 'name-dims-datatype.dat'. for example:"
                   " input1-1_1_1_1-fp32.dat,input2-1_1_1_1-fp16.dat,input3-1_1-int8.dat");
-Define_string_opt(--in-shapes, g_flag_input_shapes, "",
+Define_string_opt("--in-shapes", g_flag_input_shapes, "",
                   "shapes of input tensors."
                   " dims are separated by underline, inputs are separated by comma. example:"
                   " 1_3_128_128,2_3_400_640,3_3_768_1024");
 
-Define_bool_opt(--save-input, g_flag_save_input, false, "save input tensors in one file in NDARRAY format");
-Define_bool_opt(--save-inputs, g_flag_save_inputs, false, "save separated input tensors in NDARRAY format");
-Define_bool_opt(--save-outputs, g_flag_save_outputs, false, "save separated output tensors in NDARRAY format");
-Define_string_opt(--save-data-dir, g_flag_save_data_dir, ".",
+Define_bool_opt("--save-input", g_flag_save_input, false, "save input tensors in one file in NDARRAY format");
+Define_bool_opt("--save-inputs", g_flag_save_inputs, false, "save separated input tensors in NDARRAY format");
+Define_bool_opt("--save-outputs", g_flag_save_outputs, false, "save separated output tensors in NDARRAY format");
+Define_string_opt("--save-data-dir", g_flag_save_data_dir, ".",
                   "directory to save input/output data if '--save-*' options are enabled.");
 
 /* -------------------------------------------------------------------------- */
@@ -78,15 +77,15 @@ string ToString(T v) {
 
 #ifdef PPLNN_USE_CUDA
 
-Define_string_opt(--output-format, g_flag_output_format, "", "declare the output format");
-Define_string_opt(--output-type, g_flag_output_type, "", "declare the output type");
-Define_string_opt(--dims, g_flag_compiler_dims, "0", "declare init input dims for algo selection (split with comma)");
-Define_uint32_opt(--running-type, g_flag_kernel_default_types, 0,
+Define_string_opt("--output-format", g_flag_output_format, "", "declare the output format");
+Define_string_opt("--output-type", g_flag_output_type, "", "declare the output type");
+Define_string_opt("--dims", g_flag_compiler_dims, "0", "declare init input dims for algo selection (split with comma)");
+Define_uint32_opt("--running-type", g_flag_kernel_default_types, 0,
                   "declare the default type for running kernel, all the kernel will be excuted with this type");
-Define_bool_opt(--quick-select, g_flag_quick_select, 0, "quick select algorithms for conv and gemm kernel");
-Define_string_opt(--node-types, g_flag_node_datatype, "",
+Define_bool_opt("--quick-select", g_flag_quick_select, 0, "quick select algorithms for conv and gemm kernel");
+Define_string_opt("--node-types", g_flag_node_datatype, "",
                   "declare several node names and their types splited by comma for special kernels");
-Define_uint32_opt(--runningtimes, g_flag_running_times, 1, "declare running times");
+Define_uint32_opt("--runningtimes", g_flag_running_times, 1, "declare running times");
 
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/engines/cuda/cuda_options.h"
@@ -108,8 +107,8 @@ static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
 
 #elif defined(PPLNN_USE_X86)
 
-Define_bool_opt(--disable-avx512, g_flag_disable_avx512, false, "disable avx512 feature");
-Define_bool_opt(--core-binding, g_flag_core_binding, false, "core binding");
+Define_bool_opt("--disable-avx512", g_flag_disable_avx512, false, "disable avx512 feature");
+Define_bool_opt("--core-binding", g_flag_core_binding, false, "core binding");
 
 #include "ppl/nn/engines/x86/engine_factory.h"
 #include "ppl/nn/engines/x86/x86_options.h"

@@ -52,14 +52,14 @@
 
 #define CASE_STRING_FMT() "m%ldn%ldk%ld_n%s"
 
-Define_bool_opt(--help, Flag_help, false, "show these help information");
-Define_string(cfg, "", "(required) fc config file, format:" CASE_STRING_FMT())
-Define_int32(mb, 0, "(0) custom batch")
-Define_int32(warm_up, 10, "(10) warm up iterations")
-Define_int32(min_iter, 20, "(20) min benchmark iterations")
-Define_float(min_second, 1.0, "(1.0) min benchmark seconds")
-Define_bool(validate, false, "(false) do result validation")
-Define_float(eps, 1e-6, "(1e-6) rel error trunk for validation")
+Define_bool_opt("--help", Flag_help, false, "show these help information");
+Define_string(cfg, "", "(required) fc config file, format:" CASE_STRING_FMT());
+Define_int32(mb, 0, "(0) custom batch");
+Define_int32(warm_up, 10, "(10) warm up iterations");
+Define_int32(min_iter, 20, "(20) min benchmark iterations");
+Define_float(min_second, 1.0, "(1.0) min benchmark seconds");
+Define_bool(validate, false, "(false) do result validation");
+Define_float(eps, 1e-6, "(1e-6) rel error trunk for validation");
 
 int main(int argc, char **argv) {
     simple_flags::parse_args(argc, argv);

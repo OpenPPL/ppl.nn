@@ -46,13 +46,13 @@
 
 #define CASE_STRING_FMT() "m%ldn%ldk%ld_trans_A%ldtrans_B%ld_alpha%fbeta%f_C%ld_fuse%ld_n%s"
 
-Define_bool_opt(--help, Flag_help, false, "show these help information");
-Define_string(cfg, "", "(required) fc config file, format:" CASE_STRING_FMT())
-Define_int32(warm_up, 10, "(10) warm up iterations")
-Define_int32(min_iter, 20, "(20) min benchmark iterations")
-Define_float(min_second, 1.0, "(1.0) min benchmark seconds")
-Define_bool(validate, false, "(false) do result validation")
-Define_float(eps, 1e-5, "(1e-5) rel error trunk for validation")
+Define_bool_opt("--help", Flag_help, false, "show these help information");
+Define_string(cfg, "", "(required) fc config file, format:" CASE_STRING_FMT());
+Define_int32(warm_up, 10, "(10) warm up iterations");
+Define_int32(min_iter, 20, "(20) min benchmark iterations");
+Define_float(min_second, 1.0, "(1.0) min benchmark seconds");
+Define_bool(validate, false, "(false) do result validation");
+Define_float(eps, 1e-5, "(1e-5) rel error trunk for validation");
 
 ppl::common::RetCode gemm_v2_ref_fp32(const ppl::kernel::x86::gemm_v2_param_fp32& param) {
 #ifdef PPL_USE_X86_OMP_COLLAPSE
