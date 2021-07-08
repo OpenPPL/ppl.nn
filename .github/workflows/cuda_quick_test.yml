@@ -1,0 +1,35 @@
+name: PPL<CUDA> Build && Quick Test
+
+on:
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - '.github/workflows/**'
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+jobs:
+  build_and_test:
+    runs-on: self-hosted
+
+    steps:
+      - name: Create CheckOut Directory
+        run: |
+          echo "Create CheckOut Directory: ${{ github.run_id }}."
+          mkdir ${{ github.run_id }}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: ${{ github.run_id }}
+
+      - name: Build
+        run: |
+          cd ../../ && ./build_pplnn.sh ${{ github.run_id }} cuda
+
+      - name: Test
+        run: |
+          cd ../../ && ./test_pplnn.sh ${{ github.run_id }} cuda
