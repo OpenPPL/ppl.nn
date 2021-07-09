@@ -198,12 +198,16 @@ static void GenerateRandomDims(TensorShape* shape) {
     }
 }
 
-static bool SetRandomInputs(Runtime* runtime) {
+static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime* runtime) {
     for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
         auto t = runtime->GetInputTensor(c);
         auto& shape = t->GetShape();
 
-        GenerateRandomDims(&shape);
+        if (input_shapes.empty()) {
+            GenerateRandomDims(&shape);
+        } else {
+            t->GetShape().Reshape(input_shapes[c]);
+        }
 
         auto nr_element = shape.GetBytesIncludingPadding() / sizeof(float);
         unique_ptr<float[]> buffer(new float[nr_element]);
@@ -756,7 +760,7 @@ int main(int argc, char* argv[]) {
             return -1;
         }
     } else {
-        if (!SetRandomInputs(runtime.get())) {
+        if (!SetRandomInputs(input_shapes, runtime.get())) {
             LOG(ERROR) << "SetRandomInputs failed.";
             return -1;
         }
