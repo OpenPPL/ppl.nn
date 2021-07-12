@@ -368,6 +368,11 @@ RetCode OptGraph::SelectAlgos(CudaDevice* device) {
     OptKernelOptions options(graph_, info_, resource_, args_, device, &tensor_impls_);
     UpdateTopologicalSort();
 
+    if (!PPLCudaComputeCapabilityEqual(7, 5, device->GetDeviceId())) {
+        LOG(ERROR) << "PPL is not support your GPU device right now.";
+        return RC_UNSUPPORTED;
+    }
+
     AlgoGraph algo_graph(topo);
     // calculate the least time consuming
     for (uint32_t i = 0; i < sorted_node_ids_.size(); ++i) {
