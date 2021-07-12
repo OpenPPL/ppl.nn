@@ -182,7 +182,7 @@ ppl::common::RetCode reisze2d_ndarray_pytorch_cubic_floor_fp32(
     PRAGMA_OMP_PARALLEL_FOR()
     for (int64_t oh = 0; oh < dst_h; ++oh) {
         float ih   = (oh + 0.5f) * hscale - 0.5f;
-        int64_t sy = std::floor(ih);
+        int64_t sy = ::floor(ih);
         float fy   = ih - sy;
         sy_tab[oh] = sy;
 
@@ -195,7 +195,7 @@ ppl::common::RetCode reisze2d_ndarray_pytorch_cubic_floor_fp32(
     PRAGMA_OMP_PARALLEL_FOR()
     for (int64_t ow = 0; ow < dst_w; ++ow) {
         float iw   = (ow + 0.5f) * wscale - 0.5f;
-        int64_t sx = std::floor(iw);
+        int64_t sx = ::floor(iw);
         float fx   = iw - sx;
         sx_tab[ow] = sx;
 

@@ -16,6 +16,19 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
+if(APPLE)
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+        set(OpenMP_C "${CMAKE_C_COMPILER}")
+        set(OpenMP_C_FLAGS "-Xclang -fopenmp -I/usr/local/opt/libomp/include -Wno-unused-command-line-argument")
+    endif()
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        set(OpenMP_CXX "${CMAKE_CXX_COMPILER}")
+        set(OpenMP_CXX_FLAGS "-Xclang -fopenmp -I/usr/local/opt/libomp/include -Wno-unused-command-line-argument")
+    endif()
+endif()
+
+# --------------------------------------------------------------------------- #
+
 include(FetchContent)
 
 set(FETCHCONTENT_BASE_DIR ${HPCC_DEPS_DIR})

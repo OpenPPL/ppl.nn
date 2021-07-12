@@ -31,5 +31,5 @@ TEST(OpInfoManagerTest, misc) {
     mgr.Register("domain", "type", info);
     auto ret = mgr.Find("domain", "type");
     EXPECT_NE(nullptr, ret);
-    EXPECT_EQ(TestParamEqualFunc, ret->param_equal);
+    EXPECT_EQ(&TestParamEqualFunc, ret->param_equal);
 }

@@ -62,8 +62,8 @@ ppl::common::RetCode roialign_ndarray_fp32(
         float bin_size_h = roi_height / pooled_height;
         float bin_size_w = roi_width / pooled_width;
 
-        int64_t roi_bin_grid_h = (sampling_ratio > 0) ? sampling_ratio : static_cast<int64_t>(std::ceil(roi_height / pooled_height)); // e.g., = 2
-        int64_t roi_bin_grid_w = (sampling_ratio > 0) ? sampling_ratio : static_cast<int64_t>(std::ceil(roi_width / pooled_width));
+        int64_t roi_bin_grid_h = (sampling_ratio > 0) ? sampling_ratio : static_cast<int64_t>(::ceil(roi_height / pooled_height)); // e.g., = 2
+        int64_t roi_bin_grid_w = (sampling_ratio > 0) ? sampling_ratio : static_cast<int64_t>(::ceil(roi_width / pooled_width));
 
         const int64_t count = roi_bin_grid_h * roi_bin_grid_w;
 
