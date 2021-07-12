@@ -27,6 +27,11 @@ If you want to enable openmp, please specify `HPCC_USE_OPENMP` as following:
 ./build.sh -DHPCC_USE_OPENMP=ON
 ```
 
+If you are building on MacOS (Darwin), install `libomp` by [homebrew](https://brew.sh/) first:
+```bash
+brew install libomp
+```
+
 ### Enable CUDA Engine
 
 X86-64 engine is enabled by default.

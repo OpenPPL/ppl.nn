@@ -35,7 +35,7 @@ RetCode ReshapePooling(InputOutputInfo* info, const void* arg) {
     const int32_t kernel_dims = x->GetDimCount() - 2;
     if (param->global_pooling) {
         for (int32_t i = 2; i < kernel_dims + 2; ++i) {
-            y->SetDim(i, std::min(1l, x->GetDim(i))); // input tensor dim may be zero
+            y->SetDim(i, std::min((int64_t)1l, x->GetDim(i))); // input tensor dim may be zero
         }
     } else {
         std::vector<int32_t> pads(kernel_dims * 2, 0);
