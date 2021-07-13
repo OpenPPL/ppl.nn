@@ -17,7 +17,8 @@
 
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel_creator_manager.h"
 
-#include "ppl/nn/engines/cuda/optimizer/ops/bridge_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/ppl/bridge_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/ppl/shape_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/conv_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/add_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/argmax_op.h"
@@ -122,7 +123,6 @@ static CudaOptKernel* GenericCreateOptKernel(const ir::Node* node) {
 
 OptKernelCreatorManager::OptKernelCreatorManager() {
     // onnx op's default domain is ""
-    REGISTER_OPT_KERNEL_CREATOR("", "Bridge", BridgeOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Add", AddOp);
     REGISTER_OPT_KERNEL_CREATOR("", "ArgMax", ArgmaxOp);
     REGISTER_OPT_KERNEL_CREATOR("", "AveragePool", AveragePoolOp);
@@ -193,10 +193,13 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("", "SplitToSequence", SplitToSequenceOp);
     REGISTER_OPT_KERNEL_CREATOR("", "SequenceAt", SequenceAtOp);
     // mmcv op domain is "mmcv"
-    REGISTER_OPT_KERNEL_CREATOR("mmcv", "Bridge", BridgeOp);
     REGISTER_OPT_KERNEL_CREATOR("mmcv", "NonMaxSuppression", MMCVNonMaxSupressionOp);
     REGISTER_OPT_KERNEL_CREATOR("mmcv", "MMCVRoiAlign", MMCVROIAlignOp);
     REGISTER_OPT_KERNEL_CREATOR("mmcv", "grid_sampler", MMCVGridSampleOp);
+
+    // ppl customize op domain is "ppl"
+    REGISTER_OPT_KERNEL_CREATOR("ppl", "Bridge", BridgeOp);
+    REGISTER_OPT_KERNEL_CREATOR("ppl", "Shape", PPLShapeOp);
 }
 
 }}} // namespace ppl::nn::cuda

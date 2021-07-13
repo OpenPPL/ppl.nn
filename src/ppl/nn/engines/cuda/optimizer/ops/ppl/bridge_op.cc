@@ -15,9 +15,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/optimizer/ops/bridge_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/ppl/bridge_op.h"
 
-#include "ppl/nn/engines/cuda/kernels/bridge_kernel.h"
+#include "ppl/nn/engines/cuda/kernels/ppl/bridge_kernel.h"
 #include "ppl/nn/common/logger.h"
 
 using namespace std;
@@ -72,7 +72,11 @@ RetCode BridgeOp::AddInternalBridgeNode(ir::Node* node, ir::Node* new_node, ir::
     new_node->AddOutput(new_edge->GetId());
     new_edge->SetProducer(new_node->GetId());
     new_edge->AddConsumer(node->GetId());
-    node->ReplaceInput(edge->GetId(), new_edge->GetId());
+    auto size = node->ReplaceInput(edge->GetId(), new_edge->GetId());
+    if (size == 0) {
+        LOG(ERROR) << "Replace error";
+        return RC_UNSUPPORTED;
+    }
 
     return RC_SUCCESS;
 }

@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/kernels/bridge_kernel.h"
+#include "ppl/nn/engines/cuda/kernels/ppl/bridge_kernel.h"
 #include "ppl/nn/common/logger.h"
 
 namespace ppl { namespace nn { namespace cuda {
