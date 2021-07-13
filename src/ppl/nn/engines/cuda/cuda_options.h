@@ -83,6 +83,16 @@ enum {
     */
     CUDA_CONF_SET_NODE_DATA_TYPE,
 
+    /**
+       @brief the name of json file that saves quantization information
+
+       @note example:
+       @code{.cpp}
+       cuda_engine->Configure(CUDA_CONF_SET_QUANTIZATION, "quantization.json");
+       @endcode
+    */
+    CUDA_CONF_SET_QUANTIZATION,
+
     /** max value */
     CUDA_CONF_MAX,
 };

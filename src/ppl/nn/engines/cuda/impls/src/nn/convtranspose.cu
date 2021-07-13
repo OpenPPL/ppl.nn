@@ -249,7 +249,7 @@ __global__ void remove_padding(
     if (off < M*N)    data[off] = pad_data[in_off];
 }
 template<typename T>
-void RemovePadding(
+T* RemovePadding(
     const cudaStream_t &stream,
     T *pad_data,
     T *data,
@@ -257,10 +257,11 @@ void RemovePadding(
     const int padN,
     const int N)
 {
-    if(padN == N)    return;
+    if(padN == N)    return pad_data;
     int block_size = 256;
     int grid = (M*N+255) / 256;
     remove_padding<T><<<grid, block_size, 0, stream>>>(pad_data, data, M, padN, N);
+    return data;
 }
 
 ppl::common::RetCode PPLCUDAConvTransposeForward(
@@ -361,9 +362,8 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
                                   fuse_param,
                                   kernel_id);
 
-            RemovePadding<__half>(stream, pad_out_data, out_data, M, padN, N);
-
-            ppl_col2im_gpu<__half>(stream, (const __half*)pad_out_data, num_filters,
+            __half* tmp = RemovePadding<__half>(stream, pad_out_data, out_data, M, padN, N);
+            ppl_col2im_gpu<__half>(stream, (const __half*)tmp, num_filters,
                     out_height, out_width, kernel_h, kernel_w, pad_h, pad_w, stride_h,
                     stride_w, hole_h, hole_w, height, width, 0.f, ((__half*)output) + offset_out);
 
@@ -377,42 +377,3 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
         return ppl::common::RC_UNSUPPORTED;
     }
 }
-//<<<<<<< Updated upstream
-//=======
-//
-//
-//
-//ppl::common::RetCode PPLCUDAConvTransposeModifyWeight(
-//    const cudaStream_t &stream,
-//    void *cvt_filter,
-//    void *filter,
-//    ppl::nn::TensorShape* filter_shape){
-//    return ppl::common::RC_UNSUPPORTED;
-//    //int in_c_pad  = filter_shape->GetDim(0);
-//    //int out_c_pad = filter_shape->GetDim(1);
-//    //int kernel_h         = filter_shape->GetDim(2);
-//    //int kernel_w         = filter_shape->GetDim(3);
-//    //int n = out_c_pad * kernel_h*kernel_w;
-//    //if (filter_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16){
-//    //} else if (filter_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32){
-//    //}
-//    //ppl::nn::common::TransposeParam param;
-//    //param.perm.push_back(3);
-//    //param.perm.push_back(1);
-//    //param.perm.push_back(2);
-//    //param.perm.push_back(0);
-//    //ppl::nn::TensorShape cvt_shape, input_shape;
-//    //input_shape.Reshape({in_c_pad, kernel_h, kernel_w, out_c_pad});
-//    //input_shape.SetDataType(filter_shape->GetDataType());
-//    //cvt_shape.Reshape({out_c_pad, kernel_h, kernel_w, in_c_pad});
-//    //cvt_shape.SetDataType(filter_shape->GetDataType());
-//
-//    //cudaMemcpy(cvt_filter, filter, n*in_c_pad*sizeof(__half), cudaMemcpyDeviceToDevice);
-//    //return 0;
-//}
-//
-//
-//
-//
-//
-//>>>>>>> Stashed changes

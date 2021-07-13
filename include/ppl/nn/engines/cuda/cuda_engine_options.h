@@ -15,24 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_ONNX_SHAPE_KERNEL_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_ONNX_SHAPE_KERNEL_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
 
-#include "ppl/nn/engines/cuda/kernel.h"
+#include <stdint.h>
 
-#include "ppl/nn/params/ppl/shape_param.h"
+namespace ppl { namespace nn {
 
-namespace ppl { namespace nn { namespace cuda {
-
-class ShapeKernel : public CudaKernel {
-public:
-    ShapeKernel(const ir::Node* node) : CudaKernel(node) {}
-
-private:
-    ppl::common::RetCode DoExecute(KernelExecContext*) override;
-    bool CanDoExecute(const KernelExecContext&) const override;
+struct PPLNN_PUBLIC CudaEngineOptions final {
+    uint32_t device_id = 0;
 };
 
-}}} // namespace ppl::nn::cuda
+}} // namespace ppl::nn
 
 #endif

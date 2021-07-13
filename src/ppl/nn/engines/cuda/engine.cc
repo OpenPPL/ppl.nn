@@ -30,14 +30,16 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-RetCode CudaEngine::Init() {
+RetCode CudaEngine::Init(const CudaEngineOptions& options) {
     // TODO implement other options
-    return device_.Init(MM_LESS_MEMORY);
+    return device_.Init(options, MM_LESS_MEMORY);
 }
 
 EngineContext* CudaEngine::CreateEngineContext(const string&, const EngineContextOptions& options) {
     auto ctx = unique_ptr<CudaEngineContext>(new CudaEngineContext(GetName()));
-    auto status = ctx->Init(options);
+    CudaEngineOptions cuda_options;
+    cuda_options.device_id = device_.GetDeviceId();
+    auto status = ctx->Init(cuda_options, options);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init CudaEngineContext failed: " << GetRetCodeStr(status);
         return nullptr;
@@ -269,6 +271,14 @@ RetCode CudaEngine::SetNodeType(CudaEngine* engine, va_list args) {
     return RC_SUCCESS;
 }
 
+RetCode CudaEngine::SetQuantization(CudaEngine* engine, va_list args) {
+    const char* json_file = va_arg(args, const char*);
+    QuantParamParser parser;
+    parser.Parse(json_file, &engine->cuda_flags_.quant_info);
+    LOG(INFO) << "Quant tensor size: " << engine->cuda_flags_.quant_info.tensor_params.size();
+    return RC_SUCCESS;
+}
+
 CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetOutputFormat, // CUDA_CONF_SET_OUTPUT_DATA_FORMAT
     CudaEngine::SetOutputType, // CUDA_CONF_SET_OUTPUT_TYPE
@@ -276,6 +286,7 @@ CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetKernelDefaultType, // CUDA_CONF_SET_KERNEL_DEFAULT_TYPE
     CudaEngine::SetAlgorithm, // CUDA_CONF_SET_DEFAULT_ALGORITHMS
     CudaEngine::SetNodeType, // CUDA_CONF_SET_NODE_DATA_TYPE
+    CudaEngine::SetQuantization, // CUDA_CONF_SET_QUANTIZATION
 };
 
 RetCode CudaEngine::Configure(uint32_t option, ...) {

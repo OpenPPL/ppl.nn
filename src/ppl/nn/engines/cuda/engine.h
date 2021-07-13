@@ -40,12 +40,13 @@ struct CudaArgs {
     std::map<std::string, ppl::common::datatype_t> output_types;
     std::map<std::string, ppl::common::datatype_t> node_types;
     std::map<std::string, std::vector<uint32_t>> input_dims;
+    QuantParamInfo quant_info;
 };
 
 class CudaEngine final : public EngineImpl {
 public:
     CudaEngine() : EngineImpl("cuda") {}
-    ppl::common::RetCode Init();
+    ppl::common::RetCode Init(const CudaEngineOptions& options);
     ppl::common::RetCode Configure(uint32_t, ...) override;
     EngineContext* CreateEngineContext(const std::string& graph_name, const EngineContextOptions&) override;
     bool CanRunOp(const ir::Node*) const override;
@@ -65,6 +66,7 @@ private:
     static ppl::common::RetCode SetKernelDefaultType(CudaEngine*, va_list);
     static ppl::common::RetCode SetAlgorithm(CudaEngine*, va_list);
     static ppl::common::RetCode SetNodeType(CudaEngine*, va_list);
+    static ppl::common::RetCode SetQuantization(CudaEngine*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(CudaEngine*, va_list);
     static ConfHandlerFunc conf_handlers_[CUDA_CONF_MAX];

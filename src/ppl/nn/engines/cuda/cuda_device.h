@@ -25,14 +25,16 @@
 
 #include "ppl/nn/engines/cuda/data_converter.h"
 #include "ppl/nn/engines/cuda/cuda_common.h"
+#include "ppl/nn/engines/cuda/cuda_engine_options.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
 class CudaDevice : public Device {
 public:
-    CudaDevice();
     virtual ~CudaDevice();
 
+    void InitDevice(const CudaEngineOptions& options);
+    
     virtual ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) = 0;
 
     ppl::common::RetCode Realloc(const TensorShape& shape, BufferDesc* buffer) override final {

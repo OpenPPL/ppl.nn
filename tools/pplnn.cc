@@ -86,6 +86,8 @@ Define_bool_opt("--quick-select", g_flag_quick_select, 0, "quick select algorith
 Define_string_opt("--node-types", g_flag_node_datatype, "",
                   "declare several node names and their types splited by comma for special kernels");
 Define_uint32_opt("--runningtimes", g_flag_running_times, 1, "declare running times");
+Define_uint32_opt("--device-id", g_flag_device_id, 0, "declare device id for cuda");
+Define_string_opt("--quantization", g_flag_quantization, "", "declare json file saved quantization information");
 
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/engines/cuda/cuda_options.h"
@@ -93,13 +95,16 @@ Define_uint32_opt("--runningtimes", g_flag_running_times, 1, "declare running ti
 static bool FillRuntimeOptions(RuntimeOptions* options);
 
 static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
-    auto engine = CudaEngineFactory::Create();
+    CudaEngineOptions options;
+    options.device_id = g_flag_device_id;
+    auto engine = CudaEngineFactory::Create(options);
     engine->Configure(ppl::nn::cuda::CUDA_CONF_SET_OUTPUT_FORMAT, g_flag_output_format.c_str());
     engine->Configure(ppl::nn::cuda::CUDA_CONF_SET_OUTPUT_TYPE, g_flag_output_type.c_str());
     engine->Configure(ppl::nn::cuda::CUDA_CONF_SET_COMPILER_INPUT_SHAPE, g_flag_compiler_dims.c_str());
     engine->Configure(ppl::nn::cuda::CUDA_CONF_SET_KERNEL_DEFAULT_TYPE, g_flag_kernel_default_types);
     engine->Configure(ppl::nn::cuda::CUDA_CONF_SET_DEFAULT_ALGORITHMS, g_flag_quick_select);
     engine->Configure(ppl::nn::cuda::CUDA_CONF_SET_NODE_DATA_TYPE, g_flag_node_datatype.c_str());
+    engine->Configure(ppl::nn::cuda::CUDA_CONF_SET_QUANTIZATION, g_flag_quantization.c_str());
     engines->emplace_back(unique_ptr<Engine>(engine));
     LOG(INFO) << "***** register CudaEngine *****";
     return true;
@@ -206,7 +211,7 @@ static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime
         if (input_shapes.empty()) {
             GenerateRandomDims(&shape);
         } else {
-            t->GetShape().Reshape(input_shapes[c]);
+            shape.Reshape(input_shapes[c]);
         }
 
         auto nr_element = shape.GetBytesIncludingPadding() / sizeof(float);

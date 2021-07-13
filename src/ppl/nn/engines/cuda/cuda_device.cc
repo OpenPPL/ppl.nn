@@ -26,18 +26,18 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-CudaDevice::CudaDevice() {
-    context_.device_id = 0;
+CudaDevice::~CudaDevice() {
+    cudaStreamDestroy(context_.stream);
+}
+
+void CudaDevice::InitDevice(const CudaEngineOptions& options) {
+    context_.device_id = options.device_id;
     cudaSetDevice(context_.device_id);
     if (!(context_.stream)) {
         cudaStreamCreate(&(context_.stream));
     }
 
     data_converter_.SetDevice(this);
-}
-
-CudaDevice::~CudaDevice() {
-    cudaStreamDestroy(context_.stream);
 }
 
 // Copy from host

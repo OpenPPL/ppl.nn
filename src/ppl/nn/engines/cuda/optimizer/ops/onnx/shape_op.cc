@@ -35,7 +35,6 @@ RetCode ShapeOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         auto output_shape = &info->GetOutput<TensorImpl>(0)->GetShape();
         output_shape->Reshape({info->GetInput<TensorImpl>(0)->GetShape().GetRealDimCount()});
-
         return RC_SUCCESS;
     };
 

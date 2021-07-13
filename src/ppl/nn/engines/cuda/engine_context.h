@@ -27,7 +27,8 @@ namespace ppl { namespace nn { namespace cuda {
 class CudaEngineContext final : public EngineContext {
 public:
     CudaEngineContext(const std::string& name) : name_(name) {}
-    ppl::common::RetCode Init(const EngineContextOptions& options);
+
+    ppl::common::RetCode Init(const CudaEngineOptions& cuda_options, const EngineContextOptions& options);
     Device* GetDevice() override {
         return &device_;
     }

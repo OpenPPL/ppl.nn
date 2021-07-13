@@ -80,8 +80,8 @@ __inline __device__ void ppl_reduce_row_li(Operator op, PPLReduceDimDes des, Red
     int64_t offset             = blockIdx.x * des.n_reduce;
     int64_t blocksize          = blockDim.x * blockDim.y;
     int64_t multi_block_offset = blockIdx.y * des.num_elements;
-    for (int64_t i = 0; i < des.num_elements; i += blocksize) {
-        acc_type tmp = tid < des.num_elements ? (acc_type)op.fetch(tid + offset + multi_block_offset) : (acc_type)op.InitVal();
+    for (int64_t i = tid; i < des.num_elements; i += blocksize) {
+        acc_type tmp = multi_block_offset + i < des.n_reduce ? (acc_type)op.fetch(i + offset + multi_block_offset) : (acc_type)op.InitVal();
         val          = op.compute(val, tmp);
     }
     shared_data[tid] = val;
