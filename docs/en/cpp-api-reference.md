@@ -2,7 +2,7 @@ This section introduces some public classes and functions of `PPLNN`.
 
 ## Engine
 
-Defined in [include/ppl/nn/engines/engine.h](include/ppl/nn/engines/engine.h).
+Defined in [include/ppl/nn/engines/engine.h](https://github.com/openppl-public/ppl.nn/blob/master/include/ppl/nn/engines/engine.h).
 
 An `Engine` is a collection of op implementations running on specified devices such as CPU or Nvidia GPU.
 
@@ -40,7 +40,7 @@ Creates a CUDA engine instance with the given `options`.
 
 ## OnnxRuntimeBuilderFactory
 
-Defined in [include/ppl/nn/models/onnx/onnx_runtime_builder_factory.h](include/ppl/nn/models/onnx/onnx_runtime_builder_factory.h).
+Defined in [include/ppl/nn/models/onnx/onnx_runtime_builder_factory.h](https://github.com/openppl-public/ppl.nn/blob/master/include/ppl/nn/models/onnx/onnx_runtime_builder_factory.h).
 
 Used to create an `OnnxRuntimeBuilder`.
 
@@ -62,7 +62,7 @@ Creates an `OnnxRuntimeBuilder` instance from an ONNX buffer.
 
 ## OnnxRuntimeBuilder
 
-Defined in [include/ppl/nn/models/onnx/onnx_runtime_builder.h](include/ppl/nn/models/onnx/onnx_runtime_builder.h).
+Defined in [include/ppl/nn/models/onnx/onnx_runtime_builder.h](https://github.com/openppl-public/ppl.nn/blob/master/include/ppl/nn/models/onnx/onnx_runtime_builder.h).
 
 `OnnxRuntimeBuilder` is used to create `Runtime` instances. It contains read-only data that a `Runtime` needs.
 
@@ -72,11 +72,11 @@ Defined in [include/ppl/nn/models/onnx/onnx_runtime_builder.h](include/ppl/nn/mo
 Runtime* CreateRuntime(const RuntimeOptions&);
 ```
 
-Creates a `Runtime` instance which is used to evaluate a compute graph. The parameter `RuntimeOptions` is defined in [src/ppl/runtime/runtime_options.h](src/ppl/runtime/runtime_options.h).
+Creates a `Runtime` instance which is used to evaluate a compute graph. The parameter `RuntimeOptions` is defined in [src/ppl/runtime/runtime_options.h](https://github.com/openppl-public/ppl.nn/blob/master/include/ppl/nn/runtime/runtime_options.h).
 
 ## Runtime
 
-Defined in [include/ppl/nn/runtime/runtime.h](include/ppl/nn/runtime/runtime.h).
+Defined in [include/ppl/nn/runtime/runtime.h](https://github.com/openppl-public/ppl.nn/blob/master/include/ppl/nn/runtime/runtime.h).
 
 `Runtime` is the main structure for evaluating a model.
 
@@ -134,7 +134,7 @@ Gets profiling statistics of each kernel. Note that this function is available i
 
 ## Tensor
 
-Defined in [include/ppl/nn/runtime/tensor.h](include/ppl/nn/runtime/tensor.h).
+Defined in [include/ppl/nn/runtime/tensor.h](https://github.com/openppl-public/ppl.nn/blob/master/include/ppl/nn/runtime/tensor.h).
 
 This structure represents the input/output data.
 
@@ -179,7 +179,7 @@ Converts data to inner buffer from `src` with the shape `src_desc`. Note that in
 
 ## TensorShape
 
-Defined in [include/ppl/nn/common/tensor_shape.h](include/ppl/nn/common/tensor_shape.h).
+Defined in [include/ppl/nn/common/tensor_shape.h](https://github.com/openppl-public/ppl.nn/blob/master/include/ppl/nn/common/tensor_shape.h).
 
 ## Logger
 
