@@ -17,7 +17,9 @@ Engine* x86_engine = X86EngineFactory::Create();
 Or use
 
 ```c++
-Engine* CudaEngineFactory::Create();
+CudaEngineOptions options;
+// ... set options
+Engine* CudaEngineFactory::Create(options);
 ```
 
 to create an engine running on NVIDIA GPUs.
@@ -46,7 +48,7 @@ RuntimeBuilder* builder = OnnxRuntimeBuilderFactory::Create(model_file, std::mov
 
 ```c++
 Engine* x86_engine = X86EngineFactory::Create();
-Engine* cuda_engine = CudaEngineFactory::Create();
+Engine* cuda_engine = CudaEngineFactory::Create(CudaEngineOptions());
 
 vector<unique_ptr<Engine>> engines;
 engines.emplace_back(unique_ptr<Engine>(x86_engine));

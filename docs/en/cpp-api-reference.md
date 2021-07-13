@@ -33,10 +33,10 @@ A built-in engine factory thas is used to create engines running on NVIDIA GPUs.
 #### Functions
 
 ```c++
-Engine* CudaEngineFactory::Create();
+Engine* CudaEngineFactory::Create(const CudaEngineOptions& options);
 ```
 
-Creates a CUDA engine instance.
+Creates a CUDA engine instance with the given `options`.
 
 ## OnnxRuntimeBuilderFactory
 
