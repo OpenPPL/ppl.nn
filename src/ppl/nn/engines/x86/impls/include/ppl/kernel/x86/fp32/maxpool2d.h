@@ -24,6 +24,7 @@ namespace ppl { namespace kernel { namespace x86 {
 
 // maxpool2d n16chw blk
 
+#ifdef PPLNN_USE_X86_AVX512
 ppl::common::RetCode maxpool2d_n16chw_blk1x16_fp32_avx512(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
@@ -35,6 +36,7 @@ ppl::common::RetCode maxpool2d_n16chw_blk1x16_fp32_avx512(
     const int32_t pad_h,
     const int32_t pad_w,
     float *dst);
+#endif
 
 ppl::common::RetCode maxpool2d_n16chw_blk1x8_fp32_avx(
     const ppl::nn::TensorShape *src_shape,

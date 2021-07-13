@@ -38,11 +38,17 @@ ppl::common::RetCode MMCVGridSampleKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("padding_mode: %ld\n", param_->padding_mode);
 
     if (param_->padding_mode == 0) { // bilinear
-        if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
+        if (false) {
+        }
+#ifdef PPLNN_USE_X86_AVX512
+        else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
+            LOG(ERROR) << "running here";
             return kernel::x86::mmcv_gridsample_linear_ndarray_fp32_avx512(
                 &input->GetShape(), &grid->GetShape(), input->GetBufferPtr<float>(), grid->GetBufferPtr<float>(),
                 param_->align_corners, param_->padding_mode, output->GetBufferPtr<float>());
-        } else {
+        }
+#endif
+        else {
             return kernel::x86::mmcv_gridsample_linear_ndarray_fp32(
                 &input->GetShape(), &grid->GetShape(), input->GetBufferPtr<float>(), grid->GetBufferPtr<float>(),
                 param_->align_corners, param_->padding_mode, output->GetBufferPtr<float>());

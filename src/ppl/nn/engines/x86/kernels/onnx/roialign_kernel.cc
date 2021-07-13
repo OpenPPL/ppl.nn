@@ -42,13 +42,18 @@ ppl::common::RetCode ROIAlignKernel::DoExecute(KernelExecContext* ctx) {
     auto data_type = x->GetShape().GetDataType();
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
         if (data_format == ppl::common::DATAFORMAT_N16CX) {
-            if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
+            if (false) {
+            }
+#ifdef PPLNN_USE_X86_AVX512
+            else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
                 return kernel::x86::roialign_n16cx_fp32_avx512(
                     &x->GetShape(), &rois->GetShape(), &batch_indices->GetShape(), x->GetBufferPtr<float>(),
                     rois->GetBufferPtr<float>(), batch_indices->GetBufferPtr<int64_t>(), param_->mode,
                     param_->output_height, param_->output_width, param_->sampling_ratio, param_->spatial_scale,
                     y->GetBufferPtr<float>());
-            } else if (MayUseISA(ppl::common::ISA_X86_AVX)) {
+            }
+#endif
+            else if (MayUseISA(ppl::common::ISA_X86_AVX)) {
                 return kernel::x86::roialign_n16cx_fp32_avx(
                     &x->GetShape(), &rois->GetShape(), &batch_indices->GetShape(), x->GetBufferPtr<float>(),
                     rois->GetBufferPtr<float>(), batch_indices->GetBufferPtr<int64_t>(), param_->mode,

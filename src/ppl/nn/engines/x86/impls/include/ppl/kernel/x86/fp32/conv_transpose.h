@@ -22,6 +22,7 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
+#ifdef PPLNN_USE_X86_AVX512
 int64_t conv_transpose_ndarray_fp32_avx512_get_buffer_bytes(
     const int32_t batch,
     const int32_t src_h,
@@ -56,6 +57,7 @@ ppl::common::RetCode conv_transpose_ndarray_fp32_avx512(
     const int32_t hole_w,
     float *tmp_buffer,
     float *output);
+#endif
 
 int64_t conv_transpose_ndarray_fp32_fma_get_buffer_bytes(
     const int32_t batch,

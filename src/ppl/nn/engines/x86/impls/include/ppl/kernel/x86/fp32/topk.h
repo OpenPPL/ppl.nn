@@ -18,9 +18,6 @@
 #ifndef __ST_PPL_KERNEL_X86_FP32_TOPK_H_
 #define __ST_PPL_KERNEL_X86_FP32_TOPK_H_
 
-#ifdef PPL_USE_X86_OMP
-#include <omp.h>
-#endif
 #include "ppl/kernel/x86/common/general_include.h"
 
 namespace ppl { namespace kernel { namespace x86 {

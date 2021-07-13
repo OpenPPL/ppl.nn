@@ -24,6 +24,7 @@ namespace ppl { namespace kernel { namespace x86 {
 
 // averagepool2d n16chw blk
 
+#ifdef PPLNN_USE_X86_AVX512
 ppl::common::RetCode averagepool2d_n16chw_blk1x16_fp32_avx512(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
@@ -37,6 +38,7 @@ ppl::common::RetCode averagepool2d_n16chw_blk1x16_fp32_avx512(
     const int32_t pooling_mode,
     const int32_t ceil_mode,
     float *dst);
+#endif
 
 ppl::common::RetCode averagepool2d_n16chw_blk1x8_fp32_avx(
     const ppl::nn::TensorShape *src_shape,

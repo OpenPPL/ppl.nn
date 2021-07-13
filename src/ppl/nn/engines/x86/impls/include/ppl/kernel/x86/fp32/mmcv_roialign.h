@@ -58,6 +58,7 @@ ppl::common::RetCode mmcv_roialign_n16cx_fp32_avx(
     const int32_t pool_mode, // 0: max, 1: avg
     float *output);
 
+#ifdef PPLNN_USE_X86_AVX512
 ppl::common::RetCode mmcv_roialign_n16cx_fp32_avx512(
     const ppl::nn::TensorShape *input_shape,
     const ppl::nn::TensorShape *rois_shape,
@@ -69,6 +70,7 @@ ppl::common::RetCode mmcv_roialign_n16cx_fp32_avx512(
     const float spatial_scale,
     const int32_t pool_mode, // 0: max, 1: avg
     float *output);
+#endif
 
 }}}; // namespace ppl::kernel::x86
 

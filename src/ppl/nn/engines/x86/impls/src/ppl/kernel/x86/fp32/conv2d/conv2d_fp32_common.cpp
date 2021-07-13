@@ -29,11 +29,13 @@
 #include "ppl/kernel/x86/fp32/conv2d/gemm_direct/fma/conv2d_n16cx_gemm_direct_v2_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/conv2d/direct/fma/conv2d_n16cx_direct_v2_fp32_fma.h"
 
+#ifdef PPLNN_USE_X86_AVX512
 #include "ppl/kernel/x86/fp32/conv2d/direct/avx512/conv2d_n16cx_direct_fp32_avx512.h"
 #include "ppl/kernel/x86/fp32/conv2d/gemm_direct/avx512/conv2d_n16cx_gemm_direct_fp32_avx512.h"
 #include "ppl/kernel/x86/fp32/conv2d/depthwise/avx512/conv2d_n16cx_depthwise_fp32_avx512.h"
 #include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/avx512/conv2d_n16cx_direct_ndarray_fp32_avx512.h"
 #include "ppl/kernel/x86/fp32/conv2d/winograd/avx512/conv2d_n16cx_winograd_b4f3_fp32_avx512.h"
+#endif
 
 namespace ppl { namespace kernel { namespace x86 {
 
@@ -46,15 +48,16 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
         .output_format = ppl::common::DATAFORMAT_UNKNOWN};
 
     static conv2d_fp32_algo_info fma_fallback_info = {
-            .algo_type     = conv2d_fp32_algo::im2col_gemm,
-            .isa           = ppl::common::ISA_X86_FMA,
-            .input_format  = ppl::common::DATAFORMAT_NDARRAY,
-            .output_format = ppl::common::DATAFORMAT_NDARRAY};
+        .algo_type     = conv2d_fp32_algo::im2col_gemm,
+        .isa           = ppl::common::ISA_X86_FMA,
+        .input_format  = ppl::common::DATAFORMAT_NDARRAY,
+        .output_format = ppl::common::DATAFORMAT_NDARRAY};
 
+#ifdef PPLNN_USE_X86_AVX512
     if (isa_flags & ppl::common::ISA_X86_AVX512) {
         if (src_format == ppl::common::DATAFORMAT_NDARRAY) {
             auto direct_ndarray_mgr = new conv2d_n16cx_direct_ndarray_fp32_avx512_manager(param, nullptr);
-            bool supported = direct_ndarray_mgr->is_supported();
+            bool supported          = direct_ndarray_mgr->is_supported();
             delete direct_ndarray_mgr;
             if (supported) {
                 return (conv2d_fp32_algo_info){
@@ -66,7 +69,7 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
         }
 
         if (param.is_depthwise()) {
-            auto dw_mgr = new conv2d_n16cx_depthwise_fp32_avx512_manager(param, nullptr);
+            auto dw_mgr    = new conv2d_n16cx_depthwise_fp32_avx512_manager(param, nullptr);
             bool supported = dw_mgr->is_supported();
             delete dw_mgr;
             if (supported) {
@@ -79,7 +82,7 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
         }
 
         if (param.is_pointwise()) {
-            auto gd_mgr = new conv2d_n16cx_gemm_direct_fp32_avx512_manager(param, nullptr);
+            auto gd_mgr    = new conv2d_n16cx_gemm_direct_fp32_avx512_manager(param, nullptr);
             bool supported = gd_mgr->is_supported();
             delete gd_mgr;
             if (supported) {
@@ -95,7 +98,7 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
             param.kernel_h == 3 && param.kernel_w == 3 &&
             param.stride_h == 1 && param.stride_w == 1 &&
             param.dilation_h == 1 && param.dilation_w == 1) {
-            auto wg_mgr = new conv2d_n16cx_winograd_b4f3_fp32_avx512_manager(param, nullptr);
+            auto wg_mgr    = new conv2d_n16cx_winograd_b4f3_fp32_avx512_manager(param, nullptr);
             bool supported = wg_mgr->is_supported();
             delete wg_mgr;
             if (supported) {
@@ -109,7 +112,7 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
 
         {
             auto direct_mgr = new conv2d_n16cx_direct_fp32_avx512_manager(param, nullptr);
-            bool supported = direct_mgr->is_supported();
+            bool supported  = direct_mgr->is_supported();
             delete direct_mgr;
             if (supported) {
                 return (conv2d_fp32_algo_info){
@@ -120,11 +123,12 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
             }
         }
     }
+#endif
 
     if (isa_flags & ppl::common::ISA_X86_FMA) {
         if (src_format == ppl::common::DATAFORMAT_NDARRAY) {
             auto direct_ndarray_mgr = new conv2d_n16cx_direct_ndarray_fp32_fma_manager(param, nullptr);
-            bool supported = direct_ndarray_mgr->is_supported();
+            bool supported          = direct_ndarray_mgr->is_supported();
             delete direct_ndarray_mgr;
             if (supported) {
                 return (conv2d_fp32_algo_info){
@@ -136,7 +140,7 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
         }
 
         if (param.is_depthwise()) {
-            auto dw_mgr = new conv2d_n16cx_depthwise_fp32_fma_manager(param, nullptr);
+            auto dw_mgr    = new conv2d_n16cx_depthwise_fp32_fma_manager(param, nullptr);
             bool supported = dw_mgr->is_supported();
             delete dw_mgr;
             if (!supported) {
@@ -151,7 +155,7 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
         }
 
         if (param.is_pointwise()) {
-            auto gd_mgr = new conv2d_n16cx_gemm_direct_v2_fp32_fma_manager(param, nullptr);
+            auto gd_mgr    = new conv2d_n16cx_gemm_direct_v2_fp32_fma_manager(param, nullptr);
             bool supported = gd_mgr->is_supported();
             delete gd_mgr;
             if (supported) {
@@ -167,7 +171,7 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
             param.kernel_h == 3 && param.kernel_w == 3 &&
             param.stride_h == 1 && param.stride_w == 1 &&
             param.dilation_h == 1 && param.dilation_w == 1) {
-            auto wg_mgr = new conv2d_n16cx_winograd_b4f3_fp32_fma_manager(param, nullptr);
+            auto wg_mgr    = new conv2d_n16cx_winograd_b4f3_fp32_fma_manager(param, nullptr);
             bool supported = wg_mgr->is_supported();
             delete wg_mgr;
             if (supported) {
@@ -181,7 +185,7 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
 
         {
             auto direct_mgr = new conv2d_n16cx_direct_v2_fp32_fma_manager(param, nullptr);
-            bool supported = direct_mgr->is_supported();
+            bool supported  = direct_mgr->is_supported();
             delete direct_mgr;
             if (!supported) {
                 return fma_fallback_info;
@@ -231,12 +235,6 @@ conv2d_fp32_manager *conv2d_algo_selector::gen_algo(const conv2d_fp32_param &par
         algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
         conv_mgr = new conv2d_n16cx_winograd_b4f3_fp32_fma_manager(param, allocator);
     }
-    if (algo_info.algo_type == conv2d_fp32_algo::winograd_b4f3 &&
-        algo_info.isa == ppl::common::ISA_X86_AVX512 &&
-        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
-        conv_mgr = new conv2d_n16cx_winograd_b4f3_fp32_avx512_manager(param, allocator);
-    }
     if (algo_info.algo_type == conv2d_fp32_algo::direct &&
         algo_info.isa == ppl::common::ISA_X86_FMA &&
         algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
@@ -260,6 +258,13 @@ conv2d_fp32_manager *conv2d_algo_selector::gen_algo(const conv2d_fp32_param &par
         algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
         algo_info.output_format == ppl::common::DATAFORMAT_NDARRAY) {
         conv_mgr = new conv2d_im2col_gemm_fp32_fma_manager(param, allocator);
+    }
+#ifdef PPLNN_USE_X86_AVX512
+    if (algo_info.algo_type == conv2d_fp32_algo::winograd_b4f3 &&
+        algo_info.isa == ppl::common::ISA_X86_AVX512 &&
+        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+        conv_mgr = new conv2d_n16cx_winograd_b4f3_fp32_avx512_manager(param, allocator);
     }
     if (algo_info.algo_type == conv2d_fp32_algo::direct &&
         algo_info.isa == ppl::common::ISA_X86_AVX512 &&
@@ -285,6 +290,7 @@ conv2d_fp32_manager *conv2d_algo_selector::gen_algo(const conv2d_fp32_param &par
         algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
         conv_mgr = new conv2d_n16cx_depthwise_fp32_avx512_manager(param, allocator);
     }
+#endif
 
     return conv_mgr;
 }

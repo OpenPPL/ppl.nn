@@ -91,12 +91,16 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
     if (param_->coord_trans_mode == param_->RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL &&
         param_->mode == param_->RESIZE_MODE_LINEAR) {
         if (X->GetShape().GetDataFormat() == ppl::common::DATAFORMAT_N16CX) {
-            if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
+            if (false) {
+            }
+#ifdef PPLNN_USE_X86_AVX512
+            else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
                 return kernel::x86::resize2d_n16cx_pytorch_2linear_floor_fp32_avx512(&X->GetShape(), &Y->GetShape(),
                                                                                      X->GetBufferPtr<float>(), scale_h,
                                                                                      scale_w, Y->GetBufferPtr<float>());
             }
-            if (MayUseISA(ppl::common::ISA_X86_AVX)) {
+#endif
+            else if (MayUseISA(ppl::common::ISA_X86_AVX)) {
                 return kernel::x86::resize2d_n16chw_pytorch_2linear_floor_fp32_avx(&X->GetShape(), &Y->GetShape(),
                                                                                    X->GetBufferPtr<float>(), scale_h,
                                                                                    scale_w, Y->GetBufferPtr<float>());
@@ -109,11 +113,16 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
     if (param_->coord_trans_mode == param_->RESIZE_COORD_TRANS_MODE_ASYMMETRIC &&
         param_->mode == param_->RESIZE_MODE_NEAREST) {
         if (X->GetShape().GetDataFormat() == ppl::common::DATAFORMAT_N16CX) {
-            if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
+            if (false) {
+            }
+#ifdef PPLNN_USE_X86_AVX512
+            else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
                 return kernel::x86::reisze2d_n16cx_asymmetric_nearest_floor_fp32_avx512(
                     &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w,
                     Y->GetBufferPtr<float>());
-            } else if (MayUseISA(ppl::common::ISA_X86_AVX)) {
+            }
+#endif
+            else if (MayUseISA(ppl::common::ISA_X86_AVX)) {
                 return kernel::x86::reisze2d_n16cx_asymmetric_nearest_floor_fp32_avx(&X->GetShape(), &Y->GetShape(),
                                                                                      X->GetBufferPtr<float>(), scale_h,
                                                                                      scale_w, Y->GetBufferPtr<float>());

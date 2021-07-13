@@ -265,7 +265,11 @@ DEBUG_TAG(D);
         param.beta = beta;
         param.trans_A = trans_A;
         param.trans_B = trans_B;
+#ifdef PPLNN_USE_X86_AVX512
         param.isa_flag = ppl::common::ISA_X86_AVX512;
+#else
+        param.isa_flag = ppl::common::ISA_X86_FMA;
+#endif
         param.fuse_flag = fuse_flag;
         param.c_type = c_type;
 

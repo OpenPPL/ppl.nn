@@ -22,6 +22,7 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
+#ifdef PPLNN_USE_X86_AVX512
 uint64_t conv2d_dynamic_ndarray_fp32_avx512_get_buffer_bytes(
     const int32_t batch,
     const int32_t num_output,
@@ -35,6 +36,7 @@ uint64_t conv2d_dynamic_ndarray_fp32_avx512_get_buffer_bytes(
     const int32_t stride_w,
     const int32_t pad_h,
     const int32_t pad_w);
+#endif
 
 uint64_t conv2d_dynamic_ndarray_fp32_fma_get_buffer_bytes(
     const int32_t batch,
@@ -64,6 +66,7 @@ uint64_t conv2d_dynamic_ndarray_fp32_sse_get_buffer_bytes(
     const int32_t pad_h,
     const int32_t pad_w);
 
+#ifdef PPLNN_USE_X86_AVX512
 ppl::common::RetCode conv2d_dynamic_ndarray_fp32_avx512(
     const float *input,
     const float *filter,
@@ -86,6 +89,7 @@ ppl::common::RetCode conv2d_dynamic_ndarray_fp32_avx512(
     const int32_t hole_w,
     float *tmp_buffer,
     float *output);
+#endif
 
 ppl::common::RetCode conv2d_dynamic_ndarray_fp32_fma(
     const float *input,

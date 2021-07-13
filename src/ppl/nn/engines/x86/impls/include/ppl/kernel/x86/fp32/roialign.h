@@ -64,6 +64,7 @@ ppl::common::RetCode roialign_n16cx_fp32_avx(
     const float spatial_scale,
     float *output);
 
+#ifdef PPLNN_USE_X86_AVX512
 ppl::common::RetCode roialign_n16cx_fp32_avx512(
     const ppl::nn::TensorShape *input_shape,
     const ppl::nn::TensorShape *rois_shape,
@@ -77,6 +78,7 @@ ppl::common::RetCode roialign_n16cx_fp32_avx512(
     const int32_t sampling_ratio,
     const float spatial_scale,
     float *output);
+#endif
 
 }}}; // namespace ppl::kernel::x86
 

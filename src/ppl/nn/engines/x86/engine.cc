@@ -31,6 +31,11 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace x86 {
 
 X86Engine::X86Engine() : EngineImpl("x86"), device_(X86_DEFAULT_ALIGNMENT, ppl::common::GetCpuISA()) {
+#ifndef PPLNN_USE_X86_AVX512
+    auto isa = device_.GetISA();
+    isa &= ~ppl::common::ISA_X86_AVX512;
+    device_.SetISA(isa);
+#endif
     ppl::kernel::x86::set_denormals_zero(true);
 }
 

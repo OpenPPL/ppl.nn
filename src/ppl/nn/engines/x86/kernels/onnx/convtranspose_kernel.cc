@@ -29,12 +29,17 @@ uint64_t ConvTransposeKernel::CalcTmpBufferSize(const KernelExecContext& ctx) co
     const int32_t num_outputs = ctx.GetInput<TensorImpl>(1)->GetShape().GetDim(0);
     const int32_t channels = x->GetShape().GetDim(1);
 
-    if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
+    if (false) {
+    }
+#ifdef PPLNN_USE_X86_AVX512
+    else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
         return kernel::x86::conv_transpose_ndarray_fp32_avx512_get_buffer_bytes(
             batch, src_h, src_w, num_outputs, channels, param_->kernel_shape[0], param_->kernel_shape[1],
             param_->strides[0], param_->strides[1], param_->pads[0], param_->pads[1]);
-    } else if (MayUseISA(ppl::common::ISA_X86_FMA)) {
-        return kernel::x86::conv_transpose_ndarray_fp32_avx512_get_buffer_bytes(
+    }
+#endif
+    else if (MayUseISA(ppl::common::ISA_X86_FMA)) {
+        return kernel::x86::conv_transpose_ndarray_fp32_fma_get_buffer_bytes(
             batch, src_h, src_w, num_outputs, channels, param_->kernel_shape[0], param_->kernel_shape[1],
             param_->strides[0], param_->strides[1], param_->pads[0], param_->pads[1]);
     } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
@@ -108,13 +113,18 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
         if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
+            if (false) {
+            }
+#ifdef PPLNN_USE_X86_AVX512
             if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
                 return kernel::x86::conv_transpose_ndarray_fp32_avx512(
                     X->GetBufferPtr<float>(), W->GetBufferPtr<float>(), b_data, src_h, src_w, dst_h, dst_w, batch,
                     channels, num_output, param_->kernel_shape[0], param_->kernel_shape[1], param_->strides[0],
                     param_->strides[1], param_->pads[0], param_->pads[1], param_->dilations[0], param_->dilations[1],
                     (float*)tmp_buffer, Y->GetBufferPtr<float>());
-            } else if (MayUseISA(ppl::common::ISA_X86_FMA)) {
+            }
+#endif
+            else if (MayUseISA(ppl::common::ISA_X86_FMA)) {
                 return kernel::x86::conv_transpose_ndarray_fp32_fma(
                     X->GetBufferPtr<float>(), W->GetBufferPtr<float>(), b_data, src_h, src_w, dst_h, dst_w, batch,
                     channels, num_output, param_->kernel_shape[0], param_->kernel_shape[1], param_->strides[0],
