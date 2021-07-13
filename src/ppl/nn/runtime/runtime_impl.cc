@@ -186,7 +186,7 @@ RetCode InitRuntimeGraphOutputs(const ir::GraphTopo* topo, const RuntimeGraphInf
         auto eid = topo->GetOutput(i);
         auto edge = topo->GetEdgeById(eid);
 
-        auto ret_pair = graph->tensors.insert(make_pair(eid, TensorImpl(edge, TENSORTYPE_NORMAL)));
+        auto ret_pair = graph->tensors.insert(make_pair(eid, TensorImpl(edge, TENSORTYPE_RESERVED)));
         auto tensor = &ret_pair.first->second;
 
         if (ret_pair.second) {
