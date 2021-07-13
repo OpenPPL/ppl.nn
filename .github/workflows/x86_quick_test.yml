@@ -3,12 +3,10 @@ name: PPL<x86> Build && Quick Test
 on:
   push:
     branches: [ master ]
-    paths-ignore:
-      - '.github/workflows/**'
+    paths-ignore: ['.**',  'docs/**', 'samples/**', README.md]
   pull_request:
     branches: [ master ]
-    paths-ignore:
-      - '.github/workflows/**'
+    paths-ignore: ['.**',  'docs/**', 'samples/**', README.md]
   workflow_dispatch:
 
 jobs:
@@ -16,7 +14,7 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Create CheckOut Directory
+      - name: Create Checkout Directory
         run: |
           echo "Create CheckOut Directory: ${{ github.run_id }}."
           mkdir ${{ github.run_id }}
