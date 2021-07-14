@@ -26,12 +26,12 @@ namespace ppl { namespace kernel { namespace x86 {
 
 template <bool nt_store, int32_t spec_stride_w, int32_t oc_len, int32_t w_len>
 void conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel(
-    const int64_t *priv_param,
-    const int64_t *shar_param)
+    const int64_t *shar_param,
+    int64_t *priv_param)
 {
 #define IC_COMPUTE_STEP(IC) do {\
-    if (oc_len > 0 * CH_DT_BLK()) zmm28 = _mm512_loadu_ps(ic_flt + 0 * flt_ocb_stride + (IC) * CH_DT_BLK());\
-    if (oc_len > 1 * CH_DT_BLK()) zmm29 = _mm512_loadu_ps(ic_flt + 1 * flt_ocb_stride + (IC) * CH_DT_BLK());\
+    if (oc_len > 0 * CH_DT_BLK()) zmm28 = _mm512_loadu_ps(ic_flt_o16 + (IC) * CH_DT_BLK());\
+    if (oc_len > 1 * CH_DT_BLK()) zmm29 = _mm512_loadu_ps(ic_flt_o32 + (IC) * CH_DT_BLK());\
     if (w_len > 0) {\
         zmm30 = _mm512_set1_ps(ic_src[(IC) + 0 * src_sw_stride]);\
         if (oc_len > 0 * CH_DT_BLK()) zmm0  = _mm512_fmadd_ps(zmm28, zmm30, zmm0);\
@@ -101,6 +101,13 @@ void conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel(
         zmm31 = _mm512_set1_ps(ic_src[(IC) + 13 * src_sw_stride]);\
         if (oc_len > 0 * CH_DT_BLK()) zmm13 = _mm512_fmadd_ps(zmm28, zmm31, zmm13);\
         if (oc_len > 1 * CH_DT_BLK()) zmm27 = _mm512_fmadd_ps(zmm29, zmm31, zmm27);\
+    }\
+} while (0)
+
+#define IC_PREFETCH_STEP(IC)  do {\
+    if (oc_len > 1 * CH_DT_BLK() && w_len > 6) {\
+        if (oc_len > 0 * CH_DT_BLK()) _mm_prefetch((const char*)ic_flt_o16 + 0 * flt_ocb_stride + (IC) * CH_DT_BLK() + CH_DT_BLK() * CH_DT_BLK(), _MM_HINT_T0);\
+        if (oc_len > 1 * CH_DT_BLK()) _mm_prefetch((const char*)ic_flt_o32 + 0 * flt_ocb_stride + (IC) * CH_DT_BLK() + CH_DT_BLK() * CH_DT_BLK(), _MM_HINT_T0);\
     }\
 } while (0)
 
@@ -241,41 +248,22 @@ void conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel(
         while (channels >= CH_DT_BLK()) {
             channels -= CH_DT_BLK();
             const float *k_src = icb_src;
-            const float *k_flt = icb_flt;
+            const float *k_flt_o16 = icb_flt + 0 * flt_ocb_stride;
+            const float *k_flt_o32 = icb_flt + 1 * flt_ocb_stride;
             for (int64_t kh = kh_start; kh < kh_end; ++kh) {
                 for (int64_t kw = 0; kw < kernel_w; ++kw) {
-                    if (oc_len == 2 * CH_DT_BLK() && w_len == 14) {
-                        const float *ic_src = k_src;
-                        const float *ic_flt = k_flt;
+                    const float *ic_src = k_src;
+                    const float *ic_flt_o16 = k_flt_o16;
+                    const float *ic_flt_o32 = k_flt_o32;
+                    for (int64_t ic = 0; ic < CH_DT_BLK(); ++ic) {
                         IC_COMPUTE_STEP(0);
-                        IC_COMPUTE_STEP(1);
-                        IC_COMPUTE_STEP(2);
-                        IC_COMPUTE_STEP(3);
-
-                        IC_COMPUTE_STEP(4);
-                        IC_COMPUTE_STEP(5);
-                        IC_COMPUTE_STEP(6);
-                        IC_COMPUTE_STEP(7);
-
-                        IC_COMPUTE_STEP(8);
-                        IC_COMPUTE_STEP(9);
-                        IC_COMPUTE_STEP(10);
-                        IC_COMPUTE_STEP(11);
-
-                        IC_COMPUTE_STEP(12);
-                        IC_COMPUTE_STEP(13);
-                        IC_COMPUTE_STEP(14);
-                        IC_COMPUTE_STEP(15);
-                    } else {
-                        const float *ic_src = k_src;
-                        const float *ic_flt = k_flt;
-                        for (int64_t ic = 0; ic < CH_DT_BLK(); ++ic) {
-                            IC_COMPUTE_STEP(0);
-                            ic_src += 1;
-                            ic_flt += CH_DT_BLK();
-                        }
+                        IC_PREFETCH_STEP(0);
+                        ic_src += 1;
+                        ic_flt_o16 += CH_DT_BLK();
+                        ic_flt_o32 += CH_DT_BLK();
                     }
-                    k_flt += CH_DT_BLK() * CH_DT_BLK();
+                    k_flt_o16 += CH_DT_BLK() * CH_DT_BLK();
+                    k_flt_o32 += CH_DT_BLK() * CH_DT_BLK();
                     k_src += src_dw_stride;
                 }
                 k_src += src_dh_stride;
@@ -285,17 +273,21 @@ void conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel(
         }
         if (channels > 0) {
             const float *k_src = icb_src;
-            const float *k_flt = icb_flt;
+            const float *k_flt_o16 = icb_flt + 0 * flt_ocb_stride;
+            const float *k_flt_o32 = icb_flt + 1 * flt_ocb_stride;
             for (int64_t kh = kh_start; kh < kh_end; ++kh) {
                 for (int64_t kw = 0; kw < kernel_w; ++kw) {
                     const float *ic_src = k_src;
-                    const float *ic_flt = k_flt;
+                    const float *ic_flt_o16 = k_flt_o16;
+                    const float *ic_flt_o32 = k_flt_o32;
                     for (int64_t ic = 0; ic < channels; ++ic) {
                         IC_COMPUTE_STEP(0);
                         ic_src += 1;
-                        ic_flt += CH_DT_BLK();
+                        ic_flt_o16 += CH_DT_BLK();
+                        ic_flt_o32 += CH_DT_BLK();
                     }
-                    k_flt += CH_DT_BLK() * CH_DT_BLK();
+                    k_flt_o16 += CH_DT_BLK() * CH_DT_BLK();
+                    k_flt_o32 += CH_DT_BLK() * CH_DT_BLK();
                     k_src += src_dw_stride;
                 }
                 k_src += src_dh_stride;
@@ -451,7 +443,11 @@ void conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel(
         dst += w_len * CH_DT_BLK();
         ow -= w_len;
     } while (ow > 0);
+    PICK_PARAM(const float *, priv_param, SRC_IDX()) = src;
+    PICK_PARAM(const float *, priv_param, HIS_IDX()) = his;
+    PICK_PARAM(float *, priv_param, DST_IDX()) = dst;
 #undef IC_COMPUTE_STEP
+#undef IC_PREFETCH_STEP
 }
 
 }}};

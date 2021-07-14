@@ -26,8 +26,8 @@ namespace ppl { namespace kernel { namespace x86 {
 
 template <bool nt_store, int32_t oc_len>
 void conv2d_n16cx_direct_fp32_avx512_blk1x1_kernel(
-    const int64_t *priv_param,
-    const int64_t *shar_param)
+    const int64_t *shar_param,
+    int64_t *priv_param)
 {
 #define IC_COMPUTE_STEP(IC) do {\
     zmm4 = _mm512_set1_ps(ic_src[(IC)]);\
@@ -75,6 +75,7 @@ void conv2d_n16cx_direct_fp32_avx512_blk1x1_kernel(
     const int64_t src_icb_stride = shar_param[SRC_ICB_STRIDE_IDX()];
     const int64_t src_dh_stride = shar_param[SRC_DH_STRIDE_IDX()];
     const int64_t src_dw_stride = shar_param[SRC_DW_STRIDE_IDX()];
+    const int64_t src_sw_stride = shar_param[SRC_SW_STRIDE_IDX()];
     const int64_t flt_ocb_stride = shar_param[FLT_OCB_STRIDE_IDX()];
     const int64_t kh_start = priv_param[KH_START_IDX()];
     const int64_t kh_end = priv_param[KH_END_IDX()];
@@ -147,6 +148,9 @@ void conv2d_n16cx_direct_fp32_avx512_blk1x1_kernel(
         if (oc_len > 2 * CH_DT_BLK()) _mm512_storeu_ps(dst + 2 * dst_ocb_stride, zmm2);
         if (oc_len > 3 * CH_DT_BLK()) _mm512_storeu_ps(dst + 3 * dst_ocb_stride, zmm3);
     }
+    PICK_PARAM(const float *, priv_param, SRC_IDX()) += src_sw_stride;
+    PICK_PARAM(const float *, priv_param, HIS_IDX()) += CH_DT_BLK();
+    PICK_PARAM(float *, priv_param, DST_IDX()) += CH_DT_BLK();
 #undef IC_COMPUTE_STEP
 }
 

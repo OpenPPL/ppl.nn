@@ -72,7 +72,7 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-typedef void (*conv2d_n16cx_direct_kernel_fp32_avx512_func_t)(const int64_t*, const int64_t*);
+typedef void (*conv2d_n16cx_direct_kernel_fp32_avx512_func_t)(const int64_t*, int64_t*);
 
 extern conv2d_n16cx_direct_kernel_fp32_avx512_func_t
     conv2d_n16cx_direct_kernel_fp32_avx512_pad_table[NT_STORE_OPT()][MAX_OC_RF()];

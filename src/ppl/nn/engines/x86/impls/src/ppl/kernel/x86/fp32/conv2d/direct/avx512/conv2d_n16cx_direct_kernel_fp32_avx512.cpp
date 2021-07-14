@@ -41,15 +41,15 @@ conv2d_n16cx_direct_kernel_fp32_avx512_pad_table[NT_STORE_OPT()][MAX_OC_RF()] =
 
 #define DIRECT_O16_KERNEL_TABLE_BLK(NT_STORE, STRIDE_W) \
     {\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 1>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 2>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 3>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 4>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 5>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 6>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 7>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 8>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 9>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 1>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 2>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 3>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 4>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 5>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 6>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 7>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 8>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 9>,\
         conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 10>,\
         conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 11>,\
         conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 1 * CH_DT_BLK(), 12>,\
@@ -59,15 +59,15 @@ conv2d_n16cx_direct_kernel_fp32_avx512_pad_table[NT_STORE_OPT()][MAX_OC_RF()] =
 
 #define DIRECT_O32_KERNEL_TABLE_BLK(NT_STORE, STRIDE_W) \
     {\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 1>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 2>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 3>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 4>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 5>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 6>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 7>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 8>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 9>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 1>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 2>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 3>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 4>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 5>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 6>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 7>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 8>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 9>,\
         conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 10>,\
         conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 11>,\
         conv2d_n16cx_direct_fp32_avx512_blk1x14_kernel<NT_STORE, STRIDE_W, 2 * CH_DT_BLK(), 12>,\
@@ -77,12 +77,12 @@ conv2d_n16cx_direct_kernel_fp32_avx512_pad_table[NT_STORE_OPT()][MAX_OC_RF()] =
 
 #define DIRECT_O48_KERNEL_TABLE_BLK(NT_STORE, STRIDE_W) \
     {\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 3 * CH_DT_BLK(), 1>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 3 * CH_DT_BLK(), 2>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 3 * CH_DT_BLK(), 3>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 3 * CH_DT_BLK(), 4>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 3 * CH_DT_BLK(), 5>,\
-        conv2d_n16cx_direct_fp32_avx512_blk1x6_kernel<NT_STORE, STRIDE_W, 3 * CH_DT_BLK(), 6>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel<NT_STORE, STRIDE_W, 3 * CH_DT_BLK(), 1>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel<NT_STORE, STRIDE_W, 3 * CH_DT_BLK(), 2>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel<NT_STORE, STRIDE_W, 3 * CH_DT_BLK(), 3>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel<NT_STORE, STRIDE_W, 3 * CH_DT_BLK(), 4>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel<NT_STORE, STRIDE_W, 3 * CH_DT_BLK(), 5>,\
+        conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel<NT_STORE, STRIDE_W, 3 * CH_DT_BLK(), 6>,\
         conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel<NT_STORE, STRIDE_W, 3 * CH_DT_BLK(), 7>,\
         conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel<NT_STORE, STRIDE_W, 3 * CH_DT_BLK(), 8>,\
         conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel<NT_STORE, STRIDE_W, 3 * CH_DT_BLK(), 9>,\
