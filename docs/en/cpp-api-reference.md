@@ -183,7 +183,7 @@ Defined in [include/ppl/nn/common/tensor_shape.h](../../include/ppl/nn/common/te
 
 ## Logger
 
-Defined in [include/ppl/nn/common/logger.h](../include/ppl/nn/common/logger.h).
+Defined in [include/ppl/nn/common/logger.h](../../include/ppl/nn/common/logger.h).
 
 ```c++
 void SetCurrentLogger(Logger*);
