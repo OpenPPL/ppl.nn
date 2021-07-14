@@ -786,7 +786,7 @@ int main(int argc, char* argv[]) {
         auto& shape = in->GetShape();
         if (shape.GetElementsIncludingPadding() == 0) {
             LOG(ERROR) << "input tensor[" << in->GetName() << "] is empty.";
-            return RC_INVALID_VALUE;
+            return -1;
         }
     }
 
