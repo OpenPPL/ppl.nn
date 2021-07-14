@@ -26,13 +26,14 @@ namespace ppl { namespace kernel { namespace x86 {
 
 template <bool nt_store>
 void conv2d_n16cx_depthwise_fp32_avx512_blk1x1_kernel(
-    const int64_t *priv_param,
-    const int64_t *shar_param)
+    const int64_t *shar_param,
+    int64_t *priv_param)
 {
     __m512 zmm0, zmm1;
 
     const int64_t src_dh_stride = shar_param[SRC_DH_STRIDE_IDX()];
     const int64_t src_dw_stride = shar_param[SRC_DW_STRIDE_IDX()];
+    const int64_t src_sw_stride = shar_param[SRC_SW_STRIDE_IDX()];
     const int64_t kernel_flags  = shar_param[FLAGS_IDX()];
     const int64_t kernel_w      = shar_param[KW_IDX()];
 
@@ -79,6 +80,9 @@ void conv2d_n16cx_depthwise_fp32_avx512_blk1x1_kernel(
     } else {
         _mm512_storeu_ps(PICK_PARAM(float*, priv_param, DST_IDX()), zmm0);
     }
+    PICK_PARAM(const float *, priv_param, SRC_IDX()) += src_sw_stride;
+    PICK_PARAM(const float *, priv_param, SUM_SRC_IDX()) += CH_DT_BLK();
+    PICK_PARAM(float *, priv_param, DST_IDX()) += CH_DT_BLK();
 }
 
 }}};

@@ -238,25 +238,16 @@ ppl::common::RetCode conv2d_n16cx_depthwise_fp32_avx512_executor::execute()
                     private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1), cp.dilation_w);
                     private_param[KW_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0), cp.dilation_w);
                 }
-                conv2d_n16cx_depthwise_kernel_fp32_avx512_pad_table[nt_store_sel](private_param, share_param);
-                PICK_PARAM(const float*, private_param, SRC_IDX()) += src_sw_stride;
-                PICK_PARAM(const float*, private_param, SUM_SRC_IDX()) += CH_DT_BLK();
-                PICK_PARAM(float*, private_param, DST_IDX()) += CH_DT_BLK();
+                conv2d_n16cx_depthwise_kernel_fp32_avx512_pad_table[nt_store_sel](share_param, private_param);
             }
 
             if (ow_unroll_body) {
                 private_param[OW_IDX()] = ow_unroll_body;
-                conv2d_n16cx_depthwise_kernel_fp32_avx512_blk_table[nt_store_sel][stride_w_sel][sp.ow_kr_blk - 1](private_param, share_param);
-                PICK_PARAM(const float *, private_param, SRC_IDX()) += ow_unroll_body * src_sw_stride;
-                PICK_PARAM(const float *, private_param, SUM_SRC_IDX()) += ow_unroll_body * CH_DT_BLK();
-                PICK_PARAM(float *, private_param, DST_IDX()) += ow_unroll_body * CH_DT_BLK();
+                conv2d_n16cx_depthwise_kernel_fp32_avx512_blk_table[nt_store_sel][stride_w_sel][sp.ow_kr_blk - 1](share_param, private_param);
             }
             if (ow_unroll_tail) {
                 private_param[OW_IDX()] = ow_unroll_tail;
-                conv2d_n16cx_depthwise_kernel_fp32_avx512_blk_table[nt_store_sel][stride_w_sel][ow_unroll_tail - 1](private_param, share_param);
-                PICK_PARAM(const float *, private_param, SRC_IDX()) += ow_unroll_tail * src_sw_stride;
-                PICK_PARAM(const float *, private_param, SUM_SRC_IDX()) += ow_unroll_tail * CH_DT_BLK();
-                PICK_PARAM(float *, private_param, DST_IDX()) += ow_unroll_tail * CH_DT_BLK();
+                conv2d_n16cx_depthwise_kernel_fp32_avx512_blk_table[nt_store_sel][stride_w_sel][ow_unroll_tail - 1](share_param, private_param);
             }
 
             for (int64_t ow = sp.unroll_ow_end; ow < dst_w; ++ow) {
@@ -268,10 +259,7 @@ ppl::common::RetCode conv2d_n16cx_depthwise_fp32_avx512_executor::execute()
                     private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1), cp.dilation_w);
                     private_param[KW_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0), cp.dilation_w);
                 }
-                conv2d_n16cx_depthwise_kernel_fp32_avx512_pad_table[nt_store_sel](private_param, share_param);
-                PICK_PARAM(const float*, private_param, SRC_IDX()) += src_sw_stride;
-                PICK_PARAM(const float*, private_param, SUM_SRC_IDX()) += CH_DT_BLK();
-                PICK_PARAM(float*, private_param, DST_IDX()) += CH_DT_BLK();
+                conv2d_n16cx_depthwise_kernel_fp32_avx512_pad_table[nt_store_sel](share_param, private_param);
             }
         }
     }
