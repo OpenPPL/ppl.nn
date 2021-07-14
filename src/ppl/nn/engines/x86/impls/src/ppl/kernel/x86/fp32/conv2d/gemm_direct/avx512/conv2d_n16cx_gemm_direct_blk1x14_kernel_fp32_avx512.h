@@ -568,7 +568,7 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_blk1x14_kernel_core(
         [KERNEL_FLAG_RELU6]           "i" (KERNEL_FLAG_RELU6())
         :
         "cc",
-        "rax", "rbx", "rcx", "rdx",
+        "rax", "rbx", "rcx",
         "r8" , "r9" , "r10", "r11", "r12", "r13", "r14", "r15",
         "zmm0" , "zmm1" , "zmm2" , "zmm3" , "zmm4" , "zmm5" , "zmm6" , "zmm7" ,
         "zmm8" , "zmm9" , "zmm10", "zmm11", "zmm12", "zmm13", "zmm14", "zmm15",
