@@ -16,7 +16,8 @@ jobs:
     steps:
       - name: Create Checkout Directory
         run: |
-          echo "Create CheckOut Directory: ${{ github.run_id }}."
+          echo "Create Checkout Directory: ${{ github.run_id }}."
+          [ -z "${{ github.run_id }}" ] || rm -rf ${{ github.run_id }}
           mkdir ${{ github.run_id }}
 
       - name: Checkout
