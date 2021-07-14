@@ -186,10 +186,7 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_executor::execute()
                             const int64_t iw              = ow * cp.stride_w - cp.pad_w;
                             private_param[KW_START_IDX()] = min<int64_t>(max<int64_t>(0 - iw, 0), cp.kernel_w - 1);
                             private_param[KW_END_IDX()]   = max<int64_t>(min<int64_t>(src_w - iw, cp.kernel_w), 0);
-                            conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_pad_table[nt_store_sel][oc_sel](private_param, share_param);
-                            PICK_PARAM(const float*, private_param, SRC_IDX()) += cp.stride_w;
-                            PICK_PARAM(const float*, private_param, HIS_IDX()) += OC_DT_BLK();
-                            PICK_PARAM(float*, private_param, DST_IDX()) += OC_DT_BLK();
+                            conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_pad_table[nt_store_sel][oc_sel](share_param, private_param);
                         }
 
                         const int64_t ow_unroll_len  = sp.unroll_ow_end - sp.unroll_ow_start;
@@ -198,32 +195,23 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_executor::execute()
                         if (ow_unroll_body) {
                             private_param[OW_IDX()] = ow_unroll_body;
                             switch (oc_sel) {
-                                case 0: conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_o16_table[nt_store_sel][OW_KR_BLK() - 1](private_param, share_param); break;
-                                case 1: conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_o32_table[nt_store_sel][OW_KR_BLK() - 1](private_param, share_param); break;
+                                case 0: conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_o16_table[nt_store_sel][OW_KR_BLK() - 1](share_param, private_param); break;
+                                case 1: conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_o32_table[nt_store_sel][OW_KR_BLK() - 1](share_param, private_param); break;
                             }
-                            PICK_PARAM(const float*, private_param, SRC_IDX()) += ow_unroll_body * cp.stride_w;
-                            PICK_PARAM(const float*, private_param, HIS_IDX()) += ow_unroll_body * OC_DT_BLK();
-                            PICK_PARAM(float*, private_param, DST_IDX()) += ow_unroll_body * OC_DT_BLK();
                         }
                         if (ow_unroll_tail) {
                             private_param[OW_IDX()] = ow_unroll_tail;
                             switch (oc_sel) {
-                                case 0: conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_o16_table[nt_store_sel][ow_unroll_tail - 1](private_param, share_param); break;
-                                case 1: conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_o32_table[nt_store_sel][ow_unroll_tail - 1](private_param, share_param); break;
+                                case 0: conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_o16_table[nt_store_sel][ow_unroll_tail - 1](share_param, private_param); break;
+                                case 1: conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_o32_table[nt_store_sel][ow_unroll_tail - 1](share_param, private_param); break;
                             }
-                            PICK_PARAM(const float*, private_param, SRC_IDX()) += ow_unroll_tail * cp.stride_w;
-                            PICK_PARAM(const float*, private_param, HIS_IDX()) += ow_unroll_tail * OC_DT_BLK();
-                            PICK_PARAM(float*, private_param, DST_IDX()) += ow_unroll_tail * OC_DT_BLK();
                         }
 
                         for (int64_t ow = sp.unroll_ow_end; ow < dst_w; ++ow) {
                             const int64_t iw       = ow * cp.stride_w - cp.pad_w;
                             private_param[KW_START_IDX()] = min<int64_t>(max<int64_t>(0 - iw, 0), cp.kernel_w - 1);
                             private_param[KW_END_IDX()]   = max<int64_t>(min<int64_t>(src_w - iw, cp.kernel_w), 0);
-                            conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_pad_table[nt_store_sel][oc_sel](private_param, share_param);
-                            PICK_PARAM(const float*, private_param, SRC_IDX()) += cp.stride_w;
-                            PICK_PARAM(const float*, private_param, HIS_IDX()) += OC_DT_BLK();
-                            PICK_PARAM(float*, private_param, DST_IDX()) += OC_DT_BLK();
+                            conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_pad_table[nt_store_sel][oc_sel](share_param, private_param);
                         }
                     }
                 }
