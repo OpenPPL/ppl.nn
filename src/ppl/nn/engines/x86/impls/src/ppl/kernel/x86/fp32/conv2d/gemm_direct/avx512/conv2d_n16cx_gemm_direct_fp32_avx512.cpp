@@ -93,14 +93,14 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_executor::cal_kernel_tunning_param()
         --sp.mb_l3_blk;
     }
 
-    sp.hw_kr_blk = min(dst_hw, BLK1X14_HW_RF());
-    sp.hw_l2_blk = min(dst_hw, round_up(HW_L2_BLK_MAX(), sp.hw_kr_blk));
-    sp.oc_kr_blk = min((sp.hw_kr_blk <= BLK1X14_HW_RF() ? 2 : 1) * CH_DT_BLK(), sp.padded_oc);
+    sp.oc_kr_blk = min(2 * CH_DT_BLK(), sp.padded_oc);
     if (sp.padded_oc > sp.padded_ic) {
         sp.oc_l2_blk = min(OC_L2_BLK_MAX_L(), sp.padded_oc);
     } else {
         sp.oc_l2_blk = min(OC_L2_BLK_MAX_S(), sp.padded_oc);
     }
+    sp.hw_kr_blk = min(dst_hw, BLK1X14_HW_RF());
+    sp.hw_l2_blk = min(dst_hw, round_up(HW_L2_BLK_MAX(), sp.hw_kr_blk));
 
     if (sp.padded_oc > 2 * sp.oc_l2_blk && sp.padded_ic > IC_L2_BLK_MAX_L()) {
         const int64_t bghw_task = sp.gp_l3_blk * sp.mb_l3_blk * div_up(dst_hw, sp.hw_l2_blk);
