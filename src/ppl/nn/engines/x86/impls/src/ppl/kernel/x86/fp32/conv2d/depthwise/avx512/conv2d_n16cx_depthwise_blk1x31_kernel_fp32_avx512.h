@@ -26,8 +26,8 @@ namespace ppl { namespace kernel { namespace x86 {
 
 template <bool nt_store, int32_t spec_stride_w, int32_t w_len>
 void conv2d_n16cx_depthwise_fp32_avx512_blk1x31_kernel(
-    const int64_t *priv_param,
-    const int64_t *shar_param)
+    const int64_t *shar_param,
+    int64_t *priv_param)
 {
 #define KW_COMPUTE_STEP() do {\
     zmm31 = _mm512_loadu_ps(k_flt);\
@@ -299,6 +299,9 @@ void conv2d_n16cx_depthwise_fp32_avx512_blk1x31_kernel(
         dst += w_len * CH_DT_BLK();
         ow -= w_len;
     } while (ow > 0);
+    PICK_PARAM(const float *, priv_param, SRC_IDX()) = src;
+    PICK_PARAM(const float *, priv_param, SUM_SRC_IDX()) = sum;
+    PICK_PARAM(float *, priv_param, DST_IDX()) = dst;
 #undef KW_COMPUTE_STEP
 }
 
