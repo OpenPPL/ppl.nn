@@ -26,12 +26,12 @@ namespace ppl { namespace kernel { namespace x86 {
 
 template <bool nt_store, int32_t oc_len, int32_t w_len>
 void conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel(
-    const int64_t *priv_param,
-    const int64_t *shar_param)
+    const int64_t *shar_param,
+    int64_t *priv_param)
 {
 #define KW_COMPUTE_STEP() do {\
-    if (oc_len > 0 * OC_DT_BLK()) zmm28 = _mm512_loadu_ps(k_flt + 0 * flt_ocb_stride);\
-    if (oc_len > 1 * OC_DT_BLK()) zmm29 = _mm512_loadu_ps(k_flt + 1 * flt_ocb_stride);\
+    if (oc_len > 0 * OC_DT_BLK()) zmm28 = _mm512_loadu_ps(k_flt_o16);\
+    if (oc_len > 1 * OC_DT_BLK()) zmm29 = _mm512_loadu_ps(k_flt_o32);\
     if (w_len > 0) {\
         zmm30 = _mm512_set1_ps(k_src[0 * stride_w]);\
         if (oc_len > 0 * OC_DT_BLK()) zmm0  = _mm512_fmadd_ps(zmm28, zmm30, zmm0);\
@@ -102,7 +102,8 @@ void conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel(
         if (oc_len > 0 * OC_DT_BLK()) zmm13 = _mm512_fmadd_ps(zmm28, zmm31, zmm13);\
         if (oc_len > 1 * OC_DT_BLK()) zmm27 = _mm512_fmadd_ps(zmm29, zmm31, zmm27);\
     }\
-    k_flt += OC_DT_BLK();\
+    k_flt_o16 += OC_DT_BLK();\
+    k_flt_o32 += OC_DT_BLK();\
     k_src += 1;\
 } while (0)
 
@@ -241,7 +242,8 @@ void conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel(
         int64_t channels    = shar_param[CHANNELS_IDX()];
         do {
             const float *k_src = ic_src;
-            const float *k_flt = ic_flt;
+            const float *k_flt_o16 = ic_flt + 0 * flt_ocb_stride;
+            const float *k_flt_o32 = ic_flt + 1 * flt_ocb_stride;
             for (int64_t kh = kh_start; kh < kh_end; ++kh) {
                 for (int64_t kw = 0; kw < kernel_w; ++kw) {
                     KW_COMPUTE_STEP();
@@ -402,6 +404,9 @@ void conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel(
         dst += w_len * OC_DT_BLK();
         ow -= w_len;
     } while (ow > 0);
+    PICK_PARAM(const float *, priv_param, SRC_IDX()) = src;
+    PICK_PARAM(const float *, priv_param, HIS_IDX()) = his;
+    PICK_PARAM(float *, priv_param, DST_IDX()) = dst;
 #undef KW_COMPUTE_STEP
 }
 

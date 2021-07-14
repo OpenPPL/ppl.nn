@@ -26,13 +26,14 @@ namespace ppl { namespace kernel { namespace x86 {
 
 template <bool nt_store, int32_t oc_len>
 void conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x1_kernel(
-    const int64_t *priv_param,
-    const int64_t *shar_param)
+    const int64_t *shar_param,
+    int64_t *priv_param)
 {
     __m512 zmm0, zmm1, zmm2, zmm3, zmm4;
 
     const int64_t kernel_h = shar_param[KH_IDX()];
     const int64_t kernel_w = shar_param[KW_IDX()];
+    const int64_t stride_w = shar_param[SW_IDX()];
     const int64_t src_c_stride = shar_param[SRC_C_STRIDE_IDX()];
     const int64_t src_h_stride = shar_param[SRC_H_STRIDE_IDX()];
     const int64_t flt_ocb_stride = shar_param[FLT_OCB_STRIDE_IDX()];
@@ -106,6 +107,10 @@ void conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x1_kernel(
         if (oc_len > 0 * OC_DT_BLK()) _mm512_storeu_ps(dst + 0 * dst_ocb_stride, zmm0);
         if (oc_len > 1 * OC_DT_BLK()) _mm512_storeu_ps(dst + 1 * dst_ocb_stride, zmm1);
     }
+
+    PICK_PARAM(const float*, priv_param, SRC_IDX()) += stride_w;
+    PICK_PARAM(const float*, priv_param, HIS_IDX()) += OC_DT_BLK();
+    PICK_PARAM(float*, priv_param, DST_IDX()) += OC_DT_BLK();
 }
 
 }}};
