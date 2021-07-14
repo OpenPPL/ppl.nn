@@ -21,7 +21,7 @@
 
 #include "ppl/nn/engines/cuda/engine_context.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel_creator_manager.h"
-#include "ppl/nn/utils/utils.h"
+#include "ppl/nn/engines/utils.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_graph.h"
 #include "ppl/nn/common/logger.h"
 

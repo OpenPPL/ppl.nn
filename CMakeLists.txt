@@ -39,12 +39,12 @@ include(cmake/version.cmake)
 file(GLOB_RECURSE PPLNN_MODELS_SRC
     src/ppl/nn/models/*.cc)
 file(GLOB_RECURSE PPLNN_BUILTIN_ENGINE_SRC
-    src/ppl/nn/engines/cpu/*.cc
     src/ppl/nn/engines/common/*.cc)
 file(GLOB_RECURSE PPLNN_OPUTILS_SRC
     src/ppl/nn/oputils/*.cc)
 file(GLOB PPLNN_FRAMEWORK_SRC
     src/ppl/nn/common/*.cc
+    src/ppl/nn/engines/*.cc
     src/ppl/nn/ir/*.cc
     src/ppl/nn/optimizers/*.cc
     src/ppl/nn/quantization/*.cc

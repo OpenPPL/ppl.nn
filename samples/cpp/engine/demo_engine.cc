@@ -19,8 +19,8 @@
 #include "demo_kernel.h"
 #include "demo_engine_context.h"
 #include "ppl/nn/runtime/runtime_partition_info.h"
+#include "ppl/nn/engines/utils.h"
 #include "ppl/nn/common/logger.h"
-#include "ppl/nn/utils/utils.h"
 using namespace std;
 using namespace ppl::common;
 

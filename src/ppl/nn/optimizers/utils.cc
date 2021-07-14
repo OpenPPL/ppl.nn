@@ -16,12 +16,13 @@
 // under the License.
 
 #include "ppl/nn/optimizers/utils.h"
-#include "ppl/nn/utils/utils.h"
 #include "ppl/nn/optimizers/simple_graph_partitioner.h"
 #include "ppl/nn/optimizers/graph_optimizer_manager.h"
 #include "ppl/nn/engines/common/ppl/converter_op.h"
+#include "ppl/nn/engines/utils.h"
 #include "ppl/nn/ir/partial_graph_topo.h"
 #include "ppl/nn/runtime/runtime_partition_info.h"
+#include "ppl/nn/utils/utils.h"
 #include "ppl/nn/common/logger.h"
 #include <set>
 using namespace std;

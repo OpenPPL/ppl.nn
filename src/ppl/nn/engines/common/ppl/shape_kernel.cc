@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/common/ppl/shape_kernel.h"
-#include "ppl/nn/utils/utils.h"
+#include "ppl/nn/runtime/tensor_impl.h"
 
 namespace ppl { namespace nn { namespace common {
 
@@ -55,4 +55,4 @@ ppl::common::RetCode PPLShapeKernel::DoExecute(KernelExecContext* ctx) {
     return ppl::common::RC_SUCCESS;
 }
 
-}}} // namespace ppl::nn::coomon
+}}} // namespace ppl::nn::common

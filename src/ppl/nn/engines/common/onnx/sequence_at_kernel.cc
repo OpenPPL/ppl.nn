@@ -16,8 +16,8 @@
 // under the License.
 
 #include "ppl/nn/engines/common/onnx/sequence_at_kernel.h"
+#include "ppl/nn/engines/utils.h"
 #include "ppl/nn/runtime/tensor_sequence.h"
-#include "ppl/nn/utils/utils.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;

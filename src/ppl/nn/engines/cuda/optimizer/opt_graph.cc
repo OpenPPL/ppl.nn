@@ -22,9 +22,7 @@
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/engines/cuda/optimizer/algos/algo_graph.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/ppl/bridge_op.h"
-#include "ppl/nn/optimizers/fuse_parallel_node_optimizer.h"
-#include "ppl/nn/optimizers/fuse_bn_optimizer.h"
-#include "ppl/nn/utils/utils.h"
+#include "ppl/nn/engines/utils.h"
 
 using namespace std;
 using namespace ppl::common;

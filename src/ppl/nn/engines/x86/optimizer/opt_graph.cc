@@ -17,7 +17,6 @@
 
 #include "ppl/nn/engines/x86/optimizer/opt_graph.h"
 #include "ppl/nn/engines/x86/optimizer/opt_kernel_creator_manager.h"
-#include "ppl/nn/utils/utils.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/conv_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/ppl/channel_shuffle_op.h"
@@ -26,6 +25,7 @@
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/sub_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/div_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/gemm_op.h"
+#include "ppl/nn/engines/utils.h"
 #include "ppl/nn/params/onnx/transpose_param.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/batch_normalization_op.h"
 #include <string.h>
@@ -259,7 +259,8 @@ RetCode OptGraph::LayoutOptimize(const OptKernelOptions& options) {
             }
         }
 
-        for (uint32_t i = 0; i < node->GetExtraInputCount(); i++) { // extra input(used by if/loop op) force to be ndarray
+        // extra input(used by if/loop op) force to be ndarray
+        for (uint32_t i = 0; i < node->GetExtraInputCount(); i++) {
             auto edge_id = node->GetExtraInput(i);
             auto extra_input_format = tensor_impls_[edge_id]->GetShape().GetDataFormat();
             if (extra_input_format != ppl::common::DATAFORMAT_NDARRAY) {

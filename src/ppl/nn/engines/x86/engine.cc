@@ -21,8 +21,8 @@
 #include "ppl/nn/engines/x86/engine_context.h"
 #include "ppl/nn/engines/x86/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/engines/x86/optimizer/opt_graph.h"
+#include "ppl/nn/engines/utils.h"
 #include "ppl/nn/common/logger.h"
-#include "ppl/nn/utils/utils.h"
 #include "ppl/kernel/x86/common/simd_tools.h"
 
 using namespace std;

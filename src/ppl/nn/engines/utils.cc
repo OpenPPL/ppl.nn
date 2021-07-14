@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/utils/utils.h"
+#include "ppl/nn/engines/utils.h"
 #include "ppl/nn/utils/generic_cpu_device.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
