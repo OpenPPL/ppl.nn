@@ -31,7 +31,7 @@ ppl::common::RetCode mmcv_gridsample_linear_ndarray_fp32(
     const int64_t padding_mode,
     float *dst);
 
-#ifdef PPLNN_USE_X86_AVX512
+#ifdef PPL_USE_X86_AVX512
 ppl::common::RetCode mmcv_gridsample_linear_ndarray_fp32_avx512(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *grid_shape,

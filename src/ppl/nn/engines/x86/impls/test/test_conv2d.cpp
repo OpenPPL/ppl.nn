@@ -83,7 +83,11 @@ Define_float(eps, 1e-6, "(1e-6) rel error trunk for validation");
 Define_bool(dynamic, false, "(false) prepare and alloc temp buffer for each run");
 Define_bool(profile, false, "(false) do profile and dump profile info");
 Define_bool(export_onnx_op_test, false, "(false) export cfg to ppl onnx op test format");
+#ifdef PPL_USE_X86_AVX512
 Define_bool(disable_avx512, false, "(false) disable avx512 for auto select algo");
+#else
+static bool Flag_disable_avx512 = true;
+#endif
 
 /*
 
@@ -133,15 +137,6 @@ static std::map<std::string, ppl::kernel::x86::conv2d_fp32_algo_info> algo_table
         })
     },
     {
-        "n16cx_gemm_direct_fp32_avx512",
-        ppl::kernel::x86::conv2d_fp32_algo_info({
-            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::gemm_direct,
-            .isa = ppl::common::ISA_X86_AVX512,
-            .input_format = ppl::common::DATAFORMAT_N16CX,
-            .output_format = ppl::common::DATAFORMAT_N16CX
-        })
-    },
-    {
         "n16cx_depthwise_fp32_fma",
         ppl::kernel::x86::conv2d_fp32_algo_info({
             .algo_type = ppl::kernel::x86::conv2d_fp32_algo::depthwise,
@@ -151,28 +146,10 @@ static std::map<std::string, ppl::kernel::x86::conv2d_fp32_algo_info> algo_table
         })
     },
     {
-        "n16cx_depthwise_fp32_avx512",
-        ppl::kernel::x86::conv2d_fp32_algo_info({
-            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::depthwise,
-            .isa = ppl::common::ISA_X86_AVX512,
-            .input_format = ppl::common::DATAFORMAT_N16CX,
-            .output_format = ppl::common::DATAFORMAT_N16CX
-        })
-    },
-    {
         "n16cx_winograd_b4f3_fp32_fma",
         ppl::kernel::x86::conv2d_fp32_algo_info({
             .algo_type = ppl::kernel::x86::conv2d_fp32_algo::winograd_b4f3,
             .isa = ppl::common::ISA_X86_FMA,
-            .input_format = ppl::common::DATAFORMAT_N16CX,
-            .output_format = ppl::common::DATAFORMAT_N16CX
-        })
-    },
-    {
-        "n16cx_winograd_b4f3_fp32_avx512",
-        ppl::kernel::x86::conv2d_fp32_algo_info({
-            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::winograd_b4f3,
-            .isa = ppl::common::ISA_X86_AVX512,
             .input_format = ppl::common::DATAFORMAT_N16CX,
             .output_format = ppl::common::DATAFORMAT_N16CX
         })
@@ -196,28 +173,10 @@ static std::map<std::string, ppl::kernel::x86::conv2d_fp32_algo_info> algo_table
         })
     },
     {
-        "n16cx_direct_fp32_avx512",
-        ppl::kernel::x86::conv2d_fp32_algo_info({
-            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::direct,
-            .isa = ppl::common::ISA_X86_AVX512,
-            .input_format = ppl::common::DATAFORMAT_N16CX,
-            .output_format = ppl::common::DATAFORMAT_N16CX
-        })
-    },
-    {
         "n16cx_direct_ndarray_fp32_fma",
         ppl::kernel::x86::conv2d_fp32_algo_info({
             .algo_type = ppl::kernel::x86::conv2d_fp32_algo::direct,
             .isa = ppl::common::ISA_X86_FMA,
-            .input_format = ppl::common::DATAFORMAT_NDARRAY,
-            .output_format = ppl::common::DATAFORMAT_N16CX
-        })
-    },
-    {
-        "n16cx_direct_ndarray_fp32_avx512",
-        ppl::kernel::x86::conv2d_fp32_algo_info({
-            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::direct,
-            .isa = ppl::common::ISA_X86_AVX512,
             .input_format = ppl::common::DATAFORMAT_NDARRAY,
             .output_format = ppl::common::DATAFORMAT_N16CX
         })
@@ -230,8 +189,54 @@ static std::map<std::string, ppl::kernel::x86::conv2d_fp32_algo_info> algo_table
             .input_format = ppl::common::DATAFORMAT_NDARRAY,
             .output_format = ppl::common::DATAFORMAT_NDARRAY
         })
-    }
-
+    },
+#ifdef PPL_USE_X86_AVX512
+    {
+        "n16cx_gemm_direct_fp32_avx512",
+        ppl::kernel::x86::conv2d_fp32_algo_info({
+            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::gemm_direct,
+            .isa = ppl::common::ISA_X86_AVX512,
+            .input_format = ppl::common::DATAFORMAT_N16CX,
+            .output_format = ppl::common::DATAFORMAT_N16CX
+        })
+    },
+    {
+        "n16cx_depthwise_fp32_avx512",
+        ppl::kernel::x86::conv2d_fp32_algo_info({
+            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::depthwise,
+            .isa = ppl::common::ISA_X86_AVX512,
+            .input_format = ppl::common::DATAFORMAT_N16CX,
+            .output_format = ppl::common::DATAFORMAT_N16CX
+        })
+    },
+    {
+        "n16cx_winograd_b4f3_fp32_avx512",
+        ppl::kernel::x86::conv2d_fp32_algo_info({
+            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::winograd_b4f3,
+            .isa = ppl::common::ISA_X86_AVX512,
+            .input_format = ppl::common::DATAFORMAT_N16CX,
+            .output_format = ppl::common::DATAFORMAT_N16CX
+        })
+    },
+    {
+        "n16cx_direct_fp32_avx512",
+        ppl::kernel::x86::conv2d_fp32_algo_info({
+            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::direct,
+            .isa = ppl::common::ISA_X86_AVX512,
+            .input_format = ppl::common::DATAFORMAT_N16CX,
+            .output_format = ppl::common::DATAFORMAT_N16CX
+        })
+    },
+    {
+        "n16cx_direct_ndarray_fp32_avx512",
+        ppl::kernel::x86::conv2d_fp32_algo_info({
+            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::direct,
+            .isa = ppl::common::ISA_X86_AVX512,
+            .input_format = ppl::common::DATAFORMAT_NDARRAY,
+            .output_format = ppl::common::DATAFORMAT_N16CX
+        })
+    },
+#endif
 };
 
 int main(int argc, char **argv) {

@@ -31,7 +31,7 @@ uint64_t ConvTransposeKernel::CalcTmpBufferSize(const KernelExecContext& ctx) co
 
     if (false) {
     }
-#ifdef PPLNN_USE_X86_AVX512
+#ifdef PPL_USE_X86_AVX512
     else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
         return kernel::x86::conv_transpose_ndarray_fp32_avx512_get_buffer_bytes(
             batch, src_h, src_w, num_outputs, channels, param_->kernel_shape[0], param_->kernel_shape[1],
@@ -115,7 +115,7 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
         if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
             if (false) {
             }
-#ifdef PPLNN_USE_X86_AVX512
+#ifdef PPL_USE_X86_AVX512
             if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
                 return kernel::x86::conv_transpose_ndarray_fp32_avx512(
                     X->GetBufferPtr<float>(), W->GetBufferPtr<float>(), b_data, src_h, src_w, dst_h, dst_w, batch,

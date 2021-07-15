@@ -1,0 +1,6 @@
+#ifndef __ST_PPL_KERNEL_X86_COMMON_CONFIG_H_
+#define __ST_PPL_KERNEL_X86_COMMON_CONFIG_H_
+
+#cmakedefine PPL_USE_X86_AVX512
+
+#endif

@@ -40,7 +40,7 @@ ppl::common::RetCode MMCVGridSampleKernel::DoExecute(KernelExecContext* ctx) {
     if (param_->padding_mode == 0) { // bilinear
         if (false) {
         }
-#ifdef PPLNN_USE_X86_AVX512
+#ifdef PPL_USE_X86_AVX512
         else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
             LOG(ERROR) << "running here";
             return kernel::x86::mmcv_gridsample_linear_ndarray_fp32_avx512(

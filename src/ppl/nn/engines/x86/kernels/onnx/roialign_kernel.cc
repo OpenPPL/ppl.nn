@@ -44,7 +44,7 @@ ppl::common::RetCode ROIAlignKernel::DoExecute(KernelExecContext* ctx) {
         if (data_format == ppl::common::DATAFORMAT_N16CX) {
             if (false) {
             }
-#ifdef PPLNN_USE_X86_AVX512
+#ifdef PPL_USE_X86_AVX512
             else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
                 return kernel::x86::roialign_n16cx_fp32_avx512(
                     &x->GetShape(), &rois->GetShape(), &batch_indices->GetShape(), x->GetBufferPtr<float>(),

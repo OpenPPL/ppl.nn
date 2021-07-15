@@ -91,7 +91,7 @@ ppl::common::RetCode AveragePoolKernel::DoExecute(KernelExecContext* ctx) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
             if (false) {
             }
-#ifdef PPLNN_USE_X86_AVX512
+#ifdef PPL_USE_X86_AVX512
             else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
                 return ppl::kernel::x86::averagepool2d_n16chw_blk1x16_fp32_avx512(
                     &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,

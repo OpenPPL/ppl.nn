@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/kernel/x86/fp32/gemm_v2.h"
-#ifdef PPLNN_USE_X86_AVX512
+#ifdef PPL_USE_X86_AVX512
 #include "ppl/kernel/x86/fp32/gemm_v2/avx512/gemm_v2_mnk_kernel_nm_atbn_executor_fp32_avx512.h"
 #endif
 #include "ppl/kernel/x86/fp32/gemm_v2/fma/gemm_v2_mnk_sub_kmn_kernel_nm_atbn_executor_fp32_fma.h"
@@ -35,7 +35,7 @@ gemm_v2_executor_fp32* create_gemm_v2_executor_fp32(
     if (algo_info.algo_type != gemm_v2_fp32_algo_type::undef) {
         if (false) {
         }
-#ifdef PPLNN_USE_X86_AVX512
+#ifdef PPL_USE_X86_AVX512
         else if (algo_info.algo_type == gemm_v2_fp32_algo_type::mnk_kernel_nm_atbn_fp32_avx512) {
             executor = new gemm_v2_mnk_kernel_nm_atbn_executor_fp32_avx512;
         }
@@ -54,7 +54,7 @@ gemm_v2_executor_fp32* create_gemm_v2_executor_fp32(
             algo_select_strategy.internal_param_select_strategy == gemm_v2_algo_select_strategy::use_default_param) {
             if (false) {
             }
-#ifdef PPLNN_USE_X86_AVX512
+#ifdef PPL_USE_X86_AVX512
             else if (param.isa_flag & common::ISA_X86_AVX512) {
                 executor = new gemm_v2_mnk_kernel_nm_atbn_executor_fp32_avx512;
             }
