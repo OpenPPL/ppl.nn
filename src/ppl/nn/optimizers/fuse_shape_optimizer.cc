@@ -76,11 +76,17 @@ RetCode UpdateMatrixForNextNode(ir::Node* node, std::vector<edgeid_t>* edge_arra
             auto temp_edge_id = node->GetInput(i);
             if (shape_param->alpha.find(temp_edge_id) != shape_param->alpha.end()) {
                 auto ith_matrix = shape_param->alpha.find(temp_edge_id)->second;
+                if (matrix.real_dim < 0 || ith_matrix.real_dim < 0) {
+                    return RC_UNSUPPORTED;
+                }
                 matrix.Append(ith_matrix);
             } else if (constants.find(temp_edge_id) != constants.end()) {
                 auto concat_input = (const int64_t*)(constants.find(temp_edge_id)->second.data.data());
                 auto concat_dims = shapes.find(temp_edge_id)->second.dims;
                 if (concat_dims.size() != 1 || concat_dims[0] != 1) {
+                    return RC_UNSUPPORTED;
+                } 
+                if (matrix.real_dim < 0) {
                     return RC_UNSUPPORTED;
                 }
                 matrix.Append(concat_input[0]);
