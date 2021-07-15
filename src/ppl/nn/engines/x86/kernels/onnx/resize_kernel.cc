@@ -93,7 +93,7 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
         if (X->GetShape().GetDataFormat() == ppl::common::DATAFORMAT_N16CX) {
             if (false) {
             }
-#ifdef PPLNN_USE_X86_AVX512
+#ifdef PPL_USE_X86_AVX512
             else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
                 return kernel::x86::resize2d_n16cx_pytorch_2linear_floor_fp32_avx512(&X->GetShape(), &Y->GetShape(),
                                                                                      X->GetBufferPtr<float>(), scale_h,
@@ -115,7 +115,7 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
         if (X->GetShape().GetDataFormat() == ppl::common::DATAFORMAT_N16CX) {
             if (false) {
             }
-#ifdef PPLNN_USE_X86_AVX512
+#ifdef PPL_USE_X86_AVX512
             else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
                 return kernel::x86::reisze2d_n16cx_asymmetric_nearest_floor_fp32_avx512(
                     &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w,

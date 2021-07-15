@@ -29,7 +29,7 @@
 #include "ppl/kernel/x86/fp32/conv2d/gemm_direct/fma/conv2d_n16cx_gemm_direct_v2_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/conv2d/direct/fma/conv2d_n16cx_direct_v2_fp32_fma.h"
 
-#ifdef PPLNN_USE_X86_AVX512
+#ifdef PPL_USE_X86_AVX512
 #include "ppl/kernel/x86/fp32/conv2d/direct/avx512/conv2d_n16cx_direct_fp32_avx512.h"
 #include "ppl/kernel/x86/fp32/conv2d/gemm_direct/avx512/conv2d_n16cx_gemm_direct_fp32_avx512.h"
 #include "ppl/kernel/x86/fp32/conv2d/depthwise/avx512/conv2d_n16cx_depthwise_fp32_avx512.h"
@@ -53,7 +53,7 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
         .input_format  = ppl::common::DATAFORMAT_NDARRAY,
         .output_format = ppl::common::DATAFORMAT_NDARRAY};
 
-#ifdef PPLNN_USE_X86_AVX512
+#ifdef PPL_USE_X86_AVX512
     if (isa_flags & ppl::common::ISA_X86_AVX512) {
         if (src_format == ppl::common::DATAFORMAT_NDARRAY) {
             auto direct_ndarray_mgr = new conv2d_n16cx_direct_ndarray_fp32_avx512_manager(param, nullptr);
@@ -259,7 +259,7 @@ conv2d_fp32_manager *conv2d_algo_selector::gen_algo(const conv2d_fp32_param &par
         algo_info.output_format == ppl::common::DATAFORMAT_NDARRAY) {
         conv_mgr = new conv2d_im2col_gemm_fp32_fma_manager(param, allocator);
     }
-#ifdef PPLNN_USE_X86_AVX512
+#ifdef PPL_USE_X86_AVX512
     if (algo_info.algo_type == conv2d_fp32_algo::winograd_b4f3 &&
         algo_info.isa == ppl::common::ISA_X86_AVX512 &&
         algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&

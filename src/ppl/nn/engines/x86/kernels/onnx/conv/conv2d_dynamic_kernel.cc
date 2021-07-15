@@ -32,7 +32,7 @@ uint64_t Conv2dDynamicKernel::CalcTmpBufferSize(const KernelExecContext& ctx) co
 
     if (false) {
     }
-#ifdef PPLNN_USE_X86_AVX512
+#ifdef PPL_USE_X86_AVX512
     else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
         return kernel::x86::conv2d_dynamic_ndarray_fp32_avx512_get_buffer_bytes(
             batch, num_output, param_->group, dst_h, dst_w, channels / param_->group, param_->kernel_shape[0],
@@ -134,7 +134,7 @@ ppl::common::RetCode Conv2dDynamicKernel::DoExecute(KernelExecContext* ctx) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
             if (false) {
             }
-#ifdef PPLNN_USE_X86_AVX512
+#ifdef PPL_USE_X86_AVX512
             else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
                 return kernel::x86::conv2d_dynamic_ndarray_fp32_avx512(
                     X->GetBufferPtr<float>(), W->GetBufferPtr<float>(), b_data, src_h, src_w, dst_h, dst_w, batch,
