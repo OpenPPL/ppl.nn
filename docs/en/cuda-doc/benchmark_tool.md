@@ -39,7 +39,7 @@ All tested model are dynamic model created by pytorch model zoo.
 ```
 
 
-| 模型名称                     | PPL      | TRT-8    |
+| model name                     | PPL      | TRT-8    |
 |--------------------------|----------|----------|
 | alexnet                  | 0.60907  | 0.668934 |
 | densenet121_opt          | 2.64249  | 3.13724  |
