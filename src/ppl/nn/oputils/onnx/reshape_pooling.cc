@@ -60,7 +60,6 @@ RetCode ReshapePooling(InputOutputInfo* info, const void* arg) {
                 out_dim_i32 = (int32_t)floorf(pre_out_dim_f32);
             }
             if (out_dim_i32 <= 0) {
-                LOG(ERROR) << "Output Width or Height Is Invalid Value!";
                 return RC_INVALID_VALUE;
             }
             y->SetDim(j, out_dim_i32);

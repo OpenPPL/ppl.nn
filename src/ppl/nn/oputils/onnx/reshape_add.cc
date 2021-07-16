@@ -16,7 +16,6 @@
 // under the License.
 
 #include "ppl/nn/oputils/onnx/reshape_add.h"
-#include "ppl/nn/common/logger.h"
 #include "ppl/nn/oputils/broadcast.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
@@ -25,7 +24,6 @@ namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeAdd(InputOutputInfo* info, const void*) {
     if (info->GetInputCount() != 2) {
-        LOG(ERROR) << "2 input required.";
         return RC_INVALID_VALUE;
     }
 
@@ -36,7 +34,6 @@ RetCode ReshapeAdd(InputOutputInfo* info, const void*) {
     multi_bc.SetInputTensorShapes(lhs, rhs);
     multi_bc.CalcBroadCast();
     if (!multi_bc.CanBroadCast()) {
-        LOG(ERROR) << "unbroadcastable input.";
         return RC_INVALID_VALUE;
     }
 

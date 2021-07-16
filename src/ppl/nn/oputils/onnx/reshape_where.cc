@@ -27,7 +27,6 @@ namespace ppl { namespace nn { namespace oputils {
 
 common::RetCode ReshapeWhere(InputOutputInfo* info, const void* arg) {
     if (info->GetInputCount() != 3) {
-        LOG(ERROR) << "3 input required.";
         return RC_INVALID_VALUE;
     }
 
@@ -39,7 +38,6 @@ common::RetCode ReshapeWhere(InputOutputInfo* info, const void* arg) {
     }
     multi_input_bc.CalcBroadCast();
     if (!multi_input_bc.CanBroadCast()) {
-        LOG(ERROR) << "unbroadcastable input.";
         return RC_INVALID_VALUE;
     }
 

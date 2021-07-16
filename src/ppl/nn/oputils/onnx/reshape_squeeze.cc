@@ -16,7 +16,6 @@
 // under the License.
 
 #include "ppl/nn/oputils/onnx/reshape_squeeze.h"
-#include "ppl/nn/common/logger.h"
 #include <set>
 using namespace std;
 #include "ppl/nn/runtime/tensor_impl.h"

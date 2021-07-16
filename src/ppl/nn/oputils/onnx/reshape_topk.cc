@@ -16,7 +16,6 @@
 // under the License.
 
 #include "ppl/nn/oputils/onnx/reshape_topk.h"
-#include "ppl/nn/common/logger.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
@@ -34,7 +33,6 @@ RetCode ReshapeTopK(InputOutputInfo* info, const void* arg, int64_t k) {
     int32_t axis = param->axis;
 
     if (axis < -dim_count || axis > dim_count - 1) {
-        LOG(ERROR) << "Invalid attribute axis value: " << axis << ".";
         return RC_INVALID_VALUE;
     }
     if (axis < 0) {
@@ -43,7 +41,6 @@ RetCode ReshapeTopK(InputOutputInfo* info, const void* arg, int64_t k) {
 
     const int64_t axis_dim = x->GetShape().GetDim(axis);
     // if (k > axis_dim) {
-    //     LOG(ERROR) << "Invalid K: " << k << ". " << axis_dim;
     //     return RC_INVALID_VALUE;
     // }
 

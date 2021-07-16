@@ -16,7 +16,6 @@
 // under the License.
 
 #include "ppl/nn/oputils/onnx/reshape_unsqueeze.h"
-#include "ppl/nn/common/logger.h"
 #include <algorithm>
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
@@ -33,7 +32,6 @@ RetCode ReshapeUnsqueeze(InputOutputInfo* info, const void* arg) {
 
     for (uint32_t i = 0; i < param->axes.size(); ++i) {
         if (param->axes[i] < (int32_t)(-out_dim_count) || param->axes[i] >= (int32_t)out_dim_count) {
-            LOG(ERROR) << "axes overflow.";
             return RC_INVALID_VALUE;
         }
         if (param->axes[i] < 0) {

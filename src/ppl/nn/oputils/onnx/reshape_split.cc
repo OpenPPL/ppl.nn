@@ -16,7 +16,6 @@
 // under the License.
 
 #include "ppl/nn/oputils/onnx/reshape_split.h"
-#include "ppl/nn/common/logger.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
@@ -32,7 +31,6 @@ RetCode ReshapeSplit(InputOutputInfo* info, const void* arg) {
         uint32_t in_dim = shape.GetDim(split_axis);
         uint32_t split_dim = in_dim / info->GetOutputCount();
         if (split_dim * info->GetOutputCount() != in_dim) {
-            LOG(ERROR) << "splited axis cannot divied by output count.";
             return RC_INVALID_VALUE;
         }
 
@@ -47,7 +45,6 @@ RetCode ReshapeSplit(InputOutputInfo* info, const void* arg) {
         return RC_SUCCESS;
     }
     if (info->GetOutputCount() != param->split_point.size()) {
-        LOG(ERROR) << "output count and split point num not match.";
         return RC_INVALID_VALUE;
     }
 
@@ -56,7 +53,6 @@ RetCode ReshapeSplit(InputOutputInfo* info, const void* arg) {
         sumDim += param->split_point[i];
     }
     if (sumDim != shape.GetDim(split_axis)) {
-        LOG(ERROR) << "splited axis and sum of split point not match.";
         return RC_INVALID_VALUE;
     }
 

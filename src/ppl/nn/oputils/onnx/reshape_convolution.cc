@@ -17,7 +17,6 @@
 
 #include "ppl/nn/oputils/onnx/reshape_convolution.h"
 #include "ppl/nn/runtime/tensor_impl.h"
-#include "ppl/common/log.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
@@ -43,7 +42,6 @@ RetCode ReshapeConvolution(InputOutputInfo* info, const void* arg) {
                 param->strides[i] +
             1;
         if (out_dim <= 0) {
-            LOG(ERROR) << "Output Width or Height Is Invalid Value!";
             return RC_INVALID_VALUE;
         }
         y->SetDim(j, out_dim);

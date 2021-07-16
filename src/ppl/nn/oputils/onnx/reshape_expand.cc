@@ -17,7 +17,6 @@
 
 #include "ppl/nn/oputils/onnx/reshape_expand.h"
 #include "ppl/nn/oputils/broadcast.h"
-#include "ppl/nn/common/logger.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
 

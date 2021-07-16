@@ -16,7 +16,6 @@
 // under the License.
 
 #include "ppl/nn/oputils/broadcast.h"
-#include "ppl/nn/common/logger.h"
 #include <deque>
 #include <algorithm>
 using namespace ppl::common;
