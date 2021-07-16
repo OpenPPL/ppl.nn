@@ -100,7 +100,7 @@ static RetCode ReadFileContent(const char* fname, string* buf) {
 
     ifile.open(fname, ios_base::in);
     if (!ifile.is_open()) {
-        LOG(ERROR) << "open quant file[" << fname << "] failed.";
+        // LOG(ERROR) << "open quant file[" << fname << "] failed.";
         return RC_NOT_FOUND;
     }
 
