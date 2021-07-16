@@ -33,7 +33,7 @@ Average run cost: *** ms.
 测试模型均为pytorch model zoo导出的动态模型。测试指令如下：
 
 ```
-./pplnn --onnx-model model.onnx -–in-shapes 1_3_224_224 --dims 1_3_224_224 --warmuptimes 400 --enable-profiling
+./pplnn --onnx-model model.onnx --inputs input.bin -–in-shapes 1_3_224_224 --dims 1_3_224_224 --warmuptimes 400 --enable-profiling
 ```
 
 测试结果对比如下：
