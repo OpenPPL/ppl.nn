@@ -51,7 +51,7 @@ ppl::common::RetCode resize2d_n16cx_pytorch_2linear_floor_fp32_avx512(
 
     PRAGMA_OMP_PARALLEL_FOR()
     for (int64_t ow = 0; ow < dst_w; ow++) {
-        float iw = (ow + 0.5f) * wscale - 0.5f;
+        float iw = dst_w > 1 ? (ow + 0.5f) * wscale - 0.5f : 0;
         if (iw < 0) {
             w0_vec[ow]        = 0;
             w1_vec[ow]        = 0;
@@ -71,7 +71,7 @@ ppl::common::RetCode resize2d_n16cx_pytorch_2linear_floor_fp32_avx512(
         float *l_dst       = dst + bc * dst_hw;
 
         for (int64_t oh = 0; oh < dst_h; ++oh) {
-            float ih = (oh + 0.5f) * hscale - 0.5f;
+            float ih = dst_h > 1 ? (oh + 0.5f) * hscale - 0.5f : 0;
             int64_t h0, h1;
             float h0_lambda, h1_lambda;
             if (ih < 0) {
