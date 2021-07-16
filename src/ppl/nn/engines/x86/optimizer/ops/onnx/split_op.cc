@@ -36,10 +36,6 @@ RetCode SplitOp::Init(const OptKernelOptions& options) {
         if (ret != RC_SUCCESS) {
             return ret;
         }
-        if (info->GetInput<TensorImpl>(0)->GetShape().GetDataType() != DATATYPE_FLOAT32) {
-            LOG(ERROR) << "only support fp32 now.";
-            return RC_UNSUPPORTED;
-        }
         return RC_SUCCESS;
     };
 
