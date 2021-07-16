@@ -45,7 +45,7 @@ For more information and usage details, please refer to [MMClassification offici
 
 ### Example: Converting Faster R-CNN
 
-If you do not install MMDetection, following this [tutorial](https://github.com/open-mmlab/mmdetection/blob/master/docs/get_started.md) to install it first. Faster R-CNN uses some custom operators implemented in `MMCV` which is more efficient than standard ONNX operators. If you want to use these custom operations, you need to build custom operators for ONNX Runtime before installing MMCV. Please refer to the MMCV tutorial [Custom operators for ONNX Runtime in MMCV](https://github.com/open-mmlab/mmcv/blob/master/docs/onnxruntime_op.md#how-to-build-custom-operators-for-onnx-runtime). If you do not build custom operators, Faster R-CNN will be converted to the ONNX model using standard operations.
+If you do not install MMDetection, following this [tutorial](https://github.com/open-mmlab/mmdetection/blob/master/docs/get_started.md) to install it first. Faster R-CNN uses some custom operators implemented in `MMCV` which is more efficient than standard ONNX operators. If you want to use these custom operations, you need to build custom operators for ONNX Runtime before installing MMCV. Please refer to the MMCV tutorial [Custom operators for ONNX Runtime in MMCV](https://github.com/open-mmlab/mmcv/blob/master/docs/deployment/onnxruntime_op.md#how-to-build-custom-operators-for-onnx-runtime). If you do not build custom operators, Faster R-CNN will be converted to the ONNX model using standard operations.
 
 Download the corresponding checkpoint, and use the tool to convert the checkpoint to an ONNX model.
 ```bash
