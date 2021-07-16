@@ -73,8 +73,6 @@ const double TuringHMMAImpgemm::ExcuteTimer(ir::Node* node, OptKernelOptions& op
     auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
 
-    LOG(ERROR) << shape_in0.GetDim(2) << " " << shape_in0.GetDim(3);
-
     // input H or W is too small
     if (shape_in0.GetDim(2) + 2 * temp_conv_param.pad_height < shape_in1.GetDim(2) ||
         shape_in0.GetDim(3) + 2 * temp_conv_param.pad_width < shape_in1.GetDim(3)) {
