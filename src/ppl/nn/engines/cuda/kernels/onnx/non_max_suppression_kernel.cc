@@ -64,7 +64,7 @@ ppl::common::RetCode NonMaxSuppressionKernel::DoExecute(KernelExecContext* ctx) 
         }
     }
 
-    float score_threshold = 0.f;
+    float score_threshold = -FLT_MAX;
     if (ctx->GetInputCount() >= 5) {
         auto status = ctx->GetInput<TensorImpl>(4)->CopyToHost(&score_threshold);
         if (status != ppl::common::RC_SUCCESS) {
