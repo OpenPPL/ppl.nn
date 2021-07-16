@@ -125,13 +125,13 @@ RetCode OptGraph::UpdateDims() {
                 if (dims_pairs == args_->input_dims.end()) { // use default dims
                     dims_pairs = args_->input_dims.find("");
                     if (dims_pairs == args_->input_dims.end()) {
-                        LOG(ERROR) << "Error inpt dims init for input edge[" << edge->GetName() << "]";
+                        LOG(ERROR) << "Error input dims init for input edge[" << edge->GetName() << "]";
                         return RC_INVALID_VALUE;
                     }
                 }
                 if (ir_shape->second.dims.size() == dims_pairs->second.size()) {
                     for (uint32_t k = 0; k < ir_shape->second.dims.size(); ++k) {
-                        if (ir_shape->second.dims[k] == 0 && (dims_pairs->second)[k] != 0) {
+                        if ((dims_pairs->second)[k] != 0) {
                             ir_shape->second.dims[k] = (dims_pairs->second)[k];
                         }
                     }
