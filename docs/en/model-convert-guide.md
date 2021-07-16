@@ -59,10 +59,8 @@ faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth \
 --output-file faster_rcnn.onnx --simplify --dynamic-export
 ```
 
-The inputs of detection models are usually in different shapes, we recommend using `--dynamic-export` to export the model with dynamic input and output shapes, to ensure the accuracy of the network. 
+The inputs of detection models are usually in different shapes, we recommend using `--dynamic-export` to export the model with dynamic input and output shapes, to ensure the accuracy of the network.
 The `faster_rcnn.onnx` will be generated in the current directory. More details can refer to the [MMDetection official converting tutorial](https://github.com/open-mmlab/mmdetection/blob/master/docs/tutorials/pytorch2onnx.md).
-
-
 
 For a two-stage detector like Faster R-CNN, if the exported ONNX model supports dynamic shapes and multi-batch inputs, MMDetection converting tools fixes the number of proposals to 1000, i.e. the first dimension of Region Proposal Network(RPN) output is 1000. This will introduce unnecessary calculations for input images with less than 1000 proposal boxes. For inference libraries like `PPLNN` that support the `NonZero` operation, the source code of the detector implementation in MMDetection can be slightly modified to avoid the additional calculations mentioned above, and further improve the inference speed.
 
@@ -126,9 +124,9 @@ model = torchvision.models.mobilenet_v2(pretrained=True).cuda()
 input_names = [ "input" ]
 output_names = [ "probs" ]
 
-# Providing dynamic axes to export models with dynamic shapes. The dictionary 
-# specifies a mapping FROM the index of dynamic axis in corresponding 
-# input/output TO the name that is desired to be applied on such axis 
+# Providing dynamic axes to export models with dynamic shapes. The dictionary
+# specifies a mapping FROM the index of dynamic axis in corresponding
+# input/output TO the name that is desired to be applied on such axis
 # of such input/output during export.
 dynamic_axes = {
     'input': {
@@ -141,13 +139,13 @@ dynamic_axes = {
         },
     }
 
-torch.onnx.export(model, 
-                  dummy_input, 
-                  "mobilenet_v2.onnx", 
-                  input_names=input_names, 
-                  output_names=output_names, 
+torch.onnx.export(model,
+                  dummy_input,
+                  "mobilenet_v2.onnx",
+                  input_names=input_names,
+                  output_names=output_names,
                   do_constant_folding=True,
-                  opset_version=11, 
+                  opset_version=11,
                   dynamic_axes=dynamic_axes)
 ```
 
