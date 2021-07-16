@@ -41,7 +41,7 @@ Here are some useful flags during conversion:
 * --verify &emsp; Verify the correctness of an exported model by comparing the results with Pytorch
 * --show &emsp; Show the graph of ONNX model
 
-For more information and usage details, please refer to [MMClassification official conversion tutorials](https://github.com/open-mmlab/mmclassification/blob/master/docs_zh-CN/tutorials/pytorch2onnx.md).
+For more information and usage details, please refer to [MMClassification official conversion tutorials](https://github.com/open-mmlab/mmclassification/blob/master/docs_zh-CN/tools/pytorch2onnx.md).
 
 ### Example: Converting Faster R-CNN
 
@@ -60,7 +60,7 @@ faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth \
 ```
 
 The inputs of detection models are usually in different shapes, we recommend using `--dynamic-export` to export the model with dynamic input and output shapes, to ensure the accuracy of the network. 
-The `faster_rcnn.onnx` will be generated in the current directory. More details can refer to the [MMDetection official converting tutorial](https://github.com/open-mmlab/mmdetection/blob/master/docs/tutorials/pytorch2onnx.md). 
+The `faster_rcnn.onnx` will be generated in the current directory. More details can refer to the [MMDetection official converting tutorial](https://github.com/open-mmlab/mmdetection/blob/master/docs/tutorials/pytorch2onnx.md).
 
 
 
@@ -111,7 +111,7 @@ Then run the converting tools and a simplified ONNX model will be generated.
 
 
 ## Convert Model from PyTorch
-PyTorch provides an API called `torch.onnx.export()` to support the model conversion. More information can be get from the [offical docs](https://pytorch.org/docs/stable/onnx.html?highlight=torch%20onnx%20export#torch.onnx.export). Here is a simple example code that exports a pre-trained MobileNetV2 in torchvision into ONNX with dynamic shapes. 
+PyTorch provides an API called `torch.onnx.export()` to support the model conversion. More information can be get from the [offical docs](https://pytorch.org/docs/stable/onnx.html?highlight=torch%20onnx%20export#torch.onnx.export). Here is a simple example code that exports a pre-trained MobileNetV2 in torchvision into ONNX with dynamic shapes.
 
 ```python
 import torch
