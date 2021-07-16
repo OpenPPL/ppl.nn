@@ -19,6 +19,7 @@
 #include "ppl/nn/engines/x86/macros.h"
 #include "ppl/kernel/x86/fp32/concat.h"
 #include "ppl/kernel/x86/int64/concat.h"
+#include "ppl/kernel/x86/bool/concat.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -64,8 +65,8 @@ ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
     const int32_t real_axis =
         param_->axis < 0 ? param_->axis + ctx->GetInput<TensorImpl>(0)->GetShape().GetDimCount() : param_->axis;
 
-    if (data_type == ppl::common::DATATYPE_FLOAT32 && data_format == ppl::common::DATAFORMAT_N16CX && real_axis == 1 &&
-        MayUseISA(ppl::common::ISA_X86_AVX)) {
+    if (ppl::common::GetSizeOfDataType(data_type) == 4 && data_format == ppl::common::DATAFORMAT_N16CX &&
+        real_axis == 1 && MayUseISA(ppl::common::ISA_X86_AVX)) {
         bool interleave_channels = false;
         for (uint32_t i = 0; i < src_shape_list_.size() - 1; i++) {
             if (src_shape_list_[i]->GetDim(1) % 16 != 0) {
@@ -80,7 +81,7 @@ ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
         }
     }
 
-    if (data_type == ppl::common::DATATYPE_FLOAT32) {
+    if (ppl::common::GetSizeOfDataType(data_type) == 4) {
         if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
             return kernel::x86::concat_ndarray_fp32(src_shape_list_.data(), (const float**)src_list_.data(),
                                                     ctx->GetInputCount(), param_->axis,
@@ -91,9 +92,8 @@ ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
                                                   concat_result->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "unsupported data format: " << ppl::common::GetDataFormatStr(data_format);
-            return ppl::common::RC_UNSUPPORTED;
         }
-    } else if (data_type == ppl::common::DATATYPE_INT64) {
+    } else if (ppl::common::GetSizeOfDataType(data_type) == 8) {
         if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
             return kernel::x86::concat_ndarray_int64(src_shape_list_.data(), (const int64_t**)src_list_.data(),
                                                      ctx->GetInputCount(), param_->axis,
@@ -104,11 +104,21 @@ ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
                                                    concat_result->GetBufferPtr<int64_t>());
         } else {
             LOG(ERROR) << "unsupported data format: " << ppl::common::GetDataFormatStr(data_format);
-            return ppl::common::RC_UNSUPPORTED;
+        }
+    } else if (ppl::common::GetSizeOfDataType(data_type) == 1) {
+        if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
+            return kernel::x86::concat_ndarray_bool(src_shape_list_.data(), (const uint8_t**)src_list_.data(),
+                                                    ctx->GetInputCount(), param_->axis,
+                                                    concat_result->GetBufferPtr<uint8_t>());
+        } else if (data_format == ppl::common::DATAFORMAT_N16CX) {
+            return kernel::x86::concat_n16cx_bool(src_shape_list_.data(), (const uint8_t**)src_list_.data(),
+                                                  ctx->GetInputCount(), param_->axis,
+                                                  concat_result->GetBufferPtr<uint8_t>());
+        } else {
+            LOG(ERROR) << "unsupported data format: " << ppl::common::GetDataFormatStr(data_format);
         }
     } else {
         LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type);
-        return ppl::common::RC_UNSUPPORTED;
     }
 
     return ppl::common::RC_UNSUPPORTED;
