@@ -43,7 +43,7 @@ ppl::common::RetCode reisze2d_ndarray_pytorch_linear_floor_fp32(
         const float *l_src = src + ni * src_h * src_w;
         float *l_dst       = dst + ni * dst_h * dst_w;
         for (int64_t oh = 0; oh < dst_h; ++oh) {
-            float ih = (oh + 0.5f) * hscale - 0.5f;
+            float ih = dst_h > 1 ? (oh + 0.5f) * hscale - 0.5f : 0;
             int64_t h0, h1;
             float h0_lambda, h1_lambda;
             if (ih < 0) {
@@ -59,7 +59,7 @@ ppl::common::RetCode reisze2d_ndarray_pytorch_linear_floor_fp32(
             }
 
             for (int64_t ow = 0; ow < dst_w; ++ow) {
-                float iw = (ow + 0.5f) * wscale - 0.5f;
+                float iw = dst_w > 1 ? (ow + 0.5f) * wscale - 0.5f : 0;
                 int64_t w0, w1;
                 float w0_lambda, w1_lambda;
                 if (iw < 0) {
@@ -135,9 +135,9 @@ ppl::common::RetCode reisze2d_ndarray_asymmetric_nearest_floor_fp32(
 }
 
 inline void calc_resize_cubic_coeff(
-        const float r,
-        const float A,
-        float *coeff)
+    const float r,
+    const float A,
+    float *coeff)
 {
     coeff[0] = ((A * (r + 1) - 5 * A) * (r + 1) + 8 * A) * (r + 1) - 4 * A;
     coeff[1] = ((A + 2) * r - (A + 3)) * r * r + 1;
@@ -147,11 +147,11 @@ inline void calc_resize_cubic_coeff(
 
 template <typename T>
 inline T get_value_bounded(
-        const T *src,
-        const int64_t h,
-        const int64_t w,
-        const int64_t src_h,
-        const int64_t src_w)
+    const T *src,
+    const int64_t h,
+    const int64_t w,
+    const int64_t src_h,
+    const int64_t src_w)
 {
     int64_t h_ = max<int64_t>(min(h, src_h - 1), 0);
     int64_t w_ = max<int64_t>(min(w, src_w - 1), 0);
@@ -181,7 +181,7 @@ ppl::common::RetCode reisze2d_ndarray_pytorch_cubic_floor_fp32(
     std::vector<float> coeff_y_tab(dst_h * 4);
     PRAGMA_OMP_PARALLEL_FOR()
     for (int64_t oh = 0; oh < dst_h; ++oh) {
-        float ih   = (oh + 0.5f) * hscale - 0.5f;
+        float ih   = dst_h > 1 ? (oh + 0.5f) * hscale - 0.5f : 0;
         int64_t sy = ::floor(ih);
         float fy   = ih - sy;
         sy_tab[oh] = sy;
@@ -194,7 +194,7 @@ ppl::common::RetCode reisze2d_ndarray_pytorch_cubic_floor_fp32(
     std::vector<float> coeff_x_tab(dst_w * 4);
     PRAGMA_OMP_PARALLEL_FOR()
     for (int64_t ow = 0; ow < dst_w; ++ow) {
-        float iw   = (ow + 0.5f) * wscale - 0.5f;
+        float iw   = dst_w > 1 ? (ow + 0.5f) * wscale - 0.5f : 0;
         int64_t sx = ::floor(iw);
         float fx   = iw - sx;
         sx_tab[ow] = sx;
