@@ -19,6 +19,7 @@
 #define __ST_FP_H_
 
 #include <stdint.h>
+#include <cmath>
 
 template <typename T>
 bool check_array_error(T* input, T* ref, uint64_t len, T eps)
