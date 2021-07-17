@@ -41,11 +41,11 @@ Here are some useful flags during conversion:
 * --verify &emsp; Verify the correctness of an exported model by comparing the results with Pytorch
 * --show &emsp; Show the graph of ONNX model
 
-For more information and usage details, please refer to [MMClassification official conversion tutorials](https://github.com/open-mmlab/mmclassification/blob/master/docs_zh-CN/tutorials/pytorch2onnx.md).
+For more information and usage details, please refer to [MMClassification official conversion tutorials](https://github.com/open-mmlab/mmclassification/blob/master/docs_zh-CN/tools/pytorch2onnx.md).
 
 ### Example: Converting Faster R-CNN
 
-If you do not install MMDetection, following this [tutorial](https://github.com/open-mmlab/mmdetection/blob/master/docs/get_started.md) to install it first. Faster R-CNN uses some custom operators implemented in `MMCV` which is more efficient than standard ONNX operators. If you want to use these custom operations, you need to build custom operators for ONNX Runtime before installing MMCV. Please refer to the MMCV tutorial [Custom operators for ONNX Runtime in MMCV](https://github.com/open-mmlab/mmcv/blob/master/docs/onnxruntime_op.md#how-to-build-custom-operators-for-onnx-runtime). If you do not build custom operators, Faster R-CNN will be converted to the ONNX model using standard operations.
+If you do not install MMDetection, following this [tutorial](https://github.com/open-mmlab/mmdetection/blob/master/docs/get_started.md) to install it first. Faster R-CNN uses some custom operators implemented in `MMCV` which is more efficient than standard ONNX operators. If you want to use these custom operations, you need to build custom operators for ONNX Runtime before installing MMCV. Please refer to the MMCV tutorial [Custom operators for ONNX Runtime in MMCV](https://github.com/open-mmlab/mmcv/blob/master/docs/deployment/onnxruntime_op.md#how-to-build-custom-operators-for-onnx-runtime). If you do not build custom operators, Faster R-CNN will be converted to the ONNX model using standard operations.
 
 Download the corresponding checkpoint, and use the tool to convert the checkpoint to an ONNX model.
 ```bash
@@ -59,10 +59,8 @@ faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth \
 --output-file faster_rcnn.onnx --simplify --dynamic-export
 ```
 
-The inputs of detection models are usually in different shapes, we recommend using `--dynamic-export` to export the model with dynamic input and output shapes, to ensure the accuracy of the network. 
-The `faster_rcnn.onnx` will be generated in the current directory. More details can refer to the [MMDetection official converting tutorial](https://github.com/open-mmlab/mmdetection/blob/master/docs/tutorials/pytorch2onnx.md). 
-
-
+The inputs of detection models are usually in different shapes, we recommend using `--dynamic-export` to export the model with dynamic input and output shapes, to ensure the accuracy of the network.
+The `faster_rcnn.onnx` will be generated in the current directory. More details can refer to the [MMDetection official converting tutorial](https://github.com/open-mmlab/mmdetection/blob/master/docs/tutorials/pytorch2onnx.md).
 
 For a two-stage detector like Faster R-CNN, if the exported ONNX model supports dynamic shapes and multi-batch inputs, MMDetection converting tools fixes the number of proposals to 1000, i.e. the first dimension of Region Proposal Network(RPN) output is 1000. This will introduce unnecessary calculations for input images with less than 1000 proposal boxes. For inference libraries like `PPLNN` that support the `NonZero` operation, the source code of the detector implementation in MMDetection can be slightly modified to avoid the additional calculations mentioned above, and further improve the inference speed.
 
@@ -111,7 +109,7 @@ Then run the converting tools and a simplified ONNX model will be generated.
 
 
 ## Convert Model from PyTorch
-PyTorch provides an API called `torch.onnx.export()` to support the model conversion. More information can be get from the [offical docs](https://pytorch.org/docs/stable/onnx.html?highlight=torch%20onnx%20export#torch.onnx.export). Here is a simple example code that exports a pre-trained MobileNetV2 in torchvision into ONNX with dynamic shapes. 
+PyTorch provides an API called `torch.onnx.export()` to support the model conversion. More information can be get from the [offical docs](https://pytorch.org/docs/stable/onnx.html?highlight=torch%20onnx%20export#torch.onnx.export). Here is a simple example code that exports a pre-trained MobileNetV2 in torchvision into ONNX with dynamic shapes.
 
 ```python
 import torch
@@ -126,9 +124,9 @@ model = torchvision.models.mobilenet_v2(pretrained=True).cuda()
 input_names = [ "input" ]
 output_names = [ "probs" ]
 
-# Providing dynamic axes to export models with dynamic shapes. The dictionary 
-# specifies a mapping FROM the index of dynamic axis in corresponding 
-# input/output TO the name that is desired to be applied on such axis 
+# Providing dynamic axes to export models with dynamic shapes. The dictionary
+# specifies a mapping FROM the index of dynamic axis in corresponding
+# input/output TO the name that is desired to be applied on such axis
 # of such input/output during export.
 dynamic_axes = {
     'input': {
@@ -141,13 +139,13 @@ dynamic_axes = {
         },
     }
 
-torch.onnx.export(model, 
-                  dummy_input, 
-                  "mobilenet_v2.onnx", 
-                  input_names=input_names, 
-                  output_names=output_names, 
+torch.onnx.export(model,
+                  dummy_input,
+                  "mobilenet_v2.onnx",
+                  input_names=input_names,
+                  output_names=output_names,
                   do_constant_folding=True,
-                  opset_version=11, 
+                  opset_version=11,
                   dynamic_axes=dynamic_axes)
 ```
 
