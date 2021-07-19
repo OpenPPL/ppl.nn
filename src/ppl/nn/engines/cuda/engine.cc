@@ -274,7 +274,7 @@ RetCode CudaEngine::SetNodeType(CudaEngine* engine, va_list args) {
 RetCode CudaEngine::SetQuantization(CudaEngine* engine, va_list args) {
     const char* json_file = va_arg(args, const char*);
     QuantParamParser parser;
-    if (json_file != "") {
+    if (json_file[0] != '\0') {
         parser.Parse(json_file, &engine->cuda_flags_.quant_info);
         LOG(INFO) << "Quant tensor size: " << engine->cuda_flags_.quant_info.tensor_params.size();
     }
