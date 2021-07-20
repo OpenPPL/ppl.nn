@@ -31,14 +31,14 @@ public:
     /**
        @brief create an `OnnxRuntimeBuilder` instance from a model file
        @param engines used to process this model
-       @note engines are managed by the caller and MUST be destroyed after `OnnxRuntimeBuilder`
+       @note engines are managed by the caller
     */
     static OnnxRuntimeBuilder* Create(const char* model_file, Engine** engines, uint32_t engine_num);
 
     /**
        @brief create an `OnnxRuntimeBuilder` instance from a buffer
        @param engines used to process this model
-       @note engines are managed by the caller and MUST be destroyed after `OnnxRuntimeBuilder`
+       @note engines are managed by the caller
     */
     static OnnxRuntimeBuilder* Create(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num);
 };
