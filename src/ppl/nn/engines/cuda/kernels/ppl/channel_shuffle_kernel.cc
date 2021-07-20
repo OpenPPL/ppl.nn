@@ -15,28 +15,27 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/optimizer/fusions/fs_filter_manager.h"
-
-using namespace std;
-using namespace ppl::common;
+#include "ppl/nn/engines/cuda/kernels/ppl/channel_shuffle_kernel.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-Fusion* FsFilterManager::FindFusion(const std::string& kernel_type) const {
-    auto ref = type2fusion_.find(kernel_type);
-    if (ref == type2fusion_.end()) {
-        return nullptr;
-    }
-    return ref->second;
-}
+ppl::common::RetCode ChannelShuffleKernel::DoExecute(KernelExecContext* ctx) {
+    auto X = ctx->GetInput<TensorImpl>(0);
+    auto Y = ctx->GetOutput<TensorImpl>(0);
+    int group_ = param_->group;
 
-FsFilterManager::FsFilterManager() {
-    type2fusion_.emplace("AveragePool", &averagepool_fs_);
-    type2fusion_.emplace("Concat", &concat_fs_);
-    type2fusion_.emplace("Conv", &conv_fs_);
-    type2fusion_.emplace("Gemm", &gemm_fs_);
-    type2fusion_.emplace("Reshape", &channel_shuffle_fs_);
-    
+    if (X->GetShape().GetDimCount() != 4 || Y->GetShape().GetDimCount() != 4) {
+        LOG(ERROR) << "incorrect input dimcount: " << X->GetShape().GetDimCount();
+        return ppl::common::RC_UNSUPPORTED;
+    }
+    if (X->GetShape().GetDim(1) % group_) {
+        LOG(ERROR) << "unsupported ChanneShuffle group: " << group_;
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
+    LOG(INFO) << "Excute channel shuffle kernel";
+
+    return ppl::common::RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::cuda
