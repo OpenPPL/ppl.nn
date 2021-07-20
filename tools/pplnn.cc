@@ -716,8 +716,12 @@ int main(int argc, char* argv[]) {
     unique_ptr<Runtime> runtime;
 
     if (!g_flag_onnx_model.empty()) {
+        vector<Engine*> engine_ptrs(engines.size());
+        for (uint32_t i = 0; i < engines.size(); ++i) {
+            engine_ptrs[i] = engines[i].get();
+        }
         auto builder = unique_ptr<OnnxRuntimeBuilder>(
-            OnnxRuntimeBuilderFactory::Create(g_flag_onnx_model.c_str(), std::move(engines)));
+            OnnxRuntimeBuilderFactory::Create(g_flag_onnx_model.c_str(), engine_ptrs.data(), engine_ptrs.size()));
         if (!builder) {
             LOG(ERROR) << "create OnnxRuntimeBuilder failed.";
             return -1;

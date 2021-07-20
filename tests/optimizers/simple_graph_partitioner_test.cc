@@ -45,11 +45,15 @@ protected:
 };
 
 TEST_F(TestGraphPartion, partition1) {
+    vector<unique_ptr<EngineImpl>> engines;
+    engines.emplace_back(unique_ptr<EngineImpl>(new TmpEngineOne()));
+    engines.emplace_back(unique_ptr<EngineImpl>(new TmpEngineTwo()));
+
     auto resource = make_shared<utils::SharedResource>();
     auto graph_info = make_shared<RuntimeGraphInfo>();
-    resource->engines.reserve(2);
-    resource->engines.emplace_back(unique_ptr<EngineImpl>(new TmpEngineOne()));
-    resource->engines.emplace_back(unique_ptr<EngineImpl>(new TmpEngineTwo()));
+    resource->engines.resize(2);
+    resource->engines[0] = engines[0].get();
+    resource->engines[1] = engines[1].get();
     SimpleGraphPartitioner partitioner;
     vector<pair<EngineImpl*, vector<nodeid_t>>> partitions;
     auto status = partitioner.Partition(resource.get(), builder_.GetGraph(), &partitions);

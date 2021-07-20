@@ -25,31 +25,30 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn {
 
-OnnxRuntimeBuilder* OnnxRuntimeBuilderFactory::Create(const char* model_file, vector<unique_ptr<Engine>>&& engines) {
+OnnxRuntimeBuilder* OnnxRuntimeBuilderFactory::Create(const char* model_file, Engine** engines, uint32_t engine_num) {
     FileMapping fm;
     if (fm.Init(model_file) != RC_SUCCESS) {
         LOG(ERROR) << "Init filemapping from file [" << model_file << "] error.";
         return nullptr;
     }
-    return OnnxRuntimeBuilderFactory::Create(fm.Data(), fm.Size(), std::move(engines));
+    return OnnxRuntimeBuilderFactory::Create(fm.Data(), fm.Size(), engines, engine_num);
 }
 
-OnnxRuntimeBuilder* OnnxRuntimeBuilderFactory::Create(const char* model_buf, uint64_t buf_len,
-                                                      vector<unique_ptr<Engine>>&& engines) {
+OnnxRuntimeBuilder* OnnxRuntimeBuilderFactory::Create(const char* model_buf, uint64_t buf_len, Engine** engines,
+                                                      uint32_t engine_num) {
     set<string> engine_names;
-    for (auto e = engines.begin(); e != engines.end(); ++e) {
-        auto ret_pair = engine_names.insert(e->get()->GetName());
+    for (uint32_t i = 0; i < engine_num; ++i) {
+        auto e = engines[i];
+        auto ret_pair = engine_names.insert(e->GetName());
         if (!ret_pair.second) {
-            LOG(ERROR) << "duplicated engine[" << e->get()->GetName() << "]";
+            LOG(ERROR) << "duplicated engine[" << e->GetName() << "]";
             return nullptr;
         }
     }
 
-    vector<unique_ptr<EngineImpl>> engine_impls;
-    engine_impls.reserve(engines.size());
-    for (auto e = engines.begin(); e != engines.end(); ++e) {
-        auto impl = unique_ptr<EngineImpl>(static_cast<EngineImpl*>(e->release()));
-        engine_impls.emplace_back(std::move(impl));
+    vector<EngineImpl*> engine_impls(engine_num);
+    for (uint32_t i = 0; i < engine_num; ++i) {
+        engine_impls[i] = static_cast<EngineImpl*>(engines[i]);
     }
 
     auto builder = new onnx::RuntimeBuilderImpl();

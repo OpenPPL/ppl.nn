@@ -34,7 +34,7 @@ class RuntimeBuilderImpl final : public OnnxRuntimeBuilder {
 public:
     RuntimeBuilderImpl();
     ~RuntimeBuilderImpl();
-    ppl::common::RetCode Init(const char* model_buf, size_t buf_len, std::vector<std::unique_ptr<EngineImpl>>&&);
+    ppl::common::RetCode Init(const char* model_buf, size_t buf_len, std::vector<EngineImpl*>&&);
     Runtime* CreateRuntime(const RuntimeOptions&) override;
 
 private:

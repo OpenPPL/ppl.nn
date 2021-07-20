@@ -28,8 +28,19 @@ namespace ppl { namespace nn {
 
 class PPLNN_PUBLIC OnnxRuntimeBuilderFactory final {
 public:
-    static OnnxRuntimeBuilder* Create(const char* model_file, std::vector<std::unique_ptr<Engine>>&&);
-    static OnnxRuntimeBuilder* Create(const char* model_buf, uint64_t buf_len, std::vector<std::unique_ptr<Engine>>&&);
+    /**
+       @brief create an `OnnxRuntimeBuilder` instance from a model file
+       @param engines used to process this model
+       @note engines are managed by the caller and MUST be destroyed after `OnnxRuntimeBuilder`
+    */
+    static OnnxRuntimeBuilder* Create(const char* model_file, Engine** engines, uint32_t engine_num);
+
+    /**
+       @brief create an `OnnxRuntimeBuilder` instance from a buffer
+       @param engines used to process this model
+       @note engines are managed by the caller and MUST be destroyed after `OnnxRuntimeBuilder`
+    */
+    static OnnxRuntimeBuilder* Create(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num);
 };
 
 }} // namespace ppl::nn
