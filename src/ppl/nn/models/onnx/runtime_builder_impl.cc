@@ -37,12 +37,8 @@ RuntimeBuilderImpl::~RuntimeBuilderImpl() {
     resource_.reset();
 }
 
-RetCode RuntimeBuilderImpl::Init(const char* model_buf, size_t buf_len, vector<unique_ptr<EngineImpl>>&& engines) {
-    resource_->engines.reserve(engines.size());
-    for (auto e = engines.begin(); e != engines.end(); ++e) {
-        auto impl = unique_ptr<EngineImpl>(static_cast<EngineImpl*>(e->release()));
-        resource_->engines.emplace_back(std::move(impl));
-    }
+RetCode RuntimeBuilderImpl::Init(const char* model_buf, size_t buf_len, vector<EngineImpl*>&& engines) {
+    resource_->engines = std::move(engines);
 
     auto status = ModelParser::Parse(model_buf, buf_len, &graph_);
     if (status != RC_SUCCESS) {

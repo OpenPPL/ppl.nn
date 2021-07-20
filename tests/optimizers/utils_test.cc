@@ -41,11 +41,15 @@ protected:
 };
 
 TEST_F(UtilsTest, basic_partition) {
+    vector<unique_ptr<EngineImpl>> engines;
+    engines.emplace_back(unique_ptr<EngineImpl>(new TmpEngineOne()));
+    engines.emplace_back(unique_ptr<EngineImpl>(new TmpEngineTwo()));
+
     auto resource = make_shared<utils::SharedResource>();
     auto graph_info = make_shared<RuntimeGraphInfo>();
-    resource->engines.reserve(2);
-    resource->engines.emplace_back(unique_ptr<EngineImpl>(new TmpEngineOne()));
-    resource->engines.emplace_back(unique_ptr<EngineImpl>(new TmpEngineTwo()));
+    resource->engines.resize(2);
+    resource->engines[0] = engines[0].get();
+    resource->engines[1] = engines[1].get();
     auto status = utils::ProcessGraph(resource.get(), builder_.GetGraph(), graph_info.get());
     EXPECT_EQ(status, RC_SUCCESS);
 }

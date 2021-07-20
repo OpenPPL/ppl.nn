@@ -23,7 +23,8 @@
 namespace ppl { namespace nn { namespace utils {
 
 struct SharedResource {
-    std::vector<std::unique_ptr<EngineImpl>> engines;
+    /** engines are managed by caller */
+    std::vector<EngineImpl*> engines;
 };
 
 }}} // namespace ppl::nn::utils

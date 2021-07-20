@@ -68,7 +68,7 @@ static void DoPartition(const vector<nodeid_t>& nodes, const ir::Graph* parent, 
 static EngineImpl* FindEngine(utils::SharedResource* resource, const ir::Node* node) {
     auto engines = &resource->engines;
     for (auto it = engines->begin(); it != engines->end(); ++it) {
-        auto engine = it->get();
+        auto engine = *it;
         if (engine->CanRunOp(node)) {
             return engine;
         }
