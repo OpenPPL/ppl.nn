@@ -15,28 +15,29 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/optimizer/fusions/fs_filter_manager.h"
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_PPL_CHANNEL_SHUFFLE_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_PPL_CHANNEL_SHUFFLE_KERNEL_H_
 
-using namespace std;
-using namespace ppl::common;
+#include "ppl/nn/engines/cuda/kernel.h"
+#include "ppl/nn/params/ppl/channel_shuffle_param.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-Fusion* FsFilterManager::FindFusion(const std::string& kernel_type) const {
-    auto ref = type2fusion_.find(kernel_type);
-    if (ref == type2fusion_.end()) {
-        return nullptr;
-    }
-    return ref->second;
-}
+class ChannelShuffleKernel : public CudaKernel {
+public:
+    ChannelShuffleKernel(const ir::Node* node) : CudaKernel(node) {}
 
-FsFilterManager::FsFilterManager() {
-    type2fusion_.emplace("AveragePool", &averagepool_fs_);
-    type2fusion_.emplace("Concat", &concat_fs_);
-    type2fusion_.emplace("Conv", &conv_fs_);
-    type2fusion_.emplace("Gemm", &gemm_fs_);
-    type2fusion_.emplace("Reshape", &channel_shuffle_fs_);
-    
-}
+    void SetParam(const ppl::nn::common::ChannelShuffleParam* p) {
+        param_ = p;
+    }
+
+private:
+    ppl::common::RetCode DoExecute(KernelExecContext*) override;
+
+private:
+    const ppl::nn::common::ChannelShuffleParam* param_ = nullptr;
+};
 
 }}} // namespace ppl::nn::cuda
+
+#endif
