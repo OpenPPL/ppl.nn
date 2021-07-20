@@ -42,7 +42,7 @@ public:
 private:
     ppl::common::RetCode InitKernels();
     ppl::common::RetCode UpdateDims();
-    ppl::common::RetCode FuseConvOperator();
+    ppl::common::RetCode FuseOperator();
     ppl::common::RetCode AddBridgeKernels();
     ppl::common::RetCode UpdateType();
     ppl::common::RetCode SelectAlgos(CudaDevice*);

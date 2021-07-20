@@ -15,28 +15,29 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/optimizer/fusions/fs_filter_manager.h"
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_PPL_CHANNEL_SHUFFLE_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_PPL_CHANNEL_SHUFFLE_OP_H_
 
-using namespace std;
-using namespace ppl::common;
+#include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
+
+#include "ppl/nn/params/ppl/channel_shuffle_param.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-Fusion* FsFilterManager::FindFusion(const std::string& kernel_type) const {
-    auto ref = type2fusion_.find(kernel_type);
-    if (ref == type2fusion_.end()) {
-        return nullptr;
-    }
-    return ref->second;
-}
-
-FsFilterManager::FsFilterManager() {
-    type2fusion_.emplace("AveragePool", &averagepool_fs_);
-    type2fusion_.emplace("Concat", &concat_fs_);
-    type2fusion_.emplace("Conv", &conv_fs_);
-    type2fusion_.emplace("Gemm", &gemm_fs_);
-    type2fusion_.emplace("Reshape", &channel_shuffle_fs_);
+class ChannelShuffleOp final : public CudaOptKernel {
+public:
+    ChannelShuffleOp(const ir::Node* node) : CudaOptKernel(node) {}
+    KernelImpl* CreateKernelImpl() const override;
+    ppl::common::RetCode Init(const OptKernelOptions&) override;
+    ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
+    void* GetParam() override {
+        return (void*)&param_;
+    };
     
-}
+private:
+    ppl::nn::common::ChannelShuffleParam param_;
+};
 
 }}} // namespace ppl::nn::cuda
+
+#endif

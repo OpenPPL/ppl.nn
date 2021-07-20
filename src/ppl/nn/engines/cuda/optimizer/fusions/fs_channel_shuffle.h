@@ -15,39 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_ALGOS_FS_FILTER_MANAGER_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_ALGOS_FS_FILTER_MANAGER_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_FUSIONS_FS_CHANNEL_SHUFFLE_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_FUSIONS_FS_CHANNEL_SHUFFLE_H_
 
 #include "ppl/nn/engines/cuda/optimizer/fusions/fusion.h"
 
-#include "ppl/nn/engines/cuda/optimizer/fusions/fs_averagepool.h"
-#include "ppl/nn/engines/cuda/optimizer/fusions/fs_channel_shuffle.h"
-#include "ppl/nn/engines/cuda/optimizer/fusions/fs_concat.h"
-#include "ppl/nn/engines/cuda/optimizer/fusions/fs_conv.h"
-#include "ppl/nn/engines/cuda/optimizer/fusions/fs_gemm.h"
-
 namespace ppl { namespace nn { namespace cuda {
 
-class FsFilterManager {
+class ChannelShuffleFusion : public Fusion {
 public:
-    static FsFilterManager* Instance() {
-        static FsFilterManager mgr;
-        return &mgr;
-    }
-
-    Fusion* FindFusion(const std::string& kernel_type) const;
+    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, OptKernelOptions& options) override;
 
 private:
-    FsFilterManager();
-
-private:
-    std::map<std::string, Fusion*> type2fusion_;
-    AveragePoolFusion averagepool_fs_;
-    ConcatFusion concat_fs_;
-    ConvFusion conv_fs_;
-    GemmFusion gemm_fs_;
-    ChannelShuffleFusion channel_shuffle_fs_;
+    const bool CanFuse(ir::Node* node, OptKernelOptions& options);
+    const bool CanFuseFirstReshape(ir::Node* node, OptKernelOptions& options);
+    const bool CanFuseTranspose(ir::Node* node, OptKernelOptions& options);
+    const bool CanFuseSecondReshape(ir::Node* node, OptKernelOptions& options);
+    const ppl::common::RetCode FuseWithNextNodes(ir::Node* node, OptKernelOptions& options);
 };
 
 }}} // namespace ppl::nn::cuda

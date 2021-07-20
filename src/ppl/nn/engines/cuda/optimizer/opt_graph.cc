@@ -203,7 +203,7 @@ RetCode OptGraph::UpdateDims() {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::FuseConvOperator() {
+RetCode OptGraph::FuseOperator() {
     ir::GraphTopo* topo = graph_->topo.get();
     UpdateTopologicalSort();
     auto fs_filter_manager = FsFilterManager::Instance();
@@ -242,12 +242,10 @@ RetCode OptGraph::AddBridgeKernels() {
             }
 
             auto edge = topo->GetEdgeById(edge_id);
-
-            auto creator = OptKernelCreatorManager::Instance()->Find("ppl", "Bridge");
-
             if (edge->GetName().find("Bridge_Edge") != string::npos) {
                 continue;
             }
+            auto creator = OptKernelCreatorManager::Instance()->Find("ppl", "Bridge");
 
             auto ret_pair = topo->AddNode("Bridge_Node_" + node->GetName() + "_" + edge->GetName());
             if (!ret_pair.second) {
@@ -495,7 +493,7 @@ RetCode OptGraph::DoOptimize(CudaDevice* device) {
         return status;
     }
 
-    status = FuseConvOperator();
+    status = FuseOperator();
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Fuse operators failed: " << GetRetCodeStr(status);
         return status;
@@ -531,7 +529,7 @@ RetCode OptGraph::DoOptimize(CudaDevice* device) {
         return status;
     }
 
-    status = FuseConvOperator();
+    status = FuseOperator();
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Fuse operators failed: " << GetRetCodeStr(status);
         return status;
