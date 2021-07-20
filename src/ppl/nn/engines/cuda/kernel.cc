@@ -131,6 +131,7 @@ RetCode CudaKernel::Execute(KernelExecContext* ctx) {
     for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto tensor = ctx->GetOutput<TensorImpl>(i);
         auto tensor_size = tensor->GetShape().GetBytesIncludingPadding();
+        LOG(ERROR) << tensor->GetEdge()->GetName();
         LOG(DEBUG) << "tensor size " << tensor_size;
         LOG(DEBUG) << "tensor datatype " << tensor->GetShape().GetDataType() << " tensor dataformat "
                    << tensor->GetShape().GetDataFormat();

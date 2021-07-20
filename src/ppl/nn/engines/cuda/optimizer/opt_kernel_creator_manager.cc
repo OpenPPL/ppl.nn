@@ -18,6 +18,7 @@
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel_creator_manager.h"
 
 #include "ppl/nn/engines/cuda/optimizer/ops/ppl/bridge_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/ppl/channel_shuffle_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/ppl/shape_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/conv_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/add_op.h"
@@ -200,6 +201,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     // ppl customize op domain is "ppl"
     REGISTER_OPT_KERNEL_CREATOR("ppl", "Bridge", BridgeOp);
     REGISTER_OPT_KERNEL_CREATOR("ppl", "Shape", PPLShapeOp);
+    REGISTER_OPT_KERNEL_CREATOR("ppl", "ChannelShuffle", ChannelShuffleOp);
 }
 
 }}} // namespace ppl::nn::cuda
