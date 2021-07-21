@@ -33,7 +33,7 @@ public:
     void* GetParam() override {
         return (void*)&param_;
     };
-    
+
 private:
     ppl::nn::common::ChannelShuffleParam param_;
 };

@@ -35,9 +35,9 @@ ppl::common::RetCode ChannelShuffleKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    auto status = PPLCUDAChannelShuffleForwardImp(GetStream(), group_, 
-        &X->GetShape(), X->GetBufferPtr(), &Y->GetShape(), Y->GetBufferPtr());
-    
+    auto status = PPLCUDAChannelShuffleForwardImp(GetStream(), group_, &X->GetShape(), X->GetBufferPtr(),
+                                                  &Y->GetShape(), Y->GetBufferPtr());
+
     LOG(DEBUG) << "Excute channel shuffle kernel";
     return status;
 }

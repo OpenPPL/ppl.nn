@@ -41,7 +41,7 @@ RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
         info->GetOutput<TensorImpl>(0)->GetShape().Reshape(in_shape0.GetDims(), in_shape0.GetRealDimCount());
         return RC_SUCCESS;
     };
-    
+
     return RC_SUCCESS;
 }
 
