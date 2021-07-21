@@ -24,11 +24,11 @@ namespace ppl { namespace nn { namespace cuda {
 
 class GemmFusion : public Fusion {
 public:
-    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, OptKernelOptions& options) override;
+    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
 
 private:
-    const bool CanFuse(ir::Node* nextnode, OptKernelOptions& options, uint32_t flag);
-    const ppl::common::RetCode FuseGemmWithNextNode(ir::Node* node, ir::Node* nextnode, OptKernelOptions& options);
+    const bool CanFuse(ir::Node* nextnode, const OptKernelOptions& options, uint32_t flag);
+    const ppl::common::RetCode FuseGemmWithNextNode(ir::Node* node, ir::Node* nextnode, const OptKernelOptions& options);
 
 private:
     std::set<std::string> fuse_type{"Relu",
