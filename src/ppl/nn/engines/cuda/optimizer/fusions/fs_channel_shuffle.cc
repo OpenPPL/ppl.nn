@@ -36,7 +36,7 @@ const bool ChannelShuffleFusion::CanFuseFirstReshape(ir::Node* node, const OptKe
     auto data = options.graph->data.get();
     auto shape_edge_id = node->GetInput(1);
     auto constants_pair = data->constants.find(shape_edge_id);
-    
+
     if (constants_pair != data->constants.end()) {
         auto dims = data->shapes.find(shape_edge_id)->second.dims;
         if (dims.size() != 1 || dims[0] != 5) {
@@ -47,8 +47,8 @@ const bool ChannelShuffleFusion::CanFuseFirstReshape(ir::Node* node, const OptKe
             return false;
         }
         return true;
-    } 
-    
+    }
+
     auto shape_node_id = topo->GetEdgeById(shape_edge_id)->GetProducer();
     auto attr_pair = data->attrs.find(shape_node_id);
     if (attr_pair != data->attrs.end()) {
@@ -95,7 +95,7 @@ const bool ChannelShuffleFusion::CanFuseSecondReshape(ir::Node* node, const OptK
         }
         return true;
     }
-    
+
     auto shape_node_id = topo->GetEdgeById(shape_edge_id)->GetProducer();
     auto attr_pair = data->attrs.find(shape_node_id);
     if (attr_pair != data->attrs.end()) {
@@ -114,21 +114,21 @@ const bool ChannelShuffleFusion::CanFuse(ir::Node* node, const OptKernelOptions&
     for (uint32_t i = 0; i < 3; ++i) {
         switch (i) // TODO use function vector
         {
-        case 0:
-            if (!CanFuseFirstReshape(node, options)) {
-                return false;
-            }
-            break;
-        case 1:
-            if (!CanFuseTranspose(node, options)) {
-                return false;
-            }
-            break;
-        case 2:
-            if (!CanFuseSecondReshape(node, options)) {
-                return false;
-            }
-            break;
+            case 0:
+                if (!CanFuseFirstReshape(node, options)) {
+                    return false;
+                }
+                break;
+            case 1:
+                if (!CanFuseTranspose(node, options)) {
+                    return false;
+                }
+                break;
+            case 2:
+                if (!CanFuseSecondReshape(node, options)) {
+                    return false;
+                }
+                break;
         }
 
         auto edge_id = node->GetOutput(0);
