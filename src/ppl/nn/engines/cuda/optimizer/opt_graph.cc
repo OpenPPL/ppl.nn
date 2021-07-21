@@ -254,7 +254,7 @@ RetCode OptGraph::AddBridgeKernels() {
             }
             auto new_node = ret_pair.first;
 
-            new_node->SetType(ir::Node::Type(node->GetType().domain, "Bridge"));
+            new_node->SetType(ir::Node::Type("ppl", "Bridge"));
             auto bridge_kernel = unique_ptr<CudaOptKernel>(creator(new_node));
             ((BridgeOp*)bridge_kernel.get())->AddInternalBridgeNode(node, new_node, edge, graph_);
 

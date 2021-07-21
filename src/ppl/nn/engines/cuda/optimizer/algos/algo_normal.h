@@ -87,7 +87,7 @@ private:
                                          "Split",
                                          "Sigmoid"};
     std::set<std::string> arbitrary_set_{"Shape"};
-    std::set<std::string> nhwc_set_{};
+    std::set<std::string> nhwc_set_{"ChannelShuffle"};
 };
 
 }}} // namespace ppl::nn::cuda

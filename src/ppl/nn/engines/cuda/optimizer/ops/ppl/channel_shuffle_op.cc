@@ -27,13 +27,8 @@ using namespace ppl::nn::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
-    LOG(ERROR) << "init channel shuffle";
     infer_type_func_ = [this](InputOutputInfo* info, datatype_t type) -> RetCode {
-        LOG(ERROR) << type;
-        LOG(ERROR) << info->GetOutputCount();
-        LOG(ERROR) << info->GetInputCount();
         auto in_shape = &info->GetInput<TensorImpl>(0)->GetShape();
-        LOG(ERROR) << in_shape->GetDataType();
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
             auto out_shape = &info->GetOutput<TensorImpl>(i)->GetShape();
             out_shape->SetDataType(in_shape->GetDataType());
