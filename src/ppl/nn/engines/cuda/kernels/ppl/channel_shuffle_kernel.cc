@@ -33,7 +33,7 @@ ppl::common::RetCode ChannelShuffleKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    LOG(INFO) << "Excute channel shuffle kernel";
+    LOG(DEBUG) << "Excute channel shuffle kernel";
 
     return ppl::common::RC_SUCCESS;
 }

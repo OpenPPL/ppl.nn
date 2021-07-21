@@ -39,7 +39,6 @@ RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
             out_shape->SetDataType(in_shape->GetDataType());
         }
         return ppl::common::RC_SUCCESS;
-        // return type != DATATYPE_UNKNOWN ? InferDefaultType(info, type) : InferInheritedType(info);
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
