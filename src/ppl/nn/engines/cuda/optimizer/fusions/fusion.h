@@ -31,7 +31,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 class Fusion {
 public:
-    virtual const ppl::common::RetCode FuseNode(ir::Node*, bool, OptKernelOptions&) = 0;
+    virtual const ppl::common::RetCode FuseNode(ir::Node*, bool, const OptKernelOptions&) = 0;
 };
 
 }}} // namespace ppl::nn::cuda

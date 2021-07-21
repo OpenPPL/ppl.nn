@@ -25,7 +25,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-const RetCode ConvFusion::FuseConvWithNextNode(ir::Node* node, ir::Node* nextnode, OptKernelOptions& options) {
+const RetCode ConvFusion::FuseConvWithNextNode(ir::Node* node, ir::Node* nextnode, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto connect_edge_id = node->GetOutput(0);
 
@@ -56,8 +56,8 @@ const RetCode ConvFusion::FuseConvWithNextNode(ir::Node* node, ir::Node* nextnod
     return RC_SUCCESS;
 }
 
-const bool ConvFusion::FuseTest(ir::Node* node, OptKernelOptions& options,
-                                std::function<ppl::common::RetCode(ir::Node*, OptKernelOptions&)> canfuse) {
+const bool ConvFusion::FuseTest(ir::Node* node, const OptKernelOptions& options,
+                                std::function<ppl::common::RetCode(ir::Node*, const OptKernelOptions&)> canfuse) {
     auto topo = options.graph->topo.get();
     auto data = options.graph->data.get();
     auto node_id = node->GetId();
@@ -105,7 +105,7 @@ const bool ConvFusion::FuseTest(ir::Node* node, OptKernelOptions& options,
     return false;
 }
 
-const RetCode ConvFusion::FuseNode(ir::Node* node, bool reliable, OptKernelOptions& options) {
+const RetCode ConvFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
     FuseTest(node, options, CanFuseRelu);
     if (reliable) {
         if (FuseTest(node, options, CanFuseElementwise)) {

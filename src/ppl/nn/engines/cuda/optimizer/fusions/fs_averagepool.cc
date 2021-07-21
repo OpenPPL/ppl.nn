@@ -27,7 +27,7 @@ using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-const bool AveragePoolFusion::CanFuse(ir::Node* node, ir::Node* prenode, OptKernelOptions& options) {
+const bool AveragePoolFusion::CanFuse(ir::Node* node, ir::Node* prenode, const OptKernelOptions& options) {
     if (node->GetType().name != "AveragePool" || prenode->GetType().name != "Pad")
         return false;
 
@@ -81,7 +81,7 @@ const bool AveragePoolFusion::CanFuse(ir::Node* node, ir::Node* prenode, OptKern
     return true;
 }
 
-const RetCode AveragePoolFusion::FuseWithPreviousPad(ir::Node* node, ir::Node* prenode, OptKernelOptions& options) {
+const RetCode AveragePoolFusion::FuseWithPreviousPad(ir::Node* node, ir::Node* prenode, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto connect_edge_id = node->GetInput(0);
     auto pre_edge_id = prenode->GetInput(0);
@@ -99,7 +99,7 @@ const RetCode AveragePoolFusion::FuseWithPreviousPad(ir::Node* node, ir::Node* p
     return RC_SUCCESS;
 }
 
-const RetCode AveragePoolFusion::FuseNode(ir::Node* node, bool reliable, OptKernelOptions& options) {
+const RetCode AveragePoolFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto data = options.graph->data.get();
     auto node_id = node->GetId();

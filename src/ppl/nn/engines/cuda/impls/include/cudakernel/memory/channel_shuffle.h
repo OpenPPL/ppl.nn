@@ -15,22 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_FUSIONS_FS_CAST_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_FUSIONS_FS_CAST_H_
+#ifndef PPLCUDA_KERNEL_INCLUDE_CHANNELSHUFFLE_CHANNELSHUFFLE_H_
+#define PPLCUDA_KERNEL_INCLUDE_CHANNELSHUFFLE_CHANNELSHUFFLE_H_
+#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/retcode.h"
+#include <cuda_runtime.h>
 
-#include "ppl/nn/engines/cuda/optimizer/fusions/fusion.h"
+ppl::common::RetCode PPLCUDAChannelShuffleForwardImp(
+    cudaStream_t stream,
+    int group,
+    const ppl::nn::TensorShape* input_shape,
+    const void* input,
+    const ppl::nn::TensorShape* output_shape,
+    void* output);
 
-namespace ppl { namespace nn { namespace cuda {
-
-class CastFusion : public Fusion {
-public:
-    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
-
-private:
-    const bool CanFuse(ir::Node* node, ir::Node* prenode);
-    const ppl::common::RetCode FuseWithPreviousCast(ir::Node* node, ir::Node* prenode, const OptKernelOptions& options);
-};
-
-}}} // namespace ppl::nn::cuda
-
-#endif
+#endif //PPLCUDA_KERNEL_INCLUDE_CHANNELSHUFFLE_CHANNELSHUFFLE_H_

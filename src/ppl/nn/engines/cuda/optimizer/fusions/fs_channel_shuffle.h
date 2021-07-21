@@ -24,14 +24,14 @@ namespace ppl { namespace nn { namespace cuda {
 
 class ChannelShuffleFusion : public Fusion {
 public:
-    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, OptKernelOptions& options) override;
+    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
 
 private:
-    const bool CanFuse(ir::Node* node, OptKernelOptions& options);
-    const bool CanFuseFirstReshape(ir::Node* node, OptKernelOptions& options);
-    const bool CanFuseTranspose(ir::Node* node, OptKernelOptions& options);
-    const bool CanFuseSecondReshape(ir::Node* node, OptKernelOptions& options);
-    const ppl::common::RetCode FuseWithNextNodes(ir::Node* node, OptKernelOptions& options);
+    const bool CanFuse(ir::Node* node, const OptKernelOptions& options);
+    const bool CanFuseFirstReshape(ir::Node* node, const OptKernelOptions& options);
+    const bool CanFuseTranspose(ir::Node* node, const OptKernelOptions& options);
+    const bool CanFuseSecondReshape(ir::Node* node, const OptKernelOptions& options);
+    const ppl::common::RetCode FuseWithNextNodes(ir::Node* node, const OptKernelOptions& options);
 };
 
 }}} // namespace ppl::nn::cuda
