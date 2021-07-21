@@ -110,7 +110,7 @@ Platform Information:
 #### 1. 1-batch/1-thread with AVX512F
 
 |  Model Name  |  OpenPPL  |  onnxruntime v1.8  |  OpenVINO r2021.2  |
-| :------------ | :------------ | :------------ | :------------ | :------------ |
+| :------------ | :------------ | :------------ | :------------ |
 |  deeplabv3plus  |  394.12  |  453.81  |  476.82  |
 |  esrgan  |  1800.47  |  3216.80  |  3298.32  |
 |  mobilenet_v2  |  4.45  |  5.41  |  5.04  |
@@ -129,7 +129,7 @@ Platform Information:
 #### 2. 16-batch/16-thread with AVX512F
 
 |  Model Name  |  OpenPPL  |  onnxruntime v1.8  |  OpenVINO r2021.2  |
-| :------------ | :------------ | :------------ | :------------ | :------------ |
+| :------------ | :------------ | :------------ | :------------ |
 |  deeplabv3plus\*  |  423.09|  518.72  |  520.29  |
 |  esrgan  |  unavailable  |  unavailable  |  unavailable  |
 |  mobilenet_v2  |  12.85  |  18.29  |  13.07  |
@@ -150,7 +150,7 @@ Platform Information:
 #### 3. 1-batch/1-thread with FMA3
 
 |  Model Name  |  OpenPPL  |  onnxruntime v1.8  |  OpenVINO r2021.2  |  MindSpore Lite r1.3  |
-| :------------ | :------------ | :------------ | :------------ | :------------ | :------------ |
+| :------------ | :------------ | :------------ | :------------ | :------------ |
 |  deeplabv3plus  |  630.45  |  919.51  |  836.47  |  938.73  |
 |  esrgan  |  2428.81  |  5118.05  |  4686.33  |  3636.94  |
 |  mobilenet_v2  |  6.84  |  7.56  |  7.06  |  7.54  |
@@ -169,7 +169,7 @@ Platform Information:
 #### 4. 16-batch/16-thread with FMA3
 
 |  Model Name  |  OpenPPL  |  onnxruntime v1.8  |  OpenVINO r2021.2  |  MindSpore Lite r1.3  |
-| :------------ | :------------ | :------------ | :------------ | :------------ | :------------ |
+| :------------ | :------------ | :------------ | :------------ | :------------ |
 |  deeplabv3plus\*  |  685.18  |  972.02  |  884.11  |  1129.83  |
 |  esrgan  |  unavailable  |  unavailable  |  unavailable  |  unavailable  |
 |  mobilenet_v2  |  14.87  |  18.33  |  9.29  |  24.57  |
