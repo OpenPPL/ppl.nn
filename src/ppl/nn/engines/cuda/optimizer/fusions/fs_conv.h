@@ -24,14 +24,14 @@ namespace ppl { namespace nn { namespace cuda {
 
 class ConvFusion : public Fusion {
 public:
-    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, OptKernelOptions& options) override;
+    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
 
 private:
-    const bool FuseTest(ir::Node* node, OptKernelOptions& options,
-                        std::function<ppl::common::RetCode(ir::Node*, OptKernelOptions&)>);
-    const ppl::common::RetCode FuseConvWithNextNode(ir::Node* node, ir::Node* nextnode, OptKernelOptions& options);
+    const bool FuseTest(ir::Node* node, const OptKernelOptions& options,
+                        std::function<ppl::common::RetCode(ir::Node*, const OptKernelOptions&)>);
+    const ppl::common::RetCode FuseConvWithNextNode(ir::Node* node, ir::Node* nextnode, const OptKernelOptions& options);
 
-    static bool CanFuseRelu(ir::Node* nextnode, OptKernelOptions& options) {
+    static bool CanFuseRelu(ir::Node* nextnode, const OptKernelOptions& options) {
         std::set<std::string> relu_fuse_op{"Relu", "Clip", "PRelu", "LeakyRelu", "Sigmoid"};
         if (relu_fuse_op.find(nextnode->GetType().name) != relu_fuse_op.end()) {
             if (nextnode->GetType().name == "PRelu") { // extra check for PRelu
@@ -48,7 +48,7 @@ private:
         return false;
     }
 
-    static bool CanFuseElementwise(ir::Node* nextnode, OptKernelOptions& options) {
+    static bool CanFuseElementwise(ir::Node* nextnode, const OptKernelOptions& options) {
         std::set<std::string> elementwise_fuse_op{"Add"};
         if (elementwise_fuse_op.find(nextnode->GetType().name) != elementwise_fuse_op.end()) {
             // two inputs must have same dims size for conv-add fusion

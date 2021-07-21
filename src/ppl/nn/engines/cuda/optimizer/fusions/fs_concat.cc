@@ -29,7 +29,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-const bool ConcatFusion::CanFuse(ir::Node* prenode, OptKernelOptions& options, uint32_t offset_channel_size) {
+const bool ConcatFusion::CanFuse(ir::Node* prenode, const OptKernelOptions& options, uint32_t offset_channel_size) {
     auto topo = options.graph->topo.get();
     auto shape = options.tensors->find(prenode->GetOutput(0))->second->GetShape();
 
@@ -56,7 +56,7 @@ const bool ConcatFusion::CanFuse(ir::Node* prenode, OptKernelOptions& options, u
     return true;
 }
 
-const RetCode ConcatFusion::FuseNode(ir::Node* node, bool reliable, OptKernelOptions& options) {
+const RetCode ConcatFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto node_id = node->GetId();
     auto opt_kernel = (CudaOptKernel*)(options.info->kernels[node_id].get());

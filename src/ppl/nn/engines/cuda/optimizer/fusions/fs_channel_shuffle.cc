@@ -28,7 +28,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-const bool ChannelShuffleFusion::CanFuseFirstReshape(ir::Node* node, OptKernelOptions& options) {
+const bool ChannelShuffleFusion::CanFuseFirstReshape(ir::Node* node, const OptKernelOptions& options) {
     if (node->GetType().name != "Reshape") {
         return false;
     }
@@ -62,7 +62,7 @@ const bool ChannelShuffleFusion::CanFuseFirstReshape(ir::Node* node, OptKernelOp
     return false;
 }
 
-const bool ChannelShuffleFusion::CanFuseTranspose(ir::Node* node, OptKernelOptions& options) {
+const bool ChannelShuffleFusion::CanFuseTranspose(ir::Node* node, const OptKernelOptions& options) {
     if (node->GetType().name != "Transpose") {
         return false;
     }
@@ -79,7 +79,7 @@ const bool ChannelShuffleFusion::CanFuseTranspose(ir::Node* node, OptKernelOptio
     return false;
 }
 
-const bool ChannelShuffleFusion::CanFuseSecondReshape(ir::Node* node, OptKernelOptions& options) {
+const bool ChannelShuffleFusion::CanFuseSecondReshape(ir::Node* node, const OptKernelOptions& options) {
     if (node->GetType().name != "Reshape") {
         return false;
     }
@@ -109,7 +109,7 @@ const bool ChannelShuffleFusion::CanFuseSecondReshape(ir::Node* node, OptKernelO
     return false;
 }
 
-const bool ChannelShuffleFusion::CanFuse(ir::Node* node, OptKernelOptions& options) {
+const bool ChannelShuffleFusion::CanFuse(ir::Node* node, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     for (uint32_t i = 0; i < 3; ++i) {
         switch (i) // TODO use function vector
@@ -145,7 +145,7 @@ const bool ChannelShuffleFusion::CanFuse(ir::Node* node, OptKernelOptions& optio
     return true;
 }
 
-const RetCode ChannelShuffleFusion::FuseWithNextNodes(ir::Node* node, OptKernelOptions& options) {
+const RetCode ChannelShuffleFusion::FuseWithNextNodes(ir::Node* node, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto connect_edge_id = node->GetOutput(0);
     auto edge_id = node->GetOutput(0);
@@ -179,7 +179,7 @@ const RetCode ChannelShuffleFusion::FuseWithNextNodes(ir::Node* node, OptKernelO
     return RC_SUCCESS;
 }
 
-const RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, OptKernelOptions& options) {
+const RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
     if (CanFuse(node, options)) {
         LOG(DEBUG) << "Fuse node[" << node->GetName() << "] into channel shuffle";
         std::string node_name = "ChannelShuffle_" + node->GetName();

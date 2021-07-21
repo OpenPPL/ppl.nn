@@ -24,11 +24,11 @@ namespace ppl { namespace nn { namespace cuda {
 
 class CastFusion : public Fusion {
 public:
-    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, OptKernelOptions& options) override;
+    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
 
 private:
     const bool CanFuse(ir::Node* node, ir::Node* prenode);
-    const ppl::common::RetCode FuseWithPreviousCast(ir::Node* node, ir::Node* prenode, OptKernelOptions& options);
+    const ppl::common::RetCode FuseWithPreviousCast(ir::Node* node, ir::Node* prenode, const OptKernelOptions& options);
 };
 
 }}} // namespace ppl::nn::cuda

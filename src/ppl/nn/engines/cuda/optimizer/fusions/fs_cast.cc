@@ -32,7 +32,7 @@ const bool CastFusion::CanFuse(ir::Node* node, ir::Node* prenode) {
     return false;
 }
 
-const RetCode CastFusion::FuseWithPreviousCast(ir::Node* node, ir::Node* prenode, OptKernelOptions& options) {
+const RetCode CastFusion::FuseWithPreviousCast(ir::Node* node, ir::Node* prenode, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto connect_edge_id = node->GetInput(0);
     auto connect_edge = topo->GetEdgeById(connect_edge_id);
@@ -52,7 +52,7 @@ const RetCode CastFusion::FuseWithPreviousCast(ir::Node* node, ir::Node* prenode
     return RC_SUCCESS;
 }
 
-const RetCode CastFusion::FuseNode(ir::Node* node, bool reliable, OptKernelOptions& options) {
+const RetCode CastFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto node_id = node->GetId();
     auto edge_id = node->GetInput(0);

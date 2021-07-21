@@ -25,14 +25,14 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-const bool GemmFusion::CanFuse(ir::Node* nextnode, OptKernelOptions& options, uint32_t flag) {
+const bool GemmFusion::CanFuse(ir::Node* nextnode, const OptKernelOptions& options, uint32_t flag) {
     if (fuse_type.find(nextnode->GetType().name) != fuse_type.end()) {
         return true;
     }
     return false;
 }
 
-const RetCode GemmFusion::FuseGemmWithNextNode(ir::Node* node, ir::Node* nextnode, OptKernelOptions& options) {
+const RetCode GemmFusion::FuseGemmWithNextNode(ir::Node* node, ir::Node* nextnode, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto connect_edge_id = node->GetOutput(0);
 
@@ -63,7 +63,7 @@ const RetCode GemmFusion::FuseGemmWithNextNode(ir::Node* node, ir::Node* nextnod
     return RC_SUCCESS;
 }
 
-const RetCode GemmFusion::FuseNode(ir::Node* node, bool reliable, OptKernelOptions& options) {
+const RetCode GemmFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto data = options.graph->data.get();
     auto node_id = node->GetId();
