@@ -17,6 +17,8 @@
 
 #include "ppl/nn/engines/cuda/kernels/ppl/channel_shuffle_kernel.h"
 
+#include "cudakernel/memory/channel_shuffle.h"
+
 namespace ppl { namespace nn { namespace cuda {
 
 ppl::common::RetCode ChannelShuffleKernel::DoExecute(KernelExecContext* ctx) {
@@ -33,7 +35,8 @@ ppl::common::RetCode ChannelShuffleKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    LOG(INFO) << "Excute channel shuffle kernel";
+    PPLCUDAChannelShuffleForwardImp(GetStream(), group_, &X->GetShape(), X->GetBufferPtr(), &Y->GetShape(),
+                                    Y->GetBufferPtr());
 
     return ppl::common::RC_SUCCESS;
 }
