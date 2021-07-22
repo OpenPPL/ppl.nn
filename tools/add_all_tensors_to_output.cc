@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "onnx.pb.h"
+#include "ppl/nn/models/onnx/generated/onnx.pb.h"
 
 // large proto file support
 #include "google/protobuf/io/coded_stream.h"
