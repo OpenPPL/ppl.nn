@@ -50,6 +50,11 @@ const bool ChannelShuffleFusion::CanFuseFirstReshape(ir::Node* node, const OptKe
     }
 
     auto shape_node_id = topo->GetEdgeById(shape_edge_id)->GetProducer();
+    auto shape_node = topo->GetNodeById(shape_node_id);
+    if (shape_node->GetType().name != "Shape") {
+        return false;
+    }
+
     auto attr_pair = data->attrs.find(shape_node_id);
     if (attr_pair != data->attrs.end()) {
         auto param = (const ppl::nn::common::PPLShapeParam*)(attr_pair->second.get());
