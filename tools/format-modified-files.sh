@@ -4,7 +4,7 @@ echo "usage example: [FORMATTER='/path/to/formatter --option foo'] ./tools/forma
 echo '---------------------------------------'
 
 if [ -z "$FORMATTER" ]; then
-    default_formatter='/usr/bin/clang-format-10'
+    default_formatter='/usr/bin/clang-format-12'
     if ! [ -f ${default_formatter} ]; then
         echo "FORMATTER is not set." >&2
         exit -1
@@ -34,5 +34,7 @@ for entry in ${filelist[@]}; do
         else
             exit -1
         fi
+    else
+        echo "skip [$entry]"
     fi
 done
