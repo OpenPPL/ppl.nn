@@ -41,9 +41,11 @@ BufferedCudaAllocator::~BufferedCudaAllocator() {
     cuDevicePrimaryCtxRelease(cu_device_);
 }
 
-RetCode BufferedCudaAllocator::InitCudaEnv() {
+RetCode BufferedCudaAllocator::InitCudaEnv(int device_id) {
     CUresult status;
     const char* errmsg = nullptr;
+
+    cu_device_ = device_id;
 
     status = cuInit(0);
     if (status != CUDA_SUCCESS) {
@@ -52,7 +54,7 @@ RetCode BufferedCudaAllocator::InitCudaEnv() {
         return RC_OTHER_ERROR;
     }
 
-    status = cuDevicePrimaryCtxRetain(&cu_context_, 0);
+    status = cuDevicePrimaryCtxRetain(&cu_context_, device_id);
     if (status != CUDA_SUCCESS) {
         cuGetErrorString(status, &errmsg);
         LOG(ERROR) << "cuDevicePrimaryCtxRetain failed: " << errmsg;
@@ -66,18 +68,11 @@ RetCode BufferedCudaAllocator::InitCudaEnv() {
         return RC_OTHER_ERROR;
     }
 
-    status = cuCtxGetDevice(&cu_device_);
-    if (status != CUDA_SUCCESS) {
-        cuGetErrorString(status, &errmsg);
-        LOG(ERROR) << "cuCtxGetDevice failed: " << errmsg;
-        return RC_OTHER_ERROR;
-    }
-
     return RC_SUCCESS;
 }
 
 RetCode BufferedCudaAllocator::Init(int devid, uint64_t granularity) {
-    auto status = InitCudaEnv();
+    auto status = InitCudaEnv(devid);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitCudaEnv failed: " << GetRetCodeStr(status);
         return status;

@@ -38,7 +38,7 @@ public:
     void Free(void* ptr) override;
 
 private:
-    ppl::common::RetCode InitCudaEnv();
+    ppl::common::RetCode InitCudaEnv(int device_id);
 
 private:
     CUmemAllocationProp prop_ = {};
