@@ -85,7 +85,6 @@ Define_uint32_opt("--running-type", g_flag_kernel_default_types, 0,
 Define_bool_opt("--quick-select", g_flag_quick_select, 0, "quick select algorithms for conv and gemm kernel");
 Define_string_opt("--node-types", g_flag_node_datatype, "",
                   "declare several node names and their types splited by comma for special kernels");
-Define_uint32_opt("--runningtimes", g_flag_running_times, 1, "declare running times");
 Define_uint32_opt("--device-id", g_flag_device_id, 0, "declare device id for cuda");
 Define_string_opt("--quantization", g_flag_quantization, "", "declare json file saved quantization information");
 
@@ -795,15 +794,6 @@ int main(int argc, char* argv[]) {
     }
 
     auto run_begin_ts = std::chrono::system_clock::now();
-#ifdef PPLNN_USE_CUDA
-    for (uint32_t i = 0; i < g_flag_warmup_times; ++i) {
-        runtime->Run();
-    }
-    run_begin_ts = std::chrono::system_clock::now();
-    for (uint32_t i = 0; i < g_flag_running_times - 1; ++i) {
-        runtime->Run();
-    }
-#endif
     auto status = runtime->Run();
     if (status == RC_SUCCESS) {
         status = runtime->Sync();
