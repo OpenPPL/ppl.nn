@@ -210,10 +210,8 @@ RetCode CudaEngine::SetCompilerInputDims(CudaEngine* engine, va_list args) {
     if (temp_dims.size() == 1 && temp_dims[0] == 0) {
         LOG(WARNING) << "Default input dims for dynamic graph are 1_3_224_224, we recommend using '--dims' to set a "
                         "suitable training shape.";
-        std::vector<uint32_t> default_dims{1, 3, 224, 224};
-        engine->cuda_flags_.input_dims.emplace("", default_dims);
     } else {
-        engine->cuda_flags_.input_dims.emplace(temp_name, temp_dims);
+        engine->cuda_flags_.input_dims[temp_name] = temp_dims;
     }
     return RC_SUCCESS;
 }

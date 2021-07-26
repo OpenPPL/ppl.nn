@@ -131,7 +131,7 @@ RetCode OptGraph::UpdateDims() {
                 }
                 if (ir_shape->second.dims.size() == dims_pairs->second.size()) {
                     for (uint32_t k = 0; k < ir_shape->second.dims.size(); ++k) {
-                        if ((dims_pairs->second)[k] != 0) {
+                        if (ir_shape->second.dims[k] == 1 && (dims_pairs->second)[k] != 0) {
                             ir_shape->second.dims[k] = (dims_pairs->second)[k];
                         }
                     }

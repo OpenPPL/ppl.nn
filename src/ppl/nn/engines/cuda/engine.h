@@ -34,6 +34,11 @@ using namespace std;
 namespace ppl { namespace nn { namespace cuda {
 
 struct CudaArgs {
+    CudaArgs() {
+        std::vector<uint32_t> default_dims{1, 3, 224, 224};
+        input_dims.emplace("", default_dims);
+    }
+
     bool quick_select = false;
     ppl::common::datatype_t kernel_default_type = 0;
     std::map<std::string, ppl::common::dataformat_t> output_formats;
