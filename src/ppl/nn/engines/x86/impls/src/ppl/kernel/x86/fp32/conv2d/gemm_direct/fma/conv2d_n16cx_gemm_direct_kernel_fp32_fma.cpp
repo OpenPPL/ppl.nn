@@ -155,7 +155,11 @@ void conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel_core(
         "cmp $CH_DT_BLK, %%r10\n"
         "jl 6f\n" // label_ic_remain
 "5:\n" // label_ic_body
+#if defined(__APPLE__) && (defined(__GNUC__) || defined(__xlC__) || defined(__xlc__))
+        ".align 4\n"
+#else
         ".align 16\n"
+#endif
         ".irp IC,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15\n"
         "vmovups ((\\IC * CH_DT_BLK + 0 * CH_RF_BLK) * D_BYTES)(%%rbx), %%ymm14\n"
         "vmovups ((\\IC * CH_DT_BLK + 1 * CH_RF_BLK) * D_BYTES)(%%rbx), %%ymm15\n"
