@@ -128,7 +128,11 @@ void conv2d_n16cx_winograd_t6_kernel_fp32_avx512_core(
         "cmp $CH_DT_BLK, %%r10\n"
         "jl 5f\n" // label_ic_remain
 "4:\n" // label_ic_body
+#if defined(__APPLE__) && (defined(__GNUC__) || defined(__xlC__) || defined(__xlc__))
+        ".align 4\n"
+#else
         ".align 16\n"
+#endif
         ".irp IC,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15\n"
         "vmovups (\\IC * CH_DT_BLK * D_BYTES)(%%rbx), %%zmm26\n"
         "vmovups (\\IC * CH_DT_BLK * D_BYTES)(%%rcx), %%zmm27\n"
