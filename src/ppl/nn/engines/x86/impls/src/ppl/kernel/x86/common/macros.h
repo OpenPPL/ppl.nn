@@ -22,6 +22,10 @@
 #define PPL_USE_X86_MSVC
 #endif
 
+#if defined(__APPLE__) && (defined(__GNUC__) || defined(__xlC__) || defined(__xlc__))
+#define PPL_USE_X86_DARWIN
+#endif
+
 #if (defined(__x86_64__) && (defined(__GNUC__) || defined(__GNUG__) || defined(__clang__)))
 #ifndef __APPLE_CC__
 #define PPL_USE_X86_INLINE_ASM_MACRO
@@ -69,6 +73,12 @@
 
 #define PPL_X86_TENSOR_MAX_DIMS() 8
 #define PPL_X86_CACHELINE_BYTES() 64
+
+#ifdef PPL_USE_X86_DARWIN
+#define PPL_X86_INLINE_ASM_ALIGN() ".align 4\n"
+#else
+#define PPL_X86_INLINE_ASM_ALIGN() ".align 16\n"
+#endif
 
 #define PPL_STR_INNER(X) #X
 #define PPL_STR(X)       PPL_STR_INNER(X)
