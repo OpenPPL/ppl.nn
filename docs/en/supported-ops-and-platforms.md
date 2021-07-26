@@ -1,3 +1,5 @@
+## OpenPPL supported operators
+
 * ONNX
 
 | Op Type            | Op Set | Linux X86-64 | Linux CUDA |
@@ -84,4 +86,9 @@
 
 | Op Type        | Op Set | Linux X86-64 | Linux CUDA |
 |:--------------:|:------:|:------------:|:----------:|
-| ChannelShuffle | 1      | &check;      | &check;    |
+| ChannelShuffle | 1      | &check;      | &check;    |  
+
+## OpenPPL supported precision 
+
+1. CUDA only supports FP16 precision on Turing Devices.
+2. x86 only supports FP32 precision on AVX512/FMA.
