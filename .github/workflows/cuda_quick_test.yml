@@ -1,9 +1,9 @@
 name: PPL<CUDA> Build && Quick Test
 
 on:
-  push:
-    branches: [ master ]
-    paths-ignore: ['.**',  'docs/**', 'samples/**', README.md]
+  #push:
+  #  branches: [ master ]
+  #  paths-ignore: ['.**',  'docs/**', 'samples/**', README.md]
   pull_request:
     branches: [ master ]
     paths-ignore: ['.**',  'docs/**', 'samples/**', README.md]
