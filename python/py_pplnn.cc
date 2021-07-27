@@ -22,6 +22,7 @@ namespace ppl { namespace nn { namespace python {
 #ifdef PPLNN_USE_CUDA
 void RegisterCudaEngineFactory(pybind11::module*);
 void RegisterCudaEngineOptions(pybind11::module*);
+void RegisterCudaEngine(pybind11::module*);
 #endif
 #ifdef PPLNN_USE_X86
 void RegisterX86EngineFactory(pybind11::module*);
@@ -42,6 +43,7 @@ PYBIND11_MODULE(pypplnn, m) {
 #ifdef PPLNN_USE_CUDA
     RegisterCudaEngineFactory(&m);
     RegisterCudaEngineOptions(&m);
+    RegisterCudaEngine(&m);
 #endif
 #ifdef PPLNN_USE_X86
     RegisterX86EngineFactory(&m);
