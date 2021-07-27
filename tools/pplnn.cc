@@ -79,7 +79,8 @@ string ToString(T v) {
 
 Define_string_opt("--output-format", g_flag_output_format, "", "declare the output format");
 Define_string_opt("--output-type", g_flag_output_type, "", "declare the output type");
-Define_string_opt("--dims", g_flag_compiler_dims, "0", "declare init input dims for algo selection (split with comma)");
+Define_string_opt("--dims", g_flag_compiler_dims, "0", "declare init input dims for algo selection (split with comma)."
+                  "for example: 1_3_224_224,1_3_128_640");
 Define_uint32_opt("--running-type", g_flag_kernel_default_types, 0,
                   "declare the default type for running kernel, all the kernel will be excuted with this type");
 Define_bool_opt("--quick-select", g_flag_quick_select, 0, "quick select algorithms for conv and gemm kernel");

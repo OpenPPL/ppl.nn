@@ -1,4 +1,4 @@
-This section shows how to use `PPLNN` step by step with an example [api_intro.cc](samples/cpp/api/api_intro.cc). Refer to [API References](docs/en/api-references.md) for more details.
+This section shows how to use `PPLNN` step by step with an example [api_intro.cc](../../samples/cpp/api/api_intro.cc). Refer to [API Reference](cpp-api-reference.md) for more details.
 
 ### Creating engines
 
@@ -8,7 +8,7 @@ In `PPLNN`, an `Engine` is a collection of op implementations running on specifi
 Engine* X86EngineFactory::Create();
 ```
 
-to create an engine which runs on x86-compatitable CPUs:
+to create an engine which runs on x86-compatible CPUs:
 
 ```c++
 Engine* x86_engine = X86EngineFactory::Create();
