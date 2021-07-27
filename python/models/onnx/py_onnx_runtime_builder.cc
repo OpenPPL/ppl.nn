@@ -15,18 +15,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
+#include "py_onnx_runtime_builder.h"
+#include "pybind11/pybind11.h"
 
-#include "ppl/nn/common/common.h"
-#include <stdint.h>
+namespace ppl { namespace nn { namespace python {
 
-namespace ppl { namespace nn {
+void RegisterOnnxRuntimeBuilder(pybind11::module* m) {
+    pybind11::class_<PyOnnxRuntimeBuilder>(*m, "OnnxRuntimeBuilder")
+        .def("CreateRuntime", &PyOnnxRuntimeBuilder::CreateRuntime);
+}
 
-struct PPLNN_PUBLIC CudaEngineOptions final {
-    uint32_t device_id = 0;
-};
-
-}} // namespace ppl::nn
-
-#endif
+}}} // namespace ppl::nn::python

@@ -57,3 +57,21 @@ There is a test tool named `pplnn` in `tools/pplnn.cc`. You can run `pplnn` usin
 ```
 
 NOTE: if CUDA engine is enabled, `pplnn` uses CUDA only.
+
+You can run the python demo with:
+
+```bash
+PYTHONPATH=./pplnn-build/python:./pplnn-build/ppl.common-build/python python3 ./tools/pplnn.py --use-x86 --onnx-model tests/testdata/conv.onnx
+```
+
+or
+
+```bash
+PYTHONPATH=./pplnn-build/python:./pplnn-build/ppl.common-build/python python3 ./tools/pplnn.py --use-cuda --onnx-model tests/testdata/conv.onnx
+```
+
+or use both engines:
+
+```bash
+PYTHONPATH=./pplnn-build/python:./pplnn-build/ppl.common-build/python python3 ./tools/pplnn.py --use-x86 --use-cuda --onnx-model tests/testdata/conv.onnx
+```
