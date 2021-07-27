@@ -73,6 +73,9 @@ def ParseCommandLineArgs():
     for dev in g_supported_devices:
         parser.add_argument("--use-" + dev, dest = "use_" + dev, action = "store_true",
                             default = False, required = False)
+        if dev == "x86":
+            parser.add_argument("--disable-avx512", dest = "disable_avx512", action = "store_true",
+                                default = False, required = False)
 
     parser.add_argument("--onnx-model", type = str, default = "", required = False,
                         help = "onnx model file")
@@ -112,6 +115,9 @@ def RegisterEngines(args):
         if not x86_engine:
             logging.error("create x86 engine failed.")
             sys.exit(-1)
+        if args.disable_avx512:
+            x86_engine.Configure(pplnn.X86_CONF_DISABLE_AVX512)
+
         engines.append(pplnn.Engine(x86_engine))
     if args.use_cuda:
         cuda_options = pplnn.CudaEngineOptions()
