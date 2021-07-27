@@ -16,7 +16,7 @@ Sets various options for this engine. Parameters vary depending on the first par
 
 ## X86EngineFactory
 
-A built-in engine factory thas is used to create engines running on x86-compatitable CPUs.
+A built-in engine factory thas is used to create engines running on x86-compatible CPUs.
 
 #### Functions
 
