@@ -15,18 +15,24 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
+#include "py_runtime.h"
+#include "ppl/nn/runtime/policy_defs.h"
+#include "pybind11/pybind11.h"
+using namespace ppl::common;
 
-#include "ppl/nn/common/common.h"
-#include <stdint.h>
+namespace ppl { namespace nn { namespace python {
 
-namespace ppl { namespace nn {
+void RegisterRuntime(pybind11::module* m) {
+    pybind11::class_<PyRuntime>(*m, "Runtime")
+        .def("GetInputCount", &PyRuntime::GetInputCount)
+        .def("GetInputTensor", &PyRuntime::GetInputTensor)
+        .def("Run", &PyRuntime::Run)
+        .def("Sync", &PyRuntime::Sync)
+        .def("GetOutputCount", &PyRuntime::GetOutputCount)
+        .def("GetOutputTensor", &PyRuntime::GetOutputTensor);
 
-struct PPLNN_PUBLIC CudaEngineOptions final {
-    uint32_t device_id = 0;
-};
+    m->attr("MM_BETTER_PERFORMANCE") = (uint32_t)MM_BETTER_PERFORMANCE;
+    m->attr("MM_LESS_MEMORY") = (uint32_t)MM_LESS_MEMORY;
+}
 
-}} // namespace ppl::nn
-
-#endif
+}}} // namespace ppl::nn::python

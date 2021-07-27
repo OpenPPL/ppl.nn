@@ -9,6 +9,7 @@ option(PPLNN_BUILD_TESTS "build all tests" ON)
 option(PPLNN_BUILD_TOOLS "build tools" ON)
 option(PPLNN_BUILD_SAMPLES "build samples" ON)
 option(PPLNN_ENABLE_KERNEL_PROFILING "enable profiling for each kernel" OFF)
+option(PPLNN_ENABLE_PYTHON_API "enable python api support" ON)
 
 # --------------------------------------------------------------------------- #
 
@@ -63,6 +64,10 @@ list(APPEND PPLNN_LINK_LIBRARIES pplcommon_static libprotobuf)
 
 if(PPLNN_ENABLE_KERNEL_PROFILING)
     list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_ENABLE_KERNEL_PROFILING)
+endif()
+
+if(PPLNN_ENABLE_PYTHON_API)
+    add_subdirectory(python)
 endif()
 
 # --------------------------------------------------------------------------- #

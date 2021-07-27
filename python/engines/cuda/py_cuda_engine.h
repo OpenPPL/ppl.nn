@@ -15,18 +15,35 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
+#ifndef _ST_HPC_PPL_NN_PYTHON_PY_CUDA_ENGINE_H_
+#define _ST_HPC_PPL_NN_PYTHON_PY_CUDA_ENGINE_H_
 
-#include "ppl/nn/common/common.h"
-#include <stdint.h>
+#include "ppl/nn/engines/engine.h"
+#include "pybind11/pybind11.h"
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace python {
 
-struct PPLNN_PUBLIC CudaEngineOptions final {
-    uint32_t device_id = 0;
+class PyCudaEngine final {
+public:
+    PyCudaEngine(Engine* engine) : engine_(engine) {}
+    PyCudaEngine(PyCudaEngine&&) = default;
+    PyCudaEngine& operator=(PyCudaEngine&&) = default;
+    PyCudaEngine(const PyCudaEngine&) = default;
+    PyCudaEngine& operator=(const PyCudaEngine&) = default;
+
+    std::string GetName() const {
+        return engine_->GetName();
+    }
+    const std::shared_ptr<Engine>& GetEnginePtr() const {
+        return engine_;
+    }
+    ppl::common::RetCode Configure(uint32_t option, const pybind11::args& args);
+
+private:
+    std::shared_ptr<Engine> engine_;
 };
 
-}} // namespace ppl::nn
+
+}}}
 
 #endif

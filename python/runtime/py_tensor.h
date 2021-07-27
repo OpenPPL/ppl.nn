@@ -15,18 +15,33 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
+#ifndef _ST_HPC_PPL_NN_PYTHON_PY_TENSOR_H_
+#define _ST_HPC_PPL_NN_PYTHON_PY_TENSOR_H_
 
-#include "ppl/nn/common/common.h"
-#include <stdint.h>
+#include "../common/py_ndarray.h"
+#include "ppl/nn/runtime/tensor.h"
+#include "pybind11/pybind11.h"
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace python {
 
-struct PPLNN_PUBLIC CudaEngineOptions final {
-    uint32_t device_id = 0;
+class PyTensor final {
+public:
+    PyTensor(Tensor* tensor) : tensor_(tensor) {}
+    PyTensor(PyTensor&&) = default;
+    PyTensor& operator=(PyTensor&&) = default;
+    const char* GetName() const {
+        return tensor_->GetName();
+    }
+    const TensorShape& GetConstShape() const {
+        return tensor_->GetShape();
+    }
+    ppl::common::RetCode CopyFromHost(const pybind11::buffer&);
+    PyNdArray CopyToHost() const;
+
+private:
+    Tensor* tensor_;
 };
 
-}} // namespace ppl::nn
+}}} // namespace ppl::nn::python
 
 #endif

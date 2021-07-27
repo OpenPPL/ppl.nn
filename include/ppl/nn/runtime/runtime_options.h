@@ -18,6 +18,7 @@
 #ifndef _ST_HPC_PPL_NN_RUNTIME_RUNTIME_OPTIONS_H_
 #define _ST_HPC_PPL_NN_RUNTIME_RUNTIME_OPTIONS_H_
 
+#include "ppl/nn/common/common.h"
 #include "ppl/nn/runtime/policy_defs.h"
 
 namespace ppl { namespace nn {

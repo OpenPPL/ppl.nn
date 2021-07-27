@@ -15,18 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
+#include "ppl/nn/runtime/runtime_options.h"
+#include "pybind11/pybind11.h"
 
-#include "ppl/nn/common/common.h"
-#include <stdint.h>
+namespace ppl { namespace nn { namespace python {
 
-namespace ppl { namespace nn {
+void RegisterRuntimeOptions(pybind11::module* m) {
+    pybind11::class_<RuntimeOptions>(*m, "RuntimeOptions")
+        .def(pybind11::init<>())
+        .def_readwrite("mm_policy", &RuntimeOptions::mm_policy);
+}
 
-struct PPLNN_PUBLIC CudaEngineOptions final {
-    uint32_t device_id = 0;
-};
-
-}} // namespace ppl::nn
-
-#endif
+}}} // namespace ppl::nn::python

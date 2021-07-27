@@ -11,15 +11,20 @@
 * [Supported Ops and Platforms](docs/en/supported-ops-and-platforms.md)
 * [Building from Source](docs/en/building-from-source.md)
 * [Generating ONNX models from OpenMMLab](docs/en/model-convert-guide.md)
-* [Getting Started in C++](docs/en/cpp-getting-started.md)
-* [C++ API References](docs/en/cpp-api-reference.md)
+* APIs
+  - C++
+    - [Getting Started](docs/en/cpp-getting-started.md)
+    - [API Reference](docs/en/cpp-api-reference.md)
+  - Python
+    - [Getting Started](docs/en/python-getting-started.md)
+    - [API Reference](docs/en/python-api-reference.md)
 * Develop Guide
-  - [Add New Engines and Ops](docs/en/add-new-engines-and-ops.md)
+  - [Adding New Engines and Ops](docs/en/add-new-engines-and-ops.md)
   - X86
-    - [Add Ops](docs/en/x86-doc/add_op.md)（[中文版](docs/cn/x86-doc/add_op.md)）
+    - [Adding Ops](docs/en/x86-doc/add_op.md)（[中文版](docs/cn/x86-doc/add_op.md)）
     - [Benchmark](docs/en/x86-doc/benchmark_tool.md)（[中文版](docs/cn/x86-doc/benchmark_tool.md)）
   - CUDA
-    - [Add Ops](docs/en/cuda-doc/add_op.md)（[中文版](docs/cn/cuda-doc/add_op.md)）
+    - [Adding Ops](docs/en/cuda-doc/add_op.md)（[中文版](docs/cn/cuda-doc/add_op.md)）
     - [Benchmark](docs/en/cuda-doc/benchmark_tool.md)（[中文版](docs/cn/cuda-doc/benchmark_tool.md)）
 
 ### Contact Us

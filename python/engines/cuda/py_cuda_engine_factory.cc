@@ -15,18 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
+#include "py_cuda_engine.h"
+#include "ppl/nn/engines/cuda/engine_factory.h"
 
-#include "ppl/nn/common/common.h"
-#include <stdint.h>
+namespace ppl { namespace nn { namespace python {
 
-namespace ppl { namespace nn {
-
-struct PPLNN_PUBLIC CudaEngineOptions final {
-    uint32_t device_id = 0;
+class PyCudaEngineFactory final {
+public:
+    static PyCudaEngine Create(const CudaEngineOptions& options) {
+        return PyCudaEngine(CudaEngineFactory::Create(options));
+    }
 };
 
-}} // namespace ppl::nn
+void RegisterCudaEngineFactory(pybind11::module* m) {
+    pybind11::class_<PyCudaEngineFactory>(*m, "CudaEngineFactory")
+        .def_static("Create", &PyCudaEngineFactory::Create);
+}
 
-#endif
+}}} // namespace ppl::nn::python

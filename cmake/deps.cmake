@@ -63,7 +63,7 @@ set(PPLCOMMON_BUILD_BENCHMARK OFF CACHE BOOL "disable ppl.common benchmark")
 
 hpcc_declare_git_dep(ppl.common
     https://github.com/openppl-public/ppl.common.git
-    v0.1.4)
+    v0.2.0)
 
 # --------------------------------------------------------------------------- #
 
@@ -82,6 +82,12 @@ set(RAPIDJSON_BUILD_DOC OFF CACHE BOOL "disable rapidjson docs")
 hpcc_declare_git_dep(rapidjson
     https://github.com/Tencent/rapidjson.git
     master)
+
+# --------------------------------------------------------------------------- #
+
+hpcc_declare_git_dep(pybind11
+    https://github.com/pybind/pybind11.git
+    v2.7.0)
 
 # --------------------------------------------------------------------------- #
 

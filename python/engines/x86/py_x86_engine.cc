@@ -15,18 +15,24 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
+#include "py_x86_engine.h"
+#include "ppl/common/retcode.h"
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
+#include "ppl/nn/common/logger.h"
+using namespace ppl::common;
 
-#include "ppl/nn/common/common.h"
-#include <stdint.h>
+namespace ppl { namespace nn { namespace python {
 
-namespace ppl { namespace nn {
+RetCode PyX86Engine::Configure(uint32_t option, const pybind11::args& args) {
+    LOG(ERROR) << "Configure() is not available now.";
+    return RC_UNSUPPORTED;
+}
 
-struct PPLNN_PUBLIC CudaEngineOptions final {
-    uint32_t device_id = 0;
-};
+void RegisterX86Engine(pybind11::module* m) {
+    pybind11::class_<PyX86Engine>(*m, "X86Engine")
+        .def("GetName", &PyX86Engine::GetName)
+        .def("Configure", &PyX86Engine::Configure);
+}
 
-}} // namespace ppl::nn
-
-#endif
+}}} // namespace ppl::nn::python

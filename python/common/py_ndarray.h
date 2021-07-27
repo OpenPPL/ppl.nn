@@ -15,18 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
+#ifndef _ST_HPC_PPL_NN_PYTHON_PY_NDARRAY_H_
+#define _ST_HPC_PPL_NN_PYTHON_PY_NDARRAY_H_
 
-#include "ppl/nn/common/common.h"
-#include <stdint.h>
+#include "ppl/common/types.h"
+#include <vector>
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace python {
 
-struct PPLNN_PUBLIC CudaEngineOptions final {
-    uint32_t device_id = 0;
+struct PyNdArray final {
+    std::vector<char> data;
+    ppl::common::datatype_t data_type = ppl::common::DATATYPE_UNKNOWN;
+    std::vector<int64_t> dims;
+    std::vector<uint64_t> strides;
 };
 
-}} // namespace ppl::nn
+}}} // namespace ppl::nn::python
 
 #endif
