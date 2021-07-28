@@ -1,5 +1,10 @@
 ## PPLNN
 
+[![website](docs/images/Website-OpenPPL-brightgreen.svg)](https://openppl.ai/)
+[![License](docs/images/License-Apache-2.0-green.svg)](LICENSE)
+[![qq](docs/images/Chat-on-QQ-red.svg)](https://qm.qq.com/cgi-bin/qm/qr?k=X7JWUqOdBih71dUU9AZF2gD3PKjxaxB-)
+[![zhihu](docs/images/Discuss-on-Zhihu.svg)](https://www.zhihu.com/people/openppl)
+
 ### Overview
 
 `PPLNN`, which is short for "**P**PLNN is a **P**rimitive **L**ibrary for **N**eural **N**etwork", is a high-performance deep-learning inference engine for efficient AI inferencing. It can run various ONNX models and has better support for [OpenMMLab](https://github.com/open-mmlab).
@@ -29,8 +34,12 @@
 
 ### Contact Us
 
-* [OpenPPL Homepage](https://openppl.ai/)
-* [OpenPPL on Github](https://github.com/openppl-public/ppl.nn)
+Questions, reports, and suggestions are welcome through GitHub Issues!
+
+| WeChat Official Account | QQ Group |
+| :----:| :----: | 
+| OpenPPL | 627853444 |
+| ![OpenPPL](docs/images/qrcode_for_gh_303b3780c847_258.jpg)| ![QQGroup](docs/images/qqgroup_s.jpg) |
 
 ### Contributions
 
