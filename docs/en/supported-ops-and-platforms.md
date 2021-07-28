@@ -86,7 +86,9 @@
 
 | Op Type        | Op Set | Linux X86-64 | Linux CUDA |
 |:--------------:|:------:|:------------:|:----------:|
-| ChannelShuffle | 1      | &check;      | &check;    |  
+| ChannelShuffle | 1      | &check;      | &check;    |
+| Shape          | 1      | &check;      | &check;    |
+| Swish          | 1      | &check;      |            |
 
 ## OpenPPL supported precision 
 
