@@ -24,15 +24,12 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace x86 {
 
 RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
-    if (options.graph_data) {
-        auto status = GenericLoadParam(options, &param_);
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
-            return status;
-        }
-    } else {
-        param_ = make_shared<ppl::nn::common::ChannelShuffleParam>();
+    auto status = GenericLoadParam(options, &param_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
+        return status;
     }
+    
     infer_type_func_ = GenericInferType;
     infer_dims_func_ = GenericInferDims;
     return RC_SUCCESS;

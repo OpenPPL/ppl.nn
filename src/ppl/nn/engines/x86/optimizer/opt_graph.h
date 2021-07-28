@@ -43,7 +43,7 @@ private:
     ppl::common::RetCode TryToInferDims(X86Device* device);
     bool FuseConvActivation();
     bool FuseConvAdd();
-    bool FuseChannelShuffle();
+    bool FuseChannelShuffle(const OptKernelOptions& options);
     bool FuseBNReLU();
     bool FuseArithmeticReLU();
     bool FuseFcActivation();

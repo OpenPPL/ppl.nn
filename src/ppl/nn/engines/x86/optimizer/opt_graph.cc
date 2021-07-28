@@ -622,7 +622,7 @@ bool OptGraph::FuseConvAdd() {
     return graph_changed;
 }
 
-bool OptGraph::FuseChannelShuffle() {
+bool OptGraph::FuseChannelShuffle(const OptKernelOptions& options) {
     bool graph_changed = false;
 
     for (auto it = graph_->topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
@@ -758,13 +758,21 @@ bool OptGraph::FuseChannelShuffle() {
                 continue;
             }
 
-            auto status = opt_kernel->Init(OptKernelOptions());
+            auto param_ref = options.graph_data->attrs.find(opt_kernel->GetNode()->GetId());
+            if (param_ref == options.graph_data->attrs.end()) {
+                options.graph_data->attrs[opt_kernel->GetNode()->GetId()] = make_shared<ppl::nn::common::ChannelShuffleParam>();
+            }
+            else {
+                LOG(ERROR) << "Node " << opt_kernel->GetNode()->GetName() << "param exist.";
+                continue;
+            }
+
+            auto status = opt_kernel->Init(options);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "Init for kernel[" << opt_kernel->GetNode()->GetName()
                            << "] failed: " << GetRetCodeStr(status);
                 continue;
             }
-            opt_kernel->CreateKernelImpl();
             opt_kernel->SetOutputDataFormat(0, tensor_impls_[base_edge_id]->GetShape().GetDataFormat());
             info_->kernels.emplace(channel_shuffle_node->GetId(), std::move(opt_kernel));
 
@@ -1159,7 +1167,7 @@ RetCode OptGraph::DoOptimize(X86Device* device) {
         return status;
     }
 
-    FuseChannelShuffle();
+    FuseChannelShuffle(options);
 
     status = LayoutOptimize(options);
     if (status != RC_SUCCESS) {
