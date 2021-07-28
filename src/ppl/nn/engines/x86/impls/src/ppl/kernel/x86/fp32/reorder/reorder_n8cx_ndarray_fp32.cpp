@@ -19,12 +19,12 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-ppl::common::RetCode reorder_n16cx_ndarray_fp32(
+ppl::common::RetCode reorder_n8cx_ndarray_fp32(
     const ppl::nn::TensorShape *src_shape,
     const float *src,
     float *dst)
 {
-    if (src_shape->GetDataFormat() != ppl::common::DATAFORMAT_N16CX ||
+    if (src_shape->GetDataFormat() != ppl::common::DATAFORMAT_N8CX ||
         src_shape->GetDimCount() < 3) {
         return ppl::common::RC_UNSUPPORTED;
     }
@@ -33,7 +33,7 @@ ppl::common::RetCode reorder_n16cx_ndarray_fp32(
     const int64_t channels = src_shape->GetDim(1);
     const int64_t X        = src_shape->GetElementsExcludingPadding() / batch / channels;
 
-    const int64_t c_blk    = 16;
+    const int64_t c_blk    = 8;
     const int64_t padded_c = round_up(channels, c_blk);
 
 #ifdef PPL_USE_X86_OMP_COLLAPSE

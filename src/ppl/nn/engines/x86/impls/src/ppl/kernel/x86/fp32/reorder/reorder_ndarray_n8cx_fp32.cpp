@@ -19,12 +19,12 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-ppl::common::RetCode reorder_n16cx_ndarray_fp32(
+ppl::common::RetCode reorder_ndarray_n8cx_fp32(
     const ppl::nn::TensorShape *src_shape,
     const float *src,
     float *dst)
 {
-    if (src_shape->GetDataFormat() != ppl::common::DATAFORMAT_N16CX ||
+    if (src_shape->GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY ||
         src_shape->GetDimCount() < 3) {
         return ppl::common::RC_UNSUPPORTED;
     }
@@ -33,7 +33,7 @@ ppl::common::RetCode reorder_n16cx_ndarray_fp32(
     const int64_t channels = src_shape->GetDim(1);
     const int64_t X        = src_shape->GetElementsExcludingPadding() / batch / channels;
 
-    const int64_t c_blk    = 16;
+    const int64_t c_blk    = 8;
     const int64_t padded_c = round_up(channels, c_blk);
 
 #ifdef PPL_USE_X86_OMP_COLLAPSE
@@ -45,11 +45,15 @@ ppl::common::RetCode reorder_n16cx_ndarray_fp32(
 #endif
         for (int64_t c = 0; c < channels; c += c_blk) {
             const int64_t c_eff = min<int64_t>(channels - c, c_blk);
-            float *ldst         = dst + b * channels * X + c * X;
-            const float *lsrc   = src + b * padded_c * X + c * X;
+            float *ldst         = dst + b * padded_c * X + c * X;
+            const float *lsrc   = src + b * channels * X + c * X;
             for (int64_t x = 0; x < X; ++x) {
                 for (int64_t cc = 0; cc < c_eff; ++cc) {
-                    ldst[cc * X + x] = lsrc[x * c_blk + cc];
+                    ldst[x * c_blk + cc] = lsrc[cc * X + x];
+                }
+                // fill the padded channels
+                for (int64_t cc = c_eff; cc < c_blk; ++cc) {
+                    ldst[x * c_blk + cc] = 0;
                 }
             }
         }
