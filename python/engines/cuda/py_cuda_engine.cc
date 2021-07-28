@@ -20,19 +20,40 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 #include "ppl/nn/common/logger.h"
+#include "ppl/nn/engines/cuda/cuda_options.h"
 using namespace ppl::common;
+
+#include <map>
+using namespace std;
 
 namespace ppl { namespace nn { namespace python {
 
+static RetCode SetUseDefaultAlgorithms(Engine* engine, uint32_t option, const pybind11::args&) {
+    return engine->Configure(option);
+}
+
+typedef RetCode (*ConfigFunc)(Engine*, uint32_t option, const pybind11::args& args);
+
+static const map<uint32_t, ConfigFunc> g_opt2func = {
+    {cuda::CUDA_CONF_USE_DEFAULT_ALGORITHMS, SetUseDefaultAlgorithms},
+};
+
 RetCode PyCudaEngine::Configure(uint32_t option, const pybind11::args& args) {
-    LOG(ERROR) << "Configure() is not available now.";
-    return RC_UNSUPPORTED;
+    auto it = g_opt2func.find(option);
+    if (it == g_opt2func.end()) {
+        LOG(ERROR) << "unsupported option: " << option;
+        return RC_UNSUPPORTED;
+    }
+
+    return it->second(engine_.get(), option, args);
 }
 
 void RegisterCudaEngine(pybind11::module* m) {
     pybind11::class_<PyCudaEngine>(*m, "CudaEngine")
         .def("GetName", &PyCudaEngine::GetName)
         .def("Configure", &PyCudaEngine::Configure);
+
+    m->attr("CUDA_CONF_USE_DEFAULT_ALGORITHMS") = (uint32_t)cuda::CUDA_CONF_USE_DEFAULT_ALGORITHMS;
 }
 
 }}} // namespace ppl::nn::python

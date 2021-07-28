@@ -76,6 +76,11 @@ def ParseCommandLineArgs():
         if dev == "x86":
             parser.add_argument("--disable-avx512", dest = "disable_avx512", action = "store_true",
                                 default = False, required = False)
+        elif dev == "cuda":
+            parser.add_argument("--quick-select", dest = "quick_select", action = "store_true",
+                                default = False, required = False)
+            parser.add_argument("--device-id", type = int, dest = "device_id",
+                                default = 0, required = False, help = "specify which device is used.")
 
     parser.add_argument("--onnx-model", type = str, default = "", required = False,
                         help = "onnx model file")
@@ -115,16 +120,30 @@ def RegisterEngines(args):
         if not x86_engine:
             logging.error("create x86 engine failed.")
             sys.exit(-1)
+
         if args.disable_avx512:
-            x86_engine.Configure(pplnn.X86_CONF_DISABLE_AVX512)
+            status = x86_engine.Configure(pplnn.X86_CONF_DISABLE_AVX512)
+            if status != pplcommon.RC_SUCCESS:
+                logging.error("x86 engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
+                sys.exit(-1)
 
         engines.append(pplnn.Engine(x86_engine))
+
     if args.use_cuda:
         cuda_options = pplnn.CudaEngineOptions()
+        cuda_options.device_id = args.device_id
+
         cuda_engine = pplnn.CudaEngineFactory.Create(cuda_options)
         if not cuda_engine:
             logging.error("create cuda engine failed.")
             sys.exit(-1)
+
+        if args.quick_select:
+            status = cuda_engine.Configure(pplnn.CUDA_CONF_SET_DEFAULT_ALGORITHMS)
+            if status != pplcommon.RC_SUCCESS:
+                logging.error("cuda engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
+                sys.exit(-1)
+
         engines.append(pplnn.Engine(cuda_engine))
 
     return engines
@@ -153,7 +172,11 @@ def SetInputsOneByOne(inputs, in_shapes, runtime):
         tensor = runtime.GetInputTensor(i)
         shape = tensor.GetShape()
         in_data = np.fromfile(input_files[i], dtype=shape.GetDataType())
-        tensor.CopyFromHost(in_data)
+        status = tensor.CopyFromHost(in_data)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("copy data to tensor[" + tensor.GetName() + "] failed: " +
+                          pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
 
 # ---------------------------------------------------------------------------- #
 
@@ -245,6 +268,10 @@ def SaveInputsOneByOne(save_data_dir, runtime):
         tensor = runtime.GetInputTensor(i)
         shape = tensor.GetShape()
         tensor_data = tensor.CopyToHost()
+        if not tensor_data:
+            logging.error("copy data from tensor[" + tensor.GetName() + "] failed.")
+            sys.exit(-1)
+
         in_data = np.array(tensor_data, copy=False)
         in_data.tofile(save_data_dir + "/pplnn_input_" + str(i) + "_" +
                        tensor.GetName() + "-" + GenDimsStr(shape.GetDims()) + "-" +
@@ -259,6 +286,10 @@ def SaveInputsAllInOne(save_data_dir, runtime):
         tensor = runtime.GetInputTensor(i)
         shsape = tensor.GetShape()
         tensor_data = tensor.CopyToHost()
+        if not tensor_data:
+            logging.error("copy data from tensor[" + tensor.GetName() + "] failed.")
+            sys.exit(-1)
+
         in_data = np.array(tensor_data, copy=False)
         fd.write(in_data.tobytes())
     fd.close()
@@ -270,6 +301,10 @@ def SaveOutputsOneByOne(save_data_dir, runtime):
         tensor = runtime.GetOutputTensor(i)
         shape = tensor.GetShape()
         tensor_data = tensor.CopyToHost()
+        if not tensor_data:
+            logging.error("copy data from tensor[" + tensor.GetName() + "] failed.")
+            sys.exit(-1)
+
         out_data = np.array(tensor_data, copy=False)
         out_data.tofile(save_data_dir + "/pplnn_output-" + tensor.GetName() + ".dat")
 
@@ -312,7 +347,7 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
-    args = ParseCommandLineArgs();
+    args = ParseCommandLineArgs()
 
     if args.display_version:
         logging.info("PPLNN version: " + pplnn.GetVersionString())

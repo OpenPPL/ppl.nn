@@ -331,12 +331,7 @@ RetCode OptGraph::UpdateType() {
         IOinfo.SetNode(node);
         CudaOptKernel* kernel = (CudaOptKernel*)(info_->kernels.find(node->GetId())->second.get());
 
-        datatype_t kernel_type = args_->kernel_default_type;
-        auto conf_pair = args_->node_types.find(node->GetName());
-        if (conf_pair != args_->node_types.end()) {
-            kernel_type = conf_pair->second;
-        }
-        auto status = kernel->InferType(&IOinfo, kernel_type);
+        auto status = kernel->InferType(&IOinfo, DATATYPE_UNKNOWN);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "Set type for node[" << node->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;

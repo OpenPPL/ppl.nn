@@ -46,52 +46,21 @@ enum {
 
        @note example:
        @code{.cpp}
-       std::string dims = "1,3,224,224"
-       engine->Configure(CUDA_CONF_SET_COMPILER_INPUT_SHAPE, dims.c_str);
+       std::string dims = "1_3_224_224";
+       engine->Configure(CUDA_CONF_SET_COMPILER_INPUT_SHAPE, dims.c_str());
        @endcode
     */
     CUDA_CONF_SET_COMPILER_INPUT_SHAPE,
-
-    /**
-       @brief set kernel default execution data type
-
-       @note example:
-       @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_SET_KERNEL_DEFAULT_TYPE, DATATYPE_FLOAT32);
-       @endcode
-    */
-    CUDA_CONF_SET_KERNEL_DEFAULT_TYPE,
 
     /**
        @brief use default algorithms for conv and gemm
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_USE_DEFAULT_ALGORITHMS, true);
+       cuda_engine->Configure(CUDA_CONF_USE_DEFAULT_ALGORITHMS, true/false);
        @endcode
     */
-    CUDA_CONF_SET_DEFAULT_ALGORITHMS,
-
-    /**
-       @brief set node execution type
-
-       @note example:
-       @code{.cpp}
-       std::string node_types = "Conv_0,DATATYPE_FLOAT32;Conv_1,DATATYPE_FLOAT16"
-       cuda_engine->Configure(CUDA_CONF_SET_NODE_DATA_TYPE, node_types.c_str());
-       @endcode
-    */
-    CUDA_CONF_SET_NODE_DATA_TYPE,
-
-    /**
-       @brief the name of json file that saves quantization information
-
-       @note example:
-       @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_SET_QUANTIZATION, "quantization.json");
-       @endcode
-    */
-    CUDA_CONF_SET_QUANTIZATION,
+    CUDA_CONF_USE_DEFAULT_ALGORITHMS,
 
     /** max value */
     CUDA_CONF_MAX,

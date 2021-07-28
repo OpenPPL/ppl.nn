@@ -216,56 +216,9 @@ RetCode CudaEngine::SetCompilerInputDims(CudaEngine* engine, va_list args) {
     return RC_SUCCESS;
 }
 
-RetCode CudaEngine::SetKernelDefaultType(CudaEngine* engine, va_list args) {
-    engine->cuda_flags_.kernel_default_type = va_arg(args, datatype_t);
-    return RC_SUCCESS;
-}
-
-RetCode CudaEngine::SetAlgorithm(CudaEngine* engine, va_list args) {
-    engine->cuda_flags_.quick_select = va_arg(args, uint32_t);
-    return RC_SUCCESS;
-}
-
-RetCode CudaEngine::SetNodeType(CudaEngine* engine, va_list args) {
-    const char* node_types = va_arg(args, const char*);
-    std::string temp_name[2] = {"", ""};
-    uint32_t flag = 0;
-
-    if (node_types[0] == '\0')
-        return RC_SUCCESS;
-
-    for (uint32_t i = 0;; i++) {
-        if (node_types[i] == ',') {
-            flag = 1;
-        } else if (node_types[i] == ';' || node_types[i] == '\0') {
-            datatype_t temp_type = DATATYPE_UNKNOWN;
-            for (int j = 1; j < DATATYPE_MAX; ++j) {
-                if (temp_name[1] == GetDataTypeStr(j)) {
-                    temp_type = j;
-                }
-            }
-            if (temp_type == DATATYPE_UNKNOWN) {
-                LOG(ERROR) << "Incorrect data type.";
-                return RC_INVALID_VALUE;
-            }
-
-            engine->cuda_flags_.node_types.emplace(temp_name[0], temp_type);
-            temp_name[0] = "";
-            temp_name[1] = "";
-            flag = 0;
-
-            if (node_types[i] == '\0') {
-                break;
-            }
-        } else {
-            temp_name[flag] = temp_name[flag] + node_types[i];
-        }
-    }
-
-    if (temp_name[0] != "" || temp_name[1] != "") {
-        LOG(ERROR) << "The sizes of node name and data type are not equal.";
-        return RC_INVALID_VALUE;
-    }
+RetCode CudaEngine::SetUseDefaultAlgorithms(CudaEngine* engine, va_list args) {
+    auto flag = va_arg(args, uint32_t);
+    engine->cuda_flags_.quick_select = (flag > 0);
     return RC_SUCCESS;
 }
 
@@ -283,10 +236,7 @@ CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetOutputFormat, // CUDA_CONF_SET_OUTPUT_DATA_FORMAT
     CudaEngine::SetOutputType, // CUDA_CONF_SET_OUTPUT_TYPE
     CudaEngine::SetCompilerInputDims, // CUDA_CONF_SET_COMPILER_INPUT_SHAPE
-    CudaEngine::SetKernelDefaultType, // CUDA_CONF_SET_KERNEL_DEFAULT_TYPE
-    CudaEngine::SetAlgorithm, // CUDA_CONF_SET_DEFAULT_ALGORITHMS
-    CudaEngine::SetNodeType, // CUDA_CONF_SET_NODE_DATA_TYPE
-    CudaEngine::SetQuantization, // CUDA_CONF_SET_QUANTIZATION
+    CudaEngine::SetUseDefaultAlgorithms, // CUDA_CONF_USE_DEFAULT_ALGORITHMS
 };
 
 RetCode CudaEngine::Configure(uint32_t option, ...) {
