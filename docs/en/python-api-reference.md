@@ -133,6 +133,12 @@ x86_engine = X86EngineFactory::Create()
 
 Creates an `Engine` instance running on x86-64 compatiable CPUs.
 
+```python
+ret_code = x86_engine.Configure(option)
+```
+
+Configures `x86_engine`. Refer to [x86_options.h](../../include/ppl/nn/engines/x86/x86_options.h) for available options.
+
 ### CUDA
 
 #### CudaEngineOptions
@@ -147,6 +153,12 @@ cuda_engine = CudaEngineFactory::Create(cuda_options)
 ```
 
 Creates an `Engine` instance running on NVIDIA GPUs.
+
+```python
+ret_code = cuda_engine.Configure(option)
+```
+
+Configures `cuda_engine`. Refer to [cuda_options.h](../../include/ppl/nn/engines/cuda/cuda_options.h) for available options(some options are not exported yet).
 
 ## Other Utilities
 

@@ -93,6 +93,6 @@ ret_code = runtime.Sync()
 for i in range(runtime.GetOutputCount()):
     tensor = runtime.GetOutputTensor(i)
     shape = tensor.GetShape()
-    ndarray = tensor.CopyToHost()
-    out_data = np.array(ndarray, copy=False)
+    tensor_data = tensor.CopyToHost()
+    out_data = np.array(tensor_data, copy=False)
 ```
