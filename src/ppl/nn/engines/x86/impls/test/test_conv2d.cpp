@@ -237,6 +237,15 @@ static std::map<std::string, ppl::kernel::x86::conv2d_fp32_algo_info> algo_table
         })
     },
 #endif
+    {
+        "n8cx_direct_fp32_sse",
+        ppl::kernel::x86::conv2d_fp32_algo_info({
+            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::direct,
+            .isa = ppl::common::ISA_X86_SSE,
+            .input_format = ppl::common::DATAFORMAT_N8CX,
+            .output_format = ppl::common::DATAFORMAT_N8CX
+        })
+    },
 };
 
 int main(int argc, char **argv) {
@@ -325,7 +334,7 @@ for (int64_t lcfg = 0; lcfg < Flag_loop_cfg; ++lcfg) {
 
     std::cerr << "==============================================================\n";
     std::cerr << "begin tests\n";
-    std::cerr << "line_no,case_string,min_ms,max_gflops,avg_ms,avg_gflops\n";
+    std::cerr << "\%line_no,\%case_string,\%mops,\%mbs,\%min_ms,\%max_gflops,\%max_gbps,\%avg_ms,\%avg_gflops,\%avg_gbps\n";
 
     char line[512];
     int line_no = 0;
@@ -464,16 +473,20 @@ DEBUG_TAG(C);
         src_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         src_shape.Reshape({batch, param.channels, src_h, src_w});
 
-        ppl::nn::TensorShape src16_shape = src_shape;
-        src16_shape.SetDataFormat(ppl::common::DATAFORMAT_N16CX);
+        ppl::nn::TensorShape src_trans_shape = src_shape;
+        if (algoinfo.input_format != ppl::common::DATAFORMAT_NDARRAY) {
+            src_trans_shape.SetDataFormat(algoinfo.input_format);
+        }
 
         ppl::nn::TensorShape dst_shape;
         dst_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
         dst_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         dst_shape.Reshape({batch, param.num_output, dst_h, dst_w});
 
-        ppl::nn::TensorShape dst16_shape = dst_shape;
-        dst16_shape.SetDataFormat(ppl::common::DATAFORMAT_N16CX);
+        ppl::nn::TensorShape dst_trans_shape = dst_shape;
+        if (algoinfo.output_format != ppl::common::DATAFORMAT_NDARRAY) {
+            dst_trans_shape.SetDataFormat(algoinfo.output_format);
+        }
 
         ppl::nn::TensorShape filter_shape;
         filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
@@ -485,14 +498,19 @@ DEBUG_TAG(C);
         bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         bias_shape.Reshape({param.num_output});
 
+        const float mbs = ((float)src_shape.GetBytesExcludingPadding() +
+                          dst_shape.GetBytesExcludingPadding() +
+                          filter_shape.GetBytesExcludingPadding() +
+                          bias_shape.GetBytesExcludingPadding()) / 1024 / 1024;
+
 DEBUG_TAG(D);
         float *src = nullptr;
         float *dst = nullptr;
         float *sum_src = nullptr;
         float *dst_ref = nullptr;
-        float *src16 = nullptr;
-        float *dst16 = nullptr;
-        float *sum_src16 = nullptr;
+        float *src_trans = nullptr;
+        float *dst_trans = nullptr;
+        float *sum_src_trans = nullptr;
         float *filter = nullptr;
         float *bias = nullptr;
         void *temp_buffer = nullptr;
@@ -515,14 +533,21 @@ DEBUG_TAG(E);
         }
 
 DEBUG_TAG(F);
-        if (algoinfo.input_format == ppl::common::DATAFORMAT_N16CX) {
-            src16 = (float*)allocator.Alloc(src16_shape.GetBytesIncludingPadding());
-            if (!src16) {
-                std::cerr << "," << "src16 out of memory\n";
+        if (algoinfo.input_format != ppl::common::DATAFORMAT_NDARRAY) {
+            src_trans = (float*)allocator.Alloc(src_trans_shape.GetBytesIncludingPadding());
+            if (!src_trans) {
+                std::cerr << "," << "src_trans out of memory\n";
                 return -1;
             }
-            if (ppl::common::RC_SUCCESS != ppl::kernel::x86::reorder_ndarray_n16cx_fp32_avx(&src_shape, src, src16)) {
-                std::cerr << "," << " reorder src16 failed\n";
+            ppl::common::RetCode ret_code = ppl::common::RC_INVALID_VALUE;
+            if (algoinfo.input_format == ppl::common::DATAFORMAT_N16CX) {
+                ret_code = ppl::kernel::x86::reorder_ndarray_n16cx_fp32_avx(&src_shape, src, src_trans);
+            }
+            if (algoinfo.input_format == ppl::common::DATAFORMAT_N8CX) {
+                ret_code = ppl::kernel::x86::reorder_ndarray_n8cx_fp32(&src_shape, src, src_trans);
+            }
+            if (ppl::common::RC_SUCCESS != ret_code) {
+                std::cerr << "," << " reorder src_trans failed\n";
                 return -1;
             }
         }
@@ -545,13 +570,13 @@ DEBUG_TAG(H);
             memset(dst_ref, 0, dst_shape.GetBytesIncludingPadding());
         }
 DEBUG_TAG(I);
-        if (algoinfo.output_format == ppl::common::DATAFORMAT_N16CX) {
-            dst16 = (float*)allocator.Alloc(dst16_shape.GetBytesIncludingPadding());
-            if (!dst16) {
-                std::cerr << "," << "dst16 out of memory\n";
+        if (algoinfo.output_format != ppl::common::DATAFORMAT_NDARRAY) {
+            dst_trans = (float*)allocator.Alloc(dst_trans_shape.GetBytesIncludingPadding());
+            if (!dst_trans) {
+                std::cerr << "," << "dst_trans out of memory\n";
                 return -1;
             }
-            memset(dst16, 0, dst16_shape.GetBytesIncludingPadding());
+            memset(dst_trans, 0, dst_trans_shape.GetBytesIncludingPadding());
         }
         if (Flag_sum) {
             sum_src = (float*)allocator.Alloc(dst_shape.GetBytesIncludingPadding());
@@ -562,14 +587,21 @@ DEBUG_TAG(I);
             for (uint64_t i = 0; i < dst_shape.GetElementsIncludingPadding(); ++i) {
                 sum_src[i] = (rand() % src_mod + src_shift) * src_scale;
             }
-            if (algoinfo.output_format == ppl::common::DATAFORMAT_N16CX) {
-                sum_src16 = (float*)allocator.Alloc(dst16_shape.GetBytesIncludingPadding());
-                if (!sum_src16) {
-                    std::cerr << "," << "sum_src16 out of memory\n";
+            if (algoinfo.output_format != ppl::common::DATAFORMAT_NDARRAY) {
+                sum_src_trans = (float*)allocator.Alloc(dst_trans_shape.GetBytesIncludingPadding());
+                if (!sum_src_trans) {
+                    std::cerr << "," << "sum_src_trans out of memory\n";
                     return -1;
                 }
-                if (ppl::common::RC_SUCCESS != ppl::kernel::x86::reorder_ndarray_n16cx_fp32_avx(&dst_shape, sum_src, sum_src16)) {
-                    std::cerr << "," << "reorder sum_src16 failed\n";
+                ppl::common::RetCode ret_code = ppl::common::RC_INVALID_VALUE;
+                if (algoinfo.output_format == ppl::common::DATAFORMAT_N16CX) {
+                    ret_code = ppl::kernel::x86::reorder_ndarray_n16cx_fp32_avx(&dst_shape, sum_src, sum_src_trans);
+                }
+                if (algoinfo.output_format == ppl::common::DATAFORMAT_N8CX) {
+                    ret_code = ppl::kernel::x86::reorder_ndarray_n8cx_fp32(&dst_shape, sum_src, sum_src_trans);
+                }
+                if (ppl::common::RC_SUCCESS != ret_code) {
+                    std::cerr << "," << "reorder sum_src_trans failed\n";
                     return -1;
                 }
             }
@@ -605,17 +637,15 @@ DEBUG_TAG(L);
 DEBUG_TAG(M);
         if (algoinfo.input_format == ppl::common::DATAFORMAT_NDARRAY) {
             conv_exe->set_src(src);
-        }
-        if (algoinfo.input_format == ppl::common::DATAFORMAT_N16CX) {
-            conv_exe->set_src(src16);
+        } else {
+            conv_exe->set_src(src_trans);
         }
         if (algoinfo.output_format == ppl::common::DATAFORMAT_NDARRAY) {
             conv_exe->set_sum_src(sum_src);
             conv_exe->set_dst(dst);
-        }
-        if (algoinfo.output_format == ppl::common::DATAFORMAT_N16CX) {
-            conv_exe->set_sum_src(sum_src16);
-            conv_exe->set_dst(dst16);
+        } else {
+            conv_exe->set_sum_src(sum_src_trans);
+            conv_exe->set_dst(dst_trans);
         }
 
 DEBUG_TAG(N);
@@ -665,7 +695,9 @@ DEBUG_TAG(N);
         double avg_exe_us = tot_exe_us / tot_exe_iter;
         double max_gflops = gops / (min_exe_us / 1e6);
         double avg_gflops = gops / (avg_exe_us / 1e6);
-        fprintf(stderr, ",%.3f,%.2f,%.3f,%.2f", min_exe_us / 1e3, max_gflops, avg_exe_us / 1e3, avg_gflops);
+        double max_gbps = mbs / 1024 / (min_exe_us / 1e6);
+        double avg_mbs = mbs / 1024 / (avg_exe_us / 1e6);
+        fprintf(stderr, ",%.3f,%.3f,%.3f,%.2f,%.2f,%.3f,%.2f,%.2f", gops * 1000, mbs, min_exe_us / 1e3, max_gflops, max_gbps, avg_exe_us / 1e3, avg_gflops, avg_mbs);
 
         ++case_no;
         all_case_gflops += avg_gflops;
@@ -686,9 +718,16 @@ DEBUG_TAG(O);
                 std::cerr << "," << "conv2d_ref_fp32 failed\n";
                 return -1;
             }
-            if (algoinfo.output_format == ppl::common::DATAFORMAT_N16CX) {
-                if (ppl::common::RC_SUCCESS != ppl::kernel::x86::reorder_n16cx_ndarray_fp32_avx(&dst16_shape, dst16, dst)) {
-                    std::cerr << "," << "reorder dst16 failed\n";
+            if (algoinfo.output_format != ppl::common::DATAFORMAT_NDARRAY) {
+                ppl::common::RetCode ret_code = ppl::common::RC_INVALID_VALUE;
+                if (algoinfo.output_format == ppl::common::DATAFORMAT_N16CX) {
+                    ret_code = ppl::kernel::x86::reorder_n16cx_ndarray_fp32_avx(&dst_trans_shape, dst_trans, dst);
+                }
+                if (algoinfo.output_format == ppl::common::DATAFORMAT_N8CX) {
+                    ret_code = ppl::kernel::x86::reorder_n8cx_ndarray_fp32(&dst_trans_shape, dst_trans, dst);
+                }
+                if (ppl::common::RC_SUCCESS != ret_code) {
+                    std::cerr << "," << "reorder dst_trans failed\n";
                     return -1;
                 }
             }
@@ -711,9 +750,9 @@ DEBUG_TAG(Y);
         if (dst) allocator.Free(dst);
         if (sum_src) allocator.Free(sum_src);
         if (dst_ref) allocator.Free(dst_ref);
-        if (src16) allocator.Free(src16);
-        if (dst16) allocator.Free(dst16);
-        if (sum_src16) allocator.Free(sum_src16);
+        if (src_trans) allocator.Free(src_trans);
+        if (dst_trans) allocator.Free(dst_trans);
+        if (sum_src_trans) allocator.Free(sum_src_trans);
         if (!Flag_dynamic) {
             if (temp_buffer) allocator.Free(temp_buffer);
         }
