@@ -92,7 +92,7 @@ void conv2d_n16cx_direct_fp32_avx512_executor::cal_kernel_tunning_param()
     }
     sp.mb_l3_blk = min<int32_t>(batch, div_up(num_thread, sp.gp_l3_blk));
     while (sp.mb_l3_blk > 1 && sp.gp_l3_blk * sp.mb_l3_blk * sp.ic_l2_blk * padded_src_hw > l3_cap_all_core) {
-            --sp.mb_l3_blk;
+        --sp.mb_l3_blk;
     }
 
     if (dst_h <= 112 && dst_w <= 112
@@ -436,8 +436,8 @@ bool conv2d_n16cx_direct_fp32_avx512_manager::is_supported()
     if (param_.is_pointwise()) {
         return false;
     }
-    bool aligned_channels   = param_.channels / param_.group % 16 == 0;
-    bool aligned_num_output = param_.num_output / param_.group % 16 == 0;
+    bool aligned_channels   = param_.channels / param_.group % CH_DT_BLK() == 0;
+    bool aligned_num_output = param_.num_output / param_.group % CH_DT_BLK() == 0;
     return (param_.group == 1) || (aligned_channels && aligned_num_output);
 }
 

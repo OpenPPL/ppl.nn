@@ -281,8 +281,8 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_manager::gen_cvt_weigh
 
 bool conv2d_n16cx_direct_ndarray_fp32_fma_manager::is_supported()
 {
-    bool small_channels = param_.channels / param_.group < 16;
-    bool aligned_num_output = param_.group == 1 || param_.num_output / param_.group % 16 == 0;
+    bool small_channels = param_.channels / param_.group < OC_DT_BLK();
+    bool aligned_num_output = param_.group == 1 || param_.num_output / param_.group % OC_DT_BLK() == 0;
     return small_channels && aligned_num_output && param_.dilation_h == 1 && param_.dilation_w == 1;
 }
 
