@@ -1,4 +1,15 @@
+<div align="center">
+  <img width="50%" src="docs/images/openppl_logo.png">
+</div>
+
 ## PPLNN
+
+---
+
+[![website](https://img.shields.io/badge/Website-OpenPPL-brightgreen)](https://openppl.ai/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
+[![qq](https://img.shields.io/badge/Chat-on%20QQ-red?logo=tencentqq)](https://qm.qq.com/cgi-bin/qm/qr?k=X7JWUqOdBih71dUU9AZF2gD3PKjxaxB-&jump_from=webapi)
+[![zhihu](https://img.shields.io/badge/Discuss-on%20Zhihu-%230084ff?labelColor=abcdef&logo=zhihu)](https://www.zhihu.com/people/openppl)
 
 ### Overview
 
@@ -29,8 +40,12 @@
 
 ### Contact Us
 
-* [OpenPPL Homepage](https://openppl.ai/)
-* [OpenPPL on Github](https://github.com/openppl-public/ppl.nn)
+Questions, reports, and suggestions are welcome through GitHub Issues!
+
+| WeChat Official Account | QQ Group |
+| :----:| :----: | 
+| OpenPPL | 627853444 |
+| <p align="center"><img width="200" height="200"  src="docs/images/qrcode_for_gh_303b3780c847_258.jpg"/>| <p align="center"><img width="200" height="200"  src="docs/images/qqgroup_s.jpg"/> |
 
 ### Contributions
 
