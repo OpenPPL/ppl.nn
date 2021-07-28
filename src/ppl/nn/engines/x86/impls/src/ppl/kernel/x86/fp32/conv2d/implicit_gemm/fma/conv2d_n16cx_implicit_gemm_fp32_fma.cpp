@@ -677,8 +677,8 @@ bool conv2d_n16cx_implicit_gemm_fp32_fma_manager::is_supported()
     if (param_.is_pointwise() && param_.stride_h == 1 && param_.stride_w == 1) {
         return false;
     }
-    bool aligned_channels   = param_.channels / param_.group % 16 == 0;
-    bool aligned_num_output = param_.num_output / param_.group % 16 == 0;
+    bool aligned_channels   = param_.channels / param_.group % CH_DT_BLK() == 0;
+    bool aligned_num_output = param_.num_output / param_.group % CH_DT_BLK() == 0;
     return (param_.group == 1) || (aligned_channels && aligned_num_output);
 }
 

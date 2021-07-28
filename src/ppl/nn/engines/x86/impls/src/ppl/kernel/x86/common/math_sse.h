@@ -18,7 +18,7 @@
 #ifndef __ST_PPL_KERNEL_X86_COMMON_MATH_SSE_H_
 #define __ST_PPL_KERNEL_X86_COMMON_MATH_SSE_H_
 
-#include <xmmintrin.h>
+#include <nmmintrin.h>
 
 namespace ppl { namespace kernel { namespace x86 {
 

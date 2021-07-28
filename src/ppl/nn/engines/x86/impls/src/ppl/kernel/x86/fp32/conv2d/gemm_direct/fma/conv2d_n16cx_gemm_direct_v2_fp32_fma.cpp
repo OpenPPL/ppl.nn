@@ -347,8 +347,8 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_v2_fp32_fma_manager::gen_cvt_weigh
 
 bool conv2d_n16cx_gemm_direct_v2_fp32_fma_manager::is_supported()
 {
-    bool aligned_channels   = param_.channels / param_.group % 16 == 0;
-    bool aligned_num_output = param_.num_output / param_.group % 16 == 0;
+    bool aligned_channels   = param_.channels / param_.group % CH_DT_BLK() == 0;
+    bool aligned_num_output = param_.num_output / param_.group % CH_DT_BLK() == 0;
     return ((param_.group == 1) || (aligned_channels && aligned_num_output)) && param_.is_pointwise();
 }
 
