@@ -31,7 +31,7 @@ ppl::common::RetCode SwishKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(input);
     PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
-    PPLNN_X86_DEBUG_TRACE("beta: %u\n", param_->beta);
+    PPLNN_X86_DEBUG_TRACE("beta: %f\n", param_->beta);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     const ppl::common::datatype_t data_type = input->GetShape().GetDataType();
