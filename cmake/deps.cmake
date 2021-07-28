@@ -63,7 +63,7 @@ set(PPLCOMMON_BUILD_BENCHMARK OFF CACHE BOOL "disable ppl.common benchmark")
 
 hpcc_declare_git_dep(ppl.common
     https://github.com/openppl-public/ppl.common.git
-    v0.2.0)
+    v0.2.1)
 
 # --------------------------------------------------------------------------- #
 
@@ -84,6 +84,11 @@ hpcc_declare_git_dep(rapidjson
     master)
 
 # --------------------------------------------------------------------------- #
+
+set(PYBIND11_INSTALL OFF CACHE BOOL "disable pybind11 installation")
+set(PYBIND11_TEST OFF CACHE BOOL "disable pybind11 tests")
+set(PYBIND11_NOPYTHON ON CACHE BOOL "do not find python")
+set(PYBIND11_FINDPYTHON OFF CACHE BOOL "do not find python")
 
 hpcc_declare_git_dep(pybind11
     https://github.com/pybind/pybind11.git
