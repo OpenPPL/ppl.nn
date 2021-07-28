@@ -37,6 +37,8 @@
 #include "ppl/kernel/x86/fp32/conv2d/winograd/avx512/conv2d_n16cx_winograd_b4f3_fp32_avx512.h"
 #endif
 
+#include "ppl/kernel/x86/fp32/conv2d/direct/sse/conv2d_n8cx_direct_fp32_sse.h"
+
 namespace ppl { namespace kernel { namespace x86 {
 
 conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataformat_t src_format, const conv2d_fp32_param &param, const ppl::common::isa_t isa_flags)
@@ -291,6 +293,12 @@ conv2d_fp32_manager *conv2d_algo_selector::gen_algo(const conv2d_fp32_param &par
         conv_mgr = new conv2d_n16cx_depthwise_fp32_avx512_manager(param, allocator);
     }
 #endif
+    if (algo_info.algo_type == conv2d_fp32_algo::direct &&
+        algo_info.isa == ppl::common::ISA_X86_SSE &&
+        algo_info.input_format == ppl::common::DATAFORMAT_N8CX &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
+        conv_mgr = new conv2d_n8cx_direct_fp32_sse_manager(param, allocator);
+    }
 
     return conv_mgr;
 }
