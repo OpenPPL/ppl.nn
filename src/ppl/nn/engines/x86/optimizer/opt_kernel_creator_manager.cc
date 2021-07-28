@@ -92,6 +92,7 @@
 #include "ppl/nn/engines/x86/optimizer/ops/ppl/reorder_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/ppl/channel_shuffle_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/ppl/shape_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/ppl/swish_op.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
@@ -206,6 +207,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("ppl", "ChannelShuffle", ChannelShuffleOp);
     REGISTER_OPT_KERNEL_CREATOR("ppl", "Reorder", ReorderOp);
     REGISTER_OPT_KERNEL_CREATOR("ppl", "Shape", PPLShapeOp);
+    REGISTER_OPT_KERNEL_CREATOR("ppl", "Swish", SwishOp);
 }
 
 }}} // namespace ppl::nn::x86

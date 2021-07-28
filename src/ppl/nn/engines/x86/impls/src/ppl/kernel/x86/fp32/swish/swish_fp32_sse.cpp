@@ -23,11 +23,13 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-ppl::common::RetCode sigmoid_fp32_sse(
+ppl::common::RetCode swish_fp32_sse(
     const ppl::nn::TensorShape *x_shape,
     const float *x,
+    const float beta,
     float *y)
 {
+    const __m128 v_beta       = _mm_set1_ps(beta);
     const int64_t n_elem      = x_shape->GetElementsIncludingPadding();
     const int64_t unroll_n    = 16;
     const int64_t unroll_body = round(n_elem, unroll_n);
@@ -38,13 +40,14 @@ ppl::common::RetCode sigmoid_fp32_sse(
         __m128 src1 = _mm_loadu_ps(x + i + 4);
         __m128 src2 = _mm_loadu_ps(x + i + 8);
         __m128 src3 = _mm_loadu_ps(x + i + 12);
-        _mm_storeu_ps(y + i + 0, _sse_sigmoid_ps(src0));
-        _mm_storeu_ps(y + i + 4, _sse_sigmoid_ps(src1));
-        _mm_storeu_ps(y + i + 8, _sse_sigmoid_ps(src2));
-        _mm_storeu_ps(y + i + 12, _sse_sigmoid_ps(src3));
+        _mm_storeu_ps(y + i + 0, src0 * _sse_sigmoid_ps(v_beta * src0));
+        _mm_storeu_ps(y + i + 4, src1 * _sse_sigmoid_ps(v_beta * src1));
+        _mm_storeu_ps(y + i + 8, src2 * _sse_sigmoid_ps(v_beta * src2));
+        _mm_storeu_ps(y + i + 12, src3 * _sse_sigmoid_ps(v_beta * src3));
     }
     for (int64_t i = unroll_body; i < n_elem; ++i) {
-        y[i] = 1.0f / (expf(-x[i]) + 1.0f);
+        const float src_val = x[i];
+        y[i]                = src_val / (expf(-beta * src_val) + 1.0f);
     }
 
     return ppl::common::RC_SUCCESS;

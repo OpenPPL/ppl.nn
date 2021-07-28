@@ -47,6 +47,10 @@ private:
     bool FuseBNReLU();
     bool FuseArithmeticReLU();
     bool FuseFcActivation();
+    bool FuseSwish(const OptKernelOptions& options);
+
+    ppl::common::RetCode CreateX86OptKernel(const OptKernelOptions& options, const ir::Node* node,
+                                            X86OptKernel** kernel);
 
 private:
     utils::SharedResource* resource_ = nullptr;

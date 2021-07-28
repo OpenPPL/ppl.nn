@@ -18,34 +18,9 @@
 #include <immintrin.h>
 #include <math.h>
 #include "ppl/kernel/x86/common/internal_include.h"
+#include "ppl/kernel/x86/common/math_fma.h"
 
 namespace ppl { namespace kernel { namespace x86 {
-
-// an approximation of tanh
-static inline __m256 _fma_tanh_ps(__m256 value)
-{
-    value = _mm256_max_ps(_mm256_set1_ps(-9.0f), value);
-    value = _mm256_min_ps(_mm256_set1_ps(9.0f), value);
-
-    __m256 value_squared = _mm256_mul_ps(value, value);
-
-    __m256 p;
-    p = _mm256_fmadd_ps(value_squared, _mm256_set1_ps(-2.76076847742355e-16f), _mm256_set1_ps(2.00018790482477e-13f));
-    p = _mm256_fmadd_ps(p, value_squared, _mm256_set1_ps(-8.60467152213735e-11f));
-    p = _mm256_fmadd_ps(p, value_squared, _mm256_set1_ps(5.12229709037114e-08f));
-    p = _mm256_fmadd_ps(p, value_squared, _mm256_set1_ps(1.48572235717979e-05f));
-    p = _mm256_fmadd_ps(p, value_squared, _mm256_set1_ps(6.37261928875436e-04f));
-    p = _mm256_fmadd_ps(p, value_squared, _mm256_set1_ps(4.89352455891786e-03f));
-    p = _mm256_mul_ps(p, value);
-
-    __m256 q;
-    q = _mm256_fmadd_ps(value_squared, _mm256_set1_ps(1.19825839466702e-06f), _mm256_set1_ps(1.18534705686654e-04f));
-    q = _mm256_fmadd_ps(q, value_squared, _mm256_set1_ps(2.26843463243900e-03f));
-    q = _mm256_fmadd_ps(q, value_squared, _mm256_set1_ps(4.89352518554385e-03f));
-
-    __m256 dst = _mm256_div_ps(p, q);
-    return dst;
-}
 
 ppl::common::RetCode tanh_fp32_fma(
     const ppl::nn::TensorShape *x_shape,
