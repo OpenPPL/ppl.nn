@@ -1,4 +1,4 @@
-## PPLNN
+# PPLNN
 
 [![website](docs/images/Website-OpenPPL-brightgreen.svg)](https://openppl.ai/)
 [![License](docs/images/License-Apache-2.0-green.svg)](LICENSE)
@@ -46,7 +46,7 @@ cd ppl.nn
 PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py --use-x86 --onnx-model tests/testdata/conv.onnx
 ```
 
-Refer to the [Documents](#documents) section for more details.
+Refer to [Documents](#documents) for more details.
 
 ### Documents
 
@@ -74,7 +74,7 @@ Refer to the [Documents](#documents) section for more details.
 Questions, reports, and suggestions are welcome through GitHub Issues!
 
 | WeChat Official Account | QQ Group |
-| :----:| :----: | 
+| :----:| :----: |
 | OpenPPL | 627853444 |
 | ![OpenPPL](docs/images/qrcode_for_gh_303b3780c847_258.jpg)| ![QQGroup](docs/images/qqgroup_s.jpg) |
 
