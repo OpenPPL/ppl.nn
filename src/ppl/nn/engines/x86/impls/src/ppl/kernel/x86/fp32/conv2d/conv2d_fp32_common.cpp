@@ -38,6 +38,7 @@
 #endif
 
 #include "ppl/kernel/x86/fp32/conv2d/direct/sse/conv2d_n8cx_direct_fp32_sse.h"
+#include "ppl/kernel/x86/fp32/conv2d/gemm_direct/sse/conv2d_n8cx_gemm_direct_fp32_sse.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
@@ -298,6 +299,12 @@ conv2d_fp32_manager *conv2d_algo_selector::gen_algo(const conv2d_fp32_param &par
         algo_info.input_format == ppl::common::DATAFORMAT_N8CX &&
         algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
         conv_mgr = new conv2d_n8cx_direct_fp32_sse_manager(param, allocator);
+    }
+    if (algo_info.algo_type == conv2d_fp32_algo::gemm_direct &&
+        algo_info.isa == ppl::common::ISA_X86_SSE &&
+        algo_info.input_format == ppl::common::DATAFORMAT_N8CX &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
+        conv_mgr = new conv2d_n8cx_gemm_direct_fp32_sse_manager(param, allocator);
     }
 
     return conv_mgr;
