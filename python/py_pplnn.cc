@@ -39,7 +39,7 @@ void RegisterRuntimeOptions(pybind11::module*);
 void RegisterRuntime(pybind11::module*);
 void RegisterGetVersionString(pybind11::module*);
 
-PYBIND11_MODULE(pypplnn, m) {
+PYBIND11_MODULE(nn, m) {
 #ifdef PPLNN_USE_CUDA
     RegisterCudaEngineFactory(&m);
     RegisterCudaEngineOptions(&m);

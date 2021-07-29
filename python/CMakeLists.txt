@@ -19,4 +19,6 @@ target_include_directories(pypplnn_shared PUBLIC
 
 # rename target for python import
 set_target_properties(pypplnn_shared PROPERTIES PREFIX "")
-set_target_properties(pypplnn_shared PROPERTIES OUTPUT_NAME "pypplnn")
+set_target_properties(pypplnn_shared PROPERTIES OUTPUT_NAME "nn")
+
+install(TARGETS pypplnn_shared LIBRARY DESTINATION pyppl)
