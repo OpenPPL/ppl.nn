@@ -35,8 +35,8 @@ public:
     const TensorShape& GetConstShape() const {
         return tensor_->GetShape();
     }
-    ppl::common::RetCode CopyFromHost(const pybind11::buffer&);
-    PyNdArray CopyToHost() const;
+    ppl::common::RetCode ConvertFromHost(const pybind11::buffer&);
+    PyNdArray ConvertToHost() const;
 
 private:
     Tensor* tensor_;

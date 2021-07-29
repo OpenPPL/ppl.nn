@@ -14,13 +14,13 @@ Returns a tuple of array dimensions.
 data_type = TensorShape::GetDataType()
 ```
 
-Returns the data type of elements in tensor. Data types are defined in `pypplcommon`.
+Returns the data type of elements in tensor. Data types are defined in `pyppl.common`.
 
 ```python
 data_format = TensorShape::GetDataFormat()
 ```
 
-Returns the data format of tensor. Data formats are defined in `pypplcommon`.
+Returns the data format of tensor. Data formats are defined in `pyppl.common`.
 
 ```python
 is_scalar = TensorShape::IsScalar()
@@ -43,16 +43,16 @@ tensor_shape = Tensor::GetShape()
 Returns a `TensorShape` info of the tensor.
 
 ```python
-ret_code = Tensor::CopyFromHost(numpy_ndarray)
+ret_code = Tensor::ConvertFromHost(numpy_ndarray)
 ```
 
-Copies data to the tensor from an `ndarray` object. `ret_code` is an instance of `RetCode` defined in `pypplcommon`.
+Copies NDARRAY data to the tensor from an `ndarray` object. `ret_code` is an instance of `RetCode` defined in `pyppl.common`.
 
 ```python
-tensor_data = Tensor::CopyToHost()
+tensor_data = Tensor::ConvertToHost()
 ```
 
-Copies tensor's data to host. We can use `numpy.array` to create an `ndarray` instance using `numpy_ndarray = numpy.array(tensor_data, copy=False)`.
+Copies tensor's data to host in NDARRAY format. We can use `numpy.array` to create an `ndarray` instance using `numpy_ndarray = numpy.array(tensor_data, copy=False)`.
 
 ### Engine
 
@@ -101,7 +101,7 @@ Returns the input tensor in position `idx`, which is in range [0, input_count).
 ret_code = Runtime::Run()
 ```
 
-Evaluates the model. `ret_code` is an instance of `RetCode` defined in `pypplcommon`.
+Evaluates the model. `ret_code` is an instance of `RetCode` defined in `pyppl.common`.
 
 ```python
 ret_code = Runtime::Sync()
@@ -169,14 +169,14 @@ version_str = pypplnn.GetVersionString()
 Returns the version string of current version.
 
 ```python
-msg_str = pypplcommon.GetRetCodeStr(ret_code)
+msg_str = pyppl.common.GetRetCodeStr(ret_code)
 ```
 
 Returns a human-readable message of `ret_code`.
 
 ```python
-pypplcommon.SetLoggingLevel(log_level)
-log_level = pypplcommon.GetLoggingLevel()
+pyppl.common.SetLoggingLevel(log_level)
+log_level = pyppl.common.GetLoggingLevel()
 ```
 
-Sets and gets the current logging level respectively. Logging levels are defined in `pypplcommon`.
+Sets and gets the current logging level respectively. Logging levels are defined in `pyppl.common`.
