@@ -48,6 +48,14 @@ If you want to use specified CUDA toolkit version, please specify `CUDA_TOOLKIT_
 ./build.sh -DHPCC_USE_CUDA=ON -DCUDA_TOOLKIT_ROOT_DIR=/path/to/cuda-toolkit-root-dir
 ```
 
+### Buliding Python API support
+
+`PPLNN` builds python API by default. If you want to use a specified version of python, you can pass `PYTHON3_INCLUDE_DIRS` to `build.sh`:
+
+```bash
+./build.sh -DPYTHON3_INCLUDE_DIRS=/path/to/your/python/include/dir
+```
+
 ### Test
 
 There is a test tool named `pplnn` in `tools/pplnn.cc`. You can run `pplnn` using the following command:
