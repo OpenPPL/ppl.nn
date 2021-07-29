@@ -1,6 +1,6 @@
 This section describes the python APIs of `PPLNN`. Refer to [pplnn.py](../../tools/pplnn.py) for usage examples and [py_pplnn.cc](../../python/py_pplnn.cc) for exported symbols.
 
-## Common APIs in `pypplnn`
+## Common APIs in `pyppl.nn`
 
 ### TensorShape
 
@@ -121,7 +121,7 @@ output_tensor = Runtime::GetOutputTensor(idx)
 
 Returns the output tensor in position `idx`, which is in range [0, output_count).
 
-## Device Specific APIs in `pypplnn`
+## Device Specific APIs in `pyppl.nn`
 
 ### X86
 
