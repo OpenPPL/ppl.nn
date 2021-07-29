@@ -22,7 +22,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace python {
 
-RetCode PyTensor::CopyFromHost(const pybind11::buffer& b) {
+RetCode PyTensor::ConvertFromHost(const pybind11::buffer& b) {
     pybind11::buffer_info info = b.request();
 
     vector<int64_t> dims(info.ndim);
@@ -53,7 +53,7 @@ RetCode PyTensor::CopyFromHost(const pybind11::buffer& b) {
     return RC_SUCCESS;
 }
 
-PyNdArray PyTensor::CopyToHost() const {
+PyNdArray PyTensor::ConvertToHost() const {
     PyNdArray arr;
     if (tensor_->GetShape().GetBytesExcludingPadding() == 0) {
         return arr;
@@ -91,8 +91,8 @@ void RegisterTensor(pybind11::module* m) {
     pybind11::class_<PyTensor>(*m, "Tensor")
         .def("GetName", &PyTensor::GetName, pybind11::return_value_policy::reference)
         .def("GetShape", &PyTensor::GetConstShape, pybind11::return_value_policy::reference)
-        .def("CopyFromHost", &PyTensor::CopyFromHost)
-        .def("CopyToHost", &PyTensor::CopyToHost, pybind11::return_value_policy::move);
+        .def("ConvertFromHost", &PyTensor::ConvertFromHost)
+        .def("ConvertToHost", &PyTensor::ConvertToHost, pybind11::return_value_policy::move);
 }
 
 }}} // namespace ppl::nn::python

@@ -68,7 +68,7 @@ for i in range(runtime.GetInputCount()):
     dims = GenerateRandomDims(tensor.GetShape())
 
     in_data = np.random.uniform(-1.0, 1.0, dims)
-    status = tensor.CopyFromHost(in_data)
+    status = tensor.ConvertFromHost(in_data)
     if status != pplcommon.RC_SUCCESS:
         logging.error("copy data to tensor[" + tensor.GetName() + "] failed: " +
                       pplcommon.GetRetCodeStr(status))
@@ -93,6 +93,6 @@ ret_code = runtime.Sync()
 for i in range(runtime.GetOutputCount()):
     tensor = runtime.GetOutputTensor(i)
     shape = tensor.GetShape()
-    tensor_data = tensor.CopyToHost()
+    tensor_data = tensor.ConvertToHost()
     out_data = np.array(tensor_data, copy=False)
 ```
