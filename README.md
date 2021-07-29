@@ -11,6 +11,43 @@
 
 ![alt arch](docs/images/arch.png)
 
+### Hello, world!
+
+* Installing prerequisites:
+
+    - On Debian or Ubuntu:
+
+    ```bash
+    apt-get install build-essential cmake git python3 python3-dev
+    ```
+
+    - On RedHat or CentOS:
+
+    ```bash
+    yum install gcc gcc-c++ cmake3 make git python3 python3-devel
+    ```
+
+* Cloning source code:
+
+```bash
+git clone https://github.com/openppl-public/ppl.nn.git
+```
+
+* Building from source:
+
+```bash
+cd ppl.nn
+./build.sh
+```
+
+* Running python demo:
+
+```bash
+PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py --use-x86 --onnx-model tests/testdata/conv.onnx
+```
+
+Refer to the [Documents](#documents) section for more details.
+
 ### Documents
 
 * [Supported Ops and Platforms](docs/en/supported-ops-and-platforms.md)

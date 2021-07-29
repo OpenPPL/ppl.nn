@@ -3,8 +3,8 @@ This section shows how to use python APIs. Refer to [python API reference](pytho
 For brevity, all code snippets assume that the following two lines are present:
 
 ```python
-import pypplnn as pplnn
-import pypplcommon as pplcommon
+from pyppl import nn as pplnn
+from pyppl import common as pplcommon
 ```
 
 ### Creating Engines
