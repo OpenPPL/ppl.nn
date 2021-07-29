@@ -246,6 +246,15 @@ static std::map<std::string, ppl::kernel::x86::conv2d_fp32_algo_info> algo_table
             .output_format = ppl::common::DATAFORMAT_N8CX
         })
     },
+    {
+        "n8cx_gemm_direct_fp32_sse",
+        ppl::kernel::x86::conv2d_fp32_algo_info({
+            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::gemm_direct,
+            .isa = ppl::common::ISA_X86_SSE,
+            .input_format = ppl::common::DATAFORMAT_N8CX,
+            .output_format = ppl::common::DATAFORMAT_N8CX
+        })
+    },
 };
 
 int main(int argc, char **argv) {
@@ -500,6 +509,7 @@ DEBUG_TAG(C);
 
         const float mbs = ((float)src_shape.GetBytesExcludingPadding() +
                           dst_shape.GetBytesExcludingPadding() +
+                          (Flag_sum ? dst_shape.GetBytesExcludingPadding() : 0) +
                           filter_shape.GetBytesExcludingPadding() +
                           bias_shape.GetBytesExcludingPadding()) / 1024 / 1024;
 
