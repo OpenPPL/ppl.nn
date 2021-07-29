@@ -24,8 +24,8 @@ import logging
 import argparse
 import random
 import numpy as np
-import pypplnn as pplnn
-import pypplcommon as pplcommon
+from pyppl import nn as pplnn
+from pyppl import common as pplcommon
 
 # ---------------------------------------------------------------------------- #
 
