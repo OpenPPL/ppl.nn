@@ -31,10 +31,6 @@
 #define L2_RATIO()        0.251
 #define L3_RATIO()        0.501
 
-#define CH_DT_BLK() 16
-#define CH_RF_BLK() 8
-#define CH_RF_CNT() 2
-
 #define PADDING_POLICY_NOPAD() 0
 #define PADDING_POLICY_PREPAD() 1
 

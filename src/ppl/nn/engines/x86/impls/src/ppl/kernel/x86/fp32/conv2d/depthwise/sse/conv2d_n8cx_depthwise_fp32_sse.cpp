@@ -20,9 +20,9 @@
 #include <string.h>
 
 #include "ppl/kernel/x86/fp32/reorder.h"
-#include "ppl/kernel/x86/common/avx_tools.h"
-#include "ppl/kernel/x86/fp32/conv2d/depthwise/fma/conv2d_n16cx_depthwise_fp32_fma.h"
-#include "ppl/kernel/x86/fp32/conv2d/depthwise/fma/conv2d_n16cx_depthwise_kernel_fp32_fma.h"
+#include "ppl/kernel/x86/common/sse_tools.h"
+#include "ppl/kernel/x86/fp32/conv2d/depthwise/sse/conv2d_n8cx_depthwise_fp32_sse.h"
+#include "ppl/kernel/x86/fp32/conv2d/depthwise/sse/conv2d_n8cx_depthwise_kernel_fp32_sse.h"
 #include "ppl/common/sys.h"
 
 #define ASSUME_L2_BYTES() (256 * 1024)
@@ -36,13 +36,13 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-void conv2d_n16cx_depthwise_fp32_fma_executor::init_preproc_param()
+void conv2d_n8cx_depthwise_fp32_sse_executor::init_preproc_param()
 {
     schedule_param_.padded_ch = round_up(conv_param_->group, CH_DT_BLK());
     schedule_param_.ow_kr_blk = MAX_OW_RF();
 }
 
-void conv2d_n16cx_depthwise_fp32_fma_executor::cal_kernel_tunning_param()
+void conv2d_n8cx_depthwise_fp32_sse_executor::cal_kernel_tunning_param()
 {
     const conv2d_fp32_param &cp = *conv_param_;
     kernel_schedule_param &sp   = schedule_param_;
@@ -66,6 +66,7 @@ void conv2d_n16cx_depthwise_fp32_fma_executor::cal_kernel_tunning_param()
         && dst_w <= 14
         && cp.stride_w < dst_w && cp.pad_w != 0
         && cp.dilation_w < dst_w
+        && cp.sparse_level() < 0.4f
         && num_thread < 8) {
         sp.padding_policy = PADDING_POLICY_PREPAD();
     } else {
@@ -101,7 +102,7 @@ void conv2d_n16cx_depthwise_fp32_fma_executor::cal_kernel_tunning_param()
     }
 }
 
-uint64_t conv2d_n16cx_depthwise_fp32_fma_executor::cal_temp_buffer_size()
+uint64_t conv2d_n8cx_depthwise_fp32_sse_executor::cal_temp_buffer_size()
 {
     if (schedule_param_.padding_policy == PADDING_POLICY_NOPAD()) {
         return 64u;
@@ -113,7 +114,7 @@ uint64_t conv2d_n16cx_depthwise_fp32_fma_executor::cal_temp_buffer_size()
     }
 }
 
-ppl::common::RetCode conv2d_n16cx_depthwise_fp32_fma_executor::prepare()
+ppl::common::RetCode conv2d_n8cx_depthwise_fp32_sse_executor::prepare()
 {
     if (!conv_param_ || !src_shape_ || !dst_shape_ || ((conv_param_->fuse_flag & conv_fuse_flag::sum) && !sum_src_shape_)) {
         return ppl::common::RC_INVALID_VALUE;
@@ -125,7 +126,7 @@ ppl::common::RetCode conv2d_n16cx_depthwise_fp32_fma_executor::prepare()
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode conv2d_n16cx_depthwise_fp32_fma_executor::execute()
+ppl::common::RetCode conv2d_n8cx_depthwise_fp32_sse_executor::execute()
 {
     if (!conv_param_ || !cvt_filter_ || !cvt_bias_ || !src_ || !dst_ || ((conv_param_->fuse_flag & conv_fuse_flag::sum) && !sum_src_) || !temp_buffer_) {
         return ppl::common::RC_INVALID_VALUE;
@@ -195,12 +196,12 @@ ppl::common::RetCode conv2d_n16cx_depthwise_fp32_fma_executor::execute()
             float *padded_src = reinterpret_cast<float*>(temp_buffer_) + PPL_OMP_THREAD_ID() * padded_src_hw * CH_DT_BLK();
             float *l_padded_src = padded_src;
             for (int64_t ih = 0; ih < src_h; ++ih) {
-                memset32_avx(l_padded_src, 0, cp.pad_w * CH_DT_BLK());
+                memset32_sse(l_padded_src, 0, cp.pad_w * CH_DT_BLK());
                 l_padded_src += cp.pad_w * CH_DT_BLK();
-                memcpy32_avx(l_padded_src, base_src, base_src_h_stride);
+                memcpy32_sse(l_padded_src, base_src, base_src_h_stride);
                 l_padded_src += base_src_h_stride;
                 base_src += base_src_h_stride;
-                memset32_avx(l_padded_src, 0, cp.pad_w * CH_DT_BLK());
+                memset32_sse(l_padded_src, 0, cp.pad_w * CH_DT_BLK());
                 l_padded_src += cp.pad_w * CH_DT_BLK();
             }
             base_src = padded_src + cp.pad_w * CH_DT_BLK();
@@ -234,25 +235,16 @@ ppl::common::RetCode conv2d_n16cx_depthwise_fp32_fma_executor::execute()
                     private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1), cp.dilation_w);
                     private_param[KW_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0), cp.dilation_w);
                 }
-                conv2d_n16cx_depthwise_kernel_fp32_fma_pad_table[nt_store_sel](private_param, share_param);
-                PICK_PARAM(const float*, private_param, SRC_IDX()) += src_sw_stride;
-                PICK_PARAM(const float*, private_param, SUM_SRC_IDX()) += CH_DT_BLK();
-                PICK_PARAM(float*, private_param, DST_IDX()) += CH_DT_BLK();
+                conv2d_n8cx_depthwise_kernel_fp32_sse_pad_table[nt_store_sel](share_param, private_param);
             }
 
             if (ow_unroll_body) {
                 private_param[OW_IDX()] = ow_unroll_body;
-                conv2d_n16cx_depthwise_kernel_fp32_fma_blk_table[nt_store_sel][stride_w_sel][sp.ow_kr_blk - 1](private_param, share_param);
-                PICK_PARAM(const float *, private_param, SRC_IDX()) += ow_unroll_body * src_sw_stride;
-                PICK_PARAM(const float *, private_param, SUM_SRC_IDX()) += ow_unroll_body * CH_DT_BLK();
-                PICK_PARAM(float *, private_param, DST_IDX()) += ow_unroll_body * CH_DT_BLK();
+                conv2d_n8cx_depthwise_kernel_fp32_sse_blk_table[nt_store_sel][stride_w_sel][sp.ow_kr_blk - 1](share_param, private_param);
             }
             if (ow_unroll_tail) {
                 private_param[OW_IDX()] = ow_unroll_tail;
-                conv2d_n16cx_depthwise_kernel_fp32_fma_blk_table[nt_store_sel][stride_w_sel][ow_unroll_tail - 1](private_param, share_param);
-                PICK_PARAM(const float *, private_param, SRC_IDX()) += ow_unroll_tail * src_sw_stride;
-                PICK_PARAM(const float *, private_param, SUM_SRC_IDX()) += ow_unroll_tail * CH_DT_BLK();
-                PICK_PARAM(float *, private_param, DST_IDX()) += ow_unroll_tail * CH_DT_BLK();
+                conv2d_n8cx_depthwise_kernel_fp32_sse_blk_table[nt_store_sel][stride_w_sel][ow_unroll_tail - 1](share_param, private_param);
             }
 
             for (int64_t ow = sp.unroll_ow_end; ow < dst_w; ++ow) {
@@ -264,10 +256,7 @@ ppl::common::RetCode conv2d_n16cx_depthwise_fp32_fma_executor::execute()
                     private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1), cp.dilation_w);
                     private_param[KW_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0), cp.dilation_w);
                 }
-                conv2d_n16cx_depthwise_kernel_fp32_fma_pad_table[nt_store_sel](private_param, share_param);
-                PICK_PARAM(const float*, private_param, SRC_IDX()) += src_sw_stride;
-                PICK_PARAM(const float*, private_param, SUM_SRC_IDX()) += CH_DT_BLK();
-                PICK_PARAM(float*, private_param, DST_IDX()) += CH_DT_BLK();
+                conv2d_n8cx_depthwise_kernel_fp32_sse_pad_table[nt_store_sel](share_param, private_param);
             }
         }
     }
@@ -281,7 +270,7 @@ ppl::common::RetCode conv2d_n16cx_depthwise_fp32_fma_executor::execute()
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode conv2d_n16cx_depthwise_fp32_fma_manager::gen_cvt_weights(const float *filter, const float *bias)
+ppl::common::RetCode conv2d_n8cx_depthwise_fp32_sse_manager::gen_cvt_weights(const float *filter, const float *bias)
 {
     if (cvt_bias_ != nullptr || cvt_filter_ != nullptr) {
         return ppl::common::RC_PERMISSION_DENIED;
@@ -309,17 +298,17 @@ ppl::common::RetCode conv2d_n16cx_depthwise_fp32_fma_manager::gen_cvt_weights(co
     filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
     filter_shape.Reshape({1, channels, param_.kernel_h, param_.kernel_w});
 
-    return reorder_ndarray_n16cx_fp32_avx(&filter_shape, filter, cvt_filter_);
+    return reorder_ndarray_n8cx_fp32(&filter_shape, filter, cvt_filter_);
 }
 
-bool conv2d_n16cx_depthwise_fp32_fma_manager::is_supported()
+bool conv2d_n8cx_depthwise_fp32_sse_manager::is_supported()
 {
     return param_.is_depthwise();
 }
 
-conv2d_fp32_executor *conv2d_n16cx_depthwise_fp32_fma_manager::gen_executor()
+conv2d_fp32_executor *conv2d_n8cx_depthwise_fp32_sse_manager::gen_executor()
 {
-    return new conv2d_n16cx_depthwise_fp32_fma_executor(&param_, cvt_filter_, cvt_bias_);
+    return new conv2d_n8cx_depthwise_fp32_sse_executor(&param_, cvt_filter_, cvt_bias_);
 }
 
 }}}; // namespace ppl::kernel::x86

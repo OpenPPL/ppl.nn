@@ -255,6 +255,15 @@ static std::map<std::string, ppl::kernel::x86::conv2d_fp32_algo_info> algo_table
             .output_format = ppl::common::DATAFORMAT_N8CX
         })
     },
+    {
+        "n8cx_depthwise_fp32_sse",
+        ppl::kernel::x86::conv2d_fp32_algo_info({
+            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::depthwise,
+            .isa = ppl::common::ISA_X86_SSE,
+            .input_format = ppl::common::DATAFORMAT_N8CX,
+            .output_format = ppl::common::DATAFORMAT_N8CX
+        })
+    },
 };
 
 int main(int argc, char **argv) {
