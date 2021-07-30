@@ -211,12 +211,12 @@ static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime
         }
 
         auto nr_element = shape.GetBytesIncludingPadding() / sizeof(float);
-        unique_ptr<float[]> buffer(new float[nr_element]);
+        vector<float> buffer(nr_element);
 
         std::default_random_engine eng;
         std::uniform_real_distribution<float> dis(-1.0f, 1.0f);
         for (uint32_t i = 0; i < nr_element; ++i) {
-            buffer.get()[i] = dis(eng);
+            buffer[i] = dis(eng);
         }
 
         auto status = t->ReallocBuffer();
@@ -227,7 +227,7 @@ static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime
 
         TensorShape src_desc = t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-        status = t->ConvertFromHost(buffer.get(), src_desc);
+        status = t->ConvertFromHost(buffer.data(), src_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "set tensor[" << t->GetName() << "] content failed: " << GetRetCodeStr(status);
             return false;
@@ -453,11 +453,11 @@ static bool SaveInputsOneByOne(const Runtime* runtime) {
         auto& shape = t->GetShape();
 
         auto bytes = shape.GetBytesIncludingPadding();
-        unique_ptr<char[]> buffer(new char[bytes]);
+        vector<char> buffer(bytes);
 
         TensorShape src_desc = t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-        auto status = t->ConvertToHost(buffer.get(), src_desc);
+        auto status = t->ConvertToHost(buffer.data(), src_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "convert data failed: " << GetRetCodeStr(status);
             return false;
@@ -479,7 +479,7 @@ static bool SaveInputsOneByOne(const Runtime* runtime) {
             return false;
         }
 
-        ofs.write(buffer.get(), bytes);
+        ofs.write(buffer.data(), bytes);
     }
 
     return true;
@@ -496,17 +496,17 @@ static bool SaveInputsAllInOne(const Runtime* runtime) {
     for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
         auto t = runtime->GetInputTensor(c);
         auto bytes = t->GetShape().GetBytesIncludingPadding();
-        unique_ptr<char[]> buffer(new char[bytes]);
+        vector<char> buffer(bytes);
 
         TensorShape src_desc = t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-        auto status = t->ConvertToHost((void*)buffer.get(), src_desc);
+        auto status = t->ConvertToHost((void*)buffer.data(), src_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "convert data failed: " << GetRetCodeStr(status);
             return false;
         }
 
-        ofs.write(buffer.get(), bytes);
+        ofs.write(buffer.data(), bytes);
     }
 
     return true;
@@ -519,9 +519,9 @@ static bool SaveOutputsOneByOne(const Runtime* runtime) {
         TensorShape dst_desc = t->GetShape();
         dst_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         auto bytes = dst_desc.GetBytesIncludingPadding();
-        unique_ptr<char[]> buffer(new char[bytes]);
+        vector<char> buffer(bytes);
 
-        auto status = t->ConvertToHost(buffer.get(), dst_desc);
+        auto status = t->ConvertToHost(buffer.data(), dst_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "convert data of tensor[" << t->GetName() << "] failed: " << GetRetCodeStr(status);
             return false;
@@ -534,7 +534,7 @@ static bool SaveOutputsOneByOne(const Runtime* runtime) {
             return false;
         }
 
-        ofs.write(buffer.get(), bytes);
+        ofs.write(buffer.data(), bytes);
     }
 
     return true;
