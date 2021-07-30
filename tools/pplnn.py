@@ -172,7 +172,14 @@ def SetInputsOneByOne(inputs, in_shapes, runtime):
         tensor = runtime.GetInputTensor(i)
         shape = tensor.GetShape()
         np_data_type = g_pplnntype2numpytype[shape.GetDataType()]
-        in_data = np.fromfile(input_files[i], dtype = np_data_type)
+
+        dims = []
+        if in_shapes:
+            dims = in_shapes[i]
+        else:
+            dims = shape.GetDims()
+
+        in_data = np.fromfile(input_files[i], dtype=np_data_type).reshape(dims)
         status = tensor.ConvertFromHost(in_data)
         if status != pplcommon.RC_SUCCESS:
             logging.error("copy data to tensor[" + tensor.GetName() + "] failed: " +
@@ -202,8 +209,7 @@ def SetReshapedInputsOneByOne(reshaped_inputs, runtime):
         tensor = runtime.GetInputTensor(i)
         shape = tensor.GetShape()
         np_data_type = g_pplnntype2numpytype[shape.GetDataType()]
-        in_data = np.fromfile(input_files[i], dtype = np_data_type)
-        in_data = in_data.reshape(input_shape)
+        in_data = np.fromfile(input_files[i], dtype=np_data_type).reshape(input_shape)
         status = tensor.ConvertFromHost(in_data)
         if status != pplcommon.RC_SUCCESS:
             logging.error("copy data to tensor[" + tensor.GetName() + "] failed: " +
@@ -239,10 +245,10 @@ def SetRandomInputs(in_shapes, runtime):
             upper_bound = info.max
 
         dims = []
-        if not in_shapes:
-            dims = GenerateRandomDims(shape)
-        else:
+        if in_shapes:
             dims = in_shapes[i]
+        else:
+            dims = GenerateRandomDims(shape)
 
         in_data = (upper_bound - lower_bound) * rng.random(dims, dtype = np_data_type) * lower_bound
         status = tensor.ConvertFromHost(in_data)
