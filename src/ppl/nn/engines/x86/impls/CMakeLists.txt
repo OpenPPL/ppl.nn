@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(PPLKernelX86)
 
 option(PPL_USE_X86_OMP "Build x86 kernel with openmp support." OFF)
