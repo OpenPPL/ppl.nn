@@ -171,7 +171,8 @@ def SetInputsOneByOne(inputs, in_shapes, runtime):
     for i in range(file_num):
         tensor = runtime.GetInputTensor(i)
         shape = tensor.GetShape()
-        in_data = np.fromfile(input_files[i], dtype=shape.GetDataType())
+        np_data_type = g_pplnntype2numpytype[shape.GetDataType()]
+        in_data = np.fromfile(input_files[i], dtype = np_data_type)
         status = tensor.ConvertFromHost(in_data)
         if status != pplcommon.RC_SUCCESS:
             logging.error("copy data to tensor[" + tensor.GetName() + "] failed: " +
@@ -243,7 +244,7 @@ def SetRandomInputs(in_shapes, runtime):
         else:
             dims = in_shapes[i]
 
-        in_data = (upper_bound - lower_bound) * rng.random(dims, dtype=g_pplnntype2numpytype[shape.GetDataType()]) * lower_bound
+        in_data = (upper_bound - lower_bound) * rng.random(dims, dtype = np_data_type) * lower_bound
         status = tensor.ConvertFromHost(in_data)
         if status != pplcommon.RC_SUCCESS:
             logging.error("copy data to tensor[" + tensor.GetName() + "] failed: " +
