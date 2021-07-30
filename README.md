@@ -50,7 +50,9 @@ Refer to [Documents](#documents) for more details.
 
 ### Documents
 
-* [Supported Ops and Platforms](docs/en/supported-ops-and-platforms.md)
+* OpenPPL Support
+  - [Supported Precison](docs/en/supported-ops-and-platforms.md)
+  - [Supported Ops and Platforms](docs/en/supported-ops-and-platforms.md)
 * [Building from Source](docs/en/building-from-source.md)
 * [Generating ONNX models from OpenMMLab](docs/en/model-convert-guide.md)
 * APIs

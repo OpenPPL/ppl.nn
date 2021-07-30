@@ -1,4 +1,10 @@
-## OpenPPL supported operators
+## Supported precision
+
+1. CUDA only supports FP16 precision on Turing Devices.
+2. x86 only supports FP32 precision on AVX512/FMA.
+
+
+## Supported operators
 
 * ONNX
 
@@ -89,8 +95,3 @@
 | ChannelShuffle | 1      | &check;      | &check;    |
 | Shape          | 1      | &check;      | &check;    |
 | Swish          | 1      | &check;      |            |
-
-## OpenPPL supported precision 
-
-1. CUDA only supports FP16 precision on Turing Devices.
-2. x86 only supports FP32 precision on AVX512/FMA.
