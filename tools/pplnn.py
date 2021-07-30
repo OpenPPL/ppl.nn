@@ -139,7 +139,7 @@ def RegisterEngines(args):
             sys.exit(-1)
 
         if args.quick_select:
-            status = cuda_engine.Configure(pplnn.CUDA_CONF_SET_DEFAULT_ALGORITHMS)
+            status = cuda_engine.Configure(pplnn.CUDA_CONF_USE_DEFAULT_ALGORITHMS)
             if status != pplcommon.RC_SUCCESS:
                 logging.error("cuda engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
                 sys.exit(-1)
@@ -284,7 +284,6 @@ def SaveInputsAllInOne(save_data_dir, runtime):
     fd = open(out_file_name, mode="wb+")
     for i in range(runtime.GetInputCount()):
         tensor = runtime.GetInputTensor(i)
-        shsape = tensor.GetShape()
         tensor_data = tensor.ConvertToHost()
         if not tensor_data:
             logging.error("copy data from tensor[" + tensor.GetName() + "] failed.")
@@ -299,7 +298,6 @@ def SaveInputsAllInOne(save_data_dir, runtime):
 def SaveOutputsOneByOne(save_data_dir, runtime):
     for i in range(runtime.GetOutputCount()):
         tensor = runtime.GetOutputTensor(i)
-        shape = tensor.GetShape()
         tensor_data = tensor.ConvertToHost()
         if not tensor_data:
             logging.error("copy data from tensor[" + tensor.GetName() + "] failed.")
