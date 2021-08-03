@@ -68,11 +68,11 @@ struct Matrix {
             } else if (name == "Sub") {
                 matrix_2d[i][MAXDIMSIZE] = -other.matrix_2d[i][MAXDIMSIZE];
             } else if (name == "Div") {
-                for (int32_t j = 0; j < MAXDIMSIZE; ++j) {
+                for (int32_t j = 0; j <= MAXDIMSIZE; ++j) {
                     matrix_2d[i][j] = matrix_2d[i][j] / other.matrix_2d[i][MAXDIMSIZE];
                 }
             } else if (name == "Mul") {
-                for (uint32_t j = 0; j < MAXDIMSIZE; ++j) {
+                for (uint32_t j = 0; j <= MAXDIMSIZE; ++j) {
                     matrix_2d[i][j] = matrix_2d[i][j] * other.matrix_2d[i][MAXDIMSIZE];
                 }
             }

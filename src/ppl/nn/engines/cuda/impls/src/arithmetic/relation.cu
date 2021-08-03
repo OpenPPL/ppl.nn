@@ -487,7 +487,7 @@ ppl::common::RetCode PPLCUDARelationForwardImp(
             input_shape0->GetDim(axis) < input_shape1->GetDim(axis)) {
             first_shorter = true;
         }
-        if (input_shape0->GetElementsExcludingPadding() < input_shape0->GetElementsExcludingPadding())  {
+        if (input_shape0->GetElementsExcludingPadding() < input_shape1->GetElementsExcludingPadding())  {
             first_shorter = true;
         }
         ppl_cukernel_relation_one_broadcast<op_type, T><<<grid_size,

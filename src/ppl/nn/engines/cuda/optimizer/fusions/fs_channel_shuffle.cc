@@ -141,7 +141,7 @@ const bool ChannelShuffleFusion::CanFuse(ir::Node* node, const OptKernelOptions&
         if (topo->GetOutput(edge->GetName()) != INVALID_EDGEID) { // Can not fuse an output edge
             return false;
         }
-        if (topo->GetEdgeById(edge_id)->CalcConsumerCount() != 1) { // Can not fuse multi-consumer edge
+        if (i < 2 && topo->GetEdgeById(edge_id)->CalcConsumerCount() != 1) { // Can not fuse multi-consumer edge
             return false;
         }
         auto nextnode_id = topo->GetEdgeById(edge_id)->CreateConsumerIter().Get(); // Get Output(0)
