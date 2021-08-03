@@ -2,7 +2,7 @@
 
 * Linux running on x86 compatible CPUs
 * GCC >= 4.9 or LLVM/Clang >= 6.0
-* [CMake](https://cmake.org/download/) >= 3.13
+* [CMake](https://cmake.org/download/) >= 3.14
 * [Git](https://git-scm.com/downloads) >= 2.7.0
 * [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit-archive) >= 10.2 (for CUDA version)
 * [Python](https://www.python.org/downloads/) >= 3 (for CUDA version)
