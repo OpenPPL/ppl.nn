@@ -390,6 +390,7 @@ ppl::common::RetCode PPLCUDANMSForwardImp(
     bool *result_mask        = reinterpret_cast<bool *>((char *)dev_mask + Align(blocks * num_boxes * sizeof(uint64_t), CUDA_ALIGNMENT));
     int *d_num_filter_scores = reinterpret_cast<int *>(result_mask + Align(num_boxes * sizeof(bool), CUDA_ALIGNMENT));
     uint64_t *g_reduce_mask  = reinterpret_cast<uint64_t *>((char *)d_num_filter_scores + Align(sizeof(int), CUDA_ALIGNMENT));
+    int dev_mask_size = Align(blocks * num_boxes * sizeof(uint64_t), CUDA_ALIGNMENT);
     // process one class one time
     for (int b = 0; b < num_batch; ++b) {
         // step 1: sort scores and index select boxes
@@ -449,6 +450,7 @@ ppl::common::RetCode PPLCUDANMSForwardImp(
                     }
                 }
                 // step 2: nms operations (type related)
+                cudaMemset(dev_mask, 0, dev_mask_size);
                 if (boxes_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
                     NMSGpuImpl<float>(stream, (const float *)sorted_boxes, iou_threshold, num_filtered_boxes, max_output_boxes_per_class, center_point_box, max_shared_mem, g_reduce_mask, dev_mask, result_mask);
                 } else if (boxes_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {

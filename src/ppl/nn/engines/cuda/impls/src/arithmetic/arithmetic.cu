@@ -572,7 +572,7 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImp(
                         input_shape0->GetDim(axis) < input_shape1->GetDim(axis)) {
                         first_shorter = true;
                     }
-                    if (input_shape0->GetRealDimCount() < input_shape1->GetRealDimCount())  {
+                    if (input_shape0->GetElementsExcludingPadding() < input_shape0->GetElementsExcludingPadding())  {
                         first_shorter = true;
                     }
                     ppl_cukernel_arithmetic_one_broadcast<op_type, half><<<grid_size, block_size, 0,
@@ -607,7 +607,7 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImp(
                     input_shape0->GetDim(axis) < input_shape1->GetDim(axis)) {
                     first_shorter = true;
                 }
-                if (input_shape0->GetRealDimCount() < input_shape1->GetRealDimCount())  {
+                if (input_shape0->GetElementsExcludingPadding() < input_shape0->GetElementsExcludingPadding())  {
                     first_shorter = true;
                 }
                 ppl_cukernel_arithmetic_one_broadcast<op_type, T><<<grid_size, block_size, 0,
