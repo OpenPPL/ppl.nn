@@ -17,10 +17,26 @@
 
 #include "py_tensor.h"
 #include "ppl/nn/common/logger.h"
+#include <map>
 using namespace std;
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace python {
+
+static const map<string, datatype_t> g_format2datatype = {
+    {"B", DATATYPE_UINT8}, // -> unsigned char
+    {"H", DATATYPE_UINT16}, //  -> unsigned short
+    {"I", DATATYPE_UINT32}, //  -> unsigned int
+    {"L", DATATYPE_UINT64}, //  -> unsigned long
+    {"e", DATATYPE_FLOAT16}, //  -> 2 bytes
+    {"f", DATATYPE_FLOAT32}, //  -> float
+    {"d", DATATYPE_FLOAT64}, //  -> double
+    {"b", DATATYPE_INT8}, //  -> signed char
+    {"h", DATATYPE_INT16}, //  -> short
+    {"i", DATATYPE_INT32}, //  -> int
+    {"l", DATATYPE_INT64}, //  -> long
+    {"?", DATATYPE_BOOL}, //  -> unsigned char
+};
 
 RetCode PyTensor::ConvertFromHost(const pybind11::buffer& b) {
     pybind11::buffer_info info = b.request();
@@ -33,8 +49,18 @@ RetCode PyTensor::ConvertFromHost(const pybind11::buffer& b) {
     TensorShape& shape = tensor_->GetShape();
     shape.Reshape(dims);
 
+    auto ref = g_format2datatype.find(info.format);
+    if (ref == g_format2datatype.end()) {
+        LOG(ERROR) << "unsupported data format[\"" << info.format << "\"]";
+        return RC_UNSUPPORTED;
+    }
+    auto data_type = ref->second;
+    LOG(DEBUG) << "data type of input for tensor[" << tensor_->GetName() << "] is ["
+               << GetDataTypeStr(data_type) << "].";
+
     TensorShape src_shape = shape;
     src_shape.SetDataFormat(DATAFORMAT_NDARRAY);
+    src_shape.SetDataType(data_type);
 
     auto status = tensor_->ReallocBuffer();
     if (status != RC_SUCCESS) {
