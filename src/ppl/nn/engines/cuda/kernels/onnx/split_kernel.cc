@@ -40,6 +40,9 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
     for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto output = ctx->GetOutput<TensorImpl>(i);
         dst_list_[i] = output->GetBufferPtr();
+        auto output_shape = output->GetShape();
+        if(output_shape.GetElementsExcludingPadding() < output_shape.GetElementsIncludingPadding())
+            cudaMemset(dst_list_[i], 0, output_shape.GetBytesIncludingPadding());
         for (int32_t it = 0; it < dim_count; ++it) {
             dst_dims_[i].push_back(output->GetShape().GetDim(it));
         }
