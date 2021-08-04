@@ -24,6 +24,10 @@ namespace ppl { namespace nn { namespace python {
 
 void RegisterRuntime(pybind11::module* m) {
     pybind11::class_<PyRuntime>(*m, "Runtime")
+        .def("__bool__",
+             [](const PyRuntime& runtime) -> bool {
+                 return (runtime.GetPtr());
+             })
         .def("GetInputCount", &PyRuntime::GetInputCount)
         .def("GetInputTensor", &PyRuntime::GetInputTensor)
         .def("Run", &PyRuntime::Run)

@@ -29,6 +29,9 @@ public:
     PyTensor(Tensor* tensor) : tensor_(tensor) {}
     PyTensor(PyTensor&&) = default;
     PyTensor& operator=(PyTensor&&) = default;
+    Tensor* GetPtr() const {
+        return tensor_;
+    }
     const char* GetName() const {
         return tensor_->GetName();
     }

@@ -31,6 +31,9 @@ public:
     PyRuntime(PyRuntime&&) = default;
     PyRuntime& operator=(PyRuntime&&) = default;
 
+    Runtime* GetPtr() const {
+        return runtime_.get();
+    }
     uint32_t GetInputCount() const {
         return runtime_->GetInputCount();
     }

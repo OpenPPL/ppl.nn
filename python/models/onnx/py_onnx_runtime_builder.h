@@ -35,6 +35,9 @@ public:
     PyRuntime CreateRuntime(const RuntimeOptions& options) {
         return PyRuntime(engines_, builder_->CreateRuntime(options));
     }
+    OnnxRuntimeBuilder* GetPtr() const {
+        return builder_.get();
+    }
 
 private:
     std::vector<PyEngine> engines_; // retain engines

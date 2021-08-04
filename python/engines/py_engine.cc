@@ -25,7 +25,10 @@ namespace ppl { namespace nn { namespace python {
 void RegisterEngine(pybind11::module* m) {
     pybind11::class_<PyEngine>(*m, "Engine")
         .def(pybind11::init<PyX86Engine>())
-        .def(pybind11::init<PyCudaEngine>());
+        .def(pybind11::init<PyCudaEngine>())
+        .def("__bool__", [](const PyEngine& engine) -> bool {
+            return (engine.GetPtr());
+        });
 }
 
 }}} // namespace ppl::nn::python
