@@ -35,6 +35,10 @@ ppl::common::RetCode ChannelShuffleKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
+    auto Y_shape = Y->GetShape();
+    if(Y_shape.GetElementsExcludingPadding() < Y_shape.GetElementsIncludingPadding())
+        cudaMemset(Y->GetBufferPtr(), 0, Y_shape.GetBytesIncludingPadding());
+
     PPLCUDAChannelShuffleForwardImp(GetStream(), group_, &X->GetShape(), X->GetBufferPtr(), &Y->GetShape(),
                                     Y->GetBufferPtr());
 
