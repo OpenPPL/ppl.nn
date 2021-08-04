@@ -50,6 +50,10 @@ RetCode PyCudaEngine::Configure(uint32_t option, const pybind11::args& args) {
 
 void RegisterCudaEngine(pybind11::module* m) {
     pybind11::class_<PyCudaEngine>(*m, "CudaEngine")
+        .def("__bool__",
+             [](const PyCudaEngine& engine) -> bool {
+                 return (engine.GetInnerPtr().get());
+             })
         .def("GetName", &PyCudaEngine::GetName)
         .def("Configure", &PyCudaEngine::Configure);
 

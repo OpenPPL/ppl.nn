@@ -42,6 +42,10 @@ static const char* g_datatype2format[] = {
 
 void RegisterNdArray(pybind11::module* m) {
     pybind11::class_<PyNdArray>(*m, "NdArray", pybind11::buffer_protocol())
+        .def("__bool__",
+             [](const PyNdArray& arr) -> bool {
+                 return (!arr.data.empty());
+             })
         .def_buffer([](PyNdArray& arr) -> pybind11::buffer_info {
             return pybind11::buffer_info(arr.data.data(), ppl::common::GetSizeOfDataType(arr.data_type),
                                          g_datatype2format[arr.data_type], arr.dims.size(), arr.dims, arr.strides);

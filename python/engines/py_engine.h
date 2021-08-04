@@ -29,17 +29,17 @@ class PyEngine final {
 public:
     PyEngine(const std::shared_ptr<Engine>& engine) : engine_(engine) {}
     PyEngine(const PyX86Engine& e) {
-        engine_ = e.GetEnginePtr();
+        engine_ = e.GetInnerPtr();
     }
     PyEngine(const PyCudaEngine& e) {
-        engine_ = e.GetEnginePtr();
+        engine_ = e.GetInnerPtr();
     }
     PyEngine(PyEngine&&) = default;
     PyEngine& operator=(PyEngine&&) = default;
     PyEngine(const PyEngine&) = default;
     PyEngine& operator=(const PyEngine&) = default;
 
-    Engine* GetEnginePtr() const {
+    Engine* GetPtr() const {
         return engine_.get();
     }
 

@@ -36,6 +36,10 @@ RetCode PyX86Engine::Configure(uint32_t option, const pybind11::args& args) {
 
 void RegisterX86Engine(pybind11::module* m) {
     pybind11::class_<PyX86Engine>(*m, "X86Engine")
+        .def("__bool__",
+             [](const PyX86Engine& engine) -> bool {
+                 return (engine.GetInnerPtr().get());
+             })
         .def("GetName", &PyX86Engine::GetName)
         .def("Configure", &PyX86Engine::Configure);
 

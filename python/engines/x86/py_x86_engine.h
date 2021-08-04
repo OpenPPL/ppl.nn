@@ -34,7 +34,7 @@ public:
     std::string GetName() const {
         return engine_->GetName();
     }
-    const std::shared_ptr<Engine>& GetEnginePtr() const {
+    const std::shared_ptr<Engine>& GetInnerPtr() const {
         return engine_;
     }
     ppl::common::RetCode Configure(uint32_t option, const pybind11::args& args);
@@ -43,7 +43,6 @@ private:
     std::shared_ptr<Engine> engine_;
 };
 
-
-}}}
+}}} // namespace ppl::nn::python
 
 #endif

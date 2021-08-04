@@ -55,8 +55,8 @@ RetCode PyTensor::ConvertFromHost(const pybind11::buffer& b) {
         return RC_UNSUPPORTED;
     }
     auto data_type = ref->second;
-    LOG(DEBUG) << "data type of input for tensor[" << tensor_->GetName() << "] is ["
-               << GetDataTypeStr(data_type) << "].";
+    LOG(DEBUG) << "data type of input for tensor[" << tensor_->GetName() << "] is [" << GetDataTypeStr(data_type)
+               << "].";
 
     TensorShape src_shape = shape;
     src_shape.SetDataFormat(DATAFORMAT_NDARRAY);
@@ -115,6 +115,10 @@ PyNdArray PyTensor::ConvertToHost() const {
 
 void RegisterTensor(pybind11::module* m) {
     pybind11::class_<PyTensor>(*m, "Tensor")
+        .def("__bool__",
+             [](const PyTensor& tensor) -> bool {
+                 return (tensor.GetPtr());
+             })
         .def("GetName", &PyTensor::GetName, pybind11::return_value_policy::reference)
         .def("GetShape", &PyTensor::GetConstShape, pybind11::return_value_policy::reference)
         .def("ConvertFromHost", &PyTensor::ConvertFromHost)
