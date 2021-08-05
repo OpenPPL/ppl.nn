@@ -50,11 +50,12 @@ Refer to [Documents](#documents) for more details.
 
 ### Documents
 
-* OpenPPL Support
+* Ops and Models
   - [Supported Precison](docs/en/supported-ops-and-platforms.md)
   - [Supported Ops and Platforms](docs/en/supported-ops-and-platforms.md)
+  - [Converting ONNX Opset](docs/en/onnx-model-opset-convert-guide.md)
+  - [Generating ONNX models from OpenMMLab](docs/en/model-convert-guide.md)
 * [Building from Source](docs/en/building-from-source.md)
-* [Generating ONNX models from OpenMMLab](docs/en/model-convert-guide.md)
 * APIs
   - C++
     - [Getting Started](docs/en/cpp-getting-started.md)
