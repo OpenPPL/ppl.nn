@@ -1,9 +1,9 @@
 hpcc_populate_dep(pybind11)
 
 if(NOT PYTHON3_INCLUDE_DIRS)
-    find_package(Python3 COMPONENTS Development REQUIRED)
+    find_package(Python3 COMPONENTS Development QUIET)
     if(NOT Python3_Development_FOUND)
-        message("python dev lib is required.")
+        message(FATAL_ERROR "python dev lib is required. please install python3 development files (python3-dev on Debian/Ubuntu or python3-devel on RetHat/CentOS).")
     endif()
     set(PYTHON3_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
 endif()
