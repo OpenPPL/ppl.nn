@@ -63,7 +63,7 @@ RetCode CudaKernel::BeforeExecute(KernelExecContext* ctx) {
 
     for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto tensor = ctx->GetOutput<TensorImpl>(i);
-        status = tensor->GetBufferPtr() != nullptr ? RC_SUCCESS : tensor->ReallocBuffer();
+        status = tensor->ReallocBuffer();
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "ReallocBuffer for tensor[" << tensor->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
