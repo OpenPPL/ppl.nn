@@ -50,6 +50,7 @@
 #include "ppl/nn/models/onnx/parsers/parse_topk_param.h"
 #include "ppl/nn/models/onnx/parsers/parse_transpose_param.h"
 #include "ppl/nn/models/onnx/parsers/parse_unsqueeze_param.h"
+#include "ppl/nn/models/onnx/parsers/parse_lrn_param.h"
 
 #include "ppl/nn/models/onnx/parsers/parse_mmcv_gridsample_param.h"
 #include "ppl/nn/models/onnx/parsers/parse_mmcv_nonmaxsupression_param.h"
@@ -188,6 +189,8 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Where");
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Ceil");
     PPL_REGISTER_OP_WITHOUT_PARAM("", "And");
+    PPL_REGISTER_OP_WITH_PARAM("", "LRN", ppl::nn::common::LRNParam, ParseLRNParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Dropout");
 
     // mmcv op param parser
     PPL_REGISTER_OP_WITH_PARAM("mmcv", "NonMaxSuppression", ppl::nn::common::MMCVNMSParam, ParseMMCVNMSParam);
