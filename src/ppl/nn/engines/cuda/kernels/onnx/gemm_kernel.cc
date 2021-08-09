@@ -22,6 +22,19 @@
 
 namespace ppl { namespace nn { namespace cuda {
 
+bool GemmKernel::CanDoExecute(const KernelExecContext& ctx) const {
+    auto& input = ctx.GetInput<TensorImpl>(0)->GetShape();
+    auto& weight = ctx.GetInput<TensorImpl>(1)->GetShape();
+    if (input.GetBytesIncludingPadding() == 0) {
+        return false;
+    }
+    if (input.GetDim(1) != weight.GetDim(1)) {
+        return false;
+    }
+
+    return true;
+}
+
 uint64_t GemmKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     auto A = &ctx.GetInput<TensorImpl>(0)->GetShape();
     return PPLGemmCUDAGetBufSize(A, param_->param.transA);

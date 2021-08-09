@@ -34,6 +34,7 @@ public:
 private:
     uint64_t CalcTmpBufferSize(const KernelExecContext&) const override;
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
+    bool CanDoExecute(const KernelExecContext&) const override;
 
 private:
     const CudaGemmParam* param_ = nullptr;
