@@ -92,16 +92,20 @@ static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
     CudaEngineOptions options;
     options.device_id = g_flag_device_id;
 
-    auto engine = CudaEngineFactory::Create(options);
-    engine->Configure(ppl::nn::cuda::CUDA_CONF_SET_OUTPUT_FORMAT, g_flag_output_format.c_str());
-    engine->Configure(ppl::nn::cuda::CUDA_CONF_SET_OUTPUT_TYPE, g_flag_output_type.c_str());
-    engine->Configure(ppl::nn::cuda::CUDA_CONF_USE_DEFAULT_ALGORITHMS, g_flag_quick_select);
-
-    if (!g_flag_compiler_dims.empty()) {
-        engine->Configure(ppl::nn::cuda::CUDA_CONF_SET_COMPILER_INPUT_SHAPE, g_flag_compiler_dims.c_str());
+    auto cuda_engine = CudaEngineFactory::Create(options);
+    if (!cuda_engine) {
+        return false;
     }
 
-    engines->emplace_back(unique_ptr<Engine>(engine));
+    cuda_engine->Configure(ppl::nn::cuda::CUDA_CONF_SET_OUTPUT_FORMAT, g_flag_output_format.c_str());
+    cuda_engine->Configure(ppl::nn::cuda::CUDA_CONF_SET_OUTPUT_TYPE, g_flag_output_type.c_str());
+    cuda_engine->Configure(ppl::nn::cuda::CUDA_CONF_USE_DEFAULT_ALGORITHMS, g_flag_quick_select);
+
+    if (!g_flag_compiler_dims.empty()) {
+        cuda_engine->Configure(ppl::nn::cuda::CUDA_CONF_SET_COMPILER_INPUT_SHAPE, g_flag_compiler_dims.c_str());
+    }
+
+    engines->emplace_back(unique_ptr<Engine>(cuda_engine));
     LOG(INFO) << "***** register CudaEngine *****";
     return true;
 }
