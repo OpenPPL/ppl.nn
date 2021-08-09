@@ -22,6 +22,7 @@
 #include "ppl/nn/optimizers/fuse_parallel_node_optimizer.h"
 #include "ppl/nn/optimizers/fuse_bn_optimizer.h"
 #include "ppl/nn/optimizers/fuse_shape_optimizer.h"
+#include "ppl/nn/optimizers/skip_dropout_optimizer.h"
 
 using namespace std;
 using namespace ppl::common;
@@ -35,6 +36,7 @@ GraphOptimizerManager::GraphOptimizerManager() {
     REGISTER_OPTIMIZER("FuseParallelNodeOptimizer", FuseParallelNodeOptimizer);
     REGISTER_OPTIMIZER("FuseBNOptimizer", FuseBNOptimizer);
     REGISTER_OPTIMIZER("FuseShapeOptimizer", FuseShapeOptimizer);
+    REGISTER_OPTIMIZER("SkipDropoutOptimizer", SkipDropoutOptimizer);
 }
 
 RetCode GraphOptimizerManager::Process(ir::Graph* graph) const {
