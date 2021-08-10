@@ -19,9 +19,16 @@
 #include "ppl/nn/utils/generic_cpu_device.h"
 #include "tests/ir/graph_builder.h"
 #include "gtest/gtest.h"
+#include <vector>
+using namespace std;
 using namespace ppl::nn;
 using namespace ppl::nn::test;
 using namespace ppl::common;
+
+static inline int64_t GenRandDim() {
+    static const uint32_t max_dim = 640;
+    return rand() % max_dim + 1;
+}
 
 class TensorImplTest : public testing::Test {
 protected:
@@ -33,71 +40,63 @@ protected:
     }
 
 protected:
+    TensorImpl ConstructFp32TensorWithCpuDevice() {
+        auto topo = builder_.GetGraph()->topo.get();
+        auto edge = topo->GetEdgeById(1);
+        EXPECT_NE(nullptr, edge);
+
+        TensorImpl tensor(edge, EdgeObject::T_TENSOR);
+        EXPECT_EQ(EdgeObject::T_TENSOR, tensor.GetObjectType());
+        EXPECT_EQ(edge->GetName(), tensor.GetName());
+
+        TensorShape& shape = tensor.GetShape();
+        shape.Reshape({1, 3, GenRandDim(), GenRandDim()});
+        shape.SetDataType(DATATYPE_FLOAT32);
+        shape.SetDataFormat(DATAFORMAT_NDARRAY);
+
+        EXPECT_EQ(RC_SUCCESS, tensor.SetDevice(&cpu_device_));
+        EXPECT_EQ(&cpu_device_, tensor.GetDevice());
+
+        return tensor;
+    }
+
+protected:
+    utils::GenericCpuDevice cpu_device_;
     GraphBuilder builder_;
 };
 
 TEST_F(TensorImplTest, empty) {
-    auto topo = builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(1);
-    EXPECT_NE(nullptr, edge);
-
-    TensorImpl tensor(edge, EdgeObject::T_TENSOR);
-    EXPECT_EQ(EdgeObject::T_TENSOR, tensor.GetObjectType());
-    EXPECT_EQ(edge->GetName(), tensor.GetName());
-
-    utils::GenericCpuDevice device;
-    EXPECT_EQ(RC_SUCCESS, tensor.SetDevice(&device));
-    EXPECT_EQ(&device, tensor.GetDevice());
-    EXPECT_EQ(RC_SUCCESS, tensor.SetDevice(&device)); // buffer is empty
+    auto tensor = ConstructFp32TensorWithCpuDevice();
+    EXPECT_EQ(RC_SUCCESS, tensor.SetDevice(&cpu_device_)); // buffer is empty
     EXPECT_FALSE(tensor.IsBufferOwner());
 }
 
-static inline int64_t GenRandDim() {
-    static const uint32_t max_dim = 640;
-    return rand() % max_dim + 1;
-}
-
 TEST_F(TensorImplTest, with_buffer) {
-    auto topo = builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(1);
-    EXPECT_NE(nullptr, edge);
-
-    TensorImpl tensor(edge, EdgeObject::T_TENSOR);
-    EXPECT_EQ(EdgeObject::T_TENSOR, tensor.GetObjectType());
-    EXPECT_EQ(edge->GetName(), tensor.GetName());
-
-    TensorShape& shape = tensor.GetShape();
-    shape.Reshape({1, 3, GenRandDim(), GenRandDim()});
-    shape.SetDataType(DATATYPE_FLOAT32);
-    shape.SetDataFormat(DATAFORMAT_NDARRAY);
-
-    utils::GenericCpuDevice device;
-    EXPECT_EQ(RC_SUCCESS, tensor.SetDevice(&device));
-    EXPECT_EQ(&device, tensor.GetDevice());
-
+    auto tensor = ConstructFp32TensorWithCpuDevice();
     EXPECT_EQ(RC_SUCCESS, tensor.ReallocBuffer());
-    EXPECT_NE(RC_SUCCESS, tensor.SetDevice(&device)); // cannot set device if buffer is not empty
+    EXPECT_NE(RC_SUCCESS, tensor.SetDevice(&cpu_device_)); // cannot set device if buffer is not empty
     tensor.FreeBuffer();
 }
 
 TEST_F(TensorImplTest, setbuffer) {
-    auto topo = builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(1);
-    EXPECT_NE(nullptr, edge);
-
-    TensorImpl tensor(edge, EdgeObject::T_TENSOR);
-    EXPECT_EQ(EdgeObject::T_TENSOR, tensor.GetObjectType());
-    EXPECT_EQ(edge->GetName(), tensor.GetName());
-
-    TensorShape& shape = tensor.GetShape();
-    shape.Reshape({1, 3, GenRandDim(), GenRandDim()});
-    shape.SetDataType(DATATYPE_FLOAT32);
-    shape.SetDataFormat(DATAFORMAT_NDARRAY);
-
-    utils::GenericCpuDevice device;
-    EXPECT_EQ(RC_SUCCESS, tensor.SetDevice(&device));
-
+    auto tensor = ConstructFp32TensorWithCpuDevice();
     auto buf = tensor.DetachBuffer();
     EXPECT_EQ(nullptr, tensor.GetBufferPtr());
-    device.Free(&buf);
+    cpu_device_.Free(&buf);
+}
+
+TEST_F(TensorImplTest, SetAndGetBufferPtr) {
+    auto tensor = ConstructFp32TensorWithCpuDevice();
+    auto& shape = tensor.GetShape();
+    auto nr_element = shape.GetElementsIncludingPadding();
+
+    vector<float> buf(nr_element);
+    buf[0] = 1.234;
+    buf[3] = 3.1415926;
+    tensor.SetBufferPtr(buf.data());
+    EXPECT_EQ(buf.data(), tensor.GetBufferPtr());
+
+    vector<float> buf2(nr_element);
+    EXPECT_EQ(RC_SUCCESS, tensor.CopyToHost(buf2.data()));
+    EXPECT_EQ(buf, buf2);
 }

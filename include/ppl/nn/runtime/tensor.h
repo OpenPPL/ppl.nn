@@ -57,6 +57,15 @@ public:
 
     /** @brief convert tensor's data from `dst` with shape `dst_desc` */
     virtual ppl::common::RetCode ConvertFromHost(const void* src, const TensorShape& src_desc) = 0;
+
+    /**
+       @brief set the underlying buffer ptr
+       @param buf buffer ptr that can be read/written by the internal `Device` class.
+    */
+    virtual void SetBufferPtr(void* buf) = 0;
+
+    /** @brief get the underlying buffer ptr */
+    virtual void* GetBufferPtr() const = 0;
 };
 
 }} // namespace ppl::nn

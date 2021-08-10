@@ -119,6 +119,14 @@ void RegisterTensor(pybind11::module* m) {
              [](const PyTensor& tensor) -> bool {
                  return (tensor.GetPtr());
              })
+        .def("GetBufferPtr",
+             [](const PyTensor& tensor) -> uint64_t {
+                 return (uint64_t)(tensor.GetPtr()->GetBufferPtr());
+             })
+        .def("SetBufferPtr",
+             [](PyTensor& tensor, uint64_t ptr) -> void {
+                 tensor.GetPtr()->SetBufferPtr((void*)ptr);
+             })
         .def("GetName", &PyTensor::GetName, pybind11::return_value_policy::reference)
         .def("GetShape", &PyTensor::GetConstShape, pybind11::return_value_policy::reference)
         .def("ConvertFromHost", &PyTensor::ConvertFromHost)
