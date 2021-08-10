@@ -84,7 +84,15 @@ public:
         return buffer_info_.ReallocBuffer();
     }
 
-    template <typename T = void>
+    void SetBufferPtr(void* ptr) override {
+        buffer_info_.SetBuffer(BufferDesc(ptr));
+    }
+
+    void* GetBufferPtr() const override {
+        return buffer_info_.GetBufferPtr();
+    }
+
+    template <typename T>
     T* GetBufferPtr() const {
         return buffer_info_.GetBufferPtr<T>();
     }

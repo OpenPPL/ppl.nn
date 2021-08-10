@@ -35,6 +35,10 @@ void RegisterTensorShape(pybind11::module* m) {
                  }
                  return dims;
              })
+        .def("SetDims",
+             [](TensorShape& shape, const vector<int64_t>& dims) -> void {
+                 shape.Reshape(dims);
+             })
         .def("GetDataType", &TensorShape::GetDataType)
         .def("GetDataFormat", &TensorShape::GetDataFormat)
         .def("IsScalar", &TensorShape::IsScalar);

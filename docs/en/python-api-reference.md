@@ -11,6 +11,12 @@ dims = TensorShape::GetDims()
 Returns a tuple of array dimensions.
 
 ```python
+TensorShape::SetDims(dims)
+```
+
+Sets dims of the tensor.
+
+```python
 data_type = TensorShape::GetDataType()
 ```
 
@@ -53,6 +59,18 @@ tensor_data = Tensor::ConvertToHost()
 ```
 
 Copies tensor's data to host in NDARRAY format. We can use `numpy.array` to create an `ndarray` instance using `numpy_ndarray = numpy.array(tensor_data, copy=False)`.
+
+```python
+addr = Tensor::GetBufferPtr()
+```
+
+Returns the underlying buffer ptr as an integer.
+
+```python
+Tensor::SetBfferPtr(addr)
+```
+
+Sets the tensor buffer area to `addr` which is an integer and can be casted to `void*`. Note that `addr` can be read/written by internal `Device` class.
 
 ### Engine
 

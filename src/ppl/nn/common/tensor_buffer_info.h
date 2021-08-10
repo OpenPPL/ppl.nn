@@ -47,7 +47,7 @@ public:
     /**
        @brief set a buffer `buf` allocated by `device` as this tensor's buffer.
        old buffer of this tensor will be freed or detached.
-       @note if `device` is nullptr, make sure that `buf` can be handled by device_.
+       @note if `device` is nullptr, make sure that `buf` can be read/written by device_.
     */
     void SetBuffer(const BufferDesc& buf, Device* device = nullptr, bool is_buffer_owner = false);
 

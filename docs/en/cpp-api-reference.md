@@ -177,6 +177,18 @@ ppl::common::RetCode ConvertFromHost(const void* src, const ppl::common::TensorS
 
 Converts data to inner buffer from `src` with the shape `src_desc`. Note that inner buffer MUST be allocated before calling this function.
 
+```c++
+void SetBufferPtr(void* buf);
+```
+
+Sets the underlying buffer ptr. Note that `buf` can be read/written by the internal `Device` class.
+
+```c++
+void* GetBufferPtr() const;
+```
+
+Returns the underlying buffer ptr.
+
 ## TensorShape
 
 Defined in [include/ppl/nn/common/tensor_shape.h](../../include/ppl/nn/common/tensor_shape.h).
