@@ -11,7 +11,7 @@ pplnn工具编译请参考[building-from-source.md](../../en/building-from-sourc
 x86架构使用openmp作为线程池。若需要测试多线程性能，编译时请指定`-DHPCC_USE_OPENMP=ON`：
 
 ```bash
-./build.sh -DHPCC_USE_OPENMP=ON
+./build.sh -DHPCC_USE_X86=ON -DHPCC_USE_OPENMP=ON
 ```
 
 编译后pplnn工具的生成路径为：./pplnn-build/tools/pplnn

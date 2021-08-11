@@ -11,7 +11,7 @@ For compilation method of pplnn, please refer to: [building-from-source.md](../.
 X86 architecture uses openmp as the thread pool, so if you need to test multi-thread performance, please compile with `-DHPCC_USE_OPENMP=ON` option as below:
 
 ```bash
-./build.sh -DHPCC_USE_OPENMP=ON
+./build.sh -DHPCC_USE_X86=ON -DHPCC_USE_OPENMP=ON
 ```
 
 pplnn will be generated to: ./pplnn-build/tools/pplnn
