@@ -26,7 +26,6 @@
 #include "ppl/nn/models/onnx/onnx_runtime_builder_factory.h"
 #include "ppl/nn/engines/x86/engine_factory.h"
 #include "ppl/nn/engines/x86/x86_options.h"
-#include "ppl/kernel/x86/common/threading_tools.h"
 
 #include "imagenet_labels.h"
 
@@ -57,7 +56,7 @@ int32_t ImagePreprocess(const Mat& src_img, float* in_data) {
     split(rgb_img, rgb_channels);
 
     // by this constructor, when cv::Mat r_channel_fp32 changed, in_data will also change
-    Mat r_channel_fp32(height, width, CV_32FC1, in_data + 0 * height * width); 
+    Mat r_channel_fp32(height, width, CV_32FC1, in_data + 0 * height * width);
     Mat g_channel_fp32(height, width, CV_32FC1, in_data + 1 * height * width);
     Mat b_channel_fp32(height, width, CV_32FC1, in_data + 2 * height * width);
     vector<Mat> rgb_channels_fp32{r_channel_fp32, g_channel_fp32, b_channel_fp32};
