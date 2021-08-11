@@ -70,8 +70,8 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
     uint sts_idy   =   tid >> 4;
 #endif
 
-    uint cta_idx   = blockIdx.x;
-    uint cta_idy   = blockIdx.y;
+    uint cta_idx   = blockIdx.y;
+    uint cta_idy   = blockIdx.x;
 
 #if defined(ENABLE_SPLITK) && defined(ENABLE_SPLITF)
     uint spk_id    =  blockIdx.z %  splitk;

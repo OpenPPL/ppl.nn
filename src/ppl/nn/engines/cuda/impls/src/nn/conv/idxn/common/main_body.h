@@ -46,8 +46,8 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
     uint warp_idx  = (tid >>  WARP_SIZE_IN_BITS) & (CTA_SIZE_X_IN_WARP - 1);
     uint warp_idy  =  tid >> (WARP_SIZE_IN_BITS  +  CTA_SIZE_X_IN_BITS);
 
-    uint cta_idx   = blockIdx.x;
-    uint cta_idy   = blockIdx.y;
+    uint cta_idx   = blockIdx.y;
+    uint cta_idy   = blockIdx.x;
 
     uint grp_id    = blockIdx.z;
 

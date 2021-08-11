@@ -313,15 +313,15 @@ int PPLCUDAGemmSelectKernel(
         block_size.y = 1;
         block_size.z = 1;
 
-        grid_size.x  = DivUp(N_pad, tile_n_per_cta);
-        grid_size.y  = DivUp(M, tile_m_per_cta);
+        grid_size.x  = DivUp(M, tile_m_per_cta);
+        grid_size.y  = DivUp(N_pad, tile_n_per_cta);
         grid_size.z  = 1;//num_grp * splitk;
 
 	    cudaEventRecord(begin, stream);
 	    for (int i = 0; i < TIMES; i++) {
             if (g_kvec[kid].ktype == CONV_2SPK_F1) {
                 FAKE_CONV_PARAM
-	            int kLoopNum = DivUp(K_pad, tile_k_per_cta);
+	        int kLoopNum = DivUp(K_pad, tile_k_per_cta);
                 lut_t in_lut, flt_lut;
                 (g_kvec[kid].lut_kptr)<<<grid_size, block_size, 0, stream>>>(GEMM_FUNC_PARAM);
             }
@@ -414,8 +414,8 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
     block_size.x = cta_size_in_thd;
     block_size.y = 1;
     block_size.z = 1;
-    grid_size.x  = DivUp(N_pad, tile_n_per_cta);
-    grid_size.y  = DivUp(M, tile_m_per_cta);
+    grid_size.x  = DivUp(M, tile_m_per_cta);
+    grid_size.y  = DivUp(N_pad, tile_n_per_cta);
     grid_size.z  = 1;//num_grp * splitk;
     int kLoopNum = DivUp(K_pad, tile_k_per_cta);
     lut_t in_lut, flt_lut;
