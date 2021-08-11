@@ -5,7 +5,7 @@
 执行语句:
 
 ```
-./pplnn --onnx-model model.onnx --inputs input.bin -–in-shapes n_c_h_w [--dims d] [--warmuptimes m] --enable-profiling
+./pplnn --use-cuda --onnx-model model.onnx --inputs input.bin -–in-shapes n_c_h_w [--dims d] [--warmuptimes m] --enable-profiling
 ```
 
 `n_c_h_w` 表示实际推理图片大小，使用NCHW排布。
@@ -17,9 +17,9 @@
 测试样例:
 
 ```
-./pplnn --onnx-model model.onnx --inputs input.bin --in-shapes 1_3_224_224 --dims 1_3_224_224 --warmuptimes 100 --enable-profiling
+./pplnn --use-cuda --onnx-model model.onnx --inputs input.bin --in-shapes 1_3_224_224 --dims 1_3_224_224 --warmuptimes 100 --enable-profiling
 
-./pplnn --onnx-model model.onnx --inputs input1.bin,input2.bin --in-shapes 4_3_1200_1200,4_8 --dims input1,4_3_800_1216;input2,4_8 --warmuptimes 400 --enable-profiling
+./pplnn --use-cuda --onnx-model model.onnx --inputs input1.bin,input2.bin --in-shapes 4_3_1200_1200,4_8 --dims input1,4_3_800_1216;input2,4_8 --warmuptimes 400 --enable-profiling
 ```
 
 运行时间以如下格式打印:
@@ -33,7 +33,7 @@ Average run cost: *** ms.
 测试模型均为pytorch model zoo导出的动态模型。测试指令如下：
 
 ```
-./pplnn --onnx-model model.onnx --inputs input.bin -–in-shapes 1_3_224_224 --dims 1_3_224_224 --warmuptimes 400 --enable-profiling
+./pplnn --use-cuda --onnx-model model.onnx --inputs input.bin -–in-shapes 1_3_224_224 --dims 1_3_224_224 --warmuptimes 400 --enable-profiling
 ```
 
 测试结果对比如下：

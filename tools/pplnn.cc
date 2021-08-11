@@ -77,6 +77,8 @@ string ToString(T v) {
 
 #ifdef PPLNN_USE_CUDA
 
+Define_bool_opt("--use-cuda", g_flag_use_cuda, false, "use cuda engine");
+
 Define_string_opt("--output-format", g_flag_output_format, "", "declare the output format");
 Define_string_opt("--output-type", g_flag_output_type, "", "declare the output type");
 Define_string_opt("--dims", g_flag_compiler_dims, "",
@@ -88,7 +90,7 @@ Define_uint32_opt("--device-id", g_flag_device_id, 0, "declare device id for cud
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/engines/cuda/cuda_options.h"
 
-static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
+static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     CudaEngineOptions options;
     options.device_id = g_flag_device_id;
 
@@ -110,7 +112,11 @@ static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
     return true;
 }
 
-#elif defined(PPLNN_USE_X86)
+#endif
+
+#ifdef PPLNN_USE_X86
+
+Define_bool_opt("--use-x86", g_flag_use_x86, false, "use x86 engine");
 
 Define_bool_opt("--disable-avx512", g_flag_disable_avx512, false, "disable avx512 feature");
 Define_bool_opt("--core-binding", g_flag_core_binding, false, "core binding");
@@ -118,7 +124,7 @@ Define_bool_opt("--core-binding", g_flag_core_binding, false, "core binding");
 #include "ppl/nn/engines/x86/engine_factory.h"
 #include "ppl/nn/engines/x86/x86_options.h"
 #include "ppl/kernel/x86/common/threading_tools.h"
-static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
+static inline bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
     auto x86_engine = X86EngineFactory::Create();
     if (g_flag_disable_avx512) {
         x86_engine->Configure(ppl::nn::x86::X86_CONF_DISABLE_AVX512);
@@ -131,12 +137,37 @@ static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
     LOG(INFO) << "***** register X86Engine *****";
     return true;
 }
-#else
-static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
-    LOG(ERROR) << "no valid engines.";
-    return false;
-}
+
 #endif
+
+static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
+#ifdef PPLNN_USE_X86
+    if (g_flag_use_x86) {
+        bool ok = RegisterX86Engine(engines);
+        if (!ok) {
+            LOG(ERROR) << "RegisterX86Engine failed.";
+            return false;
+        }
+    }
+#endif
+
+#ifdef PPLNN_USE_CUDA
+    if (g_flag_use_cuda) {
+        bool ok = RegisterCudaEngine(engines);
+        if (!ok) {
+            LOG(ERROR) << "RegisterCudaEngine failed.";
+            return false;
+        }
+    }
+#endif
+
+    if (engines->empty()) {
+        LOG(ERROR) << "no engine is registered. run `./pplnn --help` to see supported engines marked with '--use-*', or see documents listed in README.md for building instructions.";
+        return false;
+    }
+
+    return true;
+}
 
 /* -------------------------------------------------------------------------- */
 

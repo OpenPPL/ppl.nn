@@ -16,7 +16,7 @@ git clone https://github.com/openppl-public/ppl.nn.git
 ### Building X86-64 Engine
 
 ```bash
-./build.sh
+./build.sh -DHPCC_USE_X86=ON
 ```
 
 Headers and libraries are installed in `pplnn-build/install`.
@@ -24,7 +24,7 @@ Headers and libraries are installed in `pplnn-build/install`.
 If you want to enable openmp, please specify `HPCC_USE_OPENMP` as following:
 
 ```bash
-./build.sh -DHPCC_USE_OPENMP=ON
+./build.sh -DHPCC_USE_X86=ON -DHPCC_USE_OPENMP=ON
 ```
 
 If you are building on MacOS (Darwin), install `libomp` by [homebrew](https://brew.sh/) first:
@@ -34,10 +34,14 @@ brew install libomp
 
 ### Building CUDA Engine
 
-X86-64 engine is enabled by default when building CUDA engine.
-
 ```bash
 ./build.sh -DHPCC_USE_CUDA=ON
+```
+
+Note that if you want to build X86 engine along with CUDA engine, you should specify `-DHPCC_USE_X86=ON` explicitly like this:
+
+```bash
+./build.sh -DHPCC_USE_X86=ON -DHPCC_USE_CUDA=ON
 ```
 
 Headers and libraries are installed in `pplnn-build/install`.
@@ -53,29 +57,21 @@ If you want to use specified CUDA toolkit version, please specify `CUDA_TOOLKIT_
 `PPLNN` builds python API by default. If you want to use a specified version of python, you can pass `PYTHON3_INCLUDE_DIRS` to `build.sh`:
 
 ```bash
-./build.sh -DPYTHON3_INCLUDE_DIRS=/path/to/your/python/include/dir
+./build.sh -DPYTHON3_INCLUDE_DIRS=/path/to/your/python/include/dir [other options]
 ```
 
 ### Testing
 
-There is a test tool named `pplnn` in `tools/pplnn.cc`. You can run `pplnn` using the following command:
+There is a test tool named `pplnn` generated from `tools/pplnn.cc`. You can run `pplnn` using the following command:
 
 ```bash
-./pplnn-build/tools/pplnn --onnx-model tests/testdata/conv.onnx
+./pplnn-build/tools/pplnn [--use-x86 | --use-cuda] --onnx-model tests/testdata/conv.onnx
 ```
 
-NOTE: if CUDA engine is enabled, `pplnn` uses CUDA only.
-
-You can run the python demo with:
+or run the python demo with:
 
 ```bash
-PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py --use-x86 --onnx-model tests/testdata/conv.onnx
-```
-
-or
-
-```bash
-PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py --use-cuda --onnx-model tests/testdata/conv.onnx
+PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py [--use-x86 | --use-cuda] --onnx-model tests/testdata/conv.onnx
 ```
 
 or use both engines:

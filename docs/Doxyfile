@@ -835,7 +835,7 @@ EXCLUDE_PATTERNS       = */.git/* \
                          */deps/* \
                          */models/onnx/proto/* \
                          */models/onnx/generated/* \
-                         */x64-build/* \
+                         */x86-build/* \
                          */cuda-build/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names

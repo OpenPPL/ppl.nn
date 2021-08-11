@@ -1,7 +1,3 @@
-if (NOT HPCC_USE_CUDA AND NOT WITH_CUDA)
-    return()
-endif()
-
 # ----- required cuda version >= 10.2 ----- #
 
 find_package(CUDA REQUIRED)
@@ -18,11 +14,3 @@ add_subdirectory(src/ppl/nn/engines/cuda/impls)
 list(APPEND PPLNN_LINK_LIBRARIES PPLCUDAKernel)
 
 list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_USE_CUDA)
-
-# ----- install cuda engine ----- #
-
-file(GLOB PPLNN_CUDA_PUBLIC_HEADERS
-    src/ppl/nn/engines/cuda/cuda_options.h
-    src/ppl/nn/engines/cuda/engine_factory.h)
-install(FILES ${PPLNN_CUDA_PUBLIC_HEADERS}
-    DESTINATION include/ppl/nn/engines/cuda)

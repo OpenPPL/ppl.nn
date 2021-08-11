@@ -37,7 +37,7 @@ git clone https://github.com/openppl-public/ppl.nn.git
 
 ```bash
 cd ppl.nn
-./build.sh
+./build.sh -DHPCC_USE_X86=ON
 ```
 
 * Running python demo:
