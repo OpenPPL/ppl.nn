@@ -342,8 +342,8 @@ ppl::common::RetCode PPLCUDAConvolutionSelectKernel(
             block_size.y = 1;
             block_size.z = 1;
 
-            grid_size.x = DivUp(num_flt_per_grp_pad, g_kernel_container[kid].tile_n_per_cta);
-            grid_size.y = DivUp(conv_param.in_num * conv_param.out_height * conv_param.out_width, g_kernel_container[kid].tile_m_per_cta);
+            grid_size.x = DivUp(conv_param.in_num * conv_param.out_height * conv_param.out_width, g_kernel_container[kid].tile_m_per_cta);
+            grid_size.y = DivUp(num_flt_per_grp_pad, g_kernel_container[kid].tile_n_per_cta);
             grid_size.z = conv_param.num_grp * splitk * splitf;
 
 	        cudaEventRecord(begin, stream);
@@ -511,8 +511,8 @@ void PPLCUDAConvolutionForwardImp(
     block_size.y = 1;
     block_size.z = 1;
 
-    grid_size.x  = DivUp(num_flt_per_grp_pad, g_kernel_container[kid].tile_n_per_cta);
-    grid_size.y  = DivUp(conv_param.in_num * conv_param.out_height * conv_param.out_width, g_kernel_container[kid].tile_m_per_cta);
+    grid_size.x  = DivUp(conv_param.in_num * conv_param.out_height * conv_param.out_width, g_kernel_container[kid].tile_m_per_cta);
+    grid_size.y  = DivUp(num_flt_per_grp_pad, g_kernel_container[kid].tile_n_per_cta);
     grid_size.z  = conv_param.num_grp * splitk * splitf;
 
     if(g_kernel_container[kid].ktype == CONV_IDXN_C2 || g_kernel_container[kid].ktype == CONV_IDXN_C4 || \
