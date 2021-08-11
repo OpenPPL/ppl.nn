@@ -5,7 +5,7 @@ deps
 target
 install
 cuda-build
-x64-build
+x86-build
 pplnn-build
 cuda-debug
 cuda-release

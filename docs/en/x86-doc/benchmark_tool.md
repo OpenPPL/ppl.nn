@@ -11,7 +11,7 @@ For compilation method of pplnn, please refer to: [building-from-source.md](../.
 X86 architecture uses openmp as the thread pool, so if you need to test multi-thread performance, please compile with `-DHPCC_USE_OPENMP=ON` option as below:
 
 ```bash
-./build.sh -DHPCC_USE_OPENMP=ON
+./build.sh -DHPCC_USE_X86=ON -DHPCC_USE_OPENMP=ON
 ```
 
 pplnn will be generated to: ./pplnn-build/tools/pplnn
@@ -49,6 +49,7 @@ input-1_3_224_224-fp32.dat
 
 pplnn's run options related to the x86 architecture benchmark are:
 
+* `--use-x86`: use x86 engine
 * `--onnx-model`: Specify the tested onnx model file
 * `--in-shapes`:  Specify the input tensor shape
 * `--mm-policy`: Memory management strategy, "mem" means less memory usage, and "perf" means more radical memory optimization. Default is mem
@@ -71,7 +72,8 @@ export OMP_NUM_THREADS=8    # use 8 threads
 Here is an example to use random test data for benchmark:
 
 ```bash
-./pplnn --onnx-model <onnx_model> \   # specify onnx model
+./pplnn --use-x86                 \   # use x86 engine
+        --onnx-model <onnx_model> \   # specify onnx model
         --mm-policy mem           \   # use "mem" memory management policy
         --enable-profiling        \   # enable profiling
         --min-profiling-time 10   \   # benchmark lasts at least 10s
@@ -89,7 +91,8 @@ The external test data format requirements are described in section 2.1.
 You can use the following command for benchmark:
 
 ```bash
-./pplnn --onnx-model <onnx_model>                       \   # specify onnx model
+./pplnn --use-x86                                       \   # use x86 engine
+        --onnx-model <onnx_model>                       \   # specify onnx model
         --reshaped-inputs input-1_3_224_224-fp32.dat    \   # specify input test data file
         --mm-policy mem                                 \   # use "mem" memory management policy
         --enable-profiling                              \   # enable profiling
