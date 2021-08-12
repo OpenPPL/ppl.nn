@@ -27,8 +27,8 @@ jobs:
 
       - name: Build
         run: |
-          cd ../../ && ./build_pplnn.sh ${{ github.run_id }} x86
+          cd ../../ && ./build_pplnn.sh ${{ github.run_id }} x86_64
 
       - name: Test
         run: |
-          cd ../../ && ./test_pplnn.sh ${{ github.run_id }} x86
+          cd ../../ && ./test_pplnn.sh ${{ github.run_id }} x86_64

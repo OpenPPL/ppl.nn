@@ -37,13 +37,13 @@ git clone https://github.com/openppl-public/ppl.nn.git
 
 ```bash
 cd ppl.nn
-./build.sh -DHPCC_USE_X86=ON
+./build.sh -DHPCC_USE_X86_64=ON
 ```
 
 * Running python demo:
 
 ```bash
-PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py --use-x86 --onnx-model tests/testdata/conv.onnx
+PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py --use-x86-64 --onnx-model tests/testdata/conv.onnx
 ```
 
 Refer to [Documents](#documents) for more details.
