@@ -49,7 +49,7 @@ input-1_3_224_224-fp32.dat
 
 pplnn's run options related to the x86 architecture benchmark are:
 
-* `--use-x86-64`: use x86_64 engine
+* `--use-x86`: use x86 engine
 * `--onnx-model`: Specify the tested onnx model file
 * `--in-shapes`:  Specify the input tensor shape
 * `--mm-policy`: Memory management strategy, "mem" means less memory usage, and "perf" means more radical memory optimization. Default is mem
@@ -72,7 +72,7 @@ export OMP_NUM_THREADS=8    # use 8 threads
 Here is an example to use random test data for benchmark:
 
 ```bash
-./pplnn --use-x86-64              \   # use x86_64 engine
+./pplnn --use-x86                 \   # use x86 engine
         --onnx-model <onnx_model> \   # specify onnx model
         --mm-policy mem           \   # use "mem" memory management policy
         --enable-profiling        \   # enable profiling
@@ -91,7 +91,7 @@ The external test data format requirements are described in section 2.1.
 You can use the following command for benchmark:
 
 ```bash
-./pplnn --use-x86-64                                    \   # use x86_64 engine
+./pplnn --use-x86                                       \   # use x86 engine
         --onnx-model <onnx_model>                       \   # specify onnx model
         --reshaped-inputs input-1_3_224_224-fp32.dat    \   # specify input test data file
         --mm-policy mem                                 \   # use "mem" memory management policy

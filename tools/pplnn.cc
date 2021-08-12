@@ -116,7 +116,7 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
 
 #ifdef PPLNN_USE_X86
 
-Define_bool_opt("--use-x86-64", g_flag_use_x86_64, false, "use x86_64 engine");
+Define_bool_opt("--use-x86", g_flag_use_x86, false, "use x86 engine");
 
 Define_bool_opt("--disable-avx512", g_flag_disable_avx512, false, "disable avx512 feature");
 Define_bool_opt("--core-binding", g_flag_core_binding, false, "core binding");
@@ -142,7 +142,7 @@ static inline bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
 
 static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
 #ifdef PPLNN_USE_X86
-    if (g_flag_use_x86_64) {
+    if (g_flag_use_x86) {
         bool ok = RegisterX86Engine(engines);
         if (!ok) {
             LOG(ERROR) << "RegisterX86Engine failed.";

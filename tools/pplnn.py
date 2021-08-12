@@ -29,7 +29,7 @@ from pyppl import common as pplcommon
 
 # ---------------------------------------------------------------------------- #
 
-g_supported_devices = ["x86_64", "cuda"]
+g_supported_devices = ["x86", "cuda"]
 
 g_pplnntype2numpytype = {
     pplcommon.DATATYPE_INT8 : np.int8,
@@ -71,14 +71,12 @@ def ParseCommandLineArgs():
                         default = False, required = False)
 
     for dev in g_supported_devices:
-        if dev == "x86_64":
-            parser.add_argument("--use-x86-64", dest = "use_x86_64", action = "store_true",
-                                default = False, required = False)
+        parser.add_argument("--use-" + dev, dest = "use_" + dev, action = "store_true",
+                            default = False, required = False)
+        if dev == "x86":
             parser.add_argument("--disable-avx512", dest = "disable_avx512", action = "store_true",
                                 default = False, required = False)
         elif dev == "cuda":
-            parser.add_argument("--use-" + dev, dest = "use_" + dev, action = "store_true",
-                                default = False, required = False)
             parser.add_argument("--quick-select", dest = "quick_select", action = "store_true",
                                 default = False, required = False)
             parser.add_argument("--device-id", type = int, dest = "device_id",
@@ -117,16 +115,16 @@ def ParseCommandLineArgs():
 
 def RegisterEngines(args):
     engines = []
-    if args.use_x86_64:
+    if args.use_x86:
         x86_engine = pplnn.X86EngineFactory.Create()
         if not x86_engine:
-            logging.error("create x86_64 engine failed.")
+            logging.error("create x86 engine failed.")
             sys.exit(-1)
 
         if args.disable_avx512:
             status = x86_engine.Configure(pplnn.X86_CONF_DISABLE_AVX512)
             if status != pplcommon.RC_SUCCESS:
-                logging.error("x86_64 engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
+                logging.error("x86 engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
                 sys.exit(-1)
 
         engines.append(pplnn.Engine(x86_engine))
