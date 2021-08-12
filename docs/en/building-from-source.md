@@ -1,6 +1,6 @@
 ### Prerequisites
 
-* Linux running on x86 compatible CPUs
+* Linux running on x86_64 compatible CPUs
 * GCC >= 4.9 or LLVM/Clang >= 6.0
 * [CMake](https://cmake.org/download/) >= 3.14
 * [Git](https://git-scm.com/downloads) >= 2.7.0
@@ -13,10 +13,10 @@
 git clone https://github.com/openppl-public/ppl.nn.git
 ```
 
-### Building X86-64 Engine
+### Building X86_64 Engine
 
 ```bash
-./build.sh -DHPCC_USE_X86=ON
+./build.sh -DHPCC_USE_X86_64=ON
 ```
 
 Headers and libraries are installed in `pplnn-build/install`.
@@ -24,7 +24,7 @@ Headers and libraries are installed in `pplnn-build/install`.
 If you want to enable openmp, please specify `HPCC_USE_OPENMP` as following:
 
 ```bash
-./build.sh -DHPCC_USE_X86=ON -DHPCC_USE_OPENMP=ON
+./build.sh -DHPCC_USE_X86_64=ON -DHPCC_USE_OPENMP=ON
 ```
 
 If you are building on MacOS (Darwin), install `libomp` by [homebrew](https://brew.sh/) first:
@@ -38,10 +38,10 @@ brew install libomp
 ./build.sh -DHPCC_USE_CUDA=ON
 ```
 
-Note that if you want to build X86 engine along with CUDA engine, you should specify `-DHPCC_USE_X86=ON` explicitly like this:
+Note that if you want to build X86 engine along with CUDA engine, you should specify `-DHPCC_USE_X86_64=ON` explicitly like this:
 
 ```bash
-./build.sh -DHPCC_USE_X86=ON -DHPCC_USE_CUDA=ON
+./build.sh -DHPCC_USE_X86_64=ON -DHPCC_USE_CUDA=ON
 ```
 
 Headers and libraries are installed in `pplnn-build/install`.
@@ -65,19 +65,19 @@ If you want to use specified CUDA toolkit version, please specify `CUDA_TOOLKIT_
 There is a test tool named `pplnn` generated from `tools/pplnn.cc`. You can run `pplnn` using the following command:
 
 ```bash
-./pplnn-build/tools/pplnn [--use-x86 | --use-cuda] --onnx-model tests/testdata/conv.onnx
+./pplnn-build/tools/pplnn [--use-x86-64 | --use-cuda] --onnx-model tests/testdata/conv.onnx
 ```
 
 or run the python demo with:
 
 ```bash
-PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py [--use-x86 | --use-cuda] --onnx-model tests/testdata/conv.onnx
+PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py [--use-x86-64 | --use-cuda] --onnx-model tests/testdata/conv.onnx
 ```
 
 or use both engines:
 
 ```bash
-PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py --use-x86 --use-cuda --onnx-model tests/testdata/conv.onnx
+PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py --use-x86-64 --use-cuda --onnx-model tests/testdata/conv.onnx
 ```
 
 ### Installing Pyppl Modules Using `Pip`

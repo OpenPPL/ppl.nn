@@ -43,7 +43,7 @@ endif()
 
 FetchContent_Declare(hpcc
     GIT_REPOSITORY https://github.com/openppl-public/hpcc.git
-    GIT_TAG v0.1.2
+    GIT_TAG v0.1.3
     GIT_SHALLOW TRUE
     SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
@@ -63,7 +63,7 @@ set(PPLCOMMON_BUILD_BENCHMARK OFF CACHE BOOL "disable ppl.common benchmark")
 
 hpcc_declare_git_dep(ppl.common
     https://github.com/openppl-public/ppl.common.git
-    v0.2.3)
+    v0.2.4)
 
 # --------------------------------------------------------------------------- #
 

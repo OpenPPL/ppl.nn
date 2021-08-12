@@ -11,7 +11,7 @@ pplnn工具编译请参考[building-from-source.md](../../en/building-from-sourc
 x86架构使用openmp作为线程池。若需要测试多线程性能，编译时请指定`-DHPCC_USE_OPENMP=ON`：
 
 ```bash
-./build.sh -DHPCC_USE_X86=ON -DHPCC_USE_OPENMP=ON
+./build.sh -DHPCC_USE_X86_64=ON -DHPCC_USE_OPENMP=ON
 ```
 
 编译后pplnn工具的生成路径为：./pplnn-build/tools/pplnn
@@ -49,7 +49,7 @@ input-1_3_224_224-fp32.dat
 
 pplnn中，与x86架构测速相关的运行选项有：
 
-* `--use-x86`：指定使用 x86
+* `--use-x86-64`：指定使用 x86_64
 * `--onnx-model`：指定onnx模型文件
 * `--reshaped-inputs`：指定外部数据，格式要求上文已阐述
 * `--mm-policy`：内存管理策略，mem代表更少的内存使用，perf代表更激进的内存优化，默认为mem
@@ -72,7 +72,7 @@ export OMP_NUM_THREADS=8    # 指定8线程
 使用随机数据测速时，示例如下：
 
 ```bash
-./pplnn --use-x86                 \   # 指定使用 x86
+./pplnn --use-x86-64              \   # 指定使用 x86_64
         --onnx-model <onnx_model> \   # 指定onnx模型
         --mm-policy mem           \   # 使用mem内存策略
         --enable-profiling        \   # 使能测速
@@ -91,7 +91,7 @@ pplnn会自动根据模型输入的shape生成随机测试数据。
 测速时，可使用如下命令测速：
 
 ```bash
-./pplnn --use-x86                                       \   # 指定使用 x86
+./pplnn --use-x86-64                                    \   # 指定使用 x86-64
         --onnx-model <onnx_model>                       \   # 指定onnx模型
         --reshaped-inputs input-1_3_224_224-fp32.dat    \   # 指定输入数据文件
         --mm-policy mem                                 \   # 使用mem内存策略
