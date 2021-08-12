@@ -65,19 +65,19 @@ If you want to use specified CUDA toolkit version, please specify `CUDA_TOOLKIT_
 There is a test tool named `pplnn` generated from `tools/pplnn.cc`. You can run `pplnn` using the following command:
 
 ```bash
-./pplnn-build/tools/pplnn [--use-x86-64 | --use-cuda] --onnx-model tests/testdata/conv.onnx
+./pplnn-build/tools/pplnn [--use-x86 | --use-cuda] --onnx-model tests/testdata/conv.onnx
 ```
 
 or run the python demo with:
 
 ```bash
-PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py [--use-x86-64 | --use-cuda] --onnx-model tests/testdata/conv.onnx
+PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py [--use-x86 | --use-cuda] --onnx-model tests/testdata/conv.onnx
 ```
 
 or use both engines:
 
 ```bash
-PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py --use-x86-64 --use-cuda --onnx-model tests/testdata/conv.onnx
+PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py --use-x86 --use-cuda --onnx-model tests/testdata/conv.onnx
 ```
 
 ### Installing Pyppl Modules Using `Pip`
