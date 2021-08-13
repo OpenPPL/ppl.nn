@@ -100,8 +100,9 @@ RetCode ReshapeSlice(InputOutputInfo* info) {
 
     const int64_t* axes = nullptr;
     vector<int64_t> axes_vec;
-    if (info->GetInputCount() >= 4) {
-        axes = info->GetInput<TensorImpl>(3)->GetBufferPtr<int64_t>();
+    auto axes_tensor = info->GetInputCount() > 3 ? info->GetInput<TensorImpl>(3) : nullptr;
+    if (axes_tensor) {
+        axes = axes_tensor->GetBufferPtr<int64_t>();
         if (axes == nullptr) {
             return RC_NOT_FOUND;
         }
@@ -115,8 +116,9 @@ RetCode ReshapeSlice(InputOutputInfo* info) {
 
     const int64_t* steps = nullptr;
     vector<int64_t> steps_vec;
-    if (info->GetInputCount() >= 5) {
-        steps = info->GetInput<TensorImpl>(4)->GetBufferPtr<int64_t>();
+    auto steps_tensor = info->GetInputCount() > 4 ? info->GetInput<TensorImpl>(4) : nullptr;
+    if (steps_tensor) {
+        steps = steps_tensor->GetBufferPtr<int64_t>();
         if (steps == nullptr) {
             return RC_NOT_FOUND;
         }

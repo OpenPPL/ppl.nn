@@ -22,9 +22,11 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
-    auto x = ctx->GetInput<TensorImpl>(0);
-    auto y = ctx->GetOutput<TensorImpl>(0);
-    float constant_value = ctx->GetInputCount() >= 3 ? (ctx->GetInput<TensorImpl>(2)->GetBufferPtr<float>())[0] : 0;
+    PPLNN_X86_REQUIRED_INPUT(x, 0);
+    PPLNN_X86_OPTIONAL_INPUT(constant, 1);
+    PPLNN_X86_REQUIRED_OUTPUT(y, 0);
+
+    float constant_value = constant ? (constant->GetBufferPtr<float>())[0] : 0;
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [x]:\n");

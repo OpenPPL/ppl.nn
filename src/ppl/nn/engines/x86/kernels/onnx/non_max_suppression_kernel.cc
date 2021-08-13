@@ -22,20 +22,16 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode NonMaxSuppressionKernel::DoExecute(KernelExecContext* ctx) {
-    auto boxes = ctx->GetInput<TensorImpl>(0);
-    auto scores = ctx->GetInput<TensorImpl>(1);
-    auto output = ctx->GetOutput<TensorImpl>(0);
-
-    const int64_t max_output_boxes_per_class =
-        ctx->GetInputCount() >= 3 ? (ctx->GetInput<TensorImpl>(2)->GetBufferPtr<int64_t>())[0] : 0;
-    const float iou_threshold =
-        ctx->GetInputCount() >= 4 && ctx->GetInput<TensorImpl>(3) && ctx->GetInput<TensorImpl>(3)->GetBufferPtr<float>()
-        ? (ctx->GetInput<TensorImpl>(3)->GetBufferPtr<float>())[0]
-        : 0;
-    const float score_threshold =
-        ctx->GetInputCount() >= 5 && ctx->GetInput<TensorImpl>(4) && ctx->GetInput<TensorImpl>(4)->GetBufferPtr<float>()
-        ? (ctx->GetInput<TensorImpl>(4)->GetBufferPtr<float>())[0]
-        : -FLT_MAX;
+    PPLNN_X86_REQUIRED_INPUT(boxes, 0);
+    PPLNN_X86_REQUIRED_INPUT(scores, 1);
+    PPLNN_X86_OPTIONAL_INPUT(max_output_boxes_per_class_tensor, 2);
+    PPLNN_X86_OPTIONAL_INPUT(iou_threshold_tensor, 3);
+    PPLNN_X86_OPTIONAL_INPUT(score_threshold_tensor, 4);
+    PPLNN_X86_REQUIRED_OUTPUT(output, 0);
+    
+    const int64_t max_output_boxes_per_class = max_output_boxes_per_class_tensor ? max_output_boxes_per_class_tensor->GetBufferPtr<int64_t>()[0] : 0;
+    const float iou_threshold = iou_threshold_tensor ? (iou_threshold_tensor->GetBufferPtr<float>())[0] : 0;
+    const float score_threshold = score_threshold_tensor ? (score_threshold_tensor->GetBufferPtr<float>())[0] : -FLT_MAX;
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [boxes]:\n");
@@ -62,11 +58,10 @@ ppl::common::RetCode NonMaxSuppressionKernel::DoExecute(KernelExecContext* ctx) 
         return ret;
     }
 
-    ctx->GetOutput<TensorImpl>(0)->GetShape().Reshape(
-        {real_num_boxes_output, 3}); // TODO: this will cause output data shape changed according to
-    // result, but never exceed max output shape
+    ctx->GetOutput<TensorImpl>(0)->GetShape().Reshape({real_num_boxes_output, 3});
+    // TODO: this will cause output data shape changed according to result, but never exceed max output shape
+    PPLNN_X86_DEBUG_TRACE("Output [output] after forward:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
-    PPLNN_X86_DEBUG_TRACE("center_point_box: %d\n", param_->center_point_box);
     return ppl::common::RC_SUCCESS;
 }
 

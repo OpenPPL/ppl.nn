@@ -21,48 +21,59 @@
 namespace ppl { namespace nn { namespace x86 {
 
 bool ResizeKernel::CanDoExecute(const KernelExecContext& ctx) const {
-    auto& X = ctx.GetInput<TensorImpl>(0)->GetShape();
-    if (X.GetBytesIncludingPadding() == 0) {
+    auto& X_shape = ctx.GetInput<TensorImpl>(0)->GetShape();
+    if (X_shape.GetBytesIncludingPadding() == 0) {
         return false;
     }
 
-    auto& scales = ctx.GetInput<TensorImpl>(2)->GetShape();
-    if (ctx.GetInputCount() == 3 && scales.GetBytesIncludingPadding() == 0) {
+    auto scales = ctx.GetInputCount() > 2 ? ctx.GetInput<TensorImpl>(2) : nullptr;
+    auto sizes = ctx.GetInputCount() > 3 ? ctx.GetInput<TensorImpl>(3) : nullptr;
+
+    auto has_size = sizes && sizes->GetShape().GetDimCount() == 1 && sizes->GetShape().GetDim(0) == X_shape.GetDimCount();
+    auto has_scales = scales && scales->GetShape().GetDimCount() == 1 && scales->GetShape().GetDim(0) == X_shape.GetDimCount();
+
+    if (has_scales && has_size) {
         return false;
     }
 
-    if (ctx.GetInputCount() >= 4) {
-        auto& sizes = ctx.GetInput<TensorImpl>(3)->GetShape();
-        if (scales.GetBytesIncludingPadding() == 0 && sizes.GetBytesIncludingPadding() == 0) {
-            return false;
-        }
+    if (!has_scales && !has_size) {
+        return false;
     }
+
     return true;
 }
 
 ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
-    auto X = ctx->GetInput<TensorImpl>(0);
-    auto Y = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(X, 0);
+    PPLNN_X86_OPTIONAL_INPUT(roi, 1);
+    PPLNN_X86_OPTIONAL_INPUT(scales, 2);
+    PPLNN_X86_OPTIONAL_INPUT(sizes, 3);
+    PPLNN_X86_REQUIRED_OUTPUT(Y, 0);
 
     float scale_h = (float)Y->GetShape().GetDim(2) / X->GetShape().GetDim(2);
     float scale_w = (float)Y->GetShape().GetDim(3) / X->GetShape().GetDim(3);
-    auto scales = ctx->GetInput<TensorImpl>(2);
-    if (!scales->GetShape().IsEmpty()) {
+
+    auto has_scales = scales && scales->GetShape().GetDimCount() == 1 && scales->GetShape().GetDim(0) == X->GetShape().GetDimCount();
+
+    if (has_scales) {
         const float* scales_data = scales->GetBufferPtr<float>();
         scale_h = scales_data[2];
         scale_w = scales_data[3];
     }
+    
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [X]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(X);
-    auto roi = ctx->GetInput<TensorImpl>(1);
-    PPLNN_X86_DEBUG_TRACE("Input [roi]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(roi);
-    PPLNN_X86_DEBUG_TRACE("Input [scales]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(scales);
-    if (ctx->GetInputCount() == 4) {
-        auto sizes = ctx->GetInput<TensorImpl>(3);
+    if (roi) {
+        PPLNN_X86_DEBUG_TRACE("Input [roi]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(roi);
+    }
+    if (scales) {
+        PPLNN_X86_DEBUG_TRACE("Input [scales]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(scales);
+    }
+    if (sizes) {
         PPLNN_X86_DEBUG_TRACE("Input [sizes]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(sizes);
     }

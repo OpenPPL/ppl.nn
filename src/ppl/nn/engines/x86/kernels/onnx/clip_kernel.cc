@@ -31,15 +31,10 @@ bool ClipKernel::CanDoExecute(const KernelExecContext& ctx) const {
 }
 
 ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
-    auto input = ctx->GetInput<TensorImpl>(0);
-    auto output = ctx->GetOutput<TensorImpl>(0);
-
-    PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
-    PPLNN_X86_DEBUG_TRACE("Input [input]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(input);
-    PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+    PPLNN_X86_REQUIRED_INPUT(input, 0);
+    PPLNN_X86_OPTIONAL_INPUT(min_tensor, 1);
+    PPLNN_X86_OPTIONAL_INPUT(max_tensor, 2);
+    PPLNN_X86_REQUIRED_OUTPUT(output, 0);
 
     const auto data_type = input->GetShape().GetDataType();
     if (data_type != ppl::common::DATATYPE_FLOAT32) {
@@ -49,15 +44,29 @@ ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
 
     float min_val = -FLT_MAX;
     float max_val = FLT_MAX;
-    if (ctx->GetInputCount() >= 2 && ctx->GetInput<TensorImpl>(1) != nullptr) {
-        min_val = (ctx->GetInput<TensorImpl>(1)->GetBufferPtr<float>())[0];
+    if (min_tensor) {
+        min_val = (min_tensor->GetBufferPtr<float>())[0];
     }
-    if (ctx->GetInputCount() >= 3 && ctx->GetInput<TensorImpl>(2) != nullptr) {
-        max_val = (ctx->GetInput<TensorImpl>(2)->GetBufferPtr<float>())[0];
+    if (max_tensor) {
+        max_val = (max_tensor->GetBufferPtr<float>())[0];
     }
 
-    PPLNN_X86_DEBUG_TRACE("min: %f\n", min_val);
-    PPLNN_X86_DEBUG_TRACE("max: %f\n", max_val);
+    PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+    PPLNN_X86_DEBUG_TRACE("Input [input]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(input);
+    if (min_tensor) {
+        PPLNN_X86_DEBUG_TRACE("Input [min]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(min_tensor);
+    }
+    if (max_tensor) {
+        PPLNN_X86_DEBUG_TRACE("Input [max]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(max_tensor);
+    }
+    PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
+    PPLNN_X86_DEBUG_TRACE("min_val: %f\n", min_val);
+    PPLNN_X86_DEBUG_TRACE("max_val: %f\n", max_val);
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     if (MayUseISA(ppl::common::ISA_X86_AVX)) {
         return ppl::kernel::x86::clip_fp32_avx(&input->GetShape(), input->GetBufferPtr<float>(), min_val, max_val,

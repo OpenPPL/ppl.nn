@@ -49,12 +49,8 @@ RetCode ReshapeNonMaxSuppression(InputOutputInfo* info, int64_t max_output_boxes
 }
 
 RetCode ReshapeNonMaxSuppression(InputOutputInfo* info) {
-    int64_t max_output_boxes_per_class = 0;
-    if (info->GetInputCount() >= 3 && info->GetInput<TensorImpl>(2) != nullptr &&
-        info->GetInput<TensorImpl>(2)->GetBufferPtr<int64_t>() != nullptr) {
-        max_output_boxes_per_class = info->GetInput<TensorImpl>(2)->GetBufferPtr<int64_t>()[0];
-    }
-    return ReshapeNonMaxSuppression(info, max_output_boxes_per_class);
+    auto max_output_boxes_per_class = info->GetInputCount() > 2 ? info->GetInput<TensorImpl>(2) : nullptr;
+    return ReshapeNonMaxSuppression(info, max_output_boxes_per_class ? max_output_boxes_per_class->GetBufferPtr<int64_t>()[0] : 0);
 }
 
 }}} // namespace ppl::nn::oputils
