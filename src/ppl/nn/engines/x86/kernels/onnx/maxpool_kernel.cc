@@ -21,17 +21,18 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode MaxPoolKernel::DoExecute(KernelExecContext* ctx) {
-    auto X = ctx->GetInput<TensorImpl>(0);
-    auto Y = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(X, 0);
+    PPLNN_X86_REQUIRED_OUTPUT(Y, 0);
+    PPLNN_X86_OPTIONAL_OUTPUT(Indices, 1);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [X]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(X);
     PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
-    if (ctx->GetOutputCount() == 2) {
+    if (Indices) {
         PPLNN_X86_DEBUG_TRACE("Output [Indices]:\n");
-        PPL_X86_TENSOR_PRINT_DEBUG_MSG(ctx->GetOutput<TensorImpl>(1));
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(Indices);
     }
 
     if (X->GetShape().GetDimCount() != 4) {
@@ -133,7 +134,7 @@ ppl::common::RetCode MaxPoolKernel::DoExecute(KernelExecContext* ctx) {
             if (data_type == ppl::common::DATATYPE_FLOAT32) {
                 return ppl::kernel::x86::maxpool2d_nchw_with_indices_fp32(
                     &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
-                    pad_h, pad_w, Y->GetBufferPtr<float>(), ctx->GetOutput<TensorImpl>(1)->GetBufferPtr<int64_t>());
+                    pad_h, pad_w, Y->GetBufferPtr<float>(), Indices->GetBufferPtr<int64_t>());
             } else {
                 LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";
             }

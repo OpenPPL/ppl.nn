@@ -37,11 +37,6 @@ RetCode ReshapeResize(InputOutputInfo* info, const void* arg, const float* roi_d
     std::vector<uint32_t> out_dims(input_dim_count);
 
     if (scales_data) {
-        auto scales_shape = &info->GetInput<TensorImpl>(2)->GetShape();
-        if (scales_shape->GetDimCount() != 1 || scales_shape->GetDim(0) != input_dim_count) {
-            return RC_INVALID_VALUE;
-        }
-
         if (param->coord_trans_mode == ResizeParam::RESIZE_COORD_TRANS_MODE_TF_CROP_AND_RESIZE) {
             TensorShape* roi_shape = &info->GetInput<TensorImpl>(1)->GetShape();
             if (roi_shape->GetDimCount() != 1 || roi_shape->GetDim(0) != input_dim_count * 2 || !roi_data) {
@@ -57,11 +52,6 @@ RetCode ReshapeResize(InputOutputInfo* info, const void* arg, const float* roi_d
             }
         }
     } else {
-        TensorShape* sizes_shape = &info->GetInput<TensorImpl>(3)->GetShape();
-        if (sizes_shape->GetDimCount() != 1 || sizes_shape->GetDim(0) != input_dim_count) {
-            return RC_INVALID_VALUE;
-        }
-
         for (uint32_t i = 0; i < input_dim_count; ++i) {
             out_dims[i] = sizes_data[i];
         }
@@ -78,16 +68,34 @@ RetCode ReshapeResize(InputOutputInfo* info, const void* arg, const float* roi_d
 }
 
 RetCode ReshapeResize(InputOutputInfo* info, const void* arg) {
+    const TensorShape& in_shape = info->GetInput<TensorImpl>(0)->GetShape();
+    uint32_t input_dim_count = in_shape.GetDimCount();
+
+    auto roi = info->GetInputCount() > 1 ? info->GetInput<TensorImpl>(1) : nullptr;
     const float* roi_data = nullptr;
-    if (!info->GetInput<TensorImpl>(1)->GetShape().IsEmpty()) {
+    if (roi && !roi->GetShape().IsEmpty()) {
         roi_data = info->GetInput<TensorImpl>(1)->GetBufferPtr<float>();
         if (roi_data == nullptr) {
             return RC_NOT_FOUND;
         }
     }
 
+    auto scales = info->GetInputCount() > 2 ? info->GetInput<TensorImpl>(2) : nullptr;
+    auto sizes = info->GetInputCount() > 3 ? info->GetInput<TensorImpl>(3) : nullptr;
+
+    auto has_size = sizes && sizes->GetShape().GetDimCount() == 1 && sizes->GetShape().GetDim(0) == input_dim_count;
+    auto has_scales = scales && scales->GetShape().GetDimCount() == 1 && scales->GetShape().GetDim(0) == input_dim_count;
+
+    if (has_scales && has_size) {
+        return RC_INVALID_VALUE;
+    }
+
+    if (!has_scales && !has_size) {
+        return RC_INVALID_VALUE;
+    }
+
     const float* scales_data = nullptr;
-    if (!info->GetInput<TensorImpl>(2)->GetShape().IsEmpty()) {
+    if (has_scales) {
         scales_data = info->GetInput<TensorImpl>(2)->GetBufferPtr<float>();
         if (scales_data == nullptr) {
             return RC_NOT_FOUND;
@@ -95,12 +103,10 @@ RetCode ReshapeResize(InputOutputInfo* info, const void* arg) {
     }
 
     const int64_t* sizes_data = nullptr;
-    if (info->GetInputCount() == 4) {
-        if (!info->GetInput<TensorImpl>(3)->GetShape().IsEmpty()) {
-            sizes_data = info->GetInput<TensorImpl>(3)->GetBufferPtr<int64_t>();
-            if (sizes_data == nullptr) {
-                return RC_NOT_FOUND;
-            }
+    if (has_size) {
+        sizes_data = info->GetInput<TensorImpl>(3)->GetBufferPtr<int64_t>();
+        if (sizes_data == nullptr) {
+            return RC_NOT_FOUND;
         }
     }
 

@@ -49,4 +49,24 @@
         PPLNN_X86_DEBUG_TRACE("DataFormat: %s\n", ppl::common::GetDataFormatStr(X->GetShape().GetDataFormat())); \
     } while (0)
 
+#define PPLNN_X86_REQUIRED_INPUT(X, IDX) \
+    auto X = ctx->GetInputCount() > IDX ? ctx->GetInput<TensorImpl>(IDX) : nullptr; \
+    if (!X) { \
+        LOG(ERROR) << "Input \""<< #X << "\" is required."; \
+        return ppl::common::RC_NOT_FOUND; \
+    } do {} while (0)
+
+#define PPLNN_X86_OPTIONAL_INPUT(X, IDX) \
+    auto X = ctx->GetInputCount() > IDX ? ctx->GetInput<TensorImpl>(IDX) : nullptr
+
+#define PPLNN_X86_REQUIRED_OUTPUT(X, IDX) \
+    auto X = ctx->GetOutputCount() > IDX ? ctx->GetOutput<TensorImpl>(IDX) : nullptr; \
+    if (!X) { \
+        LOG(ERROR) << "Output \""<< #X << "\" is required."; \
+        return ppl::common::RC_NOT_FOUND; \
+    } do {} while (0)
+
+#define PPLNN_X86_OPTIONAL_OUTPUT(X, IDX) \
+    auto X = ctx->GetOutputCount() > IDX ? ctx->GetOutput<TensorImpl>(IDX) : nullptr
+
 #endif

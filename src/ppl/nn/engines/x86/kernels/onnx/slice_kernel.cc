@@ -23,24 +23,41 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
-    auto data = ctx->GetInput<TensorImpl>(0);
-    auto output = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(data, 0);
+    PPLNN_X86_REQUIRED_INPUT(starts_tensor, 1);
+    PPLNN_X86_REQUIRED_INPUT(ends_tensor, 2);
+    PPLNN_X86_OPTIONAL_INPUT(axes_tensor, 3);
+    PPLNN_X86_OPTIONAL_INPUT(steps_tensor, 4);
+    PPLNN_X86_REQUIRED_OUTPUT(output, 0);
+
     const int axes_num = ctx->GetInput<TensorImpl>(1)->GetShape().GetDim(0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [data]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(data);
+    PPLNN_X86_DEBUG_TRACE("Input [starts]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(starts_tensor);
+    PPLNN_X86_DEBUG_TRACE("Input [ends]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(ends_tensor);
+    if (axes_tensor) {
+        PPLNN_X86_DEBUG_TRACE("Input [axes]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(axes_tensor);
+    }
+    if (steps_tensor) {
+        PPLNN_X86_DEBUG_TRACE("Input [steps]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(steps_tensor);
+    }
     PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     // prepare starts, axes, steps
-    auto starts = ctx->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
+    auto starts = starts_tensor->GetBufferPtr<int64_t>();
 
     const int64_t* axes = nullptr;
     std::vector<int64_t> axes_vec;
-    if (ctx->GetInputCount() >= 4) {
-        axes = ctx->GetInput<TensorImpl>(3)->GetBufferPtr<int64_t>();
+    if (axes_tensor) {
+        axes = axes_tensor->GetBufferPtr<int64_t>();
     } else {
         axes_vec.resize(axes_num);
         for (int i = 0; i < axes_num; i++) {
@@ -51,8 +68,8 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
 
     std::vector<int64_t> steps_vec;
     const int64_t* steps = nullptr;
-    if (ctx->GetInputCount() >= 5) {
-        steps = ctx->GetInput<TensorImpl>(4)->GetBufferPtr<int64_t>();
+    if (steps_tensor) {
+        steps = steps_tensor->GetBufferPtr<int64_t>();
     } else {
         steps_vec.resize(axes_num, 1);
         steps = steps_vec.data();

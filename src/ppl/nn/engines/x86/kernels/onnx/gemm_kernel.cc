@@ -21,20 +21,17 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
-    auto A = ctx->GetInput<TensorImpl>(0);
-    auto B = ctx->GetInput<TensorImpl>(1);
-    TensorImpl* C = nullptr;
-    if (ctx->GetInputCount() == 3) {
-        C = ctx->GetInput<TensorImpl>(2);
-    }
-    auto Y = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(A, 0);
+    PPLNN_X86_REQUIRED_INPUT(B, 1);
+    PPLNN_X86_OPTIONAL_INPUT(C, 2);
+    PPLNN_X86_REQUIRED_OUTPUT(Y, 0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [A]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(A);
     PPLNN_X86_DEBUG_TRACE("Input [B]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(B);
-    if (C != nullptr) {
+    if (C) {
         PPLNN_X86_DEBUG_TRACE("Input [C]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(C);
     }

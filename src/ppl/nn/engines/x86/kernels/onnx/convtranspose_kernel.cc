@@ -67,15 +67,14 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
 
-    TensorImpl* X = ctx->GetInput<TensorImpl>(0);
-    TensorImpl* W = ctx->GetInput<TensorImpl>(1);
-    TensorImpl* B = nullptr;
-    TensorImpl* Y = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(X, 0);
+    PPLNN_X86_REQUIRED_INPUT(W, 1);
+    PPLNN_X86_OPTIONAL_INPUT(B, 2);
+    PPLNN_X86_REQUIRED_OUTPUT(Y, 0);
     const float* b_data = nullptr;
 
     int32_t num_output = W->GetShape().GetDim(1);
-    if (ctx->GetInputCount() >= 3) {
-        B = ctx->GetInput<TensorImpl>(2);
+    if (B) {
         b_data = B->GetBufferPtr<float>();
     }
 
@@ -84,7 +83,7 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(X);
     PPLNN_X86_DEBUG_TRACE("Input [W]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(W);
-    if (ctx->GetInputCount() >= 3) {
+    if (B) {
         PPLNN_X86_DEBUG_TRACE("Input [B]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(B);
     }
