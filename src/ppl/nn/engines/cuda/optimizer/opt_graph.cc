@@ -76,8 +76,8 @@ RetCode OptGraph::InitKernels() {
 }
 
 RetCode OptGraph::UpdateDims() {
-    ir::GraphTopo* topo = graph_->topo.get();
-    ir::GraphData* data = graph_->data.get();
+    auto topo = graph_->topo.get();
+    auto data = graph_->data.get();
 
     vector<nodeid_t> sorted_node_ids;
     topo->TopologicalSort([&sorted_node_ids](nodeid_t nid) -> void {
@@ -230,7 +230,6 @@ RetCode OptGraph::AddBridgeKernels() {
 
     for (auto iter = topo->CreateNodeIter(); iter->IsValid(); iter->Forward()) {
         auto node = iter->Get();
-
         if (node->GetType().name == "Bridge") {
             continue;
         }
@@ -240,11 +239,11 @@ RetCode OptGraph::AddBridgeKernels() {
             if (edge_id == INVALID_EDGEID) {
                 continue;
             }
-
             auto edge = topo->GetEdgeById(edge_id);
             if (edge->GetName().find("Bridge_Edge") != string::npos) {
                 continue;
             }
+
             auto creator = OptKernelCreatorManager::Instance()->Find("ppl", "Bridge");
             auto ret_pair = topo->AddNode("Bridge_Node_" + node->GetName() + "_" + edge->GetName());
             if (!ret_pair.second) {
@@ -257,10 +256,11 @@ RetCode OptGraph::AddBridgeKernels() {
             auto bridge_kernel = unique_ptr<CudaOptKernel>(creator(new_node));
             ((BridgeOp*)bridge_kernel.get())->AddInternalBridgeNode(node, new_node, edge, graph_);
 
+            auto preedge_id = new_node->GetInput(0);
             auto postedge_id = new_node->GetOutput(0);
             auto impl_pair = tensor_impls_.insert(
                 make_pair(postedge_id, unique_ptr<TensorImpl>(new TensorImpl(edge, TENSORTYPE_NORMAL))));
-            auto pre_shape = tensor_impls_.find(new_node->GetInput(0))->second.get();
+            auto pre_shape = tensor_impls_.find(preedge_id)->second.get();
             impl_pair.first->second->GetShape().Reshape(pre_shape->GetShape().GetDims(),
                                                         pre_shape->GetShape().GetRealDimCount());
 
@@ -287,10 +287,11 @@ RetCode OptGraph::AddBridgeKernels() {
                 ((BridgeOp*)bridge_kernel.get())->AddFinalBridgeNode(node, new_node, edge, graph_);
 
                 auto preedge_id = new_node->GetInput(0);
+                auto postedge_id = new_node->GetOutput(0);
                 auto new_edge = topo->GetEdgeById(preedge_id);
                 auto impl_pair = tensor_impls_.insert(
                     make_pair(preedge_id, unique_ptr<TensorImpl>(new TensorImpl(new_edge, TENSORTYPE_NORMAL))));
-                auto post_shape = tensor_impls_.find(new_node->GetOutput(0))->second.get();
+                auto post_shape = tensor_impls_.find(postedge_id)->second.get();
 
                 impl_pair.first->second->GetShape().Reshape(post_shape->GetShape().GetDims(),
                                                             post_shape->GetShape().GetRealDimCount());
@@ -312,8 +313,56 @@ RetCode OptGraph::AddBridgeKernels() {
     return RC_SUCCESS;
 }
 
+RetCode OptGraph::InitQuantization() {
+    auto topo = graph_->topo.get();
+    auto quant_params = args_->quant_info.tensor_params;
+    std::vector<CudaTensorQuant> graph_quants(topo->GetMaxEdgeId());
+
+    for (auto iter = topo->CreateEdgeIter(); iter->IsValid(); iter->Forward()) {
+        auto edge = iter->Get();
+        auto pair = quant_params.find(edge->GetName());
+        if (pair != quant_params.end()) {
+            LOG(DEBUG) << "Found a quant_param for edge " << edge->GetName();
+            CudaTensorQuant temp_tensor_quant;
+            auto str = pair->second.fields.find("bit_width")->second;
+            int bit_width = *(int*)(str.content.data());
+            if (bit_width == 8) {
+                temp_tensor_quant.type = DATATYPE_INT8;
+            } else {
+                LOG(ERROR) << "Error quantization configue.";
+                return RC_UNSUPPORTED;
+            }
+            str = pair->second.fields.find("per_channel")->second;
+            temp_tensor_quant.per_chnnal = *(bool*)(str.content.data());
+            str = pair->second.fields.find("scale")->second;
+            temp_tensor_quant.scale[0] = *(float*)(str.content.data());
+            str = pair->second.fields.find("zero_point")->second;
+            temp_tensor_quant.zero_point[0] = *(float*)(str.content.data());
+            graph_quants[edge->GetId()] = temp_tensor_quant;
+        }
+    }
+
+    for (auto iter = topo->CreateNodeIter(); iter->IsValid(); iter->Forward()) {
+        auto node = iter->Get();
+        if (node->GetType().name != "Bridge") {
+            continue;
+        }
+        auto& input_quant = graph_quants.at(node->GetInput(0));
+        auto& output_quant = graph_quants.at(node->GetOutput(0));
+        if (input_quant.type == DATATYPE_UNKNOWN) {
+            input_quant = output_quant;
+        } else {
+            output_quant = input_quant;
+        }
+    }
+
+    args_->tensor_quants.emplace(topo->GetName(), std::move(graph_quants));
+    return RC_SUCCESS;
+}
+
 RetCode OptGraph::UpdateType() {
-    ir::GraphTopo* topo = graph_->topo.get();
+    auto topo = graph_->topo.get();
+    auto& graph_quants = args_->tensor_quants.find(topo->GetName())->second;
     UpdateTopologicalSort();
 
     InputOutputInfo IOinfo;
@@ -331,7 +380,12 @@ RetCode OptGraph::UpdateType() {
         IOinfo.SetNode(node);
         CudaOptKernel* kernel = (CudaOptKernel*)(info_->kernels.find(node->GetId())->second.get());
 
-        auto status = kernel->InferType(&IOinfo, DATATYPE_UNKNOWN);
+        datatype_t kernel_type = args_->kernel_default_type;
+        auto conf_pair = args_->node_types.find(node->GetName());
+        if (conf_pair != args_->node_types.end()) {
+            kernel_type = conf_pair->second;
+        }
+        auto status = kernel->InferType(&IOinfo, &graph_quants, kernel_type);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "Set type for node[" << node->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
@@ -341,7 +395,8 @@ RetCode OptGraph::UpdateType() {
         auto edge = topo->GetEdgeById(node->GetOutput(0));
         if (edge->CalcConsumerCount() == 0) {
             auto out_shape = &IOinfo.GetOutput<TensorImpl>(0)->GetShape();
-            if (out_shape->GetDataType() == DATATYPE_FLOAT16)
+            if (out_shape->GetDataType() == DATATYPE_FLOAT16 ||
+                out_shape->GetDataType() == DATATYPE_INT8)
                 out_shape->SetDataType(DATATYPE_FLOAT32);
             auto pair_type = args_->output_types.find(edge->GetName());
             if (pair_type != args_->output_types.end()) {
@@ -355,7 +410,9 @@ RetCode OptGraph::UpdateType() {
 
 RetCode OptGraph::SelectAlgos(CudaDevice* device) {
     auto topo = graph_->topo.get();
-    OptKernelOptions options(graph_, info_, resource_, args_, device, &tensor_impls_);
+    auto& graph_quants = args_->tensor_quants.find(topo->GetName())->second;
+
+    OptKernelOptions options(graph_, info_, resource_, args_, device, &tensor_impls_, &graph_quants);
     UpdateTopologicalSort();
 
     if (!PPLCudaComputeCapabilityEqual(7, 5, device->GetDeviceId())) {
@@ -405,6 +462,7 @@ RetCode OptGraph::SelectAlgos(CudaDevice* device) {
 RetCode OptGraph::LoadConstants(CudaDevice* device) {
     auto topo = graph_->topo.get();
     auto graph_data = graph_->data.get();
+    auto& graph_quants = args_->tensor_quants.find(topo->GetName())->second;
 
     for (auto iter = topo->CreateNodeIter(); iter->IsValid(); iter->Forward()) {
         auto node = iter->Get();
@@ -414,7 +472,6 @@ RetCode OptGraph::LoadConstants(CudaDevice* device) {
 
         auto preedge_id = node->GetInput(0);
         auto postedge_id = node->GetOutput(0);
-
         auto preshape = tensor_impls_.find(preedge_id)->second->GetShape();
         auto postshape = tensor_impls_.find(postedge_id)->second->GetShape();
 
@@ -440,6 +497,7 @@ RetCode OptGraph::LoadConstants(CudaDevice* device) {
 
             info_->constants[preedge_id] = std::move(constant_info);
             tensor_impls_.find(preedge_id)->second->GetShape() = postshape;
+            graph_quants[preedge_id] = graph_quants[postedge_id];
         }
     }
     return RC_SUCCESS;
@@ -447,6 +505,7 @@ RetCode OptGraph::LoadConstants(CudaDevice* device) {
 
 RetCode OptGraph::DeleteBridgeKernels() {
     auto topo = graph_->topo.get();
+    auto& graph_quants = args_->tensor_quants.find(topo->GetName())->second;
     uint32_t count = 0;
 
     for (auto iter = topo->CreateNodeIter(); iter->IsValid(); iter->Forward()) {
@@ -463,7 +522,7 @@ RetCode OptGraph::DeleteBridgeKernels() {
         }
 
         auto node_id = node->GetId();
-        auto status = ((BridgeOp*)(bridge_kernel->second.get()))->DeleteBridgeNode(node, graph_, &tensor_impls_);
+        auto status = ((BridgeOp*)(bridge_kernel->second.get()))->DeleteBridgeNode(node, graph_, &tensor_impls_, &graph_quants);
         if (status == RC_SUCCESS) {
             info_->kernels.erase(node_id);
             count++;
@@ -496,6 +555,12 @@ RetCode OptGraph::DoOptimize(CudaDevice* device) {
     status = AddBridgeKernels();
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Add Bridge nodes failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    status = InitQuantization();
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "init quantization failed: " << GetRetCodeStr(status);
         return status;
     }
 

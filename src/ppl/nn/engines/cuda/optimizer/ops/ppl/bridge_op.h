@@ -30,8 +30,7 @@ public:
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
     ppl::common::RetCode AddInternalBridgeNode(ir::Node*, ir::Node*, ir::Edge*, ir::Graph*);
     ppl::common::RetCode AddFinalBridgeNode(ir::Node*, ir::Node*, ir::Edge*, ir::Graph*);
-    ppl::common::RetCode DeleteBridgeNode(ir::Node*, ir::Graph*,
-                                          std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors);
+    ppl::common::RetCode DeleteBridgeNode(ir::Node*, ir::Graph*, std::map<edgeid_t, std::unique_ptr<TensorImpl>>*, std::vector<CudaTensorQuant>*);
 };
 
 }}} // namespace ppl::nn::cuda

@@ -74,6 +74,10 @@ protected:
         return reinterpret_cast<CudaDevice*>(GetDevice());
     }
 
+    const CudaCommonParam* GetCommonParam() {
+        return common_param_;
+    }
+
 private:
     const CudaCommonParam* common_param_ = nullptr;
     std::function<ppl::common::RetCode(InputOutputInfo*)> reshape_func_;

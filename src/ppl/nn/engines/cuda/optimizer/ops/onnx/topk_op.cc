@@ -34,8 +34,7 @@ RetCode TopKOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_type_func_ = [this](InputOutputInfo* info, datatype_t type) -> RetCode {
-        auto status = type != DATATYPE_UNKNOWN ? InferDefaultType(info, type) : InferInheritedType(info);
+    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         auto shape = &info->GetOutput<TensorImpl>(1)->GetShape();
         shape->SetDataType(ppl::common::DATATYPE_INT32);
         if (info->GetInputCount() == 2) {
@@ -44,7 +43,7 @@ RetCode TopKOp::Init(const OptKernelOptions& options) {
         } else {
             return ppl::common::RC_UNSUPPORTED;
         }
-        return status;
+        return RC_SUCCESS;
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {

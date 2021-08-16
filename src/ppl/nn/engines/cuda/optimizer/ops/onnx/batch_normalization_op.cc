@@ -34,9 +34,19 @@ RetCode BatchNormalizationOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_type_func_ = [this](InputOutputInfo* info, datatype_t type) -> RetCode {
-        auto in_shape = &info->GetInput<TensorImpl>(0)->GetShape();
-        type = in_shape->GetDataType();
+    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+        if (type == DATATYPE_UNKNOWN) {
+            if (!SetOpFirstInputQuant(info, quant)) {
+                return InferInheritedType(info);
+            }
+        } else if (type == DATATYPE_INT8) {
+            if (!SetOpFirstInputQuant(info, quant)) {
+                LOG(ERROR) << "Set quantization for node[" << this->GetNode()->GetName() << "] failed.";
+                return RC_INVALID_VALUE;
+            }
+        }
+        auto& in_shape = info->GetInput<TensorImpl>(0)->GetShape();
+        type = in_shape.GetDataType();
         return InferDefaultType(info, type);
     };
 

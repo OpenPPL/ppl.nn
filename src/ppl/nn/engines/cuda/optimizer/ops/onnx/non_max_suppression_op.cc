@@ -35,7 +35,7 @@ RetCode NonMaxSupressionOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_type_func_ = [this](InputOutputInfo* info, datatype_t type) -> RetCode {
+    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         // prefer fp32 version for precision
         auto shape0 = &info->GetInput<TensorImpl>(0)->GetShape();
         shape0->SetDataType(DATATYPE_FLOAT32);

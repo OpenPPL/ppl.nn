@@ -18,6 +18,7 @@
 #include "ppl/nn/engines/cuda/optimizer/ops/ppl/bridge_op.h"
 
 #include "ppl/nn/engines/cuda/kernels/ppl/bridge_kernel.h"
+#include "cudakernel/reformat/reformat.h"
 #include "ppl/nn/common/logger.h"
 
 using namespace std;
@@ -26,10 +27,15 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode BridgeOp::Init(const OptKernelOptions& options) {
-    infer_type_func_ = [this](InputOutputInfo* info, datatype_t type) -> RetCode {
-        auto in_shape = &info->GetInput<TensorImpl>(0)->GetShape();
-        auto out_shape = &info->GetOutput<TensorImpl>(0)->GetShape();
-        out_shape->SetDataType(in_shape->GetDataType());
+    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+        auto& in_shape = info->GetInput<TensorImpl>(0)->GetShape();
+        auto& out_shape = info->GetOutput<TensorImpl>(0)->GetShape();
+        auto in_edge_id = info->GetInput<TensorImpl>(0)->GetEdge()->GetId();
+        auto& in_quant = quant->at(in_edge_id);
+        if (in_quant.type != ppl::common::DATATYPE_UNKNOWN) {
+            in_shape.SetDataType(in_quant.type);
+        }
+        out_shape.SetDataType(in_shape.GetDataType());
         return RC_SUCCESS;
     };
 
@@ -40,7 +46,6 @@ RetCode BridgeOp::Init(const OptKernelOptions& options) {
         }
         auto& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
         info->GetOutput<TensorImpl>(0)->GetShape().Reshape(in_shape0.GetDims(), in_shape0.GetRealDimCount());
-        // info->GetOutput<TensorImpl>(0)->GetShape().CalcPadding();
         return RC_SUCCESS;
     };
 
@@ -105,7 +110,8 @@ RetCode BridgeOp::AddFinalBridgeNode(ir::Node* node, ir::Node* new_node, ir::Edg
 }
 
 RetCode BridgeOp::DeleteBridgeNode(ir::Node* node, ir::Graph* graph,
-                                   std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors) {
+                                   std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
+                                   std::vector<CudaTensorQuant>* quants) {
     auto topo = graph->topo.get();
 
     auto preedge_id = node->GetInput(0);
@@ -116,14 +122,15 @@ RetCode BridgeOp::DeleteBridgeNode(ir::Node* node, ir::Graph* graph,
     }
 
     auto nextnode_id = topo->GetEdgeById(postedge_id)->CreateConsumerIter().Get(); // consumer0
-    auto preshape = tensors->find(preedge_id)->second.get()->GetShape();
-    auto postshape = tensors->find(postedge_id)->second.get()->GetShape();
+    auto prequant = quants->at(preedge_id);
+    auto postquant = quants->at(postedge_id);
 
     auto preedge = topo->GetEdgeById(preedge_id);
     auto nextnode = topo->GetNodeById(nextnode_id);
 
-    if (preshape.GetDataFormat() == postshape.GetDataFormat() &&
-        preshape.GetDataType() == postshape.GetDataType() && // two edge has the same shape
+    if (prequant.format == postquant.format && // two edge has the same format
+        prequant.type == postquant.type && // two edge has the same type
+        EqualQuant(prequant, postquant) && // two edge has the same quant
         topo->GetInput(topo->GetEdgeById(preedge_id)->GetName()) == INVALID_EDGEID && // and preedge is not graph input
         topo->GetExtraInput(topo->GetEdgeById(preedge_id)->GetName()) ==
             INVALID_EDGEID && // and preedge is not graph extrainput

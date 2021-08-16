@@ -35,9 +35,18 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
     }
 
     // TODO (WJF)： use fp32 version temporally
-    infer_type_func_ = [this](InputOutputInfo* info, datatype_t type) -> RetCode {
-        // type = ppl::common::DATATYPE_FLOAT32;
+    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         type = ppl::common::DATATYPE_FLOAT16;
+        if (type == DATATYPE_UNKNOWN) {
+            if (!SetOpFirstInputQuant(info, quant)) {
+                return InferInheritedType(info);
+            }
+        } else if (type == DATATYPE_INT8) {
+            if (!SetOpFirstInputQuant(info, quant)) {
+                LOG(ERROR) << "Set quantization for node[" << this->GetNode()->GetName() << "] failed.";
+                return RC_INVALID_VALUE;
+            }
+        }
         return InferDefaultType(info, type);
     };
 

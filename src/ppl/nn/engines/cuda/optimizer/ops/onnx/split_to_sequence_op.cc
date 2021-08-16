@@ -35,8 +35,18 @@ RetCode SplitToSequenceOp::Init(const OptKernelOptions& options) {
     auto param = static_cast<SplitToSequenceParam*>(attr_ref->second.get());
     op_.Init(param->axis, param->keepdims, common::SplitToSequenceOp::GenericSplitFunc);
 
-    infer_type_func_ = [this](InputOutputInfo* info, datatype_t type) -> RetCode {
-        return type != DATATYPE_UNKNOWN ? InferDefaultType(info, type) : InferInheritedType(info);
+    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+        if (type == DATATYPE_UNKNOWN) {
+            if (!SetOpFirstInputQuant(info, quant)) {
+                return InferInheritedType(info);
+            }
+        } else if (type == DATATYPE_INT8) {
+            if (!SetOpFirstInputQuant(info, quant)) {
+                LOG(ERROR) << "Set quantization for node[" << this->GetNode()->GetName() << "] failed.";
+                return RC_INVALID_VALUE;
+            }
+        }
+        return InferDefaultType(info, type);
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {

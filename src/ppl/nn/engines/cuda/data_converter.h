@@ -19,6 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_CUDA_DATA_CONVERTER_H_
 
 #include "ppl/nn/common/data_converter.h"
+#include "ppl/nn/engines/cuda/cuda_common_param.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -38,6 +39,12 @@ public:
 
     ppl::common::RetCode Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
                                  const TensorShape& src_desc) const;
+
+    ppl::common::RetCode ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const CudaTensorQuant& dst_quant,
+                                         const void* src, const TensorShape& src_desc, const CudaTensorQuant& src_quant) const;
+
+    ppl::common::RetCode Convert(BufferDesc* dst, const TensorShape& dst_desc, const CudaTensorQuant& dst_quant,
+                                 const BufferDesc& src, const TensorShape& src_desc, const CudaTensorQuant& src_quant) const;
 
 private:
     CudaDevice* device_;
