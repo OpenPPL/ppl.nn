@@ -33,6 +33,7 @@ public:
 
     ppl::common::RetCode Register(const std::string& domain, const std::string& type, OptKernelCreator);
     OptKernelCreator Find(const std::string& domain, const std::string& type);
+    void Remove(const std::string& domain, const std::string& type);
 
 private:
     std::map<std::string, std::map<std::string, OptKernelCreator>> domain_type_creator_;

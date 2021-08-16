@@ -105,6 +105,17 @@ RetCode OptKernelCreatorManager::Register(const string& domain, const string& ty
     return type_ret.second ? RC_SUCCESS : RC_EXISTS;
 }
 
+void OptKernelCreatorManager::Remove(const string& domain, const string& type) {
+    auto domain_ret = domain_type_creator_.find(domain);
+    if (domain_ret != domain_type_creator_.end()) {
+        auto& type2creator = domain_ret->second;
+        type2creator.erase(type);
+        if (type2creator.empty()) {
+            domain_type_creator_.erase(domain_ret);
+        }
+    }
+}
+
 OptKernelCreator OptKernelCreatorManager::Find(const string& domain, const string& type) {
     auto type_creator_ref = domain_type_creator_.find(domain);
     if (type_creator_ref != domain_type_creator_.end()) {
