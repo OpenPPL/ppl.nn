@@ -23,7 +23,11 @@ namespace ppl { namespace nn { namespace python {
 void RegisterCudaEngineOptions(pybind11::module* m) {
     pybind11::class_<CudaEngineOptions>(*m, "CudaEngineOptions")
         .def(pybind11::init<>())
-        .def_readwrite("device_id", &CudaEngineOptions::device_id);
+        .def_readwrite("device_id", &CudaEngineOptions::device_id)
+        .def_readwrite("mm_policy", &CudaEngineOptions::mm_policy);
+
+    m->attr("CUDA_MM_COMPACT") = (uint32_t)CUDA_MM_COMPACT;
+    m->attr("CUDA_MM_BEST_FIT") = (uint32_t)CUDA_MM_BEST_FIT;
 }
 
 }}} // namespace ppl::nn::python

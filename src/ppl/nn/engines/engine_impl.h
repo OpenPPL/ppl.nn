@@ -21,7 +21,6 @@
 #include "ppl/nn/ir/graph.h"
 #include "ppl/nn/engines/engine.h"
 #include "ppl/nn/engines/engine_context.h"
-#include "ppl/nn/engines/engine_context_options.h"
 
 namespace ppl { namespace nn {
 
@@ -50,7 +49,7 @@ public:
        @brief create an `EngineContext` instance for a `Runtime` instance of
        graph named `graph_name`.
     */
-    virtual EngineContext* CreateEngineContext(const std::string& graph_name, const EngineContextOptions&) = 0;
+    virtual EngineContext* CreateEngineContext(const std::string& graph_name) = 0;
 
     /** @brief tells whether this engine can run an op specified by `node`. */
     virtual bool CanRunOp(const ir::Node* node) const = 0;

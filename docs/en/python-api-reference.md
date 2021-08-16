@@ -80,10 +80,6 @@ name_str = Engine::GetName()
 
 Returns engine's name.
 
-### RuntimeOptions
-
-Refer to [runtime_options.h](../../include/ppl/nn/runtime/runtime_options.h) for more details.
-
 ### OnnxRuntimeBuilderFactory
 
 ```python
@@ -95,8 +91,7 @@ Creates an `OnnxRuntimeBuilder` instance from an ONNX model. `engines` is a list
 ### OnnxRuntimeBuilder
 
 ```python
-runtime_options = RuntimeOptions()
-runtime = OnnxRuntimeBuilder::CreateRuntime(runtime_options)
+runtime = OnnxRuntimeBuilder::CreateRuntime()
 ```
 
 Creates a `Runtime` instance for inferencing.
@@ -146,7 +141,8 @@ Returns the output tensor in position `idx`, which is in range [0, output_count)
 #### X86EngineFactory
 
 ```python
-x86_engine = X86EngineFactory::Create()
+x86_options = X86EngineOptions()
+x86_engine = X86EngineFactory::Create(x86_options)
 ```
 
 Creates an `Engine` instance running on x86-64 compatiable CPUs.

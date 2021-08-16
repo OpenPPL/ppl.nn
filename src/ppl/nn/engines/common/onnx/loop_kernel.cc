@@ -32,8 +32,7 @@ void EmptyDeleter(T*) {}
 RetCode LoopKernel::SetExecutionInfo(const shared_ptr<ir::GraphTopo>& topo, const RuntimeGraphInfo* info,
                                      const RuntimeAuxInfo* aux_info, utils::SharedResource* resource,
                                      LoopConcatOutputFunc func) {
-    auto status = subgraph_.Init(RuntimeOptions(), // TODO
-                                 topo, shared_ptr<const RuntimeGraphInfo>(info, EmptyDeleter<const RuntimeGraphInfo>),
+    auto status = subgraph_.Init(topo, shared_ptr<const RuntimeGraphInfo>(info, EmptyDeleter<const RuntimeGraphInfo>),
                                  shared_ptr<const RuntimeAuxInfo>(aux_info, EmptyDeleter<const RuntimeAuxInfo>),
                                  shared_ptr<utils::SharedResource>(resource, EmptyDeleter<utils::SharedResource>));
     if (status != RC_SUCCESS) {

@@ -26,7 +26,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace demo {
 
-EngineContext* DemoEngine::CreateEngineContext(const string&, const EngineContextOptions&) {
+EngineContext* DemoEngine::CreateEngineContext(const string&) {
     return new DemoEngineContext(GetName());
 }
 

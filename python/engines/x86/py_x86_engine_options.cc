@@ -15,18 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_RUNTIME_RUNTIME_OPTIONS_H_
-#define _ST_HPC_PPL_NN_RUNTIME_RUNTIME_OPTIONS_H_
+#include "ppl/nn/engines/x86/x86_engine_options.h"
+#include "pybind11/pybind11.h"
 
-#include "ppl/nn/common/common.h"
-#include "ppl/nn/runtime/policy_defs.h"
+namespace ppl { namespace nn { namespace python {
 
-namespace ppl { namespace nn {
+void RegisterX86EngineOptions(pybind11::module* m) {
+    pybind11::class_<X86EngineOptions>(*m, "X86EngineOptions")
+        .def(pybind11::init<>())
+        .def_readwrite("mm_policy", &X86EngineOptions::mm_policy);
 
-struct PPLNN_PUBLIC RuntimeOptions final {
-    MemoryManagementPolicy mm_policy = MM_LESS_MEMORY;
-};
+    m->attr("X86_MM_COMPACT") = (uint32_t)X86_MM_COMPACT;
+    m->attr("X86_MM_MRU") = (uint32_t)X86_MM_MRU;
+}
 
-}} // namespace ppl::nn
-
-#endif
+}}} // namespace ppl::nn::python

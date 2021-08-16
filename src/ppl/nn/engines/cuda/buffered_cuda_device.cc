@@ -30,13 +30,13 @@ namespace ppl { namespace nn { namespace cuda {
 
 #define DEFAULT_BLOCK_SIZE 1048576
 
-RetCode BufferedCudaDevice::Init(const CudaEngineOptions& options, const MemoryManagementPolicy& mm_policy) {
-    this->InitDevice(options);
+RetCode BufferedCudaDevice::Init(const CudaEngineOptions& options) {
+    CudaDevice::Init(options.device_id);
 
-    if (mm_policy == MM_BETTER_PERFORMANCE) {
+    if (options.mm_policy == CUDA_MM_BEST_FIT) {
         allocator_.reset(new DefaultCudaAllocator());
         buffer_manager_.reset(new utils::StackBufferManager(allocator_.get(), true));
-    } else if (mm_policy == MM_LESS_MEMORY) {
+    } else if (options.mm_policy == CUDA_MM_COMPACT) {
         size_t granularity = 0;
         CUmemAllocationProp prop = {};
         prop.type = CU_MEM_ALLOCATION_TYPE_PINNED;

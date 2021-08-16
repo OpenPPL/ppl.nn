@@ -18,9 +18,9 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_CONTEXT_H_
 #define _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_CONTEXT_H_
 
-#include "ppl/nn/engines/cuda/buffered_cuda_device.h"
+#include "ppl/common/retcode.h"
 #include "ppl/nn/engines/engine_context.h"
-#include "ppl/nn/engines/engine_context_options.h"
+#include "ppl/nn/engines/cuda/buffered_cuda_device.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -28,7 +28,8 @@ class CudaEngineContext final : public EngineContext {
 public:
     CudaEngineContext(const std::string& name) : name_(name) {}
 
-    ppl::common::RetCode Init(const CudaEngineOptions& cuda_options, const EngineContextOptions& options);
+    ppl::common::RetCode Init(const CudaEngineOptions& options);
+
     Device* GetDevice() override {
         return &device_;
     }

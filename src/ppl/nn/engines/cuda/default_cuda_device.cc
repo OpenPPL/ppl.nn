@@ -31,6 +31,11 @@ DefaultCudaDevice::~DefaultCudaDevice() {
     allocator_.reset();
 }
 
+RetCode DefaultCudaDevice::Init(uint32_t device_id) {
+    CudaDevice::Init(device_id);
+    return RC_SUCCESS;
+}
+
 RetCode DefaultCudaDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {
     if (buffer->addr) {
         allocator_->Free(buffer->addr);

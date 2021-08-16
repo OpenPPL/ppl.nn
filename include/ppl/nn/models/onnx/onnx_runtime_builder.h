@@ -20,14 +20,13 @@
 
 #include "ppl/nn/common/common.h"
 #include "ppl/nn/runtime/runtime.h"
-#include "ppl/nn/runtime/runtime_options.h"
 
 namespace ppl { namespace nn {
 
 class PPLNN_PUBLIC OnnxRuntimeBuilder {
 public:
     virtual ~OnnxRuntimeBuilder() {}
-    virtual Runtime* CreateRuntime(const RuntimeOptions&) = 0;
+    virtual Runtime* CreateRuntime() = 0;
 };
 
 }} // namespace ppl::nn

@@ -47,7 +47,7 @@ RuntimeBuilder* builder = OnnxRuntimeBuilderFactory::Create(model_file, std::mov
 `PPLNN` supports multiple engines running in the same model. For example:
 
 ```c++
-Engine* x86_engine = X86EngineFactory::Create();
+Engine* x86_engine = X86EngineFactory::Create(X86EngineOptions());
 Engine* cuda_engine = CudaEngineFactory::Create(CudaEngineOptions());
 
 vector<unique_ptr<Engine>> engines;
@@ -57,7 +57,8 @@ engines.emplace_back(unique_ptr<Engine>(cuda_engine));
 
 const char* model_file = "/path/to/onnx/model";
 // use x86 and cuda engines to run this model
-RuntimeBuilder* builder = OnnxRuntimeBuilderFactory::Create(model_file, std::move(engines));
+vector<Engine*> engine_ptrs = {x86_engine, cuda_engine};
+RuntimeBuilder* builder = OnnxRuntimeBuilderFactory::Create(model_file, engine_ptrs.data(), engine_ptrs.size());
 ```
 
 `PPLNN` will partition the model and assign different ops to these engines according to configurations.
@@ -67,14 +68,13 @@ RuntimeBuilder* builder = OnnxRuntimeBuilderFactory::Create(model_file, std::mov
 We can use
 
 ```c++
-Runtime* OnnxRuntimeBuilder::CreateRuntime(const RuntimeOptions&);
+Runtime* OnnxRuntimeBuilder::CreateRuntime();
 ```
 
 to create a `Runtime`:
 
 ```c++
-RuntimeOptions runtime_options;
-Runtime* runtime = builder->CreateRuntime(runtime_options);
+Runtime* runtime = builder->CreateRuntime();
 ```
 
 ### Filling Inputs

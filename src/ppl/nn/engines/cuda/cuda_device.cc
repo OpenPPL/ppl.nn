@@ -30,8 +30,8 @@ CudaDevice::~CudaDevice() {
     cudaStreamDestroy(context_.stream);
 }
 
-void CudaDevice::InitDevice(const CudaEngineOptions& options) {
-    context_.device_id = options.device_id;
+void CudaDevice::Init(uint32_t device_id) {
+    context_.device_id = device_id;
     cudaSetDevice(context_.device_id);
     if (!(context_.stream)) {
         cudaStreamCreate(&(context_.stream));

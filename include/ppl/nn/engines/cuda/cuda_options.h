@@ -18,7 +18,7 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_OPTIONS_H_
 #define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_OPTIONS_H_
 
-namespace ppl { namespace nn { namespace cuda {
+namespace ppl { namespace nn {
 
 enum {
     /**
@@ -66,6 +66,15 @@ enum {
     CUDA_CONF_MAX,
 };
 
-}}} // namespace ppl::nn::cuda
+/** @brief memory management policies */
+enum {
+    /** less memory usage, does not support vGPU now */
+    CUDA_MM_COMPACT = 0,
+
+    /** best fit first, will use more memory */
+    CUDA_MM_BEST_FIT = 1,
+};
+
+}} // namespace ppl::nn
 
 #endif

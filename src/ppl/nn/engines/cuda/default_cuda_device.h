@@ -29,6 +29,7 @@ public:
     DefaultCudaDevice();
     virtual ~DefaultCudaDevice();
 
+    ppl::common::RetCode Init(uint32_t device_id);
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc*) override;
     void Free(BufferDesc*) override;
 

@@ -16,7 +16,6 @@
 // under the License.
 
 #include "py_runtime.h"
-#include "ppl/nn/runtime/policy_defs.h"
 #include "pybind11/pybind11.h"
 using namespace ppl::common;
 
@@ -34,9 +33,6 @@ void RegisterRuntime(pybind11::module* m) {
         .def("Sync", &PyRuntime::Sync)
         .def("GetOutputCount", &PyRuntime::GetOutputCount)
         .def("GetOutputTensor", &PyRuntime::GetOutputTensor);
-
-    m->attr("MM_BETTER_PERFORMANCE") = (uint32_t)MM_BETTER_PERFORMANCE;
-    m->attr("MM_LESS_MEMORY") = (uint32_t)MM_LESS_MEMORY;
 }
 
 }}} // namespace ppl::nn::python

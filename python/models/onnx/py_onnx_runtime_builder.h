@@ -32,8 +32,8 @@ public:
     PyOnnxRuntimeBuilder(PyOnnxRuntimeBuilder&&) = default;
     PyOnnxRuntimeBuilder& operator=(PyOnnxRuntimeBuilder&&) = default;
 
-    PyRuntime CreateRuntime(const RuntimeOptions& options) {
-        return PyRuntime(engines_, builder_->CreateRuntime(options));
+    PyRuntime CreateRuntime() {
+        return PyRuntime(engines_, builder_->CreateRuntime());
     }
     OnnxRuntimeBuilder* GetPtr() const {
         return builder_.get();

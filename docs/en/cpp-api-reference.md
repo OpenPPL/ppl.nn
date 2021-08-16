@@ -16,19 +16,19 @@ Sets various options for this engine. Parameters vary depending on the first par
 
 ## X86EngineFactory
 
-A built-in engine factory thas is used to create engines running on x86-compatible CPUs.
+A built-in engine factory that is used to create engines running on x86-compatible CPUs.
 
 #### Functions
 
 ```c++
-Engine* X86EngineFactory::Create();
+Engine* X86EngineFactory::Create(const X86EngineOptions& options);
 ```
 
-Creates a x86 engine instance.
+Creates an X86 engine instance with the given options.
 
 ## CudaEngineFactory
 
-A built-in engine factory thas is used to create engines running on NVIDIA GPUs.
+A built-in engine factory that is used to create engines running on NVIDIA GPUs.
 
 #### Functions
 
@@ -36,7 +36,7 @@ A built-in engine factory thas is used to create engines running on NVIDIA GPUs.
 Engine* CudaEngineFactory::Create(const CudaEngineOptions& options);
 ```
 
-Creates a CUDA engine instance with the given `options`.
+Creates a CUDA engine instance with the given options.
 
 ## OnnxRuntimeBuilderFactory
 
@@ -69,10 +69,10 @@ Defined in [include/ppl/nn/models/onnx/onnx_runtime_builder.h](../../include/ppl
 #### Functions
 
 ```c++
-Runtime* CreateRuntime(const RuntimeOptions&);
+Runtime* CreateRuntime();
 ```
 
-Creates a `Runtime` instance which is used to evaluate a compute graph. The parameter `RuntimeOptions` is defined in [include/ppl/nn/runtime/runtime_options.h](../../include/ppl/nn/runtime/runtime_options.h).
+Creates a `Runtime` instance which is used to evaluate a compute graph.
 
 ## Runtime
 

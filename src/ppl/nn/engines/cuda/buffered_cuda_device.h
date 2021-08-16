@@ -20,7 +20,6 @@
 
 #include <cuda.h>
 
-#include "ppl/nn/runtime/policy_defs.h"
 #include "ppl/nn/utils/buffer_manager.h"
 #include "ppl/nn/engines/cuda/cuda_device.h"
 
@@ -30,7 +29,7 @@ class BufferedCudaDevice final : public CudaDevice {
 public:
     ~BufferedCudaDevice();
 
-    ppl::common::RetCode Init(const CudaEngineOptions& options, const MemoryManagementPolicy& mm_policy);
+    ppl::common::RetCode Init(const CudaEngineOptions& options);
 
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc*) override;
     void Free(BufferDesc*) override;

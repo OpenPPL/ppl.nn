@@ -19,7 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_X86_RUNTIME_X86_DEVICE_H_
 
 #include "ppl/nn/engines/x86/x86_device.h"
-#include "ppl/nn/runtime/policy_defs.h"
+#include "ppl/nn/engines/x86/x86_options.h"
 #include "ppl/nn/utils/stack_buffer_manager.h"
 #include "ppl/nn/utils/compact_buffer_manager.h"
 #include "ppl/nn/common/logger.h"
@@ -33,11 +33,10 @@ private:
     }
 
 public:
-    RuntimeX86Device(uint64_t alignment, ppl::common::isa_t isa, MemoryManagementPolicy mm_policy)
-        : X86Device(alignment, isa) {
-        if (mm_policy == MM_BETTER_PERFORMANCE) {
+    RuntimeX86Device(uint64_t alignment, ppl::common::isa_t isa, uint32_t mm_policy) : X86Device(alignment, isa) {
+        if (mm_policy == X86_MM_MRU) {
             buffer_manager_.reset(new utils::StackBufferManager(GetAllocator()));
-        } else if (mm_policy == MM_LESS_MEMORY) {
+        } else if (mm_policy == X86_MM_COMPACT) {
             buffer_manager_.reset(new utils::CompactBufferManager(GetAllocator()));
         }
     }

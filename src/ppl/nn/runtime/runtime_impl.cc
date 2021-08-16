@@ -35,15 +35,15 @@ RuntimeImpl::~RuntimeImpl() {
     engctx_.clear();
 }
 
-static EngineContext* FindOrCreateEngineContext(const string& graph_name, const EngineContextOptions& options,
-                                                EngineImpl* engine, map<EngineImpl*, EngineContext*>* eng2ctx,
+static EngineContext* FindOrCreateEngineContext(const string& graph_name, EngineImpl* engine,
+                                                map<EngineImpl*, EngineContext*>* eng2ctx,
                                                 vector<unique_ptr<EngineContext>>* engctx) {
     auto ref = eng2ctx->find(engine);
     if (ref != eng2ctx->end()) {
         return ref->second;
     }
 
-    auto ctx = engine->CreateEngineContext(graph_name, options);
+    auto ctx = engine->CreateEngineContext(graph_name);
     if (ctx) {
         engctx->emplace_back(unique_ptr<EngineContext>(ctx));
         eng2ctx->insert(make_pair(engine, ctx));
@@ -52,21 +52,13 @@ static EngineContext* FindOrCreateEngineContext(const string& graph_name, const 
     return ctx;
 }
 
-static void InitEngineContextOptions(const RuntimeOptions& rt_opt, EngineContextOptions* opt) {
-    opt->mm_policy = rt_opt.mm_policy;
-}
-
 static RetCode InitRuntimeGraphKernels(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                       const RuntimeOptions& options, vector<unique_ptr<EngineContext>>* engctx,
-                                       RuntimeGraph* graph) {
+                                       vector<unique_ptr<EngineContext>>* engctx, RuntimeGraph* graph) {
     graph->nodeid2kernel.resize(topo->GetMaxNodeId());
-
-    EngineContextOptions engctx_options;
-    InitEngineContextOptions(options, &engctx_options);
 
     map<EngineImpl*, EngineContext*> eng2ctx;
     for (auto it = info.kernels.begin(); it != info.kernels.end(); ++it) {
-        auto ctx = FindOrCreateEngineContext(topo->GetName(), engctx_options, it->engine, &eng2ctx, engctx);
+        auto ctx = FindOrCreateEngineContext(topo->GetName(), it->engine, &eng2ctx, engctx);
         if (!ctx) {
             LOG(ERROR) << "create context of engine[" << it->engine->GetName() << "] failed.";
             return RC_OTHER_ERROR;
@@ -307,9 +299,8 @@ static void InitRuntimeGraphBarriers(uint64_t max_edge_id, RuntimeGraph* graph) 
     }
 }
 
-RetCode RuntimeImpl::InitRuntimeGraph(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                      const RuntimeOptions& options, RuntimeGraph* graph) {
-    auto status = InitRuntimeGraphKernels(topo, info, options, &engctx_, graph);
+RetCode RuntimeImpl::InitRuntimeGraph(const ir::GraphTopo* topo, const RuntimeGraphInfo& info, RuntimeGraph* graph) {
+    auto status = InitRuntimeGraphKernels(topo, info, &engctx_, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphKernels failed: " << GetRetCodeStr(status);
         return status;
@@ -350,23 +341,9 @@ RetCode RuntimeImpl::InitRuntimeGraph(const ir::GraphTopo* topo, const RuntimeGr
     return RC_SUCCESS;
 }
 
-static bool CheckOptions(const RuntimeOptions& options) {
-    if (options.mm_policy != MM_BETTER_PERFORMANCE && options.mm_policy != MM_LESS_MEMORY) {
-        LOG(ERROR) << "invalid memory management policy [" << (uint32_t)options.mm_policy << "]";
-        return false;
-    }
-
-    return true;
-}
-
-RetCode RuntimeImpl::Init(const RuntimeOptions& options, const shared_ptr<ir::GraphTopo>& topo,
-                          const shared_ptr<const RuntimeGraphInfo>& info,
+RetCode RuntimeImpl::Init(const shared_ptr<ir::GraphTopo>& topo, const shared_ptr<const RuntimeGraphInfo>& info,
                           const shared_ptr<const RuntimeAuxInfo>& aux_info,
                           const shared_ptr<utils::SharedResource>& resource) {
-    if (!CheckOptions(options)) {
-        return RC_INVALID_VALUE;
-    }
-
     resource_ = resource;
     graph_info_ = info;
     aux_info_ = aux_info;
@@ -374,7 +351,7 @@ RetCode RuntimeImpl::Init(const RuntimeOptions& options, const shared_ptr<ir::Gr
 
     profiler_.Init(&conf_, &graph_, aux_info.get());
 
-    auto status = InitRuntimeGraph(topo.get(), *info, options, &graph_);
+    auto status = InitRuntimeGraph(topo.get(), *info, &graph_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraph failed: " << GetRetCodeStr(status);
         return status;
