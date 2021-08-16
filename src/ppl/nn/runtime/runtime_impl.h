@@ -24,7 +24,6 @@
 #include "ppl/nn/runtime/runtime_graph.h"
 #include "ppl/nn/runtime/runtime_graph_info.h"
 #include "ppl/nn/runtime/runtime_aux_info.h"
-#include "ppl/nn/runtime/runtime_options.h"
 #include "ppl/nn/runtime/runtime_internal_conf.h"
 #include "ppl/nn/runtime/scheduler.h"
 #include "ppl/nn/utils/shared_resource.h"
@@ -38,8 +37,7 @@ public:
     RuntimeImpl() {}
     ~RuntimeImpl();
 
-    ppl::common::RetCode Init(const RuntimeOptions& options, const std::shared_ptr<ir::GraphTopo>&,
-                              const std::shared_ptr<const RuntimeGraphInfo>&,
+    ppl::common::RetCode Init(const std::shared_ptr<ir::GraphTopo>&, const std::shared_ptr<const RuntimeGraphInfo>&,
                               const std::shared_ptr<const RuntimeAuxInfo>&,
                               const std::shared_ptr<utils::SharedResource>&);
 
@@ -81,8 +79,7 @@ public:
     ppl::common::RetCode GetProfilingStatistics(ProfilingStatistics* stat) const override;
 
 private:
-    ppl::common::RetCode InitRuntimeGraph(const ir::GraphTopo*, const RuntimeGraphInfo&, const RuntimeOptions&,
-                                          RuntimeGraph*);
+    ppl::common::RetCode InitRuntimeGraph(const ir::GraphTopo*, const RuntimeGraphInfo&, RuntimeGraph*);
 
 private:
     RuntimeGraph graph_;

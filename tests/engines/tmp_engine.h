@@ -29,7 +29,7 @@ public:
     ppl::common::RetCode Configure(uint32_t, ...) override {
         return ppl::common::RC_UNSUPPORTED;
     }
-    EngineContext* CreateEngineContext(const std::string&, const EngineContextOptions&) override {
+    EngineContext* CreateEngineContext(const std::string&) override {
         return new TmpEngineContext(GetName());
     }
     bool CanRunOp(const ir::Node* node) const override {
@@ -59,7 +59,7 @@ public:
     ppl::common::RetCode Configure(uint32_t, ...) override {
         return ppl::common::RC_UNSUPPORTED;
     }
-    EngineContext* CreateEngineContext(const std::string&, const EngineContextOptions&) override {
+    EngineContext* CreateEngineContext(const std::string&) override {
         return new TmpEngineContext(GetName());
     }
     bool CanRunOp(const ir::Node* node) const override {

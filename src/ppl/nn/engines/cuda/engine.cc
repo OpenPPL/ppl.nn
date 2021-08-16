@@ -31,15 +31,13 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode CudaEngine::Init(const CudaEngineOptions& options) {
-    // TODO implement other options
-    return device_.Init(options, MM_LESS_MEMORY);
+    options_ = options;
+    return device_.Init(options);
 }
 
-EngineContext* CudaEngine::CreateEngineContext(const string&, const EngineContextOptions& options) {
+EngineContext* CudaEngine::CreateEngineContext(const string&) {
     auto ctx = unique_ptr<CudaEngineContext>(new CudaEngineContext(GetName()));
-    CudaEngineOptions cuda_options;
-    cuda_options.device_id = device_.GetDeviceId();
-    auto status = ctx->Init(cuda_options, options);
+    auto status = ctx->Init(options_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init CudaEngineContext failed: " << GetRetCodeStr(status);
         return nullptr;

@@ -35,7 +35,7 @@ static RetCode SetUseDefaultAlgorithms(Engine* engine, uint32_t option, const py
 typedef RetCode (*ConfigFunc)(Engine*, uint32_t option, const pybind11::args& args);
 
 static const map<uint32_t, ConfigFunc> g_opt2func = {
-    {cuda::CUDA_CONF_USE_DEFAULT_ALGORITHMS, SetUseDefaultAlgorithms},
+    {CUDA_CONF_USE_DEFAULT_ALGORITHMS, SetUseDefaultAlgorithms},
 };
 
 RetCode PyCudaEngine::Configure(uint32_t option, const pybind11::args& args) {
@@ -57,7 +57,7 @@ void RegisterCudaEngine(pybind11::module* m) {
         .def("GetName", &PyCudaEngine::GetName)
         .def("Configure", &PyCudaEngine::Configure);
 
-    m->attr("CUDA_CONF_USE_DEFAULT_ALGORITHMS") = (uint32_t)cuda::CUDA_CONF_USE_DEFAULT_ALGORITHMS;
+    m->attr("CUDA_CONF_USE_DEFAULT_ALGORITHMS") = (uint32_t)CUDA_CONF_USE_DEFAULT_ALGORITHMS;
 }
 
 }}} // namespace ppl::nn::python

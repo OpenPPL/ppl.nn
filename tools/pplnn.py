@@ -116,7 +116,8 @@ def ParseCommandLineArgs():
 def RegisterEngines(args):
     engines = []
     if args.use_x86:
-        x86_engine = pplnn.X86EngineFactory.Create()
+        x86_options = pplnn.X86EngineOptions()
+        x86_engine = pplnn.X86EngineFactory.Create(x86_options)
         if not x86_engine:
             logging.error("create x86 engine failed.")
             sys.exit(-1)
@@ -372,8 +373,7 @@ if __name__ == "__main__":
         logging.error("create OnnxRuntimeBuilder failed.")
         sys.exit(-1)
 
-    runtime_options = pplnn.RuntimeOptions()
-    runtime = runtime_builder.CreateRuntime(runtime_options)
+    runtime = runtime_builder.CreateRuntime()
     if not runtime:
         logging.error("create Runtime instance failed.")
         sys.exit(-1)

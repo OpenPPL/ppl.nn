@@ -34,8 +34,7 @@ RetCode IfKernel::SetExecutionInfo(const shared_ptr<ir::GraphTopo>& then_topo, c
                                    const RuntimeAuxInfo* else_aux_info,
                                    const vector<uint32_t>* extra_inputs_of_else_branch,
                                    utils::SharedResource* resource) {
-    auto status = then_branch_.Init(RuntimeOptions(), // TODO
-                                    then_topo,
+    auto status = then_branch_.Init(then_topo,
                                     shared_ptr<const RuntimeGraphInfo>(then_info, EmptyDeleter<const RuntimeGraphInfo>),
                                     shared_ptr<const RuntimeAuxInfo>(then_aux_info, EmptyDeleter<const RuntimeAuxInfo>),
                                     shared_ptr<utils::SharedResource>(resource, EmptyDeleter<utils::SharedResource>));
@@ -44,8 +43,7 @@ RetCode IfKernel::SetExecutionInfo(const shared_ptr<ir::GraphTopo>& then_topo, c
         return status;
     }
 
-    status = else_branch_.Init(RuntimeOptions(), // TODO
-                               else_topo,
+    status = else_branch_.Init(else_topo,
                                shared_ptr<const RuntimeGraphInfo>(else_info, EmptyDeleter<const RuntimeGraphInfo>),
                                shared_ptr<const RuntimeAuxInfo>(else_aux_info, EmptyDeleter<const RuntimeAuxInfo>),
                                shared_ptr<utils::SharedResource>(resource, EmptyDeleter<utils::SharedResource>));

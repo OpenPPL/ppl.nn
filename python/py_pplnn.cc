@@ -26,6 +26,7 @@ void RegisterCudaEngine(pybind11::module*);
 #endif
 #ifdef PPLNN_USE_X86
 void RegisterX86EngineFactory(pybind11::module*);
+void RegisterX86EngineOptions(pybind11::module*);
 void RegisterX86Engine(pybind11::module*);
 #endif
 
@@ -35,7 +36,6 @@ void RegisterNdArray(pybind11::module*);
 void RegisterEngine(pybind11::module*);
 void RegisterOnnxRuntimeBuilderFactory(pybind11::module*);
 void RegisterOnnxRuntimeBuilder(pybind11::module*);
-void RegisterRuntimeOptions(pybind11::module*);
 void RegisterRuntime(pybind11::module*);
 void RegisterGetVersionString(pybind11::module*);
 
@@ -47,6 +47,7 @@ PYBIND11_MODULE(nn, m) {
 #endif
 #ifdef PPLNN_USE_X86
     RegisterX86EngineFactory(&m);
+    RegisterX86EngineOptions(&m);
     RegisterX86Engine(&m);
 #endif
 
@@ -56,7 +57,6 @@ PYBIND11_MODULE(nn, m) {
     RegisterEngine(&m);
     RegisterOnnxRuntimeBuilderFactory(&m);
     RegisterOnnxRuntimeBuilder(&m);
-    RegisterRuntimeOptions(&m);
     RegisterRuntime(&m);
     RegisterGetVersionString(&m);
 }

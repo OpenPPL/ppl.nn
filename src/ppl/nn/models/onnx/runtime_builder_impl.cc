@@ -61,13 +61,13 @@ RetCode RuntimeBuilderImpl::Init(const char* model_buf, size_t buf_len, vector<E
     return RC_SUCCESS;
 }
 
-Runtime* RuntimeBuilderImpl::CreateRuntime(const RuntimeOptions& options) {
+Runtime* RuntimeBuilderImpl::CreateRuntime() {
     auto runtime = new RuntimeImpl();
     if (!runtime) {
         return nullptr;
     }
 
-    auto status = runtime->Init(options, graph_.topo, graph_info_, aux_info_, resource_);
+    auto status = runtime->Init(graph_.topo, graph_info_, aux_info_, resource_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init runtime failed: " << GetRetCodeStr(status);
         delete runtime;

@@ -15,17 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_RUNTIME_POLICY_DEFS_H_
-#define _ST_HPC_PPL_NN_RUNTIME_POLICY_DEFS_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_X86_ENGINE_OPTIONS_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_X86_ENGINE_OPTIONS_H_
+
+#include "ppl/nn/common/common.h"
+#include "ppl/nn/engines/x86/x86_options.h"
+#include <stdint.h>
 
 namespace ppl { namespace nn {
 
-enum MemoryManagementPolicy {
-    /** better performance policy, will use more memory */
-    MM_BETTER_PERFORMANCE = 0,
-
-    /** less memory policy, may cause performance loss */
-    MM_LESS_MEMORY = 1,
+struct PPLNN_PUBLIC X86EngineOptions final {
+    uint32_t mm_policy = X86_MM_COMPACT;
 };
 
 }} // namespace ppl::nn

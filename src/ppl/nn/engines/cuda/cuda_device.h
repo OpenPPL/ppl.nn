@@ -33,8 +33,8 @@ class CudaDevice : public Device {
 public:
     virtual ~CudaDevice();
 
-    void InitDevice(const CudaEngineOptions& options);
-    
+    void Init(uint32_t device_id);
+
     virtual ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) = 0;
 
     ppl::common::RetCode Realloc(const TensorShape& shape, BufferDesc* buffer) override final {

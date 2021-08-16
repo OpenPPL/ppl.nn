@@ -99,12 +99,12 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
         return false;
     }
 
-    cuda_engine->Configure(ppl::nn::cuda::CUDA_CONF_SET_OUTPUT_FORMAT, g_flag_output_format.c_str());
-    cuda_engine->Configure(ppl::nn::cuda::CUDA_CONF_SET_OUTPUT_TYPE, g_flag_output_type.c_str());
-    cuda_engine->Configure(ppl::nn::cuda::CUDA_CONF_USE_DEFAULT_ALGORITHMS, g_flag_quick_select);
+    cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_OUTPUT_FORMAT, g_flag_output_format.c_str());
+    cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_OUTPUT_TYPE, g_flag_output_type.c_str());
+    cuda_engine->Configure(ppl::nn::CUDA_CONF_USE_DEFAULT_ALGORITHMS, g_flag_quick_select);
 
     if (!g_flag_compiler_dims.empty()) {
-        cuda_engine->Configure(ppl::nn::cuda::CUDA_CONF_SET_COMPILER_INPUT_SHAPE, g_flag_compiler_dims.c_str());
+        cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_COMPILER_INPUT_SHAPE, g_flag_compiler_dims.c_str());
     }
 
     engines->emplace_back(unique_ptr<Engine>(cuda_engine));
@@ -125,9 +125,10 @@ Define_bool_opt("--core-binding", g_flag_core_binding, false, "core binding");
 #include "ppl/nn/engines/x86/x86_options.h"
 #include "ppl/kernel/x86/common/threading_tools.h"
 static inline bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
-    auto x86_engine = X86EngineFactory::Create();
+    X86EngineOptions options;
+    auto x86_engine = X86EngineFactory::Create(options);
     if (g_flag_disable_avx512) {
-        x86_engine->Configure(ppl::nn::x86::X86_CONF_DISABLE_AVX512);
+        x86_engine->Configure(ppl::nn::X86_CONF_DISABLE_AVX512);
     }
     if (g_flag_core_binding) {
         ppl::kernel::x86::set_omp_core_binding(nullptr, 0, 1);
@@ -162,7 +163,8 @@ static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
 #endif
 
     if (engines->empty()) {
-        LOG(ERROR) << "no engine is registered. run `./pplnn --help` to see supported engines marked with '--use-*', or see documents listed in README.md for building instructions.";
+        LOG(ERROR) << "no engine is registered. run `./pplnn --help` to see supported engines marked with '--use-*', "
+                      "or see documents listed in README.md for building instructions.";
         return false;
     }
 
@@ -206,18 +208,6 @@ static void SplitString(const char* str, unsigned int len, const char* delim, un
     }
 
     f("", 0); // the last empty field
-}
-
-static bool FillRuntimeOptions(RuntimeOptions* options) {
-    if (g_flag_mm_policy == "perf") {
-        options->mm_policy = MM_BETTER_PERFORMANCE;
-    } else if (g_flag_mm_policy == "mem") {
-        options->mm_policy = MM_LESS_MEMORY;
-    } else {
-        LOG(ERROR) << "unsupported --mm-policy value: " << g_flag_mm_policy;
-        return false;
-    }
-    return true;
 }
 
 static void GenerateRandomDims(TensorShape* shape) {
@@ -758,12 +748,7 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
-        RuntimeOptions runtime_options;
-        if (!FillRuntimeOptions(&runtime_options)) {
-            return -1;
-        }
-
-        runtime.reset(builder->CreateRuntime(runtime_options));
+        runtime.reset(builder->CreateRuntime());
     }
 
     if (!runtime) {

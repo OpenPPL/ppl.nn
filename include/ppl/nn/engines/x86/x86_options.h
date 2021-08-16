@@ -18,7 +18,7 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_X86_X86_OPTIONS_H_
 #define _ST_HPC_PPL_NN_ENGINES_X86_X86_OPTIONS_H_
 
-namespace ppl { namespace nn { namespace x86 {
+namespace ppl { namespace nn {
 
 enum {
     /**
@@ -35,6 +35,15 @@ enum {
     X86_CONF_MAX,
 };
 
-}}} // namespace ppl::nn::x86
+/** @brief memory management policies */
+enum {
+    /** less memory usage, may cause performance loss */
+    X86_MM_COMPACT = 0,
+
+    /** most recently used first, will use more memory */
+    X86_MM_MRU = 1,
+};
+
+}} // namespace ppl::nn
 
 #endif

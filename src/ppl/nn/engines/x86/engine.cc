@@ -40,8 +40,13 @@ X86Engine::X86Engine() : EngineImpl("x86"), device_(X86_DEFAULT_ALIGNMENT, ppl::
     ppl::kernel::x86::set_denormals_zero(true);
 }
 
-EngineContext* X86Engine::CreateEngineContext(const string&, const EngineContextOptions& options) {
-    return new X86EngineContext(GetName(), device_.GetISA(), options);
+RetCode X86Engine::Init(const X86EngineOptions& options) {
+    options_ = options;
+    return RC_SUCCESS;
+}
+
+EngineContext* X86Engine::CreateEngineContext(const string&) {
+    return new X86EngineContext(GetName(), device_.GetISA(), options_.mm_policy);
 }
 
 bool X86Engine::CanRunOp(const ir::Node* node) const {

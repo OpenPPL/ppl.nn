@@ -19,12 +19,13 @@
 #define _ST_HPC_PPL_NN_ENGINES_X86_ENGINE_FACTORY_H_
 
 #include "ppl/nn/engines/engine.h"
+#include "ppl/nn/engines/x86/x86_engine_options.h"
 
 namespace ppl { namespace nn {
 
 class PPLNN_PUBLIC X86EngineFactory final {
 public:
-    static Engine* Create();
+    static Engine* Create(const X86EngineOptions&);
 };
 
 }} // namespace ppl::nn

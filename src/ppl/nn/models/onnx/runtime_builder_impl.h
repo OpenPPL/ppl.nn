@@ -24,7 +24,6 @@
 #include "ppl/nn/engines/engine_impl.h"
 #include "ppl/nn/utils/shared_resource.h"
 #include "ppl/nn/runtime/runtime.h"
-#include "ppl/nn/runtime/runtime_options.h"
 #include "ppl/nn/runtime/runtime_graph_info.h"
 #include "ppl/nn/runtime/runtime_aux_info.h"
 
@@ -35,7 +34,7 @@ public:
     RuntimeBuilderImpl();
     ~RuntimeBuilderImpl();
     ppl::common::RetCode Init(const char* model_buf, size_t buf_len, std::vector<EngineImpl*>&&);
-    Runtime* CreateRuntime(const RuntimeOptions&) override;
+    Runtime* CreateRuntime() override;
 
 private:
     ir::Graph graph_;

@@ -1,3 +1,7 @@
+if(NOT PPLNN_USE_X86_64)
+    return()
+endif()
+
 find_package(OpenCV QUIET)
 if (NOT OpenCV_FOUND)
     message(WARNING "OpenCV not found. Samples need opencv will not be built!")

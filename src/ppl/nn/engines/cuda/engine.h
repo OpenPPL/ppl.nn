@@ -22,10 +22,9 @@
 
 #include "ppl/common/types.h"
 #include "ppl/nn/engines/engine_impl.h"
-#include "ppl/nn/engines/cuda/cuda_options.h"
+#include "ppl/nn/engines/cuda/cuda_engine_options.h"
 #include "ppl/nn/engines/cuda/buffered_cuda_device.h"
 #include "ppl/nn/quantization/quant_param_parser.h"
-#include "ppl/nn/runtime/runtime_options.h"
 
 using namespace std;
 
@@ -49,7 +48,7 @@ public:
     CudaEngine() : EngineImpl("cuda") {}
     ppl::common::RetCode Init(const CudaEngineOptions& options);
     ppl::common::RetCode Configure(uint32_t, ...) override;
-    EngineContext* CreateEngineContext(const std::string& graph_name, const EngineContextOptions&) override;
+    EngineContext* CreateEngineContext(const std::string& graph_name) override;
     bool CanRunOp(const ir::Node*) const override;
     ppl::common::RetCode ProcessGraph(utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*) override;
 
@@ -73,6 +72,7 @@ private:
 private:
     BufferedCudaDevice device_;
     CudaArgs cuda_flags_;
+    CudaEngineOptions options_;
 };
 
 }}} // namespace ppl::nn::cuda

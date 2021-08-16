@@ -20,15 +20,16 @@
 
 #include "ppl/nn/engines/engine_impl.h"
 #include "ppl/nn/engines/x86/x86_device.h"
-#include "ppl/nn/engines/x86/x86_options.h"
+#include "ppl/nn/engines/x86/x86_engine_options.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
 class X86Engine final : public EngineImpl {
 public:
     X86Engine();
+    ppl::common::RetCode Init(const X86EngineOptions&);
     ppl::common::RetCode Configure(uint32_t, ...) override;
-    EngineContext* CreateEngineContext(const std::string& graph_name, const EngineContextOptions&) override;
+    EngineContext* CreateEngineContext(const std::string& graph_name) override;
     bool CanRunOp(const ir::Node*) const override;
     ppl::common::RetCode ProcessGraph(utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*) override;
 
@@ -47,6 +48,7 @@ private:
 
 private:
     X86Device device_;
+    X86EngineOptions options_;
 };
 
 }}} // namespace ppl::nn::x86

@@ -19,12 +19,14 @@
 #define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
 
 #include "ppl/nn/common/common.h"
+#include "ppl/nn/engines/cuda/cuda_options.h"
 #include <stdint.h>
 
 namespace ppl { namespace nn {
 
 struct PPLNN_PUBLIC CudaEngineOptions final {
     uint32_t device_id = 0;
+    uint32_t mm_policy = CUDA_MM_COMPACT;
 };
 
 }} // namespace ppl::nn
