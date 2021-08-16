@@ -66,6 +66,12 @@ uint64_t PPLCUDAConvolutionGetRuntimeBufSize(
         unsigned int splitf,
         uint64_t workspace = ((uint64_t)8)*1024*1024*1024);
 
+ppl::common::RetCode PPLCUDAConvolutionQuickSelectKernel(
+        ppl::common::datatype_t type,
+        float cash_miss,
+        algo_param_t &algo_param,
+        conv_param_t &conv_param);
+
 ppl::common::RetCode PPLCUDAConvolutionSelectKernel(
         cudaStream_t &stream, 
         ppl::common::datatype_t type,
