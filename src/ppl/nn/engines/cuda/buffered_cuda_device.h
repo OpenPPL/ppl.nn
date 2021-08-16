@@ -30,7 +30,7 @@ class BufferedCudaDevice final : public CudaDevice {
 public:
     ~BufferedCudaDevice();
 
-    ppl::common::RetCode Init(const CudaEngineOptions& options, const MemoryManagementPolicy& mm_policy);
+    ppl::common::RetCode Init(const CudaEngineOptions& options, MemoryManagementPolicy mm_policy);
 
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc*) override;
     void Free(BufferDesc*) override;

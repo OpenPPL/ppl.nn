@@ -30,7 +30,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 #define DEFAULT_BLOCK_SIZE 1048576
 
-RetCode BufferedCudaDevice::Init(const CudaEngineOptions& options, const MemoryManagementPolicy& mm_policy) {
+RetCode BufferedCudaDevice::Init(const CudaEngineOptions& options, MemoryManagementPolicy mm_policy) {
     this->InitDevice(options);
 
     if (mm_policy == MM_BETTER_PERFORMANCE) {

@@ -32,7 +32,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 RetCode CudaEngine::Init(const CudaEngineOptions& options) {
     // TODO implement other options
-    return device_.Init(options, MM_LESS_MEMORY);
+    return device_.Init(options, MM_BETTER_PERFORMANCE);
 }
 
 EngineContext* CudaEngine::CreateEngineContext(const string&, const EngineContextOptions& options) {

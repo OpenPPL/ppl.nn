@@ -27,13 +27,13 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode CudaEngineContext::Init(const CudaEngineOptions& cuda_options, const EngineContextOptions& options) {
-    if (options.mm_policy != MM_LESS_MEMORY) {
-        LOG(WARNING) << "unsupported mm policy[" << options.mm_policy << "]. CudaEngine supports MM_LESS_MEMORY only."
-                     << " mm policy will be MM_LESS_MEMORY.";
+    if (options.mm_policy != MM_BETTER_PERFORMANCE) {
+        LOG(WARNING) << "unsupported mm policy[" << options.mm_policy << "]. CudaEngine supports MM_BETTER_PERFORMANCE only."
+                     << " mm policy will be MM_BETTER_PERFORMANCE.";
     }
 
     // TODO implement other options
-    auto status = device_.Init(cuda_options, MM_LESS_MEMORY);
+    auto status = device_.Init(cuda_options, MM_BETTER_PERFORMANCE);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init BufferedCudaDevice failed: " << GetRetCodeStr(status);
         return status;
