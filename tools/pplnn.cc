@@ -94,6 +94,12 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     CudaEngineOptions options;
     options.device_id = g_flag_device_id;
 
+    if (g_flag_mm_policy == "perf") {
+        options.mm_policy = CUDA_MM_BEST_FIT;
+    } else if (g_flag_mm_policy == "mem") {
+        options.mm_policy = CUDA_MM_COMPACT;
+    }
+
     auto cuda_engine = CudaEngineFactory::Create(options);
     if (!cuda_engine) {
         return false;
@@ -126,6 +132,12 @@ Define_bool_opt("--core-binding", g_flag_core_binding, false, "core binding");
 #include "ppl/kernel/x86/common/threading_tools.h"
 static inline bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
     X86EngineOptions options;
+    if (g_flag_mm_policy == "perf") {
+        options.mm_policy = X86_MM_MRU;
+    } else if (g_flag_mm_policy == "mem") {
+        options.mm_policy = X86_MM_COMPACT;
+    }
+
     auto x86_engine = X86EngineFactory::Create(options);
     if (g_flag_disable_avx512) {
         x86_engine->Configure(ppl::nn::X86_CONF_DISABLE_AVX512);
