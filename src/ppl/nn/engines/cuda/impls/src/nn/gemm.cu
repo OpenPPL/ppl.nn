@@ -398,7 +398,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
     ppl::common::RetCode status = ppl::common::RC_SUCCESS;
     if(M == 1){
         status = PPLCUDAGemvForwardImp<__half>(stream,
-                    M, N, K,
+                    M, N_pad, K_pad,
                     input, weight, bias,
                     (void*)final_out,
                     param, temp_buffer, fuse_param);
@@ -743,8 +743,8 @@ template<typename T>
 ppl::common::RetCode PPLCUDAGemvForwardImp(
     const cudaStream_t &stream,
     const int M,
-    const int N,
-    const int K,
+    const int padN,
+    const int padK,
     const void* input,
     const void* weight,
     const void* bias,
@@ -759,17 +759,17 @@ ppl::common::RetCode PPLCUDAGemvForwardImp(
     constexpr int expect_blocks = 64;
     //constexpr int MAX_BLK_SIZE = 256;
     //constexpr int MAX_THD_TILE_N_V4 = 4;
-    int n_v4 = N / ELEM_NUM_PR_LD;
+    int n_v4 = padN / ELEM_NUM_PR_LD;
     int blk_tile_n_v4 = DivUp(n_v4, expect_blocks/M);
 #define LAUNCH_KERNEL(){ \
     constexpr int BLK_TILE_N = BLK_SIZE_Y * THD_TILE_N_V4 * ELEM_NUM_PR_LD; \
     constexpr int BLK_SIZE = BLK_SIZE_Y * BLK_SIZE_X; \
     dim3 grid; \
-    grid.x = DivUp(N, BLK_TILE_N); \
+    grid.x = DivUp(padN, BLK_TILE_N); \
     grid.y = 1;    grid.z = 1; \
     dim3 threads = dim3(BLK_SIZE_X, BLK_SIZE_Y,1); \
     gemv<T, BLK_TILE_N, THD_TILE_N_V4, BLK_SIZE><<<grid, threads, 0, stream>>>\
-    	(output, input, weight, bias, K, N, fuse_param); \
+    	(output, input, weight, bias, padK, padN, fuse_param); \
 }
 #define CONFIG_KERNEL(_blk_tile_n_v4){ \
     if(BLK_SIZE_X <= 64 && blk_tile_n_v4 >= 16){ \
@@ -794,7 +794,7 @@ ppl::common::RetCode PPLCUDAGemvForwardImp(
         LAUNCH_KERNEL(); \
     } \
 }
-    if (K >= 512){
+    if (padK >= 512){
         constexpr int BLK_SIZE_X = 64;
         CONFIG_KERNEL(blk_tile_n_v4);
     }
