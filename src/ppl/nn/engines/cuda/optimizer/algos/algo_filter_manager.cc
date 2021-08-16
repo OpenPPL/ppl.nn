@@ -36,6 +36,7 @@ const AlgoFilter* AlgoFilterManager::FindKernel(const std::string& type) const {
 
 AlgoFilterManager::AlgoFilterManager() {
     REGISTER_ALGO_FILTER_INFO("Conv", turing_hmma_imp_);
+    REGISTER_ALGO_FILTER_INFO("Conv", turing_imma_imp_);
     REGISTER_ALGO_FILTER_INFO("Conv", depthwise_direct_imp_);
     REGISTER_ALGO_FILTER_INFO("Bridge", bridge_imp_);
     REGISTER_ALGO_FILTER_INFO("Concat", concat_imp_);

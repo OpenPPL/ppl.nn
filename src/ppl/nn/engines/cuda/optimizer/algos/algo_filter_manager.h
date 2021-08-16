@@ -62,6 +62,7 @@ private:
     DepthwiseDirect depthwise_direct_imp_;
     GemmAlgorithm gemm_imp_;
     NormalAlgorithm normal_imp_;
+    TuringIMMAImpgemm turing_imma_imp_;
     TuringHMMAImpgemm turing_hmma_imp_;
 };
 

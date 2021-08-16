@@ -56,6 +56,23 @@ class TuringHMMAImpgemm final : public ConvAlgorithm {
 public:
     void GetAttrParam(void*& param) override;
     void DeleteAttrParam(void*& param) override;
+    const bool IsSupported(const ir::Node* node, const OptKernelOptions& options) override;
+    const double ExcuteTimer(ir::Node* node, OptKernelOptions& options) override;
+    RetCode ModifyParam(const ir::Node* node, OptKernelOptions& options) override;
+    void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
+                        dataformat_t input_format, dataformat_t output_format) override;
+
+private:
+    CudaConvParam attr_param_;
+    std::map<nodeid_t, SelectionInfo> selection_res_;
+};
+
+class TuringIMMAImpgemm final : public ConvAlgorithm {
+public:
+    int MAX_INT8 = 127;
+    void GetAttrParam(void*& param) override;
+    void DeleteAttrParam(void*& param) override;
+    const bool IsSupported(const ir::Node* node, const OptKernelOptions& options) override;
     const double ExcuteTimer(ir::Node* node, OptKernelOptions& options) override;
     RetCode ModifyParam(const ir::Node* node, OptKernelOptions& options) override;
     void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
@@ -70,6 +87,7 @@ class DepthwiseDirect final : public ConvAlgorithm {
 public:
     void GetAttrParam(void*& param) override;
     void DeleteAttrParam(void*& param) override;
+    const bool IsSupported(const ir::Node* node, const OptKernelOptions& options) override;
     const double ExcuteTimer(ir::Node* node, OptKernelOptions& options) override;
     RetCode ModifyParam(const ir::Node* node, OptKernelOptions& options) override;
     void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
