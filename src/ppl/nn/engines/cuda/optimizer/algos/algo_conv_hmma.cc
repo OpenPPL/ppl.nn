@@ -60,18 +60,19 @@ const double TuringHMMAImpgemm::ExcuteTimer(ir::Node* node, OptKernelOptions& op
         return ALGO_INVALID_TIME;
     }
 
-    if (options.args->quick_select) {
-        return 0.0f;
-    }
-
     conv_param_t temp_conv_param;
-    fuse_param_t temp_fuse_param;
-
+    fuse_param_t temp_fuse_param;    
     auto shape_in0 = options.tensors->find(node->GetInput(0))->second->GetShape();
     auto shape_in1 = options.tensors->find(node->GetInput(1))->second->GetShape();
     auto shape_in2 = TensorShape();
     auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
+    ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_.param, temp_conv_param);
+    ConvertToEmptyFuseParam(temp_fuse_param);
+
+    if (options.args->quick_select) {
+        return 0.0f;
+    }
 
     // input H or W is too small
     if (shape_in0.GetDim(2) + 2 * temp_conv_param.pad_height < shape_in1.GetDim(2) ||
@@ -79,9 +80,6 @@ const double TuringHMMAImpgemm::ExcuteTimer(ir::Node* node, OptKernelOptions& op
         shape_in0.SetDim(2, shape_in1.GetDim(2));
         shape_in0.SetDim(3, shape_in1.GetDim(3));
     }
-
-    ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_.param, temp_conv_param);
-    ConvertToEmptyFuseParam(temp_fuse_param);
 
     // Padding
     shape_in0.SetDim(1, shape_in1.GetDim(1) * attr_param_.param.group);
