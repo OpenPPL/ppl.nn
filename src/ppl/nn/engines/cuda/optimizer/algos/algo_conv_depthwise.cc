@@ -40,6 +40,22 @@ void DepthwiseDirect::GetAttrParam(void*& param) {
     return;
 }
 
+const bool DepthwiseDirect::IsSupported(const ir::Node* node, const OptKernelOptions& options) {
+    this->attr_param_ = *(reinterpret_cast<CudaConvParam*>(options.param));
+    // check if conv is depthwise
+    auto tensor1 = options.tensors->find(node->GetInput(1))->second->GetShape();
+    if ((uint32_t)attr_param_.param.group != tensor1.GetDim(0) || tensor1.GetDim(1) != 1 ||
+        (uint32_t)attr_param_.param.group == 1) {
+        return false;
+    }
+    // check if conv is quantization
+    auto quant0 = options.quants->at(node->GetInput(0));
+    if (quant0.type != DATATYPE_UNKNOWN) {
+        return false;
+    }
+    return true;
+}
+
 const double DepthwiseDirect::ExcuteTimer(ir::Node* node, OptKernelOptions& options) {
     this->attr_param_ = *(reinterpret_cast<CudaConvParam*>(options.param));
     attr_param_.extra_param.algo_info.algo_type = "DepthwiseDirect";
@@ -50,13 +66,6 @@ const double DepthwiseDirect::ExcuteTimer(ir::Node* node, OptKernelOptions& opti
     if (pair != selection_res_.end()) {
         attr_param_.extra_param.algo_info.kernel_index = pair->second.kernel_index;
         return pair->second.timer;
-    }
-
-    // check if conv is depthwise
-    auto tensor1 = options.tensors->find(node->GetInput(1))->second->GetShape();
-    if ((uint32_t)attr_param_.param.group != tensor1.GetDim(0) || tensor1.GetDim(1) != 1 ||
-        (uint32_t)attr_param_.param.group == 1) {
-        return ALGO_INVALID_TIME;
     }
 
     conv_param_t temp_conv_param;
@@ -181,6 +190,8 @@ RetCode DepthwiseDirect::ModifyParam(const ir::Node* node, OptKernelOptions& opt
 
         options.info->constants.emplace(preedge_id, std::move(constant_info));
         options.tensors->find(preedge_id)->second->GetShape() = postshape;
+        options.quants->at(preedge_id).format = postshape.GetDataFormat();
+        options.quants->at(preedge_id).type = postshape.GetDataType();
     }
 
     reinterpret_cast<CudaConvParam*>(options.param)->extra_param.algo_info.is_initializer_weight =

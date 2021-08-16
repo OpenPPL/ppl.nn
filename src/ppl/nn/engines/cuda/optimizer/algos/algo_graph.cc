@@ -76,8 +76,10 @@ RetCode AlgoGraph::CreateNode(ir::Node* node, CudaOptKernel* kernel) {
     std::vector<AlgoNode*> temp_vect;
     for (auto it = formats.begin(); it != formats.end(); ++it) {
         AlgoNode* algo_node = new AlgoNode();
+        // initialize algo_node
         algo_node->node = node;
         algo_node->input_format = it->first;
+        algo_node->selected_algo = algo_filter->GetAlgo(0);
         kernel->CopyParam(algo_node->param);
 
         // initialize shortest time
@@ -121,7 +123,8 @@ RetCode AlgoGraph::UpdateNode(ir::Node* node, OptKernelOptions& options) {
                 pre_algo_filter = algo_filter_manager->FindKernel("Normal");
             }
             auto pre_formats = pre_algo_filter->GetAlgo(0)->Getformats(pre_node->GetType().name);
-
+            
+            bool at_least_one_algo = false;
             for (auto pre_it = pre_vect.begin(); pre_it != pre_vect.end(); ++pre_it) {
                 auto sum_time = GetSumTime(*pre_it);
                 auto consumer_count = GetConsumerCount(*pre_it, options.graph);
@@ -131,12 +134,15 @@ RetCode AlgoGraph::UpdateNode(ir::Node* node, OptKernelOptions& options) {
                     if (output_formats.find((*it)->input_format) == output_formats.end()) {
                         continue;
                     }
-
+                    options.param = (*pre_it)->param;
                     for (uint32_t j = 0; j < pre_algo_filter->GetAlgoCount(); ++j) {
-                        Algorithm* temp_algo = pre_algo_filter->GetAlgo(j);
+                        Algorithm* temp_algo = pre_algo_filter->GetAlgo(j);    
+                        if (!temp_algo->IsSupported(pre_node, options)) {
+                            continue;
+                        }
+                        at_least_one_algo = true;
                         temp_algo->ReshapeOnEdges(pre_node, options.tensors, (*pre_it)->input_format,
                                                   (*it)->input_format);
-                        options.param = (*pre_it)->param;
                         auto timer = (temp_algo->ExcuteTimer(pre_node, options) + sum_time) / consumer_count;
 
                         if ((*it)->shortest_time[i] > timer) {
@@ -145,8 +151,12 @@ RetCode AlgoGraph::UpdateNode(ir::Node* node, OptKernelOptions& options) {
                             (*pre_it)->selected_algo = temp_algo;
                             temp_algo->GetAttrParam((*pre_it)->param);
                         }
-                    }
+                    }        
                 }
+            }
+            if (!at_least_one_algo) {
+                LOG(ERROR) << "Can not find any supported algo for node[" << pre_node->GetName() << "].";
+                return RC_UNSUPPORTED;
             }
         }
     }

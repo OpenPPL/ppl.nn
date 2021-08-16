@@ -28,7 +28,6 @@
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 
 #define ALGO_MAX_TIME (3.0e+10)
-#define ALGO_INVALID_TIME (3.0e+11)
 
 #define ALLOC_BUFFERF_FOR_ALGO_SELECT(buffer_name, size, callback)                           \
     BufferDesc buffer_name;                                                                  \
@@ -45,13 +44,13 @@ namespace ppl { namespace nn { namespace cuda {
 
 class Algorithm {
 public:
-    virtual const bool IsRepeatable() {
+    virtual const bool IsRepeatable(OptKernelOptions& options) {
         return true;
     }
-    virtual const bool IsSupported() {
+    virtual const bool IsSupported(const ir::Node* node, const OptKernelOptions& options) {
         return true;
     }
-    virtual const bool CanSupportDynamic() {
+    virtual const bool CanSupportDynamic(OptKernelOptions& options) {
         return true;
     }
 
