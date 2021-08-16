@@ -34,17 +34,25 @@ RetCode MaxUnPoolOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_type_func_ = [this](InputOutputInfo* info, datatype_t type) -> RetCode {
-        if (type == ppl::common::DATATYPE_UNKNOWN)
-            type = ppl::common::DATATYPE_FLOAT16;
-        auto status = InferDefaultType(info, type);
+    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+        type = ppl::common::DATATYPE_FLOAT16;
         auto shape1 = &info->GetInput<TensorImpl>(1)->GetShape();
         shape1->SetDataType(DATATYPE_INT64);
         if (info->GetInputCount() > 2) {
             auto shape2 = &info->GetInput<TensorImpl>(2)->GetShape();
             shape2->SetDataType(DATATYPE_INT64);
         }
-        return status;
+        if (type == DATATYPE_UNKNOWN) {
+            if (!CheckOpQuant(info, quant)) {
+                return InferInheritedType(info);
+            }
+        } else if (type == DATATYPE_INT8) {
+            if (!CheckOpQuant(info, quant)) {
+                LOG(ERROR) << "Set quantization for node[" << this->GetNode()->GetName() << "] failed.";
+                return RC_INVALID_VALUE;
+            }
+        }
+        return InferDefaultType(info, type);
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {

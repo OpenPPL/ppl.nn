@@ -34,8 +34,18 @@ RetCode ConcatOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_type_func_ = [this](InputOutputInfo* info, datatype_t type) -> RetCode {
-        return type != DATAFORMAT_UNKNOWN ? InferDefaultType(info, type) : InferHighestType(info);
+    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+        if (type == DATATYPE_UNKNOWN) {
+            if (!SetOpAllInputQuant(info, quant)) {
+                return InferHighestType(info);
+            }
+        } else if (type == DATATYPE_INT8) {
+            if (!SetOpAllInputQuant(info, quant)) {
+                LOG(ERROR) << "Set quantization for node[" << this->GetNode()->GetName() << "] failed.";
+                return RC_INVALID_VALUE;
+            }
+        }
+        return InferDefaultType(info, type);
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {

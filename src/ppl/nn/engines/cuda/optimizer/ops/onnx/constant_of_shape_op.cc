@@ -34,7 +34,7 @@ RetCode ConstantOfShapeOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_type_func_ = [this](InputOutputInfo* info, datatype_t type) -> RetCode {
+    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         auto output = &info->GetOutput<TensorImpl>(0)->GetShape();
         output->SetDataType(param_.data_type);
         return RC_SUCCESS;

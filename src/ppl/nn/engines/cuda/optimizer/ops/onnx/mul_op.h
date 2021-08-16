@@ -30,7 +30,7 @@ public:
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
 private:
-    uint64_t mask = 0;
+    uint64_t mask_ = 0;
 };
 
 }}} // namespace ppl::nn::cuda

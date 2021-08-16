@@ -25,9 +25,8 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode CudaOptKernel::SetCommonParam(const OptKernelOptions& options) {
+    common_param_.cuda_tensor_info = options.quants;
     auto node = GetNode();
-
-    common_param_.output_tensor_info.resize(node->GetOutputCount());
     for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
         auto edge_id = node->GetOutput(i);
         auto iter = options.tensors->find(edge_id);
@@ -35,10 +34,10 @@ RetCode CudaOptKernel::SetCommonParam(const OptKernelOptions& options) {
             LOG(ERROR) << "can not find edge " << edge_id;
             return RC_NOT_FOUND;
         }
-        common_param_.output_tensor_info[i].data_format = iter->second->GetShape().GetDataFormat();
-        common_param_.output_tensor_info[i].data_type = iter->second->GetShape().GetDataType();
+        auto& temp_tensor = common_param_.cuda_tensor_info->at(edge_id);
+        temp_tensor.format = iter->second->GetShape().GetDataFormat();
+        temp_tensor.type = iter->second->GetShape().GetDataType();
     }
-
     return RC_SUCCESS;
 }
 

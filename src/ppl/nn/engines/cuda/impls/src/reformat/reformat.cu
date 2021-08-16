@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include <float.h>
+
 #include "cudakernel/reformat/reformat.h"
 #include "cudakernel/common/common.h"
 #include "cudakernel/common/divmod_fast.h"
@@ -114,6 +116,80 @@ __global__ void cuda_kernel_cvtformat<type, NHWC_NDARRAY>(                      
     cvtNHWCTONC(char)
     cvtNHWCTONC(double)
 
+
+
+#define cvtN4CXTONC(type)                                                                                              \
+template <>                                                                                                            \
+__global__ void cuda_kernel_cvtformat<type, N4CX_NDARRAY>(                                                             \
+    type * input,                                                                                                      \
+    type * output,                                                                                                     \
+    ReFormatParam param)                                                                                               \
+{                                                                                                                      \
+    const uint64_t tid = blockIdx.x * blockDim.x + threadIdx.x;                                                        \
+    if (tid >= param.n_inner)                                                                                          \
+        return;                                                                                                        \
+    const uint64_t inner_idx = tid;                                                                                    \
+    const uint64_t num_inner = blockIdx.z;                                                                             \
+    const uint64_t c4_idx    = blockIdx.y;                                                                             \
+    _Pragma("unroll 4") for (int c_in_c4_idx = 0; c_in_c4_idx < 4; c_in_c4_idx++)                                      \
+    {                                                                                                                  \
+        const uint64_t c_idx       = c4_idx * 4 + c_in_c4_idx;                                                         \
+        const uint64_t size        = param.n_inner;                                                                    \
+        const uint64_t padChannels = gridDim.y * 4;                                                                    \
+        const uint64_t numChannels = param.channel;                                                                    \
+        if (c_idx < numChannels) {                                                                                     \
+            const uint64_t offset    = num_inner * padChannels * size + (c4_idx * size + inner_idx) * 4 + c_in_c4_idx; \
+            const uint64_t outOffset = num_inner * numChannels * size + c_idx * size + inner_idx;                      \
+            output[outOffset]        = input[offset];                                                                  \
+        }                                                                                                              \
+    }                                                                                                                  \
+}
+
+#if __CUDACC_VER_MAJOR__ >= 9
+    cvtN4CXTONC(half)
+#endif
+    cvtN4CXTONC(float)
+    cvtN4CXTONC(char)
+    cvtN4CXTONC(double)
+
+
+
+#define cvtNCTON4CX(type)                                                                                             \
+template <>                                                                                                           \
+__global__ void cuda_kernel_cvtformat<type, NDARRAY_N4CX>(                                                            \
+    type * input,                                                                                                     \
+    type * output,                                                                                                    \
+    ReFormatParam param)                                                                                              \
+{                                                                                                                     \
+    const uint64_t tid = blockIdx.x * blockDim.x + threadIdx.x;                                                       \
+    if (tid >= param.n_inner)                                                                                         \
+        return;                                                                                                       \
+    const uint64_t inner_idx = tid;                                                                                   \
+    const uint64_t num_inner = blockIdx.z;                                                                            \
+    const uint64_t c4_idx    = blockIdx.y;                                                                            \
+    _Pragma("unroll 4") for (int c_in_c4_idx = 0; c_in_c4_idx < 4; c_in_c4_idx++)                                     \
+    {                                                                                                                 \
+        const uint64_t c_idx       = c4_idx * 4 + c_in_c4_idx;                                                        \
+        const uint64_t size        = param.n_inner;                                                                   \
+        const uint64_t padChannels = gridDim.y * 4;                                                                   \
+        const uint64_t numChannels = param.channel;                                                                   \
+        if (c_idx < numChannels) {                                                                                    \
+            const uint64_t offset   = num_inner * padChannels * size + (c4_idx * size + inner_idx) * 4 + c_in_c4_idx; \
+            const uint64_t inOffset = num_inner * numChannels * size + c_idx * size + inner_idx;                      \
+            output[offset]          = input[inOffset];                                                                \
+        }                                                                                                             \
+    }                                                                                                                 \
+}
+
+#if __CUDACC_VER_MAJOR__ >= 9
+    cvtNCTON4CX(half)
+#endif
+    cvtNCTON4CX(float)
+    cvtNCTON4CX(char)
+    cvtNCTON4CX(double)
+
+
+
 template <typename T, CVTFormatMode mode>
 __global__ void cuda_kernel_small_channel_cvtformat(
     T* input,
@@ -202,6 +278,79 @@ __global__ void cuda_kernel_small_channel_cvtformat<type, NHWC_NDARRAY>(        
     cvtSMCHANNELNHWCTONC(double)
 
 
+
+#define cvtSMCHANNELN4CXTONC(type)                                                                               \
+template <>                                                                                                      \
+__global__ void cuda_kernel_small_channel_cvtformat<type, N4CX_NDARRAY>(                                         \
+    type * input,                                                                                                \
+    int num_elems,                                                                                               \
+    DivModFast inner_fast,                                                                                       \
+    DivModFast src_pad_fast,                                                                                     \
+    DivModFast dst_pad_fast,                                                                                     \
+    type* output,                                                                                                \
+    ReFormatParam param)                                                                                         \
+{                                                                                                                \
+    const int tid = blockIdx.x * blockDim.x + threadIdx.x;                                                       \
+    if (tid >= num_elems)                                                                                        \
+        return;                                                                                                  \
+    int inner_idx, num_inner, c_idx;                                                                             \
+    inner_fast.divmod(tid, num_inner, inner_idx);                                                                \
+    src_pad_fast.divmod(num_inner, num_inner, c_idx);                                                            \
+    const int c4_idx           = c_idx / 4;                                                                      \
+    const int c_in_c4_idx      = c_idx % 4;                                                                      \
+    const uint64_t size        = param.n_inner;                                                                  \
+    const uint64_t padChannels = param.src_pad;                                                                  \
+    const uint64_t numChannels = param.channel;                                                                  \
+    const uint64_t offset      = num_inner * padChannels * size + (c4_idx * size + inner_idx) * 4 + c_in_c4_idx; \
+    const uint64_t outOffset   = num_inner * numChannels * size + c_idx * size + inner_idx;                      \
+    output[outOffset]          = input[offset];                                                                  \
+}
+
+#if __CUDACC_VER_MAJOR__ >= 9
+    cvtSMCHANNELN4CXTONC(half)
+#endif
+    cvtSMCHANNELN4CXTONC(float)
+    cvtSMCHANNELN4CXTONC(char)
+    cvtSMCHANNELN4CXTONC(double)
+
+
+
+#define cvtSMCHANNELNCTON4CX(type)                                                                               \
+template <>                                                                                                      \
+__global__ void cuda_kernel_small_channel_cvtformat<type, NDARRAY_N4CX>(                                         \
+    type * input,                                                                                                \
+    int num_elems,                                                                                               \
+    DivModFast inner_fast,                                                                                       \
+    DivModFast src_pad_fast,                                                                                     \
+    DivModFast dst_pad_fast,                                                                                     \
+    type* output,                                                                                                \
+    ReFormatParam param)                                                                                         \
+{                                                                                                                \
+    const int tid = blockIdx.x * blockDim.x + threadIdx.x;                                                       \
+    if (tid >= num_elems)                                                                                        \
+        return;                                                                                                  \
+    int inner_idx, num_inner, c_idx;                                                                             \
+    inner_fast.divmod(tid, num_inner, inner_idx);                                                                \
+    src_pad_fast.divmod(num_inner, num_inner, c_idx);                                                            \
+    const int c4_idx           = c_idx / 4;                                                                      \
+    const int c_in_c4_idx      = c_idx % 4;                                                                      \
+    const uint64_t size        = param.n_inner;                                                                  \
+    const uint64_t padChannels = param.dst_pad;                                                                  \
+    const uint64_t numChannels = param.channel;                                                                  \
+    const uint64_t offset      = num_inner * padChannels * size + (c4_idx * size + inner_idx) * 4 + c_in_c4_idx; \
+    const uint64_t inOffset    = num_inner * numChannels * size + c_idx * size + inner_idx;                      \
+    output[offset]             = input[inOffset];                                                                \
+}
+
+#if __CUDACC_VER_MAJOR__ >= 9
+    cvtSMCHANNELNCTON4CX(half)
+#endif
+    cvtSMCHANNELNCTON4CX(float)
+    cvtSMCHANNELNCTON4CX(char)
+    cvtSMCHANNELNCTON4CX(double)
+
+
+
 #define MAX_DIM 65533
 template<CVTFormatMode mode>
 void GenDimParam(
@@ -209,17 +358,27 @@ void GenDimParam(
     dim3& dimBlock,
     dim3& dimGrid)
 {
-    dimBlock.x = DIM;
-    dimBlock.y = DIM;
-
     dimGrid.z = param.n_outer >= MAX_DIM ? MAX_DIM : param.n_outer;
-    if (mode == NHWC_NDARRAY){
-        dimGrid.x = DivUp(param.src_pad, DIM);
-        dimGrid.y = DivUp(param.n_inner, DIM);
-    }
-    else if (mode == NDARRAY_NHWC) {
-        dimGrid.x = DivUp(param.n_inner, DIM);
-        dimGrid.y = DivUp(param.dst_pad, DIM);
+    if (mode == NHWC_NDARRAY) {
+        dimBlock.x = DIM;
+        dimBlock.y = DIM;
+        dimGrid.x  = DivUp(param.src_pad, DIM);
+        dimGrid.y  = DivUp(param.n_inner, DIM);
+    } else if (mode == NDARRAY_NHWC) {
+        dimBlock.x = DIM;
+        dimBlock.y = DIM;
+        dimGrid.x  = DivUp(param.n_inner, DIM);
+        dimGrid.y  = DivUp(param.dst_pad, DIM);
+    } else if (mode == N4CX_NDARRAY) {
+        dimBlock.x = DIM;
+        dimBlock.y = 1;
+        dimGrid.x  = DivUp(param.n_inner, DIM);
+        dimGrid.y  = param.src_pad / 4;
+    } else if (mode == NDARRAY_N4CX) {
+        dimBlock.x = DIM;
+        dimBlock.y = 1;
+        dimGrid.x  = DivUp(param.n_inner, DIM);
+        dimGrid.y  = param.dst_pad / 4;
     } else {
 
     }
@@ -230,6 +389,12 @@ void GenDimParam(
         RUN(NDARRAY_NHWC);     \
     case NHWC_NDARRAY:         \
         RUN(NHWC_NDARRAY);
+
+#define RFN4CX             \
+    case NDARRAY_N4CX:     \
+        RUN(NDARRAY_N4CX); \
+    case N4CX_NDARRAY:     \
+        RUN(N4CX_NDARRAY);
 
 void PPLCUDANormalCVTFormat(cudaStream_t stream, const void *input, void *output, ReFormatParam param)
 {
@@ -263,6 +428,7 @@ void PPLCUDANormalCVTFormat(cudaStream_t stream, const void *input, void *output
 
     switch (GetCVTFormatMode(param)) {
         RFNHWC
+        RFN4CX
         default:
             return;
     }
@@ -308,6 +474,7 @@ void PPLCUDASmallChannelCVTFormat(cudaStream_t stream, const void *input, void *
 
     switch (GetCVTFormatMode(param)) {
         RFNHWC
+        RFN4CX
         default:
             return;
     }
@@ -321,7 +488,25 @@ void PPLCUDACVTFormat(
     ReFormatParam param)
 {
     if (param.channel < LEASTCHANNEL) {
-        PPLCUDASmallChannelCVTFormat(stream, input, output, param);
+        if (param.out_type == DATATYPE_INT8) {
+            auto host_in = new int8_t[param.in_elems];
+            auto host_out = new int8_t[param.out_elems];
+            cudaMemcpy(host_in, input, param.in_elems, cudaMemcpyDefault);
+            PPLCUDASmallChannelCVTFormat(stream, input, output, param);
+            cudaMemcpy(host_out, output, param.out_elems, cudaMemcpyDefault);
+            delete[] host_in;
+            delete[] host_out;
+        } else if (param.out_type == DATATYPE_FLOAT32) {
+            auto host_in = new float[param.in_elems];
+            auto host_out = new float[param.out_elems];
+            cudaMemcpy(host_in, input, 4 * param.in_elems, cudaMemcpyDefault);
+            PPLCUDASmallChannelCVTFormat(stream, input, output, param);
+            cudaMemcpy(host_out, output, 4 * param.out_elems, cudaMemcpyDefault);
+            delete[] host_in;
+            delete[] host_out;
+        } else {
+            PPLCUDASmallChannelCVTFormat(stream, input, output, param);
+        }
     } else
     {
         PPLCUDANormalCVTFormat(stream, input, output, param);
@@ -333,6 +518,15 @@ CVTFormatMode GetCVTFormatMode(ReFormatParam param)
         switch (param.out_format) {
             case DATAFORMAT_NHWC:
                 return NDARRAY_NHWC;
+            case DATAFORMAT_N4CX:
+                return NDARRAY_N4CX;
+            default:
+                return CVTFormatUnknown;
+        }
+    } else if (param.in_format == DATAFORMAT_N4CX) {
+        switch (param.out_format) {
+            case DATAFORMAT_NDARRAY:
+                return N4CX_NDARRAY;
             default:
                 return CVTFormatUnknown;
         }
@@ -421,6 +615,23 @@ CVTTypeMode GetCVTTypeMode(ReFormatParam param)
     return CVTTypeUnknown;
 }
 
+bool is_float_eq(const std::vector<float>& a, const std::vector<float>& b) {
+    if (a.size() != b.size()) {
+        return false;
+    }
+    for (uint32_t i = 0; i < a.size(); i++) {
+        if (fabs(a[0] - b[0]) > FLT_EPSILON) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool EqualQuant(const ppl::nn::cuda::CudaTensorQuant& quant_a, const ppl::nn::cuda::CudaTensorQuant& quant_b) {
+    return is_float_eq(quant_a.scale, quant_b.scale) &&
+           is_float_eq(quant_a.zero_point, quant_b.zero_point);
+}
+
 ppl::common::RetCode SetReLayoutParam(
     ReFormatParam *param,
     const TensorShape& input,
@@ -447,6 +658,24 @@ ppl::common::RetCode SetReLayoutParam(
     param->in_elems = input.GetElementsIncludingPadding();
     return RC_SUCCESS;
 
+}
+
+ppl::common::RetCode SetReLayoutParam(
+    ReFormatParam *param,
+    const TensorShape& input,
+    const ppl::nn::cuda::CudaTensorQuant& input_quant,
+    const TensorShape& output,
+    const ppl::nn::cuda::CudaTensorQuant& output_quant)
+{
+    SetReLayoutParam(param, input, output);
+    param->i_step = input_quant.scale[0];
+    param->i_zero_point = input_quant.zero_point[0];
+    param->o_step = output_quant.scale[0];
+    param->o_zero_point = output_quant.zero_point[0];
+    if (input_quant.type == output_quant.type) {
+        param->mix_type = EqualQuant(input_quant, output_quant);
+    }
+    return RC_SUCCESS;
 }
 
 void PPLCUDADataConvert(

@@ -41,6 +41,7 @@ public:
 
 private:
     ppl::common::RetCode InitKernels();
+    ppl::common::RetCode InitQuantization();
     ppl::common::RetCode UpdateDims();
     ppl::common::RetCode FuseOperator();
     ppl::common::RetCode AddBridgeKernels();
