@@ -104,7 +104,7 @@ enum CVTTypeMode {
     INT64_FLOAT32   = 18,
 };
 
-bool is_float_eq(const std::vector<float>& a, const std::vector<float>& b);
+bool IsFloatEqual(const std::vector<float>& a, const std::vector<float>& b);
 bool EqualQuant(const ppl::nn::cuda::CudaTensorQuant& quant_a, const ppl::nn::cuda::CudaTensorQuant& quant_b);
 
 CVTFormatMode GetCVTFormatMode(ReFormatParam param);

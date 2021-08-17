@@ -34,19 +34,33 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    // TODO (WJF)： use fp32 version temporally
     infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
-        type = ppl::common::DATATYPE_FLOAT16;
-        if (type == DATATYPE_UNKNOWN) {
-            if (!SetOpFirstInputQuant(info, quant)) {
-                return InferInheritedType(info);
-            }
-        } else if (type == DATATYPE_INT8) {
-            if (!SetOpFirstInputQuant(info, quant)) {
-                LOG(ERROR) << "Set quantization for node[" << this->GetNode()->GetName() << "] failed.";
+        if (type == DATATYPE_INT8) {
+            auto in_edge_id = info->GetInput<TensorImpl>(0)->GetEdge()->GetId();
+            auto& in_quant = quant->at(in_edge_id);
+            auto out_edge_id = info->GetOutput<TensorImpl>(0)->GetEdge()->GetId();
+            auto& out_quant = quant->at(out_edge_id);
+            if (in_quant.type != DATATYPE_INT8 || out_quant.type != DATATYPE_INT8) {
                 return RC_INVALID_VALUE;
             }
+            // Copy quant info skipping input0
+            for (uint32_t i = 1; i < info->GetInputCount(); ++i) {
+                auto in_edge_id = info->GetInput<TensorImpl>(i)->GetEdge()->GetId();
+                auto& in_quant = quant->at(in_edge_id);
+                auto in_shape = &info->GetInput<TensorImpl>(i)->GetShape();
+                if (i == 1 && in_quant.type != DATATYPE_UNKNOWN) {
+                    continue;
+                }
+                if (i == 2 && param_.param.bias_term) {
+                    in_shape->SetDataType(ppl::common::DATATYPE_FLOAT32);
+                    continue;
+                }
+                in_quant = out_quant;
+                in_shape->SetDataType(in_quant.type);
+            }
+            return ppl::common::RC_SUCCESS;
         }
+        type = ppl::common::DATATYPE_FLOAT16;
         return InferDefaultType(info, type);
     };
 

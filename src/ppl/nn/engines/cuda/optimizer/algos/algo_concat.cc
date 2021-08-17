@@ -21,7 +21,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-const double ConcatAlgorithm::ExcuteTimer(ir::Node* node, OptKernelOptions& options) {
+double ConcatAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& options) {
     auto shape = options.tensors->find(node->GetOutput(0))->second->GetShape();
     double timer = 1.0e-7 * shape.GetElementsIncludingPadding();
     return timer;

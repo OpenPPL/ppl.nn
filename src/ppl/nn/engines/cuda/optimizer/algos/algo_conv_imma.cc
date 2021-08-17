@@ -32,15 +32,14 @@ void TuringIMMAImpgemm::DeleteAttrParam(void*& param) {
     return;
 }
 
-void TuringIMMAImpgemm::GetAttrParam(void*& param) {
+void TuringIMMAImpgemm::GetAttrParam(void*& param) const {
     if (param == nullptr)
         param = new CudaConvParam();
     *(CudaConvParam*)param = attr_param_;
     return;
 }
 
-const bool TuringIMMAImpgemm::IsSupported(const ir::Node* node, const OptKernelOptions& options) {
-    this->attr_param_ = *(reinterpret_cast<CudaConvParam*>(options.param));
+bool TuringIMMAImpgemm::IsSupported(const ir::Node* node, const OptKernelOptions& options) const {
     // check if conv quant to INT8
     auto quant0 = options.quants->at(node->GetInput(0));
     if (quant0.type != DATATYPE_INT8) {
@@ -49,7 +48,7 @@ const bool TuringIMMAImpgemm::IsSupported(const ir::Node* node, const OptKernelO
     return true;
 }
 
-const double TuringIMMAImpgemm::ExcuteTimer(ir::Node* node, OptKernelOptions& options) {
+double TuringIMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& options) {
     this->attr_param_ = *(reinterpret_cast<CudaConvParam*>(options.param));
     attr_param_.extra_param.algo_info.algo_type = "TuringIMMAImpgemm";
     attr_param_.extra_param.algo_info.kernel_index = 0;

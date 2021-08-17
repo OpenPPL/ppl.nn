@@ -28,24 +28,27 @@ namespace ppl { namespace nn { namespace cuda {
 
 RetCode EqualOp::Init(const OptKernelOptions& options) {
     infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
-        auto in0_edge_id = info->GetInput<TensorImpl>(0)->GetEdge()->GetId();
-        auto& in0_quant = quant->at(in0_edge_id);
-        auto in1_edge_id = info->GetInput<TensorImpl>(1)->GetEdge()->GetId();
-        auto& in1_quant = quant->at(in1_edge_id);
-        if (in0_quant.type != ppl::common::DATATYPE_UNKNOWN && 
-            in1_quant.type != ppl::common::DATATYPE_UNKNOWN) { // Do quantization
-            in1_quant = in0_quant;            
-        } else if (in0_quant.type == ppl::common::DATATYPE_UNKNOWN) { // One of them has quant, change back to highest percesion.
-            auto& in0_shape = info->GetInput<TensorImpl>(0)->GetShape();
-            auto& in1_shape = info->GetInput<TensorImpl>(1)->GetShape();
+        auto& in0_shape = info->GetInput<TensorImpl>(0)->GetShape();
+        auto& in1_shape = info->GetInput<TensorImpl>(1)->GetShape();
+        auto& out_shape = info->GetOutput<TensorImpl>(0)->GetShape();
+        out_shape.SetDataType(DATATYPE_BOOL);
+        if (type == DATATYPE_INT8) {
+            auto in0_edge_id = info->GetInput<TensorImpl>(0)->GetEdge()->GetId();
+            auto& in0_quant = quant->at(in0_edge_id);
+            auto in1_edge_id = info->GetInput<TensorImpl>(1)->GetEdge()->GetId();
+            auto& in1_quant = quant->at(in1_edge_id);
+            if (in0_quant.type != DATATYPE_INT8 || in1_quant.type != DATATYPE_INT8) { // Do quantization
+                return RC_INVALID_VALUE;
+            }
+            in0_shape.SetDataType(DATATYPE_INT8);
+            in1_shape.SetDataType(DATATYPE_INT8);
+        }
+
+        if (in0_shape.GetDataType() != DATATYPE_INT8) {
             in1_shape.SetDataType(in0_shape.GetDataType());
-        } else if (in1_quant.type == ppl::common::DATATYPE_UNKNOWN) {
-            auto& in0_shape = info->GetInput<TensorImpl>(0)->GetShape();
-            auto& in1_shape = info->GetInput<TensorImpl>(1)->GetShape();
+        } else {
             in0_shape.SetDataType(in1_shape.GetDataType());
         }
-        auto shape = &info->GetOutput<TensorImpl>(0)->GetShape();
-        shape->SetDataType(DATATYPE_BOOL);
         return RC_SUCCESS;
     };
 

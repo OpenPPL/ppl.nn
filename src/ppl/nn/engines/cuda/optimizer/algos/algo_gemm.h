@@ -33,17 +33,17 @@ public:
         gemm_formats_.emplace(DATAFORMAT_NHWC, nhwc);
     }
 
-    const std::map<dataformat_t, std::set<dataformat_t>> Getformats(const std::string& type_name) override {
+    const std::map<dataformat_t, std::set<dataformat_t>> Getformats(const std::string& type_name) const override {
         return gemm_formats_;
     }
 
 public:
-    void GetAttrParam(void*& param) override;
+    void GetAttrParam(void*& param) const override;
     void DeleteAttrParam(void*& param) override;
-    const double ExcuteTimer(ir::Node* node, OptKernelOptions& options) override;
+    double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) override;
     RetCode ModifyParam(const ir::Node* node, OptKernelOptions& options) override;
     void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
-                        dataformat_t input_format, dataformat_t output_format) override;
+                                ppl::common::dataformat_t input_format, ppl::common::dataformat_t output_format) override;
 
 private:
     CudaGemmParam attr_param_;

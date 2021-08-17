@@ -38,13 +38,12 @@ RetCode MulOp::Init(const OptKernelOptions& options) {
 
     infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         if (type == DATATYPE_UNKNOWN) {
-            if (!SetOpFirstInputQuant(info, quant)) {
-                return InferHighestType(info, mask_);
-            }
+            return InferHighestType(info, mask_);
         } else if (type == DATATYPE_INT8) {
-            if (!SetOpFirstInputQuant(info, quant)) {
+            auto status = UnifyToOutputQuant(info, quant);
+            if (status != RC_SUCCESS) {
                 LOG(ERROR) << "Set quantization for node[" << this->GetNode()->GetName() << "] failed.";
-                return RC_INVALID_VALUE;
+                return status;
             }
         }
         return InferDefaultType(info, type);

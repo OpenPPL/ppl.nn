@@ -33,7 +33,7 @@ public:
         conv_formats_.emplace(DATAFORMAT_NHWC, nhwc);
     }
 
-    const std::map<dataformat_t, std::set<dataformat_t>> Getformats(const std::string& type_name) override {
+    const std::map<dataformat_t, std::set<dataformat_t>> Getformats(const std::string& type_name) const override {
         return conv_formats_;
     }
 
@@ -54,13 +54,13 @@ private:
 
 class TuringHMMAImpgemm final : public ConvAlgorithm {
 public:
-    void GetAttrParam(void*& param) override;
+    void GetAttrParam(void*& param) const override;
     void DeleteAttrParam(void*& param) override;
-    const bool IsSupported(const ir::Node* node, const OptKernelOptions& options) override;
-    const double ExcuteTimer(ir::Node* node, OptKernelOptions& options) override;
+    bool IsSupported(const ir::Node* node, const OptKernelOptions& options) const override;
+    double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) override;
     RetCode ModifyParam(const ir::Node* node, OptKernelOptions& options) override;
     void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
-                        dataformat_t input_format, dataformat_t output_format) override;
+                                ppl::common::dataformat_t input_format, ppl::common::dataformat_t output_format) override;
 
 private:
     CudaConvParam attr_param_;
@@ -70,13 +70,13 @@ private:
 class TuringIMMAImpgemm final : public ConvAlgorithm {
 public:
     int MAX_INT8 = 127;
-    void GetAttrParam(void*& param) override;
+    void GetAttrParam(void*& param) const override;
     void DeleteAttrParam(void*& param) override;
-    const bool IsSupported(const ir::Node* node, const OptKernelOptions& options) override;
-    const double ExcuteTimer(ir::Node* node, OptKernelOptions& options) override;
+    bool IsSupported(const ir::Node* node, const OptKernelOptions& options) const override;
+    double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) override;
     RetCode ModifyParam(const ir::Node* node, OptKernelOptions& options) override;
     void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
-                        dataformat_t input_format, dataformat_t output_format) override;
+                                ppl::common::dataformat_t input_format, ppl::common::dataformat_t output_format) override;
 
 private:
     CudaConvParam attr_param_;
@@ -85,13 +85,13 @@ private:
 
 class DepthwiseDirect final : public ConvAlgorithm {
 public:
-    void GetAttrParam(void*& param) override;
+    void GetAttrParam(void*& param) const override;
     void DeleteAttrParam(void*& param) override;
-    const bool IsSupported(const ir::Node* node, const OptKernelOptions& options) override;
-    const double ExcuteTimer(ir::Node* node, OptKernelOptions& options) override;
+    bool IsSupported(const ir::Node* node, const OptKernelOptions& options) const override;
+    double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) override;
     RetCode ModifyParam(const ir::Node* node, OptKernelOptions& options) override;
     void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
-                        dataformat_t input_format, dataformat_t output_format) override;
+                                ppl::common::dataformat_t input_format, ppl::common::dataformat_t output_format) override;
 
 private:
     CudaConvParam attr_param_;

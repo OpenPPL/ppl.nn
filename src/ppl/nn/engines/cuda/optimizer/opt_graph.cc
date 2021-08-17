@@ -315,7 +315,7 @@ RetCode OptGraph::AddBridgeKernels() {
 
 RetCode OptGraph::InitQuantization() {
     auto topo = graph_->topo.get();
-    auto quant_params = args_->quant_info.tensor_params;
+    auto& quant_params = args_->quant_info.tensor_params;
     std::vector<CudaTensorQuant> graph_quants(topo->GetMaxEdgeId());
 
     for (auto iter = topo->CreateEdgeIter(); iter->IsValid(); iter->Forward()) {
@@ -336,12 +336,14 @@ RetCode OptGraph::InitQuantization() {
             temp_tensor_quant.per_chnnal = *(bool*)(str.content.data());
             str = pair->second.fields.find("scale")->second;
             temp_tensor_quant.scale[0] = *(float*)(str.content.data());
-            str = pair->second.fields.find("zero_point")->second;
-            temp_tensor_quant.zero_point[0] = *(float*)(str.content.data());
+            // Only support zero-point = 0.0
+            // str = pair->second.fields.find("zero_point")->second;
+            // temp_tensor_quant.zero_point[0] = *(float*)(str.content.data());
             graph_quants[edge->GetId()] = temp_tensor_quant;
         }
     }
 
+    // Copy quant info for bridge node. Because one of input and output edge is added by program.
     for (auto iter = topo->CreateNodeIter(); iter->IsValid(); iter->Forward()) {
         auto node = iter->Get();
         if (node->GetType().name != "Bridge") {
@@ -392,15 +394,16 @@ RetCode OptGraph::UpdateType() {
         }
 
         // it is an output node
-        auto edge = topo->GetEdgeById(node->GetOutput(0));
-        if (edge->CalcConsumerCount() == 0) {
-            auto out_shape = &IOinfo.GetOutput<TensorImpl>(0)->GetShape();
-            if (out_shape->GetDataType() == DATATYPE_FLOAT16 ||
-                out_shape->GetDataType() == DATATYPE_INT8)
-                out_shape->SetDataType(DATATYPE_FLOAT32);
-            auto pair_type = args_->output_types.find(edge->GetName());
-            if (pair_type != args_->output_types.end()) {
-                out_shape->SetDataType(pair_type->second);
+        for (uint32_t j = 0; j < node->GetOutputCount(); ++j) {
+            auto edge = topo->GetEdgeById(node->GetOutput(j));
+            if (edge->CalcConsumerCount() == 0) {
+                auto out_shape = &IOinfo.GetOutput<TensorImpl>(j)->GetShape();
+                if (out_shape->GetDataType() == DATATYPE_FLOAT16 || out_shape->GetDataType() == DATATYPE_INT8)
+                    out_shape->SetDataType(DATATYPE_FLOAT32);
+                auto pair_type = args_->output_types.find(edge->GetName());
+                if (pair_type != args_->output_types.end()) {
+                    out_shape->SetDataType(pair_type->second);
+                }
             }
         }
     }
@@ -522,7 +525,8 @@ RetCode OptGraph::DeleteBridgeKernels() {
         }
 
         auto node_id = node->GetId();
-        auto status = ((BridgeOp*)(bridge_kernel->second.get()))->DeleteBridgeNode(node, graph_, &tensor_impls_, &graph_quants);
+        auto status =
+            ((BridgeOp*)(bridge_kernel->second.get()))->DeleteBridgeNode(node, graph_, &tensor_impls_, &graph_quants);
         if (status == RC_SUCCESS) {
             info_->kernels.erase(node_id);
             count++;

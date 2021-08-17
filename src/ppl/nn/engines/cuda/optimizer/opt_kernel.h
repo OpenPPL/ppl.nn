@@ -43,15 +43,15 @@ namespace ppl { namespace nn { namespace cuda {
 
 struct OptKernelOptions {
     OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, utils::SharedResource* resource, CudaArgs* args,
-                     CudaDevice* device, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors, std::vector<CudaTensorQuant>* quants)
+                     CudaDevice* device, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
+                     std::vector<CudaTensorQuant>* quants)
         : graph(graph), info(info), resource(resource), args(args), device(device), tensors(tensors), quants(quants) {}
 
     OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, utils::SharedResource* resource,
                      std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors)
         : graph(graph), info(info), resource(resource), tensors(tensors) {}
 
-    OptKernelOptions(ir::Graph* graph, utils::SharedResource* resource)
-        : graph(graph), resource(resource) {}
+    OptKernelOptions(ir::Graph* graph, utils::SharedResource* resource) : graph(graph), resource(resource) {}
 
     ir::Graph* graph;
     RuntimePartitionInfo* info;
@@ -84,7 +84,8 @@ public:
         return &common_param_;
     }
 
-    ppl::common::RetCode InferType(InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, ppl::common::datatype_t type) const {
+    ppl::common::RetCode InferType(InputOutputInfo* info, std::vector<CudaTensorQuant>* quant,
+                                   ppl::common::datatype_t type) const {
         return infer_type_func_(info, quant, type);
     }
 
@@ -162,42 +163,31 @@ protected:
         return ppl::common::RC_SUCCESS;
     }
 
-    static bool CheckOpQuant(InputOutputInfo* info, std::vector<CudaTensorQuant>* quant) {
-        auto in_edge_id = info->GetInput<TensorImpl>(0)->GetEdge()->GetId();
-        auto& in_quant = quant->at(in_edge_id);
-        auto out_edge_id = info->GetOutput<TensorImpl>(0)->GetEdge()->GetId();
-        auto& out_quant = quant->at(out_edge_id);
-
-        if (in_quant.type != ppl::common::DATATYPE_UNKNOWN && 
-            out_quant.type != ppl::common::DATATYPE_UNKNOWN) { // Do quantization
-            auto& in_shape = info->GetInput<TensorImpl>(0)->GetShape();
-            auto& out_shape = info->GetOutput<TensorImpl>(0)->GetShape();
-            in_shape.SetDataType(in_quant.type);
-            out_shape.SetDataType(out_quant.type);
-            return true;
+    static ppl::common::RetCode CopyQuantType(InputOutputInfo* info, std::vector<CudaTensorQuant>* quant) {
+        for (uint32_t i = 0; i < info->GetInputCount(); ++i) {
+            auto edge_id = info->GetInput<TensorImpl>(i)->GetEdge()->GetId();
+            auto& in_quant = quant->at(edge_id);
+            if (in_quant.type != ppl::common::DATATYPE_UNKNOWN) {
+                auto& shape = info->GetInput<TensorImpl>(i)->GetShape();
+                shape.SetDataType(in_quant.type);
+            } else {
+                return ppl::common::RC_INVALID_VALUE;
+            }
         }
-        return false;
+        for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
+            auto edge_id = info->GetOutput<TensorImpl>(i)->GetEdge()->GetId();
+            auto& out_quant = quant->at(edge_id);
+            if (out_quant.type != ppl::common::DATATYPE_UNKNOWN) {
+                auto& shape = info->GetOutput<TensorImpl>(i)->GetShape();
+                shape.SetDataType(out_quant.type);
+            } else {
+                return ppl::common::RC_INVALID_VALUE;
+            }
+        }
+        return ppl::common::RC_SUCCESS;
     }
 
-    static bool SetOpFirstInputQuant(InputOutputInfo* info, std::vector<CudaTensorQuant>* quant) {
-        auto in_edge_id = info->GetInput<TensorImpl>(0)->GetEdge()->GetId();
-        auto& in_quant = quant->at(in_edge_id);
-        auto out_edge_id = info->GetOutput<TensorImpl>(0)->GetEdge()->GetId();
-        auto& out_quant = quant->at(out_edge_id);
-
-        if (in_quant.type != ppl::common::DATATYPE_UNKNOWN && 
-            out_quant.type != ppl::common::DATATYPE_UNKNOWN) { // Do quantization
-            in_quant = out_quant;
-            auto& in_shape = info->GetInput<TensorImpl>(0)->GetShape();
-            auto& out_shape = info->GetOutput<TensorImpl>(0)->GetShape();
-            in_shape.SetDataType(in_quant.type);
-            out_shape.SetDataType(out_quant.type);
-            return true;
-        }
-        return false;
-    }
-
-    static bool SetOpAllInputQuant(InputOutputInfo* info, std::vector<CudaTensorQuant>* quant) {
+    static ppl::common::RetCode UnifyToOutputQuant(InputOutputInfo* info, std::vector<CudaTensorQuant>* quant) {
         bool do_quant = true;
         for (uint32_t i = 0; i < info->GetInputCount(); ++i) {
             auto in_edge_id = info->GetInput<TensorImpl>(i)->GetEdge()->GetId();
@@ -221,7 +211,7 @@ protected:
                 auto out_edge_id = info->GetOutput<TensorImpl>(i)->GetEdge()->GetId();
                 auto& out_quant = quant->at(out_edge_id);
                 out_quant = temp_quant;
-                auto &out_shape = info->GetOutput<TensorImpl>(i)->GetShape();
+                auto& out_shape = info->GetOutput<TensorImpl>(i)->GetShape();
                 out_shape.SetDataType(out_quant.type);
             }
             for (uint32_t i = 0; i < info->GetInputCount(); ++i) {
@@ -231,8 +221,9 @@ protected:
                 auto in_shape = &info->GetInput<TensorImpl>(i)->GetShape();
                 in_shape->SetDataType(in_quant.type);
             }
+            return ppl::common::RC_SUCCESS;
         }
-        return do_quant;
+        return ppl::common::RC_INVALID_VALUE;
     }
 
     static ppl::common::RetCode InferDefaultType(InputOutputInfo* info, ppl::common::datatype_t type) {
@@ -292,10 +283,9 @@ private:
             auto edge_id = info->GetOutput<TensorImpl>(i)->GetEdge()->GetId();
             auto data_type = (*common_param_.cuda_tensor_info)[edge_id].type;
             auto data_foramt = (*common_param_.cuda_tensor_info)[edge_id].format;
-            tensor_shape.SetDataType(data_type == ppl::common::DATATYPE_UNKNOWN ? pre_shape->GetDataType()
-                                                                                 : data_type);
+            tensor_shape.SetDataType(data_type == ppl::common::DATATYPE_UNKNOWN ? pre_shape->GetDataType() : data_type);
             tensor_shape.SetDataFormat(data_foramt == ppl::common::DATAFORMAT_UNKNOWN ? pre_shape->GetDataFormat()
-                                                                                     : data_foramt);
+                                                                                      : data_foramt);
         }
     }
 
@@ -303,7 +293,8 @@ protected:
     std::function<ppl::common::RetCode(InputOutputInfo*)> infer_dims_func_;
     std::function<ppl::common::RetCode(InputOutputInfo*, std::set<uint32_t>*)> infer_unsafe_dims_func_ =
         GenericUnsafeInferDims;
-    std::function<ppl::common::RetCode(InputOutputInfo*, std::vector<CudaTensorQuant>*, ppl::common::datatype_t)> infer_type_func_;
+    std::function<ppl::common::RetCode(InputOutputInfo*, std::vector<CudaTensorQuant>*, ppl::common::datatype_t)>
+        infer_type_func_;
 
 private:
     CudaCommonParam common_param_;

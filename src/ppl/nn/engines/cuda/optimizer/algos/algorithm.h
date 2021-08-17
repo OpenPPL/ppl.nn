@@ -44,22 +44,22 @@ namespace ppl { namespace nn { namespace cuda {
 
 class Algorithm {
 public:
-    virtual const bool IsRepeatable(OptKernelOptions& options) {
+    virtual bool IsRepeatable(const OptKernelOptions& options) const {
         return true;
     }
-    virtual const bool IsSupported(const ir::Node* node, const OptKernelOptions& options) {
+    virtual bool IsSupported(const ir::Node* node, const OptKernelOptions& options) const {
         return true;
     }
-    virtual const bool CanSupportDynamic(OptKernelOptions& options) {
+    virtual bool CanSupportDynamic(const OptKernelOptions& options) const {
         return true;
     }
 
     virtual const std::map<ppl::common::dataformat_t, std::set<ppl::common::dataformat_t>> Getformats(
-        const std::string& type_name) = 0;
-    virtual void GetAttrParam(void*& param) = 0;
+        const std::string& type_name) const = 0;
+    virtual void GetAttrParam(void*& param) const = 0;
     virtual void DeleteAttrParam(void*& param) = 0;
 
-    virtual const double ExcuteTimer(ir::Node* node, OptKernelOptions& options) = 0;
+    virtual double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) = 0;
     virtual ppl::common::RetCode ModifyParam(const ir::Node*, OptKernelOptions& options) = 0;
     virtual void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
                                 ppl::common::dataformat_t input_format, ppl::common::dataformat_t output_format) = 0;
