@@ -32,30 +32,29 @@ void TuringHMMAImpgemm::DeleteAttrParam(void*& param) {
     return;
 }
 
-void TuringHMMAImpgemm::GetAttrParam(void*& param) {
+void TuringHMMAImpgemm::GetAttrParam(void*& param) const {
     if (param == nullptr)
         param = new CudaConvParam();
     *(CudaConvParam*)param = attr_param_;
     return;
 }
 
-const bool TuringHMMAImpgemm::IsSupported(const ir::Node* node, const OptKernelOptions& options) {
-    this->attr_param_ = *(reinterpret_cast<CudaConvParam*>(options.param));
+bool TuringHMMAImpgemm::IsSupported(const ir::Node* node, const OptKernelOptions& options) const {
+    uint32_t group = (reinterpret_cast<CudaConvParam*>(options.param))->param.group;
     // check if conv is depthwise
     auto tensor1 = options.tensors->find(node->GetInput(1))->second->GetShape();
-    if ((uint32_t)attr_param_.param.group == tensor1.GetDim(0) &&
-        tensor1.GetDim(1) == 1 && (uint32_t)attr_param_.param.group != 1) {
+    if (group == tensor1.GetDim(0) && tensor1.GetDim(1) == 1 && group != 1) {
         return false;
     }
     // check if conv is quantization
     auto quant0 = options.quants->at(node->GetInput(0));
-    if (quant0.type != DATATYPE_UNKNOWN) {
+    if (quant0.type == DATATYPE_INT8) {
         return false;
     }
     return true;
 }
 
-const double TuringHMMAImpgemm::ExcuteTimer(ir::Node* node, OptKernelOptions& options) {
+double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& options) {
     this->attr_param_ = *(reinterpret_cast<CudaConvParam*>(options.param));
     attr_param_.extra_param.algo_info.algo_type = "TuringHMMAImpgemm";
     attr_param_.extra_param.algo_info.kernel_index = 5100;
@@ -70,7 +69,7 @@ const double TuringHMMAImpgemm::ExcuteTimer(ir::Node* node, OptKernelOptions& op
     }
 
     conv_param_t temp_conv_param;
-    fuse_param_t temp_fuse_param;    
+    fuse_param_t temp_fuse_param;
     auto shape_in0 = options.tensors->find(node->GetInput(0))->second->GetShape();
     auto shape_in1 = options.tensors->find(node->GetInput(1))->second->GetShape();
     auto shape_in2 = TensorShape();

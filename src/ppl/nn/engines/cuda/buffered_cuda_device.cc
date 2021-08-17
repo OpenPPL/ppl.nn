@@ -66,7 +66,7 @@ RetCode BufferedCudaDevice::Init(const CudaEngineOptions& options) {
 BufferedCudaDevice::~BufferedCudaDevice() {
     if (buffer_manager_.get()) {
         LOG(DEBUG) << "buffer manager[" << buffer_manager_->GetName() << "] allocates ["
-                << buffer_manager_->GetAllocatedBytes() << "] bytes.";
+                   << buffer_manager_->GetAllocatedBytes() << "] bytes.";
         buffer_manager_->Free(&shared_tmp_buffer_);
     }
     buffer_manager_.reset();

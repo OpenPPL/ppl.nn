@@ -141,8 +141,9 @@ RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc,
     return RC_SUCCESS;
 }
 
-RetCode CudaDataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const CudaTensorQuant& dst_quant,
-                                           const void* src, const TensorShape& src_desc, const CudaTensorQuant& src_quant) const {
+RetCode CudaDataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc,
+                                           const CudaTensorQuant& dst_quant, const void* src,
+                                           const TensorShape& src_desc, const CudaTensorQuant& src_quant) const {
     if (src_desc.GetBytesExcludingPadding() == 0) {
         device_->Free(dst);
         return RC_SUCCESS;
@@ -174,7 +175,8 @@ RetCode CudaDataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& d
 }
 
 RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc, const CudaTensorQuant& dst_quant,
-                                   const BufferDesc& src, const TensorShape& src_desc, const CudaTensorQuant& src_quant) const {
+                                   const BufferDesc& src, const TensorShape& src_desc,
+                                   const CudaTensorQuant& src_quant) const {
     if (src_desc.GetBytesExcludingPadding() == 0) {
         device_->Free(dst);
         return RC_SUCCESS;

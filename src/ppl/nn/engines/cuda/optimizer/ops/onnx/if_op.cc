@@ -37,7 +37,7 @@ RetCode IfOp::Init(const OptKernelOptions& options) {
         }
         return RC_SUCCESS;
     };
-    
+
     infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t) -> RetCode {
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
             auto out_shape = &info->GetOutput<TensorImpl>(i)->GetShape();

@@ -48,7 +48,7 @@ RetCode ROIAlignOp::Init(const OptKernelOptions& options) {
             auto out_shape = &info->GetOutput<TensorImpl>(i)->GetShape();
             out_shape->SetDataType(DATATYPE_FLOAT32);
         }
-        return ppl::common::RC_SUCCESS;
+        return RC_SUCCESS;
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {

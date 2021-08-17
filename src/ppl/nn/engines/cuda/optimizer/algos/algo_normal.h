@@ -38,13 +38,13 @@ public:
         arbitrary_formats_.emplace(DATAFORMAT_NHWC, ndarray);
     }
 
-    void GetAttrParam(void*& param) override {
+    void GetAttrParam(void*& param) const override {
         return;
     };
     void DeleteAttrParam(void*& param) override {
         return;
     };
-    const std::map<dataformat_t, std::set<dataformat_t>> Getformats(const std::string& type_name) override {
+    const std::map<dataformat_t, std::set<dataformat_t>> Getformats(const std::string& type_name) const override {
         if (inherited_set_.find(type_name) != inherited_set_.end()) {
             return inherited_formats_;
         }
@@ -57,12 +57,12 @@ public:
         return ndarray_formats_;
     }
 
-    const double ExcuteTimer(ir::Node* node, OptKernelOptions& options) override;
+    double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) override;
     RetCode ModifyParam(const ir::Node*, OptKernelOptions& options) override {
         return RC_SUCCESS;
     }
     void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
-                        dataformat_t input_format, dataformat_t output_format) override;
+                                ppl::common::dataformat_t input_format, ppl::common::dataformat_t output_format) override;
 
 private:
     std::map<dataformat_t, std::set<dataformat_t>> ndarray_formats_;

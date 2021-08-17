@@ -34,7 +34,7 @@ void GemmAlgorithm::DeleteAttrParam(void*& param) {
     return;
 }
 
-void GemmAlgorithm::GetAttrParam(void*& param) {
+void GemmAlgorithm::GetAttrParam(void*& param) const {
     if (param == nullptr) {
         param = new CudaGemmParam();
     }
@@ -42,7 +42,7 @@ void GemmAlgorithm::GetAttrParam(void*& param) {
     return;
 }
 
-const double GemmAlgorithm::ExcuteTimer(ir::Node* node, OptKernelOptions& options) {
+double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& options) {
     this->attr_param_ = *(reinterpret_cast<CudaGemmParam*>(options.param));
     attr_param_.extra_param.kernel_index = 0;
     if (node->GetInputCount() == 3) {

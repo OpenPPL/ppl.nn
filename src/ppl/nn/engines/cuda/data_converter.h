@@ -41,10 +41,12 @@ public:
                                  const TensorShape& src_desc) const;
 
     ppl::common::RetCode ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const CudaTensorQuant& dst_quant,
-                                         const void* src, const TensorShape& src_desc, const CudaTensorQuant& src_quant) const;
+                                         const void* src, const TensorShape& src_desc,
+                                         const CudaTensorQuant& src_quant) const;
 
     ppl::common::RetCode Convert(BufferDesc* dst, const TensorShape& dst_desc, const CudaTensorQuant& dst_quant,
-                                 const BufferDesc& src, const TensorShape& src_desc, const CudaTensorQuant& src_quant) const;
+                                 const BufferDesc& src, const TensorShape& src_desc,
+                                 const CudaTensorQuant& src_quant) const;
 
 private:
     CudaDevice* device_;

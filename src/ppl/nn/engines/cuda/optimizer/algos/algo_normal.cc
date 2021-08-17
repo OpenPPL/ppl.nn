@@ -21,7 +21,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-const double NormalAlgorithm::ExcuteTimer(ir::Node* node, OptKernelOptions& options) {
+double NormalAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& options) {
     double timer = 1.0e-5;
     return timer;
 }

@@ -615,7 +615,7 @@ CVTTypeMode GetCVTTypeMode(ReFormatParam param)
     return CVTTypeUnknown;
 }
 
-bool is_float_eq(const std::vector<float>& a, const std::vector<float>& b) {
+bool IsFloatEqual(const std::vector<float>& a, const std::vector<float>& b) {
     if (a.size() != b.size()) {
         return false;
     }
@@ -628,8 +628,8 @@ bool is_float_eq(const std::vector<float>& a, const std::vector<float>& b) {
 }
 
 bool EqualQuant(const ppl::nn::cuda::CudaTensorQuant& quant_a, const ppl::nn::cuda::CudaTensorQuant& quant_b) {
-    return is_float_eq(quant_a.scale, quant_b.scale) &&
-           is_float_eq(quant_a.zero_point, quant_b.zero_point);
+    return IsFloatEqual(quant_a.scale, quant_b.scale) &&
+           IsFloatEqual(quant_a.zero_point, quant_b.zero_point);
 }
 
 ppl::common::RetCode SetReLayoutParam(

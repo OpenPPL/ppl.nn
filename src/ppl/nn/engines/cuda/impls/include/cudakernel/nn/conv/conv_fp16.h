@@ -17,6 +17,7 @@
 
 #ifndef __PPLCUDA_IMPLICITGEMM_CONV_H_
 #define __PPLCUDA_IMPLICITGEMM_CONV_H_
+
 #include <cuda_runtime.h>
 #include "ppl/common/types.h"
 #include "ppl/common/retcode.h"

@@ -123,7 +123,7 @@ RetCode AlgoGraph::UpdateNode(ir::Node* node, OptKernelOptions& options) {
                 pre_algo_filter = algo_filter_manager->FindKernel("Normal");
             }
             auto pre_formats = pre_algo_filter->GetAlgo(0)->Getformats(pre_node->GetType().name);
-            
+
             bool at_least_one_algo = false;
             for (auto pre_it = pre_vect.begin(); pre_it != pre_vect.end(); ++pre_it) {
                 auto sum_time = GetSumTime(*pre_it);
@@ -136,7 +136,7 @@ RetCode AlgoGraph::UpdateNode(ir::Node* node, OptKernelOptions& options) {
                     }
                     options.param = (*pre_it)->param;
                     for (uint32_t j = 0; j < pre_algo_filter->GetAlgoCount(); ++j) {
-                        Algorithm* temp_algo = pre_algo_filter->GetAlgo(j);    
+                        Algorithm* temp_algo = pre_algo_filter->GetAlgo(j);
                         if (!temp_algo->IsSupported(pre_node, options)) {
                             continue;
                         }
@@ -151,7 +151,7 @@ RetCode AlgoGraph::UpdateNode(ir::Node* node, OptKernelOptions& options) {
                             (*pre_it)->selected_algo = temp_algo;
                             temp_algo->GetAttrParam((*pre_it)->param);
                         }
-                    }        
+                    }
                 }
             }
             if (!at_least_one_algo) {

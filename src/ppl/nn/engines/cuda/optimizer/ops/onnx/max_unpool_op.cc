@@ -43,13 +43,12 @@ RetCode MaxUnPoolOp::Init(const OptKernelOptions& options) {
             shape2->SetDataType(DATATYPE_INT64);
         }
         if (type == DATATYPE_UNKNOWN) {
-            if (!CheckOpQuant(info, quant)) {
-                return InferInheritedType(info);
-            }
+            return InferInheritedType(info);
         } else if (type == DATATYPE_INT8) {
-            if (!CheckOpQuant(info, quant)) {
+            auto status = CopyQuantType(info, quant);
+            if (status != RC_SUCCESS) {
                 LOG(ERROR) << "Set quantization for node[" << this->GetNode()->GetName() << "] failed.";
-                return RC_INVALID_VALUE;
+                return status;
             }
         }
         return InferDefaultType(info, type);
