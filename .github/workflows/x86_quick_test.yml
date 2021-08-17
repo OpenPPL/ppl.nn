@@ -14,21 +14,6 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Create Checkout Directory
-        run: |
-          echo "Create Checkout Directory: ${{ github.run_id }}."
-          [ -z "${{ github.run_id }}" ] || rm -rf ${{ github.run_id }}
-          mkdir ${{ github.run_id }}
-
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          path: ${{ github.run_id }}
-
-      - name: Build
-        run: |
-          cd ../../ && ./build_pplnn.sh ${{ github.run_id }} x86_64
-
       - name: Test
         run: |
-          cd ../../ && ./test_pplnn.sh ${{ github.run_id }} x86_64
+          cd ../../ && ./test_pplnn.sh 1139056370 x86_64
