@@ -53,6 +53,7 @@
 #include "ppl/nn/models/onnx/parsers/parse_lrn_param.h"
 
 #include "ppl/nn/models/onnx/parsers/parse_mmcv_gridsample_param.h"
+#include "ppl/nn/models/onnx/parsers/parse_mmcv_modulated_deform_conv2d_param.h"
 #include "ppl/nn/models/onnx/parsers/parse_mmcv_nonmaxsupression_param.h"
 #include "ppl/nn/models/onnx/parsers/parse_mmcv_roialign_param.h"
 
@@ -196,6 +197,8 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITH_PARAM("mmcv", "NonMaxSuppression", ppl::nn::common::MMCVNMSParam, ParseMMCVNMSParam);
     PPL_REGISTER_OP_WITH_PARAM("mmcv", "MMCVRoiAlign", ppl::nn::common::MMCVROIAlignParam, ParseMMCVROIAlignParam);
     PPL_REGISTER_OP_WITH_PARAM("mmcv", "grid_sampler", ppl::nn::common::MMCVGridSampleParam, ParseMMCVGridSampleParam);
+    PPL_REGISTER_OP_WITH_PARAM("mmcv", "MMCVModulatedDeformConv2d", ppl::nn::common::MMCVModulatedDeformConv2dParam,
+                               ParseMMCVModulatedDeformConv2dParam);
 
     // ppl op param parser
     PPL_REGISTER_OP_WITH_PARAM("ppl", "ChannelShuffle", ppl::nn::common::ChannelShuffleParam, ParseChannelShuffleParam);

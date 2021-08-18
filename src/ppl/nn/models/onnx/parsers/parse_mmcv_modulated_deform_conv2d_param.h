@@ -15,30 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_CONVOLUTION_PARAM_H_
-#define _ST_HPC_PPL_NN_PARAMS_ONNX_CONVOLUTION_PARAM_H_
+#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PARSE_MMCV_MODULATED_DEFORM_CONV2D_PARAM_H_
+#define _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PARSE_MMCV_MODULATED_DEFORM_CONV2D_PARAM_H_
 
-#include <stdint.h>
-#include <vector>
+#include "ppl/common/retcode.h"
+#include "ppl/nn/params/mmcv/mmcv_modulated_deform_conv2d_param.h"
+#include "ppl/nn/ir/graph.h"
+#include "ppl/nn/models/onnx/generated/onnx.pb.h"
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
-struct ConvolutionParam {
-    std::vector<int32_t> kernel_shape;
-    std::vector<int32_t> dilations;
-    std::vector<int32_t> strides;
-    std::vector<int32_t> pads;
+ppl::common::RetCode ParseMMCVModulatedDeformConv2dParam(const ::onnx::NodeProto& pb_node, void* arg, ir::Node*, ir::GraphTopo*);
 
-    int32_t group;
-    int32_t channels; // written in op ctx, for converted filter
-    int32_t num_output; // written in op ctx, for converted filter
-    int32_t bias_term; // written in op ctx, for multi-input layer fusion
-
-    bool operator==(const ConvolutionParam& p) const {
-        return false; // has attr written in op ctx
-    }
-};
-
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

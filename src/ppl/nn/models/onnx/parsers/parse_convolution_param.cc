@@ -27,6 +27,7 @@ ppl::common::RetCode ParseConvolutionParam(const ::onnx::NodeProto& pb_node, voi
     param->strides = utils::GetNodeAttrsByKey<int32_t>(pb_node, "strides");
     param->pads = utils::GetNodeAttrsByKey<int32_t>(pb_node, "pads");
     param->group = utils::GetNodeAttrByKey(pb_node, "group", 1);
+    param->channels = 0; // set by opcontext
     param->num_output = 0; // set by opcontext
     param->bias_term = 0; // set by opcontext
 

@@ -15,30 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_CONVOLUTION_PARAM_H_
-#define _ST_HPC_PPL_NN_PARAMS_ONNX_CONVOLUTION_PARAM_H_
+#ifndef _ST_HPC_PPL_NN_OPUTILS_MMCV_RESHAPE_MMCV_MODULATED_DEFORM_CONV2D_H_
+#define _ST_HPC_PPL_NN_OPUTILS_MMCV_RESHAPE_MMCV_MODULATED_DEFORM_CONV2D_H_
 
-#include <stdint.h>
-#include <vector>
+#include "ppl/common/retcode.h"
+#include "ppl/nn/params/mmcv/mmcv_modulated_deform_conv2d_param.h"
+#include "ppl/nn/common/input_output_info.h"
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace oputils {
 
-struct ConvolutionParam {
-    std::vector<int32_t> kernel_shape;
-    std::vector<int32_t> dilations;
-    std::vector<int32_t> strides;
-    std::vector<int32_t> pads;
+ppl::common::RetCode ReshapeMMCVModulatedDeformConv2d(InputOutputInfo*, const void*);
 
-    int32_t group;
-    int32_t channels; // written in op ctx, for converted filter
-    int32_t num_output; // written in op ctx, for converted filter
-    int32_t bias_term; // written in op ctx, for multi-input layer fusion
-
-    bool operator==(const ConvolutionParam& p) const {
-        return false; // has attr written in op ctx
-    }
-};
-
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::oputils
 
 #endif
