@@ -85,6 +85,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
 
     param_->bias_term = (node->GetInputCount() == 3) ? 1 : 0;
     param_->num_output = weight_shape.dims[0];
+    param_->channels = weight_shape.dims[1] * param_->group;
 
     // Check Param
     const ppl::nn::common::ConvolutionParam& conv_param = *param_.get();
@@ -112,8 +113,8 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
         conv2d_param.dilation_h = conv_param.dilations[0];
         conv2d_param.dilation_w = conv_param.dilations[1];
         conv2d_param.group = conv_param.group;
-        conv2d_param.num_output = weight_shape.dims[0];
-        conv2d_param.channels = weight_shape.dims[1] * conv_param.group;
+        conv2d_param.num_output = conv_param.num_output;
+        conv2d_param.channels = conv_param.channels;
         conv2d_param.fuse_flag = 0;
 
         conv2d_param_->algo_info = ppl::kernel::x86::conv2d_algo_selector::select_algo(
@@ -161,7 +162,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
                     conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data, bias_data);
                 }
             } else {
-                std::vector<float> zero_bias(weight_shape.dims[0], 0.0f);
+                std::vector<float> zero_bias(conv2d_param.num_output, 0.0f);
                 conv2d_param_->mgr->gen_cvt_weights(weight_data, zero_bias.data());
                 if (conv2d_param_->fallback_mgr) {
                     conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data, zero_bias.data());

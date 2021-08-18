@@ -15,35 +15,35 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/oputils/onnx/reshape_convolution.h"
+#include "ppl/nn/oputils/mmcv/reshape_mmcv_modulated_deform_conv2d.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace oputils {
 
-RetCode ReshapeConvolution(InputOutputInfo* info, const void* arg) {
-    auto param = (const ConvolutionParam*)arg;
-    auto x = &info->GetInput<TensorImpl>(0)->GetShape();
-    auto w = &info->GetInput<TensorImpl>(1)->GetShape();
-    auto y = &info->GetOutput<TensorImpl>(0)->GetShape();
-    auto num_output = w->GetDim(0);
+RetCode ReshapeMMCVModulatedDeformConv2d(InputOutputInfo* info, const void* arg) {
+    auto param = (const MMCVModulatedDeformConv2dParam*)arg;
+    auto input = &info->GetInput<TensorImpl>(0)->GetShape();
+    auto weight = &info->GetInput<TensorImpl>(3)->GetShape();
+    auto output = &info->GetOutput<TensorImpl>(0)->GetShape();
+    auto num_output = weight->GetDim(0);
 
-    y->SetDimCount(x->GetDimCount());
-    y->SetDim(0, x->GetDim(0));
-    y->SetDim(1, num_output);
+    output->SetDimCount(input->GetDimCount());
+    output->SetDim(0, input->GetDim(0));
+    output->SetDim(1, num_output);
 
-    const int32_t kernel_dims = (int32_t)x->GetDimCount() - 2;
-    for (int32_t i = 0; i < kernel_dims; ++i) {
-        const int32_t j = i + 2;
-        const int32_t kernel_shape_eff = (w->GetDim(j) - 1) * param->dilations[i] + 1;
-        const int64_t out_dim = (x->GetDim(j) + param->pads[i] + param->pads[i + kernel_dims] - kernel_shape_eff) / param->strides[i] + 1;
+    const int64_t kernel_dims = 2;
+    for (int64_t i = 0; i < kernel_dims; ++i) {
+        const int64_t j = i + 2;
+        const int64_t kernel_shape_eff = (weight->GetDim(j) - 1) * param->dilation[i] + 1;
+        const int64_t out_dim = (input->GetDim(j) + param->padding[i] * 2 - kernel_shape_eff) / param->stride[i] + 1;
         if (out_dim <= 0) {
             return RC_INVALID_VALUE;
         }
-        y->SetDim(j, out_dim);
+        output->SetDim(j, out_dim);
     }
-    y->CalcPadding();
+    output->CalcPadding();
 
     return RC_SUCCESS;
 }

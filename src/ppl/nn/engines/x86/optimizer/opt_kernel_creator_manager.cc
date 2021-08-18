@@ -87,6 +87,7 @@
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/unsqueeze_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/where_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/mmcv/mmcv_gridsample_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/mmcv/mmcv_modulated_deform_conv2d_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/mmcv/mmcv_non_max_suppression_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/mmcv/mmcv_roialign_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/ppl/reorder_op.h"
@@ -213,6 +214,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("mmcv", "grid_sampler", MMCVGridSampleOp);
     REGISTER_OPT_KERNEL_CREATOR("mmcv", "NonMaxSuppression", MMCVNonMaxSuppressionOp);
     REGISTER_OPT_KERNEL_CREATOR("mmcv", "MMCVRoiAlign", MMCVROIAlignOp);
+    REGISTER_OPT_KERNEL_CREATOR("mmcv", "MMCVModulatedDeformConv2d", MMCVModulatedDeformConv2dOp);
 
     // ppl
     REGISTER_OPT_KERNEL_CREATOR("ppl", "ChannelShuffle", ChannelShuffleOp);

@@ -15,30 +15,24 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_CONVOLUTION_PARAM_H_
-#define _ST_HPC_PPL_NN_PARAMS_ONNX_CONVOLUTION_PARAM_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86OPTIMIZER_OPS_MMCV_MMCV_MODULATED_DEFORM_CONV2D_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86OPTIMIZER_OPS_MMCV_MMCV_MODULATED_DEFORM_CONV2D_OP_H_
 
-#include <stdint.h>
-#include <vector>
+#include "ppl/nn/params/mmcv/mmcv_modulated_deform_conv2d_param.h"
+#include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace x86 {
 
-struct ConvolutionParam {
-    std::vector<int32_t> kernel_shape;
-    std::vector<int32_t> dilations;
-    std::vector<int32_t> strides;
-    std::vector<int32_t> pads;
+class MMCVModulatedDeformConv2dOp final : public X86OptKernel {
+public:
+    MMCVModulatedDeformConv2dOp(const ir::Node* node) : X86OptKernel(node) {}
+    ppl::common::RetCode Init(const OptKernelOptions& options) override;
+    KernelImpl* CreateKernelImpl() const override;
 
-    int32_t group;
-    int32_t channels; // written in op ctx, for converted filter
-    int32_t num_output; // written in op ctx, for converted filter
-    int32_t bias_term; // written in op ctx, for multi-input layer fusion
-
-    bool operator==(const ConvolutionParam& p) const {
-        return false; // has attr written in op ctx
-    }
+private:
+    std::shared_ptr<ppl::nn::common::MMCVModulatedDeformConv2dParam> param_;
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::x86
 
 #endif

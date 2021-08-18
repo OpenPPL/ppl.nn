@@ -15,16 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/x86/optimizer/ops/mmcv/mmcv_gridsample_op.h"
-#include "ppl/nn/engines/x86/kernels/mmcv/mmcv_gridsample_kernel.h"
-#include "ppl/nn/oputils/mmcv/reshape_mmcv_gridsample.h"
+#include "ppl/nn/engines/x86/optimizer/ops/mmcv/mmcv_modulated_deform_conv2d_op.h"
+#include "ppl/nn/engines/x86/kernels/mmcv/mmcv_modulated_deform_conv2d_kernel.h"
+#include "ppl/nn/oputils/mmcv/reshape_mmcv_modulated_deform_conv2d.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode MMCVGridSampleOp::Init(const OptKernelOptions& options) {
+RetCode MMCVModulatedDeformConv2dOp::Init(const OptKernelOptions& options) {
     auto status = GenericLoadParam(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
@@ -32,7 +32,7 @@ RetCode MMCVGridSampleOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeMMCVGridSample(info, param_.get());
+        return oputils::ReshapeMMCVModulatedDeformConv2d(info, param_.get());
     };
 
     infer_type_func_ = GenericInferType;
@@ -40,8 +40,8 @@ RetCode MMCVGridSampleOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
-KernelImpl* MMCVGridSampleOp::CreateKernelImpl() const {
-    return CreateKernelImplWithParam<MMCVGridSampleKernel>(param_.get());
+KernelImpl* MMCVModulatedDeformConv2dOp::CreateKernelImpl() const {
+    return CreateKernelImplWithParam<MMCVModulatedDeformConv2dKernel>(param_.get());
 }
 
 }}} // namespace ppl::nn::x86

@@ -15,26 +15,26 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_CONVOLUTION_PARAM_H_
-#define _ST_HPC_PPL_NN_PARAMS_ONNX_CONVOLUTION_PARAM_H_
+#ifndef _ST_HPC_PPL_NN_PARAMS_MMCV_MMCV_MODULATED_DEFORM_CONV2D_PARAM_H
+#define _ST_HPC_PPL_NN_PARAMS_MMCV_MMCV_MODULATED_DEFORM_CONV2D_PARAM_H
 
 #include <stdint.h>
-#include <vector>
 
 namespace ppl { namespace nn { namespace common {
 
-struct ConvolutionParam {
-    std::vector<int32_t> kernel_shape;
-    std::vector<int32_t> dilations;
-    std::vector<int32_t> strides;
-    std::vector<int32_t> pads;
+struct MMCVModulatedDeformConv2dParam {
+    int64_t kernel_size[2]; // written in op ctx
+    int64_t stride[2];
+    int64_t padding[2];
+    int64_t dilation[2];
+    int64_t groups;
+    int64_t deform_groups;
 
-    int32_t group;
-    int32_t channels; // written in op ctx, for converted filter
-    int32_t num_output; // written in op ctx, for converted filter
-    int32_t bias_term; // written in op ctx, for multi-input layer fusion
+    int64_t channels;  // written in op ctx
+    int64_t num_output; // written in op ctx
+    int64_t bias_term; // written in op ctx, for multi-input layer fusion
 
-    bool operator==(const ConvolutionParam& p) const {
+    bool operator==(const MMCVModulatedDeformConv2dParam& p) const {
         return false; // has attr written in op ctx
     }
 };
