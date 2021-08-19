@@ -93,5 +93,5 @@
 | Op Type        | Op Set | Linux X86-64 | Linux CUDA |
 |:--------------:|:------:|:------------:|:----------:|
 | ChannelShuffle | 1      | &check;      | &check;    |
-| Shape          | 1      | &check;      | &check;    |
+| [ShapeOperation](docs/en/shape_operation.md)        | 1      | &check;      | &check;    |
 | Swish          | 1      | &check;      |            |
