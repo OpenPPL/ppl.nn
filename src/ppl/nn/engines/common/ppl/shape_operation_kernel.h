@@ -15,29 +15,30 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/x86/optimizer/ops/ppl/shape_op.h"
+#ifndef _ST_HPC_PPL_NN_ENGINES_COMMON_PPL_SHAPE_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_COMMON_PPL_SHAPE_KERNEL_H_
 
-#include "ppl/nn/common/logger.h"
-#include "ppl/nn/engines/common/ppl/shape_kernel.h"
+#include "ppl/nn/engines/common/common_kernel_impl.h"
 
-using namespace std;
-using namespace ppl::common;
+#include "ppl/nn/params/ppl/shape_operation_param.h"
 
-namespace ppl { namespace nn { namespace x86 {
+namespace ppl { namespace nn { namespace common {
 
-RetCode PPLShapeOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ppl::nn::common::PPLShapeParam>(options, &param_);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
-        return status;
+class PPLShapeOperationKernel : public CommonKernelImpl {
+public:
+    PPLShapeOperationKernel(const ir::Node* node) : CommonKernelImpl(node) {}
+
+    void SetParam(const ppl::nn::common::PPLShapeOperationParam* p) {
+        param_ = p;
     }
-    return RC_SUCCESS;
-}
 
-KernelImpl* PPLShapeOp::CreateKernelImpl() const {
-    auto kernel = op_.CreateKernelImpl();
-    ((ppl::nn::common::PPLShapeKernel*)kernel)->SetParam(param_.get());
-    return kernel;
-}
+private:
+    ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
-}}} // namespace ppl::nn::x86
+private:
+    const ppl::nn::common::PPLShapeOperationParam* param_ = nullptr;
+};
+
+}}} // namespace ppl::nn::common
+
+#endif

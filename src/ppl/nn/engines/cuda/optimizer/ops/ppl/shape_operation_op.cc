@@ -15,18 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/optimizer/ops/ppl/shape_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/ppl/shape_operation_op.h"
 
 #include "ppl/nn/common/logger.h"
-#include "ppl/nn/engines/common/ppl/shape_kernel.h"
+#include "ppl/nn/engines/common/ppl/shape_operation_kernel.h"
 
 using namespace std;
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-RetCode PPLShapeOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ppl::nn::common::PPLShapeParam>(options, &param_);
+RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
+    auto status = GenericLoadParam<ppl::nn::common::PPLShapeOperationParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
@@ -41,7 +41,7 @@ RetCode PPLShapeOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        auto param = (ppl::nn::common::PPLShapeParam*)this->GetParam();
+        auto param = (ppl::nn::common::PPLShapeOperationParam*)this->GetParam();
         auto input_dim_size = info->GetInput<TensorImpl>(0)->GetShape().GetRealDimCount();
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
             auto output_shape = &info->GetOutput<TensorImpl>(i)->GetShape();
@@ -60,7 +60,7 @@ RetCode PPLShapeOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
-RetCode PPLShapeOp::Finalize(const OptKernelOptions& options) {
+RetCode PPLShapeOperationOp::Finalize(const OptKernelOptions& options) {
     auto status = SetCommonParam(options);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load common param failed: " << GetRetCodeStr(status);
@@ -70,9 +70,9 @@ RetCode PPLShapeOp::Finalize(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
-KernelImpl* PPLShapeOp::CreateKernelImpl() const {
+KernelImpl* PPLShapeOperationOp::CreateKernelImpl() const {
     auto kernel = op_.CreateKernelImpl();
-    ((ppl::nn::common::PPLShapeKernel*)kernel)->SetParam(&param_);
+    ((ppl::nn::common::PPLShapeOperationKernel*)kernel)->SetParam(&param_);
     return kernel;
 }
 

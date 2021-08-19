@@ -15,30 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_COMMON_PPL_SHAPE_KERNEL_H_
-#define _ST_HPC_PPL_NN_ENGINES_COMMON_PPL_SHAPE_KERNEL_H_
-
-#include "ppl/nn/engines/common/common_kernel_impl.h"
-
-#include "ppl/nn/params/ppl/shape_param.h"
+#include "ppl/nn/engines/common/ppl/shape_operation_op.h"
+#include "ppl/nn/engines/common/ppl/shape_operation_kernel.h"
+#include "ppl/nn/common/logger.h"
+using namespace std;
+using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace common {
 
-class PPLShapeKernel : public CommonKernelImpl {
-public:
-    PPLShapeKernel(const ir::Node* node) : CommonKernelImpl(node) {}
-
-    void SetParam(const ppl::nn::common::PPLShapeParam* p) {
-        param_ = p;
-    }
-
-private:
-    ppl::common::RetCode DoExecute(KernelExecContext*) override;
-
-private:
-    const ppl::nn::common::PPLShapeParam* param_ = nullptr;
-};
+KernelImpl* PPLShapeOperationOp::CreateKernelImpl() const {
+    auto kernel = new PPLShapeOperationKernel(node_);
+    return kernel;
+}
 
 }}} // namespace ppl::nn::common
-
-#endif
