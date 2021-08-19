@@ -15,17 +15,29 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/common/ppl/shape_op.h"
-#include "ppl/nn/engines/common/ppl/shape_kernel.h"
+#include "ppl/nn/engines/x86/optimizer/ops/ppl/shape_operation_op.h"
+
 #include "ppl/nn/common/logger.h"
+#include "ppl/nn/engines/common/ppl/shape_operation_kernel.h"
+
 using namespace std;
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace x86 {
 
-KernelImpl* PPLShapeOp::CreateKernelImpl() const {
-    auto kernel = new PPLShapeKernel(node_);
+RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
+    auto status = GenericLoadParam<ppl::nn::common::PPLShapeOperationParam>(options, &param_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
+        return status;
+    }
+    return RC_SUCCESS;
+}
+
+KernelImpl* PPLShapeOperationOp::CreateKernelImpl() const {
+    auto kernel = op_.CreateKernelImpl();
+    ((ppl::nn::common::PPLShapeOperationKernel*)kernel)->SetParam(param_.get());
     return kernel;
 }
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::x86

@@ -15,12 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/common/ppl/shape_kernel.h"
+#include "ppl/nn/engines/common/ppl/shape_operation_kernel.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 
 namespace ppl { namespace nn { namespace common {
 
-ppl::common::RetCode PPLShapeKernel::DoExecute(KernelExecContext* ctx) {
+ppl::common::RetCode PPLShapeOperationKernel::DoExecute(KernelExecContext* ctx) {
     auto data = ctx->GetInput<TensorImpl>(0);
     auto input_dim_size = ctx->GetInput<TensorImpl>(0)->GetShape().GetRealDimCount();
     for (size_t i = 0; i < ctx->GetOutputCount(); ++i) {
@@ -44,11 +44,15 @@ ppl::common::RetCode PPLShapeKernel::DoExecute(KernelExecContext* ctx) {
 
         std::unique_ptr<int64_t[]> shape_host(new int64_t[dim_size]);
         for (uint32_t j = 0; j < dim_size; ++j) {
-            double temp = matrix.matrix_2d[j][ppl::nn::common::Matrix::MAXDIMSIZE];
+            int64_t numer = matrix.numerator[j][ppl::nn::common::ShapeMatrix::MAXDIMSIZE];
+            int64_t denom = matrix.denominator[j][ppl::nn::common::ShapeMatrix::MAXDIMSIZE];
             for (uint32_t k = 0; k < data->GetShape().GetDimCount(); ++k) {
-                temp += data->GetShape().GetDim(k) * matrix.matrix_2d[j][k];
+                if (matrix.numerator[j][k]) {
+                    numer = numer * matrix.denominator[j][k] + denom * data->GetShape().GetDim(k) * matrix.numerator[j][k];
+                    denom = denom * matrix.denominator[j][k];
+                }
             }
-            shape_host[j] = (int64_t)temp;
+            shape_host[j] = numer / denom;
         }
         shape->CopyFromHost(shape_host.get());
     }

@@ -15,24 +15,26 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_COMMON_PPL_SHAPE_OP_H_
-#define _ST_HPC_PPL_NN_ENGINES_COMMON_PPL_SHAPE_OP_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_PPL_SHAPE_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_PPL_SHAPE_OP_H_
 
-#include "ppl/nn/runtime/kernel_impl.h"
+#include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
 
-#include "ppl/nn/params/ppl/shape_param.h"
+#include "ppl/nn/engines/common/ppl/shape_operation_op.h"
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace x86 {
 
-class PPLShapeOp final {
+class PPLShapeOperationOp final : public X86OptKernel {
 public:
-    PPLShapeOp(const ir::Node* node) : node_(node) {}
-    KernelImpl* CreateKernelImpl() const;
+    PPLShapeOperationOp(const ir::Node* node) : X86OptKernel(node), op_(node) {}
+    KernelImpl* CreateKernelImpl() const override;
+    ppl::common::RetCode Init(const OptKernelOptions&) override;
 
 private:
-    const ir::Node* node_;
+    std::shared_ptr<ppl::nn::common::PPLShapeOperationParam> param_;
+    ppl::nn::common::PPLShapeOperationOp op_;
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::x86
 
 #endif

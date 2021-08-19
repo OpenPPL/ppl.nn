@@ -15,26 +15,31 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_PPL_SHAPE_OP_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_PPL_SHAPE_OP_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_PPL_SHAPE_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_PPL_SHAPE_OP_H_
 
-#include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
+#include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 
-#include "ppl/nn/engines/common/ppl/shape_op.h"
+#include "ppl/nn/engines/common/ppl/shape_operation_op.h"
 
-namespace ppl { namespace nn { namespace x86 {
+namespace ppl { namespace nn { namespace cuda {
 
-class PPLShapeOp final : public X86OptKernel {
+class PPLShapeOperationOp final : public CudaOptKernel {
 public:
-    PPLShapeOp(const ir::Node* node) : X86OptKernel(node), op_(node) {}
+    PPLShapeOperationOp(const ir::Node* node) : CudaOptKernel(node), op_(node) {}
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
+    ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
+
+    void* GetParam() override {
+        return (void*)&param_;
+    };
 
 private:
-    std::shared_ptr<ppl::nn::common::PPLShapeParam> param_;
-    ppl::nn::common::PPLShapeOp op_;
+    ppl::nn::common::PPLShapeOperationParam param_;
+    ppl::nn::common::PPLShapeOperationOp op_;
 };
 
-}}} // namespace ppl::nn::x86
+}}} // namespace ppl::nn::cuda
 
 #endif

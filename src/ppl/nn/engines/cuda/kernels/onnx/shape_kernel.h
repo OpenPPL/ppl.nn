@@ -20,8 +20,6 @@
 
 #include "ppl/nn/engines/cuda/kernel.h"
 
-#include "ppl/nn/params/ppl/shape_param.h"
-
 namespace ppl { namespace nn { namespace cuda {
 
 class ShapeKernel : public CudaKernel {
