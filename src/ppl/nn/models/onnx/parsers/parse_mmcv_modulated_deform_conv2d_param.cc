@@ -36,7 +36,7 @@ ppl::common::RetCode ParseMMCVModulatedDeformConv2dParam(const ::onnx::NodeProto
     auto padding = utils::GetNodeAttrsByKey<int32_t>(pb_node, "padding");
     auto dilation = utils::GetNodeAttrsByKey<int32_t>(pb_node, "dilation");
 
-    auto kernel_dims = 2;
+    size_t kernel_dims = 2;
 
     if (dilation.size() != kernel_dims || stride.size() != kernel_dims || padding.size() != kernel_dims) {
         return ppl::common::RC_INVALID_VALUE;

@@ -39,6 +39,38 @@ vector<int32_t> GetNodeAttrsByKey<int32_t>(const ::onnx::NodeProto& node, const 
 }
 
 template <>
+vector<float> GetNodeAttrsByKey<float>(const ::onnx::NodeProto& node, const char* key) {
+    vector<float> result;
+    for (int32_t i = 0; i < node.attribute_size(); i++) {
+        const ::onnx::AttributeProto& attribute = node.attribute(i);
+        if (attribute.name() == key) {
+            result.resize(attribute.floats_size());
+            for (int32_t j = 0; j < attribute.floats_size(); j++) {
+                result[j] = attribute.floats(j);
+            }
+            break;
+        }
+    }
+    return result;
+}
+
+template <>
+vector<string> GetNodeAttrsByKey<string>(const ::onnx::NodeProto& node, const char* key) {
+    vector<string> result;
+    for (int32_t i = 0; i < node.attribute_size(); i++) {
+        const ::onnx::AttributeProto& attribute = node.attribute(i);
+        if (attribute.name() == key) {
+            result.resize(attribute.strings_size());
+            for (int32_t j = 0; j < attribute.strings_size(); j++) {
+                result[j] = attribute.strings(j);
+            }
+            break;
+        }
+    }
+    return result;
+}
+
+template <>
 int32_t GetAttrValue<int32_t>(const ::onnx::AttributeProto& attribute) {
     return attribute.i();
 }

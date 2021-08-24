@@ -42,7 +42,7 @@ ppl::common::RetCode softmax_ndarray_fp32_fma(
 
     const int64_t simd_w = 8;
 
-    PRAGMA_OMP_PARALLEL_FOR()
+PRAGMA_OMP_PARALLEL_FOR()
     for (int64_t i = 0; i < outer_dim; i++) {
         const float *p_src = src + i * axis_dim * inner_dim;
         float *p_dst       = dst + i * axis_dim * inner_dim;
@@ -72,7 +72,7 @@ ppl::common::RetCode softmax_ndarray_fp32_fma(
             v_exp_sum = _mm256_add_ps(v_exp_sum, v_exp_val);
         }
         for (; j < axis_dim * inner_dim; j++) {
-            float exp_val = expf(p_src[j]);
+            float exp_val = expf(p_src[j] - max_val);
             p_dst[j]      = exp_val;
             exp_sum += exp_val;
         }
