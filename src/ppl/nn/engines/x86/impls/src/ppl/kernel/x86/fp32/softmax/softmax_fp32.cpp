@@ -42,9 +42,17 @@ ppl::common::RetCode softmax_ndarray_fp32(
         const float *p_src = src + i * axis_dim * inner_dim;
         float *p_dst       = dst + i * axis_dim * inner_dim;
 
+        // find max
+        float max_val = p_src[0];
+        for (int64_t j = 1; j < axis_dim * inner_dim; j++) {
+            if (p_src[j] > max_val) {
+                max_val = p_src[j];
+            }
+        }
+
         float exp_sum = 0.0f;
         for (int64_t j = 0; j < axis_dim * inner_dim; j++) {
-            float exp_val = expf(p_src[j]);
+            float exp_val = expf(p_src[j] - max_val);
             p_dst[j]      = exp_val;
             exp_sum += exp_val;
         }

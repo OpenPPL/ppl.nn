@@ -16,6 +16,7 @@
 // under the License.
 
 #include <math.h>
+#include <float.h>
 #include <immintrin.h>
 
 #include "ppl/kernel/x86/common/internal_include.h"
@@ -46,12 +47,27 @@ ppl::common::RetCode softmax_ndarray_fp32_fma(
         const float *p_src = src + i * axis_dim * inner_dim;
         float *p_dst       = dst + i * axis_dim * inner_dim;
 
+        int64_t j;
+        __m256 v_max_val = _mm256_set1_ps(-FLT_MAX);
+        float max_val = -FLT_MAX;
+        float m_max_val[simd_w];
+        for (j = 0; j + simd_w <= axis_dim * inner_dim; j += simd_w) {
+            v_max_val = _mm256_max_ps(v_max_val, _mm256_loadu_ps(p_src + j));
+        }
+        _mm256_storeu_ps(m_max_val, v_max_val);
+        for (; j < axis_dim * inner_dim; j++) {
+            max_val = max(max_val, p_src[j]);
+        }
+        for (j = 0; j < simd_w; j++) {
+            max_val = max(max_val, m_max_val[j]);
+        }
+        v_max_val = _mm256_set1_ps(max_val);
+
         float exp_sum    = 0;
         __m256 v_exp_sum = _mm256_set1_ps(0);
-        int64_t j        = 0;
-        for (; j + simd_w <= axis_dim * inner_dim; j += simd_w) {
+        for (j = 0; j + simd_w <= axis_dim * inner_dim; j += simd_w) {
             const __m256 v_src     = _mm256_loadu_ps(p_src + j);
-            const __m256 v_exp_val = _fma_exp_ps(v_src);
+            const __m256 v_exp_val = _fma_exp_ps(_mm256_sub_ps(v_src, v_max_val));
             _mm256_storeu_ps(p_dst + j, v_exp_val);
             v_exp_sum = _mm256_add_ps(v_exp_sum, v_exp_val);
         }
@@ -72,8 +88,7 @@ ppl::common::RetCode softmax_ndarray_fp32_fma(
         const float r_exp_sum    = 1.0f / exp_sum;
         const __m256 v_r_exp_sum = _mm256_set1_ps(r_exp_sum);
 
-        j = 0;
-        for (; j + simd_w <= axis_dim * inner_dim; j += simd_w) {
+        for (j = 0; j + simd_w <= axis_dim * inner_dim; j += simd_w) {
             __m256 v_dst = _mm256_loadu_ps(p_dst + j);
             v_dst        = _mm256_mul_ps(v_dst, v_r_exp_sum);
             _mm256_storeu_ps(p_dst + j, v_dst);
