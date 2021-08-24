@@ -37,7 +37,7 @@ ppl::common::RetCode MMCVGridSampleKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("interpolation_mode: %ld\n", param_->interpolation_mode);
     PPLNN_X86_DEBUG_TRACE("padding_mode: %ld\n", param_->padding_mode);
 
-    if (param_->padding_mode == 0) { // bilinear
+    if (param_->interpolation_mode == 0) { // bilinear
         if (false) {
         }
 #ifdef PPL_USE_X86_AVX512
