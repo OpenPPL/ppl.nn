@@ -16,6 +16,7 @@
 // under the License.
 
 #include <math.h>
+#include <float.h>
 #include <nmmintrin.h>
 
 #include "ppl/kernel/x86/common/internal_include.h"
@@ -46,12 +47,28 @@ ppl::common::RetCode softmax_ndarray_fp32_sse(
         const float *p_src = src + i * axis_dim * inner_dim;
         float *p_dst       = dst + i * axis_dim * inner_dim;
 
+        int64_t j;
+        __m128 v_max_val = _mm_set1_ps(-FLT_MAX);
+        float max_val = -FLT_MAX;
+        float m_max_val[simd_w];
+        for (j = 0; j + simd_w <= axis_dim * inner_dim; j += simd_w) {
+            v_max_val = _mm_max_ps(v_max_val, _mm_loadu_ps(p_src + j));
+        }
+        _mm_storeu_ps(m_max_val, v_max_val);
+        for (; j < axis_dim * inner_dim; j++) {
+            max_val = max(max_val, p_src[j]);
+        }
+        for (j = 0; j < simd_w; j++) {
+            max_val = max(max_val, m_max_val[j]);
+        }
+        v_max_val = _mm_set1_ps(max_val);
+
         float exp_sum    = 0;
         __m128 v_exp_sum = _mm_set1_ps(0);
-        int64_t j        = 0;
-        for (; j + simd_w <= axis_dim * inner_dim; j += simd_w) {
+
+        for (j = 0; j + simd_w <= axis_dim * inner_dim; j += simd_w) {
             const __m128 v_src     = _mm_loadu_ps(p_src + j);
-            const __m128 v_exp_val = _sse_exp_ps(v_src);
+            const __m128 v_exp_val = _sse_exp_ps(_mm_sub_ps(v_src, v_max_val));
             _mm_storeu_ps(p_dst + j, v_exp_val);
             v_exp_sum = _mm_add_ps(v_exp_sum, v_exp_val);
         }
@@ -72,8 +89,7 @@ ppl::common::RetCode softmax_ndarray_fp32_sse(
         const float r_exp_sum    = 1.0f / exp_sum;
         const __m128 v_r_exp_sum = _mm_set1_ps(r_exp_sum);
 
-        j = 0;
-        for (; j + simd_w <= axis_dim * inner_dim; j += simd_w) {
+        for (j = 0; j + simd_w <= axis_dim * inner_dim; j += simd_w) {
             __m128 v_dst = _mm_loadu_ps(p_dst + j);
             v_dst        = _mm_mul_ps(v_dst, v_r_exp_sum);
             _mm_storeu_ps(p_dst + j, v_dst);
