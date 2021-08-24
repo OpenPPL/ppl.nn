@@ -37,7 +37,7 @@ ppl::common::RetCode softmax_ndarray_fp32(
         inner_dim *= src_shape->GetDim(i);
     }
 
-    PRAGMA_OMP_PARALLEL_FOR()
+PRAGMA_OMP_PARALLEL_FOR()
     for (int64_t i = 0; i < outer_dim; i++) {
         const float *p_src = src + i * axis_dim * inner_dim;
         float *p_dst       = dst + i * axis_dim * inner_dim;

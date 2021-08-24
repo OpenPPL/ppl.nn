@@ -46,6 +46,7 @@
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/less_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/log_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/loop_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/onnx/lstm_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/matmul_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/max_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/max_pool_op.h"
@@ -169,6 +170,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("", "Less", LessOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Log", LogOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Loop", LoopOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "LSTM", LSTMOp);
     REGISTER_OPT_KERNEL_CREATOR("", "MatMul", MatMulOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Max", MaxOp);
     REGISTER_OPT_KERNEL_CREATOR("", "MaxPool", MaxPoolOp);

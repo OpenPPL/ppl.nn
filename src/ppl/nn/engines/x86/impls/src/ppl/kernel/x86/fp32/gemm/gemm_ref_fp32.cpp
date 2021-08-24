@@ -42,29 +42,33 @@ ppl::common::RetCode gemm_ref_fp32(
 #endif
         for (int64_t n = 0; n < N; ++n) {
             float y = 0.0f;
-            if (!trans_A && !trans_B) { // MK, KN; NN
-                for (int64_t k = 0; k < K; ++k) {
-                    y += A[m * K + k] * B[k * N + n];
+            if (alpha != 0.0f) {
+                if (!trans_A && !trans_B) { // MK, KN; NN
+                    for (int64_t k = 0; k < K; ++k) {
+                        y += A[m * K + k] * B[k * N + n];
+                    }
                 }
-            }
-            if (trans_A && !trans_B) { // KM, KN; TN
-                for (int64_t k = 0; k < K; ++k) {
-                    y += A[k * M + m] * B[k * N + n];
+                if (trans_A && !trans_B) { // KM, KN; TN
+                    for (int64_t k = 0; k < K; ++k) {
+                        y += A[k * M + m] * B[k * N + n];
+                    }
                 }
-            }
-            if (trans_A && trans_B) { // KM, NK; TT
-                for (int64_t k = 0; k < K; ++k) {
-                    y += A[k * M + m] * B[n * K + k];
+                if (trans_A && trans_B) { // KM, NK; TT
+                    for (int64_t k = 0; k < K; ++k) {
+                        y += A[k * M + m] * B[n * K + k];
+                    }
                 }
-            }
-            if (!trans_A && trans_B) { // MK, NK; NT
-                for (int64_t k = 0; k < K; ++k) {
-                    y += A[m * K + k] * B[n * K + k];
+                if (!trans_A && trans_B) { // MK, NK; NT
+                    for (int64_t k = 0; k < K; ++k) {
+                        y += A[m * K + k] * B[n * K + k];
+                    }
                 }
+                y *= alpha;
             }
-            y *= alpha;
-            if (V) y += beta * V[n];
-            if (H) y += beta * H[m * N + n];
+            if (beta != 0.0f) {
+                if (V) y += beta * V[n];
+                if (H) y += beta * H[m * N + n];
+            }
             Y[m * N + n] = y;
         }
     }
