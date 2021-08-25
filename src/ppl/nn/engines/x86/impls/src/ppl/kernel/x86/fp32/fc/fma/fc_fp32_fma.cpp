@@ -20,7 +20,7 @@
 
 #include "ppl/kernel/x86/fp32/reorder.h"
 #include "ppl/kernel/x86/fp32/fc/fma/fc_fp32_fma.h"
-#include "ppl/kernel/x86/fp32/gemm/kernel/fma/gemm_nn_bcasta_vloadb_kernel_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/fma/conv_gemm_kernel_fp32_fma.h"
 #include "ppl/kernel/x86/common/avx_tools.h"
 #include "ppl/common/sys.h"
 
@@ -179,14 +179,14 @@ ppl::common::RetCode fc_fp32_fma_executor::execute()
                     PICK_PARAM(int64_t, shar_param, A_MBLK_STRIDE_IDX()) = B_KR_BLK() * padded_icl2_eff;
                     PICK_PARAM(int64_t, shar_param, A_KBLK_STRIDE_IDX()) = B_KR_BLK() * CH_DT_BLK();
                     PICK_PARAM(int64_t, priv_param, M_IDX())             = b_body;
-                    gemm_nn_bcasta_vloadb_m6n16k16_kernel_fp32_fma_table[KER_FORM_CONV()][0][0][oc_sel][B_KR_BLK() - 1](priv_param, shar_param);
+                    conv_gemm_kernel_fp32_fma_table[oc_sel][B_KR_BLK() - 1](priv_param, shar_param);
                     PICK_PARAM(const float *, priv_param, A_IDX()) += b_body * padded_icl2_eff;
                     PICK_PARAM(float *, priv_param, C_IDX()) += b_body * oc_dst_b_stride;
                 }
                 if (b_tail) {
                     PICK_PARAM(int64_t, shar_param, A_KBLK_STRIDE_IDX()) = b_tail * CH_DT_BLK();
                     PICK_PARAM(int64_t, priv_param, M_IDX())             = b_tail;
-                    gemm_nn_bcasta_vloadb_m6n16k16_kernel_fp32_fma_table[KER_FORM_CONV()][0][0][oc_sel][b_tail - 1](priv_param, shar_param);
+                    conv_gemm_kernel_fp32_fma_table[oc_sel][b_tail - 1](priv_param, shar_param);
                 }
 
                 if (oc_unaligned && is_last_ic) {

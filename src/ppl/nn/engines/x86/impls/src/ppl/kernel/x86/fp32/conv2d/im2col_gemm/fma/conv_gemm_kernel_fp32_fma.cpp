@@ -17,14 +17,14 @@
 
 #include <immintrin.h>
 
-#include "ppl/kernel/x86/fp32/gemm/kernel/fma/gemm_nn_bcasta_vloadb_kernel_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/fma/conv_gemm_kernel_fp32_fma.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
 #ifdef PPL_USE_X86_INLINE_ASM
 
-template <int64_t ker_form, bool nt_store, bool prefetch_a, int64_t m_len>
-void gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel_core(
+template <bool nt_store, int64_t m_len>
+void conv_gemm_fp32_fma_kernel_core(
     const int64_t *priv_param,
     const int64_t *shar_param)
 {
@@ -56,9 +56,7 @@ void gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel_core(
         ".equ ALPHA_IDX, (6 * P_BYTES)\n" // float
         ".equ BETA_IDX, (7 * P_BYTES)\n" // float
 
-        ".equ KER_FORM, %c[KER_FORM]\n"
         ".equ NT_STORE, %c[NT_STORE]\n"
-        ".equ PREFETCH_A, %c[PREFETCH_A]\n"
         ".equ PREFETCH_B, 1\n"
         ".equ KERNEL_FLAG_LOAD_C, %c[KERNEL_FLAG_LOAD_C]\n"
         ".equ KERNEL_FLAG_ADD_V, %c[KERNEL_FLAG_ADD_V]\n"
@@ -67,14 +65,8 @@ void gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel_core(
         ".equ KERNEL_FLAG_RELU6, %c[KERNEL_FLAG_RELU6]\n"
         ".equ M_LEN, %c[M_LEN]\n"
 
-        ".equ KER_FORM_NONE, 0\n"
-        ".equ KER_FORM_GEMM, 1\n"
-        ".equ KER_FORM_CONV, 2\n"
-
         PPL_X86_INLINE_ASM_ALIGN()
-        ".if KER_FORM != KER_FORM_NONE\n"
         "mov H_IDX(%[priv_param]), %%r15\n" // mb_h
-        ".endif\n" // .if KER_FORM != KER_FORM_NONE
         "mov A_IDX(%[priv_param]), %%r14\n" // mb_a
         "mov C_IDX(%[priv_param]), %%r13\n" // mb_c
         "mov M_IDX(%[priv_param]), %%r12\n" // m
@@ -151,14 +143,6 @@ void gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel_core(
 "4:\n" // label_k_body
         PPL_X86_INLINE_ASM_ALIGN()
         "lea (%%rax, %%r11, D_BYTES), %%rcx\n"
-        ".if PREFETCH_A\n"
-        ".if M_LEN > 0\n prefetcht0 (0 * M6_K_DT_BLK * D_BYTES)(%%rcx)\n .endif\n"
-        ".if M_LEN > 1\n prefetcht0 (1 * M6_K_DT_BLK * D_BYTES)(%%rcx)\n .endif\n"
-        ".if M_LEN > 2\n prefetcht0 (2 * M6_K_DT_BLK * D_BYTES)(%%rcx)\n .endif\n"
-        ".if M_LEN > 3\n prefetcht0 (3 * M6_K_DT_BLK * D_BYTES)(%%rcx)\n .endif\n"
-        ".if M_LEN > 4\n prefetcht0 (4 * M6_K_DT_BLK * D_BYTES)(%%rcx)\n .endif\n"
-        ".if M_LEN > 5\n prefetcht0 (5 * M6_K_DT_BLK * D_BYTES)(%%rcx)\n .endif\n"
-        ".endif\n" // if PREFETCH_A
         ".if M_LEN > 1\n" // UNROLL OR NOT
         ".irp K,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15\n"
         "vmovups ((\\K * M6_N_DT_BLK + 0 * N_RF_BLK) * D_BYTES)(%%rbx), %%ymm6\n"
@@ -289,7 +273,6 @@ void gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel_core(
         "jne 5b\n" // label_k_remain
 
 "6:\n" // label_finalize_session
-        ".if KER_FORM != KER_FORM_NONE\n"
         "mov FLAGS_IDX(%[shar_param]), %%r11\n"
         "test $KERNEL_FLAG_ADD_V, %%r11\n"
         "jz 7f\n" // label_addv_end
@@ -410,7 +393,7 @@ void gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel_core(
         "vminps %%ymm9, %%ymm15, %%ymm15\n"
         ".endif\n"
 "9:\n" // label_relu_end
-        ".endif\n" // .if KER_FORM != KER_FORM_NONE
+
         "mov C_M_STRIDE_IDX(%[shar_param]), %%r10\n"
         ".if NT_STORE\n"
         ".if M_LEN > 0\n"
@@ -484,9 +467,7 @@ void gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel_core(
         :
         [priv_param]                    "r" (priv_param),
         [shar_param]                    "r" (shar_param),
-        [KER_FORM]                      "i" (ker_form),
         [NT_STORE]                      "i" (nt_store),
-        [PREFETCH_A]                    "i" (prefetch_a),
         [M_LEN]                         "i" (m_len),
         [KERNEL_FLAG_LOAD_C]            "i" (KERNEL_FLAG_LOAD_C()),
         [KERNEL_FLAG_ADD_V]             "i" (KERNEL_FLAG_ADD_V()),
@@ -505,15 +486,15 @@ void gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel_core(
 
 #endif
 
-template <int64_t ker_form, bool nt_store, bool prefetch_a, int64_t n_len, int64_t m_len>
-void gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel(
+template <bool nt_store, int64_t n_len, int64_t m_len>
+void conv_gemm_fp32_fma_kernel(
     const int64_t *priv_param,
     const int64_t *shar_param)
 {
 
 #ifdef PPL_USE_X86_INLINE_ASM
-    if (ker_form != KER_FORM_GEMM() && n_len == 2 * N_RF_BLK() && m_len == 6) {
-        gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel_core<ker_form, nt_store, prefetch_a, m_len>(priv_param, shar_param);
+    if (n_len == 2 * N_RF_BLK() && m_len == 6) {
+        conv_gemm_fp32_fma_kernel_core<nt_store, m_len>(priv_param, shar_param);
         return;
     }
 #endif
@@ -561,10 +542,7 @@ void gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel(
 #else
 #define K_PREFETCH_STEP(K)
 #endif
-    const float *mb_h;
-    if (ker_form != KER_FORM_NONE()) {
-        mb_h = PICK_PARAM(const float*, priv_param, H_IDX());
-    }
+    const float *mb_h = PICK_PARAM(const float*, priv_param, H_IDX());
     const float *mb_a = PICK_PARAM(const float*, priv_param, A_IDX());
     float *mb_c = PICK_PARAM(float*, priv_param, C_IDX());
     int64_t m = PICK_PARAM(int64_t, priv_param, M_IDX());
@@ -632,15 +610,6 @@ void gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel(
             const int64_t a_kblk_stride = PICK_PARAM(const int64_t, shar_param, A_KBLK_STRIDE_IDX());
             while (k >= M6_K_DT_BLK()) {
                 k -= M6_K_DT_BLK();
-                if (prefetch_a) {
-                    const float *next_a = a + a_kblk_stride;
-                    if (m_len > 0) _mm_prefetch((const char*)(next_a + 0 * M6_K_DT_BLK()), _MM_HINT_T0);
-                    if (m_len > 1) _mm_prefetch((const char*)(next_a + 1 * M6_K_DT_BLK()), _MM_HINT_T0);
-                    if (m_len > 2) _mm_prefetch((const char*)(next_a + 2 * M6_K_DT_BLK()), _MM_HINT_T0);
-                    if (m_len > 3) _mm_prefetch((const char*)(next_a + 3 * M6_K_DT_BLK()), _MM_HINT_T0);
-                    if (m_len > 4) _mm_prefetch((const char*)(next_a + 4 * M6_K_DT_BLK()), _MM_HINT_T0);
-                    if (m_len > 5) _mm_prefetch((const char*)(next_a + 5 * M6_K_DT_BLK()), _MM_HINT_T0);
-                }
                 if (n_len == 2 * N_RF_BLK() && m_len > 3) {
                     K_COMPUTE_STEP(0);
                     K_PREFETCH_STEP(0);
@@ -692,180 +661,98 @@ void gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel(
         }
         
         { // session - finalize
-            if (ker_form != KER_FORM_NONE()) {
-                const uint64_t flags = PICK_PARAM(const uint64_t, shar_param, FLAGS_IDX());
-                if (ker_form == KER_FORM_CONV()) {
-                    if (flags & KERNEL_FLAG_ADD_V()) {
-                        const float *v = PICK_PARAM(const float*, priv_param, V_IDX());
-                        if (n_len > 0 * N_RF_BLK()) {
-                            ymm8 = _mm256_loadu_ps(v + 0 * N_RF_BLK());
-                            if (m_len > 0) ymm0 = _mm256_add_ps(ymm8, ymm0);
-                            if (m_len > 1) ymm1 = _mm256_add_ps(ymm8, ymm1);
-                            if (m_len > 2) ymm2 = _mm256_add_ps(ymm8, ymm2);
-                            if (m_len > 3) ymm3 = _mm256_add_ps(ymm8, ymm3);
-                            if (m_len > 4) ymm4 = _mm256_add_ps(ymm8, ymm4);
-                            if (m_len > 5) ymm5 = _mm256_add_ps(ymm8, ymm5);
-                        }
-                        if (n_len > 1 * N_RF_BLK()) {
-                            ymm9 = _mm256_loadu_ps(v + 1 * N_RF_BLK());
-                            if (m_len > 0) ymm10 = _mm256_add_ps(ymm9, ymm10);
-                            if (m_len > 1) ymm11 = _mm256_add_ps(ymm9, ymm11);
-                            if (m_len > 2) ymm12 = _mm256_add_ps(ymm9, ymm12);
-                            if (m_len > 3) ymm13 = _mm256_add_ps(ymm9, ymm13);
-                            if (m_len > 4) ymm14 = _mm256_add_ps(ymm9, ymm14);
-                            if (m_len > 5) ymm15 = _mm256_add_ps(ymm9, ymm15);
-                        }
-                    }
-                    if (flags & KERNEL_FLAG_ADD_H()) {
-                        const int64_t h_m_stride = PICK_PARAM(const int64_t, shar_param, H_M_STRIDE_IDX());
-                        if (m_len > 0) {
-                            if (n_len > 0 * N_RF_BLK()) ymm0 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm0);
-                            if (n_len > 1 * N_RF_BLK()) ymm10 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm10);
-                            mb_h += h_m_stride;
-                        }
-                        if (m_len > 1) {
-                            if (n_len > 0 * N_RF_BLK()) ymm1 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm1);
-                            if (n_len > 1 * N_RF_BLK()) ymm11 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm11);
-                            mb_h += h_m_stride;
-                        }
-                        if (m_len > 2) {
-                            if (n_len > 0 * N_RF_BLK()) ymm2 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm2);
-                            if (n_len > 1 * N_RF_BLK()) ymm12 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm12);
-                            mb_h += h_m_stride;
-                        }
-                        if (m_len > 3) {
-                            if (n_len > 0 * N_RF_BLK()) ymm3 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm3);
-                            if (n_len > 1 * N_RF_BLK()) ymm13 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm13);
-                            mb_h += h_m_stride;
-                        }
-                        if (m_len > 4) {
-                            if (n_len > 0 * N_RF_BLK()) ymm4 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm4);
-                            if (n_len > 1 * N_RF_BLK()) ymm14 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm14);
-                            mb_h += h_m_stride;
-                        }
-                        if (m_len > 5) {
-                            if (n_len > 0 * N_RF_BLK()) ymm5 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm5);
-                            if (n_len > 1 * N_RF_BLK()) ymm15 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm15);
-                            mb_h += h_m_stride;
-                        }
-                    }
+            const uint64_t flags = PICK_PARAM(const uint64_t, shar_param, FLAGS_IDX());
+            if (flags & KERNEL_FLAG_ADD_V()) {
+                const float *v = PICK_PARAM(const float*, priv_param, V_IDX());
+                if (n_len > 0 * N_RF_BLK()) {
+                    ymm8 = _mm256_loadu_ps(v + 0 * N_RF_BLK());
+                    if (m_len > 0) ymm0 = _mm256_add_ps(ymm8, ymm0);
+                    if (m_len > 1) ymm1 = _mm256_add_ps(ymm8, ymm1);
+                    if (m_len > 2) ymm2 = _mm256_add_ps(ymm8, ymm2);
+                    if (m_len > 3) ymm3 = _mm256_add_ps(ymm8, ymm3);
+                    if (m_len > 4) ymm4 = _mm256_add_ps(ymm8, ymm4);
+                    if (m_len > 5) ymm5 = _mm256_add_ps(ymm8, ymm5);
+                }
+                if (n_len > 1 * N_RF_BLK()) {
+                    ymm9 = _mm256_loadu_ps(v + 1 * N_RF_BLK());
+                    if (m_len > 0) ymm10 = _mm256_add_ps(ymm9, ymm10);
+                    if (m_len > 1) ymm11 = _mm256_add_ps(ymm9, ymm11);
+                    if (m_len > 2) ymm12 = _mm256_add_ps(ymm9, ymm12);
+                    if (m_len > 3) ymm13 = _mm256_add_ps(ymm9, ymm13);
+                    if (m_len > 4) ymm14 = _mm256_add_ps(ymm9, ymm14);
+                    if (m_len > 5) ymm15 = _mm256_add_ps(ymm9, ymm15);
+                }
+            }
+            if (flags & KERNEL_FLAG_ADD_H()) {
+                const int64_t h_m_stride = PICK_PARAM(const int64_t, shar_param, H_M_STRIDE_IDX());
+                if (m_len > 0) {
+                    if (n_len > 0 * N_RF_BLK()) ymm0 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm0);
+                    if (n_len > 1 * N_RF_BLK()) ymm10 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm10);
+                    mb_h += h_m_stride;
+                }
+                if (m_len > 1) {
+                    if (n_len > 0 * N_RF_BLK()) ymm1 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm1);
+                    if (n_len > 1 * N_RF_BLK()) ymm11 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm11);
+                    mb_h += h_m_stride;
+                }
+                if (m_len > 2) {
+                    if (n_len > 0 * N_RF_BLK()) ymm2 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm2);
+                    if (n_len > 1 * N_RF_BLK()) ymm12 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm12);
+                    mb_h += h_m_stride;
+                }
+                if (m_len > 3) {
+                    if (n_len > 0 * N_RF_BLK()) ymm3 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm3);
+                    if (n_len > 1 * N_RF_BLK()) ymm13 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm13);
+                    mb_h += h_m_stride;
+                }
+                if (m_len > 4) {
+                    if (n_len > 0 * N_RF_BLK()) ymm4 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm4);
+                    if (n_len > 1 * N_RF_BLK()) ymm14 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm14);
+                    mb_h += h_m_stride;
+                }
+                if (m_len > 5) {
+                    if (n_len > 0 * N_RF_BLK()) ymm5 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm5);
+                    if (n_len > 1 * N_RF_BLK()) ymm15 = _mm256_add_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm15);
+                    mb_h += h_m_stride;
+                }
+            }
 
-                    if (flags & (KERNEL_FLAG_RELU() | KERNEL_FLAG_RELU6())) {
-                        ymm8 = _mm256_setzero_ps();
-                        if (n_len > 0 * N_RF_BLK()) {
-                            if (m_len > 0) ymm0 = _mm256_max_ps(ymm8, ymm0);
-                            if (m_len > 1) ymm1 = _mm256_max_ps(ymm8, ymm1);
-                            if (m_len > 2) ymm2 = _mm256_max_ps(ymm8, ymm2);
-                            if (m_len > 3) ymm3 = _mm256_max_ps(ymm8, ymm3);
-                            if (m_len > 4) ymm4 = _mm256_max_ps(ymm8, ymm4);
-                            if (m_len > 5) ymm5 = _mm256_max_ps(ymm8, ymm5);
-                        }
-                        if (n_len > 1 * N_RF_BLK()) {
-                            if (m_len > 0) ymm10 = _mm256_max_ps(ymm8, ymm10);
-                            if (m_len > 1) ymm11 = _mm256_max_ps(ymm8, ymm11);
-                            if (m_len > 2) ymm12 = _mm256_max_ps(ymm8, ymm12);
-                            if (m_len > 3) ymm13 = _mm256_max_ps(ymm8, ymm13);
-                            if (m_len > 4) ymm14 = _mm256_max_ps(ymm8, ymm14);
-                            if (m_len > 5) ymm15 = _mm256_max_ps(ymm8, ymm15);
-                        }
-                    }
-                    if (flags & KERNEL_FLAG_RELU6()) {
-                        ymm9 = _mm256_set1_ps(6.0f);
-                        if (n_len > 0 * N_RF_BLK()) {
-                            if (m_len > 0) ymm0 = _mm256_min_ps(ymm9, ymm0);
-                            if (m_len > 1) ymm1 = _mm256_min_ps(ymm9, ymm1);
-                            if (m_len > 2) ymm2 = _mm256_min_ps(ymm9, ymm2);
-                            if (m_len > 3) ymm3 = _mm256_min_ps(ymm9, ymm3);
-                            if (m_len > 4) ymm4 = _mm256_min_ps(ymm9, ymm4);
-                            if (m_len > 5) ymm5 = _mm256_min_ps(ymm9, ymm5);
-                        }
-                        if (n_len > 1 * N_RF_BLK()) {
-                            if (m_len > 0) ymm10 = _mm256_min_ps(ymm9, ymm10);
-                            if (m_len > 1) ymm11 = _mm256_min_ps(ymm9, ymm11);
-                            if (m_len > 2) ymm12 = _mm256_min_ps(ymm9, ymm12);
-                            if (m_len > 3) ymm13 = _mm256_min_ps(ymm9, ymm13);
-                            if (m_len > 4) ymm14 = _mm256_min_ps(ymm9, ymm14);
-                            if (m_len > 5) ymm15 = _mm256_min_ps(ymm9, ymm15);
-                        }
-                    }
-                } else if (ker_form == KER_FORM_GEMM()) {
-                    if (flags & KERNEL_FLAG_MUL_C()) {
-                        const float alpha = PICK_PARAM(const float, shar_param, ALPHA_IDX());
-                        ymm8 = _mm256_set1_ps(alpha);
-                        if (n_len > 0 * N_RF_BLK()) {
-                            if (m_len > 0) ymm0 = _mm256_mul_ps(ymm8, ymm0);
-                            if (m_len > 1) ymm1 = _mm256_mul_ps(ymm8, ymm1);
-                            if (m_len > 2) ymm2 = _mm256_mul_ps(ymm8, ymm2);
-                            if (m_len > 3) ymm3 = _mm256_mul_ps(ymm8, ymm3);
-                            if (m_len > 4) ymm4 = _mm256_mul_ps(ymm8, ymm4);
-                            if (m_len > 5) ymm5 = _mm256_mul_ps(ymm8, ymm5);
-                        }
-                        if (n_len > 1 * N_RF_BLK()) {
-                            if (m_len > 0) ymm10 = _mm256_mul_ps(ymm8, ymm10);
-                            if (m_len > 1) ymm11 = _mm256_mul_ps(ymm8, ymm11);
-                            if (m_len > 2) ymm12 = _mm256_mul_ps(ymm8, ymm12);
-                            if (m_len > 3) ymm13 = _mm256_mul_ps(ymm8, ymm13);
-                            if (m_len > 4) ymm14 = _mm256_mul_ps(ymm8, ymm14);
-                            if (m_len > 5) ymm15 = _mm256_mul_ps(ymm8, ymm15);
-                        }
-                    }
-                    if (flags & KERNEL_FLAG_FMA_V()) {
-                        const float *v = PICK_PARAM(const float*, priv_param, V_IDX());
-                        const float beta = PICK_PARAM(const float, shar_param, BETA_IDX());
-                        ymm9 = _mm256_set1_ps(beta);
-                        if (n_len > 0 * N_RF_BLK()) {
-                            ymm8 = _mm256_loadu_ps(v + 0 * N_RF_BLK());
-                            if (m_len > 0) ymm0 = _mm256_fmadd_ps(ymm8, ymm9, ymm0);
-                            if (m_len > 1) ymm1 = _mm256_fmadd_ps(ymm8, ymm9, ymm1);
-                            if (m_len > 2) ymm2 = _mm256_fmadd_ps(ymm8, ymm9, ymm2);
-                            if (m_len > 3) ymm3 = _mm256_fmadd_ps(ymm8, ymm9, ymm3);
-                            if (m_len > 4) ymm4 = _mm256_fmadd_ps(ymm8, ymm9, ymm4);
-                            if (m_len > 5) ymm5 = _mm256_fmadd_ps(ymm8, ymm9, ymm5);
-                        }
-                        if (n_len > 1 * N_RF_BLK()) {
-                            ymm7 = _mm256_loadu_ps(v + 1 * N_RF_BLK());
-                            if (m_len > 0) ymm10 = _mm256_fmadd_ps(ymm7, ymm9, ymm10);
-                            if (m_len > 1) ymm11 = _mm256_fmadd_ps(ymm7, ymm9, ymm11);
-                            if (m_len > 2) ymm12 = _mm256_fmadd_ps(ymm7, ymm9, ymm12);
-                            if (m_len > 3) ymm13 = _mm256_fmadd_ps(ymm7, ymm9, ymm13);
-                            if (m_len > 4) ymm14 = _mm256_fmadd_ps(ymm7, ymm9, ymm14);
-                            if (m_len > 5) ymm15 = _mm256_fmadd_ps(ymm7, ymm9, ymm15);
-                        }
-                    } else if (flags & KERNEL_FLAG_FMA_H()) {
-                        const int64_t h_m_stride = PICK_PARAM(const int64_t, shar_param, H_M_STRIDE_IDX());
-                        const float beta = PICK_PARAM(const float, shar_param, BETA_IDX());
-                        ymm9 = _mm256_set1_ps(beta);
-                        if (m_len > 0) {
-                            if (n_len > 0 * N_RF_BLK()) ymm0 = _mm256_fmadd_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm9, ymm0);
-                            if (n_len > 1 * N_RF_BLK()) ymm10 = _mm256_fmadd_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm9, ymm10);
-                            mb_h += h_m_stride;
-                        }
-                        if (m_len > 1) {
-                            if (n_len > 0 * N_RF_BLK()) ymm1 = _mm256_fmadd_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm9, ymm1);
-                            if (n_len > 1 * N_RF_BLK()) ymm11 = _mm256_fmadd_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm9, ymm11);
-                            mb_h += h_m_stride;
-                        }
-                        if (m_len > 2) {
-                            if (n_len > 0 * N_RF_BLK()) ymm2 = _mm256_fmadd_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm9, ymm2);
-                            if (n_len > 1 * N_RF_BLK()) ymm12 = _mm256_fmadd_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm9, ymm12);
-                            mb_h += h_m_stride;
-                        }
-                        if (m_len > 3) {
-                            if (n_len > 0 * N_RF_BLK()) ymm3 = _mm256_fmadd_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm9, ymm3);
-                            if (n_len > 1 * N_RF_BLK()) ymm13 = _mm256_fmadd_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm9, ymm13);
-                            mb_h += h_m_stride;
-                        }
-                        if (m_len > 4) {
-                            if (n_len > 0 * N_RF_BLK()) ymm4 = _mm256_fmadd_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm9, ymm4);
-                            if (n_len > 1 * N_RF_BLK()) ymm14 = _mm256_fmadd_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm9, ymm14);
-                            mb_h += h_m_stride;
-                        }
-                        if (m_len > 5) {
-                            if (n_len > 0 * N_RF_BLK()) ymm5 = _mm256_fmadd_ps(_mm256_loadu_ps(mb_h + 0 * N_RF_BLK()), ymm9, ymm5);
-                            if (n_len > 1 * N_RF_BLK()) ymm15 = _mm256_fmadd_ps(_mm256_loadu_ps(mb_h + 1 * N_RF_BLK()), ymm9, ymm15);
-                            mb_h += h_m_stride;
-                        }
-                    }
+            if (flags & (KERNEL_FLAG_RELU() | KERNEL_FLAG_RELU6())) {
+                ymm8 = _mm256_setzero_ps();
+                if (n_len > 0 * N_RF_BLK()) {
+                    if (m_len > 0) ymm0 = _mm256_max_ps(ymm8, ymm0);
+                    if (m_len > 1) ymm1 = _mm256_max_ps(ymm8, ymm1);
+                    if (m_len > 2) ymm2 = _mm256_max_ps(ymm8, ymm2);
+                    if (m_len > 3) ymm3 = _mm256_max_ps(ymm8, ymm3);
+                    if (m_len > 4) ymm4 = _mm256_max_ps(ymm8, ymm4);
+                    if (m_len > 5) ymm5 = _mm256_max_ps(ymm8, ymm5);
+                }
+                if (n_len > 1 * N_RF_BLK()) {
+                    if (m_len > 0) ymm10 = _mm256_max_ps(ymm8, ymm10);
+                    if (m_len > 1) ymm11 = _mm256_max_ps(ymm8, ymm11);
+                    if (m_len > 2) ymm12 = _mm256_max_ps(ymm8, ymm12);
+                    if (m_len > 3) ymm13 = _mm256_max_ps(ymm8, ymm13);
+                    if (m_len > 4) ymm14 = _mm256_max_ps(ymm8, ymm14);
+                    if (m_len > 5) ymm15 = _mm256_max_ps(ymm8, ymm15);
+                }
+            }
+            if (flags & KERNEL_FLAG_RELU6()) {
+                ymm9 = _mm256_set1_ps(6.0f);
+                if (n_len > 0 * N_RF_BLK()) {
+                    if (m_len > 0) ymm0 = _mm256_min_ps(ymm9, ymm0);
+                    if (m_len > 1) ymm1 = _mm256_min_ps(ymm9, ymm1);
+                    if (m_len > 2) ymm2 = _mm256_min_ps(ymm9, ymm2);
+                    if (m_len > 3) ymm3 = _mm256_min_ps(ymm9, ymm3);
+                    if (m_len > 4) ymm4 = _mm256_min_ps(ymm9, ymm4);
+                    if (m_len > 5) ymm5 = _mm256_min_ps(ymm9, ymm5);
+                }
+                if (n_len > 1 * N_RF_BLK()) {
+                    if (m_len > 0) ymm10 = _mm256_min_ps(ymm9, ymm10);
+                    if (m_len > 1) ymm11 = _mm256_min_ps(ymm9, ymm11);
+                    if (m_len > 2) ymm12 = _mm256_min_ps(ymm9, ymm12);
+                    if (m_len > 3) ymm13 = _mm256_min_ps(ymm9, ymm13);
+                    if (m_len > 4) ymm14 = _mm256_min_ps(ymm9, ymm14);
+                    if (m_len > 5) ymm15 = _mm256_min_ps(ymm9, ymm15);
                 }
             }
 
@@ -949,59 +836,27 @@ void gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel(
 #endif
 }
 
-#define N16M6_KERNEL_TABLE_BLK(KER_FORM, NT_STORE, PREFTH_A) \
+#define CONV_GEMM_KERNEL_TABLE_BLK(NT_STORE) \
 {\
     {\
-        gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel<KER_FORM, NT_STORE, PREFTH_A, 1 * N_RF_BLK(), 1>,\
-        gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel<KER_FORM, NT_STORE, PREFTH_A, 1 * N_RF_BLK(), 2>,\
-        gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel<KER_FORM, NT_STORE, PREFTH_A, 1 * N_RF_BLK(), 3>,\
-        gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel<KER_FORM, NT_STORE, PREFTH_A, 1 * N_RF_BLK(), 4>,\
-        gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel<KER_FORM, NT_STORE, PREFTH_A, 1 * N_RF_BLK(), 5>,\
-        gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel<KER_FORM, NT_STORE, PREFTH_A, 1 * N_RF_BLK(), 6>,\
+        conv_gemm_fp32_fma_kernel<NT_STORE, 1 * N_RF_BLK(), 1>,\
+        conv_gemm_fp32_fma_kernel<NT_STORE, 1 * N_RF_BLK(), 2>,\
+        conv_gemm_fp32_fma_kernel<NT_STORE, 1 * N_RF_BLK(), 3>,\
+        conv_gemm_fp32_fma_kernel<NT_STORE, 1 * N_RF_BLK(), 4>,\
+        conv_gemm_fp32_fma_kernel<NT_STORE, 1 * N_RF_BLK(), 5>,\
+        conv_gemm_fp32_fma_kernel<NT_STORE, 1 * N_RF_BLK(), 6>,\
     },\
     {\
-        gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel<KER_FORM, NT_STORE, PREFTH_A, 2 * N_RF_BLK(), 1>,\
-        gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel<KER_FORM, NT_STORE, PREFTH_A, 2 * N_RF_BLK(), 2>,\
-        gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel<KER_FORM, NT_STORE, PREFTH_A, 2 * N_RF_BLK(), 3>,\
-        gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel<KER_FORM, NT_STORE, PREFTH_A, 2 * N_RF_BLK(), 4>,\
-        gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel<KER_FORM, NT_STORE, PREFTH_A, 2 * N_RF_BLK(), 5>,\
-        gemm_nn_bcasta_vloadb_m6n16k16_fp32_fma_kernel<KER_FORM, NT_STORE, PREFTH_A, 2 * N_RF_BLK(), 6>,\
+        conv_gemm_fp32_fma_kernel<NT_STORE, 2 * N_RF_BLK(), 1>,\
+        conv_gemm_fp32_fma_kernel<NT_STORE, 2 * N_RF_BLK(), 2>,\
+        conv_gemm_fp32_fma_kernel<NT_STORE, 2 * N_RF_BLK(), 3>,\
+        conv_gemm_fp32_fma_kernel<NT_STORE, 2 * N_RF_BLK(), 4>,\
+        conv_gemm_fp32_fma_kernel<NT_STORE, 2 * N_RF_BLK(), 5>,\
+        conv_gemm_fp32_fma_kernel<NT_STORE, 2 * N_RF_BLK(), 6>,\
     },\
 }
 
-gemm_nn_bcasta_vloadb_m6n16k16_kernel_fp32_fma_func_t
-gemm_nn_bcasta_vloadb_m6n16k16_kernel_fp32_fma_table[KER_FORM_OPT()][NT_STORE_OPT()][PREFTH_A_OPT()][M6_N_RF()][M6_M_RF()] = 
-{
-    {
-        {
-            N16M6_KERNEL_TABLE_BLK(KER_FORM_NONE(), false, false),
-            N16M6_KERNEL_TABLE_BLK(KER_FORM_NONE(), false, true),
-        },
-        {
-            N16M6_KERNEL_TABLE_BLK(KER_FORM_NONE(), true, false),
-            N16M6_KERNEL_TABLE_BLK(KER_FORM_NONE(), true, true),
-        },
-    },
-    {
-        {
-            N16M6_KERNEL_TABLE_BLK(KER_FORM_GEMM(), false, false),
-            N16M6_KERNEL_TABLE_BLK(KER_FORM_GEMM(), false, true),
-        },
-        {
-            N16M6_KERNEL_TABLE_BLK(KER_FORM_GEMM(), true, false),
-            N16M6_KERNEL_TABLE_BLK(KER_FORM_GEMM(), true, true),
-        },
-    },
-    {
-        {
-            N16M6_KERNEL_TABLE_BLK(KER_FORM_CONV(), false, false),
-            N16M6_KERNEL_TABLE_BLK(KER_FORM_CONV(), false, true),
-        },
-        {
-            N16M6_KERNEL_TABLE_BLK(KER_FORM_CONV(), true, false),
-            N16M6_KERNEL_TABLE_BLK(KER_FORM_CONV(), true, true),
-        },
-    },
-};
+conv_gemm_kernel_fp32_fma_func_t
+conv_gemm_kernel_fp32_fma_table[M6_N_RF()][M6_M_RF()] = CONV_GEMM_KERNEL_TABLE_BLK(false);
 
 }}};
