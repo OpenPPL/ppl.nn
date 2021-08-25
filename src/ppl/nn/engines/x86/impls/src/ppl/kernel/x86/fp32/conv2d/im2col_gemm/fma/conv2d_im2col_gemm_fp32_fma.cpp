@@ -23,7 +23,7 @@
 #include "ppl/kernel/x86/fp32/reorder.h"
 #include "ppl/kernel/x86/common/avx_tools.h"
 #include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/fma/conv2d_im2col_gemm_fp32_fma.h"
-#include "ppl/kernel/x86/fp32/gemm/kernel/fma/gemm_nn_bcasta_vloadb_kernel_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/fma/conv_gemm_kernel_fp32_fma.h"
 #include "ppl/common/sys.h"
 
 #define ASSUME_L2_BYTES() (256 * 1024)
@@ -363,13 +363,13 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::execute()
                                         PICK_PARAM(float *, priv_param, C_IDX()) = thr_dst + hw;
                                         if (oc_body) {
                                             PICK_PARAM(int64_t, priv_param, M_IDX()) = oc_body;
-                                            gemm_nn_bcasta_vloadb_m6n16k16_kernel_fp32_fma_table[KER_FORM_CONV()][0][0][1][OC_KR_BLK() - 1](priv_param, shar_param);
+                                            conv_gemm_kernel_fp32_fma_table[1][OC_KR_BLK() - 1](priv_param, shar_param);
                                             PICK_PARAM(const float *, priv_param, A_IDX()) += oc_body * K_DT_BLK();
                                             PICK_PARAM(float *, priv_param, C_IDX()) += oc_body * dst_c_stride;
                                         }
                                         if (oc_tail) {
                                             PICK_PARAM(int64_t, priv_param, M_IDX()) = oc_tail;
-                                            gemm_nn_bcasta_vloadb_m6n16k16_kernel_fp32_fma_table[KER_FORM_CONV()][0][0][1][oc_tail - 1](priv_param, shar_param);
+                                            conv_gemm_kernel_fp32_fma_table[1][oc_tail - 1](priv_param, shar_param);
                                         }
                                     }
                                 }
@@ -381,13 +381,13 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::execute()
                                     PICK_PARAM(float *, priv_param, C_IDX()) = thr_dst_buf;
                                     if (oc_body) {
                                         PICK_PARAM(int64_t, priv_param, M_IDX()) = oc_body;
-                                        gemm_nn_bcasta_vloadb_m6n16k16_kernel_fp32_fma_table[KER_FORM_CONV()][0][0][hw_sel][OC_KR_BLK() - 1](priv_param, shar_param);
+                                        conv_gemm_kernel_fp32_fma_table[hw_sel][OC_KR_BLK() - 1](priv_param, shar_param);
                                         PICK_PARAM(const float *, priv_param, A_IDX()) += oc_body * K_DT_BLK();
                                         PICK_PARAM(float *, priv_param, C_IDX()) += oc_body * dst_buf_c_stride;
                                     }
                                     if (oc_tail) {
                                         PICK_PARAM(int64_t, priv_param, M_IDX()) = oc_tail;
-                                        gemm_nn_bcasta_vloadb_m6n16k16_kernel_fp32_fma_table[KER_FORM_CONV()][0][0][hw_sel][oc_tail - 1](priv_param, shar_param);
+                                        conv_gemm_kernel_fp32_fma_table[hw_sel][oc_tail - 1](priv_param, shar_param);
                                     }
                                 }
                             }

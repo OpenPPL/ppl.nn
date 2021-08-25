@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_X86_FP32_CONV2D_GEMM_DIRECT_FMA_CONV2D_IM2COL_GEMM_FP32_FMA_H_
-#define __ST_PPL_KERNEL_X86_FP32_CONV2D_GEMM_DIRECT_FMA_CONV2D_IM2COL_GEMM_FP32_FMA_H_
+#ifndef __ST_PPL_KERNEL_X86_FP32_CONV2D_IM2COL_GEMM_FMA_CONV2D_IM2COL_GEMM_FP32_FMA_H_
+#define __ST_PPL_KERNEL_X86_FP32_CONV2D_IM2COL_GEMM_FMA_CONV2D_IM2COL_GEMM_FP32_FMA_H_
 
 #include "ppl/kernel/x86/fp32/conv2d.h"
 #include "ppl/kernel/x86/common/internal_include.h"
