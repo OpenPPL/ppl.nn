@@ -4,8 +4,8 @@
 * GCC >= 4.9 or LLVM/Clang >= 6.0
 * [CMake](https://cmake.org/download/) >= 3.14
 * [Git](https://git-scm.com/downloads) >= 2.7.0
-* [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit-archive) >= 10.2 (for CUDA version)
-* [Python](https://www.python.org/downloads/) >= 3 (for CUDA version)
+* [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit-archive) >= 10.2 (for CUDA)
+* [Python](https://www.python.org/downloads/) >= 3 (for CUDA and Python API support)
 
 ### Cloning Source Code
 
@@ -54,10 +54,16 @@ If you want to use specified CUDA toolkit version, please specify `CUDA_TOOLKIT_
 
 ### Buliding Python API support
 
-`PPLNN` builds python API by default. If you want to use a specified version of python, you can pass `PYTHON3_INCLUDE_DIRS` to `build.sh`:
+add `-DPPLNN_ENABLE_PYTHON_API=ON` to the build command if you want to use `PPLNN` in python:
 
 ```bash
-./build.sh -DPYTHON3_INCLUDE_DIRS=/path/to/your/python/include/dir [other options]
+./build.sh -DPPLNN_ENABLE_PYTHON_API=ON
+```
+
+If you want to use a specified version of python, you can pass `PYTHON3_INCLUDE_DIRS` to `build.sh`:
+
+```bash
+./build.sh -DPPLNN_ENABLE_PYTHON_API=ON -DPYTHON3_INCLUDE_DIRS=/path/to/your/python/include/dir [other options]
 ```
 
 ### Testing

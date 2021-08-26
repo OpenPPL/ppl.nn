@@ -95,8 +95,9 @@ target_include_directories(PPLKernelX86
 target_compile_definitions(PPLKernelX86 PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
 target_compile_options(PPLKernelX86 PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
 
-install(TARGETS PPLKernelX86 ARCHIVE DESTINATION lib)
-#install(DIRECTORY include/ppl DESTINATION include)
+if(PPLNN_INSTALL)
+    install(TARGETS PPLKernelX86 ARCHIVE DESTINATION lib)
+endif()
 
 ################### Test ###################
 
