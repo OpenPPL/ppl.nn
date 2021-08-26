@@ -21,4 +21,6 @@ target_include_directories(pypplnn_shared PUBLIC
 set_target_properties(pypplnn_shared PROPERTIES PREFIX "")
 set_target_properties(pypplnn_shared PROPERTIES OUTPUT_NAME "nn")
 
-install(TARGETS pypplnn_shared LIBRARY DESTINATION pyppl)
+if(PPLNN_INSTALL)
+    install(TARGETS pypplnn_shared LIBRARY DESTINATION pyppl)
+endif()
