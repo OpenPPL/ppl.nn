@@ -225,7 +225,8 @@ RetCode CudaEngine::SetQuantization(CudaEngine* engine, va_list args) {
     if (json_file && json_file[0] != '\0') {
         QuantParamParser parser;
         parser.Parse(json_file, &engine->cuda_flags_.quant_info);
-        LOG(INFO) << "Quant tensor size: " << engine->cuda_flags_.quant_info.tensor_params.size();
+        LOG(DEBUG) << "Quant tensor size: " << engine->cuda_flags_.quant_info.tensor_params.size();
+        LOG(DEBUG) << "Quant node size: " << engine->cuda_flags_.quant_info.node_params.size();
     }
     return RC_SUCCESS;
 }
@@ -235,6 +236,7 @@ CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetOutputType, // CUDA_CONF_SET_OUTPUT_TYPE
     CudaEngine::SetCompilerInputDims, // CUDA_CONF_SET_COMPILER_INPUT_SHAPE
     CudaEngine::SetUseDefaultAlgorithms, // CUDA_CONF_USE_DEFAULT_ALGORITHMS
+    CudaEngine::SetQuantization, // CUDA_CONF_SET_QUANTIZATION
 };
 
 RetCode CudaEngine::Configure(uint32_t option, ...) {

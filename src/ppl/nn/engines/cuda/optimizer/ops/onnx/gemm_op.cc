@@ -48,9 +48,6 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
                 auto in_edge_id = info->GetInput<TensorImpl>(i)->GetEdge()->GetId();
                 auto& in_quant = quant->at(in_edge_id);
                 auto in_shape = &info->GetInput<TensorImpl>(i)->GetShape();
-                if (i == 1 && in_quant.type != DATATYPE_UNKNOWN) {
-                    continue;
-                }
                 if (i == 2 && param_.param.bias_term) {
                     in_shape->SetDataType(ppl::common::DATATYPE_FLOAT32);
                     continue;

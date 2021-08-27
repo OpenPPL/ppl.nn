@@ -315,46 +315,95 @@ RetCode OptGraph::AddBridgeKernels() {
 
 RetCode OptGraph::InitQuantization() {
     auto topo = graph_->topo.get();
-    auto& quant_params = args_->quant_info.tensor_params;
     std::vector<CudaTensorQuant> graph_quants(topo->GetMaxEdgeId());
-
-    for (auto iter = topo->CreateEdgeIter(); iter->IsValid(); iter->Forward()) {
-        auto edge = iter->Get();
-        auto pair = quant_params.find(edge->GetName());
-        if (pair != quant_params.end()) {
-            LOG(DEBUG) << "Found a quant_param for edge " << edge->GetName();
-            CudaTensorQuant temp_tensor_quant;
-            auto str = pair->second.fields.find("bit_width")->second;
-            int bit_width = *(int*)(str.content.data());
-            if (bit_width == 8) {
-                temp_tensor_quant.type = DATATYPE_INT8;
-            } else {
-                LOG(ERROR) << "Error quantization configue.";
-                return RC_UNSUPPORTED;
-            }
-            str = pair->second.fields.find("per_channel")->second;
-            temp_tensor_quant.per_chnnal = *(bool*)(str.content.data());
-            str = pair->second.fields.find("scale")->second;
-            temp_tensor_quant.scale[0] = *(float*)(str.content.data());
-            // Only support zero-point = 0.0
-            // str = pair->second.fields.find("zero_point")->second;
-            // temp_tensor_quant.zero_point[0] = *(float*)(str.content.data());
-            graph_quants[edge->GetId()] = temp_tensor_quant;
-        }
-    }
-
-    // Copy quant info for bridge node. Because one of input and output edge is added by program.
+    // Load node quant to args_->node_type
+    auto& node_params = args_->quant_info.node_params;
     for (auto iter = topo->CreateNodeIter(); iter->IsValid(); iter->Forward()) {
         auto node = iter->Get();
-        if (node->GetType().name != "Bridge") {
-            continue;
+        auto pair = node_params.find(node->GetName());
+        if (pair != node_params.end()) {
+            auto str = pair->second.fields.find("data_type")->second;
+            uint32_t bit_width = 0;
+            datatype_t type = DATATYPE_UNKNOWN;
+            if (str.content == "INT8") {
+                args_->node_types.emplace(node->GetName(), DATATYPE_INT8);
+                type = DATATYPE_INT8;
+                bit_width = 8;
+            } else if (str.content == "FLOAT32") {
+                args_->node_types.emplace(node->GetName(), DATATYPE_FLOAT32);
+                type = DATATYPE_FLOAT32;
+                bit_width = 32;
+            } else {
+                LOG(ERROR) << "Not support set to such datatype: " << str.content;
+            }
+            for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
+                auto edge_id = node->GetInput(i);
+                if (edge_id == INVALID_EDGEID) {
+                    continue;
+                }
+                auto& input_quant = graph_quants.at(edge_id);
+                input_quant.type = type;
+                input_quant.bit_width = bit_width;
+            }
+            for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
+                auto edge_id = node->GetOutput(i);
+                if (edge_id == INVALID_EDGEID) {
+                    continue;
+                }
+                auto& output_quant = graph_quants.at(edge_id);
+                output_quant.type = type;
+                output_quant.bit_width = bit_width;
+            }
         }
-        auto& input_quant = graph_quants.at(node->GetInput(0));
-        auto& output_quant = graph_quants.at(node->GetOutput(0));
-        if (input_quant.type == DATATYPE_UNKNOWN) {
-            input_quant = output_quant;
+    }
+    // Load tensor quant to args_->quant_info
+    auto& tensor_params = args_->quant_info.tensor_params;
+    for (auto iter = topo->CreateEdgeIter(); iter->IsValid(); iter->Forward()) {
+        auto edge = iter->Get();
+        auto pair = tensor_params.find(edge->GetName());
+        // Try to copy quant info from otherside of bridge node
+        if (pair == tensor_params.end()) {
+            if (edge->GetProducer() != INVALID_NODEID) {
+                auto pre_node = topo->GetNodeById(edge->GetProducer());
+                if (pre_node->GetType().name == "Bridge") {
+                    auto new_edge = topo->GetEdgeById(pre_node->GetInput(0));
+                    pair = tensor_params.find(new_edge->GetName());
+                }
+            }
+            if (edge->CalcConsumerCount() == 1) {
+                auto post_node = topo->GetNodeById(edge->CreateConsumerIter().Get());
+                if (post_node->GetType().name == "Bridge") {
+                    auto new_edge = topo->GetEdgeById(post_node->GetOutput(0));
+                    pair = tensor_params.find(new_edge->GetName());
+                }  
+            }
+        }
+        // Still can not find quant info. It means quant info is not exist.
+        if (pair == tensor_params.end()) {
+            continue; 
+        }
+        auto& temp_tensor_quant = graph_quants[edge->GetId()];
+        auto str = pair->second.fields.find("per_channel")->second;
+        temp_tensor_quant.per_chnnal = *(bool*)(str.content.data());
+        if (temp_tensor_quant.per_chnnal) {
+            auto max_str = pair->second.fields.find("tensor_max")->second;
+            auto min_str = pair->second.fields.find("tensor_min")->second;
+            uint32_t size = max_str.content.length();
+            temp_tensor_quant.scale.resize(size);
+            temp_tensor_quant.zero_point.resize(size);
+            for (uint32_t i = 0; i < size; ++i) {
+                auto tensor_max = *((float*)(str.content.data()) + i);
+                auto tensor_min = *((float*)(str.content.data()) + i);
+                temp_tensor_quant.scale[i] = (tensor_max - tensor_min) / ((1 << temp_tensor_quant.bit_width) - 1);
+                temp_tensor_quant.zero_point[i] = tensor_max + tensor_min;
+            }
         } else {
-            output_quant = input_quant;
+            str = pair->second.fields.find("tensor_max")->second;
+            auto tensor_max = *(float*)(str.content.data());
+            str = pair->second.fields.find("tensor_min")->second;
+            auto tensor_min = *(float*)(str.content.data());
+            temp_tensor_quant.scale[0] = (tensor_max - tensor_min) / ((1 << temp_tensor_quant.bit_width) - 1);
+            temp_tensor_quant.zero_point[0] = tensor_max + tensor_min;
         }
     }
 

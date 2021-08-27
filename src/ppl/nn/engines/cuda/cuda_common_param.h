@@ -31,6 +31,7 @@ struct CudaTensorQuant {
     ppl::common::dataformat_t format = ppl::common::DATAFORMAT_UNKNOWN;
     ppl::common::datatype_t type = ppl::common::DATATYPE_UNKNOWN;
     bool per_chnnal = false;
+    uint32_t bit_width = 0;
     std::vector<float> scale{0.1f};
     std::vector<float> zero_point{0.0f};
 };

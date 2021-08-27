@@ -628,7 +628,8 @@ bool IsFloatEqual(const std::vector<float>& a, const std::vector<float>& b) {
 }
 
 bool EqualQuant(const ppl::nn::cuda::CudaTensorQuant& quant_a, const ppl::nn::cuda::CudaTensorQuant& quant_b) {
-    return IsFloatEqual(quant_a.scale, quant_b.scale) &&
+    return quant_a.bit_width == quant_b.bit_width &&
+           IsFloatEqual(quant_a.scale, quant_b.scale) &&
            IsFloatEqual(quant_a.zero_point, quant_b.zero_point);
 }
 
@@ -672,8 +673,8 @@ ppl::common::RetCode SetReLayoutParam(
     param->i_zero_point = input_quant.zero_point[0];
     param->o_step = output_quant.scale[0];
     param->o_zero_point = output_quant.zero_point[0];
-    if (input_quant.type == output_quant.type) {
-        param->mix_type = EqualQuant(input_quant, output_quant);
+    if (param->in_type == param->out_type) {
+        param->mix_type = !EqualQuant(input_quant, output_quant);
     }
     return RC_SUCCESS;
 }
