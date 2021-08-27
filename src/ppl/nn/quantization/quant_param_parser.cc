@@ -35,7 +35,6 @@ static RetCode ParseParam(const rapidjson::Value& v, QuantParam* param) {
 
     for (auto it = v.MemberBegin(); it != v.MemberEnd(); ++it) {
         const string key(it->name.GetString(), it->name.GetStringLength());
-
         QuantParam::Value value;
         if (it->value.IsBool()) {
             auto field_value = it->value.GetBool();
@@ -43,11 +42,17 @@ static RetCode ParseParam(const rapidjson::Value& v, QuantParam* param) {
         } else if (it->value.IsFloat()) {
             auto field_value = it->value.GetFloat();
             value.content.assign((const char*)&field_value, sizeof(field_value));
-        } else if (it->value.IsInt()) {
-            auto field_value = it->value.GetInt();
+        } else if (it->value.IsInt64()) {
+            auto field_value = it->value.GetInt64();
             value.content.assign((const char*)&field_value, sizeof(field_value));
         } else if (it->value.IsString()) {
             value.content.assign(it->value.GetString(), it->value.GetStringLength());
+        } else if (it->value.IsArray()) {
+            value.content.clear();
+            for (auto iter = it->value.GetArray().Begin(); iter != it->value.GetArray().End(); ++iter) {
+                auto field_value = it->value.GetFloat();
+                value.content.append((const char*)&field_value, sizeof(field_value));
+            }
         } else {
             LOG(ERROR) << "unsupported json value type.";
             return RC_UNSUPPORTED;
@@ -75,21 +80,32 @@ static RetCode DoParse(const string& buf, QuantParamInfo* info) {
     }
 
     for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
-        const string tensor_name(it->name.GetString(), it->name.GetStringLength());
-
+        const string object_name(it->name.GetString(), it->name.GetStringLength());
         if (!it->value.IsObject()) {
-            LOG(ERROR) << "value of tensor[" << tensor_name << "] is not an object.";
+            LOG(ERROR) << "value of object[" << object_name << "] is not an object.";
             return RC_INVALID_VALUE;
         }
-
-        QuantParam param;
-        auto status = ParseParam(it->value, &param);
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "ParseParam of [" << tensor_name << "] failed: " << GetRetCodeStr(status);
-            return status;
+        const bool is_tensor_set = object_name == "quant_info";
+        const bool is_node_set = object_name == "op_info";
+        if (!is_tensor_set && !is_node_set) {
+            LOG(ERROR) << "name of object[" << object_name << "] is not meaningful.";
+            return RC_INVALID_VALUE;            
         }
-
-        info->tensor_params.insert(make_pair(tensor_name, param));
+        auto& quant_info = is_tensor_set ? info->tensor_params : info->node_params;
+        for (auto iter = it->value.MemberBegin(); iter != it->value.MemberEnd(); ++iter) {
+            const string quant_name(iter->name.GetString(), iter->name.GetStringLength());
+            if (!iter->value.IsObject()) {
+                LOG(ERROR) << "value of sub-object[" << quant_name << "] is not an object.";
+                return RC_INVALID_VALUE;
+            }
+            QuantParam param;
+            auto status = ParseParam(iter->value, &param);
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "ParseParam of [" << quant_name << "] failed: " << GetRetCodeStr(status);
+                return status;
+            }
+            quant_info.insert(make_pair(quant_name, param));
+        }
     }
 
     return RC_SUCCESS;

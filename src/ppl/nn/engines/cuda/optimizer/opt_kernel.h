@@ -170,8 +170,6 @@ protected:
             if (in_quant.type != ppl::common::DATATYPE_UNKNOWN) {
                 auto& shape = info->GetInput<TensorImpl>(i)->GetShape();
                 shape.SetDataType(in_quant.type);
-            } else {
-                return ppl::common::RC_INVALID_VALUE;
             }
         }
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
@@ -180,8 +178,6 @@ protected:
             if (out_quant.type != ppl::common::DATATYPE_UNKNOWN) {
                 auto& shape = info->GetOutput<TensorImpl>(i)->GetShape();
                 shape.SetDataType(out_quant.type);
-            } else {
-                return ppl::common::RC_INVALID_VALUE;
             }
         }
         return ppl::common::RC_SUCCESS;

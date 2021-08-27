@@ -34,6 +34,7 @@ struct QuantParam {
 
 struct QuantParamInfo {
     std::map<std::string, QuantParam> tensor_params;
+    std::map<std::string, QuantParam> node_params;
 };
 
 }} // namespace ppl::nn
