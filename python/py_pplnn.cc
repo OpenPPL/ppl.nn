@@ -35,7 +35,7 @@ void RegisterTensor(pybind11::module*);
 void RegisterNdArray(pybind11::module*);
 void RegisterEngine(pybind11::module*);
 void RegisterOnnxRuntimeBuilderFactory(pybind11::module*);
-void RegisterOnnxRuntimeBuilder(pybind11::module*);
+void RegisterRuntimeBuilder(pybind11::module*);
 void RegisterRuntime(pybind11::module*);
 void RegisterGetVersionString(pybind11::module*);
 
@@ -56,7 +56,7 @@ PYBIND11_MODULE(nn, m) {
     RegisterNdArray(&m);
     RegisterEngine(&m);
     RegisterOnnxRuntimeBuilderFactory(&m);
-    RegisterOnnxRuntimeBuilder(&m);
+    RegisterRuntimeBuilder(&m);
     RegisterRuntime(&m);
     RegisterGetVersionString(&m);
 }

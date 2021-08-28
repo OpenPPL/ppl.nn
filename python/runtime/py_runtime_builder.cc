@@ -15,18 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "py_onnx_runtime_builder.h"
+#include "py_runtime_builder.h"
 #include "pybind11/pybind11.h"
 
 namespace ppl { namespace nn { namespace python {
 
-void RegisterOnnxRuntimeBuilder(pybind11::module* m) {
-    pybind11::class_<PyOnnxRuntimeBuilder>(*m, "OnnxRuntimeBuilder")
+void RegisterRuntimeBuilder(pybind11::module* m) {
+    pybind11::class_<PyRuntimeBuilder>(*m, "RuntimeBuilder")
         .def("__bool__",
-             [](const PyOnnxRuntimeBuilder& builder) -> bool {
+             [](const PyRuntimeBuilder& builder) -> bool {
                  return (builder.GetPtr());
              })
-        .def("CreateRuntime", &PyOnnxRuntimeBuilder::CreateRuntime);
+        .def("CreateRuntime", &PyRuntimeBuilder::CreateRuntime);
 }
 
 }}} // namespace ppl::nn::python

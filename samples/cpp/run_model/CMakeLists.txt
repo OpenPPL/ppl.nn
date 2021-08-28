@@ -1,4 +1,4 @@
-if(NOT PPLNN_USE_X86_64)
+if(NOT HPCC_USE_X86_64)
     return()
 endif()
 

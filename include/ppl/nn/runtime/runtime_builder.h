@@ -15,17 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_ONNX_RUNTIME_BUILDER_H_
-#define _ST_HPC_PPL_NN_MODELS_ONNX_ONNX_RUNTIME_BUILDER_H_
+#ifndef _ST_HPC_PPL_NN_RUNTIME_RUNTIME_BUILDER_H_
+#define _ST_HPC_PPL_NN_RUNTIME_RUNTIME_BUILDER_H_
 
 #include "ppl/nn/common/common.h"
 #include "ppl/nn/runtime/runtime.h"
 
 namespace ppl { namespace nn {
 
-class PPLNN_PUBLIC OnnxRuntimeBuilder {
+class PPLNN_PUBLIC RuntimeBuilder {
 public:
-    virtual ~OnnxRuntimeBuilder() {}
+    virtual ~RuntimeBuilder() {}
     virtual Runtime* CreateRuntime() = 0;
 };
 

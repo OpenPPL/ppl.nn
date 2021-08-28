@@ -15,33 +15,33 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_PYTHON_PY_ONNX_RUNTIME_BUILDER_H_
-#define _ST_HPC_PPL_NN_PYTHON_PY_ONNX_RUNTIME_BUILDER_H_
+#ifndef _ST_HPC_PPL_NN_PYTHON_PY_RUNTIME_BUILDER_H_
+#define _ST_HPC_PPL_NN_PYTHON_PY_RUNTIME_BUILDER_H_
 
-#include "../../runtime/py_runtime.h"
-#include "../../engines/py_engine.h"
-#include "ppl/nn/models/onnx/onnx_runtime_builder.h"
+#include "../engines/py_engine.h"
+#include "py_runtime.h"
+#include "ppl/nn/runtime/runtime_builder.h"
 #include <memory>
 
 namespace ppl { namespace nn { namespace python {
 
-class PyOnnxRuntimeBuilder final {
+class PyRuntimeBuilder final {
 public:
-    PyOnnxRuntimeBuilder(const std::vector<PyEngine>& engines, OnnxRuntimeBuilder* builder)
+    PyRuntimeBuilder(const std::vector<PyEngine>& engines, RuntimeBuilder* builder)
         : engines_(engines), builder_(builder) {}
-    PyOnnxRuntimeBuilder(PyOnnxRuntimeBuilder&&) = default;
-    PyOnnxRuntimeBuilder& operator=(PyOnnxRuntimeBuilder&&) = default;
+    PyRuntimeBuilder(PyRuntimeBuilder&&) = default;
+    PyRuntimeBuilder& operator=(PyRuntimeBuilder&&) = default;
 
     PyRuntime CreateRuntime() {
         return PyRuntime(engines_, builder_->CreateRuntime());
     }
-    OnnxRuntimeBuilder* GetPtr() const {
+    RuntimeBuilder* GetPtr() const {
         return builder_.get();
     }
 
 private:
     std::vector<PyEngine> engines_; // retain engines
-    std::unique_ptr<OnnxRuntimeBuilder> builder_;
+    std::unique_ptr<RuntimeBuilder> builder_;
 };
 
 }}} // namespace ppl::nn::python

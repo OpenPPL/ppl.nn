@@ -86,12 +86,12 @@ Returns engine's name.
 runtime_builder = OnnxRuntimeBuilderFactory::CreateFromFile(onnx_model_file, engines)
 ```
 
-Creates an `OnnxRuntimeBuilder` instance from an ONNX model. `engines` is a list of `Engine` instances that may be used to evaluate the model.
+Creates an `RuntimeBuilder` instance from an ONNX model. `engines` is a list of `Engine` instances that may be used to evaluate the model.
 
-### OnnxRuntimeBuilder
+### RuntimeBuilder
 
 ```python
-runtime = OnnxRuntimeBuilder::CreateRuntime()
+runtime = RuntimeBuilder::CreateRuntime()
 ```
 
 Creates a `Runtime` instance for inferencing.
