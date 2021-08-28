@@ -753,10 +753,10 @@ int main(int argc, char* argv[]) {
         for (uint32_t i = 0; i < engines.size(); ++i) {
             engine_ptrs[i] = engines[i].get();
         }
-        auto builder = unique_ptr<OnnxRuntimeBuilder>(
+        auto builder = unique_ptr<RuntimeBuilder>(
             OnnxRuntimeBuilderFactory::Create(g_flag_onnx_model.c_str(), engine_ptrs.data(), engine_ptrs.size()));
         if (!builder) {
-            LOG(ERROR) << "create OnnxRuntimeBuilder failed.";
+            LOG(ERROR) << "create RuntimeBuilder failed.";
             return -1;
         }
 

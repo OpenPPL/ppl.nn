@@ -42,29 +42,27 @@ Creates a CUDA engine instance with the given options.
 
 Defined in [include/ppl/nn/models/onnx/onnx_runtime_builder_factory.h](../../include/ppl/nn/models/onnx/onnx_runtime_builder_factory.h).
 
-Used to create an `OnnxRuntimeBuilder`.
+Used to create an `RuntimeBuilder`.
 
 #### Functions
 
 ```c++
-OnnxRuntimeBuilder* Create(const char* model_file,
-                           std::vector<std::unique_ptr<Engine>>&&);
+RuntimeBuilder* Create(const char* model_file, Engine** engines, uint32_t engine_num);
 ```
 
-Creates an `OnnxRuntimeBuilder` instance from an ONNX model file. The first parameter is the model file path, the second is engines that may be used to evaluate the compute graph.
+Creates an `RuntimeBuilder` instance from an ONNX model file. The first parameter is the model file path, the second is engines that may be used to evaluate the compute graph. Note that callers should guarantee that `engines` is valid during inferencing.
 
 ```c++
-OnnxRuntimeBuilder* Create(const char* model_buf, uint64_t buf_len,
-                           std::vector<std::unique_ptr<Engine>>&&);
+RuntimeBuilder* Create(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num);
 ```
 
-Creates an `OnnxRuntimeBuilder` instance from an ONNX buffer.
+Creates an `RuntimeBuilder` instance from an ONNX buffer. Note that callers should guarantee that `engines` is valid during inferencing.
 
-## OnnxRuntimeBuilder
+## RuntimeBuilder
 
-Defined in [include/ppl/nn/models/onnx/onnx_runtime_builder.h](../../include/ppl/nn/models/onnx/onnx_runtime_builder.h).
+Defined in [include/ppl/nn/runtime/runtime_builder.h](../../include/ppl/nn/runtime/runtime_builder.h).
 
-`OnnxRuntimeBuilder` is used to create `Runtime` instances. It contains read-only data that a `Runtime` needs.
+`RuntimeBuilder` is used to create `Runtime` instances. It contains read-only data that a `Runtime` needs.
 
 #### Functions
 

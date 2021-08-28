@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "py_onnx_runtime_builder.h"
+#include "../../runtime/py_runtime_builder.h"
 #include "../../engines/py_engine.h"
 #include "ppl/nn/models/onnx/onnx_runtime_builder_factory.h"
 #include "pybind11/pybind11.h"
@@ -26,13 +26,13 @@ namespace ppl { namespace nn { namespace python {
 
 class PyOnnxRuntimeBuilderFactory final {
 public:
-    static PyOnnxRuntimeBuilder CreateFromFile(const char* model_file, vector<PyEngine>& engines) {
+    static PyRuntimeBuilder CreateFromFile(const char* model_file, vector<PyEngine>& engines) {
         vector<Engine*> engine_ptrs(engines.size());
         for (uint32_t i = 0; i < engines.size(); ++i) {
             engine_ptrs[i] = engines[i].GetPtr();
         }
-        return PyOnnxRuntimeBuilder(
-            engines, OnnxRuntimeBuilderFactory::Create(model_file, engine_ptrs.data(), engine_ptrs.size()));
+        return PyRuntimeBuilder(engines,
+                                OnnxRuntimeBuilderFactory::Create(model_file, engine_ptrs.data(), engine_ptrs.size()));
     }
 };
 

@@ -370,7 +370,7 @@ if __name__ == "__main__":
 
     runtime_builder = pplnn.OnnxRuntimeBuilderFactory.CreateFromFile(args.onnx_model, engines)
     if not runtime_builder:
-        logging.error("create OnnxRuntimeBuilder failed.")
+        logging.error("create RuntimeBuilder failed.")
         sys.exit(-1)
 
     runtime = runtime_builder.CreateRuntime()

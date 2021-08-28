@@ -122,10 +122,10 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
     engine_ptrs.emplace_back(engines[0].get());
 
     // create onnx runtime builder according to onnx model & engines registered before
-    auto builder = unique_ptr<OnnxRuntimeBuilder>(
+    auto builder = unique_ptr<RuntimeBuilder>(
         OnnxRuntimeBuilderFactory::Create(onnx_model_path, engine_ptrs.data(), engine_ptrs.size()));
     if (!builder) {
-        fprintf(stderr, "create OnnxRuntimeBuilder from onnx model %s failed!\n", onnx_model_path);
+        fprintf(stderr, "create RuntimeBuilder from onnx model %s failed!\n", onnx_model_path);
         return -1;
     }
 

@@ -25,7 +25,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn {
 
-OnnxRuntimeBuilder* OnnxRuntimeBuilderFactory::Create(const char* model_file, Engine** engines, uint32_t engine_num) {
+RuntimeBuilder* OnnxRuntimeBuilderFactory::Create(const char* model_file, Engine** engines, uint32_t engine_num) {
     FileMapping fm;
     if (fm.Init(model_file) != RC_SUCCESS) {
         LOG(ERROR) << "Init filemapping from file [" << model_file << "] error.";
@@ -34,8 +34,8 @@ OnnxRuntimeBuilder* OnnxRuntimeBuilderFactory::Create(const char* model_file, En
     return OnnxRuntimeBuilderFactory::Create(fm.Data(), fm.Size(), engines, engine_num);
 }
 
-OnnxRuntimeBuilder* OnnxRuntimeBuilderFactory::Create(const char* model_buf, uint64_t buf_len, Engine** engines,
-                                                      uint32_t engine_num) {
+RuntimeBuilder* OnnxRuntimeBuilderFactory::Create(const char* model_buf, uint64_t buf_len, Engine** engines,
+                                                  uint32_t engine_num) {
     set<string> engine_names;
     for (uint32_t i = 0; i < engine_num; ++i) {
         auto e = engines[i];
@@ -55,7 +55,7 @@ OnnxRuntimeBuilder* OnnxRuntimeBuilderFactory::Create(const char* model_buf, uin
     if (builder) {
         auto status = builder->Init(model_buf, buf_len, std::move(engine_impls));
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "init OnnxRuntimeBuilder failed: " << GetRetCodeStr(status);
+            LOG(ERROR) << "init RuntimeBuilder failed: " << GetRetCodeStr(status);
             delete builder;
             return nullptr;
         }
