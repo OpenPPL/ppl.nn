@@ -11,15 +11,16 @@ Engine* X86EngineFactory::Create();
 to create an engine which runs on x86-compatible CPUs:
 
 ```c++
-Engine* x86_engine = X86EngineFactory::Create();
+X86EngineOptions x86_options;
+Engine* x86_engine = X86EngineFactory::Create(x86_options);
 ```
 
 Or use
 
 ```c++
-CudaEngineOptions options;
+CudaEngineOptions cuda_options;
 // ... set options
-Engine* CudaEngineFactory::Create(options);
+Engine* CudaEngineFactory::Create(cuda_options);
 ```
 
 to create an engine running on NVIDIA GPUs.
