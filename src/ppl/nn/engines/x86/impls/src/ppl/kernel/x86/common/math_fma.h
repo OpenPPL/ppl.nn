@@ -23,8 +23,9 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 // an approximation of sigmoid
-static inline __m256 _fma_sigmoid_ps(__m256 value)
+static inline __m256 _fma_sigmoid_ps(const __m256 __value)
 {
+    __m256 value = __value;
     value = _mm256_max_ps(_mm256_set1_ps(-18.0f), value);
     value = _mm256_min_ps(_mm256_set1_ps(18.0f), value);
 
@@ -49,8 +50,9 @@ static inline __m256 _fma_sigmoid_ps(__m256 value)
 }
 
 // an approximation of tanh
-static inline __m256 _fma_tanh_ps(__m256 value)
+static inline __m256 _fma_tanh_ps(const __m256 __value)
 {
+    __m256 value = __value;
     value = _mm256_max_ps(_mm256_set1_ps(-9.0f), value);
     value = _mm256_min_ps(_mm256_set1_ps(9.0f), value);
 
@@ -75,12 +77,13 @@ static inline __m256 _fma_tanh_ps(__m256 value)
 }
 
 // an approximation of exp
-static inline __m256 _fma_exp_ps(__m256 x)
+static inline __m256 _fma_exp_ps(const __m256 __x)
 {
     __m256 tmp = _mm256_setzero_ps(), fx;
     __m256i imm0;
     __m256 one = _mm256_set1_ps(1.0f);
 
+    __m256 x = __x;
     x = _mm256_min_ps(x, _mm256_set1_ps(88.3762626647949f));
     x = _mm256_max_ps(x, _mm256_set1_ps(-88.3762626647949f));
 

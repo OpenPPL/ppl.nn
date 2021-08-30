@@ -23,8 +23,9 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 // an approximation of sigmoid
-static inline __m128 _sse_sigmoid_ps(__m128 value)
+static inline __m128 _sse_sigmoid_ps(const __m128 __value)
 {
+    __m128 value = __value;
     value = _mm_max_ps(_mm_set1_ps(-18.0f), value);
     value = _mm_min_ps(_mm_set1_ps(18.0f), value);
 
@@ -58,8 +59,9 @@ static inline __m128 _sse_sigmoid_ps(__m128 value)
 }
 
 // an approximation of tanh
-static inline __m128 _sse_tanh_ps(__m128 value)
+static inline __m128 _sse_tanh_ps(const __m128 __value)
 {
+    __m128 value = __value;
     value = _mm_max_ps(_mm_set1_ps(-9.0f), value);
     value = _mm_min_ps(_mm_set1_ps(9.0f), value);
 
@@ -93,12 +95,13 @@ static inline __m128 _sse_tanh_ps(__m128 value)
 }
 
 // an approximation of exp
-static inline __m128 _sse_exp_ps(__m128 x)
+static inline __m128 _sse_exp_ps(const __m128 __x)
 {
     __m128 tmp = _mm_setzero_ps(), fx;
     __m128i imm0;
     __m128 one = _mm_set1_ps(1.0f);
 
+    __m128 x = __x;
     x = _mm_min_ps(x, _mm_set1_ps(88.3762626647949f));
     x = _mm_max_ps(x, _mm_set1_ps(-88.3762626647949f));
 
