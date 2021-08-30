@@ -46,13 +46,11 @@ inline void memset32_avx(void *dst, const int32_t val, const int64_t n32) {
         __dst[2] = val;
         __dst[3] = val;
         __dst += 4;
-        __n32 -= 4;
     }
     if (__n32 & 2) {
         __dst[0] = val;
         __dst[1] = val;
         __dst += 2;
-        __n32 -= 2;
     }
     if (__n32 & 1) {
         __dst[0] = val;
@@ -74,20 +72,17 @@ inline void memcpy32_avx(void *dst, const void *src, const int64_t n32) {
         _mm256_storeu_ps(__dst + 0, _mm256_loadu_ps(__src + 0));
         __dst += 8;
         __src += 8;
-        __n32 -= 8;
     }
     if (__n32 & 4) {
         _mm_storeu_ps(__dst + 0, _mm_loadu_ps(__src + 0));
         __dst += 4;
         __src += 4;
-        __n32 -= 4;
     }
     if (__n32 & 2) {
         __dst[0] = __src[0];
         __dst[1] = __src[1];
         __dst += 2;
         __src += 2;
-        __n32 -= 2;
     }
     if (__n32 & 1) {
         __dst[0] = __src[0];

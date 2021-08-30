@@ -53,6 +53,37 @@ ppl::common::RetCode deform_conv2d_ref_fp32(
     void *temp_buffer,
     float *dst);
 
+uint64_t deform_conv2d_fp32_fma_get_buffer_bytes(
+    const int64_t dst_h,
+    const int64_t dst_w,
+    const int64_t group,
+    const int64_t channels,
+    const int64_t kernel_h,
+    const int64_t kernel_w);
+
+ppl::common::RetCode deform_conv2d_fp32_fma(
+    const ppl::nn::TensorShape *src_shape,
+    const ppl::nn::TensorShape *dst_shape,
+    const float *src,
+    const float *offset,
+    const float *mask,
+    const float *filter,
+    const float *bias,
+    const int64_t group,
+    const int64_t offset_group,
+    const int64_t channels,
+    const int64_t num_output,
+    const int64_t kernel_h,
+    const int64_t kernel_w,
+    const int64_t stride_h,
+    const int64_t stride_w,
+    const int64_t pad_h,
+    const int64_t pad_w,
+    const int64_t dilation_h,
+    const int64_t dilation_w,
+    void *temp_buffer,
+    float *dst);
+
 }}}; // namespace ppl::kernel::x86
 
 #endif

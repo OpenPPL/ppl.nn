@@ -21,7 +21,7 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-uint64_t deform_conv2d_ref_fp32_get_buffer_bytes(
+uint64_t deform_conv2d_fp32_fma_get_buffer_bytes(
     const int64_t dst_h,
     const int64_t dst_w,
     const int64_t group,
@@ -36,7 +36,7 @@ uint64_t deform_conv2d_ref_fp32_get_buffer_bytes(
     return ic_per_gp * kernel_h * kernel_w * dst_h * dst_w * sizeof(float);
 }
 
-ppl::common::RetCode deform_conv2d_ref_fp32(
+ppl::common::RetCode deform_conv2d_fp32_fma(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
     const float *src,
@@ -91,7 +91,7 @@ ppl::common::RetCode deform_conv2d_ref_fp32(
                 mask != nullptr,
                 columns);
             float *dst_ptr = dst + b * dst_c * dst_h * dst_w + g * oc_per_gp * dst_h * dst_w;
-            gemm_ref_fp32(
+            gemm_fp32_fma(
                 filter + g * oc_per_gp * ic_per_gp * kernel_h * kernel_w,
                 columns,
                 bias + g * oc_per_gp,

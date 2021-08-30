@@ -41,8 +41,13 @@ uint64_t LSTMKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     const bool has_Y = ctx.GetOutputCount() > 0 && ctx.GetOutput<TensorImpl>(0);
     const bool has_Y_h = ctx.GetOutputCount() > 1 && ctx.GetOutput<TensorImpl>(1);
     const bool has_Y_c = ctx.GetOutputCount() > 2 && ctx.GetOutput<TensorImpl>(2);
-    return kernel::x86::lstm_ref_fp32_get_buffer_bytes(
-        &X->GetShape(), direction_, param_->hidden_size, has_Y, has_Y_h, has_Y_c);
+    if (MayUseISA(ppl::common::ISA_X86_FMA)) {
+        return kernel::x86::lstm_fp32_fma_get_buffer_bytes(
+            &X->GetShape(), direction_, param_->hidden_size, has_Y, has_Y_h, has_Y_c);
+    } else {
+        return kernel::x86::lstm_ref_fp32_get_buffer_bytes(
+            &X->GetShape(), direction_, param_->hidden_size, has_Y, has_Y_h, has_Y_c);
+    }
 }
 
 ppl::common::RetCode LSTMKernel::DoExecute(KernelExecContext* ctx) {
@@ -149,11 +154,19 @@ ppl::common::RetCode LSTMKernel::DoExecute(KernelExecContext* ctx) {
     const auto data_format = X->GetShape().GetDataFormat();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32 && data_format == ppl::common::DATAFORMAT_NDARRAY) {
-        return kernel::x86::lstm_ref_fp32(
-            &X->GetShape(), X->GetBufferPtr<const float>(),
-            W->GetBufferPtr<const float>(), R->GetBufferPtr<const float>(),
-            P_data, B_data, sequence_lens_data, initial_h_data, initial_c_data,
-            direction_, param_->hidden_size, tmp_buffer, Y_data, Y_h_data, Y_c_data);
+        if (MayUseISA(ppl::common::ISA_X86_FMA)) {
+            return kernel::x86::lstm_fp32_fma(
+                &X->GetShape(), X->GetBufferPtr<const float>(),
+                W->GetBufferPtr<const float>(), R->GetBufferPtr<const float>(),
+                P_data, B_data, sequence_lens_data, initial_h_data, initial_c_data,
+                direction_, param_->hidden_size, tmp_buffer, Y_data, Y_h_data, Y_c_data);
+        } else {
+            return kernel::x86::lstm_ref_fp32(
+                &X->GetShape(), X->GetBufferPtr<const float>(),
+                W->GetBufferPtr<const float>(), R->GetBufferPtr<const float>(),
+                P_data, B_data, sequence_lens_data, initial_h_data, initial_c_data,
+                direction_, param_->hidden_size, tmp_buffer, Y_data, Y_h_data, Y_c_data);
+        }
     } else {
         LOG(ERROR) << "only support fp32 ndarray now.";
     }

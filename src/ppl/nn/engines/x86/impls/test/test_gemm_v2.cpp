@@ -30,7 +30,7 @@
 #include <omp.h>
 #endif
 
-#include "ppl/kernel/x86/fp32/gemm.h"
+#include "ppl/kernel/x86/fp32/gemm_v2.h"
 #include "ppl/common/generic_cpu_allocator.h"
 #include "ppl/kernel/x86/common/simd_tools.h"
 #include "ppl/kernel/x86/common/internal_include.h"
@@ -44,7 +44,7 @@
 #define DEBUG_TAG(X)
 #endif
 
-#define CASE_STRING_FMT() "m%ldn%ldk%ld_n%s"
+#define CASE_STRING_FMT() "m%ldn%ldk%ld_trans_A%ldtrans_B%ld_alpha%fbeta%f_C%ld_fuse%ld_n%s"
 
 Define_bool_opt("--help", Flag_help, false, "show these help information");
 Define_string(cfg, "", "(required) fc config file, format:" CASE_STRING_FMT());
@@ -54,16 +54,40 @@ Define_float(min_second, 1.0, "(1.0) min benchmark seconds");
 Define_bool(validate, false, "(false) do result validation");
 Define_float(eps, 1e-5, "(1e-5) rel error trunk for validation");
 
-Define_float(alpha, 1.0f, "(1.0) gemm alpha");
-Define_float(beta, 0.0f, "(0.0) gemm beta");
-Define_int32(relu, 0, "(0) fuse relu, 0 for none, 1 for relu, 6 for relu6");
-Define_int32(type_a, 0, "(0) 0 for no_trans, 1 for trans");
-Define_int32(type_b, 0, "(0) 0 for no_trans, 1 for trans");
-Define_int32(type_v, 0, "(0) 0 for empty, 1 for scalar, 2 for col vector, 3 for row vector");
-Define_int32(type_h, 0, "(0) 0 for empty, 1 for no_trans");
-Define_int32(m, 0, "(0) override M");
-Define_int32(n, 0, "(0) override N");
-Define_int32(k, 0, "(0) override K");
+ppl::common::RetCode gemm_v2_ref_fp32(const ppl::kernel::x86::gemm_v2_param_fp32& param) {
+#ifdef PPL_USE_X86_OMP_COLLAPSE
+    PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)
+#else
+    PRAGMA_OMP_PARALLEL_FOR()
+#endif
+    for (int32_t m = 0; m < param.M; m++) {
+        for (int32_t n = 0; n < param.N; n++) {
+            float sum = 0;
+            for (int32_t k = 0; k < param.K; k++) {
+                const float a_val = param.trans_A ? param.src_A[k * param.lda + m] : param.src_A[m * param.lda + k];
+                const float b_val = param.trans_B ? param.src_B[n * param.ldb + k] : param.src_B[k * param.ldb + n];
+                sum += a_val * b_val;
+            }
+            float c_val = 0;
+            if (param.c_type == ppl::kernel::x86::gemm_v2_C_type::scalar) {
+                c_val = param.src_C[0];
+            } else if (param.c_type == ppl::kernel::x86::gemm_v2_C_type::vector_h) {
+                c_val = param.src_C[m];
+            } else if (param.c_type == ppl::kernel::x86::gemm_v2_C_type::vector_w) {
+                c_val = param.src_C[n];
+            } else if (param.c_type == ppl::kernel::x86::gemm_v2_C_type::matrix) {
+                c_val = param.src_C[m * param.ldc + n];
+            }
+            float result = param.alpha * sum + param.beta * c_val;
+            if (param.fuse_flag & ppl::kernel::x86::gemm_v2_fuse_flag::relu) {
+                result = ppl::kernel::x86::max(result, 0.0f);
+            }
+            param.dst_Y[m * param.ldy + n] = result;
+        }
+    }
+
+    return ppl::common::RC_SUCCESS;
+}
 
 int main(int argc, char **argv) {
     simple_flags::parse_args(argc, argv);
@@ -117,12 +141,6 @@ int main(int argc, char **argv) {
         num_threads, Flag_warm_up, Flag_min_iter, Flag_min_second, Flag_validate, Flag_eps
     );
     std::cerr << "==============================================================\n";
-    fprintf(
-        stderr,
-        "alpha=%f\nbeta=%f\nrelu=%d\ntype_a=%d\ntype_b=%d\ntype_v=%d\ntype_h=%d\nM=%d\nN=%d\nK=%d\n\n",
-        Flag_alpha, Flag_beta, Flag_relu, Flag_type_a, Flag_type_b, Flag_type_v, Flag_type_h, Flag_m, Flag_n, Flag_k
-    );
-    std::cerr << "==============================================================\n";
     std::cerr << "begin tests\n";
     std::cerr << "line_no,case_string,min_ms,max_gflops,max_gbps,avg_ms,avg_gflops,avg_gbps\n";
 
@@ -132,46 +150,6 @@ int main(int argc, char **argv) {
     double all_case_gflops = 0.;
     double all_case_gbps = 0.;
     double all_case_us = 0.;
-
-    ppl::kernel::x86::gemm_m_type_t typeA;
-    ppl::kernel::x86::gemm_m_type_t typeB;
-    ppl::kernel::x86::gemm_v_type_t typeV;
-    ppl::kernel::x86::gemm_m_type_t typeH;
-    ppl::kernel::x86::gemm_post_t post_flag;
-
-    switch (Flag_type_a) {
-        case 1: typeA = ppl::kernel::x86::gemm_m_type::trans; break;
-        default: typeA = ppl::kernel::x86::gemm_m_type::notrans; break;
-    }
-    const bool is_trans_a = Flag_type_a == 1;
-
-    switch (Flag_type_b) {
-        case 1: typeB = ppl::kernel::x86::gemm_m_type::trans; break;
-        default: typeB = ppl::kernel::x86::gemm_m_type::notrans; break;
-    }
-    const bool is_trans_b = Flag_type_b == 1;
-
-    switch (Flag_type_v) {
-        case 1: typeV = ppl::kernel::x86::gemm_v_type::scalar; break;
-        case 2: typeV = ppl::kernel::x86::gemm_v_type::col_vec; break;
-        case 3: typeV = ppl::kernel::x86::gemm_v_type::row_vec; break;
-        default: typeV = ppl::kernel::x86::gemm_v_type::empty; break;
-    }
-
-    switch (Flag_type_h) {
-        case 1: typeH = ppl::kernel::x86::gemm_m_type::notrans; break;
-        default: typeH = ppl::kernel::x86::gemm_m_type::empty; break;
-    }
-
-    switch (Flag_relu) {
-        case 1: post_flag = ppl::kernel::x86::gemm_post::relu; break;
-        case 6: post_flag = ppl::kernel::x86::gemm_post::relu6; break;
-        default: post_flag = ppl::kernel::x86::gemm_post::none; break;
-    }
-
-    const int32_t data_mod = 7;
-    const int32_t data_shift = -3;
-    const float data_scale = Flag_validate ? 1.0 : 0.1;
 
     while (cfgfile.getline(line, 512, '\n')) {
         ++line_no;
@@ -183,118 +161,146 @@ int main(int argc, char **argv) {
 
         char case_name[100];
         int64_t M, N, K;
+        int64_t trans_A, trans_B;
+        float alpha, beta;
+        int64_t c_type;
+        int64_t fuse_flag;
 
-        if (4 != sscanf(
+        if (10 != sscanf(
             line,
             CASE_STRING_FMT() "\n",
-            &M, &N, &K, case_name
+            &M, &N, &K, &trans_A, &trans_B, &alpha, &beta, &c_type, &fuse_flag, case_name
         )) {
             std::cerr << line_no << "," << line << ",invalid format\n";
             continue;
         }
 
-        if (Flag_m > 0) M = Flag_m;
-        if (Flag_n > 0) N = Flag_n;
-        if (Flag_k > 0) K = Flag_k;
-
         fprintf(
             stderr,
             "%d," CASE_STRING_FMT(),
-            line_no, M, N, K, case_name
+            line_no, M, N, K, trans_A, trans_B, alpha, beta, c_type, fuse_flag, case_name
         );
-
+        std::cerr << "\n";
 DEBUG_TAG(A);
-        const int64_t lda = is_trans_a ? M : K;
-        const int64_t ldb = is_trans_b ? K : N;
-        const int64_t ldh = N;
-        const int64_t ldc = N;
+        const int64_t lda = trans_A ? M : K;
+        const int64_t ldb = trans_B ? K : N;
+        const int64_t ldy = N;
         const int64_t A_num_elements = M * K;
         const int64_t B_num_elements = K * N;
-        const int64_t C_num_elements = M * N;
-        const int64_t H_num_elements = Flag_type_h ? C_num_elements : 0;
+        const int64_t dst_num_elements = M * N;
         const int64_t A_num_bytes = A_num_elements * sizeof(float);
         const int64_t B_num_bytes = B_num_elements * sizeof(float);
-        const int64_t C_num_bytes = C_num_elements * sizeof(float);
-        const int64_t H_num_bytes = Flag_type_h ? C_num_bytes : 0;
+        const int64_t dst_num_bytes = dst_num_elements * sizeof(float);
 
-        int64_t V_num_elements;
-        switch (Flag_type_v) {
-            case 1: V_num_elements = 1; break;
-            case 2: V_num_elements = M; break;
-            case 3: V_num_elements = N; break;
-            default: V_num_elements = 0; break;
+        int64_t ldc = 0;
+        int64_t C_num_elements = 0;
+        if (c_type == ppl::kernel::x86::gemm_v2_C_type::scalar) {
+            C_num_elements = 1;
+        } else if (c_type == ppl::kernel::x86::gemm_v2_C_type::vector_h) {
+            C_num_elements = M;
+        } else if (c_type == ppl::kernel::x86::gemm_v2_C_type::vector_w) {
+            C_num_elements = N;
+        } else if (c_type == ppl::kernel::x86::gemm_v2_C_type::matrix) {
+            C_num_elements = M * N;
+            ldc = N;
         }
-        const int64_t V_num_bytes = V_num_elements * sizeof(float);
+        const int64_t C_num_bytes = C_num_elements * sizeof(float);
 
         const double gops = (double)M * N * K * 2 / 1e9;
-        const double gbs = (double)(A_num_bytes + B_num_bytes + C_num_bytes + V_num_bytes + H_num_bytes) / 1e9;
+        const double gbs = (double)(A_num_bytes + B_num_bytes + C_num_bytes + dst_num_bytes) / 1e9;
 DEBUG_TAG(B);
         ppl::common::GenericCpuAllocator allocator(PPL_X86_CACHELINE_BYTES());
 
         float* A = (float*)allocator.Alloc(A_num_bytes);
         float* B = (float*)allocator.Alloc(B_num_bytes);
-        float* C = (float*)allocator.Alloc(C_num_bytes);
-        if (!A || !B || !C) {
-            std::cerr << ", A or B or C out of memory\n";
+        float* dst = (float*)allocator.Alloc(dst_num_bytes);
+        if (!A || !B || !dst) {
+            std::cerr << "," << "input & output tensors out of memory\n";
             return -1;
         }
-        memset(C, 0, C_num_bytes);
+        memset(dst, 0, dst_num_bytes);
 
-        float* V = nullptr;
-        if (V_num_bytes > 0) {
-            V = (float*)allocator.Alloc(V_num_bytes);
-            if (!V) {
-                std::cerr << ", V out of memory\n";
+        float* C = nullptr;
+        if (C_num_bytes > 0) {
+            C = (float*)allocator.Alloc(C_num_bytes);
+            if (!C) {
+                std::cerr << "," << "input tensors out of memory\n";
                 return -1;
             }
         }
-
-        float* H = nullptr;
-        if (H_num_bytes > 0) {
-            H = (float*)allocator.Alloc(H_num_bytes);
-            if (!H) {
-                std::cerr << ", H out of memory\n";
-                return -1;
-            }
-        }
-
 DEBUG_TAG(C);
         for (int64_t i = 0; i < A_num_elements; i++) {
-            A[i] = (rand() % data_mod + data_shift) * data_scale;
+            A[i] = (float)rand() / INT32_MAX - 0.5f;
         }
         for (int64_t i = 0; i < B_num_elements; i++) {
-            B[i] = (rand() % data_mod + data_shift) * data_scale;
+            B[i] = (float)rand() / INT32_MAX - 0.5f;
         }
-        for (int64_t i = 0; i < V_num_elements; i++) {
-            V[i] = (rand() % data_mod + data_shift) * data_scale;
-        }
-        for (int64_t i = 0; i < H_num_elements; i++) {
-            H[i] = (rand() % data_mod + data_shift) * data_scale;
+        for (int64_t i = 0; i < C_num_elements; i++) {
+            C[i] = (float)rand() / INT32_MAX - 0.5f;
         }
 
-        float* C_ref = nullptr;
+        float* dst_ref = nullptr;
         if (Flag_validate) {
-            C_ref = (float*)allocator.Alloc(C_num_bytes);
-            if (!C_ref) {
-                std::cerr << "," << "C_ref out of memory\n";
+            dst_ref = (float*)allocator.Alloc(dst_num_bytes);
+            if (!dst_ref) {
+                std::cerr << "," << "dst_ref out of memory\n";
                 return -1;
             }
-            memset(C_ref, 0, C_num_bytes);
+            memset(dst_ref, 0, dst_num_bytes);
         }
 DEBUG_TAG(D);
-        ppl::common::RetCode ret =
-            ppl::kernel::x86::gemm_fp32_fma(
-                A, B, V, H,
-                typeA, typeB, typeV, typeH,
-                M, N, K,
-                lda, ldb, ldc, ldh,
-                Flag_alpha, Flag_beta,
-                post_flag, C);
+        ppl::kernel::x86::gemm_v2_param_fp32 param;
+        param.src_A = A;
+        param.src_B = B;
+        param.src_C = C;
+        param.dst_Y = dst;
+        param.M = M;
+        param.N = N;
+        param.K = K;
+        param.lda = lda;
+        param.ldb = ldb;
+        param.ldc = ldc;
+        param.ldy = ldy;
+        param.alpha = alpha;
+        param.beta = beta;
+        param.trans_A = trans_A;
+        param.trans_B = trans_B;
+#ifdef PPL_USE_X86_AVX512
+        param.isa_flag = ppl::common::ISA_X86_AVX512;
+#else
+        param.isa_flag = ppl::common::ISA_X86_FMA;
+#endif
+        param.fuse_flag = fuse_flag;
+        param.c_type = c_type;
+
+        auto executor = std::unique_ptr<ppl::kernel::x86::gemm_v2_executor_fp32>(ppl::kernel::x86::create_gemm_v2_executor_fp32(param));
+        if (executor == nullptr) {
+            fprintf(stderr, "cannot create executor!\n");
+            return -1;
+        }
+DEBUG_TAG(E);
+        const int64_t temp_buffer_bytes = executor->get_buffer_bytes();
+        void* temp_buffer = nullptr;
+        if (temp_buffer_bytes > 0) {
+            temp_buffer = allocator.Alloc(temp_buffer_bytes);
+            if (!temp_buffer) {
+                std::cerr << "," << "temp_buffer out of memory\n";
+                return -1;
+            }
+        }
+        executor->set_temp_buffer(temp_buffer);
+DEBUG_TAG(F);
+        ppl::common::RetCode ret = executor->execute();
         if (ret != ppl::common::RC_SUCCESS) {
             fprintf(stderr, "execute failed!\n");
             return -1;
         }
 
+        if (Flag_validate) {
+            param.dst_Y = dst_ref;
+            gemm_v2_ref_fp32(param);
+            check_array_error(dst, dst_ref, dst_num_elements, Flag_eps);
+        }
 DEBUG_TAG(G);
         std::chrono::high_resolution_clock::time_point start;
         std::chrono::high_resolution_clock::time_point end;
@@ -304,13 +310,7 @@ DEBUG_TAG(G);
 
         for (; tot_exe_iter < Flag_min_iter || tot_exe_us < Flag_min_second * 1e6; ++tot_exe_iter) {
             start = std::chrono::high_resolution_clock::now();
-            ppl::kernel::x86::gemm_fp32_fma(
-                A, B, V, H,
-                typeA, typeB, typeV, typeH,
-                M, N, K,
-                lda, ldb, ldc, ldh,
-                Flag_alpha, Flag_beta,
-                post_flag, C);
+            executor->execute();
             end = std::chrono::high_resolution_clock::now();
             double dur = (end - start).count() / 1e3;
             tot_exe_us += dur;
@@ -329,21 +329,6 @@ DEBUG_TAG(G);
             min_exe_us / 1e3, max_gflops, max_gbps,
             avg_exe_us / 1e3, avg_gflops, avg_gbps);
 
-        if (Flag_validate) {
-            if (ppl::common::RC_SUCCESS != ppl::kernel::x86::gemm_ref_fp32(
-                A, B, V, H,
-                typeA, typeB, typeV, typeH,
-                M, N, K,
-                lda, ldb, ldc, ldh,
-                Flag_alpha, Flag_beta,
-                post_flag, C_ref)) {
-                std::cerr << "," << "gemm_ref_fp32 failed\n";
-                return -1;
-            }
-            std::cerr << ",";
-            check_array_error(C, C_ref, C_num_elements, Flag_eps);
-        }
-
         ++case_no;
         all_case_gflops += avg_gflops;
         all_case_gbps += avg_gbps;
@@ -352,14 +337,11 @@ DEBUG_TAG(H);
         allocator.Free(A);
         allocator.Free(B);
         allocator.Free(C);
-        if (V) {
-            allocator.Free(V);
+        if (dst_ref) {
+            allocator.Free(dst_ref);
         }
-        if (H) {
-            allocator.Free(H);
-        }
-        if (C_ref) {
-            allocator.Free(C_ref);
+        if (temp_buffer) {
+            allocator.Free(temp_buffer);
         }
         std::cerr << "\n";
     }
