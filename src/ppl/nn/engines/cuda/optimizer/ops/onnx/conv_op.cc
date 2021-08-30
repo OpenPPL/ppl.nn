@@ -18,6 +18,7 @@
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/conv_op.h"
 
 #include "ppl/nn/engines/cuda/kernels/onnx/conv_hmma_kernel.h"
+#include "ppl/nn/engines/cuda/kernels/onnx/conv_imma_kernel.h"
 #include "ppl/nn/engines/cuda/kernels/onnx/conv_depthwise_kernel.h"
 #include "ppl/nn/oputils/onnx/reshape_convolution.h"
 #include "ppl/nn/common/logger.h"
@@ -112,8 +113,8 @@ KernelImpl* ConvOp::CreateKernelImpl() const {
         return CreateKernelImplWithParam<ConvHmmaKernel>(&param_);
     } else if (param_.extra_param.algo_info.algo_type == "DepthwiseDirect") {
         return CreateKernelImplWithParam<ConvDepthwiseKernel>(&param_);
-    } else {
-        LOG(ERROR) << "Not support " << param_.extra_param.algo_info.algo_type << " algo right now.";
+    } else if (param_.extra_param.algo_info.algo_type == "TuringIMMAImpgemm") {
+        return CreateKernelImplWithParam<ConvImmaKernel>(&param_);
     }
     return nullptr;
 }

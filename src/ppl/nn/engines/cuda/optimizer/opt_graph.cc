@@ -258,8 +258,9 @@ RetCode OptGraph::AddBridgeKernels() {
 
             auto preedge_id = new_node->GetInput(0);
             auto postedge_id = new_node->GetOutput(0);
+            auto new_edge = topo->GetEdgeById(postedge_id);
             auto impl_pair = tensor_impls_.insert(
-                make_pair(postedge_id, unique_ptr<TensorImpl>(new TensorImpl(edge, TENSORTYPE_NORMAL))));
+                make_pair(postedge_id, unique_ptr<TensorImpl>(new TensorImpl(new_edge, TENSORTYPE_NORMAL))));
             auto pre_shape = tensor_impls_.find(preedge_id)->second.get();
             impl_pair.first->second->GetShape().Reshape(pre_shape->GetShape().GetDims(),
                                                         pre_shape->GetShape().GetRealDimCount());
@@ -388,7 +389,7 @@ RetCode OptGraph::InitQuantization() {
         if (temp_tensor_quant.per_chnnal) {
             auto max_str = pair->second.fields.find("tensor_max")->second;
             auto min_str = pair->second.fields.find("tensor_min")->second;
-            uint32_t size = max_str.content.length();
+            uint32_t size = max_str.content.length() / 4;
             temp_tensor_quant.scale.resize(size);
             temp_tensor_quant.zero_point.resize(size);
             for (uint32_t i = 0; i < size; ++i) {
