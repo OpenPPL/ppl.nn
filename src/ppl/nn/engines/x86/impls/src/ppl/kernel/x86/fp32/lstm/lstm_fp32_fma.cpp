@@ -16,11 +16,13 @@
 // under the License.
 
 #include <math.h>
-#include <string.h>
+#include <immintrin.h>
 
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/kernel/x86/fp32/lstm.h"
 #include "ppl/kernel/x86/fp32/gemm.h"
+#include "ppl/kernel/x86/common/avx_tools.h"
+#include "ppl/kernel/x86/common/math_fma.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
@@ -28,7 +30,7 @@ static inline float sigmoidf(const float x) {
     return 1.0f / (1.0f + expf(-x));
 }
 
-uint64_t lstm_ref_fp32_get_buffer_bytes(
+uint64_t lstm_fp32_fma_get_buffer_bytes(
     const ppl::nn::TensorShape *X_shape,
     const rnn_direction_t direction,
     const int64_t hidden_size,
@@ -49,7 +51,7 @@ uint64_t lstm_ref_fp32_get_buffer_bytes(
     return (gate_buff_size + yh_size + yc_size) * sizeof(float);
 }
 
-ppl::common::RetCode lstm_ref_fp32(
+ppl::common::RetCode lstm_fp32_fma(
     const ppl::nn::TensorShape *X_shape,
     const float *X,
     const float *X_weight,
@@ -69,6 +71,8 @@ ppl::common::RetCode lstm_ref_fp32(
     if (!Y && !Y_h && !Y_c) {
         return ppl::common::RC_SUCCESS;
     }
+
+    const int64_t simd_w = 8;
 
     const int64_t num_direction = direction == rnn_direction::bidirectional ? 2 : 1;
     const int64_t seq_len = X_shape->GetDim(0);
@@ -122,7 +126,7 @@ ppl::common::RetCode lstm_ref_fp32(
             const float *Y_c_prev = is_first_seq ? nd_init_c : nd_Yc;
             float *sY = nd_Y + mapped_seq_index * num_direction * batch * hidden_size;
 
-            gemm_ref_fp32( // X[s]*W[nd]_{iofc}^T+Wb_{iofc}
+            gemm_fp32_fma( // X[s]*W[nd]_{iofc}^T+Wb_{iofc}
                 sX, nd_W, nd_Wb, nullptr,
                 gemm_m_type::notrans, gemm_m_type::trans,
                 gemm_v_type::row_vec, gemm_m_type::empty,
@@ -131,7 +135,7 @@ ppl::common::RetCode lstm_ref_fp32(
                 1.0f, 1.0f, gemm_post::none, gate_buf);
 
             const float alpha = !Y_h_prev ? 0.0f : 1.0f; // some hack, gemm will skip aAxB if alpha is 0
-            gemm_ref_fp32( // h_0[nd]*R[nd]_{iofc}^T+Rb_{iofc}
+            gemm_fp32_fma( // h_0[nd]*R[nd]_{iofc}^T+Rb_{iofc}
                 Y_h_prev, nd_R, nd_Rb, gate_buf,
                 gemm_m_type::notrans, gemm_m_type::trans,
                 gemm_v_type::row_vec, gemm_m_type::notrans,
@@ -141,11 +145,11 @@ ppl::common::RetCode lstm_ref_fp32(
 
             if (is_first_seq && !Y_h_prev) {
                 Y_h_prev = nd_Yh; // preprocess Y_h_prev
-                memset(nd_Yh, 0, batch * hidden_size * sizeof(float));
+                memset32_avx(nd_Yh, 0, batch * hidden_size);
             }
             if (is_first_seq && !Y_c_prev) {
                 Y_c_prev = nd_Yc; // preprocess Y_c_prev
-                memset(nd_Yc, 0, batch * hidden_size * sizeof(float));
+                memset32_avx(nd_Yc, 0, batch * hidden_size);
             }
 
             if (!P_weight) {
@@ -160,7 +164,18 @@ PRAGMA_OMP_PARALLEL_FOR()
                         float *Ct = nd_Yc + b * hidden_size;
                         float *Ht = nd_Yh + b * hidden_size;
                         float *Yt = sY + b * hidden_size;
-                        for (int64_t h = 0; h < hidden_size; ++h) {
+                        int64_t h = 0;
+                        for (; h <= hidden_size - simd_w; h += simd_w) {
+                            const __m256 it = _fma_sigmoid_ps(_mm256_loadu_ps(gI + h));
+                            const __m256 ft = _fma_sigmoid_ps(_mm256_loadu_ps(gF + h));
+                            const __m256 ct = _fma_tanh_ps(_mm256_loadu_ps(gC + h));
+                            const __m256 cn = ft * _mm256_loadu_ps(Cprev + h) + it * ct;
+                            const __m256 ot = _fma_sigmoid_ps(_mm256_loadu_ps(gO + h));
+                            const __m256 hn = ot *_fma_tanh_ps(cn);
+                            _mm256_storeu_ps(Ct + h, cn);
+                            _mm256_storeu_ps(Ht + h, hn);
+                        }
+                        for (; h < hidden_size; ++h) {
                             const float it = sigmoidf(gI[h]);
                             const float ft = sigmoidf(gF[h]);
                             const float ct = ::tanhf(gC[h]);
@@ -169,15 +184,15 @@ PRAGMA_OMP_PARALLEL_FOR()
                             Ht[h] = ot * ::tanhf(Ct[h]);
                         }
                         if (Y) {
-                            memcpy(Yt, Ht, hidden_size * sizeof(float));
+                            memcpy32_avx(Yt, Ht, hidden_size);
                         }
                     } else { // pass through the initial_h, initial_c
                         const float *Hprev = Y_h_prev + b * hidden_size;
                         const float *Cprev = Y_c_prev + b * hidden_size;
                         float *Ct = nd_Yc + b * hidden_size;
                         float *Ht = nd_Yh + b * hidden_size;
-                        memcpy(Ct, Cprev, hidden_size * sizeof(float));
-                        memcpy(Ht, Hprev, hidden_size * sizeof(float));
+                        memcpy32_avx(Ct, Cprev, hidden_size);
+                        memcpy32_avx(Ht, Hprev, hidden_size);
                     }
                 }
             } else {
@@ -195,7 +210,19 @@ PRAGMA_OMP_PARALLEL_FOR()
                         float *Ct = nd_Yc + b * hidden_size;
                         float *Ht = nd_Yh + b * hidden_size;
                         float *Yt = sY + b * hidden_size;
-                        for (int64_t h = 0; h < hidden_size; ++h) {
+                        int64_t h = 0;
+                        for (; h <= hidden_size - simd_w; h += simd_w) {
+                            const __m256 cp = _mm256_loadu_ps(Cprev + h);
+                            const __m256 it = _fma_sigmoid_ps(_mm256_loadu_ps(gI + h) + cp * _mm256_loadu_ps(pI + h));
+                            const __m256 ft = _fma_sigmoid_ps(_mm256_loadu_ps(gF + h) + cp * _mm256_loadu_ps(pF + h));
+                            const __m256 ct = _fma_tanh_ps(_mm256_loadu_ps(gC + h));
+                            const __m256 cn = ft * cp + it * ct;
+                            const __m256 ot = _fma_sigmoid_ps(_mm256_loadu_ps(gO + h) + cn * _mm256_loadu_ps(pO + h));
+                            const __m256 hn = ot *_fma_tanh_ps(cn);
+                            _mm256_storeu_ps(Ct + h, cn);
+                            _mm256_storeu_ps(Ht + h, hn);
+                        }
+                        for (; h < hidden_size; ++h) {
                             const float it = sigmoidf(gI[h] + pI[h] * Cprev[h]);
                             const float ft = sigmoidf(gF[h] + pF[h] * Cprev[h]);
                             const float ct = ::tanhf(gC[h]);
@@ -204,15 +231,15 @@ PRAGMA_OMP_PARALLEL_FOR()
                             Ht[h] = ot * ::tanhf(Ct[h]);
                         }
                         if (Y) {
-                            memcpy(Yt, Ht, hidden_size * sizeof(float));
+                            memcpy32_avx(Yt, Ht, hidden_size * sizeof(float));
                         }
                     } else { // pass through the initial_h, initial_c
                         const float *Hprev = Y_h_prev + b * hidden_size;
                         const float *Cprev = Y_c_prev + b * hidden_size;
                         float *Ct = nd_Yc + b * hidden_size;
                         float *Ht = nd_Yh + b * hidden_size;
-                        memcpy(Ct, Cprev, hidden_size * sizeof(float));
-                        memcpy(Ht, Hprev, hidden_size * sizeof(float));
+                        memcpy32_avx(Ct, Cprev, hidden_size);
+                        memcpy32_avx(Ht, Hprev, hidden_size);
                     }
                 }
             }

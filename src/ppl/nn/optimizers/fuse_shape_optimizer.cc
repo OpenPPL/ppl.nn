@@ -247,6 +247,7 @@ RetCode FuseShapeOptimizer::Optimize(ir::Graph* graph) const {
             continue;
         }
         node->SetType(ir::Node::Type{"ppl", "Shape"});
+        node->SetName(node->GetName() + "_Fused");
 
         PPLShapeOperationParam shape_param;
         ShapeMatrix temp_matrix;

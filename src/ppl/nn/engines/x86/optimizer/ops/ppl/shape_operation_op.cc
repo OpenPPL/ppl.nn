@@ -34,6 +34,12 @@ RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
+RetCode PPLShapeOperationOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
+                              vector<dataformat_t>* selected_output_formats) {
+    selected_input_formats->at(0) = info.GetInput<TensorImpl>(0)->GetShape().GetDataFormat();
+    return RC_SUCCESS;
+}
+
 KernelImpl* PPLShapeOperationOp::CreateKernelImpl() const {
     auto kernel = op_.CreateKernelImpl();
     ((ppl::nn::common::PPLShapeOperationKernel*)kernel)->SetParam(param_.get());
