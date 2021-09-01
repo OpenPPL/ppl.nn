@@ -25,12 +25,13 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-static const int64_t init_k_l2_blk = 128;
-static const int64_t init_n_l2_blk = 144;
+static const int64_t init_k_l2_blk_s = 128;
+static const int64_t init_k_l2_blk_m = 192;
+static const int64_t init_k_l2_blk_l = 256;
+static const int64_t init_n_l2_blk_s = 144;
+static const int64_t init_n_l2_blk_l = 192;
 static const int64_t init_m_l2_blk = 256;
 static const int64_t m_l1_blk = init_m_l2_blk / 4;
-static const int64_t max_packed_b_len = init_n_l2_blk * init_k_l2_blk;
-static const int64_t max_c_buffer_len = init_m_l2_blk * init_n_l2_blk;
 
 void gemm_pack_b_operation_fp32_fma(
     const float *B,
@@ -530,9 +531,29 @@ ppl::common::RetCode gemm_operation_fp32_fma(
     }
 
     // blocking
-    int64_t k_l2_blk = min(init_k_l2_blk, K);
+    int64_t l2_size = ppl::common::GetCpuCacheL2();
+    if (l2_size == 0) {
+        l2_size = 256 * 1024;
+    }
+    int64_t sel_k_l2_blk;
+    int64_t sel_n_l2_blk;
+    if (l2_size > 512 * 1024) {
+        sel_k_l2_blk = init_k_l2_blk_l;
+        sel_n_l2_blk = init_n_l2_blk_l;
+    } else if (l2_size > 256 * 1024) {
+        sel_k_l2_blk = init_k_l2_blk_m;
+        sel_n_l2_blk = init_n_l2_blk_s;
+    } else {
+        sel_k_l2_blk = init_k_l2_blk_s;
+        sel_n_l2_blk = init_n_l2_blk_s;
+    }
+
+    const int64_t max_packed_b_len = sel_n_l2_blk * sel_k_l2_blk;
+    const int64_t max_c_buffer_len = init_m_l2_blk * sel_n_l2_blk;
+
+    int64_t k_l2_blk = min(sel_k_l2_blk, K);
     int64_t n_l2_blk = round_up(min(max_packed_b_len / k_l2_blk, N), n_reg_elts);
-    if (typeA == gemm_m_type::notrans && n_l2_blk < 0.75f * init_n_l2_blk) {
+    if (typeA == gemm_m_type::notrans && n_l2_blk < 0.75f * sel_n_l2_blk) {
         k_l2_blk = min(max_packed_b_len / n_l2_blk, K);
     }
     int64_t m_l2_blk = alloc_c_buffer ? min(max_c_buffer_len / n_l2_blk, M) : M;
