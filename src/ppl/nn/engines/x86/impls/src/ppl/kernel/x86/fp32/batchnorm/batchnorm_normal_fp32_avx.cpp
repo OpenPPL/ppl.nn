@@ -35,8 +35,8 @@ ppl::common::RetCode batchnorm_ndarray_fp32_avx(
 {
     const int32_t batch    = src_shape->GetDim(0);
     const int32_t channels = src_shape->GetDim(1);
-    const int32_t height   = src_shape->GetDim(2);
-    const int32_t width    = src_shape->GetDim(3);
+    const int32_t height   = src_shape->GetDimCount() > 2 ? src_shape->GetDim(2) : 1;
+    const int32_t width    = src_shape->GetDimCount() > 3 ? src_shape->GetDim(3) : 1;
 
     const int32_t simd_w = 8;
     int64_t hxw          = height * width;
