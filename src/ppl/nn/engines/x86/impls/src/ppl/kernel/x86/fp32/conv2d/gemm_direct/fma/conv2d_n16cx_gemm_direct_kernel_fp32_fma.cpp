@@ -378,7 +378,7 @@ void conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel(
     const int64_t *shar_param)
 {
 #ifdef PPL_USE_X86_INLINE_ASM
-    if (oc_len == 2 * CH_RF_BLK() && hw_len == 6) {
+    if (oc_len == 2 * CH_RF_BLK()) {
         conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel_core<nt_store, hw_len>(priv_param, shar_param);
         return;
     }
