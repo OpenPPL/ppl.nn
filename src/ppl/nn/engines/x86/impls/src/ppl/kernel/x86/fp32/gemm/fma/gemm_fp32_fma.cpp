@@ -483,7 +483,6 @@ void gemm_fp32_fma_apply_beta(
 }
 
 // Row-major impl, H and C could be the same matrix
-// Parameter <hint> is for NUMA-Aware schedule
 ppl::common::RetCode gemm_operation_fp32_fma(
     const float *A,
     const float *B,
@@ -503,7 +502,6 @@ ppl::common::RetCode gemm_operation_fp32_fma(
     const float alpha,
     const float beta,
     const gemm_post_t post,
-    const int32_t hint,
     float *C)
 {
     if (typeA == gemm_m_type::packed || typeB == gemm_m_type::packed) {
@@ -517,7 +515,7 @@ ppl::common::RetCode gemm_operation_fp32_fma(
     const int64_t n_reg_elts = gemm_kernel_fp32_fma::config::n_reg_elts;
     const bool apply_aAB = alpha != 0.0f && typeA != gemm_m_type::empty && typeB != gemm_m_type::empty;
     const bool apply_bVpbH = beta != 0.0f && (typeV != gemm_v_type::empty || typeH != gemm_m_type::empty);
-    const bool alloc_c_buffer = (hint || (N % n_reg_elts)) && apply_aAB;
+    const bool alloc_c_buffer = (N % n_reg_elts) && apply_aAB;
 
     if (!apply_aAB && !apply_bVpbH) {
         return ppl::common::RC_SUCCESS;
@@ -557,10 +555,11 @@ ppl::common::RetCode gemm_operation_fp32_fma(
         k_l2_blk = min(max_packed_b_len / n_l2_blk, K);
     }
     int64_t m_l3_blk = alloc_c_buffer ? min(max_c_buffer_len / n_l2_blk, M) : M;
+    const bool sliding_trans_a = n_l2_blk < N;
 
     ppl::common::GenericCpuAllocator allocator;
     float *packed_b = (float*)allocator.Alloc(k_l2_blk * n_l2_blk * sizeof(float));
-    float *transposed_a = typeA == gemm_m_type::trans ? (float*)allocator.Alloc(m_l2_blk * k_l2_blk * sizeof(float)) : nullptr;
+    float *transposed_a = typeA == gemm_m_type::trans ? (float*)allocator.Alloc((sliding_trans_a ? m_l3_blk : m_l2_blk) * k_l2_blk * sizeof(float)) : nullptr;
     float *c_buffer = alloc_c_buffer ? (float*)allocator.Alloc(m_l3_blk * n_l2_blk * sizeof(float)) : nullptr;
 
     auto apply_beta_func = gemm_fp32_fma_apply_beta<gemm_m_type::empty, gemm_v_type::empty>;
@@ -581,45 +580,47 @@ ppl::common::RetCode gemm_operation_fp32_fma(
     ker_p.pick<float>(gemm_kernel_fp32_fma::param_def::alpha_idx) = alpha;
 
     for (int64_t ml3 = 0; ml3 < M; ml3 += m_l3_blk) {
-        for (int64_t nl2 = 0; nl2 < N; nl2 += n_l2_blk) {
-            const int64_t ml3_eff = min(m_l3_blk, M - ml3);
-            const int64_t nl2_eff = min(n_l2_blk, N - nl2);
-            const int64_t padded_nl2_eff = round_up(nl2_eff, n_reg_elts);
+        const int64_t ml3_eff = min(m_l3_blk, M - ml3);
+        for (int64_t kl2 = 0; kl2 < K; kl2 += k_l2_blk) {
+            const int64_t kl2_eff = min(k_l2_blk, K - kl2);
+            const bool is_first_k = kl2 == 0;
+            const bool is_last_k = kl2 + kl2_eff == K;
+            for (int64_t nl2 = 0; nl2 < N; nl2 += n_l2_blk) {
+                const int64_t nl2_eff = min(n_l2_blk, N - nl2);
+                const int64_t padded_nl2_eff = round_up(nl2_eff, n_reg_elts);
 
-            const int64_t nl2_body = round(nl2_eff, gemm_kernel_fp32_fma::config::max_n_blk);
-            const int64_t nl2_treg = div_up(nl2_eff - nl2_body, n_reg_elts);
-            const int64_t nl2_tail = nl2_treg * n_reg_elts;
+                const int64_t nl2_body = round(nl2_eff, gemm_kernel_fp32_fma::config::max_n_blk);
+                const int64_t nl2_treg = div_up(nl2_eff - nl2_body, n_reg_elts);
+                const int64_t nl2_tail = nl2_treg * n_reg_elts;
 
-            const bool use_c_buffer = alloc_c_buffer && (hint || (nl2_eff % n_reg_elts));
+                const bool use_c_buffer = alloc_c_buffer && (nl2_eff % n_reg_elts);
 
-            float *local_c = C + ml3 * ldc + nl2;
-            float *local_c_buf = use_c_buffer ? c_buffer : local_c;
-            const int64_t ldc_buf = use_c_buffer ? padded_nl2_eff : ldc;
-            ker_p.pick<float*>(gemm_kernel_fp32_fma::param_def::c_ptr_idx) = local_c_buf;
-            ker_p.pick<int64_t>(gemm_kernel_fp32_fma::param_def::ldc_idx) = ldc_buf;
-            ker_p.pick<gemm_kernel_fp32_fma::flag_t>(gemm_kernel_fp32_fma::param_def::flags_idx) = 0;
+                float *local_c = C + ml3 * ldc + nl2;
+                float *local_c_buf = use_c_buffer ? c_buffer : local_c;
+                const int64_t ldc_buf = use_c_buffer ? padded_nl2_eff : ldc;
+                ker_p.pick<float*>(gemm_kernel_fp32_fma::param_def::c_ptr_idx) = local_c_buf;
+                ker_p.pick<int64_t>(gemm_kernel_fp32_fma::param_def::ldc_idx) = ldc_buf;
+                ker_p.pick<gemm_kernel_fp32_fma::flag_t>(gemm_kernel_fp32_fma::param_def::flags_idx) = is_first_k ? 0 : gemm_kernel_fp32_fma::flag::load_c;
 
-            if (apply_bVpbH) {
-                const float *l_h = nullptr;
-                const float *l_v = nullptr;
-                if (typeH == gemm_m_type::notrans) l_h = H + ml3 * ldh + nl2;
-                if (typeV == gemm_v_type::scalar) l_v = V;
-                if (typeV == gemm_v_type::col_vec) l_v = V + ml3;
-                if (typeV == gemm_v_type::row_vec) l_v = V + nl2;
-                apply_beta_func(l_v, l_h, ml3_eff, nl2_eff, ldh, ldc_buf, beta, local_c_buf);
-                ker_p.pick<gemm_kernel_fp32_fma::flag_t>(gemm_kernel_fp32_fma::param_def::flags_idx) |= gemm_kernel_fp32_fma::flag::load_c;
-            }
+                if (apply_bVpbH && is_first_k) {
+                    const float *l_h = nullptr;
+                    const float *l_v = nullptr;
+                    if (typeH == gemm_m_type::notrans) l_h = H + ml3 * ldh + nl2;
+                    if (typeV == gemm_v_type::scalar) l_v = V;
+                    if (typeV == gemm_v_type::col_vec) l_v = V + ml3;
+                    if (typeV == gemm_v_type::row_vec) l_v = V + nl2;
+                    apply_beta_func(l_v, l_h, ml3_eff, nl2_eff, ldh, ldc_buf, beta, local_c_buf);
+                    ker_p.pick<gemm_kernel_fp32_fma::flag_t>(gemm_kernel_fp32_fma::param_def::flags_idx) |= gemm_kernel_fp32_fma::flag::load_c;
+                }
 
-            if (!apply_aAB)
-                continue;
+                if (!apply_aAB)
+                    continue;
 
-            for (int64_t kl2 = 0; kl2 < K; kl2 += k_l2_blk) {
-                const int64_t kl2_eff = min(k_l2_blk, K - kl2);
-                const bool is_last_k = kl2 + kl2_eff == K;
                 if (is_last_k) {
                     if (post == gemm_post::relu6) ker_p.pick<gemm_kernel_fp32_fma::flag_t>(gemm_kernel_fp32_fma::param_def::flags_idx) |= gemm_kernel_fp32_fma::flag::relu6;
                     if (post == gemm_post::relu) ker_p.pick<gemm_kernel_fp32_fma::flag_t>(gemm_kernel_fp32_fma::param_def::flags_idx) |= gemm_kernel_fp32_fma::flag::relu;
                 }
+
                 const float *base_b = B + (typeB == gemm_m_type::notrans ? kl2 * ldb + nl2 : nl2 * ldb + kl2);
                 const float *base_a = A + (typeA == gemm_m_type::notrans ? ml3 * lda + kl2 : kl2 * lda + ml3);
                 float *base_c_buf = local_c_buf;
@@ -668,8 +669,11 @@ ppl::common::RetCode gemm_operation_fp32_fma(
                     ker_p.pick<int64_t>(gemm_kernel_fp32_fma::param_def::lda_idx) = kl2_eff;
                     for (int64_t ml2 = 0; ml2 < ml3_eff; ml2 += m_l2_blk) {
                         const int64_t ml2_eff = min(m_l2_blk, ml3_eff - ml2);
-                        gemm_trans_a_operation_fp32(base_a + ml2, ml2_eff, kl2_eff, lda, transposed_a);
-                        const float *base_trans_a = transposed_a;
+                        float *local_trans_a = transposed_a + (sliding_trans_a ? ml2 * kl2_eff : 0);
+                        if (nl2 == 0) {
+                            gemm_trans_a_operation_fp32(base_a + ml2, ml2_eff, kl2_eff, lda, local_trans_a);
+                        }
+                        const float *base_trans_a = local_trans_a;
                         const int64_t ldtrans_a = kl2_eff;
                         int64_t m = ml2_eff;
                         while (m >= gemm_kernel_fp32_fma::config::max_m_blk) {
@@ -708,12 +712,10 @@ ppl::common::RetCode gemm_operation_fp32_fma(
                         }
                     }
                 }
-                
-                ker_p.pick<gemm_kernel_fp32_fma::flag_t>(gemm_kernel_fp32_fma::param_def::flags_idx) |= gemm_kernel_fp32_fma::flag::load_c;
-            }
 
-            if (use_c_buffer) {
-                gemm_fp32_fma_copy_c_buf(c_buffer, ml3_eff, nl2_eff, ldc_buf, ldc, local_c);
+                if (use_c_buffer && is_last_k) {
+                    gemm_fp32_fma_copy_c_buf(c_buffer, ml3_eff, nl2_eff, ldc_buf, ldc, local_c);
+                }
             }
         }
     }
@@ -762,7 +764,7 @@ ppl::common::RetCode gemm_fp32_fma(
             A, B, V, H,
             typeA, typeB, typeV, typeH,
             M, N, K, lda, ldb ,ldc ,ldh,
-            alpha, beta, post, 0, C);
+            alpha, beta, post, C);
     }
 
     int64_t m_task_blk;
@@ -830,7 +832,7 @@ ppl::common::RetCode gemm_fp32_fma(
             lA, lB, lV, lH,
             typeA, typeB, typeV, typeH,
             mb_eff, nb_eff, K, lda, ldb ,ldc ,ldh,
-            alpha, beta, post, 0, lC);
+            alpha, beta, post, lC);
 
         (void) ret;
     }
