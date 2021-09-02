@@ -22,99 +22,67 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode BatchNormalizationKernel::DoExecute(KernelExecContext* ctx) {
-    auto input = ctx->GetInput<TensorImpl>(0);
-    auto output = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(X, 0);
+    PPLNN_X86_REQUIRED_INPUT(scale, 1);
+    PPLNN_X86_REQUIRED_INPUT(B, 2);
+    PPLNN_X86_REQUIRED_INPUT(mean, 3);
+    PPLNN_X86_REQUIRED_INPUT(var, 4);
+    PPLNN_X86_REQUIRED_OUTPUT(Y, 0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
-    PPLNN_X86_DEBUG_TRACE("Input [input]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(input);
-    PPLNN_X86_DEBUG_TRACE("Input [output]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
+    PPLNN_X86_DEBUG_TRACE("Input [X]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(X);
+    PPLNN_X86_DEBUG_TRACE("Input [scale]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(scale);
+    PPLNN_X86_DEBUG_TRACE("Input [B]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(B);
+    PPLNN_X86_DEBUG_TRACE("Input [mean]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(mean);
+    PPLNN_X86_DEBUG_TRACE("Input [var]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(var);
+    PPLNN_X86_DEBUG_TRACE("Input [Y]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
     PPLNN_X86_DEBUG_TRACE("epsilon: %lf\n", param_->epsilon);
     PPLNN_X86_DEBUG_TRACE("momentum: %lf\n", param_->momentum);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    const auto data_format = input->GetShape().GetDataFormat();
-    const auto data_type = input->GetShape().GetDataType();
+    const auto data_format = X->GetShape().GetDataFormat();
+    const auto data_type = X->GetShape().GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
         if (data_format == ppl::common::DATAFORMAT_N16CX) {
             if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-                if (fuse_relu_) {
-                    return kernel::x86::batchnorm_n16cx_fp32_avx<true>(
-                        &input->GetShape(), input->GetBufferPtr<const float>(),
-                        ctx->GetInput<TensorImpl>(3)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(4)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(1)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(2)->GetBufferPtr<float>(), param_->epsilon,
-                        output->GetBufferPtr<float>());
-                } else {
-                    return kernel::x86::batchnorm_n16cx_fp32_avx<false>(
-                        &input->GetShape(), input->GetBufferPtr<const float>(),
-                        ctx->GetInput<TensorImpl>(3)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(4)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(1)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(2)->GetBufferPtr<float>(), param_->epsilon,
-                        output->GetBufferPtr<float>());
-                }
+                return kernel::x86::batchnorm_n16cx_fp32_avx(
+                    &X->GetShape(), X->GetBufferPtr<const float>(),
+                    mean->GetBufferPtr<float>(), var->GetBufferPtr<float>(),
+                    scale->GetBufferPtr<float>(), B->GetBufferPtr<float>(),
+                    param_->epsilon, this->fuse_relu_,
+                    Y->GetBufferPtr<float>());
             } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-                if (fuse_relu_) {
-                    return kernel::x86::batchnorm_n16cx_fp32_sse<true>(
-                        &input->GetShape(), input->GetBufferPtr<const float>(),
-                        ctx->GetInput<TensorImpl>(3)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(4)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(1)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(2)->GetBufferPtr<float>(), param_->epsilon,
-                        output->GetBufferPtr<float>());
-                } else {
-                    return kernel::x86::batchnorm_n16cx_fp32_sse<false>(
-                        &input->GetShape(), input->GetBufferPtr<const float>(),
-                        ctx->GetInput<TensorImpl>(3)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(4)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(1)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(2)->GetBufferPtr<float>(), param_->epsilon,
-                        output->GetBufferPtr<float>());
-                }
+                return kernel::x86::batchnorm_n16cx_fp32_sse(
+                    &X->GetShape(), X->GetBufferPtr<const float>(),
+                    mean->GetBufferPtr<float>(), var->GetBufferPtr<float>(),
+                    scale->GetBufferPtr<float>(), B->GetBufferPtr<float>(),
+                    param_->epsilon, this->fuse_relu_,
+                    Y->GetBufferPtr<float>());
             } else {
                 LOG(ERROR) << "ISA not supported";
             }
         } else if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
             if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-                if (fuse_relu_) {
-                    return kernel::x86::batchnorm_ndarray_fp32_avx<true>(
-                        &input->GetShape(), input->GetBufferPtr<const float>(),
-                        ctx->GetInput<TensorImpl>(3)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(4)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(1)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(2)->GetBufferPtr<float>(), param_->epsilon,
-                        output->GetBufferPtr<float>());
-                } else {
-                    return kernel::x86::batchnorm_ndarray_fp32_avx<false>(
-                        &input->GetShape(), input->GetBufferPtr<const float>(),
-                        ctx->GetInput<TensorImpl>(3)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(4)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(1)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(2)->GetBufferPtr<float>(), param_->epsilon,
-                        output->GetBufferPtr<float>());
-                }
+                return kernel::x86::batchnorm_ndarray_fp32_avx(
+                    &X->GetShape(), X->GetBufferPtr<const float>(),
+                    mean->GetBufferPtr<float>(), var->GetBufferPtr<float>(),
+                    scale->GetBufferPtr<float>(), B->GetBufferPtr<float>(),
+                    param_->epsilon, this->fuse_relu_,
+                    Y->GetBufferPtr<float>());
             } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-                if (fuse_relu_) {
-                    return kernel::x86::batchnorm_ndarray_fp32_sse<true>(
-                        &input->GetShape(), input->GetBufferPtr<const float>(),
-                        ctx->GetInput<TensorImpl>(3)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(4)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(1)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(2)->GetBufferPtr<float>(), param_->epsilon,
-                        output->GetBufferPtr<float>());
-                } else {
-                    return kernel::x86::batchnorm_ndarray_fp32_sse<false>(
-                        &input->GetShape(), input->GetBufferPtr<const float>(),
-                        ctx->GetInput<TensorImpl>(3)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(4)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(1)->GetBufferPtr<float>(),
-                        ctx->GetInput<TensorImpl>(2)->GetBufferPtr<float>(), param_->epsilon,
-                        output->GetBufferPtr<float>());
-                }
+                return kernel::x86::batchnorm_ndarray_fp32_avx(
+                    &X->GetShape(), X->GetBufferPtr<const float>(),
+                    mean->GetBufferPtr<float>(), var->GetBufferPtr<float>(),
+                    scale->GetBufferPtr<float>(), B->GetBufferPtr<float>(),
+                    param_->epsilon, this->fuse_relu_,
+                    Y->GetBufferPtr<float>());
             } else {
                 LOG(ERROR) << "ISA not supported";
             }

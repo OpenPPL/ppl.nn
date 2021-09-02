@@ -22,29 +22,6 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-template <bool fuse_relu>
-ppl::common::RetCode batchnorm_ndarray_fp32_sse(
-    const ppl::nn::TensorShape *src_shape,
-    const float *src,
-    const float *mean,
-    const float *variance,
-    const float *scale,
-    const float *shift,
-    const float var_eps,
-    float *dst);
-
-template <bool fuse_relu>
-ppl::common::RetCode batchnorm_n16cx_fp32_sse(
-    const ppl::nn::TensorShape *src_shape,
-    const float *src,
-    const float *mean,
-    const float *variance,
-    const float *scale,
-    const float *shift,
-    const float var_eps,
-    float *dst);
-
-template <bool fuse_relu>
 ppl::common::RetCode batchnorm_ndarray_fp32_avx(
     const ppl::nn::TensorShape *src_shape,
     const float *src,
@@ -53,9 +30,9 @@ ppl::common::RetCode batchnorm_ndarray_fp32_avx(
     const float *scale,
     const float *shift,
     const float var_eps,
+    const bool relu,
     float *dst);
 
-template <bool fuse_relu>
 ppl::common::RetCode batchnorm_n16cx_fp32_avx(
     const ppl::nn::TensorShape *src_shape,
     const float *src,
@@ -64,6 +41,29 @@ ppl::common::RetCode batchnorm_n16cx_fp32_avx(
     const float *scale,
     const float *shift,
     const float var_eps,
+    const bool relu,
+    float *dst);
+
+ppl::common::RetCode batchnorm_ndarray_fp32_sse(
+    const ppl::nn::TensorShape *src_shape,
+    const float *src,
+    const float *mean,
+    const float *variance,
+    const float *scale,
+    const float *shift,
+    const float var_eps,
+    const bool relu,
+    float *dst);
+
+ppl::common::RetCode batchnorm_n16cx_fp32_sse(
+    const ppl::nn::TensorShape *src_shape,
+    const float *src,
+    const float *mean,
+    const float *variance,
+    const float *scale,
+    const float *shift,
+    const float var_eps,
+    const bool relu,
     float *dst);
 
 }}}; // namespace ppl::kernel::x86
