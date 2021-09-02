@@ -23,7 +23,7 @@ using namespace ppl::nn::common;
 namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeBatchNormalization(InputOutputInfo* info, const void*) {
-    if (info->GetInputCount() != 5 || info->GetOutputCount() != 1) {
+    if (info->GetInputCount() != 5) {
         return RC_INVALID_VALUE;
     }
     const TensorShape& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();

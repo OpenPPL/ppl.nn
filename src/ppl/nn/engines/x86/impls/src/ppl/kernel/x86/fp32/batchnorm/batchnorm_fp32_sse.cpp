@@ -33,13 +33,15 @@ ppl::common::RetCode batchnorm_ndarray_fp32_sse(
     const float var_eps,
     float *dst)
 {
-    const int32_t batch    = src_shape->GetDim(0);
-    const int32_t channels = src_shape->GetDim(1);
-    const int32_t height   = src_shape->GetDim(2);
-    const int32_t width    = src_shape->GetDim(3);
+    const int64_t batch    = src_shape->GetDim(0);
+    const int64_t channels = src_shape->GetDimCount() > 1 ? src_shape->GetDim(1) : 1;
+    int64_t inner_dim = 1;
+    for (uint32_t i = 2; i < src_shape->GetDimCount(); ++i) {
+        inner_dim *= src_shape->GetDim(i);
+    }
 
-    const int32_t simd_w = 4;
-    int64_t hxw          = height * width;
+    const int64_t simd_w = 4;
+    const int64_t unroll_inner = 4 * simd_w;
     __m128 zero_vec      = _mm_set1_ps(0.0f);
 #ifndef PPL_USE_X86_OMP_COLLAPSE
     PRAGMA_OMP_PARALLEL_FOR()
@@ -54,9 +56,9 @@ ppl::common::RetCode batchnorm_ndarray_fp32_sse(
             __m128 mean_vec0        = _mm_set1_ps(mean_var);
             __m128 shift_vec0       = _mm_set1_ps(shift_var);
             __m128 var_rcp_vec0     = _mm_set1_ps(var_rcp_var);
-            float *base_dst         = dst + n * channels * hxw + c * hxw;
-            const float *base_src   = src + n * channels * hxw + c * hxw;
-            for (int64_t i = 0; i < round(hxw, 16); i += 16) {
+            float *base_dst         = dst + n * channels * inner_dim + c * inner_dim;
+            const float *base_src   = src + n * channels * inner_dim + c * inner_dim;
+            for (int64_t i = 0; i < round(inner_dim, unroll_inner); i += unroll_inner) {
                 __m128 data_vec0 = (_mm_loadu_ps(base_src + simd_w * 0) - mean_vec0) * var_rcp_vec0 + shift_vec0;
                 __m128 data_vec1 = (_mm_loadu_ps(base_src + simd_w * 1) - mean_vec0) * var_rcp_vec0 + shift_vec0;
                 __m128 data_vec2 = (_mm_loadu_ps(base_src + simd_w * 2) - mean_vec0) * var_rcp_vec0 + shift_vec0;
@@ -71,11 +73,11 @@ ppl::common::RetCode batchnorm_ndarray_fp32_sse(
                 _mm_storeu_ps(base_dst + simd_w * 1, data_vec1);
                 _mm_storeu_ps(base_dst + simd_w * 2, data_vec2);
                 _mm_storeu_ps(base_dst + simd_w * 3, data_vec3);
-                base_dst += 16;
-                base_src += 16;
+                base_dst += unroll_inner;
+                base_src += unroll_inner;
             }
-            if (round(hxw, 16) < hxw) {
-                for (int64_t i = 0; i < hxw - round(hxw, 16); ++i) {
+            if (round(inner_dim, unroll_inner) < inner_dim) {
+                for (int64_t i = 0; i < inner_dim - round(inner_dim, unroll_inner); ++i) {
                     float data = (base_src[i] - mean_var) * var_rcp_var + shift_var;
                     if (fuse_relu) {
                         data = max(data, 0.0f);
@@ -99,14 +101,14 @@ ppl::common::RetCode batchnorm_n16cx_fp32_sse(
     const float var_eps,
     float *dst)
 {
-    const int32_t batch    = src_shape->GetDim(0);
-    const int32_t channels = src_shape->GetDim(1);
-    const int32_t height   = src_shape->GetDim(2);
-    const int32_t width    = src_shape->GetDim(3);
+    const int64_t batch    = src_shape->GetDim(0);
+    const int64_t channels = src_shape->GetDim(1);
+    const int64_t height   = src_shape->GetDim(2);
+    const int64_t width    = src_shape->GetDim(3);
 
-    const int32_t simd_w = 4;
-    const int32_t c_blk  = 16;
-    const int32_t pad_c  = round_up(channels, c_blk);
+    const int64_t simd_w = 4;
+    const int64_t c_blk  = 16;
+    const int64_t pad_c  = round_up(channels, c_blk);
     const int64_t hxw    = height * width;
 
     __m128 zero_vec = _mm_set1_ps(0.0f);
@@ -176,15 +178,15 @@ ppl::common::RetCode batchnorm_n16cx_fp32_sse(
                 _mm_storeu_ps(base_dst + simd_w * 1, data_vec1);
                 _mm_storeu_ps(base_dst + simd_w * 2, data_vec2);
                 _mm_storeu_ps(base_dst + simd_w * 3, data_vec3);
-                base_dst += 16;
-                base_src += 16;
+                base_dst += c_blk;
+                base_src += c_blk;
             }
         }
     }
     return ppl::common::RC_SUCCESS;
 }
 
-template ppl::common::RetCode batchnorm_ndarray_fp32_sse<false>(
+ppl::common::RetCode batchnorm_ndarray_fp32_sse(
     const ppl::nn::TensorShape *src_shape,
     const float *src,
     const float *mean,
@@ -192,9 +194,17 @@ template ppl::common::RetCode batchnorm_ndarray_fp32_sse<false>(
     const float *scale,
     const float *shift,
     const float var_eps,
-    float *dst);
+    const bool relu,
+    float *dst)
+{
+    if (relu) {
+        return batchnorm_ndarray_fp32_sse<true>(src_shape, src, mean, variance, scale, shift, var_eps, dst);
+    } else {
+        return batchnorm_ndarray_fp32_sse<false>(src_shape, src, mean, variance, scale, shift, var_eps, dst);
+    }
+}
 
-template ppl::common::RetCode batchnorm_ndarray_fp32_sse<true>(
+ppl::common::RetCode batchnorm_n16cx_fp32_sse(
     const ppl::nn::TensorShape *src_shape,
     const float *src,
     const float *mean,
@@ -202,26 +212,14 @@ template ppl::common::RetCode batchnorm_ndarray_fp32_sse<true>(
     const float *scale,
     const float *shift,
     const float var_eps,
-    float *dst);
-
-template ppl::common::RetCode batchnorm_n16cx_fp32_sse<false>(
-    const ppl::nn::TensorShape *src_shape,
-    const float *src,
-    const float *mean,
-    const float *variance,
-    const float *scale,
-    const float *shift,
-    const float var_eps,
-    float *dst);
-
-template ppl::common::RetCode batchnorm_n16cx_fp32_sse<true>(
-    const ppl::nn::TensorShape *src_shape,
-    const float *src,
-    const float *mean,
-    const float *variance,
-    const float *scale,
-    const float *shift,
-    const float var_eps,
-    float *dst);
+    const bool relu,
+    float *dst)
+{
+    if (relu) {
+        return batchnorm_n16cx_fp32_sse<true>(src_shape, src, mean, variance, scale, shift, var_eps, dst);
+    } else {
+        return batchnorm_n16cx_fp32_sse<false>(src_shape, src, mean, variance, scale, shift, var_eps, dst);
+    }
+}
 
 }}}; // namespace ppl::kernel::x86
