@@ -27,7 +27,7 @@ class gemm_kernel_fp32_fma {
 public:
     typedef void (*func_t)(int64_t*);
 
-    struct param_def{
+    struct param_def {
         static const int64_t a_ptr_idx = 0;
         static const int64_t packed_b_ptr_idx = 1;
         static const int64_t c_ptr_idx = 2;

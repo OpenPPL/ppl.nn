@@ -25,50 +25,54 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 template <typename T>
-inline const T &max(const T &a, const T &b)
+inline T max(const T a, const T b)
 {
+    static_assert(std::is_fundamental<T>::value, "only allow fundamental type");
     return a > b ? a : b;
 }
 
 template <typename T>
-inline const T &min(const T &a, const T &b)
+inline T min(const T a, const T b)
 {
+    static_assert(std::is_fundamental<T>::value, "only allow fundamental type");
     return a < b ? a : b;
 }
 
 template <typename T>
-inline const T abs(const T &x)
+inline T abs(const T x)
 {
+    static_assert(std::is_arithmetic<T>::value, "only allow arithmetic type");
     return x > 0 ? x : (-x);
 }
 
 template <typename T0, typename T1>
-inline T0 div_up(const T0 &a, const T1 &b)
+inline T0 div_up(const T0 a, const T1 b)
 {
+    static_assert(std::is_integral<T0>::value && std::is_integral<T1>::value, "only allow integral type");
     const T0 tb = static_cast<T0>(b);
     return (a + tb - static_cast<T0>(1)) / tb;
 }
 
 template <typename T0, typename T1>
-inline T0 round(const T0 &a, const T1 &b)
+inline T0 round(const T0 a, const T1 b)
 {
+    static_assert(std::is_integral<T0>::value && std::is_integral<T1>::value, "only allow integral type");
     const T0 tb = static_cast<T0>(b);
     return a / tb * tb;
 }
 
 template <typename T0, typename T1>
-inline T0 round_up(const T0 &a, const T1 &b)
+inline T0 round_up(const T0 a, const T1 b)
 {
+    static_assert(std::is_integral<T0>::value && std::is_integral<T1>::value, "only allow integral type");
     const T0 tb = static_cast<T0>(b);
     return (a + tb - static_cast<T0>(1)) / tb * tb;
 }
 
 template <typename T0, typename T1>
-inline T0 mod_up(const T0 &a, const T1 &m)
+inline T0 mod_up(const T0 a, const T1 m)
 {
-    static_assert(
-        false || std::is_same<T0, int64_t>::value || std::is_same<T0, int32_t>::value,
-        "only allow int64_t/int32_t");
+    static_assert(std::is_integral<T0>::value && std::is_integral<T1>::value, "only allow integral type");
     const T0 tm = static_cast<T0>(m);
     return (a % tm == 0 && a != 0) ? tm : a % tm;
 }
