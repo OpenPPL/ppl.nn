@@ -46,7 +46,7 @@ void gemm_fp32_fma_kernel_core(int64_t *param)
         ".equ N_REG_ELTS, %c[N_REG_ELTS]\n"
         ".equ U_M, %c[U_M]\n"
         ".equ U_N, %c[U_N]\n"
-        ".equ U_NR, %c[U_NR]\n"
+        ".equ U_NR, ((U_N + N_REG_ELTS - 1) / N_REG_ELTS)\n"
         ".equ U_K, %c[U_K]\n"
         ".equ KERNEL_FLAG_LOAD_C, %c[KERNEL_FLAG_LOAD_C]\n"
         ".equ KERNEL_FLAG_RELU, %c[KERNEL_FLAG_RELU]\n"
@@ -305,7 +305,6 @@ void gemm_fp32_fma_kernel_core(int64_t *param)
         [N_REG_ELTS]                    "i" (gemm_kernel_fp32_fma::config::n_reg_elts),
         [U_M]                           "i" (u_m),
         [U_N]                           "i" (u_n),
-        [U_NR]                          "i" (div_up(u_n, gemm_kernel_fp32_fma::config::n_reg_elts)),
         [U_K]                           "i" (8),
         [KERNEL_FLAG_LOAD_C]            "i" (gemm_kernel_fp32_fma::flag::load_c),
         [KERNEL_FLAG_RELU]              "i" (gemm_kernel_fp32_fma::flag::relu),
