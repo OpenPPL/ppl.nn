@@ -165,7 +165,7 @@ RetCode CudaDataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& d
         return status;
     }
 
-    status = Convert(dst, dst_desc, tmp_buffer_desc, src_desc);
+    status = Convert(dst, dst_desc, dst_quant, tmp_buffer_desc, src_desc, src_quant);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "convert in device failed during ConvertFromHost: " << GetRetCodeStr(status);
         return status;
