@@ -541,8 +541,9 @@ RetCode OptGraph::LoadConstants(CudaDevice* device) {
                 return status;
             }
 
-            status = device->GetDataConverter()->ConvertFromHost(&constant_info.GetBufferDesc(), postshape,
-                                                                 constant_ref->second.data.data(), preshape);
+            auto converter = (CudaDataConverter*)device->GetDataConverter();
+            status = converter->ConvertFromHost(&constant_info.GetBufferDesc(), postshape, graph_quants[postedge_id],
+                                                constant_ref->second.data.data(), preshape, graph_quants[preedge_id]);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
                 return status;

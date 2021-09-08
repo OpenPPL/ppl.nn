@@ -60,17 +60,24 @@ RetCode ConvOp::Init(const OptKernelOptions& options) {
             if (in_quant.type != DATATYPE_INT8 || out_quant.type != DATATYPE_INT8) {
                 return RC_INVALID_VALUE;
             }
+            info->GetInput<TensorImpl>(0)->GetShape().SetDataType(in_quant.type);
+            info->GetOutput<TensorImpl>(0)->GetShape().SetDataType(out_quant.type);
+
             // Copy quant info skipping input0
             for (uint32_t i = 1; i < info->GetInputCount(); ++i) {
                 auto in_edge_id = info->GetInput<TensorImpl>(i)->GetEdge()->GetId();
                 auto& in_quant = quant->at(in_edge_id);
                 auto in_shape = &info->GetInput<TensorImpl>(i)->GetShape();
+                if (i == 1 && in_quant.type != DATATYPE_UNKNOWN) {
+                    in_shape->SetDataType(in_quant.type);
+                    continue;
+                }
                 if (i == 2 && param_.param.bias_term) {
                     in_shape->SetDataType(ppl::common::DATATYPE_FLOAT32);
                     continue;
                 }
                 in_quant = out_quant;
-                in_shape->SetDataType(in_quant.type);
+                in_shape->SetDataType(out_quant.type);
             }
             return ppl::common::RC_SUCCESS;
         }
