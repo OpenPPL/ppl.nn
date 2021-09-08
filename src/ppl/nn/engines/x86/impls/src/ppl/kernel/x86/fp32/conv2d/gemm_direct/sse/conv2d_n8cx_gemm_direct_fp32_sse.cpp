@@ -31,11 +31,11 @@
 #define L2_RATIO()        0.251
 #define L3_RATIO()        0.501
 
-#define IC_L2_BLK_MAX_L()      (16 * CH_DT_BLK()) // preserve for tuning
-#define IC_L2_BLK_MAX_S()      (16 * CH_DT_BLK())
+#define IC_L2_BLK_MAX_L()      (12 * CH_DT_BLK()) // preserve for tuning
+#define IC_L2_BLK_MAX_S()      (12 * CH_DT_BLK())
 #define IC_L2_BLK_TAIL_RATIO() 0.251
-#define OC_L2_BLK_MAX_L()      (16 * CH_DT_BLK()) // preserve for tuning
-#define OC_L2_BLK_MAX_S()      (16 * CH_DT_BLK())
+#define OC_L2_BLK_MAX_L()      (12 * CH_DT_BLK()) // preserve for tuning
+#define OC_L2_BLK_MAX_S()      (12 * CH_DT_BLK())
 #define OC_L2_BLK_MIN()        (2 * CH_DT_BLK())
 #define HW_L2_BLK_MAX()        256
 #define HW_L2_BLK_MIN()        BLK1X3_HW_RF()
@@ -93,13 +93,18 @@ void conv2d_n8cx_gemm_direct_fp32_sse_executor::cal_kernel_tunning_param()
         --sp.mb_l3_blk;
     }
 
-    sp.oc_kr_blk = min(2 * CH_DT_BLK(), sp.padded_oc);
+    sp.oc_kr_blk = min(BLK1X1_OC_RF() * CH_RF_BLK(), sp.padded_oc);
+    if (sp.padded_oc % sp.oc_kr_blk != 0 && sp.padded_oc / sp.oc_kr_blk < 4) {
+        sp.oc_kr_blk = BLK1X3_OC_RF() * CH_RF_BLK();
+    }
     if (sp.padded_oc > sp.padded_ic) {
         sp.oc_l2_blk = min(OC_L2_BLK_MAX_L(), sp.padded_oc);
     } else {
         sp.oc_l2_blk = min(OC_L2_BLK_MAX_S(), sp.padded_oc);
     }
-    sp.hw_kr_blk = min(dst_hw, BLK1X3_HW_RF());
+
+    static const int32_t hw_rf_table[6] = { 3, 3, 1, 1, 1, 1 };
+    sp.hw_kr_blk = hw_rf_table[sp.oc_kr_blk / CH_DT_BLK() - 1];
     sp.hw_l2_blk = min(dst_hw, round_up(HW_L2_BLK_MAX(), sp.hw_kr_blk));
 
     if (sp.padded_oc > 2 * sp.oc_l2_blk && sp.padded_ic > IC_L2_BLK_MAX_L()) {
@@ -286,25 +291,27 @@ ppl::common::RetCode conv2d_n8cx_gemm_direct_fp32_sse_executor::execute()
                                 for (int64_t oc = ocl2; oc < ocl2 + ocl2_eff; oc += sp.oc_kr_blk) {
                                     const int64_t oc_eff = min<int64_t>(ocl2 + ocl2_eff - oc, sp.oc_kr_blk);
                                     const int64_t oc_sel = div_up(oc_eff, CH_DT_BLK()) - 1;
-                                    if (hw_body) {
+                                    if (sp.hw_kr_blk == BLK1X3_HW_RF()) {
+                                        if (hw_body) {
+                                            PICK_PARAM(const float *, private_param, SRC_IDX())  = l_src;
+                                            PICK_PARAM(const float *, private_param, HIS_IDX())  = l_his;
+                                            PICK_PARAM(float *, private_param, DST_IDX())        = l_dst;
+                                            private_param[HW_IDX()] = hw_body;
+                                            conv2d_n8cx_gemm_direct_kernel_fp32_sse_hw3_table[nt_store_sel][oc_sel](private_param, share_param);
+                                        }
+                                        if (hw_tail) {
+                                            PICK_PARAM(const float *, private_param, SRC_IDX())  = l_src + hw_body * CH_DT_BLK();
+                                            PICK_PARAM(const float *, private_param, HIS_IDX())  = l_his + hw_body * CH_DT_BLK();
+                                            PICK_PARAM(float *, private_param, DST_IDX())        = l_dst + hw_body * CH_DT_BLK();
+                                            private_param[HW_IDX()] = hw_tail;
+                                            conv2d_n8cx_gemm_direct_kernel_fp32_sse_hw1_table[nt_store_sel][oc_sel](private_param, share_param);
+                                        }
+                                    } else {
                                         PICK_PARAM(const float *, private_param, SRC_IDX())  = l_src;
                                         PICK_PARAM(const float *, private_param, HIS_IDX())  = l_his;
                                         PICK_PARAM(float *, private_param, DST_IDX())        = l_dst;
-                                        private_param[HW_IDX()] = hw_body;
-                                        switch (oc_sel) {
-                                            case 0: conv2d_n8cx_gemm_direct_kernel_fp32_sse_o8_table[nt_store_sel][sp.hw_kr_blk - 1](private_param, share_param); break;
-                                            case 1: conv2d_n8cx_gemm_direct_kernel_fp32_sse_o16_table[nt_store_sel][sp.hw_kr_blk - 1](private_param, share_param); break;
-                                        }
-                                    }
-                                    if (hw_tail) {
-                                        PICK_PARAM(const float *, private_param, SRC_IDX())  = l_src + hw_body * CH_DT_BLK();
-                                        PICK_PARAM(const float *, private_param, HIS_IDX())  = l_his + hw_body * CH_DT_BLK();
-                                        PICK_PARAM(float *, private_param, DST_IDX())        = l_dst + hw_body * CH_DT_BLK();
-                                        private_param[HW_IDX()] = hw_tail;
-                                        switch (oc_sel) {
-                                            case 0: conv2d_n8cx_gemm_direct_kernel_fp32_sse_o8_table[nt_store_sel][hw_tail - 1](private_param, share_param); break;
-                                            case 1: conv2d_n8cx_gemm_direct_kernel_fp32_sse_o16_table[nt_store_sel][hw_tail - 1](private_param, share_param); break;
-                                        }
+                                        private_param[HW_IDX()] = hwl2_eff;
+                                        conv2d_n8cx_gemm_direct_kernel_fp32_sse_hw1_table[nt_store_sel][oc_sel](private_param, share_param);
                                     }
                                     PICK_PARAM(const float *, private_param, FLT_IDX())  += sp.oc_kr_blk * sp.ic_l2_blk;
                                     PICK_PARAM(const float *, private_param, BIAS_IDX()) += sp.oc_kr_blk;

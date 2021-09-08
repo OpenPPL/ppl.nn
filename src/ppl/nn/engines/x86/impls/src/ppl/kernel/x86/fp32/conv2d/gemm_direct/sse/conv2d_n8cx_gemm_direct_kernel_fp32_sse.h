@@ -49,20 +49,23 @@
 
 #define NT_STORE_OPT() 2
 
-#define MAX_OC_RF() 4
+#define MAX_OC_RF() 14
 #define MAX_HW_RF() 3
 
 #define BLK1X3_OC_RF() 4
 #define BLK1X3_HW_RF() 3
+
+#define BLK1X1_OC_RF() 12
+#define BLK1X1_HW_RF() 1
 
 namespace ppl { namespace kernel { namespace x86 {
 
 typedef void (*conv2d_n8cx_gemm_direct_kernel_fp32_sse_func_t)(const int64_t*, const int64_t*);
 
 extern conv2d_n8cx_gemm_direct_kernel_fp32_sse_func_t
-    conv2d_n8cx_gemm_direct_kernel_fp32_sse_o8_table[NT_STORE_OPT()][BLK1X3_HW_RF()];
+    conv2d_n8cx_gemm_direct_kernel_fp32_sse_hw3_table[NT_STORE_OPT()][BLK1X3_OC_RF() / 2];
 extern conv2d_n8cx_gemm_direct_kernel_fp32_sse_func_t
-    conv2d_n8cx_gemm_direct_kernel_fp32_sse_o16_table[NT_STORE_OPT()][BLK1X3_HW_RF()];
+    conv2d_n8cx_gemm_direct_kernel_fp32_sse_hw1_table[NT_STORE_OPT()][BLK1X1_OC_RF() / 2];
 
 }}}; // namespace ppl::kernel::x86
 

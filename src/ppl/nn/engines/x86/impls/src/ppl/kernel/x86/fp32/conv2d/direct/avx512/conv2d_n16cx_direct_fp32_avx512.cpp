@@ -39,8 +39,6 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-static int64_t conv2d_n16cx_direct_kernel_fp32_avx512_oc_rf_table[14] = { 4, 4, 4, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2, 2 };
-
 int32_t conv2d_n16cx_direct_fp32_avx512_executor::cal_ic_l2_blk(const conv2d_fp32_param &param)
 {
     const int32_t ic_per_gp = param.channels / param.group;
@@ -126,9 +124,11 @@ void conv2d_n16cx_direct_fp32_avx512_executor::cal_kernel_tunning_param()
         sp.unroll_ow_end = dst_w;
     }
 
+    static const int64_t oc_rf_table[14] = { 4, 4, 4, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2, 2 };
+
     if (sp.unroll_ow_start < sp.unroll_ow_end) {
         sp.ow_kr_blk = min(sp.unroll_ow_end - sp.unroll_ow_start, MAX_OW_RF());
-        sp.oc_kr_blk = conv2d_n16cx_direct_kernel_fp32_avx512_oc_rf_table[sp.ow_kr_blk - 1] * CH_DT_BLK();
+        sp.oc_kr_blk = oc_rf_table[sp.ow_kr_blk - 1] * CH_DT_BLK();
     } else {
         sp.ow_kr_blk = MAX_OW_RF();
         sp.oc_kr_blk = 4 * CH_DT_BLK();
