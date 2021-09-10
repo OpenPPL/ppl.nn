@@ -19,7 +19,6 @@
 #define __ST_PPL_KERNEL_X86_FP32_CONV2D_GEMM_DIRECT_SSE_CONV2D_N8CX_GEMM_DIRECT_KERNEL_FP32_SSE_H_
 
 #include "ppl/kernel/x86/common/internal_include.h"
-#include "ppl/kernel/x86/fp32/conv2d.h"
 
 #define KERNEL_FLAG_LD_BIAS() (1 << 0)
 #define KERNEL_FLAG_AD_BIAS() (1 << 1)

@@ -565,7 +565,8 @@ void gemm_fp32_fma_kernel(int64_t *param)
 #undef K_COMPUTE_STEP
 }
 
-const gemm_kernel_fp32_fma::func_t gemm_kernel_fp32_fma::table_[gemm_kernel_fp32_fma::config::max_n_regs][gemm_kernel_fp32_fma::config::max_m_regs] =
+const gemm_kernel_fp32_fma::func_t
+    gemm_kernel_fp32_fma::table_[gemm_kernel_fp32_fma::config::max_n_regs][gemm_kernel_fp32_fma::config::max_m_regs] =
 {
     {
         gemm_fp32_fma_kernel<1, 1 * gemm_kernel_fp32_fma::config::n_reg_elts>,

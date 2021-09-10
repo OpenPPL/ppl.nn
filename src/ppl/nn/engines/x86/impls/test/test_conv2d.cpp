@@ -273,6 +273,15 @@ static std::map<std::string, ppl::kernel::x86::conv2d_fp32_algo_info> algo_table
             .output_format = ppl::common::DATAFORMAT_N8CX
         })
     },
+    {
+        "im2col_gemm_fp32_sse",
+        ppl::kernel::x86::conv2d_fp32_algo_info({
+            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::im2col_gemm,
+            .isa = ppl::common::ISA_X86_SSE,
+            .input_format = ppl::common::DATAFORMAT_NDARRAY,
+            .output_format = ppl::common::DATAFORMAT_NDARRAY
+        })
+    },
 };
 
 int main(int argc, char **argv) {
