@@ -416,6 +416,9 @@ ppl::common::RetCode conv2d_n8cx_direct_fp32_sse_manager::gen_cvt_weights(const 
 
 bool conv2d_n8cx_direct_fp32_sse_manager::is_supported()
 {
+    if (param_.is_pointwise()) {
+        return false;
+    }
     bool aligned_channels   = param_.channels / param_.group % CH_DT_BLK() == 0;
     bool aligned_num_output = param_.num_output / param_.group % CH_DT_BLK() == 0;
     return (param_.group == 1) || (aligned_channels && aligned_num_output);

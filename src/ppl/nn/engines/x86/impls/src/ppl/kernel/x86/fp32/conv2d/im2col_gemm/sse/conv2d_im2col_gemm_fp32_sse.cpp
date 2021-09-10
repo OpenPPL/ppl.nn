@@ -16,42 +16,41 @@
 // under the License.
 
 #include <new>
-#include <immintrin.h>
+#include <nmmintrin.h>
 #include <math.h>
 #include <string.h>
 
 #include "ppl/kernel/x86/fp32/reorder.h"
-#include "ppl/kernel/x86/common/avx_tools.h"
-#include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/fma/conv2d_im2col_gemm_fp32_fma.h"
-#include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/fma/conv_gemm_kernel_fp32_fma.h"
+#include "ppl/kernel/x86/common/sse_tools.h"
+#include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/sse/conv2d_im2col_gemm_fp32_sse.h"
+#include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/sse/conv_gemm_kernel_fp32_sse.h"
+#include "ppl/kernel/x86/common/array_param_helper.h"
 #include "ppl/common/sys.h"
-
-#define ASSUME_L2_BYTES() (256 * 1024)
-#define ASSUME_L2_WAYS()  4
-#define ASSUME_L3_BYTES() (2048 * 1024)
-#define L2_RATIO()        0.251
-#define L3_RATIO()        0.501
-
-#define HW_RF_BLK() N_RF_BLK()
-#define OC6_HW_RF() M6_N_RF()
-#define HW_KR_BLK() (HW_RF_BLK() * OC6_HW_RF())
-#define OC_KR_BLK() M6_M_RF()
-#define K_DT_BLK() 16
-
-#define HW_L2_BLK_MAX() (4 * HW_KR_BLK())
-#define K_L2_BLK_MAX() (8 * K_DT_BLK())
 
 namespace ppl { namespace kernel { namespace x86 {
 
-void conv2d_im2col_gemm_fp32_fma_executor::init_preproc_param()
+static const int64_t assume_l2_bytes = 256 * 1024;
+static const int64_t assume_l2_ways = 4;
+static const int64_t assume_l3_bytes = 2048 * 1024;
+static const float l2_ratio = 0.251f;
+static const float l3_ratio = 0.501f;
+
+static const int64_t k_l2_blk_max = 12 * conv_gemm_kernel_fp32_sse::config::unroll_k;
+static const int64_t hw_ker_blk_max = conv_gemm_kernel_fp32_sse::config::max_n_blk;
+static const int64_t hw_regb_elts = conv_gemm_kernel_fp32_sse::config::n_regb_elts;
+static const int64_t hw_reg_elts = conv_gemm_kernel_fp32_sse::config::n_reg_elts;
+static const int64_t hw_l2_blk_max = 2 * hw_ker_blk_max;
+
+
+void conv2d_im2col_gemm_fp32_sse_executor::init_preproc_param()
 {
     schedule_param_.ic_per_gp = conv_param_->channels / conv_param_->group;
     schedule_param_.oc_per_gp = conv_param_->num_output / conv_param_->group;
     schedule_param_.k_per_gp = schedule_param_.ic_per_gp * conv_param_->kernel_h * conv_param_->kernel_w;
-    schedule_param_.padded_k = round_up(schedule_param_.k_per_gp, K_DT_BLK());
+    schedule_param_.padded_k = round_up(schedule_param_.k_per_gp, conv_gemm_kernel_fp32_sse::config::unroll_k);
 }
 
-void conv2d_im2col_gemm_fp32_fma_executor::cal_kernel_tunning_param()
+void conv2d_im2col_gemm_fp32_sse_executor::cal_kernel_tunning_param()
 {
     const conv2d_fp32_param &cp = *conv_param_;
     kernel_schedule_param &sp   = schedule_param_;
@@ -60,9 +59,9 @@ void conv2d_im2col_gemm_fp32_fma_executor::cal_kernel_tunning_param()
     const int32_t batch      = src_shape_->GetDim(0);
     const int32_t dst_hw     = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
 
-    const float l3_cap_all_core = (ppl::common::GetCpuCacheL3() == 0 ? (ASSUME_L3_BYTES() * num_thread) : ppl::common::GetCpuCacheL3()) * L3_RATIO() / sizeof(float);
+    const float l3_cap_all_core = (ppl::common::GetCpuCacheL3() == 0 ? (assume_l3_bytes * num_thread) : ppl::common::GetCpuCacheL3()) * l3_ratio / sizeof(float);
 
-    sp.hw_l2_blk = round_up(min<int64_t>(dst_hw, HW_L2_BLK_MAX()), HW_KR_BLK());
+    sp.hw_l2_blk = round_up(min<int64_t>(dst_hw, hw_l2_blk_max), hw_ker_blk_max);
 
     sp.mb_l3_blk = 1;
     sp.gp_l3_blk = 1;
@@ -75,7 +74,7 @@ void conv2d_im2col_gemm_fp32_fma_executor::cal_kernel_tunning_param()
     }
 }
 
-uint64_t conv2d_im2col_gemm_fp32_fma_executor::cal_temp_buffer_size()
+uint64_t conv2d_im2col_gemm_fp32_sse_executor::cal_temp_buffer_size()
 {
     const conv2d_fp32_param &cp = *conv_param_;
     kernel_schedule_param &sp   = schedule_param_;
@@ -84,13 +83,13 @@ uint64_t conv2d_im2col_gemm_fp32_fma_executor::cal_temp_buffer_size()
     const bool is_gemm = cp.is_pointwise() && cp.sparse_level() == 1.0f;
 
     const uint64_t im2col_size = is_gemm ? 0 : round_up(sp.mb_l3_blk * sp.gp_l3_blk * sp.k_per_gp * dst_hw * sizeof(float), PPL_X86_CACHELINE_BYTES());
-    const uint64_t src_trans_size_per_thr = K_L2_BLK_MAX() * HW_L2_BLK_MAX() * sizeof(float);
-    const uint64_t dst_buf_size_per_thr = sp.oc_per_gp * HW_KR_BLK() * sizeof(float);
+    const uint64_t src_trans_size_per_thr = k_l2_blk_max * hw_l2_blk_max * sizeof(float);
+    const uint64_t dst_buf_size_per_thr = sp.oc_per_gp * hw_ker_blk_max * sizeof(float);
 
     return im2col_size + (src_trans_size_per_thr + dst_buf_size_per_thr) * PPL_OMP_MAX_THREADS();
 }
 
-ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::prepare()
+ppl::common::RetCode conv2d_im2col_gemm_fp32_sse_executor::prepare()
 {
     if (!conv_param_ || !src_shape_ || !dst_shape_ || ((conv_param_->fuse_flag & conv_fuse_flag::sum) && !sum_src_shape_)) {
         return ppl::common::RC_INVALID_VALUE;
@@ -102,7 +101,7 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::prepare()
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::execute()
+ppl::common::RetCode conv2d_im2col_gemm_fp32_sse_executor::execute()
 {
     if (!conv_param_ || !cvt_filter_ || !cvt_bias_ || !src_ || !dst_ || ((conv_param_->fuse_flag & conv_fuse_flag::sum) && !sum_src_) || !temp_buffer_) {
         return ppl::common::RC_INVALID_VALUE;
@@ -139,8 +138,8 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::execute()
     }
 
     const uint64_t im2col_len = is_gemm ? 0 : (round_up(sp.mb_l3_blk * sp.gp_l3_blk * sp.k_per_gp * dst_hw * sizeof(float), PPL_X86_CACHELINE_BYTES()) / sizeof(float));
-    const uint64_t src_trans_len_per_thr = K_L2_BLK_MAX() * HW_L2_BLK_MAX();
-    const uint64_t dst_buf_len_per_thr = sp.oc_per_gp * HW_KR_BLK();
+    const uint64_t src_trans_len_per_thr = k_l2_blk_max * hw_l2_blk_max;
+    const uint64_t dst_buf_len_per_thr = sp.oc_per_gp * hw_ker_blk_max;
     const uint64_t buffer_len_per_thr = src_trans_len_per_thr + dst_buf_len_per_thr;
 
     float *base_im2col   = (float *)temp_buffer_;
@@ -201,16 +200,16 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::execute()
                                     const float *l_src = b_src + ic * src_h * src_w;
                                     float *l_im2col = b_im2col + k * dst_h * dst_w;
 
-                                    memset32_avx(l_im2col, 0, oh_beg * dst_w);
+                                    memset32_sse(l_im2col, 0, oh_beg * dst_w);
                                     if (cp.stride_w == 1) {
                                         for (int64_t oh = oh_beg, ih = ih_beg; oh < oh_end; ++oh, ih += cp.stride_h) {
-                                            memset32_avx(l_im2col + oh * dst_w, 0, ow_beg);
-                                            memcpy32_avx(l_im2col + oh * dst_w + ow_beg, l_src + ih * src_w + iw_beg, (ow_end - ow_beg));
-                                            memset32_avx(l_im2col + oh * dst_w + ow_end, 0, (dst_w - ow_end));
+                                            memset32_sse(l_im2col + oh * dst_w, 0, ow_beg);
+                                            memcpy32_sse(l_im2col + oh * dst_w + ow_beg, l_src + ih * src_w + iw_beg, (ow_end - ow_beg));
+                                            memset32_sse(l_im2col + oh * dst_w + ow_end, 0, (dst_w - ow_end));
                                         }
                                     } else {
                                         for (int64_t oh = oh_beg, ih = ih_beg; oh < oh_end; ++oh, ih += cp.stride_h) {
-                                            memset32_avx(l_im2col + oh * dst_w, 0, ow_beg);
+                                            memset32_sse(l_im2col + oh * dst_w, 0, ow_beg);
                                             const float *w_src = l_src + ih * src_w + iw_beg;
                                             float *w_im2col = l_im2col + oh * dst_w + ow_beg;
                                             float *w_im2col_end = w_im2col + (ow_end - ow_beg);
@@ -218,10 +217,10 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::execute()
                                                 *w_im2col = *w_src;
                                                 w_src += cp.stride_w;
                                             }
-                                            memset32_avx(l_im2col + oh * dst_w + ow_end, 0, (dst_w - ow_end));
+                                            memset32_sse(l_im2col + oh * dst_w + ow_end, 0, (dst_w - ow_end));
                                         }
                                     }
-                                    memset32_avx(l_im2col + oh_end * dst_w, 0, (dst_h - oh_end) * dst_w);
+                                    memset32_sse(l_im2col + oh_end * dst_w, 0, (dst_h - oh_end) * dst_w);
                                 }
                             }
                         }
@@ -230,9 +229,9 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::execute()
             }
             const int64_t hw_l2_cnt = div_up(dst_hw, sp.hw_l2_blk);
             const int64_t num_thread = PPL_OMP_MAX_THREADS();
-            int64_t oc_thr_blk = round_up(sp.oc_per_gp, OC_KR_BLK());
+            int64_t oc_thr_blk = sp.oc_per_gp;
             if (hw_l2_cnt * gpl3_eff * mbl3_eff < num_thread * 0.8) {
-                oc_thr_blk = round_up(max<int64_t>(1, sp.oc_per_gp / div_up(num_thread, hw_l2_cnt * gpl3_eff * mbl3_eff)), OC_KR_BLK());
+                oc_thr_blk = max<int64_t>(1, sp.oc_per_gp / div_up(num_thread, hw_l2_cnt * gpl3_eff * mbl3_eff));
             }
 #ifdef PPL_USE_X86_OMP_COLLAPSE
             PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(4)
@@ -245,17 +244,21 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::execute()
                     for (int64_t hwl2 = 0; hwl2 < dst_hw; hwl2 += sp.hw_l2_blk) {
                         for (int64_t octhr = 0; octhr < sp.oc_per_gp; octhr += oc_thr_blk) {
                             const int64_t hwl2_eff = min<int64_t>(dst_hw - hwl2, sp.hw_l2_blk);
-                            const int64_t hw_body = round(hwl2_eff, HW_KR_BLK());
+                            const int64_t hw_body = round(hwl2_eff, hw_ker_blk_max);
                             const int64_t hw_tail = hwl2_eff - hw_body;
+                            const int64_t hw_tregb = div_up(hw_tail, hw_regb_elts);
                             const int64_t octhr_eff = min<int64_t>(sp.oc_per_gp - octhr, oc_thr_blk);
-                            const int64_t oc_body = round(octhr_eff, OC_KR_BLK());
-                            const int64_t oc_tail = octhr_eff - oc_body;
-                            const int64_t dst_buf_c_stride = HW_KR_BLK();
-                            int64_t shar_param[SHAR_PARAM_LEN()];
-                            int64_t priv_param[PRIV_PARAM_LEN()];
+                            const int64_t dst_buf_c_stride = hw_ker_blk_max;
+
+                            int64_t kernel_param[conv_gemm_kernel_fp32_sse::param_def::length];
+                            array_param_helper kp(kernel_param);
+                            conv_gemm_kernel_fp32_sse ker(kernel_param);
+                            kp.pick<int64_t>(conv_gemm_kernel_fp32_sse::param_def::flags_idx) = conv_gemm_kernel_fp32_sse::flag::load_h;
+                            kp.pick<int64_t>(conv_gemm_kernel_fp32_sse::param_def::m_idx) = octhr_eff;
+
                             float *thr_src_trans = base_buffer + buffer_len_per_thr * PPL_OMP_THREAD_ID();
                             float *thr_dst_buf = thr_src_trans + src_trans_len_per_thr;
-                            const float *thr_flt = base_flt + g * flt_g_stride + octhr * K_DT_BLK();
+                            const float *thr_flt = base_flt + g * flt_g_stride;
                             const float *thr_bias = cvt_bias_ + (gpl3 + g) * bias_g_stride + octhr;
                             const float *thr_im2col = base_im2col + b * im2col_b_stride + g * im2col_g_stride + hwl2;
                             float *thr_dst = base_dst + b * base_dst_b_stride + g * dst_g_stride + octhr * dst_hw + hwl2;
@@ -267,10 +270,10 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::execute()
                                     const float *l_his = base_his + b * base_his_b_stride + g * dst_g_stride + octhr * dst_hw + hwl2;
                                     for (int64_t oc = 0; oc < octhr_eff; ++oc) {
                                         if (hw_body) {
-                                            __m256 ymm_bias = _mm256_set1_ps(thr_bias[oc]);
-                                            for (int64_t hw = 0; hw < hw_body; hw += HW_KR_BLK()) {
-                                                _mm256_storeu_ps(l_dst + hw + 0 * HW_RF_BLK(), _mm256_add_ps(_mm256_loadu_ps(l_his + hw + 0 * HW_RF_BLK()), ymm_bias));
-                                                _mm256_storeu_ps(l_dst + hw + 1 * HW_RF_BLK(), _mm256_add_ps(_mm256_loadu_ps(l_his + hw + 1 * HW_RF_BLK()), ymm_bias));
+                                            __m128 xmm_bias = _mm_set1_ps(thr_bias[oc]);
+                                            for (int64_t hw = 0; hw < hw_body; hw += hw_regb_elts) {
+                                                _mm_storeu_ps(l_dst + hw + 0 * hw_reg_elts, _mm_add_ps(_mm_loadu_ps(l_his + hw + 0 * hw_reg_elts), xmm_bias));
+                                                _mm_storeu_ps(l_dst + hw + 1 * hw_reg_elts, _mm_add_ps(_mm_loadu_ps(l_his + hw + 1 * hw_reg_elts), xmm_bias));
                                             }
                                             l_dst += dst_c_stride;
                                         }
@@ -284,113 +287,88 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::execute()
                                     }
                                 } else {
                                     for (int64_t oc = 0; oc < octhr_eff; ++oc) {
-                                        __m256 ymm_bias = _mm256_set1_ps(thr_bias[oc]);
                                         if (hw_body) {
-                                            for (int64_t hw = 0; hw < hw_body; hw += HW_KR_BLK()) {
-                                                _mm256_storeu_ps(l_dst + hw + 0 * HW_RF_BLK(), ymm_bias);
-                                                _mm256_storeu_ps(l_dst + hw + 1 * HW_RF_BLK(), ymm_bias);
-                                            }
+                                            memset32_sse(l_dst, (*(int32_t*)&thr_bias[oc]), hw_body);
                                             l_dst += dst_c_stride;
                                         }
                                         if (hw_tail) {
-                                            _mm256_storeu_ps(l_dst_buf + 0 * HW_RF_BLK(), ymm_bias);
-                                            _mm256_storeu_ps(l_dst_buf + 1 * HW_RF_BLK(), ymm_bias);
+                                            memset32_sse(l_dst_buf, (*(int32_t*)&thr_bias[oc]), hwl2_eff - hw_body);
                                             l_dst_buf += dst_buf_c_stride;
                                         }
                                     }
                                 }
                             }
                             // gemm
-                            for (int64_t kl2 = 0; kl2 < sp.k_per_gp; kl2 += K_L2_BLK_MAX()) {
-                                const int64_t kl2_eff = min<int64_t>(sp.k_per_gp - kl2, K_L2_BLK_MAX());
-                                const bool is_last_k  = kl2 + K_L2_BLK_MAX() >= sp.k_per_gp;
-                                uint64_t kernel_flags = KERNEL_FLAG_LOAD_C();
+                            for (int64_t kl2 = 0; kl2 < sp.k_per_gp; kl2 += k_l2_blk_max) {
+                                const int64_t kl2_eff = min<int64_t>(sp.k_per_gp - kl2, k_l2_blk_max);
+                                const bool is_last_k  = kl2 + k_l2_blk_max >= sp.k_per_gp;
                                 if (is_last_k) {
                                     if (with_relu) {
-                                        kernel_flags |= KERNEL_FLAG_RELU();
+                                        kp.pick<int64_t>(conv_gemm_kernel_fp32_sse::param_def::flags_idx) |= conv_gemm_kernel_fp32_sse::flag::relu;
                                     } else if (with_relu6) {
-                                        kernel_flags |= KERNEL_FLAG_RELU6();
+                                        kp.pick<int64_t>(conv_gemm_kernel_fp32_sse::param_def::flags_idx) |= conv_gemm_kernel_fp32_sse::flag::relu6;
                                     }
                                 }
-                                if (hw_body) {
-                                    for (int64_t hw = 0; hw < hw_body; hw += HW_KR_BLK()) {
+                                // pack col, Nk8n
+                                {
+                                    int64_t hw = 0;
+                                    for (; hw < hwl2_eff; hw += hw_regb_elts) {
                                         const float *l_im2col = thr_im2col + kl2 * dst_hw + hw;
                                         float *l_src_trans = thr_src_trans + hw * kl2_eff;
                                         for (int64_t k = 0; k < kl2_eff; ++k) {
-                                            _mm256_storeu_ps(l_src_trans + 0 * HW_RF_BLK(), _mm256_loadu_ps(l_im2col + 0 * HW_RF_BLK()));
-                                            _mm256_storeu_ps(l_src_trans + 1 * HW_RF_BLK(), _mm256_loadu_ps(l_im2col + 1 * HW_RF_BLK()));
+                                            _mm_storeu_ps(l_src_trans + 0 * hw_reg_elts, _mm_loadu_ps(l_im2col + 0 * hw_reg_elts));
+                                            _mm_storeu_ps(l_src_trans + 1 * hw_reg_elts, _mm_loadu_ps(l_im2col + 1 * hw_reg_elts));
                                             l_im2col += dst_hw;
-                                            l_src_trans += HW_KR_BLK();
+                                            l_src_trans += hw_regb_elts;
+                                        }
+                                    }
+                                    if (hw < hwl2_eff) {
+                                        const int64_t hw_rb_tail = hwl2_eff - hw;
+                                        const float *l_im2col = thr_im2col + kl2 * dst_hw + hw;
+                                        float *l_src_trans = thr_src_trans + hw * kl2_eff;
+                                        for (int64_t k = 0; k < kl2_eff; ++k) {
+                                            const float *d_im2col = l_im2col;
+                                            float *d_src_trans = l_src_trans;
+                                            if (hw_rb_tail & 4) {
+                                                _mm_storeu_ps(d_src_trans, _mm_loadu_ps(d_im2col));
+                                                d_src_trans += 4;
+                                                d_im2col += 4;
+                                            }
+                                            if (hw_rb_tail & 2) {
+                                                d_src_trans[0] = d_im2col[0];
+                                                d_src_trans[1] = d_im2col[1];
+                                                d_src_trans += 2;
+                                                d_im2col += 2;
+                                            }
+                                            if (hw_rb_tail & 1) {
+                                                d_src_trans[0] = d_im2col[0];
+                                            }
+                                            l_im2col += dst_hw;
+                                            l_src_trans += hw_regb_elts;
                                         }
                                     }
                                 }
-                                if (hw_tail) {
-                                    const float *l_im2col = thr_im2col + kl2 * dst_hw + hw_body;
-                                    float *l_src_trans = thr_src_trans + hw_body * kl2_eff;
-                                    for (int64_t k = 0; k < kl2_eff; ++k) {
-                                        const float *d_im2col = l_im2col;
-                                        float *d_src_trans = l_src_trans;
-                                        if (hw_tail & 8) {
-                                            _mm256_storeu_ps(d_src_trans, _mm256_loadu_ps(d_im2col));
-                                            d_src_trans += 8;
-                                            d_im2col += 8;
-                                        }
-                                        if (hw_tail & 4) {
-                                            _mm_storeu_ps(d_src_trans, _mm_loadu_ps(d_im2col));
-                                            d_src_trans += 4;
-                                            d_im2col += 4;
-                                        }
-                                        if (hw_tail & 2) {
-                                            d_src_trans[0] = d_im2col[0];
-                                            d_src_trans[1] = d_im2col[1];
-                                            d_src_trans += 2;
-                                            d_im2col += 2;
-                                        }
-                                        if (hw_tail & 1) {
-                                            d_src_trans[0] = d_im2col[0];
-                                        }
-                                        l_im2col += dst_hw;
-                                        l_src_trans += HW_KR_BLK();
-                                    }
-                                }
-                                PICK_PARAM(int64_t, shar_param, K_IDX())       = kl2_eff;
-                                PICK_PARAM(int64_t, shar_param, FLAGS_IDX())   = kernel_flags;
-                                PICK_PARAM(int64_t, shar_param, A_MBLK_STRIDE_IDX()) = OC_KR_BLK() * K_DT_BLK();
-                                PICK_PARAM(int64_t, shar_param, A_KBLK_STRIDE_IDX()) = sp.oc_per_gp * K_DT_BLK();
+                                kp.pick<int64_t>(conv_gemm_kernel_fp32_sse::param_def::k_idx) = kl2_eff;
+                                kp.pick<int64_t>(conv_gemm_kernel_fp32_sse::param_def::lda_idx) = kl2_eff;
+                                kp.pick<int64_t>(conv_gemm_kernel_fp32_sse::param_def::ldpacked_b_idx) = kl2_eff * hw_regb_elts;
+                                kp.pick<const float*>(conv_gemm_kernel_fp32_sse::param_def::a_ptr_idx) = thr_flt + kl2 * sp.oc_per_gp + octhr * kl2_eff;
                                 if (hw_body) {
-                                    PICK_PARAM(int64_t, shar_param, C_M_STRIDE_IDX()) = dst_c_stride;
-                                    for (int64_t hw = 0; hw < hw_body; hw += HW_KR_BLK()) {
-                                        PICK_PARAM(const float *, priv_param, A_IDX()) = thr_flt + kl2 * sp.oc_per_gp;
-                                        PICK_PARAM(const float *, priv_param, B_IDX()) = thr_src_trans + hw * kl2_eff;
-                                        PICK_PARAM(float *, priv_param, C_IDX()) = thr_dst + hw;
-                                        if (oc_body) {
-                                            PICK_PARAM(int64_t, priv_param, M_IDX()) = oc_body;
-                                            conv_gemm_kernel_fp32_fma_table[1][OC_KR_BLK() - 1](priv_param, shar_param);
-                                            PICK_PARAM(const float *, priv_param, A_IDX()) += oc_body * K_DT_BLK();
-                                            PICK_PARAM(float *, priv_param, C_IDX()) += oc_body * dst_c_stride;
-                                        }
-                                        if (oc_tail) {
-                                            PICK_PARAM(int64_t, priv_param, M_IDX()) = oc_tail;
-                                            conv_gemm_kernel_fp32_fma_table[1][oc_tail - 1](priv_param, shar_param);
-                                        }
+                                    kp.pick<int64_t>(conv_gemm_kernel_fp32_sse::param_def::ldc_idx) = dst_c_stride;
+                                    kp.pick<int64_t>(conv_gemm_kernel_fp32_sse::param_def::ldh_idx) = dst_c_stride;
+                                    for (int64_t hw = 0; hw < hw_body; hw += hw_ker_blk_max) {
+                                        kp.pick<const float*>(conv_gemm_kernel_fp32_sse::param_def::packed_b_ptr_idx) = thr_src_trans + hw * kl2_eff;
+                                        kp.pick<float*>(conv_gemm_kernel_fp32_sse::param_def::c_ptr_idx) = thr_dst + hw;
+                                        kp.pick<float*>(conv_gemm_kernel_fp32_sse::param_def::h_ptr_idx) = thr_dst + hw;
+                                        ker.execute(conv_gemm_kernel_fp32_sse::config::max_n_regbs);
                                     }
                                 }
                                 if (hw_tail) {
-                                    PICK_PARAM(int64_t, shar_param, C_M_STRIDE_IDX()) = dst_buf_c_stride;
-                                    const int64_t hw_sel = div_up(hw_tail, HW_RF_BLK()) - 1;
-                                    PICK_PARAM(const float *, priv_param, A_IDX()) = thr_flt + kl2 * sp.oc_per_gp;
-                                    PICK_PARAM(const float *, priv_param, B_IDX()) = thr_src_trans + hw_body * kl2_eff;
-                                    PICK_PARAM(float *, priv_param, C_IDX()) = thr_dst_buf;
-                                    if (oc_body) {
-                                        PICK_PARAM(int64_t, priv_param, M_IDX()) = oc_body;
-                                        conv_gemm_kernel_fp32_fma_table[hw_sel][OC_KR_BLK() - 1](priv_param, shar_param);
-                                        PICK_PARAM(const float *, priv_param, A_IDX()) += oc_body * K_DT_BLK();
-                                        PICK_PARAM(float *, priv_param, C_IDX()) += oc_body * dst_buf_c_stride;
-                                    }
-                                    if (oc_tail) {
-                                        PICK_PARAM(int64_t, priv_param, M_IDX()) = oc_tail;
-                                        conv_gemm_kernel_fp32_fma_table[hw_sel][oc_tail - 1](priv_param, shar_param);
-                                    }
+                                    kp.pick<int64_t>(conv_gemm_kernel_fp32_sse::param_def::ldc_idx) = dst_buf_c_stride;
+                                    kp.pick<int64_t>(conv_gemm_kernel_fp32_sse::param_def::ldh_idx) = dst_buf_c_stride;
+                                    kp.pick<const float*>(conv_gemm_kernel_fp32_sse::param_def::packed_b_ptr_idx) = thr_src_trans + hw_body * kl2_eff;
+                                    kp.pick<float*>(conv_gemm_kernel_fp32_sse::param_def::c_ptr_idx) = thr_dst_buf;
+                                    kp.pick<float*>(conv_gemm_kernel_fp32_sse::param_def::h_ptr_idx) = thr_dst_buf;
+                                    ker.execute(hw_tregb);
                                 }
                             }
                             // store dst
@@ -398,9 +376,7 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::execute()
                                 float *l_dst_buf = thr_dst_buf;
                                 float *l_dst = base_dst + b * base_dst_b_stride + g * dst_g_stride + octhr * dst_hw + hwl2;
                                 for (int64_t oc = 0; oc < octhr_eff; ++oc) {
-                                    for (int64_t hw = hw_body; hw < hwl2_eff; ++hw) {
-                                        l_dst[hw] = l_dst_buf[hw - hw_body];
-                                    }
+                                    memcpy32_sse(l_dst + hw_body, l_dst_buf, hwl2_eff - hw_body);
                                     l_dst_buf += dst_buf_c_stride;
                                     l_dst += dst_c_stride;
                                 }
@@ -415,7 +391,7 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::execute()
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_manager::gen_cvt_weights(const float *filter, const float *bias)
+ppl::common::RetCode conv2d_im2col_gemm_fp32_sse_manager::gen_cvt_weights(const float *filter, const float *bias)
 {
     if (cvt_bias_ != nullptr || cvt_filter_ != nullptr) {
         return ppl::common::RC_PERMISSION_DENIED;
@@ -431,28 +407,26 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_manager::gen_cvt_weights(const 
 
     // M = OC
     // K = ic * kh * kw
-    // filter: MK -> KM16k
+    // filter: MK -> KMBk
     const int64_t ic_per_gp = param_.channels / param_.group;
     const int64_t oc_per_gp = param_.num_output / param_.group;
     const int64_t k_per_gp = ic_per_gp * param_.kernel_h * param_.kernel_w;
-    const int64_t padded_k = round_up(k_per_gp, K_DT_BLK());
 
-    cvt_filter_size_ = param_.group * oc_per_gp * padded_k;
+    cvt_filter_size_ = param_.group * oc_per_gp * k_per_gp;
     cvt_filter_      = (float *)allocator_->Alloc(cvt_filter_size_ * sizeof(float));
     if (cvt_filter_ == nullptr) {
         return ppl::common::RC_OUT_OF_MEMORY;
     }
 
     for (int64_t g = 0; g < param_.group; ++g) {
-        for (int64_t k = 0; k < k_per_gp; k += K_DT_BLK()) {
-            const int64_t k_eff = min<int64_t>(k_per_gp - k, K_DT_BLK());
+        for (int64_t k = 0; k < k_per_gp; k += k_l2_blk_max) {
+            const int64_t k_eff = min<int64_t>(k_per_gp - k, k_l2_blk_max);
             const float *l_flt = filter + g * oc_per_gp * k_per_gp + k;
-            float *l_cvt_flt = cvt_filter_ + g * oc_per_gp * padded_k + k * oc_per_gp;
+            float *l_cvt_flt = cvt_filter_ + g * oc_per_gp * k_per_gp + k * oc_per_gp;
             for (int64_t oc = 0; oc < oc_per_gp; ++oc) {
                 memcpy(l_cvt_flt, l_flt, k_eff * sizeof(float));
-                memset(l_cvt_flt + k_eff, 0, (K_DT_BLK() - k_eff) * sizeof(float));
                 l_flt += k_per_gp;
-                l_cvt_flt += K_DT_BLK();
+                l_cvt_flt += k_eff;
             }
         }
     }
@@ -460,14 +434,14 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_manager::gen_cvt_weights(const 
     return ppl::common::RC_SUCCESS;
 }
 
-bool conv2d_im2col_gemm_fp32_fma_manager::is_supported()
+bool conv2d_im2col_gemm_fp32_sse_manager::is_supported()
 {
     return true;
 }
 
-conv2d_fp32_executor *conv2d_im2col_gemm_fp32_fma_manager::gen_executor()
+conv2d_fp32_executor *conv2d_im2col_gemm_fp32_sse_manager::gen_executor()
 {
-    return new conv2d_im2col_gemm_fp32_fma_executor(&param_, cvt_filter_, cvt_bias_);
+    return new conv2d_im2col_gemm_fp32_sse_executor(&param_, cvt_filter_, cvt_bias_);
 }
 
 }}}; // namespace ppl::kernel::x86

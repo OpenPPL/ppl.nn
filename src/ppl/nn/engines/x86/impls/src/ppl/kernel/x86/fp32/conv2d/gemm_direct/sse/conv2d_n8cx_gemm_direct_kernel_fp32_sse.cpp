@@ -575,12 +575,14 @@ void conv2d_n8cx_gemm_direct_fp32_sse_blk1x3_kernel(
             const float *ic_src = icb_src;
             const float *ic_flt_o8 = icb_flt + 0 * flt_ocb_stride;
             const float *ic_flt_o16 = icb_flt + 1 * flt_ocb_stride;
-            for (int64_t ic = 0; ic < CH_DT_BLK(); ++ic) {
-                IC_COMPUTE_STEP(0);
-                ic_src += 1;
-                ic_flt_o8 += CH_DT_BLK();
-                ic_flt_o16 += CH_DT_BLK();
-            }
+            IC_COMPUTE_STEP(0);
+            IC_COMPUTE_STEP(1);
+            IC_COMPUTE_STEP(2);
+            IC_COMPUTE_STEP(3);
+            IC_COMPUTE_STEP(4);
+            IC_COMPUTE_STEP(5);
+            IC_COMPUTE_STEP(6);
+            IC_COMPUTE_STEP(7);
             icb_flt += CH_DT_BLK() * CH_DT_BLK();
             icb_src += src_icb_stride;
         }
@@ -770,7 +772,7 @@ void conv2d_n8cx_gemm_direct_fp32_sse_blk1x1_kernel_core(
         ".equ KERNEL_FLAG_RELU6, %c[KERNEL_FLAG_RELU6]\n"
 
         "mov SRC_ICB_STRIDE_IDX(%[shar_param]), %%r8\n"
-        "mov FLT_OCB_STRIDE_IDX(%[shar_param]), %%r9\n\n"
+        "mov FLT_OCB_STRIDE_IDX(%[shar_param]), %%r9\n"
         "mov FLAGS_IDX(%[shar_param]), %%r11\n"
         "mov SRC_IDX(%[priv_param]), %%r12\n"
         "mov HIS_IDX(%[priv_param]), %%r13\n"
@@ -1327,12 +1329,14 @@ void conv2d_n8cx_gemm_direct_fp32_sse_blk1x1_kernel(
             const float *ic_src = icb_src;
             const float *ic_flt_o24 = icb_flt + 0 * flt_ocb_stride;
             const float *ic_flt_o48 = icb_flt + 3 * flt_ocb_stride;
-            for (int64_t ic = 0; ic < CH_DT_BLK(); ++ic) {
-                IC_COMPUTE_STEP(0);
-                ic_src += 1;
-                ic_flt_o24 += CH_DT_BLK();
-                ic_flt_o48 += CH_DT_BLK();
-            }
+            IC_COMPUTE_STEP(0);
+            IC_COMPUTE_STEP(1);
+            IC_COMPUTE_STEP(2);
+            IC_COMPUTE_STEP(3);
+            IC_COMPUTE_STEP(4);
+            IC_COMPUTE_STEP(5);
+            IC_COMPUTE_STEP(6);
+            IC_COMPUTE_STEP(7);
             icb_flt += CH_DT_BLK() * CH_DT_BLK();
             icb_src += src_icb_stride;
         }
