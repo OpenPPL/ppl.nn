@@ -76,9 +76,6 @@ public:
     virtual void CopyParam(void*& param) {
         param = nullptr;
     }
-    virtual bool CompareParam(CudaOptKernel* other) {
-        return false;
-    }
 
     CudaCommonParam* GetCommparam() {
         return &common_param_;

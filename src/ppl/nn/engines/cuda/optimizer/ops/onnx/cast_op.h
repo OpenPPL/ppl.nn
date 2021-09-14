@@ -34,11 +34,6 @@ public:
     void* GetParam() override {
         return (void*)&param_;
     };
-    bool CompareParam(CudaOptKernel* other) override {
-        if (other->GetNode()->GetType().name == "Cast")
-            return param_.to == ((ppl::nn::common::CastParam*)other->GetParam())->to;
-        return false;
-    }
 
 private:
     ppl::nn::common::CastParam param_;

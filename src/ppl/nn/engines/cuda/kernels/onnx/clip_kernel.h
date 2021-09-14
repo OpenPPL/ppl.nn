@@ -20,15 +20,24 @@
 
 #include "ppl/nn/engines/cuda/kernel.h"
 
+#include "ppl/nn/engines/cuda/params/clip_extra_param.h"
+
 namespace ppl { namespace nn { namespace cuda {
 
 class ClipKernel : public CudaKernel {
 public:
     ClipKernel(const ir::Node* node) : CudaKernel(node) {}
 
+    void SetParam(const ppl::nn::cuda::ClipParam* p) {
+        param_ = p;
+    }
+
 private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
     bool CanDoExecute(const KernelExecContext&) const override;
+    
+private:
+    const ppl::nn::cuda::ClipParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::cuda
