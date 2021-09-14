@@ -15,26 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_CLIP_OP_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_CLIP_OP_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_PARAMS_CLIP_EXTRA_PARAM_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_PARAMS_CLIP_EXTRA_PARAM_H_
 
-#include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
+#include <set>
+#include <string>
 
-#include "ppl/nn/engines/cuda/params/clip_extra_param.h"
+#define FLT_MAX 3e+38F
 
 namespace ppl { namespace nn { namespace cuda {
-
-class ClipOp final : public CudaOptKernel {
-public:
-    ClipOp(const ir::Node* node) : CudaOptKernel(node) {}
-    KernelImpl* CreateKernelImpl() const override;
-    ppl::common::RetCode Init(const OptKernelOptions&) override;
-    ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
-
-private:
-    ClipParam param_;
+struct ClipParam {
+    float min_val = -FLT_MAX;
+    float max_val = FLT_MAX;
 };
-
 }}} // namespace ppl::nn::cuda
 
 #endif

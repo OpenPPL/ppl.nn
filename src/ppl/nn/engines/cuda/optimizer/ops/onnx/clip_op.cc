@@ -40,6 +40,16 @@ RetCode ClipOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = GenericInferDims;
+
+    auto data = options.graph->data.get();
+    auto min_edge_id = GetNode()->GetInput(1);
+    if (min_edge_id != INVALID_EDGEID) {
+        param_.min_val = *((float*)data->constants[min_edge_id].data.data());
+    }
+    auto max_edge_id = GetNode()->GetInput(2);
+    if (max_edge_id != INVALID_EDGEID) {
+        param_.max_val = *((float*)data->constants[max_edge_id].data.data());
+    }
     return RC_SUCCESS;
 }
 
@@ -54,7 +64,7 @@ RetCode ClipOp::Finalize(const OptKernelOptions& options) {
 }
 
 KernelImpl* ClipOp::CreateKernelImpl() const {
-    return CreateKernelImplWithoutParam<ClipKernel>();
+    return CreateKernelImplWithParam<ClipKernel>(&param_);
 }
 
 }}} // namespace ppl::nn::cuda

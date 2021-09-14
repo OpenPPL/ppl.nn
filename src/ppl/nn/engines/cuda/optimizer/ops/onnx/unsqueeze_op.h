@@ -34,20 +34,6 @@ public:
     void* GetParam() override {
         return (void*)&param_;
     };
-    bool CompareParam(CudaOptKernel* other) override {
-        if (other->GetNode()->GetType().name == "Unsqueeze") {
-            ppl::nn::common::UnsqueezeParam temp = *((ppl::nn::common::UnsqueezeParam*)other->GetParam());
-            if (param_.axes.size() != temp.axes.size()) {
-                return false;
-            }
-            for (uint32_t i = 0; i < temp.axes.size(); ++i) {
-                if (param_.axes[i] != temp.axes[i]) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
 
 private:
     ppl::nn::common::UnsqueezeParam param_;

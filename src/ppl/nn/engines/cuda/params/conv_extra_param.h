@@ -24,6 +24,7 @@
 #include "ppl/nn/engines/cuda/cuda_device.h"
 #include "ppl/nn/oputils/onnx/reshape_convolution.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
+#include "ppl/nn/engines/cuda/params/clip_extra_param.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
 #include "cudakernel/nn/conv/depthwise.h"
 #include "cudakernel/nn/conv/group_padding.h"
@@ -33,11 +34,6 @@
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
-struct ClipParam {
-    float min_val = -FLT_MAX;
-    float max_val = FLT_MAX;
-};
-
 struct ConvFusionInfo {
     std::vector<std::string> types; // max fuse relu + add + relu right now
     std::vector<uint32_t> input_ind; // save fused kernel's input index
