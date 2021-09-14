@@ -16,21 +16,29 @@
 // under the License.
 
 #include "ppl/nn/engines/cuda/kernels/ppl/bridge_kernel.h"
+
+#include "ppl/common/cuda/cuda_types.h"
 #include "ppl/nn/common/logger.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
 bool BridgeKernel::EqualTypeAndFormat(const TensorImpl* input, const TensorImpl* output) {
-    if (input->GetShape().GetDataType() != output->GetShape().GetDataType()) {
+    auto in_shape = input->GetShape();
+    auto out_shape = output->GetShape();
+    
+    if (in_shape.GetDataType() != out_shape.GetDataType()) {
         return false;
     }
 
-    if (input->GetShape().GetDataFormat() == output->GetShape().GetDataFormat()) {
+    if (in_shape.GetDataFormat() == out_shape.GetDataFormat()) {
         return true;
     }
 
-    if (input->GetShape().GetDimCount() == 2 && output->GetShape().GetDimCount() == 2) {
-        return true;
+    auto src_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(in_shape.GetDataFormat());
+    auto dst_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(out_shape.GetDataFormat());
+    if (in_shape.GetDimCount() == 2 && out_shape.GetDimCount() == 2 &&
+        in_shape.GetDim(1) % src_align_size == 0 && out_shape.GetDim(1) % dst_align_size == 0) {
+            return true;
     }
 
     return false;
@@ -41,9 +49,13 @@ ppl::common::RetCode BridgeKernel::DoExecute(KernelExecContext* ctx) {
     auto output = ctx->GetOutput<TensorImpl>(0);
     ppl::common::RetCode status = ppl::common::RC_SUCCESS;
 
-    auto converter = output->GetDevice()->GetDataConverter();
-    status =
-        converter->Convert(&output->GetBufferDesc(), output->GetShape(), input->GetBufferDesc(), input->GetShape());
+    if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL && EqualTypeAndFormat(input, output)) {
+        output->TransferBufferFrom(input);
+    } else {
+        auto converter = output->GetDevice()->GetDataConverter();
+        status =
+            converter->Convert(&output->GetBufferDesc(), output->GetShape(), input->GetBufferDesc(), input->GetShape());
+    }
     return status;
 }
 
