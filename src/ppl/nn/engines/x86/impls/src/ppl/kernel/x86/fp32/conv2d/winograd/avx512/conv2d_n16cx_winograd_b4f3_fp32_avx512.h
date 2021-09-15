@@ -43,15 +43,15 @@ public:
 private:
     struct kernel_schedule_param {
         // Preprocessed param
-        int32_t ic_per_gp;
-        int32_t oc_per_gp;
-        int32_t padded_ic;
-        int32_t padded_oc;
+        int64_t ic_per_gp;
+        int64_t oc_per_gp;
+        int64_t padded_ic;
+        int64_t padded_oc;
 
-        int32_t num_tiles_h;
-        int32_t num_tiles_w;
-        int32_t num_tiles_b;
-        int32_t num_tiles;
+        int64_t num_tiles_h;
+        int64_t num_tiles_w;
+        int64_t num_tiles_b;
+        int64_t num_tiles;
 
         // Multithread mode
         int32_t parallel_mode;
@@ -59,21 +59,21 @@ private:
         int32_t override_only;
 
         // Blocking
-        int32_t ic_l2_blk;
-        int32_t oc_l2_blk;
-        int32_t tiles_l2_blk;
+        int64_t ic_l2_blk;
+        int64_t oc_l2_blk;
+        int64_t tiles_l2_blk;
 
         // Array length
-        int32_t thread_tile_in_len;
-        int32_t thread_matmul_in_len;
-        int32_t thread_src_trans_len;
-        int32_t thread_gemm_out_len;
-        int32_t thread_matmul_out_len;
-        int32_t thread_postprocess_len;
-        int32_t thread_src_dst_trans_len;
-        int32_t thread_workspace_len;
-        int32_t src_trans_len;
-        int32_t gemm_out_len;
+        int64_t thread_tile_in_len;
+        int64_t thread_matmul_in_len;
+        int64_t thread_src_trans_len;
+        int64_t thread_gemm_out_len;
+        int64_t thread_matmul_out_len;
+        int64_t thread_postprocess_len;
+        int64_t thread_src_dst_trans_len;
+        int64_t thread_workspace_len;
+        int64_t src_trans_len;
+        int64_t gemm_out_len;
 
     } schedule_param_;
 

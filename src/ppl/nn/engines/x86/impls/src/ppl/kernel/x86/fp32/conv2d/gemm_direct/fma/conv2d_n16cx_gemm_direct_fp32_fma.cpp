@@ -51,12 +51,12 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-int32_t conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_ic_l2_blk(const conv2d_fp32_param &param)
+int64_t conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_ic_l2_blk(const conv2d_fp32_param &param)
 {
-    const int32_t ic_per_gp = param.channels / param.group;
-    const int32_t padded_ic = round_up(ic_per_gp, CH_DT_BLK());
+    const int64_t ic_per_gp = param.channels / param.group;
+    const int64_t padded_ic = round_up(ic_per_gp, CH_DT_BLK());
 
-    int32_t ic_l2_blk = min(IC_L2_BLK_MAX(), padded_ic);
+    int64_t ic_l2_blk = min<int64_t>(IC_L2_BLK_MAX(), padded_ic);
     if (mod_up(padded_ic, ic_l2_blk) < IC_L2_BLK_TAIL_RATIO() * ic_l2_blk) {
         ic_l2_blk = round_up(padded_ic / (padded_ic / ic_l2_blk), CH_DT_BLK());
     }
@@ -75,7 +75,7 @@ void conv2d_n16cx_gemm_direct_fp32_fma_executor::init_preproc_param()
     schedule_param_.hw_kr_blk = HW_KR_BLK_MAX();
 #define REDUN_HW(HW, HW_BLK) (float(round_up(HW, HW_BLK)) / (HW)-1.0f)
     if (REDUN_HW(dst_hw, schedule_param_.hw_kr_blk) > 0.201f) {
-        for (int32_t hw_blk = HW_KR_BLK_MAX() - 1; hw_blk >= HW_KR_BLK_MIN(); --hw_blk) {
+        for (int64_t hw_blk = HW_KR_BLK_MAX() - 1; hw_blk >= HW_KR_BLK_MIN(); --hw_blk) {
             if (REDUN_HW(dst_hw, hw_blk) < REDUN_HW(dst_hw, schedule_param_.hw_kr_blk)) {
                 schedule_param_.hw_kr_blk = hw_blk;
             }
@@ -92,9 +92,9 @@ void conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_tunning_param()
     const conv2d_fp32_param &cp = *conv_param_;
     kernel_schedule_param &sp   = schedule_param_;
 
-    const int32_t num_thread = PPL_OMP_MAX_THREADS();
-    const int32_t batch      = src_shape_->GetDim(0);
-    const int32_t dst_hw     = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
+    const int64_t num_thread = PPL_OMP_MAX_THREADS();
+    const int64_t batch      = src_shape_->GetDim(0);
+    const int64_t dst_hw     = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
 
     const float l2_cap_per_core = (ppl::common::GetCpuCacheL2() == 0 ? ASSUME_L2_BYTES() : ppl::common::GetCpuCacheL2()) * L2_RATIO() / sizeof(float);
     const float l3_cap_all_core = (ppl::common::GetCpuCacheL3() == 0 ? (ASSUME_L3_BYTES() * num_thread) : ppl::common::GetCpuCacheL3()) * L3_RATIO() / sizeof(float);
@@ -102,14 +102,14 @@ void conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_tunning_param()
     sp.ic_l2_blk = cal_ic_l2_blk(cp);
     sp.ic_l2_cnt = div_up(sp.padded_ic, sp.ic_l2_blk);
 
-    const int32_t oc_l2_blk_by_space = round_up(int32_t(l2_cap_per_core / sp.ic_l2_blk), CH_DT_BLK());
-    sp.oc_l2_blk                     = min(min(max(oc_l2_blk_by_space, OC_L2_BLK_MIN()), OC_L2_BLK_MAX()), sp.padded_oc);
+    const int64_t oc_l2_blk_by_space = round_up(int64_t(l2_cap_per_core / sp.ic_l2_blk), CH_DT_BLK());
+    sp.oc_l2_blk                     = min(min<int64_t>(max<int64_t>(oc_l2_blk_by_space, OC_L2_BLK_MIN()), OC_L2_BLK_MAX()), sp.padded_oc);
     if (mod_up(sp.padded_oc, sp.oc_l2_blk) < OC_L2_BLK_TAIL_RATIO() * sp.oc_l2_blk) {
-        sp.oc_l2_blk = round_up(sp.padded_oc / max(sp.padded_oc / sp.oc_l2_blk, 1), CH_DT_BLK());
+        sp.oc_l2_blk = round_up(sp.padded_oc / max<int64_t>(sp.padded_oc / sp.oc_l2_blk, 1), CH_DT_BLK());
     }
 
     if (sp.padded_ic > sp.padded_oc && sp.padded_oc <= OC_L2_BLK_MAX()) {
-        const int32_t num_oc_group = min(num_thread, OC_L2_GRP_MIN());
+        const int64_t num_oc_group = min<int64_t>(num_thread, OC_L2_GRP_MIN());
         while (num_oc_group > div_up(sp.padded_oc, sp.oc_l2_blk) && sp.oc_l2_blk > OC_L2_BLK_MIN()) {
             sp.oc_l2_blk -= CH_DT_BLK();
         }
@@ -120,20 +120,20 @@ void conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_tunning_param()
 
     sp.hw_l3_blk = round_up(dst_hw, sp.hw_kr_blk);
     if (num_thread <= sp.mb_l3_blk * 2) {
-        const int32_t mini_filter_factor = static_cast<int32_t>(sp.padded_ic <= CH_DT_BLK() && sp.padded_oc <= CH_DT_BLK()) + 1;
-        const int32_t scaled_hw_l2_blk_max = HW_L3_BLK_MAX(sp) * mini_filter_factor;
+        const int64_t mini_filter_factor = static_cast<int64_t>(sp.padded_ic <= CH_DT_BLK() && sp.padded_oc <= CH_DT_BLK()) + 1;
+        const int64_t scaled_hw_l2_blk_max = HW_L3_BLK_MAX(sp) * mini_filter_factor;
         if (sp.hw_l3_blk > scaled_hw_l2_blk_max) {
             sp.hw_l3_blk = scaled_hw_l2_blk_max;
         }
     } else {
-        const int32_t mini_filter_factor = (sp.padded_oc <= max(div_up(num_thread, sp.mb_l3_blk), 8) * CH_DT_BLK()) ? (div_up(num_thread, sp.mb_l3_blk) * 2) : 1;
-        const int32_t scaled_hw_l2_blk_max = HW_L3_BLK_MAX(sp) * mini_filter_factor;
+        const int64_t mini_filter_factor = (sp.padded_oc <= max<int64_t>(div_up(num_thread, sp.mb_l3_blk), 8) * CH_DT_BLK()) ? (div_up(num_thread, sp.mb_l3_blk) * 2) : 1;
+        const int64_t scaled_hw_l2_blk_max = HW_L3_BLK_MAX(sp) * mini_filter_factor;
         if (sp.hw_l3_blk > scaled_hw_l2_blk_max) {
             sp.hw_l3_blk = scaled_hw_l2_blk_max;
         }
     }
     if (mod_up(dst_hw, sp.hw_l3_blk) < HW_L3_BLK_TAIL_RATIO() * sp.hw_l3_blk) {
-        sp.hw_l3_blk = round_up(dst_hw / max(dst_hw / sp.hw_l3_blk, 1), sp.hw_kr_blk);
+        sp.hw_l3_blk = round_up(dst_hw / max<int64_t>(dst_hw / sp.hw_l3_blk, 1), sp.hw_kr_blk);
     }
 
     sp.use_nt_store = 0;
@@ -142,7 +142,7 @@ void conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_tunning_param()
     }
 }
 
-void conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_threading_param(const int32_t batch, const int32_t group)
+void conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_threading_param(const int64_t batch, const int64_t group)
 {
     kernel_schedule_param &sp = schedule_param_;
 
@@ -154,8 +154,8 @@ void conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_threading_param(cons
         sp.hw_l2_blk = min(round_up(sp.hw_l3_blk, sp.hw_kr_blk), HW_L2_BLK_MAX(sp));
         // Split the block for load-balancing
 #ifdef PPL_USE_X86_OMP_COLLAPSE
-        const int32_t num_thread = PPL_OMP_MAX_THREADS();
-        const int32_t num_tasks = batch * group * div_up(sp.padded_oc, sp.oc_l2_blk);
+        const int64_t num_thread = PPL_OMP_MAX_THREADS();
+        const int64_t num_tasks = batch * group * div_up(sp.padded_oc, sp.oc_l2_blk);
         while (
             (num_thread > num_tasks * div_up(sp.hw_l3_blk, sp.hw_l2_blk) ||
              mod_up(num_tasks * div_up(sp.hw_l3_blk, sp.hw_l2_blk), num_thread) < THREAD_TAIL_RATIO() * num_thread) &&
@@ -197,20 +197,20 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_executor::execute()
     const conv2d_fp32_param &cp     = *conv_param_;
     const kernel_schedule_param &sp = schedule_param_;
 
-    const int32_t batch  = src_shape_->GetDim(0);
-    const int32_t src_hw = src_shape_->GetDim(2) * src_shape_->GetDim(3);
-    const int32_t dst_hw = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
+    const int64_t batch  = src_shape_->GetDim(0);
+    const int64_t src_hw = src_shape_->GetDim(2) * src_shape_->GetDim(3);
+    const int64_t dst_hw = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
 
-    const int32_t padded_src_c = round_up(src_shape_->GetDim(1), CH_DT_BLK());
-    const int32_t padded_dst_c = round_up(dst_shape_->GetDim(1), CH_DT_BLK());
+    const int64_t padded_src_c = round_up(src_shape_->GetDim(1), CH_DT_BLK());
+    const int64_t padded_dst_c = round_up(dst_shape_->GetDim(1), CH_DT_BLK());
     const int64_t padded_rf_oc = round_up(sp.oc_per_gp, CH_RF_BLK());
 
-    const int64_t src_g_stride   = int64_t(sp.padded_ic) * src_hw;
-    const int64_t src_b_stride   = int64_t(padded_src_c) * src_hw;
-    const int64_t src_icb_stride = int64_t(src_hw) * CH_DT_BLK();
-    const int64_t dst_g_stride   = int64_t(sp.padded_oc) * dst_hw;
-    const int64_t dst_b_stride   = int64_t(padded_dst_c) * dst_hw;
-    const int64_t flt_g_stride   = int64_t(sp.ic_l2_cnt) * sp.padded_oc * sp.ic_l2_blk;
+    const int64_t src_g_stride   = sp.padded_ic * src_hw;
+    const int64_t src_b_stride   = padded_src_c * src_hw;
+    const int64_t src_icb_stride = src_hw * CH_DT_BLK();
+    const int64_t dst_g_stride   = sp.padded_oc * dst_hw;
+    const int64_t dst_b_stride   = padded_dst_c * dst_hw;
+    const int64_t flt_g_stride   = sp.ic_l2_cnt * sp.padded_oc * sp.ic_l2_blk;
     const int64_t bias_g_stride  = sp.padded_oc;
 
     const bool with_sum   = cp.fuse_flag & conv_fuse_flag::sum;
@@ -342,9 +342,9 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_manager::gen_cvt_weights(
         return ppl::common::RC_PERMISSION_DENIED;
     }
 
-    const int32_t oc_per_gp = param_.num_output / param_.group;
-    const int32_t padded_oc = round_up(oc_per_gp, CH_DT_BLK());
-    const int32_t ic_l2_blk = conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_ic_l2_blk(param_);
+    const int64_t oc_per_gp = param_.num_output / param_.group;
+    const int64_t padded_oc = round_up(oc_per_gp, CH_DT_BLK());
+    const int64_t ic_l2_blk = conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_ic_l2_blk(param_);
 
     cvt_bias_size_ = param_.group * padded_oc;
     cvt_bias_      = (float *)allocator_->Alloc(cvt_bias_size_ * sizeof(float));
@@ -352,7 +352,7 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_manager::gen_cvt_weights(
         return ppl::common::RC_OUT_OF_MEMORY;
     }
 
-    for (int32_t g = 0; g < param_.group; ++g) {
+    for (int64_t g = 0; g < param_.group; ++g) {
         memcpy(cvt_bias_ + g * padded_oc, bias + g * oc_per_gp, oc_per_gp * sizeof(float));
         memset(cvt_bias_ + g * padded_oc + oc_per_gp, 0, (padded_oc - oc_per_gp) * sizeof(float));
     }

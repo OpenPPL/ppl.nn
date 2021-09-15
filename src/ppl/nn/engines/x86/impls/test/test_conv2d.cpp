@@ -111,15 +111,6 @@ n16cx_gemm_direct_fp32_fma
 static std::map<std::string, ppl::kernel::x86::conv2d_fp32_algo_info> algo_table =
 {
     {
-        "n16cx_implicit_gemm_fp32_fma",
-        ppl::kernel::x86::conv2d_fp32_algo_info({
-            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::implicit_gemm,
-            .isa = ppl::common::ISA_X86_FMA,
-            .input_format = ppl::common::DATAFORMAT_N16CX,
-            .output_format = ppl::common::DATAFORMAT_N16CX
-        })
-    },
-    {
         "n16cx_gemm_direct_fp32_fma",
         ppl::kernel::x86::conv2d_fp32_algo_info({
             .algo_type = ppl::kernel::x86::conv2d_fp32_algo::gemm_direct,
@@ -150,15 +141,6 @@ static std::map<std::string, ppl::kernel::x86::conv2d_fp32_algo_info> algo_table
         "n16cx_winograd_b4f3_fp32_fma",
         ppl::kernel::x86::conv2d_fp32_algo_info({
             .algo_type = ppl::kernel::x86::conv2d_fp32_algo::winograd_b4f3,
-            .isa = ppl::common::ISA_X86_FMA,
-            .input_format = ppl::common::DATAFORMAT_N16CX,
-            .output_format = ppl::common::DATAFORMAT_N16CX
-        })
-    },
-    {
-        "n16cx_direct_fp32_fma",
-        ppl::kernel::x86::conv2d_fp32_algo_info({
-            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::direct,
             .isa = ppl::common::ISA_X86_FMA,
             .input_format = ppl::common::DATAFORMAT_N16CX,
             .output_format = ppl::common::DATAFORMAT_N16CX

@@ -38,15 +38,15 @@ public:
 private:
     struct kernel_schedule_param {
         // Preprocessed param
-        int32_t ic_per_gp;
-        int32_t oc_per_gp;
-        int32_t padded_oc;
+        int64_t ic_per_gp;
+        int64_t oc_per_gp;
+        int64_t padded_oc;
 
         // Kernel tunning
-        int32_t oc_l2_blk;
+        int64_t oc_l2_blk;
         int32_t use_nt_store;
-        int32_t unroll_ow_start;
-        int32_t unroll_ow_end;
+        int64_t unroll_ow_start;
+        int64_t unroll_ow_end;
     } schedule_param_;
 
     void init_preproc_param();

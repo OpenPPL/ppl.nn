@@ -54,8 +54,6 @@ private:
     void init_preproc_param();
     void cal_kernel_tunning_param();
 
-    static int32_t cal_ic_l2_blk(const conv2d_fp32_param &param);
-
     friend conv2d_im2col_gemm_fp32_sse_manager;
 };
 

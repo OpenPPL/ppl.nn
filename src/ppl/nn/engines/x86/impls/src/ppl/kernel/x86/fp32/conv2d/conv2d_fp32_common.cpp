@@ -19,12 +19,10 @@
 
 #include "ppl/kernel/x86/fp32/conv2d.h"
 
-#include "ppl/kernel/x86/fp32/conv2d/implicit_gemm/fma/conv2d_n16cx_implicit_gemm_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/conv2d/gemm_direct/fma/conv2d_n16cx_gemm_direct_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/conv2d/winograd/fma/conv2d_n16cx_winograd_b4f3_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/conv2d/depthwise/fma/conv2d_n16cx_depthwise_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/fma/conv2d_im2col_gemm_fp32_fma.h"
-#include "ppl/kernel/x86/fp32/conv2d/direct/fma/conv2d_n16cx_direct_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/fma/conv2d_n16cx_direct_ndarray_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/conv2d/gemm_direct/fma/conv2d_n16cx_gemm_direct_v2_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/conv2d/direct/fma/conv2d_n16cx_direct_v2_fp32_fma.h"
@@ -238,12 +236,6 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
 conv2d_fp32_manager *conv2d_algo_selector::gen_algo(const conv2d_fp32_param &param, const conv2d_fp32_algo_info &algo_info, ppl::common::Allocator *allocator)
 {
     conv2d_fp32_manager *conv_mgr = nullptr;
-    if (algo_info.algo_type == conv2d_fp32_algo::implicit_gemm &&
-        algo_info.isa == ppl::common::ISA_X86_FMA &&
-        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
-        conv_mgr = new conv2d_n16cx_implicit_gemm_fp32_fma_manager(param, allocator);
-    }
     if (algo_info.algo_type == conv2d_fp32_algo::gemm_direct &&
         algo_info.isa == ppl::common::ISA_X86_FMA &&
         algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
@@ -267,12 +259,6 @@ conv2d_fp32_manager *conv2d_algo_selector::gen_algo(const conv2d_fp32_param &par
         algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
         algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
         conv_mgr = new conv2d_n16cx_winograd_b4f3_fp32_fma_manager(param, allocator);
-    }
-    if (algo_info.algo_type == conv2d_fp32_algo::direct &&
-        algo_info.isa == ppl::common::ISA_X86_FMA &&
-        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
-        conv_mgr = new conv2d_n16cx_direct_fp32_fma_manager(param, allocator);
     }
     if (algo_info.algo_type == conv2d_fp32_algo::direct_v2 &&
         algo_info.isa == ppl::common::ISA_X86_FMA &&

@@ -39,10 +39,10 @@ public:
 private:
     struct kernel_schedule_param {
         // Preprocessed param
-        int32_t padded_ch;
+        int64_t padded_ch;
 
         // Kernel tunning
-        int32_t ow_kr_blk;
+        int64_t ow_kr_blk;
     } schedule_param_;
 
     void init_preproc_param();

@@ -42,18 +42,18 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-int32_t conv2d_n16cx_gemm_direct_fp32_avx512_executor::cal_ic_l2_blk(const conv2d_fp32_param &param)
+int64_t conv2d_n16cx_gemm_direct_fp32_avx512_executor::cal_ic_l2_blk(const conv2d_fp32_param &param)
 {
-    const int32_t ic_per_gp = param.channels / param.group;
-    const int32_t padded_ic = round_up(ic_per_gp, CH_DT_BLK());
-    const int32_t oc_per_gp = param.num_output / param.group;
-    const int32_t padded_oc = round_up(oc_per_gp, CH_DT_BLK());
+    const int64_t ic_per_gp = param.channels / param.group;
+    const int64_t padded_ic = round_up(ic_per_gp, CH_DT_BLK());
+    const int64_t oc_per_gp = param.num_output / param.group;
+    const int64_t padded_oc = round_up(oc_per_gp, CH_DT_BLK());
 
-    int32_t ic_l2_blk;
+    int64_t ic_l2_blk;
     if (padded_ic > padded_oc) {
-        ic_l2_blk = min(IC_L2_BLK_MAX_L(), padded_ic);
+        ic_l2_blk = min<int64_t>(IC_L2_BLK_MAX_L(), padded_ic);
     } else {
-        ic_l2_blk = min(IC_L2_BLK_MAX_S(), padded_ic);
+        ic_l2_blk = min<int64_t>(IC_L2_BLK_MAX_S(), padded_ic);
     }
     if (mod_up(padded_ic, ic_l2_blk) < IC_L2_BLK_TAIL_RATIO() * ic_l2_blk) {
         ic_l2_blk = round_up(padded_ic / (padded_ic / ic_l2_blk), CH_DT_BLK());
@@ -74,33 +74,33 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_executor::cal_kernel_tunning_param()
     const conv2d_fp32_param &cp = *conv_param_;
     kernel_schedule_param &sp   = schedule_param_;
 
-    const int32_t num_thread = PPL_OMP_MAX_THREADS();
-    const int32_t batch      = src_shape_->GetDim(0);
-    const int32_t dst_hw     = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
+    const int64_t num_thread = PPL_OMP_MAX_THREADS();
+    const int64_t batch      = src_shape_->GetDim(0);
+    const int64_t dst_hw     = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
 
     const float l3_cap_all_core = (ppl::common::GetCpuCacheL3() == 0 ? (ASSUME_L3_BYTES() * num_thread) : ppl::common::GetCpuCacheL3()) * L3_RATIO() / sizeof(float);
 
     sp.ic_l2_blk = cal_ic_l2_blk(cp);
     sp.ic_l2_cnt = div_up(sp.padded_ic, sp.ic_l2_blk);
 
-    sp.gp_l3_blk = min<int32_t>(cp.group, num_thread);
-    sp.mb_l3_blk = min<int32_t>(batch, div_up(num_thread, sp.gp_l3_blk));
+    sp.gp_l3_blk = min(cp.group, num_thread);
+    sp.mb_l3_blk = min(batch, div_up(num_thread, sp.gp_l3_blk));
     while (sp.gp_l3_blk > 1 && sp.gp_l3_blk * sp.mb_l3_blk * sp.ic_l2_blk * dst_hw > l3_cap_all_core) {
         --sp.gp_l3_blk;
     }
-    sp.mb_l3_blk = min<int32_t>(batch, div_up(num_thread, sp.gp_l3_blk));
+    sp.mb_l3_blk = min(batch, div_up(num_thread, sp.gp_l3_blk));
     while (sp.mb_l3_blk > 1 && sp.gp_l3_blk * sp.mb_l3_blk * sp.ic_l2_blk * dst_hw > l3_cap_all_core) {
         --sp.mb_l3_blk;
     }
 
-    sp.oc_kr_blk = min(2 * CH_DT_BLK(), sp.padded_oc);
+    sp.oc_kr_blk = min<int64_t>(2 * CH_DT_BLK(), sp.padded_oc);
     if (sp.padded_oc > sp.padded_ic) {
-        sp.oc_l2_blk = min(OC_L2_BLK_MAX_L(), sp.padded_oc);
+        sp.oc_l2_blk = min<int64_t>(OC_L2_BLK_MAX_L(), sp.padded_oc);
     } else {
-        sp.oc_l2_blk = min(OC_L2_BLK_MAX_S(), sp.padded_oc);
+        sp.oc_l2_blk = min<int64_t>(OC_L2_BLK_MAX_S(), sp.padded_oc);
     }
-    sp.hw_kr_blk = min(dst_hw, BLK1X14_HW_RF());
-    sp.hw_l2_blk = min(dst_hw, round_up(HW_L2_BLK_MAX(), sp.hw_kr_blk));
+    sp.hw_kr_blk = min<int64_t>(dst_hw, BLK1X14_HW_RF());
+    sp.hw_l2_blk = min<int64_t>(dst_hw, round_up(HW_L2_BLK_MAX(), sp.hw_kr_blk));
 
     if (sp.padded_oc > 2 * sp.oc_l2_blk && sp.padded_ic > IC_L2_BLK_MAX_L()) {
         const int64_t bghw_task = sp.gp_l3_blk * sp.mb_l3_blk * div_up(dst_hw, sp.hw_l2_blk);
@@ -132,8 +132,8 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_executor::cal_kernel_tunning_param()
 uint64_t conv2d_n16cx_gemm_direct_fp32_avx512_executor::cal_temp_buffer_size()
 {
     if (schedule_param_.down_sample) {
-        const int32_t dst_hw = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
-        return dst_hw * schedule_param_.mb_l3_blk * schedule_param_.gp_l3_blk * schedule_param_.ic_l2_blk * sizeof(float);
+        const int64_t dst_hw = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
+        return (uint64_t)dst_hw * schedule_param_.mb_l3_blk * schedule_param_.gp_l3_blk * schedule_param_.ic_l2_blk * sizeof(float);
     }
     return 64u;
 }
@@ -159,20 +159,20 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_avx512_executor::execute()
     const conv2d_fp32_param &cp     = *conv_param_;
     const kernel_schedule_param &sp = schedule_param_;
 
-    const int32_t batch = src_shape_->GetDim(0);
-    const int32_t src_h = src_shape_->GetDim(2);
-    const int32_t src_w = src_shape_->GetDim(3);
-    const int32_t dst_hw = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
+    const int64_t batch = src_shape_->GetDim(0);
+    const int64_t src_h = src_shape_->GetDim(2);
+    const int64_t src_w = src_shape_->GetDim(3);
+    const int64_t dst_hw = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
 
-    const int64_t src_b_stride   = int64_t(round_up(src_shape_->GetDim(1), CH_DT_BLK())) * src_h * src_w;
-    const int64_t src_g_stride   = int64_t(sp.padded_ic) * src_h * src_w;
-    const int64_t src_icb_stride = int64_t(src_h) * src_w * CH_DT_BLK();
-    const int64_t src_h_stride   = int64_t(src_w) * CH_DT_BLK();
-    const int64_t dst_b_stride   = int64_t(round_up(dst_shape_->GetDim(1), CH_DT_BLK())) * dst_hw;
-    const int64_t dst_g_stride   = int64_t(sp.padded_oc) * dst_hw;
-    const int64_t dst_ocb_stride = int64_t(dst_hw) * CH_DT_BLK();
-    const int64_t flt_g_stride   = int64_t(sp.ic_l2_cnt) * sp.padded_oc * sp.ic_l2_blk;
-    const int64_t flt_ocb_stride = int64_t(sp.ic_l2_blk) * CH_DT_BLK();
+    const int64_t src_b_stride   = round_up(src_shape_->GetDim(1), CH_DT_BLK()) * src_h * src_w;
+    const int64_t src_g_stride   = sp.padded_ic * src_h * src_w;
+    const int64_t src_icb_stride = src_h * src_w * CH_DT_BLK();
+    const int64_t src_h_stride   = src_w * CH_DT_BLK();
+    const int64_t dst_b_stride   = round_up(dst_shape_->GetDim(1), CH_DT_BLK()) * dst_hw;
+    const int64_t dst_g_stride   = sp.padded_oc * dst_hw;
+    const int64_t dst_ocb_stride = dst_hw * CH_DT_BLK();
+    const int64_t flt_g_stride   = sp.ic_l2_cnt * sp.padded_oc * sp.ic_l2_blk;
+    const int64_t flt_ocb_stride = sp.ic_l2_blk * CH_DT_BLK();
 
     const bool with_sum   = cp.fuse_flag & conv_fuse_flag::sum;
     const bool with_relu  = cp.fuse_flag & conv_fuse_flag::relu;
@@ -334,9 +334,9 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_avx512_manager::gen_cvt_weigh
         return ppl::common::RC_PERMISSION_DENIED;
     }
 
-    const int32_t oc_per_gp = param_.num_output / param_.group;
-    const int32_t padded_oc = round_up(oc_per_gp, CH_DT_BLK());
-    const int32_t ic_l2_blk = conv2d_n16cx_gemm_direct_fp32_avx512_executor::cal_ic_l2_blk(param_);
+    const int64_t oc_per_gp = param_.num_output / param_.group;
+    const int64_t padded_oc = round_up(oc_per_gp, CH_DT_BLK());
+    const int64_t ic_l2_blk = conv2d_n16cx_gemm_direct_fp32_avx512_executor::cal_ic_l2_blk(param_);
 
     cvt_bias_size_ = param_.group * padded_oc;
     cvt_bias_      = (float *)allocator_->Alloc(cvt_bias_size_ * sizeof(float));
@@ -344,7 +344,7 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_avx512_manager::gen_cvt_weigh
         return ppl::common::RC_OUT_OF_MEMORY;
     }
 
-    for (int32_t g = 0; g < param_.group; ++g) {
+    for (int64_t g = 0; g < param_.group; ++g) {
         memcpy(cvt_bias_ + g * padded_oc, bias + g * oc_per_gp, oc_per_gp * sizeof(float));
         memset(cvt_bias_ + g * padded_oc + oc_per_gp, 0, (padded_oc - oc_per_gp) * sizeof(float));
     }

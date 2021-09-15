@@ -39,14 +39,14 @@ public:
 private:
     struct kernel_schedule_param {
         // Preprocessed param
-        int32_t padded_ch;
+        int64_t padded_ch;
 
         // Kernel tunning
-        int32_t ow_kr_blk;
+        int64_t ow_kr_blk;
         int32_t use_nt_store;
 
-        int32_t unroll_ow_start;
-        int32_t unroll_ow_end;
+        int64_t unroll_ow_start;
+        int64_t unroll_ow_end;
 
         int32_t padding_policy;
     } schedule_param_;
