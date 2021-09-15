@@ -868,8 +868,8 @@ ppl::common::RetCode conv2d_depthwise_fp32_sse_manager::gen_cvt_weights(const fl
         return ppl::common::RC_PERMISSION_DENIED;
     }
 
-    const int32_t channels  = param_.group;
-    const int32_t padded_ch = round_up(channels, CH_DT_BLK());
+    const int64_t channels  = param_.group;
+    const int64_t padded_ch = round_up(channels, CH_DT_BLK());
 
     cvt_bias_size_ = padded_ch;
     cvt_bias_      = (float *)allocator_->Alloc(cvt_bias_size_ * sizeof(float));

@@ -38,20 +38,20 @@ public:
 private:
     struct kernel_schedule_param {
         // Preprocessed param
-        int32_t ic_per_gp;
-        int32_t oc_per_gp;
-        int32_t padded_ic;
-        int32_t padded_oc;
+        int64_t ic_per_gp;
+        int64_t oc_per_gp;
+        int64_t padded_ic;
+        int64_t padded_oc;
 
         // Kernel tunning
-        int32_t hw_kr_blk;
-        int32_t hw_l2_blk;
-        int32_t ic_l2_blk;
-        int32_t ic_l2_cnt;
-        int32_t oc_kr_blk;
-        int32_t oc_l2_blk;
-        int32_t mb_l3_blk;
-        int32_t gp_l3_blk;
+        int64_t hw_kr_blk;
+        int64_t hw_l2_blk;
+        int64_t ic_l2_blk;
+        int64_t ic_l2_cnt;
+        int64_t oc_kr_blk;
+        int64_t oc_l2_blk;
+        int64_t mb_l3_blk;
+        int64_t gp_l3_blk;
         int32_t use_nt_store;
         int32_t down_sample;
     } schedule_param_;
@@ -59,7 +59,7 @@ private:
     void init_preproc_param();
     void cal_kernel_tunning_param();
 
-    static int32_t cal_ic_l2_blk(const conv2d_fp32_param &param);
+    static int64_t cal_ic_l2_blk(const conv2d_fp32_param &param);
 
     friend conv2d_n16cx_gemm_direct_fp32_avx512_manager;
 };
