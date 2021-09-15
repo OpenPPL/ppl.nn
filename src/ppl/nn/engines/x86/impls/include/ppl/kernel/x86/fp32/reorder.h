@@ -62,6 +62,11 @@ ppl::common::RetCode reorder_n8cx_ndarray_fp32(
     const float *src,
     float *dst);
 
+ppl::common::RetCode reorder_ndarray_n4cx_fp32(
+    const ppl::nn::TensorShape *src_shape,
+    const float *src,
+    float *dst);
+
 uint64_t reorder_goidhw_gIOdhwB16i16o_fp32_get_dst_size(
     const int32_t group,
     const int32_t num_output,

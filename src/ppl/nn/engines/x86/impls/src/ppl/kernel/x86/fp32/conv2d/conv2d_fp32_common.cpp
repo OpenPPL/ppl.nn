@@ -42,6 +42,7 @@
 #include "ppl/kernel/x86/fp32/conv2d/depthwise/sse/conv2d_n8cx_depthwise_fp32_sse.h"
 #include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/sse/conv2d_n8cx_direct_ndarray_fp32_sse.h"
 #include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/sse/conv2d_im2col_gemm_fp32_sse.h"
+#include "ppl/kernel/x86/fp32/conv2d/depthwise/sse/conv2d_depthwise_fp32_sse.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
@@ -58,6 +59,13 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
         .isa           = ppl::common::ISA_X86_FMA,
         .input_format  = ppl::common::DATAFORMAT_NDARRAY,
         .output_format = ppl::common::DATAFORMAT_NDARRAY};
+
+    static conv2d_fp32_algo_info sse_fallback_info = {
+        .algo_type     = conv2d_fp32_algo::im2col_gemm,
+        .isa           = ppl::common::ISA_X86_SSE,
+        .input_format  = ppl::common::DATAFORMAT_NDARRAY,
+        .output_format = ppl::common::DATAFORMAT_NDARRAY};
+
 
 #ifdef PPL_USE_X86_AVX512
     if (isa_flags & ppl::common::ISA_X86_AVX512) {
@@ -203,9 +211,28 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
                     .output_format = ppl::common::DATAFORMAT_N16CX};
             }
         }
-    } else {
-        return unknown_info;
     }
+
+    if (isa_flags & ppl::common::ISA_X86_SSE) {
+        if (param.is_depthwise()) {
+            auto dw_mgr    = new conv2d_depthwise_fp32_sse_manager(param, nullptr);
+            bool supported = dw_mgr->is_supported();
+            delete dw_mgr;
+            if (!supported) {
+                return sse_fallback_info;
+            } else {
+                return (conv2d_fp32_algo_info){
+                    .algo_type     = conv2d_fp32_algo::depthwise,
+                    .isa           = ppl::common::ISA_X86_SSE,
+                    .input_format  = ppl::common::DATAFORMAT_NDARRAY,
+                    .output_format = ppl::common::DATAFORMAT_NDARRAY};
+            }
+        }
+
+        return sse_fallback_info;
+    }
+
+    return unknown_info;
 }
 
 conv2d_fp32_manager *conv2d_algo_selector::gen_algo(const conv2d_fp32_param &param, const conv2d_fp32_algo_info &algo_info, ppl::common::Allocator *allocator)
@@ -326,6 +353,12 @@ conv2d_fp32_manager *conv2d_algo_selector::gen_algo(const conv2d_fp32_param &par
         algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
         algo_info.output_format == ppl::common::DATAFORMAT_NDARRAY) {
         conv_mgr = new conv2d_im2col_gemm_fp32_sse_manager(param, allocator);
+    }
+    if (algo_info.algo_type == conv2d_fp32_algo::depthwise &&
+        algo_info.isa == ppl::common::ISA_X86_SSE &&
+        algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
+        algo_info.output_format == ppl::common::DATAFORMAT_NDARRAY) {
+        conv_mgr = new conv2d_depthwise_fp32_sse_manager(param, allocator);
     }
 
     return conv_mgr;

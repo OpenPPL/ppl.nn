@@ -88,6 +88,7 @@ Define_bool(disable_avx512, false, "(false) disable avx512 for auto select algo"
 #else
 static bool Flag_disable_avx512 = true;
 #endif
+Define_bool(disable_avx_fma3, false, "(false) disable avx, fma3, avx512 for auto select algo");
 
 /*
 
@@ -282,6 +283,15 @@ static std::map<std::string, ppl::kernel::x86::conv2d_fp32_algo_info> algo_table
             .output_format = ppl::common::DATAFORMAT_NDARRAY
         })
     },
+    {
+        "depthwise_fp32_sse",
+        ppl::kernel::x86::conv2d_fp32_algo_info({
+            .algo_type = ppl::kernel::x86::conv2d_fp32_algo::depthwise,
+            .isa = ppl::common::ISA_X86_SSE,
+            .input_format = ppl::common::DATAFORMAT_NDARRAY,
+            .output_format = ppl::common::DATAFORMAT_NDARRAY
+        })
+    },
 };
 
 int main(int argc, char **argv) {
@@ -349,8 +359,8 @@ int main(int argc, char **argv) {
     std::cerr << "==============================================================\n";
     fprintf(
         stderr,
-        "num_threads=%d\ndynamic=%d\navx512=%d\nwarm_up=%d\nmin_iter=%d\nmin_second=%f\nvalidate=%d\neps=%f\nrelu=%d\nsum=%d\n",
-        num_threads, Flag_dynamic, !Flag_disable_avx512, Flag_warm_up, Flag_min_iter, Flag_min_second, Flag_validate, Flag_eps, Flag_relu, Flag_sum
+        "num_threads=%d\ndynamic=%d\navx512=%d\nfma3=%d\nwarm_up=%d\nmin_iter=%d\nmin_second=%f\nvalidate=%d\neps=%f\nrelu=%d\nsum=%d\n",
+        num_threads, Flag_dynamic, !Flag_disable_avx512, !Flag_disable_avx_fma3, Flag_warm_up, Flag_min_iter, Flag_min_second, Flag_validate, Flag_eps, Flag_relu, Flag_sum
     );
 
 for (int64_t lcfg = 0; lcfg < Flag_loop_cfg; ++lcfg) {
@@ -475,6 +485,11 @@ DEBUG_TAG(A);
             auto isa = ppl::common::GetCpuISA();
             if (Flag_disable_avx512) {
                 isa &= ~(ppl::common::ISA_X86_AVX512);
+            }
+            if (Flag_disable_avx_fma3) {
+                isa &= ~(ppl::common::ISA_X86_AVX512);
+                isa &= ~(ppl::common::ISA_X86_FMA);
+                isa &= ~(ppl::common::ISA_X86_AVX);
             }
             algoinfo = ppl::kernel::x86::conv2d_algo_selector::select_algo(src_format, param, isa);
             if (algoinfo.algo_type == ppl::kernel::x86::conv2d_fp32_algo::unknown) {

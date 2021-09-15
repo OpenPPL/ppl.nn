@@ -76,6 +76,8 @@ def ParseCommandLineArgs():
         if dev == "x86":
             parser.add_argument("--disable-avx512", dest = "disable_avx512", action = "store_true",
                                 default = False, required = False)
+            parser.add_argument("--disable-avx-fma3", dest = "disable_avx_fma3", action = "store_true",
+                                default = False, required = False)
         elif dev == "cuda":
             parser.add_argument("--quick-select", dest = "quick_select", action = "store_true",
                                 default = False, required = False)
@@ -124,6 +126,12 @@ def RegisterEngines(args):
 
         if args.disable_avx512:
             status = x86_engine.Configure(pplnn.X86_CONF_DISABLE_AVX512)
+            if status != pplcommon.RC_SUCCESS:
+                logging.error("x86 engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
+                sys.exit(-1)
+
+        if args.disable_avx_fma3:
+            status = x86_engine.Configure(pplnn.X86_CONF_DISABLE_AVX_FMA3)
             if status != pplcommon.RC_SUCCESS:
                 logging.error("x86 engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
                 sys.exit(-1)

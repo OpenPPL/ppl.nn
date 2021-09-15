@@ -31,6 +31,16 @@ enum {
     */
     X86_CONF_DISABLE_AVX512 = 0,
 
+    /**
+       @brief disable avx, fma3 and avx512 support
+
+       @note example:
+       @code{.cpp}
+       x86_engine->Configure(X86_CONF_DISABLE_AVX_FMA3);
+       @endcode
+    */
+    X86_CONF_DISABLE_AVX_FMA3 = 1,
+
     /** max value */
     X86_CONF_MAX,
 };

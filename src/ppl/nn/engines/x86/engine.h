@@ -42,6 +42,7 @@ private:
      * defined as member functions can avoid exporting unnecessary APIs
      */
     static ppl::common::RetCode DisableAVX512(X86Engine*, va_list);
+    static ppl::common::RetCode DisableAVXFMA3(X86Engine*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(X86Engine*, va_list);
     static ConfHandlerFunc conf_handlers_[X86_CONF_MAX];

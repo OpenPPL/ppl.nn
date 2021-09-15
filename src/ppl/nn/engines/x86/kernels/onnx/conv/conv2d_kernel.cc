@@ -55,6 +55,16 @@ ppl::common::RetCode Conv2dKernel::DoExecute(KernelExecContext* ctx) {
         return rc;
     }
 
+#if DUMP_CONV
+    fprintf(stderr, CASE_STRING_FMT() "\n", cur_executor->conv_param()->group, X->GetShape().GetDim(0),
+            cur_executor->conv_param()->channels, X->GetShape().GetDim(2), X->GetShape().GetDim(3),
+            cur_executor->conv_param()->num_output, Y->GetShape().GetDim(2), Y->GetShape().GetDim(3),
+            cur_executor->conv_param()->kernel_h, cur_executor->conv_param()->kernel_w,
+            cur_executor->conv_param()->stride_h, cur_executor->conv_param()->stride_w,
+            cur_executor->conv_param()->pad_h, cur_executor->conv_param()->pad_w,
+            cur_executor->conv_param()->dilation_h - 1, cur_executor->conv_param()->dilation_w - 1, GetName().c_str());
+#endif
+
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
     auto status = GetX86Device()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
@@ -92,16 +102,6 @@ ppl::common::RetCode Conv2dKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
     PPLNN_X86_DEBUG_TRACE("fuse_flag: %ld\n", cur_executor->conv_param()->fuse_flag);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
-
-#if DUMP_CONV
-    fprintf(stderr, CASE_STRING_FMT() "\n", cur_executor->conv_param()->group, X->GetShape().GetDim(0),
-            cur_executor->conv_param()->channels, X->GetShape().GetDim(2), X->GetShape().GetDim(3),
-            cur_executor->conv_param()->num_output, Y->GetShape().GetDim(2), Y->GetShape().GetDim(3),
-            cur_executor->conv_param()->kernel_h, cur_executor->conv_param()->kernel_w,
-            cur_executor->conv_param()->stride_h, cur_executor->conv_param()->stride_w,
-            cur_executor->conv_param()->pad_h, cur_executor->conv_param()->pad_w,
-            cur_executor->conv_param()->dilation_h - 1, cur_executor->conv_param()->dilation_w - 1, GetName().c_str());
-#endif
 
     rc = cur_executor->execute();
     if (ppl::common::RC_SUCCESS != rc) {

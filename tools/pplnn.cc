@@ -125,6 +125,7 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
 Define_bool_opt("--use-x86", g_flag_use_x86, false, "use x86 engine");
 
 Define_bool_opt("--disable-avx512", g_flag_disable_avx512, false, "disable avx512 feature");
+Define_bool_opt("--disable-avx-fma3", g_flag_disable_avx_fma3, false, "disable avx, fma3 and avx512 feature");
 Define_bool_opt("--core-binding", g_flag_core_binding, false, "core binding");
 
 #include "ppl/nn/engines/x86/engine_factory.h"
@@ -141,6 +142,9 @@ static inline bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
     auto x86_engine = X86EngineFactory::Create(options);
     if (g_flag_disable_avx512) {
         x86_engine->Configure(ppl::nn::X86_CONF_DISABLE_AVX512);
+    }
+    if (g_flag_disable_avx_fma3) {
+        x86_engine->Configure(ppl::nn::X86_CONF_DISABLE_AVX_FMA3);
     }
     if (g_flag_core_binding) {
         ppl::kernel::x86::set_omp_core_binding(nullptr, 0, 1);
