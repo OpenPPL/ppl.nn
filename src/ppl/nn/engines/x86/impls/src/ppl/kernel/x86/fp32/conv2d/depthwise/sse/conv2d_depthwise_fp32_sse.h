@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_X86_FP32_CONV2D_IM2COL_GEMM_SSE_CONV2D_IM2COL_GEMM_FP32_SSE_H_
-#define __ST_PPL_KERNEL_X86_FP32_CONV2D_IM2COL_GEMM_SSE_CONV2D_IM2COL_GEMM_FP32_SSE_H_
+#ifndef __ST_PPL_KERNEL_X86_FP32_CONV2D_DEPTHWISE_SSE_CONV2D_DEPTHWISE_FP32_SSE_H_
+#define __ST_PPL_KERNEL_X86_FP32_CONV2D_DEPTHWISE_SSE_CONV2D_DEPTHWISE_FP32_SSE_H_
 
 #include "ppl/kernel/x86/fp32/conv2d.h"
 #include "ppl/kernel/x86/common/internal_include.h"
@@ -25,12 +25,12 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 // forward declare;
-class conv2d_im2col_gemm_fp32_sse_manager;
+class conv2d_depthwise_fp32_sse_manager;
 
-class conv2d_im2col_gemm_fp32_sse_executor final : public conv2d_fp32_executor {
+class conv2d_depthwise_fp32_sse_executor final : public conv2d_fp32_executor {
 public:
-    conv2d_im2col_gemm_fp32_sse_executor() {}
-    conv2d_im2col_gemm_fp32_sse_executor(const conv2d_fp32_param *conv_param, const float *cvt_filter, const float *bias)
+    conv2d_depthwise_fp32_sse_executor() {}
+    conv2d_depthwise_fp32_sse_executor(const conv2d_fp32_param *conv_param, const float *cvt_filter, const float *bias)
         : conv2d_fp32_executor(conv_param, cvt_filter, bias) {}
     uint64_t cal_temp_buffer_size() override;
     ppl::common::RetCode prepare() override;
@@ -39,30 +39,22 @@ public:
 private:
     struct kernel_schedule_param {
         // Preprocessed param
-        int64_t ic_per_gp;
-        int64_t oc_per_gp;
-        int64_t k_per_gp;
-        int64_t padded_k;
+        int32_t padded_ch;
 
         // Kernel tunning
-        int64_t hw_l2_blk;
-        int64_t mb_l3_blk;
-        int64_t gp_l3_blk;
-        int32_t use_nt_store;
+        int32_t ow_kr_blk;
     } schedule_param_;
 
     void init_preproc_param();
     void cal_kernel_tunning_param();
 
-    static int32_t cal_ic_l2_blk(const conv2d_fp32_param &param);
-
-    friend conv2d_im2col_gemm_fp32_sse_manager;
+    friend conv2d_depthwise_fp32_sse_manager;
 };
 
-class conv2d_im2col_gemm_fp32_sse_manager final : public conv2d_fp32_manager {
+class conv2d_depthwise_fp32_sse_manager final : public conv2d_fp32_manager {
 public:
-    conv2d_im2col_gemm_fp32_sse_manager() {}
-    conv2d_im2col_gemm_fp32_sse_manager(const conv2d_fp32_param &param, ppl::common::Allocator *allocator)
+    conv2d_depthwise_fp32_sse_manager() {}
+    conv2d_depthwise_fp32_sse_manager(const conv2d_fp32_param &param, ppl::common::Allocator *allocator)
         : conv2d_fp32_manager(param, allocator) {}
     bool is_supported() override;
     ppl::common::RetCode gen_cvt_weights(const float *filter, const float *bias) override;

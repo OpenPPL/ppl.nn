@@ -30,6 +30,10 @@ RetCode PyX86Engine::Configure(uint32_t option, const pybind11::args& args) {
         return engine_->Configure(X86_CONF_DISABLE_AVX512);
     }
 
+    if (option == X86_CONF_DISABLE_AVX_FMA3) {
+        return engine_->Configure(X86_CONF_DISABLE_AVX_FMA3);
+    }
+
     LOG(ERROR) << "unsupported option: " << option;
     return RC_UNSUPPORTED;
 }
@@ -44,6 +48,7 @@ void RegisterX86Engine(pybind11::module* m) {
         .def("Configure", &PyX86Engine::Configure);
 
     m->attr("X86_CONF_DISABLE_AVX512") = (uint32_t)X86_CONF_DISABLE_AVX512;
+    m->attr("X86_CONF_DISABLE_AVX_FMA3") = (uint32_t)X86_CONF_DISABLE_AVX_FMA3;
 }
 
 }}} // namespace ppl::nn::python

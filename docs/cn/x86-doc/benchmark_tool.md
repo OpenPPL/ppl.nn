@@ -56,7 +56,8 @@ pplnn中，与x86架构测速相关的运行选项有：
 * `--enable-profiling`：使能测速，默认为不使能
 * `--min-profiling-time`：指定测速的最少持续时间，单位为秒，默认为1s
 * `--warmuptimes`：指定warm up的次数，默认为0
-* `--disable-avx512`：指定禁用avx512指令集，默认为启用
+* `--disable-avx512`：指定禁用avx512指令集，默认为不禁用
+* `--disable-avx-fma3`：指定同时禁用avx, fma3, avx512指令集，默认为不禁用
 * `--core-binding`：启用绑核，默认不启用
 
 #### 3.2. 环境变量设置
