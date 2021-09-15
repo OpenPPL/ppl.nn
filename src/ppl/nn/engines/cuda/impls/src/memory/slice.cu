@@ -90,7 +90,7 @@ ppl::common::RetCode PPLCUDASliceForwardImp(
         acc_input_stride *= input_shape->GetDim(it);
         acc_output_stride *= output_shape->GetDim(it);
     }
-    if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC) {
+    if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8) {
         acc_output_stride = 1;
         acc_input_stride = 1;
         for (int it = num_dims - 1; it >= 0; --it) {

@@ -151,7 +151,7 @@ ppl::common::RetCode PPLCUDAMaxUnpoolForwardImp(
     int num_elems  = in_width * in_height * channels * batch;
     int grid_size  = (num_elems + block_size - 1) / block_size;
 
-    if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC) {
+    if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8) {
         #define SWITCH_CASE(TYPE) \
         case sizeof(TYPE): \
         { \

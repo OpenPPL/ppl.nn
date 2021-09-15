@@ -92,7 +92,7 @@ __global__ void ppl_cukernel_pooling_ave_global_shuffle_half(
 #endif
 }
 
-__global__ void ppl_cukernel_pooling_ave_global_shuffle_half2_NHWC(
+__global__ void ppl_cukernel_pooling_ave_global_shuffle_half2_NHWC8(
     const half2* input,
     half2* output,
     int batch,
@@ -149,13 +149,13 @@ ppl::common::RetCode PPLCUDAGlobalAvePoolingForwardImpFp16(
     if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
         dim_grid.y = (pad_channels + dim_block.y - 1) / dim_block.y;
         ppl_cukernel_pooling_ave_global_shuffle_half<<<dim_grid, dim_block, 0, stream>>>((const half*)input, (half*)output, batch, pad_channels, in_height * in_width);
-    } else if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC) {
+    } else if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8) {
         // use half2, default padded
         dim3 dim_block(32, 8, 1); // (c, hw, 1)
         int padChannelsDivide = (pad_channels >> 1); // half2
         int channel_blocks    = (padChannelsDivide + dim_block.x - 1) / dim_block.x;
         dim3 dim_grid(channel_blocks, 1, batch);
-        ppl_cukernel_pooling_ave_global_shuffle_half2_NHWC<<<dim_grid,
+        ppl_cukernel_pooling_ave_global_shuffle_half2_NHWC8<<<dim_grid,
                                                               dim_block,
                                                               0,
                                                               stream>>>((const half2*)input, (half2*)output, batch, padChannelsDivide, in_height * in_width);

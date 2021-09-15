@@ -23,7 +23,7 @@
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 
-#define NHWC_ALIGNED_AXIS (8)
+#define NHWC8_ALIGNED_AXIS (8)
 
 template <typename T1, typename T2>
 __global__ void __launch_bounds__(256) ppl_cukernel_split_nhwc_two_inputs(
@@ -137,7 +137,7 @@ ppl::common::RetCode PPLCUDASplitForwardImp(
         }
 
     #undef SWITCH_CASE
-    } else if (input_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC) {
+    } else if (input_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8) {
         int num_dims = input_shape->GetDimCount();
         if (num_dims < 2) return ppl::common::RC_UNSUPPORTED;
         int input_elems = input_shape->GetElementsExcludingPadding();
@@ -148,11 +148,11 @@ ppl::common::RetCode PPLCUDASplitForwardImp(
             int block_size = 256;                                                                                                         \
             int grid_size = (input_elems + block_size - 1) / block_size;                                                                  \
             int axis_width0 = out_dims[0][split_axis];                                                                                    \
-            int pad_axis_width0 = Align(axis_width0, NHWC_ALIGNED_AXIS);                                                                  \
+            int pad_axis_width0 = Align(axis_width0, NHWC8_ALIGNED_AXIS);                                                                  \
             int axis_width1 = out_dims[1][split_axis];                                                                                    \
-            int pad_axis_width1 = Align(axis_width1, NHWC_ALIGNED_AXIS);                                                                  \
+            int pad_axis_width1 = Align(axis_width1, NHWC8_ALIGNED_AXIS);                                                                  \
             int inner_dims = axis_width0 + axis_width1;                                                                                   \
-            int pad_inner_dims = Align(inner_dims, NHWC_ALIGNED_AXIS);                                                                    \
+            int pad_inner_dims = Align(inner_dims, NHWC8_ALIGNED_AXIS);                                                                    \
             ppl_cukernel_split_nhwc_two_inputs<<<grid_size, block_size, 0, stream>>>(input_elems,                                        \
                     inner_dims, pad_inner_dims, axis_width0, pad_axis_width0, axis_width1, pad_axis_width1,                               \
                     (const TYPE*)input, (TYPE*)outputs[0], (TYPE*)outputs[1]);                                                            \

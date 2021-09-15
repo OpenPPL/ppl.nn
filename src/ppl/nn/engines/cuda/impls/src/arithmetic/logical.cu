@@ -318,7 +318,7 @@ ppl::common::RetCode PPLCUDALogicalForwardImp(
             }
             return ppl::common::RC_SUCCESS;
         }
-        case ppl::common::DATAFORMAT_NHWC: {
+        case ppl::common::DATAFORMAT_NHWC8: {
             bool can_broadcast = (input_shape0->GetDimCount() >= 2) && (input_shape1->GetDimCount() >= 2);
             if (!can_broadcast) return ppl::common::RC_UNSUPPORTED;
             if ((input_shape0->GetDim(1) & 0x7) || (input_shape1->GetDim(1) & 0x7)) return ppl::common::RC_UNSUPPORTED;

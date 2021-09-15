@@ -559,7 +559,7 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImp(
     } else {
         ArithmeticParam param;
         int packed_channel = 1;
-        if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC) {
+        if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8) {
             if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
                 // one broadcast (or last dimensions broadcast)
                 if (ppl_feature_broadcast(input_shape0, input_shape1, &axis)) {
@@ -657,7 +657,7 @@ ppl::common::RetCode PPLCUDAArithMetic##OPTYPE##ForwardImp( \
     } \
 }
 
-#define INSTANT_LIMNHWC(OPTYPE) \
+#define INSTANT_LIMNHWC8(OPTYPE) \
 ppl::common::RetCode PPLCUDAArithMetic##OPTYPE##ForwardImp( \
     cudaStream_t stream, \
     const ppl::nn::TensorShape* input_shape0, \
@@ -666,7 +666,7 @@ ppl::common::RetCode PPLCUDAArithMetic##OPTYPE##ForwardImp( \
     const void *input1, \
     const ppl::nn::TensorShape* output_shape, \
     void *output) { \
-    if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC) { \
+    if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8) { \
         if (input_shape0->GetDimCount() >= 2 && (input_shape0->GetDim(1) & 0x7)) \
             return ppl::common::RC_UNSUPPORTED; \
         if (input_shape1->GetDimCount() >= 2 && (input_shape1->GetDim(1) & 0x7)) \
@@ -696,11 +696,11 @@ ppl::common::RetCode PPLCUDAArithMetic##OPTYPE##ForwardImp( \
 INSTANT(Add);
 INSTANT(Sub);
 INSTANT(Mul);
-INSTANT_LIMNHWC(Div);
-INSTANT_LIMNHWC(Max);
-INSTANT_LIMNHWC(Min);
-INSTANT_LIMNHWC(Pow);
-INSTANT_LIMNHWC(PRelu);
+INSTANT_LIMNHWC8(Div);
+INSTANT_LIMNHWC8(Max);
+INSTANT_LIMNHWC8(Min);
+INSTANT_LIMNHWC8(Pow);
+INSTANT_LIMNHWC8(PRelu);
 
 #undef INSTANT
 
