@@ -22,7 +22,7 @@
 #include "ppl/nn/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 
-#define NHWC_ALIGNED_AXIS (8)
+#define NHWC8_ALIGNED_AXIS (8)
 
 template <typename T>
 __global__ void ppl_cukernel_concat(
@@ -174,7 +174,7 @@ bool IsConcatNoPadding(
     ppl::nn::TensorShape* output_shape,
     int mask)
 {
-    if (output_shape->GetDataFormat() != ppl::common::DATAFORMAT_NHWC || axis != 1) 
+    if (output_shape->GetDataFormat() != ppl::common::DATAFORMAT_NHWC8 || axis != 1) 
         return false;
     for (int i = 0; i < num_inputs; i++) {
         if (input_padded_dims[i][axis] - input_dims[i][axis] != 0) return false;
@@ -310,7 +310,7 @@ ppl::common::RetCode PPLCUDAConcatForwardImp(
             }
             #undef SWITCH_CASE
         }
-    } else if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC) {
+    } else if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8) {
         // nhwc, axis == 1 means last dim
         if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16 && num_inputs == 2 &&
             axis == 1) {
@@ -327,11 +327,11 @@ ppl::common::RetCode PPLCUDAConcatForwardImp(
                 int block_size = 256;
                 int grid_size = (output_elems + block_size - 1) / block_size;
                 int axis_width0 = input_dims[0][axis];
-                int pad_axis_width0 = Align(axis_width0, NHWC_ALIGNED_AXIS);
+                int pad_axis_width0 = Align(axis_width0, NHWC8_ALIGNED_AXIS);
                 int axis_width1 = input_dims[1][axis];
-                int pad_axis_width1 = Align(axis_width1, NHWC_ALIGNED_AXIS);
+                int pad_axis_width1 = Align(axis_width1, NHWC8_ALIGNED_AXIS);
                 int inner_dims = axis_width0 + axis_width1;
-                int pad_inner_dims = Align(inner_dims, NHWC_ALIGNED_AXIS);
+                int pad_inner_dims = Align(inner_dims, NHWC8_ALIGNED_AXIS);
                 ppl_cukernel_concat_nhwc_two_inputs<<<grid_size, block_size, 0, stream>>>(output_elems,
                         inner_dims, pad_inner_dims, axis_width0, pad_axis_width0, axis_width1, pad_axis_width1,
                         (const int16_t*)inputs[0], (const int16_t*)inputs[1], (int16_t*)output);

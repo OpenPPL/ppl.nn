@@ -29,8 +29,8 @@ namespace ppl { namespace nn { namespace cuda {
 class ConvAlgorithm : public Algorithm {
 public:
     ConvAlgorithm() {
-        std::set<dataformat_t> nhwc{DATAFORMAT_NHWC};
-        conv_formats_.emplace(DATAFORMAT_NHWC, nhwc);
+        std::set<dataformat_t> nhwc{DATAFORMAT_NHWC8};
+        conv_formats_.emplace(DATAFORMAT_NHWC8, nhwc);
     }
 
     const std::map<dataformat_t, std::set<dataformat_t>> Getformats(const std::string& type_name) const override {

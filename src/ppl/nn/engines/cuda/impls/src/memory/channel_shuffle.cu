@@ -100,7 +100,7 @@ ppl::common::RetCode PPLCUDAChannelShuffleForwardImp(
 
     #define SWITCH_CASE(TYPE)                                                                                       \
     case sizeof(TYPE): {                                                                                            \
-        if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC){                                         \
+        if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8){                                         \
             ppl_cukernel_channel_shuffle_nhwc<<<grid_size, block_size, 0, stream>>>(                                \
                 num_elems, group, channels_per_group, pad_channels, channels_fast,                                  \
                 (const TYPE *)input, (TYPE *)output);                                                               \

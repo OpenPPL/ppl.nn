@@ -120,16 +120,16 @@
 
 #define SET_IN_Kv8_OFF(_tid, _sm_base_v4) \
         { \
-            int _inNHWC_id =  _tid; \
+            int _inNHWC8_id =  _tid; \
             \
             int4 _in_off; \
             \
-            _in_off.y = ((_inNHWC_id /  in_chl_per_grp_pad_v8) % flt_width)  * hole_width; \
-            _in_off.z = ((_inNHWC_id / (in_chl_per_grp_pad_v8  * flt_width)) % flt_height) * hole_height; \
-            _in_off.w =   _inNHWC_id / (in_chl_per_grp_pad_v8  * flt_width   * flt_height); \
+            _in_off.y = ((_inNHWC8_id /  in_chl_per_grp_pad_v8) % flt_width)  * hole_width; \
+            _in_off.z = ((_inNHWC8_id / (in_chl_per_grp_pad_v8  * flt_width)) % flt_height) * hole_height; \
+            _in_off.w =   _inNHWC8_id / (in_chl_per_grp_pad_v8  * flt_width   * flt_height); \
             \
             _in_off.x = (_in_off.w  * in_hw + _in_off.z * in_width + _in_off.y) * in_chl_per_grp_pad_v8 * num_grp + \
-                        (_inNHWC_id %  in_chl_per_grp_pad_v8); \
+                        (_inNHWC8_id %  in_chl_per_grp_pad_v8); \
             \
             _sm_base_v4[SM_IN_ID_SIZE + _tid] = _in_off; \
          }

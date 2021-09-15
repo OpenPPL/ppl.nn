@@ -63,7 +63,7 @@ set(PPLCOMMON_BUILD_BENCHMARK OFF CACHE BOOL "disable ppl.common benchmark")
 
 hpcc_declare_git_dep(ppl.common
     https://github.com/openppl-public/ppl.common.git
-    v0.2.4)
+    v0.2.5)
 
 # --------------------------------------------------------------------------- #
 

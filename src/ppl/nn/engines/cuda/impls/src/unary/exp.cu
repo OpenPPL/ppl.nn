@@ -96,7 +96,7 @@ ppl::common::RetCode PPLCUDAExpForwardImp(
         } else {
             return ppl::common::RC_UNSUPPORTED;
         }
-    } else if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC) {
+    } else if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8) {
         int block_size = 256;
         dim3 grid_size;
         int chw     = channels * height * width;

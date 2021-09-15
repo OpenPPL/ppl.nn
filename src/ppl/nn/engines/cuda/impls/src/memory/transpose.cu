@@ -272,7 +272,7 @@ ppl::common::RetCode PPLCUDATransposeForwardImp(
         acc_input_stride *= input_shape->GetDim(it);
         acc_output_stride *= output_shape->GetDim(it);
     }
-    if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC) {
+    if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8) {
         acc_input_stride = 1;
         acc_output_stride = 1;
         for (int it = num_dims - 1; it >= 0; --it) {
@@ -308,7 +308,7 @@ ppl::common::RetCode PPLCUDATransposeForwardImp(
 
     #define SWITCH_CASE(TYPE)                                                                                       \
     case sizeof(TYPE): {                                                                                            \
-        if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC){                                             \
+        if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8){                                             \
             ppl_cukernel_transpose_nhwc<<<grid_size, block_size, 0, stream>>>(                                      \
                 num_elems, num_dims, input_strides_fast, input_strides,                                             \
                 output_flip_strides, (const TYPE *)input, (TYPE *)output);                                          \

@@ -536,7 +536,7 @@ __global__ void ppl_cukernel_pooling_max_common(
 
 // #################### pooling max f3s2 ##################
 template <int TILE_H, int TILE_W>
-__global__ void ppl_cukernel_pooling_max_f3s2_half2_NHWC(
+__global__ void ppl_cukernel_pooling_max_f3s2_half2_NHWC8(
     const half2* input,
     half2* output,
     int batch,
@@ -605,7 +605,7 @@ __global__ void ppl_cukernel_pooling_max_f3s2_half2_NHWC(
 
 // #################### pooling max f3s1 ##################
 template <int TILE_H, int TILE_W>
-__global__ void ppl_cukernel_pooling_max_f3s1_half2_NHWC(
+__global__ void ppl_cukernel_pooling_max_f3s1_half2_NHWC8(
     const half2* input,
     half2* output,
     int batch,
@@ -672,7 +672,7 @@ __global__ void ppl_cukernel_pooling_max_f3s1_half2_NHWC(
 
 // #################### pooling max #######################
 template <int TILE_H, int TILE_W>
-__global__ void ppl_cukernel_pooling_max_common_half2_NHWC(
+__global__ void ppl_cukernel_pooling_max_common_half2_NHWC8(
     const half2* input,
     half2* output,
     int batch,
@@ -776,7 +776,7 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImpFp16(
                 input, output, batch, pad_channels, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, pad_height, pad_width);
         }
         return ppl::common::RC_SUCCESS;
-    } else if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC) {
+    } else if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8) {
         int partH             = (out_height + 3) / 4;
         int partW             = (out_width + 0) / 1;
         int padChannelsDivide = (pad_channels >> 1);
@@ -787,12 +787,12 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImpFp16(
         // dim_grid.y = padChannelsDivide;
         dim_grid.z = batch;
         if (f3 && s1) {
-            ppl_cukernel_pooling_max_f3s1_half2_NHWC<4, 1><<<dim_grid,
+            ppl_cukernel_pooling_max_f3s1_half2_NHWC8<4, 1><<<dim_grid,
                                                               dim_block,
                                                               0,
                                                               stream>>>((const half2*)input, (half2*)output, batch, padChannelsDivide, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, pad_height, pad_width);
         } else if (f3 && s2) {
-            ppl_cukernel_pooling_max_f3s2_half2_NHWC<4, 1><<<dim_grid,
+            ppl_cukernel_pooling_max_f3s2_half2_NHWC8<4, 1><<<dim_grid,
                                                               dim_block,
                                                               0,
                                                               stream>>>((const half2*)input, (half2*)output, batch, padChannelsDivide, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, pad_height, pad_width);
@@ -806,12 +806,12 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImpFp16(
             dim_grid.y = (partH * partW + dim_block.y - 1) / dim_block.y;
             // dim_grid.y = padChannelsDivide;
             dim_grid.z = batch;
-            ppl_cukernel_pooling_max_common_half2_NHWC<1, 1><<<dim_grid,
+            ppl_cukernel_pooling_max_common_half2_NHWC8<1, 1><<<dim_grid,
                                                                 dim_block,
                                                                 0,
                                                                 stream>>>((const half2*)input, (half2*)output, batch, padChannelsDivide, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, pad_height, pad_width);
         } else {
-            ppl_cukernel_pooling_max_common_half2_NHWC<4, 1><<<dim_grid,
+            ppl_cukernel_pooling_max_common_half2_NHWC8<4, 1><<<dim_grid,
                                                                 dim_block,
                                                                 0,
                                                                 stream>>>((const half2*)input, (half2*)output, batch, padChannelsDivide, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, pad_height, pad_width);

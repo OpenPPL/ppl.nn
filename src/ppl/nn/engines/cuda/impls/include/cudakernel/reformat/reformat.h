@@ -34,7 +34,7 @@ inline int AlignDataFormat(ppl::common::dataformat_t dt)
             return 16;
         case ppl::common::DATAFORMAT_N32CX:
             return 32;
-        case ppl::common::DATAFORMAT_NHWC:
+        case ppl::common::DATAFORMAT_NHWC8:
             return 8;
         default:
             return 1;
@@ -78,8 +78,8 @@ enum CVTFormatMode {
     NDARRAY_N4CX  = 2,
     N4CX_NDARRAY  = 11,
 
-    NDARRAY_NHWC  = 31,
-    NHWC_NDARRAY  = 32,
+    NDARRAY_NHWC8  = 31,
+    NHWC8_NDARRAY  = 32,
 };
 
 enum CVTTypeMode {

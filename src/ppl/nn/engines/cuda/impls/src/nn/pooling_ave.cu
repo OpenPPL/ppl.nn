@@ -413,7 +413,7 @@ __global__ void ppl_cukernel_pooling_ave_common(
 
 // #################### pooling ave f3s2 ##################
 template <int TILE_H, int TILE_W>
-__global__ void ppl_cukernel_pooling_ave_f3s2_half2_NHWC(
+__global__ void ppl_cukernel_pooling_ave_f3s2_half2_NHWC8(
     const half2* input,
     half2* output,
     int if_exclude_padding,
@@ -498,7 +498,7 @@ __global__ void ppl_cukernel_pooling_ave_f3s2_half2_NHWC(
 
 // #################### pooling ave f3s1 ##################
 template <int TILE_H, int TILE_W>
-__global__ void ppl_cukernel_pooling_ave_f3s1_half2_NHWC(
+__global__ void ppl_cukernel_pooling_ave_f3s1_half2_NHWC8(
     const half2* input,
     half2* output,
     int if_exclude_padding,
@@ -580,7 +580,7 @@ __global__ void ppl_cukernel_pooling_ave_f3s1_half2_NHWC(
 
 // #################### pooling ave #######################
 template <int TILE_H, int TILE_W>
-__global__ void ppl_cukernel_pooling_ave_common_half2_NHWC(
+__global__ void ppl_cukernel_pooling_ave_common_half2_NHWC8(
     const half2* input,
     half2* output,
     int if_exclude_padding,
@@ -691,7 +691,7 @@ ppl::common::RetCode PPLCUDAAvePoolingForwardImpFp16(
             ppl_cukernel_pooling_ave_common_half<4, 1><<<dim_grid, dim_block, 0, stream>>>(input, output, if_exclude_padding, batch, pad_channels, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, padding_height, padding_width);
         }
         return ppl::common::RC_SUCCESS;
-    } else if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC) {
+    } else if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8) {
         int partH             = (out_height + 3) / 4;
         int partW             = (out_width + 0) / 1;
         int padChannelsDivide = (pad_channels >> 1);
@@ -702,17 +702,17 @@ ppl::common::RetCode PPLCUDAAvePoolingForwardImpFp16(
         // dim_grid.y = padChannelsDivide;
         dim_grid.z = batch;
         if (f3 && s1) {
-            ppl_cukernel_pooling_ave_f3s1_half2_NHWC<4, 1><<<dim_grid,
+            ppl_cukernel_pooling_ave_f3s1_half2_NHWC8<4, 1><<<dim_grid,
                                                               dim_block,
                                                               0,
                                                               stream>>>((const half2*)input, (half2*)output, if_exclude_padding, batch, padChannelsDivide, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, padding_height, padding_width);
         } else if (f3 && s2) {
-            ppl_cukernel_pooling_ave_f3s2_half2_NHWC<4, 1><<<dim_grid,
+            ppl_cukernel_pooling_ave_f3s2_half2_NHWC8<4, 1><<<dim_grid,
                                                               dim_block,
                                                               0,
                                                               stream>>>((const half2*)input, (half2*)output, if_exclude_padding, batch, padChannelsDivide, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, padding_height, padding_width);
         } else {
-            ppl_cukernel_pooling_ave_common_half2_NHWC<4, 1><<<dim_grid,
+            ppl_cukernel_pooling_ave_common_half2_NHWC8<4, 1><<<dim_grid,
                                                                 dim_block,
                                                                 0,
                                                                 stream>>>((const half2*)input, (half2*)output, if_exclude_padding, batch, padChannelsDivide, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, padding_height, padding_width);

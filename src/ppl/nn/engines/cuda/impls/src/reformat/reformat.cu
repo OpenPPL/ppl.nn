@@ -36,9 +36,9 @@ __global__ void cuda_kernel_cvtformat(
 {
 }
 
-#define cvtNCTONHWC(type)                                                                               \
+#define cvtNCTONHWC8(type)                                                                               \
 template<>                                                                                              \
-__global__ void cuda_kernel_cvtformat<type, NDARRAY_NHWC>(                                              \
+__global__ void cuda_kernel_cvtformat<type, NDARRAY_NHWC8>(                                              \
     type* input,                                                                                        \
     type* output,                                                                                       \
     ReFormatParam param)                                                                                \
@@ -69,17 +69,17 @@ __global__ void cuda_kernel_cvtformat<type, NDARRAY_NHWC>(                      
 }
 
 #if __CUDACC_VER_MAJOR__ >= 9
-    cvtNCTONHWC(half)
+    cvtNCTONHWC8(half)
 #endif
-    cvtNCTONHWC(float)
-    cvtNCTONHWC(char)
-    cvtNCTONHWC(double)
+    cvtNCTONHWC8(float)
+    cvtNCTONHWC8(char)
+    cvtNCTONHWC8(double)
 
 
 
-#define cvtNHWCTONC(type)                                                                               \
+#define cvtNHWC8TONC(type)                                                                               \
 template<>                                                                                              \
-__global__ void cuda_kernel_cvtformat<type, NHWC_NDARRAY>(                                              \
+__global__ void cuda_kernel_cvtformat<type, NHWC8_NDARRAY>(                                              \
     type* input,                                                                                        \
     type* output,                                                                                       \
     ReFormatParam param)                                                                                \
@@ -110,11 +110,11 @@ __global__ void cuda_kernel_cvtformat<type, NHWC_NDARRAY>(                      
 }
 
 #if __CUDACC_VER_MAJOR__ >= 9
-    cvtNHWCTONC(half)
+    cvtNHWC8TONC(half)
 #endif
-    cvtNHWCTONC(float)
-    cvtNHWCTONC(char)
-    cvtNHWCTONC(double)
+    cvtNHWC8TONC(float)
+    cvtNHWC8TONC(char)
+    cvtNHWC8TONC(double)
 
 
 
@@ -202,9 +202,9 @@ __global__ void cuda_kernel_small_channel_cvtformat(
 {
 }
 /*
-// #define cvtSMCHANNELNCTONHWC(type)                                                                      \
+// #define cvtSMCHANNELNCTONHWC8(type)                                                                      \
 // template<>                                                                                              \
-// __global__ void cuda_kernel_small_channel_cvtformat<type, NDARRAY_NHWC>(                                \
+// __global__ void cuda_kernel_small_channel_cvtformat<type, NDARRAY_NHWC8>(                                \
 //     type* input,                                                                                        \
 //     int64_t num_elems,                                                                                  \
 //     type* output,                                                                                       \
@@ -219,9 +219,9 @@ __global__ void cuda_kernel_small_channel_cvtformat(
 //     output[tid] = c_idx > param.channel ? input[offset] : (type)0;                                      \
 // }
 */
-#define cvtSMCHANNELNCTONHWC(type)                                                                      \
+#define cvtSMCHANNELNCTONHWC8(type)                                                                      \
 template<>                                                                                              \
-__global__ void cuda_kernel_small_channel_cvtformat<type, NDARRAY_NHWC>(                                \
+__global__ void cuda_kernel_small_channel_cvtformat<type, NDARRAY_NHWC8>(                                \
     type* input,                                                                                        \
     int num_elems,                                                                                      \
     DivModFast inner_fast,                                                                              \
@@ -241,17 +241,17 @@ __global__ void cuda_kernel_small_channel_cvtformat<type, NDARRAY_NHWC>(        
 }
 
 #if __CUDACC_VER_MAJOR__ >= 9
-    cvtSMCHANNELNCTONHWC(half)
+    cvtSMCHANNELNCTONHWC8(half)
 #endif
-    cvtSMCHANNELNCTONHWC(float)
-    cvtSMCHANNELNCTONHWC(char)
-    cvtSMCHANNELNCTONHWC(double)
+    cvtSMCHANNELNCTONHWC8(float)
+    cvtSMCHANNELNCTONHWC8(char)
+    cvtSMCHANNELNCTONHWC8(double)
 
 
 
-#define cvtSMCHANNELNHWCTONC(type)                                                                      \
+#define cvtSMCHANNELNHWC8TONC(type)                                                                      \
 template<>                                                                                              \
-__global__ void cuda_kernel_small_channel_cvtformat<type, NHWC_NDARRAY>(                                \
+__global__ void cuda_kernel_small_channel_cvtformat<type, NHWC8_NDARRAY>(                                \
     type* input,                                                                                        \
     int num_elems,                                                                                      \
     DivModFast inner_fast,                                                                              \
@@ -271,11 +271,11 @@ __global__ void cuda_kernel_small_channel_cvtformat<type, NHWC_NDARRAY>(        
 }
 
 #if __CUDACC_VER_MAJOR__ >= 9
-    cvtSMCHANNELNHWCTONC(half)
+    cvtSMCHANNELNHWC8TONC(half)
 #endif
-    cvtSMCHANNELNHWCTONC(float)
-    cvtSMCHANNELNHWCTONC(char)
-    cvtSMCHANNELNHWCTONC(double)
+    cvtSMCHANNELNHWC8TONC(float)
+    cvtSMCHANNELNHWC8TONC(char)
+    cvtSMCHANNELNHWC8TONC(double)
 
 
 
@@ -359,12 +359,12 @@ void GenDimParam(
     dim3& dimGrid)
 {
     dimGrid.z = param.n_outer >= MAX_DIM ? MAX_DIM : param.n_outer;
-    if (mode == NHWC_NDARRAY) {
+    if (mode == NHWC8_NDARRAY) {
         dimBlock.x = DIM;
         dimBlock.y = DIM;
         dimGrid.x  = DivUp(param.src_pad, DIM);
         dimGrid.y  = DivUp(param.n_inner, DIM);
-    } else if (mode == NDARRAY_NHWC) {
+    } else if (mode == NDARRAY_NHWC8) {
         dimBlock.x = DIM;
         dimBlock.y = DIM;
         dimGrid.x  = DivUp(param.n_inner, DIM);
@@ -384,11 +384,11 @@ void GenDimParam(
     }
 }
 
-#define RFNHWC                 \
-    case NDARRAY_NHWC:         \
-        RUN(NDARRAY_NHWC);     \
-    case NHWC_NDARRAY:         \
-        RUN(NHWC_NDARRAY);
+#define RFNHWC8                 \
+    case NDARRAY_NHWC8:         \
+        RUN(NDARRAY_NHWC8);     \
+    case NHWC8_NDARRAY:         \
+        RUN(NHWC8_NDARRAY);
 
 #define RFN4CX             \
     case NDARRAY_N4CX:     \
@@ -427,7 +427,7 @@ void PPLCUDANormalCVTFormat(cudaStream_t stream, const void *input, void *output
     } while (0)
 
     switch (GetCVTFormatMode(param)) {
-        RFNHWC
+        RFNHWC8
         RFN4CX
         default:
             return;
@@ -473,7 +473,7 @@ void PPLCUDASmallChannelCVTFormat(cudaStream_t stream, const void *input, void *
     } while (0)
 
     switch (GetCVTFormatMode(param)) {
-        RFNHWC
+        RFNHWC8
         RFN4CX
         default:
             return;
@@ -516,8 +516,8 @@ CVTFormatMode GetCVTFormatMode(ReFormatParam param)
 {
     if (param.in_format == DATAFORMAT_NDARRAY) {
         switch (param.out_format) {
-            case DATAFORMAT_NHWC:
-                return NDARRAY_NHWC;
+            case DATAFORMAT_NHWC8:
+                return NDARRAY_NHWC8;
             case DATAFORMAT_N4CX:
                 return NDARRAY_N4CX;
             default:
@@ -530,10 +530,10 @@ CVTFormatMode GetCVTFormatMode(ReFormatParam param)
             default:
                 return CVTFormatUnknown;
         }
-    } else if (param.in_format == DATAFORMAT_NHWC) {
+    } else if (param.in_format == DATAFORMAT_NHWC8) {
         switch (param.out_format) {
             case DATAFORMAT_NDARRAY:
-                return NHWC_NDARRAY;
+                return NHWC8_NDARRAY;
             default:
                 return CVTFormatUnknown;
         }
@@ -639,8 +639,8 @@ ppl::common::RetCode SetReLayoutParam(
     const TensorShape& output)
 {
     if (input.GetDimCount() <= 1 &&
-        ((input.GetDataFormat() == DATAFORMAT_NHWC) ||
-        (output.GetDataFormat() == DATAFORMAT_NHWC)))
+        ((input.GetDataFormat() == DATAFORMAT_NHWC8) ||
+        (output.GetDataFormat() == DATAFORMAT_NHWC8)))
         return RC_INVALID_VALUE;
     param->n_outer = input.GetDim(0);
     param->channel = input.GetDimCount() > 1 ? input.GetDim(1) : 1;
