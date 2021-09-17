@@ -29,8 +29,8 @@ public:
     ConcatAlgorithm() {
         std::set<dataformat_t> ndarray{DATAFORMAT_NDARRAY};
         concat_formats_.emplace(DATAFORMAT_NDARRAY, ndarray);
-        std::set<dataformat_t> nhwc{DATAFORMAT_NHWC8};
-        concat_formats_.emplace(DATAFORMAT_NHWC8, nhwc);
+        std::set<dataformat_t> nhwc8{DATAFORMAT_NHWC8};
+        concat_formats_.emplace(DATAFORMAT_NHWC8, nhwc8);
     }
 
     void GetAttrParam(void*& param) const override {

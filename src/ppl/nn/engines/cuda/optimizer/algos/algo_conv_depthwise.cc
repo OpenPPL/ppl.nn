@@ -40,7 +40,7 @@ void DepthwiseDirect::GetAttrParam(void*& param) const {
     return;
 }
 
-bool DepthwiseDirect::IsSupported(const ir::Node* node, const OptKernelOptions& options) const {
+bool DepthwiseDirect::IsSupported(const ir::Node* node, const OptKernelOptions& options, dataformat_t input_format) const {
     uint32_t group = (reinterpret_cast<CudaConvParam*>(options.param))->param.group;
     // check if conv is depthwise
     auto tensor1 = options.tensors->find(node->GetInput(1))->second->GetShape();
@@ -50,6 +50,9 @@ bool DepthwiseDirect::IsSupported(const ir::Node* node, const OptKernelOptions& 
     // check if conv is quantization
     auto quant0 = options.quants->at(node->GetInput(0));
     if (quant0.type == DATATYPE_INT8) {
+        return false;
+    }
+    if (input_format != DATAFORMAT_NHWC8) {
         return false;
     }
     return true;

@@ -29,8 +29,10 @@ namespace ppl { namespace nn { namespace cuda {
 class ConvAlgorithm : public Algorithm {
 public:
     ConvAlgorithm() {
-        std::set<dataformat_t> nhwc{DATAFORMAT_NHWC8};
-        conv_formats_.emplace(DATAFORMAT_NHWC8, nhwc);
+        std::set<dataformat_t> nhwc8{DATAFORMAT_NHWC8};
+        conv_formats_.emplace(DATAFORMAT_NHWC8, nhwc8);
+        std::set<dataformat_t> nhwc16{DATAFORMAT_NHWC16};
+        conv_formats_.emplace(DATAFORMAT_NHWC16, nhwc16);
     }
 
     const std::map<dataformat_t, std::set<dataformat_t>> Getformats(const std::string& type_name) const override {
@@ -56,7 +58,7 @@ class TuringHMMAImpgemm final : public ConvAlgorithm {
 public:
     void GetAttrParam(void*& param) const override;
     void DeleteAttrParam(void*& param) override;
-    bool IsSupported(const ir::Node* node, const OptKernelOptions& options) const override;
+    bool IsSupported(const ir::Node* node, const OptKernelOptions& options, ppl::common::dataformat_t input_format) const override;
     double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) override;
     RetCode ModifyParam(const ir::Node* node, OptKernelOptions& options) override;
     void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
@@ -72,7 +74,7 @@ public:
     int MAX_INT8 = 127;
     void GetAttrParam(void*& param) const override;
     void DeleteAttrParam(void*& param) override;
-    bool IsSupported(const ir::Node* node, const OptKernelOptions& options) const override;
+    bool IsSupported(const ir::Node* node, const OptKernelOptions& options, ppl::common::dataformat_t input_format) const override;
     double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) override;
     RetCode ModifyParam(const ir::Node* node, OptKernelOptions& options) override;
     void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
@@ -87,7 +89,7 @@ class DepthwiseDirect final : public ConvAlgorithm {
 public:
     void GetAttrParam(void*& param) const override;
     void DeleteAttrParam(void*& param) override;
-    bool IsSupported(const ir::Node* node, const OptKernelOptions& options) const override;
+    bool IsSupported(const ir::Node* node, const OptKernelOptions& options, ppl::common::dataformat_t input_format) const override;
     double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) override;
     RetCode ModifyParam(const ir::Node* node, OptKernelOptions& options) override;
     void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
