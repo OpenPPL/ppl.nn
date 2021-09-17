@@ -51,13 +51,13 @@ struct gemm_v2_param_fp32 {
     float* dst_Y       = nullptr;
     int32_t trans_A    = 0;
     int32_t trans_B    = 0;
-    int32_t M          = 0;
-    int32_t N          = 0;
-    int32_t K          = 0;
-    int32_t lda        = 0;
-    int32_t ldb        = 0;
-    int32_t ldc        = 0;
-    int32_t ldy        = 0;
+    int64_t M          = 0;
+    int64_t N          = 0;
+    int64_t K          = 0;
+    int64_t lda        = 0;
+    int64_t ldb        = 0;
+    int64_t ldc        = 0;
+    int64_t ldy        = 0;
     float alpha        = 1.0f;
     float beta         = 0.0f;
 

@@ -20,6 +20,7 @@
 
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/kernel/x86/common/math_sse.h"
+#include "ppl/kernel/x86/common/sse_tools.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 

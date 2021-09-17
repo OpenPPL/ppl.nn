@@ -36,13 +36,13 @@ inline float reduce_init_val_fp32(void)
 template <>
 inline float reduce_init_val_fp32<REDUCE_MAX>(void)
 {
-    return -__FLT_MAX__;
+    return -FLT_MAX;
 }
 
 template <>
 inline float reduce_init_val_fp32<REDUCE_MIN>(void)
 {
-    return __FLT_MAX__;
+    return FLT_MAX;
 }
 
 template <reduce_op_type_t _op>
