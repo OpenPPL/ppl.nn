@@ -29,8 +29,8 @@ namespace ppl { namespace nn { namespace cuda {
 class GemmAlgorithm : public Algorithm {
 public:
     GemmAlgorithm() {
-        std::set<dataformat_t> nhwc{DATAFORMAT_NHWC8};
-        gemm_formats_.emplace(DATAFORMAT_NHWC8, nhwc);
+        std::set<dataformat_t> nhwc8{DATAFORMAT_NHWC8};
+        gemm_formats_.emplace(DATAFORMAT_NHWC8, nhwc8);
     }
 
     const std::map<dataformat_t, std::set<dataformat_t>> Getformats(const std::string& type_name) const override {

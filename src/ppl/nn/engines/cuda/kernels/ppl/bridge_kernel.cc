@@ -25,6 +25,10 @@ namespace ppl { namespace nn { namespace cuda {
 bool BridgeKernel::EqualTypeAndFormat(const TensorImpl* input, const TensorImpl* output) {
     auto in_shape = input->GetShape();
     auto out_shape = output->GetShape();
+
+    if (in_shape.GetDim(1) != out_shape.GetDim(1)) {
+        return false;
+    }
     
     if (in_shape.GetDataType() != out_shape.GetDataType()) {
         return false;
@@ -36,9 +40,14 @@ bool BridgeKernel::EqualTypeAndFormat(const TensorImpl* input, const TensorImpl*
 
     auto src_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(in_shape.GetDataFormat());
     auto dst_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(out_shape.GetDataFormat());
-    if (in_shape.GetDimCount() == 2 && out_shape.GetDimCount() == 2 &&
-        in_shape.GetDim(1) % src_align_size == 0 && out_shape.GetDim(1) % dst_align_size == 0) {
+    if (in_shape.GetDim(1) % src_align_size == 0 && out_shape.GetDim(1) % dst_align_size == 0) {
+        if (in_shape.GetDimCount() == 2 && out_shape.GetDimCount() == 2) {
             return true;
+        }
+        if ((in_shape.GetDataType() == ppl::common::DATAFORMAT_NHWC8 || in_shape.GetDataType() == ppl::common::DATAFORMAT_NHWC16) &&
+            (out_shape.GetDataType() == ppl::common::DATAFORMAT_NHWC8 || out_shape.GetDataType() == ppl::common::DATAFORMAT_NHWC16)) {
+            return true;
+        }
     }
 
     return false;

@@ -28,12 +28,12 @@ class NormalAlgorithm : public Algorithm {
 public:
     NormalAlgorithm() {
         std::set<dataformat_t> ndarray{DATAFORMAT_NDARRAY};
-        std::set<dataformat_t> nhwc{DATAFORMAT_NHWC8};
+        std::set<dataformat_t> nhwc8{DATAFORMAT_NHWC8};
 
         ndarray_formats_.emplace(DATAFORMAT_NDARRAY, ndarray);
-        nhwc_formats_.emplace(DATAFORMAT_NHWC8, nhwc);
+        nhwc8_formats_.emplace(DATAFORMAT_NHWC8, nhwc8);
         inherited_formats_.emplace(DATAFORMAT_NDARRAY, ndarray);
-        inherited_formats_.emplace(DATAFORMAT_NHWC8, nhwc);
+        inherited_formats_.emplace(DATAFORMAT_NHWC8, nhwc8);
         arbitrary_formats_.emplace(DATAFORMAT_NDARRAY, ndarray);
         arbitrary_formats_.emplace(DATAFORMAT_NHWC8, ndarray);
     }
@@ -51,8 +51,8 @@ public:
         if (arbitrary_set_.find(type_name) != arbitrary_set_.end()) {
             return arbitrary_formats_;
         }
-        if (nhwc_set_.find(type_name) != nhwc_set_.end()) {
-            return nhwc_formats_;
+        if (nhwc8_set_.find(type_name) != nhwc8_set_.end()) {
+            return nhwc8_formats_;
         }
         return ndarray_formats_;
     }
@@ -66,7 +66,7 @@ public:
 
 private:
     std::map<dataformat_t, std::set<dataformat_t>> ndarray_formats_;
-    std::map<dataformat_t, std::set<dataformat_t>> nhwc_formats_;
+    std::map<dataformat_t, std::set<dataformat_t>> nhwc8_formats_;
     std::map<dataformat_t, std::set<dataformat_t>> inherited_formats_;
     std::map<dataformat_t, std::set<dataformat_t>> arbitrary_formats_;
     std::set<std::string> inherited_set_{"Add",
@@ -87,7 +87,7 @@ private:
                                          "Split",
                                          "Sigmoid"};
     std::set<std::string> arbitrary_set_{"Shape"};
-    std::set<std::string> nhwc_set_{"ChannelShuffle"};
+    std::set<std::string> nhwc8_set_{"ChannelShuffle"};
 };
 
 }}} // namespace ppl::nn::cuda

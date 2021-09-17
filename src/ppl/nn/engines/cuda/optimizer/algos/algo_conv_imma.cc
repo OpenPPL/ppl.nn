@@ -39,10 +39,13 @@ void TuringIMMAImpgemm::GetAttrParam(void*& param) const {
     return;
 }
 
-bool TuringIMMAImpgemm::IsSupported(const ir::Node* node, const OptKernelOptions& options) const {
+bool TuringIMMAImpgemm::IsSupported(const ir::Node* node, const OptKernelOptions& options, dataformat_t input_format) const {
     // check if conv quant to INT8
     auto quant0 = options.quants->at(node->GetInput(0));
     if (quant0.type != DATATYPE_INT8) {
+        return false;
+    }
+    if (input_format != DATAFORMAT_NHWC16) {
         return false;
     }
     return true;
@@ -57,6 +60,13 @@ double TuringIMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
 }
 
 RetCode TuringIMMAImpgemm::ModifyParam(const ir::Node* node, OptKernelOptions& options) {
+    auto topo = options.graph->topo.get();
+    auto data = options.graph->data.get();
+    auto weight_edge = topo->GetEdgeById(node->GetInput(1));
+    auto weight_node = topo->GetNodeById(weight_edge->GetProducer());
+    auto weight_iter = data->constants.find(weight_node->GetInput(0));
+    reinterpret_cast<CudaConvParam*>(options.param)->extra_param.algo_info.is_initializer_weight =
+        weight_iter != data->constants.end();
     return RC_SUCCESS;
 }
 
