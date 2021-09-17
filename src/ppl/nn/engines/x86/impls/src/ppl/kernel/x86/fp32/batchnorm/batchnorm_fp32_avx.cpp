@@ -19,6 +19,7 @@
 #include <math.h>
 
 #include "ppl/kernel/x86/common/internal_include.h"
+#include "ppl/kernel/x86/common/avx_tools.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 

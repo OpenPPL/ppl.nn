@@ -21,6 +21,7 @@
 #include <string.h>
 #include <chrono>
 #include <memory>
+#include <inttypes.h>
 
 #if defined(__linux__) && defined(PPL_USE_X86_OMP)
 #ifndef _GNU_SOURCE
@@ -44,15 +45,15 @@
 #define DEBUG_TAG(X)
 #endif
 
-#define CASE_STRING_FMT() "m%ldn%ldk%ld_n%s"
+#define CASE_STRING_FMT() "m%" PRId64 "n%" PRId64 "k%" PRId64 "_n%s"
 
 Define_bool_opt("--help", Flag_help, false, "show these help information");
 Define_string(cfg, "", "(required) fc config file, format:" CASE_STRING_FMT());
 Define_int32(warm_up, 10, "(10) warm up iterations");
 Define_int32(min_iter, 20, "(20) min benchmark iterations");
-Define_float(min_second, 1.0, "(1.0) min benchmark seconds");
+Define_float(min_second, 1.0f, "(1.0) min benchmark seconds");
 Define_bool(validate, false, "(false) do result validation");
-Define_float(eps, 1e-5, "(1e-5) rel error trunk for validation");
+Define_float(eps, 1e-5f, "(1e-5) rel error trunk for validation");
 
 Define_float(alpha, 1.0f, "(1.0) gemm alpha");
 Define_float(beta, 0.0f, "(0.0) gemm beta");
@@ -312,7 +313,7 @@ DEBUG_TAG(G);
                 Flag_alpha, Flag_beta,
                 post_flag, C);
             end = std::chrono::high_resolution_clock::now();
-            double dur = (end - start).count() / 1e3;
+            double dur = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() / 1e3;
             tot_exe_us += dur;
             if (dur < min_exe_us) {
                 min_exe_us = dur;

@@ -21,6 +21,7 @@
 
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/kernel/x86/common/roialign/roialign_common.h"
+#include "ppl/kernel/x86/common/avx512_tools.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 

@@ -21,7 +21,53 @@
 #include <stdint.h>
 #include <nmmintrin.h>
 
+#include "ppl/kernel/x86/common/internal_include.h"
+
 namespace ppl { namespace kernel { namespace x86 {
+
+#ifdef PPL_USE_X86_MSVC
+
+inline __m128 operator+(const __m128 a, const __m128 b) {
+    return _mm_add_ps(a, b);
+}
+
+inline __m128 operator-(const __m128 a, const __m128 b) {
+    return _mm_sub_ps(a, b);
+}
+
+inline __m128 operator*(const __m128 a, const __m128 b) {
+    return _mm_mul_ps(a, b);
+}
+
+inline __m128 operator/(const __m128 a, const __m128 b) {
+    return _mm_div_ps(a, b);
+}
+
+inline __m128& operator+=(__m128 &a, const __m128 b) {
+    return a = _mm_add_ps(a, b);
+}
+
+inline __m128& operator-=(__m128 &a, const __m128 b) {
+    return a = _mm_sub_ps(a, b);
+}
+
+inline __m128& operator*=(__m128 &a, const __m128 b) {
+    return a = _mm_mul_ps(a, b);
+}
+
+inline __m128& operator/=(__m128 &a, const __m128 b) {
+    return a = _mm_div_ps(a, b);
+}
+
+inline __m128 operator-(const __m128 a) {
+    return _mm_setzero_ps() - a;
+}
+
+inline __m128 operator+(const __m128 a) {
+    return a;
+}
+
+#endif
 
 inline void memset32_sse(void *dst, const int32_t val, const int64_t n32) {
     int64_t __n32 = n32;

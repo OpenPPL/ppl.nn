@@ -21,6 +21,7 @@
 #include <string.h>
 #include <chrono>
 #include <memory>
+#include <inttypes.h>
 
 #if defined(__linux__) && defined(PPL_USE_X86_OMP)
 #ifndef _GNU_SOURCE
@@ -44,15 +45,15 @@
 #define DEBUG_TAG(X)
 #endif
 
-#define CASE_STRING_FMT() "m%ldn%ldk%ld_trans_A%ldtrans_B%ld_alpha%fbeta%f_C%ld_fuse%ld_n%s"
+#define CASE_STRING_FMT() "m%" PRId64 "n%" PRId64 "k%" PRId64 "_trans_A%dtrans_B%d_alpha%fbeta%f_C%d_fuse%d_n%s"
 
 Define_bool_opt("--help", Flag_help, false, "show these help information");
 Define_string(cfg, "", "(required) fc config file, format:" CASE_STRING_FMT());
 Define_int32(warm_up, 10, "(10) warm up iterations");
 Define_int32(min_iter, 20, "(20) min benchmark iterations");
-Define_float(min_second, 1.0, "(1.0) min benchmark seconds");
+Define_float(min_second, 1.0f, "(1.0) min benchmark seconds");
 Define_bool(validate, false, "(false) do result validation");
-Define_float(eps, 1e-5, "(1e-5) rel error trunk for validation");
+Define_float(eps, 1e-5f, "(1e-5) rel error trunk for validation");
 
 ppl::common::RetCode gemm_v2_ref_fp32(const ppl::kernel::x86::gemm_v2_param_fp32& param) {
 #ifdef PPL_USE_X86_OMP_COLLAPSE
@@ -161,10 +162,10 @@ int main(int argc, char **argv) {
 
         char case_name[100];
         int64_t M, N, K;
-        int64_t trans_A, trans_B;
+        int32_t trans_A, trans_B;
         float alpha, beta;
-        int64_t c_type;
-        int64_t fuse_flag;
+        int32_t c_type;
+        int32_t fuse_flag;
 
         if (10 != sscanf(
             line,
@@ -312,7 +313,7 @@ DEBUG_TAG(G);
             start = std::chrono::high_resolution_clock::now();
             executor->execute();
             end = std::chrono::high_resolution_clock::now();
-            double dur = (end - start).count() / 1e3;
+            double dur = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() / 1e3;
             tot_exe_us += dur;
             if (dur < min_exe_us) {
                 min_exe_us = dur;

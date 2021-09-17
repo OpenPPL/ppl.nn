@@ -27,13 +27,13 @@ fc_fp32_algo_info fc_algo_selector::select_algo(const ppl::common::dataformat_t 
     (void)src_format;
 
     static fc_fp32_algo_info unknown_info = {
-        .algo_type = fc_fp32_algo::unknown,
-        .isa       = ppl::common::ISA_undef};
+        fc_fp32_algo::unknown,
+        ppl::common::ISA_undef};
 
     if (isa_flags & ppl::common::ISA_X86_FMA) {
-        return (fc_fp32_algo_info){
-            .algo_type = fc_fp32_algo::standard,
-            .isa       = ppl::common::ISA_X86_FMA};
+        return {
+            fc_fp32_algo::standard,
+            ppl::common::ISA_X86_FMA};
     } else {
         return unknown_info;
     }
