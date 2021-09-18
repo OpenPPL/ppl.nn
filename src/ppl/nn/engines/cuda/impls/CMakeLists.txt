@@ -50,6 +50,7 @@ target_include_directories(PPLCUDAKernel PUBLIC
     ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES})
 target_link_directories(PPLCUDAKernel PUBLIC ${CMAKE_CUDA_HOST_IMPLICIT_LINK_DIRECTORIES})
 target_link_libraries(PPLCUDAKernel PUBLIC cuda ${CUDA_LIBRARIES} ${CMAKE_CUDA_HOST_IMPLICIT_LINK_LIBRARIES})
+target_link_libraries(PPLCUDAKernel INTERFACE "cuda;cudart_static;cudadevrt;nvrtc")
 
 hpcc_populate_dep(ppl.common)
 target_link_libraries(PPLCUDAKernel PUBLIC pplcommon_static)

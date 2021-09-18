@@ -98,5 +98,15 @@ void PPLCUDAConvolutionForwardImp(
 	conv_param_t &conv_param, 
 	fuse_param_t &fuse_param);
 
-
+void PPLCUDAConvolutionForwardJITImp(
+    cudaStream_t &stream,
+    ppl::common::datatype_t type,
+    int4* d_input,
+    int4* d_flt,
+    int4* d_output,
+    int4* bias,
+    int4* d_temp_buf,
+    algo_param_t &algo_param,
+    conv_param_t &conv_param,
+    fuse_param_t &fuse_param);
 #endif// __PPLCUDA_IMPLICITGEMM_CONV_H_
