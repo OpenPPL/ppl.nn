@@ -43,7 +43,7 @@ endif()
 
 FetchContent_Declare(hpcc
     GIT_REPOSITORY https://github.com/openppl-public/hpcc.git
-    GIT_TAG v0.1.3
+    GIT_TAG v0.1.4
     GIT_SHALLOW TRUE
     SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
@@ -61,6 +61,7 @@ endif()
 set(PPLCOMMON_BUILD_TESTS OFF CACHE BOOL "disable ppl.common tests")
 set(PPLCOMMON_BUILD_BENCHMARK OFF CACHE BOOL "disable ppl.common benchmark")
 set(PPLCOMMON_ENABLE_PYTHON_API ${PPLNN_ENABLE_PYTHON_API})
+set(PPLCOMMON_ENABLE_LUA_API ${PPLNN_ENABLE_LUA_API})
 
 hpcc_declare_git_dep(ppl.common
     https://github.com/openppl-public/ppl.common.git
@@ -94,6 +95,14 @@ set(PYBIND11_FINDPYTHON OFF CACHE BOOL "do not find python")
 hpcc_declare_git_dep(pybind11
     https://github.com/pybind/pybind11.git
     v2.7.0)
+
+# --------------------------------------------------------------------------- #
+
+set(LUACPP_INSTALL OFF CACHE BOOL "")
+
+hpcc_declare_git_dep(luacpp
+    https://github.com/ouonline/lua-cpp.git
+    cf8481951f83e35121e61e3aff95443f53630073)
 
 # --------------------------------------------------------------------------- #
 

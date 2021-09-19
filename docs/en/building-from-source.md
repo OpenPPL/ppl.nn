@@ -6,6 +6,7 @@
 * [Git](https://git-scm.com/downloads) >= 2.7.0
 * [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit-archive) >= 10.2 (for CUDA)
 * [Python](https://www.python.org/downloads/) >= 3 (for CUDA and Python API support)
+* [Lua](https://www.lua.org/download.html) >= 5.4.0 (optional, for Lua API support)
 
 ### Cloning Source Code
 
@@ -66,15 +67,7 @@ If you want to use a specified version of python, you can pass `PYTHON3_INCLUDE_
 ./build.sh -DPPLNN_ENABLE_PYTHON_API=ON -DPYTHON3_INCLUDE_DIRS=/path/to/your/python/include/dir [other options]
 ```
 
-### Testing
-
-There is a test tool named `pplnn` generated from `tools/pplnn.cc`. You can run `pplnn` using the following command:
-
-```bash
-./pplnn-build/tools/pplnn [--use-x86 | --use-cuda] --onnx-model tests/testdata/conv.onnx
-```
-
-or run the python demo with:
+Run the python demo with the following command:
 
 ```bash
 PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py [--use-x86 | --use-cuda] --onnx-model tests/testdata/conv.onnx
@@ -83,10 +76,9 @@ PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py [--use-x86 | --use-cud
 or use both engines:
 
 ```bash
+cd ppl.nn
 PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py --use-x86 --use-cuda --onnx-model tests/testdata/conv.onnx
 ```
-
-### Installing Pyppl Modules Using `Pip`
 
 There is a python packaging configuration in [python/package](../../python/package). You can install pyppl using `pip`:
 
@@ -102,3 +94,34 @@ pip3 install .
 **WARNING**: `Pip3` will delete all of the installed pyppl .so files before installation. Make sure that you have put all the .so files needed in `package/pyppl` before executing `pip3 install .`.
 
 After installation, you can use `from pyppl import nn` directly without setting the `PYTHONPATH` env.
+
+### Buliding Lua API support
+
+add `-DPPLNN_ENABLE_LUA_API=ON` to the build command if you want to use `PPLNN` in lua:
+
+```bash
+./build.sh -DPPLNN_ENABLE_LUA_API=ON
+```
+
+If you want to use a specified version of lua, you can pass `LUA_INCLUDE_DIR` and `LUA_LIBRARIES` to `build.sh`:
+
+```bash
+./build.sh -DPPLNN_ENABLE_LUA_API=ON -DLUA_INCLUDE_DIR=/path/to/your/lua/include/dir -DLUA_LIBRARIES=/path/to/your/lua/lib [other options]
+```
+
+Run the lua demo with the following commands:
+
+```bash
+cd ppl.nn
+LUAPATH=./pplnn-build/install /path/to/your/lua-interpreter ./tools/pplnn.lua
+```
+
+Note that your lua interpreter should be compiled with options `MYCFLAGS="-DLUA_USE_DLOPEN -fPIC" MYLIBS=-ldl` to enable loading .so plugins.
+
+### Testing
+
+There is a test tool named `pplnn` generated from `tools/pplnn.cc`. You can run `pplnn` using the following command:
+
+```bash
+./pplnn-build/tools/pplnn [--use-x86 | --use-cuda] --onnx-model tests/testdata/conv.onnx
+```
