@@ -8,6 +8,25 @@ processor_num=`cat /proc/cpuinfo | grep processor | grep -v grep | wc -l`
 options='-DCMAKE_BUILD_TYPE=Release -DPPLNN_ENABLE_PYTHON_API=ON'
 
 # --------------------------------------------------------------------------- #
+# preparing lua
+
+lua_package='/tmp/lua-5.4.3.tar.gz'
+if ! [ -f "${lua_package}" ]; then
+    wget -c 'https://www.lua.org/ftp/lua-5.4.3.tar.gz' -O ${lua_package}
+fi
+
+lua_source_dir='/tmp/lua-5.4.3'
+if ! [ -d "${lua_source_dir}" ]; then
+    cd /tmp
+    tar -xf ${lua_package}
+    cd ${lua_source_dir}
+    make posix -j8 MYCFLAGS="-DLUA_USE_DLOPEN -fPIC" MYLIBS=-ldl
+    cd ${workdir}
+fi
+
+options="$options -DPPLNN_ENABLE_LUA_API=ON -DLUA_INCLUDE_DIR=${lua_source_dir}/src -DLUA_LIBRARIES=${lua_source_dir}/src/liblua.a"
+
+# --------------------------------------------------------------------------- #
 
 function BuildCuda() {
     mkdir ${cuda_build_dir}
