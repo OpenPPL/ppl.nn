@@ -60,6 +60,7 @@ endif()
 
 set(PPLCOMMON_BUILD_TESTS OFF CACHE BOOL "disable ppl.common tests")
 set(PPLCOMMON_BUILD_BENCHMARK OFF CACHE BOOL "disable ppl.common benchmark")
+set(PPLCOMMON_ENABLE_PYTHON_API ${PPLNN_ENABLE_PYTHON_API})
 
 hpcc_declare_git_dep(ppl.common
     https://github.com/openppl-public/ppl.common.git

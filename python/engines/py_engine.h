@@ -25,26 +25,14 @@
 
 namespace ppl { namespace nn { namespace python {
 
-class PyEngine final {
-public:
-    PyEngine(const std::shared_ptr<Engine>& engine) : engine_(engine) {}
+struct PyEngine final {
     PyEngine(const PyX86Engine& e) {
-        engine_ = e.GetInnerPtr();
+        ptr = e.ptr;
     }
     PyEngine(const PyCudaEngine& e) {
-        engine_ = e.GetInnerPtr();
+        ptr = e.ptr;
     }
-    PyEngine(PyEngine&&) = default;
-    PyEngine& operator=(PyEngine&&) = default;
-    PyEngine(const PyEngine&) = default;
-    PyEngine& operator=(const PyEngine&) = default;
-
-    Engine* GetPtr() const {
-        return engine_.get();
-    }
-
-private:
-    std::shared_ptr<Engine> engine_;
+    std::shared_ptr<Engine> ptr;
 };
 
 }}} // namespace ppl::nn::python
