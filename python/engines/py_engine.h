@@ -19,19 +19,28 @@
 #define _ST_HPC_PPL_NN_PYTHON_PY_ENGINE_H_
 
 #include "ppl/nn/engines/engine.h"
-#include "x86/py_x86_engine.h"
-#include "cuda/py_cuda_engine.h"
 #include <memory>
+
+#ifdef PPLNN_USE_X86
+#include "x86/py_x86_engine.h"
+#endif
+#ifdef PPLNN_USE_CUDA
+#include "cuda/py_cuda_engine.h"
+#endif
 
 namespace ppl { namespace nn { namespace python {
 
 struct PyEngine final {
+#ifdef PPLNN_USE_X86
     PyEngine(const PyX86Engine& e) {
         ptr = e.ptr;
     }
+#endif
+#ifdef PPLNN_USE_CUDA
     PyEngine(const PyCudaEngine& e) {
         ptr = e.ptr;
     }
+#endif
     std::shared_ptr<Engine> ptr;
 };
 
