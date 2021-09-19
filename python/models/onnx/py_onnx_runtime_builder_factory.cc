@@ -29,7 +29,7 @@ public:
     static PyRuntimeBuilder CreateFromFile(const char* model_file, vector<PyEngine>& engines) {
         vector<Engine*> engine_ptrs(engines.size());
         for (uint32_t i = 0; i < engines.size(); ++i) {
-            engine_ptrs[i] = engines[i].GetPtr();
+            engine_ptrs[i] = engines[i].ptr.get();
         }
         return PyRuntimeBuilder(engines,
                                 OnnxRuntimeBuilderFactory::Create(model_file, engine_ptrs.data(), engine_ptrs.size()));

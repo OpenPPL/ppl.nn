@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#ifdef PPLNN_USE_CUDA
+
 #include "py_cuda_engine.h"
 #include "ppl/common/retcode.h"
 #include "pybind11/pybind11.h"
@@ -28,36 +30,35 @@ using namespace std;
 
 namespace ppl { namespace nn { namespace python {
 
-static RetCode SetUseDefaultAlgorithms(Engine* engine, uint32_t option, const pybind11::args&) {
+static RetCode GenericSetOption(Engine* engine, uint32_t option, const pybind11::args&) {
     return engine->Configure(option);
 }
 
 typedef RetCode (*ConfigFunc)(Engine*, uint32_t option, const pybind11::args& args);
 
 static const map<uint32_t, ConfigFunc> g_opt2func = {
-    {CUDA_CONF_USE_DEFAULT_ALGORITHMS, SetUseDefaultAlgorithms},
+    {CUDA_CONF_USE_DEFAULT_ALGORITHMS, GenericSetOption},
 };
-
-RetCode PyCudaEngine::Configure(uint32_t option, const pybind11::args& args) {
-    auto it = g_opt2func.find(option);
-    if (it == g_opt2func.end()) {
-        LOG(ERROR) << "unsupported option: " << option;
-        return RC_UNSUPPORTED;
-    }
-
-    return it->second(engine_.get(), option, args);
-}
 
 void RegisterCudaEngine(pybind11::module* m) {
     pybind11::class_<PyCudaEngine>(*m, "CudaEngine")
         .def("__bool__",
              [](const PyCudaEngine& engine) -> bool {
-                 return (engine.GetInnerPtr().get());
+                 return (engine.ptr.get());
              })
-        .def("GetName", &PyCudaEngine::GetName)
-        .def("Configure", &PyCudaEngine::Configure);
+        .def("Configure",
+             [](PyCudaEngine& engine, uint32_t option, const pybind11::args& args) -> RetCode {
+                 auto it = g_opt2func.find(option);
+                 if (it == g_opt2func.end()) {
+                     LOG(ERROR) << "unsupported option: " << option;
+                     return RC_UNSUPPORTED;
+                 }
+                 return it->second(engine.ptr.get(), option, args);
+             });
 
     m->attr("CUDA_CONF_USE_DEFAULT_ALGORITHMS") = (uint32_t)CUDA_CONF_USE_DEFAULT_ALGORITHMS;
 }
 
 }}} // namespace ppl::nn::python
+
+#endif

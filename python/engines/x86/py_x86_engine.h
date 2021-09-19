@@ -18,31 +18,20 @@
 #ifndef _ST_HPC_PPL_NN_PYTHON_PY_X86_ENGINE_H_
 #define _ST_HPC_PPL_NN_PYTHON_PY_X86_ENGINE_H_
 
+#ifdef PPLNN_USE_X86
+
 #include "ppl/nn/engines/engine.h"
 #include "pybind11/pybind11.h"
 
 namespace ppl { namespace nn { namespace python {
 
-class PyX86Engine final {
-public:
-    PyX86Engine(Engine* engine) : engine_(engine) {}
-    PyX86Engine(PyX86Engine&&) = default;
-    PyX86Engine& operator=(PyX86Engine&&) = default;
-    PyX86Engine(const PyX86Engine&) = default;
-    PyX86Engine& operator=(const PyX86Engine&) = default;
-
-    std::string GetName() const {
-        return engine_->GetName();
-    }
-    const std::shared_ptr<Engine>& GetInnerPtr() const {
-        return engine_;
-    }
-    ppl::common::RetCode Configure(uint32_t option, const pybind11::args& args);
-
-private:
-    std::shared_ptr<Engine> engine_;
+struct PyX86Engine final {
+    PyX86Engine(Engine* p) : ptr(p) {}
+    std::shared_ptr<Engine> ptr;
 };
 
 }}} // namespace ppl::nn::python
+
+#endif
 
 #endif

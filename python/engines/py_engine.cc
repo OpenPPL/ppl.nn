@@ -16,8 +16,6 @@
 // under the License.
 
 #include "py_engine.h"
-#include "ppl/common/retcode.h"
-#include "pybind11/stl.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace python {
@@ -27,7 +25,7 @@ void RegisterEngine(pybind11::module* m) {
         .def(pybind11::init<PyX86Engine>())
         .def(pybind11::init<PyCudaEngine>())
         .def("__bool__", [](const PyEngine& engine) -> bool {
-            return (engine.GetPtr());
+            return (engine.ptr.get());
         });
 }
 

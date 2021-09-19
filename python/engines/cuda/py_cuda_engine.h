@@ -18,31 +18,20 @@
 #ifndef _ST_HPC_PPL_NN_PYTHON_PY_CUDA_ENGINE_H_
 #define _ST_HPC_PPL_NN_PYTHON_PY_CUDA_ENGINE_H_
 
+#ifdef PPLNN_USE_CUDA
+
 #include "ppl/nn/engines/engine.h"
 #include "pybind11/pybind11.h"
 
 namespace ppl { namespace nn { namespace python {
 
-class PyCudaEngine final {
-public:
-    PyCudaEngine(Engine* engine) : engine_(engine) {}
-    PyCudaEngine(PyCudaEngine&&) = default;
-    PyCudaEngine& operator=(PyCudaEngine&&) = default;
-    PyCudaEngine(const PyCudaEngine&) = default;
-    PyCudaEngine& operator=(const PyCudaEngine&) = default;
-
-    std::string GetName() const {
-        return engine_->GetName();
-    }
-    const std::shared_ptr<Engine>& GetInnerPtr() const {
-        return engine_;
-    }
-    ppl::common::RetCode Configure(uint32_t option, const pybind11::args& args);
-
-private:
-    std::shared_ptr<Engine> engine_;
+struct PyCudaEngine final {
+    PyCudaEngine(Engine* p) : ptr(p) {}
+    std::shared_ptr<Engine> ptr;
 };
 
 }}} // namespace ppl::nn::python
+
+#endif
 
 #endif
