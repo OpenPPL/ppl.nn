@@ -93,17 +93,17 @@ inline __m128 relation_vector_kernel_fp32_sse<RELATION_NOT_EQUAL>(__m128 va, __m
     return _mm_cmpneq_ps(va, vb);
 }
 
-inline void pack_4xuint32x8_to_1xuint8x32_sse(__m128 v0, __m128 v1, __m128 v2, __m128 v3, uint8_t* dst)
-{
-    uint32_t tmp[16];
-    _mm_storeu_ps((float*)(tmp + 0), v0);
-    _mm_storeu_ps((float*)(tmp + 4), v1);
-    _mm_storeu_ps((float*)(tmp + 8), v2);
-    _mm_storeu_ps((float*)(tmp + 12), v3);
-    for (uint64_t i = 0; i < 16; i++) {
-        dst[i] = tmp[i] & 0x00000001;
-    }
-}
+#define PACK_4UINT32X8_TO_UINT32X32_SSE(v0, v1, v2, v3, dst) do {\
+    uint32_t tmp[16];\
+    uint8_t *tmp_dst = dst;\
+    _mm_storeu_ps((float*)(tmp + 0), v0);\
+    _mm_storeu_ps((float*)(tmp + 4), v1);\
+    _mm_storeu_ps((float*)(tmp + 8), v2);\
+    _mm_storeu_ps((float*)(tmp + 12), v3);\
+    for (uint64_t _ii = 0; _ii < 16; _ii++) {\
+        tmp_dst[_ii] = tmp[_ii] & 0x00000001;\
+    }\
+} while (false)
 
 template <relation_op_type_t _op>
 ppl::common::RetCode relation_eltwise_binary_op_fp32_sse(
@@ -125,7 +125,7 @@ ppl::common::RetCode relation_eltwise_binary_op_fp32_sse(
         mm1        = relation_vector_kernel_fp32_sse<_op>(mm1, _mm_loadu_ps(src1 + i + 1 * simd_w));
         mm2        = relation_vector_kernel_fp32_sse<_op>(mm2, _mm_loadu_ps(src1 + i + 2 * simd_w));
         mm3        = relation_vector_kernel_fp32_sse<_op>(mm3, _mm_loadu_ps(src1 + i + 3 * simd_w));
-        pack_4xuint32x8_to_1xuint8x32_sse(mm0, mm1, mm2, mm3, dst + i);
+        PACK_4UINT32X8_TO_UINT32X32_SSE(mm0, mm1, mm2, mm3, dst + i);
     }
     for (uint64_t i = unroll_body; i < dst_shape->GetElementsIncludingPadding(); i++) {
         dst[i] = relation_scalar_kernel_fp32<_op>(src0[i], src1[i]);
@@ -183,7 +183,7 @@ ppl::common::RetCode relation_ndarray_binary_op_recursive_fp32_sse(
                 mm0_1 = relation_vector_kernel_fp32_sse<_op>(mm0_1, mm1_1);
                 mm0_2 = relation_vector_kernel_fp32_sse<_op>(mm0_2, mm1_2);
                 mm0_3 = relation_vector_kernel_fp32_sse<_op>(mm0_3, mm1_3);
-                pack_4xuint32x8_to_1xuint8x32_sse(mm0_0, mm0_1, mm0_2, mm0_3, dst + i);
+                PACK_4UINT32X8_TO_UINT32X32_SSE(mm0_0, mm0_1, mm0_2, mm0_3, dst + i);
             }
             for (int64_t i = unroll_body; i < dst_shape->GetDim(dim); i++) {
                 dst[i] = relation_scalar_kernel_fp32<_op>(src0[i * inc0[dim]], src1[i * inc1[dim]]);
@@ -218,7 +218,7 @@ ppl::common::RetCode relation_ndarray_binary_op_recursive_fp32_sse(
                 mm0_1 = relation_vector_kernel_fp32_sse<_op>(mm0_1, mm1_1);
                 mm0_2 = relation_vector_kernel_fp32_sse<_op>(mm0_2, mm1_2);
                 mm0_3 = relation_vector_kernel_fp32_sse<_op>(mm0_3, mm1_3);
-                pack_4xuint32x8_to_1xuint8x32_sse(mm0_0, mm0_1, mm0_2, mm0_3, dst + i);
+                PACK_4UINT32X8_TO_UINT32X32_SSE(mm0_0, mm0_1, mm0_2, mm0_3, dst + i);
             }
             for (int64_t i = unroll_body; i < dst_shape->GetDim(dim); i++) {
                 dst[i] = relation_scalar_kernel_fp32<_op>(src0[i * inc0[dim]], src1[i * inc1[dim]]);
