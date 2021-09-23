@@ -19,10 +19,20 @@ namespace ppl { namespace nn { namespace cuda {
 
 struct CUDAThreadConfig
 {
+    // config array, first three are Grid dimension config
+    // last three are Block dimension config
     size_t thread_config[6];
+    // Dynamic shared memory size in bytes
     size_t dyn_shmem_size{0};
-
+    /*
+     *  param i The Block dimension
+     *  return i-th block dim
+    */
     size_t BlockDim(int i) { return thread_config[i + 3]; }
+    /*
+     *  param i The Grid dimension
+     *  return i-th grid dim
+    */
     size_t GridDim(int i ) { return thread_config[i]; }
 };
 
