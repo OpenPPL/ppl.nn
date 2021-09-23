@@ -17,6 +17,7 @@
 
 #include "ppl/nn/oputils/onnx/reshape_tile.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
@@ -44,7 +45,7 @@ RetCode ReshapeTile(InputOutputInfo* info, const void* arg) {
     uint32_t input_dims = info->GetInput<TensorImpl>(0)->GetShape().GetDimCount();
     info->GetOutput<TensorImpl>(0)->GetShape().SetDimCount(input_dims);
 
-    uint32_t out_dims[input_dims];
+    vector<uint32_t> out_dims(input_dims);
     for (uint32_t i = 0; i < input_dims; ++i) {
         out_dims[i] = in_shape.GetDim(i) * repeats[i];
         info->GetOutput<TensorImpl>(0)->GetShape().SetDim(i, out_dims[i]);
@@ -65,7 +66,7 @@ RetCode ReshapeTile(InputOutputInfo* info, const void* arg, const int64_t* repea
     uint32_t input_dims = info->GetInput<TensorImpl>(0)->GetShape().GetDimCount();
     info->GetOutput<TensorImpl>(0)->GetShape().SetDimCount(input_dims);
 
-    uint32_t out_dims[input_dims];
+    vector<uint32_t> out_dims(input_dims);
     for (uint32_t i = 0; i < input_dims; ++i) {
         out_dims[i] = in_shape.GetDim(i) * repeats[i];
         info->GetOutput<TensorImpl>(0)->GetShape().SetDim(i, out_dims[i]);
