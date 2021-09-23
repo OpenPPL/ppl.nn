@@ -203,12 +203,27 @@ static string GetDimsStr(const Tensor* tensor) {
     return res;
 }
 
+static const char* MemMem(const char* haystack, unsigned int haystack_len,
+                          const char* needle, unsigned int needle_len)
+{
+    if (!haystack || haystack_len == 0 || !needle || needle_len == 0) {
+        return nullptr;
+    }
+
+    for (auto h = haystack; haystack_len >= needle_len; ++h, --haystack_len) {
+        if (memcmp(h, needle, needle_len) == 0) {
+            return h;
+        }
+    }
+    return nullptr;
+}
+
 static void SplitString(const char* str, unsigned int len, const char* delim, unsigned int delim_len,
                         const function<bool(const char* s, unsigned int l)>& f) {
     const char* end = str + len;
 
     while (str < end) {
-        auto cursor = (const char*)memmem(str, len, delim, delim_len);
+        auto cursor = MemMem(str, len, delim, delim_len);
         if (!cursor) {
             f(str, end - str);
             return;
