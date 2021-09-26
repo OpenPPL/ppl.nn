@@ -38,6 +38,12 @@ struct CudaArgs {
         input_dims.emplace("", default_dims);
     }
 
+    struct AlgoInfo {
+        int kid = 0;
+        int splitk = 1;
+        int splitf = 1;
+    };
+
     bool quick_select = false;
     ppl::common::datatype_t kernel_default_type = 0;
     std::map<std::string, ppl::common::dataformat_t> output_formats;
@@ -45,6 +51,7 @@ struct CudaArgs {
     std::map<std::string, ppl::common::datatype_t> node_types;
     std::map<std::string, std::vector<uint32_t>> input_dims;
     std::map<std::string, std::vector<CudaTensorQuant>> tensor_quants;
+    std::map<std::string, AlgoInfo> alog_selects;
     QuantParamInfo quant_info;
 };
 
@@ -70,6 +77,7 @@ private:
     static ppl::common::RetCode SetCompilerInputDims(CudaEngine*, va_list);
     static ppl::common::RetCode SetUseDefaultAlgorithms(CudaEngine*, va_list);
     static ppl::common::RetCode SetQuantization(CudaEngine*, va_list);
+    static ppl::common::RetCode SetAlgorithm(CudaEngine*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(CudaEngine*, va_list);
     static ConfHandlerFunc conf_handlers_[CUDA_CONF_MAX];
