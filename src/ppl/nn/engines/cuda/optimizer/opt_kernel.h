@@ -209,11 +209,15 @@ protected:
 
     static ppl::common::RetCode InferDefaultType(InputOutputInfo* info, ppl::common::datatype_t type) {
         for (uint32_t i = 0; i < info->GetInputCount(); ++i) {
-            auto in_shape = &info->GetInput<TensorImpl>(i)->GetShape();
+            auto impl = info->GetInput<TensorImpl>(i);
+            if (impl == nullptr)  continue;
+            auto in_shape = &impl->GetShape();
             in_shape->SetDataType(type);
         }
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
-            auto out_shape = &info->GetOutput<TensorImpl>(i)->GetShape();
+            auto impl = info->GetOutput<TensorImpl>(i);
+            if (impl == nullptr)  continue;
+            auto out_shape = &impl->GetShape();
             out_shape->SetDataType(type);
         }
         return ppl::common::RC_SUCCESS;

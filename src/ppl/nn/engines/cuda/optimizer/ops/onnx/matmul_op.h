@@ -15,23 +15,28 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_MMCV_MMCV_MODULATED_DEFORM_CONV2D_OP_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_MMCV_MMCV_MODULATED_DEFORM_CONV2D_OP_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_MATMUL_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_MATMUL_OP_H_
 
-#include "ppl/nn/params/mmcv/mmcv_modulated_deform_conv2d_param.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
+
+#include "ppl/nn/engines/cuda/params/gemm_extra_param.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-class MMCVModulatedDeformConv2dOp final : public CudaOptKernel {
+class MatMulOp final : public CudaOptKernel {
 public:
-    MMCVModulatedDeformConv2dOp(const ir::Node* node) : CudaOptKernel(node) {}
-    ppl::common::RetCode Init(const OptKernelOptions& options) override;
-    ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
+    MatMulOp(const ir::Node* node) : CudaOptKernel(node) {}
     KernelImpl* CreateKernelImpl() const override;
+    ppl::common::RetCode Init(const OptKernelOptions&) override;
+    ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
+    void* GetParam() override {
+        return (void*)&param_;
+    };
+    void CopyParam(void*& param) override;
 
 private:
-    ppl::nn::common::MMCVModulatedDeformConv2dParam param_;
+    CudaGemmParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

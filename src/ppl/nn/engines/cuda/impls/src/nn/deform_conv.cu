@@ -415,6 +415,9 @@ ppl::common::RetCode PPLCUDADeformConvForward(
             shape_a.SetDim(0, M); shape_a.SetDim(1, K); \
             shape_b.SetDim(0, N); shape_b.SetDim(1, K); \
             shape_c.SetDim(0, M); shape_c.SetDim(1, N); \
+            shape_a.SetDataType(ppl::common::DATATYPE_FLOAT16); \
+            shape_b.SetDataType(ppl::common::DATATYPE_FLOAT16); \
+            shape_c.SetDataType(ppl::common::DATATYPE_FLOAT16); \
             ppl::nn::common::GemmParam gemm_param; \
             fuse_param_t fuse_param; \
             gemm_param.bias_term = 0; \
@@ -461,7 +464,7 @@ ppl::common::RetCode PPLCUDADeformConvForward(
             __half *tmp_b = (__half*)trans_columns + g * col_trans_out_h * col_trans_out_w;
             __half *tmp_output = (__half*)output_buf + b * out_c * col_trans_out_h + g * oc_per_grp * col_trans_out_h;
 
-            __half *tmp_bias = (__half*)bias + g*oc_per_grp;
+            __half *tmp_bias = bias? (__half*)bias + g*oc_per_grp : NULL;
             PPLCUDAGemmForwardImp(
                 stream, &shape_a, tmp_a, &shape_b, tmp_b,
                 tmp_bias, &shape_c, tmp_output,
