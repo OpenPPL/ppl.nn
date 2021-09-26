@@ -87,6 +87,7 @@
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/loop_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/sequence_at_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/split_to_sequence_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/lstm_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/mmcv/mmcv_non_max_suppression_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/mmcv/mmcv_roialign_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/mmcv/mmcv_gridsample_op.h"
@@ -204,6 +205,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("", "Loop", LoopOp);
     REGISTER_OPT_KERNEL_CREATOR("", "SplitToSequence", SplitToSequenceOp);
     REGISTER_OPT_KERNEL_CREATOR("", "SequenceAt", SequenceAtOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "LSTM", LstmOp);
     // mmcv op domain is "mmcv"
     REGISTER_OPT_KERNEL_CREATOR("mmcv", "NonMaxSuppression", MMCVNonMaxSupressionOp);
     REGISTER_OPT_KERNEL_CREATOR("mmcv", "MMCVRoiAlign", MMCVROIAlignOp);

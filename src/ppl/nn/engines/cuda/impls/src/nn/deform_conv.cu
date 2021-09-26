@@ -251,6 +251,9 @@ void deformable_im2col(
   }
 
   cudaError_t err = cudaGetLastError();
+  if (err != cudaSuccess) {
+    printf("error in deformable_im2col: %s\n", cudaGetErrorString(err));
+  }
 }
 
 template <typename T>
