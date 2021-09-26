@@ -37,7 +37,7 @@ class DataProcess(object):
         """Load an image from the specified input path, and resize it to requited shape(h, w)
 
         Keyword arguments:
-        input_ima_path -- string path of the image to be loaded
+        input_img_path -- string path of the image to be loaded
         resized_h -- required shape's h
         resized w -- required shape's w
         """
@@ -55,21 +55,21 @@ class DataProcess(object):
         Keyword arguments:
         img -- img's pixel array(numpy array)
         """
-        mean = np.array(self._mean).reshape(1,-1).astype(np.float64)
-        std = np.array(self._std).reshape(1,-1).astype(np.float64)
+        mean = np.array(self._mean).reshape(1, -1).astype(np.float64)
+        std = np.array(self._std).reshape(1, -1).astype(np.float64)
         stdinv = 1 / std
         img = img.copy().astype(np.float32)
         cv2.cvtColor(img, cv2.COLOR_BGR2RGB, img)
         cv2.subtract(img, mean, img)
         cv2.multiply(img, stdinv, img)
-        img = img.transpose(2,0,1)
+        img = img.transpose(2, 0, 1)
         img.tofile(self._data_bin)
-    
+
     def preprocess(self, input_img_path, resized_h, resized_w):
         """ change input img as a NumPy float array.
 
         Keyword arguments:
-        input_ima_path -- string path of the image to be loaded
+        input_img_path -- string path of the image to be loaded
         resized_h -- required shape's h
         resized w -- required shape's w
         """
@@ -77,7 +77,7 @@ class DataProcess(object):
         self._normalize(img)
         return self._data_bin
 
-    def _draw_result_to_img(self, 
+    def _draw_result_to_img(self,
                             boxes_and_score_data,
                             labels_data,
                             masks_data,
@@ -109,13 +109,13 @@ class DataProcess(object):
             top = int(bbox_int[1] / self._h_scale)
             right = int(bbox_int[2] / self._w_scale)
             bottom = int(bbox_int[3] / self._h_scale)
-            cv2.rectangle(im, (left, top), (right, bottom), (0,0,0), 2)
+            cv2.rectangle(im, (left, top), (right, bottom), (0, 0, 0), 2)
             cv2.putText(im,
-                        coco_classes[label] + ": " + str(round(bbox[4],2)),
+                        coco_classes[label] + ": " + str(round(bbox[4], 2)),
                         (left, top),
                         cv2.FONT_HERSHEY_COMPLEX_SMALL,
                         1.0,
-                        (0,0,0))
+                        (0, 0, 0))
             if segms is not None:
                 color_mask = mask_colors[labels[i]]
                 mask = segms[i]
@@ -157,7 +157,7 @@ class PPLModel(object):
         """  set input data
         """
         tensor = self._runtime.GetInputTensor(0)
-        in_data = np.fromfile(input_file,dtype=np.float32).reshape((1,3,800,1200))
+        in_data = np.fromfile(input_file, dtype=np.float32).reshape((1, 3, 800, 1200))
         status = tensor.ConvertFromHost(in_data)
         if status != pplcommon.RC_SUCCESS:
             logging.error("copy data to tensor[" + tensor.GetName() + "] failed: " +
@@ -210,9 +210,9 @@ class PPLModel(object):
 
 def parsArgs():
     parser = argparse.ArgumentParser("runner of maskrcnn onnx model.")
-    parser.add_argument('-i','--in_img_file', type=str, dest='in_img_file', required=True, help="Specify the input image.")
-    parser.add_argument('-o','--out_img_file', type=str, dest='out_img_file', required=False, help="Specify the output image's name.")
-    parser.add_argument('-m','--onnx_model', type=str, dest='onnx_model', required=True, help="Specify the onnx model path.")
+    parser.add_argument('-i', '--in_img_file', type=str, dest='in_img_file', required=True, help="Specify the input image.")
+    parser.add_argument('-o', '--out_img_file', type=str, dest='out_img_file', required=False, help="Specify the output image's name.")
+    parser.add_argument('-m', '--onnx_model', type=str, dest='onnx_model', required=True, help="Specify the onnx model path.")
 
     args = parser.parse_args()
 
@@ -222,7 +222,7 @@ if __name__ == "__main__":
     args = parsArgs()
     if args.in_img_file is None:
         logging.error("no input img file was select.")
-        sys.exit(1)    
+        sys.exit(1)
 
     if args.out_img_file is None:
         args.out_img_file = 'test_out.jpg'
@@ -236,7 +236,7 @@ if __name__ == "__main__":
     image_file = args.in_img_file
     result_file = args.out_img_file
     model_file = args.onnx_model
-    
+
     data_process = DataProcess()
     # preprocess
     input_data = data_process.preprocess(image_file, 800, 1200)
@@ -246,6 +246,6 @@ if __name__ == "__main__":
     dets_data, labels_data, masks_data = ppl_model.run('x86', model_file, input_data)
 
     # postprocess
-    data_process.postprocess(dets_data, labels_data,masks_data, result_file)
-    
+    data_process.postprocess(dets_data, labels_data, masks_data, result_file)
+
     logging.info("Run ok")
