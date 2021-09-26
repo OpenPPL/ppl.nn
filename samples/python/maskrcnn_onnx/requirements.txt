@@ -1,5 +1,0 @@
-numpy
-cv2
-logging
-argparse
-sys
