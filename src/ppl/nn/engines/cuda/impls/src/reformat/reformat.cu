@@ -639,10 +639,10 @@ ppl::common::RetCode SetReLayoutParam(
     const TensorShape& input,
     const TensorShape& output)
 {
-    if (input.GetDimCount() <= 1 &&
-        ((input.GetDataFormat() == DATAFORMAT_NHWC8) ||
-        (output.GetDataFormat() == DATAFORMAT_NHWC8)))
-        return RC_INVALID_VALUE;
+    // if (input.GetDimCount() <= 1 &&
+    //     ((input.GetDataFormat() == DATAFORMAT_NHWC8) ||
+    //     (output.GetDataFormat() == DATAFORMAT_NHWC8)))
+    //     return RC_INVALID_VALUE;
     param->n_outer = input.GetDim(0);
     param->channel = input.GetDimCount() > 1 ? input.GetDim(1) : 1;
     param->n_inner = input.GetDimCount() > 2 ? input.GetElementsFromDimensionIncludingPadding(2) : 1;

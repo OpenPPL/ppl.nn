@@ -41,6 +41,8 @@ AlgoFilterManager::AlgoFilterManager() {
     REGISTER_ALGO_FILTER_INFO("Bridge", bridge_imp_);
     REGISTER_ALGO_FILTER_INFO("Concat", concat_imp_);
     REGISTER_ALGO_FILTER_INFO("Gemm", gemm_imp_);
+    REGISTER_ALGO_FILTER_INFO("MMCVModulatedDeformConv2d", deform_conv_imp_);
+    REGISTER_ALGO_FILTER_INFO("MatMul", gemm_imp_);
     REGISTER_ALGO_FILTER_INFO("Normal", normal_imp_);
 }
 

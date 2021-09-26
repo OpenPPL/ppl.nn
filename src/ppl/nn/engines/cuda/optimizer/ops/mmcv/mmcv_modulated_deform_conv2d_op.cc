@@ -32,18 +32,28 @@ RetCode MMCVModulatedDeformConv2dOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeMMCVModulatedDeformConv2d(info, param_.get());
+        return oputils::ReshapeMMCVModulatedDeformConv2d(info, &param_);
     };
 
     infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
-        return InferInheritedType(info);
+        type = ppl::common::DATATYPE_FLOAT16;
+        return InferDefaultType(info, type);
     };
 
     return RC_SUCCESS;
 }
 
+RetCode MMCVModulatedDeformConv2dOp::Finalize(const OptKernelOptions& options) {
+    auto status = SetCommonParam(options);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load common param failed: " << GetRetCodeStr(status);
+        return status;
+    }
+    return RC_SUCCESS;
+}
+
 KernelImpl* MMCVModulatedDeformConv2dOp::CreateKernelImpl() const {
-    return CreateKernelImplWithParam<MMCVModulatedDeformConv2dKernel>(param_.get());
+    return CreateKernelImplWithParam<MMCVModulatedDeformConv2dKernel>(&param_);
 }
 
 }}} // namespace ppl::nn::cuda

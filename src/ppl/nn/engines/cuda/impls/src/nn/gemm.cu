@@ -370,8 +370,8 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
 
     int pad_size   = GetPadSize(type);
     int transA   = param.transA;
-    int transB   = param.transB;
-    if(!param.transB)    return ppl::common::RC_UNSUPPORTED;
+    int transB   = 1;
+    // if(!param.transB)    return ppl::common::RC_UNSUPPORTED;
     int N     = transB ? weight_shape->GetDim(0) : weight_shape->GetDim(1);
     int K     = transB ? weight_shape->GetDim(1) : weight_shape->GetDim(0);
     int N_pad = Align(N, pad_size);
@@ -745,7 +745,7 @@ ppl::common::RetCode PPLCUDAGemvForwardImp(
     void* temp_buffer, 
     const fuse_param_t &fuse_param) 
 {
-    if(!param.transB)    return ppl::common::RC_UNSUPPORTED;
+    // if(!param.transB)    return ppl::common::RC_UNSUPPORTED;
 
     constexpr int ELEM_NUM_PR_LD = sizeof(int4)/sizeof(T);
     constexpr int expect_blocks = 64;

@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_ALGOS_ALGO_CONV_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_ALGOS_ALGO_CONV_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_ALGOS_ALGO_DEFORM_CONV_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_ALGOS_ALGO_DEFORM_CONV_H_
 
 #include "ppl/nn/engines/cuda/optimizer/algos/algorithm.h"
 
@@ -36,6 +36,13 @@ public:
     const std::map<dataformat_t, std::set<dataformat_t>> Getformats(const std::string& type_name) const override {
         return conv_formats_;
     }
+
+    void GetAttrParam(void*& param) const override {
+        return;
+    };
+    void DeleteAttrParam(void*& param) override {
+        return;
+    };
 
 public:
     double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) override;

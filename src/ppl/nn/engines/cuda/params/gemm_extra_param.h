@@ -27,6 +27,7 @@ struct GemmExtraParam {
     uint32_t kernel_index = 0;
     uint32_t has_activation = 0;
     bool has_clip = false;
+    bool is_initializer_weight = 1;
     ClipParam clip;
 };
 

@@ -173,7 +173,10 @@ RetCode GemmAlgorithm::ModifyParam(const ir::Node* node, OptKernelOptions& optio
         options.tensors->find(preedge_id)->second->GetShape() = postshape;
         options.quants->at(preedge_id).format = postshape.GetDataFormat();
         options.quants->at(preedge_id).type = postshape.GetDataType();
+    } else {
+        reinterpret_cast<CudaGemmParam*>(options.param)->extra_param.is_initializer_weight = 0;
     }
+    
     if (attr_param_.param.bias_term == 0) {
         return RC_SUCCESS;
     }
