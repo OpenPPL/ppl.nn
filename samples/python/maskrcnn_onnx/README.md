@@ -26,7 +26,7 @@ This sample, run_maskrcnn_onnx, implements a ONNX-based pipeline for performing 
 1. Install the dependencies for Python.
 
     ```sh
-    python3 -m pip install -r requirements.txt
+    python3 -m pip install numpy opencv-python argparse
     ```
 
 2. Download sample data.
