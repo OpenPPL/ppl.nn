@@ -22,8 +22,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 double NormalAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& options) {
-    double timer = 1.0e-5;
-    return timer;
+    return 1.0e-5;
 }
 
 void NormalAlgorithm::ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
