@@ -87,6 +87,8 @@ Define_string_opt("--dims", g_flag_compiler_dims, "",
 Define_bool_opt("--quick-select", g_flag_quick_select, false, "quick select algorithms for conv and gemm kernel");
 Define_uint32_opt("--device-id", g_flag_device_id, 0, "declare device id for cuda");
 
+Define_string_opt("--algo-info", g_algo_info, "", "declare best algo index for certain conv input shape");
+
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/engines/cuda/cuda_options.h"
 
@@ -108,6 +110,7 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_OUTPUT_FORMAT, g_flag_output_format.c_str());
     cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_OUTPUT_TYPE, g_flag_output_type.c_str());
     cuda_engine->Configure(ppl::nn::CUDA_CONF_USE_DEFAULT_ALGORITHMS, g_flag_quick_select);
+    cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_ALGORITHM, g_algo_info.c_str());
 
     if (!g_flag_compiler_dims.empty()) {
         cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_COMPILER_INPUT_SHAPE, g_flag_compiler_dims.c_str());
