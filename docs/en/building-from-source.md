@@ -1,7 +1,7 @@
 ### Prerequisites
 
-* Linux running on x86_64 compatible CPUs
-* GCC >= 4.9 or LLVM/Clang >= 6.0
+* Linux or Windows or MacOS(Darwin) running on x86_64 compatible CPUs
+* GCC >= 4.9 or LLVM/Clang >= 6.0, or Visual Studio >= 2015
 * [CMake](https://cmake.org/download/) >= 3.14
 * [Git](https://git-scm.com/downloads) >= 2.7.0
 * [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit-archive) >= 10.2 (for CUDA)
@@ -16,6 +16,8 @@ git clone https://github.com/openppl-public/ppl.nn.git
 
 ### Building X86_64 Engine
 
+#### Linux
+
 ```bash
 ./build.sh -DHPCC_USE_X86_64=ON
 ```
@@ -28,12 +30,29 @@ If you want to enable openmp, please specify `HPCC_USE_OPENMP` as following:
 ./build.sh -DHPCC_USE_X86_64=ON -DHPCC_USE_OPENMP=ON
 ```
 
-If you are building on MacOS (Darwin), install `libomp` by [homebrew](https://brew.sh/) first:
+#### MacOS (Darwin)
+
+Install `libomp` provided by [homebrew](https://brew.sh/) first:
+
 ```bash
 brew install libomp
 ```
 
+and follow the instructions for Linux above.
+
+#### Windows
+
+Using vs2015 for example:
+
+```
+build.bat -G "Visual Studio 14 2015 Win64" -DHPCC_USE_X86_64=ON
+```
+
+Headers and libraries are installed in `pplnn-build/install`.
+
 ### Building CUDA Engine
+
+#### Linux and MacOS(Darwin)
 
 ```bash
 ./build.sh -DHPCC_USE_CUDA=ON
