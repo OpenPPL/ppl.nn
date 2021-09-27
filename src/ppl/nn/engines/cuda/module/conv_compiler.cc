@@ -15,32 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_COMMON_PARAM_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_COMMON_PARAM_H_
+#include "ppl/nn/engines/cuda/module/conv_compiler.h"
 
-#include <stdint.h>
-#include <string>
-#include <vector>
 
-#include "ppl/common/types.h"
-#include "ppl/nn/common/types.h"
-#include "ppl/nn/engines/cuda/module/cuda_module.h"
 namespace ppl { namespace nn { namespace cuda {
 
-struct CudaTensorQuant {
-    ppl::common::dataformat_t format = ppl::common::DATAFORMAT_UNKNOWN;
-    ppl::common::datatype_t type = ppl::common::DATATYPE_UNKNOWN;
-    bool per_chnnal = false;
-    uint32_t bit_width = 0;
-    std::vector<float> scale{0.1f};
-    std::vector<float> zero_point{0.0f};
-};
+const ppl::common::RetCode ConvCompiler::Compile(ir::Node* node, const OptKernelOptions& options) {
 
-struct CudaCommonParam {
-    std::vector<CudaTensorQuant>* cuda_tensor_info;
-    // CUDAModule* module = nullptr;
-};
+    auto node_id = node->GetId();
+    auto opt_kerenl = options.info->kernels.find(node_id)->second.get();
+    
+    CudaOptKernel* cuda_kernel = static_cast<CudaOptKernel*>(opt_kerenl);
+    
+    auto param = cuda_kernel->GetCommparam();
+    
+    return ppl::common::RC_SUCCESS;
+}
 
 }}} // namespace ppl::nn::cuda
-
-#endif

@@ -15,37 +15,33 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <ppl/nn/engines/cuda/module/cuda_module.h>
+
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_MODULE_OP_COMPILE_MANAGER_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_MODULE_OP_COMPILE_MANAGER_H_
+
+#include "ppl/nn/engines/cuda/module/op_compiler.h"
+#include "ppl/nn/engines/cuda/module/conv_compiler.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-void CUDAModule::SaveToFile() {
-}
-
-CUfunction CUDAModule::GetKernelFunc() {
-    if (module_ == nullptr) {
-        cuModuleLoadDataEx(&module_, source_code_.second.c_str(), 0, 0 , 0);
+class OpCompilerManager {
+public:
+    static OpCompilerManager* Instance() {
+        static OpCompilerManager mgr;
+        return &mgr;
     }
-    CUfunction func;
-    cuModuleGetFunction(&func, module_, this->source_code_.first.c_str());
-    return func;
-}
 
-CUfunction CUDAModuleWrapper::GetKernelFunc() {
-    return module_->GetKernelFunc();
-}
+    OpCompiler* FindCompiler(const std::string& kernel_type) const;
 
-CUDAModuleWrapper* CUDAModuleManager::FindModuleByNodeId(nodeid_t id) {
-    auto mod = this->module_.find(id);
-    if (mod != this->module_.end()) {
-        return mod->second;
-    } else {
-        return nullptr;
-    }
-}
-void CUDAModuleManager::InsertModule(std::pair<nodeid_t, CUDAModuleWrapper*> mod) {
-    this->module_.emplace(mod);
-}
+private:
+    OpCompilerManager();
 
+private:
+    std::map<std::string, OpCompiler*> type2compiler_;
+    ConvCompiler conv_;
+
+};
 
 }}} // namespace ppl::nn::cuda
+
+#endif

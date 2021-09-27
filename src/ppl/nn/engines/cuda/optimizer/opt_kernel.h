@@ -50,7 +50,9 @@ struct OptKernelOptions {
     OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, utils::SharedResource* resource,
                      std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors)
         : graph(graph), info(info), resource(resource), tensors(tensors) {}
-
+    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, utils::SharedResource* resource,
+                     CudaDevice* device)
+        : graph(graph), info(info), resource(resource), device(device) {}
     OptKernelOptions(ir::Graph* graph, utils::SharedResource* resource) : graph(graph), resource(resource) {}
 
     ir::Graph* graph;

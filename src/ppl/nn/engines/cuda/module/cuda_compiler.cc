@@ -15,37 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <ppl/nn/engines/cuda/module/cuda_module.h>
+#include "ppl/nn/engines/cuda/module/cuda_compiler.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-void CUDAModule::SaveToFile() {
-}
+std::string CUDANVRTCCompile(std::pair<std::string, std::string> code, std::vector<const char*> compile_params) {
+    nvrtcProgram program;
+    PPL_NVRTC_SAFE_CALL(nvrtcCreateProgram(&program, code.second.c_str(), code.first.c_str(), 0, nullptr, nullptr));
+    PPL_NVRTC_SAFE_CALL(nvrtcCompileProgram(program, compile_params.size(), compile_params.data()));
+    
+    std::string ptx_code;
+    size_t ptx_size = 0;
+    PPL_NVRTC_SAFE_CALL(nvrtcGetPTXSize(program, &ptx_size));
+    ptx_code.resize(ptx_size);
 
-CUfunction CUDAModule::GetKernelFunc() {
-    if (module_ == nullptr) {
-        cuModuleLoadDataEx(&module_, source_code_.second.c_str(), 0, 0 , 0);
-    }
-    CUfunction func;
-    cuModuleGetFunction(&func, module_, this->source_code_.first.c_str());
-    return func;
+    PPL_NVRTC_SAFE_CALL(nvrtcGetPTX(program, &ptx_code[0]));
+    PPL_NVRTC_SAFE_CALL(nvrtcDestroyProgram(&program));
+    return ptx_code;
 }
-
-CUfunction CUDAModuleWrapper::GetKernelFunc() {
-    return module_->GetKernelFunc();
-}
-
-CUDAModuleWrapper* CUDAModuleManager::FindModuleByNodeId(nodeid_t id) {
-    auto mod = this->module_.find(id);
-    if (mod != this->module_.end()) {
-        return mod->second;
-    } else {
-        return nullptr;
-    }
-}
-void CUDAModuleManager::InsertModule(std::pair<nodeid_t, CUDAModuleWrapper*> mod) {
-    this->module_.emplace(mod);
-}
-
-
+    
 }}} // namespace ppl::nn::cuda

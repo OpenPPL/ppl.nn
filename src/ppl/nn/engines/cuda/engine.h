@@ -27,6 +27,8 @@
 #include "ppl/nn/engines/cuda/cuda_common_param.h"
 #include "ppl/nn/engines/cuda/buffered_cuda_device.h"
 #include "ppl/nn/quantization/quant_param_parser.h"
+#include "ppl/nn/engines/cuda/module/cuda_module.h"
+// #include "ppl/nn/engines/cuda/optimizer/opt_graph.h"
 
 using namespace std;
 
@@ -56,6 +58,7 @@ public:
     EngineContext* CreateEngineContext(const std::string& graph_name) override;
     bool CanRunOp(const ir::Node*) const override;
     ppl::common::RetCode ProcessGraph(utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*) override;
+    ppl::common::RetCode CompileCudaModule(ir::Graph*, utils::SharedResource*, RuntimePartitionInfo*);
 
 private:
     ppl::common::RetCode DoOptimize(ir::Graph*, utils::SharedResource*, RuntimePartitionInfo*);
@@ -78,6 +81,7 @@ private:
     BufferedCudaDevice device_;
     CudaArgs cuda_flags_;
     CudaEngineOptions options_;
+    CUDAModuleManager cuda_module_;
 };
 
 }}} // namespace ppl::nn::cuda

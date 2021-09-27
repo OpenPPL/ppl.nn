@@ -24,6 +24,7 @@
 #include "ppl/nn/engines/utils.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_graph.h"
 #include "ppl/nn/common/logger.h"
+#include "ppl/nn/engines/cuda/module/op_compile_manager.h"
 
 using namespace std;
 using namespace ppl::common;
@@ -59,8 +60,37 @@ RetCode CudaEngine::DoOptimize(ir::Graph* graph, utils::SharedResource* resource
         return status;
     }
 
+    // auto kernel = info->kernels.find(0)->second;
+    // CudaOptKernel* cuda_kernel = static_cast<CudaOptKernel*>(kernel);
+    // auto param = cuda_kernel->GetCommparam();
+
+    status = CompileCudaModule(graph, resource, info);
+
+    // [nodeid_t, CudaConvParam(module)]
+
+    // CUDAModuleManager ->[nodeid_t, module]
+
+    // kernel -> create
+
+    // status = CompileCudaModule();
     return RC_SUCCESS;
 }
+
+ppl::common::RetCode CudaEngine::CompileCudaModule(ir::Graph* graph, utils::SharedResource* resource, RuntimePartitionInfo* info) {
+    auto op_compiler_manager = OpCompilerManager::Instance();
+    
+    ir::Node* op = graph->topo.get()->GetNodeById(0);
+    
+    auto op_compiler = op_compiler_manager->FindCompiler(op->GetType().name);
+
+    const OptKernelOptions options(graph, info, resource, &device_);
+    op_compiler->Compile(op, options);
+
+    
+
+    return RC_SUCCESS;
+}
+
 
 RetCode CudaEngine::ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
     auto status = DoOptimize(graph, resource, info);

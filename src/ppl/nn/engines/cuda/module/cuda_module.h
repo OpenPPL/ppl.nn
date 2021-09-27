@@ -15,16 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_MODULE_CUDA_MODULE_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_MODULE_CUDA_MODULE_H_
 
 #include <unordered_map>
+#include <map>
 #include <vector>
 #include <mutex>
 
 #include <nvrtc.h>
 #include <cuda.h>
 
-#include "cuda_thread_config.h"
+#include "ppl/nn/engines/cuda/module/cuda_thread_config.h"
 #include "ppl/nn/engines/cuda/cuda_device.h"
+#include "ppl/nn/common/types.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -56,20 +60,22 @@ private:
 class CUDAModuleWrapper {
 public:
     // Initilize the cuda func wrapper
-    void Init(CUDAModule* module, std::string func_name) {
+    void Init(CUDAModule* module, std::string func_name, CudaDevice* device) {
         module_ = module;
-        func_name_ = func_name_;
+        func_name_ = func_name;
+        device_ = device;
         std::fill(cuda_thread_config_.thread_config, cuda_thread_config_.thread_config + 6, 1);
         cuda_thread_config_.dyn_shmem_size = 0;
     }
+    
     // Invoke the cuda kernel 
     void Run(void **args) {
         CUfunction func = module_->GetKernelFunc();
-        cudaStream_t stream = device->GetStream();
-        CUresult result = cuLaunchKernel(func, cuda_thread_config_.GridDim(0), cuda_thread_config_.GridDim(1), 
-                                    cuda_thread_config_.GridDim(2), cuda_thread_config_.BlockDim(0), 
-                                    cuda_thread_config_.BlockDim(1), cuda_thread_config_.BlockDim(2),
-                                    cuda_thread_config_.dyn_shmem_size, stream, args, nullptr);
+        cudaStream_t stream = device_->GetStream();
+        cuLaunchKernel(func, cuda_thread_config_.GridDim(0), cuda_thread_config_.GridDim(1), 
+                            cuda_thread_config_.GridDim(2), cuda_thread_config_.BlockDim(0), 
+                            cuda_thread_config_.BlockDim(1), cuda_thread_config_.BlockDim(2),
+                            cuda_thread_config_.dyn_shmem_size, stream, args, nullptr);
     }
     // Get the kernel func from CUDAModule
     CUfunction GetKernelFunc();
@@ -81,13 +87,24 @@ private:
     // Kernel Luanch Parameters
     CUDAThreadConfig cuda_thread_config_;
     // Device in PPL CUDA 
-    CudaDevice *device;
+    CudaDevice *device_;
 };
 
+using ModuleMap = std::map<nodeid_t, CUDAModuleWrapper*>;
+
 class CUDAModuleManager {
+public:
+
+    CUDAModuleWrapper* FindModuleByNodeId(nodeid_t id);
+    
+    void InsertModule(std::pair<nodeid_t, CUDAModuleWrapper*> mod);
+
+    ModuleMap* GetModule() { return &(this->module_); }
 
 private:
-    std::vector<CUDAModule> module_;
+    ModuleMap module_;
 };
 
 }}} // namespace ppl::nn::cuda
+
+#endif
