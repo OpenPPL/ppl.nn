@@ -3,10 +3,10 @@ name: PPL<x86> Build && Quick Test
 on:
   #push:
   #  branches: [ master ]
-  #  paths-ignore: ['.**',  'docs/**', 'samples/**', README.md]
+  #  paths-ignore: ['.**', 'docker/**', 'docs/**', 'samples/**', README.md]
   pull_request:
     branches: [ master ]
-    paths-ignore: ['.**',  'docs/**', 'samples/**', README.md]
+    paths-ignore: ['.**', 'docker/**', 'docs/**', 'samples/**', README.md]
   workflow_dispatch:
 
 jobs:
