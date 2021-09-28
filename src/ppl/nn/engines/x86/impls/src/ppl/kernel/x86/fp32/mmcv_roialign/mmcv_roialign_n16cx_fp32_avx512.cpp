@@ -17,6 +17,7 @@
 
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/kernel/x86/common/mmcv_roialign/mmcv_roialign_common.h"
+#include "ppl/kernel/x86/common/avx512_tools.h"
 
 #include <immintrin.h>
 #include <float.h>

@@ -47,7 +47,7 @@ public:
     virtual bool IsRepeatable(const OptKernelOptions& options) const {
         return true;
     }
-    virtual bool IsSupported(const ir::Node* node, const OptKernelOptions& options) const {
+    virtual bool IsSupported(const ir::Node* node, const OptKernelOptions& options, ppl::common::dataformat_t input_format) const {
         return true;
     }
     virtual bool CanSupportDynamic(const OptKernelOptions& options) const {

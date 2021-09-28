@@ -37,16 +37,15 @@ RetCode BatchNormalizationOp::Init(const OptKernelOptions& options) {
     infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         auto& in_shape = info->GetInput<TensorImpl>(0)->GetShape();
         type = in_shape.GetDataType();
+        ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
-            return InferInheritedType(info);
+            status = InferInheritedType(info);
         } else if (type == DATATYPE_INT8) {
-            auto status = CopyQuantType(info, quant);
-            if (status != RC_SUCCESS) {
-                LOG(ERROR) << "Set quantization for node[" << this->GetNode()->GetName() << "] failed.";
-                return status;
-            }
+            status = CopyQuantType(info, quant);
+        } else {
+            status = InferDefaultType(info, type);
         }
-        return InferDefaultType(info, type);
+        return status;
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {

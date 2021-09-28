@@ -24,10 +24,20 @@ inline bool IsGraphOutput(const ir::Graph* graph, edgeid_t edge_id) {
 
 bool CanFuse(ir::Node* node, PPLShapeOperationParam* shape_param, ir::Graph* graph) {
     auto& constants = graph->data->constants;
+    auto topo = graph->topo.get();
     const std::set<std::string> fuse_ops{"Add", "Cast", "Concat", "Div", "Gather", "Mul", "Slice", "Sub", "Squeeze", "Unsqueeze"};
     if (!node || node->GetType().domain != "" || 
         fuse_ops.find(node->GetType().name) == fuse_ops.end()) {
         return false;
+    }
+
+    // all node's inputs can not be graph output
+    for (uint32_t i = 0; i< node->GetInputCount(); ++i) {
+        auto edge_id = node->GetInput(i);
+        auto edge = topo->GetEdgeById(edge_id);
+        if (edge_id == INVALID_EDGEID || topo->GetOutput(edge->GetName()) != INVALID_EDGEID) {
+            return false;
+        }
     }
 
     // all node's inputs must be one of Shape op's output or Constant

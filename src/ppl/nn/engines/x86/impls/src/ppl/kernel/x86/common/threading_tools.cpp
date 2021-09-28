@@ -67,7 +67,7 @@ single_parallel_loop_config_t select_single_parallel_loop(
 {
     const int64_t omp_max_threads = PPL_OMP_MAX_THREADS();
     if (iter_of_loop.size() == 0 || omp_max_threads == 1) {
-        return (single_parallel_loop_config_t){0, 1};
+        return {0, 1};
     }
 
     int64_t data_lane = 8; // for 64-bit system
@@ -91,7 +91,7 @@ single_parallel_loop_config_t select_single_parallel_loop(
         int64_t tasks = 1;
         for (; depth >= 0; --depth) {
             if (iter_of_loop[depth] == 0) {
-                return (single_parallel_loop_config_t){0, 1};
+                return {0, 1};
             }
             tasks *= iter_of_loop[depth];
             task_of_iter[depth] = tasks;
@@ -111,7 +111,7 @@ single_parallel_loop_config_t select_single_parallel_loop(
         }
     }
 
-    return (single_parallel_loop_config_t){max_depth, max_thread_of_depth};
+    return {max_depth, max_thread_of_depth};
 }
 
 // use forbid mask to indicate which dims cannot be paralleled
@@ -126,7 +126,7 @@ single_parallel_loop_config_t select_single_parallel_loop_with_mask(
 {
     const int64_t omp_max_threads = PPL_OMP_MAX_THREADS();
     if (iter_of_loop.size() == 0 || omp_max_threads == 1) {
-        return (single_parallel_loop_config_t){0, 1};
+        return {0, 1};
     }
 
     int64_t data_lane = 1;
@@ -170,7 +170,7 @@ single_parallel_loop_config_t select_single_parallel_loop_with_mask(
         }
     }
 
-    return (single_parallel_loop_config_t){max_depth, max_thread_of_depth};
+    return {max_depth, max_thread_of_depth};
 }
 
 }}}; // namespace ppl::kernel::x86

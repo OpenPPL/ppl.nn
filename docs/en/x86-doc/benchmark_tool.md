@@ -57,6 +57,7 @@ pplnn's run options related to the x86 architecture benchmark are:
 * `--min-profiling-time`: Specify the minimum time duration of benchmark in seconds. Default is 1s
 * `--warmuptimes`: Specify the warm up times. Default is 0
 * `--disable-avx512`: Disable avx512 instruction set. Default is false
+* `--disable-avx-fma3`: Disable avx, fma3 and avx512 instruction sets. Default is false
 * `--core-binding`: Enable core binding. Default is false.
 
 #### 3.2. Environment Variable Settings

@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#ifdef PPLNN_USE_CUDA
+
 #include "ppl/nn/engines/cuda/cuda_engine_options.h"
 #include "pybind11/pybind11.h"
 
@@ -31,3 +33,5 @@ void RegisterCudaEngineOptions(pybind11::module* m) {
 }
 
 }}} // namespace ppl::nn::python
+
+#endif

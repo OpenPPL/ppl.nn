@@ -43,7 +43,7 @@ endif()
 
 FetchContent_Declare(hpcc
     GIT_REPOSITORY https://github.com/openppl-public/hpcc.git
-    GIT_TAG v0.1.3
+    GIT_TAG v0.1.5
     GIT_SHALLOW TRUE
     SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
@@ -60,18 +60,20 @@ endif()
 
 set(PPLCOMMON_BUILD_TESTS OFF CACHE BOOL "disable ppl.common tests")
 set(PPLCOMMON_BUILD_BENCHMARK OFF CACHE BOOL "disable ppl.common benchmark")
+set(PPLCOMMON_ENABLE_PYTHON_API ${PPLNN_ENABLE_PYTHON_API})
+set(PPLCOMMON_ENABLE_LUA_API ${PPLNN_ENABLE_LUA_API})
 
 hpcc_declare_git_dep(ppl.common
     https://github.com/openppl-public/ppl.common.git
-    v0.2.5)
+    v0.3.0)
 
 # --------------------------------------------------------------------------- #
 
 set(protobuf_BUILD_TESTS OFF CACHE BOOL "disable protobuf tests")
 
-hpcc_declare_git_dep(protobuf
-    https://github.com/protocolbuffers/protobuf.git
-    v3.1.0)
+hpcc_declare_pkg_dep(protobuf
+    https://github.com/protocolbuffers/protobuf/archive/refs/tags/v3.1.0.zip
+    04123cc6d9ce7e8eaa8bca826bba4f1b)
 
 # --------------------------------------------------------------------------- #
 
@@ -81,7 +83,7 @@ set(RAPIDJSON_BUILD_DOC OFF CACHE BOOL "disable rapidjson docs")
 
 hpcc_declare_git_dep(rapidjson
     https://github.com/Tencent/rapidjson.git
-    master)
+    00dbcf2c6e03c47d6c399338b6de060c71356464)
 
 # --------------------------------------------------------------------------- #
 
@@ -90,15 +92,23 @@ set(PYBIND11_TEST OFF CACHE BOOL "disable pybind11 tests")
 set(PYBIND11_NOPYTHON ON CACHE BOOL "do not find python")
 set(PYBIND11_FINDPYTHON OFF CACHE BOOL "do not find python")
 
-hpcc_declare_git_dep(pybind11
-    https://github.com/pybind/pybind11.git
-    v2.7.0)
+hpcc_declare_pkg_dep(pybind11
+    https://github.com/pybind/pybind11/archive/refs/tags/v2.7.0.zip
+    267807f790ef598ef912a79aceefdc10)
+
+# --------------------------------------------------------------------------- #
+
+set(LUACPP_INSTALL OFF CACHE BOOL "")
+
+hpcc_declare_git_dep(luacpp
+    https://github.com/ouonline/lua-cpp.git
+    cf8481951f83e35121e61e3aff95443f53630073)
 
 # --------------------------------------------------------------------------- #
 
 set(INSTALL_GTEST OFF CACHE BOOL "")
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
 
-hpcc_declare_git_dep(googletest
-    https://github.com/google/googletest.git
-    release-1.10.0)
+hpcc_declare_pkg_dep(googletest
+    https://github.com/google/googletest/archive/refs/tags/release-1.10.0.zip
+    82358affdd7ab94854c8ee73a180fc53)

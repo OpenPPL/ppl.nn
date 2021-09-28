@@ -56,9 +56,9 @@ void conv2d_im2col_gemm_fp32_fma_executor::cal_kernel_tunning_param()
     const conv2d_fp32_param &cp = *conv_param_;
     kernel_schedule_param &sp   = schedule_param_;
 
-    const int32_t num_thread = PPL_OMP_MAX_THREADS();
-    const int32_t batch      = src_shape_->GetDim(0);
-    const int32_t dst_hw     = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
+    const int64_t num_thread = PPL_OMP_MAX_THREADS();
+    const int64_t batch      = src_shape_->GetDim(0);
+    const int64_t dst_hw     = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
 
     const float l3_cap_all_core = (ppl::common::GetCpuCacheL3() == 0 ? (ASSUME_L3_BYTES() * num_thread) : ppl::common::GetCpuCacheL3()) * L3_RATIO() / sizeof(float);
 
@@ -80,9 +80,10 @@ uint64_t conv2d_im2col_gemm_fp32_fma_executor::cal_temp_buffer_size()
     const conv2d_fp32_param &cp = *conv_param_;
     kernel_schedule_param &sp   = schedule_param_;
 
-    const int32_t dst_hw = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
+    const int64_t dst_hw = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
+    const bool is_gemm = cp.is_pointwise() && cp.sparse_level() == 1.0f;
 
-    const uint64_t im2col_size = cp.is_pointwise() ? 0 : round_up(sp.mb_l3_blk * sp.gp_l3_blk * sp.k_per_gp * dst_hw * sizeof(float), PPL_X86_CACHELINE_BYTES());
+    const uint64_t im2col_size = is_gemm ? 0 : round_up(sp.mb_l3_blk * sp.gp_l3_blk * sp.k_per_gp * dst_hw * sizeof(float), PPL_X86_CACHELINE_BYTES());
     const uint64_t src_trans_size_per_thr = K_L2_BLK_MAX() * HW_L2_BLK_MAX() * sizeof(float);
     const uint64_t dst_buf_size_per_thr = sp.oc_per_gp * HW_KR_BLK() * sizeof(float);
 
@@ -110,33 +111,34 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::execute()
     const conv2d_fp32_param &cp     = *conv_param_;
     const kernel_schedule_param &sp = schedule_param_;
 
-    const int32_t batch = src_shape_->GetDim(0);
-    const int32_t src_h = src_shape_->GetDim(2);
-    const int32_t src_w = src_shape_->GetDim(3);
-    const int32_t dst_h = dst_shape_->GetDim(2);
-    const int32_t dst_w = dst_shape_->GetDim(3);
-    const int32_t src_c = src_shape_->GetDim(1);
-    const int32_t dst_c = dst_shape_->GetDim(1);
+    const int64_t batch = src_shape_->GetDim(0);
+    const int64_t src_h = src_shape_->GetDim(2);
+    const int64_t src_w = src_shape_->GetDim(3);
+    const int64_t dst_h = dst_shape_->GetDim(2);
+    const int64_t dst_w = dst_shape_->GetDim(3);
+    const int64_t src_c = src_shape_->GetDim(1);
+    const int64_t dst_c = dst_shape_->GetDim(1);
 
-    const int64_t src_g_stride  = int64_t(sp.ic_per_gp) * src_h * src_w;
-    const int64_t src_b_stride  = int64_t(src_c) * src_h * src_w;
-    const int64_t dst_g_stride  = int64_t(sp.oc_per_gp) * dst_h * dst_w;
-    const int64_t dst_b_stride  = int64_t(dst_c) * dst_h * dst_w;
-    const int64_t dst_c_stride  = int64_t(dst_h) * dst_w;
-    const int64_t flt_g_stride  = int64_t(sp.oc_per_gp) * sp.padded_k;
+    const int64_t src_g_stride  = sp.ic_per_gp * src_h * src_w;
+    const int64_t src_b_stride  = src_c * src_h * src_w;
+    const int64_t dst_g_stride  = sp.oc_per_gp * dst_h * dst_w;
+    const int64_t dst_b_stride  = dst_c * dst_h * dst_w;
+    const int64_t dst_c_stride  = dst_h * dst_w;
+    const int64_t flt_g_stride  = sp.oc_per_gp * sp.padded_k;
     const int64_t bias_g_stride = sp.oc_per_gp;
     const int64_t dst_hw = int64_t(dst_h) * dst_w;
 
     const bool with_sum   = cp.fuse_flag & conv_fuse_flag::sum;
     const bool with_relu  = cp.fuse_flag & conv_fuse_flag::relu;
     const bool with_relu6 = cp.fuse_flag & conv_fuse_flag::relu6;
+    const bool is_gemm = cp.is_pointwise() && cp.sparse_level() == 1.0f;
 
     int64_t sum_src_b_stride = 0;
     if (with_sum) {
         sum_src_b_stride = int64_t(sum_src_shape_->GetDim(1)) * dst_h * dst_w;
     }
 
-    const uint64_t im2col_len = cp.is_pointwise() ? 0 : (round_up(sp.mb_l3_blk * sp.gp_l3_blk * sp.k_per_gp * dst_hw * sizeof(float), PPL_X86_CACHELINE_BYTES()) / sizeof(float));
+    const uint64_t im2col_len = is_gemm ? 0 : (round_up(sp.mb_l3_blk * sp.gp_l3_blk * sp.k_per_gp * dst_hw * sizeof(float), PPL_X86_CACHELINE_BYTES()) / sizeof(float));
     const uint64_t src_trans_len_per_thr = K_L2_BLK_MAX() * HW_L2_BLK_MAX();
     const uint64_t dst_buf_len_per_thr = sp.oc_per_gp * HW_KR_BLK();
     const uint64_t buffer_len_per_thr = src_trans_len_per_thr + dst_buf_len_per_thr;
@@ -165,7 +167,7 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::execute()
             base_flt += gpl3 * flt_g_stride;
             int64_t im2col_b_stride;
             int64_t im2col_g_stride;
-            if (cp.is_pointwise()) {
+            if (is_gemm) {
                 base_im2col = const_cast<float*>(base_src);
                 im2col_b_stride = cp.group * sp.k_per_gp * dst_hw;
                 im2col_g_stride = sp.k_per_gp * dst_hw;
@@ -230,7 +232,7 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_fma_executor::execute()
             const int64_t num_thread = PPL_OMP_MAX_THREADS();
             int64_t oc_thr_blk = round_up(sp.oc_per_gp, OC_KR_BLK());
             if (hw_l2_cnt * gpl3_eff * mbl3_eff < num_thread * 0.8) {
-                oc_thr_blk = round_up(sp.oc_per_gp / div_up(num_thread, hw_l2_cnt * gpl3_eff * mbl3_eff), OC_KR_BLK());
+                oc_thr_blk = round_up(max<int64_t>(1, sp.oc_per_gp / div_up(num_thread, hw_l2_cnt * gpl3_eff * mbl3_eff)), OC_KR_BLK());
             }
 #ifdef PPL_USE_X86_OMP_COLLAPSE
             PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(4)

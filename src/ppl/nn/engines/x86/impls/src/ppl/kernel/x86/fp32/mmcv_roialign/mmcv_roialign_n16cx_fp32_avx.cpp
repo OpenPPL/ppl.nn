@@ -15,13 +15,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/kernel/x86/common/internal_include.h"
-#include "ppl/kernel/x86/common/mmcv_roialign/mmcv_roialign_common.h"
-
 #include <immintrin.h>
 #include <float.h>
 #include <string>
 #include <math.h>
+
+#include "ppl/kernel/x86/common/internal_include.h"
+#include "ppl/kernel/x86/common/mmcv_roialign/mmcv_roialign_common.h"
+#include "ppl/kernel/x86/common/avx_tools.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 

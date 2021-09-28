@@ -125,6 +125,7 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
 Define_bool_opt("--use-x86", g_flag_use_x86, false, "use x86 engine");
 
 Define_bool_opt("--disable-avx512", g_flag_disable_avx512, false, "disable avx512 feature");
+Define_bool_opt("--disable-avx-fma3", g_flag_disable_avx_fma3, false, "disable avx, fma3 and avx512 feature");
 Define_bool_opt("--core-binding", g_flag_core_binding, false, "core binding");
 
 #include "ppl/nn/engines/x86/engine_factory.h"
@@ -141,6 +142,9 @@ static inline bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
     auto x86_engine = X86EngineFactory::Create(options);
     if (g_flag_disable_avx512) {
         x86_engine->Configure(ppl::nn::X86_CONF_DISABLE_AVX512);
+    }
+    if (g_flag_disable_avx_fma3) {
+        x86_engine->Configure(ppl::nn::X86_CONF_DISABLE_AVX_FMA3);
     }
     if (g_flag_core_binding) {
         ppl::kernel::x86::set_omp_core_binding(nullptr, 0, 1);
@@ -199,12 +203,27 @@ static string GetDimsStr(const Tensor* tensor) {
     return res;
 }
 
+static const char* MemMem(const char* haystack, unsigned int haystack_len,
+                          const char* needle, unsigned int needle_len)
+{
+    if (!haystack || haystack_len == 0 || !needle || needle_len == 0) {
+        return nullptr;
+    }
+
+    for (auto h = haystack; haystack_len >= needle_len; ++h, --haystack_len) {
+        if (memcmp(h, needle, needle_len) == 0) {
+            return h;
+        }
+    }
+    return nullptr;
+}
+
 static void SplitString(const char* str, unsigned int len, const char* delim, unsigned int delim_len,
                         const function<bool(const char* s, unsigned int l)>& f) {
     const char* end = str + len;
 
     while (str < end) {
-        auto cursor = (const char*)memmem(str, len, delim, delim_len);
+        auto cursor = MemMem(str, len, delim, delim_len);
         if (!cursor) {
             f(str, end - str);
             return;

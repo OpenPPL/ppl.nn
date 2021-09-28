@@ -92,17 +92,17 @@ inline __m256 relation_vector_kernel_fp32_avx<RELATION_NOT_EQUAL>(__m256 va, __m
     return _mm256_cmp_ps(va, vb, _CMP_NEQ_OQ);
 }
 
-inline void pack_4xuint32x8_to_1xuint8x32_avx(__m256 v0, __m256 v1, __m256 v2, __m256 v3, uint8_t* dst)
-{
-    uint32_t tmp[32];
-    _mm256_storeu_si256((__m256i*)(tmp + 0), _mm256_castps_si256(v0));
-    _mm256_storeu_si256((__m256i*)(tmp + 8), _mm256_castps_si256(v1));
-    _mm256_storeu_si256((__m256i*)(tmp + 16), _mm256_castps_si256(v2));
-    _mm256_storeu_si256((__m256i*)(tmp + 24), _mm256_castps_si256(v3));
-    for (uint64_t i = 0; i < 32; i++) {
-        dst[i] = tmp[i] & 0x00000001;
-    }
-}
+#define PACK_4UINT32X8_TO_UINT32X32_AVX(v0, v1, v2, v3, dst) do {\
+    uint32_t tmp[32];\
+    uint8_t *tmp_dst = dst;\
+    _mm256_storeu_si256((__m256i*)(tmp + 0), _mm256_castps_si256(v0));\
+    _mm256_storeu_si256((__m256i*)(tmp + 8), _mm256_castps_si256(v1));\
+    _mm256_storeu_si256((__m256i*)(tmp + 16), _mm256_castps_si256(v2));\
+    _mm256_storeu_si256((__m256i*)(tmp + 24), _mm256_castps_si256(v3));\
+    for (uint64_t _ii = 0; _ii < 32; _ii++) {\
+        tmp_dst[_ii] = tmp[_ii] & 0x00000001;\
+    }\
+} while (false)
 
 template <relation_op_type_t _op>
 ppl::common::RetCode relation_eltwise_binary_op_fp32_avx(
@@ -125,7 +125,7 @@ ppl::common::RetCode relation_eltwise_binary_op_fp32_avx(
         mm1        = relation_vector_kernel_fp32_avx<_op>(mm1, _mm256_loadu_ps(src1 + i + 1 * simd_w));
         mm2        = relation_vector_kernel_fp32_avx<_op>(mm2, _mm256_loadu_ps(src1 + i + 2 * simd_w));
         mm3        = relation_vector_kernel_fp32_avx<_op>(mm3, _mm256_loadu_ps(src1 + i + 3 * simd_w));
-        pack_4xuint32x8_to_1xuint8x32_avx(mm0, mm1, mm2, mm3, dst + i);
+        PACK_4UINT32X8_TO_UINT32X32_AVX(mm0, mm1, mm2, mm3, dst + i);
     }
     for (uint64_t i = unroll_body; i < length; i++) {
         dst[i] = relation_scalar_kernel_fp32<_op>(src0[i], src1[i]);
@@ -183,7 +183,7 @@ ppl::common::RetCode relation_ndarray_binary_op_recursive_fp32_avx(
                 mm0_1 = relation_vector_kernel_fp32_avx<_op>(mm0_1, mm1_1);
                 mm0_2 = relation_vector_kernel_fp32_avx<_op>(mm0_2, mm1_2);
                 mm0_3 = relation_vector_kernel_fp32_avx<_op>(mm0_3, mm1_3);
-                pack_4xuint32x8_to_1xuint8x32_avx(mm0_0, mm0_1, mm0_2, mm0_3, dst + i);
+                PACK_4UINT32X8_TO_UINT32X32_AVX(mm0_0, mm0_1, mm0_2, mm0_3, dst + i);
             }
             for (int64_t i = unroll_body; i < dst_shape->GetDim(dim); i++) {
                 dst[i] = relation_scalar_kernel_fp32<_op>(src0[i * inc0[dim]], src1[i * inc1[dim]]);
@@ -218,7 +218,7 @@ ppl::common::RetCode relation_ndarray_binary_op_recursive_fp32_avx(
                 mm0_1 = relation_vector_kernel_fp32_avx<_op>(mm0_1, mm1_1);
                 mm0_2 = relation_vector_kernel_fp32_avx<_op>(mm0_2, mm1_2);
                 mm0_3 = relation_vector_kernel_fp32_avx<_op>(mm0_3, mm1_3);
-                pack_4xuint32x8_to_1xuint8x32_avx(mm0_0, mm0_1, mm0_2, mm0_3, dst + i);
+                PACK_4UINT32X8_TO_UINT32X32_AVX(mm0_0, mm0_1, mm0_2, mm0_3, dst + i);
             }
             for (int64_t i = unroll_body; i < dst_shape->GetDim(dim); i++) {
                 dst[i] = relation_scalar_kernel_fp32<_op>(src0[i * inc0[dim]], src1[i * inc1[dim]]);
@@ -311,5 +311,7 @@ ppl::common::RetCode relation_ndarray_binary_op_fp32_avx(
 }
 
 }}}; // namespace ppl::kernel::x86
+
+#undef PACK_4UINT32X8_TO_UINT32X32_AVX
 
 #endif // __ST_PPL_KERNEL_X86_FP32_RELATION_AVX_RELATION_FP32_AVX_COMMON_H_

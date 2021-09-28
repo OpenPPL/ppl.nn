@@ -27,10 +27,10 @@ namespace ppl { namespace nn { namespace cuda {
 class BridgeAlgorithm : public Algorithm {
 public:
     BridgeAlgorithm() {
-        std::set<dataformat_t> ndarray{DATAFORMAT_NDARRAY, DATAFORMAT_NHWC8};
-        bridge_formats_.emplace(DATAFORMAT_NDARRAY, ndarray);
-        std::set<dataformat_t> nhwc{DATAFORMAT_NDARRAY, DATAFORMAT_NHWC8};
-        bridge_formats_.emplace(DATAFORMAT_NHWC8, nhwc);
+        std::set<dataformat_t> all_formats{DATAFORMAT_NDARRAY, DATAFORMAT_NHWC8, DATAFORMAT_NHWC16};
+        bridge_formats_.emplace(DATAFORMAT_NDARRAY, all_formats);
+        bridge_formats_.emplace(DATAFORMAT_NHWC8, all_formats);
+        bridge_formats_.emplace(DATAFORMAT_NHWC16, all_formats);
     }
 
     void GetAttrParam(void*& param) const override {

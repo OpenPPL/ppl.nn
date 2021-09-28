@@ -11,6 +11,7 @@ option(PPLNN_BUILD_SAMPLES "build samples" ON)
 option(PPLNN_INSTALL "install ppl headers and libs" ON)
 option(PPLNN_ENABLE_KERNEL_PROFILING "enable profiling for each kernel" OFF)
 option(PPLNN_ENABLE_PYTHON_API "enable python api support" OFF)
+option(PPLNN_ENABLE_LUA_API "enable lua api support" OFF)
 
 # --------------------------------------------------------------------------- #
 
@@ -71,6 +72,10 @@ if(PPLNN_ENABLE_PYTHON_API)
     add_subdirectory(python)
 endif()
 
+if(PPLNN_ENABLE_LUA_API)
+    add_subdirectory(lua)
+endif()
+
 # --------------------------------------------------------------------------- #
 
 # engines
@@ -101,7 +106,10 @@ target_include_directories(pplnn_static PRIVATE
 
 # installation
 
-include(cmake/install.cmake)
+if(PPLNN_INSTALL)
+    install(DIRECTORY include DESTINATION .)
+    install(TARGETS pplnn_static LIBRARY DESTINATION lib)
+endif()
 
 # --------------------------------------------------------------------------- #
 

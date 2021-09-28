@@ -49,22 +49,22 @@ void conv2d_n16cx_direct_ndarray_fp32_avx512_executor::cal_kernel_tunning_param(
     const conv2d_fp32_param &cp = *conv_param_;
     kernel_schedule_param &sp   = schedule_param_;
 
-    const int32_t num_thread = PPL_OMP_MAX_THREADS();
-    const int32_t batch      = src_shape_->GetDim(0);
-    const int32_t src_h      = src_shape_->GetDim(2);
-    const int32_t src_w      = src_shape_->GetDim(3);
-    const int32_t dst_h      = dst_shape_->GetDim(2);
-    const int32_t dst_w      = dst_shape_->GetDim(3);
+    const int64_t num_thread = PPL_OMP_MAX_THREADS();
+    const int64_t batch      = src_shape_->GetDim(0);
+    const int64_t src_h      = src_shape_->GetDim(2);
+    const int64_t src_w      = src_shape_->GetDim(3);
+    const int64_t dst_h      = dst_shape_->GetDim(2);
+    const int64_t dst_w      = dst_shape_->GetDim(3);
 
     sp.unroll_ow_start = -1;
     sp.unroll_ow_end = -1;
-    for (int32_t ow = 0; ow < dst_w; ++ow) {
+    for (int64_t ow = 0; ow < dst_w; ++ow) {
         if (ow * cp.stride_w - cp.pad_w >= 0) {
             sp.unroll_ow_start = ow;
             break;
         }
     }
-    for (int32_t ow = dst_w - 1; ow >= 0; --ow) {
+    for (int64_t ow = dst_w - 1; ow >= 0; --ow) {
         if (ow * cp.stride_w - cp.pad_w + cp.kernel_w <= src_w) {
             sp.unroll_ow_end = ow + 1;
             break;
@@ -74,7 +74,7 @@ void conv2d_n16cx_direct_ndarray_fp32_avx512_executor::cal_kernel_tunning_param(
         sp.unroll_ow_start = sp.unroll_ow_end = dst_w;
     }
 
-    sp.oc_l2_blk = min(sp.padded_oc, OC_L2_BLK_MAX());
+    sp.oc_l2_blk = min<int64_t>(sp.padded_oc, OC_L2_BLK_MAX());
 
     const float l3_cap_all_core = (ppl::common::GetCpuCacheL3() == 0 ? (ASSUME_L3_BYTES() * num_thread) : ppl::common::GetCpuCacheL3()) * L3_RATIO() / sizeof(float);
 
@@ -113,20 +113,20 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_executor::execute()
     const conv2d_fp32_param &cp     = *conv_param_;
     const kernel_schedule_param &sp = schedule_param_;
 
-    const int32_t batch = src_shape_->GetDim(0);
-    const int32_t src_h = src_shape_->GetDim(2);
-    const int32_t src_w = src_shape_->GetDim(3);
-    const int32_t dst_h = dst_shape_->GetDim(2);
-    const int32_t dst_w = dst_shape_->GetDim(3);
+    const int64_t batch = src_shape_->GetDim(0);
+    const int64_t src_h = src_shape_->GetDim(2);
+    const int64_t src_w = src_shape_->GetDim(3);
+    const int64_t dst_h = dst_shape_->GetDim(2);
+    const int64_t dst_w = dst_shape_->GetDim(3);
 
-    const int64_t src_b_stride = int64_t(src_shape_->GetDim(1)) * src_h * src_w;
-    const int64_t src_g_stride = int64_t(sp.ic_per_gp) * src_h * src_w;
-    const int64_t src_c_stride = int64_t(src_h) * src_w;
-    const int64_t dst_b_stride = int64_t(round_up(dst_shape_->GetDim(1), OC_DT_BLK())) * dst_h * dst_w;
-    const int64_t dst_g_stride = int64_t(sp.padded_oc) * dst_h * dst_w;
-    const int64_t dst_ocb_stride = int64_t(dst_h) * dst_w * OC_DT_BLK();
-    const int64_t flt_g_stride = int64_t(sp.padded_oc) * sp.ic_per_gp * cp.kernel_h * cp.kernel_w;
-    const int64_t flt_ocb_stride = int64_t(sp.ic_per_gp) * cp.kernel_h * cp.kernel_w * OC_DT_BLK();
+    const int64_t src_b_stride = src_shape_->GetDim(1) * src_h * src_w;
+    const int64_t src_g_stride = sp.ic_per_gp * src_h * src_w;
+    const int64_t src_c_stride = src_h * src_w;
+    const int64_t dst_b_stride = round_up(dst_shape_->GetDim(1), OC_DT_BLK()) * dst_h * dst_w;
+    const int64_t dst_g_stride = sp.padded_oc * dst_h * dst_w;
+    const int64_t dst_ocb_stride = dst_h * dst_w * OC_DT_BLK();
+    const int64_t flt_g_stride = sp.padded_oc * sp.ic_per_gp * cp.kernel_h * cp.kernel_w;
+    const int64_t flt_ocb_stride = sp.ic_per_gp * cp.kernel_h * cp.kernel_w * OC_DT_BLK();
 
     const bool with_sum = cp.fuse_flag & conv_fuse_flag::sum;
     const bool with_relu  = cp.fuse_flag & conv_fuse_flag::relu;
@@ -234,9 +234,9 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_manager::gen_cvt_we
         return ppl::common::RC_PERMISSION_DENIED;
     }
 
-    const int32_t oc_per_gp = param_.num_output / param_.group;
-    const int32_t ic_per_gp = param_.channels / param_.group;
-    const int32_t padded_oc = round_up(oc_per_gp, OC_DT_BLK());
+    const int64_t oc_per_gp = param_.num_output / param_.group;
+    const int64_t ic_per_gp = param_.channels / param_.group;
+    const int64_t padded_oc = round_up(oc_per_gp, OC_DT_BLK());
 
     cvt_bias_size_ = param_.group * padded_oc;
     cvt_bias_      = (float *)allocator_->Alloc(cvt_bias_size_ * sizeof(float));
@@ -244,7 +244,7 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_manager::gen_cvt_we
         return ppl::common::RC_OUT_OF_MEMORY;
     }
 
-    for (int32_t g = 0; g < param_.group; ++g) {
+    for (int64_t g = 0; g < param_.group; ++g) {
         memcpy(cvt_bias_ + g * padded_oc, bias + g * oc_per_gp, oc_per_gp * sizeof(float));
         memset(cvt_bias_ + g * padded_oc + oc_per_gp, 0, (padded_oc - oc_per_gp) * sizeof(float));
     }
@@ -260,7 +260,7 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_manager::gen_cvt_we
         return ppl::common::RC_OUT_OF_MEMORY;
     }
     ppl::common::RetCode status = ppl::common::RC_OTHER_ERROR;
-    for (int32_t g = 0; g < param_.group; ++g) {
+    for (int64_t g = 0; g < param_.group; ++g) {
         status = reorder_ndarray_n16cx_fp32_avx(
                     &filter_shape,
                     filter + g * oc_per_gp * ic_per_gp * param_.kernel_h * param_.kernel_w,

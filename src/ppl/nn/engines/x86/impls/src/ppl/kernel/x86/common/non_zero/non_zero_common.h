@@ -46,8 +46,8 @@ ppl::common::RetCode non_zero_ndarray_common(
 {
     const int64_t dim_count  = src_shape->GetDimCount();
     const int64_t stride_out = src_shape->GetElementsExcludingPadding();
-    uint64_t idx[dim_count];
-    uint64_t strides[dim_count];
+    uint64_t idx[PPL_X86_TENSOR_MAX_DIMS()];
+    uint64_t strides[PPL_X86_TENSOR_MAX_DIMS()];
     int64_t *temp_output = (int64_t*)temp_buffer;
 
     strides[dim_count - 1] = 1;

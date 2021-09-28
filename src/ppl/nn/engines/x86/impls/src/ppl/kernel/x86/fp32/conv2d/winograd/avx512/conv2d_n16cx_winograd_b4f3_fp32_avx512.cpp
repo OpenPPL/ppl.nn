@@ -21,7 +21,7 @@
 
 #include "ppl/kernel/x86/fp32/conv2d/winograd/avx512/conv2d_n16cx_winograd_b4f3_fp32_avx512.h"
 #include "ppl/kernel/x86/fp32/conv2d/winograd/avx512/conv2d_n16cx_winograd_kernel_fp32_avx512.h"
-#include "ppl/kernel/x86/common/avx_tools.h"
+#include "ppl/kernel/x86/common/avx512_tools.h"
 #include "ppl/common/sys.h"
 
 #define ASSUME_L2_BYTES() (256 * 1024)
@@ -91,11 +91,11 @@ std::string conv2d_n16cx_winograd_b4f3_fp32_avx512_executor::export_profiler()
 #endif
 }
 
-static int32_t get_ic_l2_blk(
-    const int32_t channels,
-    const int32_t num_output)
+static int64_t get_ic_l2_blk(
+    const int64_t channels,
+    const int64_t num_output)
 {
-    int32_t rst = IC_L2_BLK_MAX_L();
+    int64_t rst = IC_L2_BLK_MAX_L();
     if (channels <= num_output && channels <= IC_L2_BLK_MAX_L()) {
         rst = IC_L2_BLK_MAX_S();
     }
@@ -105,25 +105,25 @@ static int32_t get_ic_l2_blk(
     return rst;
 }
 
-static int32_t get_oc_l2_blk(
-    const int32_t channels,
-    const int32_t num_output)
+static int64_t get_oc_l2_blk(
+    const int64_t channels,
+    const int64_t num_output)
 {
-    int32_t rst = OC_L2_BLK_MAX();
+    int64_t rst = OC_L2_BLK_MAX();
     if (rst > round_up(num_output, CH_DT_BLK())) {
         rst = round_up(num_output, CH_DT_BLK());
     }
     return rst;
 }
 
-static int32_t get_tiles_l2_blk(
-    const int32_t batch,
-    const int32_t src_h,
-    const int32_t src_w,
-    const int32_t pad_h,
-    const int32_t pad_w,
-    const int32_t channels,
-    const int32_t num_output,
+static int64_t get_tiles_l2_blk(
+    const int64_t batch,
+    const int64_t src_h,
+    const int64_t src_w,
+    const int64_t pad_h,
+    const int64_t pad_w,
+    const int64_t channels,
+    const int64_t num_output,
     const int32_t mode)
 {
     const int64_t num_threads = PPL_OMP_MAX_THREADS();
@@ -134,10 +134,10 @@ static int32_t get_tiles_l2_blk(
     const int64_t num_tiles_b = num_tiles_h * num_tiles_w;
     const int64_t num_tiles   = num_tiles_b * batch;
 
-    int32_t tiles_l2_blk = TILE_L2_BLK_MAX_S();
+    int64_t tiles_l2_blk = TILE_L2_BLK_MAX_S();
     if (mode == PARALLEL_OUTER()) {
         float min_cost = FLT_MAX;
-        for (int32_t tl2 = TILE_L2_BLK_MIN(); tl2 <= TILE_L2_BLK_MAX_S(); tl2 += TILE_KR_BLK()) {
+        for (int64_t tl2 = TILE_L2_BLK_MIN(); tl2 <= TILE_L2_BLK_MAX_S(); tl2 += TILE_KR_BLK()) {
             const int64_t num_tasks = div_up(div_up(num_tiles, tl2), num_threads);
             const float factor = PARALLEL_TILE_COEF() * (TILE_L2_BLK_MAX_S() - tl2) / TILE_L2_BLK_MAX_S();
             const float cost_estimate = num_tasks * tl2 * (1 + factor);
@@ -150,7 +150,7 @@ static int32_t get_tiles_l2_blk(
         tiles_l2_blk = TILE_L2_BLK_MAX_L();
     }
 
-    tiles_l2_blk = round_up(min<int32_t>(tiles_l2_blk, num_tiles), TILE_KR_BLK());
+    tiles_l2_blk = round_up(min(tiles_l2_blk, num_tiles), TILE_KR_BLK());
 
     return tiles_l2_blk;
 }
@@ -160,16 +160,16 @@ void conv2d_n16cx_winograd_b4f3_fp32_avx512_executor::init_preproc_param()
     kernel_schedule_param &sp   = schedule_param_;
     const conv2d_fp32_param &cp = *conv_param_;
 
-    const int32_t num_thread = PPL_OMP_MAX_THREADS();
+    const int64_t num_thread = PPL_OMP_MAX_THREADS();
 
     sp.ic_per_gp = cp.channels / cp.group;
     sp.oc_per_gp = cp.num_output / cp.group;
     sp.padded_ic = round_up(sp.ic_per_gp, CH_DT_BLK());
     sp.padded_oc = round_up(sp.oc_per_gp, CH_DT_BLK());
 
-    const int32_t batch = src_shape_->GetDim(0);
-    const int32_t dst_h = dst_shape_->GetDim(2);
-    const int32_t dst_w = dst_shape_->GetDim(3);
+    const int64_t batch = src_shape_->GetDim(0);
+    const int64_t dst_h = dst_shape_->GetDim(2);
+    const int64_t dst_w = dst_shape_->GetDim(3);
 
     sp.num_tiles_h      = div_up(dst_h, TILE_OUT_H());
     sp.num_tiles_w      = div_up(dst_w, TILE_OUT_W());
@@ -192,7 +192,7 @@ void conv2d_n16cx_winograd_b4f3_fp32_avx512_executor::init_preproc_param()
         const int64_t tiles_all_threads = num_thread * sp.tiles_l2_blk;
         const int64_t oc_l2_cnt         = max<int64_t>(tiles_all_threads / sp.num_tiles, 1);
 
-        sp.oc_l2_blk = round_up(max<int32_t>(sp.oc_per_gp / oc_l2_cnt, 1), OC_KR_BLK());
+        sp.oc_l2_blk = round_up(max<int64_t>(sp.oc_per_gp / oc_l2_cnt, 1), OC_KR_BLK());
         
         sp.thread_tile_in_len   = round_up(CH_DT_BLK() * TILE_IN_H() * TILE_IN_W() * TILE_KR_BLK(), PPL_X86_CACHELINE_BYTES() / sizeof(float));
         sp.thread_matmul_in_len = round_up(CH_DT_BLK() * TILE_IN_H() * TILE_IN_W() * TILE_KR_BLK(), PPL_X86_CACHELINE_BYTES() / sizeof(float));
@@ -236,7 +236,7 @@ void conv2d_n16cx_winograd_b4f3_fp32_avx512_executor::init_preproc_param()
 uint64_t conv2d_n16cx_winograd_b4f3_fp32_avx512_executor::cal_temp_buffer_size()
 {
     const kernel_schedule_param &sp = schedule_param_;
-    const int32_t num_thread        = PPL_OMP_MAX_THREADS();
+    const int64_t num_thread        = PPL_OMP_MAX_THREADS();
 
     if (sp.parallel_mode == PARALLEL_OUTER()) {
         return sp.thread_workspace_len * num_thread * sizeof(float);
@@ -303,7 +303,7 @@ static inline void winograd_b4f3_preprocess_fp32_avx512(
     zmm12 = _mm512_set1_ps(2.0f);
     zmm13 = _mm512_set1_ps(4.0f);
     zmm14 = _mm512_set1_ps(5.0f);
-    for (int32_t th = 0; th < TILE_IN_H(); ++th) {
+    for (int64_t th = 0; th < TILE_IN_H(); ++th) {
         const float *l_tile = tile_src + th * tile_src_h_stride;
         float *l_temp = matmul_buffer + th * tile_h_stride;
         
@@ -351,7 +351,7 @@ static inline void winograd_b4f3_preprocess_fp32_avx512(
         _mm512_storeu_ps(l_temp + 5 * CH_DT_BLK(), zmm10);
     }
 
-    for (int32_t tw = 0; tw < TILE_IN_W(); ++tw) {
+    for (int64_t tw = 0; tw < TILE_IN_W(); ++tw) {
         const float *l_temp = matmul_buffer + tw * CH_DT_BLK();
         float *l_dst        = src_trans + tw * src_trans_ti_stride;
 
@@ -418,7 +418,7 @@ static inline void winograd_b4f3_dst_trans_fp32_avx512(
     zmm13 = _mm512_set1_ps(2.0f);
     zmm14 = _mm512_set1_ps(4.0f);
     zmm15 = _mm512_set1_ps(8.0f);
-    for (int32_t th = 0; th < TILE_IN_H(); ++th) {
+    for (int64_t th = 0; th < TILE_IN_H(); ++th) {
         const float *l_dst_trans = dst_trans + th * TILE_IN_W() * dst_trans_ti_stride;
         float *l_temp = matmul_buffer + th * matmul_h_stride;
         __m512 zmm0, zmm2, zmm4, zmm6;
@@ -457,7 +457,7 @@ static inline void winograd_b4f3_dst_trans_fp32_avx512(
         _mm512_storeu_ps(l_temp + 2 * CH_DT_BLK(), zmm4);
         _mm512_storeu_ps(l_temp + 3 * CH_DT_BLK(), zmm6);
     }
-    for (int32_t tw = 0; tw < TILE_OUT_W(); ++tw) {
+    for (int64_t tw = 0; tw < TILE_OUT_W(); ++tw) {
         float *l_dst           = dst + tw * CH_DT_BLK();
         const float *l_sum_src = sum_src + tw * CH_DT_BLK();
         float *l_temp = matmul_buffer + tw * CH_DT_BLK();
@@ -605,18 +605,18 @@ ppl::common::RetCode conv2d_n16cx_winograd_b4f3_fp32_avx512_executor::execute()
     const conv2d_fp32_param &cp     = *conv_param_;
     const kernel_schedule_param &sp = schedule_param_;
 
-    const int32_t src_h = src_shape_->GetDim(2);
-    const int32_t src_w = src_shape_->GetDim(3);
-    const int32_t dst_h = dst_shape_->GetDim(2);
-    const int32_t dst_w = dst_shape_->GetDim(3);
+    const int64_t src_h = src_shape_->GetDim(2);
+    const int64_t src_w = src_shape_->GetDim(3);
+    const int64_t dst_h = dst_shape_->GetDim(2);
+    const int64_t dst_w = dst_shape_->GetDim(3);
 
-    const int32_t padded_src_c = round_up(src_shape_->GetDim(1), CH_DT_BLK());
-    const int32_t padded_dst_c = round_up(dst_shape_->GetDim(1), CH_DT_BLK());
+    const int64_t padded_src_c = round_up(src_shape_->GetDim(1), CH_DT_BLK());
+    const int64_t padded_dst_c = round_up(dst_shape_->GetDim(1), CH_DT_BLK());
 
-    const int64_t src_g_stride     = int64_t(sp.padded_ic) * src_h * src_w;
-    const int64_t src_b_stride     = int64_t(padded_src_c) * src_h * src_w;
-    const int64_t dst_g_stride     = int64_t(sp.padded_oc) * dst_h * dst_w;
-    const int64_t dst_b_stride     = int64_t(padded_dst_c) * dst_h * dst_w;
+    const int64_t src_g_stride     = sp.padded_ic * src_h * src_w;
+    const int64_t src_b_stride     = padded_src_c * src_h * src_w;
+    const int64_t dst_g_stride     = sp.padded_oc * dst_h * dst_w;
+    const int64_t dst_b_stride     = padded_dst_c * dst_h * dst_w;
     const int64_t bias_g_stride    = sp.padded_oc;
     const int64_t cvt_flt_g_stride = sp.padded_ic * sp.padded_oc * TILE_IN_H() * TILE_IN_W();
     int64_t sum_src_b_stride       = 0;
@@ -1077,7 +1077,7 @@ ppl::common::RetCode conv2d_n16cx_winograd_b4f3_fp32_avx512_manager::gen_cvt_wei
     const int64_t padded_oc = round_up(oc_per_gp, CH_DT_BLK());
     const int64_t padded_ic = round_up(ic_per_gp, CH_DT_BLK());
 
-    const int32_t ic_l2_blk = get_ic_l2_blk(ic_per_gp, oc_per_gp);
+    const int64_t ic_l2_blk = get_ic_l2_blk(ic_per_gp, oc_per_gp);
 
     if (cvt_bias_ != nullptr || cvt_filter_ != nullptr) {
         return ppl::common::RC_PERMISSION_DENIED;

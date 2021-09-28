@@ -21,7 +21,54 @@
 #include <stdint.h>
 #include <immintrin.h>
 
+#include "ppl/kernel/x86/common/internal_include.h"
+#include "ppl/kernel/x86/common/sse_tools.h"
+
 namespace ppl { namespace kernel { namespace x86 {
+
+#ifdef PPL_USE_X86_MSVC
+
+inline __m256 operator+(const __m256 a, const __m256 b) {
+    return _mm256_add_ps(a, b);
+}
+
+inline __m256 operator-(const __m256 a, const __m256 b) {
+    return _mm256_sub_ps(a, b);
+}
+
+inline __m256 operator*(const __m256 a, const __m256 b) {
+    return _mm256_mul_ps(a, b);
+}
+
+inline __m256 operator/(const __m256 a, const __m256 b) {
+    return _mm256_div_ps(a, b);
+}
+
+inline __m256& operator+=(__m256 &a, const __m256 b) {
+    return a = _mm256_add_ps(a, b);
+}
+
+inline __m256& operator-=(__m256 &a, const __m256 b) {
+    return a = _mm256_sub_ps(a, b);
+}
+
+inline __m256& operator*=(__m256 &a, const __m256 b) {
+    return a = _mm256_mul_ps(a, b);
+}
+
+inline __m256& operator/=(__m256 &a, const __m256 b) {
+    return a = _mm256_div_ps(a, b);
+}
+
+inline __m256 operator-(const __m256 a) {
+    return _mm256_setzero_ps() - a;
+}
+
+inline __m256 operator+(const __m256 a) {
+    return a;
+}
+
+#endif
 
 inline void memset32_avx(void *dst, const int32_t val, const int64_t n32) {
     int64_t __n32 = n32;

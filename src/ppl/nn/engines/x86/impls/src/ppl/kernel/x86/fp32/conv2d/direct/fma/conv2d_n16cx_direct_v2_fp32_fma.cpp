@@ -40,16 +40,16 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-int32_t conv2d_n16cx_direct_v2_fp32_fma_executor::cal_ic_l2_blk(const conv2d_fp32_param &param)
+int64_t conv2d_n16cx_direct_v2_fp32_fma_executor::cal_ic_l2_blk(const conv2d_fp32_param &param)
 {
-    const int32_t ic_per_gp = param.channels / param.group;
-    const int32_t padded_ic = round_up(ic_per_gp, CH_DT_BLK());
+    const int64_t ic_per_gp = param.channels / param.group;
+    const int64_t padded_ic = round_up(ic_per_gp, CH_DT_BLK());
 
-    int32_t ic_l2_blk;
+    int64_t ic_l2_blk;
     if (padded_ic >= IC_L2_BLK_MAX()) {
-        ic_l2_blk = min(div_up(4 * IC_L2_BLK_MAX(), param.kernel_h * param.kernel_w * CH_DT_BLK()) * CH_DT_BLK(), padded_ic);
+        ic_l2_blk = min<int64_t>(div_up(4 * IC_L2_BLK_MAX(), param.kernel_h * param.kernel_w * CH_DT_BLK()) * CH_DT_BLK(), padded_ic);
     } else {
-        ic_l2_blk = min(div_up(IC_L2_BLK_MAX(), param.kernel_h * param.kernel_w * CH_DT_BLK()) * CH_DT_BLK(), padded_ic);
+        ic_l2_blk = min<int64_t>(div_up(IC_L2_BLK_MAX(), param.kernel_h * param.kernel_w * CH_DT_BLK()) * CH_DT_BLK(), padded_ic);
     }
     if (mod_up(padded_ic, ic_l2_blk) < IC_L2_BLK_TAIL_RATIO() * ic_l2_blk) {
         ic_l2_blk = round_up(padded_ic / (padded_ic / ic_l2_blk), CH_DT_BLK());
@@ -71,26 +71,26 @@ void conv2d_n16cx_direct_v2_fp32_fma_executor::cal_kernel_tunning_param()
     const conv2d_fp32_param &cp = *conv_param_;
     kernel_schedule_param &sp   = schedule_param_;
 
-    const int32_t num_thread   = PPL_OMP_MAX_THREADS();
-    const int32_t batch        = src_shape_->GetDim(0);
-    const int32_t src_h        = src_shape_->GetDim(2);
-    const int32_t src_w        = src_shape_->GetDim(3);
-    const int32_t dst_h        = dst_shape_->GetDim(2);
-    const int32_t dst_w        = dst_shape_->GetDim(3);
-    const int32_t ext_kernel_w = (cp.kernel_w - 1) * cp.dilation_w + 1;
+    const int64_t num_thread   = PPL_OMP_MAX_THREADS();
+    const int64_t batch        = src_shape_->GetDim(0);
+    const int64_t src_h        = src_shape_->GetDim(2);
+    const int64_t src_w        = src_shape_->GetDim(3);
+    const int64_t dst_h        = dst_shape_->GetDim(2);
+    const int64_t dst_w        = dst_shape_->GetDim(3);
+    const int64_t ext_kernel_w = (cp.kernel_w - 1) * cp.dilation_w + 1;
 
     const float l3_cap_all_core = (ppl::common::GetCpuCacheL3() == 0 ? (ASSUME_L3_BYTES() * num_thread) : ppl::common::GetCpuCacheL3()) * L3_RATIO() / sizeof(float);
 
     sp.ic_l2_blk = cal_ic_l2_blk(cp);
     sp.ic_l2_cnt = div_up(sp.padded_ic, sp.ic_l2_blk);
 
-    sp.gp_l3_blk = min<int32_t>(cp.group, num_thread);
-    sp.mb_l3_blk = min<int32_t>(batch, div_up(num_thread, sp.gp_l3_blk));
+    sp.gp_l3_blk = min(cp.group, num_thread);
+    sp.mb_l3_blk = min(batch, div_up(num_thread, sp.gp_l3_blk));
     const int64_t padded_src_hw = int64_t(src_h) * (src_w + 2 * cp.pad_w);
     while (sp.gp_l3_blk > 1 && sp.gp_l3_blk * sp.mb_l3_blk * sp.ic_l2_blk * padded_src_hw > l3_cap_all_core) {
         --sp.gp_l3_blk;
     }
-    sp.mb_l3_blk = min<int32_t>(batch, div_up(num_thread, sp.gp_l3_blk));
+    sp.mb_l3_blk = min(batch, div_up(num_thread, sp.gp_l3_blk));
     while (sp.mb_l3_blk > 1 && sp.gp_l3_blk * sp.mb_l3_blk * sp.ic_l2_blk * padded_src_hw > l3_cap_all_core) {
         --sp.mb_l3_blk;
     }
@@ -106,13 +106,13 @@ void conv2d_n16cx_direct_v2_fp32_fma_executor::cal_kernel_tunning_param()
     sp.unroll_ow_start = -1;
     sp.unroll_ow_end = -1;
     if (sp.padding_policy == PADDING_POLICY_NOPAD()) {
-        for (int32_t ow = 0; ow < dst_w; ++ow) {
+        for (int64_t ow = 0; ow < dst_w; ++ow) {
             if (ow * cp.stride_w - cp.pad_w >= 0) {
                 sp.unroll_ow_start = ow;
                 break;
             }
         }
-        for (int32_t ow = dst_w - 1; ow >= 0; --ow) {
+        for (int64_t ow = dst_w - 1; ow >= 0; --ow) {
             if (ow * cp.stride_w - cp.pad_w + ext_kernel_w <= src_w) {
                 sp.unroll_ow_end = ow + 1;
                 break;
@@ -127,7 +127,7 @@ void conv2d_n16cx_direct_v2_fp32_fma_executor::cal_kernel_tunning_param()
     }
 
     if (sp.unroll_ow_start < sp.unroll_ow_end) {
-        sp.ow_kr_blk = min(sp.unroll_ow_end - sp.unroll_ow_start, MAX_OW_RF());
+        sp.ow_kr_blk = min<int64_t>(sp.unroll_ow_end - sp.unroll_ow_start, MAX_OW_RF());
 #define REDUN_W(W, W_BLK) (float(round_up(W, W_BLK)) / (W)-1.0f)
         if (REDUN_W(dst_w, sp.ow_kr_blk) > 0.201f) {
             for (int32_t ow_blk = MAX_OW_RF(); ow_blk >= MAX_OW_RF() - 2; --ow_blk) {
@@ -141,7 +141,7 @@ void conv2d_n16cx_direct_v2_fp32_fma_executor::cal_kernel_tunning_param()
         sp.ow_kr_blk = MAX_OW_RF();
     }
 
-    sp.oc_l2_blk = min(OC_L2_BLK_MAX(), sp.padded_oc);
+    sp.oc_l2_blk = min<int64_t>(OC_L2_BLK_MAX(), sp.padded_oc);
 
     sp.use_nt_store = 0;
     if (batch * cp.group * sp.padded_oc * dst_h * dst_w > l3_cap_all_core * 2) {
@@ -152,8 +152,8 @@ void conv2d_n16cx_direct_v2_fp32_fma_executor::cal_kernel_tunning_param()
 uint64_t conv2d_n16cx_direct_v2_fp32_fma_executor::cal_temp_buffer_size()
 {
     if (schedule_param_.padding_policy == PADDING_POLICY_PREPAD()) {
-        const int32_t src_h          = src_shape_->GetDim(2);
-        const int32_t src_w          = src_shape_->GetDim(3);
+        const int64_t src_h          = src_shape_->GetDim(2);
+        const int64_t src_w          = src_shape_->GetDim(3);
         const uint64_t padded_src_hw = uint64_t(src_h) * (src_w + 2 * conv_param_->pad_w);
         return padded_src_hw * schedule_param_.mb_l3_blk * schedule_param_.gp_l3_blk * schedule_param_.ic_l2_blk * sizeof(float);
     }
@@ -181,27 +181,27 @@ ppl::common::RetCode conv2d_n16cx_direct_v2_fp32_fma_executor::execute()
     const conv2d_fp32_param &cp     = *conv_param_;
     const kernel_schedule_param &sp = schedule_param_;
 
-    const int32_t batch = src_shape_->GetDim(0);
-    const int32_t src_h = src_shape_->GetDim(2);
-    const int32_t src_w = src_shape_->GetDim(3);
-    const int32_t dst_h = dst_shape_->GetDim(2);
-    const int32_t dst_w = dst_shape_->GetDim(3);
+    const int64_t batch = src_shape_->GetDim(0);
+    const int64_t src_h = src_shape_->GetDim(2);
+    const int64_t src_w = src_shape_->GetDim(3);
+    const int64_t dst_h = dst_shape_->GetDim(2);
+    const int64_t dst_w = dst_shape_->GetDim(3);
 
-    const int32_t ext_kernel_h = (cp.kernel_h - 1) * cp.dilation_h + 1;
-    const int32_t ext_kernel_w = (cp.kernel_w - 1) * cp.dilation_w + 1;
+    const int64_t ext_kernel_h = (cp.kernel_h - 1) * cp.dilation_h + 1;
+    const int64_t ext_kernel_w = (cp.kernel_w - 1) * cp.dilation_w + 1;
     const int64_t padded_rf_oc = round_up(sp.oc_per_gp, CH_RF_BLK());
 
-    const int64_t src_b_stride   = int64_t(round_up(src_shape_->GetDim(1), CH_DT_BLK())) * src_h * src_w;
-    const int64_t src_g_stride   = int64_t(sp.padded_ic) * src_h * src_w;
-    const int64_t src_icb_stride = int64_t(src_h) * src_w * CH_DT_BLK();
-    const int64_t src_h_stride   = int64_t(src_w) * CH_DT_BLK();
-    const int64_t src_sw_stride  = int64_t(cp.stride_w) * CH_DT_BLK();
-    const int64_t src_dh_stride  = int64_t(cp.dilation_h) * src_w * CH_DT_BLK();
-    const int64_t src_dw_stride  = int64_t(cp.dilation_w) * CH_DT_BLK();
-    const int64_t dst_b_stride   = int64_t(round_up(dst_shape_->GetDim(1), CH_DT_BLK())) * dst_h * dst_w;
-    const int64_t dst_g_stride   = int64_t(sp.padded_oc) * dst_h * dst_w;
-    const int64_t dst_h_stride   = int64_t(dst_w) * CH_DT_BLK();
-    const int64_t flt_g_stride   = int64_t(sp.ic_l2_cnt) * sp.padded_oc * cp.kernel_h * cp.kernel_w * sp.ic_l2_blk;
+    const int64_t src_b_stride   = round_up(src_shape_->GetDim(1), CH_DT_BLK()) * src_h * src_w;
+    const int64_t src_g_stride   = sp.padded_ic * src_h * src_w;
+    const int64_t src_icb_stride = src_h * src_w * CH_DT_BLK();
+    const int64_t src_h_stride   = src_w * CH_DT_BLK();
+    const int64_t src_sw_stride  = cp.stride_w * CH_DT_BLK();
+    const int64_t src_dh_stride  = cp.dilation_h * src_w * CH_DT_BLK();
+    const int64_t src_dw_stride  = cp.dilation_w * CH_DT_BLK();
+    const int64_t dst_b_stride   = round_up(dst_shape_->GetDim(1), CH_DT_BLK()) * dst_h * dst_w;
+    const int64_t dst_g_stride   = sp.padded_oc * dst_h * dst_w;
+    const int64_t dst_h_stride   = dst_w * CH_DT_BLK();
+    const int64_t flt_g_stride   = sp.ic_l2_cnt * sp.padded_oc * cp.kernel_h * cp.kernel_w * sp.ic_l2_blk;
 
     const bool with_sum   = cp.fuse_flag & conv_fuse_flag::sum;
     const bool with_relu  = cp.fuse_flag & conv_fuse_flag::relu;
@@ -407,9 +407,9 @@ ppl::common::RetCode conv2d_n16cx_direct_v2_fp32_fma_manager::gen_cvt_weights(co
         return ppl::common::RC_PERMISSION_DENIED;
     }
 
-    const int32_t oc_per_gp = param_.num_output / param_.group;
-    const int32_t padded_oc = round_up(oc_per_gp, CH_DT_BLK());
-    const int32_t ic_l2_blk = conv2d_n16cx_direct_v2_fp32_fma_executor::cal_ic_l2_blk(param_);
+    const int64_t oc_per_gp = param_.num_output / param_.group;
+    const int64_t padded_oc = round_up(oc_per_gp, CH_DT_BLK());
+    const int64_t ic_l2_blk = conv2d_n16cx_direct_v2_fp32_fma_executor::cal_ic_l2_blk(param_);
 
     cvt_bias_size_ = param_.group * padded_oc;
     cvt_bias_      = (float *)allocator_->Alloc(cvt_bias_size_ * sizeof(float));
@@ -417,7 +417,7 @@ ppl::common::RetCode conv2d_n16cx_direct_v2_fp32_fma_manager::gen_cvt_weights(co
         return ppl::common::RC_OUT_OF_MEMORY;
     }
 
-    for (int32_t g = 0; g < param_.group; ++g) {
+    for (int64_t g = 0; g < param_.group; ++g) {
         memcpy(cvt_bias_ + g * padded_oc, bias + g * oc_per_gp, oc_per_gp * sizeof(float));
         memset(cvt_bias_ + g * padded_oc + oc_per_gp, 0, (padded_oc - oc_per_gp) * sizeof(float));
     }

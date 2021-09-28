@@ -25,7 +25,10 @@
 #if defined(DEBUG) || !defined(NDEBUG)
 #include <stdio.h>
 #define PPLNN_X86_DEBUG_TRACE(fmt, ...) \
-    fprintf(stderr, "T [%s:%d] " fmt, ppl::common::stripfilename(__FILE__), __LINE__, ##__VA_ARGS__)
+    do { \
+        fprintf(stderr, "T [%s:%d] " fmt, ppl::common::stripfilename(__FILE__), __LINE__, ##__VA_ARGS__); \
+        fflush(stderr); \
+    } while (0)
 #else
 #define PPLNN_X86_DEBUG_TRACE(fmt, ...)
 #endif // DEBUG

@@ -19,7 +19,6 @@
 #define __ST_PPL_KERNEL_X86_FP32_CONV2D_GEMM_DIRECT_SSE_CONV2D_N8CX_GEMM_DIRECT_KERNEL_FP32_SSE_H_
 
 #include "ppl/kernel/x86/common/internal_include.h"
-#include "ppl/kernel/x86/fp32/conv2d.h"
 
 #define KERNEL_FLAG_LD_BIAS() (1 << 0)
 #define KERNEL_FLAG_AD_BIAS() (1 << 1)
@@ -49,20 +48,23 @@
 
 #define NT_STORE_OPT() 2
 
-#define MAX_OC_RF() 4
+#define MAX_OC_RF() 14
 #define MAX_HW_RF() 3
 
 #define BLK1X3_OC_RF() 4
 #define BLK1X3_HW_RF() 3
+
+#define BLK1X1_OC_RF() 12
+#define BLK1X1_HW_RF() 1
 
 namespace ppl { namespace kernel { namespace x86 {
 
 typedef void (*conv2d_n8cx_gemm_direct_kernel_fp32_sse_func_t)(const int64_t*, const int64_t*);
 
 extern conv2d_n8cx_gemm_direct_kernel_fp32_sse_func_t
-    conv2d_n8cx_gemm_direct_kernel_fp32_sse_o8_table[NT_STORE_OPT()][BLK1X3_HW_RF()];
+    conv2d_n8cx_gemm_direct_kernel_fp32_sse_hw3_table[NT_STORE_OPT()][BLK1X3_OC_RF() / 2];
 extern conv2d_n8cx_gemm_direct_kernel_fp32_sse_func_t
-    conv2d_n8cx_gemm_direct_kernel_fp32_sse_o16_table[NT_STORE_OPT()][BLK1X3_HW_RF()];
+    conv2d_n8cx_gemm_direct_kernel_fp32_sse_hw1_table[NT_STORE_OPT()][BLK1X1_OC_RF() / 2];
 
 }}}; // namespace ppl::kernel::x86
 

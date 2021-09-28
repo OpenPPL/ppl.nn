@@ -137,7 +137,7 @@ RetCode AlgoGraph::UpdateNode(ir::Node* node, OptKernelOptions& options) {
                     options.param = (*pre_it)->param;
                     for (uint32_t j = 0; j < pre_algo_filter->GetAlgoCount(); ++j) {
                         Algorithm* temp_algo = pre_algo_filter->GetAlgo(j);
-                        if (!temp_algo->IsSupported(pre_node, options)) {
+                        if (!temp_algo->IsSupported(pre_node, options, (*pre_it)->input_format)) {
                             continue;
                         }
                         at_least_one_algo = true;
