@@ -18,6 +18,7 @@
 #include "cudakernel/arithmetic/arithmetic.h"
 #include "ppl/common/types.h"
 #include <cuda_fp16.h>
+#include <algorithm>
 
 enum ArithmeticOpType {
     Arithmetic_Unknown = 0,

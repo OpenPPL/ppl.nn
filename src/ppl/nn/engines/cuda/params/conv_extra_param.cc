@@ -78,7 +78,7 @@ RetCode ConvertToEmptyFuseParam(fuse_param_t& fuse_param) {
 
 RetCode ConvertToPrelu(uint32_t fuse_index, InputOutputInfo* info, CudaDevice* device, ConvFusionInfo fuse_info,
                        fuse_param_t& fuse_param) {
-    u_int32_t prelu_input = fuse_info.input_ind[fuse_index];
+    uint32_t prelu_input = fuse_info.input_ind[fuse_index];
     auto shape = info->GetInput<TensorImpl>(prelu_input)->GetShape();
 
     if (fuse_index == 0) {
@@ -152,7 +152,7 @@ RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* device, Con
 
     if (fuse_index < fuse_size && fuse_info.types[fuse_index] == "Add") {
         fuse_param.has_elt = true;
-        u_int32_t elt_input = fuse_info.input_ind[fuse_index];
+        uint32_t elt_input = fuse_info.input_ind[fuse_index];
         fuse_param.pre_data = info->GetInput<TensorImpl>(elt_input)->GetBufferPtr();
         fuse_index++;
     }

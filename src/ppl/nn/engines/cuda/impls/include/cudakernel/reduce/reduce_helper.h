@@ -18,6 +18,7 @@
 #ifndef PPLCUDA_REDUCE_REDUCE_HELPER_H_
 #define PPLCUDA_REDUCE_REDUCE_HELPER_H_
 #include <utility>
+#include "cudakernel/common/macro.h"
 
 struct PPLReduceDimDes {
     int64_t n_inner;

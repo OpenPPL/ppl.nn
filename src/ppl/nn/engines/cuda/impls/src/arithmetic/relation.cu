@@ -18,6 +18,7 @@
 #include "cudakernel/arithmetic/relation.h"
 #include "ppl/common/types.h"
 #include <cuda_fp16.h>
+#include <algorithm>
 
 enum RelationOpType {
     Relation_Unknown = 0,
