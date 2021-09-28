@@ -20,6 +20,7 @@
 #include "cudakernel/reformat/reformat.h"
 #include "cudakernel/common/common.h"
 #include "cudakernel/common/divmod_fast.h"
+#include "cudakernel/common/macro.h"
 
 #include "cuda_fp16.h"
 using namespace PPLCUDA;

@@ -21,6 +21,7 @@
 #define _INT4_TO_8HALF_     8
 
 #include <cuda_fp16.h>
+#include "cudakernel/common/macro.h"
 
 __global__ void MergeConvSplitResults(
         int4* input,             int4* output, 

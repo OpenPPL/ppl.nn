@@ -35,7 +35,9 @@ ppl::common::RetCode ReduceSumKernel::DoExecute(KernelExecContext* ctx) {
         n_reduce =
             accumulate(input_shape.GetDims(), input_shape.GetDims() + dim_count, n_reduce, std::multiplies<uint32_t>());
     } else {
-        uint32_t real_axis[param_->axes.size()];
+        // uint32_t real_axis[param_->axes.size()];
+        std::vector<uint32_t> real_axis(param_->axes.size());
+
         for (uint32_t i = 0; i < param_->axes.size(); ++i) {
             real_axis[i] = (param_->axes[i] + dim_count) % dim_count;
             if (i > 0 && real_axis[i] != real_axis[i - 1] + 1) {

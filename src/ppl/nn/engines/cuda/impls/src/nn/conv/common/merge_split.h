@@ -20,6 +20,7 @@
 
 #include <cuda.h>
 #include <cuda_fp16.h>
+#include "cudakernel/common/macro.h"
 
 //////////////////////////////////////////////////
 // merge kernel
