@@ -35,6 +35,7 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
     }
 
     infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+        type = ppl::common::DATATYPE_FLOAT16;
         if (type == DATATYPE_INT8) {
             auto in_edge_id = info->GetInput<TensorImpl>(0)->GetEdge()->GetId();
             auto& in_quant = quant->at(in_edge_id);
@@ -64,7 +65,6 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
             }
             return ppl::common::RC_SUCCESS;
         }
-        type = ppl::common::DATATYPE_FLOAT16;
         return InferDefaultType(info, type);
     };
 

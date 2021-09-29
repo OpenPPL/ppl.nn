@@ -141,6 +141,39 @@ RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc,
     return RC_SUCCESS;
 }
 
+RetCode CudaDataConverter::ConvertToHost(void* dst, const TensorShape& dst_desc, const CudaTensorQuant& dst_quant,
+                                         const BufferDesc& src, const TensorShape& src_desc,
+                                         const CudaTensorQuant& src_quant) const {
+    if (src_desc.GetBytesExcludingPadding() == 0) {
+        // TODO release dst
+        return RC_SUCCESS;
+    }
+
+    BufferDesc tmp_buffer_desc;
+    auto status = device_->Realloc(dst_desc, &tmp_buffer_desc);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "alloc tmp buffer for dst tensor failed";
+        return status;
+    }
+    BufferDescGuard __tmp_buffer_guard__(&tmp_buffer_desc, [this](BufferDesc* buffer) {
+        device_->Free(buffer);
+    });
+
+    status = Convert(&tmp_buffer_desc, dst_desc, dst_quant, src, src_desc, src_quant);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "convert in device failed during ConvertToHost: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    status = device_->CopyToHost(dst, tmp_buffer_desc, dst_desc);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "copy dst data to Host failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    return RC_SUCCESS;
+}
+
 RetCode CudaDataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc,
                                            const CudaTensorQuant& dst_quant, const void* src,
                                            const TensorShape& src_desc, const CudaTensorQuant& src_quant) const {

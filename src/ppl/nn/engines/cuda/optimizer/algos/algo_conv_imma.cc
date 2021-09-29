@@ -54,7 +54,7 @@ bool TuringIMMAImpgemm::IsSupported(const ir::Node* node, const OptKernelOptions
 double TuringIMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& options) {
     this->attr_param_ = *(reinterpret_cast<CudaConvParam*>(options.param));
     attr_param_.extra_param.algo_info.algo_type = "TuringIMMAImpgemm";
-    attr_param_.extra_param.algo_info.kernel_index = 0;
+    attr_param_.extra_param.algo_info.kernel_index = 4000;
     double timer = 1e-4f; // TODO: add SelectAlgo
     return timer;
 }

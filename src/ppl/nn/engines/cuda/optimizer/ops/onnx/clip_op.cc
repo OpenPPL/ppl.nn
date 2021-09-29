@@ -35,10 +35,12 @@ RetCode ClipOp::Init(const OptKernelOptions& options) {
         } else {
             status = InferDefaultType(info, type);
         }
-        auto shape1 = &info->GetInput<TensorImpl>(1)->GetShape();
-        shape1->SetDataType(DATATYPE_FLOAT32);
-        auto shape2 = &info->GetInput<TensorImpl>(2)->GetShape();
-        shape2->SetDataType(DATATYPE_FLOAT32);
+        auto input1 = info->GetInput<TensorImpl>(1);
+        if (input1 != nullptr)
+            input1->GetShape().SetDataType(DATATYPE_FLOAT32);
+        auto input2 = info->GetInput<TensorImpl>(2);
+        if (input2 != nullptr)
+            input2->GetShape().SetDataType(DATATYPE_FLOAT32);
         return status;
     };
 
