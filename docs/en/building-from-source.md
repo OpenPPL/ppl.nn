@@ -72,6 +72,16 @@ If you want to use specified CUDA toolkit version, please specify `CUDA_TOOLKIT_
 ./build.sh -DHPCC_USE_CUDA=ON -DCUDA_TOOLKIT_ROOT_DIR=/path/to/cuda-toolkit-root-dir
 ```
 
+#### Windows
+
+Using vs2015 for example:
+
+```
+build.bat -G "Visual Studio 14 2015 Win64" -DHPCC_USE_CUDA=ON
+```
+
+Headers and libraries are installed in `pplnn-build/install`.
+
 ### Buliding Python API support
 
 add `-DPPLNN_ENABLE_PYTHON_API=ON` to the build command if you want to use `PPLNN` in python:
