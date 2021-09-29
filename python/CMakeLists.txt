@@ -3,15 +3,29 @@ hpcc_populate_dep(pybind11)
 if(NOT PYTHON3_INCLUDE_DIRS)
     find_package(Python3 COMPONENTS Development QUIET)
     if(NOT Python3_Development_FOUND)
-        message(FATAL_ERROR "python dev lib is required. please install python3 development files (python3-dev on Debian/Ubuntu or python3-devel on RetHat/CentOS) or specify `PYTHON3_INCLUDE_DIRS` manually.")
+        if(MSVC)
+            message(FATAL_ERROR "python dev lib is required. please install python3 development files or specify `PYTHON3_INCLUDE_DIRS` and `PYTHON3_LIBRARIES` manually.")
+        else()
+            message(FATAL_ERROR "python dev lib is required. please install python3 development files (python3-dev on Debian/Ubuntu or python3-devel on RetHat/CentOS) or specify `PYTHON3_INCLUDE_DIRS` manually.")
+        endif()
     endif()
     set(PYTHON3_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
+
+    if(MSVC)
+        set(PYTHON3_LIBRARIES ${Python3_LIBRARIES})
+    endif()
+endif()
+
+if(MSVC)
+    if(NOT PYTHON3_LIBRARIES)
+        message(FATAL_ERROR "please specify `PYTHON3_INCLUDE_DIRS` and `PYTHON3_LIBRARIES` manually.")
+    endif()
 endif()
 
 file(GLOB_RECURSE PPLNN_PYTHON_API_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cc)
 add_library(pypplnn_shared SHARED ${PPLNN_PYTHON_API_SRC})
-target_link_libraries(pypplnn_shared PUBLIC pplnn_static)
+target_link_libraries(pypplnn_shared PUBLIC pplnn_static ${PYTHON3_LIBRARIES})
 target_include_directories(pypplnn_shared PUBLIC
     ${PROJECT_SOURCE_DIR}/include
     ${pybind11_SOURCE_DIR}/include
@@ -22,5 +36,5 @@ set_target_properties(pypplnn_shared PROPERTIES PREFIX "")
 set_target_properties(pypplnn_shared PROPERTIES OUTPUT_NAME "nn")
 
 if(PPLNN_INSTALL)
-    install(TARGETS pypplnn_shared LIBRARY DESTINATION pyppl)
+    install(TARGETS pypplnn_shared DESTINATION pyppl)
 endif()

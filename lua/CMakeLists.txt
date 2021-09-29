@@ -22,5 +22,5 @@ set_target_properties(luapplnn_shared PROPERTIES PREFIX "")
 set_target_properties(luapplnn_shared PROPERTIES OUTPUT_NAME "nn")
 
 if(PPLNN_INSTALL)
-    install(TARGETS luapplnn_shared LIBRARY DESTINATION luappl)
+    install(TARGETS luapplnn_shared DESTINATION luappl)
 endif()
