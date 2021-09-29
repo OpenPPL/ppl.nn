@@ -75,17 +75,10 @@ static bool is_g_kvec_set = false;
 
 void init_f1_kvec(std::vector<kernel_info_t> &g_kvec, ppl::common::datatype_t type)
 {
-    if ( type == ppl::common::DATATYPE_FLOAT32 )
-    {
-        printf("fp32 unsupported in %s\n", __FUNCTION__);
-    }
-    else if ( type == ppl::common::DATATYPE_FLOAT16 )
+    if ( type == ppl::common::DATATYPE_FLOAT16 )
     {
         Initialize2spkConvF1KernelContainer(g_kvec);
     }
-    else 
-    { printf("type unsupported\n"); }
-
     is_g_kvec_set = true;
 }
 
@@ -326,9 +319,6 @@ int PPLCUDAGemmSelectKernel(
 	        int kLoopNum = DivUp(K_pad, tile_k_per_cta);
                 lut_t in_lut, flt_lut;
                 (g_kvec[kid].lut_kptr)<<<grid_size, block_size, 0, stream>>>(GEMM_FUNC_PARAM);
-            }
-            else { 
-                printf("Error: kernel type error in %s\n", __FUNCTION__); 
             }
         }
 	    cudaEventRecord(end, stream);
