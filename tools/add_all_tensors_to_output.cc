@@ -36,7 +36,7 @@ static bool ParseFromBinaryFile(const char* model_file, ::onnx::ModelProto* pb_m
     int fd = fileno(fp);
     google::protobuf::io::FileInputStream fis(fd);
     google::protobuf::io::CodedInputStream cis(&fis);
-    cis.SetTotalBytesLimit(INT_MAX, INT_MAX / 2);
+    cis.SetTotalBytesLimit(INT_MAX);
     bool ok = pb_model->ParseFromCodedStream(&cis);
     fclose(fp);
 
