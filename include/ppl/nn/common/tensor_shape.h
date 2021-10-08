@@ -116,6 +116,8 @@ public:
                 padding1_[TensorShape::kAxisC] = CalcPadding(dims_[1], 16);
             } else if (data_format_ == ppl::common::DATAFORMAT_NHWC8) {
                 padding1_[TensorShape::kAxisC] = CalcPadding(dims_[1], 8);
+            } else if (data_format_ == ppl::common::DATAFORMAT_NHWC16) {
+                padding1_[TensorShape::kAxisC] = CalcPadding(dims_[1], 16);
             }
         }
     }

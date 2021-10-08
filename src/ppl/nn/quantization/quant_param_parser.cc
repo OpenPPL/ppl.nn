@@ -50,7 +50,7 @@ static RetCode ParseParam(const rapidjson::Value& v, QuantParam* param) {
         } else if (it->value.IsArray()) {
             value.content.clear();
             for (auto iter = it->value.GetArray().Begin(); iter != it->value.GetArray().End(); ++iter) {
-                auto field_value = it->value.GetFloat();
+                auto field_value = iter->GetFloat();
                 value.content.append((const char*)&field_value, sizeof(field_value));
             }
         } else {

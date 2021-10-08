@@ -393,8 +393,8 @@ RetCode OptGraph::InitQuantization() {
             temp_tensor_quant.scale.resize(size);
             temp_tensor_quant.zero_point.resize(size);
             for (uint32_t i = 0; i < size; ++i) {
-                auto tensor_max = *((float*)(str.content.data()) + i);
-                auto tensor_min = *((float*)(str.content.data()) + i);
+                auto tensor_max = *((float*)(max_str.content.data()) + i);
+                auto tensor_min = *((float*)(min_str.content.data()) + i);
                 temp_tensor_quant.scale[i] = (tensor_max - tensor_min) / ((1 << temp_tensor_quant.bit_width) - 1);
                 temp_tensor_quant.zero_point[i] = tensor_max + tensor_min;
             }
