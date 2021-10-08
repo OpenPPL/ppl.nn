@@ -4,6 +4,7 @@ file(GLOB PPLNN_TOOL_SRC
 
 add_executable(pplnn ${PPLNN_TOOL_SRC})
 target_link_libraries(pplnn PRIVATE pplnn_static)
+target_compile_features(pplnn PRIVATE cxx_std_11)
 
 add_executable(add_all_tensors_to_output
     ${CMAKE_CURRENT_SOURCE_DIR}/add_all_tensors_to_output.cc
@@ -13,7 +14,9 @@ target_include_directories(add_all_tensors_to_output PRIVATE
     ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(add_all_tensors_to_output PRIVATE
     libprotobuf)
+target_compile_features(add_all_tensors_to_output PRIVATE cxx_std_11)
 
 add_executable(onnx_model_is_supported
     ${CMAKE_CURRENT_SOURCE_DIR}/onnx_model_is_supported.cc)
 target_link_libraries(onnx_model_is_supported PRIVATE pplnn_static)
+target_compile_features(onnx_model_is_supported PRIVATE cxx_std_11)

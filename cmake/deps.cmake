@@ -43,8 +43,7 @@ endif()
 
 FetchContent_Declare(hpcc
     GIT_REPOSITORY https://github.com/openppl-public/hpcc.git
-    GIT_TAG v0.1.5
-    GIT_SHALLOW TRUE
+    GIT_TAG 072f718bf47a893c86e48d3a78d2a0f181adb8c5
     SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
     SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild
@@ -65,7 +64,7 @@ set(PPLCOMMON_ENABLE_LUA_API ${PPLNN_ENABLE_LUA_API})
 
 hpcc_declare_git_dep(ppl.common
     https://github.com/openppl-public/ppl.common.git
-    b2c5d9ba72af5abff8f463cf8b18b98352416190)
+    742439f844f6fa4e669c3ea872ef46beb5a942b2)
 
 # --------------------------------------------------------------------------- #
 

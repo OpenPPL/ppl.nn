@@ -90,6 +90,7 @@ set(PPLNN_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../..)
 set(PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES ${PPLNN_SOURCE_DIR}/include ${PPLNN_SOURCE_DIR}/src)
 
 add_library(PPLKernelX86 STATIC ${PPLKERNELX86_SRC})
+target_compile_features(PPLKernelX86 PRIVATE cxx_std_11)
 target_link_libraries(PPLKernelX86 ${PPLKERNELX86_LINK_LIBRARIES})
 set_target_properties(PPLKernelX86 PROPERTIES
     DEBUG_POSTFIX d)
@@ -112,6 +113,7 @@ target_include_directories(test_conv2d
     PRIVATE src ${PPLNN_TOOLS_DIR} ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES})
 target_compile_options(test_conv2d PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
 target_compile_definitions(test_conv2d PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
+target_compile_features(test_conv2d PRIVATE cxx_std_11)
 target_link_libraries(test_conv2d PRIVATE PPLKernelX86 ${PPLKERNELX86_LINK_LIBRARIES})
 
 add_executable(test_fc test/test_fc.cpp ${PPLNN_TOOLS_DIR}/simple_flags.cc)
@@ -120,6 +122,7 @@ target_include_directories(test_fc
     PRIVATE src ${PPLNN_TOOLS_DIR} ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES})
 target_compile_options(test_fc PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
 target_compile_definitions(test_fc PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
+target_compile_features(test_fc PRIVATE cxx_std_11)
 target_link_libraries(test_fc PRIVATE PPLKernelX86 ${PPLKERNELX86_LINK_LIBRARIES})
 
 add_executable(test_gemm test/test_gemm.cpp ${PPLNN_TOOLS_DIR}/simple_flags.cc)
@@ -128,6 +131,7 @@ target_include_directories(test_gemm
     PRIVATE src ${PPLNN_TOOLS_DIR} ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES})
 target_compile_options(test_gemm PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
 target_compile_definitions(test_gemm PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
+target_compile_features(test_gemm PRIVATE cxx_std_11)
 target_link_libraries(test_gemm PRIVATE PPLKernelX86 ${PPLKERNELX86_LINK_LIBRARIES})
 
 add_executable(test_gemm_v2 test/test_gemm_v2.cpp ${PPLNN_TOOLS_DIR}/simple_flags.cc)
@@ -136,4 +140,5 @@ target_include_directories(test_gemm_v2
     PRIVATE src ${PPLNN_TOOLS_DIR} ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES})
 target_compile_options(test_gemm_v2 PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
 target_compile_definitions(test_gemm_v2 PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
+target_compile_features(test_gemm_v2 PRIVATE cxx_std_11)
 target_link_libraries(test_gemm_v2 PRIVATE PPLKernelX86 ${PPLKERNELX86_LINK_LIBRARIES})

@@ -8,4 +8,5 @@ target_include_directories(pplnn_unittest PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/..
     ${googletest_SOURCE_DIR}/include)
 
-target_compile_definitions(pplnn_unittest PUBLIC PPLNN_TESTDATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/testdata")
+target_compile_definitions(pplnn_unittest PRIVATE PPLNN_TESTDATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/testdata")
+target_compile_features(pplnn_unittest PRIVATE cxx_std_11)
