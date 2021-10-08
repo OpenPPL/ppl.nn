@@ -8,9 +8,9 @@ endif()
 hpcc_populate_dep(luacpp)
 
 file(GLOB_RECURSE PPLNN_LUA_API_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cc)
-set_source_files_properties(${PPLNN_LUA_API_SRC} PROPERTIES COMPILE_FLAGS -std=c++14)
 
 add_library(luapplnn_shared SHARED ${PPLNN_LUA_API_SRC})
+target_compile_features(luapplnn_shared PRIVATE cxx_std_14)
 target_link_libraries(luapplnn_shared PUBLIC pplnn_static luacpp_static ${LUA_LIBRARIES})
 target_include_directories(luapplnn_shared PUBLIC
     ${PROJECT_SOURCE_DIR}/include

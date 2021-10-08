@@ -12,7 +12,7 @@ options='-DCMAKE_BUILD_TYPE=Release -DPPLNN_ENABLE_PYTHON_API=ON'
 
 lua_package='/tmp/lua-5.4.3.tar.gz'
 if ! [ -f "${lua_package}" ]; then
-    wget -c 'https://www.lua.org/ftp/lua-5.4.3.tar.gz' -O ${lua_package}
+    wget --no-check-certificate -c 'https://www.lua.org/ftp/lua-5.4.3.tar.gz' -O ${lua_package}
 fi
 
 lua_source_dir='/tmp/lua-5.4.3'

@@ -30,6 +30,7 @@ target_include_directories(pypplnn_shared PUBLIC
     ${PROJECT_SOURCE_DIR}/include
     ${pybind11_SOURCE_DIR}/include
     ${PYTHON3_INCLUDE_DIRS})
+target_compile_features(pypplnn_shared PRIVATE cxx_std_11)
 
 # rename target for python import
 set_target_properties(pypplnn_shared PROPERTIES PREFIX "")

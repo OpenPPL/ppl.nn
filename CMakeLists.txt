@@ -97,6 +97,7 @@ target_include_directories(pplnn_static PUBLIC ${PPLNN_INCLUDE_DIRECTORIES})
 target_link_directories(pplnn_static PUBLIC ${PPLNN_LINK_DIRECTORIES})
 target_link_libraries(pplnn_static PUBLIC ${PPLNN_LINK_LIBRARIES})
 target_compile_definitions(pplnn_static PUBLIC ${PPLNN_COMPILE_DEFINITIONS})
+target_compile_features(pplnn_static PRIVATE cxx_std_11)
 
 target_include_directories(pplnn_static PRIVATE
     ${rapidjson_SOURCE_DIR}/include
