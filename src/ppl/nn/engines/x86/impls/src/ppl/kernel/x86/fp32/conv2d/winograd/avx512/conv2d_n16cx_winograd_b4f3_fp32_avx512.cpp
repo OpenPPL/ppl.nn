@@ -194,8 +194,8 @@ void conv2d_n16cx_winograd_b4f3_fp32_avx512_executor::init_preproc_param()
 
         sp.oc_l2_blk = round_up(max<int64_t>(sp.oc_per_gp / oc_l2_cnt, 1), OC_KR_BLK());
         
-        sp.thread_tile_in_len   = round_up(CH_DT_BLK() * TILE_IN_H() * TILE_IN_W() * TILE_KR_BLK(), PPL_X86_CACHELINE_BYTES() / sizeof(float));
-        sp.thread_matmul_in_len = round_up(CH_DT_BLK() * TILE_IN_H() * TILE_IN_W() * TILE_KR_BLK(), PPL_X86_CACHELINE_BYTES() / sizeof(float));
+        sp.thread_tile_in_len   = round_up(CH_DT_BLK() * TILE_IN_H() * TILE_IN_W(), PPL_X86_CACHELINE_BYTES() / sizeof(float));
+        sp.thread_matmul_in_len = round_up(CH_DT_BLK() * TILE_IN_H() * TILE_IN_W(), PPL_X86_CACHELINE_BYTES() / sizeof(float));
 
         sp.thread_src_trans_len = round_up(sp.ic_l2_blk * TILE_IN_H() * TILE_IN_W() * sp.tiles_l2_blk, PPL_X86_CACHELINE_BYTES() / sizeof(float));
         sp.thread_gemm_out_len  = round_up(sp.oc_l2_blk * TILE_IN_H() * TILE_IN_W() * sp.tiles_l2_blk, PPL_X86_CACHELINE_BYTES() / sizeof(float));
@@ -211,8 +211,8 @@ void conv2d_n16cx_winograd_b4f3_fp32_avx512_executor::init_preproc_param()
     } else {
         sp.oc_l2_blk = get_oc_l2_blk(sp.ic_per_gp, sp.oc_per_gp);
 
-        sp.thread_tile_in_len   = round_up(CH_DT_BLK() * TILE_IN_H() * TILE_IN_W() * TILE_KR_BLK(), PPL_X86_CACHELINE_BYTES() / sizeof(float));
-        sp.thread_matmul_in_len = round_up(CH_DT_BLK() * TILE_IN_H() * TILE_IN_W() * TILE_KR_BLK(), PPL_X86_CACHELINE_BYTES() / sizeof(float));
+        sp.thread_tile_in_len   = round_up(CH_DT_BLK() * TILE_IN_H() * TILE_IN_W(), PPL_X86_CACHELINE_BYTES() / sizeof(float));
+        sp.thread_matmul_in_len = round_up(CH_DT_BLK() * TILE_IN_H() * TILE_IN_W(), PPL_X86_CACHELINE_BYTES() / sizeof(float));
 
         sp.src_trans_len        = round_up(sp.ic_l2_blk * TILE_IN_H() * TILE_IN_W() * sp.tiles_l2_blk, PPL_X86_CACHELINE_BYTES() / sizeof(float));
         sp.gemm_out_len         = round_up(sp.padded_oc * TILE_IN_H() * TILE_IN_W() * sp.tiles_l2_blk, PPL_X86_CACHELINE_BYTES() / sizeof(float));
@@ -1150,7 +1150,7 @@ ppl::common::RetCode conv2d_n16cx_winograd_b4f3_fp32_avx512_manager::gen_cvt_wei
                     if (ocb_eff < CH_DT_BLK()) {
                         for (int64_t i = 0; i < TILE_IN_H(); ++i) {
                             for (int64_t j = 0; j < TILE_IN_W(); ++j) {
-                                for (int oc = ocb_eff; oc < CH_DT_BLK(); ++oc) {
+                                for (int64_t oc = ocb_eff; oc < CH_DT_BLK(); ++oc) {
                                     l_cvt_flt[(i * TILE_IN_W() + j) * padded_oc * icl2_eff + oc] = 0.0f;
                                 }
                             }

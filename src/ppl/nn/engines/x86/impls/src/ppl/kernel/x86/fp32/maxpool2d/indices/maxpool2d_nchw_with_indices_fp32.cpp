@@ -66,8 +66,8 @@ ppl::common::RetCode maxpool2d_nchw_with_indices_fp32(
                 } else {
                     float max_val     = -FLT_MAX;
                     int64_t max_index = 0;
-                    for (int ih = ihstart; ih < ihend; ih++) {
-                        for (int iw = iwstart; iw < iwend; iw++) {
+                    for (int64_t ih = ihstart; ih < ihend; ih++) {
+                        for (int64_t iw = iwstart; iw < iwend; iw++) {
                             const int64_t src_index = ih * src_w + iw;
                             const float src_val     = p_src[src_index];
                             if (src_val > max_val) {
