@@ -86,7 +86,7 @@ ppl::common::RetCode resize2d_n16cx_pytorch_2linear_floor_fp32_avx512(
                 h0_lambda = 1.0f - h1_lambda;
             }
 
-            for (int ow = 0; ow < dst_w; ++ow) {
+            for (int64_t ow = 0; ow < dst_w; ++ow) {
                 int64_t w0, w1;
                 float w0_lambda, w1_lambda;
 

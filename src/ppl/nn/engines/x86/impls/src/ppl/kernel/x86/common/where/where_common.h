@@ -97,15 +97,15 @@ inline ppl::nn::TensorShape pad_shape(
     ppl::nn::TensorShape padded_shape(*shape);
     padded_shape.SetDimCount(padded_dim_count);
     if (shape->IsScalar()) {
-        for (int i = 0; i < padded_dim_count; i++) {
+        for (int32_t i = 0; i < padded_dim_count; i++) {
             padded_shape.SetDim(i, 1);
         }
     } else {
-        const int dim_diff = padded_dim_count - shape->GetDimCount();
-        for (int i = 0; i < dim_diff; i++) {
+        const int32_t dim_diff = padded_dim_count - shape->GetDimCount();
+        for (int32_t i = 0; i < dim_diff; i++) {
             padded_shape.SetDim(i, 1);
         }
-        for (int i = dim_diff; i < padded_dim_count; i++) {
+        for (int32_t i = dim_diff; i < padded_dim_count; i++) {
             padded_shape.SetDim(i, shape->GetDim(i - dim_diff));
         }
     }
@@ -124,7 +124,7 @@ ppl::common::RetCode where_ndarray_common(
     eT *dst)
 {
     // pad input dim
-    const int dim_count = dst_shape->GetDimCount();
+    const uint32_t dim_count = dst_shape->GetDimCount();
     if (dim_count > PPL_X86_TENSOR_MAX_DIMS()) {
         return ppl::common::RC_UNSUPPORTED;
     }
@@ -144,7 +144,7 @@ ppl::common::RetCode where_ndarray_common(
     int64_t stride_y    = 1;
     int64_t stride_out  = 1;
 
-    for (int i = dim_count - 1; i >= 0; i--) {
+    for (uint32_t i = dim_count - 1; i >= 0; i--) {
         inc_cond[i] = padded_cond_shape.GetDim(i) == 1 ? 0 : stride_cond;
         inc_x[i]    = padded_x_shape.GetDim(i) == 1 ? 0 : stride_x;
         inc_y[i]    = padded_y_shape.GetDim(i) == 1 ? 0 : stride_y;

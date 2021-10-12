@@ -47,7 +47,7 @@ ppl::common::RetCode roialign_ndarray_fp32(
     const int64_t rois_offset = 4;
 
     PRAGMA_OMP_PARALLEL_FOR()
-    for (int i = 0; i < num_rois; i++) {
+    for (int64_t i = 0; i < num_rois; i++) {
         int64_t index_n             = i * channels * pooled_width * pooled_height;
         const float *p_rois         = rois + i * rois_offset;
         const int64_t roi_batch_ind = batch_indices[i];

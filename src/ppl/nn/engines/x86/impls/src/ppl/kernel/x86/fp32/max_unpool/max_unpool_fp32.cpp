@@ -40,18 +40,18 @@ ppl::common::RetCode max_unpool_nchw_fp32(
 #ifdef PPL_USE_X86_OMP_COLLAPSE
     PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)
 #endif
-    for (int n = 0; n < batch; n++) {
+    for (int64_t n = 0; n < batch; n++) {
 #ifndef PPL_USE_X86_OMP_COLLAPSE
         PRAGMA_OMP_PARALLEL_FOR()
 #endif
-        for (int c = 0; c < channels; c++) {
+        for (int64_t c = 0; c < channels; c++) {
             const float *p_src       = src + (n * channels + c) * src_h * src_w;
             const int64_t *p_indices = indices + (n * channels + c) * src_h * src_w;
             float *p_dst             = dst + (n * channels + c) * dst_h * dst_w;
 
             const int64_t indices_offset = c * dst_h * dst_w;
-            for (int ih = 0; ih < src_h; ih++) {
-                for (int iw = 0; iw < src_w; iw++) {
+            for (int64_t ih = 0; ih < src_h; ih++) {
+                for (int64_t iw = 0; iw < src_w; iw++) {
                     const int64_t src_index = ih * src_w + iw;
                     const float data        = p_src[src_index];
                     const int64_t dst_index = p_indices[src_index] - indices_offset;

@@ -307,7 +307,7 @@ static ppl::common::RetCode arithmetic_broadcast_ndarray_fp32_sse(
         idx2dims(start_idx, real_dst_shape, real_dim_count, blocks[i].start);
         idx2dims(end_idx, real_dst_shape, real_dim_count, blocks[i].end);
         blocks[i].id = i;
-        for (int j = 0; j < real_dim_count; j++) {
+        for (int64_t j = 0; j < real_dim_count; j++) {
             blocks[i].idx[j] = blocks[i].start[j];
         }
     }

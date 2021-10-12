@@ -53,8 +53,8 @@ ppl::common::RetCode cast(
 {
 #define MAKE_CAST_TYPE(idt, odt) (((uint32_t)idt << 16) | (uint32_t)odt)
 
-    int idt = src_shape->GetDataType();
-    int odt = dst_shape->GetDataType();
+    auto idt = src_shape->GetDataType();
+    auto odt = dst_shape->GetDataType();
 
     if (idt == odt) {
         memcpy(dst, src, dst_shape->GetBytesIncludingPadding());
