@@ -1,0 +1,69 @@
+cmake_minimum_required(VERSION 3.10)
+
+if(TARGET "pplnn_static")
+    return()
+endif()
+
+add_library(pplnn_static STATIC IMPORTED)
+
+# --------------------------------------------------------------------------- #
+
+# exported definitions
+set(PPLNN_USE_CUDA @HPCC_USE_CUDA@)
+set(PPLNN_USE_X86 @HPCC_USE_X86_64@)
+
+# --------------------------------------------------------------------------- #
+
+set(__PPLNN_PACKAGE_ROOTDIR__ "${CMAKE_CURRENT_LIST_DIR}/../../..")
+set(__PPLNN_LINK_LIBRARIES__)
+
+if(PPLNN_USE_X86)
+    if(NOT TARGET "pplkernelx86_static")
+        include(${CMAKE_CURRENT_LIST_DIR}/pplkernelx86-config.cmake)
+    endif()
+    list(APPEND __PPLNN_LINK_LIBRARIES__ "pplkernelx86_static")
+endif()
+
+if(PPLNN_USE_CUDA)
+    if(NOT TARGET "pplkernelcuda_static")
+        include(${CMAKE_CURRENT_LIST_DIR}/pplkernelcuda-config.cmake)
+    endif()
+    list(APPEND __PPLNN_LINK_LIBRARIES__ "pplkernelcuda_static")
+endif()
+
+if(NOT TARGET "pplcommon_static")
+    include(${CMAKE_CURRENT_LIST_DIR}/pplcommon-config.cmake)
+endif()
+list(APPEND __PPLNN_LINK_LIBRARIES__ "pplcommon_static")
+
+# TODO do not export protobuf
+if(NOT TARGET "protobuf::libprotobuf")
+    include(${__PPLNN_PACKAGE_ROOTDIR__}/lib/cmake/protobuf/protobuf-config.cmake)
+endif()
+list(APPEND __PPLNN_LINK_LIBRARIES__ "protobuf::libprotobuf")
+
+# --------------------------------------------------------------------------- #
+
+set_target_properties(pplnn_static PROPERTIES
+    INTERFACE_LINK_LIBRARIES "${__PPLNN_LINK_LIBRARIES__}")
+
+if(MSVC)
+    set_target_properties(pplnn_static PROPERTIES
+        IMPORTED_LOCATION "${__PPLNN_PACKAGE_ROOTDIR__}/lib/libpplnn_static.lib"
+        IMPORTED_LOCATION_DEBUG "${__PPLNN_PACKAGE_ROOTDIR__}/lib/libpplnn_static.lib"
+        IMPORTED_LOCATION_RELEASE "${__PPLNN_PACKAGE_ROOTDIR__}/lib/libpplnn_static.lib")
+else()
+    set_target_properties(pplnn_static PROPERTIES
+        IMPORTED_LOCATION "${__PPLNN_PACKAGE_ROOTDIR__}/lib/libpplnn_static.a"
+        IMPORTED_LOCATION_DEBUG "${__PPLNN_PACKAGE_ROOTDIR__}/lib/libpplnn_static.a"
+        IMPORTED_LOCATION_RELEASE "${__PPLNN_PACKAGE_ROOTDIR__}/lib/libpplnn_static.a")
+endif()
+
+# exported definitions
+set(pplnn_INCLUDE_DIRS "${__PPLNN_PACKAGE_ROOTDIR__}/include")
+set(pplnn_LIBRARIES "pplnn_static")
+
+# --------------------------------------------------------------------------- #
+
+unset(__PPLNN_LINK_LIBRARIES__)
+unset(__PPLNN_PACKAGE_ROOTDIR__)

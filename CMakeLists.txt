@@ -109,7 +109,10 @@ target_include_directories(pplnn_static PRIVATE
 
 if(PPLNN_INSTALL)
     install(DIRECTORY include DESTINATION .)
-    install(TARGETS pplnn_static LIBRARY DESTINATION lib)
+    install(TARGETS pplnn_static DESTINATION lib)
+    configure_file(${CMAKE_CURRENT_LIST_DIR}/cmake/pplnn-config.cmake.in
+        ${CMAKE_INSTALL_PREFIX}/lib/cmake/ppl/pplnn-config.cmake
+        @ONLY)
 endif()
 
 # --------------------------------------------------------------------------- #
