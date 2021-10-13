@@ -140,7 +140,7 @@ ppl::common::RetCode reduce_ndarray_int64(
     auto pc = select_single_parallel_loop_with_mask(
         loop_iter,
         forbid_mask,
-        ppl::common::ISA_undef,
+        ppl::common::ISA_UNKNOWN,
         reduce_on_last_dim ? sizeof(int64_t) : 2 * sizeof(int64_t),
         reduce_on_last_dim ? 0 : sizeof(int64_t),
         sizeof(int64_t),

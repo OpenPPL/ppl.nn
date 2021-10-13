@@ -215,7 +215,7 @@ common::RetCode reduce_n16cx_int64(
     auto pc = select_single_parallel_loop_with_mask(
         loop_iter,
         forbid_mask,
-        ppl::common::ISA_undef,
+        ppl::common::ISA_UNKNOWN,
         load_per_task,
         store_per_task,
         C_BLK() * sizeof(int64_t),
