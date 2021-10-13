@@ -92,8 +92,6 @@ set(PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES ${PPLNN_SOURCE_DIR}/include ${PPLNN_SOUR
 add_library(pplkernelx86_static STATIC ${PPLKERNELX86_SRC})
 target_compile_features(pplkernelx86_static PRIVATE cxx_std_11)
 target_link_libraries(pplkernelx86_static ${PPLKERNELX86_LINK_LIBRARIES})
-set_target_properties(pplkernelx86_static PROPERTIES
-    DEBUG_POSTFIX d)
 target_include_directories(pplkernelx86_static
     PUBLIC include ${PPLKERNELX86_INCLUDE_DIRECTORIES}
     PRIVATE src ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES})
@@ -102,6 +100,7 @@ target_compile_options(pplkernelx86_static PRIVATE ${PPLKERNELX86_COMPILE_OPTION
 
 if(PPLNN_INSTALL)
     install(TARGETS pplkernelx86_static DESTINATION lib)
+    install(FILES ${CMAKE_CURRENT_LIST_DIR}/pplkernelx86-config.cmake DESTINATION lib/cmake/ppl)
 endif()
 
 ################### Test ###################
