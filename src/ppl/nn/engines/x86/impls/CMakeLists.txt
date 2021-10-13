@@ -89,19 +89,19 @@ list(APPEND PPLKERNELX86_LINK_LIBRARIES pplcommon_static)
 set(PPLNN_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../..)
 set(PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES ${PPLNN_SOURCE_DIR}/include ${PPLNN_SOURCE_DIR}/src)
 
-add_library(PPLKernelX86 STATIC ${PPLKERNELX86_SRC})
-target_compile_features(PPLKernelX86 PRIVATE cxx_std_11)
-target_link_libraries(PPLKernelX86 ${PPLKERNELX86_LINK_LIBRARIES})
-set_target_properties(PPLKernelX86 PROPERTIES
+add_library(pplkernelx86_static STATIC ${PPLKERNELX86_SRC})
+target_compile_features(pplkernelx86_static PRIVATE cxx_std_11)
+target_link_libraries(pplkernelx86_static ${PPLKERNELX86_LINK_LIBRARIES})
+set_target_properties(pplkernelx86_static PROPERTIES
     DEBUG_POSTFIX d)
-target_include_directories(PPLKernelX86
+target_include_directories(pplkernelx86_static
     PUBLIC include ${PPLKERNELX86_INCLUDE_DIRECTORIES}
     PRIVATE src ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES})
-target_compile_definitions(PPLKernelX86 PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
-target_compile_options(PPLKernelX86 PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
+target_compile_definitions(pplkernelx86_static PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
+target_compile_options(pplkernelx86_static PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
 
 if(PPLNN_INSTALL)
-    install(TARGETS PPLKernelX86 DESTINATION lib)
+    install(TARGETS pplkernelx86_static DESTINATION lib)
 endif()
 
 ################### Test ###################
@@ -114,7 +114,7 @@ target_include_directories(test_conv2d
 target_compile_options(test_conv2d PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
 target_compile_definitions(test_conv2d PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
 target_compile_features(test_conv2d PRIVATE cxx_std_11)
-target_link_libraries(test_conv2d PRIVATE PPLKernelX86 ${PPLKERNELX86_LINK_LIBRARIES})
+target_link_libraries(test_conv2d PRIVATE pplkernelx86_static ${PPLKERNELX86_LINK_LIBRARIES})
 
 add_executable(test_fc test/test_fc.cpp ${PPLNN_TOOLS_DIR}/simple_flags.cc)
 target_include_directories(test_fc
@@ -123,7 +123,7 @@ target_include_directories(test_fc
 target_compile_options(test_fc PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
 target_compile_definitions(test_fc PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
 target_compile_features(test_fc PRIVATE cxx_std_11)
-target_link_libraries(test_fc PRIVATE PPLKernelX86 ${PPLKERNELX86_LINK_LIBRARIES})
+target_link_libraries(test_fc PRIVATE pplkernelx86_static ${PPLKERNELX86_LINK_LIBRARIES})
 
 add_executable(test_gemm test/test_gemm.cpp ${PPLNN_TOOLS_DIR}/simple_flags.cc)
 target_include_directories(test_gemm
@@ -132,7 +132,7 @@ target_include_directories(test_gemm
 target_compile_options(test_gemm PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
 target_compile_definitions(test_gemm PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
 target_compile_features(test_gemm PRIVATE cxx_std_11)
-target_link_libraries(test_gemm PRIVATE PPLKernelX86 ${PPLKERNELX86_LINK_LIBRARIES})
+target_link_libraries(test_gemm PRIVATE pplkernelx86_static ${PPLKERNELX86_LINK_LIBRARIES})
 
 add_executable(test_gemm_v2 test/test_gemm_v2.cpp ${PPLNN_TOOLS_DIR}/simple_flags.cc)
 target_include_directories(test_gemm_v2
@@ -141,4 +141,4 @@ target_include_directories(test_gemm_v2
 target_compile_options(test_gemm_v2 PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
 target_compile_definitions(test_gemm_v2 PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
 target_compile_features(test_gemm_v2 PRIVATE cxx_std_11)
-target_link_libraries(test_gemm_v2 PRIVATE PPLKernelX86 ${PPLKERNELX86_LINK_LIBRARIES})
+target_link_libraries(test_gemm_v2 PRIVATE pplkernelx86_static ${PPLKERNELX86_LINK_LIBRARIES})
