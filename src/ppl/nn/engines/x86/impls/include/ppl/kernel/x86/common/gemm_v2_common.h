@@ -61,7 +61,7 @@ struct gemm_v2_param_fp32 {
     float alpha        = 1.0f;
     float beta         = 0.0f;
 
-    ppl::common::isa_t isa_flag   = ppl::common::ISA_undef;
+    ppl::common::isa_t isa_flag   = ppl::common::ISA_UNKNOWN;
     gemm_v2_fuse_flag_t fuse_flag = gemm_v2_fuse_flag::none;
     gemm_v2_C_type_t c_type       = gemm_v2_C_type::empty;
 };

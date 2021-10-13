@@ -230,7 +230,7 @@ ppl::common::RetCode transpose_ndarray(
     }
 
     std::vector<int64_t> loops(src_dims, src_dims + dim_count);
-    auto pc = select_single_parallel_loop(loops, ppl::common::ISA_undef, sizeof(eT), sizeof(eT), sizeof(eT), 1);
+    auto pc = select_single_parallel_loop(loops, ppl::common::ISA_UNKNOWN, sizeof(eT), sizeof(eT), sizeof(eT), 1);
 
     int32_t revert_perm[PPL_X86_TENSOR_MAX_DIMS()] = {0};
     for (int64_t i = 0; i < dim_count; i++) {

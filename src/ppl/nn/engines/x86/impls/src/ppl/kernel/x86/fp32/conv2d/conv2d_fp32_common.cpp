@@ -48,7 +48,7 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
 {
     static conv2d_fp32_algo_info unknown_info = {
         conv2d_fp32_algo::unknown,
-        ppl::common::ISA_undef,
+        ppl::common::ISA_UNKNOWN,
         ppl::common::DATAFORMAT_UNKNOWN,
         ppl::common::DATAFORMAT_UNKNOWN};
 

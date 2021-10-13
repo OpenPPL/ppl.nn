@@ -64,7 +64,7 @@ set(PPLCOMMON_ENABLE_LUA_API ${PPLNN_ENABLE_LUA_API})
 
 hpcc_declare_git_dep(ppl.common
     https://github.com/openppl-public/ppl.common.git
-    8925761ded2134ee45fd91b104c86db2712242a0)
+    74e6cd3fa973b58a2ac137a758537ddd3ac6851c)
 
 # --------------------------------------------------------------------------- #
 

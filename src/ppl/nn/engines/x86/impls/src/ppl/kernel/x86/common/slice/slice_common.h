@@ -135,7 +135,7 @@ ppl::common::RetCode slice_ndarray_common(
     }
 
     std::vector<int64_t> loops(dst_shape->GetDims(), dst_shape->GetDims() + dim_count);
-    auto pc = select_single_parallel_loop(loops, ppl::common::ISA_undef, sizeof(eT), sizeof(eT), sizeof(eT), 1);
+    auto pc = select_single_parallel_loop(loops, ppl::common::ISA_UNKNOWN, sizeof(eT), sizeof(eT), sizeof(eT), 1);
 
     return slice_ndarray_recursive<eT>(pc, src_shape, dst_shape, src, real_starts, real_steps, stride_in, stride_out, 0, dst);
 }

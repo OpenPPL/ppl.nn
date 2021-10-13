@@ -28,7 +28,7 @@ fc_fp32_algo_info fc_algo_selector::select_algo(const ppl::common::dataformat_t 
 
     static fc_fp32_algo_info unknown_info = {
         fc_fp32_algo::unknown,
-        ppl::common::ISA_undef};
+        ppl::common::ISA_UNKNOWN};
 
     if (isa_flags & ppl::common::ISA_X86_FMA) {
         return {
