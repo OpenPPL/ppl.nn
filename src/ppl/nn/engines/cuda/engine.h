@@ -61,7 +61,7 @@ public:
     ppl::common::RetCode Init(const CudaEngineOptions& options);
     ppl::common::RetCode Configure(uint32_t, ...) override;
     EngineContext* CreateEngineContext(const std::string& graph_name) override;
-    bool CanRunOp(const ir::Node*) const override;
+    bool Supports(const ir::Node*) const override;
     ppl::common::RetCode ProcessGraph(utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*) override;
 
 private:

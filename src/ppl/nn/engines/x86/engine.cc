@@ -49,7 +49,7 @@ EngineContext* X86Engine::CreateEngineContext(const string&) {
     return new X86EngineContext(GetName(), device_.GetISA(), options_.mm_policy);
 }
 
-bool X86Engine::CanRunOp(const ir::Node* node) const {
+bool X86Engine::Supports(const ir::Node* node) const {
     auto& type = node->GetType();
     return (OptKernelCreatorManager::Instance()->Find(type.domain, type.name) != nullptr);
 }

@@ -14,7 +14,7 @@ EngineContext* EngineImpl::CreateEngineContext(const std::string& graph_name,
 Create an `EngineContext` used by a `Runtime` instance. The first parameter `graph_name` denotes the graph which this `EngineContext` is used for.
 
 ```c++
-bool EngineImpl::CanRunOp(const ir::Node* node) const;
+bool EngineImpl::Supports(const ir::Node* node) const;
 ```
 
 Tell if this engine can run an op specified by `node`.

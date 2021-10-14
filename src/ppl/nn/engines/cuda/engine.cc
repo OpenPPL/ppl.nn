@@ -49,7 +49,7 @@ EngineContext* CudaEngine::CreateEngineContext(const string&) {
     return ctx.release();
 }
 
-bool CudaEngine::CanRunOp(const ir::Node* node) const {
+bool CudaEngine::Supports(const ir::Node* node) const {
     auto& type = node->GetType();
     return (OptKernelCreatorManager::Instance()->Find(type.domain, type.name) != nullptr);
 }
