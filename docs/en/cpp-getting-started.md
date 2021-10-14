@@ -91,13 +91,13 @@ for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
     auto& shape = t->GetShape();
 
     auto nr_element = shape.GetBytesIncludingPadding() / sizeof(float);
-    unique_ptr<float[]> buffer(new float[nr_element]);
+    vector<float> buffer(nr_element);
 
     // fill random input data
     std::default_random_engine eng;
     std::uniform_real_distribution<float> dis(-1.0f, 1.0f);
     for (uint32_t i = 0; i < nr_element; ++i) {
-        buffer.get()[i] = dis(eng);
+        buffer[i] = dis(eng);
     }
 
     auto status = t->ReallocBuffer();
@@ -110,7 +110,7 @@ for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
     src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
 
     // input tensors may require different data format
-    status = t->ConvertFromHost(buffer.get(), src_desc);
+    status = t->ConvertFromHost((const void*)buffer.data(), src_desc);
     if (status != RC_SUCCESS) {
         // ......
     }
@@ -142,9 +142,9 @@ for (uint32_t c = 0; c < runtime->GetOutputCount(); ++c) {
     TensorShape dst_desc = t->GetShape();
     dst_desc.SetDataFormat(DATAFORMAT_NDARRAY);
     auto bytes = dst_desc.GetBytesIncludingPadding();
-    unique_ptr<char[]> buffer(new char[bytes]);
+    vector<char> buffer(bytes);
 
-    auto status = t->ConvertToHost(buffer.get(), dst_desc);
+    auto status = t->ConvertToHost((void*)buffer.data(), dst_desc);
     // ......
 }
 ```
