@@ -69,7 +69,7 @@ static EngineImpl* FindEngine(utils::SharedResource* resource, const ir::Node* n
     auto engines = &resource->engines;
     for (auto it = engines->begin(); it != engines->end(); ++it) {
         auto engine = *it;
-        if (engine->CanRunOp(node)) {
+        if (engine->Supports(node)) {
             return engine;
         }
     }

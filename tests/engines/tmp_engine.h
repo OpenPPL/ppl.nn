@@ -32,7 +32,7 @@ public:
     EngineContext* CreateEngineContext(const std::string&) override {
         return new TmpEngineContext(GetName());
     }
-    bool CanRunOp(const ir::Node* node) const override {
+    bool Supports(const ir::Node* node) const override {
         auto& type = node->GetType();
         return (type.name == "op1" || type.name == "op2");
     }
@@ -62,7 +62,7 @@ public:
     EngineContext* CreateEngineContext(const std::string&) override {
         return new TmpEngineContext(GetName());
     }
-    bool CanRunOp(const ir::Node* node) const override {
+    bool Supports(const ir::Node* node) const override {
         auto& type = node->GetType();
         return (type.name == "op3" || type.name == "op4");
     }

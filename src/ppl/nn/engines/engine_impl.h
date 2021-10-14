@@ -51,8 +51,8 @@ public:
     */
     virtual EngineContext* CreateEngineContext(const std::string& graph_name) = 0;
 
-    /** @brief tells whether this engine can run an op specified by `node`. */
-    virtual bool CanRunOp(const ir::Node* node) const = 0;
+    /** @brief tells whether this engine implements `node`. */
+    virtual bool Supports(const ir::Node* node) const = 0;
 
     /**
        @brief optimize the compute graph `graph` and fill `info`
