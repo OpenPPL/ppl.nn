@@ -19,6 +19,7 @@
 
 #include "py_cuda_engine.h"
 #include "ppl/nn/engines/cuda/engine_factory.h"
+#include "pybind11/pybind11.h"
 
 namespace ppl { namespace nn { namespace python {
 

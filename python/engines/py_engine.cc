@@ -16,6 +16,7 @@
 // under the License.
 
 #include "py_engine.h"
+#include "pybind11/pybind11.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace python {
