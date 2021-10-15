@@ -21,7 +21,7 @@
 #ifdef PPLNN_USE_CUDA
 
 #include "ppl/nn/engines/engine.h"
-#include "pybind11/pybind11.h"
+#include <memory>
 
 namespace ppl { namespace nn { namespace python {
 

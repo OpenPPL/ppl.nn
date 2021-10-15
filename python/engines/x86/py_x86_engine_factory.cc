@@ -19,6 +19,7 @@
 
 #include "py_x86_engine.h"
 #include "ppl/nn/engines/x86/engine_factory.h"
+#include "pybind11/pybind11.h"
 
 namespace ppl { namespace nn { namespace python {
 
