@@ -492,7 +492,7 @@ RetCode OptGraph::TryToInferType(X86Device* device) {
         });
 
         auto kernel = (X86OptKernel*)(info_->kernels[node_id].get());
-        kernel->InferTypes(&IOinfo);
+        kernel->InferType(&IOinfo);
     }
 
     return RC_SUCCESS;
