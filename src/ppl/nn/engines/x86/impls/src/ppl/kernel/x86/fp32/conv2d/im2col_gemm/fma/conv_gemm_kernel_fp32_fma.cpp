@@ -57,7 +57,6 @@ void conv_gemm_fp32_fma_kernel_core(
         ".equ BETA_IDX, (7 * P_BYTES)\n" // float
 
         ".equ NT_STORE, %c[NT_STORE]\n"
-        ".equ PREFETCH_B, 1\n"
         ".equ KERNEL_FLAG_LOAD_C, %c[KERNEL_FLAG_LOAD_C]\n"
         ".equ KERNEL_FLAG_ADD_V, %c[KERNEL_FLAG_ADD_V]\n"
         ".equ KERNEL_FLAG_ADD_H, %c[KERNEL_FLAG_ADD_H]\n"
@@ -143,10 +142,13 @@ void conv_gemm_fp32_fma_kernel_core(
 "4:\n" // label_k_body
         PPL_X86_INLINE_ASM_ALIGN()
         "lea (%%rax, %%r11, D_BYTES), %%rcx\n"
-        ".if M_LEN > 1\n" // UNROLL OR NOT
+        ".if M_LEN > 0\n" // UNROLL OR NOT
         ".irp K,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15\n"
         "vmovups ((\\K * M6_N_DT_BLK + 0 * N_RF_BLK) * D_BYTES)(%%rbx), %%ymm6\n"
         "vmovups ((\\K * M6_N_DT_BLK + 1 * N_RF_BLK) * D_BYTES)(%%rbx), %%ymm7\n"
+        ".if M_LEN > 3\n"
+        "prefetcht0 ((\\K * M6_N_DT_BLK + M6_K_DT_BLK * M6_N_DT_BLK) * D_BYTES)(%%rbx)\n"
+        ".endif\n"
         ".if M_LEN > 0\n vbroadcastss ((\\K + 0 * M6_K_DT_BLK) * D_BYTES)(%%rax), %%ymm8\n .endif\n"
         ".if M_LEN > 1\n vbroadcastss ((\\K + 1 * M6_K_DT_BLK) * D_BYTES)(%%rax), %%ymm9\n .endif\n"
         ".if M_LEN > 0\n"
@@ -173,9 +175,6 @@ void conv_gemm_fp32_fma_kernel_core(
         "vfmadd231ps %%ymm6, %%ymm8, %%ymm4\n"
         "vfmadd231ps %%ymm7, %%ymm8, %%ymm14\n"
         ".endif\n"
-        ".if PREFETCH_B\n"
-        "prefetcht0 ((\\K * M6_N_DT_BLK + M6_K_DT_BLK * M6_N_DT_BLK) * D_BYTES)(%%rbx)\n"
-        ".endif\n" // .if PREFETCH_B
         ".if M_LEN > 5\n"
         "vfmadd231ps %%ymm6, %%ymm9, %%ymm5\n"
         "vfmadd231ps %%ymm7, %%ymm9, %%ymm15\n"
@@ -188,6 +187,9 @@ void conv_gemm_fp32_fma_kernel_core(
 "10:\n" // label_k_loop
         "vmovups ((0 * M6_N_DT_BLK + 0 * N_RF_BLK) * D_BYTES)(%%rbx), %%ymm6\n"
         "vmovups ((0 * M6_N_DT_BLK + 1 * N_RF_BLK) * D_BYTES)(%%rbx), %%ymm7\n"
+        ".if M_LEN > 3\n"
+        "prefetcht0 ((0 * M6_N_DT_BLK + M6_K_DT_BLK * M6_N_DT_BLK) * D_BYTES)(%%rbx)\n"
+        ".endif\n"
         ".if M_LEN > 0\n vbroadcastss ((0 + 0 * M6_K_DT_BLK) * D_BYTES)(%%rdx), %%ymm8\n .endif\n"
         ".if M_LEN > 1\n vbroadcastss ((0 + 1 * M6_K_DT_BLK) * D_BYTES)(%%rdx), %%ymm9\n .endif\n"
         ".if M_LEN > 0\n"
@@ -214,9 +216,6 @@ void conv_gemm_fp32_fma_kernel_core(
         "vfmadd231ps %%ymm6, %%ymm8, %%ymm4\n"
         "vfmadd231ps %%ymm7, %%ymm8, %%ymm14\n"
         ".endif\n"
-        ".if PREFETCH_B\n"
-        "prefetcht0 ((0 * M6_N_DT_BLK + M6_K_DT_BLK * M6_N_DT_BLK) * D_BYTES)(%%rbx)\n"
-        ".endif\n" // .if PREFETCH_B
         ".if M_LEN > 5\n"
         "vfmadd231ps %%ymm6, %%ymm9, %%ymm5\n"
         "vfmadd231ps %%ymm7, %%ymm9, %%ymm15\n"
@@ -493,7 +492,7 @@ void conv_gemm_fp32_fma_kernel(
 {
 
 #ifdef PPL_USE_X86_INLINE_ASM
-    if (n_len == 2 * N_RF_BLK() && m_len == 6) {
+    if (n_len == 2 * N_RF_BLK()) {
         conv_gemm_fp32_fma_kernel_core<nt_store, m_len>(priv_param, shar_param);
         return;
     }

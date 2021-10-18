@@ -114,11 +114,20 @@ void conv2d_n16cx_depthwise_fp32_fma_blk1x7_kernel(
 
         const float *k_src = src + kh_start * src_dh_stride;
         const float *k_flt  = PICK_PARAM(const float*, priv_param, FLT_IDX()) + kh_start * kernel_w * CH_DT_BLK();
-        for (int32_t kh = kh_start; kh < kh_end; ++kh) {
-            for (int32_t kw = 0; kw < kernel_w; ++kw) {
+        if (kernel_w == 3) {
+            for (int32_t kh = kh_start; kh < kh_end; ++kh) {
                 KW_COMPUTE_STEP();
+                KW_COMPUTE_STEP();
+                KW_COMPUTE_STEP();
+                k_src += src_kh_stride;
             }
-            k_src += src_kh_stride;
+        } else {
+            for (int32_t kh = kh_start; kh < kh_end; ++kh) {
+                for (int32_t kw = 0; kw < kernel_w; ++kw) {
+                    KW_COMPUTE_STEP();
+                }
+                k_src += src_kh_stride;
+            }
         }
         
         if (kernel_flags & KERNEL_FLAG_SUM()) {

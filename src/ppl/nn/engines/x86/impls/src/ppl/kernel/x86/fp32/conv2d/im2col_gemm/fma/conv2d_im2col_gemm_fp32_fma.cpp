@@ -67,7 +67,7 @@ void conv2d_im2col_gemm_fp32_fma_executor::cal_kernel_tunning_param()
     sp.mb_l3_blk = 1;
     sp.gp_l3_blk = 1;
     const int64_t im2col_size_per_img = sp.k_per_gp * dst_hw;
-    while ((sp.mb_l3_blk + 1) * sp.gp_l3_blk * im2col_size_per_img < l3_cap_all_core && sp.mb_l3_blk < batch && sp.mb_l3_blk * sp.gp_l3_blk < num_thread) {
+    while ((sp.mb_l3_blk + 1) * sp.gp_l3_blk * im2col_size_per_img < l3_cap_all_core * 3 && sp.mb_l3_blk < batch && sp.mb_l3_blk * sp.gp_l3_blk < num_thread) {
         ++sp.mb_l3_blk;
     }
     while (sp.mb_l3_blk * (sp.gp_l3_blk + 1) * im2col_size_per_img < l3_cap_all_core && sp.gp_l3_blk < cp.group && sp.mb_l3_blk * sp.gp_l3_blk < num_thread) {

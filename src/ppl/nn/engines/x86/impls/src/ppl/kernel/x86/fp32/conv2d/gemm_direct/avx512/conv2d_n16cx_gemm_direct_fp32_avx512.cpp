@@ -85,13 +85,6 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_executor::cal_kernel_tunning_param()
 
     sp.gp_l3_blk = min(cp.group, num_thread);
     sp.mb_l3_blk = min(batch, div_up(num_thread, sp.gp_l3_blk));
-    while (sp.gp_l3_blk > 1 && sp.gp_l3_blk * sp.mb_l3_blk * sp.ic_l2_blk * dst_hw > l3_cap_all_core) {
-        --sp.gp_l3_blk;
-    }
-    sp.mb_l3_blk = min(batch, div_up(num_thread, sp.gp_l3_blk));
-    while (sp.mb_l3_blk > 1 && sp.gp_l3_blk * sp.mb_l3_blk * sp.ic_l2_blk * dst_hw > l3_cap_all_core) {
-        --sp.mb_l3_blk;
-    }
 
     sp.oc_kr_blk = min<int64_t>(2 * CH_DT_BLK(), sp.padded_oc);
     if (sp.padded_oc > sp.padded_ic) {
