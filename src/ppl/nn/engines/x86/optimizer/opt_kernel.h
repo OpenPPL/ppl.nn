@@ -55,11 +55,6 @@ public:
         }
         return ppl::common::RC_NOT_FOUND;
     }
-    void InferTypes(InputOutputInfo* info) const {
-        if (infer_type_func_) {
-            infer_type_func_(info);
-        }
-    }
 
     virtual ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
                                               std::vector<ppl::common::dataformat_t>* selected_input_formats,
