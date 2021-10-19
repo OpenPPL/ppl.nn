@@ -60,8 +60,8 @@ else()
 endif()
 
 # exported definitions
-set(pplnn_INCLUDE_DIRS "${__PPLNN_PACKAGE_ROOTDIR__}/include")
-set(pplnn_LIBRARIES "pplnn_static")
+set(PPLNN_INCLUDE_DIRS "${__PPLNN_PACKAGE_ROOTDIR__}/include")
+set(PPLNN_LIBRARIES "pplnn_static")
 
 # --------------------------------------------------------------------------- #
 
