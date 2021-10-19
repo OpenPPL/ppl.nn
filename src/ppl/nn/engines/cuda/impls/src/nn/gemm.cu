@@ -89,7 +89,7 @@ uint64_t PPLGemmCUDAGetBufSize(
     auto type = input_shape->GetDataType();
     int type_size = ppl::common::GetSizeOfDataType(type);
 
-    if(transA){
+    if (transA) {
         int pad_size = GetPadSize(type); // ldg 128 bytes
         int K     = input_shape->GetDim(0);
         int M     = input_shape->GetDim(1);
@@ -104,7 +104,7 @@ unsigned int PPLCUDAGemmGetBiasSize(
     const int N,
     const bool is_scalar)
 {
-    if(!is_scalar)    return 0;
+    if (!is_scalar)    return 0;
     int pad_size = GetPadSize(type); // ldg 128 bytes
     int N_pad    = Align(N, pad_size);
     int type_size = ppl::common::GetSizeOfDataType(type);
@@ -134,7 +134,7 @@ __global__ void matrix_transpose(
     __syncthreads();
     value = smem[threadIdx.y][threadIdx.x];
     float fp_value = (float)value * scale;
-    if(out_range) output[out_y*in_row + out_x] = (__half)fp_value;
+    if (out_range)    output[out_y*in_row + out_x] = (__half)fp_value;
 }
 
 template<typename T>
@@ -185,7 +185,7 @@ ppl::common::RetCode PPLCUDAGemmModifyWeights(
                 return ppl::common::RC_UNSUPPORTED;
         }
 #undef TRANSWEIGHT
-    } else if (alpha != 1.f){
+    } else if (alpha != 1.f) {
         int grid_size = DivUp(dim0*dim1, 512);
         switch(type){
             case ppl::common::DATATYPE_FLOAT32 : {
@@ -216,13 +216,13 @@ ppl::common::RetCode PPLCUDAGemmModifyBias(
 	    int N_pad = Align(N, pad_size);
         if (type == ppl::common::DATATYPE_FLOAT32) {
 	        if (bias_shape->IsScalar())    return ppl::common::RC_UNSUPPORTED;
-	        if (beta != 0.f && beta != 1.f){
+	        if (beta != 0.f && beta != 1.f) {
                 int grid_size = DivUp(N_pad, 512);
                 scale<float><<<grid_size, 512, 0, stream>>>((float*)bias, beta, N_pad);
 	        }
         } else if (type == ppl::common::DATATYPE_FLOAT16) {
             if (bias_shape->IsScalar())    return ppl::common::RC_UNSUPPORTED;
-            if (beta != 0.f && beta != 1.f){
+            if (beta != 0.f && beta != 1.f) {
                 int grid_size = DivUp(N_pad, 512);
                 scale<__half><<<grid_size, 512, 0, stream>>>((__half*)bias, beta, N_pad);
             }
@@ -370,8 +370,8 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
 
     int pad_size   = GetPadSize(type);
     int transA   = param.transA;
-    int transB   = 1;
-    // if(!param.transB)    return ppl::common::RC_UNSUPPORTED;
+    int transB   = param.transB;
+    if (!param.transB)    return ppl::common::RC_UNSUPPORTED;
     int N     = transB ? weight_shape->GetDim(0) : weight_shape->GetDim(1);
     int K     = transB ? weight_shape->GetDim(1) : weight_shape->GetDim(0);
     int N_pad = Align(N, pad_size);
@@ -745,7 +745,7 @@ ppl::common::RetCode PPLCUDAGemvForwardImp(
     void* temp_buffer, 
     const fuse_param_t &fuse_param) 
 {
-    // if(!param.transB)    return ppl::common::RC_UNSUPPORTED;
+    if (!param.transB)    return ppl::common::RC_UNSUPPORTED;
 
     constexpr int ELEM_NUM_PR_LD = sizeof(int4)/sizeof(T);
     constexpr int expect_blocks = 64;

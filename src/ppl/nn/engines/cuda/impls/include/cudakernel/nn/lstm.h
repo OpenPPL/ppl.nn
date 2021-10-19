@@ -4,7 +4,7 @@
 
 int64_t PPLCUDALstmGetRuntimeBufSize(
     const ppl::nn::TensorShape *X_shape,
-    const ppl::kernel::cuda::rnn_direction_t direction,
+    const unsigned int direction,
     const int64_t hidden_size);
 
 ppl::common::RetCode PPLCUDALstmForwardImp(
@@ -18,7 +18,7 @@ ppl::common::RetCode PPLCUDALstmForwardImp(
     const void *sequence_lens,
     const void *initial_h,
     const void *initial_c,
-    const ppl::kernel::cuda::rnn_direction_t direction,
+    const unsigned int direction,
     const int64_t hidden_size,
     void *temp_buffer,
     void *Y,

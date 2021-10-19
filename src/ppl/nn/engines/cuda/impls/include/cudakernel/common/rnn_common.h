@@ -19,23 +19,18 @@
 #define __PPL_KERNEL_CUDA_RNN_COMMON_H_
 
 
-namespace ppl { namespace kernel { namespace cuda {
-
-typedef unsigned int rnn_direction_t;
-
-class rnn_direction {
+class RnnDirection {
 public:
-    static const rnn_direction_t forward       = 0;
-    static const rnn_direction_t reverse       = 1;
-    static const rnn_direction_t bidirectional = 2;
+    static const unsigned int forward       = 0;
+    static const unsigned int reverse       = 1;
+    static const unsigned int bidirectional = 2;
 };
 
-class rnn_num_gate {
+class RnnNumGate {
 public:
     static const int64_t lstm = 4;
     static const int64_t gru  = 3;
 };
 
-}}}; // namespace ppl::kernel::cuda
 
 #endif

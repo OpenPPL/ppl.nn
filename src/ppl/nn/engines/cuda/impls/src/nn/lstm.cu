@@ -8,9 +8,6 @@
 __device__ float sigmoidf(float a){
     return expf(a) / (1 + expf(a));
 }
-//__device__ float tanhf(float a){
-//    return (1-__expf(2*a)) / (1+__expf(2*a));
-//}
 
 
 //(seq, batch, dir, 4*hidden)
@@ -32,16 +29,13 @@ __global__ void fuse_gate(
 {
     int tid = blockIdx.x*blockDim.x + threadIdx.x;
     int h_id = tid % (hidden_size);
-    int hb_id = tid / (hidden_size);// % batch;
-    //int hd_id = tid / (batch*hidden_size) % num_direction;
+    int hb_id = tid / (hidden_size);
     bool in_range = tid < batch * hidden_size;
     
-    //int x_off = hb_id*num_direction*4*hidden_size + hd_id*4*hidden_size + h_id;
-    //int h_off = hd_id*batch*4*hidden_size + hb_id*4*hidden_size + h_id;
     int x_off = hb_id*num_direction*4*hidden_size + h_id;
     int h_off = hb_id*4*hidden_size + h_id;
     
-    if(!in_range)    return;
+    if (!in_range)    return;
 
     float x1 = ((__half*)X_in)[x_off];
     float x2 = ((__half*)X_in)[x_off + 1*hidden_size];
@@ -63,7 +57,7 @@ __global__ void fuse_gate(
     float hb3 = bias? (float)((__half*)bias)[h_id + 6*hidden_size] : 0.f;
     float hb4 = bias? (float)((__half*)bias)[h_id + 7*hidden_size] : 0.f;
     
-    float c_pre = ((__half*)ceil)[tid];
+    float c_pre = ceil? (float)((__half*)ceil)[tid] : 0.f;
     float pi = P? (float)((__half*)P)[h_id] : 0.f;
     float po = P? (float)((__half*)P)[h_id + 1*hidden_size] : 0.f;
     float pf = P? (float)((__half*)P)[h_id + 2*hidden_size] : 0.f;
@@ -73,13 +67,12 @@ __global__ void fuse_gate(
     float gf = (x3 + xb3) + (h3 + hb3) + pf*c_pre;
     float gc = (x4 + xb4) + (h4 + hb4);
     
-    gf = sigmoidf(gf);//__expf(gf) / (1 + __expf(gf));
-    gi = sigmoidf(gi);//__expf(gi) / (1 + __expf(gi));
-    //gc = (1 - __expf(2*gc)) / (1 + __expf(2*gc));
+    gf = sigmoidf(gf);
+    gi = sigmoidf(gi);
     gc = tanhf(gc);
     float c  = gf * c_pre + gi * gc;
     go = go + po * c;
-    float output = sigmoidf(go);//__expf(go) / (1 + __expf(go));
+    float output = sigmoidf(go);
     float ht = output * tanhf(c);
     
     ((__half*)out_h)[tid] = (__half)ht;
@@ -88,12 +81,12 @@ __global__ void fuse_gate(
 
 int64_t PPLCUDALstmGetRuntimeBufSize(
     const ppl::nn::TensorShape *X_shape,
-    const ppl::kernel::cuda::rnn_direction_t direction,
+    const unsigned int direction,
     const int64_t hidden_size)
 {
     int seq_len = X_shape->GetDim(0);//max seq_len
     int batch = X_shape->GetDim(1);
-    int num_direction = direction == ppl::kernel::cuda::rnn_direction::bidirectional ? 2 : 1;
+    int num_direction = direction == RnnDirection::bidirectional ? 2 : 1;
     int64_t size = 0;
     size += seq_len*batch * num_direction*4*hidden_size;// X_in
     size += batch*4*hidden_size;// hidden_buf
@@ -128,7 +121,7 @@ ppl::common::RetCode PPLCUDALstmForwardImp(
     const void *sequence_lens,//FIXME: batch-wise output is different
     const void *initial_h,
     const void *initial_c,
-    const ppl::kernel::cuda::rnn_direction_t direction,
+    const unsigned int direction,
     const int64_t hidden_size,
     void *temp_buffer,
     void *Y,
@@ -138,21 +131,27 @@ ppl::common::RetCode PPLCUDALstmForwardImp(
     int seq_len = X_shape->GetDim(0);//max seq_len
     int batch = X_shape->GetDim(1);
     int input_size = X_shape->GetDim(2);
-    int num_direction = direction == ppl::kernel::cuda::rnn_direction::bidirectional ? 2 : 1;
+    int num_direction = direction == RnnDirection::bidirectional ? 2 : 1;
     
     //(seq, batch, dir, 4*hidden)
-    //gemm(X, X_weight, X_in)
     ppl::nn::TensorShape input_shape, weight_shape, output_shape;
     int M = seq_len*batch;
     int K = input_size;
     int N = num_direction*4*hidden_size;
-    if(K%8!=0 || hidden_size%8 != 0){
+    if (sequence_lens) {
+        printf("error: lstm sequence_lens are different.\n");
+        return ppl::common::RC_UNSUPPORTED;
+    }
+    if (K%8!=0 || hidden_size%8 != 0) {
         printf("error: lstm input size or hidden_size is not aligned.\n");
         return ppl::common::RC_UNSUPPORTED;
     }
 #define GET_GEMM_PARAM input_shape.Reshape({M, K}); \
     weight_shape.Reshape({N, K}); \
     output_shape.Reshape({M, N}); \
+    input_shape.SetDataType(ppl::common::DATATYPE_FLOAT16); \
+    weight_shape.SetDataType(ppl::common::DATATYPE_FLOAT16); \
+    output_shape.SetDataType(ppl::common::DATATYPE_FLOAT16); \
     fuse_param_t fuse_param; \
     ppl::nn::common::GemmParam gemm_param; \
     gemm_param.bias_term = 0; \
@@ -169,13 +168,9 @@ ppl::common::RetCode PPLCUDALstmForwardImp(
                 NULL, &output_shape, X_in,
                 gemm_param, tmp_buf, fuse_param, kid);
 
-
-    //__half *pre_ceil = (__half*)initial_c;
     __half *hidden_buf = (__half*)X_in + M*N;
-    //__half *hidden_buf = Y;
     __half *ceil_buf = hidden_buf + batch*4*hidden_size;
-    //__half *pre_hidden = initial_h ? (__half*)initial_h : hidden_buf;
-    int reverse = direction == ppl::kernel::cuda::rnn_direction::reverse ? 1 : 0;
+    int reverse = direction == RnnDirection::reverse ? 1 : 0;
     
     for(int d = 0; d < num_direction; d++){
         bool rev = (reverse || d==1);
@@ -190,8 +185,8 @@ ppl::common::RetCode PPLCUDALstmForwardImp(
             int cur_idx = pre_idx + dir;
             __half *pre_hidden = i==0 ? (__half*)initial_h : (__half*)Y + pre_idx*num_direction*batch*hidden_size
                                                       + d*batch*hidden_size;
-            __half *post_hidden = hidden_buf;// + d*batch*4*hidden_size;
-            if(initial_h != nullptr){
+            __half *post_hidden = hidden_buf;
+            if (initial_h != nullptr) {
                 int M = batch;
                 int K = hidden_size;
                 int N = 4*hidden_size;
@@ -200,11 +195,10 @@ ppl::common::RetCode PPLCUDALstmForwardImp(
                             stream, &input_shape, pre_hidden, &weight_shape, tR,
                             NULL, &output_shape, post_hidden,
                             gemm_param, tmp_buf, fuse_param, kid);
-            } else{
+            } else {
                 cudaMemset(post_hidden, 0, 4*hidden_size*sizeof(__half));
             }
 
-            // fuse_gate()
             __half *out_h = (__half*)Y + cur_idx*num_direction*batch*hidden_size
                               + d*batch*hidden_size;
             __half *pre_c = i==0? (__half*)initial_c : ceil_buf;
@@ -220,8 +214,12 @@ ppl::common::RetCode PPLCUDALstmForwardImp(
                                                     P, num_direction, batch, hidden_size,
                                                     out_c, out_h);
            
-            if(Y_h && i==seq_len-1)    cudaMemcpyAsync((__half*)Y_h+d*batch*hidden_size, out_h, batch*hidden_size*sizeof(__half), cudaMemcpyDeviceToDevice, stream);
-            if(Y_c && i==seq_len-1)    cudaMemcpyAsync((__half*)Y_c+d*batch*hidden_size, out_c, batch*hidden_size*sizeof(__half), cudaMemcpyDeviceToDevice, stream);
+            if (Y_h && i==seq_len-1) {
+                cudaMemcpyAsync((__half*)Y_h+d*batch*hidden_size, out_h, batch*hidden_size*sizeof(__half), cudaMemcpyDeviceToDevice, stream);
+            }
+            if (Y_c && i==seq_len-1) {
+                cudaMemcpyAsync((__half*)Y_c+d*batch*hidden_size, out_c, batch*hidden_size*sizeof(__half), cudaMemcpyDeviceToDevice, stream);
+            }
         }
     }
    

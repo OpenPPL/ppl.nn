@@ -13,20 +13,21 @@ public:
     void SetParam(const ppl::nn::common::LSTMParam* p) {
         param_ = p;
         if (p->direction == ppl::nn::common::LSTMParam::DIR_FORWARD) {
-            direction_ = ppl::kernel::cuda::rnn_direction::forward;
+            direction_ = RnnDirection::forward;
         }
         if (p->direction == ppl::nn::common::LSTMParam::DIR_REVERSE) {
-            direction_ = ppl::kernel::cuda::rnn_direction::reverse;
+            direction_ = RnnDirection::reverse;
         }
         if (p->direction == ppl::nn::common::LSTMParam::DIR_BIDIRECTIONAL) {
-            direction_ = ppl::kernel::cuda::rnn_direction::bidirectional;
+            direction_ = RnnDirection::bidirectional;
         }
     }
 
 private:
+    bool CanDoExecute(const KernelExecContext& ctx) const override;
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
     const ppl::nn::common::LSTMParam *param_ = nullptr;
-    ppl::kernel::cuda::rnn_direction_t direction_;
+    unsigned int direction_;
 };
 
 }}} // namespace ppl::nn::cuda
