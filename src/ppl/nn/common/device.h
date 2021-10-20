@@ -24,7 +24,6 @@
 #include "ppl/nn/common/buffer_desc.h"
 #include "ppl/nn/common/data_converter.h"
 #include "ppl/nn/common/types.h"
-#include "ppl/nn/runtime/barrier.h"
 
 namespace ppl { namespace nn {
 
@@ -92,11 +91,6 @@ public:
        @param src points to data area on this device
     */
     virtual ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, const TensorShape& shape) const = 0;
-
-    /** @brief create a barrier that is used for synchronization between different devices. */
-    virtual std::shared_ptr<Barrier> CreateBarrier() {
-        return std::shared_ptr<Barrier>();
-    }
 
     /** @brief get DataConverter that can process data on this device */
     virtual const DataConverter* GetDataConverter() const = 0;

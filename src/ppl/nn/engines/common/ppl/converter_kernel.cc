@@ -35,7 +35,7 @@ RetCode ConverterKernel::DoExecute(KernelExecContext* ctx) {
         auto src = ctx->GetInput<TensorImpl>(i);
         auto dst = ctx->GetOutput<TensorImpl>(i);
 
-        auto src_barrier = ctx->GetInputBarrier(i);
+        auto src_barrier = src->GetBarrier();
         if (src_barrier) {
             auto status = src_barrier->Sync();
             if (status != RC_SUCCESS) {

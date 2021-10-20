@@ -35,28 +35,8 @@ public:
         return is_profiling_enabled_;
     }
 
-    void SetGetBarrierFunc(const std::function<Barrier*(edgeid_t)>& f) {
-        get_barrier_func_ = f;
-    }
-
-    Barrier* GetInputBarrier(uint32_t idx) const {
-        auto eid = node_->GetInput(idx);
-        return get_barrier_func_(eid);
-    }
-
-    Barrier* GetExtraInputBarrier(uint32_t idx) const {
-        auto eid = node_->GetExtraInput(idx);
-        return get_barrier_func_(eid);
-    }
-
-    Barrier* GetOutputBarrier(uint32_t idx) const {
-        auto eid = node_->GetOutput(idx);
-        return get_barrier_func_(eid);
-    }
-
 private:
     bool is_profiling_enabled_ = false;
-    std::function<Barrier*(edgeid_t)> get_barrier_func_;
 };
 
 }} // namespace ppl::nn

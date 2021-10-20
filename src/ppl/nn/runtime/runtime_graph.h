@@ -20,7 +20,6 @@
 
 #include "ppl/nn/runtime/kernel_impl.h"
 #include "ppl/nn/runtime/tensor_impl.h"
-#include "ppl/nn/runtime/barrier.h"
 #include <vector>
 
 namespace ppl { namespace nn {
@@ -56,12 +55,6 @@ struct RuntimeGraph {
 
     /** kernels list where the subscriptor is KernelImpl::GetNode()::GetId() */
     std::vector<std::unique_ptr<KernelImpl>> nodeid2kernel;
-
-    /** whether a kernel needs to be synchronized before getting its outputs */
-    std::vector<bool> kernel_barrier_flag;
-
-    /** barriers for EdgeObjects before getting their contents */
-    std::vector<std::shared_ptr<Barrier>> edgeid2barrier;
 };
 
 }} // namespace ppl::nn

@@ -92,17 +92,8 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
         return RC_INVALID_VALUE;
     };
 
-    auto get_barrier_func = [this](edgeid_t eid) -> Barrier* {
-        if (eid >= edgeid2object_.size()) {
-            return nullptr;
-        }
-
-        return graph_->edgeid2barrier[eid].get();
-    };
-
     KernelExecContext ctx;
     ctx.SetAcquireObjectFunc(acquire_object_func);
-    ctx.SetGetBarrierFunc(get_barrier_func);
     ctx.SetProfilingFlag(profiler->IsProfilingEnabled());
 
     for (auto x = aux_info_->sorted_nodes.begin(); x != aux_info_->sorted_nodes.end(); ++x) {
@@ -110,8 +101,7 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
         ctx.SetNode(kernel->GetNode());
         ctx.SetDevice(kernel->GetDevice());
 
-        auto status =
-            utils::ExecuteKernel(kernel, &ctx, graph_->kernel_barrier_flag[*x], release_object_func, profiler);
+        auto status = utils::ExecuteKernel(kernel, &ctx, release_object_func, profiler);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "execute kernel[" << kernel->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;

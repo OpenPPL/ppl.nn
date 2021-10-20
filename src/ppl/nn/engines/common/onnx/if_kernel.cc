@@ -106,11 +106,11 @@ static RetCode SetOutputs(RuntimeImpl* subgraph, KernelExecContext* ctx, Device*
 
 static RetCode SyncAllInputs(KernelExecContext* ctx) {
     for (uint32_t i = 0; i < ctx->GetInputCount(); ++i) {
-        auto barrier = ctx->GetInputBarrier(i);
+        auto e = ctx->GetInput<EdgeObject>(i);
+        auto barrier = e->GetBarrier();
         if (barrier) {
             auto status = barrier->Sync();
             if (status != RC_SUCCESS) {
-                auto e = ctx->GetInput<EdgeObject>(i);
                 LOG(ERROR) << "sync EdgeObject[" << e->GetEdge()->GetName() << "] failed: " << GetRetCodeStr(status);
                 return status;
             }
@@ -118,11 +118,11 @@ static RetCode SyncAllInputs(KernelExecContext* ctx) {
     }
 
     for (uint32_t i = 0; i < ctx->GetExtraInputCount(); ++i) {
-        auto barrier = ctx->GetExtraInputBarrier(i);
+        auto e = ctx->GetExtraInput<EdgeObject>(i);
+        auto barrier = e->GetBarrier();
         if (barrier) {
             auto status = barrier->Sync();
             if (status != RC_SUCCESS) {
-                auto e = ctx->GetExtraInput<EdgeObject>(i);
                 LOG(ERROR) << "sync EdgeObject[" << e->GetEdge()->GetName() << "] failed: " << GetRetCodeStr(status);
                 return status;
             }

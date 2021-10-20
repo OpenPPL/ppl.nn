@@ -103,7 +103,7 @@ vector<EdgeObject*> InitObjectInUse(const ir::GraphTopo* topo, RuntimeGraph* gra
     return objects_in_use;
 }
 
-static RetCode AfterExecuteKernel(KernelImpl* kernel, KernelExecContext* ctx, bool needs_output_barrier,
+static RetCode AfterExecuteKernel(KernelImpl* kernel, KernelExecContext* ctx,
                                   const function<RetCode(EdgeObject*)>& release_object_func) {
     for (uint32_t i = 0; i < ctx->GetInputCount(); ++i) {
         auto object = ctx->GetInput<EdgeObject>(i);
@@ -140,23 +140,10 @@ static RetCode AfterExecuteKernel(KernelImpl* kernel, KernelExecContext* ctx, bo
         }
     }
 
-    if (needs_output_barrier) {
-        // all outputs share the same barrier from their parent
-        auto barrier = ctx->GetOutputBarrier(0);
-        if (barrier) {
-            auto status = barrier->Refresh(kernel->GetTaskQueueId());
-            if (status != RC_SUCCESS) {
-                LOG(ERROR) << "refresh barrier of kernel[" << kernel->GetName()
-                           << "] failed: " << GetRetCodeStr(status);
-                return status;
-            }
-        }
-    }
-
     return RC_SUCCESS;
 }
 
-RetCode ExecuteKernel(KernelImpl* kernel, KernelExecContext* ctx, bool needs_output_barrier,
+RetCode ExecuteKernel(KernelImpl* kernel, KernelExecContext* ctx,
                       const function<RetCode(EdgeObject*)>& release_object_func, Profiler* profiler) {
     auto exec_status = kernel->Execute(ctx);
 
@@ -164,7 +151,7 @@ RetCode ExecuteKernel(KernelImpl* kernel, KernelExecContext* ctx, bool needs_out
     profiler->CollectStatistics(kernel);
 #endif
 
-    auto status = AfterExecuteKernel(kernel, ctx, needs_output_barrier, release_object_func);
+    auto status = AfterExecuteKernel(kernel, ctx, release_object_func);
 
     if (exec_status != RC_SUCCESS) {
         LOG(ERROR) << "exec kernel[" << kernel->GetName() << "] failed: " << GetRetCodeStr(exec_status);

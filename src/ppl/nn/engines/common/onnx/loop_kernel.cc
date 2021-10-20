@@ -203,6 +203,7 @@ static RetCode InitSubgraphInputs(const KernelExecContext& ctx, bool keep_going,
         if (dst->GetDevice() == src->GetDevice()) {
             dst->SetBuffer(src->GetBufferDesc());
         } else {
+            // srcs are already synchronized by SyncAllInputs()
             status = utils::CopyTensorBuffer(*src, dst, tmp_cpu_device);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "copy tensor from [" << src->GetName() << "] to [" << dst->GetName()
@@ -266,7 +267,7 @@ static RetCode SetOutputsFromSubgraph(const LoopInfo& info, Device* tmp_cpu_devi
 
         dst->GetShape() = src->GetShape();
 
-        // outputs are already synchronized by subgraph->Sync()
+        // srcs are already synchronized by subgraph->Sync()
         auto status = utils::CopyTensorBuffer(*src, dst, tmp_cpu_device);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy from tensor[" << src->GetName() << "] to tensor[" << dst->GetName()
@@ -309,11 +310,11 @@ static RetCode SetOutputsFromSubgraph(const LoopInfo& info, Device* tmp_cpu_devi
 
 static RetCode SyncAllInputs(KernelExecContext* ctx) {
     for (uint32_t i = 0; i < ctx->GetInputCount(); ++i) {
-        auto barrier = ctx->GetInputBarrier(i);
+        auto e = ctx->GetInput<EdgeObject>(i);
+        auto barrier = e->GetBarrier();
         if (barrier) {
             auto status = barrier->Sync();
             if (status != RC_SUCCESS) {
-                auto e = ctx->GetInput<EdgeObject>(i);
                 LOG(ERROR) << "sync EdgeObject[" << e->GetEdge()->GetName() << "] failed: " << GetRetCodeStr(status);
                 return status;
             }
@@ -321,11 +322,11 @@ static RetCode SyncAllInputs(KernelExecContext* ctx) {
     }
 
     for (uint32_t i = 0; i < ctx->GetExtraInputCount(); ++i) {
-        auto barrier = ctx->GetExtraInputBarrier(i);
+        auto e = ctx->GetExtraInput<EdgeObject>(i);
+        auto barrier = e->GetBarrier();
         if (barrier) {
             auto status = barrier->Sync();
             if (status != RC_SUCCESS) {
-                auto e = ctx->GetExtraInput<EdgeObject>(i);
                 LOG(ERROR) << "sync EdgeObject[" << e->GetEdge()->GetName() << "] failed: " << GetRetCodeStr(status);
                 return status;
             }

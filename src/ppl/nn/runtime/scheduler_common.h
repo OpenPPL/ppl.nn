@@ -32,7 +32,7 @@ std::vector<uint32_t> InitObjectRefcount(const ir::GraphTopo* topo);
 /** @brief put inputs/extra_inputs/outputs/constants into a vector */
 std::vector<EdgeObject*> InitObjectInUse(const ir::GraphTopo* topo, RuntimeGraph* graph);
 
-ppl::common::RetCode ExecuteKernel(KernelImpl*, KernelExecContext*, bool needs_output_barrier,
+ppl::common::RetCode ExecuteKernel(KernelImpl*, KernelExecContext*,
                                    const std::function<ppl::common::RetCode(EdgeObject*)>& release_object_func,
                                    Profiler*);
 

@@ -17,7 +17,6 @@
 
 #include "ppl/nn/runtime/kernel_exec_context.h"
 #include "tests/ir/graph_builder.h"
-#include "tests/runtime/test_barrier.h"
 #include "gtest/gtest.h"
 #include <vector>
 using namespace std;
@@ -32,13 +31,10 @@ protected:
         builder_.AddNode("b", ir::Node::Type("test", "op2"), {"output_of_a"}, {"output_of_b"});
         builder_.AddNode("c", ir::Node::Type("test", "op3"), {"output_of_b"}, {"output_of_c"});
         builder_.Finalize();
-
-        barriers_.resize(builder_.GetGraph()->topo->GetMaxEdgeId());
     }
 
 protected:
     GraphBuilder builder_;
-    vector<TestBarrier> barriers_;
 };
 
 TEST_F(KernelExecContextTest, misc) {
@@ -49,15 +45,10 @@ TEST_F(KernelExecContextTest, misc) {
 
     KernelExecContext ctx;
     ctx.SetNode(node);
-    ctx.SetGetBarrierFunc([this](edgeid_t eid) -> Barrier* {
-        return &barriers_[eid];
-    });
 
     auto edge = topo->GetEdgeByName("input_of_a");
     EXPECT_NE(nullptr, edge);
-    EXPECT_EQ(&barriers_[0], ctx.GetInputBarrier(0));
 
     edge = topo->GetEdgeByName("output_of_a");
     EXPECT_NE(nullptr, edge);
-    EXPECT_EQ(&barriers_[1], ctx.GetOutputBarrier(0));
 }
