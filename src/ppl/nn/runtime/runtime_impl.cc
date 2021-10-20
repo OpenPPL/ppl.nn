@@ -232,73 +232,6 @@ static RetCode InitRuntimeGraphConstants(const ir::GraphTopo* topo, const Runtim
     return RC_SUCCESS;
 }
 
-static bool HasExtraInputFrom(const ir::Node* successor, const ir::Node* parent) {
-    for (uint32_t j = 0; j < successor->GetExtraInputCount(); ++j) {
-        auto extra_input = successor->GetExtraInput(j);
-        for (uint32_t i = 0; i < parent->GetOutputCount(); ++i) {
-            if (parent->GetOutput(i) == extra_input) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-static RetCode InitRuntimeGraphKernelBarrierFlags(const ir::GraphTopo* topo, RuntimeGraph* graph) {
-    graph->kernel_barrier_flag.resize(topo->GetMaxNodeId(), false);
-
-    for (uint32_t nid = 0; nid < graph->nodeid2kernel.size(); ++nid) {
-        auto kernel = graph->nodeid2kernel[nid].get();
-        if (!kernel) {
-            continue;
-        }
-
-        auto device = kernel->GetDevice();
-        auto successors = topo->FindSuccessors(nid);
-        for (auto s = successors.begin(); s != successors.end(); ++s) {
-            auto successor = graph->nodeid2kernel[*s].get();
-            /*
-              kernel needs a barrier when one of successors:
-              - runs on another devices, or
-              - has at least one extra input, which means this successor has subgraph(s),
-                from its parent.
-            */
-            if ((successor->GetDevice() != device) || HasExtraInputFrom(successor->GetNode(), kernel->GetNode())) {
-                graph->kernel_barrier_flag[nid] = true;
-                break;
-            }
-        }
-    }
-
-    /* leaf nodes of graph need to be synchronized */
-    for (uint32_t i = 0; i < graph->outputs.size(); ++i) {
-        auto output = graph->outputs[i];
-        auto producer_id = output->GetEdge()->GetProducer();
-        if (producer_id != INVALID_NODEID) {
-            graph->kernel_barrier_flag[producer_id] = true;
-            break;
-        }
-    }
-
-    return RC_SUCCESS;
-}
-
-static void InitRuntimeGraphBarriers(uint64_t max_edge_id, RuntimeGraph* graph) {
-    graph->edgeid2barrier.resize(max_edge_id);
-    for (uint32_t i = 0; i < graph->kernel_barrier_flag.size(); ++i) {
-        if (graph->kernel_barrier_flag[i]) {
-            auto kernel = graph->nodeid2kernel[i].get();
-            auto barrier = kernel->GetDevice()->CreateBarrier();
-            auto node = kernel->GetNode();
-
-            // all outputs share the same barrier from their parent
-            for (uint32_t j = 0; j < node->GetOutputCount(); ++j) {
-                graph->edgeid2barrier[node->GetOutput(j)] = barrier;
-            }
-        }
-    }
-}
-
 RetCode RuntimeImpl::InitRuntimeGraph(const ir::GraphTopo* topo, const RuntimeGraphInfo& info, RuntimeGraph* graph) {
     auto status = InitRuntimeGraphKernels(topo, info, &engctx_, graph);
     if (status != RC_SUCCESS) {
@@ -330,14 +263,6 @@ RetCode RuntimeImpl::InitRuntimeGraph(const ir::GraphTopo* topo, const RuntimeGr
         return status;
     }
 
-    status = InitRuntimeGraphKernelBarrierFlags(topo, graph);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "InitRuntimeGraphBarriers failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
-    InitRuntimeGraphBarriers(topo->GetMaxEdgeId(), graph);
-
     return RC_SUCCESS;
 }
 
@@ -368,7 +293,7 @@ RetCode RuntimeImpl::Run() {
 RetCode RuntimeImpl::Sync() {
     for (uint32_t i = 0; i < GetOutputCount(); ++i) {
         auto output = GetOutputTensorImpl(i);
-        auto barrier = graph_.edgeid2barrier[output->GetEdge()->GetId()];
+        auto barrier = output->GetBarrier();
         if (barrier) {
             auto status = barrier->Sync();
             if (status != RC_SUCCESS) {

@@ -23,6 +23,7 @@
 #include "ppl/nn/common/logger.h"
 
 using namespace ppl::common;
+using namespace std;
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -52,6 +53,12 @@ RetCode CudaKernel::Init() {
     }
 #endif
 
+    auto status = barrier_.Init();
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "create barrier for kernel[" << GetName() << "] failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
     return RC_SUCCESS;
 }
 
@@ -68,6 +75,7 @@ RetCode CudaKernel::BeforeExecute(KernelExecContext* ctx) {
             LOG(ERROR) << "ReallocBuffer for tensor[" << tensor->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
         }
+        tensor->SetBarrier(&barrier_);
     }
 
     return RC_SUCCESS;
@@ -152,6 +160,8 @@ RetCode CudaKernel::Execute(KernelExecContext* ctx) {
     LOG(INFO) << "After execute kernel[" << GetName() << "] with running time " << (float)diff.count()
               << " ms and memory cost " << total_size;
 #endif
+
+    barrier_.Update(static_cast<CudaDevice*>(GetDevice())->GetStream());
 
     return status;
 }

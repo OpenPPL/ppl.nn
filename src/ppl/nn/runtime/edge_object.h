@@ -19,6 +19,7 @@
 #define _ST_HPC_PPL_NN_RUNTIME_EDGE_OBJECT_H_
 
 #include "ppl/nn/ir/edge.h"
+#include "ppl/nn/runtime/barrier.h"
 
 namespace ppl { namespace nn {
 
@@ -47,9 +48,17 @@ public:
         return type_;
     }
 
+    void SetBarrier(Barrier* b) {
+        barrier_ = b;
+    }
+    Barrier* GetBarrier() const {
+        return barrier_;
+    }
+
 private:
     const ir::Edge* edge_;
     uint32_t type_;
+    Barrier* barrier_ = nullptr;
 };
 
 template <typename T>

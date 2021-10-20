@@ -23,6 +23,7 @@
 #include "ppl/nn/engines/cuda/macros.h"
 #include "ppl/nn/engines/cuda/cuda_device.h"
 #include "ppl/nn/engines/cuda/cuda_common_param.h"
+#include "ppl/nn/engines/cuda/cuda_barrier.h"
 #include "ppl/common/sys.h"
 
 namespace ppl { namespace nn { namespace cuda {
@@ -81,7 +82,7 @@ protected:
 private:
     const CudaCommonParam* common_param_ = nullptr;
     std::function<ppl::common::RetCode(InputOutputInfo*)> reshape_func_;
-    cudaEvent_t finished_event_;
+    CudaBarrier barrier_;
 };
 
 }}} // namespace ppl::nn::cuda

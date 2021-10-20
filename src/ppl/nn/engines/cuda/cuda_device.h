@@ -76,8 +76,6 @@ public:
         Free(buffer);
     }
 
-    std::shared_ptr<Barrier> CreateBarrier() override final;
-
     cudaStream_t GetStream() const {
         return context_.stream;
     }
