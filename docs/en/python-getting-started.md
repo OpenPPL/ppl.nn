@@ -57,7 +57,7 @@ runtime = runtime_builder.CreateRuntime()
 We can get graph inputs using the following functions of `Runtime`:
 
 ```python
-input_count = runtime.GetInputCound()
+input_count = runtime.GetInputCount()
 tensor = runtime.GetInputTensor(idx)
 ```
 
