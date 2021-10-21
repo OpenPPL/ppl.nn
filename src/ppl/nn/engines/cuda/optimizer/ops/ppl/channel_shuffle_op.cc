@@ -41,7 +41,9 @@ RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         auto& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
-        info->GetOutput<TensorImpl>(0)->GetShape().Reshape(in_shape0.GetDims(), in_shape0.GetRealDimCount());
+        for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
+            info->GetOutput<TensorImpl>(i)->GetShape().Reshape(in_shape0.GetDims(), in_shape0.GetRealDimCount());
+        }
         return RC_SUCCESS;
     };
     return RC_SUCCESS;
