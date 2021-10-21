@@ -29,4 +29,14 @@ ppl::common::RetCode PPLCUDAChannelShuffleForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output);
 
+ppl::common::RetCode PPLCUDAFuseChannelShuffleForwardImp(
+    cudaStream_t stream,
+    int group,
+    const ppl::nn::TensorShape* input_shape,
+    const void* input1,
+    const void* input2,
+    const ppl::nn::TensorShape* output_shape,
+    void* output1,
+    void* output2);
+
 #endif //PPLCUDA_KERNEL_INCLUDE_CHANNELSHUFFLE_CHANNELSHUFFLE_H_

@@ -28,8 +28,7 @@ ppl::common::RetCode PPLShapeOperationKernel::DoExecute(KernelExecContext* ctx) 
         auto edge = shape->GetEdge();
         auto pair = param_->alpha.find(edge->GetId());
         if (pair == param_->alpha.end()) {
-            LOG(ERROR) << "Can not find param for edge[" << edge->GetName() << "].";
-            return ppl::common::RC_NOT_FOUND;
+            pair = param_->alpha.begin();
         }
         auto& matrix = pair->second;
         auto dim_size = matrix.real_dim < 0 ? input_dim_size : matrix.real_dim;

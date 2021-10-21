@@ -35,13 +35,25 @@ ppl::common::RetCode ChannelShuffleKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    auto Y_shape = Y->GetShape();
-    if(Y_shape.GetElementsExcludingPadding() < Y_shape.GetElementsIncludingPadding())
-        cudaMemset(Y->GetBufferPtr(), 0, Y_shape.GetBytesIncludingPadding());
+    if (ctx->GetOutputCount() == 1) {
+        auto Y_shape = Y->GetShape();
+        if(Y_shape.GetElementsExcludingPadding() < Y_shape.GetElementsIncludingPadding())
+            cudaMemset(Y->GetBufferPtr(), 0, Y_shape.GetBytesIncludingPadding());
+        PPLCUDAChannelShuffleForwardImp(GetStream(), group_, &X->GetShape(), X->GetBufferPtr(),
+                                                             &Y->GetShape(), Y->GetBufferPtr());
+    }
 
-    PPLCUDAChannelShuffleForwardImp(GetStream(), group_, &X->GetShape(), X->GetBufferPtr(), &Y->GetShape(),
-                                    Y->GetBufferPtr());
-
+    if (ctx->GetOutputCount() == 2) {
+        auto X2 = ctx->GetInput<TensorImpl>(1);
+        auto Y2 = ctx->GetOutput<TensorImpl>(1);
+        if(Y->GetShape().GetElementsExcludingPadding() < Y->GetShape().GetElementsIncludingPadding())
+            cudaMemset(Y->GetBufferPtr(), 0, Y->GetShape().GetBytesIncludingPadding());
+        if(Y2->GetShape().GetElementsExcludingPadding() < Y2->GetShape().GetElementsIncludingPadding())
+            cudaMemset(Y2->GetBufferPtr(), 0, Y2->GetShape().GetBytesIncludingPadding());
+        
+        PPLCUDAFuseChannelShuffleForwardImp(GetStream(), group_, &X->GetShape(), X->GetBufferPtr(), X2->GetBufferPtr(),
+                                                                 &Y->GetShape(), Y->GetBufferPtr(), Y2->GetBufferPtr());
+    }
     return ppl::common::RC_SUCCESS;
 }
 

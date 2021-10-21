@@ -31,7 +31,9 @@ private:
     const bool CanFuseFirstReshape(ir::Node* node, const OptKernelOptions& options);
     const bool CanFuseTranspose(ir::Node* node, const OptKernelOptions& options);
     const bool CanFuseSecondReshape(ir::Node* node, const OptKernelOptions& options);
+    const bool CanFuseUpAndDown(ir::Node* node, const OptKernelOptions& options);
     const ppl::common::RetCode FuseWithNextNodes(ir::Node* node, const OptKernelOptions& options);
+    const ppl::common::RetCode FuseWithLastNodes(ir::Node* next_node, const OptKernelOptions& options);
 };
 
 }}} // namespace ppl::nn::cuda

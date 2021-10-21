@@ -144,21 +144,44 @@ const bool ChannelShuffleFusion::CanFuse(ir::Node* node, const OptKernelOptions&
         if (i < 2 && topo->GetEdgeById(edge_id)->CalcConsumerCount() != 1) { // Can not fuse multi-consumer edge
             return false;
         }
-        auto nextnode_id = topo->GetEdgeById(edge_id)->CreateConsumerIter().Get(); // Get Output(0)
-        node = topo->GetNodeById(nextnode_id);
+        auto next_node_id = topo->GetEdgeById(edge_id)->CreateConsumerIter().Get(); // Get Output(0)
+        node = topo->GetNodeById(next_node_id);
     }
     return true;
 }
 
+const bool ChannelShuffleFusion::CanFuseUpAndDown(ir::Node* node, const OptKernelOptions& options) {
+    auto topo = options.graph->topo.get();
+    auto pre_edge = topo->GetEdgeById(node->GetInput(0));
+    auto post_edge = topo->GetEdgeById(node->GetOutput(0));
+    auto pre_node = topo->GetNodeById(pre_edge->GetProducer());
+    auto post_node = topo->GetNodeById(post_edge->CreateConsumerIter().Get());
+
+    if (topo->GetOutput(pre_edge->GetName()) != INVALID_EDGEID ||
+        topo->GetOutput(post_edge->GetName()) != INVALID_EDGEID) { // Can not fuse an output edge
+            return false;
+    }
+
+    if (pre_node->GetType().name != "Concat" || pre_node->GetOutputCount() != 1) {
+        return false;
+    }
+
+    if (post_node->GetType().name != "Split" || post_node->GetInputCount() != 1) {
+        return false;
+    }
+
+    return true;
+}
+
+
 const RetCode ChannelShuffleFusion::FuseWithNextNodes(ir::Node* node, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto connect_edge_id = node->GetOutput(0);
-    auto edge_id = node->GetOutput(0);
-    auto nextnode_id = topo->GetEdgeById(edge_id)->CreateConsumerIter().Get(); // Get Output(0)
-    auto nextnode = topo->GetNodeById(nextnode_id);
+    auto next_node_id = topo->GetEdgeById(connect_edge_id)->CreateConsumerIter().Get(); // Get Output(0)
+    auto next_node = topo->GetNodeById(next_node_id);
 
-    for (uint32_t i = 0; i < nextnode->GetOutputCount(); ++i) {
-        auto edge_id = nextnode->GetOutput(i);
+    for (uint32_t i = 0; i < next_node->GetOutputCount(); ++i) {
+        auto edge_id = next_node->GetOutput(i);
         auto temp_edge = topo->GetEdgeById(edge_id);
         temp_edge->SetProducer(node->GetId());
         if (i == 0) {
@@ -168,23 +191,51 @@ const RetCode ChannelShuffleFusion::FuseWithNextNodes(ir::Node* node, const OptK
         }
     }
 
-    for (uint32_t i = 0; i < nextnode->GetInputCount(); ++i) {
-        auto edge_id = nextnode->GetInput(i);
+    for (uint32_t i = 0; i < next_node->GetInputCount(); ++i) {
+        auto edge_id = next_node->GetInput(i);
         if (edge_id == connect_edge_id || edge_id == INVALID_EDGEID) {
             continue;
         }
         ir::Edge* edge = topo->GetEdgeById(edge_id);
-        edge->DelConsumer(nextnode->GetId());
+        edge->DelConsumer(next_node->GetId());
         edge->AddConsumer(node->GetId());
         node->AddInput(edge_id);
     }
 
     topo->DelEdgeById(connect_edge_id);
-    topo->DelNodeById(nextnode->GetId());
+    topo->DelNodeById(next_node->GetId());
+    return RC_SUCCESS;
+}
+
+const RetCode ChannelShuffleFusion::FuseWithLastNodes(ir::Node* next_node, const OptKernelOptions& options) {
+    auto topo = options.graph->topo.get();
+    auto connect_edge_id = next_node->GetInput(0);
+    auto node_id = topo->GetEdgeById(connect_edge_id)->GetProducer(); // Get Output(0)
+    auto node = topo->GetNodeById(node_id);
+    auto shape_edge = topo->GetEdgeById(next_node->GetInput(1));
+    auto shape_node = topo->GetNodeById(shape_edge->GetProducer());
+
+    for (uint32_t i = 0; i < next_node->GetOutputCount(); ++i) {
+        auto edge_id = next_node->GetOutput(i);
+        auto temp_edge = topo->GetEdgeById(edge_id);
+        temp_edge->SetProducer(node->GetId());
+        if (i == 0) {
+            node->ReplaceOutput(connect_edge_id, edge_id);
+        } else {
+            node->AddOutput(edge_id);
+        }
+    }
+
+    topo->DelEdgeById(connect_edge_id);
+    topo->DelEdgeById(next_node->GetInput(1));
+    topo->DelEdgeById(next_node->GetInput(2));
+    topo->DelNodeById(shape_node->GetId());
+    topo->DelNodeById(next_node->GetId());
     return RC_SUCCESS;
 }
 
 const RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
+    auto topo = options.graph->topo.get();
     if (CanFuse(node, options)) {
         LOG(DEBUG) << "Fuse node[" << node->GetName() << "] into channel shuffle";
         std::string node_name = "ChannelShuffle_" + node->GetName();
@@ -192,6 +243,21 @@ const RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, cons
             options.info->kernels.erase(node->GetId());
             FuseWithNextNodes(node, options);
         }
+
+        if (CanFuseUpAndDown(node, options)) {
+            auto pre_edge = topo->GetEdgeById(node->GetInput(0));
+            auto post_edge = topo->GetEdgeById(node->GetOutput(0));
+            auto pre_node = topo->GetNodeById(pre_edge->GetProducer());
+            auto post_node = topo->GetNodeById(post_edge->CreateConsumerIter().Get());
+
+            options.info->kernels.erase(pre_node->GetId());
+            options.info->kernels.erase(post_node->GetId());
+            LOG(DEBUG) << "Fuse pre_node[" << pre_node->GetName() << "] and post_node["<< post_node->GetName() << "] into channel shuffle";
+            FuseWithLastNodes(node, options);
+            node = pre_node;
+            FuseWithNextNodes(node, options);
+        }
+
         node->SetType(ir::Node::Type("ppl", "ChannelShuffle"));
         node->SetName(node_name);
         auto creator = OptKernelCreatorManager::Instance()->Find(node->GetType().domain, node->GetType().name);
