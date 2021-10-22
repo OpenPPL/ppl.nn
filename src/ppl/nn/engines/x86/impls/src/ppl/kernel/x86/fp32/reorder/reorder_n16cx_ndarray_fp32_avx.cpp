@@ -15,10 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <immintrin.h>
-
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/kernel/x86/fp32/transpose/avx/transpose_fp32_avx.h"
+#include "ppl/kernel/x86/common/avx_tools.h"
+#include "ppl/common/sys.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
@@ -68,6 +68,61 @@ ppl::common::RetCode reorder_n16cx_ndarray_fp32_avx(
             }
         }
     }
+
+    return ppl::common::RC_SUCCESS;
+}
+
+ppl::common::RetCode reorder_n16cx_ndarray_inplace_fp32_avx(
+    const ppl::nn::TensorShape *src_shape,
+    float *data)
+{
+    if (src_shape->GetDataFormat() != ppl::common::DATAFORMAT_N16CX ||
+        src_shape->GetDimCount() < 3) {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
+    const int64_t batch    = src_shape->GetDim(0);
+    const int64_t channels = src_shape->GetDim(1);
+    const int64_t X        = src_shape->GetElementsExcludingPadding() / batch / channels;
+
+    const int64_t simd_w   = 8;
+    const int64_t c_blk    = 16;
+    const int64_t padded_c = round_up(channels, c_blk);
+
+    float *temp_buffer = (float*)ppl::common::AlignedAlloc(PPL_OMP_MAX_THREADS() * c_blk * X * sizeof(float), PPL_X86_CACHELINE_BYTES());
+
+#ifdef PPL_USE_X86_OMP_COLLAPSE
+    PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)
+#endif
+    for (int64_t b = 0; b < batch; ++b) {
+#ifndef PPL_USE_X86_OMP_COLLAPSE
+        PRAGMA_OMP_PARALLEL_FOR()
+#endif
+        for (int64_t c = 0; c < channels; c += c_blk) {
+            const int64_t c_eff = min<int64_t>(channels - c, c_blk);
+            float *local_buffer = temp_buffer + PPL_OMP_THREAD_ID() * c_blk * X;
+            for (int64_t x = 0; x < X; x += simd_w) {
+                const int64_t x_eff = min<int64_t>(X - x, simd_w);
+                for (int64_t mc = 0; mc < c_eff; mc += simd_w) {
+                    const int64_t mc_eff = min<int64_t>(c_eff - mc, simd_w);
+                    float *ldst          = local_buffer + mc * X + x;
+                    const float *lsrc    = data + b * padded_c * X + c * X + x * c_blk + mc;
+                    if (x_eff == simd_w && mc_eff == simd_w) {
+                        transpose_8x8_fp32_avx(lsrc, c_blk, X, ldst);
+                    } else {
+                        for (int64_t xx = 0; xx < x_eff; ++xx) {
+                            for (int64_t cc = 0; cc < mc_eff; ++cc) {
+                                ldst[cc * X + xx] = lsrc[xx * c_blk + cc];
+                            }
+                        }
+                    }
+                }
+            }
+            memcpy32_avx(data + b * channels * X + c * X, local_buffer, c_eff * X);
+        }
+    }
+
+    ppl::common::AlignedFree(temp_buffer);
 
     return ppl::common::RC_SUCCESS;
 }
