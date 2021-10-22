@@ -21,6 +21,10 @@ target_include_directories(luapplnn_shared PUBLIC
 set_target_properties(luapplnn_shared PROPERTIES PREFIX "")
 set_target_properties(luapplnn_shared PROPERTIES OUTPUT_NAME "nn")
 
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+    set_target_properties(luapplnn_shared PROPERTIES SUFFIX ".so") # using .so instead of .dylib
+endif()
+
 if(PPLNN_INSTALL)
     install(TARGETS luapplnn_shared DESTINATION luappl)
 endif()
