@@ -3,7 +3,14 @@
 workdir=`pwd`
 x86_64_build_dir="${workdir}/x86-64-build"
 cuda_build_dir="${workdir}/cuda-build"
-processor_num=`cat /proc/cpuinfo | grep processor | grep -v grep | wc -l`
+
+if [[ `uname` == "Linux" ]]; then
+    processor_num=`cat /proc/cpuinfo | grep processor | grep -v grep | wc -l`
+elif [[ `uname` == "Darwin" ]]; then
+    processor_num=`sysctl machdep.cpu | grep machdep.cpu.core_count | cut -d " " -f 2`
+else
+    processor_num=1
+fi
 
 options='-DCMAKE_BUILD_TYPE=Release -DPPLNN_ENABLE_PYTHON_API=ON'
 

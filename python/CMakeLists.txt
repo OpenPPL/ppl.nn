@@ -36,6 +36,11 @@ target_compile_features(pypplnn_shared PRIVATE cxx_std_11)
 set_target_properties(pypplnn_shared PROPERTIES PREFIX "")
 set_target_properties(pypplnn_shared PROPERTIES OUTPUT_NAME "nn")
 
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+    target_link_options(pypplnn_shared PUBLIC "LINKER:-undefined,dynamic_lookup") # required by pybind11
+    set_target_properties(pypplnn_shared PROPERTIES SUFFIX ".so") # using .so instead of .dylib
+endif()
+
 if(PPLNN_INSTALL)
     install(TARGETS pypplnn_shared DESTINATION pyppl)
 endif()
