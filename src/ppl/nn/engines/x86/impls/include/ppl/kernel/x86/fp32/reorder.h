@@ -19,8 +19,17 @@
 #define __ST_PPL_KERNEL_X86_FP32_REORDER_H_
 
 #include "ppl/kernel/x86/common/general_include.h"
+#include "ppl/kernel/x86/common/reorder_common.h"
 
 namespace ppl { namespace kernel { namespace x86 {
+
+ppl::common::RetCode reorder_ndarray_n16cx_inplace_fp32_avx(
+    const ppl::nn::TensorShape *src_shape,
+    float *data);
+
+ppl::common::RetCode reorder_ndarray_n16cx_inplace_fp32(
+    const ppl::nn::TensorShape *src_shape,
+    float *data);
 
 ppl::common::RetCode reorder_ndarray_n16cx_fp32_avx(
     const ppl::nn::TensorShape *src_shape,
@@ -31,6 +40,14 @@ ppl::common::RetCode reorder_ndarray_n16cx_fp32(
     const ppl::nn::TensorShape *src_shape,
     const float *src,
     float *dst);
+
+ppl::common::RetCode reorder_n16cx_ndarray_inplace_fp32_avx(
+    const ppl::nn::TensorShape *src_shape,
+    float *data);
+
+ppl::common::RetCode reorder_n16cx_ndarray_inplace_fp32(
+    const ppl::nn::TensorShape *src_shape,
+    float *data);
 
 ppl::common::RetCode reorder_n16cx_ndarray_fp32_avx(
     const ppl::nn::TensorShape *src_shape,
