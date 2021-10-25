@@ -272,6 +272,8 @@ RetCode CudaEngine::SetAlgorithm(CudaEngine* engine, va_list args) {
                     algo_info.splitk = iter->value.GetInt();
                 } else if (str_name == "splitf") {
                     algo_info.splitf = iter->value.GetInt();
+                } else if (str_name == "kname") {
+                    
                 } else {
                     LOG(ERROR) << "name of object[" << str_name << "] is not meaningful.";
                     return RC_INVALID_VALUE;
