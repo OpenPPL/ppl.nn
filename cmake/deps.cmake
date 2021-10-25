@@ -64,7 +64,7 @@ set(PPLCOMMON_ENABLE_LUA_API ${PPLNN_ENABLE_LUA_API})
 
 hpcc_declare_git_dep(ppl.common
     https://github.com/openppl-public/ppl.common.git
-    ec3d5cdda45097b569160603ff52b3a1f129b711)
+    fb123ab9d757eaecb2276f27392148f5c4dd1560)
 
 # --------------------------------------------------------------------------- #
 
@@ -100,8 +100,8 @@ hpcc_declare_pkg_dep(pybind11
 set(LUACPP_INSTALL OFF CACHE BOOL "")
 
 hpcc_declare_pkg_dep(luacpp
-    https://github.com/ouonline/lua-cpp/archive/6e9327be6594e54facba750178b13d86bf1a71fb.zip
-    818e2f7890eb3fe92c7026d9bb4394b2)
+    https://github.com/ouonline/lua-cpp/archive/30d40b248e25e2c72a552c70fde48a289365b9ea.zip
+    1c7e50a374d5e7b6c2a697f3f2e9f765)
 
 # --------------------------------------------------------------------------- #
 
