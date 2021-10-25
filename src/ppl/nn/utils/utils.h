@@ -28,7 +28,7 @@ static inline bool IsPplConverterNode(const ir::Node* node) {
 }
 
 static inline ir::Node::Type MakePplConverterNodeType() {
-    return ir::Node::Type("ppl", "Converter");
+    return ir::Node::Type("ppl", "Converter", 1);
 }
 
 }}} // namespace ppl::nn::utils

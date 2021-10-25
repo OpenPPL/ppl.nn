@@ -19,24 +19,26 @@
 #define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPT_KERNEL_CREATOR_MANAGER_H_
 
 #include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
+#include "ppl/nn/utils/op_info_manager.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
 typedef X86OptKernel* (*OptKernelCreator)(const ir::Node*);
 
-class OptKernelCreatorManager {
+class OptKernelCreatorManager final {
 public:
     static OptKernelCreatorManager* Instance() {
         static OptKernelCreatorManager mgr;
         return &mgr;
     }
 
-    ppl::common::RetCode Register(const std::string& domain, const std::string& type, OptKernelCreator);
-    OptKernelCreator Find(const std::string& domain, const std::string& type);
+    ppl::common::RetCode Register(const std::string& domain, const std::string& type, const utils::VersionRange&,
+                                  OptKernelCreator);
+    OptKernelCreator Find(const std::string& domain, const std::string& type, uint64_t version) const;
     void Remove(const std::string& domain, const std::string& type);
 
 private:
-    std::map<std::string, std::map<std::string, OptKernelCreator>> domain_type_creator_;
+    utils::OpInfoManager<OptKernelCreator> mgr_;
 
 private:
     OptKernelCreatorManager();

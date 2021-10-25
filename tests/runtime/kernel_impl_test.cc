@@ -28,9 +28,9 @@ using namespace ppl::nn::test;
 class KernelImplTest : public testing::Test {
 protected:
     void SetUp() override {
-        builder_.AddNode("a", ir::Node::Type("test", "op1"), {"input_of_a"}, {"output_of_a"});
-        builder_.AddNode("b", ir::Node::Type("test", "op2"), {"output_of_a"}, {"output_of_b"});
-        builder_.AddNode("c", ir::Node::Type("test", "op3"), {"output_of_b"}, {"output_of_c"});
+        builder_.AddNode("a", ir::Node::Type("test", "op1", 1), {"input_of_a"}, {"output_of_a"});
+        builder_.AddNode("b", ir::Node::Type("test", "op2", 1), {"output_of_a"}, {"output_of_b"});
+        builder_.AddNode("c", ir::Node::Type("test", "op3", 1), {"output_of_b"}, {"output_of_c"});
         builder_.Finalize();
     }
 
@@ -46,7 +46,7 @@ TEST_F(KernelImplTest, misc) {
     TestKernel kernels(node);
     EXPECT_EQ(node, kernels.GetNode());
     EXPECT_EQ("a", kernels.GetName());
-    EXPECT_EQ(ir::Node::Type("test", "op1"), kernels.GetType());
+    EXPECT_EQ(ir::Node::Type("test", "op1", 1), kernels.GetType());
 
     utils::GenericCpuDevice device;
     kernels.SetDevice(&device);

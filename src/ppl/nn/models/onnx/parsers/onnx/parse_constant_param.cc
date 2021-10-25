@@ -18,6 +18,7 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_constant_param.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/models/onnx/utils.h"
+using namespace std;
 
 namespace ppl { namespace nn { namespace onnx {
 
@@ -47,7 +48,8 @@ static const char* g_keys[] = {
     nullptr,
 };
 
-ppl::common::RetCode ParseConstantParam(const ::onnx::NodeProto& pb_node, void* arg, ir::Node*, ir::GraphTopo*) {
+ppl::common::RetCode ParseConstantParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
+                                        ir::Node*, ir::GraphTopo*) {
     auto param = static_cast<ppl::nn::common::ConstantParam*>(arg);
 
     for (uint32_t i = 0; g_keys[i]; ++i) {

@@ -21,11 +21,13 @@
 #include "ppl/common/retcode.h"
 #include "ppl/nn/ir/graph.h"
 #include "ppl/nn/models/onnx/generated/onnx.pb.h"
+#include "ppl/nn/utils/op_info_manager.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
 typedef void* (*CreateParamFunc)();
-typedef ppl::common::RetCode (*ParseParamFunc)(const ::onnx::NodeProto&, void* param, ir::Node*, ir::GraphTopo*);
+typedef ppl::common::RetCode (*ParseParamFunc)(const ::onnx::NodeProto&, const std::map<std::string, uint64_t>& op_sets,
+                                               void* param, ir::Node*, ir::GraphTopo*);
 typedef void (*DeleteParamFunc)(void* param);
 
 struct ParserInfo {
@@ -34,18 +36,19 @@ struct ParserInfo {
     DeleteParamFunc destroy_param;
 };
 
-class ParamParserManager {
+class ParamParserManager final {
 public:
     static ParamParserManager* Instance() {
         static ParamParserManager mgr;
         return &mgr;
     }
 
-    void Register(const std::string& domain, const std::string& op_type, const ParserInfo&);
-    const ParserInfo* Find(const std::string& domain, const std::string& op_type) const;
+    ppl::common::RetCode Register(const std::string& domain, const std::string& type, const utils::VersionRange&,
+                                  const ParserInfo&);
+    const ParserInfo* Find(const std::string& domain, const std::string& type, uint64_t version) const;
 
 private:
-    std::map<std::string, std::map<std::string, ParserInfo>> domain_type_parser_;
+    utils::OpInfoManager<ParserInfo> mgr_;
 
 private:
     ParamParserManager();

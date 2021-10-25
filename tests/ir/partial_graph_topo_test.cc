@@ -27,9 +27,9 @@ using namespace ppl::nn::test;
 class PartialGraphTopoTest : public testing::Test {
 public:
     void ConstructGraph(GraphBuilder* graph_builder) {
-        graph_builder->AddNode("c", ir::Node::Type("test", "echo"), {"output_of_b"}, {"cc"});
-        graph_builder->AddNode("b", ir::Node::Type("test", "echo"), {"ab"}, {"output_of_b"});
-        graph_builder->AddNode("a", ir::Node::Type("test", "echo"), {"input_of_a"}, {"ab"});
+        graph_builder->AddNode("c", ir::Node::Type("test", "echo", 1), {"output_of_b"}, {"cc"});
+        graph_builder->AddNode("b", ir::Node::Type("test", "echo", 1), {"ab"}, {"output_of_b"});
+        graph_builder->AddNode("a", ir::Node::Type("test", "echo", 1), {"input_of_a"}, {"ab"});
         graph_builder->Finalize();
     }
 

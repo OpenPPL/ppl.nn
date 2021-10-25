@@ -57,7 +57,8 @@ static RetCode CollectExtraInputIndices(const ir::GraphTopo* current, const ir::
     return RC_SUCCESS;
 }
 
-RetCode ParseIfParam(const ::onnx::NodeProto& pb_node, void* arg, ir::Node* node, ir::GraphTopo* topo) {
+RetCode ParseIfParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>& op_sets, void* arg, ir::Node* node,
+                     ir::GraphTopo* topo) {
     auto param = (ppl::nn::common::IfParam*)arg;
     for (int i = 0; i < pb_node.attribute_size(); ++i) {
         auto& attr = pb_node.attribute(i);
@@ -69,7 +70,7 @@ RetCode ParseIfParam(const ::onnx::NodeProto& pb_node, void* arg, ir::Node* node
 
         if (attr.name() == "then_branch") {
             GraphParser parser;
-            auto status = parser.Parse(attr.g(), &param->then_branch);
+            auto status = parser.Parse(attr.g(), op_sets, &param->then_branch);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "parse then_branch of if op[" << pb_node.name() << "] failed: " << GetRetCodeStr(status);
                 return status;
@@ -84,7 +85,7 @@ RetCode ParseIfParam(const ::onnx::NodeProto& pb_node, void* arg, ir::Node* node
             }
         } else if (attr.name() == "else_branch") {
             GraphParser parser;
-            auto status = parser.Parse(attr.g(), &param->else_branch);
+            auto status = parser.Parse(attr.g(), op_sets, &param->else_branch);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "parse else_branch of if op[" << pb_node.name() << "] failed: " << GetRetCodeStr(status);
                 return status;

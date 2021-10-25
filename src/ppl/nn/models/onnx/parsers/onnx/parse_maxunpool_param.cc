@@ -17,10 +17,12 @@
 
 #include "ppl/nn/models/onnx/parsers/onnx/parse_maxunpool_param.h"
 #include "ppl/nn/models/onnx/utils.h"
+using namespace std;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseMaxUnpoolParam(const ::onnx::NodeProto& pb_node, void* arg, ir::Node*, ir::GraphTopo*) {
+ppl::common::RetCode ParseMaxUnpoolParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
+                                         ir::Node*, ir::GraphTopo*) {
     auto param = static_cast<ppl::nn::common::MaxUnpoolParam*>(arg);
 
     param->kernel_shape = utils::GetNodeAttrsByKey<int32_t>(pb_node, "kernel_shape");

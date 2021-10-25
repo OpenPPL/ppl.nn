@@ -26,9 +26,9 @@ namespace ppl { namespace nn { namespace ir {
 
 class Node final {
 public:
-    struct Type {
+    struct Type final {
         Type() {}
-        Type(const std::string& d, const std::string& n) : domain(d), name(n) {}
+        Type(const std::string& d, const std::string& n, uint64_t v) : domain(d), name(n), version(v) {}
         Type(Type&&) = default;
         Type(const Type&) = default;
 
@@ -36,11 +36,12 @@ public:
         Type& operator=(const Type&) = default;
 
         bool operator==(const Type& tid) const {
-            return (name == tid.name && domain == tid.domain);
+            return (name == tid.name && domain == tid.domain && version == tid.version);
         }
 
         std::string domain;
         std::string name;
+        uint64_t version;
     };
 
 public:

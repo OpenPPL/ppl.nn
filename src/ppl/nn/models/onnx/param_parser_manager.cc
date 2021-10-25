@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/models/onnx/param_parser_manager.h"
-#include "ppl/nn/models/op_info_manager.h"
+#include "ppl/nn/params/param_utils_manager.h"
 
 // NOTE: sorted in alphabet order
 #include "ppl/nn/models/onnx/parsers/onnx/parse_argmax_param.h"
@@ -61,22 +61,17 @@
 #include "ppl/nn/models/onnx/parsers/ppl/parse_ppl_channel_shuffle_param.h"
 
 using namespace std;
+using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-void ParamParserManager::Register(const string& domain, const string& type, const ParserInfo& info) {
-    domain_type_parser_[domain][type] = info;
+RetCode ParamParserManager::Register(const string& domain, const string& type, const utils::VersionRange& ver,
+                                     const ParserInfo& info) {
+    return mgr_.Register(domain, type, ver, info);
 }
 
-const ParserInfo* ParamParserManager::Find(const string& domain, const string& op_type) const {
-    auto type_parser_ref = domain_type_parser_.find(domain);
-    if (type_parser_ref != domain_type_parser_.end()) {
-        auto parser_ref = type_parser_ref->second.find(op_type);
-        if (parser_ref != type_parser_ref->second.end()) {
-            return &(parser_ref->second);
-        }
-    }
-    return nullptr;
+const ParserInfo* ParamParserManager::Find(const string& domain, const string& type, uint64_t version) const {
+    return mgr_.Find(domain, type, version);
 }
 
 template <typename T>
@@ -90,120 +85,127 @@ void DeleteParam(void* ptr) {
 }
 
 template <typename T>
-bool ParamEqual(void* param_0, void* param_1) {
-    return *static_cast<T*>(param_0) == *static_cast<T*>(param_1);
+bool ParamEqual(const void* param_0, const void* param_1) {
+    return *static_cast<const T*>(param_0) == *static_cast<const T*>(param_1);
 }
 
-#define PPL_REGISTER_OP_WITH_PARAM(domain, type, param_type, parse_param_func) \
-    do {                                                                       \
-        ParserInfo parse_info;                                                 \
-        parse_info.create_param = CreateParam<param_type>;                     \
-        parse_info.parse_param = parse_param_func;                             \
-        parse_info.destroy_param = DeleteParam<param_type>;                    \
-        domain_type_parser_[domain][type] = parse_info;                        \
-                                                                               \
-        OpInfo info;                                                           \
-        info.param_equal = ParamEqual<param_type>;                             \
-        OpInfoManager::Instance()->Register(domain, type, info);               \
+#define PPL_REGISTER_OP_WITH_PARAM(domain, type, first_version, last_version, param_type, parse_param_func)         \
+    do {                                                                                                            \
+        ParserInfo parse_info;                                                                                      \
+        parse_info.create_param = CreateParam<param_type>;                                                          \
+        parse_info.parse_param = parse_param_func;                                                                  \
+        parse_info.destroy_param = DeleteParam<param_type>;                                                         \
+        Register(domain, type, utils::VersionRange(first_version, last_version), parse_info);                       \
+                                                                                                                    \
+        ParamUtils u;                                                                                               \
+        u.equal = ParamEqual<param_type>;                                                                           \
+        ParamUtilsManager::Instance()->Register(domain, type, utils::VersionRange(first_version, last_version), u); \
     } while (0)
 
-#define PPL_REGISTER_OP_WITHOUT_PARAM(domain, type)     \
-    do {                                                \
-        ParserInfo parse_info;                          \
-        parse_info.create_param = nullptr;              \
-        parse_info.parse_param = nullptr;               \
-        parse_info.destroy_param = nullptr;             \
-        domain_type_parser_[domain][type] = parse_info; \
+#define PPL_REGISTER_OP_WITHOUT_PARAM(domain, type, first_version, last_version)              \
+    do {                                                                                      \
+        ParserInfo parse_info;                                                                \
+        parse_info.create_param = nullptr;                                                    \
+        parse_info.parse_param = nullptr;                                                     \
+        parse_info.destroy_param = nullptr;                                                   \
+        Register(domain, type, utils::VersionRange(first_version, last_version), parse_info); \
     } while (0)
 
 // NOTE: sorted in alphabet order
 ParamParserManager::ParamParserManager() {
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Add");
-    PPL_REGISTER_OP_WITH_PARAM("", "ArgMax", ppl::nn::common::ArgMaxParam, ParseArgMaxParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "AveragePool", ppl::nn::common::PoolingParam, ParsePoolingParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "BatchNormalization", ppl::nn::common::BatchNormalizationParam,
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Add", 11, 11);
+    PPL_REGISTER_OP_WITH_PARAM("", "ArgMax", 11, 11, ppl::nn::common::ArgMaxParam, ParseArgMaxParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "AveragePool", 11, 11, ppl::nn::common::PoolingParam, ParsePoolingParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "BatchNormalization", 11, 11, ppl::nn::common::BatchNormalizationParam,
                                ParseBatchNormalizationParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Cast", ppl::nn::common::CastParam, ParseCastParam);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Clip");
-    PPL_REGISTER_OP_WITH_PARAM("", "Concat", ppl::nn::common::ConcatParam, ParseConcatParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Constant", ppl::nn::common::ConstantParam, ParseConstantParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ConstantOfShape", ppl::nn::common::ConstantOfShapeParam, ParseConstantOfShapeParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Conv", ppl::nn::common::ConvolutionParam, ParseConvolutionParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ConvTranspose", ppl::nn::common::ConvTransposeParam, ParseConvTransposeParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "DepthToSpace", ppl::nn::common::DepthToSpaceParam, ParseDepthToSpaceParam);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Div");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Equal");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Exp");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Expand");
-    PPL_REGISTER_OP_WITH_PARAM("", "Flatten", ppl::nn::common::FlattenParam, ParseFlattenParam);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Floor");
-    PPL_REGISTER_OP_WITH_PARAM("", "Gather", ppl::nn::common::GatherParam, ParseGatherParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "GatherND", ppl::nn::common::GatherNDParam, ParseGatherNDParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Gemm", ppl::nn::common::GemmParam, ParseGemmParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "GlobalAveragePool", ppl::nn::common::PoolingParam, ParsePoolingParam);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Greater");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Identity");
-    PPL_REGISTER_OP_WITH_PARAM("", "If", ppl::nn::common::IfParam, ParseIfParam);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Less");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Log");
-    PPL_REGISTER_OP_WITH_PARAM("", "Loop", ppl::nn::common::LoopParam, ParseLoopParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "LeakyRelu", ppl::nn::common::LeakyReLUParam, ParseLeakyReLUParam);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "MatMul");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Max");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Min");
-    PPL_REGISTER_OP_WITH_PARAM("", "MaxPool", ppl::nn::common::PoolingParam, ParsePoolingParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "MaxUnpool", ppl::nn::common::MaxUnpoolParam, ParseMaxUnpoolParam);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Mul");
-    PPL_REGISTER_OP_WITH_PARAM("", "NonMaxSuppression", ppl::nn::common::NonMaxSuppressionParam,
+    PPL_REGISTER_OP_WITH_PARAM("", "Cast", 11, 11, ppl::nn::common::CastParam, ParseCastParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Clip", 11, 11);
+    PPL_REGISTER_OP_WITH_PARAM("", "Concat", 11, 11, ppl::nn::common::ConcatParam, ParseConcatParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Constant", 11, 11, ppl::nn::common::ConstantParam, ParseConstantParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ConstantOfShape", 11, 11, ppl::nn::common::ConstantOfShapeParam,
+                               ParseConstantOfShapeParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Conv", 11, 11, ppl::nn::common::ConvolutionParam, ParseConvolutionParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ConvTranspose", 11, 11, ppl::nn::common::ConvTransposeParam,
+                               ParseConvTransposeParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "DepthToSpace", 11, 11, ppl::nn::common::DepthToSpaceParam, ParseDepthToSpaceParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Div", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Equal", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Exp", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Expand", 11, 11);
+    PPL_REGISTER_OP_WITH_PARAM("", "Flatten", 11, 11, ppl::nn::common::FlattenParam, ParseFlattenParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Floor", 11, 11);
+    PPL_REGISTER_OP_WITH_PARAM("", "Gather", 11, 11, ppl::nn::common::GatherParam, ParseGatherParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "GatherND", 11, 11, ppl::nn::common::GatherNDParam, ParseGatherNDParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Gemm", 11, 11, ppl::nn::common::GemmParam, ParseGemmParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "GlobalAveragePool", 11, 11, ppl::nn::common::PoolingParam, ParsePoolingParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Greater", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Identity", 11, 11);
+    PPL_REGISTER_OP_WITH_PARAM("", "If", 1, 13, ppl::nn::common::IfParam, ParseIfParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Less", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Log", 11, 11);
+    PPL_REGISTER_OP_WITH_PARAM("", "Loop", 1, 13, ppl::nn::common::LoopParam, ParseLoopParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "LeakyRelu", 11, 11, ppl::nn::common::LeakyReLUParam, ParseLeakyReLUParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "MatMul", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Max", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Min", 11, 11);
+    PPL_REGISTER_OP_WITH_PARAM("", "MaxPool", 11, 11, ppl::nn::common::PoolingParam, ParsePoolingParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "MaxUnpool", 11, 11, ppl::nn::common::MaxUnpoolParam, ParseMaxUnpoolParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Mul", 11, 11);
+    PPL_REGISTER_OP_WITH_PARAM("", "NonMaxSuppression", 11, 11, ppl::nn::common::NonMaxSuppressionParam,
                                ParseNonMaxSuppressionParam);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "NonZero");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Not");
-    PPL_REGISTER_OP_WITH_PARAM("", "Pad", ppl::nn::common::PadParam, ParsePadParam);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Pow");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Range");
-    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMax", ppl::nn::common::ReduceParam, ParseReduceParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMean", ppl::nn::common::ReduceParam, ParseReduceParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMin", ppl::nn::common::ReduceParam, ParseReduceParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ReduceSum", ppl::nn::common::ReduceParam, ParseReduceParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ReduceProd", ppl::nn::common::ReduceParam, ParseReduceParam);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Relu");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Reshape");
-    PPL_REGISTER_OP_WITH_PARAM("", "Resize", ppl::nn::common::ResizeParam, ParseResizeParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "RoiAlign", ppl::nn::common::ROIAlignParam, ParseROIAlignParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ScatterElements", ppl::nn::common::ScatterElementsParam, ParseScatterElementsParam);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "ScatterND");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "SequenceAt");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Shape");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Sigmoid");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Slice");
-    PPL_REGISTER_OP_WITH_PARAM("", "Softmax", ppl::nn::common::SoftmaxParam, ParseSoftmaxParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Split", ppl::nn::common::SplitParam, ParseSplitParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "SplitToSequence", ppl::nn::common::SplitToSequenceParam, ParseSplitToSequenceParam);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Sqrt");
-    PPL_REGISTER_OP_WITH_PARAM("", "Squeeze", ppl::nn::common::SqueezeParam, ParseSqueezeParam);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Sub");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Sum");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Tanh");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Tile");
-    PPL_REGISTER_OP_WITH_PARAM("", "TopK", ppl::nn::common::TopKParam, ParseTopKParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Transpose", ppl::nn::common::TransposeParam, ParseTransposeParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Unsqueeze", ppl::nn::common::UnsqueezeParam, ParseUnsqueezeParam);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Where");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Ceil");
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "And");
-    PPL_REGISTER_OP_WITH_PARAM("", "LRN", ppl::nn::common::LRNParam, ParseLRNParam);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Dropout");
-    PPL_REGISTER_OP_WITH_PARAM("", "LSTM", ppl::nn::common::LSTMParam, ParseLSTMParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "NonZero", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Not", 11, 11);
+    PPL_REGISTER_OP_WITH_PARAM("", "Pad", 11, 11, ppl::nn::common::PadParam, ParsePadParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Pow", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Range", 11, 11);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMax", 11, 11, ppl::nn::common::ReduceParam, ParseReduceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMean", 11, 11, ppl::nn::common::ReduceParam, ParseReduceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMin", 11, 11, ppl::nn::common::ReduceParam, ParseReduceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceSum", 11, 11, ppl::nn::common::ReduceParam, ParseReduceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceProd", 11, 11, ppl::nn::common::ReduceParam, ParseReduceParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Relu", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Reshape", 11, 11);
+    PPL_REGISTER_OP_WITH_PARAM("", "Resize", 11, 11, ppl::nn::common::ResizeParam, ParseResizeParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "RoiAlign", 11, 11, ppl::nn::common::ROIAlignParam, ParseROIAlignParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ScatterElements", 11, 11, ppl::nn::common::ScatterElementsParam,
+                               ParseScatterElementsParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "ScatterND", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "SequenceAt", 1, 13);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Shape", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Sigmoid", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Slice", 11, 11);
+    PPL_REGISTER_OP_WITH_PARAM("", "Softmax", 11, 11, ppl::nn::common::SoftmaxParam, ParseSoftmaxParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Split", 11, 11, ppl::nn::common::SplitParam, ParseSplitParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "SplitToSequence", 1, 13, ppl::nn::common::SplitToSequenceParam,
+                               ParseSplitToSequenceParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Sqrt", 11, 11);
+    PPL_REGISTER_OP_WITH_PARAM("", "Squeeze", 11, 11, ppl::nn::common::SqueezeParam, ParseSqueezeParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Sub", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Sum", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Tanh", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Tile", 11, 11);
+    PPL_REGISTER_OP_WITH_PARAM("", "TopK", 11, 11, ppl::nn::common::TopKParam, ParseTopKParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Transpose", 11, 11, ppl::nn::common::TransposeParam, ParseTransposeParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Unsqueeze", 11, 11, ppl::nn::common::UnsqueezeParam, ParseUnsqueezeParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Where", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Ceil", 11, 11);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "And", 11, 11);
+    PPL_REGISTER_OP_WITH_PARAM("", "LRN", 11, 11, ppl::nn::common::LRNParam, ParseLRNParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Dropout", 11, 11);
+    PPL_REGISTER_OP_WITH_PARAM("", "LSTM", 11, 11, ppl::nn::common::LSTMParam, ParseLSTMParam);
 
     // mmcv op param parser
-    PPL_REGISTER_OP_WITH_PARAM("mmcv", "NonMaxSuppression", ppl::nn::common::MMCVNMSParam, ParseMMCVNMSParam);
-    PPL_REGISTER_OP_WITH_PARAM("mmcv", "MMCVRoiAlign", ppl::nn::common::MMCVROIAlignParam, ParseMMCVROIAlignParam);
-    PPL_REGISTER_OP_WITH_PARAM("mmcv", "grid_sampler", ppl::nn::common::MMCVGridSampleParam, ParseMMCVGridSampleParam);
-    PPL_REGISTER_OP_WITH_PARAM("mmcv", "MMCVModulatedDeformConv2d", ppl::nn::common::MMCVModulatedDeformConv2dParam,
-                               ParseMMCVModulatedDeformConv2dParam);
+    PPL_REGISTER_OP_WITH_PARAM("mmcv", "NonMaxSuppression", 1, 1, ppl::nn::common::MMCVNMSParam, ParseMMCVNMSParam);
+    PPL_REGISTER_OP_WITH_PARAM("mmcv", "MMCVRoiAlign", 1, 1, ppl::nn::common::MMCVROIAlignParam,
+                               ParseMMCVROIAlignParam);
+    PPL_REGISTER_OP_WITH_PARAM("mmcv", "grid_sampler", 1, 1, ppl::nn::common::MMCVGridSampleParam,
+                               ParseMMCVGridSampleParam);
+    PPL_REGISTER_OP_WITH_PARAM("mmcv", "MMCVModulatedDeformConv2d", 1, 1,
+                               ppl::nn::common::MMCVModulatedDeformConv2dParam, ParseMMCVModulatedDeformConv2dParam);
 
     // ppl op param parser
-    PPL_REGISTER_OP_WITH_PARAM("ppl", "ChannelShuffle", ppl::nn::common::ChannelShuffleParam, ParseChannelShuffleParam);
+    PPL_REGISTER_OP_WITH_PARAM("ppl", "ChannelShuffle", 1, 1, ppl::nn::common::ChannelShuffleParam,
+                               ParseChannelShuffleParam);
 }
 
 }}} // namespace ppl::nn::onnx

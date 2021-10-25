@@ -56,7 +56,7 @@ RetCode OptGraph::InitKernels() {
     for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
         auto node = it->Get();
         auto& type = node->GetType();
-        auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name);
+        auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
         if (!creator) {
             LOG(ERROR) << "cannot find creator for CudaOptKernel[" << node->GetName() << "] type[" << type.domain << ":"
                        << type.name << "]";
@@ -244,7 +244,7 @@ RetCode OptGraph::AddBridgeKernels() {
                 continue;
             }
 
-            auto creator = OptKernelCreatorManager::Instance()->Find("ppl", "Bridge");
+            auto creator = OptKernelCreatorManager::Instance()->Find("ppl", "Bridge", 1);
             auto ret_pair = topo->AddNode("Bridge_Node_" + node->GetName() + "_" + edge->GetName());
             if (!ret_pair.second) {
                 LOG(ERROR) << "create a new node for [" << edge->GetName() << "] failed.";
@@ -252,7 +252,7 @@ RetCode OptGraph::AddBridgeKernels() {
             }
             auto new_node = ret_pair.first;
 
-            new_node->SetType(ir::Node::Type("ppl", "Bridge"));
+            new_node->SetType(ir::Node::Type("ppl", "Bridge", 1));
             auto bridge_kernel = unique_ptr<CudaOptKernel>(creator(new_node));
             ((BridgeOp*)bridge_kernel.get())->AddInternalBridgeNode(node, new_node, edge, graph_);
 
@@ -274,7 +274,7 @@ RetCode OptGraph::AddBridgeKernels() {
             auto edge = topo->GetEdgeById(node->GetOutput(j));
             if (topo->GetOutput(edge->GetName()) != INVALID_EDGEID || // it is marked as an output node
                 edge->CalcConsumerCount() == 0) { // it is an finel node for the graph
-                auto creator = OptKernelCreatorManager::Instance()->Find("ppl", "Bridge");
+                auto creator = OptKernelCreatorManager::Instance()->Find("ppl", "Bridge", 1);
 
                 auto ret_pair = topo->AddNode("Bridge_Final_" + node->GetName() + "_" + edge->GetName());
                 if (!ret_pair.second) {
@@ -283,7 +283,7 @@ RetCode OptGraph::AddBridgeKernels() {
                 }
                 auto new_node = ret_pair.first;
 
-                new_node->SetType(ir::Node::Type("ppl", "Bridge"));
+                new_node->SetType(ir::Node::Type("ppl", "Bridge", 1));
                 auto bridge_kernel = unique_ptr<CudaOptKernel>(creator(new_node));
                 ((BridgeOp*)bridge_kernel.get())->AddFinalBridgeNode(node, new_node, edge, graph_);
 
@@ -376,12 +376,12 @@ RetCode OptGraph::InitQuantization() {
                 if (post_node->GetType().name == "Bridge") {
                     auto new_edge = topo->GetEdgeById(post_node->GetOutput(0));
                     pair = tensor_params.find(new_edge->GetName());
-                }  
+                }
             }
         }
         // Still can not find quant info. It means quant info is not exist.
         if (pair == tensor_params.end()) {
-            continue; 
+            continue;
         }
         auto& temp_tensor_quant = graph_quants[edge->GetId()];
         auto str = pair->second.fields.find("per_channel")->second;

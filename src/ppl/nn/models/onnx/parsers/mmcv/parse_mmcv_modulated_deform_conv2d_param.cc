@@ -17,10 +17,12 @@
 
 #include "ppl/nn/models/onnx/parsers/mmcv/parse_mmcv_modulated_deform_conv2d_param.h"
 #include "ppl/nn/models/onnx/utils.h"
+using namespace std;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseMMCVModulatedDeformConv2dParam(const ::onnx::NodeProto& pb_node, void* arg, ir::Node*, ir::GraphTopo*) {
+ppl::common::RetCode ParseMMCVModulatedDeformConv2dParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&,
+                                                         void* arg, ir::Node*, ir::GraphTopo*) {
     auto param = static_cast<ppl::nn::common::MMCVModulatedDeformConv2dParam*>(arg);
 
     param->kernel_size[0] = 0; // set by opcontext, for converted filter

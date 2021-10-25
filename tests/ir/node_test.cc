@@ -36,7 +36,7 @@ TEST(NodeTest, NodeTest_SetNameAndGetName_Test) {
 
 TEST(NodeTest, NodeTest_SetTypeAndGetType_Test) {
     ir::Node node(1);
-    node.SetType(ir::Node::Type("domain", "test"));
+    node.SetType(ir::Node::Type("domain", "test", 1));
     const ir::Node::Type& type = node.GetType();
     EXPECT_EQ("domain", type.domain);
     EXPECT_EQ("test", type.name);

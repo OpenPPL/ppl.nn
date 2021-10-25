@@ -47,6 +47,7 @@ TEST_F(GraphParserTest, Parse_Test) {
     fclose(fp);
     ppl::nn::onnx::GraphParser graph_parser;
     ppl::nn::ir::Graph graph;
-    auto status = graph_parser.Parse(pb_model.graph(), &graph);
+    map<string, uint64_t> op_sets = {{"", 11}};
+    auto status = graph_parser.Parse(pb_model.graph(), op_sets, &graph);
     EXPECT_EQ(status, ppl::common::RC_SUCCESS);
 }
