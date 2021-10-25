@@ -18,10 +18,12 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_pad_param.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/models/onnx/utils.h"
+using namespace std;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParsePadParam(const ::onnx::NodeProto& pb_node, void* arg, ir::Node*, ir::GraphTopo*) {
+ppl::common::RetCode ParsePadParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg, ir::Node*,
+                                   ir::GraphTopo*) {
     auto param = static_cast<ppl::nn::common::PadParam*>(arg);
     std::string mode = utils::GetNodeAttrByKey<std::string>(pb_node, "mode", "constant");
     if (mode == "constant") {

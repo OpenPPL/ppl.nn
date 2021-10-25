@@ -15,32 +15,38 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_OP_INFO_MANAGER_H
-#define _ST_HPC_PPL_NN_MODELS_OP_INFO_MANAGER_H
+#ifndef _ST_HPC_PPL_NN_PARAMS_PARAM_UTILS_MANAGER_H_
+#define _ST_HPC_PPL_NN_PARAMS_PARAM_UTILS_MANAGER_H_
 
-#include "ppl/common/retcode.h"
-#include "ppl/nn/ir/graph.h"
+#include "ppl/nn/utils/op_info_manager.h"
 
 namespace ppl { namespace nn {
 
-typedef bool (*ParamEqualFunc)(void* param_0, void* param_1);
-
-struct OpInfo {
-    ParamEqualFunc param_equal;
+struct ParamUtils final {
+    bool (*equal)(const void* param_0, const void* param_1);
 };
 
-class OpInfoManager {
+class ParamUtilsManager final {
 public:
-    static OpInfoManager* Instance() {
-        static OpInfoManager mgr;
+    static ParamUtilsManager* Instance() {
+        static ParamUtilsManager mgr;
         return &mgr;
     }
 
-    const OpInfo* Find(const std::string& domain, const std::string& op_type) const;
-    void Register(const std::string& domain, const std::string& op_type, const OpInfo&);
+    ppl::common::RetCode Register(const std::string& domain, const std::string& type, const utils::VersionRange& ver,
+                                  const ParamUtils& item) {
+        return mgr_.Register(domain, type, ver, item);
+    }
+
+    const ParamUtils* Find(const std::string& domain, const std::string& type, uint64_t version) const {
+        return mgr_.Find(domain, type, version);
+    }
 
 private:
-    std::map<std::string, std::map<std::string, OpInfo>> info_;
+    utils::OpInfoManager<ParamUtils> mgr_;
+
+private:
+    ParamUtilsManager() {}
 };
 
 }} // namespace ppl::nn

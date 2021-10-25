@@ -19,11 +19,13 @@
 #include "ppl/nn/models/onnx/graph_parser.h"
 #include "ppl/nn/models/onnx/utils.h"
 #include "ppl/nn/common/logger.h"
+using namespace std;
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseLoopParam(const ::onnx::NodeProto& pb_node, void* arg, ir::Node* node, ir::GraphTopo* topo) {
+RetCode ParseLoopParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>& op_sets, void* arg,
+                       ir::Node* node, ir::GraphTopo* topo) {
     auto param = static_cast<ppl::nn::common::LoopParam*>(arg);
     if (pb_node.attribute_size() != 1) {
         LOG(ERROR) << "invalid attribute size[" << pb_node.attribute_size() << "] != 1.";
@@ -36,7 +38,7 @@ RetCode ParseLoopParam(const ::onnx::NodeProto& pb_node, void* arg, ir::Node* no
     }
 
     GraphParser parser;
-    auto status = parser.Parse(attr.g(), &(param->graph));
+    auto status = parser.Parse(attr.g(), op_sets, &(param->graph));
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse subgraph of loop pb_node[" << pb_node.name();
         return status;

@@ -46,6 +46,20 @@ static bool ParseFromBinaryBuffer(const char* buf, uint64_t buf_len, google::pro
     return pb_model->ParseFromCodedStream(&cis);
 }
 
+static map<string, uint64_t> ParseOpSets(const ::onnx::ModelProto pb_model) {
+    map<string, uint64_t> res;
+    for (int i = 0; i < pb_model.opset_import_size(); ++i) {
+        const string& domain = pb_model.opset_import(i).domain();
+        uint64_t version = pb_model.opset_import(i).version();
+
+        auto ref = res.insert(make_pair(domain, 0));
+        if (version > ref.first->second) {
+            ref.first->second = version;
+        }
+    }
+    return res;
+}
+
 RetCode ModelParser::Parse(const char* buf, uint64_t buf_len, ir::Graph* graph) {
     ::onnx::ModelProto pb_model;
     if (!ParseFromBinaryBuffer(buf, buf_len, &pb_model)) {
@@ -53,23 +67,15 @@ RetCode ModelParser::Parse(const char* buf, uint64_t buf_len, ir::Graph* graph) 
         return RC_OTHER_ERROR;
     }
 
-    for (int i = 0; i < pb_model.opset_import_size(); ++i) {
-        const string& domain = pb_model.opset_import(i).domain();
-        int64_t version = pb_model.opset_import(i).version();
-        // only supports onnx opset version >= 11
-        if (domain.empty() && version < 11) {
-            LOG(ERROR) << "unsupported opset [" << domain << ":" << version << "]";
-            return RC_UNSUPPORTED;
-        }
-    }
-
     if (pb_model.graph().quantization_annotation_size() > 0) {
         LOG(ERROR) << "quantization in ONNX model is not supported now.";
         return RC_UNSUPPORTED;
     }
 
+    map<string, uint64_t> op_sets = ParseOpSets(pb_model);
+
     GraphParser graph_parser;
-    auto status = graph_parser.Parse(pb_model.graph(), graph);
+    auto status = graph_parser.Parse(pb_model.graph(), op_sets, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse graph failed: " << GetRetCodeStr(status);
         return status;

@@ -17,13 +17,15 @@
 
 #include "ppl/nn/models/onnx/parsers/onnx/parse_convtranspose_param.h"
 #include "ppl/nn/models/onnx/utils.h"
+using namespace std;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseConvTransposeParam(const ::onnx::NodeProto& pb_node, void* arg, ir::Node*, ir::GraphTopo*) {
+ppl::common::RetCode ParseConvTransposeParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
+                                             ir::Node*, ir::GraphTopo*) {
     auto param = static_cast<ppl::nn::common::ConvTransposeParam*>(arg);
 
-    param->auto_pad = utils::GetNodeAttrByKey<std::string>(pb_node, "auto_pad", "");
+    param->auto_pad = utils::GetNodeAttrByKey<string>(pb_node, "auto_pad", "");
     param->dilations = utils::GetNodeAttrsByKey<int32_t>(pb_node, "dilations");
     param->kernel_shape = utils::GetNodeAttrsByKey<int32_t>(pb_node, "kernel_shape");
     param->output_padding = utils::GetNodeAttrsByKey<int32_t>(pb_node, "output_padding");

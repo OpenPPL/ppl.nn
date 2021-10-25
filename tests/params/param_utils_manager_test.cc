@@ -15,25 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/op_info_manager.h"
-using namespace std;
+#include "ppl/nn/params/param_utils_manager.h"
+#include "gtest/gtest.h"
+using namespace ppl::nn;
 using namespace ppl::common;
 
-namespace ppl { namespace nn {
-
-const OpInfo* OpInfoManager::Find(const string& domain, const string& op_type) const {
-    auto type_ref = info_.find(domain);
-    if (type_ref != info_.end()) {
-        auto ref = type_ref->second.find(op_type);
-        if (ref != type_ref->second.end()) {
-            return &(ref->second);
-        }
-    }
-    return nullptr;
+static bool TestParamEqualFunc(const void* param_0, const void* param_1) {
+    return true;
 }
 
-void OpInfoManager::Register(const string& domain, const string& op_type, const OpInfo& info) {
-    info_[domain][op_type] = info;
+TEST(ParamUtilsManagerTest, misc) {
+    ParamUtils info;
+    info.equal = TestParamEqualFunc;
+    auto mgr = ParamUtilsManager::Instance();
+    mgr->Register("domain", "type", utils::VersionRange(0, 0), info);
+    auto ret = mgr->Find("domain", "type", 0);
+    EXPECT_NE(nullptr, ret);
+    EXPECT_EQ(&TestParamEqualFunc, ret->equal);
 }
-
-}} // namespace ppl::nn

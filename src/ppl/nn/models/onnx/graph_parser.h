@@ -26,7 +26,8 @@ namespace ppl { namespace nn { namespace onnx {
 
 class GraphParser final {
 public:
-    ppl::common::RetCode Parse(const ::onnx::GraphProto& pb_graph, ir::Graph* graph);
+    ppl::common::RetCode Parse(const ::onnx::GraphProto& pb_graph, const std::map<std::string, uint64_t>& op_sets,
+                               ir::Graph* graph);
 
 private:
     uint32_t anonymous_node_count_ = 0; // used to generate anonymous node name

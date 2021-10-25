@@ -22,10 +22,13 @@
 #include "ppl/nn/params/onnx/gather_nd_param.h"
 #include "ppl/nn/ir/graph.h"
 #include "ppl/nn/models/onnx/generated/onnx.pb.h"
+#include <map>
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseGatherNDParam(const ::onnx::NodeProto& pb_node, void* arg, ir::Node*, ir::GraphTopo*);
+ppl::common::RetCode ParseGatherNDParam(const ::onnx::NodeProto& pb_node,
+                                        const std::map<std::string, uint64_t>& op_sets, void* arg, ir::Node*,
+                                        ir::GraphTopo*);
 
 }}} // namespace ppl::nn::onnx
 

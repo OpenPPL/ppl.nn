@@ -46,7 +46,7 @@ RetCode OptGraph::InitKernels(const ir::Graph* graph) {
     for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
         auto node = it->Get();
         auto& type = node->GetType();
-        auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name);
+        auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
         if (!creator) {
             LOG(ERROR) << "cannot find creator for X86OptKernel[" << node->GetName() << "] type[" << type.domain << ":"
                        << type.name << "]";
@@ -129,7 +129,7 @@ RetCode OptGraph::AddReorderOp(const OptKernelOptions& options, const edgeid_t& 
         return RC_EXISTS;
     }
     ir::Node* reorder_node = node_ret_pair.first; // TODO: change name for easy to understand
-    reorder_node->SetType(ir::Node::Type("ppl", "Reorder"));
+    reorder_node->SetType(ir::Node::Type("ppl", "Reorder", 1));
 
     std::string reorder_edge_name = reorder_node_name + "_edge";
     auto edge_ret_pair = graph_->topo->AddEdge(reorder_edge_name);
@@ -163,8 +163,8 @@ RetCode OptGraph::AddReorderOp(const OptKernelOptions& options, const edgeid_t& 
         node->ReplaceOutput(edge_id, reorder_edge->GetId());
     }
 
-    auto type = reorder_node->GetType();
-    auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name);
+    auto& type = reorder_node->GetType();
+    auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
     if (!creator) {
         LOG(ERROR) << "cannot find creator for X86OptKernel[" << reorder_node->GetName() << "] type[" << type.domain
                    << ":" << type.name << "]";
@@ -734,7 +734,7 @@ bool OptGraph::FuseChannelShuffle(const OptKernelOptions& options) {
                 continue;
             }
             ir::Node* channel_shuffle_node = node_ret_pair.first;
-            channel_shuffle_node->SetType(ir::Node::Type("ppl", "ChannelShuffle"));
+            channel_shuffle_node->SetType(ir::Node::Type("ppl", "ChannelShuffle", 1));
 
             channel_shuffle_node->AddInput(base_edge_id);
             channel_shuffle_node->AddOutput(reshape2_output_edge_id);
@@ -744,8 +744,8 @@ bool OptGraph::FuseChannelShuffle(const OptKernelOptions& options) {
 
             reshape2_output_edge->SetProducer(channel_shuffle_node->GetId());
 
-            auto type = channel_shuffle_node->GetType();
-            auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name);
+            auto& type = channel_shuffle_node->GetType();
+            auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
             if (!creator) {
                 LOG(ERROR) << "cannot find creator for X86OptKernel[" << channel_shuffle_node->GetName() << "] type["
                            << type.domain << ":" << type.name << "]";
@@ -1002,7 +1002,7 @@ ppl::common::RetCode OptGraph::CreateX86OptKernel(const OptKernelOptions& option
                                                   X86OptKernel** kernel) {
     auto& type = node->GetType();
 
-    auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name);
+    auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
     if (!creator) {
         LOG(ERROR) << "cannot find creator for X86OptKernel[" << node->GetName() << "] type[" << type.domain << ":"
                    << type.name << "]";
@@ -1072,7 +1072,7 @@ bool OptGraph::FuseSwish(const OptKernelOptions& options) {
                 //                                               |-------------------------------------------------------------------------->|
                 const std::string swish_node_name =
                     "Fused_Swish_" + sigmoid_node->GetName() + "_" + last_mul_node->GetName();
-                const ir::Node::Type type("ppl", "Swish");
+                const ir::Node::Type type("ppl", "Swish", 1);
 
                 // add node to graph topo
                 auto node_ret_pair = graph_->topo->AddNode(swish_node_name);
