@@ -17,12 +17,13 @@ options='-DCMAKE_BUILD_TYPE=Release -DPPLNN_ENABLE_PYTHON_API=ON'
 # --------------------------------------------------------------------------- #
 # preparing lua
 
-lua_package='/tmp/lua-5.4.3.tar.gz'
+lua_version='5.3.6'
+lua_package="/tmp/lua-${lua_version}.tar.gz"
 if ! [ -f "${lua_package}" ]; then
-    wget --no-check-certificate -c 'https://www.lua.org/ftp/lua-5.4.3.tar.gz' -O ${lua_package}
+    wget --no-check-certificate -c "https://www.lua.org/ftp/lua-${lua_version}.tar.gz" -O ${lua_package}
 fi
 
-lua_source_dir='/tmp/lua-5.4.3'
+lua_source_dir="/tmp/lua-${lua_version}"
 if ! [ -d "${lua_source_dir}" ]; then
     cd /tmp
     tar -xf ${lua_package}

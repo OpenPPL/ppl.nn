@@ -6,7 +6,7 @@
 * [Git](https://git-scm.com/downloads) >= 2.7.0
 * [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit-archive) >= 10.2 (for CUDA)
 * [Python](https://www.python.org/downloads/) >= 3 (for CUDA and Python API support)
-* [Lua](https://www.lua.org/download.html) >= 5.4.0 (optional, for Lua API support)
+* [Lua](https://www.lua.org/download.html) >= 5.2.0 (optional, for Lua API support)
 
 ### Cloning Source Code
 
