@@ -73,6 +73,7 @@ void conv2d_n16cx_direct_v2_fp32_fma_executor::cal_kernel_tunning_param()
 
     const int64_t num_thread   = PPL_OMP_MAX_THREADS();
     const int64_t batch        = src_shape_->GetDim(0);
+    const int64_t channels     = src_shape_->GetDim(1);
     const int64_t src_h        = src_shape_->GetDim(2);
     const int64_t src_w        = src_shape_->GetDim(3);
     const int64_t dst_h        = dst_shape_->GetDim(2);
@@ -97,7 +98,8 @@ void conv2d_n16cx_direct_v2_fp32_fma_executor::cal_kernel_tunning_param()
 
     if (dst_h <= 112 && dst_w <= 112
         && cp.stride_w < dst_w && cp.pad_w != 0
-        && cp.dilation_w < dst_w) {
+        && cp.dilation_w < dst_w
+        && !(channels / cp.group <= CH_DT_BLK() && cp.group >= PPL_OMP_MAX_THREADS())) {
         sp.padding_policy = PADDING_POLICY_PREPAD();
     } else {
         sp.padding_policy = PADDING_POLICY_NOPAD();

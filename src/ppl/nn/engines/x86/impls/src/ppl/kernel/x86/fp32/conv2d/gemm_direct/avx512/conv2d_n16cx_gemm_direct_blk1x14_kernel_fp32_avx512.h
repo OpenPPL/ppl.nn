@@ -31,7 +31,7 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_blk1x14_kernel_core(
     const int64_t *priv_param,
     const int64_t *shar_param)
 {
-    float six[1] = {6.0f};
+    static const float six[1] = {6.0f};
     __asm__ __volatile__ (
         ".equ P_BYTES, 8\n"
         ".equ D_BYTES, 4\n"

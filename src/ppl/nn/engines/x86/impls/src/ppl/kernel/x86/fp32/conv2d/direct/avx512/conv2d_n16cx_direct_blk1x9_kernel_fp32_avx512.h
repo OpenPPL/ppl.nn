@@ -30,59 +30,59 @@ void conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel(
     int64_t *priv_param)
 {
 #define IC_COMPUTE_STEP(IC) do {\
-    if (oc_len > 0 * CH_DT_BLK()) zmm27 = _mm512_loadu_ps(ic_flt_o16 + 0 * flt_ocb_stride + (IC) * CH_DT_BLK());\
-    if (oc_len > 1 * CH_DT_BLK()) zmm28 = _mm512_loadu_ps(ic_flt_o16 + 1 * flt_ocb_stride + (IC) * CH_DT_BLK());\
-    if (oc_len > 2 * CH_DT_BLK()) zmm29 = _mm512_loadu_ps(ic_flt_o48 + 0 * flt_ocb_stride + (IC) * CH_DT_BLK());\
+    if (oc_len > 0 * CH_DT_BLK()) zmm27 = _mm512_loadu_ps(icb_flt_o16 + 0 * flt_ocb_stride + (IC) * CH_DT_BLK());\
+    if (oc_len > 1 * CH_DT_BLK()) zmm28 = _mm512_loadu_ps(icb_flt_o16 + 1 * flt_ocb_stride + (IC) * CH_DT_BLK());\
+    if (oc_len > 2 * CH_DT_BLK()) zmm29 = _mm512_loadu_ps(icb_flt_o48 + 0 * flt_ocb_stride + (IC) * CH_DT_BLK());\
     if (w_len > 0) {\
-        zmm30 = _mm512_set1_ps(ic_src[(IC) + 0 * src_sw_stride]);\
+        zmm30 = _mm512_set1_ps(k_src[(IC) + 0 * src_sw_stride]);\
         if (oc_len > 0 * CH_DT_BLK()) zmm0  = _mm512_fmadd_ps(zmm27, zmm30, zmm0);\
         if (oc_len > 1 * CH_DT_BLK()) zmm9  = _mm512_fmadd_ps(zmm28, zmm30, zmm9);\
         if (oc_len > 2 * CH_DT_BLK()) zmm18 = _mm512_fmadd_ps(zmm29, zmm30, zmm18);\
     }\
     if (w_len > 1) {\
-        zmm31 = _mm512_set1_ps(ic_src[(IC) + 1 * src_sw_stride]);\
+        zmm31 = _mm512_set1_ps(k_src[(IC) + 1 * src_sw_stride]);\
         if (oc_len > 0 * CH_DT_BLK()) zmm1  = _mm512_fmadd_ps(zmm27, zmm31, zmm1);\
         if (oc_len > 1 * CH_DT_BLK()) zmm10 = _mm512_fmadd_ps(zmm28, zmm31, zmm10);\
         if (oc_len > 2 * CH_DT_BLK()) zmm19 = _mm512_fmadd_ps(zmm29, zmm31, zmm19);\
     }\
     if (w_len > 2) {\
-        zmm30 = _mm512_set1_ps(ic_src[(IC) + 2 * src_sw_stride]);\
+        zmm30 = _mm512_set1_ps(k_src[(IC) + 2 * src_sw_stride]);\
         if (oc_len > 0 * CH_DT_BLK()) zmm2  = _mm512_fmadd_ps(zmm27, zmm30, zmm2);\
         if (oc_len > 1 * CH_DT_BLK()) zmm11 = _mm512_fmadd_ps(zmm28, zmm30, zmm11);\
         if (oc_len > 2 * CH_DT_BLK()) zmm20 = _mm512_fmadd_ps(zmm29, zmm30, zmm20);\
     }\
     if (w_len > 3) {\
-        zmm31 = _mm512_set1_ps(ic_src[(IC) + 3 * src_sw_stride]);\
+        zmm31 = _mm512_set1_ps(k_src[(IC) + 3 * src_sw_stride]);\
         if (oc_len > 0 * CH_DT_BLK()) zmm3  = _mm512_fmadd_ps(zmm27, zmm31, zmm3);\
         if (oc_len > 1 * CH_DT_BLK()) zmm12 = _mm512_fmadd_ps(zmm28, zmm31, zmm12);\
         if (oc_len > 2 * CH_DT_BLK()) zmm21 = _mm512_fmadd_ps(zmm29, zmm31, zmm21);\
     }\
     if (w_len > 4) {\
-        zmm30 = _mm512_set1_ps(ic_src[(IC) + 4 * src_sw_stride]);\
+        zmm30 = _mm512_set1_ps(k_src[(IC) + 4 * src_sw_stride]);\
         if (oc_len > 0 * CH_DT_BLK()) zmm4  = _mm512_fmadd_ps(zmm27, zmm30, zmm4);\
         if (oc_len > 1 * CH_DT_BLK()) zmm13 = _mm512_fmadd_ps(zmm28, zmm30, zmm13);\
         if (oc_len > 2 * CH_DT_BLK()) zmm22 = _mm512_fmadd_ps(zmm29, zmm30, zmm22);\
     }\
     if (w_len > 5) {\
-        zmm31 = _mm512_set1_ps(ic_src[(IC) + 5 * src_sw_stride]);\
+        zmm31 = _mm512_set1_ps(k_src[(IC) + 5 * src_sw_stride]);\
         if (oc_len > 0 * CH_DT_BLK()) zmm5  = _mm512_fmadd_ps(zmm27, zmm31, zmm5);\
         if (oc_len > 1 * CH_DT_BLK()) zmm14 = _mm512_fmadd_ps(zmm28, zmm31, zmm14);\
         if (oc_len > 2 * CH_DT_BLK()) zmm23 = _mm512_fmadd_ps(zmm29, zmm31, zmm23);\
     }\
     if (w_len > 6) {\
-        zmm30 = _mm512_set1_ps(ic_src[(IC) + 6 * src_sw_stride]);\
+        zmm30 = _mm512_set1_ps(k_src[(IC) + 6 * src_sw_stride]);\
         if (oc_len > 0 * CH_DT_BLK()) zmm6  = _mm512_fmadd_ps(zmm27, zmm30, zmm6);\
         if (oc_len > 1 * CH_DT_BLK()) zmm15 = _mm512_fmadd_ps(zmm28, zmm30, zmm15);\
         if (oc_len > 2 * CH_DT_BLK()) zmm24 = _mm512_fmadd_ps(zmm29, zmm30, zmm24);\
     }\
     if (w_len > 7) {\
-        zmm31 = _mm512_set1_ps(ic_src[(IC) + 7 * src_sw_stride]);\
+        zmm31 = _mm512_set1_ps(k_src[(IC) + 7 * src_sw_stride]);\
         if (oc_len > 0 * CH_DT_BLK()) zmm7  = _mm512_fmadd_ps(zmm27, zmm31, zmm7);\
         if (oc_len > 1 * CH_DT_BLK()) zmm16 = _mm512_fmadd_ps(zmm28, zmm31, zmm16);\
         if (oc_len > 2 * CH_DT_BLK()) zmm25 = _mm512_fmadd_ps(zmm29, zmm31, zmm25);\
     }\
     if (w_len > 8) {\
-        zmm31 = _mm512_set1_ps(ic_src[(IC) + 8 * src_sw_stride]);\
+        zmm31 = _mm512_set1_ps(k_src[(IC) + 8 * src_sw_stride]);\
         if (oc_len > 0 * CH_DT_BLK()) zmm8  = _mm512_fmadd_ps(zmm27, zmm31, zmm8);\
         if (oc_len > 1 * CH_DT_BLK()) zmm17 = _mm512_fmadd_ps(zmm28, zmm31, zmm17);\
         if (oc_len > 2 * CH_DT_BLK()) zmm26 = _mm512_fmadd_ps(zmm29, zmm31, zmm26);\
@@ -91,9 +91,9 @@ void conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel(
 
 #define IC_PREFETCH_STEP(IC)  do {\
     if (oc_len > 2 * CH_DT_BLK() && w_len > 4) {\
-        if (oc_len > 0 * CH_DT_BLK()) _mm_prefetch((const char*)ic_flt_o16 + 0 * flt_ocb_stride + (IC) * CH_DT_BLK() + CH_DT_BLK() * CH_DT_BLK(), _MM_HINT_T0);\
-        if (oc_len > 1 * CH_DT_BLK()) _mm_prefetch((const char*)ic_flt_o16 + 1 * flt_ocb_stride + (IC) * CH_DT_BLK() + CH_DT_BLK() * CH_DT_BLK(), _MM_HINT_T0);\
-        if (oc_len > 2 * CH_DT_BLK()) _mm_prefetch((const char*)ic_flt_o48 + 0 * flt_ocb_stride + (IC) * CH_DT_BLK() + CH_DT_BLK() * CH_DT_BLK(), _MM_HINT_T0);\
+        if (oc_len > 0 * CH_DT_BLK()) _mm_prefetch((const char*)icb_flt_o16 + 0 * flt_ocb_stride + (IC) * CH_DT_BLK() + CH_DT_BLK() * CH_DT_BLK(), _MM_HINT_T0);\
+        if (oc_len > 1 * CH_DT_BLK()) _mm_prefetch((const char*)icb_flt_o16 + 1 * flt_ocb_stride + (IC) * CH_DT_BLK() + CH_DT_BLK() * CH_DT_BLK(), _MM_HINT_T0);\
+        if (oc_len > 2 * CH_DT_BLK()) _mm_prefetch((const char*)icb_flt_o48 + 0 * flt_ocb_stride + (IC) * CH_DT_BLK() + CH_DT_BLK() * CH_DT_BLK(), _MM_HINT_T0);\
     }\
 } while (0)
 
@@ -104,20 +104,21 @@ void conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel(
 
     const int64_t kernel_h = shar_param[KH_IDX()];
     const int64_t kernel_w = shar_param[KW_IDX()];
-    const int64_t src_icb_stride = shar_param[SRC_ICB_STRIDE_IDX()];
     const int64_t src_sw_stride = spec_stride_w ? spec_stride_w * CH_DT_BLK() : shar_param[SRC_SW_STRIDE_IDX()];
     const int64_t src_dw_stride = shar_param[SRC_DW_STRIDE_IDX()];
     const int64_t src_dh_stride = shar_param[SRC_DH_STRIDE_IDX()] - kernel_w * src_dw_stride;
-    const int64_t flt_ocb_stride = shar_param[FLT_OCB_STRIDE_IDX()];
-    const int64_t kernel_flags = shar_param[FLAGS_IDX()];
-    const int64_t kh_start = priv_param[KH_START_IDX()];
-    const int64_t kh_end = priv_param[KH_END_IDX()];
+    const int64_t flt_icb_stride = (kernel_h - priv_param[KH_END_IDX()] + priv_param[KH_START_IDX()]) * kernel_w * CH_DT_BLK() * CH_DT_BLK();
+    const int64_t src_icb_stride = shar_param[SRC_ICB_STRIDE_IDX()];
+
+    const int64_t src_offset = priv_param[KH_START_IDX()] * shar_param[SRC_DH_STRIDE_IDX()];
+    const int64_t flt_offset = priv_param[KH_START_IDX()] * kernel_w * CH_DT_BLK() * CH_DT_BLK();
 
     const float *src = PICK_PARAM(const float*, priv_param, SRC_IDX());
     const float *his = PICK_PARAM(const float*, priv_param, HIS_IDX());
     float *dst       = PICK_PARAM(float*, priv_param, DST_IDX());
     int64_t ow       = priv_param[OW_IDX()];
     do {
+        const int64_t kernel_flags = shar_param[FLAGS_IDX()];
         if (kernel_flags & KERNEL_FLAG_LD_BIAS()) {
             const float* bias = PICK_PARAM(const float*, priv_param, BIAS_IDX());
             if (oc_len > 0 * CH_DT_BLK()) {
@@ -233,53 +234,46 @@ void conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel(
             }
         }
         
-        const float *icb_src = src + kh_start * (src_dh_stride + kernel_w * src_dw_stride);
-        const float *icb_flt = PICK_PARAM(const float*, priv_param, FLT_IDX()) + kh_start * kernel_w * CH_DT_BLK() * CH_DT_BLK();
+        const int64_t flt_ocb_stride = shar_param[FLT_OCB_STRIDE_IDX()];
+        const int64_t kh_start = priv_param[KH_START_IDX()];
+        const int64_t kh_end = priv_param[KH_END_IDX()];
         int64_t channels     = shar_param[CHANNELS_IDX()];
+        const float *icb_src = src + src_offset;
+        const float *icb_flt_o16 = PICK_PARAM(const float*, priv_param, FLT_IDX()) + flt_offset;
+        const float *icb_flt_o48 = icb_flt_o16 + 2 * flt_ocb_stride;
         while (channels >= CH_DT_BLK()) {
             channels -= CH_DT_BLK();
             const float *k_src = icb_src;
-            const float *k_flt_o16 = icb_flt + 0 * flt_ocb_stride;
-            const float *k_flt_o48 = icb_flt + 2 * flt_ocb_stride;
             for (int64_t kh = kh_start; kh < kh_end; ++kh) {
                 for (int64_t kw = 0; kw < kernel_w; ++kw) {
-                    const float *ic_src = k_src;
-                    const float *ic_flt_o16 = k_flt_o16;
-                    const float *ic_flt_o48 = k_flt_o48;
                     for (int64_t ic = 0; ic < CH_DT_BLK(); ++ic) {
                         IC_COMPUTE_STEP(0);
                         IC_PREFETCH_STEP(0);
-                        ic_src += 1;
-                        ic_flt_o16 += CH_DT_BLK();
-                        ic_flt_o48 += CH_DT_BLK();
+                        k_src += 1;
+                        icb_flt_o16 += CH_DT_BLK();
+                        icb_flt_o48 += CH_DT_BLK();
                     }
-                    k_flt_o16 += CH_DT_BLK() * CH_DT_BLK();
-                    k_flt_o48 += CH_DT_BLK() * CH_DT_BLK();
-                    k_src += src_dw_stride;
+                    k_src += src_dw_stride - CH_DT_BLK();
                 }
                 k_src += src_dh_stride;
             }
-            icb_flt += kernel_h * kernel_w * CH_DT_BLK() * CH_DT_BLK();
+            icb_flt_o16 += flt_icb_stride;
+            icb_flt_o48 += flt_icb_stride;
             icb_src += src_icb_stride;
         }
         if (channels > 0) {
             const float *k_src = icb_src;
-            const float *k_flt_o16 = icb_flt + 0 * flt_ocb_stride;
-            const float *k_flt_o48 = icb_flt + 2 * flt_ocb_stride;
             for (int64_t kh = kh_start; kh < kh_end; ++kh) {
                 for (int64_t kw = 0; kw < kernel_w; ++kw) {
-                    const float *ic_src = k_src;
-                    const float *ic_flt_o16 = k_flt_o16;
-                    const float *ic_flt_o48 = k_flt_o48;
                     for (int64_t ic = 0; ic < channels; ++ic) {
                         IC_COMPUTE_STEP(0);
-                        ic_src += 1;
-                        ic_flt_o16 += CH_DT_BLK();
-                        ic_flt_o48 += CH_DT_BLK();
+                        k_src += 1;
+                        icb_flt_o16 += CH_DT_BLK();
+                        icb_flt_o48 += CH_DT_BLK();
                     }
-                    k_flt_o16 += CH_DT_BLK() * CH_DT_BLK();
-                    k_flt_o48 += CH_DT_BLK() * CH_DT_BLK();
-                    k_src += src_dw_stride;
+                    icb_flt_o16 += (CH_DT_BLK() - channels) * CH_DT_BLK();
+                    icb_flt_o48 += (CH_DT_BLK() - channels) * CH_DT_BLK();
+                    k_src += src_dw_stride - channels;
                 }
                 k_src += src_dh_stride;
             }
