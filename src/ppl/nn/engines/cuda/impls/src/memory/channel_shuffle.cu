@@ -147,18 +147,20 @@ __global__ void ppl_cukernel_fuse_channel_shuffle(
     hw_idx = remain;
     int out_c_idx = c_idx % channels_per_group * group + c_idx / channels_per_group; 
     output_offset += out_c_idx * input_strides_fast[1].d_ + hw_idx;
+    int out_div_hw = output_offset / hw;
+    int in_div_hw = index / hw;
 
-    if(output_offset >= num_elems) {
-        if(index >= num_elems) {
-            output2[output_offset - num_elems] = input2[index - num_elems];
+    if(out_div_hw % 2) {
+        if(in_div_hw % 2) {
+            output2[(out_div_hw - 1) / 2 * hw + hw_idx] = input2[(in_div_hw - 1) / 2 * hw + hw_idx];
         } else {
-            output2[output_offset - num_elems] = input1[index];
+            output2[(out_div_hw - 1) / 2 * hw + hw_idx] = input1[in_div_hw / 2 * hw + hw_idx];
         }
     } else {
-        if(index >= num_elems) {
-            output1[output_offset] = input2[index - num_elems];
+        if(in_div_hw % 2) {
+            output1[out_div_hw / 2 * hw + hw_idx] = input2[(in_div_hw - 1) / 2 * hw + hw_idx];
         } else {
-            output1[output_offset] = input1[index];
+            output1[out_div_hw / 2 * hw + hw_idx] = input1[in_div_hw / 2 * hw + hw_idx];
         }
     }
 }
@@ -173,7 +175,9 @@ __global__ void ppl_cukernel_fuse_channel_shuffle_nhwc(
     const T *input1,
     const T *input2,
     T *output1,
-    T *output2)
+    T *output2,
+    int elems_nhw,
+    int elems_c)
 {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     if (index >= 2*num_elems)
@@ -183,19 +187,19 @@ __global__ void ppl_cukernel_fuse_channel_shuffle_nhwc(
     int nhw_idx, c_idx, remain = index;
     channels_fast.divmod(remain, nhw_idx, c_idx);
     int out_c_idx = c_idx % channels_per_group * group + c_idx / channels_per_group; 
-    input_offset += nhw_idx * pad_channels + c_idx;
-    output_offset += nhw_idx * pad_channels + out_c_idx;
-    if(output_offset >= num_elems) {
-        if(input_offset >= num_elems) {
-            output2[output_offset - num_elems] = input2[input_offset - num_elems];
+    input_offset += nhw_idx * 2 * elems_c + c_idx;
+    output_offset += nhw_idx * 2 * elems_c + out_c_idx;
+    if(output_offset % (2 * elems_c) >= elems_c) {
+        if(input_offset % (2 * elems_c) >= elems_c) {
+            output2[nhw_idx * pad_channels + out_c_idx - elems_c] = input2[nhw_idx * pad_channels + c_idx - elems_c];
         } else {
-            output2[output_offset - num_elems] = input1[input_offset];
+            output2[nhw_idx * pad_channels + out_c_idx - elems_c] = input1[nhw_idx * pad_channels + c_idx];
         }
     } else {
-        if(input_offset >= num_elems) {
-            output1[output_offset] = input2[input_offset - num_elems];
+        if(input_offset % (2 * elems_c) >= elems_c) {
+            output1[nhw_idx * pad_channels + out_c_idx] = input2[nhw_idx * pad_channels + c_idx - elems_c];
         } else {
-            output1[output_offset] = input1[input_offset];
+            output1[nhw_idx * pad_channels + out_c_idx] = input1[nhw_idx * pad_channels + c_idx];
         }
     }
 }
@@ -223,7 +227,9 @@ ppl::common::RetCode PPLCUDAFuseChannelShuffleForwardImp(
     input_strides_fast[0] = DivModFast(elems_chw);
     // for nhwc layout
     int pad_channels = input_shape->GetDim(1) + input_shape->GetPadding0(1) + input_shape->GetPadding1(1);
-    DivModFast channels_fast(input_shape->GetDim(1));
+    DivModFast channels_fast(2 * input_shape->GetDim(1));
+    int elems_nhw = elems_hw * input_shape->GetDim(0);
+    int elems_c = input_shape->GetDim(1);
 
     int block_size = 256;
     int grid_size  = (2*num_elems + block_size - 1) / block_size;
@@ -234,7 +240,7 @@ ppl::common::RetCode PPLCUDAFuseChannelShuffleForwardImp(
         if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8){                                         \
             ppl_cukernel_fuse_channel_shuffle_nhwc<<<grid_size, block_size, 0, stream>>>(                                \
                 num_elems, group, channels_per_group, pad_channels, channels_fast,                                  \
-                (const TYPE *)input1, (const TYPE *) input2, (TYPE *)output1, (TYPE *)output2);                     \
+                (const TYPE *)input1, (const TYPE *) input2, (TYPE *)output1, (TYPE *)output2, elems_nhw, elems_c);                     \
         } else {                                                                                                    \
             ppl_cukernel_fuse_channel_shuffle<<<grid_size, block_size, 0, stream>>>(                                     \
                 num_elems, group, channels_per_group, input_strides_fast, (const TYPE *)input1, (const TYPE *)input2,\

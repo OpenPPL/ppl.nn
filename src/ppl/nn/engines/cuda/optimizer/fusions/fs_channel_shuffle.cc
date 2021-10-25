@@ -209,28 +209,32 @@ const RetCode ChannelShuffleFusion::FuseWithNextNodes(ir::Node* node, const OptK
 
 const RetCode ChannelShuffleFusion::FuseWithLastNodes(ir::Node* next_node, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
+    auto next_node_id = next_node->GetId();
     auto connect_edge_id = next_node->GetInput(0);
     auto node_id = topo->GetEdgeById(connect_edge_id)->GetProducer(); // Get Output(0)
     auto node = topo->GetNodeById(node_id);
     auto shape_edge = topo->GetEdgeById(next_node->GetInput(1));
     auto shape_node = topo->GetNodeById(shape_edge->GetProducer());
 
-    for (uint32_t i = 0; i < next_node->GetOutputCount(); ++i) {
-        auto edge_id = next_node->GetOutput(i);
-        auto temp_edge = topo->GetEdgeById(edge_id);
-        temp_edge->SetProducer(node->GetId());
-        if (i == 0) {
-            node->ReplaceOutput(connect_edge_id, edge_id);
-        } else {
-            node->AddOutput(edge_id);
+    for (uint32_t i = 0; i < next_node->GetInputCount(); ++i) {
+        auto edge_id = next_node->GetInput(i);
+        auto edge = topo->GetEdgeById(edge_id);
+        edge->DelConsumer(next_node_id);
+        if (edge_id == connect_edge_id || edge->CalcConsumerCount() == 0) {
+            topo->DelEdgeById(edge_id);
         }
     }
 
-    topo->DelEdgeById(connect_edge_id);
-    topo->DelEdgeById(next_node->GetInput(1));
-    topo->DelEdgeById(next_node->GetInput(2));
-    topo->DelNodeById(shape_node->GetId());
-    topo->DelNodeById(next_node->GetId());
+    for (uint32_t i = 0; i < next_node->GetOutputCount(); ++i) {
+        auto edge_id = next_node->GetOutput(i);
+        auto edge = topo->GetEdgeById(edge_id);
+        node->ReplaceOutput(node->GetOutput(i), edge_id);
+        edge->SetProducer(node_id);
+    }
+
+    topo->DelNodeById(next_node_id);
+    if (shape_node)
+        topo->DelNodeById(shape_node->GetId());
     return RC_SUCCESS;
 }
 
