@@ -84,25 +84,11 @@ void conv2d_n16cx_direct_v2_fp32_fma_blk1x1_kernel(
                 if (channels >= CH_DT_BLK()) {
                     const float *ic_src = kw_src;
                     const float *ic_flt = kw_flt;
-                    IC_COMPUTE_STEP(0);
-                    IC_COMPUTE_STEP(1);
-                    IC_COMPUTE_STEP(2);
-                    IC_COMPUTE_STEP(3);
-
-                    IC_COMPUTE_STEP(4);
-                    IC_COMPUTE_STEP(5);
-                    IC_COMPUTE_STEP(6);
-                    IC_COMPUTE_STEP(7);
-
-                    IC_COMPUTE_STEP(8);
-                    IC_COMPUTE_STEP(9);
-                    IC_COMPUTE_STEP(10);
-                    IC_COMPUTE_STEP(11);
-
-                    IC_COMPUTE_STEP(12);
-                    IC_COMPUTE_STEP(13);
-                    IC_COMPUTE_STEP(14);
-                    IC_COMPUTE_STEP(15);
+                    for (int64_t ic = 0; ic < CH_DT_BLK(); ++ic) {
+                        IC_COMPUTE_STEP(0);
+                        ic_src += 1;
+                        ic_flt += CH_DT_BLK();
+                    }
                 } else {
                     const float *ic_src = kw_src;
                     const float *ic_flt = kw_flt;
