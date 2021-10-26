@@ -31,8 +31,7 @@ struct ConstantParam {
     std::string data;
 
     bool operator==(const ConstantParam& p) const {
-        return this->data_type == p.data_type && this->data_format == p.data_format && this->dims == p.dims &&
-            this->data == p.data;
+        return (data_type == p.data_type && data_format == p.data_format && dims == p.dims && data == p.data);
     }
 };
 

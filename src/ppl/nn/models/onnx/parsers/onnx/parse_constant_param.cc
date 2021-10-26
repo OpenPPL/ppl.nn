@@ -19,14 +19,15 @@
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-static ppl::common::RetCode DoParse(const ::onnx::TensorProto& pb_tensor, ppl::nn::common::ConstantParam* param) {
+static RetCode DoParseTensorProto(const ::onnx::TensorProto& pb_tensor, ppl::nn::common::ConstantParam* param) {
     ir::Shape shape;
     auto status = utils::ParseTensorProto(pb_tensor, &param->data, &shape);
-    if (status != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "parse `value` failed: " << ppl::common::GetRetCodeStr(status);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "parse `value` failed: " << GetRetCodeStr(status);
         return status;
     }
 
@@ -34,33 +35,63 @@ static ppl::common::RetCode DoParse(const ::onnx::TensorProto& pb_tensor, ppl::n
     param->data_format = shape.data_format;
     param->dims = std::move(shape.dims);
 
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
-static const char* g_keys[] = {
-    "value", // The value for the elements of the output tensor.
-    "value_float", // The value for the sole element for the scalar, float32, output tensor.
-    "value_floats", // The values for the elements for the 1D, float32, output tensor.
-    "value_int", // The value for the sole element for the scalar, int64, output tensor.
-    "value_ints", // The values for the elements for the 1D, int64, output tensor.
-    // "value_string", // The value for the sole element for the scalar, UTF-8 string, output tensor.
-    // "value_strings", // The values for the elements for the 1D, UTF-8 string, output tensor.
-    nullptr,
-};
+static const unordered_set<string> g_unsupported_fields = {"sparse_value", "value_string", "value_strings"};
 
-ppl::common::RetCode ParseConstantParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
-                                        ir::Node*, ir::GraphTopo*) {
+RetCode ParseConstantParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg, ir::Node*,
+                           ir::GraphTopo*) {
     auto param = static_cast<ppl::nn::common::ConstantParam*>(arg);
 
-    for (uint32_t i = 0; g_keys[i]; ++i) {
-        const ::onnx::TensorProto* value = utils::GetTensorProtoByKey(pb_node, g_keys[i]);
-        if (value) {
-            return DoParse(*value, param);
+    for (int i = 0; i < pb_node.attribute_size(); i++) {
+        const ::onnx::AttributeProto& attribute = pb_node.attribute(i);
+        if (g_unsupported_fields.find(attribute.name()) != g_unsupported_fields.end()) {
+            LOG(ERROR) << "attribute[" << attribute.name() << "] is not supported in current implementation.";
+            return RC_UNSUPPORTED;
+        }
+
+        if (attribute.name() == "value") {
+            return DoParseTensorProto(attribute.t(), param);
+        } else if (attribute.name() == "value_int") {
+            int64_t v = attribute.i();
+            param->data_type = DATATYPE_INT64;
+            param->data_format = DATAFORMAT_NDARRAY;
+            param->dims.push_back(1);
+            param->data.assign((const char*)(&v), sizeof(v));
+            return RC_SUCCESS;
+        } else if (attribute.name() == "value_ints") {
+            param->data_type = DATATYPE_INT64;
+            param->data_format = DATAFORMAT_NDARRAY;
+            param->dims.push_back(attribute.ints_size());
+            param->data.reserve(attribute.ints_size() * sizeof(int64_t));
+            for (int x = 0; x < attribute.ints_size(); ++x) {
+                int64_t v = attribute.ints(x);
+                param->data.append((const char*)(&v), sizeof(v));
+            }
+            return RC_SUCCESS;
+        } else if (attribute.name() == "value_float") {
+            float v = attribute.f();
+            param->data_type = DATATYPE_FLOAT32;
+            param->data_format = DATAFORMAT_NDARRAY;
+            param->dims.push_back(1);
+            param->data.assign((const char*)(&v), sizeof(v));
+            return RC_SUCCESS;
+        } else if (attribute.name() == "value_floats") {
+            param->data_type = DATATYPE_FLOAT32;
+            param->data_format = DATAFORMAT_NDARRAY;
+            param->dims.push_back(attribute.floats_size());
+            param->data.reserve(attribute.floats_size() * sizeof(float));
+            for (int x = 0; x < attribute.floats_size(); ++x) {
+                float v = attribute.floats(x);
+                param->data.append((const char*)(&v), sizeof(v));
+            }
+            return RC_SUCCESS;
         }
     }
 
-    LOG(ERROR) << "cannot find supported fields in arg of Constant[" << pb_node.name() << "]";
-    return ppl::common::RC_UNSUPPORTED;
+    LOG(ERROR) << "cannot find supported fields in Constant[" << pb_node.name() << "]";
+    return RC_UNSUPPORTED;
 }
 
 }}} // namespace ppl::nn::onnx
