@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/x86/kernels/onnx/squeeze_kernel.h"
+#include "ppl/kernel/x86/common/memory.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -33,7 +34,7 @@ ppl::common::RetCode SqueezeKernel::DoExecute(KernelExecContext* ctx) {
     if (data->GetEdge()->CalcConsumerCount() == 1 && data->GetType() == TENSORTYPE_NORMAL) {
         squeezed->TransferBufferFrom(data);
     } else {
-        memcpy(squeezed->GetBufferPtr(), data->GetBufferPtr(), data->GetShape().GetBytesIncludingPadding());
+        return ppl::kernel::x86::memory_copy(data->GetBufferPtr(), data->GetShape().GetBytesIncludingPadding(), squeezed->GetBufferPtr());
     }
 
     return ppl::common::RC_SUCCESS;

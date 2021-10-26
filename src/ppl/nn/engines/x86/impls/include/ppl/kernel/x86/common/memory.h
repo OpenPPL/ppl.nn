@@ -22,10 +22,15 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-ppl::common::RetCode memset_nbytes(
+ppl::common::RetCode memory_init(
     const void *src,
-    const uint64_t bytes_per_element,
+    const uint64_t sizeof_elem,
     const uint64_t num_elements,
+    void* dst);
+
+ppl::common::RetCode memory_copy(
+    const void *src,
+    const uint64_t num_bytes,
     void* dst);
 
 }}}; // namespace ppl::kernel::x86

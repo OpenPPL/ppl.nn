@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/x86/kernels/onnx/reshape_kernel.h"
-#include <cstring>
+#include "ppl/kernel/x86/common/memory.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -37,7 +37,7 @@ ppl::common::RetCode ReshapeKernel::DoExecute(KernelExecContext* ctx) {
     if (data->GetEdge()->CalcConsumerCount() == 1 && data->GetType() == TENSORTYPE_NORMAL) {
         reshaped->TransferBufferFrom(data);
     } else {
-        memcpy(reshaped->GetBufferPtr(), data->GetBufferPtr(), data->GetShape().GetBytesIncludingPadding());
+        return ppl::kernel::x86::memory_copy(data->GetBufferPtr(), data->GetShape().GetBytesIncludingPadding(), reshaped->GetBufferPtr());
     }
 
     return ppl::common::RC_SUCCESS;

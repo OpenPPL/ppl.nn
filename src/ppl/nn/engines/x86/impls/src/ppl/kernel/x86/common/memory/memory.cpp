@@ -15,35 +15,37 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include <string.h>
+
 #include "ppl/kernel/x86/common/internal_include.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
-ppl::common::RetCode memset_nbytes(
+ppl::common::RetCode memory_init(
     const void *src,
-    const uint64_t bytes_per_element,
+    const uint64_t sizeof_elem,
     const uint64_t num_elements,
     void* dst)
 {
-    if (bytes_per_element == 1) {
+    if (sizeof_elem == 1) {
         const uint8_t val = ((uint8_t*)src)[0];
         PRAGMA_OMP_PARALLEL_FOR()
         for (uint64_t i = 0; i < num_elements; i++) {
             ((uint8_t*)dst)[i] = val;
         }
-    } else if (bytes_per_element == 2) {
+    } else if (sizeof_elem == 2) {
         const uint16_t val = ((uint16_t*)src)[0];
         PRAGMA_OMP_PARALLEL_FOR()
         for (uint64_t i = 0; i < num_elements; i++) {
             ((uint16_t*)dst)[i] = val;
         }
-    } else if (bytes_per_element == 4) {
+    } else if (sizeof_elem == 4) {
         const uint32_t val = ((uint32_t*)src)[0];
         PRAGMA_OMP_PARALLEL_FOR()
         for (uint64_t i = 0; i < num_elements; i++) {
             ((uint32_t*)dst)[i] = val;
         }
-    } else if (bytes_per_element == 8) {
+    } else if (sizeof_elem == 8) {
         const uint64_t val = ((uint64_t*)src)[0];
         PRAGMA_OMP_PARALLEL_FOR()
         for (uint64_t i = 0; i < num_elements; i++) {
@@ -52,10 +54,33 @@ ppl::common::RetCode memset_nbytes(
     } else {
         PRAGMA_OMP_PARALLEL_FOR()
         for (uint64_t i = 0; i < num_elements; i++) {
-            for (uint64_t j = 0; j < bytes_per_element; j++) {
-                ((uint8_t*)dst)[i * bytes_per_element + j] = ((uint8_t*)src)[j];
+            for (uint64_t j = 0; j < sizeof_elem; j++) {
+                ((uint8_t*)dst)[i * sizeof_elem + j] = ((uint8_t*)src)[j];
             }
         }
+    }
+
+    return ppl::common::RC_SUCCESS;
+}
+
+ppl::common::RetCode memory_copy(
+    const void *src,
+    const uint64_t num_bytes,
+    void* dst)
+{
+    const uint64_t min_block_size = 128 * 1024;
+    const uint64_t num_block = min<uint64_t>(PPL_OMP_MAX_THREADS(), div_up(num_bytes, min_block_size));
+    const uint64_t block_body = num_bytes / num_block;
+    const uint64_t block_tail = num_bytes % num_block;
+
+    uint8_t *l_dst        = (uint8_t*)dst;
+    const uint8_t * l_src = (const uint8_t*)src;
+
+    PRAGMA_OMP_PARALLEL_FOR()
+    for (uint64_t n = 0; n < num_block; ++n) {
+        const uint64_t block_start = n * block_body + (block_tail > n ? n : block_tail);
+        const uint64_t block_size = block_body + (block_tail > n ? 1 : 0);
+        memcpy(l_dst + block_start, src + block_start, block_size);
     }
 
     return ppl::common::RC_SUCCESS;
