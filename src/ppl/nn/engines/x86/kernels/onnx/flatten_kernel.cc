@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/x86/kernels/onnx/flatten_kernel.h"
-#include "ppl/nn/common/logger.h"
+#include "ppl/kernel/x86/common/memory.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -35,7 +35,7 @@ ppl::common::RetCode FlattenKernel::DoExecute(KernelExecContext* ctx) {
     if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL) {
         output->TransferBufferFrom(input);
     } else {
-        memcpy(output->GetBufferPtr(), input->GetBufferPtr(), input->GetShape().GetBytesIncludingPadding());
+        return ppl::kernel::x86::memory_copy(input->GetBufferPtr(), input->GetShape().GetBytesIncludingPadding(), output->GetBufferPtr());
     }
 
     return ppl::common::RC_SUCCESS;

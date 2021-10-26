@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/x86/kernels/onnx/pad_kernel.h"
-
+#include "ppl/kernel/x86/common/memory.h"
 #include "ppl/kernel/x86/fp32/pad.h"
 
 namespace ppl { namespace nn { namespace x86 {
@@ -47,7 +47,7 @@ ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
         if (x->GetEdge()->CalcConsumerCount() == 1 && x->GetType() == TENSORTYPE_NORMAL) {
             y->TransferBufferFrom(x);
         } else {
-            memcpy(y->GetBufferPtr(), x->GetBufferPtr(), x->GetShape().GetBytesIncludingPadding());
+            return ppl::kernel::x86::memory_copy(x->GetBufferPtr(), x->GetShape().GetBytesIncludingPadding(), y->GetBufferPtr());
         }
         return ppl::common::RC_SUCCESS;
     }

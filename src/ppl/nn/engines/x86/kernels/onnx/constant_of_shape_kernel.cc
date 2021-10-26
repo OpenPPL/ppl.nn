@@ -17,7 +17,7 @@
 
 #include "ppl/nn/engines/x86/kernels/onnx/constant_of_shape_kernel.h"
 
-#include "ppl/kernel/x86/common/memset_nbytes.h"
+#include "ppl/kernel/x86/common/memory.h"
 
 #include <chrono>
 
@@ -35,7 +35,7 @@ ppl::common::RetCode ConstantOfShapeKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     uint64_t output_datatype_size = ppl::common::GetSizeOfDataType(output->GetShape().GetDataType());
-    return kernel::x86::memset_nbytes(param_->data.data(), output_datatype_size,
+    return kernel::x86::memory_init(param_->data.data(), output_datatype_size,
                                       output->GetShape().GetElementsIncludingPadding(), output->GetBufferPtr());
 }
 
