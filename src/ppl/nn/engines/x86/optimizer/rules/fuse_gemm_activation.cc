@@ -49,7 +49,7 @@ bool FuseGemmActivation(const OptKernelOptions &options) {
 
             auto gemm_kernel = reinterpret_cast<GemmOp*>(info->kernels[gemm_node->GetId()].get());
             if (successor_node->GetType().name == "Relu") {
-                if (!gemm_kernel->SetFuseReLU()) { // set fuse flag to gemm_op
+                if (!gemm_kernel->TryFuseReLU()) { // set fuse flag to gemm_op
                     continue;
                 }
             } else {

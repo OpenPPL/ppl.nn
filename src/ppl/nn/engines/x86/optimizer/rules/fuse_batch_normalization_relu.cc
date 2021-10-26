@@ -60,7 +60,7 @@ bool FuseBatchNormalizationReLU(const OptKernelOptions &options) {
             auto bn_kernel = (BatchNormalizationOp*)bn_kernel_it->second.get();
 
             // bn_node -> bn_output_edge -> relu_node -> relu_output_edge
-            bn_kernel->SetFuseReLU(true);
+            bn_kernel->TryFuseReLU();
             bn_node->ReplaceOutput(bn_output_edge->GetId(), relu_output_edge->GetId());
             relu_output_edge->SetProducer(bn_node->GetId());
 

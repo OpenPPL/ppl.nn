@@ -84,11 +84,11 @@ bool FuseConvActivation(const OptKernelOptions &options) {
 
             auto conv_kernel = static_cast<ConvOp*>(info->kernels[conv_node->GetId()].get());
             if (successor_node->GetType().name == "Relu") {
-                if (!conv_kernel->SetFuseReLU()) { // set fuse flag to conv_op
+                if (!conv_kernel->TryFuseReLU()) { // set fuse flag to conv_op
                     continue;
                 }
             } else if (IsReLU6(graph_data, successor_node)) {
-                if (!conv_kernel->SetFuseReLU6()) { // set fuse flag to conv_op
+                if (!conv_kernel->TryFuseReLU6()) { // set fuse flag to conv_op
                     continue;
                 }
                 // remove relu6's input min/max's connect in advance

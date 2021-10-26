@@ -30,7 +30,7 @@ public:
     ~GemmOp();
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
-    bool SetFuseReLU();
+    bool TryFuseReLU();
 
 private:
     FCParam* fc_param_;

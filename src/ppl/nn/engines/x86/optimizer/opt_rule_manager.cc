@@ -91,10 +91,10 @@ OptRuleManager::OptRuleManager() {
 
     REGISTER_OPT_RULE("BeforeLayoutOptimize", "FuseChannelShuffle", FuseChannelShuffle);
 
-    REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseArithmeticReLU", FuseArithmeticReLU);
-    REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseBatchNormalizationReLU", FuseBatchNormalizationReLU);
     REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseConvActivation", FuseConvActivation);
     REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseConvEltwise", FuseConvEltwise);
+    REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseArithmeticReLU", FuseArithmeticReLU);
+    REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseBatchNormalizationReLU", FuseBatchNormalizationReLU);
     REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseGemmActivation", FuseGemmActivation);
     REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseSwish", FuseSwish);
 }

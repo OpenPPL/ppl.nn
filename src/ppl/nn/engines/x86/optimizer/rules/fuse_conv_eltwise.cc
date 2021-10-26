@@ -18,6 +18,7 @@
 #include "ppl/nn/engines/x86/optimizer/rules/fuse_conv_eltwise.h"
 #include "ppl/nn/engines/x86/optimizer/rules/utils.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/conv_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/onnx/add_op.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -56,12 +57,16 @@ bool FuseConvEltwise(const OptKernelOptions &options) {
 
             ir::Node* conv_node = nullptr;
             ir::Edge* src_sum_edge = nullptr;
+            auto add_op = (AddOp*)info->kernels[add_node->GetId()].get();
             if (!conv_node && input_edge_0->GetProducer() != INVALID_NODEID && input_edge_0->CalcConsumerCount() == 1 &&
                 !IsGraphOutput(graph_topo, input_edge_0->GetId())) {
                 auto predecessor_node_0 = graph_topo->GetNodeById(input_edge_0->GetProducer());
                 if (predecessor_node_0->GetType().domain == "" && predecessor_node_0->GetType().name == "Conv") {
                     auto conv_op = (ConvOp*)info->kernels[predecessor_node_0->GetId()].get();
-                    if (conv_op->SetFuseSum()) {
+                    if (conv_op->TryFuseSum()) {
+                        if (add_op->HasFuseReLU()) { // becareful
+                            conv_op->TryFuseReLU();
+                        }
                         conv_node = predecessor_node_0;
                         src_sum_edge = input_edge_1;
                     }
@@ -73,7 +78,10 @@ bool FuseConvEltwise(const OptKernelOptions &options) {
                 auto predecessor_node_1 = graph_topo->GetNodeById(input_edge_1->GetProducer());
                 if (predecessor_node_1->GetType().domain == "" && predecessor_node_1->GetType().name == "Conv") {
                     auto conv_op = (ConvOp*)info->kernels[predecessor_node_1->GetId()].get();
-                    if (conv_op->SetFuseSum()) {
+                    if (conv_op->TryFuseSum()) {
+                        if (add_op->HasFuseReLU()) {
+                            conv_op->TryFuseReLU();
+                        }
                         conv_node = predecessor_node_1;
                         src_sum_edge = input_edge_0;
                     }

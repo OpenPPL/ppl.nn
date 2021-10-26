@@ -193,7 +193,7 @@ RetCode ConvOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* 
     return RC_SUCCESS;
 }
 
-bool ConvOp::SetFuseReLU() {
+bool ConvOp::TryFuseReLU() {
     if (!conv2d_param_ || conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_fp32_algo::unknown) {
         return false;
     }
@@ -206,7 +206,7 @@ bool ConvOp::SetFuseReLU() {
     return true;
 }
 
-bool ConvOp::SetFuseReLU6() {
+bool ConvOp::TryFuseReLU6() {
     if (!conv2d_param_ || conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_fp32_algo::unknown) {
         return false;
     }
@@ -219,7 +219,7 @@ bool ConvOp::SetFuseReLU6() {
     return true;
 }
 
-bool ConvOp::SetFuseSum() {
+bool ConvOp::TryFuseSum() {
     if (!conv2d_param_ || conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_fp32_algo::unknown) {
         return false;
     }

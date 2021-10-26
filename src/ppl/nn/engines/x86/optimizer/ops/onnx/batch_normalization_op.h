@@ -31,8 +31,12 @@ public:
                                       std::vector<ppl::common::dataformat_t>* selected_input_formats,
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
     KernelImpl* CreateKernelImpl() const override;
-    void SetFuseReLU(bool fuse_relu) {
-        fuse_relu_ = fuse_relu;
+    bool TryFuseReLU() { 
+        fuse_relu_ = true;
+        return true;
+    }
+    bool HasFuseReLU() {
+        return fuse_relu_;
     }
 
 private:
