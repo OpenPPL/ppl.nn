@@ -27,7 +27,6 @@
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/convtranspose_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/clip_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/concat_op.h"
-#include "ppl/nn/engines/x86/optimizer/ops/onnx/constant_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/constant_of_shape_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/depth_to_space_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/div_op.h"
@@ -152,7 +151,6 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("", "Ceil", 6, 12, CeilOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Clip", 11, 11, ClipOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Concat", 11, 12, ConcatOp);
-    REGISTER_OPT_KERNEL_CREATOR("", "Constant", 11, 11, ConstantOp);
     REGISTER_OPT_KERNEL_CREATOR("", "ConstantOfShape", 9, 16, ConstantOfShapeOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Conv", 11, 16, ConvOp);
     REGISTER_OPT_KERNEL_CREATOR("", "ConvTranspose", 11, 16, ConvTransposeOp);

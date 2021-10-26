@@ -139,7 +139,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Ceil", 6, 12);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Clip", 11, 11);
     PPL_REGISTER_OP_WITH_PARAM("", "Concat", 11, 12, ppl::nn::common::ConcatParam, ParseConcatParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Constant", 11, 11, ppl::nn::common::ConstantParam, ParseConstantParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Constant", 9, 16, ppl::nn::common::ConstantParam, ParseConstantParam);
     PPL_REGISTER_OP_WITH_PARAM("", "ConstantOfShape", 9, 16, ppl::nn::common::ConstantOfShapeParam,
                                ParseConstantOfShapeParam);
     PPL_REGISTER_OP_WITH_PARAM("", "Conv", 11, 16, ppl::nn::common::ConvolutionParam, ParseConvolutionParam);

@@ -19,7 +19,7 @@
 | Ceil               | 6~12   | &check;                     | &check;            |
 | Clip               | 11     | &check;                     | &check;            |
 | Concat             | 11~12  | &check;                     | &check;            |
-| Constant           | 11     | &check;                     |                    |
+| Constant           | 9~16   | &check;                     |                    |
 | ConstantOfShape    | 9~16   | &check;                     | &check;            |
 | Conv               | 11~16  | &check;                     | &check;            |
 | ConvTranspose      | 11~16  | &check;                     | &check;            |
