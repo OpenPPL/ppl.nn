@@ -98,7 +98,7 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
-bool GemmOp::SetFuseReLU() {
+bool GemmOp::TryFuseReLU() {
     gemm_fuse_relu_ = true;
     if (fc_param_ && fc_param_->algo_info.algo_type != ppl::kernel::x86::fc_fp32_algo::unknown) {
         ppl::kernel::x86::fc_fp32_param param = fc_param_->mgr->param();

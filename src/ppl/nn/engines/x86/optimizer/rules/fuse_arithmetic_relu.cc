@@ -81,16 +81,16 @@ bool FuseArithmeticReLU(const OptKernelOptions &options) {
             // arithmetic_node -> arithmetic_output_edge -> relu_node -> relu_output_edge
             if (at == ADD) {
                 auto arithmetic_kernel = (AddOp*)arithmetic_kernel_it->second.get();
-                arithmetic_kernel->SetFuseReLU(true);
+                arithmetic_kernel->TryFuseReLU();
             } else if (at == SUB) {
                 auto arithmetic_kernel = (SubOp*)arithmetic_kernel_it->second.get();
-                arithmetic_kernel->SetFuseReLU(true);
+                arithmetic_kernel->TryFuseReLU();
             } else if (at == MUL) {
                 auto arithmetic_kernel = (MulOp*)arithmetic_kernel_it->second.get();
-                arithmetic_kernel->SetFuseReLU(true);
+                arithmetic_kernel->TryFuseReLU();
             } else if (at == DIV) {
                 auto arithmetic_kernel = (DivOp*)arithmetic_kernel_it->second.get();
-                arithmetic_kernel->SetFuseReLU(true);
+                arithmetic_kernel->TryFuseReLU();
             } else {
                 continue;
             }
