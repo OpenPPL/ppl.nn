@@ -80,7 +80,7 @@ ppl::common::RetCode memory_copy(
     for (uint64_t n = 0; n < num_block; ++n) {
         const uint64_t block_start = n * block_body + (block_tail > n ? n : block_tail);
         const uint64_t block_size = block_body + (block_tail > n ? 1 : 0);
-        memcpy(l_dst + block_start, src + block_start, block_size);
+        memcpy(l_dst + block_start, l_src + block_start, block_size);
     }
 
     return ppl::common::RC_SUCCESS;

@@ -15,35 +15,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPT_GRAPH_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPT_GRAPH_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_RULES_FUSE_CONV_ACTIVATION_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_RULES_FUSE_CONV_ACTIVATION_H_
 
-#include <memory>
-
-#include "ppl/nn/ir/graph.h"
-#include "ppl/nn/engines/x86/x86_device.h"
-#include "ppl/nn/runtime/runtime_partition_info.h"
 #include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
-class OptGraph final {
-public:
-    ppl::common::RetCode Init(ir::Graph*, utils::SharedResource*, RuntimePartitionInfo*);
-    ppl::common::RetCode DoOptimize(X86Device*);
-
-private:
-    ppl::common::RetCode InitKernels(const ir::Graph* graph);
-    ppl::common::RetCode InitTensorImpls();
-    ppl::common::RetCode TryToInferType(X86Device* device);
-    ppl::common::RetCode TryToInferDims(X86Device* device);
-
-private:
-    utils::SharedResource* resource_ = nullptr;
-    ir::Graph* graph_ = nullptr;
-    RuntimePartitionInfo* info_ = nullptr;
-    std::map<edgeid_t, std::unique_ptr<TensorImpl>> tensor_impls_;
-};
+bool FuseConvActivation(const OptKernelOptions &options);
 
 }}} // namespace ppl::nn::x86
 

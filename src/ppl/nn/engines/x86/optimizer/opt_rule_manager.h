@@ -15,34 +15,34 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPT_GRAPH_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPT_GRAPH_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPT_RULE_MANAGER_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPT_RULE_MANAGER_H_
 
-#include <memory>
-
-#include "ppl/nn/ir/graph.h"
-#include "ppl/nn/engines/x86/x86_device.h"
-#include "ppl/nn/runtime/runtime_partition_info.h"
 #include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
-class OptGraph final {
+typedef bool (*OptRule)(const OptKernelOptions &);
+
+class OptRuleManager {
 public:
-    ppl::common::RetCode Init(ir::Graph*, utils::SharedResource*, RuntimePartitionInfo*);
-    ppl::common::RetCode DoOptimize(X86Device*);
+    static OptRuleManager* Instance() {
+        static OptRuleManager mgr;
+        return &mgr;
+    }
+    ~OptRuleManager();
+
+    ppl::common::RetCode Register(const std::string& tag, const std::string& name, OptRule rule);
+    void Remove(const std::string& tag, const std::string& name);
+    OptRule Find(const std::string& tag, const std::string& name);
+    bool Apply(const std::string& tag, const std::string& name, const OptKernelOptions& options);
+    void ApplyByTag(const std::string& tag, const OptKernelOptions& options);
 
 private:
-    ppl::common::RetCode InitKernels(const ir::Graph* graph);
-    ppl::common::RetCode InitTensorImpls();
-    ppl::common::RetCode TryToInferType(X86Device* device);
-    ppl::common::RetCode TryToInferDims(X86Device* device);
+    std::map<std::string, std::map<std::string, OptRule>> rule_all_;
 
 private:
-    utils::SharedResource* resource_ = nullptr;
-    ir::Graph* graph_ = nullptr;
-    RuntimePartitionInfo* info_ = nullptr;
-    std::map<edgeid_t, std::unique_ptr<TensorImpl>> tensor_impls_;
+    OptRuleManager();
 };
 
 }}} // namespace ppl::nn::x86
