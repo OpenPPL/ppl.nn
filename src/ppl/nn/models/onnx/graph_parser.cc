@@ -172,8 +172,8 @@ static RetCode ParseNodeInfo(const ::onnx::NodeProto& pb_node, const map<string,
 
     auto parser_info = ParamParserManager::Instance()->Find(pb_node.domain(), pb_node.op_type(), op_set_ref->second);
     if (!parser_info) {
-        LOG(ERROR) << "can not find param parser of version[" << op_set_ref->second << "] of type[" << pb_node.domain()
-                   << ":" << pb_node.op_type() << "]";
+        LOG(ERROR) << "unsupported op: domain[" << pb_node.domain() << "], type[" << pb_node.op_type() << "], version["
+                   << op_set_ref->second << "]";
         return RC_UNSUPPORTED;
     }
 
