@@ -25,6 +25,7 @@
 #include "ppl/nn/engines/cuda/optimizer/opt_graph.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/quantization/quant_param_parser.cc"
+#include "ppl/nn/utils/array.h"
 #include "rapidjson/document.h"
 #include "rapidjson/error/error.h"
 
@@ -169,54 +170,6 @@ RetCode CudaEngine::SetOutputType(CudaEngine* engine, va_list args) {
     return RC_SUCCESS;
 }
 
-RetCode CudaEngine::SetCompilerInputDims(CudaEngine* engine, va_list args) {
-    const char* str = va_arg(args, const char*);
-    int count = 0;
-    bool load_dims = true;
-    std::string temp_name = "";
-    std::vector<uint32_t> temp_dims;
-
-    for (uint32_t i = 0; str[i] != '\0'; i++) {
-        if (str[i] == ',') { // has input edge name
-            load_dims = false;
-            break;
-        }
-    }
-
-    for (uint32_t i = 0; str[i] != '\0'; i++) {
-        if (str[i] == ';') {
-            engine->cuda_flags_.input_dims.emplace(temp_name, temp_dims);
-            temp_name = "";
-            temp_dims.clear();
-            load_dims = false;
-            count = 0;
-        }
-        if (str[i] == '_') {
-            temp_dims.push_back(count);
-            count = 0;
-        } else if (str[i] == ',') { // swap to load dims
-            load_dims = true;
-        } else if (load_dims) {
-            if (str[i] < '0' || str[i] > '9') {
-                LOG(ERROR) << "Invalid input dims";
-                return RC_INVALID_VALUE;
-            }
-            count = count * 10 + (uint32_t)(str[i] - '0');
-        } else {
-            temp_name = temp_name + str[i];
-        }
-    }
-    temp_dims.push_back(count);
-
-    if (temp_dims.size() == 1 && temp_dims[0] == 0) {
-        LOG(WARNING) << "Default input dims for dynamic graph are 1_3_224_224, we recommend using '--dims' to set a "
-                        "suitable training shape.";
-    } else {
-        engine->cuda_flags_.input_dims[temp_name] = temp_dims;
-    }
-    return RC_SUCCESS;
-}
-
 RetCode CudaEngine::SetUseDefaultAlgorithms(CudaEngine* engine, va_list args) {
     auto flag = va_arg(args, uint32_t);
     engine->cuda_flags_.quick_select = (flag > 0);
@@ -273,7 +226,7 @@ RetCode CudaEngine::SetAlgorithm(CudaEngine* engine, va_list args) {
                 } else if (str_name == "splitf") {
                     algo_info.splitf = iter->value.GetInt();
                 } else if (str_name == "kname") {
-                    
+
                 } else {
                     LOG(ERROR) << "name of object[" << str_name << "] is not meaningful.";
                     return RC_INVALID_VALUE;
@@ -286,13 +239,31 @@ RetCode CudaEngine::SetAlgorithm(CudaEngine* engine, va_list args) {
     return RC_SUCCESS;
 }
 
+RetCode CudaEngine::SetInputDims(CudaEngine* engine, va_list args) {
+    auto& input_dims = engine->cuda_flags_.input_dims;
+    auto dims_vec = va_arg(args, utils::Array<int64_t>*);
+    auto input_count = va_arg(args, uint64_t);
+
+    input_dims.resize(input_count);
+    for (uint64_t i = 0; i < input_count; ++i) {
+        const utils::Array<int64_t>& src = dims_vec[i];
+        vector<int64_t>& dst = input_dims[i];
+        dst.resize(src.size);
+        for (uint32_t j = 0; j < src.size; ++j) {
+            dst[j] = src.base[j];
+        }
+    }
+
+    return RC_SUCCESS;
+}
+
 CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetOutputFormat, // CUDA_CONF_SET_OUTPUT_DATA_FORMAT
     CudaEngine::SetOutputType, // CUDA_CONF_SET_OUTPUT_TYPE
-    CudaEngine::SetCompilerInputDims, // CUDA_CONF_SET_COMPILER_INPUT_SHAPE
     CudaEngine::SetUseDefaultAlgorithms, // CUDA_CONF_USE_DEFAULT_ALGORITHMS
     CudaEngine::SetQuantization, // CUDA_CONF_SET_QUANTIZATION
     CudaEngine::SetAlgorithm, // CUDA_CONF_SET_ALGORITHM
+    CudaEngine::SetInputDims, // CUDA_CONF_SET_INPUT_DIMS
 };
 
 RetCode CudaEngine::Configure(uint32_t option, ...) {

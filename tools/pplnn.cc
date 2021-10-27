@@ -69,11 +69,104 @@ Define_string_opt("--save-data-dir", g_flag_save_data_dir, ".",
 /* -------------------------------------------------------------------------- */
 
 template <typename T>
-string ToString(T v) {
+static string ToString(T v) {
     stringstream ss;
     ss << v;
     return ss.str();
 }
+
+static vector<int64_t> GenerateRandomDims(uint32_t dim_count) {
+    static const uint32_t max_dim = 640;
+    static const uint32_t min_dim = 128;
+    srand(time(nullptr));
+
+    vector<int64_t> dims(dim_count);
+    for (uint32_t i = 0; i < dim_count; ++i) {
+        dims[i] = rand() % (max_dim - min_dim + 1) + min_dim;
+    }
+    return dims;
+}
+
+static const char* MemMem(const char* haystack, unsigned int haystack_len,
+                          const char* needle, unsigned int needle_len)
+{
+    if (!haystack || haystack_len == 0 || !needle || needle_len == 0) {
+        return nullptr;
+    }
+
+    for (auto h = haystack; haystack_len >= needle_len; ++h, --haystack_len) {
+        if (memcmp(h, needle, needle_len) == 0) {
+            return h;
+        }
+    }
+    return nullptr;
+}
+
+static void SplitString(const char* str, unsigned int len, const char* delim, unsigned int delim_len,
+                        const function<bool(const char* s, unsigned int l)>& f) {
+    const char* end = str + len;
+
+    while (str < end) {
+        auto cursor = MemMem(str, len, delim, delim_len);
+        if (!cursor) {
+            f(str, end - str);
+            return;
+        }
+
+        if (!f(str, cursor - str)) {
+            return;
+        }
+
+        cursor += delim_len;
+        str = cursor;
+        len = end - cursor;
+    }
+
+    f("", 0); // the last empty field
+}
+
+static bool ParseInputShapes(const string& shape_str, vector<vector<int64_t>>* input_shapes) {
+    bool ok = true;
+
+    vector<string> input_shape_list;
+    SplitString(shape_str.data(), shape_str.size(), ",", 1,
+                [&ok, &input_shape_list](const char* s, unsigned int l) -> bool {
+                    if (l > 0) {
+                        input_shape_list.emplace_back(s, l);
+                        return true;
+                    }
+                    LOG(ERROR) << "empty shape in option '--input-shapes'";
+                    ok = false;
+                    return false;
+                });
+    if (!ok) {
+        return false;
+    }
+
+    for (auto x = input_shape_list.begin(); x != input_shape_list.end(); ++x) {
+        ok = true;
+        vector<int64_t> shape;
+        SplitString(x->data(), x->size(), "_", 1, [&ok, &shape](const char* s, unsigned int l) -> bool {
+            if (l > 0) {
+                int64_t dim = atol(string(s, l).c_str());
+                shape.push_back(dim);
+                return true;
+            }
+            LOG(ERROR) << "illegal dim format.";
+            ok = false;
+            return false;
+        });
+        if (!ok) {
+            return false;
+        }
+
+        input_shapes->push_back(shape);
+    }
+
+    return true;
+}
+
+/* -------------------------------------------------------------------------- */
 
 #ifdef PPLNN_USE_CUDA
 
@@ -81,9 +174,6 @@ Define_bool_opt("--use-cuda", g_flag_use_cuda, false, "use cuda engine");
 
 Define_string_opt("--output-format", g_flag_output_format, "", "declare the output format");
 Define_string_opt("--output-type", g_flag_output_type, "", "declare the output type");
-Define_string_opt("--dims", g_flag_compiler_dims, "",
-                  "declare init input dims for algo selection (split with comma)."
-                  " for example: 1_3_224_224,1_3_128_640");
 Define_bool_opt("--quick-select", g_flag_quick_select, false, "quick select algorithms for conv and gemm kernel");
 Define_uint32_opt("--device-id", g_flag_device_id, 0, "declare device id for cuda");
 
@@ -91,6 +181,7 @@ Define_string_opt("--algo-info", g_algo_info, "", "declare best algo index for c
 
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/engines/cuda/cuda_options.h"
+#include "ppl/nn/utils/array.h"
 
 static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     CudaEngineOptions options;
@@ -112,8 +203,21 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     cuda_engine->Configure(ppl::nn::CUDA_CONF_USE_DEFAULT_ALGORITHMS, g_flag_quick_select);
     cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_ALGORITHM, g_algo_info.c_str());
 
-    if (!g_flag_compiler_dims.empty()) {
-        cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_COMPILER_INPUT_SHAPE, g_flag_compiler_dims.c_str());
+    // pass input shapes to cuda engine for further optimizations
+    if (!g_flag_input_shapes.empty()) {
+        vector<vector<int64_t>> input_shapes;
+        if (!ParseInputShapes(g_flag_input_shapes, &input_shapes)) {
+            LOG(ERROR) << "ParseInputShapes failed.";
+            return false;
+        }
+
+        vector<utils::Array<int64_t>> dims(input_shapes.size());
+        for (uint32_t i = 0; i < input_shapes.size(); ++i) {
+            auto& arr = dims[i];
+            arr.base = input_shapes[i].data();
+            arr.size = input_shapes[i].size();
+        }
+        cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_INPUT_DIMS, dims.data(), dims.size());
     }
 
     engines->emplace_back(unique_ptr<Engine>(cuda_engine));
@@ -206,65 +310,19 @@ static string GetDimsStr(const Tensor* tensor) {
     return res;
 }
 
-static const char* MemMem(const char* haystack, unsigned int haystack_len,
-                          const char* needle, unsigned int needle_len)
-{
-    if (!haystack || haystack_len == 0 || !needle || needle_len == 0) {
-        return nullptr;
-    }
-
-    for (auto h = haystack; haystack_len >= needle_len; ++h, --haystack_len) {
-        if (memcmp(h, needle, needle_len) == 0) {
-            return h;
-        }
-    }
-    return nullptr;
-}
-
-static void SplitString(const char* str, unsigned int len, const char* delim, unsigned int delim_len,
-                        const function<bool(const char* s, unsigned int l)>& f) {
-    const char* end = str + len;
-
-    while (str < end) {
-        auto cursor = MemMem(str, len, delim, delim_len);
-        if (!cursor) {
-            f(str, end - str);
-            return;
-        }
-
-        if (!f(str, cursor - str)) {
-            return;
-        }
-
-        cursor += delim_len;
-        str = cursor;
-        len = end - cursor;
-    }
-
-    f("", 0); // the last empty field
-}
-
-static void GenerateRandomDims(TensorShape* shape) {
-    static const uint32_t max_dim = 640;
-    static const uint32_t min_dim = 128;
-    srand(time(nullptr));
-
-    auto dimcount = shape->GetRealDimCount();
-    for (uint32_t i = 2; i < dimcount; ++i) {
-        if (shape->GetDim(i) == 1) {
-            auto value = rand() % (max_dim - min_dim + 1) + min_dim;
-            shape->SetDim(i, value);
-        }
-    }
-}
-
 static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime* runtime) {
     for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
         auto t = runtime->GetInputTensor(c);
         auto& shape = t->GetShape();
 
         if (input_shapes.empty()) {
-            GenerateRandomDims(&shape);
+            auto dim_count = shape.GetRealDimCount();
+            auto dims = GenerateRandomDims(dim_count);
+            for (uint32_t j = 2; j < dim_count; ++j) {
+                if (shape.GetDim(j) == 1) {
+                    shape.SetDim(j, dims[j]);
+                }
+            }
         } else {
             shape.Reshape(input_shapes[c]);
         }
@@ -696,47 +754,6 @@ static void PrintProfilingStatistics(const ProfilingStatistics& stat, double run
     LOG(INFO) << "SCHED_LOST: [" << float_buf_0 << "]";
 }
 #endif
-
-static bool ParseInputShapes(const string& shape_str, vector<vector<int64_t>>* input_shapes) {
-    bool ok = true;
-
-    vector<string> input_shape_list;
-    SplitString(shape_str.data(), shape_str.size(), ",", 1,
-                [&ok, &input_shape_list](const char* s, unsigned int l) -> bool {
-                    if (l > 0) {
-                        input_shape_list.emplace_back(s, l);
-                        return true;
-                    }
-                    LOG(ERROR) << "empty shape in option '--input-shapes'";
-                    ok = false;
-                    return false;
-                });
-    if (!ok) {
-        return false;
-    }
-
-    for (auto x = input_shape_list.begin(); x != input_shape_list.end(); ++x) {
-        ok = true;
-        vector<int64_t> shape;
-        SplitString(x->data(), x->size(), "_", 1, [&ok, &shape](const char* s, unsigned int l) -> bool {
-            if (l > 0) {
-                int64_t dim = atol(string(s, l).c_str());
-                shape.push_back(dim);
-                return true;
-            }
-            LOG(ERROR) << "illegal dim format.";
-            ok = false;
-            return false;
-        });
-        if (!ok) {
-            return false;
-        }
-
-        input_shapes->push_back(shape);
-    }
-
-    return true;
-}
 
 int main(int argc, char* argv[]) {
     simple_flags::parse_args(argc, argv);

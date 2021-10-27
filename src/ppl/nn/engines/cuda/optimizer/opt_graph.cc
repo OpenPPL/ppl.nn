@@ -121,18 +121,22 @@ RetCode OptGraph::UpdateDims() {
                     LOG(ERROR) << "cannot find input shape in data map.";
                     return RC_INVALID_VALUE;
                 }
-                auto dims_pairs = args_->input_dims.find(edge->GetName());
-                if (dims_pairs == args_->input_dims.end()) { // use default dims
-                    dims_pairs = args_->input_dims.find("");
-                    if (dims_pairs == args_->input_dims.end()) {
-                        LOG(ERROR) << "Error input dims init for input edge[" << edge->GetName() << "]";
-                        return RC_INVALID_VALUE;
+
+                vector<int64_t>* dims = nullptr;
+                if (j >= args_->input_dims.size()) {
+                    dims = &args_->input_dims[0]; // use default dims
+                } else {
+                    if (args_->input_dims[j].empty()) { // not set
+                        dims = &args_->input_dims[0]; // use default dims
+                    } else {
+                        dims = &args_->input_dims[j];
                     }
                 }
-                if (ir_shape->second.dims.size() == dims_pairs->second.size()) {
+
+                if (ir_shape->second.dims.size() == dims->size()) {
                     for (uint32_t k = 0; k < ir_shape->second.dims.size(); ++k) {
-                        if (ir_shape->second.dims[k] == 1 && (dims_pairs->second)[k] != 0) {
-                            ir_shape->second.dims[k] = (dims_pairs->second)[k];
+                        if (ir_shape->second.dims[k] == 1 && dims->at(k) != 0) {
+                            ir_shape->second.dims[k] = dims->at(k);
                         }
                     }
                 }

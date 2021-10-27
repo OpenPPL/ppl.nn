@@ -42,17 +42,6 @@ enum {
     CUDA_CONF_SET_OUTPUT_TYPE,
 
     /**
-       @brief set init input dims for compiler
-
-       @note example:
-       @code{.cpp}
-       std::string dims = "1_3_224_224";
-       engine->Configure(CUDA_CONF_SET_COMPILER_INPUT_SHAPE, dims.c_str());
-       @endcode
-    */
-    CUDA_CONF_SET_COMPILER_INPUT_SHAPE,
-
-    /**
        @brief use default algorithms for conv and gemm
 
        @note example:
@@ -71,7 +60,7 @@ enum {
        @endcode
     */
     CUDA_CONF_SET_QUANTIZATION,
-   
+
     /**
        @brief the name of json file that saves selected algos' index information
 
@@ -81,7 +70,19 @@ enum {
        @endcode
     */
     CUDA_CONF_SET_ALGORITHM,
-    
+
+    /**
+       @brief set init input dims as a hint for graph optimization
+
+       @note example:
+       @code{.cpp}
+       vector<utils::Array<int64_t>> dims;
+       // fill dims of each input
+       engine->Configure(CUDA_CONF_SET_INPUT_DIMS, dims.data(), dims.size());
+       @endcode
+    */
+    CUDA_CONF_SET_INPUT_DIMS,
+
     /** max value */
     CUDA_CONF_MAX,
 };
