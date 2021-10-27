@@ -56,7 +56,7 @@ enum {
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_SET_QUANTIZATION, "quantization.json");
+       cuda_engine->Configure(CUDA_CONF_SET_QUANTIZATION, quantination_json_buffer);
        @endcode
     */
     CUDA_CONF_SET_QUANTIZATION,
@@ -66,10 +66,10 @@ enum {
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_SET_ALGORITHM, "algo_info.json");
+       cuda_engine->Configure(CUDA_CONF_SET_ALGORITHMS, algo_info_json_buffer);
        @endcode
     */
-    CUDA_CONF_SET_ALGORITHM,
+    CUDA_CONF_SET_ALGORITHMS,
 
     /**
        @brief set init input dims as a hint for graph optimization

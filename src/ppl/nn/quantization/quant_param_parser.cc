@@ -64,10 +64,27 @@ static RetCode ParseParam(const rapidjson::Value& v, QuantParam* param) {
     return RC_SUCCESS;
 }
 
-static RetCode DoParse(const string& buf, QuantParamInfo* info) {
+static RetCode ReadFileContent(const char* fname, string* buf) {
+    ifstream ifile;
+
+    ifile.open(fname, ios_base::in);
+    if (!ifile.is_open()) {
+        LOG(ERROR) << "open quant file[" << fname << "] failed.";
+        return RC_NOT_FOUND;
+    }
+
+    stringstream ss;
+    ss << ifile.rdbuf();
+    *buf = ss.str();
+
+    ifile.close();
+    return RC_SUCCESS;
+}
+
+RetCode QuantParamParser::ParseBuffer(const char* buf, QuantParamInfo* info) {
     rapidjson::Document d;
 
-    d.Parse(buf.c_str());
+    d.Parse(buf);
     if (d.HasParseError()) {
         LOG(ERROR) << "parse quant file failed: position[" << d.GetErrorOffset() << "], code[" << d.GetParseError()
                    << "]";
@@ -85,11 +102,11 @@ static RetCode DoParse(const string& buf, QuantParamInfo* info) {
             LOG(ERROR) << "value of object[" << object_name << "] is not an object.";
             return RC_INVALID_VALUE;
         }
-        const bool is_tensor_set = object_name == "quant_info";
-        const bool is_node_set = object_name == "op_info";
+        const bool is_tensor_set = (object_name == "quant_info");
+        const bool is_node_set = (object_name == "op_info");
         if (!is_tensor_set && !is_node_set) {
             LOG(ERROR) << "name of object[" << object_name << "] is not meaningful.";
-            return RC_INVALID_VALUE;            
+            return RC_INVALID_VALUE;
         }
         auto& quant_info = is_tensor_set ? info->tensor_params : info->node_params;
         for (auto iter = it->value.MemberBegin(); iter != it->value.MemberEnd(); ++iter) {
@@ -111,31 +128,14 @@ static RetCode DoParse(const string& buf, QuantParamInfo* info) {
     return RC_SUCCESS;
 }
 
-static RetCode ReadFileContent(const char* fname, string* buf) {
-    ifstream ifile;
-
-    ifile.open(fname, ios_base::in);
-    if (!ifile.is_open()) {
-        LOG(ERROR) << "open quant file[" << fname << "] failed.";
-        return RC_NOT_FOUND;
-    }
-
-    stringstream ss;
-    ss << ifile.rdbuf();
-    *buf = ss.str();
-
-    ifile.close();
-    return RC_SUCCESS;
-}
-
-RetCode QuantParamParser::Parse(const char* fname, QuantParamInfo* info) {
+RetCode QuantParamParser::ParseFile(const char* fname, QuantParamInfo* info) {
     string buf;
     auto status = ReadFileContent(fname, &buf);
     if (status != RC_SUCCESS) {
         return status;
     }
 
-    status = DoParse(buf, info);
+    status = ParseBuffer(buf.c_str(), info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse quant file[" << fname << "] failed: " << GetRetCodeStr(status);
     }

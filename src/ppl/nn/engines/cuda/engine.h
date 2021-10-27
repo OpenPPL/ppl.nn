@@ -75,7 +75,7 @@ private:
     static ppl::common::RetCode SetOutputType(CudaEngine*, va_list);
     static ppl::common::RetCode SetUseDefaultAlgorithms(CudaEngine*, va_list);
     static ppl::common::RetCode SetQuantization(CudaEngine*, va_list);
-    static ppl::common::RetCode SetAlgorithm(CudaEngine*, va_list);
+    static ppl::common::RetCode SetAlgorithms(CudaEngine*, va_list);
     static ppl::common::RetCode SetInputDims(CudaEngine*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(CudaEngine*, va_list);
