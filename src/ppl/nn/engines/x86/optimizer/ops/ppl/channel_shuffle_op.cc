@@ -31,7 +31,26 @@ RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
     }
     
     infer_type_func_ = GenericInferType;
-    infer_dims_func_ = GenericInferDims;
+
+    infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
+        auto& input0 = info->GetInput<TensorImpl>(0)->GetShape();
+        int64_t channels = input0.GetDim(1);
+        for (uint32_t i = 1; i < info->GetInputCount(); ++i) {
+            channels += info->GetInput<TensorImpl>(1)->GetShape().GetDim(1);
+        }
+        if (channels % info->GetOutputCount()) {
+            return ppl::common::RC_INVALID_VALUE;
+        }
+        channels /= info->GetOutputCount();
+        for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
+            auto &output = info->GetOutput<TensorImpl>(i)->GetShape();
+            output.Reshape(input0.GetDims(), input0.GetRealDimCount());
+            output.SetDim(1, channels);
+        }
+        
+        return RC_SUCCESS;
+    };
+
     return RC_SUCCESS;
 }
 
@@ -41,16 +60,33 @@ void ChannelShuffleOp::SetGroup(int group) {
 
 RetCode ChannelShuffleOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
                                        vector<dataformat_t>* selected_output_formats) {
-    auto input_format = info.GetInput<TensorImpl>(0)->GetShape().GetDataFormat();
-
-    if (input_format == DATAFORMAT_N16CX) {
-        selected_input_formats->at(0) = DATAFORMAT_N16CX;
-        selected_output_formats->at(0) = DATAFORMAT_N16CX;
-    }
-
-    if (input_format == DATAFORMAT_NDARRAY) {
-        selected_input_formats->at(0) = DATAFORMAT_NDARRAY;
-        selected_output_formats->at(0) = DATAFORMAT_NDARRAY;
+    if (info.GetInputCount() == 2) {
+        auto input_format1 = info.GetInput<TensorImpl>(0)->GetShape().GetDataFormat();
+        auto input_format2 = info.GetInput<TensorImpl>(1)->GetShape().GetDataFormat();
+        if (input_format1 == DATAFORMAT_N16CX && input_format2 == DATAFORMAT_N16CX) {
+            selected_input_formats->at(0) = DATAFORMAT_N16CX;
+            selected_input_formats->at(1) = DATAFORMAT_N16CX;
+            selected_output_formats->at(0) = DATAFORMAT_N16CX;
+            if (info.GetOutputCount() == 2) {
+                selected_output_formats->at(1) = DATAFORMAT_N16CX;
+            }
+        } else {
+            selected_input_formats->at(0) = DATAFORMAT_NDARRAY;
+            selected_input_formats->at(1) = DATAFORMAT_NDARRAY;
+            selected_output_formats->at(0) = DATAFORMAT_NDARRAY;
+            if (info.GetOutputCount() == 2) {
+                selected_output_formats->at(1) = DATAFORMAT_NDARRAY;
+            }
+        }
+    } else {
+        auto input_format = info.GetInput<TensorImpl>(0)->GetShape().GetDataFormat();
+        if (input_format == DATAFORMAT_N16CX) {
+            selected_input_formats->at(0) = DATAFORMAT_N16CX;
+            selected_output_formats->at(0) = DATAFORMAT_N16CX;
+        } else {
+            selected_input_formats->at(0) = DATAFORMAT_NDARRAY;
+            selected_output_formats->at(0) = DATAFORMAT_NDARRAY;
+        }
     }
 
     return RC_SUCCESS;
