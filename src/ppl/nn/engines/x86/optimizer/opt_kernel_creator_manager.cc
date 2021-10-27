@@ -152,7 +152,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("", "Clip", 11, 11, ClipOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Concat", 11, 12, ConcatOp);
     REGISTER_OPT_KERNEL_CREATOR("", "ConstantOfShape", 9, 16, ConstantOfShapeOp);
-    REGISTER_OPT_KERNEL_CREATOR("", "Conv", 11, 16, ConvOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "Conv", 1, 16, ConvOp);
     REGISTER_OPT_KERNEL_CREATOR("", "ConvTranspose", 11, 16, ConvTransposeOp);
     // D
     REGISTER_OPT_KERNEL_CREATOR("", "DepthToSpace", 11, 12, DepthToSpaceOp);
