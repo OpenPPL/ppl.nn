@@ -31,7 +31,7 @@ include(cmake/deps.cmake)
 include(cmake/protobuf.cmake)
 
 hpcc_populate_dep(rapidjson)
-hpcc_populate_dep(ppl.common)
+hpcc_populate_dep(pplcommon)
 
 # --------------------------------------------------------------------------- #
 

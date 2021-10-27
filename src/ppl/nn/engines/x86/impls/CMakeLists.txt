@@ -83,7 +83,7 @@ endif()
 configure_file(include/ppl/kernel/x86/common/config.h.in ${PROJECT_BINARY_DIR}/include/ppl/kernel/x86/common/config.h @ONLY)
 list(APPEND PPLKERNELX86_INCLUDE_DIRECTORIES ${PROJECT_BINARY_DIR}/include)
 
-hpcc_populate_dep(ppl.common)
+hpcc_populate_dep(pplcommon)
 list(APPEND PPLKERNELX86_LINK_LIBRARIES pplcommon_static)
 
 set(PPLNN_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../..)
