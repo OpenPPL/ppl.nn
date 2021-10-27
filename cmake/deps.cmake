@@ -57,12 +57,12 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
-set(PPLCOMMON_BUILD_TESTS OFF CACHE BOOL "disable ppl.common tests")
-set(PPLCOMMON_BUILD_BENCHMARK OFF CACHE BOOL "disable ppl.common benchmark")
+set(PPLCOMMON_BUILD_TESTS OFF CACHE BOOL "disable pplcommon tests")
+set(PPLCOMMON_BUILD_BENCHMARK OFF CACHE BOOL "disable pplcommon benchmark")
 set(PPLCOMMON_ENABLE_PYTHON_API ${PPLNN_ENABLE_PYTHON_API})
 set(PPLCOMMON_ENABLE_LUA_API ${PPLNN_ENABLE_LUA_API})
 
-hpcc_declare_git_dep(ppl.common
+hpcc_declare_git_dep(pplcommon
     https://github.com/openppl-public/ppl.common.git
     fb123ab9d757eaecb2276f27392148f5c4dd1560)
 

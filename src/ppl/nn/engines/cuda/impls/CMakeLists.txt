@@ -52,7 +52,7 @@ target_include_directories(pplkernelcuda_static PUBLIC
 target_link_directories(pplkernelcuda_static PUBLIC ${CMAKE_CUDA_HOST_IMPLICIT_LINK_DIRECTORIES})
 target_link_libraries(pplkernelcuda_static PUBLIC cuda ${CUDA_LIBRARIES} ${CMAKE_CUDA_HOST_IMPLICIT_LINK_LIBRARIES})
 
-hpcc_populate_dep(ppl.common)
+hpcc_populate_dep(pplcommon)
 target_link_libraries(pplkernelcuda_static PUBLIC pplcommon_static)
 
 set(_EXPECTED_CUDA_HOST_LINK_DIRECTORIES )
