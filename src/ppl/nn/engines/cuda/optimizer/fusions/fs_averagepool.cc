@@ -81,7 +81,8 @@ const bool AveragePoolFusion::CanFuse(ir::Node* node, ir::Node* prenode, const O
     return true;
 }
 
-const RetCode AveragePoolFusion::FuseWithPreviousPad(ir::Node* node, ir::Node* prenode, const OptKernelOptions& options) {
+const RetCode AveragePoolFusion::FuseWithPreviousPad(ir::Node* node, ir::Node* prenode,
+                                                     const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto connect_edge_id = node->GetInput(0);
     auto pre_edge_id = prenode->GetInput(0);

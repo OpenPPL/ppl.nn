@@ -40,4 +40,4 @@ ppl::common::RetCode PPLCUDANMSForwardImp(
     float iou_threshold,
     float score_threshold = -FLT_MAX);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_NMS_NMS_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_NMS_NMS_H_

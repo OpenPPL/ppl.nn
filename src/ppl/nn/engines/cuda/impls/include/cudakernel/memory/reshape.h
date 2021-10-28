@@ -28,4 +28,4 @@ ppl::common::RetCode PPLCUDAReshapeForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_RESHAPE_RESHAPE_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_RESHAPE_RESHAPE_H_

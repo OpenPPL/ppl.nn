@@ -32,4 +32,4 @@ ppl::common::RetCode PPLCUDAMMCVROIAlignForwardImp(
     ppl::nn::TensorShape* output_shape,
     void* output,
     ppl::nn::common::MMCVROIAlignParam param);
-#endif //PPLCUDA_KERNEL_INCLUDE_MMCV_ROIALIGN_ROIALIGN_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_MMCV_ROIALIGN_ROIALIGN_H_

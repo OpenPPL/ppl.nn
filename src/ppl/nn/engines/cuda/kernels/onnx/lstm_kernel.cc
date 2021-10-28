@@ -53,7 +53,8 @@ ppl::common::RetCode LstmKernel::DoExecute(KernelExecContext* ctx) {
     auto Y_h_ptr = Y_h? Y_h->GetBufferPtr() : NULL;
     auto Y_c_ptr = Y_c? Y_c->GetBufferPtr() : NULL;
 
-    status = PPLCUDALstmForwardImp(GetStream(), &X_shape, X->GetBufferPtr(),
+    CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
+    status = PPLCUDALstmForwardImp(GetStream(), module, &X_shape, X->GetBufferPtr(),
                               W->GetBufferPtr(), R->GetBufferPtr(), P->GetBufferPtr(), B->GetBufferPtr(),
                               seq_lens_ptr, initial_h_ptr, initial_c_ptr,
                               direction_, hidden_size, tmp_buffer,

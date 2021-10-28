@@ -29,4 +29,4 @@ ppl::common::RetCode PPLCUDAClipForwardImp(
     float _min,
     float _max);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_CLIP_CLIP_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_CLIP_CLIP_H_

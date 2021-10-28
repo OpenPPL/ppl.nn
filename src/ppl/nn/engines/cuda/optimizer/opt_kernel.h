@@ -42,26 +42,38 @@ struct SharedResource;
 namespace ppl { namespace nn { namespace cuda {
 
 struct OptKernelOptions {
-    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, utils::SharedResource* resource, CudaArgs* args,
+    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, utils::SharedResource* resource, CudaArgs* args, CompileInfo* compile_set,
                      CudaDevice* device, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
                      std::vector<CudaTensorQuant>* quants, std::map<std::string, CudaArgs::AlgoInfo>* algos)
-        : graph(graph), info(info), resource(resource), args(args), device(device), tensors(tensors), quants(quants), algos(algos) {}
+        : graph(graph)
+        , info(info)
+        , resource(resource)
+        , args(args)
+        , compile_set(compile_set)
+        , device(device)
+        , tensors(tensors)
+        , quants(quants)
+        , algos(algos) {}
 
     OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, utils::SharedResource* resource,
                      std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors)
         : graph(graph), info(info), resource(resource), tensors(tensors) {}
-
+    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, utils::SharedResource* resource, CudaDevice* device,
+                     CUDAModuleManager* manager)
+        : graph(graph), info(info), resource(resource), device(device), cuda_module_manager(manager) {}
     OptKernelOptions(ir::Graph* graph, utils::SharedResource* resource) : graph(graph), resource(resource) {}
 
     ir::Graph* graph;
     RuntimePartitionInfo* info;
     utils::SharedResource* resource;
     CudaArgs* args;
+    CompileInfo* compile_set;
     CudaDevice* device;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors;
     std::vector<CudaTensorQuant>* quants;
     std::map<std::string, CudaArgs::AlgoInfo>* algos;
     void* param;
+    CUDAModuleManager* cuda_module_manager;
 };
 
 class CudaOptKernel : public OptKernel {
@@ -210,13 +222,15 @@ protected:
     static ppl::common::RetCode InferDefaultType(InputOutputInfo* info, ppl::common::datatype_t type) {
         for (uint32_t i = 0; i < info->GetInputCount(); ++i) {
             auto impl = info->GetInput<TensorImpl>(i);
-            if (impl == nullptr)  continue;
+            if (impl == nullptr)
+                continue;
             auto in_shape = &impl->GetShape();
             in_shape->SetDataType(type);
         }
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
             auto impl = info->GetOutput<TensorImpl>(i);
-            if (impl == nullptr)  continue;
+            if (impl == nullptr)
+                continue;
             auto out_shape = &impl->GetShape();
             out_shape->SetDataType(type);
         }

@@ -28,4 +28,4 @@ ppl::common::RetCode PPLCUDASqueezeForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_UNSQUEEZE_UNSQUEEZE_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_UNSQUEEZE_UNSQUEEZE_H_

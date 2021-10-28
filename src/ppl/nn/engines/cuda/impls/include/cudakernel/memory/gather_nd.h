@@ -38,4 +38,4 @@ ppl::common::RetCode PPLCUDAGatherNDForwardImp(
     void* temp_buffer,
     int batch_dims = 0);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_GATHERND_GATHERND_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_GATHERND_GATHERND_H_

@@ -23,7 +23,7 @@
 #include <cuda_fp16.h>
 #include <float.h>
 #include <memory>
-#define CUDA_ALIGNMENT    128
+#define CUDA_ALIGNMENT 128
 constexpr int N_BOX_DIM      = 4;
 constexpr int NMS_BLOCK_SIZE = 8 * sizeof(int64_t);
 
@@ -60,7 +60,7 @@ __device__ __inline__ T Min(T a, T b)
 }
 
 template <typename T>
-__device__ bool devIoU(const T* box_i, const T* box_j, T iou_threshold, int offset)
+__device__ bool devIoU(const T *box_i, const T *box_j, T iou_threshold, int offset)
 {
     // use math helper
     typedef Math<T, T, T> OpMath;
@@ -98,10 +98,10 @@ template <typename T>
 __global__ __launch_bounds__(NMS_BLOCK_SIZE) void mmcv_nms_one_one_kernel(
     int num_boxes,
     int num_blocks,
-    const T* boxes,
+    const T *boxes,
     float iou_threshold,
     int offset,
-    uint64_t* out_mask)
+    uint64_t *out_mask)
 {
     T t_iou_threshold = (T)iou_threshold;
     __shared__ T s_boxes[NMS_BLOCK_SIZE * N_BOX_DIM];
@@ -151,8 +151,8 @@ __device__ __inline__ bool isBitSet(uint64_t *mask, int pos)
 __global__ void mmcv_nms_reduce_mask_kernel(
     int num_blocks,
     int num_boxes,
-    const uint64_t* in_mask,
-    bool* reduced_mask)
+    const uint64_t *in_mask,
+    bool *reduced_mask)
 {
     extern __shared__ uint64_t s_reduced_mask[];
     int tid = threadIdx.x;
@@ -178,9 +178,9 @@ __global__ void mmcv_nms_reduce_mask_kernel(
 __global__ void mmcv_nms_reduce_mask_kernel_global(
     int num_blocks,
     int num_boxes,
-    const uint64_t* in_mask,
-    uint64_t* g_reduce_mask,
-    bool* reduced_mask)
+    const uint64_t *in_mask,
+    uint64_t *g_reduce_mask,
+    bool *reduced_mask)
 {
     int tid = threadIdx.x;
     for (int it = tid; it < num_blocks; it += blockDim.x) {
@@ -205,9 +205,9 @@ __global__ void mmcv_nms_reduce_mask_kernel_global(
 template <typename T>
 __global__ void mmcv_indexSelectBoxes(
     int num_filtered_boxes,
-    int32_t* sorted_indices,
-    const T* boxes,
-    T* sorted_boxes)
+    int32_t *sorted_indices,
+    const T *boxes,
+    T *sorted_boxes)
 {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     if (index >= num_filtered_boxes)
@@ -223,44 +223,44 @@ __global__ void mmcv_indexSelectBoxes(
 template <typename T>
 void MMCVNMSGpuImpl(
     cudaStream_t stream,
-    const T* sorted_boxes,
+    const T *sorted_boxes,
     float iou_threshold,
     int num_boxes,
     int offset,
     int max_shared_mem,
-    uint64_t* g_reduce_mask,
-    uint64_t* dev_mask,
-    bool* result_mask)
+    uint64_t *g_reduce_mask,
+    uint64_t *dev_mask,
+    bool *result_mask)
 {
     // step 1: calculate all iou
     constexpr int block_size = NMS_BLOCK_SIZE;
     int num_blocks           = DivUp(num_boxes, block_size);
     dim3 grid_size(num_blocks, num_blocks);
     mmcv_nms_one_one_kernel<<<grid_size, block_size, 0, stream>>>(num_boxes,
-                                                             num_blocks,
-                                                             sorted_boxes,
-                                                             iou_threshold,
-                                                             offset,
-                                                             dev_mask);
+                                                                  num_blocks,
+                                                                  sorted_boxes,
+                                                                  iou_threshold,
+                                                                  offset,
+                                                                  dev_mask);
     // step 2: mask reduce
     int32_t reduced_mask_size = num_blocks * block_size;
     if (max_shared_mem > reduced_mask_size) {
         // #boxes should not exceed #bits in shared memory
         mmcv_nms_reduce_mask_kernel<<<1, 1024, reduced_mask_size, stream>>>(num_blocks,
-                                                                    num_boxes,
-                                                                    dev_mask,
-                                                                    result_mask);
+                                                                            num_boxes,
+                                                                            dev_mask,
+                                                                            result_mask);
     } else {
         // use global memory
         mmcv_nms_reduce_mask_kernel_global<<<1, 1024, 0, stream>>>(num_blocks,
-                                                                    num_boxes,
-                                                                    dev_mask,
-                                                                    g_reduce_mask,
-                                                                    result_mask);
+                                                                   num_boxes,
+                                                                   dev_mask,
+                                                                   g_reduce_mask,
+                                                                   result_mask);
     }
 }
 
-int64_t PPLMMCVNMSGetTempBufferSize(const ppl::nn::TensorShape* boxes_shape)
+int64_t PPLMMCVNMSGetTempBufferSize(const ppl::nn::TensorShape *boxes_shape)
 {
     int64_t total_size = 0;
     int elem_size      = ppl::common::GetSizeOfDataType(boxes_shape->GetDataType());
@@ -279,7 +279,7 @@ int64_t PPLMMCVNMSGetTempBufferSize(const ppl::nn::TensorShape* boxes_shape)
     total_size += Align(sizeof(bool) * num_boxes, CUDA_ALIGNMENT); // reduced mask;
 
     // reduce needed
-    int num_blocks           = DivUp(num_boxes, NMS_BLOCK_SIZE);
+    int num_blocks = DivUp(num_boxes, NMS_BLOCK_SIZE);
     total_size += Align(num_blocks * NMS_BLOCK_SIZE, CUDA_ALIGNMENT); // count filtered boxes number
 
     return total_size;
@@ -287,13 +287,13 @@ int64_t PPLMMCVNMSGetTempBufferSize(const ppl::nn::TensorShape* boxes_shape)
 
 ppl::common::RetCode PPLCUDAMMCVNMSForwardImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape* boxes_shape,
-    const void* boxes,
-    ppl::nn::TensorShape* scores_shape,
-    const void* scores,
-    ppl::nn::TensorShape* output_shape,
-    int64_t* output,
-    void* temp_buffer,
+    ppl::nn::TensorShape *boxes_shape,
+    const void *boxes,
+    ppl::nn::TensorShape *scores_shape,
+    const void *scores,
+    ppl::nn::TensorShape *output_shape,
+    int64_t *output,
+    void *temp_buffer,
     int64_t temp_buffer_bytes,
     int device_id,
     float iou_threshold,
@@ -314,7 +314,7 @@ ppl::common::RetCode PPLCUDAMMCVNMSForwardImp(
     ppl::nn::TensorShape indices_shape;
     indices_shape.SetDataType(ppl::common::DATATYPE_INT32);
     indices_shape.Reshape({num_boxes});
-    int axis = 0;
+    int axis                = 0;
     int topk_buffer_size    = PPLTopKGetTempBufferSize(&indices_shape, num_boxes, axis);
     void *topk_buffer       = temp_buffer;
     void *sorted_scores     = static_cast<void *>(static_cast<char *>(topk_buffer) + Align(topk_buffer_size, CUDA_ALIGNMENT));
@@ -324,9 +324,9 @@ ppl::common::RetCode PPLCUDAMMCVNMSForwardImp(
     uint64_t *dev_mask = reinterpret_cast<uint64_t *>(
         static_cast<char *>(sorted_boxes) + Align(elem_size * N_BOX_DIM * num_boxes, CUDA_ALIGNMENT));
     // each bit in int64_t represent one iou
-    int blocks               = DivUp(num_boxes, NMS_BLOCK_SIZE);
-    bool *result_mask        = reinterpret_cast<bool *>((char *)dev_mask + Align(blocks * num_boxes * sizeof(uint64_t), CUDA_ALIGNMENT));
-    uint64_t *g_reduce_mask  = reinterpret_cast<uint64_t *>((char *)result_mask + Align(sizeof(bool) * num_boxes, CUDA_ALIGNMENT));
+    int blocks              = DivUp(num_boxes, NMS_BLOCK_SIZE);
+    bool *result_mask       = reinterpret_cast<bool *>((char *)dev_mask + Align(blocks * num_boxes * sizeof(uint64_t), CUDA_ALIGNMENT));
+    uint64_t *g_reduce_mask = reinterpret_cast<uint64_t *>((char *)result_mask + Align(sizeof(bool) * num_boxes, CUDA_ALIGNMENT));
 
     // reset to zero each iteration
     cudaMemset(temp_buffer, 0, temp_buffer_bytes);

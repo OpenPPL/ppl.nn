@@ -32,4 +32,4 @@ ppl::common::RetCode PPLCUDAMMCVGridSampleForwardImp(
     ppl::nn::TensorShape* output_shape,
     void* output,
     ppl::nn::common::MMCVGridSampleParam param);
-#endif //PPLCUDA_KERNEL_INCLUDE_MMCV_GRIDSAMPLE_GRIDSAMPLE_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_MMCV_GRIDSAMPLE_GRIDSAMPLE_H_

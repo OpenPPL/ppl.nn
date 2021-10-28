@@ -142,7 +142,7 @@
 #undef MMA_SIZE_X_IN_BITS
 #undef CTA_SIZE_X_IN_BITS
 
-#undef BLK_M_PER_MMA 
+#undef BLK_M_PER_MMA
 #undef BLK_N_PER_MMA
 
 ////////////////////////////////////////
@@ -279,7 +279,7 @@
 // shared memory size macros
 ////////////////////////////////////////
 
-#undef  SM_IN_ID_SIZE
+#undef SM_IN_ID_SIZE
 #undef SM_OFF_ID_SIZE
 
 ////////////////////////////////////////
@@ -397,7 +397,7 @@
 #undef LOAD_dBv2
 #undef LOAD_dBv4
 
-#undef SET_dBv4_BOUND 
+#undef SET_dBv4_BOUND
 
 /////////////////////////////////////////////////////
 // precision half output

@@ -159,7 +159,7 @@ const bool ChannelShuffleFusion::CanFuseUpAndDown(ir::Node* node, const OptKerne
 
     if (topo->GetOutput(pre_edge->GetName()) != INVALID_EDGEID ||
         topo->GetOutput(post_edge->GetName()) != INVALID_EDGEID) { // Can not fuse an output edge
-            return false;
+        return false;
     }
 
     if (pre_node->GetType().name != "Concat" || pre_node->GetOutputCount() != 1) {
@@ -172,7 +172,6 @@ const bool ChannelShuffleFusion::CanFuseUpAndDown(ir::Node* node, const OptKerne
 
     return true;
 }
-
 
 const RetCode ChannelShuffleFusion::FuseWithNextNodes(ir::Node* node, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
@@ -256,7 +255,8 @@ const RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, cons
 
             options.info->kernels.erase(pre_node->GetId());
             options.info->kernels.erase(post_node->GetId());
-            LOG(DEBUG) << "Fuse pre_node[" << pre_node->GetName() << "] and post_node["<< post_node->GetName() << "] into channel shuffle";
+            LOG(DEBUG) << "Fuse pre_node[" << pre_node->GetName() << "] and post_node[" << post_node->GetName()
+                       << "] into channel shuffle";
             FuseWithLastNodes(node, options);
             node = pre_node;
             FuseWithNextNodes(node, options);
@@ -264,7 +264,8 @@ const RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, cons
 
         node->SetType(ir::Node::Type("ppl", "ChannelShuffle", 1));
         node->SetName(node_name);
-        auto creator = OptKernelCreatorManager::Instance()->Find(node->GetType().domain, node->GetType().name, node->GetType().version);
+        auto creator = OptKernelCreatorManager::Instance()->Find(node->GetType().domain, node->GetType().name,
+                                                                 node->GetType().version);
         if (!creator) {
             LOG(ERROR) << "Cannot find creator for channel shuffle kernel";
             return RC_UNSUPPORTED;

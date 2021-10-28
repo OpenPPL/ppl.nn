@@ -81,4 +81,4 @@ void ConvDirectDepthwiseForwardCudaFP16(
     half* output,
     ConvFuse fuse_params);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_CONV_DEPTHWISE_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_CONV_DEPTHWISE_H_

@@ -31,4 +31,4 @@ ppl::common::RetCode PPLCUDAGatherForwardImp(
     void* output,
     int axis);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_GATHER_GATHER_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_GATHER_GATHER_H_

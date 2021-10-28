@@ -25,10 +25,12 @@
 #define PAD_PARAM_MAX_DIM_SIZE 5
 struct PadKernelParam {
     typedef uint32_t pad_mode_t;
-    enum { PAD_MODE_CONSTANT = 0, PAD_MODE_REFLECT = 1, PAD_MODE_EDGE = 2 };
+    enum { PAD_MODE_CONSTANT = 0,
+           PAD_MODE_REFLECT  = 1,
+           PAD_MODE_EDGE     = 2 };
 
     float constant_value = 0.f;
-    pad_mode_t mode = PAD_MODE_CONSTANT;
+    pad_mode_t mode      = PAD_MODE_CONSTANT;
 };
 
 ppl::common::RetCode PPLCUDAPadForwardImp(
@@ -41,4 +43,4 @@ ppl::common::RetCode PPLCUDAPadForwardImp(
     ppl::nn::TensorShape* output_shape,
     void* output);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_PAD_PAD_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_PAD_PAD_H_

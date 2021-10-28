@@ -91,4 +91,4 @@ ppl::common::RetCode PPLCUDAArithMeticPReluForwardImp(
     const void* input1,
     const ppl::nn::TensorShape* output_shape,
     void* output);
-#endif //PPLCUDA_KERNEL_INCLUDE_ARITHMETIC_ARITHMETIC_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_ARITHMETIC_ARITHMETIC_H_

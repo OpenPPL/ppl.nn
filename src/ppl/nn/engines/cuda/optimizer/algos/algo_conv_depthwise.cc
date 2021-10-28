@@ -40,7 +40,8 @@ void DepthwiseDirect::GetAttrParam(void*& param) const {
     return;
 }
 
-bool DepthwiseDirect::IsSupported(const ir::Node* node, const OptKernelOptions& options, dataformat_t input_format) const {
+bool DepthwiseDirect::IsSupported(const ir::Node* node, const OptKernelOptions& options,
+                                  dataformat_t input_format) const {
     uint32_t group = (reinterpret_cast<CudaConvParam*>(options.param))->param.group;
     // check if conv is depthwise
     auto tensor1 = options.tensors->find(node->GetInput(1))->second->GetShape();
@@ -61,12 +62,12 @@ bool DepthwiseDirect::IsSupported(const ir::Node* node, const OptKernelOptions& 
 double DepthwiseDirect::ExcuteTimer(const ir::Node* node, OptKernelOptions& options) {
     this->attr_param_ = *(reinterpret_cast<CudaConvParam*>(options.param));
     attr_param_.extra_param.algo_info.algo_type = "DepthwiseDirect";
-    attr_param_.extra_param.algo_info.kernel_index = 0;
+    attr_param_.extra_param.algo_info.kid = 0;
 
     // If the node has selcted, return answer directly
     auto pair = selection_res_.find(node->GetId());
     if (pair != selection_res_.end()) {
-        attr_param_.extra_param.algo_info.kernel_index = pair->second.kernel_index;
+        attr_param_.extra_param.algo_info.kid = pair->second.kernel_index;
         return pair->second.timer;
     }
 
@@ -112,7 +113,7 @@ double DepthwiseDirect::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     auto stream = options.device->GetStream();
     auto kernel_id = PPLCUDADepthwiseSelectKernel(stream, input_buffer.addr, weight_buffer.addr, bias_buffer.addr, 1,
                                                   temp_conv_param, temp_fuse_param, output_buffer.addr);
-    attr_param_.extra_param.algo_info.kernel_index = kernel_id;
+    attr_param_.extra_param.algo_info.kid = kernel_id;
 
     auto run_begin_ts = std::chrono::system_clock::now();
     PPLCUDADepthwiseForwardCudaImp(stream, kernel_id, input_buffer.addr, weight_buffer.addr, bias_buffer.addr,
@@ -121,9 +122,8 @@ double DepthwiseDirect::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     auto diff = std::chrono::duration_cast<std::chrono::microseconds>(run_end_ts - run_begin_ts);
     double timer = (double)diff.count() / 1000;
 
-    LOG(DEBUG) << "Select DepthwiseDirect algorithm with kernel index "
-               << attr_param_.extra_param.algo_info.kernel_index << " and excute timer " << timer << " for node["
-               << node->GetName() << "]";
+    LOG(DEBUG) << "Select DepthwiseDirect algorithm with kernel index " << attr_param_.extra_param.algo_info.kid
+               << " and excute timer " << timer << " for node[" << node->GetName() << "]";
 
     SelectionInfo temp_res(kernel_id, 1, 1, timer);
     selection_res_.emplace(node->GetId(), std::move(temp_res));

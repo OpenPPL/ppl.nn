@@ -33,4 +33,4 @@ ppl::common::RetCode PPLCUDAScatterElementsForwardImp(
     void* output,
     int axis);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_SCATTER_ELEMENTS_SCATTER_ELEMENTS_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_SCATTER_ELEMENTS_SCATTER_ELEMENTS_H_

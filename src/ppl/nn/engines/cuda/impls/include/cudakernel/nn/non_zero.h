@@ -31,4 +31,4 @@ ppl::common::RetCode PPLCUDANonZeroForwardImp(
     int64_t* output,
     int32_t* tempbuffer);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_NONZERO_NONZERO_MAX_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_NONZERO_NONZERO_MAX_H_

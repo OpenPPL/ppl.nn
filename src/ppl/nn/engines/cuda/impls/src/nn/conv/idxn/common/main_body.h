@@ -19,37 +19,39 @@
 __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST)
 #endif
 {
-#if (__CUDA_ARCH__ >= 750) && (__CUDACC_VER_MAJOR__  * 1000  + __CUDACC_VER_MINOR__ * 10  >= 10020)
+#if (__CUDA_ARCH__ >= 750) && (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
     int C[C_ITEMS_PER_THD];
 
-    __half  * hC  = (__half  *) C;
-    __half2 * h2C = (__half2 *) C;
+    __half *hC   = (__half *)C;
+    __half2 *h2C = (__half2 *)C;
 
 #if TILE_K_PER_STEP == 8
-    int  * dAv1 = (int  *) dA;
-    int  * dBv1 = (int  *) dB;
+    int *dAv1 = (int *)dA;
+    int *dBv1 = (int *)dB;
 #elif TILE_K_PER_STEP == 16
-    int2 * dAv2 = (int2 *) dA;
-    int2 * dBv2 = (int2 *) dB;
+    int2 *dAv2                  = (int2 *)dA;
+    int2 *dBv2                  = (int2 *)dB;
 #elif TILE_K_PER_STEP == 32
-    int4 * dAv4 = (int4 *) dA;
-    int4 * dBv4 = (int4 *) dB;
+    int4 *dAv4                  = (int4 *)dA;
+    int4 *dBv4                  = (int4 *)dB;
 #endif
-    int  * dCv1 = (int  *) dC;
+    int *dCv1 = (int *)dC;
 
-    for (int i = 0; i < HC_ITEMS_PER_THD; i++) { hC[i] = _HALF_ZERO_; }
+    for (int i = 0; i < HC_ITEMS_PER_THD; i++) {
+        hC[i] = _HALF_ZERO_;
+    }
 
-    uint tid       =  threadIdx.x;
-    uint tid_x     =  tid &  0x3;
-    uint tid_y     = (tid & 0x1f) >> 2;
+    uint tid   = threadIdx.x;
+    uint tid_x = tid & 0x3;
+    uint tid_y = (tid & 0x1f) >> 2;
 
-    uint warp_idx  = (tid >>  WARP_SIZE_IN_BITS) & (CTA_SIZE_X_IN_WARP - 1);
-    uint warp_idy  =  tid >> (WARP_SIZE_IN_BITS  +  CTA_SIZE_X_IN_BITS);
+    uint warp_idx = (tid >> WARP_SIZE_IN_BITS) & (CTA_SIZE_X_IN_WARP - 1);
+    uint warp_idy = tid >> (WARP_SIZE_IN_BITS + CTA_SIZE_X_IN_BITS);
 
-    uint cta_idx   = blockIdx.y;
-    uint cta_idy   = blockIdx.x;
+    uint cta_idx = blockIdx.y;
+    uint cta_idy = blockIdx.x;
 
-    uint grp_id    = blockIdx.z;
+    uint grp_id = blockIdx.z;
 
     uint in_chl_per_grp_pad_v8 = in_chl_per_grp_pad >> 3;
 #if TILE_K_PER_STEP == 8
@@ -65,60 +67,59 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
 #if TILE_K_PER_STEP == 8
     uint flt_hwc_v2 = flt_hw * flt_chl_per_grp_pad_v2;
 #elif TILE_K_PER_STEP == 16
-    uint flt_hwc_v4 = flt_hw * flt_chl_per_grp_pad_v4;
+    uint flt_hwc_v4             = flt_hw * flt_chl_per_grp_pad_v4;
 #elif TILE_K_PER_STEP == 32
-    uint flt_hwc_v8 = flt_hw * flt_chl_per_grp_pad_v8;
+    uint flt_hwc_v8             = flt_hw * flt_chl_per_grp_pad_v8;
 #endif
 
     bool dCv1_y_valid[BLK_M_PER_MMA];
-    uint   dCv1_idy[BLK_M_PER_MMA];
+    uint dCv1_idy[BLK_M_PER_MMA];
 
-    dCv1_idy[0] =  cta_idy     * TILE_M_V1_PER_CTA  +
-                   warp_idy    * TILE_M_V1_PER_MMA  +
-                   tid_y;
+    dCv1_idy[0] = cta_idy * TILE_M_V1_PER_CTA +
+                  warp_idy * TILE_M_V1_PER_MMA +
+                  tid_y;
 
-    dCv1_idy[1] =  dCv1_idy[0] + TILE_M_V1_PER_MMA_HALF;
+    dCv1_idy[1] = dCv1_idy[0] + TILE_M_V1_PER_MMA_HALF;
 
     bool dCv1_x_valid[NUM_N_STEPS];
-    uint   dCv1_idx[NUM_N_STEPS];
+    uint dCv1_idx[NUM_N_STEPS];
 
-    uint dCv1_idx_base  =  grp_id      * num_flt_per_grp_pad_v2  +
-                           cta_idx     * TILE_N_V2_PER_CTA  +
-                           warp_idx    * TILE_N_V2_PER_MMA  +
-                           tid_x;
+    uint dCv1_idx_base = grp_id * num_flt_per_grp_pad_v2 +
+                         cta_idx * TILE_N_V2_PER_CTA +
+                         warp_idx * TILE_N_V2_PER_MMA +
+                         tid_x;
     uint dCv1_idx_bound = (grp_id + 1) * num_flt_per_grp_pad_v2;
 
-    for(uint i = 0; i < NUM_N_STEPS; i++)
-    {
-        dCv1_idx[i]     =  dCv1_idx_base + i * TILE_N_V2_PER_STEP;
-        dCv1_x_valid[i]   = (dCv1_idx[i] < dCv1_idx_bound);
+    for (uint i = 0; i < NUM_N_STEPS; i++) {
+        dCv1_idx[i]     = dCv1_idx_base + i * TILE_N_V2_PER_STEP;
+        dCv1_x_valid[i] = (dCv1_idx[i] < dCv1_idx_bound);
     }
 
 #if TILE_K_PER_STEP == 8
     const int ZEROv1 = 0;
 #elif TILE_K_PER_STEP == 16
-    const int2 ZEROv2 = {0, 0};
+    const int2 ZEROv2           = {0, 0};
 #elif TILE_K_PER_STEP == 32
-    const int4 ZEROv4 = {0, 0, 0, 0};
+    const int4 ZEROv4           = {0, 0, 0, 0};
 #endif
 
     __shared__ int4 sm_base_v4[SM_IN_ID_SIZE + SM_IN_OFF_SIZE];
 
 #if TILE_K_PER_STEP == 8
-    int  reg_dAv1[REG_dAv1_SIZE];
-    int  reg_dBv1[REG_dBv1_SIZE];
+    int reg_dAv1[REG_dAv1_SIZE];
+    int reg_dBv1[REG_dBv1_SIZE];
 #elif TILE_K_PER_STEP == 16
     int2 reg_dAv2[REG_dAv2_SIZE];
     int2 reg_dBv2[REG_dBv2_SIZE];
 
-    int * reg_dAv1 = (int *) reg_dAv2;
-    int * reg_dBv1 = (int *) reg_dBv2;
+    int *reg_dAv1 = (int *)reg_dAv2;
+    int *reg_dBv1 = (int *)reg_dBv2;
 #elif TILE_K_PER_STEP == 32
     int4 reg_dAv4[REG_dAv4_SIZE];
     int4 reg_dBv4[REG_dBv4_SIZE];
 
-    int * reg_dAv1 = (int *) reg_dAv4;
-    int * reg_dBv1 = (int *) reg_dBv4;
+    int *reg_dAv1 = (int *)reg_dAv4;
+    int *reg_dBv1 = (int *)reg_dBv4;
 #endif
 
 #if (TILE_M_PER_CTA > CTA_SIZE_IN_THD)
@@ -127,65 +128,60 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
 #elif (TILE_M_PER_CTA == CTA_SIZE_IN_THD)
     SET_IN_Mv1_ID(tid, sm_base_v4);
 #elif (TILE_M_PER_CTA < CTA_SIZE_IN_THD)
-    if(tid < TILE_M_PER_CTA)
+    if (tid < TILE_M_PER_CTA)
         SET_IN_Mv1_ID(tid, sm_base_v4);
 #endif
 
-    if(tid < koff_num_pad)
+    if (tid < koff_num_pad)
         SET_IN_Kv8_OFF(tid, sm_base_v4);
 
 #if TILE_K_PER_STEP == 8
-    int   dBv1_off[READ_dBv1_STEPS];
+    int dBv1_off[READ_dBv1_STEPS];
     bool flt_n_valid[READ_dBv1_STEPS];
-    int  flt_hwc_v2_off = tid_x;
+    int flt_hwc_v2_off = tid_x;
 
-    for(int i = 0; i < READ_dBv1_STEPS; i++)
-    {
+    for (int i = 0; i < READ_dBv1_STEPS; i++) {
         SET_dBv1_BOUND(i, dBv1_off[i], flt_n_valid[i]);
     }
 #elif TILE_K_PER_STEP == 16
-    int   dBv2_off[READ_dBv2_STEPS];
+    int dBv2_off[READ_dBv2_STEPS];
     bool flt_n_valid[READ_dBv2_STEPS];
-    int  flt_hwc_v4_off = tid_x;
+    int flt_hwc_v4_off = tid_x;
 
-    for(int i = 0; i < READ_dBv2_STEPS; i++)
-    {
+    for (int i = 0; i < READ_dBv2_STEPS; i++) {
         SET_dBv2_BOUND(i, dBv2_off[i], flt_n_valid[i]);
     }
 #elif TILE_K_PER_STEP == 32
-    int   dBv4_off[READ_dBv4_STEPS];
+    int dBv4_off[READ_dBv4_STEPS];
     bool flt_n_valid[READ_dBv4_STEPS];
-    int  flt_hwc_v8_off = tid_x;
+    int flt_hwc_v8_off = tid_x;
 
-    for(int i = 0; i < READ_dBv4_STEPS; i++)
-    {
+    for (int i = 0; i < READ_dBv4_STEPS; i++) {
         SET_dBv4_BOUND(i, dBv4_off[i], flt_n_valid[i]);
     }
 #endif
-    
-    uint in_id_read  =  warp_idy * TILE_M_PER_MMA + tid_y;
 
-    uint in_off_read =  tid_x + SM_IN_ID_SIZE;
+    uint in_id_read = warp_idy * TILE_M_PER_MMA + tid_y;
+
+    uint in_off_read = tid_x + SM_IN_ID_SIZE;
 
 #if TILE_K_PER_STEP == 8
-    int4  in_id[READ_dAv1_STEPS];
+    int4 in_id[READ_dAv1_STEPS];
 #elif TILE_K_PER_STEP == 16
-    int4  in_id[READ_dAv2_STEPS];
+    int4 in_id[READ_dAv2_STEPS];
 #elif TILE_K_PER_STEP == 32
-    int4  in_id[READ_dAv4_STEPS];
+    int4 in_id[READ_dAv4_STEPS];
 #endif
     int4 in_off;
 
     __syncthreads();
 
-    for(int i = 0; i < NUM_M_STEPS; i++)
-    {
+    for (int i = 0; i < NUM_M_STEPS; i++) {
         in_id[i * BLK_M_PER_MMA]     = sm_base_v4[in_id_read + TILE_M_PER_STEP * i];
         in_id[i * BLK_M_PER_MMA + 1] = sm_base_v4[in_id_read + TILE_M_PER_STEP * i + TILE_M_PER_MMA_HALF];
     }
 
-    for(uint i = 0; i < kloop_num; i++)
-    {
+    for (uint i = 0; i < kloop_num; i++) {
         in_off = sm_base_v4[in_off_read];
 
 #if TILE_K_PER_STEP == 8
@@ -236,12 +232,11 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
 #endif
     }
 
-    for(int step = 0; step < NUM_M_STEPS; step++)
-    {
+    for (int step = 0; step < NUM_M_STEPS; step++) {
         dCv1_y_valid[0] = (dCv1_idy[0] < out_nhw);
         dCv1_y_valid[1] = (dCv1_idy[1] < out_nhw);
 
-        uint Cv1_off  = step * TILE_N_V2_PER_THD * BLK_M_PER_MMA;
+        uint Cv1_off = step * TILE_N_V2_PER_THD * BLK_M_PER_MMA;
 
 #if TILE_N_PER_WARP == 8
 

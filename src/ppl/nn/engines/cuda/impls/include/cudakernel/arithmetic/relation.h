@@ -47,4 +47,4 @@ ppl::common::RetCode PPLCUDARelationLessForwardImp(
     const ppl::nn::TensorShape* output_shape,
     bool* output);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_RELATION_RELATION_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_RELATION_RELATION_H_

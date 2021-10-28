@@ -15,7 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 #ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_ALGOS_FS_FILTER_MANAGER_H_
 #define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_ALGOS_FS_FILTER_MANAGER_H_
 

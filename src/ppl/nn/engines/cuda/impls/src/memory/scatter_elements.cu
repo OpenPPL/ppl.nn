@@ -31,10 +31,10 @@ __device__ __inline__ int get_indices_val(
     int res = 0;
     switch (indices_element_size) {
         case sizeof(int32_t):
-            res = static_cast<const int32_t *>(indices)[offset];
+            res = static_cast<const int32_t*>(indices)[offset];
             break;
         case sizeof(int64_t):
-            res = static_cast<const int64_t *>(indices)[offset];
+            res = static_cast<const int64_t*>(indices)[offset];
             break;
         default:
             break;
@@ -112,13 +112,11 @@ ppl::common::RetCode PPLCUDAScatterElementsForwardImp(
 
     int input_axis_width = input_shape->GetDim(axis);
 
-    #define SWITCH_CASE(TYPE)                                                                                        \
-        case sizeof(TYPE): {                                                                                         \
-            ppl_cukernel_scatter_elements<<<grid_size, block_size, 0, stream>>>(num_updates, num_updates_dim,        \
-                updates_strides_fast, axis, input_axis_width, input_strides, (const TYPE *)updates,                  \
-                (const TYPE *)input, (TYPE *)output, indices_element_size, (const void *)indices);                   \
-            return ppl::common::RC_SUCCESS;                                                                          \
-        }
+#define SWITCH_CASE(TYPE)                                                                                                                                                                                                                                                    \
+    case sizeof(TYPE): {                                                                                                                                                                                                                                                     \
+        ppl_cukernel_scatter_elements<<<grid_size, block_size, 0, stream>>>(num_updates, num_updates_dim, updates_strides_fast, axis, input_axis_width, input_strides, (const TYPE*)updates, (const TYPE*)input, (TYPE*)output, indices_element_size, (const void*)indices); \
+        return ppl::common::RC_SUCCESS;                                                                                                                                                                                                                                      \
+    }
 
     switch (ppl::common::GetSizeOfDataType(input_shape->GetDataType())) {
         SWITCH_CASE(int8_t);
@@ -129,5 +127,5 @@ ppl::common::RetCode PPLCUDAScatterElementsForwardImp(
             return ppl::common::RC_UNSUPPORTED;
     }
 
-    #undef SWITCH_CASE
+#undef SWITCH_CASE
 }

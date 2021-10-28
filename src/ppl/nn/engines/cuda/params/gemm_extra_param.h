@@ -24,11 +24,12 @@
 namespace ppl { namespace nn { namespace cuda {
 
 struct GemmExtraParam {
-    uint32_t kernel_index = 0;
-    uint32_t has_activation = 0;
-    bool has_clip = false;
-    bool is_initializer_weight = 1;
-    ClipParam clip;
+    ConvAlgoInfo algo_info;
+    ConvFusionInfo fuse_info;
+    bool is_initializer_weight = true;
+    // uint32_t has_activation = 0;
+    // bool has_clip = false;
+    // ClipParam clip;
 };
 
 struct CudaGemmParam {

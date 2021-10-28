@@ -97,31 +97,42 @@ __global__ void ppl_cukernel_pooling_ave_f3s2_half(
 
 template <int TILE_H, int TILE_W>
 __global__ void ppl_cukernel_pooling_ave_f3s2(
-    const float* input, float* output, 
-    int if_exclude_padding, int batch, int pad_channels,
-    int in_height, int in_width, int out_height, int out_width,
-    int kernel_height, int kernel_width, int stride_height,
-    int stride_width, int padding_height, int padding_width)
+    const float* input,
+    float* output,
+    int if_exclude_padding,
+    int batch,
+    int pad_channels,
+    int in_height,
+    int in_width,
+    int out_height,
+    int out_width,
+    int kernel_height,
+    int kernel_width,
+    int stride_height,
+    int stride_width,
+    int padding_height,
+    int padding_width)
 {
     int tx = blockIdx.x * blockDim.x + threadIdx.x;
-    int c = blockIdx.y * blockDim.y + threadIdx.y;
-    int b = blockIdx.z;
-    if (c >= pad_channels) return;
+    int c  = blockIdx.y * blockDim.y + threadIdx.y;
+    int b  = blockIdx.z;
+    if (c >= pad_channels)
+        return;
 
-    int in_off = (b * pad_channels + c) * in_height * in_width;
+    int in_off  = (b * pad_channels + c) * in_height * in_width;
     int out_off = (b * pad_channels + c) * out_height * out_width;
 
     int partW = (out_width + TILE_W - 1) / TILE_W;
-    int ox = (tx % partW) * TILE_W;
-    int oy = (tx / partW) * TILE_H;
+    int ox    = (tx % partW) * TILE_W;
+    int oy    = (tx / partW) * TILE_H;
 
     // register blocking for input
     float iregs[TILE_H * 2 + 1][TILE_W * 2 + 1];
     for (int i = 0; i < 2 * TILE_H + 1; i++) {
         for (int j = 0; j < 2 * TILE_W + 1; j++) {
-            int iy = oy * 2 + i - padding_height;
-            int ix = ox * 2 + j - padding_width;
-            bool pred = (iy >= 0 && iy < in_height) && (ix >= 0 && ix < in_width);
+            int iy      = oy * 2 + i - padding_height;
+            int ix      = ox * 2 + j - padding_width;
+            bool pred   = (iy >= 0 && iy < in_height) && (ix >= 0 && ix < in_width);
             iregs[i][j] = pred ? input[in_off + iy * in_width + ix] : float(0);
         }
     }
@@ -142,14 +153,14 @@ __global__ void ppl_cukernel_pooling_ave_f3s2(
                 cnt = 9;
             }
             float val = iregs[i * 2 + 0][j * 2 + 0];
-            val = val + iregs[i * 2 + 0][j * 2 + 1];
-            val = val + iregs[i * 2 + 0][j * 2 + 2];
-            val = val + iregs[i * 2 + 1][j * 2 + 0];
-            val = val + iregs[i * 2 + 1][j * 2 + 1];
-            val = val + iregs[i * 2 + 1][j * 2 + 2];
-            val = val + iregs[i * 2 + 2][j * 2 + 0];
-            val = val + iregs[i * 2 + 2][j * 2 + 1];
-            val = val + iregs[i * 2 + 2][j * 2 + 2];
+            val       = val + iregs[i * 2 + 0][j * 2 + 1];
+            val       = val + iregs[i * 2 + 0][j * 2 + 2];
+            val       = val + iregs[i * 2 + 1][j * 2 + 0];
+            val       = val + iregs[i * 2 + 1][j * 2 + 1];
+            val       = val + iregs[i * 2 + 1][j * 2 + 2];
+            val       = val + iregs[i * 2 + 2][j * 2 + 0];
+            val       = val + iregs[i * 2 + 2][j * 2 + 1];
+            val       = val + iregs[i * 2 + 2][j * 2 + 2];
             if (oy + i < out_height && ox + j < out_width) {
                 output[out_off + (oy + i) * out_width + ox + j] = val / cnt;
             }
@@ -208,7 +219,7 @@ __global__ void ppl_cukernel_pooling_ave_f3s1_half(
                 for (int fy = 0; fy < 3; fy++) {
                     for (int fx = 0; fx < 3; fx++) {
                         int iy = (oy + i) + fy - padding_height;
-                        int ix = (ox + j)  + fx - padding_width;
+                        int ix = (ox + j) + fx - padding_width;
                         cnt += (iy >= 0 && iy < in_height) && (ix >= 0 && ix < in_width);
                     }
                 }
@@ -234,31 +245,42 @@ __global__ void ppl_cukernel_pooling_ave_f3s1_half(
 
 template <int TILE_H, int TILE_W>
 __global__ void ppl_cukernel_pooling_ave_f3s1(
-    const float* input, float* output, 
-    int if_exclude_padding, int batch, int pad_channels,
-    int in_height, int in_width, int out_height, int out_width,
-    int kernel_height, int kernel_width, int stride_height,
-    int stride_width, int padding_height, int padding_width)
+    const float* input,
+    float* output,
+    int if_exclude_padding,
+    int batch,
+    int pad_channels,
+    int in_height,
+    int in_width,
+    int out_height,
+    int out_width,
+    int kernel_height,
+    int kernel_width,
+    int stride_height,
+    int stride_width,
+    int padding_height,
+    int padding_width)
 {
     int tx = blockIdx.x * blockDim.x + threadIdx.x;
-    int c = blockIdx.y * blockDim.y + threadIdx.y;
-    int b = blockIdx.z;
-    if (c >= pad_channels) return;
+    int c  = blockIdx.y * blockDim.y + threadIdx.y;
+    int b  = blockIdx.z;
+    if (c >= pad_channels)
+        return;
 
-    int in_off = (b * pad_channels + c) * in_height * in_width;
+    int in_off  = (b * pad_channels + c) * in_height * in_width;
     int out_off = (b * pad_channels + c) * out_height * out_width;
 
     int partW = (out_width + TILE_W - 1) / TILE_W;
-    int ox = (tx % partW) * TILE_W;
-    int oy = (tx / partW) * TILE_H;
+    int ox    = (tx % partW) * TILE_W;
+    int oy    = (tx / partW) * TILE_H;
 
     // register blocking for input
     float iregs[TILE_H + 2][TILE_W + 2];
     for (int i = 0; i < TILE_H + 2; i++) {
         for (int j = 0; j < TILE_W + 2; j++) {
-            int iy = oy + i - padding_height;
-            int ix = ox + j - padding_width;
-            bool pred = (iy >= 0 && iy < in_height) && (ix >= 0 && ix < in_width) && (c < pad_channels);
+            int iy      = oy + i - padding_height;
+            int ix      = ox + j - padding_width;
+            bool pred   = (iy >= 0 && iy < in_height) && (ix >= 0 && ix < in_width) && (c < pad_channels);
             iregs[i][j] = pred ? input[in_off + iy * in_width + ix] : float(0);
         }
     }
@@ -278,14 +300,14 @@ __global__ void ppl_cukernel_pooling_ave_f3s1(
                 cnt = 9;
             }
             float val = iregs[i + 0][j + 0];
-            val = val + iregs[i + 0][j + 1];
-            val = val + iregs[i + 0][j + 2];
-            val = val + iregs[i + 1][j + 0];
-            val = val + iregs[i + 1][j + 1];
-            val = val + iregs[i + 1][j + 2];
-            val = val + iregs[i + 2][j + 0];
-            val = val + iregs[i + 2][j + 1];
-            val = val + iregs[i + 2][j + 2];
+            val       = val + iregs[i + 0][j + 1];
+            val       = val + iregs[i + 0][j + 2];
+            val       = val + iregs[i + 1][j + 0];
+            val       = val + iregs[i + 1][j + 1];
+            val       = val + iregs[i + 1][j + 2];
+            val       = val + iregs[i + 2][j + 0];
+            val       = val + iregs[i + 2][j + 1];
+            val       = val + iregs[i + 2][j + 2];
             if (oy + i < out_height && ox < out_width) {
                 output[out_off + (oy + i) * out_width + ox] = (val / cnt);
             }
@@ -361,37 +383,48 @@ __global__ void ppl_cukernel_pooling_ave_common_half(
 
 template <int TILE_H, int TILE_W>
 __global__ void ppl_cukernel_pooling_ave_common(
-    const float* input, float* output, 
-    int if_exclude_padding, int batch, int pad_channels,
-    int in_height, int in_width, int out_height, int out_width,
-    int kernel_height, int kernel_width, int stride_height,
-    int stride_width, int padding_height, int padding_width)
+    const float* input,
+    float* output,
+    int if_exclude_padding,
+    int batch,
+    int pad_channels,
+    int in_height,
+    int in_width,
+    int out_height,
+    int out_width,
+    int kernel_height,
+    int kernel_width,
+    int stride_height,
+    int stride_width,
+    int padding_height,
+    int padding_width)
 {
     int tx = blockIdx.x * blockDim.x + threadIdx.x;
-    int c = blockIdx.y * blockDim.y + threadIdx.y;
-    int b = blockIdx.z;
-    if (c >= pad_channels) return;
+    int c  = blockIdx.y * blockDim.y + threadIdx.y;
+    int b  = blockIdx.z;
+    if (c >= pad_channels)
+        return;
 
-    int in_off = (b * pad_channels + c) * in_height * in_width;
+    int in_off  = (b * pad_channels + c) * in_height * in_width;
     int out_off = (b * pad_channels + c) * out_height * out_width;
 
     int partW = (out_width + TILE_W - 1) / TILE_W;
-    int ox = (tx % partW) * TILE_W;
-    int oy = (tx / partW) * TILE_H;
+    int ox    = (tx % partW) * TILE_W;
+    int oy    = (tx / partW) * TILE_H;
 
     // pooling
     for (int i = 0; i < TILE_H; i++) {
         for (int j = 0; j < TILE_W; j++) {
-            int cnt = 0;
+            int cnt   = 0;
             float res = float(0);
             for (int ky = 0; ky < kernel_height; ky++) {
                 for (int kx = 0; kx < kernel_width; kx++) {
                     // load input
-                    int ix = (ox + j) * stride_width - padding_width + kx;
-                    int iy = (oy + i) * stride_height - padding_height + ky;
-                    bool pred = (ix >= 0 && ix < in_width) && (iy >=0 && iy < in_height);
+                    int ix     = (ox + j) * stride_width - padding_width + kx;
+                    int iy     = (oy + i) * stride_height - padding_height + ky;
+                    bool pred  = (ix >= 0 && ix < in_width) && (iy >= 0 && iy < in_height);
                     float ival = pred ? input[in_off + iy * in_width + ix] : float(0);
-                    res = res + ival;
+                    res        = res + ival;
 
                     // cnt exclude padding
                     if (if_exclude_padding) {
@@ -737,11 +770,13 @@ ppl::common::RetCode PPLCUDAAvePoolingForwardImpFp32(
     int padding_width,
     int if_exclude_padding)
 {
-    int batch = output_shape->GetDim(0);
-    int channels = output_shape->GetDim(1);
+    int batch        = output_shape->GetDim(0);
+    int channels     = output_shape->GetDim(1);
     int pad_channels = output_shape->GetDim(1) + output_shape->GetPadding1(1);
-    int out_height = output_shape->GetDim(2); int out_width = output_shape->GetDim(3);
-    int in_height = input_shape->GetDim(2); int in_width = input_shape->GetDim(3);
+    int out_height   = output_shape->GetDim(2);
+    int out_width    = output_shape->GetDim(3);
+    int in_height    = input_shape->GetDim(2);
+    int in_width     = input_shape->GetDim(3);
 
     bool f3 = (kernel_height == 3) && (kernel_width == 3);
     bool s1 = (stride_height == 1) && (stride_width == 1);
@@ -758,20 +793,11 @@ ppl::common::RetCode PPLCUDAAvePoolingForwardImpFp32(
         dim_grid.z = batch;
 
         if (f3 && s1) {
-            ppl_cukernel_pooling_ave_f3s1<4, 1><<<dim_grid, dim_block,
-                0, stream>>>(input, output, if_exclude_padding, batch, pad_channels,
-                in_height, in_width, out_height, out_width, kernel_height,
-                kernel_width, stride_height, stride_width, padding_height, padding_width);
+            ppl_cukernel_pooling_ave_f3s1<4, 1><<<dim_grid, dim_block, 0, stream>>>(input, output, if_exclude_padding, batch, pad_channels, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, padding_height, padding_width);
         } else if (f3 && s2) {
-            ppl_cukernel_pooling_ave_f3s2<4, 1><<<dim_grid, dim_block,
-                0, stream>>>(input, output, if_exclude_padding, batch, pad_channels,
-                in_height, in_width, out_height, out_width, kernel_height,
-                kernel_width, stride_height, stride_width, padding_height, padding_width);
+            ppl_cukernel_pooling_ave_f3s2<4, 1><<<dim_grid, dim_block, 0, stream>>>(input, output, if_exclude_padding, batch, pad_channels, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, padding_height, padding_width);
         } else {
-            ppl_cukernel_pooling_ave_common<4, 1><<<dim_grid, dim_block,
-                0, stream>>>(input, output, if_exclude_padding, batch, pad_channels,
-                in_height, in_width, out_height, out_width, kernel_height,
-                kernel_width, stride_height, stride_width, padding_height, padding_width);
+            ppl_cukernel_pooling_ave_common<4, 1><<<dim_grid, dim_block, 0, stream>>>(input, output, if_exclude_padding, batch, pad_channels, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, padding_height, padding_width);
         }
         return ppl::common::RC_SUCCESS;
     } else {
@@ -795,14 +821,10 @@ ppl::common::RetCode PPLCUDAAvePoolingForwardImp(
 {
     if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
         return PPLCUDAAvePoolingForwardImpFp16(
-            stream, input_shape, (const half*)input, output_shape, (half*)output,
-            kernel_height, kernel_width, stride_height, stride_width,
-            padding_height, padding_width, if_exclude_padding);
+            stream, input_shape, (const half*)input, output_shape, (half*)output, kernel_height, kernel_width, stride_height, stride_width, padding_height, padding_width, if_exclude_padding);
     } else if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
         return PPLCUDAAvePoolingForwardImpFp32(
-            stream, input_shape, (const float*)input, output_shape, (float*)output,
-            kernel_height, kernel_width, stride_height, stride_width,
-            padding_height, padding_width, if_exclude_padding);
+            stream, input_shape, (const float*)input, output_shape, (float*)output, kernel_height, kernel_width, stride_height, stride_width, padding_height, padding_width, if_exclude_padding);
     } else {
         return ppl::common::RC_UNSUPPORTED;
     }

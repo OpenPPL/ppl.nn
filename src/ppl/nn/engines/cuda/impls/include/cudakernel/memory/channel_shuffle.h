@@ -39,4 +39,4 @@ ppl::common::RetCode PPLCUDAFuseChannelShuffleForwardImp(
     void* output1,
     void* output2);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_CHANNELSHUFFLE_CHANNELSHUFFLE_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_CHANNELSHUFFLE_CHANNELSHUFFLE_H_

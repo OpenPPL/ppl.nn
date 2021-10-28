@@ -69,10 +69,10 @@ __global__ void ppl_cukernel_exp_nhwc(const uint64_t num_elems,
 
 ppl::common::RetCode PPLCUDAExpForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
-    const void* input,
-    const ppl::nn::TensorShape* output_shape,
-    void* output)
+    const ppl::nn::TensorShape *input_shape,
+    const void *input,
+    const ppl::nn::TensorShape *output_shape,
+    void *output)
 {
     uint64_t num_elems = output_shape->GetElementsIncludingPadding();
     int batch          = output_shape->GetDim(0);

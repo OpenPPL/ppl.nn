@@ -56,7 +56,7 @@ __global__ void ppl_cukernel_slice(
         input_idx[axis] = output_idx[axis] * param.steps[it] + param.starts[it];
     }
 
-    int64_t input_offset = 0;
+    int64_t input_offset  = 0;
     int64_t output_offset = 0;
     for (int it = 0; it < num_dims; ++it) {
         input_offset += input_idx[it] * input_strides[it];
@@ -73,7 +73,8 @@ ppl::common::RetCode PPLCUDASliceForwardImp(
     ppl::nn::TensorShape* output_shape,
     void* output)
 {
-    if (output_shape->GetElementsIncludingPadding() == 0) return ppl::common::RC_SUCCESS;
+    if (output_shape->GetElementsIncludingPadding() == 0)
+        return ppl::common::RC_SUCCESS;
     int block_size     = 256;
     uint64_t num_elems = output_shape->GetElementsExcludingPadding();
     int grid_size      = (num_elems + block_size - 1) / block_size;
@@ -85,40 +86,39 @@ ppl::common::RetCode PPLCUDASliceForwardImp(
     int64_t acc_input_stride  = 1;
     for (int it = num_dims - 1; it >= 0; --it) {
         input_strides[it]       = acc_input_stride;
-        output_strides[it]       = acc_output_stride;
+        output_strides[it]      = acc_output_stride;
         output_strides_fast[it] = DivModFast(acc_output_stride);
         acc_input_stride *= input_shape->GetDim(it);
         acc_output_stride *= output_shape->GetDim(it);
     }
     if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8) {
         acc_output_stride = 1;
-        acc_input_stride = 1;
+        acc_input_stride  = 1;
         for (int it = num_dims - 1; it >= 0; --it) {
             if (it == num_dims - 1) {
-                input_strides[1]       = acc_input_stride;
-                output_strides[1]       = acc_output_stride;
+                input_strides[1]  = acc_input_stride;
+                output_strides[1] = acc_output_stride;
                 acc_input_stride *= input_shape->GetDim(1) + input_shape->GetPadding0(1) + input_shape->GetPadding1(1);
                 acc_output_stride *= output_shape->GetDim(1) + output_shape->GetPadding0(1) + output_shape->GetPadding1(1);
             } else if (it == 0) {
-                input_strides[it]       = acc_input_stride;
-                output_strides[it]       = acc_output_stride;
+                input_strides[it]  = acc_input_stride;
+                output_strides[it] = acc_output_stride;
                 acc_input_stride *= input_shape->GetDim(it);
                 acc_output_stride *= output_shape->GetDim(it);
             } else {
-                input_strides[it + 1]       = acc_input_stride;
-                output_strides[it + 1]       = acc_output_stride;
+                input_strides[it + 1]  = acc_input_stride;
+                output_strides[it + 1] = acc_output_stride;
                 acc_input_stride *= input_shape->GetDim(it + 1);
                 acc_output_stride *= output_shape->GetDim(it + 1);
             }
         }
     }
 
-#define SWITCH_CASE(TYPE)                                                                   \
-    case sizeof(TYPE): {                                                                    \
-        ppl_cukernel_slice<<<grid_size, block_size, 0, stream>>>(                           \
-            num_elems, num_dims, param, input_strides, (const TYPE*)input,                  \
-            output_strides, output_strides_fast, (TYPE*)output);                            \
-        return ppl::common::RC_SUCCESS;                                                     \
+#define SWITCH_CASE(TYPE)                                                                                                       \
+    case sizeof(TYPE): {                                                                                                        \
+        ppl_cukernel_slice<<<grid_size, block_size, 0, stream>>>(                                                               \
+            num_elems, num_dims, param, input_strides, (const TYPE*)input, output_strides, output_strides_fast, (TYPE*)output); \
+        return ppl::common::RC_SUCCESS;                                                                                         \
     }
 
     switch (ppl::common::GetSizeOfDataType(input_shape->GetDataType())) {

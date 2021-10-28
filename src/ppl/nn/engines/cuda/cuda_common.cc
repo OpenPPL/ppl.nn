@@ -15,10 +15,52 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
-#include "cuda_common.h"
+#include "ppl/nn/engines/cuda/cuda_common.h"
+#include "ppl/nn/common/logger.h"
 
 namespace ppl { namespace nn {
+
+std::pair<int, int> PPLCudaGetDeviceArch(int device) {
+    int major = 6, minor = 0;
+    cudaError_t e1 = cudaDeviceGetAttribute(&major, cudaDevAttrComputeCapabilityMajor, device);
+    cudaError_t e2 = cudaDeviceGetAttribute(&minor, cudaDevAttrComputeCapabilityMinor, device);
+    std::pair<int, int> res;
+    if (e1 == cudaSuccess && e2 == cudaSuccess) {
+        res = std::pair<int, int>(std::move(major), std::move(minor));
+    } else {
+        LOG(ERROR) << "Can Not Get Correct Arch For Device";
+        res = std::pair<int, int>(std::move(6), std::move(0));
+    }
+    return std::move(res);
+}
+
+std::string CUDAIncludePath() {
+#if defined(_WIN32) || defined(_WIN64)
+    const std::string delimiter = "\\";
+#else
+    const std::string delimiter = "/";
+#endif
+
+    std::string include_path;
+    const char* cuda_path = "CUDA_PATH";
+    const char* cuda_path_env = std::getenv(cuda_path);
+    if (cuda_path_env != nullptr) {
+        include_path = cuda_path_env + delimiter + "include";
+        return include_path;
+    }
+#if defined(__linux__)
+    struct stat st;
+    include_path = "/usr/local/cuda/include";
+    if (stat(include_path.c_str(), &st) == 0) {
+        return include_path;
+    }
+
+    if (stat("/usr/include/cuda.h", &st) == 0) {
+        return "/usr/include";
+    }
+#endif
+    return include_path;
+}
 
 bool PPLCudaComputeCapabilityRequired(int major, int minor, int device) {
     cudaDeviceProp device_prop;

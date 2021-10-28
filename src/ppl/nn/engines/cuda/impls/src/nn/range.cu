@@ -39,8 +39,8 @@ __global__ void ppl_cukernel_range(
 template <>
 __global__ void ppl_cukernel_range<half>(
     int64_t num_elems,
-    const half *start,
-    const half *delta,
+    const half* start,
+    const half* delta,
     half* output)
 {
     typedef Math<half, half, half> OpMath;
@@ -52,24 +52,24 @@ __global__ void ppl_cukernel_range<half>(
 
 ppl::common::RetCode PPLCUDARangeForwardImp(
     cudaStream_t stream,
-    const void *start,
-    const void *delta,
+    const void* start,
+    const void* delta,
     ppl::nn::TensorShape* output_shape,
     void* output)
 {
     int block_size     = 256;
     uint64_t num_elems = output_shape->GetElementsIncludingPadding();
     int grid_size      = (num_elems + block_size - 1) / block_size;
-    switch(output_shape->GetDataType()) {
-        case ppl::common::DATATYPE_FLOAT32 :
+    switch (output_shape->GetDataType()) {
+        case ppl::common::DATATYPE_FLOAT32:
             ppl_cukernel_range<float><<<grid_size, block_size, 0, stream>>>(num_elems, (float*)start, (float*)delta, (float*)output);
             break;
-        case ppl::common::DATATYPE_FLOAT16 :
+        case ppl::common::DATATYPE_FLOAT16:
             ppl_cukernel_range<half><<<grid_size, block_size, 0, stream>>>(num_elems, (half*)start, (half*)delta, (half*)output);
             break;
-        case ppl::common::DATATYPE_INT64 :
+        case ppl::common::DATATYPE_INT64:
             ppl_cukernel_range<int64_t><<<grid_size, block_size, 0, stream>>>(num_elems, (int64_t*)start, (int64_t*)delta, (int64_t*)output);
-        break;
+            break;
         default:
             return ppl::common::RC_UNSUPPORTED;
     }

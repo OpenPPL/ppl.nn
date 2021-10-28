@@ -48,4 +48,4 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImp(
     int padding_height,
     int padding_width);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_POOLING_POOLING_MAX_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_POOLING_POOLING_MAX_H_

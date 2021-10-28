@@ -38,4 +38,4 @@ ppl::common::RetCode PPLCUDAMMCVNMSForwardImp(
     float iou_threshold,
     int64_t offset);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_MMCVNMS_MMCVNMS_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_MMCVNMS_MMCVNMS_H_

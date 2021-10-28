@@ -27,4 +27,4 @@ ppl::common::RetCode PPLCUDALogForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_LOG_LOG_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_LOG_LOG_H_

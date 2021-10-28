@@ -28,7 +28,8 @@ public:
 
 private:
     const bool CanFuse(ir::Node* nextnode, const OptKernelOptions& options, uint32_t flag);
-    const ppl::common::RetCode FuseGemmWithNextNode(ir::Node* node, ir::Node* nextnode, const OptKernelOptions& options);
+    const ppl::common::RetCode FuseGemmWithNextNode(ir::Node* node, ir::Node* nextnode,
+                                                    const OptKernelOptions& options);
 
 private:
     std::set<std::string> fuse_type{"Relu",

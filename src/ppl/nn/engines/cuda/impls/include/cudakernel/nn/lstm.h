@@ -1,6 +1,7 @@
 #include <cuda.h>
 #include "cudakernel/common/rnn_common.h"
 
+#include "ppl/nn/engines/cuda/module/cuda_module.h"
 
 int64_t PPLCUDALstmGetRuntimeBufSize(
     const ppl::nn::TensorShape *X_shape,
@@ -9,6 +10,7 @@ int64_t PPLCUDALstmGetRuntimeBufSize(
 
 ppl::common::RetCode PPLCUDALstmForwardImp(
     cudaStream_t stream,
+    ppl::nn::cuda::CUDAModule *module,
     const ppl::nn::TensorShape *X_shape,
     const void *X,
     const void *X_weight,

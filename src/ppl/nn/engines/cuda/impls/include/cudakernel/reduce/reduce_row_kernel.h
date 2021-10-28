@@ -23,11 +23,11 @@
 #include "cudakernel/math/operators.h"
 #include <stdio.h>
 /*
-*  [BX, 1]
-*  [Gx, 1] 
-*  length reduce length
-*  num_elements
-*/
+ *  [BX, 1]
+ *  [Gx, 1]
+ *  length reduce length
+ *  num_elements
+ */
 template <typename T, class Operator, int ReduceSize, bool MultiBlock>
 __inline__ __device__ void ppl_reduce_all(Operator op, PPLReduceDimDes des, ReduceParam param)
 {

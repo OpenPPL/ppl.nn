@@ -20,24 +20,25 @@
 #include <cuda_fp16.h>
 
 __global__ void ppl_cukernel_pooling_ave_global_shuffle(
-      const float* input,
-      float* output,
-      int batch,
-      int pad_channels,
-      int HW)
+    const float* input,
+    float* output,
+    int batch,
+    int pad_channels,
+    int HW)
 {
-    int c = (blockIdx.y * blockDim.y + threadIdx.y);
+    int c  = (blockIdx.y * blockDim.y + threadIdx.y);
     int bc = blockIdx.z * pad_channels + c;
-    if (c >= pad_channels) return;
+    if (c >= pad_channels)
+        return;
 
     float res = float(0);
     for (int i = 0; i < HW; i += 64) {
-        bool pred0 = i + threadIdx.x * 2 + 0 < HW;
-        bool pred1 = i + threadIdx.x * 2 + 1 < HW;
+        bool pred0  = i + threadIdx.x * 2 + 0 < HW;
+        bool pred1  = i + threadIdx.x * 2 + 1 < HW;
         float ival0 = pred0 ? input[bc * HW + 2 * threadIdx.x + i + 0] : float(0);
         float ival1 = pred1 ? input[bc * HW + 2 * threadIdx.x + i + 1] : float(0);
-        float val = ival0 + ival1;
-        res = res + val;
+        float val   = ival0 + ival1;
+        res         = res + val;
     }
 
     for (int offset = 16; offset > 0; offset /= 2) {
@@ -81,7 +82,7 @@ __global__ void ppl_cukernel_pooling_ave_global_shuffle_half(
 #if __CUDACC_VER_MAJOR__ >= 9
         half val = __shfl_down_sync(0xffffffff, res, offset);
 #else
-        half val  = __shfl_down(res, offset);
+        half val = __shfl_down(res, offset);
 #endif
         res = __hadd(res, val);
     }
@@ -167,21 +168,22 @@ ppl::common::RetCode PPLCUDAGlobalAvePoolingForwardImpFp16(
 
 ppl::common::RetCode PPLCUDAGlobalAvePoolingForwardImpFp32(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape, const float* input,
-    ppl::nn::TensorShape* output_shape, float* output) {
-    
-    int batch = output_shape->GetDim(0);
+    ppl::nn::TensorShape* input_shape,
+    const float* input,
+    ppl::nn::TensorShape* output_shape,
+    float* output)
+{
+    int batch        = output_shape->GetDim(0);
     int pad_channels = output_shape->GetDim(1) + output_shape->GetPadding1(1);
-    int in_height = input_shape->GetDim(2); int in_width = input_shape->GetDim(3);
+    int in_height    = input_shape->GetDim(2);
+    int in_width     = input_shape->GetDim(3);
 
     dim3 dim_block(32, 4, 1);
     dim3 dim_grid(1, 1, batch);
 
     if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
         dim_grid.y = (pad_channels + dim_block.y - 1) / dim_block.y;
-        ppl_cukernel_pooling_ave_global_shuffle<<<dim_grid, dim_block,
-            0, stream>>>((const float*)input, (float*)output, batch, pad_channels,
-            in_height * in_width);
+        ppl_cukernel_pooling_ave_global_shuffle<<<dim_grid, dim_block, 0, stream>>>((const float*)input, (float*)output, batch, pad_channels, in_height * in_width);
     } else {
         return ppl::common::RC_UNSUPPORTED;
     }

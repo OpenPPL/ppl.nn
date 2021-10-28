@@ -91,12 +91,12 @@ __global__ void ppl_cukernel_batchnorm_withmeanvar_nhwc(
     int outer_offset = 0;
     channel_fast.divmod(index, outer_offset, c_idx);
 
-    T scale_val   = scale[c_idx];
-    T B_val       = B[c_idx];
-    T mean_val    = mean[c_idx];
-    T var_val     = var[c_idx];
-    T std         = ppl_get_std<T>(var_val, t_eps);
-    int nhwc_index = outer_offset * pad_channels + c_idx;
+    T scale_val        = scale[c_idx];
+    T B_val            = B[c_idx];
+    T mean_val         = mean[c_idx];
+    T var_val          = var[c_idx];
+    T std              = ppl_get_std<T>(var_val, t_eps);
+    int nhwc_index     = outer_offset * pad_channels + c_idx;
     output[nhwc_index] = OpMath::add(OpMath::mul(OpMath::mul(OpMath::sub(input[nhwc_index], mean_val), std), scale_val), B_val);
 }
 
@@ -133,7 +133,7 @@ ppl::common::RetCode PPLCUDABatchNormalizationForwardImp(
         }
     } else {
         DivModFast channel_fast(channels);
-        int pad_channels  = dim_count >= 2 ? input_shape->GetDim(1) + input_shape->GetPadding0(1) + input_shape->GetPadding1(1) : 1;
+        int pad_channels = dim_count >= 2 ? input_shape->GetDim(1) + input_shape->GetPadding0(1) + input_shape->GetPadding1(1) : 1;
         if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
             ppl_cukernel_batchnorm_withmeanvar_nhwc<float><<<grid_size, block_size, 0, stream>>>(num_elems, channel_fast, pad_channels, (const float*)input, (const float*)scale, (const float*)B, (const float*)mean, (const float*)var, epsilon, (float*)output);
         } else if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {

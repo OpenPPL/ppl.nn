@@ -28,4 +28,4 @@ ppl::common::RetCode PPLCUDAExpandForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_EXPAND_EXPAND_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_EXPAND_EXPAND_H_

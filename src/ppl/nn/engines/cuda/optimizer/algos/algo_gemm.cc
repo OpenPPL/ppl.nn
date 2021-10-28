@@ -44,13 +44,9 @@ void GemmAlgorithm::GetAttrParam(void*& param) const {
 
 double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& options) {
     this->attr_param_ = *(reinterpret_cast<CudaGemmParam*>(options.param));
-    attr_param_.extra_param.kernel_index = 0;
+    options.compile_set->emplace(node->GetId());
     if (node->GetInputCount() == 3) {
         attr_param_.param.bias_term = 1;
-    }
-
-    if (options.args->quick_select) {
-        return 0.0f;
     }
 
     auto shape_in0 = options.tensors->find(node->GetInput(0))->second->GetShape();
@@ -58,6 +54,35 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
     auto shape_in2 = TensorShape();
     auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
+
+    conv_param_t temp_conv_param;
+    fuse_param_t temp_fuse_param;
+    temp_conv_param.in_num = attr_param_.param.transA ? shape_in0.GetDim(1) : shape_in0.GetDim(0);
+    temp_conv_param.num_chl = attr_param_.param.transB ? shape_in1.GetDim(1) : shape_in1.GetDim(0);
+    temp_conv_param.num_flt = attr_param_.param.transB ? shape_in1.GetDim(0) : shape_in1.GetDim(1);
+    temp_conv_param.in_height = 1;
+    temp_conv_param.in_width = 1;
+    temp_conv_param.flt_height = 1;
+    temp_conv_param.flt_width = 1;
+    temp_conv_param.out_height = 1;
+    temp_conv_param.out_width = 1;
+    temp_conv_param.pad_height = 1;
+    temp_conv_param.pad_width = 1;
+    temp_conv_param.stride_height = 1;
+    temp_conv_param.stride_width = 1;
+    temp_conv_param.hole_height = 1;
+    temp_conv_param.hole_width = 1;
+    temp_conv_param.num_grp = 1;
+
+    auto algo_info = options.algos->find(GetConvShapeString(temp_conv_param));
+    if (algo_info != options.algos->end()) {
+        attr_param_.extra_param.algo_info.algo_name = algo_info->second.kname;
+        attr_param_.extra_param.algo_info.kid = algo_info->second.kid;
+        attr_param_.extra_param.algo_info.splitk = algo_info->second.splitk;
+        attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
+        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info, temp_conv_param);
+        return 0.0f;
+    }
 
     // illegal gemm input
     if (shape_in0.GetDim(!attr_param_.param.transA) != shape_in1.GetDim(attr_param_.param.transB)) {
@@ -81,24 +106,24 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
     uint64_t size = PPLGemmCUDAGetBufSize(&shape_in0, attr_param_.param.transA);
     ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, size, ALGO_MAX_TIME)
 
-    // Do Select
     auto stream = options.device->GetStream();
-    fuse_param_t temp_fuse_param;
-    auto kernel_id =
-        PPLCUDAGemmSelectKernel(stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr, bias_buffer.addr,
-                                &shape_out, output_buffer.addr, attr_param_.param, temp_buffer.addr, temp_fuse_param);
-    attr_param_.extra_param.kernel_index = kernel_id;
 
-    auto run_begin_ts = std::chrono::system_clock::now();
-    status = PPLCUDAGemmForwardImp(stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
-                                   bias_buffer.addr, &shape_out, output_buffer.addr, attr_param_.param,
-                                   temp_buffer.addr, temp_fuse_param, kernel_id);
-    auto run_end_ts = std::chrono::system_clock::now();
-    auto diff = std::chrono::duration_cast<std::chrono::microseconds>(run_end_ts - run_begin_ts);
-    double timer = (double)diff.count() / 1000;
+#ifdef PPLNN_ENABLE_CUDA_JIT
+    // Do select
+    LOG(INFO) << "Compiling " << node->GetName();
+    int device_id = options.device->GetDeviceId();
+    PPLCUDAConvolutionPredictKernel(attr_param_.extra_param.algo_info, temp_conv_param);
+    auto timer = PPLCUDAGemmJITSelectKernel(device_id, stream, shape_in0.GetDataType(), &shape_in0, input_buffer.addr, &shape_in1,
+                                            weight_buffer.addr, bias_buffer.addr, &shape_out, output_buffer.addr,
+                                            temp_buffer.addr, temp_conv_param, temp_fuse_param,
+                                            attr_param_.extra_param.algo_info);
+#else
+    // Do Select
+    auto timer = PPLCUDAGemmSelectKernel(stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
+                                         bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr,
+                                         attr_param_.param, temp_fuse_param, attr_param_.extra_param.algo_info);
+#endif
 
-    LOG(DEBUG) << "Select gemm algorithm with kernel index " << attr_param_.extra_param.kernel_index
-               << " and excute timer " << timer << " for node[" << node->GetName() << "]";
     return timer;
 }
 
@@ -176,7 +201,7 @@ RetCode GemmAlgorithm::ModifyParam(const ir::Node* node, OptKernelOptions& optio
     } else {
         reinterpret_cast<CudaGemmParam*>(options.param)->extra_param.is_initializer_weight = 0;
     }
-    
+
     if (attr_param_.param.bias_term == 0) {
         return RC_SUCCESS;
     }

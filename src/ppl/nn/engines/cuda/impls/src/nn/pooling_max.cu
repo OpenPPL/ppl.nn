@@ -20,9 +20,9 @@
 #include <cuda_fp16.h>
 #include <float.h>
 
-#define HALF_MIN half(-65504)
+#define HALF_MIN  half(-65504)
 #define HALF2_MIN half2(-65504, -65504)
-#define PPL_CUDA_HALF2_MAX(a, b)                    \
+#define PPL_CUDA_HALF2_MAX(a, b)                     \
     do {                                             \
         (a).x = __hgt((a).x, (b).x) ? (a).x : (b).x; \
         (a).y = __hgt((a).y, (b).y) ? (a).y : (b).y; \
@@ -113,12 +113,13 @@ __global__ void ppl_cukernel_pooling_max_f3s2(
     int pad_width)
 {
     int tx = blockIdx.x * blockDim.x + threadIdx.x;
-    int c = blockIdx.y * blockDim.y + threadIdx.y;
-    int b = blockIdx.z;
+    int c  = blockIdx.y * blockDim.y + threadIdx.y;
+    int b  = blockIdx.z;
 
-      if (c >= pad_channels) return;
+    if (c >= pad_channels)
+        return;
 
-    int inOff = (b * pad_channels + c) * in_height * in_width;
+    int inOff  = (b * pad_channels + c) * in_height * in_width;
     int outOff = (b * pad_channels + c) * out_height * out_width;
 
     int partW = (out_width + TILE_W - 1) / TILE_W;
@@ -130,27 +131,27 @@ __global__ void ppl_cukernel_pooling_max_f3s2(
     float iregs[TILE_H * 2 + 1][TILE_W * 2 + 1];
     for (int i = 0; i < 2 * TILE_H + 1; i++) {
         for (int j = 0; j < 2 * TILE_W + 1; j++) {
-            int iy = oy * 2 + i - pad_height;
-            int ix = ox * 2 + j - pad_width;
-            bool pred = (iy >= 0 && iy < in_height) && (ix >= 0 && ix < in_width);
+            int iy      = oy * 2 + i - pad_height;
+            int ix      = ox * 2 + j - pad_width;
+            bool pred   = (iy >= 0 && iy < in_height) && (ix >= 0 && ix < in_width);
             iregs[i][j] = pred ? input[inOff + iy * in_width + ix] : -FLT_MAX;
         }
     }
 
-      // pooling max & store output
+    // pooling max & store output
 #pragma unroll TILE_H
-      for (int i = 0; i < TILE_H; i++) {
+    for (int i = 0; i < TILE_H; i++) {
 #pragma unroll TILE_W
         for (int j = 0; j < TILE_W; j++) {
             float val = iregs[i * 2 + 0][j * 2 + 0];
-            val = (val > iregs[i * 2 + 0][j * 2 + 1]) ? val : iregs[i * 2 + 0][j * 2 + 1];
-            val = (val > iregs[i * 2 + 0][j * 2 + 2]) ? val : iregs[i * 2 + 0][j * 2 + 2];
-            val = (val > iregs[i * 2 + 1][j * 2 + 0]) ? val : iregs[i * 2 + 1][j * 2 + 0];
-            val = (val > iregs[i * 2 + 1][j * 2 + 1]) ? val : iregs[i * 2 + 1][j * 2 + 1];
-            val = (val > iregs[i * 2 + 1][j * 2 + 2]) ? val : iregs[i * 2 + 1][j * 2 + 2];
-            val = (val > iregs[i * 2 + 2][j * 2 + 0]) ? val : iregs[i * 2 + 2][j * 2 + 0];
-            val = (val > iregs[i * 2 + 2][j * 2 + 1]) ? val : iregs[i * 2 + 2][j * 2 + 1];
-            val = (val > iregs[i * 2 + 2][j * 2 + 2]) ? val : iregs[i * 2 + 2][j * 2 + 2];
+            val       = (val > iregs[i * 2 + 0][j * 2 + 1]) ? val : iregs[i * 2 + 0][j * 2 + 1];
+            val       = (val > iregs[i * 2 + 0][j * 2 + 2]) ? val : iregs[i * 2 + 0][j * 2 + 2];
+            val       = (val > iregs[i * 2 + 1][j * 2 + 0]) ? val : iregs[i * 2 + 1][j * 2 + 0];
+            val       = (val > iregs[i * 2 + 1][j * 2 + 1]) ? val : iregs[i * 2 + 1][j * 2 + 1];
+            val       = (val > iregs[i * 2 + 1][j * 2 + 2]) ? val : iregs[i * 2 + 1][j * 2 + 2];
+            val       = (val > iregs[i * 2 + 2][j * 2 + 0]) ? val : iregs[i * 2 + 2][j * 2 + 0];
+            val       = (val > iregs[i * 2 + 2][j * 2 + 1]) ? val : iregs[i * 2 + 2][j * 2 + 1];
+            val       = (val > iregs[i * 2 + 2][j * 2 + 2]) ? val : iregs[i * 2 + 2][j * 2 + 2];
 
             if (oy + i < out_height && ox + j < out_width) {
                 output[outOff + (oy + i) * out_width + ox + j] = val;
@@ -243,12 +244,13 @@ __global__ void ppl_cukernel_pooling_max_f3s1(
     int pad_width)
 {
     int tx = blockIdx.x * blockDim.x + threadIdx.x;
-    int c = blockIdx.y * blockDim.y + threadIdx.y;
-    int b = blockIdx.z;
+    int c  = blockIdx.y * blockDim.y + threadIdx.y;
+    int b  = blockIdx.z;
 
-    if (c >= pad_channels) return;
+    if (c >= pad_channels)
+        return;
 
-    int inOff = (b * pad_channels + c) * in_height * in_width;
+    int inOff  = (b * pad_channels + c) * in_height * in_width;
     int outOff = (b * pad_channels + c) * out_height * out_width;
 
     float iregs[TILE_H + 2][TILE_W + 2];
@@ -261,9 +263,9 @@ __global__ void ppl_cukernel_pooling_max_f3s1(
     // register blocking for input
     for (int i = 0; i < TILE_H + 2; i++) {
         for (int j = 0; j < TILE_W + 2; j++) {
-            int iy = oy + i - pad_height;
-            int ix = ox + j - pad_width;
-            bool pred = (iy >= 0 && iy < in_height) && (ix >= 0 && ix < in_width);
+            int iy      = oy + i - pad_height;
+            int ix      = ox + j - pad_width;
+            bool pred   = (iy >= 0 && iy < in_height) && (ix >= 0 && ix < in_width);
             iregs[i][j] = pred ? input[inOff + iy * in_width + ix] : -FLT_MAX;
         }
     }
@@ -272,14 +274,14 @@ __global__ void ppl_cukernel_pooling_max_f3s1(
     for (int i = 0; i < TILE_H; i++) {
         for (int j = 0; j < TILE_W; j++) {
             float val = iregs[i + 0][j + 0];
-            val = (val > iregs[i + 0][j + 1]) ? val : iregs[i + 0][j + 1];
-            val = (val > iregs[i + 0][j + 2]) ? val : iregs[i + 0][j + 2];
-            val = (val > iregs[i + 1][j + 0]) ? val : iregs[i + 1][j + 0];
-            val = (val > iregs[i + 1][j + 1]) ? val : iregs[i + 1][j + 1];
-            val = (val > iregs[i + 1][j + 2]) ? val : iregs[i + 1][j + 2];
-            val = (val > iregs[i + 2][j + 0]) ? val : iregs[i + 2][j + 0];
-            val = (val > iregs[i + 2][j + 1]) ? val : iregs[i + 2][j + 1];
-            val = (val > iregs[i + 2][j + 2]) ? val : iregs[i + 2][j + 2];
+            val       = (val > iregs[i + 0][j + 1]) ? val : iregs[i + 0][j + 1];
+            val       = (val > iregs[i + 0][j + 2]) ? val : iregs[i + 0][j + 2];
+            val       = (val > iregs[i + 1][j + 0]) ? val : iregs[i + 1][j + 0];
+            val       = (val > iregs[i + 1][j + 1]) ? val : iregs[i + 1][j + 1];
+            val       = (val > iregs[i + 1][j + 2]) ? val : iregs[i + 1][j + 2];
+            val       = (val > iregs[i + 2][j + 0]) ? val : iregs[i + 2][j + 0];
+            val       = (val > iregs[i + 2][j + 1]) ? val : iregs[i + 2][j + 1];
+            val       = (val > iregs[i + 2][j + 2]) ? val : iregs[i + 2][j + 2];
 
             if (oy + i < out_height && ox + j < out_width) {
                 output[outOff + (oy + i) * out_width + ox + j] = val;
@@ -385,7 +387,7 @@ __global__ void ppl_cukernel_pooling_max_common_half(
     // register blocking for input
     for (int i = 0; i < TILE_H; i++) {
         for (int j = 0; j < TILE_W; j++) {
-            half res = HALF_MIN;
+            half res         = HALF_MIN;
             int64_t in_index = 0;
 
             // read input
@@ -397,7 +399,7 @@ __global__ void ppl_cukernel_pooling_max_common_half(
                     half ival = pred ? input[inOff + iy * in_width + ix] : HALF_MIN;
 
                     if (__hlt(res, ival)) {
-                        res = ival;
+                        res      = ival;
                         in_index = inOff + iy * in_width + ix;
                     }
                 }
@@ -405,8 +407,8 @@ __global__ void ppl_cukernel_pooling_max_common_half(
 
             // store output
             if (oy + i < out_height && ox + j < out_width) {
-                int64_t out_index = outOff + (oy + i) * out_width + ox + j;
-                output[out_index] = res;
+                int64_t out_index  = outOff + (oy + i) * out_width + ox + j;
+                output[out_index]  = res;
                 indices[out_index] = in_index;
             }
         }
@@ -432,12 +434,13 @@ __global__ void ppl_cukernel_pooling_max_common(
     int pad_width)
 {
     int tx = blockIdx.x * blockDim.x + threadIdx.x;
-    int c = blockIdx.y * blockDim.y + threadIdx.y;
-    int b = blockIdx.z;
+    int c  = blockIdx.y * blockDim.y + threadIdx.y;
+    int b  = blockIdx.z;
 
-    if (c >= pad_channels) return;
+    if (c >= pad_channels)
+        return;
 
-    int inOff = (b * pad_channels + c) * in_height * in_width;
+    int inOff  = (b * pad_channels + c) * in_height * in_width;
     int outOff = (b * pad_channels + c) * out_height * out_width;
 
     int partW = (out_width + TILE_W - 1) / TILE_W;
@@ -448,18 +451,17 @@ __global__ void ppl_cukernel_pooling_max_common(
     // register blocking for input
     for (int i = 0; i < TILE_H; i++) {
         for (int j = 0; j < TILE_W; j++) {
-
             float res = -FLT_MAX;
 
             // read input
             for (int fy = 0; fy < kernel_height; fy++) {
                 for (int fx = 0; fx < kernel_width; fx++) {
-                int iy = (oy + i) * stride_height + fy - pad_height;
-                int ix = (ox + j) * stride_width + fx - pad_width;
-                bool pred = (iy >= 0 && iy < in_height) && (ix >= 0 && ix < in_width);
-                float ival = pred ? input[inOff + iy * in_width + ix] : -FLT_MAX;
+                    int iy     = (oy + i) * stride_height + fy - pad_height;
+                    int ix     = (ox + j) * stride_width + fx - pad_width;
+                    bool pred  = (iy >= 0 && iy < in_height) && (ix >= 0 && ix < in_width);
+                    float ival = pred ? input[inOff + iy * in_width + ix] : -FLT_MAX;
 
-                res = (res > ival) ? res : ival;
+                    res = (res > ival) ? res : ival;
                 }
             }
 
@@ -475,7 +477,7 @@ template <int TILE_H, int TILE_W>
 __global__ void ppl_cukernel_pooling_max_common(
     const float* input,
     float* output,
-    int64_t *indices,
+    int64_t* indices,
     int batch,
     int pad_channels,
     int in_height,
@@ -490,12 +492,13 @@ __global__ void ppl_cukernel_pooling_max_common(
     int pad_width)
 {
     int tx = blockIdx.x * blockDim.x + threadIdx.x;
-    int c = blockIdx.y * blockDim.y + threadIdx.y;
-    int b = blockIdx.z;
+    int c  = blockIdx.y * blockDim.y + threadIdx.y;
+    int b  = blockIdx.z;
 
-    if (c >= pad_channels) return;
+    if (c >= pad_channels)
+        return;
 
-    int inOff = (b * pad_channels + c) * in_height * in_width;
+    int inOff  = (b * pad_channels + c) * in_height * in_width;
     int outOff = (b * pad_channels + c) * out_height * out_width;
 
     int partW = (out_width + TILE_W - 1) / TILE_W;
@@ -506,19 +509,18 @@ __global__ void ppl_cukernel_pooling_max_common(
     // register blocking for input
     for (int i = 0; i < TILE_H; i++) {
         for (int j = 0; j < TILE_W; j++) {
-
-            float res = -FLT_MAX;
+            float res        = -FLT_MAX;
             int64_t in_index = 0;
 
             // read input
             for (int fy = 0; fy < kernel_height; fy++) {
                 for (int fx = 0; fx < kernel_width; fx++) {
-                    int iy = (oy + i) * stride_height + fy - pad_height;
-                    int ix = (ox + j) * stride_width + fx - pad_width;
-                    bool pred = (iy >= 0 && iy < in_height) && (ix >= 0 && ix < in_width);
+                    int iy     = (oy + i) * stride_height + fy - pad_height;
+                    int ix     = (ox + j) * stride_width + fx - pad_width;
+                    bool pred  = (iy >= 0 && iy < in_height) && (ix >= 0 && ix < in_width);
                     float ival = pred ? input[inOff + iy * in_width + ix] : -FLT_MAX;
                     if (res < ival) {
-                        res = ival;
+                        res      = ival;
                         in_index = inOff + iy * in_width + ix;
                     }
                 }
@@ -526,8 +528,8 @@ __global__ void ppl_cukernel_pooling_max_common(
 
             // store output
             if (oy + i < out_height && ox + j < out_width) {
-                int64_t out_index = outOff + (oy + i) * out_width + ox + j;
-                output[out_index] = res;
+                int64_t out_index  = outOff + (oy + i) * out_width + ox + j;
+                output[out_index]  = res;
                 indices[out_index] = in_index;
             }
         }
@@ -876,11 +878,13 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImpFp32(
     int pad_height,
     int pad_width)
 {
-    int batch = output_shape->GetDim(0);
-    int channels = output_shape->GetDim(1);
+    int batch        = output_shape->GetDim(0);
+    int channels     = output_shape->GetDim(1);
     int pad_channels = output_shape->GetDim(1) + output_shape->GetPadding1(1);
-    int out_height = output_shape->GetDim(2); int out_width = output_shape->GetDim(3);
-    int in_height = input_shape->GetDim(2); int in_width = input_shape->GetDim(3);
+    int out_height   = output_shape->GetDim(2);
+    int out_width    = output_shape->GetDim(3);
+    int in_height    = input_shape->GetDim(2);
+    int in_width     = input_shape->GetDim(3);
 
     bool f3 = (kernel_height == 3) && (kernel_width == 3);
     bool s1 = (stride_height == 1) && (stride_width == 1);
@@ -897,22 +901,16 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImpFp32(
         dim_grid.z = batch;
 
         if (f3 && s1) {
-            partH = (out_height + 5) / 6;
+            partH      = (out_height + 5) / 6;
             dim_grid.x = (partH * partW + dim_block.x - 1) / dim_block.x;
             ppl_cukernel_pooling_max_f3s1<6, 1><<<dim_grid, dim_block, 0, stream>>>(
-              input, output, batch, pad_channels, in_height, in_width, out_height,
-              out_width, kernel_height, kernel_width, stride_height, stride_width,
-              pad_height, pad_width);
+                input, output, batch, pad_channels, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, pad_height, pad_width);
         } else if (f3 && s2) {
             ppl_cukernel_pooling_max_f3s2<4, 1><<<dim_grid, dim_block, 0, stream>>>(
-                input, output, batch, pad_channels, in_height, in_width, out_height,
-                out_width, kernel_height, kernel_width, stride_height, stride_width,
-                pad_height, pad_width);
+                input, output, batch, pad_channels, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, pad_height, pad_width);
         } else {
             ppl_cukernel_pooling_max_common<4, 1><<<dim_grid, dim_block, 0, stream>>>(
-                input, output, batch, pad_channels, in_height, in_width, out_height,
-                out_width, kernel_height, kernel_width, stride_height, stride_width,
-                pad_height, pad_width);
+                input, output, batch, pad_channels, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, pad_height, pad_width);
         }
         return ppl::common::RC_SUCCESS;
     } else {
@@ -935,11 +933,13 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImpFp32(
     int pad_height,
     int pad_width)
 {
-    int batch = output_shape->GetDim(0);
-    int channels = output_shape->GetDim(1);
+    int batch        = output_shape->GetDim(0);
+    int channels     = output_shape->GetDim(1);
     int pad_channels = output_shape->GetDim(1) + output_shape->GetPadding1(1);
-    int out_height = output_shape->GetDim(2); int out_width = output_shape->GetDim(3);
-    int in_height = input_shape->GetDim(2); int in_width = input_shape->GetDim(3);
+    int out_height   = output_shape->GetDim(2);
+    int out_width    = output_shape->GetDim(3);
+    int in_height    = input_shape->GetDim(2);
+    int in_width     = input_shape->GetDim(3);
 
     if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
         // thread layout
@@ -952,9 +952,7 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImpFp32(
         dim_grid.z = batch;
 
         ppl_cukernel_pooling_max_common<4, 1><<<dim_grid, dim_block, 0, stream>>>(
-            input, output, indices, batch, pad_channels, in_height, in_width, out_height,
-            out_width, kernel_height, kernel_width, stride_height, stride_width,
-            pad_height, pad_width);
+            input, output, indices, batch, pad_channels, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, pad_height, pad_width);
         return ppl::common::RC_SUCCESS;
     } else {
         return ppl::common::RC_UNSUPPORTED;
@@ -976,14 +974,10 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImp(
 {
     if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
         return PPLCUDAMaxPoolingForwardImpFp16(
-            stream, input_shape, (const half*)input, output_shape, (half*)output,
-            kernel_height, kernel_width, stride_height, stride_width,
-            padding_height, padding_width);
+            stream, input_shape, (const half*)input, output_shape, (half*)output, kernel_height, kernel_width, stride_height, stride_width, padding_height, padding_width);
     } else if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
         return PPLCUDAMaxPoolingForwardImpFp32(
-            stream, input_shape, (const float*)input, output_shape, (float*)output,
-            kernel_height, kernel_width, stride_height, stride_width,
-            padding_height, padding_width);
+            stream, input_shape, (const float*)input, output_shape, (float*)output, kernel_height, kernel_width, stride_height, stride_width, padding_height, padding_width);
     } else {
         return ppl::common::RC_UNSUPPORTED;
     }
@@ -1006,16 +1000,10 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImp(
 {
     if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
         return PPLCUDAMaxPoolingForwardImpFp16(
-            stream, input_shape, (const half*)input, output_shape, (half*)output,
-            indices_shape, indices,
-            kernel_height, kernel_width, stride_height, stride_width,
-            padding_height, padding_width);
+            stream, input_shape, (const half*)input, output_shape, (half*)output, indices_shape, indices, kernel_height, kernel_width, stride_height, stride_width, padding_height, padding_width);
     } else if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
         return PPLCUDAMaxPoolingForwardImpFp32(
-            stream, input_shape, (const float*)input, output_shape, (float*)output,
-            indices_shape, indices,
-            kernel_height, kernel_width, stride_height, stride_width,
-            padding_height, padding_width);
+            stream, input_shape, (const float*)input, output_shape, (float*)output, indices_shape, indices, kernel_height, kernel_width, stride_height, stride_width, padding_height, padding_width);
     } else {
         return ppl::common::RC_UNSUPPORTED;
     }

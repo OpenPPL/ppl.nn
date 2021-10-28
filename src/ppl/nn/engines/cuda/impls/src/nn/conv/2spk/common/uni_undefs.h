@@ -121,7 +121,6 @@
 #undef SMEM_ROW_BYTE_SIZE
 #undef SMEM_ROW_BIT_SIZE
 
-
 ////////////////////////////////////////
 // mma size macros
 ////////////////////////////////////////
@@ -213,7 +212,6 @@
 #undef TILE_K_V4_PER_KMA
 #undef TILE_K_V8_PER_KMA
 
-
 /////////////////////
 // tile n
 
@@ -236,7 +234,6 @@
 #undef TILE_N_V2_PER_MMA
 #undef TILE_N_V4_PER_MMA
 #undef TILE_N_V8_PER_MMA
-
 
 ////////////////////////////////////////
 // shared memory size macros
@@ -449,7 +446,7 @@
 
 #undef LOAD_dAv4
 
-#undef SET_dAv4_BOUND 
+#undef SET_dAv4_BOUND
 
 //////////////////////////
 // load dB
@@ -467,7 +464,7 @@
 
 #undef LOAD_dBv4
 
-#undef SET_dBv4_BOUND 
+#undef SET_dBv4_BOUND
 
 /////////////////////////////////////////////////////
 // common write shared memory macros

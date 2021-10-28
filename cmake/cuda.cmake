@@ -1,3 +1,5 @@
+option(PPLNN_ENABLE_CUDA_JIT "enable cuda JIT support" ON)
+
 # ----- required cuda version >= 10.2 ----- #
 
 find_package(CUDA REQUIRED)

@@ -37,4 +37,4 @@ ppl::common::RetCode PPLCUDASubpixelUpForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_SUBPIXEL_SUBPIXEL_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_SUBPIXEL_SUBPIXEL_H_

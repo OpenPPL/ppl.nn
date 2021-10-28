@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/ usr / bin / env python3
 
 """generate idxn conv kernels dynamically
 """

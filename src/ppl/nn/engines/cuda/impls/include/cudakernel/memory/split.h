@@ -30,4 +30,4 @@ ppl::common::RetCode PPLCUDASplitForwardImp(
     const int64_t* out_dims[],
     void* output[]);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_SPLIT_SPLIT_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_SPLIT_SPLIT_H_

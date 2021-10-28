@@ -51,7 +51,7 @@ public:
     }
 
     void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
-                                ppl::common::dataformat_t input_format, ppl::common::dataformat_t output_format) override;
+                        ppl::common::dataformat_t input_format, ppl::common::dataformat_t output_format) override;
 
 private:
     std::map<dataformat_t, std::set<dataformat_t>> concat_formats_;

@@ -18,7 +18,6 @@
 #ifndef __PPL_KERNEL_CUDA_RNN_COMMON_H_
 #define __PPL_KERNEL_CUDA_RNN_COMMON_H_
 
-
 class RnnDirection {
 public:
     static const unsigned int forward       = 0;
@@ -31,6 +30,5 @@ public:
     static const int64_t lstm = 4;
     static const int64_t gru  = 3;
 };
-
 
 #endif

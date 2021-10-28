@@ -34,4 +34,4 @@ ppl::common::RetCode PPLCUDAResizeForwardImp(
     int inter_mode,
     float cubic_coeff);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_RESIZE_RESIZE_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_RESIZE_RESIZE_H_

@@ -48,7 +48,7 @@ ppl::common::RetCode PPLCUDASoftmaxForwardImp(
     // reduce max
     PPLReduceDimDes reduce_desc(1, D, N);
     ReduceParam reduce_max = ReduceMax;
-    void *max_sum_output   = temp_buffer;
+    void* max_sum_output   = temp_buffer;
     ppl::nn::TensorShape max_sum_shape(*input_shape);
     max_sum_shape.SetDim(0, N);
     max_sum_shape.SetDim(1, 1);
@@ -59,13 +59,13 @@ ppl::common::RetCode PPLCUDASoftmaxForwardImp(
     nd_shape.SetDim(0, N);
     nd_shape.SetDim(1, D);
     nd_shape.SetDimCount(2);
-    status = PPLCUDAArithMeticSubForwardImp(stream, &nd_shape, input, &max_sum_shape, max_sum_output, &nd_shape, output);
+    status                 = PPLCUDAArithMeticSubForwardImp(stream, &nd_shape, input, &max_sum_shape, max_sum_output, &nd_shape, output);
     // exp
-    status = PPLCUDAExpForwardImp(stream, &nd_shape, output, &nd_shape, output);
-    //reduce sum
+    status                 = PPLCUDAExpForwardImp(stream, &nd_shape, output, &nd_shape, output);
+    // reduce sum
     ReduceParam reduce_sum = ReduceSum;
-    status = PPLCUDAReduceForwardImp(stream, reduce_sum, reduce_desc, &nd_shape, output, &max_sum_shape, max_sum_output);
-    //div
-    status = PPLCUDAArithMeticDivForwardImp(stream, &nd_shape, output, &max_sum_shape, max_sum_output, &nd_shape, output);
+    status                 = PPLCUDAReduceForwardImp(stream, reduce_sum, reduce_desc, &nd_shape, output, &max_sum_shape, max_sum_output);
+    // div
+    status                 = PPLCUDAArithMeticDivForwardImp(stream, &nd_shape, output, &max_sum_shape, max_sum_output, &nd_shape, output);
     return status;
 }

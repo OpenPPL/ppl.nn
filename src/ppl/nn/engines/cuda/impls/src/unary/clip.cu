@@ -79,14 +79,14 @@ __global__ void ppl_cukernel_clip_nhwc<float4>(
     int chw,
     int hw,
     const float4* input,
-    float4 *output,
+    float4* output,
     float _min,
     float _max)
 {
 #if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
     __shared__ float4 s_indata[256];
     __shared__ float4 s_outdata[256];
-    int tid = threadIdx.x;
+    int tid     = threadIdx.x;
     int chw_idx = blockIdx.x * blockDim.x + tid;
     if (chw_idx >= chw)
         return;
@@ -94,10 +94,10 @@ __global__ void ppl_cukernel_clip_nhwc<float4>(
     int64_t index = b_idx * hw * pad_channels + chw_idx;
     s_indata[tid] = input[index];
 
-    half* s_indata_half = reinterpret_cast<half*>(s_indata);
+    half* s_indata_half  = reinterpret_cast<half*>(s_indata);
     half* s_outdata_half = reinterpret_cast<half*>(s_outdata);
-    for(int it = 0; it < 8; it++) {
-        int inner_idx = tid * 8 + it;
+    for (int it = 0; it < 8; it++) {
+        int inner_idx             = tid * 8 + it;
         s_outdata_half[inner_idx] = ppl_scalar_clip<half>(s_indata_half[inner_idx], _min, _max);
     }
     output[index] = s_outdata[tid];
@@ -125,14 +125,14 @@ ppl::common::RetCode PPLCUDAClipForwardImp(
         int grid_size  = (num_elems + block_size - 1) / block_size;
         if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
             ppl_cukernel_clip_ndarray<float><<<grid_size, block_size, 0, stream>>>(num_elems,
-                                                                                   (const float *)input,
-                                                                                   (float *)output,
+                                                                                   (const float*)input,
+                                                                                   (float*)output,
                                                                                    _min,
                                                                                    _max);
         } else if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
             ppl_cukernel_clip_ndarray<half><<<grid_size, block_size, 0, stream>>>(num_elems,
-                                                                                  (const half *)input,
-                                                                                  (half *)output,
+                                                                                  (const half*)input,
+                                                                                  (half*)output,
                                                                                   _min,
                                                                                   _max);
 
@@ -147,16 +147,16 @@ ppl::common::RetCode PPLCUDAClipForwardImp(
         grid_size.z = batch;
         if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
             ppl_cukernel_clip_nhwc<float><<<grid_size, block_size, 0, stream>>>(
-                num_elems, channels, pad_channels, channels * height * width, height * width, (const float *)input, (float *)output, _min, _max);
+                num_elems, channels, pad_channels, channels * height * width, height * width, (const float*)input, (float*)output, _min, _max);
         } else if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
             if (channels & 0x7) {
                 ppl_cukernel_clip_nhwc<half><<<grid_size, block_size, 0, stream>>>(
-                    num_elems, channels, pad_channels, channels * height * width, height * width, (const half *)input, (half *)output, _min, _max);
+                    num_elems, channels, pad_channels, channels * height * width, height * width, (const half*)input, (half*)output, _min, _max);
             } else {
                 int pad_chw = pad_channels * height * width;
                 grid_size.x = (pad_chw + block_size - 1) / block_size;
                 ppl_cukernel_clip_nhwc<float4><<<grid_size, block_size, 0, stream>>>(
-                    num_elems >> 3, channels, pad_channels >> 3, pad_chw >> 3, height * width, (const float4 *)input, (float4 *)output, _min, _max);
+                    num_elems >> 3, channels, pad_channels >> 3, pad_chw >> 3, height * width, (const float4*)input, (float4*)output, _min, _max);
             }
         } else {
             return ppl::common::RC_UNSUPPORTED;

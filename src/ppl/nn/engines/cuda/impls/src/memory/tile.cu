@@ -74,7 +74,7 @@ ppl::common::RetCode PPLCUDATileForwardImp(
 
 #define SWITCH_CASE(TYPE)                                                                                                 \
     case sizeof(TYPE): {                                                                                                  \
-        ppl_cukernel_tile<<<grid_size, block_size, 0, stream>>>(                                                         \
+        ppl_cukernel_tile<<<grid_size, block_size, 0, stream>>>(                                                          \
             num_elems, num_dims, input_dims_fast, input_strides, (const TYPE*)input, output_strides_fast, (TYPE*)output); \
         return ppl::common::RC_SUCCESS;                                                                                   \
     }

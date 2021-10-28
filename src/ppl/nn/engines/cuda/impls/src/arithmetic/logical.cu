@@ -37,10 +37,12 @@ struct bool8_ {
     bool w1;
 };
 
-template<LogicalOpType op_type>
+template <LogicalOpType op_type>
 __device__ inline bool ppl_logical_scalar(bool a, bool b);
 
-template<> __device__ inline bool ppl_logical_scalar<Logical_And>(bool a, bool b) {
+template <>
+__device__ inline bool ppl_logical_scalar<Logical_And>(bool a, bool b)
+{
     return a && b;
 }
 
@@ -78,7 +80,7 @@ void ppl_logical_prepare_strides(
 {
     ppl::nn::TensorShape pad_tensor_shape0 = *tensor_shape0;
     ppl::nn::TensorShape pad_tensor_shape1 = *tensor_shape1;
-    int max_dims = tensor_shape_out->GetDimCount();
+    int max_dims                           = tensor_shape_out->GetDimCount();
     if (pad_tensor_shape0.GetDimCount() < pad_tensor_shape1.GetDimCount()) {
         pad_tensor_shape0.SetDimCount(max_dims);
         // pad 1 to shape_min_pad's higher dim
@@ -123,18 +125,19 @@ void ppl_logical_prepare_strides(
 }
 
 void ppl_logical_prepare_strides_nhwc(
-    const ppl::nn::TensorShape *tensor_shape0,
-    const ppl::nn::TensorShape *tensor_shape1,
-    const ppl::nn::TensorShape *tensor_shape_out,
+    const ppl::nn::TensorShape* tensor_shape0,
+    const ppl::nn::TensorShape* tensor_shape1,
+    const ppl::nn::TensorShape* tensor_shape_out,
     const int packed_channel,
-    uint32_t *stride_in0,
-    uint32_t *stride_in1,
-    uint32_t *stride_out)
+    uint32_t* stride_in0,
+    uint32_t* stride_in1,
+    uint32_t* stride_out)
 {
-    if (tensor_shape0->GetDimCount() < 2 || tensor_shape1->GetDimCount() < 2) return;
+    if (tensor_shape0->GetDimCount() < 2 || tensor_shape1->GetDimCount() < 2)
+        return;
     ppl::nn::TensorShape pad_tensor_shape0 = *tensor_shape0;
     ppl::nn::TensorShape pad_tensor_shape1 = *tensor_shape1;
-    int max_dims = tensor_shape_out->GetDimCount();
+    int max_dims                           = tensor_shape_out->GetDimCount();
     if (pad_tensor_shape0.GetDimCount() < pad_tensor_shape1.GetDimCount()) {
         pad_tensor_shape0.SetDimCount(max_dims);
         // pad 1 to shape_min_pad's higher dim
@@ -164,9 +167,12 @@ void ppl_logical_prepare_strides_nhwc(
 
     for (int stride_pos = dimCount - 1; stride_pos >= 0; stride_pos--) {
         int i = stride_pos;
-        if (stride_pos == dimCount - 1) i = 1;
-        else if (stride_pos == 0) i = 0;
-        else i = stride_pos + 1;
+        if (stride_pos == dimCount - 1)
+            i = 1;
+        else if (stride_pos == 0)
+            i = 0;
+        else
+            i = stride_pos + 1;
         stride_in0[stride_pos] = pad_tensor_shape0.GetDim(i) == 1 ? 0 : stride0;
         stride_in1[stride_pos] = pad_tensor_shape1.GetDim(i) == 1 ? 0 : stride1;
         stride_out[stride_pos] = stride_out0;
@@ -182,10 +188,11 @@ void ppl_logical_prepare_strides_nhwc(
     }
 }
 
-static void ppl_pad_tensor_shape(const ppl::nn::TensorShape *tensor_shape0,
-                          const ppl::nn::TensorShape *tensor_shape1,
-                          ppl::nn::TensorShape *pad_tensor_shape0,
-                          ppl::nn::TensorShape *pad_tensor_shape1) {
+static void ppl_pad_tensor_shape(const ppl::nn::TensorShape* tensor_shape0,
+                                 const ppl::nn::TensorShape* tensor_shape1,
+                                 ppl::nn::TensorShape* pad_tensor_shape0,
+                                 ppl::nn::TensorShape* pad_tensor_shape1)
+{
     int max_dims = std::max(tensor_shape0->GetDimCount(), tensor_shape1->GetDimCount());
     if (pad_tensor_shape0->GetDimCount() < pad_tensor_shape1->GetDimCount()) {
         pad_tensor_shape0->SetDimCount(max_dims);
@@ -210,28 +217,27 @@ static void ppl_pad_tensor_shape(const ppl::nn::TensorShape *tensor_shape0,
     }
 }
 
-static int ppl_get_num_broadcast_dims(const ppl::nn::TensorShape *tensor_shape0,
-                            const ppl::nn::TensorShape *tensor_shape1,
-                            int &aixs) {
+static int ppl_get_num_broadcast_dims(const ppl::nn::TensorShape* tensor_shape0,
+                                      const ppl::nn::TensorShape* tensor_shape1,
+                                      int& aixs)
+{
     ppl::nn::TensorShape pad_tensor_shape0 = *tensor_shape0;
     ppl::nn::TensorShape pad_tensor_shape1 = *tensor_shape1;
-    ppl_pad_tensor_shape(tensor_shape0, tensor_shape1,
-            &pad_tensor_shape0, &pad_tensor_shape1);
-    int dim_count = pad_tensor_shape0.GetDimCount();
+    ppl_pad_tensor_shape(tensor_shape0, tensor_shape1, &pad_tensor_shape0, &pad_tensor_shape1);
+    int dim_count          = pad_tensor_shape0.GetDimCount();
     int num_broadcast_dims = 0;
-    for(int it = 0; it < dim_count; ++it) {
+    for (int it = 0; it < dim_count; ++it) {
         if (pad_tensor_shape0.GetDim(it) != pad_tensor_shape1.GetDim(it))
             ++num_broadcast_dims;
     }
     if (num_broadcast_dims == 1) {
-        for(int it = 0; it < dim_count; ++it) {
+        for (int it = 0; it < dim_count; ++it) {
             if (pad_tensor_shape0.GetDim(it) != pad_tensor_shape1.GetDim(it))
                 aixs = it;
         }
     }
     return num_broadcast_dims;
 }
-
 
 #define MAXDIMENSIONS 7
 
@@ -255,8 +261,8 @@ __global__ void ppl_cukernel_logical(
     if (index >= num_elems)
         return;
     uint64_t out_index = index;
-    uint64_t offset0 = 0;
-    uint64_t offset1 = 0;
+    uint64_t offset0   = 0;
+    uint64_t offset1   = 0;
     for (int i = 0; i < dim_count; i++) {
         uint64_t dim_off = index / param.stride_out[i];
         offset0 += dim_off * param.stride_in0[i];
@@ -276,7 +282,8 @@ __global__ void ppl_cukernel_logical_naive(
 {
 #if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
     uint64_t index = blockIdx.x * blockDim.x + threadIdx.x;
-    if (index >= num_elems) return;
+    if (index >= num_elems)
+        return;
     output[index] = ppl_logical_vector<op_type>(input0[index], input1[index]);
 #endif
 }
@@ -297,7 +304,7 @@ ppl::common::RetCode PPLCUDALogicalForwardImp(
     int dim_count      = output_shape->GetDimCount();
     int block_size     = 256;
 
-    int axis = 0;                                                                                                                                                          
+    int axis               = 0;
     int num_broadcast_dims = ppl_get_num_broadcast_dims(input_shape0, input_shape1, axis);
     switch (output_shape->GetDataFormat()) {
         case ppl::common::DATAFORMAT_NDARRAY: {
@@ -313,21 +320,23 @@ ppl::common::RetCode PPLCUDALogicalForwardImp(
             } else {
                 uint64_t grid_size = (num_elems + block_size - 1) / block_size;
                 ppl_cukernel_logical_naive<op_type, bool, bool><<<grid_size,
-                                                            block_size,
-                                                            0,
-                                                            stream>>>(num_elems, (const bool*)input0, (const bool*)input1, (bool*)output);
+                                                                  block_size,
+                                                                  0,
+                                                                  stream>>>(num_elems, (const bool*)input0, (const bool*)input1, (bool*)output);
             }
             return ppl::common::RC_SUCCESS;
         }
         case ppl::common::DATAFORMAT_NHWC8: {
             bool can_broadcast = (input_shape0->GetDimCount() >= 2) && (input_shape1->GetDimCount() >= 2);
-            if (!can_broadcast) return ppl::common::RC_UNSUPPORTED;
-            if ((input_shape0->GetDim(1) & 0x7) || (input_shape1->GetDim(1) & 0x7)) return ppl::common::RC_UNSUPPORTED;
+            if (!can_broadcast)
+                return ppl::common::RC_UNSUPPORTED;
+            if ((input_shape0->GetDim(1) & 0x7) || (input_shape1->GetDim(1) & 0x7))
+                return ppl::common::RC_UNSUPPORTED;
             int channel_shift  = 3;
             int packed_channel = 8;
             uint64_t grid_size = ((num_elems >> channel_shift) + block_size - 1) / block_size;
             ppl_logical_prepare_strides_nhwc(input_shape0, input_shape1, output_shape, packed_channel, param.stride_in0, param.stride_in1, param.stride_out);
-            ppl_cukernel_logical<op_type, bool8_, bool8_><<<grid_size, block_size, 0, stream>>>(num_elems >> channel_shift, dim_count, param, (const bool8_ *)input0, (const bool8_ *)input1, (bool8_ *)output);
+            ppl_cukernel_logical<op_type, bool8_, bool8_><<<grid_size, block_size, 0, stream>>>(num_elems >> channel_shift, dim_count, param, (const bool8_*)input0, (const bool8_*)input1, (bool8_*)output);
             return ppl::common::RC_SUCCESS;
         }
         default:
@@ -336,23 +345,28 @@ ppl::common::RetCode PPLCUDALogicalForwardImp(
 #undef SWITCH_CASE
 }
 
-#define INSTANT(OPTYPE) \
-ppl::common::RetCode PPLCUDALogical##OPTYPE##ForwardImp( \
-    cudaStream_t stream, \
-    const ppl::nn::TensorShape* input_shape0, \
-    const bool *input0, \
-    const ppl::nn::TensorShape* input_shape1, \
-    const bool *input1, \
-    const ppl::nn::TensorShape* output_shape, \
-    bool *output) { \
-    if (input_shape0->GetDataType() == ppl::common::DATATYPE_BOOL) { \
-        return PPLCUDALogicalForwardImp<Logical_##OPTYPE>(stream, \
-            input_shape0, (const bool*)input0, input_shape1, \
-            (const bool*)input1, output_shape, output); \
-    } else { \
-        return ppl::common::RC_UNSUPPORTED; \
-    } \
-}
+#define INSTANT(OPTYPE)                                                            \
+    ppl::common::RetCode PPLCUDALogical##OPTYPE##ForwardImp(                       \
+        cudaStream_t stream,                                                       \
+        const ppl::nn::TensorShape* input_shape0,                                  \
+        const bool* input0,                                                        \
+        const ppl::nn::TensorShape* input_shape1,                                  \
+        const bool* input1,                                                        \
+        const ppl::nn::TensorShape* output_shape,                                  \
+        bool* output)                                                              \
+    {                                                                              \
+        if (input_shape0->GetDataType() == ppl::common::DATATYPE_BOOL) {           \
+            return PPLCUDALogicalForwardImp<Logical_##OPTYPE>(stream,              \
+                                                              input_shape0,        \
+                                                              (const bool*)input0, \
+                                                              input_shape1,        \
+                                                              (const bool*)input1, \
+                                                              output_shape,        \
+                                                              output);             \
+        } else {                                                                   \
+            return ppl::common::RC_UNSUPPORTED;                                    \
+        }                                                                          \
+    }
 
 INSTANT(And);
 

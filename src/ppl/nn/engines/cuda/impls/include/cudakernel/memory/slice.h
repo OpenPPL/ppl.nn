@@ -22,7 +22,7 @@
 #include <cuda_runtime.h>
 #include <stdint.h>
 
-#define SLICE_PARAM_MAX_DIM_SIZE  5
+#define SLICE_PARAM_MAX_DIM_SIZE 5
 struct SliceKernelParam {
     int64_t axes_num = 0;
     int64_t starts[SLICE_PARAM_MAX_DIM_SIZE];
@@ -39,4 +39,4 @@ ppl::common::RetCode PPLCUDASliceForwardImp(
     ppl::nn::TensorShape* output_shape,
     void* output);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_SLICE_SLICE_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_SLICE_SLICE_H_

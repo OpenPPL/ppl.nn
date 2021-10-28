@@ -92,18 +92,24 @@ const RetCode GemmFusion::FuseNode(ir::Node* node, bool reliable, const OptKerne
 
         if (CanFuse(nextnode, options, i)) {
             LOG(DEBUG) << "Fuse node[" << node->GetName() << "] and nextnode[" << nextnode->GetName() << "]";
-
+            param->extra_param.fuse_info.types.emplace_back(nextnode->GetType().name);
+            param->extra_param.fuse_info.input_ind.emplace_back(node->GetInputCount());
             if (nextnode->GetType().name != "Clip") {
-                param->extra_param.has_activation = nextnode->GetType().name == "Relu" ? 1 : 2;
+                auto next_kernel = (CudaOptKernel*)(options.info->kernels[nextnode_id].get());
+                void* temp_param = nullptr;
+                next_kernel->CopyParam(temp_param);
+                param->extra_param.fuse_info.fuse_attrs.emplace_back(std::move(temp_param));
             } else {
+                auto clip_param = new ClipParam();
                 auto min_iter = data->constants.find(nextnode->GetInput(1));
                 if (min_iter != data->constants.end()) {
-                    param->extra_param.clip.min_val = *(float*)(min_iter->second.data.data());
+                    clip_param->min_val = *(float*)(min_iter->second.data.data());
                 }
                 auto max_iter = data->constants.find(nextnode->GetInput(2));
                 if (max_iter != data->constants.end()) {
-                    param->extra_param.clip.max_val = *(float*)(max_iter->second.data.data());
+                    clip_param->max_val = *(float*)(max_iter->second.data.data());
                 }
+                param->extra_param.fuse_info.fuse_attrs.emplace_back((void*)clip_param);
             }
             options.info->kernels.erase(nextnode_id);
             FuseGemmWithNextNode(node, nextnode, options);
