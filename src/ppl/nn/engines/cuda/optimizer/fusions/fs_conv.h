@@ -29,7 +29,8 @@ public:
 private:
     const bool FuseTest(ir::Node* node, const OptKernelOptions& options,
                         std::function<ppl::common::RetCode(ir::Node*, const OptKernelOptions&)>);
-    const ppl::common::RetCode FuseConvWithNextNode(ir::Node* node, ir::Node* nextnode, const OptKernelOptions& options);
+    const ppl::common::RetCode FuseConvWithNextNode(ir::Node* node, ir::Node* nextnode,
+                                                    const OptKernelOptions& options);
 
     static bool CanFuseRelu(ir::Node* nextnode, const OptKernelOptions& options) {
         std::set<std::string> relu_fuse_op{"Relu", "Clip", "PRelu", "LeakyRelu", "Sigmoid"};

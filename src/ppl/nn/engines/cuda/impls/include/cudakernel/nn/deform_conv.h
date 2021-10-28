@@ -1,4 +1,6 @@
 #include "ppl/nn/common/tensor_shape.h"
+#include "ppl/nn/engines/cuda/module/cuda_module.h"
+
 #include "ppl/common/retcode.h"
 
 int64_t PPLCUDADeformConvGetBufSize(
@@ -8,6 +10,7 @@ int64_t PPLCUDADeformConvGetBufSize(
 
 ppl::common::RetCode PPLCUDADeformConvForward(
     const cudaStream_t &stream,
+    ppl::nn::cuda::CUDAModule *module,
     const ppl::nn::TensorShape *output_shape,
     const ppl::nn::TensorShape *input_shape,
     void *output,
@@ -36,4 +39,3 @@ ppl::common::RetCode PPLCUDADeformConvModifyWeights(
     const ppl::nn::TensorShape *flt_shape,
     const void *in_flt,
     void *out_flt);
- 

@@ -30,4 +30,4 @@ ppl::common::RetCode PPLCUDATransposeForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_TRANSPOSE_TRANSPOSE_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_TRANSPOSE_TRANSPOSE_H_

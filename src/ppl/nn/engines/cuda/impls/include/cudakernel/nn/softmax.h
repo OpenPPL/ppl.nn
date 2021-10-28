@@ -32,4 +32,4 @@ ppl::common::RetCode PPLCUDASoftmaxForwardImp(
     void* temp_buffer,
     int axis);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_SOFTMAX_SOFTMAX_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_SOFTMAX_SOFTMAX_H_

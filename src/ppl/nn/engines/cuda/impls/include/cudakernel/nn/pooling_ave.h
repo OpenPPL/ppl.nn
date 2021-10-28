@@ -34,4 +34,4 @@ ppl::common::RetCode PPLCUDAAvePoolingForwardImp(
     int padding_width,
     int if_exclude_padding);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_POOLING_POOLING_AVE_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_POOLING_POOLING_AVE_H_

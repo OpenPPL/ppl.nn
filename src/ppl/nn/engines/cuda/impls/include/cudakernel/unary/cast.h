@@ -28,4 +28,4 @@ ppl::common::RetCode PPLCUDACastForwardImp(
     void* output,
     int to_);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_CAST_CAST_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_CAST_CAST_H_

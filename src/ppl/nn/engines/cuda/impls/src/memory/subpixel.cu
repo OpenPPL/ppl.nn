@@ -127,11 +127,11 @@ ppl::common::RetCode PPLCUDASubpixelDownForwardImp(
     int block_size = 256;
     int grid_size  = (num_elems + block_size - 1) / block_size;
 
-#define SWITCH_CASE(TYPE)                                                                                                    \
-    case sizeof(TYPE): {                                                                                                     \
-        ppl_cukernel_subpixel_down<<<grid_size, block_size, 0, stream>>>(                                                   \
-            num_elems, down_ratio, num_output_dim, output_strides_fast, input_strides, (const TYPE *)input, (TYPE *)output); \
-        return ppl::common::RC_SUCCESS;                                                                                      \
+#define SWITCH_CASE(TYPE)                                                                                                  \
+    case sizeof(TYPE): {                                                                                                   \
+        ppl_cukernel_subpixel_down<<<grid_size, block_size, 0, stream>>>(                                                  \
+            num_elems, down_ratio, num_output_dim, output_strides_fast, input_strides, (const TYPE*)input, (TYPE*)output); \
+        return ppl::common::RC_SUCCESS;                                                                                    \
     }
 
     switch (ppl::common::GetSizeOfDataType(input_shape->GetDataType())) {
@@ -175,11 +175,11 @@ ppl::common::RetCode PPLCUDASubpixelUpForwardImp(
     int block_size = 256;
     int grid_size  = (num_elems + block_size - 1) / block_size;
 
-#define SWITCH_CASE(TYPE)                                                                                                  \
-    case sizeof(TYPE): {                                                                                                   \
-        ppl_cukernel_subpixel_up<<<grid_size, block_size, 0, stream>>>(                                                   \
-            num_elems, up_ratio, num_output_dim, output_strides_fast, input_strides, (const TYPE *)input, (TYPE *)output); \
-        return ppl::common::RC_SUCCESS;                                                                                    \
+#define SWITCH_CASE(TYPE)                                                                                                \
+    case sizeof(TYPE): {                                                                                                 \
+        ppl_cukernel_subpixel_up<<<grid_size, block_size, 0, stream>>>(                                                  \
+            num_elems, up_ratio, num_output_dim, output_strides_fast, input_strides, (const TYPE*)input, (TYPE*)output); \
+        return ppl::common::RC_SUCCESS;                                                                                  \
     }
 
     switch (ppl::common::GetSizeOfDataType(input_shape->GetDataType())) {

@@ -53,7 +53,7 @@ __global__ void ppl_cukernel_scatter_nd_offset(
     if (index >= num_pieces)
         return;
     // offset
-    const IndexT *indices_ptr = indices_data + index * indices_last_dim_size;
+    const IndexT* indices_ptr = indices_data + index * indices_last_dim_size;
     int64_t rel_offset        = 0;
     for (int it = 0; it < indices_last_dim_size; ++it) {
         IndexT cor_val = indices_ptr[it];
@@ -102,9 +102,9 @@ ppl::common::RetCode PPLCUDAScatterNDForwardImp(
         indices_last_dim_size);
     int block_size             = 256;
     // step 1: calcalute each piece's offset first
-    int64_t *piece_offsets     = static_cast<int64_t *>(temp_buffer);
-    int64_t *input_strides_gpu = piece_offsets + num_pieces;
-    int64_t *input_dims_gpu    = input_strides_gpu + num_input_dim;
+    int64_t* piece_offsets     = static_cast<int64_t*>(temp_buffer);
+    int64_t* input_strides_gpu = piece_offsets + num_pieces;
+    int64_t* input_dims_gpu    = input_strides_gpu + num_input_dim;
     std::vector<int64_t> input_strides(indices_last_dim_size);
     std::vector<int64_t> input_dims(num_input_dim);
     // dimension is partitioned as indices_last_dim_size--piece_size
@@ -120,11 +120,11 @@ ppl::common::RetCode PPLCUDAScatterNDForwardImp(
     int cal_offset_grid = (num_pieces + block_size - 1) / block_size;
     switch (ppl::common::GetSizeOfDataType(indices_shape->GetDataType())) {
         case sizeof(int32_t): {
-            ppl_cukernel_scatter_nd_offset<<<cal_offset_grid, block_size, 0, stream>>>(num_pieces, input_dims_gpu, input_strides_gpu, indices_last_dim_size, (const int32_t *)indices, piece_offsets);
+            ppl_cukernel_scatter_nd_offset<<<cal_offset_grid, block_size, 0, stream>>>(num_pieces, input_dims_gpu, input_strides_gpu, indices_last_dim_size, (const int32_t*)indices, piece_offsets);
             break;
         }
         case sizeof(int64_t): {
-            ppl_cukernel_scatter_nd_offset<<<cal_offset_grid, block_size, 0, stream>>>(num_pieces, input_dims_gpu, input_strides_gpu, indices_last_dim_size, (const int64_t *)indices, piece_offsets);
+            ppl_cukernel_scatter_nd_offset<<<cal_offset_grid, block_size, 0, stream>>>(num_pieces, input_dims_gpu, input_strides_gpu, indices_last_dim_size, (const int64_t*)indices, piece_offsets);
             break;
         }
         default:
@@ -136,12 +136,11 @@ ppl::common::RetCode PPLCUDAScatterNDForwardImp(
     int scatter_grid_size = (num_elems + block_size - 1) / block_size;
     DivModFast piece_size_fast(piece_size);
 
-    #define SWITCH_CASE(TYPE)                                                                                        \
-        case sizeof(TYPE): {                                                                                         \
-            ppl_cukernel_scatter_nd<<<scatter_grid_size, block_size, 0, stream>>>(num_elems, piece_size_fast,        \
-                piece_offsets, (const TYPE *)updates, (TYPE *)output);                                               \
-            return ppl::common::RC_SUCCESS;                                                                          \
-        }
+#define SWITCH_CASE(TYPE)                                                                                                                                      \
+    case sizeof(TYPE): {                                                                                                                                       \
+        ppl_cukernel_scatter_nd<<<scatter_grid_size, block_size, 0, stream>>>(num_elems, piece_size_fast, piece_offsets, (const TYPE*)updates, (TYPE*)output); \
+        return ppl::common::RC_SUCCESS;                                                                                                                        \
+    }
 
     switch (ppl::common::GetSizeOfDataType(input_shape->GetDataType())) {
         SWITCH_CASE(int8_t);
@@ -152,5 +151,5 @@ ppl::common::RetCode PPLCUDAScatterNDForwardImp(
             return ppl::common::RC_UNSUPPORTED;
     }
 
-    #undef SWITCH_CASE
+#undef SWITCH_CASE
 }

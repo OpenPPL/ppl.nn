@@ -39,4 +39,4 @@ ppl::common::RetCode PPLCUDAScatterNDForwardImp(
     void* output,
     void* temp_buffer);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_SCATTERND_SCATTERND_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_SCATTERND_SCATTERND_H_

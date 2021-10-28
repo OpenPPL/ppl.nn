@@ -84,11 +84,11 @@ ppl::common::RetCode WhereForwardImpNoBroadcast(
         int block_size = 256;
         int grid_size  = ((num_elems / num_vec_elems) + block_size - 1) / block_size;
 
-#define SWITCH_CASE(TYPE)                                                                                                     \
-    case sizeof(TYPE): {                                                                                                      \
-        ppl_cukernel_where_vec_no_broadcast<<<grid_size, block_size, 0, stream>>>(                                           \
-            num_elems, num_vec_elems, (const bool *)condition, (const TYPE *)input_x, (const TYPE *)input_y, (TYPE *)output); \
-        return ppl::common::RC_SUCCESS;                                                                                       \
+#define SWITCH_CASE(TYPE)                                                                                                 \
+    case sizeof(TYPE): {                                                                                                  \
+        ppl_cukernel_where_vec_no_broadcast<<<grid_size, block_size, 0, stream>>>(                                        \
+            num_elems, num_vec_elems, (const bool*)condition, (const TYPE*)input_x, (const TYPE*)input_y, (TYPE*)output); \
+        return ppl::common::RC_SUCCESS;                                                                                   \
     }
 
         switch (ppl::common::GetSizeOfDataType(output_shape->GetDataType())) {
@@ -104,11 +104,11 @@ ppl::common::RetCode WhereForwardImpNoBroadcast(
         int block_size = 256;
         int grid_size  = (num_elems + block_size - 1) / block_size;
 
-#define SWITCH_CASE(TYPE)                                                                                      \
-    case sizeof(TYPE): {                                                                                       \
-        ppl_cukernel_where_no_broadcast<<<grid_size, block_size, 0, stream>>>(                                \
-            num_elems, (const bool *)condition, (const TYPE *)input_x, (const TYPE *)input_y, (TYPE *)output); \
-        return ppl::common::RC_SUCCESS;                                                                        \
+#define SWITCH_CASE(TYPE)                                                                                  \
+    case sizeof(TYPE): {                                                                                   \
+        ppl_cukernel_where_no_broadcast<<<grid_size, block_size, 0, stream>>>(                             \
+            num_elems, (const bool*)condition, (const TYPE*)input_x, (const TYPE*)input_y, (TYPE*)output); \
+        return ppl::common::RC_SUCCESS;                                                                    \
     }
 
         switch (ppl::common::GetSizeOfDataType(output_shape->GetDataType())) {
@@ -158,12 +158,12 @@ ppl::common::RetCode WhereForwardImpSimpleBroadcast(
     int block_size = 256;
     int grid_size  = (num_elems + block_size - 1) / block_size;
 
-#define SWITCH_CASE(TYPE)                                                                                          \
-    case sizeof(TYPE): {                                                                                           \
-        ppl_cukernel_where_simple_broadcast<TYPE, C_BType, X_BType, Y_BType>                                      \
-            <<<grid_size, block_size, 0, stream>>>(                                                                \
-                num_elems, (const bool *)condition, (const TYPE *)input_x, (const TYPE *)input_y, (TYPE *)output); \
-        return ppl::common::RC_SUCCESS;                                                                            \
+#define SWITCH_CASE(TYPE)                                                                                      \
+    case sizeof(TYPE): {                                                                                       \
+        ppl_cukernel_where_simple_broadcast<TYPE, C_BType, X_BType, Y_BType>                                   \
+            <<<grid_size, block_size, 0, stream>>>(                                                            \
+                num_elems, (const bool*)condition, (const TYPE*)input_x, (const TYPE*)input_y, (TYPE*)output); \
+        return ppl::common::RC_SUCCESS;                                                                        \
     }
 
     switch (ppl::common::GetSizeOfDataType(output_shape->GetDataType())) {
@@ -233,12 +233,12 @@ ppl::common::RetCode WhereForwardImpComplexBroadcast(
     int block_size = 256;
     int grid_size  = (num_elems + block_size - 1) / block_size;
 
-#define SWITCH_CASE(TYPE)                                                                                                                                                                              \
-    case sizeof(TYPE): {                                                                                                                                                                               \
-        ppl_cukernel_where_complex_broadcast<TYPE, C_BType, X_BType, Y_BType>                                                                                                                         \
-            <<<grid_size, block_size, 0, stream>>>(                                                                                                                                                    \
-                num_elems, num_dims, condition_strides, (const bool *)condition, input_x_strides, (const TYPE *)input_x, input_y_strides, (const TYPE *)input_y, output_strides_fast, (TYPE *)output); \
-        return ppl::common::RC_SUCCESS;                                                                                                                                                                \
+#define SWITCH_CASE(TYPE)                                                                                                                                                                          \
+    case sizeof(TYPE): {                                                                                                                                                                           \
+        ppl_cukernel_where_complex_broadcast<TYPE, C_BType, X_BType, Y_BType>                                                                                                                      \
+            <<<grid_size, block_size, 0, stream>>>(                                                                                                                                                \
+                num_elems, num_dims, condition_strides, (const bool*)condition, input_x_strides, (const TYPE*)input_x, input_y_strides, (const TYPE*)input_y, output_strides_fast, (TYPE*)output); \
+        return ppl::common::RC_SUCCESS;                                                                                                                                                            \
     }
 
     switch (ppl::common::GetSizeOfDataType(output_shape->GetDataType())) {
@@ -256,7 +256,7 @@ BroadcastType GetBroadcastType(int64_t test_num, int64_t ref_num)
 {
     if (test_num == ref_num) { // no broadcast
         return BroadcastType::NoBroadcast;
-    } else if (test_num == 1) { //scalar
+    } else if (test_num == 1) { // scalar
         return BroadcastType::SimpleBroadcast;
     } else { // need recompute index
         return BroadcastType::ComplexBroadcast;
@@ -285,11 +285,11 @@ ppl::common::RetCode PPLCUDAWhereForwardImp(
     BroadcastType input_y_btype   = GetBroadcastType(num_input_y_elems, num_elems);
     if (condition_btype == BroadcastType::NoBroadcast &&
         input_x_btype == BroadcastType::NoBroadcast &&
-        input_y_btype == BroadcastType::NoBroadcast) { //no broadcast
+        input_y_btype == BroadcastType::NoBroadcast) { // no broadcast
         return WhereForwardImpNoBroadcast(stream, condition_shape, condition, input_x_shape, input_x, input_y_shape, input_y, output_shape, output);
     } else if (condition_btype != BroadcastType::ComplexBroadcast &&
                input_x_btype != BroadcastType::ComplexBroadcast &&
-               input_y_btype != BroadcastType::ComplexBroadcast) { //simple broadcast
+               input_y_btype != BroadcastType::ComplexBroadcast) { // simple broadcast
 
 #define HANDLE_SIMPLE_BROADCAST_Y(condition_btype, input_x_btype, input_y_btype)                                                                                                             \
     switch (input_y_btype) {                                                                                                                                                                 \

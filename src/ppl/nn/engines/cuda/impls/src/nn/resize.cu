@@ -93,8 +93,9 @@ static __device__ __forceinline__ void get_cubic_resize_coefficients(
 template <typename T>
 static __device__ inline T cubic_interplote(float frac0, T data0, float frac1, T data1, float frac2, T data2, float frac3, T data3);
 
-template<typename T>
-static __device__ inline T cubic_interplote(float frac0, T data0, float frac1, T data1, float frac2, T data2, float frac3, T data3) {
+template <typename T>
+static __device__ inline T cubic_interplote(float frac0, T data0, float frac1, T data1, float frac2, T data2, float frac3, T data3)
+{
     T res;
     res = frac0 * data0 + frac1 * data1 +
           frac2 * data2 + frac3 * data3;
@@ -162,9 +163,9 @@ __device__ __forceinline__ static T resize_get_value_bounded(
     return data[access_c * height * width + access_y * width + access_x];
 }
 
-template<typename T>
-__device__ inline T bilinear_interplote(float frac_w0, float frac_w1,
-    float frac_h0, float frac_h1, T data0, T data1, T data2, T data3) {
+template <typename T>
+__device__ inline T bilinear_interplote(float frac_w0, float frac_w1, float frac_h0, float frac_h1, T data0, T data1, T data2, T data3)
+{
     T res;
     res = frac_h0 * (frac_w0 * data0 + frac_w1 * data1) +
           frac_h1 * (frac_w0 * data2 + frac_w1 * data3);
@@ -234,7 +235,7 @@ __global__ void ppl_cukernel_resize_bilinear(
             return;
         }
 
-        //const float h1r = h_scale * h2;
+        // const float h1r = h_scale * h2;
         const float h1r = cudaComputeSourceIndexBilinear(h_scale, h2);
 
         const int h1         = h1r;
@@ -242,7 +243,7 @@ __global__ void ppl_cukernel_resize_bilinear(
         const float h1lambda = h1r - h1;
         const float h0lambda = 1.f - h1lambda;
 
-        //const float w1r = w_scale * w2;
+        // const float w1r = w_scale * w2;
         const float w1r      = cudaComputeSourceIndexBilinear(w_scale, w2);
         const int w1         = w1r;
         const int w1p        = (w1 < in_width - 1) ? 1 : 0;
@@ -295,11 +296,11 @@ __global__ void ppl_cukernel_resize_nearest(
             return;
         }
 
-        //const float h1r = h_scale * h2;
+        // const float h1r = h_scale * h2;
         const float h1r = cudaComputeSourceIndexNearest(h_scale, h2, transform_mode);
         const int h1    = h1r;
 
-        //const float w1r = w_scale * w2;
+        // const float w1r = w_scale * w2;
         const float w1r = cudaComputeSourceIndexNearest(w_scale, w2, transform_mode);
         const int w1    = w1r;
 

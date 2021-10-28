@@ -466,7 +466,7 @@ RetCode OptGraph::SelectAlgos(CudaDevice* device) {
     auto& graph_quants = args_->tensor_quants.find(topo->GetName())->second;
     auto& graph_algos = args_->alog_selects;
 
-    OptKernelOptions options(graph_, info_, resource_, args_, device, &tensor_impls_, &graph_quants, &graph_algos);
+    OptKernelOptions options(graph_, info_, resource_, args_, compile_set_, device, &tensor_impls_, &graph_quants, &graph_algos);
     UpdateTopologicalSort();
 
     if (!PPLCudaComputeCapabilityEqual(7, 5, device->GetDeviceId())) {

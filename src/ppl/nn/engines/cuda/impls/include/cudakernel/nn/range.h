@@ -29,4 +29,4 @@ ppl::common::RetCode PPLCUDARangeForwardImp(
     ppl::nn::TensorShape* output_shape,
     void* output);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_RANGE_RANGE_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_RANGE_RANGE_H_

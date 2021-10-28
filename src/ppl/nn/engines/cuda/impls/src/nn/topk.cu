@@ -25,7 +25,7 @@
 #include <float.h>
 #include <memory>
 
-#define MAX_DIM           8 //tensor_shape.kMaxNumDimensions
+#define MAX_DIM           8 // tensor_shape.kMaxNumDimensions
 #define killWARDependency 1
 
 #define RADIX_SIZE 16
@@ -39,7 +39,7 @@ struct TensorInfo {
     int strides[MAX_DIM];
     const void *data;
     int dims;
-    TensorInfo(ppl::nn::TensorShape* tensor_shape, const void *data_ptr)
+    TensorInfo(ppl::nn::TensorShape *tensor_shape, const void *data_ptr)
     {
         for (unsigned int i = 0; i < tensor_shape->GetDimCount() && i < MAX_DIM; i++) {
             shape[i] = tensor_shape->GetDim(i);
@@ -156,21 +156,20 @@ __device__ unsigned int find_desired(
 
 template <typename T, bool dir>
 __device__ T find_kth_value(
-    int *smem, 
-    int K, 
-    const int sliceSize, 
-    const T *inputSlice, 
+    int *smem,
+    int K,
+    const int sliceSize,
+    const T *inputSlice,
     const int inputSliceStride)
 {
     int count[RADIX_SIZE];
     // use fixed higher bits to filter data
-    unsigned int mask    = 0; //fixed high bit
+    unsigned int mask    = 0; // fixed high bit
     unsigned int desired = 0; // current radix bits to fix
     int *radix_hist      = smem;
     unsigned int kthValue;
-    for (int pos = 8 * sizeof(int) - RADIX_BITS; pos >= 0; pos -= RADIX_BITS)
-    {
-        //reinit radix_hist to 0 every loop
+    for (int pos = 8 * sizeof(int) - RADIX_BITS; pos >= 0; pos -= RADIX_BITS) {
+        // reinit radix_hist to 0 every loop
         for (int i = 0; i < RADIX_SIZE; i++) {
             count[i] = 0;
         }
@@ -224,9 +223,7 @@ __device__ T find_kth_value(
                     asm("bfi.b32 %0, %1, %0, %2, %3;"
                         : "+r"(mask)
                         : "r"(RADIX_MASK), "r"(pos), "r"(RADIX_BITS));
-                    kthValue      = find_desired<T>((unsigned int *)smem, threadIdx.x, 
-				                    mask, desired, 
-						    inputSliceStride, inputSlice, sliceSize);
+                    kthValue      = find_desired<T>((unsigned int *)smem, threadIdx.x, mask, desired, inputSliceStride, inputSlice, sliceSize);
                     T fp_kthValue = convertu2<T>(kthValue);
                     return fp_kthValue;
                 } else if (K <= count[i]) { // narrow radix unitl K == count[i] == 1
@@ -241,8 +238,7 @@ __device__ T find_kth_value(
 
                 K -= count[i];
             }
-        }
-        else {
+        } else {
             for (int i = 0; i < RADIX_SIZE; ++i) {
                 if (K == count[i] && K == 1) {
                     asm("bfi.b32 %0, %1, %0, %2, %3;"
@@ -251,9 +247,7 @@ __device__ T find_kth_value(
                     asm("bfi.b32 %0, %1, %0, %2, %3;"
                         : "+r"(mask)
                         : "r"(RADIX_MASK), "r"(pos), "r"(RADIX_BITS));
-                    kthValue      = find_desired<T>((unsigned int *)smem, threadIdx.x, 
-				                    mask, desired, 
-						    inputSliceStride, inputSlice, sliceSize);
+                    kthValue      = find_desired<T>((unsigned int *)smem, threadIdx.x, mask, desired, inputSliceStride, inputSlice, sliceSize);
                     T fp_kthValue = convertu2<T>(kthValue);
                     return fp_kthValue;
                 } else if (K <= count[i]) { // narrow radix unitl K == count[i] == 1
@@ -270,7 +264,7 @@ __device__ T find_kth_value(
             }
         }
     }
-    kthValue = desired;
+    kthValue      = desired;
     T fp_kthValue = convertu2<T>(kthValue);
     return fp_kthValue;
 }
@@ -278,11 +272,11 @@ __device__ T find_kth_value(
 template <typename T>
 __device__ T scanInWarp(T value, int lane);
 __device__ void prefix_scan(
-    int *smem, 
-    const unsigned int active, 
-    const int activeWarps, 
-    const bool flag, 
-    int &index, 
+    int *smem,
+    const unsigned int active,
+    const int activeWarps,
+    const bool flag,
+    int &index,
     int &blkTotal)
 {
     if (threadIdx.x < blockDim.x / 32) {
@@ -323,30 +317,25 @@ __device__ void prefix_scan(
     if (killWARDependency) {
         __syncthreads();
     }
-
 }
 
 // dir = 1: decrease order; 0: increase order
 template <typename T, bool dir, int blockSize, bool sorted>
 __global__ void selectTopK(
-    TensorInfo input, 
-    TensorInfo topK, 
-    TensorInfo indices, 
-    const int K, 
-    const int collapsedDims, 
-    const int sliceSize, 
-    const int inputSliceStride, 
-    const int topKSliceStride, 
+    TensorInfo input,
+    TensorInfo topK,
+    TensorInfo indices,
+    const int K,
+    const int collapsedDims,
+    const int sliceSize,
+    const int inputSliceStride,
+    const int topKSliceStride,
     const int indicesSliceStride)
 {
-
-
     int inputSliceStart   = get_offset(blockIdx.x, collapsedDims, input);
     // if sorted, transform the output to coalesced slices
-    int topKSliceStart    = sorted ? blockIdx.x * K : 
-	                             get_offset(blockIdx.x, collapsedDims, topK);
-    int indicesSliceStart = sorted ? blockIdx.x * K : 
-	                             get_offset(blockIdx.x, collapsedDims, indices);
+    int topKSliceStart    = sorted ? blockIdx.x * K : get_offset(blockIdx.x, collapsedDims, topK);
+    int indicesSliceStart = sorted ? blockIdx.x * K : get_offset(blockIdx.x, collapsedDims, indices);
 
     // inc or dec hist every bin until reach K
     __shared__ int radix_hist[2 + blockSize / 32];
@@ -355,8 +344,8 @@ __global__ void selectTopK(
     T *inputSlice     = (T *)input.data + inputSliceStart;
     T *topKSlice      = (T *)topK.data + topKSliceStart;
     int *indicesSlice = (int *)indices.data + indicesSliceStart;
-    
-    T fp_kthValue = find_kth_value<T, dir>(smem, K, sliceSize, inputSlice, inputSliceStride);
+
+    T fp_kthValue   = find_kth_value<T, dir>(smem, K, sliceSize, inputSlice, inputSliceStride);
     int writeStart  = 0;
     int activeWarps = 0;
     int tmpSize     = sliceSize;
@@ -377,15 +366,13 @@ __global__ void selectTopK(
         prefix_scan(smem, active, activeWarps, flag, index, blkTotal);
 
         if (flag) {
-            int topKOffset  = sorted ? (writeStart + index) : 
-		                       (writeStart + index) * topKSliceStride;
-            int indexOffset = sorted ? (writeStart + index) : 
-		                       (writeStart + index) * indicesSliceStride;
+            int topKOffset            = sorted ? (writeStart + index) : (writeStart + index) * topKSliceStride;
+            int indexOffset           = sorted ? (writeStart + index) : (writeStart + index) * indicesSliceStride;
             topKSlice[topKOffset]     = value;
             indicesSlice[indexOffset] = off;
         }
         writeStart += blkTotal;
-        //if tmpSize < 0, the loop breaks
+        // if tmpSize < 0, the loop breaks
         tmpSize -= blockSize;
     }
 
@@ -405,10 +392,8 @@ __global__ void selectTopK(
         if (flag) {
             int outputIndex = writeStart + index;
             if (outputIndex < K) {
-                int topKOffset  = sorted ? outputIndex : 
-			                   outputIndex * topKSliceStride;
-                int indexOffset = sorted ? outputIndex : 
-			                   outputIndex * indicesSliceStride;
+                int topKOffset            = sorted ? outputIndex : outputIndex * topKSliceStride;
+                int indexOffset           = sorted ? outputIndex : outputIndex * indicesSliceStride;
                 topKSlice[topKOffset]     = value;
                 indicesSlice[indexOffset] = off;
             }
@@ -421,21 +406,20 @@ __global__ void selectTopK(
         writeStart += blkTotal;
         tmpSize -= blockSize;
     }
-
 }
 
 template <typename KEY, typename VALUE, bool largest>
 __device__ inline void swap(
-    const bool isOdd, 
-    bool &valid1, 
-    KEY &value1, 
-    VALUE &index1, 
-    bool &valid2, 
-    KEY &value2, 
+    const bool isOdd,
+    bool &valid1,
+    KEY &value1,
+    VALUE &index1,
+    bool &valid2,
+    KEY &value2,
     VALUE &index2)
 {
-    bool isLarge = (largest ^ Math<KEY, KEY, KEY>::lt(value1, value2) && valid1) || 
-	           !valid2;
+    bool isLarge = (largest ^ Math<KEY, KEY, KEY>::lt(value1, value2) && valid1) ||
+                   !valid2;
     if (isLarge == isOdd) {
         KEY tmpValue   = value1;
         VALUE tmpIndex = index1;
@@ -451,8 +435,8 @@ __device__ inline void swap(
 
 template <typename KEY, typename VALUE, bool dir, int power2SortSize>
 __global__ void bitonicSort(
-    KEY *Key, 
-    VALUE *Value, 
+    KEY *Key,
+    VALUE *Value,
     const int sliceSize)
 {
     __shared__ KEY smemTopk[power2SortSize];
@@ -482,7 +466,7 @@ __global__ void bitonicSort(
 
 #pragma unroll
     for (int size = 2; size < power2SortSize; size *= 2) {
-        int oddSeg  = (tid & (size / 2)) != 0;
+        int oddSeg = (tid & (size / 2)) != 0;
 #pragma unroll
         // sort each size
         for (int sub_size = size; sub_size > 1; sub_size /= 2) {
@@ -497,9 +481,12 @@ __global__ void bitonicSort(
             VALUE index2  = smemIndices[off + stride];
 
             swap<KEY, VALUE, dir>(oddSeg,
-		 inRange1, value1, index1,
-		 inRange2, value2, index2);
-
+                                  inRange1,
+                                  value1,
+                                  index1,
+                                  inRange2,
+                                  value2,
+                                  index2);
 
             smemTopk[off]             = value1;
             smemIndices[off]          = index1;
@@ -525,8 +512,12 @@ __global__ void bitonicSort(
         VALUE index2  = smemIndices[off + stride];
 
         swap<KEY, VALUE, dir>(false,
-	    inRange1, value1, index1,
-	    inRange2, value2, index2);
+                              inRange1,
+                              value1,
+                              index1,
+                              inRange2,
+                              value2,
+                              index2);
 
         smemTopk[off]             = value1;
         smemIndices[off]          = index1;
@@ -570,14 +561,13 @@ void radix_sort(
     unsigned int *keyBuf,
     VALUE *valueBuf);
 
-
-//tempBuf:
+// tempBuf:
 //*dims
-//convertKey: size*sizeof(unsigned int). zero if inplace
-//keyBuf: convertKey size
-//valueBuf: value size
-//prefixData: SORT_RADIX_SIZE * blocks * sizeof(int)
-//tmpPrefix: SORT_RADIX_SIZE * block_x* sizeof(uint)
+// convertKey: size*sizeof(unsigned int). zero if inplace
+// keyBuf: convertKey size
+// valueBuf: value size
+// prefixData: SORT_RADIX_SIZE * blocks * sizeof(int)
+// tmpPrefix: SORT_RADIX_SIZE * block_x* sizeof(uint)
 template <typename KEY, typename VALUE, bool dir>
 void sortInplace(
     cudaStream_t stream,
@@ -588,7 +578,6 @@ void sortInplace(
     void *temp_buffer,
     int64_t temp_buffer_bytes)
 {
-
     const int blocks = slices_num;
     if (size == 1) {
     } else if (size <= 64) {
@@ -597,29 +586,25 @@ void sortInplace(
         bitonicSort<KEY, VALUE, dir, 128><<<blocks, 64, 0, stream>>>(Key, Value, size);
     } else if (size <= 512) {
         bitonicSort<KEY, VALUE, dir, 512><<<blocks, 256, 0, stream>>>(Key, Value, size);
-    }
-    else {
+    } else {
         int new_blocks = (size + BLK_SORT_SIZE - 1) / BLK_SORT_SIZE;
 
         unsigned int *convert_key = (unsigned int *)temp_buffer;
         unsigned int *topk_buf    = (unsigned int *)(convert_key + slices_num * size);
-        VALUE *indices_buf        = (VALUE        *)(topk_buf    + slices_num * size);
+        VALUE *indices_buf        = (VALUE *)(topk_buf + slices_num * size);
         unsigned int *prefix_data = (unsigned int *)(indices_buf + slices_num * size);
         unsigned int *tmp_prefix  = (unsigned int *)(prefix_data + slices_num * SORT_RADIX_SIZE * new_blocks);
 
-        radix_sort<KEY, VALUE, dir>(stream, Key, Value, size, slices_num, 
-			            convert_key, prefix_data, tmp_prefix, 
-				    topk_buf, indices_buf);
+        radix_sort<KEY, VALUE, dir>(stream, Key, Value, size, slices_num, convert_key, prefix_data, tmp_prefix, topk_buf, indices_buf);
     }
-
 }
 
 int collapse_dim(TensorInfo *param, int dim)
 {
-    int dimSize      = param->shape[dim];
+    int dimSize       = param->shape[dim];
     param->shape[dim] = 1;
-    int cur          = -1;
-    int p            = 0;
+    int cur           = -1;
+    int p             = 0;
     for (; p < dim; p++) {
         if (param->shape[p] == 1)
             continue;
@@ -648,9 +633,7 @@ int collapse_dim(TensorInfo *param, int dim)
         param->strides[i] = param->shape[i + 1] * param->strides[i + 1];
     }
 
-    int sliceStride = (dim == -1 || dim == param->dims - 1) ? 
-	              1 : 
-		      param->shape[markCur + 1] * param->strides[markCur + 1];
+    int sliceStride         = (dim == -1 || dim == param->dims - 1) ? 1 : param->shape[markCur + 1] * param->strides[markCur + 1];
     param->strides[markCur] = dimSize * sliceStride;
 
     for (int i = markCur - 1; i >= 0; --i) {
@@ -660,7 +643,6 @@ int collapse_dim(TensorInfo *param, int dim)
     param->dims = cur + 1;
     return sliceStride;
 }
-
 
 // bitWidth: 2 or 4 SORT_RADIX_SIZE
 // bitPos: 0-30
@@ -687,9 +669,7 @@ __global__ void radixSort(
 
     int lane        = threadIdx.x & 31;
     int warpId      = threadIdx.x >> 5;
-    int activeWarps = (blockIdx.x == gridDim.x - 1) ? 
-	              DivUp((size & (BLK_SORT_SIZE - 1)), 32) : 
-		      BLK_SORT_SIZE / 32;
+    int activeWarps = (blockIdx.x == gridDim.x - 1) ? DivUp((size & (BLK_SORT_SIZE - 1)), 32) : BLK_SORT_SIZE / 32;
     if (activeWarps == 0)
         activeWarps = 32;
     int64_t tid                     = blockIdx.x * blockDim.x + threadIdx.x;
@@ -704,20 +684,20 @@ __global__ void radixSort(
             : "=r"(keyRadix)
             : "r"(intKey), "r"(bitPos), "r"(SORT_RADIX_BITS));
         int radixPrefix = 0;
-        for (int i = dir * (SORT_RADIX_SIZE - 1); 
-	     i != (1 - dir) * SORT_RADIX_SIZE + dir * (-1); 
-	     i += dir * (-1) + 1 - dir) {
+        for (int i = dir * (SORT_RADIX_SIZE - 1);
+             i != (1 - dir) * SORT_RADIX_SIZE + dir * (-1);
+             i += dir * (-1) + 1 - dir) {
             bool flag           = inRange && (keyRadix == i);
             unsigned int ballot = __ballot_sync(active, flag);
             int warpCnt         = __popc(ballot);
-            int lanePrefix = __popc(ballot & lane_mask_lt);
-            int warpPrefix = 0;
+            int lanePrefix      = __popc(ballot & lane_mask_lt);
+            int warpPrefix      = 0;
             if (inRange && lane == 0) {
                 s_cnt[i * BLK_SORT_SIZE / 32 + warpId] = warpCnt;
             }
             __syncthreads();
 
-            //prefix sum in warp
+            // prefix sum in warp
             if (threadIdx.x < 32) {
                 warpCnt             = s_cnt[i * BLK_SORT_SIZE / 32 + threadIdx.x];
                 unsigned int prefix = warpCnt;
@@ -740,12 +720,12 @@ __global__ void radixSort(
             }
 
             radixPrefix += s_cnt[i * BLK_SORT_SIZE / 32 + activeWarps - 1];
-            __syncthreads(); //WAR
+            __syncthreads(); // WAR
         }
         if (threadIdx.x == 0) {
             for (int i = 0; i < SORT_RADIX_SIZE; i++) {
-                prefixData[blockIdx.y*gridDim.x*SORT_RADIX_SIZE + i*gridDim.x+blockIdx.x] = 
-	            s_cnt[i * BLK_SORT_SIZE / 32 + activeWarps - 1];
+                prefixData[blockIdx.y * gridDim.x * SORT_RADIX_SIZE + i * gridDim.x + blockIdx.x] =
+                    s_cnt[i * BLK_SORT_SIZE / 32 + activeWarps - 1];
             }
         }
 
@@ -773,9 +753,9 @@ __device__ T scanInWarp(T value, int lane)
 //#define SIZE_PER_SCAN 1024
 template <typename T>
 __global__ void prefixSum(
-    T *prefixData, 
-    const int size, 
-    const int blkScanSize, 
+    T *prefixData,
+    const int size,
+    const int blkScanSize,
     T *blkTotal)
 {
     __shared__ T warp_cnt[SIZE_PER_SCAN >> 5];
@@ -784,8 +764,8 @@ __global__ void prefixSum(
     int warpId  = threadIdx.x >> 5;
     int64_t off = blockIdx.x * blkScanSize + threadIdx.x;
     prefixData += (blockIdx.z * SORT_RADIX_SIZE + blockIdx.y) * size;
-    blkTotal   += blockIdx.z * SORT_RADIX_SIZE * gridDim.x + 
-	          blockIdx.y * gridDim.x + blockIdx.x;
+    blkTotal += blockIdx.z * SORT_RADIX_SIZE * gridDim.x +
+                blockIdx.y * gridDim.x + blockIdx.x;
 
     T subScanPrefix = (T)0;
     for (int iterOff = 0; iterOff < blkScanSize; iterOff += SIZE_PER_SCAN) {
@@ -834,16 +814,16 @@ __global__ void prefixSum(
         }
         subScanPrefix += warp_cnt[(SIZE_PER_SCAN >> 5) - 1];
     }
-    //blk scan total
+    // blk scan total
     if (threadIdx.x == 0) {
         blkTotal[0] = subScanPrefix;
     }
 }
 template <typename T>
 __global__ void finalPrefixSum(
-    T *prefixData, 
-    const int size, 
-    const int blkScanSize, 
+    T *prefixData,
+    const int size,
+    const int blkScanSize,
     T *blkTotal)
 {
     int batchId = blockIdx.z * SORT_RADIX_SIZE + blockIdx.y;
@@ -864,29 +844,28 @@ __global__ void finalPrefixSum(
         }
     }
     if (blockIdx.x == gridDim.x - 1 && threadIdx.x == 0) {
-        blkTotal[batchId * gridDim.x + blockIdx.x] = 
-	    blkPrefix + blkTotal[batchId * gridDim.x + blockIdx.x];
+        blkTotal[batchId * gridDim.x + blockIdx.x] =
+            blkPrefix + blkTotal[batchId * gridDim.x + blockIdx.x];
     }
 }
 
 template <bool dir, typename VALUE>
 __global__ void interBlkSort(
-    unsigned int *outKey, 
-    VALUE *outValue, 
-    unsigned int *Key, 
-    VALUE *Value, 
+    unsigned int *outKey,
+    VALUE *outValue,
+    unsigned int *Key,
+    VALUE *Value,
     unsigned int size,
     unsigned int *prefixData,
     unsigned int *radixTotal,
     unsigned int totalPos,
     unsigned int bitPos)
 {
-
     prefixData += blockIdx.y * SORT_RADIX_SIZE * gridDim.x;
     radixTotal += blockIdx.y * SORT_RADIX_SIZE * totalPos;
-    Key      += blockIdx.y * size;
-    Value    += blockIdx.y * size;
-    outKey   += blockIdx.y * size;
+    Key += blockIdx.y * size;
+    Value += blockIdx.y * size;
+    outKey += blockIdx.y * size;
     outValue += blockIdx.y * size;
 
     __shared__ unsigned int s_cnt[SORT_RADIX_SIZE * BLK_SORT_SIZE / 32];
@@ -897,9 +876,7 @@ __global__ void interBlkSort(
     if (threadIdx.x < SORT_RADIX_SIZE * BLK_SORT_SIZE / 32)
         s_cnt[threadIdx.x] = 0;
     __syncthreads();
-    int activeWarps = (blockIdx.x == gridDim.x - 1) ? 
-	              DivUp((size & (BLK_SORT_SIZE - 1)), 31) : 
-	              BLK_SORT_SIZE / 32;
+    int activeWarps = (blockIdx.x == gridDim.x - 1) ? DivUp((size & (BLK_SORT_SIZE - 1)), 31) : BLK_SORT_SIZE / 32;
     if (activeWarps == 0)
         activeWarps = 32;
 
@@ -916,10 +893,9 @@ __global__ void interBlkSort(
         asm("bfe.u32 %0, %1, %2, %3;"
             : "=r"(keyRadix)
             : "r"(intKey), "r"(bitPos), "r"(SORT_RADIX_BITS));
-        for (int i = dir * (SORT_RADIX_SIZE - 1); 
-	    i != (1 - dir) * SORT_RADIX_SIZE + dir * (-1);
-	    i += dir * (-1) + 1 - dir)
-	{
+        for (int i = dir * (SORT_RADIX_SIZE - 1);
+             i != (1 - dir) * SORT_RADIX_SIZE + dir * (-1);
+             i += dir * (-1) + 1 - dir) {
             unsigned int blkPrefix  = prefixData[i * gridDim.x + blockIdx.x];
             bool flag               = inRange && (keyRadix == i);
             unsigned int ballot     = __ballot_sync(active, flag);
@@ -962,7 +938,7 @@ __global__ void interBlkSort(
     }
 }
 
-//for fp16, we can apply short int *outKey
+// for fp16, we can apply short int *outKey
 template <typename KEY>
 __global__ void convert(KEY *Key, unsigned int *outKey, int size)
 {
@@ -983,38 +959,37 @@ __global__ void reverse_convert(unsigned int *Key, KEY *outKey, int size)
 
     unsigned int intKey = Key[tid];
     KEY key             = convertu2<KEY>(intKey);
-    outKey[tid] = key;
+    outKey[tid]         = key;
 }
 
-//tempBuf:
+// tempBuf:
 //*dims
-//convertKey: size*sizeof(unsigned int). zero if inplace
-//keyBuf: convertKey size
-//valueBuf: value size
-//prefixData: SORT_RADIX_SIZE * blocks * sizeof(int)
-//tmpPrefix: SORT_RADIX_SIZE * block_x* sizeof(uint)
+// convertKey: size*sizeof(unsigned int). zero if inplace
+// keyBuf: convertKey size
+// valueBuf: value size
+// prefixData: SORT_RADIX_SIZE * blocks * sizeof(int)
+// tmpPrefix: SORT_RADIX_SIZE * block_x* sizeof(uint)
 template <typename KEY, typename VALUE, bool largest>
 void radix_sort(
-    cudaStream_t stream, 
-    KEY *key, 
-    VALUE *value, 
-    int size, 
-    int sliceNum, 
-    unsigned int *convertKey, 
-    unsigned int *prefixData, 
-    unsigned int *tmpPrefix, 
-    unsigned int *keyBuf, 
+    cudaStream_t stream,
+    KEY *key,
+    VALUE *value,
+    int size,
+    int sliceNum,
+    unsigned int *convertKey,
+    unsigned int *prefixData,
+    unsigned int *tmpPrefix,
+    unsigned int *keyBuf,
     VALUE *valueBuf)
 {
-    convert<KEY><<<DivUp(sliceNum *size, 1024), 1024, 0, stream>>>
-	(key, convertKey, sliceNum * size);
+    convert<KEY><<<DivUp(sliceNum * size, 1024), 1024, 0, stream>>>(key, convertKey, sliceNum * size);
     int blocks = DivUp(size, BLK_SORT_SIZE);
 
     constexpr int MAX_BLKS = 64;
-    int prefixSize     = blocks;
-    int blkScanSize    = max(DivUp(prefixSize, MAX_BLKS), 
-		               SIZE_PER_SCAN);
-    unsigned int block_x = DivUp(blocks, blkScanSize);
+    int prefixSize         = blocks;
+    int blkScanSize        = max(DivUp(prefixSize, MAX_BLKS),
+                          SIZE_PER_SCAN);
+    unsigned int block_x   = DivUp(blocks, blkScanSize);
 
     unsigned int *keyIn, *keyOut;
     VALUE *valueIn, *valueOut;
@@ -1023,21 +998,17 @@ void radix_sort(
     keyOut   = keyBuf;
     valueOut = valueBuf;
 
-    dim3 sort_grid = dim3(blocks, sliceNum, 1);
+    dim3 sort_grid   = dim3(blocks, sliceNum, 1);
     dim3 prefix_grid = dim3(block_x, SORT_RADIX_SIZE, sliceNum);
-    dim3 final_grid = dim3(block_x, SORT_RADIX_SIZE, sliceNum);
+    dim3 final_grid  = dim3(block_x, SORT_RADIX_SIZE, sliceNum);
     for (unsigned pos = 0; pos <= 8 * sizeof(KEY) - SORT_RADIX_BITS; pos += SORT_RADIX_BITS) {
-        radixSort<largest, VALUE> <<<sort_grid, BLK_SORT_SIZE, 0, stream>>>
-	    (keyIn, valueIn, size, pos, prefixData);
+        radixSort<largest, VALUE><<<sort_grid, BLK_SORT_SIZE, 0, stream>>>(keyIn, valueIn, size, pos, prefixData);
 
-        prefixSum<unsigned int> <<<prefix_grid, SIZE_PER_SCAN, 0, stream>>>
-	    (prefixData, blocks, blkScanSize, tmpPrefix);
+        prefixSum<unsigned int><<<prefix_grid, SIZE_PER_SCAN, 0, stream>>>(prefixData, blocks, blkScanSize, tmpPrefix);
         if (block_x > 1) {
-            finalPrefixSum<unsigned int><<<final_grid, SIZE_PER_SCAN, 0, stream>>>
-	    (prefixData, blocks, blkScanSize, tmpPrefix);
+            finalPrefixSum<unsigned int><<<final_grid, SIZE_PER_SCAN, 0, stream>>>(prefixData, blocks, blkScanSize, tmpPrefix);
         }
-        interBlkSort<largest, VALUE> <<<sort_grid, BLK_SORT_SIZE, 0, stream>>>
-	    (keyOut, valueOut, keyIn, valueIn, size, prefixData, tmpPrefix, block_x, pos);
+        interBlkSort<largest, VALUE><<<sort_grid, BLK_SORT_SIZE, 0, stream>>>(keyOut, valueOut, keyIn, valueIn, size, prefixData, tmpPrefix, block_x, pos);
 
         unsigned int *tmpk = keyIn;
         VALUE *tmpv        = valueIn;
@@ -1048,50 +1019,50 @@ void radix_sort(
         valueOut = tmpv;
     }
     if (keyIn != convertKey) {
-        cudaMemcpyAsync(value, valueOut, size * sizeof(VALUE), 
-	    cudaMemcpyDeviceToDevice, stream);
+        cudaMemcpyAsync(value, valueOut, size * sizeof(VALUE), cudaMemcpyDeviceToDevice, stream);
     }
 
-    reverse_convert<KEY><<<DivUp(sliceNum*size, 1024), 1024, 0, stream>>>
-        (keyIn, key, sliceNum * size);
+    reverse_convert<KEY><<<DivUp(sliceNum * size, 1024), 1024, 0, stream>>>(keyIn, key, sliceNum * size);
 }
 
 int64_t PPLTopKGetTempBufferSize(
-    const ppl::nn::TensorShape* indices_shape, 
-    const int K, 
-    int dim_k, 
+    const ppl::nn::TensorShape *indices_shape,
+    const int K,
+    int dim_k,
     bool sorted)
 {
     if (sorted == false)
         return 0;
 
-    if(dim_k == -1){
-	dim_k = indices_shape->GetDimCount() - 1;
+    if (dim_k == -1) {
+        dim_k = indices_shape->GetDimCount() - 1;
     }
     int slices_num = 1;
     for (unsigned int i = 0; i < indices_shape->GetDimCount(); i++) {
-        if (i != (unsigned int)dim_k)    slices_num *= indices_shape->GetDim(i);
+        if (i != (unsigned int)dim_k)
+            slices_num *= indices_shape->GetDim(i);
     }
 
     int64_t total_size = 0;
-    //keyBuf
+    // keyBuf
     total_size += slices_num * K * sizeof(unsigned int);
-    //valueBuf unsigned int
+    // valueBuf unsigned int
     total_size += slices_num * K * sizeof(indices_shape->GetDataType());
-    //max bitonic sort size
-    if (K <= 512)     return total_size;
+    // max bitonic sort size
+    if (K <= 512)
+        return total_size;
 
-    //determined by GPU devices, SMs number
-    constexpr int MAX_BLKS  = 64;
-    int new_blocks       = (K + BLK_SORT_SIZE - 1) / BLK_SORT_SIZE;
-    int prefixSize       = new_blocks;
-    int blkScanSize      = max( DivUp(prefixSize, MAX_BLKS), SIZE_PER_SCAN);
-    unsigned int block_x = DivUp(new_blocks, blkScanSize);
-    //convertKey
+    // determined by GPU devices, SMs number
+    constexpr int MAX_BLKS = 64;
+    int new_blocks         = (K + BLK_SORT_SIZE - 1) / BLK_SORT_SIZE;
+    int prefixSize         = new_blocks;
+    int blkScanSize        = max(DivUp(prefixSize, MAX_BLKS), SIZE_PER_SCAN);
+    unsigned int block_x   = DivUp(new_blocks, blkScanSize);
+    // convertKey
     total_size += slices_num * K * sizeof(unsigned int);
-    //prefixData
+    // prefixData
     total_size += slices_num * SORT_RADIX_SIZE * new_blocks * sizeof(unsigned int);
-    //tmpPrefix
+    // tmpPrefix
     total_size += slices_num * SORT_RADIX_SIZE * block_x * sizeof(unsigned int);
 
     return total_size;
@@ -1099,10 +1070,10 @@ int64_t PPLTopKGetTempBufferSize(
 
 template <typename T>
 __global__ void transpose(
-    const T *input, 
-    T *output, 
-    const int batch, 
-    const int input_h, 
+    const T *input,
+    T *output,
+    const int batch,
+    const int input_h,
     const int input_w)
 {
     __shared__ T smem[32][33];
@@ -1128,15 +1099,15 @@ __global__ void transpose(
 template <typename T, typename ID>
 void topKGpuImpl(
     const cudaStream_t &stream,
-    const int K, 
-    int dim, 
-    TensorInfo inputInfo, 
-    TensorInfo topKInfo, 
-    TensorInfo indicesInfo, 
-    void *temp_buffer, 
-    int64_t temp_buffer_bytes, 
+    const int K,
+    int dim,
+    TensorInfo inputInfo,
+    TensorInfo topKInfo,
+    TensorInfo indicesInfo,
+    void *temp_buffer,
+    int64_t temp_buffer_bytes,
     const bool largest = true,
-    const bool sorted = true)
+    const bool sorted  = true)
 {
     bool is_trans = false;
     int batch     = 1;
@@ -1155,7 +1126,7 @@ void topKGpuImpl(
         }
     }
     int sliceSize          = inputInfo.shape[dim];
-    //collapse dim_k and dim which is size of 1
+    // collapse dim_k and dim which is size of 1
     int inputSliceStride   = collapse_dim(&inputInfo, dim);
     int topKSliceStride    = collapse_dim(&topKInfo, dim);
     int indicesSliceStride = collapse_dim(&indicesInfo, dim);
@@ -1164,61 +1135,42 @@ void topKGpuImpl(
     for (int i = 0; i < inputInfo.dims; ++i) {
         blocks *= inputInfo.shape[i];
     }
- 
-#define POSTLOG_TRANSPOSE(){ \
-            if (is_trans) { \
-		int trans_size = batch * trans_h * trans_w; \
-		dim3 block_size = dim3(32, 32, 1); \
-		dim3 grid = dim3(DivUp(trans_w, 32),  \
-				 DivUp(trans_h, 32),  \
-				 batch); \
-		T *trans_topk = reinterpret_cast<T*>(temp_buffer); \
-		ID *trans_indices = reinterpret_cast<ID*>(trans_topk + trans_size); \
-		 \
-                transpose<T><<<grid, block_size, 0, stream>>> \
-			          ((T *)topKInfo.data, trans_topk,  \
-				   batch, trans_h, trans_w); \
-                transpose<ID><<<grid, block_size, 0, stream>>> \
-			          ((ID *)indicesInfo.data, trans_indices,  \
-				   batch, trans_h, trans_w); \
-                cudaMemcpyAsync((T *)topKInfo.data, trans_topk,  \
-				trans_size * sizeof(T ), cudaMemcpyDeviceToDevice, stream); \
-                cudaMemcpyAsync((ID*)indicesInfo.data, trans_indices,  \
-				trans_size * sizeof(ID), cudaMemcpyDeviceToDevice, stream); \
-            } \
-}
+
+#define POSTLOG_TRANSPOSE()                                                                                                    \
+    {                                                                                                                          \
+        if (is_trans) {                                                                                                        \
+            int trans_size    = batch * trans_h * trans_w;                                                                     \
+            dim3 block_size   = dim3(32, 32, 1);                                                                               \
+            dim3 grid         = dim3(DivUp(trans_w, 32),                                                                       \
+                             DivUp(trans_h, 32),                                                                       \
+                             batch);                                                                                   \
+            T *trans_topk     = reinterpret_cast<T *>(temp_buffer);                                                            \
+            ID *trans_indices = reinterpret_cast<ID *>(trans_topk + trans_size);                                               \
+                                                                                                                               \
+            transpose<T><<<grid, block_size, 0, stream>>>((T *)topKInfo.data, trans_topk, batch, trans_h, trans_w);            \
+            transpose<ID><<<grid, block_size, 0, stream>>>((ID *)indicesInfo.data, trans_indices, batch, trans_h, trans_w);    \
+            cudaMemcpyAsync((T *)topKInfo.data, trans_topk, trans_size * sizeof(T), cudaMemcpyDeviceToDevice, stream);         \
+            cudaMemcpyAsync((ID *)indicesInfo.data, trans_indices, trans_size * sizeof(ID), cudaMemcpyDeviceToDevice, stream); \
+        }                                                                                                                      \
+    }
     constexpr int BLK_SIZE = 1024;
     if (largest) {
-        if (sorted) { //index is int32 by default
-            selectTopK<T, 1, BLK_SIZE, 1><<<blocks, BLK_SIZE, 0, stream>>>
-		                 (inputInfo, topKInfo, indicesInfo, 
-		                  K, inputInfo.dims, sliceSize, 
-		                  inputSliceStride, topKSliceStride, indicesSliceStride);
-            sortInplace<T, ID, 1>(stream, (T *)topKInfo.data, (ID *)indicesInfo.data, 
-			          K, blocks, temp_buffer, temp_buffer_bytes);
-            //transpose
-	    POSTLOG_TRANSPOSE();
+        if (sorted) { // index is int32 by default
+            selectTopK<T, 1, BLK_SIZE, 1><<<blocks, BLK_SIZE, 0, stream>>>(inputInfo, topKInfo, indicesInfo, K, inputInfo.dims, sliceSize, inputSliceStride, topKSliceStride, indicesSliceStride);
+            sortInplace<T, ID, 1>(stream, (T *)topKInfo.data, (ID *)indicesInfo.data, K, blocks, temp_buffer, temp_buffer_bytes);
+            // transpose
+            POSTLOG_TRANSPOSE();
         } else {
-            selectTopK<T, 1, BLK_SIZE, 0><<<blocks, BLK_SIZE, 0, stream>>>
-		                  (inputInfo, topKInfo, indicesInfo, 
-				   K, inputInfo.dims, sliceSize, 
-				   inputSliceStride, topKSliceStride, indicesSliceStride);
+            selectTopK<T, 1, BLK_SIZE, 0><<<blocks, BLK_SIZE, 0, stream>>>(inputInfo, topKInfo, indicesInfo, K, inputInfo.dims, sliceSize, inputSliceStride, topKSliceStride, indicesSliceStride);
         }
     } else {
         if (sorted) {
-            selectTopK<T, 0, BLK_SIZE, 1><<<blocks, BLK_SIZE, 0, stream>>>
-		                  (inputInfo, topKInfo, indicesInfo, 
-				   K, inputInfo.dims, sliceSize, 
-				   inputSliceStride, topKSliceStride, indicesSliceStride);
-            sortInplace<T, ID, 0>(stream, (T *)topKInfo.data, (ID *)indicesInfo.data, 
-			          K, blocks, temp_buffer, temp_buffer_bytes);
-            //transpose
-	    POSTLOG_TRANSPOSE();
+            selectTopK<T, 0, BLK_SIZE, 1><<<blocks, BLK_SIZE, 0, stream>>>(inputInfo, topKInfo, indicesInfo, K, inputInfo.dims, sliceSize, inputSliceStride, topKSliceStride, indicesSliceStride);
+            sortInplace<T, ID, 0>(stream, (T *)topKInfo.data, (ID *)indicesInfo.data, K, blocks, temp_buffer, temp_buffer_bytes);
+            // transpose
+            POSTLOG_TRANSPOSE();
         } else {
-            selectTopK<T, 0, BLK_SIZE, 0><<<blocks, BLK_SIZE, 0, stream>>>
-		                  (inputInfo, topKInfo, indicesInfo, 
-				   K, inputInfo.dims, sliceSize, 
-				   inputSliceStride, topKSliceStride, indicesSliceStride);
+            selectTopK<T, 0, BLK_SIZE, 0><<<blocks, BLK_SIZE, 0, stream>>>(inputInfo, topKInfo, indicesInfo, K, inputInfo.dims, sliceSize, inputSliceStride, topKSliceStride, indicesSliceStride);
         }
     }
 #undef POSTLOG_TRANSPOSE
@@ -1226,11 +1178,11 @@ void topKGpuImpl(
 
 ppl::common::RetCode PPLCUDATopKForwardImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::nn::TensorShape *input_shape,
     const void *input,
-    ppl::nn::TensorShape* topk_shape,
+    ppl::nn::TensorShape *topk_shape,
     void *topk,
-    ppl::nn::TensorShape* indices_shape,
+    ppl::nn::TensorShape *indices_shape,
     int *indices,
     void *temp_buffer,
     int64_t temp_buffer_bytes,
@@ -1243,13 +1195,9 @@ ppl::common::RetCode PPLCUDATopKForwardImp(
     TensorInfo topk_info(topk_shape, topk);
     TensorInfo indices_info(indices_shape, indices);
     if (input_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
-        topKGpuImpl<float, int>(stream, K, dim_k, 
-			        input_info, topk_info, indices_info, 
-				temp_buffer, temp_buffer_bytes, largest, sorted);
+        topKGpuImpl<float, int>(stream, K, dim_k, input_info, topk_info, indices_info, temp_buffer, temp_buffer_bytes, largest, sorted);
     } else if (input_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
-        topKGpuImpl<__half,int>(stream, K, dim_k, 
-			        input_info, topk_info, indices_info, 
-				temp_buffer, temp_buffer_bytes, largest, sorted);
+        topKGpuImpl<__half, int>(stream, K, dim_k, input_info, topk_info, indices_info, temp_buffer, temp_buffer_bytes, largest, sorted);
     }
 
     return ppl::common::RC_SUCCESS;

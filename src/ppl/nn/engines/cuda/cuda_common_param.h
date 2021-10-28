@@ -24,7 +24,6 @@
 
 #include "ppl/common/types.h"
 #include "ppl/nn/common/types.h"
-
 namespace ppl { namespace nn { namespace cuda {
 
 struct CudaTensorQuant {
@@ -38,6 +37,7 @@ struct CudaTensorQuant {
 
 struct CudaCommonParam {
     std::vector<CudaTensorQuant>* cuda_tensor_info;
+    void* module = nullptr;
 };
 
 }}} // namespace ppl::nn::cuda

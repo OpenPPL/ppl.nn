@@ -27,4 +27,4 @@ ppl::common::RetCode PPLCUDAConstantOfShapeForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_CONSTANT_OF_SHAPE_CONSTANT_OF_SHAPE_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_CONSTANT_OF_SHAPE_CONSTANT_OF_SHAPE_H_

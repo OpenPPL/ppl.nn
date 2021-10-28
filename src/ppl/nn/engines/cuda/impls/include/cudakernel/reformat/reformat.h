@@ -62,8 +62,8 @@ struct ReFormatParam {
 
     int i_zero_point = 0;
     int o_zero_point = 0;
-    float i_step = 1.0f;
-    float o_step = 1.0f;
+    float i_step     = 1.0f;
+    float o_step     = 1.0f;
 
     ppl::common::dataformat_t in_format;
     ppl::common::dataformat_t out_format;
@@ -75,11 +75,11 @@ struct ReFormatParam {
 enum CVTFormatMode {
     CVTFormatUnknown = 0,
 
-    NDARRAY_N4CX  = 2,
-    N4CX_NDARRAY  = 11,
+    NDARRAY_N4CX = 2,
+    N4CX_NDARRAY = 11,
 
-    NDARRAY_NHWC8  = 31,
-    NHWC8_NDARRAY  = 32,
+    NDARRAY_NHWC8 = 31,
+    NHWC8_NDARRAY = 32,
 };
 
 enum CVTTypeMode {
@@ -113,7 +113,6 @@ CVTTypeMode GetCVTTypeMode(ReFormatParam param);
 void PPLCUDACVTFormat(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
 void PPLCUDACVTTypePerTensor(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
 ppl::common::RetCode SetReLayoutParam(ReFormatParam* param, const ppl::nn::TensorShape& input, const ppl::nn::TensorShape& output);
-ppl::common::RetCode SetReLayoutParam(ReFormatParam* param, const ppl::nn::TensorShape& input, const ppl::nn::cuda::CudaTensorQuant& input_quant,
-                                      const ppl::nn::TensorShape& output, const ppl::nn::cuda::CudaTensorQuant& output_quant);
+ppl::common::RetCode SetReLayoutParam(ReFormatParam* param, const ppl::nn::TensorShape& input, const ppl::nn::cuda::CudaTensorQuant& input_quant, const ppl::nn::TensorShape& output, const ppl::nn::cuda::CudaTensorQuant& output_quant);
 
 void PPLCUDADataConvert(cudaStream_t stream, const void* input, void* output, void* tempBuf, ReFormatParam& param);

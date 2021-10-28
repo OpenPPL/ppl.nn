@@ -51,7 +51,7 @@ void ConvImpgemmPrecomputeCudaCoreFp16(
     const half* input,
     const half* cvtFilter,
     const half* bias,
-    void *tempBuf,
+    void* tempBuf,
     int inHeight,
     int inWidth,
     int channels,
@@ -71,4 +71,4 @@ void ConvImpgemmPrecomputeCudaCoreFp16(
     half* output,
     ConvFuse fuse_params);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_CONV_GEMM_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_CONV_GEMM_H_

@@ -32,4 +32,4 @@ ppl::common::RetCode PPLCUDAWhereForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_WHERE_WHERE_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_WHERE_WHERE_H_

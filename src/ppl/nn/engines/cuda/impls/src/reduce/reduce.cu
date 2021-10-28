@@ -23,8 +23,9 @@ __global__ void CudaSetInitVal(
     half initval,
     int64_t size)
 {
-    int tid     = blockIdx.x * gridDim.x + threadIdx.y * blockDim.x + threadIdx.x;
-    if (tid >= size) return;
+    int tid = blockIdx.x * gridDim.x + threadIdx.y * blockDim.x + threadIdx.x;
+    if (tid >= size)
+        return;
     output[tid] = initval;
 }
 __global__ void CudaSetInitVal(
@@ -32,8 +33,9 @@ __global__ void CudaSetInitVal(
     float initval,
     int64_t size)
 {
-    int tid     = blockIdx.x * gridDim.x + threadIdx.y * blockDim.x + threadIdx.x;
-    if (tid >= size) return;
+    int tid = blockIdx.x * gridDim.x + threadIdx.y * blockDim.x + threadIdx.x;
+    if (tid >= size)
+        return;
     output[tid] = initval;
 }
 __global__ void CudaSetInitVal(
@@ -41,8 +43,9 @@ __global__ void CudaSetInitVal(
     int64_t initval,
     int64_t size)
 {
-    int tid     = blockIdx.x * gridDim.x + threadIdx.y * blockDim.x + threadIdx.x;
-    if (tid >= size) return;
+    int tid = blockIdx.x * gridDim.x + threadIdx.y * blockDim.x + threadIdx.x;
+    if (tid >= size)
+        return;
     output[tid] = initval;
 }
 template <typename T>
@@ -53,7 +56,7 @@ void SetInitVal(
 {
     dim3 blockDim(32, 32);
     dim3 gridDim(DivUp(32 * 32, size));
-    CudaSetInitVal<<<gridDim, blockDim>>>((T *)output, initval, size);
+    CudaSetInitVal<<<gridDim, blockDim>>>((T*)output, initval, size);
     cudaDeviceSynchronize();
 }
 
@@ -89,7 +92,7 @@ ppl::common::RetCode PPLCUDAReduceOPImp(
     typedef typename Operator::acctype acc_type;
     typedef typename Operator::srctype in_type;
     typedef typename Operator::dsttype dst_type;
-    Operator op((in_type *)input, (dst_type *)output);
+    Operator op((in_type*)input, (dst_type*)output);
     ReduceMode mode      = GetReduceMode(des);
     bool multi_block     = false;
     int64_t num_elements = 1;
@@ -98,7 +101,7 @@ ppl::common::RetCode PPLCUDAReduceOPImp(
 #define CASE(Mode)                                                                                                                         \
     case Mode:                                                                                                                             \
         if (multi_block) {                                                                                                                 \
-            SetInitVal(output, initval, des.n_inner *des.n_outer);                                                                         \
+            SetInitVal(output, initval, des.n_inner* des.n_outer);                                                                         \
             ppl_reduce<acc_type, Operator, BLOCKSIZE, true, (int)Mode><<<configure.second, configure.first, 0, stream>>>(op, des, param);  \
         } else                                                                                                                             \
             ppl_reduce<acc_type, Operator, BLOCKSIZE, false, (int)Mode><<<configure.second, configure.first, 0, stream>>>(op, des, param); \
@@ -131,7 +134,7 @@ ppl::common::RetCode PPLCUDAReduceForwardImp(
     case Mode:                              \
         return PPLCUDAReduceOPImp<OP<Tin, Tout, Tacc>>(stream, param, des, input_shape, input, output_shape, output);
 #define CASEINT64(Mode, OP, Tin, Tout, Tacc) \
-    case Mode:                              \
+    case Mode:                               \
         return PPLCUDAReduceOPImp<OP<Tin, Tout, Tacc>>(stream, param, des, input_shape, input, output_shape, output);
 
     if (input_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {

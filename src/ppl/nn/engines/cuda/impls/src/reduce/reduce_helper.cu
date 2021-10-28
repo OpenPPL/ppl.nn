@@ -95,7 +95,7 @@ std::pair<dim3, dim3> ComputeReduceColConfigure(
 
     int64_t bx = des.n_outer, by = 1, split_num = 1, block_reduce = des.n_reduce;
     if (des.n_inner < 32) {
-        //GetSplitNum(bx, by, block_reduce, split_num, multi_block);
+        // GetSplitNum(bx, by, block_reduce, split_num, multi_block);
         grid_dim.x = bx;
         grid_dim.y = split_num;
         return {block_dim, grid_dim};

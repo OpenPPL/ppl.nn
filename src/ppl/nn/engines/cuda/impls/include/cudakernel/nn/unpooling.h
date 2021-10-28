@@ -37,4 +37,4 @@ ppl::common::RetCode PPLCUDAMaxUnpoolForwardImp(
     int kernel_h,
     int kernel_w);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_UNPOOLING_UNPOOLING_MAX_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_UNPOOLING_UNPOOLING_MAX_H_

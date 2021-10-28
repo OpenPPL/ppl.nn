@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/cuda/kernels/onnx/convtranspose_kernel.h"
+#include "ppl/nn/engines/cuda/module/cuda_module.h"
 
 #include "cudakernel/nn/convtranspose.h"
 
@@ -52,8 +53,8 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
         B = ctx->GetInput<TensorImpl>(2);
         b_data = B->GetBufferPtr<float>();
     }
-
-    status = PPLCUDAConvTransposeForward(GetStream(), &X->GetShape(), X->GetBufferPtr(), W->GetBufferPtr(), b_data,
+    CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
+    status = PPLCUDAConvTransposeForward(GetStream(), module, &X->GetShape(), X->GetBufferPtr(), W->GetBufferPtr(), b_data,
                                          param_, tmp_buffer, &Y->GetShape(), Y->GetBufferPtr());
 
     return status;

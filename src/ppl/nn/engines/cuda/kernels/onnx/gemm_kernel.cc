@@ -86,17 +86,14 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     fuse_param_t temp_fuse_param;
-    ConvertToEmptyFuseParam(temp_fuse_param);
-    temp_fuse_param.has_activation = param_->extra_param.has_activation;
-    temp_fuse_param.has_clip = param_->extra_param.has_clip;
-    temp_fuse_param.clip_min = param_->extra_param.clip.min_val;
-    temp_fuse_param.clip_max = param_->extra_param.clip.max_val;
+    ConvertToForwardFuseParam(ctx, GetCudaDevice(), param_->extra_param.fuse_info, temp_fuse_param);
 
     auto stream = GetStream();
-    status = PPLCUDAGemmForwardImp(stream, &input->GetShape(), input->GetBufferPtr(), &newshape,
-                                   param_->extra_param.is_initializer_weight ? weight->GetBufferPtr() : weight_buffer.addr,
-                                   bias, &output->GetShape(), output->GetBufferPtr(),
-                                   param_->param, tmp_buffer, temp_fuse_param, param_->extra_param.kernel_index);
+    CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
+
+    status = PPLCUDAGemmForwardImp(stream, module, &input->GetShape(), input->GetBufferPtr(), &weight->GetShape(),
+                                   weight->GetBufferPtr(), bias, &output->GetShape(), output->GetBufferPtr(),
+                                   param_->param, tmp_buffer, temp_fuse_param, param_->extra_param.algo_info);
 
     return status;
 }

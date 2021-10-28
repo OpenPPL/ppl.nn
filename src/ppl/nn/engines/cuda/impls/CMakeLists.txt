@@ -7,24 +7,47 @@ if(CUDA_VERSION_MAJOR VERSION_GREATER_EQUAL "10")
 endif()
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${_NVCC_FLAGS}")
 
+set(PPLCUDA_COMPILE_DEFINITIONS)
+
 # 2spk conv code generator
-# idxn conv code generator
+#idxn conv code generator
 find_package(Python3 REQUIRED)
 if(NOT Python3_FOUND)
     message(FATAL_ERROR "cannot find python3")
 endif()
+
+if(PPLNN_ENABLE_CUDA_JIT)
+message(STATUS ${CMAKE_CURRENT_BINARY_DIR})
+   execute_process(
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv/gene_header.py ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv ${CMAKE_CURRENT_BINARY_DIR}
+    OUTPUT_STRIP_TRAILING_WHITESPACE) 
+else()
 execute_process(
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv/2spk/gen_2spk_kernel.py ${CMAKE_CURRENT_BINARY_DIR}/conv/2spk
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv/idxn/gen_idxn_kernel.py ${CMAKE_CURRENT_BINARY_DIR}/conv/idxn
-    OUTPUT_VARIABLE conv_kernels_codegen
     OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
 
 file(GLOB_RECURSE CUDA_SRC tools/*.cu)
 
-file(GLOB_RECURSE CUDA_SRC ${CUDA_SRC} ${CMAKE_CURRENT_BINARY_DIR}/conv/2spk/f*_kernels.cu
+if(PPLNN_ENABLE_CUDA_JIT)
+    file(GLOB_RECURSE CUDA_SRC ${CUDA_SRC} ${CMAKE_CURRENT_BINARY_DIR}/gene_header.cc
+                                            src/nn/conv/gene_kernel.cc)
+else()
+    file(GLOB_RECURSE CUDA_SRC ${CUDA_SRC} ${CMAKE_CURRENT_BINARY_DIR}/conv/2spk/f*_kernels.cu
                                        ${CMAKE_CURRENT_BINARY_DIR}/conv/2spk/init*.cu
                                        ${CMAKE_CURRENT_BINARY_DIR}/conv/idxn/idxn_kernels*.cu
                                        ${CMAKE_CURRENT_BINARY_DIR}/conv/idxn/init*.cu)
+endif()
+
+if(PPLNN_ENABLE_CUDA_JIT)
+    list(APPEND PPLCUDA_COMPILE_DEFINITIONS PPLNN_ENABLE_CUDA_JIT)
+endif()
+#file(GLOB_RECURSE CUDA_SRC ${CUDA_SRC} ${CMAKE_CURRENT_BINARY_DIR}/conv/2spk/f*_kernels.cu
+#                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/2spk/init*.cu
+#                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/idxn/idxn_kernels*.cu
+#                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/idxn/init*.cu
+#                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/gene_header.cc)
 
 file(GLOB_RECURSE CUDA_SRC ${CUDA_SRC} src/arithmetic/*.cu
                                        src/memory/*.cu
@@ -51,9 +74,15 @@ target_include_directories(pplkernelcuda_static PUBLIC
     ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES})
 target_link_directories(pplkernelcuda_static PUBLIC ${CMAKE_CUDA_HOST_IMPLICIT_LINK_DIRECTORIES})
 target_link_libraries(pplkernelcuda_static PUBLIC cuda ${CUDA_LIBRARIES} ${CMAKE_CUDA_HOST_IMPLICIT_LINK_LIBRARIES})
+target_link_libraries(pplkernelcuda_static INTERFACE "cuda;cudart_static;cudadevrt")
+
+if(PPLNN_ENABLE_CUDA_JIT)
+    target_link_libraries(pplkernelcuda_static INTERFACE "nvrtc")
+endif()
 
 hpcc_populate_dep(pplcommon)
 target_link_libraries(pplkernelcuda_static PUBLIC pplcommon_static)
+target_compile_definitions(pplkernelcuda_static PUBLIC ${PPLCUDA_COMPILE_DEFINITIONS})
 
 set(_EXPECTED_CUDA_HOST_LINK_DIRECTORIES )
 foreach(dir ${CMAKE_CUDA_HOST_IMPLICIT_LINK_DIRECTORIES})

@@ -30,4 +30,4 @@ ppl::common::RetCode PPLCUDADepthToSpaceForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_DEPTHTOSPACE_DEPTHTOSPACE_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_DEPTHTOSPACE_DEPTHTOSPACE_H_

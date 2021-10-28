@@ -29,4 +29,4 @@ ppl::common::RetCode PPLCUDALogicalAndForwardImp(
     const ppl::nn::TensorShape* output_shape,
     bool* output);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_

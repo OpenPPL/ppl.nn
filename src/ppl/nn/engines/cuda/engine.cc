@@ -24,6 +24,7 @@
 #include "ppl/nn/engines/utils.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_graph.h"
 #include "ppl/nn/common/logger.h"
+#include "ppl/nn/engines/cuda/module/op_compile_manager.h"
 #include "ppl/nn/quantization/quant_param_parser.cc"
 #include "rapidjson/document.h"
 #include "rapidjson/error/error.h"
@@ -55,11 +56,32 @@ bool CudaEngine::Supports(const ir::Node* node) const {
 }
 
 RetCode CudaEngine::DoOptimize(ir::Graph* graph, utils::SharedResource* resource, RuntimePartitionInfo* info) {
-    OptGraph opt_graph(graph, info, resource, &cuda_flags_);
+    OptGraph opt_graph(graph, info, resource, &cuda_flags_, &compile_set_);
     auto status = opt_graph.DoOptimize(&device_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "OptGraph DoOptimeize failed: " << GetRetCodeStr(status);
         return status;
+    }
+
+#ifdef PPLNN_ENABLE_CUDA_JIT
+    status = CompileCudaModule(graph, resource, info);
+#endif
+
+    return RC_SUCCESS;
+}
+
+ppl::common::RetCode CudaEngine::CompileCudaModule(ir::Graph* graph, utils::SharedResource* resource,
+                                                   RuntimePartitionInfo* info) {
+    auto op_compiler_manager = OpCompilerManager::Instance();
+    for (auto it = compile_set_.begin(); it != compile_set_.end(); it++) {
+        auto node_id = *it;
+        ir::Node* op = graph->topo.get()->GetNodeById(node_id);
+        auto op_compiler = op_compiler_manager->FindCompiler(op->GetType().name);
+        if (op_compiler == nullptr)
+            continue;
+
+        const OptKernelOptions options(graph, info, resource, &device_, &cuda_manager_);
+        op_compiler->Compile(op, options);
     }
 
     return RC_SUCCESS;
@@ -247,7 +269,7 @@ RetCode CudaEngine::SetAlgorithm(CudaEngine* engine, va_list args) {
         d.Parse(buf.c_str());
         if (d.HasParseError()) {
             LOG(ERROR) << "parse quant file failed: position[" << d.GetErrorOffset() << "], code[" << d.GetParseError()
-                    << "]";
+                       << "]";
             return RC_INVALID_VALUE;
         }
 
@@ -273,16 +295,16 @@ RetCode CudaEngine::SetAlgorithm(CudaEngine* engine, va_list args) {
                 } else if (str_name == "splitf") {
                     algo_info.splitf = iter->value.GetInt();
                 } else if (str_name == "kname") {
-                    
+                    algo_info.kname.assign(iter->value.GetString(), iter->value.GetStringLength());
                 } else {
                     LOG(ERROR) << "name of object[" << str_name << "] is not meaningful.";
                     return RC_INVALID_VALUE;
                 }
             }
             engine->cuda_flags_.alog_selects.insert(make_pair(shape_name, algo_info));
-            LOG(INFO) << shape_name;
         }
     }
+    LOG(INFO) << "Algo info size is " << engine->cuda_flags_.alog_selects.size();
     return RC_SUCCESS;
 }
 

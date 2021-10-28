@@ -22,9 +22,9 @@
 // #include <cuda_runtime.h>
 
 int64_t PPLTopKGetTempBufferSize(
-    const ppl::nn::TensorShape* indices_shape, 
-    const int K, 
-    int dim_k, 
+    const ppl::nn::TensorShape* indices_shape,
+    const int K,
+    int dim_k,
     bool sorted = true);
 
 ppl::common::RetCode PPLCUDATopKForwardImp(

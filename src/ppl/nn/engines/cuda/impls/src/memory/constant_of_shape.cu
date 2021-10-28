@@ -36,19 +36,19 @@ __global__ void ppl_cukernel_constant_of_shape(
 
 ppl::common::RetCode PPLCUDAConstantOfShapeForwardImp(
     cudaStream_t stream,
-    const void* pre_set_value,
-    const ppl::nn::TensorShape* output_shape,
-    void* output)
+    const void *pre_set_value,
+    const ppl::nn::TensorShape *output_shape,
+    void *output)
 {
     int64_t num_elems = output_shape->GetElementsIncludingPadding();
-    int block_size = 256;
-    int grid_size  = (num_elems + block_size - 1) / block_size;
+    int block_size    = 256;
+    int grid_size     = (num_elems + block_size - 1) / block_size;
 
-#define SWITCH_CASE(TYPE)                                                      \
-    case sizeof(TYPE): {                                                       \
+#define SWITCH_CASE(TYPE)                                                     \
+    case sizeof(TYPE): {                                                      \
         ppl_cukernel_constant_of_shape<<<grid_size, block_size, 0, stream>>>( \
-            num_elems, (const TYPE *)pre_set_value, (TYPE *)output);           \
-        return ppl::common::RC_SUCCESS;                                        \
+            num_elems, (const TYPE *)pre_set_value, (TYPE *)output);          \
+        return ppl::common::RC_SUCCESS;                                       \
     }
 
     switch (ppl::common::GetSizeOfDataType(output_shape->GetDataType())) {

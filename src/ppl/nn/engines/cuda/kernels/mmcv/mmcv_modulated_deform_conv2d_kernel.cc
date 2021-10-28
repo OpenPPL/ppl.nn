@@ -51,8 +51,9 @@ ppl::common::RetCode MMCVModulatedDeformConv2dKernel::DoExecute(KernelExecContex
     const int64_t kernel_w = weight->GetShape().GetDim(3);
 
     auto stream = GetStream();
+    CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
     status = PPLCUDADeformConvForward(
-        stream, &output->GetShape(), &input->GetShape(), 
+        stream, module, &output->GetShape(), &input->GetShape(), 
         output->GetBufferPtr(), input->GetBufferPtr(), weight->GetBufferPtr(),
         offset->GetBufferPtr(), mask ? mask->GetBufferPtr() : nullptr, bias ? bias->GetBufferPtr() : nullptr,
         param_->groups, param_->deform_groups, channels, num_output,

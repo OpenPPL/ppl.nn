@@ -34,4 +34,4 @@ ppl::common::RetCode PPLCUDATileForwardImp(
     ppl::nn::TensorShape* output_shape,
     void* output);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_TILE_TILE_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_TILE_TILE_H_

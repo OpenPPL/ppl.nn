@@ -19,23 +19,24 @@
 #define PPLCUDA_KERNEL_INCLUDE_CONV_FUSE_TYPE_H_
 
 struct ConvFuse {
-    ConvFuse() {
-        ifReLU = false;
-        ifEltwise = false;
-        ifEltwiseReLU = false;
-        ifConcat = false;
-        ifPReLU = false;
-        ifReLUMax = false;
+    ConvFuse()
+    {
+        ifReLU           = false;
+        ifEltwise        = false;
+        ifEltwiseReLU    = false;
+        ifConcat         = false;
+        ifPReLU          = false;
+        ifReLUMax        = false;
         ifEltwiseReLUMax = false;
-        ifEltwisePReLU = false;
-        reluMax = 0.0f;
-        eltwiseReluMax = 0.0f;
-        concatOffset = 0;
-        concatStride = 0;
-        preDataGrp = nullptr;
-        concatOutData = nullptr;
-        negeData = nullptr;
-        negeEltData = nullptr;
+        ifEltwisePReLU   = false;
+        reluMax          = 0.0f;
+        eltwiseReluMax   = 0.0f;
+        concatOffset     = 0;
+        concatStride     = 0;
+        preDataGrp       = nullptr;
+        concatOutData    = nullptr;
+        negeData         = nullptr;
+        negeEltData      = nullptr;
     }
 
     bool ifReLU;
@@ -56,4 +57,4 @@ struct ConvFuse {
     void* negeEltData;
 };
 
-#endif //PPLCUDA_KERNEL_INCLUDE_CONV_FUSE_TYPE_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_CONV_FUSE_TYPE_H_

@@ -60,7 +60,7 @@ __global__ void ppl_cukernel_gather_nd_offset(
     int batch_idx             = num_pieces_per_batch_fast.div(index);
     int64_t batch_offset      = batch_idx * input_batch_stride;
     // inner offset
-    const IndexT *indices_ptr = indices_data + index * indices_last_dim_size;
+    const IndexT* indices_ptr = indices_data + index * indices_last_dim_size;
     int64_t rel_offset        = 0;
     for (int it = 0; it < indices_last_dim_size; ++it) {
         IndexT cor_val = indices_ptr[it];
@@ -108,9 +108,9 @@ ppl::common::RetCode PPLCUDAGatherNDForwardImp(
         batch_dim + indices_last_dim_size);
     int block_size             = 256;
     // step 1: calcalute each piece's offset first
-    int64_t *piece_offsets     = static_cast<int64_t *>(temp_buffer);
-    int64_t *input_strides_gpu = piece_offsets + num_pieces;
-    int64_t *input_dims_gpu    = input_strides_gpu + num_input_dim;
+    int64_t* piece_offsets     = static_cast<int64_t*>(temp_buffer);
+    int64_t* input_strides_gpu = piece_offsets + num_pieces;
+    int64_t* input_dims_gpu    = input_strides_gpu + num_input_dim;
     std::vector<int64_t> input_strides(indices_last_dim_size);
     std::vector<int64_t> input_dims(num_input_dim);
     // dimension is partitioned as batch--indices_last_dim_size--piece_size
@@ -126,11 +126,11 @@ ppl::common::RetCode PPLCUDAGatherNDForwardImp(
     int cal_offset_grid = (num_pieces + block_size - 1) / block_size;
     switch (ppl::common::GetSizeOfDataType(indices_shape->GetDataType())) {
         case sizeof(int32_t): {
-            ppl_cukernel_gather_nd_offset<<<cal_offset_grid, block_size, 0, stream>>>(num_pieces, num_pieces_per_batch_fast, batch_dim, input_dims_gpu, input_batch_stride, input_strides_gpu, indices_last_dim_size, (const int32_t *)indices, piece_offsets);
+            ppl_cukernel_gather_nd_offset<<<cal_offset_grid, block_size, 0, stream>>>(num_pieces, num_pieces_per_batch_fast, batch_dim, input_dims_gpu, input_batch_stride, input_strides_gpu, indices_last_dim_size, (const int32_t*)indices, piece_offsets);
             break;
         }
         case sizeof(int64_t): {
-            ppl_cukernel_gather_nd_offset<<<cal_offset_grid, block_size, 0, stream>>>(num_pieces, num_pieces_per_batch_fast, batch_dim, input_dims_gpu, input_batch_stride, input_strides_gpu, indices_last_dim_size, (const int64_t *)indices, piece_offsets);
+            ppl_cukernel_gather_nd_offset<<<cal_offset_grid, block_size, 0, stream>>>(num_pieces, num_pieces_per_batch_fast, batch_dim, input_dims_gpu, input_batch_stride, input_strides_gpu, indices_last_dim_size, (const int64_t*)indices, piece_offsets);
             break;
         }
         default:
@@ -142,12 +142,11 @@ ppl::common::RetCode PPLCUDAGatherNDForwardImp(
     int gather_grid_size = (num_elems + block_size - 1) / block_size;
     DivModFast piece_size_fast(piece_size);
 
-    #define SWITCH_CASE(TYPE)                                                                                        \
-        case sizeof(TYPE): {                                                                                         \
-            ppl_cukernel_gather_nd<<<gather_grid_size, block_size,                                                   \
-                0, stream>>>(num_elems, piece_size_fast, piece_offsets, (const TYPE *)input, (TYPE *)output);        \
-            return ppl::common::RC_SUCCESS;                                                                          \
-        }
+#define SWITCH_CASE(TYPE)                                                                                                                                  \
+    case sizeof(TYPE): {                                                                                                                                   \
+        ppl_cukernel_gather_nd<<<gather_grid_size, block_size, 0, stream>>>(num_elems, piece_size_fast, piece_offsets, (const TYPE*)input, (TYPE*)output); \
+        return ppl::common::RC_SUCCESS;                                                                                                                    \
+    }
 
     switch (ppl::common::GetSizeOfDataType(input_shape->GetDataType())) {
         SWITCH_CASE(int8_t);
@@ -158,5 +157,5 @@ ppl::common::RetCode PPLCUDAGatherNDForwardImp(
             return ppl::common::RC_UNSUPPORTED;
     }
 
-    #undef SWITCH_CASE
+#undef SWITCH_CASE
 }

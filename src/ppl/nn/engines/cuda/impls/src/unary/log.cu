@@ -35,8 +35,8 @@ __device__ __inline__ half ppl_scalar_log<half>(const half &in_val)
 template <typename T>
 __global__ void ppl_cukernel_log_ndarray(
     const uint64_t num_elems,
-    const T* input,
-    T* output)
+    const T *input,
+    T *output)
 {
 #if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
     int64_t index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -53,8 +53,8 @@ __global__ void ppl_cukernel_log_nhwc(
     int pad_channels,
     int chw,
     int hw,
-    const T* input,
-    T* output)
+    const T *input,
+    T *output)
 {
 #if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
     int chw_idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -71,10 +71,10 @@ __global__ void ppl_cukernel_log_nhwc(
 
 ppl::common::RetCode PPLCUDALogForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
-    const void* input,
-    const ppl::nn::TensorShape* output_shape,
-    void* output)
+    const ppl::nn::TensorShape *input_shape,
+    const void *input,
+    const ppl::nn::TensorShape *output_shape,
+    void *output)
 {
     uint64_t num_elems = output_shape->GetElementsIncludingPadding();
     int batch          = output_shape->GetDim(0);

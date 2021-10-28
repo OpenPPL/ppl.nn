@@ -23,12 +23,12 @@
 #include <cuda_fp16.h>
 #include <float.h>
 #include <memory>
-#define CUDA_ALIGNMENT    128
+#define CUDA_ALIGNMENT 128
 constexpr int N_BOX_DIM      = 4;
 constexpr int NMS_BLOCK_SIZE = 8 * sizeof(int64_t);
 
 template <typename T>
-__device__ __inline__ void maxMin(T a, T b, T& min_val, T& max_val)
+__device__ __inline__ void maxMin(T a, T b, T &min_val, T &max_val)
 {
     if (Math<T, T, T>::gt(a, b)) {
         min_val = b;
@@ -60,7 +60,7 @@ __device__ __inline__ T Min(T a, T b)
 }
 
 template <typename T>
-__device__ bool devIoU(const T* box_i, const T* box_j, T iou_threshold, int center_point_box)
+__device__ bool devIoU(const T *box_i, const T *box_j, T iou_threshold, int center_point_box)
 {
     // use math helper
     typedef Math<T, T, T> OpMath;
@@ -114,10 +114,10 @@ template <typename T>
 __global__ __launch_bounds__(NMS_BLOCK_SIZE) void nms_one_one_kernel(
     int num_boxes,
     int num_blocks,
-    const T* boxes,
+    const T *boxes,
     float iou_threshold,
     int center_point_box,
-    uint64_t* out_mask)
+    uint64_t *out_mask)
 {
     T t_iou_threshold = (T)iou_threshold;
     __shared__ T s_boxes[NMS_BLOCK_SIZE * N_BOX_DIM];
@@ -168,8 +168,8 @@ __global__ void nms_reduce_mask_kernel(
     int num_blocks,
     int num_boxes,
     int max_boxes,
-    const uint64_t* in_mask,
-    bool* reduced_mask)
+    const uint64_t *in_mask,
+    bool *reduced_mask)
 {
     extern __shared__ uint64_t s_reduced_mask[];
     int tid = threadIdx.x;
@@ -200,9 +200,9 @@ __global__ void nms_reduce_mask_kernel_global(
     int num_blocks,
     int num_boxes,
     int max_boxes,
-    const uint64_t* in_mask,
-    uint64_t* g_reduce_mask,
-    bool* reduced_mask)
+    const uint64_t *in_mask,
+    uint64_t *g_reduce_mask,
+    bool *reduced_mask)
 {
     int tid = threadIdx.x;
     for (int it = tid; it < num_blocks; it += blockDim.x) {
@@ -231,9 +231,9 @@ __global__ void nms_reduce_mask_kernel_global(
 template <typename T>
 __global__ void indexSelectBoxes(
     int num_filtered_boxes,
-    int32_t* sorted_indices,
-    const T* boxes,
-    T* sorted_boxes)
+    int32_t *sorted_indices,
+    const T *boxes,
+    T *sorted_boxes)
 {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     if (index >= num_filtered_boxes)
@@ -251,8 +251,8 @@ template <typename T>
 __global__ void countScoresBoxes(
     int num_boxes,
     float score_threshold,
-    const T* sorted_boxes,
-    int* d_num_filter_scores)
+    const T *sorted_boxes,
+    int *d_num_filter_scores)
 {
     int tid             = threadIdx.x;
     T t_score_threshold = (T)score_threshold;
@@ -275,15 +275,15 @@ __global__ void countScoresBoxes(
 template <typename T>
 void NMSGpuImpl(
     cudaStream_t stream,
-    const T* sorted_boxes,
+    const T *sorted_boxes,
     float iou_threshold,
     int num_filtered_boxes,
     int max_output_boxes_per_class,
     int center_point_box,
     int max_shared_mem,
-    uint64_t* g_reduce_mask,
-    uint64_t* dev_mask,
-    bool* result_mask)
+    uint64_t *g_reduce_mask,
+    uint64_t *dev_mask,
+    bool *result_mask)
 {
     // step 1: calculate all iou
     constexpr int block_size = NMS_BLOCK_SIZE;
@@ -298,24 +298,24 @@ void NMSGpuImpl(
     // step 2: mask reduce
     int32_t reduced_mask_size = num_blocks * block_size;
     if (max_shared_mem > reduced_mask_size) {
-    // #boxes should not exceed #bits in shared memory
+        // #boxes should not exceed #bits in shared memory
         nms_reduce_mask_kernel<<<1, 1024, reduced_mask_size, stream>>>(num_blocks,
-                                                                    num_filtered_boxes,
-                                                                    max_output_boxes_per_class,
-                                                                    dev_mask,
-                                                                    result_mask);
+                                                                       num_filtered_boxes,
+                                                                       max_output_boxes_per_class,
+                                                                       dev_mask,
+                                                                       result_mask);
     } else {
         // use global memory
         nms_reduce_mask_kernel_global<<<1, 1024, 0, stream>>>(num_blocks,
-                                                                num_filtered_boxes,
-                                                                max_output_boxes_per_class,
-                                                                dev_mask,
-                                                                g_reduce_mask,
-                                                                result_mask);
+                                                              num_filtered_boxes,
+                                                              max_output_boxes_per_class,
+                                                              dev_mask,
+                                                              g_reduce_mask,
+                                                              result_mask);
     }
 }
 
-int64_t PPLNMSGetTempBufferSize(const ppl::nn::TensorShape* scores_shape)
+int64_t PPLNMSGetTempBufferSize(const ppl::nn::TensorShape *scores_shape)
 {
     int64_t total_size = 0;
     int elem_size      = ppl::common::GetSizeOfDataType(scores_shape->GetDataType());
@@ -336,7 +336,7 @@ int64_t PPLNMSGetTempBufferSize(const ppl::nn::TensorShape* scores_shape)
     total_size += Align(sizeof(int), CUDA_ALIGNMENT); // count filtered boxes number
 
     // reduce needed
-    int num_blocks           = DivUp(num_boxes, NMS_BLOCK_SIZE);
+    int num_blocks = DivUp(num_boxes, NMS_BLOCK_SIZE);
     total_size += Align(num_blocks * NMS_BLOCK_SIZE, CUDA_ALIGNMENT); // count filtered boxes number
 
     return total_size;
@@ -344,13 +344,13 @@ int64_t PPLNMSGetTempBufferSize(const ppl::nn::TensorShape* scores_shape)
 
 ppl::common::RetCode PPLCUDANMSForwardImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape* boxes_shape,
-    const void* boxes,
-    ppl::nn::TensorShape* scores_shape,
-    const void* scores,
-    ppl::nn::TensorShape* output_shape,
-    int64_t* output,
-    void* temp_buffer,
+    ppl::nn::TensorShape *boxes_shape,
+    const void *boxes,
+    ppl::nn::TensorShape *scores_shape,
+    const void *scores,
+    ppl::nn::TensorShape *output_shape,
+    int64_t *output,
+    void *temp_buffer,
     int64_t temp_buffer_bytes,
     int device_id,
     int center_point_box,
@@ -375,9 +375,9 @@ ppl::common::RetCode PPLCUDANMSForwardImp(
     ppl::nn::TensorShape indices_shape(*scores_shape);
     indices_shape.Reshape({num_class, num_boxes});
     indices_shape.SetDataType(ppl::common::DATATYPE_INT32);
-    int axis = 1;
-    int topk_buffer_size    = PPLTopKGetTempBufferSize(&indices_shape, num_boxes, axis);
-    void *topk_buffer       = temp_buffer;
+    int axis                    = 1;
+    int topk_buffer_size        = PPLTopKGetTempBufferSize(&indices_shape, num_boxes, axis);
+    void *topk_buffer           = temp_buffer;
     void *sorted_scores_tot     = static_cast<void *>(static_cast<char *>(topk_buffer) + Align(topk_buffer_size, CUDA_ALIGNMENT));
     int32_t *sorted_indices_tot = reinterpret_cast<int32_t *>(
         static_cast<char *>(sorted_scores_tot) + Align(elem_size * num_class * num_boxes, CUDA_ALIGNMENT));
@@ -390,31 +390,31 @@ ppl::common::RetCode PPLCUDANMSForwardImp(
     bool *result_mask        = reinterpret_cast<bool *>((char *)dev_mask + Align(blocks * num_boxes * sizeof(uint64_t), CUDA_ALIGNMENT));
     int *d_num_filter_scores = reinterpret_cast<int *>(result_mask + Align(num_boxes * sizeof(bool), CUDA_ALIGNMENT));
     uint64_t *g_reduce_mask  = reinterpret_cast<uint64_t *>((char *)d_num_filter_scores + Align(sizeof(int), CUDA_ALIGNMENT));
-    int dev_mask_size = Align(blocks * num_boxes * sizeof(uint64_t), CUDA_ALIGNMENT);
+    int dev_mask_size        = Align(blocks * num_boxes * sizeof(uint64_t), CUDA_ALIGNMENT);
     // process one class one time
     for (int b = 0; b < num_batch; ++b) {
         // step 1: sort scores and index select boxes
         cudaMemset(temp_buffer, 0, temp_buffer_bytes);
         PPLCUDATopKForwardImp(stream,
-                            &topk_shape,
-                            static_cast<const float *>(scores) + b * scores_shape->GetElementsFromDimensionIncludingPadding(1),
-                            &topk_shape,
-                            sorted_scores_tot,
-                            &indices_shape,
-                            sorted_indices_tot,
-                            topk_buffer,
-                            topk_buffer_size,
-                            num_boxes,
-                            axis);
+                              &topk_shape,
+                              static_cast<const float *>(scores) + b * scores_shape->GetElementsFromDimensionIncludingPadding(1),
+                              &topk_shape,
+                              sorted_scores_tot,
+                              &indices_shape,
+                              sorted_indices_tot,
+                              topk_buffer,
+                              topk_buffer_size,
+                              num_boxes,
+                              axis);
         // int nms_buffer_size = temp_buffer_bytes - Align(topk_buffer_size, CUDA_ALIGNMENT) -
-                // Align(elem_size * num_class * num_boxes, CUDA_ALIGNMENT) -
-                // Align(num_class * num_boxes * sizeof(int32_t), CUDA_ALIGNMENT);
+        // Align(elem_size * num_class * num_boxes, CUDA_ALIGNMENT) -
+        // Align(num_class * num_boxes * sizeof(int32_t), CUDA_ALIGNMENT);
 
         for (int c = 0; c < num_class; ++c) {
             // reset to zero each iteration (Not necessary)
             // cudaMemset(sorted_boxes, 0, nms_buffer_size);
-            float *sorted_scores = static_cast<float*>(sorted_scores_tot) + c * num_boxes;//+ b * num_class * num_boxes + c * num_boxes;
-            int32_t *sorted_indices = sorted_indices_tot + c * num_boxes;// + b * num_class * num_boxes + c * num_boxes;
+            float *sorted_scores    = static_cast<float *>(sorted_scores_tot) + c * num_boxes; //+ b * num_class * num_boxes + c * num_boxes;
+            int32_t *sorted_indices = sorted_indices_tot + c * num_boxes; // + b * num_class * num_boxes + c * num_boxes;
 
             int num_selected_indices_per_class = 0;
             int num_filtered_boxes             = 0;
@@ -474,7 +474,8 @@ ppl::common::RetCode PPLCUDANMSForwardImp(
                         h_constructed_indices.get()[num_selected_indices_per_class * 3 + 2] =
                             h_sorted_indices.get()[it];
                         ++num_selected_indices_per_class;
-                        if (num_selected_indices_per_class >= max_output_boxes_per_class) break;
+                        if (num_selected_indices_per_class >= max_output_boxes_per_class)
+                            break;
                     }
                 }
                 // step 4: gather one class output to totals

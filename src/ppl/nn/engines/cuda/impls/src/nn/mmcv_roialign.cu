@@ -68,7 +68,7 @@ __device__ T bilinear_interpolate(
     T v4 = input[y_high * width + x_high];
     T w1 = hy * hx, w2 = hy * lx, w3 = ly * hx, w4 = ly * lx;
 
-    T val = (w1 * v1 + w2 * v2 + w3 * v3 + w4 * v4); 
+    T val = (w1 * v1 + w2 * v2 + w3 * v3 + w4 * v4);
 
     return val;
 }
@@ -100,7 +100,7 @@ __global__ void mmcv_roi_align_forward_cuda_kernel(
         int n  = index / pooled_width / pooled_height / channels;
 
         const T* offset_rois = rois + n * 5;
-        int roi_batch_ind = offset_rois[0];
+        int roi_batch_ind    = offset_rois[0];
 
         // Do not using rounding; this implementation detail is critical
         T offset      = aligned ? (T)0.5 : (T)0.0;
@@ -197,7 +197,7 @@ ppl::common::RetCode PPLCUDAMMCVROIAlignForwardImp(
     int width         = input_shape->GetDim(3);
     int64_t num_elems = output_shape->GetElementsIncludingPadding();
     int grid_size     = DivUp(num_elems, block_size);
-    bool is_mode_max = param.pool_mode != "avg";
+    bool is_mode_max  = param.pool_mode != "avg";
     if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
         mmcv_roi_align_forward_cuda_kernel<float><<<grid_size, block_size, 0, stream>>>(num_elems, (const float*)input, (const float*)rois, (float*)output, param.aligned_height, param.aligned_width, param.spatial_scale, param.sampling_ratio, is_mode_max, param.aligned, channels, height, width);
     }

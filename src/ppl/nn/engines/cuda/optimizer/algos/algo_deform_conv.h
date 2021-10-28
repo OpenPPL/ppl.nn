@@ -48,7 +48,7 @@ public:
     double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) override;
     RetCode ModifyParam(const ir::Node* node, OptKernelOptions& options) override;
     void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
-                                ppl::common::dataformat_t input_format, ppl::common::dataformat_t output_format) override;
+                        ppl::common::dataformat_t input_format, ppl::common::dataformat_t output_format) override;
 
 private:
     ppl::nn::common::MMCVModulatedDeformConv2dParam* param_ = nullptr;

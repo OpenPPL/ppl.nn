@@ -72,9 +72,7 @@ ppl::common::RetCode ConvHmmaKernel::DoExecute(KernelExecContext* ctx) {
     ConvertToForwardFuseParam(ctx, GetCudaDevice(), param_->extra_param.fuse_info, temp_fuse_param);
 
     struct algo_param_t algo_param;
-    algo_param.kid = param_->extra_param.algo_info.kernel_index;
-    algo_param.splitk = param_->extra_param.algo_info.splitk;
-    algo_param.splitf = param_->extra_param.algo_info.splitf;
+    algo_param = param_->extra_param.algo_info;
 
     uint64_t size = PPLCUDAConvolutionGetRuntimeBufSize(shape_in0.GetDataType(), temp_conv_param, algo_param.splitk,
                                                         algo_param.splitf, ((uint64_t)8) * 1024 * 1024 * 1024);
@@ -90,15 +88,22 @@ ppl::common::RetCode ConvHmmaKernel::DoExecute(KernelExecContext* ctx) {
         GetCudaDevice()->FreeTmpBuffer(buffer);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
-
     auto stream = GetStream();
+#ifdef PPLNN_ENABLE_CUDA_JIT
+    CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
+    PPLCUDAConvolutionForwardJITImp(
+        stream, module->GetKernelFunc(), shape_in0.GetDataType(), (int4*)ctx->GetInput<TensorImpl>(0)->GetBufferPtr(),
+        (int4*)ctx->GetInput<TensorImpl>(1)->GetBufferPtr(), (int4*)ctx->GetOutput<TensorImpl>(0)->GetBufferPtr(),
+        param_->param.bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, (int4*)tmp_buffer,
+        algo_param, temp_conv_param, temp_fuse_param);    
+#else
     PPLCUDAConvolutionForwardImp(
         stream, shape_in0.GetDataType(), (int4*)ctx->GetInput<TensorImpl>(0)->GetBufferPtr(),
         (int4*)ctx->GetInput<TensorImpl>(1)->GetBufferPtr(), (int4*)ctx->GetOutput<TensorImpl>(0)->GetBufferPtr(),
         param_->param.bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, (int4*)tmp_buffer,
-        algo_param, temp_conv_param, temp_fuse_param);
-
-    LOG(DEBUG) << "Excute HMMA conv with kernel id:" << param_->extra_param.algo_info.kernel_index
+        algo_param, temp_conv_param, temp_fuse_param);    
+#endif
+    LOG(DEBUG) << "Excute HMMA conv with kernel id:" << param_->extra_param.algo_info.kid
                << " and temp buffer size: " << size;
     return ppl::common::RC_SUCCESS;
 }

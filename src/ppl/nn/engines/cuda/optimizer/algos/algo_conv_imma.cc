@@ -39,7 +39,8 @@ void TuringIMMAImpgemm::GetAttrParam(void*& param) const {
     return;
 }
 
-bool TuringIMMAImpgemm::IsSupported(const ir::Node* node, const OptKernelOptions& options, dataformat_t input_format) const {
+bool TuringIMMAImpgemm::IsSupported(const ir::Node* node, const OptKernelOptions& options,
+                                    dataformat_t input_format) const {
     // check if conv quant to INT8
     auto quant0 = options.quants->at(node->GetInput(0));
     if (quant0.type != DATATYPE_INT8) {
@@ -54,7 +55,7 @@ bool TuringIMMAImpgemm::IsSupported(const ir::Node* node, const OptKernelOptions
 double TuringIMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& options) {
     this->attr_param_ = *(reinterpret_cast<CudaConvParam*>(options.param));
     attr_param_.extra_param.algo_info.algo_type = "TuringIMMAImpgemm";
-    attr_param_.extra_param.algo_info.kernel_index = 4000;
+    attr_param_.extra_param.algo_info.kid = 0;
     double timer = 1e-4f; // TODO: add SelectAlgo
     return timer;
 }

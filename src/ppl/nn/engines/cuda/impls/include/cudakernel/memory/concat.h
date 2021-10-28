@@ -32,4 +32,4 @@ ppl::common::RetCode PPLCUDAConcatForwardImp(
     void* output,
     int mask = 0);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_CONCAT_CONCAT_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_CONCAT_CONCAT_H_

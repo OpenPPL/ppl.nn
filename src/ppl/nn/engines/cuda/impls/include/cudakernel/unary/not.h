@@ -27,4 +27,4 @@ ppl::common::RetCode PPLCUDANotForwardImp(
     const ppl::nn::TensorShape* output_shape,
     bool* output);
 
-#endif //PPLCUDA_KERNEL_INCLUDE_NOT_NOT_H_
+#endif // PPLCUDA_KERNEL_INCLUDE_NOT_NOT_H_

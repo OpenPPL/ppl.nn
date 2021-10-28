@@ -34,22 +34,9 @@
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
-struct ConvFusionInfo {
-    std::vector<std::string> types; // max fuse relu + add + relu right now
-    std::vector<uint32_t> input_ind; // save fused kernel's input index
-    std::vector<void*> fuse_attrs; // save fused kernel's attributes
-    int channel_size = -1; // save total channel size for concat
-    int channel_offset = -1; // save output offset if we fuse concat
-    int concat_edge_id = -1; // save concat output edge id
-};
 
-struct ConvAlgoInfo {
-    std::string algo_type = "";
-    unsigned int kernel_index;
-    unsigned int splitk = 1;
-    unsigned int splitf = 1;
-    bool is_initializer_weight = 1;
-};
+typedef algo_param_t ConvAlgoInfo;
+typedef fuse_info_t ConvFusionInfo;
 
 struct ConvExtraParam {
     ConvAlgoInfo algo_info;
