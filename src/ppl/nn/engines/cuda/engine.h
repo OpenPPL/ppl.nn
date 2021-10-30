@@ -37,10 +37,6 @@ namespace ppl { namespace nn { namespace cuda {
 typedef std::set<nodeid_t> CompileInfo;
 
 struct CudaArgs {
-    CudaArgs() {
-        input_dims.push_back({1, 3, 224, 224}); // default dims
-    }
-
     struct AlgoInfo {
         std::string kname = "";
         int kid = 0;
@@ -57,6 +53,7 @@ struct CudaArgs {
     std::map<std::string, std::vector<CudaTensorQuant>> tensor_quants;
     std::map<std::string, AlgoInfo> alog_selects;
     QuantParamInfo quant_info;
+    const std::vector<int64_t> default_dims{1, 3, 224, 224};
 };
 
 class CudaEngine final : public EngineImpl {
@@ -79,10 +76,10 @@ private:
     */
     static ppl::common::RetCode SetOutputFormat(CudaEngine*, va_list);
     static ppl::common::RetCode SetOutputType(CudaEngine*, va_list);
+    static ppl::common::RetCode SetInputDims(CudaEngine*, va_list);
     static ppl::common::RetCode SetUseDefaultAlgorithms(CudaEngine*, va_list);
     static ppl::common::RetCode SetQuantization(CudaEngine*, va_list);
-    static ppl::common::RetCode SetAlgorithm(CudaEngine*, va_list);
-    static ppl::common::RetCode SetInputDims(CudaEngine*, va_list);
+    static ppl::common::RetCode SetAlgorithms(CudaEngine*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(CudaEngine*, va_list);
     static ConfHandlerFunc conf_handlers_[CUDA_CONF_MAX];

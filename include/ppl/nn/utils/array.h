@@ -26,7 +26,7 @@ namespace ppl { namespace nn { namespace utils {
 template <typename T>
 struct PPLNN_PUBLIC Array final {
     T* base = nullptr; // points to a buffer that is managed by the caller
-    uint32_t size = 0;
+    uint64_t size = 0;
 };
 
 }}}

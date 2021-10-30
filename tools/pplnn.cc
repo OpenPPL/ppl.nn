@@ -76,6 +76,23 @@ static string ToString(T v) {
     return ss.str();
 }
 
+static inline RetCode ReadFileContent(const char* fname, string* buf) {
+    ifstream ifile;
+
+    ifile.open(fname, ios_base::in);
+    if (!ifile.is_open()) {
+        LOG(ERROR) << "open quant file[" << fname << "] failed.";
+        return RC_NOT_FOUND;
+    }
+
+    stringstream ss;
+    ss << ifile.rdbuf();
+    *buf = ss.str();
+
+    ifile.close();
+    return RC_SUCCESS;
+}
+
 static vector<int64_t> GenerateRandomDims(uint32_t dim_count) {
     static const uint32_t max_dim = 640;
     static const uint32_t min_dim = 128;
@@ -178,7 +195,7 @@ Define_string_opt("--output-type", g_flag_output_type, "", "declare the output t
 Define_bool_opt("--quick-select", g_flag_quick_select, false, "quick select algorithms for conv and gemm kernel");
 Define_uint32_opt("--device-id", g_flag_device_id, 0, "declare device id for cuda");
 
-Define_string_opt("--algo-info", g_algo_info, "", "declare best algo index for certain conv input shape");
+Define_string_opt("--algo-info", g_flag_algo_info_file, "", "declare best algo index for certain conv input shape");
 
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/engines/cuda/cuda_options.h"
@@ -202,7 +219,16 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_OUTPUT_FORMAT, g_flag_output_format.c_str());
     cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_OUTPUT_TYPE, g_flag_output_type.c_str());
     cuda_engine->Configure(ppl::nn::CUDA_CONF_USE_DEFAULT_ALGORITHMS, g_flag_quick_select);
-    cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_ALGORITHM, g_algo_info.c_str());
+
+    if (!g_flag_algo_info_file.empty()) {
+        string algo_info_json_buffer;
+        auto status = ReadFileContent(g_flag_algo_info_file.c_str(), &algo_info_json_buffer);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "read algo info from file[" << g_flag_algo_info_file << "] failed.";
+            return false;
+        }
+        cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_ALGORITHMS, algo_info_json_buffer.c_str());
+    }
 
     // pass input shapes to cuda engine for further optimizations
     if (!g_flag_input_shapes.empty()) {
@@ -239,6 +265,7 @@ Define_bool_opt("--core-binding", g_flag_core_binding, false, "core binding");
 #include "ppl/nn/engines/x86/engine_factory.h"
 #include "ppl/nn/engines/x86/x86_options.h"
 #include "ppl/kernel/x86/common/threading_tools.h"
+
 static inline bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
     X86EngineOptions options;
     if (g_flag_mm_policy == "perf") {

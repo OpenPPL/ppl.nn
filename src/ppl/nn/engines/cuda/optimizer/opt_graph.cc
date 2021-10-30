@@ -122,12 +122,12 @@ RetCode OptGraph::UpdateDims() {
                     return RC_INVALID_VALUE;
                 }
 
-                vector<int64_t>* dims = nullptr;
+                const vector<int64_t>* dims = nullptr;
                 if (j >= args_->input_dims.size()) {
-                    dims = &args_->input_dims[0]; // use default dims
+                    dims = &args_->default_dims;
                 } else {
-                    if (args_->input_dims[j].empty()) { // not set
-                        dims = &args_->input_dims[0]; // use default dims
+                    if (args_->input_dims[j].empty()) {
+                        dims = &args_->default_dims;
                     } else {
                         dims = &args_->input_dims[j];
                     }
