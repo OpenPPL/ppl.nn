@@ -42,6 +42,18 @@ enum {
     CUDA_CONF_SET_OUTPUT_TYPE,
 
     /**
+       @brief set init input dims as a hint for graph optimization
+
+       @note example:
+       @code{.cpp}
+       vector<utils::Array<int64_t>> dims;
+       // fill dims of each input
+       engine->Configure(CUDA_CONF_SET_INPUT_DIMS, dims.data(), dims.size());
+       @endcode
+    */
+    CUDA_CONF_SET_INPUT_DIMS,
+
+    /**
        @brief use default algorithms for conv and gemm
 
        @note example:
@@ -56,7 +68,7 @@ enum {
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_SET_QUANTIZATION, "quantization.json");
+       cuda_engine->Configure(CUDA_CONF_SET_QUANTIZATION, quantination_json_buffer);
        @endcode
     */
     CUDA_CONF_SET_QUANTIZATION,
@@ -66,22 +78,10 @@ enum {
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_SET_ALGORITHM, "algo_info.json");
+       cuda_engine->Configure(CUDA_CONF_SET_ALGORITHMS, algo_info_json_buffer);
        @endcode
     */
-    CUDA_CONF_SET_ALGORITHM,
-
-    /**
-       @brief set init input dims as a hint for graph optimization
-
-       @note example:
-       @code{.cpp}
-       vector<utils::Array<int64_t>> dims;
-       // fill dims of each input
-       engine->Configure(CUDA_CONF_SET_INPUT_DIMS, dims.data(), dims.size());
-       @endcode
-    */
-    CUDA_CONF_SET_INPUT_DIMS,
+    CUDA_CONF_SET_ALGORITHMS,
 
     /** max value */
     CUDA_CONF_MAX,

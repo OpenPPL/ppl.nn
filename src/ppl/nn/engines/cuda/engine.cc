@@ -192,75 +192,6 @@ RetCode CudaEngine::SetOutputType(CudaEngine* engine, va_list args) {
     return RC_SUCCESS;
 }
 
-RetCode CudaEngine::SetUseDefaultAlgorithms(CudaEngine* engine, va_list args) {
-    auto flag = va_arg(args, uint32_t);
-    engine->cuda_flags_.quick_select = (flag > 0);
-    return RC_SUCCESS;
-}
-
-RetCode CudaEngine::SetQuantization(CudaEngine* engine, va_list args) {
-    const char* json_file = va_arg(args, const char*);
-    if (json_file && json_file[0] != '\0') {
-        QuantParamParser parser;
-        parser.Parse(json_file, &engine->cuda_flags_.quant_info);
-        LOG(DEBUG) << "Quant tensor size: " << engine->cuda_flags_.quant_info.tensor_params.size();
-        LOG(DEBUG) << "Quant node size: " << engine->cuda_flags_.quant_info.node_params.size();
-    }
-    return RC_SUCCESS;
-}
-
-RetCode CudaEngine::SetAlgorithm(CudaEngine* engine, va_list args) {
-    const char* json_file = va_arg(args, const char*);
-    if (json_file && json_file[0] != '\0') {
-        std::string buf;
-        auto status = ReadFileContent(json_file, &buf);
-        if (status != RC_SUCCESS) {
-            return status;
-        }
-
-        rapidjson::Document d;
-        d.Parse(buf.c_str());
-        if (d.HasParseError()) {
-            LOG(ERROR) << "parse quant file failed: position[" << d.GetErrorOffset() << "], code[" << d.GetParseError()
-                       << "]";
-            return RC_INVALID_VALUE;
-        }
-
-        if (!d.IsObject()) {
-            LOG(ERROR) << "quant file content is not an object.";
-            return RC_INVALID_VALUE;
-        }
-
-        for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
-            const string shape_name(it->name.GetString(), it->name.GetStringLength());
-            if (!it->value.IsObject()) {
-                LOG(ERROR) << "value of object[" << shape_name << "] is not an object.";
-                return RC_INVALID_VALUE;
-            }
-
-            CudaArgs::AlgoInfo algo_info;
-            for (auto iter = it->value.MemberBegin(); iter != it->value.MemberEnd(); ++iter) {
-                const string str_name(iter->name.GetString(), iter->name.GetStringLength());
-                if (str_name == "kid") {
-                    algo_info.kid = iter->value.GetInt();
-                } else if (str_name == "splitk") {
-                    algo_info.splitk = iter->value.GetInt();
-                } else if (str_name == "splitf") {
-                    algo_info.splitf = iter->value.GetInt();
-                } else if (str_name == "kname") {
-                    algo_info.kname.assign(iter->value.GetString(), iter->value.GetStringLength());
-                } else {
-                    LOG(ERROR) << "name of object[" << str_name << "] is not meaningful.";
-                    return RC_INVALID_VALUE;
-                }
-            }
-            engine->cuda_flags_.alog_selects.insert(make_pair(shape_name, algo_info));
-        }
-    }
-    LOG(INFO) << "Algo info size is " << engine->cuda_flags_.alog_selects.size();
-    return RC_SUCCESS;
-}
-
 RetCode CudaEngine::SetInputDims(CudaEngine* engine, va_list args) {
     auto& input_dims = engine->cuda_flags_.input_dims;
     auto dims_vec = va_arg(args, utils::Array<int64_t>*);
@@ -271,7 +202,7 @@ RetCode CudaEngine::SetInputDims(CudaEngine* engine, va_list args) {
         const utils::Array<int64_t>& src = dims_vec[i];
         vector<int64_t>& dst = input_dims[i];
         dst.resize(src.size);
-        for (uint32_t j = 0; j < src.size; ++j) {
+        for (uint64_t j = 0; j < src.size; ++j) {
             dst[j] = src.base[j];
         }
     }
@@ -279,13 +210,87 @@ RetCode CudaEngine::SetInputDims(CudaEngine* engine, va_list args) {
     return RC_SUCCESS;
 }
 
+RetCode CudaEngine::SetUseDefaultAlgorithms(CudaEngine* engine, va_list args) {
+    auto flag = va_arg(args, uint32_t);
+    engine->cuda_flags_.quick_select = (flag > 0);
+    return RC_SUCCESS;
+}
+
+RetCode CudaEngine::SetQuantization(CudaEngine* engine, va_list args) {
+    const char* json_buffer = va_arg(args, const char*);
+    if (!json_buffer) {
+        LOG(ERROR) << "quantization buffer is null.";
+        return RC_INVALID_VALUE;
+    }
+
+    QuantParamParser parser;
+    auto status = parser.ParseBuffer(json_buffer, &engine->cuda_flags_.quant_info);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "parse quantization buffer failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    LOG(DEBUG) << "Quant tensor size: " << engine->cuda_flags_.quant_info.tensor_params.size();
+    LOG(DEBUG) << "Quant node size: " << engine->cuda_flags_.quant_info.node_params.size();
+    return RC_SUCCESS;
+}
+
+RetCode CudaEngine::SetAlgorithms(CudaEngine* engine, va_list args) {
+    auto json_buffer = va_arg(args, const char*);
+    if (!json_buffer) {
+        LOG(ERROR) << "empty algorithm info buffer.";
+        return RC_INVALID_VALUE;
+    }
+
+    rapidjson::Document d;
+    d.Parse(json_buffer);
+    if (d.HasParseError()) {
+        LOG(ERROR) << "parse quant file failed: position[" << d.GetErrorOffset() << "], code[" << d.GetParseError()
+                   << "]";
+        return RC_INVALID_VALUE;
+    }
+
+    if (!d.IsObject()) {
+        LOG(ERROR) << "quant file content is not an object.";
+        return RC_INVALID_VALUE;
+    }
+
+    for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
+        const string shape_name(it->name.GetString(), it->name.GetStringLength());
+        if (!it->value.IsObject()) {
+            LOG(ERROR) << "value of object[" << shape_name << "] is not an object.";
+            return RC_INVALID_VALUE;
+        }
+
+        CudaArgs::AlgoInfo algo_info;
+        for (auto iter = it->value.MemberBegin(); iter != it->value.MemberEnd(); ++iter) {
+            const string str_name(iter->name.GetString(), iter->name.GetStringLength());
+            if (str_name == "kid") {
+                algo_info.kid = iter->value.GetInt();
+            } else if (str_name == "splitk") {
+                algo_info.splitk = iter->value.GetInt();
+            } else if (str_name == "splitf") {
+                algo_info.splitf = iter->value.GetInt();
+            } else if (str_name == "kname") {
+
+            } else {
+                LOG(ERROR) << "name of object[" << str_name << "] is not meaningful.";
+                return RC_INVALID_VALUE;
+            }
+        }
+        engine->cuda_flags_.alog_selects.insert(make_pair(shape_name, algo_info));
+    }
+    LOG(DEBUG) << "Algo info size is " << engine->cuda_flags_.alog_selects.size();
+    return RC_SUCCESS;
+}
+
 CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetOutputFormat, // CUDA_CONF_SET_OUTPUT_DATA_FORMAT
     CudaEngine::SetOutputType, // CUDA_CONF_SET_OUTPUT_TYPE
+    CudaEngine::SetInputDims, // CUDA_CONF_SET_INPUT_DIMS
     CudaEngine::SetUseDefaultAlgorithms, // CUDA_CONF_USE_DEFAULT_ALGORITHMS
     CudaEngine::SetQuantization, // CUDA_CONF_SET_QUANTIZATION
-    CudaEngine::SetAlgorithm, // CUDA_CONF_SET_ALGORITHM
-    CudaEngine::SetInputDims, // CUDA_CONF_SET_INPUT_DIMS
+    CudaEngine::SetAlgorithms, // CUDA_CONF_SET_ALGORITHMS
 };
 
 RetCode CudaEngine::Configure(uint32_t option, ...) {

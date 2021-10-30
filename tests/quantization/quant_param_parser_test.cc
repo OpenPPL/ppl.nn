@@ -25,7 +25,7 @@ TEST(QuantParamParserTest, misc) {
     QuantParamParser parser;
     QuantParamInfo info;
     const string test_conf = PPLNN_TESTDATA_DIR + string("/ppq_test_qparams.json");
-    auto status = parser.Parse(test_conf.c_str(), &info);
+    auto status = parser.ParseFile(test_conf.c_str(), &info);
     EXPECT_EQ(RC_SUCCESS, status);
 
     auto item_iter = info.tensor_params.find("input.1");

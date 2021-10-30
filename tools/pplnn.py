@@ -83,6 +83,8 @@ def ParseCommandLineArgs():
                                 default = False, required = False)
             parser.add_argument("--device-id", type = int, dest = "device_id",
                                 default = 0, required = False, help = "specify which device is used.")
+            parser.add_argument("--algo-info", type = str, default = "", required = False,
+                                help = "a json file containing op implementations info")
 
     parser.add_argument("--onnx-model", type = str, default = "", required = False,
                         help = "onnx model file")
@@ -115,50 +117,6 @@ def ParseCommandLineArgs():
 
 # ---------------------------------------------------------------------------- #
 
-def RegisterEngines(args):
-    engines = []
-    if args.use_x86:
-        x86_options = pplnn.X86EngineOptions()
-        x86_engine = pplnn.X86EngineFactory.Create(x86_options)
-        if not x86_engine:
-            logging.error("create x86 engine failed.")
-            sys.exit(-1)
-
-        if args.disable_avx512:
-            status = x86_engine.Configure(pplnn.X86_CONF_DISABLE_AVX512)
-            if status != pplcommon.RC_SUCCESS:
-                logging.error("x86 engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
-                sys.exit(-1)
-
-        if args.disable_avx_fma3:
-            status = x86_engine.Configure(pplnn.X86_CONF_DISABLE_AVX_FMA3)
-            if status != pplcommon.RC_SUCCESS:
-                logging.error("x86 engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
-                sys.exit(-1)
-
-        engines.append(pplnn.Engine(x86_engine))
-
-    if args.use_cuda:
-        cuda_options = pplnn.CudaEngineOptions()
-        cuda_options.device_id = args.device_id
-
-        cuda_engine = pplnn.CudaEngineFactory.Create(cuda_options)
-        if not cuda_engine:
-            logging.error("create cuda engine failed.")
-            sys.exit(-1)
-
-        if args.quick_select:
-            status = cuda_engine.Configure(pplnn.CUDA_CONF_USE_DEFAULT_ALGORITHMS)
-            if status != pplcommon.RC_SUCCESS:
-                logging.error("cuda engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
-                sys.exit(-1)
-
-        engines.append(pplnn.Engine(cuda_engine))
-
-    return engines
-
-# ---------------------------------------------------------------------------- #
-
 def ParseInShapes(in_shapes_str):
     ret = []
     shape_strs = list(filter(None, in_shapes_str.split(",")))
@@ -166,6 +124,73 @@ def ParseInShapes(in_shapes_str):
         dims = [int(d) for d in s.split("_")]
         ret.append(dims)
     return ret
+
+# ---------------------------------------------------------------------------- #
+
+def CreateX86Engine(args):
+    x86_options = pplnn.X86EngineOptions()
+    x86_engine = pplnn.X86EngineFactory.Create(x86_options)
+    if not x86_engine:
+        logging.error("create x86 engine failed.")
+        sys.exit(-1)
+
+    if args.disable_avx512:
+        status = x86_engine.Configure(pplnn.X86_CONF_DISABLE_AVX512)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("x86 engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+    if args.disable_avx_fma3:
+        status = x86_engine.Configure(pplnn.X86_CONF_DISABLE_AVX_FMA3)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("x86 engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+    return x86_engine
+
+def CreateCudaEngine(args):
+    cuda_options = pplnn.CudaEngineOptions()
+    cuda_options.device_id = args.device_id
+
+    cuda_engine = pplnn.CudaEngineFactory.Create(cuda_options)
+    if not cuda_engine:
+        logging.error("create cuda engine failed.")
+        sys.exit(-1)
+
+    if args.quick_select:
+        status = cuda_engine.Configure(pplnn.CUDA_CONF_USE_DEFAULT_ALGORITHMS)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("cuda engine Configure(CUDA_CONF_USE_DEFAULT_ALGORITHMS) failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+    if args.in_shapes:
+        shapes = ParseInShapes(args.in_shapes)
+        status = cuda_engine.Configure(pplnn.CUDA_CONF_SET_INPUT_DIMS, shapes)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("cuda engine Configure(CUDA_CONF_SET_INPUT_DIMS) failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+    if args.algo_info:
+        with open(args.algo_info, 'r') as f:
+            json_buffer = f.read()
+            status = cuda_engine.Configure(pplnn.CUDA_CONF_SET_ALGORITHMS, json_buffer)
+            if status != pplcommon.RC_SUCCESS:
+                logging.error("cuda engine Configure(CUDA_CONF_SET_ALGORITHMS) failed: " + pplcommon.GetRetCodeStr(status))
+                sys.exit(-1)
+
+    return cuda_engine
+
+def RegisterEngines(args):
+    engines = []
+    if args.use_x86:
+        x86_engine = CreateX86Engine(args)
+        engines.append(pplnn.Engine(x86_engine))
+
+    if args.use_cuda:
+        cuda_engine = CreateCudaEngine(args)
+        engines.append(pplnn.Engine(cuda_engine))
+
+    return engines
 
 # ---------------------------------------------------------------------------- #
 
