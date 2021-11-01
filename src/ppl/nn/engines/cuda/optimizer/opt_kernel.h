@@ -44,7 +44,7 @@ namespace ppl { namespace nn { namespace cuda {
 struct OptKernelOptions {
     OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, utils::SharedResource* resource, CudaArgs* args, CompileInfo* compile_set,
                      CudaDevice* device, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
-                     std::vector<CudaTensorQuant>* quants, std::map<std::string, CudaArgs::AlgoInfo>* algos)
+                     std::vector<CudaTensorQuant>* quants, std::map<std::string, CudaArgs::AlgoSelects>* algos)
         : graph(graph)
         , info(info)
         , resource(resource)
@@ -71,7 +71,7 @@ struct OptKernelOptions {
     CudaDevice* device;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors;
     std::vector<CudaTensorQuant>* quants;
-    std::map<std::string, CudaArgs::AlgoInfo>* algos;
+    std::map<std::string, CudaArgs::AlgoSelects>* algos;
     void* param;
     CUDAModuleManager* cuda_module_manager;
 };

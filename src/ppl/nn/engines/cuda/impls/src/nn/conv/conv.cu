@@ -160,7 +160,7 @@ void InitializeKernelContainer(std::vector<kernel_info_t> &g_kernel_container, p
     is_g_kernel_container_initialized = true;
 }
 
-std::string GetConvShapeString(conv_param_t &conv_param)
+std::string GetConvShapeString(const conv_param_t &conv_param)
 {
     return std::string("b" + std::to_string(conv_param.in_num) +
                        "_c" + std::to_string(conv_param.num_chl) +

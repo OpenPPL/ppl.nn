@@ -19,6 +19,12 @@
 
 #include "ppl/nn/params/onnx/leaky_relu_param.h"
 #include "ppl/nn/common/logger.h"
+#include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
+
+#include <fstream>
+#include <sstream>
 
 using namespace ppl::common;
 using namespace ppl::nn::common;
@@ -64,18 +70,6 @@ RetCode ConvertToForwardConvParam(const TensorShape& shape_in0, const TensorShap
     return RC_SUCCESS;
 }
 
-RetCode ConvertToEmptyFuseParam(fuse_param_t& fuse_param) {
-    fuse_param.has_activation = 0;
-    fuse_param.has_clip = false;
-    fuse_param.has_prelu = false;
-    fuse_param.has_elt = false;
-    fuse_param.has_elt_activation = 0;
-    fuse_param.has_elt_clip = false;
-    fuse_param.has_elt_prelu = 0;
-    fuse_param.has_concat = false;
-    return RC_SUCCESS;
-}
-
 RetCode ConvertToPrelu(uint32_t fuse_index, InputOutputInfo* info, CudaDevice* device, ConvFusionInfo fuse_info,
                        fuse_param_t& fuse_param) {
     uint32_t prelu_input = fuse_info.input_ind[fuse_index];
@@ -111,7 +105,6 @@ RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* device, Con
     int fuse_index = 0;
     int fuse_size = fuse_info.types.size();
 
-    ConvertToEmptyFuseParam(fuse_param);
     RetCode status;
     ClipParam* param;
 
@@ -199,6 +192,44 @@ RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* device, Con
     }
 
     return RC_SUCCESS;
+}
+
+void LoadAlgoInfo(const std::string& file_path, const conv_param_t& conv_param, const algo_param_t& algo_param) {
+    if (!file_path.empty()) {
+        rapidjson::Document oWriteDoc;
+        fstream iofile;
+        iofile.open(file_path, ios_base::in | ios_base::out);
+        if (!iofile.is_open()) {
+            oWriteDoc.SetObject();
+        } else {
+            std::stringstream algo_info_json_buffer;
+            algo_info_json_buffer << iofile.rdbuf();
+            oWriteDoc.Parse(algo_info_json_buffer.str().c_str());
+            if (oWriteDoc.HasParseError()) {
+                oWriteDoc.SetObject();
+            }
+        }
+        
+        std::string shape_str = GetConvShapeString(conv_param);
+        std::string kname_str = algo_param.algo_name;
+
+        rapidjson::Document::AllocatorType& allocator = oWriteDoc.GetAllocator();
+        rapidjson::Value object(rapidjson::kObjectType);
+        rapidjson::Value shape_info(shape_str.c_str(), shape_str.size(), allocator);
+        rapidjson::Value kname_info(kname_str.c_str(), kname_str.size(), allocator);
+        object.AddMember("kid", algo_param.kid, allocator);
+        object.AddMember("kname", kname_info, allocator);
+        object.AddMember("splitk", algo_param.splitk, allocator);
+        object.AddMember("splitf", algo_param.splitf, allocator);
+        oWriteDoc.AddMember(shape_info, object, allocator);
+        rapidjson::StringBuffer oBuffer;
+        rapidjson::Writer<rapidjson::StringBuffer> oWriter(oBuffer);
+        oWriteDoc.Accept(oWriter);
+
+        iofile << oBuffer.GetString();
+        iofile.close();
+    }
+    return;
 }
 
 }}} // namespace ppl::nn::cuda

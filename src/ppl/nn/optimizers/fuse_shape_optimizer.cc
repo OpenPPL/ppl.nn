@@ -245,7 +245,7 @@ void UpdateGraph(ir::Node* node, PPLShapeOperationParam* shape_param, ir::Graph*
             topo->DelEdgeById(it->first);
         }
     }
-    LOG(DEBUG) << "Output count " << node->GetOutputCount() << " for fused shape node[" << node->GetName();
+    LOG(DEBUG) << "Output count " << node->GetOutputCount() << " for fused shape node[" << node->GetName() << "]";
     return;
 }
 
