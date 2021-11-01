@@ -120,7 +120,7 @@ struct fuse_info_t {
     int concat_edge_id = -1; // save concat output edge id
 };
 
-std::string GetConvShapeString(conv_param_t& conv_param);
+std::string GetConvShapeString(const conv_param_t& conv_param);
 
 ppl::common::RetCode PPLCUDAConvolutionModifyAlgoParam(algo_param_t& algo_param, uint32_t index);
 

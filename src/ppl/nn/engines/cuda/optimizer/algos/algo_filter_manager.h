@@ -24,6 +24,7 @@
 #include "ppl/nn/engines/cuda/optimizer/algos/algo_conv.h"
 #include "ppl/nn/engines/cuda/optimizer/algos/algo_convtranspose.h"
 #include "ppl/nn/engines/cuda/optimizer/algos/algo_gemm.h"
+#include "ppl/nn/engines/cuda/optimizer/algos/algo_lstm.h"
 #include "ppl/nn/engines/cuda/optimizer/algos/algo_deform_conv.h"
 #include "ppl/nn/engines/cuda/optimizer/algos/algo_normal.h"
 
@@ -65,6 +66,7 @@ private:
     DepthwiseDirect depthwise_direct_imp_;
     GemmAlgorithm gemm_imp_;
     DeformConvAlgorithm deform_conv_imp_;
+    LstmAlgorithm lstm_imp_;
     NormalAlgorithm normal_imp_;
     TuringIMMAImpgemm turing_imma_imp_;
     TuringHMMAImpgemm turing_hmma_imp_;

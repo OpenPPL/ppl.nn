@@ -86,7 +86,7 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
 
     // illegal gemm input
     if (shape_in0.GetDim(!attr_param_.param.transA) != shape_in1.GetDim(attr_param_.param.transB)) {
-        return ALGO_MAX_TIME;
+        shape_in0.SetDim(!attr_param_.param.transA, shape_in1.GetDim(attr_param_.param.transB));
     }
 
     // Padding
@@ -123,7 +123,13 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
                                          bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr,
                                          attr_param_.param, temp_fuse_param, attr_param_.extra_param.algo_info);
 #endif
-
+    CudaArgs::AlgoSelects algo_select;
+    algo_select.kname  = attr_param_.extra_param.algo_info.algo_name;
+    algo_select.kid    = attr_param_.extra_param.algo_info.kid;
+    algo_select.splitk = attr_param_.extra_param.algo_info.splitk;
+    algo_select.splitf = attr_param_.extra_param.algo_info.splitf;
+    options.algos->emplace(GetConvShapeString(temp_conv_param), std::move(algo_select));
+    LoadAlgoInfo(options.args->save_algo_path, temp_conv_param, attr_param_.extra_param.algo_info);
     return timer;
 }
 

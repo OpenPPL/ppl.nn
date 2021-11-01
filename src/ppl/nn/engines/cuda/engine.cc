@@ -235,15 +235,21 @@ RetCode CudaEngine::SetQuantization(CudaEngine* engine, va_list args) {
     return RC_SUCCESS;
 }
 
-RetCode CudaEngine::SetAlgorithms(CudaEngine* engine, va_list args) {
-    auto json_buffer = va_arg(args, const char*);
-    if (!json_buffer) {
+RetCode CudaEngine::ExportAlgorithms(CudaEngine* engine, va_list args) {
+    auto file_path = va_arg(args, const char*);
+    engine->cuda_flags_.save_algo_path = std::string(file_path);
+    return RC_SUCCESS;
+}
+
+RetCode CudaEngine::ImportAlgorithms(CudaEngine* engine, va_list args) {
+    auto file_path = va_arg(args, const char*);
+    if (!file_path) {
         LOG(ERROR) << "empty algorithm info buffer.";
         return RC_INVALID_VALUE;
     }
 
     rapidjson::Document d;
-    d.Parse(json_buffer);
+    d.Parse(file_path);
     if (d.HasParseError()) {
         LOG(ERROR) << "parse quant file failed: position[" << d.GetErrorOffset() << "], code[" << d.GetParseError()
                    << "]";
@@ -262,7 +268,7 @@ RetCode CudaEngine::SetAlgorithms(CudaEngine* engine, va_list args) {
             return RC_INVALID_VALUE;
         }
 
-        CudaArgs::AlgoInfo algo_info;
+        CudaArgs::AlgoSelects algo_info;
         for (auto iter = it->value.MemberBegin(); iter != it->value.MemberEnd(); ++iter) {
             const string str_name(iter->name.GetString(), iter->name.GetStringLength());
             if (str_name == "kid") {
@@ -272,7 +278,7 @@ RetCode CudaEngine::SetAlgorithms(CudaEngine* engine, va_list args) {
             } else if (str_name == "splitf") {
                 algo_info.splitf = iter->value.GetInt();
             } else if (str_name == "kname") {
-
+                algo_info.kname.assign(iter->value.GetString(), iter->value.GetStringLength());
             } else {
                 LOG(ERROR) << "name of object[" << str_name << "] is not meaningful.";
                 return RC_INVALID_VALUE;
@@ -290,7 +296,8 @@ CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetInputDims, // CUDA_CONF_SET_INPUT_DIMS
     CudaEngine::SetUseDefaultAlgorithms, // CUDA_CONF_USE_DEFAULT_ALGORITHMS
     CudaEngine::SetQuantization, // CUDA_CONF_SET_QUANTIZATION
-    CudaEngine::SetAlgorithms, // CUDA_CONF_SET_ALGORITHMS
+    CudaEngine::ExportAlgorithms, // CUDA_CONF_EXPORT_ALGORITHMS
+    CudaEngine::ImportAlgorithms, // CUDA_CONF_IMPORT_ALGORITHMS
 };
 
 RetCode CudaEngine::Configure(uint32_t option, ...) {

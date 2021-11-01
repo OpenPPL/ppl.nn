@@ -80,7 +80,6 @@ double DepthwiseDirect::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
     ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_.param, temp_conv_param);
-    ConvertToEmptyFuseParam(temp_fuse_param);
 
     if (options.args->quick_select) {
         return 0.0f;

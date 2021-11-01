@@ -195,7 +195,8 @@ Define_string_opt("--output-type", g_flag_output_type, "", "declare the output t
 Define_bool_opt("--quick-select", g_flag_quick_select, false, "quick select algorithms for conv and gemm kernel");
 Define_uint32_opt("--device-id", g_flag_device_id, 0, "declare device id for cuda");
 
-Define_string_opt("--algo-info", g_flag_algo_info_file, "", "declare best algo index for certain conv input shape");
+Define_string_opt("--export-algo-file", g_flag_export_algo_file, "", "Export the selected best algo info into the json file.");
+Define_string_opt("--import-algo-file", g_flag_import_algo_file, "", "The objects in the json file declare best algo info for certain conv input shape");
 
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/engines/cuda/cuda_options.h"
@@ -219,15 +220,16 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_OUTPUT_FORMAT, g_flag_output_format.c_str());
     cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_OUTPUT_TYPE, g_flag_output_type.c_str());
     cuda_engine->Configure(ppl::nn::CUDA_CONF_USE_DEFAULT_ALGORITHMS, g_flag_quick_select);
+    cuda_engine->Configure(ppl::nn::CUDA_CONF_EXPORT_ALGORITHMS, g_flag_export_algo_file.c_str());
 
-    if (!g_flag_algo_info_file.empty()) {
+    if (!g_flag_import_algo_file.empty()) {
         string algo_info_json_buffer;
-        auto status = ReadFileContent(g_flag_algo_info_file.c_str(), &algo_info_json_buffer);
+        auto status = ReadFileContent(g_flag_import_algo_file.c_str(), &algo_info_json_buffer);
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "read algo info from file[" << g_flag_algo_info_file << "] failed.";
+            LOG(ERROR) << "read algo info from file[" << g_flag_import_algo_file << "] failed.";
             return false;
         }
-        cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_ALGORITHMS, algo_info_json_buffer.c_str());
+        cuda_engine->Configure(ppl::nn::CUDA_CONF_IMPORT_ALGORITHMS, algo_info_json_buffer.c_str());
     }
 
     // pass input shapes to cuda engine for further optimizations

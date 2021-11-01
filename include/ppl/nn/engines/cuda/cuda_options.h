@@ -78,10 +78,20 @@ enum {
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_SET_ALGORITHMS, algo_info_json_buffer);
+       cuda_engine->Configure(CUDA_CONF_EXPORT_ALGORITHMS, algo_info_json_buffer);
        @endcode
     */
-    CUDA_CONF_SET_ALGORITHMS,
+    CUDA_CONF_EXPORT_ALGORITHMS,
+
+    /**
+       @brief the name of json file that reads selected algos' index information
+
+       @note example:
+       @code{.cpp}
+       cuda_engine->Configure(CUDA_CONF_IMPORT_ALGORITHMS, algo_info_json_buffer);
+       @endcode
+    */
+    CUDA_CONF_IMPORT_ALGORITHMS,
 
     /** max value */
     CUDA_CONF_MAX,

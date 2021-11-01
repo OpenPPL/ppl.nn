@@ -19,6 +19,7 @@
 
 #include <chrono>
 
+
 #include "ppl/common/cuda/cuda_types.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/utils/utils.h"
@@ -71,7 +72,6 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
     ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_.param, temp_conv_param);
-    ConvertToEmptyFuseParam(temp_fuse_param);
 
     auto algo_info = options.algos->find(GetConvShapeString(temp_conv_param));
     if (algo_info != options.algos->end()) {
@@ -127,7 +127,13 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
                                                 (int4*)bias_buffer.addr, (int4*)temp_buffer.addr,
                                                 attr_param_.extra_param.algo_info, temp_conv_param, temp_fuse_param);
 #endif
-
+    CudaArgs::AlgoSelects algo_select;
+    algo_select.kname  = attr_param_.extra_param.algo_info.algo_name;
+    algo_select.kid    = attr_param_.extra_param.algo_info.kid;
+    algo_select.splitk = attr_param_.extra_param.algo_info.splitk;
+    algo_select.splitf = attr_param_.extra_param.algo_info.splitf;
+    options.algos->emplace(GetConvShapeString(temp_conv_param), std::move(algo_select));
+    LoadAlgoInfo(options.args->save_algo_path, temp_conv_param, attr_param_.extra_param.algo_info);
     return timer;
 }
 

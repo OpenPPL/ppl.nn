@@ -53,10 +53,11 @@ ppl::common::RetCode ConvertToForwardConvParam(const TensorShape& shape_in0, con
                                                ppl::nn::common::ConvolutionParam normal_param,
                                                conv_param_t& conv_param);
 
-ppl::common::RetCode ConvertToEmptyFuseParam(fuse_param_t& fuse_param);
-
 ppl::common::RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* devive, ConvFusionInfo fuse_info,
                                                fuse_param_t& fuse_param);
+                                
+void LoadAlgoInfo(const std::string& file_path, const conv_param_t& conv_param, const algo_param_t& algo_param);
+
 }}} // namespace ppl::nn::cuda
 
 #endif

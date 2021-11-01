@@ -72,6 +72,12 @@ If you want to use specified CUDA toolkit version, please specify `CUDA_TOOLKIT_
 ./build.sh -DHPCC_USE_CUDA=ON -DCUDA_TOOLKIT_ROOT_DIR=/path/to/cuda-toolkit-root-dir
 ```
 
+We use runtime-compiling version by default. If you want to use static version (build all kernels in advance), please specify `PPLNN_ENABLE_CUDA_JIT` as following:
+
+```bash
+./build.sh -DHPCC_USE_CUDA=ON -DPPLNN_ENABLE_CUDA_JIT=OFF
+```
+
 #### Windows
 
 Using vs2015 for example:

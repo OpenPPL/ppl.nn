@@ -37,21 +37,22 @@ namespace ppl { namespace nn { namespace cuda {
 typedef std::set<nodeid_t> CompileInfo;
 
 struct CudaArgs {
-    struct AlgoInfo {
+    struct AlgoSelects {
         std::string kname = "";
         int kid = 0;
         int splitk = 1;
         int splitf = 1;
     };
 
-    bool quick_select = false;
+    bool quick_select;
+    std::string save_algo_path = "";
     ppl::common::datatype_t kernel_default_type = 0;
     std::map<std::string, ppl::common::dataformat_t> output_formats;
     std::map<std::string, ppl::common::datatype_t> output_types;
     std::map<std::string, ppl::common::datatype_t> node_types;
     std::vector<std::vector<int64_t>> input_dims;
     std::map<std::string, std::vector<CudaTensorQuant>> tensor_quants;
-    std::map<std::string, AlgoInfo> alog_selects;
+    std::map<std::string, AlgoSelects> alog_selects;
     QuantParamInfo quant_info;
     const std::vector<int64_t> default_dims{1, 3, 224, 224};
 };
@@ -79,7 +80,8 @@ private:
     static ppl::common::RetCode SetInputDims(CudaEngine*, va_list);
     static ppl::common::RetCode SetUseDefaultAlgorithms(CudaEngine*, va_list);
     static ppl::common::RetCode SetQuantization(CudaEngine*, va_list);
-    static ppl::common::RetCode SetAlgorithms(CudaEngine*, va_list);
+    static ppl::common::RetCode ExportAlgorithms(CudaEngine*, va_list);
+    static ppl::common::RetCode ImportAlgorithms(CudaEngine*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(CudaEngine*, va_list);
     static ConfHandlerFunc conf_handlers_[CUDA_CONF_MAX];
