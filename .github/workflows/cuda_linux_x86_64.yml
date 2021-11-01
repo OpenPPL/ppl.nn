@@ -1,4 +1,4 @@
-name: PPL<x86 and common> Build && Quick Test
+name: cuda-linux-x86-64
 
 on:
   #push:
@@ -6,12 +6,14 @@ on:
   #  paths-ignore: ['.**', 'docker/**', 'docs/**', 'samples/**', README.md]
   pull_request:
     branches: [ master ]
-    paths-ignore: ['.**', 'docker/**', 'docs/**', 'samples/**', README.md, 'src/ppl/nn/engines/cuda/**']
+    paths:
+      - 'src/ppl/nn/engines/cuda/**'
+      - 'src/ppl/nn/optimizers/**'
   workflow_dispatch:
 
 jobs:
   build_and_test:
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64]
 
     steps:
       - name: Create Checkout Directory
@@ -27,8 +29,8 @@ jobs:
 
       - name: Build
         run: |
-          cd ../../ && ./build_pplnn.sh ${{ github.run_id }} x86_64
+          cd ../../ && ./build_pplnn.sh ${{ github.run_id }} cuda
 
       - name: Test
         run: |
-          cd ../../ && ./test_pplnn.sh ${{ github.run_id }} x86_64
+          cd ../../ && ./test_pplnn.sh ${{ github.run_id }} cuda
