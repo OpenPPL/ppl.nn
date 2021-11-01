@@ -16,9 +16,7 @@ jobs:
     steps:
       - name: Create Checkout Directory
         run: |
-          echo "Create Checkout Directory: ${{ github.run_id }}."
-          if ( Test-Path ${{ github.run_id }} ) { Remove-Item ${{ github.run_id }} -Recurse -Force}
-          mkdir ${{ github.run_id }}
+          cd ../../ ; ./make_pplnn_dir.ps1 ${{ github.run_id }}
       - name: Checkout
         uses: actions/checkout@v2
         with:
