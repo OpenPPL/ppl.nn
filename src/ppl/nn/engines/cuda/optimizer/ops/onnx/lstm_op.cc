@@ -47,8 +47,6 @@ RetCode LstmOp::Init(const OptKernelOptions& options) {
 }
 
 RetCode LstmOp::Finalize(const OptKernelOptions& options) {
-    param_ = *((LSTMParam*)options.param);
-
     auto status = SetCommonParam(options);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load common param failed: " << GetRetCodeStr(status);
