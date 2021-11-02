@@ -1,7 +1,6 @@
 #!/bin/bash
 
 workdir=`pwd`
-pplnn_build_dir="${workdir}/pplnn-build"
 
 if [[ `uname` == "Linux" ]]; then
     processor_num=`cat /proc/cpuinfo | grep processor | grep -v grep | wc -l`
@@ -11,10 +10,11 @@ else
     processor_num=1
 fi
 
-options="-DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${pplnn_build_dir}/install $*"
+options="-DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install $*"
 
+pplnn_build_dir="${workdir}/pplnn-build"
 mkdir ${pplnn_build_dir}
 cd ${pplnn_build_dir}
-cmd="cmake $options .. && make -j${processor_num} && make install"
+cmd="cmake $options .. && cmake --build . -j ${processor_num} --config Release && cmake --build . --target install -j ${processor_num} --config Release"
 echo "cmd -> $cmd"
 eval "$cmd"
