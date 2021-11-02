@@ -69,12 +69,23 @@ static RetCode ImportAlgorithms(Engine* engine, uint32_t option, const pybind11:
     return engine->Configure(option, buffer.c_str());
 }
 
+static RetCode ExportAlgorithms(Engine* engine, uint32_t option, const pybind11::args& args) {
+    if (args.size() != 1) {
+        LOG(ERROR) << "expected for 1 parameter but got [" << args.size() << "].";
+        return RC_INVALID_VALUE;
+    }
+
+    auto fname = args[0].cast<string>();
+    return engine->Configure(option, fname.c_str());
+}
+
 typedef RetCode (*ConfigFunc)(Engine*, uint32_t option, const pybind11::args& args);
 
 static const map<uint32_t, ConfigFunc> g_opt2func = {
     {CUDA_CONF_USE_DEFAULT_ALGORITHMS, GenericSetOption},
     {CUDA_CONF_SET_INPUT_DIMS, SetInputDims},
     {CUDA_CONF_IMPORT_ALGORITHMS, ImportAlgorithms},
+    {CUDA_CONF_EXPORT_ALGORITHMS, ExportAlgorithms},
 };
 
 void RegisterCudaEngine(pybind11::module* m) {
@@ -96,6 +107,7 @@ void RegisterCudaEngine(pybind11::module* m) {
     m->attr("CUDA_CONF_USE_DEFAULT_ALGORITHMS") = (uint32_t)CUDA_CONF_USE_DEFAULT_ALGORITHMS;
     m->attr("CUDA_CONF_SET_INPUT_DIMS") = (uint32_t)CUDA_CONF_SET_INPUT_DIMS;
     m->attr("CUDA_CONF_IMPORT_ALGORITHMS") = (uint32_t)CUDA_CONF_IMPORT_ALGORITHMS;
+    m->attr("CUDA_CONF_EXPORT_ALGORITHMS") = (uint32_t)CUDA_CONF_EXPORT_ALGORITHMS;
 }
 
 }}} // namespace ppl::nn::python

@@ -76,23 +76,6 @@ static string ToString(T v) {
     return ss.str();
 }
 
-static inline RetCode ReadFileContent(const char* fname, string* buf) {
-    ifstream ifile;
-
-    ifile.open(fname, ios_base::in);
-    if (!ifile.is_open()) {
-        LOG(ERROR) << "open quant file[" << fname << "] failed.";
-        return RC_NOT_FOUND;
-    }
-
-    stringstream ss;
-    ss << ifile.rdbuf();
-    *buf = ss.str();
-
-    ifile.close();
-    return RC_SUCCESS;
-}
-
 static vector<int64_t> GenerateRandomDims(uint32_t dim_count) {
     static const uint32_t max_dim = 640;
     static const uint32_t min_dim = 128;
@@ -220,16 +203,24 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_OUTPUT_FORMAT, g_flag_output_format.c_str());
     cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_OUTPUT_TYPE, g_flag_output_type.c_str());
     cuda_engine->Configure(ppl::nn::CUDA_CONF_USE_DEFAULT_ALGORITHMS, g_flag_quick_select);
-    cuda_engine->Configure(ppl::nn::CUDA_CONF_EXPORT_ALGORITHMS, g_flag_export_algo_file.c_str());
+
+    if (!g_flag_export_algo_file.empty()) {
+        cuda_engine->Configure(ppl::nn::CUDA_CONF_EXPORT_ALGORITHMS, g_flag_export_algo_file.c_str());
+    }
 
     if (!g_flag_import_algo_file.empty()) {
-        string algo_info_json_buffer;
-        auto status = ReadFileContent(g_flag_import_algo_file.c_str(), &algo_info_json_buffer);
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "read algo info from file[" << g_flag_import_algo_file << "] failed.";
-            return false;
+        // import and export from the same file
+        if (g_flag_import_algo_file == g_flag_export_algo_file) {
+            // try to create this file first
+            ofstream ofs(g_flag_export_algo_file, ios_base::app);
+            if (!ofs.is_open()) {
+                LOG(ERROR) << "cannot create file[" << g_flag_export_algo_file << "] for exporting algorithms.";
+                return false;
+            }
+            ofs.close();
         }
-        cuda_engine->Configure(ppl::nn::CUDA_CONF_IMPORT_ALGORITHMS, algo_info_json_buffer.c_str());
+
+        cuda_engine->Configure(ppl::nn::CUDA_CONF_IMPORT_ALGORITHMS, g_flag_import_algo_file.c_str());
     }
 
     // pass input shapes to cuda engine for further optimizations
