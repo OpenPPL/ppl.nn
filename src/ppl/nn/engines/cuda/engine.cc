@@ -216,15 +216,43 @@ RetCode CudaEngine::SetUseDefaultAlgorithms(CudaEngine* engine, va_list args) {
     return RC_SUCCESS;
 }
 
+static RetCode ReadFileContent(const char* fname, string* buf) {
+    ifstream ifile;
+
+    ifile.open(fname, ios_base::in);
+    if (!ifile.is_open()) {
+        LOG(ERROR) << "open file[" << fname << "] failed.";
+        return RC_NOT_FOUND;
+    }
+
+    stringstream ss;
+    ss << ifile.rdbuf();
+    *buf = ss.str();
+
+    ifile.close();
+    return RC_SUCCESS;
+}
+
 RetCode CudaEngine::SetQuantization(CudaEngine* engine, va_list args) {
-    const char* json_buffer = va_arg(args, const char*);
-    if (!json_buffer) {
-        LOG(ERROR) << "quantization buffer is null.";
+    const char* json_file = va_arg(args, const char*);
+    if (!json_file) {
+        LOG(ERROR) << "empty quantization info filename.";
         return RC_INVALID_VALUE;
     }
 
+    string json_buffer;
+    auto status = ReadFileContent(json_file, &json_buffer);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "read quant info from file[" << json_file << "] failed.";
+        return RC_INVALID_VALUE;
+    }
+    if (json_buffer.empty()) {
+        LOG(WARNING) << "empty quant info file[" << json_file << "]. do nothing.";
+        return RC_SUCCESS;
+    }
+
     QuantParamParser parser;
-    auto status = parser.ParseBuffer(json_buffer, &engine->cuda_flags_.quant_info);
+    status = parser.ParseBuffer(json_buffer.c_str(), &engine->cuda_flags_.quant_info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse quantization buffer failed: " << GetRetCodeStr(status);
         return status;
@@ -242,14 +270,25 @@ RetCode CudaEngine::ExportAlgorithms(CudaEngine* engine, va_list args) {
 }
 
 RetCode CudaEngine::ImportAlgorithms(CudaEngine* engine, va_list args) {
-    auto file_path = va_arg(args, const char*);
-    if (!file_path) {
-        LOG(ERROR) << "empty algorithm info buffer.";
+    auto json_file = va_arg(args, const char*);
+    if (!json_file) {
+        LOG(WARNING) << "empty algorithm info filename. do nothing.";
+        return RC_SUCCESS;
+    }
+
+    string json_buffer;
+    auto status = ReadFileContent(json_file, &json_buffer);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "read algo info from file[" << json_file << "] failed.";
         return RC_INVALID_VALUE;
+    }
+    if (json_buffer.empty()) {
+        LOG(WARNING) << "empty quant info file[" << json_file << "]. do nothing.";
+        return RC_SUCCESS;
     }
 
     rapidjson::Document d;
-    d.Parse(file_path);
+    d.Parse(json_buffer.c_str());
     if (d.HasParseError()) {
         LOG(ERROR) << "parse quant file failed: position[" << d.GetErrorOffset() << "], code[" << d.GetParseError()
                    << "]";

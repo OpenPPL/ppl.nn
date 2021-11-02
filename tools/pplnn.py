@@ -83,8 +83,10 @@ def ParseCommandLineArgs():
                                 default = False, required = False)
             parser.add_argument("--device-id", type = int, dest = "device_id",
                                 default = 0, required = False, help = "specify which device is used.")
-            parser.add_argument("--algo-info", type = str, default = "", required = False,
+            parser.add_argument("--import-algo-file", type = str, default = "", required = False,
                                 help = "a json file containing op implementations info")
+            parser.add_argument("--export-algo-file", type = str, default = "", required = False,
+                                help = "a json file used to store op implementations info")
 
     parser.add_argument("--onnx-model", type = str, default = "", required = False,
                         help = "onnx model file")
@@ -170,13 +172,23 @@ def CreateCudaEngine(args):
             logging.error("cuda engine Configure(CUDA_CONF_SET_INPUT_DIMS) failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
 
-    if args.algo_info:
-        with open(args.algo_info, 'r') as f:
-            json_buffer = f.read()
-            status = cuda_engine.Configure(pplnn.CUDA_CONF_SET_ALGORITHMS, json_buffer)
-            if status != pplcommon.RC_SUCCESS:
-                logging.error("cuda engine Configure(CUDA_CONF_SET_ALGORITHMS) failed: " + pplcommon.GetRetCodeStr(status))
-                sys.exit(-1)
+    if args.export_algo_file:
+        status = cuda_engine.Configure(pplnn.CUDA_CONF_EXPORT_ALGORITHMS, args.export_algo_file)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("cuda engine Configure(CUDA_CONF_EXPORT_ALGORITHMS) failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+    if args.import_algo_file:
+        # import and export from the same file
+        if args.import_algo_file == args.export_algo_file:
+            # try to create this file first
+            f = open(args.export_algo_file, "a")
+            f.close()
+
+        status = cuda_engine.Configure(pplnn.CUDA_CONF_IMPORT_ALGORITHMS, args.import_algo_file)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("cuda engine Configure(CUDA_CONF_IMPORT_ALGORITHMS) failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
 
     return cuda_engine
 

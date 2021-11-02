@@ -64,31 +64,31 @@ enum {
     CUDA_CONF_USE_DEFAULT_ALGORITHMS,
 
     /**
-       @brief the name of json file that saves quantization information
+       @param json_file a json file containing quantization information
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_SET_QUANTIZATION, quantination_json_buffer);
+       cuda_engine->Configure(CUDA_CONF_SET_QUANTIZATION, json_file);
        @endcode
     */
     CUDA_CONF_SET_QUANTIZATION,
 
     /**
-       @brief the name of json file that saves selected algos' index information
+       @param json_file a json file used to store selected algos' index information
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_EXPORT_ALGORITHMS, algo_info_json_buffer);
+       cuda_engine->Configure(CUDA_CONF_EXPORT_ALGORITHMS, json_file);
        @endcode
     */
     CUDA_CONF_EXPORT_ALGORITHMS,
 
     /**
-       @brief the name of json file that reads selected algos' index information
+       @param json_file a json file containing selected algos' index information
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_IMPORT_ALGORITHMS, algo_info_json_buffer);
+       cuda_engine->Configure(CUDA_CONF_IMPORT_ALGORITHMS, json_file);
        @endcode
     */
     CUDA_CONF_IMPORT_ALGORITHMS,
