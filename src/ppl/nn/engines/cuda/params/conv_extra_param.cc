@@ -197,18 +197,19 @@ RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* device, Con
 void LoadAlgoInfo(const std::string& file_path, const conv_param_t& conv_param, const algo_param_t& algo_param) {
     if (!file_path.empty()) {
         rapidjson::Document oWriteDoc;
-        fstream iofile;
-        iofile.open(file_path, ios_base::in | ios_base::out);
-        if (!iofile.is_open()) {
+        fstream ifile;
+        ifile.open(file_path, ios_base::in);
+        if (!ifile.is_open()) {
             oWriteDoc.SetObject();
         } else {
             std::stringstream algo_info_json_buffer;
-            algo_info_json_buffer << iofile.rdbuf();
+            algo_info_json_buffer << ifile.rdbuf();
             oWriteDoc.Parse(algo_info_json_buffer.str().c_str());
             if (oWriteDoc.HasParseError()) {
                 oWriteDoc.SetObject();
             }
         }
+        ifile.close();
         
         std::string shape_str = GetConvShapeString(conv_param);
         std::string kname_str = algo_param.algo_name;
@@ -226,8 +227,13 @@ void LoadAlgoInfo(const std::string& file_path, const conv_param_t& conv_param, 
         rapidjson::Writer<rapidjson::StringBuffer> oWriter(oBuffer);
         oWriteDoc.Accept(oWriter);
 
-        iofile << oBuffer.GetString();
-        iofile.close();
+        fstream ofile;
+        ofile.open(file_path, ios_base::out);
+        if (!ofile.is_open()) {
+            return;
+        }
+        ofile << oBuffer.GetString();
+        ofile.close();
     }
     return;
 }
