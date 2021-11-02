@@ -29,5 +29,4 @@ jobs:
       - name: clean
         if: ${{ always() }}
         run: |
-          cd ../../ && ./clean_pplnn.ps1 ${{ github.run_id }} x86_64
-          echo "clean up."
+          cd ../../ ; ./clean_pplnn.ps1 ${{ github.run_id }} x86_64
