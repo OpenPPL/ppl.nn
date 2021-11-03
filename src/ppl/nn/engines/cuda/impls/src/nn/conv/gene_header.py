@@ -35,6 +35,7 @@ std::string GeneHeader::Find(const std::string& path) {
     return "";
 }
 GeneHeader::GeneHeader() {
+    std::string code_str;
 """
     file.write(template)
 
@@ -48,8 +49,9 @@ def init_include_file(file, path, name):
         code = header_file.read()
         code = code.replace('\\', '\\\\')
         code = code.replace('\"', '\\\"')
-        code = code.replace('\n', '\\n\\\n')
-        template = """    header_code_.emplace("{name}", "{code}");
+        code = code.replace('\n', '\\n";\n    code_str += \"')
+        template = """    code_str = "{code}";
+    header_code_.emplace("{name}", code_str);
 """
         file.write(template.format(name = name,
                                    code = code))
