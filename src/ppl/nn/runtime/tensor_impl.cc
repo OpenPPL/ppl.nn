@@ -22,6 +22,15 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn {
 
+RetCode TensorImpl::ReallocBuffer() {
+    if (!buffer_info_.IsBufferOwner() && buffer_info_.GetBufferPtr()) {
+        LOG(WARNING) << "tensor[" << GetName() << "] is not the buffer owner. ReallocBuffer() does nothing.";
+        return RC_SUCCESS;
+    }
+
+    return buffer_info_.ReallocBuffer();
+}
+
 RetCode TensorImpl::CopyToHost(void* dst) const {
     return buffer_info_.GetDevice()->CopyToHost(dst, buffer_info_.GetBufferDesc(), buffer_info_.GetShape());
 }

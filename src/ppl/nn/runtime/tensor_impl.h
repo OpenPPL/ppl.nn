@@ -80,9 +80,7 @@ public:
         buffer_info_.FreeBuffer();
     }
 
-    ppl::common::RetCode ReallocBuffer() override {
-        return buffer_info_.ReallocBuffer();
-    }
+    ppl::common::RetCode ReallocBuffer() override;
 
     void SetBufferPtr(void* ptr) override {
         buffer_info_.SetBuffer(BufferDesc(ptr));
