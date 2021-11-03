@@ -26,7 +26,9 @@ enum {
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_SET_OUTPUT_FORMAT, DATAFORMAT_NDARRAY);
+       vector<dataformat_t> output_formats;
+       // fill output_formats
+       cuda_engine->Configure(CUDA_CONF_SET_OUTPUT_FORMAT, output_formats.data(), output_formats.size());
        @endcode
     */
     CUDA_CONF_SET_OUTPUT_FORMAT = 0,
@@ -36,7 +38,9 @@ enum {
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_SET_OUTPUT_TYPE, DATATYPE_FLOAT32);
+       vector<datatype_t> output_types;
+       // fill output_types;
+       cuda_engine->Configure(CUDA_CONF_SET_OUTPUT_TYPE, output_types.data(), output_types.size());
        @endcode
     */
     CUDA_CONF_SET_OUTPUT_TYPE,

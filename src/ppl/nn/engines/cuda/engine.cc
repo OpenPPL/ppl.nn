@@ -107,87 +107,23 @@ RetCode CudaEngine::ProcessGraph(utils::SharedResource* resource, ir::Graph* gra
 /* -------------------------------------------------------------------------- */
 
 RetCode CudaEngine::SetOutputFormat(CudaEngine* engine, va_list args) {
-    const char* edge_formats = va_arg(args, const char*);
-    std::string temp_name[2] = {"", ""};
-    uint32_t flag = 0;
+    auto base = va_arg(args, dataformat_t*);
+    auto size = va_arg(args, uint64_t);
 
-    if (edge_formats[0] == '\0')
-        return RC_SUCCESS;
-
-    for (uint32_t i = 0;; i++) {
-        if (edge_formats[i] == ',') {
-            flag = 1;
-        } else if (edge_formats[i] == ';' || edge_formats[i] == '\0') {
-            datatype_t temp_type = DATATYPE_UNKNOWN;
-            for (int j = 1; j < DATATYPE_MAX; ++j) {
-                if (temp_name[1] == GetDataTypeStr(j)) {
-                    temp_type = j;
-                }
-            }
-            if (temp_type == DATATYPE_UNKNOWN) {
-                LOG(ERROR) << "Incorrect data type.";
-                return RC_INVALID_VALUE;
-            }
-
-            engine->cuda_flags_.output_formats.emplace(temp_name[0], temp_type);
-            temp_name[0] = "";
-            temp_name[1] = "";
-            flag = 0;
-
-            if (edge_formats[i] == '\0') {
-                break;
-            }
-        } else {
-            temp_name[flag] = temp_name[flag] + edge_formats[i];
-        }
-    }
-
-    if (temp_name[0] != "" || temp_name[1] != "") {
-        LOG(ERROR) << "The sizes of edge name and data format are not equal.";
-        return RC_INVALID_VALUE;
+    engine->cuda_flags_.output_formats.resize(size);
+    for (uint64_t i = 0; i < size; ++i) {
+        engine->cuda_flags_.output_formats[i] = base[i];
     }
     return RC_SUCCESS;
 }
 
 RetCode CudaEngine::SetOutputType(CudaEngine* engine, va_list args) {
-    const char* edge_types = va_arg(args, const char*);
-    std::string temp_name[2] = {"", ""};
-    uint32_t flag = 0;
+    auto base = va_arg(args, datatype_t*);
+    auto size = va_arg(args, uint64_t);
 
-    if (edge_types[0] == '\0')
-        return RC_SUCCESS;
-
-    for (uint32_t i = 0;; i++) {
-        if (edge_types[i] == ',') {
-            flag = 1;
-        } else if (edge_types[i] == ';' || edge_types[i] == '\0') {
-            datatype_t temp_type = DATATYPE_UNKNOWN;
-            for (int j = 1; j < DATATYPE_MAX; ++j) {
-                if (temp_name[1] == GetDataTypeStr(j)) {
-                    temp_type = j;
-                }
-            }
-            if (temp_type == DATATYPE_UNKNOWN) {
-                LOG(ERROR) << "Incorrect data type.";
-                return RC_INVALID_VALUE;
-            }
-
-            engine->cuda_flags_.output_types.emplace(temp_name[0], temp_type);
-            temp_name[0] = "";
-            temp_name[1] = "";
-            flag = 0;
-
-            if (edge_types[i] == '\0') {
-                break;
-            }
-        } else {
-            temp_name[flag] = temp_name[flag] + edge_types[i];
-        }
-    }
-
-    if (temp_name[0] != "" || temp_name[1] != "") {
-        LOG(ERROR) << "The sizes of edge name and data type are not equal.";
-        return RC_INVALID_VALUE;
+    engine->cuda_flags_.output_types.resize(size);
+    for (uint64_t i = 0; i < size; ++i) {
+        engine->cuda_flags_.output_types[i] = base[i];
     }
     return RC_SUCCESS;
 }
