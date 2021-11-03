@@ -47,9 +47,9 @@ struct CudaArgs {
     bool quick_select;
     std::string save_algo_path = "";
     ppl::common::datatype_t kernel_default_type = 0;
-    std::map<std::string, ppl::common::dataformat_t> output_formats;
-    std::map<std::string, ppl::common::datatype_t> output_types;
     std::map<std::string, ppl::common::datatype_t> node_types;
+    std::vector<ppl::common::dataformat_t> output_formats;
+    std::vector<ppl::common::datatype_t> output_types;
     std::vector<std::vector<int64_t>> input_dims;
     std::map<std::string, std::vector<CudaTensorQuant>> tensor_quants;
     std::map<std::string, AlgoSelects> alog_selects;

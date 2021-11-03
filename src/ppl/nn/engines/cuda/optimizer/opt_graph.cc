@@ -301,12 +301,12 @@ RetCode OptGraph::AddBridgeKernels() {
                 impl_pair.first->second->GetShape().Reshape(post_shape->GetShape().GetDims(),
                                                             post_shape->GetShape().GetRealDimCount());
 
-                auto pair_format = args_->output_formats.find(edge->GetName());
-                if (pair_format != args_->output_formats.end()) {
-                    post_shape->GetShape().SetDataFormat(pair_format->second);
+                if (j < args_->output_formats.size()) {
+                    post_shape->GetShape().SetDataFormat(args_->output_formats[j]);
                 } else {
                     post_shape->GetShape().SetDataFormat(DATAFORMAT_NDARRAY);
                 }
+
                 bridge_kernel.get()->Init(options);
                 info_->kernels.emplace(new_node->GetId(), std::move(bridge_kernel));
                 count++;
@@ -454,9 +454,9 @@ RetCode OptGraph::UpdateType() {
                 auto out_shape = &IOinfo.GetOutput<TensorImpl>(j)->GetShape();
                 if (out_shape->GetDataType() == DATATYPE_FLOAT16 || out_shape->GetDataType() == DATATYPE_INT8)
                     out_shape->SetDataType(DATATYPE_FLOAT32);
-                auto pair_type = args_->output_types.find(edge->GetName());
-                if (pair_type != args_->output_types.end()) {
-                    out_shape->SetDataType(pair_type->second);
+
+                if (j < args_->output_types.size()) {
+                    out_shape->SetDataType(args_->output_types[j]);
                 }
             }
         }

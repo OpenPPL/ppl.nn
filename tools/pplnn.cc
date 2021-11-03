@@ -173,8 +173,6 @@ static bool ParseInputShapes(const string& shape_str, vector<vector<int64_t>>* i
 
 Define_bool_opt("--use-cuda", g_flag_use_cuda, false, "use cuda engine");
 
-Define_string_opt("--output-format", g_flag_output_format, "", "declare the output format");
-Define_string_opt("--output-type", g_flag_output_type, "", "declare the output type");
 Define_bool_opt("--quick-select", g_flag_quick_select, false, "quick select algorithms for conv and gemm kernel");
 Define_uint32_opt("--device-id", g_flag_device_id, 0, "declare device id for cuda");
 
@@ -200,8 +198,6 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
         return false;
     }
 
-    cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_OUTPUT_FORMAT, g_flag_output_format.c_str());
-    cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_OUTPUT_TYPE, g_flag_output_type.c_str());
     cuda_engine->Configure(ppl::nn::CUDA_CONF_USE_DEFAULT_ALGORITHMS, g_flag_quick_select);
 
     if (!g_flag_export_algo_file.empty()) {
