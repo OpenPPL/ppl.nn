@@ -940,7 +940,7 @@ double PPLCUDAConvolutionJitSelectKernel(
                 }
 
                 kernel_info_t temp_kernel(-1, ktype, algo_param.algo_name.c_str());
-                if (!temp_kernel.CheckKernelTilesFeasible())
+                if (!temp_kernel.CheckKernelTilesFeasible(device_id))
                     continue;
                 if (!temp_kernel.CheckKernelTypeFeasible(conv_param.flt_height, conv_param.flt_width, num_chl_per_grp, splitk))
                     continue;
