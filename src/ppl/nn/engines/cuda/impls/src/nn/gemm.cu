@@ -317,7 +317,7 @@ double PPLCUDAGemmJITSelectKernel(
                                "_k" + ToString(algo_param.tiles.k_cta) + "_s" + ToString(algo_param.tiles.k_per_set) + "_buf1";
 
         kernel_info_t temp_kernel(-1, ktype, algo_param.algo_name.c_str());
-        if (!temp_kernel.CheckKernelTilesFeasible())
+        if (!temp_kernel.CheckKernelTilesFeasible(device_id))
             continue;
         if (!temp_kernel.CheckKernelTypeFeasible(conv_param.flt_height, conv_param.flt_width, num_chl_per_grp, splitk))
             continue;
@@ -341,7 +341,7 @@ double PPLCUDAGemmJITSelectKernel(
 
     int index = 0;
     std::vector<const char *> compile_params;
-    elapsed = AlgoForwardTime(stream, knames, total_source, index, compile_params, 0, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, fuse_param, workspace);
+    elapsed = AlgoForwardTime(stream, knames, total_source, index, compile_params, device_id, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, fuse_param, workspace);
 
     algo_param = params[index];
     return elapsed;

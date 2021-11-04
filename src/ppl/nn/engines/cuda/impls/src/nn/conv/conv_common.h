@@ -189,7 +189,7 @@ struct kernel_info_t {
         }
     }
 
-    bool CheckKernelTilesFeasible()
+    bool CheckKernelTilesFeasible(int device_id)
     {
         if (ktype == CONV_IDXN_C2 || ktype == CONV_IDXN_C4 || ktype == CONV_IDXN_C32) {
             return tile_m_per_warp >= 16 && tile_m_per_warp <= 64 &&
@@ -200,7 +200,9 @@ struct kernel_info_t {
                    tile_k_per_cta >= tile_k_per_step && tile_k_per_cta / tile_k_per_step <= 2 &&
                    (tile_m_per_cta / tile_m_per_warp != 4 || tile_n_per_cta / tile_n_per_warp != 4);
         } else {
-            int MAX_SMEM_V4_PER_CTA = 3072;
+            cudaDeviceProp device_prop;
+            cudaGetDeviceProperties(&device_prop, device_id);
+            int MAX_SMEM_V4_PER_CTA = device_prop.sharedMemPerBlock / 16;
             int INT4_TO_4HALF2      = 8;
             int BUF_SIZE            = 1;
 
