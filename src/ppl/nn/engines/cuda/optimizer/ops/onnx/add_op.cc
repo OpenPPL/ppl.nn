@@ -48,7 +48,7 @@ RetCode AddOp::Init(const OptKernelOptions& options) {
         return status;
     };
 
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+    infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         return oputils::ReshapeAdd(info, nullptr);
     };
 

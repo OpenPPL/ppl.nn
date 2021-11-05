@@ -27,7 +27,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode AndOp::Init(const OptKernelOptions& options) {
-    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+    infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         for (uint32_t i = 0; i < info->GetInputCount(); ++i) {
             auto in_shape = &info->GetInput<TensorImpl>(i)->GetShape();
             in_shape->SetDataType(DATATYPE_BOOL);
@@ -37,7 +37,7 @@ RetCode AndOp::Init(const OptKernelOptions& options) {
         return RC_SUCCESS;
     };
 
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+    infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         return oputils::ReshapeAnd(info, nullptr);
     };
 

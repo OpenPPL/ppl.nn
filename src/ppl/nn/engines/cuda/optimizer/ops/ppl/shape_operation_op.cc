@@ -32,7 +32,7 @@ RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+    infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
             auto shape = &info->GetOutput<TensorImpl>(i)->GetShape();
             shape->SetDataType(ppl::common::DATATYPE_INT64);

@@ -34,7 +34,7 @@ RetCode ArgmaxOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+    infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         auto shape = &info->GetOutput<TensorImpl>(0)->GetShape();
         shape->SetDataType(ppl::common::DATATYPE_INT64);
         return RC_SUCCESS;

@@ -29,21 +29,21 @@ public:
     SequenceAtOp(const ir::Node* node) : CudaOptKernel(node), op_(node) {}
 
     ppl::common::RetCode Init(const OptKernelOptions&) override {
-        infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant,
+        infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant,
                                   datatype_t type) -> RetCode {
             if (type == DATATYPE_UNKNOWN) {
                 return InferInheritedType(info);
             } else if (type == DATATYPE_INT8) {
                 auto status = CopyQuantType(info, quant);
                 if (status != RC_SUCCESS) {
-                    LOG(ERROR) << "Set quantization for node[" << this->GetNode()->GetName() << "] failed.";
+                    LOG(ERROR) << "Set sequence quantization failed.";
                     return RC_INVALID_VALUE;
                 }
             }
             return InferDefaultType(info, type);
         };
 
-        infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
             auto in_shape = &info->GetInput<TensorImpl>(0)->GetShape();
             for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
                 auto out_shape = &info->GetOutput<TensorImpl>(0)->GetShape();

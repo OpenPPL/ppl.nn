@@ -28,7 +28,7 @@ using namespace ppl::nn::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode TileOp::Init(const OptKernelOptions& options) {
-    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+    infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
             status = InferInheritedType(info);
@@ -42,7 +42,7 @@ RetCode TileOp::Init(const OptKernelOptions& options) {
         return status;
     };
 
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+    infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         const TensorShape& shape = info->GetInput<TensorImpl>(0)->GetShape();
         uint32_t dim_count = shape.GetDimCount();
         auto repeat = info->GetInput<TensorImpl>(1);

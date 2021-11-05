@@ -27,7 +27,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode SliceOp::Init(const OptKernelOptions& options) {
-    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+    infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
             status = InferInheritedType(info);
@@ -39,7 +39,7 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
         return status;
     };
 
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+    infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         SliceKernelParam kernel_param;
 
         const TensorShape& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();

@@ -27,7 +27,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode ReshapeOp::Init(const OptKernelOptions& options) {
-    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+    infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
             status = InferInheritedType(info);
@@ -41,7 +41,7 @@ RetCode ReshapeOp::Init(const OptKernelOptions& options) {
         return status;
     };
 
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+    infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         if (info->GetInputCount() != 2) {
             LOG(ERROR) << "2 input required.";
             return RC_INVALID_VALUE;

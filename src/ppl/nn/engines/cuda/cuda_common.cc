@@ -31,7 +31,7 @@ std::pair<int, int> PPLCudaGetDeviceArch(int device) {
         LOG(ERROR) << "Can Not Get Correct Arch For Device";
         res = std::pair<int, int>(std::move(6), std::move(0));
     }
-    return std::move(res);
+    return res;
 }
 
 std::string CUDAIncludePath() {

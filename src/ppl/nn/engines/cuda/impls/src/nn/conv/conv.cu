@@ -599,11 +599,10 @@ ppl::common::RetCode PPLCUDAConvolutionLoadAlgoParam(
     algo_param_t &algo_param,
     conv_param_t &conv_param)
 {
-    int chl_per_group = conv_param.num_chl / conv_param.num_grp;
     auto kname        = algo_param.algo_name.substr(algo_param.algo_name.find("_b"));
     auto f_size       = algo_param.algo_name.substr(25,2);
 
-    if (chl_per_group <= 32) { // Use non-shared memory algo for small channel
+    if (algo_param.algo_name.find("Idxn") != std::string::npos) {
         sscanf(kname.c_str(), "_b%dx%d_w%dx%d_k%d_s%d_nosmem", &algo_param.tiles.m_cta, &algo_param.tiles.n_cta, &algo_param.tiles.m_warp, &algo_param.tiles.n_warp, &algo_param.tiles.k_cta, &algo_param.tiles.k_per_step);
         algo_param.tiles.flt_pad_size    = algo_param.tiles.k_per_step / 4;
         algo_param.tiles.cta_size_in_thd = (algo_param.tiles.m_cta / algo_param.tiles.m_warp) *

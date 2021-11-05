@@ -27,7 +27,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode GreaterOp::Init(const OptKernelOptions& options) {
-    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+    infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         auto& in0_shape = info->GetInput<TensorImpl>(0)->GetShape();
         auto& in1_shape = info->GetInput<TensorImpl>(1)->GetShape();
         auto& out_shape = info->GetOutput<TensorImpl>(0)->GetShape();
@@ -52,7 +52,7 @@ RetCode GreaterOp::Init(const OptKernelOptions& options) {
         return RC_SUCCESS;
     };
 
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+    infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         return oputils::ReshapeGreater(info, nullptr);
     };
 
