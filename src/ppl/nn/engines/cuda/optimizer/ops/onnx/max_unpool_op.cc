@@ -34,7 +34,7 @@ RetCode MaxUnPoolOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+    infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         type = ppl::common::DATATYPE_FLOAT16;
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {

@@ -38,7 +38,7 @@ public:
                                          const TensorShape& src_desc) const override;
 
     ppl::common::RetCode Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
-                                 const TensorShape& src_desc) const;
+                                 const TensorShape& src_desc) const override;
 
     ppl::common::RetCode ConvertToHost(void* dst, const TensorShape& dst_desc, const CudaTensorQuant& dst_quant,
                                        const BufferDesc& src, const TensorShape& src_desc,

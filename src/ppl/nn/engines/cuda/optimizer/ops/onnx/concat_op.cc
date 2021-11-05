@@ -34,7 +34,7 @@ RetCode ConcatOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+    infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
             status = InferHighestType(info);
@@ -50,7 +50,7 @@ RetCode ConcatOp::Init(const OptKernelOptions& options) {
         return oputils::ReshapeConcat(info, &param_);
     };
 
-    infer_unsafe_dims_func_ = [this](InputOutputInfo* info, std::set<uint32_t>* illegal_inputs) -> RetCode {
+    infer_unsafe_dims_func_ = [](InputOutputInfo* info, std::set<uint32_t>* illegal_inputs) -> RetCode {
         auto in_shape0 = &info->GetInput<TensorImpl>(0)->GetShape();
         for (uint32_t i = 0; i < info->GetInputCount(); ++i) {
             if (illegal_inputs->find(i) != illegal_inputs->end()) {

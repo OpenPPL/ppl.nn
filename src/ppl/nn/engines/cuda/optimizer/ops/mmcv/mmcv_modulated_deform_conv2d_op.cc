@@ -31,13 +31,13 @@ RetCode MMCVModulatedDeformConv2dOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeMMCVModulatedDeformConv2d(info, &param_);
-    };
-
-    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+    infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         type = ppl::common::DATATYPE_FLOAT16;
         return InferDefaultType(info, type);
+    };
+
+    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        return oputils::ReshapeMMCVModulatedDeformConv2d(info, &param_);
     };
 
     return RC_SUCCESS;

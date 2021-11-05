@@ -42,7 +42,7 @@ static RetCode ConcatOutputs(const vector<TensorBufferInfo>& outputs, BufferDesc
 }
 
 RetCode LoopOp::Init(const OptKernelOptions& options) {
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+    infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
             auto out_shape = &info->GetOutput<TensorImpl>(i)->GetShape();
             if (out_shape->GetDataFormat() == DATAFORMAT_UNKNOWN) {
@@ -52,7 +52,7 @@ RetCode LoopOp::Init(const OptKernelOptions& options) {
         }
         return RC_SUCCESS;
     };
-    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t) -> RetCode {
+    infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t) -> RetCode {
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
             auto out_shape = &info->GetOutput<TensorImpl>(i)->GetShape();
             out_shape->SetDataType(DATATYPE_UNKNOWN);

@@ -34,7 +34,7 @@ RetCode MMCVROIAlignOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+    infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         for (uint32_t i = 0; i < info->GetInputCount(); ++i) {
             auto in_shape = &info->GetInput<TensorImpl>(i)->GetShape();
             if (in_shape->GetDataType() == DATATYPE_UNKNOWN) {

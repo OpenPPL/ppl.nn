@@ -34,7 +34,7 @@ RetCode BatchNormalizationOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+    infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         auto& in_shape = info->GetInput<TensorImpl>(0)->GetShape();
         type = in_shape.GetDataType();
         ppl::common::RetCode status;
@@ -48,7 +48,7 @@ RetCode BatchNormalizationOp::Init(const OptKernelOptions& options) {
         return status;
     };
 
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+    infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         return oputils::ReshapeBatchNormalization(info, nullptr);
     };
 
