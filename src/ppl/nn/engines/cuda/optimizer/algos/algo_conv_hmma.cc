@@ -73,7 +73,8 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
     ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_.param, temp_conv_param);
 
-    auto algo_info = options.algos->find(GetConvShapeString(temp_conv_param));
+    std::string key_str = node->GetName();
+    auto algo_info = options.algos->find(key_str);
     if (algo_info != options.algos->end()) {
         attr_param_.extra_param.algo_info.algo_name = algo_info->second.kname;
         attr_param_.extra_param.algo_info.kid = algo_info->second.kid;
@@ -142,8 +143,8 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     algo_select.kid    = attr_param_.extra_param.algo_info.kid;
     algo_select.splitk = attr_param_.extra_param.algo_info.splitk;
     algo_select.splitf = attr_param_.extra_param.algo_info.splitf;
-    options.algos->emplace(GetConvShapeString(temp_conv_param), std::move(algo_select));
-    LoadAlgoInfo(options.args->save_algo_path, temp_conv_param, attr_param_.extra_param.algo_info);
+    options.algos->emplace(key_str, std::move(algo_select));
+    LoadAlgoInfo(options.args->save_algo_path, attr_param_.extra_param.algo_info, key_str);
     return timer;
 }
 
