@@ -194,7 +194,7 @@ RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* device, Con
     return RC_SUCCESS;
 }
 
-void LoadAlgoInfo(const std::string& file_path, const conv_param_t& conv_param, const algo_param_t& algo_param) {
+void LoadAlgoInfo(const std::string& file_path, const algo_param_t& algo_param, const std::string& key_str) {
     if (!file_path.empty()) {
         rapidjson::Document oWriteDoc;
         fstream ifile;
@@ -211,18 +211,18 @@ void LoadAlgoInfo(const std::string& file_path, const conv_param_t& conv_param, 
         }
         ifile.close();
         
-        std::string shape_str = GetConvShapeString(conv_param);
         std::string kname_str = algo_param.algo_name;
 
         rapidjson::Document::AllocatorType& allocator = oWriteDoc.GetAllocator();
         rapidjson::Value object(rapidjson::kObjectType);
-        rapidjson::Value shape_info(shape_str.c_str(), shape_str.size(), allocator);
+        rapidjson::Value key_info(key_str.c_str(), key_str.size(), allocator);
         rapidjson::Value kname_info(kname_str.c_str(), kname_str.size(), allocator);
         object.AddMember("kid", algo_param.kid, allocator);
         object.AddMember("kname", kname_info, allocator);
         object.AddMember("splitk", algo_param.splitk, allocator);
         object.AddMember("splitf", algo_param.splitf, allocator);
-        oWriteDoc.AddMember(shape_info, object, allocator);
+        oWriteDoc.RemoveMember(key_info);
+        oWriteDoc.AddMember(key_info, object, allocator);
         rapidjson::StringBuffer oBuffer;
         rapidjson::Writer<rapidjson::StringBuffer> oWriter(oBuffer);
         oWriteDoc.Accept(oWriter);
