@@ -7,6 +7,7 @@ on:
   pull_request:
     branches: [ master ]
     paths:
+      - 'include/ppl/nn/engines/cuda/**'
       - 'src/ppl/nn/engines/cuda/**'
       - 'src/ppl/nn/optimizers/**'
   workflow_dispatch:
