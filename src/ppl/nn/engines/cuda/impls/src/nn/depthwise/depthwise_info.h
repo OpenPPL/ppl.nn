@@ -99,21 +99,21 @@ void InitKernelList(std::vector<depthwise_kernel_info>& vec)
     vec.push_back(depthwise_kernel_info(ppl_cuda_depthwise_hmma<-1, -1, -1, -1, -1, -1, -1, -1>, "ppl_cuda_depthwise_hmma", i, 1, 1, -1, -1, -1, -1, -1, -1));
     i++;
 
-    vec.push_back(depthwise_kernel_info(ppl_cuda_depthwise_hmma<2, 2, 2, 2, 1, 1, 1, 1>, "ppl_cuda_depthwise_hmma", i, 2, 2, 2, 2, 1, 1, 1, 1));
-    i++;
-    vec.push_back(depthwise_kernel_info(ppl_cuda_depthwise_hmma<4, 4, 4, 4, 1, 1, 1, 1>, "ppl_cuda_depthwise_hmma", i, 4, 4, 4, 4, 1, 1, 1, 1));
-    i++;
+    // vec.push_back(depthwise_kernel_info(ppl_cuda_depthwise_hmma<2, 2, 2, 2, 1, 1, 1, 1>, "ppl_cuda_depthwise_hmma", i, 2, 2, 2, 2, 1, 1, 1, 1));
+    // i++;
+    // vec.push_back(depthwise_kernel_info(ppl_cuda_depthwise_hmma<4, 4, 4, 4, 1, 1, 1, 1>, "ppl_cuda_depthwise_hmma", i, 4, 4, 4, 4, 1, 1, 1, 1));
+    // i++;
 
-    vec.push_back(depthwise_kernel_info(ppl_cuda_depthwise_hmma<2, 2, 4, 4, 3, 3, 1, 1>, "ppl_cuda_depthwise_hmma", i, 2, 2, 4, 4, 3, 3, 1, 1));
-    i++;
-    vec.push_back(depthwise_kernel_info(ppl_cuda_depthwise_hmma<4, 4, 6, 6, 3, 3, 1, 1>, "ppl_cuda_depthwise_hmma", i, 4, 4, 6, 6, 3, 3, 1, 1));
-    i++;
+    // vec.push_back(depthwise_kernel_info(ppl_cuda_depthwise_hmma<2, 2, 4, 4, 3, 3, 1, 1>, "ppl_cuda_depthwise_hmma", i, 2, 2, 4, 4, 3, 3, 1, 1));
+    // i++;
+    // vec.push_back(depthwise_kernel_info(ppl_cuda_depthwise_hmma<4, 4, 6, 6, 3, 3, 1, 1>, "ppl_cuda_depthwise_hmma", i, 4, 4, 6, 6, 3, 3, 1, 1));
+    // i++;
 
-    vec.push_back(depthwise_kernel_info(ppl_cuda_depthwise_hmma<2, 2, 5, 5, 3, 3, 2, 2>, "ppl_cuda_depthwise_hmma", i, 2, 2, 5, 5, 3, 3, 2, 2));
-    i++;
+    // vec.push_back(depthwise_kernel_info(ppl_cuda_depthwise_hmma<2, 2, 5, 5, 3, 3, 2, 2>, "ppl_cuda_depthwise_hmma", i, 2, 2, 5, 5, 3, 3, 2, 2));
+    // i++;
 
-    vec.push_back(depthwise_kernel_info(ppl_cuda_depthwise_hmma<2, 2, 6, 6, 5, 5, 1, 1>, "ppl_cuda_depthwise_hmma", i, 2, 2, 6, 6, 5, 5, 1, 1));
-    i++;
+    // vec.push_back(depthwise_kernel_info(ppl_cuda_depthwise_hmma<2, 2, 6, 6, 5, 5, 1, 1>, "ppl_cuda_depthwise_hmma", i, 2, 2, 6, 6, 5, 5, 1, 1));
+    // i++;
 }
 
 void GenConfigure(depthwise_kernel_info info, conv_param_t conv_param, int* tile_height, int* tile_width, int* elems)
