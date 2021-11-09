@@ -1,0 +1,22 @@
+{
+    "quant_info": {
+        "input.1": {
+            "bit_width": 8,
+            "per_channel": false,
+            "sym": false,
+            "algorithm": "KL",
+            "quant_flag": true,
+            "scale": 0.020705883175719017,
+            "zero_point": 128.0,
+            "tensor_max": 2.640000104904175,
+            "tensor_min": -2.640000104904175,
+            "q_max": 255,
+            "q_min": 0
+        }
+    },
+    "op_info": {
+        "Conv_0": {
+            "data_type": "INT8"
+        }
+    }
+}

@@ -24,7 +24,7 @@ using namespace ppl::common;
 TEST(QuantParamParserTest, misc) {
     QuantParamParser parser;
     QuantParamInfo info;
-    const string test_conf = PPLNN_TESTDATA_DIR + string("/ppq_test_qparams.json");
+    const string test_conf = PPLNN_TESTDATA_DIR + string("/quant_test.json");
     auto status = parser.ParseFile(test_conf.c_str(), &info);
     EXPECT_EQ(RC_SUCCESS, status);
 
@@ -32,5 +32,5 @@ TEST(QuantParamParserTest, misc) {
     EXPECT_NE(info.tensor_params.end(), item_iter);
     auto field_iter = item_iter->second.fields.find("algorithm");
     EXPECT_NE(item_iter->second.fields.end(), field_iter);
-    EXPECT_EQ("kl", field_iter->second.content);
+    EXPECT_EQ("KL", field_iter->second.content);
 }
