@@ -20,6 +20,9 @@
 
 #if defined(__linux__)
 #include <sys/stat.h>
+
+#elif defined(__Win32) // defined(__Win32__) // defined(Win32)
+#include<iostream> 
 #endif
 
 #include <map>
