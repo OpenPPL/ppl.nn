@@ -68,14 +68,6 @@ if(PPLNN_ENABLE_KERNEL_PROFILING)
     list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_ENABLE_KERNEL_PROFILING)
 endif()
 
-if(PPLNN_ENABLE_PYTHON_API)
-    add_subdirectory(python)
-endif()
-
-if(PPLNN_ENABLE_LUA_API)
-    add_subdirectory(lua)
-endif()
-
 # --------------------------------------------------------------------------- #
 
 # engines
@@ -90,7 +82,13 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
-# dependencies
+if(PPLNN_ENABLE_PYTHON_API)
+    add_subdirectory(python)
+endif()
+
+if(PPLNN_ENABLE_LUA_API)
+    add_subdirectory(lua)
+endif()
 
 add_library(pplnn_static STATIC ${PPLNN_SOURCES})
 target_include_directories(pplnn_static PUBLIC ${PPLNN_INCLUDE_DIRECTORIES})
