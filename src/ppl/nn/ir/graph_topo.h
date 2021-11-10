@@ -51,14 +51,11 @@ public:
     typedef Iter<Edge> EdgeIter;
 
 public:
-    GraphTopo() {}
+    GraphTopo(const std::string& name) : name_(name) {}
     virtual ~GraphTopo() {}
 
     // ----- //
 
-    void SetName(const std::string& name) {
-        name_ = name;
-    }
     const std::string& GetName() const {
         return name_;
     }
@@ -181,7 +178,7 @@ public:
 
 protected:
     /** name of the graph */
-    std::string name_;
+    const std::string name_;
 
     /** ids of input edges that are needed to be filled. constant edges are not included. */
     std::vector<edgeid_t> inputs_;

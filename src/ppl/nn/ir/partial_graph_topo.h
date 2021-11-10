@@ -68,7 +68,7 @@ public:
        @param parent parent graph which this partial graph belongs to
        @param nodes nodes of this partial graph
     */
-    PartialGraphTopo(GraphTopo* parent, const std::vector<nodeid_t>& nodes);
+    PartialGraphTopo(GraphTopo* parent, const std::string& name, const std::vector<nodeid_t>& nodes);
 
     // ----- //
 
