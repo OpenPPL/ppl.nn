@@ -29,24 +29,22 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
-include(FetchContent)
-
-set(FETCHCONTENT_BASE_DIR ${HPCC_DEPS_DIR})
-set(FETCHCONTENT_QUIET OFF)
-
-# --------------------------------------------------------------------------- #
-
 find_package(Git QUIET)
 if(NOT Git_FOUND)
     message(FATAL_ERROR "git is required.")
 endif()
 
+include(FetchContent)
+
+set(FETCHCONTENT_BASE_DIR ${HPCC_DEPS_DIR})
+set(FETCHCONTENT_QUIET OFF)
+
 FetchContent_Declare(hpcc
     GIT_REPOSITORY https://github.com/openppl-public/hpcc.git
-    GIT_TAG 97b154551d2cac09fa4558cb933f6372c4da83dc
+    GIT_TAG af532951283fa95861e8c14f3d797818ee526156
     SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
-    SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild
+    SUBBUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-subbuild
     UPDATE_DISCONNECTED True)
 
 FetchContent_GetProperties(hpcc)
@@ -64,15 +62,15 @@ set(PPLCOMMON_ENABLE_LUA_API ${PPLNN_ENABLE_LUA_API})
 
 hpcc_declare_git_dep(pplcommon
     https://github.com/openppl-public/ppl.common.git
-    fb123ab9d757eaecb2276f27392148f5c4dd1560)
+    fbbabec28c23e6cefc8941522a6bcfbb06b29966)
 
 # --------------------------------------------------------------------------- #
 
 set(protobuf_BUILD_TESTS OFF CACHE BOOL "disable protobuf tests")
 
 hpcc_declare_pkg_dep(protobuf
-    https://github.com/protocolbuffers/protobuf/archive/refs/tags/v3.12.4.zip
-    35baf103b2bbc166502c2e431d9d543b)
+    https://github.com/protocolbuffers/protobuf/releases/download/v3.12.4/protobuf-cpp-3.12.4.zip
+    41651ed9f6cd35063f57003ff24bacfb)
 
 # --------------------------------------------------------------------------- #
 
@@ -92,16 +90,16 @@ set(PYBIND11_NOPYTHON ON CACHE BOOL "do not find python")
 set(PYBIND11_FINDPYTHON OFF CACHE BOOL "do not find python")
 
 hpcc_declare_pkg_dep(pybind11
-    https://github.com/pybind/pybind11/archive/refs/tags/v2.7.0.zip
-    267807f790ef598ef912a79aceefdc10)
+    https://github.com/pybind/pybind11/archive/refs/tags/v2.7.1.zip
+    cc6d9f0c21694e7c4ec4a00f077de61b)
 
 # --------------------------------------------------------------------------- #
 
 set(LUACPP_INSTALL OFF CACHE BOOL "")
 
 hpcc_declare_pkg_dep(luacpp
-    https://github.com/ouonline/lua-cpp/archive/30d40b248e25e2c72a552c70fde48a289365b9ea.zip
-    1c7e50a374d5e7b6c2a697f3f2e9f765)
+    https://github.com/ouonline/lua-cpp/archive/6074d360820af5f1459f39b1a731b788be0643a0.zip
+    401fdb315bfb3863f789afdd1296084d)
 
 # --------------------------------------------------------------------------- #
 
