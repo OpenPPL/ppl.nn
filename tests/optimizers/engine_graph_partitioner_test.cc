@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/optimizers/simple_graph_partitioner.h"
+#include "ppl/nn/optimizers/engine_graph_partitioner.h"
 #include "ppl/nn/runtime/runtime_graph_info.h"
 
 #include "gtest/gtest.h"
@@ -54,7 +54,7 @@ TEST_F(TestGraphPartion, partition1) {
     resource->engines.resize(2);
     resource->engines[0] = engines[0].get();
     resource->engines[1] = engines[1].get();
-    SimpleGraphPartitioner partitioner;
+    EngineGraphPartitioner partitioner;
     vector<pair<EngineImpl*, vector<nodeid_t>>> partitions;
     auto status = partitioner.Partition(resource.get(), builder_.GetGraph(), &partitions);
     EXPECT_EQ(status, RC_SUCCESS);
