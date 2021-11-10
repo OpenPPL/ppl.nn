@@ -20,7 +20,7 @@
 
 #include "ppl/nn/engines/cuda/kernel.h"
 
-#include "ppl/nn/params/onnx/convtranspose_param.h"
+#include "ppl/nn/engines/cuda/params/convtranspose_extra_param.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -28,7 +28,7 @@ class ConvTransposeKernel : public CudaKernel {
 public:
     ConvTransposeKernel(const ir::Node* node) : CudaKernel(node) {}
 
-    void SetParam(const ppl::nn::common::ConvTransposeParam* p) {
+    void SetParam(const CudaConvTransposeParam* p) {
         param_ = p;
     }
 
@@ -37,7 +37,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::ConvTransposeParam* param_ = nullptr;
+    const CudaConvTransposeParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::cuda

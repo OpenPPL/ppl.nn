@@ -28,7 +28,7 @@ using namespace ppl::nn::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode ConvTransposeOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ConvTransposeParam>(options, &param_);
+    auto status = GenericLoadParam<ConvTransposeParam>(options, &param_.param);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
@@ -55,6 +55,8 @@ RetCode ConvTransposeOp::Init(const OptKernelOptions& options) {
 }
 
 RetCode ConvTransposeOp::Finalize(const OptKernelOptions& options) {
+    param_ = *((CudaConvTransposeParam*)options.param);
+
     auto status = SetCommonParam(options);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load common param failed: " << GetRetCodeStr(status);
@@ -62,6 +64,14 @@ RetCode ConvTransposeOp::Finalize(const OptKernelOptions& options) {
     }
 
     return RC_SUCCESS;
+}
+
+void ConvTransposeOp::CopyParam(void*& param) {
+    if (param == nullptr) {
+        param = new CudaConvTransposeParam();
+    }
+    *(CudaConvTransposeParam*)param = param_;
+    return;
 }
 
 KernelImpl* ConvTransposeOp::CreateKernelImpl() const {

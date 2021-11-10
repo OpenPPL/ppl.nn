@@ -26,7 +26,7 @@ uint64_t ConvTransposeKernel::CalcTmpBufferSize(const KernelExecContext& ctx) co
     auto x = ctx.GetInput<TensorImpl>(0);
     auto y = ctx.GetOutput<TensorImpl>(0);
 
-    return PPLConvTransposeGetBufSizeCuda(&x->GetShape(), &y->GetShape(), param_);
+    return PPLConvTransposeGetBufSizeCuda(&x->GetShape(), &y->GetShape(), &param_->param);
 }
 
 ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
@@ -55,7 +55,7 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
     }
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
     status = PPLCUDAConvTransposeForward(GetStream(), module, &X->GetShape(), X->GetBufferPtr(), W->GetBufferPtr(), b_data,
-                                         param_, tmp_buffer, &Y->GetShape(), Y->GetBufferPtr());
+                                         &param_->param, param_->extra_param.algo_info, tmp_buffer, &Y->GetShape(), Y->GetBufferPtr());
 
     return status;
 }

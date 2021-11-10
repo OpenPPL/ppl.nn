@@ -15,34 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_MODULE_OP_COMPILE_MANAGER_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_MODULE_OP_COMPILE_MANAGER_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_PARAMS_CONVTRANSPOSE_EXTRA_PARAM_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_PARAMS_CONVTRANSPOSE_EXTRA_PARAM_H_
 
-#include "ppl/nn/engines/cuda/module/op_compiler.h"
-#include "ppl/nn/engines/cuda/module/conv_compiler.h"
-#include "ppl/nn/engines/cuda/module/convtranspose_compiler.h"
-#include "ppl/nn/engines/cuda/module/gemm_compiler.h"
-#include "ppl/nn/engines/cuda/module/normal_compiler.h"
+#include "ppl/nn/engines/cuda/params/conv_extra_param.h"
+#include "ppl/nn/params/onnx/convtranspose_param.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-class OpCompilerManager {
-public:
-    static OpCompilerManager* Instance() {
-        static OpCompilerManager mgr;
-        return &mgr;
-    }
-    OpCompiler* FindCompiler(const std::string& kernel_type) const;
+struct ConvTransposeExtraParam {
+    ConvAlgoInfo algo_info;
+};
 
-private:
-    OpCompilerManager();
-
-private:
-    std::map<std::string, OpCompiler*> type2compiler_;
-    ConvTransposeCompiler convtranspose_;
-    ConvCompiler conv_;
-    GemmCompiler gemm_;
-    NormalCompiler normal_;
+struct CudaConvTransposeParam {
+    ppl::nn::common::ConvTransposeParam param;
+    ConvTransposeExtraParam extra_param;
 };
 
 }}} // namespace ppl::nn::cuda
