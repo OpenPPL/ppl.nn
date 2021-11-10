@@ -15,17 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_X86_FP32_CONV2D_DIRECT_FMA_CONV2D_N16CX_DIRECT_V2_BLK1X1_KERNEL_FP32_FMA_H_
-#define __ST_PPL_KERNEL_X86_FP32_CONV2D_DIRECT_FMA_CONV2D_N16CX_DIRECT_V2_BLK1X1_KERNEL_FP32_FMA_H_
+#ifndef __ST_PPL_KERNEL_X86_FP32_CONV2D_DIRECT_FMA_CONV2D_N16CX_DIRECT_BLK1X1_KERNEL_FP32_FMA_H_
+#define __ST_PPL_KERNEL_X86_FP32_CONV2D_DIRECT_FMA_CONV2D_N16CX_DIRECT_BLK1X1_KERNEL_FP32_FMA_H_
 
 #include <immintrin.h>
 
-#include "ppl/kernel/x86/fp32/conv2d/direct/fma/conv2d_n16cx_direct_v2_kernel_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/direct/fma/conv2d_n16cx_direct_kernel_fp32_fma.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
 template <bool nt_store, int32_t oc_len>
-void conv2d_n16cx_direct_v2_fp32_fma_blk1x1_kernel(
+void conv2d_n16cx_direct_fp32_fma_blk1x1_kernel(
     const int64_t *priv_param,
     const int64_t *shar_param)
 {

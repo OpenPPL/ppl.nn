@@ -456,7 +456,7 @@ void conv_gemm_fp32_sse_kernel(
     const int64_t n_regb_elts = conv_gemm_kernel_fp32_sse::config::n_regb_elts;
     const int64_t n_reg_elts = conv_gemm_kernel_fp32_sse::config::n_reg_elts;
     const int64_t u_nb       = div_up(u_n, n_regb_elts);
-    const int64_t u_k        = 8;
+    const int64_t u_k        = conv_gemm_kernel_fp32_sse::config::unroll_k;
     const int64_t flags      = kp.pick<const int64_t>(conv_gemm_kernel_fp32_sse::param_def::flags_idx);
 
     const float *a_ptr = kp.pick<const float*>(conv_gemm_kernel_fp32_sse::param_def::a_ptr_idx);

@@ -121,15 +121,6 @@ static std::map<std::string, ppl::kernel::x86::conv2d_fp32_algo_info> algo_table
         })
     },
     {
-        "n16cx_gemm_direct_v2_fp32_fma",
-        ppl::kernel::x86::conv2d_fp32_algo_info({
-            ppl::kernel::x86::conv2d_fp32_algo::gemm_direct_v2,
-            ppl::common::ISA_X86_FMA,
-            ppl::common::DATAFORMAT_N16CX,
-            ppl::common::DATAFORMAT_N16CX
-        })
-    },
-    {
         "n16cx_depthwise_fp32_fma",
         ppl::kernel::x86::conv2d_fp32_algo_info({
             ppl::kernel::x86::conv2d_fp32_algo::depthwise,
@@ -148,9 +139,9 @@ static std::map<std::string, ppl::kernel::x86::conv2d_fp32_algo_info> algo_table
         })
     },
     {
-        "n16cx_direct_v2_fp32_fma",
+        "n16cx_direct_fp32_fma",
         ppl::kernel::x86::conv2d_fp32_algo_info({
-            ppl::kernel::x86::conv2d_fp32_algo::direct_v2,
+            ppl::kernel::x86::conv2d_fp32_algo::direct,
             ppl::common::ISA_X86_FMA,
             ppl::common::DATAFORMAT_N16CX,
             ppl::common::DATAFORMAT_N16CX
