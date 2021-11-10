@@ -17,6 +17,7 @@
 
 #ifndef PPLCUDA_KERNEL_INCLUDE_CONVTRANSPOSE_CONVTRANSPOSE_H_
 #define PPLCUDA_KERNEL_INCLUDE_CONVTRANSPOSE_CONVTRANSPOSE_H_
+#include "cudakernel/gemm/gemm.h"
 #include "ppl/nn/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "ppl/nn/params/onnx/convtranspose_param.h"
@@ -37,6 +38,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
     const void* filter,
     const void* bias,
     const ppl::nn::common::ConvTransposeParam* param,
+    algo_param_t algo_param,
     void* temp_buffer,
     ppl::nn::TensorShape* output_shape,
     void* output);

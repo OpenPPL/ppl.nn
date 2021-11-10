@@ -17,7 +17,6 @@
 
 #include "cudakernel/nn/convtranspose.h"
 #include "cudakernel/math/math.h"
-#include "cudakernel/gemm/gemm.h"
 #include "cudakernel/memory/transpose.h"
 #include "cudakernel/common/common.h"
 #include "ppl/nn/params/onnx/transpose_param.h"
@@ -333,6 +332,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
     const void* filter,
     const void* bias,
     const ppl::nn::common::ConvTransposeParam* param,
+    algo_param_t algo_param,
     void* temp_buffer,
     ppl::nn::TensorShape* output_shape,
     void* output)
@@ -420,8 +420,6 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
             // NT
             ppl::nn::TensorShape a_shape, b_shape, c_shape;
             // input transpose KxN -> NxK    weight transpose KxM -> MxK
-            algo_param_t algo_param;
-            algo_param.UseDefaultF1Kernel();
             PPLCUDAGemmForwardImp(stream, module, &out_a_shape, trans_filter, &out_b_shape, trans_in_data, NULL, &c_shape, pad_out_data, gemm_param, NULL, fuse_param, algo_param);
 
             __half* tmp = RemovePadding<__half>(stream, pad_out_data, out_data, M, padN, N);
