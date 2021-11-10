@@ -26,5 +26,5 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
 endif()
 
 if(PPLNN_INSTALL)
-    install(TARGETS luapplnn_shared DESTINATION luappl)
+    install(TARGETS luapplnn_shared DESTINATION lib/luappl)
 endif()

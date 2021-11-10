@@ -43,7 +43,7 @@ cd ppl.nn
 * Running python demo:
 
 ```bash
-PYTHONPATH=./pplnn-build/install python3 ./tools/pplnn.py --use-x86 --onnx-model tests/testdata/conv.onnx
+PYTHONPATH=./pplnn-build/install/lib python3 ./tools/pplnn.py --use-x86 --onnx-model tests/testdata/conv.onnx
 ```
 
 Refer to [Documents](#documents) for more details.
