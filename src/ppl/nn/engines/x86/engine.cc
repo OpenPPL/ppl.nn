@@ -18,7 +18,7 @@
 #include <stdarg.h>
 
 #include "ppl/nn/engines/x86/engine.h"
-#include "ppl/nn/engines/x86/engine_context.h"
+#include "ppl/nn/engines/x86/runtime_x86_device.h"
 #include "ppl/nn/engines/x86/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/engines/x86/optimizer/opt_graph.h"
 #include "ppl/nn/engines/utils.h"
@@ -28,6 +28,8 @@
 
 using namespace std;
 using namespace ppl::common;
+
+#define X86_DEFAULT_ALIGNMENT 64u
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -45,8 +47,8 @@ RetCode X86Engine::Init(const X86EngineOptions& options) {
     return RC_SUCCESS;
 }
 
-EngineContext* X86Engine::CreateEngineContext(const string&) {
-    return new X86EngineContext(GetName(), device_.GetISA(), options_.mm_policy);
+Device* X86Engine::CreateDevice() {
+    return new RuntimeX86Device(X86_DEFAULT_ALIGNMENT, device_.GetISA(), options_.mm_policy);
 }
 
 bool X86Engine::Supports(const ir::Node* node) const {

@@ -19,7 +19,6 @@
 #define _ST_HPC_PPL_NN_RUNTIME_RUNTIME_IMPL_H_
 
 #include "ppl/nn/ir/graph.h"
-#include "ppl/nn/engines/engine_context.h"
 #include "ppl/nn/runtime/runtime.h"
 #include "ppl/nn/runtime/runtime_graph.h"
 #include "ppl/nn/runtime/runtime_graph_info.h"
@@ -84,7 +83,7 @@ private:
 private:
     RuntimeGraph graph_;
     std::unique_ptr<Scheduler> sched_;
-    std::vector<std::unique_ptr<EngineContext>> engctx_;
+    std::vector<std::unique_ptr<Device>> devices_;
     utils::GenericCpuDevice cpu_device_; // default cpu device
     RuntimeInternalConf conf_;
     Profiler profiler_;

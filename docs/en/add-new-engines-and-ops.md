@@ -7,11 +7,10 @@ There is an engine demo in [samples/cpp/engine](samples/cpp/engine).
 `EngineImpl`(defined in [src/ppl/nn/engines/engine_impl.h](src/ppl/nn/engines/engine_impl.h)) defines the interfaces needed by `PPLNN`.
 
 ```c++
-EngineContext* EngineImpl::CreateEngineContext(const std::string& graph_name,
-                                               const EngineContextOptions&);
+Device* EngineImpl::CreateDevice();
 ```
 
-Create an `EngineContext` used by a `Runtime` instance. The first parameter `graph_name` denotes the graph which this `EngineContext` is used for.
+Creates `Device` instances used by a `Runtime` instance.
 
 ```c++
 bool EngineImpl::Supports(const ir::Node* node) const;
@@ -37,17 +36,9 @@ struct RuntimePartitionInfo {
 
 `constants` are read-only and used by multiple `Runtime` instances. `kernels` are a list of `OptKernel` that are used to create `KernelImpl` instances.
 
-##### 2. Define and Implement a Class Inherited from EngineContext
-
-`EngineContext`(defined in [src/ppl/nn/engines/engine_context.h](src/ppl/nn/engines/engine_context.h)). An `EngineContext` is used by a `Runtime` instance only.
-
-```c++
-Device* EngineContext::GetDevice();
-```
-
 Get the device instance used by a `Runtime`.
 
-##### 3. Define and Implement Op Classes Inherited from OptKernel
+##### 2. Define and Implement Op Classes Inherited from OptKernel
 
 `OptKernel`(defined in [src/ppl/nn/runtime/opt_kernel.h](src/ppl/nn/runtime/opt_kernel.h)) stores all data needed for evaluating an OP. It can create multiple `KernelImpl` instances.
 
@@ -57,7 +48,7 @@ KernelImpl* OptKernel::CreateKernelImpl() const;
 
 Create a `KernelImpl` instance used in runtime stage.
 
-##### 4. Define and Implement Op Classes Inherited from KernelImpl
+##### 3. Define and Implement Op Classes Inherited from KernelImpl
 
 `KernelImpl`(defined in [src/ppl/nn/runtime/kernel_impl.h](src/ppl/nn/runtime/kernel_impl.h)) is the main class used to evaluate an op, which is created by `OptKernel`. Each `KernelImpl` instance is used by only one `Runtime` instance.
 

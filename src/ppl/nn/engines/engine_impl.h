@@ -19,8 +19,8 @@
 #define _ST_HPC_PPL_NN_ENGINES_ENGINE_IMPL_H_
 
 #include "ppl/nn/ir/graph.h"
+#include "ppl/nn/common/device.h"
 #include "ppl/nn/engines/engine.h"
-#include "ppl/nn/engines/engine_context.h"
 
 namespace ppl { namespace nn {
 
@@ -45,11 +45,8 @@ public:
         return name_.c_str();
     }
 
-    /**
-       @brief create an `EngineContext` instance for a `Runtime` instance of
-       graph named `graph_name`.
-    */
-    virtual EngineContext* CreateEngineContext(const std::string& graph_name) = 0;
+    /** @brief create a `Device` instance for `Runtime` instances */
+    virtual Device* CreateDevice() = 0;
 
     /** @brief tells whether this engine implements `node`. */
     virtual bool Supports(const ir::Node* node) const = 0;

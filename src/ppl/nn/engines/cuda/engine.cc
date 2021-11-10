@@ -19,7 +19,6 @@
 
 #include <stdarg.h>
 
-#include "ppl/nn/engines/cuda/engine_context.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/engines/utils.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_graph.h"
@@ -40,15 +39,19 @@ RetCode CudaEngine::Init(const CudaEngineOptions& options) {
     return device_.Init(options);
 }
 
-EngineContext* CudaEngine::CreateEngineContext(const string&) {
-    auto ctx = unique_ptr<CudaEngineContext>(new CudaEngineContext(GetName()));
-    auto status = ctx->Init(options_);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "init CudaEngineContext failed: " << GetRetCodeStr(status);
+Device* CudaEngine::CreateDevice() {
+    auto dev = unique_ptr<BufferedCudaDevice>(new BufferedCudaDevice());
+    if (!dev) {
         return nullptr;
     }
 
-    return ctx.release();
+    auto status = dev->Init(options_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "init cuda device failed: " << GetRetCodeStr(status);
+        return nullptr;
+    }
+
+    return dev.release();
 }
 
 bool CudaEngine::Supports(const ir::Node* node) const {
