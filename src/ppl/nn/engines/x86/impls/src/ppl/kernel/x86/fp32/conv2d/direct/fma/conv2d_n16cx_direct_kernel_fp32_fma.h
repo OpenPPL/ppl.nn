@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_X86_FP32_CONV2D_DIRECT_FMA_CONV2D_N16CX_DIRECT_V2_KERNEL_FP32_FMA_H_
-#define __ST_PPL_KERNEL_X86_FP32_CONV2D_DIRECT_FMA_CONV2D_N16CX_DIRECT_V2_KERNEL_FP32_FMA_H_
+#ifndef __ST_PPL_KERNEL_X86_FP32_CONV2D_DIRECT_FMA_CONV2D_N16CX_DIRECT_KERNEL_FP32_FMA_H_
+#define __ST_PPL_KERNEL_X86_FP32_CONV2D_DIRECT_FMA_CONV2D_N16CX_DIRECT_KERNEL_FP32_FMA_H_
 
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/kernel/x86/fp32/conv2d.h"
@@ -64,12 +64,12 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-typedef void (*conv2d_n16cx_direct_v2_kernel_fp32_fma_func_t)(const int64_t*, const int64_t*);
+typedef void (*conv2d_n16cx_direct_kernel_fp32_fma_func_t)(const int64_t*, const int64_t*);
 
-extern conv2d_n16cx_direct_v2_kernel_fp32_fma_func_t
-    conv2d_n16cx_direct_v2_kernel_fp32_fma_pad_table[NT_STORE_OPT()][MAX_OC_RF()];
-extern conv2d_n16cx_direct_v2_kernel_fp32_fma_func_t
-    conv2d_n16cx_direct_v2_kernel_fp32_fma_blk_table[NT_STORE_OPT()][STRIDE_W_OPT()][MAX_OC_RF()][MAX_OW_RF()];
+extern conv2d_n16cx_direct_kernel_fp32_fma_func_t
+    conv2d_n16cx_direct_kernel_fp32_fma_pad_table[NT_STORE_OPT()][MAX_OC_RF()];
+extern conv2d_n16cx_direct_kernel_fp32_fma_func_t
+    conv2d_n16cx_direct_kernel_fp32_fma_blk_table[NT_STORE_OPT()][STRIDE_W_OPT()][MAX_OC_RF()][MAX_OW_RF()];
 
 }}}; // namespace ppl::kernel::x86
 

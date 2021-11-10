@@ -364,7 +364,7 @@ void gemm_fp32_fma_kernel(int64_t *param)
     array_param_helper kp(param);
     const int64_t n_reg_elts = gemm_kernel_fp32_fma::config::n_reg_elts;
     const int64_t u_nr = div_up(u_n, n_reg_elts);
-    const int64_t u_k = 8;
+    const int64_t u_k = gemm_kernel_fp32_fma::config::unroll_k;
 
     const gemm_kernel_fp32_fma::flag_t flags = kp.pick<const gemm_kernel_fp32_fma::flag_t>(gemm_kernel_fp32_fma::param_def::flags_idx);
     const float *packed_b_ptr = kp.pick<const float*>(gemm_kernel_fp32_fma::param_def::packed_b_ptr_idx);

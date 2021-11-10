@@ -51,7 +51,7 @@ public:
         static const int64_t n_regb_regs = 2;
         static const int64_t max_n_regbs = max_n_regs / n_regb_regs;
         static const int64_t n_regb_elts = n_reg_elts * n_regb_regs;
-        static const int64_t max_m_blk = max_m_regs;
+        static const int64_t max_m_blk = max_m_regs * m_reg_elts;
         static const int64_t max_n_blk = max_n_regs * n_reg_elts;
         static const int64_t unroll_k = 8;
     };

@@ -21,44 +21,59 @@
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/kernel/x86/fp32/conv2d.h"
 
-#define KERNEL_FLAG_LD_BIAS() (1 << 0)
-#define KERNEL_FLAG_AD_BIAS() (1 << 1)
-#define KERNEL_FLAG_RELU()    (1 << 2)
-#define KERNEL_FLAG_RELU6()   (1 << 3)
-
-#define PICK_PARAM(T, PARAM, IDX) *(T*)(PARAM + IDX)
-
-#define PRIV_PARAM_LEN() 6
-#define SRC_IDX()        0
-#define HIS_IDX()        1
-#define DST_IDX()        2
-#define FLT_IDX()        3
-#define BIAS_IDX()       4
-#define HW_IDX()         5
-
-#define SHAR_PARAM_LEN()     4
-#define CHANNELS_IDX()       0
-#define SRC_ICB_STRIDE_IDX() 1
-#define FLAGS_IDX()          2
-#define SIX_IDX()            3
-
-#define CH_DT_BLK() 16
-#define CH_RF_BLK() 8
-
-#define NT_STORE_OPT() 2
-
-#define MAX_OC_RF() 2
-#define MAX_HW_RF() 6
-
-#define BLK1X6_OC_RF() 2
-#define BLK1X6_HW_RF() 6
-
 namespace ppl { namespace kernel { namespace x86 {
 
-typedef void (*conv2d_n16cx_gemm_direct_kernel_fp32_fma_func_t)(const int64_t*, const int64_t*);
+class conv2d_n16cx_gemm_direct_kernel_fp32_fma {
+public:
+    typedef void (*func_t)(int64_t*);
 
-extern conv2d_n16cx_gemm_direct_kernel_fp32_fma_func_t
-    conv2d_n16cx_gemm_direct_kernel_fp32_fma_table[NT_STORE_OPT()][MAX_OC_RF()][MAX_HW_RF()];
+    struct param_def {
+        static const int64_t kSRC_PTR_IDX = 0;
+        static const int64_t kHIS_PTR_IDX = 1;
+        static const int64_t kDST_PTR_IDX = 2;
+        static const int64_t kFLT_PTR_IDX = 3;
+        static const int64_t kBIAS_PTR_IDX = 4;
+        static const int64_t kSPACE_IDX = 5;
+        static const int64_t kCHANNELS_IDX = 6;
+        static const int64_t kSRC_ICB_STRIDE_IDX = 7;
+        static const int64_t kFLAGS_IDX = 8;
+        static const int64_t kLENGTH = 9;
+    };
+
+    struct config {
+        static const int64_t kIC_DATA_BLK = 16;
+        static const int64_t kOC_DATA_BLK = 16;
+        static const int64_t kMAX_S_REGS = 6;
+        static const int64_t kMAX_OC_REGS = 2;
+        static const int64_t kS_REG_ELTS = 1;
+        static const int64_t kOC_REG_ELTS = 8;
+        static const int64_t kOC_DATA_BLK_REGS = 2;
+        static const int64_t kMAX_OC_DATA_BLKS = kMAX_OC_REGS / kOC_DATA_BLK_REGS;
+        static const int64_t kMAX_S_BLK = kMAX_S_REGS * kS_REG_ELTS;
+        static const int64_t kMAX_OC_BLK = kMAX_OC_DATA_BLKS * kOC_DATA_BLK;
+        static const int64_t kNT_STORE_OPT = 2;
+    };
+
+    typedef int64_t flag_t;
+    struct flag {
+        static const flag_t kLOAD_BIAS = (1 << 1);
+        static const flag_t kADD_BIAS = (1 << 2);
+        static const flag_t kRELU = (1 << 11);
+        static const flag_t kRELU6 = (1 << 12);
+    };
+
+    conv2d_n16cx_gemm_direct_kernel_fp32_fma(int64_t *param) : param_(param) { }
+    void set_param(int64_t *param) { this->param_ = param; }
+    int64_t *param() { return param_; }
+
+    void execute(const int64_t nt_store, const int64_t oc_reg, const int64_t s_reg) {
+        table_[nt_store][oc_reg - 1][s_reg - 1](param_);
+    }
+
+private:
+    int64_t *param_;
+    static const func_t table_[config::kNT_STORE_OPT][config::kMAX_OC_REGS][config::kMAX_S_REGS];
+};
 
 }}}; // namespace ppl::kernel::x86
 

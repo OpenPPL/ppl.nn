@@ -128,12 +128,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
 
             // winograd b4f3 avx512 may fallback to direct
             if (conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_fp32_algo::winograd_b4f3) {
-                if (conv2d_param_->algo_info.isa == ppl::common::ISA_X86_FMA) {
-                    conv2d_param_->algo_info.algo_type = ppl::kernel::x86::conv2d_fp32_algo::direct_v2;
-                } else {
-                    conv2d_param_->algo_info.algo_type = ppl::kernel::x86::conv2d_fp32_algo::direct;
-                }
-                
+                conv2d_param_->algo_info.algo_type = ppl::kernel::x86::conv2d_fp32_algo::direct;
                 conv2d_param_->fallback_mgr = ppl::kernel::x86::conv2d_algo_selector::gen_algo(
                     conv2d_param_->param, conv2d_param_->algo_info, options.device->GetAllocator());
                 conv2d_param_->infer_fallback_func = [](const TensorImpl* X, const TensorImpl* Y,

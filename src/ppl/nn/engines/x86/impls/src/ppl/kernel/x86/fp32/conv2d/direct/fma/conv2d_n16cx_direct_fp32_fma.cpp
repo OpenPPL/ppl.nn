@@ -21,8 +21,8 @@
 
 #include "ppl/kernel/x86/fp32/reorder.h"
 #include "ppl/kernel/x86/common/avx_tools.h"
-#include "ppl/kernel/x86/fp32/conv2d/direct/fma/conv2d_n16cx_direct_v2_fp32_fma.h"
-#include "ppl/kernel/x86/fp32/conv2d/direct/fma/conv2d_n16cx_direct_v2_kernel_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/direct/fma/conv2d_n16cx_direct_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/direct/fma/conv2d_n16cx_direct_kernel_fp32_fma.h"
 #include "ppl/common/sys.h"
 
 #define ASSUME_L2_BYTES() (256 * 1024)
@@ -40,7 +40,7 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-int64_t conv2d_n16cx_direct_v2_fp32_fma_executor::cal_ic_l2_blk(const conv2d_fp32_param &param)
+int64_t conv2d_n16cx_direct_fp32_fma_executor::cal_ic_l2_blk(const conv2d_fp32_param &param)
 {
     const int64_t ic_per_gp = param.channels / param.group;
     const int64_t padded_ic = round_up(ic_per_gp, CH_DT_BLK());
@@ -58,7 +58,7 @@ int64_t conv2d_n16cx_direct_v2_fp32_fma_executor::cal_ic_l2_blk(const conv2d_fp3
     return ic_l2_blk;
 }
 
-void conv2d_n16cx_direct_v2_fp32_fma_executor::init_preproc_param()
+void conv2d_n16cx_direct_fp32_fma_executor::init_preproc_param()
 {
     schedule_param_.ic_per_gp = conv_param_->channels / conv_param_->group;
     schedule_param_.oc_per_gp = conv_param_->num_output / conv_param_->group;
@@ -66,7 +66,7 @@ void conv2d_n16cx_direct_v2_fp32_fma_executor::init_preproc_param()
     schedule_param_.padded_oc = round_up(schedule_param_.oc_per_gp, CH_DT_BLK());
 }
 
-void conv2d_n16cx_direct_v2_fp32_fma_executor::cal_kernel_tunning_param()
+void conv2d_n16cx_direct_fp32_fma_executor::cal_kernel_tunning_param()
 {
     const conv2d_fp32_param &cp = *conv_param_;
     kernel_schedule_param &sp   = schedule_param_;
@@ -151,7 +151,7 @@ void conv2d_n16cx_direct_v2_fp32_fma_executor::cal_kernel_tunning_param()
     }
 }
 
-uint64_t conv2d_n16cx_direct_v2_fp32_fma_executor::cal_temp_buffer_size()
+uint64_t conv2d_n16cx_direct_fp32_fma_executor::cal_temp_buffer_size()
 {
     if (schedule_param_.padding_policy == PADDING_POLICY_PREPAD()) {
         const int64_t src_h          = src_shape_->GetDim(2);
@@ -162,7 +162,7 @@ uint64_t conv2d_n16cx_direct_v2_fp32_fma_executor::cal_temp_buffer_size()
     return 64u;
 }
 
-ppl::common::RetCode conv2d_n16cx_direct_v2_fp32_fma_executor::prepare()
+ppl::common::RetCode conv2d_n16cx_direct_fp32_fma_executor::prepare()
 {
     if (!conv_param_ || !src_shape_ || !dst_shape_ || ((conv_param_->fuse_flag & conv_fuse_flag::sum) && !sum_src_shape_)) {
         return ppl::common::RC_INVALID_VALUE;
@@ -174,7 +174,7 @@ ppl::common::RetCode conv2d_n16cx_direct_v2_fp32_fma_executor::prepare()
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode conv2d_n16cx_direct_v2_fp32_fma_executor::execute()
+ppl::common::RetCode conv2d_n16cx_direct_fp32_fma_executor::execute()
 {
     if (!conv_param_ || !cvt_filter_ || !cvt_bias_ || !src_ || !dst_ || ((conv_param_->fuse_flag & conv_fuse_flag::sum) && !sum_src_) || !temp_buffer_) {
         return ppl::common::RC_INVALID_VALUE;
@@ -348,7 +348,7 @@ ppl::common::RetCode conv2d_n16cx_direct_v2_fp32_fma_executor::execute()
                                             private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1), cp.dilation_w);
                                             private_param[KW_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0), cp.dilation_w);
                                         }
-                                        conv2d_n16cx_direct_v2_kernel_fp32_fma_pad_table[nt_store_sel][oc_sel](private_param, share_param);
+                                        conv2d_n16cx_direct_kernel_fp32_fma_pad_table[nt_store_sel][oc_sel](private_param, share_param);
                                         PICK_PARAM(const float *, private_param, SRC_IDX()) += src_sw_stride;
                                         PICK_PARAM(const float *, private_param, HIS_IDX()) += CH_DT_BLK();
                                         PICK_PARAM(float *, private_param, DST_IDX()) += CH_DT_BLK();
@@ -356,14 +356,14 @@ ppl::common::RetCode conv2d_n16cx_direct_v2_fp32_fma_executor::execute()
 
                                     if (ow_unroll_body) {
                                         private_param[OW_IDX()] = ow_unroll_body;
-                                        conv2d_n16cx_direct_v2_kernel_fp32_fma_blk_table[nt_store_sel][stride_w_sel][oc_sel][sp.ow_kr_blk - 1](private_param, share_param);
+                                        conv2d_n16cx_direct_kernel_fp32_fma_blk_table[nt_store_sel][stride_w_sel][oc_sel][sp.ow_kr_blk - 1](private_param, share_param);
                                         PICK_PARAM(const float *, private_param, SRC_IDX()) += ow_unroll_body * src_sw_stride;
                                         PICK_PARAM(const float *, private_param, HIS_IDX()) += ow_unroll_body * CH_DT_BLK();
                                         PICK_PARAM(float *, private_param, DST_IDX()) += ow_unroll_body * CH_DT_BLK();
                                     }
                                     if (ow_unroll_tail) {
                                         private_param[OW_IDX()] = ow_unroll_tail;
-                                        conv2d_n16cx_direct_v2_kernel_fp32_fma_blk_table[nt_store_sel][stride_w_sel][oc_sel][ow_unroll_tail - 1](private_param, share_param);
+                                        conv2d_n16cx_direct_kernel_fp32_fma_blk_table[nt_store_sel][stride_w_sel][oc_sel][ow_unroll_tail - 1](private_param, share_param);
                                         PICK_PARAM(const float *, private_param, SRC_IDX()) += ow_unroll_tail * src_sw_stride;
                                         PICK_PARAM(const float *, private_param, HIS_IDX()) += ow_unroll_tail * CH_DT_BLK();
                                         PICK_PARAM(float *, private_param, DST_IDX()) += ow_unroll_tail * CH_DT_BLK();
@@ -378,7 +378,7 @@ ppl::common::RetCode conv2d_n16cx_direct_v2_fp32_fma_executor::execute()
                                             private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1), cp.dilation_w);
                                             private_param[KW_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0), cp.dilation_w);
                                         }
-                                        conv2d_n16cx_direct_v2_kernel_fp32_fma_pad_table[nt_store_sel][oc_sel](private_param, share_param);
+                                        conv2d_n16cx_direct_kernel_fp32_fma_pad_table[nt_store_sel][oc_sel](private_param, share_param);
                                         PICK_PARAM(const float *, private_param, SRC_IDX()) += src_sw_stride;
                                         PICK_PARAM(const float *, private_param, HIS_IDX()) += CH_DT_BLK();
                                         PICK_PARAM(float *, private_param, DST_IDX()) += CH_DT_BLK();
@@ -403,7 +403,7 @@ ppl::common::RetCode conv2d_n16cx_direct_v2_fp32_fma_executor::execute()
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode conv2d_n16cx_direct_v2_fp32_fma_manager::gen_cvt_weights(const float *filter, const float *bias)
+ppl::common::RetCode conv2d_n16cx_direct_fp32_fma_manager::gen_cvt_weights(const float *filter, const float *bias)
 {
     if (cvt_bias_ != nullptr || cvt_filter_ != nullptr) {
         return ppl::common::RC_PERMISSION_DENIED;
@@ -411,7 +411,7 @@ ppl::common::RetCode conv2d_n16cx_direct_v2_fp32_fma_manager::gen_cvt_weights(co
 
     const int64_t oc_per_gp = param_.num_output / param_.group;
     const int64_t padded_oc = round_up(oc_per_gp, CH_DT_BLK());
-    const int64_t ic_l2_blk = conv2d_n16cx_direct_v2_fp32_fma_executor::cal_ic_l2_blk(param_);
+    const int64_t ic_l2_blk = conv2d_n16cx_direct_fp32_fma_executor::cal_ic_l2_blk(param_);
 
     cvt_bias_size_ = param_.group * padded_oc;
     cvt_bias_      = (float *)allocator_->Alloc(cvt_bias_size_ * sizeof(float));
@@ -438,7 +438,7 @@ ppl::common::RetCode conv2d_n16cx_direct_v2_fp32_fma_manager::gen_cvt_weights(co
         1, param_.kernel_h, param_.kernel_w, ic_l2_blk, cvt_filter_);
 }
 
-bool conv2d_n16cx_direct_v2_fp32_fma_manager::is_supported()
+bool conv2d_n16cx_direct_fp32_fma_manager::is_supported()
 {
     if (param_.is_pointwise()) {
         return false;
@@ -448,9 +448,9 @@ bool conv2d_n16cx_direct_v2_fp32_fma_manager::is_supported()
     return (param_.group == 1) || (aligned_channels && aligned_num_output);
 }
 
-conv2d_fp32_executor *conv2d_n16cx_direct_v2_fp32_fma_manager::gen_executor()
+conv2d_fp32_executor *conv2d_n16cx_direct_fp32_fma_manager::gen_executor()
 {
-    return new conv2d_n16cx_direct_v2_fp32_fma_executor(&param_, cvt_filter_, cvt_bias_);
+    return new conv2d_n16cx_direct_fp32_fma_executor(&param_, cvt_filter_, cvt_bias_);
 }
 
 }}}; // namespace ppl::kernel::x86

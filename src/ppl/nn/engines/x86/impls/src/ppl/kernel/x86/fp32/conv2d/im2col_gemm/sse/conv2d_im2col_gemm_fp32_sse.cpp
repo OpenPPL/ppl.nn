@@ -41,7 +41,6 @@ static const int64_t hw_regb_elts = conv_gemm_kernel_fp32_sse::config::n_regb_el
 static const int64_t hw_reg_elts = conv_gemm_kernel_fp32_sse::config::n_reg_elts;
 static const int64_t hw_l2_blk_max = 2 * hw_ker_blk_max;
 
-
 void conv2d_im2col_gemm_fp32_sse_executor::init_preproc_param()
 {
     schedule_param_.ic_per_gp = conv_param_->channels / conv_param_->group;
