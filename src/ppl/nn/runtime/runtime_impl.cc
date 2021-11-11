@@ -32,46 +32,31 @@ RuntimeImpl::~RuntimeImpl() {
     sched_.reset();
     graph_.Clear();
     graph_info_.reset();
-    engctx_.clear();
-}
-
-static EngineContext* FindOrCreateEngineContext(const string& graph_name, EngineImpl* engine,
-                                                map<EngineImpl*, EngineContext*>* eng2ctx,
-                                                vector<unique_ptr<EngineContext>>* engctx) {
-    auto ref = eng2ctx->find(engine);
-    if (ref != eng2ctx->end()) {
-        return ref->second;
-    }
-
-    auto ctx = engine->CreateEngineContext(graph_name);
-    if (ctx) {
-        engctx->emplace_back(unique_ptr<EngineContext>(ctx));
-        eng2ctx->insert(make_pair(engine, ctx));
-    }
-
-    return ctx;
+    devices_.clear();
 }
 
 static RetCode InitRuntimeGraphKernels(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                       vector<unique_ptr<EngineContext>>* engctx, RuntimeGraph* graph) {
+                                       vector<unique_ptr<Device>>* devices, RuntimeGraph* graph) {
     graph->nodeid2kernel.resize(topo->GetMaxNodeId());
 
-    map<EngineImpl*, EngineContext*> eng2ctx;
-    for (auto it = info.kernels.begin(); it != info.kernels.end(); ++it) {
-        auto ctx = FindOrCreateEngineContext(topo->GetName(), it->engine, &eng2ctx, engctx);
-        if (!ctx) {
-            LOG(ERROR) << "create context of engine[" << it->engine->GetName() << "] failed.";
+    for (auto partition = info.partitions.begin(); partition != info.partitions.end(); ++partition) {
+        auto dev = partition->engine->CreateDevice();
+        if (!dev) {
+            LOG(ERROR) << "create device of engine[" << partition->engine->GetName() << "] failed.";
             return RC_OTHER_ERROR;
         }
 
-        auto impl = it->op->CreateKernelImpl();
-        if (!impl) {
-            LOG(ERROR) << "create kernel[" << it->op->GetNode()->GetName() << "] failed.";
-            return RC_OTHER_ERROR;
-        }
+        devices->emplace_back(unique_ptr<Device>(dev));
 
-        impl->SetDevice(ctx->GetDevice());
-        graph->nodeid2kernel[it->op->GetNode()->GetId()].reset(impl);
+        for (auto o = partition->ops.begin(); o != partition->ops.end(); ++o) {
+            auto impl = (*o)->CreateKernelImpl();
+            if (!impl) {
+                LOG(ERROR) << "create kernel[" << (*o)->GetNode()->GetName() << "] failed.";
+                return RC_OTHER_ERROR;
+            }
+            impl->SetDevice(dev);
+            graph->nodeid2kernel[(*o)->GetNode()->GetId()].reset(impl);
+        }
     }
 
     return RC_SUCCESS;
@@ -233,7 +218,7 @@ static RetCode InitRuntimeGraphConstants(const ir::GraphTopo* topo, const Runtim
 }
 
 RetCode RuntimeImpl::InitRuntimeGraph(const ir::GraphTopo* topo, const RuntimeGraphInfo& info, RuntimeGraph* graph) {
-    auto status = InitRuntimeGraphKernels(topo, info, &engctx_, graph);
+    auto status = InitRuntimeGraphKernels(topo, info, &devices_, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphKernels failed: " << GetRetCodeStr(status);
         return status;

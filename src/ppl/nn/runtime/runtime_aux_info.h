@@ -33,7 +33,7 @@ struct RuntimeAuxInfo final {
     std::vector<nodeid_t> sorted_nodes;
 };
 
-ppl::common::RetCode GenerateRuntimeAuxInfo(const RuntimeGraphInfo&, RuntimeAuxInfo*);
+ppl::common::RetCode GenerateRuntimeAuxInfo(const ir::GraphTopo*, RuntimeAuxInfo*);
 
 }} // namespace ppl::nn
 

@@ -52,7 +52,7 @@ RetCode RuntimeBuilderImpl::Init(const char* model_buf, size_t buf_len, vector<E
         return status;
     }
 
-    status = GenerateRuntimeAuxInfo(*graph_info_, aux_info_.get());
+    status = GenerateRuntimeAuxInfo(graph_.topo.get(), aux_info_.get());
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenerateRuntimeAuxInfo failed: " << GetRetCodeStr(status);
         return status;

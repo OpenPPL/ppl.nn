@@ -62,7 +62,7 @@ public:
     CudaEngine() : EngineImpl("cuda") {}
     ppl::common::RetCode Init(const CudaEngineOptions& options);
     ppl::common::RetCode Configure(uint32_t, ...) override;
-    EngineContext* CreateEngineContext(const std::string& graph_name) override;
+    Device* CreateDevice() override;
     bool Supports(const ir::Node*) const override;
     ppl::common::RetCode ProcessGraph(utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*) override;
     ppl::common::RetCode CompileCudaModule(ir::Graph*, utils::SharedResource*, RuntimePartitionInfo*);

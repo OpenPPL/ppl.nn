@@ -17,7 +17,6 @@
 
 #include "demo_engine.h"
 #include "demo_kernel.h"
-#include "demo_engine_context.h"
 #include "ppl/nn/runtime/runtime_partition_info.h"
 #include "ppl/nn/engines/utils.h"
 #include "ppl/nn/common/logger.h"
@@ -26,8 +25,8 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace demo {
 
-EngineContext* DemoEngine::CreateEngineContext(const string&) {
-    return new DemoEngineContext(GetName());
+Device* DemoEngine::CreateDevice() {
+    return new utils::GenericCpuDevice();
 }
 
 static RetCode FillKernels(const ir::Graph* graph, RuntimePartitionInfo* info) {
