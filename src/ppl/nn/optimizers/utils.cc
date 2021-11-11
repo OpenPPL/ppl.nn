@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/optimizers/utils.h"
-#include "ppl/nn/optimizers/simple_graph_partitioner.h"
+#include "ppl/nn/optimizers/engine_graph_partitioner.h"
 #include "ppl/nn/optimizers/graph_optimizer_manager.h"
 #include "ppl/nn/engines/common/ppl/converter_op.h"
 #include "ppl/nn/engines/utils.h"
@@ -424,7 +424,7 @@ RetCode ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimeG
 
     vector<pair<EngineImpl*, vector<nodeid_t>>> partitions;
 
-    SimpleGraphPartitioner partitioner;
+    EngineGraphPartitioner partitioner;
     status = partitioner.Partition(resource, graph, &partitions);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "partitioning graph[" << graph->topo->GetName() << "] failed: " << GetRetCodeStr(status);
