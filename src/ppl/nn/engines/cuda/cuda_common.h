@@ -23,6 +23,7 @@
 #endif
 
 #include <map>
+#include <string>
 #include <cuda_runtime.h>
 
 namespace ppl { namespace nn {
