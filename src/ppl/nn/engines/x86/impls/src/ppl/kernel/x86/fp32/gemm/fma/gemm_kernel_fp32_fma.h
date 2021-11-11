@@ -28,34 +28,34 @@ public:
     typedef void (*func_t)(int64_t*);
 
     struct param_def {
-        static const int64_t a_ptr_idx = 0;
-        static const int64_t packed_b_ptr_idx = 1;
-        static const int64_t c_ptr_idx = 2;
-        static const int64_t n_idx = 3;
-        static const int64_t k_idx = 4;
-        static const int64_t lda_idx = 5;
-        static const int64_t ldpacked_b_idx = 6;
-        static const int64_t ldc_idx = 7;
-        static const int64_t alpha_idx = 8;
-        static const int64_t flags_idx = 9;
-        static const int64_t length = 10;
+        static const int64_t A_PTR_IDX = 0;
+        static const int64_t PACKED_B_PTR_IDX = 1;
+        static const int64_t C_PTR_IDX = 2;
+        static const int64_t N_IDX = 3;
+        static const int64_t K_IDX = 4;
+        static const int64_t LDA_IDX = 5;
+        static const int64_t LDPACKED_B_IDX = 6;
+        static const int64_t LDC_IDX = 7;
+        static const int64_t ALPHA_IDX = 8;
+        static const int64_t FLAGS_IDX = 9;
+        static const int64_t LENGTH = 10;
     };
 
     struct config {
-        static const int64_t max_m_regs = 4;
-        static const int64_t max_n_regs = 3;
-        static const int64_t m_reg_elts = 1;
-        static const int64_t n_reg_elts = 8;
-        static const int64_t max_m_blk = max_m_regs * m_reg_elts;
-        static const int64_t max_n_blk = max_n_regs * n_reg_elts;
-        static const int64_t unroll_k = 8;
+        static const int64_t MAX_M_REGS = 4;
+        static const int64_t MAX_N_REGS = 3;
+        static const int64_t M_REG_ELTS = 1;
+        static const int64_t N_REG_ELTS = 8;
+        static const int64_t MAX_M_BLK = MAX_M_REGS * M_REG_ELTS;
+        static const int64_t MAX_N_BLK = MAX_N_REGS * N_REG_ELTS;
+        static const int64_t UNROLL_K = 8;
     };
 
     typedef int64_t flag_t;
     struct flag {
-        static const flag_t load_c = (1 << 1);
-        static const flag_t relu = (1 << 11);
-        static const flag_t relu6 = (1 << 12);
+        static const flag_t LOAD_C = (1 << 1);
+        static const flag_t RELU = (1 << 11);
+        static const flag_t RELU6 = (1 << 12);
     };
 
     gemm_kernel_fp32_fma(int64_t *param) : param_(param) { }
@@ -68,7 +68,7 @@ public:
 
 private:
     int64_t *param_;
-    static const func_t table_[config::max_n_regs][config::max_m_regs];
+    static const func_t table_[config::MAX_N_REGS][config::MAX_M_REGS];
 };
 
 }}}; // namespace ppl::kernel::x86

@@ -97,7 +97,7 @@ ppl::common::RetCode fc_fp32_fma_executor::execute()
     const int64_t dst_b_stride     = fp.num_output;
     const int64_t dst_buf_b_stride = CH_DT_BLK();
 
-    const bool with_relu = fp.fuse_flag & fc_fuse_flag::relu;
+    const bool with_relu = fp.fuse_flag & fc_fuse_flag::RELU;
 
     int64_t src_trans_size = 0;
     if (sp.multi_batch) {

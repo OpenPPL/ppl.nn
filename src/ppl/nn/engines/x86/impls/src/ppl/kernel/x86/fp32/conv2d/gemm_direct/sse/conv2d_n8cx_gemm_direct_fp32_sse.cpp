@@ -145,7 +145,7 @@ uint64_t conv2d_n8cx_gemm_direct_fp32_sse_executor::cal_temp_buffer_size()
 
 ppl::common::RetCode conv2d_n8cx_gemm_direct_fp32_sse_executor::prepare()
 {
-    if (!conv_param_ || !src_shape_ || !dst_shape_ || ((conv_param_->fuse_flag & conv_fuse_flag::sum) && !sum_src_shape_)) {
+    if (!conv_param_ || !src_shape_ || !dst_shape_ || ((conv_param_->fuse_flag & conv_fuse_flag::SUM) && !sum_src_shape_)) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
@@ -157,7 +157,7 @@ ppl::common::RetCode conv2d_n8cx_gemm_direct_fp32_sse_executor::prepare()
 
 ppl::common::RetCode conv2d_n8cx_gemm_direct_fp32_sse_executor::execute()
 {
-    if (!conv_param_ || !cvt_filter_ || !cvt_bias_ || !src_ || !dst_ || ((conv_param_->fuse_flag & conv_fuse_flag::sum) && !sum_src_) || !temp_buffer_) {
+    if (!conv_param_ || !cvt_filter_ || !cvt_bias_ || !src_ || !dst_ || ((conv_param_->fuse_flag & conv_fuse_flag::SUM) && !sum_src_) || !temp_buffer_) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
@@ -179,9 +179,9 @@ ppl::common::RetCode conv2d_n8cx_gemm_direct_fp32_sse_executor::execute()
     const int64_t flt_g_stride   = sp.ic_l2_cnt * sp.padded_oc * sp.ic_l2_blk;
     const int64_t flt_ocb_stride = sp.ic_l2_blk * CH_DT_BLK();
 
-    const bool with_sum   = cp.fuse_flag & conv_fuse_flag::sum;
-    const bool with_relu  = cp.fuse_flag & conv_fuse_flag::relu;
-    const bool with_relu6 = cp.fuse_flag & conv_fuse_flag::relu6;
+    const bool with_sum   = cp.fuse_flag & conv_fuse_flag::SUM;
+    const bool with_relu  = cp.fuse_flag & conv_fuse_flag::RELU;
+    const bool with_relu6 = cp.fuse_flag & conv_fuse_flag::RELU6;
 
     int64_t sum_src_b_stride = 0;
     if (with_sum) {

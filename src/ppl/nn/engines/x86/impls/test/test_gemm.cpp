@@ -141,33 +141,33 @@ int main(int argc, char **argv) {
     ppl::kernel::x86::gemm_post_t post_flag;
 
     switch (Flag_type_a) {
-        case 1: typeA = ppl::kernel::x86::gemm_m_type::trans; break;
-        default: typeA = ppl::kernel::x86::gemm_m_type::notrans; break;
+        case 1: typeA = ppl::kernel::x86::gemm_m_type::TRANS; break;
+        default: typeA = ppl::kernel::x86::gemm_m_type::NOTRANS; break;
     }
     const bool is_trans_a = Flag_type_a == 1;
 
     switch (Flag_type_b) {
-        case 1: typeB = ppl::kernel::x86::gemm_m_type::trans; break;
-        default: typeB = ppl::kernel::x86::gemm_m_type::notrans; break;
+        case 1: typeB = ppl::kernel::x86::gemm_m_type::TRANS; break;
+        default: typeB = ppl::kernel::x86::gemm_m_type::NOTRANS; break;
     }
     const bool is_trans_b = Flag_type_b == 1;
 
     switch (Flag_type_v) {
-        case 1: typeV = ppl::kernel::x86::gemm_v_type::scalar; break;
-        case 2: typeV = ppl::kernel::x86::gemm_v_type::col_vec; break;
-        case 3: typeV = ppl::kernel::x86::gemm_v_type::row_vec; break;
-        default: typeV = ppl::kernel::x86::gemm_v_type::empty; break;
+        case 1: typeV = ppl::kernel::x86::gemm_v_type::SCALAR; break;
+        case 2: typeV = ppl::kernel::x86::gemm_v_type::COL_VEC; break;
+        case 3: typeV = ppl::kernel::x86::gemm_v_type::ROW_VEC; break;
+        default: typeV = ppl::kernel::x86::gemm_v_type::EMPTY; break;
     }
 
     switch (Flag_type_h) {
-        case 1: typeH = ppl::kernel::x86::gemm_m_type::notrans; break;
-        default: typeH = ppl::kernel::x86::gemm_m_type::empty; break;
+        case 1: typeH = ppl::kernel::x86::gemm_m_type::NOTRANS; break;
+        default: typeH = ppl::kernel::x86::gemm_m_type::EMPTY; break;
     }
 
     switch (Flag_relu) {
-        case 1: post_flag = ppl::kernel::x86::gemm_post::relu; break;
-        case 6: post_flag = ppl::kernel::x86::gemm_post::relu6; break;
-        default: post_flag = ppl::kernel::x86::gemm_post::none; break;
+        case 1: post_flag = ppl::kernel::x86::gemm_post::RELU; break;
+        case 6: post_flag = ppl::kernel::x86::gemm_post::RELU6; break;
+        default: post_flag = ppl::kernel::x86::gemm_post::NONE; break;
     }
 
     const int32_t data_mod = 7;

@@ -42,7 +42,7 @@ ppl::common::RetCode Conv2dKernel::DoExecute(KernelExecContext* ctx) {
     cur_executor->set_dst(Y->GetBufferPtr<float>());
 
     TensorImpl* sum_src = nullptr;
-    if (cur_executor->conv_param()->fuse_flag & ppl::kernel::x86::conv_fuse_flag::sum) {
+    if (cur_executor->conv_param()->fuse_flag & ppl::kernel::x86::conv_fuse_flag::SUM) {
         sum_src = ctx->GetInput<TensorImpl>(ctx->GetInputCount() - 1);
         cur_executor->set_sum_src_shape(&sum_src->GetShape());
         cur_executor->set_sum_src(sum_src->GetBufferPtr<float>());

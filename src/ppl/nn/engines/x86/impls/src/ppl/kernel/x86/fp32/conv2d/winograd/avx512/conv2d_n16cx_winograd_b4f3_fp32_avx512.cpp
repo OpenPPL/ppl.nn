@@ -249,7 +249,7 @@ uint64_t conv2d_n16cx_winograd_b4f3_fp32_avx512_executor::cal_temp_buffer_size()
 
 ppl::common::RetCode conv2d_n16cx_winograd_b4f3_fp32_avx512_executor::prepare()
 {
-    if (!conv_param_ || !src_shape_ || !dst_shape_ || ((conv_param_->fuse_flag & conv_fuse_flag::sum) && !sum_src_shape_)) {
+    if (!conv_param_ || !src_shape_ || !dst_shape_ || ((conv_param_->fuse_flag & conv_fuse_flag::SUM) && !sum_src_shape_)) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
@@ -500,14 +500,14 @@ static inline void winograd_b4f3_dst_trans_fp32_avx512(
         zmm4 += zmm8;
         zmm6 += zmm8;
 
-        if (fuse_flag & conv_fuse_flag::sum) {
+        if (fuse_flag & conv_fuse_flag::SUM) {
             zmm0 = _mm512_add_ps(_mm512_loadu_ps(l_sum_src + 0 * sum_src_h_stride), zmm0);
             zmm2 = _mm512_add_ps(_mm512_loadu_ps(l_sum_src + 1 * sum_src_h_stride), zmm2);
             zmm4 = _mm512_add_ps(_mm512_loadu_ps(l_sum_src + 2 * sum_src_h_stride), zmm4);
             zmm6 = _mm512_add_ps(_mm512_loadu_ps(l_sum_src + 3 * sum_src_h_stride), zmm6);
         }
 
-        if (fuse_flag & (conv_fuse_flag::relu | conv_fuse_flag::relu6)) {
+        if (fuse_flag & (conv_fuse_flag::RELU | conv_fuse_flag::RELU6)) {
             zmm10 = _mm512_setzero_ps();
             zmm0  = _mm512_max_ps(zmm10, zmm0);
             zmm2  = _mm512_max_ps(zmm10, zmm2);
@@ -515,7 +515,7 @@ static inline void winograd_b4f3_dst_trans_fp32_avx512(
             zmm6  = _mm512_max_ps(zmm10, zmm6);
         }
 
-        if (fuse_flag & conv_fuse_flag::relu6) {
+        if (fuse_flag & conv_fuse_flag::RELU6) {
             zmm11 = _mm512_set1_ps(6.0f);
             zmm0  = _mm512_min_ps(zmm11, zmm0);
             zmm2  = _mm512_min_ps(zmm11, zmm2);
@@ -548,19 +548,19 @@ void winograd_b4f3_store_dst_fp32_avx512(
     float *dst)
 {
     __m512 vmin, vmax;
-    if (fuse_flag & (conv_fuse_flag::relu | conv_fuse_flag::relu6)) {
+    if (fuse_flag & (conv_fuse_flag::RELU | conv_fuse_flag::RELU6)) {
         vmin = _mm512_setzero_ps();
     } else {
         vmin = _mm512_set1_ps(-FLT_MAX);
     }
 
-    if (fuse_flag & conv_fuse_flag::relu6) {
+    if (fuse_flag & conv_fuse_flag::RELU6) {
         vmax = _mm512_set1_ps(6.0f);
     } else {
         vmax = _mm512_set1_ps(FLT_MAX);
     }
 
-    if (fuse_flag & conv_fuse_flag::sum) {
+    if (fuse_flag & conv_fuse_flag::SUM) {
         for (int64_t oh = 0; oh < oh_len; ++oh) {
             const float *l_src = src + oh * TILE_OUT_W() * CH_DT_BLK();
             const float *l_sum_src = sum_src + oh * dst_h_stride;
@@ -598,7 +598,7 @@ void winograd_b4f3_store_dst_fp32_avx512(
 
 ppl::common::RetCode conv2d_n16cx_winograd_b4f3_fp32_avx512_executor::execute()
 {
-    if (!conv_param_ || !cvt_filter_ || !cvt_bias_ || !src_ || !dst_ || ((conv_param_->fuse_flag & conv_fuse_flag::sum) && !sum_src_) || !temp_buffer_) {
+    if (!conv_param_ || !cvt_filter_ || !cvt_bias_ || !src_ || !dst_ || ((conv_param_->fuse_flag & conv_fuse_flag::SUM) && !sum_src_) || !temp_buffer_) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
@@ -620,7 +620,7 @@ ppl::common::RetCode conv2d_n16cx_winograd_b4f3_fp32_avx512_executor::execute()
     const int64_t bias_g_stride    = sp.padded_oc;
     const int64_t cvt_flt_g_stride = sp.padded_ic * sp.padded_oc * TILE_IN_H() * TILE_IN_W();
     int64_t sum_src_b_stride       = 0;
-    if (conv_param_->fuse_flag & conv_fuse_flag::sum) {
+    if (conv_param_->fuse_flag & conv_fuse_flag::SUM) {
         sum_src_b_stride = int64_t(round_up(sum_src_shape_->GetDim(1), CH_DT_BLK())) * dst_h * dst_w;
     }
 
@@ -808,7 +808,7 @@ ppl::common::RetCode conv2d_n16cx_winograd_b4f3_fp32_avx512_executor::execute()
                                                     l_gemm_out, l_sum_src,
                                                     cvt_bias_ + g * bias_g_stride + ocb,
                                                     gemm_out_ti_stride, dst_w * CH_DT_BLK(),
-                                                    TILE_OUT_W() * CH_DT_BLK(), conv_fuse_flag::none,
+                                                    TILE_OUT_W() * CH_DT_BLK(), conv_fuse_flag::NONE,
                                                     postprocess_buf, dst_buf);
                                                 if (sp.use_nt_store) {
                                                     winograd_b4f3_store_dst_fp32_avx512<true>(
@@ -1030,7 +1030,7 @@ ppl::common::RetCode conv2d_n16cx_winograd_b4f3_fp32_avx512_executor::execute()
                                             l_gemm_out, l_sum_src,
                                             cvt_bias_ + g * bias_g_stride + ocb,
                                             gemm_out_ti_stride, dst_w * CH_DT_BLK(),
-                                            TILE_OUT_W() * CH_DT_BLK(), conv_fuse_flag::none,
+                                            TILE_OUT_W() * CH_DT_BLK(), conv_fuse_flag::NONE,
                                             postprocess_buf, dst_buf);
                                         if (sp.use_nt_store) {
                                             winograd_b4f3_store_dst_fp32_avx512<true>(

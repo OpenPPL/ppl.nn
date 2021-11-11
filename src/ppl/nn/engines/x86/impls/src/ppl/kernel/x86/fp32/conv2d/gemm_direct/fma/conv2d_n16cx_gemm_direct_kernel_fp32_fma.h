@@ -28,38 +28,38 @@ public:
     typedef void (*func_t)(int64_t*);
 
     struct param_def {
-        static const int64_t kSRC_PTR_IDX = 0;
-        static const int64_t kHIS_PTR_IDX = 1;
-        static const int64_t kDST_PTR_IDX = 2;
-        static const int64_t kFLT_PTR_IDX = 3;
-        static const int64_t kBIAS_PTR_IDX = 4;
-        static const int64_t kSPACE_IDX = 5;
-        static const int64_t kCHANNELS_IDX = 6;
-        static const int64_t kSRC_ICB_STRIDE_IDX = 7;
-        static const int64_t kFLAGS_IDX = 8;
-        static const int64_t kLENGTH = 9;
+        static const int64_t SRC_PTR_IDX = 0;
+        static const int64_t HIS_PTR_IDX = 1;
+        static const int64_t DST_PTR_IDX = 2;
+        static const int64_t FLT_PTR_IDX = 3;
+        static const int64_t BIAS_PTR_IDX = 4;
+        static const int64_t SPACE_IDX = 5;
+        static const int64_t CHANNELS_IDX = 6;
+        static const int64_t SRC_ICB_STRIDE_IDX = 7;
+        static const int64_t FLAGS_IDX = 8;
+        static const int64_t LENGTH = 9;
     };
 
     struct config {
-        static const int64_t kIC_DATA_BLK = 16;
-        static const int64_t kOC_DATA_BLK = 16;
-        static const int64_t kMAX_S_REGS = 6;
-        static const int64_t kMAX_OC_REGS = 2;
-        static const int64_t kS_REG_ELTS = 1;
-        static const int64_t kOC_REG_ELTS = 8;
-        static const int64_t kOC_DATA_BLK_REGS = 2;
-        static const int64_t kMAX_OC_DATA_BLKS = kMAX_OC_REGS / kOC_DATA_BLK_REGS;
-        static const int64_t kMAX_S_BLK = kMAX_S_REGS * kS_REG_ELTS;
-        static const int64_t kMAX_OC_BLK = kMAX_OC_DATA_BLKS * kOC_DATA_BLK;
-        static const int64_t kNT_STORE_OPT = 2;
+        static const int64_t IC_DATA_BLK = 16;
+        static const int64_t OC_DATA_BLK = 16;
+        static const int64_t MAX_S_REGS = 6;
+        static const int64_t MAX_OC_REGS = 2;
+        static const int64_t S_REG_ELTS = 1;
+        static const int64_t OC_REG_ELTS = 8;
+        static const int64_t OC_DATA_BLK_REGS = 2;
+        static const int64_t MAX_OC_DATA_BLKS = MAX_OC_REGS / OC_DATA_BLK_REGS;
+        static const int64_t MAX_S_BLK = MAX_S_REGS * S_REG_ELTS;
+        static const int64_t MAX_OC_BLK = MAX_OC_DATA_BLKS * OC_DATA_BLK;
+        static const int64_t NT_STORE_OPT = 2;
     };
 
     typedef int64_t flag_t;
     struct flag {
-        static const flag_t kLOAD_BIAS = (1 << 1);
-        static const flag_t kADD_BIAS = (1 << 2);
-        static const flag_t kRELU = (1 << 11);
-        static const flag_t kRELU6 = (1 << 12);
+        static const flag_t LOAD_BIAS = (1 << 1);
+        static const flag_t ADD_BIAS = (1 << 2);
+        static const flag_t RELU = (1 << 11);
+        static const flag_t RELU6 = (1 << 12);
     };
 
     conv2d_n16cx_gemm_direct_kernel_fp32_fma(int64_t *param) : param_(param) { }
@@ -72,7 +72,7 @@ public:
 
 private:
     int64_t *param_;
-    static const func_t table_[config::kNT_STORE_OPT][config::kMAX_OC_REGS][config::kMAX_S_REGS];
+    static const func_t table_[config::NT_STORE_OPT][config::MAX_OC_REGS][config::MAX_S_REGS];
 };
 
 }}}; // namespace ppl::kernel::x86

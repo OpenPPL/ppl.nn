@@ -96,11 +96,11 @@ ppl::common::RetCode deform_conv2d_fp32_fma(
                 columns,
                 bias + g * oc_per_gp,
                 nullptr,
-                gemm_m_type::notrans, gemm_m_type::notrans,
-                bias ? gemm_v_type::col_vec : gemm_v_type::empty, gemm_m_type::empty,
+                gemm_m_type::NOTRANS, gemm_m_type::NOTRANS,
+                bias ? gemm_v_type::COL_VEC : gemm_v_type::EMPTY, gemm_m_type::EMPTY,
                 oc_per_gp, dst_h * dst_w, ic_per_gp * kernel_h * kernel_w,
                 ic_per_gp * kernel_h * kernel_w, dst_h * dst_w, dst_h * dst_w, dst_h * dst_w,
-                1.0f, 1.0f, gemm_post::none,
+                1.0f, 1.0f, gemm_post::NONE,
                 dst_ptr);
         }
     }

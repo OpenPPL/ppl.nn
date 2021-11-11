@@ -27,12 +27,12 @@ fc_fp32_algo_info fc_algo_selector::select_algo(const ppl::common::dataformat_t 
     (void)src_format;
 
     static fc_fp32_algo_info unknown_info = {
-        fc_fp32_algo::unknown,
+        fc_fp32_algo::UNKNOWN,
         ppl::common::ISA_UNKNOWN};
 
     if (isa_flags & ppl::common::ISA_X86_FMA) {
         return {
-            fc_fp32_algo::standard,
+            fc_fp32_algo::STANDARD,
             ppl::common::ISA_X86_FMA};
     } else {
         return unknown_info;
@@ -42,7 +42,7 @@ fc_fp32_algo_info fc_algo_selector::select_algo(const ppl::common::dataformat_t 
 fc_fp32_manager *fc_algo_selector::gen_algo(const fc_fp32_param &param, const fc_fp32_algo_info &algo_info, ppl::common::Allocator *allocator)
 {
     fc_fp32_manager *fc_mgr = nullptr;
-    if (algo_info.algo_type == fc_fp32_algo::standard &&
+    if (algo_info.algo_type == fc_fp32_algo::STANDARD &&
         algo_info.isa == ppl::common::ISA_X86_FMA) {
         fc_mgr = new fc_fp32_fma_manager(param, allocator);
     }
