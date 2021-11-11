@@ -10,7 +10,8 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${_NVCC_FLAGS}")
 set(PPLCUDA_COMPILE_DEFINITIONS)
 
 # 2spk conv code generator
-#idxn conv code generator
+# idxn conv code generator
+# swzl conv code generator
 find_package(Python3 REQUIRED)
 if(NOT Python3_FOUND)
     message(FATAL_ERROR "cannot find python3")
@@ -20,11 +21,12 @@ if(PPLNN_ENABLE_CUDA_JIT)
 message(STATUS ${CMAKE_CURRENT_BINARY_DIR})
    execute_process(
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv/gene_header.py ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv ${CMAKE_CURRENT_BINARY_DIR}
-    OUTPUT_STRIP_TRAILING_WHITESPACE) 
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
 else()
 execute_process(
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv/2spk/gen_2spk_kernel.py ${CMAKE_CURRENT_BINARY_DIR}/conv/2spk
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv/idxn/gen_idxn_kernel.py ${CMAKE_CURRENT_BINARY_DIR}/conv/idxn
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv/swzl/gen_swzl_kernel.py ${CMAKE_CURRENT_BINARY_DIR}/conv/swzl
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
 
@@ -35,9 +37,11 @@ if(PPLNN_ENABLE_CUDA_JIT)
                                             src/nn/conv/gene_kernel.cc)
 else()
     file(GLOB_RECURSE CUDA_SRC ${CUDA_SRC} ${CMAKE_CURRENT_BINARY_DIR}/conv/2spk/f*_kernels.cu
-                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/2spk/init*.cu
                                        ${CMAKE_CURRENT_BINARY_DIR}/conv/idxn/idxn_kernels*.cu
-                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/idxn/init*.cu)
+                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/swzl/f*_kernels*.cu
+                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/2spk/init*.cu
+                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/idxn/init*.cu
+                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/swzl/init*.cu)
 endif()
 
 if(PPLNN_ENABLE_CUDA_JIT)

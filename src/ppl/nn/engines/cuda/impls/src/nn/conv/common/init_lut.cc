@@ -103,74 +103,25 @@ void InitializeFilterLut(
     free(tmp_lut);
 }
 
-void InitializeAbsChlLut(
-    int& abs_chl_lut_size,
-    int* abs_chl_lut,
-    int num_chl,
-    int num_grp,
-    int pad_size,
-    int num_chl_per_step,
-    int splitk)
+void InitializeNumChlPerSpk(
+   int& num_chl_per_spk_head,
+   int& num_chl_per_spk_tail,
+   int num_chl,
+   int num_grp,
+   int pad_size,
+   int num_chl_per_step,
+   int splitk)
 {
-    abs_chl_lut_size = splitk;
+    int num_chl_per_grp = num_chl / num_grp;
+    int num_chl_per_grp_pad = Align(num_chl_per_grp, pad_size);
+    int num_chl_per_grp_pad_step = Align(num_chl_per_grp, num_chl_per_step);
+    int num_chl_per_grp_pad_per_step = num_chl_per_grp_pad_step  / num_chl_per_step;
 
-    int num_chl_per_grp              = num_chl / num_grp;
-    int num_chl_per_grp_pad          = Align(num_chl_per_grp, pad_size);
-    int num_chl_per_grp_pad_step     = Align(num_chl_per_grp, num_chl_per_step);
-    int num_chl_per_grp_pad_per_step = num_chl_per_grp_pad_step / num_chl_per_step;
+    int num_chl_per_step_per_spk_head =  num_chl_per_grp_pad_per_step / splitk;
+    int num_chl_per_step_per_spk_tail = (num_chl_per_grp_pad_per_step % splitk) + num_chl_per_step_per_spk_head;
 
-    for (int i = 0; i < splitk; i++)
-        abs_chl_lut[i] = num_chl_per_grp_pad_per_step / splitk;
-
-    for (int i = 0; i < (num_chl_per_grp_pad_per_step % splitk); i++)
-        abs_chl_lut[i] += 1;
-
-    for (int i = 0; i < splitk; i++)
-        abs_chl_lut[i] = abs_chl_lut[i] * num_chl_per_step;
-
-    abs_chl_lut[splitk - 1] = abs_chl_lut[splitk - 1] - (num_chl_per_grp_pad_step - num_chl_per_grp_pad);
+    num_chl_per_spk_head =  num_chl_per_step_per_spk_head * num_chl_per_step;
+    num_chl_per_spk_tail =  num_chl_per_step_per_spk_tail * num_chl_per_step -
+                            (Align(num_chl_per_grp, num_chl_per_step) - num_chl_per_grp_pad);
 }
 
-void InitializeChlLut(
-    int& chl_lut_size,
-    int* chl_lut,
-    int num_chl,
-    int num_grp,
-    int pad_size,
-    int num_chl_per_step,
-    int splitk)
-{
-    chl_lut_size = splitk + 1;
-
-    int abs_chl_lut_size;
-    int abs_chl_lut[MAX_SPLITK_SIZE];
-
-    InitializeAbsChlLut(abs_chl_lut_size, abs_chl_lut, num_chl, num_grp, pad_size, num_chl_per_step, splitk);
-
-    chl_lut[0] = 0;
-    for (int i = 1; i < splitk + 1; i++)
-        chl_lut[i] = chl_lut[i - 1] + abs_chl_lut[i - 1];
-}
-
-void InitializeKloopLut(
-    int& kloop_lut_size,
-    int* kloop_lut,
-    int num_chl,
-    int num_grp,
-    int pad_size,
-    int num_chl_per_step,
-    int splitk,
-    int splitf,
-    int flt_hw)
-{
-    kloop_lut_size = splitk;
-
-    int abs_chl_lut_size;
-    int abs_chl_lut[MAX_SPLITK_SIZE];
-
-    InitializeAbsChlLut(abs_chl_lut_size, abs_chl_lut, num_chl, num_grp, pad_size, num_chl_per_step, splitk);
-
-    for (int i = 0; i < splitk; i++) {
-        kloop_lut[i] = ((splitf == 1) ? flt_hw : 1) * DivUp(abs_chl_lut[i], num_chl_per_step);
-    }
-}
