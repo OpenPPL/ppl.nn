@@ -37,8 +37,8 @@ typedef uint32_t fc_fp32_algo_t;
 
 class fc_fp32_algo {
 public:
-    static const fc_fp32_algo_t unknown  = 0;
-    static const fc_fp32_algo_t standard = 1;
+    static const fc_fp32_algo_t UNKNOWN  = 0;
+    static const fc_fp32_algo_t STANDARD = 1;
 };
 
 struct fc_fp32_algo_info {

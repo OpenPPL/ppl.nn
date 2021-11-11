@@ -81,27 +81,27 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     param.isa_flag = GetISA();
 
     if (gemm_fuse_relu_) {
-        param.fuse_flag = ppl::kernel::x86::gemm_v2_fuse_flag::relu;
+        param.fuse_flag = ppl::kernel::x86::gemm_v2_fuse_flag::RELU;
     } else {
-        param.fuse_flag = ppl::kernel::x86::gemm_v2_fuse_flag::none;
+        param.fuse_flag = ppl::kernel::x86::gemm_v2_fuse_flag::NONE;
     }
 
     param.src_C = nullptr;
-    param.c_type = ppl::kernel::x86::gemm_v2_C_type::empty;
+    param.c_type = ppl::kernel::x86::gemm_v2_C_type::EMPTY;
     param.ldc = 0;
     if (C != nullptr && !C->GetShape().IsEmpty()) {
         param.src_C = C->GetBufferPtr<float>();
         if (C->GetShape().GetElementsExcludingPadding() == 1) {
-            param.c_type = ppl::kernel::x86::gemm_v2_C_type::scalar;
+            param.c_type = ppl::kernel::x86::gemm_v2_C_type::SCALAR;
         } else if (C->GetShape().GetDimCount() == 1) {
-            param.c_type = ppl::kernel::x86::gemm_v2_C_type::vector_w;
+            param.c_type = ppl::kernel::x86::gemm_v2_C_type::VECTOR_W;
         } else if (C->GetShape().GetDimCount() == 2) {
             if (C->GetShape().GetDim(0) == 1) {
-                param.c_type = ppl::kernel::x86::gemm_v2_C_type::vector_w;
+                param.c_type = ppl::kernel::x86::gemm_v2_C_type::VECTOR_W;
             } else if (C->GetShape().GetDim(1) == 1) {
-                param.c_type = ppl::kernel::x86::gemm_v2_C_type::vector_h;
+                param.c_type = ppl::kernel::x86::gemm_v2_C_type::VECTOR_H;
             } else {
-                param.c_type = ppl::kernel::x86::gemm_v2_C_type::matrix;
+                param.c_type = ppl::kernel::x86::gemm_v2_C_type::MATRIX;
                 param.ldc = C->GetShape().GetDim(1);
             }
         }

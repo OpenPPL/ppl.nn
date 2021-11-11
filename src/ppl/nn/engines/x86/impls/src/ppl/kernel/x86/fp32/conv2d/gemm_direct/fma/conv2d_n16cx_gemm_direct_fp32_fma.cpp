@@ -26,44 +26,41 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-using kernel_cfg = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config;
-using ker_param_def = conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def;
+static const int64_t ASSUME_L2_BYTES = 256 * 1024;
+static const int64_t ASSUME_L2_WAYS = 4;
+static const int64_t ASSUME_L3_BYTES = 2048 * 1024;
+static const float L2_RATIO = 0.251f;
+static const float L3_RATIO = 0.501f;
 
-static const int64_t kASSUME_L2_BYTES = 256 * 1024;
-static const int64_t kASSUME_L2_WAYS = 4;
-static const int64_t kASSUME_L3_BYTES = 2048 * 1024;
-static const float kL2_RATIO = 0.251f;
-static const float kL3_RATIO = 0.501f;
+static const int64_t IC_DATA_BLK = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::IC_DATA_BLK;
+static const int64_t OC_DATA_BLK = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_DATA_BLK;
+static const int64_t OC_REG_ELTS = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_REG_ELTS;
 
-static const int64_t kIC_DATA_BLK = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kIC_DATA_BLK;
-static const int64_t kOC_DATA_BLK = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_DATA_BLK;
-static const int64_t kOC_REG_ELTS = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_REG_ELTS;
-
-static const int64_t kIC_L2_BLK_MAX_LARGE = 16 * kIC_DATA_BLK; // preserve for tuning
-static const int64_t kIC_L2_BLK_MAX_SMALL = 16 * kIC_DATA_BLK;
-static const float kIC_L2_BLK_TAIL_RATIO = 0.251f;
-static const int64_t kOC_L2_BLK_MAX_LARGE = 16 * kOC_DATA_BLK; // preserve for tuning
-static const int64_t kOC_L2_BLK_MAX_SMALL = 16 * kOC_DATA_BLK;
-static const int64_t kOC_L2_BLK_MIN = 1 * kOC_DATA_BLK;
-static const int64_t kS_L2_BLK_MAX = 12 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kMAX_S_REGS;
-static const int64_t kS_KERNEL_BLK_MAX = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kMAX_S_REGS;
-static const int64_t kS_KERNEL_BLK_MIN = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kMAX_S_REGS - 2;
+static const int64_t IC_L2_BLK_MAX_LARGE = 16 * IC_DATA_BLK; // preserve for tuning
+static const int64_t IC_L2_BLK_MAX_SMALL = 16 * IC_DATA_BLK;
+static const float IC_L2_BLK_TAIL_RATIO = 0.251f;
+static const int64_t OC_L2_BLK_MAX_LARGE = 16 * OC_DATA_BLK; // preserve for tuning
+static const int64_t OC_L2_BLK_MAX_SMALL = 16 * OC_DATA_BLK;
+static const int64_t OC_L2_BLK_MIN = 1 * OC_DATA_BLK;
+static const int64_t S_L2_BLK_MAX = 12 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::MAX_S_REGS;
+static const int64_t S_KERNEL_BLK_MAX = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::MAX_S_REGS;
+static const int64_t S_KERNEL_BLK_MIN = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::MAX_S_REGS - 2;
 
 int64_t conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_ic_l2_blk(const conv2d_fp32_param &param)
 {
     const int64_t ic_per_grp = param.channels / param.group;
-    const int64_t padded_ic = round_up(ic_per_grp, kIC_DATA_BLK);
+    const int64_t padded_ic = round_up(ic_per_grp, IC_DATA_BLK);
     const int64_t oc_per_grp = param.num_output / param.group;
-    const int64_t padded_oc = round_up(oc_per_grp, kOC_DATA_BLK);
+    const int64_t padded_oc = round_up(oc_per_grp, OC_DATA_BLK);
 
     int64_t ic_l2_blk;
     if (padded_ic > padded_oc) {
-        ic_l2_blk = min(kIC_L2_BLK_MAX_LARGE, padded_ic);
+        ic_l2_blk = min(IC_L2_BLK_MAX_LARGE, padded_ic);
     } else {
-        ic_l2_blk = min(kIC_L2_BLK_MAX_SMALL, padded_ic);
+        ic_l2_blk = min(IC_L2_BLK_MAX_SMALL, padded_ic);
     }
-    if (mod_up(padded_ic, ic_l2_blk) < kIC_L2_BLK_TAIL_RATIO * ic_l2_blk) {
-        ic_l2_blk = round_up(padded_ic / (padded_ic / ic_l2_blk), kIC_DATA_BLK);
+    if (mod_up(padded_ic, ic_l2_blk) < IC_L2_BLK_TAIL_RATIO * ic_l2_blk) {
+        ic_l2_blk = round_up(padded_ic / (padded_ic / ic_l2_blk), IC_DATA_BLK);
     }
     return ic_l2_blk;
 }
@@ -72,8 +69,8 @@ void conv2d_n16cx_gemm_direct_fp32_fma_executor::init_preproc_param()
 {
     schedule_param_.ic_per_grp = conv_param_->channels / conv_param_->group;
     schedule_param_.oc_per_grp = conv_param_->num_output / conv_param_->group;
-    schedule_param_.padded_ic = round_up(schedule_param_.ic_per_grp, kIC_DATA_BLK);
-    schedule_param_.padded_oc = round_up(schedule_param_.oc_per_grp, kOC_DATA_BLK);
+    schedule_param_.padded_ic = round_up(schedule_param_.ic_per_grp, IC_DATA_BLK);
+    schedule_param_.padded_oc = round_up(schedule_param_.oc_per_grp, OC_DATA_BLK);
 }
 
 void conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_tunning_param()
@@ -85,7 +82,7 @@ void conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_tunning_param()
     const int64_t batch      = src_shape_->GetDim(0);
     const int64_t dst_space  = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
 
-    const float l3_cap_all_core = (ppl::common::GetCpuCacheL3() == 0 ? (kASSUME_L3_BYTES * num_thread) : ppl::common::GetCpuCacheL3()) * kL3_RATIO / sizeof(float);
+    const float l3_cap_all_core = (ppl::common::GetCpuCacheL3() == 0 ? (ASSUME_L3_BYTES * num_thread) : ppl::common::GetCpuCacheL3()) * L3_RATIO / sizeof(float);
 
     sp.ic_l2_blk = cal_ic_l2_blk(cp);
     sp.ic_l2_cnt = div_up(sp.padded_ic, sp.ic_l2_blk);
@@ -93,26 +90,26 @@ void conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_tunning_param()
     sp.mb_l3_blk = min(batch, num_thread);
     sp.grp_l3_blk = 1;
 
-    sp.s_kr_blk = kS_KERNEL_BLK_MAX;
+    sp.s_kr_blk = S_KERNEL_BLK_MAX;
 #define REDUN_S(S, S_BLK) (float(round_up(S, S_BLK)) / (S)-1.0f)
     if (REDUN_S(dst_space, sp.s_kr_blk) > 0.201f) {
-        for (int64_t s_blk = kS_KERNEL_BLK_MAX - 1; s_blk >= kS_KERNEL_BLK_MIN; --s_blk) {
+        for (int64_t s_blk = S_KERNEL_BLK_MAX - 1; s_blk >= S_KERNEL_BLK_MIN; --s_blk) {
             if (REDUN_S(dst_space, s_blk) < REDUN_S(dst_space, sp.s_kr_blk)) {
                 sp.s_kr_blk = s_blk;
             }
         }
     }
 #undef REDUN_S
-    sp.s_l2_blk = min(dst_space, round_up(kS_L2_BLK_MAX, sp.s_kr_blk));
+    sp.s_l2_blk = min(dst_space, round_up(S_L2_BLK_MAX, sp.s_kr_blk));
     if (sp.padded_oc > sp.padded_ic) {
-        sp.oc_l2_blk = min(kOC_L2_BLK_MAX_LARGE, sp.padded_oc);
+        sp.oc_l2_blk = min(OC_L2_BLK_MAX_LARGE, sp.padded_oc);
     } else {
-        sp.oc_l2_blk = min(kOC_L2_BLK_MAX_SMALL, sp.padded_oc);
+        sp.oc_l2_blk = min(OC_L2_BLK_MAX_SMALL, sp.padded_oc);
     }
 
     const int64_t oc_thread = div_up(num_thread, sp.grp_l3_blk * sp.mb_l3_blk * div_up(dst_space, sp.s_l2_blk));
     if (sp.padded_oc / oc_thread < sp.oc_l2_blk) {
-        sp.oc_l2_blk = round_up(max(sp.padded_oc / oc_thread, kOC_L2_BLK_MIN), kOC_DATA_BLK);
+        sp.oc_l2_blk = round_up(max(sp.padded_oc / oc_thread, OC_L2_BLK_MIN), OC_DATA_BLK);
     }
 
     sp.down_sample = 0;
@@ -137,7 +134,7 @@ uint64_t conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_temp_buffer_size()
 
 ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_executor::prepare()
 {
-    if (!conv_param_ || !src_shape_ || !dst_shape_ || ((conv_param_->fuse_flag & conv_fuse_flag::sum) && !sum_src_shape_)) {
+    if (!conv_param_ || !src_shape_ || !dst_shape_ || ((conv_param_->fuse_flag & conv_fuse_flag::SUM) && !sum_src_shape_)) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
@@ -149,7 +146,7 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_executor::prepare()
 
 ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_executor::execute()
 {
-    if (!conv_param_ || !cvt_filter_ || !cvt_bias_ || !src_ || !dst_ || ((conv_param_->fuse_flag & conv_fuse_flag::sum) && !sum_src_) || !temp_buffer_) {
+    if (!conv_param_ || !cvt_filter_ || !cvt_bias_ || !src_ || !dst_ || ((conv_param_->fuse_flag & conv_fuse_flag::SUM) && !sum_src_) || !temp_buffer_) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
@@ -160,23 +157,23 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_executor::execute()
     const int64_t src_h         = src_shape_->GetDim(2);
     const int64_t src_w         = src_shape_->GetDim(3);
     const int64_t dst_space     = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
-    const int64_t padded_reg_oc = round_up(sp.oc_per_grp, kOC_REG_ELTS);
+    const int64_t padded_reg_oc = round_up(sp.oc_per_grp, OC_REG_ELTS);
 
-    const int64_t src_b_stride   = round_up(src_shape_->GetDim(1), kIC_DATA_BLK) * src_h * src_w;
+    const int64_t src_b_stride   = round_up(src_shape_->GetDim(1), IC_DATA_BLK) * src_h * src_w;
     const int64_t src_g_stride   = sp.padded_ic * src_h * src_w;
-    const int64_t src_icb_stride = src_h * src_w * kIC_DATA_BLK;
-    const int64_t src_h_stride   = src_w * kIC_DATA_BLK;
-    const int64_t dst_b_stride   = round_up(dst_shape_->GetDim(1), kOC_DATA_BLK) * dst_space;
+    const int64_t src_icb_stride = src_h * src_w * IC_DATA_BLK;
+    const int64_t src_h_stride   = src_w * IC_DATA_BLK;
+    const int64_t dst_b_stride   = round_up(dst_shape_->GetDim(1), OC_DATA_BLK) * dst_space;
     const int64_t dst_g_stride   = sp.padded_oc * dst_space;
     const int64_t flt_g_stride   = sp.ic_l2_cnt * sp.padded_oc * sp.ic_l2_blk;
 
-    const bool with_sum   = cp.fuse_flag & conv_fuse_flag::sum;
-    const bool with_relu  = cp.fuse_flag & conv_fuse_flag::relu;
-    const bool with_relu6 = cp.fuse_flag & conv_fuse_flag::relu6;
+    const bool with_sum   = cp.fuse_flag & conv_fuse_flag::SUM;
+    const bool with_relu  = cp.fuse_flag & conv_fuse_flag::RELU;
+    const bool with_relu6 = cp.fuse_flag & conv_fuse_flag::RELU6;
 
     int64_t sum_src_b_stride = 0;
     if (with_sum) {
-        sum_src_b_stride = int64_t(round_up(sum_src_shape_->GetDim(1), kOC_DATA_BLK)) * dst_space;
+        sum_src_b_stride = int64_t(round_up(sum_src_shape_->GetDim(1), OC_DATA_BLK)) * dst_space;
     }
 
     for (int64_t mbl3 = 0; mbl3 < batch; mbl3 += sp.mb_l3_blk) {
@@ -202,16 +199,16 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_executor::execute()
                     if (with_sum) {
                         base_his     = sum_src_;
                         his_b_stride = sum_src_b_stride;
-                        ker_flags |= conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::kADD_BIAS;
+                        ker_flags |= conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::ADD_BIAS;
                     } else {
-                        ker_flags |= conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::kLOAD_BIAS;
+                        ker_flags |= conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::LOAD_BIAS;
                     }
                 }
                 if (is_last_ic) {
                     if (with_relu) {
-                        ker_flags |= conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::kRELU;
+                        ker_flags |= conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU;
                     } else if (with_relu6) {
-                        ker_flags |= conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::kRELU6;
+                        ker_flags |= conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU6;
                     }
                 }
                 base_src += mbl3 * base_src_b_stride + grpl3 * base_src_g_stride + icl2 * src_h * src_w;
@@ -222,7 +219,7 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_executor::execute()
                 if (sp.down_sample) {
                     const int64_t src_trans_b_stride   = int64_t(sp.ic_l2_blk) * dst_space;
                     const int64_t src_trans_g_stride   = int64_t(sp.mb_l3_blk) * sp.ic_l2_blk * dst_space;
-                    const int64_t src_trans_icb_stride = int64_t(dst_space) * kIC_DATA_BLK;
+                    const int64_t src_trans_icb_stride = int64_t(dst_space) * IC_DATA_BLK;
                     float *src_trans                   = reinterpret_cast<float*>(temp_buffer_);
 #ifdef PPL_USE_X86_OMP_COLLAPSE
                     PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(3)
@@ -232,13 +229,13 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_executor::execute()
                         PRAGMA_OMP_PARALLEL_FOR()
 #endif
                         for (int64_t b = 0; b < mbl3_eff; ++b) {
-                            for (int64_t icb = 0; icb < div_up(icl2_eff, kIC_DATA_BLK); ++icb) {
+                            for (int64_t icb = 0; icb < div_up(icl2_eff, IC_DATA_BLK); ++icb) {
                                 const float *l_base_src = base_src + g * base_src_g_stride + b * base_src_b_stride + icb * base_src_icb_stride;
                                 float *l_src_trans      = src_trans + g * src_trans_g_stride + b * src_trans_b_stride + icb * src_trans_icb_stride;
                                 for (int64_t ih = 0; ih < src_h; ih += cp.stride_h) {
                                     for (int64_t iw = 0; iw < src_w; iw += cp.stride_w) {
-                                        memcpy32_avx(l_src_trans, l_base_src + iw * kIC_DATA_BLK, kIC_DATA_BLK);
-                                        l_src_trans += kIC_DATA_BLK;
+                                        memcpy32_avx(l_src_trans, l_base_src + iw * IC_DATA_BLK, IC_DATA_BLK);
+                                        l_src_trans += IC_DATA_BLK;
                                     }
                                     l_base_src += cp.stride_h * src_h_stride;
                                 }
@@ -260,47 +257,47 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_executor::execute()
 #endif
                         for (int64_t ocl2 = 0; ocl2 < padded_reg_oc; ocl2 += sp.oc_l2_blk) {
                             for (int64_t sl2 = 0; sl2 < dst_space; sl2 += sp.s_l2_blk) {
-                                int64_t ker_param[conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kLENGTH];
+                                int64_t ker_param[conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::LENGTH];
                                 array_param_helper ker_p(ker_param);
                                 conv2d_n16cx_gemm_direct_kernel_fp32_fma ker(ker_param);
-                                ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kSRC_ICB_STRIDE_IDX) = base_src_icb_stride;
-                                ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kCHANNELS_IDX)       = icl2_eff;
-                                ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kFLAGS_IDX)          = ker_flags;
+                                ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::SRC_ICB_STRIDE_IDX) = base_src_icb_stride;
+                                ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::CHANNELS_IDX)       = icl2_eff;
+                                ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::FLAGS_IDX)          = ker_flags;
 
                                 const int64_t ocl2_eff = min(padded_reg_oc - ocl2, sp.oc_l2_blk);
                                 const int64_t sl2_eff  = min(dst_space - sl2, sp.s_l2_blk);
                                 const int64_t s_body   = round(sl2_eff, sp.s_kr_blk);
                                 const int64_t s_tail   = sl2_eff - s_body;
 
-                                const float *l_src  = base_src + b * base_src_b_stride + g * base_src_g_stride + sl2 * kIC_DATA_BLK;
-                                const float *l_his  = base_his + b * his_b_stride + g * dst_g_stride + ocl2 * dst_space + sl2 * kOC_DATA_BLK;
-                                float *l_dst        = base_dst + b * dst_b_stride + g * dst_g_stride + ocl2 * dst_space + sl2 * kOC_DATA_BLK;
+                                const float *l_src  = base_src + b * base_src_b_stride + g * base_src_g_stride + sl2 * IC_DATA_BLK;
+                                const float *l_his  = base_his + b * his_b_stride + g * dst_g_stride + ocl2 * dst_space + sl2 * OC_DATA_BLK;
+                                float *l_dst        = base_dst + b * dst_b_stride + g * dst_g_stride + ocl2 * dst_space + sl2 * OC_DATA_BLK;
                                 const float *l_flt  = base_flt + g * flt_g_stride + ocl2 * sp.ic_l2_blk;
                                 const float *l_bias = cvt_bias_ + (g + grpl3) * sp.padded_oc + ocl2;
 
-                                ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kFLT_PTR_IDX)  = l_flt;
-                                ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kBIAS_PTR_IDX) = l_bias;
-                                for (int64_t oc = ocl2; oc < ocl2 + ocl2_eff; oc += kOC_DATA_BLK) {
-                                    const int64_t oc_eff = min(ocl2 + ocl2_eff - oc, kOC_DATA_BLK);
-                                    const int64_t oc_reg = div_up(oc_eff, kOC_REG_ELTS);
+                                ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::FLT_PTR_IDX)  = l_flt;
+                                ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::BIAS_PTR_IDX) = l_bias;
+                                for (int64_t oc = ocl2; oc < ocl2 + ocl2_eff; oc += OC_DATA_BLK) {
+                                    const int64_t oc_eff = min(ocl2 + ocl2_eff - oc, OC_DATA_BLK);
+                                    const int64_t oc_reg = div_up(oc_eff, OC_REG_ELTS);
                                     if (s_body) {
-                                        ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kSRC_PTR_IDX) = l_src;
-                                        ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kHIS_PTR_IDX) = l_his;
-                                        ker_p.pick<float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kDST_PTR_IDX)       = l_dst;
-                                        ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kSPACE_IDX)        = s_body;
+                                        ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::SRC_PTR_IDX) = l_src;
+                                        ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::HIS_PTR_IDX) = l_his;
+                                        ker_p.pick<float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::DST_PTR_IDX)       = l_dst;
+                                        ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::SPACE_IDX)        = s_body;
                                         ker.execute(sp.use_nt_store, oc_reg, sp.s_kr_blk);
                                     }
                                     if (s_tail) {
-                                        ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kSRC_PTR_IDX) = l_src + s_body * kIC_DATA_BLK;
-                                        ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kHIS_PTR_IDX) = l_his + s_body * kOC_DATA_BLK;
-                                        ker_p.pick<float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kDST_PTR_IDX)       = l_dst + s_body * kOC_DATA_BLK;
-                                        ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kSPACE_IDX)        = s_tail;
+                                        ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::SRC_PTR_IDX) = l_src + s_body * IC_DATA_BLK;
+                                        ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::HIS_PTR_IDX) = l_his + s_body * OC_DATA_BLK;
+                                        ker_p.pick<float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::DST_PTR_IDX)       = l_dst + s_body * OC_DATA_BLK;
+                                        ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::SPACE_IDX)        = s_tail;
                                         ker.execute(sp.use_nt_store, oc_reg, s_tail);
                                     }
-                                    ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kFLT_PTR_IDX)  += kOC_DATA_BLK * sp.ic_l2_blk;
-                                    ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kBIAS_PTR_IDX) += kOC_DATA_BLK;
-                                    l_his += kOC_DATA_BLK * dst_space;
-                                    l_dst += kOC_DATA_BLK * dst_space;
+                                    ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::FLT_PTR_IDX)  += OC_DATA_BLK * sp.ic_l2_blk;
+                                    ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::BIAS_PTR_IDX) += OC_DATA_BLK;
+                                    l_his += OC_DATA_BLK * dst_space;
+                                    l_dst += OC_DATA_BLK * dst_space;
                                 }
                             }
                         }
@@ -326,7 +323,7 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_manager::gen_cvt_weights(
     }
 
     const int64_t oc_per_grp = param_.num_output / param_.group;
-    const int64_t padded_oc = round_up(oc_per_grp, kOC_DATA_BLK);
+    const int64_t padded_oc = round_up(oc_per_grp, OC_DATA_BLK);
     const int64_t ic_l2_blk = conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_ic_l2_blk(param_);
 
     cvt_bias_size_ = param_.group * padded_oc;
@@ -356,8 +353,8 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_manager::gen_cvt_weights(
 
 bool conv2d_n16cx_gemm_direct_fp32_fma_manager::is_supported()
 {
-    bool aligned_channels   = param_.channels / param_.group % kIC_DATA_BLK == 0;
-    bool aligned_num_output = param_.num_output / param_.group % kOC_DATA_BLK == 0;
+    bool aligned_channels   = param_.channels / param_.group % IC_DATA_BLK == 0;
+    bool aligned_num_output = param_.num_output / param_.group % OC_DATA_BLK == 0;
     return ((param_.group == 1) || (aligned_channels && aligned_num_output)) && param_.is_pointwise();
 }
 

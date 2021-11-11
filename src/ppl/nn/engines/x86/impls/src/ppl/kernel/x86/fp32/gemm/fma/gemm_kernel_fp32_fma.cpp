@@ -302,13 +302,13 @@ void gemm_fp32_fma_kernel_core(int64_t *param)
         :
         :
         [param]                         "r" (param),
-        [N_REG_ELTS]                    "i" (gemm_kernel_fp32_fma::config::n_reg_elts),
+        [N_REG_ELTS]                    "i" (gemm_kernel_fp32_fma::config::N_REG_ELTS),
         [U_M]                           "i" (u_m),
         [U_N]                           "i" (u_n),
         [U_K]                           "i" (8),
-        [KERNEL_FLAG_LOAD_C]            "i" (gemm_kernel_fp32_fma::flag::load_c),
-        [KERNEL_FLAG_RELU]              "i" (gemm_kernel_fp32_fma::flag::relu),
-        [KERNEL_FLAG_RELU6]             "i" (gemm_kernel_fp32_fma::flag::relu6)
+        [KERNEL_FLAG_LOAD_C]            "i" (gemm_kernel_fp32_fma::flag::LOAD_C),
+        [KERNEL_FLAG_RELU]              "i" (gemm_kernel_fp32_fma::flag::RELU),
+        [KERNEL_FLAG_RELU6]             "i" (gemm_kernel_fp32_fma::flag::RELU6)
         :
         "cc",
         "rax", "rbx", "rcx", "rdx",
@@ -362,15 +362,15 @@ void gemm_fp32_fma_kernel(int64_t *param)
 } while (0)
 
     array_param_helper kp(param);
-    const int64_t n_reg_elts = gemm_kernel_fp32_fma::config::n_reg_elts;
+    const int64_t n_reg_elts = gemm_kernel_fp32_fma::config::N_REG_ELTS;
     const int64_t u_nr = div_up(u_n, n_reg_elts);
-    const int64_t u_k = gemm_kernel_fp32_fma::config::unroll_k;
+    const int64_t u_k = gemm_kernel_fp32_fma::config::UNROLL_K;
 
-    const gemm_kernel_fp32_fma::flag_t flags = kp.pick<const gemm_kernel_fp32_fma::flag_t>(gemm_kernel_fp32_fma::param_def::flags_idx);
-    const float *packed_b_ptr = kp.pick<const float*>(gemm_kernel_fp32_fma::param_def::packed_b_ptr_idx);
-    float *c_ptr = kp.pick<float*>(gemm_kernel_fp32_fma::param_def::c_ptr_idx);
-    const int64_t ldpacked_b = kp.pick<const int64_t>(gemm_kernel_fp32_fma::param_def::ldpacked_b_idx);
-    int64_t n = kp.pick<int64_t>(gemm_kernel_fp32_fma::param_def::n_idx);
+    const gemm_kernel_fp32_fma::flag_t flags = kp.pick<const gemm_kernel_fp32_fma::flag_t>(gemm_kernel_fp32_fma::param_def::FLAGS_IDX);
+    const float *packed_b_ptr = kp.pick<const float*>(gemm_kernel_fp32_fma::param_def::PACKED_B_PTR_IDX);
+    float *c_ptr = kp.pick<float*>(gemm_kernel_fp32_fma::param_def::C_PTR_IDX);
+    const int64_t ldpacked_b = kp.pick<const int64_t>(gemm_kernel_fp32_fma::param_def::LDPACKED_B_IDX);
+    int64_t n = kp.pick<int64_t>(gemm_kernel_fp32_fma::param_def::N_IDX);
     do {
         __m256 ymm0, ymm1, ymm2, ymm3, ymm4, ymm5, ymm6, ymm7;
         __m256 ymm8, ymm9, ymm10, ymm11, ymm12, ymm13, ymm14, ymm15;
@@ -398,12 +398,12 @@ void gemm_fp32_fma_kernel(int64_t *param)
         }
 
         { // session - compute
-            int64_t k = kp.pick<int64_t>(gemm_kernel_fp32_fma::param_def::k_idx);
-            const int64_t lda = kp.pick<const int64_t>(gemm_kernel_fp32_fma::param_def::lda_idx);
+            int64_t k = kp.pick<int64_t>(gemm_kernel_fp32_fma::param_def::K_IDX);
+            const int64_t lda = kp.pick<const int64_t>(gemm_kernel_fp32_fma::param_def::LDA_IDX);
             const float *kpacked_b = packed_b_ptr;
             const float *ka_m0;
             const float *ka_m2;
-            if (u_m > 0) ka_m0 = kp.pick<const float*>(gemm_kernel_fp32_fma::param_def::a_ptr_idx);
+            if (u_m > 0) ka_m0 = kp.pick<const float*>(gemm_kernel_fp32_fma::param_def::A_PTR_IDX);
             if (u_m > 2) ka_m2 = ka_m0 + 2 * lda;
             while (k >= u_k) {
                 k -= u_k;
@@ -429,7 +429,7 @@ void gemm_fp32_fma_kernel(int64_t *param)
         }
         
         { // session - finalize
-            const float alpha = kp.pick<const float>(gemm_kernel_fp32_fma::param_def::alpha_idx);
+            const float alpha = kp.pick<const float>(gemm_kernel_fp32_fma::param_def::ALPHA_IDX);
             if (alpha != 1.0f) {
                 ymm12 = _mm256_set1_ps(alpha);
                 if (u_m > 0) {
@@ -454,8 +454,8 @@ void gemm_fp32_fma_kernel(int64_t *param)
                 }
             }
 
-            if (flags & gemm_kernel_fp32_fma::flag::load_c) {
-                const int64_t ldc = kp.pick<const int64_t>(gemm_kernel_fp32_fma::param_def::ldc_idx);
+            if (flags & gemm_kernel_fp32_fma::flag::LOAD_C) {
+                const int64_t ldc = kp.pick<const int64_t>(gemm_kernel_fp32_fma::param_def::LDC_IDX);
                 const float *l_c = c_ptr;
                 if (u_m > 0) {
                     if (u_nr > 0) ymm0 = _mm256_add_ps(_mm256_loadu_ps(l_c + 0 * n_reg_elts), ymm0);
@@ -482,7 +482,7 @@ void gemm_fp32_fma_kernel(int64_t *param)
                 }
             }
 
-            if (flags & (gemm_kernel_fp32_fma::flag::relu | gemm_kernel_fp32_fma::flag::relu6)) {
+            if (flags & (gemm_kernel_fp32_fma::flag::RELU | gemm_kernel_fp32_fma::flag::RELU6)) {
                 ymm13 = _mm256_setzero_ps();
                 if (u_m > 0) {
                     if (u_nr > 0) ymm0 = _mm256_max_ps(ymm13, ymm0);
@@ -506,7 +506,7 @@ void gemm_fp32_fma_kernel(int64_t *param)
                 }
             }
 
-            if (flags & gemm_kernel_fp32_fma::flag::relu6) {
+            if (flags & gemm_kernel_fp32_fma::flag::RELU6) {
                 ymm12 = _mm256_set1_ps(6.0f);
                 if (u_m > 0) {
                     if (u_nr > 0) ymm0 = _mm256_min_ps(ymm12, ymm0);
@@ -530,7 +530,7 @@ void gemm_fp32_fma_kernel(int64_t *param)
                 }
             }
 
-            const int64_t ldc = kp.pick<const int64_t>(gemm_kernel_fp32_fma::param_def::ldc_idx);
+            const int64_t ldc = kp.pick<const int64_t>(gemm_kernel_fp32_fma::param_def::LDC_IDX);
             float *l_c = c_ptr;
             if (u_m > 0) {
                 if (u_nr > 0) _mm256_storeu_ps(l_c + 0 * n_reg_elts, ymm0);
@@ -566,25 +566,25 @@ void gemm_fp32_fma_kernel(int64_t *param)
 }
 
 const gemm_kernel_fp32_fma::func_t
-    gemm_kernel_fp32_fma::table_[gemm_kernel_fp32_fma::config::max_n_regs][gemm_kernel_fp32_fma::config::max_m_regs] =
+    gemm_kernel_fp32_fma::table_[config::MAX_N_REGS][config::MAX_M_REGS] =
 {
     {
-        gemm_fp32_fma_kernel<1, 1 * gemm_kernel_fp32_fma::config::n_reg_elts>,
-        gemm_fp32_fma_kernel<2, 1 * gemm_kernel_fp32_fma::config::n_reg_elts>,
-        gemm_fp32_fma_kernel<3, 1 * gemm_kernel_fp32_fma::config::n_reg_elts>,
-        gemm_fp32_fma_kernel<4, 1 * gemm_kernel_fp32_fma::config::n_reg_elts>,
+        gemm_fp32_fma_kernel<1, 1 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_fp32_fma_kernel<2, 1 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_fp32_fma_kernel<3, 1 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_fp32_fma_kernel<4, 1 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
     },
     {
-        gemm_fp32_fma_kernel<1, 2 * gemm_kernel_fp32_fma::config::n_reg_elts>,
-        gemm_fp32_fma_kernel<2, 2 * gemm_kernel_fp32_fma::config::n_reg_elts>,
-        gemm_fp32_fma_kernel<3, 2 * gemm_kernel_fp32_fma::config::n_reg_elts>,
-        gemm_fp32_fma_kernel<4, 2 * gemm_kernel_fp32_fma::config::n_reg_elts>,
+        gemm_fp32_fma_kernel<1, 2 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_fp32_fma_kernel<2, 2 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_fp32_fma_kernel<3, 2 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_fp32_fma_kernel<4, 2 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
     },
     {
-        gemm_fp32_fma_kernel<1, 3 * gemm_kernel_fp32_fma::config::n_reg_elts>,
-        gemm_fp32_fma_kernel<2, 3 * gemm_kernel_fp32_fma::config::n_reg_elts>,
-        gemm_fp32_fma_kernel<3, 3 * gemm_kernel_fp32_fma::config::n_reg_elts>,
-        gemm_fp32_fma_kernel<4, 3 * gemm_kernel_fp32_fma::config::n_reg_elts>,
+        gemm_fp32_fma_kernel<1, 3 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_fp32_fma_kernel<2, 3 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_fp32_fma_kernel<3, 3 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_fp32_fma_kernel<4, 3 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
     },
 };
 

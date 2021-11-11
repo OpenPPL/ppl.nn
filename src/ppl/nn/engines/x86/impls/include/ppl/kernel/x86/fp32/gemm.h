@@ -19,34 +19,9 @@
 #define __ST_PPL_KERNEL_X86_FP32_GEMM_H_
 
 #include "ppl/kernel/x86/common/general_include.h"
+#include "ppl/kernel/x86/common/gemm_common.h"
 
 namespace ppl { namespace kernel { namespace x86 {
-
-typedef int32_t gemm_v_type_t;
-class gemm_v_type {
-public:
-    static const gemm_v_type_t empty = 0;
-    static const gemm_v_type_t scalar = 1;
-    static const gemm_v_type_t col_vec = 2;
-    static const gemm_v_type_t row_vec = 3;
-};
-
-typedef int32_t gemm_m_type_t;
-class gemm_m_type {
-public:
-    static const gemm_m_type_t empty = 0;
-    static const gemm_m_type_t notrans = 1;
-    static const gemm_m_type_t trans = 2;
-    static const gemm_m_type_t packed = 3;
-};
-
-typedef int32_t gemm_post_t;
-class gemm_post {
-public:
-    static const gemm_post_t none = 0;
-    static const gemm_post_t relu = 1;
-    static const gemm_post_t relu6 = 2;
-};
 
 ppl::common::RetCode gemm_ref_fp32(
     const float *A,

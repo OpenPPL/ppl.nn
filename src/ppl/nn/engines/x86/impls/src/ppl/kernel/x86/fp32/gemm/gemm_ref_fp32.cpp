@@ -41,11 +41,11 @@ ppl::common::RetCode gemm_ref_fp32(
     const gemm_post_t post,
     float *Y)
 {
-    if (typeA == gemm_m_type::packed || typeB == gemm_m_type::packed) {
+    if (typeA == gemm_m_type::PACKED || typeB == gemm_m_type::PACKED) {
         return ppl::common::RC_UNSUPPORTED;
     }
-    const bool trans_A = typeA == gemm_m_type::trans;
-    const bool trans_B = typeB == gemm_m_type::trans;
+    const bool trans_A = typeA == gemm_m_type::TRANS;
+    const bool trans_B = typeB == gemm_m_type::TRANS;
 #ifdef PPL_USE_X86_OMP_COLLAPSE
     PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)
 #endif
@@ -55,7 +55,7 @@ ppl::common::RetCode gemm_ref_fp32(
 #endif
         for (int64_t n = 0; n < N; ++n) {
             float y = 0.0f;
-            if (alpha != 0.0f && typeA != gemm_m_type::empty && typeB != gemm_m_type::empty) {
+            if (alpha != 0.0f && typeA != gemm_m_type::EMPTY && typeB != gemm_m_type::EMPTY) {
                 if (!trans_A && !trans_B) { // MK, KN; NN
                     for (int64_t k = 0; k < K; ++k) {
                         y += A[m * lda + k] * B[k * ldb + n];
@@ -80,18 +80,18 @@ ppl::common::RetCode gemm_ref_fp32(
             }
             if (beta != 0.0f) {
                 if (V) {
-                    if (typeV == gemm_v_type::row_vec) y += beta * V[n];
-                    if (typeV == gemm_v_type::col_vec) y += beta * V[m];
-                    if (typeV == gemm_v_type::scalar) y += beta * V[0];
+                    if (typeV == gemm_v_type::ROW_VEC) y += beta * V[n];
+                    if (typeV == gemm_v_type::COL_VEC) y += beta * V[m];
+                    if (typeV == gemm_v_type::SCALAR) y += beta * V[0];
                 }
                 if (H) {
-                    if (typeH == gemm_m_type::notrans) y += beta * H[m * ldh + n];
+                    if (typeH == gemm_m_type::NOTRANS) y += beta * H[m * ldh + n];
                 }
             }
-            if (post & (gemm_post::relu6 | gemm_post::relu)) {
+            if (post & (gemm_post::RELU6 | gemm_post::RELU)) {
                 y = max(y, 0.0f);
             }
-            if (post & gemm_post::relu6) {
+            if (post & gemm_post::RELU6) {
                 y = min(y, 6.0f);
             }
             Y[m * ldc + n] = y;

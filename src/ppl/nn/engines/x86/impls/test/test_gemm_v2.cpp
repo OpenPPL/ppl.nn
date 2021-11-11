@@ -70,17 +70,17 @@ ppl::common::RetCode gemm_v2_ref_fp32(const ppl::kernel::x86::gemm_v2_param_fp32
                 sum += a_val * b_val;
             }
             float c_val = 0;
-            if (param.c_type == ppl::kernel::x86::gemm_v2_C_type::scalar) {
+            if (param.c_type == ppl::kernel::x86::gemm_v2_C_type::SCALAR) {
                 c_val = param.src_C[0];
-            } else if (param.c_type == ppl::kernel::x86::gemm_v2_C_type::vector_h) {
+            } else if (param.c_type == ppl::kernel::x86::gemm_v2_C_type::VECTOR_H) {
                 c_val = param.src_C[m];
-            } else if (param.c_type == ppl::kernel::x86::gemm_v2_C_type::vector_w) {
+            } else if (param.c_type == ppl::kernel::x86::gemm_v2_C_type::VECTOR_W) {
                 c_val = param.src_C[n];
-            } else if (param.c_type == ppl::kernel::x86::gemm_v2_C_type::matrix) {
+            } else if (param.c_type == ppl::kernel::x86::gemm_v2_C_type::MATRIX) {
                 c_val = param.src_C[m * param.ldc + n];
             }
             float result = param.alpha * sum + param.beta * c_val;
-            if (param.fuse_flag & ppl::kernel::x86::gemm_v2_fuse_flag::relu) {
+            if (param.fuse_flag & ppl::kernel::x86::gemm_v2_fuse_flag::RELU) {
                 result = ppl::kernel::x86::max(result, 0.0f);
             }
             param.dst_Y[m * param.ldy + n] = result;
@@ -195,13 +195,13 @@ DEBUG_TAG(A);
 
         int64_t ldc = 0;
         int64_t C_num_elements = 0;
-        if (c_type == ppl::kernel::x86::gemm_v2_C_type::scalar) {
+        if (c_type == ppl::kernel::x86::gemm_v2_C_type::SCALAR) {
             C_num_elements = 1;
-        } else if (c_type == ppl::kernel::x86::gemm_v2_C_type::vector_h) {
+        } else if (c_type == ppl::kernel::x86::gemm_v2_C_type::VECTOR_H) {
             C_num_elements = M;
-        } else if (c_type == ppl::kernel::x86::gemm_v2_C_type::vector_w) {
+        } else if (c_type == ppl::kernel::x86::gemm_v2_C_type::VECTOR_W) {
             C_num_elements = N;
-        } else if (c_type == ppl::kernel::x86::gemm_v2_C_type::matrix) {
+        } else if (c_type == ppl::kernel::x86::gemm_v2_C_type::MATRIX) {
             C_num_elements = M * N;
             ldc = N;
         }

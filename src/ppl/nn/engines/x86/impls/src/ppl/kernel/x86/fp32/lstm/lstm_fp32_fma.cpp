@@ -42,9 +42,9 @@ uint64_t lstm_fp32_fma_get_buffer_bytes(
         return 64u;
 
     const int64_t batch = X_shape->GetDim(1);
-    const int64_t num_direction = direction == rnn_direction::bidirectional ? 2 : 1;
+    const int64_t num_direction = direction == rnn_direction::BIDIRECTIONAL ? 2 : 1;
 
-    const uint64_t gate_buff_size = batch * rnn_num_gate::lstm * hidden_size;
+    const uint64_t gate_buff_size = batch * rnn_num_gate::LSTM * hidden_size;
     const uint64_t yh_size = has_Y_h ? num_direction * batch * hidden_size : 0;
     const uint64_t yc_size = has_Y_c ? num_direction * batch * hidden_size : 0;
 
@@ -74,7 +74,7 @@ ppl::common::RetCode lstm_fp32_fma(
 
     const int64_t simd_w = 8;
 
-    const int64_t num_direction = direction == rnn_direction::bidirectional ? 2 : 1;
+    const int64_t num_direction = direction == rnn_direction::BIDIRECTIONAL ? 2 : 1;
     const int64_t seq_len = X_shape->GetDim(0);
     const int64_t batch = X_shape->GetDim(1);
     const int64_t input_size = X_shape->GetDim(2);
@@ -95,17 +95,17 @@ ppl::common::RetCode lstm_fp32_fma(
     float *gate_buf = temp_buffer_fp32;
 
     for (int64_t nd = 0; nd < num_direction; ++nd) {
-        const bool is_reverse = nd || (direction == rnn_direction::reverse);
+        const bool is_reverse = nd || (direction == rnn_direction::REVERSE);
 
         float *nd_Yh = Yh_buf + nd * batch * hidden_size;
         float *nd_Yc = Yc_buf + nd * batch * hidden_size;
         float *nd_Y = Y + nd * batch * hidden_size;
 
-        const float *nd_W = X_weight + nd * rnn_num_gate::lstm * hidden_size * input_size;
-        const float *nd_R = R_weight + nd * rnn_num_gate::lstm * hidden_size * hidden_size;
-        const float *nd_P = P_weight ? P_weight + nd * (rnn_num_gate::lstm - 1) * hidden_size : nullptr;
-        const float *nd_Wb = bias ? bias + nd * 2 * rnn_num_gate::lstm * hidden_size : nullptr;
-        const float *nd_Rb = bias ? nd_Wb + rnn_num_gate::lstm * hidden_size : nullptr;
+        const float *nd_W = X_weight + nd * rnn_num_gate::LSTM * hidden_size * input_size;
+        const float *nd_R = R_weight + nd * rnn_num_gate::LSTM * hidden_size * hidden_size;
+        const float *nd_P = P_weight ? P_weight + nd * (rnn_num_gate::LSTM - 1) * hidden_size : nullptr;
+        const float *nd_Wb = bias ? bias + nd * 2 * rnn_num_gate::LSTM * hidden_size : nullptr;
+        const float *nd_Rb = bias ? nd_Wb + rnn_num_gate::LSTM * hidden_size : nullptr;
 
         const float *nd_init_h = initial_h ? initial_h + nd * batch * hidden_size : nullptr;
         const float *nd_init_c = initial_c ? initial_c + nd * batch * hidden_size : nullptr;
@@ -128,20 +128,20 @@ ppl::common::RetCode lstm_fp32_fma(
 
             gemm_fp32_fma( // X[s]*W[nd]_{iofc}^T+Wb_{iofc}
                 sX, nd_W, nd_Wb, nullptr,
-                gemm_m_type::notrans, gemm_m_type::trans,
-                gemm_v_type::row_vec, gemm_m_type::empty,
-                batch, rnn_num_gate::lstm * hidden_size, input_size,
-                input_size, input_size, rnn_num_gate::lstm * hidden_size, 0,
-                1.0f, 1.0f, gemm_post::none, gate_buf);
+                gemm_m_type::NOTRANS, gemm_m_type::TRANS,
+                gemm_v_type::ROW_VEC, gemm_m_type::EMPTY,
+                batch, rnn_num_gate::LSTM * hidden_size, input_size,
+                input_size, input_size, rnn_num_gate::LSTM * hidden_size, 0,
+                1.0f, 1.0f, gemm_post::NONE, gate_buf);
 
             const float alpha = !Y_h_prev ? 0.0f : 1.0f; // some hack, gemm will skip aAxB if alpha is 0
             gemm_fp32_fma( // h_0[nd]*R[nd]_{iofc}^T+Rb_{iofc}
                 Y_h_prev, nd_R, nd_Rb, gate_buf,
-                gemm_m_type::notrans, gemm_m_type::trans,
-                gemm_v_type::row_vec, gemm_m_type::notrans,
-                batch, rnn_num_gate::lstm * hidden_size, hidden_size,
-                hidden_size, hidden_size, rnn_num_gate::lstm * hidden_size, rnn_num_gate::lstm * hidden_size,
-                alpha, 1.0f, gemm_post::none, gate_buf);
+                gemm_m_type::NOTRANS, gemm_m_type::TRANS,
+                gemm_v_type::ROW_VEC, gemm_m_type::NOTRANS,
+                batch, rnn_num_gate::LSTM * hidden_size, hidden_size,
+                hidden_size, hidden_size, rnn_num_gate::LSTM * hidden_size, rnn_num_gate::LSTM * hidden_size,
+                alpha, 1.0f, gemm_post::NONE, gate_buf);
 
             if (is_first_seq && !Y_h_prev) {
                 Y_h_prev = nd_Yh; // preprocess Y_h_prev
@@ -156,7 +156,7 @@ ppl::common::RetCode lstm_fp32_fma(
 PRAGMA_OMP_PARALLEL_FOR()
                 for (int64_t b = 0; b < batch; ++b) {
                     if (!sequence_lens || seq_idx < sequence_lens[b]) {
-                        const float *gI = gate_buf + b * rnn_num_gate::lstm * hidden_size;
+                        const float *gI = gate_buf + b * rnn_num_gate::LSTM * hidden_size;
                         const float *gO = gI + hidden_size;
                         const float *gF = gO + hidden_size;
                         const float *gC = gF + hidden_size;
@@ -202,7 +202,7 @@ PRAGMA_OMP_PARALLEL_FOR()
 PRAGMA_OMP_PARALLEL_FOR()
                 for (int64_t b = 0; b < batch; ++b) {
                     if (!sequence_lens || seq_idx < sequence_lens[b]) {
-                        const float *gI = gate_buf + b * rnn_num_gate::lstm * hidden_size;
+                        const float *gI = gate_buf + b * rnn_num_gate::LSTM * hidden_size;
                         const float *gO = gI + hidden_size;
                         const float *gF = gO + hidden_size;
                         const float *gC = gF + hidden_size;

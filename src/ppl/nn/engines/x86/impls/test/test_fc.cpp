@@ -157,7 +157,7 @@ DEBUG_TAG(A);
         ppl::kernel::x86::fc_fp32_algo_info algoinfo;
 
         algoinfo = ppl::kernel::x86::fc_algo_selector::select_algo(ppl::common::DATAFORMAT_NDARRAY, param, ppl::common::GetCpuISA());
-        if (algoinfo.algo_type == ppl::kernel::x86::fc_fp32_algo::unknown) {
+        if (algoinfo.algo_type == ppl::kernel::x86::fc_fp32_algo::UNKNOWN) {
             std::cerr << "," << "unsupported case\n";
             continue;
         }
@@ -312,13 +312,13 @@ DEBUG_TAG(O);
         if (Flag_validate) {
             if (ppl::common::RC_SUCCESS != ppl::kernel::x86::gemm_ref_fp32(
                     src, filter, bias, nullptr,
-                    ppl::kernel::x86::gemm_m_type::notrans,
-                    ppl::kernel::x86::gemm_m_type::trans,
-                    ppl::kernel::x86::gemm_v_type::row_vec,
-                    ppl::kernel::x86::gemm_m_type::empty,
+                    ppl::kernel::x86::gemm_m_type::NOTRANS,
+                    ppl::kernel::x86::gemm_m_type::TRANS,
+                    ppl::kernel::x86::gemm_v_type::ROW_VEC,
+                    ppl::kernel::x86::gemm_m_type::EMPTY,
                     M, N, K, K, K, N, 0,
                     1.0f, 1.0f,
-                    ppl::kernel::x86::gemm_post::none,
+                    ppl::kernel::x86::gemm_post::NONE,
                     dst_ref)) {
                 std::cerr << "," << "gemm_ref_fp32 failed\n";
                 return -1;

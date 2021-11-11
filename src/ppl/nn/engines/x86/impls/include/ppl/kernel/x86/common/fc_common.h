@@ -27,8 +27,8 @@ typedef uint64_t fc_fuse_flag_t;
 class fc_fuse_flag {
 public:
     enum {
-        none  = 0,
-        relu  = 1 << 0,
+        NONE  = 0,
+        RELU  = 1 << 0,
     };
 };
 
