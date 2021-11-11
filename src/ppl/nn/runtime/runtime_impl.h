@@ -75,6 +75,13 @@ public:
     ppl::common::RetCode Run() override;
     ppl::common::RetCode Sync() override;
 
+    uint32_t GetDeviceContextCount() const override {
+        return devices_.size();
+    }
+    DeviceContext* GetDeviceContext(uint32_t idx) const override {
+        return devices_[idx]->GetContext();
+    }
+
     ppl::common::RetCode GetProfilingStatistics(ProfilingStatistics* stat) const override;
 
 private:

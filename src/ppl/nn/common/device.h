@@ -22,6 +22,7 @@
 #include "ppl/common/allocator.h"
 #include "ppl/nn/common/tensor_shape.h"
 #include "ppl/nn/common/buffer_desc.h"
+#include "ppl/nn/common/device_context.h"
 #include "ppl/nn/common/data_converter.h"
 #include "ppl/nn/common/types.h"
 
@@ -94,6 +95,9 @@ public:
 
     /** @brief get DataConverter that can process data on this device */
     virtual const DataConverter* GetDataConverter() const = 0;
+
+    /** @brief get context of this device */
+    virtual DeviceContext* GetContext() const = 0;
 };
 
 }} // namespace ppl::nn

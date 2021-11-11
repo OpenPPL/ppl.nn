@@ -50,8 +50,24 @@ public:
         return &data_converter_;
     }
 
+    DeviceContext* GetContext() const override {
+        return &context_;
+    }
+
+private:
+    class CpuDeviceContext final : public DeviceContext {
+    public:
+        const char* GetType() const override {
+            return "cpu";
+        }
+        ppl::common::RetCode Configure(uint32_t, ...) override {
+            return ppl::common::RC_UNSUPPORTED;
+        }
+    };
+
 private:
     mutable ppl::common::GenericCpuAllocator allocator_;
+    mutable CpuDeviceContext context_;
     GenericCpuDataConverter data_converter_;
 };
 
