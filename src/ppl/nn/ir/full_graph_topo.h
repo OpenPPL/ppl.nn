@@ -65,7 +65,7 @@ public:
     };
 
 public:
-    FullGraphTopo() {}
+    FullGraphTopo(const std::string& name) : GraphTopo(name) {}
 
     // ----- //
 
