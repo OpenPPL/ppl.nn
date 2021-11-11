@@ -155,7 +155,7 @@ void conv2d_n16cx_direct_ndarray_fp32_fma_blk1x6_kernel(
             ic_flt += flt_c_stride;
         }
 
-        if (param->fuse_flag & conv_fuse_flag::sum) {
+        if (param->fuse_flag & conv_fuse_flag::SUM) {
             if (w_len > 0) {
                 if (oc_len > 0 * OC_RF_BLK()) ymm0 = _mm256_add_ps(_mm256_loadu_ps(w_sum_src + 0 * OC_DT_BLK() + 0 * OC_RF_BLK()), ymm0);
                 if (oc_len > 1 * OC_RF_BLK()) ymm10 = _mm256_add_ps(_mm256_loadu_ps(w_sum_src + 0 * OC_DT_BLK() + 1 * OC_RF_BLK()), ymm10);
@@ -182,7 +182,7 @@ void conv2d_n16cx_direct_ndarray_fp32_fma_blk1x6_kernel(
             }
         }
 
-        if (param->fuse_flag & (conv_fuse_flag::relu | conv_fuse_flag::relu6)) {
+        if (param->fuse_flag & (conv_fuse_flag::RELU | conv_fuse_flag::RELU6)) {
             ymm8 = _mm256_setzero_ps();
             if (oc_len > 0 * OC_RF_BLK()) {
                 if (w_len > 0) ymm0 = _mm256_max_ps(ymm0, ymm8);
@@ -202,7 +202,7 @@ void conv2d_n16cx_direct_ndarray_fp32_fma_blk1x6_kernel(
             }
         }
 
-        if (param->fuse_flag & conv_fuse_flag::relu6) {
+        if (param->fuse_flag & conv_fuse_flag::RELU6) {
             ymm9 = _mm256_set1_ps(6.0f);
             if (oc_len > 0 * OC_RF_BLK()) {
                 if (w_len > 0) ymm0 = _mm256_min_ps(ymm0, ymm9);

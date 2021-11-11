@@ -367,14 +367,14 @@ void conv_gemm_kernel_fp32_sse_kernel_core(
         :
         [param]                       "r" (param),
         [six]                         "r" (six),
-        [N_REGB_ELTS]                 "i" (conv_gemm_kernel_fp32_sse::config::n_regb_elts),
-        [N_REG_ELTS]                  "i" (conv_gemm_kernel_fp32_sse::config::n_reg_elts),
+        [N_REGB_ELTS]                 "i" (conv_gemm_kernel_fp32_sse::config::N_REGB_ELTS),
+        [N_REG_ELTS]                  "i" (conv_gemm_kernel_fp32_sse::config::N_REG_ELTS),
         [U_N]                         "i" (u_n),
-        [U_K]                         "i" (conv_gemm_kernel_fp32_sse::config::unroll_k),
-        [KERNEL_FLAG_LOAD_H]          "i" (conv_gemm_kernel_fp32_sse::flag::load_h),
-        [KERNEL_FLAG_ADD_V]           "i" (conv_gemm_kernel_fp32_sse::flag::add_v),
-        [KERNEL_FLAG_RELU]            "i" (conv_gemm_kernel_fp32_sse::flag::relu),
-        [KERNEL_FLAG_RELU6]           "i" (conv_gemm_kernel_fp32_sse::flag::relu6)
+        [U_K]                         "i" (conv_gemm_kernel_fp32_sse::config::UNROLL_K),
+        [KERNEL_FLAG_LOAD_H]          "i" (conv_gemm_kernel_fp32_sse::flag::LOAD_H),
+        [KERNEL_FLAG_ADD_V]           "i" (conv_gemm_kernel_fp32_sse::flag::ADD_V),
+        [KERNEL_FLAG_RELU]            "i" (conv_gemm_kernel_fp32_sse::flag::RELU),
+        [KERNEL_FLAG_RELU6]           "i" (conv_gemm_kernel_fp32_sse::flag::RELU6)
         :
         "cc",
         "rax", "rbx", "rcx",
@@ -453,18 +453,18 @@ void conv_gemm_fp32_sse_kernel(
     __m128 xmm8, xmm9, xmm10, xmm11, xmm12, xmm13, xmm14, xmm15;
 
     array_param_helper kp(param);
-    const int64_t n_regb_elts = conv_gemm_kernel_fp32_sse::config::n_regb_elts;
-    const int64_t n_reg_elts = conv_gemm_kernel_fp32_sse::config::n_reg_elts;
+    const int64_t n_regb_elts = conv_gemm_kernel_fp32_sse::config::N_REGB_ELTS;
+    const int64_t n_reg_elts = conv_gemm_kernel_fp32_sse::config::N_REG_ELTS;
     const int64_t u_nb       = div_up(u_n, n_regb_elts);
-    const int64_t u_k        = conv_gemm_kernel_fp32_sse::config::unroll_k;
-    const int64_t flags      = kp.pick<const int64_t>(conv_gemm_kernel_fp32_sse::param_def::flags_idx);
+    const int64_t u_k        = conv_gemm_kernel_fp32_sse::config::UNROLL_K;
+    const int64_t flags      = kp.pick<const int64_t>(conv_gemm_kernel_fp32_sse::param_def::FLAGS_IDX);
 
-    const float *a_ptr = kp.pick<const float*>(conv_gemm_kernel_fp32_sse::param_def::a_ptr_idx);
-    const float *h_ptr = kp.pick<const float*>(conv_gemm_kernel_fp32_sse::param_def::h_ptr_idx);
-    float *c_ptr       = kp.pick<float*>(conv_gemm_kernel_fp32_sse::param_def::c_ptr_idx);
-    int64_t m          = kp.pick<int64_t>(conv_gemm_kernel_fp32_sse::param_def::m_idx);
+    const float *a_ptr = kp.pick<const float*>(conv_gemm_kernel_fp32_sse::param_def::A_PTR_IDX);
+    const float *h_ptr = kp.pick<const float*>(conv_gemm_kernel_fp32_sse::param_def::H_PTR_IDX);
+    float *c_ptr       = kp.pick<float*>(conv_gemm_kernel_fp32_sse::param_def::C_PTR_IDX);
+    int64_t m          = kp.pick<int64_t>(conv_gemm_kernel_fp32_sse::param_def::M_IDX);
     do {
-        if (flags & conv_gemm_kernel_fp32_sse::flag::load_h) {
+        if (flags & conv_gemm_kernel_fp32_sse::flag::LOAD_H) {
             if (u_nb > 0) {
                 xmm0 = _mm_loadu_ps(h_ptr + 0 * n_regb_elts + 0 * n_reg_elts);
                 xmm1 = _mm_loadu_ps(h_ptr + 0 * n_regb_elts + 1 * n_reg_elts);
@@ -489,7 +489,7 @@ void conv_gemm_fp32_sse_kernel(
                 xmm10 = _mm_loadu_ps(h_ptr + 5 * n_regb_elts + 0 * n_reg_elts);
                 xmm11 = _mm_loadu_ps(h_ptr + 5 * n_regb_elts + 1 * n_reg_elts);
             }
-            h_ptr += kp.pick<const int64_t>(conv_gemm_kernel_fp32_sse::param_def::ldh_idx);
+            h_ptr += kp.pick<const int64_t>(conv_gemm_kernel_fp32_sse::param_def::LDH_IDX);
         } else {
             if (u_nb > 0) {
                 xmm0 = _mm_setzero_ps();
@@ -517,12 +517,12 @@ void conv_gemm_fp32_sse_kernel(
             }
         }
         
-        const int64_t ldpacked_b = kp.pick<const int64_t>(conv_gemm_kernel_fp32_sse::param_def::ldpacked_b_idx);
-        const float *kpacked_b_n24 = kp.pick<const float*>(conv_gemm_kernel_fp32_sse::param_def::packed_b_ptr_idx);
+        const int64_t ldpacked_b = kp.pick<const int64_t>(conv_gemm_kernel_fp32_sse::param_def::LDPACKED_B_IDX);
+        const float *kpacked_b_n24 = kp.pick<const float*>(conv_gemm_kernel_fp32_sse::param_def::PACKED_B_PTR_IDX);
         const float *kpacked_b_n48 = u_nb > 3 ? kpacked_b_n24 + 3 * ldpacked_b : nullptr;
 
         const float *ka = a_ptr;
-        int64_t k       = kp.pick<const int64_t>(conv_gemm_kernel_fp32_sse::param_def::k_idx);
+        int64_t k       = kp.pick<const int64_t>(conv_gemm_kernel_fp32_sse::param_def::K_IDX);
         while (k >= u_k) {
             k -= u_k;
             K_COMPUTE_STEP(0);
@@ -545,8 +545,8 @@ void conv_gemm_fp32_sse_kernel(
             ka += 1;
         }
 
-        if (flags & conv_gemm_kernel_fp32_sse::flag::add_v) {
-            const float *v_ptr = kp.pick<const float*>(conv_gemm_kernel_fp32_sse::param_def::v_ptr_idx);
+        if (flags & conv_gemm_kernel_fp32_sse::flag::ADD_V) {
+            const float *v_ptr = kp.pick<const float*>(conv_gemm_kernel_fp32_sse::param_def::V_PTR_IDX);
             if (u_nb > 0) {
                 xmm0 = _mm_add_ps(_mm_loadu_ps(v_ptr + 0 * n_regb_elts + 0 * n_reg_elts), xmm0);
                 xmm1 = _mm_add_ps(_mm_loadu_ps(v_ptr + 0 * n_regb_elts + 1 * n_reg_elts), xmm1);
@@ -573,7 +573,7 @@ void conv_gemm_fp32_sse_kernel(
             }
         }
 
-        if (flags & (conv_gemm_kernel_fp32_sse::flag::relu | conv_gemm_kernel_fp32_sse::flag::relu6)) {
+        if (flags & (conv_gemm_kernel_fp32_sse::flag::RELU | conv_gemm_kernel_fp32_sse::flag::RELU6)) {
             xmm14 = _mm_setzero_ps();
             if (u_nb > 0) {
                 xmm0 = _mm_max_ps(xmm0, xmm14);
@@ -600,7 +600,7 @@ void conv_gemm_fp32_sse_kernel(
                 xmm11 = _mm_max_ps(xmm11, xmm14);
             }
 
-            if (flags & conv_gemm_kernel_fp32_sse::flag::relu6) {
+            if (flags & conv_gemm_kernel_fp32_sse::flag::RELU6) {
                 xmm13 = _mm_set1_ps(6.0f);
                 if (u_nb > 0) {
                     xmm0 = _mm_min_ps(xmm0, xmm13);
@@ -653,22 +653,22 @@ void conv_gemm_fp32_sse_kernel(
             _mm_storeu_ps(c_ptr + 5 * n_regb_elts + 0 * n_reg_elts, xmm10);
             _mm_storeu_ps(c_ptr + 5 * n_regb_elts + 1 * n_reg_elts, xmm11);
         }
-        a_ptr += kp.pick<const int64_t>(conv_gemm_kernel_fp32_sse::param_def::lda_idx);
-        c_ptr += kp.pick<const int64_t>(conv_gemm_kernel_fp32_sse::param_def::ldc_idx);
+        a_ptr += kp.pick<const int64_t>(conv_gemm_kernel_fp32_sse::param_def::LDA_IDX);
+        c_ptr += kp.pick<const int64_t>(conv_gemm_kernel_fp32_sse::param_def::LDC_IDX);
         m -= 1;
     } while (m > 0);
 #undef K_COMPUTE_STEP
 }
 
 const conv_gemm_kernel_fp32_sse::func_t
-    conv_gemm_kernel_fp32_sse::table_[config::max_n_regbs] =
+    conv_gemm_kernel_fp32_sse::table_[config::MAX_N_REGBS] =
 {
-    conv_gemm_fp32_sse_kernel<1 * conv_gemm_kernel_fp32_sse::config::n_regb_elts>,\
-    conv_gemm_fp32_sse_kernel<2 * conv_gemm_kernel_fp32_sse::config::n_regb_elts>,\
-    conv_gemm_fp32_sse_kernel<3 * conv_gemm_kernel_fp32_sse::config::n_regb_elts>,\
-    conv_gemm_fp32_sse_kernel<4 * conv_gemm_kernel_fp32_sse::config::n_regb_elts>,\
-    conv_gemm_fp32_sse_kernel<5 * conv_gemm_kernel_fp32_sse::config::n_regb_elts>,\
-    conv_gemm_fp32_sse_kernel<6 * conv_gemm_kernel_fp32_sse::config::n_regb_elts>,\
+    conv_gemm_fp32_sse_kernel<1 * conv_gemm_kernel_fp32_sse::config::N_REGB_ELTS>,\
+    conv_gemm_fp32_sse_kernel<2 * conv_gemm_kernel_fp32_sse::config::N_REGB_ELTS>,\
+    conv_gemm_fp32_sse_kernel<3 * conv_gemm_kernel_fp32_sse::config::N_REGB_ELTS>,\
+    conv_gemm_fp32_sse_kernel<4 * conv_gemm_kernel_fp32_sse::config::N_REGB_ELTS>,\
+    conv_gemm_fp32_sse_kernel<5 * conv_gemm_kernel_fp32_sse::config::N_REGB_ELTS>,\
+    conv_gemm_fp32_sse_kernel<6 * conv_gemm_kernel_fp32_sse::config::N_REGB_ELTS>,\
 };
 
 }}};

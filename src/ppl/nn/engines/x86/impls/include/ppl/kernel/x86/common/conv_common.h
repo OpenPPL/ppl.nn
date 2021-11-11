@@ -27,10 +27,10 @@ typedef uint64_t conv_fuse_flag_t;
 class conv_fuse_flag {
 public:
     enum {
-        none  = 0,
-        relu  = 1 << 0,
-        relu6 = 1 << 1,
-        sum   = 1 << 16,
+        NONE  = 0,
+        RELU  = 1 << 0,
+        RELU6 = 1 << 1,
+        SUM   = 1 << 16,
     };
 };
 

@@ -74,7 +74,7 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
 
         fc_param_->algo_info = ppl::kernel::x86::fc_algo_selector::select_algo(
             ppl::common::DATAFORMAT_NDARRAY, fc_param_->param, options.device->GetISA());
-        if (fc_param_->algo_info.algo_type == ppl::kernel::x86::fc_fp32_algo::unknown) {
+        if (fc_param_->algo_info.algo_type == ppl::kernel::x86::fc_fp32_algo::UNKNOWN) {
             LOG(INFO) << "FC select algorithm failed, use fallback kernel";
         } else {
             fc_param_->mgr = ppl::kernel::x86::fc_algo_selector::gen_algo(fc_param_->param, fc_param_->algo_info,
@@ -100,16 +100,16 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
 
 bool GemmOp::TryFuseReLU() {
     gemm_fuse_relu_ = true;
-    if (fc_param_ && fc_param_->algo_info.algo_type != ppl::kernel::x86::fc_fp32_algo::unknown) {
+    if (fc_param_ && fc_param_->algo_info.algo_type != ppl::kernel::x86::fc_fp32_algo::UNKNOWN) {
         ppl::kernel::x86::fc_fp32_param param = fc_param_->mgr->param();
-        param.fuse_flag |= ppl::kernel::x86::fc_fuse_flag::relu;
+        param.fuse_flag |= ppl::kernel::x86::fc_fuse_flag::RELU;
         fc_param_->mgr->set_param(param);
     }
     return true;
 }
 
 KernelImpl* GemmOp::CreateKernelImpl() const {
-    if (fc_param_ && fc_param_->algo_info.algo_type != ppl::kernel::x86::fc_fp32_algo::unknown) {
+    if (fc_param_ && fc_param_->algo_info.algo_type != ppl::kernel::x86::fc_fp32_algo::UNKNOWN) {
         return CreateKernelImplWithParam<FCKernel>(fc_param_);
     } else {
         auto kernel = CreateKernelImplWithParam<GemmKernel>(param_.get());

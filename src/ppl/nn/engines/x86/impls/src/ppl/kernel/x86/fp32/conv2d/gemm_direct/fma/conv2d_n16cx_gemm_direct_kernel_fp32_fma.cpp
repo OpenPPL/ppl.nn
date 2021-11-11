@@ -357,13 +357,13 @@ void conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel_core(int64_t *param)
         [param]                       "r" (param),
         [NT_STORE]                    "i" (nt_store),
         [U_S]                         "i" (u_s),
-        [IC_DATA_BLK]                 "i" (conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kIC_DATA_BLK),
-        [OC_DATA_BLK]                 "i" (conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_DATA_BLK),
-        [OC_REG_ELTS]                 "i" (conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_REG_ELTS),
-        [KERNEL_FLAG_LD_BIAS]         "i" (conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::kLOAD_BIAS),
-        [KERNEL_FLAG_AD_BIAS]         "i" (conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::kADD_BIAS),
-        [KERNEL_FLAG_RELU]            "i" (conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::kRELU),
-        [KERNEL_FLAG_RELU6]           "i" (conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::kRELU6)
+        [IC_DATA_BLK]                 "i" (conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::IC_DATA_BLK),
+        [OC_DATA_BLK]                 "i" (conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_DATA_BLK),
+        [OC_REG_ELTS]                 "i" (conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_REG_ELTS),
+        [KERNEL_FLAG_LD_BIAS]         "i" (conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::LOAD_BIAS),
+        [KERNEL_FLAG_AD_BIAS]         "i" (conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::ADD_BIAS),
+        [KERNEL_FLAG_RELU]            "i" (conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU),
+        [KERNEL_FLAG_RELU6]           "i" (conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU6)
         :
         "cc",
         "rax", "rbx", "rcx",
@@ -380,42 +380,42 @@ template <bool nt_store, int32_t u_oc, int32_t u_s>
 void conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel(int64_t *param)
 {
 #ifdef PPL_USE_X86_INLINE_ASM
-    if (u_oc == 2 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_REG_ELTS) {
+    if (u_oc == 2 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_REG_ELTS) {
         conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel_core<nt_store, u_s>(param);
         return;
     }
 #endif
 
 #define IC_COMPUTE_STEP(IC) do {\
-    if (u_ocr > 0) ymm14 = _mm256_loadu_ps(ic_flt + (IC) * kOC_DATA_BLK + 0 * kOC_REG_ELTS);\
-    if (u_ocr > 1) ymm15 = _mm256_loadu_ps(ic_flt + (IC) * kOC_DATA_BLK + 1 * kOC_REG_ELTS);\
+    if (u_ocr > 0) ymm14 = _mm256_loadu_ps(ic_flt + (IC) * OC_DATA_BLK + 0 * OC_REG_ELTS);\
+    if (u_ocr > 1) ymm15 = _mm256_loadu_ps(ic_flt + (IC) * OC_DATA_BLK + 1 * OC_REG_ELTS);\
     if (u_s > 0) {\
-        ymm12 = _mm256_set1_ps(ic_src[(IC) + 0 * kIC_DATA_BLK]);\
+        ymm12 = _mm256_set1_ps(ic_src[(IC) + 0 * IC_DATA_BLK]);\
         if (u_ocr > 0) ymm0 = _mm256_fmadd_ps(ymm14, ymm12, ymm0);\
         if (u_ocr > 1) ymm1 = _mm256_fmadd_ps(ymm15, ymm12, ymm1);\
     }\
     if (u_s > 1) {\
-        ymm13 = _mm256_set1_ps(ic_src[(IC) + 1 * kIC_DATA_BLK]);\
+        ymm13 = _mm256_set1_ps(ic_src[(IC) + 1 * IC_DATA_BLK]);\
         if (u_ocr > 0) ymm2 = _mm256_fmadd_ps(ymm14, ymm13, ymm2);\
         if (u_ocr > 1) ymm3 = _mm256_fmadd_ps(ymm15, ymm13, ymm3);\
     }\
     if (u_s > 2) {\
-        ymm12 = _mm256_set1_ps(ic_src[(IC) + 2 * kIC_DATA_BLK]);\
+        ymm12 = _mm256_set1_ps(ic_src[(IC) + 2 * IC_DATA_BLK]);\
         if (u_ocr > 0) ymm4 = _mm256_fmadd_ps(ymm14, ymm12, ymm4);\
         if (u_ocr > 1) ymm5 = _mm256_fmadd_ps(ymm15, ymm12, ymm5);\
     }\
     if (u_s > 3) {\
-        ymm13 = _mm256_set1_ps(ic_src[(IC) + 3 * kIC_DATA_BLK]);\
+        ymm13 = _mm256_set1_ps(ic_src[(IC) + 3 * IC_DATA_BLK]);\
         if (u_ocr > 0) ymm6 = _mm256_fmadd_ps(ymm14, ymm13, ymm6);\
         if (u_ocr > 1) ymm7 = _mm256_fmadd_ps(ymm15, ymm13, ymm7);\
     }\
     if (u_s > 4) {\
-        ymm12 = _mm256_set1_ps(ic_src[(IC) + 4 * kIC_DATA_BLK]);\
+        ymm12 = _mm256_set1_ps(ic_src[(IC) + 4 * IC_DATA_BLK]);\
         if (u_ocr > 0) ymm8 = _mm256_fmadd_ps(ymm14, ymm12, ymm8);\
         if (u_ocr > 1) ymm9 = _mm256_fmadd_ps(ymm15, ymm12, ymm9);\
     }\
     if (u_s > 5) {\
-        ymm13 = _mm256_set1_ps(ic_src[(IC) + 5 * kIC_DATA_BLK]);\
+        ymm13 = _mm256_set1_ps(ic_src[(IC) + 5 * IC_DATA_BLK]);\
         if (u_ocr > 0) ymm10 = _mm256_fmadd_ps(ymm14, ymm13, ymm10);\
         if (u_ocr > 1) ymm11 = _mm256_fmadd_ps(ymm15, ymm13, ymm11);\
     }\
@@ -424,26 +424,26 @@ void conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel(int64_t *param)
     __m256 ymm0, ymm1, ymm2, ymm3, ymm4, ymm5, ymm6, ymm7;
     __m256 ymm8, ymm9, ymm10, ymm11, ymm12, ymm13, ymm14, ymm15;
 
-    const int64_t kIC_DATA_BLK = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kIC_DATA_BLK;
-    const int64_t kOC_DATA_BLK = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_DATA_BLK;
-    const int64_t kOC_REG_ELTS = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_REG_ELTS;
-    const int64_t u_ocr = div_up(u_oc, kOC_REG_ELTS);
+    const int64_t IC_DATA_BLK = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::IC_DATA_BLK;
+    const int64_t OC_DATA_BLK = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_DATA_BLK;
+    const int64_t OC_REG_ELTS = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_REG_ELTS;
+    const int64_t u_ocr = div_up(u_oc, OC_REG_ELTS);
 
     array_param_helper ker_p(param);
 
-    const int64_t src_icb_stride = ker_p.pick<const int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kSRC_ICB_STRIDE_IDX);
-    const int64_t flags = ker_p.pick<const int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kFLAGS_IDX);
+    const int64_t src_icb_stride = ker_p.pick<const int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::SRC_ICB_STRIDE_IDX);
+    const int64_t flags = ker_p.pick<const int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::FLAGS_IDX);
 
-    const float *src = ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kSRC_PTR_IDX);
-    const float *his = ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kHIS_PTR_IDX);
-    float *dst       = ker_p.pick<float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kDST_PTR_IDX);
-    int64_t space    = ker_p.pick<const int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kSPACE_IDX);
+    const float *src = ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::SRC_PTR_IDX);
+    const float *his = ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::HIS_PTR_IDX);
+    float *dst       = ker_p.pick<float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::DST_PTR_IDX);
+    int64_t space    = ker_p.pick<const int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::SPACE_IDX);
     do {
-        if (flags & conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::kLOAD_BIAS) {
-            const float* bias = ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kBIAS_PTR_IDX);
+        if (flags & conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::LOAD_BIAS) {
+            const float* bias = ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::BIAS_PTR_IDX);
             if (u_s > 0) {
-                if (u_ocr > 0) ymm0 = _mm256_loadu_ps(bias + 0 * kOC_REG_ELTS);
-                if (u_ocr > 1) ymm1 = _mm256_loadu_ps(bias + 1 * kOC_REG_ELTS);
+                if (u_ocr > 0) ymm0 = _mm256_loadu_ps(bias + 0 * OC_REG_ELTS);
+                if (u_ocr > 1) ymm1 = _mm256_loadu_ps(bias + 1 * OC_REG_ELTS);
             }
             if (u_s > 1) {
                 if (u_ocr > 0) ymm2 = ymm0;
@@ -467,35 +467,35 @@ void conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel(int64_t *param)
             }
         } else {
             if (u_s > 0) {
-                if (u_ocr > 0) ymm0 = _mm256_loadu_ps(his + 0 * kOC_DATA_BLK + 0 * kOC_REG_ELTS);
-                if (u_ocr > 1) ymm1 = _mm256_loadu_ps(his + 0 * kOC_DATA_BLK + 1 * kOC_REG_ELTS);
+                if (u_ocr > 0) ymm0 = _mm256_loadu_ps(his + 0 * OC_DATA_BLK + 0 * OC_REG_ELTS);
+                if (u_ocr > 1) ymm1 = _mm256_loadu_ps(his + 0 * OC_DATA_BLK + 1 * OC_REG_ELTS);
             }
             if (u_s > 1) {
-                if (u_ocr > 0) ymm2 = _mm256_loadu_ps(his + 1 * kOC_DATA_BLK + 0 * kOC_REG_ELTS);
-                if (u_ocr > 1) ymm3 = _mm256_loadu_ps(his + 1 * kOC_DATA_BLK + 1 * kOC_REG_ELTS);
+                if (u_ocr > 0) ymm2 = _mm256_loadu_ps(his + 1 * OC_DATA_BLK + 0 * OC_REG_ELTS);
+                if (u_ocr > 1) ymm3 = _mm256_loadu_ps(his + 1 * OC_DATA_BLK + 1 * OC_REG_ELTS);
             }
             if (u_s > 2) {
-                if (u_ocr > 0) ymm4 = _mm256_loadu_ps(his + 2 * kOC_DATA_BLK + 0 * kOC_REG_ELTS);
-                if (u_ocr > 1) ymm5 = _mm256_loadu_ps(his + 2 * kOC_DATA_BLK + 1 * kOC_REG_ELTS);
+                if (u_ocr > 0) ymm4 = _mm256_loadu_ps(his + 2 * OC_DATA_BLK + 0 * OC_REG_ELTS);
+                if (u_ocr > 1) ymm5 = _mm256_loadu_ps(his + 2 * OC_DATA_BLK + 1 * OC_REG_ELTS);
             }
             if (u_s > 3) {
-                if (u_ocr > 0) ymm6 = _mm256_loadu_ps(his + 3 * kOC_DATA_BLK + 0 * kOC_REG_ELTS);
-                if (u_ocr > 1) ymm7 = _mm256_loadu_ps(his + 3 * kOC_DATA_BLK + 1 * kOC_REG_ELTS);
+                if (u_ocr > 0) ymm6 = _mm256_loadu_ps(his + 3 * OC_DATA_BLK + 0 * OC_REG_ELTS);
+                if (u_ocr > 1) ymm7 = _mm256_loadu_ps(his + 3 * OC_DATA_BLK + 1 * OC_REG_ELTS);
             }
             if (u_s > 4) {
-                if (u_ocr > 0) ymm8 = _mm256_loadu_ps(his + 4 * kOC_DATA_BLK + 0 * kOC_REG_ELTS);
-                if (u_ocr > 1) ymm9 = _mm256_loadu_ps(his + 4 * kOC_DATA_BLK + 1 * kOC_REG_ELTS);
+                if (u_ocr > 0) ymm8 = _mm256_loadu_ps(his + 4 * OC_DATA_BLK + 0 * OC_REG_ELTS);
+                if (u_ocr > 1) ymm9 = _mm256_loadu_ps(his + 4 * OC_DATA_BLK + 1 * OC_REG_ELTS);
             }
             if (u_s > 5) {
-                if (u_ocr > 0) ymm10 = _mm256_loadu_ps(his + 5 * kOC_DATA_BLK + 0 * kOC_REG_ELTS);
-                if (u_ocr > 1) ymm11 = _mm256_loadu_ps(his + 5 * kOC_DATA_BLK + 1 * kOC_REG_ELTS);
+                if (u_ocr > 0) ymm10 = _mm256_loadu_ps(his + 5 * OC_DATA_BLK + 0 * OC_REG_ELTS);
+                if (u_ocr > 1) ymm11 = _mm256_loadu_ps(his + 5 * OC_DATA_BLK + 1 * OC_REG_ELTS);
             }
         }
 
-        if (flags & conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::kADD_BIAS) {
-            const float* bias = ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kBIAS_PTR_IDX);
-            if (u_ocr > 0) ymm14 = _mm256_loadu_ps(bias + 0 * kOC_REG_ELTS);
-            if (u_ocr > 1) ymm15 = _mm256_loadu_ps(bias + 1 * kOC_REG_ELTS);
+        if (flags & conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::ADD_BIAS) {
+            const float* bias = ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::BIAS_PTR_IDX);
+            if (u_ocr > 0) ymm14 = _mm256_loadu_ps(bias + 0 * OC_REG_ELTS);
+            if (u_ocr > 1) ymm15 = _mm256_loadu_ps(bias + 1 * OC_REG_ELTS);
             if (u_s > 0) {
                 if (u_ocr > 0) ymm0 = _mm256_add_ps(ymm14, ymm0);
                 if (u_ocr > 1) ymm1 = _mm256_add_ps(ymm15, ymm1);
@@ -523,10 +523,10 @@ void conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel(int64_t *param)
         }
         
         const float *ic_src = src;
-        const float *ic_flt = ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kFLT_PTR_IDX);
-        int64_t channels     = ker_p.pick<const int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::kCHANNELS_IDX);
-        while (channels >= kIC_DATA_BLK) {
-            channels -= kIC_DATA_BLK;
+        const float *ic_flt = ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::FLT_PTR_IDX);
+        int64_t channels     = ker_p.pick<const int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::CHANNELS_IDX);
+        while (channels >= IC_DATA_BLK) {
+            channels -= IC_DATA_BLK;
             IC_COMPUTE_STEP(0);
             IC_COMPUTE_STEP(1);
             IC_COMPUTE_STEP(2);
@@ -546,18 +546,18 @@ void conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel(int64_t *param)
             IC_COMPUTE_STEP(13);
             IC_COMPUTE_STEP(14);
             IC_COMPUTE_STEP(15);
-            ic_flt += kIC_DATA_BLK * kOC_DATA_BLK;
+            ic_flt += IC_DATA_BLK * OC_DATA_BLK;
             ic_src += src_icb_stride;
         }
         if (channels > 0) {
             for (int64_t ic = 0; ic < channels; ++ic) {
                 IC_COMPUTE_STEP(0);
                 ic_src += 1;
-                ic_flt += kOC_DATA_BLK;
+                ic_flt += OC_DATA_BLK;
             }
         }
         
-        if (flags & (conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::kRELU | conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::kRELU6)) {
+        if (flags & (conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU | conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU6)) {
             ymm14 = _mm256_setzero_ps();
             if (u_s > 0) {
                 if (u_ocr > 0) ymm0 = _mm256_max_ps(ymm14, ymm0);
@@ -584,7 +584,7 @@ void conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel(int64_t *param)
                 if (u_ocr > 1) ymm11 = _mm256_max_ps(ymm14, ymm11);
             }
         }
-        if (flags & conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::kRELU6) {
+        if (flags & conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU6) {
             ymm15 = _mm256_set1_ps(6.0f);
             if (u_s > 0) {
                 if (u_ocr > 0) ymm0 = _mm256_min_ps(ymm15, ymm0);
@@ -614,58 +614,58 @@ void conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel(int64_t *param)
 
         if (nt_store) {
             if (u_s > 0) {
-                if (u_ocr > 0) _mm256_stream_ps(dst + 0 * kOC_DATA_BLK + 0 * kOC_REG_ELTS, ymm0);
-                if (u_ocr > 1) _mm256_stream_ps(dst + 0 * kOC_DATA_BLK + 1 * kOC_REG_ELTS, ymm1);
+                if (u_ocr > 0) _mm256_stream_ps(dst + 0 * OC_DATA_BLK + 0 * OC_REG_ELTS, ymm0);
+                if (u_ocr > 1) _mm256_stream_ps(dst + 0 * OC_DATA_BLK + 1 * OC_REG_ELTS, ymm1);
             }
             if (u_s > 1) {
-                if (u_ocr > 0) _mm256_stream_ps(dst + 1 * kOC_DATA_BLK + 0 * kOC_REG_ELTS, ymm2);
-                if (u_ocr > 1) _mm256_stream_ps(dst + 1 * kOC_DATA_BLK + 1 * kOC_REG_ELTS, ymm3);
+                if (u_ocr > 0) _mm256_stream_ps(dst + 1 * OC_DATA_BLK + 0 * OC_REG_ELTS, ymm2);
+                if (u_ocr > 1) _mm256_stream_ps(dst + 1 * OC_DATA_BLK + 1 * OC_REG_ELTS, ymm3);
             }
             if (u_s > 2) {
-                if (u_ocr > 0) _mm256_stream_ps(dst + 2 * kOC_DATA_BLK + 0 * kOC_REG_ELTS, ymm4);
-                if (u_ocr > 1) _mm256_stream_ps(dst + 2 * kOC_DATA_BLK + 1 * kOC_REG_ELTS, ymm5);
+                if (u_ocr > 0) _mm256_stream_ps(dst + 2 * OC_DATA_BLK + 0 * OC_REG_ELTS, ymm4);
+                if (u_ocr > 1) _mm256_stream_ps(dst + 2 * OC_DATA_BLK + 1 * OC_REG_ELTS, ymm5);
             }
             if (u_s > 3) {
-                if (u_ocr > 0) _mm256_stream_ps(dst + 3 * kOC_DATA_BLK + 0 * kOC_REG_ELTS, ymm6);
-                if (u_ocr > 1) _mm256_stream_ps(dst + 3 * kOC_DATA_BLK + 1 * kOC_REG_ELTS, ymm7);
+                if (u_ocr > 0) _mm256_stream_ps(dst + 3 * OC_DATA_BLK + 0 * OC_REG_ELTS, ymm6);
+                if (u_ocr > 1) _mm256_stream_ps(dst + 3 * OC_DATA_BLK + 1 * OC_REG_ELTS, ymm7);
             }
             if (u_s > 4) {
-                if (u_ocr > 0) _mm256_stream_ps(dst + 4 * kOC_DATA_BLK + 0 * kOC_REG_ELTS, ymm8);
-                if (u_ocr > 1) _mm256_stream_ps(dst + 4 * kOC_DATA_BLK + 1 * kOC_REG_ELTS, ymm9);
+                if (u_ocr > 0) _mm256_stream_ps(dst + 4 * OC_DATA_BLK + 0 * OC_REG_ELTS, ymm8);
+                if (u_ocr > 1) _mm256_stream_ps(dst + 4 * OC_DATA_BLK + 1 * OC_REG_ELTS, ymm9);
             }
             if (u_s > 5) {
-                if (u_ocr > 0) _mm256_stream_ps(dst + 5 * kOC_DATA_BLK + 0 * kOC_REG_ELTS, ymm10);
-                if (u_ocr > 1) _mm256_stream_ps(dst + 5 * kOC_DATA_BLK + 1 * kOC_REG_ELTS, ymm11);
+                if (u_ocr > 0) _mm256_stream_ps(dst + 5 * OC_DATA_BLK + 0 * OC_REG_ELTS, ymm10);
+                if (u_ocr > 1) _mm256_stream_ps(dst + 5 * OC_DATA_BLK + 1 * OC_REG_ELTS, ymm11);
             }
         } else {
             if (u_s > 0) {
-                if (u_ocr > 0) _mm256_storeu_ps(dst + 0 * kOC_DATA_BLK + 0 * kOC_REG_ELTS, ymm0);
-                if (u_ocr > 1) _mm256_storeu_ps(dst + 0 * kOC_DATA_BLK + 1 * kOC_REG_ELTS, ymm1);
+                if (u_ocr > 0) _mm256_storeu_ps(dst + 0 * OC_DATA_BLK + 0 * OC_REG_ELTS, ymm0);
+                if (u_ocr > 1) _mm256_storeu_ps(dst + 0 * OC_DATA_BLK + 1 * OC_REG_ELTS, ymm1);
             }
             if (u_s > 1) {
-                if (u_ocr > 0) _mm256_storeu_ps(dst + 1 * kOC_DATA_BLK + 0 * kOC_REG_ELTS, ymm2);
-                if (u_ocr > 1) _mm256_storeu_ps(dst + 1 * kOC_DATA_BLK + 1 * kOC_REG_ELTS, ymm3);
+                if (u_ocr > 0) _mm256_storeu_ps(dst + 1 * OC_DATA_BLK + 0 * OC_REG_ELTS, ymm2);
+                if (u_ocr > 1) _mm256_storeu_ps(dst + 1 * OC_DATA_BLK + 1 * OC_REG_ELTS, ymm3);
             }
             if (u_s > 2) {
-                if (u_ocr > 0) _mm256_storeu_ps(dst + 2 * kOC_DATA_BLK + 0 * kOC_REG_ELTS, ymm4);
-                if (u_ocr > 1) _mm256_storeu_ps(dst + 2 * kOC_DATA_BLK + 1 * kOC_REG_ELTS, ymm5);
+                if (u_ocr > 0) _mm256_storeu_ps(dst + 2 * OC_DATA_BLK + 0 * OC_REG_ELTS, ymm4);
+                if (u_ocr > 1) _mm256_storeu_ps(dst + 2 * OC_DATA_BLK + 1 * OC_REG_ELTS, ymm5);
             }
             if (u_s > 3) {
-                if (u_ocr > 0) _mm256_storeu_ps(dst + 3 * kOC_DATA_BLK + 0 * kOC_REG_ELTS, ymm6);
-                if (u_ocr > 1) _mm256_storeu_ps(dst + 3 * kOC_DATA_BLK + 1 * kOC_REG_ELTS, ymm7);
+                if (u_ocr > 0) _mm256_storeu_ps(dst + 3 * OC_DATA_BLK + 0 * OC_REG_ELTS, ymm6);
+                if (u_ocr > 1) _mm256_storeu_ps(dst + 3 * OC_DATA_BLK + 1 * OC_REG_ELTS, ymm7);
             }
             if (u_s > 4) {
-                if (u_ocr > 0) _mm256_storeu_ps(dst + 4 * kOC_DATA_BLK + 0 * kOC_REG_ELTS, ymm8);
-                if (u_ocr > 1) _mm256_storeu_ps(dst + 4 * kOC_DATA_BLK + 1 * kOC_REG_ELTS, ymm9);
+                if (u_ocr > 0) _mm256_storeu_ps(dst + 4 * OC_DATA_BLK + 0 * OC_REG_ELTS, ymm8);
+                if (u_ocr > 1) _mm256_storeu_ps(dst + 4 * OC_DATA_BLK + 1 * OC_REG_ELTS, ymm9);
             }
             if (u_s > 5) {
-                if (u_ocr > 0) _mm256_storeu_ps(dst + 5 * kOC_DATA_BLK + 0 * kOC_REG_ELTS, ymm10);
-                if (u_ocr > 1) _mm256_storeu_ps(dst + 5 * kOC_DATA_BLK + 1 * kOC_REG_ELTS, ymm11);
+                if (u_ocr > 0) _mm256_storeu_ps(dst + 5 * OC_DATA_BLK + 0 * OC_REG_ELTS, ymm10);
+                if (u_ocr > 1) _mm256_storeu_ps(dst + 5 * OC_DATA_BLK + 1 * OC_REG_ELTS, ymm11);
             }
         }
-        src += u_s * kIC_DATA_BLK;
-        his += u_s * kOC_DATA_BLK;
-        dst += u_s * kOC_DATA_BLK;
+        src += u_s * IC_DATA_BLK;
+        his += u_s * OC_DATA_BLK;
+        dst += u_s * OC_DATA_BLK;
         space -= u_s;
     } while (space > 0);
 #undef IC_COMPUTE_STEP
@@ -674,25 +674,25 @@ void conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel(int64_t *param)
 #define GEMM_DIRECT_KERNEL_TABLE_BLK(NT_STORE) \
 {\
     {\
-        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 1 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_REG_ELTS, 1>,\
-        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 1 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_REG_ELTS, 2>,\
-        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 1 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_REG_ELTS, 3>,\
-        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 1 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_REG_ELTS, 4>,\
-        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 1 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_REG_ELTS, 5>,\
-        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 1 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_REG_ELTS, 6>,\
+        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 1 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_REG_ELTS, 1>,\
+        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 1 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_REG_ELTS, 2>,\
+        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 1 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_REG_ELTS, 3>,\
+        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 1 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_REG_ELTS, 4>,\
+        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 1 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_REG_ELTS, 5>,\
+        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 1 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_REG_ELTS, 6>,\
     },\
     {\
-        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 2 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_REG_ELTS, 1>,\
-        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 2 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_REG_ELTS, 2>,\
-        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 2 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_REG_ELTS, 3>,\
-        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 2 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_REG_ELTS, 4>,\
-        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 2 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_REG_ELTS, 5>,\
-        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 2 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::kOC_REG_ELTS, 6>,\
+        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 2 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_REG_ELTS, 1>,\
+        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 2 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_REG_ELTS, 2>,\
+        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 2 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_REG_ELTS, 3>,\
+        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 2 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_REG_ELTS, 4>,\
+        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 2 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_REG_ELTS, 5>,\
+        conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel<NT_STORE, 2 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::OC_REG_ELTS, 6>,\
     },\
 }
 
 const conv2d_n16cx_gemm_direct_kernel_fp32_fma::func_t
-    conv2d_n16cx_gemm_direct_kernel_fp32_fma::table_[config::kNT_STORE_OPT][config::kMAX_OC_REGS][config::kMAX_S_REGS] =
+    conv2d_n16cx_gemm_direct_kernel_fp32_fma::table_[config::NT_STORE_OPT][config::MAX_OC_REGS][config::MAX_S_REGS] =
 {
     GEMM_DIRECT_KERNEL_TABLE_BLK(false),
     GEMM_DIRECT_KERNEL_TABLE_BLK(true),

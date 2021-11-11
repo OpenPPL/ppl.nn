@@ -166,13 +166,13 @@ static void store_dst_data_impl(
 
     float s_c  = 0;
     __m128 v_c = v_zero;
-    if (!beta_0 && c_type == gemm_v2_C_type::scalar) {
+    if (!beta_0 && c_type == gemm_v2_C_type::SCALAR) {
         s_c = C[0];
         v_c = _mm_set1_ps(s_c);
     }
 
     for (int32_t m = 0; m < m_len; m++) {
-        if (!beta_0 && c_type == gemm_v2_C_type::vector_h) {
+        if (!beta_0 && c_type == gemm_v2_C_type::VECTOR_H) {
             s_c = C[m];
             v_c = _mm_set1_ps(s_c);
         }
@@ -182,16 +182,16 @@ static void store_dst_data_impl(
             if (!alpha_1) {
                 v_data = _mm_mul_ps(v_data, v_alpha);
             }
-            if (!beta_0 && c_type != gemm_v2_C_type::empty) {
-                if (c_type == gemm_v2_C_type::matrix) {
+            if (!beta_0 && c_type != gemm_v2_C_type::EMPTY) {
+                if (c_type == gemm_v2_C_type::MATRIX) {
                     v_c = _mm_loadu_ps(C + m * ldc + n);
                 }
-                if (c_type == gemm_v2_C_type::vector_w) {
+                if (c_type == gemm_v2_C_type::VECTOR_W) {
                     v_c = _mm_loadu_ps(C + n);
                 }
                 v_data = _mm_add_ps(v_data, _mm_mul_ps(v_beta, v_c));
             }
-            if (fuse_flag & gemm_v2_fuse_flag::relu) {
+            if (fuse_flag & gemm_v2_fuse_flag::RELU) {
                 v_data = _mm_max_ps(v_data, v_zero);
             }
             _mm_storeu_ps(dst + m * ldy + n, v_data);
@@ -201,16 +201,16 @@ static void store_dst_data_impl(
             if (!alpha_1) {
                 data *= alpha;
             }
-            if (!beta_0 && c_type != gemm_v2_C_type::empty) {
-                if (c_type == gemm_v2_C_type::matrix) {
+            if (!beta_0 && c_type != gemm_v2_C_type::EMPTY) {
+                if (c_type == gemm_v2_C_type::MATRIX) {
                     s_c = C[m * ldc + n];
                 }
-                if (c_type == gemm_v2_C_type::vector_w) {
+                if (c_type == gemm_v2_C_type::VECTOR_W) {
                     s_c = C[n];
                 }
                 data += beta * s_c;
             }
-            if (fuse_flag & gemm_v2_fuse_flag::relu) {
+            if (fuse_flag & gemm_v2_fuse_flag::RELU) {
                 data = max(data, 0.0f);
             }
             dst[m * ldy + n] = data;
@@ -223,110 +223,110 @@ static const store_dst_data_func_type_t store_dst_data_func_tab[5][2][2][2] = {
     {
         {
             {
-                store_dst_data_impl<gemm_v2_C_type::empty, gemm_v2_fuse_flag::none, false, false>,
-                store_dst_data_impl<gemm_v2_C_type::empty, gemm_v2_fuse_flag::none, false, true>,
+                store_dst_data_impl<gemm_v2_C_type::EMPTY, gemm_v2_fuse_flag::NONE, false, false>,
+                store_dst_data_impl<gemm_v2_C_type::EMPTY, gemm_v2_fuse_flag::NONE, false, true>,
             },
             {
-                store_dst_data_impl<gemm_v2_C_type::empty, gemm_v2_fuse_flag::none, true, false>,
-                store_dst_data_impl<gemm_v2_C_type::empty, gemm_v2_fuse_flag::none, true, true>,
-            },
-        },
-        {
-            {
-                store_dst_data_impl<gemm_v2_C_type::empty, gemm_v2_fuse_flag::relu, false, false>,
-                store_dst_data_impl<gemm_v2_C_type::empty, gemm_v2_fuse_flag::relu, false, true>,
-            },
-            {
-                store_dst_data_impl<gemm_v2_C_type::empty, gemm_v2_fuse_flag::relu, true, false>,
-                store_dst_data_impl<gemm_v2_C_type::empty, gemm_v2_fuse_flag::relu, true, true>,
-            },
-        },
-    },
-    {
-        {
-            {
-                store_dst_data_impl<gemm_v2_C_type::scalar, gemm_v2_fuse_flag::none, false, false>,
-                store_dst_data_impl<gemm_v2_C_type::scalar, gemm_v2_fuse_flag::none, false, true>,
-            },
-            {
-                store_dst_data_impl<gemm_v2_C_type::scalar, gemm_v2_fuse_flag::none, true, false>,
-                store_dst_data_impl<gemm_v2_C_type::scalar, gemm_v2_fuse_flag::none, true, true>,
+                store_dst_data_impl<gemm_v2_C_type::EMPTY, gemm_v2_fuse_flag::NONE, true, false>,
+                store_dst_data_impl<gemm_v2_C_type::EMPTY, gemm_v2_fuse_flag::NONE, true, true>,
             },
         },
         {
             {
-                store_dst_data_impl<gemm_v2_C_type::scalar, gemm_v2_fuse_flag::relu, false, false>,
-                store_dst_data_impl<gemm_v2_C_type::scalar, gemm_v2_fuse_flag::relu, false, true>,
+                store_dst_data_impl<gemm_v2_C_type::EMPTY, gemm_v2_fuse_flag::RELU, false, false>,
+                store_dst_data_impl<gemm_v2_C_type::EMPTY, gemm_v2_fuse_flag::RELU, false, true>,
             },
             {
-                store_dst_data_impl<gemm_v2_C_type::scalar, gemm_v2_fuse_flag::relu, true, false>,
-                store_dst_data_impl<gemm_v2_C_type::scalar, gemm_v2_fuse_flag::relu, true, true>,
+                store_dst_data_impl<gemm_v2_C_type::EMPTY, gemm_v2_fuse_flag::RELU, true, false>,
+                store_dst_data_impl<gemm_v2_C_type::EMPTY, gemm_v2_fuse_flag::RELU, true, true>,
             },
         },
     },
     {
         {
             {
-                store_dst_data_impl<gemm_v2_C_type::vector_h, gemm_v2_fuse_flag::none, false, false>,
-                store_dst_data_impl<gemm_v2_C_type::vector_h, gemm_v2_fuse_flag::none, false, true>,
+                store_dst_data_impl<gemm_v2_C_type::SCALAR, gemm_v2_fuse_flag::NONE, false, false>,
+                store_dst_data_impl<gemm_v2_C_type::SCALAR, gemm_v2_fuse_flag::NONE, false, true>,
             },
             {
-                store_dst_data_impl<gemm_v2_C_type::vector_h, gemm_v2_fuse_flag::none, true, false>,
-                store_dst_data_impl<gemm_v2_C_type::vector_h, gemm_v2_fuse_flag::none, true, true>,
-            },
-        },
-        {
-            {
-                store_dst_data_impl<gemm_v2_C_type::vector_h, gemm_v2_fuse_flag::relu, false, false>,
-                store_dst_data_impl<gemm_v2_C_type::vector_h, gemm_v2_fuse_flag::relu, false, true>,
-            },
-            {
-                store_dst_data_impl<gemm_v2_C_type::vector_h, gemm_v2_fuse_flag::relu, true, false>,
-                store_dst_data_impl<gemm_v2_C_type::vector_h, gemm_v2_fuse_flag::relu, true, true>,
-            },
-        },
-    },
-    {
-        {
-            {
-                store_dst_data_impl<gemm_v2_C_type::vector_w, gemm_v2_fuse_flag::none, false, false>,
-                store_dst_data_impl<gemm_v2_C_type::vector_w, gemm_v2_fuse_flag::none, false, true>,
-            },
-            {
-                store_dst_data_impl<gemm_v2_C_type::vector_w, gemm_v2_fuse_flag::none, true, false>,
-                store_dst_data_impl<gemm_v2_C_type::vector_w, gemm_v2_fuse_flag::none, true, true>,
+                store_dst_data_impl<gemm_v2_C_type::SCALAR, gemm_v2_fuse_flag::NONE, true, false>,
+                store_dst_data_impl<gemm_v2_C_type::SCALAR, gemm_v2_fuse_flag::NONE, true, true>,
             },
         },
         {
             {
-                store_dst_data_impl<gemm_v2_C_type::vector_w, gemm_v2_fuse_flag::relu, false, false>,
-                store_dst_data_impl<gemm_v2_C_type::vector_w, gemm_v2_fuse_flag::relu, false, true>,
+                store_dst_data_impl<gemm_v2_C_type::SCALAR, gemm_v2_fuse_flag::RELU, false, false>,
+                store_dst_data_impl<gemm_v2_C_type::SCALAR, gemm_v2_fuse_flag::RELU, false, true>,
             },
             {
-                store_dst_data_impl<gemm_v2_C_type::vector_w, gemm_v2_fuse_flag::relu, true, false>,
-                store_dst_data_impl<gemm_v2_C_type::vector_w, gemm_v2_fuse_flag::relu, true, true>,
+                store_dst_data_impl<gemm_v2_C_type::SCALAR, gemm_v2_fuse_flag::RELU, true, false>,
+                store_dst_data_impl<gemm_v2_C_type::SCALAR, gemm_v2_fuse_flag::RELU, true, true>,
             },
         },
     },
     {
         {
             {
-                store_dst_data_impl<gemm_v2_C_type::matrix, gemm_v2_fuse_flag::none, false, false>,
-                store_dst_data_impl<gemm_v2_C_type::matrix, gemm_v2_fuse_flag::none, false, true>,
+                store_dst_data_impl<gemm_v2_C_type::VECTOR_H, gemm_v2_fuse_flag::NONE, false, false>,
+                store_dst_data_impl<gemm_v2_C_type::VECTOR_H, gemm_v2_fuse_flag::NONE, false, true>,
             },
             {
-                store_dst_data_impl<gemm_v2_C_type::matrix, gemm_v2_fuse_flag::none, true, false>,
-                store_dst_data_impl<gemm_v2_C_type::matrix, gemm_v2_fuse_flag::none, true, true>,
+                store_dst_data_impl<gemm_v2_C_type::VECTOR_H, gemm_v2_fuse_flag::NONE, true, false>,
+                store_dst_data_impl<gemm_v2_C_type::VECTOR_H, gemm_v2_fuse_flag::NONE, true, true>,
             },
         },
         {
             {
-                store_dst_data_impl<gemm_v2_C_type::matrix, gemm_v2_fuse_flag::relu, false, false>,
-                store_dst_data_impl<gemm_v2_C_type::matrix, gemm_v2_fuse_flag::relu, false, true>,
+                store_dst_data_impl<gemm_v2_C_type::VECTOR_H, gemm_v2_fuse_flag::RELU, false, false>,
+                store_dst_data_impl<gemm_v2_C_type::VECTOR_H, gemm_v2_fuse_flag::RELU, false, true>,
             },
             {
-                store_dst_data_impl<gemm_v2_C_type::matrix, gemm_v2_fuse_flag::relu, true, false>,
-                store_dst_data_impl<gemm_v2_C_type::matrix, gemm_v2_fuse_flag::relu, true, true>,
+                store_dst_data_impl<gemm_v2_C_type::VECTOR_H, gemm_v2_fuse_flag::RELU, true, false>,
+                store_dst_data_impl<gemm_v2_C_type::VECTOR_H, gemm_v2_fuse_flag::RELU, true, true>,
+            },
+        },
+    },
+    {
+        {
+            {
+                store_dst_data_impl<gemm_v2_C_type::VECTOR_W, gemm_v2_fuse_flag::NONE, false, false>,
+                store_dst_data_impl<gemm_v2_C_type::VECTOR_W, gemm_v2_fuse_flag::NONE, false, true>,
+            },
+            {
+                store_dst_data_impl<gemm_v2_C_type::VECTOR_W, gemm_v2_fuse_flag::NONE, true, false>,
+                store_dst_data_impl<gemm_v2_C_type::VECTOR_W, gemm_v2_fuse_flag::NONE, true, true>,
+            },
+        },
+        {
+            {
+                store_dst_data_impl<gemm_v2_C_type::VECTOR_W, gemm_v2_fuse_flag::RELU, false, false>,
+                store_dst_data_impl<gemm_v2_C_type::VECTOR_W, gemm_v2_fuse_flag::RELU, false, true>,
+            },
+            {
+                store_dst_data_impl<gemm_v2_C_type::VECTOR_W, gemm_v2_fuse_flag::RELU, true, false>,
+                store_dst_data_impl<gemm_v2_C_type::VECTOR_W, gemm_v2_fuse_flag::RELU, true, true>,
+            },
+        },
+    },
+    {
+        {
+            {
+                store_dst_data_impl<gemm_v2_C_type::MATRIX, gemm_v2_fuse_flag::NONE, false, false>,
+                store_dst_data_impl<gemm_v2_C_type::MATRIX, gemm_v2_fuse_flag::NONE, false, true>,
+            },
+            {
+                store_dst_data_impl<gemm_v2_C_type::MATRIX, gemm_v2_fuse_flag::NONE, true, false>,
+                store_dst_data_impl<gemm_v2_C_type::MATRIX, gemm_v2_fuse_flag::NONE, true, true>,
+            },
+        },
+        {
+            {
+                store_dst_data_impl<gemm_v2_C_type::MATRIX, gemm_v2_fuse_flag::RELU, false, false>,
+                store_dst_data_impl<gemm_v2_C_type::MATRIX, gemm_v2_fuse_flag::RELU, false, true>,
+            },
+            {
+                store_dst_data_impl<gemm_v2_C_type::MATRIX, gemm_v2_fuse_flag::RELU, true, false>,
+                store_dst_data_impl<gemm_v2_C_type::MATRIX, gemm_v2_fuse_flag::RELU, true, true>,
             },
         },
     },
@@ -462,15 +462,15 @@ common::RetCode gemm_v2_mnk_sub_kmn_kernel_nm_atbn_executor_fp32_sse::execute(vo
             }
 
             const float* l_src_c = nullptr;
-            if (c_type == gemm_v2_C_type::empty || C == nullptr) {
+            if (c_type == gemm_v2_C_type::EMPTY || C == nullptr) {
                 l_src_c = nullptr;
-            } else if (c_type == gemm_v2_C_type::scalar) {
+            } else if (c_type == gemm_v2_C_type::SCALAR) {
                 l_src_c = C;
-            } else if (c_type == gemm_v2_C_type::vector_h) {
+            } else if (c_type == gemm_v2_C_type::VECTOR_H) {
                 l_src_c = C + m;
-            } else if (c_type == gemm_v2_C_type::vector_w) {
+            } else if (c_type == gemm_v2_C_type::VECTOR_W) {
                 l_src_c = C + n;
-            } else if (c_type == gemm_v2_C_type::matrix) {
+            } else if (c_type == gemm_v2_C_type::MATRIX) {
                 l_src_c = C + m * ldc + n;
             }
             store_dst_data(temp_dst, m_blk_eff, n_blk_eff, l_src_c, dst + m * ldy + n);

@@ -86,14 +86,14 @@ ppl::common::RetCode conv2d_ref_fp32(
                         if (bias != nullptr) {
                             sum_val += bias[g * oc_per_gp + oc];
                         }
-                        if (param.fuse_flag & conv_fuse_flag::sum) {
+                        if (param.fuse_flag & conv_fuse_flag::SUM) {
                             const float *sum_d = sum_src + (b * sum_src_shape->GetDim(1) + g * oc_per_gp) * dst_h * dst_w;
                             sum_val += sum_d[output_idx];
                         }
-                        if (param.fuse_flag & (conv_fuse_flag::relu | conv_fuse_flag::relu6)) {
+                        if (param.fuse_flag & (conv_fuse_flag::RELU | conv_fuse_flag::RELU6)) {
                             sum_val = max(sum_val, 0.0f);
                         }
-                        if (param.fuse_flag & conv_fuse_flag::relu6) {
+                        if (param.fuse_flag & conv_fuse_flag::RELU6) {
                             sum_val = min(sum_val, 6.0f);
                         }
                         output_d[output_idx] = sum_val;

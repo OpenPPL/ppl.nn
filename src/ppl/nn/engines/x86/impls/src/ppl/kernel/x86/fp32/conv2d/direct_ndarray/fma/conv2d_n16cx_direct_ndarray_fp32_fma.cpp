@@ -80,7 +80,7 @@ void conv2d_n16cx_direct_ndarray_fp32_fma_executor::cal_kernel_tunning_param()
     sp.use_nt_store           = 0;
     const int64_t src_len     = int64_t(batch) * cp.channels * src_h * src_w;
     const int64_t dst_len     = int64_t(batch) * cp.group * sp.padded_oc * dst_h * dst_w;
-    const int64_t sum_src_len = (conv_param_->fuse_flag & conv_fuse_flag::sum) ? int64_t(batch) * cp.group * sp.padded_oc * dst_h * dst_w : 0;
+    const int64_t sum_src_len = (conv_param_->fuse_flag & conv_fuse_flag::SUM) ? int64_t(batch) * cp.group * sp.padded_oc * dst_h * dst_w : 0;
     if (src_len + dst_len + sum_src_len > l3_cap_all_core * 3) {
         sp.use_nt_store = 1;
     }
@@ -93,7 +93,7 @@ uint64_t conv2d_n16cx_direct_ndarray_fp32_fma_executor::cal_temp_buffer_size()
 
 ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_executor::prepare()
 {
-    if (!conv_param_ || !src_shape_ || !dst_shape_ || ((conv_param_->fuse_flag & conv_fuse_flag::sum) && !sum_src_shape_)) {
+    if (!conv_param_ || !src_shape_ || !dst_shape_ || ((conv_param_->fuse_flag & conv_fuse_flag::SUM) && !sum_src_shape_)) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
@@ -105,7 +105,7 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_executor::prepare()
 
 ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_executor::execute()
 {
-    if (!conv_param_ || !cvt_filter_ || !cvt_bias_ || !src_ || !dst_ || ((conv_param_->fuse_flag & conv_fuse_flag::sum) && !sum_src_) || !temp_buffer_) {
+    if (!conv_param_ || !cvt_filter_ || !cvt_bias_ || !src_ || !dst_ || ((conv_param_->fuse_flag & conv_fuse_flag::SUM) && !sum_src_) || !temp_buffer_) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
@@ -136,7 +136,7 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_executor::execute_inne
     const int64_t flt_c_stride = cp.kernel_h * cp.kernel_w * OC_DT_BLK();
     const int64_t padded_rf_oc = round_up(sp.oc_per_gp, OC_RF_BLK());
 
-    const bool with_sum = cp.fuse_flag & conv_fuse_flag::sum;
+    const bool with_sum = cp.fuse_flag & conv_fuse_flag::SUM;
 
     int64_t sum_src_b_stride = 0;
     if (with_sum) {
