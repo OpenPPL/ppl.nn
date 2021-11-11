@@ -36,11 +36,19 @@ const ppl::common::RetCode GemmCompiler::Compile(ir::Node* node, const OptKernel
     CudaGemmParam* gemm_param = static_cast<CudaGemmParam*>(cuda_kernel->GetParam());
     auto algo_param = gemm_param->extra_param.algo_info;
 
+    auto edge_pair = options.tensors->find(node->GetInput(0));
+    if (edge_pair == options.tensors->end()) {
+        return ppl::common::RC_NOT_FOUND;
+    }
+    auto input_type = edge_pair->second->GetShape().GetDataType();
+    auto mgr = CodeGeneFactorManager::Instance();
+    auto gene_factor = mgr->FindKernel(input_type);
+
     std::string source = "";
-    Gene2spkKernel(source, algo_param.algo_name, algo_param.tiles.m_cta, algo_param.tiles.n_cta,
+    gene_factor->Gene2spkKernel(source, algo_param.algo_name, algo_param.tiles.m_cta, algo_param.tiles.n_cta,
                        algo_param.tiles.m_warp, algo_param.tiles.n_warp, algo_param.tiles.k_cta,
                        algo_param.tiles.k_per_set, algo_param.splitk, algo_param.splitf, 1, 0);
-    ReplaceFusionFor2spk(source, gemm_param->extra_param.fuse_info);
+    gene_factor->ReplaceFusionFor2spk(source, gemm_param->extra_param.fuse_info);
     std::string name = algo_param.algo_name;
     std::vector<std::string> compile_params;
     std::vector<const char*> param_cstring{};

@@ -58,6 +58,9 @@ enum {
     CONV_IDXN_C2  = 4,
     CONV_IDXN_C4  = 5,
     CONV_IDXN_C32 = 6,
+    CONV_SWZL_F1 = 7,
+    CONV_SWZL_F3 = 8,
+    CONV_SWZL_FN = 9,
     CONV_KTYPE_NUM,
 };
 
@@ -186,6 +189,19 @@ struct kernel_info_t {
                               (tile_n_per_cta / tile_n_per_warp) *
                               (tile_k_per_cta / tile_k_per_set) *
                               WARP_SIZE;
+        } else if( ktype == CONV_SWZL_F1 || ktype == CONV_SWZL_F3 || ktype == CONV_SWZL_FN ) {
+            if(      strstr(kname_substrs[3].c_str(), "f1") ) flt_size = 1;
+            else if( strstr(kname_substrs[3].c_str(), "f3") ) flt_size = 3;
+            else if( strstr(kname_substrs[3].c_str(), "fn") ) flt_size = 0;
+            else flt_size = -1;
+    
+            sscanf(kname_substrs[4].c_str(), "b%dx%d", &tile_m_per_cta,  &tile_n_per_cta);
+            sscanf(kname_substrs[5].c_str(), "w%dx%d", &tile_m_per_warp, &tile_n_per_warp);
+            sscanf(kname_substrs[6].c_str(), "k%d",    &tile_k_per_cta);
+    
+            cta_size_in_thd = (tile_m_per_cta / tile_m_per_warp) * \
+                              (tile_n_per_cta / tile_n_per_warp) * \
+                              WARP_SIZE;
         }
     }
 
@@ -235,7 +251,8 @@ struct kernel_info_t {
                 return (kloop_time == 1);
             } else
                 return false;
-        } else if (num_chl_per_grp > 2 && num_chl_per_grp <= 4) {
+        }
+        else if (num_chl_per_grp > 2 && num_chl_per_grp <= 4) {
             if (ktype == CONV_IDXN_C4 && splitk == 1) {
                 int num_chl_per_grp_pad = Align(num_chl_per_grp, 4);
 
@@ -256,11 +273,11 @@ struct kernel_info_t {
             } else
                 return false;
         } else if (flt_height == 1 && flt_width == 1) {
-            return (ktype == CONV_2SPK_F1) ? true : false;
+            return (ktype == CONV_2SPK_F1 || ktype == CONV_SWZL_F1) ? true : false;
         } else if (flt_height == 3 && flt_width == 3) {
-            return (ktype == CONV_2SPK_F3 || ktype == CONV_2SPK_FS) ? true : false;
+            return (ktype == CONV_2SPK_F3 || ktype == CONV_SWZL_F3 || ktype == CONV_2SPK_FS) ? true : false;
         } else if (flt_height * flt_width < 128) {
-            return (ktype == CONV_2SPK_FN || ktype == CONV_2SPK_FS) ? true : false;
+            return (ktype == CONV_2SPK_FN || ktype == CONV_SWZL_FN || ktype == CONV_2SPK_FS) ? true : false;
         }
 
         return false;
@@ -287,6 +304,7 @@ struct kernel_info_t {
             return true;
     }
 
+    // TODO: need to fix by xusi
     __inline__ bool CheckQuickSelectFeasible(algo_param_t algo_param, int num_chl_per_grp, int grid_size, int flt_hw, int splitk, int splitf, int device_id)
     {
         cudaDeviceProp device_prop;
@@ -295,7 +313,7 @@ struct kernel_info_t {
         if (kname.at(kname.length() - 1) == '2') // Delete Buf2
             return false;
 
-        if (ktype == CONV_2SPK_FN && (flt_hw == 1 || flt_hw == 9)) // Delete FN for f1 and f3 case
+        if ((ktype == CONV_2SPK_FN || ktype == CONV_SWZL_FN) && (flt_hw == 1 || flt_hw == 9)) // Delete FN for f1 and f3 case
             return false;
 
         if (splitk != 1 && num_chl_per_grp / splitk <= 128) // Filt splitk for small chl size
@@ -422,4 +440,7 @@ void Initialize2spkConvFSKernelContainer(std::vector<kernel_info_t> &kernel_cont
 
 void InitializeIdxnConvKernelContainer(std::vector<kernel_info_t> &kernel_container);
 
+void InitializeSwzlConvF1KernelContainer(std::vector<kernel_info_t> & kernel_container);
+void InitializeSwzlConvF3KernelContainer(std::vector<kernel_info_t> & kernel_container);
+void InitializeSwzlConvFNKernelContainer(std::vector<kernel_info_t> & kernel_container);
 #endif

@@ -328,8 +328,10 @@ double PPLCUDAGemmJITSelectKernel(
         if (!temp_kernel.CheckQuickSelectFeasible(algo_param, num_chl_per_grp, grid_size, flt_hw, splitk, splitf, device_id))
             continue;
 
+        auto mgr = CodeGeneFactorManager::Instance();
+        auto gene_factor = mgr->FindKernel(type);
         std::string source = "";
-        Gene2spkKernel(source, algo_param.algo_name, algo_param.tiles.m_cta, algo_param.tiles.n_cta, algo_param.tiles.m_warp, algo_param.tiles.n_warp, algo_param.tiles.k_cta, algo_param.tiles.k_per_set, algo_param.splitk, algo_param.splitf, algo_param.tiles.buf, declare_times);
+        gene_factor->Gene2spkKernel(source, algo_param.algo_name, algo_param.tiles.m_cta, algo_param.tiles.n_cta, algo_param.tiles.m_warp, algo_param.tiles.n_warp, algo_param.tiles.k_cta, algo_param.tiles.k_per_set, algo_param.splitk, algo_param.splitf, algo_param.tiles.buf, declare_times);
         declare_times++;
 
         if (std::find(knames.begin(), knames.end(), algo_param.algo_name) == knames.end()) {

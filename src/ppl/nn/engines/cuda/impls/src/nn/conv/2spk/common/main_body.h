@@ -27,6 +27,7 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
     __half *hC = (__half *)Cv4;
     int *C     = (int *)Cv4;
 
+#pragma unroll
     for (int i = 0; i < HC_ITEMS_PER_THD; i++) {
         hC[i] = _HALF_ZERO_;
     }
@@ -79,9 +80,13 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
     uint spk_id = blockIdx.z % splitk;
     uint spf_id = (blockIdx.z % (splitk * flt_hw)) / splitk;
     uint grp_id = blockIdx.z / (splitk * flt_hw);
+
+    uint num_chl_per_spk = (spk_id != splitk - 1) ? num_chl_per_spk_head: num_chl_per_spk_tail;
 #elif defined(ENABLE_SPLITK) && !defined(ENABLE_SPLITF)
     uint spk_id    = blockIdx.z % splitk;
     uint grp_id    = blockIdx.z / splitk;
+
+    uint num_chl_per_spk = (spk_id != splitk - 1) ? num_chl_per_spk_head: num_chl_per_spk_tail;
 #elif !defined(ENABLE_SPLITK) && defined(ENABLE_SPLITF)
     uint spf_id    = blockIdx.z % flt_hw;
     uint grp_id    = blockIdx.z / flt_hw;
@@ -157,8 +162,8 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
 #endif
 
 #if defined(ENABLE_SPLITK)
-    int flt_c_v8_end = chl_lut.idx[spk_id + 1] >> 3;
-    int flt_c_v8_id  = ldg_idx + (chl_lut.idx[spk_id] >> 3);
+    int flt_c_v8_end = (spk_id * num_chl_per_spk_head + num_chl_per_spk) >> 3;
+    int flt_c_v8_id  = ldg_idx + ((spk_id * num_chl_per_spk_head) >> 3);
 #elif defined(ENABLE_SPLITF) || defined(ENABLE_FUSE)
     int flt_c_v8_end = num_chl_per_grp_pad_v8;
     int flt_c_v8_id  = ldg_idx;
@@ -311,7 +316,7 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
 #endif
 
 #if defined(ENABLE_SPLITK)
-    for (uint j = 0; j < kloop_lut.idx[spk_id]; j++)
+    for (uint j = 0; j < flt_hw * DivUp(num_chl_per_spk, TILE_K_PER_SET); j++)
 #elif defined(ENABLE_SPLITF) || defined(ENABLE_FUSE)
     for (uint j = 0; j < kloop_num; j++)
 #endif
@@ -408,6 +413,7 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
 
     __syncthreads();
 
+#pragma unroll
     for (int s = 0; s < OUTPUT_STEPS; s++) {
         READ_sRv4(Rv4, sm_base_v4, sRv4_read);
 
@@ -421,11 +427,9 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
                         dCv4_idx;
 
 #if defined(ENABLE_FUSE)
-        ADD_BIAS_V4(has_bias, bias);
-#endif
-
-#if defined(ENABLE_FUSE)
         uint concatV4_off = 0;
+
+        ADD_BIAS_V4(has_bias, bias);
 
         FUSE_RELU_V4(has_relu);
         FUSE_CLIP_V4(has_clip, clip_max, clip_min);
