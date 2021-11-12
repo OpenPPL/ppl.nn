@@ -203,6 +203,7 @@ const RetCode ChannelShuffleFusion::FuseWithNextNodes(ir::Node* node, const OptK
 
     topo->DelEdgeById(connect_edge_id);
     topo->DelNodeById(next_node->GetId());
+    options.info->kernels.erase(next_node_id);
     return RC_SUCCESS;
 }
 
@@ -232,8 +233,10 @@ const RetCode ChannelShuffleFusion::FuseWithLastNodes(ir::Node* next_node, const
     }
 
     topo->DelNodeById(next_node_id);
-    if (shape_node)
+    if (shape_node) {
+        options.info->kernels.erase(shape_node->GetId());
         topo->DelNodeById(shape_node->GetId());
+    }
     return RC_SUCCESS;
 }
 
@@ -242,8 +245,8 @@ const RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, cons
     if (CanFuse(node, options)) {
         LOG(DEBUG) << "Fuse node[" << node->GetName() << "] into channel shuffle";
         std::string node_name = "ChannelShuffle_" + node->GetName();
+        options.info->kernels.erase(node->GetId());
         for (uint32_t i = 0; i < 2; ++i) {
-            options.info->kernels.erase(node->GetId());
             FuseWithNextNodes(node, options);
         }
 
@@ -253,12 +256,11 @@ const RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, cons
             auto pre_node = topo->GetNodeById(pre_edge->GetProducer());
             auto post_node = topo->GetNodeById(post_edge->CreateConsumerIter().Get());
 
-            options.info->kernels.erase(pre_node->GetId());
-            options.info->kernels.erase(post_node->GetId());
             LOG(DEBUG) << "Fuse pre_node[" << pre_node->GetName() << "] and post_node[" << post_node->GetName()
                        << "] into channel shuffle";
             FuseWithLastNodes(node, options);
             node = pre_node;
+            options.info->kernels.erase(node->GetId());
             FuseWithNextNodes(node, options);
         }
 
