@@ -29,7 +29,7 @@ public:
     ppl::common::RetCode Configure(uint32_t, ...) override {
         return ppl::common::RC_UNSUPPORTED;
     }
-    EngineContext* CreateEngineContext(const std::string& graph_name) override;
+    EngineContext* CreateEngineContext() override;
     bool Supports(const ir::Node*) const override {
         return true;
     }

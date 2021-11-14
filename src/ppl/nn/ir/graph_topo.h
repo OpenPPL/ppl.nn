@@ -80,6 +80,9 @@ public:
     virtual const Node* GetNodeById(nodeid_t id) const = 0;
     virtual void DelNodeById(nodeid_t id) = 0;
 
+    Node* GetNodeByName(const std::string& name);
+    const Node* GetNodeByName(const std::string& name) const;
+
     // ----- //
 
     /**
@@ -93,15 +96,15 @@ public:
     /** @brief create an iterator for iterating all valid edges. */
     virtual std::shared_ptr<EdgeIter> CreateEdgeIter() const = 0;
 
-    Edge* GetEdgeByName(const std::string& name);
-    const Edge* GetEdgeByName(const std::string& name) const;
-
     /** @brief return the max edge id that is greater than any used edge id. */
     virtual edgeid_t GetMaxEdgeId() const = 0;
 
     virtual Edge* GetEdgeById(edgeid_t) = 0;
     virtual const Edge* GetEdgeById(edgeid_t) const = 0;
     virtual void DelEdgeById(edgeid_t) = 0;
+
+    Edge* GetEdgeByName(const std::string& name);
+    const Edge* GetEdgeByName(const std::string& name) const;
 
     // ----- //
 

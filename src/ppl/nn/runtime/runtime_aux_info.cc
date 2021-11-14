@@ -22,12 +22,10 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn {
 
-RetCode GenerateRuntimeAuxInfo(const RuntimeGraphInfo& graph_info, RuntimeAuxInfo* aux_info) {
-    aux_info->sorted_nodes.resize(graph_info.kernels.size());
-    for (uint32_t i = 0; i < graph_info.kernels.size(); ++i) {
-        aux_info->sorted_nodes[i] = graph_info.kernels[i].op->GetNode()->GetId();
-    }
-
+RetCode GenerateRuntimeAuxInfo(const ir::GraphTopo* topo, RuntimeAuxInfo* aux_info) {
+    topo->TopologicalSort([aux_info](nodeid_t nid) -> void {
+        aux_info->sorted_nodes.push_back(nid);
+    });
     return RC_SUCCESS;
 }
 

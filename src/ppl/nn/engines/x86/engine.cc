@@ -45,8 +45,8 @@ RetCode X86Engine::Init(const X86EngineOptions& options) {
     return RC_SUCCESS;
 }
 
-EngineContext* X86Engine::CreateEngineContext(const string&) {
-    return new X86EngineContext(GetName(), device_.GetISA(), options_.mm_policy);
+EngineContext* X86Engine::CreateEngineContext() {
+    return new X86EngineContext(device_.GetISA(), options_.mm_policy);
 }
 
 bool X86Engine::Supports(const ir::Node* node) const {

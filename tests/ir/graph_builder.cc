@@ -66,7 +66,7 @@ RetCode GraphBuilder::Finalize() {
 
     for (auto it = topo->CreateEdgeIter(); it->IsValid(); it->Forward()) {
         auto edge = it->Get();
-        if (!edge->GetProducer()) {
+        if (edge->GetProducer() == INVALID_NODEID) {
             topo->MarkAsInput(edge->GetId());
         }
         if (edge->CalcConsumerCount() == 0) {

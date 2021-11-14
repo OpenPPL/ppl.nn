@@ -22,6 +22,24 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace ir {
 
+static Node* FindNode(const ir::GraphTopo* topo, const string& name) {
+    for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
+        auto node = it->Get();
+        if (node->GetName() == name) {
+            return node;
+        }
+    }
+    return nullptr;
+}
+
+Node* GraphTopo::GetNodeByName(const string& name) {
+    return FindNode(this, name);
+}
+
+const Node* GraphTopo::GetNodeByName(const string& name) const {
+    return FindNode(this, name);
+}
+
 static edgeid_t FindEdgeId(const string& name, const vector<edgeid_t>& edge_ids, const GraphTopo* topo) {
     for (uint32_t i = 0; i < edge_ids.size(); ++i) {
         auto eid = edge_ids[i];

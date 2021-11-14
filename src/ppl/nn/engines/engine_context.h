@@ -32,8 +32,8 @@ class EngineContext {
 public:
     virtual ~EngineContext() {}
 
-    /** @brief get device instance used by `Runtime` */
-    virtual Device* GetDevice() = 0;
+    /** @brief create a `Device` instance used by this `Runtime` */
+    virtual Device* CreateDevice() = 0;
 };
 
 }} // namespace ppl::nn
