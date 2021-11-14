@@ -15,25 +15,27 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA__CUDA_COMMON_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA__CUDA_COMMON_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_DEVICE_CONTEXT_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_DEVICE_CONTEXT_H_
 
-#if defined(__linux__)
-#include <sys/stat.h>
-#endif
-
-#include <map>
-#include <string>
+#include "ppl/nn/common/device_context.h"
 #include <cuda_runtime.h>
 
 namespace ppl { namespace nn {
 
-std::pair<int, int> PPLCudaGetDeviceArch(int device);
-std::string CUDAIncludePath();
+class CudaDeviceContext final : public DeviceContext {
+public:
+    const char* GetType() const override {
+        return "cuda";
+    }
+    ppl::common::RetCode Configure(uint32_t, ...) override {
+        return ppl::common::RC_UNSUPPORTED;
+    }
 
-bool PPLCudaComputeCapabilityRequired(int major, int minor, int device);
-bool PPLCudaComputeCapabilityEqual(int major, int minor, int device);
+    int device_id = 0;
+    cudaStream_t stream = nullptr;
+};
 
-}} // namespace ppl::nn
+}}
 
 #endif

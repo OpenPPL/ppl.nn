@@ -15,24 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA__CUDA_COMMON_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA__CUDA_COMMON_H_
+#ifndef _ST_HPC_PPL_NN_COMMON_DEVICE_CONTEXT_H_
+#define _ST_HPC_PPL_NN_COMMON_DEVICE_CONTEXT_H_
 
-#if defined(__linux__)
-#include <sys/stat.h>
-#endif
-
-#include <map>
-#include <string>
-#include <cuda_runtime.h>
+#include "ppl/common/retcode.h"
+#include "ppl/nn/common/common.h"
 
 namespace ppl { namespace nn {
 
-std::pair<int, int> PPLCudaGetDeviceArch(int device);
-std::string CUDAIncludePath();
-
-bool PPLCudaComputeCapabilityRequired(int major, int minor, int device);
-bool PPLCudaComputeCapabilityEqual(int major, int minor, int device);
+class PPLNN_PUBLIC DeviceContext {
+public:
+    virtual ~DeviceContext() {}
+    virtual const char* GetType() const = 0;
+    virtual ppl::common::RetCode Configure(uint32_t, ...) = 0;
+};
 
 }} // namespace ppl::nn
 

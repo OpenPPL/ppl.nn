@@ -24,7 +24,7 @@
 #include <random>
 
 #include "ppl/nn/engines/cuda/data_converter.h"
-#include "ppl/nn/engines/cuda/cuda_common.h"
+#include "ppl/nn/engines/cuda/cuda_device_context.h"
 #include "ppl/nn/engines/cuda/cuda_engine_options.h"
 
 namespace ppl { namespace nn { namespace cuda {
@@ -69,6 +69,10 @@ public:
         return &data_converter_;
     }
 
+    DeviceContext* GetContext() const override {
+        return &context_;
+    }
+
     virtual ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
         return Realloc(bytes, buffer);
     }
@@ -88,7 +92,7 @@ public:
     }
 
 private:
-    CudaCtxParam context_;
+    mutable CudaDeviceContext context_;
     CudaDataConverter data_converter_;
     std::map<edgeid_t, BufferDesc> edge2buffer_;
 };
