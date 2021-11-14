@@ -27,15 +27,12 @@ namespace ppl { namespace nn { namespace test {
 
 class GraphBuilder final {
 public:
-    GraphBuilder();
+    GraphBuilder(const std::string& graph_name = "");
     ppl::common::RetCode AddNode(const std::string& name, const ir::Node::Type& type,
                                  const std::vector<std::string>& inputs, const std::vector<std::string>& outputs);
     ppl::common::RetCode Finalize();
     ir::Graph* GetGraph() const {
         return &graph_;
-    }
-    void SetGraphName(const std::string& name) {
-        graph_.topo->SetName(name);
     }
 
 private:

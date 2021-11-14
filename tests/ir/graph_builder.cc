@@ -23,8 +23,8 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace test {
 
-GraphBuilder::GraphBuilder() {
-    graph_.topo = make_shared<ir::FullGraphTopo>();
+GraphBuilder::GraphBuilder(const string& graph_name) {
+    graph_.topo = make_shared<ir::FullGraphTopo>(graph_name);
     graph_.data = make_shared<ir::GraphData>();
 }
 
