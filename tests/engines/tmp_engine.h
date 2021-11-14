@@ -15,10 +15,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "tmp_engine_context.h"
 #include "ppl/nn/engines/engine_impl.h"
-#include "ppl/nn/utils/generic_cpu_device.h"
 #include "ppl/nn/runtime/runtime_partition_info.h"
-#include "tests/engines/tmp_engine_context.h"
 #include "tests/engines/tmp_kernel.h"
 
 namespace ppl { namespace nn { namespace test {
@@ -29,12 +28,12 @@ public:
     ppl::common::RetCode Configure(uint32_t, ...) override {
         return ppl::common::RC_UNSUPPORTED;
     }
-    EngineContext* CreateEngineContext(const std::string&) override {
-        return new TmpEngineContext(GetName());
+    EngineContext* CreateEngineContext() override {
+        return new TmpEngineContext();
     }
     bool Supports(const ir::Node* node) const override {
         auto& type = node->GetType();
-        return (type.name == "op1" || type.name == "op2");
+        return (type.name == "op1");
     }
     ppl::common::RetCode ProcessGraph(utils::SharedResource*, ir::Graph* graph, RuntimePartitionInfo* info) override {
         auto topo = graph->topo.get();
@@ -43,7 +42,7 @@ public:
             if (node->GetType().name == "op1") {
                 info->kernels.emplace(node->GetId(), std::unique_ptr<OptKernel>(new TmpOptKernelOne(node)));
             } else {
-                info->kernels.emplace(node->GetId(), std::unique_ptr<OptKernel>(new TmpOptKernelTwo(node)));
+                return ppl::common::RC_UNSUPPORTED;
             }
         }
         return ppl::common::RC_SUCCESS;
@@ -59,21 +58,21 @@ public:
     ppl::common::RetCode Configure(uint32_t, ...) override {
         return ppl::common::RC_UNSUPPORTED;
     }
-    EngineContext* CreateEngineContext(const std::string&) override {
-        return new TmpEngineContext(GetName());
+    EngineContext* CreateEngineContext() override {
+        return new TmpEngineContext();
     }
     bool Supports(const ir::Node* node) const override {
         auto& type = node->GetType();
-        return (type.name == "op3" || type.name == "op4");
+        return (type.name == "op2");
     }
     ppl::common::RetCode ProcessGraph(utils::SharedResource*, ir::Graph* graph, RuntimePartitionInfo* info) override {
         auto topo = graph->topo.get();
         for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
             auto node = it->Get();
-            if (node->GetType().name == "op3") {
-                info->kernels.emplace(node->GetId(), std::unique_ptr<OptKernel>(new TmpOptKernelOne(node)));
-            } else {
+            if (node->GetType().name == "op2") {
                 info->kernels.emplace(node->GetId(), std::unique_ptr<OptKernel>(new TmpOptKernelTwo(node)));
+            } else {
+                return ppl::common::RC_UNSUPPORTED;
             }
         }
         return ppl::common::RC_SUCCESS;

@@ -22,14 +22,9 @@ namespace ppl { namespace nn { namespace test {
 
 class TmpEngineContext final : public EngineContext {
 public:
-    TmpEngineContext(const std::string& name) : name_(name) {}
-    Device* GetDevice() override {
-        return &device_;
+    Device* CreateDevice() override {
+        return new utils::GenericCpuDevice();
     }
-
-private:
-    const std::string name_;
-    utils::GenericCpuDevice device_;
 };
 
 }}} // namespace ppl::nn::test

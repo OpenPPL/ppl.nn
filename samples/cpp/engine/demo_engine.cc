@@ -26,8 +26,8 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace demo {
 
-EngineContext* DemoEngine::CreateEngineContext(const string&) {
-    return new DemoEngineContext(GetName());
+EngineContext* DemoEngine::CreateEngineContext() {
+    return new DemoEngineContext();
 }
 
 static RetCode FillKernels(const ir::Graph* graph, RuntimePartitionInfo* info) {

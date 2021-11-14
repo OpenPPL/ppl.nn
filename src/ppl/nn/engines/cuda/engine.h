@@ -26,7 +26,7 @@
 #include "ppl/nn/engines/cuda/cuda_engine_options.h"
 #include "ppl/nn/engines/cuda/cuda_options.h"
 #include "ppl/nn/engines/cuda/cuda_common_param.h"
-#include "ppl/nn/engines/cuda/buffered_cuda_device.h"
+#include "ppl/nn/engines/cuda/engine_context.h"
 #include "ppl/nn/quantization/quant_param_parser.h"
 #include "ppl/nn/engines/cuda/module/cuda_module.h"
 
@@ -62,7 +62,7 @@ public:
     CudaEngine() : EngineImpl("cuda") {}
     ppl::common::RetCode Init(const CudaEngineOptions& options);
     ppl::common::RetCode Configure(uint32_t, ...) override;
-    EngineContext* CreateEngineContext(const std::string& graph_name) override;
+    EngineContext* CreateEngineContext() override;
     bool Supports(const ir::Node*) const override;
     ppl::common::RetCode ProcessGraph(utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*) override;
     ppl::common::RetCode CompileCudaModule(ir::Graph*, utils::SharedResource*, RuntimePartitionInfo*);

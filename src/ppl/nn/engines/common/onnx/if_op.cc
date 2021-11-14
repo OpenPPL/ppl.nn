@@ -36,7 +36,7 @@ RetCode IfOp::Init(utils::SharedResource* resource, IfParam* if_param) {
         return status;
     }
 
-    status = GenerateRuntimeAuxInfo(then_info_, &then_aux_info_);
+    status = GenerateRuntimeAuxInfo(if_param->then_branch.topo.get(), &then_aux_info_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenerateRuntimeAuxInfo for then_branch of kernel[" << node_->GetName()
                    << "] failed: " << GetRetCodeStr(status);
@@ -49,7 +49,7 @@ RetCode IfOp::Init(utils::SharedResource* resource, IfParam* if_param) {
         return status;
     }
 
-    status = GenerateRuntimeAuxInfo(else_info_, &else_aux_info_);
+    status = GenerateRuntimeAuxInfo(if_param->else_branch.topo.get(), &else_aux_info_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenerateRuntimeAuxInfo for else_branch of kernel[" << node_->GetName()
                    << "] failed: " << GetRetCodeStr(status);

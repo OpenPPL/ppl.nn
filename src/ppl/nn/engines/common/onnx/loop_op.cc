@@ -25,15 +25,14 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace common {
 
-RetCode LoopOp::Init(utils::SharedResource* resource, LoopParam* loop_param,
-                     LoopConcatOutputFunc concat_output_func) {
+RetCode LoopOp::Init(utils::SharedResource* resource, LoopParam* loop_param, LoopConcatOutputFunc concat_output_func) {
     auto status = utils::ProcessGraph(resource, &loop_param->graph, &graph_info_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "ProcessGraph failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = GenerateRuntimeAuxInfo(graph_info_, &aux_info_);
+    status = GenerateRuntimeAuxInfo(loop_param->graph.topo.get(), &aux_info_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenerateRuntimeAuxInfo failed: " << GetRetCodeStr(status);
         return status;
