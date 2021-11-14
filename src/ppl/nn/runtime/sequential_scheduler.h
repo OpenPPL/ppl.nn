@@ -34,9 +34,6 @@ private:
     const RuntimeAuxInfo* aux_info_;
     RuntimeGraph* graph_;
 
-    /** object reference count. this vector is read-only after being created. */
-    std::vector<uint32_t> const_object_refcount_;
-
     /** used to hold objects that are used during Run() */
     std::vector<EdgeObject*> edgeid2object_;
 

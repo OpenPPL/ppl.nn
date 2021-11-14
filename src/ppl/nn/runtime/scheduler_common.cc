@@ -22,63 +22,6 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace utils {
 
-vector<uint32_t> InitObjectRefcount(const ir::GraphTopo* topo) {
-    vector<uint32_t> object_refcount(topo->GetMaxEdgeId(), 0);
-
-    for (auto it = topo->CreateEdgeIter(); it->IsValid(); it->Forward()) {
-        auto edge = it->Get();
-
-        uint32_t refcount = 0;
-        for (auto iter = edge->CreateConsumerIter(); iter.IsValid(); iter.Forward()) {
-            auto next = topo->GetNodeById(iter.Get());
-            for (uint32_t i = 0; i < next->GetInputCount(); ++i) {
-                auto eid = next->GetInput(i);
-                if (eid == edge->GetId()) {
-                    ++refcount;
-                }
-            }
-            for (uint32_t i = 0; i < next->GetExtraInputCount(); ++i) {
-                auto eid = next->GetExtraInput(i);
-                if (eid == edge->GetId()) {
-                    ++refcount;
-                }
-            }
-        }
-
-        /*
-          object_refcount = consumer_count + producer_count
-          if a object's producer does not exist, which means that it is an input object,
-          we increase its refcount to make sure that the refcount will always > 0 during
-          runtime.
-        */
-        object_refcount[edge->GetId()] = refcount + 1 /* for producer */;
-    }
-
-    /*
-      inputs/extra_inputs/outputs/constants cannot be freed during Run(),
-      we increase their refcounts to ensure that their refcounts will always > 0
-      during runtime.
-    */
-    for (uint32_t i = 0; i < topo->GetInputCount(); ++i) {
-        auto eid = topo->GetInput(i);
-        ++object_refcount[eid];
-    }
-    for (uint32_t i = 0; i < topo->GetExtraInputCount(); ++i) {
-        auto eid = topo->GetExtraInput(i);
-        ++object_refcount[eid];
-    }
-    for (uint32_t i = 0; i < topo->GetConstantCount(); ++i) {
-        auto eid = topo->GetConstant(i);
-        ++object_refcount[eid];
-    }
-    for (uint32_t i = 0; i < topo->GetOutputCount(); ++i) {
-        auto eid = topo->GetOutput(i);
-        ++object_refcount[eid];
-    }
-
-    return object_refcount;
-}
-
 // puts inputs/extra_inputs/outputs/constants into a vector
 vector<EdgeObject*> InitObjectInUse(const ir::GraphTopo* topo, RuntimeGraph* graph) {
     vector<EdgeObject*> objects_in_use(topo->GetMaxEdgeId(), nullptr);
@@ -104,16 +47,18 @@ vector<EdgeObject*> InitObjectInUse(const ir::GraphTopo* topo, RuntimeGraph* gra
 }
 
 static RetCode AfterExecuteKernel(KernelImpl* kernel, KernelExecContext* ctx,
-                                  const function<RetCode(EdgeObject*)>& release_object_func) {
+                                  const function<RetCode(EdgeObject*, nodeid_t)>& release_func) {
+    auto nid = kernel->GetNode()->GetId();
+
     for (uint32_t i = 0; i < ctx->GetInputCount(); ++i) {
         auto object = ctx->GetInput<EdgeObject>(i);
         if (!object) {
             continue;
         }
 
-        auto status = release_object_func(object);
+        auto status = release_func(object, nid);
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "release_object_func failed: " << GetRetCodeStr(status);
+            LOG(ERROR) << "release edge[" << object->GetEdge()->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
         }
     }
@@ -124,18 +69,18 @@ static RetCode AfterExecuteKernel(KernelImpl* kernel, KernelExecContext* ctx,
             continue;
         }
 
-        auto status = release_object_func(object);
+        auto status = release_func(object, nid);
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "release_object_func failed: " << GetRetCodeStr(status);
+            LOG(ERROR) << "release edge[" << object->GetEdge()->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
         }
     }
 
     for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto object = ctx->GetOutput<EdgeObject>(i);
-        auto status = release_object_func(object);
+        auto status = release_func(object, nid);
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "release_object_func failed: " << GetRetCodeStr(status);
+            LOG(ERROR) << "release edge[" << object->GetEdge()->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
         }
     }
@@ -144,14 +89,14 @@ static RetCode AfterExecuteKernel(KernelImpl* kernel, KernelExecContext* ctx,
 }
 
 RetCode ExecuteKernel(KernelImpl* kernel, KernelExecContext* ctx,
-                      const function<RetCode(EdgeObject*)>& release_object_func, Profiler* profiler) {
+                      const function<RetCode(EdgeObject*, nodeid_t)>& release_func, Profiler* profiler) {
     auto exec_status = kernel->Execute(ctx);
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
     profiler->CollectStatistics(kernel);
 #endif
 
-    auto status = AfterExecuteKernel(kernel, ctx, release_object_func);
+    auto status = AfterExecuteKernel(kernel, ctx, release_func);
 
     if (exec_status != RC_SUCCESS) {
         LOG(ERROR) << "exec kernel[" << kernel->GetName() << "] failed: " << GetRetCodeStr(exec_status);

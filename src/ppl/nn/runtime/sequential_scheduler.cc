@@ -15,6 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#ifndef NDEBUG
+#include <set>
+#endif
+
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/runtime/sequential_scheduler.h"
 #include "ppl/nn/runtime/scheduler_common.h"
@@ -27,16 +31,60 @@ RetCode SequentialScheduler::Init(const ir::GraphTopo* topo, const RuntimeAuxInf
     graph_ = g;
     topo_ = topo;
     aux_info_ = aux_info;
-
-    const_object_refcount_ = utils::InitObjectRefcount(topo_);
-    edgeid2object_ = utils::InitObjectInUse(topo_, g);
-
+    edgeid2object_ = utils::InitObjectInUse(topo, g);
     return RC_SUCCESS;
 }
 
-RetCode SequentialScheduler::Run(Profiler* profiler) {
-    std::vector<uint32_t> object_refcount = const_object_refcount_;
+#ifndef NDEBUG
+static bool ValidateEdges(const RuntimeGraph* graph, const vector<EdgeObject*> eid2obj) {
+    set<EdgeObject*> reserved_set;
+    for (auto x = graph->inputs.begin(); x != graph->inputs.end(); ++x) {
+        reserved_set.insert(*x);
+    }
+    for (auto x = graph->extra_inputs.begin(); x != graph->extra_inputs.end(); ++x) {
+        reserved_set.insert(*x);
+    }
+    for (auto x = graph->constants.begin(); x != graph->constants.end(); ++x) {
+        reserved_set.insert(*x);
+    }
+    for (auto x = graph->outputs.begin(); x != graph->outputs.end(); ++x) {
+        reserved_set.insert(*x);
+    }
 
+    set<EdgeObject*> unused_set;
+    for (auto x = eid2obj.begin(); x != eid2obj.end(); ++x) {
+        if (*x) {
+            unused_set.insert(*x);
+        }
+    }
+
+    vector<EdgeObject*> diff_reserved2unused(reserved_set.size());
+    auto end_iter = std::set_difference(reserved_set.begin(), reserved_set.end(), unused_set.begin(), unused_set.end(),
+                                        diff_reserved2unused.begin());
+    diff_reserved2unused.resize(end_iter - diff_reserved2unused.begin());
+    if (!diff_reserved2unused.empty()) {
+        LOG(ERROR) << "diff edge set reserved <=> unused:";
+        for (auto x = diff_reserved2unused.begin(); x != diff_reserved2unused.end(); ++x) {
+            LOG(ERROR) << " " << (*x)->GetEdge()->GetName();
+        }
+    }
+
+    vector<EdgeObject*> diff_unused2reserved(unused_set.size());
+    end_iter = std::set_difference(unused_set.begin(), unused_set.end(), reserved_set.begin(), reserved_set.end(),
+                                   diff_unused2reserved.begin());
+    diff_unused2reserved.resize(end_iter - diff_unused2reserved.begin());
+    if (!diff_unused2reserved.empty()) {
+        LOG(ERROR) << "diff edge set unused <=> reserved:";
+        for (auto x = diff_unused2reserved.begin(); x != diff_unused2reserved.end(); ++x) {
+            LOG(ERROR) << " " << (*x)->GetEdge()->GetName();
+        }
+    }
+
+    return (diff_reserved2unused.empty() && diff_unused2reserved.empty());
+}
+#endif
+
+RetCode SequentialScheduler::Run(Profiler* profiler) {
     auto acquire_object_func = [this](edgeid_t eid, uint32_t etype, Device* device) -> EdgeObject* {
         if (eid >= edgeid2object_.size()) {
             return nullptr;
@@ -68,28 +116,21 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
         return object;
     };
 
-    auto release_object_func = [this, &object_refcount](EdgeObject* object) -> RetCode {
+    auto release_object_func = [this](EdgeObject* object, nodeid_t user) -> RetCode {
         auto eid = object->GetEdge()->GetId();
-        uint32_t& refcount = object_refcount[eid];
-        if (refcount > 0) {
-            --refcount;
-            if (refcount == 0 && edgeid2object_[eid]) {
-                auto obj = edgeid2object_[eid];
-                if (obj->GetObjectType() == EdgeObject::T_TENSOR) {
-                    tensor_pool_.Free(static_cast<TensorImpl*>(obj));
-                } else if (obj->GetObjectType() == EdgeObject::T_TENSOR_SEQUENCE) {
-                    tensor_sequence_pool_.Free(static_cast<TensorSequence*>(obj));
-                } else {
-                    LOG(ERROR) << "invalid edge object type[" << obj->GetObjectType() << "]";
-                    return RC_INVALID_VALUE;
-                }
-                edgeid2object_[eid] = nullptr;
+        if (aux_info_->tensor_last_consumer[eid] == user) {
+            auto obj = edgeid2object_[eid];
+            if (obj->GetObjectType() == EdgeObject::T_TENSOR) {
+                tensor_pool_.Free(static_cast<TensorImpl*>(obj));
+            } else if (obj->GetObjectType() == EdgeObject::T_TENSOR_SEQUENCE) {
+                tensor_sequence_pool_.Free(static_cast<TensorSequence*>(obj));
+            } else {
+                LOG(ERROR) << "invalid edge object type[" << obj->GetObjectType() << "]";
+                return RC_INVALID_VALUE;
             }
-            return RC_SUCCESS;
+            edgeid2object_[eid] = nullptr;
         }
-
-        LOG(ERROR) << "invalid refcount of object[" << object->GetEdge()->GetName() << "]";
-        return RC_INVALID_VALUE;
+        return RC_SUCCESS;
     };
 
     KernelExecContext ctx;
@@ -107,6 +148,13 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
             return status;
         }
     }
+
+#ifndef NDEBUG
+    if (!ValidateEdges(graph_, edgeid2object_)) {
+        LOG(ERROR) << "valid edge(s) not matched.";
+        return RC_INVALID_VALUE;
+    }
+#endif
 
     return RC_SUCCESS;
 }

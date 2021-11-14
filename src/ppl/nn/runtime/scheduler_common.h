@@ -26,14 +26,11 @@
 
 namespace ppl { namespace nn { namespace utils {
 
-/** @brief calculate each object's reference count in `topo`. */
-std::vector<uint32_t> InitObjectRefcount(const ir::GraphTopo* topo);
-
 /** @brief put inputs/extra_inputs/outputs/constants into a vector */
 std::vector<EdgeObject*> InitObjectInUse(const ir::GraphTopo* topo, RuntimeGraph* graph);
 
 ppl::common::RetCode ExecuteKernel(KernelImpl*, KernelExecContext*,
-                                   const std::function<ppl::common::RetCode(EdgeObject*)>& release_object_func,
+                                   const std::function<ppl::common::RetCode(EdgeObject*, nodeid_t)>& release_func,
                                    Profiler*);
 
 }}} // namespace ppl::nn::utils
