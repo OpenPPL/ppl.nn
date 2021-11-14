@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/optimizers/simple_graph_partitioner.h"
+#include "ppl/nn/optimizers/engine_graph_partitioner.h"
 #include "ppl/nn/common/logger.h"
 #include <set>
 using namespace std;
@@ -77,7 +77,7 @@ static EngineImpl* FindEngine(utils::SharedResource* resource, const ir::Node* n
     return nullptr;
 }
 
-RetCode SimpleGraphPartitioner::Partition(utils::SharedResource* resource, ir::Graph* graph,
+RetCode EngineGraphPartitioner::Partition(utils::SharedResource* resource, ir::Graph* graph,
                                           vector<pair<EngineImpl*, vector<nodeid_t>>>* partitions) const {
     auto topo = graph->topo.get();
 
