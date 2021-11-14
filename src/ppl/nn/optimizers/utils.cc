@@ -244,8 +244,8 @@ static RetCode GenPartitionsInfo(const vector<pair<EngineImpl*, vector<nodeid_t>
             sub_graph.topo = graph->topo;
             sub_graph.data = graph->data;
         } else {
-            auto sub_topo = make_shared<ir::PartialGraphTopo>(graph->topo.get(), it->second);
-            sub_topo->SetName(graph->topo->GetName() + "." + it->first->GetName());
+            auto sub_topo = make_shared<ir::PartialGraphTopo>(
+                graph->topo.get(), graph->topo->GetName() + "." + it->first->GetName(), it->second);
             sub_graph.topo = sub_topo;
             sub_graph.data = graph->data;
         }

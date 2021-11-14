@@ -244,13 +244,11 @@ static RetCode ParseGraphOutput(const ::onnx::GraphProto& pb_graph, ir::GraphTop
 }
 
 RetCode GraphParser::Parse(const ::onnx::GraphProto& pb_graph, const map<string, uint64_t>& op_sets, ir::Graph* graph) {
-    graph->topo = make_shared<ir::FullGraphTopo>();
+    graph->topo = make_shared<ir::FullGraphTopo>(pb_graph.name());
     graph->data = make_shared<ir::GraphData>();
 
     auto topo = graph->topo.get();
     auto data = graph->data.get();
-
-    topo->SetName(pb_graph.name());
 
     auto status = ParseGraphInitializer(pb_graph, topo, data);
     if (status != RC_SUCCESS) {

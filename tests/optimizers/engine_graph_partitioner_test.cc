@@ -33,7 +33,6 @@ using namespace ppl::nn::test;
 class TestGraphPartion : public testing::Test {
 protected:
     virtual void SetUp() override {
-        builder_.SetGraphName("tmp");
         builder_.AddNode("a", ir::Node::Type("test", "op1", 1), {"input_of_a"}, {"output_of_a"});
         builder_.AddNode("b", ir::Node::Type("test", "op2", 1), {"output_of_a"}, {"output_of_b"});
         builder_.AddNode("c", ir::Node::Type("test", "op3", 1), {"output_of_b"}, {"output_of_c"});
