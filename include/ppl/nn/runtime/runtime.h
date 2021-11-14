@@ -20,6 +20,7 @@
 
 #include "ppl/common/retcode.h"
 #include "ppl/nn/common/common.h"
+#include "ppl/nn/common/device_context.h"
 #include "ppl/nn/runtime/tensor.h"
 #include "ppl/nn/runtime/profiling_statistics.h"
 
@@ -73,9 +74,7 @@ public:
     */
     virtual ppl::common::RetCode Sync() = 0;
 
-    /**
-       @brief get the number of outputs of the associated graph.
-    */
+    /** @brief get the number of outputs of the associated graph. */
     virtual uint32_t GetOutputCount() const = 0;
 
     /**
@@ -83,6 +82,15 @@ public:
        @param idx should be less than `GetOutputCount()`.
     */
     virtual Tensor* GetOutputTensor(uint32_t idx) const = 0;
+
+    /** @brief get the number of `DeviceContext` used by this `Runtime` instance */
+    virtual uint32_t GetDeviceContextCount() const = 0;
+
+    /**
+       @brief get device context at position `idx`.
+       @param idx should be less than `GetDeviceContextCount()`.
+    */
+    virtual DeviceContext* GetDeviceContext(uint32_t idx) const = 0;
 
     /**
        @brief get profiling statistics of each kernel.
