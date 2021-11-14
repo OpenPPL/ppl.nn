@@ -223,16 +223,21 @@ void UpdateGraph(ir::Node* node, PPLShapeOperationParam* shape_param, ir::Graph*
     bool first_add = true;
     for (auto it = shape_param->alpha.begin(); it != shape_param->alpha.end(); ++it) {
         auto edge = topo->GetEdgeById(it->first);
+
         bool flag = false;
-        for (auto edge_it = edge->CreateConsumerIter(); edge_it.IsValid();) {
+        vector<nodeid_t> to_be_deleted;
+        for (auto edge_it = edge->CreateConsumerIter(); edge_it.IsValid(); edge_it.Forward()) {
             auto temp_node_id = edge_it.Get();
             if (topo->GetNodeById(temp_node_id) != nullptr) {
                 flag = true;
-                edge_it.Forward();
             } else {
-                edge->DelConsumer(temp_node_id);
+                to_be_deleted.push_back(temp_node_id);
             }
         }
+        for (auto x = to_be_deleted.begin(); x != to_be_deleted.end(); ++x) {
+            edge->DelConsumer(*x);
+        }
+
         if (flag) {
             edge->SetProducer(node->GetId());
             if (first_add) {
