@@ -24,14 +24,9 @@ using namespace std;
 
 namespace ppl { namespace nn { namespace utils {
 
-static inline string GetGraphvizNodeName(const ir::Node* node) {
-    string type_str;
-    if (node->GetType().domain.empty()) {
-        type_str = node->GetType().name;
-    } else {
-        type_str = node->GetType().domain + "." + node->GetType().name;
-    }
-    return node->GetName() + "[" + type_str + "][" + std::to_string(node->GetId()) + "]";
+static string GenNodeIdStr(const ir::Node* node) {
+    auto& type = node->GetType();
+    return node->GetName() + "[" + type.domain + ":" + type.name + ":" + std::to_string(type.version) + "]";
 }
 
 static string ToGraphviz(const ir::GraphTopo* topo) {
@@ -42,32 +37,23 @@ static string ToGraphviz(const ir::GraphTopo* topo) {
 
         string begin_node_name;
         if (edge->GetProducer() == INVALID_NODEID) {
-            if (topo->GetInput(edge->GetName()) != INVALID_EDGEID) {
-                begin_node_name = "input:" + edge->GetName();
-            } else if (topo->GetExtraInput(edge->GetName()) != INVALID_EDGEID) {
-                begin_node_name = "extra_input:" + edge->GetName();
-            }
+            begin_node_name = "NIL-BEGIN";
         } else {
             auto node = topo->GetNodeById(edge->GetProducer());
-            begin_node_name = GetGraphvizNodeName(node);
+            begin_node_name = GenNodeIdStr(node);
         }
 
-        auto edge_iter = edge->CreateConsumerIter();
-        if (edge_iter.IsValid()) {
+        auto consumer_iter = edge->CreateConsumerIter();
+        if (consumer_iter.IsValid()) {
             do {
-                auto node = topo->GetNodeById(edge_iter.Get());
-                if (!begin_node_name.empty()) {
-                    content += "\"" + begin_node_name + "\" -> \"" + GetGraphvizNodeName(node) + "\" [label=\"" +
-                        edge->GetName() + "\"]\n";
-                }
-                edge_iter.Forward();
-            } while (edge_iter.IsValid());
+                auto node = topo->GetNodeById(consumer_iter.Get());
+                content += "\"" + begin_node_name + "\" -> \"" + GenNodeIdStr(node) + "\" [label=\"" + edge->GetName() +
+                    "\"]\n";
+                consumer_iter.Forward();
+            } while (consumer_iter.IsValid());
         } else {
-            if (!begin_node_name.empty()) {
-                content += "\"" + begin_node_name + "\" -> \"output:" + edge->GetName() + "\" [label=\"" +
-                    edge->GetName() + "\"]\n";
-            }
-            edge_iter.Forward();
+            content += "\"" + begin_node_name + "\" -> \"NIL-END\" [label=\"" + edge->GetName() + "\"]\n";
+            consumer_iter.Forward();
         }
     }
 
