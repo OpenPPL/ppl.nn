@@ -21,6 +21,7 @@
 
 #include "ppl/common/cuda/cuda_types.h"
 #include "cudakernel/gemm/gemm.h"
+#include "cudakernel/nn/convtranspose.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/utils/utils.h"
 
@@ -127,6 +128,62 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
 }
 
 RetCode ConvTransposeAlgorithm::ModifyParam(const ir::Node* node, OptKernelOptions& options) {
+    this->attr_param_ = *(reinterpret_cast<CudaConvTransposeParam*>(options.param));
+    auto topo = options.graph->topo.get();
+    auto data = options.graph->data.get();
+    auto weight_edge = topo->GetEdgeById(node->GetInput(1));
+    auto weight_node = topo->GetNodeById(weight_edge->GetProducer());
+
+    auto shape_in0 = options.tensors->find(node->GetInput(0))->second->GetShape();
+    auto shape_in1 = options.tensors->find(node->GetInput(1))->second->GetShape();
+    auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
+    auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
+
+    RetCode status;
+    auto stream = options.device->GetStream();
+    auto weight_iter = data->constants.find(weight_node->GetInput(0));
+    if (weight_iter != data->constants.end() && // is a constant tensor and has not be loaded
+        options.info->constants.find(weight_node->GetInput(0)) == options.info->constants.end()) {
+        auto preedge_id = weight_node->GetInput(0);
+        auto postedge_id = node->GetInput(1);
+        auto preshape = options.tensors->find(preedge_id)->second->GetShape();
+        auto postshape = options.tensors->find(postedge_id)->second->GetShape();
+        auto newshape = postshape;
+        newshape.SetDim(0, (newshape.GetDim(0) + align_size - 1) / align_size * align_size);
+
+        RuntimeConstantInfo weight_constat_info;
+        {
+            BufferDesc buffer;
+            status = options.device->Realloc(newshape, &buffer);
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
+                return status;
+            }
+
+            weight_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
+            weight_constat_info.SetBuffer(buffer, options.device, true);
+        }
+
+        auto size = PPLConvTransposeGetBufSizeCuda(&shape_in0, &shape_out, &attr_param_.param);
+        ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_temp_buffer, size, RC_OUT_OF_MEMORY)
+        ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_input_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
+        status = options.device->GetDataConverter()->ConvertFromHost(&filter_input_buffer, postshape,
+                                                                     weight_iter->second.data.data(), preshape);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << node->GetName() << " copy constant failed: " << GetRetCodeStr(status);
+            return status;
+        }
+
+        PPLCUDAConvTransposeCvt(stream, filter_input_buffer.addr, filter_temp_buffer.addr, weight_constat_info.GetBufferDesc().addr, 
+                                &shape_in0, &shape_in1, &attr_param_.param);
+
+        options.info->constants.emplace(preedge_id, std::move(weight_constat_info));
+        options.tensors->find(preedge_id)->second->GetShape() = postshape;
+        options.quants->at(preedge_id).format = postshape.GetDataFormat();
+        options.quants->at(preedge_id).type = postshape.GetDataType();
+    }
+    reinterpret_cast<CudaConvParam*>(options.param)->extra_param.algo_info.is_initializer_weight =
+        weight_iter != data->constants.end();
     return RC_SUCCESS;
 }
 
