@@ -64,15 +64,6 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     attr_param_.extra_param.algo_info.algo_type = "TuringHMMAImpgemm";
     options.compile_set->emplace(node->GetId());
 
-    conv_param_t temp_conv_param;
-    fuse_param_t temp_fuse_param;
-    auto shape_in0 = options.tensors->find(node->GetInput(0))->second->GetShape();
-    auto shape_in1 = options.tensors->find(node->GetInput(1))->second->GetShape();
-    auto shape_in2 = TensorShape();
-    auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
-    auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
-    ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_.param, temp_conv_param);
-
     std::string key_str = node->GetName();
     auto algo_info = options.algos->find(key_str);
     if (algo_info != options.algos->end()) {
@@ -80,19 +71,27 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
         attr_param_.extra_param.algo_info.kid = algo_info->second.kid;
         attr_param_.extra_param.algo_info.splitk = algo_info->second.splitk;
         attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
-        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info, temp_conv_param);
+        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
         return 0.0f;
     } else { // Give the default kernel
-        attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_fn_b32x32_w32x8_k64_s32_buf1";
+        attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_fn_b128x128_w64x64_k32_s32_buf1";
         attr_param_.extra_param.algo_info.kid = 5100;
         attr_param_.extra_param.algo_info.splitk = 1;
         attr_param_.extra_param.algo_info.splitf = 1;
-        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info, temp_conv_param);
+        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
     }
 
     if (options.args->quick_select) {
         return 0.0f;
     }
+
+    conv_param_t temp_conv_param;
+    fuse_param_t temp_fuse_param;
+    auto shape_in0 = options.tensors->find(node->GetInput(0))->second->GetShape();
+    auto shape_in1 = options.tensors->find(node->GetInput(1))->second->GetShape();
+    auto shape_in2 = TensorShape();
+    auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
+    auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
 
     // input H or W is too small
     if (shape_in0.GetDim(2) + 2 * temp_conv_param.pad_height < shape_in1.GetDim(2) ||
@@ -110,6 +109,8 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
         shape_in2 = options.tensors->find(node->GetInput(2))->second->GetShape();
         shape_in2.SetDim(0, k_per_grp_pad * temp_conv_param.num_grp);
     }
+
+    ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_.param, temp_conv_param);
 
     RetCode status;
     ALLOC_BUFFERF_FOR_ALGO_SELECT(input_buffer, shape_in0.GetBytesIncludingPadding(), ALGO_MAX_TIME)

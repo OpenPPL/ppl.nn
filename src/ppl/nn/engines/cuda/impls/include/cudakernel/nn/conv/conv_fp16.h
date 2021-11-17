@@ -137,8 +137,7 @@ uint64_t PPLCUDAConvolutionGetRuntimeBufSize(
     uint64_t workspace = ((uint64_t)8) * 1024 * 1024 * 1024);
 
 ppl::common::RetCode PPLCUDAConvolutionLoadAlgoParam(
-    algo_param_t& algo_param,
-    conv_param_t& conv_param);
+    algo_param_t& algo_param);
 
 ppl::common::RetCode PPLCUDAConvolutionPredictKernel(
     algo_param_t& algo_param,

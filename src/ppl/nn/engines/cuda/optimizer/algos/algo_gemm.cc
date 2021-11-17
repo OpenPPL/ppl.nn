@@ -49,11 +49,51 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
         attr_param_.param.bias_term = 1;
     }
 
+    std::string key_str = node->GetName();
+    auto algo_info = options.algos->find(key_str);
+    if (algo_info != options.algos->end()) {
+        attr_param_.extra_param.algo_info.algo_name = algo_info->second.kname;
+        attr_param_.extra_param.algo_info.kid = algo_info->second.kid;
+        attr_param_.extra_param.algo_info.splitk = algo_info->second.splitk;
+        attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
+        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
+        return 0.0f;
+    } else { // Give the default kernel
+        attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";
+        attr_param_.extra_param.algo_info.kid = 0;
+        attr_param_.extra_param.algo_info.splitk = 1;
+        attr_param_.extra_param.algo_info.splitf = 1;
+        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
+    }
+
+    if (options.args->quick_select) {
+        return 0.0f;
+    }
+
     auto shape_in0 = options.tensors->find(node->GetInput(0))->second->GetShape();
     auto shape_in1 = options.tensors->find(node->GetInput(1))->second->GetShape();
     auto shape_in2 = TensorShape();
     auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
+
+    // illegal gemm input
+    if (shape_in0.GetDim(!attr_param_.param.transA) != shape_in1.GetDim(attr_param_.param.transB)) {
+        shape_in0.SetDim(!attr_param_.param.transA, shape_in1.GetDim(attr_param_.param.transB));
+    }
+
+    // input N is too small
+    if (shape_in0.GetDim(attr_param_.param.transA) < 1) {
+        shape_in0.SetDim(attr_param_.param.transA, 1);
+        shape_out.SetDim(0, 1);
+    }
+
+    // Padding
+    shape_in1.SetDim(0, (shape_in1.GetDim(0) + align_size - 1) / align_size * align_size);
+    shape_in1.SetDim(1, (shape_in1.GetDim(1) + align_size - 1) / align_size * align_size);
+    if (attr_param_.param.bias_term) {
+        shape_in2 = options.tensors->find(node->GetInput(2))->second->GetShape();
+        shape_in2.SetDim(0, (shape_in2.GetDim(0) + align_size - 1) / align_size * align_size);
+    }
 
     conv_param_t temp_conv_param;
     fuse_param_t temp_fuse_param;
@@ -73,30 +113,6 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
     temp_conv_param.hole_height = 1;
     temp_conv_param.hole_width = 1;
     temp_conv_param.num_grp = 1;
-
-    std::string key_str = node->GetName();
-    auto algo_info = options.algos->find(key_str);
-    if (algo_info != options.algos->end()) {
-        attr_param_.extra_param.algo_info.algo_name = algo_info->second.kname;
-        attr_param_.extra_param.algo_info.kid = algo_info->second.kid;
-        attr_param_.extra_param.algo_info.splitk = algo_info->second.splitk;
-        attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
-        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info, temp_conv_param);
-        return 0.0f;
-    }
-
-    // illegal gemm input
-    if (shape_in0.GetDim(!attr_param_.param.transA) != shape_in1.GetDim(attr_param_.param.transB)) {
-        shape_in0.SetDim(!attr_param_.param.transA, shape_in1.GetDim(attr_param_.param.transB));
-    }
-
-    // Padding
-    shape_in1.SetDim(0, (shape_in1.GetDim(0) + align_size - 1) / align_size * align_size);
-    shape_in1.SetDim(1, (shape_in1.GetDim(1) + align_size - 1) / align_size * align_size);
-    if (attr_param_.param.bias_term) {
-        shape_in2 = options.tensors->find(node->GetInput(2))->second->GetShape();
-        shape_in2.SetDim(0, (shape_in2.GetDim(0) + align_size - 1) / align_size * align_size);
-    }
 
     RetCode status;
     ALLOC_BUFFERF_FOR_ALGO_SELECT(input_buffer, shape_in0.GetBytesIncludingPadding(), ALGO_MAX_TIME)
