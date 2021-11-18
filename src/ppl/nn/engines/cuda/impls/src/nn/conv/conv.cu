@@ -596,8 +596,7 @@ __inline__ std::string ToString(int v)
 }
 
 ppl::common::RetCode PPLCUDAConvolutionLoadAlgoParam(
-    algo_param_t &algo_param,
-    conv_param_t &conv_param)
+    algo_param_t &algo_param)
 {
     auto kname        = algo_param.algo_name.substr(algo_param.algo_name.find("_b"));
     auto f_size       = algo_param.algo_name.substr(25,2);

@@ -55,6 +55,17 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
     auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
 
+    // illegal gemm input
+    if (shape_in0.GetDim(!attr_param_.param.transA) != shape_in1.GetDim(attr_param_.param.transB)) {
+        shape_in0.SetDim(!attr_param_.param.transA, shape_in1.GetDim(attr_param_.param.transB));
+    }
+
+    // input N is too small
+    if (shape_in0.GetDim(attr_param_.param.transA) < 1) {
+        shape_in0.SetDim(attr_param_.param.transA, 1);
+        shape_out.SetDim(0, 1);
+    }
+
     conv_param_t temp_conv_param;
     fuse_param_t temp_fuse_param;
     temp_conv_param.in_num = attr_param_.param.transA ? shape_in0.GetDim(1) : shape_in0.GetDim(0);
@@ -81,13 +92,18 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
         attr_param_.extra_param.algo_info.kid = algo_info->second.kid;
         attr_param_.extra_param.algo_info.splitk = algo_info->second.splitk;
         attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
-        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info, temp_conv_param);
+        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
         return 0.0f;
+    } else { // Give the default kernel
+        attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";
+        attr_param_.extra_param.algo_info.kid = 0;
+        attr_param_.extra_param.algo_info.splitk = 1;
+        attr_param_.extra_param.algo_info.splitf = 1;
+        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
     }
 
-    // illegal gemm input
-    if (shape_in0.GetDim(!attr_param_.param.transA) != shape_in1.GetDim(attr_param_.param.transB)) {
-        shape_in0.SetDim(!attr_param_.param.transA, shape_in1.GetDim(attr_param_.param.transB));
+    if (options.args->quick_select) {
+        return 0.0f;
     }
 
     // Padding
