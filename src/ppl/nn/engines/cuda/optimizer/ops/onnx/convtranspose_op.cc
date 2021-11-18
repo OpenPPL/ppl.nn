@@ -56,7 +56,6 @@ RetCode ConvTransposeOp::Init(const OptKernelOptions& options) {
 
 RetCode ConvTransposeOp::Finalize(const OptKernelOptions& options) {
     param_ = *((CudaConvTransposeParam*)options.param);
-
     auto status = SetCommonParam(options);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load common param failed: " << GetRetCodeStr(status);
