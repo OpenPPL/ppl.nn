@@ -314,7 +314,7 @@ ppl::common::RetCode Fp16CodeGeneFactor::GeneSwzlKernel(std::string& file_res, s
         file_str << "#define READ_sRv4(_Rv4, _sm_base_v4, _sRv4_read)                 READ_sRv4_SIZE4(_Rv4, _sm_base_v4, _sRv4_read)\n";
         file_str << "#define WRITE_sRv1(_sm_base_v1, _sRv1_write_base, _C, _C_off)    WRITE_sRv1_" << warp_y / MMA_Y << "x2(_sm_base_v1, _sRv1_write_base, _C, _C_off)\n\n";
     } else {
-        LOG(ERROR) << "knum is error, create kernel failed with ksize " << k_size;
+        LOG(ERROR) << "knum is error, create kernel failed with warp_y " << warp_y;
         return ppl::common::RC_INVALID_VALUE;
     }
 
@@ -349,14 +349,14 @@ ppl::common::RetCode Fp16CodeGeneFactor::GeneSwzlKernel(std::string& file_res, s
 
     file_str << "#define READ_sAv1(_A, _sm_base_v1, _sAv1_read)          READ_sUv1_1x" << warp_y / MMA_Y << "(_A, _sm_base_v1, _sAv1_read)\n";
 
-    if (warp_y == 128) {
+    if (warp_x == 128) {
         file_str << "#define READ_sBv1(_B, _sm_base_v1, _sBv1_read)          READ_sUv1_4x" << warp_x / MMA_X_HALF / 4 << "(_B, _sm_base_v1, _sBv1_read)\n\n";
-    } else if (warp_y == 64) {
+    } else if (warp_x == 64) {
         file_str << "#define READ_sBv1(_B, _sm_base_v1, _sBv1_read)          READ_sUv1_2x" << warp_x / MMA_X_HALF / 2 << "(_B, _sm_base_v1, _sBv1_read)\n\n";
-    } else if (warp_y == 16 || warp_y == 32) {
+    } else if (warp_x == 16 || warp_x == 32) {
         file_str << "#define READ_sBv1(_B, _sm_base_v1, _sBv1_read)          READ_sUv1_1x" << warp_x / MMA_X_HALF << "(_B, _sm_base_v1, _sBv1_read)\n\n";
     } else {
-        LOG(ERROR) << "warp_y is error, create kernel failed";
+        LOG(ERROR) << "warp_x is error, create kernel failed " << warp_x;
         return ppl::common::RC_INVALID_VALUE;
     }
 
@@ -368,7 +368,6 @@ ppl::common::RetCode Fp16CodeGeneFactor::GeneSwzlKernel(std::string& file_res, s
             file_str << "#define WRITE_sBv4(_sm_base_v4, _sm_off, _reg)                          WRITE_sUv4_SIZE" << GetSizeString(dBv4_size) << "(_sm_base_v4, _sm_off, _reg)\n\n";
 
             file_str << "#define FLT_SIZE1\n\n";
-
     } else if (flt_size == "f3") {
             file_str << "#define LOAD_dAv4(_regA, _dA, _dAv4_off, _flt_c_v8_id, _flt_n_valid)    LOAD_dAv4_SIZE" << GetSizeString(dAv4_size) << "(_regA, _dA, _dAv4_off, _flt_c_v8_id, _flt_n_valid)\n";
             file_str << "#define WRITE_sAv4(_sm_base_v4, _sm_off, _reg)                          WRITE_sUv4_SIZE" << GetSizeString(dAv4_size) << "(_sm_base_v4, _sm_off, _reg)\n\n";
@@ -384,9 +383,12 @@ ppl::common::RetCode Fp16CodeGeneFactor::GeneSwzlKernel(std::string& file_res, s
             file_str << "#define LOAD_dBv4(_regB, _dB, _dBv4_off, _in_n_id, _in_h_id, _in_w_id)  LOAD_dBv4_SIZE" << GetSizeString(dBv4_size) << "(_regB, _dB, _dBv4_off, _in_n_id, _in_h_id, _in_w_id)\n";
             file_str << "#define WRITE_sBv4(_sm_base_v4, _sm_off, _reg)                          WRITE_sUv4_SIZE" << GetSizeString(dBv4_size) << "(_sm_base_v4, _sm_off, _reg)\n\n";
 
-            file_str << "#define FWD_FLT(_flt_h_id, _flt_w_id, _flt_c_v8_id, _flt_c_v8_valid)    FWD_FLT_SIZE" << (dAv4_size ? GetSizeString(dAv4_size) : "1") << "(_flt_h_id, _flt_w_id, _flt_c_v8_id, _flt_c_v8_valid)\n";
+            file_str << "#define FWD_FLT(_flt_h_id, _flt_w_id, _flt_c_v8_id, _flt_c_v8_valid)    FWD_FLT_SIZE" << (dAv4_size >= 1? GetSizeString(dAv4_size) : "1") << "(_flt_h_id, _flt_w_id, _flt_c_v8_id, _flt_c_v8_valid)\n";
 
             file_str << "#define FLT_SIZEN\n\n";
+    }  else {
+        LOG(ERROR) << "flt_size is error, create kernel failed with " << flt_size;
+        return ppl::common::RC_INVALID_VALUE;
     }
 
     WriteIncludeFile(file_str, "/swzl/common/output_macros.h");
@@ -413,6 +415,7 @@ ppl::common::RetCode Fp16CodeGeneFactor::ReplaceFusionFor2spk(std::string& file_
 
     std::stringstream file_str;
     file_str << "uint concatV4_off = 0;\n";
+    file_str << "ADD_BIAS_V4(has_bias, bias);\n";
     file_str << "if(dCv4_x_valid  && dCv4_y_valid ) {\n";
 
     if (fuse_index < fuse_size && relu_set.find(fuse_info.types[fuse_index]) != relu_set.end()) {
@@ -540,12 +543,11 @@ ppl::common::RetCode Fp16CodeGeneFactor::ReplaceFusionForSwzl(std::string& file_
     int fuse_index = 0;
     int fuse_size  = fuse_info.types.size();
 
-    auto begin = file_res.find("uint concatV4_off = 0;");
+    auto begin = file_res.find("FUSE_RELU_V4(has_relu);");
     auto end   = file_res.find("#endif", begin);
 
     std::stringstream file_str;
-    file_str << "uint concatV4_off = 0;\n";
-    file_str << "if(dCv4_x_valid  && dCv4_y_valid ) {\n";
+    file_str << "if(dCv4_y_valid) {\n";
 
     if (fuse_index < fuse_size && relu_set.find(fuse_info.types[fuse_index]) != relu_set.end()) {
         auto type = fuse_info.types[fuse_index];
@@ -590,11 +592,9 @@ ppl::common::RetCode Fp16CodeGeneFactor::ReplaceFusionForSwzl(std::string& file_
         fuse_index++;
     }
 
-    if (fuse_info.channel_offset >= 0) {
-        file_str << "JIT_SET_CONCAT_OFF_V4(concatV4_off)\n";
-    }
-
     file_str << "}\n";
+    file_str << "JIT_SET_CONCAT_OFF_V4(has_concat, concat_v4_off)\n";
+
     file_res.replace(begin, end - begin, file_str.str());
     return ppl::common::RC_SUCCESS;
 }

@@ -206,7 +206,9 @@ struct kernel_info_t {
     }
 
     bool CheckKernelTilesFeasible(int device_id)
-    {
+    {            
+        cudaDeviceProp device_prop;
+        cudaGetDeviceProperties(&device_prop, device_id);
         if (ktype == CONV_IDXN_C2 || ktype == CONV_IDXN_C4 || ktype == CONV_IDXN_C32) {
             return tile_m_per_warp >= 16 && tile_m_per_warp <= 64 &&
                    tile_n_per_warp >= 8 && tile_n_per_warp <= 32 &&
@@ -215,9 +217,7 @@ struct kernel_info_t {
                    tile_n_per_cta >= tile_n_per_warp && tile_n_per_cta / tile_n_per_warp <= 4 &&
                    tile_k_per_cta >= tile_k_per_step && tile_k_per_cta / tile_k_per_step <= 2 &&
                    (tile_m_per_cta / tile_m_per_warp != 4 || tile_n_per_cta / tile_n_per_warp != 4);
-        } else {
-            cudaDeviceProp device_prop;
-            cudaGetDeviceProperties(&device_prop, device_id);
+        } else if (ktype == CONV_2SPK_F1 || ktype == CONV_2SPK_F3 || ktype == CONV_2SPK_FN || ktype == CONV_2SPK_FS) { 
             int MAX_SMEM_V4_PER_CTA = device_prop.sharedMemPerBlock / 16;
             int INT4_TO_4HALF2      = 8;
             int BUF_SIZE            = 1;
@@ -236,7 +236,29 @@ struct kernel_info_t {
                    sm_c_v4 * tile_k_per_cta / tile_k_per_set <= MAX_SMEM_V4_PER_CTA &&
                    (tile_m_per_cta / tile_m_per_warp != 4 || tile_n_per_cta / tile_n_per_warp != 4) &&
                    (tile_m_per_warp != 128 || tile_n_per_warp != 64);
+        } else if ( ktype == CONV_SWZL_F1 || ktype == CONV_SWZL_F3 || ktype == CONV_SWZL_FN ) {
+            int MAX_SMEM_V4_PER_CTA = device_prop.sharedMemPerBlock / 16;
+            int INT4_TO_8HALF = 8;
+            int BUF_SIZE      = 1;
+            int MMA_X         = 16;
+
+            int sm_a_v4 = tile_m_per_cta * tile_k_per_cta * BUF_SIZE / INT4_TO_8HALF;
+            int sm_b_v4 = tile_n_per_cta * tile_k_per_cta * BUF_SIZE / INT4_TO_8HALF;
+            int sm_r_v4 = tile_m_per_cta * MMA_X  / INT4_TO_8HALF;
+
+            return tile_m_per_warp >= 8 && tile_m_per_warp <= 64 && // tiles limit
+                   tile_n_per_warp >= 16 && tile_n_per_warp <= 128 &&
+                   tile_k_per_cta >= 8 && tile_k_per_cta <= 64 &&
+                   tile_m_per_cta >= tile_m_per_warp && tile_m_per_cta / tile_m_per_warp <= 4 &&
+                   tile_n_per_cta >= tile_n_per_warp && tile_n_per_cta / tile_n_per_warp <= 4 &&
+                   sm_a_v4 + sm_b_v4 <= MAX_SMEM_V4_PER_CTA && // share memeory limit
+                   sm_r_v4 <= MAX_SMEM_V4_PER_CTA &&
+                   (tile_m_per_cta / tile_m_per_warp != 1 || tile_n_per_cta / tile_n_per_warp != 1 || tile_k_per_cta == 64) &&
+                   (tile_m_per_cta / tile_m_per_warp != 4 || tile_n_per_cta / tile_n_per_warp != 4) &&
+                   (tile_m_per_warp != 8 || tile_n_per_warp != 16) &&
+                   (tile_m_per_warp != 128 || tile_n_per_warp != 64);
         }
+        return false;
     }
 
     bool CheckKernelTypeFeasible(int flt_height, int flt_width, int num_chl_per_grp, int splitk)

@@ -199,3 +199,133 @@
 	        } \
         }
         
+//////////////////////////////////////////////////////
+// relu macros
+//////////////////////////////////////////////////////
+
+#define JIT_FUSE_RELU_V4()                                                                           \
+        {                                                                                                 \
+                _Pragma("unroll") for(int i = 0; i < OUTPUT_BLKS_PER_STEP; i++)                           \
+                {                                                                                         \
+                    int *Rv1 = (int *)Rv4;                                                                \
+                                                                                                          \
+                        _Pragma("unroll") for (int j = 0; j < _INT4_TO_4HALF2_; j++) {                    \
+                            Rv1[i * _INT4_TO_4HALF2_ + j] = __vmaxs2(Rv1[i * _INT4_TO_4HALF2_ + j], 0);   \
+                        }                                                                                 \
+		        }                                                                                         \
+        }
+
+#define JIT_FUSE_SIGMOID_V4()                                                                           \
+        {                                                                                                 \
+                _Pragma("unroll") for(int i = 0; i < OUTPUT_BLKS_PER_STEP; i++)                           \
+                {                                                                                         \
+                    int *Rv1 = (int *)Rv4;                                                                \
+                    __half2 h2ONE((__half)1.f, (__half)1.f);                                          \
+                    _Pragma("unroll") for (int j = 0; j < _INT4_TO_4HALF2_; j++) {                    \
+                        h2R[i * _INT4_TO_4HALF2_ + j] = __h2div(h2exp(h2R[i * _INT4_TO_4HALF2_ + j]), \
+                                __hadd2(h2ONE, h2exp(h2R[i * _INT4_TO_4HALF2_ + j])));                \
+                    }                                                                                 \
+		        }                                                                                         \
+        }
+
+//////////////////////////////////////////////////////
+// clip macros
+//////////////////////////////////////////////////////
+
+#define JIT_FUSE_CLIP_V4(_clip_max, _clip_min) \
+        { \
+                _Pragma("unroll") for(int i = 0; i < OUTPUT_BLKS_PER_STEP; i++) \
+                { \
+                    _Pragma("unroll") for(int j = 0; j < _INT4_TO_4INT_; j++) \
+                    { \
+                        h2R[i * _INT4_TO_4INT_ + j].x = __hgt(h2R[i * _INT4_TO_4INT_ + j].x, _clip_max.x) ? _clip_max.x : h2R[i * _INT4_TO_4INT_ + j].x; \
+                        h2R[i * _INT4_TO_4INT_ + j].y = __hgt(h2R[i * _INT4_TO_4INT_ + j].y, _clip_max.x) ? _clip_max.y : h2R[i * _INT4_TO_4INT_ + j].y; \
+                        h2R[i * _INT4_TO_4INT_ + j].x = __hlt(h2R[i * _INT4_TO_4INT_ + j].x, _clip_min.x) ? _clip_min.x : h2R[i * _INT4_TO_4INT_ + j].x; \
+                        h2R[i * _INT4_TO_4INT_ + j].y = __hlt(h2R[i * _INT4_TO_4INT_ + j].y, _clip_min.x) ? _clip_min.y : h2R[i * _INT4_TO_4INT_ + j].y; \
+	                } \
+		        } \
+        }
+
+//////////////////////////////////////////////////////
+// prelu macros
+//////////////////////////////////////////////////////
+
+#define JIT_FUSE_LEAKY_V4(_leaky) \
+    { \
+            int4 _scale_v4[OUTPUT_BLKS_PER_STEP];                                                                                \
+            __half *_hscale = (__half *)&_scale_v4;                                                                              \
+                                                                                                                                 \
+            _Pragma("unroll") for(int i = 0; i < OUTPUT_BLKS_PER_STEP; i++)                                                      \
+            {                                                                                                                    \
+                    _Pragma("unroll") for (int j = 0; j < _INT4_TO_8HALF_; j++)                                                  \
+                    {                                                                                                            \
+                        if (__hlt(hR[i * _INT4_TO_8HALF_ + j], 0))                                                               \
+                            hR[i * _INT4_TO_8HALF_ + j] = __hmul(hR[i * _INT4_TO_8HALF_ + j], _leaky);                           \
+                    }                                                                                                            \
+            } \
+    }
+
+#define JIT_FUSE_PRELU_V4(_has_prelu, _prelu) \
+    { \
+            int4 _scale_v4[OUTPUT_BLKS_PER_STEP];                                                                                \
+            __half *_hscale = (__half *)&_scale_v4;                                                                              \
+                                                                                                                                 \
+            _Pragma("unroll") for(int i = 0; i < OUTPUT_BLKS_PER_STEP; i++)                                                      \
+            {                                                                                                                    \
+                if (_has_prelu == 2) {                                                                                           \
+                    _scale_v4[i] = ((int4 *)_prelu)[grp_id * num_flt_per_grp_pad_v8 + dCv4_idy];                                 \
+                                                                                                                                 \
+                    _Pragma("unroll") for (int j = 0; j < _INT4_TO_8HALF_; j++)                                                  \
+                    {                                                                                                            \
+                        if (__hlt(hR[i * _INT4_TO_8HALF_ + j], 0))                                                               \
+                            hR[i * _INT4_TO_8HALF_ + j] = __hmul(hR[i * _INT4_TO_8HALF_ + j], _hscale[i * _INT4_TO_8HALF_ + j]); \
+                    }                                                                                                            \
+                }                                                                                                                \
+                                                                                                                                 \
+                if (_has_prelu == 3) {                                                                                           \
+                    if(dCv4_x_valid[i])                                                                                          \
+                        _scale_v4[i] = ((int4 *)_prelu)[dCv4_base + dCv4_idx[i] * num_flt_per_grp_pad_v8 * num_grp];             \
+                                                                                                                                 \
+                    _Pragma("unroll") for (int j = 0; j < _INT4_TO_8HALF_; j++)                                                  \
+                    {                                                                                                            \
+                        if (__hlt(hR[i * _INT4_TO_8HALF_ + j], 0))                                                               \
+                            hR[i * _INT4_TO_8HALF_ + j] = __hmul(hR[i * _INT4_TO_8HALF_ + j], _hscale[i * _INT4_TO_8HALF_ + j]); \
+                    }                                                                                                            \
+                } \
+            } \
+    }
+
+
+//////////////////////////////////////////////////////
+// eltwise macros
+//////////////////////////////////////////////////////
+
+#define JIT_FUSE_ELT_V4(_pre_data) \
+        { \
+                int4 _elt_v4[OUTPUT_BLKS_PER_STEP]; \
+                __half2 *_h2_elt = (__half2 *)&_elt_v4; \
+                \
+                _Pragma("unroll") for(int i = 0; i < OUTPUT_BLKS_PER_STEP; i++) \
+                { \
+                    if(dCv4_x_valid[i]) \
+                        _elt_v4[i] = ((int4 *) _pre_data) [dCv4_base + dCv4_idx[i] * num_flt_per_grp_pad_v8 * num_grp]; \
+                    \
+                    _Pragma("unroll") for (int j = 0; j < _INT4_TO_4HALF2_; j++) \
+                    { \
+                        h2R[i * _INT4_TO_4HALF2_ + j] = __hadd2(h2R[i * _INT4_TO_4HALF2_ + j], _h2_elt[i * _INT4_TO_4HALF2_ + j]); \
+	                } \
+	            } \
+        }
+
+//////////////////////////////////////////////////////
+// concat macros
+//////////////////////////////////////////////////////
+
+#define JIT_SET_CONCAT_OFF_V4(_has_concat, _concat_v4_off) \
+        { \
+            _Pragma("unroll") \
+            for(int i = 0; i < OUTPUT_BLKS_PER_STEP; i++) \
+            { \
+	            _concat_v4_off[i] = (_has_concat) ? dCv4_idx[i] * concat_stride_v8 + concat_offset_v8 : dCv4_idx[i] * num_flt_per_grp_pad_v8 * num_grp; \
+	        } \
+        }
