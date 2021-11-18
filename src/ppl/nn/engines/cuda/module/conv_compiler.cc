@@ -35,26 +35,27 @@ const ppl::common::RetCode ConvCompiler::Compile(ir::Node* node, const OptKernel
     CudaCommonParam* cuda_param = static_cast<CudaCommonParam*>(param);
     CudaConvParam* conv_param = static_cast<CudaConvParam*>(cuda_kernel->GetParam());
     auto algo_param = conv_param->extra_param.algo_info;
-
-    auto edge_pair = options.tensors->find(node->GetInput(0));
-    if (edge_pair == options.tensors->end()) {
-        return ppl::common::RC_NOT_FOUND;
-    }
-    auto input_type = edge_pair->second->GetShape().GetDataType();
+    auto edge_quant = cuda_param->cuda_tensor_info->at(node->GetInput(0));
+    auto input_type = edge_quant.type;
     auto mgr = CodeGeneFactorManager::Instance();
     auto gene_factor = mgr->FindKernel(input_type);
-    
+
     std::string source = "";
     if (algo_param.algo_name.find("Idxn") != std::string::npos) {
         gene_factor->GeneIdxnKernel(source, algo_param.algo_name, algo_param.tiles.m_cta, algo_param.tiles.n_cta,
                        algo_param.tiles.m_warp, algo_param.tiles.n_warp, algo_param.tiles.k_cta,
                        algo_param.tiles.k_per_step, 0);
         gene_factor->ReplaceFusionForIdxn(source, conv_param->extra_param.fuse_info);
-    } else {
+    } else if (algo_param.algo_name.find("2spk") != std::string::npos) {
         gene_factor->Gene2spkKernel(source, algo_param.algo_name, algo_param.tiles.m_cta, algo_param.tiles.n_cta,
                        algo_param.tiles.m_warp, algo_param.tiles.n_warp, algo_param.tiles.k_cta,
                        algo_param.tiles.k_per_set, algo_param.splitk, algo_param.splitf, algo_param.tiles.buf, 0);
         gene_factor->ReplaceFusionFor2spk(source, conv_param->extra_param.fuse_info);
+    } else if (algo_param.algo_name.find("Swzl") != std::string::npos) {
+        gene_factor->GeneSwzlKernel(source, algo_param.algo_name, algo_param.tiles.m_cta, algo_param.tiles.n_cta,
+                       algo_param.tiles.m_warp, algo_param.tiles.n_warp, algo_param.tiles.k_cta,
+                       algo_param.splitk, algo_param.tiles.buf, 0);
+        gene_factor->ReplaceFusionForSwzl(source, conv_param->extra_param.fuse_info);
     }
     std::string name = algo_param.algo_name;
     std::vector<std::string> compile_params;

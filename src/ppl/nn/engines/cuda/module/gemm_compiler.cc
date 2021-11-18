@@ -35,12 +35,8 @@ const ppl::common::RetCode GemmCompiler::Compile(ir::Node* node, const OptKernel
     CudaCommonParam* cuda_param = static_cast<CudaCommonParam*>(param);
     CudaGemmParam* gemm_param = static_cast<CudaGemmParam*>(cuda_kernel->GetParam());
     auto algo_param = gemm_param->extra_param.algo_info;
-
-    auto edge_pair = options.tensors->find(node->GetInput(0));
-    if (edge_pair == options.tensors->end()) {
-        return ppl::common::RC_NOT_FOUND;
-    }
-    auto input_type = edge_pair->second->GetShape().GetDataType();
+    auto edge_quant = cuda_param->cuda_tensor_info->at(node->GetInput(0));
+    auto input_type = edge_quant.type;
     auto mgr = CodeGeneFactorManager::Instance();
     auto gene_factor = mgr->FindKernel(input_type);
 

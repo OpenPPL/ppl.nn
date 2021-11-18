@@ -35,12 +35,8 @@ const ppl::common::RetCode NormalCompiler::Compile(ir::Node* node, const OptKern
     CudaCommonParam* cuda_param = static_cast<CudaCommonParam*>(param);
     algo_param_t algo_param;
     fuse_info_t fuse_info;
-
-    auto edge_pair = options.tensors->find(node->GetInput(0));
-    if (edge_pair == options.tensors->end()) {
-        return ppl::common::RC_NOT_FOUND;
-    }
-    auto input_type = edge_pair->second->GetShape().GetDataType();
+    auto edge_quant = cuda_param->cuda_tensor_info->at(node->GetInput(0));
+    auto input_type = edge_quant.type;
     auto mgr = CodeGeneFactorManager::Instance();
     auto gene_factor = mgr->FindKernel(input_type);
 
