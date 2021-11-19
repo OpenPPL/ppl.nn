@@ -21,6 +21,7 @@
 #include "ppl/nn/engines/common/ppl/converter_op.h"
 #include "ppl/nn/engines/utils.h"
 #include "ppl/nn/ir/partial_graph_topo.h"
+#include "ppl/nn/ir/utils.h"
 #include "ppl/nn/runtime/runtime_partition_info.h"
 #include "ppl/nn/utils/utils.h"
 #include "ppl/nn/common/logger.h"
@@ -441,7 +442,7 @@ RetCode ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimeG
     vector<pair<EngineImpl*, vector<nodeid_t>>> partitions;
 
     EngineGraphPartitioner partitioner;
-    status = partitioner.Partition(resource, graph, &partitions);
+    status = partitioner.Partition(resource, graph->topo.get(), &partitions);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "partitioning graph[" << graph->topo->GetName() << "] failed: " << GetRetCodeStr(status);
         return status;

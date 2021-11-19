@@ -26,7 +26,7 @@ namespace ppl { namespace nn {
 
 class EngineGraphPartitioner final {
 public:
-    ppl::common::RetCode Partition(utils::SharedResource*, ir::Graph*,
+    ppl::common::RetCode Partition(utils::SharedResource*, ir::GraphTopo*,
                                    std::vector<std::pair<EngineImpl*, std::vector<nodeid_t>>>*) const;
 };
 
