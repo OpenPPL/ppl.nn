@@ -224,6 +224,29 @@ static RetCode InsertConverterNodesForPartitions(const vector<EngineImpl*>& node
     return RC_SUCCESS;
 }
 
+static RetCode CollectSortedOps(const ir::GraphTopo* topo, RuntimePartitionInfo* sub_info,
+                                vector<unique_ptr<OptKernel>>* ops) {
+    vector<nodeid_t> sub_sorted_nodes;
+    topo->TopologicalSort([&sub_sorted_nodes](nodeid_t nid) -> void {
+        sub_sorted_nodes.push_back(nid);
+    });
+
+    vector<unique_ptr<OptKernel>> tmp_ops(sub_sorted_nodes.size());
+    for (uint32_t i = 0; i < sub_sorted_nodes.size(); ++i) {
+        auto ref = sub_info->kernels.find(sub_sorted_nodes[i]);
+        if (ref == sub_info->kernels.end()) {
+            auto node = topo->GetNodeById(sub_sorted_nodes[i]);
+            LOG(ERROR) << "cannot find node[" << node->GetName() << "] in opt kernels";
+            return RC_NOT_FOUND;
+        }
+        tmp_ops[i] = std::move(ref->second);
+        sub_info->kernels.erase(ref);
+    }
+
+    *ops = std::move(tmp_ops);
+    return RC_SUCCESS;
+}
+
 static RetCode GenPartitionsInfo(const vector<pair<EngineImpl*, vector<nodeid_t>>>& partitions,
                                  utils::SharedResource* resource, ir::Graph* graph,
                                  vector<pair<edgeid_t, RuntimeConstantInfo>>* constants,
@@ -235,10 +258,9 @@ static RetCode GenPartitionsInfo(const vector<pair<EngineImpl*, vector<nodeid_t>
             sub_graph.topo = graph->topo;
             sub_graph.data = graph->data;
         } else {
-            auto sub_topo = make_shared<ir::PartialGraphTopo>(
+            sub_graph.topo = make_shared<ir::PartialGraphTopo>(
                 graph->topo.get(), graph->topo->GetName() + "." + partition.first->GetName() + "." + std::to_string(p),
                 partition.second);
-            sub_graph.topo = sub_topo;
             sub_graph.data = graph->data;
         }
 
@@ -257,9 +279,10 @@ static RetCode GenPartitionsInfo(const vector<pair<EngineImpl*, vector<nodeid_t>
 
         RuntimeGraphInfo::Partition par_info;
         par_info.engine = engine;
-        par_info.ops.reserve(subgraph_info.kernels.size());
-        for (auto x = subgraph_info.kernels.begin(); x != subgraph_info.kernels.end(); ++x) {
-            par_info.ops.emplace_back(std::move(x->second));
+        status = CollectSortedOps(sub_graph.topo.get(), &subgraph_info, &par_info.sorted_ops);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "collect optkernels failed: " << GetRetCodeStr(status);
+            return status;
         }
         info_list->emplace_back(std::move(par_info));
     }
@@ -461,7 +484,8 @@ RetCode ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimeG
     for (auto x = converter_nodes.begin(); x != converter_nodes.end(); ++x) {
         RuntimeGraphInfo::Partition par_info;
         par_info.engine = x->second;
-        par_info.ops.emplace_back(unique_ptr<OptKernel>(new common::ConverterOp(graph->topo->GetNodeById(x->first))));
+        par_info.sorted_ops.emplace_back(
+            unique_ptr<OptKernel>(new common::ConverterOp(graph->topo->GetNodeById(x->first))));
         info->partitions.emplace_back(std::move(par_info)); // one converter is treated as a single partition
     }
 
