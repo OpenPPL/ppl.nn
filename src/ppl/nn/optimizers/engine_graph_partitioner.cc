@@ -23,10 +23,8 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn {
 
-static void DoPartition(const vector<nodeid_t>& nodes, const ir::Graph* parent, EngineImpl* engine,
+static void DoPartition(const vector<nodeid_t>& nodes, const ir::GraphTopo* topo, EngineImpl* engine,
                         vector<pair<EngineImpl*, vector<nodeid_t>>>* partitions) {
-    auto topo = parent->topo.get();
-
     set<nodeid_t> nodes_left;
     nodes_left.insert(nodes.begin(), nodes.end());
 
@@ -77,10 +75,8 @@ static EngineImpl* FindEngine(utils::SharedResource* resource, const ir::Node* n
     return nullptr;
 }
 
-RetCode EngineGraphPartitioner::Partition(utils::SharedResource* resource, ir::Graph* graph,
+RetCode EngineGraphPartitioner::Partition(utils::SharedResource* resource, ir::GraphTopo* topo,
                                           vector<pair<EngineImpl*, vector<nodeid_t>>>* partitions) const {
-    auto topo = graph->topo.get();
-
     map<EngineImpl*, vector<nodeid_t>> engine_partitions;
     for (auto iter = topo->CreateNodeIter(); iter->IsValid(); iter->Forward()) {
         auto node = iter->Get();
@@ -101,11 +97,11 @@ RetCode EngineGraphPartitioner::Partition(utils::SharedResource* resource, ir::G
         partitions->emplace_back(ref->first, std::move(ref->second));
     } else {
         for (auto it = engine_partitions.begin(); it != engine_partitions.end(); ++it) {
-            DoPartition(it->second, graph, it->first, partitions);
+            DoPartition(it->second, topo, it->first, partitions);
         }
     }
 
-    LOG(INFO) << "total partition(s) of graph[" << graph->topo->GetName() << "]: " << partitions->size() << ".";
+    LOG(INFO) << "total partition(s) of graph[" << topo->GetName() << "]: " << partitions->size() << ".";
 
     return RC_SUCCESS;
 }

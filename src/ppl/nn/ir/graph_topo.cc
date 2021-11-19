@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/ir/graph_topo.h"
+#include "ppl/nn/ir/utils.h"
 #include "ppl/nn/utils/vector_utils.h"
 using namespace std;
 using namespace ppl::common;
@@ -212,50 +213,25 @@ vector<nodeid_t> GraphTopo::FindSuccessors(nodeid_t nid) const {
     return res;
 }
 
-struct NodeItem {
-    NodeItem(nodeid_t nid = INVALID_NODEID, bool r = false) : id(nid), resolved(r) {}
-    nodeid_t id;
-    bool resolved;
-};
-
 void GraphTopo::TopologicalSort(const function<void(nodeid_t)>& callback) const {
-    vector<NodeItem> node_stack;
-    vector<bool> node_is_valid(GetMaxNodeId(), false);
-
-    node_stack.reserve(GetMaxNodeId());
-    for (auto it = CreateNodeIter(); it->IsValid(); it->Forward()) {
-        auto nid = it->Get()->GetId();
-        node_is_valid[nid] = true;
-        node_stack.push_back(NodeItem(nid, false));
-    }
-
-    vector<bool> node_is_visited(GetMaxNodeId(), false);
-
-    while (!node_stack.empty()) {
-        auto item = node_stack.back();
-        node_stack.pop_back();
-
-        auto nid = item.id;
-        if (item.resolved) {
-            callback(nid);
-            continue;
-        }
-
-        if (node_is_visited[nid]) {
-            continue;
-        }
-
-        node_is_visited[nid] = true;
-        item.resolved = true;
-        node_stack.push_back(item);
-
-        auto prev_ids = FindPredecessors(item.id);
-        for (auto it = prev_ids.begin(); it != prev_ids.end(); ++it) {
-            if (node_is_valid[*it]) {
-                node_stack.push_back(NodeItem(*it, false));
+    auto node_iter = CreateNodeIter();
+    utils::Dfs(
+        GetMaxNodeId(),
+        [&node_iter]() -> nodeid_t {
+            if (node_iter->IsValid()) {
+                auto ret = node_iter->Get();
+                node_iter->Forward();
+                return ret->GetId();
             }
-        }
-    }
+            return INVALID_NODEID;
+        },
+        [this](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
+            auto prevs = this->FindPredecessors(nid);
+            for (auto x = prevs.begin(); x != prevs.end(); ++x) {
+                f(*x);
+            }
+        },
+        callback);
 }
 
 }}} // namespace ppl::nn::ir
