@@ -15,28 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_SOFTMAX_OP_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_SOFTMAX_OP_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_FUSIONS_FS_SOFTMAX_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_FUSIONS_FS_SOFTMAX_H_
 
-#include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
-
-#include "ppl/nn/params/onnx/softmax_param.h"
+#include "ppl/nn/engines/cuda/optimizer/fusions/fusion.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-class SoftmaxOp final : public CudaOptKernel {
+class SoftmaxFusion : public Fusion {
 public:
-    SoftmaxOp(const ir::Node* node) : CudaOptKernel(node) {}
-    KernelImpl* CreateKernelImpl() const override;
-    ppl::common::RetCode Init(const OptKernelOptions&) override;
-    ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
-
-    void* GetParam() override {
-        return (void*)&param_;
-    };
-
-private:
-    ppl::nn::common::SoftmaxParam param_;
+    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
 };
 
 }}} // namespace ppl::nn::cuda

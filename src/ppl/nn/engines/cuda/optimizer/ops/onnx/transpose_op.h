@@ -31,6 +31,10 @@ public:
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
+    void* GetParam() override {
+        return (void*)&param_;
+    };
+
 private:
     ppl::nn::common::TransposeParam param_;
 };
