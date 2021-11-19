@@ -29,7 +29,7 @@ using namespace ppl::nn;
 using namespace ppl::nn::test;
 using namespace ppl::common;
 
-class UtilsTest : public testing::Test {
+class OptimizerUtilsTest : public testing::Test {
 protected:
     void SetUp() {
         engines_.emplace_back(unique_ptr<EngineImpl>(new TmpEngineOne()));
@@ -45,7 +45,7 @@ protected:
     shared_ptr<utils::SharedResource> resource_;
 };
 
-TEST_F(UtilsTest, basic_partition) {
+TEST_F(OptimizerUtilsTest, basic_partition) {
     GraphBuilder builder;
     builder.AddNode("a", ir::Node::Type("test", "op1", 1), {"in1"}, {"out1"});
     builder.AddNode("b", ir::Node::Type("test", "op2", 1), {"out1"}, {"out2"});
@@ -77,7 +77,7 @@ TEST_F(UtilsTest, basic_partition) {
     EXPECT_EQ(1, type.version);
 }
 
-TEST_F(UtilsTest, converters_for_input) {
+TEST_F(OptimizerUtilsTest, converters_for_input) {
     GraphBuilder builder;
     builder.AddNode("a", ir::Node::Type("test", "op1", 1), {"in1"}, {"out1"});
     builder.AddNode("b", ir::Node::Type("test", "op2", 1), {"in1", "out1"}, {"out2"});
