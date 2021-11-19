@@ -31,7 +31,7 @@ class EngineImpl;
 struct RuntimeGraphInfo final {
     struct Partition final {
         EngineImpl* engine = nullptr;
-        std::vector<std::unique_ptr<OptKernel>> ops;
+        std::vector<std::unique_ptr<OptKernel>> sorted_ops; // sorted topologically
     };
     std::map<edgeid_t, TensorShape> shapes;
     std::vector<std::pair<edgeid_t, RuntimeConstantInfo>> constants;

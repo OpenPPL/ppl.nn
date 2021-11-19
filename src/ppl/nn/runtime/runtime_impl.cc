@@ -36,43 +36,46 @@ RuntimeImpl::~RuntimeImpl() {
     engctx_.clear();
 }
 
-static EngineContext* FindOrCreateEngineContext(EngineImpl* engine, map<EngineImpl*, EngineContext*>* eng2ctx,
-                                                vector<unique_ptr<EngineContext>>* engctx) {
-    auto ref = eng2ctx->find(engine);
-    if (ref != eng2ctx->end()) {
+static Device* FindOrCreateDevice(EngineImpl* engine, map<EngineImpl*, Device*>* eng2dev,
+                                  vector<unique_ptr<Device>>* devices, vector<unique_ptr<EngineContext>>* engctx) {
+    auto ref = eng2dev->find(engine);
+    if (ref != eng2dev->end()) {
         return ref->second;
     }
 
-    auto ctx = engine->CreateEngineContext();
-    if (ctx) {
-        engctx->emplace_back(unique_ptr<EngineContext>(ctx));
-        eng2ctx->insert(make_pair(engine, ctx));
+    auto ctx = unique_ptr<EngineContext>(engine->CreateEngineContext());
+    if (!ctx) {
+        LOG(ERROR) << "create EngineContext for engine[" << engine->GetName() << "] failed.";
+        return nullptr;
     }
 
-    return ctx;
+    auto dev = ctx->CreateDevice();
+    if (!dev) {
+        LOG(ERROR) << "create Device instance for engine[" << engine->GetName() << "] failed.";
+        return nullptr;
+    }
+
+    engctx->emplace_back(std::move(ctx));
+    devices->emplace_back(unique_ptr<Device>(dev));
+    eng2dev->insert(make_pair(engine, dev));
+
+    return dev;
 }
 
 static RetCode InitRuntimeGraphKernels(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                       vector<unique_ptr<EngineContext>>* engctx,
-                                       vector<unique_ptr<Device>>* devices, RuntimeGraph* graph) {
+                                       vector<unique_ptr<EngineContext>>* engctx, vector<unique_ptr<Device>>* devices,
+                                       RuntimeGraph* graph) {
     graph->nodeid2kernel.resize(topo->GetMaxNodeId());
 
-    map<EngineImpl*, EngineContext*> eng2ctx;
+    map<EngineImpl*, Device*> eng2dev;
     for (auto partition = info.partitions.begin(); partition != info.partitions.end(); ++partition) {
-        auto ctx = FindOrCreateEngineContext(partition->engine, &eng2ctx, engctx);
-        if (!ctx) {
-            LOG(ERROR) << "create context of engine[" << partition->engine->GetName() << "] failed.";
-            return RC_OTHER_ERROR;
-        }
-
-        auto dev = ctx->CreateDevice();
+        auto dev = FindOrCreateDevice(partition->engine, &eng2dev, devices, engctx);
         if (!dev) {
-            LOG(ERROR) << "create device of engine[" << partition->engine->GetName() << "] failed.";
+            LOG(ERROR) << "create device for engine[" << partition->engine->GetName() << "] failed.";
             return RC_OTHER_ERROR;
         }
-        devices->emplace_back(unique_ptr<Device>(dev));
 
-        for (auto o = partition->ops.begin(); o != partition->ops.end(); ++o) {
+        for (auto o = partition->sorted_ops.begin(); o != partition->sorted_ops.end(); ++o) {
             auto impl = (*o)->CreateKernelImpl();
             if (!impl) {
                 LOG(ERROR) << "create kernel[" << (*o)->GetNode()->GetName() << "] failed.";
