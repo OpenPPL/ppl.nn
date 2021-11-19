@@ -25,6 +25,7 @@
 #include "ppl/nn/engines/cuda/optimizer/fusions/fs_concat.h"
 #include "ppl/nn/engines/cuda/optimizer/fusions/fs_conv.h"
 #include "ppl/nn/engines/cuda/optimizer/fusions/fs_gemm.h"
+#include "ppl/nn/engines/cuda/optimizer/fusions/fs_softmax.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -44,9 +45,10 @@ private:
     std::map<std::string, Fusion*> type2fusion_;
     AveragePoolFusion averagepool_fs_;
     ConcatFusion concat_fs_;
+    ChannelShuffleFusion channel_shuffle_fs_;
     ConvFusion conv_fs_;
     GemmFusion gemm_fs_;
-    ChannelShuffleFusion channel_shuffle_fs_;
+    SoftmaxFusion softmax_fs_;
 };
 
 }}} // namespace ppl::nn::cuda

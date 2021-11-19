@@ -95,6 +95,36 @@ bool FastTransposeSupport(
     return true;
 }
 
+bool FastTransposeSupport2(
+    FastTransposeParam *fast_param,
+    const ppl::nn::TensorShape *input_shape,
+    ppl::nn::common::TransposeParam param,
+    const ppl::nn::TensorShape *output_shape)
+{
+    if (input_shape->GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY ||
+        output_shape->GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY) {
+        return false;
+    }
+    int num_dims = input_shape->GetDimCount();
+    for (int i = 0; i < num_dims; i++) {
+        if (param.perm[i] == i) {
+            fast_param->n_outer *= input_shape->GetDim(i);
+            continue;
+        } else {
+            fast_param->n_width = input_shape->GetDim(num_dims - 1);
+            fast_param->n_height = 1;
+            for (int j = i; j < num_dims - 1; j++) {
+                if (param.perm[j + 1] == j) {
+                    fast_param->n_height *= input_shape->GetDim(j);
+                } else {
+                    return false;
+                }
+            }
+            break;
+        }
+    }
+    return true;
+}
 ppl::common::RetCode PPLCUDATransposeFastForwardImp(
     cudaStream_t stream,
     FastTransposeParam param,
@@ -259,6 +289,8 @@ ppl::common::RetCode PPLCUDATransposeForwardImp(
 {
     FastTransposeParam fast_param;
     if (FastTransposeSupport(&fast_param, input_shape, param, output_shape)) {
+        return PPLCUDATransposeFastForwardImp(stream, fast_param, input_shape, input, output_shape, output);
+    } else if (FastTransposeSupport2(&fast_param, input_shape, param, output_shape)) {
         return PPLCUDATransposeFastForwardImp(stream, fast_param, input_shape, input, output_shape, output);
     } else if (MiddleFastTransposeSupport(&fast_param, input_shape, param, output_shape)) {
         return PPLCUDATransposeMiddleFastForwardImp(stream, fast_param, input_shape, input, output_shape, output);
