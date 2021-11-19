@@ -49,15 +49,16 @@ TEST_F(TestGraphPartion, partition1) {
     engines.emplace_back(unique_ptr<EngineImpl>(new TmpEngineTwo()));
 
     auto resource = make_shared<utils::SharedResource>();
-    auto graph_info = make_shared<RuntimeGraphInfo>();
     resource->engines.resize(2);
     resource->engines[0] = engines[0].get();
     resource->engines[1] = engines[1].get();
+
     EngineGraphPartitioner partitioner;
     vector<pair<EngineImpl*, vector<nodeid_t>>> partitions;
-    auto status = partitioner.Partition(resource.get(), builder_.GetGraph(), &partitions);
+    auto status = partitioner.Partition(resource.get(), builder_.GetGraph()->topo.get(), &partitions);
     EXPECT_EQ(status, RC_SUCCESS);
     EXPECT_EQ(partitions.size(), 2);
+
     for (auto partition : partitions) {
         if (string(partition.first->GetName()) == "tmpOne") {
             for (auto node_id : partition.second) {
