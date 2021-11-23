@@ -58,12 +58,10 @@
                     Rv1[i] = __vmaxs2(Rv1[i], 0);                                   \
                 }                                                                   \
             } else if (_has_relu == 2) {                                            \
-                __half2 *h2R = (__half2 *)Rv4;                                      \
-                __half2 h2ONE((__half)1.f, (__half)1.f);                            \
-                                                                                    \
-                _Pragma("unroll") for (int i = 0; i < _INT4_TO_4HALF2_; i++)        \
+                __half *hR = (__half *)Rv4;                                         \
+                _Pragma("unroll") for (int i = 0; i < _INT4_TO_8HALF_; i++)         \
                 {                                                                   \
-                    h2R[i] = __h2div(h2exp(h2R[i]), __hadd2(h2ONE, h2exp(h2R[i]))); \
+                    hR[i] = __expf((float)hR[i]) / (1.f + __expf((float)hR[i]));    \
                 }                                                                   \
             }                                                                       \
         }                                                                           \
@@ -149,12 +147,10 @@
 
 #define JIT_FUSE_SIGMOID_V4()                                               \
     {                                                                       \
-        __half2 *h2R = (__half2 *)Rv4;                                      \
-        __half2 h2ONE((__half)1.f, (__half)1.f);                            \
-                                                                            \
-        _Pragma("unroll") for (int i = 0; i < _INT4_TO_4HALF2_; i++)        \
+        __half *hR = (__half *)Rv4;                                         \
+        _Pragma("unroll") for (int i = 0; i < _INT4_TO_8HALF_; i++)         \
         {                                                                   \
-            h2R[i] = __h2div(h2exp(h2R[i]), __hadd2(h2ONE, h2exp(h2R[i]))); \
+            hR[i] = __expf((float)hR[i]) / (1.f + __expf((float)hR[i]));    \
         }                                                                   \
     }
 

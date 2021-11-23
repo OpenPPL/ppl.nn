@@ -117,6 +117,15 @@ const bool ChannelShuffleFusion::CanFuseSecondReshape(ir::Node* node, const OptK
 const bool ChannelShuffleFusion::CanFuse(ir::Node* node, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     for (uint32_t i = 0; i < 3; ++i) {
+        auto edge_id = node->GetOutput(0);
+        auto edge = topo->GetEdgeById(edge_id);
+        if (topo->GetOutput(edge->GetName()) != INVALID_EDGEID) { // Can not fuse an output edge
+            return false;
+        }
+        if (i < 2 && topo->GetEdgeById(edge_id)->CalcConsumerCount() != 1) { // Can not fuse multi-consumer edge
+            return false;
+        }
+
         switch (i) // TODO use function vector
         {
             case 0:
@@ -136,14 +145,6 @@ const bool ChannelShuffleFusion::CanFuse(ir::Node* node, const OptKernelOptions&
                 break;
         }
 
-        auto edge_id = node->GetOutput(0);
-        auto edge = topo->GetEdgeById(edge_id);
-        if (topo->GetOutput(edge->GetName()) != INVALID_EDGEID) { // Can not fuse an output edge
-            return false;
-        }
-        if (i < 2 && topo->GetEdgeById(edge_id)->CalcConsumerCount() != 1) { // Can not fuse multi-consumer edge
-            return false;
-        }
         auto next_node_id = topo->GetEdgeById(edge_id)->CreateConsumerIter().Get(); // Get Output(0)
         node = topo->GetNodeById(next_node_id);
     }
