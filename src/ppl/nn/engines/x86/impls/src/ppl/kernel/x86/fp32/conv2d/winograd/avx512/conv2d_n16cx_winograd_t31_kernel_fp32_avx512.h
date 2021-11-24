@@ -126,7 +126,7 @@ inline void conv2d_n16cx_winograd_t31_kernel_fp32_avx512_core(
         "mov FLT_IDX(%[param]), %%rbx\n"
         "mov CHANNELS_IDX(%[param]), %%r10\n"
         "cmp $CH_DT_BLK, %%r10\n"
-        "jl 6f\n" // label_ic_remain
+        "jl 5f\n" // label_ic_remain
 "4:\n" // label_ic_body
         PPL_X86_INLINE_ASM_ALIGN()
         ".if T_LEN < 9\n"
