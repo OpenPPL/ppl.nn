@@ -44,7 +44,7 @@ struct CudaArgs {
         int splitf = 1;
     };
 
-    bool quick_select;
+    bool quick_select = false;
     std::string save_algo_path = "";
     ppl::common::datatype_t kernel_default_type = 0;
     std::map<std::string, ppl::common::datatype_t> node_types;
