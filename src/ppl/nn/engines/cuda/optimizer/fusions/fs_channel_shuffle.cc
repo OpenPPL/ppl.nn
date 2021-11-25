@@ -50,6 +50,9 @@ const bool ChannelShuffleFusion::CanFuseFirstReshape(ir::Node* node, const OptKe
     }
 
     auto shape_node_id = topo->GetEdgeById(shape_edge_id)->GetProducer();
+    if (shape_node_id == INVALID_NODEID) {
+        return false;
+    }
     auto shape_node = topo->GetNodeById(shape_node_id);
     if (shape_node->GetType().name != "Shape") {
         return false;
@@ -91,6 +94,9 @@ const bool ChannelShuffleFusion::CanFuseSecondReshape(ir::Node* node, const OptK
     auto topo = options.graph->topo.get();
     auto data = options.graph->data.get();
     auto shape_edge_id = node->GetInput(1);
+    if (shape_edge_id == INVALID_EDGEID) {
+        return false;
+    }
     auto constants_pair = data->constants.find(shape_edge_id);
 
     if (constants_pair != data->constants.end()) {
@@ -102,6 +108,9 @@ const bool ChannelShuffleFusion::CanFuseSecondReshape(ir::Node* node, const OptK
     }
 
     auto shape_node_id = topo->GetEdgeById(shape_edge_id)->GetProducer();
+    if (shape_node_id == INVALID_NODEID) {
+        return false;
+    }
     auto attr_pair = data->attrs.find(shape_node_id);
     if (attr_pair != data->attrs.end()) {
         auto param = (const ppl::nn::common::PPLShapeOperationParam*)(attr_pair->second.get());

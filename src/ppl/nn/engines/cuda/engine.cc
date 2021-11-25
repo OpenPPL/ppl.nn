@@ -76,6 +76,8 @@ ppl::common::RetCode CudaEngine::CompileCudaModule(ir::Graph* graph, utils::Shar
     for (auto it = compile_set_.begin(); it != compile_set_.end(); it++) {
         auto node_id = *it;
         ir::Node* op = graph->topo.get()->GetNodeById(node_id);
+        if (!op)
+            continue;
         auto op_compiler = op_compiler_manager->FindCompiler(op->GetType().name);
         if (op_compiler == nullptr)
             continue;
