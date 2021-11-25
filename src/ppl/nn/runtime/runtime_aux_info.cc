@@ -145,67 +145,10 @@ static RetCode InitTensorLastConsumer(const ir::GraphTopo* topo, const vector<no
     return RC_SUCCESS;
 }
 
-static vector<nodeid_t> SortNodes(const ir::GraphTopo* topo) {
-    // get node levels for second stage
-    vector<uint32_t> nid2level(topo->GetMaxNodeId(), 0);
-    auto node_iter = topo->CreateNodeIter();
-    utils::Bfs(
-        topo->GetMaxNodeId(),
-        [&node_iter]() -> nodeid_t {
-            if (node_iter->IsValid()) {
-                auto node = node_iter->Get();
-                node_iter->Forward();
-                return node->GetId();
-            }
-            return INVALID_NODEID;
-        },
-        [topo](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
-            auto prevs = topo->FindPredecessors(nid);
-            for (auto x : prevs) {
-                f(x);
-            }
-        },
-        [topo](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
-            auto nexts = topo->FindSuccessors(nid);
-            for (auto x : nexts) {
-                f(x);
-            }
-        },
-        [topo, &nid2level](nodeid_t nid, uint32_t level) -> void {
-            nid2level[nid] = level;
-        });
-
-    vector<nodeid_t> ret;
-    node_iter = topo->CreateNodeIter();
-    utils::Dfs(
-        topo->GetMaxNodeId(),
-        [&node_iter, &topo]() -> nodeid_t {
-            if (node_iter->IsValid()) {
-                auto node = node_iter->Get();
-                node_iter->Forward();
-                return node->GetId();
-            }
-            return INVALID_NODEID;
-        },
-        [topo](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
-            auto prevs = topo->FindPredecessors(nid);
-            for (auto x : prevs) {
-                f(x);
-            }
-        },
-        [&ret](nodeid_t nid) -> void {
-            ret.push_back(nid);
-        },
-        [&nid2level](nodeid_t a, nodeid_t b) -> bool {
-            // nodes in the longer path will be evaluated first
-            return (nid2level[a] < nid2level[b]);
-        });
-
-    return ret;
-}
-
 RetCode GenerateRuntimeAuxInfo(const ir::GraphTopo* topo, RuntimeAuxInfo* info) {
-    info->sorted_nodes = SortNodes(topo);
+    utils::DfsDeeperFirst(topo, [info](nodeid_t nid) -> void {
+        info->sorted_nodes.push_back(nid);
+    });
 
     auto status = InitTensorLastConsumer(topo, info->sorted_nodes, &info->tensor_last_consumer);
     if (status != RC_SUCCESS) {

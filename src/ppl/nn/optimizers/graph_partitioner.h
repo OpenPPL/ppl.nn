@@ -15,27 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_RUNTIME_RUNTIME_GRAPH_INFO_H_
-#define _ST_HPC_PPL_NN_RUNTIME_RUNTIME_GRAPH_INFO_H_
+#ifndef _ST_HPC_PPL_NN_OPTIMIZERS_GRAPH_PARTITIONER_H_
+#define _ST_HPC_PPL_NN_OPTIMIZERS_GRAPH_PARTITIONER_H_
 
-#include "ppl/nn/common/tensor_shape.h"
-#include "ppl/nn/runtime/opt_kernel.h"
-#include "ppl/nn/runtime/runtime_constant_info.h"
+#include "ppl/nn/common/types.h"
+#include "ppl/nn/ir/graph_topo.h"
+#include "ppl/nn/engines/engine_impl.h"
 #include <vector>
-#include <map>
 
 namespace ppl { namespace nn {
 
-class EngineImpl;
-
-struct RuntimeGraphInfo final {
-    struct Partition final {
-        EngineImpl* engine = nullptr;
-        std::vector<std::unique_ptr<OptKernel>> sorted_ops; // sorted topologically
-    };
-    std::map<edgeid_t, TensorShape> shapes;
-    std::vector<std::pair<edgeid_t, RuntimeConstantInfo>> constants;
-    std::vector<Partition> sorted_partitions; // sorted topologically
+class GraphPartitioner {
+public:
+    virtual ~GraphPartitioner() {}
+    virtual ppl::common::RetCode Partition(const std::vector<EngineImpl*>&, const ir::GraphTopo*,
+                                           std::vector<std::pair<EngineImpl*, std::vector<nodeid_t>>>*) const = 0;
 };
 
 }} // namespace ppl::nn

@@ -63,9 +63,8 @@ static void DoPartition(const vector<nodeid_t>& nodes, const ir::GraphTopo* topo
     } while (!nodes_left.empty());
 }
 
-static EngineImpl* FindEngine(utils::SharedResource* resource, const ir::Node* node) {
-    auto engines = &resource->engines;
-    for (auto it = engines->begin(); it != engines->end(); ++it) {
+static EngineImpl* FindEngine(const vector<EngineImpl*>& engines, const ir::Node* node) {
+    for (auto it = engines.begin(); it != engines.end(); ++it) {
         auto engine = *it;
         if (engine->Supports(node)) {
             return engine;
@@ -75,12 +74,12 @@ static EngineImpl* FindEngine(utils::SharedResource* resource, const ir::Node* n
     return nullptr;
 }
 
-RetCode EngineGraphPartitioner::Partition(utils::SharedResource* resource, ir::GraphTopo* topo,
+RetCode EngineGraphPartitioner::Partition(const vector<EngineImpl*>& engines, const ir::GraphTopo* topo,
                                           vector<pair<EngineImpl*, vector<nodeid_t>>>* partitions) const {
     map<EngineImpl*, vector<nodeid_t>> engine_partitions;
     for (auto iter = topo->CreateNodeIter(); iter->IsValid(); iter->Forward()) {
         auto node = iter->Get();
-        auto engine = FindEngine(resource, node);
+        auto engine = FindEngine(engines, node);
         if (!engine) {
             const ir::Node::Type& type = node->GetType();
             LOG(ERROR) << "cannot find implementation of op: domain[" << type.domain << "], type[" << type.name
