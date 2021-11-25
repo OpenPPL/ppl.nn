@@ -15,13 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/optimizers/utils.h"
 #include "gtest/gtest.h"
 #include "tests/ir/graph_builder.h"
 #include "tests/engines/tmp_engine.h"
+#include "ppl/nn/optimizers/utils.h"
 #include "ppl/nn/auxtools/to_graphviz.h"
+#include "ppl/nn/optimizers/special_type_graph_partitioner.h"
 #include "ppl/nn/common/logger.h"
-#include <iostream>
 #include <utility>
 #include <memory>
 using namespace std;
@@ -32,13 +32,14 @@ using namespace ppl::common;
 class OptimizerUtilsTest : public testing::Test {
 protected:
     void SetUp() {
-        engines_.emplace_back(unique_ptr<EngineImpl>(new TmpEngineOne()));
-        engines_.emplace_back(unique_ptr<EngineImpl>(new TmpEngineTwo()));
+        engines_.emplace_back(unique_ptr<EngineImpl>(new TmpEngine1()));
+        engines_.emplace_back(unique_ptr<EngineImpl>(new TmpEngine2()));
 
         resource_ = make_shared<utils::SharedResource>();
         resource_->engines.resize(2);
         resource_->engines[0] = engines_[0].get();
         resource_->engines[1] = engines_[1].get();
+        resource_->graph_partitioner = make_shared<SpecialTypeGraphPartitioner>();
     }
 
     vector<unique_ptr<EngineImpl>> engines_;
@@ -107,4 +108,64 @@ TEST_F(OptimizerUtilsTest, converters_for_input) {
         }
     }
     EXPECT_TRUE(converter_count == 1);
+}
+
+TEST_F(OptimizerUtilsTest, partition_sorting) {
+    GraphBuilder builder;
+    builder.AddNode("a", ir::Node::Type("test", "op1", 1), {"in1"}, {"out1", "out2"});
+    builder.AddNode("b", ir::Node::Type("test", "op2", 1), {"out1", "out6", "out9", "out11"}, {"out3"});
+    builder.AddNode("c", ir::Node::Type("test", "op1", 1), {"out1"}, {"out4"});
+    builder.AddNode("d", ir::Node::Type("test", "op1", 1), {"out2"}, {"out5"});
+    builder.AddNode("e", ir::Node::Type("test", "op1", 1), {"out4"}, {"out6", "out7"});
+    builder.AddNode("f", ir::Node::Type("test", "op1", 1), {"out5"}, {"out8"});
+    builder.AddNode("g", ir::Node::Type("test", "op1", 1), {"out7", "out8"}, {"out9"});
+    builder.AddNode("h", ir::Node::Type("test", "op2", 1), {"in2"}, {"out10"});
+    builder.AddNode("i", ir::Node::Type("test", "op2", 1), {"out9", "out10"}, {"out11"});
+    builder.Finalize();
+
+    auto graph = builder.GetGraph();
+    auto topo = graph->topo.get();
+
+    auto node_a = topo->GetNodeByName("a");
+    EXPECT_TRUE(node_a != nullptr);
+    auto node_b = topo->GetNodeByName("b");
+    EXPECT_TRUE(node_b != nullptr);
+    auto node_c = topo->GetNodeByName("c");
+    EXPECT_TRUE(node_c != nullptr);
+    auto node_d = topo->GetNodeByName("d");
+    EXPECT_TRUE(node_d != nullptr);
+    auto node_e = topo->GetNodeByName("e");
+    EXPECT_TRUE(node_e != nullptr);
+    auto node_f = topo->GetNodeByName("f");
+    EXPECT_TRUE(node_f != nullptr);
+    auto node_g = topo->GetNodeByName("g");
+    EXPECT_TRUE(node_g != nullptr);
+    auto node_h = topo->GetNodeByName("h");
+    EXPECT_TRUE(node_h != nullptr);
+    auto node_i = topo->GetNodeByName("i");
+    EXPECT_TRUE(node_i != nullptr);
+
+    RuntimeGraphInfo graph_info;
+    auto status = utils::ProcessGraph(resource_.get(), graph, &graph_info);
+    EXPECT_EQ(RC_SUCCESS, status);
+
+    LOG(DEBUG) << utils::ToGraphviz(topo);
+
+    LOG(DEBUG) << "number of partitions = " << graph_info.sorted_partitions.size();
+    for (uint32_t i = 0; i < graph_info.sorted_partitions.size(); ++i) {
+        auto& partition = graph_info.sorted_partitions[i];
+        LOG(DEBUG) << "partition [" << i << "], number of nodes [" << partition.sorted_ops.size() << "]:";
+        vector<nodeid_t> sorted_nodes(partition.sorted_ops.size());
+        for (uint32_t j = 0; j < partition.sorted_ops.size(); ++j) {
+            auto& op = partition.sorted_ops[j];
+            sorted_nodes[j] = op->GetNode()->GetId();
+            LOG(DEBUG) << "    " << op->GetNode()->GetName();
+        }
+
+        if (i == 0) {
+            EXPECT_TRUE(utils::VectorFind(sorted_nodes, node_a->GetId()) < sorted_nodes.size());
+        } else if (i == graph_info.sorted_partitions.size() - 1) {
+            EXPECT_TRUE(utils::VectorFind(sorted_nodes, node_b->GetId()) < sorted_nodes.size());
+        }
+    }
 }
