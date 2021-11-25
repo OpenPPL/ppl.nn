@@ -44,6 +44,32 @@ protected:
     GraphBuilder builder_;
 };
 
+static bool IsBefore(const string& a, const string& b, const ir::GraphTopo* topo,
+                     const vector<nodeid_t>& sorted_nodes) {
+    auto node_a = topo->GetNodeByName(a);
+    EXPECT_TRUE(node_a != nullptr);
+    auto node_b = topo->GetNodeByName(b);
+    EXPECT_TRUE(node_b != nullptr);
+
+    uint32_t node_a_pos = 0;
+    for (; node_a_pos < sorted_nodes.size(); ++node_a_pos) {
+        if (sorted_nodes[node_a_pos] == node_a->GetId()) {
+            break;
+        }
+    }
+    EXPECT_TRUE(node_a_pos < sorted_nodes.size());
+
+    uint32_t node_b_pos = 0;
+    for (; node_b_pos < sorted_nodes.size(); ++node_b_pos) {
+        if (sorted_nodes[node_b_pos] == node_b->GetId()) {
+            break;
+        }
+    }
+    EXPECT_TRUE(node_b_pos < sorted_nodes.size());
+
+    return (node_a_pos < node_b_pos);
+}
+
 TEST_F(IrUtilsTest, Dfs) {
     auto topo = builder_.GetGraph()->topo.get();
     vector<nodeid_t> sorted_nodes;
@@ -71,29 +97,7 @@ TEST_F(IrUtilsTest, Dfs) {
         });
     cout << "nil" << endl;
 
-    auto node_c = topo->GetNodeByName("c");
-    EXPECT_TRUE(node_c != nullptr);
-    auto node_g = topo->GetNodeByName("g");
-    EXPECT_TRUE(node_g != nullptr);
-
-    uint32_t node_c_pos = 0;
-    for (; node_c_pos < sorted_nodes.size(); ++node_c_pos) {
-        if (sorted_nodes[node_c_pos] == node_c->GetId()) {
-            break;
-        }
-    }
-    EXPECT_TRUE(node_c_pos < sorted_nodes.size());
-
-    uint32_t node_g_pos = 0;
-    for (; node_g_pos < sorted_nodes.size(); ++node_g_pos) {
-        if (sorted_nodes[node_g_pos] == node_g->GetId()) {
-            break;
-        }
-    }
-    EXPECT_TRUE(node_g_pos < sorted_nodes.size());
-
-    EXPECT_TRUE(node_c_pos < node_g_pos);
-
+    EXPECT_TRUE(IsBefore("c", "g", topo, sorted_nodes));
 }
 
 TEST_F(IrUtilsTest, Bfs) {
@@ -111,11 +115,9 @@ TEST_F(IrUtilsTest, Bfs) {
             }
             return INVALID_NODEID;
         },
-        [topo](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
+        [topo](nodeid_t nid) -> uint32_t {
             auto prevs = topo->FindPredecessors(nid);
-            for (auto x : prevs) {
-                f(x);
-            }
+            return prevs.size();
         },
         [topo](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
             auto nexts = topo->FindSuccessors(nid);
@@ -129,109 +131,17 @@ TEST_F(IrUtilsTest, Bfs) {
         });
     cout << "nil" << endl;
 
-    auto node_c = topo->GetNodeByName("c");
-    EXPECT_TRUE(node_c != nullptr);
-    auto node_g = topo->GetNodeByName("g");
-    EXPECT_TRUE(node_g != nullptr);
-
-    uint32_t node_c_pos = 0;
-    for (; node_c_pos < sorted_nodes.size(); ++node_c_pos) {
-        if (sorted_nodes[node_c_pos] == node_c->GetId()) {
-            break;
-        }
-    }
-    EXPECT_TRUE(node_c_pos < sorted_nodes.size());
-
-    uint32_t node_g_pos = 0;
-    for (; node_g_pos < sorted_nodes.size(); ++node_g_pos) {
-        if (sorted_nodes[node_g_pos] == node_g->GetId()) {
-            break;
-        }
-    }
-    EXPECT_TRUE(node_g_pos < sorted_nodes.size());
-
-    EXPECT_TRUE(node_c_pos < node_g_pos);
+    EXPECT_TRUE(IsBefore("c", "g", topo, sorted_nodes));
 }
 
-TEST_F(IrUtilsTest, DfsWithPriority) {
+TEST_F(IrUtilsTest, DfsDeeperFirst) {
     auto topo = builder_.GetGraph()->topo.get();
-
-    auto node_iter = topo->CreateNodeIter();
-    vector<uint32_t> nid2level(topo->GetMaxNodeId(), 0);
-    utils::Bfs(
-        topo->GetMaxNodeId(),
-        [&node_iter]() -> nodeid_t {
-            if (node_iter->IsValid()) {
-                auto node = node_iter->Get();
-                node_iter->Forward();
-                return node->GetId();
-            }
-            return INVALID_NODEID;
-        },
-        [topo](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
-            auto prevs = topo->FindPredecessors(nid);
-            for (auto x : prevs) {
-                f(x);
-            }
-        },
-        [topo](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
-            auto nexts = topo->FindSuccessors(nid);
-            for (auto x : nexts) {
-                f(x);
-            }
-        },
-        [topo, &nid2level](nodeid_t nid, uint32_t level) -> void {
-            cout << "set node[" << topo->GetNodeById(nid)->GetName() << "] level = " << level << endl;
-            nid2level[nid] = level;
-        });
-
     vector<nodeid_t> sorted_nodes;
-    node_iter = topo->CreateNodeIter();
-    utils::Dfs(
-        topo->GetMaxNodeId(),
-        [&node_iter]() -> nodeid_t {
-            if (node_iter->IsValid()) {
-                auto node = node_iter->Get();
-                node_iter->Forward();
-                return node->GetId();
-            }
-            return INVALID_NODEID;
-        },
-        [topo](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
-            auto prevs = topo->FindPredecessors(nid);
-            for (auto x : prevs) {
-                f(x);
-            }
-        },
-        [topo, &nid2level, &sorted_nodes](nodeid_t nid) -> void {
-            cout << topo->GetNodeById(nid)->GetName() << "[" << nid2level[nid] << "] -> ";
-            sorted_nodes.push_back(nid);
-        },
-        [&nid2level](nodeid_t a, nodeid_t b) -> bool {
-            return (nid2level[a] < nid2level[b]);
-        });
+    utils::DfsDeeperFirst(topo, [&topo, &sorted_nodes](nodeid_t nid) -> void {
+        cout << topo->GetNodeById(nid)->GetName() << " -> ";
+        sorted_nodes.push_back(nid);
+    });
     cout << "nil" << endl;
 
-    auto node_a = topo->GetNodeByName("a");
-    EXPECT_TRUE(node_a != nullptr);
-    auto node_h = topo->GetNodeByName("h");
-    EXPECT_TRUE(node_h != nullptr);
-
-    uint32_t node_a_pos = 0;
-    for (; node_a_pos < sorted_nodes.size(); ++node_a_pos) {
-        if (sorted_nodes[node_a_pos] == node_a->GetId()) {
-            break;
-        }
-    }
-    EXPECT_TRUE(node_a_pos < sorted_nodes.size());
-
-    uint32_t node_h_pos = 0;
-    for (; node_h_pos < sorted_nodes.size(); ++node_h_pos) {
-        if (sorted_nodes[node_h_pos] == node_h->GetId()) {
-            break;
-        }
-    }
-    EXPECT_TRUE(node_h_pos < sorted_nodes.size());
-
-    EXPECT_TRUE(node_a_pos < node_h_pos);
+    EXPECT_TRUE(IsBefore("a", "h", topo, sorted_nodes));
 }
