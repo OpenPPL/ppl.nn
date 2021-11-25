@@ -19,6 +19,7 @@
 #define _ST_HPC_PPL_NN_IR_UTILS_H_
 
 #include "ppl/nn/common/types.h"
+#include "ppl/nn/ir/graph_topo.h"
 #include <vector>
 #include <functional>
 
@@ -30,9 +31,12 @@ void Dfs(nodeid_t max_node_id, const std::function<nodeid_t()>& get_next_node,
          const std::function<bool(nodeid_t, nodeid_t)>& less_than = nullptr);
 
 void Bfs(nodeid_t max_node_id, const std::function<nodeid_t()>& get_next_node,
-         const std::function<void(nodeid_t, const std::function<void(nodeid_t)>&)>& for_each_predecessor,
+         const std::function<uint32_t(nodeid_t)>& get_predecessor_count,
          const std::function<void(nodeid_t, const std::function<void(nodeid_t)>&)>& for_each_successor,
          const std::function<void(nodeid_t, uint32_t level)>& process);
+
+/** @brief depth-first topological sort. nodes in the longer path will be evaluated first. */
+void DfsDeeperFirst(const ir::GraphTopo* topo, const std::function<void(nodeid_t)>& process);
 
 }}} // namespace ppl::nn::utils
 
