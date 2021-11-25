@@ -19,12 +19,15 @@
 #define _ST_HPC_PPL_NN_UTILS_SHARED_RESOURCE_H_
 
 #include "ppl/nn/engines/engine_impl.h"
+#include "ppl/nn/optimizers/graph_partitioner.h"
+#include <memory>
+#include <vector>
 
 namespace ppl { namespace nn { namespace utils {
 
 struct SharedResource {
-    /** engines are managed by caller */
-    std::vector<EngineImpl*> engines;
+    std::vector<EngineImpl*> engines; // engines are allocated/freed by the caller
+    std::shared_ptr<GraphPartitioner> graph_partitioner;
 };
 
 }}} // namespace ppl::nn::utils

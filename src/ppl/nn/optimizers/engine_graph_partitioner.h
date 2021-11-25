@@ -18,16 +18,15 @@
 #ifndef _ST_HPC_PPL_NN_OPTIMIZERS_ENGINE_GRAPH_PARTITIONER_H_
 #define _ST_HPC_PPL_NN_OPTIMIZERS_ENGINE_GRAPH_PARTITIONER_H_
 
-#include "ppl/nn/ir/graph.h"
-#include "ppl/nn/utils/shared_resource.h"
+#include "ppl/nn/optimizers/graph_partitioner.h"
 #include <vector>
 
 namespace ppl { namespace nn {
 
-class EngineGraphPartitioner final {
+class EngineGraphPartitioner final : public GraphPartitioner {
 public:
-    ppl::common::RetCode Partition(utils::SharedResource*, ir::GraphTopo*,
-                                   std::vector<std::pair<EngineImpl*, std::vector<nodeid_t>>>*) const;
+    ppl::common::RetCode Partition(const std::vector<EngineImpl*>&, const ir::GraphTopo*,
+                                   std::vector<std::pair<EngineImpl*, std::vector<nodeid_t>>>*) const override;
 };
 
 }} // namespace ppl::nn
