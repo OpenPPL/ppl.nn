@@ -18,6 +18,7 @@
 #include "ppl/nn/ir/graph_topo.h"
 #include "ppl/nn/ir/utils.h"
 #include "ppl/nn/utils/vector_utils.h"
+#include <queue>
 using namespace std;
 using namespace ppl::common;
 
@@ -211,6 +212,24 @@ vector<nodeid_t> GraphTopo::FindSuccessors(nodeid_t nid) const {
         }
     }
     return res;
+}
+
+set<nodeid_t> GraphTopo::FindAncestors(nodeid_t nid) const {
+    set<nodeid_t> dedup;
+    queue<nodeid_t> q;
+    q.push(nid);
+    while (!q.empty()) {
+        nid = q.front();
+        q.pop();
+        auto prev_ids = FindPredecessors(nid);
+        for (auto p : prev_ids) {
+            auto ret_pair = dedup.insert(p);
+            if (ret_pair.second) {
+                q.push(p);
+            }
+        }
+    }
+    return dedup;
 }
 
 void GraphTopo::TopologicalSort(const function<void(nodeid_t)>& callback) const {

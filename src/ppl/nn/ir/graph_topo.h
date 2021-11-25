@@ -23,6 +23,7 @@
 #include "ppl/nn/common/types.h"
 #include "ppl/nn/ir/edge.h"
 #include "ppl/nn/ir/node.h"
+#include <set>
 #include <memory>
 #include <functional>
 
@@ -172,6 +173,9 @@ public:
 
     /** @brief find successors of the given node in this graph */
     std::vector<nodeid_t> FindSuccessors(nodeid_t) const;
+
+    /** @brief find ancestors of the given node */
+    std::set<nodeid_t> FindAncestors(nodeid_t) const;
 
     /**
        @brief topological sort
