@@ -91,6 +91,9 @@ def ParseCommandLineArgs():
     parser.add_argument("--onnx-model", type = str, default = "", required = False,
                         help = "onnx model file")
 
+    parser.add_argument("--mm-policy", type = str, default = "perf", required = False,
+                        help = "\"perf\" => better performance, or \"mem\" => less memory usage")
+
     parser.add_argument("--in-shapes", type = str, dest = "in_shapes",
                         default = "", required = False, help = "shapes of input tensors."
                         " dims are separated by underline, inputs are separated by comma. example:"
@@ -131,6 +134,11 @@ def ParseInShapes(in_shapes_str):
 
 def CreateX86Engine(args):
     x86_options = pplnn.X86EngineOptions()
+    if args.mm_policy == "perf":
+        x86_options.mm_policy = pplnn.X86_MM_MRU
+    elif args.mm_policy == "mem":
+        x86_options.mm_policy = pplnn.X86_MM_COMPACT
+
     x86_engine = pplnn.X86EngineFactory.Create(x86_options)
     if not x86_engine:
         logging.error("create x86 engine failed.")
@@ -153,6 +161,10 @@ def CreateX86Engine(args):
 def CreateCudaEngine(args):
     cuda_options = pplnn.CudaEngineOptions()
     cuda_options.device_id = args.device_id
+    if args.mm_policy == "perf":
+        cuda_options.mm_policy = pplnn.CUDA_MM_BEST_FIT
+    elif args.mm_policy == "mem":
+        cuda_options.mm_policy = pplnn.CUDA_MM_COMPACT
 
     cuda_engine = pplnn.CudaEngineFactory.Create(cuda_options)
     if not cuda_engine:
