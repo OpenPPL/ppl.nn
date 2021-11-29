@@ -328,19 +328,29 @@ def GenDimsStr(dims):
 
 # ---------------------------------------------------------------------------- #
 
+def CalcElementCount(dims):
+    count = 1
+    for d in dims:
+        count = count * d
+    return count
+
 def SaveInputsOneByOne(save_data_dir, runtime):
     for i in range(runtime.GetInputCount()):
         tensor = runtime.GetInputTensor(i)
         shape = tensor.GetShape()
-        tensor_data = tensor.ConvertToHost()
-        if not tensor_data:
-            logging.error("copy data from tensor[" + tensor.GetName() + "] failed.")
-            sys.exit(-1)
+        dims = shape.GetDims()
+        out_file_name = save_data_dir + "/pplnn_input_" + str(i) + "_" + tensor.GetName() + "-" + GenDimsStr(dims) + "-" + g_data_type_str[shape.GetDataType()] + ".dat"
+        element_count = CalcElementCount(dims)
+        if element_count > 0:
+            tensor_data = tensor.ConvertToHost()
+            if not tensor_data:
+                logging.error("copy data from tensor[" + tensor.GetName() + "] failed.")
+                sys.exit(-1)
 
-        in_data = np.array(tensor_data, copy=False)
-        in_data.tofile(save_data_dir + "/pplnn_input_" + str(i) + "_" +
-                       tensor.GetName() + "-" + GenDimsStr(shape.GetDims()) + "-" +
-                       g_data_type_str[shape.GetDataType()] + ".dat")
+            in_data = np.array(tensor_data, copy=False)
+            in_data.tofile(out_file_name)
+        else:
+            open(out_file_name, 'a').close()
 
 # ---------------------------------------------------------------------------- #
 
@@ -349,13 +359,16 @@ def SaveInputsAllInOne(save_data_dir, runtime):
     fd = open(out_file_name, mode="wb+")
     for i in range(runtime.GetInputCount()):
         tensor = runtime.GetInputTensor(i)
-        tensor_data = tensor.ConvertToHost()
-        if not tensor_data:
-            logging.error("copy data from tensor[" + tensor.GetName() + "] failed.")
-            sys.exit(-1)
+        dims = tensor.GetShape().GetDims()
+        element_count = CalcElementCount(dims)
+        if element_count > 0:
+            tensor_data = tensor.ConvertToHost()
+            if not tensor_data:
+                logging.error("copy data from tensor[" + tensor.GetName() + "] failed.")
+                sys.exit(-1)
 
-        in_data = np.array(tensor_data, copy=False)
-        fd.write(in_data.tobytes())
+            in_data = np.array(tensor_data, copy=False)
+            fd.write(in_data.tobytes())
     fd.close()
 
 # ---------------------------------------------------------------------------- #
@@ -363,21 +376,24 @@ def SaveInputsAllInOne(save_data_dir, runtime):
 def SaveOutputsOneByOne(save_data_dir, runtime):
     for i in range(runtime.GetOutputCount()):
         tensor = runtime.GetOutputTensor(i)
-        tensor_data = tensor.ConvertToHost()
-        if not tensor_data:
-            logging.error("copy data from tensor[" + tensor.GetName() + "] failed.")
-            sys.exit(-1)
+        out_file_name = save_data_dir + "/pplnn_output-" + tensor.GetName() + ".dat"
+        dims = tensor.GetShape().GetDims()
+        element_count = CalcElementCount(dims)
+        if element_count > 0:
+            tensor_data = tensor.ConvertToHost()
+            if not tensor_data:
+                logging.error("copy data from tensor[" + tensor.GetName() + "] failed.")
+                sys.exit(-1)
 
-        out_data = np.array(tensor_data, copy=False)
-        out_data.tofile(save_data_dir + "/pplnn_output-" + tensor.GetName() + ".dat")
+            out_data = np.array(tensor_data, copy=False)
+            out_data.tofile(out_file_name)
+        else:
+            open(out_file_name, 'a').close()
 
 # ---------------------------------------------------------------------------- #
 
 def CalcBytes(dims, item_size):
-    nbytes = item_size
-    for d in dims:
-        nbytes = nbytes * d
-    return nbytes
+    return item_size * CalcElementCount(dims)
 
 def PrintInputOutputInfo(runtime):
     logging.info("----- input info -----")
