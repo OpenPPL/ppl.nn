@@ -22,9 +22,11 @@
 #include "ppl/nn/engines/x86/x86_options.h"
 #include "ppl/nn/utils/stack_buffer_manager.h"
 #include "ppl/nn/utils/compact_buffer_manager.h"
-#include "ppl/nn/common/logger.h"
+#include "ppl/nn/utils/buffered_cpu_allocator.h"
 
 namespace ppl { namespace nn { namespace x86 {
+
+static void DummyDeleter(ppl::common::Allocator*) {}
 
 class RuntimeX86Device final : public X86Device {
 private:
@@ -35,34 +37,24 @@ private:
 public:
     RuntimeX86Device(uint64_t alignment, ppl::common::isa_t isa, uint32_t mm_policy) : X86Device(alignment, isa) {
         if (mm_policy == X86_MM_MRU) {
-            buffer_manager_.reset(new utils::StackBufferManager(GetAllocator()));
+            auto allocator_ptr = X86Device::GetAllocator();
+            allocator_ = std::shared_ptr<ppl::common::Allocator>(allocator_ptr, DummyDeleter);
+            buffer_manager_.reset(new utils::StackBufferManager(allocator_ptr));
         } else if (mm_policy == X86_MM_COMPACT) {
-            buffer_manager_.reset(new utils::CompactBufferManager(GetAllocator()));
+            allocator_.reset(new utils::BufferedCpuAllocator(alignment));
+            buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get()));
         }
+    }
+
+    ppl::common::Allocator* GetAllocator() const override {
+        return allocator_.get();
     }
 
     ~RuntimeX86Device() {
         LOG(DEBUG) << "buffer manager[" << buffer_manager_->GetName() << "] allocates ["
                    << buffer_manager_->GetAllocatedBytes() << "] bytes.";
-        buffer_manager_->Free(&shared_tmp_buffer_);
         buffer_manager_.reset();
     }
-
-    ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) override {
-        if (bytes > tmp_buffer_size_) {
-            auto status = buffer_manager_->Realloc(bytes, &shared_tmp_buffer_);
-            if (status == ppl::common::RC_SUCCESS) {
-                tmp_buffer_size_ = bytes;
-                *buffer = shared_tmp_buffer_;
-            }
-            return status;
-        }
-
-        *buffer = shared_tmp_buffer_;
-        return ppl::common::RC_SUCCESS;
-    }
-
-    void FreeTmpBuffer(BufferDesc*) override {}
 
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) override {
         bytes = Align(bytes, 256);
@@ -75,8 +67,7 @@ public:
 
 private:
     std::unique_ptr<utils::BufferManager> buffer_manager_;
-    BufferDesc shared_tmp_buffer_;
-    uint64_t tmp_buffer_size_ = 0;
+    std::shared_ptr<ppl::common::Allocator> allocator_;
 };
 
 }}} // namespace ppl::nn::x86
