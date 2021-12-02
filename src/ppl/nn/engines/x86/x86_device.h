@@ -18,15 +18,26 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_X86_X86_DEVICE_H_
 #define _ST_HPC_PPL_NN_ENGINES_X86_X86_DEVICE_H_
 
-#include "ppl/nn/utils/generic_cpu_device.h"
+#include "ppl/nn/common/device.h"
+#include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/x86/data_converter.h"
+#include "ppl/common/generic_cpu_allocator.h"
+#include <cstring> // memcpy
 
 namespace ppl { namespace nn { namespace x86 {
 
-class X86Device : public utils::GenericCpuDevice {
+class X86Device : public Device {
 public:
-    X86Device(uint64_t alignment, ppl::common::isa_t isa)
-        : GenericCpuDevice(alignment), isa_(isa), data_converter_(isa) {}
+    X86Device(uint64_t alignment, ppl::common::isa_t isa) : isa_(isa), data_converter_(isa), allocator_(alignment) {
+        shared_tmp_buffer_.desc = 0;
+    }
+
+    ~X86Device() {
+        if (shared_tmp_buffer_.addr) {
+            LOG(DEBUG) << "tmp buffer size [" << shared_tmp_buffer_.desc << "]";
+            free(shared_tmp_buffer_.addr);
+        }
+    }
 
     void SetISA(ppl::common::isa_t isa) {
         isa_ = isa;
@@ -36,20 +47,104 @@ public:
         return isa_;
     }
 
-    virtual ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
-        return Realloc(bytes, buffer);
+    ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
+        if (bytes > shared_tmp_buffer_.desc) {
+            auto new_addr = realloc(shared_tmp_buffer_.addr, bytes);
+            if (!new_addr) {
+                return ppl::common::RC_OUT_OF_MEMORY;
+            }
+            shared_tmp_buffer_.addr = new_addr;
+            shared_tmp_buffer_.desc = bytes;
+        }
+        *buffer = shared_tmp_buffer_;
+        return ppl::common::RC_SUCCESS;
     }
-    virtual void FreeTmpBuffer(BufferDesc* buffer) {
-        Free(buffer);
+
+    void FreeTmpBuffer(BufferDesc* buffer) {}
+
+    virtual ppl::common::Allocator* GetAllocator() const {
+        return &allocator_;
+    }
+
+    ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) override {
+        if (buffer->addr) {
+            allocator_.Free(buffer->addr);
+        }
+
+        if (bytes == 0) {
+            buffer->addr = nullptr;
+            return ppl::common::RC_SUCCESS;
+        }
+
+        buffer->addr = allocator_.Alloc(bytes);
+        if (!buffer->addr) {
+            return ppl::common::RC_OUT_OF_MEMORY;
+        }
+
+        buffer->desc = bytes;
+        return ppl::common::RC_SUCCESS;
+    }
+
+    void Free(BufferDesc* buffer) override {
+        if (buffer->addr) {
+            allocator_.Free(buffer->addr);
+            buffer->addr = nullptr;
+        }
+    }
+
+    ppl::common::RetCode Realloc(const TensorShape& shape, BufferDesc* buffer) override final {
+        return Realloc(shape.GetBytesIncludingPadding(), buffer);
+    }
+
+    ppl::common::RetCode CopyFromHost(BufferDesc* dst, const void* src, uint64_t bytes) const override final {
+        memcpy(dst->addr, src, bytes);
+        return ppl::common::RC_SUCCESS;
+    }
+    ppl::common::RetCode CopyFromHost(BufferDesc* dst, const void* src, const TensorShape& shape) const override final {
+        return CopyFromHost(dst, src, shape.GetBytesIncludingPadding());
+    }
+
+    ppl::common::RetCode CopyToHost(void* dst, const BufferDesc& src, uint64_t bytes) const override final {
+        memcpy(dst, src.addr, bytes);
+        return ppl::common::RC_SUCCESS;
+    }
+    ppl::common::RetCode CopyToHost(void* dst, const BufferDesc& src, const TensorShape& shape) const override final {
+        return CopyToHost(dst, src, shape.GetBytesIncludingPadding());
+    }
+
+    ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, uint64_t bytes) const override final {
+        memcpy(dst->addr, src.addr, bytes);
+        return ppl::common::RC_SUCCESS;
+    }
+    ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, const TensorShape& shape) const override final {
+        return Copy(dst, src, shape.GetBytesIncludingPadding());
     }
 
     const DataConverter* GetDataConverter() const override final {
         return &data_converter_;
     }
 
+    DeviceContext* GetContext() const override final {
+        return &context_;
+    }
+
+private:
+    class X86DeviceContext final : public DeviceContext {
+    public:
+        const char* GetType() const override {
+            return "cpu";
+        }
+        ppl::common::RetCode Configure(uint32_t, ...) override {
+            return ppl::common::RC_UNSUPPORTED;
+        }
+    };
+
 private:
     ppl::common::isa_t isa_;
     X86DataConverter data_converter_;
+    BufferDesc shared_tmp_buffer_;
+    mutable X86DeviceContext context_;
+    mutable ppl::common::GenericCpuAllocator allocator_;
 };
 
 }}} // namespace ppl::nn::x86
