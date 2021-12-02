@@ -20,7 +20,7 @@
 #include "ppl/nn/runtime/runtime_impl.h"
 #include "ppl/nn/models/onnx/model_parser.h"
 #include "ppl/nn/models/onnx/runtime_builder_impl.h"
-#include "ppl/nn/optimizers/special_type_graph_partitioner.h"
+#include "ppl/nn/optimizers/engine_graph_partitioner.h"
 using namespace std;
 using namespace ppl::common;
 
@@ -40,7 +40,7 @@ RuntimeBuilderImpl::~RuntimeBuilderImpl() {
 
 RetCode RuntimeBuilderImpl::Init(const char* model_buf, size_t buf_len, vector<EngineImpl*>&& engines) {
     resource_->engines = std::move(engines);
-    resource_->graph_partitioner = make_shared<SpecialTypeGraphPartitioner>();
+    resource_->graph_partitioner = make_shared<EngineGraphPartitioner>();
 
     auto status = ModelParser::Parse(model_buf, buf_len, &graph_);
     if (status != RC_SUCCESS) {
