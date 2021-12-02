@@ -68,14 +68,14 @@ static RetCode InitRuntimeGraphKernels(const ir::GraphTopo* topo, const RuntimeG
     graph->nodeid2kernel.resize(topo->GetMaxNodeId());
 
     map<EngineImpl*, Device*> eng2dev;
-    for (auto partition = info.sorted_partitions.begin(); partition != info.sorted_partitions.end(); ++partition) {
+    for (auto partition = info.partitions.begin(); partition != info.partitions.end(); ++partition) {
         auto dev = FindOrCreateDevice(partition->engine, &eng2dev, devices, engctx);
         if (!dev) {
             LOG(ERROR) << "create device for engine[" << partition->engine->GetName() << "] failed.";
             return RC_OTHER_ERROR;
         }
 
-        for (auto o = partition->sorted_ops.begin(); o != partition->sorted_ops.end(); ++o) {
+        for (auto o = partition->ops.begin(); o != partition->ops.end(); ++o) {
             auto impl = (*o)->CreateKernelImpl();
             if (!impl) {
                 LOG(ERROR) << "create kernel[" << (*o)->GetNode()->GetName() << "] failed.";

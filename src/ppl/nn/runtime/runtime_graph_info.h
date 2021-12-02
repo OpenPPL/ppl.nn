@@ -31,11 +31,11 @@ class EngineImpl;
 struct RuntimeGraphInfo final {
     struct Partition final {
         EngineImpl* engine = nullptr;
-        std::vector<std::unique_ptr<OptKernel>> sorted_ops; // sorted topologically
+        std::vector<std::unique_ptr<OptKernel>> ops;
     };
     std::map<edgeid_t, TensorShape> shapes;
     std::vector<std::pair<edgeid_t, RuntimeConstantInfo>> constants;
-    std::vector<Partition> sorted_partitions; // sorted topologically
+    std::vector<Partition> partitions;
 };
 
 }} // namespace ppl::nn

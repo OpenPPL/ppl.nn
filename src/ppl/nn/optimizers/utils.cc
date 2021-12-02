@@ -225,23 +225,19 @@ static RetCode InsertConverterNodesForPartitions(const vector<EngineImpl*>& node
     return RC_SUCCESS;
 }
 
-static RetCode CollectSortedOps(const ir::GraphTopo* topo, RuntimePartitionInfo* sub_info,
-                                vector<unique_ptr<OptKernel>>* ops) {
-    vector<nodeid_t> sub_sorted_nodes;
-    utils::DfsDeeperFirst(topo, [&sub_sorted_nodes](nodeid_t nid) -> void {
-        sub_sorted_nodes.push_back(nid);
-    });
+static RetCode CollectOps(const ir::GraphTopo* topo, map<nodeid_t, unique_ptr<OptKernel>>* nid2kernel,
+                          vector<unique_ptr<OptKernel>>* ops) {
+    vector<unique_ptr<OptKernel>> tmp_ops;
+    tmp_ops.reserve(nid2kernel->size());
 
-    vector<unique_ptr<OptKernel>> tmp_ops(sub_sorted_nodes.size());
-    for (uint32_t i = 0; i < sub_sorted_nodes.size(); ++i) {
-        auto ref = sub_info->kernels.find(sub_sorted_nodes[i]);
-        if (ref == sub_info->kernels.end()) {
-            auto node = topo->GetNodeById(sub_sorted_nodes[i]);
-            LOG(ERROR) << "cannot find node[" << node->GetName() << "] in opt kernels.";
+    for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
+        auto nid = it->Get()->GetId();
+        auto ref = nid2kernel->find(nid);
+        if (ref == nid2kernel->end()) {
+            LOG(ERROR) << "cannot find implementation of node[" << it->Get()->GetName() << "]";
             return RC_NOT_FOUND;
         }
-        tmp_ops[i] = std::move(ref->second);
-        sub_info->kernels.erase(ref);
+        tmp_ops.emplace_back(std::move(ref->second));
     }
 
     *ops = std::move(tmp_ops);
@@ -280,7 +276,7 @@ static RetCode GenPartitionsInfo(const vector<pair<EngineImpl*, vector<nodeid_t>
 
         RuntimeGraphInfo::Partition par_info;
         par_info.engine = engine;
-        status = CollectSortedOps(sub_graph.topo.get(), &subgraph_info, &par_info.sorted_ops);
+        status = CollectOps(sub_graph.topo.get(), &subgraph_info.kernels, &par_info.ops);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "collect optkernels failed: " << GetRetCodeStr(status);
             return status;
@@ -461,91 +457,6 @@ static vector<nodeid_t> FindPredecessors(nodeid_t nid, const vector<unique_ptr<i
     return prev_ids;
 }
 
-// TODO optimize
-static void SortPartitions(ir::GraphTopo* topo, vector<RuntimeGraphInfo::Partition>* partitions) {
-    vector<unique_ptr<ir::GraphTopo>> topo_list(partitions->size());
-    for (uint32_t i = 0; i < partitions->size(); ++i) {
-        auto& partition = partitions->at(i);
-        vector<nodeid_t> nids;
-        for (auto x = partition.sorted_ops.begin(); x != partition.sorted_ops.end(); ++x) {
-            nids.push_back((*x)->GetNode()->GetId());
-        }
-        topo_list[i].reset(new ir::PartialGraphTopo(topo, "", nids));
-    }
-
-    vector<uint32_t> nid2level(partitions->size(), 0);
-    nodeid_t partition_counter = 0;
-    utils::Bfs(
-        partitions->size(),
-        [&partition_counter]() -> nodeid_t {
-            return partition_counter++;
-        },
-        [&topo_list](nodeid_t nid) -> uint32_t {
-            return FindPredecessors(nid, topo_list).size();
-        },
-        [&topo_list](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
-            set<nodeid_t> outputs;
-            for (uint32_t i = 0; i < topo_list[nid]->GetOutputCount(); ++i) {
-                outputs.insert(topo_list[nid]->GetOutput(i));
-            }
-
-            vector<nodeid_t> next_ids;
-            for (uint32_t i = 0; i < topo_list.size(); ++i) {
-                if (i == nid) {
-                    continue;
-                }
-                for (uint32_t j = 0; j < topo_list[i]->GetInputCount(); ++j) {
-                    if (outputs.find(topo_list[i]->GetInput(j)) != outputs.end()) {
-                        if (std::find(next_ids.begin(), next_ids.end(), i) == next_ids.end()) {
-                            next_ids.push_back(i);
-                        }
-                    }
-                }
-                for (uint32_t j = 0; j < topo_list[i]->GetExtraInputCount(); ++j) {
-                    if (outputs.find(topo_list[i]->GetExtraInput(j)) != outputs.end()) {
-                        if (std::find(next_ids.begin(), next_ids.end(), i) == next_ids.end()) {
-                            next_ids.push_back(i);
-                        }
-                    }
-                }
-            }
-
-            for (auto x = next_ids.begin(); x != next_ids.end(); ++x) {
-                f(*x);
-            }
-        },
-        [&nid2level](nodeid_t nid, uint32_t level) -> void {
-            nid2level[nid] = level;
-        });
-
-    vector<nodeid_t> sorted_partition_idx;
-    partition_counter = 0;
-    utils::Dfs(
-        partitions->size(),
-        [&partition_counter]() -> nodeid_t {
-            return partition_counter++;
-        },
-        [&topo_list](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
-            auto prev_ids = FindPredecessors(nid, topo_list);
-            for (auto x : prev_ids) {
-                f(x);
-            }
-        },
-        [&sorted_partition_idx](nodeid_t nid) -> void {
-            sorted_partition_idx.push_back(nid);
-        },
-        [&nid2level](nodeid_t a, nodeid_t b) -> bool {
-            // nodes in the longer path will be evaluated first
-            return (nid2level[a] < nid2level[b]);
-        });
-
-    vector<RuntimeGraphInfo::Partition> tmp_par(sorted_partition_idx.size());
-    for (uint32_t i = 0; i < sorted_partition_idx.size(); ++i) {
-        tmp_par[i] = std::move(partitions->at(sorted_partition_idx[i]));
-    }
-    *partitions = std::move(tmp_par);
-}
-
 RetCode ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimeGraphInfo* info) {
     GraphOptimizerManager optimizer_mgr;
     auto status = optimizer_mgr.Process(graph);
@@ -588,7 +499,7 @@ RetCode ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimeG
       subgraphs MUST be created after inserting converter nodes. because subgraphs cannot visit
       edges that are directly inserted in the main graph.
     */
-    status = GenPartitionsInfo(partitions, resource, graph, &info->constants, &info->sorted_partitions);
+    status = GenPartitionsInfo(partitions, resource, graph, &info->constants, &info->partitions);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenPartitionsInfo failed:" << GetRetCodeStr(status);
         return status;
@@ -598,13 +509,8 @@ RetCode ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimeG
     for (auto x = converter_nodes.begin(); x != converter_nodes.end(); ++x) {
         RuntimeGraphInfo::Partition par_info;
         par_info.engine = x->second;
-        par_info.sorted_ops.emplace_back(
-            unique_ptr<OptKernel>(new common::ConverterOp(graph->topo->GetNodeById(x->first))));
-        info->sorted_partitions.emplace_back(std::move(par_info)); // one converter is treated as a single partition
-    }
-
-    if (info->sorted_partitions.size() > 1) {
-        SortPartitions(graph->topo.get(), &info->sorted_partitions);
+        par_info.ops.emplace_back(unique_ptr<OptKernel>(new common::ConverterOp(graph->topo->GetNodeById(x->first))));
+        info->partitions.emplace_back(std::move(par_info)); // one converter is treated as a single partition
     }
 
     // save input shapes for runtime
