@@ -27,16 +27,14 @@ namespace ppl { namespace nn { namespace x86 {
 
 class X86EngineContext final : public EngineContext {
 public:
-    X86EngineContext(ppl::common::isa_t isa, uint32_t mm_policy)
-        : isa_(isa), mm_policy_(mm_policy) {}
+    X86EngineContext(ppl::common::isa_t isa, uint32_t mm_policy) : device_(X86_DEFAULT_ALIGNMENT, isa, mm_policy) {}
 
-    Device* CreateDevice() override {
-        return new RuntimeX86Device(X86_DEFAULT_ALIGNMENT, isa_, mm_policy_);
+    Device* GetDevice() override {
+        return &device_;
     }
 
 private:
-    const ppl::common::isa_t isa_;
-    const uint32_t mm_policy_;
+    RuntimeX86Device device_;
 };
 
 }}} // namespace ppl::nn::x86

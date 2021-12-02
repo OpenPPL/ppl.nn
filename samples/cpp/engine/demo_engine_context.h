@@ -25,9 +25,12 @@ namespace ppl { namespace nn { namespace demo {
 
 class DemoEngineContext final : public EngineContext {
 public:
-    Device* CreateDevice() override {
-        return new utils::GenericCpuDevice();
+    Device* GetDevice() override {
+        return &device_;
     }
+
+private:
+    utils::GenericCpuDevice device_;
 };
 
 }}} // namespace ppl::nn::demo

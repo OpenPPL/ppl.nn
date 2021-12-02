@@ -76,10 +76,10 @@ public:
     ppl::common::RetCode Sync() override;
 
     uint32_t GetDeviceContextCount() const override {
-        return devices_.size();
+        return engctx_.size();
     }
     DeviceContext* GetDeviceContext(uint32_t idx) const override {
-        return devices_[idx]->GetContext();
+        return engctx_[idx]->GetDevice()->GetContext();
     }
 
     ppl::common::RetCode GetProfilingStatistics(ProfilingStatistics* stat) const override;
@@ -91,7 +91,6 @@ private:
     RuntimeGraph graph_;
     std::unique_ptr<Scheduler> sched_;
     std::vector<std::unique_ptr<EngineContext>> engctx_;
-    std::vector<std::unique_ptr<Device>> devices_;
     utils::GenericCpuDevice cpu_device_; // default cpu device
     RuntimeInternalConf conf_;
     Profiler profiler_;

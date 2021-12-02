@@ -26,10 +26,12 @@ namespace ppl { namespace nn { namespace cuda {
 class CudaEngineContext final : public EngineContext {
 public:
     ppl::common::RetCode Init(const CudaEngineOptions& options);
-    Device* CreateDevice() override;
+    Device* GetDevice() override {
+        return &device_;
+    }
 
 private:
-    CudaEngineOptions options_;
+    BufferedCudaDevice device_;
 };
 
 }}} // namespace ppl::nn::cuda

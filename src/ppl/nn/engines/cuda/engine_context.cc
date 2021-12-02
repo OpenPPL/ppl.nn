@@ -26,20 +26,12 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode CudaEngineContext::Init(const CudaEngineOptions& options) {
-    options_ = options;
-    return RC_SUCCESS;
-}
-
-Device* CudaEngineContext::CreateDevice() {
-    unique_ptr<BufferedCudaDevice> dev(new BufferedCudaDevice());
-    if (dev) {
-        auto status = dev->Init(options_);
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "init BufferedCudaDevice failed: " << GetRetCodeStr(status);
-            return nullptr;
-        }
+    auto status = device_.Init(options);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "init BufferedCudaDevice failed: " << GetRetCodeStr(status);
+        return status;
     }
-    return dev.release();
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::cuda
