@@ -431,32 +431,6 @@ static RetCode InsertConverterNodesForInputs(ir::Graph* graph, const vector<Engi
     return RC_SUCCESS;
 }
 
-static vector<nodeid_t> FindPredecessors(nodeid_t nid, const vector<unique_ptr<ir::GraphTopo>>& topo_list) {
-    set<nodeid_t> inputs;
-    for (uint32_t i = 0; i < topo_list[nid]->GetInputCount(); ++i) {
-        inputs.insert(topo_list[nid]->GetInput(i));
-    }
-    for (uint32_t i = 0; i < topo_list[nid]->GetExtraInputCount(); ++i) {
-        inputs.insert(topo_list[nid]->GetExtraInput(i));
-    }
-
-    vector<nodeid_t> prev_ids;
-    for (uint32_t i = 0; i < topo_list.size(); ++i) {
-        if (i == nid) {
-            continue;
-        }
-        for (uint32_t j = 0; j < topo_list[i]->GetOutputCount(); ++j) {
-            if (inputs.find(topo_list[i]->GetOutput(j)) != inputs.end()) {
-                if (std::find(prev_ids.begin(), prev_ids.end(), i) == prev_ids.end()) {
-                    prev_ids.push_back(i);
-                }
-            }
-        }
-    }
-
-    return prev_ids;
-}
-
 RetCode ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimeGraphInfo* info) {
     GraphOptimizerManager optimizer_mgr;
     auto status = optimizer_mgr.Process(graph);
