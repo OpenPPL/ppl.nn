@@ -58,6 +58,7 @@
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/roialign_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/pad_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/pow_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/onnx/prelu_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/range_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/reduce_max_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/reduce_min_op.h"
@@ -193,6 +194,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     // P
     REGISTER_OPT_KERNEL_CREATOR("", "Pad", 11, 12, PadOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Pow", 7, 11, PowOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "PRelu", 11, 12, PReluOp);
     // R
     REGISTER_OPT_KERNEL_CREATOR("", "Range", 11, 16, RangeOp);
     REGISTER_OPT_KERNEL_CREATOR("", "ReduceMax", 11, 11, ReduceMaxOp);
