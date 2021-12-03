@@ -24,10 +24,6 @@
 
 namespace ppl { namespace nn {
 
-/**
-   @class KernelImpl
-   @note KernelImpl may run on different threads when SCHED_PARALLEL is specified
-*/
 class KernelImpl {
 public:
     KernelImpl(const ir::Node* node) : node_(node), device_(nullptr) {}
@@ -65,14 +61,6 @@ public:
        @param ctx contexts needed during execution
     */
     virtual ppl::common::RetCode Execute(KernelExecContext* ctx) = 0;
-
-    /**
-       @brief get id of the task queue where this kernel was executed on device. default is 0.
-       @note task queue id may be unspecified before Execute() and changed after Execute().
-    */
-    virtual uint32_t GetTaskQueueId() const {
-        return 0;
-    }
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
 public:
