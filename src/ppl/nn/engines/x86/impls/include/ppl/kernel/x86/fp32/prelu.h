@@ -22,15 +22,15 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-ppl::common::RetCode prelu_fp32_avx(
+ppl::common::RetCode prelu_channel_shared_fp32_avx(
     const ppl::nn::TensorShape *src_shape,
-    const float* src,
+    const float *src,
     const float *slope,
     float *dst);
 
-ppl::common::RetCode prelu_fp32_sse(
+ppl::common::RetCode prelu_channel_shared_fp32_sse(
     const ppl::nn::TensorShape *src_shape,
-    const float* src,
+    const float *src,
     const float *slope,
     float *dst);
 

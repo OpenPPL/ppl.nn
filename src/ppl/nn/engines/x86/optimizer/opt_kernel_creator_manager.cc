@@ -194,7 +194,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     // P
     REGISTER_OPT_KERNEL_CREATOR("", "Pad", 11, 12, PadOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Pow", 7, 11, PowOp);
-    REGISTER_OPT_KERNEL_CREATOR("", "PRelu", 11, 12, PReluOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "PRelu", 9, 16, PReluOp);
     // R
     REGISTER_OPT_KERNEL_CREATOR("", "Range", 11, 16, RangeOp);
     REGISTER_OPT_KERNEL_CREATOR("", "ReduceMax", 11, 11, ReduceMaxOp);

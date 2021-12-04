@@ -22,37 +22,41 @@ namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode PReluKernel::DoExecute(KernelExecContext* ctx) {
 
-    PPLNN_X86_REQUIRED_INPUT(X, 0);
-    PPLNN_X86_REQUIRED_INPUT(slope, 1);
-    PPLNN_X86_REQUIRED_OUTPUT(Y, 0);
-
-    PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
-    PPLNN_X86_DEBUG_TRACE("Input [X]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(X);
-    PPLNN_X86_DEBUG_TRACE("Input [slope]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(slope);
-    PPLNN_X86_DEBUG_TRACE("Input [Y]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
-
     auto x = ctx->GetInput<TensorImpl>(0);
+    auto slope = ctx->GetInput<TensorImpl>(1);
     auto y = ctx->GetOutput<TensorImpl>(0);
 
-    const auto data_type = x->GetShape().GetDataType();
-    const auto data_format = X->GetShape().GetDataFormat();
+    PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+    PPLNN_X86_DEBUG_TRACE("Input [x]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(x);
+    PPLNN_X86_DEBUG_TRACE("Input [slope]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(slope);
+    PPLNN_X86_DEBUG_TRACE("Input [x]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    if(data_format != ppl::common::DATAFORMAT_NDARRAY){
+    const auto data_type = x->GetShape().GetDataType();
+    const auto data_format = x->GetShape().GetDataFormat();
+
+    if (data_format == ppl::common::DATAFORMAT_NDARRAY){
+        for(uint32_t i=1; i < slope->GetShape().GetDimCount(); ++i){
+            if (slope->GetShape().GetDim(i) != 1){
+                LOG(ERROR) << "prelu only support channel broadcasting."; 
+                return ppl::common::RC_UNSUPPORTED;
+            }
+        }
+    }else{
         LOG(ERROR) << "unsupported data format: " << ppl::common::GetDataFormatStr(data_format) << "."; 
         return ppl::common::RC_UNSUPPORTED;
     }
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
         if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-            return kernel::x86::prelu_fp32_avx(&x->GetShape(), x->GetBufferPtr<float>(), 
+            return kernel::x86::prelu_channel_shared_fp32_avx(&x->GetShape(), x->GetBufferPtr<float>(), 
                                                     slope->GetBufferPtr<float>(),
                                                     y->GetBufferPtr<float>());
         } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-            return kernel::x86::prelu_fp32_sse(&x->GetShape(), x->GetBufferPtr<float>(), 
+            return kernel::x86::prelu_channel_shared_fp32_sse(&x->GetShape(), x->GetBufferPtr<float>(), 
                                                     slope->GetBufferPtr<float>(),
                                                     y->GetBufferPtr<float>());
         } else {
