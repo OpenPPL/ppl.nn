@@ -17,7 +17,6 @@
 
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/prelu_op.h"
 #include "ppl/nn/engines/x86/kernels/onnx/prelu_kernel.h"
-#include "ppl/nn/oputils/onnx/reshape_prelu.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
@@ -26,12 +25,8 @@ namespace ppl { namespace nn { namespace x86 {
 
 RetCode PReluOp::Init(const OptKernelOptions& options) {
     
-    infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapePReLU(info, nullptr);
-    };
-
+    infer_dims_func_ = GenericInferDims;
     infer_type_func_ = GenericInferType;
-
     return RC_SUCCESS;
 }
 

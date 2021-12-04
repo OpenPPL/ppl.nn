@@ -187,7 +187,7 @@ ParamParserManager::ParamParserManager() {
     // P
     PPL_REGISTER_OP_WITH_PARAM("", "Pad", 11, 12, ppl::nn::common::PadParam, ParsePadParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Pow", 7, 11);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "PRelu", 11, 12);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "PRelu", 9, 16);
     // R
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Range", 11, 16);
     PPL_REGISTER_OP_WITH_PARAM("", "ReduceMax", 11, 11, ppl::nn::common::ReduceParam, ParseReduceParam);

@@ -21,9 +21,9 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-ppl::common::RetCode prelu_fp32_sse(
+ppl::common::RetCode prelu_channel_shared_fp32_sse(
     const ppl::nn::TensorShape *src_shape,
-    const float* src,
+    const float *src,
     const float *slope,
     float *dst)
 {
@@ -36,7 +36,7 @@ ppl::common::RetCode prelu_fp32_sse(
     }
 
     const int64_t simd_w       = 4;
-    const int64_t unroll_inner = 4 * simd_w;
+    const int64_t unroll_inner = 2 * simd_w;
     const __m128 v_zero        = _mm_setzero_ps();
 
 #ifndef PPL_USE_X86_OMP_COLLAPSE
