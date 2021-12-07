@@ -217,18 +217,42 @@ vector<nodeid_t> GraphTopo::FindSuccessors(nodeid_t nid) const {
 set<nodeid_t> GraphTopo::FindAncestors(nodeid_t nid) const {
     set<nodeid_t> dedup;
     queue<nodeid_t> q;
+
     q.push(nid);
     while (!q.empty()) {
         nid = q.front();
         q.pop();
-        auto prev_ids = FindPredecessors(nid);
-        for (auto p : prev_ids) {
-            auto ret_pair = dedup.insert(p);
-            if (ret_pair.second) {
-                q.push(p);
+        auto node = GetNodeById(nid);
+
+        for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
+            auto eid = node->GetInput(i);
+            if (eid != INVALID_EDGEID) {
+                auto edge = GetEdgeById(eid);
+                auto pid = edge->GetProducer();
+                if (pid != INVALID_NODEID) {
+                    auto ret_pair = dedup.insert(pid);
+                    if (ret_pair.second) {
+                        q.push(pid);
+                    }
+                }
+            }
+        }
+
+        for (uint32_t i = 0; i < node->GetExtraInputCount(); ++i) {
+            auto eid = node->GetExtraInput(i);
+            if (eid != INVALID_EDGEID) {
+                auto edge = GetEdgeById(eid);
+                auto pid = edge->GetProducer();
+                if (pid != INVALID_NODEID) {
+                    auto ret_pair = dedup.insert(pid);
+                    if (ret_pair.second) {
+                        q.push(pid);
+                    }
+                }
             }
         }
     }
+
     return dedup;
 }
 
