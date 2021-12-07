@@ -26,6 +26,8 @@ struct FCParam {
     ppl::kernel::x86::fc_fp32_param param;
     ppl::kernel::x86::fc_fp32_algo_info algo_info;
     ppl::kernel::x86::fc_fp32_manager* mgr = nullptr;
+
+    ~FCParam() { if (mgr != nullptr) delete mgr; }
 };
 
 }}}; // namespace ppl::nn::x86

@@ -29,7 +29,6 @@ GemmOp::~GemmOp() {
     if (fc_param_ != nullptr) {
         if (fc_param_->mgr != nullptr) {
             fc_param_->mgr->release_cvt_weights();
-            delete fc_param_->mgr;
         }
         delete fc_param_;
     }

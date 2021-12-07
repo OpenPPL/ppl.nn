@@ -51,7 +51,13 @@
 #define DEBUG_TAG(X)
 #endif
 
-#define CASE_STRING_FMT() "g%" PRId64 "_mb%" PRId64 "_ic%" PRId64 "ih%" PRId64 "iw%" PRId64 "_oc%" PRId64 "oh%" PRId64 "ow%" PRId64 "_kh%" PRId64 "kw%" PRId64 "sh%" PRId64 "sw%" PRId64 "ph%" PRId64 "pw%" PRId64 "dh%" PRId64 "dw%" PRId64 "_n%s"
+#define CASE_STRING_FMT() \
+    "g%" PRId64 \
+    "_mb%" PRId64 \
+    "_ic%" PRId64 "ih%" PRId64 "iw%" PRId64 \
+    "_oc%" PRId64 "oh%" PRId64 "ow%" PRId64 \
+    "_kh%" PRId64 "kw%" PRId64 "sh%" PRId64 "sw%" PRId64 "ph%" PRId64 "pw%" PRId64 "dh%" PRId64 "dw%" PRId64 \
+    "_n%s"
 
 #define ONNX_TEST_CASE() \
 "\

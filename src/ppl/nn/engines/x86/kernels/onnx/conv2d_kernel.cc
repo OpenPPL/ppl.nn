@@ -15,9 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/x86/kernels/onnx/conv/conv2d_kernel.h"
+#include <inttypes.h>
 
-#define CASE_STRING_FMT() "g%ld_mb%d_ic%ldih%diw%d_oc%ldoh%dow%d_kh%ldkw%ldsh%ldsw%ldph%ldpw%lddh%lddw%ld_n%s"
+#include "ppl/nn/engines/x86/kernels/onnx/conv2d_kernel.h"
+
+#define CASE_STRING_FMT() \
+    "g%" PRId64 \
+    "_mb%" PRId64 \
+    "_ic%" PRId64 "ih%" PRId64 "iw%" PRId64 \
+    "_oc%" PRId64 "oh%" PRId64 "ow%" PRId64 \
+    "_kh%" PRId64 "kw%" PRId64 "sh%" PRId64 "sw%" PRId64 "ph%" PRId64 "pw%" PRId64 "dh%" PRId64 "dw%" PRId64 \
+    "_n%s"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -26,8 +34,8 @@ uint64_t Conv2dKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
 }
 
 ppl::common::RetCode Conv2dKernel::DoExecute(KernelExecContext* ctx) {
-    TensorImpl* X = ctx->GetInput<TensorImpl>(0);
-    TensorImpl* Y = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(X, 0);
+    PPLNN_X86_REQUIRED_OUTPUT(Y, 0);
 
     if (param_->infer_fallback_func) {
         use_fallback_ = param_->infer_fallback_func(X, Y, &param_->param);
@@ -54,6 +62,7 @@ ppl::common::RetCode Conv2dKernel::DoExecute(KernelExecContext* ctx) {
         LOG(ERROR) << "Prepare failed: " << ppl::common::GetRetCodeStr(rc);
         return rc;
     }
+
 
 #if DUMP_CONV
     fprintf(stderr, CASE_STRING_FMT() "\n", cur_executor->conv_param()->group, X->GetShape().GetDim(0),

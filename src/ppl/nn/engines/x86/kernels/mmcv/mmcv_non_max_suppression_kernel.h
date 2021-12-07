@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_MMCV_NON_MAX_SUPPRESSION_KERNEL_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_MMCV_NON_MAX_SUPPRESSION_KERNEL_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_MMCV_MMCV_NON_MAX_SUPPRESSION_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_MMCV_MMCV_NON_MAX_SUPPRESSION_KERNEL_H_
 
 #include "ppl/nn/engines/x86/kernel.h"
 #include "ppl/nn/params/mmcv/mmcv_non_max_suppression_param.h"

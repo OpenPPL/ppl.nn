@@ -15,29 +15,30 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_MMCV_MMCV_GRIDSAMPLE_KERNEL_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_MMCV_MMCV_GRIDSAMPLE_KERNEL_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_PARAMS_CONV_PARAM_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_PARAMS_CONV_PARAM_H_
 
-#include "ppl/nn/engines/x86/kernel.h"
-#include "ppl/nn/params/mmcv/mmcv_gridsample_param.h"
+#include <functional>
+
+#include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/kernel/x86/fp32/conv2d.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
-class MMCVGridSampleKernel : public X86Kernel {
-public:
-    MMCVGridSampleKernel(const ir::Node* node) : X86Kernel(node) {}
-
-    void SetParam(const ppl::nn::common::MMCVGridSampleParam* p) {
-        param_ = p;
+struct Conv2dParam {
+    ppl::kernel::x86::conv2d_fp32_param param;
+    ppl::kernel::x86::conv2d_fp32_algo_info algo_info;
+    ppl::kernel::x86::conv2d_fp32_manager *mgr = nullptr;
+    ppl::kernel::x86::conv2d_fp32_manager *fallback_mgr = nullptr;
+    std::function<bool(const TensorImpl*, const TensorImpl*, const ppl::kernel::x86::conv2d_fp32_param*)>
+        infer_fallback_func;
+    
+    ~Conv2dParam() {
+        if (mgr != nullptr) delete mgr;
+        if (fallback_mgr != nullptr) delete fallback_mgr;
     }
-
-private:
-    ppl::common::RetCode DoExecute(KernelExecContext*) override;
-
-private:
-    const ppl::nn::common::MMCVGridSampleParam* param_ = nullptr;
 };
 
-}}} // namespace ppl::nn::x86
+}}}; // namespace ppl::nn::x86
 
 #endif

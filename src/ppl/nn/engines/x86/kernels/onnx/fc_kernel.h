@@ -33,6 +33,7 @@ public:
     }
 
     void SetParam(const FCParam* p) {
+        param_ = p;
         if (executor_)
             delete executor_;
         executor_ = p->mgr->gen_executor();
@@ -43,6 +44,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
+    const FCParam *param_ = nullptr;
     ppl::kernel::x86::fc_fp32_executor* executor_ = nullptr;
 };
 
