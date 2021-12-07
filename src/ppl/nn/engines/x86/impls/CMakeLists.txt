@@ -141,3 +141,12 @@ target_compile_options(test_gemm_v2 PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
 target_compile_definitions(test_gemm_v2 PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
 target_compile_features(test_gemm_v2 PRIVATE cxx_std_11)
 target_link_libraries(test_gemm_v2 PRIVATE pplkernelx86_static ${PPLKERNELX86_LINK_LIBRARIES})
+
+add_executable(test_pd_conv2d test/test_pd_conv2d.cpp ${PPLNN_TOOLS_DIR}/simple_flags.cc)
+target_include_directories(test_pd_conv2d
+    PUBLIC include ${PPLKERNELX86_INCLUDE_DIRECTORIES}
+    PRIVATE src ${PPLNN_TOOLS_DIR} ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES})
+target_compile_options(test_pd_conv2d PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
+target_compile_definitions(test_pd_conv2d PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
+target_compile_features(test_pd_conv2d PRIVATE cxx_std_11)
+target_link_libraries(test_pd_conv2d PRIVATE pplkernelx86_static ${PPLKERNELX86_LINK_LIBRARIES})

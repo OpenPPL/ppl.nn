@@ -16,8 +16,8 @@
 // under the License.
 
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/conv_op.h"
-#include "ppl/nn/engines/x86/kernels/onnx/conv/conv2d_dynamic_kernel.h"
-#include "ppl/nn/engines/x86/kernels/onnx/conv/conv2d_kernel.h"
+#include "ppl/nn/engines/x86/kernels/onnx/conv2d_dynamic_kernel.h"
+#include "ppl/nn/engines/x86/kernels/onnx/conv2d_kernel.h"
 #include "ppl/nn/oputils/onnx/reshape_convolution.h"
 #include "ppl/nn/common/logger.h"
 
@@ -32,11 +32,9 @@ ConvOp::~ConvOp() {
     if (conv2d_param_ != nullptr) {
         if (conv2d_param_->mgr != nullptr) {
             conv2d_param_->mgr->release_cvt_weights();
-            delete conv2d_param_->mgr;
         }
         if (conv2d_param_->fallback_mgr != nullptr) {
             conv2d_param_->fallback_mgr->release_cvt_weights();
-            delete conv2d_param_->fallback_mgr;
         }
         delete conv2d_param_;
     }
@@ -97,7 +95,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
 
     if (kernel_dims == 2) {
         if (!conv2d_param_) {
-            conv2d_param_ = new Convolution2DParam;
+            conv2d_param_ = new Conv2dParam;
         }
         if (!conv2d_param_) {
             return ppl::common::RC_OUT_OF_MEMORY;

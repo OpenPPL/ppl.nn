@@ -15,36 +15,34 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_CONV_OP_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_CONV_OP_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86OPTIMIZER_OPS_PPL_POST_DEPTHWISE_CONVO_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86OPTIMIZER_OPS_PPL_POST_DEPTHWISE_CONVO_OP_H_
 
-#include "ppl/nn/params/onnx/convolution_param.h"
-#include "ppl/nn/engines/x86/params/conv_param.h"
 #include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
+#include "ppl/nn/engines/x86/optimizer/ops/onnx/conv_op.h"
+#include "ppl/nn/engines/x86/params/post_depthwise_conv_param.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
-class PostDepthwiseConvOp;
-class ConvOp final : public X86OptKernel {
+class PostDepthwiseConvOp final : public X86OptKernel {
 public:
-    ConvOp(const ir::Node* node) : X86OptKernel(node), conv2d_param_(nullptr) {}
-
-    ~ConvOp();
+    PostDepthwiseConvOp(const ir::Node* node) : X86OptKernel(node) {}
+    ~PostDepthwiseConvOp();
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
                                       std::vector<ppl::common::dataformat_t>* selected_input_formats,
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
-    ppl::common::RetCode SelectAlgorithm(const InputOutputInfo& info, const OptKernelOptions& options) override;
-    bool TryFuseReLU();
-    bool TryFuseReLU6();
-    bool TryFuseSum();
+
+    void SetPostDepthwiseConv2dParam(PostDepthwiseConv2dParam *param) {
+        pd_conv2d_param_ = param;
+    }
+
+    static PostDepthwiseConv2dParam* TryMakePostDepthwiseConv2dParam(
+        ConvOp *conv_op, ConvOp *post_conv_op);
 
 private:
-    Conv2dParam* conv2d_param_;
-    std::shared_ptr<ppl::nn::common::ConvolutionParam> param_;
-
-    friend PostDepthwiseConvOp;
+    PostDepthwiseConv2dParam *pd_conv2d_param_;
 };
 
 }}} // namespace ppl::nn::x86

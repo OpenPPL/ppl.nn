@@ -167,7 +167,7 @@ public:
     const conv2d_fp32_param *conv_param() const
     {
         return conv_param_;
-    };
+    }
 
     void set_cvt_filter(const float *cvt_filter)
     {
@@ -203,7 +203,7 @@ public:
     const ppl::nn::TensorShape *src_shape() const
     {
         return src_shape_;
-    };
+    }
 
     void set_dst(float *dst)
     {
@@ -286,7 +286,7 @@ public:
     const conv2d_fp32_param &param() const
     {
         return param_;
-    };
+    }
 
     void set_allocator(ppl::common::Allocator *allocator)
     {

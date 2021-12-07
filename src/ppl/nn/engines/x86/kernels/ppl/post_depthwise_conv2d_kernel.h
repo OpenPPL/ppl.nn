@@ -15,27 +15,37 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_MMCV_MMCV_GRIDSAMPLE_KERNEL_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_MMCV_MMCV_GRIDSAMPLE_KERNEL_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_PPL_POST_DEPTHWISE_CONV2D_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_PPL_POST_DEPTHWISE_CONV2D_KERNEL_H_
 
 #include "ppl/nn/engines/x86/kernel.h"
-#include "ppl/nn/params/mmcv/mmcv_gridsample_param.h"
+#include "ppl/nn/engines/x86/params/post_depthwise_conv_param.h"
+#include "ppl/kernel/x86/fp32/pd_conv2d.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
-class MMCVGridSampleKernel : public X86Kernel {
+class PostDepthwiseConv2dKernel : public X86Kernel {
 public:
-    MMCVGridSampleKernel(const ir::Node* node) : X86Kernel(node) {}
+    PostDepthwiseConv2dKernel(const ir::Node* node) : X86Kernel(node) {}
+    ~PostDepthwiseConv2dKernel() {
+        if (executor_)
+            delete executor_;
+    }
 
-    void SetParam(const ppl::nn::common::MMCVGridSampleParam* p) {
+    void SetParam(const PostDepthwiseConv2dParam* p) {
         param_ = p;
+        if (executor_)
+            delete executor_;
+        executor_ = p->mgr->gen_executor();
     }
 
 private:
+    uint64_t CalcTmpBufferSize(const KernelExecContext& ctx) const override;
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::MMCVGridSampleParam* param_ = nullptr;
+    const PostDepthwiseConv2dParam* param_ = nullptr;
+    ppl::kernel::x86::pd_conv2d_fp32_executor* executor_ = nullptr;
 };
 
 }}} // namespace ppl::nn::x86

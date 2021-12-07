@@ -20,6 +20,7 @@
 
 #include "ppl/nn/engines/x86/optimizer/rules/fuse_conv_activation.h"
 #include "ppl/nn/engines/x86/optimizer/rules/fuse_conv_eltwise.h"
+#include "ppl/nn/engines/x86/optimizer/rules/fuse_conv_depthwise.h"
 #include "ppl/nn/engines/x86/optimizer/rules/fuse_gemm_activation.h"
 #include "ppl/nn/engines/x86/optimizer/rules/fuse_arithmetic_relu.h"
 #include "ppl/nn/engines/x86/optimizer/rules/fuse_batch_normalization_relu.h"
@@ -93,6 +94,7 @@ OptRuleManager::OptRuleManager() {
 
     REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseConvActivation", FuseConvActivation);
     REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseConvEltwise", FuseConvEltwise);
+    REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseConvDepthwise", FuseConvDepthwise);
     REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseArithmeticReLU", FuseArithmeticReLU);
     REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseBatchNormalizationReLU", FuseBatchNormalizationReLU);
     REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseGemmActivation", FuseGemmActivation);

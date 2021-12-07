@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/x86/kernels/onnx/conv/conv2d_dynamic_kernel.h"
+#include "ppl/nn/engines/x86/kernels/onnx/conv2d_dynamic_kernel.h"
 #include "ppl/kernel/x86/fp32/conv2d_dynamic.h"
 
 namespace ppl { namespace nn { namespace x86 {

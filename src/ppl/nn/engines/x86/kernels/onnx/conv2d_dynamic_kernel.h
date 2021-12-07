@@ -15,27 +15,28 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_MMCV_MMCV_GRIDSAMPLE_KERNEL_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_MMCV_MMCV_GRIDSAMPLE_KERNEL_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_ONNX_CONV2D_DYNAMIC_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_ONNX_CONV2D_DYNAMIC_KERNEL_H_
 
 #include "ppl/nn/engines/x86/kernel.h"
-#include "ppl/nn/params/mmcv/mmcv_gridsample_param.h"
+#include "ppl/nn/params/onnx/convolution_param.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
-class MMCVGridSampleKernel : public X86Kernel {
+class Conv2dDynamicKernel : public X86Kernel {
 public:
-    MMCVGridSampleKernel(const ir::Node* node) : X86Kernel(node) {}
+    Conv2dDynamicKernel(const ir::Node* node) : X86Kernel(node) {}
 
-    void SetParam(const ppl::nn::common::MMCVGridSampleParam* p) {
+    void SetParam(const ppl::nn::common::ConvolutionParam* p) {
         param_ = p;
     }
 
 private:
+    uint64_t CalcTmpBufferSize(const KernelExecContext& ctx) const override;
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::MMCVGridSampleParam* param_ = nullptr;
+    const ppl::nn::common::ConvolutionParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::x86
