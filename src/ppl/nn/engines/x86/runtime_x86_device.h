@@ -23,6 +23,7 @@
 #include "ppl/nn/utils/stack_buffer_manager.h"
 #include "ppl/nn/utils/compact_buffer_manager.h"
 #include "ppl/nn/utils/buffered_cpu_allocator.h"
+#include "ppl/nn/common/logger.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -36,6 +37,7 @@ private:
 
 public:
     RuntimeX86Device(uint64_t alignment, ppl::common::isa_t isa, uint32_t mm_policy) : X86Device(alignment, isa) {
+        shared_tmp_buffer_.desc = 0;
         if (mm_policy == X86_MM_MRU) {
             auto allocator_ptr = X86Device::GetAllocator();
             allocator_ = std::shared_ptr<ppl::common::Allocator>(allocator_ptr, DummyDeleter);
@@ -53,6 +55,10 @@ public:
     ~RuntimeX86Device() {
         LOG(DEBUG) << "buffer manager[" << buffer_manager_->GetName() << "] allocates ["
                    << buffer_manager_->GetAllocatedBytes() << "] bytes.";
+        if (shared_tmp_buffer_.addr) {
+            LOG(DEBUG) << "tmp buffer size [" << shared_tmp_buffer_.desc << "]";
+            free(shared_tmp_buffer_.addr);
+        }
         buffer_manager_.reset();
     }
 
@@ -65,7 +71,23 @@ public:
         buffer_manager_->Free(buffer);
     }
 
+    ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) override {
+        if (bytes > shared_tmp_buffer_.desc) {
+            auto new_addr = realloc(shared_tmp_buffer_.addr, bytes);
+            if (!new_addr) {
+                return ppl::common::RC_OUT_OF_MEMORY;
+            }
+            shared_tmp_buffer_.addr = new_addr;
+            shared_tmp_buffer_.desc = bytes;
+        }
+        *buffer = shared_tmp_buffer_;
+        return ppl::common::RC_SUCCESS;
+    }
+
+    void FreeTmpBuffer(BufferDesc* buffer) override {}
+
 private:
+    BufferDesc shared_tmp_buffer_;
     std::unique_ptr<utils::BufferManager> buffer_manager_;
     std::shared_ptr<ppl::common::Allocator> allocator_;
 };
