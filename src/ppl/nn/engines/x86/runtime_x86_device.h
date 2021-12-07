@@ -57,7 +57,7 @@ public:
                    << buffer_manager_->GetAllocatedBytes() << "] bytes.";
         if (shared_tmp_buffer_.addr) {
             LOG(DEBUG) << "tmp buffer size [" << shared_tmp_buffer_.desc << "]";
-            free(shared_tmp_buffer_.addr);
+            buffer_manager_->Free(&shared_tmp_buffer_);
         }
         buffer_manager_.reset();
     }
@@ -72,13 +72,11 @@ public:
     }
 
     ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) override {
-        if (bytes > shared_tmp_buffer_.desc) {
-            auto new_addr = realloc(shared_tmp_buffer_.addr, bytes);
-            if (!new_addr) {
-                return ppl::common::RC_OUT_OF_MEMORY;
+        if (bytes > shared_tmp_buffer_.desc || bytes <= shared_tmp_buffer_.desc / 2) {
+            auto ret = buffer_manager_->Realloc(bytes, &shared_tmp_buffer_);
+            if (ppl::common::RC_SUCCESS != ret) {
+                return ret;
             }
-            shared_tmp_buffer_.addr = new_addr;
-            shared_tmp_buffer_.desc = bytes;
         }
         *buffer = shared_tmp_buffer_;
         return ppl::common::RC_SUCCESS;

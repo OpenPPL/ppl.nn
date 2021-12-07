@@ -134,7 +134,7 @@ void pd_conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_tunning_param()
     const bool small_feature_map = feature_map_len < (l2_cap_per_core * num_thread * 2); // data already in L2
     const bool small_src_w = (src_w < 2 * sp.gd_ker_blk && feature_map_len < (l2_cap_per_core * num_thread * 3 + l3_cap_all_core))
                           || (src_w < 4 * sp.gd_ker_blk && feature_map_len < (l2_cap_per_core * num_thread * 3)); // weak kernel performance
-    const bool dense_conv = src_w <= 4 * sp.gd_ker_blk && dw_p.kernel_w > 3; // weak kernel performance
+    const bool dense_conv = src_w <= 4 * sp.gd_ker_blk && dw_p.sparse_level() < 0.04f; // (sh1*sw1)/(kh5*kw5), weak kernel performance
     if (small_src_w || large_inter_cost || small_feature_map || dense_conv) {
         sp.mode = EXEC_MODE_SEPARATE;
     } else {
