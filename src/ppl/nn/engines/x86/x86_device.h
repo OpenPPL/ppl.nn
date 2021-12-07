@@ -19,7 +19,6 @@
 #define _ST_HPC_PPL_NN_ENGINES_X86_X86_DEVICE_H_
 
 #include "ppl/nn/common/device.h"
-#include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/x86/data_converter.h"
 #include "ppl/common/generic_cpu_allocator.h"
 #include <cstring> // memcpy
@@ -28,16 +27,7 @@ namespace ppl { namespace nn { namespace x86 {
 
 class X86Device : public Device {
 public:
-    X86Device(uint64_t alignment, ppl::common::isa_t isa) : isa_(isa), data_converter_(isa), allocator_(alignment) {
-        shared_tmp_buffer_.desc = 0;
-    }
-
-    ~X86Device() {
-        if (shared_tmp_buffer_.addr) {
-            LOG(DEBUG) << "tmp buffer size [" << shared_tmp_buffer_.desc << "]";
-            free(shared_tmp_buffer_.addr);
-        }
-    }
+    X86Device(uint64_t alignment, ppl::common::isa_t isa) : isa_(isa), data_converter_(isa), allocator_(alignment) {}
 
     void SetISA(ppl::common::isa_t isa) {
         isa_ = isa;
@@ -47,20 +37,13 @@ public:
         return isa_;
     }
 
-    ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
-        if (bytes > shared_tmp_buffer_.desc) {
-            auto new_addr = realloc(shared_tmp_buffer_.addr, bytes);
-            if (!new_addr) {
-                return ppl::common::RC_OUT_OF_MEMORY;
-            }
-            shared_tmp_buffer_.addr = new_addr;
-            shared_tmp_buffer_.desc = bytes;
-        }
-        *buffer = shared_tmp_buffer_;
-        return ppl::common::RC_SUCCESS;
+    virtual ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
+        return Realloc(bytes, buffer);
     }
 
-    void FreeTmpBuffer(BufferDesc* buffer) {}
+    virtual void FreeTmpBuffer(BufferDesc* buffer) {
+        Free(buffer);
+    }
 
     virtual ppl::common::Allocator* GetAllocator() const {
         return &allocator_;
@@ -142,7 +125,6 @@ private:
 private:
     ppl::common::isa_t isa_;
     X86DataConverter data_converter_;
-    BufferDesc shared_tmp_buffer_;
     mutable X86DeviceContext context_;
     mutable ppl::common::GenericCpuAllocator allocator_;
 };
