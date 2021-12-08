@@ -114,8 +114,8 @@ RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, Runt
     auto topo = graph.topo.get();
     auto graph_data = graph.data.get();
 
-    for (auto x = graph_data->constants.begin(); x != graph_data->constants.end(); ++x) {
-        auto eid = x->first;
+    for (uint32_t i = 0; i < topo->GetConstantCount(); ++i) {
+        auto eid = topo->GetConstant(i);
         auto edge = topo->GetEdgeById(eid);
 
         auto shape_ref = graph_data->shapes.find(eid);
@@ -127,8 +127,14 @@ RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, Runt
         TensorShape tensor_shape;
         utils::IrShape2TensorShape(shape_ref->second, &tensor_shape);
 
+        auto constant_ref = graph_data->constants.find(eid);
+        if (constant_ref == graph_data->constants.end()) {
+            LOG(ERROR) << "cannot find data of constant[" << edge->GetName() << "]";
+            return RC_NOT_FOUND;
+        }
+
         RuntimeConstantInfo constant_info;
-        auto status = GenericLoadConstant(eid, x->second, tensor_shape, device, &constant_info);
+        auto status = GenericLoadConstant(eid, constant_ref->second, tensor_shape, device, &constant_info);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "load constant[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
