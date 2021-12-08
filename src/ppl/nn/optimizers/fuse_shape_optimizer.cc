@@ -194,6 +194,7 @@ RetCode UpdateMatrixForNextNode(ir::Node* node, std::vector<edgeid_t>* edge_arra
             constants_edge->DelConsumer(node->GetId());
             if (constants_edge->CalcConsumerCount() == 0) {
                 constants.erase(input_edge_id);
+                graph->topo->DelEdgeById(input_edge_id);
             }
         }
     }
