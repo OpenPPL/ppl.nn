@@ -71,6 +71,46 @@ RetCode X86Engine::DoOptimize(ir::Graph* graph, utils::SharedResource* resource,
     return RC_SUCCESS;
 }
 
+ppl::common::RetCode X86Engine::CalDataOmittedConstants(
+    const ir::Graph& graph,
+    const RuntimePartitionInfo& info,
+    std::set<edgeid_t>* data_omitted_constants) const {
+
+    data_omitted_constants->clear();
+
+    std::map<edgeid_t, int64_t> constants_data_refcount;
+    for (uint32_t i = 0; i < graph.topo->GetConstantCount(); ++i) {
+        auto edge_id = graph.topo->GetConstant(i);
+        auto edge = graph.topo->GetEdgeById(edge_id);
+        if (edge == nullptr) {
+            LOG(ERROR) << "Edge of Constant[edgeid=" << edge_id << "] not found";
+            return RC_NOT_FOUND;
+        }
+        const int64_t refcount = edge->CalcConsumerCount();
+        auto ret = constants_data_refcount.insert(make_pair(edge_id, refcount));
+        if (!ret.second) {
+            LOG(ERROR) << "Duplicated Constant Edge";
+            return ppl::common::RC_OTHER_ERROR;
+        }
+    }
+
+    for (auto it = info.kernels.begin(); it != info.kernels.end(); ++it) {
+        auto kernel = (X86OptKernel*)it->second.get();
+        auto ret = kernel->OmitConstantsData(&constants_data_refcount);
+        if (ppl::common::RC_SUCCESS != ret) {
+            return ret;
+        }
+    }
+
+    for (auto it = constants_data_refcount.begin(); it != constants_data_refcount.end(); ++it) {
+        if (it->second <= 0) {
+            data_omitted_constants->insert(it->first);
+        }
+    }
+
+    return ppl::common::RC_SUCCESS;
+}
+
 RetCode X86Engine::ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
     auto status = DoOptimize(graph, resource, info);
     if (status != RC_SUCCESS) {
@@ -78,7 +118,14 @@ RetCode X86Engine::ProcessGraph(utils::SharedResource* resource, ir::Graph* grap
         return status;
     }
 
-    status = utils::LoadConstants(*graph, &device_, &info->constants);
+    std::set<edgeid_t> data_omitted_constants;
+    status = CalDataOmittedConstants(*graph, *info, &data_omitted_constants);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "CalDataOmittedConstants failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    status = utils::LoadConstants(*graph, &device_, &info->constants, &data_omitted_constants);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "LoadConstants failed: " << GetRetCodeStr(status);
         return status;

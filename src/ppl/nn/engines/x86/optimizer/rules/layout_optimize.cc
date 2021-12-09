@@ -15,7 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/x86/optimizer/rules/fuse_arithmetic_relu.h"
 #include "ppl/nn/engines/x86/optimizer/rules/utils.h"
 #include "ppl/nn/engines/x86/optimizer/opt_rule_manager.h"
 
