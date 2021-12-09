@@ -71,12 +71,12 @@ RetCode X86Engine::DoOptimize(ir::Graph* graph, utils::SharedResource* resource,
     return RC_SUCCESS;
 }
 
-ppl::common::RetCode X86Engine::CalDataEmittedConstants(
+ppl::common::RetCode X86Engine::CalDataOmittedConstants(
     const ir::Graph& graph,
     const RuntimePartitionInfo& info,
-    std::set<edgeid_t>* data_emitted_constants) const {
+    std::set<edgeid_t>* data_omitted_constants) const {
 
-    data_emitted_constants->clear();
+    data_omitted_constants->clear();
 
     std::map<edgeid_t, int64_t> constants_data_refcount;
     for (uint32_t i = 0; i < graph.topo->GetConstantCount(); ++i) {
@@ -96,7 +96,7 @@ ppl::common::RetCode X86Engine::CalDataEmittedConstants(
 
     for (auto it = info.kernels.begin(); it != info.kernels.end(); ++it) {
         auto kernel = (X86OptKernel*)it->second.get();
-        auto ret = kernel->EmitConstantsData(&constants_data_refcount);
+        auto ret = kernel->OmitConstantsData(&constants_data_refcount);
         if (ppl::common::RC_SUCCESS != ret) {
             return ret;
         }
@@ -104,7 +104,7 @@ ppl::common::RetCode X86Engine::CalDataEmittedConstants(
 
     for (auto it = constants_data_refcount.begin(); it != constants_data_refcount.end(); ++it) {
         if (it->second <= 0) {
-            data_emitted_constants->insert(it->first);
+            data_omitted_constants->insert(it->first);
         }
     }
 
@@ -118,14 +118,14 @@ RetCode X86Engine::ProcessGraph(utils::SharedResource* resource, ir::Graph* grap
         return status;
     }
 
-    std::set<edgeid_t> data_emitted_constants;
-    status = CalDataEmittedConstants(*graph, *info, &data_emitted_constants);
+    std::set<edgeid_t> data_omitted_constants;
+    status = CalDataOmittedConstants(*graph, *info, &data_omitted_constants);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "CalDataEmittedConstants failed: " << GetRetCodeStr(status);
+        LOG(ERROR) << "CalDataOmittedConstants failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = utils::LoadConstants(*graph, &device_, &info->constants, &data_emitted_constants);
+    status = utils::LoadConstants(*graph, &device_, &info->constants, &data_omitted_constants);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "LoadConstants failed: " << GetRetCodeStr(status);
         return status;

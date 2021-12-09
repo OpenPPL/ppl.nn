@@ -186,7 +186,7 @@ RetCode ConvOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* 
     return RC_SUCCESS;
 }
 
-RetCode ConvOp::EmitConstantsData(std::map<edgeid_t, int64_t> *constants_data_refcount) {
+RetCode ConvOp::OmitConstantsData(std::map<edgeid_t, int64_t> *constants_data_refcount) {
     if (conv2d_param_ && conv2d_param_->algo_info.algo_type != ppl::kernel::x86::conv2d_fp32_algo::UNKNOWN) {
         auto weight_id = GetNode()->GetInput(1);
         auto it = constants_data_refcount->find(weight_id);

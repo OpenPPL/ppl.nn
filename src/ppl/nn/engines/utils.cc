@@ -91,10 +91,10 @@ RetCode CopyBuffer(const BufferDesc& src_buf, const TensorShape& src_shape, cons
 /* -------------------------------------------------------------------------- */
 
 RetCode GenericLoadConstant(edgeid_t eid, const ir::Constant& constant, const TensorShape& shape, Device* device,
-                            RuntimeConstantInfo* info, bool emit_data) {
+                            RuntimeConstantInfo* info, bool omit_data) {
     info->Reshape(shape);
 
-    if (!emit_data) {
+    if (!omit_data) {
         info->SetDevice(device);
         auto status = info->ReallocBuffer();
         if (status != RC_SUCCESS) {
@@ -112,7 +112,7 @@ RetCode GenericLoadConstant(edgeid_t eid, const ir::Constant& constant, const Te
     return RC_SUCCESS;
 }
 
-RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, RuntimeConstantInfo>* constants, std::set<edgeid_t>* data_emitted_constants) {
+RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, RuntimeConstantInfo>* constants, std::set<edgeid_t>* data_omitted_constants) {
     auto topo = graph.topo.get();
     auto graph_data = graph.data.get();
 
@@ -139,15 +139,15 @@ RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, Runt
             return RC_NOT_FOUND;
         }
 
-        bool emit_data = false;
-        if (data_emitted_constants != nullptr) {
-            if (data_emitted_constants->find(eid) != data_emitted_constants->end()) {
-                emit_data = true;
+        bool omit_data = false;
+        if (data_omitted_constants != nullptr) {
+            if (data_omitted_constants->find(eid) != data_omitted_constants->end()) {
+                omit_data = true;
             }
         }
 
         RuntimeConstantInfo constant_info;
-        auto status = GenericLoadConstant(eid, constant_ref->second, tensor_shape, device, &constant_info, emit_data);
+        auto status = GenericLoadConstant(eid, constant_ref->second, tensor_shape, device, &constant_info, omit_data);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "load constant[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;

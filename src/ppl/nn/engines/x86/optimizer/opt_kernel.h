@@ -74,7 +74,7 @@ public:
         common_param_.output_formats[idx] = format;
     }
 
-    virtual ppl::common::RetCode EmitConstantsData(std::map<edgeid_t, int64_t> *constants_data_refcount) {
+    virtual ppl::common::RetCode OmitConstantsData(std::map<edgeid_t, int64_t> *constants_data_refcount) {
         return ppl::common::RC_SUCCESS;
     }
 

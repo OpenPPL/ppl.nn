@@ -46,9 +46,9 @@ Define_string_opt("--mm-policy", g_flag_mm_policy, "mem",
                   "\"perf\" => better performance, or \"mem\" => less memory usage");
 
 Define_bool_opt("--enable-profiling", g_flag_enable_profiling, false, "enable profiling and print profiling info");
-Define_float_opt("--min-profiling-time", g_flag_min_profiling_time, 1.0f, "min execute time by seconds for profiling");
-Define_uint32_opt("--min-profiling-iter", g_flag_min_profiling_iter, 1, "declare profiling iteration");
-Define_uint32_opt("--warmup-iter", g_flag_warmup_times, 0, "declare warmup iteration");
+Define_float_opt("--min-profiling-seconds", g_flag_min_profiling_seconds, 1.0f, "min execute time by seconds for profiling");
+Define_uint32_opt("--min-profiling-iterations", g_flag_min_profiling_iterations, 1, "declare profiling iteration");
+Define_uint32_opt("--warmup-iterations", g_flag_warmup_iterations, 0, "declare profiling warmup iteration");
 
 Define_string_opt("--input", g_flag_input, "", "binary input file containing all tensors' data");
 Define_string_opt("--inputs", g_flag_inputs, "", "binary input files separated by comma");
@@ -909,9 +909,9 @@ int main(int argc, char* argv[]) {
     LOG(INFO) << "Run ok";
 
     if (g_flag_enable_profiling) {
-        if (g_flag_warmup_times > 0) {
-            LOG(INFO) << "Warm up start for " << g_flag_warmup_times << " times.";
-            for (uint32_t i = 0; i < g_flag_warmup_times; ++i) {
+        if (g_flag_warmup_iterations > 0) {
+            LOG(INFO) << "Warm up start for " << g_flag_warmup_iterations << " times.";
+            for (uint32_t i = 0; i < g_flag_warmup_iterations; ++i) {
                 auto status = runtime->Run();
                 if (status == RC_SUCCESS) {
                     status = runtime->Sync();
@@ -929,8 +929,8 @@ int main(int argc, char* argv[]) {
 
         double run_dur = 0;
         uint32_t run_count = 0;
-        while (run_dur < g_flag_min_profiling_time * 1000 ||
-               run_count < g_flag_min_profiling_iter) {
+        while (run_dur < g_flag_min_profiling_seconds * 1000 ||
+               run_count < g_flag_min_profiling_iterations) {
             run_begin_ts = std::chrono::system_clock::now();
             auto status = runtime->Run();
             if (status == RC_SUCCESS) {

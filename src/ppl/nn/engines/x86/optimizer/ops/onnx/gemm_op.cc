@@ -99,7 +99,7 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
-RetCode GemmOp::EmitConstantsData(std::map<edgeid_t, int64_t> *constants_data_refcount) {
+RetCode GemmOp::OmitConstantsData(std::map<edgeid_t, int64_t> *constants_data_refcount) {
     if (fc_param_ && fc_param_->algo_info.algo_type != ppl::kernel::x86::fc_fp32_algo::UNKNOWN) {
         auto weight_id = GetNode()->GetInput(1);
         auto it = constants_data_refcount->find(weight_id);
