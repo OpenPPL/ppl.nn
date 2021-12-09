@@ -54,8 +54,8 @@ pplnn中，与x86架构测速相关的运行选项有：
 * `--reshaped-inputs`：指定外部数据，格式要求上文已阐述
 * `--mm-policy`：内存管理策略，mem代表更少的内存使用，perf代表更激进的内存优化，默认为mem
 * `--enable-profiling`：使能测速，默认为不使能
-* `--min-profiling-time`：指定测速的最少持续时间，单位为秒，默认为1s
-* `--warmuptimes`：指定warm up的次数，默认为0
+* `--min-profiling-seconds`：指定测速的最少持续时间，单位为秒，默认为1s
+* `--warmup-iterations`：指定warm up的次数，默认为0
 * `--disable-avx512`：指定禁用avx512指令集，默认为不禁用
 * `--disable-avx-fma3`：指定同时禁用avx, fma3, avx512指令集，默认为不禁用
 * `--core-binding`：启用绑核，默认不启用
@@ -77,8 +77,8 @@ export OMP_NUM_THREADS=8    # 指定8线程
         --onnx-model <onnx_model> \   # 指定onnx模型
         --mm-policy mem           \   # 使用mem内存策略
         --enable-profiling        \   # 使能测速
-        --min-profiling-time 10   \   # 测速时最少持续10s
-        --warmuptimes 5           \   # warm up 5次
+        --min-profiling-seconds 10   \   # 测速时最少持续10s
+        --warmup-iterations 5           \   # warm up 5次
         --core-binding            \   # 启用绑核
         --disable-avx512              # 禁用avx512指令集
 ```
@@ -97,8 +97,8 @@ pplnn会自动根据模型输入的shape生成随机测试数据。
         --reshaped-inputs input-1_3_224_224-fp32.dat    \   # 指定输入数据文件
         --mm-policy mem                                 \   # 使用mem内存策略
         --enable-profiling                              \   # 使能测速
-        --min-profiling-time 10                         \   # 测速时最少持续10s
-        --warmuptimes 5                                     # warm up 5次
+        --min-profiling-seconds 10                         \   # 测速时最少持续10s
+        --warmup-iterations 5                                     # warm up 5次
 ```
 
 当有多个输入时，`--reshaped-inputs`使用逗号','分割。

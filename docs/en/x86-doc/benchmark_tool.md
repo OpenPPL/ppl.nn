@@ -54,8 +54,8 @@ pplnn's run options related to the x86 architecture benchmark are:
 * `--in-shapes`:  Specify the input tensor shape
 * `--mm-policy`: Memory management strategy, "mem" means less memory usage, and "perf" means more radical memory optimization. Default is mem
 * `--enable-profiling`: Enable profiling. Default is false
-* `--min-profiling-time`: Specify the minimum time duration of benchmark in seconds. Default is 1s
-* `--warmuptimes`: Specify the warm up times. Default is 0
+* `--min-profiling-seconds`: Specify the minimum time duration of benchmark in seconds. Default is 1s
+* `--warmup-iterations`: Specify the warm up times. Default is 0
 * `--disable-avx512`: Disable avx512 instruction set. Default is false
 * `--disable-avx-fma3`: Disable avx, fma3 and avx512 instruction sets. Default is false
 * `--core-binding`: Enable core binding. Default is false.
@@ -77,8 +77,8 @@ Here is an example to use random test data for benchmark:
         --onnx-model <onnx_model> \   # specify onnx model
         --mm-policy mem           \   # use "mem" memory management policy
         --enable-profiling        \   # enable profiling
-        --min-profiling-time 10   \   # benchmark lasts at least 10s
-        --warmuptimes 5           \   # warm up 5 times
+        --min-profiling-seconds 10   \   # benchmark lasts at least 10s
+        --warmup-iterations 5           \   # warm up 5 times
         --core-binding            \   # enable core binding
         --disable-avx512              # disable avx512 instruction set
 ```
@@ -97,8 +97,8 @@ You can use the following command for benchmark:
         --reshaped-inputs input-1_3_224_224-fp32.dat    \   # specify input test data file
         --mm-policy mem                                 \   # use "mem" memory management policy
         --enable-profiling                              \   # enable profiling
-        --min-profiling-time 10                         \   # benchmark lasts at least 10s
-        --warmuptimes 5                                     # warm up 5 times
+        --min-profiling-seconds 10                         \   # benchmark lasts at least 10s
+        --warmup-iterations 5                                     # warm up 5 times
 ```
 
 When there are multiple inputs, `--reshaped-inputs` is separated by commas ','.

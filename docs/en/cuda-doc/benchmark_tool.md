@@ -5,19 +5,19 @@
 Execute the command:
 
 ```C++
-./pplnn --use-cuda --onnx-model model.onnx --inputs input.bin -–in-shapes n_c_h_w [--warmuptimes m] --enable-profiling
+./pplnn --use-cuda --onnx-model model.onnx --inputs input.bin -–in-shapes n_c_h_w [--warmup-iterations m] --enable-profiling
 ```
 
 `n_c_h_w` represents the actual input image size
 
-`--warmuptimes` indicates warm up times. The number of m is optional, but a suitable m is over than 400.
+`--warmup-iterations` indicates warm up times. The number of m is optional, but a suitable m is over than 400.
 
 Example:
 
 ```
-./pplnn --use-cuda --onnx-model model.onnx --inputs input.bin --in-shapes 1_3_224_224 --warmuptimes 400 --enable-profiling
+./pplnn --use-cuda --onnx-model model.onnx --inputs input.bin --in-shapes 1_3_224_224 --warmup-iterations 400 --enable-profiling
 
-./pplnn --use-cuda --onnx-model model.onnx --inputs input1.bin,input2.bin --in-shapes 4_3_1200_1200,4_8 --warmuptimes 400 --enable-profiling
+./pplnn --use-cuda --onnx-model model.onnx --inputs input1.bin,input2.bin --in-shapes 4_3_1200_1200,4_8 --warmup-iterations 400 --enable-profiling
 ```
 
 The running cost is shown in log as following:
@@ -31,7 +31,7 @@ Average run cost: *** ms.
 All tested model are dynamic model created by pytorch model zoo.
 
 ```
-./pplnn --use-cuda --onnx-model model.onnx --inputs input.bin -–in-shapes 1_3_224_224 --warmuptimes 400 --enable-profiling
+./pplnn --use-cuda --onnx-model model.onnx --inputs input.bin -–in-shapes 1_3_224_224 --warmup-iterations 400 --enable-profiling
 ```
 
 
