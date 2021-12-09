@@ -35,6 +35,7 @@ public:
 
 private:
     ppl::common::RetCode DoOptimize(ir::Graph*, utils::SharedResource*, RuntimePartitionInfo*);
+    ppl::common::RetCode CalDataEmittedConstants(const ir::Graph&, const RuntimePartitionInfo&, std::set<edgeid_t>*) const;
 
 private:
     /*

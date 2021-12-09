@@ -63,18 +63,17 @@ bool FuseConvDepthwise(const OptKernelOptions &options) {
             pd_conv2d_node->SetType(type);
 
             // add new node input/output
+            bool conv_has_bias = conv_kernel->GetBiasTerm();
+            bool depthwise_has_bias = post_conv_kernel->GetBiasTerm();
+
             auto conv_input = graph_topo->GetEdgeById(conv_node->GetInput(0));
             auto conv_w = graph_topo->GetEdgeById(conv_node->GetInput(1));
-            auto conv_b = graph_topo->GetEdgeById(conv_node->GetInput(2));
+            auto conv_b = conv_has_bias ? graph_topo->GetEdgeById(conv_node->GetInput(2)) : nullptr;
             auto conv_output = graph_topo->GetEdgeById(conv_node->GetOutput(0)); // depthwise input
             auto depthwise_w = graph_topo->GetEdgeById(next_node->GetInput(1));
-            auto depthwise_b = graph_topo->GetEdgeById(next_node->GetInput(2));
+            auto depthwise_b = depthwise_has_bias ? graph_topo->GetEdgeById(next_node->GetInput(2)) : nullptr;
             auto depthwise_output = graph_topo->GetEdgeById(next_node->GetOutput(0));
             pd_conv2d_node->AddInput(conv_input->GetId());
-            pd_conv2d_node->AddInput(conv_w->GetId());
-            pd_conv2d_node->AddInput(conv_b->GetId());
-            pd_conv2d_node->AddInput(depthwise_w->GetId());
-            pd_conv2d_node->AddInput(depthwise_b->GetId());
             pd_conv2d_node->AddOutput(depthwise_output->GetId());
 
             // create opt kernel & set param and dataformat
@@ -94,25 +93,35 @@ bool FuseConvDepthwise(const OptKernelOptions &options) {
             // change graph topo
             conv_input->DelConsumer(conv_node->GetId());
             conv_w->DelConsumer(conv_node->GetId());
-            conv_b->DelConsumer(conv_node->GetId());
             depthwise_w->DelConsumer(next_node->GetId());
-            depthwise_b->DelConsumer(next_node->GetId());
+            if (conv_has_bias) conv_b->DelConsumer(conv_node->GetId());
+            if (depthwise_has_bias) depthwise_b->DelConsumer(next_node->GetId());
+            // ====
             depthwise_output->SetProducer(pd_conv2d_node->GetId());
+            // ====
             conv_input->AddConsumer(pd_conv2d_node->GetId());
-            conv_w->AddConsumer(pd_conv2d_node->GetId());
-            conv_b->AddConsumer(pd_conv2d_node->GetId());
-            depthwise_w->AddConsumer(pd_conv2d_node->GetId());
-            depthwise_b->AddConsumer(pd_conv2d_node->GetId());
 
             // delete kernel & tensors
+            bool del_conv_w = conv_w->CalcConsumerCount() == 0;
+            bool del_conv_b = conv_has_bias && conv_b->CalcConsumerCount() == 0;
+            bool del_depthwise_w = depthwise_w->CalcConsumerCount() == 0;
+            bool del_depthwise_b = depthwise_has_bias && depthwise_b->CalcConsumerCount() == 0;
             info->kernels.erase(conv_node->GetId());
             info->kernels.erase(next_node->GetId());
             tensors.erase(conv_output->GetId());
+            if (del_conv_w) tensors.erase(conv_w->GetId());
+            if (del_conv_b) tensors.erase(conv_b->GetId());
+            if (del_depthwise_w) tensors.erase(depthwise_w->GetId());
+            if (del_depthwise_b) tensors.erase(depthwise_b->GetId());
 
             // delete unused node & edge
             graph_topo->DelNodeById(conv_node->GetId());
             graph_topo->DelNodeById(next_node->GetId());
             graph_topo->DelEdgeById(conv_output->GetId());
+            if (del_conv_w) graph_topo->DelEdgeById(conv_w->GetId());
+            if (del_conv_b) graph_topo->DelEdgeById(conv_b->GetId());
+            if (del_depthwise_w) graph_topo->DelEdgeById(depthwise_w->GetId());
+            if (del_depthwise_b) graph_topo->DelEdgeById(depthwise_b->GetId());
 
             graph_changed = true;
         }

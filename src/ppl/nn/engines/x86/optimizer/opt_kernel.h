@@ -74,6 +74,10 @@ public:
         common_param_.output_formats[idx] = format;
     }
 
+    virtual ppl::common::RetCode EmitConstantsData(std::map<edgeid_t, int64_t> *constants_data_refcount) {
+        return ppl::common::RC_SUCCESS;
+    }
+
 protected:
     template <typename T>
     ppl::common::RetCode GenericLoadParam(const OptKernelOptions& options, std::shared_ptr<T>* param) const {

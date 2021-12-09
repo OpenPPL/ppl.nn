@@ -47,8 +47,8 @@ Define_string_opt("--mm-policy", g_flag_mm_policy, "mem",
 
 Define_bool_opt("--enable-profiling", g_flag_enable_profiling, false, "enable profiling and print profiling info");
 Define_float_opt("--min-profiling-time", g_flag_min_profiling_time, 1.0f, "min execute time by seconds for profiling");
-Define_uint32_opt("--min-profiling-number", g_flag_min_profiling_number, 1, "declare profiling times");
-Define_uint32_opt("--warmuptimes", g_flag_warmup_times, 0, "declare warmup times");
+Define_uint32_opt("--min-profiling-iter", g_flag_min_profiling_iter, 1, "declare profiling iteration");
+Define_uint32_opt("--warmup-iter", g_flag_warmup_times, 0, "declare warmup iteration");
 
 Define_string_opt("--input", g_flag_input, "", "binary input file containing all tensors' data");
 Define_string_opt("--inputs", g_flag_inputs, "", "binary input files separated by comma");
@@ -930,7 +930,7 @@ int main(int argc, char* argv[]) {
         double run_dur = 0;
         uint32_t run_count = 0;
         while (run_dur < g_flag_min_profiling_time * 1000 ||
-               run_count < g_flag_min_profiling_number) {
+               run_count < g_flag_min_profiling_iter) {
             run_begin_ts = std::chrono::system_clock::now();
             auto status = runtime->Run();
             if (status == RC_SUCCESS) {

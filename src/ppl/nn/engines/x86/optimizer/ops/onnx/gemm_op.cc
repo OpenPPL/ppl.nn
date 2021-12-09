@@ -58,6 +58,8 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
         }
     }
 
+    param_->bias_term = (node->GetInputCount() == 3) ? 1 : 0;
+
     if (!param_->transA && param_->transB && weight_data != nullptr) {
         if (!fc_param_) {
             fc_param_ = new FCParam;
@@ -94,6 +96,24 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
 
     infer_type_func_ = GenericInferType;
 
+    return RC_SUCCESS;
+}
+
+RetCode GemmOp::EmitConstantsData(std::map<edgeid_t, int64_t> *constants_data_refcount) {
+    if (fc_param_ && fc_param_->algo_info.algo_type != ppl::kernel::x86::fc_fp32_algo::UNKNOWN) {
+        auto weight_id = GetNode()->GetInput(1);
+        auto it = constants_data_refcount->find(weight_id);
+        if (it != constants_data_refcount->end()) {
+            it->second--;
+        }
+        if (param_->bias_term) {
+            auto bias_id = GetNode()->GetInput(2);
+            it = constants_data_refcount->find(bias_id);
+            if (it != constants_data_refcount->end()) {
+                it->second--;
+            }
+        }
+    }
     return RC_SUCCESS;
 }
 

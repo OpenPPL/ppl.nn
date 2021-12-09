@@ -36,6 +36,8 @@ public:
                                       std::vector<ppl::common::dataformat_t>* selected_input_formats,
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
     ppl::common::RetCode SelectAlgorithm(const InputOutputInfo& info, const OptKernelOptions& options) override;
+    ppl::common::RetCode EmitConstantsData(std::map<edgeid_t, int64_t> *constants_data_refcount) override;
+    bool GetBiasTerm() { return param_->bias_term; };
     bool TryFuseReLU();
     bool TryFuseReLU6();
     bool TryFuseSum();
