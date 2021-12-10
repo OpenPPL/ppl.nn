@@ -78,7 +78,7 @@ RetCode ParseIfParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_
 
             utils::ResolveExtraInputs(param->then_branch.topo.get(), node, topo);
             status = CollectExtraInputIndices(param->then_branch.topo.get(), node, topo,
-                                              &param->then_extra_input_indices_in_parent_node);
+                                              &param->then_extra_input_indices_in_host_node);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "CollectExtraInputIndices of then branch failed: " << GetRetCodeStr(status);
                 return status;
@@ -93,7 +93,7 @@ RetCode ParseIfParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_
 
             utils::ResolveExtraInputs(param->else_branch.topo.get(), node, topo);
             status = CollectExtraInputIndices(param->else_branch.topo.get(), node, topo,
-                                              &param->else_extra_input_indices_in_parent_node);
+                                              &param->else_extra_input_indices_in_host_node);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "CollectExtraInputIndices of else branch failed: " << GetRetCodeStr(status);
                 return status;

@@ -125,6 +125,18 @@ Tensor* GetOutputTensor(uint32_t idx) const;
 Gets the output tensor at position `idx`. Note that `idx` should be less than the number of outputs.
 
 ```c++
+uint32_t GetDeviceContextCount() const;
+```
+
+Gets the number of `DeviceContext` used by this `Runtime` instance.
+
+```c++
+DeviceContext* GetDeviceContext(uint32_t idx) const;
+```
+
+Gets the `DeviceContext` at position `idx`. Note that `idx` should be less than `GetDeviceContextCount()`.
+
+```c++
 ppl::common::RetCode GetProfilingStatistics(ProfilingStatistics*) const;
 ```
 

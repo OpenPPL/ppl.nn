@@ -56,7 +56,6 @@ public:
         LOG(DEBUG) << "buffer manager[" << buffer_manager_->GetName() << "] allocates ["
                    << buffer_manager_->GetAllocatedBytes() << "] bytes.";
         if (shared_tmp_buffer_.addr) {
-            LOG(DEBUG) << "tmp buffer size [" << shared_tmp_buffer_.desc << "]";
             buffer_manager_->Free(&shared_tmp_buffer_);
         }
         buffer_manager_.reset();

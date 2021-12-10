@@ -109,7 +109,7 @@ public:
 
     // ----- //
 
-    /** @brief mark an edge as graph input edge, which is needed to be filled. */
+    /** @brief mark an edge as graph input, which is needed to be filled. */
     void MarkAsInput(edgeid_t);
 
     uint32_t GetInputCount() const {
@@ -122,7 +122,7 @@ public:
 
     // ----- //
 
-    /** @brief mark an edge as constant edge. */
+    /** @brief mark an edge as constant. */
     void MarkAsConstant(edgeid_t);
 
     uint32_t GetConstantCount() const {
@@ -135,7 +135,7 @@ public:
 
     // ----- //
 
-    /** @brief mark an edge as constant edge. */
+    /** @brief mark an edge as output. */
     void MarkAsOutput(edgeid_t);
 
     uint32_t GetOutputCount() const {

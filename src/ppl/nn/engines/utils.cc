@@ -112,7 +112,8 @@ RetCode GenericLoadConstant(edgeid_t eid, const ir::Constant& constant, const Te
     return RC_SUCCESS;
 }
 
-RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, RuntimeConstantInfo>* constants, std::set<edgeid_t>* data_omitted_constants) {
+RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, RuntimeConstantInfo>* constants,
+                      std::set<edgeid_t>* data_omitted_constants) {
     auto topo = graph.topo.get();
     auto graph_data = graph.data.get();
 
@@ -141,9 +142,7 @@ RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, Runt
 
         bool omit_data = false;
         if (data_omitted_constants != nullptr) {
-            if (data_omitted_constants->find(eid) != data_omitted_constants->end()) {
-                omit_data = true;
-            }
+            omit_data = (data_omitted_constants->find(eid) != data_omitted_constants->end());
         }
 
         RuntimeConstantInfo constant_info;

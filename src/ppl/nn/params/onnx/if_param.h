@@ -25,9 +25,13 @@ namespace ppl { namespace nn { namespace common {
 struct IfParam {
     ir::Graph then_branch;
     ir::Graph else_branch;
-    // indices in ir::Node::GetExtraInput()
-    std::vector<uint32_t> then_extra_input_indices_in_parent_node;
-    std::vector<uint32_t> else_extra_input_indices_in_parent_node;
+
+    /**
+       indices in ir::Node::GetExtraInput(). We use indices instead of tensor names to get corresponding inputs in case
+       that optimizers change its input tensors.
+    */
+    std::vector<uint32_t> then_extra_input_indices_in_host_node;
+    std::vector<uint32_t> else_extra_input_indices_in_host_node;
 
     bool operator==(const IfParam& p) const {
         return false; // has subgraph
