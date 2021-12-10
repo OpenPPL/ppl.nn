@@ -52,6 +52,7 @@
 | Not                | 1~16   | &check;                     | &check;            |
 | Pad                | 11~12  | &check;                     | &check;            |
 | Pow                | 7~11   | &check;                     | &check;            |
+| PRelu              | 9~16   | &check;                     |                    |
 | Range              | 11~16  | &check;                     | &check;            |
 | ReduceMax          | 11     | &check;                     | &check;            |
 | ReduceMean         | 11~12  | &check;                     | &check;            |

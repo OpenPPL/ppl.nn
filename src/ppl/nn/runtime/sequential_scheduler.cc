@@ -37,50 +37,50 @@ RetCode SequentialScheduler::Init(const ir::GraphTopo* topo, const RuntimeAuxInf
 
 #ifndef NDEBUG
 static bool ValidateEdges(const RuntimeGraph* graph, const vector<EdgeObject*> eid2obj) {
-    set<EdgeObject*> reserved_set;
+    set<EdgeObject*> tensors_before;
     for (auto x = graph->inputs.begin(); x != graph->inputs.end(); ++x) {
-        reserved_set.insert(*x);
+        tensors_before.insert(*x);
     }
     for (auto x = graph->extra_inputs.begin(); x != graph->extra_inputs.end(); ++x) {
-        reserved_set.insert(*x);
+        tensors_before.insert(*x);
     }
     for (auto x = graph->constants.begin(); x != graph->constants.end(); ++x) {
-        reserved_set.insert(*x);
+        tensors_before.insert(*x);
     }
     for (auto x = graph->outputs.begin(); x != graph->outputs.end(); ++x) {
-        reserved_set.insert(*x);
+        tensors_before.insert(*x);
     }
 
-    set<EdgeObject*> unused_set;
+    set<EdgeObject*> tensors_after;
     for (auto x = eid2obj.begin(); x != eid2obj.end(); ++x) {
         if (*x) {
-            unused_set.insert(*x);
+            tensors_after.insert(*x);
         }
     }
 
-    vector<EdgeObject*> diff_reserved2unused(reserved_set.size());
-    auto end_iter = std::set_difference(reserved_set.begin(), reserved_set.end(), unused_set.begin(), unused_set.end(),
-                                        diff_reserved2unused.begin());
-    diff_reserved2unused.resize(end_iter - diff_reserved2unused.begin());
-    if (!diff_reserved2unused.empty()) {
-        LOG(ERROR) << "diff edge set reserved <=> unused:";
-        for (auto x = diff_reserved2unused.begin(); x != diff_reserved2unused.end(); ++x) {
+    vector<EdgeObject*> diff_before2after(tensors_before.size());
+    auto end_iter = std::set_difference(tensors_before.begin(), tensors_before.end(), tensors_after.begin(),
+                                        tensors_after.end(), diff_before2after.begin());
+    diff_before2after.resize(end_iter - diff_before2after.begin());
+    if (!diff_before2after.empty()) {
+        LOG(ERROR) << "edge(s) in `before` but not in `after`:";
+        for (auto x = diff_before2after.begin(); x != diff_before2after.end(); ++x) {
             LOG(ERROR) << " " << (*x)->GetEdge()->GetName();
         }
     }
 
-    vector<EdgeObject*> diff_unused2reserved(unused_set.size());
-    end_iter = std::set_difference(unused_set.begin(), unused_set.end(), reserved_set.begin(), reserved_set.end(),
-                                   diff_unused2reserved.begin());
-    diff_unused2reserved.resize(end_iter - diff_unused2reserved.begin());
-    if (!diff_unused2reserved.empty()) {
-        LOG(ERROR) << "diff edge set unused <=> reserved:";
-        for (auto x = diff_unused2reserved.begin(); x != diff_unused2reserved.end(); ++x) {
+    vector<EdgeObject*> diff_after2before(tensors_after.size());
+    end_iter = std::set_difference(tensors_after.begin(), tensors_after.end(), tensors_before.begin(),
+                                   tensors_before.end(), diff_after2before.begin());
+    diff_after2before.resize(end_iter - diff_after2before.begin());
+    if (!diff_after2before.empty()) {
+        LOG(ERROR) << "edge(s) in `after` but not in `before`:";
+        for (auto x = diff_after2before.begin(); x != diff_after2before.end(); ++x) {
             LOG(ERROR) << " " << (*x)->GetEdge()->GetName();
         }
     }
 
-    return (diff_reserved2unused.empty() && diff_unused2reserved.empty());
+    return (diff_before2after.empty() && diff_after2before.empty());
 }
 #endif
 

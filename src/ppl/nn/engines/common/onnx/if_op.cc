@@ -26,8 +26,8 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace common {
 
 RetCode IfOp::Init(utils::SharedResource* resource, IfParam* if_param) {
-    extra_inputs_of_then_graph_ = if_param->then_extra_input_indices_in_parent_node;
-    extra_inputs_of_else_graph_ = if_param->else_extra_input_indices_in_parent_node;
+    extra_inputs_of_then_graph_ = if_param->then_extra_input_indices_in_host_node;
+    extra_inputs_of_else_graph_ = if_param->else_extra_input_indices_in_host_node;
 
     auto status = utils::ProcessGraph(resource, &if_param->then_branch, &then_info_);
     if (status != RC_SUCCESS) {
