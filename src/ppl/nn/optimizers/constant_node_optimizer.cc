@@ -43,6 +43,7 @@ ppl::common::RetCode ConstantNodeOptimizer::Optimize(ir::Graph* graph) const {
             auto param_it = attrs.find(constant_node->GetId());
             if (param_it == attrs.end()) {
                 LOG(ERROR) << "cannot find constant node[" << constant_node->GetName() << "]'s param.";
+                graph->topo->DelEdgeById(edge_id);
                 return RC_NOT_FOUND;
             }
             const common::ConstantParam* param = (const common::ConstantParam*)param_it->second.get();
@@ -50,6 +51,8 @@ ppl::common::RetCode ConstantNodeOptimizer::Optimize(ir::Graph* graph) const {
             // copy constant info to graph
             auto constant_ret = constants.insert(make_pair(edge_id, ir::Constant()));
             constant_ret.first->second.data = param->data;
+
+            graph->topo->MarkAsConstant(edge_id);
 
             auto shape_ret = shapes.insert(make_pair(edge_id, ir::Shape()));
             shape_ret.first->second.data_type = param->data_type;
