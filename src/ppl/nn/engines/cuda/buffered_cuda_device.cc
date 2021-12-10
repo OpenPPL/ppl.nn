@@ -84,7 +84,7 @@ void BufferedCudaDevice::Free(BufferDesc* buffer) {
 }
 
 RetCode BufferedCudaDevice::AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
-    if (bytes > tmp_buffer_size_) {
+    if (bytes > tmp_buffer_size_ || bytes <= tmp_buffer_size_ / 2) {
         auto status = buffer_manager_->Realloc(bytes, &shared_tmp_buffer_);
         if (status == RC_SUCCESS) {
             tmp_buffer_size_ = bytes;

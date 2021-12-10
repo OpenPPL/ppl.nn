@@ -96,12 +96,6 @@ RetCode CudaEngine::ProcessGraph(utils::SharedResource* resource, ir::Graph* gra
         return status;
     }
 
-    status = utils::LoadConstants(*graph, &device_, &info->constants);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "LoadConstants failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
     return RC_SUCCESS;
 }
 
