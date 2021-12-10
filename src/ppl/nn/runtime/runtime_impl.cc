@@ -214,8 +214,8 @@ static RetCode InitRuntimeGraphConstants(const ir::GraphTopo* topo, const Runtim
 
     constants->reserve(topo->GetConstantCount());
 
-    for (auto x = info.constants.begin(); x != info.constants.end(); ++x) {
-        auto eid = x->first;
+    for (uint32_t i = 0; i < topo->GetConstantCount(); ++i) {
+        auto eid = topo->GetConstant(i);
         auto edge = topo->GetEdgeById(eid);
         if (!edge) {
             LOG(ERROR) << "cannot find edge info of constant[" << eid << "]";
@@ -225,8 +225,14 @@ static RetCode InitRuntimeGraphConstants(const ir::GraphTopo* topo, const Runtim
         auto tensor = &ret_pair.first->second;
 
         if (ret_pair.second) {
-            tensor->GetShape() = x->second.GetShape();
-            tensor->SetBuffer(x->second.GetBufferDesc(), x->second.GetDevice());
+            auto constant_ref = info.constants.find(eid);
+            if (constant_ref == info.constants.end()) {
+                LOG(ERROR) << "cannot find data of constant[" << edge->GetName() << "]";
+                return RC_NOT_FOUND;
+            }
+
+            tensor->GetShape() = constant_ref->second.GetShape();
+            tensor->SetBuffer(constant_ref->second.GetBufferDesc(), constant_ref->second.GetDevice());
         }
 
         constants->push_back(tensor);
