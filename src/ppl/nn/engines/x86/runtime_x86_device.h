@@ -36,8 +36,7 @@ private:
     }
 
 public:
-    RuntimeX86Device(uint64_t alignment, ppl::common::isa_t isa, uint32_t mm_policy) : X86Device(alignment, isa) {
-        shared_tmp_buffer_.desc = 0;
+    RuntimeX86Device(uint64_t alignment, ppl::common::isa_t isa, uint32_t mm_policy) : X86Device(alignment, isa), tmp_buffer_size_(0) {
         if (mm_policy == X86_MM_MRU) {
             auto allocator_ptr = X86Device::GetAllocator();
             allocator_ = std::shared_ptr<ppl::common::Allocator>(allocator_ptr, DummyDeleter);
@@ -71,11 +70,12 @@ public:
     }
 
     ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) override {
-        if (bytes > shared_tmp_buffer_.desc || bytes <= shared_tmp_buffer_.desc / 2) {
+        if (bytes > tmp_buffer_size_ || bytes <= tmp_buffer_size_ / 2) {
             auto ret = buffer_manager_->Realloc(bytes, &shared_tmp_buffer_);
             if (ppl::common::RC_SUCCESS != ret) {
                 return ret;
             }
+            tmp_buffer_size_ = bytes;
         }
         *buffer = shared_tmp_buffer_;
         return ppl::common::RC_SUCCESS;
@@ -85,6 +85,7 @@ public:
 
 private:
     BufferDesc shared_tmp_buffer_;
+    uint64_t tmp_buffer_size_;
     std::unique_ptr<utils::BufferManager> buffer_manager_;
     std::shared_ptr<ppl::common::Allocator> allocator_;
 };
