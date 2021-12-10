@@ -47,24 +47,26 @@ __global__ void cuda_kernel_fast_trans(
     __shared__ T share_val[DIM][DIM + 1];
     int64_t num = blockIdx.z;
     for (int n = num; n < param.n_outer; n += gridDim.z) {
-        int64_t idx_w = blockIdx.x * blockDim.x + threadIdx.x;
-        int64_t idx_h = blockIdx.y * blockDim.y + threadIdx.y;
-        if (idx_w < param.n_width && idx_h < param.n_height) {
-            int64_t offset                      = n * param.n_height * param.n_width + idx_h * param.n_width + idx_w;
-            share_val[threadIdx.y][threadIdx.x] = input[offset];
-        } else {
-            share_val[threadIdx.y][threadIdx.x] = (T)0;
-        }
-        __syncthreads();
-        idx_w = blockIdx.y * blockDim.y + threadIdx.x;
-        idx_h = blockIdx.x * blockDim.x + threadIdx.y;
-        if (idx_w < param.n_height && idx_h < param.n_width) {
-            int64_t offset = n * param.n_height * param.n_width + idx_h * param.n_height + idx_w;
-            output[offset] = share_val[threadIdx.x][threadIdx.y];
+        for (int t = blockIdx.y; t < DivUp(param.n_height, 32); t += gridDim.y) {
+            int64_t idx_w = blockIdx.x * blockDim.x + threadIdx.x;
+            int64_t idx_h = t * blockDim.y + threadIdx.y;
+            // idx_h += 
+            if (idx_w < param.n_width && idx_h < param.n_height) {
+                int64_t offset                      = n * param.n_height * param.n_width + idx_h * param.n_width + idx_w;
+                share_val[threadIdx.y][threadIdx.x] = input[offset];
+            } else {
+                share_val[threadIdx.y][threadIdx.x] = (T)0;
+            }
+            __syncthreads();
+            idx_w = t * blockDim.y + threadIdx.x;
+            idx_h = blockIdx.x * blockDim.x + threadIdx.y;
+            if (idx_w < param.n_height && idx_h < param.n_width) {
+                int64_t offset = n * param.n_height * param.n_width + idx_h * param.n_height + idx_w;
+                output[offset] = share_val[threadIdx.x][threadIdx.y];
+            }
         }
     }
 }
-
 bool FastTransposeSupport(
     FastTransposeParam *fast_param,
     const ppl::nn::TensorShape *input_shape,
@@ -135,7 +137,8 @@ ppl::common::RetCode PPLCUDATransposeFastForwardImp(
 {
     dim3 dim_block(DIM, DIM, 1);
     int dimz = param.n_outer >= MAX_DIM ? MAX_DIM : param.n_outer;
-    dim3 dim_grid(DivUp(param.n_width, DIM), DivUp(param.n_height, DIM), dimz);
+    int dimy = DivUp(param.n_height, DIM) >= MAX_DIM ? MAX_DIM :DivUp(param.n_height, DIM); 
+    dim3 dim_grid(DivUp(param.n_width, DIM), dimy, dimz);
 
 #define SWITCH_CASE(TYPE)                                           \
     case sizeof(TYPE): {                                            \
