@@ -23,24 +23,28 @@
 #include "ppl/kernel/x86/common/avx_tools.h"
 #include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/fma/conv2d_n16cx_direct_ndarray_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/fma/conv2d_n16cx_direct_ndarray_kernel_fp32_fma.h"
+#include "ppl/kernel/x86/common/array_param_helper.h"
 #include "ppl/common/sys.h"
 
-#define ASSUME_L2_BYTES() (256 * 1024)
-#define ASSUME_L2_WAYS()  4
-#define ASSUME_L3_BYTES() (2048 * 1024)
-#define L2_RATIO()        0.251
-#define L3_RATIO()        0.501
-
-#define OW_KR_BLK() BLK1X6_OW_RF()
-#define OC_L2_BLK_MAX() (4 * OC_DT_BLK())
-
 namespace ppl { namespace kernel { namespace x86 {
+
+static const int64_t ASSUME_L2_BYTES = 256 * 1024;
+static const int64_t ASSUME_L2_WAYS = 4;
+static const int64_t ASSUME_L3_BYTES = 2048 * 1024;
+static const float L2_RATIO = 0.251f;
+static const float L3_RATIO = 0.501f;
+
+static const int64_t OC_DATA_BLK = conv2d_n16cx_direct_ndarray_kernel_fp32_fma::config::OC_DATA_BLK;
+static const int64_t OC_REG_ELTS = conv2d_n16cx_direct_ndarray_kernel_fp32_fma::config::OC_REG_ELTS;
+static const int64_t W_KR_BLK = conv2d_n16cx_direct_ndarray_kernel_fp32_fma::config::MAX_W_BLK;
+
+static const int64_t OC_L2_BLK_MAX = 4 * OC_DATA_BLK;
 
 void conv2d_n16cx_direct_ndarray_fp32_fma_executor::init_preproc_param()
 {
     schedule_param_.ic_per_gp = conv_param_->channels / conv_param_->group;
     schedule_param_.oc_per_gp = conv_param_->num_output / conv_param_->group;
-    schedule_param_.padded_oc = round_up(schedule_param_.oc_per_gp, OC_DT_BLK());
+    schedule_param_.padded_oc = round_up(schedule_param_.oc_per_gp, OC_DATA_BLK);
 }
 
 void conv2d_n16cx_direct_ndarray_fp32_fma_executor::cal_kernel_tunning_param()
@@ -73,9 +77,9 @@ void conv2d_n16cx_direct_ndarray_fp32_fma_executor::cal_kernel_tunning_param()
         sp.unroll_ow_start = sp.unroll_ow_end = dst_w;
     }
 
-    sp.oc_l2_blk = min<int64_t>(sp.padded_oc, OC_L2_BLK_MAX());
+    sp.oc_l2_blk = min<int64_t>(sp.padded_oc, OC_L2_BLK_MAX);
 
-    const float l3_cap_all_core = (ppl::common::GetCpuCacheL3() == 0 ? (ASSUME_L3_BYTES() * num_thread) : ppl::common::GetCpuCacheL3()) * L3_RATIO() / sizeof(float);
+    const float l3_cap_all_core = (ppl::common::GetCpuCacheL3() == 0 ? (ASSUME_L3_BYTES * num_thread) : ppl::common::GetCpuCacheL3()) * L3_RATIO / sizeof(float);
 
     sp.use_nt_store           = 0;
     const int64_t src_len     = int64_t(batch) * cp.channels * src_h * src_w;
@@ -131,17 +135,24 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_executor::execute_inne
     const int64_t src_b_stride = src_shape_->GetDim(1) * src_h * src_w;
     const int64_t src_g_stride = sp.ic_per_gp * src_h * src_w;
     const int64_t src_c_stride = src_h * src_w;
-    const int64_t dst_b_stride = round_up(dst_shape_->GetDim(1), OC_DT_BLK()) * dst_h * dst_w;
+    const int64_t dst_b_stride = round_up(dst_shape_->GetDim(1), OC_DATA_BLK) * dst_h * dst_w;
     const int64_t dst_g_stride = sp.padded_oc * dst_h * dst_w;
-    const int64_t flt_c_stride = cp.kernel_h * cp.kernel_w * OC_DT_BLK();
-    const int64_t padded_rf_oc = round_up(sp.oc_per_gp, OC_RF_BLK());
+    const int64_t flt_c_stride = cp.kernel_h * cp.kernel_w * OC_DATA_BLK;
+    const int64_t padded_rf_oc = round_up(sp.oc_per_gp, OC_REG_ELTS);
 
-    const bool with_sum = cp.fuse_flag & conv_fuse_flag::SUM;
+    const bool with_relu  = cp.fuse_flag & conv_fuse_flag::RELU;
+    const bool with_relu6 = cp.fuse_flag & conv_fuse_flag::RELU6;
+    const bool with_sum   = cp.fuse_flag & conv_fuse_flag::SUM;
 
     int64_t sum_src_b_stride = 0;
     if (with_sum) {
-        sum_src_b_stride = int64_t(round_up(sum_src_shape_->GetDim(1), OC_DT_BLK())) * dst_h * dst_w;
+        sum_src_b_stride = int64_t(round_up(sum_src_shape_->GetDim(1), OC_DATA_BLK)) * dst_h * dst_w;
     }
+
+    int64_t kernel_flags = 0;
+    if (with_relu)  kernel_flags |= conv2d_n16cx_direct_ndarray_kernel_fp32_fma::flag::RELU;
+    if (with_relu6) kernel_flags |= conv2d_n16cx_direct_ndarray_kernel_fp32_fma::flag::RELU6;
+    if (with_sum)   kernel_flags |= conv2d_n16cx_direct_ndarray_kernel_fp32_fma::flag::SUM;
 
 #ifdef PPL_USE_X86_OMP_COLLAPSE
     PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(4)
@@ -153,73 +164,76 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_executor::execute_inne
 #endif
             for (int64_t ocl2 = 0; ocl2 < padded_rf_oc; ocl2 += sp.oc_l2_blk) {
                 for (int64_t oh = 0; oh < dst_h; ++oh) {
+                    int64_t kernel_param[conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::LENGTH];
+                    conv2d_n16cx_direct_ndarray_kernel_fp32_fma ker(kernel_param);
+                    array_param_helper ker_p(kernel_param);
+
                     const int64_t ocl2_eff = min<int64_t>(padded_rf_oc - ocl2, sp.oc_l2_blk);
                     const int64_t ih       = oh * cp.stride_h - cp.pad_h;
                     const int64_t kh_start = min<int64_t>(max<int64_t>(0 - ih, 0), cp.kernel_h - 1);
                     const int64_t kh_end   = max<int64_t>(min<int64_t>(src_h - ih, cp.kernel_h), 0);
-                    const int64_t nt_store_sel = sp.use_nt_store;
-                    for (int64_t oc = ocl2; oc < ocl2 + ocl2_eff; oc += OC_DT_BLK()) {
-                        const int64_t oc_eff = min<int64_t>(ocl2 + ocl2_eff - oc, OC_DT_BLK());
-                        const int64_t oc_sel = div_up(oc_eff, OC_RF_BLK()) - 1;
-                        const float *w_src     = src_ + b * src_b_stride + g * src_g_stride + ih * src_w - cp.pad_w;
-                        const float *w_sum_src = sum_src_ + b * sum_src_b_stride + g * dst_g_stride + oc * dst_h * dst_w + oh * dst_w * OC_DT_BLK();
-                        float *w_dst           = dst_ + b * dst_b_stride + g * dst_g_stride + oc * dst_h * dst_w + oh * dst_w * OC_DT_BLK();
-                        const float *flt       = cvt_filter_ + g * sp.padded_oc * sp.ic_per_gp * cp.kernel_h * cp.kernel_w + oc * sp.ic_per_gp * cp.kernel_h * cp.kernel_w;
-                        const float *bias      = cvt_bias_ + g * sp.padded_oc + oc;
+
+                    const int64_t nt_store_sel   = sp.use_nt_store;
+                    const int64_t ow_unroll_len  = sp.unroll_ow_end - sp.unroll_ow_start;
+                    const int64_t ow_unroll_body = round(ow_unroll_len, W_KR_BLK);
+                    const int64_t ow_unroll_tail = ow_unroll_len - ow_unroll_body;
+
+                    const float *base_src      = src_ + b * src_b_stride + g * src_g_stride + ih * src_w - cp.pad_w;
+                    const float *base_sum_src  = sum_src_ + b * sum_src_b_stride + g * dst_g_stride + oh * dst_w * OC_DATA_BLK;
+                    float *base_dst            = dst_ + b * dst_b_stride + g * dst_g_stride + oh * dst_w * OC_DATA_BLK;
+                    const float *base_flt      = cvt_filter_ + g * sp.padded_oc * sp.ic_per_gp * cp.kernel_h * cp.kernel_w;
+                    const float *base_bias     = cvt_bias_ + g * sp.padded_oc;
+
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::CHANNELS_IDX)     = sp.ic_per_gp;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::KH_IDX)           = cp.kernel_h;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::KW_IDX)           = cp.kernel_w;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::SW_IDX)           = cp.stride_w;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::KH_START_IDX)     = kh_start;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::KH_END_IDX)       = kh_end;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::SRC_H_STRIDE_IDX) = src_w;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::SRC_C_STRIDE_IDX) = src_c_stride;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::FLT_C_STRIDE_IDX) = flt_c_stride;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::FLAGS_IDX)        = kernel_flags;
+
+                    ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::FLT_PTR_IDX)  = base_flt;
+                    ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::BIAS_PTR_IDX) = base_bias;
+                    for (int64_t oc = ocl2; oc < ocl2 + ocl2_eff; oc += OC_DATA_BLK) {
+                        const int64_t oc_eff = min<int64_t>(ocl2 + ocl2_eff - oc, OC_DATA_BLK);
+                        const int64_t oc_reg = div_up(oc_eff, OC_REG_ELTS);
+                        ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::SRC_PTR_IDX)     = base_src;
+                        ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::SUM_SRC_PTR_IDX) = base_sum_src;
+                        ker_p.pick<float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::DST_PTR_IDX)           = base_dst;
 
                         for (int64_t ow = 0; ow < sp.unroll_ow_start; ++ow) {
                             const int64_t iw       = ow * cp.stride_w - cp.pad_w;
                             const int64_t kw_start = min<int64_t>(max<int64_t>(0 - iw, 0), cp.kernel_w - 1);
                             const int64_t kw_end   = max<int64_t>(min<int64_t>(src_w - iw, cp.kernel_w), 0);
-                            if (oc_sel == 0) {
-                                conv2d_n16cx_direct_ndarray_fp32_fma_blk1x1_kernel<use_nt_store, 1 * OC_RF_BLK()>(
-                                    w_src, flt, bias, w_sum_src, kh_start, kh_end, kw_start, kw_end,
-                                    src_w, src_c_stride, flt_c_stride, conv_param_, w_dst);
-                            } else {
-                                conv2d_n16cx_direct_ndarray_fp32_fma_blk1x1_kernel<use_nt_store, 2 * OC_RF_BLK()>(
-                                    w_src, flt, bias, w_sum_src, kh_start, kh_end, kw_start, kw_end,
-                                    src_w, src_c_stride, flt_c_stride, conv_param_, w_dst);
-                            }
-                            w_src += cp.stride_w;
-                            w_sum_src += OC_DT_BLK();
-                            w_dst += OC_DT_BLK();
+                            ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::KW_START_IDX) = kw_start;
+                            ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::KW_END_IDX)   = kw_end;
+                            ker.execute_border(nt_store_sel, oc_reg);
                         }
 
-                        const int64_t ow_unroll_len  = sp.unroll_ow_end - sp.unroll_ow_start;
-                        const int64_t ow_unroll_body = round(ow_unroll_len, OW_KR_BLK());
-                        const int64_t ow_unroll_tail = ow_unroll_len - ow_unroll_body;
                         if (ow_unroll_body) {
-                            conv2d_n16cx_direct_ndarray_fp32_fma_blk1x6_kernel_table[nt_store_sel][oc_sel][OW_KR_BLK() - 1](
-                                w_src, flt, bias, w_sum_src, ow_unroll_body, kh_start, kh_end, src_w, src_c_stride, flt_c_stride, conv_param_, w_dst);
-                            w_src += ow_unroll_body * cp.stride_w;
-                            w_sum_src += ow_unroll_body * OC_DT_BLK();
-                            w_dst += ow_unroll_body * OC_DT_BLK();
+                            ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::DST_WIDTH_IDX) = ow_unroll_body;
+                            ker.execute(nt_store_sel, oc_reg, W_KR_BLK);
                         }
                         if (ow_unroll_tail) {
-                            conv2d_n16cx_direct_ndarray_fp32_fma_blk1x6_kernel_table[nt_store_sel][oc_sel][ow_unroll_tail - 1](
-                                w_src, flt, bias, w_sum_src, ow_unroll_tail, kh_start, kh_end, src_w, src_c_stride, flt_c_stride, conv_param_, w_dst);
-                            w_src += ow_unroll_tail * cp.stride_w;
-                            w_sum_src += ow_unroll_tail * OC_DT_BLK();
-                            w_dst += ow_unroll_tail * OC_DT_BLK();
+                            ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::DST_WIDTH_IDX) = ow_unroll_tail;
+                            ker.execute(nt_store_sel, oc_reg, ow_unroll_tail);
                         }
 
                         for (int64_t ow = sp.unroll_ow_end; ow < dst_w; ++ow) {
                             const int64_t iw       = ow * cp.stride_w - cp.pad_w;
                             const int64_t kw_start = min<int64_t>(max<int64_t>(0 - iw, 0), cp.kernel_w - 1);
                             const int64_t kw_end   = max<int64_t>(min<int64_t>(src_w - iw, cp.kernel_w), 0);
-                            if (oc_sel == 0) {
-                                conv2d_n16cx_direct_ndarray_fp32_fma_blk1x1_kernel<use_nt_store, 1 * OC_RF_BLK()>(
-                                    w_src, flt, bias, w_sum_src, kh_start, kh_end, kw_start, kw_end,
-                                    src_w, src_c_stride, flt_c_stride, conv_param_, w_dst);
-                            } else {
-                                conv2d_n16cx_direct_ndarray_fp32_fma_blk1x1_kernel<use_nt_store, 2 * OC_RF_BLK()>(
-                                    w_src, flt, bias, w_sum_src, kh_start, kh_end, kw_start, kw_end,
-                                    src_w, src_c_stride, flt_c_stride, conv_param_, w_dst);
-                            }
-                            w_src += cp.stride_w;
-                            w_sum_src += OC_DT_BLK();
-                            w_dst += OC_DT_BLK();
+                            ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::KW_START_IDX) = kw_start;
+                            ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::KW_END_IDX)   = kw_end;
+                            ker.execute_border(nt_store_sel, oc_reg);
                         }
+                        ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::FLT_PTR_IDX)  += OC_DATA_BLK * sp.ic_per_gp * cp.kernel_h * cp.kernel_w;
+                        ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::BIAS_PTR_IDX) += OC_DATA_BLK;
+                        base_sum_src += OC_DATA_BLK * dst_h * dst_w;
+                        base_dst     += OC_DATA_BLK * dst_h * dst_w;
                     }
                 }
             }
@@ -243,7 +257,7 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_manager::gen_cvt_weigh
 
     const int64_t oc_per_gp = param_.num_output / param_.group;
     const int64_t ic_per_gp = param_.channels / param_.group;
-    const int64_t padded_oc = round_up(oc_per_gp, OC_DT_BLK());
+    const int64_t padded_oc = round_up(oc_per_gp, OC_DATA_BLK);
 
     cvt_bias_size_ = param_.group * padded_oc;
     cvt_bias_      = (float *)allocator_->Alloc(cvt_bias_size_ * sizeof(float));
@@ -281,8 +295,8 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_manager::gen_cvt_weigh
 
 bool conv2d_n16cx_direct_ndarray_fp32_fma_manager::is_supported()
 {
-    bool small_channels = param_.channels / param_.group < OC_DT_BLK();
-    bool aligned_num_output = param_.group == 1 || param_.num_output / param_.group % OC_DT_BLK() == 0;
+    bool small_channels = param_.channels / param_.group < OC_DATA_BLK;
+    bool aligned_num_output = param_.group == 1 || param_.num_output / param_.group % OC_DATA_BLK == 0;
     return small_channels && aligned_num_output && param_.dilation_h == 1 && param_.dilation_w == 1;
 }
 
