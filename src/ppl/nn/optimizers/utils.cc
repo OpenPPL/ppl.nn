@@ -246,7 +246,7 @@ static RetCode CollectOps(const ir::GraphTopo* topo, map<nodeid_t, unique_ptr<Op
 
 static RetCode GenPartitionsInfo(const vector<pair<EngineImpl*, vector<nodeid_t>>>& partitions,
                                  utils::SharedResource* resource, ir::Graph* graph,
-                                 vector<pair<edgeid_t, RuntimeConstantInfo>>* constants,
+                                 map<edgeid_t, RuntimeConstantInfo>* constants,
                                  vector<RuntimeGraphInfo::Partition>* info_list) {
     for (uint32_t p = 0; p < partitions.size(); ++p) {
         auto& partition = partitions[p];
@@ -271,7 +271,7 @@ static RetCode GenPartitionsInfo(const vector<pair<EngineImpl*, vector<nodeid_t>
         }
 
         for (auto x = subgraph_info.constants.begin(); x != subgraph_info.constants.end(); ++x) {
-            constants->emplace_back(x->first, std::move(x->second));
+            constants->emplace(x->first, std::move(x->second));
         }
 
         RuntimeGraphInfo::Partition par_info;

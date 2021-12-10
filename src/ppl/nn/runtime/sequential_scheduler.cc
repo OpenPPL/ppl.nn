@@ -35,55 +35,6 @@ RetCode SequentialScheduler::Init(const ir::GraphTopo* topo, const RuntimeAuxInf
     return RC_SUCCESS;
 }
 
-#ifndef NDEBUG
-static bool ValidateEdges(const RuntimeGraph* graph, const vector<EdgeObject*> eid2obj) {
-    set<EdgeObject*> tensors_before;
-    for (auto x = graph->inputs.begin(); x != graph->inputs.end(); ++x) {
-        tensors_before.insert(*x);
-    }
-    for (auto x = graph->extra_inputs.begin(); x != graph->extra_inputs.end(); ++x) {
-        tensors_before.insert(*x);
-    }
-    for (auto x = graph->constants.begin(); x != graph->constants.end(); ++x) {
-        tensors_before.insert(*x);
-    }
-    for (auto x = graph->outputs.begin(); x != graph->outputs.end(); ++x) {
-        tensors_before.insert(*x);
-    }
-
-    set<EdgeObject*> tensors_after;
-    for (auto x = eid2obj.begin(); x != eid2obj.end(); ++x) {
-        if (*x) {
-            tensors_after.insert(*x);
-        }
-    }
-
-    vector<EdgeObject*> diff_before2after(tensors_before.size());
-    auto end_iter = std::set_difference(tensors_before.begin(), tensors_before.end(), tensors_after.begin(),
-                                        tensors_after.end(), diff_before2after.begin());
-    diff_before2after.resize(end_iter - diff_before2after.begin());
-    if (!diff_before2after.empty()) {
-        LOG(ERROR) << "edge(s) in `before` but not in `after`:";
-        for (auto x = diff_before2after.begin(); x != diff_before2after.end(); ++x) {
-            LOG(ERROR) << " " << (*x)->GetEdge()->GetName();
-        }
-    }
-
-    vector<EdgeObject*> diff_after2before(tensors_after.size());
-    end_iter = std::set_difference(tensors_after.begin(), tensors_after.end(), tensors_before.begin(),
-                                   tensors_before.end(), diff_after2before.begin());
-    diff_after2before.resize(end_iter - diff_after2before.begin());
-    if (!diff_after2before.empty()) {
-        LOG(ERROR) << "edge(s) in `after` but not in `before`:";
-        for (auto x = diff_after2before.begin(); x != diff_after2before.end(); ++x) {
-            LOG(ERROR) << " " << (*x)->GetEdge()->GetName();
-        }
-    }
-
-    return (diff_before2after.empty() && diff_after2before.empty());
-}
-#endif
-
 RetCode SequentialScheduler::Run(Profiler* profiler) {
     auto acquire_object_func = [this](edgeid_t eid, uint32_t etype, Device* device) -> EdgeObject* {
         if (eid >= edgeid2object_.size()) {
@@ -133,6 +84,15 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
         return RC_SUCCESS;
     };
 
+#ifndef NDEBUG
+    set<edgeid_t> edges_before;
+    for (uint32_t i = 0; i < edgeid2object_.size(); ++i) {
+        if (edgeid2object_[i]) {
+            edges_before.insert(i);
+        }
+    }
+#endif
+
     KernelExecContext ctx;
     ctx.SetAcquireObjectFunc(acquire_object_func);
     ctx.SetProfilingFlag(profiler->IsProfilingEnabled());
@@ -150,9 +110,39 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
     }
 
 #ifndef NDEBUG
-    if (!ValidateEdges(graph_, edgeid2object_)) {
-        LOG(ERROR) << "valid edge(s) not matched.";
-        return RC_INVALID_VALUE;
+    set<edgeid_t> edges_after;
+    for (uint32_t i = 0; i < edgeid2object_.size(); ++i) {
+        if (edgeid2object_[i]) {
+            edges_after.insert(i);
+        }
+    }
+
+    vector<edgeid_t> diff_before2after(edges_before.size());
+    auto end_iter = std::set_difference(edges_before.begin(), edges_before.end(), edges_after.begin(),
+                                        edges_after.end(), diff_before2after.begin());
+    diff_before2after.resize(end_iter - diff_before2after.begin());
+    if (!diff_before2after.empty()) {
+        LOG(ERROR) << "edge(s) in `before` but not in `after`:";
+        for (auto x = diff_before2after.begin(); x != diff_before2after.end(); ++x) {
+            auto edge = topo_->GetEdgeById(*x);
+            LOG(ERROR) << " " << edge->GetName();
+        }
+    }
+
+    vector<edgeid_t> diff_after2before(edges_after.size());
+    end_iter = std::set_difference(edges_after.begin(), edges_after.end(), edges_before.begin(),
+                                   edges_before.end(), diff_after2before.begin());
+    diff_after2before.resize(end_iter - diff_after2before.begin());
+    if (!diff_after2before.empty()) {
+        LOG(ERROR) << "edge(s) in `after` but not in `before`:";
+        for (auto x = diff_after2before.begin(); x != diff_after2before.end(); ++x) {
+            auto edge = topo_->GetEdgeById(*x);
+            LOG(ERROR) << " " << edge->GetName();
+        }
+    }
+
+    if (!diff_before2after.empty() || !diff_after2before.empty()) {
+        return RC_OTHER_ERROR;
     }
 #endif
 
