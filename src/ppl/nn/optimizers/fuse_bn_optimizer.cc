@@ -130,13 +130,14 @@ static bool FuseConvBatchNormalization(ir::Graph* graph) {
             if (conv_bias_edge) {
                 conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.data();
             } else { // if conv node has no bias, add bias tensor
-                auto add_bias_edge_name = conv_node->GetName() + "_" + "bias";
+                auto add_bias_edge_name = conv_node->GetName() + "_bias";
                 auto edge_ret_pair = graph->topo->AddEdge(add_bias_edge_name);
                 if (!edge_ret_pair.second) {
                     LOG(ERROR) << "edge[" << add_bias_edge_name << "] already exists.";
                     continue;
                 }
                 conv_bias_edge = edge_ret_pair.first;
+                graph->topo->MarkAsConstant(conv_bias_edge->GetId());
                 conv_node->AddInput(conv_bias_edge->GetId());
                 conv_bias_edge->AddConsumer(conv_node->GetId());
 
@@ -448,13 +449,14 @@ static RetCode FuseConvAdd(ir::Graph* graph) {
             if (conv_bias_edge) {
                 conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.data();
             } else { // if conv node has no bias, add bias tensor
-                auto add_bias_edge_name = conv_node->GetName() + "_" + "bias";
+                auto add_bias_edge_name = conv_node->GetName() + "_bias";
                 auto edge_ret_pair = graph->topo->AddEdge(add_bias_edge_name);
                 if (!edge_ret_pair.second) {
                     LOG(ERROR) << "edge[" << add_bias_edge_name << "] already exists.";
                     continue;
                 }
                 conv_bias_edge = edge_ret_pair.first;
+                graph->topo->MarkAsConstant(conv_bias_edge->GetId());
                 conv_node->AddInput(conv_bias_edge->GetId());
                 conv_bias_edge->AddConsumer(conv_node->GetId());
 
