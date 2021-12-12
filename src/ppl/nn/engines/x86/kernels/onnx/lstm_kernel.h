@@ -27,7 +27,7 @@ namespace ppl { namespace nn { namespace x86 {
 class LSTMKernel : public X86Kernel {
 public:
     LSTMKernel(const ir::Node* node) : X86Kernel(node) {}
-    bool CanDoExecute(const KernelExecContext& ctx) const;
+    bool CanDoExecute(const KernelExecContext& ctx) const override;
 
     void SetParam(const ppl::nn::common::LSTMParam* p) {
         param_ = p;
