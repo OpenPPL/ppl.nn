@@ -496,7 +496,7 @@ RetCode ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimeG
     }
 
 #ifndef NDEBUG
-    if (!ValidateGraphTopo(graph->topo.get())) {
+    if (!ValidateGraph(*graph)) {
         LOG(ERROR) << "ValidateGraphTopo failed.";
         return RC_INVALID_VALUE;
     }

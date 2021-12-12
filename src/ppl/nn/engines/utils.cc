@@ -113,7 +113,7 @@ RetCode GenericLoadConstant(edgeid_t eid, const ir::Constant& constant, const Te
 }
 
 RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, RuntimeConstantInfo>* constants,
-                      std::set<edgeid_t>* data_omitted_constants) {
+                      const std::set<edgeid_t>* data_omitted_constants) {
     auto topo = graph.topo.get();
     auto graph_data = graph.data.get();
 
@@ -123,6 +123,11 @@ RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, Runt
         if (edge == nullptr) {
             LOG(ERROR) << "cannot get edge of constant[edgeid=" << eid << "]";
             return RC_NOT_FOUND;
+        }
+
+        auto ret_pair = constants->insert(make_pair(eid, RuntimeConstantInfo()));
+        if (!ret_pair.second) {
+            continue;
         }
 
         auto shape_ref = graph_data->shapes.find(eid);
@@ -145,14 +150,12 @@ RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, Runt
             omit_data = (data_omitted_constants->find(eid) != data_omitted_constants->end());
         }
 
-        RuntimeConstantInfo constant_info;
+        RuntimeConstantInfo& constant_info = ret_pair.first->second;
         auto status = GenericLoadConstant(eid, constant_ref->second, tensor_shape, device, &constant_info, omit_data);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "load constant[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
         }
-
-        constants->emplace(eid, std::move(constant_info));
     }
 
     return RC_SUCCESS;

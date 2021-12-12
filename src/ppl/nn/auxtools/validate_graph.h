@@ -113,6 +113,28 @@ static bool DiffEdges(const set<edgeid_t>& edge_dedup, const set<edgeid_t>& all_
     return diff_result_used2all.empty();
 }
 
+static bool ValidateConstants(const ir::Graph& graph) {
+    auto topo = graph.topo.get();
+    auto data = graph.data.get();
+
+    if (topo->GetConstantCount() > data->constants.size()) {
+        LOG(ERROR) << "number of constants in GraphTopo > GraphData";
+        return false;
+    }
+
+    for (uint32_t i = 0; i < topo->GetConstantCount(); ++i) {
+        auto eid = topo->GetConstant(i);
+        auto ref = data->constants.find(eid);
+        if (ref == data->constants.end()) {
+            auto edge = topo->GetEdgeById(eid);
+            LOG(ERROR) << "cannot find data of constant[" << edge->GetName() << "]";
+            return false;
+        }
+    }
+
+    return true;
+}
+
 static bool ValidateGraphTopo(const ir::GraphTopo* topo) {
     set<nodeid_t> node_dedup;
     set<edgeid_t> edge_dedup;
@@ -220,6 +242,10 @@ static bool ValidateGraphTopo(const ir::GraphTopo* topo) {
     }
 
     return true;
+}
+
+static bool ValidateGraph(const ir::Graph& graph) {
+    return (ValidateGraphTopo(graph.topo.get()) && ValidateConstants(graph));
 }
 
 }}} // namespace ppl::nn::utils

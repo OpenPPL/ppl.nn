@@ -96,6 +96,13 @@ RetCode CudaEngine::ProcessGraph(utils::SharedResource* resource, ir::Graph* gra
         return status;
     }
 
+    // load rest of constants that are not used by ops. e.g. `cond` of Loop
+    status = utils::LoadConstants(*graph, &device_, &info->constants);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load constants failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
     return RC_SUCCESS;
 }
 
