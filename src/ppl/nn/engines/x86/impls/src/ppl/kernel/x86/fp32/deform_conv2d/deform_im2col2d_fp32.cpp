@@ -112,8 +112,8 @@ PRAGMA_OMP_PARALLEL_FOR()
 
                 eT mask_value = 1;
                 if (use_mask) {
-                mask_value =
-                    mask_ptr[mask_idx * (dst_h * dst_w) + oh * dst_w + ow];
+                    mask_value =
+                        mask_ptr[mask_idx * (dst_h * dst_w) + oh * dst_w + ow];
                 }
 
                 const eT offset_h = offset_ptr[offset_idx * (dst_h * dst_w) + oh * dst_w + ow];

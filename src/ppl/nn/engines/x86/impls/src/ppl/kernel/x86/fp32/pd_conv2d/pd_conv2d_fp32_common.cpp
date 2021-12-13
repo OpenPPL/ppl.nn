@@ -18,7 +18,9 @@
 #include "ppl/kernel/x86/fp32/pd_conv2d.h"
 
 #include "ppl/kernel/x86/fp32/pd_conv2d/fma/pd_conv2d_n16cx_gemm_direct_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/pd_conv2d/fma/pd_conv2d_n16cx_direct_ndarray_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/conv2d/gemm_direct/fma/conv2d_n16cx_gemm_direct_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/fma/conv2d_n16cx_direct_ndarray_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/conv2d/depthwise/fma/conv2d_n16cx_depthwise_fp32_fma.h"
 
 namespace ppl { namespace kernel { namespace x86 {
@@ -55,6 +57,30 @@ pd_conv2d_fp32_algo_info pd_conv2d_algo_selector::select_algo(
         }
     }
 
+    if (true // direct_ndarray algo
+        && algo.algo_type == ppl::kernel::x86::conv2d_fp32_algo::DIRECT
+        && algo.input_format == ppl::common::DATAFORMAT_NDARRAY
+        && algo.output_format == ppl::common::DATAFORMAT_N16CX
+        && post_algo.algo_type == ppl::kernel::x86::conv2d_fp32_algo::DEPTHWISE
+        && post_algo.input_format == ppl::common::DATAFORMAT_N16CX
+        && post_algo.output_format == ppl::common::DATAFORMAT_N16CX)
+    {
+        if (algo.isa == ppl::common::ISA_X86_FMA && post_algo.isa == ppl::common::ISA_X86_FMA) {
+            if (true // gemm_direct fma support param
+                && !(param.fuse_flag & ppl::kernel::x86::conv_fuse_flag::SUM)
+                && !(post_param.fuse_flag & ppl::kernel::x86::conv_fuse_flag::SUM)
+                && post_param.dilation_h == 1
+                && post_param.dilation_w == 1
+                && param.num_output == post_param.channels) {
+                return {
+                    pd_conv2d_fp32_algo::DIRECT,
+                    ppl::common::ISA_X86_FMA,
+                    ppl::common::DATAFORMAT_NDARRAY,
+                    ppl::common::DATAFORMAT_N16CX};
+            }
+        }
+    }
+
     return {
         pd_conv2d_fp32_algo::UNKNOWN,
         ppl::common::ISA_UNKNOWN,
@@ -76,6 +102,14 @@ pd_conv2d_fp32_manager *pd_conv2d_algo_selector::gen_algo(
             new conv2d_n16cx_gemm_direct_fp32_fma_manager(param, allocator),
             new conv2d_n16cx_depthwise_fp32_fma_manager(depthwise_param, allocator));
     }
+    if (algo_info.algo_type == pd_conv2d_fp32_algo::DIRECT &&
+        algo_info.isa == ppl::common::ISA_X86_FMA &&
+        algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+        return new pd_conv2d_n16cx_direct_ndarray_fp32_fma_manager(
+            new conv2d_n16cx_direct_ndarray_fp32_fma_manager(param, allocator),
+            new conv2d_n16cx_depthwise_fp32_fma_manager(depthwise_param, allocator));
+    }
 
     return nullptr;
 }
@@ -90,6 +124,12 @@ pd_conv2d_fp32_manager *pd_conv2d_algo_selector::gen_algo(
         algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
         algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
         return new pd_conv2d_n16cx_gemm_direct_fp32_fma_manager(mgr, depthwise_mgr);
+    }
+    if (algo_info.algo_type == pd_conv2d_fp32_algo::DIRECT &&
+        algo_info.isa == ppl::common::ISA_X86_FMA &&
+        algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
+        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+        return new pd_conv2d_n16cx_direct_ndarray_fp32_fma_manager(mgr, depthwise_mgr);
     }
 
     return nullptr;

@@ -249,7 +249,7 @@ DEBUG_TAG(A);
             isa &= ~(ppl::common::ISA_X86_AVX512);
         }
 
-        auto cv_algoinfo = ppl::kernel::x86::conv2d_algo_selector::select_algo(ppl::common::DATAFORMAT_N16CX, cv_param, isa);
+        auto cv_algoinfo = ppl::kernel::x86::conv2d_algo_selector::select_algo(ppl::common::DATAFORMAT_NDARRAY, cv_param, isa);
         auto dw_algoinfo = ppl::kernel::x86::conv2d_algo_selector::select_algo(ppl::common::DATAFORMAT_N16CX, dw_param, isa);
 
         auto pd_conv_algo_info = ppl::kernel::x86::pd_conv2d_algo_selector::select_algo(cv_algoinfo, dw_algoinfo, cv_param, dw_param);
@@ -297,7 +297,7 @@ DEBUG_TAG(C);
         ppl::nn::TensorShape cv_filter_shape;
         cv_filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
         cv_filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-        cv_filter_shape.Reshape({cv_param.num_output, cv_param.channels / cv_param.group, 1, 1});
+        cv_filter_shape.Reshape({cv_param.num_output, cv_param.channels / cv_param.group, cv_param.kernel_h, cv_param.kernel_w});
 
         ppl::nn::TensorShape cv_bias_shape;
         cv_bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);

@@ -44,7 +44,7 @@ public:
     struct config {
         static const int64_t CH_DATA_BLK = 16;
         static const int64_t MAX_W_REGS = 7;
-        static const int64_t W_REG_ELTS = 8;
+        static const int64_t W_REG_ELTS = 1;
         static const int64_t CH_REGS = 2;
         static const int64_t CH_REG_ELTS = 8;
         static const int64_t CH_DATA_BLK_REGS = 2;
