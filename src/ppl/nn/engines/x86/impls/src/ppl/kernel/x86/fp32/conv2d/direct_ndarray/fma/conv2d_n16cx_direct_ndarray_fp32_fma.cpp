@@ -42,9 +42,9 @@ static const int64_t OC_L2_BLK_MAX = 4 * OC_DATA_BLK;
 
 void conv2d_n16cx_direct_ndarray_fp32_fma_executor::init_preproc_param()
 {
-    schedule_param_.ic_per_gp = conv_param_->channels / conv_param_->group;
-    schedule_param_.oc_per_gp = conv_param_->num_output / conv_param_->group;
-    schedule_param_.padded_oc = round_up(schedule_param_.oc_per_gp, OC_DATA_BLK);
+    schedule_param_.ic_per_grp = conv_param_->channels / conv_param_->group;
+    schedule_param_.oc_per_grp = conv_param_->num_output / conv_param_->group;
+    schedule_param_.padded_oc = round_up(schedule_param_.oc_per_grp, OC_DATA_BLK);
 }
 
 void conv2d_n16cx_direct_ndarray_fp32_fma_executor::cal_kernel_tunning_param()
@@ -133,12 +133,12 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_executor::execute_inne
     const int64_t dst_w = dst_shape_->GetDim(3);
 
     const int64_t src_b_stride = src_shape_->GetDim(1) * src_h * src_w;
-    const int64_t src_g_stride = sp.ic_per_gp * src_h * src_w;
+    const int64_t src_g_stride = sp.ic_per_grp * src_h * src_w;
     const int64_t src_c_stride = src_h * src_w;
     const int64_t dst_b_stride = round_up(dst_shape_->GetDim(1), OC_DATA_BLK) * dst_h * dst_w;
     const int64_t dst_g_stride = sp.padded_oc * dst_h * dst_w;
     const int64_t flt_c_stride = cp.kernel_h * cp.kernel_w * OC_DATA_BLK;
-    const int64_t padded_rf_oc = round_up(sp.oc_per_gp, OC_REG_ELTS);
+    const int64_t padded_rf_oc = round_up(sp.oc_per_grp, OC_REG_ELTS);
 
     const bool with_relu  = cp.fuse_flag & conv_fuse_flag::RELU;
     const bool with_relu6 = cp.fuse_flag & conv_fuse_flag::RELU6;
@@ -181,10 +181,10 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_executor::execute_inne
                     const float *base_src      = src_ + b * src_b_stride + g * src_g_stride + ih * src_w - cp.pad_w;
                     const float *base_sum_src  = sum_src_ + b * sum_src_b_stride + g * dst_g_stride + oh * dst_w * OC_DATA_BLK;
                     float *base_dst            = dst_ + b * dst_b_stride + g * dst_g_stride + oh * dst_w * OC_DATA_BLK;
-                    const float *base_flt      = cvt_filter_ + g * sp.padded_oc * sp.ic_per_gp * cp.kernel_h * cp.kernel_w;
+                    const float *base_flt      = cvt_filter_ + g * sp.padded_oc * sp.ic_per_grp * cp.kernel_h * cp.kernel_w;
                     const float *base_bias     = cvt_bias_ + g * sp.padded_oc;
 
-                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::CHANNELS_IDX)     = sp.ic_per_gp;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::CHANNELS_IDX)     = sp.ic_per_grp;
                     ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::KH_IDX)           = cp.kernel_h;
                     ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::KW_IDX)           = cp.kernel_w;
                     ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::SW_IDX)           = cp.stride_w;
@@ -230,7 +230,7 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_executor::execute_inne
                             ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::KW_END_IDX)   = kw_end;
                             ker.execute_border(nt_store_sel, oc_reg);
                         }
-                        ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::FLT_PTR_IDX)  += OC_DATA_BLK * sp.ic_per_gp * cp.kernel_h * cp.kernel_w;
+                        ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::FLT_PTR_IDX)  += OC_DATA_BLK * sp.ic_per_grp * cp.kernel_h * cp.kernel_w;
                         ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::BIAS_PTR_IDX) += OC_DATA_BLK;
                         base_sum_src += OC_DATA_BLK * dst_h * dst_w;
                         base_dst     += OC_DATA_BLK * dst_h * dst_w;
@@ -255,9 +255,9 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_manager::gen_cvt_weigh
         return ppl::common::RC_PERMISSION_DENIED;
     }
 
-    const int64_t oc_per_gp = param_.num_output / param_.group;
-    const int64_t ic_per_gp = param_.channels / param_.group;
-    const int64_t padded_oc = round_up(oc_per_gp, OC_DATA_BLK);
+    const int64_t oc_per_grp = param_.num_output / param_.group;
+    const int64_t ic_per_grp = param_.channels / param_.group;
+    const int64_t padded_oc = round_up(oc_per_grp, OC_DATA_BLK);
 
     cvt_bias_size_ = param_.group * padded_oc;
     cvt_bias_      = (float *)allocator_->Alloc(cvt_bias_size_ * sizeof(float));
@@ -266,16 +266,16 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_manager::gen_cvt_weigh
     }
 
     for (int64_t g = 0; g < param_.group; ++g) {
-        memcpy(cvt_bias_ + g * padded_oc, bias + g * oc_per_gp, oc_per_gp * sizeof(float));
-        memset(cvt_bias_ + g * padded_oc + oc_per_gp, 0, (padded_oc - oc_per_gp) * sizeof(float));
+        memcpy(cvt_bias_ + g * padded_oc, bias + g * oc_per_grp, oc_per_grp * sizeof(float));
+        memset(cvt_bias_ + g * padded_oc + oc_per_grp, 0, (padded_oc - oc_per_grp) * sizeof(float));
     }
 
     ppl::nn::TensorShape filter_shape;
     filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
     filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-    filter_shape.Reshape({1, oc_per_gp, ic_per_gp * param_.kernel_h * param_.kernel_w , 1});
+    filter_shape.Reshape({1, oc_per_grp, ic_per_grp * param_.kernel_h * param_.kernel_w , 1});
 
-    cvt_filter_size_ = param_.group * padded_oc * ic_per_gp * param_.kernel_h * param_.kernel_w;
+    cvt_filter_size_ = param_.group * padded_oc * ic_per_grp * param_.kernel_h * param_.kernel_w;
     cvt_filter_      = (float *)allocator_->Alloc(cvt_filter_size_ * sizeof(float));
     if (cvt_filter_ == nullptr) {
         return ppl::common::RC_OUT_OF_MEMORY;
@@ -284,8 +284,8 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_manager::gen_cvt_weigh
     for (int64_t g = 0; g < param_.group; ++g) {
         status = reorder_ndarray_n16cx_fp32_avx(
                     &filter_shape,
-                    filter + g * oc_per_gp * ic_per_gp * param_.kernel_h * param_.kernel_w,
-                    cvt_filter_ + g * padded_oc * ic_per_gp * param_.kernel_h * param_.kernel_w);
+                    filter + g * oc_per_grp * ic_per_grp * param_.kernel_h * param_.kernel_w,
+                    cvt_filter_ + g * padded_oc * ic_per_grp * param_.kernel_h * param_.kernel_w);
         if (status != ppl::common::RC_SUCCESS)
             break;
     }
