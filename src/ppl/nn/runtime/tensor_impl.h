@@ -43,6 +43,10 @@ public:
         return GetEdge()->GetName().c_str();
     }
 
+    DeviceContext* GetDeviceContext() const override {
+        return buffer_info_.GetDevice()->GetContext();
+    }
+
     tensortype_t GetType() const {
         return type_;
     }
