@@ -15,22 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_PYTHON_PY_RUNTIME_H_
-#define _ST_HPC_PPL_NN_PYTHON_PY_RUNTIME_H_
+#ifndef _ST_HPC_PPL_NN_PYTHON_PY_DEVICE_CONTEXT_H_
+#define _ST_HPC_PPL_NN_PYTHON_PY_DEVICE_CONTEXT_H_
 
-#include "../engines/py_engine.h"
-#include "ppl/nn/runtime/runtime.h"
-#include <memory>
+#include "ppl/nn/common/device_context.h"
 
 namespace ppl { namespace nn { namespace python {
 
-struct PyRuntime final {
-    PyRuntime(const std::vector<PyEngine>& e, Runtime* r) : engines(e), ptr(r) {}
-    PyRuntime(PyRuntime&&) = default;
-    PyRuntime& operator=(PyRuntime&&) = default;
-
-    std::vector<PyEngine> engines; // retain engines
-    std::unique_ptr<Runtime> ptr;
+struct PyDeviceContext final {
+    PyDeviceContext(DeviceContext* ctx) : ptr(ctx) {}
+    DeviceContext* ptr = nullptr;
 };
 
 }}} // namespace ppl::nn::python

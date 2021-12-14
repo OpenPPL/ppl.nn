@@ -61,6 +61,12 @@ tensor_data = Tensor::ConvertToHost()
 Copies tensor's data to host in NDARRAY format. We can use `numpy.array` to create an `ndarray` instance using `numpy_ndarray = numpy.array(tensor_data, copy=False)`.
 
 ```python
+dev_ctx = Tensor::GetDeviceContext()
+```
+
+Gets context of the underlying `Device`.
+
+```python
 addr = Tensor::GetBufferPtr()
 ```
 
@@ -125,6 +131,18 @@ output_tensor = Runtime::GetOutputTensor(idx)
 ```
 
 Returns the output tensor in position `idx`, which is in range [0, output_count).
+
+```python
+dev_count = Runtime::GetDeviceContextCount()
+```
+
+Returns the number of `DeviceContext` used by this `Runtime` instance.
+
+```python
+dev_ctx = Runtime::GetDeviceContext(idx)
+```
+
+Returns the `DeviceContext` at position `idx`. Note that `idx` should be less than `GetDeviceContextCount()`.
 
 ## Device Specific APIs in `pyppl.nn`
 

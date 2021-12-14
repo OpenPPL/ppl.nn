@@ -36,6 +36,7 @@ void RegisterNdArray(pybind11::module*);
 void RegisterEngine(pybind11::module*);
 void RegisterOnnxRuntimeBuilderFactory(pybind11::module*);
 void RegisterRuntimeBuilder(pybind11::module*);
+void RegisterDeviceContext(pybind11::module*);
 void RegisterRuntime(pybind11::module*);
 void RegisterGetVersionString(pybind11::module*);
 
@@ -57,6 +58,7 @@ PYBIND11_MODULE(nn, m) {
     RegisterEngine(&m);
     RegisterOnnxRuntimeBuilderFactory(&m);
     RegisterRuntimeBuilder(&m);
+    RegisterDeviceContext(&m);
     RegisterRuntime(&m);
     RegisterGetVersionString(&m);
 }
