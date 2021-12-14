@@ -16,6 +16,7 @@
 // under the License.
 
 #include "py_tensor.h"
+#include "../common/py_device_context.h"
 #include "ppl/nn/common/logger.h"
 #include <map>
 using namespace std;
@@ -126,6 +127,10 @@ void RegisterTensor(pybind11::module* m) {
         .def("SetBufferPtr",
              [](PyTensor& tensor, uint64_t ptr) -> void {
                  tensor.GetPtr()->SetBufferPtr((void*)ptr);
+             })
+        .def("GetDeviceContext",
+             [](const PyTensor& tensor) -> PyDeviceContext {
+                 return PyDeviceContext(tensor.GetPtr()->GetDeviceContext());
              })
         .def("GetName", &PyTensor::GetName, pybind11::return_value_policy::reference)
         .def("GetShape", &PyTensor::GetConstShape, pybind11::return_value_policy::reference)

@@ -16,6 +16,8 @@
 // under the License.
 
 #include "py_runtime.h"
+#include "py_tensor.h"
+#include "../common/py_device_context.h"
 #include "pybind11/pybind11.h"
 using namespace ppl::common;
 
@@ -25,14 +27,39 @@ void RegisterRuntime(pybind11::module* m) {
     pybind11::class_<PyRuntime>(*m, "Runtime")
         .def("__bool__",
              [](const PyRuntime& runtime) -> bool {
-                 return (runtime.GetPtr());
+                 return (runtime.ptr.get());
              })
-        .def("GetInputCount", &PyRuntime::GetInputCount)
-        .def("GetInputTensor", &PyRuntime::GetInputTensor)
-        .def("Run", &PyRuntime::Run)
-        .def("Sync", &PyRuntime::Sync)
-        .def("GetOutputCount", &PyRuntime::GetOutputCount)
-        .def("GetOutputTensor", &PyRuntime::GetOutputTensor);
+        .def("GetInputCount",
+             [](const PyRuntime& runtime) -> uint32_t {
+                 return runtime.ptr->GetInputCount();
+             })
+        .def("GetInputTensor",
+             [](const PyRuntime& runtime, uint32_t idx) -> PyTensor {
+                 return PyTensor(runtime.ptr->GetInputTensor(idx));
+             })
+        .def("Run",
+             [](const PyRuntime& runtime) -> RetCode {
+                 return runtime.ptr->Run();
+             })
+        .def("Sync",
+             [](const PyRuntime& runtime) -> RetCode {
+                 return runtime.ptr->Sync();
+             })
+        .def("GetOutputCount",
+             [](const PyRuntime& runtime) -> uint32_t {
+                 return runtime.ptr->GetOutputCount();
+             })
+        .def("GetOutputTensor",
+             [](const PyRuntime& runtime, uint32_t idx) -> PyTensor {
+                 return PyTensor(runtime.ptr->GetOutputTensor(idx));
+             })
+        .def("GetDeviceContextCount",
+             [](const PyRuntime& runtime) -> uint32_t {
+                 return runtime.ptr->GetDeviceContextCount();
+             })
+        .def("GetDeviceContext", [](const PyRuntime& runtime, uint32_t idx) -> PyDeviceContext {
+            return PyDeviceContext(runtime.ptr->GetDeviceContext(idx));
+        });
 }
 
 }}} // namespace ppl::nn::python
