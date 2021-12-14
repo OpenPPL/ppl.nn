@@ -20,6 +20,7 @@
 
 #include "ppl/common/retcode.h"
 #include "ppl/nn/common/tensor_shape.h"
+#include "ppl/nn/common/device_context.h"
 #include "ppl/nn/common/common.h"
 
 namespace ppl { namespace nn {
@@ -57,6 +58,9 @@ public:
 
     /** @brief convert tensor's data from `dst` with shape `dst_desc` */
     virtual ppl::common::RetCode ConvertFromHost(const void* src, const TensorShape& src_desc) = 0;
+
+    /** @brief get context of the underlying `Device` */
+    virtual DeviceContext* GetDeviceContext() const = 0;
 
     /**
        @brief set the underlying buffer ptr

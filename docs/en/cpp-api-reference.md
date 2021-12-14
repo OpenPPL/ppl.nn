@@ -188,6 +188,12 @@ ppl::common::RetCode ConvertFromHost(const void* src, const ppl::common::TensorS
 Converts data to inner buffer from `src` with the shape `src_desc`. Note that inner buffer MUST be allocated before calling this function.
 
 ```c++
+DeviceContext* GetDeviceContext() const;
+```
+
+Gets context of the underlying `Device`.
+
+```c++
 void SetBufferPtr(void* buf);
 ```
 
