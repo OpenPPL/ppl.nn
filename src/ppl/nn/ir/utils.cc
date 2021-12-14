@@ -126,7 +126,7 @@ void DfsDeeperFirst(const ir::GraphTopo* topo, const function<void(nodeid_t)>& p
     // get node levels for second stage
     vector<uint32_t> nid2level(topo->GetMaxNodeId(), 0);
     auto node_iter = topo->CreateNodeIter();
-    utils::Bfs(
+    Bfs(
         topo->GetMaxNodeId(),
         [&node_iter]() -> nodeid_t {
             if (node_iter->IsValid()) {
@@ -149,8 +149,8 @@ void DfsDeeperFirst(const ir::GraphTopo* topo, const function<void(nodeid_t)>& p
             nid2level[nid] = level;
         });
 
-    node_iter = topo->CreateNodeIter();
-    utils::Dfs(
+    node_iter->Reset();
+    Dfs(
         topo->GetMaxNodeId(),
         [&node_iter]() -> nodeid_t {
             if (node_iter->IsValid()) {
