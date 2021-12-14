@@ -311,7 +311,7 @@ ppl::common::RetCode conv2d_im2col_gemm_fp32_sse_executor::execute()
                                 // pack col, Nk8n
                                 {
                                     int64_t hw = 0;
-                                    for (; hw < hwl2_eff; hw += HW_REGB_ELTS) {
+                                    for (; hw <= hwl2_eff - HW_REGB_ELTS; hw += HW_REGB_ELTS) {
                                         const float *l_im2col = thr_im2col + kl2 * dst_hw + hw;
                                         float *l_src_trans = thr_src_trans + hw * kl2_eff;
                                         for (int64_t k = 0; k < kl2_eff; ++k) {
