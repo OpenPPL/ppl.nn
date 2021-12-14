@@ -41,6 +41,9 @@ public:
         bool IsValid() const override {
             return idx_ < vec_->size();
         }
+        void Reset() override {
+            idx_ = 0;
+        }
         T* Get() override {
             return vec_->at(idx_).get();
         }

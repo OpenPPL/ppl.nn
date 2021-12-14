@@ -37,6 +37,8 @@ public:
     public:
         virtual ~Iter() {}
 
+        virtual void Reset() = 0;
+
         /** @brief tells if this iterator is valid */
         virtual bool IsValid() const = 0;
 
