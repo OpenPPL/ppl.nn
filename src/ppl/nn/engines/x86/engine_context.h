@@ -33,6 +33,10 @@ public:
         return &device_;
     }
 
+    const char* GetName() const override {
+        return "x86";
+    }
+
 private:
     RuntimeX86Device device_;
 };

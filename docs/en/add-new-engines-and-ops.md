@@ -7,11 +7,10 @@ There is an engine demo in [samples/cpp/engine](samples/cpp/engine).
 `EngineImpl`(defined in [src/ppl/nn/engines/engine_impl.h](src/ppl/nn/engines/engine_impl.h)) defines the interfaces needed by `PPLNN`.
 
 ```c++
-EngineContext* EngineImpl::CreateEngineContext(const std::string& graph_name,
-                                               const EngineContextOptions&);
+EngineContext* EngineImpl::CreateEngineContext();
 ```
 
-Create an `EngineContext` used by a `Runtime` instance. The first parameter `graph_name` denotes the graph which this `EngineContext` is used for.
+Create an `EngineContext` used by a `Runtime` instance.
 
 ```c++
 bool EngineImpl::Supports(const ir::Node* node) const;
@@ -42,10 +41,22 @@ struct RuntimePartitionInfo {
 `EngineContext`(defined in [src/ppl/nn/engines/engine_context.h](src/ppl/nn/engines/engine_context.h)). An `EngineContext` is used by a `Runtime` instance only.
 
 ```c++
+const char* EngineContext::GetName() const;
+```
+
+Returns the name of this `EngineContext`.
+
+```c++
 Device* EngineContext::GetDevice();
 ```
 
-Get the device instance used by a `Runtime`.
+Returns the device instance used by a `Runtime`.
+
+```c++
+ppl::common::RetCode EngineContext::BeforeRun();
+```
+
+Called before `RuntimeImpl::Run()`.
 
 ##### 3. Define and Implement Op Classes Inherited from OptKernel
 
@@ -102,7 +113,8 @@ This depends on strategies the engine provides. In `X86Engine`, a Singleton `Opt
 typedef X86OptKernel* (*OptKernelCreator)(const ir::Node*);
 
 ppl::common::RetCode OptKernelCreatorManager::Register(
-        const std::string& domain, const std::string& type, OptKernelCreator);
+        const std::string& domain, const std::string& type, const utils::VersionRange versions,
+        OptKernelCreator);
 ```
 
 is used to register a function which is used to create an instance of the `OptKernel` instance.

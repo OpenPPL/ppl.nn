@@ -32,8 +32,15 @@ class EngineContext {
 public:
     virtual ~EngineContext() {}
 
+    virtual const char* GetName() const = 0;
+
     /** @brief returns the `Device` instance used by this `Runtime` */
     virtual Device* GetDevice() = 0;
+
+    /** @brief called before Scheduler::Run(). */
+    virtual ppl::common::RetCode BeforeRun() {
+        return ppl::common::RC_SUCCESS;
+    }
 };
 
 }} // namespace ppl::nn

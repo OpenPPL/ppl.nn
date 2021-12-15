@@ -313,6 +313,15 @@ RetCode RuntimeImpl::Sync() {
 RetCode RuntimeImpl::Run() {
     RetCode status;
 
+    for (auto x = engctx_.begin(); x != engctx_.end(); ++x) {
+        status = x->get()->BeforeRun();
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "BeforeRun() of EngineContext[" << x->get()->GetName() << "] failed: "
+                       << GetRetCodeStr(status);
+            return status;
+        }
+    }
+
     status = sched_->Run(&profiler_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Run() failed: " << GetRetCodeStr(status);
