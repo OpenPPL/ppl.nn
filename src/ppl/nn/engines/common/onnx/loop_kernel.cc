@@ -386,12 +386,6 @@ RetCode LoopKernel::DoExecute(KernelExecContext* ctx) {
             return status;
         }
 
-        status = subgraph_.Sync();
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "sync loop kernel[" << GetName() << "] failed: " << GetRetCodeStr(status);
-            return status;
-        }
-
         ++trip_count;
         status = subgraph_.GetOutputTensorImpl(0)->CopyToHost(&keep_going);
         if (status != RC_SUCCESS) {

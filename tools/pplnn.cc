@@ -773,6 +773,8 @@ static void PrintProfilingStatistics(const ProfilingStatistics& stat, double run
 #endif
 
 int main(int argc, char* argv[]) {
+    RetCode status;
+
     simple_flags::parse_args(argc, argv);
     if (!simple_flags::get_unknown_flags().empty()) {
         string content;
@@ -885,10 +887,7 @@ int main(int argc, char* argv[]) {
     LOG(INFO) << "Prepare costs: " << (float)prepare_diff.count() / 1000 << " ms.";
 
     auto run_begin_ts = std::chrono::system_clock::now();
-    auto status = runtime->Run();
-    if (status == RC_SUCCESS) {
-        status = runtime->Sync();
-    }
+    status = runtime->Run();
     auto run_end_ts = std::chrono::system_clock::now();
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Run() failed: " << GetRetCodeStr(status);
@@ -912,15 +911,12 @@ int main(int argc, char* argv[]) {
         if (g_flag_warmup_iterations > 0) {
             LOG(INFO) << "Warm up start for " << g_flag_warmup_iterations << " times.";
             for (uint32_t i = 0; i < g_flag_warmup_iterations; ++i) {
-                auto status = runtime->Run();
-                if (status == RC_SUCCESS) {
-                    status = runtime->Sync();
-                }
+                runtime->Run();
             }
             LOG(INFO) << "Warm up end.";
         }
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-        auto status = runtime->Configure(RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG, true);
+        status = runtime->Configure(RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG, true);
         if (status != RC_SUCCESS) {
             LOG(WARNING) << "enable profiling failed: " << GetRetCodeStr(status);
         }
@@ -932,10 +928,7 @@ int main(int argc, char* argv[]) {
         while (run_dur < g_flag_min_profiling_seconds * 1000 ||
                run_count < g_flag_min_profiling_iterations) {
             run_begin_ts = std::chrono::system_clock::now();
-            auto status = runtime->Run();
-            if (status == RC_SUCCESS) {
-                status = runtime->Sync();
-            }
+            runtime->Run();
             run_end_ts = std::chrono::system_clock::now();
             diff = std::chrono::duration_cast<std::chrono::microseconds>(run_end_ts - run_begin_ts);
             run_dur += (double)diff.count() / 1000;

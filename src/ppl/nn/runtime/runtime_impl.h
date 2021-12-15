@@ -73,7 +73,6 @@ public:
     }
 
     ppl::common::RetCode Run() override;
-    ppl::common::RetCode Sync() override;
 
     uint32_t GetDeviceContextCount() const override {
         return engctx_.size();
@@ -86,6 +85,12 @@ public:
 
 private:
     ppl::common::RetCode InitRuntimeGraph(const ir::GraphTopo*, const RuntimeGraphInfo&, RuntimeGraph*);
+
+    /**
+       @brief blocks until all operations finish.
+       @note MUST be called before getting outputs or profiling statistics in case some engine may run asynchronously.
+    */
+    ppl::common::RetCode Sync();
 
 private:
     RuntimeGraph graph_;

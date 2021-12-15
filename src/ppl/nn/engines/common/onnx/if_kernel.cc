@@ -169,12 +169,6 @@ RetCode IfKernel::DoExecute(KernelExecContext* ctx) {
         return status;
     }
 
-    status = subgraph->Sync();
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "sync if kernel[" << GetName() << "] failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
     return SetOutputs(subgraph, ctx, &tmp_cpu_device);
 }
 

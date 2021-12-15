@@ -295,10 +295,6 @@ RetCode RuntimeImpl::Init(const shared_ptr<ir::GraphTopo>& topo, const shared_pt
     return sched_->Init(topo.get(), aux_info.get(), &graph_);
 }
 
-RetCode RuntimeImpl::Run() {
-    return sched_->Run(&profiler_);
-}
-
 RetCode RuntimeImpl::Sync() {
     for (uint32_t i = 0; i < GetOutputCount(); ++i) {
         auto output = GetOutputTensorImpl(i);
@@ -312,6 +308,18 @@ RetCode RuntimeImpl::Sync() {
         }
     }
     return RC_SUCCESS;
+}
+
+RetCode RuntimeImpl::Run() {
+    RetCode status;
+
+    status = sched_->Run(&profiler_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "Run() failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    return Sync();
 }
 
 RetCode RuntimeImpl::GetProfilingStatistics(ProfilingStatistics* stat) const {

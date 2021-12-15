@@ -133,11 +133,6 @@ int main(void) {
         return -1;
     }
 
-    status = runtime->Sync();
-    if (status != RC_SUCCESS) {
-        cerr << "Sync() failed: " << GetRetCodeStr(status) << endl;
-    }
-
     PrintInputOutputInfo(runtime.get());
 
     return 0;

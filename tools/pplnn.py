@@ -470,11 +470,6 @@ if __name__ == "__main__":
         logging.error("Run() failed: " + pplcommon.GetRetCodeStr(status))
         sys.exit(-1)
 
-    status = runtime.Sync()
-    if status != pplcommon.RC_SUCCESS:
-        logging.error("Run() failed: " + pplcommon.GetRetCodeStr(status))
-        sys.exit(-1)
-
     PrintInputOutputInfo(runtime)
 
     if args.save_outputs:

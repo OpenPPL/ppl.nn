@@ -41,10 +41,6 @@ void RegisterRuntime(pybind11::module* m) {
              [](const PyRuntime& runtime) -> RetCode {
                  return runtime.ptr->Run();
              })
-        .def("Sync",
-             [](const PyRuntime& runtime) -> RetCode {
-                 return runtime.ptr->Sync();
-             })
         .def("GetOutputCount",
              [](const PyRuntime& runtime) -> uint32_t {
                  return runtime.ptr->GetOutputCount();

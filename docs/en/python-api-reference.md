@@ -115,12 +115,6 @@ ret_code = Runtime::Run()
 Evaluates the model. `ret_code` is an instance of `RetCode` defined in `pyppl.common`.
 
 ```python
-ret_code = Runtime::Sync()
-```
-
-Waits for all operations to finish.
-
-```python
 output_count = Runtime::GetOutputCount()
 ```
 

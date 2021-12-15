@@ -105,13 +105,6 @@ ppl::common::RetCode Run();
 Runs the model with given inputs. Input data MUST be filled via the returned value of `GetInputTensor()` before calling this function.
 
 ```c++
-ppl::common::RetCode Sync();
-```
-
-Blocks current CPU thread until all operations are finished. Note that this function MUST be called before getting outputs or profiling statistics, in case some engine may run asynchronously.
-
-
-```c++
 uint32_t GetOutputCount() const;
 ```
 

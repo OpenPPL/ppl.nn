@@ -105,12 +105,6 @@ ret_code = Runtime::Run()
 Evaluates the model. `ret_code` is an instance of `RetCode` defined in `luappl.common`.
 
 ```lua
-ret_code = Runtime::Sync()
-```
-
-Waits for all operations to finish.
-
-```lua
 output_count = Runtime:GetOutputCount()
 ```
 

@@ -67,13 +67,6 @@ public:
     */
     virtual ppl::common::RetCode Run() = 0;
 
-    /**
-       @brief blocks until all operations finish.
-       @note MUST be called before getting outputs or profiling statistics in case
-       some engine may run asynchronously.
-    */
-    virtual ppl::common::RetCode Sync() = 0;
-
     /** @brief get the number of outputs of the associated graph. */
     virtual uint32_t GetOutputCount() const = 0;
 

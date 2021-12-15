@@ -82,12 +82,6 @@ for i in range(runtime.GetInputCount()):
 ret_code = runtime.Run()
 ```
 
-and waits for all operations to finish(some engine may run asynchronously):
-
-```python
-ret_code = runtime.Sync()
-```
-
 ### Getting Results
 
 ```python
