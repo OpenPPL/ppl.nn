@@ -38,14 +38,14 @@ public:
 private:
     struct kernel_schedule_param {
         // Preprocessed param
-        int64_t ic_per_gp;
-        int64_t oc_per_gp;
+        int64_t ic_per_grp;
+        int64_t oc_per_grp;
         int64_t padded_ic;
         int64_t padded_oc;
 
         // Kernel tunning
-        int64_t hw_kr_blk;
-        int64_t hw_l2_blk;
+        int64_t s_kr_blk;
+        int64_t s_l2_blk;
         int64_t ic_l2_blk;
         int64_t ic_l2_cnt;
         int64_t oc_kr_blk;
