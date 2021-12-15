@@ -191,7 +191,7 @@ ppl::common::RetCode PPLCUDAConvolutionSelectKernelInt8(
     int concat_stride_v8 = fuse_param.concat_stride / pad_size;
 
     bool  is_in_grp_pad = num_chl_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
-    bool is_out_grp_pad = num_flt_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
+    bool is_out_grp_pad = num_flt_per_grp_pad != num_flt_per_grp && conv_param.num_grp != 1;
 
     uint64_t buf_off_v4 = 0;
 
@@ -357,7 +357,7 @@ void PPLCUDAConvolutionForwardImpInt8(
     int concat_stride_v8 = fuse_param.concat_stride / pad_size;
 
     bool  is_in_grp_pad = num_chl_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
-    bool is_out_grp_pad = num_flt_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
+    bool is_out_grp_pad = num_flt_per_grp_pad != num_flt_per_grp && conv_param.num_grp != 1;
 
     uint64_t buf_off_v4 = 0;
 
@@ -626,7 +626,7 @@ void PPLCUDAConvolutionForwardJITImp(
     int concat_stride_v8 = fuse_param.concat_stride / pad_size;
 
     bool is_in_grp_pad  = num_chl_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
-    bool is_out_grp_pad = num_flt_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
+    bool is_out_grp_pad = num_flt_per_grp_pad != num_flt_per_grp && conv_param.num_grp != 1;
 
     uint64_t buf_off_v4 = 0;
 
