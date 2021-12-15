@@ -194,21 +194,21 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_executor::execute()
                 int64_t base_src_g_stride   = src_g_stride;
                 int64_t base_src_icb_stride = src_icb_stride;
                 int64_t his_b_stride        = dst_b_stride;
-                uint64_t ker_flags          = 0;
+                uint64_t kernel_flags       = 0;
                 if (is_first_ic) {
                     if (with_sum) {
                         base_his     = sum_src_;
                         his_b_stride = sum_src_b_stride;
-                        ker_flags |= conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::ADD_BIAS;
+                        kernel_flags |= conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::ADD_BIAS;
                     } else {
-                        ker_flags |= conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::LOAD_BIAS;
+                        kernel_flags |= conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::LOAD_BIAS;
                     }
                 }
                 if (is_last_ic) {
                     if (with_relu) {
-                        ker_flags |= conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU;
+                        kernel_flags |= conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU;
                     } else if (with_relu6) {
-                        ker_flags |= conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU6;
+                        kernel_flags |= conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU6;
                     }
                 }
                 base_src += mbl3 * base_src_b_stride + grpl3 * base_src_g_stride + icl2 * src_h * src_w;
@@ -262,7 +262,7 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_executor::execute()
                                 conv2d_n16cx_gemm_direct_kernel_fp32_fma ker(ker_param);
                                 ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::SRC_ICB_STRIDE_IDX) = base_src_icb_stride;
                                 ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::CHANNELS_IDX)       = icl2_eff;
-                                ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::FLAGS_IDX)          = ker_flags;
+                                ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::FLAGS_IDX)          = kernel_flags;
 
                                 const int64_t ocl2_eff = min(padded_reg_oc - ocl2, sp.oc_l2_blk);
                                 const int64_t sl2_eff  = min(dst_space - sl2, sp.s_l2_blk);

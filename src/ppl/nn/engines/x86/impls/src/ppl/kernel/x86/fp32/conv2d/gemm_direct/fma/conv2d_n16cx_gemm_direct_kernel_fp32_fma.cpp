@@ -432,14 +432,14 @@ void conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel(int64_t *param)
     array_param_helper ker_p(param);
 
     const int64_t src_icb_stride = ker_p.pick<const int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::SRC_ICB_STRIDE_IDX);
-    const int64_t flags = ker_p.pick<const int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::FLAGS_IDX);
+    const int64_t kernel_flags = ker_p.pick<const int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::FLAGS_IDX);
 
     const float *src = ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::SRC_PTR_IDX);
     const float *his = ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::HIS_PTR_IDX);
     float *dst       = ker_p.pick<float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::DST_PTR_IDX);
     int64_t space    = ker_p.pick<const int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::SPACE_IDX);
     do {
-        if (flags & conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::LOAD_BIAS) {
+        if (kernel_flags & conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::LOAD_BIAS) {
             const float* bias = ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::BIAS_PTR_IDX);
             if (u_s > 0) {
                 if (u_ocr > 0) ymm0 = _mm256_loadu_ps(bias + 0 * OC_REG_ELTS);
@@ -492,7 +492,7 @@ void conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel(int64_t *param)
             }
         }
 
-        if (flags & conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::ADD_BIAS) {
+        if (kernel_flags & conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::ADD_BIAS) {
             const float* bias = ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::BIAS_PTR_IDX);
             if (u_ocr > 0) ymm14 = _mm256_loadu_ps(bias + 0 * OC_REG_ELTS);
             if (u_ocr > 1) ymm15 = _mm256_loadu_ps(bias + 1 * OC_REG_ELTS);
@@ -557,7 +557,7 @@ void conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel(int64_t *param)
             }
         }
         
-        if (flags & (conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU | conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU6)) {
+        if (kernel_flags & (conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU | conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU6)) {
             ymm14 = _mm256_setzero_ps();
             if (u_s > 0) {
                 if (u_ocr > 0) ymm0 = _mm256_max_ps(ymm14, ymm0);
@@ -584,7 +584,7 @@ void conv2d_n16cx_gemm_direct_fp32_fma_blk1x6_kernel(int64_t *param)
                 if (u_ocr > 1) ymm11 = _mm256_max_ps(ymm14, ymm11);
             }
         }
-        if (flags & conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU6) {
+        if (kernel_flags & conv2d_n16cx_gemm_direct_kernel_fp32_fma::flag::RELU6) {
             ymm15 = _mm256_set1_ps(6.0f);
             if (u_s > 0) {
                 if (u_ocr > 0) ymm0 = _mm256_min_ps(ymm15, ymm0);
