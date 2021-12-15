@@ -40,9 +40,6 @@ void RegisterRuntime(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTab
         .DefMember("Run", [](LuaRuntime* lruntime) -> RetCode {
             return lruntime->ptr->Run();
         })
-        .DefMember("Sync", [](LuaRuntime* lruntime) -> RetCode {
-            return lruntime->ptr->Sync();
-        })
         .DefMember("GetOutputCount", [](const LuaRuntime* lruntime) -> uint32_t {
             return lruntime->ptr->GetOutputCount();
         })

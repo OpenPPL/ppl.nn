@@ -175,12 +175,6 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
         return -1;
     }
 
-    status = runtime->Sync(); // wait for all ops run finished, not implemented yet.
-    if (status != RC_SUCCESS) { // now sync is done by runtime->Run() function.
-        fprintf(stderr, "runtime sync failed: %s\n", GetRetCodeStr(status));
-        return -1;
-    }
-
     printf("successfully run network!\n");
 
     /************************ 6. get output data *************************/

@@ -127,13 +127,7 @@ RetCode status = runtime->Run();
 
 ### Getting Results
 
-Before getting results we must wait for all operations to finish(some engine may run asynchronously):
-
-```c++
-RetCode status = runtime->Sync();
-```
-
-Then iterate each output:
+Iterates each output:
 
 ```c++
 for (uint32_t c = 0; c < runtime->GetOutputCount(); ++c) {

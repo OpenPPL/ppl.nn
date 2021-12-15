@@ -268,12 +268,6 @@ if status ~= pplcommon.RC_SUCCESS then
     os.exit(-1)
 end
 
-status = runtime:Sync()
-if status ~= pplcommon.RC_SUCCESS then
-    logging.error("Sync() failed: " .. pplcommon.GetRetCodeStr(status))
-    os.exit(-1)
-end
-
 PrintInputOutputInfo(runtime)
 
 if args.save_outputs then

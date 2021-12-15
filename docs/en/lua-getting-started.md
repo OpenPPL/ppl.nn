@@ -86,12 +86,6 @@ end
 ret_code = runtime:Run()
 ```
 
-and waits for all operations to finish(some engine may run asynchronously):
-
-```lua
-ret_code = runtime:Sync()
-```
-
 ### Getting Results
 
 ```lua
