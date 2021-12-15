@@ -29,6 +29,9 @@ public:
     Device* GetDevice() override {
         return &device_;
     }
+    const char* GetName() const override {
+        return "cuda";
+    }
 
 private:
     BufferedCudaDevice device_;
