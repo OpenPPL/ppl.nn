@@ -249,7 +249,7 @@ uint64_t PPLCUDAConvolutionGetCompilationBufSize(ppl::common::datatype_t type, c
     uint32_t num_flt_per_grp_pad = Align(num_flt_per_grp, pad_size);
 
     bool is_in_grp_pad  = num_chl_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
-    bool is_out_grp_pad = num_flt_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
+    bool is_out_grp_pad = num_flt_per_grp_pad != num_flt_per_grp && conv_param.num_grp != 1;
 
     uint32_t cvt_input_size  = 0;
     uint32_t cvt_output_size = 0;
@@ -282,7 +282,7 @@ uint64_t PPLCUDAConvolutionGetRuntimeBufSize(
     uint32_t num_flt_per_grp_pad = Align(num_flt_per_grp, pad_size);
 
     bool is_in_grp_pad  = num_chl_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
-    bool is_out_grp_pad = num_flt_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
+    bool is_out_grp_pad = num_flt_per_grp_pad != num_flt_per_grp && conv_param.num_grp != 1;
 
     uint32_t cvt_input_size  = 0;
     uint32_t cvt_output_size = 0;
@@ -348,7 +348,7 @@ double PPLCUDAConvolutionSelectKernel(
     int concat_stride_v8 = fuse_param.concat_stride / pad_size;
 
     bool is_in_grp_pad  = num_chl_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
-    bool is_out_grp_pad = num_flt_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
+    bool is_out_grp_pad = num_flt_per_grp_pad != num_flt_per_grp && conv_param.num_grp != 1;
 
     uint64_t buf_off_v4 = 0;
 
@@ -547,7 +547,7 @@ void PPLCUDAConvolutionForwardImp(
     int concat_stride_v8 = fuse_param.concat_stride / pad_size;
 
     bool is_in_grp_pad  = num_chl_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
-    bool is_out_grp_pad = num_flt_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
+    bool is_out_grp_pad = num_flt_per_grp_pad != num_flt_per_grp && conv_param.num_grp != 1;
 
     uint64_t buf_off_v4 = 0;
 
@@ -1097,6 +1097,7 @@ double PPLCUDAConvolutionJitSelectKernel(
 
     algo_param                         = params[index];
     g_conv_shape_hash[conv_shape_hash] = algo_param;
+    printf("%s\n", algo_param.algo_name.c_str());
     return elapsed;
 }
 
@@ -1132,7 +1133,7 @@ void PPLCUDAConvolutionForwardJITImp(
     int concat_stride_v8 = fuse_param.concat_stride / pad_size;
 
     bool is_in_grp_pad  = num_chl_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
-    bool is_out_grp_pad = num_flt_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
+    bool is_out_grp_pad = num_flt_per_grp_pad != num_flt_per_grp && conv_param.num_grp != 1;
 
     uint64_t buf_off_v4 = 0;
 

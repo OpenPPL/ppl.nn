@@ -152,6 +152,7 @@ void PPLCUDAConvolutionCvtInput(
 {
     const int in_num    = conv_param.in_num;
     const int num_chl   = conv_param.num_chl;
+    const int num_chl_pad = conv_param.num_chl_pad;
     const int in_height = conv_param.in_height;
     const int in_width  = conv_param.in_width;
     const int num_grp   = conv_param.num_grp;
@@ -165,10 +166,11 @@ void PPLCUDAConvolutionCvtInput(
     DivModFast fast_div_channel(num_chl_per_grp_pad);
     dim3 grid(DivUp(out_size, cta_size), 1, 1);
     if (type == ppl::common::DATATYPE_FLOAT32) {
-        split_group<float><<<grid, cta_size, 0, stream>>>((float *)output, (float *)input, fast_div_channel, out_size, num_grp, num_chl_per_grp, num_chl, num_chl_per_grp_pad);
-
+        split_group<float><<<grid, cta_size, 0, stream>>>((float*)output, (float*)input, fast_div_channel,
+            out_size, num_grp, num_chl_per_grp, num_chl_pad, num_chl_per_grp_pad);
     } else if (type == ppl::common::DATATYPE_FLOAT16) {
-        split_group<__half><<<grid, cta_size, 0, stream>>>((__half *)output, (__half *)input, fast_div_channel, out_size, num_grp, num_chl_per_grp, num_chl, num_chl_per_grp_pad);
+        split_group<__half><<<grid, cta_size, 0, stream>>>((__half*)output, (__half*)input, fast_div_channel,
+            out_size, num_grp, num_chl_per_grp, num_chl_pad, num_chl_per_grp_pad);
     }
 }
 
