@@ -107,25 +107,17 @@ public:
         return &data_converter_;
     }
 
-    DeviceContext* GetContext() const override final {
-        return &context_;
+    const char* GetType() const override final {
+        return "x86";
     }
 
-private:
-    class X86DeviceContext final : public DeviceContext {
-    public:
-        const char* GetType() const override {
-            return "cpu";
-        }
-        ppl::common::RetCode Configure(uint32_t, ...) override {
-            return ppl::common::RC_UNSUPPORTED;
-        }
-    };
+    ppl::common::RetCode Configure(uint32_t, ...) override {
+        return ppl::common::RC_UNSUPPORTED;
+    }
 
 private:
     ppl::common::isa_t isa_;
     X86DataConverter data_converter_;
-    mutable X86DeviceContext context_;
     mutable ppl::common::GenericCpuAllocator allocator_;
 };
 

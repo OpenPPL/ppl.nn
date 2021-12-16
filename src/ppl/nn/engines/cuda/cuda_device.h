@@ -19,12 +19,12 @@
 #define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_DEVICE_H_
 
 #include "ppl/nn/common/device.h"
+#include <cuda_runtime.h>
 
 #include <map>
 #include <random>
 
 #include "ppl/nn/engines/cuda/data_converter.h"
-#include "ppl/nn/engines/cuda/cuda_device_context.h"
 #include "ppl/nn/engines/cuda/cuda_engine_options.h"
 
 namespace ppl { namespace nn { namespace cuda {
@@ -52,7 +52,7 @@ public:
         for (size_t i = 0; i < bytes / sizeof(float); ++i) {
             host_random_data[i] = dis(eng);
         }
-        cudaMemcpyAsync(buffer->addr, host_random_data.get(), bytes, cudaMemcpyHostToDevice, context_.stream);
+        cudaMemcpyAsync(buffer->addr, host_random_data.get(), bytes, cudaMemcpyHostToDevice, stream_);
         return status;
     }
 
@@ -69,8 +69,12 @@ public:
         return &data_converter_;
     }
 
-    DeviceContext* GetContext() const override {
-        return &context_;
+    const char* GetType() const override final {
+        return "cuda";
+    }
+
+    ppl::common::RetCode Configure(uint32_t, ...) override {
+        return ppl::common::RC_UNSUPPORTED;
     }
 
     virtual ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
@@ -81,10 +85,10 @@ public:
     }
 
     cudaStream_t GetStream() const {
-        return context_.stream;
+        return stream_;
     }
     int GetDeviceId() const {
-        return context_.device_id;
+        return device_id_;
     }
 
     std::map<edgeid_t, BufferDesc>* GetEdge2Buffer() {
@@ -92,7 +96,8 @@ public:
     }
 
 private:
-    mutable CudaDeviceContext context_;
+    int device_id_ = 0;
+    cudaStream_t stream_ = nullptr;
     CudaDataConverter data_converter_;
     std::map<edgeid_t, BufferDesc> edge2buffer_;
 };

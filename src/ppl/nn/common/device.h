@@ -28,7 +28,7 @@
 
 namespace ppl { namespace nn {
 
-class Device {
+class Device : public DeviceContext {
 public:
     virtual ~Device() {}
 
@@ -95,9 +95,6 @@ public:
 
     /** @brief get DataConverter that can process data on this device */
     virtual const DataConverter* GetDataConverter() const = 0;
-
-    /** @brief get context of this device */
-    virtual DeviceContext* GetContext() const = 0;
 };
 
 }} // namespace ppl::nn

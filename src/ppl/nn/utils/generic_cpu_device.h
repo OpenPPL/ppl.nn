@@ -24,10 +24,9 @@
 
 namespace ppl { namespace nn { namespace utils {
 
-class GenericCpuDevice : public Device {
+class GenericCpuDevice final : public Device {
 public:
     GenericCpuDevice(uint64_t alignment = 64) : allocator_(alignment) {}
-    virtual ~GenericCpuDevice() {}
 
     /** @brief get the underlying allocator used to allocate/free memories */
     ppl::common::Allocator* GetAllocator() const {
@@ -50,24 +49,16 @@ public:
         return &data_converter_;
     }
 
-    DeviceContext* GetContext() const override {
-        return &context_;
+    const char* GetType() const override {
+        return "cpu";
+    }
+
+    ppl::common::RetCode Configure(uint32_t, ...) override {
+        return ppl::common::RC_UNSUPPORTED;
     }
 
 private:
-    class CpuDeviceContext final : public DeviceContext {
-    public:
-        const char* GetType() const override {
-            return "cpu";
-        }
-        ppl::common::RetCode Configure(uint32_t, ...) override {
-            return ppl::common::RC_UNSUPPORTED;
-        }
-    };
-
-private:
     mutable ppl::common::GenericCpuAllocator allocator_;
-    mutable CpuDeviceContext context_;
     GenericCpuDataConverter data_converter_;
 };
 
