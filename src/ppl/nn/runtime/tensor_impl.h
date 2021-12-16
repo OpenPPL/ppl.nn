@@ -44,7 +44,7 @@ public:
     }
 
     DeviceContext* GetDeviceContext() const override {
-        return buffer_info_.GetDevice()->GetContext();
+        return buffer_info_.GetDevice();
     }
 
     tensortype_t GetType() const {

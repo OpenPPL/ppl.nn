@@ -27,14 +27,14 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 CudaDevice::~CudaDevice() {
-    cudaStreamDestroy(context_.stream);
+    cudaStreamDestroy(stream_);
 }
 
 void CudaDevice::Init(uint32_t device_id) {
-    context_.device_id = device_id;
-    cudaSetDevice(context_.device_id);
-    if (!(context_.stream)) {
-        cudaStreamCreate(&(context_.stream));
+    device_id_ = device_id;
+    cudaSetDevice(device_id);
+    if (!stream_) {
+        cudaStreamCreate(&stream_);
     }
 
     data_converter_.SetDevice(this);
@@ -42,7 +42,7 @@ void CudaDevice::Init(uint32_t device_id) {
 
 // Copy from host
 RetCode CudaDevice::CopyFromHost(BufferDesc* dst, const void* src, uint64_t bytes) const {
-    cudaError_t err = cudaMemcpyAsync(dst->addr, src, bytes, cudaMemcpyHostToDevice, context_.stream);
+    cudaError_t err = cudaMemcpyAsync(dst->addr, src, bytes, cudaMemcpyHostToDevice, stream_);
     if (err != cudaSuccess) {
         LOG(ERROR) << "cudaMemcpyAsync " << err << ", " << cudaGetErrorString(err);
         return RC_OTHER_ERROR;
@@ -56,12 +56,12 @@ RetCode CudaDevice::CopyFromHost(BufferDesc* dst, const void* src, const TensorS
 
 // Copy to host
 RetCode CudaDevice::CopyToHost(void* dst, const BufferDesc& src, uint64_t bytes) const {
-    cudaError_t err = cudaMemcpyAsync(dst, src.addr, bytes, cudaMemcpyDeviceToHost, context_.stream);
+    cudaError_t err = cudaMemcpyAsync(dst, src.addr, bytes, cudaMemcpyDeviceToHost, stream_);
     if (err != cudaSuccess) {
         LOG(ERROR) << "cudaMemcpyAsync " << err << ", " << cudaGetErrorString(err);
         return RC_OTHER_ERROR;
     }
-    err = cudaStreamSynchronize(context_.stream);
+    err = cudaStreamSynchronize(stream_);
     if (err != cudaSuccess) {
         LOG(ERROR) << "cudaStreamSynchronize " << err << ", " << cudaGetErrorString(err);
         return RC_OTHER_ERROR;
@@ -73,7 +73,7 @@ RetCode CudaDevice::CopyToHost(void* dst, const BufferDesc& src, const TensorSha
 }
 
 RetCode CudaDevice::Copy(BufferDesc* dst, const BufferDesc& src, uint64_t bytes) const {
-    cudaError_t err = cudaMemcpyAsync(dst->addr, src.addr, bytes, cudaMemcpyDeviceToDevice, context_.stream);
+    cudaError_t err = cudaMemcpyAsync(dst->addr, src.addr, bytes, cudaMemcpyDeviceToDevice, stream_);
     if (err != cudaSuccess) {
         LOG(ERROR) << "cudaMemcpyAsync " << err << ", " << cudaGetErrorString(err);
         return RC_OTHER_ERROR;

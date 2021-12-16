@@ -78,7 +78,7 @@ public:
         return engctx_.size();
     }
     DeviceContext* GetDeviceContext(uint32_t idx) const override {
-        return engctx_[idx]->GetDevice()->GetContext();
+        return engctx_[idx]->GetDevice();
     }
 
     ppl::common::RetCode GetProfilingStatistics(ProfilingStatistics* stat) const override;
