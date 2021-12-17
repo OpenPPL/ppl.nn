@@ -20,6 +20,7 @@
 
 namespace ppl { namespace nn {
 
+/** @brief options for X86Engine::Configure() */
 enum {
     /**
        @brief disable avx512 support
@@ -52,6 +53,14 @@ enum {
 
     /** most recently used first, will use more memory */
     X86_MM_MRU = 1,
+};
+
+/** @brief options for x86::DeviceContext::Configure() */
+enum {
+    /** @brief memory defragmentation. make sure that device is not used when performing defragmentations. */
+    X86_DEV_CONF_MEM_DEFRAG = 0,
+
+    X86_DEV_CONF_MAX,
 };
 
 }} // namespace ppl::nn

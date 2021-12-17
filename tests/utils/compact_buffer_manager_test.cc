@@ -27,7 +27,7 @@ TEST(CompactBufferManagerTest, alloc_and_free) {
     const uint64_t alignment = 128;
 
     GenericCpuAllocator ar(alignment);
-    utils::CompactBufferManager mgr(&ar, block_size);
+    utils::CompactBufferManager mgr(&ar, alignment, block_size);
     BufferDesc buffer;
     auto status = mgr.Realloc(bytes_needed, &buffer);
     EXPECT_EQ(RC_SUCCESS, status);
