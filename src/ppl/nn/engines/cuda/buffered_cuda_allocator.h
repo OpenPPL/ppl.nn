@@ -29,7 +29,7 @@ namespace ppl { namespace nn {
 
 class BufferedCudaAllocator final : public ppl::common::Allocator {
 public:
-    BufferedCudaAllocator() : Allocator(CUDA_DEFAULT_ALIGNMENT) {}
+    BufferedCudaAllocator() {}
     ~BufferedCudaAllocator();
 
     ppl::common::RetCode Init(int devid, uint64_t granularity);

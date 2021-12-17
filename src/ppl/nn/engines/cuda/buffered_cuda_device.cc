@@ -57,7 +57,7 @@ RetCode BufferedCudaDevice::Init(const CudaEngineOptions& options) {
         if (granularity > DEFAULT_BLOCK_SIZE) {
             block_size = granularity;
         }
-        buffer_manager_.reset(new utils::CompactBufferManager(allocator, block_size));
+        buffer_manager_.reset(new utils::CompactBufferManager(allocator, CUDA_DEFAULT_ALIGNMENT, block_size));
     }
 
     return RC_SUCCESS;

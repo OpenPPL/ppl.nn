@@ -15,8 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/utils/buffered_cpu_allocator.h"
+#include "ppl/nn/utils/cpu_block_allocator.h"
 #include "ppl/nn/common/logger.h"
+#include <utility> // make_pair
+using namespace std;
 
 #ifdef _MSC_VER
 #include <windows.h>
@@ -27,17 +29,25 @@
 
 namespace ppl { namespace nn { namespace utils {
 
-BufferedCpuAllocator::~BufferedCpuAllocator() {
-    for (auto c = chunk_list_.begin(); c != chunk_list_.end(); ++c) {
+static inline void DoFree(void* base, uint64_t bytes) {
 #ifdef _MSC_VER
-        VirtualFree(c->base, 0, MEM_RELEASE);
+    (void)bytes;
+    VirtualFree(base, 0, MEM_RELEASE);
 #else
-        munmap(c->base, c->size);
+    munmap(base, bytes);
 #endif
+}
+
+CpuBlockAllocator::~CpuBlockAllocator() {
+    if (!addr2size_.empty()) {
+        LOG(WARNING) << "[" << addr2size_.size() << "] block(s) are not freed.";
+        for (auto x = addr2size_.begin(); x != addr2size_.end(); ++x) {
+            DoFree(x->first, x->second);
+        }
     }
 }
 
-void* BufferedCpuAllocator::Alloc(uint64_t bytes) {
+void* CpuBlockAllocator::Alloc(uint64_t bytes) {
 #ifdef _MSC_VER
     auto new_addr = VirtualAlloc(nullptr, bytes, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     if (!new_addr) {
@@ -57,8 +67,16 @@ void* BufferedCpuAllocator::Alloc(uint64_t bytes) {
     }
 #endif
 
-    chunk_list_.push_back(ChunkInfo(new_addr, bytes));
+    addr2size_.insert(make_pair(new_addr, bytes));
     return new_addr;
+}
+
+void CpuBlockAllocator::Free(void* ptr) {
+    auto ref = addr2size_.find(ptr);
+    if (ref != addr2size_.end()) {
+        DoFree(ref->first, ref->second);
+        addr2size_.erase(ref);
+    }
 }
 
 }}} // namespace ppl::nn::utils

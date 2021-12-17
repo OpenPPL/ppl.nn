@@ -28,11 +28,6 @@ class GenericCpuDevice final : public Device {
 public:
     GenericCpuDevice(uint64_t alignment = 64) : allocator_(alignment) {}
 
-    /** @brief get the underlying allocator used to allocate/free memories */
-    ppl::common::Allocator* GetAllocator() const {
-        return &allocator_;
-    }
-
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc*) override;
     ppl::common::RetCode Realloc(const TensorShape&, BufferDesc*) override final;
     void Free(BufferDesc*) override;

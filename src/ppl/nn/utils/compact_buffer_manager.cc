@@ -37,7 +37,7 @@ RetCode CompactBufferManager::Realloc(uint64_t bytes, BufferDesc* buffer) {
         return RC_SUCCESS;
     }
 
-    bytes = Align(bytes, mgr_.GetAllocator()->GetAlignment());
+    bytes = Align(bytes, alignment_);
     buffer->addr = mgr_.Alloc(bytes);
     if (!buffer->addr) {
         buffer->desc = 0;

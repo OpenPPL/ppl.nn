@@ -26,10 +26,8 @@
 
 namespace ppl { namespace nn {
 
-class DefaultCudaAllocator : public ppl::common::Allocator {
+class DefaultCudaAllocator final : public ppl::common::Allocator {
 public:
-    DefaultCudaAllocator() : Allocator(CUDA_DEFAULT_ALIGNMENT) {}
-
     void* Alloc(uint64_t size) override {
         void* ptr = nullptr;
         if (size > 0) {

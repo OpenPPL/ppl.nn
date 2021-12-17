@@ -19,15 +19,10 @@
 #define _ST_HPC_PPL_NN_ENGINES_X86_RUNTIME_X86_DEVICE_H_
 
 #include "ppl/nn/engines/x86/x86_device.h"
-#include "ppl/nn/engines/x86/x86_options.h"
-#include "ppl/nn/utils/stack_buffer_manager.h"
-#include "ppl/nn/utils/compact_buffer_manager.h"
-#include "ppl/nn/utils/buffered_cpu_allocator.h"
-#include "ppl/nn/common/logger.h"
+#include "ppl/nn/utils/buffer_manager.h"
+#include "ppl/common/allocator.h"
 
 namespace ppl { namespace nn { namespace x86 {
-
-static void DummyDeleter(ppl::common::Allocator*) {}
 
 class RuntimeX86Device final : public X86Device {
 private:
@@ -36,28 +31,11 @@ private:
     }
 
 public:
-    RuntimeX86Device(uint64_t alignment, ppl::common::isa_t isa, uint32_t mm_policy) : X86Device(alignment, isa), tmp_buffer_size_(0) {
-        if (mm_policy == X86_MM_MRU) {
-            auto allocator_ptr = X86Device::GetAllocator();
-            allocator_ = std::shared_ptr<ppl::common::Allocator>(allocator_ptr, DummyDeleter);
-            buffer_manager_.reset(new utils::StackBufferManager(allocator_ptr));
-        } else if (mm_policy == X86_MM_COMPACT) {
-            allocator_.reset(new utils::BufferedCpuAllocator(alignment));
-            buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get()));
-        }
-    }
+    RuntimeX86Device(uint64_t alignment, ppl::common::isa_t isa, uint32_t mm_policy);
+    ~RuntimeX86Device();
 
     ppl::common::Allocator* GetAllocator() const override {
         return allocator_.get();
-    }
-
-    ~RuntimeX86Device() {
-        LOG(DEBUG) << "buffer manager[" << buffer_manager_->GetName() << "] allocates ["
-                   << buffer_manager_->GetAllocatedBytes() << "] bytes.";
-        if (shared_tmp_buffer_.addr) {
-            buffer_manager_->Free(&shared_tmp_buffer_);
-        }
-        buffer_manager_.reset();
     }
 
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) override {
@@ -69,21 +47,24 @@ public:
         buffer_manager_->Free(buffer);
     }
 
-    ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) override {
-        if (bytes > tmp_buffer_size_ || bytes <= tmp_buffer_size_ / 2) {
-            auto ret = buffer_manager_->Realloc(bytes, &shared_tmp_buffer_);
-            if (ppl::common::RC_SUCCESS != ret) {
-                return ret;
-            }
-            tmp_buffer_size_ = bytes;
-        }
-        *buffer = shared_tmp_buffer_;
-        return ppl::common::RC_SUCCESS;
-    }
-
+    ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) override;
     void FreeTmpBuffer(BufferDesc* buffer) override {}
 
+    // ----- configurations ----- //
+
+    /**
+       @brief replaces all blocks with a single block.
+       @note make sure that this device is not used when calling DoMemDefrag().
+    */
+    static ppl::common::RetCode DoMemDefrag(RuntimeX86Device*, va_list);
+
+    typedef ppl::common::RetCode (*ConfHandlerFunc)(RuntimeX86Device*, va_list);
+    static ConfHandlerFunc conf_handlers_[X86_DEV_CONF_MAX];
+
+    ppl::common::RetCode Configure(uint32_t, ...) override;
+
 private:
+    bool can_defragement_;
     BufferDesc shared_tmp_buffer_;
     uint64_t tmp_buffer_size_;
     std::unique_ptr<utils::BufferManager> buffer_manager_;
