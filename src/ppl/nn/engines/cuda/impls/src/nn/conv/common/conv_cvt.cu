@@ -71,7 +71,8 @@ template <typename T>
 __global__ void merge_group(
     T *output,
     T *input,
-    DivModFast fast_div_channel,
+    DivModFast fast_div_channel_pad,
+    DivModFast fast_div_channel_per_grp,
     uint64_t out_size,
     const int num_grp,
     const int num_chl_per_grp,
@@ -80,13 +81,15 @@ __global__ void merge_group(
     int flt_align)
 {
     int32_t out_off = blockIdx.x * blockDim.x + threadIdx.x;
-    if (out_off >= out_size)
-        return;
-    int32_t channel = fast_div_channel.mod(out_off);
-
-    int32_t nhw_id = out_off / (flt_align);
-    int chl_id     = out_off % flt_align;
-    int32_t grp_id = (fast_div_channel.div(out_off)) % num_grp;
+    if (out_off >= out_size) return;
+    //int32_t channel = fast_div_channel_per_grp.mod(out_off);
+    //int32_t nhw_id = out_off / (flt_align);
+    //int chl_id = out_off % flt_align;
+    //int32_t grp_id = (fast_div_channel_per_grp.div(out_off)) % num_grp;
+    int32_t chl_id = fast_div_channel_pad.mod(out_off);
+    int32_t nhw_id = fast_div_channel_pad.div(out_off);
+    int32_t grp_id = (fast_div_channel_per_grp.div(chl_id));
+    int32_t channel = fast_div_channel_per_grp.mod(chl_id);
 
     int32_t in_off  = nhw_id * num_grp * num_chl_per_grp_pad + grp_id * num_chl_per_grp_pad + channel;
     output[out_off] = chl_id < num_chl ? input[in_off] : T(0);
@@ -139,8 +142,16 @@ void PPLCUDAConvolutionCvtFlt(
 
     } else if (type == ppl::common::DATATYPE_FLOAT16) {
         cudaMemset(output, 0, sizeof(half) * num_grp * out_size_per_grp);
-        flt_group_padding<__half><<<grid, cta_size, 0, stream>>>((__half *)output, (__half *)input, in_size_per_grp, num_grp, num_chl_per_grp_pad, out_size_per_grp);
+        flt_group_padding<__half><<<grid, cta_size, 0, stream>>>((__half*)output, (__half*)input, in_size_per_grp, num_grp, num_chl_per_grp_pad,
+        out_size_per_grp);
+    } else if (type == ppl::common::DATATYPE_INT8) {
+        //FIXME different from fp16: flt num not paded
+        out_size_per_grp = num_flt_per_grp * flt_height * flt_width * num_chl_per_grp_pad;
+        cudaMemset(output, 0, sizeof(int8_t) * num_grp * out_size_per_grp);
+        flt_group_padding<int8_t><<<grid, cta_size, 0, stream>>>((int8_t*)output, (int8_t*)input, in_size_per_grp, num_grp, num_chl_per_grp_pad,
+        out_size_per_grp);
     }
+
 }
 
 void PPLCUDAConvolutionCvtInput(
@@ -150,9 +161,9 @@ void PPLCUDAConvolutionCvtInput(
     ppl::common::datatype_t type,
     conv_param_t &conv_param)
 {
-    const int in_num    = conv_param.in_num;
-    const int num_chl   = conv_param.num_chl;
-    const int num_chl_pad = conv_param.num_chl_pad;
+    const int in_num    = conv_param.in_num;   
+    const int num_chl   = conv_param.num_chl;   
+    const int num_chl_pad = conv_param.num_chl_pad;   
     const int in_height = conv_param.in_height;
     const int in_width  = conv_param.in_width;
     const int num_grp   = conv_param.num_grp;
@@ -167,11 +178,16 @@ void PPLCUDAConvolutionCvtInput(
     dim3 grid(DivUp(out_size, cta_size), 1, 1);
     if (type == ppl::common::DATATYPE_FLOAT32) {
         split_group<float><<<grid, cta_size, 0, stream>>>((float*)output, (float*)input, fast_div_channel,
-            out_size, num_grp, num_chl_per_grp, num_chl_pad, num_chl_per_grp_pad);
+        out_size, num_grp, num_chl_per_grp, num_chl_pad, num_chl_per_grp_pad);
+
     } else if (type == ppl::common::DATATYPE_FLOAT16) {
         split_group<__half><<<grid, cta_size, 0, stream>>>((__half*)output, (__half*)input, fast_div_channel,
-            out_size, num_grp, num_chl_per_grp, num_chl_pad, num_chl_per_grp_pad);
+        out_size, num_grp, num_chl_per_grp, num_chl_pad, num_chl_per_grp_pad);
+    } else if (type == ppl::common::DATATYPE_INT8) {
+        split_group<int8_t><<<grid, cta_size, 0, stream>>>((int8_t*)output, (int8_t*)input, fast_div_channel,
+        out_size, num_grp, num_chl_per_grp, num_chl_pad, num_chl_per_grp_pad);
     }
+
 }
 
 void PPLCUDAConvolutionCvtOutput(
@@ -197,14 +213,20 @@ void PPLCUDAConvolutionCvtOutput(
     const int cta_size = 512;
 
     uint64_t out_size = in_num * out_height * out_width * flt_align;
-    DivModFast fast_div_channel(num_flt_per_grp);
+    DivModFast fast_div_channel_per_grp(num_flt_per_grp);
+    DivModFast fast_div_channel_pad(flt_align);
 
     dim3 grid(DivUp(out_size, cta_size), 1, 1);
     if (type == ppl::common::DATATYPE_FLOAT32) {
-        merge_group<float><<<grid, cta_size, 0, stream>>>((float *)output, (float *)input, fast_div_channel, out_size, num_grp, num_flt_per_grp, num_flt, num_flt_per_grp_pad, flt_align);
+        merge_group<float><<<grid, cta_size, 0, stream>>>((float*)output, (float*)input, fast_div_channel_pad,
+        fast_div_channel_per_grp, out_size, num_grp, num_flt_per_grp, num_flt, num_flt_per_grp_pad, flt_align);
 
     } else if (type == ppl::common::DATATYPE_FLOAT16) {
-        merge_group<__half><<<grid, cta_size, 0, stream>>>((__half *)output, (__half *)input, fast_div_channel, out_size, num_grp, num_flt_per_grp, num_flt, num_flt_per_grp_pad, flt_align);
+        merge_group<__half><<<grid, cta_size, 0, stream>>>((__half*)output, (__half*)input, fast_div_channel_pad,
+        fast_div_channel_per_grp, out_size, num_grp, num_flt_per_grp, num_flt, num_flt_per_grp_pad, flt_align);
+    } else if (type == ppl::common::DATATYPE_INT8) {
+        merge_group<int8_t><<<grid, cta_size, 0, stream>>>((int8_t*)output, (int8_t*)input, fast_div_channel_pad,
+        fast_div_channel_per_grp, out_size, num_grp, num_flt_per_grp, num_flt, num_flt_per_grp_pad, flt_align);
     }
 }
 
@@ -235,6 +257,13 @@ void PPLCUDAConvolutionCvtBias(
 
     } else if (type == ppl::common::DATATYPE_FLOAT16) {
         group_padding<__half><<<grid, cta_size, 0, stream>>>(
-            (__half *)output, (__half *)input, out_size, num_grp, num_flt_per_grp, conv_param.num_flt_pad, num_flt_per_grp_pad);
+			(__half*)output, (__half*)input, 
+			out_size, num_grp, 
+			num_flt_per_grp, conv_param.num_flt_pad, num_flt_per_grp_pad);
+    } else if (type == ppl::common::DATATYPE_INT8) {
+        group_padding<float><<<grid, cta_size, 0, stream>>>(
+			(float*)output, (float*)input, 
+			out_size, num_grp, 
+			num_flt_per_grp, conv_param.num_flt_pad, num_flt_per_grp_pad);
     }
 }
