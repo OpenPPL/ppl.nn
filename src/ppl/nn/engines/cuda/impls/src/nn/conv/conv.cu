@@ -1097,7 +1097,6 @@ double PPLCUDAConvolutionJitSelectKernel(
 
     algo_param                         = params[index];
     g_conv_shape_hash[conv_shape_hash] = algo_param;
-    printf("%s\n", algo_param.algo_name.c_str());
     return elapsed;
 }
 

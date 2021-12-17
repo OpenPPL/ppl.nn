@@ -253,7 +253,7 @@ struct kernel_info_t {
                    tile_n_per_cta >= tile_n_per_warp && tile_n_per_cta / tile_n_per_warp <= 4 &&
                    sm_a_v4 + sm_b_v4 <= MAX_SMEM_V4_PER_CTA && // share memeory limit
                    sm_r_v4 <= MAX_SMEM_V4_PER_CTA &&
-                   (tile_m_per_cta / tile_m_per_warp != 1 || tile_n_per_cta / tile_n_per_warp != 1 || tile_k_per_cta == 64) &&
+                   (tile_m_per_cta / tile_m_per_warp != 1 || tile_n_per_cta / tile_n_per_warp != 1 || tile_k_per_cta != 64) &&
                    (tile_m_per_cta / tile_m_per_warp != 4 || tile_n_per_cta / tile_n_per_warp != 4) &&
                    (tile_m_per_warp != 8 || tile_n_per_warp != 16) &&
                    (tile_m_per_warp != 128 || tile_n_per_warp != 64);
