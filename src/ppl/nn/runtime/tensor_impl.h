@@ -80,7 +80,7 @@ public:
         return buffer_info_.DetachBuffer();
     }
 
-    void FreeBuffer() {
+    void FreeBuffer() override {
         buffer_info_.FreeBuffer();
     }
 
