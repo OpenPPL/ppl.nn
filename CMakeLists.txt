@@ -12,6 +12,7 @@ option(PPLNN_INSTALL "install ppl headers and libs" ON)
 option(PPLNN_ENABLE_KERNEL_PROFILING "enable profiling for each kernel" OFF)
 option(PPLNN_ENABLE_PYTHON_API "enable python api support" OFF)
 option(PPLNN_ENABLE_LUA_API "enable lua api support" OFF)
+option(PPLNN_HOLD_DEPS "don't update dependencies" OFF)
 
 # --------------------------------------------------------------------------- #
 
