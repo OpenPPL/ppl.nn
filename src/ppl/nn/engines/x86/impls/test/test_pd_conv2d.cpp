@@ -70,11 +70,11 @@ Define_int32(min_iter, 4, "(4) min benchmark iterations");
 Define_float(min_second, 0.5f, "(0.5) min benchmark seconds");
 Define_bool(validate, false, "(false) do result validation");
 Define_float(eps, 1e-6f, "(1e-6) rel error trunk for validation");
-// #ifdef PPL_USE_X86_AVX512
-// Define_bool(disable_avx512, false, "(false) disable avx512 for auto select algo");
-// #else
+#ifdef PPL_USE_X86_AVX512
+Define_bool(disable_avx512, false, "(false) disable avx512 for auto select algo");
+#else
 static bool Flag_disable_avx512 = true;
-// #endif
+#endif
 
 /*
 

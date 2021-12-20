@@ -118,10 +118,14 @@ bool FuseConvDepthwise(const OptKernelOptions &options) {
             graph_topo->DelNodeById(conv_node->GetId());
             graph_topo->DelNodeById(next_node->GetId());
             graph_topo->DelEdgeById(conv_output->GetId());
-            if (del_conv_w) graph_topo->DelEdgeById(conv_w->GetId());
-            if (del_conv_b) graph_topo->DelEdgeById(conv_b->GetId());
-            if (del_depthwise_w) graph_topo->DelEdgeById(depthwise_w->GetId());
-            if (del_depthwise_b) graph_topo->DelEdgeById(depthwise_b->GetId());
+            auto conv_w_id = conv_w->GetId();
+            auto conv_b_id = conv_b->GetId();
+            auto depthwise_w_id = depthwise_w->GetId();
+            auto depthwise_b_id = depthwise_b->GetId();
+            if (del_conv_w) graph_topo->DelEdgeById(conv_w_id);
+            if (del_conv_b) graph_topo->DelEdgeById(conv_b_id);
+            if (del_depthwise_w) graph_topo->DelEdgeById(depthwise_w_id);
+            if (del_depthwise_b) graph_topo->DelEdgeById(depthwise_b_id);
 
             graph_changed = true;
         }

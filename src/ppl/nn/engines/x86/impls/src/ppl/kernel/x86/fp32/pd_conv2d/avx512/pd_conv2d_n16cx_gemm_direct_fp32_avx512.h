@@ -15,23 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_X86_FP32_CONV2D_GEMM_DIRECT_FMA_CONV2D_N16CX_GEMM_DIRECT_FP32_FMA_H_
-#define __ST_PPL_KERNEL_X86_FP32_CONV2D_GEMM_DIRECT_FMA_CONV2D_N16CX_GEMM_DIRECT_FP32_FMA_H_
+#ifndef __ST_PPL_KERNEL_X86_FP32_PD_CONV2D_AVX512_PD_CONV2D_N16CX_GEMM_DIRECT_FP32_AVX512_H_
+#define __ST_PPL_KERNEL_X86_FP32_PD_CONV2D_AVX512_PD_CONV2D_N16CX_GEMM_DIRECT_FP32_AVX512_H_
 
-#include "ppl/kernel/x86/fp32/conv2d.h"
+#include "ppl/kernel/x86/fp32/pd_conv2d.h"
 #include "ppl/kernel/x86/common/internal_include.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
-// forward declare;
-class conv2d_n16cx_gemm_direct_fp32_fma_manager;
-class pd_conv2d_n16cx_gemm_direct_fp32_fma_executor;
-
-class conv2d_n16cx_gemm_direct_fp32_fma_executor final : public conv2d_fp32_executor {
+class pd_conv2d_n16cx_gemm_direct_fp32_avx512_executor final : public pd_conv2d_fp32_executor {
 public:
-    conv2d_n16cx_gemm_direct_fp32_fma_executor() {}
-    conv2d_n16cx_gemm_direct_fp32_fma_executor(const conv2d_fp32_param *conv_param, const float *cvt_filter, const float *bias)
-        : conv2d_fp32_executor(conv_param, cvt_filter, bias) {}
+    pd_conv2d_n16cx_gemm_direct_fp32_avx512_executor(conv2d_fp32_executor *exec, conv2d_fp32_executor *depthwise_exec)
+        : pd_conv2d_fp32_executor(exec, depthwise_exec) {}
+
     uint64_t cal_temp_buffer_size() override;
     ppl::common::RetCode prepare() override;
     ppl::common::RetCode execute() override;
@@ -45,34 +41,40 @@ private:
         int64_t padded_oc;
 
         // Kernel tunning
-        int64_t s_ker_blk;
-        int64_t s_l2_blk;
+        int64_t gd_ker_blk;
+        int64_t oc_ker_blk;
+        int64_t dw_ker_blk;
+        int64_t oh_l2_blk;
         int64_t ic_l2_blk;
         int64_t ic_l2_cnt;
         int64_t oc_l2_blk;
         int64_t mb_l3_blk;
         int64_t grp_l3_blk;
         int32_t use_nt_store;
-        int32_t down_sample;
+
+        int64_t mode;
+        uint64_t gd_temp_buffer_size;
+        uint64_t dw_temp_buffer_size;
     } schedule_param_;
+
+    ppl::nn::TensorShape inter_shape_;
 
     void init_preproc_param();
     void cal_kernel_tunning_param();
+    ppl::common::RetCode fuse_execute();
+    ppl::common::RetCode separate_execute();
 
     static int64_t cal_ic_l2_blk(const conv2d_fp32_param &param);
-
-    friend conv2d_n16cx_gemm_direct_fp32_fma_manager;
-    friend pd_conv2d_n16cx_gemm_direct_fp32_fma_executor;
 };
 
-class conv2d_n16cx_gemm_direct_fp32_fma_manager final : public conv2d_fp32_manager {
+class pd_conv2d_n16cx_gemm_direct_fp32_avx512_manager final : public pd_conv2d_fp32_manager {
 public:
-    conv2d_n16cx_gemm_direct_fp32_fma_manager() {}
-    conv2d_n16cx_gemm_direct_fp32_fma_manager(const conv2d_fp32_param &param, ppl::common::Allocator *allocator)
-        : conv2d_fp32_manager(param, allocator) {}
-    bool is_supported() override;
-    ppl::common::RetCode gen_cvt_weights(const float *filter, const float *bias) override;
-    conv2d_fp32_executor *gen_executor() override;
+    pd_conv2d_n16cx_gemm_direct_fp32_avx512_manager() {}
+    pd_conv2d_n16cx_gemm_direct_fp32_avx512_manager(conv2d_fp32_manager *mgr, conv2d_fp32_manager *depthwise_mgr)
+        : pd_conv2d_fp32_manager(mgr, depthwise_mgr) {}
+    pd_conv2d_fp32_executor *gen_executor() override {
+        return new pd_conv2d_n16cx_gemm_direct_fp32_avx512_executor(conv2d_manager_->gen_executor(), depthwise_conv2d_manager_->gen_executor());
+    }
 };
 
 }}}; // namespace ppl::kernel::x86

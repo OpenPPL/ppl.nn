@@ -77,7 +77,7 @@ void pd_conv2d_n16cx_depthwise_fp32_fma_blk1x7_kernel(int64_t *param)
     const int64_t kh_end   = ker_p.pick<const int64_t>(pd_conv2d_n16cx_depthwise_kernel_fp32_fma::param_def::KH_END_IDX);
 
     const int64_t src_uw_stride = u_w * src_sw_stride;
-    const int64_t flt_offset = kh_start * kernel_w * CH_DATA_BLK;
+    const int64_t flt_offset    = kh_start * kernel_w * CH_DATA_BLK;
 
     const float **src_kh_list = ker_p.pick<const float**>(pd_conv2d_n16cx_depthwise_kernel_fp32_fma::param_def::SRC_PTR_KH_LIST_IDX);
     float *dst                = ker_p.pick<float*>(pd_conv2d_n16cx_depthwise_kernel_fp32_fma::param_def::DST_PTR_IDX);
