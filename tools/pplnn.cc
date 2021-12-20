@@ -46,7 +46,8 @@ Define_string_opt("--mm-policy", g_flag_mm_policy, "mem",
                   "\"perf\" => better performance, or \"mem\" => less memory usage");
 
 Define_bool_opt("--enable-profiling", g_flag_enable_profiling, false, "enable profiling and print profiling info");
-Define_float_opt("--min-profiling-seconds", g_flag_min_profiling_seconds, 1.0f, "min execute time by seconds for profiling");
+Define_float_opt("--min-profiling-seconds", g_flag_min_profiling_seconds, 1.0f,
+                 "min execute time by seconds for profiling");
 Define_uint32_opt("--min-profiling-iterations", g_flag_min_profiling_iterations, 1, "declare profiling iteration");
 Define_uint32_opt("--warmup-iterations", g_flag_warmup_iterations, 0, "declare profiling warmup iteration");
 
@@ -88,9 +89,8 @@ static vector<int64_t> GenerateRandomDims(uint32_t dim_count) {
     return dims;
 }
 
-static const char* MemMem(const char* haystack, unsigned int haystack_len,
-                          const char* needle, unsigned int needle_len)
-{
+static const char* MemMem(const char* haystack, unsigned int haystack_len, const char* needle,
+                          unsigned int needle_len) {
     if (!haystack || haystack_len == 0 || !needle || needle_len == 0) {
         return nullptr;
     }
@@ -176,8 +176,10 @@ Define_bool_opt("--use-cuda", g_flag_use_cuda, false, "use cuda engine");
 Define_bool_opt("--quick-select", g_flag_quick_select, false, "quick select algorithms for conv and gemm kernel");
 Define_uint32_opt("--device-id", g_flag_device_id, 0, "declare device id for cuda");
 
-Define_string_opt("--export-algo-file", g_flag_export_algo_file, "", "Export the selected best algo info into the json file.");
-Define_string_opt("--import-algo-file", g_flag_import_algo_file, "", "The objects in the json file declare best algo info for certain conv input shape");
+Define_string_opt("--export-algo-file", g_flag_export_algo_file, "",
+                  "Export the selected best algo info into the json file.");
+Define_string_opt("--import-algo-file", g_flag_import_algo_file, "",
+                  "The objects in the json file declare best algo info for certain conv input shape");
 
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/engines/cuda/cuda_options.h"
@@ -327,7 +329,7 @@ static string GetDimsStr(const Tensor* tensor) {
     return res;
 }
 
-static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime* runtime) {
+static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime* runtime, vector<string>* input_data) {
     for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
         auto t = runtime->GetInputTensor(c);
         auto& shape = t->GetShape();
@@ -366,12 +368,15 @@ static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime
             LOG(ERROR) << "set tensor[" << t->GetName() << "] content failed: " << GetRetCodeStr(status);
             return false;
         }
+
+        input_data->emplace_back(string((const char*)buffer.data(), buffer.size()));
     }
 
     return true;
 }
 
-static bool SetInputsAllInOne(const string& input_file, const vector<vector<int64_t>>& input_shapes, Runtime* runtime) {
+static bool SetInputsAllInOne(const string& input_file, const vector<vector<int64_t>>& input_shapes, Runtime* runtime,
+                              vector<string>* input_data) {
     FileMapping fm;
     auto status = fm.Init(input_file.c_str());
     if (status != RC_SUCCESS) {
@@ -401,7 +406,9 @@ static bool SetInputsAllInOne(const string& input_file, const vector<vector<int6
             return false;
         }
 
-        data += src_desc.GetBytesIncludingPadding();
+        const uint64_t content_size = src_desc.GetBytesIncludingPadding();
+        input_data->emplace_back(string(data, content_size));
+        data += content_size;
     }
 
     return true;
@@ -431,7 +438,7 @@ static const char* FindDataTypeStr(datatype_t dt) {
 }
 
 static bool SetInputsOneByOne(const string& input_files_str, const vector<vector<int64_t>>& input_shapes,
-                              Runtime* runtime) {
+                              Runtime* runtime, vector<string>* input_data) {
     vector<string> files;
     SplitString(input_files_str.data(), input_files_str.size(), ",", 1,
                 [&files](const char* s, unsigned int l) -> bool {
@@ -474,6 +481,8 @@ static bool SetInputsOneByOne(const string& input_files_str, const vector<vector
             LOG(ERROR) << "set input[" << t->GetName() << "] failed: " << GetRetCodeStr(status);
             return false;
         }
+
+        input_data->emplace_back(string(fm.Data(), fm.Size()));
     }
 
     return true;
@@ -490,7 +499,7 @@ static string GetBasename(const string& path) {
     return last_entry;
 }
 
-static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* runtime) {
+static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* runtime, vector<string>* input_data) {
     vector<string> files;
     SplitString(input_files_str.data(), input_files_str.size(), ",", 1,
                 [&files](const char* s, unsigned int l) -> bool {
@@ -576,6 +585,8 @@ static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* ru
             LOG(ERROR) << "set input[" << t->GetName() << "] failed: " << GetRetCodeStr(status);
             return false;
         }
+
+        input_data->emplace_back(string(fm.Data(), fm.Size()));
     }
 
     return true;
@@ -772,6 +783,96 @@ static void PrintProfilingStatistics(const ProfilingStatistics& stat, double run
 }
 #endif
 
+static bool SetInputs(const vector<string>& input_data, Runtime* runtime) {
+    if (input_data.size() != runtime->GetInputCount()) {
+        LOG(ERROR) << "number of input data [" << input_data.size() << "] != runtime input count ["
+                   << runtime->GetInputCount() << "]";
+        return false;
+    }
+
+    for (uint32_t i = 0; i < runtime->GetInputCount(); ++i) {
+        auto t = runtime->GetInputTensor(i);
+        auto status = t->ConvertFromHost(input_data[i].data(), t->GetShape());
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "set input [" << t->GetName() << "] failed: " << GetRetCodeStr(status);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static bool Profiling(const vector<string>& input_data, Runtime* runtime) {
+    RetCode status;
+    if (g_flag_warmup_iterations > 0) {
+        LOG(INFO) << "Warm up start for " << g_flag_warmup_iterations << " times.";
+
+        for (uint32_t i = 0; i < runtime->GetDeviceContextCount(); ++i) {
+            auto ctx = runtime->GetDeviceContext(i);
+            if (strcmp(ctx->GetType(), "x86") == 0) {
+                ctx->Configure(X86_DEV_CONF_MEM_DEFRAG);
+            }
+        }
+        // set inputs again after defragmentation
+        if (!SetInputs(input_data, runtime)) {
+            LOG(ERROR) << "SetInputs failed.";
+            return false;
+        }
+
+        for (uint32_t i = 0; i < g_flag_warmup_iterations; ++i) {
+            runtime->Run();
+        }
+        LOG(INFO) << "Warm up end.";
+    }
+
+    for (uint32_t i = 0; i < runtime->GetDeviceContextCount(); ++i) {
+        auto ctx = runtime->GetDeviceContext(i);
+        if (strcmp(ctx->GetType(), "x86") == 0) {
+            ctx->Configure(X86_DEV_CONF_MEM_DEFRAG);
+        }
+    }
+    // set inputs again after defragmentation
+    if (!SetInputs(input_data, runtime)) {
+        LOG(ERROR) << "SetInputs failed.";
+        return false;
+    }
+
+#ifdef PPLNN_ENABLE_KERNEL_PROFILING
+    status = runtime->Configure(RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG, true);
+    if (status != RC_SUCCESS) {
+        LOG(WARNING) << "enable profiling failed: " << GetRetCodeStr(status);
+    }
+#endif
+    LOG(INFO) << "Profiling start";
+
+    double run_dur = 0;
+    uint32_t run_count = 0;
+    while (run_dur < g_flag_min_profiling_seconds * 1000 || run_count < g_flag_min_profiling_iterations) {
+        auto run_begin_ts = std::chrono::system_clock::now();
+        runtime->Run();
+        auto run_end_ts = std::chrono::system_clock::now();
+        auto diff = std::chrono::duration_cast<std::chrono::microseconds>(run_end_ts - run_begin_ts);
+        run_dur += (double)diff.count() / 1000;
+        run_count += 1;
+    }
+
+    LOG(INFO) << "Duration: " << run_dur << " ms";
+
+#ifdef PPLNN_ENABLE_KERNEL_PROFILING
+    ProfilingStatistics stat;
+    status = runtime->GetProfilingStatistics(&stat);
+    if (status != RC_SUCCESS) {
+        LOG(WARNING) << "Get profiling statistics failed: " << GetRetCodeStr(status);
+    }
+    PrintProfilingStatistics(stat, run_dur, run_count);
+#else
+    LOG(INFO) << "Average run cost: " << (run_dur / run_count) << " ms.";
+#endif
+
+    LOG(INFO) << "Profiling End";
+    return true;
+}
+
 int main(int argc, char* argv[]) {
     RetCode status;
 
@@ -841,23 +942,24 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    vector<string> input_data; // store input data for profiling
     if (!g_flag_input.empty()) {
-        if (!SetInputsAllInOne(g_flag_input, input_shapes, runtime.get())) {
+        if (!SetInputsAllInOne(g_flag_input, input_shapes, runtime.get(), &input_data)) {
             LOG(ERROR) << "SetInputsAllInOne failed.";
             return -1;
         }
     } else if (!g_flag_inputs.empty()) {
-        if (!SetInputsOneByOne(g_flag_inputs, input_shapes, runtime.get())) {
+        if (!SetInputsOneByOne(g_flag_inputs, input_shapes, runtime.get(), &input_data)) {
             LOG(ERROR) << "SetInputsOneByOne failed.";
             return -1;
         }
     } else if (!g_flag_reshaped_inputs.empty()) {
-        if (!SetReshapedInputsOneByOne(g_flag_reshaped_inputs, runtime.get())) {
+        if (!SetReshapedInputsOneByOne(g_flag_reshaped_inputs, runtime.get(), &input_data)) {
             LOG(ERROR) << "SetReshapedInputsOneByOne failed.";
             return -1;
         }
     } else {
-        if (!SetRandomInputs(input_shapes, runtime.get())) {
+        if (!SetRandomInputs(input_shapes, runtime.get(), &input_data)) {
             LOG(ERROR) << "SetRandomInputs failed.";
             return -1;
         }
@@ -908,47 +1010,10 @@ int main(int argc, char* argv[]) {
     LOG(INFO) << "Run ok";
 
     if (g_flag_enable_profiling) {
-        if (g_flag_warmup_iterations > 0) {
-            LOG(INFO) << "Warm up start for " << g_flag_warmup_iterations << " times.";
-            for (uint32_t i = 0; i < g_flag_warmup_iterations; ++i) {
-                runtime->Run();
-            }
-            LOG(INFO) << "Warm up end.";
+        if (!Profiling(input_data, runtime.get())) {
+            LOG(ERROR) << "Profiling() failed.";
+            return -1;
         }
-#ifdef PPLNN_ENABLE_KERNEL_PROFILING
-        status = runtime->Configure(RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG, true);
-        if (status != RC_SUCCESS) {
-            LOG(WARNING) << "enable profiling failed: " << GetRetCodeStr(status);
-        }
-#endif
-        LOG(INFO) << "Profiling start";
-
-        double run_dur = 0;
-        uint32_t run_count = 0;
-        while (run_dur < g_flag_min_profiling_seconds * 1000 ||
-               run_count < g_flag_min_profiling_iterations) {
-            run_begin_ts = std::chrono::system_clock::now();
-            runtime->Run();
-            run_end_ts = std::chrono::system_clock::now();
-            diff = std::chrono::duration_cast<std::chrono::microseconds>(run_end_ts - run_begin_ts);
-            run_dur += (double)diff.count() / 1000;
-            run_count += 1;
-        }
-
-        LOG(INFO) << "Duration: " << run_dur << " ms";
-
-#ifdef PPLNN_ENABLE_KERNEL_PROFILING
-        ProfilingStatistics stat;
-        status = runtime->GetProfilingStatistics(&stat);
-        if (status != RC_SUCCESS) {
-            LOG(WARNING) << "Get profiling statistics failed: " << GetRetCodeStr(status);
-        }
-        PrintProfilingStatistics(stat, run_dur, run_count);
-#else
-        LOG(INFO) << "Average run cost: " << (run_dur / run_count) << " ms.";
-#endif
-
-        LOG(INFO) << "Profiling End";
     }
 
     return 0;
