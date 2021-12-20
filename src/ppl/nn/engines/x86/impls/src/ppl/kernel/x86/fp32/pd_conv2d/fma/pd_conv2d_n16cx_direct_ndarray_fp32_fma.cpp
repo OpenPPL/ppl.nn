@@ -18,7 +18,6 @@
 #include <string.h>
 #include <vector>
 
-#include "ppl/kernel/x86/fp32/reorder.h"
 #include "ppl/kernel/x86/common/avx_tools.h"
 #include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/fma/conv2d_n16cx_direct_ndarray_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/fma/conv2d_n16cx_direct_ndarray_kernel_fp32_fma.h"

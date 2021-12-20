@@ -90,17 +90,17 @@ void conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_tunning_param()
     sp.mb_l3_blk = min(batch, num_thread);
     sp.grp_l3_blk = 1;
 
-    sp.s_kr_blk = S_KERNEL_BLK_MAX;
+    sp.s_ker_blk = S_KERNEL_BLK_MAX;
 #define REDUN_S(S, S_BLK) (float(round_up(S, S_BLK)) / (S)-1.0f)
-    if (REDUN_S(dst_space, sp.s_kr_blk) > 0.201f) {
+    if (REDUN_S(dst_space, sp.s_ker_blk) > 0.201f) {
         for (int64_t s_blk = S_KERNEL_BLK_MAX - 1; s_blk >= S_KERNEL_BLK_MIN; --s_blk) {
-            if (REDUN_S(dst_space, s_blk) < REDUN_S(dst_space, sp.s_kr_blk)) {
-                sp.s_kr_blk = s_blk;
+            if (REDUN_S(dst_space, s_blk) < REDUN_S(dst_space, sp.s_ker_blk)) {
+                sp.s_ker_blk = s_blk;
             }
         }
     }
 #undef REDUN_S
-    sp.s_l2_blk = min(dst_space, round_up(S_L2_BLK_MAX, sp.s_kr_blk));
+    sp.s_l2_blk = min(dst_space, round_up(S_L2_BLK_MAX, sp.s_ker_blk));
     if (sp.padded_oc > sp.padded_ic) {
         sp.oc_l2_blk = min(OC_L2_BLK_MAX_LARGE, sp.padded_oc);
     } else {
@@ -266,7 +266,7 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_executor::execute()
 
                                 const int64_t ocl2_eff = min(padded_reg_oc - ocl2, sp.oc_l2_blk);
                                 const int64_t sl2_eff  = min(dst_space - sl2, sp.s_l2_blk);
-                                const int64_t s_body   = round(sl2_eff, sp.s_kr_blk);
+                                const int64_t s_body   = round(sl2_eff, sp.s_ker_blk);
                                 const int64_t s_tail   = sl2_eff - s_body;
 
                                 const float *l_src  = base_src + b * base_src_b_stride + g * base_src_g_stride + sl2 * IC_DATA_BLK;
@@ -285,7 +285,7 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_executor::execute()
                                         ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::HIS_PTR_IDX) = l_his;
                                         ker_p.pick<float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::DST_PTR_IDX)       = l_dst;
                                         ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::SPACE_IDX)        = s_body;
-                                        ker.execute(sp.use_nt_store, oc_reg, sp.s_kr_blk);
+                                        ker.execute(sp.use_nt_store, oc_reg, sp.s_ker_blk);
                                     }
                                     if (s_tail) {
                                         ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_fma::param_def::SRC_PTR_IDX) = l_src + s_body * IC_DATA_BLK;

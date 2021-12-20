@@ -25,6 +25,7 @@ namespace ppl { namespace kernel { namespace x86 {
 
 // forward declare;
 class conv2d_n16cx_gemm_direct_fp32_avx512_manager;
+class pd_conv2d_n16cx_gemm_direct_fp32_avx512_executor;
 
 class conv2d_n16cx_gemm_direct_fp32_avx512_executor final : public conv2d_fp32_executor {
 public:
@@ -44,11 +45,11 @@ private:
         int64_t padded_oc;
 
         // Kernel tunning
-        int64_t s_kr_blk;
+        int64_t s_ker_blk;
         int64_t s_l2_blk;
         int64_t ic_l2_blk;
         int64_t ic_l2_cnt;
-        int64_t oc_kr_blk;
+        int64_t oc_ker_blk;
         int64_t oc_l2_blk;
         int64_t mb_l3_blk;
         int64_t gp_l3_blk;
@@ -62,6 +63,7 @@ private:
     static int64_t cal_ic_l2_blk(const conv2d_fp32_param &param);
 
     friend conv2d_n16cx_gemm_direct_fp32_avx512_manager;
+    friend pd_conv2d_n16cx_gemm_direct_fp32_avx512_executor;
 };
 
 class conv2d_n16cx_gemm_direct_fp32_avx512_manager final : public conv2d_fp32_manager {

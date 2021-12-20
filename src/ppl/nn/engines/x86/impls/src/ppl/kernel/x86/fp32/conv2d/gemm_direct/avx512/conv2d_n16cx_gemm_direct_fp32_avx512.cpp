@@ -90,28 +90,28 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_executor::cal_kernel_tunning_param()
     sp.gp_l3_blk = min(cp.group, num_thread);
     sp.mb_l3_blk = min(batch, div_up(num_thread, sp.gp_l3_blk));
 
-    sp.oc_kr_blk = min<int64_t>(2 * OC_DATA_BLK, sp.padded_oc);
+    sp.oc_ker_blk = min<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::config::MAX_OC_BLK, sp.padded_oc);
     if (sp.padded_oc > sp.padded_ic) {
         sp.oc_l2_blk = min<int64_t>(OC_L2_BLK_MAX_LARGE, sp.padded_oc);
     } else {
         sp.oc_l2_blk = min<int64_t>(OC_L2_BLK_MAX_SMALL, sp.padded_oc);
     }
-    sp.s_kr_blk = min<int64_t>(dst_space, conv2d_n16cx_gemm_direct_kernel_fp32_avx512::config::MAX_S_BLK);
-    sp.s_l2_blk = min<int64_t>(dst_space, round_up(S_L2_BLK_MAX, sp.s_kr_blk));
+    sp.s_ker_blk = min<int64_t>(dst_space, conv2d_n16cx_gemm_direct_kernel_fp32_avx512::config::MAX_S_BLK);
+    sp.s_l2_blk = min<int64_t>(dst_space, round_up(S_L2_BLK_MAX, sp.s_ker_blk));
 
     if (sp.padded_oc > 2 * sp.oc_l2_blk && sp.padded_ic > IC_L2_BLK_MAX_LARGE) {
         const int64_t bgs_task = sp.gp_l3_blk * sp.mb_l3_blk * div_up(dst_space, sp.s_l2_blk);
-        while (sp.oc_l2_blk - sp.oc_kr_blk >= OC_L2_BLK_MIN && bgs_task * div_up(sp.padded_oc, sp.oc_l2_blk) < num_thread) {
-            sp.oc_l2_blk -= sp.oc_kr_blk;
+        while (sp.oc_l2_blk - sp.oc_ker_blk >= OC_L2_BLK_MIN && bgs_task * div_up(sp.padded_oc, sp.oc_l2_blk) < num_thread) {
+            sp.oc_l2_blk -= sp.oc_ker_blk;
         }
     } else {
         const int64_t bgo_task = sp.gp_l3_blk * sp.mb_l3_blk * div_up(sp.padded_oc, sp.oc_l2_blk);
-        while (sp.s_l2_blk - sp.s_kr_blk >= S_L2_BLK_MIN && bgo_task * div_up(dst_space, sp.s_l2_blk) < num_thread) {
-            sp.s_l2_blk -= sp.s_kr_blk;
+        while (sp.s_l2_blk - sp.s_ker_blk >= S_L2_BLK_MIN && bgo_task * div_up(dst_space, sp.s_l2_blk) < num_thread) {
+            sp.s_l2_blk -= sp.s_ker_blk;
         }
         const int64_t bgs_task = sp.gp_l3_blk * sp.mb_l3_blk * div_up(dst_space, sp.s_l2_blk);
-        while (sp.oc_l2_blk - sp.oc_kr_blk >= OC_L2_BLK_MIN && bgs_task * div_up(sp.padded_oc, sp.oc_l2_blk) < num_thread) {
-            sp.oc_l2_blk -= sp.oc_kr_blk;
+        while (sp.oc_l2_blk - sp.oc_ker_blk >= OC_L2_BLK_MIN && bgs_task * div_up(sp.padded_oc, sp.oc_l2_blk) < num_thread) {
+            sp.oc_l2_blk -= sp.oc_ker_blk;
         }
     }
 
@@ -272,7 +272,7 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_avx512_executor::execute()
 
                                 const int64_t ocl2_eff = min<int64_t>(sp.padded_oc - ocl2, sp.oc_l2_blk);
                                 const int64_t sl2_eff = min<int64_t>(dst_space - sl2, sp.s_l2_blk);
-                                const int64_t s_body = round(sl2_eff, sp.s_kr_blk);
+                                const int64_t s_body = round(sl2_eff, sp.s_ker_blk);
                                 const int64_t s_tail = sl2_eff - s_body;
                                 const float *l_src  = base_src + b * base_src_b_stride + g * base_src_g_stride + sl2 * IC_DATA_BLK;
                                 const float *l_his  = base_his + b * his_b_stride + g * dst_g_stride + ocl2 * dst_space + sl2 * OC_DATA_BLK;
@@ -282,15 +282,15 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_avx512_executor::execute()
 
                                 ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::param_def::FLT_PTR_IDX)  = l_flt;
                                 ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::param_def::BIAS_PTR_IDX) = l_bias;
-                                for (int64_t oc = ocl2; oc < ocl2 + ocl2_eff; oc += sp.oc_kr_blk) {
-                                    const int64_t oc_eff = min<int64_t>(ocl2 + ocl2_eff - oc, sp.oc_kr_blk);
+                                for (int64_t oc = ocl2; oc < ocl2 + ocl2_eff; oc += sp.oc_ker_blk) {
+                                    const int64_t oc_eff = min<int64_t>(ocl2 + ocl2_eff - oc, sp.oc_ker_blk);
                                     const int64_t oc_reg = div_up(oc_eff, OC_DATA_BLK);
                                     if (s_body) {
                                         ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::param_def::SRC_PTR_IDX) = l_src;
                                         ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::param_def::HIS_PTR_IDX) = l_his;
                                         ker_p.pick<float*>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::param_def::DST_PTR_IDX)       = l_dst;
                                         ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::param_def::SPACE_IDX)        = s_body;
-                                        ker.execute(sp.use_nt_store, oc_reg, sp.s_kr_blk);
+                                        ker.execute(sp.use_nt_store, oc_reg, sp.s_ker_blk);
                                     }
                                     if (s_tail) {
                                         ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::param_def::SRC_PTR_IDX) = l_src + s_body * IC_DATA_BLK;
@@ -299,10 +299,10 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_avx512_executor::execute()
                                         ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::param_def::SPACE_IDX)        = s_tail;
                                         ker.execute(sp.use_nt_store, oc_reg, s_tail);
                                     }
-                                    ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::param_def::FLT_PTR_IDX)  += sp.oc_kr_blk * sp.ic_l2_blk;
-                                    ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::param_def::BIAS_PTR_IDX) += sp.oc_kr_blk;
-                                    l_his += sp.oc_kr_blk * dst_space;
-                                    l_dst += sp.oc_kr_blk * dst_space;
+                                    ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::param_def::FLT_PTR_IDX)  += sp.oc_ker_blk * sp.ic_l2_blk;
+                                    ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::param_def::BIAS_PTR_IDX) += sp.oc_ker_blk;
+                                    l_his += sp.oc_ker_blk * dst_space;
+                                    l_dst += sp.oc_ker_blk * dst_space;
                                 }
                             }
                         }
