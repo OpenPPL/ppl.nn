@@ -41,6 +41,9 @@ public:
     /** @brief rellocate a buffer according to its shape */
     virtual ppl::common::RetCode ReallocBuffer() = 0;
 
+    /** @brief free data buffer */
+    virtual void FreeBuffer() = 0;
+
     /**
        @brief copy tensor's data to `dst`, which points to a host memory
        @note `dst` MUST have enough space.
