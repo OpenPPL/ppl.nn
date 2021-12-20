@@ -783,6 +783,29 @@ static void PrintProfilingStatistics(const ProfilingStatistics& stat, double run
 }
 #endif
 
+static bool Defragment(Runtime* runtime) {
+    for (uint32_t i = 0; i < runtime->GetInputCount(); ++i) {
+        runtime->GetInputTensor(i)->FreeBuffer();
+    }
+    for (uint32_t i = 0; i < runtime->GetOutputCount(); ++i) {
+        runtime->GetOutputTensor(i)->FreeBuffer();
+    }
+
+    for (uint32_t i = 0; i < runtime->GetDeviceContextCount(); ++i) {
+        auto ctx = runtime->GetDeviceContext(i);
+        // currently only x86 supports defragmentation
+        if (strcmp(ctx->GetType(), "x86") == 0) {
+            auto status = ctx->Configure(X86_DEV_CONF_MEM_DEFRAG);
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "x86 defragment failed: " << GetRetCodeStr(status);
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 static bool SetInputs(const vector<string>& input_data, Runtime* runtime) {
     if (input_data.size() != runtime->GetInputCount()) {
         LOG(ERROR) << "number of input data [" << input_data.size() << "] != runtime input count ["
@@ -792,7 +815,14 @@ static bool SetInputs(const vector<string>& input_data, Runtime* runtime) {
 
     for (uint32_t i = 0; i < runtime->GetInputCount(); ++i) {
         auto t = runtime->GetInputTensor(i);
-        auto status = t->ConvertFromHost(input_data[i].data(), t->GetShape());
+        auto status = t->ReallocBuffer();
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "realloc buffer for input[" << t->GetName() << "] failed: "
+                       << GetRetCodeStr(status);
+            return false;
+        }
+
+        status = t->ConvertFromHost(input_data[i].data(), t->GetShape());
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "set input [" << t->GetName() << "] failed: " << GetRetCodeStr(status);
             return false;
@@ -807,12 +837,11 @@ static bool Profiling(const vector<string>& input_data, Runtime* runtime) {
     if (g_flag_warmup_iterations > 0) {
         LOG(INFO) << "Warm up start for " << g_flag_warmup_iterations << " times.";
 
-        for (uint32_t i = 0; i < runtime->GetDeviceContextCount(); ++i) {
-            auto ctx = runtime->GetDeviceContext(i);
-            if (strcmp(ctx->GetType(), "x86") == 0) {
-                ctx->Configure(X86_DEV_CONF_MEM_DEFRAG);
-            }
+        if (!Defragment(runtime)) {
+            LOG(ERROR) << "Defragment failed.";
+            return false;
         }
+
         // set inputs again after defragmentation
         if (!SetInputs(input_data, runtime)) {
             LOG(ERROR) << "SetInputs failed.";
@@ -825,12 +854,11 @@ static bool Profiling(const vector<string>& input_data, Runtime* runtime) {
         LOG(INFO) << "Warm up end.";
     }
 
-    for (uint32_t i = 0; i < runtime->GetDeviceContextCount(); ++i) {
-        auto ctx = runtime->GetDeviceContext(i);
-        if (strcmp(ctx->GetType(), "x86") == 0) {
-            ctx->Configure(X86_DEV_CONF_MEM_DEFRAG);
-        }
+    if (!Defragment(runtime)) {
+        LOG(ERROR) << "Defragment failed.";
+        return false;
     }
+
     // set inputs again after defragmentation
     if (!SetInputs(input_data, runtime)) {
         LOG(ERROR) << "SetInputs failed.";
