@@ -30,8 +30,8 @@ set(PPLNN_LINK_DIRECTORIES)
 
 include(cmake/deps.cmake)
 include(cmake/protobuf.cmake)
+include(cmake/rapidjson.cmake)
 
-hpcc_populate_dep(rapidjson)
 hpcc_populate_dep(pplcommon)
 
 # --------------------------------------------------------------------------- #
