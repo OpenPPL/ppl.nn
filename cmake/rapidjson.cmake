@@ -1,0 +1,5 @@
+FetchContent_GetProperties(rapidjson)
+if(NOT rapidjon_POPULATED)
+    FetchContent_Populate(rapidjson)
+    add_subdirectory(${rapidjson_SOURCE_DIR} ${rapidjson_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
