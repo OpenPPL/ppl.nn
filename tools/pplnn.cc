@@ -49,7 +49,7 @@ Define_bool_opt("--enable-profiling", g_flag_enable_profiling, false, "enable pr
 Define_float_opt("--min-profiling-seconds", g_flag_min_profiling_seconds, 1.0f,
                  "min execute time by seconds for profiling");
 Define_uint32_opt("--min-profiling-iterations", g_flag_min_profiling_iterations, 1, "declare profiling iteration");
-Define_uint32_opt("--warmup-iterations", g_flag_warmup_iterations, 0, "declare profiling warmup iteration");
+Define_uint32_opt("--warmup-iterations", g_flag_warmup_iterations, 1, "declare profiling warmup iteration");
 
 Define_string_opt("--input", g_flag_input, "", "binary input file containing all tensors' data");
 Define_string_opt("--inputs", g_flag_inputs, "", "binary input files separated by comma");
@@ -840,37 +840,23 @@ static bool Profiling(const vector<string>& input_data, Runtime* runtime) {
     if (g_flag_warmup_iterations > 0) {
         LOG(INFO) << "Warm up start for " << g_flag_warmup_iterations << " times.";
 
-#ifdef PPLNN_USE_X86
-        if (!Defragment(runtime)) {
-            LOG(ERROR) << "Defragment failed.";
-            return false;
-        }
-
-        // set inputs again after defragmentation
-        if (!SetInputs(input_data, runtime)) {
-            LOG(ERROR) << "SetInputs failed.";
-            return false;
-        }
-#endif
-
         for (uint32_t i = 0; i < g_flag_warmup_iterations; ++i) {
+#ifdef PPLNN_USE_X86
+            if (!Defragment(runtime)) {
+                LOG(ERROR) << "Defragment failed.";
+                return false;
+            }
+
+            // set inputs again after defragmentation
+            if (!SetInputs(input_data, runtime)) {
+                LOG(ERROR) << "SetInputs failed.";
+                return false;
+            }
+#endif
             runtime->Run();
         }
         LOG(INFO) << "Warm up end.";
     }
-
-#ifdef PPLNN_USE_X86
-    if (!Defragment(runtime)) {
-        LOG(ERROR) << "Defragment failed.";
-        return false;
-    }
-
-    // set inputs again after defragmentation
-    if (!SetInputs(input_data, runtime)) {
-        LOG(ERROR) << "SetInputs failed.";
-        return false;
-    }
-#endif
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
     status = runtime->Configure(RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG, true);

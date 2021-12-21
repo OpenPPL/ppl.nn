@@ -48,7 +48,7 @@ public:
     }
 
     ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) override;
-    void FreeTmpBuffer(BufferDesc* buffer) override {}
+    void FreeTmpBuffer(BufferDesc* buffer) override;
 
     // ----- configurations ----- //
 
