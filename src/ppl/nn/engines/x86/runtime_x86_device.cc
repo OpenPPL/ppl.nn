@@ -72,6 +72,11 @@ RetCode RuntimeX86Device::DoMemDefrag(RuntimeX86Device* dev, va_list) {
     }
 
     auto mgr = dynamic_cast<utils::CompactBufferManager*>(dev->buffer_manager_.get());
+    if (dev->tmp_buffer_size_ > 0) {
+        mgr->Free(&dev->shared_tmp_buffer_);
+        dev->shared_tmp_buffer_.addr = nullptr;
+        dev->tmp_buffer_size_ = 0;
+    }
     return mgr->Defragment();
 }
 
