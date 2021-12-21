@@ -369,7 +369,7 @@ static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime
             return false;
         }
 
-        input_data->emplace_back(string((const char*)buffer.data(), buffer.size()));
+        input_data->emplace_back(string((const char*)buffer.data(), buffer.size() * sizeof(float)));
     }
 
     return true;
@@ -783,6 +783,7 @@ static void PrintProfilingStatistics(const ProfilingStatistics& stat, double run
 }
 #endif
 
+#ifdef PPLNN_USE_X86
 static bool Defragment(Runtime* runtime) {
     for (uint32_t i = 0; i < runtime->GetInputCount(); ++i) {
         runtime->GetInputTensor(i)->FreeBuffer();
@@ -817,12 +818,13 @@ static bool SetInputs(const vector<string>& input_data, Runtime* runtime) {
         auto t = runtime->GetInputTensor(i);
         auto status = t->ReallocBuffer();
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "realloc buffer for input[" << t->GetName() << "] failed: "
-                       << GetRetCodeStr(status);
+            LOG(ERROR) << "realloc buffer for input[" << t->GetName() << "] failed: " << GetRetCodeStr(status);
             return false;
         }
 
-        status = t->ConvertFromHost(input_data[i].data(), t->GetShape());
+        TensorShape src_desc = t->GetShape();
+        src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
+        status = t->ConvertFromHost(input_data[i].data(), src_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "set input [" << t->GetName() << "] failed: " << GetRetCodeStr(status);
             return false;
@@ -831,12 +833,14 @@ static bool SetInputs(const vector<string>& input_data, Runtime* runtime) {
 
     return true;
 }
+#endif
 
 static bool Profiling(const vector<string>& input_data, Runtime* runtime) {
     RetCode status;
     if (g_flag_warmup_iterations > 0) {
         LOG(INFO) << "Warm up start for " << g_flag_warmup_iterations << " times.";
 
+#ifdef PPLNN_USE_X86
         if (!Defragment(runtime)) {
             LOG(ERROR) << "Defragment failed.";
             return false;
@@ -847,6 +851,7 @@ static bool Profiling(const vector<string>& input_data, Runtime* runtime) {
             LOG(ERROR) << "SetInputs failed.";
             return false;
         }
+#endif
 
         for (uint32_t i = 0; i < g_flag_warmup_iterations; ++i) {
             runtime->Run();
@@ -854,6 +859,7 @@ static bool Profiling(const vector<string>& input_data, Runtime* runtime) {
         LOG(INFO) << "Warm up end.";
     }
 
+#ifdef PPLNN_USE_X86
     if (!Defragment(runtime)) {
         LOG(ERROR) << "Defragment failed.";
         return false;
@@ -864,6 +870,7 @@ static bool Profiling(const vector<string>& input_data, Runtime* runtime) {
         LOG(ERROR) << "SetInputs failed.";
         return false;
     }
+#endif
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
     status = runtime->Configure(RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG, true);
