@@ -222,20 +222,19 @@ static RetCode InitRuntimeGraphConstants(const ir::GraphTopo* topo, const Runtim
             return RC_NOT_FOUND;
         }
         auto ret_pair = tensors->insert(make_pair(eid, TensorImpl(edge, TENSORTYPE_RESERVED)));
-        auto tensor = &ret_pair.first->second;
 
         if (ret_pair.second) {
             auto constant_ref = info.constants.find(eid);
             if (constant_ref == info.constants.end()) {
-                LOG(ERROR) << "cannot find data of constant[" << edge->GetName() << "]";
-                return RC_NOT_FOUND;
+                // ignore constants that are not in `RuntimeGraphInfo::constants`
+                tensors->erase(ret_pair.first);
+            } else {
+                auto tensor = &ret_pair.first->second;
+                tensor->SetBuffer(constant_ref->second.GetBufferDesc(), constant_ref->second.GetDevice());
+                tensor->GetShape() = constant_ref->second.GetShape();
+                constants->push_back(tensor);
             }
-
-            tensor->GetShape() = constant_ref->second.GetShape();
-            tensor->SetBuffer(constant_ref->second.GetBufferDesc(), constant_ref->second.GetDevice());
         }
-
-        constants->push_back(tensor);
     }
 
     return RC_SUCCESS;
@@ -316,8 +315,8 @@ RetCode RuntimeImpl::Run() {
     for (auto x = engctx_.begin(); x != engctx_.end(); ++x) {
         status = x->get()->BeforeRun();
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "BeforeRun() of EngineContext[" << x->get()->GetName() << "] failed: "
-                       << GetRetCodeStr(status);
+            LOG(ERROR) << "BeforeRun() of EngineContext[" << x->get()->GetName()
+                       << "] failed: " << GetRetCodeStr(status);
             return status;
         }
     }
