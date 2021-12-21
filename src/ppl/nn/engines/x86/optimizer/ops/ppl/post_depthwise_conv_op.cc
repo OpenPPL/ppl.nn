@@ -26,13 +26,13 @@ PostDepthwiseConvOp::~PostDepthwiseConvOp() {
     if (pd_conv2d_param_ != nullptr) {
         if (pd_conv2d_param_->mgr != nullptr) {
             pd_conv2d_param_->mgr->release_cvt_weights();
-        } 
+        }
         if (pd_conv2d_param_->conv2d_param != nullptr) {
             delete pd_conv2d_param_->conv2d_param;
         }
         if (pd_conv2d_param_->depthwise_conv2d_param != nullptr) {
             delete pd_conv2d_param_->depthwise_conv2d_param;
-        } 
+        }
         delete pd_conv2d_param_;
     }
 }

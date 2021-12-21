@@ -28,14 +28,20 @@ class PostDepthwiseConv2dKernel : public X86Kernel {
 public:
     PostDepthwiseConv2dKernel(const ir::Node* node) : X86Kernel(node) {}
     ~PostDepthwiseConv2dKernel() {
-        if (executor_)
+        if (executor_) {
+            delete executor_->conv2d_executor();
+            delete executor_->depthwise_conv2d_executor();
             delete executor_;
+        }
     }
 
     void SetParam(const PostDepthwiseConv2dParam* p) {
         param_ = p;
-        if (executor_)
+        if (executor_) {
+            delete executor_->conv2d_executor();
+            delete executor_->depthwise_conv2d_executor();
             delete executor_;
+        }
         executor_ = p->mgr->gen_executor();
     }
 
