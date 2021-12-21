@@ -46,22 +46,35 @@ RuntimeX86Device::RuntimeX86Device(uint64_t alignment, isa_t isa, uint32_t mm_po
 RuntimeX86Device::~RuntimeX86Device() {
     LOG(DEBUG) << "buffer manager[" << buffer_manager_->GetName() << "] allocates ["
                << buffer_manager_->GetAllocatedBytes() << "] bytes.";
-    if (shared_tmp_buffer_.addr) {
+    if (tmp_buffer_size_) {
         buffer_manager_->Free(&shared_tmp_buffer_);
     }
     buffer_manager_.reset();
 }
 
 RetCode RuntimeX86Device::AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
-    if (bytes > tmp_buffer_size_ || bytes <= tmp_buffer_size_ / 2) {
+    if (can_defragement_) {
         auto ret = buffer_manager_->Realloc(bytes, &shared_tmp_buffer_);
         if (RC_SUCCESS != ret) {
             return ret;
         }
-        tmp_buffer_size_ = bytes;
+    } else {
+        if (bytes > tmp_buffer_size_ || bytes <= tmp_buffer_size_ / 2) {
+            auto ret = buffer_manager_->Realloc(bytes, &shared_tmp_buffer_);
+            if (RC_SUCCESS != ret) {
+                return ret;
+            }
+            tmp_buffer_size_ = bytes;
+        }
     }
     *buffer = shared_tmp_buffer_;
     return RC_SUCCESS;
+}
+
+void RuntimeX86Device::FreeTmpBuffer(BufferDesc* buffer) {
+    if (can_defragement_) {
+        buffer_manager_->Free(&shared_tmp_buffer_);
+    }
 }
 
 /* -------------------------------------------------------------------------- */
