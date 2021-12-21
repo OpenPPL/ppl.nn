@@ -17,6 +17,7 @@
 
 #include "ppl/nn/engines/x86/kernels/onnx/sub_kernel.h"
 #include "ppl/nn/common/logger.h"
+#include "ppl/nn/engines/x86/utils.h"
 
 #include "ppl/kernel/x86/fp32/arithmetic.h"
 #include "ppl/kernel/x86/int64/arithmetic.h"
@@ -44,22 +45,32 @@ ppl::common::RetCode SubKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
+    auto lA = A;
+    auto lB = B;
+    if (A->GetEdge()->CalcConsumerCount() == 1 && A->GetType() == TENSORTYPE_NORMAL && TensorShapeEqual(A->GetShape(), C->GetShape())) {
+        C->TransferBufferFrom(A);
+        lA = C;
+    } else if (B->GetEdge()->CalcConsumerCount() == 1 && B->GetType() == TENSORTYPE_NORMAL && TensorShapeEqual(B->GetShape(), C->GetShape())) {
+        C->TransferBufferFrom(B);
+        lB = C;
+    }
+
     if (data_type == common::DATATYPE_FLOAT32) {
         if (MayUseISA(ppl::common::ISA_X86_AVX)) {
             return kernel::x86::sub_fp32_avx(&A->GetShape(), &B->GetShape(), &C->GetShape(),
-                                             A->GetBufferPtr<const float>(), B->GetBufferPtr<const float>(), fuse_relu_,
+                                             lA->GetBufferPtr<const float>(), lB->GetBufferPtr<const float>(), fuse_relu_,
                                              C->GetBufferPtr<float>());
         } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
             return kernel::x86::sub_fp32_sse(&A->GetShape(), &B->GetShape(), &C->GetShape(),
-                                             A->GetBufferPtr<const float>(), B->GetBufferPtr<const float>(), fuse_relu_,
+                                             lA->GetBufferPtr<const float>(), lB->GetBufferPtr<const float>(), fuse_relu_,
                                              C->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "get unsupported isa " << GetISA();
             return ppl::common::RC_UNSUPPORTED;
         }
     } else if (data_type == common::DATATYPE_INT64) {
-        return kernel::x86::sub_int64(&A->GetShape(), &B->GetShape(), &C->GetShape(), A->GetBufferPtr<const int64_t>(),
-                                      B->GetBufferPtr<const int64_t>(), C->GetBufferPtr<int64_t>());
+        return kernel::x86::sub_int64(&A->GetShape(), &B->GetShape(), &C->GetShape(), lA->GetBufferPtr<const int64_t>(),
+                                      lB->GetBufferPtr<const int64_t>(), C->GetBufferPtr<int64_t>());
     } else {
         LOG(ERROR) << "unsupported datatype " << common::GetDataTypeStr(data_type);
         return ppl::common::RC_UNSUPPORTED;
