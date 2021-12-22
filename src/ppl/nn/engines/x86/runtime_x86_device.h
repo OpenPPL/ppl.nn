@@ -39,7 +39,6 @@ public:
     }
 
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) override {
-        bytes = Align(bytes, 256);
         return buffer_manager_->Realloc(bytes, buffer);
     }
 
