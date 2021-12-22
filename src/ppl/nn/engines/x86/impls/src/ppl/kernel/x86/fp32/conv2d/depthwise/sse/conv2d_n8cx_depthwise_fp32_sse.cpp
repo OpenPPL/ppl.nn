@@ -128,12 +128,16 @@ ppl::common::RetCode conv2d_n8cx_depthwise_fp32_sse_executor::prepare()
 
 ppl::common::RetCode conv2d_n8cx_depthwise_fp32_sse_executor::execute()
 {
-    if (!conv_param_ || !cvt_filter_ || !cvt_bias_ || !src_ || !dst_ || ((conv_param_->fuse_flag & conv_fuse_flag::SUM) && !sum_src_) || !temp_buffer_) {
+    if (!conv_param_ || !cvt_filter_ || !cvt_bias_ || !src_ || !dst_ || ((conv_param_->fuse_flag & conv_fuse_flag::SUM) && !sum_src_)) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
     const conv2d_fp32_param &cp     = *conv_param_;
     const kernel_schedule_param &sp = schedule_param_;
+
+    if (sp.padding_policy == PADDING_POLICY_PREPAD() && !temp_buffer_) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
 
     const int64_t batch = src_shape_->GetDim(0);
     const int64_t src_h = src_shape_->GetDim(2);

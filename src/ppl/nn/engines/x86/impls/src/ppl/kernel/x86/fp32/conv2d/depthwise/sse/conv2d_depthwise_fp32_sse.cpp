@@ -608,21 +608,6 @@ static void conv2d_depthwise_fp32_sse_dst_trans(
     }
 }
 
-void conv2d_depthwise_fp32_sse_dst_trans_simple(
-    const float *dst_trans,
-    const float *sum_src,
-    int64_t width,
-    int64_t channels,
-    int64_t dst_c_stride,
-    float *dst)
-{
-    for (int64_t c = 0; c < channels; ++c) {
-        for (int64_t w = 0; w < width; ++w) {
-            dst[c * dst_c_stride + w] = dst_trans[w * CH_DT_BLK() + c];
-        }
-    }
-}
-
 ppl::common::RetCode conv2d_depthwise_fp32_sse_executor::execute()
 {
     if (!conv_param_ || !cvt_filter_ || !cvt_bias_ || !src_ || !dst_ || ((conv_param_->fuse_flag & conv_fuse_flag::SUM) && !sum_src_) || !temp_buffer_) {
