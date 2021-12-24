@@ -35,27 +35,45 @@ ppl::common::RetCode GatherNdKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    const uint32_t r = x->GetShape().GetDimCount();
-    const uint32_t q = indices->GetShape().GetDimCount();
-    const uint32_t k = indices->GetShape().GetDim(q - 1);
+    const int64_t r = x->GetShape().GetDimCount();
+    const int64_t q = indices->GetShape().GetDimCount();
+    const int64_t k = indices->GetShape().GetDim(q - 1);
 
-    int32_t inner_dim = 1;
-    for (uint32_t i = k; i < r; i++) {
+    int64_t inner_dim = 1;
+    int64_t num_indices = 1;
+
+    for (int64_t i = k; i < r; i++) {
         inner_dim *= x->GetShape().GetDim(i);
     }
-    int32_t num_indices = 1;
-    for (uint32_t i = 0; i < q - 1; i++) {
+    for (int64_t i = 0; i < q - 1; i++) {
         num_indices *= indices->GetShape().GetDim(i);
     }
-    int32_t indices_dim = k;
 
-    auto dim_count = x->GetShape().GetDimCount();
-    std::vector<int32_t> strides_vec(dim_count);
-    auto strides = strides_vec.data(); // may be faster
+    BufferDesc tmp_buffer_desc;
+    auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
+    auto status = GetX86Device()->AllocTmpBuffer(indices->GetShape().GetBytesExcludingPadding(), &tmp_buffer_desc);
+    if (status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
+                   << "] failed: " << ppl::common::GetRetCodeStr(status);
+        return status;
+    }
+    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
+        GetX86Device()->FreeTmpBuffer(buffer);
+    });
+    auto real_indices = (int64_t*)tmp_buffer_desc.addr;
+    auto indices_data = indices->GetBufferPtr<const int64_t>();
+    for (int64_t i = 0; i < num_indices; ++i) {
+        for (int64_t j = 0; j < k; ++j) {
+            auto idx = i * k + j;
+            real_indices[idx] = indices_data[idx] >= 0 ? indices_data[idx] : indices_data[idx] + x->GetShape().GetDim(j);
+        }
+    }
 
-    strides[dim_count - 1] = 1;
-    for (int i = dim_count - 2; i >= 0; i--) {
-        strides[i] = strides[i + 1] * x->GetShape().GetDim(i + 1);
+    std::vector<int64_t> strides(r);
+    auto strides_data = strides.data();
+    strides_data[r - 1] = 1;
+    for (int i = r - 2; i >= 0; i--) {
+        strides_data[i] = strides_data[i + 1] * x->GetShape().GetDim(i + 1);
     }
 
     const auto data_type = x->GetShape().GetDataType();
@@ -63,8 +81,8 @@ ppl::common::RetCode GatherNdKernel::DoExecute(KernelExecContext* ctx) {
 
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
-            return kernel::x86::gather_nd_ndarray_fp32(x->GetBufferPtr<float>(), indices->GetBufferPtr<int64_t>(),
-                                                       strides, inner_dim, num_indices, indices_dim,
+            return kernel::x86::gather_nd_ndarray_fp32(x->GetBufferPtr<const float>(), real_indices,
+                                                       strides_data, inner_dim, num_indices, k,
                                                        y->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "unsupported data type " << ppl::common::GetDataTypeStr(data_type) << ".";
