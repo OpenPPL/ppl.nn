@@ -23,7 +23,7 @@ namespace ppl { namespace kernel { namespace x86 {
 ppl::common::RetCode gather_nd_ndarray_fp32(
     const float *src,
     const int64_t *indices,
-    const int32_t *strides,
+    const int64_t *strides,
     const int64_t inner_dim,
     const int64_t num_indices,
     const int64_t indices_dim,

@@ -37,35 +37,40 @@ ppl::common::RetCode GatherKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    const uint32_t q = indices->GetShape().GetRealDimCount();
+    const int64_t r = x->GetShape().GetDimCount();
+    const int64_t q = indices->GetShape().GetDimCount();
+    const int64_t real_axis = param_->axis >= 0 ? param_->axis : param_->axis + r;
 
     int64_t num_indices = 1;
-    int64_t indices_dim = indices->GetShape().GetDim(q - 1);
+    const int64_t indices_dim = indices->GetShape().GetDim(q - 1);
     int64_t outter_dim = 1;
     int64_t inner_dim = 1;
-    int64_t n = indices->GetShape().GetElementsExcludingPadding();
-    std::vector<int64_t> real_indices;
-    real_indices.resize(n);
-    if (q != 0) {
-        for (uint32_t i = 0; i < q - 1; ++i) {
-            num_indices *= indices->GetShape().GetDim(i);
-        }
-        for (uint32_t i = 0; i < indices->GetShape().GetElementsExcludingPadding(); ++i) {
-            real_indices[i] = indices->GetBufferPtr<int64_t>()[i] >= 0 ? indices->GetBufferPtr<int64_t>()[i]
-                                                                       : indices->GetBufferPtr<int64_t>()[i] + q;
-        }
+    const int64_t gather_dim = x->GetShape().GetDim(real_axis);
+
+    BufferDesc tmp_buffer_desc;
+    auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
+    auto status = GetX86Device()->AllocTmpBuffer(indices->GetShape().GetBytesExcludingPadding(), &tmp_buffer_desc);
+    if (status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
+                   << "] failed: " << ppl::common::GetRetCodeStr(status);
+        return status;
     }
-    if (indices->GetShape().IsScalar()) {
-        real_indices[0] = indices->GetBufferPtr<int64_t>()[0] >= 0
-            ? indices->GetBufferPtr<int64_t>()[0]
-            : indices->GetBufferPtr<int64_t>()[0] + x->GetShape().GetDim(param_->axis);
+    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
+        GetX86Device()->FreeTmpBuffer(buffer);
+    });
+    auto real_indices = (int64_t*)tmp_buffer_desc.addr;
+    auto indices_data = indices->GetBufferPtr<const int64_t>();
+    for (uint64_t i = 0; i < indices->GetShape().GetElementsExcludingPadding(); ++i) {
+        real_indices[i] = indices_data[i] >= 0 ? indices_data[i] : indices_data[i] + gather_dim;
     }
-    for (int32_t i = 0; i < param_->axis; ++i) {
+
+    for (int64_t i = 0; i < q - 1; ++i) {
+        num_indices *= indices->GetShape().GetDim(i);
+    }
+    for (int64_t i = 0; i < real_axis; ++i) {
         outter_dim *= x->GetShape().GetDim(i);
     }
-    int32_t gather_dim = x->GetShape().GetDim(param_->axis);
-
-    for (uint32_t i = param_->axis + 1; i < x->GetShape().GetDimCount(); ++i) {
+    for (int64_t i = real_axis + 1; i < r; ++i) {
         inner_dim *= x->GetShape().GetDim(i);
     }
 
@@ -73,11 +78,11 @@ ppl::common::RetCode GatherKernel::DoExecute(KernelExecContext* ctx) {
     const auto data_format = x->GetShape().GetDataFormat();
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
-            return kernel::x86::gather_ndarray_fp32(x->GetBufferPtr<float>(), real_indices.data(), outter_dim,
+            return kernel::x86::gather_ndarray_fp32(x->GetBufferPtr<const float>(), real_indices, outter_dim,
                                                     gather_dim, inner_dim, num_indices, indices_dim,
                                                     y->GetBufferPtr<float>());
         } else if (data_type == ppl::common::DATATYPE_INT64) {
-            return kernel::x86::gather_ndarray_int64(x->GetBufferPtr<int64_t>(), real_indices.data(), outter_dim,
+            return kernel::x86::gather_ndarray_int64(x->GetBufferPtr<const int64_t>(), real_indices, outter_dim,
                                                      gather_dim, inner_dim, num_indices, indices_dim,
                                                      y->GetBufferPtr<int64_t>());
         } else {
