@@ -309,7 +309,7 @@ inline void conv2d_n16cx_direct_ndarray_fp32_fma_blk1x1_kernel(int64_t *param)
     if (u_ocr > 0) ymm0 = _mm256_loadu_ps(bias + 0 * OC_REG_ELTS);
     if (u_ocr > 1) ymm1 = _mm256_loadu_ps(bias + 1 * OC_REG_ELTS);
 
-    int64_t ic          = ker_p.pick<const int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::CHANNELS_IDX);
+    int64_t ic          = ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::CHANNELS_IDX);
     const float *ic_src = ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::SRC_PTR_IDX) + src_offset;
     const float *ic_flt = ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::FLT_PTR_IDX) + flt_offset;
     ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::SRC_PTR_IDX) += stride_w;

@@ -21,57 +21,74 @@
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/kernel/x86/fp32/conv2d.h"
 
-#define KERNEL_FLAG_LD_BIAS() (1 << 0)
-#define KERNEL_FLAG_AD_BIAS() (1 << 1)
-#define KERNEL_FLAG_RELU()    (1 << 2)
-#define KERNEL_FLAG_RELU6()   (1 << 3)
-
-#define PICK_PARAM(T, PARAM, IDX) *(T*)(PARAM + IDX)
-
-#define PRIV_PARAM_LEN() 10
-#define SRC_IDX()        0
-#define HIS_IDX()        1
-#define DST_IDX()        2
-#define FLT_IDX()        3
-#define BIAS_IDX()       4
-#define OW_IDX()         5
-#define KH_START_IDX()   6
-#define KH_END_IDX()     7
-#define KW_START_IDX()   8
-#define KW_END_IDX()     9
-
-#define SHAR_PARAM_LEN()     10
-#define CHANNELS_IDX()       0
-#define SRC_C_STRIDE_IDX()   1
-#define SRC_H_STRIDE_IDX()   2
-#define HIS_OCB_STRIDE_IDX() 3
-#define DST_OCB_STRIDE_IDX() 4
-#define FLT_OCB_STRIDE_IDX() 5
-#define FLAGS_IDX()          6
-#define SW_IDX()             7
-#define KH_IDX()             8
-#define KW_IDX()             9
-
-#define OC_DT_BLK() 16
-
-#define NT_STORE_OPT() 2
-
-#define MAX_OC_RF() 2
-#define MAX_OW_RF() 7
-
-#define BLK1X14_OC_RF() 2
-#define BLK1X14_OW_RF() 14
-
 namespace ppl { namespace kernel { namespace x86 {
 
-typedef void (*conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_func_t)(const int64_t*, int64_t*);
+class conv2d_n16cx_direct_ndarray_kernel_fp32_avx512 {
+public:
+    typedef void (*func_t)(int64_t*);
 
-extern conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_func_t
-    conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_pad_table[NT_STORE_OPT()][MAX_OC_RF()];
-extern conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_func_t
-    conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_o16_table[NT_STORE_OPT()][MAX_OW_RF()];
-extern conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_func_t
-    conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_o32_table[NT_STORE_OPT()][MAX_OW_RF()];
+    struct param_def {
+        static const int64_t SRC_PTR_IDX = 0;
+        static const int64_t SUM_SRC_PTR_IDX = 1;
+        static const int64_t DST_PTR_IDX = 2;
+        static const int64_t FLT_PTR_IDX = 3;
+        static const int64_t BIAS_PTR_IDX = 4;
+        static const int64_t DST_WIDTH_IDX = 5;
+        static const int64_t CHANNELS_IDX = 6;
+        static const int64_t SRC_H_STRIDE_IDX = 7;
+        static const int64_t SRC_C_STRIDE_IDX = 8;
+        static const int64_t FLT_C_STRIDE_IDX = 9;
+        static const int64_t SUM_SRC_OCB_STRIDE_IDX = 10;
+        static const int64_t DST_OCB_STRIDE_IDX = 11;
+        static const int64_t FLT_OCB_STRIDE_IDX = 12;
+        static const int64_t KH_START_IDX = 13;
+        static const int64_t KH_END_IDX = 14;
+        static const int64_t KW_START_IDX = 15;
+        static const int64_t KW_END_IDX = 16;
+        static const int64_t KH_IDX = 17;
+        static const int64_t KW_IDX = 18;
+        static const int64_t SW_IDX = 19;
+        static const int64_t FLAGS_IDX = 20;
+        static const int64_t LENGTH = 21;
+    };
+
+    struct config {
+        static const int64_t OC_DATA_BLK = 16;
+        static const int64_t MAX_W_REGS = 14;
+        static const int64_t MAX_OC_REGS = 2;
+        static const int64_t W_REG_ELTS = 1;
+        static const int64_t OC_REG_ELTS = 16;
+        static const int64_t OC_DATA_BLK_REGS = 1;
+        static const int64_t MAX_OC_DATA_BLKS = MAX_OC_REGS / OC_DATA_BLK_REGS;
+        static const int64_t MAX_W_BLK = MAX_W_REGS * W_REG_ELTS;
+        static const int64_t MAX_OC_BLK = MAX_OC_DATA_BLKS * OC_DATA_BLK;
+        static const int64_t NT_STORE_OPT = 2;
+    };
+
+    typedef int64_t flag_t;
+    struct flag {
+        static const flag_t SUM = (1 << 10);
+        static const flag_t RELU = (1 << 11);
+        static const flag_t RELU6 = (1 << 12);
+    };
+
+    conv2d_n16cx_direct_ndarray_kernel_fp32_avx512(int64_t *param) : param_(param) { }
+    void set_param(int64_t *param) { this->param_ = param; }
+    int64_t *param() { return param_; }
+
+    void execute(const int64_t nt_store, const int64_t oc_reg, const int64_t w_reg) {
+        table_[nt_store][oc_reg - 1][w_reg - 1](param_);
+    }
+
+    void execute_border(const int64_t nt_store, const int64_t oc_reg) {
+        border_table_[nt_store][oc_reg - 1](param_);
+    }
+
+private:
+    int64_t *param_;
+    static const func_t table_[config::NT_STORE_OPT][config::MAX_OC_REGS][config::MAX_W_REGS];
+    static const func_t border_table_[config::NT_STORE_OPT][config::MAX_OC_REGS];
+};
 
 }}}; // namespace ppl::kernel::x86
 

@@ -23,25 +23,28 @@
 #include "ppl/kernel/x86/common/avx_tools.h"
 #include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/avx512/conv2d_n16cx_direct_ndarray_fp32_avx512.h"
 #include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/avx512/conv2d_n16cx_direct_ndarray_kernel_fp32_avx512.h"
+#include "ppl/kernel/x86/common/array_param_helper.h"
 #include "ppl/common/sys.h"
-
-#define ASSUME_L2_BYTES() (256 * 1024)
-#define ASSUME_L2_WAYS()  4
-#define ASSUME_L3_BYTES() (2048 * 1024)
-#define L2_RATIO()        0.251
-#define L3_RATIO()        0.501
-
-#define OW_KR_BLK() MAX_OW_RF()
-#define OC_KR_BLK() (MAX_OC_RF() * OC_DT_BLK())
-#define OC_L2_BLK_MAX() (4 * OC_DT_BLK())
 
 namespace ppl { namespace kernel { namespace x86 {
 
+static const int64_t ASSUME_L2_BYTES = 256 * 1024;
+static const int64_t ASSUME_L2_WAYS = 4;
+static const int64_t ASSUME_L3_BYTES = 2048 * 1024;
+static const float L2_RATIO = 0.251f;
+static const float L3_RATIO = 0.501f;
+
+static const int64_t OC_DATA_BLK = conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK;
+static const int64_t W_KER_BLK = conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::MAX_W_BLK;
+static const int64_t OC_KER_BLK = conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::MAX_OC_BLK;
+
+static const int64_t OC_L2_BLK_MAX = 4 * OC_DATA_BLK;
+
 void conv2d_n16cx_direct_ndarray_fp32_avx512_executor::init_preproc_param()
 {
-    schedule_param_.ic_per_gp = conv_param_->channels / conv_param_->group;
-    schedule_param_.oc_per_gp = conv_param_->num_output / conv_param_->group;
-    schedule_param_.padded_oc = round_up(schedule_param_.oc_per_gp, OC_DT_BLK());
+    schedule_param_.ic_per_grp = conv_param_->channels / conv_param_->group;
+    schedule_param_.oc_per_grp = conv_param_->num_output / conv_param_->group;
+    schedule_param_.padded_oc = round_up(schedule_param_.oc_per_grp, OC_DATA_BLK);
 }
 
 void conv2d_n16cx_direct_ndarray_fp32_avx512_executor::cal_kernel_tunning_param()
@@ -74,9 +77,9 @@ void conv2d_n16cx_direct_ndarray_fp32_avx512_executor::cal_kernel_tunning_param(
         sp.unroll_ow_start = sp.unroll_ow_end = dst_w;
     }
 
-    sp.oc_l2_blk = min<int64_t>(sp.padded_oc, OC_L2_BLK_MAX());
+    sp.oc_l2_blk = min<int64_t>(sp.padded_oc, OC_L2_BLK_MAX);
 
-    const float l3_cap_all_core = (ppl::common::GetCpuCacheL3() == 0 ? (ASSUME_L3_BYTES() * num_thread) : ppl::common::GetCpuCacheL3()) * L3_RATIO() / sizeof(float);
+    const float l3_cap_all_core = (ppl::common::GetCpuCacheL3() == 0 ? (ASSUME_L3_BYTES * num_thread) : ppl::common::GetCpuCacheL3()) * L3_RATIO / sizeof(float);
 
     sp.use_nt_store           = 0;
     const int64_t src_len     = int64_t(batch) * cp.channels * src_h * src_w;
@@ -120,13 +123,13 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_executor::execute()
     const int64_t dst_w = dst_shape_->GetDim(3);
 
     const int64_t src_b_stride = src_shape_->GetDim(1) * src_h * src_w;
-    const int64_t src_g_stride = sp.ic_per_gp * src_h * src_w;
+    const int64_t src_g_stride = sp.ic_per_grp * src_h * src_w;
     const int64_t src_c_stride = src_h * src_w;
-    const int64_t dst_b_stride = round_up(dst_shape_->GetDim(1), OC_DT_BLK()) * dst_h * dst_w;
+    const int64_t dst_b_stride = round_up(dst_shape_->GetDim(1), OC_DATA_BLK) * dst_h * dst_w;
     const int64_t dst_g_stride = sp.padded_oc * dst_h * dst_w;
-    const int64_t dst_ocb_stride = dst_h * dst_w * OC_DT_BLK();
-    const int64_t flt_g_stride = sp.padded_oc * sp.ic_per_gp * cp.kernel_h * cp.kernel_w;
-    const int64_t flt_ocb_stride = sp.ic_per_gp * cp.kernel_h * cp.kernel_w * OC_DT_BLK();
+    const int64_t dst_ocb_stride = dst_h * dst_w * OC_DATA_BLK;
+    const int64_t flt_c_stride = cp.kernel_h * cp.kernel_w * OC_DATA_BLK;
+    const int64_t flt_ocb_stride = sp.ic_per_grp * cp.kernel_h * cp.kernel_w * OC_DATA_BLK;
 
     const bool with_sum = cp.fuse_flag & conv_fuse_flag::SUM;
     const bool with_relu  = cp.fuse_flag & conv_fuse_flag::RELU;
@@ -134,29 +137,13 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_executor::execute()
 
     int64_t sum_src_b_stride = 0;
     if (with_sum) {
-        sum_src_b_stride = int64_t(round_up(sum_src_shape_->GetDim(1), OC_DT_BLK())) * dst_h * dst_w;
+        sum_src_b_stride = int64_t(round_up(sum_src_shape_->GetDim(1), OC_DATA_BLK)) * dst_h * dst_w;
     }
 
-    int64_t share_param[SHAR_PARAM_LEN()];
-    share_param[CHANNELS_IDX()] = sp.ic_per_gp;
-    share_param[SRC_C_STRIDE_IDX()] = src_c_stride;
-    share_param[SRC_H_STRIDE_IDX()] = src_w;
-    share_param[HIS_OCB_STRIDE_IDX()] = dst_ocb_stride;
-    share_param[DST_OCB_STRIDE_IDX()] = dst_ocb_stride;
-    share_param[FLT_OCB_STRIDE_IDX()] = flt_ocb_stride;
-    share_param[SW_IDX()] = cp.stride_w;
-    share_param[KH_IDX()] = cp.kernel_h;
-    share_param[KW_IDX()] = cp.kernel_w;
-    share_param[KW_IDX()] = cp.kernel_w;
-    {
-        uint64_t kernel_flags = 0;
-        if (with_sum) kernel_flags |= KERNEL_FLAG_AD_BIAS();
-        if (!with_sum) kernel_flags |= KERNEL_FLAG_LD_BIAS();
-        if (with_relu) kernel_flags |= KERNEL_FLAG_RELU();
-        if (with_relu6) kernel_flags |= KERNEL_FLAG_RELU6();
-        share_param[FLAGS_IDX()] = kernel_flags;
-    }
-    const int32_t nt_store_sel = sp.use_nt_store;
+    int64_t kernel_flags = 0;
+    if (with_relu)  kernel_flags |= conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::flag::RELU;
+    if (with_relu6) kernel_flags |= conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::flag::RELU6;
+    if (with_sum)   kernel_flags |= conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::flag::SUM;
 
 #ifdef PPL_USE_X86_OMP_COLLAPSE
     PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(4)
@@ -168,51 +155,79 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_executor::execute()
 #endif
             for (int64_t ocl2 = 0; ocl2 < sp.padded_oc; ocl2 += sp.oc_l2_blk) {
                 for (int64_t oh = 0; oh < dst_h; ++oh) {
-                    int64_t private_param[PRIV_PARAM_LEN()];
+                    int64_t kernel_param[conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::LENGTH];
+                    conv2d_n16cx_direct_ndarray_kernel_fp32_avx512 ker(kernel_param);
+                    array_param_helper ker_p(kernel_param);
+
                     const int64_t ocl2_eff = min<int64_t>(sp.padded_oc - ocl2, sp.oc_l2_blk);
                     const int64_t ih       = oh * cp.stride_h - cp.pad_h;
-                    private_param[KH_START_IDX()] = min<int64_t>(max<int64_t>(0 - ih, 0), cp.kernel_h - 1);
-                    private_param[KH_END_IDX()]   = max<int64_t>(min<int64_t>(src_h - ih, cp.kernel_h), 0);
-                    for (int64_t oc = ocl2; oc < ocl2 + ocl2_eff; oc += OC_KR_BLK()) {
-                        const int64_t oc_eff = min<int64_t>(ocl2 + ocl2_eff - oc, OC_KR_BLK());
-                        const int64_t oc_sel = div_up(oc_eff, OC_DT_BLK()) - 1;
-                        PICK_PARAM(const float*, private_param, SRC_IDX()) = src_ + b * src_b_stride + g * src_g_stride + ih * src_w - cp.pad_w;
-                        PICK_PARAM(const float*, private_param, HIS_IDX()) = sum_src_ + b * sum_src_b_stride + g * dst_g_stride + oc * dst_h * dst_w + oh * dst_w * OC_DT_BLK();
-                        PICK_PARAM(float*, private_param, DST_IDX())       = dst_ + b * dst_b_stride + g * dst_g_stride + oc * dst_h * dst_w + oh * dst_w * OC_DT_BLK();
-                        PICK_PARAM(const float*, private_param, FLT_IDX())  = cvt_filter_ + g * flt_g_stride + oc * sp.ic_per_gp * cp.kernel_h * cp.kernel_w;
-                        PICK_PARAM(const float*, private_param, BIAS_IDX()) = cvt_bias_ + g * sp.padded_oc + oc;
+                    const int64_t kh_start = min<int64_t>(max<int64_t>(0 - ih, 0), cp.kernel_h - 1);
+                    const int64_t kh_end   = max<int64_t>(min<int64_t>(src_h - ih, cp.kernel_h), 0);
+
+                    const int64_t nt_store_sel   = sp.use_nt_store;
+                    const int64_t ow_unroll_len  = sp.unroll_ow_end - sp.unroll_ow_start;
+                    const int64_t ow_unroll_body = round(ow_unroll_len, W_KER_BLK);
+                    const int64_t ow_unroll_tail = ow_unroll_len - ow_unroll_body;
+
+                    const float *base_src      = src_ + b * src_b_stride + g * src_g_stride + ih * src_w - cp.pad_w;
+                    const float *base_sum_src  = sum_src_ + b * sum_src_b_stride + g * dst_g_stride + oh * dst_w * OC_DATA_BLK;
+                    float *base_dst            = dst_ + b * dst_b_stride + g * dst_g_stride + oh * dst_w * OC_DATA_BLK;
+                    const float *base_flt      = cvt_filter_ + g * sp.padded_oc * sp.ic_per_grp * cp.kernel_h * cp.kernel_w;
+                    const float *base_bias     = cvt_bias_ + g * sp.padded_oc;
+
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::CHANNELS_IDX)           = sp.ic_per_grp;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::KH_IDX)                 = cp.kernel_h;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::KW_IDX)                 = cp.kernel_w;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::SW_IDX)                 = cp.stride_w;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::KH_START_IDX)           = kh_start;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::KH_END_IDX)             = kh_end;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::SRC_H_STRIDE_IDX)       = src_w;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::SRC_C_STRIDE_IDX)       = src_c_stride;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::FLT_C_STRIDE_IDX)       = flt_c_stride;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::SUM_SRC_OCB_STRIDE_IDX) = dst_ocb_stride;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::DST_OCB_STRIDE_IDX)     = dst_ocb_stride;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::FLT_OCB_STRIDE_IDX)     = flt_ocb_stride;
+                    ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::FLAGS_IDX)              = kernel_flags;
+
+                    ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::FLT_PTR_IDX)  = base_flt;
+                    ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::BIAS_PTR_IDX) = base_bias;
+                    for (int64_t oc = ocl2; oc < ocl2 + ocl2_eff; oc += OC_KER_BLK) {
+                        const int64_t oc_eff = min<int64_t>(ocl2 + ocl2_eff - oc, OC_KER_BLK);
+                        const int64_t oc_reg = div_up(oc_eff, OC_DATA_BLK);
+                        ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::SRC_PTR_IDX)     = base_src;
+                        ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::SUM_SRC_PTR_IDX) = base_sum_src;
+                        ker_p.pick<float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::DST_PTR_IDX)           = base_dst;
 
                         for (int64_t ow = 0; ow < sp.unroll_ow_start; ++ow) {
-                            const int64_t iw              = ow * cp.stride_w - cp.pad_w;
-                            private_param[KW_START_IDX()] = min<int64_t>(max<int64_t>(0 - iw, 0), cp.kernel_w - 1);
-                            private_param[KW_END_IDX()]   = max<int64_t>(min<int64_t>(src_w - iw, cp.kernel_w), 0);
-                            conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_pad_table[nt_store_sel][oc_sel](share_param, private_param);
+                            const int64_t iw       = ow * cp.stride_w - cp.pad_w;
+                            const int64_t kw_start = min<int64_t>(max<int64_t>(0 - iw, 0), cp.kernel_w - 1);
+                            const int64_t kw_end   = max<int64_t>(min<int64_t>(src_w - iw, cp.kernel_w), 0);
+                            ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::KW_START_IDX) = kw_start;
+                            ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::KW_END_IDX)   = kw_end;
+                            ker.execute_border(nt_store_sel, oc_reg);
                         }
 
-                        const int64_t ow_unroll_len  = sp.unroll_ow_end - sp.unroll_ow_start;
-                        const int64_t ow_unroll_body = round(ow_unroll_len, OW_KR_BLK());
-                        const int64_t ow_unroll_tail = ow_unroll_len - ow_unroll_body;
                         if (ow_unroll_body) {
-                            private_param[OW_IDX()] = ow_unroll_body;
-                            switch (oc_sel) {
-                                case 0: conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_o16_table[nt_store_sel][OW_KR_BLK() - 1](share_param, private_param); break;
-                                case 1: conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_o32_table[nt_store_sel][OW_KR_BLK() - 1](share_param, private_param); break;
-                            }
+                            ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::DST_WIDTH_IDX) = ow_unroll_body;
+                            ker.execute(nt_store_sel, oc_reg, W_KER_BLK);
                         }
                         if (ow_unroll_tail) {
-                            private_param[OW_IDX()] = ow_unroll_tail;
-                            switch (oc_sel) {
-                                case 0: conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_o16_table[nt_store_sel][ow_unroll_tail - 1](share_param, private_param); break;
-                                case 1: conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_o32_table[nt_store_sel][ow_unroll_tail - 1](share_param, private_param); break;
-                            }
+                            ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::DST_WIDTH_IDX) = ow_unroll_tail;
+                            ker.execute(nt_store_sel, oc_reg, ow_unroll_tail);
                         }
 
                         for (int64_t ow = sp.unroll_ow_end; ow < dst_w; ++ow) {
                             const int64_t iw       = ow * cp.stride_w - cp.pad_w;
-                            private_param[KW_START_IDX()] = min<int64_t>(max<int64_t>(0 - iw, 0), cp.kernel_w - 1);
-                            private_param[KW_END_IDX()]   = max<int64_t>(min<int64_t>(src_w - iw, cp.kernel_w), 0);
-                            conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_pad_table[nt_store_sel][oc_sel](share_param, private_param);
+                            const int64_t kw_start = min<int64_t>(max<int64_t>(0 - iw, 0), cp.kernel_w - 1);
+                            const int64_t kw_end   = max<int64_t>(min<int64_t>(src_w - iw, cp.kernel_w), 0);
+                            ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::KW_START_IDX) = kw_start;
+                            ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::KW_END_IDX)   = kw_end;
+                            ker.execute_border(nt_store_sel, oc_reg);
                         }
+                        ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::FLT_PTR_IDX)  += OC_KER_BLK * sp.ic_per_grp * cp.kernel_h * cp.kernel_w;
+                        ker_p.pick<const float*>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::BIAS_PTR_IDX) += OC_KER_BLK;
+                        base_sum_src += OC_KER_BLK * dst_h * dst_w;
+                        base_dst     += OC_KER_BLK * dst_h * dst_w;
                     }
                 }
             }
@@ -234,9 +249,9 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_manager::gen_cvt_we
         return ppl::common::RC_PERMISSION_DENIED;
     }
 
-    const int64_t oc_per_gp = param_.num_output / param_.group;
-    const int64_t ic_per_gp = param_.channels / param_.group;
-    const int64_t padded_oc = round_up(oc_per_gp, OC_DT_BLK());
+    const int64_t oc_per_grp = param_.num_output / param_.group;
+    const int64_t ic_per_grp = param_.channels / param_.group;
+    const int64_t padded_oc = round_up(oc_per_grp, OC_DATA_BLK);
 
     cvt_bias_size_ = param_.group * padded_oc;
     cvt_bias_      = (float *)allocator_->Alloc(cvt_bias_size_ * sizeof(float));
@@ -245,16 +260,16 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_manager::gen_cvt_we
     }
 
     for (int64_t g = 0; g < param_.group; ++g) {
-        memcpy(cvt_bias_ + g * padded_oc, bias + g * oc_per_gp, oc_per_gp * sizeof(float));
-        memset(cvt_bias_ + g * padded_oc + oc_per_gp, 0, (padded_oc - oc_per_gp) * sizeof(float));
+        memcpy(cvt_bias_ + g * padded_oc, bias + g * oc_per_grp, oc_per_grp * sizeof(float));
+        memset(cvt_bias_ + g * padded_oc + oc_per_grp, 0, (padded_oc - oc_per_grp) * sizeof(float));
     }
 
     ppl::nn::TensorShape filter_shape;
     filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
     filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-    filter_shape.Reshape({1, oc_per_gp, ic_per_gp * param_.kernel_h * param_.kernel_w , 1});
+    filter_shape.Reshape({1, oc_per_grp, ic_per_grp * param_.kernel_h * param_.kernel_w , 1});
 
-    cvt_filter_size_ = param_.group * padded_oc * ic_per_gp * param_.kernel_h * param_.kernel_w;
+    cvt_filter_size_ = param_.group * padded_oc * ic_per_grp * param_.kernel_h * param_.kernel_w;
     cvt_filter_      = (float *)allocator_->Alloc(cvt_filter_size_ * sizeof(float));
     if (cvt_filter_ == nullptr) {
         return ppl::common::RC_OUT_OF_MEMORY;
@@ -263,8 +278,8 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_manager::gen_cvt_we
     for (int64_t g = 0; g < param_.group; ++g) {
         status = reorder_ndarray_n16cx_fp32_avx(
                     &filter_shape,
-                    filter + g * oc_per_gp * ic_per_gp * param_.kernel_h * param_.kernel_w,
-                    cvt_filter_ + g * padded_oc * ic_per_gp * param_.kernel_h * param_.kernel_w);
+                    filter + g * oc_per_grp * ic_per_grp * param_.kernel_h * param_.kernel_w,
+                    cvt_filter_ + g * padded_oc * ic_per_grp * param_.kernel_h * param_.kernel_w);
         if (status != ppl::common::RC_SUCCESS)
             break;
     }
@@ -274,8 +289,8 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_manager::gen_cvt_we
 
 bool conv2d_n16cx_direct_ndarray_fp32_avx512_manager::is_supported()
 {
-    bool small_channels = param_.channels / param_.group < OC_DT_BLK();
-    bool aligned_num_output = param_.group == 1 || param_.num_output / param_.group % OC_DT_BLK() == 0;
+    bool small_channels = param_.channels / param_.group < OC_DATA_BLK;
+    bool aligned_num_output = param_.group == 1 || param_.num_output / param_.group % OC_DATA_BLK == 0;
     return small_channels && aligned_num_output && param_.dilation_h == 1 && param_.dilation_w == 1;
 }
 

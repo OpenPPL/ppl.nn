@@ -36,7 +36,7 @@ static const float L3_RATIO = 0.501f;
 
 static const int64_t OC_DATA_BLK = conv2d_n16cx_direct_ndarray_kernel_fp32_fma::config::OC_DATA_BLK;
 static const int64_t OC_REG_ELTS = conv2d_n16cx_direct_ndarray_kernel_fp32_fma::config::OC_REG_ELTS;
-static const int64_t W_KR_BLK = conv2d_n16cx_direct_ndarray_kernel_fp32_fma::config::MAX_W_BLK;
+static const int64_t W_KER_BLK = conv2d_n16cx_direct_ndarray_kernel_fp32_fma::config::MAX_W_BLK;
 
 static const int64_t OC_L2_BLK_MAX = 4 * OC_DATA_BLK;
 
@@ -175,7 +175,7 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_executor::execute_inne
 
                     const int64_t nt_store_sel   = sp.use_nt_store;
                     const int64_t ow_unroll_len  = sp.unroll_ow_end - sp.unroll_ow_start;
-                    const int64_t ow_unroll_body = round(ow_unroll_len, W_KR_BLK);
+                    const int64_t ow_unroll_body = round(ow_unroll_len, W_KER_BLK);
                     const int64_t ow_unroll_tail = ow_unroll_len - ow_unroll_body;
 
                     const float *base_src      = src_ + b * src_b_stride + g * src_g_stride + ih * src_w - cp.pad_w;
@@ -215,7 +215,7 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_executor::execute_inne
 
                         if (ow_unroll_body) {
                             ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::DST_WIDTH_IDX) = ow_unroll_body;
-                            ker.execute(nt_store_sel, oc_reg, W_KR_BLK);
+                            ker.execute(nt_store_sel, oc_reg, W_KER_BLK);
                         }
                         if (ow_unroll_tail) {
                             ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::DST_WIDTH_IDX) = ow_unroll_tail;

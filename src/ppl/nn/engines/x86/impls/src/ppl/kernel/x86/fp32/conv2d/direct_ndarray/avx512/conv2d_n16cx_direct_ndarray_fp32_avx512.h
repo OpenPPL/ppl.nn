@@ -38,8 +38,8 @@ public:
 private:
     struct kernel_schedule_param {
         // Preprocessed param
-        int64_t ic_per_gp;
-        int64_t oc_per_gp;
+        int64_t ic_per_grp;
+        int64_t oc_per_grp;
         int64_t padded_oc;
 
         // Kernel tunning

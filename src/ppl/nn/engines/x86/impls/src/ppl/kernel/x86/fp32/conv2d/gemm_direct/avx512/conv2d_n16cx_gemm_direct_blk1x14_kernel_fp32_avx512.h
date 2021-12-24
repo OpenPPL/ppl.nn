@@ -803,15 +803,17 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_blk1x14_kernel(int64_t *param)
         int64_t channels             = ker_p.pick<int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::param_def::CHANNELS_IDX);
         const int64_t flt_ocb_stride = ker_p.pick<const int64_t>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::param_def::FLT_OCB_STRIDE_IDX);
         const float *icb_src         = src;
-        const float *icb_flt_o16     = ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::param_def::FLT_PTR_IDX);
-        const float *icb_flt_o32     = icb_flt_o16 + flt_ocb_stride;
+        const float *icb_flt_o16;
+        const float *icb_flt_o32;
+        if (u_ocb > 0) icb_flt_o16 = ker_p.pick<const float*>(conv2d_n16cx_gemm_direct_kernel_fp32_avx512::param_def::FLT_PTR_IDX);
+        if (u_ocb > 1) icb_flt_o32 = icb_flt_o16 + flt_ocb_stride;
         while (channels >= IC_DATA_BLK) {
             channels -= IC_DATA_BLK;
             for (int64_t ic = 0; ic < IC_DATA_BLK; ++ic) {
                 IC_COMPUTE_STEP(0);
                 icb_src += 1;
-                icb_flt_o16 += OC_DATA_BLK;
-                icb_flt_o32 += OC_DATA_BLK;
+                if (u_ocb > 0) icb_flt_o16 += OC_DATA_BLK;
+                if (u_ocb > 1) icb_flt_o32 += OC_DATA_BLK;
             }
             icb_src += src_icb_stride - IC_DATA_BLK;
         }
@@ -819,8 +821,8 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_blk1x14_kernel(int64_t *param)
             for (int64_t ic = 0; ic < channels; ++ic) {
                 IC_COMPUTE_STEP(0);
                 icb_src += 1;
-                icb_flt_o16 += OC_DATA_BLK;
-                icb_flt_o32 += OC_DATA_BLK;
+                if (u_ocb > 0) icb_flt_o16 += OC_DATA_BLK;
+                if (u_ocb > 1) icb_flt_o32 += OC_DATA_BLK;
             }
         }
         
