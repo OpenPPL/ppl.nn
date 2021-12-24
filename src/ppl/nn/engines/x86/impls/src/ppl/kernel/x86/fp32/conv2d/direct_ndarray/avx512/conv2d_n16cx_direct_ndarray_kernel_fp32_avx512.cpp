@@ -20,53 +20,60 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_func_t
-conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_pad_table[NT_STORE_OPT()][MAX_OC_RF()] =
+const conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::func_t
+    conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::border_table_[config::NT_STORE_OPT][config::MAX_OC_REGS] =
 {
     {
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x1_kernel<false, 1 * OC_DT_BLK()>,
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x1_kernel<false, 2 * OC_DT_BLK()>,
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x1_kernel<false, 1 * config::OC_DATA_BLK>,
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x1_kernel<false, 2 * config::OC_DATA_BLK>,
     },
     {
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x1_kernel<true, 1 * OC_DT_BLK()>,
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x1_kernel<true, 2 * OC_DT_BLK()>,
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x1_kernel<true, 1 * config::OC_DATA_BLK>,
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x1_kernel<true, 2 * config::OC_DATA_BLK>,
     },
 };
 
-#define DIRECT_NDARRAY_O16_KERNEL_TABLE_BLK(NT_STORE) \
+#define DIRECT_NDARRAY_KERNEL_TABLE_BLK(NT_STORE) \
+{\
     {\
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * OC_DT_BLK(), 1>,\
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * OC_DT_BLK(), 2>,\
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * OC_DT_BLK(), 3>,\
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * OC_DT_BLK(), 4>,\
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * OC_DT_BLK(), 5>,\
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * OC_DT_BLK(), 6>,\
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * OC_DT_BLK(), 7>,\
-    }
-
-#define DIRECT_NDARRAY_O32_KERNEL_TABLE_BLK(NT_STORE) \
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 1>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 2>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 3>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 4>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 5>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 6>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 7>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 8>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 9>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 10>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 11>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 12>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 13>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 1 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 14>,\
+    },\
     {\
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * OC_DT_BLK(), 1>,\
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * OC_DT_BLK(), 2>,\
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * OC_DT_BLK(), 3>,\
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * OC_DT_BLK(), 4>,\
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * OC_DT_BLK(), 5>,\
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * OC_DT_BLK(), 6>,\
-        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * OC_DT_BLK(), 7>,\
-    }
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 1>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 2>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 3>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 4>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 5>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 6>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 7>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 8>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 9>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 10>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 11>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 12>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 13>,\
+        conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel<NT_STORE, 2 * conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK, 14>,\
+    },\
+}
 
-conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_func_t
-conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_o16_table[NT_STORE_OPT()][MAX_OW_RF()] =
+const conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::func_t
+    conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::table_[config::NT_STORE_OPT][config::MAX_OC_REGS][config::MAX_W_REGS] =
 {
-    DIRECT_NDARRAY_O16_KERNEL_TABLE_BLK(false),
-    DIRECT_NDARRAY_O16_KERNEL_TABLE_BLK(true),
-};
-
-conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_func_t
-conv2d_n16cx_direct_ndarray_kernel_fp32_avx512_o32_table[NT_STORE_OPT()][MAX_OW_RF()] =
-{
-    DIRECT_NDARRAY_O32_KERNEL_TABLE_BLK(false),
-    DIRECT_NDARRAY_O32_KERNEL_TABLE_BLK(true),
+    DIRECT_NDARRAY_KERNEL_TABLE_BLK(false),
+    DIRECT_NDARRAY_KERNEL_TABLE_BLK(true),
 };
 
 }}};
