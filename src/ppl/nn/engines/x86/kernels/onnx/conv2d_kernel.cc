@@ -64,7 +64,7 @@ ppl::common::RetCode Conv2dKernel::DoExecute(KernelExecContext* ctx) {
     }
 
 
-#if DUMP_CONV
+#ifdef DUMP_CONV
     fprintf(stderr, CASE_STRING_FMT() "\n", cur_executor->conv_param()->group, X->GetShape().GetDim(0),
             cur_executor->conv_param()->channels, X->GetShape().GetDim(2), X->GetShape().GetDim(3),
             cur_executor->conv_param()->num_output, Y->GetShape().GetDim(2), Y->GetShape().GetDim(3),
