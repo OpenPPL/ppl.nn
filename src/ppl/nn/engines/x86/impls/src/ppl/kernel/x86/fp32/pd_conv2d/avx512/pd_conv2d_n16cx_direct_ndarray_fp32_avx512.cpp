@@ -39,9 +39,6 @@ static const int64_t OC_DATA_BLK = conv2d_n16cx_direct_ndarray_kernel_fp32_avx51
 static const int64_t OC_L2_BLK_MAX = 4 * OC_DATA_BLK;
 static const int64_t OH_L2_BLK_MIN = 32;
 
-static const int64_t EXEC_MODE_FUSE = 0;
-static const int64_t EXEC_MODE_SEPARATE = 1;
-
 void pd_conv2d_n16cx_direct_ndarray_fp32_avx512_executor::init_preproc_param()
 {
     auto dr_param = conv2d_executor_->conv_param();
@@ -124,9 +121,9 @@ void pd_conv2d_n16cx_direct_ndarray_fp32_avx512_executor::cal_kernel_tunning_par
                           || (inter_w < 2 * sp.dr_ker_blk && feature_map_len < (l2_cap_per_core * num_thread * 3)); // weak kernel performance
     const bool dense_conv = inter_w <= 2 * sp.dr_ker_blk && dw_p.sparse_level() < 0.04f; // (sh1*sw1)/(kh5*kw5), weak kernel performance
     if (small_inter_w || large_inter_cost || small_feature_map || dense_conv) {
-        sp.mode = EXEC_MODE_SEPARATE;
+        mode_ = pd_conv2d_fp32_mode::SEPARATE;
     } else {
-        sp.mode = EXEC_MODE_FUSE;
+        mode_ = pd_conv2d_fp32_mode::FUSE;
     }
 
     sp.use_nt_store = 0;
@@ -137,7 +134,7 @@ void pd_conv2d_n16cx_direct_ndarray_fp32_avx512_executor::cal_kernel_tunning_par
 
 uint64_t pd_conv2d_n16cx_direct_ndarray_fp32_avx512_executor::cal_temp_buffer_size()
 {
-    if (schedule_param_.mode == EXEC_MODE_SEPARATE) {
+    if (mode_ == pd_conv2d_fp32_mode::SEPARATE) {
         schedule_param_.dr_temp_buffer_size = round_up(conv2d_executor_->cal_temp_buffer_size(), PPL_X86_CACHELINE_BYTES());
         schedule_param_.dw_temp_buffer_size = round_up(depthwise_conv2d_executor_->cal_temp_buffer_size(), PPL_X86_CACHELINE_BYTES());
         return schedule_param_.dr_temp_buffer_size + schedule_param_.dw_temp_buffer_size + inter_shape_.GetBytesIncludingPadding();
@@ -159,19 +156,25 @@ ppl::common::RetCode pd_conv2d_n16cx_direct_ndarray_fp32_avx512_executor::prepar
     init_preproc_param();
     cal_kernel_tunning_param();
 
-    if (schedule_param_.mode == EXEC_MODE_SEPARATE) {
-        conv2d_executor_->prepare();
-        depthwise_conv2d_executor_->prepare();
+    if (mode_ == pd_conv2d_fp32_mode::SEPARATE) {
+        auto ret = conv2d_executor_->prepare();
+        if (ppl::common::RC_SUCCESS != ret) {
+            return ret;
+        }
+        ret = depthwise_conv2d_executor_->prepare();
+        if (ppl::common::RC_SUCCESS != ret) {
+            return ret;
+        }
     }
 
     return ppl::common::RC_SUCCESS;
 }
 
 ppl::common::RetCode pd_conv2d_n16cx_direct_ndarray_fp32_avx512_executor::execute() {
-    if (schedule_param_.mode == EXEC_MODE_SEPARATE) {
+    if (mode_ == pd_conv2d_fp32_mode::SEPARATE) {
         return separate_execute();
     }
-    if (schedule_param_.mode == EXEC_MODE_FUSE) {
+    if (mode_ == pd_conv2d_fp32_mode::FUSE) {
         return fuse_execute();
     }
     return ppl::common::RC_INVALID_VALUE;

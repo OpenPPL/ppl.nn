@@ -24,12 +24,20 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 typedef uint32_t pd_conv2d_fp32_algo_t;
+typedef uint32_t pd_conv2d_fp32_mode_t;
 
 class pd_conv2d_fp32_algo {
 public:
     static const pd_conv2d_fp32_algo_t UNKNOWN  = 0;
     static const pd_conv2d_fp32_algo_t GEMM_DIRECT = 1;
     static const pd_conv2d_fp32_algo_t DIRECT = 2;
+};
+
+class pd_conv2d_fp32_mode {
+public:
+    static const pd_conv2d_fp32_mode_t UNKNOWN  = 0;
+    static const pd_conv2d_fp32_mode_t FUSE     = 1;
+    static const pd_conv2d_fp32_mode_t SEPARATE = 2;
 };
 
 struct pd_conv2d_fp32_algo_info {
@@ -43,6 +51,7 @@ class pd_conv2d_fp32_executor {
 protected:
     conv2d_fp32_executor *conv2d_executor_;
     conv2d_fp32_executor *depthwise_conv2d_executor_;
+    pd_conv2d_fp32_mode_t mode_; // available after prepare()
 
     const float *src_;
     const ppl::nn::TensorShape *src_shape_;
@@ -55,13 +64,15 @@ public:
     pd_conv2d_fp32_executor() 
         : conv2d_executor_(nullptr)
         , depthwise_conv2d_executor_(nullptr)
+        , mode_(pd_conv2d_fp32_mode::UNKNOWN)
         , src_(nullptr)
         , src_shape_(nullptr)
         , dst_(nullptr)
         , dst_shape_(nullptr)
         , temp_buffer_(nullptr) {}
     pd_conv2d_fp32_executor(conv2d_fp32_executor *exec, conv2d_fp32_executor *depthwise_exec)
-        : src_(nullptr)
+        : mode_(pd_conv2d_fp32_mode::UNKNOWN)
+        , src_(nullptr)
         , src_shape_(nullptr)
         , dst_(nullptr)
         , dst_shape_(nullptr)
@@ -74,6 +85,10 @@ public:
     virtual ppl::common::RetCode prepare() = 0;
     virtual ppl::common::RetCode execute() = 0;
     virtual ~pd_conv2d_fp32_executor() {}
+
+    pd_conv2d_fp32_mode_t mode() const {
+        return mode_;
+    }
 
     void set_conv2d_executor(conv2d_fp32_executor *exec) {
         conv2d_executor_ = exec;

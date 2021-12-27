@@ -50,7 +50,6 @@ private:
         int64_t dr_unroll_w_start;
         int64_t dr_unroll_w_end;
 
-        int64_t mode;
         uint64_t dr_temp_buffer_size;
         uint64_t dw_temp_buffer_size;
     } schedule_param_;
