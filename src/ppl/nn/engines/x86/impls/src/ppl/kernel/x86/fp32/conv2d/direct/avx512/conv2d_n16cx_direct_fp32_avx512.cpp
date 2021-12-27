@@ -126,11 +126,18 @@ void conv2d_n16cx_direct_fp32_avx512_executor::cal_kernel_tunning_param()
         sp.unroll_ow_end = dst_w;
     }
 
-    static const int64_t oc_rf_table[14] = { 4, 4, 4, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2, 2 };
+    static const int64_t ow2oc_table[14] = { 4, 4, 4, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2, 2 };
+    static const int64_t oc2ow_table[4] = { 14, 14, 9, 6 };
 
     if (sp.unroll_ow_start < sp.unroll_ow_end) {
-        sp.ow_kr_blk = min<int64_t>(sp.unroll_ow_end - sp.unroll_ow_start, MAX_OW_RF());
-        sp.oc_kr_blk = oc_rf_table[sp.ow_kr_blk - 1] * CH_DT_BLK();
+        if (sp.padded_oc <= 4 * CH_DT_BLK()) {
+            sp.oc_kr_blk = sp.padded_oc;
+            sp.ow_kr_blk = oc2ow_table[sp.padded_oc / CH_DT_BLK() - 1];
+            sp.ow_kr_blk = min<int64_t>(sp.unroll_ow_end - sp.unroll_ow_start, sp.ow_kr_blk);
+        } else {
+            sp.ow_kr_blk = min<int64_t>(sp.unroll_ow_end - sp.unroll_ow_start, MAX_OW_RF());
+            sp.oc_kr_blk = ow2oc_table[sp.ow_kr_blk - 1] * CH_DT_BLK();
+        }
     } else {
         sp.ow_kr_blk = MAX_OW_RF();
         sp.oc_kr_blk = 4 * CH_DT_BLK();
