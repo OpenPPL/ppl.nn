@@ -170,10 +170,10 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_executor::execute()
                     const int64_t ow_unroll_tail = ow_unroll_len - ow_unroll_body;
 
                     const float *base_src      = src_ + b * src_b_stride + g * src_g_stride + ih * src_w - cp.pad_w;
-                    const float *base_sum_src  = sum_src_ + b * sum_src_b_stride + g * dst_g_stride + oh * dst_w * OC_DATA_BLK;
-                    float *base_dst            = dst_ + b * dst_b_stride + g * dst_g_stride + oh * dst_w * OC_DATA_BLK;
-                    const float *base_flt      = cvt_filter_ + g * sp.padded_oc * sp.ic_per_grp * cp.kernel_h * cp.kernel_w;
-                    const float *base_bias     = cvt_bias_ + g * sp.padded_oc;
+                    const float *base_sum_src  = sum_src_ + b * sum_src_b_stride + g * dst_g_stride + ocl2 * dst_h * dst_w + oh * dst_w * OC_DATA_BLK;
+                    float *base_dst            = dst_ + b * dst_b_stride + g * dst_g_stride + ocl2 * dst_h * dst_w + oh * dst_w * OC_DATA_BLK;
+                    const float *base_flt      = cvt_filter_ + (g * sp.padded_oc + ocl2) * sp.ic_per_grp * cp.kernel_h * cp.kernel_w;
+                    const float *base_bias     = cvt_bias_ + g * sp.padded_oc + ocl2;
 
                     ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::CHANNELS_IDX)           = sp.ic_per_grp;
                     ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::KH_IDX)                 = cp.kernel_h;
