@@ -90,8 +90,7 @@ static KernelImpl* FindKernelByName(const vector<unique_ptr<KernelImpl>>& kernel
     return nullptr;
 }
 
-static RetCode InitRuntimeGraphInputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                      utils::GenericCpuDevice* cpu_device, RuntimeGraph* graph) {
+static RetCode InitRuntimeGraphInputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info, RuntimeGraph* graph) {
     graph->inputs.reserve(topo->GetInputCount());
 
     for (uint32_t i = 0; i < topo->GetInputCount(); ++i) {
@@ -102,25 +101,18 @@ static RetCode InitRuntimeGraphInputs(const ir::GraphTopo* topo, const RuntimeGr
         auto tensor = &ret_pair.first->second;
 
         if (ret_pair.second) {
-            auto consumer_iter = edge->CreateConsumerIter();
-            if (!consumer_iter.IsValid()) {
-                // some edges may be used only by graph itself, e.g. `cond` of Loop
-                tensor->SetDevice(cpu_device);
-            } else {
-                for (; consumer_iter.IsValid(); consumer_iter.Forward()) {
-                    auto consumer = topo->GetNodeById(consumer_iter.Get());
-                    if (utils::IsPplConverterNode(consumer)) {
-                        continue;
-                    }
-
-                    auto kernel = FindKernelByName(graph->nodeid2kernel, consumer->GetName());
-                    if (!kernel) {
-                        LOG(ERROR) << "cannot find consumer[" << consumer->GetName() << "] of [" << edge->GetName()
-                                   << "]";
-                        return RC_NOT_FOUND;
-                    }
-                    tensor->SetDevice(kernel->GetDevice());
+            for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
+                auto consumer = topo->GetNodeById(it.Get());
+                if (utils::IsPplConverterNode(consumer)) {
+                    continue;
                 }
+
+                auto kernel = FindKernelByName(graph->nodeid2kernel, consumer->GetName());
+                if (!kernel) {
+                    LOG(ERROR) << "cannot find consumer[" << consumer->GetName() << "] of [" << edge->GetName() << "]";
+                    return RC_NOT_FOUND;
+                }
+                tensor->SetDevice(kernel->GetDevice());
             }
 
             // ONNX supports reshaping inputs in runtime stage
@@ -253,7 +245,7 @@ RetCode RuntimeImpl::InitRuntimeGraph(const ir::GraphTopo* topo, const RuntimeGr
         return status;
     }
 
-    status = InitRuntimeGraphInputs(topo, info, &cpu_device_, graph);
+    status = InitRuntimeGraphInputs(topo, info, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphInputs failed: " << GetRetCodeStr(status);
         return status;

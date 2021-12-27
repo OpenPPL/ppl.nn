@@ -26,7 +26,6 @@
 #include "ppl/nn/runtime/runtime_internal_conf.h"
 #include "ppl/nn/runtime/scheduler.h"
 #include "ppl/nn/utils/shared_resource.h"
-#include "ppl/nn/utils/generic_cpu_device.h"
 #include "ppl/nn/runtime/profiler.h"
 
 namespace ppl { namespace nn {
@@ -96,7 +95,6 @@ private:
     RuntimeGraph graph_;
     std::unique_ptr<Scheduler> sched_;
     std::vector<std::unique_ptr<EngineContext>> engctx_;
-    utils::GenericCpuDevice cpu_device_; // default cpu device
     RuntimeInternalConf conf_;
     Profiler profiler_;
 
