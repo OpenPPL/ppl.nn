@@ -246,7 +246,6 @@ static RetCode CollectOps(const ir::GraphTopo* topo, map<nodeid_t, unique_ptr<Op
 
 static RetCode GenPartitionsInfo(const vector<pair<EngineImpl*, vector<nodeid_t>>>& partitions,
                                  utils::SharedResource* resource, ir::Graph* graph,
-                                 map<edgeid_t, RuntimeConstantInfo>* constants,
                                  vector<RuntimeGraphInfo::Partition>* info_list) {
     for (uint32_t p = 0; p < partitions.size(); ++p) {
         auto& partition = partitions[p];
@@ -270,12 +269,10 @@ static RetCode GenPartitionsInfo(const vector<pair<EngineImpl*, vector<nodeid_t>
             return status;
         }
 
-        for (auto x = subgraph_info.constants.begin(); x != subgraph_info.constants.end(); ++x) {
-            constants->emplace(x->first, std::move(x->second));
-        }
-
         RuntimeGraphInfo::Partition par_info;
         par_info.engine = engine;
+        par_info.constants = std::move(subgraph_info.constants);
+
         status = CollectOps(sub_graph.topo.get(), &subgraph_info.kernels, &par_info.ops);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "collect optkernels failed: " << GetRetCodeStr(status);
@@ -473,7 +470,7 @@ RetCode ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimeG
       subgraphs MUST be created after inserting converter nodes. because subgraphs cannot visit
       edges that are directly inserted in the main graph.
     */
-    status = GenPartitionsInfo(partitions, resource, graph, &info->constants, &info->partitions);
+    status = GenPartitionsInfo(partitions, resource, graph, &info->partitions);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenPartitionsInfo failed:" << GetRetCodeStr(status);
         return status;
