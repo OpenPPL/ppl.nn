@@ -138,7 +138,7 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_executor::execute_inne
     const int64_t dst_b_stride = round_up(dst_shape_->GetDim(1), OC_DATA_BLK) * dst_h * dst_w;
     const int64_t dst_g_stride = sp.padded_oc * dst_h * dst_w;
     const int64_t flt_c_stride = cp.kernel_h * cp.kernel_w * OC_DATA_BLK;
-    const int64_t padded_rf_oc = round_up(sp.oc_per_grp, OC_REG_ELTS);
+    const int64_t padded_reg_oc = round_up(sp.oc_per_grp, OC_REG_ELTS);
 
     const bool with_relu  = cp.fuse_flag & conv_fuse_flag::RELU;
     const bool with_relu6 = cp.fuse_flag & conv_fuse_flag::RELU6;
@@ -162,13 +162,13 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_executor::execute_inne
 #ifndef PPL_USE_X86_OMP_COLLAPSE
             PRAGMA_OMP_PARALLEL_FOR()
 #endif
-            for (int64_t ocl2 = 0; ocl2 < padded_rf_oc; ocl2 += sp.oc_l2_blk) {
+            for (int64_t ocl2 = 0; ocl2 < padded_reg_oc; ocl2 += sp.oc_l2_blk) {
                 for (int64_t oh = 0; oh < dst_h; ++oh) {
                     int64_t kernel_param[conv2d_n16cx_direct_ndarray_kernel_fp32_fma::param_def::LENGTH];
                     conv2d_n16cx_direct_ndarray_kernel_fp32_fma ker(kernel_param);
                     array_param_helper ker_p(kernel_param);
 
-                    const int64_t ocl2_eff = min<int64_t>(padded_rf_oc - ocl2, sp.oc_l2_blk);
+                    const int64_t ocl2_eff = min<int64_t>(padded_reg_oc - ocl2, sp.oc_l2_blk);
                     const int64_t ih       = oh * cp.stride_h - cp.pad_h;
                     const int64_t kh_start = min<int64_t>(max<int64_t>(0 - ih, 0), cp.kernel_h - 1);
                     const int64_t kh_end   = max<int64_t>(min<int64_t>(src_h - ih, cp.kernel_h), 0);

@@ -195,7 +195,7 @@ ppl::common::RetCode conv2d_n16cx_direct_fp32_fma_executor::execute()
 
     const int64_t ext_kernel_h = (cp.kernel_h - 1) * cp.dilation_h + 1;
     const int64_t ext_kernel_w = (cp.kernel_w - 1) * cp.dilation_w + 1;
-    const int64_t padded_rf_oc = round_up(sp.oc_per_gp, CH_RF_BLK());
+    const int64_t padded_reg_oc = round_up(sp.oc_per_gp, CH_RF_BLK());
 
     const int64_t src_b_stride   = round_up(src_shape_->GetDim(1), CH_DT_BLK()) * src_h * src_w;
     const int64_t src_g_stride   = sp.padded_ic * src_h * src_w;
@@ -318,10 +318,10 @@ ppl::common::RetCode conv2d_n16cx_direct_fp32_fma_executor::execute()
 #ifndef PPL_USE_X86_OMP_COLLAPSE
                         PRAGMA_OMP_FOR()
 #endif
-                        for (int64_t ocl2 = 0; ocl2 < padded_rf_oc; ocl2 += sp.oc_l2_blk) {
+                        for (int64_t ocl2 = 0; ocl2 < padded_reg_oc; ocl2 += sp.oc_l2_blk) {
                             for (int64_t oh = 0; oh < dst_h; ++oh) {
                                 int64_t private_param[PRIV_PARAM_LEN()];
-                                const int64_t ocl2_eff = min<int64_t>(padded_rf_oc - ocl2, sp.oc_l2_blk);
+                                const int64_t ocl2_eff = min<int64_t>(padded_reg_oc - ocl2, sp.oc_l2_blk);
                                 const int64_t ih       = oh * cp.stride_h - cp.pad_h;
                                 private_param[KH_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - ih, 0), ext_kernel_h - 1), cp.dilation_h);
                                 private_param[KH_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_h - ih, ext_kernel_h), 0), cp.dilation_h);
