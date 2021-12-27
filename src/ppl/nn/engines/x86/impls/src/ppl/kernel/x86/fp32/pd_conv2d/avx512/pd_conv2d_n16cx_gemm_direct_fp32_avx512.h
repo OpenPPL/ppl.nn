@@ -52,7 +52,6 @@ private:
         int64_t grp_l3_blk;
         int32_t use_nt_store;
 
-        int64_t mode;
         uint64_t gd_temp_buffer_size;
         uint64_t dw_temp_buffer_size;
     } schedule_param_;
