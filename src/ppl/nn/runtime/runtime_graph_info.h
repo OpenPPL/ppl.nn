@@ -30,11 +30,18 @@ class EngineImpl;
 
 struct RuntimeGraphInfo final {
     struct Partition final {
+        // vs2019 requires these constructors
+        Partition() {}
+        Partition(Partition&&) = default;
+        Partition& operator=(Partition&&) = default;
+        Partition(const Partition&) = delete;
+        Partition& operator=(const Partition&) = delete;
+
         EngineImpl* engine = nullptr;
         std::vector<std::unique_ptr<OptKernel>> ops;
+        std::map<edgeid_t, RuntimeConstantInfo> constants;
     };
     std::map<edgeid_t, TensorShape> shapes;
-    std::map<edgeid_t, RuntimeConstantInfo> constants;
     std::vector<Partition> partitions;
 };
 
