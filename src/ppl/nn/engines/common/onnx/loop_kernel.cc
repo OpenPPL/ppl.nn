@@ -66,7 +66,7 @@ static inline RetCode GetKeepGoing(const KernelExecContext& ctx, bool* keep_goin
     return RC_SUCCESS;
 }
 
-struct LoopInfo {
+struct LoopInfo final {
     LoopInfo(const KernelExecContext& ctx) {
         loop_carried_dep_num = ctx.GetInputCount() - 2; // N
         scan_output_num = ctx.GetOutputCount() - loop_carried_dep_num; // K
@@ -145,31 +145,37 @@ static RetCode UpdateSubgraphInputs(int64_t trip_count, RuntimeImpl* subgraph,
 
 static RetCode InitSubgraphInputs(const KernelExecContext& ctx, bool keep_going,
                                   utils::GenericCpuDevice* tmp_cpu_device, RuntimeImpl* subgraph) {
-    auto input0 = subgraph->GetInputTensorImpl(0);
-    auto status = input0->ReallocBuffer();
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "ReallocBuffer for tensor[" << input0->GetName() << "] failed: " << GetRetCodeStr(status);
-        return status;
-    }
+    RetCode status;
 
-    int64_t trip_count = 0;
-    status = input0->CopyFromHost(&trip_count);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "get trip count failed: " << GetRetCodeStr(status);
-        return status;
+    auto input0 = subgraph->GetInputTensorImpl(0);
+    if (input0->GetDevice()) { // not used by anyone if device is net set
+        status = input0->ReallocBuffer();
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "ReallocBuffer for tensor[" << input0->GetName() << "] failed: " << GetRetCodeStr(status);
+            return status;
+        }
+
+        const int64_t trip_count = 0;
+        status = input0->CopyFromHost(&trip_count);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "get trip count failed: " << GetRetCodeStr(status);
+            return status;
+        }
     }
 
     auto input1 = subgraph->GetInputTensorImpl(1);
-    status = input1->ReallocBuffer();
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "ReallocBuffer for tensor[" << input1->GetName() << "] failed: " << GetRetCodeStr(status);
-        return status;
-    }
+    if (input1->GetDevice()) { // not used by anyone if device is not set
+        status = input1->ReallocBuffer();
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "ReallocBuffer for tensor[" << input1->GetName() << "] failed: " << GetRetCodeStr(status);
+            return status;
+        }
 
-    status = input1->CopyFromHost(&keep_going);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "get `keep_going` failed: " << GetRetCodeStr(status);
-        return status;
+        status = input1->CopyFromHost(&keep_going);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "get `keep_going` failed: " << GetRetCodeStr(status);
+            return status;
+        }
     }
 
     for (uint32_t i = 2; i < ctx.GetInputCount(); ++i) {
