@@ -48,6 +48,12 @@ __device__ __inline__ half ppl_scalar_unary<Unary_Abs, half>(const half& in_val)
 }
 
 template <>
+__device__ __inline__ int8_t ppl_scalar_unary<Unary_Abs, int8_t>(const int8_t& in_val)
+{
+    return abs(in_val);
+}
+
+template <>
 __device__ __inline__ float ppl_scalar_unary<Unary_Relu, float>(const float& in_val)
 {
     float res;
@@ -60,6 +66,14 @@ __device__ __inline__ half ppl_scalar_unary<Unary_Relu, half>(const half& in_val
 {
     half res;
     res = __hgt(in_val, 0) ? in_val : half(0);
+    return res;
+}
+
+template <>
+__device__ __inline__ int8_t ppl_scalar_unary<Unary_Relu, int8_t>(const int8_t& in_val)
+{
+    int8_t res;
+    res = (in_val > 0) ? in_val : 0;
     return res;
 }
 
@@ -78,6 +92,12 @@ __device__ __inline__ half ppl_scalar_unary<Unary_Sigmoid, half>(const half& in_
 }
 
 template <>
+__device__ __inline__ int8_t ppl_scalar_unary<Unary_Sigmoid, int8_t>(const int8_t& in_val)
+{
+    return 1 / (1 + int8_t(expf(float(-in_val))));
+}
+
+template <>
 __device__ __inline__ float ppl_scalar_unary<Unary_Sqrt, float>(const float& in_val)
 {
     return sqrt(in_val);
@@ -87,6 +107,12 @@ template <>
 __device__ __inline__ half ppl_scalar_unary<Unary_Sqrt, half>(const half& in_val)
 {
     return __float2half(sqrt(__half2float(in_val)));
+}
+
+template <>
+__device__ __inline__ int8_t ppl_scalar_unary<Unary_Sqrt, int8_t>(const int8_t& in_val)
+{
+    return int8_t(sqrt(float(in_val)));
 }
 
 template <>
@@ -102,6 +128,12 @@ __device__ __inline__ half ppl_scalar_unary<Unary_TanH, half>(const half& in_val
 }
 
 template <>
+__device__ __inline__ int8_t ppl_scalar_unary<Unary_TanH, int8_t>(const int8_t& in_val)
+{
+    return int8_t(tanh(float(in_val)));
+}
+
+template <>
 __device__ __inline__ float ppl_scalar_unary<Unary_Floor, float>(const float& in_val)
 {
     return floor(in_val);
@@ -114,6 +146,12 @@ __device__ __inline__ half ppl_scalar_unary<Unary_Floor, half>(const half& in_va
 }
 
 template <>
+__device__ __inline__ int8_t ppl_scalar_unary<Unary_Floor, int8_t>(const int8_t& in_val)
+{
+    return int8_t(floor(float(in_val)));
+}
+
+template <>
 __device__ __inline__ float ppl_scalar_unary<Unary_Ceil, float>(const float& in_val)
 {
     return ceil(in_val);
@@ -123,6 +161,12 @@ template <>
 __device__ __inline__ half ppl_scalar_unary<Unary_Ceil, half>(const half& in_val)
 {
     return hceil(in_val);
+}
+
+template <>
+__device__ __inline__ int8_t ppl_scalar_unary<Unary_Ceil, int8_t>(const int8_t& in_val)
+{
+    return int8_t(ceil(float(in_val)));
 }
 
 #endif
@@ -157,6 +201,8 @@ __global__ void ppl_cukernel_unary_any(
             ppl_cukernel_unary_any<Unary_##TYPE, float><<<grid_size, block_size, 0, stream>>>(num_elems, (const float*)input, (float*)output); \
         } else if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {                                                             \
             ppl_cukernel_unary_any<Unary_##TYPE, half><<<grid_size, block_size, 0, stream>>>(num_elems, (const half*)input, (half*)output);    \
+        } else if (output_shape->GetDataType() == ppl::common::DATATYPE_INT8) {                                                                \
+            ppl_cukernel_unary_any<Unary_##TYPE, int8_t><<<grid_size, block_size, 0, stream>>>(num_elems, (const int8_t*)input, (int8_t*)output);    \
         } else {                                                                                                                               \
             return ppl::common::RC_UNSUPPORTED;                                                                                                \
         }                                                                                                                                      \

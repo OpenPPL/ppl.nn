@@ -18,12 +18,12 @@
 #include "ppl/nn/engines/cuda/kernel.h"
 
 #include <chrono>
-
+#include <memory>
+#include <fstream>
 #include "ppl/common/allocator.h"
 #include "ppl/nn/common/logger.h"
 
 using namespace ppl::common;
-using namespace std;
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -52,7 +52,6 @@ RetCode CudaKernel::Init() {
         return RC_OTHER_ERROR;
     }
 #endif
-
     auto status = barrier_.Init();
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "create barrier for kernel[" << GetName() << "] failed: " << GetRetCodeStr(status);
@@ -108,6 +107,7 @@ bool CudaKernel::CanDoExecute(const KernelExecContext& ctx) const {
     for (uint32_t i = 0; i < ctx.GetInputCount(); ++i) {
         auto tensor = ctx.GetInput<TensorImpl>(i);
         if (!tensor || tensor->GetShape().GetBytesIncludingPadding() == 0) {
+            LOG(ERROR) << "cannot execute " << GetName();
             return false;
         }
     }
@@ -155,6 +155,7 @@ RetCode CudaKernel::Execute(KernelExecContext* ctx) {
     }
 
 #ifndef NDEBUG
+
     auto run_end_ts = std::chrono::system_clock::now();
     auto diff = std::chrono::duration_cast<std::chrono::microseconds>(run_end_ts - run_begin_ts);
     LOG(INFO) << "After execute kernel[" << GetName() << "] with running time " << (float)diff.count()

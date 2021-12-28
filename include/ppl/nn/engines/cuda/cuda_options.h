@@ -46,6 +46,18 @@ enum {
     CUDA_CONF_SET_OUTPUT_TYPE,
 
     /**
+       @brief set default kernel type
+
+       @note example:
+       @code{.cpp}
+       datatype_t default_kernel_type;
+       // fill output_types;
+       cuda_engine->Configure(CUDA_CONF_USE_DEFAULT_KERNEL_TYPE, type);
+       @endcode
+    */
+    CUDA_CONF_USE_DEFAULT_KERNEL_TYPE,
+
+    /**
        @brief set init input dims as a hint for graph optimization
 
        @note example:

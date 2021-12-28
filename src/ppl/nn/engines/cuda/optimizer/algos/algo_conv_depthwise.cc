@@ -81,6 +81,13 @@ double DepthwiseDirect::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
     ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_.param, temp_conv_param);
 
+    auto input_id0 = options.tensors->find(node->GetInput(0))->second->GetEdge()->GetId();
+    auto input_id1 = options.tensors->find(node->GetInput(1))->second->GetEdge()->GetId();
+    auto input_quant0 = options.quants->at(input_id0);
+    auto input_quant1 = options.quants->at(input_id1);
+    auto output_id = options.tensors->find(node->GetOutput(0))->second->GetEdge()->GetId();
+    auto output_quant = options.quants->at(output_id);
+
     if (options.args->quick_select) {
         return 0.0f;
     }
@@ -107,16 +114,17 @@ double DepthwiseDirect::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     ALLOC_BUFFERF_FOR_ALGO_SELECT(weight_buffer, shape_in1.GetBytesIncludingPadding(), ALGO_MAX_TIME)
     ALLOC_BUFFERF_FOR_ALGO_SELECT(bias_buffer, shape_in2.GetBytesIncludingPadding(), ALGO_MAX_TIME)
     ALLOC_BUFFERF_FOR_ALGO_SELECT(output_buffer, shape_out.GetBytesIncludingPadding(), ALGO_MAX_TIME)
+    ALLOC_BUFFERF_FOR_ALGO_SELECT(quant_buffer, shape_in1.GetDim(0) * sizeof(float), ALGO_MAX_TIME)
 
     // Do select
     auto stream = options.device->GetStream();
     auto kernel_id = PPLCUDADepthwiseSelectKernel(stream, input_buffer.addr, weight_buffer.addr, bias_buffer.addr, 1,
-                                                  temp_conv_param, temp_fuse_param, output_buffer.addr);
+                                                  temp_conv_param, temp_fuse_param, output_buffer.addr, shape_out.GetDataType(), input_quant0.scale[0], (float*)quant_buffer.addr, output_quant.scale[0]);
     attr_param_.extra_param.algo_info.kid = kernel_id;
 
     auto run_begin_ts = std::chrono::system_clock::now();
     PPLCUDADepthwiseForwardCudaImp(stream, kernel_id, input_buffer.addr, weight_buffer.addr, bias_buffer.addr,
-                                   temp_conv_param, temp_fuse_param, output_buffer.addr);
+                                   temp_conv_param, temp_fuse_param, output_buffer.addr, shape_out.GetDataType(), input_quant0.scale[0], (float*)quant_buffer.addr, output_quant.scale[0]);
     auto run_end_ts = std::chrono::system_clock::now();
     auto diff = std::chrono::duration_cast<std::chrono::microseconds>(run_end_ts - run_begin_ts);
     double timer = (double)diff.count() / 1000;
@@ -129,7 +137,7 @@ double DepthwiseDirect::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     return timer;
 }
 
-RetCode DepthwiseDirect::ModifyParam(const ir::Node* node, OptKernelOptions& options) {
+RetCode DepthwiseDirect::ModifyParam(ir::Node* node, OptKernelOptions& options) {
     this->attr_param_ = *(reinterpret_cast<CudaConvParam*>(options.param));
 
     auto shape_in0 = options.tensors->find(node->GetInput(0))->second->GetShape();
@@ -185,9 +193,10 @@ RetCode DepthwiseDirect::ModifyParam(const ir::Node* node, OptKernelOptions& opt
         auto shape_in1 = options.tensors->find(node->GetInput(1))->second->GetShape();
         auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
 
+
         ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_.param, temp_conv_param);
         auto stream = options.device->GetStream();
-        PPLCUDADepthwiseConvertFilter(stream, temp_buffer.addr, constant_info.GetBufferDesc().addr, temp_conv_param);
+        PPLCUDADepthwiseConvertFilter(stream, temp_buffer.addr, constant_info.GetBufferDesc().addr, temp_conv_param, shape_out.GetDataType());
 
         options.info->constants.emplace(preedge_id, std::move(constant_info));
         options.tensors->find(preedge_id)->second->GetShape() = postshape;

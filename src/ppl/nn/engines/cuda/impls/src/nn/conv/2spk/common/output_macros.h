@@ -58,7 +58,7 @@
                     Rv1[i] = __vmaxs2(Rv1[i], 0);                                   \
                 }                                                                   \
             } else if (_has_relu == 2) {                                            \
-                __half *hR = (__half *)Rv4;                                         \
+                __half *hR = (__half*)Rv4;                                          \
                 _Pragma("unroll") for (int i = 0; i < _INT4_TO_8HALF_; i++)         \
                 {                                                                   \
                     hR[i] = __expf((float)hR[i]) / (1.f + __expf((float)hR[i]));    \
@@ -147,7 +147,7 @@
 
 #define JIT_FUSE_SIGMOID_V4()                                               \
     {                                                                       \
-        __half *hR = (__half *)Rv4;                                         \
+        __half *hR = (__half*)Rv4;                                          \
         _Pragma("unroll") for (int i = 0; i < _INT4_TO_8HALF_; i++)         \
         {                                                                   \
             hR[i] = __expf((float)hR[i]) / (1.f + __expf((float)hR[i]));    \

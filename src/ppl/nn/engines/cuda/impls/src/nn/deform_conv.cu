@@ -346,7 +346,7 @@ int64_t PPLCUDADeformConvGetBufSize(
     int K_pad           = Align(K, pad_size);
     int N_pad           = Align(N, pad_size);
     size += K * N; // columns
-    size += N_pad * K_pad; // transpose&pad columns, FIXME should be N x K_pad
+    size += N_pad * K_pad; // transpose&pad columns, should be N x K_pad
     size += M * N_pad; // pre-transpose output
     return (int64_t)size * sizeof(__half);
 }
@@ -406,7 +406,6 @@ ppl::common::RetCode PPLCUDADeformConvForward(
     int col_trans_in_h  = ic_per_grp * kernel_h * kernel_w;
     int col_trans_in_w  = n_parallel_imgs * out_h * out_w;
     int col_trans_out_h = Align(col_trans_in_w, pad_size);
-    // int col_trans_out_h = col_trans_in_w;// FIXME
     int col_trans_out_w = Align(col_trans_in_h, pad_size);
 
     int M = oc_per_grp;
@@ -437,7 +436,7 @@ ppl::common::RetCode PPLCUDADeformConvForward(
     FAKE_GEMM_PARAM
 #undef FAKE_GEMM_PARAM
 
-    __half *columns       = reinterpret_cast<__half *>(temp_buffer); // in_c*r*s,  n_parallel_imgs*out_h*out_w
+    __half *columns       = reinterpret_cast<__half *>(temp_buffer);
     __half *trans_columns = columns + group * col_trans_in_h * col_trans_in_w;
     __half *output_buf    = trans_columns + group * N * K;
     for (int64_t b = 0; b < batch / n_parallel_imgs; ++b) {
@@ -485,18 +484,16 @@ ppl::common::RetCode PPLCUDADeformConvForward(
         }
     }
 
-    // output nhwc pad 8 layout FIXME
-    // if(n_parallel_imgs > 1){
+    // output nhwc pad 8 layout
     const int o_trans_in_h      = out_c;
-    const int o_trans_in_w      = N; // n_parallel_imgs*out_h*out_w;
+    const int o_trans_in_w      = N;
     const int o_trans_out_w_pad = Align(o_trans_in_h, pad_size);
-    const int o_trans_out_h     = n_parallel_imgs * out_h * out_w; // o_trans_out_w;
+    const int o_trans_out_h     = n_parallel_imgs * out_h * out_w;
     dim3 out_threads(32, 32, 1);
     dim3 out_grid;
     out_grid.x = DivUp(o_trans_in_w, 32);
     out_grid.y = DivUp(o_trans_in_h, 32);
     out_grid.z = batch / n_parallel_imgs;
     transpose_with_pad<__half><<<out_grid, out_threads, 0, stream>>>(output_buf, (__half *)output, batch / n_parallel_imgs, o_trans_in_h, o_trans_in_w, o_trans_out_h, o_trans_out_w_pad);
-    //}
     return ppl::common::RC_SUCCESS;
 }

@@ -22,7 +22,6 @@
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 #include <algorithm>
-
 #define MAX_BLOCK_DIM_YZ (65536)
 
 template <typename T>

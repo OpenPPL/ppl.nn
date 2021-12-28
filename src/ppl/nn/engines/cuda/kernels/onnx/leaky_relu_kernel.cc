@@ -24,10 +24,14 @@ namespace ppl { namespace nn { namespace cuda {
 ppl::common::RetCode LeakyReluKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
+    auto input_id = input->GetEdge()->GetId();
+    auto input_quant = GetCommonParam()->cuda_tensor_info->at(input_id);
+    auto output_id = output->GetEdge()->GetId();
+    auto output_quant = GetCommonParam()->cuda_tensor_info->at(output_id);
 
     ppl::common::RetCode status =
         PPLCUDAUnaryLeakyReluForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(), &output->GetShape(),
-                                        output->GetBufferPtr(), param_->alpha);
+                                        output->GetBufferPtr(), param_->alpha, input_quant.scale[0], output_quant.scale[0]);
     return status;
 }
 

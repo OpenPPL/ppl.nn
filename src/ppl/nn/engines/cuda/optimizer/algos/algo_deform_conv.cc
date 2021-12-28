@@ -33,7 +33,7 @@ double DeformConvAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& 
     return 1e-5;
 }
 
-RetCode DeformConvAlgorithm::ModifyParam(const ir::Node* node, OptKernelOptions& options) {
+RetCode DeformConvAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
     this->param_ = (reinterpret_cast<ppl::nn::common::MMCVModulatedDeformConv2dParam*>(options.param));
     auto topo = options.graph->topo.get();
     auto data = options.graph->data.get();

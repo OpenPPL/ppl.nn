@@ -20,7 +20,6 @@
 
 #include <cuda.h>
 #include <cuda_fp16.h>
-#include "cudakernel/common/macro.h"
 
 //////////////////////////////////////////////////
 // merge kernel
@@ -54,5 +53,22 @@ __global__ void MergeConvSplitResults(
     bool has_concat,
     int concat_offset_v8,
     int concat_stride_v8);
+
+__global__ void MergeConvSplitResultsFp32(
+        int4* input,             int* output, 
+	    int split_height_v1,     int split_width_v8, 
+	    int out_hw,              int split, 
+        int has_bias,            const int4* bias,
+        int has_relu,            const float clip_min,
+	    bool has_clip,           const float clip_max,
+        int has_prelu,           const void* prelu,
+        bool has_elt,            const int4* pre_data,
+        int has_elt_relu,        const float elt_clip_min,
+	    bool has_elt_clip,       const float elt_clip_max,
+        int has_elt_prelu,       const void* elt_prelu,
+        const float leaky,       const float elt_leaky,
+        bool has_concat,         int concat_offset_v8,
+        int concat_stride_v8, 
+        float out_scale,         float pre_scale);
 
 #endif // __PPLCUDA_MERGE_SPLIT_H__

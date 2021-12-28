@@ -20,7 +20,6 @@
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/cuda/kernels/onnx/slice_kernel.h"
 #include "ppl/nn/oputils/onnx/reshape_slice.h"
-
 using namespace std;
 using namespace ppl::common;
 
@@ -35,6 +34,12 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
             status = CopyQuantType(info, quant);
         } else {
             status = InferDefaultType(info, type);
+        }
+        for (uint32_t i = 1; i < 5; ++i) {
+            if (info->GetInputCount() >= i) {
+                auto shape = &info->GetInput<TensorImpl>(i)->GetShape();
+                shape->SetDataType(ppl::common::DATATYPE_INT64);
+            }
         }
         return status;
     };
@@ -128,7 +133,6 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
             kernel_param.starts[it] = start_val;
             kernel_param.ends[it] = end_val;
         }
-
         return oputils::ReshapeSlice(info, kernel_param.starts, kernel_param.ends, kernel_param.axes,
                                      kernel_param.steps);
     };

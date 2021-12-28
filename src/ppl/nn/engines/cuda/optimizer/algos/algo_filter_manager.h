@@ -64,6 +64,7 @@ private:
     ConcatAlgorithm concat_imp_;
     ConvTransposeAlgorithm convtranspose_imp_;
     DepthwiseDirect depthwise_direct_imp_;
+    DepthwiseDirectInt8 depthwise_direct_imp_int8_;
     GemmAlgorithm gemm_imp_;
     DeformConvAlgorithm deform_conv_imp_;
     LstmAlgorithm lstm_imp_;

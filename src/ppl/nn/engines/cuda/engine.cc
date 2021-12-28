@@ -130,6 +130,12 @@ RetCode CudaEngine::SetOutputType(CudaEngine* engine, va_list args) {
     return RC_SUCCESS;
 }
 
+RetCode CudaEngine::SetKernelType(CudaEngine* engine, va_list args) {
+    auto type = va_arg(args, datatype_t);
+    engine->cuda_flags_.default_kernel_type = type;
+    return RC_SUCCESS;
+}
+
 RetCode CudaEngine::SetInputDims(CudaEngine* engine, va_list args) {
     auto& input_dims = engine->cuda_flags_.input_dims;
     auto dims_vec = va_arg(args, utils::Array<int64_t>*);
@@ -270,6 +276,7 @@ RetCode CudaEngine::ImportAlgorithms(CudaEngine* engine, va_list args) {
 CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetOutputFormat, // CUDA_CONF_SET_OUTPUT_DATA_FORMAT
     CudaEngine::SetOutputType, // CUDA_CONF_SET_OUTPUT_TYPE
+    CudaEngine::SetKernelType, // CUDA_CONF_USE_DEFAULT_KERNEL_TYPE
     CudaEngine::SetInputDims, // CUDA_CONF_SET_INPUT_DIMS
     CudaEngine::SetUseDefaultAlgorithms, // CUDA_CONF_USE_DEFAULT_ALGORITHMS
     CudaEngine::SetQuantization, // CUDA_CONF_SET_QUANTIZATION

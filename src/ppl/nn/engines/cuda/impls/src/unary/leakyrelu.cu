@@ -30,6 +30,14 @@ __device__ __inline__ float ppl_scalar_leakyrelu<float>(const float& in_val, flo
     return res;
 }
 
+__device__ __inline__ int8_t ppl_scalar_leakyrelu_int8(const int8_t& in_val, float alpha, float in_scale, float out_scale)
+{
+    int8_t res;
+    float res_f = (in_val > 0) ? in_val : alpha * in_val;
+    res = round(res_f * in_scale / out_scale);
+    return res;
+}
+
 template <>
 __device__ __inline__ half ppl_scalar_leakyrelu<half>(const half& in_val, float alpha)
 {
@@ -55,13 +63,32 @@ __global__ void ppl_cukernel_unary_leakyrelu(
 #endif
 }
 
+__global__ void ppl_cukernel_unary_leakyrelu(
+    const uint64_t num_elems,
+    const int8_t* input,
+    int8_t* output,
+    float alpha,
+    float in_scale,
+    float out_scale)
+{
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
+    uint64_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index >= num_elems)
+        return;
+    int8_t in_val  = input[index];
+    output[index] = ppl_scalar_leakyrelu_int8(in_val, alpha, in_scale, out_scale);
+#endif
+}
+
 ppl::common::RetCode PPLCUDAUnaryLeakyReluForwardImp(
     cudaStream_t stream,
     const ppl::nn::TensorShape* input_shape,
     const void* input,
     const ppl::nn::TensorShape* output_shape,
     void* output,
-    float alpha)
+    float alpha,
+    float in_scale,
+    float out_scale)
 {
     uint64_t num_elems = output_shape->GetElementsIncludingPadding();
     int block_size     = 256;
@@ -70,6 +97,8 @@ ppl::common::RetCode PPLCUDAUnaryLeakyReluForwardImp(
         ppl_cukernel_unary_leakyrelu<float><<<grid_size, block_size, 0, stream>>>(num_elems, (const float*)input, (float*)output, alpha);
     } else if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
         ppl_cukernel_unary_leakyrelu<half><<<grid_size, block_size, 0, stream>>>(num_elems, (const half*)input, (half*)output, alpha);
+    } else if (output_shape->GetDataType() == ppl::common::DATATYPE_INT8) {
+        ppl_cukernel_unary_leakyrelu<<<grid_size, block_size, 0, stream>>>(num_elems, (const int8_t*)input, (int8_t*)output, alpha, in_scale, out_scale);
     } else {
         return ppl::common::RC_UNSUPPORTED;
     }

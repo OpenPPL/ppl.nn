@@ -44,9 +44,9 @@ struct CudaArgs {
         int splitf = 1;
     };
 
-    bool quick_select = false;
+    bool quick_select;
     std::string save_algo_path = "";
-    ppl::common::datatype_t kernel_default_type = 0;
+    ppl::common::datatype_t default_kernel_type = 0;
     std::map<std::string, ppl::common::datatype_t> node_types;
     std::vector<ppl::common::dataformat_t> output_formats;
     std::vector<ppl::common::datatype_t> output_types;
@@ -77,6 +77,7 @@ private:
     */
     static ppl::common::RetCode SetOutputFormat(CudaEngine*, va_list);
     static ppl::common::RetCode SetOutputType(CudaEngine*, va_list);
+    static ppl::common::RetCode SetKernelType(CudaEngine*, va_list);
     static ppl::common::RetCode SetInputDims(CudaEngine*, va_list);
     static ppl::common::RetCode SetUseDefaultAlgorithms(CudaEngine*, va_list);
     static ppl::common::RetCode SetQuantization(CudaEngine*, va_list);

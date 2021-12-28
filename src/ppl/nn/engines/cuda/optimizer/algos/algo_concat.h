@@ -31,6 +31,8 @@ public:
         concat_formats_.emplace(DATAFORMAT_NDARRAY, ndarray);
         std::set<dataformat_t> nhwc8{DATAFORMAT_NHWC8};
         concat_formats_.emplace(DATAFORMAT_NHWC8, nhwc8);
+        std::set<dataformat_t> nhwc16{DATAFORMAT_NHWC16};
+        concat_formats_.emplace(DATAFORMAT_NHWC16, nhwc16);
     }
 
     void GetAttrParam(void*& param) const override {
@@ -46,7 +48,7 @@ public:
 
     double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) override;
 
-    RetCode ModifyParam(const ir::Node*, OptKernelOptions& options) override {
+    RetCode ModifyParam(ir::Node* node, OptKernelOptions& options) override {
         return RC_SUCCESS;
     }
 

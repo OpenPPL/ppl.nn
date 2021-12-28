@@ -67,11 +67,14 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
         }
         h_scale = 1.f / scales_data[2];
         w_scale = 1.f / scales_data[3];
-    }
-
-    ppl::common::RetCode status = PPLCUDAResizeForwardImp(
+    }    
+    auto input_id = input->GetEdge()->GetId();
+    auto input_quant = GetCommonParam()->cuda_tensor_info->at(input_id);
+    auto output_id = output->GetEdge()->GetId();
+    auto output_quant = GetCommonParam()->cuda_tensor_info->at(output_id);
+    auto status = PPLCUDAResizeForwardImp(
         GetStream(), &input->GetShape(), input->GetBufferPtr(), &output->GetShape(), output->GetBufferPtr(),
-        scale_pre_set, h_scale, w_scale, param_->coord_trans_mode, param_->mode, param_->cubic_coeff_a);
+        scale_pre_set, h_scale, w_scale, param_->coord_trans_mode, param_->mode, param_->cubic_coeff_a, input_quant.scale[0], output_quant.scale[0]);
     return status;
 }
 

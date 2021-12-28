@@ -175,11 +175,12 @@ Define_bool_opt("--use-cuda", g_flag_use_cuda, false, "use cuda engine");
 
 Define_bool_opt("--quick-select", g_flag_quick_select, false, "quick select algorithms for conv and gemm kernel");
 Define_uint32_opt("--device-id", g_flag_device_id, 0, "declare device id for cuda");
+Define_uint32_opt("--kernel-type", g_flag_kernel_type, 0, "declare default kernel type for cuda");
 
-Define_string_opt("--export-algo-file", g_flag_export_algo_file, "",
-                  "Export the selected best algo info into the json file.");
-Define_string_opt("--import-algo-file", g_flag_import_algo_file, "",
-                  "The objects in the json file declare best algo info for certain conv input shape");
+Define_string_opt("--export-algo-file", g_flag_export_algo_file, "", "Export the selected best algo info into the json file.");
+Define_string_opt("--import-algo-file", g_flag_import_algo_file, "", "The objects in the json file declare best algo info for certain conv input shape");
+
+Define_string_opt("--quant-file", g_flag_quant_file, "", "declare json file saved quantization information");
 
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/engines/cuda/cuda_options.h"
@@ -201,6 +202,11 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     }
 
     cuda_engine->Configure(ppl::nn::CUDA_CONF_USE_DEFAULT_ALGORITHMS, g_flag_quick_select);
+    cuda_engine->Configure(ppl::nn::CUDA_CONF_USE_DEFAULT_KERNEL_TYPE, g_flag_kernel_type);
+    
+    if (!g_flag_quant_file.empty()) {
+        cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_QUANTIZATION, g_flag_quant_file.c_str());
+    }
 
     if (!g_flag_export_algo_file.empty()) {
         cuda_engine->Configure(ppl::nn::CUDA_CONF_EXPORT_ALGORITHMS, g_flag_export_algo_file.c_str());

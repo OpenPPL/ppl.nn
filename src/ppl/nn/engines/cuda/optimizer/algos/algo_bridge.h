@@ -46,7 +46,7 @@ public:
 
     double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) override;
 
-    RetCode ModifyParam(const ir::Node*, OptKernelOptions& options) override {
+    RetCode ModifyParam(ir::Node* node, OptKernelOptions& options) override {
         return RC_SUCCESS;
     }
 

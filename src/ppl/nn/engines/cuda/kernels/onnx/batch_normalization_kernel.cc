@@ -25,11 +25,19 @@ ppl::common::RetCode BatchNormalizationKernel::DoExecute(KernelExecContext* ctx)
     auto input = ctx->GetInput<TensorImpl>(0);
     auto scale = ctx->GetInput<TensorImpl>(1);
     auto output = ctx->GetOutput<TensorImpl>(0);
+    auto input_id = input->GetEdge()->GetId();
+    auto input_quant = GetCommonParam()->cuda_tensor_info->at(input_id);
 
+    // How to use:
+    auto has_relu = param_->extra_param.has_relu;
+
+    auto output_id = output->GetEdge()->GetId();
+    auto output_quant = GetCommonParam()->cuda_tensor_info->at(output_id);
     ppl::common::RetCode status = PPLCUDABatchNormalizationForwardImp(
         GetStream(), &input->GetShape(), input->GetBufferPtr(), &scale->GetShape(), scale->GetBufferPtr(),
         ctx->GetInput<TensorImpl>(2)->GetBufferPtr(), ctx->GetInput<TensorImpl>(3)->GetBufferPtr(),
-        ctx->GetInput<TensorImpl>(4)->GetBufferPtr(), &output->GetShape(), output->GetBufferPtr(), param_->epsilon);
+        ctx->GetInput<TensorImpl>(4)->GetBufferPtr(), &output->GetShape(), output->GetBufferPtr(), param_->param.epsilon,
+        input_quant.scale[0], 1.0f / output_quant.scale[0], has_relu);
     return status;
 }
 

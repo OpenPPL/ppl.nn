@@ -26,6 +26,7 @@
 #include "ppl/nn/engines/cuda/optimizer/fusions/fs_conv.h"
 #include "ppl/nn/engines/cuda/optimizer/fusions/fs_gemm.h"
 #include "ppl/nn/engines/cuda/optimizer/fusions/fs_softmax.h"
+#include "ppl/nn/engines/cuda/optimizer/fusions/fs_batch_normalization.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -49,6 +50,8 @@ private:
     ConvFusion conv_fs_;
     GemmFusion gemm_fs_;
     SoftmaxFusion softmax_fs_;
+    BatchNormalizationFusion batchnorm_fs_;
+
 };
 
 }}} // namespace ppl::nn::cuda

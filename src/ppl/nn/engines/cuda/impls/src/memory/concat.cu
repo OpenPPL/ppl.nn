@@ -21,8 +21,8 @@
 #include "cudakernel/common/common.h"
 #include "ppl/nn/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
-
 #define NHWC8_ALIGNED_AXIS (8)
+#define NHWC16_ALIGNED_AXIS (16)
 
 template <typename T>
 __global__ void ppl_cukernel_concat(
@@ -175,7 +175,7 @@ bool IsConcatNoPadding(
     ppl::nn::TensorShape* output_shape,
     int mask)
 {
-    if (output_shape->GetDataFormat() != ppl::common::DATAFORMAT_NHWC8 || axis != 1)
+    if ((output_shape->GetDataFormat() != ppl::common::DATAFORMAT_NHWC8 && output_shape->GetDataFormat() != ppl::common::DATAFORMAT_NHWC16) || axis != 1)
         return false;
     for (int i = 0; i < num_inputs; i++) {
         if (input_padded_dims[i][axis] - input_dims[i][axis] != 0)
@@ -198,6 +198,30 @@ ppl::common::RetCode PPLCUDAConcatNoPaddingForwardImp(
     int64_t num_elems         = output_shape->GetElementsIncludingPadding() / output_shape->GetDim(axis);
     int64_t output_axis_width = output_shape->GetDim(axis);
     int64_t axis_offset       = 0;
+    if (output_shape->GetDataType() == ppl::common::DATATYPE_INT8 && output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC16) {
+        output_axis_width = output_axis_width >> 4;                                                    
+        for (int j = 0; j < num_inputs; ++j) {                                                                       
+            int input_axis_width = (input_dims[j][axis] >> 4);                                                              
+            int num_in_elems     = num_elems * input_axis_width;
+            if (!(mask & (1 << j))) {                                                                                
+                if (num_in_elems > 0) {                                                                              
+                    DivModFast num_elems_inner_fast = DivModFast(input_axis_width);                                  
+                    int block_size                  = 256;                                                           
+                    int grid_size                   = (num_in_elems + block_size - 1) / block_size;                  
+                    ppl_cukernel_concat_nhwc_nopadding<<<grid_size, block_size, 0, stream>>>(num_in_elems,           
+                                                                                             (const float4*)inputs[j], 
+                                                                                             num_in_elems,           
+                                                                                             output_axis_width,      
+                                                                                             num_elems_inner_fast,   
+                                                                                             axis_offset,            
+                                                                                             (float4*)output);         
+                }                                                                                                    
+            }                                                                                                        
+            axis_offset += (input_axis_width);                                                                         
+        }        
+        return ppl::common::RC_SUCCESS;
+    }
+
 #define SWITCH_CASE(TYPE)                                                                                            \
     case sizeof(TYPE): {                                                                                             \
         for (int j = 0; j < num_inputs; ++j) {                                                                       \
@@ -318,7 +342,9 @@ ppl::common::RetCode PPLCUDAConcatForwardImp(
             }
 #undef SWITCH_CASE
         }
-    } else if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8) {
+    } else if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8 ||
+               output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC16) {
+
         // nhwc, axis == 1 means last dim
         if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16 && num_inputs == 2 &&
             axis == 1) {
@@ -355,6 +381,46 @@ ppl::common::RetCode PPLCUDAConcatForwardImp(
                                                                                           (const int16_t*)inputs[0],
                                                                                           (const int16_t*)inputs[1],
                                                                                           (int16_t*)output);
+            }
+            return ppl::common::RC_SUCCESS;
+        }
+
+                // nhwc, axis == 1 means last dim
+        if (output_shape->GetDataType() == ppl::common::DATATYPE_INT8 && num_inputs == 2 &&
+            axis == 1) {
+            if (!(input_dims[0][axis] & 0xFFFFFFFF) && !(input_dims[1][axis] & 0xFFFFFFFF)) {
+                int block_size    = 256;
+                int channel_shift = 4;
+                int grid_size     = ((output_elems >> channel_shift) + block_size - 1) / block_size;
+                int axis_width0   = input_dims[0][axis] >> channel_shift;
+                int axis_width1   = input_dims[1][axis] >> channel_shift;
+                int inner_dims    = axis_width0 + axis_width1;
+                ppl_cukernel_concat_nhwc_two_inputs<<<grid_size, block_size, 0, stream>>>(output_elems >> channel_shift,
+                                                                                          inner_dims,
+                                                                                          axis_width0,
+                                                                                          axis_width1,
+                                                                                          (const float4*)inputs[0],
+                                                                                          (const float4*)inputs[1],
+                                                                                          (float4*)output);
+            } else {
+                int block_size      = 256;
+                int grid_size       = (output_elems + block_size - 1) / block_size;
+                int axis_width0     = input_dims[0][axis];
+                int pad_axis_width0 = Align(axis_width0, NHWC16_ALIGNED_AXIS);
+                int axis_width1     = input_dims[1][axis];
+                int pad_axis_width1 = Align(axis_width1, NHWC16_ALIGNED_AXIS);
+                int inner_dims      = axis_width0 + axis_width1;
+                int pad_inner_dims  = Align(inner_dims, NHWC16_ALIGNED_AXIS);
+                ppl_cukernel_concat_nhwc_two_inputs<<<grid_size, block_size, 0, stream>>>(output_elems,
+                                                                                          inner_dims,
+                                                                                          pad_inner_dims,
+                                                                                          axis_width0,
+                                                                                          pad_axis_width0,
+                                                                                          axis_width1,
+                                                                                          pad_axis_width1,
+                                                                                          (const int8_t*)inputs[0],
+                                                                                          (const int8_t*)inputs[1],
+                                                                                          (int8_t*)output);
             }
             return ppl::common::RC_SUCCESS;
         }

@@ -37,6 +37,8 @@ FsFilterManager::FsFilterManager() {
     type2fusion_.emplace("Gemm", &gemm_fs_);
     type2fusion_.emplace("Reshape", &channel_shuffle_fs_);
     type2fusion_.emplace("Softmax", &softmax_fs_);
+    type2fusion_.emplace("BatchNormalization", &batchnorm_fs_);
+
 }
 
 }}} // namespace ppl::nn::cuda

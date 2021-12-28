@@ -41,7 +41,7 @@ RetCode MulOp::Init(const OptKernelOptions& options) {
         if (type == DATATYPE_UNKNOWN) {
             status = InferHighestType(info, mask_);
         } else if (type == DATATYPE_INT8) {
-            status = UnifyToOutputQuant(info, quant);
+            status = CopyQuantType(info, quant);
         } else {
             status = InferDefaultType(info, type);
         }

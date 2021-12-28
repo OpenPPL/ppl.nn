@@ -30,6 +30,12 @@ __device__ __inline__ half ppl_scalar_exp<half>(const half &in_val)
 {
     return __float2half(exp(__half2float(in_val)));
 }
+
+template <>
+__device__ __inline__ int8_t ppl_scalar_exp<int8_t>(const int8_t &in_val)
+{
+    return int8_t(exp(float(in_val)));
+}
 #endif
 
 template <typename T>
@@ -93,6 +99,10 @@ ppl::common::RetCode PPLCUDAExpForwardImp(
                                                                                  (const half *)input,
                                                                                  (half *)output);
 
+        } else if (output_shape->GetDataType() == ppl::common::DATATYPE_INT8) {
+            ppl_cukernel_exp_ndarray<int8_t><<<grid_size, block_size, 0, stream>>>(num_elems,
+                                                                                 (const int8_t *)input,
+                                                                                 (int8_t *)output);
         } else {
             return ppl::common::RC_UNSUPPORTED;
         }
@@ -108,6 +118,9 @@ ppl::common::RetCode PPLCUDAExpForwardImp(
         } else if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
             ppl_cukernel_exp_nhwc<half><<<grid_size, block_size, 0, stream>>>(
                 num_elems, channels, pad_channels, channels * height * width, height * width, (const half *)input, (half *)output);
+        } else if (output_shape->GetDataType() == ppl::common::DATATYPE_INT8) {
+            ppl_cukernel_exp_nhwc<int8_t><<<grid_size, block_size, 0, stream>>>(
+                num_elems, channels, pad_channels, channels * height * width, height * width, (const int8_t *)input, (int8_t *)output);
         } else {
             return ppl::common::RC_UNSUPPORTED;
         }
