@@ -31,7 +31,7 @@ RetCode SequentialScheduler::Init(const ir::GraphTopo* topo, const RuntimeAuxInf
     graph_ = g;
     topo_ = topo;
     aux_info_ = aux_info;
-    edgeid2object_ = utils::InitObjectInUse(topo, g);
+    edgeid2object_ = utils::InitObjectInUse(topo->GetMaxEdgeId(), g);
     return RC_SUCCESS;
 }
 
@@ -130,8 +130,8 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
     }
 
     vector<edgeid_t> diff_after2before(edges_after.size());
-    end_iter = std::set_difference(edges_after.begin(), edges_after.end(), edges_before.begin(),
-                                   edges_before.end(), diff_after2before.begin());
+    end_iter = std::set_difference(edges_after.begin(), edges_after.end(), edges_before.begin(), edges_before.end(),
+                                   diff_after2before.begin());
     diff_after2before.resize(end_iter - diff_after2before.begin());
     if (!diff_after2before.empty()) {
         LOG(ERROR) << "edge(s) in `after` but not in `before`:";

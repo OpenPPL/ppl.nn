@@ -23,24 +23,28 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace utils {
 
 // puts inputs/extra_inputs/outputs/constants into a vector
-vector<EdgeObject*> InitObjectInUse(const ir::GraphTopo* topo, RuntimeGraph* graph) {
-    vector<EdgeObject*> objects_in_use(topo->GetMaxEdgeId(), nullptr);
+vector<EdgeObject*> InitObjectInUse(edgeid_t max_edge_id, RuntimeGraph* graph) {
+    vector<EdgeObject*> objects_in_use(max_edge_id, nullptr);
 
     for (auto it = graph->inputs.begin(); it != graph->inputs.end(); ++it) {
-        auto eid = (*it)->GetEdge()->GetId();
-        objects_in_use[eid] = *it;
+        auto tensor = *it;
+        auto eid = tensor->GetEdge()->GetId();
+        objects_in_use[eid] = tensor;
     }
     for (auto it = graph->extra_inputs.begin(); it != graph->extra_inputs.end(); ++it) {
-        auto eid = (*it)->GetEdge()->GetId();
-        objects_in_use[eid] = *it;
+        auto tensor = *it;
+        auto eid = tensor->GetEdge()->GetId();
+        objects_in_use[eid] = tensor;
     }
     for (auto it = graph->outputs.begin(); it != graph->outputs.end(); ++it) {
-        auto eid = (*it)->GetEdge()->GetId();
-        objects_in_use[eid] = *it;
+        auto tensor = *it;
+        auto eid = tensor->GetEdge()->GetId();
+        objects_in_use[eid] = tensor;
     }
     for (auto it = graph->constants.begin(); it != graph->constants.end(); ++it) {
-        auto eid = (*it)->GetEdge()->GetId();
-        objects_in_use[eid] = *it;
+        auto tensor = *it;
+        auto eid = tensor->GetEdge()->GetId();
+        objects_in_use[eid] = tensor;
     }
 
     return objects_in_use;

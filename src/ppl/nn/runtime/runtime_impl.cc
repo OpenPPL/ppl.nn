@@ -96,23 +96,25 @@ static RetCode InitRuntimeGraphInputs(const ir::GraphTopo* topo, const RuntimeGr
     for (uint32_t i = 0; i < topo->GetInputCount(); ++i) {
         auto eid = topo->GetInput(i);
         auto edge = topo->GetEdgeById(eid);
-
         auto ret_pair = graph->tensors.insert(make_pair(eid, TensorImpl(edge, TENSORTYPE_RESERVED)));
         auto tensor = &ret_pair.first->second;
 
         if (ret_pair.second) {
+            // finds a consumer to get device for this input
             for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
                 auto consumer = topo->GetNodeById(it.Get());
                 if (utils::IsPplConverterNode(consumer)) {
                     continue;
                 }
 
+                // Consumers of an edge are in the same engine. This is guranteed by optimizer.
                 auto kernel = FindKernelByName(graph->nodeid2kernel, consumer->GetName());
                 if (!kernel) {
                     LOG(ERROR) << "cannot find consumer[" << consumer->GetName() << "] of [" << edge->GetName() << "]";
                     return RC_NOT_FOUND;
                 }
                 tensor->SetDevice(kernel->GetDevice());
+                break;
             }
 
             // ONNX supports reshaping inputs in runtime stage
@@ -135,23 +137,25 @@ static RetCode InitRuntimeGraphExtraInputs(const ir::GraphTopo* topo, const Runt
     for (uint32_t i = 0; i < topo->GetExtraInputCount(); ++i) {
         auto eid = topo->GetExtraInput(i);
         auto edge = topo->GetEdgeById(eid);
-
         auto ret_pair = graph->tensors.insert(make_pair(eid, TensorImpl(edge, TENSORTYPE_RESERVED)));
         auto tensor = &ret_pair.first->second;
 
         if (ret_pair.second) {
+            // finds a consumer to get device for this extra input
             for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
                 auto consumer = topo->GetNodeById(it.Get());
                 if (utils::IsPplConverterNode(consumer)) {
                     continue;
                 }
 
+                // Consumers of an edge are in the same engine. This is guranteed by optimizer.
                 auto kernel = FindKernelByName(graph->nodeid2kernel, consumer->GetName());
                 if (!kernel) {
                     LOG(ERROR) << "cannot find consumer[" << consumer->GetName() << "] of [" << edge->GetName() << "]";
                     return RC_NOT_FOUND;
                 }
                 tensor->SetDevice(kernel->GetDevice());
+                break;
             }
 
             auto shape_ref = info.shapes.find(edge->GetId());
