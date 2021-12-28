@@ -57,7 +57,7 @@ static vector<uint32_t> CalcEdgeRefcount(const ir::GraphTopo* topo) {
     }
 
     /*
-      inputs/extra_inputs/outputs/constants cannot be freed during Run(),
+      inputs/extra_inputs/outputs/constants cannot be freed or reused during Run(),
       we increase their refcounts to ensure that their refcounts will always > 0
       during runtime.
     */

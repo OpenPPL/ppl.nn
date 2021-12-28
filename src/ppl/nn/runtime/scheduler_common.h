@@ -27,7 +27,7 @@
 namespace ppl { namespace nn { namespace utils {
 
 /** @brief put inputs/extra_inputs/outputs/constants into a vector */
-std::vector<EdgeObject*> InitObjectInUse(const ir::GraphTopo* topo, RuntimeGraph* graph);
+std::vector<EdgeObject*> InitObjectInUse(edgeid_t max_edge_id, RuntimeGraph* graph);
 
 ppl::common::RetCode ExecuteKernel(KernelImpl*, KernelExecContext*,
                                    const std::function<ppl::common::RetCode(EdgeObject*, nodeid_t)>& release_func,
