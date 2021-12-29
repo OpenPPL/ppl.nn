@@ -30,13 +30,16 @@ ppl::common::RetCode ReshapeKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(data);
     PPLNN_X86_DEBUG_TRACE("Input [shape]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(shape);
-    PPLNN_X86_DEBUG_TRACE("Output [reshaped]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(reshaped);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     if (data->GetEdge()->CalcConsumerCount() == 1 && data->GetType() == TENSORTYPE_NORMAL) {
         reshaped->TransferBufferFrom(data);
+        PPLNN_X86_DEBUG_TRACE("Output [reshaped]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(reshaped);
     } else {
+        PPLNN_X86_REALLOC_TENSOR_BUFFER(reshaped);
+        PPLNN_X86_DEBUG_TRACE("Output [reshaped]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(reshaped);
         return ppl::kernel::x86::memory_copy(data->GetBufferPtr(), data->GetShape().GetBytesIncludingPadding(), reshaped->GetBufferPtr());
     }
 

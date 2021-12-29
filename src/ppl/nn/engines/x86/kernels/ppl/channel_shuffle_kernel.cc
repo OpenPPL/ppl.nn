@@ -33,13 +33,17 @@ ppl::common::RetCode ChannelShuffleKernel::DoExecute(KernelExecContext* ctx) {
         PPLNN_X86_DEBUG_TRACE("Input [X1]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(X1);
     }
+
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
     PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
     if (Y1) {
+        PPLNN_X86_REALLOC_TENSOR_BUFFER(Y1);
         PPLNN_X86_DEBUG_TRACE("Output [Y1]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y1);
     }
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     if (!(ctx->GetInputCount() == ctx->GetOutputCount()) &&
         !(ctx->GetInputCount() == 2 && ctx->GetOutputCount() == 1)) {

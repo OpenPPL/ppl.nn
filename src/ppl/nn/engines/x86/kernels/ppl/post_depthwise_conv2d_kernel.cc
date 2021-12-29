@@ -38,54 +38,11 @@ ppl::common::RetCode PostDepthwiseConv2dKernel::DoExecute(KernelExecContext* ctx
     PPLNN_X86_REQUIRED_INPUT(X, 0);
     PPLNN_X86_REQUIRED_OUTPUT(Y, 0);
 
-    executor_->set_src_shape(&X->GetShape());
-    executor_->set_src(X->GetBufferPtr<float>());
-
-    executor_->set_dst_shape(&Y->GetShape());
-    executor_->set_dst(Y->GetBufferPtr<float>());
-
-    ppl::common::RetCode rc;
-    rc = executor_->prepare();
-    if (ppl::common::RC_SUCCESS != rc) {
-        LOG(ERROR) << "Prepare failed: " << ppl::common::GetRetCodeStr(rc);
-        return rc;
-    }
-
-#ifdef DUMP_CONV
-    fprintf(stderr, CASE_STRING_FMT() "\n", executor_->conv2d_executor()->conv_param()->group, X->GetShape().GetDim(0),
-            executor_->conv2d_executor()->conv_param()->channels, X->GetShape().GetDim(2), X->GetShape().GetDim(3),
-            executor_->conv2d_executor()->conv_param()->num_output, Y->GetShape().GetDim(2), Y->GetShape().GetDim(3),
-            executor_->conv2d_executor()->conv_param()->kernel_h, executor_->conv2d_executor()->conv_param()->kernel_w,
-            executor_->conv2d_executor()->conv_param()->stride_h, executor_->conv2d_executor()->conv_param()->stride_w,
-            executor_->conv2d_executor()->conv_param()->pad_h, executor_->conv2d_executor()->conv_param()->pad_w,
-            executor_->conv2d_executor()->conv_param()->dilation_h - 1, executor_->conv2d_executor()->conv_param()->dilation_w - 1,
-            executor_->depthwise_conv2d_executor()->conv_param()->kernel_h, executor_->depthwise_conv2d_executor()->conv_param()->kernel_w,
-            executor_->depthwise_conv2d_executor()->conv_param()->stride_h, executor_->depthwise_conv2d_executor()->conv_param()->stride_w,
-            executor_->depthwise_conv2d_executor()->conv_param()->pad_h, executor_->depthwise_conv2d_executor()->conv_param()->pad_w,
-            executor_->depthwise_conv2d_executor()->conv_param()->dilation_h - 1, executor_->depthwise_conv2d_executor()->conv_param()->dilation_w - 1,
-            GetName().c_str());
-#endif
-
-    BufferDesc tmp_buffer_desc;
-    auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
-    auto status = GetX86Device()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
-    if (status != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
-                   << "] failed: " << ppl::common::GetRetCodeStr(status);
-        return status;
-    }
-    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-        GetX86Device()->FreeTmpBuffer(buffer);
-    });
-    auto tmp_buffer = tmp_buffer_desc.addr;
-
-    executor_->set_temp_buffer(tmp_buffer);
-
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+
     PPLNN_X86_DEBUG_TRACE("Input [X]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(X);
-    PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
+
     PPLNN_X86_DEBUG_TRACE("kernel_shape: %ld %ld, %ld %ld\n",
         executor_->conv2d_executor()->conv_param()->kernel_h,
         executor_->conv2d_executor()->conv_param()->kernel_w,
@@ -109,11 +66,57 @@ ppl::common::RetCode PostDepthwiseConv2dKernel::DoExecute(KernelExecContext* ctx
     PPLNN_X86_DEBUG_TRACE("group: %ld\n", executor_->conv2d_executor()->conv_param()->group);
     PPLNN_X86_DEBUG_TRACE("channels: %ld\n", executor_->conv2d_executor()->conv_param()->channels);
     PPLNN_X86_DEBUG_TRACE("num_output: %ld\n", executor_->conv2d_executor()->conv_param()->num_output);
-    PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
     PPLNN_X86_DEBUG_TRACE("fuse_flag: %ld, %ld\n",
         executor_->conv2d_executor()->conv_param()->fuse_flag,
         executor_->depthwise_conv2d_executor()->conv_param()->fuse_flag);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    executor_->set_src_shape(&X->GetShape());
+    executor_->set_dst_shape(&Y->GetShape());
+
+    ppl::common::RetCode rc;
+    rc = executor_->prepare();
+    if (ppl::common::RC_SUCCESS != rc) {
+        LOG(ERROR) << "Prepare failed: " << ppl::common::GetRetCodeStr(rc);
+        return rc;
+    }
+
+#ifdef DUMP_CONV
+    fprintf(stderr, CASE_STRING_FMT() "\n", executor_->conv2d_executor()->conv_param()->group, X->GetShape().GetDim(0),
+            executor_->conv2d_executor()->conv_param()->channels, X->GetShape().GetDim(2), X->GetShape().GetDim(3),
+            executor_->conv2d_executor()->conv_param()->num_output, Y->GetShape().GetDim(2), Y->GetShape().GetDim(3),
+            executor_->conv2d_executor()->conv_param()->kernel_h, executor_->conv2d_executor()->conv_param()->kernel_w,
+            executor_->conv2d_executor()->conv_param()->stride_h, executor_->conv2d_executor()->conv_param()->stride_w,
+            executor_->conv2d_executor()->conv_param()->pad_h, executor_->conv2d_executor()->conv_param()->pad_w,
+            executor_->conv2d_executor()->conv_param()->dilation_h - 1, executor_->conv2d_executor()->conv_param()->dilation_w - 1,
+            executor_->depthwise_conv2d_executor()->conv_param()->kernel_h, executor_->depthwise_conv2d_executor()->conv_param()->kernel_w,
+            executor_->depthwise_conv2d_executor()->conv_param()->stride_h, executor_->depthwise_conv2d_executor()->conv_param()->stride_w,
+            executor_->depthwise_conv2d_executor()->conv_param()->pad_h, executor_->depthwise_conv2d_executor()->conv_param()->pad_w,
+            executor_->depthwise_conv2d_executor()->conv_param()->dilation_h - 1, executor_->depthwise_conv2d_executor()->conv_param()->dilation_w - 1,
+            GetName().c_str());
+#endif
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
+    PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
+
+    BufferDesc tmp_buffer_desc;
+    auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
+    auto status = GetX86Device()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
+    if (status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
+                   << "] failed: " << ppl::common::GetRetCodeStr(status);
+        return status;
+    }
+    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
+        GetX86Device()->FreeTmpBuffer(buffer);
+    });
+    auto tmp_buffer = tmp_buffer_desc.addr;
+    PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
+
+    executor_->set_temp_buffer(tmp_buffer);
+    executor_->set_src(X->GetBufferPtr<float>());
+    executor_->set_dst(Y->GetBufferPtr<float>());
 
     rc = executor_->execute();
     if (ppl::common::RC_SUCCESS != rc) {

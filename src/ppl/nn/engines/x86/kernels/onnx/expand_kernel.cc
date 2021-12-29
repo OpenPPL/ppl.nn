@@ -34,18 +34,22 @@ bool ExpandKernel::CanDoExecute(const KernelExecContext& ctx) const {
 }
 
 ppl::common::RetCode ExpandKernel::DoExecute(KernelExecContext* ctx) {
-    auto input = ctx->GetInput<TensorImpl>(0);
-    auto shape = ctx->GetInput<TensorImpl>(1);
-    auto output = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(input, 0);
+    PPLNN_X86_REQUIRED_INPUT(shape, 1);
+    PPLNN_X86_REQUIRED_OUTPUT(output, 0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+
     PPLNN_X86_DEBUG_TRACE("Input [input]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(input);
     PPLNN_X86_DEBUG_TRACE("Input [shape]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(shape);
+
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(output);
     PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     const ppl::common::datatype_t data_type = output->GetShape().GetDataType();
     if (data_type == ppl::common::DATATYPE_FLOAT32) {

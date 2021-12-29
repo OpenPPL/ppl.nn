@@ -21,10 +21,10 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode RangeKernel::DoExecute(KernelExecContext* ctx) {
-    auto start = ctx->GetInput<TensorImpl>(0);
-    auto limit = ctx->GetInput<TensorImpl>(1);
-    auto delta = ctx->GetInput<TensorImpl>(2);
-    auto output = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(start, 0);
+    PPLNN_X86_REQUIRED_INPUT(limit, 1);
+    PPLNN_X86_REQUIRED_INPUT(delta, 2);
+    PPLNN_X86_REQUIRED_OUTPUT(output, 0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [start]:\n");
@@ -33,9 +33,12 @@ ppl::common::RetCode RangeKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(limit);
     PPLNN_X86_DEBUG_TRACE("Input [delta]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(delta);
+
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(output);
     PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     const auto data_type = output->GetShape().GetDataType();
     if (data_type == ppl::common::DATATYPE_INT64) {

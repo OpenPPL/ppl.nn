@@ -63,19 +63,6 @@ ppl::common::RetCode LSTMKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_OPTIONAL_OUTPUT(Y_h, 1);
     PPLNN_X86_OPTIONAL_OUTPUT(Y_c, 2);
 
-    BufferDesc tmp_buffer_desc;
-    auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
-    auto status = GetX86Device()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
-    if (status != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
-                   << "] failed: " << ppl::common::GetRetCodeStr(status);
-        return status;
-    }
-    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-        GetX86Device()->FreeTmpBuffer(buffer);
-    });
-    auto tmp_buffer = tmp_buffer_desc.addr;
-
     const float *B_data = nullptr;
     const int32_t *sequence_lens_data = nullptr;
     const float *initial_h_data = nullptr;
@@ -117,21 +104,6 @@ ppl::common::RetCode LSTMKernel::DoExecute(KernelExecContext* ctx) {
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(P);
         P_data = P->GetBufferPtr<const float>();
     }
-    if (Y) {
-        PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
-        PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
-        Y_data = Y->GetBufferPtr<float>();
-    }
-    if (Y_h) {
-        PPLNN_X86_DEBUG_TRACE("Output [Y_h]:\n");
-        PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y_h);
-        Y_h_data = Y_h->GetBufferPtr<float>();
-    }
-    if (Y_c) {
-        PPLNN_X86_DEBUG_TRACE("Output [Y_c]:\n");
-        PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y_c);
-        Y_c_data = Y_c->GetBufferPtr<float>();
-    }
     PPLNN_X86_DEBUG_TRACE("activation_alpha(%lu):\n", param_->activation_alpha.size());
     for (size_t i = 0; i < param_->activation_alpha.size(); ++i) {
         PPLNN_X86_DEBUG_TRACE("\t%f\n", param_->activation_alpha[i]);
@@ -149,6 +121,39 @@ ppl::common::RetCode LSTMKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("hidden_size: %d\n", param_->hidden_size);
     PPLNN_X86_DEBUG_TRACE("input_forget: %d\n", param_->input_forget);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    if (Y) {
+        PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
+        PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
+        Y_data = Y->GetBufferPtr<float>();
+    }
+    if (Y_h) {
+        PPLNN_X86_REALLOC_TENSOR_BUFFER(Y_h);
+        PPLNN_X86_DEBUG_TRACE("Output [Y_h]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y_h);
+        Y_h_data = Y_h->GetBufferPtr<float>();
+    }
+    if (Y_c) {
+        PPLNN_X86_REALLOC_TENSOR_BUFFER(Y_c);
+        PPLNN_X86_DEBUG_TRACE("Output [Y_c]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y_c);
+        Y_c_data = Y_c->GetBufferPtr<float>();
+    }
+
+    BufferDesc tmp_buffer_desc;
+    auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
+    auto status = GetX86Device()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
+    if (status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
+                   << "] failed: " << ppl::common::GetRetCodeStr(status);
+        return status;
+    }
+    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
+        GetX86Device()->FreeTmpBuffer(buffer);
+    });
+    auto tmp_buffer = tmp_buffer_desc.addr;
+    PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
 
     const auto data_type = X->GetShape().GetDataType();
     const auto data_format = X->GetShape().GetDataFormat();

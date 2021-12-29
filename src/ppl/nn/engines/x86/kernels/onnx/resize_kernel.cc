@@ -50,18 +50,6 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_OPTIONAL_INPUT(sizes, 3);
     PPLNN_X86_REQUIRED_OUTPUT(Y, 0);
 
-    float scale_h = (float)Y->GetShape().GetDim(2) / X->GetShape().GetDim(2);
-    float scale_w = (float)Y->GetShape().GetDim(3) / X->GetShape().GetDim(3);
-
-    auto has_scales = scales && scales->GetShape().GetDimCount() == 1 && scales->GetShape().GetDim(0) == X->GetShape().GetDimCount();
-
-    if (has_scales) {
-        const float* scales_data = scales->GetBufferPtr<float>();
-        scale_h = scales_data[2];
-        scale_w = scales_data[3];
-    }
-    
-
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [X]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(X);
@@ -77,8 +65,7 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
         PPLNN_X86_DEBUG_TRACE("Input [sizes]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(sizes);
     }
-    PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
+
     PPLNN_X86_DEBUG_TRACE("coord_trans_mode: %d\n", param_->coord_trans_mode);
     PPLNN_X86_DEBUG_TRACE("nearest_mode: %d\n", param_->nearest_mode);
     PPLNN_X86_DEBUG_TRACE("mode: %d\n", param_->mode);
@@ -86,6 +73,21 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("exclude_outside: %d\n", param_->exclude_outside);
     PPLNN_X86_DEBUG_TRACE("extrapolation_value: %f\n", param_->extrapolation_value);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
+    PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
+
+    float scale_h = (float)Y->GetShape().GetDim(2) / X->GetShape().GetDim(2);
+    float scale_w = (float)Y->GetShape().GetDim(3) / X->GetShape().GetDim(3);
+
+    auto has_scales = scales && scales->GetShape().GetDimCount() == 1 && scales->GetShape().GetDim(0) == X->GetShape().GetDimCount();
+
+    if (has_scales) {
+        const float* scales_data = scales->GetBufferPtr<float>();
+        scale_h = scales_data[2];
+        scale_w = scales_data[3];
+    }
 
     const auto data_type = X->GetShape().GetDataType();
     if (data_type != ppl::common::DATATYPE_FLOAT32) {

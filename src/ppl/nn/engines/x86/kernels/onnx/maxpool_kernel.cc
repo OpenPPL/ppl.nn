@@ -28,16 +28,19 @@ ppl::common::RetCode MaxPoolKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [X]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(X);
-    PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
-    if (Indices) {
-        PPLNN_X86_DEBUG_TRACE("Output [Indices]:\n");
-        PPL_X86_TENSOR_PRINT_DEBUG_MSG(Indices);
-    }
 
     if (X->GetShape().GetDimCount() != 4) {
         LOG(ERROR) << "only support 4-D tensor now.";
         return ppl::common::RC_UNSUPPORTED;
+    }
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
+    PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
+    if (Indices) {
+        PPLNN_X86_REALLOC_TENSOR_BUFFER(Indices);
+        PPLNN_X86_DEBUG_TRACE("Output [Indices]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(Indices);
     }
 
     const int32_t src_h = X->GetShape().GetDim(2);

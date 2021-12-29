@@ -31,11 +31,14 @@ ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [x]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(x);
-    PPLNN_X86_DEBUG_TRACE("Output [y]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
+
     PPLNN_X86_DEBUG_TRACE("pad mode: %d\n", param_->mode);
     PPLNN_X86_DEBUG_TRACE("constant_value: %f\n", constant_value);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(y);
+    PPLNN_X86_DEBUG_TRACE("Output [y]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
 
     const int dim_count = x->GetShape().GetDimCount();
     auto pads_data = ctx->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();

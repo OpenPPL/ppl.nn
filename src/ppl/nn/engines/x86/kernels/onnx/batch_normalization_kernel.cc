@@ -30,6 +30,7 @@ ppl::common::RetCode BatchNormalizationKernel::DoExecute(KernelExecContext* ctx)
     PPLNN_X86_REQUIRED_OUTPUT(Y, 0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+
     PPLNN_X86_DEBUG_TRACE("Input [X]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(X);
     PPLNN_X86_DEBUG_TRACE("Input [scale]:\n");
@@ -40,11 +41,14 @@ ppl::common::RetCode BatchNormalizationKernel::DoExecute(KernelExecContext* ctx)
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(mean);
     PPLNN_X86_DEBUG_TRACE("Input [var]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(var);
-    PPLNN_X86_DEBUG_TRACE("Input [Y]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
+
     PPLNN_X86_DEBUG_TRACE("epsilon: %lf\n", param_->epsilon);
     PPLNN_X86_DEBUG_TRACE("momentum: %lf\n", param_->momentum);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
+    PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
 
     const auto data_format = X->GetShape().GetDataFormat();
     const auto data_type = X->GetShape().GetDataType();

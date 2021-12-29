@@ -25,7 +25,7 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
-    auto input = ctx->GetInput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(input, 0);
 
     std::vector<void*> dst_list(ctx->GetOutputCount());
     std::vector<const TensorShape*> dst_shape_list(ctx->GetOutputCount());
@@ -33,15 +33,18 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [input]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(input);
+
+    PPLNN_X86_DEBUG_TRACE("axis: %d\n", param_->axis);
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
     for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto output = ctx->GetOutput<TensorImpl>(i);
+        PPLNN_X86_REALLOC_TENSOR_BUFFER(output);
         PPLNN_X86_DEBUG_TRACE("Output [outputs[%u]]:\n", i);
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
         dst_list[i] = output->GetBufferPtr<void>();
         dst_shape_list[i] = &output->GetShape();
     }
-    PPLNN_X86_DEBUG_TRACE("axis: %d\n", param_->axis);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     const int32_t real_axis =
         param_->axis < 0 ? param_->axis + ctx->GetInput<TensorImpl>(0)->GetShape().GetDimCount() : param_->axis;

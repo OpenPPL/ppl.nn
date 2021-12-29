@@ -21,12 +21,20 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode AveragePoolKernel::DoExecute(KernelExecContext* ctx) {
-    auto X = ctx->GetInput<TensorImpl>(0);
-    auto Y = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(X, 0);
+    PPLNN_X86_REQUIRED_OUTPUT(Y, 0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+
     PPLNN_X86_DEBUG_TRACE("Input [X]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(X);
+
+    PPLNN_X86_DEBUG_TRACE("mode: %d\n", param_->mode);
+    PPLNN_X86_DEBUG_TRACE("ceil_mode: %d\n", param_->ceil_mode);
+    PPLNN_X86_DEBUG_TRACE("global_pooling: %d\n", param_->global_pooling);
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
     PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
 
@@ -79,10 +87,6 @@ ppl::common::RetCode AveragePoolKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("dilations: %d %d\n", dilation_h, dilation_w);
     PPLNN_X86_DEBUG_TRACE("strides: %d %d\n", stride_h, stride_w);
     PPLNN_X86_DEBUG_TRACE("pads: %d %d\n", pad_h, pad_w);
-    PPLNN_X86_DEBUG_TRACE("mode: %d\n", param_->mode);
-    PPLNN_X86_DEBUG_TRACE("ceil_mode: %d\n", param_->ceil_mode);
-    PPLNN_X86_DEBUG_TRACE("global_pooling: %d\n", param_->global_pooling);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     const auto data_type = X->GetShape().GetDataType();
     const auto data_format = X->GetShape().GetDataFormat();

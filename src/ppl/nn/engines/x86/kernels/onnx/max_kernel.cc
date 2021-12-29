@@ -40,6 +40,11 @@ uint64_t MaxKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
 }
 
 ppl::common::RetCode MaxKernel::DoExecute(KernelExecContext* ctx) {
+    PPLNN_X86_REQUIRED_OUTPUT(max, 0);
+
+    PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+    PPLNN_X86_DEBUG_TRACE("Input num: %u\n", ctx->GetInputCount());
+
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
     auto status = GetX86Device()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
@@ -52,13 +57,7 @@ ppl::common::RetCode MaxKernel::DoExecute(KernelExecContext* ctx) {
         GetX86Device()->FreeTmpBuffer(buffer);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
-
-    auto max = ctx->GetOutput<TensorImpl>(0);
-
-    PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
-    PPLNN_X86_DEBUG_TRACE("Input num: %u\n", ctx->GetInputCount());
-    PPLNN_X86_DEBUG_TRACE("Output [max]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(max);
+    PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     const auto data_type = max->GetShape().GetDataType();
@@ -80,9 +79,15 @@ ppl::common::RetCode MaxKernel::DoExecute(KernelExecContext* ctx) {
 
     const float** input_ptrs = (const float**)tmp_buffer;
     for (uint32_t i = 0; i < input_num; i++) {
+        PPLNN_X86_DEBUG_TRACE("Input [inputs[%u]]:\n", i);
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(ctx->GetInput<TensorImpl>(i));
         input_ptrs[i] = ctx->GetInput<TensorImpl>(i)->GetBufferPtr<float>();
     }
     void* temp = (uint8_t*)tmp_buffer + input_num * sizeof(const float*);
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(max);
+    PPLNN_X86_DEBUG_TRACE("Output [max]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(max);
 
     if (is_eltwise) {
         if (MayUseISA(ppl::common::ISA_X86_AVX)) {

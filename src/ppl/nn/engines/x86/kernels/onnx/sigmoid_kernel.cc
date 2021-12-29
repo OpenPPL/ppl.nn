@@ -21,15 +21,18 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode SigmoidKernel::DoExecute(KernelExecContext* ctx) {
-    auto X = ctx->GetInput<TensorImpl>(0);
-    auto Y = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(X, 0);
+    PPLNN_X86_REQUIRED_OUTPUT(Y, 0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [X]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(X);
+
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
     PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     const auto data_type = X->GetShape().GetDataType();
 

@@ -25,13 +25,20 @@ ppl::common::RetCode IdentityKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_REQUIRED_OUTPUT(output, 0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+
     PPLNN_X86_DEBUG_TRACE("Input [input]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(input);
-    PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
+
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL) {
         output->TransferBufferFrom(input);
+        PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
     } else {
+        PPLNN_X86_REALLOC_TENSOR_BUFFER(output);
+        PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
         return ppl::kernel::x86::memory_copy(input->GetBufferPtr(), input->GetShape().GetBytesIncludingPadding(), output->GetBufferPtr());
     }
 
