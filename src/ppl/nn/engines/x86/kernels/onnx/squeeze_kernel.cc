@@ -21,19 +21,23 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode SqueezeKernel::DoExecute(KernelExecContext* ctx) {
-    auto data = ctx->GetInput<TensorImpl>(0);
-    auto squeezed = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(data, 0);
+    PPLNN_X86_REQUIRED_OUTPUT(squeezed, 0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [data]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(data);
-    PPLNN_X86_DEBUG_TRACE("Output [squeezed]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(squeezed);
+
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     if (data->GetEdge()->CalcConsumerCount() == 1 && data->GetType() == TENSORTYPE_NORMAL) {
         squeezed->TransferBufferFrom(data);
+        PPLNN_X86_DEBUG_TRACE("Output [squeezed]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(squeezed);
     } else {
+        PPLNN_X86_REALLOC_TENSOR_BUFFER(squeezed);
+        PPLNN_X86_DEBUG_TRACE("Output [squeezed]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(squeezed);
         return ppl::kernel::x86::memory_copy(data->GetBufferPtr(), data->GetShape().GetBytesIncludingPadding(), squeezed->GetBufferPtr());
     }
 

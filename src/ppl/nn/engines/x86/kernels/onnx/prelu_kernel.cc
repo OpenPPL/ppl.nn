@@ -30,9 +30,12 @@ ppl::common::RetCode PReluKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(X);
     PPLNN_X86_DEBUG_TRACE("Input [slope]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(slope);
+
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
     PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     const auto data_type = X->GetShape().GetDataType();
     const auto data_format = X->GetShape().GetDataFormat();

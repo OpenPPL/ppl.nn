@@ -33,6 +33,19 @@ uint64_t NonZeroKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
 }
 
 ppl::common::RetCode NonZeroKernel::DoExecute(KernelExecContext* ctx) {
+    PPLNN_X86_REQUIRED_INPUT(x, 0);
+    PPLNN_X86_REQUIRED_OUTPUT(y, 0);
+
+    PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+    PPLNN_X86_DEBUG_TRACE("Input [x]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(x);
+
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(y);
+    PPLNN_X86_DEBUG_TRACE("Output [y]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
+
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
     auto status = GetX86Device()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
@@ -45,16 +58,7 @@ ppl::common::RetCode NonZeroKernel::DoExecute(KernelExecContext* ctx) {
         GetX86Device()->FreeTmpBuffer(buffer);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
-
-    auto x = ctx->GetInput<TensorImpl>(0);
-    auto y = ctx->GetOutput<TensorImpl>(0);
-
-    PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
-    PPLNN_X86_DEBUG_TRACE("Input [x]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(x);
-    PPLNN_X86_DEBUG_TRACE("Output [y]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+    PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
 
     int64_t real_output_num = 0;
     ppl::common::RetCode ret = ppl::common::RC_SUCCESS;

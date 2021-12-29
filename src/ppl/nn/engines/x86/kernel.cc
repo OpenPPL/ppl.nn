@@ -32,15 +32,6 @@ RetCode X86Kernel::BeforeExecute(KernelExecContext* ctx) {
         return status;
     }
 
-    for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
-        auto tensor = ctx->GetOutput<TensorImpl>(i);
-        status = tensor->ReallocBuffer();
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "ReallocBuffer for tensor[" << tensor->GetName() << "] failed: " << GetRetCodeStr(status);
-            return status;
-        }
-    }
-
     return RC_SUCCESS;
 }
 

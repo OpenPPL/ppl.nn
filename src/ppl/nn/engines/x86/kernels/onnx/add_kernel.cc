@@ -25,17 +25,17 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode AddKernel::DoExecute(KernelExecContext* ctx) {
-    auto A = ctx->GetInput<TensorImpl>(0);
-    auto B = ctx->GetInput<TensorImpl>(1);
-    auto C = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(A, 0);
+    PPLNN_X86_REQUIRED_INPUT(B, 1);
+    PPLNN_X86_REQUIRED_OUTPUT(C, 0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+
     PPLNN_X86_DEBUG_TRACE("Input [A]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(A);
     PPLNN_X86_DEBUG_TRACE("Input [B]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(B);
-    PPLNN_X86_DEBUG_TRACE("Output [C]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(C);
+
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     const common::datatype_t data_type = ctx->GetOutput<TensorImpl>(0)->GetShape().GetDataType();
@@ -53,7 +53,12 @@ ppl::common::RetCode AddKernel::DoExecute(KernelExecContext* ctx) {
     } else if (B->GetEdge()->CalcConsumerCount() == 1 && B->GetType() == TENSORTYPE_NORMAL && TensorShapeEqual(B->GetShape(), C->GetShape())) {
         C->TransferBufferFrom(B);
         lB = C;
+    } else {
+        PPLNN_X86_REALLOC_TENSOR_BUFFER(C);
     }
+
+    PPLNN_X86_DEBUG_TRACE("Output [C]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(C);
 
     if (data_type == common::DATATYPE_FLOAT32) {
         if (MayUseISA(ppl::common::ISA_X86_AVX)) {

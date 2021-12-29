@@ -27,15 +27,19 @@ ppl::common::RetCode MMCVGridSampleKernel::DoExecute(KernelExecContext* ctx) {
     auto output = ctx->GetOutput<TensorImpl>(0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+
     PPLNN_X86_DEBUG_TRACE("Input [input]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(input);
     PPLNN_X86_DEBUG_TRACE("Input [grid]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(grid);
-    PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
+
     PPLNN_X86_DEBUG_TRACE("align_corners: %ld\n", param_->align_corners);
     PPLNN_X86_DEBUG_TRACE("interpolation_mode: %ld\n", param_->interpolation_mode);
     PPLNN_X86_DEBUG_TRACE("padding_mode: %ld\n", param_->padding_mode);
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(output);
+    PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
 
     if (param_->interpolation_mode == 0) { // bilinear
         if (false) {

@@ -72,4 +72,13 @@
 #define PPLNN_X86_OPTIONAL_OUTPUT(X, IDX) \
     auto X = ctx->GetOutputCount() > IDX ? ctx->GetOutput<TensorImpl>(IDX) : nullptr
 
+#define PPLNN_X86_REALLOC_TENSOR_BUFFER(X) \
+    do {\
+        auto status = X->ReallocBuffer();\
+        if (status != ppl::common::RC_SUCCESS) {\
+            LOG(ERROR) << "ReallocBuffer for tensor[" << X->GetName() << "] failed: " << ppl::common::GetRetCodeStr(status);\
+            return status;\
+        }\
+    } while (0)
+
 #endif

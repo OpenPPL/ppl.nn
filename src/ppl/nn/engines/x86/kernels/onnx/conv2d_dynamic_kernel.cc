@@ -56,23 +56,32 @@ uint64_t Conv2dDynamicKernel::CalcTmpBufferSize(const KernelExecContext& ctx) co
 }
 
 ppl::common::RetCode Conv2dDynamicKernel::DoExecute(KernelExecContext* ctx) {
-    BufferDesc tmp_buffer_desc;
-    auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
-    auto status = GetX86Device()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
-    if (status != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
-                   << "] failed: " << ppl::common::GetRetCodeStr(status);
-        return status;
-    }
-    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-        GetX86Device()->FreeTmpBuffer(buffer);
-    });
-    auto tmp_buffer = tmp_buffer_desc.addr;
-
     PPLNN_X86_REQUIRED_INPUT(X, 0);
     PPLNN_X86_REQUIRED_INPUT(W, 1);
     PPLNN_X86_OPTIONAL_INPUT(B, 2);
     PPLNN_X86_REQUIRED_OUTPUT(Y, 0);
+
+    PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+
+    PPLNN_X86_DEBUG_TRACE("Input [X]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(X);
+    PPLNN_X86_DEBUG_TRACE("Input [W]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(W);
+    if (B) {
+        PPLNN_X86_DEBUG_TRACE("Input [B]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(B);
+    }
+
+    const int32_t num_output = W->GetShape().GetDim(0);
+    const int32_t channels = W->GetShape().GetDim(1) * param_->group;
+
+    PPLNN_X86_DEBUG_TRACE("kernel_shape: %d %d\n", param_->kernel_shape[0], param_->kernel_shape[1]);
+    PPLNN_X86_DEBUG_TRACE("dilations: %d %d\n", param_->dilations[0], param_->dilations[1]);
+    PPLNN_X86_DEBUG_TRACE("strides: %d %d\n", param_->strides[0], param_->strides[1]);
+    PPLNN_X86_DEBUG_TRACE("pads: %d %d %d %d\n", param_->pads[0], param_->pads[1], param_->pads[2], param_->pads[3]);
+    PPLNN_X86_DEBUG_TRACE("group: %d\n", param_->group);
+    PPLNN_X86_DEBUG_TRACE("num_output: %d\n", num_output);
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     const float* b_data = nullptr;
 
@@ -94,31 +103,28 @@ ppl::common::RetCode Conv2dDynamicKernel::DoExecute(KernelExecContext* ctx) {
         }
     }
 
-    const int32_t num_output = W->GetShape().GetDim(0);
-    const int32_t channels = W->GetShape().GetDim(1) * param_->group;
     if (B) {
         b_data = B->GetBufferPtr<float>();
     }
 
-    PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
-    PPLNN_X86_DEBUG_TRACE("Input [X]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(X);
-    PPLNN_X86_DEBUG_TRACE("Input [W]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(W);
-    if (B) {
-        PPLNN_X86_DEBUG_TRACE("Input [B]:\n");
-        PPL_X86_TENSOR_PRINT_DEBUG_MSG(B);
-    }
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
     PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
-    PPLNN_X86_DEBUG_TRACE("kernel_shape: %d %d\n", param_->kernel_shape[0], param_->kernel_shape[1]);
-    PPLNN_X86_DEBUG_TRACE("dilations: %d %d\n", param_->dilations[0], param_->dilations[1]);
-    PPLNN_X86_DEBUG_TRACE("strides: %d %d\n", param_->strides[0], param_->strides[1]);
-    PPLNN_X86_DEBUG_TRACE("pads: %d %d %d %d\n", param_->pads[0], param_->pads[1], param_->pads[2], param_->pads[3]);
-    PPLNN_X86_DEBUG_TRACE("group: %d\n", param_->group);
-    PPLNN_X86_DEBUG_TRACE("num_output: %d\n", num_output);
+
+    BufferDesc tmp_buffer_desc;
+    auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
+    auto status = GetX86Device()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
+    if (status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
+                   << "] failed: " << ppl::common::GetRetCodeStr(status);
+        return status;
+    }
+    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
+        GetX86Device()->FreeTmpBuffer(buffer);
+    });
+    auto tmp_buffer = tmp_buffer_desc.addr;
     PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+    
 
     const int32_t batch = X->GetShape().GetDim(0);
     const int32_t src_h = X->GetShape().GetDim(2);

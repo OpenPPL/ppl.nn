@@ -35,13 +35,16 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
         PPLNN_X86_DEBUG_TRACE("Input [C]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(C);
     }
-    PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
+
     PPLNN_X86_DEBUG_TRACE("trans_A: %d\n", param_->transA);
     PPLNN_X86_DEBUG_TRACE("trans_B: %d\n", param_->transB);
     PPLNN_X86_DEBUG_TRACE("alpha: %f\n", param_->alpha);
     PPLNN_X86_DEBUG_TRACE("beta: %f\n", param_->beta);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
+    PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
 
     if (A->GetShape().GetDataType() != ppl::common::DATATYPE_FLOAT32 ||
         A->GetShape().GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY) {
@@ -126,6 +129,8 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
         GetX86Device()->FreeTmpBuffer(buffer);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
+    PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
+
     executor->set_temp_buffer(tmp_buffer);
 
     return executor->execute();

@@ -22,18 +22,21 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode MaxUnpoolKernel::DoExecute(KernelExecContext* ctx) {
-    auto x = ctx->GetInput<TensorImpl>(0);
-    auto indices = ctx->GetInput<TensorImpl>(1);
-    auto y = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(x, 0);
+    PPLNN_X86_REQUIRED_INPUT(indices, 1);
+    PPLNN_X86_REQUIRED_OUTPUT(y, 0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [x]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(x);
     PPLNN_X86_DEBUG_TRACE("Input [indices]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(indices);
+
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(y);
     PPLNN_X86_DEBUG_TRACE("Output [y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     if (x->GetShape().GetDimCount() != 4 || indices->GetShape().GetDimCount() != 4) {
         LOG(ERROR) << "only support 4-D Tensor now.";

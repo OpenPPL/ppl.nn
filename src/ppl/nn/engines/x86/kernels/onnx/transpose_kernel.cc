@@ -24,10 +24,14 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode TransposeKernel::DoExecute(KernelExecContext* ctx) {
-    auto data = ctx->GetInput<TensorImpl>(0);
-    auto transposed = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(data, 0);
+    PPLNN_X86_REQUIRED_OUTPUT(transposed, 0);
 
     const uint32_t dim_count = data->GetShape().GetDimCount();
+
+    PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+    PPLNN_X86_DEBUG_TRACE("Input [data]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(data);
 
     auto modified_perm = param_->perm;
     if (modified_perm.empty()) { // perm is empty, default is reverse dimention.
@@ -36,16 +40,14 @@ ppl::common::RetCode TransposeKernel::DoExecute(KernelExecContext* ctx) {
             modified_perm[i] = dim_count - i - 1;
         }
     }
-
-    PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
-    PPLNN_X86_DEBUG_TRACE("Input [data]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(data);
-    PPLNN_X86_DEBUG_TRACE("Output [transposed]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(transposed);
     for (uint32_t i = 0; i < data->GetShape().GetDimCount(); ++i) {
         PPLNN_X86_DEBUG_TRACE("perm[%u]: %d\n", i, modified_perm[i]);
     }
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(transposed);
+    PPLNN_X86_DEBUG_TRACE("Output [transposed]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(transposed);
 
     const auto data_type = data->GetShape().GetDataType();
     const auto data_format = data->GetShape().GetDataFormat();

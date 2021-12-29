@@ -24,14 +24,19 @@ uint64_t FCKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
 }
 
 ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
-    TensorImpl* A = ctx->GetInput<TensorImpl>(0);
-    TensorImpl* Y = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(A, 0);
+    PPLNN_X86_REQUIRED_OUTPUT(Y, 0);
+
+    PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+    PPLNN_X86_DEBUG_TRACE("Input [A]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(A);
+
+    PPLNN_X86_DEBUG_TRACE("channels: %ld\n", executor_->fc_param()->channels);
+    PPLNN_X86_DEBUG_TRACE("num_output: %ld\n", executor_->fc_param()->num_output);
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     executor_->set_src_shape(&A->GetShape());
-    executor_->set_src(A->GetBufferPtr<float>());
-
     executor_->set_dst_shape(&Y->GetShape());
-    executor_->set_dst(Y->GetBufferPtr<float>());
 
     ppl::common::RetCode rc;
     rc = executor_->prepare();
@@ -39,6 +44,10 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
         LOG(ERROR) << "Prepare failed: " << ppl::common::GetRetCodeStr(rc);
         return rc;
     }
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
+    PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
 
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
@@ -52,18 +61,11 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
         GetX86Device()->FreeTmpBuffer(buffer);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
+    PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
 
     executor_->set_temp_buffer(tmp_buffer);
-
-    PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
-    PPLNN_X86_DEBUG_TRACE("Input [A]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(A);
-    PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
-    PPLNN_X86_DEBUG_TRACE("channels: %ld\n", executor_->fc_param()->channels);
-    PPLNN_X86_DEBUG_TRACE("num_output: %ld\n", executor_->fc_param()->num_output);
-    PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+    executor_->set_src(A->GetBufferPtr<float>());
+    executor_->set_dst(Y->GetBufferPtr<float>());
 
     rc = executor_->execute();
     if (ppl::common::RC_SUCCESS != rc) {

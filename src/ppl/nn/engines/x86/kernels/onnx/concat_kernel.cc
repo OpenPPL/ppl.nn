@@ -45,9 +45,10 @@ ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
     src_list_.resize(ctx->GetInputCount());
     src_shape_list_.resize(ctx->GetInputCount());
 
-    auto concat_result = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_OUTPUT(concat_result, 0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+
     for (uint32_t i = 0; i < ctx->GetInputCount(); ++i) {
         auto input = ctx->GetInput<TensorImpl>(i);
         PPLNN_X86_DEBUG_TRACE("Input [inputs[%u]]:\n", i);
@@ -55,10 +56,13 @@ ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
         src_shape_list_[i] = &input->GetShape();
         src_list_[i] = input->GetBufferPtr();
     }
-    PPLNN_X86_DEBUG_TRACE("Output [concat_result]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(concat_result);
+
     PPLNN_X86_DEBUG_TRACE("axis: %d\n", param_->axis);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(concat_result);
+    PPLNN_X86_DEBUG_TRACE("Output [concat_result]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(concat_result);
 
     auto data_type = concat_result->GetShape().GetDataType();
     auto data_format = concat_result->GetShape().GetDataFormat();

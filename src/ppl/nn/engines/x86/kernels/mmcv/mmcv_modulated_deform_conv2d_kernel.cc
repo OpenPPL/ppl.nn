@@ -45,6 +45,7 @@ ppl::common::RetCode MMCVModulatedDeformConv2dKernel::DoExecute(KernelExecContex
     PPLNN_X86_REQUIRED_OUTPUT(output, 0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+
     PPLNN_X86_DEBUG_TRACE("Input [input]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(input);
     PPLNN_X86_DEBUG_TRACE("Input [offset]:\n");
@@ -53,13 +54,16 @@ ppl::common::RetCode MMCVModulatedDeformConv2dKernel::DoExecute(KernelExecContex
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(mask);
     PPLNN_X86_DEBUG_TRACE("Input [weight]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(weight);
-    PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
+
     PPLNN_X86_DEBUG_TRACE("stride: %ld, %ld\n", param_->stride[0], param_->stride[1]);
     PPLNN_X86_DEBUG_TRACE("padding: %ld, %ld\n", param_->padding[0], param_->padding[1]);
     PPLNN_X86_DEBUG_TRACE("dilation: %ld, %ld\n", param_->dilation[0], param_->dilation[1]);
     PPLNN_X86_DEBUG_TRACE("groups: %ld\n", param_->groups);
     PPLNN_X86_DEBUG_TRACE("deform_groups: %ld\n", param_->deform_groups);
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(output);
+    PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
 
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_size = CalcTmpBufferSize(*ctx);

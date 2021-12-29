@@ -21,17 +21,21 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode ArgMaxKernel::DoExecute(KernelExecContext* ctx) {
-    auto data = ctx->GetInput<TensorImpl>(0);
-    auto reduced = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(data, 0);
+    PPLNN_X86_REQUIRED_OUTPUT(reduced, 0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+
     PPLNN_X86_DEBUG_TRACE("Input [data]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(data);
-    PPLNN_X86_DEBUG_TRACE("Input [reduced]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(reduced);
+
     PPLNN_X86_DEBUG_TRACE("axis: %d\n", param_->axis);
     PPLNN_X86_DEBUG_TRACE("keepdims: %d\n", param_->keepdims);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(reduced);
+    PPLNN_X86_DEBUG_TRACE("Output [reduced]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(reduced);
 
     const auto data_type = data->GetShape().GetDataType();
 

@@ -28,6 +28,26 @@ uint64_t TopKKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
 }
 
 ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
+    PPLNN_X86_REQUIRED_INPUT(x, 0);
+    PPLNN_X86_REQUIRED_INPUT(k, 1);
+    PPLNN_X86_REQUIRED_OUTPUT(values, 0);
+    PPLNN_X86_REQUIRED_OUTPUT(indices, 1);
+
+    PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
+    PPLNN_X86_DEBUG_TRACE("Input [x]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(x);
+    PPLNN_X86_DEBUG_TRACE("Input [k]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(k);
+
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(values);
+    PPLNN_X86_DEBUG_TRACE("Output [values]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(values);
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(indices);
+    PPLNN_X86_DEBUG_TRACE("Output [indices]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(indices);
+
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
     auto status = GetX86Device()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
@@ -40,22 +60,7 @@ ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
         GetX86Device()->FreeTmpBuffer(buffer);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
-
-    auto x = ctx->GetInput<TensorImpl>(0);
-    auto k = ctx->GetInput<TensorImpl>(1);
-    auto values = ctx->GetOutput<TensorImpl>(0);
-    auto indices = ctx->GetOutput<TensorImpl>(1);
-
-    PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
-    PPLNN_X86_DEBUG_TRACE("Input [x]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(x);
-    PPLNN_X86_DEBUG_TRACE("Input [k]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(k);
-    PPLNN_X86_DEBUG_TRACE("Output [values]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(values);
-    PPLNN_X86_DEBUG_TRACE("Output [indices]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(indices);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+    PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
 
     const int64_t k_value = ctx->GetInput<TensorImpl>(1)->GetBufferPtr<const int64_t>()[0];
     uint32_t axis = param_->axis < 0 ? param_->axis + x->GetShape().GetDimCount() : param_->axis;

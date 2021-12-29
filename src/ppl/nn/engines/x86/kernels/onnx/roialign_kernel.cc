@@ -22,10 +22,10 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode ROIAlignKernel::DoExecute(KernelExecContext* ctx) {
-    auto x = ctx->GetInput<TensorImpl>(0);
-    auto rois = ctx->GetInput<TensorImpl>(1);
-    auto batch_indices = ctx->GetInput<TensorImpl>(2);
-    auto y = ctx->GetOutput<TensorImpl>(0);
+    PPLNN_X86_REQUIRED_INPUT(x, 0);
+    PPLNN_X86_REQUIRED_INPUT(rois, 1);
+    PPLNN_X86_REQUIRED_INPUT(batch_indices, 2);
+    PPLNN_X86_REQUIRED_OUTPUT(y, 0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [x]:\n");
@@ -34,9 +34,12 @@ ppl::common::RetCode ROIAlignKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(rois);
     PPLNN_X86_DEBUG_TRACE("Input [batch_indices]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(batch_indices);
+
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(y);
     PPLNN_X86_DEBUG_TRACE("Output [y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     auto data_format = x->GetShape().GetDataFormat();
     auto data_type = x->GetShape().GetDataType();

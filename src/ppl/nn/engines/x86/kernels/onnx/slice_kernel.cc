@@ -30,8 +30,6 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_OPTIONAL_INPUT(steps_tensor, 4);
     PPLNN_X86_REQUIRED_OUTPUT(output, 0);
 
-    const int axes_num = ctx->GetInput<TensorImpl>(1)->GetShape().GetDim(0);
-
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [data]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(data);
@@ -47,12 +45,16 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
         PPLNN_X86_DEBUG_TRACE("Input [steps]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(steps_tensor);
     }
+
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(output);
     PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     // prepare starts, axes, steps
     auto starts = starts_tensor->GetBufferPtr<int64_t>();
+    const int axes_num = ctx->GetInput<TensorImpl>(1)->GetShape().GetDim(0);
 
     const int64_t* axes = nullptr;
     std::vector<int64_t> axes_vec;
