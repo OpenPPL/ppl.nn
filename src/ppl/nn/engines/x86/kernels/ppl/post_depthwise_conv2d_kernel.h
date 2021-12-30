@@ -48,6 +48,8 @@ public:
 private:
     uint64_t CalcTmpBufferSize(const KernelExecContext& ctx) const override;
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
+    ppl::common::RetCode SeparateExecute(KernelExecContext* ctx, TensorImpl *X, TensorImpl *Y);
+    ppl::common::RetCode FuseExecute(KernelExecContext* ctx, TensorImpl *X, TensorImpl *Y);
 
 private:
     const PostDepthwiseConv2dParam* param_ = nullptr;

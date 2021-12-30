@@ -52,6 +52,7 @@ protected:
     conv2d_fp32_executor *conv2d_executor_;
     conv2d_fp32_executor *depthwise_conv2d_executor_;
     pd_conv2d_fp32_mode_t mode_; // available after prepare()
+    ppl::nn::TensorShape inter_shape_; // available after prepare()
 
     const float *src_;
     const ppl::nn::TensorShape *src_shape_;
@@ -88,6 +89,10 @@ public:
 
     pd_conv2d_fp32_mode_t mode() const {
         return mode_;
+    }
+
+    const ppl::nn::TensorShape &inter_shape() const {
+        return inter_shape_;
     }
 
     void set_conv2d_executor(conv2d_fp32_executor *exec) {

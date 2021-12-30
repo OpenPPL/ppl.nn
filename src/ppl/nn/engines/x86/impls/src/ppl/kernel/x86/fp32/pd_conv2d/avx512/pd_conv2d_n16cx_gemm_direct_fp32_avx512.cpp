@@ -112,6 +112,11 @@ void pd_conv2d_n16cx_gemm_direct_fp32_avx512_executor::cal_kernel_tunning_param(
         sp.oh_l2_blk = max(dst_h / oh_thread, OH_L2_BLK_MIN);
     }
 
+    sp.use_nt_store = 0;
+    if (batch * gd_p.group * sp.padded_oc * dst_h * dst_w > l3_cap_all_core * 3) {
+        sp.use_nt_store = 1;
+    }
+
     const int64_t inter_buffer_len = dw_p.kernel_h * (dw_p.pad_w * 2 + inter_w) * sp.oc_l2_blk;
     const int64_t feature_map_len = batch * (sp.padded_ic * gd_p.group * src_h * src_w + sp.padded_oc * gd_p.group * dst_h * dst_w);
     const bool large_inter_cost = inter_buffer_len > (l2_cap_per_core / L2_RATIO); // inter buffer oversized
@@ -123,11 +128,6 @@ void pd_conv2d_n16cx_gemm_direct_fp32_avx512_executor::cal_kernel_tunning_param(
         mode_ = pd_conv2d_fp32_mode::SEPARATE;
     } else {
         mode_ = pd_conv2d_fp32_mode::FUSE;
-    }
-
-    sp.use_nt_store = 0;
-    if (batch * gd_p.group * sp.padded_oc * dst_h * dst_w > l3_cap_all_core * 3) {
-        sp.use_nt_store = 1;
     }
 }
 
