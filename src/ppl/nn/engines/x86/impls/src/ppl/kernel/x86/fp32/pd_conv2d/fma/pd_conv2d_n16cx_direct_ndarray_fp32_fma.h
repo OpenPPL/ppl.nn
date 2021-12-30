@@ -54,8 +54,6 @@ private:
         uint64_t dw_temp_buffer_size;
     } schedule_param_;
 
-    ppl::nn::TensorShape inter_shape_;
-
     void init_preproc_param();
     void cal_kernel_tunning_param();
     ppl::common::RetCode fuse_execute();

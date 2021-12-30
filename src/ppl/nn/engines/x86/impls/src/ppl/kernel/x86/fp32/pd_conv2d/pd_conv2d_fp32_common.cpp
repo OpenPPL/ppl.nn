@@ -200,7 +200,7 @@ pd_conv2d_fp32_manager *pd_conv2d_algo_selector::gen_algo(
         algo_info.isa == ppl::common::ISA_X86_AVX512 &&
         algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
         algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
-        return new pd_conv2d_n16cx_gemm_direct_fp32_fma_manager(mgr, depthwise_mgr);
+        return new pd_conv2d_n16cx_gemm_direct_fp32_avx512_manager(mgr, depthwise_mgr);
     }
     if (algo_info.algo_type == pd_conv2d_fp32_algo::DIRECT &&
         algo_info.isa == ppl::common::ISA_X86_AVX512 &&

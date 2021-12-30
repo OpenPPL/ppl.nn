@@ -30,6 +30,125 @@
 
 namespace ppl { namespace nn { namespace x86 {
 
+ppl::common::RetCode PostDepthwiseConv2dKernel::SeparateExecute(KernelExecContext* ctx, TensorImpl *X, TensorImpl *Y) {
+    auto& inter_shape = executor_->inter_shape();
+    PPLNN_X86_DEBUG_TRACE("InterTensor:\n");
+    PPLNN_X86_DEBUG_TRACE("DimCount: %u\n", inter_shape.GetDimCount());
+    for (uint32_t i = 0; i < inter_shape.GetDimCount(); ++i) {
+        PPLNN_X86_DEBUG_TRACE("\tdim[%u]: %ld\tpads: [%hu, %hu]\n", i, inter_shape.GetDim(i),
+                               inter_shape.GetPadding0(i), inter_shape.GetPadding1(i));
+    }
+    PPLNN_X86_DEBUG_TRACE("DataType: %s\n", ppl::common::GetDataTypeStr(inter_shape.GetDataType()));
+    PPLNN_X86_DEBUG_TRACE("DataFormat: %s\n", ppl::common::GetDataFormatStr(inter_shape.GetDataFormat()));
+
+    BufferDesc inter_buffer_desc;
+    auto status = GetDevice()->Realloc(inter_shape, &inter_buffer_desc);
+    if (status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "alloc InterTensor size[" << inter_shape.GetBytesIncludingPadding() << "] for kernel[" << GetName()
+                   << "] failed: " << ppl::common::GetRetCodeStr(status);
+        return status;
+    }
+    BufferDescGuard inter_buffer_guard(&inter_buffer_desc, [this](BufferDesc* buffer) -> void {
+            GetX86Device()->Free(buffer);
+    });
+    auto inter_buffer = (float*)inter_buffer_desc.addr;
+
+    {
+        BufferDesc conv_tmp_buffer_desc;
+        auto conv_tmp_buffer_size = executor_->conv2d_executor()->cal_temp_buffer_size();
+        auto status = GetX86Device()->AllocTmpBuffer(conv_tmp_buffer_size, &conv_tmp_buffer_desc);
+        if (status != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "alloc conv tmp buffer size[" << conv_tmp_buffer_size << "] for kernel[" << GetName()
+                    << "] failed: " << ppl::common::GetRetCodeStr(status);
+            return status;
+        }
+        BufferDescGuard __tmp_buffer_guard(&conv_tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
+            GetX86Device()->FreeTmpBuffer(buffer);
+        });
+        auto conv_tmp_buffer = conv_tmp_buffer_desc.addr;
+        PPLNN_X86_DEBUG_TRACE("conv buffer: %p\n", conv_tmp_buffer);
+
+        executor_->conv2d_executor()->set_temp_buffer(conv_tmp_buffer);
+        executor_->conv2d_executor()->set_src(X->GetBufferPtr<float>());
+        executor_->conv2d_executor()->set_dst(inter_buffer);
+
+        auto rc = executor_->conv2d_executor()->execute();
+        if (ppl::common::RC_SUCCESS != rc) {
+            LOG(ERROR) << "Execute failed: " << ppl::common::GetRetCodeStr(rc);
+            return rc;
+        }
+
+         if (X->GetEdge()->CalcConsumerCount() == 1 && X->GetType() == TENSORTYPE_NORMAL) {
+            PPLNN_X86_DEBUG_TRACE("Free Input [X]\n");
+            X->FreeBuffer();
+        }
+    }
+
+    {
+        PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
+        PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
+
+        BufferDesc depthwise_conv_tmp_buffer_desc;
+        auto depthwise_conv_tmp_buffer_size = executor_->depthwise_conv2d_executor()->cal_temp_buffer_size();
+        auto status = GetX86Device()->AllocTmpBuffer(depthwise_conv_tmp_buffer_size, &depthwise_conv_tmp_buffer_desc);
+        if (status != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "alloc depthwise conv tmp buffer size[" << depthwise_conv_tmp_buffer_size << "] for kernel[" << GetName()
+                    << "] failed: " << ppl::common::GetRetCodeStr(status);
+            return status;
+        }
+        BufferDescGuard __tmp_buffer_guard(&depthwise_conv_tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
+            GetX86Device()->FreeTmpBuffer(buffer);
+        });
+        auto depthwise_conv_tmp_buffer = depthwise_conv_tmp_buffer_desc.addr;
+        PPLNN_X86_DEBUG_TRACE("depthwise conv buffer: %p\n", depthwise_conv_tmp_buffer);
+
+        executor_->depthwise_conv2d_executor()->set_temp_buffer(depthwise_conv_tmp_buffer);
+        executor_->depthwise_conv2d_executor()->set_src(inter_buffer);
+        executor_->depthwise_conv2d_executor()->set_dst(Y->GetBufferPtr<float>());
+
+        auto rc = executor_->depthwise_conv2d_executor()->execute();
+        if (ppl::common::RC_SUCCESS != rc) {
+            LOG(ERROR) << "Execute failed: " << ppl::common::GetRetCodeStr(rc);
+            return rc;
+        }
+    }
+
+    return ppl::common::RC_SUCCESS;
+}
+
+ppl::common::RetCode PostDepthwiseConv2dKernel::FuseExecute(KernelExecContext* ctx, TensorImpl *X, TensorImpl *Y) {
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
+    PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
+
+    BufferDesc tmp_buffer_desc;
+    auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
+    auto status = GetX86Device()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
+    if (status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
+                   << "] failed: " << ppl::common::GetRetCodeStr(status);
+        return status;
+    }
+    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
+        GetX86Device()->FreeTmpBuffer(buffer);
+    });
+    auto tmp_buffer = tmp_buffer_desc.addr;
+    PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
+
+    executor_->set_temp_buffer(tmp_buffer);
+    executor_->set_src(X->GetBufferPtr<float>());
+    executor_->set_dst(Y->GetBufferPtr<float>());
+
+    auto rc = executor_->execute();
+    if (ppl::common::RC_SUCCESS != rc) {
+        LOG(ERROR) << "Execute failed: " << ppl::common::GetRetCodeStr(rc);
+        return rc;
+    }
+
+    return ppl::common::RC_SUCCESS;
+}
+
 uint64_t PostDepthwiseConv2dKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     return executor_->cal_temp_buffer_size();
 }
@@ -96,35 +215,12 @@ ppl::common::RetCode PostDepthwiseConv2dKernel::DoExecute(KernelExecContext* ctx
             GetName().c_str());
 #endif
 
-    PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
-    PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
-
-    BufferDesc tmp_buffer_desc;
-    auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
-    auto status = GetX86Device()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
-    if (status != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
-                   << "] failed: " << ppl::common::GetRetCodeStr(status);
-        return status;
+    PPLNN_X86_DEBUG_TRACE("mode: %u\n", executor_->mode());
+    if (executor_->mode() == ppl::kernel::x86::pd_conv2d_fp32_mode::SEPARATE) {
+        return SeparateExecute(ctx, X, Y);
+    } else {
+        return FuseExecute(ctx, X, Y);
     }
-    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-        GetX86Device()->FreeTmpBuffer(buffer);
-    });
-    auto tmp_buffer = tmp_buffer_desc.addr;
-    PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
-
-    executor_->set_temp_buffer(tmp_buffer);
-    executor_->set_src(X->GetBufferPtr<float>());
-    executor_->set_dst(Y->GetBufferPtr<float>());
-
-    rc = executor_->execute();
-    if (ppl::common::RC_SUCCESS != rc) {
-        LOG(ERROR) << "Execute failed: " << ppl::common::GetRetCodeStr(rc);
-        return rc;
-    }
-
-    return ppl::common::RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::x86
