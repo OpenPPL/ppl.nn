@@ -29,10 +29,10 @@
 2. 指定数据类型
 
 ```C++
-./pplnn --use-cuda --onnx-model model.onnx --inputs input.bin -–in-shapes n_c_h_w --kernel-type 10 [--warmup-iterations m] --enable-profiling
+./pplnn --use-cuda --onnx-model model.onnx --inputs input.bin -–in-shapes n_c_h_w --kernel-type DATATYPE_INT8 [--warmup-iterations m] --enable-profiling
 ```
 
-同时，我们提供不依赖量化文件的测试性能。通过`--kernel-type 10`将所有的算子类型指定为int8，框架会优先调用int8精度下的算子。
+同时，我们提供不依赖量化文件的测试性能。通过`--kernel-type DATATYPE_INT8`将所有的算子类型指定为int8，框架会优先调用int8精度下的算子。
 
 ### 测试样例
 
@@ -45,7 +45,7 @@
 // int8
 ./pplnn --use-cuda --onnx-model model.onnx --inputs input.bin --in-shapes 1_3_224_224 --quant-file quant.json --warmup-iterations 100 --enable-profiling
 
-./pplnn --use-cuda --onnx-model model.onnx --inputs input1.bin,input2.bin --in-shapes 4_3_1200_1200,4_8 --kernel-type 10 --warmup-iterations 400 --enable-profiling
+./pplnn --use-cuda --onnx-model model.onnx --inputs input1.bin,input2.bin --in-shapes 4_3_1200_1200,4_8 --kernel-type DATATYPE_INT8 --warmup-iterations 400 --enable-profiling
 ```
 
 运行时间以如下格式打印:

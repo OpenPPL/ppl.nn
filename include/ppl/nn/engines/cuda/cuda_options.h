@@ -50,9 +50,8 @@ enum {
 
        @note example:
        @code{.cpp}
-       datatype_t default_kernel_type;
-       // fill output_types;
-       cuda_engine->Configure(CUDA_CONF_USE_DEFAULT_KERNEL_TYPE, type);
+       datatype_t kernel_type;
+       cuda_engine->Configure(CUDA_CONF_USE_DEFAULT_KERNEL_TYPE, kernel_type);
        @endcode
     */
     CUDA_CONF_USE_DEFAULT_KERNEL_TYPE,

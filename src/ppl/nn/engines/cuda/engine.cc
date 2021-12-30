@@ -132,15 +132,7 @@ RetCode CudaEngine::SetOutputType(CudaEngine* engine, va_list args) {
 }
 
 RetCode CudaEngine::SetKernelType(CudaEngine* engine, va_list args) {
-    string type = va_arg(args, const char*);
-    transform(type.begin(), type.end(), type.begin(),::toupper);
-    for (datatype_t i = DATATYPE_UNKNOWN; i < DATATYPE_MAX; i++) {
-        if (GetDataTypeStr(i) == type) {
-            engine->cuda_flags_.default_kernel_type = i;
-            return RC_SUCCESS;
-        }
-    }
-    LOG(ERROR) << "Invalid kernel type.";
+    engine->cuda_flags_.default_kernel_type = va_arg(args, datatype_t);
     return RC_SUCCESS;
 }
 

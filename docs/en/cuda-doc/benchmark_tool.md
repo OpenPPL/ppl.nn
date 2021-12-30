@@ -29,10 +29,10 @@ There are two methods testing the network performance under int8 accuracy. You c
 2. Use default kernel type
 
 ```C++
-./pplnn --use-cuda --onnx-model model.onnx --inputs input.bin -–in-shapes n_c_h_w --kernel-type 10 [--warmup-iterations m] --enable-profiling
+./pplnn --use-cuda --onnx-model model.onnx --inputs input.bin -–in-shapes n_c_h_w --kernel-type DATATYPE_INT8 [--warmup-iterations m] --enable-profiling
 ```
 
-We also support testing benchmark without quantitation file. You can specify all kernel types as int8 through `--kernel-type 10`, and our framework will preferentially running kernels with int8 precision.
+We also support testing benchmark without quantitation file. You can specify all kernel types as int8 through `--kernel-type DATATYPE_INT8`, and our framework will preferentially running kernels with int8 precision.
 
 
 ###Example:
@@ -46,7 +46,7 @@ We also support testing benchmark without quantitation file. You can specify all
 // int8
 ./pplnn --use-cuda --onnx-model model.onnx --inputs input.bin --in-shapes 1_3_224_224 --quant-file quant.json --warmup-iterations 100 --enable-profiling
 
-./pplnn --use-cuda --onnx-model model.onnx --inputs input1.bin,input2.bin --in-shapes 4_3_1200_1200,4_8 --kernel-type 10 --warmup-iterations 400 --enable-profiling
+./pplnn --use-cuda --onnx-model model.onnx --inputs input1.bin,input2.bin --in-shapes 4_3_1200_1200,4_8 --kernel-type DATATYPE_INT8 --warmup-iterations 400 --enable-profiling
 ```
 
 The running cost is shown in log as following:

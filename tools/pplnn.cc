@@ -202,9 +202,21 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     }
 
     cuda_engine->Configure(ppl::nn::CUDA_CONF_USE_DEFAULT_ALGORITHMS, g_flag_quick_select);
-    
+
     if (!g_flag_kernel_type.empty()) {
-        cuda_engine->Configure(ppl::nn::CUDA_CONF_USE_DEFAULT_KERNEL_TYPE, g_flag_kernel_type.c_str());
+        datatype_t kernel_type = DATATYPE_UNKNOWN;
+        for (datatype_t i = DATATYPE_UNKNOWN; i < DATATYPE_MAX; i++) {
+            if (GetDataTypeStr(i) == g_flag_kernel_type) {
+                kernel_type = i;
+                break;
+            }
+        }
+
+        if (kernel_type != DATATYPE_UNKNOWN) {
+            cuda_engine->Configure(ppl::nn::CUDA_CONF_USE_DEFAULT_KERNEL_TYPE, kernel_type);
+        } else {
+            LOG(ERROR) << "invalid kernel type[" << g_flag_kernel_type << "]";
+        }
     }
 
     if (!g_flag_quant_file.empty()) {
