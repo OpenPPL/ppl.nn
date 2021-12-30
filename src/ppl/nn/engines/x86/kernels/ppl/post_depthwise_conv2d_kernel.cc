@@ -30,7 +30,7 @@
 
 namespace ppl { namespace nn { namespace x86 {
 
-ppl::common::RetCode PostDepthwiseConv2dKernel::SeparateExecute(KernelExecContext* ctx, TensorImpl *X, TensorImpl *Y) {
+ppl::common::RetCode PostDepthwiseConv2dKernel::SeparateExecute(KernelExecContext* ctx, TensorImpl* X, TensorImpl* Y) {
     auto& inter_shape = executor_->inter_shape();
     PPLNN_X86_DEBUG_TRACE("InterTensor:\n");
     PPLNN_X86_DEBUG_TRACE("DimCount: %u\n", inter_shape.GetDimCount());
@@ -117,7 +117,7 @@ ppl::common::RetCode PostDepthwiseConv2dKernel::SeparateExecute(KernelExecContex
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode PostDepthwiseConv2dKernel::FuseExecute(KernelExecContext* ctx, TensorImpl *X, TensorImpl *Y) {
+ppl::common::RetCode PostDepthwiseConv2dKernel::FuseExecute(KernelExecContext* ctx, TensorImpl* X, TensorImpl* Y) {
     PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
     PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
