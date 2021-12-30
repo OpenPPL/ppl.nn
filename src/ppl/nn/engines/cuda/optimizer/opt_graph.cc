@@ -203,7 +203,7 @@ RetCode OptGraph::UpdateDims() {
         }
     }
 
-    LOG(INFO) << "Create " << tensor_impls_.size() << " TensorImpl";
+    LOG(DEBUG) << "Create " << tensor_impls_.size() << " TensorImpl";
     return RC_SUCCESS;
 }
 
@@ -321,6 +321,7 @@ RetCode OptGraph::AddBridgeKernels() {
 RetCode OptGraph::InitQuantization() {
     auto topo = graph_->topo.get();
     std::vector<CudaTensorQuant> graph_quants(topo->GetMaxEdgeId());
+
     // Load node quant to args_->node_type
     auto& node_params = args_->quant_info.node_params;
     for (auto iter = topo->CreateNodeIter(); iter->IsValid(); iter->Forward()) {
@@ -328,36 +329,12 @@ RetCode OptGraph::InitQuantization() {
         auto pair = node_params.find(node->GetName());
         if (pair != node_params.end()) {
             auto str = pair->second.fields.find("data_type")->second;
-            uint32_t bit_width = 0;
-            datatype_t type = DATATYPE_UNKNOWN;
             if (str.content == "INT8") {
                 args_->node_types.emplace(node->GetName(), DATATYPE_INT8);
-                type = DATATYPE_INT8;
-                bit_width = 8;
             } else if (str.content == "FLOAT32") {
                 args_->node_types.emplace(node->GetName(), DATATYPE_FLOAT32);
-                type = DATATYPE_FLOAT32;
-                bit_width = 32;
             } else {
                 LOG(ERROR) << "Not support set to such datatype: " << str.content;
-            }
-            for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
-                auto edge_id = node->GetInput(i);
-                if (edge_id == INVALID_EDGEID) {
-                    continue;
-                }
-                auto& input_quant = graph_quants.at(edge_id);
-                input_quant.type = type;
-                input_quant.bit_width = bit_width;
-            }
-            for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
-                auto edge_id = node->GetOutput(i);
-                if (edge_id == INVALID_EDGEID) {
-                    continue;
-                }
-                auto& output_quant = graph_quants.at(edge_id);
-                output_quant.type = type;
-                output_quant.bit_width = bit_width;
             }
         }
     }
@@ -389,25 +366,29 @@ RetCode OptGraph::InitQuantization() {
         }
         auto& temp_tensor_quant = graph_quants[edge->GetId()];
         auto str = pair->second.fields.find("per_channel")->second;
-        temp_tensor_quant.per_chnnal = *(bool*)(str.content.data());
-        if (temp_tensor_quant.per_chnnal) {
+        temp_tensor_quant.per_channel = *(bool*)(str.content.data());
+        auto bit_width = pair->second.fields.find("bit_width")->second;
+        temp_tensor_quant.bit_width = *(int*)(bit_width.content.data());
+        if (temp_tensor_quant.per_channel) {
             auto max_str = pair->second.fields.find("tensor_max")->second;
             auto min_str = pair->second.fields.find("tensor_min")->second;
-            uint32_t size = max_str.content.length() / 4;
+            auto scale_str = pair->second.fields.find("scale")->second;
+            uint32_t size = max_str.content.length() / 8;
             temp_tensor_quant.scale.resize(size);
             temp_tensor_quant.zero_point.resize(size);
             for (uint32_t i = 0; i < size; ++i) {
-                auto tensor_max = *((float*)(max_str.content.data()) + i);
-                auto tensor_min = *((float*)(min_str.content.data()) + i);
-                temp_tensor_quant.scale[i] = (tensor_max - tensor_min) / ((1 << temp_tensor_quant.bit_width) - 1);
+                auto tensor_max = *((double*)(max_str.content.data()) + i);
+                auto tensor_min = *((double*)(min_str.content.data()) + i);
+                temp_tensor_quant.scale[i] = (double)(tensor_max - tensor_min) / ((1 << temp_tensor_quant.bit_width) - 1);
                 temp_tensor_quant.zero_point[i] = tensor_max + tensor_min;
             }
         } else {
             str = pair->second.fields.find("tensor_max")->second;
-            auto tensor_max = *(float*)(str.content.data());
+            auto tensor_max = *(double*)(str.content.data());
             str = pair->second.fields.find("tensor_min")->second;
-            auto tensor_min = *(float*)(str.content.data());
-            temp_tensor_quant.scale[0] = (tensor_max - tensor_min) / ((1 << temp_tensor_quant.bit_width) - 1);
+            auto tensor_min = *(double*)(str.content.data());
+            auto scale_str = pair->second.fields.find("scale")->second;
+            temp_tensor_quant.scale[0] = (double)(tensor_max - tensor_min) / ((1 << temp_tensor_quant.bit_width) - 1);
             temp_tensor_quant.zero_point[0] = tensor_max + tensor_min;
         }
     }
@@ -436,10 +417,28 @@ RetCode OptGraph::UpdateType() {
         IOinfo.SetNode(node);
         CudaOptKernel* kernel = (CudaOptKernel*)(info_->kernels.find(node->GetId())->second.get());
 
-        datatype_t kernel_type = args_->kernel_default_type;
+        datatype_t kernel_type = args_->default_kernel_type;
         auto conf_pair = args_->node_types.find(node->GetName());
         if (conf_pair != args_->node_types.end()) {
             kernel_type = conf_pair->second;
+        }
+        if (kernel_type == DATATYPE_INT8) {
+            for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
+                auto edge_id = node->GetInput(i);
+                if (edge_id == INVALID_EDGEID) {
+                    continue;
+                }
+                auto& input_quant = graph_quants.at(edge_id);
+                input_quant.type = kernel_type;
+            }
+            for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
+                auto edge_id = node->GetOutput(i);
+                if (edge_id == INVALID_EDGEID) {
+                    continue;
+                }
+                auto& output_quant = graph_quants.at(edge_id);
+                output_quant.type = kernel_type;
+            }
         }
         auto status = kernel->InferType(&IOinfo, &graph_quants, kernel_type);
         if (status != RC_SUCCESS) {
@@ -472,11 +471,6 @@ RetCode OptGraph::SelectAlgos(CudaDevice* device) {
 
     OptKernelOptions options(graph_, info_, resource_, args_, compile_set_, device, &tensor_impls_, &graph_quants, &graph_algos);
     UpdateTopologicalSort();
-
-    if (!PPLCudaComputeCapabilityEqual(7, 5, device->GetDeviceId())) {
-        LOG(ERROR) << "PPL is not support your GPU device right now.";
-        return RC_UNSUPPORTED;
-    }
 
     AlgoGraph algo_graph(topo);
     // calculate the least time consuming

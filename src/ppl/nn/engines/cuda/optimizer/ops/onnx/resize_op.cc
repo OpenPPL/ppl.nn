@@ -20,6 +20,7 @@
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/cuda/kernels/onnx/resize_kernel.h"
 #include "ppl/nn/oputils/onnx/reshape_resize.h"
+#include<iostream>
 
 using namespace std;
 using namespace ppl::common;
@@ -43,6 +44,8 @@ RetCode ResizeOp::Init(const OptKernelOptions& options) {
         } else {
             status = InferDefaultType(info, type);
         }
+        auto shape = &info->GetInput<TensorImpl>(2)->GetShape();
+        shape->SetDataType(ppl::common::DATATYPE_FLOAT32);
         if (info->GetInputCount() == 4) {
             auto shape = &info->GetInput<TensorImpl>(3)->GetShape();
             shape->SetDataType(ppl::common::DATATYPE_INT64);

@@ -17,37 +17,43 @@
 
 #include "ppl/nn/engines/cuda/kernels/ppl/bridge_kernel.h"
 
+#include "cudakernel/reformat/reformat.h"
 #include "ppl/common/cuda/cuda_types.h"
 #include "ppl/nn/common/logger.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-bool BridgeKernel::EqualTypeAndFormat(const TensorImpl* input, const TensorImpl* output) {
-    auto in_shape = input->GetShape();
-    auto out_shape = output->GetShape();
+bool BridgeKernel::EqualTypeAndFormat(const TensorImpl* input, const TensorImpl* output, const CudaTensorQuant& in_quant, const CudaTensorQuant& out_quant) {
+    auto src_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(input->GetShape().GetDataFormat());
+    auto dst_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(output->GetShape().GetDataFormat());
 
-    if (in_shape.GetDim(1) != out_shape.GetDim(1)) {
-        return false;
-    }
-    
-    if (in_shape.GetDataType() != out_shape.GetDataType()) {
+    if (input->GetShape().GetDataType() != output->GetShape().GetDataType()) {
         return false;
     }
 
-    if (in_shape.GetDataFormat() == out_shape.GetDataFormat()) {
+    if (input->GetShape().GetDataType() == ppl::common::DATATYPE_INT8 && !EqualQuant(in_quant, out_quant)) {
+        return false;
+    }
+
+    if (input->GetShape().GetDataFormat() == output->GetShape().GetDataFormat()) {
         return true;
     }
 
-    auto src_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(in_shape.GetDataFormat());
-    auto dst_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(out_shape.GetDataFormat());
-    if (in_shape.GetDim(1) % src_align_size == 0 && out_shape.GetDim(1) % dst_align_size == 0) {
-        if (in_shape.GetDimCount() == 2 && out_shape.GetDimCount() == 2) {
-            return true;
-        }
-        if ((in_shape.GetDataType() == ppl::common::DATAFORMAT_NHWC8 || in_shape.GetDataType() == ppl::common::DATAFORMAT_NHWC16) &&
-            (out_shape.GetDataType() == ppl::common::DATAFORMAT_NHWC8 || out_shape.GetDataType() == ppl::common::DATAFORMAT_NHWC16)) {
-            return true;
-        }
+    if (input->GetShape().GetDimCount() == 1 && output->GetShape().GetDimCount() == 1) {
+        return true;
+    }
+
+    if (input->GetShape().GetDim(1) % src_align_size != 0 || output->GetShape().GetDim(1) % dst_align_size != 0) {
+        return false;
+    }
+
+    if (input->GetShape().GetDimCount() == 2 && output->GetShape().GetDimCount() == 2) {
+        return true;
+    }
+
+    if (input->GetShape().GetDimCount() == 4 && output->GetShape().GetDimCount() == 4 &&
+        input->GetShape().GetDim(2) == 1 && input->GetShape().GetDim(3) == 1) {
+        return true;
     }
 
     return false;
@@ -57,14 +63,26 @@ ppl::common::RetCode BridgeKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
     ppl::common::RetCode status = ppl::common::RC_SUCCESS;
+    auto converter = output->GetDevice()->GetDataConverter();
 
-    if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL && EqualTypeAndFormat(input, output)) {
+    auto input_id = input->GetEdge()->GetId();
+    auto input_quant = GetCommonParam()->cuda_tensor_info->at(input_id);
+    auto output_id = output->GetEdge()->GetId();
+    auto output_quant = GetCommonParam()->cuda_tensor_info->at(output_id);
+
+    if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL &&
+        EqualTypeAndFormat(input, output, input_quant, output_quant)) {
         output->TransferBufferFrom(input);
-    } else {
-        auto converter = output->GetDevice()->GetDataConverter();
-        status =
-            converter->Convert(&output->GetBufferDesc(), output->GetShape(), input->GetBufferDesc(), input->GetShape());
+        return status;
     }
+
+    if (input->GetShape().GetDataType() != ppl::common::DATATYPE_INT8 &&
+        output->GetShape().GetDataType() != ppl::common::DATATYPE_INT8) {
+        status = converter->Convert(&output->GetBufferDesc(), output->GetShape(), input->GetBufferDesc(), input->GetShape());
+    } else {
+        status = ((CudaDataConverter*)converter)->Convert(&output->GetBufferDesc(), output->GetShape(), output_quant, input->GetBufferDesc(), input->GetShape(), input_quant);
+    }
+
     return status;
 }
 

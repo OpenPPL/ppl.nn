@@ -36,6 +36,8 @@ inline int AlignDataFormat(ppl::common::dataformat_t dt)
             return 32;
         case ppl::common::DATAFORMAT_NHWC8:
             return 8;
+        case ppl::common::DATAFORMAT_NHWC16:
+            return 16;
         default:
             return 1;
     }
@@ -60,10 +62,18 @@ struct ReFormatParam {
     bool mix_type;
     bool mix_format;
 
+    bool same_scale = 1;
+    int quant_stride = 1;
+    int quant_dim_size = 1;//output channel size
     int i_zero_point = 0;
     int o_zero_point = 0;
-    float i_step     = 1.0f;
-    float o_step     = 1.0f;
+    float *i_step_ptr = nullptr;
+    float *o_step_ptr = nullptr;
+    
+    bool per_channel = false;
+
+    float i_step = 1.0f;
+    float o_step = 1.0f;
 
     ppl::common::dataformat_t in_format;
     ppl::common::dataformat_t out_format;
@@ -78,8 +88,10 @@ enum CVTFormatMode {
     NDARRAY_N4CX = 2,
     N4CX_NDARRAY = 11,
 
-    NDARRAY_NHWC8 = 31,
-    NHWC8_NDARRAY = 32,
+    NDARRAY_NHWC  = 31,
+    NHWC_NDARRAY  = 32,
+    NHWC8_NHWC16  = 33,
+    NHWC16_NHWC8  = 34,
 };
 
 enum CVTTypeMode {
@@ -112,6 +124,8 @@ CVTTypeMode GetCVTTypeMode(ReFormatParam param);
 
 void PPLCUDACVTFormat(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
 void PPLCUDACVTTypePerTensor(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
+void PPLCUDACVTTypePerChannel(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
+
 ppl::common::RetCode SetReLayoutParam(ReFormatParam* param, const ppl::nn::TensorShape& input, const ppl::nn::TensorShape& output);
 ppl::common::RetCode SetReLayoutParam(ReFormatParam* param, const ppl::nn::TensorShape& input, const ppl::nn::cuda::CudaTensorQuant& input_quant, const ppl::nn::TensorShape& output, const ppl::nn::cuda::CudaTensorQuant& output_quant);
 

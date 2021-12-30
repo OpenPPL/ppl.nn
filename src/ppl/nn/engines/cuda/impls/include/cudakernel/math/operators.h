@@ -42,6 +42,11 @@ inline __host__ __device__ half getMin<half>()
 {
     return HLAF_MIN;
 }
+template <>
+inline __host__ __device__ int8_t getMin<int8_t>()
+{
+    return INT8_MIN;
+}
 
 template <typename T>
 T getMax();
@@ -59,6 +64,11 @@ template <>
 inline __host__ __device__ half getMax<half>()
 {
     return HALF_MAX;
+}
+template <>
+inline __host__ __device__ int8_t getMax<int8_t>()
+{
+    return INT8_MAX;
 }
 
 template <typename T>
@@ -78,6 +88,11 @@ inline __host__ __device__ int64_t getZero()
 {
     return (int64_t)0;
 }
+template <>
+inline __host__ __device__ int8_t getZero()
+{
+    return (int8_t)0;
+}
 
 template <typename T>
 T getOne();
@@ -95,6 +110,11 @@ template <>
 inline __host__ __device__ int64_t getOne()
 {
     return (int64_t)1;
+}
+template <>
+inline __host__ __device__ int8_t getOne()
+{
+    return (int8_t)1;
 }
 template <typename src_type, typename dst_type, typename acc_type>
 struct SumOp {

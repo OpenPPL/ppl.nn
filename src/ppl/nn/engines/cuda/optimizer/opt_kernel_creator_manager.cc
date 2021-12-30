@@ -182,7 +182,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     // M
     REGISTER_OPT_KERNEL_CREATOR("", "MatMul", 9, 12, MatMulOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Max", 8, 11, MaxOp);
-    REGISTER_OPT_KERNEL_CREATOR("", "MaxPool", 11, 11, MaxPoolOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "MaxPool", 11, 13, MaxPoolOp);
     REGISTER_OPT_KERNEL_CREATOR("", "MaxUnpool", 11, 16, MaxUnPoolOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Min", 8, 11, MinOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Mul", 7, 12, MulOp);

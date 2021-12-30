@@ -20,7 +20,7 @@
 
 #include "ppl/nn/engines/cuda/kernel.h"
 
-#include "ppl/nn/params/onnx/batch_normalization_param.h"
+#include "ppl/nn/engines/cuda/params/batch_normalization_extra_param.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -28,7 +28,7 @@ class BatchNormalizationKernel : public CudaKernel {
 public:
     BatchNormalizationKernel(const ir::Node* node) : CudaKernel(node) {}
 
-    void SetParam(const ppl::nn::common::BatchNormalizationParam* p) {
+    void SetParam(const CudaBatchNormalizationParam* p) {
         param_ = p;
     }
 
@@ -36,7 +36,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::BatchNormalizationParam* param_ = nullptr;
+    const CudaBatchNormalizationParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::cuda

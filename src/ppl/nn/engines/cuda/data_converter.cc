@@ -222,18 +222,53 @@ RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc,
         return status;
     }
 
-    auto src_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(src_desc.GetDataFormat());
-    auto dst_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(dst_desc.GetDataFormat());
-    if (src_desc.GetDimCount() == 2 && dst_desc.GetDimCount() == 2) {
-        if (src_desc.GetDim(1) % src_align_size == 0 && dst_desc.GetDim(1) % dst_align_size == 0) {
-            param.in_format = param.out_format;
-            param.mix_format = 0;
+    BufferDesc in_scale_buf, out_scale_buf;
+    status = device_->Realloc(param.quant_dim_size*sizeof(float), &in_scale_buf);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "alloc tmp buffer for dst tensor failed";
+        return status;
+    }
+    status = device_->Realloc(param.quant_dim_size*sizeof(float), &out_scale_buf);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "alloc tmp buffer for dst tensor failed";
+        return status;
+    }
+    BufferDescGuard __in_scale_buf_guard__(&in_scale_buf, [this](BufferDesc* buffer) {
+        device_->Free(buffer);
+    });
+    BufferDescGuard __out_scale_buf_guard__(&out_scale_buf, [this](BufferDesc* buffer) {
+        device_->Free(buffer);
+    });
+
+    if (param.mix_type && (src_quant.per_channel || dst_quant.per_channel)) {
+        vector<float> in_scale(src_quant.scale);
+        if (in_scale.size()==1) {
+            float t_scale = in_scale[0];
+            in_scale.resize(param.quant_dim_size, t_scale);
+        } else {
+            while (in_scale.size() < (unsigned)param.quant_dim_size) {
+                in_scale.push_back(1.f);
+            }
         }
+        device_->CopyFromHost(&in_scale_buf, &(in_scale[0]), ((int)param.quant_dim_size)*sizeof(float));
+        param.i_step_ptr = (float*)in_scale_buf.addr;
+
+        vector<float> out_scale(dst_quant.scale);
+        if (out_scale.size()==1) {
+            float t_scale = out_scale[0];
+            out_scale.resize(param.quant_dim_size, t_scale);
+        } else {
+            while (out_scale.size() < (unsigned)param.quant_dim_size) {
+                out_scale.push_back(1.f);
+            }
+        }
+        device_->CopyFromHost(&out_scale_buf, &(out_scale[0]), ((int)param.quant_dim_size)*sizeof(float));
+        param.o_step_ptr = (float*)out_scale_buf.addr;
     }
 
-    if (param.in_format == param.out_format && param.in_type == param.out_type) {
+    if (!param.mix_format && !param.mix_type) {
         device_->Copy(dst, src, dst_desc);
-    } else if (param.in_format == param.out_format || param.in_type == param.out_type) {
+    } else if ( !param.mix_format || !param.mix_type) {
         PPLCUDADataConvert(device_->GetStream(), src.addr, dst->addr, nullptr, param);
     } else {
         auto shape_size = src_desc.GetElementsIncludingPadding() * GetSizeOfDataType(dst_desc.GetDataType());
@@ -247,6 +282,7 @@ RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc,
         BufferDescGuard __tmp_buffer_guard__(&tmp_buffer_desc, [this](BufferDesc* buffer) {
             device_->Free(buffer);
         });
+
 
         PPLCUDADataConvert(device_->GetStream(), src.addr, dst->addr, tmp_buffer_desc.addr, param);
     }

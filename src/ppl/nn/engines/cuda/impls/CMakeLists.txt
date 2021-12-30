@@ -24,6 +24,8 @@ message(STATUS ${CMAKE_CURRENT_BINARY_DIR})
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 else()
 execute_process(
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv/int8_2spk/gen_2spk_int8_kernel.py ${CMAKE_CURRENT_BINARY_DIR}/conv/int8_2spk
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv/int8_idxn/gen_idxn_int8_kernel.py ${CMAKE_CURRENT_BINARY_DIR}/conv/int8_idxn
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv/2spk/gen_2spk_kernel.py ${CMAKE_CURRENT_BINARY_DIR}/conv/2spk
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv/idxn/gen_idxn_kernel.py ${CMAKE_CURRENT_BINARY_DIR}/conv/idxn
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv/swzl/gen_swzl_kernel.py ${CMAKE_CURRENT_BINARY_DIR}/conv/swzl
@@ -53,11 +55,22 @@ endif()
 #                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/idxn/init*.cu
 #                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/gene_header.cc)
 
+file(GLOB_RECURSE CUDA_SRC ${CUDA_SRC} ${CMAKE_CURRENT_BINARY_DIR}/conv/int8_2spk/int8_f*_kernels.cu
+                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/int8_2spk/init*.cu
+                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/int8_idxn/int8_idxn_kernels*.cu
+                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/int8_idxn/init*.cu)
+
+file(GLOB_RECURSE CUDA_SRC ${CUDA_SRC} ${CMAKE_CURRENT_BINARY_DIR}/conv/int8_2spk/int8_f*_kernels.cu
+                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/int8_2spk/init*.cu
+                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/int8_idxn/int8_idxn_kernels*.cu
+                                       ${CMAKE_CURRENT_BINARY_DIR}/conv/int8_idxn/init*.cu)
+
 file(GLOB_RECURSE CUDA_SRC ${CUDA_SRC} src/arithmetic/*.cu
                                        src/memory/*.cu
                                        src/reduce/*.cu
                                        src/reformat/*.cu
                                        src/nn/conv/conv.cu
+                                       src/nn/conv/conv_int8.cu
                                        src/nn/conv/common/*.cu
                                        src/nn/conv/common/init_lut.cc
 				                       src/unary/*.cu)

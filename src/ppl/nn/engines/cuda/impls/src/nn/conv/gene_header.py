@@ -45,7 +45,7 @@ def write_tail(file):
     file.write(template)
 
 def init_include_file(file, path, name):
-    with open(path + name, "r") as header_file:
+    with open(path + name, "r", encoding='UTF-8') as header_file:
         code = header_file.read()
         code = code.replace('\\', '\\\\')
         code = code.replace('\"', '\\\"')
@@ -65,7 +65,7 @@ def main():
     sourse_pwd = sys.argv[1]
     tail_pwd = sys.argv[2]
 
-    with open(tail_pwd + "/gene_header.cc", "w+") as f:
+    with open(tail_pwd + "/gene_header.cc", "w+", encoding='UTF-8') as f:
         write_head(f)
         
         init_include_file(f, sourse_pwd, "/2spk/common/const_macros.h")
@@ -108,6 +108,35 @@ def main():
         init_include_file(f, sourse_pwd, "/idxn/common/output_macros.h")
         init_include_file(f, sourse_pwd, "/idxn/common/main_body.h")
         init_include_file(f, sourse_pwd, "/idxn/common/uni_undefs.h")
+        
+        init_include_file(f, sourse_pwd, "/int8_2spk/common/const_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_2spk/f1/bound_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_2spk/f3/bound_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_2spk/fn/bound_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_2spk/fs/bound_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_2spk/common/ldsm_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_2spk/f1/dmem_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_2spk/f3/dmem_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_2spk/fn/dmem_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_2spk/fs/dmem_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_2spk/common/imma_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_2spk/common/reduce_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_2spk/common/smem_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_2spk/common/output_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_2spk/common/quant_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_2spk/common/main_body.h")
+        init_include_file(f, sourse_pwd, "/int8_2spk/common/uni_undefs.h")
+        init_include_file(f, sourse_pwd, "/int8_idxn/common/const_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_idxn/common/dmem_i1_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_idxn/common/imma_i1_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_idxn/common/dmem_i2_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_idxn/common/imma_i2_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_idxn/common/dmem_i4_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_idxn/common/imma_i4_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_idxn/common/output_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_idxn/common/quant_macros.h")
+        init_include_file(f, sourse_pwd, "/int8_idxn/common/main_body.h")
+        init_include_file(f, sourse_pwd, "/int8_idxn/common/uni_undefs.h")
          
         write_tail(f)
         

@@ -190,11 +190,12 @@
         concat_stride_v8
 
 static std::vector<kernel_info_t> g_kernel_container;
+static std::vector<kernel_info_t> g_int8_kernel_container;
 static bool is_g_kernel_container_initialized = false;
 
 static std::unordered_map<size_t, algo_param_t> g_conv_shape_hash;
 
-void InitializeKernelContainer(std::vector<kernel_info_t> &g_kernel_container, ppl::common::datatype_t type)
+__inline__ void InitializeKernelContainerInt8(std::vector<kernel_info_t> &g_kernel_container, ppl::common::datatype_t type)
 {
     if (type == ppl::common::DATATYPE_FLOAT16) {
 #ifndef PPLNN_ENABLE_CUDA_JIT
@@ -251,8 +252,8 @@ uint64_t PPLCUDAConvolutionGetCompilationBufSize(ppl::common::datatype_t type, c
     bool is_in_grp_pad  = num_chl_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
     bool is_out_grp_pad = num_flt_per_grp_pad != num_flt_per_grp && conv_param.num_grp != 1;
 
-    uint32_t cvt_input_size  = 0;
-    uint32_t cvt_output_size = 0;
+    uint64_t cvt_input_size = 0;
+    uint64_t cvt_output_size = 0;
 
     if (is_in_grp_pad)
         cvt_input_size = GetCvtInputSize(type, conv_param, num_chl_per_grp_pad);
@@ -284,17 +285,17 @@ uint64_t PPLCUDAConvolutionGetRuntimeBufSize(
     bool is_in_grp_pad  = num_chl_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
     bool is_out_grp_pad = num_flt_per_grp_pad != num_flt_per_grp && conv_param.num_grp != 1;
 
-    uint32_t cvt_input_size  = 0;
-    uint32_t cvt_output_size = 0;
+    uint64_t cvt_input_size = 0;
+    uint64_t cvt_output_size = 0;
 
     if (is_in_grp_pad)
         cvt_input_size = GetCvtInputSize(type, conv_param, num_chl_per_grp_pad);
     if (is_out_grp_pad)
         cvt_output_size = getCvtOutputSize(type, conv_param, num_flt_per_grp_pad);
 
-    uint32_t split_size = 0;
-
-    if (splitk > 1 || splitf > 1)
+    uint64_t split_size = 0;
+    
+    if(splitk > 1 || splitf > 1)
         split_size = GetSplitKFSize(type, conv_param, num_flt_per_grp_pad, splitk, splitf);
 
     uint64_t total_size = cvt_input_size + cvt_output_size + split_size;
@@ -318,7 +319,7 @@ double PPLCUDAConvolutionSelectKernel(
     uint64_t workspace)
 {
     if (!is_g_kernel_container_initialized)
-        InitializeKernelContainer(g_kernel_container, type);
+        InitializeKernelContainerInt8(g_kernel_container, type);
 
     size_t conv_shape_hash = GetConvShapeHashKey(conv_param);
 
@@ -525,7 +526,7 @@ void PPLCUDAConvolutionForwardImp(
     fuse_param_t &fuse_param)
 {
     if (!is_g_kernel_container_initialized)
-        InitializeKernelContainer(g_kernel_container, type);
+        InitializeKernelContainerInt8(g_kernel_container, type);
 
     unsigned int kid    = algo_param.kid;
     unsigned int splitk = algo_param.splitk;
@@ -776,6 +777,7 @@ ppl::common::RetCode PPLCUDAConvolutionModifyAlgoParam(
 }
 
 ppl::common::RetCode PPLCUDAConvolutionPredictKernel(
+    ppl::common::datatype_t type,
     algo_param_t &algo_param,
     conv_param_t &conv_param)
 {
@@ -814,6 +816,10 @@ ppl::common::RetCode PPLCUDAConvolutionPredictKernel(
         } else {
             algo_param.tiles.k_cta      = 32;
             algo_param.tiles.k_per_step = 32;
+        }
+        if (type == ppl::common::DATATYPE_INT8) {
+            algo_param.tiles.k_cta      *= 2;
+            algo_param.tiles.k_per_step *= 2;            
         }
     } else { // Use 2spk or swizzle algo for large channel
         float min_pad          = 1.0;
@@ -911,7 +917,7 @@ float AlgoForwardTime(
         CUfunction function = cuda_module->GetKernelFunc(name[n]);
         cudaEventRecord(begin, stream);
         for (int i = 0; i < times; i++) {
-            PPLCUDAConvolutionForwardJITImp(
+            PPLCUDAConvolutionForwardJitImp(
                 stream, function, type, d_input, d_flt, d_output, bias, d_temp_buf, algo_param[n], conv_param, fuse_param);
         }
         cudaEventRecord(end, stream);
@@ -944,15 +950,6 @@ double PPLCUDAConvolutionJitSelectKernel(
     fuse_param_t &fuse_param,
     uint64_t workspace)
 {
-    size_t conv_shape_hash = GetConvShapeHashKey(conv_param);
-
-    std::unordered_map<size_t, algo_param_t>::const_iterator conv_shape_hash_iterator = g_conv_shape_hash.find(conv_shape_hash);
-
-    if (conv_shape_hash_iterator != g_conv_shape_hash.end()) {
-        algo_param = conv_shape_hash_iterator->second;
-        return ppl::common::RC_SUCCESS;
-    }
-
     auto pre_algo_param     = algo_param;
     int pad_size            = GetPadSize(type);
     int num_chl_per_grp     = conv_param.num_chl / conv_param.num_grp;
@@ -1058,7 +1055,7 @@ double PPLCUDAConvolutionJitSelectKernel(
                 }
 
                 kernel_info_t temp_kernel(-1, ktype, algo_param.algo_name.c_str());
-                if (!temp_kernel.CheckKernelTilesFeasible(device_id))
+                if (!temp_kernel.CheckKernelTilesFeasible(type, device_id))
                     continue;
                 if (!temp_kernel.CheckKernelTypeFeasible(conv_param.flt_height, conv_param.flt_width, num_chl_per_grp, splitk))
                     continue;
@@ -1096,11 +1093,10 @@ double PPLCUDAConvolutionJitSelectKernel(
     elapsed = AlgoForwardTime(stream, knames, total_source, index, compile_params, device_id, true, type, d_input, d_flt, d_output, bias, d_temp_buf, params, conv_param, fuse_param, workspace);
 
     algo_param                         = params[index];
-    g_conv_shape_hash[conv_shape_hash] = algo_param;
     return elapsed;
 }
 
-void PPLCUDAConvolutionForwardJITImp(
+void PPLCUDAConvolutionForwardJitImp(
     cudaStream_t &stream,
     CUfunction function,
     ppl::common::datatype_t type,
@@ -1181,8 +1177,6 @@ void PPLCUDAConvolutionForwardJITImp(
     }
     grid_size.z = conv_param.num_grp * splitk * splitf;
 
-    // int has_relu = fuse_param.has_activation == 1? 1:0;
-    // int has_elt_relu = fuse_param.has_elt_activation == 1 ? 1 : 0;
     const int4 *pre_data  = (const int4 *)fuse_param.pre_data;
     const void *prelu     = (const void *)fuse_param.prelu;
     const void *elt_prelu = (const void *)fuse_param.elt_prelu;

@@ -40,8 +40,8 @@ __global__ void ppl_argmax(
         int64_t offset  = out_idx * outer_stride + in_idx;
         int64_t val     = 0;
         for (int i = 1; i < n_reduce; i++) {
-            float temp1 = input[offset + val * n_inner];
-            float temp2 = input[offset + i * n_inner];
+            T temp1 = input[offset + val * n_inner];
+            T temp2 = input[offset + i * n_inner];
             if (temp1 <= temp2)
                 val = i;
         }
@@ -65,7 +65,11 @@ ppl::common::RetCode PPLCUDAArgMaxForwardImp(
         ppl_argmax<half><<<grid_dim, block_dim, 0, stream>>>(des, (const half*)input, (int64_t*)output);
     } else if (input_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
         ppl_argmax<float><<<grid_dim, block_dim, 0, stream>>>(des, (const float*)input, (int64_t*)output);
-    } else {
+    }
+    else if (input_shape->GetDataType() == ppl::common::DATATYPE_INT8) {
+        ppl_argmax<int8_t><<<grid_dim, block_dim, 0, stream>>>(des, (const int8_t*)input, (int64_t*)output);
+    }
+    else {
         return ppl::common::RC_UNSUPPORTED;
     }
 

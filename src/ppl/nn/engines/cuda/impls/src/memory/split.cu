@@ -136,22 +136,27 @@ ppl::common::RetCode PPLCUDASplitForwardImp(
         }
 
 #undef SWITCH_CASE
-    } else if (input_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8) {
+    } else if (input_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8 ||
+               input_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC16) {
         int num_dims = input_shape->GetDimCount();
         if (num_dims < 2)
             return ppl::common::RC_UNSUPPORTED;
         int input_elems = input_shape->GetElementsExcludingPadding();
         if (num_outputs == 2 && split_axis == 1) {
+            int align_size = NHWC8_ALIGNED_AXIS;
+            if (input_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC16) {
+                align_size = NHWC8_ALIGNED_AXIS * 2;
+            }
 #define SWITCH_CASE(TYPE)                                                                            \
     case sizeof(TYPE): {                                                                             \
         int block_size      = 256;                                                                   \
         int grid_size       = (input_elems + block_size - 1) / block_size;                           \
         int axis_width0     = out_dims[0][split_axis];                                               \
-        int pad_axis_width0 = Align(axis_width0, NHWC8_ALIGNED_AXIS);                                \
+        int pad_axis_width0 = Align(axis_width0, align_size);                                \
         int axis_width1     = out_dims[1][split_axis];                                               \
-        int pad_axis_width1 = Align(axis_width1, NHWC8_ALIGNED_AXIS);                                \
+        int pad_axis_width1 = Align(axis_width1, align_size);                                \
         int inner_dims      = axis_width0 + axis_width1;                                             \
-        int pad_inner_dims  = Align(inner_dims, NHWC8_ALIGNED_AXIS);                                 \
+        int pad_inner_dims  = Align(inner_dims, align_size);                                 \
         ppl_cukernel_split_nhwc_two_inputs<<<grid_size, block_size, 0, stream>>>(input_elems,        \
                                                                                  inner_dims,         \
                                                                                  pad_inner_dims,     \

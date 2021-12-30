@@ -18,7 +18,6 @@
 #include "cudakernel/arithmetic/logical.h"
 #include "ppl/common/types.h"
 #include <algorithm>
-
 enum LogicalOpType {
     Logical_Unknown = 0,
     Logical_And,

@@ -40,7 +40,7 @@ RetCode MMCVROIAlignOp::Init(const OptKernelOptions& options) {
             if (in_shape->GetDataType() == DATATYPE_UNKNOWN) {
                 return RC_UNSUPPORTED;
             }
-            if (in_shape->GetDataType() == DATATYPE_FLOAT16) {
+            if (in_shape->GetDataType() == DATATYPE_FLOAT16 || in_shape->GetDataType() == DATATYPE_INT8) {
                 in_shape->SetDataType(DATATYPE_FLOAT32);
             }
         }

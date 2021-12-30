@@ -20,7 +20,7 @@
 
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 
-#include "ppl/nn/params/onnx/batch_normalization_param.h"
+#include "ppl/nn/engines/cuda/params/batch_normalization_extra_param.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -30,9 +30,12 @@ public:
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
+    void* GetParam() override {
+        return (void*)&param_;
+    };
 
 private:
-    ppl::nn::common::BatchNormalizationParam param_;
+    CudaBatchNormalizationParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

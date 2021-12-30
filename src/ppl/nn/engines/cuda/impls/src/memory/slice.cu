@@ -23,7 +23,6 @@
 #include <cuda_runtime.h>
 
 #define MAX_DIM_SIZE SLICE_PARAM_MAX_DIM_SIZE
-
 template <typename T>
 __global__ void ppl_cukernel_slice(
     int64_t num_elems,
@@ -120,7 +119,6 @@ ppl::common::RetCode PPLCUDASliceForwardImp(
             num_elems, num_dims, param, input_strides, (const TYPE*)input, output_strides, output_strides_fast, (TYPE*)output); \
         return ppl::common::RC_SUCCESS;                                                                                         \
     }
-
     switch (ppl::common::GetSizeOfDataType(input_shape->GetDataType())) {
         SWITCH_CASE(int8_t);
         SWITCH_CASE(int16_t);

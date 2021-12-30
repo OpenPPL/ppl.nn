@@ -24,7 +24,6 @@
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/utils/utils.h"
 
-//#include "cudakernel/gemm/gemm.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
@@ -34,7 +33,7 @@ double LstmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
     return 1e-5f;
 }
 
-RetCode LstmAlgorithm::ModifyParam(const ir::Node* node, OptKernelOptions& options) {
+RetCode LstmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 

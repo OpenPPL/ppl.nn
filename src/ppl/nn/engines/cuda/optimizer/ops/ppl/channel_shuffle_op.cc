@@ -19,6 +19,7 @@
 
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/cuda/kernels/ppl/channel_shuffle_kernel.h"
+#include<iostream>
 
 using namespace std;
 using namespace ppl::common;
@@ -36,6 +37,10 @@ RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
         } else {
             status = InferDefaultType(info, type);
         }
+        for (uint32_t i = info->GetOutputCount(); i < info->GetInputCount(); ++i) { // Shape op's outputs
+            auto shape = &info->GetInput<TensorImpl>(i)->GetShape();
+            shape->SetDataType(ppl::common::DATATYPE_INT64);
+        }
         return status;
     };
 
@@ -46,6 +51,7 @@ RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
         }
         return RC_SUCCESS;
     };
+    
     return RC_SUCCESS;
 }
 

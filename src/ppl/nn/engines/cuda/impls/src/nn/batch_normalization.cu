@@ -39,6 +39,22 @@ __device__ half ppl_get_std<half>(half var_val, half eps)
 }
 
 template <typename T>
+__device__ T ppl_relu(T val)
+{
+    return val > 0 ? val : 0;
+}
+
+template <>
+__device__ half ppl_relu<half>(half val)
+{
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
+    return __hgt(val, __float2half(0.0)) ? val : half(0);
+#else
+    return half(0);
+#endif
+}
+
+template <typename T>
 __global__ void ppl_cukernel_batchnorm_withmeanvar(
     int64_t num_elems,
     DivModFast channel_fast,
@@ -80,6 +96,7 @@ __global__ void ppl_cukernel_batchnorm_withmeanvar_nhwc(
     const T* mean,
     const T* var,
     float eps,
+    bool with_relu,
     T* output)
 {
     typedef Math<T, T, T> OpMath;
@@ -97,8 +114,53 @@ __global__ void ppl_cukernel_batchnorm_withmeanvar_nhwc(
     T var_val          = var[c_idx];
     T std              = ppl_get_std<T>(var_val, t_eps);
     int nhwc_index     = outer_offset * pad_channels + c_idx;
-    output[nhwc_index] = OpMath::add(OpMath::mul(OpMath::mul(OpMath::sub(input[nhwc_index], mean_val), std), scale_val), B_val);
+    T dst_val = OpMath::add(OpMath::mul(OpMath::mul(OpMath::sub(input[nhwc_index], mean_val), std), scale_val), B_val);
+    if (with_relu) {
+        dst_val = ppl_relu<T>(dst_val);
+    }
+    output[nhwc_index] = dst_val;
+    
 }
+
+__global__ void ppl_cukernel_batchnorm_withmeanvar_int8_nhwc(
+    int64_t num_elems,
+    DivModFast channel_fast,
+    int pad_channels,
+    const char* input,
+    const float* scale,
+    const float* B,
+    const float* mean,
+    const float* var,
+    float eps,
+    float in_scale,
+    float out_scale,
+    bool with_relu,
+    char* output)
+{
+    typedef Math<char, char, char> OpMath;
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index >= num_elems)
+        return;
+    char t_eps          = (char)eps;
+    int c_idx        = 0;
+    int outer_offset = 0;
+    channel_fast.divmod(index, outer_offset, c_idx);
+
+    float scale_val        = scale[c_idx];
+    float B_val            = B[c_idx];
+    float mean_val         = mean[c_idx];
+    float var_val          = var[c_idx];
+    float std              = ppl_get_std<float>(var_val, t_eps);
+    int nhwc_index     = outer_offset * pad_channels + c_idx;
+    float val = OpMath::add(OpMath::mul(OpMath::mul(OpMath::sub((float)input[nhwc_index] * in_scale, mean_val), std), scale_val), B_val);
+    int int_val = __float2int_rn(val * out_scale);
+    char dst = int_val < -128 ? -128 : int_val > 127 ? 127 : (char)int_val; 
+    if (with_relu) {
+        dst = dst > 0? dst:0;
+    }
+    output[nhwc_index] = dst;//OpMath::add(OpMath::mul(OpMath::mul(OpMath::sub(input[nhwc_index], mean_val), std), scale_val), B_val);
+}
+
 
 ppl::common::RetCode PPLCUDABatchNormalizationForwardImp(
     cudaStream_t stream,
@@ -112,7 +174,10 @@ ppl::common::RetCode PPLCUDABatchNormalizationForwardImp(
     const void* var,
     ppl::nn::TensorShape* output_shape,
     void* output,
-    float epsilon)
+    float epsilon,
+    float in_scale,
+    float out_scale,
+    bool with_relu)
 {
     int dim_count = input_shape->GetDimCount();
     int batch     = input_shape->GetDim(0);
@@ -135,9 +200,11 @@ ppl::common::RetCode PPLCUDABatchNormalizationForwardImp(
         DivModFast channel_fast(channels);
         int pad_channels = dim_count >= 2 ? input_shape->GetDim(1) + input_shape->GetPadding0(1) + input_shape->GetPadding1(1) : 1;
         if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
-            ppl_cukernel_batchnorm_withmeanvar_nhwc<float><<<grid_size, block_size, 0, stream>>>(num_elems, channel_fast, pad_channels, (const float*)input, (const float*)scale, (const float*)B, (const float*)mean, (const float*)var, epsilon, (float*)output);
+            ppl_cukernel_batchnorm_withmeanvar_nhwc<float><<<grid_size, block_size, 0, stream>>>(num_elems, channel_fast, pad_channels, (const float*)input, (const float*)scale, (const float*)B, (const float*)mean, (const float*)var, epsilon, with_relu, (float*)output);
         } else if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
-            ppl_cukernel_batchnorm_withmeanvar_nhwc<half><<<grid_size, block_size, 0, stream>>>(num_elems, channel_fast, pad_channels, (const half*)input, (const half*)scale, (const half*)B, (const half*)mean, (const half*)var, epsilon, (half*)output);
+            ppl_cukernel_batchnorm_withmeanvar_nhwc<half><<<grid_size, block_size, 0, stream>>>(num_elems, channel_fast, pad_channels, (const half*)input, (const half*)scale, (const half*)B, (const half*)mean, (const half*)var, epsilon, with_relu, (half*)output);
+        } else if (output_shape->GetDataType() == ppl::common::DATATYPE_INT8) {
+            ppl_cukernel_batchnorm_withmeanvar_int8_nhwc<<<grid_size, block_size, 0, stream>>>(num_elems, channel_fast, pad_channels, (const char*)input, (const float*)scale, (const float*)B, (const float*)mean, (const float*)var, epsilon, in_scale, out_scale, with_relu, (char*)output);
         }
     }
     return ppl::common::RC_SUCCESS;

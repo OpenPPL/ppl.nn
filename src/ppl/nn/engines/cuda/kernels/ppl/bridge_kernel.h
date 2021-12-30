@@ -28,7 +28,7 @@ public:
 
 private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
-    bool EqualTypeAndFormat(const TensorImpl*, const TensorImpl*);
+    bool EqualTypeAndFormat(const TensorImpl*, const TensorImpl*, const CudaTensorQuant&, const CudaTensorQuant& src_quant);
 };
 
 }}} // namespace ppl::nn::cuda

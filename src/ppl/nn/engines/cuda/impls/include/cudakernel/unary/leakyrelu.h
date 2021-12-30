@@ -26,6 +26,8 @@ ppl::common::RetCode PPLCUDAUnaryLeakyReluForwardImp(
     const void* input,
     const ppl::nn::TensorShape* output_shape,
     void* output,
-    float alpha);
+    float alpha,
+    float in_scale,
+    float out_scale);
 
 #endif // PPLCUDA_KERNEL_INCLUDE_LEAKYRELU_LEAKYRELU_H_

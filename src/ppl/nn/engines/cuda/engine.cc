@@ -18,6 +18,7 @@
 #include "ppl/nn/engines/cuda/engine.h"
 
 #include <stdarg.h>
+#include <algorithm>
 
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/engines/utils.h"
@@ -127,6 +128,19 @@ RetCode CudaEngine::SetOutputType(CudaEngine* engine, va_list args) {
     for (uint64_t i = 0; i < size; ++i) {
         engine->cuda_flags_.output_types[i] = base[i];
     }
+    return RC_SUCCESS;
+}
+
+RetCode CudaEngine::SetKernelType(CudaEngine* engine, va_list args) {
+    string type = va_arg(args, const char*);
+    transform(type.begin(), type.end(), type.begin(),::toupper);
+    for (datatype_t i = DATATYPE_UNKNOWN; i < DATATYPE_MAX; i++) {
+        if (GetDataTypeStr(i) == type) {
+            engine->cuda_flags_.default_kernel_type = i;
+            return RC_SUCCESS;
+        }
+    }
+    LOG(ERROR) << "Invalid kernel type.";
     return RC_SUCCESS;
 }
 
@@ -270,6 +284,7 @@ RetCode CudaEngine::ImportAlgorithms(CudaEngine* engine, va_list args) {
 CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetOutputFormat, // CUDA_CONF_SET_OUTPUT_DATA_FORMAT
     CudaEngine::SetOutputType, // CUDA_CONF_SET_OUTPUT_TYPE
+    CudaEngine::SetKernelType, // CUDA_CONF_USE_DEFAULT_KERNEL_TYPE
     CudaEngine::SetInputDims, // CUDA_CONF_SET_INPUT_DIMS
     CudaEngine::SetUseDefaultAlgorithms, // CUDA_CONF_USE_DEFAULT_ALGORITHMS
     CudaEngine::SetQuantization, // CUDA_CONF_SET_QUANTIZATION

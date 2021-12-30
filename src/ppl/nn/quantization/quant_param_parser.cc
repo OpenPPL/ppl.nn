@@ -39,8 +39,8 @@ static RetCode ParseParam(const rapidjson::Value& v, QuantParam* param) {
         if (it->value.IsBool()) {
             auto field_value = it->value.GetBool();
             value.content.assign((const char*)&field_value, sizeof(field_value));
-        } else if (it->value.IsFloat()) {
-            auto field_value = it->value.GetFloat();
+        } else if (it->value.IsDouble()) {
+            auto field_value = it->value.GetDouble();
             value.content.assign((const char*)&field_value, sizeof(field_value));
         } else if (it->value.IsInt64()) {
             auto field_value = it->value.GetInt64();
@@ -50,7 +50,7 @@ static RetCode ParseParam(const rapidjson::Value& v, QuantParam* param) {
         } else if (it->value.IsArray()) {
             value.content.clear();
             for (auto iter = it->value.GetArray().Begin(); iter != it->value.GetArray().End(); ++iter) {
-                auto field_value = iter->GetFloat();
+                auto field_value = iter->GetDouble();
                 value.content.append((const char*)&field_value, sizeof(field_value));
             }
         } else {

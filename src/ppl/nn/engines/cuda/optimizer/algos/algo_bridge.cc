@@ -28,10 +28,6 @@ double BridgeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     double timer = 0.0;
 
     if (input_format_ != output_format_) {
-        // if (preshape.GetDimCount() == 1) {
-        //     return ALGO_DOUBLE_MAX;
-        // }
-
         if (data->constants.find(preedge_id) != data->constants.end()) {
             return timer = 0.0;
         }
