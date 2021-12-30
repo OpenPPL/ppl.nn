@@ -37,7 +37,7 @@ static const float L3_RATIO = 0.501f;
 static const int64_t OC_DATA_BLK = conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::config::OC_DATA_BLK;
 
 static const int64_t OC_L2_BLK_MAX = 4 * OC_DATA_BLK;
-static const int64_t OH_L2_BLK_MIN = 32;
+static const int64_t OH_L2_BLK_MIN = 8;
 
 void pd_conv2d_n16cx_direct_ndarray_fp32_avx512_executor::init_preproc_param()
 {
@@ -84,7 +84,7 @@ void pd_conv2d_n16cx_direct_ndarray_fp32_avx512_executor::cal_kernel_tunning_par
     const float l2_cap_per_core = (ppl::common::GetCpuCacheL2() == 0 ? ASSUME_L2_BYTES : ppl::common::GetCpuCacheL2()) * L2_RATIO / sizeof(float);
     const float l3_cap_all_core = (ppl::common::GetCpuCacheL3() == 0 ? (ASSUME_L3_BYTES * num_thread) : ppl::common::GetCpuCacheL3()) * L3_RATIO / sizeof(float);
 
-    sp.mb_l3_blk = min(batch, num_thread);
+    sp.mb_l3_blk = batch;
     sp.grp_l3_blk = 1;
 
     sp.dr_unroll_w_start = -1;
@@ -108,9 +108,21 @@ void pd_conv2d_n16cx_direct_ndarray_fp32_avx512_executor::cal_kernel_tunning_par
     sp.oc_l2_blk = min(OC_L2_BLK_MAX, sp.padded_oc);
 
     sp.oh_l2_blk = dst_h;
-    const int64_t oh_thread = div_up(num_thread, sp.grp_l3_blk * sp.mb_l3_blk * div_up(sp.padded_oc, sp.oc_l2_blk));
+    auto task_bgo = sp.grp_l3_blk * sp.mb_l3_blk * div_up(sp.padded_oc, sp.oc_l2_blk);
+    const int64_t oh_thread = div_up(num_thread, task_bgo);
     if (oh_thread > 1) {
         sp.oh_l2_blk = max(dst_h / oh_thread, OH_L2_BLK_MIN);
+    }
+    while (true 
+        && task_bgo * div_up(dst_h, sp.oh_l2_blk) < num_thread * 4
+        && (task_bgo % num_thread != 0 || (sp.grp_l3_blk * sp.mb_l3_blk) % num_thread != 0 || sp.mb_l3_blk % num_thread != 0)
+        && sp.oh_l2_blk > OH_L2_BLK_MIN) {
+
+        if (dst_h / sp.oh_l2_blk <= 2) {
+            sp.oh_l2_blk /= 2;
+        } else {
+            sp.oh_l2_blk -= 1;
+        }
     }
 
     sp.use_nt_store = 0;
