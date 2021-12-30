@@ -32,7 +32,7 @@ RetCode ReshapeOp::Init(const OptKernelOptions& options) {
         if (type == DATATYPE_UNKNOWN) {
             status = InferInheritedType(info);
         } else if (type == DATATYPE_INT8) {
-            status = CopyQuantType(info, quant);
+            status = UnifyToOutputQuant(info, quant);
         } else {
             status = InferDefaultType(info, type);
         }

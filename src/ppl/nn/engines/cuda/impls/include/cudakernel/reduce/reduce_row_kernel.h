@@ -21,7 +21,6 @@
 #include "cudakernel/reduce/block_warp_reduce.h"
 #include "cudakernel/common/atomic.h"
 #include "cudakernel/math/operators.h"
-#include <stdio.h>
 /*
  *  [BX, 1]
  *  [Gx, 1]

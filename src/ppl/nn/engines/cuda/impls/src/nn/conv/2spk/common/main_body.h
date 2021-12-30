@@ -178,6 +178,7 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
     int dAv4_off[READ_dAv4_STEPS];
     bool in_hw_valid[READ_dAv4_STEPS];
 
+#pragma unroll
     for (int i = 0; i < READ_dAv4_STEPS; i++) {
         SET_dAv4_BOUND(i, dAv4_off[i], in_hw_valid[i]);
     }
@@ -185,6 +186,7 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
     int dAv4_off[READ_dAv4_STEPS];
     int in_hw_mask[READ_dAv4_STEPS];
 
+#pragma unroll
     for (int i = 0; i < READ_dAv4_STEPS; i++) {
         SET_dAv4_BOUND(i, dAv4_off[i], in_hw_mask[i]);
     }
@@ -197,6 +199,7 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
                        int in_h_start[READ_dAv4_STEPS];
                        int in_w_start[READ_dAv4_STEPS];
 
+#pragma unroll
                        for (int i = 0; i < READ_dAv4_STEPS; i++) {
                            SET_dAv4_BOUND(i, dAv4_off[i], in_n_id[i], in_h_start[i], in_w_start[i]);
                            in_h_id[i] = in_h_start[i];
@@ -207,6 +210,7 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
     int dBv4_off[READ_dBv4_STEPS];
     bool flt_n_valid[READ_dBv4_STEPS];
 
+#pragma unroll
     for (int i = 0; i < READ_dBv4_STEPS; i++) {
         SET_dBv4_BOUND(i, dBv4_off[i], flt_n_valid[i]);
     }

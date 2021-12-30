@@ -45,6 +45,19 @@ int GetRelueType(const std::string& name) {
     return -1;
 }
 
+#define GetPadSize(pad_size, type){ \
+    pad_size = 0; \
+    if (type == DATATYPE_FLOAT32) { \
+            pad_size = 4; \
+    } else if (type == DATATYPE_FLOAT16) { \
+            pad_size = 8; \
+    } else if (type == DATATYPE_INT8) { \
+            pad_size = 16; \
+    } \
+}
+
+#define Align(x, y) ( ((x)+(y)-1) / (y) * (y) )
+
 RetCode ConvertToForwardConvParam(const TensorShape& shape_in0, const TensorShape& shape_in1,
                                   const TensorShape& shape_out, ConvolutionParam normal_param,
                                   conv_param_t& conv_param) {
@@ -54,8 +67,15 @@ RetCode ConvertToForwardConvParam(const TensorShape& shape_in0, const TensorShap
     conv_param.num_grp = normal_param.group;
     conv_param.num_chl = shape_in1.GetDim(1) * normal_param.group;
     conv_param.num_flt = shape_in1.GetDim(0);
-    conv_param.num_chl_pad = (conv_param.num_chl + 7) / 8 * 8;
-    conv_param.num_flt_pad = (conv_param.num_flt + 7) / 8 * 8;
+    unsigned int in_pad_size;
+    unsigned int flt_pad_size;
+    GetPadSize(in_pad_size, shape_in0.GetDataType());
+    GetPadSize(flt_pad_size, shape_in1.GetDataType());
+    //conv_param.num_chl_pad = (conv_param.num_chl + 7) / 8 * 8;
+    //conv_param.num_flt_pad = (conv_param.num_flt + 7) / 8 * 8;
+    //std::cout << "in pad size: " << in_pad_size << " flt_pad_size: " << flt_pad_size << std::endl;
+    conv_param.num_chl_pad = Align(conv_param.num_chl, in_pad_size);
+    conv_param.num_flt_pad = Align(conv_param.num_flt, flt_pad_size);
     conv_param.flt_height = shape_in1.GetDim(2);
     conv_param.flt_width = shape_in1.GetDim(3);
     conv_param.out_height = shape_out.GetDim(2);
@@ -69,6 +89,8 @@ RetCode ConvertToForwardConvParam(const TensorShape& shape_in0, const TensorShap
     conv_param.has_bias = normal_param.bias_term;
     return RC_SUCCESS;
 }
+#undef GetPadSize
+#undef Align
 
 RetCode ConvertToPrelu(uint32_t fuse_index, InputOutputInfo* info, CudaDevice* device, ConvFusionInfo fuse_info,
                        fuse_param_t& fuse_param) {
@@ -185,7 +207,7 @@ RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* device, Con
     }
 
     fuse_param.has_concat = fuse_info.channel_offset >= 0;
-    if (fuse_param.has_concat) { // TODO Xusi fix this
+    if (fuse_param.has_concat) {
         fuse_param.concat_offset = fuse_info.channel_offset;
         fuse_param.concat_stride = fuse_info.channel_size;
         fuse_param.post_concat = info->GetOutput<TensorImpl>(0)->GetBufferPtr();

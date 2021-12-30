@@ -25,6 +25,6 @@ ppl::common::RetCode PPLCUDAGlobalAvePoolingForwardImp(
     ppl::nn::TensorShape* input_shape,
     const void* input,
     ppl::nn::TensorShape* output_shape,
-    void* output);
+    void* output, float in_scale, float out_scale);
 
 #endif // PPLCUDA_KERNEL_INCLUDE_GLOBAL_POOLING_POOLING_AVE_H_

@@ -225,9 +225,16 @@ AlgoNode* AlgoGraph::FindBestAlgo(const ir::Node* node) {
 }
 
 RetCode AlgoGraph::DetermineNode(CudaOptKernel* kernel, OptKernelOptions& options) {
-    auto node = kernel->GetNode();
+    auto node = (ir::Node*)kernel->GetNode();
     AlgoNode* algo_node = FindBestAlgo(node);
     algo_node->selected_algo->ReshapeOnEdges(node, options.tensors, algo_node->input_format, algo_node->output_format);
+    for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
+        if (algo_node->parents[i] != nullptr) {
+            algo_node->parents[i]->determined = true;
+            algo_node->parents[i]->output_format = algo_node->input_format;
+        }
+    }
+    
     options.param = algo_node->param;
     auto status = algo_node->selected_algo->ModifyParam(node, options);
     if (status != RC_SUCCESS) {
@@ -239,13 +246,6 @@ RetCode AlgoGraph::DetermineNode(CudaOptKernel* kernel, OptKernelOptions& option
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Finalize for kernel[" << node->GetName() << "] failed: " << GetRetCodeStr(status);
         return status;
-    }
-
-    for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
-        if (algo_node->parents[i] != nullptr) {
-            algo_node->parents[i]->determined = true;
-            algo_node->parents[i]->output_format = algo_node->input_format;
-        }
     }
     return RC_SUCCESS;
 }

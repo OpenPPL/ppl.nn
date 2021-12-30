@@ -18,7 +18,6 @@
 #include "ppl/nn/engines/cuda/kernels/onnx/slice_kernel.h"
 
 #include "cudakernel/memory/slice.h"
-
 namespace ppl { namespace nn { namespace cuda {
 
 ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
@@ -71,7 +70,6 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
             kernel_param.steps[it] = 1;
         }
     }
-
     for (int it = 0; it < kernel_param.axes_num; ++it) {
         int64_t axis = kernel_param.axes[it];
         int64_t start_val = kernel_param.starts[it];

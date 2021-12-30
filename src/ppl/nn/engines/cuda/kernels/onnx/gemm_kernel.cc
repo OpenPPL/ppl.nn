@@ -91,9 +91,44 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     auto stream = GetStream();
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
 
-    status = PPLCUDAGemmForwardImp(stream, module, &input->GetShape(), input->GetBufferPtr(), &weight->GetShape(),
-                                   weight->GetBufferPtr(), bias, &output->GetShape(), output->GetBufferPtr(),
+    auto shape_in0 = input->GetShape();
+    if (shape_in0.GetDataType()==ppl::common::DATATYPE_FLOAT16) {
+        status = PPLCUDAGemmForwardImp(stream, module, &input->GetShape(), input->GetBufferPtr(),
+                                   &weight->GetShape(), weight->GetBufferPtr(), bias,
+                                   &output->GetShape(), output->GetBufferPtr(),
                                    param_->param, tmp_buffer, temp_fuse_param, param_->extra_param.algo_info);
+    } else if (shape_in0.GetDataType()==ppl::common::DATATYPE_INT8) {
+        quant_param_t temp_quant_param;
+        auto input_quant = GetCommonParam()->cuda_tensor_info->at(input->GetEdge()->GetId());
+        auto output_quant = GetCommonParam()->cuda_tensor_info->at(output->GetEdge()->GetId());
+        auto input_scale = input_quant.scale[0];
+        auto output_scale = output_quant.scale[0];
+        auto d_weight_scale = ctx->GetInput<TensorImpl>(ctx->GetInputCount() - 1)->GetBufferPtr();
+        temp_quant_param.in_scale    = input_scale;
+        temp_quant_param.out_scale   = 1 / output_scale;
+        temp_quant_param.d_flt_scale = d_weight_scale;
+        if (temp_fuse_param.has_elt) {
+            auto tps = param_->extra_param.fuse_info.types;
+            auto ret = std::find(tps.begin(), tps.end(), "Add");
+            if (ret == tps.end())
+               LOG(ERROR) << "fuse_info types error: no add op";
+            int  id  =  ret - tps.begin();
+            auto elt_index = param_->extra_param.fuse_info.input_ind[id];
+            auto elt = ctx->GetInput<TensorImpl>(elt_index);
+            auto elt_quant = GetCommonParam()->cuda_tensor_info->at(elt->GetEdge()->GetId());
+            temp_quant_param.pre_scale = elt_quant.scale[0];
+        }
+        if (param_->extra_param.fuse_info.channel_offset >= 0) {
+             temp_quant_param.out_scale = 1 / GetCommonParam()->cuda_tensor_info->at(param_->extra_param.fuse_info.concat_edge_id).scale[0];
+        }
+
+
+        status = PPLCUDAGemmForwardImpInt8(stream, module, &input->GetShape(), input->GetBufferPtr(),
+                                   &weight->GetShape(), weight->GetBufferPtr(), bias,
+                                   &output->GetShape(), output->GetBufferPtr(),
+                                   param_->param, tmp_buffer, temp_quant_param, 
+                                   temp_fuse_param, param_->extra_param.algo_info);
+    }
 
     return status;
 }

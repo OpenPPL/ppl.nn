@@ -37,6 +37,7 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
 #endif
     int *dCv1 = (int *)dC;
 
+#pragma unroll
     for (int i = 0; i < HC_ITEMS_PER_THD; i++) {
         hC[i] = _HALF_ZERO_;
     }
@@ -90,6 +91,7 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
                          tid_x;
     uint dCv1_idx_bound = (grp_id + 1) * num_flt_per_grp_pad_v2;
 
+#pragma unroll
     for (uint i = 0; i < NUM_N_STEPS; i++) {
         dCv1_idx[i]     = dCv1_idx_base + i * TILE_N_V2_PER_STEP;
         dCv1_x_valid[i] = (dCv1_idx[i] < dCv1_idx_bound);
@@ -140,6 +142,7 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
     bool flt_n_valid[READ_dBv1_STEPS];
     int flt_hwc_v2_off = tid_x;
 
+#pragma unroll
     for (int i = 0; i < READ_dBv1_STEPS; i++) {
         SET_dBv1_BOUND(i, dBv1_off[i], flt_n_valid[i]);
     }
@@ -148,6 +151,7 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
     bool flt_n_valid[READ_dBv2_STEPS];
     int flt_hwc_v4_off = tid_x;
 
+#pragma unroll
     for (int i = 0; i < READ_dBv2_STEPS; i++) {
         SET_dBv2_BOUND(i, dBv2_off[i], flt_n_valid[i]);
     }
@@ -156,6 +160,7 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
     bool flt_n_valid[READ_dBv4_STEPS];
     int flt_hwc_v8_off = tid_x;
 
+#pragma unroll
     for (int i = 0; i < READ_dBv4_STEPS; i++) {
         SET_dBv4_BOUND(i, dBv4_off[i], flt_n_valid[i]);
     }
@@ -176,6 +181,7 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
 
     __syncthreads();
 
+#pragma unroll
     for (int i = 0; i < NUM_M_STEPS; i++) {
         in_id[i * BLK_M_PER_MMA]     = sm_base_v4[in_id_read + TILE_M_PER_STEP * i];
         in_id[i * BLK_M_PER_MMA + 1] = sm_base_v4[in_id_read + TILE_M_PER_STEP * i + TILE_M_PER_MMA_HALF];
@@ -232,6 +238,7 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
 #endif
     }
 
+#pragma unroll
     for (int step = 0; step < NUM_M_STEPS; step++) {
         dCv1_y_valid[0] = (dCv1_idy[0] < out_nhw);
         dCv1_y_valid[1] = (dCv1_idy[1] < out_nhw);

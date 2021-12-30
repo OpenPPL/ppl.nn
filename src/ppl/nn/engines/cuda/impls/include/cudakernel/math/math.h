@@ -377,12 +377,6 @@ struct Math<half2, half2, half2> {
         return __float22half2_rn(vf);
 #endif
     }
-    // static inline __device__ bool lt(half lhs, half rhs) {
-    // }
-    // static inline __device__ bool gt(half lhs, half rhs) {
-    // }
-    // static inline __device__ bool eq(half lhs, half rhs) {
-    // }
     static inline __device__ half2 zero()
     {
         return __half2half2(Math<half, half, half>::zero());

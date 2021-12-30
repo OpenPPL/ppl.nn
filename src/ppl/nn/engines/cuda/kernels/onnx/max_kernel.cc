@@ -25,17 +25,23 @@ ppl::common::RetCode MaxKernel::DoExecute(KernelExecContext* ctx) {
     auto input0 = ctx->GetInput<TensorImpl>(0);
     auto input1 = ctx->GetInput<TensorImpl>(1);
     auto output = ctx->GetOutput<TensorImpl>(0);
+    auto input_id0 = input0->GetEdge()->GetId();
+    auto input_id1 = input1->GetEdge()->GetId();
+    auto input_quant0 = GetCommonParam()->cuda_tensor_info->at(input_id0);
+    auto input_quant1 = GetCommonParam()->cuda_tensor_info->at(input_id1);
+    auto output_id = output->GetEdge()->GetId();
+    auto output_quant = GetCommonParam()->cuda_tensor_info->at(output_id);
 
     ppl::common::RetCode status =
         PPLCUDAArithMeticMaxForwardImp(GetStream(), &input0->GetShape(), input0->GetBufferPtr(), &input1->GetShape(),
-                                       input1->GetBufferPtr(), &output->GetShape(), output->GetBufferPtr());
+                                       input1->GetBufferPtr(), &output->GetShape(), output->GetBufferPtr(), input_quant0.scale[0], input_quant1.scale[0], output_quant.scale[0]);
     int32_t input_count = ctx->GetInputCount();
     if (input_count > 2) {
         for (int it = 2; it < input_count; ++it) {
             auto input = ctx->GetInput<TensorImpl>(it);
             status = PPLCUDAArithMeticMaxForwardImp(GetStream(), &output->GetShape(), output->GetBufferPtr(),
                                                     &input->GetShape(), input->GetBufferPtr(), &output->GetShape(),
-                                                    output->GetBufferPtr());
+                                                    output->GetBufferPtr(), input_quant0.scale[0], input_quant1.scale[0], output_quant.scale[0]);
         }
     }
     return status;

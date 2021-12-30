@@ -61,7 +61,7 @@ public:
     virtual void DeleteAttrParam(void*& param) = 0;
 
     virtual double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) = 0;
-    virtual ppl::common::RetCode ModifyParam(const ir::Node*, OptKernelOptions& options) = 0;
+    virtual ppl::common::RetCode ModifyParam(ir::Node* node, OptKernelOptions& options) = 0;
     virtual void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
                                 ppl::common::dataformat_t input_format, ppl::common::dataformat_t output_format) = 0;
 };

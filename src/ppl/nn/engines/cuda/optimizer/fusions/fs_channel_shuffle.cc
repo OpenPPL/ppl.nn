@@ -50,9 +50,6 @@ const bool ChannelShuffleFusion::CanFuseFirstReshape(ir::Node* node, const OptKe
     }
 
     auto shape_node_id = topo->GetEdgeById(shape_edge_id)->GetProducer();
-    if (shape_node_id == INVALID_NODEID) {
-        return false;
-    }
     auto shape_node = topo->GetNodeById(shape_node_id);
     if (shape_node->GetType().name != "Shape") {
         return false;
@@ -94,9 +91,6 @@ const bool ChannelShuffleFusion::CanFuseSecondReshape(ir::Node* node, const OptK
     auto topo = options.graph->topo.get();
     auto data = options.graph->data.get();
     auto shape_edge_id = node->GetInput(1);
-    if (shape_edge_id == INVALID_EDGEID) {
-        return false;
-    }
     auto constants_pair = data->constants.find(shape_edge_id);
 
     if (constants_pair != data->constants.end()) {
@@ -108,9 +102,6 @@ const bool ChannelShuffleFusion::CanFuseSecondReshape(ir::Node* node, const OptK
     }
 
     auto shape_node_id = topo->GetEdgeById(shape_edge_id)->GetProducer();
-    if (shape_node_id == INVALID_NODEID) {
-        return false;
-    }
     auto attr_pair = data->attrs.find(shape_node_id);
     if (attr_pair != data->attrs.end()) {
         auto param = (const ppl::nn::common::PPLShapeOperationParam*)(attr_pair->second.get());
@@ -126,15 +117,6 @@ const bool ChannelShuffleFusion::CanFuseSecondReshape(ir::Node* node, const OptK
 const bool ChannelShuffleFusion::CanFuse(ir::Node* node, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     for (uint32_t i = 0; i < 3; ++i) {
-        auto edge_id = node->GetOutput(0);
-        auto edge = topo->GetEdgeById(edge_id);
-        if (topo->GetOutput(edge->GetName()) != INVALID_EDGEID) { // Can not fuse an output edge
-            return false;
-        }
-        if (i < 2 && topo->GetEdgeById(edge_id)->CalcConsumerCount() != 1) { // Can not fuse multi-consumer edge
-            return false;
-        }
-
         switch (i) // TODO use function vector
         {
             case 0:
@@ -154,6 +136,14 @@ const bool ChannelShuffleFusion::CanFuse(ir::Node* node, const OptKernelOptions&
                 break;
         }
 
+        auto edge_id = node->GetOutput(0);
+        auto edge = topo->GetEdgeById(edge_id);
+        if (topo->GetOutput(edge->GetName()) != INVALID_EDGEID) { // Can not fuse an output edge
+            return false;
+        }
+        if (i < 2 && topo->GetEdgeById(edge_id)->CalcConsumerCount() != 1) { // Can not fuse multi-consumer edge
+            return false;
+        }
         auto next_node_id = topo->GetEdgeById(edge_id)->CreateConsumerIter().Get(); // Get Output(0)
         node = topo->GetNodeById(next_node_id);
     }
@@ -254,7 +244,7 @@ const RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, cons
     auto topo = options.graph->topo.get();
     if (CanFuse(node, options)) {
         LOG(DEBUG) << "Fuse node[" << node->GetName() << "] into channel shuffle";
-        std::string node_name = "ChannelShuffle_" + node->GetName();
+        // std::string node_name = "ChannelShuffle_" + node->GetName();
         options.info->kernels.erase(node->GetId());
         for (uint32_t i = 0; i < 2; ++i) {
             FuseWithNextNodes(node, options);
@@ -275,7 +265,7 @@ const RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, cons
         }
 
         node->SetType(ir::Node::Type("ppl", "ChannelShuffle", 1));
-        node->SetName(node_name);
+        // node->SetName(node_name);
         auto creator = OptKernelCreatorManager::Instance()->Find(node->GetType().domain, node->GetType().name,
                                                                  node->GetType().version);
         if (!creator) {

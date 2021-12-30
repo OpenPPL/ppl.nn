@@ -19,6 +19,7 @@
 
 #include "cudakernel/nn/pooling_ave.h"
 #include "cudakernel/nn/global_pooling_ave.h"
+#include<iostream>
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -26,9 +27,13 @@ ppl::common::RetCode AvePoolingKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
     ppl::common::RetCode status = ppl::common::RC_UNSUPPORTED;
+    auto input_id = input->GetEdge()->GetId();
+    auto input_quant = GetCommonParam()->cuda_tensor_info->at(input_id);
+    auto output_id = output->GetEdge()->GetId();
+    auto output_quant = GetCommonParam()->cuda_tensor_info->at(output_id);
     if (param_->global_pooling) {
         status = PPLCUDAGlobalAvePoolingForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(),
-                                                   &output->GetShape(), output->GetBufferPtr());
+                                                   &output->GetShape(), output->GetBufferPtr(), input_quant.scale[0], output_quant.scale[0]);
     } else {
         int32_t kernel_h = param_->kernel_shape[0];
         int32_t kernel_w = param_->kernel_shape[1];
@@ -48,7 +53,7 @@ ppl::common::RetCode AvePoolingKernel::DoExecute(KernelExecContext* ctx) {
         }
         status = PPLCUDAAvePoolingForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(),
                                              &output->GetShape(), output->GetBufferPtr(), kernel_h, kernel_w, stride_h,
-                                             stride_w, pad_h, pad_w, if_excluding_padding);
+                                             stride_w, pad_h, pad_w, if_excluding_padding, input_quant.scale[0], output_quant.scale[0]);
     }
     return status;
 }

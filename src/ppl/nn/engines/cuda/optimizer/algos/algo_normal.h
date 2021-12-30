@@ -29,13 +29,15 @@ public:
     NormalAlgorithm() {
         std::set<dataformat_t> ndarray{DATAFORMAT_NDARRAY};
         std::set<dataformat_t> nhwc8{DATAFORMAT_NHWC8};
+        std::set<dataformat_t> nhwc16{DATAFORMAT_NHWC16};
 
         ndarray_formats_.emplace(DATAFORMAT_NDARRAY, ndarray);
-        nhwc8_formats_.emplace(DATAFORMAT_NHWC8, nhwc8);
         inherited_formats_.emplace(DATAFORMAT_NDARRAY, ndarray);
         inherited_formats_.emplace(DATAFORMAT_NHWC8, nhwc8);
+        inherited_formats_.emplace(DATAFORMAT_NHWC16, nhwc16);
         arbitrary_formats_.emplace(DATAFORMAT_NDARRAY, ndarray);
         arbitrary_formats_.emplace(DATAFORMAT_NHWC8, ndarray);
+        arbitrary_formats_.emplace(DATAFORMAT_NHWC16, ndarray);
     }
 
     void GetAttrParam(void*& param) const override {
@@ -51,14 +53,11 @@ public:
         if (arbitrary_set_.find(type_name) != arbitrary_set_.end()) {
             return arbitrary_formats_;
         }
-        if (nhwc8_set_.find(type_name) != nhwc8_set_.end()) {
-            return nhwc8_formats_;
-        }
         return ndarray_formats_;
     }
 
     double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) override;
-    RetCode ModifyParam(const ir::Node*, OptKernelOptions& options) override {
+    RetCode ModifyParam(ir::Node* node, OptKernelOptions& options) override {
         return RC_SUCCESS;
     }
     void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
@@ -85,9 +84,9 @@ private:
                                          "BatchNormalization",
                                          "Slice",
                                          "Split",
-                                         "Sigmoid"};
+                                         "Sigmoid",
+                                         "ChannelShuffle"};
     std::set<std::string> arbitrary_set_{"Shape"};
-    std::set<std::string> nhwc8_set_{"ChannelShuffle"};
 };
 
 }}} // namespace ppl::nn::cuda

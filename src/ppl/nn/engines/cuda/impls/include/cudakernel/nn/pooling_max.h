@@ -31,7 +31,9 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImp(
     int stride_height,
     int stride_width,
     int padding_height,
-    int padding_width);
+    int padding_width,
+    float in_scale,
+    float out_scale);
 
 ppl::common::RetCode PPLCUDAMaxPoolingForwardImp(
     cudaStream_t stream,
@@ -46,6 +48,8 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImp(
     int stride_height,
     int stride_width,
     int padding_height,
-    int padding_width);
+    int padding_width,
+    float in_scale,
+    float out_scale);
 
 #endif // PPLCUDA_KERNEL_INCLUDE_POOLING_POOLING_MAX_H_
