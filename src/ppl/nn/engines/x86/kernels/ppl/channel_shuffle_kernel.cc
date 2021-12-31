@@ -47,7 +47,8 @@ ppl::common::RetCode ChannelShuffleKernel::DoExecute(KernelExecContext* ctx) {
 
     if (!(ctx->GetInputCount() == ctx->GetOutputCount()) &&
         !(ctx->GetInputCount() == 2 && ctx->GetOutputCount() == 1)) {
-        LOG(ERROR) << "output tensor count and input tensor count must be equal or only have one output tensor.";
+        LOG(ERROR) << "output tensor count and input tensor count must be equal or only have one output tensor: "
+            << ctx->GetInputCount() << "," << ctx->GetOutputCount();
         return ppl::common::RC_UNSUPPORTED;
     }
 

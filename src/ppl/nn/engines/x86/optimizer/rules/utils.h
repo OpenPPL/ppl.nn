@@ -64,6 +64,12 @@ inline bool IsGraphOutput(const ir::GraphTopo* graph_topo, edgeid_t edge_id) {
     return false;
 }
 
+// replace subgraph with one node
+ppl::common::RetCode ReplaceSubgraphWithOneNode(
+    const OptKernelOptions& options, std::vector<ir::Node*>& nodes,
+    std::vector<ir::Edge*>& inputs, std::vector<ir::Edge*>& outputs,
+    ir::Node* target_node);
+
 }}} // namespace ppl::nn::x86
 
 #endif
