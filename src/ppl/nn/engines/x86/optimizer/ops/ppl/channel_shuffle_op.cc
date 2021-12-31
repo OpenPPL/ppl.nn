@@ -36,7 +36,7 @@ RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
         auto& input0 = info->GetInput<TensorImpl>(0)->GetShape();
         int64_t channels = input0.GetDim(1);
         for (uint32_t i = 1; i < info->GetInputCount(); ++i) {
-            channels += info->GetInput<TensorImpl>(1)->GetShape().GetDim(1);
+            channels += info->GetInput<TensorImpl>(i)->GetShape().GetDim(1);
         }
         if (channels % info->GetOutputCount()) {
             return ppl::common::RC_INVALID_VALUE;
@@ -46,6 +46,7 @@ RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
             auto &output = info->GetOutput<TensorImpl>(i)->GetShape();
             output.Reshape(input0.GetDims(), input0.GetRealDimCount());
             output.SetDim(1, channels);
+            output.CalcPadding();
         }
         
         return RC_SUCCESS;
