@@ -81,6 +81,10 @@ if(HPCC_USE_CUDA)
     include(cmake/cuda.cmake)
 endif()
 
+if(HPCC_USE_RISCV)
+    include(cmake/riscv.cmake)
+endif()
+
 # --------------------------------------------------------------------------- #
 
 if(PPLNN_ENABLE_PYTHON_API)

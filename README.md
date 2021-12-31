@@ -74,6 +74,9 @@ Refer to [Documents](#documents) for more details.
   - CUDA
     - [Adding Ops](docs/en/cuda-doc/add_op.md)（[中文版](docs/cn/cuda-doc/add_op.md)）
     - [Benchmark](docs/en/cuda-doc/benchmark_tool.md)（[中文版](docs/cn/cuda-doc/benchmark_tool.md)）
+  - RISCV
+    - [Adding Ops](docs/en/riscv-doc/add_op.md)（[中文版](docs/cn/riscv-doc/add_op.md)）
+    - [Benchmark](docs/en/riscv-doc/benchmark_tool.md)（[中文版](docs/cn/riscv-doc/benchmark_tool.md)）
 
 ### Contact Us
 
