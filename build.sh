@@ -10,7 +10,7 @@ else
     processor_num=1
 fi
 
-options="-DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install $*"
+options="-DCMAKE_INSTALL_PREFIX=install $*"
 
 pplnn_build_dir="${workdir}/pplnn-build"
 mkdir ${pplnn_build_dir}

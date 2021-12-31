@@ -177,8 +177,10 @@ Define_bool_opt("--quick-select", g_flag_quick_select, false, "quick select algo
 Define_uint32_opt("--device-id", g_flag_device_id, 0, "declare device id for cuda");
 Define_string_opt("--kernel-type", g_flag_kernel_type, "", "declare default kernel type for cuda");
 
-Define_string_opt("--export-algo-file", g_flag_export_algo_file, "", "Export the selected best algo info into the json file.");
-Define_string_opt("--import-algo-file", g_flag_import_algo_file, "", "The objects in the json file declare best algo info for certain conv input shape");
+Define_string_opt("--export-algo-file", g_flag_export_algo_file, "",
+                  "Export the selected best algo info into the json file.");
+Define_string_opt("--import-algo-file", g_flag_import_algo_file, "",
+                  "The objects in the json file declare best algo info for certain conv input shape");
 
 Define_string_opt("--quant-file", g_flag_quant_file, "", "declare json file saved quantization information");
 
@@ -304,6 +306,35 @@ static inline bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
 
 #endif
 
+#ifdef PPLNN_USE_RISCV
+
+Define_bool_opt("--use-riscv", g_flag_use_riscv, false, "use riscv engine");
+Define_bool_opt("--use-fp16", g_flag_use_fp16, false, "infer with riscv fp32");
+Define_string_opt("--output-format", g_flag_output_format, "", "declare the output format");
+Define_string_opt("--output-type", g_flag_output_type, "", "declare the output type");
+
+#include "ppl/nn/engines/riscv/engine_factory.h"
+#include "ppl/nn/engines/riscv/riscv_options.h"
+#include "ppl/nn/engines/riscv/riscv_engine_options.h"
+
+static inline bool RegisterRISCVEngine(vector<unique_ptr<Engine>>* engines) {
+    RISCVEngineOptions options;
+    options.tune_param_flag = false;
+    if (g_flag_use_fp16) {
+        options.forward_precision = RISCV_USE_FP16;
+    } else {
+        options.forward_precision = RISCV_USE_FP32;
+    }
+
+    auto riscv_engine = RISCVEngineFactory::Create(options);
+    // configure engine
+    engines->emplace_back(unique_ptr<Engine>(riscv_engine));
+    LOG(INFO) << "***** register RISCVEngine *****";
+    return true;
+}
+
+#endif
+
 static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
 #ifdef PPLNN_USE_X86
     if (g_flag_use_x86) {
@@ -318,6 +349,16 @@ static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
 #ifdef PPLNN_USE_CUDA
     if (g_flag_use_cuda) {
         bool ok = RegisterCudaEngine(engines);
+        if (!ok) {
+            LOG(ERROR) << "RegisterCudaEngine failed.";
+            return false;
+        }
+    }
+#endif
+
+#ifdef PPLNN_USE_RISCV
+    if (g_flag_use_riscv) {
+        bool ok = RegisterRISCVEngine(engines);
         if (!ok) {
             LOG(ERROR) << "RegisterCudaEngine failed.";
             return false;
@@ -382,9 +423,9 @@ static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime
             return false;
         }
 
-        TensorShape src_desc = t->GetShape();
-        src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-        status = t->ConvertFromHost(buffer.data(), src_desc);
+        TensorShape* src_desc = &t->GetShape();
+        src_desc->SetDataFormat(DATAFORMAT_NDARRAY);
+        status = t->ConvertFromHost(buffer.data(), *src_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "set tensor[" << t->GetName() << "] content failed: " << GetRetCodeStr(status);
             return false;
@@ -419,15 +460,15 @@ static bool SetInputsAllInOne(const string& input_file, const vector<vector<int6
             return false;
         }
 
-        TensorShape src_desc = t->GetShape();
-        src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-        status = t->ConvertFromHost(data, src_desc);
+        TensorShape* src_desc = &t->GetShape();
+        src_desc->SetDataFormat(DATAFORMAT_NDARRAY);
+        status = t->ConvertFromHost(data, *src_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "convert tensor[" << t->GetName() << "] content failed: " << GetRetCodeStr(status);
             return false;
         }
 
-        const uint64_t content_size = src_desc.GetBytesIncludingPadding();
+        const uint64_t content_size = src_desc->GetBytesIncludingPadding();
         input_data->emplace_back(string(data, content_size));
         data += content_size;
     }
@@ -495,9 +536,9 @@ static bool SetInputsOneByOne(const string& input_files_str, const vector<vector
             return false;
         }
 
-        TensorShape src_desc = t->GetShape();
-        src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-        status = t->ConvertFromHost(fm.Data(), src_desc);
+        TensorShape* src_desc = &t->GetShape();
+        src_desc->SetDataFormat(DATAFORMAT_NDARRAY);
+        status = t->ConvertFromHost(fm.Data(), *src_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "set input[" << t->GetName() << "] failed: " << GetRetCodeStr(status);
             return false;
@@ -599,9 +640,9 @@ static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* ru
             return false;
         }
 
-        TensorShape src_desc = t->GetShape();
-        src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-        status = t->ConvertFromHost(fm.Data(), src_desc);
+        TensorShape* src_desc = &t->GetShape();
+        src_desc->SetDataFormat(DATAFORMAT_NDARRAY);
+        status = t->ConvertFromHost(fm.Data(), *src_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "set input[" << t->GetName() << "] failed: " << GetRetCodeStr(status);
             return false;
@@ -621,9 +662,9 @@ static bool SaveInputsOneByOne(const Runtime* runtime) {
         auto bytes = shape.GetBytesIncludingPadding();
         vector<char> buffer(bytes);
 
-        TensorShape src_desc = t->GetShape();
-        src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-        auto status = t->ConvertToHost(buffer.data(), src_desc);
+        TensorShape* src_desc = &t->GetShape();
+        src_desc->SetDataFormat(DATAFORMAT_NDARRAY);
+        auto status = t->ConvertToHost(buffer.data(), *src_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "convert data failed: " << GetRetCodeStr(status);
             return false;
@@ -664,9 +705,9 @@ static bool SaveInputsAllInOne(const Runtime* runtime) {
         auto bytes = t->GetShape().GetBytesIncludingPadding();
         vector<char> buffer(bytes);
 
-        TensorShape src_desc = t->GetShape();
-        src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-        auto status = t->ConvertToHost((void*)buffer.data(), src_desc);
+        TensorShape* src_desc = &t->GetShape();
+        src_desc->SetDataFormat(DATAFORMAT_NDARRAY);
+        auto status = t->ConvertToHost((void*)buffer.data(), *src_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "convert data failed: " << GetRetCodeStr(status);
             return false;
@@ -682,12 +723,13 @@ static bool SaveOutputsOneByOne(const Runtime* runtime) {
     for (uint32_t c = 0; c < runtime->GetOutputCount(); ++c) {
         auto t = runtime->GetOutputTensor(c);
 
-        TensorShape dst_desc = t->GetShape();
-        dst_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-        auto bytes = dst_desc.GetBytesIncludingPadding();
+        TensorShape* dst_desc = &t->GetShape();
+        dst_desc->SetDataFormat(DATAFORMAT_NDARRAY);
+
+        auto bytes = dst_desc->GetBytesIncludingPadding();
         vector<char> buffer(bytes);
 
-        auto status = t->ConvertToHost(buffer.data(), dst_desc);
+        auto status = t->ConvertToHost(buffer.data(), *dst_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "convert data of tensor[" << t->GetName() << "] failed: " << GetRetCodeStr(status);
             return false;

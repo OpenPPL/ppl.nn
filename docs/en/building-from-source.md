@@ -77,6 +77,20 @@ We use runtime-compiling version by default. If you want to use static version (
 ```bash
 ./build.sh -DHPCC_USE_CUDA=ON -DPPLNN_ENABLE_CUDA_JIT=OFF
 ```
+### Building RISCV Engine
+
+#### AllWinner D1
+
+You need to download c906 toolchain package from [https://occ.t-head.cn/community/download?id=3913221581316624384](https://occ.t-head.cn/community/download?id=3913221581316624384).
+``` bash
+tar -xf riscv64-linux-x86_64-20210512.tar.gz
+export RISCV_ROOT_PATH=/path/to/riscv64-linux-x86_64-20210512
+```
+
+Build pplnn:
+```bash
+./build.sh -DHPCC_TOOLCHAIN_DIR=$RISCV_ROOT_PATH -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/riscv64-linux-gnu.cmake -DHPCC_USE_RISCV=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON -DPPLNN_ENABLE_PYTHON_API=OFF -DPPLNN_ENABLE_LUA_API=OFF -DCMAKE_INSTALL_PREFIX=pplnn-build/install
+```
 
 #### Windows
 
