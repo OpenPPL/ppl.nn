@@ -460,6 +460,13 @@ if __name__ == "__main__":
     else:
         SetRandomInputs(in_shapes, runtime)
 
+    for i in range(runtime.GetInputCount()):
+        tensor = runtime.GetInputTensor(i)
+        shape = tensor.GetShape()
+        if shape.GetElementsIncludingPadding() == 0:
+            logging.error("input tensor[" + tensor.GetName() + "] is empty.")
+            sys.exit(-1)
+
     if args.save_input:
         SaveInputsAllInOne(args.save_data_dir, runtime)
     if args.save_inputs:
