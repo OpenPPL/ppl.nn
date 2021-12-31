@@ -27,19 +27,65 @@
 
 namespace ppl { namespace nn { namespace x86 {
 
-bool FuseChannelShuffle(const OptKernelOptions &options) {
+inline void GetSliceParam(const ir::Node* node, const ir::GraphTopo* graph_topo, const ir::GraphData* graph_data,
+                          std::vector<int64_t>& starts, std::vector<int64_t>& ends, std::vector<int64_t>& axes,
+                          std::vector<int64_t>& steps) {
+    if (node == nullptr) {
+        return;
+    }
+    if (node->GetType().domain != "" || node->GetType().name != "Slice") {
+        return;
+    }
+
+    const auto& constants = graph_data->constants;
+
+    auto starts_edge = graph_topo->GetEdgeById(node->GetInput(1));
+    if (starts_edge != nullptr && constants.find(starts_edge->GetId()) != constants.end()) {
+        auto it = constants.find(starts_edge->GetId());
+        const auto starts_data = it->second.data;
+        starts = std::vector<int64_t>((const int64_t*)starts_data.data(),
+                                      (const int64_t*)starts_data.data() + starts_data.size() / sizeof(int64_t));
+    }
+
+    auto ends_edge = graph_topo->GetEdgeById(node->GetInput(2));
+    if (ends_edge != nullptr && constants.find(ends_edge->GetId()) != constants.end()) {
+        auto it = constants.find(ends_edge->GetId());
+        const auto ends_data = it->second.data;
+        ends = std::vector<int64_t>((const int64_t*)ends_data.data(),
+                                    (const int64_t*)ends_data.data() + ends_data.size() / sizeof(int64_t));
+    }
+
+    auto axes_edge = node->GetInputCount() >= 4 ? graph_topo->GetEdgeById(node->GetInput(3)) : nullptr;
+    if (axes_edge != nullptr && constants.find(axes_edge->GetId()) != constants.end()) {
+        auto it = constants.find(axes_edge->GetId());
+        const auto axes_data = it->second.data;
+        axes = std::vector<int64_t>((const int64_t*)axes_data.data(),
+                                    (const int64_t*)axes_data.data() + axes_data.size() / sizeof(int64_t));
+    }
+
+    auto steps_edge = node->GetInputCount() >= 5 ? graph_topo->GetEdgeById(node->GetInput(4)) : nullptr;
+    if (steps_edge != nullptr && constants.find(steps_edge->GetId()) != constants.end()) {
+        auto it = constants.find(steps_edge->GetId());
+        const auto steps_data = it->second.data;
+        steps = std::vector<int64_t>((const int64_t*)steps_data.data(),
+                                     (const int64_t*)steps_data.data() + steps_data.size() / sizeof(int64_t));
+    }
+}
+
+bool FuseChannelShuffle(const OptKernelOptions& options) {
     bool graph_changed = false;
+
     auto graph_topo = options.graph_topo;
     auto graph_data = options.graph_data;
-    auto info = options.info;
-    auto &tensors = *options.tensors;
+    auto& tensors = *options.tensors;
 
     for (auto it = graph_topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
         auto node = it->Get();
-        if (node->GetType().domain == "" && node->GetType().name == "Reshape") {
+        if (node->GetType().domain == "" && node->GetType().name == "Reshape") { // start from reshape op
+            /******************** pattern match ***********************/
+            /** 1. check topo **/
             // find 1st Reshape node
             auto reshape1_node = node;
-            auto reshape1_node_id = reshape1_node->GetId();
             auto reshape1_output_edge_id = reshape1_node->GetOutput(0);
             auto reshape1_output_edge = graph_topo->GetEdgeById(reshape1_output_edge_id);
 
@@ -53,7 +99,8 @@ bool FuseChannelShuffle(const OptKernelOptions &options) {
             // find transpose node
             auto successor_node_id = reshape1_output_edge->CreateConsumerIter().Get();
             auto successor_node = graph_topo->GetNodeById(successor_node_id);
-            if (successor_node == nullptr || successor_node->GetType().domain != "" || successor_node->GetType().name != "Transpose") {
+            if (successor_node == nullptr || successor_node->GetType().domain != "" ||
+                successor_node->GetType().name != "Transpose") {
                 continue;
             }
             auto trans_node_id = successor_node_id;
@@ -70,22 +117,21 @@ bool FuseChannelShuffle(const OptKernelOptions &options) {
             // find 2nd reshape node
             successor_node_id = trans_output_edge->CreateConsumerIter().Get();
             successor_node = graph_topo->GetNodeById(successor_node_id);
-            if (successor_node == nullptr || successor_node->GetType().domain != "" || successor_node->GetType().name != "Reshape") {
+            if (successor_node == nullptr || successor_node->GetType().domain != "" ||
+                successor_node->GetType().name != "Reshape") {
                 continue;
             }
             auto reshape2_node = successor_node;
-            auto reshape2_node_id = reshape2_node->GetId();
             auto reshape2_output_edge_id = reshape2_node->GetOutput(0);
             auto reshape2_output_edge = graph_topo->GetEdgeById(reshape2_output_edge_id);
             if (IsGraphOutput(graph_topo, reshape2_output_edge_id)) {
                 continue;
             }
 
+            /** 2. check parameter **/
             // check reshape input[1] kind
             auto shape1_edge_id = reshape1_node->GetInput(1);
             auto shape2_edge_id = reshape2_node->GetInput(1);
-            auto shape1_edge = graph_topo->GetEdgeById(shape1_edge_id);
-            auto shape2_edge = graph_topo->GetEdgeById(shape2_edge_id);
             if (graph_data->constants.find(shape1_edge_id) == graph_data->constants.end() ||
                 graph_data->constants.find(shape2_edge_id) == graph_data->constants.end()) {
                 continue;
@@ -129,44 +175,103 @@ bool FuseChannelShuffle(const OptKernelOptions &options) {
                 continue;
             }
 
+            const int64_t group = reshape1_output_shape.GetDim(1);
+            const int64_t channels_per_group = reshape1_output_shape.GetDim(2);
+            const int64_t channels = group * channels_per_group;
+
+            /** 3. check prev concat & next split/slice **/
             bool fuse_concat = false;
             bool fuse_split = false;
-            bool fuse_concat_split = false;
+            bool fuse_slice = false;
+
+            // check prev concat
             auto reshape1_input_edge = graph_topo->GetEdgeById(reshape1_node->GetInput(0));
             auto reshape1_prev_node = graph_topo->GetNodeById(reshape1_input_edge->GetProducer());
-            auto reshape2_next_node = graph_topo->GetNodeById(reshape2_output_edge->CreateConsumerIter().Get());
-            auto concat_param = (common::ConcatParam*)attrs[reshape1_prev_node->GetId()].get();
-            auto split_param = (common::SplitParam*)attrs[reshape2_next_node->GetId()].get();
-            if (true
-                && reshape1_input_edge->CalcConsumerCount() == 1
-                && reshape1_prev_node != nullptr
-                && reshape1_prev_node->GetType().domain == ""
-                && reshape1_prev_node->GetType().name == "Concat"
-                && reshape1_prev_node->GetInputCount() == 2
-                && concat_param->axis == 1)
+            if (reshape1_input_edge->CalcConsumerCount() == 1 && reshape1_prev_node != nullptr &&
+                reshape1_prev_node->GetType().domain == "" && reshape1_prev_node->GetType().name == "Concat" &&
+                reshape1_prev_node->GetInputCount() == 2) // only support two input concat
             {
-                fuse_concat = true;
+                auto concat_param = (common::ConcatParam*)attrs[reshape1_prev_node->GetId()].get();
+                if (concat_param->axis == 1) {
+                    int32_t sum_channels = 0;
+                    for (uint32_t i = 0; i < reshape1_prev_node->GetInputCount(); i++) {
+                        auto input_shape = tensors[reshape1_prev_node->GetInput(i)]->GetShape();
+                        if (!input_shape.IsEmpty()) {
+                            sum_channels += input_shape.GetDim(1);
+                        }
+                    }
+                    if (sum_channels == channels) {
+                        fuse_concat = true;
+                    }
+                }
             }
-            if (true
-                && reshape2_output_edge->CalcConsumerCount() == 1
-                && reshape2_next_node != nullptr
-                && reshape2_next_node->GetType().domain == ""
-                && reshape2_next_node->GetType().name == "Split"
-                && reshape2_next_node->GetOutputCount() == 2
-                && split_param->axis == 1
-                && split_param->split_point[0] == split_param->split_point[1])
-            {
-                fuse_split = true;
-            }
-            fuse_concat_split = fuse_concat && fuse_split;
 
+            // check next split/slice
+            std::vector<ir::Node*> reshape2_next_nodes;
+            for (auto consumer_it = reshape2_output_edge->CreateConsumerIter(); consumer_it.IsValid(); consumer_it.Forward()) {
+                reshape2_next_nodes.push_back(graph_topo->GetNodeById(consumer_it.Get()));
+            }
+
+            if (reshape2_next_nodes.size() == 1) { // check next split
+                auto reshape2_next_node = reshape2_next_nodes[0];
+                if (reshape2_next_node != nullptr && reshape2_next_node->GetType().domain == "" &&
+                    reshape2_next_node->GetType().name == "Split" &&
+                    reshape2_next_node->GetOutputCount() == group) // only support 2 output split
+                {
+                    auto split_param = (common::SplitParam*)attrs[reshape2_next_node->GetId()].get();
+                    if (split_param->axis == 1) {
+                        int32_t sum_channels = 0;
+                        for (uint32_t i = 0; i < reshape2_next_node->GetOutputCount(); i++) {
+                            auto output_shape = tensors[reshape2_next_node->GetOutput(i)]->GetShape();
+                            if (!output_shape.IsEmpty() || output_shape.GetDim(1) != channels_per_group) {
+                                sum_channels += output_shape.GetDim(1);
+                            }
+                        }
+                        if (sum_channels == channels) {
+                            fuse_split = true;
+                        }
+                    }
+                }
+            } else if (reshape2_next_nodes.size() == 2 && group == 2) { // check next two slice
+                if (reshape2_next_nodes[0] != nullptr &&
+                    reshape2_next_nodes[1] != nullptr &&
+                    reshape2_next_nodes[0]->GetType().domain == "" &&
+                    reshape2_next_nodes[1]->GetType().domain == "" &&
+                    reshape2_next_nodes[0]->GetType().name == "Slice" &&
+                    reshape2_next_nodes[1]->GetType().name == "Slice") {
+                    std::vector<int64_t> starts0, ends0, axes0, steps0;
+                    std::vector<int64_t> starts1, ends1, axes1, steps1;
+                    GetSliceParam(reshape2_next_nodes[0], graph_topo, graph_data, starts0, ends0, axes0, steps0);
+                    GetSliceParam(reshape2_next_nodes[1], graph_topo, graph_data, starts1, ends1, axes1, steps1);
+                    if (starts0.size() == 1 && ends0.size() == 1 && axes0.size() == 1 && starts1.size() == 1 &&
+                        ends1.size() == 1 && axes1.size() == 1 && ends0[0] - starts0[0] == channels_per_group &&
+                        ends1[0] - starts1[0] == channels_per_group &&
+                        (ends0[0] == starts1[0] || ends1[0] == starts0[0]) && axes0[0] == 1 && axes1[0] == 1 &&
+                        (steps0.size() == 0 || (steps0.size() == 1 && steps0[0] == 1)) &&
+                        (steps1.size() == 0 || (steps1.size() == 1 && steps1[0] == 1))) {
+                        if (ends1[0] == starts0[0]) {
+                            std::swap(reshape2_next_nodes[0], reshape2_next_nodes[1]);
+                        }
+                        fuse_slice = true;
+                    }
+                }
+            }
+
+            if (!fuse_concat && (fuse_split || fuse_slice)) {
+                fuse_split = false;
+                fuse_slice = false;
+            }
+
+            /******************** do optimize ***********************/
+            /** 1. create & register fused op **/
             std::string channel_shuffle_node_name =
                 "ChannelShuffle_" +
                 (fuse_concat ? (reshape1_prev_node->GetName() + "_") : "") +
                 reshape1_node->GetName() + "_" +
                 trans_node->GetName() + "_" +
                 reshape2_node->GetName() +
-                (fuse_split ? ("_" + reshape2_next_node->GetName()) : "");
+                (fuse_split ? ("_" + reshape2_next_nodes[0]->GetName()) : "") +
+                (fuse_slice ? ("_" + reshape2_next_nodes[0]->GetName() + "_" + reshape2_next_nodes[1]->GetName()) : "");
             auto node_ret_pair = graph_topo->AddNode(channel_shuffle_node_name);
             if (!node_ret_pair.second) {
                 LOG(ERROR) << "node[" << channel_shuffle_node_name << "] already exists.";
@@ -175,156 +280,60 @@ bool FuseChannelShuffle(const OptKernelOptions &options) {
             ir::Node* channel_shuffle_node = node_ret_pair.first;
             channel_shuffle_node->SetType(ir::Node::Type("ppl", "ChannelShuffle", 1));
 
-            auto param_ref = options.graph_data->attrs.find(channel_shuffle_node->GetId());
-            if (param_ref == options.graph_data->attrs.end()) {
+            auto param_ref = graph_data->attrs.find(channel_shuffle_node->GetId());
+            if (param_ref == graph_data->attrs.end()) {
                 auto channel_shuffle_param = std::make_shared<ppl::nn::common::ChannelShuffleParam>();
-                const int32_t group = (int32_t)reshape1_output_shape.GetDim(1);
                 channel_shuffle_param->group = group;
-                options.graph_data->attrs[channel_shuffle_node->GetId()] = channel_shuffle_param;
+                graph_data->attrs[channel_shuffle_node->GetId()] = channel_shuffle_param;
             } else {
-                LOG(ERROR) << "Node " << channel_shuffle_node->GetName() << "param exist.";
+                LOG(ERROR) << "Node [" << channel_shuffle_node->GetName() << "] param exist.";
                 continue;
             }
 
-            if (fuse_concat_split) {
-                // add ChannelShuffle node into graph
-                // base_edge1/2 -> concat_node -> concat_edge -> reshape1_node -> reshape1_edge -> trans_node -> trans_edge -> reshape2_node -> reshape2_edge -> split_node -> split_edge1/2
-
-                // base_edge1/2 -> ChannelShufflenode                                                                                                                       -> split_edge1/2
-                auto base_edge1_id = reshape1_prev_node->GetInput(0);
-                auto base_edge1 = graph_topo->GetEdgeById(base_edge1_id);
-                auto base_edge2_id = reshape1_prev_node->GetInput(1);
-                auto base_edge2 = graph_topo->GetEdgeById(base_edge2_id);
-
-                auto split_edge1_id = reshape2_next_node->GetOutput(0);
-                auto split_edge1 = graph_topo->GetEdgeById(split_edge1_id);
-                auto split_edge2_id = reshape2_next_node->GetOutput(1);
-                auto split_edge2 = graph_topo->GetEdgeById(split_edge2_id);
-
-                channel_shuffle_node->AddInput(base_edge1_id);
-                channel_shuffle_node->AddInput(base_edge2_id);
-                channel_shuffle_node->AddOutput(split_edge1_id);
-                channel_shuffle_node->AddOutput(split_edge2_id);
-
-                X86OptKernel *opt_kernel = nullptr;
-                if (ppl::common::RC_SUCCESS != CreateX86OptKernel(options, channel_shuffle_node, &opt_kernel)) {
-                    LOG(ERROR) << "Node " << channel_shuffle_node->GetName() << "param exist.";
-                    graph_topo->DelNodeById(channel_shuffle_node->GetId());
-                    continue;
+            /** 2. replace ops with fused op **/
+            std::vector<ir::Node*> to_delete_nodes{reshape1_node, trans_node, reshape2_node};
+            std::vector<ir::Edge*> inputs{reshape1_input_edge};
+            std::vector<ir::Edge*> outputs{reshape2_output_edge};
+            if (fuse_concat) {
+                to_delete_nodes.insert(to_delete_nodes.begin(), reshape1_prev_node);
+                inputs.resize(reshape1_prev_node->GetInputCount());
+                for (uint32_t i = 0; i < reshape1_prev_node->GetInputCount(); i++) {
+                    inputs[i] = graph_topo->GetEdgeById(reshape1_prev_node->GetInput(i));
                 }
-
-                base_edge1->DelConsumer(reshape1_prev_node->GetId());
-                base_edge1->AddConsumer(channel_shuffle_node->GetId());
-                base_edge2->DelConsumer(reshape1_prev_node->GetId());
-                base_edge2->AddConsumer(channel_shuffle_node->GetId());
-
-                split_edge1->SetProducer(channel_shuffle_node->GetId());
-                split_edge2->SetProducer(channel_shuffle_node->GetId());
-
-                info->kernels.erase(reshape1_prev_node->GetId());
-                info->kernels.erase(reshape1_node_id);
-                info->kernels.erase(trans_node_id);
-                info->kernels.erase(reshape2_node_id);
-                info->kernels.erase(reshape2_next_node->GetId());
-
-                graph_topo->DelEdgeById(reshape1_input_edge->GetId());
-                graph_topo->DelEdgeById(reshape1_output_edge_id);
-                graph_topo->DelEdgeById(trans_output_edge_id);
-                graph_topo->DelEdgeById(reshape2_output_edge_id);
-
-                graph_topo->DelNodeById(reshape1_prev_node->GetId());
-                graph_topo->DelNodeById(reshape1_node_id);
-                graph_topo->DelNodeById(trans_node_id);
-                graph_topo->DelNodeById(reshape2_node_id);
-                graph_topo->DelNodeById(reshape2_next_node->GetId());
-            } else if (fuse_concat) {
-                // add ChannelShuffle node into graph
-                // base_edge1/2 -> concat_node -> concat_edge -> reshape1_node -> reshape1_edge -> trans_node -> trans_edge -> reshape2_node -> reshape2_edge
-
-                // base_edge1/2 -> ChannelShufflenode                                                                                        -> reshape2_edge
-                auto base_edge1_id = reshape1_prev_node->GetInput(0);
-                auto base_edge1 = graph_topo->GetEdgeById(base_edge1_id);
-                auto base_edge2_id = reshape1_prev_node->GetInput(1);
-                auto base_edge2 = graph_topo->GetEdgeById(base_edge2_id);
-
-                channel_shuffle_node->AddInput(base_edge1_id);
-                channel_shuffle_node->AddInput(base_edge2_id);
-                channel_shuffle_node->AddOutput(reshape2_output_edge_id);
-
-                X86OptKernel *opt_kernel = nullptr;
-                if (ppl::common::RC_SUCCESS != CreateX86OptKernel(options, channel_shuffle_node, &opt_kernel)) {
-                    LOG(ERROR) << "Node " << channel_shuffle_node->GetName() << "param exist.";
-                    graph_topo->DelNodeById(channel_shuffle_node->GetId());
-                    continue;
+            }
+            if (fuse_split) {
+                to_delete_nodes.push_back(reshape2_next_nodes[0]);
+                outputs.resize(reshape2_next_nodes[0]->GetOutputCount());
+                for (uint32_t i = 0; i < reshape2_next_nodes[0]->GetOutputCount(); i++) {
+                    outputs[i] = graph_topo->GetEdgeById(reshape2_next_nodes[0]->GetOutput(i));
                 }
-
-                base_edge1->DelConsumer(reshape1_prev_node->GetId());
-                base_edge1->AddConsumer(channel_shuffle_node->GetId());
-                base_edge2->DelConsumer(reshape1_prev_node->GetId());
-                base_edge2->AddConsumer(channel_shuffle_node->GetId());
-
-                reshape2_output_edge->SetProducer(channel_shuffle_node->GetId());
-
-                info->kernels.erase(reshape1_prev_node->GetId());
-                info->kernels.erase(reshape1_node_id);
-                info->kernels.erase(trans_node_id);
-                info->kernels.erase(reshape2_node_id);
-
-                graph_topo->DelEdgeById(reshape1_input_edge->GetId());
-                graph_topo->DelEdgeById(reshape1_output_edge_id);
-                graph_topo->DelEdgeById(trans_output_edge_id);
-
-                graph_topo->DelNodeById(reshape1_prev_node->GetId());
-                graph_topo->DelNodeById(reshape1_node_id);
-                graph_topo->DelNodeById(trans_node_id);
-                graph_topo->DelNodeById(reshape2_node_id);
-            } else {
-                // add ChannelShuffle node into graph
-                // base_node -> base_edge -> reshape1_node -> reshape1_edge -> trans_node -> trans_edge -> reshape2_node -> reshape2_edge
-
-                // base_node -> base_edge -> ChannelShufflenode                                                          -> reshape2_edge
-                auto base_edge_id = reshape1_node->GetInput(0);
-                auto base_edge = graph_topo->GetEdgeById(base_edge_id);
-
-                channel_shuffle_node->AddInput(base_edge_id);
-                channel_shuffle_node->AddOutput(reshape2_output_edge_id);
-
-                X86OptKernel *opt_kernel = nullptr;
-                if (ppl::common::RC_SUCCESS != CreateX86OptKernel(options, channel_shuffle_node, &opt_kernel)) {
-                    LOG(ERROR) << "Node " << channel_shuffle_node->GetName() << "param exist.";
-                    graph_topo->DelNodeById(channel_shuffle_node->GetId());
-                    continue;
-                }
-
-                base_edge->DelConsumer(reshape1_node_id);
-                base_edge->AddConsumer(channel_shuffle_node->GetId());
-
-                reshape2_output_edge->SetProducer(channel_shuffle_node->GetId());
-
-                info->kernels.erase(reshape1_node_id);
-                info->kernels.erase(trans_node_id);
-                info->kernels.erase(reshape2_node_id);
-
-                graph_topo->DelEdgeById(reshape1_output_edge_id);
-                graph_topo->DelEdgeById(trans_output_edge_id);
-
-                graph_topo->DelNodeById(reshape1_node_id);
-                graph_topo->DelNodeById(trans_node_id);
-                graph_topo->DelNodeById(reshape2_node_id);
+            }
+            if (fuse_slice) {
+                to_delete_nodes.push_back(reshape2_next_nodes[0]);
+                to_delete_nodes.push_back(reshape2_next_nodes[1]);
+                outputs.resize(2);
+                outputs[0] = graph_topo->GetEdgeById(reshape2_next_nodes[0]->GetOutput(0));
+                outputs[1] = graph_topo->GetEdgeById(reshape2_next_nodes[1]->GetOutput(0));
             }
 
-            shape1_edge->DelConsumer(reshape1_node_id);
-            shape2_edge->DelConsumer(reshape2_node_id);
-
-            if (shape1_edge->CalcConsumerCount() == 0 && !IsGraphOutput(graph_topo, shape1_edge->GetId())) {
-                graph_data->constants.erase(shape1_edge_id);
-                graph_topo->DelEdgeById(shape1_edge_id);
-            }
-            if (shape2_edge->CalcConsumerCount() == 0 && !IsGraphOutput(graph_topo, shape2_edge->GetId())) {
-                graph_data->constants.erase(shape2_edge_id);
-                graph_topo->DelEdgeById(shape2_edge_id);
+            if (ppl::common::RC_SUCCESS !=
+                ReplaceSubgraphWithOneNode(options, to_delete_nodes, inputs, outputs, channel_shuffle_node)) {
+                LOG(ERROR) << "Replace sequence nodes with node [" << channel_shuffle_node->GetName() << "] failed.";
+                graph_data->attrs.erase(channel_shuffle_node->GetId());
+                graph_topo->DelNodeById(channel_shuffle_node->GetId());
+                continue;
             }
 
+            /** 3. create opt_kernel **/
+            X86OptKernel* opt_kernel = nullptr;
+            if (ppl::common::RC_SUCCESS != CreateX86OptKernel(options, channel_shuffle_node, &opt_kernel)) {
+                LOG(ERROR) << "Create OptKernel [" << channel_shuffle_node->GetName() << "] failed.";
+                graph_data->attrs.erase(channel_shuffle_node->GetId());
+                graph_topo->DelNodeById(channel_shuffle_node->GetId());
+                continue;
+            }
+
+            LOG(DEBUG) << "Successfully fused " << channel_shuffle_node_name;
             graph_changed = true;
         }
     }
