@@ -1006,21 +1006,21 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    for (uint32_t i = 0; i < runtime->GetInputCount(); ++i) {
+        auto in = runtime->GetInputTensor(i);
+        auto& shape = in->GetShape();
+        if (shape.GetElementsIncludingPadding() == 0) {
+            LOG(ERROR) << "input tensor[" << in->GetName() << "] is empty.";
+            return -1;
+        }
+    }
+
     if (g_flag_save_input) {
         if (!SaveInputsAllInOne(runtime.get())) {
             return -1;
         }
     } else if (g_flag_save_inputs) {
         if (!SaveInputsOneByOne(runtime.get())) {
-            return -1;
-        }
-    }
-
-    for (uint32_t i = 0; i < runtime->GetInputCount(); ++i) {
-        auto in = runtime->GetInputTensor(i);
-        auto& shape = in->GetShape();
-        if (shape.GetElementsIncludingPadding() == 0) {
-            LOG(ERROR) << "input tensor[" << in->GetName() << "] is empty.";
             return -1;
         }
     }
