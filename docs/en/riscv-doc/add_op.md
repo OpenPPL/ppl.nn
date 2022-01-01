@@ -17,9 +17,9 @@ Add <opname\>_op.h and <opname\>_op.cc in the ppl.nn/src/ppl/nn/engines/riscv/op
 
 Take Clip as an example, its operator definition class is in ppl.nn/src/ppl/nn/engines/riscv/optimizer/ops/onnx/clip_op.h:
 ``` c++
-class ClipOp final: public RISCVOptKernel {
+class ClipOp final: public RiscvOptKernel {
 public:
-    ClipOp(const ir::Node* node): RISCVOptKernel(node) {}
+    ClipOp(const ir::Node* node): RiscvOptKernel(node) {}
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
@@ -117,9 +117,9 @@ Add <opname\>_kernel.h and <opname\>_kernel.cc to the ppl.nn/src/ppl/nn/engines/
 
 The operator call interface of Clip is defined as follows:
 ``` c++
-class ClipKernel: public RISCVKernel {
+class ClipKernel: public RiscvKernel {
 public:
-    ClipKernel(const ir::Node* node): RISCVKernel(node) {}
+    ClipKernel(const ir::Node* node): RiscvKernel(node) {}
 
 private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;

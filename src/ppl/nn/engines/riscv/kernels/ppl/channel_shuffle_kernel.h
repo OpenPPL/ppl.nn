@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class ChannelShuffleKernel : public RISCVKernel {
+class ChannelShuffleKernel : public RiscvKernel {
 public:
-    ChannelShuffleKernel(const ir::Node* node) : RISCVKernel(node) {}
+    ChannelShuffleKernel(const ir::Node* node) : RiscvKernel(node) {}
 
     void SetParam(const ppl::nn::common::ChannelShuffleParam* p) {
         param_ = p;

@@ -317,8 +317,8 @@ Define_string_opt("--output-type", g_flag_output_type, "", "declare the output t
 #include "ppl/nn/engines/riscv/riscv_options.h"
 #include "ppl/nn/engines/riscv/riscv_engine_options.h"
 
-static inline bool RegisterRISCVEngine(vector<unique_ptr<Engine>>* engines) {
-    RISCVEngineOptions options;
+static inline bool RegisterRiscvEngine(vector<unique_ptr<Engine>>* engines) {
+    RiscvEngineOptions options;
     options.tune_param_flag = false;
     if (g_flag_use_fp16) {
         options.forward_precision = RISCV_USE_FP16;
@@ -326,10 +326,10 @@ static inline bool RegisterRISCVEngine(vector<unique_ptr<Engine>>* engines) {
         options.forward_precision = RISCV_USE_FP32;
     }
 
-    auto riscv_engine = RISCVEngineFactory::Create(options);
+    auto riscv_engine = RiscvEngineFactory::Create(options);
     // configure engine
     engines->emplace_back(unique_ptr<Engine>(riscv_engine));
-    LOG(INFO) << "***** register RISCVEngine *****";
+    LOG(INFO) << "***** register RiscvEngine *****";
     return true;
 }
 
@@ -358,7 +358,7 @@ static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
 
 #ifdef PPLNN_USE_RISCV
     if (g_flag_use_riscv) {
-        bool ok = RegisterRISCVEngine(engines);
+        bool ok = RegisterRiscvEngine(engines);
         if (!ok) {
             LOG(ERROR) << "RegisterCudaEngine failed.";
             return false;

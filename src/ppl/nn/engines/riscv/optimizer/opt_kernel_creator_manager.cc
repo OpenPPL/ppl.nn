@@ -71,7 +71,7 @@ void OptKernelCreatorManager::Remove(const string& domain, const string& type) {
 }
 
 template <typename T>
-static RISCVOptKernel* GenericCreateOptKernel(const ir::Node* node) {
+static RiscvOptKernel* GenericCreateOptKernel(const ir::Node* node) {
     return new T(node);
 }
 

@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class GatherOp final : public RISCVOptKernel {
+class GatherOp final : public RiscvOptKernel {
 public:
-    GatherOp(const ir::Node* node) : RISCVOptKernel(node) {}
+    GatherOp(const ir::Node* node) : RiscvOptKernel(node) {}
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 

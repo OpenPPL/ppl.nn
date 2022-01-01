@@ -24,9 +24,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class PPLShapeOperationOp final : public RISCVOptKernel {
+class PPLShapeOperationOp final : public RiscvOptKernel {
 public:
-    PPLShapeOperationOp(const ir::Node* node) : RISCVOptKernel(node), op_(node) {}
+    PPLShapeOperationOp(const ir::Node* node) : RiscvOptKernel(node), op_(node) {}
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
 

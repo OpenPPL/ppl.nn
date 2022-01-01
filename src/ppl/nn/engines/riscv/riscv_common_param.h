@@ -23,7 +23,7 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-struct RISCVCommonParam {
+struct RiscvCommonParam {
     std::vector<ppl::common::dataformat_t> output_formats;
     std::vector<ppl::common::datatype_t> output_types;
 };

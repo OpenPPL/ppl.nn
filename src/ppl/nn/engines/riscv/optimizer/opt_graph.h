@@ -30,21 +30,21 @@ namespace ppl { namespace nn { namespace riscv {
 
 class OptGraph final {
 public:
-    ppl::common::RetCode Init(ir::Graph*, utils::SharedResource*, RuntimePartitionInfo*, RISCVEngineOptions* options);
-    ppl::common::RetCode DoOptimize(RISCVDevice*);
+    ppl::common::RetCode Init(ir::Graph*, utils::SharedResource*, RuntimePartitionInfo*, RiscvEngineOptions* options);
+    ppl::common::RetCode DoOptimize(RiscvDevice*);
 
 private:
     ppl::common::RetCode InitKernels(const ir::Graph* graph);
     ppl::common::RetCode InitTensorImpls();
-    ppl::common::RetCode TryToInferType(RISCVDevice* device);
-    ppl::common::RetCode TryToInferDims(RISCVDevice* device);
+    ppl::common::RetCode TryToInferType(RiscvDevice* device);
+    ppl::common::RetCode TryToInferDims(RiscvDevice* device);
 
 private:
     utils::SharedResource* resource_ = nullptr;
     ir::Graph* graph_ = nullptr;
     nn::RuntimePartitionInfo* info_ = nullptr;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>> tensor_impls_;
-    RISCVEngineOptions* options_ = nullptr;
+    RiscvEngineOptions* options_ = nullptr;
 };
 
 }}} // namespace ppl::nn::riscv

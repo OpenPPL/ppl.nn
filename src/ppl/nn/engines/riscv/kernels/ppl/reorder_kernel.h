@@ -38,9 +38,9 @@ inline TensorShape PadShapeTo3Dims(const TensorShape& shape) {
     return padded_shape;
 }
 
-class ReorderKernel : public RISCVKernel {
+class ReorderKernel : public RiscvKernel {
 public:
-    ReorderKernel(const ir::Node* node) : RISCVKernel(node) {}
+    ReorderKernel(const ir::Node* node) : RiscvKernel(node) {}
 
 private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;

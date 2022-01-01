@@ -31,9 +31,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class GemmOp final : public RISCVOptKernel {
+class GemmOp final : public RiscvOptKernel {
 public:
-    GemmOp(const ir::Node* node) : RISCVOptKernel(node), fc_param_(nullptr) {}
+    GemmOp(const ir::Node* node) : RiscvOptKernel(node), fc_param_(nullptr) {}
     ~GemmOp();
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,

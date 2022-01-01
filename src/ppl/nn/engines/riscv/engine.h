@@ -28,10 +28,10 @@ namespace ppl { namespace nn { namespace riscv {
 
 #define RISCV_DEFAULT_ALIGNMENT 64u
 
-class RISCVEngine final : public EngineImpl {
+class RiscvEngine final : public EngineImpl {
 public:
-    RISCVEngine() : EngineImpl("riscv"), device_(RISCV_DEFAULT_ALIGNMENT) {}
-    ppl::common::RetCode Init(const RISCVEngineOptions& options);
+    RiscvEngine() : EngineImpl("riscv"), device_(RISCV_DEFAULT_ALIGNMENT) {}
+    ppl::common::RetCode Init(const RiscvEngineOptions& options);
     ppl::common::RetCode Configure(uint32_t, ...) override;
     EngineContext* CreateEngineContext() override;
     bool Supports(const ir::Node*) const override;
@@ -43,8 +43,8 @@ private:
                                                  std::set<edgeid_t>*) const;
 
 private:
-    RISCVDevice device_;
-    RISCVEngineOptions options_;
+    RiscvDevice device_;
+    RiscvEngineOptions options_;
 };
 
 }}} // namespace ppl::nn::riscv

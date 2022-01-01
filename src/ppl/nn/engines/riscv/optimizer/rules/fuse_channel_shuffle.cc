@@ -329,8 +329,8 @@ bool FuseChannelShuffle(const OptKernelOptions& options) {
             }
 
             /** 3. create opt_kernel **/
-            RISCVOptKernel* opt_kernel = nullptr;
-            if (ppl::common::RC_SUCCESS != CreateRISCVOptKernel(options, channel_shuffle_node, &opt_kernel)) {
+            RiscvOptKernel* opt_kernel = nullptr;
+            if (ppl::common::RC_SUCCESS != CreateRiscvOptKernel(options, channel_shuffle_node, &opt_kernel)) {
                 LOG(ERROR) << "Node " << channel_shuffle_node->GetName() << "param exist.";
                 graph_data->attrs.erase(channel_shuffle_node->GetId());
                 graph_topo->DelNodeById(channel_shuffle_node->GetId());

@@ -29,28 +29,26 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace riscv {
 
-ppl::common::RetCode RISCVEngine::Init(const RISCVEngineOptions& options) {
+ppl::common::RetCode RiscvEngine::Init(const RiscvEngineOptions& options) {
     options_ = options;
     return ppl::common::RC_SUCCESS;
 };
 
-EngineContext* RISCVEngine::CreateEngineContext() {
-    return new RISCVEngineContext(&device_);
+EngineContext* RiscvEngine::CreateEngineContext() {
+    return new RiscvEngineContext(&device_);
 }
 
-ppl::common::RetCode RISCVEngine::Configure(uint32_t, ...) {
-    LOG(ERROR) << "invalid option["
-               << "]";
+ppl::common::RetCode RiscvEngine::Configure(uint32_t, ...) {
     return ppl::common::RC_UNSUPPORTED;
 }
 
-bool RISCVEngine::Supports(const ir::Node* node) const {
+bool RiscvEngine::Supports(const ir::Node* node) const {
     auto& type = node->GetType();
     bool ok = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version) != nullptr;
     return ok;
 }
 
-RetCode RISCVEngine::DoOptimize(ir::Graph* graph, utils::SharedResource* resource, RuntimePartitionInfo* info) {
+RetCode RiscvEngine::DoOptimize(ir::Graph* graph, utils::SharedResource* resource, RuntimePartitionInfo* info) {
     OptGraph opt_graph;
     auto status = opt_graph.Init(graph, resource, info, &options_);
     if (status != RC_SUCCESS) {
@@ -67,7 +65,7 @@ RetCode RISCVEngine::DoOptimize(ir::Graph* graph, utils::SharedResource* resourc
     return RC_SUCCESS;
 }
 
-ppl::common::RetCode RISCVEngine::CalDataOmittedConstants(const ir::Graph& graph, const RuntimePartitionInfo& info,
+ppl::common::RetCode RiscvEngine::CalDataOmittedConstants(const ir::Graph& graph, const RuntimePartitionInfo& info,
                                                           std::set<edgeid_t>* data_omitted_constants) const {
     data_omitted_constants->clear();
 
@@ -88,7 +86,7 @@ ppl::common::RetCode RISCVEngine::CalDataOmittedConstants(const ir::Graph& graph
     }
 
     for (auto it = info.kernels.begin(); it != info.kernels.end(); ++it) {
-        auto kernel = (RISCVOptKernel*)it->second.get();
+        auto kernel = (RiscvOptKernel*)it->second.get();
         auto ret = kernel->OmitConstantsData(&constants_data_refcount);
         if (ppl::common::RC_SUCCESS != ret) {
             return ret;
@@ -104,7 +102,7 @@ ppl::common::RetCode RISCVEngine::CalDataOmittedConstants(const ir::Graph& graph
     return ppl::common::RC_SUCCESS;
 }
 
-RetCode RISCVEngine::ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
+RetCode RiscvEngine::ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
     auto status = DoOptimize(graph, resource, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "DoOptimize failed: " << GetRetCodeStr(status);

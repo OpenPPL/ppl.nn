@@ -22,9 +22,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class SigmoidOp final : public RISCVOptKernel {
+class SigmoidOp final : public RiscvOptKernel {
 public:
-    SigmoidOp(const ir::Node* node) : RISCVOptKernel(node) {}
+    SigmoidOp(const ir::Node* node) : RiscvOptKernel(node) {}
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 };

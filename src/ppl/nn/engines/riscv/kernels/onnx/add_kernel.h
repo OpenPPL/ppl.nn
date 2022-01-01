@@ -22,9 +22,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class AddKernel : public RISCVKernel {
+class AddKernel : public RiscvKernel {
 public:
-    AddKernel(const ir::Node* node) : RISCVKernel(node) {}
+    AddKernel(const ir::Node* node) : RiscvKernel(node) {}
 
 private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;

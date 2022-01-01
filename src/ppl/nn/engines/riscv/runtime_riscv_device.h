@@ -28,20 +28,20 @@ namespace ppl { namespace nn { namespace riscv {
 
 static void DummyDeleter(ppl::common::Allocator*) {}
 
-class RuntimeRISCVDevice final : public RISCVDevice {
+class RuntimeRiscvDevice final : public RiscvDevice {
 private:
     static inline uint64_t Align(uint64_t x, uint64_t n) {
         return (x + n - 1) & (~(n - 1));
     }
 
 public:
-    RuntimeRISCVDevice(uint64_t alignment) : RISCVDevice(alignment) {
-        auto allocator_ptr = RISCVDevice::GetAllocator();
+    RuntimeRiscvDevice(uint64_t alignment) : RiscvDevice(alignment) {
+        auto allocator_ptr = RiscvDevice::GetAllocator();
         allocator_ = std::shared_ptr<ppl::common::Allocator>(allocator_ptr, DummyDeleter);
         buffer_manager_.reset(new utils::StackBufferManager(allocator_ptr));
     }
 
-    ~RuntimeRISCVDevice() {
+    ~RuntimeRiscvDevice() {
         LOG(DEBUG) << "buffer manager[" << buffer_manager_->GetName() << "] allocates ["
                    << buffer_manager_->GetAllocatedBytes() << "] bytes.";
         if (tmp_buffer_size_) {

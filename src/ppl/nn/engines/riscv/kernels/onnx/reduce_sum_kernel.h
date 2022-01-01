@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class ReduceSumKernel : public RISCVKernel {
+class ReduceSumKernel : public RiscvKernel {
 public:
-    ReduceSumKernel(const ir::Node* node) : RISCVKernel(node) {}
+    ReduceSumKernel(const ir::Node* node) : RiscvKernel(node) {}
 
     void SetParam(const ppl::nn::common::ReduceParam* p) {
         param_ = p;

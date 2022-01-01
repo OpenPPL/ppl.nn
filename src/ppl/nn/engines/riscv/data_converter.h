@@ -23,7 +23,7 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class RISCVDataConverter final : public DataConverter {
+class RiscvDataConverter final : public DataConverter {
 public:
     ppl::common::RetCode ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
                                        const TensorShape& src_desc) const override;

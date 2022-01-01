@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class GemmKernel : public RISCVKernel {
+class GemmKernel : public RiscvKernel {
 public:
-    GemmKernel(const ir::Node* node) : RISCVKernel(node) {}
+    GemmKernel(const ir::Node* node) : RiscvKernel(node) {}
 
     void SetParam(const ppl::nn::common::GemmParam* p) {
         param_ = p;

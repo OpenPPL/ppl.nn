@@ -31,9 +31,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class ConvOp final : public RISCVOptKernel {
+class ConvOp final : public RiscvOptKernel {
 public:
-    ConvOp(const ir::Node* node) : RISCVOptKernel(node), conv2d_param_(nullptr){};
+    ConvOp(const ir::Node* node) : RiscvOptKernel(node), conv2d_param_(nullptr){};
     ~ConvOp();
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;

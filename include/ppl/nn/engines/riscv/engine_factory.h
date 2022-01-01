@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn {
 
-class PPLNN_PUBLIC RISCVEngineFactory final {
+class PPLNN_PUBLIC RiscvEngineFactory final {
 public:
-    static Engine* Create(const RISCVEngineOptions&);
+    static Engine* Create(const RiscvEngineOptions&);
 };
 
 }} // namespace ppl::nn

@@ -89,14 +89,14 @@ static ppl::common::RetCode AddReorderOp(const OptKernelOptions& options, const 
     auto type = reorder_node->GetType();
     auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
     if (!creator) {
-        LOG(ERROR) << "cannot find creator for RISCVOptKernel[" << reorder_node->GetName() << "] type[" << type.domain
+        LOG(ERROR) << "cannot find creator for RiscvOptKernel[" << reorder_node->GetName() << "] type[" << type.domain
                    << ":" << type.name << "]";
         return ppl::common::RC_NOT_FOUND;
     }
 
-    auto opt_kernel = std::unique_ptr<RISCVOptKernel>(creator(reorder_node));
+    auto opt_kernel = std::unique_ptr<RiscvOptKernel>(creator(reorder_node));
     if (!opt_kernel) {
-        LOG(ERROR) << "create RISCVOptKernel failed: oom";
+        LOG(ERROR) << "create RiscvOptKernel failed: oom";
         return ppl::common::RC_OUT_OF_MEMORY;
     }
 
@@ -142,7 +142,7 @@ bool LayoutOptimize(const OptKernelOptions& options) {
             LOG(ERROR) << "cannot find node_id " << node_id << " in RuntimePartitionInfo.";
             return false;
         }
-        auto kernel = (RISCVOptKernel*)info->kernels[node_id].get();
+        auto kernel = (RiscvOptKernel*)info->kernels[node_id].get();
         auto node = kernel->GetNode();
 
         InputOutputInfo IOinfo;

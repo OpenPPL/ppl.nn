@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class CastKernel : public RISCVKernel {
+class CastKernel : public RiscvKernel {
 public:
-    CastKernel(const ir::Node* node) : RISCVKernel(node) {}
+    CastKernel(const ir::Node* node) : RiscvKernel(node) {}
 
     void SetParam(const ppl::nn::common::CastParam* p) {
         param_ = p;

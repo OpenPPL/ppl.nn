@@ -25,9 +25,9 @@ namespace ppl { namespace nn { namespace riscv {
 
 #define RISCV_DEFAULT_ALIGNMENT 64u
 
-class RISCVEngineContext final : public EngineContext {
+class RiscvEngineContext final : public EngineContext {
 public:
-    RISCVEngineContext(RISCVDevice* device) : device_(device) {}
+    RiscvEngineContext(RiscvDevice* device) : device_(device) {}
     Device* GetDevice() override {
         return device_;
     }
@@ -37,7 +37,7 @@ public:
     }
 
 private:
-    RISCVDevice* device_;
+    RiscvDevice* device_;
 };
 
 }}} // namespace ppl::nn::riscv

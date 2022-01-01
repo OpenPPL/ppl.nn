@@ -25,20 +25,20 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-inline ppl::common::RetCode CreateRISCVOptKernel(const OptKernelOptions& options, const ir::Node* node,
-                                                 RISCVOptKernel** kernel) {
+inline ppl::common::RetCode CreateRiscvOptKernel(const OptKernelOptions& options, const ir::Node* node,
+                                                 RiscvOptKernel** kernel) {
     auto& type = node->GetType();
 
     auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
     if (!creator) {
-        LOG(ERROR) << "cannot find creator for RISCVOptKernel[" << node->GetName() << "] type[" << type.domain << ":"
+        LOG(ERROR) << "cannot find creator for RiscvOptKernel[" << node->GetName() << "] type[" << type.domain << ":"
                    << type.name << "]";
         return ppl::common::RC_NOT_FOUND;
     }
 
-    auto opt_kernel = std::unique_ptr<RISCVOptKernel>(creator(node));
+    auto opt_kernel = std::unique_ptr<RiscvOptKernel>(creator(node));
     if (!opt_kernel) {
-        LOG(ERROR) << "create RISCVOptKernel failed: oom";
+        LOG(ERROR) << "create RiscvOptKernel failed: oom";
         return ppl::common::RC_OUT_OF_MEMORY;
     }
 

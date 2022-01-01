@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class UnsqueezeKernel : public RISCVKernel {
+class UnsqueezeKernel : public RiscvKernel {
 public:
-    UnsqueezeKernel(const ir::Node* node) : RISCVKernel(node) {}
+    UnsqueezeKernel(const ir::Node* node) : RiscvKernel(node) {}
 
     void SetParam(const ppl::nn::common::UnsqueezeParam* p) {
         param_ = p;

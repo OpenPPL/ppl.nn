@@ -41,14 +41,14 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
 
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
-    rc = GetRISCVDevice()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
+    rc = GetRiscvDevice()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
     if (rc != ppl::common::RC_SUCCESS) {
         LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
                    << "] failed: " << ppl::common::GetRetCodeStr(rc);
         return rc;
     }
     BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-        GetRISCVDevice()->FreeTmpBuffer(buffer);
+        GetRiscvDevice()->FreeTmpBuffer(buffer);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
 

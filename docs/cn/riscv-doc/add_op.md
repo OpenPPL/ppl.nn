@@ -17,9 +17,9 @@ PPLNN在riscv架构上添加自定义算子的步骤如下：
 
 以Clip为例，其算子定义类在ppl.nn/src/ppl/nn/engines/riscv/optimizer/ops/onnx/clip_op.h：
 ``` c++
-class ClipOp final : public RISCVOptKernel {
+class ClipOp final : public RiscvOptKernel {
 public:
-    ClipOp(const ir::Node* node) : RISCVOptKernel(node) {}
+    ClipOp(const ir::Node* node) : RiscvOptKernel(node) {}
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
@@ -117,9 +117,9 @@ REGISTER_OPT_KERNEL_CREATOR("", "Test", 7, 11, TestOp);
 
 Clip的算子调用接口定义如下：
 ``` c++
-class ClipKernel : public RISCVKernel {
+class ClipKernel : public RiscvKernel {
 public:
-    ClipKernel(const ir::Node* node) : RISCVKernel(node) {}
+    ClipKernel(const ir::Node* node) : RiscvKernel(node) {}
 
 private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;

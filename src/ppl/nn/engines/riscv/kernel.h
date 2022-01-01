@@ -29,12 +29,12 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class RISCVKernel : public KernelImpl {
+class RiscvKernel : public KernelImpl {
 public:
-    RISCVKernel(const ir::Node* node) : KernelImpl(node) {
+    RiscvKernel(const ir::Node* node) : KernelImpl(node) {
         LOG(DEBUG) << node->GetType().name << " " << GetName();
     }
-    RISCVKernel(RISCVKernel&&) = default;
+    RiscvKernel(RiscvKernel&&) = default;
     ppl::common::RetCode Execute(KernelExecContext* ctx) override;
 
     ppl::common::RetCode Reshape(KernelExecContext* ctx) const {
@@ -45,7 +45,7 @@ public:
         reshape_func_ = f;
     }
 
-    void SetCommonParam(const RISCVCommonParam* p) {
+    void SetCommonParam(const RiscvCommonParam* p) {
         common_param_ = p;
     }
 
@@ -69,17 +69,17 @@ protected:
         return 0;
     }
 
-    RISCVDevice* GetRISCVDevice() {
-        return reinterpret_cast<RISCVDevice*>(GetDevice());
+    RiscvDevice* GetRiscvDevice() {
+        return reinterpret_cast<RiscvDevice*>(GetDevice());
     }
-    const RISCVDevice* GetRISCVDevice() const {
-        return reinterpret_cast<const RISCVDevice*>(GetDevice());
+    const RiscvDevice* GetRiscvDevice() const {
+        return reinterpret_cast<const RiscvDevice*>(GetDevice());
     }
 
 private:
     ppl::common::RetCode BeforeExecute(KernelExecContext*);
 
-    const RISCVCommonParam* common_param_ = nullptr;
+    const RiscvCommonParam* common_param_ = nullptr;
     std::function<ppl::common::RetCode(InputOutputInfo*)> reshape_func_;
 };
 

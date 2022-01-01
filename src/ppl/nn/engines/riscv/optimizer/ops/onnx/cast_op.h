@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class CastOp final : public RISCVOptKernel {
+class CastOp final : public RiscvOptKernel {
 public:
-    CastOp(const ir::Node* node) : RISCVOptKernel(node) {}
+    CastOp(const ir::Node* node) : RiscvOptKernel(node) {}
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 

@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class FlattenKernel : public RISCVKernel {
+class FlattenKernel : public RiscvKernel {
 public:
-    FlattenKernel(const ir::Node* node) : RISCVKernel(node) {}
+    FlattenKernel(const ir::Node* node) : RiscvKernel(node) {}
 
     void SetParam(const ppl::nn::common::FlattenParam* p) {
         param_ = p;

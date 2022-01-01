@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class UnsqueezeOp final : public RISCVOptKernel {
+class UnsqueezeOp final : public RiscvOptKernel {
 public:
-    UnsqueezeOp(const ir::Node* node) : RISCVOptKernel(node) {}
+    UnsqueezeOp(const ir::Node* node) : RiscvOptKernel(node) {}
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 
