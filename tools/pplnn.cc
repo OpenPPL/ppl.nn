@@ -898,7 +898,6 @@ static bool SetInputs(const vector<string>& input_data, Runtime* runtime) {
 #endif
 
 static bool Profiling(const vector<string>& input_data, Runtime* runtime) {
-    RetCode status;
     if (g_flag_warmup_iterations > 0) {
         LOG(INFO) << "Warm up start for " << g_flag_warmup_iterations << " times.";
 
@@ -921,7 +920,7 @@ static bool Profiling(const vector<string>& input_data, Runtime* runtime) {
     }
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-    status = runtime->Configure(RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG, true);
+    auto status = runtime->Configure(RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG, true);
     if (status != RC_SUCCESS) {
         LOG(WARNING) << "enable profiling failed: " << GetRetCodeStr(status);
     }
