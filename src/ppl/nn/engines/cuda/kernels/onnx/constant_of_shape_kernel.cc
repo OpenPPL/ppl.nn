@@ -23,7 +23,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 uint64_t ConstantOfShapeKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     auto output = ctx.GetOutput<TensorImpl>(0);
-    return ppl::common::GetSizeOfDataType(output->GetShape().GetDataType());
+    return ppl::common::GetSizeOfDataType(output->GetShape()->GetDataType());
 }
 
 ppl::common::RetCode ConstantOfShapeKernel::DoExecute(KernelExecContext* ctx) {
@@ -48,7 +48,7 @@ ppl::common::RetCode ConstantOfShapeKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     auto tmp_buffer = tmp_buffer_desc.addr;
-    status = PPLCUDAConstantOfShapeForwardImp(GetStream(), tmp_buffer, &output->GetShape(), output->GetBufferPtr());
+    status = PPLCUDAConstantOfShapeForwardImp(GetStream(), tmp_buffer, output->GetShape(), output->GetBufferPtr());
     return status;
 }
 

@@ -30,8 +30,8 @@ RetCode ReshapeSqueeze(InputOutputInfo* info, const void* arg) {
         return RC_INVALID_VALUE;
     }
 
-    const TensorShape& input = info->GetInput<TensorImpl>(0)->GetShape();
-    auto output = &info->GetOutput<TensorImpl>(0)->GetShape();
+    const TensorShape& input = *info->GetInput<TensorImpl>(0)->GetShape();
+    auto output = info->GetOutput<TensorImpl>(0)->GetShape();
 
     if (input.IsScalar()) {
         if (param->axes.empty() || (param->axes.size() == 1 && (param->axes[0] == 0 || param->axes[0] == -1))) {

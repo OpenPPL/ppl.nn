@@ -35,7 +35,7 @@ RetCode CastOp::Init(const OptKernelOptions& options) {
     }
 
     infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
-        auto output = &info->GetOutput<TensorImpl>(0)->GetShape();
+        auto output = info->GetOutput<TensorImpl>(0)->GetShape();
         output->SetDataType(param_.to);
         return RC_SUCCESS;
     };

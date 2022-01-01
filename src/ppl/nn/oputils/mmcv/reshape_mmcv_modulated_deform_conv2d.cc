@@ -24,9 +24,9 @@ namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeMMCVModulatedDeformConv2d(InputOutputInfo* info, const void* arg) {
     auto param = (const MMCVModulatedDeformConv2dParam*)arg;
-    auto input = &info->GetInput<TensorImpl>(0)->GetShape();
-    auto weight = &info->GetInput<TensorImpl>(3)->GetShape();
-    auto output = &info->GetOutput<TensorImpl>(0)->GetShape();
+    auto input = info->GetInput<TensorImpl>(0)->GetShape();
+    auto weight = info->GetInput<TensorImpl>(3)->GetShape();
+    auto output = info->GetOutput<TensorImpl>(0)->GetShape();
     auto num_output = weight->GetDim(0);
 
     output->SetDimCount(input->GetDimCount());

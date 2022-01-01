@@ -29,7 +29,7 @@ bool ConcatKernel::CanDoExecute(const KernelExecContext& ctx) const {
         if (!tensor) {
             return false;
         }
-        if (tensor->GetShape().GetBytesIncludingPadding() != 0) {
+        if (tensor->GetShape()->GetBytesIncludingPadding() != 0) {
             all_empty = false;
         }
     }
@@ -64,7 +64,7 @@ ppl::common::RetCode ConcatKernel::BeforeExecute(KernelExecContext* ctx) {
 
 ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
     auto output = ctx->GetOutput<TensorImpl>(0);
-    int32_t dim_count = output->GetShape().GetDimCount();
+    int32_t dim_count = output->GetShape()->GetDimCount();
 
     std::vector<std::vector<int>> src_dims(ctx->GetInputCount());
     std::vector<void*> src_list(ctx->GetInputCount());
@@ -73,7 +73,7 @@ ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
     for (uint32_t i = 0; i < ctx->GetInputCount(); ++i) {
         auto input = ctx->GetInput<TensorImpl>(i);
         src_list[i] = input->GetBufferPtr();
-        auto shape = input->GetShape();
+        const TensorShape& shape = *input->GetShape();
         for (int32_t it = 0; it < dim_count; ++it) {
             src_dims[i].push_back(shape.GetDim(it));
             src_padded_dims[i].push_back(shape.GetDim(it) + shape.GetPadding0(it) + shape.GetPadding1(it));
@@ -93,7 +93,7 @@ ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
         axis += dim_count;
     ppl::common::RetCode status = PPLCUDAConcatForwardImp(
         GetStream(), axis, ctx->GetInputCount(), (int**)input_dims.get(), (int**)input_padded_dims.get(),
-        (const void**)src_list.data(), &output->GetShape(), output->GetBufferPtr(), mask);
+        (const void**)src_list.data(), output->GetShape(), output->GetBufferPtr(), mask);
 
     return status;
 }

@@ -35,11 +35,11 @@ ppl::common::RetCode SqrtKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
 
-    const auto data_type = input->GetShape().GetDataType();
+    const auto data_type = input->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
         if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-            return ppl::kernel::x86::sqrt_fp32_sse(&input->GetShape(), input->GetBufferPtr<float>(),
+            return ppl::kernel::x86::sqrt_fp32_sse(input->GetShape(), input->GetBufferPtr<float>(),
                                                    output->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "get unsupported isa " << GetISA();

@@ -37,10 +37,10 @@ ppl::common::RetCode ArgMaxKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [reduced]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(reduced);
 
-    const auto data_type = data->GetShape().GetDataType();
+    const auto data_type = data->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        return kernel::x86::argmax_ndarray_fp32(&data->GetShape(), data->GetBufferPtr<float>(), param_->axis,
+        return kernel::x86::argmax_ndarray_fp32(data->GetShape(), data->GetBufferPtr<float>(), param_->axis,
                                                 reduced->GetBufferPtr<int64_t>());
     } else {
         LOG(ERROR) << "unsupported datatype: " << ppl::common::GetDataTypeStr(data_type) << ".";

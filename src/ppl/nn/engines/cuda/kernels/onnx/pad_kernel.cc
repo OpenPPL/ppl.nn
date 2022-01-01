@@ -42,11 +42,11 @@ ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
 
     ppl::common::RetCode status = ppl::common::RC_SUCCESS;
     if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL &&
-        input->GetShape().GetElementsIncludingPadding() == output->GetShape().GetElementsIncludingPadding()) {
+        input->GetShape()->GetElementsIncludingPadding() == output->GetShape()->GetElementsIncludingPadding()) {
         output->TransferBufferFrom(input);
     } else {
-        status = PPLCUDAPadForwardImp(GetStream(), kernel_param, &input->GetShape(), input->GetBufferPtr(),
-                                      &pads->GetShape(), pads->GetBufferPtr<int64_t>(), &output->GetShape(),
+        status = PPLCUDAPadForwardImp(GetStream(), kernel_param, input->GetShape(), input->GetBufferPtr(),
+                                      pads->GetShape(), pads->GetBufferPtr<int64_t>(), output->GetShape(),
                                       output->GetBufferPtr());
     }
     return status;

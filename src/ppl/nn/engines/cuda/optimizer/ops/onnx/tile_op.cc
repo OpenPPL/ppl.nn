@@ -37,31 +37,31 @@ RetCode TileOp::Init(const OptKernelOptions& options) {
         } else {
             status = InferDefaultType(info, type);
         }
-        auto shape = &info->GetInput<TensorImpl>(1)->GetShape();
+        auto shape = info->GetInput<TensorImpl>(1)->GetShape();
         shape->SetDataType(ppl::common::DATATYPE_INT64);
         return status;
     };
 
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        const TensorShape& shape = info->GetInput<TensorImpl>(0)->GetShape();
+        const TensorShape& shape = *info->GetInput<TensorImpl>(0)->GetShape();
         uint32_t dim_count = shape.GetDimCount();
         auto repeat = info->GetInput<TensorImpl>(1);
         if (repeat->GetBufferPtr<void>() == nullptr) {
             return RC_NOT_FOUND;
         }
-        if (repeat->GetShape().GetDimCount() != 1 || repeat->GetShape().GetDim(0) != dim_count ||
-            repeat->GetShape().GetDataType() != DATATYPE_INT64) {
+        if (repeat->GetShape()->GetDimCount() != 1 || repeat->GetShape()->GetDim(0) != dim_count ||
+            repeat->GetShape()->GetDataType() != DATATYPE_INT64) {
             return RC_INVALID_VALUE;
         }
 
-        unique_ptr<int64_t[]> repeat_data(new int64_t[repeat->GetShape().GetElementsIncludingPadding()]);
-        auto status = repeat->CopyToHost(repeat_data.get());
+        vector<int64_t> repeat_data(repeat->GetShape()->GetElementsIncludingPadding());
+        auto status = repeat->CopyToHost(repeat_data.data());
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "Copy repeat data failed: " << GetRetCodeStr(status);
             return status;
         }
 
-        return oputils::ReshapeTile(info, nullptr, repeat_data.get());
+        return oputils::ReshapeTile(info, nullptr, repeat_data.data());
     };
 
     return RC_SUCCESS;

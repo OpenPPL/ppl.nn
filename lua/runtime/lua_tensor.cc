@@ -35,7 +35,7 @@ void RegisterTensor(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTabl
             return tensor->ptr->GetName();
         })
         .DefMember("GetShape", [tensor_shape_class](const LuaTensor* tensor) -> LuaUserData {
-            return tensor_shape_class.CreateUserData(&tensor->ptr->GetShape());
+            return tensor_shape_class.CreateUserData(tensor->ptr->GetShape());
         })
         .DefMember("ConvertFromHost", [](LuaTensor* ltensor, const LuaStringRef& buf,
                                          const LuaTable& dims_table, datatype_t data_type) -> RetCode {
@@ -46,7 +46,7 @@ void RegisterTensor(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTabl
             });
 
             auto tensor = ltensor->ptr;
-            TensorShape& shape = tensor->GetShape();
+            TensorShape& shape = *tensor->GetShape();
             shape.Reshape(dims);
 
             TensorShape src_shape = shape;
@@ -71,7 +71,7 @@ void RegisterTensor(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTabl
         })
         .DefMember("ConvertToHost", [lstate](LuaTensor* ltensor) -> LuaObject {
             auto tensor = ltensor->ptr;
-            TensorShape dst_shape = tensor->GetShape();
+            TensorShape dst_shape = *tensor->GetShape();
             dst_shape.SetDataFormat(DATAFORMAT_NDARRAY);
 
             vector<char> data(dst_shape.GetBytesExcludingPadding());

@@ -33,7 +33,7 @@ bool ConcatKernel::CanDoExecute(const KernelExecContext& ctx) const {
         if (!tensor) {
             return false;
         }
-        if (tensor->GetShape().GetBytesIncludingPadding() != 0) {
+        if (tensor->GetShape()->GetBytesIncludingPadding() != 0) {
             all_empty = false;
         }
     }
@@ -55,17 +55,17 @@ ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
         auto input = ctx->GetInput<TensorImpl>(i);
         PPLNN_RISCV_DEBUG_TRACE("Input [inputs[%u]]:\n", i);
         PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(input);
-        src_shape_list_[i] = &input->GetShape();
+        src_shape_list_[i] = input->GetShape();
         src_list_[i] = input->GetBufferPtr();
     }
     PPLNN_RISCV_DEBUG_TRACE("Output [concat_result]:]n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(concat_result);
     PPLNN_RISCV_DEBUG_TRACE("axis: %d\n", param_->axis);
 
-    auto data_type = concat_result->GetShape().GetDataType();
-    auto data_format = concat_result->GetShape().GetDataFormat();
+    auto data_type = concat_result->GetShape()->GetDataType();
+    auto data_format = concat_result->GetShape()->GetDataFormat();
     const int32_t real_axis =
-        param_->axis < 0 ? param_->axis + ctx->GetInput<TensorImpl>(0)->GetShape().GetDimCount() : param_->axis;
+        param_->axis < 0 ? param_->axis + ctx->GetInput<TensorImpl>(0)->GetShape()->GetDimCount() : param_->axis;
 
     if ((ppl::common::GetSizeOfDataType(data_type) == 4 && real_axis == 1 &&
          data_format == ppl::common::DATAFORMAT_N4CX) ||

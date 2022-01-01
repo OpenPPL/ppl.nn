@@ -98,7 +98,7 @@ bool FuseSwish(const OptKernelOptions &options) {
 
                 ((SwishOp*)swish_opt_kernel)->SetBeta(1.0f); // default to 1.0
                 swish_opt_kernel->SetOutputDataFormat(
-                    0, tensors[last_mul_output_edge->GetId()].get()->GetShape().GetDataFormat());
+                    0, tensors[last_mul_output_edge->GetId()].get()->GetShape()->GetDataFormat());
 
                 // change graph topo
                 sigmoid_input_edge->DelConsumer(sigmoid_node->GetId());

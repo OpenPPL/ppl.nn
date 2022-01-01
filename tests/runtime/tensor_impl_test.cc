@@ -49,10 +49,10 @@ protected:
         EXPECT_EQ(EdgeObject::T_TENSOR, tensor.GetObjectType());
         EXPECT_EQ(edge->GetName(), tensor.GetName());
 
-        TensorShape& shape = tensor.GetShape();
-        shape.Reshape({1, 3, GenRandDim(), GenRandDim()});
-        shape.SetDataType(DATATYPE_FLOAT32);
-        shape.SetDataFormat(DATAFORMAT_NDARRAY);
+        auto shape = tensor.GetShape();
+        shape->Reshape({1, 3, GenRandDim(), GenRandDim()});
+        shape->SetDataType(DATATYPE_FLOAT32);
+        shape->SetDataFormat(DATAFORMAT_NDARRAY);
 
         EXPECT_EQ(RC_SUCCESS, tensor.SetDevice(&cpu_device_));
         EXPECT_EQ(&cpu_device_, tensor.GetDevice());
@@ -87,8 +87,8 @@ TEST_F(TensorImplTest, setbuffer) {
 
 TEST_F(TensorImplTest, SetAndGetBufferPtr) {
     auto tensor = ConstructFp32TensorWithCpuDevice();
-    auto& shape = tensor.GetShape();
-    auto nr_element = shape.GetElementsIncludingPadding();
+    auto shape = tensor.GetShape();
+    auto nr_element = shape->GetElementsIncludingPadding();
 
     vector<float> buf(nr_element);
     buf[0] = 1.234;

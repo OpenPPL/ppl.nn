@@ -22,7 +22,7 @@ namespace ppl { namespace nn { namespace common {
 
 ppl::common::RetCode PPLShapeOperationKernel::DoExecute(KernelExecContext* ctx) {
     auto data = ctx->GetInput<TensorImpl>(0);
-    auto input_dim_size = ctx->GetInput<TensorImpl>(0)->GetShape().GetRealDimCount();
+    auto input_dim_size = ctx->GetInput<TensorImpl>(0)->GetShape()->GetRealDimCount();
     for (size_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto shape = ctx->GetOutput<TensorImpl>(i);
         auto edge = shape->GetEdge();
@@ -32,12 +32,12 @@ ppl::common::RetCode PPLShapeOperationKernel::DoExecute(KernelExecContext* ctx) 
         }
         auto& matrix = pair->second;
         auto dim_size = matrix.real_dim < 0 ? input_dim_size : matrix.real_dim;
-        shape->GetShape().SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-        shape->GetShape().SetDataType(ppl::common::DATATYPE_INT64);
+        shape->GetShape()->SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+        shape->GetShape()->SetDataType(ppl::common::DATATYPE_INT64);
         if (matrix.scalar) {
-            shape->GetShape().ReshapeAsScalar();
+            shape->GetShape()->ReshapeAsScalar();
         } else {
-            shape->GetShape().Reshape({dim_size});
+            shape->GetShape()->Reshape({dim_size});
         }
         shape->ReallocBuffer();
 
@@ -45,9 +45,9 @@ ppl::common::RetCode PPLShapeOperationKernel::DoExecute(KernelExecContext* ctx) 
         for (uint32_t j = 0; j < dim_size; ++j) {
             int64_t numer = matrix.numerator[j][ppl::nn::common::ShapeMatrix::MAXDIMSIZE];
             int64_t denom = matrix.denominator[j][ppl::nn::common::ShapeMatrix::MAXDIMSIZE];
-            for (uint32_t k = 0; k < data->GetShape().GetDimCount(); ++k) {
+            for (uint32_t k = 0; k < data->GetShape()->GetDimCount(); ++k) {
                 if (matrix.numerator[j][k]) {
-                    numer = numer * matrix.denominator[j][k] + denom * data->GetShape().GetDim(k) * matrix.numerator[j][k];
+                    numer = numer * matrix.denominator[j][k] + denom * data->GetShape()->GetDim(k) * matrix.numerator[j][k];
                     denom = denom * matrix.denominator[j][k];
                 }
             }

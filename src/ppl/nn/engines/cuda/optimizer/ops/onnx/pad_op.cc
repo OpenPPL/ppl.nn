@@ -43,21 +43,21 @@ RetCode PadOp::Init(const OptKernelOptions& options) {
         } else {
             status = InferDefaultType(info, type);
         }
-        auto shape = &info->GetInput<TensorImpl>(1)->GetShape();
+        auto shape = info->GetInput<TensorImpl>(1)->GetShape();
         shape->SetDataType(DATATYPE_INT64);
         return status;
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        const TensorShape& shape = info->GetInput<TensorImpl>(0)->GetShape();
+        const TensorShape& shape = *info->GetInput<TensorImpl>(0)->GetShape();
         uint32_t dim_count = shape.GetDimCount();
         auto pad = info->GetInput<TensorImpl>(1);
-        if (pad->GetShape().GetDimCount() != 1 || pad->GetShape().GetDim(0) != 2 * dim_count ||
-            pad->GetShape().GetDataType() != DATATYPE_INT64) {
+        if (pad->GetShape()->GetDimCount() != 1 || pad->GetShape()->GetDim(0) != 2 * dim_count ||
+            pad->GetShape()->GetDataType() != DATATYPE_INT64) {
             return RC_INVALID_VALUE;
         }
 
-        int pad_elems = pad->GetShape().GetElementsIncludingPadding();
+        int pad_elems = pad->GetShape()->GetElementsIncludingPadding();
         unique_ptr<int64_t[]> pad_data(new int64_t[pad_elems]);
         for (int it = 0; it < pad_elems; pad_data[it] = 0, ++it)
             ;

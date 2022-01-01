@@ -37,7 +37,7 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
         }
         for (uint32_t i = 1; i < 5; ++i) {
             if (info->GetInputCount() > i) {
-                auto shape = &info->GetInput<TensorImpl>(i)->GetShape();
+                auto shape = info->GetInput<TensorImpl>(i)->GetShape();
                 shape->SetDataType(ppl::common::DATATYPE_INT64);
             }
         }
@@ -47,7 +47,7 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         SliceKernelParam kernel_param;
 
-        const TensorShape& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
+        const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
         int dim_count = in_shape0.GetDimCount();
         int input_count = info->GetInputCount();
         { // starts
@@ -82,7 +82,7 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
                 LOG(ERROR) << "Copy axes input failed: " << GetRetCodeStr(status);
                 return status;
             }
-            kernel_param.axes_num = input->GetShape().GetElementsIncludingPadding();
+            kernel_param.axes_num = input->GetShape()->GetElementsIncludingPadding();
         } else {
             for (int it = 0; it < dim_count; ++it) {
                 kernel_param.axes[it] = it;

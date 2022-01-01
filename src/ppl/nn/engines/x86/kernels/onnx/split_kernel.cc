@@ -43,14 +43,14 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
         PPLNN_X86_DEBUG_TRACE("Output [outputs[%u]]:\n", i);
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
         dst_list[i] = output->GetBufferPtr<void>();
-        dst_shape_list[i] = &output->GetShape();
+        dst_shape_list[i] = output->GetShape();
     }
 
     const int32_t real_axis =
-        param_->axis < 0 ? param_->axis + ctx->GetInput<TensorImpl>(0)->GetShape().GetDimCount() : param_->axis;
+        param_->axis < 0 ? param_->axis + ctx->GetInput<TensorImpl>(0)->GetShape()->GetDimCount() : param_->axis;
 
-    auto data_type = input->GetShape().GetDataType();
-    auto data_format = input->GetShape().GetDataFormat();
+    auto data_type = input->GetShape()->GetDataType();
+    auto data_format = input->GetShape()->GetDataFormat();
     if (ppl::common::GetSizeOfDataType(data_type) == 4 && data_format == ppl::common::DATAFORMAT_N16CX &&
         real_axis == 1 && MayUseISA(ppl::common::ISA_X86_AVX)) {
         bool interleave_channels = false;
@@ -62,18 +62,18 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
         }
         if (interleave_channels) {
             return kernel::x86::split_n16cx_interleave_channels_fp32_avx(
-                &input->GetShape(), dst_shape_list.data(), input->GetBufferPtr<float>(), real_axis,
+                input->GetShape(), dst_shape_list.data(), input->GetBufferPtr<float>(), real_axis,
                 ctx->GetOutputCount(), 1, (float**)dst_list.data());
         }
     }
 
     if (ppl::common::GetSizeOfDataType(data_type) == 4) {
         if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
-            return kernel::x86::split_ndarray_fp32(&input->GetShape(), dst_shape_list.data(),
+            return kernel::x86::split_ndarray_fp32(input->GetShape(), dst_shape_list.data(),
                                                    input->GetBufferPtr<float>(), param_->axis, ctx->GetOutputCount(),
                                                    (float**)dst_list.data());
         } else if (data_format == ppl::common::DATAFORMAT_N16CX) {
-            return kernel::x86::split_n16cx_fp32(&input->GetShape(), dst_shape_list.data(),
+            return kernel::x86::split_n16cx_fp32(input->GetShape(), dst_shape_list.data(),
                                                  input->GetBufferPtr<float>(), param_->axis, ctx->GetOutputCount(),
                                                  (float**)dst_list.data());
         } else {
@@ -81,11 +81,11 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
         }
     } else if (ppl::common::GetSizeOfDataType(data_type) == 8) {
         if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
-            return kernel::x86::split_ndarray_int64(&input->GetShape(), dst_shape_list.data(),
+            return kernel::x86::split_ndarray_int64(input->GetShape(), dst_shape_list.data(),
                                                     input->GetBufferPtr<int64_t>(), param_->axis, ctx->GetOutputCount(),
                                                     (int64_t**)dst_list.data());
         } else if (data_format == ppl::common::DATAFORMAT_N16CX) {
-            return kernel::x86::split_n16cx_int64(&input->GetShape(), dst_shape_list.data(),
+            return kernel::x86::split_n16cx_int64(input->GetShape(), dst_shape_list.data(),
                                                   input->GetBufferPtr<int64_t>(), param_->axis, ctx->GetOutputCount(),
                                                   (int64_t**)dst_list.data());
         } else {
@@ -93,11 +93,11 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
         }
     } else if (ppl::common::GetSizeOfDataType(data_type) == 1) {
         if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
-            return kernel::x86::split_ndarray_bool(&input->GetShape(), dst_shape_list.data(),
+            return kernel::x86::split_ndarray_bool(input->GetShape(), dst_shape_list.data(),
                                                    input->GetBufferPtr<uint8_t>(), param_->axis, ctx->GetOutputCount(),
                                                    (uint8_t**)dst_list.data());
         } else if (data_format == ppl::common::DATAFORMAT_N16CX) {
-            return kernel::x86::split_n16cx_bool(&input->GetShape(), dst_shape_list.data(),
+            return kernel::x86::split_n16cx_bool(input->GetShape(), dst_shape_list.data(),
                                                  input->GetBufferPtr<uint8_t>(), param_->axis, ctx->GetOutputCount(),
                                                  (uint8_t**)dst_list.data());
         } else {

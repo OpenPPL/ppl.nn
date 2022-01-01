@@ -27,7 +27,7 @@ ppl::common::RetCode TransposeKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_REQUIRED_INPUT(data, 0);
     PPLNN_X86_REQUIRED_OUTPUT(transposed, 0);
 
-    const uint32_t dim_count = data->GetShape().GetDimCount();
+    const uint32_t dim_count = data->GetShape()->GetDimCount();
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [data]:\n");
@@ -40,7 +40,7 @@ ppl::common::RetCode TransposeKernel::DoExecute(KernelExecContext* ctx) {
             modified_perm[i] = dim_count - i - 1;
         }
     }
-    for (uint32_t i = 0; i < data->GetShape().GetDimCount(); ++i) {
+    for (uint32_t i = 0; i < data->GetShape()->GetDimCount(); ++i) {
         PPLNN_X86_DEBUG_TRACE("perm[%u]: %d\n", i, modified_perm[i]);
     }
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
@@ -49,19 +49,19 @@ ppl::common::RetCode TransposeKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [transposed]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(transposed);
 
-    const auto data_type = data->GetShape().GetDataType();
-    const auto data_format = data->GetShape().GetDataFormat();
+    const auto data_type = data->GetShape()->GetDataType();
+    const auto data_format = data->GetShape()->GetDataFormat();
 
     if (data_format == ppl::common::DATAFORMAT_N16CX) {
         if (data_type == ppl::common::DATATYPE_FLOAT32 &&
-            transposed->GetShape().GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY &&
-            data->GetShape().GetDimCount() == 4 && modified_perm == std::vector<int32_t>{0, 2, 3, 1} &&
+            transposed->GetShape()->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY &&
+            data->GetShape()->GetDimCount() == 4 && modified_perm == std::vector<int32_t>{0, 2, 3, 1} &&
             MayUseISA(ppl::common::ISA_X86_AVX) && param_->reverse == false) { // actually N16CHW -> NHWC
             if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-                return ppl::kernel::x86::reorder_n16cx_nxc_fp32_avx(&data->GetShape(), data->GetBufferPtr<float>(),
+                return ppl::kernel::x86::reorder_n16cx_nxc_fp32_avx(data->GetShape(), data->GetBufferPtr<float>(),
                                                                     transposed->GetBufferPtr<float>());
             } else {
-                return ppl::kernel::x86::reorder_n16cx_nxc_fp32(&data->GetShape(), data->GetBufferPtr<float>(),
+                return ppl::kernel::x86::reorder_n16cx_nxc_fp32(data->GetShape(), data->GetBufferPtr<float>(),
                                                                 transposed->GetBufferPtr<float>());
             }
         }
@@ -80,22 +80,22 @@ ppl::common::RetCode TransposeKernel::DoExecute(KernelExecContext* ctx) {
         if (transpose_dim.size() == 2 && transpose_dim[0] + 1 == transpose_dim[1] && transpose_dim[1] + 1 < dim_count) {
             if (data_type == ppl::common::DATATYPE_FLOAT32) {
                 return ppl::kernel::x86::transpose_ndarray_continous2d_fp32(
-                    &data->GetShape(), data->GetBufferPtr<float>(), transpose_dim[0], transpose_dim[1],
+                    data->GetShape(), data->GetBufferPtr<float>(), transpose_dim[0], transpose_dim[1],
                     transposed->GetBufferPtr<float>());
             } else if (data_type == ppl::common::DATATYPE_INT64) {
                 return ppl::kernel::x86::transpose_ndarray_continous2d_int64(
-                    &data->GetShape(), data->GetBufferPtr<int64_t>(), transpose_dim[0], transpose_dim[1],
+                    data->GetShape(), data->GetBufferPtr<int64_t>(), transpose_dim[0], transpose_dim[1],
                     transposed->GetBufferPtr<int64_t>());
             }
         }
     }
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        return kernel::x86::transpose_ndarray_fp32(&data->GetShape(), &transposed->GetShape(),
+        return kernel::x86::transpose_ndarray_fp32(data->GetShape(), transposed->GetShape(),
                                                    data->GetBufferPtr<const float>(), modified_perm.data(),
                                                    transposed->GetBufferPtr<float>());
     } else if (data_type == ppl::common::DATATYPE_INT64) {
-        return kernel::x86::transpose_ndarray_int64(&data->GetShape(), &transposed->GetShape(),
+        return kernel::x86::transpose_ndarray_int64(data->GetShape(), transposed->GetShape(),
                                                     data->GetBufferPtr<const int64_t>(), modified_perm.data(),
                                                     transposed->GetBufferPtr<int64_t>());
     } else {

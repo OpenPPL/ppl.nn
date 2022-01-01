@@ -29,10 +29,10 @@ namespace ppl { namespace nn { namespace cuda {
 RetCode AndOp::Init(const OptKernelOptions& options) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         for (uint32_t i = 0; i < info->GetInputCount(); ++i) {
-            auto in_shape = &info->GetInput<TensorImpl>(i)->GetShape();
+            auto in_shape = info->GetInput<TensorImpl>(i)->GetShape();
             in_shape->SetDataType(DATATYPE_BOOL);
         }
-        auto shape = &info->GetOutput<TensorImpl>(0)->GetShape();
+        auto shape = info->GetOutput<TensorImpl>(0)->GetShape();
         shape->SetDataType(DATATYPE_BOOL);
         return RC_SUCCESS;
     };

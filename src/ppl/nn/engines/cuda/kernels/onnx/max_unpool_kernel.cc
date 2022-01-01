@@ -30,7 +30,7 @@ ppl::common::RetCode MaxUnpoolKernel::DoExecute(KernelExecContext* ctx) {
     bool use_bottom_mask = true;
     int zero_int = 0;
     ppl::common::RetCode status =
-        PPLCUDAMaxUnpoolForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(), &output->GetShape(),
+        PPLCUDAMaxUnpoolForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(),
                                    output->GetBufferPtr(), use_bottom_mask, indices->GetBufferPtr<int64_t>(), zero_int,
                                    zero_int, zero_int, zero_int, zero_int, zero_int, zero_int);
     return status;

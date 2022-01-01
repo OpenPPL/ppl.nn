@@ -38,13 +38,13 @@ ppl::common::RetCode AveragePoolKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
 
-    if (X->GetShape().GetDimCount() != 4) {
+    if (X->GetShape()->GetDimCount() != 4) {
         LOG(ERROR) << "only support 4-D tensor now.";
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    const int32_t src_h = X->GetShape().GetDim(2);
-    const int32_t src_w = X->GetShape().GetDim(3);
+    const int32_t src_h = X->GetShape()->GetDim(2);
+    const int32_t src_w = X->GetShape()->GetDim(3);
 
     int32_t kernel_h;
     int32_t kernel_w;
@@ -88,8 +88,8 @@ ppl::common::RetCode AveragePoolKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("strides: %d %d\n", stride_h, stride_w);
     PPLNN_X86_DEBUG_TRACE("pads: %d %d\n", pad_h, pad_w);
 
-    const auto data_type = X->GetShape().GetDataType();
-    const auto data_format = X->GetShape().GetDataFormat();
+    const auto data_type = X->GetShape()->GetDataType();
+    const auto data_format = X->GetShape()->GetDataFormat();
 
     if (data_format == ppl::common::DATAFORMAT_N16CX) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
@@ -98,17 +98,17 @@ ppl::common::RetCode AveragePoolKernel::DoExecute(KernelExecContext* ctx) {
 #ifdef PPL_USE_X86_AVX512
             else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
                 return ppl::kernel::x86::averagepool2d_n16chw_blk1x16_fp32_avx512(
-                    &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
+                    X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
                     pad_h, pad_w, param_->mode, param_->ceil_mode, Y->GetBufferPtr<float>());
             }
 #endif
             else if (MayUseISA(ppl::common::ISA_X86_AVX)) {
                 return ppl::kernel::x86::averagepool2d_n16chw_blk1x8_fp32_avx(
-                    &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
+                    X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
                     pad_h, pad_w, param_->mode, param_->ceil_mode, Y->GetBufferPtr<float>());
             } else if (MayUseISA(ppl::common::ISA_X86_AVX)) {
                 return ppl::kernel::x86::averagepool2d_n16chw_blk1x4_fp32_sse(
-                    &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
+                    X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
                     pad_h, pad_w, param_->mode, param_->ceil_mode, Y->GetBufferPtr<float>());
             } else {
                 LOG(ERROR) << "get unsupported isa " << GetISA() << ".";
@@ -119,7 +119,7 @@ ppl::common::RetCode AveragePoolKernel::DoExecute(KernelExecContext* ctx) {
     } else if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
             return ppl::kernel::x86::averagepool2d_nchw_normal_fp32(
-                &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w, pad_h,
+                X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w, pad_h,
                 pad_w, param_->mode, param_->ceil_mode, Y->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";

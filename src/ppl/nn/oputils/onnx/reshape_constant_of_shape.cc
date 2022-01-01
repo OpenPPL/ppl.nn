@@ -24,8 +24,8 @@ namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeConstantOfShape(InputOutputInfo* info, const void* arg, const int64_t* input_host) {
     auto input = info->GetInput<TensorImpl>(0);
-    auto input_shape = &input->GetShape();
-    auto output_shape = &info->GetOutput<TensorImpl>(0)->GetShape();
+    auto input_shape = input->GetShape();
+    auto output_shape = info->GetOutput<TensorImpl>(0)->GetShape();
 
     if (input_shape->GetDataType() != DATATYPE_INT64) {
         return RC_INVALID_VALUE;

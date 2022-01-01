@@ -26,7 +26,7 @@ using namespace ppl::common;
 static bool SetRandomInputs(Runtime* runtime) {
     for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
         auto t = runtime->GetInputTensor(c);
-        auto& shape = t->GetShape();
+        auto& shape = *t->GetShape();
 
         auto nr_element = shape.GetBytesIncludingPadding() / sizeof(float);
         unique_ptr<float[]> buffer(new float[nr_element]);
@@ -45,7 +45,7 @@ static bool SetRandomInputs(Runtime* runtime) {
         }
 
         // our random data is treated as NDARRAY
-        TensorShape src_desc = t->GetShape();
+        TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
 
         // input tensors may require different data format
@@ -66,7 +66,7 @@ static void PrintInputOutputInfo(const Runtime* runtime) {
         cout << "input[" << i << "]:" << endl << "    name: " << tensor->GetName() << endl;
 
         string dims_str;
-        auto& shape = tensor->GetShape();
+        auto& shape = *tensor->GetShape();
         for (uint32_t j = 0; j < shape.GetDimCount(); ++j) {
             dims_str += " " + std::to_string(shape.GetDim(j));
         }
@@ -83,7 +83,7 @@ static void PrintInputOutputInfo(const Runtime* runtime) {
         cout << "output[" << i << "]:" << endl << "    name: " << tensor->GetName();
 
         string dims_str;
-        auto& shape = tensor->GetShape();
+        auto& shape = *tensor->GetShape();
         for (uint32_t j = 0; j < shape.GetDimCount(); ++j) {
             dims_str += " " + std::to_string(shape.GetDim(j));
         }

@@ -40,19 +40,19 @@ ppl::common::RetCode RangeKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
 
-    const auto data_type = output->GetShape().GetDataType();
+    const auto data_type = output->GetShape()->GetDataType();
     if (data_type == ppl::common::DATATYPE_INT64) {
         const int64_t start_val = start->GetBufferPtr<int64_t>()[0];
         const int64_t delta_val = delta->GetBufferPtr<int64_t>()[0];
         int64_t* output_data = output->GetBufferPtr<int64_t>();
-        for (uint32_t i = 0; i < output->GetShape().GetElementsExcludingPadding(); i++) {
+        for (uint32_t i = 0; i < output->GetShape()->GetElementsExcludingPadding(); i++) {
             output_data[i] = start_val + i * delta_val;
         }
     } else if (data_type == ppl::common::DATATYPE_FLOAT32) {
         const float start_val = start->GetBufferPtr<float>()[0];
         const float delta_val = delta->GetBufferPtr<float>()[0];
         float* output_data = output->GetBufferPtr<float>();
-        for (uint32_t i = 0; i < output->GetShape().GetElementsExcludingPadding(); i++) {
+        for (uint32_t i = 0; i < output->GetShape()->GetElementsExcludingPadding(); i++) {
             output_data[i] = start_val + i * delta_val;
         }
     } else {

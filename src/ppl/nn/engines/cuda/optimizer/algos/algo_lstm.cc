@@ -44,7 +44,7 @@ void LstmAlgorithm::ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std:
         if (edge_id == INVALID_EDGEID) {
             continue;
         }
-        auto shape = &tensors->find(edge_id)->second->GetShape();
+        auto shape = tensors->find(edge_id)->second->GetShape();
         if (shape->GetDimCount() > 1) {
             shape->SetDataFormat(input_format);
         } else {
@@ -54,7 +54,7 @@ void LstmAlgorithm::ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std:
 
     for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
         auto edge_id = node->GetOutput(i);
-        auto shape = &tensors->find(edge_id)->second->GetShape();
+        auto shape = tensors->find(edge_id)->second->GetShape();
         shape->SetDataFormat(output_format);
     }
     return;

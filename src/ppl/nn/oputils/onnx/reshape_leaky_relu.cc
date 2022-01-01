@@ -26,8 +26,8 @@ RetCode ReshapeLeakyReLU(InputOutputInfo* info, const void*) {
     if (info->GetInputCount() != 1 || info->GetOutputCount() != 1) {
         return RC_INVALID_VALUE;
     }
-    const TensorShape& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
-    auto out_shape0 = &info->GetOutput<TensorImpl>(0)->GetShape();
+    const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
+    auto out_shape0 = info->GetOutput<TensorImpl>(0)->GetShape();
     if (in_shape0.IsScalar()) {
         out_shape0->ReshapeAsScalar();
     } else {

@@ -49,14 +49,14 @@ RetCode ExpandOp::Init(const OptKernelOptions& options) {
             return RC_NOT_FOUND;
         }
 
-        std::unique_ptr<int64_t[]> shape_ptr(new int64_t[shape->GetShape().GetElementsIncludingPadding()]);
-        auto status = shape->CopyToHost(shape_ptr.get());
+        vector<int64_t> shape_data(shape->GetShape()->GetElementsIncludingPadding());
+        auto status = shape->CopyToHost(shape_data.data());
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "Copy shape failed: " << GetRetCodeStr(status);
             return status;
         }
 
-        return oputils::ReshapeExpand(info, nullptr, shape_ptr.get());
+        return oputils::ReshapeExpand(info, nullptr, shape_data.data());
     };
 
     return RC_SUCCESS;

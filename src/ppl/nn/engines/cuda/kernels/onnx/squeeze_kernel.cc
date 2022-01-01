@@ -29,7 +29,7 @@ ppl::common::RetCode SqueezeKernel::DoExecute(KernelExecContext* ctx) {
     if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL) {
         output->TransferBufferFrom(input);
     } else {
-        status = PPLCUDASqueezeForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(), &output->GetShape(),
+        status = PPLCUDASqueezeForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(),
                                           output->GetBufferPtr());
     }
     return status;

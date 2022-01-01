@@ -24,11 +24,11 @@ namespace ppl { namespace nn { namespace cuda {
 
 ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
-    int32_t dim_count = input->GetShape().GetDimCount();
+    int32_t dim_count = input->GetShape()->GetDimCount();
     if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL &&
         ctx->GetOutputCount() == 1 &&
-        input->GetShape().GetElementsIncludingPadding() ==
-            ctx->GetOutput<TensorImpl>(0)->GetShape().GetElementsIncludingPadding()) {
+        input->GetShape()->GetElementsIncludingPadding() ==
+            ctx->GetOutput<TensorImpl>(0)->GetShape()->GetElementsIncludingPadding()) {
         auto output = ctx->GetOutput<TensorImpl>(0);
         output->TransferBufferFrom(input);
         return ppl::common::RC_SUCCESS;
@@ -40,11 +40,11 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
     for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto output = ctx->GetOutput<TensorImpl>(i);
         dst_list_[i] = output->GetBufferPtr();
-        auto output_shape = output->GetShape();
+        const TensorShape& output_shape = *output->GetShape();
         if(output_shape.GetElementsExcludingPadding() < output_shape.GetElementsIncludingPadding())
             cudaMemset(dst_list_[i], 0, output_shape.GetBytesIncludingPadding());
         for (int32_t it = 0; it < dim_count; ++it) {
-            dst_dims_[i].push_back(output->GetShape().GetDim(it));
+            dst_dims_[i].push_back(output->GetShape()->GetDim(it));
         }
     }
 
@@ -55,7 +55,7 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     ppl::common::RetCode status = PPLCUDASplitForwardImp(
-        GetStream(), (param_->axis + dim_count) % dim_count, &input->GetShape(), input->GetBufferPtr(),
+        GetStream(), (param_->axis + dim_count) % dim_count, input->GetShape(), input->GetBufferPtr(),
         ctx->GetOutputCount(), (const int64_t**)out_dims.data(), dst_list_.data());
     return status;
 }

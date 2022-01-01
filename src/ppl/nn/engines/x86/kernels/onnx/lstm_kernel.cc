@@ -43,10 +43,10 @@ uint64_t LSTMKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     const bool has_Y_c = ctx.GetOutputCount() > 2 && ctx.GetOutput<TensorImpl>(2);
     if (MayUseISA(ppl::common::ISA_X86_FMA)) {
         return kernel::x86::lstm_fp32_fma_get_buffer_bytes(
-            &X->GetShape(), direction_, param_->hidden_size, has_Y, has_Y_h, has_Y_c);
+            X->GetShape(), direction_, param_->hidden_size, has_Y, has_Y_h, has_Y_c);
     } else {
         return kernel::x86::lstm_ref_fp32_get_buffer_bytes(
-            &X->GetShape(), direction_, param_->hidden_size, has_Y, has_Y_h, has_Y_c);
+            X->GetShape(), direction_, param_->hidden_size, has_Y, has_Y_h, has_Y_c);
     }
 }
 
@@ -155,19 +155,19 @@ ppl::common::RetCode LSTMKernel::DoExecute(KernelExecContext* ctx) {
     auto tmp_buffer = tmp_buffer_desc.addr;
     PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
 
-    const auto data_type = X->GetShape().GetDataType();
-    const auto data_format = X->GetShape().GetDataFormat();
+    const auto data_type = X->GetShape()->GetDataType();
+    const auto data_format = X->GetShape()->GetDataFormat();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32 && data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (MayUseISA(ppl::common::ISA_X86_FMA)) {
             return kernel::x86::lstm_fp32_fma(
-                &X->GetShape(), X->GetBufferPtr<const float>(),
+                X->GetShape(), X->GetBufferPtr<const float>(),
                 W->GetBufferPtr<const float>(), R->GetBufferPtr<const float>(),
                 P_data, B_data, sequence_lens_data, initial_h_data, initial_c_data,
                 direction_, param_->hidden_size, tmp_buffer, Y_data, Y_h_data, Y_c_data);
         } else {
             return kernel::x86::lstm_ref_fp32(
-                &X->GetShape(), X->GetBufferPtr<const float>(),
+                X->GetShape(), X->GetBufferPtr<const float>(),
                 W->GetBufferPtr<const float>(), R->GetBufferPtr<const float>(),
                 P_data, B_data, sequence_lens_data, initial_h_data, initial_c_data,
                 direction_, param_->hidden_size, tmp_buffer, Y_data, Y_h_data, Y_c_data);

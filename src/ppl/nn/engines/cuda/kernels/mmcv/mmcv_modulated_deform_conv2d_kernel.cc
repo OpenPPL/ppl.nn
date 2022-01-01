@@ -28,12 +28,12 @@ ppl::common::RetCode MMCVModulatedDeformConv2dKernel::DoExecute(KernelExecContex
     auto mask = ctx->GetInput<TensorImpl>(2);
     auto weight = ctx->GetInput<TensorImpl>(3);
     auto bias = ctx->GetInputCount() > 4 ? ctx->GetInput<TensorImpl>(4) : nullptr;
-    
-    auto shape_in0 = ctx->GetInput<TensorImpl>(0)->GetShape();
-    auto shape_in3 = ctx->GetInput<TensorImpl>(3)->GetShape();
-    auto shape_out = ctx->GetOutput<TensorImpl>(0)->GetShape();
 
-    int64_t size = PPLCUDADeformConvGetBufSize(&shape_in0, &shape_in3, &shape_out);
+    const TensorShape* shape_in0 = ctx->GetInput<TensorImpl>(0)->GetShape();
+    const TensorShape* shape_in3 = ctx->GetInput<TensorImpl>(3)->GetShape();
+    const TensorShape* shape_out = ctx->GetOutput<TensorImpl>(0)->GetShape();
+
+    int64_t size = PPLCUDADeformConvGetBufSize(shape_in0, shape_in3, shape_out);
     BufferDesc tmp_buffer_desc;
     auto status = GetCudaDevice()->AllocTmpBuffer(size, &tmp_buffer_desc);
     if (status != ppl::common::RC_SUCCESS) {
@@ -44,23 +44,23 @@ ppl::common::RetCode MMCVModulatedDeformConv2dKernel::DoExecute(KernelExecContex
     BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
         GetCudaDevice()->FreeTmpBuffer(buffer);
     });
-    
-    const int64_t num_output = weight->GetShape().GetDim(0);
-    const int64_t channels = weight->GetShape().GetDim(1) * param_->groups;
-    const int64_t kernel_h = weight->GetShape().GetDim(2);
-    const int64_t kernel_w = weight->GetShape().GetDim(3);
+
+    const int64_t num_output = weight->GetShape()->GetDim(0);
+    const int64_t channels = weight->GetShape()->GetDim(1) * param_->groups;
+    const int64_t kernel_h = weight->GetShape()->GetDim(2);
+    const int64_t kernel_w = weight->GetShape()->GetDim(3);
 
     auto stream = GetStream();
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
     status = PPLCUDADeformConvForward(
-        stream, module, &output->GetShape(), &input->GetShape(), 
+        stream, module, output->GetShape(), input->GetShape(),
         output->GetBufferPtr(), input->GetBufferPtr(), weight->GetBufferPtr(),
         offset->GetBufferPtr(), mask ? mask->GetBufferPtr() : nullptr, bias ? bias->GetBufferPtr() : nullptr,
         param_->groups, param_->deform_groups, channels, num_output,
-        param_->stride[0], param_->stride[1], kernel_h, kernel_w, 
+        param_->stride[0], param_->stride[1], kernel_h, kernel_w,
         param_->padding[0], param_->padding[1], param_->dilation[0], param_->dilation[1],
         mask, tmp_buffer_desc.addr);
-   
+
     return status;
 
 }

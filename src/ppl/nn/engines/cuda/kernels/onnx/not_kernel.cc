@@ -25,8 +25,8 @@ ppl::common::RetCode NotKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
 
-    ppl::common::RetCode status = PPLCUDANotForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr<bool>(),
-                                                       &output->GetShape(), output->GetBufferPtr<bool>());
+    ppl::common::RetCode status = PPLCUDANotForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr<bool>(),
+                                                       output->GetShape(), output->GetBufferPtr<bool>());
     return status;
 }
 

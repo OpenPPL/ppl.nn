@@ -23,8 +23,8 @@
 namespace ppl { namespace nn { namespace cuda {
 
 bool GemmKernel::CanDoExecute(const KernelExecContext& ctx) const {
-    auto& input = ctx.GetInput<TensorImpl>(0)->GetShape();
-    auto& weight = ctx.GetInput<TensorImpl>(1)->GetShape();
+    const TensorShape& input = *ctx.GetInput<TensorImpl>(0)->GetShape();
+    const TensorShape& weight = *ctx.GetInput<TensorImpl>(1)->GetShape();
     if (input.GetBytesIncludingPadding() == 0) {
         return false;
     }
@@ -36,7 +36,7 @@ bool GemmKernel::CanDoExecute(const KernelExecContext& ctx) const {
 }
 
 uint64_t GemmKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
-    auto A = &ctx.GetInput<TensorImpl>(0)->GetShape();
+    auto A = ctx.GetInput<TensorImpl>(0)->GetShape();
     return PPLGemmCUDAGetBufSize(A, param_->param.transA);
 }
 
@@ -60,8 +60,8 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
 
     // convert filter only if the filter tensor is an output of another kernel
     BufferDesc weight_buffer;
-    auto newshape = weight->GetShape();
-    if (!param_->extra_param.is_initializer_weight) {    
+    auto newshape = *weight->GetShape();
+    if (!param_->extra_param.is_initializer_weight) {
         auto align_size = 8;
         newshape.SetDim(0, (newshape.GetDim(0) + align_size - 1) / align_size * align_size);
 
@@ -81,7 +81,7 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     TensorShape bias_shape;
     void* bias = nullptr;
     if (ctx->GetInputCount() >= 3) {
-        bias_shape = ctx->GetInput<TensorImpl>(2)->GetShape();
+        bias_shape = *ctx->GetInput<TensorImpl>(2)->GetShape();
         bias = ctx->GetInput<TensorImpl>(2)->GetBufferPtr();
     }
 
@@ -91,11 +91,11 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     auto stream = GetStream();
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
 
-    auto shape_in0 = input->GetShape();
+    const TensorShape& shape_in0 = *input->GetShape();
     if (shape_in0.GetDataType()==ppl::common::DATATYPE_FLOAT16) {
-        status = PPLCUDAGemmForwardImp(stream, module, &input->GetShape(), input->GetBufferPtr(),
-                                   &weight->GetShape(), weight->GetBufferPtr(), bias,
-                                   &output->GetShape(), output->GetBufferPtr(),
+        status = PPLCUDAGemmForwardImp(stream, module, input->GetShape(), input->GetBufferPtr(),
+                                   weight->GetShape(), weight->GetBufferPtr(), bias,
+                                   output->GetShape(), output->GetBufferPtr(),
                                    param_->param, tmp_buffer, temp_fuse_param, param_->extra_param.algo_info);
     } else if (shape_in0.GetDataType()==ppl::common::DATATYPE_INT8) {
         quant_param_t temp_quant_param;
@@ -123,10 +123,10 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
         }
 
 
-        status = PPLCUDAGemmForwardImpInt8(stream, module, &input->GetShape(), input->GetBufferPtr(),
-                                   &weight->GetShape(), weight->GetBufferPtr(), bias,
-                                   &output->GetShape(), output->GetBufferPtr(),
-                                   param_->param, tmp_buffer, temp_quant_param, 
+        status = PPLCUDAGemmForwardImpInt8(stream, module, input->GetShape(), input->GetBufferPtr(),
+                                   weight->GetShape(), weight->GetBufferPtr(), bias,
+                                   output->GetShape(), output->GetBufferPtr(),
+                                   param_->param, tmp_buffer, temp_quant_param,
                                    temp_fuse_param, param_->extra_param.algo_info);
     }
 

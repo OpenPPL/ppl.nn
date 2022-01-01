@@ -31,19 +31,19 @@ ppl::common::RetCode ChannelShuffleKernel::DoExecute(KernelExecContext* ctx) {
     auto output_id0 = Y->GetEdge()->GetId();
     auto output_quant0 = GetCommonParam()->cuda_tensor_info->at(output_id0);
 
-    if (X->GetShape().GetDimCount() != 4 || Y->GetShape().GetDimCount() != 4) {
-        LOG(ERROR) << "incorrect input dimcount: " << X->GetShape().GetDimCount();
+    if (X->GetShape()->GetDimCount() != 4 || Y->GetShape()->GetDimCount() != 4) {
+        LOG(ERROR) << "incorrect input dimcount: " << X->GetShape()->GetDimCount();
         return ppl::common::RC_UNSUPPORTED;
     }
-    if (X->GetShape().GetDim(1) % group_) {
+    if (X->GetShape()->GetDim(1) % group_) {
         LOG(ERROR) << "unsupported ChanneShuffle group: " << group_;
         return ppl::common::RC_UNSUPPORTED;
     }
 
     if (ctx->GetOutputCount() == 1) {
         auto Y_shape = Y->GetShape();
-        PPLCUDAChannelShuffleForwardImp(GetStream(), group_, &X->GetShape(), X->GetBufferPtr(),
-                                                             &Y->GetShape(), Y->GetBufferPtr(), 
+        PPLCUDAChannelShuffleForwardImp(GetStream(), group_, X->GetShape(), X->GetBufferPtr(),
+                                                             Y->GetShape(), Y->GetBufferPtr(),
                                                              input_quant0.scale[0], output_quant0.scale[0]);
     }
 
@@ -54,8 +54,8 @@ ppl::common::RetCode ChannelShuffleKernel::DoExecute(KernelExecContext* ctx) {
         auto input_quant1 = GetCommonParam()->cuda_tensor_info->at(input_id1);
         auto output_id1 = Y2->GetEdge()->GetId();
         auto output_quant1 = GetCommonParam()->cuda_tensor_info->at(output_id1);
-        PPLCUDAFuseChannelShuffleForwardImp(GetStream(), group_, &X->GetShape(), X->GetBufferPtr(), X2->GetBufferPtr(),
-                                                                 &Y->GetShape(), Y->GetBufferPtr(), Y2->GetBufferPtr(),
+        PPLCUDAFuseChannelShuffleForwardImp(GetStream(), group_, X->GetShape(), X->GetBufferPtr(), X2->GetBufferPtr(),
+                                                                 Y->GetShape(), Y->GetBufferPtr(), Y2->GetBufferPtr(),
                                                                  input_quant0.scale[0], input_quant1.scale[0],
                                                                  output_quant0.scale[0], output_quant1.scale[0]);
     }

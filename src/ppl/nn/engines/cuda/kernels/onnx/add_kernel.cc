@@ -35,8 +35,8 @@ ppl::common::RetCode AddKernel::DoExecute(KernelExecContext* ctx) {
 
 
     ppl::common::RetCode status =
-        PPLCUDAArithMeticAddForwardImp(GetStream(), &input0->GetShape(), input0->GetBufferPtr(), &input1->GetShape(),
-                                       input1->GetBufferPtr(), &output->GetShape(), output->GetBufferPtr(), input_quant0.scale[0], input_quant1.scale[0], output_quant.scale[0]);
+        PPLCUDAArithMeticAddForwardImp(GetStream(), input0->GetShape(), input0->GetBufferPtr(), input1->GetShape(),
+                                       input1->GetBufferPtr(), output->GetShape(), output->GetBufferPtr(), input_quant0.scale[0], input_quant1.scale[0], output_quant.scale[0]);
 
     return status;
 }

@@ -38,23 +38,23 @@ ppl::common::RetCode GatherNdKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
 
-    const int64_t r = x->GetShape().GetDimCount();
-    const int64_t q = indices->GetShape().GetDimCount();
-    const int64_t k = indices->GetShape().GetDim(q - 1);
+    const int64_t r = x->GetShape()->GetDimCount();
+    const int64_t q = indices->GetShape()->GetDimCount();
+    const int64_t k = indices->GetShape()->GetDim(q - 1);
 
     int64_t inner_dim = 1;
     int64_t num_indices = 1;
 
     for (int64_t i = k; i < r; i++) {
-        inner_dim *= x->GetShape().GetDim(i);
+        inner_dim *= x->GetShape()->GetDim(i);
     }
     for (int64_t i = 0; i < q - 1; i++) {
-        num_indices *= indices->GetShape().GetDim(i);
+        num_indices *= indices->GetShape()->GetDim(i);
     }
 
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
-    auto status = GetX86Device()->AllocTmpBuffer(indices->GetShape().GetBytesExcludingPadding(), &tmp_buffer_desc);
+    auto status = GetX86Device()->AllocTmpBuffer(indices->GetShape()->GetBytesExcludingPadding(), &tmp_buffer_desc);
     if (status != ppl::common::RC_SUCCESS) {
         LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
@@ -68,7 +68,7 @@ ppl::common::RetCode GatherNdKernel::DoExecute(KernelExecContext* ctx) {
     for (int64_t i = 0; i < num_indices; ++i) {
         for (int64_t j = 0; j < k; ++j) {
             auto idx = i * k + j;
-            real_indices[idx] = indices_data[idx] >= 0 ? indices_data[idx] : indices_data[idx] + x->GetShape().GetDim(j);
+            real_indices[idx] = indices_data[idx] >= 0 ? indices_data[idx] : indices_data[idx] + x->GetShape()->GetDim(j);
         }
     }
 
@@ -76,11 +76,11 @@ ppl::common::RetCode GatherNdKernel::DoExecute(KernelExecContext* ctx) {
     auto strides_data = strides.data();
     strides_data[r - 1] = 1;
     for (int i = r - 2; i >= 0; i--) {
-        strides_data[i] = strides_data[i + 1] * x->GetShape().GetDim(i + 1);
+        strides_data[i] = strides_data[i + 1] * x->GetShape()->GetDim(i + 1);
     }
 
-    const auto data_type = x->GetShape().GetDataType();
-    const auto data_format = x->GetShape().GetDataFormat();
+    const auto data_type = x->GetShape()->GetDataType();
+    const auto data_format = x->GetShape()->GetDataFormat();
 
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {

@@ -378,14 +378,14 @@ static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
 /* -------------------------------------------------------------------------- */
 
 static string GetDimsStr(const Tensor* tensor) {
-    auto& shape = tensor->GetShape();
-    if (shape.GetRealDimCount() == 0) {
+    auto shape = tensor->GetShape();
+    if (shape->GetRealDimCount() == 0) {
         return string();
     }
 
-    string res = ToString(shape.GetDim(0));
-    for (uint32_t i = 1; i < shape.GetDimCount(); ++i) {
-        res += "_" + ToString(shape.GetDim(i));
+    string res = ToString(shape->GetDim(0));
+    for (uint32_t i = 1; i < shape->GetDimCount(); ++i) {
+        res += "_" + ToString(shape->GetDim(i));
     }
 
     return res;
@@ -394,21 +394,21 @@ static string GetDimsStr(const Tensor* tensor) {
 static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime* runtime, vector<string>* input_data) {
     for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
         auto t = runtime->GetInputTensor(c);
-        auto& shape = t->GetShape();
+        auto shape = t->GetShape();
 
         if (input_shapes.empty()) {
-            auto dim_count = shape.GetRealDimCount();
+            auto dim_count = shape->GetRealDimCount();
             auto dims = GenerateRandomDims(dim_count);
             for (uint32_t j = 2; j < dim_count; ++j) {
-                if (shape.GetDim(j) == 1) {
-                    shape.SetDim(j, dims[j]);
+                if (shape->GetDim(j) == 1) {
+                    shape->SetDim(j, dims[j]);
                 }
             }
         } else {
-            shape.Reshape(input_shapes[c]);
+            shape->Reshape(input_shapes[c]);
         }
 
-        auto nr_element = shape.GetBytesIncludingPadding() / sizeof(float);
+        auto nr_element = shape->GetBytesIncludingPadding() / sizeof(float);
         vector<float> buffer(nr_element);
 
         std::default_random_engine eng;
@@ -423,7 +423,7 @@ static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime
             return false;
         }
 
-        TensorShape src_desc = t->GetShape();
+        TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         status = t->ConvertFromHost(buffer.data(), src_desc);
         if (status != RC_SUCCESS) {
@@ -451,7 +451,7 @@ static bool SetInputsAllInOne(const string& input_file, const vector<vector<int6
         auto t = runtime->GetInputTensor(c);
 
         if (!input_shapes.empty()) {
-            t->GetShape().Reshape(input_shapes[c]);
+            t->GetShape()->Reshape(input_shapes[c]);
         }
 
         auto status = t->ReallocBuffer();
@@ -460,7 +460,7 @@ static bool SetInputsAllInOne(const string& input_file, const vector<vector<int6
             return false;
         }
 
-        TensorShape src_desc = t->GetShape();
+        TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         status = t->ConvertFromHost(data, src_desc);
         if (status != RC_SUCCESS) {
@@ -527,7 +527,7 @@ static bool SetInputsOneByOne(const string& input_files_str, const vector<vector
         auto t = runtime->GetInputTensor(i);
 
         if (!input_shapes.empty()) {
-            t->GetShape().Reshape(input_shapes[i]);
+            t->GetShape()->Reshape(input_shapes[i]);
         }
 
         status = t->ReallocBuffer();
@@ -536,7 +536,7 @@ static bool SetInputsOneByOne(const string& input_files_str, const vector<vector
             return false;
         }
 
-        TensorShape src_desc = t->GetShape();
+        TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         status = t->ConvertFromHost(fm.Data(), src_desc);
         if (status != RC_SUCCESS) {
@@ -632,7 +632,7 @@ static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* ru
         }
 
         auto t = runtime->GetInputTensor(c);
-        t->GetShape() = input_shape;
+        *t->GetShape() = input_shape;
 
         status = t->ReallocBuffer();
         if (status != RC_SUCCESS) {
@@ -640,7 +640,7 @@ static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* ru
             return false;
         }
 
-        TensorShape src_desc = t->GetShape();
+        TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         status = t->ConvertFromHost(fm.Data(), src_desc);
         if (status != RC_SUCCESS) {
@@ -657,12 +657,12 @@ static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* ru
 static bool SaveInputsOneByOne(const Runtime* runtime) {
     for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
         auto t = runtime->GetInputTensor(c);
-        auto& shape = t->GetShape();
+        auto shape = t->GetShape();
 
-        auto bytes = shape.GetBytesIncludingPadding();
+        auto bytes = shape->GetBytesIncludingPadding();
         vector<char> buffer(bytes);
 
-        TensorShape src_desc = t->GetShape();
+        TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         auto status = t->ConvertToHost(buffer.data(), src_desc);
         if (status != RC_SUCCESS) {
@@ -670,9 +670,9 @@ static bool SaveInputsOneByOne(const Runtime* runtime) {
             return false;
         }
 
-        const char* data_type_str = FindDataTypeStr(shape.GetDataType());
+        const char* data_type_str = FindDataTypeStr(shape->GetDataType());
         if (!data_type_str) {
-            LOG(ERROR) << "unsupported data type[" << shape.GetDataType();
+            LOG(ERROR) << "unsupported data type[" << shape->GetDataType();
             return false;
         }
 
@@ -702,10 +702,10 @@ static bool SaveInputsAllInOne(const Runtime* runtime) {
 
     for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
         auto t = runtime->GetInputTensor(c);
-        auto bytes = t->GetShape().GetBytesIncludingPadding();
+        auto bytes = t->GetShape()->GetBytesIncludingPadding();
         vector<char> buffer(bytes);
 
-        TensorShape src_desc = t->GetShape();
+        TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         auto status = t->ConvertToHost((void*)buffer.data(), src_desc);
         if (status != RC_SUCCESS) {
@@ -723,7 +723,7 @@ static bool SaveOutputsOneByOne(const Runtime* runtime) {
     for (uint32_t c = 0; c < runtime->GetOutputCount(); ++c) {
         auto t = runtime->GetOutputTensor(c);
 
-        TensorShape dst_desc = t->GetShape();
+        TensorShape dst_desc = *t->GetShape();
         dst_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         auto bytes = dst_desc.GetBytesIncludingPadding();
 
@@ -755,16 +755,16 @@ static void PrintInputOutputInfo(const Runtime* runtime) {
         LOG(INFO) << "    name: " << tensor->GetName();
 
         string dims_str;
-        auto& shape = tensor->GetShape();
-        for (uint32_t j = 0; j < shape.GetDimCount(); ++j) {
-            dims_str += " " + ToString(shape.GetDim(j));
+        auto shape = tensor->GetShape();
+        for (uint32_t j = 0; j < shape->GetDimCount(); ++j) {
+            dims_str += " " + ToString(shape->GetDim(j));
         }
         LOG(INFO) << "    dim(s):" << dims_str;
 
-        LOG(INFO) << "    DataType: " << GetDataTypeStr(shape.GetDataType());
-        LOG(INFO) << "    DataFormat: " << GetDataFormatStr(shape.GetDataFormat());
-        LOG(INFO) << "    NumBytesIncludePadding: " << shape.GetBytesIncludingPadding();
-        LOG(INFO) << "    NumBytesExcludePadding: " << shape.GetBytesExcludingPadding();
+        LOG(INFO) << "    DataType: " << GetDataTypeStr(shape->GetDataType());
+        LOG(INFO) << "    DataFormat: " << GetDataFormatStr(shape->GetDataFormat());
+        LOG(INFO) << "    NumBytesIncludePadding: " << shape->GetBytesIncludingPadding();
+        LOG(INFO) << "    NumBytesExcludePadding: " << shape->GetBytesExcludingPadding();
     }
 
     LOG(INFO) << "----- output info -----";
@@ -774,16 +774,16 @@ static void PrintInputOutputInfo(const Runtime* runtime) {
         LOG(INFO) << "    name: " << tensor->GetName();
 
         string dims_str;
-        auto& shape = tensor->GetShape();
-        for (uint32_t j = 0; j < shape.GetDimCount(); ++j) {
-            dims_str += " " + ToString(shape.GetDim(j));
+        auto shape = tensor->GetShape();
+        for (uint32_t j = 0; j < shape->GetDimCount(); ++j) {
+            dims_str += " " + ToString(shape->GetDim(j));
         }
         LOG(INFO) << "    dim(s):" << dims_str;
 
-        LOG(INFO) << "    DataType: " << GetDataTypeStr(shape.GetDataType());
-        LOG(INFO) << "    DataFormat: " << GetDataFormatStr(shape.GetDataFormat());
-        LOG(INFO) << "    NumBytesIncludePadding: " << shape.GetBytesIncludingPadding();
-        LOG(INFO) << "    NumBytesExcludePadding: " << shape.GetBytesExcludingPadding();
+        LOG(INFO) << "    DataType: " << GetDataTypeStr(shape->GetDataType());
+        LOG(INFO) << "    DataFormat: " << GetDataFormatStr(shape->GetDataFormat());
+        LOG(INFO) << "    NumBytesIncludePadding: " << shape->GetBytesIncludingPadding();
+        LOG(INFO) << "    NumBytesExcludePadding: " << shape->GetBytesExcludingPadding();
     }
 
     LOG(INFO) << "----------------------";
@@ -884,7 +884,7 @@ static bool SetInputs(const vector<string>& input_data, Runtime* runtime) {
             return false;
         }
 
-        TensorShape src_desc = t->GetShape();
+        TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         status = t->ConvertFromHost(input_data[i].data(), src_desc);
         if (status != RC_SUCCESS) {
@@ -1049,8 +1049,8 @@ int main(int argc, char* argv[]) {
 
     for (uint32_t i = 0; i < runtime->GetInputCount(); ++i) {
         auto in = runtime->GetInputTensor(i);
-        auto& shape = in->GetShape();
-        if (shape.GetElementsIncludingPadding() == 0) {
+        auto shape = in->GetShape();
+        if (shape->GetElementsIncludingPadding() == 0) {
             LOG(ERROR) << "input tensor[" << in->GetName() << "] is empty.";
             return -1;
         }

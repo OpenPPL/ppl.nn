@@ -68,9 +68,9 @@ RetCode OptGraph::InitTensorImpls() {
                                                                                                   : TENSORTYPE_RESERVED;
         TensorImpl* tensor = new TensorImpl(edge, tensor_type);
         if (shapes.find(edge_id) != shapes.end()) {
-            utils::IrShape2TensorShape(shapes[edge_id], &tensor->GetShape());
+            utils::IrShape2TensorShape(shapes[edge_id], tensor->GetShape());
         } else {
-            tensor->GetShape().SetDataFormat(DATAFORMAT_NDARRAY);
+            tensor->GetShape()->SetDataFormat(DATAFORMAT_NDARRAY);
         }
         tensor_impls_.emplace(edge_id, unique_ptr<TensorImpl>(tensor));
     }
@@ -114,7 +114,7 @@ RetCode OptGraph::TryToInferType(RISCVDevice* device) {
                 continue;
             }
             if (tensor_impls_.find(input_edge->GetId()) == tensor_impls_.end() ||
-                tensor_impls_[input_edge->GetId()]->GetShape().GetDataType() == DATATYPE_UNKNOWN) {
+                tensor_impls_[input_edge->GetId()]->GetShape()->GetDataType() == DATATYPE_UNKNOWN) {
                 all_inputs_has_type = false;
                 break;
             }
@@ -155,7 +155,7 @@ RetCode OptGraph::TryToInferDims(RISCVDevice* device) {
                 continue;
             }
             if (tensor_impls_.find(input_edge->GetId()) == tensor_impls_.end() ||
-                tensor_impls_[input_edge->GetId()]->GetShape().GetDimCount() == 0) {
+                tensor_impls_[input_edge->GetId()]->GetShape()->GetDimCount() == 0) {
                 all_inputs_has_dims = false;
                 break;
             }
@@ -210,7 +210,7 @@ RetCode OptGraph::DoOptimize(RISCVDevice* device) {
             tensor->SetDevice(device);
             tensor->ReallocBuffer();
             memcpy(tensor->GetBufferPtr<void>(), graph_->data->constants[edge_id].data.data(),
-                   tensor->GetShape().GetBytesExcludingPadding());
+                   tensor->GetShape()->GetBytesExcludingPadding());
         }
     }
 

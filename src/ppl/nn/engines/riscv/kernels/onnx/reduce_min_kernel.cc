@@ -29,7 +29,7 @@ ppl::common::RetCode ReduceMinKernel::DoExecute(KernelExecContext* ctx) {
     auto data = ctx->GetInput<TensorImpl>(0);
     auto reduced = ctx->GetOutput<TensorImpl>(0);
 
-    const uint32_t dim_count = data->GetShape().GetDimCount();
+    const uint32_t dim_count = data->GetShape()->GetDimCount();
     auto fixed_axes = param_->axes;
     if (param_->axes.empty()) { // empty axes means reduce all dims
         fixed_axes.resize(dim_count);
@@ -54,14 +54,14 @@ ppl::common::RetCode ReduceMinKernel::DoExecute(KernelExecContext* ctx) {
     }
     PPLNN_RISCV_DEBUG_TRACE("keepdims: %d\n", param_->keep_dims);
 
-    auto data_type = data->GetShape().GetDataType();
+    auto data_type = data->GetShape()->GetDataType();
     if (data_type == ppl::common::DATATYPE_FLOAT16) {
         return kernel::riscv::reduce_min_fp16(data->GetBufferPtr<__fp16>(), reduced->GetBufferPtr<__fp16>(),
-                                              &data->GetShape(), &reduced->GetShape(), fixed_axes.data(),
+                                              data->GetShape(), reduced->GetShape(), fixed_axes.data(),
                                               fixed_axes.size());
     } else if (data_type == ppl::common::DATATYPE_FLOAT32) {
         return kernel::riscv::reduce_min_fp32(data->GetBufferPtr<float>(), reduced->GetBufferPtr<float>(),
-                                              &data->GetShape(), &reduced->GetShape(), fixed_axes.data(),
+                                              data->GetShape(), reduced->GetShape(), fixed_axes.data(),
                                               fixed_axes.size());
     } else if (data_type == ppl::common::DATATYPE_INT64) {
     } else {

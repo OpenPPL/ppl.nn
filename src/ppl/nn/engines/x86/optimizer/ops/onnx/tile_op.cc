@@ -30,9 +30,9 @@ RetCode TileOp::Init(const OptKernelOptions& options) {
         if (ret != RC_SUCCESS) {
             return ret;
         }
-        auto A = &info->GetInput<TensorImpl>(0)->GetShape();
-        auto B = &info->GetInput<TensorImpl>(1)->GetShape();
-        auto C = &info->GetOutput<TensorImpl>(0)->GetShape();
+        auto A = info->GetInput<TensorImpl>(0)->GetShape();
+        auto B = info->GetInput<TensorImpl>(1)->GetShape();
+        auto C = info->GetOutput<TensorImpl>(0)->GetShape();
 
         if (A->GetDataType() != DATATYPE_FLOAT32 && A->GetDataType() != DATATYPE_INT64) {
             LOG(ERROR) << "unsupported data type " << GetDataTypeStr(A->GetDataType());

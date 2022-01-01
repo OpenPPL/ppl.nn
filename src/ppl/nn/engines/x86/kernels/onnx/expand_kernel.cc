@@ -26,8 +26,8 @@ bool ExpandKernel::CanDoExecute(const KernelExecContext& ctx) const {
     auto input = ctx.GetInput<TensorImpl>(0);
     auto shape = ctx.GetInput<TensorImpl>(1);
     auto output = ctx.GetOutput<TensorImpl>(0);
-    if (input->GetShape().GetBytesIncludingPadding() == 0 || shape->GetShape().GetBytesIncludingPadding() == 0 ||
-        output->GetShape().GetBytesIncludingPadding() == 0) {
+    if (input->GetShape()->GetBytesIncludingPadding() == 0 || shape->GetShape()->GetBytesIncludingPadding() == 0 ||
+        output->GetShape()->GetBytesIncludingPadding() == 0) {
         return false;
     }
     return true;
@@ -51,12 +51,12 @@ ppl::common::RetCode ExpandKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
 
-    const ppl::common::datatype_t data_type = output->GetShape().GetDataType();
+    const ppl::common::datatype_t data_type = output->GetShape()->GetDataType();
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        return kernel::x86::expand_ndarray_fp32(&input->GetShape(), &output->GetShape(), input->GetBufferPtr<float>(),
+        return kernel::x86::expand_ndarray_fp32(input->GetShape(), output->GetShape(), input->GetBufferPtr<float>(),
                                                 output->GetBufferPtr<float>());
     } else if (data_type == ppl::common::DATATYPE_INT64) {
-        return kernel::x86::expand_ndarray_int64(&input->GetShape(), &output->GetShape(),
+        return kernel::x86::expand_ndarray_int64(input->GetShape(), output->GetShape(),
                                                  input->GetBufferPtr<int64_t>(), output->GetBufferPtr<int64_t>());
     } else {
         LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type);

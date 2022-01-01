@@ -110,7 +110,7 @@ RetCode AlgoGraph::UpdateNode(ir::Node* node, OptKernelOptions& options) {
 
         ir::Node* pre_node = FindBackwardNode(node, i);
         if (pre_node == nullptr) { // this is an input node
-            auto shape = options.tensors->find(edge_id)->second->GetShape();
+            const TensorShape& shape = *options.tensors->find(edge_id)->second->GetShape();
             for (auto it = temp_vect.begin(); it != temp_vect.end(); ++it) {
                 if (shape.GetDataFormat() == (*it)->input_format) {
                     (*it)->shortest_time[i] = 0.0;
@@ -174,7 +174,7 @@ RetCode AlgoGraph::UpdateNode(ir::Node* node, OptKernelOptions& options) {
             auto postedge_id = node->GetOutput(0);
             auto formats = algo_filter->GetAlgo(0)->Getformats(node->GetType().name);
             auto output_formats = formats.find((*it)->input_format)->second;
-            auto output_format = options.tensors->find(postedge_id)->second->GetShape().GetDataFormat();
+            auto output_format = options.tensors->find(postedge_id)->second->GetShape()->GetDataFormat();
 
             if (output_formats.find(output_format) == output_formats.end()) {
                 LOG(ERROR) << "Output format " << output_format << " is not match for node[" << node->GetName() << "]";
@@ -234,7 +234,7 @@ RetCode AlgoGraph::DetermineNode(CudaOptKernel* kernel, OptKernelOptions& option
             algo_node->parents[i]->output_format = algo_node->input_format;
         }
     }
-    
+
     options.param = algo_node->param;
     auto status = algo_node->selected_algo->ModifyParam(node, options);
     if (status != RC_SUCCESS) {

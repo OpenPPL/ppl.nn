@@ -39,7 +39,7 @@ ppl::common::RetCode TileKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     ppl::common::RetCode status =
-        PPLCUDATileForwardImp(GetStream(), kernel_param, &input->GetShape(), input->GetBufferPtr(), &output->GetShape(),
+        PPLCUDATileForwardImp(GetStream(), kernel_param, input->GetShape(), input->GetBufferPtr(), output->GetShape(),
                               output->GetBufferPtr());
     return status;
 }

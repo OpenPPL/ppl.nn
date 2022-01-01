@@ -33,7 +33,7 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_OPTIONAL_INPUT(steps_tensor, 4);
     PPLNN_RISCV_REQUIRED_OUTPUT(output, 0);
 
-    const int64_t axes_num = ctx->GetInput<TensorImpl>(1)->GetShape().GetDim(0);
+    const int64_t axes_num = ctx->GetInput<TensorImpl>(1)->GetShape()->GetDim(0);
 
     PPLNN_RISCV_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_RISCV_DEBUG_TRACE("Input [data]:\n");
@@ -77,15 +77,15 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
         steps = steps_vec.data();
     }
 
-    const ppl::common::datatype_t data_type = data->GetShape().GetDataType();
+    const ppl::common::datatype_t data_type = data->GetShape()->GetDataType();
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        return kernel::riscv::slice_ndarray_fp32(&data->GetShape(), &output->GetShape(), data->GetBufferPtr<float>(),
+        return kernel::riscv::slice_ndarray_fp32(data->GetShape(), output->GetShape(), data->GetBufferPtr<float>(),
                                                  starts, steps, axes, axes_num, output->GetBufferPtr<float>());
     } else if (data_type == ppl::common::DATATYPE_FLOAT16) {
-        return kernel::riscv::slice_ndarray_fp16(&data->GetShape(), &output->GetShape(), data->GetBufferPtr<__fp16>(),
+        return kernel::riscv::slice_ndarray_fp16(data->GetShape(), output->GetShape(), data->GetBufferPtr<__fp16>(),
                                                  starts, steps, axes, axes_num, output->GetBufferPtr<__fp16>());
     } else if (data_type == ppl::common::DATATYPE_INT64) {
-        return kernel::riscv::slice_ndarray_int64(&data->GetShape(), &output->GetShape(), data->GetBufferPtr<int64_t>(),
+        return kernel::riscv::slice_ndarray_int64(data->GetShape(), output->GetShape(), data->GetBufferPtr<int64_t>(),
                                                   starts, steps, axes, axes_num, output->GetBufferPtr<int64_t>());
     }
 

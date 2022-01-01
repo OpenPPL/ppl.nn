@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 bool ClipKernel::CanDoExecute(const KernelExecContext& ctx) const {
     auto tensor = ctx.GetInput<TensorImpl>(0);
-    if (!tensor || tensor->GetShape().GetBytesIncludingPadding() == 0) {
+    if (!tensor || tensor->GetShape()->GetBytesIncludingPadding() == 0) {
         return false;
     }
     return true;
@@ -34,8 +34,8 @@ bool ClipKernel::CanDoExecute(const KernelExecContext& ctx) const {
 ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
-    ppl::common::RetCode status = PPLCUDAClipForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(),
-                                                        &output->GetShape(), output->GetBufferPtr(), param_->min_val, param_->max_val);
+    ppl::common::RetCode status = PPLCUDAClipForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(),
+                                                        output->GetShape(), output->GetBufferPtr(), param_->min_val, param_->max_val);
     return status;
 }
 

@@ -26,7 +26,7 @@
 namespace ppl { namespace nn { namespace riscv {
 
 bool ResizeKernel::CanDoExecute(const KernelExecContext& ctx) const {
-    auto& X_shape = ctx.GetInput<TensorImpl>(0)->GetShape();
+    auto& X_shape = *ctx.GetInput<TensorImpl>(0)->GetShape();
     if (X_shape.GetBytesIncludingPadding() == 0) {
         return false;
     }
@@ -35,9 +35,9 @@ bool ResizeKernel::CanDoExecute(const KernelExecContext& ctx) const {
     auto sizes = ctx.GetInputCount() > 3 ? ctx.GetInput<TensorImpl>(3) : nullptr;
 
     auto has_size =
-        sizes && sizes->GetShape().GetDimCount() == 1 && sizes->GetShape().GetDim(0) == X_shape.GetDimCount();
+        sizes && sizes->GetShape()->GetDimCount() == 1 && sizes->GetShape()->GetDim(0) == X_shape.GetDimCount();
     auto has_scales =
-        scales && scales->GetShape().GetDimCount() == 1 && scales->GetShape().GetDim(0) == X_shape.GetDimCount();
+        scales && scales->GetShape()->GetDimCount() == 1 && scales->GetShape()->GetDim(0) == X_shape.GetDimCount();
 
     if (has_scales && has_size) {
         return false;
@@ -57,11 +57,11 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_OPTIONAL_INPUT(sizes, 3);
     PPLNN_RISCV_REQUIRED_OUTPUT(Y, 0);
 
-    float scale_h = (float)Y->GetShape().GetDim(2) / X->GetShape().GetDim(2);
-    float scale_w = (float)Y->GetShape().GetDim(3) / X->GetShape().GetDim(3);
+    float scale_h = (float)Y->GetShape()->GetDim(2) / X->GetShape()->GetDim(2);
+    float scale_w = (float)Y->GetShape()->GetDim(3) / X->GetShape()->GetDim(3);
 
     auto has_scales =
-        scales && scales->GetShape().GetDimCount() == 1 && scales->GetShape().GetDim(0) == X->GetShape().GetDimCount();
+        scales && scales->GetShape()->GetDimCount() == 1 && scales->GetShape()->GetDim(0) == X->GetShape()->GetDimCount();
 
     if (has_scales) {
         const float* scales_data = scales->GetBufferPtr<float>();
@@ -69,8 +69,8 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
         scale_w = scales_data[3];
     }
 
-    const auto data_type = X->GetShape().GetDataType();
-    const auto data_format = X->GetShape().GetDataFormat();
+    const auto data_type = X->GetShape()->GetDataType();
+    const auto data_format = X->GetShape()->GetDataFormat();
     if (data_type != ppl::common::DATATYPE_FLOAT32 || data_type != ppl::common::DATATYPE_FLOAT16) {
         LOG(ERROR) << "only support fp32 && fp16 now.";
         return ppl::common::RC_UNSUPPORTED;
@@ -81,22 +81,22 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
             param_->mode == param_->RESIZE_MODE_CUBIC) {
             if (data_type == ppl::common::DATATYPE_FLOAT16) {
                 return kernel::riscv::reisze2d_ndarray_pytorch_cubic_floor_fp16(
-                    &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<__fp16>(), scale_h, scale_w, param_->cubic_coeff_a,
+                    X->GetShape(), Y->GetShape(), X->GetBufferPtr<__fp16>(), scale_h, scale_w, param_->cubic_coeff_a,
                     Y->GetBufferPtr<__fp16>());
             } else if (data_type == ppl::common::DATATYPE_FLOAT32) {
                 return kernel::riscv::reisze2d_ndarray_pytorch_cubic_floor_fp32(
-                    &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w, param_->cubic_coeff_a,
+                    X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w, param_->cubic_coeff_a,
                     Y->GetBufferPtr<float>());
             }
         }
         if (param_->coord_trans_mode == param_->RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL &&
             param_->mode == param_->RESIZE_MODE_LINEAR) {
             if (data_type == ppl::common::DATATYPE_FLOAT16) {
-                return kernel::riscv::reisze2d_ndarray_pytorch_linear_floor_fp16(&X->GetShape(), &Y->GetShape(),
+                return kernel::riscv::reisze2d_ndarray_pytorch_linear_floor_fp16(X->GetShape(), Y->GetShape(),
                                                                                  X->GetBufferPtr<__fp16>(), scale_h,
                                                                                  scale_w, Y->GetBufferPtr<__fp16>());
             } else if (data_type == ppl::common::DATATYPE_FLOAT32) {
-                return kernel::riscv::reisze2d_ndarray_pytorch_linear_floor_fp32(&X->GetShape(), &Y->GetShape(),
+                return kernel::riscv::reisze2d_ndarray_pytorch_linear_floor_fp32(X->GetShape(), Y->GetShape(),
                                                                                  X->GetBufferPtr<float>(), scale_h,
                                                                                  scale_w, Y->GetBufferPtr<float>());
             }
@@ -105,10 +105,10 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
             param_->mode == param_->RESIZE_MODE_NEAREST) {
             if (data_type == ppl::common::DATATYPE_FLOAT16) {
                 return kernel::riscv::reisze2d_ndarray_asymmetric_nearest_floor_fp16(
-                    &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<__fp16>(), scale_h, scale_w,
+                    X->GetShape(), Y->GetShape(), X->GetBufferPtr<__fp16>(), scale_h, scale_w,
                     Y->GetBufferPtr<__fp16>());
             } else if (data_type == ppl::common::DATATYPE_FLOAT32) {
-                return kernel::riscv::reisze2d_ndarray_asymmetric_nearest_floor_fp32(&X->GetShape(), &Y->GetShape(),
+                return kernel::riscv::reisze2d_ndarray_asymmetric_nearest_floor_fp32(X->GetShape(), Y->GetShape(),
                                                                                      X->GetBufferPtr<float>(), scale_h,
                                                                                      scale_w, Y->GetBufferPtr<float>());
             }
@@ -117,23 +117,23 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
         if (param_->coord_trans_mode == param_->RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL &&
             param_->mode == param_->RESIZE_MODE_LINEAR) {
             return kernel::riscv::resize2d_nbcx_pytorch_linear_floor_fp32(
-                &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w, Y->GetBufferPtr<float>());
+                X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w, Y->GetBufferPtr<float>());
         }
         if (param_->coord_trans_mode == param_->RESIZE_COORD_TRANS_MODE_ASYMMETRIC &&
             param_->mode == param_->RESIZE_MODE_NEAREST) {
             return kernel::riscv::resize2d_nbcx_asymmetric_nearest_floor_fp32(
-                &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w, Y->GetBufferPtr<float>());
+                X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w, Y->GetBufferPtr<float>());
         }
     } else if (data_format == ppl::common::DATAFORMAT_N8CX && data_type == ppl::common::DATATYPE_FLOAT16) {
         if (param_->coord_trans_mode == param_->RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL &&
             param_->mode == param_->RESIZE_MODE_LINEAR) {
             return kernel::riscv::resize2d_nbcx_pytorch_linear_floor_fp16(
-                &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<__fp16>(), scale_h, scale_w, Y->GetBufferPtr<__fp16>());
+                X->GetShape(), Y->GetShape(), X->GetBufferPtr<__fp16>(), scale_h, scale_w, Y->GetBufferPtr<__fp16>());
         }
         if (param_->coord_trans_mode == param_->RESIZE_COORD_TRANS_MODE_ASYMMETRIC &&
             param_->mode == param_->RESIZE_MODE_NEAREST) {
             return kernel::riscv::resize2d_nbcx_asymmetric_nearest_floor_fp16(
-                &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<__fp16>(), scale_h, scale_w, Y->GetBufferPtr<__fp16>());
+                X->GetShape(), Y->GetShape(), X->GetBufferPtr<__fp16>(), scale_h, scale_w, Y->GetBufferPtr<__fp16>());
         }
     }
 

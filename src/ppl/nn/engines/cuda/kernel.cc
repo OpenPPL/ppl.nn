@@ -106,7 +106,7 @@ private:
 bool CudaKernel::CanDoExecute(const KernelExecContext& ctx) const {
     for (uint32_t i = 0; i < ctx.GetInputCount(); ++i) {
         auto tensor = ctx.GetInput<TensorImpl>(i);
-        if (!tensor || tensor->GetShape().GetBytesIncludingPadding() == 0) {
+        if (!tensor || tensor->GetShape()->GetBytesIncludingPadding() == 0) {
             LOG(WARNING) << "Cannot execute " << GetName();
             return false;
         }
@@ -133,18 +133,18 @@ RetCode CudaKernel::Execute(KernelExecContext* ctx) {
         if (!tensor) {
             continue;
         }
-        auto tensor_size = tensor->GetShape().GetBytesIncludingPadding();
+        auto tensor_size = tensor->GetShape()->GetBytesIncludingPadding();
         total_size += tensor_size;
     }
     for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto tensor = ctx->GetOutput<TensorImpl>(i);
-        auto tensor_size = tensor->GetShape().GetBytesIncludingPadding();
+        auto tensor_size = tensor->GetShape()->GetBytesIncludingPadding();
         LOG(DEBUG) << "tensor size " << tensor_size;
-        LOG(DEBUG) << "tensor datatype " << tensor->GetShape().GetDataType() << " tensor dataformat "
-                   << tensor->GetShape().GetDataFormat();
-        LOG(DEBUG) << "tensor dimcount " << tensor->GetShape().GetDimCount();
-        LOG(DEBUG) << "tensor n and c " << tensor->GetShape().GetDim(0) << " " << tensor->GetShape().GetDim(1);
-        LOG(DEBUG) << "tensor h and w " << tensor->GetShape().GetDim(2) << " " << tensor->GetShape().GetDim(3);
+        LOG(DEBUG) << "tensor datatype " << tensor->GetShape()->GetDataType() << " tensor dataformat "
+                   << tensor->GetShape()->GetDataFormat();
+        LOG(DEBUG) << "tensor dimcount " << tensor->GetShape()->GetDimCount();
+        LOG(DEBUG) << "tensor n and c " << tensor->GetShape()->GetDim(0) << " " << tensor->GetShape()->GetDim(1);
+        LOG(DEBUG) << "tensor h and w " << tensor->GetShape()->GetDim(2) << " " << tensor->GetShape()->GetDim(3);
         total_size += tensor_size;
     }
     auto run_begin_ts = std::chrono::system_clock::now();

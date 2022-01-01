@@ -30,7 +30,7 @@ RetCode WhereOp::Init(const OptKernelOptions& options) {
 
     infer_type_func_ = [](InputOutputInfo* info) -> void {
         GenericInferType(info);
-        info->GetOutput<TensorImpl>(0)->GetShape().SetDataType(info->GetInput<TensorImpl>(1)->GetShape().GetDataType());
+        info->GetOutput<TensorImpl>(0)->GetShape()->SetDataType(info->GetInput<TensorImpl>(1)->GetShape()->GetDataType());
     };
 
     return RC_SUCCESS;

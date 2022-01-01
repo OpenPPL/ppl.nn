@@ -43,14 +43,14 @@ ppl::common::RetCode MMCVNonMaxSuppressionKernel::DoExecute(KernelExecContext* c
 
     int64_t real_num_boxes_output = 0;
     auto ret = kernel::x86::mmcv_nms_ndarray_fp32(
-        boxes->GetBufferPtr<const float>(), scores->GetBufferPtr<const float>(), boxes->GetShape().GetDim(0),
+        boxes->GetBufferPtr<const float>(), scores->GetBufferPtr<const float>(), boxes->GetShape()->GetDim(0),
         param_->iou_threshold, param_->offset, output->GetBufferPtr<int64_t>(), &real_num_boxes_output);
     if (ret != ppl::common::RC_SUCCESS) {
-        ctx->GetOutput<TensorImpl>(0)->GetShape().Reshape({0});
+        ctx->GetOutput<TensorImpl>(0)->GetShape()->Reshape({0});
         return ret;
     }
 
-    ctx->GetOutput<TensorImpl>(0)->GetShape().Reshape({real_num_boxes_output});
+    ctx->GetOutput<TensorImpl>(0)->GetShape()->Reshape({real_num_boxes_output});
     return ppl::common::RC_SUCCESS;
 }
 

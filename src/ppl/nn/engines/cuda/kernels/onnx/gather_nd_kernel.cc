@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace cuda {
 uint64_t GatherNdKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     auto input = ctx.GetInput<TensorImpl>(0);
     auto indices = ctx.GetInput<TensorImpl>(1);
-    return pplGatherNDGetTempBufferSize(&input->GetShape(), input->GetBufferPtr(), &indices->GetShape(),
+    return pplGatherNDGetTempBufferSize(input->GetShape(), input->GetBufferPtr(), indices->GetShape(),
                                         indices->GetBufferPtr());
 }
 
@@ -47,8 +47,8 @@ ppl::common::RetCode GatherNdKernel::DoExecute(KernelExecContext* ctx) {
     auto output = ctx->GetOutput<TensorImpl>(0);
 
     status =
-        PPLCUDAGatherNDForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(), &indices->GetShape(),
-                                  indices->GetBufferPtr(), &output->GetShape(), output->GetBufferPtr(), tmp_buffer);
+        PPLCUDAGatherNDForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), indices->GetShape(),
+                                  indices->GetBufferPtr(), output->GetShape(), output->GetBufferPtr(), tmp_buffer);
     return status;
 }
 

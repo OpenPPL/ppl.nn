@@ -40,15 +40,15 @@ ppl::common::RetCode PowKernel::DoExecute(KernelExecContext* ctx) {
 
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    const auto data_type = A->GetShape().GetDataType();
+    const auto data_type = A->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
         if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-            return ppl::kernel::x86::pow_ndarray_max6d_fp32_avx(&A->GetShape(), &B->GetShape(),
+            return ppl::kernel::x86::pow_ndarray_max6d_fp32_avx(A->GetShape(), B->GetShape(),
                                                                 A->GetBufferPtr<float>(), B->GetBufferPtr<float>(),
                                                                 C->GetBufferPtr<float>());
         } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-            return ppl::kernel::x86::pow_ndarray_max6d_fp32_sse(&A->GetShape(), &B->GetShape(),
+            return ppl::kernel::x86::pow_ndarray_max6d_fp32_sse(A->GetShape(), B->GetShape(),
                                                                 A->GetBufferPtr<float>(), B->GetBufferPtr<float>(),
                                                                 C->GetBufferPtr<float>());
         } else {

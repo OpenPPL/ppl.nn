@@ -22,13 +22,13 @@
 namespace ppl { namespace nn { namespace cuda {
 
 bool ScatterNdKernel::CanDoExecute(const KernelExecContext& ctx) const {
-    return ctx.GetInput<TensorImpl>(0)->GetShape().GetBytesIncludingPadding() != 0;
+    return ctx.GetInput<TensorImpl>(0)->GetShape()->GetBytesIncludingPadding() != 0;
 }
 
 uint64_t ScatterNdKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     auto input = ctx.GetInput<TensorImpl>(0);
     auto indices = ctx.GetInput<TensorImpl>(1);
-    return PPLScatterNDGetTempBufferSize(&input->GetShape(), input->GetBufferPtr(), &indices->GetShape(),
+    return PPLScatterNDGetTempBufferSize(input->GetShape(), input->GetBufferPtr(), indices->GetShape(),
                                          indices->GetBufferPtr());
 }
 
@@ -51,9 +51,9 @@ ppl::common::RetCode ScatterNdKernel::DoExecute(KernelExecContext* ctx) {
     auto updates = ctx->GetInput<TensorImpl>(2);
     auto output = ctx->GetOutput<TensorImpl>(0);
 
-    status = PPLCUDAScatterNDForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(), &indices->GetShape(),
-                                        indices->GetBufferPtr(), &updates->GetShape(), updates->GetBufferPtr(),
-                                        &output->GetShape(), output->GetBufferPtr(), tmp_buffer);
+    status = PPLCUDAScatterNDForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), indices->GetShape(),
+                                        indices->GetBufferPtr(), updates->GetShape(), updates->GetBufferPtr(),
+                                        output->GetShape(), output->GetBufferPtr(), tmp_buffer);
     return status;
 }
 

@@ -35,8 +35,8 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("num_output: %ld\n", executor_->fc_param()->num_output);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    executor_->set_src_shape(&A->GetShape());
-    executor_->set_dst_shape(&Y->GetShape());
+    executor_->set_src_shape(A->GetShape());
+    executor_->set_dst_shape(Y->GetShape());
 
     ppl::common::RetCode rc;
     rc = executor_->prepare();

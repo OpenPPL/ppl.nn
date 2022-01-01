@@ -24,9 +24,9 @@ namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeConvolution(InputOutputInfo* info, const void* arg) {
     auto param = (const ConvolutionParam*)arg;
-    auto x = &info->GetInput<TensorImpl>(0)->GetShape();
-    auto w = &info->GetInput<TensorImpl>(1)->GetShape();
-    auto y = &info->GetOutput<TensorImpl>(0)->GetShape();
+    auto x = info->GetInput<TensorImpl>(0)->GetShape();
+    auto w = info->GetInput<TensorImpl>(1)->GetShape();
+    auto y = info->GetOutput<TensorImpl>(0)->GetShape();
     auto num_output = w->GetDim(0);
 
     y->SetDimCount(x->GetDimCount());

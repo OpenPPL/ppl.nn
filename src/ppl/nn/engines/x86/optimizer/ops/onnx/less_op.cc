@@ -25,14 +25,14 @@ namespace ppl { namespace nn { namespace x86 {
 
 RetCode LessOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        if (info->GetInput<TensorImpl>(0)->GetShape().GetDataFormat() != DATAFORMAT_NDARRAY) {
+        if (info->GetInput<TensorImpl>(0)->GetShape()->GetDataFormat() != DATAFORMAT_NDARRAY) {
             return RC_UNSUPPORTED;
         }
         return oputils::ReshapeLess(info, nullptr);
     };
 
     infer_type_func_ = [](InputOutputInfo* info) -> void {
-        info->GetOutput<TensorImpl>(0)->GetShape().SetDataType(DATATYPE_BOOL);
+        info->GetOutput<TensorImpl>(0)->GetShape()->SetDataType(DATATYPE_BOOL);
     };
 
     return RC_SUCCESS;

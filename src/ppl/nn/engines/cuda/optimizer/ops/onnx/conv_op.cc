@@ -60,14 +60,14 @@ RetCode ConvOp::Init(const OptKernelOptions& options) {
             if (in_quant.type != DATATYPE_INT8 || out_quant.type != DATATYPE_INT8) {
                 return RC_INVALID_VALUE;
             }
-            info->GetInput<TensorImpl>(0)->GetShape().SetDataType(in_quant.type);
-            info->GetOutput<TensorImpl>(0)->GetShape().SetDataType(out_quant.type);
+            info->GetInput<TensorImpl>(0)->GetShape()->SetDataType(in_quant.type);
+            info->GetOutput<TensorImpl>(0)->GetShape()->SetDataType(out_quant.type);
 
             // Copy quant info skipping input0
             for (uint32_t i = 1; i < info->GetInputCount(); ++i) {
                 auto in_edge_id = info->GetInput<TensorImpl>(i)->GetEdge()->GetId();
                 auto& in_quant = quant->at(in_edge_id);
-                auto in_shape = &info->GetInput<TensorImpl>(i)->GetShape();
+                auto in_shape = info->GetInput<TensorImpl>(i)->GetShape();
                 if (i == 1 && in_quant.type != DATATYPE_UNKNOWN) {
                     in_shape->SetDataType(in_quant.type);
                     continue;
@@ -85,16 +85,16 @@ RetCode ConvOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        auto inshape = &info->GetInput<TensorImpl>(0)->GetShape();
+        auto inshape = info->GetInput<TensorImpl>(0)->GetShape();
         if (inshape->GetDimCount() < 4) {
-            inshape->Reshape(info->GetInput<TensorImpl>(1)->GetShape().GetDims(), 4);
+            inshape->Reshape(info->GetInput<TensorImpl>(1)->GetShape()->GetDims(), 4);
         }
         auto status = oputils::ReshapeConvolution(info, &(param_.param));
         if (info->GetOutputCount() > 1 && param_.extra_param.fuse_info.channel_offset >= 0) {
             auto postshape = info->GetOutput<TensorImpl>(1);
-            postshape->GetShape().Reshape(info->GetInput<TensorImpl>(0)->GetShape().GetDims(),
-                                          info->GetInput<TensorImpl>(0)->GetShape().GetRealDimCount());
-            postshape->GetShape().SetDim(1, param_.extra_param.fuse_info.channel_size);
+            postshape->GetShape()->Reshape(info->GetInput<TensorImpl>(0)->GetShape()->GetDims(),
+                                          info->GetInput<TensorImpl>(0)->GetShape()->GetRealDimCount());
+            postshape->GetShape()->SetDim(1, param_.extra_param.fuse_info.channel_size);
         }
         return status;
     };

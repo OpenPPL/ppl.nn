@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace cuda {
 double BridgeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& options) {
     auto data = options.graph->data.get();
     auto preedge_id = node->GetInput(0);
-    auto preshape = options.tensors->find(preedge_id)->second.get()->GetShape();
+    const TensorShape& preshape = *options.tensors->find(preedge_id)->second.get()->GetShape();
     double timer = 0.0;
 
     if (input_format_ != output_format_) {

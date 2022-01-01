@@ -24,10 +24,10 @@
 namespace ppl { namespace nn { namespace x86 {
 
 uint64_t NonZeroKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
-    if (ctx.GetInput<TensorImpl>(0)->GetShape().GetDataType() == ppl::common::DATATYPE_FLOAT32) {
-        return kernel::x86::non_zero_ndarray_fp32_get_buffer_bytes(&ctx.GetInput<TensorImpl>(0)->GetShape());
-    } else if (ctx.GetInput<TensorImpl>(0)->GetShape().GetDataType() == ppl::common::DATATYPE_BOOL) {
-        return kernel::x86::non_zero_ndarray_bool_get_buffer_bytes(&ctx.GetInput<TensorImpl>(0)->GetShape());
+    if (ctx.GetInput<TensorImpl>(0)->GetShape()->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
+        return kernel::x86::non_zero_ndarray_fp32_get_buffer_bytes(ctx.GetInput<TensorImpl>(0)->GetShape());
+    } else if (ctx.GetInput<TensorImpl>(0)->GetShape()->GetDataType() == ppl::common::DATATYPE_BOOL) {
+        return kernel::x86::non_zero_ndarray_bool_get_buffer_bytes(ctx.GetInput<TensorImpl>(0)->GetShape());
     }
     return 0;
 }
@@ -62,18 +62,18 @@ ppl::common::RetCode NonZeroKernel::DoExecute(KernelExecContext* ctx) {
 
     int64_t real_output_num = 0;
     ppl::common::RetCode ret = ppl::common::RC_SUCCESS;
-    if (x->GetShape().GetDataType() == ppl::common::DATATYPE_FLOAT32) {
-        ret = kernel::x86::non_zero_ndarray_fp32(&x->GetShape(), x->GetBufferPtr<float>(), (int64_t*)tmp_buffer,
+    if (x->GetShape()->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
+        ret = kernel::x86::non_zero_ndarray_fp32(x->GetShape(), x->GetBufferPtr<float>(), (int64_t*)tmp_buffer,
                                                  &real_output_num, y->GetBufferPtr<int64_t>());
-    } else if (x->GetShape().GetDataType() == ppl::common::DATATYPE_BOOL) {
-        ret = kernel::x86::non_zero_ndarray_bool(&x->GetShape(), x->GetBufferPtr<uint8_t>(), (int64_t*)tmp_buffer,
+    } else if (x->GetShape()->GetDataType() == ppl::common::DATATYPE_BOOL) {
+        ret = kernel::x86::non_zero_ndarray_bool(x->GetShape(), x->GetBufferPtr<uint8_t>(), (int64_t*)tmp_buffer,
                                                  &real_output_num, y->GetBufferPtr<int64_t>());
     } else {
         return ppl::common::RC_UNSUPPORTED;
     }
 
     if (ret == ppl::common::RC_SUCCESS) {
-        y->GetShape().Reshape({x->GetShape().GetDimCount(), real_output_num}); // TODO: this will cause dynamic shape
+        y->GetShape()->Reshape({x->GetShape()->GetDimCount(), real_output_num}); // TODO: this will cause dynamic shape
     }
     return ret;
 }

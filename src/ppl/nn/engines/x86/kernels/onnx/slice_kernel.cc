@@ -54,7 +54,7 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
 
     // prepare starts, axes, steps
     auto starts = starts_tensor->GetBufferPtr<int64_t>();
-    const int axes_num = ctx->GetInput<TensorImpl>(1)->GetShape().GetDim(0);
+    const int axes_num = ctx->GetInput<TensorImpl>(1)->GetShape()->GetDim(0);
 
     const int64_t* axes = nullptr;
     std::vector<int64_t> axes_vec;
@@ -77,12 +77,12 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
         steps = steps_vec.data();
     }
 
-    const ppl::common::datatype_t data_type = data->GetShape().GetDataType();
+    const ppl::common::datatype_t data_type = data->GetShape()->GetDataType();
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        return kernel::x86::slice_ndarray_fp32(&data->GetShape(), &output->GetShape(), data->GetBufferPtr<float>(),
+        return kernel::x86::slice_ndarray_fp32(data->GetShape(), output->GetShape(), data->GetBufferPtr<float>(),
                                                starts, steps, axes, axes_num, output->GetBufferPtr<float>());
     } else if (data_type == ppl::common::DATATYPE_INT64) {
-        return kernel::x86::slice_ndarray_int64(&data->GetShape(), &output->GetShape(), data->GetBufferPtr<int64_t>(),
+        return kernel::x86::slice_ndarray_int64(data->GetShape(), output->GetShape(), data->GetBufferPtr<int64_t>(),
                                                 starts, steps, axes, axes_num, output->GetBufferPtr<int64_t>());
     }
 

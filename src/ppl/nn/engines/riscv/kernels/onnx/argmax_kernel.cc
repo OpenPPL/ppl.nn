@@ -36,13 +36,13 @@ ppl::common::RetCode ArgMaxKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_DEBUG_TRACE("axis: %d\n", param_->axis);
     PPLNN_RISCV_DEBUG_TRACE("keepdims: %d\n", param_->keepdims);
 
-    const auto data_type = data->GetShape().GetDataType();
+    const auto data_type = data->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        return kernel::riscv::argmax_ndarray_fp32(&data->GetShape(), data->GetBufferPtr<float>(), param_->axis,
+        return kernel::riscv::argmax_ndarray_fp32(data->GetShape(), data->GetBufferPtr<float>(), param_->axis,
                                                   reduced->GetBufferPtr<int64_t>());
     } else if (data_type == ppl::common::DATATYPE_FLOAT16) {
-        return kernel::riscv::argmax_ndarray_fp16(&data->GetShape(), data->GetBufferPtr<__fp16>(), param_->axis,
+        return kernel::riscv::argmax_ndarray_fp16(data->GetShape(), data->GetBufferPtr<__fp16>(), param_->axis,
                                                   reduced->GetBufferPtr<int64_t>());
     } else {
         LOG(ERROR) << "unsupported datatype: " << ppl::common::GetDataTypeStr(data_type) << ".";

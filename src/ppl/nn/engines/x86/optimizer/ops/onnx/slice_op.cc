@@ -30,35 +30,35 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
             return RC_INVALID_VALUE;
         }
         for (size_t i = 1; i < info->GetInputCount(); i++) {
-            if (info->GetInput<TensorImpl>(i)->GetShape().GetDimCount() !=
+            if (info->GetInput<TensorImpl>(i)->GetShape()->GetDimCount() !=
                 1) { // starts, ends, axes, steps must be 1-D tensor
                 return RC_INVALID_VALUE;
             }
         }
-        const uint32_t axes_num = info->GetInput<TensorImpl>(1)->GetShape().GetDim(0);
+        const uint32_t axes_num = info->GetInput<TensorImpl>(1)->GetShape()->GetDim(0);
         for (size_t i = 2; i < info->GetInputCount(); i++) {
-            if (info->GetInput<TensorImpl>(i)->GetShape().GetDim(0) !=
+            if (info->GetInput<TensorImpl>(i)->GetShape()->GetDim(0) !=
                 axes_num) { // starts, end, axes, steps must have same length except for not defined
                 return RC_INVALID_VALUE;
             }
         }
         // check support
-        if (info->GetInput<TensorImpl>(0)->GetShape().GetDataType() != DATATYPE_FLOAT32 &&
-            info->GetInput<TensorImpl>(0)->GetShape().GetDataType() != DATATYPE_INT64) {
+        if (info->GetInput<TensorImpl>(0)->GetShape()->GetDataType() != DATATYPE_FLOAT32 &&
+            info->GetInput<TensorImpl>(0)->GetShape()->GetDataType() != DATATYPE_INT64) {
             LOG(ERROR) << "unsupported data type: "
-                       << GetDataTypeStr(info->GetInput<TensorImpl>(0)->GetShape().GetDataType());
+                       << GetDataTypeStr(info->GetInput<TensorImpl>(0)->GetShape()->GetDataType());
             return RC_UNSUPPORTED;
         }
         for (size_t i = 1; i < info->GetInputCount(); i++) {
-            if (info->GetInput<TensorImpl>(i)->GetShape().GetDataType() != DATATYPE_INT64) {
+            if (info->GetInput<TensorImpl>(i)->GetShape()->GetDataType() != DATATYPE_INT64) {
                 LOG(ERROR) << "starts, ends, axes & steps only support int64 now.";
                 return RC_UNSUPPORTED;
             }
         }
         for (size_t i = 0; i < info->GetInputCount(); i++) {
-            if (info->GetInput<TensorImpl>(i)->GetShape().GetDataFormat() != DATAFORMAT_NDARRAY) {
+            if (info->GetInput<TensorImpl>(i)->GetShape()->GetDataFormat() != DATAFORMAT_NDARRAY) {
                 LOG(ERROR) << "unsupported data format: "
-                           << GetDataFormatStr(info->GetInput<TensorImpl>(i)->GetShape().GetDataFormat());
+                           << GetDataFormatStr(info->GetInput<TensorImpl>(i)->GetShape()->GetDataFormat());
                 return RC_UNSUPPORTED;
             }
         }

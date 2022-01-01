@@ -26,8 +26,8 @@ RetCode ReshapeBatchNormalization(InputOutputInfo* info, const void*) {
     if (info->GetInputCount() != 5) {
         return RC_INVALID_VALUE;
     }
-    const TensorShape& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
-    auto out_shape0 = &info->GetOutput<TensorImpl>(0)->GetShape();
+    const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
+    auto out_shape0 = info->GetOutput<TensorImpl>(0)->GetShape();
     out_shape0->Reshape(in_shape0.GetDims(), in_shape0.GetDimCount());
     return RC_SUCCESS;
 }

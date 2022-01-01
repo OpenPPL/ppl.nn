@@ -30,15 +30,15 @@ RetCode PowOp::Init(const OptKernelOptions& options) {
             return ret;
         }
 
-        if (info->GetOutput<TensorImpl>(0)->GetShape().GetDataType() != DATATYPE_FLOAT32) {
+        if (info->GetOutput<TensorImpl>(0)->GetShape()->GetDataType() != DATATYPE_FLOAT32) {
             LOG(ERROR) << "only support fp32 now.";
             return RC_UNSUPPORTED;
         }
-        if (info->GetOutput<TensorImpl>(0)->GetShape().GetDataFormat() != DATAFORMAT_NDARRAY) {
+        if (info->GetOutput<TensorImpl>(0)->GetShape()->GetDataFormat() != DATAFORMAT_NDARRAY) {
             LOG(ERROR) << "only support ndarray now.";
             return RC_UNSUPPORTED;
         }
-        if (info->GetOutput<TensorImpl>(0)->GetShape().GetDimCount() > 6) {
+        if (info->GetOutput<TensorImpl>(0)->GetShape()->GetDimCount() > 6) {
             LOG(ERROR) << "tensor's dim count must <= 6.";
             return RC_UNSUPPORTED;
         }

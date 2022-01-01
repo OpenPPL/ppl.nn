@@ -60,8 +60,8 @@ ppl::common::RetCode MinKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    const auto data_type = min->GetShape().GetDataType();
-    const auto data_format = min->GetShape().GetDataFormat();
+    const auto data_type = min->GetShape()->GetDataType();
+    const auto data_format = min->GetShape()->GetDataFormat();
     if (data_type != ppl::common::DATATYPE_FLOAT32 || data_format != ppl::common::DATAFORMAT_NDARRAY) {
         LOG(ERROR) << "only support fp32 ndarray now.";
         return ppl::common::RC_UNSUPPORTED;
@@ -70,8 +70,8 @@ ppl::common::RetCode MinKernel::DoExecute(KernelExecContext* ctx) {
     bool is_eltwise = true;
     const uint32_t input_num = ctx->GetInputCount();
     for (uint32_t i = 0; i < input_num; i++) {
-        if (ctx->GetInput<TensorImpl>(i)->GetShape().GetElementsIncludingPadding() !=
-            min->GetShape().GetElementsIncludingPadding()) {
+        if (ctx->GetInput<TensorImpl>(i)->GetShape()->GetElementsIncludingPadding() !=
+            min->GetShape()->GetElementsIncludingPadding()) {
             is_eltwise = false;
             break;
         }
@@ -91,9 +91,9 @@ ppl::common::RetCode MinKernel::DoExecute(KernelExecContext* ctx) {
 
     if (is_eltwise) {
         if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-            kernel::x86::min_eltwise_fp32_avx(&min->GetShape(), input_ptrs, input_num, min->GetBufferPtr<float>());
+            kernel::x86::min_eltwise_fp32_avx(min->GetShape(), input_ptrs, input_num, min->GetBufferPtr<float>());
         } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-            kernel::x86::min_eltwise_fp32_sse(&min->GetShape(), input_ptrs, input_num, min->GetBufferPtr<float>());
+            kernel::x86::min_eltwise_fp32_sse(min->GetShape(), input_ptrs, input_num, min->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "get unsupported isa " << GetISA();
             return ppl::common::RC_UNSUPPORTED;
@@ -102,18 +102,18 @@ ppl::common::RetCode MinKernel::DoExecute(KernelExecContext* ctx) {
         if (MayUseISA(ppl::common::ISA_X86_AVX)) {
             std::vector<const TensorShape*> input_shapes(ctx->GetInputCount());
             for (uint32_t i = 0; i < ctx->GetInputCount(); ++i) {
-                input_shapes[i] = &ctx->GetInput<TensorImpl>(i)->GetShape();
+                input_shapes[i] = ctx->GetInput<TensorImpl>(i)->GetShape();
             }
 
-            kernel::x86::min_ndarray_fp32_avx(input_shapes.data(), &min->GetShape(), input_ptrs, input_num, temp,
+            kernel::x86::min_ndarray_fp32_avx(input_shapes.data(), min->GetShape(), input_ptrs, input_num, temp,
                                               min->GetBufferPtr<float>());
         } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
             std::vector<const TensorShape*> input_shapes(ctx->GetInputCount());
             for (uint32_t i = 0; i < ctx->GetInputCount(); ++i) {
-                input_shapes[i] = &ctx->GetInput<TensorImpl>(i)->GetShape();
+                input_shapes[i] = ctx->GetInput<TensorImpl>(i)->GetShape();
             }
 
-            kernel::x86::min_ndarray_fp32_sse(input_shapes.data(), &min->GetShape(), input_ptrs, input_num, temp,
+            kernel::x86::min_ndarray_fp32_sse(input_shapes.data(), min->GetShape(), input_ptrs, input_num, temp,
                                               min->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "get unsupported isa " << GetISA();

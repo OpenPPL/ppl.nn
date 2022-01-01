@@ -26,8 +26,8 @@ namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapePooling(InputOutputInfo* info, const void* arg) {
     auto param = (const PoolingParam*)arg;
-    auto x = &info->GetInput<TensorImpl>(0)->GetShape();
-    auto y = &info->GetOutput<TensorImpl>(0)->GetShape();
+    auto x = info->GetInput<TensorImpl>(0)->GetShape();
+    auto y = info->GetOutput<TensorImpl>(0)->GetShape();
 
     y->SetDimCount(x->GetDimCount());
     y->SetDim(0, x->GetDim(0));
@@ -68,7 +68,7 @@ RetCode ReshapePooling(InputOutputInfo* info, const void* arg) {
     y->CalcPadding();
 
     if (info->GetOutputCount() == 2) {
-        auto z = &info->GetOutput<TensorImpl>(1)->GetShape();
+        auto z = info->GetOutput<TensorImpl>(1)->GetShape();
         z->SetDataType(DATATYPE_INT64);
         z->Reshape(y->GetDims(), y->GetDimCount());
     }

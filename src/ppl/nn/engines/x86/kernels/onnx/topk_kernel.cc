@@ -23,8 +23,8 @@ namespace ppl { namespace nn { namespace x86 {
 
 uint64_t TopKKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     uint32_t axis =
-        param_->axis < 0 ? param_->axis + ctx.GetInput<TensorImpl>(0)->GetShape().GetDimCount() : param_->axis;
-    return ppl::kernel::x86::topk_ndarray_fp32_get_buffer_bytes(&ctx.GetInput<TensorImpl>(0)->GetShape(), axis);
+        param_->axis < 0 ? param_->axis + ctx.GetInput<TensorImpl>(0)->GetShape()->GetDimCount() : param_->axis;
+    return ppl::kernel::x86::topk_ndarray_fp32_get_buffer_bytes(ctx.GetInput<TensorImpl>(0)->GetShape(), axis);
 }
 
 ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
@@ -63,11 +63,11 @@ ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
 
     const int64_t k_value = ctx->GetInput<TensorImpl>(1)->GetBufferPtr<const int64_t>()[0];
-    uint32_t axis = param_->axis < 0 ? param_->axis + x->GetShape().GetDimCount() : param_->axis;
+    uint32_t axis = param_->axis < 0 ? param_->axis + x->GetShape()->GetDimCount() : param_->axis;
 
-    auto data_type = x->GetShape().GetDataType();
+    auto data_type = x->GetShape()->GetDataType();
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        return kernel::x86::topk_ndarray_fp32(&x->GetShape(), &values->GetShape(), &indices->GetShape(),
+        return kernel::x86::topk_ndarray_fp32(x->GetShape(), values->GetShape(), indices->GetShape(),
                                               x->GetBufferPtr<const float>(), k_value, axis, param_->largest,
                                               param_->sorted, tmp_buffer, values->GetBufferPtr<float>(),
                                               indices->GetBufferPtr<int64_t>());

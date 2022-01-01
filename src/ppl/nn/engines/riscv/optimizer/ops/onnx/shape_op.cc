@@ -24,13 +24,13 @@ namespace ppl { namespace nn { namespace riscv {
 
 RetCode ShapeOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        auto output_shape = &info->GetOutput<TensorImpl>(0)->GetShape();
-        output_shape->Reshape({info->GetInput<TensorImpl>(0)->GetShape().GetRealDimCount()});
+        auto output_shape = info->GetOutput<TensorImpl>(0)->GetShape();
+        output_shape->Reshape({info->GetInput<TensorImpl>(0)->GetShape()->GetRealDimCount()});
         return RC_SUCCESS;
     };
 
     infer_type_func_ = [](InputOutputInfo* info) -> void {
-        auto output_shape = &info->GetOutput<TensorImpl>(0)->GetShape();
+        auto output_shape = info->GetOutput<TensorImpl>(0)->GetShape();
         output_shape->SetDataType(DATATYPE_INT64);
     };
 

@@ -45,7 +45,7 @@ RetCode ConcatOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>
     const uint32_t input_count = info.GetInputCount();
     bool input_all_16c = true;
     for (uint32_t i = 0; i < input_count; i++) {
-        if (info.GetInput<TensorImpl>(i)->GetShape().GetDataFormat() != DATAFORMAT_N16CX) {
+        if (info.GetInput<TensorImpl>(i)->GetShape()->GetDataFormat() != DATAFORMAT_N16CX) {
             input_all_16c = false;
         }
     }

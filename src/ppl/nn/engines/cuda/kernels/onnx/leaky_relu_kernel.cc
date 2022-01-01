@@ -30,7 +30,7 @@ ppl::common::RetCode LeakyReluKernel::DoExecute(KernelExecContext* ctx) {
     auto output_quant = GetCommonParam()->cuda_tensor_info->at(output_id);
 
     ppl::common::RetCode status =
-        PPLCUDAUnaryLeakyReluForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(), &output->GetShape(),
+        PPLCUDAUnaryLeakyReluForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(),
                                         output->GetBufferPtr(), param_->alpha, input_quant.scale[0], output_quant.scale[0]);
     return status;
 }

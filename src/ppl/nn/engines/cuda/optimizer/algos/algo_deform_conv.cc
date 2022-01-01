@@ -49,8 +49,8 @@ RetCode DeformConvAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& optio
         options.info->constants.find(weight_node->GetInput(0)) == options.info->constants.end()) {
         auto preedge_id = weight_node->GetInput(0);
         auto postedge_id = node->GetInput(3);
-        auto preshape = options.tensors->find(preedge_id)->second->GetShape();
-        auto postshape = options.tensors->find(postedge_id)->second->GetShape();
+        const TensorShape& preshape = *options.tensors->find(preedge_id)->second->GetShape();
+        const TensorShape& postshape = *options.tensors->find(postedge_id)->second->GetShape();
         auto size = postshape.GetElementsIncludingPadding();
         size = (size / postshape.GetDim(0) + 7) / 8 * 8 * postshape.GetDim(0);
 
@@ -77,7 +77,7 @@ RetCode DeformConvAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& optio
         PPLCUDADeformConvModifyWeights(stream, &postshape, temp_buffer.addr, weight_constat_info.GetBufferDesc().addr);
 
         options.info->constants.emplace(preedge_id, std::move(weight_constat_info));
-        options.tensors->find(preedge_id)->second->GetShape() = postshape;
+        *options.tensors->find(preedge_id)->second->GetShape() = postshape;
         options.quants->at(preedge_id).format = postshape.GetDataFormat();
         options.quants->at(preedge_id).type = postshape.GetDataType();
     }
@@ -92,13 +92,13 @@ void DeformConvAlgorithm::ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t
         if (edge_id == INVALID_EDGEID) {
             continue;
         }
-        auto shape = &tensors->find(edge_id)->second->GetShape();
+        auto shape = tensors->find(edge_id)->second->GetShape();
         shape->SetDataFormat(input_format);
     }
 
     for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
         auto edge_id = node->GetOutput(i);
-        auto shape = &tensors->find(edge_id)->second->GetShape();
+        auto shape = tensors->find(edge_id)->second->GetShape();
         shape->SetDataFormat(output_format);
     }
     return;

@@ -36,7 +36,7 @@ RetCode CastOp::Init(const OptKernelOptions& options) {
     };
 
     infer_type_func_ = [this](InputOutputInfo* info) -> void {
-        info->GetOutput<TensorImpl>(0)->GetShape().SetDataType(this->param_->to);
+        info->GetOutput<TensorImpl>(0)->GetShape()->SetDataType(this->param_->to);
     };
 
     return RC_SUCCESS;

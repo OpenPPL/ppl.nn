@@ -28,9 +28,9 @@ RetCode ReshapeGemm(InputOutputInfo* info, const void* arg) {
     }
 
     auto param = (const GemmParam*)arg;
-    auto A = &info->GetInput<TensorImpl>(0)->GetShape();
-    auto B = &info->GetInput<TensorImpl>(1)->GetShape();
-    auto Y = &info->GetOutput<TensorImpl>(0)->GetShape();
+    auto A = info->GetInput<TensorImpl>(0)->GetShape();
+    auto B = info->GetInput<TensorImpl>(1)->GetShape();
+    auto Y = info->GetOutput<TensorImpl>(0)->GetShape();
 
     int32_t AMdim = 0;
     int32_t BNdim = 1;

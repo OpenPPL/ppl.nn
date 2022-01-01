@@ -35,11 +35,11 @@ ppl::common::RetCode NotKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
 
     if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-        kernel::x86::not_bool_avx(&X->GetShape(), X->GetBufferPtr<uint8_t>(), Y->GetBufferPtr<uint8_t>());
+        kernel::x86::not_bool_avx(X->GetShape(), X->GetBufferPtr<uint8_t>(), Y->GetBufferPtr<uint8_t>());
     } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-        kernel::x86::not_bool_sse(&X->GetShape(), X->GetBufferPtr<uint8_t>(), Y->GetBufferPtr<uint8_t>());
+        kernel::x86::not_bool_sse(X->GetShape(), X->GetBufferPtr<uint8_t>(), Y->GetBufferPtr<uint8_t>());
     } else {
-        kernel::x86::not_bool(&X->GetShape(), X->GetBufferPtr<uint8_t>(), Y->GetBufferPtr<uint8_t>());
+        kernel::x86::not_bool(X->GetShape(), X->GetBufferPtr<uint8_t>(), Y->GetBufferPtr<uint8_t>());
     }
 
     return ppl::common::RC_SUCCESS;

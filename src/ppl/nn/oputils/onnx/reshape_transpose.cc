@@ -25,11 +25,11 @@ namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeTranspose(InputOutputInfo* info, const void* arg) {
     auto param = (const TransposeParam*)arg;
-    const TensorShape& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
+    const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
 
     auto modified_perm = param->perm;
     if (modified_perm.empty()) { // perm is empty, default is reverse dimention.
-        auto dim_count = info->GetInput<TensorImpl>(0)->GetShape().GetDimCount();
+        auto dim_count = info->GetInput<TensorImpl>(0)->GetShape()->GetDimCount();
         modified_perm.resize(dim_count);
         for (size_t i = 0; i < dim_count; ++i) {
             modified_perm[i] = dim_count - i - 1;
@@ -41,7 +41,7 @@ RetCode ReshapeTranspose(InputOutputInfo* info, const void* arg) {
         out_dims[i] = in_shape0.GetDim(modified_perm[i]);
     }
 
-    info->GetOutput<TensorImpl>(0)->GetShape().Reshape(out_dims);
+    info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(out_dims);
     return RC_SUCCESS;
 }
 

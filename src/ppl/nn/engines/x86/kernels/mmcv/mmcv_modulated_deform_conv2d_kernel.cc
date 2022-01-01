@@ -24,15 +24,15 @@ namespace ppl { namespace nn { namespace x86 {
 uint64_t MMCVModulatedDeformConv2dKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     auto weight = ctx.GetInput<TensorImpl>(3);
     auto output = ctx.GetOutput<TensorImpl>(0);
-    auto channels = weight->GetShape().GetDim(1) * param_->groups;
+    auto channels = weight->GetShape()->GetDim(1) * param_->groups;
     if (MayUseISA(ppl::common::ISA_X86_FMA)) {
         return ppl::kernel::x86::deform_conv2d_fp32_fma_get_buffer_bytes(
-            output->GetShape().GetDim(2), output->GetShape().GetDim(3), param_->groups,
-            channels, weight->GetShape().GetDim(2), weight->GetShape().GetDim(3));
+            output->GetShape()->GetDim(2), output->GetShape()->GetDim(3), param_->groups,
+            channels, weight->GetShape()->GetDim(2), weight->GetShape()->GetDim(3));
     } else {
         return ppl::kernel::x86::deform_conv2d_ref_fp32_get_buffer_bytes(
-            output->GetShape().GetDim(2), output->GetShape().GetDim(3), param_->groups,
-            channels, weight->GetShape().GetDim(2), weight->GetShape().GetDim(3));
+            output->GetShape()->GetDim(2), output->GetShape()->GetDim(3), param_->groups,
+            channels, weight->GetShape()->GetDim(2), weight->GetShape()->GetDim(3));
     }
 }
 
@@ -78,10 +78,10 @@ ppl::common::RetCode MMCVModulatedDeformConv2dKernel::DoExecute(KernelExecContex
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
 
-    const int64_t num_output = weight->GetShape().GetDim(0);
-    const int64_t channels = weight->GetShape().GetDim(1) * param_->groups;
-    const int64_t kernel_h = weight->GetShape().GetDim(2);
-    const int64_t kernel_w = weight->GetShape().GetDim(3);
+    const int64_t num_output = weight->GetShape()->GetDim(0);
+    const int64_t channels = weight->GetShape()->GetDim(1) * param_->groups;
+    const int64_t kernel_h = weight->GetShape()->GetDim(2);
+    const int64_t kernel_w = weight->GetShape()->GetDim(3);
 
     const float *b_data = nullptr;
     if (bias) {
@@ -90,7 +90,7 @@ ppl::common::RetCode MMCVModulatedDeformConv2dKernel::DoExecute(KernelExecContex
 
     if (MayUseISA(ppl::common::ISA_X86_FMA)) {
         return ppl::kernel::x86::deform_conv2d_fp32_fma(
-            &input->GetShape(), &output->GetShape(),
+            input->GetShape(), output->GetShape(),
             input->GetBufferPtr<const float>(), offset->GetBufferPtr<const float>(),
             mask->GetBufferPtr<const float>(), weight->GetBufferPtr<const float>(), b_data,
             param_->groups, param_->deform_groups, channels, num_output,
@@ -99,7 +99,7 @@ ppl::common::RetCode MMCVModulatedDeformConv2dKernel::DoExecute(KernelExecContex
             tmp_buffer, output->GetBufferPtr<float>());
     } else {
         return ppl::kernel::x86::deform_conv2d_ref_fp32(
-            &input->GetShape(), &output->GetShape(),
+            input->GetShape(), output->GetShape(),
             input->GetBufferPtr<const float>(), offset->GetBufferPtr<const float>(),
             mask->GetBufferPtr<const float>(), weight->GetBufferPtr<const float>(), b_data,
             param_->groups, param_->deform_groups, channels, num_output,

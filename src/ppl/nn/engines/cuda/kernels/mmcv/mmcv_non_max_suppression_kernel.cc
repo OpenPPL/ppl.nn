@@ -23,7 +23,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 uint64_t MMCVNonMaxSuppressionKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     auto boxes = ctx.GetInput<TensorImpl>(0);
-    return PPLMMCVNMSGetTempBufferSize(&boxes->GetShape());
+    return PPLMMCVNMSGetTempBufferSize(boxes->GetShape());
 }
 
 ppl::common::RetCode MMCVNonMaxSuppressionKernel::DoExecute(KernelExecContext* ctx) {
@@ -45,8 +45,8 @@ ppl::common::RetCode MMCVNonMaxSuppressionKernel::DoExecute(KernelExecContext* c
     auto output = ctx->GetOutput<TensorImpl>(0);
 
     int device_id = GetCudaDevice()->GetDeviceId();
-    status = PPLCUDAMMCVNMSForwardImp(GetStream(), &boxes->GetShape(), boxes->GetBufferPtr(), &scores->GetShape(),
-                                      scores->GetBufferPtr(), &output->GetShape(), output->GetBufferPtr<int64_t>(),
+    status = PPLCUDAMMCVNMSForwardImp(GetStream(), boxes->GetShape(), boxes->GetBufferPtr(), scores->GetShape(),
+                                      scores->GetBufferPtr(), output->GetShape(), output->GetBufferPtr<int64_t>(),
                                       tmp_buffer, tmp_buffer_bytes, device_id, param_->iou_threshold, param_->offset);
 
     return status;

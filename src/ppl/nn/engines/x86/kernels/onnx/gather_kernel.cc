@@ -40,19 +40,19 @@ ppl::common::RetCode GatherKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
 
-    const int64_t r = x->GetShape().GetDimCount();
-    const int64_t q = indices->GetShape().GetDimCount();
+    const int64_t r = x->GetShape()->GetDimCount();
+    const int64_t q = indices->GetShape()->GetDimCount();
     const int64_t real_axis = param_->axis >= 0 ? param_->axis : param_->axis + r;
 
     int64_t num_indices = 1;
-    const int64_t indices_dim = indices->GetShape().GetDim(q - 1);
+    const int64_t indices_dim = indices->GetShape()->GetDim(q - 1);
     int64_t outter_dim = 1;
     int64_t inner_dim = 1;
-    const int64_t gather_dim = x->GetShape().GetDim(real_axis);
+    const int64_t gather_dim = x->GetShape()->GetDim(real_axis);
 
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
-    auto status = GetX86Device()->AllocTmpBuffer(indices->GetShape().GetBytesExcludingPadding(), &tmp_buffer_desc);
+    auto status = GetX86Device()->AllocTmpBuffer(indices->GetShape()->GetBytesExcludingPadding(), &tmp_buffer_desc);
     if (status != ppl::common::RC_SUCCESS) {
         LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
@@ -63,22 +63,22 @@ ppl::common::RetCode GatherKernel::DoExecute(KernelExecContext* ctx) {
     });
     auto real_indices = (int64_t*)tmp_buffer_desc.addr;
     auto indices_data = indices->GetBufferPtr<const int64_t>();
-    for (uint64_t i = 0; i < indices->GetShape().GetElementsExcludingPadding(); ++i) {
+    for (uint64_t i = 0; i < indices->GetShape()->GetElementsExcludingPadding(); ++i) {
         real_indices[i] = indices_data[i] >= 0 ? indices_data[i] : indices_data[i] + gather_dim;
     }
 
     for (int64_t i = 0; i < q - 1; ++i) {
-        num_indices *= indices->GetShape().GetDim(i);
+        num_indices *= indices->GetShape()->GetDim(i);
     }
     for (int64_t i = 0; i < real_axis; ++i) {
-        outter_dim *= x->GetShape().GetDim(i);
+        outter_dim *= x->GetShape()->GetDim(i);
     }
     for (int64_t i = real_axis + 1; i < r; ++i) {
-        inner_dim *= x->GetShape().GetDim(i);
+        inner_dim *= x->GetShape()->GetDim(i);
     }
 
-    const ppl::common::datatype_t data_type = y->GetShape().GetDataType();
-    const auto data_format = x->GetShape().GetDataFormat();
+    const ppl::common::datatype_t data_type = y->GetShape()->GetDataType();
+    const auto data_format = x->GetShape()->GetDataFormat();
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
             return kernel::x86::gather_ndarray_fp32(x->GetBufferPtr<const float>(), real_indices, outter_dim,

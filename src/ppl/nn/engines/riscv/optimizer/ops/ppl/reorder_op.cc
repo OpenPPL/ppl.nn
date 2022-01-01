@@ -24,8 +24,8 @@ namespace ppl { namespace nn { namespace riscv {
 
 RetCode ReorderOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        auto& input = info->GetInput<TensorImpl>(0)->GetShape();
-        auto& output = info->GetOutput<TensorImpl>(0)->GetShape();
+        auto& input = *info->GetInput<TensorImpl>(0)->GetShape();
+        auto& output = *info->GetOutput<TensorImpl>(0)->GetShape();
         if (input.GetDimCount() != 4 && input.GetDimCount() != 2) {
             return RC_UNSUPPORTED;
         }

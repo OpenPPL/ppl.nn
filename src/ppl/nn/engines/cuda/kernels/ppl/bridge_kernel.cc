@@ -24,35 +24,35 @@
 namespace ppl { namespace nn { namespace cuda {
 
 bool BridgeKernel::EqualTypeAndFormat(const TensorImpl* input, const TensorImpl* output, const CudaTensorQuant& in_quant, const CudaTensorQuant& out_quant) {
-    auto src_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(input->GetShape().GetDataFormat());
-    auto dst_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(output->GetShape().GetDataFormat());
+    auto src_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(input->GetShape()->GetDataFormat());
+    auto dst_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(output->GetShape()->GetDataFormat());
 
-    if (input->GetShape().GetDataType() != output->GetShape().GetDataType()) {
+    if (input->GetShape()->GetDataType() != output->GetShape()->GetDataType()) {
         return false;
     }
 
-    if (input->GetShape().GetDataType() == ppl::common::DATATYPE_INT8 && !EqualQuant(in_quant, out_quant)) {
+    if (input->GetShape()->GetDataType() == ppl::common::DATATYPE_INT8 && !EqualQuant(in_quant, out_quant)) {
         return false;
     }
 
-    if (input->GetShape().GetDataFormat() == output->GetShape().GetDataFormat()) {
+    if (input->GetShape()->GetDataFormat() == output->GetShape()->GetDataFormat()) {
         return true;
     }
 
-    if (input->GetShape().GetDimCount() == 1 && output->GetShape().GetDimCount() == 1) {
+    if (input->GetShape()->GetDimCount() == 1 && output->GetShape()->GetDimCount() == 1) {
         return true;
     }
 
-    if (input->GetShape().GetDim(1) % src_align_size != 0 || output->GetShape().GetDim(1) % dst_align_size != 0) {
+    if (input->GetShape()->GetDim(1) % src_align_size != 0 || output->GetShape()->GetDim(1) % dst_align_size != 0) {
         return false;
     }
 
-    if (input->GetShape().GetDimCount() == 2 && output->GetShape().GetDimCount() == 2) {
+    if (input->GetShape()->GetDimCount() == 2 && output->GetShape()->GetDimCount() == 2) {
         return true;
     }
 
-    if (input->GetShape().GetDimCount() == 4 && output->GetShape().GetDimCount() == 4 &&
-        input->GetShape().GetDim(2) == 1 && input->GetShape().GetDim(3) == 1) {
+    if (input->GetShape()->GetDimCount() == 4 && output->GetShape()->GetDimCount() == 4 &&
+        input->GetShape()->GetDim(2) == 1 && input->GetShape()->GetDim(3) == 1) {
         return true;
     }
 
@@ -76,11 +76,11 @@ ppl::common::RetCode BridgeKernel::DoExecute(KernelExecContext* ctx) {
         return status;
     }
 
-    if (input->GetShape().GetDataType() != ppl::common::DATATYPE_INT8 &&
-        output->GetShape().GetDataType() != ppl::common::DATATYPE_INT8) {
-        status = converter->Convert(&output->GetBufferDesc(), output->GetShape(), input->GetBufferDesc(), input->GetShape());
+    if (input->GetShape()->GetDataType() != ppl::common::DATATYPE_INT8 &&
+        output->GetShape()->GetDataType() != ppl::common::DATATYPE_INT8) {
+        status = converter->Convert(&output->GetBufferDesc(), *output->GetShape(), input->GetBufferDesc(), *input->GetShape());
     } else {
-        status = ((CudaDataConverter*)converter)->Convert(&output->GetBufferDesc(), output->GetShape(), output_quant, input->GetBufferDesc(), input->GetShape(), input_quant);
+        status = ((CudaDataConverter*)converter)->Convert(&output->GetBufferDesc(), *output->GetShape(), output_quant, input->GetBufferDesc(), *input->GetShape(), input_quant);
     }
 
     return status;

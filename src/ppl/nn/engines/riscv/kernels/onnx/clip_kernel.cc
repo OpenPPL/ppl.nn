@@ -28,7 +28,7 @@ namespace ppl { namespace nn { namespace riscv {
 
 bool ClipKernel::CanDoExecute(const KernelExecContext& ctx) const {
     auto tensor = ctx.GetInput<TensorImpl>(0);
-    if (!tensor || tensor->GetShape().GetBytesIncludingPadding() == 0) {
+    if (!tensor || tensor->GetShape()->GetBytesIncludingPadding() == 0) {
         return false;
     }
     return true;
@@ -40,8 +40,8 @@ ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_OPTIONAL_INPUT(max_tensor, 2);
     PPLNN_RISCV_REQUIRED_OUTPUT(output, 0);
 
-    const auto input_data_type = input->GetShape().GetDataType();
-    const auto output_data_type = output->GetShape().GetDataType();
+    const auto input_data_type = input->GetShape()->GetDataType();
+    const auto output_data_type = output->GetShape()->GetDataType();
     if (input_data_type != output_data_type) {
         return ppl::common::RC_UNSUPPORTED;
     }
@@ -71,10 +71,10 @@ ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_DEBUG_TRACE("max_val: %f\n", max_val);
 
     if (input_data_type == common::DATATYPE_FLOAT16) {
-        return kernel::riscv::clip_fp16(&input->GetShape(), max_val, min_val, input->GetBufferPtr<__fp16>(),
+        return kernel::riscv::clip_fp16(input->GetShape(), max_val, min_val, input->GetBufferPtr<__fp16>(),
                                         output->GetBufferPtr<__fp16>());
     } else if (input_data_type == common::DATATYPE_FLOAT32) {
-        return kernel::riscv::clip_fp32(&input->GetShape(), max_val, min_val, input->GetBufferPtr<float>(),
+        return kernel::riscv::clip_fp32(input->GetShape(), max_val, min_val, input->GetBufferPtr<float>(),
                                         output->GetBufferPtr<float>());
     } else {
         LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(input_data_type);

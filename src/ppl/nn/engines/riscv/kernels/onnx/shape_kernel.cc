@@ -35,8 +35,8 @@ ppl::common::RetCode ShapeKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_DEBUG_TRACE("Output [shape]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(shape);
 
-    for (size_t i = 0; i < data->GetShape().GetRealDimCount(); i++) {
-        shape->GetBufferPtr<int64_t>()[i] = data->GetShape().GetDim(i);
+    for (size_t i = 0; i < data->GetShape()->GetRealDimCount(); i++) {
+        shape->GetBufferPtr<int64_t>()[i] = data->GetShape()->GetDim(i);
     }
 
     return ppl::common::RC_SUCCESS;

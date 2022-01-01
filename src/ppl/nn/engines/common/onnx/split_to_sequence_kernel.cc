@@ -52,9 +52,9 @@ static RetCode GetSplitChunks(const TensorImpl* split, uint32_t orig_axis_dim, v
     if (!split) {
         split_chunks->resize(orig_axis_dim, 1);
     } else {
-        auto split_data_type = split->GetShape().GetDataType();
+        auto split_data_type = split->GetShape()->GetDataType();
 
-        if (split->GetShape().IsScalar()) {
+        if (split->GetShape()->IsScalar()) {
             int64_t dims_of_chunk;
             if (split_data_type == DATATYPE_INT32) {
                 int32_t tmp = 0;
@@ -83,7 +83,7 @@ static RetCode GetSplitChunks(const TensorImpl* split, uint32_t orig_axis_dim, v
                 split_chunks->push_back(remaining);
             }
         } else {
-            auto nr_chunk = split->GetShape().GetElementsExcludingPadding();
+            auto nr_chunk = split->GetShape()->GetElementsExcludingPadding();
             if (split_data_type == DATATYPE_INT32) {
                 vector<int32_t> chunks(nr_chunk);
                 auto status = split->CopyToHost(chunks.data());
@@ -122,16 +122,16 @@ static RetCode InitNdarrayBufferInfo(const TensorShape& inshape, const BufferDes
                                      TensorBufferInfo* info) {
     info->SetDevice(device);
     info->Reshape(inshape);
-    info->GetShape().SetDataFormat(DATAFORMAT_NDARRAY);
+    info->GetShape()->SetDataFormat(DATAFORMAT_NDARRAY);
 
     auto status = info->ReallocBuffer();
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "alloc [" << info->GetShape().GetBytesIncludingPadding()
+        LOG(ERROR) << "alloc [" << info->GetShape()->GetBytesIncludingPadding()
                    << "] bytes for tmp buffer failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = device->GetDataConverter()->Convert(&info->GetBufferDesc(), info->GetShape(), inbuf, inshape);
+    status = device->GetDataConverter()->Convert(&info->GetBufferDesc(), *info->GetShape(), inbuf, inshape);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "convert data format from [" << GetDataFormatStr(inshape.GetDataFormat())
                    << "] to [NDARRAY] failed: " << GetRetCodeStr(status);
@@ -142,7 +142,7 @@ static RetCode InitNdarrayBufferInfo(const TensorShape& inshape, const BufferDes
 }
 
 static RetCode CheckInputDataType(TensorImpl* input0) {
-    auto data_type = input0->GetShape().GetDataType();
+    auto data_type = input0->GetShape()->GetDataType();
     if (data_type == DATATYPE_FLOAT16 || data_type == DATATYPE_FLOAT32 || data_type == DATATYPE_FLOAT64 ||
         data_type == DATATYPE_INT16 || data_type == DATATYPE_INT32 || data_type == DATATYPE_INT64) {
         return RC_SUCCESS;
@@ -163,17 +163,17 @@ RetCode SplitToSequenceKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     const BufferDesc* src_buffer = &input->GetBufferDesc();
-    const TensorShape* src_shape = &input->GetShape();
+    const TensorShape* src_shape = input->GetShape();
     TensorBufferInfo ndarray_buffer_info;
-    if (input->GetShape().GetDataFormat() != DATAFORMAT_NDARRAY) {
-        status = InitNdarrayBufferInfo(input->GetShape(), input->GetBufferDesc(), device, &ndarray_buffer_info);
+    if (input->GetShape()->GetDataFormat() != DATAFORMAT_NDARRAY) {
+        status = InitNdarrayBufferInfo(*input->GetShape(), input->GetBufferDesc(), device, &ndarray_buffer_info);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "init tmp ndarray buffer failed: " << GetRetCodeStr(status);
             return status;
         }
 
         src_buffer = &ndarray_buffer_info.GetBufferDesc();
-        src_shape = &ndarray_buffer_info.GetShape();
+        src_shape = ndarray_buffer_info.GetShape();
     }
 
     int64_t axis = 0;
@@ -205,10 +205,10 @@ RetCode SplitToSequenceKernel::DoExecute(KernelExecContext* ctx) {
         TensorBufferInfo buffer_info;
         buffer_info.SetDevice(device);
         buffer_info.Reshape(*src_shape);
-        buffer_info.GetShape().SetDim(axis, dims_of_chunk);
+        buffer_info.GetShape()->SetDim(axis, dims_of_chunk);
         status = buffer_info.ReallocBuffer();
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "alloc tensor buffer failed, bytes[" << buffer_info.GetShape().GetBytesIncludingPadding()
+            LOG(ERROR) << "alloc tensor buffer failed, bytes[" << buffer_info.GetShape()->GetBytesIncludingPadding()
                        << "]";
             return status;
         }
@@ -221,16 +221,16 @@ RetCode SplitToSequenceKernel::DoExecute(KernelExecContext* ctx) {
         }
 
         if (!split && keepdims_ == 0) {
-            const TensorShape& orig_shape = buffer_info.GetShape();
+            const TensorShape* orig_shape = buffer_info.GetShape();
             vector<int64_t> new_dims;
-            new_dims.reserve(orig_shape.GetDimCount());
-            for (uint32_t i = 0; i < orig_shape.GetDimCount(); ++i) {
+            new_dims.reserve(orig_shape->GetDimCount());
+            for (uint32_t i = 0; i < orig_shape->GetDimCount(); ++i) {
                 if (i != axis) {
-                    new_dims.push_back(orig_shape.GetDim(i));
+                    new_dims.push_back(orig_shape->GetDim(i));
                 }
             }
 
-            buffer_info.GetShape().Reshape(new_dims);
+            buffer_info.GetShape()->Reshape(new_dims);
         }
 
         output->EmplaceBack(std::move(buffer_info));

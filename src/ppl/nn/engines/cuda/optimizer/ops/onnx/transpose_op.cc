@@ -47,7 +47,7 @@ RetCode TransposeOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        const TensorShape& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
+        const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
 
         TransposeParam modified_param = param_;
         if (modified_param.perm.empty()) {

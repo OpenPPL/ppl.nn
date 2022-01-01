@@ -33,8 +33,8 @@ ppl::common::RetCode SubKernel::DoExecute(KernelExecContext* ctx) {
     auto output_quant = GetCommonParam()->cuda_tensor_info->at(output_id);
 
     ppl::common::RetCode status =
-        PPLCUDAArithMeticSubForwardImp(GetStream(), &input0->GetShape(), input0->GetBufferPtr(), &input1->GetShape(),
-                                       input1->GetBufferPtr(), &output->GetShape(), output->GetBufferPtr(), input_quant0.scale[0], input_quant1.scale[0], output_quant.scale[0]);
+        PPLCUDAArithMeticSubForwardImp(GetStream(), input0->GetShape(), input0->GetBufferPtr(), input1->GetShape(),
+                                       input1->GetBufferPtr(), output->GetShape(), output->GetBufferPtr(), input_quant0.scale[0], input_quant1.scale[0], output_quant.scale[0]);
     return status;
 }
 

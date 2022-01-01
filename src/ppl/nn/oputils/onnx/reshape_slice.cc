@@ -27,7 +27,7 @@ namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeSlice(InputOutputInfo* info, const int64_t* starts, const int64_t* ends, const int64_t* axes,
                      const int64_t* steps) {
-    const TensorShape& shape = info->GetInput<TensorImpl>(0)->GetShape();
+    const TensorShape& shape = *info->GetInput<TensorImpl>(0)->GetShape();
     int dim_count = shape.GetDimCount();
 
     vector<int64_t> output_dim(dim_count);
@@ -35,7 +35,7 @@ RetCode ReshapeSlice(InputOutputInfo* info, const int64_t* starts, const int64_t
         output_dim[it] = shape.GetDim(it);
     }
 
-    const int axes_num = info->GetInput<TensorImpl>(1)->GetShape().GetDim(0);
+    const int axes_num = info->GetInput<TensorImpl>(1)->GetShape()->GetDim(0);
     for (int it = 0; it < axes_num; ++it) {
         int64_t start_val = starts[it];
         int64_t end_val = ends[it];
@@ -67,7 +67,7 @@ RetCode ReshapeSlice(InputOutputInfo* info, const int64_t* starts, const int64_t
         }
         output_dim[axis] = (int)(std::ceil(((double)end_val - start_val) / step_val));
     }
-    info->GetOutput<TensorImpl>(0)->GetShape().Reshape(output_dim);
+    info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(output_dim);
 
     return RC_SUCCESS;
 }
@@ -78,14 +78,14 @@ RetCode ReshapeSlice(InputOutputInfo* info) {
     }
     for (size_t i = 1; i < info->GetInputCount(); i++) {
         // starts, ends, axes, steps must be 1-D tensor
-        if (info->GetInput<TensorImpl>(i)->GetShape().GetDimCount() != 1) {
+        if (info->GetInput<TensorImpl>(i)->GetShape()->GetDimCount() != 1) {
             return RC_INVALID_VALUE;
         }
     }
-    const int axes_num = info->GetInput<TensorImpl>(1)->GetShape().GetDim(0);
+    const int axes_num = info->GetInput<TensorImpl>(1)->GetShape()->GetDim(0);
     for (size_t i = 2; i < info->GetInputCount(); i++) {
         // starts, end, axes, steps must have same length except for not defined
-        if (info->GetInput<TensorImpl>(i)->GetShape().GetDim(0) != axes_num) {
+        if (info->GetInput<TensorImpl>(i)->GetShape()->GetDim(0) != axes_num) {
             return RC_INVALID_VALUE;
         }
     }

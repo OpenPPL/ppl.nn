@@ -35,7 +35,7 @@ RetCode BatchNormalizationOp::Init(const OptKernelOptions& options) {
     }
 
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
-        auto& in_shape = info->GetInput<TensorImpl>(0)->GetShape();
+        auto& in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
         type = in_shape.GetDataType();
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
@@ -44,7 +44,7 @@ RetCode BatchNormalizationOp::Init(const OptKernelOptions& options) {
             status = CopyQuantType(info, quant);
             for (uint32_t i = 1; i < 5; ++i) {
                 if (info->GetInputCount() > i) {
-                    auto shape = &info->GetInput<TensorImpl>(i)->GetShape();
+                    auto shape = info->GetInput<TensorImpl>(i)->GetShape();
                     shape->SetDataType(ppl::common::DATATYPE_FLOAT32);
                 }
             }

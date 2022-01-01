@@ -22,7 +22,7 @@
 namespace ppl { namespace nn { namespace cuda {
 
 uint64_t TopKKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
-    auto indices_shape = ctx.GetOutput<TensorImpl>(1)->GetShape();
+    const TensorShape& indices_shape = *ctx.GetOutput<TensorImpl>(1)->GetShape();
     int64_t k_value;
     auto status = ctx.GetInput<TensorImpl>(1)->CopyToHost(&k_value);
     if (status != ppl::common::RC_SUCCESS) {
@@ -57,12 +57,12 @@ ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
         return status;
     }
 
-    uint32_t axis = param_->axis < 0 ? param_->axis + x->GetShape().GetDimCount() : param_->axis;
-    const int64_t axis_dim = x->GetShape().GetDim(axis);
+    uint32_t axis = param_->axis < 0 ? param_->axis + x->GetShape()->GetDimCount() : param_->axis;
+    const int64_t axis_dim = x->GetShape()->GetDim(axis);
     k_value = std::min(k_value, axis_dim);
     // LOG(INFO) << k_value << " -> " << axis_dim;
-    status = PPLCUDATopKForwardImp(GetStream(), &x->GetShape(), x->GetBufferPtr(), &values->GetShape(),
-                                   values->GetBufferPtr(), &indices->GetShape(), (int32_t*)indices->GetBufferPtr(),
+    status = PPLCUDATopKForwardImp(GetStream(), x->GetShape(), x->GetBufferPtr(), values->GetShape(),
+                                   values->GetBufferPtr(), indices->GetShape(), (int32_t*)indices->GetBufferPtr(),
                                    tmp_buffer, tmp_buffer_bytes, k_value, axis, param_->largest, param_->sorted);
 
     return status;

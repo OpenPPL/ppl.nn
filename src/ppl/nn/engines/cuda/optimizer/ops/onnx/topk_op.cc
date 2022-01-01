@@ -35,10 +35,10 @@ RetCode TopKOp::Init(const OptKernelOptions& options) {
     }
 
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
-        auto shape = &info->GetOutput<TensorImpl>(1)->GetShape();
+        auto shape = info->GetOutput<TensorImpl>(1)->GetShape();
         shape->SetDataType(ppl::common::DATATYPE_INT32);
         if (info->GetInputCount() == 2) {
-            shape = &info->GetInput<TensorImpl>(1)->GetShape();
+            shape = info->GetInput<TensorImpl>(1)->GetShape();
             shape->SetDataType(ppl::common::DATATYPE_INT64);
         } else {
             return ppl::common::RC_UNSUPPORTED;
@@ -64,9 +64,9 @@ RetCode TopKOp::Init(const OptKernelOptions& options) {
     };
 
     infer_unsafe_dims_func_ = [](InputOutputInfo* info, std::set<uint32_t>* illegal_inputs) -> RetCode {
-        auto& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
+        auto& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
-            auto& out_shape = info->GetOutput<TensorImpl>(i)->GetShape();
+            auto& out_shape = *info->GetOutput<TensorImpl>(i)->GetShape();
             out_shape.Reshape(in_shape0.GetDims(), in_shape0.GetRealDimCount());
             out_shape.SetDim(0, 1000);
         }

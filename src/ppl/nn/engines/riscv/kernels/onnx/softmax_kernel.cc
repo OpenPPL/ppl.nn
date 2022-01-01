@@ -35,18 +35,18 @@ ppl::common::RetCode SoftmaxKernel::DoExecute(KernelExecContext* ctx) {
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(output);
     PPLNN_RISCV_DEBUG_TRACE("axis: %d\n", param_->axis);
 
-    const auto data_type = input->GetShape().GetDataType();
-    const auto data_format = input->GetShape().GetDataFormat();
+    const auto data_type = input->GetShape()->GetDataType();
+    const auto data_format = input->GetShape()->GetDataFormat();
 
-    const int64_t real_axis = param_->axis < 0 ? param_->axis + input->GetShape().GetDimCount() : param_->axis;
+    const int64_t real_axis = param_->axis < 0 ? param_->axis + input->GetShape()->GetDimCount() : param_->axis;
 
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT16) {
             return ppl::kernel::riscv::softmax_ndarray_fp16(
-                &input->GetShape(), real_axis, input->GetBufferPtr<const __fp16>(), output->GetBufferPtr<__fp16>());
+                input->GetShape(), real_axis, input->GetBufferPtr<const __fp16>(), output->GetBufferPtr<__fp16>());
         } else if (data_type == ppl::common::DATATYPE_FLOAT32) {
             return ppl::kernel::riscv::softmax_ndarray_fp32(
-                &input->GetShape(), real_axis, input->GetBufferPtr<const float>(), output->GetBufferPtr<float>());
+                input->GetShape(), real_axis, input->GetBufferPtr<const float>(), output->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "unsupported data type " << ppl::common::GetDataTypeStr(data_type) << ".";
         }

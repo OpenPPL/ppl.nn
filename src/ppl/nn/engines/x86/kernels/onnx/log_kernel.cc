@@ -35,10 +35,10 @@ ppl::common::RetCode LogKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
 
-    const auto data_type = input->GetShape().GetDataType();
+    const auto data_type = input->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        return ppl::kernel::x86::log_fp32(&input->GetShape(), input->GetBufferPtr<float>(),
+        return ppl::kernel::x86::log_fp32(input->GetShape(), input->GetBufferPtr<float>(),
                                           output->GetBufferPtr<float>());
     } else {
         LOG(ERROR) << "unsupported datatype: " << ppl::common::GetDataTypeStr(data_type) << ".";

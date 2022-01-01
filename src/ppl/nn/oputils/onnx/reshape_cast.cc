@@ -32,8 +32,8 @@ RetCode ReshapeCast(InputOutputInfo* info, const void* arg) {
         return RC_UNSUPPORTED;
     }
 
-    auto input = &info->GetInput<TensorImpl>(0)->GetShape();
-    auto output = &info->GetOutput<TensorImpl>(0)->GetShape();
+    auto input = info->GetInput<TensorImpl>(0)->GetShape();
+    auto output = info->GetOutput<TensorImpl>(0)->GetShape();
 
     output->SetDataType(param->to);
     if (input->IsScalar()) {

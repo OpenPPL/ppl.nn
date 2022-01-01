@@ -121,8 +121,8 @@ protected:
         kernel->SetReshapeFunc([this](InputOutputInfo* info) -> ppl::common::RetCode {
             infer_type_func_(info);
             for (uint32_t i = 0; i < info->GetOutputCount(); i++) {
-                info->GetOutput<TensorImpl>(i)->GetShape().SetDataFormat(common_param_.output_formats[i]);
-                info->GetOutput<TensorImpl>(i)->GetShape().SetDataType(common_param_.output_types[i]);
+                info->GetOutput<TensorImpl>(i)->GetShape()->SetDataFormat(common_param_.output_formats[i]);
+                info->GetOutput<TensorImpl>(i)->GetShape()->SetDataType(common_param_.output_types[i]);
             }
             return infer_dims_func_(info);
         });
@@ -136,8 +136,8 @@ protected:
         kernel->SetReshapeFunc([this](InputOutputInfo* info) -> ppl::common::RetCode {
             infer_type_func_(info);
             for (uint32_t i = 0; i < info->GetOutputCount(); i++) {
-                info->GetOutput<TensorImpl>(i)->GetShape().SetDataFormat(common_param_.output_formats[i]);
-                info->GetOutput<TensorImpl>(i)->GetShape().SetDataType(common_param_.output_types[i]);
+                info->GetOutput<TensorImpl>(i)->GetShape()->SetDataFormat(common_param_.output_formats[i]);
+                info->GetOutput<TensorImpl>(i)->GetShape()->SetDataType(common_param_.output_types[i]);
             }
             return infer_dims_func_(info);
         });
@@ -145,9 +145,9 @@ protected:
     }
 
     static ppl::common::RetCode GenericInferDims(InputOutputInfo* info) {
-        auto& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
+        auto& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
-            auto& out_shape = info->GetOutput<TensorImpl>(i)->GetShape();
+            auto& out_shape = *info->GetOutput<TensorImpl>(i)->GetShape();
             if (in_shape0.IsScalar()) {
                 out_shape.ReshapeAsScalar();
             } else {
@@ -158,9 +158,9 @@ protected:
     }
 
     static void GenericInferType(InputOutputInfo* info) {
-        auto& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
+        auto& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
-            auto out_shape = &info->GetOutput<TensorImpl>(i)->GetShape();
+            auto out_shape = info->GetOutput<TensorImpl>(i)->GetShape();
             out_shape->SetDataType(in_shape0.GetDataType());
         }
     }

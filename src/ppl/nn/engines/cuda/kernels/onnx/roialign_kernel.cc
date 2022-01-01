@@ -28,9 +28,9 @@ ppl::common::RetCode ROIAlignKernel::DoExecute(KernelExecContext* ctx) {
     auto output = ctx->GetOutput<TensorImpl>(0);
 
     ppl::common::RetCode status =
-        PPLCUDAROIAlignForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(), &rois->GetShape(),
-                                  rois->GetBufferPtr(), &batch_indices->GetShape(), batch_indices->GetBufferPtr(),
-                                  &output->GetShape(), output->GetBufferPtr(), *param_);
+        PPLCUDAROIAlignForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), rois->GetShape(),
+                                  rois->GetBufferPtr(), batch_indices->GetShape(), batch_indices->GetBufferPtr(),
+                                  output->GetShape(), output->GetBufferPtr(), *param_);
     return status;
 }
 
