@@ -37,21 +37,21 @@ RetCode MaxUnPoolOp::Init(const OptKernelOptions& options) {
             return ret;
         }
 
-        if (info->GetInput<TensorImpl>(0)->GetShape().GetDataType() != DATATYPE_FLOAT32) {
+        if (info->GetInput<TensorImpl>(0)->GetShape()->GetDataType() != DATATYPE_FLOAT32) {
             LOG(ERROR) << "tensor X only support fp32 now.";
             return RC_UNSUPPORTED;
         }
-        if (info->GetInput<TensorImpl>(1)->GetShape().GetDataType() != DATATYPE_INT64) {
+        if (info->GetInput<TensorImpl>(1)->GetShape()->GetDataType() != DATATYPE_INT64) {
             LOG(ERROR) << "tensor I only support fp32 now.";
             return RC_UNSUPPORTED;
         }
-        if (info->GetInput<TensorImpl>(0)->GetShape().GetDataFormat() != DATAFORMAT_NDARRAY ||
-            info->GetInput<TensorImpl>(1)->GetShape().GetDataFormat() != DATAFORMAT_NDARRAY) {
+        if (info->GetInput<TensorImpl>(0)->GetShape()->GetDataFormat() != DATAFORMAT_NDARRAY ||
+            info->GetInput<TensorImpl>(1)->GetShape()->GetDataFormat() != DATAFORMAT_NDARRAY) {
             LOG(ERROR) << "only support ndarray now.";
             return RC_UNSUPPORTED;
         }
-        if (info->GetInput<TensorImpl>(0)->GetShape().GetDimCount() != 4 ||
-            info->GetInput<TensorImpl>(1)->GetShape().GetDimCount() != 4) {
+        if (info->GetInput<TensorImpl>(0)->GetShape()->GetDimCount() != 4 ||
+            info->GetInput<TensorImpl>(1)->GetShape()->GetDimCount() != 4) {
             LOG(ERROR) << "only support 4-D tensor now.";
             return RC_UNSUPPORTED;
         }

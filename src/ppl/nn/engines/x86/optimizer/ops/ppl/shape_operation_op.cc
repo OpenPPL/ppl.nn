@@ -36,7 +36,7 @@ RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
 
 RetCode PPLShapeOperationOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
                               vector<dataformat_t>* selected_output_formats) {
-    selected_input_formats->at(0) = info.GetInput<TensorImpl>(0)->GetShape().GetDataFormat();
+    selected_input_formats->at(0) = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
     return RC_SUCCESS;
 }
 

@@ -28,7 +28,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 RetCode RangeOp::Init(const OptKernelOptions& options) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
-        auto shape = &info->GetInput<TensorImpl>(0)->GetShape();
+        auto shape = info->GetInput<TensorImpl>(0)->GetShape();
         type = shape->GetDataType();
         return InferDefaultType(info, type);
     };
@@ -42,7 +42,7 @@ RetCode RangeOp::Init(const OptKernelOptions& options) {
             return RC_NOT_FOUND;
         }
 
-        const auto data_type = info->GetInput<TensorImpl>(0)->GetShape().GetDataType();
+        const auto data_type = info->GetInput<TensorImpl>(0)->GetShape()->GetDataType();
         if (data_type == DATATYPE_INT64) {
             int64_t start = 0, limit = 0, delta = 1;
             auto status = info->GetInput<TensorImpl>(0)->CopyToHost(&start);

@@ -27,8 +27,8 @@ ppl::common::RetCode MMCVROIAlignKernel::DoExecute(KernelExecContext* ctx) {
     auto output = ctx->GetOutput<TensorImpl>(0);
 
     ppl::common::RetCode status =
-        PPLCUDAMMCVROIAlignForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(), &rois->GetShape(),
-                                      rois->GetBufferPtr(), &output->GetShape(), output->GetBufferPtr(), *param_);
+        PPLCUDAMMCVROIAlignForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), rois->GetShape(),
+                                      rois->GetBufferPtr(), output->GetShape(), output->GetBufferPtr(), *param_);
     return status;
 }
 

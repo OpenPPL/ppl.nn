@@ -27,10 +27,10 @@ ppl::common::RetCode CastKernel::DoExecute(KernelExecContext* ctx) {
     ppl::common::RetCode status = ppl::common::RC_SUCCESS;
 
     if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL &&
-        input->GetShape().GetDataType() == output->GetShape().GetDataType()) {
+        input->GetShape()->GetDataType() == output->GetShape()->GetDataType()) {
         output->TransferBufferFrom(input);
     } else {
-        status = PPLCUDACastForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(), &output->GetShape(),
+        status = PPLCUDACastForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(),
                                        output->GetBufferPtr(), param_->to);
     }
 

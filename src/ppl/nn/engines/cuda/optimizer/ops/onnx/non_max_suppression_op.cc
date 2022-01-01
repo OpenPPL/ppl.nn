@@ -37,25 +37,25 @@ RetCode NonMaxSupressionOp::Init(const OptKernelOptions& options) {
 
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         // prefer fp32 version for precision
-        auto shape0 = &info->GetInput<TensorImpl>(0)->GetShape();
+        auto shape0 = info->GetInput<TensorImpl>(0)->GetShape();
         shape0->SetDataType(DATATYPE_FLOAT32);
 
-        auto shape1 = &info->GetInput<TensorImpl>(1)->GetShape();
+        auto shape1 = info->GetInput<TensorImpl>(1)->GetShape();
         shape1->SetDataType(DATATYPE_FLOAT32);
 
         if (info->GetInputCount() > 2) {
-            auto shape2 = &info->GetInput<TensorImpl>(2)->GetShape();
+            auto shape2 = info->GetInput<TensorImpl>(2)->GetShape();
             shape2->SetDataType(DATATYPE_INT64);
         }
         if (info->GetInputCount() > 3) {
-            auto shape3 = &info->GetInput<TensorImpl>(3)->GetShape();
+            auto shape3 = info->GetInput<TensorImpl>(3)->GetShape();
             shape3->SetDataType(DATATYPE_FLOAT32);
         }
         if (info->GetInputCount() > 4) {
-            auto shape4 = &info->GetInput<TensorImpl>(4)->GetShape();
+            auto shape4 = info->GetInput<TensorImpl>(4)->GetShape();
             shape4->SetDataType(DATATYPE_FLOAT32);
         }
-        auto shape = &info->GetOutput<TensorImpl>(0)->GetShape();
+        auto shape = info->GetOutput<TensorImpl>(0)->GetShape();
         shape->SetDataType(DATATYPE_INT64);
         return RC_SUCCESS;
     };

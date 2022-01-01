@@ -28,14 +28,14 @@ namespace ppl { namespace nn { namespace cuda {
 
 RetCode WhereOp::Init(const OptKernelOptions& options) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
-        auto shape = &info->GetInput<TensorImpl>(0)->GetShape();
+        auto shape = info->GetInput<TensorImpl>(0)->GetShape();
         shape->SetDataType(ppl::common::DATATYPE_BOOL);
-        auto in_shape = &info->GetInput<TensorImpl>(1)->GetShape();
+        auto in_shape = info->GetInput<TensorImpl>(1)->GetShape();
         if (in_shape->GetDataType() == ppl::common::DATATYPE_UNKNOWN) {
             return ppl::common::RC_UNSUPPORTED;
         }
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
-            auto out_shape = &info->GetOutput<TensorImpl>(i)->GetShape();
+            auto out_shape = info->GetOutput<TensorImpl>(i)->GetShape();
             out_shape->SetDataType(in_shape->GetDataType());
         }
         return ppl::common::RC_SUCCESS;

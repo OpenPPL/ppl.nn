@@ -34,7 +34,7 @@ RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
 
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
-            auto shape = &info->GetOutput<TensorImpl>(i)->GetShape();
+            auto shape = info->GetOutput<TensorImpl>(i)->GetShape();
             shape->SetDataType(ppl::common::DATATYPE_INT64);
         }
         return RC_SUCCESS;
@@ -42,9 +42,9 @@ RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         auto param = (ppl::nn::common::PPLShapeOperationParam*)this->GetParam();
-        auto input_dim_size = info->GetInput<TensorImpl>(0)->GetShape().GetRealDimCount();
+        auto input_dim_size = info->GetInput<TensorImpl>(0)->GetShape()->GetRealDimCount();
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
-            auto output_shape = &info->GetOutput<TensorImpl>(i)->GetShape();
+            auto output_shape = info->GetOutput<TensorImpl>(i)->GetShape();
             auto edge = info->GetOutput<TensorImpl>(i)->GetEdge();
             auto pair = param->alpha.find(edge->GetId());
             if (pair == param->alpha.end()) {

@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace cuda {
 ppl::common::RetCode TransposeKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
-    const TensorShape& in_shape0 = input->GetShape();
+    const TensorShape& in_shape0 = *input->GetShape();
 
     ppl::nn::common::TransposeParam modified_param = *param_;
     if (modified_param.perm.empty()) {
@@ -36,8 +36,8 @@ ppl::common::RetCode TransposeKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     ppl::common::RetCode status =
-        PPLCUDATransposeForwardImp(GetStream(), modified_param, &input->GetShape(), input->GetBufferPtr(),
-                                   &output->GetShape(), output->GetBufferPtr());
+        PPLCUDATransposeForwardImp(GetStream(), modified_param, input->GetShape(), input->GetBufferPtr(),
+                                   output->GetShape(), output->GetBufferPtr());
     return status;
 }
 

@@ -37,7 +37,7 @@ RetCode TopKOp::Init(const OptKernelOptions& options) {
 
     infer_type_func_ = [](InputOutputInfo* info) -> void {
         GenericInferType(info);
-        auto out_shape = &info->GetOutput<TensorImpl>(1)->GetShape();
+        auto out_shape = info->GetOutput<TensorImpl>(1)->GetShape();
         out_shape->SetDataType(DATATYPE_INT64);
     };
 

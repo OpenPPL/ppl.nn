@@ -42,7 +42,7 @@ RetCode AveragePoolOp::Init(const OptKernelOptions& options) {
 
 RetCode AveragePoolOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
                                     vector<dataformat_t>* selected_output_formats) {
-    if (info.GetInput<TensorImpl>(0)->GetShape().GetDataFormat() == DATAFORMAT_N16CX) {
+    if (info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat() == DATAFORMAT_N16CX) {
         selected_input_formats->at(0) = DATAFORMAT_N16CX;
         selected_output_formats->at(0) = DATAFORMAT_N16CX;
     }

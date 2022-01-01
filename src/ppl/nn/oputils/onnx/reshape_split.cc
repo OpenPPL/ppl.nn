@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeSplit(InputOutputInfo* info, const void* arg) {
     auto param = (const SplitParam*)arg;
-    const TensorShape& shape = info->GetInput<TensorImpl>(0)->GetShape();
+    const TensorShape& shape = *info->GetInput<TensorImpl>(0)->GetShape();
     int dim_count = shape.GetDimCount();
     uint32_t split_axis = param->axis >= 0 ? param->axis : param->axis + dim_count;
     if (param->split_point.size() == 0) {
@@ -40,7 +40,7 @@ RetCode ReshapeSplit(InputOutputInfo* info, const void* arg) {
                 tmp_output_dim[it] = shape.GetDim(it);
             }
             tmp_output_dim[split_axis] = split_dim;
-            info->GetOutput<TensorImpl>(i)->GetShape().Reshape(tmp_output_dim);
+            info->GetOutput<TensorImpl>(i)->GetShape()->Reshape(tmp_output_dim);
         }
         return RC_SUCCESS;
     }
@@ -62,7 +62,7 @@ RetCode ReshapeSplit(InputOutputInfo* info, const void* arg) {
             tmp_output_dim[it] = shape.GetDim(it);
         }
         tmp_output_dim[split_axis] = param->split_point[i];
-        info->GetOutput<TensorImpl>(i)->GetShape().Reshape(tmp_output_dim);
+        info->GetOutput<TensorImpl>(i)->GetShape()->Reshape(tmp_output_dim);
     }
 
     return RC_SUCCESS;

@@ -28,8 +28,8 @@ namespace ppl { namespace nn { namespace cuda {
 
 RetCode BridgeOp::Init(const OptKernelOptions& options) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
-        auto& in_shape = info->GetInput<TensorImpl>(0)->GetShape();
-        auto& out_shape = info->GetOutput<TensorImpl>(0)->GetShape();
+        auto& in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
+        auto& out_shape = *info->GetOutput<TensorImpl>(0)->GetShape();
         auto in_edge_id = info->GetInput<TensorImpl>(0)->GetEdge()->GetId();
         auto& in_quant = quant->at(in_edge_id);
         if (in_shape.GetDataType() == ppl::common::DATATYPE_UNKNOWN && in_quant.type != ppl::common::DATATYPE_UNKNOWN) {
@@ -44,8 +44,8 @@ RetCode BridgeOp::Init(const OptKernelOptions& options) {
             LOG(ERROR) << "1 input/output required.";
             return RC_INVALID_VALUE;
         }
-        auto& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
-        info->GetOutput<TensorImpl>(0)->GetShape().Reshape(in_shape0.GetDims(), in_shape0.GetRealDimCount());
+        auto& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
+        info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(in_shape0.GetDims(), in_shape0.GetRealDimCount());
         return RC_SUCCESS;
     };
 

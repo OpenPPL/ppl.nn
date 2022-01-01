@@ -31,7 +31,7 @@ RetCode ReshapeFlatten(InputOutputInfo* info, const void* arg) {
     auto input = info->GetInput<TensorImpl>(0);
     auto output = info->GetOutput<TensorImpl>(0);
 
-    const int32_t dim_count = input->GetShape().GetDimCount();
+    const int32_t dim_count = input->GetShape()->GetDimCount();
     if (param->axis < -dim_count || param->axis > dim_count) {
         return RC_INVALID_VALUE;
     }
@@ -40,14 +40,14 @@ RetCode ReshapeFlatten(InputOutputInfo* info, const void* arg) {
 
     int64_t outer_dim = 1;
     for (int32_t i = 0; i < axis; i++) {
-        outer_dim *= input->GetShape().GetDim(i);
+        outer_dim *= input->GetShape()->GetDim(i);
     }
     int64_t inner_dim = 1;
     for (int32_t i = axis; i < dim_count; i++) {
-        inner_dim *= input->GetShape().GetDim(i);
+        inner_dim *= input->GetShape()->GetDim(i);
     }
 
-    output->GetShape().Reshape({outer_dim, inner_dim});
+    output->GetShape()->Reshape({outer_dim, inner_dim});
     return RC_SUCCESS;
 }
 

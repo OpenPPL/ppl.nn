@@ -28,8 +28,8 @@ ppl::common::RetCode WhereKernel::DoExecute(KernelExecContext* ctx) {
     auto output = ctx->GetOutput<TensorImpl>(0);
 
     ppl::common::RetCode status = PPLCUDAWhereForwardImp(
-        GetStream(), &cond->GetShape(), (const bool*)cond->GetBufferPtr(), &x->GetShape(), x->GetBufferPtr(),
-        &y->GetShape(), y->GetBufferPtr(), &output->GetShape(), output->GetBufferPtr());
+        GetStream(), cond->GetShape(), (const bool*)cond->GetBufferPtr(), x->GetShape(), x->GetBufferPtr(),
+        y->GetShape(), y->GetBufferPtr(), output->GetShape(), output->GetBufferPtr());
 
     return status;
 }

@@ -34,7 +34,7 @@ common::RetCode ReshapeWhere(InputOutputInfo* info, const void* arg) {
 
     MultiInputBroadCaster multi_input_bc;
     for (uint32_t i = 0; i < info->GetInputCount(); i++) {
-        multi_input_bc.PushBackInputTensorShape(info->GetInput<TensorImpl>(i)->GetShape());
+        multi_input_bc.PushBackInputTensorShape(*info->GetInput<TensorImpl>(i)->GetShape());
     }
     multi_input_bc.CalcBroadCast();
     if (!multi_input_bc.CanBroadCast()) {
@@ -43,9 +43,9 @@ common::RetCode ReshapeWhere(InputOutputInfo* info, const void* arg) {
 
     auto& output_shape = multi_input_bc.OutputTensorShape();
     if (output_shape.IsScalar()) {
-        out->GetShape().ReshapeAsScalar();
+        out->GetShape()->ReshapeAsScalar();
     } else {
-        out->GetShape().Reshape(output_shape.GetDims(), output_shape.GetDimCount());
+        out->GetShape()->Reshape(output_shape.GetDims(), output_shape.GetDimCount());
     }
     return RC_SUCCESS;
 }

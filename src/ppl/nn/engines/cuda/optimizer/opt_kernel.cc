@@ -35,8 +35,8 @@ RetCode CudaOptKernel::SetCommonParam(const OptKernelOptions& options) {
             return RC_NOT_FOUND;
         }
         auto& temp_tensor = common_param_.cuda_tensor_info->at(edge_id);
-        temp_tensor.format = iter->second->GetShape().GetDataFormat();
-        temp_tensor.type = iter->second->GetShape().GetDataType();
+        temp_tensor.format = iter->second->GetShape()->GetDataFormat();
+        temp_tensor.type = iter->second->GetShape()->GetDataType();
     }
     return RC_SUCCESS;
 }

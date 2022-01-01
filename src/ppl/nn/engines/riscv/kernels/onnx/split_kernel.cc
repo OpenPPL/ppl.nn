@@ -38,22 +38,22 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
         PPLNN_RISCV_DEBUG_TRACE("Output [outputs[%u]]:\n", i);
         PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(output);
         dst_list[i] = output->GetBufferPtr<void>();
-        dst_shape_list[i] = &output->GetShape();
+        dst_shape_list[i] = output->GetShape();
     }
     PPLNN_RISCV_DEBUG_TRACE("axis: %d\n", param_->axis);
 
     const int32_t real_axis =
-        param_->axis < 0 ? param_->axis + ctx->GetInput<TensorImpl>(0)->GetShape().GetDimCount() : param_->axis;
+        param_->axis < 0 ? param_->axis + ctx->GetInput<TensorImpl>(0)->GetShape()->GetDimCount() : param_->axis;
 
-    auto data_type = input->GetShape().GetDataType();
-    auto data_format = input->GetShape().GetDataFormat();
+    auto data_type = input->GetShape()->GetDataType();
+    auto data_format = input->GetShape()->GetDataFormat();
     if (ppl::common::GetSizeOfDataType(data_type) == 4) {
         if (data_format == ppl::common::DATAFORMAT_N4CX) {
-            return kernel::riscv::split_n4cx_fp32(&input->GetShape(), dst_shape_list.data(),
+            return kernel::riscv::split_n4cx_fp32(input->GetShape(), dst_shape_list.data(),
                                                   input->GetBufferPtr<float>(), param_->axis, ctx->GetOutputCount(),
                                                   (float**)dst_list.data());
         } else if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
-            return kernel::riscv::split_ndarray_fp32(&input->GetShape(), dst_shape_list.data(),
+            return kernel::riscv::split_ndarray_fp32(input->GetShape(), dst_shape_list.data(),
                                                      input->GetBufferPtr<float>(), param_->axis, ctx->GetOutputCount(),
                                                      (float**)dst_list.data());
         } else {
@@ -61,11 +61,11 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
         }
     } else if (ppl::common::GetSizeOfDataType(data_type) == 2) {
         if (data_format == ppl::common::DATAFORMAT_N8CX) {
-            return kernel::riscv::split_n8cx_fp16(&input->GetShape(), dst_shape_list.data(),
+            return kernel::riscv::split_n8cx_fp16(input->GetShape(), dst_shape_list.data(),
                                                   input->GetBufferPtr<__fp16>(), param_->axis, ctx->GetOutputCount(),
                                                   (__fp16**)dst_list.data());
         } else if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
-            return kernel::riscv::split_ndarray_fp16(&input->GetShape(), dst_shape_list.data(),
+            return kernel::riscv::split_ndarray_fp16(input->GetShape(), dst_shape_list.data(),
                                                      input->GetBufferPtr<__fp16>(), param_->axis, ctx->GetOutputCount(),
                                                      (__fp16**)dst_list.data());
         } else {

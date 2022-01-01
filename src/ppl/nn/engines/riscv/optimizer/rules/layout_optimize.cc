@@ -114,8 +114,8 @@ static ppl::common::RetCode AddReorderOp(const OptKernelOptions& options, const 
 
     TensorImpl* tensor = new TensorImpl(reorder_edge, TENSORTYPE_NORMAL);
 
-    tensor->GetShape().SetDataFormat(reorder_dst_format);
-    tensor->GetShape().SetDataType(reorder_dst_type);
+    tensor->GetShape()->SetDataFormat(reorder_dst_format);
+    tensor->GetShape()->SetDataType(reorder_dst_type);
 
     tensors.emplace(reorder_edge->GetId(), std::unique_ptr<TensorImpl>(tensor));
 
@@ -178,8 +178,8 @@ bool LayoutOptimize(const OptKernelOptions& options) {
                 if (edge_id == INVALID_EDGEID) {
                     continue;
                 }
-                selected_input_formats[i] = tensors[edge_id]->GetShape().GetDataFormat();
-                selected_input_data_types[i] = tensors[edge_id]->GetShape().GetDataType();
+                selected_input_formats[i] = tensors[edge_id]->GetShape()->GetDataFormat();
+                selected_input_data_types[i] = tensors[edge_id]->GetShape()->GetDataType();
             }
             if (options.engine_options->forward_precision == RISCV_USE_FP32) {
                 selected_input_data_types[0] = ppl::common::DATATYPE_FLOAT32;
@@ -192,8 +192,8 @@ bool LayoutOptimize(const OptKernelOptions& options) {
                 if (edge_id == INVALID_EDGEID) {
                     continue;
                 }
-                selected_output_formats[i] = tensors[edge_id]->GetShape().GetDataFormat();
-                selected_output_data_types[i] = tensors[edge_id]->GetShape().GetDataType();
+                selected_output_formats[i] = tensors[edge_id]->GetShape()->GetDataFormat();
+                selected_output_data_types[i] = tensors[edge_id]->GetShape()->GetDataType();
             }
 
             auto status = kernel->SelectFormat(IOinfo, &selected_input_formats, &selected_output_formats);
@@ -215,8 +215,8 @@ bool LayoutOptimize(const OptKernelOptions& options) {
             if (edge_id == INVALID_EDGEID) {
                 continue;
             }
-            auto input_format = tensors[edge_id]->GetShape().GetDataFormat();
-            auto input_data_type = tensors[edge_id]->GetShape().GetDataType();
+            auto input_format = tensors[edge_id]->GetShape()->GetDataFormat();
+            auto input_data_type = tensors[edge_id]->GetShape()->GetDataType();
             auto selected_input_format = selected_input_formats[i];
             auto selected_input_data_type = selected_input_data_types[i];
             if (input_format != selected_input_format || input_data_type != selected_input_data_type) {
@@ -232,8 +232,8 @@ bool LayoutOptimize(const OptKernelOptions& options) {
         // extra input(used by if/loop op) force to be ndarray
         for (uint32_t i = 0; i < node->GetExtraInputCount(); i++) {
             auto edge_id = node->GetExtraInput(i);
-            auto extra_input_format = tensors[edge_id]->GetShape().GetDataFormat();
-            auto extra_input_data_type = tensors[edge_id]->GetShape().GetDataType();
+            auto extra_input_format = tensors[edge_id]->GetShape()->GetDataFormat();
+            auto extra_input_data_type = tensors[edge_id]->GetShape()->GetDataType();
             if (extra_input_format != ppl::common::DATAFORMAT_NDARRAY) {
                 auto status =
                     AddReorderOp(options, edge_id, node_id, REORDER_EXTRA_INPUT, extra_input_format,
@@ -253,8 +253,8 @@ bool LayoutOptimize(const OptKernelOptions& options) {
             auto selected_output_format = selected_output_formats[i];
             auto selected_output_data_type = selected_output_data_types[i];
 
-            tensors[edge_id]->GetShape().SetDataFormat(selected_output_format);
-            tensors[edge_id]->GetShape().SetDataType(selected_output_data_type);
+            tensors[edge_id]->GetShape()->SetDataFormat(selected_output_format);
+            tensors[edge_id]->GetShape()->SetDataType(selected_output_data_type);
             kernel->SetOutputDataFormat(i, selected_output_format);
             kernel->SetOutputDataType(i, selected_output_data_type);
             if (IsGraphOutput(graph_topo, edge_id) && selected_output_format != output_format) {

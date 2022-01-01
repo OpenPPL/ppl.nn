@@ -60,8 +60,8 @@ ppl::common::RetCode SumKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    const auto data_type = sum->GetShape().GetDataType();
-    const auto data_format = sum->GetShape().GetDataFormat();
+    const auto data_type = sum->GetShape()->GetDataType();
+    const auto data_format = sum->GetShape()->GetDataFormat();
     if (data_type != ppl::common::DATATYPE_FLOAT32 || data_format != ppl::common::DATAFORMAT_NDARRAY) {
         LOG(ERROR) << "only support fp32 ndarray now.";
         return ppl::common::RC_UNSUPPORTED;
@@ -70,8 +70,8 @@ ppl::common::RetCode SumKernel::DoExecute(KernelExecContext* ctx) {
     bool is_eltwise = true;
     const uint32_t input_num = ctx->GetInputCount();
     for (uint32_t i = 0; i < input_num; i++) {
-        if (ctx->GetInput<TensorImpl>(i)->GetShape().GetElementsIncludingPadding() !=
-            sum->GetShape().GetElementsIncludingPadding()) {
+        if (ctx->GetInput<TensorImpl>(i)->GetShape()->GetElementsIncludingPadding() !=
+            sum->GetShape()->GetElementsIncludingPadding()) {
             is_eltwise = false;
             break;
         }
@@ -91,9 +91,9 @@ ppl::common::RetCode SumKernel::DoExecute(KernelExecContext* ctx) {
 
     if (is_eltwise) {
         if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-            kernel::x86::sum_eltwise_fp32_avx(&sum->GetShape(), input_ptrs, input_num, sum->GetBufferPtr<float>());
+            kernel::x86::sum_eltwise_fp32_avx(sum->GetShape(), input_ptrs, input_num, sum->GetBufferPtr<float>());
         } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-            kernel::x86::sum_eltwise_fp32_sse(&sum->GetShape(), input_ptrs, input_num, sum->GetBufferPtr<float>());
+            kernel::x86::sum_eltwise_fp32_sse(sum->GetShape(), input_ptrs, input_num, sum->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "get unsupported isa " << GetISA();
             return ppl::common::RC_UNSUPPORTED;
@@ -102,18 +102,18 @@ ppl::common::RetCode SumKernel::DoExecute(KernelExecContext* ctx) {
         if (MayUseISA(ppl::common::ISA_X86_AVX)) {
             std::vector<const TensorShape*> input_shapes(ctx->GetInputCount());
             for (uint32_t i = 0; i < ctx->GetInputCount(); ++i) {
-                input_shapes[i] = &ctx->GetInput<TensorImpl>(i)->GetShape();
+                input_shapes[i] = ctx->GetInput<TensorImpl>(i)->GetShape();
             }
 
-            kernel::x86::sum_ndarray_fp32_avx(input_shapes.data(), &sum->GetShape(), input_ptrs, input_num, temp,
+            kernel::x86::sum_ndarray_fp32_avx(input_shapes.data(), sum->GetShape(), input_ptrs, input_num, temp,
                                               sum->GetBufferPtr<float>());
         } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
             std::vector<const TensorShape*> input_shapes(ctx->GetInputCount());
             for (uint32_t i = 0; i < ctx->GetInputCount(); ++i) {
-                input_shapes[i] = &ctx->GetInput<TensorImpl>(i)->GetShape();
+                input_shapes[i] = ctx->GetInput<TensorImpl>(i)->GetShape();
             }
 
-            kernel::x86::sum_ndarray_fp32_sse(input_shapes.data(), &sum->GetShape(), input_ptrs, input_num, temp,
+            kernel::x86::sum_ndarray_fp32_sse(input_shapes.data(), sum->GetShape(), input_ptrs, input_num, temp,
                                               sum->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "get unsupported isa " << GetISA();

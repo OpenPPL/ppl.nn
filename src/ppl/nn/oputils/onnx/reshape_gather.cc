@@ -29,9 +29,9 @@ RetCode ReshapeGather(InputOutputInfo* info, const void* arg) {
         return RC_INVALID_VALUE;
     }
 
-    auto data = &info->GetInput<TensorImpl>(0)->GetShape();
-    auto indices = &info->GetInput<TensorImpl>(1)->GetShape();
-    auto output = &info->GetOutput<TensorImpl>(0)->GetShape();
+    auto data = info->GetInput<TensorImpl>(0)->GetShape();
+    auto indices = info->GetInput<TensorImpl>(1)->GetShape();
+    auto output = info->GetOutput<TensorImpl>(0)->GetShape();
 
     const int32_t r = data->GetRealDimCount();
     const int32_t q = indices->GetRealDimCount();

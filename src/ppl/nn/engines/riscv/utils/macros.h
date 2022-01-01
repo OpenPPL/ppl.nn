@@ -36,20 +36,20 @@
 
 #define PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(X)                                                                        \
     do {                                                                                                           \
-        if (X->GetShape().IsScalar()) {                                                                            \
+        if (X->GetShape()->IsScalar()) {                                                                            \
             PPLNN_RISCV_DEBUG_TRACE("Scalar name: %s\n", X->GetName());                                            \
-            PPLNN_RISCV_DEBUG_TRACE("\tdata: %p type: %u\n", X->GetBufferPtr(), X->GetShape().GetDataType());      \
+            PPLNN_RISCV_DEBUG_TRACE("\tdata: %p type: %u\n", X->GetBufferPtr(), X->GetShape()->GetDataType());      \
         } else {                                                                                                   \
             PPLNN_RISCV_DEBUG_TRACE("Tensor name: %s\n", X->GetName());                                            \
             PPLNN_RISCV_DEBUG_TRACE("\tdata: %p\n", X->GetBufferPtr());                                            \
-            PPLNN_RISCV_DEBUG_TRACE("DimCount: %u\n", X->GetShape().GetDimCount());                                \
-            for (uint32_t i = 0; i < X->GetShape().GetDimCount(); ++i) {                                           \
-                PPLNN_RISCV_DEBUG_TRACE("\tdim[%u]: %ld\tpads: [%hu, %hu]\n", i, X->GetShape().GetDim(i),          \
-                                        X->GetShape().GetPadding0(i), X->GetShape().GetPadding1(i));               \
+            PPLNN_RISCV_DEBUG_TRACE("DimCount: %u\n", X->GetShape()->GetDimCount());                                \
+            for (uint32_t i = 0; i < X->GetShape()->GetDimCount(); ++i) {                                           \
+                PPLNN_RISCV_DEBUG_TRACE("\tdim[%u]: %ld\tpads: [%hu, %hu]\n", i, X->GetShape()->GetDim(i),          \
+                                        X->GetShape()->GetPadding0(i), X->GetShape()->GetPadding1(i));               \
             }                                                                                                      \
         }                                                                                                          \
-        PPLNN_RISCV_DEBUG_TRACE("DataType: %s\n", ppl::common::GetDataTypeStr(X->GetShape().GetDataType()));       \
-        PPLNN_RISCV_DEBUG_TRACE("DataFormat: %s\n", ppl::common::GetDataFormatStr(X->GetShape().GetDataFormat())); \
+        PPLNN_RISCV_DEBUG_TRACE("DataType: %s\n", ppl::common::GetDataTypeStr(X->GetShape()->GetDataType()));       \
+        PPLNN_RISCV_DEBUG_TRACE("DataFormat: %s\n", ppl::common::GetDataFormatStr(X->GetShape()->GetDataFormat())); \
     } while (0)
 
 #define PPLNN_RISCV_REQUIRED_INPUT(X, IDX)                                          \

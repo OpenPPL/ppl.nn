@@ -29,7 +29,7 @@ RetCode SequenceAtKernel::DoExecute(KernelExecContext* ctx) {
     auto pos = ctx->GetInput<TensorImpl>(1);
 
     int64_t idx;
-    switch (pos->GetShape().GetDataType()) {
+    switch (pos->GetShape()->GetDataType()) {
         case DATATYPE_INT32: {
             int32_t temp;
             auto status = pos->CopyToHost(&temp);
@@ -49,7 +49,7 @@ RetCode SequenceAtKernel::DoExecute(KernelExecContext* ctx) {
             break;
         }
         default:
-            LOG(ERROR) << "unspoorted data type [" << GetDataTypeStr(pos->GetShape().GetDataType()) << "]";
+            LOG(ERROR) << "unspoorted data type [" << GetDataTypeStr(pos->GetShape()->GetDataType()) << "]";
             return RC_INVALID_VALUE;
     }
 
@@ -67,9 +67,9 @@ RetCode SequenceAtKernel::DoExecute(KernelExecContext* ctx) {
     auto src = seq->GetElement(idx);
     auto dst = ctx->GetOutput<TensorImpl>(0);
 
-    dst->GetShape() = src->GetShape();
+    *dst->GetShape() = *src->GetShape();
 
-    auto status = utils::CopyBuffer(src->GetBufferDesc(), src->GetShape(), src->GetDevice(), dst);
+    auto status = utils::CopyBuffer(src->GetBufferDesc(), *src->GetShape(), src->GetDevice(), dst);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "copy pos[" << idx << "] of tensor sequence [" << seq->GetEdge()->GetName() << "] to tensor["
                    << dst->GetName() << "] failed: " << GetRetCodeStr(status);

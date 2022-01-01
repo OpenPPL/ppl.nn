@@ -25,11 +25,11 @@ uint64_t Conv2dDynamicKernel::CalcTmpBufferSize(const KernelExecContext& ctx) co
     auto w = ctx.GetInput<TensorImpl>(1);
     auto y = ctx.GetOutput<TensorImpl>(0);
 
-    const int32_t batch = x->GetShape().GetDim(0);
-    const int32_t num_output = w->GetShape().GetDim(0);
-    const int32_t channels = w->GetShape().GetDim(1) * param_->group;
-    const int32_t dst_h = y->GetShape().GetDim(2);
-    const int32_t dst_w = y->GetShape().GetDim(3);
+    const int32_t batch = x->GetShape()->GetDim(0);
+    const int32_t num_output = w->GetShape()->GetDim(0);
+    const int32_t channels = w->GetShape()->GetDim(1) * param_->group;
+    const int32_t dst_h = y->GetShape()->GetDim(2);
+    const int32_t dst_w = y->GetShape()->GetDim(3);
 
     if (false) {
     }
@@ -72,8 +72,8 @@ ppl::common::RetCode Conv2dDynamicKernel::DoExecute(KernelExecContext* ctx) {
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(B);
     }
 
-    const int32_t num_output = W->GetShape().GetDim(0);
-    const int32_t channels = W->GetShape().GetDim(1) * param_->group;
+    const int32_t num_output = W->GetShape()->GetDim(0);
+    const int32_t channels = W->GetShape()->GetDim(1) * param_->group;
 
     PPLNN_X86_DEBUG_TRACE("kernel_shape: %d %d\n", param_->kernel_shape[0], param_->kernel_shape[1]);
     PPLNN_X86_DEBUG_TRACE("dilations: %d %d\n", param_->dilations[0], param_->dilations[1]);
@@ -85,13 +85,13 @@ ppl::common::RetCode Conv2dDynamicKernel::DoExecute(KernelExecContext* ctx) {
 
     const float* b_data = nullptr;
 
-    if (X->GetShape().GetDataType() != ppl::common::DATATYPE_FLOAT32 ||
-        X->GetShape().GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY) {
+    if (X->GetShape()->GetDataType() != ppl::common::DATATYPE_FLOAT32 ||
+        X->GetShape()->GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY) {
         LOG(ERROR) << "only support fp32 ndarray now.";
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    if (X->GetShape().GetDimCount() != 4 || W->GetShape().GetDimCount() != 4) {
+    if (X->GetShape()->GetDimCount() != 4 || W->GetShape()->GetDimCount() != 4) {
         LOG(ERROR) << "ConvOp only support 4-D Tensor for X & W";
         return ppl::common::RC_UNSUPPORTED;
     }
@@ -126,14 +126,14 @@ ppl::common::RetCode Conv2dDynamicKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
     
 
-    const int32_t batch = X->GetShape().GetDim(0);
-    const int32_t src_h = X->GetShape().GetDim(2);
-    const int32_t src_w = X->GetShape().GetDim(3);
-    const int32_t dst_h = Y->GetShape().GetDim(2);
-    const int32_t dst_w = Y->GetShape().GetDim(3);
+    const int32_t batch = X->GetShape()->GetDim(0);
+    const int32_t src_h = X->GetShape()->GetDim(2);
+    const int32_t src_w = X->GetShape()->GetDim(3);
+    const int32_t dst_h = Y->GetShape()->GetDim(2);
+    const int32_t dst_w = Y->GetShape()->GetDim(3);
 
-    const auto data_type = X->GetShape().GetDataType();
-    const auto data_format = X->GetShape().GetDataFormat();
+    const auto data_type = X->GetShape()->GetDataType();
+    const auto data_format = X->GetShape()->GetDataFormat();
 
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {

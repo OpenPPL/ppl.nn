@@ -27,7 +27,7 @@ namespace ppl { namespace nn { namespace oputils {
 RetCode ReshapePad(InputOutputInfo* info, const void* arg, const int64_t* start_pads, const int64_t* end_pads) {
     auto param = (const PadParam*)arg;
 
-    const TensorShape& shape = info->GetInput<TensorImpl>(0)->GetShape();
+    const TensorShape& shape = *info->GetInput<TensorImpl>(0)->GetShape();
     int dim_count = shape.GetDimCount();
     int64_t output_dim[PAD_PARAM_MAX_DIM_SIZE];
 
@@ -44,18 +44,18 @@ RetCode ReshapePad(InputOutputInfo* info, const void* arg, const int64_t* start_
         }
         output_dim[it] = cur_dim_size + start_pad + end_pad;
     }
-    info->GetOutput<TensorImpl>(0)->GetShape().Reshape(output_dim, dim_count);
+    info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(output_dim, dim_count);
 
     return RC_SUCCESS;
 }
 
 RetCode ReshapePad(InputOutputInfo* info, const void* arg) {
-    const TensorShape& shape = info->GetInput<TensorImpl>(0)->GetShape();
+    const TensorShape& shape = *info->GetInput<TensorImpl>(0)->GetShape();
     uint32_t dim_count = shape.GetDimCount();
 
     auto pad = info->GetInput<TensorImpl>(1);
-    if (pad->GetShape().GetDimCount() != 1 || pad->GetShape().GetDim(0) != 2 * dim_count ||
-        pad->GetShape().GetDataType() != DATATYPE_INT64) {
+    if (pad->GetShape()->GetDimCount() != 1 || pad->GetShape()->GetDim(0) != 2 * dim_count ||
+        pad->GetShape()->GetDataType() != DATATYPE_INT64) {
         return RC_INVALID_VALUE;
     }
 

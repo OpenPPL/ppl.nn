@@ -44,7 +44,7 @@ RetCode CopyBuffer(const BufferDesc& src_buf, const TensorShape& src_shape, cons
             return status;
         }
 
-        status = converter->Convert(&dst->GetBufferDesc(), dst->GetShape(), src_buf, src_shape);
+        status = converter->Convert(&dst->GetBufferDesc(), *dst->GetShape(), src_buf, src_shape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "convert data to tensor[" << dst->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
@@ -56,7 +56,7 @@ RetCode CopyBuffer(const BufferDesc& src_buf, const TensorShape& src_shape, cons
         }
 
         BufferDesc tmp_buffer_desc;
-        auto status = tmp_cpu_device->Realloc(dst->GetShape(), &tmp_buffer_desc);
+        auto status = tmp_cpu_device->Realloc(*dst->GetShape(), &tmp_buffer_desc);
         if (status != RC_SUCCESS) {
             return status;
         }
@@ -66,7 +66,7 @@ RetCode CopyBuffer(const BufferDesc& src_buf, const TensorShape& src_shape, cons
         auto tmp_buffer = tmp_buffer_desc.addr;
 
         auto src_converter = src_dev->GetDataConverter();
-        status = src_converter->ConvertToHost(tmp_buffer, dst->GetShape(), src_buf, src_shape);
+        status = src_converter->ConvertToHost(tmp_buffer, *dst->GetShape(), src_buf, src_shape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy data to host failed: " << GetRetCodeStr(status);
             return status;

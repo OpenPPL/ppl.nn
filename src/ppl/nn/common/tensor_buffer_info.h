@@ -74,11 +74,8 @@ public:
         return buffer_;
     }
 
-    TensorShape& GetShape() {
-        return shape_;
-    }
-    const TensorShape& GetShape() const {
-        return shape_;
+    TensorShape* GetShape() const {
+        return &shape_;
     }
 
     void Reshape(const TensorShape& new_shape) {
@@ -89,7 +86,7 @@ private:
     bool is_buffer_owner_;
     BufferDesc buffer_;
     Device* device_;
-    TensorShape shape_;
+    mutable TensorShape shape_;
 
 private:
     TensorBufferInfo(const TensorBufferInfo&) = delete;

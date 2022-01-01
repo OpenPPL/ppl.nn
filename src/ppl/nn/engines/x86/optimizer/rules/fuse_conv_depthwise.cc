@@ -88,7 +88,7 @@ bool FuseConvDepthwise(const OptKernelOptions &options) {
             auto pd_conv2d_kernel = reinterpret_cast<PostDepthwiseConvOp*>(opt_kernel);
             pd_conv2d_kernel->SetPostDepthwiseConv2dParam(pd_conv2d_param);
             pd_conv2d_kernel->SetOutputDataFormat( // save data format to pd_conv2d
-                    0, tensors[next_node->GetOutput(0)].get()->GetShape().GetDataFormat());
+                    0, tensors[next_node->GetOutput(0)].get()->GetShape()->GetDataFormat());
 
             // change graph topo
             conv_input->DelConsumer(conv_node->GetId());

@@ -111,7 +111,7 @@ static ppl::common::RetCode AddReorderOp(
     info->kernels.emplace(reorder_node->GetId(), std::move(opt_kernel));
 
     TensorImpl* tensor = new TensorImpl(reorder_edge, TENSORTYPE_NORMAL);
-    tensor->GetShape().SetDataFormat((reorder_type == REORDER_INPUT || reorder_type == REORDER_EXTRA_INPUT)
+    tensor->GetShape()->SetDataFormat((reorder_type == REORDER_INPUT || reorder_type == REORDER_EXTRA_INPUT)
                                          ? reorder_out_format
                                          : reorder_in_format);
     tensors.emplace(reorder_edge->GetId(), std::unique_ptr<TensorImpl>(tensor));
@@ -143,7 +143,7 @@ static ppl::common::RetCode FuseReorderOp(const OptKernelOptions& options) {
                 auto consumer_node = graph_topo->GetNodeById(it.Get());
                 if (consumer_node->GetType().domain == "ppl" && consumer_node->GetType().name == "Reorder") {
                     auto output_edge_id = consumer_node->GetOutput(0);
-                    auto output_format = tensors[output_edge_id]->GetShape().GetDataFormat();
+                    auto output_format = tensors[output_edge_id]->GetShape()->GetDataFormat();
 
                     if (reorder_op_groups.find(output_format) == reorder_op_groups.end()) {
                         reorder_op_groups.emplace(output_format, std::vector<ir::Node*>(0));
@@ -237,7 +237,7 @@ bool LayoutOptimize(const OptKernelOptions &options) {
             if (edge_id == INVALID_EDGEID) {
                 continue;
             }
-            auto input_format = tensors[edge_id]->GetShape().GetDataFormat();
+            auto input_format = tensors[edge_id]->GetShape()->GetDataFormat();
             auto selected_input_format = selected_input_formats[i];
             if (input_format != selected_input_format) {
                 status = AddReorderOp(options, edge_id, node_id, REORDER_INPUT, input_format, selected_input_format);
@@ -251,7 +251,7 @@ bool LayoutOptimize(const OptKernelOptions &options) {
         // extra input(used by if/loop op) force to be ndarray
         for (uint32_t i = 0; i < node->GetExtraInputCount(); i++) {
             auto edge_id = node->GetExtraInput(i);
-            auto extra_input_format = tensors[edge_id]->GetShape().GetDataFormat();
+            auto extra_input_format = tensors[edge_id]->GetShape()->GetDataFormat();
             if (extra_input_format != ppl::common::DATAFORMAT_NDARRAY) {
                 status = AddReorderOp(options, edge_id, node_id, REORDER_EXTRA_INPUT, extra_input_format,
                                       ppl::common::DATAFORMAT_NDARRAY);
@@ -265,7 +265,7 @@ bool LayoutOptimize(const OptKernelOptions &options) {
         for (uint32_t i = 0; i < node->GetOutputCount(); i++) {
             auto edge_id = node->GetOutput(i);
             auto selected_output_format = selected_output_formats[i];
-            tensors[edge_id]->GetShape().SetDataFormat(selected_output_format);
+            tensors[edge_id]->GetShape()->SetDataFormat(selected_output_format);
             kernel->SetOutputDataFormat(i, selected_output_format);
         }
     }

@@ -44,7 +44,7 @@ bool TuringIMMAImpgemm::IsSupported(const ir::Node* node, const OptKernelOptions
                                     dataformat_t input_format) const {
     uint32_t group = (reinterpret_cast<CudaConvParam*>(options.param))->param.group;
     // check if conv is depthwise
-    auto tensor1 = options.tensors->find(node->GetInput(1))->second->GetShape();
+    const TensorShape& tensor1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
     if (group == tensor1.GetDim(0) && tensor1.GetDim(1) == 1 && group != 1) {
         return false;
     }
@@ -64,10 +64,10 @@ double TuringIMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     attr_param_.extra_param.algo_info.algo_type = "TuringIMMAImpgemm";
     options.compile_set->emplace(node->GetId());
 
-    auto shape_in0 = options.tensors->find(node->GetInput(0))->second->GetShape();
-    auto shape_in1 = options.tensors->find(node->GetInput(1))->second->GetShape();
+    auto shape_in0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
+    auto shape_in1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
     auto shape_in2 = TensorShape();
-    auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
+    const TensorShape& shape_out = *options.tensors->find(node->GetOutput(0))->second->GetShape();
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
     conv_param_t temp_conv_param;
     fuse_param_t temp_fuse_param;
@@ -106,7 +106,7 @@ double TuringIMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     uint32_t k_per_grp_pad = (k_per_grp + align_size - 1) / align_size * align_size;
     shape_in1.SetDim(0, k_per_grp_pad * attr_param_.param.group);
     if (temp_conv_param.has_bias) {
-        shape_in2 = options.tensors->find(node->GetInput(2))->second->GetShape();
+        shape_in2 = *options.tensors->find(node->GetInput(2))->second->GetShape();
         shape_in2.SetDim(0, k_per_grp_pad * temp_conv_param.num_grp);
     }
 
@@ -130,7 +130,7 @@ double TuringIMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     temp_quant_param.d_flt_scale = wegiht_quant.addr;
     temp_quant_param.pre_scale = 0.0f;
 
-    auto stream = options.device->GetStream();    
+    auto stream = options.device->GetStream();
 
 #ifdef PPLNN_ENABLE_CUDA_JIT
     // Do select
@@ -170,9 +170,9 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
     auto weight_node = topo->GetNodeById(weight_edge->GetProducer());
     auto quants = options.quants;
 
-    auto shape_in0 = options.tensors->find(node->GetInput(0))->second->GetShape();
-    auto shape_in1 = options.tensors->find(node->GetInput(1))->second->GetShape();
-    auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
+    const TensorShape& shape_in0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
+    const TensorShape& shape_in1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
+    const TensorShape& shape_out = *options.tensors->find(node->GetOutput(0))->second->GetShape();
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
 
     RetCode status;
@@ -225,7 +225,7 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
     quant_edge->AddConsumer(node->GetId());
 
     options.tensors->insert(make_pair(quant_edge_id, unique_ptr<TensorImpl>(new TensorImpl(quant_edge, TENSORTYPE_NORMAL))));
-    options.tensors->find(quant_edge_id)->second->GetShape() = quant_shape;
+    *options.tensors->find(quant_edge_id)->second->GetShape() = quant_shape;
     options.quants->resize(topo->GetMaxEdgeId());
     options.quants->at(quant_edge_id).format = quant_shape.GetDataFormat();
     options.quants->at(quant_edge_id).type = quant_shape.GetDataType();
@@ -242,8 +242,8 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
         options.info->constants.find(weight_node->GetInput(0)) == options.info->constants.end()) {
         auto preedge_id = weight_node->GetInput(0);
         auto postedge_id = node->GetInput(1);
-        auto preshape = options.tensors->find(preedge_id)->second->GetShape();
-        auto postshape = options.tensors->find(postedge_id)->second->GetShape();
+        const TensorShape& preshape = *options.tensors->find(preedge_id)->second->GetShape();
+        const TensorShape& postshape = *options.tensors->find(postedge_id)->second->GetShape();
         auto newshape = postshape;
         newshape.SetDim(0, k_per_grp_pad * temp_conv_param.num_grp);
 
@@ -261,7 +261,7 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
         }
 
         ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
-        status = ((CudaDataConverter*)options.device->GetDataConverter())->ConvertFromHost(&temp_buffer, postshape, (*quants)[postedge_id], 
+        status = ((CudaDataConverter*)options.device->GetDataConverter())->ConvertFromHost(&temp_buffer, postshape, (*quants)[postedge_id],
                                                                      weight_iter->second.data.data(), preshape, (*quants)[preedge_id]);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << node->GetName() << " copy constant failed: " << GetRetCodeStr(status);
@@ -270,7 +270,7 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
         cudaMemcpy(weight_constat_info.GetBufferDesc().addr, temp_buffer.addr, shape_in1.GetElementsIncludingPadding()*sizeof(int8_t), cudaMemcpyDeviceToDevice);
 
         options.info->constants.emplace(preedge_id, std::move(weight_constat_info));
-        options.tensors->find(preedge_id)->second->GetShape() = postshape;
+        *options.tensors->find(preedge_id)->second->GetShape() = postshape;
         options.quants->at(preedge_id) = (*quants)[postedge_id];
         options.quants->at(preedge_id).type = postshape.GetDataType();
         options.quants->at(preedge_id).format = postshape.GetDataFormat();
@@ -291,8 +291,8 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
         options.info->constants.find(bias_node->GetInput(0)) == options.info->constants.end()) {
         auto preedge_id = bias_node->GetInput(0);
         auto postedge_id = node->GetInput(2);
-        auto preshape = options.tensors->find(preedge_id)->second->GetShape();
-        auto postshape = options.tensors->find(postedge_id)->second->GetShape();
+        const TensorShape& preshape = *options.tensors->find(preedge_id)->second->GetShape();
+        const TensorShape& postshape = *options.tensors->find(postedge_id)->second->GetShape();
         auto newshape = postshape;
         newshape.SetDim(0, k_per_grp_pad * temp_conv_param.num_grp);
         RuntimeConstantInfo bias_constat_info;
@@ -320,7 +320,7 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
                                   shape_in0.GetDataType(), temp_conv_param);
 
         options.info->constants.emplace(preedge_id, std::move(bias_constat_info));
-        options.tensors->find(preedge_id)->second->GetShape() = postshape;
+        *options.tensors->find(preedge_id)->second->GetShape() = postshape;
         options.quants->at(preedge_id) = (*quants)[postedge_id];
         options.quants->at(preedge_id).format = postshape.GetDataFormat();
         options.quants->at(preedge_id).type = postshape.GetDataType();
@@ -336,7 +336,7 @@ void TuringIMMAImpgemm::ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, 
         if (edge_id == INVALID_EDGEID) {
             continue;
         }
-        auto shape = &tensors->find(edge_id)->second->GetShape();
+        auto shape = tensors->find(edge_id)->second->GetShape();
         if (shape->GetDimCount() > 1)
             shape->SetDataFormat(input_format);
         else
@@ -345,7 +345,7 @@ void TuringIMMAImpgemm::ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, 
 
     for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
         auto edge_id = node->GetOutput(i);
-        auto shape = &tensors->find(edge_id)->second->GetShape();
+        auto shape = tensors->find(edge_id)->second->GetShape();
         shape->SetDataFormat(output_format);
     }
     return;

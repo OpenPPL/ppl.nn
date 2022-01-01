@@ -34,15 +34,15 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
 
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    const ppl::common::datatype_t data_type = input->GetShape().GetDataType();
-    const ppl::common::dataformat_t input_format = input->GetShape().GetDataFormat();
-    const ppl::common::dataformat_t output_format = output->GetShape().GetDataFormat();
+    const ppl::common::datatype_t data_type = input->GetShape()->GetDataType();
+    const ppl::common::dataformat_t input_format = input->GetShape()->GetDataFormat();
+    const ppl::common::dataformat_t output_format = output->GetShape()->GetDataFormat();
 
     const bool may_inplace = input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL;
 
     if (ppl::common::GetSizeOfDataType(data_type) == 4) {
         if (input_format == ppl::common::DATAFORMAT_NDARRAY && output_format == ppl::common::DATAFORMAT_N16CX) {
-            const TensorShape padded_input_shape = PadShapeTo3Dims(input->GetShape());
+            const TensorShape padded_input_shape = PadShapeTo3Dims(*input->GetShape());
             if (may_inplace && ppl::kernel::x86::reorder_ndarray_n16cx_may_inplace(&padded_input_shape)) {
                 output->TransferBufferFrom(input);
                 PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
@@ -67,16 +67,16 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
                 }
             }
         } else if (input_format == ppl::common::DATAFORMAT_N16CX && output_format == ppl::common::DATAFORMAT_NDARRAY) {
-            if (may_inplace && ppl::kernel::x86::reorder_n16cx_ndarray_may_inplace(&input->GetShape())) {
+            if (may_inplace && ppl::kernel::x86::reorder_n16cx_ndarray_may_inplace(input->GetShape())) {
                 output->TransferBufferFrom(input);
                 PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
                 PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
                 if (MayUseISA(ppl::common::ISA_X86_AVX)) {
                     return ppl::kernel::x86::reorder_n16cx_ndarray_inplace_fp32_avx(
-                        &input->GetShape(), output->GetBufferPtr<float>());
+                        input->GetShape(), output->GetBufferPtr<float>());
                 } else {
                     return ppl::kernel::x86::reorder_n16cx_ndarray_inplace_fp32(
-                        &input->GetShape(), output->GetBufferPtr<float>());
+                        input->GetShape(), output->GetBufferPtr<float>());
                 }
             } else {
                 PPLNN_X86_REALLOC_TENSOR_BUFFER(output);
@@ -84,9 +84,9 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
                 PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
                 if (MayUseISA(ppl::common::ISA_X86_AVX)) {
                     return ppl::kernel::x86::reorder_n16cx_ndarray_fp32_avx(
-                        &input->GetShape(), input->GetBufferPtr<float>(), output->GetBufferPtr<float>());
+                        input->GetShape(), input->GetBufferPtr<float>(), output->GetBufferPtr<float>());
                 } else {
-                    return ppl::kernel::x86::reorder_n16cx_ndarray_fp32(&input->GetShape(), input->GetBufferPtr<float>(),
+                    return ppl::kernel::x86::reorder_n16cx_ndarray_fp32(input->GetShape(), input->GetBufferPtr<float>(),
                                                                         output->GetBufferPtr<float>());
                 }
             }
@@ -99,7 +99,7 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
         PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
         if (input_format == ppl::common::DATAFORMAT_NDARRAY && output_format == ppl::common::DATAFORMAT_N16CX) {
-            const TensorShape padded_input_shape = PadShapeTo3Dims(input->GetShape());
+            const TensorShape padded_input_shape = PadShapeTo3Dims(*input->GetShape());
             if (MayUseISA(ppl::common::ISA_X86_AVX)) {
                 return ppl::kernel::x86::reorder_ndarray_n16cx_int64_avx(
                     &padded_input_shape, input->GetBufferPtr<int64_t>(), output->GetBufferPtr<int64_t>());
@@ -110,9 +110,9 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
         } else if (input_format == ppl::common::DATAFORMAT_N16CX && output_format == ppl::common::DATAFORMAT_NDARRAY) {
             if (MayUseISA(ppl::common::ISA_X86_AVX)) {
                 return ppl::kernel::x86::reorder_n16cx_ndarray_int64_avx(
-                    &input->GetShape(), input->GetBufferPtr<int64_t>(), output->GetBufferPtr<int64_t>());
+                    input->GetShape(), input->GetBufferPtr<int64_t>(), output->GetBufferPtr<int64_t>());
             } else {
-                return ppl::kernel::x86::reorder_n16cx_ndarray_int64(&input->GetShape(), input->GetBufferPtr<int64_t>(),
+                return ppl::kernel::x86::reorder_n16cx_ndarray_int64(input->GetShape(), input->GetBufferPtr<int64_t>(),
                                                                      output->GetBufferPtr<int64_t>());
             }
         } else {

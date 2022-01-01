@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 uint64_t SoftmaxKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     auto input = ctx.GetInput<TensorImpl>(0);
-    return PPLSoftmaxGetTempBufferSize(&input->GetShape(), param_->axis);
+    return PPLSoftmaxGetTempBufferSize(input->GetShape(), param_->axis);
 }
 
 ppl::common::RetCode SoftmaxKernel::DoExecute(KernelExecContext* ctx) {
@@ -45,11 +45,8 @@ ppl::common::RetCode SoftmaxKernel::DoExecute(KernelExecContext* ctx) {
     auto output = ctx->GetOutput<TensorImpl>(0);
     auto input_quant = GetCommonParam()->cuda_tensor_info->at(input->GetEdge()->GetId());
     auto output_quant = GetCommonParam()->cuda_tensor_info->at(output->GetEdge()->GetId());
-    auto in_shape = input->GetShape();
-    auto out_shape = output->GetShape();
-    //status = PPLCUDAFastSoftmax(GetStream(), &in_shape, input->GetBufferPtr(), &out_shape, output->GetBufferPtr(), nullptr, 1);
 
-    status = PPLCUDASoftmaxForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(), &output->GetShape(),
+    status = PPLCUDASoftmaxForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(),
                                       output->GetBufferPtr(), tmp_buffer, param_->axis);
     return status;
 }

@@ -44,7 +44,7 @@ RetCode MaxPoolOp::Init(const OptKernelOptions& options) {
             status = InferDefaultType(info, type);
         }
         if (info->GetOutputCount() > 1) {
-            auto shape = &info->GetOutput<TensorImpl>(1)->GetShape();
+            auto shape = info->GetOutput<TensorImpl>(1)->GetShape();
             shape->SetDataType(ppl::common::DATATYPE_INT64);
         }
         return status;

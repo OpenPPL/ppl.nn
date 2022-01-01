@@ -42,17 +42,17 @@ ppl::common::RetCode LessKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(C);
 
     const bool is_eltwise =
-        A->GetShape().GetElementsExcludingPadding() == C->GetShape().GetElementsExcludingPadding() &&
-        B->GetShape().GetElementsExcludingPadding() == C->GetShape().GetElementsExcludingPadding();
-    const ppl::common::datatype_t data_type = A->GetShape().GetDataType();
+        A->GetShape()->GetElementsExcludingPadding() == C->GetShape()->GetElementsExcludingPadding() &&
+        B->GetShape()->GetElementsExcludingPadding() == C->GetShape()->GetElementsExcludingPadding();
+    const ppl::common::datatype_t data_type = A->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
         if (is_eltwise) {
             if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-                return kernel::x86::less_eltwise_fp32_avx(&C->GetShape(), A->GetBufferPtr<float>(),
+                return kernel::x86::less_eltwise_fp32_avx(C->GetShape(), A->GetBufferPtr<float>(),
                                                           B->GetBufferPtr<float>(), C->GetBufferPtr<uint8_t>());
             } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-                return kernel::x86::less_eltwise_fp32_sse(&C->GetShape(), A->GetBufferPtr<float>(),
+                return kernel::x86::less_eltwise_fp32_sse(C->GetShape(), A->GetBufferPtr<float>(),
                                                           B->GetBufferPtr<float>(), C->GetBufferPtr<uint8_t>());
             } else {
                 LOG(ERROR) << "get unsupported isa " << GetISA();
@@ -60,11 +60,11 @@ ppl::common::RetCode LessKernel::DoExecute(KernelExecContext* ctx) {
             }
         } else {
             if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-                return kernel::x86::less_ndarray_fp32_avx(&A->GetShape(), &B->GetShape(), &C->GetShape(),
+                return kernel::x86::less_ndarray_fp32_avx(A->GetShape(), B->GetShape(), C->GetShape(),
                                                           A->GetBufferPtr<float>(), B->GetBufferPtr<float>(),
                                                           C->GetBufferPtr<uint8_t>());
             } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-                return kernel::x86::less_ndarray_fp32_sse(&A->GetShape(), &B->GetShape(), &C->GetShape(),
+                return kernel::x86::less_ndarray_fp32_sse(A->GetShape(), B->GetShape(), C->GetShape(),
                                                           A->GetBufferPtr<float>(), B->GetBufferPtr<float>(),
                                                           C->GetBufferPtr<uint8_t>());
             } else {
@@ -74,10 +74,10 @@ ppl::common::RetCode LessKernel::DoExecute(KernelExecContext* ctx) {
         }
     } else if (data_type == ppl::common::DATATYPE_INT64) {
         if (is_eltwise) {
-            return kernel::x86::less_eltwise_int64(&C->GetShape(), A->GetBufferPtr<int64_t>(),
+            return kernel::x86::less_eltwise_int64(C->GetShape(), A->GetBufferPtr<int64_t>(),
                                                    B->GetBufferPtr<int64_t>(), C->GetBufferPtr<uint8_t>());
         } else {
-            return kernel::x86::less_ndarray_int64(&A->GetShape(), &B->GetShape(), &C->GetShape(),
+            return kernel::x86::less_ndarray_int64(A->GetShape(), B->GetShape(), C->GetShape(),
                                                    A->GetBufferPtr<int64_t>(), B->GetBufferPtr<int64_t>(),
                                                    C->GetBufferPtr<uint8_t>());
         }

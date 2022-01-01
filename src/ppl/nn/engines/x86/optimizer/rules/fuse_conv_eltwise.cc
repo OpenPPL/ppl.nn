@@ -36,8 +36,8 @@ bool FuseConvEltwise(const OptKernelOptions &options) {
             auto input_edge_1 = graph_topo->GetEdgeById(node->GetInput(1));
 
             // check if eltwise
-            auto& input_shape_0 = tensors[input_edge_0->GetId()]->GetShape();
-            auto& input_shape_1 = tensors[input_edge_1->GetId()]->GetShape();
+            auto& input_shape_0 = *tensors[input_edge_0->GetId()]->GetShape();
+            auto& input_shape_1 = *tensors[input_edge_1->GetId()]->GetShape();
             if (input_shape_0.IsEmpty() || input_shape_1.IsEmpty()) { // input shape has not been infered
                 continue;
             }
@@ -113,4 +113,3 @@ bool FuseConvEltwise(const OptKernelOptions &options) {
 }
 
 }}} // namespace ppl::nn::x86
-

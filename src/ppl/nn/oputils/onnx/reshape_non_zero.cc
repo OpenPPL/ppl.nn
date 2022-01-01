@@ -26,8 +26,8 @@ RetCode ReshapeNonZero(InputOutputInfo* info, const void*) {
         return RC_INVALID_VALUE;
     }
 
-    auto x = &info->GetInput<TensorImpl>(0)->GetShape();
-    auto y = &info->GetOutput<TensorImpl>(0)->GetShape();
+    auto x = info->GetInput<TensorImpl>(0)->GetShape();
+    auto y = info->GetOutput<TensorImpl>(0)->GetShape();
 
     const uint32_t input_dim_count = x->GetDimCount();
     const uint32_t max_output_num = x->GetElementsExcludingPadding();

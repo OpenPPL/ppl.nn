@@ -23,7 +23,7 @@
 namespace ppl { namespace nn { namespace x86 {
 
 bool ScatterNdKernel::CanDoExecute(const KernelExecContext& ctx) const {
-    return ctx.GetInput<TensorImpl>(0)->GetShape().GetBytesIncludingPadding() != 0;
+    return ctx.GetInput<TensorImpl>(0)->GetShape()->GetBytesIncludingPadding() != 0;
 }
 
 ppl::common::RetCode ScatterNdKernel::DoExecute(KernelExecContext* ctx) {
@@ -46,36 +46,36 @@ ppl::common::RetCode ScatterNdKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
 
-    const uint32_t r = x->GetShape().GetDimCount();
-    const uint32_t q = indices->GetShape().GetDimCount();
-    const uint32_t k = indices->GetShape().GetDim(q - 1);
+    const uint32_t r = x->GetShape()->GetDimCount();
+    const uint32_t q = indices->GetShape()->GetDimCount();
+    const uint32_t k = indices->GetShape()->GetDim(q - 1);
 
     int32_t inner_dim = 1;
     for (uint32_t i = k; i < r; i++) {
-        inner_dim *= x->GetShape().GetDim(i);
+        inner_dim *= x->GetShape()->GetDim(i);
     }
     int32_t num_indices = 1;
     for (uint32_t i = 0; i < q - 1; i++) {
-        num_indices *= indices->GetShape().GetDim(i);
+        num_indices *= indices->GetShape()->GetDim(i);
     }
     int32_t indices_dim = k;
 
-    auto dim_count = x->GetShape().GetDimCount();
+    auto dim_count = x->GetShape()->GetDimCount();
     std::vector<int32_t> strides_vec(dim_count);
     auto strides = strides_vec.data(); // may be faster
 
     strides[dim_count - 1] = 1;
     for (int i = dim_count - 2; i >= 0; i--) {
-        strides[i] = strides[i + 1] * x->GetShape().GetDim(i + 1);
+        strides[i] = strides[i + 1] * x->GetShape()->GetDim(i + 1);
     }
-    const auto data_type = x->GetShape().GetDataType();
-    const auto data_format = x->GetShape().GetDataFormat();
+    const auto data_type = x->GetShape()->GetDataType();
+    const auto data_format = x->GetShape()->GetDataFormat();
 
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
             return kernel::x86::scatter_nd_ndarray_fp32(x->GetBufferPtr<float>(), updates->GetBufferPtr<float>(),
                                                         indices->GetBufferPtr<int64_t>(), strides,
-                                                        x->GetShape().GetElementsIncludingPadding(), inner_dim,
+                                                        x->GetShape()->GetElementsIncludingPadding(), inner_dim,
                                                         num_indices, indices_dim, y->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";

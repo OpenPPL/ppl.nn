@@ -24,19 +24,19 @@ namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeLSTM(InputOutputInfo* info, const void* arg) {
     auto param = (const LSTMParam*)arg;
-    const TensorShape& in_shape = info->GetInput<TensorImpl>(0)->GetShape();
+    const TensorShape& in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
     const int64_t seq_len = in_shape.GetDim(0);
     const int64_t batch = in_shape.GetDim(1);
     const int64_t num_directions = param->direction == LSTMParam::DIR_BIDIRECTIONAL ? 2 : 1;
 
     if (info->GetOutputCount() > 0) {
-        info->GetOutput<TensorImpl>(0)->GetShape().Reshape({seq_len, num_directions, batch, param->hidden_size});
+        info->GetOutput<TensorImpl>(0)->GetShape()->Reshape({seq_len, num_directions, batch, param->hidden_size});
     }
     if (info->GetOutputCount() > 1) {
-        info->GetOutput<TensorImpl>(1)->GetShape().Reshape({num_directions, batch, param->hidden_size});
+        info->GetOutput<TensorImpl>(1)->GetShape()->Reshape({num_directions, batch, param->hidden_size});
     }
     if (info->GetOutputCount() > 2) {
-        info->GetOutput<TensorImpl>(2)->GetShape().Reshape({num_directions, batch, param->hidden_size});
+        info->GetOutput<TensorImpl>(2)->GetShape()->Reshape({num_directions, batch, param->hidden_size});
     }
 
     return RC_SUCCESS;

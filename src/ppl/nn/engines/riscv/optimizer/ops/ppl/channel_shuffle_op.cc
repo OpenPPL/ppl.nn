@@ -33,17 +33,17 @@ RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
     infer_type_func_ = GenericInferType;
 
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        auto& input0 = info->GetInput<TensorImpl>(0)->GetShape();
+        auto& input0 = *info->GetInput<TensorImpl>(0)->GetShape();
         int64_t channels = input0.GetDim(1);
         for (uint32_t i = 1; i < info->GetInputCount(); ++i) {
-            channels += info->GetInput<TensorImpl>(1)->GetShape().GetDim(1);
+            channels += info->GetInput<TensorImpl>(1)->GetShape()->GetDim(1);
         }
         if (channels % info->GetOutputCount()) {
             return ppl::common::RC_INVALID_VALUE;
         }
         channels /= info->GetOutputCount();
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
-            auto& output = info->GetOutput<TensorImpl>(i)->GetShape();
+            auto& output = *info->GetOutput<TensorImpl>(i)->GetShape();
             output.Reshape(input0.GetDims(), input0.GetRealDimCount());
             output.SetDim(1, channels);
         }
@@ -61,8 +61,8 @@ void ChannelShuffleOp::SetGroup(int64_t group) {
 RetCode ChannelShuffleOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
                                        vector<dataformat_t>* selected_output_formats) {
     if (info.GetInputCount() == 2) {
-        auto input_format1 = info.GetInput<TensorImpl>(0)->GetShape().GetDataFormat();
-        auto input_format2 = info.GetInput<TensorImpl>(1)->GetShape().GetDataFormat();
+        auto input_format1 = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
+        auto input_format2 = info.GetInput<TensorImpl>(1)->GetShape()->GetDataFormat();
         if (DATAFORMAT_N4CX == input_format1 && DATAFORMAT_N4CX == input_format2) {
             selected_input_formats->at(0) = DATAFORMAT_N4CX;
             selected_input_formats->at(1) = DATAFORMAT_N4CX;
@@ -86,7 +86,7 @@ RetCode ChannelShuffleOp::SelectFormat(const InputOutputInfo& info, vector<dataf
             }
         }
     } else {
-        auto input_format = info.GetInput<TensorImpl>(0)->GetShape().GetDataFormat();
+        auto input_format = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
         if (DATAFORMAT_N4CX == input_format) {
             selected_input_formats->at(0) = DATAFORMAT_N4CX;
             selected_output_formats->at(0) = DATAFORMAT_N4CX;
@@ -105,8 +105,8 @@ RetCode ChannelShuffleOp::SelectFormat(const InputOutputInfo& info, vector<dataf
 RetCode ChannelShuffleOp::SelectDataType(const InputOutputInfo& info, vector<datatype_t>* selected_input_data_types,
                                          vector<datatype_t>* selected_output_data_types) {
     if (info.GetInputCount() == 2) {
-        auto input_datatype1 = info.GetInput<TensorImpl>(0)->GetShape().GetDataType();
-        auto input_datatype2 = info.GetInput<TensorImpl>(1)->GetShape().GetDataType();
+        auto input_datatype1 = info.GetInput<TensorImpl>(0)->GetShape()->GetDataType();
+        auto input_datatype2 = info.GetInput<TensorImpl>(1)->GetShape()->GetDataType();
         if (DATATYPE_FLOAT32 == input_datatype1 && DATATYPE_FLOAT32 == input_datatype2) {
             selected_input_data_types->at(0) = DATATYPE_FLOAT32;
             selected_input_data_types->at(1) = DATATYPE_FLOAT32;
@@ -126,7 +126,7 @@ RetCode ChannelShuffleOp::SelectDataType(const InputOutputInfo& info, vector<dat
                        << ppl::common::GetDataTypeStr(input_datatype2);
         }
     } else {
-        auto input_datatype = info.GetInput<TensorImpl>(0)->GetShape().GetDataType();
+        auto input_datatype = info.GetInput<TensorImpl>(0)->GetShape()->GetDataType();
         if (DATATYPE_FLOAT32 == input_datatype) {
             selected_input_data_types->at(0) = DATATYPE_FLOAT32;
             selected_output_data_types->at(0) = DATATYPE_FLOAT32;

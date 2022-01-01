@@ -34,13 +34,13 @@ ppl::common::RetCode AveragePoolKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_DEBUG_TRACE("Output [Y]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(Y);
 
-    if (X->GetShape().GetDimCount() != 4) {
+    if (X->GetShape()->GetDimCount() != 4) {
         LOG(ERROR) << "only support 4-D tensor now.";
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    const int32_t src_h = X->GetShape().GetDim(2);
-    const int32_t src_w = X->GetShape().GetDim(3);
+    const int32_t src_h = X->GetShape()->GetDim(2);
+    const int32_t src_w = X->GetShape()->GetDim(3);
 
     int32_t kernel_h;
     int32_t kernel_w;
@@ -87,17 +87,17 @@ ppl::common::RetCode AveragePoolKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_DEBUG_TRACE("ceil_mode: %d\n", param_->ceil_mode);
     PPLNN_RISCV_DEBUG_TRACE("global_pooling: %d\n", param_->global_pooling);
 
-    const auto data_type = X->GetShape().GetDataType();
-    const auto data_format = X->GetShape().GetDataFormat();
+    const auto data_type = X->GetShape()->GetDataType();
+    const auto data_format = X->GetShape()->GetDataFormat();
 
     if (data_format == ppl::common::DATAFORMAT_N8CX && data_type == ppl::common::DATATYPE_FLOAT16) {
         return ppl::kernel::riscv::averagepool2d_n8chw_1x16_fp16(
-            &X->GetShape(), &Y->GetShape(), kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, param_->mode,
+            X->GetShape(), Y->GetShape(), kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, param_->mode,
 
             X->GetBufferPtr<const __fp16>(), Y->GetBufferPtr<__fp16>());
     } else if (data_format == ppl::common::DATAFORMAT_N4CX && data_type == ppl::common::DATATYPE_FLOAT32) {
         return ppl::kernel::riscv::averagepool2d_n4cx_1x16_fp32(
-            &X->GetShape(), &Y->GetShape(), kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, param_->mode,
+            X->GetShape(), Y->GetShape(), kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, param_->mode,
 
             X->GetBufferPtr<const float>(), Y->GetBufferPtr<float>());
     } else if (data_format == ppl::common::DATAFORMAT_NDARRAY) {

@@ -25,8 +25,8 @@ ppl::common::RetCode CeilKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
 
-    ppl::common::RetCode status = PPLCUDAUnaryCeilForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(),
-                                                             &output->GetShape(), output->GetBufferPtr());
+    ppl::common::RetCode status = PPLCUDAUnaryCeilForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(),
+                                                             output->GetShape(), output->GetBufferPtr());
     return status;
 }
 

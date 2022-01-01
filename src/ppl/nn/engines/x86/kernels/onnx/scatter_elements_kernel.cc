@@ -23,7 +23,7 @@
 namespace ppl { namespace nn { namespace x86 {
 
 bool ScatterElementsKernel::CanDoExecute(const KernelExecContext& ctx) const {
-    return ctx.GetInput<TensorImpl>(0)->GetShape().GetBytesIncludingPadding() != 0;
+    return ctx.GetInput<TensorImpl>(0)->GetShape()->GetBytesIncludingPadding() != 0;
 }
 
 ppl::common::RetCode ScatterElementsKernel::DoExecute(KernelExecContext* ctx) {
@@ -47,17 +47,17 @@ ppl::common::RetCode ScatterElementsKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
 
-    const auto data_type = x->GetShape().GetDataType();
-    const auto data_format = x->GetShape().GetDataFormat();
+    const auto data_type = x->GetShape()->GetDataType();
+    const auto data_format = x->GetShape()->GetDataFormat();
 
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
             return kernel::x86::scatter_elements_ndarray_fp32(
-                &x->GetShape(), &indices->GetShape(), x->GetBufferPtr<float>(), indices->GetBufferPtr<int64_t>(),
+                x->GetShape(), indices->GetShape(), x->GetBufferPtr<float>(), indices->GetBufferPtr<int64_t>(),
                 updates->GetBufferPtr<float>(), param_->axis, y->GetBufferPtr<float>());
         } else if (data_type == ppl::common::DATATYPE_INT64) {
             return kernel::x86::scatter_elements_ndarray_int64(
-                &x->GetShape(), &indices->GetShape(), x->GetBufferPtr<int64_t>(), indices->GetBufferPtr<int64_t>(),
+                x->GetShape(), indices->GetShape(), x->GetBufferPtr<int64_t>(), indices->GetBufferPtr<int64_t>(),
                 updates->GetBufferPtr<int64_t>(), param_->axis, y->GetBufferPtr<int64_t>());
         } else {
             LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";

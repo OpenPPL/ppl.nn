@@ -40,14 +40,14 @@ ppl::common::RetCode TileKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [C]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(C);
 
-    const auto data_type = ctx->GetInput<TensorImpl>(0)->GetShape().GetDataType();
-    const auto data_format = ctx->GetInput<TensorImpl>(0)->GetShape().GetDataFormat();
+    const auto data_type = ctx->GetInput<TensorImpl>(0)->GetShape()->GetDataType();
+    const auto data_format = ctx->GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
-            return ppl::kernel::x86::tile_ndarray_fp32(&A->GetShape(), &C->GetShape(), A->GetBufferPtr<const float>(),
+            return ppl::kernel::x86::tile_ndarray_fp32(A->GetShape(), C->GetShape(), A->GetBufferPtr<const float>(),
                                                        B->GetBufferPtr<const int64_t>(), C->GetBufferPtr<float>());
         } else if (data_type == ppl::common::DATATYPE_INT64) {
-            return ppl::kernel::x86::tile_ndarray_int64(&A->GetShape(), &C->GetShape(),
+            return ppl::kernel::x86::tile_ndarray_int64(A->GetShape(), C->GetShape(),
                                                         A->GetBufferPtr<const int64_t>(),
                                                         B->GetBufferPtr<const int64_t>(), C->GetBufferPtr<int64_t>());
         } else {

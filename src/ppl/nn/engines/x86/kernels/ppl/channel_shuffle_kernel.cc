@@ -54,46 +54,46 @@ ppl::common::RetCode ChannelShuffleKernel::DoExecute(KernelExecContext* ctx) {
 
     int group_ = param_->group;
 
-    if (X->GetShape().GetDimCount() != 4) {
-        LOG(ERROR) << "incorrect input dimcount: " << X->GetShape().GetDimCount();
+    if (X->GetShape()->GetDimCount() != 4) {
+        LOG(ERROR) << "incorrect input dimcount: " << X->GetShape()->GetDimCount();
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    if (X->GetShape().GetDim(1) % group_) {
+    if (X->GetShape()->GetDim(1) % group_) {
         LOG(ERROR) << "unsupported ChanneShuffle group: " << group_;
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    if (X->GetShape().GetDataType() == ppl::common::DATATYPE_FLOAT32) {
-        if (X->GetShape().GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
+    if (X->GetShape()->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
+        if (X->GetShape()->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
             if (X1) {
                 return kernel::x86::channel_shuffle_ndarray_concat_split_fp32(
-                    &X->GetShape(), &X1->GetShape(),
+                    X->GetShape(), X1->GetShape(),
                     X->GetBufferPtr<float>(), X1->GetBufferPtr<float>(),
                     group_,
                     Y->GetBufferPtr<float>(), Y1 ? Y1->GetBufferPtr<float>() : nullptr);
             } else {
                 return kernel::x86::channel_shuffle_ndarray_fp32(
-                    &X->GetShape(), X->GetBufferPtr<float>(), group_,
+                    X->GetShape(), X->GetBufferPtr<float>(), group_,
                     Y->GetBufferPtr<float>());
             }
-        } else if (X->GetShape().GetDataFormat() == ppl::common::DATAFORMAT_N16CX) {
+        } else if (X->GetShape()->GetDataFormat() == ppl::common::DATAFORMAT_N16CX) {
             if (X1) {
                 return kernel::x86::channel_shuffle_n16cx_concat_split_fp32(
-                    &X->GetShape(), &X1->GetShape(),
+                    X->GetShape(), X1->GetShape(),
                     X->GetBufferPtr<float>(), X1->GetBufferPtr<float>(),
                     group_,
                     Y->GetBufferPtr<float>(), Y1 ? Y1->GetBufferPtr<float>() : nullptr);
             } else {
                 return kernel::x86::channel_shuffle_n16cx_fp32(
-                    &X->GetShape(), X->GetBufferPtr<float>(), group_,
+                    X->GetShape(), X->GetBufferPtr<float>(), group_,
                     Y->GetBufferPtr<float>());
             }
         } else {
-            LOG(ERROR) << "unsupported data format: " << ppl::common::GetDataFormatStr(X->GetShape().GetDataFormat());
+            LOG(ERROR) << "unsupported data format: " << ppl::common::GetDataFormatStr(X->GetShape()->GetDataFormat());
         }
     } else {
-        LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(X->GetShape().GetDataType());
+        LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(X->GetShape()->GetDataType());
     }
 
     return ppl::common::RC_UNSUPPORTED;

@@ -32,10 +32,10 @@ RetCode PadOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        uint32_t dim_count = info->GetInput<TensorImpl>(0)->GetShape().GetDimCount();
+        uint32_t dim_count = info->GetInput<TensorImpl>(0)->GetShape()->GetDimCount();
         auto pad = info->GetInput<TensorImpl>(1);
-        if (pad->GetShape().GetDimCount() != 1 || pad->GetShape().GetDim(0) != 2 * dim_count ||
-            pad->GetShape().GetDataType() != DATATYPE_INT64) {
+        if (pad->GetShape()->GetDimCount() != 1 || pad->GetShape()->GetDim(0) != 2 * dim_count ||
+            pad->GetShape()->GetDataType() != DATATYPE_INT64) {
             return RC_INVALID_VALUE;
         }
 
@@ -44,9 +44,9 @@ RetCode PadOp::Init(const OptKernelOptions& options) {
             return ret;
         }
 
-        if (info->GetInput<TensorImpl>(0)->GetShape().GetDataType() != DATATYPE_FLOAT32) {
+        if (info->GetInput<TensorImpl>(0)->GetShape()->GetDataType() != DATATYPE_FLOAT32) {
             LOG(ERROR) << "unsupported data type: "
-                       << GetDataTypeStr(info->GetInput<TensorImpl>(0)->GetShape().GetDataType());
+                       << GetDataTypeStr(info->GetInput<TensorImpl>(0)->GetShape()->GetDataType());
             return RC_UNSUPPORTED;
         }
         return RC_SUCCESS;
@@ -59,7 +59,7 @@ RetCode PadOp::Init(const OptKernelOptions& options) {
 
 RetCode PadOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
                             vector<dataformat_t>* selected_output_formats) {
-    if (info.GetInput<TensorImpl>(0)->GetShape().GetDataFormat() == DATAFORMAT_N16CX) {
+    if (info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat() == DATAFORMAT_N16CX) {
         selected_input_formats->at(0) = DATAFORMAT_N16CX;
         selected_output_formats->at(0) = DATAFORMAT_N16CX;
     }

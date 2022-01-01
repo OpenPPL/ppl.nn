@@ -18,7 +18,7 @@
 #include "ppl/nn/engines/cuda/kernels/onnx/conv_depthwise_kernel.h"
 
 #include <cuda_fp16.h>
-#include "cuda_runtime.h" 
+#include "cuda_runtime.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -37,7 +37,7 @@ ppl::common::RetCode ConvDepthwiseKernel::BeforeExecute(KernelExecContext* ctx) 
             auto ptr = edge2buffer->find(concat_edge_id);
             if (ptr == edge2buffer->end()) {
                 BufferDesc buffer;
-                auto concat_shape = tensor->GetShape();
+                auto concat_shape = *tensor->GetShape();
                 concat_shape.SetDim(1, param_->extra_param.fuse_info.channel_size);
                 status = device->Realloc(concat_shape, &buffer);
                 if (status != RC_SUCCESS) {
@@ -65,9 +65,9 @@ ppl::common::RetCode ConvDepthwiseKernel::DoExecute(KernelExecContext* ctx) {
     conv_param_t temp_conv_param;
     fuse_param_t temp_fuse_param;
 
-    auto shape_in0 = ctx->GetInput<TensorImpl>(0)->GetShape();
-    auto shape_in1 = ctx->GetInput<TensorImpl>(1)->GetShape();
-    auto shape_out = ctx->GetOutput<TensorImpl>(0)->GetShape();
+    const TensorShape& shape_in0 = *ctx->GetInput<TensorImpl>(0)->GetShape();
+    const TensorShape& shape_in1 = *ctx->GetInput<TensorImpl>(1)->GetShape();
+    const TensorShape& shape_out = *ctx->GetOutput<TensorImpl>(0)->GetShape();
 
     auto input_id0 = ctx->GetInput<TensorImpl>(0)->GetEdge()->GetId();
     auto input_id1 = ctx->GetInput<TensorImpl>(1)->GetEdge()->GetId();

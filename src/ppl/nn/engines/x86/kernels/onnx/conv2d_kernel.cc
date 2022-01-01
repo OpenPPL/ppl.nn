@@ -60,15 +60,15 @@ ppl::common::RetCode Conv2dKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("fuse_flag: %ld\n", cur_executor->conv_param()->fuse_flag);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    cur_executor->set_src_shape(&X->GetShape());
-    cur_executor->set_dst_shape(&Y->GetShape());
+    cur_executor->set_src_shape(X->GetShape());
+    cur_executor->set_dst_shape(Y->GetShape());
 
     TensorImpl* sum_src = nullptr;
     if (cur_executor->conv_param()->fuse_flag & ppl::kernel::x86::conv_fuse_flag::SUM) {
         sum_src = ctx->GetInput<TensorImpl>(ctx->GetInputCount() - 1);
         PPLNN_X86_DEBUG_TRACE("Input [sum_src]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(sum_src);
-        cur_executor->set_sum_src_shape(&sum_src->GetShape());
+        cur_executor->set_sum_src_shape(sum_src->GetShape());
     }
 
     ppl::common::RetCode rc;
@@ -79,9 +79,9 @@ ppl::common::RetCode Conv2dKernel::DoExecute(KernelExecContext* ctx) {
     }
 
 #ifdef DUMP_CONV
-    fprintf(stderr, CASE_STRING_FMT() "\n", cur_executor->conv_param()->group, X->GetShape().GetDim(0),
-            cur_executor->conv_param()->channels, X->GetShape().GetDim(2), X->GetShape().GetDim(3),
-            cur_executor->conv_param()->num_output, Y->GetShape().GetDim(2), Y->GetShape().GetDim(3),
+    fprintf(stderr, CASE_STRING_FMT() "\n", cur_executor->conv_param()->group, X->GetShape()->GetDim(0),
+            cur_executor->conv_param()->channels, X->GetShape()->GetDim(2), X->GetShape()->GetDim(3),
+            cur_executor->conv_param()->num_output, Y->GetShape()->GetDim(2), Y->GetShape()->GetDim(3),
             cur_executor->conv_param()->kernel_h, cur_executor->conv_param()->kernel_w,
             cur_executor->conv_param()->stride_h, cur_executor->conv_param()->stride_w,
             cur_executor->conv_param()->pad_h, cur_executor->conv_param()->pad_w,

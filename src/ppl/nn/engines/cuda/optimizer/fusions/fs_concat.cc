@@ -31,7 +31,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 const bool ConcatFusion::CanFuse(ir::Node* prenode, const OptKernelOptions& options, uint32_t offset_channel_size) {
     auto topo = options.graph->topo.get();
-    auto shape = options.tensors->find(prenode->GetOutput(0))->second->GetShape();
+    const TensorShape& shape = *options.tensors->find(prenode->GetOutput(0))->second->GetShape();
 
     if (shape.GetDimCount() <= 1) {
         return false;
@@ -67,7 +67,7 @@ const RetCode ConcatFusion::FuseNode(ir::Node* node, bool reliable, const OptKer
     }
 
     uint32_t total_channel_size =
-        options.tensors->find(node->GetOutput(0))->second->GetShape().GetDim(param->param.axis);
+        options.tensors->find(node->GetOutput(0))->second->GetShape()->GetDim(param->param.axis);
     uint32_t offset_channel_size = 0;
 
     for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
@@ -89,7 +89,7 @@ const RetCode ConcatFusion::FuseNode(ir::Node* node, bool reliable, const OptKer
             conv_param->extra_param.fuse_info.channel_size = total_channel_size;
         }
 
-        auto preshape = options.tensors->find(edge_id)->second->GetShape();
+        const TensorShape& preshape = *options.tensors->find(edge_id)->second->GetShape();
         offset_channel_size += preshape.GetDim(param->param.axis);
     }
 

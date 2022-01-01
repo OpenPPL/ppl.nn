@@ -36,7 +36,7 @@ RetCode MMCVNonMaxSuppressionOp::Init(const OptKernelOptions& options) {
     };
 
     infer_type_func_ = [](InputOutputInfo* info) -> void {
-        info->GetOutput<TensorImpl>(0)->GetShape().SetDataType(DATATYPE_INT64);
+        info->GetOutput<TensorImpl>(0)->GetShape()->SetDataType(DATATYPE_INT64);
     };
 
     return RC_SUCCESS;

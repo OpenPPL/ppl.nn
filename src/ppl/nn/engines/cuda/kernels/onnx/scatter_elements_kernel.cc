@@ -22,7 +22,7 @@
 namespace ppl { namespace nn { namespace cuda {
 
 bool ScatterElementsKernel::CanDoExecute(const KernelExecContext& ctx) const {
-    return ctx.GetInput<TensorImpl>(0)->GetShape().GetBytesIncludingPadding() != 0;
+    return ctx.GetInput<TensorImpl>(0)->GetShape()->GetBytesIncludingPadding() != 0;
 }
 
 ppl::common::RetCode ScatterElementsKernel::DoExecute(KernelExecContext* ctx) {
@@ -32,8 +32,8 @@ ppl::common::RetCode ScatterElementsKernel::DoExecute(KernelExecContext* ctx) {
     auto output = ctx->GetOutput<TensorImpl>(0);
 
     auto status = PPLCUDAScatterElementsForwardImp(
-        GetStream(), &input->GetShape(), input->GetBufferPtr(), &indices->GetShape(), indices->GetBufferPtr(),
-        &updates->GetShape(), updates->GetBufferPtr(), &output->GetShape(), output->GetBufferPtr(), param_->axis);
+        GetStream(), input->GetShape(), input->GetBufferPtr(), indices->GetShape(), indices->GetBufferPtr(),
+        updates->GetShape(), updates->GetBufferPtr(), output->GetShape(), output->GetBufferPtr(), param_->axis);
     return status;
 }
 

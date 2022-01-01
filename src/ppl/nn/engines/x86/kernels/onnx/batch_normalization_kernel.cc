@@ -50,21 +50,21 @@ ppl::common::RetCode BatchNormalizationKernel::DoExecute(KernelExecContext* ctx)
     PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
 
-    const auto data_format = X->GetShape().GetDataFormat();
-    const auto data_type = X->GetShape().GetDataType();
+    const auto data_format = X->GetShape()->GetDataFormat();
+    const auto data_type = X->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
         if (data_format == ppl::common::DATAFORMAT_N16CX) {
             if (MayUseISA(ppl::common::ISA_X86_AVX)) {
                 return kernel::x86::batchnorm_n16cx_fp32_avx(
-                    &X->GetShape(), X->GetBufferPtr<const float>(),
+                    X->GetShape(), X->GetBufferPtr<const float>(),
                     mean->GetBufferPtr<float>(), var->GetBufferPtr<float>(),
                     scale->GetBufferPtr<float>(), B->GetBufferPtr<float>(),
                     param_->epsilon, this->fuse_relu_,
                     Y->GetBufferPtr<float>());
             } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
                 return kernel::x86::batchnorm_n16cx_fp32_sse(
-                    &X->GetShape(), X->GetBufferPtr<const float>(),
+                    X->GetShape(), X->GetBufferPtr<const float>(),
                     mean->GetBufferPtr<float>(), var->GetBufferPtr<float>(),
                     scale->GetBufferPtr<float>(), B->GetBufferPtr<float>(),
                     param_->epsilon, this->fuse_relu_,
@@ -75,14 +75,14 @@ ppl::common::RetCode BatchNormalizationKernel::DoExecute(KernelExecContext* ctx)
         } else if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
             if (MayUseISA(ppl::common::ISA_X86_AVX)) {
                 return kernel::x86::batchnorm_ndarray_fp32_avx(
-                    &X->GetShape(), X->GetBufferPtr<const float>(),
+                    X->GetShape(), X->GetBufferPtr<const float>(),
                     mean->GetBufferPtr<float>(), var->GetBufferPtr<float>(),
                     scale->GetBufferPtr<float>(), B->GetBufferPtr<float>(),
                     param_->epsilon, this->fuse_relu_,
                     Y->GetBufferPtr<float>());
             } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
                 return kernel::x86::batchnorm_ndarray_fp32_avx(
-                    &X->GetShape(), X->GetBufferPtr<const float>(),
+                    X->GetShape(), X->GetBufferPtr<const float>(),
                     mean->GetBufferPtr<float>(), var->GetBufferPtr<float>(),
                     scale->GetBufferPtr<float>(), B->GetBufferPtr<float>(),
                     param_->epsilon, this->fuse_relu_,

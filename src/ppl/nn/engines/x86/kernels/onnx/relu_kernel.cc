@@ -36,13 +36,13 @@ RetCode ReluKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
 
-    const auto data_type = X->GetShape().GetDataType();
+    const auto data_type = X->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
         if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-            return ppl::kernel::x86::relu_fp32_avx(&X->GetShape(), X->GetBufferPtr<float>(), Y->GetBufferPtr<float>());
+            return ppl::kernel::x86::relu_fp32_avx(X->GetShape(), X->GetBufferPtr<float>(), Y->GetBufferPtr<float>());
         } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-            return ppl::kernel::x86::relu_fp32_sse(&X->GetShape(), X->GetBufferPtr<float>(), Y->GetBufferPtr<float>());
+            return ppl::kernel::x86::relu_fp32_sse(X->GetShape(), X->GetBufferPtr<float>(), Y->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "get unsupported isa " << GetISA();
         }

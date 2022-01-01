@@ -46,7 +46,7 @@ RetCode SplitOp::Init(const OptKernelOptions& options) {
 
 RetCode SplitOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
                               vector<dataformat_t>* selected_output_formats) {
-    auto input_format = info.GetInput<TensorImpl>(0)->GetShape().GetDataFormat();
+    auto input_format = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
     if (input_format == DATAFORMAT_N16CX) {
         selected_input_formats->at(0) = DATAFORMAT_N16CX;
         for (uint32_t i = 0; i < info.GetOutputCount(); i++) {

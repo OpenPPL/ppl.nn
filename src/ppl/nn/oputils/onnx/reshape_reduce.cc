@@ -24,8 +24,8 @@ namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeReduce(InputOutputInfo* info, const void* arg) {
     auto param = (const ReduceParam*)arg;
-    auto x = &info->GetInput<TensorImpl>(0)->GetShape();
-    auto y = &info->GetOutput<TensorImpl>(0)->GetShape();
+    auto x = info->GetInput<TensorImpl>(0)->GetShape();
+    auto y = info->GetOutput<TensorImpl>(0)->GetShape();
 
     // check & prepare axes
     if (param->axes.size() > x->GetDimCount()) {

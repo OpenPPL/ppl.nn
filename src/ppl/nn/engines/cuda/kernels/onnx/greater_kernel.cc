@@ -27,8 +27,8 @@ ppl::common::RetCode GreaterKernel::DoExecute(KernelExecContext* ctx) {
     auto output = ctx->GetOutput<TensorImpl>(0);
 
     ppl::common::RetCode status =
-        PPLCUDARelationGreaterForwardImp(GetStream(), &input0->GetShape(), input0->GetBufferPtr(), &input1->GetShape(),
-                                         input1->GetBufferPtr(), &output->GetShape(), output->GetBufferPtr<bool>());
+        PPLCUDARelationGreaterForwardImp(GetStream(), input0->GetShape(), input0->GetBufferPtr(), input1->GetShape(),
+                                         input1->GetBufferPtr(), output->GetShape(), output->GetBufferPtr<bool>());
     return status;
     ;
 }

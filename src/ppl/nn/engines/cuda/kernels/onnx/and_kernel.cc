@@ -27,8 +27,8 @@ ppl::common::RetCode AndKernel::DoExecute(KernelExecContext* ctx) {
     auto output = ctx->GetOutput<TensorImpl>(0);
 
     ppl::common::RetCode status =
-        PPLCUDALogicalAndForwardImp(GetStream(), &input0->GetShape(), input0->GetBufferPtr<bool>(), &input1->GetShape(),
-                                    input1->GetBufferPtr<bool>(), &output->GetShape(), output->GetBufferPtr<bool>());
+        PPLCUDALogicalAndForwardImp(GetStream(), input0->GetShape(), input0->GetBufferPtr<bool>(), input1->GetShape(),
+                                    input1->GetBufferPtr<bool>(), output->GetShape(), output->GetBufferPtr<bool>());
     return status;
 }
 

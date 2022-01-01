@@ -106,10 +106,7 @@ public:
         return buffer_info_.GetBufferDesc();
     }
 
-    TensorShape& GetShape() override {
-        return buffer_info_.GetShape();
-    }
-    const TensorShape& GetShape() const override {
+    TensorShape* GetShape() const override {
         return buffer_info_.GetShape();
     }
 

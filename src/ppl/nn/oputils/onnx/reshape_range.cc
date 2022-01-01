@@ -26,7 +26,7 @@ namespace ppl { namespace nn { namespace oputils {
 RetCode ReshapeRange(InputOutputInfo* info, double start, double limit, double delta) {
     auto output = info->GetOutput<TensorImpl>(0);
     const uint32_t num_elements = std::max((int)(std::ceil((limit - start) / delta)), 0);
-    output->GetShape().Reshape({num_elements});
+    output->GetShape()->Reshape({num_elements});
     return RC_SUCCESS;
 }
 
@@ -40,7 +40,7 @@ common::RetCode ReshapeRange(InputOutputInfo* info, const void*) {
         return RC_NOT_FOUND;
     }
 
-    const auto data_type = info->GetInput<TensorImpl>(0)->GetShape().GetDataType();
+    const auto data_type = info->GetInput<TensorImpl>(0)->GetShape()->GetDataType();
     double start, limit, delta;
     if (data_type == DATATYPE_INT64) {
         start = *info->GetInput<TensorImpl>(0)->GetBufferPtr<int64_t>();
@@ -56,7 +56,7 @@ common::RetCode ReshapeRange(InputOutputInfo* info, const void*) {
 
     auto output = info->GetOutput<TensorImpl>(0);
     const uint32_t num_elements = std::max(std::ceil((limit - start) / delta), 0.0);
-    output->GetShape().Reshape({num_elements});
+    output->GetShape()->Reshape({num_elements});
 
     return RC_SUCCESS;
 }

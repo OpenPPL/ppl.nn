@@ -27,11 +27,11 @@ RetCode ReshapeMin(InputOutputInfo* info, const void*) {
         return RC_INVALID_VALUE;
     }
 
-    auto out = &info->GetOutput<TensorImpl>(0)->GetShape();
+    auto out = info->GetOutput<TensorImpl>(0)->GetShape();
 
     MultiInputBroadCaster multi_input_bc;
     for (uint32_t i = 0; i < info->GetInputCount(); i++) {
-        multi_input_bc.PushBackInputTensorShape(info->GetInput<TensorImpl>(i)->GetShape());
+        multi_input_bc.PushBackInputTensorShape(*info->GetInput<TensorImpl>(i)->GetShape());
     }
     multi_input_bc.CalcBroadCast();
     if (!multi_input_bc.CanBroadCast()) {

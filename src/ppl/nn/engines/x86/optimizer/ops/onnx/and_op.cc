@@ -29,7 +29,7 @@ RetCode AndOp::Init(const OptKernelOptions& options) {
     };
 
     infer_type_func_ = [](InputOutputInfo* info) -> void {
-        info->GetOutput<TensorImpl>(0)->GetShape().SetDataType(DATATYPE_BOOL);
+        info->GetOutput<TensorImpl>(0)->GetShape()->SetDataType(DATATYPE_BOOL);
     };
 
     return RC_SUCCESS;

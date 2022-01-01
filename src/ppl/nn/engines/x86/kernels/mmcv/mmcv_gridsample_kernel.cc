@@ -47,13 +47,13 @@ ppl::common::RetCode MMCVGridSampleKernel::DoExecute(KernelExecContext* ctx) {
 #ifdef PPL_USE_X86_AVX512
         else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
             return kernel::x86::mmcv_gridsample_linear_ndarray_fp32_avx512(
-                &input->GetShape(), &grid->GetShape(), input->GetBufferPtr<float>(), grid->GetBufferPtr<float>(),
+                input->GetShape(), grid->GetShape(), input->GetBufferPtr<float>(), grid->GetBufferPtr<float>(),
                 param_->align_corners, param_->padding_mode, output->GetBufferPtr<float>());
         }
 #endif
         else {
             return kernel::x86::mmcv_gridsample_linear_ndarray_fp32(
-                &input->GetShape(), &grid->GetShape(), input->GetBufferPtr<float>(), grid->GetBufferPtr<float>(),
+                input->GetShape(), grid->GetShape(), input->GetBufferPtr<float>(), grid->GetBufferPtr<float>(),
                 param_->align_corners, param_->padding_mode, output->GetBufferPtr<float>());
         }
     }

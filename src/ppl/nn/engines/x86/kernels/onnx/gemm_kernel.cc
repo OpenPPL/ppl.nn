@@ -46,8 +46,8 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
 
-    if (A->GetShape().GetDataType() != ppl::common::DATATYPE_FLOAT32 ||
-        A->GetShape().GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY) {
+    if (A->GetShape()->GetDataType() != ppl::common::DATATYPE_FLOAT32 ||
+        A->GetShape()->GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY) {
         LOG(ERROR) << "only support fp32 ndarray now.";
         return ppl::common::RC_UNSUPPORTED;
     }
@@ -63,9 +63,9 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
         BNdim = 0;
     }
 
-    const int32_t M = A->GetShape().GetDim(AMdim);
-    const int32_t K = A->GetShape().GetDim(AKdim);
-    const int32_t N = param_->N == 0 ? B->GetShape().GetDim(BNdim) : param_->N;
+    const int32_t M = A->GetShape()->GetDim(AMdim);
+    const int32_t K = A->GetShape()->GetDim(AKdim);
+    const int32_t N = param_->N == 0 ? B->GetShape()->GetDim(BNdim) : param_->N;
 
     ppl::kernel::x86::gemm_v2_param_fp32 param;
     param.src_A = A->GetBufferPtr<float>();
@@ -92,20 +92,20 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     param.src_C = nullptr;
     param.c_type = ppl::kernel::x86::gemm_v2_C_type::EMPTY;
     param.ldc = 0;
-    if (C != nullptr && !C->GetShape().IsEmpty()) {
+    if (C != nullptr && !C->GetShape()->IsEmpty()) {
         param.src_C = C->GetBufferPtr<float>();
-        if (C->GetShape().GetElementsExcludingPadding() == 1) {
+        if (C->GetShape()->GetElementsExcludingPadding() == 1) {
             param.c_type = ppl::kernel::x86::gemm_v2_C_type::SCALAR;
-        } else if (C->GetShape().GetDimCount() == 1) {
+        } else if (C->GetShape()->GetDimCount() == 1) {
             param.c_type = ppl::kernel::x86::gemm_v2_C_type::VECTOR_W;
-        } else if (C->GetShape().GetDimCount() == 2) {
-            if (C->GetShape().GetDim(0) == 1) {
+        } else if (C->GetShape()->GetDimCount() == 2) {
+            if (C->GetShape()->GetDim(0) == 1) {
                 param.c_type = ppl::kernel::x86::gemm_v2_C_type::VECTOR_W;
-            } else if (C->GetShape().GetDim(1) == 1) {
+            } else if (C->GetShape()->GetDim(1) == 1) {
                 param.c_type = ppl::kernel::x86::gemm_v2_C_type::VECTOR_H;
             } else {
                 param.c_type = ppl::kernel::x86::gemm_v2_C_type::MATRIX;
-                param.ldc = C->GetShape().GetDim(1);
+                param.ldc = C->GetShape()->GetDim(1);
             }
         }
     }

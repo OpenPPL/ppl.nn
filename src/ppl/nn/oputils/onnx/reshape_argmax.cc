@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeArgMax(InputOutputInfo* info, const void* arg) {
     auto param = (const ArgMaxParam*)arg;
-    const TensorShape& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
+    const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
     const uint32_t out_dim_count = in_shape0.GetDimCount();
     std::vector<int64_t> out_dims(out_dim_count);
     for (uint32_t i = 0; i < out_dim_count; ++i) {
@@ -37,7 +37,7 @@ RetCode ReshapeArgMax(InputOutputInfo* info, const void* arg) {
         if (fixed_axis < out_dim_count)
             out_dims.erase(out_dims.begin() + fixed_axis);
     }
-    info->GetOutput<TensorImpl>(0)->GetShape().Reshape(out_dims);
+    info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(out_dims);
 
     return RC_SUCCESS;
 }

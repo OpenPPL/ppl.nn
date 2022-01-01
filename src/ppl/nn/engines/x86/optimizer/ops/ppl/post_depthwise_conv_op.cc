@@ -66,7 +66,7 @@ PostDepthwiseConv2dParam* PostDepthwiseConvOp::TryMakePostDepthwiseConv2dParam(C
     pd_c2d_param->depthwise_conv2d_param = post_conv_op->conv2d_param_;
     pd_c2d_param->algo_info = pd_c2d_algo_info;
     pd_c2d_param->mgr = pd_c2d_mgr;
-    
+
     // release
     conv_op->conv2d_param_ = nullptr;
     post_conv_op->conv2d_param_ = nullptr;
@@ -82,8 +82,8 @@ RetCode PostDepthwiseConvOp::Init(const OptKernelOptions& options) {
 
         auto cv_p = &pd_conv2d_param_->conv2d_param->param;
         auto dw_p = &pd_conv2d_param_->depthwise_conv2d_param->param;
-        auto x = &info->GetInput<TensorImpl>(0)->GetShape();
-        auto y = &info->GetOutput<TensorImpl>(0)->GetShape();
+        auto x = info->GetInput<TensorImpl>(0)->GetShape();
+        auto y = info->GetOutput<TensorImpl>(0)->GetShape();
         auto num_output = dw_p->num_output;
 
         const int64_t kernel_h_eff = (cv_p->kernel_h - 1) * cv_p->dilation_h + 1;

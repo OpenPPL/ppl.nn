@@ -35,7 +35,7 @@ RetCode ConstantOfShapeOp::Init(const OptKernelOptions& options) {
     }
 
     infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
-        auto output = &info->GetOutput<TensorImpl>(0)->GetShape();
+        auto output = info->GetOutput<TensorImpl>(0)->GetShape();
         output->SetDataType(param_.data_type);
         return RC_SUCCESS;
     };
@@ -50,7 +50,7 @@ RetCode ConstantOfShapeOp::Init(const OptKernelOptions& options) {
             return RC_NOT_FOUND;
         }
 
-        std::unique_ptr<int64_t[]> input_host(new int64_t[input->GetShape().GetElementsIncludingPadding()]);
+        std::unique_ptr<int64_t[]> input_host(new int64_t[input->GetShape()->GetElementsIncludingPadding()]);
         auto status = input->CopyToHost(input_host.get());
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "Copy input host failed: " << GetRetCodeStr(status);

@@ -36,43 +36,43 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_DEBUG_TRACE("Output [output]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(output);
 
-    const ppl::common::datatype_t input_type = input->GetShape().GetDataType();
-    const ppl::common::datatype_t output_type = output->GetShape().GetDataType();
-    const ppl::common::dataformat_t input_format = input->GetShape().GetDataFormat();
-    const ppl::common::dataformat_t output_format = output->GetShape().GetDataFormat();
+    const ppl::common::datatype_t input_type = input->GetShape()->GetDataType();
+    const ppl::common::datatype_t output_type = output->GetShape()->GetDataType();
+    const ppl::common::dataformat_t input_format = input->GetShape()->GetDataFormat();
+    const ppl::common::dataformat_t output_format = output->GetShape()->GetDataFormat();
 
     LOG(DEBUG) << "reorder from data format " << ppl::common::GetDataFormatStr(input_format) << " to "
                << ppl::common::GetDataFormatStr(output_format);
     LOG(DEBUG) << "reorder from data type " << ppl::common::GetDataTypeStr(input_type) << " to "
                << ppl::common::GetDataTypeStr(output_type);
 
-    int64_t input_n = input->GetShape().GetDim(0);
-    int64_t input_c = input->GetShape().GetDim(1);
+    int64_t input_n = input->GetShape()->GetDim(0);
+    int64_t input_c = input->GetShape()->GetDim(1);
     int64_t input_h, input_w;
-    if (input->GetShape().GetDimCount() == 2) {
+    if (input->GetShape()->GetDimCount() == 2) {
         input_h = 1;
         input_w = 1;
-    } else if (input->GetShape().GetDimCount() == 4) {
-        input_h = input->GetShape().GetDim(2);
-        input_w = input->GetShape().GetDim(3);
+    } else if (input->GetShape()->GetDimCount() == 4) {
+        input_h = input->GetShape()->GetDim(2);
+        input_w = input->GetShape()->GetDim(3);
     } else if (input_format != output_format) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
     if (output_format == input_format && input_type == output_type) {
         memcpy(output->GetBufferPtr<__fp16>(), input->GetBufferPtr<__fp16>(),
-               input->GetShape().GetBytesIncludingPadding());
+               input->GetShape()->GetBytesIncludingPadding());
         return ppl::common::RC_SUCCESS;
     } else {
         if (input_type == ppl::common::DATATYPE_FLOAT32 && output_type == ppl::common::DATATYPE_FLOAT16 &&
             output_format == input_format) {
-            int64_t data_cnt = input->GetShape().GetElementsIncludingPadding();
+            int64_t data_cnt = input->GetShape()->GetElementsIncludingPadding();
             CvtFp32ToFp16(data_cnt, input->GetBufferPtr<float>(), output->GetBufferPtr<__fp16>());
             return ppl::common::RC_SUCCESS;
 
         } else if (input_type == ppl::common::DATATYPE_FLOAT16 && output_type == ppl::common::DATATYPE_FLOAT32 &&
                    output_format == input_format) {
-            int64_t data_cnt = input->GetShape().GetElementsIncludingPadding();
+            int64_t data_cnt = input->GetShape()->GetElementsIncludingPadding();
             CvtFp16ToFp32(data_cnt, input->GetBufferPtr<__fp16>(), output->GetBufferPtr<float>());
             return ppl::common::RC_SUCCESS;
 

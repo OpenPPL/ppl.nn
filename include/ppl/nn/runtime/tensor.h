@@ -33,10 +33,7 @@ public:
     virtual const char* GetName() const = 0;
 
     /** @brief get tensor's shape */
-    virtual TensorShape& GetShape() = 0;
-
-    /** @brief get tensor's shape */
-    virtual const TensorShape& GetShape() const = 0;
+    virtual TensorShape* GetShape() const = 0;
 
     /** @brief rellocate a buffer according to its shape */
     virtual ppl::common::RetCode ReallocBuffer() = 0;

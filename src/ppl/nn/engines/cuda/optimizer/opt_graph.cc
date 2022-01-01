@@ -157,7 +157,7 @@ RetCode OptGraph::UpdateDims() {
                     utils::IrShape2TensorShape(ir_shape->second, &temp_tensor_shape);
                 }
 
-                impl_pair.first->second->GetShape() = temp_tensor_shape;
+                *impl_pair.first->second->GetShape() = temp_tensor_shape;
                 auto constant_ref = graph_->data->constants.find(edge_id);
                 if (constant_ref != graph_->data->constants.end()) { // constant tensor
                     auto tensor = impl_pair.first->second.get();
@@ -266,8 +266,8 @@ RetCode OptGraph::AddBridgeKernels() {
             auto impl_pair = tensor_impls_.insert(
                 make_pair(postedge_id, unique_ptr<TensorImpl>(new TensorImpl(new_edge, TENSORTYPE_NORMAL))));
             auto pre_shape = tensor_impls_.find(preedge_id)->second.get();
-            impl_pair.first->second->GetShape().Reshape(pre_shape->GetShape().GetDims(),
-                                                        pre_shape->GetShape().GetRealDimCount());
+            impl_pair.first->second->GetShape()->Reshape(pre_shape->GetShape()->GetDims(),
+                                                        pre_shape->GetShape()->GetRealDimCount());
 
             bridge_kernel.get()->Init(options);
             info_->kernels.emplace(new_node->GetId(), std::move(bridge_kernel));
@@ -298,13 +298,13 @@ RetCode OptGraph::AddBridgeKernels() {
                     make_pair(preedge_id, unique_ptr<TensorImpl>(new TensorImpl(new_edge, TENSORTYPE_NORMAL))));
                 auto post_shape = tensor_impls_.find(postedge_id)->second.get();
 
-                impl_pair.first->second->GetShape().Reshape(post_shape->GetShape().GetDims(),
-                                                            post_shape->GetShape().GetRealDimCount());
+                impl_pair.first->second->GetShape()->Reshape(post_shape->GetShape()->GetDims(),
+                                                            post_shape->GetShape()->GetRealDimCount());
 
                 if (j < args_->output_formats.size()) {
-                    post_shape->GetShape().SetDataFormat(args_->output_formats[j]);
+                    post_shape->GetShape()->SetDataFormat(args_->output_formats[j]);
                 } else {
-                    post_shape->GetShape().SetDataFormat(DATAFORMAT_NDARRAY);
+                    post_shape->GetShape()->SetDataFormat(DATAFORMAT_NDARRAY);
                 }
 
                 bridge_kernel.get()->Init(options);
@@ -450,7 +450,7 @@ RetCode OptGraph::UpdateType() {
         for (uint32_t j = 0; j < node->GetOutputCount(); ++j) {
             auto edge = topo->GetEdgeById(node->GetOutput(j));
             if (edge->CalcConsumerCount() == 0) {
-                auto out_shape = &IOinfo.GetOutput<TensorImpl>(j)->GetShape();
+                auto out_shape = IOinfo.GetOutput<TensorImpl>(j)->GetShape();
                 if (out_shape->GetDataType() == DATATYPE_FLOAT16 || out_shape->GetDataType() == DATATYPE_INT8)
                     out_shape->SetDataType(DATATYPE_FLOAT32);
 
@@ -524,8 +524,8 @@ RetCode OptGraph::LoadConstants(CudaDevice* device) {
 
         auto preedge_id = node->GetInput(0);
         auto postedge_id = node->GetOutput(0);
-        auto preshape = tensor_impls_.find(preedge_id)->second->GetShape();
-        auto postshape = tensor_impls_.find(postedge_id)->second->GetShape();
+        const TensorShape& preshape = *tensor_impls_.find(preedge_id)->second->GetShape();
+        const TensorShape& postshape = *tensor_impls_.find(postedge_id)->second->GetShape();
 
         auto constant_ref = graph_data->constants.find(preedge_id);
         if (constant_ref != graph_data->constants.end() &&
@@ -549,7 +549,7 @@ RetCode OptGraph::LoadConstants(CudaDevice* device) {
             }
 
             info_->constants[preedge_id] = std::move(constant_info);
-            tensor_impls_.find(preedge_id)->second->GetShape() = postshape;
+            *tensor_impls_.find(preedge_id)->second->GetShape() = postshape;
             graph_quants[preedge_id] = graph_quants[postedge_id];
         }
     }

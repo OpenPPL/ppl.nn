@@ -23,9 +23,9 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeReshape(InputOutputInfo* info, const void*, const int64_t* shape_data) {
-    auto data = &info->GetInput<TensorImpl>(0)->GetShape();
-    auto shape = &info->GetInput<TensorImpl>(1)->GetShape();
-    auto reshaped = &info->GetOutput<TensorImpl>(0)->GetShape();
+    auto data = info->GetInput<TensorImpl>(0)->GetShape();
+    auto shape = info->GetInput<TensorImpl>(1)->GetShape();
+    auto reshaped = info->GetOutput<TensorImpl>(0)->GetShape();
 
     if (shape->GetDimCount() != 1) {
         return RC_INVALID_VALUE;

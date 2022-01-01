@@ -48,9 +48,9 @@ RetCode SplitToSequenceOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        auto in_shape = &info->GetInput<TensorImpl>(0)->GetShape();
+        auto in_shape = info->GetInput<TensorImpl>(0)->GetShape();
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
-            auto out_shape = &info->GetOutput<TensorImpl>(0)->GetShape();
+            auto out_shape = info->GetOutput<TensorImpl>(0)->GetShape();
             out_shape->Reshape(in_shape->GetDims(), in_shape->GetRealDimCount());
         }
         return RC_SUCCESS;

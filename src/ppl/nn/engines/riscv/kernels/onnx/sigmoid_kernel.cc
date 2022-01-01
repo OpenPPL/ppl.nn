@@ -33,12 +33,12 @@ ppl::common::RetCode SigmoidKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_DEBUG_TRACE("Output [Y]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(Y);
 
-    const auto data_type = X->GetShape().GetDataType();
+    const auto data_type = X->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        return ppl::kernel::riscv::sigmoid_fp32(&X->GetShape(), X->GetBufferPtr<float>(), Y->GetBufferPtr<float>());
+        return ppl::kernel::riscv::sigmoid_fp32(X->GetShape(), X->GetBufferPtr<float>(), Y->GetBufferPtr<float>());
     } else if (data_type == ppl::common::DATATYPE_FLOAT16) {
-        return ppl::kernel::riscv::sigmoid_fp16(&X->GetShape(), X->GetBufferPtr<__fp16>(), Y->GetBufferPtr<__fp16>());
+        return ppl::kernel::riscv::sigmoid_fp16(X->GetShape(), X->GetBufferPtr<__fp16>(), Y->GetBufferPtr<__fp16>());
     } else {
         LOG(ERROR) << "unsupported datatype: " << ppl::common::GetDataTypeStr(data_type) << ".";
     }

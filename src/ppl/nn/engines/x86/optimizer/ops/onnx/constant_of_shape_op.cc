@@ -36,7 +36,7 @@ RetCode ConstantOfShapeOp::Init(const OptKernelOptions& options) {
     };
 
     infer_type_func_ = [this](InputOutputInfo* info) -> void {
-        TensorShape* shape = &info->GetOutput<TensorImpl>(0)->GetShape();
+        TensorShape* shape = info->GetOutput<TensorImpl>(0)->GetShape();
         shape->SetDataType(param_->data_type);
     };
 

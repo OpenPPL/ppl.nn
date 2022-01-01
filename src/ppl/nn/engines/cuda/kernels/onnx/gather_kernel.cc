@@ -28,13 +28,13 @@ ppl::common::RetCode GatherKernel::DoExecute(KernelExecContext* ctx) {
 
     ppl::common::RetCode status = ppl::common::RC_SUCCESS;
     if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL &&
-        input->GetShape().GetDim(param_->axis) == 1 &&
-        input->GetShape().GetElementsIncludingPadding() == output->GetShape().GetElementsIncludingPadding()) {
+        input->GetShape()->GetDim(param_->axis) == 1 &&
+        input->GetShape()->GetElementsIncludingPadding() == output->GetShape()->GetElementsIncludingPadding()) {
         output->TransferBufferFrom(input);
     } else {
         status =
-            PPLCUDAGatherForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(), &indices->GetShape(),
-                                    indices->GetBufferPtr(), &output->GetShape(), output->GetBufferPtr(), param_->axis);
+            PPLCUDAGatherForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), indices->GetShape(),
+                                    indices->GetBufferPtr(), output->GetShape(), output->GetBufferPtr(), param_->axis);
     }
 
     return status;

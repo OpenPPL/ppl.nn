@@ -61,10 +61,10 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
         attr_param_.param.bias_term = 1;
     }
 
-    auto shape_in0 = options.tensors->find(node->GetInput(0))->second->GetShape();
-    auto shape_in1 = options.tensors->find(node->GetInput(1))->second->GetShape();
+    auto shape_in0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
+    auto shape_in1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
     auto shape_in2 = TensorShape();
-    auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
+    auto shape_out = *options.tensors->find(node->GetOutput(0))->second->GetShape();
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
 
     // illegal gemm input
@@ -108,9 +108,9 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
         return 0.0f;
     } else { // Give the default kernel
         if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
-            attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";    
+            attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";
         } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
-            attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_imma8816_nhwc_f1_b64x64_w64x32_k32_s16_buf1";    
+            attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_imma8816_nhwc_f1_b64x64_w64x32_k32_s16_buf1";
         } else {
             return ALGO_MAX_TIME;
         }
@@ -128,7 +128,7 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
     shape_in1.SetDim(0, (shape_in1.GetDim(0) + align_size - 1) / align_size * align_size);
     shape_in1.SetDim(1, (shape_in1.GetDim(1) + align_size - 1) / align_size * align_size);
     if (attr_param_.param.bias_term) {
-        shape_in2 = options.tensors->find(node->GetInput(2))->second->GetShape();
+        shape_in2 = *options.tensors->find(node->GetInput(2))->second->GetShape();
         shape_in2.SetDim(0, (shape_in2.GetDim(0) + align_size - 1) / align_size * align_size);
     }
 
@@ -196,9 +196,8 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
     auto weight_edge = topo->GetEdgeById(node->GetInput(1));
     auto weight_node = topo->GetNodeById(weight_edge->GetProducer());
 
-    auto shape_in0 = options.tensors->find(node->GetInput(0))->second->GetShape();
-    auto shape_in1 = options.tensors->find(node->GetInput(1))->second->GetShape();
-    auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
+    const TensorShape& shape_in0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
+    const TensorShape& shape_in1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
 
     // Add quant to conv inputs
@@ -246,7 +245,7 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
     quant_edge->AddConsumer(node->GetId());
 
     options.tensors->insert(make_pair(quant_edge_id, unique_ptr<TensorImpl>(new TensorImpl(quant_edge, TENSORTYPE_NORMAL))));
-    options.tensors->find(quant_edge_id)->second->GetShape() = quant_shape;
+    *options.tensors->find(quant_edge_id)->second->GetShape() = quant_shape;
     options.quants->resize(topo->GetMaxEdgeId());
     options.quants->at(quant_edge_id).format = quant_shape.GetDataFormat();
     options.quants->at(quant_edge_id).type = quant_shape.GetDataType();
@@ -262,8 +261,8 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
         options.info->constants.find(weight_node->GetInput(0)) == options.info->constants.end()) {
         auto preedge_id = weight_node->GetInput(0);
         auto postedge_id = node->GetInput(1);
-        auto preshape = options.tensors->find(preedge_id)->second->GetShape();
-        auto postshape = options.tensors->find(postedge_id)->second->GetShape();
+        const TensorShape& preshape = *options.tensors->find(preedge_id)->second->GetShape();
+        auto postshape = *options.tensors->find(postedge_id)->second->GetShape();
         auto newshape = postshape;
 
         if (!attr_param_.param.transB) {
@@ -327,7 +326,7 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
 
         reinterpret_cast<CudaGemmParam*>(options.param)->param.transB = 1;
         options.info->constants.emplace(preedge_id, std::move(weight_constat_info));
-        options.tensors->find(preedge_id)->second->GetShape() = postshape;
+        *options.tensors->find(preedge_id)->second->GetShape() = postshape;
         options.quants->at(preedge_id) = options.quants->at(postedge_id);
         options.quants->at(preedge_id).format = postshape.GetDataFormat();
         options.quants->at(preedge_id).type = postshape.GetDataType();
@@ -348,8 +347,8 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
         options.info->constants.find(bias_node->GetInput(0)) == options.info->constants.end()) {
         auto preedge_id = bias_node->GetInput(0);
         auto postedge_id = node->GetInput(2);
-        auto preshape = options.tensors->find(preedge_id)->second->GetShape();
-        auto postshape = options.tensors->find(postedge_id)->second->GetShape();
+        const TensorShape& preshape = *options.tensors->find(preedge_id)->second->GetShape();
+        const TensorShape& postshape = *options.tensors->find(postedge_id)->second->GetShape();
         auto newshape = postshape;
 
         newshape.SetDim(0, (postshape.GetDim(0) + align_size - 1) / align_size * align_size);
@@ -377,7 +376,7 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
         status = PPLCUDAGemmModifyBias(stream, shape_in0.GetDataType(), &newshape, bias_constat_info.GetBufferDesc().addr, &attr_param_.param);
 
         options.info->constants.emplace(preedge_id, std::move(bias_constat_info));
-        options.tensors->find(preedge_id)->second->GetShape() = postshape;
+        *options.tensors->find(preedge_id)->second->GetShape() = postshape;
         options.quants->at(preedge_id) = options.quants->at(postedge_id);
         options.quants->at(preedge_id).format = postshape.GetDataFormat();
         options.quants->at(preedge_id).type = postshape.GetDataType();
@@ -393,7 +392,7 @@ void GemmAlgorithm::ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std:
         if (edge_id == INVALID_EDGEID) {
             continue;
         }
-        auto shape = &tensors->find(edge_id)->second->GetShape();
+        auto shape = tensors->find(edge_id)->second->GetShape();
         if (shape->GetDimCount() > 1) {
             shape->SetDataFormat(input_format);
         } else {
@@ -403,7 +402,7 @@ void GemmAlgorithm::ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std:
 
     for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
         auto edge_id = node->GetOutput(i);
-        auto shape = &tensors->find(edge_id)->second->GetShape();
+        auto shape = tensors->find(edge_id)->second->GetShape();
         shape->SetDataFormat(output_format);
     }
     return;

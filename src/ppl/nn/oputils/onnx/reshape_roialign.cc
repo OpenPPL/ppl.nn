@@ -28,10 +28,10 @@ RetCode ReshapeROIAlign(InputOutputInfo* info, const void* arg) {
     }
 
     auto param = (const ROIAlignParam*)arg;
-    auto x = &info->GetInput<TensorImpl>(0)->GetShape();
-    auto rois = &info->GetInput<TensorImpl>(1)->GetShape();
-    auto batch_indices = &info->GetInput<TensorImpl>(2)->GetShape();
-    auto output = &info->GetOutput<TensorImpl>(0)->GetShape();
+    auto x = info->GetInput<TensorImpl>(0)->GetShape();
+    auto rois = info->GetInput<TensorImpl>(1)->GetShape();
+    auto batch_indices = info->GetInput<TensorImpl>(2)->GetShape();
+    auto output = info->GetOutput<TensorImpl>(0)->GetShape();
 
     if (x->GetDimCount() != 4) {
         return RC_INVALID_VALUE;

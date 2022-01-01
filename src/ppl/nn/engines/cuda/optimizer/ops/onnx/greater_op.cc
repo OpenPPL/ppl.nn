@@ -28,9 +28,9 @@ namespace ppl { namespace nn { namespace cuda {
 
 RetCode GreaterOp::Init(const OptKernelOptions& options) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
-        auto& in0_shape = info->GetInput<TensorImpl>(0)->GetShape();
-        auto& in1_shape = info->GetInput<TensorImpl>(1)->GetShape();
-        auto& out_shape = info->GetOutput<TensorImpl>(0)->GetShape();
+        auto& in0_shape = *info->GetInput<TensorImpl>(0)->GetShape();
+        auto& in1_shape = *info->GetInput<TensorImpl>(1)->GetShape();
+        auto& out_shape = *info->GetOutput<TensorImpl>(0)->GetShape();
         out_shape.SetDataType(DATATYPE_BOOL);
         if (type == DATATYPE_INT8) {
             auto in0_edge_id = info->GetInput<TensorImpl>(0)->GetEdge()->GetId();

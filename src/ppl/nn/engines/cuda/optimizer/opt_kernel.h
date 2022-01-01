@@ -161,17 +161,17 @@ protected:
     }
 
     static ppl::common::RetCode GenericInferDims(InputOutputInfo* info) {
-        auto& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
+        const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
-            info->GetOutput<TensorImpl>(i)->GetShape().Reshape(in_shape0.GetDims(), in_shape0.GetRealDimCount());
+            info->GetOutput<TensorImpl>(i)->GetShape()->Reshape(in_shape0.GetDims(), in_shape0.GetRealDimCount());
         }
         return ppl::common::RC_SUCCESS;
     }
 
     static ppl::common::RetCode GenericUnsafeInferDims(InputOutputInfo* info, std::set<uint32_t>* mask) {
-        auto& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
+        const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
-            info->GetOutput<TensorImpl>(i)->GetShape().Reshape(in_shape0.GetDims(), in_shape0.GetRealDimCount());
+            info->GetOutput<TensorImpl>(i)->GetShape()->Reshape(in_shape0.GetDims(), in_shape0.GetRealDimCount());
         }
         return ppl::common::RC_SUCCESS;
     }
@@ -181,7 +181,7 @@ protected:
             auto edge_id = info->GetInput<TensorImpl>(i)->GetEdge()->GetId();
             auto& in_quant = quant->at(edge_id);
             if (in_quant.type != ppl::common::DATATYPE_UNKNOWN) {
-                auto& shape = info->GetInput<TensorImpl>(i)->GetShape();
+                TensorShape& shape = *info->GetInput<TensorImpl>(i)->GetShape();
                 shape.SetDataType(in_quant.type);
             }
         }
@@ -189,7 +189,7 @@ protected:
             auto edge_id = info->GetOutput<TensorImpl>(i)->GetEdge()->GetId();
             auto& out_quant = quant->at(edge_id);
             if (out_quant.type != ppl::common::DATATYPE_UNKNOWN) {
-                auto& shape = info->GetOutput<TensorImpl>(i)->GetShape();
+                TensorShape& shape = *info->GetOutput<TensorImpl>(i)->GetShape();
                 shape.SetDataType(out_quant.type);
             }
         }
@@ -206,14 +206,14 @@ protected:
             auto in_edge_id = info->GetInput<TensorImpl>(i)->GetEdge()->GetId();
             auto& in_quant = quant->at(in_edge_id);
             in_quant = temp_quant;
-            auto& in_shape = info->GetInput<TensorImpl>(i)->GetShape();
+            TensorShape& in_shape = *info->GetInput<TensorImpl>(i)->GetShape();
             in_shape.SetDataType(in_quant.type);
         }
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
             auto out_edge_id = info->GetOutput<TensorImpl>(i)->GetEdge()->GetId();
             auto& out_quant = quant->at(out_edge_id);
             out_quant = temp_quant;
-            auto& out_shape = info->GetOutput<TensorImpl>(i)->GetShape();
+            TensorShape& out_shape = *info->GetOutput<TensorImpl>(i)->GetShape();
             out_shape.SetDataType(out_quant.type);
         }
         return ppl::common::RC_SUCCESS;
@@ -224,21 +224,21 @@ protected:
             auto impl = info->GetInput<TensorImpl>(i);
             if (impl == nullptr)
                 continue;
-            auto in_shape = &impl->GetShape();
+            auto in_shape = impl->GetShape();
             in_shape->SetDataType(type);
         }
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
             auto impl = info->GetOutput<TensorImpl>(i);
             if (impl == nullptr)
                 continue;
-            auto out_shape = &impl->GetShape();
+            auto out_shape = impl->GetShape();
             out_shape->SetDataType(type);
         }
         return ppl::common::RC_SUCCESS;
     }
 
     static ppl::common::RetCode InferInheritedType(InputOutputInfo* info) {
-        auto& in_shape = info->GetInput<TensorImpl>(0)->GetShape();
+        TensorShape& in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
         if (in_shape.GetDataType() == ppl::common::DATATYPE_UNKNOWN) {
             LOG(DEBUG) << "Input edge has unknown type.";
         }
@@ -246,7 +246,7 @@ protected:
             in_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
         }
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
-            auto& out_shape = info->GetOutput<TensorImpl>(i)->GetShape();
+            TensorShape& out_shape = *info->GetOutput<TensorImpl>(i)->GetShape();
             out_shape.SetDataType(in_shape.GetDataType());
         }
         return ppl::common::RC_SUCCESS;
@@ -258,7 +258,7 @@ protected:
             if (i < 64 && mask & (1 << i)) {
                 continue;
             }
-            auto in_shape = &info->GetInput<TensorImpl>(i)->GetShape();
+            auto in_shape = info->GetInput<TensorImpl>(i)->GetShape();
             if (in_shape->GetDataType() > highest) {
                 highest = in_shape->GetDataType();
             }
@@ -267,11 +267,11 @@ protected:
             highest = ppl::common::DATATYPE_FLOAT32;
         }
         for (uint32_t i = 0; i < info->GetInputCount(); ++i) {
-            auto in_shape = &info->GetInput<TensorImpl>(i)->GetShape();
+            auto in_shape = info->GetInput<TensorImpl>(i)->GetShape();
             in_shape->SetDataType(highest);
         }
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
-            auto out_shape = &info->GetOutput<TensorImpl>(i)->GetShape();
+            auto out_shape = info->GetOutput<TensorImpl>(i)->GetShape();
             out_shape->SetDataType(highest);
         }
         if (highest == ppl::common::DATATYPE_UNKNOWN) {
@@ -282,9 +282,9 @@ protected:
 
 private:
     void GenericInferTypeAndFormat(InputOutputInfo* info) const {
-        auto pre_shape = &info->GetInput<TensorImpl>(0)->GetShape();
+        auto pre_shape = info->GetInput<TensorImpl>(0)->GetShape();
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
-            auto& tensor_shape = info->GetOutput<TensorImpl>(i)->GetShape();
+            TensorShape& tensor_shape = *info->GetOutput<TensorImpl>(i)->GetShape();
             auto edge_id = info->GetOutput<TensorImpl>(i)->GetEdge()->GetId();
             auto data_type = (*common_param_.cuda_tensor_info)[edge_id].type;
             auto data_foramt = (*common_param_.cuda_tensor_info)[edge_id].format;

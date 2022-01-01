@@ -39,40 +39,40 @@ ppl::common::RetCode GatherKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_DEBUG_TRACE("Output [y]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(y);
 
-    const uint32_t q = indices->GetShape().GetRealDimCount();
+    const uint32_t q = indices->GetShape()->GetRealDimCount();
 
     int64_t num_indices = 1;
-    int64_t indices_dim = indices->GetShape().GetDim(q - 1);
+    int64_t indices_dim = indices->GetShape()->GetDim(q - 1);
     int64_t outter_dim = 1;
     int64_t inner_dim = 1;
-    int64_t n = indices->GetShape().GetElementsExcludingPadding();
+    int64_t n = indices->GetShape()->GetElementsExcludingPadding();
     std::vector<int64_t> real_indices;
     real_indices.resize(n);
     if (q != 0) {
         for (uint32_t i = 0; i < q - 1; ++i) {
-            num_indices *= indices->GetShape().GetDim(i);
+            num_indices *= indices->GetShape()->GetDim(i);
         }
-        for (uint32_t i = 0; i < indices->GetShape().GetElementsExcludingPadding(); ++i) {
+        for (uint32_t i = 0; i < indices->GetShape()->GetElementsExcludingPadding(); ++i) {
             real_indices[i] = indices->GetBufferPtr<int64_t>()[i] >= 0 ? indices->GetBufferPtr<int64_t>()[i]
                                                                        : indices->GetBufferPtr<int64_t>()[i] + q;
         }
     }
-    if (indices->GetShape().IsScalar()) {
+    if (indices->GetShape()->IsScalar()) {
         real_indices[0] = indices->GetBufferPtr<int64_t>()[0] >= 0
             ? indices->GetBufferPtr<int64_t>()[0]
-            : indices->GetBufferPtr<int64_t>()[0] + x->GetShape().GetDim(param_->axis);
+            : indices->GetBufferPtr<int64_t>()[0] + x->GetShape()->GetDim(param_->axis);
     }
     for (int32_t i = 0; i < param_->axis; ++i) {
-        outter_dim *= x->GetShape().GetDim(i);
+        outter_dim *= x->GetShape()->GetDim(i);
     }
-    int32_t gather_dim = x->GetShape().GetDim(param_->axis);
+    int32_t gather_dim = x->GetShape()->GetDim(param_->axis);
 
-    for (uint32_t i = param_->axis + 1; i < x->GetShape().GetDimCount(); ++i) {
-        inner_dim *= x->GetShape().GetDim(i);
+    for (uint32_t i = param_->axis + 1; i < x->GetShape()->GetDimCount(); ++i) {
+        inner_dim *= x->GetShape()->GetDim(i);
     }
 
-    const ppl::common::datatype_t data_type = y->GetShape().GetDataType();
-    const auto data_format = x->GetShape().GetDataFormat();
+    const ppl::common::datatype_t data_type = y->GetShape()->GetDataType();
+    const auto data_format = x->GetShape()->GetDataFormat();
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
             return kernel::riscv::gather_ndarray_fp32(x->GetBufferPtr<float>(), y->GetBufferPtr<float>(),

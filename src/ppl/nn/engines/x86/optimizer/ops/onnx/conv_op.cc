@@ -116,7 +116,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
         conv2d_param.fuse_flag = 0;
 
         conv2d_param_->algo_info = ppl::kernel::x86::conv2d_algo_selector::select_algo(
-            info.GetInput<TensorImpl>(0)->GetShape().GetDataFormat(), conv2d_param_->param, options.device->GetISA());
+            info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat(), conv2d_param_->param, options.device->GetISA());
 
         if (conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_fp32_algo::UNKNOWN) {
             LOG(INFO) << "Conv select algorithm failed, use fallback kernel";
@@ -131,9 +131,9 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
                     conv2d_param_->param, conv2d_param_->algo_info, options.device->GetAllocator());
                 conv2d_param_->infer_fallback_func = [](const TensorImpl* X, const TensorImpl* Y,
                                                         const ppl::kernel::x86::conv2d_fp32_param* param) -> bool {
-                    const int64_t dst_h = Y->GetShape().GetDim(2);
-                    const int64_t dst_w = Y->GetShape().GetDim(3);
-                    const int64_t batch = X->GetShape().GetDim(0);
+                    const int64_t dst_h = Y->GetShape()->GetDim(2);
+                    const int64_t dst_w = Y->GetShape()->GetDim(3);
+                    const int64_t batch = X->GetShape()->GetDim(0);
                     const int64_t num_tiles = batch * ((dst_h + 3) / 4) * ((dst_w + 3) / 4);
 
                     const int64_t num_threads = ppl::kernel::x86::get_omp_max_threads();

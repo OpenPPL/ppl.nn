@@ -33,7 +33,7 @@ ppl::common::RetCode CastKernel::DoExecute(KernelExecContext* ctx) {
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(output);
     PPLNN_RISCV_DEBUG_TRACE("to: %d\n", param_->to);
 
-    return kernel::riscv::cast(&input->GetShape(), &output->GetShape(), input->GetBufferPtr(), output->GetBufferPtr());
+    return kernel::riscv::cast(input->GetShape(), output->GetShape(), input->GetBufferPtr(), output->GetBufferPtr());
 }
 
 }}} // namespace ppl::nn::riscv

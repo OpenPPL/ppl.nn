@@ -36,20 +36,20 @@ ppl::common::RetCode FlattenKernel::DoExecute(KernelExecContext* ctx) {
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(output);
     PPLNN_RISCV_DEBUG_TRACE("axis: %d\n", param_->axis);
 
-    auto input_data_format = input->GetShape().GetDataFormat();
-    const int64_t size_2D = input->GetShape().GetDim(2) * input->GetShape().GetDim(3);
+    auto input_data_format = input->GetShape()->GetDataFormat();
+    const int64_t size_2D = input->GetShape()->GetDim(2) * input->GetShape()->GetDim(3);
 
     if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL &&
         ppl::common::DATAFORMAT_NDARRAY == input_data_format) {
         output->TransferBufferFrom(input);
     } else if (size_2D != 1 && ppl::common::DATAFORMAT_N8CX == input_data_format) {
         return ppl::kernel::riscv::flatten_n8cx_fp16(input->GetBufferPtr<__fp16>(), output->GetBufferPtr<__fp16>(),
-                                                     &input->GetShape(), &output->GetShape());
+                                                     input->GetShape(), output->GetShape());
     } else if (size_2D != 1 && ppl::common::DATAFORMAT_N4CX == input_data_format) {
         return ppl::kernel::riscv::flatten_n4cx_fp32(input->GetBufferPtr<float>(), output->GetBufferPtr<float>(),
-                                                     &input->GetShape(), &output->GetShape());
+                                                     input->GetShape(), output->GetShape());
     } else {
-        return ppl::kernel::riscv::memory_copy(input->GetBufferPtr(), input->GetShape().GetBytesIncludingPadding(),
+        return ppl::kernel::riscv::memory_copy(input->GetBufferPtr(), input->GetShape()->GetBytesIncludingPadding(),
                                                output->GetBufferPtr());
     }
 

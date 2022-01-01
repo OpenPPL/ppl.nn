@@ -37,8 +37,8 @@ private:
         if (relu_fuse_op.find(nextnode->GetType().name) != relu_fuse_op.end()) {
             if (nextnode->GetType().name == "PRelu") { // extra check for PRelu
                 // slope must be an 1-d array or a scalar
-                auto shape1 = options.tensors->find(nextnode->GetInput(0))->second->GetShape();
-                auto shape2 = options.tensors->find(nextnode->GetInput(1))->second->GetShape();
+                const TensorShape& shape1 = *options.tensors->find(nextnode->GetInput(0))->second->GetShape();
+                const TensorShape& shape2 = *options.tensors->find(nextnode->GetInput(1))->second->GetShape();
                 if (shape2.IsScalar() || (shape2.GetDimCount() == 1 && shape1.GetDim(1) == shape2.GetDim(0))) {
                     return true;
                 }
@@ -53,8 +53,8 @@ private:
         std::set<std::string> elementwise_fuse_op{"Add"};
         if (elementwise_fuse_op.find(nextnode->GetType().name) != elementwise_fuse_op.end()) {
             // two inputs must have same dims size for conv-add fusion
-            auto shape1 = options.tensors->find(nextnode->GetInput(0))->second->GetShape();
-            auto shape2 = options.tensors->find(nextnode->GetInput(1))->second->GetShape();
+            const TensorShape& shape1 = *options.tensors->find(nextnode->GetInput(0))->second->GetShape();
+            const TensorShape& shape2 = *options.tensors->find(nextnode->GetInput(1))->second->GetShape();
             if (shape1.GetDimCount() != shape2.GetDimCount()) {
                 return false;
             }

@@ -39,24 +39,24 @@ ppl::common::RetCode DivKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_DEBUG_TRACE("Output [C]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(C);
 
-    const common::datatype_t input_data_type_0 = ctx->GetInput<TensorImpl>(0)->GetShape().GetDataType();
-    const common::datatype_t input_data_type_1 = ctx->GetInput<TensorImpl>(1)->GetShape().GetDataType();
-    const common::datatype_t output_data_type = ctx->GetOutput<TensorImpl>(0)->GetShape().GetDataType();
+    const common::datatype_t input_data_type_0 = ctx->GetInput<TensorImpl>(0)->GetShape()->GetDataType();
+    const common::datatype_t input_data_type_1 = ctx->GetInput<TensorImpl>(1)->GetShape()->GetDataType();
+    const common::datatype_t output_data_type = ctx->GetOutput<TensorImpl>(0)->GetShape()->GetDataType();
 
     if (input_data_type_0 != input_data_type_1 || input_data_type_0 != output_data_type) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
     if (output_data_type == common::DATATYPE_FLOAT16) {
-        return kernel::riscv::div_fp16(&A->GetShape(), &B->GetShape(), &C->GetShape(), false,
+        return kernel::riscv::div_fp16(A->GetShape(), B->GetShape(), C->GetShape(), false,
                                        A->GetBufferPtr<const __fp16>(), B->GetBufferPtr<const __fp16>(),
                                        C->GetBufferPtr<__fp16>());
     } else if (output_data_type == common::DATATYPE_FLOAT32) {
-        return kernel::riscv::div_fp32(&A->GetShape(), &B->GetShape(), &C->GetShape(), false,
+        return kernel::riscv::div_fp32(A->GetShape(), B->GetShape(), C->GetShape(), false,
                                        A->GetBufferPtr<const float>(), B->GetBufferPtr<const float>(),
                                        C->GetBufferPtr<float>());
     } else if (output_data_type == common::DATATYPE_INT64) {
-        return kernel::riscv::div_int64(&A->GetShape(), &B->GetShape(), &C->GetShape(), false,
+        return kernel::riscv::div_int64(A->GetShape(), B->GetShape(), C->GetShape(), false,
                                         A->GetBufferPtr<const int64_t>(), B->GetBufferPtr<const int64_t>(),
                                         C->GetBufferPtr<int64_t>());
     } else {

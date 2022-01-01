@@ -190,8 +190,8 @@ ppl::common::RetCode PostDepthwiseConv2dKernel::DoExecute(KernelExecContext* ctx
         executor_->depthwise_conv2d_executor()->conv_param()->fuse_flag);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    executor_->set_src_shape(&X->GetShape());
-    executor_->set_dst_shape(&Y->GetShape());
+    executor_->set_src_shape(X->GetShape());
+    executor_->set_dst_shape(Y->GetShape());
 
     ppl::common::RetCode rc;
     rc = executor_->prepare();
@@ -201,9 +201,9 @@ ppl::common::RetCode PostDepthwiseConv2dKernel::DoExecute(KernelExecContext* ctx
     }
 
 #ifdef DUMP_CONV
-    fprintf(stderr, CASE_STRING_FMT() "\n", executor_->conv2d_executor()->conv_param()->group, X->GetShape().GetDim(0),
-            executor_->conv2d_executor()->conv_param()->channels, X->GetShape().GetDim(2), X->GetShape().GetDim(3),
-            executor_->conv2d_executor()->conv_param()->num_output, Y->GetShape().GetDim(2), Y->GetShape().GetDim(3),
+    fprintf(stderr, CASE_STRING_FMT() "\n", executor_->conv2d_executor()->conv_param()->group, X->GetShape()->GetDim(0),
+            executor_->conv2d_executor()->conv_param()->channels, X->GetShape()->GetDim(2), X->GetShape()->GetDim(3),
+            executor_->conv2d_executor()->conv_param()->num_output, Y->GetShape()->GetDim(2), Y->GetShape()->GetDim(3),
             executor_->conv2d_executor()->conv_param()->kernel_h, executor_->conv2d_executor()->conv_param()->kernel_w,
             executor_->conv2d_executor()->conv_param()->stride_h, executor_->conv2d_executor()->conv_param()->stride_w,
             executor_->conv2d_executor()->conv_param()->pad_h, executor_->conv2d_executor()->conv_param()->pad_w,

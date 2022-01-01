@@ -37,7 +37,7 @@ ppl::common::RetCode CastKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
 
-    return kernel::x86::cast(&input->GetShape(), &output->GetShape(), input->GetBufferPtr(), output->GetBufferPtr());
+    return kernel::x86::cast(input->GetShape(), output->GetShape(), input->GetBufferPtr(), output->GetBufferPtr());
 }
 
 }}} // namespace ppl::nn::x86

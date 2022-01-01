@@ -34,17 +34,17 @@ ppl::common::RetCode SigmoidKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
 
-    const auto data_type = X->GetShape().GetDataType();
+    const auto data_type = X->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
         if (MayUseISA(ppl::common::ISA_X86_FMA)) {
-            return ppl::kernel::x86::sigmoid_fp32_fma(&X->GetShape(), X->GetBufferPtr<float>(),
+            return ppl::kernel::x86::sigmoid_fp32_fma(X->GetShape(), X->GetBufferPtr<float>(),
                                                       Y->GetBufferPtr<float>());
         } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-            return ppl::kernel::x86::sigmoid_fp32_sse(&X->GetShape(), X->GetBufferPtr<float>(),
+            return ppl::kernel::x86::sigmoid_fp32_sse(X->GetShape(), X->GetBufferPtr<float>(),
                                                       Y->GetBufferPtr<float>());
         } else {
-            return ppl::kernel::x86::sigmoid_fp32(&X->GetShape(), X->GetBufferPtr<float>(), Y->GetBufferPtr<float>());
+            return ppl::kernel::x86::sigmoid_fp32(X->GetShape(), X->GetBufferPtr<float>(), Y->GetBufferPtr<float>());
         }
     } else {
         LOG(ERROR) << "unsupported datatype: " << ppl::common::GetDataTypeStr(data_type) << ".";

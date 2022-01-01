@@ -47,10 +47,10 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
     this->attr_param_ = *(reinterpret_cast<CudaConvTransposeParam*>(options.param));
     options.compile_set->emplace(node->GetId());
 
-    auto shape_in0 = options.tensors->find(node->GetInput(0))->second->GetShape();
-    auto shape_in1 = options.tensors->find(node->GetInput(1))->second->GetShape();
+    auto shape_in0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
+    auto shape_in1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
     auto shape_in2 = TensorShape();
-    auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
+    auto shape_out = *options.tensors->find(node->GetOutput(0))->second->GetShape();
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
 
     conv_param_t temp_conv_param;
@@ -98,7 +98,7 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
     shape_in1.SetDim(0, (shape_in1.GetDim(0) + align_size - 1) / align_size * align_size);
     shape_in1.SetDim(1, (shape_in1.GetDim(1) + align_size - 1) / align_size * align_size);
     if (temp_conv_param.has_bias) {
-        shape_in2 = options.tensors->find(node->GetInput(2))->second->GetShape();
+        shape_in2 = *options.tensors->find(node->GetInput(2))->second->GetShape();
         shape_in2.SetDim(0, (shape_in2.GetDim(0) + align_size - 1) / align_size * align_size);
     }
 
@@ -149,9 +149,8 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
     auto weight_edge = topo->GetEdgeById(node->GetInput(1));
     auto weight_node = topo->GetNodeById(weight_edge->GetProducer());
 
-    auto shape_in0 = options.tensors->find(node->GetInput(0))->second->GetShape();
-    auto shape_in1 = options.tensors->find(node->GetInput(1))->second->GetShape();
-    auto shape_out = options.tensors->find(node->GetOutput(0))->second->GetShape();
+    const TensorShape& shape_in0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
+    const TensorShape& shape_in1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
 
     RetCode status;
@@ -161,8 +160,8 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
         options.info->constants.find(weight_node->GetInput(0)) == options.info->constants.end()) {
         auto preedge_id = weight_node->GetInput(0);
         auto postedge_id = node->GetInput(1);
-        auto preshape = options.tensors->find(preedge_id)->second->GetShape();
-        auto postshape = options.tensors->find(postedge_id)->second->GetShape();
+        const TensorShape& preshape = *options.tensors->find(preedge_id)->second->GetShape();
+        const TensorShape& postshape = *options.tensors->find(postedge_id)->second->GetShape();
         auto newshape = postshape;
         newshape.SetDim(0, (newshape.GetDim(0) + align_size - 1) / align_size * align_size);
 
@@ -189,11 +188,11 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
             return status;
         }
 
-        PPLCUDAConvTransposeCvt(stream, filter_input_buffer.addr, filter_temp_buffer.addr, weight_constat_info.GetBufferDesc().addr, 
+        PPLCUDAConvTransposeCvt(stream, filter_input_buffer.addr, filter_temp_buffer.addr, weight_constat_info.GetBufferDesc().addr,
                                 &shape_in1, &attr_param_.param);
 
         options.info->constants.emplace(preedge_id, std::move(weight_constat_info));
-        options.tensors->find(preedge_id)->second->GetShape() = postshape;
+        *options.tensors->find(preedge_id)->second->GetShape() = postshape;
         options.quants->at(preedge_id).format = postshape.GetDataFormat();
         options.quants->at(preedge_id).type = postshape.GetDataType();
     }
@@ -210,7 +209,7 @@ void ConvTransposeAlgorithm::ReshapeOnEdges(const ir::Node* node,
         if (edge_id == INVALID_EDGEID) {
             continue;
         }
-        auto shape = &tensors->find(edge_id)->second->GetShape();
+        auto shape = tensors->find(edge_id)->second->GetShape();
         if (shape->GetDimCount() > 1) {
             shape->SetDataFormat(input_format);
         } else {
@@ -220,7 +219,7 @@ void ConvTransposeAlgorithm::ReshapeOnEdges(const ir::Node* node,
 
     for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
         auto edge_id = node->GetOutput(i);
-        auto shape = &tensors->find(edge_id)->second->GetShape();
+        auto shape = tensors->find(edge_id)->second->GetShape();
         shape->SetDataFormat(output_format);
     }
     return;

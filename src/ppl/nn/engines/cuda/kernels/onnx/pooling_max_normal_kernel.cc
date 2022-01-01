@@ -31,8 +31,8 @@ ppl::common::RetCode PoolingMaxNormalKernel::DoExecute(KernelExecContext* ctx) {
     auto output_id = output->GetEdge()->GetId();
     auto output_quant = GetCommonParam()->cuda_tensor_info->at(output_id);
     if (param_->global_pooling) {
-        status = PPLCUDAGlobalMaxPoolingForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(),
-                                                   &output->GetShape(), output->GetBufferPtr());
+        status = PPLCUDAGlobalMaxPoolingForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(),
+                                                   output->GetShape(), output->GetBufferPtr());
     } else {
         int32_t kernel_h = param_->kernel_shape[0];
         int32_t kernel_w = param_->kernel_shape[1];
@@ -49,13 +49,13 @@ ppl::common::RetCode PoolingMaxNormalKernel::DoExecute(KernelExecContext* ctx) {
         }
 
         if (ctx->GetOutputCount() == 1) {
-            status = PPLCUDAMaxPoolingForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(),
-                                                 &output->GetShape(), output->GetBufferPtr(), kernel_h, kernel_w,
+            status = PPLCUDAMaxPoolingForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(),
+                                                 output->GetShape(), output->GetBufferPtr(), kernel_h, kernel_w,
                                                  stride_h, stride_w, pad_h, pad_w, input_quant.scale[0], output_quant.scale[0]);
         } else if (ctx->GetOutputCount() == 2) {
             auto indices = ctx->GetOutput<TensorImpl>(1);
-            status = PPLCUDAMaxPoolingForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(),
-                                                 &output->GetShape(), output->GetBufferPtr(), &indices->GetShape(),
+            status = PPLCUDAMaxPoolingForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(),
+                                                 output->GetShape(), output->GetBufferPtr(), indices->GetShape(),
                                                  indices->GetBufferPtr<int64_t>(), kernel_h, kernel_w, stride_h,
                                                  stride_w, pad_h, pad_w, input_quant.scale[0], output_quant.scale[0]);
         }

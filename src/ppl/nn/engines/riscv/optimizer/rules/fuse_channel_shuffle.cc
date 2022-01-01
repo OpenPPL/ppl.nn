@@ -148,8 +148,8 @@ bool FuseChannelShuffle(const OptKernelOptions& options) {
             }
 
             // reshape size check
-            auto& reshape1_output_shape = tensors[reshape1_output_edge_id]->GetShape();
-            auto& reshape2_output_shape = tensors[reshape2_output_edge_id]->GetShape();
+            auto& reshape1_output_shape = *tensors[reshape1_output_edge_id]->GetShape();
+            auto& reshape2_output_shape = *tensors[reshape2_output_edge_id]->GetShape();
 
             if (reshape1_output_shape.IsEmpty() ||
                 reshape2_output_shape.IsEmpty()) { // input shape has not been infered
@@ -205,7 +205,7 @@ bool FuseChannelShuffle(const OptKernelOptions& options) {
                 if (concat_param->axis == 1) {
                     int32_t sum_channels = 0;
                     for (uint32_t i = 0; i < reshape1_prev_node->GetInputCount(); i++) {
-                        auto input_shape = tensors[reshape1_prev_node->GetInput(i)]->GetShape();
+                        const TensorShape& input_shape = *tensors[reshape1_prev_node->GetInput(i)]->GetShape();
                         if (!input_shape.IsEmpty()) {
                             sum_channels += input_shape.GetDim(1);
                         }
@@ -233,7 +233,7 @@ bool FuseChannelShuffle(const OptKernelOptions& options) {
                     if (split_param->axis == 1) {
                         int32_t sum_channels = 0;
                         for (uint32_t i = 0; i < reshape2_next_node->GetOutputCount(); i++) {
-                            auto output_shape = tensors[reshape2_next_node->GetOutput(i)]->GetShape();
+                            const TensorShape& output_shape = *tensors[reshape2_next_node->GetOutput(i)]->GetShape();
                             if (!output_shape.IsEmpty() || output_shape.GetDim(1) != channels_per_group) {
                                 sum_channels += output_shape.GetDim(1);
                             }

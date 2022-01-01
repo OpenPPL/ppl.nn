@@ -36,7 +36,7 @@ RetCode MMCVGridSampleOp::Init(const OptKernelOptions& options) {
 
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         for (uint32_t i = 0; i < info->GetInputCount(); ++i) {
-            auto in_shape = &info->GetInput<TensorImpl>(i)->GetShape();
+            auto in_shape = info->GetInput<TensorImpl>(i)->GetShape();
             if (in_shape->GetDataType() == DATATYPE_UNKNOWN)
                 return RC_UNSUPPORTED;
             if (in_shape->GetDataType() == DATATYPE_FLOAT16)
@@ -44,7 +44,7 @@ RetCode MMCVGridSampleOp::Init(const OptKernelOptions& options) {
             in_shape->SetDataFormat(DATAFORMAT_NDARRAY);
         }
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
-            auto out_shape = &info->GetOutput<TensorImpl>(i)->GetShape();
+            auto out_shape = info->GetOutput<TensorImpl>(i)->GetShape();
             out_shape->SetDataType(DATATYPE_FLOAT32);
             out_shape->SetDataFormat(DATAFORMAT_NDARRAY);
         }

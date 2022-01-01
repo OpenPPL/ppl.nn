@@ -59,7 +59,7 @@ bool FuseArithmeticReLU(const OptKernelOptions &options) {
             auto arithmetic_output_edge_shape = tensors[arithmetic_output_edge->GetId()]->GetShape();
 
             // Only Support FP32
-            if (arithmetic_output_edge_shape.GetDataType() != ppl::common::DATATYPE_FLOAT32) {
+            if (arithmetic_output_edge_shape->GetDataType() != ppl::common::DATATYPE_FLOAT32) {
                 continue;
             }
 
@@ -110,4 +110,3 @@ bool FuseArithmeticReLU(const OptKernelOptions &options) {
 }
 
 }}} // namespace ppl::nn::x86
-

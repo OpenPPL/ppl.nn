@@ -21,7 +21,7 @@
 namespace ppl { namespace nn { namespace x86 {
 
 bool ResizeKernel::CanDoExecute(const KernelExecContext& ctx) const {
-    auto& X_shape = ctx.GetInput<TensorImpl>(0)->GetShape();
+    auto& X_shape = *ctx.GetInput<TensorImpl>(0)->GetShape();
     if (X_shape.GetBytesIncludingPadding() == 0) {
         return false;
     }
@@ -29,8 +29,8 @@ bool ResizeKernel::CanDoExecute(const KernelExecContext& ctx) const {
     auto scales = ctx.GetInputCount() > 2 ? ctx.GetInput<TensorImpl>(2) : nullptr;
     auto sizes = ctx.GetInputCount() > 3 ? ctx.GetInput<TensorImpl>(3) : nullptr;
 
-    auto has_size = sizes && sizes->GetShape().GetDimCount() == 1 && sizes->GetShape().GetDim(0) == X_shape.GetDimCount();
-    auto has_scales = scales && scales->GetShape().GetDimCount() == 1 && scales->GetShape().GetDim(0) == X_shape.GetDimCount();
+    auto has_size = sizes && sizes->GetShape()->GetDimCount() == 1 && sizes->GetShape()->GetDim(0) == X_shape.GetDimCount();
+    auto has_scales = scales && scales->GetShape()->GetDimCount() == 1 && scales->GetShape()->GetDim(0) == X_shape.GetDimCount();
 
     if (has_scales && has_size) {
         return false;
@@ -78,10 +78,10 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
 
-    float scale_h = (float)Y->GetShape().GetDim(2) / X->GetShape().GetDim(2);
-    float scale_w = (float)Y->GetShape().GetDim(3) / X->GetShape().GetDim(3);
+    float scale_h = (float)Y->GetShape()->GetDim(2) / X->GetShape()->GetDim(2);
+    float scale_w = (float)Y->GetShape()->GetDim(3) / X->GetShape()->GetDim(3);
 
-    auto has_scales = scales && scales->GetShape().GetDimCount() == 1 && scales->GetShape().GetDim(0) == X->GetShape().GetDimCount();
+    auto has_scales = scales && scales->GetShape()->GetDimCount() == 1 && scales->GetShape()->GetDim(0) == X->GetShape()->GetDimCount();
 
     if (has_scales) {
         const float* scales_data = scales->GetBufferPtr<float>();
@@ -89,65 +89,65 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
         scale_w = scales_data[3];
     }
 
-    const auto data_type = X->GetShape().GetDataType();
+    const auto data_type = X->GetShape()->GetDataType();
     if (data_type != ppl::common::DATATYPE_FLOAT32) {
         LOG(ERROR) << "only support fp32 now.";
         return ppl::common::RC_UNSUPPORTED;
     }
 
     if (param_->coord_trans_mode == param_->RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL &&
-        param_->mode == param_->RESIZE_MODE_CUBIC && X->GetShape().GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
-        return kernel::x86::reisze2d_ndarray_pytorch_cubic_floor_fp32(&X->GetShape(), &Y->GetShape(),
+        param_->mode == param_->RESIZE_MODE_CUBIC && X->GetShape()->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
+        return kernel::x86::reisze2d_ndarray_pytorch_cubic_floor_fp32(X->GetShape(), Y->GetShape(),
                                                                       X->GetBufferPtr<float>(), scale_h, scale_w,
                                                                       param_->cubic_coeff_a, Y->GetBufferPtr<float>());
     }
     if (param_->coord_trans_mode == param_->RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL &&
         param_->mode == param_->RESIZE_MODE_LINEAR) {
-        if (X->GetShape().GetDataFormat() == ppl::common::DATAFORMAT_N16CX) {
+        if (X->GetShape()->GetDataFormat() == ppl::common::DATAFORMAT_N16CX) {
             if (false) {
             }
 #ifdef PPL_USE_X86_AVX512
             else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
-                return kernel::x86::resize2d_n16cx_pytorch_2linear_floor_fp32_avx512(&X->GetShape(), &Y->GetShape(),
+                return kernel::x86::resize2d_n16cx_pytorch_2linear_floor_fp32_avx512(X->GetShape(), Y->GetShape(),
                                                                                      X->GetBufferPtr<float>(), scale_h,
                                                                                      scale_w, Y->GetBufferPtr<float>());
             }
 #endif
             else if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-                return kernel::x86::resize2d_n16chw_pytorch_2linear_floor_fp32_avx(&X->GetShape(), &Y->GetShape(),
+                return kernel::x86::resize2d_n16chw_pytorch_2linear_floor_fp32_avx(X->GetShape(), Y->GetShape(),
                                                                                    X->GetBufferPtr<float>(), scale_h,
                                                                                    scale_w, Y->GetBufferPtr<float>());
             }
-        } else if (X->GetShape().GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
+        } else if (X->GetShape()->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
             return kernel::x86::reisze2d_ndarray_pytorch_linear_floor_fp32(
-                &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w, Y->GetBufferPtr<float>());
+                X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w, Y->GetBufferPtr<float>());
         }
     }
     if (param_->coord_trans_mode == param_->RESIZE_COORD_TRANS_MODE_ASYMMETRIC &&
         param_->mode == param_->RESIZE_MODE_NEAREST) {
-        if (X->GetShape().GetDataFormat() == ppl::common::DATAFORMAT_N16CX) {
+        if (X->GetShape()->GetDataFormat() == ppl::common::DATAFORMAT_N16CX) {
             if (false) {
             }
 #ifdef PPL_USE_X86_AVX512
             else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
                 return kernel::x86::reisze2d_n16cx_asymmetric_nearest_floor_fp32_avx512(
-                    &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w,
+                    X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w,
                     Y->GetBufferPtr<float>());
             }
 #endif
             else if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-                return kernel::x86::reisze2d_n16cx_asymmetric_nearest_floor_fp32_avx(&X->GetShape(), &Y->GetShape(),
+                return kernel::x86::reisze2d_n16cx_asymmetric_nearest_floor_fp32_avx(X->GetShape(), Y->GetShape(),
                                                                                      X->GetBufferPtr<float>(), scale_h,
                                                                                      scale_w, Y->GetBufferPtr<float>());
             }
-        } else if (X->GetShape().GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
-            if ((X->GetShape().GetDim(2) * 2) == Y->GetShape().GetDim(2) &&
-                (X->GetShape().GetDim(3) * 2) == Y->GetShape().GetDim(3)) {
+        } else if (X->GetShape()->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
+            if ((X->GetShape()->GetDim(2) * 2) == Y->GetShape()->GetDim(2) &&
+                (X->GetShape()->GetDim(3) * 2) == Y->GetShape()->GetDim(3)) {
                 return kernel::x86::reisze2d_ndarray_asymmetric_nearest_floor_2times_fp32_sse(
-                    &X->GetShape(), &Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w,
+                    X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w,
                     Y->GetBufferPtr<float>());
             } else {
-                return kernel::x86::reisze2d_ndarray_asymmetric_nearest_floor_fp32(&X->GetShape(), &Y->GetShape(),
+                return kernel::x86::reisze2d_ndarray_asymmetric_nearest_floor_fp32(X->GetShape(), Y->GetShape(),
                                                                                    X->GetBufferPtr<float>(), scale_h,
                                                                                    scale_w, Y->GetBufferPtr<float>());
             }

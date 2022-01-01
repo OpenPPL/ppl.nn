@@ -120,7 +120,7 @@ static RetCode InitRuntimeGraphInputs(const ir::GraphTopo* topo, const RuntimeGr
             // ONNX supports reshaping inputs in runtime stage
             auto shape_ref = info.shapes.find(edge->GetId());
             if (shape_ref != info.shapes.end()) {
-                tensor->GetShape() = shape_ref->second;
+                *tensor->GetShape() = shape_ref->second;
             }
         }
 
@@ -160,7 +160,7 @@ static RetCode InitRuntimeGraphExtraInputs(const ir::GraphTopo* topo, const Runt
 
             auto shape_ref = info.shapes.find(edge->GetId());
             if (shape_ref != info.shapes.end()) {
-                tensor->GetShape() = shape_ref->second;
+                *tensor->GetShape() = shape_ref->second;
             }
         }
 
@@ -194,7 +194,7 @@ RetCode InitRuntimeGraphOutputs(const ir::GraphTopo* topo, const RuntimeGraphInf
 
             auto shape_ref = info.shapes.find(edge->GetId());
             if (shape_ref != info.shapes.end()) {
-                tensor->GetShape() = shape_ref->second;
+                *tensor->GetShape() = shape_ref->second;
             }
         }
 
@@ -223,7 +223,7 @@ static RetCode InitRuntimeGraphConstants(const ir::GraphTopo* topo, const Runtim
             if (ret_pair.second) {
                 auto tensor = &ret_pair.first->second;
                 tensor->SetBuffer(c->second.GetBufferDesc(), c->second.GetDevice());
-                tensor->GetShape() = c->second.GetShape();
+                *tensor->GetShape() = *c->second.GetShape();
                 constants->push_back(tensor);
             }
         }

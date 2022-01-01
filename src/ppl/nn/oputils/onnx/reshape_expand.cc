@@ -24,10 +24,10 @@ namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeExpand(InputOutputInfo* info, const void*, const int64_t* shape_ptr) {
     auto shape = info->GetInput<TensorImpl>(1);
-    const uint32_t shape_dim_count = shape->GetShape().IsScalar() ? 1 : shape->GetShape().GetDim(0);
+    const uint32_t shape_dim_count = shape->GetShape()->IsScalar() ? 1 : shape->GetShape()->GetDim(0);
 
-    const TensorShape& in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
-    auto out_shape0 = &info->GetOutput<TensorImpl>(0)->GetShape();
+    const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
+    auto out_shape0 = info->GetOutput<TensorImpl>(0)->GetShape();
 
     TensorShape expand_shape;
     expand_shape.Reshape(shape_ptr, shape_dim_count);

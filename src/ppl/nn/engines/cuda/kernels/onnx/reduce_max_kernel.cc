@@ -27,7 +27,7 @@ ppl::common::RetCode ReduceMaxKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
     ReduceParam param = ReduceMax;
-    auto input_shape = input->GetShape();
+    const TensorShape& input_shape = *input->GetShape();
     uint32_t n_outer = 1, n_reduce = 1, n_inner = 1;
 
     const uint32_t dim_count = input_shape.GetDimCount();
@@ -47,7 +47,7 @@ ppl::common::RetCode ReduceMaxKernel::DoExecute(KernelExecContext* ctx) {
 
     PPLReduceDimDes des(n_inner, n_reduce, n_outer);
     ppl::common::RetCode status =
-        PPLCUDAReduceForwardImp(GetStream(), param, des, &input->GetShape(), input->GetBufferPtr(), &output->GetShape(),
+        PPLCUDAReduceForwardImp(GetStream(), param, des, input->GetShape(), input->GetBufferPtr(), output->GetShape(),
                                 output->GetBufferPtr());
     return status;
 }

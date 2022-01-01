@@ -26,10 +26,10 @@ RetCode ReshapeScatterND(InputOutputInfo* info, const void*) {
         return RC_INVALID_VALUE;
     }
 
-    const TensorShape& input_data = info->GetInput<TensorImpl>(0)->GetShape();
-    const TensorShape& input_indices = info->GetInput<TensorImpl>(1)->GetShape();
-    const TensorShape& input_updates = info->GetInput<TensorImpl>(2)->GetShape();
-    auto output = &info->GetOutput<TensorImpl>(0)->GetShape();
+    const TensorShape& input_data = *info->GetInput<TensorImpl>(0)->GetShape();
+    const TensorShape& input_indices = *info->GetInput<TensorImpl>(1)->GetShape();
+    const TensorShape& input_updates = *info->GetInput<TensorImpl>(2)->GetShape();
+    auto output = info->GetOutput<TensorImpl>(0)->GetShape();
 
     const uint32_t r = input_data.GetRealDimCount();
     const uint32_t q = input_indices.GetRealDimCount();

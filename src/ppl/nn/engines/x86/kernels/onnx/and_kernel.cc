@@ -41,16 +41,16 @@ ppl::common::RetCode AndKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(C);
 
     const bool is_eltwise =
-        A->GetShape().GetElementsExcludingPadding() == C->GetShape().GetElementsExcludingPadding() &&
-        B->GetShape().GetElementsExcludingPadding() == C->GetShape().GetElementsExcludingPadding();
-    const ppl::common::datatype_t data_type = A->GetShape().GetDataType();
+        A->GetShape()->GetElementsExcludingPadding() == C->GetShape()->GetElementsExcludingPadding() &&
+        B->GetShape()->GetElementsExcludingPadding() == C->GetShape()->GetElementsExcludingPadding();
+    const ppl::common::datatype_t data_type = A->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_BOOL) {
         if (is_eltwise) {
-            return kernel::x86::and_eltwise_bool(&C->GetShape(), A->GetBufferPtr<uint8_t>(), B->GetBufferPtr<uint8_t>(),
+            return kernel::x86::and_eltwise_bool(C->GetShape(), A->GetBufferPtr<uint8_t>(), B->GetBufferPtr<uint8_t>(),
                                                  C->GetBufferPtr<uint8_t>());
         } else {
-            return kernel::x86::and_ndarray_bool(&A->GetShape(), &B->GetShape(), &C->GetShape(),
+            return kernel::x86::and_ndarray_bool(A->GetShape(), B->GetShape(), C->GetShape(),
                                                  A->GetBufferPtr<uint8_t>(), B->GetBufferPtr<uint8_t>(),
                                                  C->GetBufferPtr<uint8_t>());
         }

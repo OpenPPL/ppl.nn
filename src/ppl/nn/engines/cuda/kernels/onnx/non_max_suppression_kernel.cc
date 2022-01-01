@@ -23,7 +23,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 uint64_t NonMaxSuppressionKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     auto scores = ctx.GetInput<TensorImpl>(1);
-    return PPLNMSGetTempBufferSize(&scores->GetShape());
+    return PPLNMSGetTempBufferSize(scores->GetShape());
 }
 
 ppl::common::RetCode NonMaxSuppressionKernel::DoExecute(KernelExecContext* ctx) {
@@ -52,7 +52,7 @@ ppl::common::RetCode NonMaxSuppressionKernel::DoExecute(KernelExecContext* ctx) 
             return status;
         }
     }
-    uint32_t num_boxes = boxes->GetShape().GetDim(1);
+    uint32_t num_boxes = boxes->GetShape()->GetDim(1);
     max_output_boxes_per_class = std::min(max_output_boxes_per_class, num_boxes);
 
     float iou_threshold = 0.f;
@@ -74,8 +74,8 @@ ppl::common::RetCode NonMaxSuppressionKernel::DoExecute(KernelExecContext* ctx) 
     }
 
     int device_id = GetCudaDevice()->GetDeviceId();
-    status = PPLCUDANMSForwardImp(GetStream(), &boxes->GetShape(), boxes->GetBufferPtr(), &scores->GetShape(),
-                                  scores->GetBufferPtr(), &output->GetShape(), output->GetBufferPtr<int64_t>(),
+    status = PPLCUDANMSForwardImp(GetStream(), boxes->GetShape(), boxes->GetBufferPtr(), scores->GetShape(),
+                                  scores->GetBufferPtr(), output->GetShape(), output->GetBufferPtr<int64_t>(),
                                   tmp_buffer, tmp_buffer_bytes, device_id, param_->center_point_box,
                                   max_output_boxes_per_class, iou_threshold, score_threshold);
 

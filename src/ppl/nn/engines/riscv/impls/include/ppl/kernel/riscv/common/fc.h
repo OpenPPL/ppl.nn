@@ -111,12 +111,12 @@ public:
     virtual ~fc_executor() {}
 
     virtual ppl::common::RetCode set_src_tensor(ppl::nn::TensorImpl& src_tensor) override {
-        set_src_shape(&src_tensor.GetShape());
+        set_src_shape(src_tensor.GetShape());
         set_src(src_tensor.GetBufferPtr<T>());
         return ppl::common::RC_SUCCESS;
     };
     virtual ppl::common::RetCode set_dst_tensor(ppl::nn::TensorImpl& dst_tensor) override {
-        set_dst_shape(&dst_tensor.GetShape());
+        set_dst_shape(dst_tensor.GetShape());
         set_dst(dst_tensor.GetBufferPtr<T>());
         return ppl::common::RC_SUCCESS;
     };

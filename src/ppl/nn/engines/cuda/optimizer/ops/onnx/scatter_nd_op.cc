@@ -36,7 +36,7 @@ RetCode ScatterNDOp::Init(const OptKernelOptions& options) {
         } else {
             status = InferDefaultType(info, type);
         }
-        auto shape = &info->GetInput<TensorImpl>(1)->GetShape();
+        auto shape = info->GetInput<TensorImpl>(1)->GetShape();
         shape->SetDataType(DATATYPE_INT64);
         return status;
     };

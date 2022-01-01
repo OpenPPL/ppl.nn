@@ -44,8 +44,8 @@ RetCode ConverterKernel::DoExecute(KernelExecContext* ctx) {
             }
         }
 
-        dst->GetShape() = src->GetShape();
-        dst->GetShape().SetDataFormat(DATAFORMAT_NDARRAY);
+        *dst->GetShape() = *src->GetShape();
+        dst->GetShape()->SetDataFormat(DATAFORMAT_NDARRAY);
 
         auto status = utils::CopyTensorBuffer(*src, dst, &tmp_cpu_device);
         if (status != RC_SUCCESS) {

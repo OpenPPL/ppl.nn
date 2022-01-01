@@ -84,14 +84,14 @@ static RetCode SaveSubgraphOutputs(RuntimeImpl* subgraph, LoopInfo* info) {
 
         TensorBufferInfo output_buffer;
         if (scan_output->IsBufferOwner()) {
-            output_buffer.Reshape(scan_output->GetShape());
+            output_buffer.Reshape(*scan_output->GetShape());
             output_buffer.SetBuffer(scan_output->GetBufferDesc(), scan_output->GetDevice(), true);
             scan_output->DetachBuffer();
         } else {
             auto device = scan_output->GetDevice();
 
             output_buffer.SetDevice(scan_output->GetDevice());
-            output_buffer.Reshape(scan_output->GetShape());
+            output_buffer.Reshape(*scan_output->GetShape());
             auto status = output_buffer.ReallocBuffer();
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "alloc buffer for tensor[" << scan_output->GetName()
@@ -100,7 +100,7 @@ static RetCode SaveSubgraphOutputs(RuntimeImpl* subgraph, LoopInfo* info) {
             }
 
             status =
-                device->Copy(&output_buffer.GetBufferDesc(), scan_output->GetBufferDesc(), scan_output->GetShape());
+                device->Copy(&output_buffer.GetBufferDesc(), scan_output->GetBufferDesc(), *scan_output->GetShape());
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "copy data from tensor[" << scan_output->GetName()
                            << "] failed: " << GetRetCodeStr(status);
@@ -126,7 +126,7 @@ static RetCode UpdateSubgraphInputs(int64_t trip_count, RuntimeImpl* subgraph,
     for (uint32_t i = 1; i < subgraph->GetInputCount(); ++i) {
         auto dst = subgraph->GetInputTensorImpl(i);
         auto src = subgraph->GetOutputTensorImpl(i - 1);
-        dst->GetShape() = src->GetShape();
+        *dst->GetShape() = *src->GetShape();
         if (dst->GetDevice() == src->GetDevice()) {
             dst->TransferBufferFrom(src);
         } else {
@@ -182,7 +182,7 @@ static RetCode InitSubgraphInputs(const KernelExecContext& ctx, bool keep_going,
         auto src = ctx.GetInput<TensorImpl>(i);
         auto dst = subgraph->GetInputTensorImpl(i);
 
-        dst->GetShape() = src->GetShape();
+        *dst->GetShape() = *src->GetShape();
 
         if (dst->GetDevice() == src->GetDevice()) {
             dst->SetBuffer(src->GetBufferDesc());
@@ -204,7 +204,7 @@ static RetCode InitSubgraphInputs(const KernelExecContext& ctx, bool keep_going,
             return RC_NOT_FOUND;
         }
 
-        dst->GetShape() = src->GetShape();
+        *dst->GetShape() = *src->GetShape();
 
         if (dst->GetDevice() == src->GetDevice()) {
             dst->SetBuffer(src->GetBufferDesc());
@@ -229,7 +229,7 @@ static RetCode SetOutputsFromInputs(const LoopInfo& info, const string& loop_ker
         auto src = ctx->GetInput<TensorImpl>(i + 2); // skip `M` and `cond`
         auto dst = ctx->GetOutput<TensorImpl>(i);
 
-        dst->GetShape() = src->GetShape();
+        *dst->GetShape() = *src->GetShape();
 
         auto status = utils::CopyTensorBuffer(*src, dst, tmp_cpu_device);
         if (status != RC_SUCCESS) {
@@ -242,14 +242,14 @@ static RetCode SetOutputsFromInputs(const LoopInfo& info, const string& loop_ker
     // create empty scan outputs
     for (uint32_t i = info.loop_carried_dep_num; i < ctx->GetOutputCount(); ++i) {
         auto src = subgraph->GetOutputTensorImpl(i + 1); // skip `cond`
-        auto& src_shape = src->GetShape();
+        auto& src_shape = *src->GetShape();
 
         if (src_shape.IsEmpty()) {
             LOG(WARNING) << "loop kernel[" << loop_kernel_name << "] trip count is 0 and "
                          << "cannot find output shape from subgraph.";
         } else {
             auto output = ctx->GetOutput<TensorImpl>(i);
-            output->GetShape() = src_shape;
+            *output->GetShape() = src_shape;
 
             auto status = output->ReallocBuffer();
             if (status != RC_SUCCESS) {
@@ -271,7 +271,7 @@ static RetCode SetOutputsFromSubgraph(const LoopInfo& info, Device* tmp_cpu_devi
         auto src = subgraph->GetOutputTensorImpl(i + 1);
         auto dst = ctx->GetOutput<TensorImpl>(i);
 
-        dst->GetShape() = src->GetShape();
+        *dst->GetShape() = *src->GetShape();
 
         // srcs are already synchronized by subgraph->Sync()
         auto status = utils::CopyTensorBuffer(*src, dst, tmp_cpu_device);
@@ -286,7 +286,7 @@ static RetCode SetOutputsFromSubgraph(const LoopInfo& info, Device* tmp_cpu_devi
         auto dst = ctx->GetOutput<TensorImpl>(i);
 
         auto& outputs = info.intermediate_outputs[i];
-        auto& output_shape = outputs[i].GetShape();
+        auto& output_shape = *outputs[i].GetShape();
 
         vector<int64_t> dims(1 + output_shape.GetDimCount());
         dims[0] = outputs.size();
@@ -294,7 +294,7 @@ static RetCode SetOutputsFromSubgraph(const LoopInfo& info, Device* tmp_cpu_devi
             dims[j + 1] = output_shape.GetDim(j);
         }
 
-        auto dst_shape = &dst->GetShape();
+        auto dst_shape = dst->GetShape();
         dst_shape->SetDataType(output_shape.GetDataType());
         dst_shape->SetDataFormat(output_shape.GetDataFormat());
         dst_shape->Reshape(dims.data(), dims.size());

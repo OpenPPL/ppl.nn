@@ -26,8 +26,8 @@ RetCode ReshapeCeil(InputOutputInfo* info, const void* arg) {
         return RC_INVALID_VALUE;
     }
 
-    auto input = &info->GetInput<TensorImpl>(0)->GetShape();
-    auto output = &info->GetOutput<TensorImpl>(0)->GetShape();
+    auto input = info->GetInput<TensorImpl>(0)->GetShape();
+    auto output = info->GetOutput<TensorImpl>(0)->GetShape();
 
     output->SetDataType(DATATYPE_FLOAT32);
     if (input->IsScalar()) {

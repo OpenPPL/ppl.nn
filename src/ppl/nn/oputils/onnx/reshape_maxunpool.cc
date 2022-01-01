@@ -32,8 +32,8 @@ RetCode ReshapeMaxUnpool(InputOutputInfo* info, const void* arg) {
         return RC_INVALID_VALUE;
     }
 
-    auto input_data = &info->GetInput<TensorImpl>(0)->GetShape();
-    auto output = &info->GetOutput<TensorImpl>(0)->GetShape();
+    auto input_data = info->GetInput<TensorImpl>(0)->GetShape();
+    auto output = info->GetOutput<TensorImpl>(0)->GetShape();
 
     const uint32_t dim_count = input_data->GetDimCount();
     std::vector<int64_t> output_dim(dim_count);

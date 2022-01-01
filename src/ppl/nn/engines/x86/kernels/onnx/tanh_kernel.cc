@@ -34,17 +34,17 @@ ppl::common::RetCode TanhKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
 
-    const auto data_type = input->GetShape().GetDataType();
+    const auto data_type = input->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
         if (MayUseISA(ppl::common::ISA_X86_FMA)) {
-            return ppl::kernel::x86::tanh_fp32_fma(&input->GetShape(), input->GetBufferPtr<float>(),
+            return ppl::kernel::x86::tanh_fp32_fma(input->GetShape(), input->GetBufferPtr<float>(),
                                                    output->GetBufferPtr<float>());
         } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-            return ppl::kernel::x86::tanh_fp32_sse(&input->GetShape(), input->GetBufferPtr<float>(),
+            return ppl::kernel::x86::tanh_fp32_sse(input->GetShape(), input->GetBufferPtr<float>(),
                                                    output->GetBufferPtr<float>());
         } else {
-            return ppl::kernel::x86::tanh_fp32(&input->GetShape(), input->GetBufferPtr<float>(),
+            return ppl::kernel::x86::tanh_fp32(input->GetShape(), input->GetBufferPtr<float>(),
                                                output->GetBufferPtr<float>());
         }
     } else {

@@ -27,9 +27,9 @@ RetCode ReshapeMMCVGridSample(InputOutputInfo* info, const void* arg) {
         return RC_INVALID_VALUE;
     }
 
-    auto input0 = &info->GetInput<TensorImpl>(0)->GetShape();
-    auto input1 = &info->GetInput<TensorImpl>(1)->GetShape();
-    auto output = &info->GetOutput<TensorImpl>(0)->GetShape();
+    auto input0 = info->GetInput<TensorImpl>(0)->GetShape();
+    auto input1 = info->GetInput<TensorImpl>(1)->GetShape();
+    auto output = info->GetOutput<TensorImpl>(0)->GetShape();
 
     if (input0->GetDimCount() != 4) {
         return RC_INVALID_VALUE;

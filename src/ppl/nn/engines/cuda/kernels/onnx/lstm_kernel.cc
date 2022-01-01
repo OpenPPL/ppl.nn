@@ -25,7 +25,7 @@ bool LstmKernel::CanDoExecute(const KernelExecContext& ctx) const {
 
 
 ppl::common::RetCode LstmKernel::DoExecute(KernelExecContext* ctx) {
-    
+
     auto X = ctx->GetInput<TensorImpl>(0);
     auto W = ctx->GetInput<TensorImpl>(1);
     auto R = ctx->GetInput<TensorImpl>(2);
@@ -39,9 +39,9 @@ ppl::common::RetCode LstmKernel::DoExecute(KernelExecContext* ctx) {
     auto Y_h = ctx->GetOutput<TensorImpl>(1);
     auto Y_c = ctx->GetOutput<TensorImpl>(2);
 
-    auto X_shape = X->GetShape();
+    const TensorShape* X_shape = X->GetShape();
     auto hidden_size = param_->hidden_size;
-    int64_t size = PPLCUDALstmGetRuntimeBufSize(&X_shape, direction_, hidden_size);
+    int64_t size = PPLCUDALstmGetRuntimeBufSize(X_shape, direction_, hidden_size);
     BufferDesc tmp_buffer_desc;
     auto status = GetCudaDevice()->AllocTmpBuffer(size, &tmp_buffer_desc);
     auto tmp_buffer = tmp_buffer_desc.addr;
@@ -55,7 +55,7 @@ ppl::common::RetCode LstmKernel::DoExecute(KernelExecContext* ctx) {
     auto P_ptr = P ? P->GetBufferPtr() : NULL;
 
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
-    status = PPLCUDALstmForwardImp(GetStream(), module, &X_shape, X->GetBufferPtr(),
+    status = PPLCUDALstmForwardImp(GetStream(), module, X_shape, X->GetBufferPtr(),
                               W->GetBufferPtr(), R->GetBufferPtr(), P_ptr, B->GetBufferPtr(),
                               seq_lens_ptr, initial_h_ptr, initial_c_ptr,
                               direction_, hidden_size, tmp_buffer,

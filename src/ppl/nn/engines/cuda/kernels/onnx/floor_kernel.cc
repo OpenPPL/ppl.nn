@@ -25,8 +25,8 @@ ppl::common::RetCode FloorKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
 
-    ppl::common::RetCode status = PPLCUDAUnaryFloorForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(),
-                                                              &output->GetShape(), output->GetBufferPtr());
+    ppl::common::RetCode status = PPLCUDAUnaryFloorForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(),
+                                                              output->GetShape(), output->GetBufferPtr());
     return status;
 }
 

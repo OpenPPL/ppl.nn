@@ -153,7 +153,7 @@ private:
                 conv2d_kernel_param.channels = conv_param.channels;
                 // conv2d_kernel_param.fuse_flag = 0;
 
-                auto algo_info = conv_op_select_algo<T>(info.GetInput<TensorImpl>(0)->GetShape(), conv2d_param_->param);
+                auto algo_info = conv_op_select_algo<T>(*info.GetInput<TensorImpl>(0)->GetShape(), conv2d_param_->param);
 
                 if (algo_info.algo_type == ppl::kernel::riscv::conv2d_common_algo::unknown) {
                     LOG(ERROR) << "Conv select algorithm failed, use fallback kernel";
@@ -169,8 +169,8 @@ private:
 
                     mgr->fast_init_tunning_param();
                     if (options.engine_options->tune_param_flag) {
-                        auto& src_shape = info.GetInput<TensorImpl>(0)->GetShape();
-                        auto& dst_shape = info.GetOutput<TensorImpl>(0)->GetShape();
+                        auto& src_shape = *info.GetInput<TensorImpl>(0)->GetShape();
+                        auto& dst_shape = *info.GetOutput<TensorImpl>(0)->GetShape();
                         std::vector<T> tunning_src, tunning_dst;
                         tunning_src.resize(src_shape.GetElementsIncludingPadding());
                         tunning_dst.resize(dst_shape.GetElementsIncludingPadding());

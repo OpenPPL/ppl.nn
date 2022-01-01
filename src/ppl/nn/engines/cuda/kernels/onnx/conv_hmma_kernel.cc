@@ -36,7 +36,7 @@ ppl::common::RetCode ConvHmmaKernel::BeforeExecute(KernelExecContext* ctx) {
             auto ptr = edge2buffer->find(concat_edge_id);
             if (ptr == edge2buffer->end()) {
                 BufferDesc buffer;
-                auto concat_shape = tensor->GetShape();
+                auto concat_shape = *tensor->GetShape();
                 concat_shape.SetDim(1, param_->extra_param.fuse_info.channel_size);
                 status = device->Realloc(concat_shape, &buffer);
                 if (status != RC_SUCCESS) {
@@ -64,9 +64,9 @@ ppl::common::RetCode ConvHmmaKernel::DoExecute(KernelExecContext* ctx) {
     conv_param_t temp_conv_param;
     fuse_param_t temp_fuse_param;
 
-    auto shape_in0 = ctx->GetInput<TensorImpl>(0)->GetShape();
-    auto shape_in1 = ctx->GetInput<TensorImpl>(1)->GetShape();
-    auto shape_out = ctx->GetOutput<TensorImpl>(0)->GetShape();
+    const TensorShape& shape_in0 = *ctx->GetInput<TensorImpl>(0)->GetShape();
+    const TensorShape& shape_in1 = *ctx->GetInput<TensorImpl>(1)->GetShape();
+    const TensorShape& shape_out = *ctx->GetOutput<TensorImpl>(0)->GetShape();
 
     ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, param_->param, temp_conv_param);
     ConvertToForwardFuseParam(ctx, GetCudaDevice(), param_->extra_param.fuse_info, temp_fuse_param);
@@ -95,13 +95,13 @@ ppl::common::RetCode ConvHmmaKernel::DoExecute(KernelExecContext* ctx) {
         stream, module->GetKernelFunc(), shape_in0.GetDataType(), (int4*)ctx->GetInput<TensorImpl>(0)->GetBufferPtr(),
         (int4*)ctx->GetInput<TensorImpl>(1)->GetBufferPtr(), (int4*)ctx->GetOutput<TensorImpl>(0)->GetBufferPtr(),
         param_->param.bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, (int4*)tmp_buffer,
-        algo_param, temp_conv_param, temp_fuse_param);    
+        algo_param, temp_conv_param, temp_fuse_param);
 #else
     PPLCUDAConvolutionForwardImp(
         stream, shape_in0.GetDataType(), (int4*)ctx->GetInput<TensorImpl>(0)->GetBufferPtr(),
         (int4*)ctx->GetInput<TensorImpl>(1)->GetBufferPtr(), (int4*)ctx->GetOutput<TensorImpl>(0)->GetBufferPtr(),
         param_->param.bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, (int4*)tmp_buffer,
-        algo_param, temp_conv_param, temp_fuse_param);    
+        algo_param, temp_conv_param, temp_fuse_param);
 #endif
     LOG(DEBUG) << "Excute HMMA conv with kernel id:" << param_->extra_param.algo_info.kid
                << " and temp buffer size: " << size;

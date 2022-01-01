@@ -43,34 +43,34 @@ ppl::common::RetCode WhereKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
 
     bool is_eltwise =
-        cond->GetShape().GetElementsIncludingPadding() == output->GetShape().GetElementsIncludingPadding() &&
-        x->GetShape().GetElementsIncludingPadding() == output->GetShape().GetElementsIncludingPadding() &&
-        y->GetShape().GetElementsIncludingPadding() == output->GetShape().GetElementsIncludingPadding();
+        cond->GetShape()->GetElementsIncludingPadding() == output->GetShape()->GetElementsIncludingPadding() &&
+        x->GetShape()->GetElementsIncludingPadding() == output->GetShape()->GetElementsIncludingPadding() &&
+        y->GetShape()->GetElementsIncludingPadding() == output->GetShape()->GetElementsIncludingPadding();
 
-    if (output->GetShape().GetDataType() == common::DATATYPE_FLOAT32) {
+    if (output->GetShape()->GetDataType() == common::DATATYPE_FLOAT32) {
         if (is_eltwise) {
-            return kernel::x86::where_eltwise_fp32(&output->GetShape(), cond->GetBufferPtr<const uint8_t>(),
+            return kernel::x86::where_eltwise_fp32(output->GetShape(), cond->GetBufferPtr<const uint8_t>(),
                                                    x->GetBufferPtr<const float>(), y->GetBufferPtr<const float>(),
                                                    output->GetBufferPtr<float>());
         } else {
-            return kernel::x86::where_ndarray_fp32(&cond->GetShape(), &x->GetShape(), &y->GetShape(),
-                                                   &output->GetShape(), cond->GetBufferPtr<const uint8_t>(),
+            return kernel::x86::where_ndarray_fp32(cond->GetShape(), x->GetShape(), y->GetShape(),
+                                                   output->GetShape(), cond->GetBufferPtr<const uint8_t>(),
                                                    x->GetBufferPtr<const float>(), y->GetBufferPtr<const float>(),
                                                    output->GetBufferPtr<float>());
         }
-    } else if (output->GetShape().GetDataType() == common::DATATYPE_INT64) {
+    } else if (output->GetShape()->GetDataType() == common::DATATYPE_INT64) {
         if (is_eltwise) {
-            return kernel::x86::where_eltwise_int64(&output->GetShape(), cond->GetBufferPtr<const uint8_t>(),
+            return kernel::x86::where_eltwise_int64(output->GetShape(), cond->GetBufferPtr<const uint8_t>(),
                                                     x->GetBufferPtr<const int64_t>(), y->GetBufferPtr<const int64_t>(),
                                                     output->GetBufferPtr<int64_t>());
         } else {
-            return kernel::x86::where_ndarray_int64(&cond->GetShape(), &x->GetShape(), &y->GetShape(),
-                                                    &output->GetShape(), cond->GetBufferPtr<const uint8_t>(),
+            return kernel::x86::where_ndarray_int64(cond->GetShape(), x->GetShape(), y->GetShape(),
+                                                    output->GetShape(), cond->GetBufferPtr<const uint8_t>(),
                                                     x->GetBufferPtr<const int64_t>(), y->GetBufferPtr<const int64_t>(),
                                                     output->GetBufferPtr<int64_t>());
         }
     } else {
-        LOG(ERROR) << "unsupported data type " << common::GetDataTypeStr(output->GetShape().GetDataType());
+        LOG(ERROR) << "unsupported data type " << common::GetDataTypeStr(output->GetShape()->GetDataType());
         return ppl::common::RC_UNSUPPORTED;
     }
 

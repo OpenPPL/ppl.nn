@@ -27,14 +27,14 @@ namespace ppl { namespace nn { namespace cuda {
 
 RetCode ShapeOp::Init(const OptKernelOptions& options) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
-        auto shape = &info->GetOutput<TensorImpl>(0)->GetShape();
+        auto shape = info->GetOutput<TensorImpl>(0)->GetShape();
         shape->SetDataType(ppl::common::DATATYPE_INT64);
         return RC_SUCCESS;
     };
 
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        auto output_shape = &info->GetOutput<TensorImpl>(0)->GetShape();
-        output_shape->Reshape({info->GetInput<TensorImpl>(0)->GetShape().GetRealDimCount()});
+        auto output_shape = info->GetOutput<TensorImpl>(0)->GetShape();
+        output_shape->Reshape({info->GetInput<TensorImpl>(0)->GetShape()->GetRealDimCount()});
         return RC_SUCCESS;
     };
 

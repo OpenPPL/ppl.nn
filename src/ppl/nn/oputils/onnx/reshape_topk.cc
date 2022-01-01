@@ -29,7 +29,7 @@ RetCode ReshapeTopK(InputOutputInfo* info, const void* arg, int64_t k) {
     auto values = info->GetOutput<TensorImpl>(0);
     auto indices = info->GetOutput<TensorImpl>(1);
 
-    const int32_t dim_count = x->GetShape().GetDimCount();
+    const int32_t dim_count = x->GetShape()->GetDimCount();
     int32_t axis = param->axis;
 
     if (axis < -dim_count || axis > dim_count - 1) {
@@ -39,17 +39,17 @@ RetCode ReshapeTopK(InputOutputInfo* info, const void* arg, int64_t k) {
         axis += dim_count;
     }
 
-    const int64_t axis_dim = x->GetShape().GetDim(axis);
+    const int64_t axis_dim = x->GetShape()->GetDim(axis);
     // if (k > axis_dim) {
     //     return RC_INVALID_VALUE;
     // }
 
-    values->GetShape().Reshape(x->GetShape().GetDims(), x->GetShape().GetDimCount());
-    indices->GetShape().Reshape(x->GetShape().GetDims(), x->GetShape().GetDimCount());
-    values->GetShape().SetDim(axis, std::min(k, axis_dim));
-    indices->GetShape().SetDim(axis, std::min(k, axis_dim));
-    values->GetShape().CalcPadding();
-    indices->GetShape().CalcPadding();
+    values->GetShape()->Reshape(x->GetShape()->GetDims(), x->GetShape()->GetDimCount());
+    indices->GetShape()->Reshape(x->GetShape()->GetDims(), x->GetShape()->GetDimCount());
+    values->GetShape()->SetDim(axis, std::min(k, axis_dim));
+    indices->GetShape()->SetDim(axis, std::min(k, axis_dim));
+    values->GetShape()->CalcPadding();
+    indices->GetShape()->CalcPadding();
 
     return RC_SUCCESS;
 }

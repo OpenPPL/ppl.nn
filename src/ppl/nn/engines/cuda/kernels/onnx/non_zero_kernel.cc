@@ -23,7 +23,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 uint64_t NonZeroKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     auto input_shape = ctx.GetOutput<TensorImpl>(0)->GetShape();
-    return PPLNonZeroGetTempBufferSize(&input_shape);
+    return PPLNonZeroGetTempBufferSize(input_shape);
 }
 
 ppl::common::RetCode NonZeroKernel::DoExecute(KernelExecContext* ctx) {
@@ -43,7 +43,7 @@ ppl::common::RetCode NonZeroKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
 
-    status = PPLCUDANonZeroForwardImp(GetStream(), &input->GetShape(), input->GetBufferPtr(), &output->GetShape(),
+    status = PPLCUDANonZeroForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(),
                                       output->GetBufferPtr<int64_t>(), (int32_t*)tmp_buffer);
 
     return status;

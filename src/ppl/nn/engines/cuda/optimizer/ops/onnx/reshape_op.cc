@@ -36,7 +36,7 @@ RetCode ReshapeOp::Init(const OptKernelOptions& options) {
         } else {
             status = InferDefaultType(info, type);
         }
-        auto shape = &info->GetInput<TensorImpl>(1)->GetShape();
+        auto shape = info->GetInput<TensorImpl>(1)->GetShape();
         shape->SetDataType(DATATYPE_INT64);
         return status;
     };
@@ -52,7 +52,7 @@ RetCode ReshapeOp::Init(const OptKernelOptions& options) {
             return RC_NOT_FOUND;
         }
 
-        const TensorShape& dst_desc = input->GetShape();
+        const TensorShape& dst_desc = *input->GetShape();
         unique_ptr<int64_t[]> shape_data(new int64_t[dst_desc.GetElementsIncludingPadding()]);
         auto status = input->CopyToHost(shape_data.get());
         if (status != RC_SUCCESS) {

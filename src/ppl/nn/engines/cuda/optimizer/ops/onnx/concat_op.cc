@@ -51,16 +51,16 @@ RetCode ConcatOp::Init(const OptKernelOptions& options) {
     };
 
     infer_unsafe_dims_func_ = [](InputOutputInfo* info, std::set<uint32_t>* illegal_inputs) -> RetCode {
-        auto in_shape0 = &info->GetInput<TensorImpl>(0)->GetShape();
+        auto in_shape0 = info->GetInput<TensorImpl>(0)->GetShape();
         for (uint32_t i = 0; i < info->GetInputCount(); ++i) {
             if (illegal_inputs->find(i) != illegal_inputs->end()) {
-                in_shape0 = &info->GetInput<TensorImpl>(i)->GetShape();
+                in_shape0 = info->GetInput<TensorImpl>(i)->GetShape();
                 break;
             }
         }
 
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
-            auto out_shape = &info->GetOutput<TensorImpl>(i)->GetShape();
+            auto out_shape = info->GetOutput<TensorImpl>(i)->GetShape();
             out_shape->Reshape(in_shape0->GetDims(), in_shape0->GetRealDimCount());
         }
         return ppl::common::RC_SUCCESS;
