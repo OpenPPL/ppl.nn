@@ -41,14 +41,14 @@ RetCode OptGraph::InitKernels(const ir::Graph* graph) {
         auto& type = node->GetType();
         auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
         if (!creator) {
-            LOG(ERROR) << "cannot find creator for RISCVOptKernel[" << node->GetName() << "] type[" << type.domain
+            LOG(ERROR) << "cannot find creator for RiscvOptKernel[" << node->GetName() << "] type[" << type.domain
                        << ":" << type.name << "]";
             return RC_NOT_FOUND;
         }
 
-        auto opt_kernel = unique_ptr<RISCVOptKernel>(creator(node));
+        auto opt_kernel = unique_ptr<RiscvOptKernel>(creator(node));
         if (!opt_kernel) {
-            LOG(ERROR) << "create RISCVOptKernel failed: oom";
+            LOG(ERROR) << "create RiscvOptKernel failed: oom";
             return RC_OUT_OF_MEMORY;
         }
 
@@ -78,7 +78,7 @@ RetCode OptGraph::InitTensorImpls() {
 }
 
 RetCode OptGraph::Init(ir::Graph* graph, utils::SharedResource* resource, RuntimePartitionInfo* info,
-                       RISCVEngineOptions* options) {
+                       RiscvEngineOptions* options) {
     resource_ = resource;
     graph_ = graph;
     info_ = info;
@@ -99,7 +99,7 @@ RetCode OptGraph::Init(ir::Graph* graph, utils::SharedResource* resource, Runtim
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::TryToInferType(RISCVDevice* device) {
+RetCode OptGraph::TryToInferType(RiscvDevice* device) {
     vector<nodeid_t> sorted_nodes;
     graph_->topo->TopologicalSort([&sorted_nodes](nodeid_t nid) -> void {
         sorted_nodes.push_back(nid);
@@ -133,14 +133,14 @@ RetCode OptGraph::TryToInferType(RISCVDevice* device) {
             return iter->second.get();
         });
 
-        auto kernel = (RISCVOptKernel*)(info_->kernels[node_id].get());
+        auto kernel = (RiscvOptKernel*)(info_->kernels[node_id].get());
         kernel->InferType(&IOinfo);
     }
 
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::TryToInferDims(RISCVDevice* device) {
+RetCode OptGraph::TryToInferDims(RiscvDevice* device) {
     vector<nodeid_t> sorted_nodes;
     graph_->topo->TopologicalSort([&sorted_nodes](nodeid_t nid) -> void {
         sorted_nodes.push_back(nid);
@@ -174,7 +174,7 @@ RetCode OptGraph::TryToInferDims(RISCVDevice* device) {
             return iter->second.get();
         });
 
-        auto kernel = (RISCVOptKernel*)(info_->kernels[node_id].get());
+        auto kernel = (RiscvOptKernel*)(info_->kernels[node_id].get());
         auto status = kernel->InferDims(&IOinfo);
         if (status != RC_SUCCESS) {
             continue;
@@ -184,7 +184,7 @@ RetCode OptGraph::TryToInferDims(RISCVDevice* device) {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::DoOptimize(RISCVDevice* device) {
+RetCode OptGraph::DoOptimize(RiscvDevice* device) {
     OptKernelOptions options;
     options.resource = resource_;
     options.graph_data = graph_->data.get();
@@ -195,7 +195,7 @@ RetCode OptGraph::DoOptimize(RISCVDevice* device) {
     options.engine_options = options_;
 
     for (auto it = info_->kernels.begin(); it != info_->kernels.end(); ++it) {
-        auto kernel = (RISCVOptKernel*)(it->second.get());
+        auto kernel = (RiscvOptKernel*)(it->second.get());
         auto status = kernel->Init(options);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "Init for kernel[" << kernel->GetNode()->GetName() << "] failed: " << GetRetCodeStr(status);

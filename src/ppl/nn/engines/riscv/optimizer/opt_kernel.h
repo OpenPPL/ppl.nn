@@ -37,16 +37,16 @@ struct OptKernelOptions {
     utils::SharedResource* resource = nullptr;
     ir::GraphData* graph_data = nullptr;
     ir::GraphTopo* graph_topo = nullptr;
-    RISCVDevice* device = nullptr;
+    RiscvDevice* device = nullptr;
     nn::RuntimePartitionInfo* info = nullptr;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors = nullptr;
-    RISCVEngineOptions* engine_options = nullptr;
+    RiscvEngineOptions* engine_options = nullptr;
 };
 
-class RISCVOptKernel : public OptKernel {
+class RiscvOptKernel : public OptKernel {
 public:
-    RISCVOptKernel(const ir::Node* node);
-    virtual ~RISCVOptKernel() {}
+    RiscvOptKernel(const ir::Node* node);
+    virtual ~RiscvOptKernel() {}
 
     virtual ppl::common::RetCode Init(const OptKernelOptions&) = 0;
 
@@ -168,7 +168,7 @@ protected:
 protected:
     std::function<void(InputOutputInfo*)> infer_type_func_;
     std::function<ppl::common::RetCode(InputOutputInfo*)> infer_dims_func_;
-    RISCVCommonParam common_param_;
+    RiscvCommonParam common_param_;
 };
 
 }}} // namespace ppl::nn::riscv

@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class Conv2dKernel : public RISCVKernel {
+class Conv2dKernel : public RiscvKernel {
 public:
-    Conv2dKernel(const ir::Node* node) : RISCVKernel(node) {}
+    Conv2dKernel(const ir::Node* node) : RiscvKernel(node) {}
     ~Conv2dKernel() {}
 
     void SetParam(const Convolution2DParam* p) {

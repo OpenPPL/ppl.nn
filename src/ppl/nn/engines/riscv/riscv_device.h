@@ -26,9 +26,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class RISCVDevice : public Device {
+class RiscvDevice : public Device {
 public:
-    RISCVDevice(uint64_t alignment) : data_converter_(), allocator_(alignment) {}
+    RiscvDevice(uint64_t alignment) : data_converter_(), allocator_(alignment) {}
 
     virtual ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
         return Realloc(bytes, buffer);
@@ -108,7 +108,7 @@ public:
     }
 
 private:
-    RISCVDataConverter data_converter_;
+    RiscvDataConverter data_converter_;
     mutable ppl::common::GenericCpuAllocator allocator_;
 };
 

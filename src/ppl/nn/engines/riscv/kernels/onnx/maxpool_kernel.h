@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class MaxPoolKernel : public RISCVKernel {
+class MaxPoolKernel : public RiscvKernel {
 public:
-    MaxPoolKernel(const ir::Node* node) : RISCVKernel(node) {}
+    MaxPoolKernel(const ir::Node* node) : RiscvKernel(node) {}
 
     void SetParam(const ppl::nn::common::PoolingParam* p) {
         param_ = p;

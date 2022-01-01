@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class ShapeOp final : public RISCVOptKernel {
+class ShapeOp final : public RiscvOptKernel {
 public:
-    ShapeOp(const ir::Node* node) : RISCVOptKernel(node) {}
+    ShapeOp(const ir::Node* node) : RiscvOptKernel(node) {}
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,

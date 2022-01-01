@@ -24,9 +24,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class FCKernel : public RISCVKernel {
+class FCKernel : public RiscvKernel {
 public:
-    FCKernel(const ir::Node* node) : RISCVKernel(node) {}
+    FCKernel(const ir::Node* node) : RiscvKernel(node) {}
     ~FCKernel() {
         if (executor_)
             delete executor_;

@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class TransposeKernel : public RISCVKernel {
+class TransposeKernel : public RiscvKernel {
 public:
-    TransposeKernel(const ir::Node* node) : RISCVKernel(node) {}
+    TransposeKernel(const ir::Node* node) : RiscvKernel(node) {}
 
     void SetParam(const ppl::nn::common::TransposeParam* p) {
         param_ = p;

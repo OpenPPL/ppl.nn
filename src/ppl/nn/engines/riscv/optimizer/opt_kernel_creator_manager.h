@@ -23,7 +23,7 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-typedef RISCVOptKernel* (*OptKernelCreator)(const ir::Node*);
+typedef RiscvOptKernel* (*OptKernelCreator)(const ir::Node*);
 
 class OptKernelCreatorManager final {
 public:

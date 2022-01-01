@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class ArgMaxKernel : public RISCVKernel {
+class ArgMaxKernel : public RiscvKernel {
 public:
-    ArgMaxKernel(const ir::Node* node) : RISCVKernel(node) {}
+    ArgMaxKernel(const ir::Node* node) : RiscvKernel(node) {}
 
     void SetParam(const ppl::nn::common::ArgMaxParam* p) {
         param_ = p;

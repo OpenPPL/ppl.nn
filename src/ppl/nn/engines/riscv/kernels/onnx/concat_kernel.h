@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class ConcatKernel : public RISCVKernel {
+class ConcatKernel : public RiscvKernel {
 public:
-    ConcatKernel(const ir::Node* node) : RISCVKernel(node) {}
+    ConcatKernel(const ir::Node* node) : RiscvKernel(node) {}
 
     void SetParam(const ppl::nn::common::ConcatParam* p) {
         param_ = p;

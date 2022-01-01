@@ -22,7 +22,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace riscv {
 
-RISCVOptKernel::RISCVOptKernel(const ir::Node* node) : OptKernel(node) {
+RiscvOptKernel::RiscvOptKernel(const ir::Node* node) : OptKernel(node) {
     common_param_.output_formats.resize(node->GetOutputCount(), DATAFORMAT_NDARRAY);
     common_param_.output_types.resize(node->GetOutputCount(), DATATYPE_FLOAT32);
 }

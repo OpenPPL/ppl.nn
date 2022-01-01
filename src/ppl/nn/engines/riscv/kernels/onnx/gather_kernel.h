@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class GatherKernel : public RISCVKernel {
+class GatherKernel : public RiscvKernel {
 public:
-    GatherKernel(const ir::Node* node) : RISCVKernel(node) {}
+    GatherKernel(const ir::Node* node) : RiscvKernel(node) {}
 
     void SetParam(const ppl::nn::common::GatherParam* p) {
         param_ = p;

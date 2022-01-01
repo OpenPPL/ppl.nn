@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class AveragePoolKernel : public RISCVKernel {
+class AveragePoolKernel : public RiscvKernel {
 public:
-    AveragePoolKernel(const ir::Node* node) : RISCVKernel(node) {}
+    AveragePoolKernel(const ir::Node* node) : RiscvKernel(node) {}
 
     void SetParam(const ppl::nn::common::PoolingParam* p) {
         param_ = p;

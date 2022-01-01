@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class TransposeOp final : public RISCVOptKernel {
+class TransposeOp final : public RiscvOptKernel {
 public:
-    TransposeOp(const ir::Node* node) : RISCVOptKernel(node) {}
+    TransposeOp(const ir::Node* node) : RiscvOptKernel(node) {}
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,

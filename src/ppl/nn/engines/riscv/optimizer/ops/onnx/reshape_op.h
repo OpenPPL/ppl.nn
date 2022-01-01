@@ -22,9 +22,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class ReshapeOp final : public RISCVOptKernel {
+class ReshapeOp final : public RiscvOptKernel {
 public:
-    ReshapeOp(const ir::Node* node) : RISCVOptKernel(node) {}
+    ReshapeOp(const ir::Node* node) : RiscvOptKernel(node) {}
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,

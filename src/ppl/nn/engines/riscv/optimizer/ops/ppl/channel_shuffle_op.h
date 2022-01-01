@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class ChannelShuffleOp final : public RISCVOptKernel {
+class ChannelShuffleOp final : public RiscvOptKernel {
 public:
-    ChannelShuffleOp(const ir::Node* node) : RISCVOptKernel(node) {}
+    ChannelShuffleOp(const ir::Node* node) : RiscvOptKernel(node) {}
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,

@@ -22,9 +22,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class ShapeKernel : public RISCVKernel {
+class ShapeKernel : public RiscvKernel {
 public:
-    ShapeKernel(const ir::Node* node) : RISCVKernel(node) {}
+    ShapeKernel(const ir::Node* node) : RiscvKernel(node) {}
 
 private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;

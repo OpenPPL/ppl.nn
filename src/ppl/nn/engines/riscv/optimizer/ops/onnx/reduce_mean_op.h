@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class ReduceMeanOp final : public RISCVOptKernel {
+class ReduceMeanOp final : public RiscvOptKernel {
 public:
-    ReduceMeanOp(const ir::Node* node) : RISCVOptKernel(node) {}
+    ReduceMeanOp(const ir::Node* node) : RiscvOptKernel(node) {}
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,

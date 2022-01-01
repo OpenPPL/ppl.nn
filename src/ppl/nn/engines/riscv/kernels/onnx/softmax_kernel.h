@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class SoftmaxKernel : public RISCVKernel {
+class SoftmaxKernel : public RiscvKernel {
 public:
-    SoftmaxKernel(const ir::Node* node) : RISCVKernel(node) {}
+    SoftmaxKernel(const ir::Node* node) : RiscvKernel(node) {}
 
     void SetParam(const ppl::nn::common::SoftmaxParam* p) {
         param_ = p;

@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class SplitKernel : public RISCVKernel {
+class SplitKernel : public RiscvKernel {
 public:
-    SplitKernel(const ir::Node* node) : RISCVKernel(node) {}
+    SplitKernel(const ir::Node* node) : RiscvKernel(node) {}
 
     void SetParam(const ppl::nn::common::SplitParam* p) {
         param_ = p;

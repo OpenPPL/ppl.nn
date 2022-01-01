@@ -23,8 +23,8 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn {
 
-Engine* RISCVEngineFactory::Create(const RISCVEngineOptions& options) {
-    auto engine = new riscv::RISCVEngine();
+Engine* RiscvEngineFactory::Create(const RiscvEngineOptions& options) {
+    auto engine = new riscv::RiscvEngine();
     if (engine) {
         auto status = engine->Init(options);
         if (status != RC_SUCCESS) {

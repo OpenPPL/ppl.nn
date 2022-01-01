@@ -46,14 +46,14 @@ ppl::common::RetCode Conv2dKernel::DoExecute(KernelExecContext* ctx) {
 
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
-    auto status = GetRISCVDevice()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
+    auto status = GetRiscvDevice()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
     if (status != ppl::common::RC_SUCCESS) {
         LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
     BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-        GetRISCVDevice()->FreeTmpBuffer(buffer);
+        GetRiscvDevice()->FreeTmpBuffer(buffer);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
     cur_executor->set_temp_buffer(tmp_buffer);

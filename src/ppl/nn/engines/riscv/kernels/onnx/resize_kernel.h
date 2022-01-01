@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class ResizeKernel : public RISCVKernel {
+class ResizeKernel : public RiscvKernel {
 public:
-    ResizeKernel(const ir::Node* node) : RISCVKernel(node) {}
+    ResizeKernel(const ir::Node* node) : RiscvKernel(node) {}
 
     void SetParam(const ppl::nn::common::ResizeParam* p) {
         param_ = p;

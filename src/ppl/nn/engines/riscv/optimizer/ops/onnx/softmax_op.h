@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class SoftmaxOp final : public RISCVOptKernel {
+class SoftmaxOp final : public RiscvOptKernel {
 public:
-    SoftmaxOp(const ir::Node* node) : RISCVOptKernel(node) {}
+    SoftmaxOp(const ir::Node* node) : RiscvOptKernel(node) {}
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
