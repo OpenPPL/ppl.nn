@@ -148,7 +148,7 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
     auto input_tensor = runtime->GetInputTensor(0);
 
     const std::vector<int64_t> input_shape{1, channels, height, width};
-    input_tensor->GetShape().Reshape(input_shape); // pplnn can reshape input dynamically even if onnx model has static input shape
+    input_tensor->GetShape()->Reshape(input_shape); // pplnn can reshape input dynamically even if onnx model has static input shape
     auto status = input_tensor->ReallocBuffer();   // must do this after tensor's shape has changed
     if (status != RC_SUCCESS) {
         fprintf(stderr, "ReallocBuffer for tensor [%s] failed: %s\n", input_tensor->GetName(), GetRetCodeStr(status));
@@ -156,7 +156,7 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
     }
 
     // set input data descriptor
-    TensorShape src_desc = input_tensor->GetShape(); // description of your prepared data, not input tensor's description
+    TensorShape src_desc = *input_tensor->GetShape(); // description of your prepared data, not input tensor's description
     src_desc.SetDataType(DATATYPE_FLOAT32);
     src_desc.SetDataFormat(DATAFORMAT_NDARRAY); // for 4-D Tensor, NDARRAY == NCHW
 
@@ -181,12 +181,12 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
     // prepare output data's buffer
     auto output_tensor = runtime->GetOutputTensor(0);
 
-    uint64_t output_size = output_tensor->GetShape().GetElementsExcludingPadding();
+    uint64_t output_size = output_tensor->GetShape()->GetElementsExcludingPadding();
     std::vector<float> output_data_(output_size);
     float* output_data = output_data_.data();
 
     // set output data descriptor
-    TensorShape dst_desc = output_tensor->GetShape(); // description of your output data buffer, not output_tensor's description
+    TensorShape dst_desc = *output_tensor->GetShape(); // description of your output data buffer, not output_tensor's description
     dst_desc.SetDataType(DATATYPE_FLOAT32);
     dst_desc.SetDataFormat(DATAFORMAT_NDARRAY); // output is 1-D Tensor, NDARRAY == vector
 

@@ -463,7 +463,7 @@ if __name__ == "__main__":
     for i in range(runtime.GetInputCount()):
         tensor = runtime.GetInputTensor(i)
         shape = tensor.GetShape()
-        if shape.GetElementsIncludingPadding() == 0:
+        if CalcElementCount(shape.GetDims()) == 0:
             logging.error("input tensor[" + tensor.GetName() + "] is empty.")
             sys.exit(-1)
 
