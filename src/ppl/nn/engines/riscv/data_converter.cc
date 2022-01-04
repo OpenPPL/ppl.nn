@@ -20,6 +20,7 @@
 
 #include "ppl/nn/engines/riscv/data_converter.h"
 #include "ppl/nn/engines/riscv/utils/data_trans.h"
+#include "ppl/nn/engines/riscv/utils/fp16fp32_cvt.h"
 #include "ppl/common/log.h"
 using namespace ppl::common;
 
@@ -37,7 +38,15 @@ RetCode RiscvDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc
     } else if (dst_desc.GetDataFormat() != src_desc.GetDataFormat() &&
                dst_desc.GetDataType() == src_desc.GetDataType()) {
         if (dst_desc.GetDataType() == DATATYPE_FLOAT32) {
-            return RC_UNSUPPORTED;
+            if (dst_desc.GetDataFormat() == DATAFORMAT_N8CX && src_desc.GetDataFormat() == DATAFORMAT_NDARRAY) {
+                NdarrayToN8cxFp32((float*)(src.addr), src_desc.GetDim(0), src_desc.GetDim(1), src_desc.GetDim(2),
+                                  src_desc.GetDim(3), (float*)(dst->addr));
+                return RC_SUCCESS;
+            } else if (dst_desc.GetDataFormat() == DATAFORMAT_NDARRAY && src_desc.GetDataFormat() == DATAFORMAT_N8CX) {
+                N8cxToNdarrayFp32((float*)(src.addr), src_desc.GetDim(0), src_desc.GetDim(1), src_desc.GetDim(2),
+                                  src_desc.GetDim(3), (float*)(dst->addr));
+                return RC_SUCCESS;
+            }
         } else if (dst_desc.GetDataType() == DATATYPE_FLOAT16) {
             if (dst_desc.GetDataFormat() == DATAFORMAT_N8CX && src_desc.GetDataFormat() == DATAFORMAT_NDARRAY) {
                 NdarrayToN8cxFp16((__fp16*)(src.addr), src_desc.GetDim(0), src_desc.GetDim(1), src_desc.GetDim(2),
@@ -64,8 +73,13 @@ RetCode RiscvDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc
         }
     } else if (dst_desc.GetDataFormat() == src_desc.GetDataFormat() &&
                dst_desc.GetDataType() != src_desc.GetDataType()) {
-        LOG(ERROR) << "TODO: add data type conversion";
-        return RC_UNSUPPORTED;
+        if (dst_desc.GetDataType() == DATATYPE_FLOAT32 && src_desc.GetDataType() == DATATYPE_FLOAT16) {
+            CvtFp16ToFp32(src_desc.GetElementsIncludingPadding(), (__fp16*)(src.addr), (float*)(dst->addr));
+            return RC_SUCCESS;
+        } else if (dst_desc.GetDataType() == DATATYPE_FLOAT16 && src_desc.GetDataType() == DATATYPE_FLOAT32) {
+            CvtFp32ToFp16(src_desc.GetElementsIncludingPadding(), (float*)(src.addr), (__fp16*)(dst->addr));
+            return RC_SUCCESS;
+        }
     }
     return RC_UNSUPPORTED;
 }
