@@ -725,8 +725,12 @@ static bool SaveOutputsOneByOne(const Runtime* runtime) {
 
         TensorShape dst_desc = *t->GetShape();
         dst_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-        auto bytes = dst_desc.GetBytesIncludingPadding();
+        // convert fp16 to fp32
+        if (dst_desc.GetDataType() == DATATYPE_FLOAT16) {
+            dst_desc.SetDataType(DATATYPE_FLOAT32);
+        }
 
+        auto bytes = dst_desc.GetBytesIncludingPadding();
         vector<char> buffer(bytes);
         auto status = t->ConvertToHost(buffer.data(), dst_desc);
         if (status != RC_SUCCESS) {
