@@ -175,7 +175,7 @@ ParamParserManager::ParamParserManager() {
     // M
     PPL_REGISTER_OP_WITHOUT_PARAM("", "MatMul", 9, 12);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Max", 8, 11);
-    PPL_REGISTER_OP_WITH_PARAM("", "MaxPool", 11, 11, ppl::nn::common::PoolingParam, ParsePoolingParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "MaxPool", 10, 16, ppl::nn::common::PoolingParam, ParsePoolingParam);
     PPL_REGISTER_OP_WITH_PARAM("", "MaxUnpool", 11, 16, ppl::nn::common::MaxUnpoolParam, ParseMaxUnpoolParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Min", 8, 11);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Mul", 7, 12);
