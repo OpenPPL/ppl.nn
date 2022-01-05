@@ -318,6 +318,13 @@ Define_bool_opt("--use-fp16", g_flag_use_fp16, false, "infer with riscv fp16 (us
 static inline bool RegisterRiscvEngine(vector<unique_ptr<Engine>>* engines) {
     RiscvEngineOptions options;
     options.tune_param_flag = false;
+    
+    if (g_flag_mm_policy == "perf") {
+        options.mm_policy = RISCV_MM_MRU;
+    } else if (g_flag_mm_policy == "mem") {
+        options.mm_policy = RISCV_MM_COMPACT;
+    }
+
     if (g_flag_use_fp16) {
         options.forward_precision = RISCV_USE_FP16;
     } else {

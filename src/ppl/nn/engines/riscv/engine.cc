@@ -35,7 +35,7 @@ ppl::common::RetCode RiscvEngine::Init(const RiscvEngineOptions& options) {
 };
 
 EngineContext* RiscvEngine::CreateEngineContext() {
-    return new RiscvEngineContext(&device_);
+    return new RiscvEngineContext(options_.mm_policy);
 }
 
 ppl::common::RetCode RiscvEngine::Configure(uint32_t, ...) {
