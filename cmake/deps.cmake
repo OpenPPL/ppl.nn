@@ -47,7 +47,7 @@ endif()
 
 FetchContent_Declare(hpcc
     GIT_REPOSITORY https://github.com/openppl-public/hpcc.git
-    GIT_TAG 4ac9367ff6b2af7ad8adc4fb7ba1c0fa27793ae0
+    GIT_TAG 563950287f35ddd3801b5e38d82b75b50f3cdfea
     SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
     SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
@@ -68,7 +68,7 @@ set(PPLCOMMON_HOLD_DEPS ${PPLNN_HOLD_DEPS})
 
 hpcc_declare_git_dep(pplcommon
     https://github.com/openppl-public/ppl.common.git
-    83dd9e3b091d7fad0106d12d68c1bb38977ede5d)
+    9c678348dbdd57c015260308bc60bf0c89bea8d1)
 
 # --------------------------------------------------------------------------- #
 
@@ -96,8 +96,8 @@ set(PYBIND11_NOPYTHON ON CACHE BOOL "do not find python")
 set(PYBIND11_FINDPYTHON OFF CACHE BOOL "do not find python")
 
 hpcc_declare_pkg_dep(pybind11
-    https://github.com/pybind/pybind11/archive/refs/tags/v2.7.1.zip
-    cc6d9f0c21694e7c4ec4a00f077de61b)
+    https://github.com/pybind/pybind11/archive/refs/tags/v2.8.1.zip
+    9a6be23096afcafe9f4124a5054776eb)
 
 # --------------------------------------------------------------------------- #
 
