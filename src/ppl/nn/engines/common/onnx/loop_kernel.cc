@@ -116,22 +116,28 @@ static RetCode SaveSubgraphOutputs(RuntimeImpl* subgraph, LoopInfo* info) {
 
 static RetCode UpdateSubgraphInputs(int64_t trip_count, RuntimeImpl* subgraph,
                                     utils::GenericCpuDevice* tmp_cpu_device) {
-    auto status = subgraph->GetInputTensorImpl(0)->CopyFromHost(&trip_count);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "get trip count failed: " << GetRetCodeStr(status);
-        return status;
+    auto trip_count_tensor = subgraph->GetInputTensorImpl(0);
+    if (trip_count_tensor->GetDevice()) { // not used by anyone if device is not set
+        auto status = trip_count_tensor->CopyFromHost(&trip_count);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "get trip count failed: " << GetRetCodeStr(status);
+            return status;
+        }
     }
 
     // starting from 1 to skip trip count
     for (uint32_t i = 1; i < subgraph->GetInputCount(); ++i) {
         auto dst = subgraph->GetInputTensorImpl(i);
+        if (!dst->GetDevice()) { // not used by anyone if device is not set
+            continue;
+        }
+
         auto src = subgraph->GetOutputTensorImpl(i - 1);
         *dst->GetShape() = *src->GetShape();
         if (dst->GetDevice() == src->GetDevice()) {
             dst->TransferBufferFrom(src);
         } else {
-            // outputs are already synchronized by subgraph->Sync()
-            status = utils::CopyTensorBuffer(*src, dst, tmp_cpu_device);
+            auto status = utils::CopyTensorBuffer(*src, dst, tmp_cpu_device);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "copy data from tensor[" << src->GetName() << "] to tensor[" << dst->GetName()
                            << "] failed: " << GetRetCodeStr(status);
@@ -148,7 +154,7 @@ static RetCode InitSubgraphInputs(const KernelExecContext& ctx, bool keep_going,
     RetCode status;
 
     auto input0 = subgraph->GetInputTensorImpl(0);
-    if (input0->GetDevice()) { // not used by anyone if device is net set
+    if (input0->GetDevice()) { // not used by anyone if device is not set
         status = input0->ReallocBuffer();
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "ReallocBuffer for tensor[" << input0->GetName() << "] failed: " << GetRetCodeStr(status);
