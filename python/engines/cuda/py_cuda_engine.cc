@@ -15,8 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifdef PPLNN_USE_CUDA
-
 #include "py_cuda_engine.h"
 #include "ppl/common/retcode.h"
 #include "pybind11/pybind11.h"
@@ -111,5 +109,3 @@ void RegisterCudaEngine(pybind11::module* m) {
 }
 
 }}} // namespace ppl::nn::python
-
-#endif

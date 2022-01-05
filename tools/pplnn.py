@@ -29,7 +29,7 @@ from pyppl import common as pplcommon
 
 # ---------------------------------------------------------------------------- #
 
-g_supported_devices = ["x86", "cuda"]
+g_supported_devices = ["x86", "cuda", "riscv"]
 
 g_pplnntype2numpytype = {
     pplcommon.DATATYPE_INT8 : np.int8,
@@ -87,6 +87,9 @@ def ParseCommandLineArgs():
                                 help = "a json file containing op implementations info")
             parser.add_argument("--export-algo-file", type = str, default = "", required = False,
                                 help = "a json file used to store op implementations info")
+        elif dev == "riscv":
+            parser.add_argument("--use-fp16", dest = "use_fp16", action = "store_true",
+                                default = False, required = False)
 
     parser.add_argument("--onnx-model", type = str, default = "", required = False,
                         help = "onnx model file")
@@ -204,6 +207,20 @@ def CreateCudaEngine(args):
 
     return cuda_engine
 
+def CreateRiscvEngine(args):
+    riscv_options = pplnn.RiscvEngineOptions()
+    if args.use_fp16:
+        riscv_options.forward_precision = pplnn.RISCV_USE_FP16
+    else:
+        riscv_options.forward_precision = pplnn.RISCV_USE_FP32
+
+    riscv_engine = pplnn.RiscvEngineFactory.Create(riscv_options)
+    if not riscv_engine:
+        logging.error("create riscv engine failed.")
+        sys.exit(-1)
+
+    return riscv_engine
+
 def RegisterEngines(args):
     engines = []
     if args.use_x86:
@@ -213,6 +230,10 @@ def RegisterEngines(args):
     if args.use_cuda:
         cuda_engine = CreateCudaEngine(args)
         engines.append(pplnn.Engine(cuda_engine))
+
+    if args.use_riscv:
+        riscv_engine = CreateRiscvEngine(args)
+        engines.append(pplnn.Engine(riscv_engine))
 
     return engines
 

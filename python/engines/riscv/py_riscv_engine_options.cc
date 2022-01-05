@@ -15,22 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "py_cuda_engine.h"
-#include "ppl/nn/engines/cuda/engine_factory.h"
+#include "ppl/nn/engines/riscv/riscv_engine_options.h"
 #include "pybind11/pybind11.h"
 
 namespace ppl { namespace nn { namespace python {
 
-class PyCudaEngineFactory final {
-public:
-    static PyCudaEngine Create(const CudaEngineOptions& options) {
-        return PyCudaEngine(CudaEngineFactory::Create(options));
-    }
-};
+void RegisterRiscvEngineOptions(pybind11::module* m) {
+    pybind11::class_<RiscvEngineOptions>(*m, "RiscvEngineOptions")
+        .def(pybind11::init<>())
+        .def_readwrite("forward_precision", &RiscvEngineOptions::forward_precision);
 
-void RegisterCudaEngineFactory(pybind11::module* m) {
-    pybind11::class_<PyCudaEngineFactory>(*m, "CudaEngineFactory")
-        .def_static("Create", &PyCudaEngineFactory::Create);
+    m->attr("RISCV_USE_FP16") = (uint32_t)RISCV_USE_FP16;
+    m->attr("RISCV_USE_FP32") = (uint32_t)RISCV_USE_FP32;
 }
 
 }}} // namespace ppl::nn::python

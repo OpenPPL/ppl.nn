@@ -4,4 +4,5 @@ list(APPEND PPLNN_SOURCES ${PPLNN_X86_SRC})
 add_subdirectory(src/ppl/nn/engines/x86/impls)
 list(APPEND PPLNN_LINK_LIBRARIES pplkernelx86_static)
 
+set(PPLNN_USE_X86 ON)
 list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_USE_X86)

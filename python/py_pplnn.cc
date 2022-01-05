@@ -24,10 +24,17 @@ void RegisterCudaEngineFactory(pybind11::module*);
 void RegisterCudaEngineOptions(pybind11::module*);
 void RegisterCudaEngine(pybind11::module*);
 #endif
+
 #ifdef PPLNN_USE_X86
 void RegisterX86EngineFactory(pybind11::module*);
 void RegisterX86EngineOptions(pybind11::module*);
 void RegisterX86Engine(pybind11::module*);
+#endif
+
+#ifdef PPLNN_USE_RISCV
+void RegisterRiscvEngineFactory(pybind11::module*);
+void RegisterRiscvEngineOptions(pybind11::module*);
+void RegisterRiscvEngine(pybind11::module*);
 #endif
 
 void RegisterTensorShape(pybind11::module*);
@@ -46,10 +53,17 @@ PYBIND11_MODULE(nn, m) {
     RegisterCudaEngineOptions(&m);
     RegisterCudaEngine(&m);
 #endif
+
 #ifdef PPLNN_USE_X86
     RegisterX86EngineFactory(&m);
     RegisterX86EngineOptions(&m);
     RegisterX86Engine(&m);
+#endif
+
+#ifdef PPLNN_USE_RISCV
+    RegisterRiscvEngineFactory(&m);
+    RegisterRiscvEngineOptions(&m);
+    RegisterRiscvEngine(&m);
 #endif
 
     RegisterTensorShape(&m);

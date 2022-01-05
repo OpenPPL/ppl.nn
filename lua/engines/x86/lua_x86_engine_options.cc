@@ -15,8 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifdef PPLNN_USE_X86
-
 #include "ppl/nn/engines/x86/x86_engine_options.h"
 #include "luacpp.h"
 #include <memory>
@@ -42,5 +40,3 @@ void RegisterX86EngineOptions(const shared_ptr<LuaState>& lstate, const shared_p
 }
 
 }}}
-
-#endif

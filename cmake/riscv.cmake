@@ -7,4 +7,5 @@ list(APPEND PPLNN_SOURCES ${PPLNN_RISCV_SRC})
 add_subdirectory(src/ppl/nn/engines/riscv/impls)
 list(APPEND PPLNN_LINK_LIBRARIES pplkernelriscv_static)
 
+set(PPLNN_USE_RISCV ON)
 list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_USE_RISCV)

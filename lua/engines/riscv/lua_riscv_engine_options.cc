@@ -15,26 +15,28 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/x86/engine_factory.h"
-#include "ppl/nn/common/logger.h"
+#include "ppl/nn/engines/riscv/riscv_engine_options.h"
 #include "luacpp.h"
-#include "../lua_engine.h"
+#include <memory>
 using namespace std;
 using namespace luacpp;
 
 namespace ppl { namespace nn { namespace lua {
 
-void RegisterX86EngineFactory(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
-    auto x86_engine_class = LuaClass<LuaEngine>(lmodule->Get("X86Engine"));
-    auto lclass = lstate->CreateClass<X86EngineFactory>()
-        .DefStatic("Create", [x86_engine_class, lstate](const X86EngineOptions* options) -> LuaObject {
-            auto engine = X86EngineFactory::Create(*options);
-            if (!engine) {
-                return lstate->CreateNil();
-            }
-            return x86_engine_class.CreateUserData(engine);
-        });
-    lmodule->Set("X86EngineFactory", lclass);
+void RegisterRiscvEngineOptions(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
+    auto lclass = lstate->CreateClass<RiscvEngineOptions>()
+        .DefConstructor()
+        .DefMember("forward_precision",
+                   [](const RiscvEngineOptions* options) -> uint32_t {
+                       return options->forward_precision;
+                   },
+                   [](RiscvEngineOptions* options, uint32_t v) -> void {
+                       options->forward_precision = v;
+                   });
+    lmodule->Set("RiscvEngineOptions", lclass);
+
+    lmodule->SetInteger("RISCV_USE_FP16", RISCV_USE_FP16);
+    lmodule->SetInteger("RISCV_USE_FP32", RISCV_USE_FP32);
 }
 
 }}}

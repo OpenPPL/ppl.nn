@@ -22,8 +22,31 @@ if(MSVC)
     endif()
 endif()
 
+# --------------------------------------------------------------------------- #
+
 file(GLOB_RECURSE PPLNN_PYTHON_API_SRC
-    ${CMAKE_CURRENT_SOURCE_DIR}/*.cc)
+    ${CMAKE_CURRENT_SOURCE_DIR}/common/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/models/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/utils/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/py_pplnn.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/engines/py_engine.cc)
+
+if(PPLNN_USE_X86)
+    file(GLOB_RECURSE PPLNN_PYTHON_X86_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/x86/*.cc)
+    list(APPEND PPLNN_PYTHON_API_SRC ${PPLNN_PYTHON_X86_SRC})
+endif()
+
+if(PPLNN_USE_CUDA)
+    file(GLOB_RECURSE PPLNN_PYTHON_CUDA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/cuda/*.cc)
+    list(APPEND PPLNN_PYTHON_API_SRC ${PPLNN_PYTHON_CUDA_SRC})
+endif()
+
+if(PPLNN_USE_RISCV)
+    file(GLOB_RECURSE PPLNN_PYTHON_RISCV_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/riscv/*.cc)
+    list(APPEND PPLNN_PYTHON_API_SRC ${PPLNN_PYTHON_RISCV_SRC})
+endif()
+
 add_library(pypplnn_shared SHARED ${PPLNN_PYTHON_API_SRC})
 target_link_libraries(pypplnn_shared PUBLIC pplnn_static ${PYTHON3_LIBRARIES})
 target_include_directories(pypplnn_shared PUBLIC
@@ -31,6 +54,8 @@ target_include_directories(pypplnn_shared PUBLIC
     ${pybind11_SOURCE_DIR}/include
     ${PYTHON3_INCLUDE_DIRS})
 target_compile_features(pypplnn_shared PRIVATE cxx_std_11)
+
+# --------------------------------------------------------------------------- #
 
 # rename target for python import
 set_target_properties(pypplnn_shared PROPERTIES PREFIX "")

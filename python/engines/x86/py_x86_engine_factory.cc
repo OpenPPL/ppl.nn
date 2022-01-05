@@ -15,8 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifdef PPLNN_USE_X86
-
 #include "py_x86_engine.h"
 #include "ppl/nn/engines/x86/engine_factory.h"
 #include "pybind11/pybind11.h"
@@ -35,5 +33,3 @@ void RegisterX86EngineFactory(pybind11::module* m) {
 }
 
 }}} // namespace ppl::nn::python
-
-#endif
