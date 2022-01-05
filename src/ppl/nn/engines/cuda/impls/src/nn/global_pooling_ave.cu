@@ -104,29 +104,36 @@ __global__ void ppl_cukernel_pooling_ave_global_shuffle_half(
     if (c >= pad_channels)
         return;
 
-    half res = half(0);
+    float res = 0.f;
     for (int i = 0; i < HW; i += 64) {
         bool pred0 = i + threadIdx.x * 2 + 0 < HW;
         bool pred1 = i + threadIdx.x * 2 + 1 < HW;
         half ival0 = pred0 ? input[bc * HW + 2 * threadIdx.x + i + 0] : half(0);
         half ival1 = pred1 ? input[bc * HW + 2 * threadIdx.x + i + 1] : half(0);
-        half val   = __hadd(ival0, ival1);
-        res        = __hadd(res, val);
+        float val  = __half2float(__hadd(ival0, ival1));
+        res        += val;
     }
 
     for (int offset = 16; offset > 0; offset /= 2) {
 #if __CUDACC_VER_MAJOR__ >= 9
-        half val = __shfl_down_sync(0xffffffff, res, offset);
+        float val = __shfl_down_sync(0xffffffff, res, offset);
 #else
-        half val = __shfl_down(res, offset);
+        float val = __shfl_down(res, offset);
 #endif
-        res = __hadd(res, val);
+        res +=  val;
     }
 
     // store output
     if (threadIdx.x == 0)
         output[bc] = __hdiv(res, __float2half(HW));
 #endif
+}
+
+static __device__ float2 __f2add(float2 val0, float2 val1) {
+    float2 res{0.f, 0.f};
+    res.x = val0.x + val1.x;
+    res.y = val0.y + val1.y;
+    return res;
 }
 
 __global__ void ppl_cukernel_pooling_ave_global_shuffle_half2_NHWC(
@@ -142,27 +149,31 @@ __global__ void ppl_cukernel_pooling_ave_global_shuffle_half2_NHWC(
     if (c >= pad_channels)
         return;
 
-    half2 res = half2(0.f, 0.f);
+    float2 res = float2{0.f, 0.f};
     // main loop
     for (int i = threadIdx.y; i < HW; i += blockDim.y) {
         half2 ival = input[b_offset * HW + i * pad_channels + c];
-        res        = __hadd2(res, ival);
+        res        = __f2add(res, __half22float2(ival));
     }
-    __shared__ half2 sum_buffer[8][32];
+    __shared__ float2 sum_buffer[8][32];
     sum_buffer[threadIdx.y][threadIdx.x] = res;
     __syncthreads();
 
     for (int i = (blockDim.y >> 1); i > 0; i = (i >> 1)) {
         if (threadIdx.y < i) {
-            half2 res                            = sum_buffer[threadIdx.y + i][threadIdx.x];
-            res                                  = __hadd2(res, sum_buffer[threadIdx.y][threadIdx.x]);
+            float2 res                           = sum_buffer[threadIdx.y + i][threadIdx.x];
+            res                                  = __f2add(res, sum_buffer[threadIdx.y][threadIdx.x]);
             sum_buffer[threadIdx.y][threadIdx.x] = res;
             __syncthreads();
         }
     }
     // store output
-    if (threadIdx.y == 0)
-        output[b_offset + c] = __h2div(sum_buffer[threadIdx.y][threadIdx.x], half2(HW, HW));
+    if (threadIdx.y == 0) {
+        float2 res = sum_buffer[threadIdx.y][threadIdx.x];
+        res.x = res.x / HW;
+        res.y = res.y / HW;
+        output[b_offset + c] = __float22half2_rn(res);
+    }
 #endif
 }
 

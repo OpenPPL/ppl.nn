@@ -41,7 +41,6 @@ ppl::common::RetCode ChannelShuffleKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     if (ctx->GetOutputCount() == 1) {
-        auto Y_shape = Y->GetShape();
         PPLCUDAChannelShuffleForwardImp(GetStream(), group_, X->GetShape(), X->GetBufferPtr(),
                                                              Y->GetShape(), Y->GetBufferPtr(),
                                                              input_quant0.scale[0], output_quant0.scale[0]);

@@ -43,7 +43,11 @@ void NormalAlgorithm::ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, st
     for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
         auto edge_id = node->GetOutput(i);
         auto shape = tensors->find(edge_id)->second->GetShape();
-        shape->SetDataFormat(output_format);
+        if (shape->GetDimCount() > 1) {
+            shape->SetDataFormat(output_format);
+        } else {
+            shape->SetDataFormat(DATAFORMAT_NDARRAY);
+        }
     }
     return;
 }
