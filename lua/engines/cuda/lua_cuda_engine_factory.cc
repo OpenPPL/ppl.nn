@@ -15,8 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifdef PPLNN_USE_CUDA
-
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/common/logger.h"
 #include "luacpp.h"
@@ -40,5 +38,3 @@ void RegisterCudaEngineFactory(const shared_ptr<LuaState>& lstate, const shared_
 }
 
 }}}
-
-#endif

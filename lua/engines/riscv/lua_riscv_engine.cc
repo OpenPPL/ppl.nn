@@ -15,22 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "py_cuda_engine.h"
-#include "ppl/nn/engines/cuda/engine_factory.h"
-#include "pybind11/pybind11.h"
+#include "../lua_engine.h"
+#include "luacpp.h"
+#include "ppl/nn/engines/riscv/riscv_options.h"
+#include "ppl/nn/common/logger.h"
+#include <map>
+using namespace std;
+using namespace luacpp;
+using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace python {
+namespace ppl { namespace nn { namespace lua {
 
-class PyCudaEngineFactory final {
-public:
-    static PyCudaEngine Create(const CudaEngineOptions& options) {
-        return PyCudaEngine(CudaEngineFactory::Create(options));
-    }
-};
-
-void RegisterCudaEngineFactory(pybind11::module* m) {
-    pybind11::class_<PyCudaEngineFactory>(*m, "CudaEngineFactory")
-        .def_static("Create", &PyCudaEngineFactory::Create);
+void RegisterRiscvEngine(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
+    auto lclass = lstate->CreateClass<LuaEngine>()
+        .DefMember("GetName", [](const LuaEngine* engine) -> const char* {
+            return engine->ptr->GetName();
+        });
+    lmodule->Set("RiscvEngine", lclass);
 }
 
-}}} // namespace ppl::nn::python
+}}}

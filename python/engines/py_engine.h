@@ -27,6 +27,9 @@
 #ifdef PPLNN_USE_CUDA
 #include "cuda/py_cuda_engine.h"
 #endif
+#ifdef PPLNN_USE_RISCV
+#include "riscv/py_riscv_engine.h"
+#endif
 
 namespace ppl { namespace nn { namespace python {
 
@@ -38,6 +41,11 @@ struct PyEngine final {
 #endif
 #ifdef PPLNN_USE_CUDA
     PyEngine(const PyCudaEngine& e) {
+        ptr = e.ptr;
+    }
+#endif
+#ifdef PPLNN_USE_RISCV
+    PyEngine(const PyRiscvEngine& e) {
         ptr = e.ptr;
     }
 #endif

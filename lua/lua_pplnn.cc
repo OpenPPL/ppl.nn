@@ -28,10 +28,17 @@ void RegisterX86EngineOptions(const shared_ptr<LuaState>&, const shared_ptr<LuaT
 void RegisterX86Engine(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterX86EngineFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 #endif
+
 #ifdef PPLNN_USE_CUDA
 void RegisterCudaEngineOptions(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterCudaEngine(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterCudaEngineFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
+#endif
+
+#ifdef PPLNN_USE_RISCV
+void RegisterRiscvEngineOptions(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
+void RegisterRiscvEngine(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
+void RegisterRiscvEngineFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 #endif
 
 void RegisterGetVersionString(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
@@ -60,10 +67,17 @@ int PPLNN_PUBLIC luaopen_luappl_nn(lua_State* l) {
     RegisterCudaEngine(lstate, lmodule);
     RegisterCudaEngineFactory(lstate, lmodule);
 #endif
+
 #ifdef PPLNN_USE_X86
     RegisterX86EngineOptions(lstate, lmodule);
     RegisterX86Engine(lstate, lmodule);
     RegisterX86EngineFactory(lstate, lmodule);
+#endif
+
+#ifdef PPLNN_USE_RISCV
+    RegisterRiscvEngineOptions(lstate, lmodule);
+    RegisterRiscvEngine(lstate, lmodule);
+    RegisterRiscvEngineFactory(lstate, lmodule);
 #endif
 
     RegisterGetVersionString(lstate, lmodule);

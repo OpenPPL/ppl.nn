@@ -7,7 +7,29 @@ endif()
 
 hpcc_populate_dep(luacpp)
 
-file(GLOB_RECURSE PPLNN_LUA_API_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cc)
+# --------------------------------------------------------------------------- #
+
+file(GLOB_RECURSE PPLNN_LUA_API_SRC
+    ${CMAKE_CURRENT_SOURCE_DIR}/common/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/models/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/utils/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/lua_pplnn.cc)
+
+if(PPLNN_USE_X86)
+    file(GLOB_RECURSE PPLNN_LUA_X86_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/x86/*.cc)
+    list(APPEND PPLNN_LUA_API_SRC ${PPLNN_LUA_X86_SRC})
+endif()
+
+if(PPLNN_USE_CUDA)
+    file(GLOB_RECURSE PPLNN_LUA_CUDA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/cuda/*.cc)
+    list(APPEND PPLNN_LUA_API_SRC ${PPLNN_LUA_CUDA_SRC})
+endif()
+
+if(PPLNN_USE_RISCV)
+    file(GLOB_RECURSE PPLNN_LUA_RISCV_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/riscv/*.cc)
+    list(APPEND PPLNN_LUA_API_SRC ${PPLNN_LUA_RISCV_SRC})
+endif()
 
 add_library(luapplnn_shared SHARED ${PPLNN_LUA_API_SRC})
 target_compile_features(luapplnn_shared PRIVATE cxx_std_14)
@@ -16,6 +38,8 @@ target_include_directories(luapplnn_shared PUBLIC
     ${PROJECT_SOURCE_DIR}/include
     ${LUA_INCLUDE_DIR}
     ${HPCC_DEPS_DIR}/luacpp)
+
+# --------------------------------------------------------------------------- #
 
 # rename target for lua import
 set_target_properties(luapplnn_shared PROPERTIES PREFIX "")

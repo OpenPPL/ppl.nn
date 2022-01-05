@@ -15,8 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifdef PPLNN_USE_CUDA
-
 #include "ppl/nn/engines/cuda/cuda_engine_options.h"
 #include "luacpp.h"
 #include <memory>
@@ -49,5 +47,3 @@ void RegisterCudaEngineOptions(const shared_ptr<LuaState>& lstate, const shared_
 }
 
 }}}
-
-#endif

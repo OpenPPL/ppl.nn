@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/x86/engine_factory.h"
+#include "ppl/nn/engines/riscv/engine_factory.h"
 #include "ppl/nn/common/logger.h"
 #include "luacpp.h"
 #include "../lua_engine.h"
@@ -24,17 +24,17 @@ using namespace luacpp;
 
 namespace ppl { namespace nn { namespace lua {
 
-void RegisterX86EngineFactory(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
-    auto x86_engine_class = LuaClass<LuaEngine>(lmodule->Get("X86Engine"));
-    auto lclass = lstate->CreateClass<X86EngineFactory>()
-        .DefStatic("Create", [x86_engine_class, lstate](const X86EngineOptions* options) -> LuaObject {
-            auto engine = X86EngineFactory::Create(*options);
+void RegisterRiscvEngineFactory(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
+    auto riscv_engine_class = LuaClass<LuaEngine>(lmodule->Get("RiscvEngine"));
+    auto lclass = lstate->CreateClass<RiscvEngineFactory>()
+        .DefStatic("Create", [riscv_engine_class, lstate](const RiscvEngineOptions* options) -> LuaObject {
+            auto engine = RiscvEngineFactory::Create(*options);
             if (!engine) {
                 return lstate->CreateNil();
             }
-            return x86_engine_class.CreateUserData(engine);
+            return riscv_engine_class.CreateUserData(engine);
         });
-    lmodule->Set("X86EngineFactory", lclass);
+    lmodule->Set("RiscvEngineFactory", lclass);
 }
 
 }}}

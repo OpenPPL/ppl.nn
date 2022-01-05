@@ -309,9 +309,7 @@ static inline bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
 #ifdef PPLNN_USE_RISCV
 
 Define_bool_opt("--use-riscv", g_flag_use_riscv, false, "use riscv engine");
-Define_bool_opt("--use-fp16", g_flag_use_fp16, false, "infer with riscv fp32");
-Define_string_opt("--output-format", g_flag_output_format, "", "declare the output format");
-Define_string_opt("--output-type", g_flag_output_type, "", "declare the output type");
+Define_bool_opt("--use-fp16", g_flag_use_fp16, false, "infer with riscv fp16 (use fp32 by default)");
 
 #include "ppl/nn/engines/riscv/engine_factory.h"
 #include "ppl/nn/engines/riscv/riscv_options.h"

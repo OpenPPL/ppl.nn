@@ -29,6 +29,9 @@ void RegisterEngine(pybind11::module* m) {
 #ifdef PPLNN_USE_CUDA
         .def(pybind11::init<PyCudaEngine>())
 #endif
+#ifdef PPLNN_USE_RISCV
+        .def(pybind11::init<PyRiscvEngine>())
+#endif
         .def("__bool__", [](const PyEngine& engine) -> bool {
             return (engine.ptr.get());
         });
