@@ -397,10 +397,10 @@ static ppl::common::RetCode arithmetic_broadcast_n16cx_fp32_sse(
     }
 
     // split task for each thread
-    const int64_t num_threads = PPL_OMP_MAX_THREADS();
     const int64_t total_len   = dst_shape->GetElementsIncludingPadding() /
                               16; // because C dim has been divided by 16, len should also div 16
-    const int64_t len_per_thread = (total_len + num_threads - 1) / num_threads;
+    const int64_t len_per_thread = div_up(total_len, PPL_OMP_MAX_THREADS());
+    const int64_t num_threads    = div_up(total_len, len_per_thread);
 
     parallel_block blocks[num_threads];
     for (int64_t i = 0; i < num_threads; i++) {
