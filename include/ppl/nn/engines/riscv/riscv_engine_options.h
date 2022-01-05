@@ -27,6 +27,7 @@ namespace ppl { namespace nn {
 struct PPLNN_PUBLIC RiscvEngineOptions final {
     uint32_t tune_param_flag = 0;
     uint32_t forward_precision = 0;
+    uint32_t mm_policy = RISCV_MM_COMPACT;
 };
 
 }} // namespace ppl::nn

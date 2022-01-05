@@ -25,6 +25,23 @@ enum {
     RISCV_USE_FP32 = 1,
 };
 
+/** @brief memory management policies */
+enum {
+    /** less memory usage, may cause performance loss */
+    RISCV_MM_COMPACT = 0,
+
+    /** most recently used first, will use more memory */
+    RISCV_MM_MRU = 1,
+};
+
+/** @brief options for riscv::DeviceContext::Configure() */
+enum {
+    /** @brief memory defragmentation. make sure that device is not used when performing defragmentations. */
+    RISCV_DEV_CONF_MEM_DEFRAG = 0,
+
+    RISCV_DEV_CONF_MAX,
+};
+
 }} // namespace ppl::nn
 
 #endif

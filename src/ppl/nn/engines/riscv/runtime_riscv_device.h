@@ -20,13 +20,10 @@
 
 #include "ppl/nn/engines/riscv/riscv_device.h"
 #include "ppl/nn/engines/riscv/riscv_options.h"
-#include "ppl/nn/utils/stack_buffer_manager.h"
-#include "ppl/nn/utils/compact_buffer_manager.h"
+#include "ppl/nn/utils/buffer_manager.h"
 #include "ppl/nn/common/logger.h"
 
 namespace ppl { namespace nn { namespace riscv {
-
-static void DummyDeleter(ppl::common::Allocator*) {}
 
 class RuntimeRiscvDevice final : public RiscvDevice {
 private:
@@ -35,39 +32,14 @@ private:
     }
 
 public:
-    RuntimeRiscvDevice(uint64_t alignment) : RiscvDevice(alignment) {
-        auto allocator_ptr = RiscvDevice::GetAllocator();
-        allocator_ = std::shared_ptr<ppl::common::Allocator>(allocator_ptr, DummyDeleter);
-        buffer_manager_.reset(new utils::StackBufferManager(allocator_ptr));
+    RuntimeRiscvDevice(uint64_t alignment, uint32_t mm_policy);
+    ~RuntimeRiscvDevice();
+
+    ppl::common::Allocator* GetAllocator() const override {
+        return allocator_.get();
     }
-
-    ~RuntimeRiscvDevice() {
-        LOG(DEBUG) << "buffer manager[" << buffer_manager_->GetName() << "] allocates ["
-                   << buffer_manager_->GetAllocatedBytes() << "] bytes.";
-        if (tmp_buffer_size_) {
-            buffer_manager_->Free(&shared_tmp_buffer_);
-        }
-        buffer_manager_.reset();
-    }
-
-    ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) override {
-        if (bytes > tmp_buffer_size_) {
-            auto status = buffer_manager_->Realloc(bytes, &shared_tmp_buffer_);
-            if (status == ppl::common::RC_SUCCESS) {
-                tmp_buffer_size_ = bytes;
-                *buffer = shared_tmp_buffer_;
-            }
-            return status;
-        }
-
-        *buffer = shared_tmp_buffer_;
-        return ppl::common::RC_SUCCESS;
-    }
-
-    void FreeTmpBuffer(BufferDesc*) override {}
 
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) override {
-        bytes = Align(bytes, 256);
         return buffer_manager_->Realloc(bytes, buffer);
     }
 
@@ -75,7 +47,24 @@ public:
         buffer_manager_->Free(buffer);
     }
 
+    ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) override;
+    void FreeTmpBuffer(BufferDesc* buffer) override;
+
+    // ----- configurations ----- //
+
+    /**
+       @brief replaces all blocks with a single block.
+       @note make sure that this device is not used when calling DoMemDefrag().
+    */
+    static ppl::common::RetCode DoMemDefrag(RuntimeRiscvDevice*, va_list);
+
+    typedef ppl::common::RetCode (*ConfHandlerFunc)(RuntimeRiscvDevice*, va_list);
+    static ConfHandlerFunc conf_handlers_[RISCV_DEV_CONF_MAX];
+
+    ppl::common::RetCode Configure(uint32_t, ...) override;
+
 private:
+    bool can_defragement_;
     std::unique_ptr<utils::BufferManager> buffer_manager_;
     BufferDesc shared_tmp_buffer_;
     uint64_t tmp_buffer_size_ = 0;
