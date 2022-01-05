@@ -217,27 +217,24 @@ static RetCode ParseGraphOutput(const ::onnx::GraphProto& pb_graph, ir::GraphTop
             return RC_NOT_FOUND;
         }
 
-        ir::Shape shape;
+        topo->MarkAsOutput(edge->GetId());
 
         auto& pb_output_type = pb_output.type();
         if (pb_output_type.has_tensor_type()) {
+            ir::Shape shape;
+
             auto& pb_tensor_type = pb_output_type.tensor_type();
             shape.data_type = utils::ConvertOnnxDataTypeToPplDataType(pb_tensor_type.elem_type());
             shape.data_format = DATAFORMAT_NDARRAY;
-        } else {
-            LOG(ERROR) << "unsupported type[" << pb_output_type.value_case() << "] of output[" << edge->GetName()
-                       << "]";
-            return RC_UNSUPPORTED;
-        }
 
-        auto& pb_tensor_shape = pb_output.type().tensor_type().shape();
-        for (int j = 0; j < pb_tensor_shape.dim_size(); ++j) {
-            auto dim_value = pb_tensor_shape.dim(j).dim_value();
-            shape.dims.push_back(dim_value);
-        }
+            auto& pb_tensor_shape = pb_tensor_type.shape();
+            for (int j = 0; j < pb_tensor_shape.dim_size(); ++j) {
+                auto dim_value = pb_tensor_shape.dim(j).dim_value();
+                shape.dims.push_back(dim_value);
+            }
 
-        data->shapes.insert(make_pair(edge->GetId(), shape));
-        topo->MarkAsOutput(edge->GetId());
+            data->shapes.insert(make_pair(edge->GetId(), shape));
+        }
     }
 
     return RC_SUCCESS;
