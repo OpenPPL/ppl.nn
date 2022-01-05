@@ -40,7 +40,8 @@ RetCode ParseLoopParam(const ::onnx::NodeProto& pb_node, const map<string, uint6
     GraphParser parser;
     auto status = parser.Parse(attr.g(), op_sets, &(param->graph));
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "parse subgraph of loop pb_node[" << pb_node.name();
+        LOG(ERROR) << "parse subgraph of loop pb_node[" << pb_node.name() << "] failed: "
+                   << GetRetCodeStr(status);
         return status;
     }
 
