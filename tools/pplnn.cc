@@ -29,6 +29,7 @@
 #include <sstream>
 #include <iostream>
 #include <functional>
+#include <algorithm>
 using namespace ppl::nn;
 using namespace ppl::common;
 using namespace std;
@@ -206,6 +207,10 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     cuda_engine->Configure(ppl::nn::CUDA_CONF_USE_DEFAULT_ALGORITHMS, g_flag_quick_select);
 
     if (!g_flag_kernel_type.empty()) {
+        string kernel_type_str(g_flag_kernel_type);
+        std::transform(g_flag_kernel_type.begin(), g_flag_kernel_type.end(),
+                       kernel_type_str.begin(), ::toupper);
+
         datatype_t kernel_type = DATATYPE_UNKNOWN;
         for (datatype_t i = DATATYPE_UNKNOWN; i < DATATYPE_MAX; i++) {
             if (GetDataTypeStr(i) == g_flag_kernel_type) {
@@ -215,7 +220,7 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
         }
 
         if (kernel_type != DATATYPE_UNKNOWN) {
-            cuda_engine->Configure(ppl::nn::CUDA_CONF_USE_DEFAULT_KERNEL_TYPE, kernel_type);
+            cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_KERNEL_TYPE, kernel_type);
         } else {
             LOG(ERROR) << "invalid kernel type[" << g_flag_kernel_type << "]";
         }
