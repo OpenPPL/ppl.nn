@@ -228,7 +228,7 @@ static ppl::common::RetCode arithmetic_broadcast_ndarray_int64(
     const int64_t len_per_thread = div_up(total_len, PPL_OMP_MAX_THREADS());
     const int64_t num_threads    = div_up(total_len, len_per_thread);
 
-    parallel_block blocks[num_threads];
+    std::vector<parallel_block> blocks(num_threads);
     for (int64_t i = 0; i < num_threads; i++) {
         int64_t start_idx = i * len_per_thread;
         int64_t end_idx   = (i + 1) * len_per_thread - 1;
@@ -256,7 +256,7 @@ static ppl::common::RetCode arithmetic_broadcast_ndarray_int64(
             inc_out,
             real_dim_count,
             0,
-            blocks + i,
+            &blocks[i],
             dst);
     }
 
