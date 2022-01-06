@@ -115,6 +115,9 @@ RetCode UpdateMatrixForNextNode(ir::Node* node, std::vector<edgeid_t>* edge_arra
         if (gather_dims.size() != 0 && (gather_dims.size() != 1 || gather_dims[0] != 1)) {
             return RC_UNSUPPORTED;
         }
+        if (gather_indices[0] < 0) {
+            return RC_UNSUPPORTED;
+        }
         matrix.scalar = true;
         matrix.Gather(gather_indices[0], gather_indices[0]+1);
     } else if (node->GetType().name == "Slice") { // Only support slice from head.

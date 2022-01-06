@@ -18,9 +18,6 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_PARAMS_CONV_EXTRA_PARAM_H_
 #define _ST_HPC_PPL_NN_ENGINES_CUDA_PARAMS_CONV_EXTRA_PARAM_H_
 
-#include <set>
-#include <string>
-
 #include "ppl/nn/engines/cuda/cuda_device.h"
 #include "ppl/nn/oputils/onnx/reshape_convolution.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
@@ -28,8 +25,6 @@
 #include "cudakernel/nn/conv/conv_fp16.h"
 #include "cudakernel/nn/conv/depthwise.h"
 #include "cudakernel/nn/conv/group_padding.h"
-
-#define FLT_MAX 3e+38F
 
 using namespace ppl::common;
 
