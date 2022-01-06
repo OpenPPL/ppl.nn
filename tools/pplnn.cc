@@ -176,14 +176,14 @@ Define_bool_opt("--use-cuda", g_flag_use_cuda, false, "use cuda engine");
 
 Define_bool_opt("--quick-select", g_flag_quick_select, false, "quick select algorithms for conv and gemm kernel");
 Define_uint32_opt("--device-id", g_flag_device_id, 0, "declare device id for cuda");
-Define_string_opt("--kernel-type", g_flag_kernel_type, "", "declare default kernel type for cuda");
+Define_string_opt("--kernel-type", g_flag_kernel_type, "", "set kernel type for cuda inferencing. valid values: int8/16/32/64,float16/32");
 
 Define_string_opt("--export-algo-file", g_flag_export_algo_file, "",
                   "Export the selected best algo info into the json file.");
 Define_string_opt("--import-algo-file", g_flag_import_algo_file, "",
                   "The objects in the json file declare best algo info for certain conv input shape");
 
-Define_string_opt("--quant-file", g_flag_quant_file, "", "declare json file saved quantization information");
+Define_string_opt("--quant-file", g_flag_quant_file, "", "a json file containing quantization information");
 
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/engines/cuda/cuda_options.h"
@@ -222,12 +222,12 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
         if (kernel_type != DATATYPE_UNKNOWN) {
             cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_KERNEL_TYPE, kernel_type);
         } else {
-            LOG(ERROR) << "invalid kernel type[" << g_flag_kernel_type << "]";
+            LOG(ERROR) << "invalid kernel type[" << g_flag_kernel_type << "]. valid values: int8/16/32/64,float16/32.";
         }
     }
 
     if (!g_flag_quant_file.empty()) {
-        cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_QUANTIZATION, g_flag_quant_file.c_str());
+        cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_QUANT_FILE, g_flag_quant_file.c_str());
     }
 
     if (!g_flag_export_algo_file.empty()) {
@@ -323,7 +323,7 @@ Define_bool_opt("--use-fp16", g_flag_use_fp16, false, "infer with riscv fp16 (us
 static inline bool RegisterRiscvEngine(vector<unique_ptr<Engine>>* engines) {
     RiscvEngineOptions options;
     options.tune_param_flag = false;
-    
+
     if (g_flag_mm_policy == "perf") {
         options.mm_policy = RISCV_MM_MRU;
     } else if (g_flag_mm_policy == "mem") {

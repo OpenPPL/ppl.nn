@@ -87,7 +87,7 @@ static RetCode SetKernelType(Engine* engine, uint32_t option, const pybind11::ar
     return engine->Configure(option, args[0].cast<datatype_t>());
 }
 
-static RetCode SetQuantization(Engine* engine, uint32_t option, const pybind11::args& args) {
+static RetCode SetQuantFile(Engine* engine, uint32_t option, const pybind11::args& args) {
     if (args.size() != 1) {
         LOG(ERROR) << "expected for 1 parameter but got [" << args.size() << "].";
         return RC_INVALID_VALUE;
@@ -105,7 +105,7 @@ static const map<uint32_t, ConfigFunc> g_opt2func = {
     {CUDA_CONF_IMPORT_ALGORITHMS, ImportAlgorithms},
     {CUDA_CONF_EXPORT_ALGORITHMS, ExportAlgorithms},
     {CUDA_CONF_SET_KERNEL_TYPE, SetKernelType},
-    {CUDA_CONF_SET_QUANTIZATION, SetQuantization},
+    {CUDA_CONF_SET_QUANT_FILE, SetQuantFile},
 };
 
 void RegisterCudaEngine(pybind11::module* m) {
@@ -129,7 +129,7 @@ void RegisterCudaEngine(pybind11::module* m) {
     m->attr("CUDA_CONF_IMPORT_ALGORITHMS") = (uint32_t)CUDA_CONF_IMPORT_ALGORITHMS;
     m->attr("CUDA_CONF_EXPORT_ALGORITHMS") = (uint32_t)CUDA_CONF_EXPORT_ALGORITHMS;
     m->attr("CUDA_CONF_SET_KERNEL_TYPE") = (uint32_t)CUDA_CONF_SET_KERNEL_TYPE;
-    m->attr("CUDA_CONF_SET_QUANTIZATION") = (uint32_t)CUDA_CONF_SET_QUANTIZATION;
+    m->attr("CUDA_CONF_SET_QUANT_FILE") = (uint32_t)CUDA_CONF_SET_QUANT_FILE;
 }
 
 }}} // namespace ppl::nn::python
