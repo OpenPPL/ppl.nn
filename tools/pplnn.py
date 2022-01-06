@@ -87,6 +87,10 @@ def ParseCommandLineArgs():
                                 help = "a json file containing op implementations info")
             parser.add_argument("--export-algo-file", type = str, default = "", required = False,
                                 help = "a json file used to store op implementations info")
+            parser.add_argument("--kernel-type", type = str, default = "", required = False,
+                                help = "set kernel type for cuda inferencing. valid values: int8/16/32/64,float16/32")
+            parser.add_argument("--quant-file", type = str, default = "", required = False,
+                                help = "a json file containing quantization information")
         elif dev == "riscv":
             parser.add_argument("--use-fp16", dest = "use_fp16", action = "store_true",
                                 default = False, required = False)
@@ -204,6 +208,22 @@ def CreateCudaEngine(args):
         if status != pplcommon.RC_SUCCESS:
             logging.error("cuda engine Configure(CUDA_CONF_IMPORT_ALGORITHMS) failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
+
+    if args.kernel_type:
+        upper_type_str = args.kernel_type.upper()
+        kernel_type = pplcommon.DATATYPE_UNKNOWN
+        for i in range(pplcommon.DATATYPE_MAX):
+            if pplcommon.GetDataTypeStr(i) == upper_type_str:
+                kernel_type = i
+                break
+        if kernel_type != pplcommon.DATATYPE_UNKNOWN:
+            cuda_engine.Configure(pplnn.CUDA_CONF_SET_KERNEL_TYPE, kernel_type)
+        else:
+            logging.error("invalid kernel type[" + args.kernel_type + "]. valid types: int8/16/32/64, float16/32.")
+            sys.exit(-1)
+
+    if args.quant_file:
+        cuda_engine.Configure(pplnn.CUDA_CONF_SET_QUANT_FILE, args.quant_file)
 
     return cuda_engine
 

@@ -177,7 +177,7 @@ static RetCode ReadFileContent(const char* fname, string* buf) {
     return RC_SUCCESS;
 }
 
-RetCode CudaEngine::SetQuantization(CudaEngine* engine, va_list args) {
+RetCode CudaEngine::SetQuantFile(CudaEngine* engine, va_list args) {
     const char* json_file = va_arg(args, const char*);
     if (!json_file) {
         LOG(ERROR) << "empty quantization info filename.";
@@ -279,7 +279,7 @@ CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetKernelType, // CUDA_CONF_USE_DEFAULT_KERNEL_TYPE
     CudaEngine::SetInputDims, // CUDA_CONF_SET_INPUT_DIMS
     CudaEngine::SetUseDefaultAlgorithms, // CUDA_CONF_USE_DEFAULT_ALGORITHMS
-    CudaEngine::SetQuantization, // CUDA_CONF_SET_QUANTIZATION
+    CudaEngine::SetQuantFile, // CUDA_CONF_SET_QUANT_FILE
     CudaEngine::ExportAlgorithms, // CUDA_CONF_EXPORT_ALGORITHMS
     CudaEngine::ImportAlgorithms, // CUDA_CONF_IMPORT_ALGORITHMS
 };

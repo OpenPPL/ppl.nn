@@ -83,10 +83,10 @@ enum {
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_SET_QUANTIZATION, json_file);
+       cuda_engine->Configure(CUDA_CONF_SET_QUANT_FILE, json_file);
        @endcode
     */
-    CUDA_CONF_SET_QUANTIZATION,
+    CUDA_CONF_SET_QUANT_FILE,
 
     /**
        @param json_file a json file used to store selected algos' index information
