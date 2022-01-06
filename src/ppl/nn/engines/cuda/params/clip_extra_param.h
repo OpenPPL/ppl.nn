@@ -20,8 +20,7 @@
 
 #include <set>
 #include <string>
-
-#define FLT_MAX 3e+38F
+#include <float.h>
 
 namespace ppl { namespace nn { namespace cuda {
 struct ClipParam {
