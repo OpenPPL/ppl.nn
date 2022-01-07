@@ -46,6 +46,15 @@ __global__ void CudaSetInitVal(
     output[tid] = initval;
 }
 __global__ void CudaSetInitVal(
+    int32_t* output,
+    int32_t initval,
+    int32_t size)
+{
+    int tid     = blockIdx.x * gridDim.x + threadIdx.y * blockDim.x + threadIdx.x;
+    if (tid >= size) return;
+    output[tid] = initval;
+}
+__global__ void CudaSetInitVal(
     int8_t* output,
     int8_t initval,
     int8_t size)
@@ -142,6 +151,9 @@ ppl::common::RetCode PPLCUDAReduceForwardImp(
 #define CASEINT64(Mode, OP, Tin, Tout, Tacc) \
     case Mode:                              \
         return PPLCUDAReduceOPImp<OP<Tin, Tout, Tacc>>(stream, param, des, input_shape, input, output_shape, output);
+#define CASEINT32(Mode, OP, Tin, Tout, Tacc) \
+    case Mode:                              \
+        return PPLCUDAReduceOPImp<OP<Tin, Tout, Tacc>>(stream, param, des, input_shape, input, output_shape, output);
 #define CASEINT8(Mode, OP, Tin, Tout, Tacc) \
     case Mode:                              \
         return PPLCUDAReduceOPImp<OP<Tin, Tout, Tacc>>(stream, param, des, input_shape, input, output_shape, output);
@@ -173,6 +185,16 @@ ppl::common::RetCode PPLCUDAReduceForwardImp(
             CASEINT64(ReduceMean, SumOp, int64_t, int64_t, int64_t)
             CASEINT64(ReduceMax, MaxOp, int64_t, int64_t, int64_t)
             CASEINT64(ReduceMin, MinOp, int64_t, int64_t, int64_t)
+            default:
+                return ppl::common::RC_UNSUPPORTED;
+        }
+    } else if (input_shape->GetDataType() == ppl::common::DATATYPE_INT32) {
+        switch (param) {
+            CASEINT32(ReduceSum, SumOp, int32_t, int32_t, int32_t)
+            CASEINT32(ReduceProd, ProdOp, int32_t, int32_t, int32_t)
+            CASEINT32(ReduceMean, SumOp, int32_t, int32_t, int32_t)
+            CASEINT32(ReduceMax, MaxOp, int32_t, int32_t, int32_t)
+            CASEINT32(ReduceMin, MinOp, int32_t, int32_t, int32_t)
             default:
                 return ppl::common::RC_UNSUPPORTED;
         }

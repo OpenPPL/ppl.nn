@@ -34,8 +34,10 @@
     #endif
 #endif
 
-#if defined(_WIN64) || defined(_WIN32)
+#ifndef PPLNN_ENABLE_CUDA_JIT
+#if (defined(_WIN64) || defined(_WIN32))
     #define _Pragma __pragma
+#endif
 #endif
 
 ////////////////////////////////////////
