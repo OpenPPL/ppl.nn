@@ -22,6 +22,7 @@
 #include "ppl/kernel/riscv/fp16/conv2d/depthwise/vec128/conv2d_n8cx_dw_fp16.h"
 #include "ppl/kernel/riscv/fp16/conv2d/depthwise/vec128/conv2d_n8cx_dw_f3s1_kernel_fp16.cpp"
 #include "ppl/kernel/riscv/fp16/conv2d/depthwise/vec128/conv2d_n8cx_dw_f3s2_kernel_fp16.cpp"
+#include "ppl/kernel/riscv/fp16/conv2d/depthwise/vec128/conv2d_n8cx_dw_f5s1_kernel_fp16.cpp"
 
 namespace ppl { namespace kernel { namespace riscv {
 
@@ -63,7 +64,7 @@ void conv_dw_src_padding_fp16(const __fp16* src, __fp16* src_padded, int64_t src
 }
 
 size_t conv_dw_get_cvt_flt_size_fp16(int64_t flt_h, int64_t flt_w, int64_t channels) {
-    int64_t padded_channels = (channels + 8 - 1) / 8 * 8;
+    int64_t padded_channels = round_up(channels, 8);
     return size_t(flt_h * flt_w * padded_channels) * sizeof(__fp16);
 }
 
@@ -307,13 +308,35 @@ ppl::common::RetCode conv2d_n8cx_dw_fp16_runtime_executor::execute() {
             default:
                 break;
         }
+    } else if (kernel_h == 5 && kernel_w == 5 && stride_h == 1 && stride_w == 1) {
+        switch (dst_w % 4) {
+            case 0: {
+                dw_conv_kernel = conv_dw_f5s1_h2w4_kernel_riscv_fp16<0>;
+                break;
+            }
+            case 1: {
+                dw_conv_kernel = conv_dw_f5s1_h2w4_kernel_riscv_fp16<1>;
+                break;
+            }
+            case 2: {
+                dw_conv_kernel = conv_dw_f5s1_h2w4_kernel_riscv_fp16<2>;
+                break;
+            }
+            case 3: {
+                dw_conv_kernel = conv_dw_f5s1_h2w4_kernel_riscv_fp16<3>;
+                break;
+            }
+            default:
+                break;
+        }
     }
 
     for (int64_t i = 0; i < padded_channels; i += 8) {
         conv_dw_src_padding_fp16(src_ + i * src_h * src_w, (__fp16*)temp_buffer_ + i * src_h_padded * src_w_padded,
-                                 src_h, src_w, pad_h, pad_w, pad_h, pad_w);
+                                 src_h, src_w, pad_w, pad_w, pad_h, pad_h);
         if ((kernel_h == 3 && kernel_w == 3 && stride_h == 1 && stride_w == 1) ||
-            (kernel_h == 3 && kernel_w == 3 && stride_h == 2 && stride_w == 2)) {
+            (kernel_h == 3 && kernel_w == 3 && stride_h == 2 && stride_w == 2) ||
+            (kernel_h == 5 && kernel_w == 5 && stride_h == 1 && stride_w == 1)) {
             dw_conv_kernel((__fp16*)temp_buffer_ + i * src_h_padded * src_w_padded,
                            cvt_filter_ + i * kernel_h * kernel_w, cvt_bias_ + i, dst_ + i * dst_h * dst_w,
 
