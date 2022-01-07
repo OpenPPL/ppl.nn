@@ -28,6 +28,8 @@ std::string CUDANVRTCCompile(std::pair<string, string> code, std::vector<const c
     auto arch = PPLCudaGetDeviceArch(device);
     std::string compile_arch = "-arch=compute_" + std::to_string(arch.first) + std::to_string(arch.second);
     params.push_back(compile_arch);
+    std::string macro = "-DPPLNN_ENABLE_CUDA_JIT=ON";
+    params.push_back(macro);
     if (include) {
         std::string cuda_include = "--include-path=" + CUDAIncludePath();
         params.push_back(cuda_include);

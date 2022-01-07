@@ -33,6 +33,11 @@ inline __host__ __device__ int64_t getMin<int64_t>()
     return INT64_MIN;
 }
 template <>
+inline __host__ __device__ int32_t getMin<int32_t>()
+{
+    return INT32_MIN;
+}
+template <>
 inline __host__ __device__ float getMin<float>()
 {
     return FLT_MIN;
@@ -54,6 +59,11 @@ template <>
 inline __host__ __device__ int64_t getMax<int64_t>()
 {
     return INT64_MAX;
+}
+template <>
+inline __host__ __device__ int32_t getMax<int32_t>()
+{
+    return INT32_MAX;
 }
 template <>
 inline __host__ __device__ float getMax<float>()
@@ -89,6 +99,11 @@ inline __host__ __device__ int64_t getZero()
     return (int64_t)0;
 }
 template <>
+inline __host__ __device__ int32_t getZero()
+{
+    return (int32_t)0;
+}
+template <>
 inline __host__ __device__ int8_t getZero()
 {
     return (int8_t)0;
@@ -110,6 +125,11 @@ template <>
 inline __host__ __device__ int64_t getOne()
 {
     return (int64_t)1;
+}
+template <>
+inline __host__ __device__ int32_t getOne()
+{
+    return (int32_t)1;
 }
 template <>
 inline __host__ __device__ int8_t getOne()

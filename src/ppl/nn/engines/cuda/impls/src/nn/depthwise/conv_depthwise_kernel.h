@@ -319,9 +319,13 @@ __forceinline__ __device__ void fuse_process_float(
 )
 {
 #if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
+#if __CUDACC_VER_MAJOR__ != 11 && __CUDACC_VER_MINOR__ != 3
 #pragma unroll
+#endif
     for (int i = 0; i < TILE_H; i++) {
+#if __CUDACC_VER_MAJOR__ != 11 && __CUDACC_VER_MINOR__ != 3
 #pragma unroll
+#endif
         for (int j = 0; j < TILE_W; j++) {
             if (fuse_params.has_activation){
                 if (fuse_params.has_activation == 1){
