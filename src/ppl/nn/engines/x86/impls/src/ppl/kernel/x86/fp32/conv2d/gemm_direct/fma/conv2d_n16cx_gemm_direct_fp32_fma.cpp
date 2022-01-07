@@ -40,7 +40,7 @@ static const int64_t IC_L2_BLK_MAX_LARGE = 16 * IC_DATA_BLK; // preserve for tun
 static const int64_t IC_L2_BLK_MAX_SMALL = 16 * IC_DATA_BLK;
 static const float IC_L2_BLK_TAIL_RATIO = 0.251f;
 static const int64_t OC_L2_BLK_MAX_LARGE = 16 * OC_DATA_BLK; // preserve for tuning
-static const int64_t OC_L2_BLK_MAX_SMALL = 16 * OC_DATA_BLK;
+static const int64_t OC_L2_BLK_MAX_SMALL = 8 * OC_DATA_BLK;
 static const int64_t OC_L2_BLK_MIN = 1 * OC_DATA_BLK;
 static const int64_t S_L2_BLK_MAX = 12 * conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::MAX_S_REGS;
 static const int64_t S_KERNEL_BLK_MAX = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::MAX_S_REGS;
@@ -82,6 +82,7 @@ void conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_tunning_param()
     const int64_t batch      = src_shape_->GetDim(0);
     const int64_t dst_space  = dst_shape_->GetDim(2) * dst_shape_->GetDim(3);
 
+    const float l2_cap_per_core = (ppl::common::GetCpuCacheL2() == 0 ? ASSUME_L2_BYTES : ppl::common::GetCpuCacheL2()) * L2_RATIO / sizeof(float);
     const float l3_cap_all_core = (ppl::common::GetCpuCacheL3() == 0 ? (ASSUME_L3_BYTES * num_thread) : ppl::common::GetCpuCacheL3()) * L3_RATIO / sizeof(float);
 
     sp.ic_l2_blk = cal_ic_l2_blk(cp);
@@ -101,7 +102,7 @@ void conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_tunning_param()
     }
 #undef REDUN_S
     sp.s_l2_blk = min(dst_space, round_up(S_L2_BLK_MAX, sp.s_ker_blk));
-    if (sp.padded_oc > sp.padded_ic) {
+    if (l2_cap_per_core >= IC_L2_BLK_MAX_LARGE * OC_L2_BLK_MAX_LARGE) {
         sp.oc_l2_blk = min(OC_L2_BLK_MAX_LARGE, sp.padded_oc);
     } else {
         sp.oc_l2_blk = min(OC_L2_BLK_MAX_SMALL, sp.padded_oc);
