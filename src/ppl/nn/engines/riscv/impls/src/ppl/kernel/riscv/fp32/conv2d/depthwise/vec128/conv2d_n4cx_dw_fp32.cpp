@@ -21,7 +21,7 @@
 #include "ppl/kernel/riscv/fp32/conv2d/depthwise/vec128/conv2d_n4cx_dw_fp32.h"
 #include "ppl/kernel/riscv/fp32/conv2d/depthwise/vec128/conv2d_n4cx_dw_f3s1_kernel_fp32.cpp"
 #include "ppl/kernel/riscv/fp32/conv2d/depthwise/vec128/conv2d_n4cx_dw_f3s2_kernel_fp32.cpp"
-
+#include "ppl/kernel/riscv/fp32/conv2d/depthwise/vec128/conv2d_n4cx_dw_f5s1_kernel_fp32.cpp"
 namespace ppl { namespace kernel { namespace riscv {
 
 #define C_BLK() (int64_t(4))
@@ -300,13 +300,35 @@ ppl::common::RetCode conv2d_n4cx_dw_fp32_runtime_executor::execute() {
             default:
                 break;
         }
+    } else if (kernel_h == 5 && kernel_w == 5 && stride_h == 1 && stride_w == 1) {
+        switch (dst_w % 4) {
+            case 0: {
+                dw_conv_kernel = conv_dw_f5s1_h2w4_kernel_riscv_fp32<0>;
+                break;
+            }
+            case 1: {
+                dw_conv_kernel = conv_dw_f5s1_h2w4_kernel_riscv_fp32<1>;
+                break;
+            }
+            case 2: {
+                dw_conv_kernel = conv_dw_f5s1_h2w4_kernel_riscv_fp32<2>;
+                break;
+            }
+            case 3: {
+                dw_conv_kernel = conv_dw_f5s1_h2w4_kernel_riscv_fp32<3>;
+                break;
+            }
+            default:
+                break;
+        }
     }
 
     for (int64_t i = 0; i < padded_channels; i += C_BLK()) {
         conv_dw_src_padding_fp32(src_ + i * src_h * src_w, (float*)temp_buffer_ + i * src_h_padded * src_w_padded,
-                                 src_h, src_w, pad_h, pad_w, pad_h, pad_w);
+                                 src_h, src_w, pad_w, pad_w, pad_h, pad_h);
         if ((kernel_h == 3 && kernel_w == 3 && stride_h == 1 && stride_w == 1) ||
-            (kernel_h == 3 && kernel_w == 3 && stride_h == 2 && stride_w == 2)) {
+            (kernel_h == 3 && kernel_w == 3 && stride_h == 2 && stride_w == 2) ||
+            (kernel_h == 5 && kernel_w == 5 && stride_h == 1 && stride_w == 1)) {
             dw_conv_kernel((float*)temp_buffer_ + i * src_h_padded * src_w_padded,
                            cvt_filter_ + i * kernel_h * kernel_w, cvt_bias_ + i, dst_ + i * dst_h * dst_w,
 
