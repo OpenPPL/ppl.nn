@@ -29,7 +29,94 @@
 #include "ppl/common/log.h"
 #include "ppl/common/types.h"
 
+using namespace ppl::common;
+
 namespace ppl { namespace kernel { namespace riscv {
+
+conv2d_common_algo_info conv2d_fp16_algo_selector::select_best_algo(const void* filter, ppl::nn::TensorShape& src_shape,
+                                                                    ppl::nn::TensorShape& dst_shape, const conv2d_common_param& param,
+                                                                    ppl::common::Allocator* allocator) {
+
+    static conv2d_common_algo_info unknown_info =
+        {conv2d_common_algo::unknown, DATAFORMAT_UNKNOWN, DATAFORMAT_UNKNOWN, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
+
+    static conv2d_common_algo_info ndarray_algo_info_lst[] = {
+        {conv2d_common_algo::tile_gemm, DATAFORMAT_NDARRAY, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16}
+    };
+
+    static conv2d_common_algo_info n4cx_algo_info_lst[] = {
+        {conv2d_common_algo::tile_gemm, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16},
+        {conv2d_common_algo::winograd_b2f3, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16},
+        {conv2d_common_algo::winograd_b4f3, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16},
+        {conv2d_common_algo::winograd_b6f3, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16}
+    };
+
+    if (param.dilation_h != 1 || param.dilation_w != 1) {
+        return unknown_info;
+    }
+
+    if (param.group == param.num_output && param.num_output == param.channels) {
+        return {conv2d_common_algo::depthwise, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
+    }
+
+    std::vector<conv2d_common_algo_info> profiling_algo_info_vec;
+    if (ppl::common::DATAFORMAT_NDARRAY == src_shape.GetDataFormat()) {
+        for (auto algo_info : ndarray_algo_info_lst) {
+            profiling_algo_info_vec.push_back(algo_info);
+        }
+    } else if (ppl::common::DATAFORMAT_N8CX == src_shape.GetDataFormat()) {
+        for (auto algo_info : n4cx_algo_info_lst) {
+            if (algo_info.algo_type == conv2d_common_algo::winograd_b2f3) {
+                if (param.kernel_h != 3 || param.kernel_w != 3 || param.stride_h != 1 || param.stride_w != 1) {
+                    continue;
+                }
+            } else if (algo_info.algo_type == conv2d_common_algo::winograd_b4f3) {
+                if (param.kernel_h != 3 || param.kernel_w != 3 || param.stride_h != 1 || param.stride_w != 1) {
+                    continue;
+                }
+            } else if (algo_info.algo_type == conv2d_common_algo::winograd_b6f3) {
+                if (param.kernel_h != 3 || param.kernel_w != 3 || param.stride_h != 1 || param.stride_w != 1) {
+                    continue;
+                }
+            }
+
+            profiling_algo_info_vec.push_back(algo_info);
+        }
+    }
+
+    const int32_t exe_count = 1;
+    double best_time = DBL_MAX;
+    conv2d_common_algo_info best_algo_info = unknown_info;
+
+    for (auto algo_info : profiling_algo_info_vec) {
+        conv2d_offline_manager<__fp16>* conv_manager = gen_algo(param, algo_info, allocator);
+        auto ori_input_format = src_shape.GetDataFormat();
+        auto ori_output_format = dst_shape.GetDataFormat();
+        src_shape.SetDataFormat(algo_info.input_format);
+        dst_shape.SetDataFormat(algo_info.output_format);
+        std::vector<__fp16> dst(dst_shape.GetElementsIncludingPadding(), 0.f);
+        std::vector<__fp16> src(src_shape.GetElementsIncludingPadding(), 0.f);
+
+        if (conv_manager == nullptr) {
+            return algo_info;
+        }
+
+        double profiling_time = conv_manager->profile_tunning_param(src.data(), (const __fp16*)filter, dst.data(), src_shape, dst_shape, exe_count);
+        src_shape.SetDataFormat(ori_input_format);
+        dst_shape.SetDataFormat(ori_output_format);
+        src.resize(0);
+        dst.resize(0);
+
+        if (profiling_time < best_time) {
+            best_time = profiling_time;
+            best_algo_info = algo_info;
+        }
+        delete conv_manager;
+    }
+
+    LOG(DEBUG) << "select best fp16 conv algo " << best_algo_info.algo_type;
+    return best_algo_info;
+}
 
 conv2d_common_algo_info conv2d_fp16_algo_selector::select_algo(const ppl::nn::TensorShape& input_shape,
                                                                const conv2d_common_param& param) {

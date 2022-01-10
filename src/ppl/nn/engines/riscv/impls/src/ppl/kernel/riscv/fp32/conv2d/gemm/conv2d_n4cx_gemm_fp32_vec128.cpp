@@ -318,7 +318,7 @@ ppl::common::RetCode conv2d_n4cx_gemm_fp32_offline_manager::fast_init_tunning_pa
 
     tunning_param_.m_blk = min(int64_t(16), M);
     tunning_param_.k_blk = min(int64_t(512), K);
-    tunning_param_.n_blk = 1152;
+    tunning_param_.n_blk = 1148;
 
     return ppl::common::RC_SUCCESS;
 }

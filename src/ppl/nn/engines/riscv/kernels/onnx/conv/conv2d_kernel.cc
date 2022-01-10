@@ -60,21 +60,21 @@ ppl::common::RetCode Conv2dKernel::DoExecute(KernelExecContext* ctx) {
 
     {
         // PPLNN_RISCV_DEBUG_TRACE("Op: %s\n", GetName().c_str());
-        PPLNN_RISCV_DEBUG_TRACE("Input [X]:\n");
-        PPLNN_RISCV_DEBUG_TRACE("Output [Y]:\n");
-        PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(Y);
-        PPLNN_RISCV_DEBUG_TRACE("kernel_shape: %ld %ld\n", cur_executor->conv_param()->kernel_h,
-                                cur_executor->conv_param()->kernel_w);
-        PPLNN_RISCV_DEBUG_TRACE("dilations: %ld %ld\n", cur_executor->conv_param()->dilation_h,
-                                cur_executor->conv_param()->dilation_w);
-        PPLNN_RISCV_DEBUG_TRACE("strides: %ld %ld\n", cur_executor->conv_param()->stride_h,
-                                cur_executor->conv_param()->stride_w);
-        PPLNN_RISCV_DEBUG_TRACE("pads: %ld %ld\n", cur_executor->conv_param()->pad_h,
-                                cur_executor->conv_param()->pad_w);
-        PPLNN_RISCV_DEBUG_TRACE("group: %ld\n", cur_executor->conv_param()->group);
-        PPLNN_RISCV_DEBUG_TRACE("channels: %ld\n", cur_executor->conv_param()->channels);
-        PPLNN_RISCV_DEBUG_TRACE("num_output: %ld\n", cur_executor->conv_param()->num_output);
-        PPLNN_RISCV_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
+        // PPLNN_RISCV_DEBUG_TRACE("Input [X]:\n");
+        // PPLNN_RISCV_DEBUG_TRACE("Output [Y]:\n");
+        // PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(Y);
+        // PPLNN_RISCV_DEBUG_TRACE("kernel_shape: %ld %ld\n", cur_executor->conv_param()->kernel_h,
+        //                         cur_executor->conv_param()->kernel_w);
+        // PPLNN_RISCV_DEBUG_TRACE("dilations: %ld %ld\n", cur_executor->conv_param()->dilation_h,
+        //                         cur_executor->conv_param()->dilation_w);
+        // PPLNN_RISCV_DEBUG_TRACE("strides: %ld %ld\n", cur_executor->conv_param()->stride_h,
+        //                         cur_executor->conv_param()->stride_w);
+        // PPLNN_RISCV_DEBUG_TRACE("pads: %ld %ld\n", cur_executor->conv_param()->pad_h,
+        //                         cur_executor->conv_param()->pad_w);
+        // PPLNN_RISCV_DEBUG_TRACE("group: %ld\n", cur_executor->conv_param()->group);
+        // PPLNN_RISCV_DEBUG_TRACE("channels: %ld\n", cur_executor->conv_param()->channels);
+        // PPLNN_RISCV_DEBUG_TRACE("num_output: %ld\n", cur_executor->conv_param()->num_output);
+        // PPLNN_RISCV_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
     }
 
     rc = cur_executor->execute();

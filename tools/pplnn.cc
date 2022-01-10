@@ -315,6 +315,7 @@ static inline bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
 
 Define_bool_opt("--use-riscv", g_flag_use_riscv, false, "use riscv engine");
 Define_bool_opt("--use-fp16", g_flag_use_fp16, false, "infer with riscv fp16 (use fp32 by default)");
+Define_int32_opt("--tuning-level", g_flag_tuning_level, 0, "select conv algo dynamic tuning level[0-1]. 0: off. 1: on");
 
 #include "ppl/nn/engines/riscv/engine_factory.h"
 #include "ppl/nn/engines/riscv/riscv_options.h"
@@ -335,6 +336,7 @@ static inline bool RegisterRiscvEngine(vector<unique_ptr<Engine>>* engines) {
     } else {
         options.forward_precision = RISCV_USE_FP32;
     }
+    options.dynamic_tuning_level = g_flag_tuning_level;
 
     auto riscv_engine = RiscvEngineFactory::Create(options);
     // configure engine
