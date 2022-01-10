@@ -1,0 +1,39 @@
+name: common-linux-riscv64
+
+on:
+  #push:
+  #  branches: [ master ]
+  #  paths-ignore: ['.**', 'docker/**', 'docs/**', 'samples/**', README.md]
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'include/ppl/nn/engines/riscv/**'
+      - 'src/ppl/nn/engines/riscv/**'
+      - 'src/ppl/nn/optimizers/**'
+  workflow_dispatch:
+
+jobs:
+  build_and_test:
+    runs-on: [self-hosted, linux, dev-dispatcher]
+
+    steps:
+      - name: Create Checkout Directory
+        run: |
+          echo "Create Checkout Directory: ${{ github.run_id }}."
+          [ -z "${{ github.run_id }}" ] || rm -rf ${{ github.run_id }}
+          mkdir ${{ github.run_id }}
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: ${{ github.run_id }}
+
+      - name: Test pplnn on Servers
+        run: |
+          cd ../../ && ./test_pplnn_on_one_server.sh ${{ github.run_id }} ${{ github.actor }} riscv
+        id: testing
+
+      - name: clean
+        if: ${{ always() }}
+        run: |
+          cd ../../ && ./stop_running_jobs.sh ${{ github.run_id }}
+          echo "clean up."
