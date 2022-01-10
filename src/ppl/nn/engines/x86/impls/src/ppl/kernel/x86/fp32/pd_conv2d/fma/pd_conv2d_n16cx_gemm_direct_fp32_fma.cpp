@@ -96,7 +96,7 @@ void pd_conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_tunning_param()
     sp.ic_l2_cnt = div_up(sp.padded_ic, sp.ic_l2_blk);
 
     sp.mb_l3_blk = batch;
-    sp.grp_l3_blk = 1;
+    sp.grp_l3_blk = gd_p.group;
 
     sp.gd_ker_blk = GD_KERNEL_BLK_MAX;
 #define REDUN_S(S, S_BLK) (float(round_up(S, S_BLK)) / (S)-1.0f)

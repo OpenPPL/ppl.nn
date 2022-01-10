@@ -83,16 +83,8 @@ void conv2d_n16cx_direct_fp32_avx512_executor::cal_kernel_tunning_param()
     sp.ic_l2_blk = cal_ic_l2_blk(cp);
     sp.ic_l2_cnt = div_up(sp.padded_ic, sp.ic_l2_blk);
 
-    sp.gp_l3_blk = min(cp.group, num_thread);
-    sp.mb_l3_blk = min(batch, div_up(num_thread, sp.gp_l3_blk));
-    const int64_t padded_src_hw = int64_t(src_h) * (src_w + 2 * cp.pad_w);
-    while (sp.gp_l3_blk > 1 && sp.gp_l3_blk * sp.mb_l3_blk * sp.ic_l2_blk * padded_src_hw > l3_cap_all_core) {
-        --sp.gp_l3_blk;
-    }
-    sp.mb_l3_blk = min(batch, div_up(num_thread, sp.gp_l3_blk));
-    while (sp.mb_l3_blk > 1 && sp.gp_l3_blk * sp.mb_l3_blk * sp.ic_l2_blk * padded_src_hw > l3_cap_all_core) {
-        --sp.mb_l3_blk;
-    }
+    sp.gp_l3_blk = cp.group;
+    sp.mb_l3_blk = batch;
 
     if (dst_h <= 112 && dst_w <= 112
         && cp.stride_w < dst_w && cp.pad_w != 0
@@ -101,6 +93,17 @@ void conv2d_n16cx_direct_fp32_avx512_executor::cal_kernel_tunning_param()
         sp.padding_policy = PADDING_POLICY_PREPAD();
     } else {
         sp.padding_policy = PADDING_POLICY_NOPAD();
+    }
+
+    if (sp.padding_policy == PADDING_POLICY_PREPAD()) {
+        const int64_t padded_src_hw = int64_t(src_h) * (src_w + 2 * cp.pad_w);
+        while (sp.gp_l3_blk > 1 && sp.gp_l3_blk * sp.mb_l3_blk * sp.ic_l2_blk * padded_src_hw > l3_cap_all_core) {
+            --sp.gp_l3_blk;
+        }
+        sp.mb_l3_blk = min(batch, div_up(num_thread, sp.gp_l3_blk));
+        while (sp.mb_l3_blk > 1 && sp.gp_l3_blk * sp.mb_l3_blk * sp.ic_l2_blk * padded_src_hw > l3_cap_all_core) {
+            --sp.mb_l3_blk;
+        }
     }
 
     sp.unroll_ow_start = -1;
