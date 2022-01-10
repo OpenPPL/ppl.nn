@@ -96,10 +96,6 @@ ppl::common::RetCode conv2d_n4cx_tile_gemm_fp32_offline_manager::fast_init_tunni
     tunning_param_.m_blk = min(tunning_param_.m_blk, round_up(num_outs_per_group, 4));
 
     tunning_param_.ow_blk = 7;
-    tunning_param_.oh_blk = round_up(8000 - tunning_param_.k_blk * tunning_param_.m_blk,
-                                     (tunning_param_.k_blk + tunning_param_.m_blk) * 7) /
-        ((tunning_param_.k_blk + tunning_param_.m_blk) * 7);
-    tunning_param_.oh_blk = max(tunning_param_.oh_blk, (int64_t)1);
     tunning_param_.oh_blk = 3;
     tunning_param_.num_thread = 1;
     return ppl::common::RC_SUCCESS;

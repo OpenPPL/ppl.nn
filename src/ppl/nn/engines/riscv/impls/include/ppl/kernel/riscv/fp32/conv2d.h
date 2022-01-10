@@ -30,8 +30,11 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-class conv2d_fp32_algo_selector {
+class conv2d_fp32_algo_selector : public conv2d_algo_selector<float> {
 public:
+    static conv2d_common_algo_info select_best_algo(const void* filter, ppl::nn::TensorShape& src_shape,
+                                                    ppl::nn::TensorShape& dst_shape, const conv2d_common_param& param,
+                                                    ppl::common::Allocator* allocator);
     static conv2d_common_algo_info select_algo(const ppl::nn::TensorShape& input_shape,
                                                const conv2d_common_param& param);
     static conv2d_offline_manager<float>* gen_algo(const conv2d_common_param& param,

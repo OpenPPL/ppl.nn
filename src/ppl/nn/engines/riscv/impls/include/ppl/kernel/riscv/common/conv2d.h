@@ -334,14 +334,12 @@ public:
     virtual conv2d_base_runtime_executor* gen_executor() = 0;
     virtual ~conv2d_offline_manager() {}
 
-protected:
-    double profile_tunning_param(const T* src, const T* filter, T* dst, ppl::nn::TensorShape& src_shape,
-                                 ppl::nn::TensorShape& dst_shape) {
-        const int32_t exe_count = 1;
+    double profile_tunning_param(const T* src, const T* filter, T* dst, const ppl::nn::TensorShape& src_shape,
+                                 const ppl::nn::TensorShape& dst_shape, const int32_t exe_count=1) {
 
         conv2d_offline_manager<T>& offline_manager = *this;
         std::vector<T> zero_bias(offline_manager.param().num_output, 0.0f);
-        // std::vector<T> tmp_buffer;
+        offline_manager.fast_init_tunning_param();
         offline_manager.gen_cvt_weights(filter, zero_bias.data());
 
         conv2d_runtime_executor<T>* executor =
@@ -358,24 +356,28 @@ protected:
                 LOG(ERROR) << "Prepare failed while the offline manager is picking the best tunning param: "
                            << ppl::common::GetRetCodeStr(rc);
             }
-            uint64_t tmp_buffer_size = executor->cal_temp_buffer_size();
-            auto tmp_buffer = (T*)offline_manager.allocator()->Alloc(tmp_buffer_size * sizeof(T));
-            // tmp_buffer.resize(tmp_buffer_size / sizeof(T));
-            executor->set_temp_buffer(tmp_buffer);
+
+            std::vector<T> tmp_buffer(executor->cal_temp_buffer_size() / sizeof(T), 0.0f);
+            executor->set_temp_buffer(tmp_buffer.data());
             for (int32_t i = 0; i < exe_count; i++) {
                 if (ppl::common::RC_SUCCESS != (rc = executor->execute())) {
                     LOG(ERROR) << "Execute failed while the offline manager is picking the best tunning param: "
                                << ppl::common::GetRetCodeStr(rc);
                 }
             }
+            tmp_buffer.resize(0);
         }
         auto end = std::chrono::high_resolution_clock::now();
-        offline_manager.allocator()->Free(executor->temp_buffer());
         offline_manager.release_cvt_weights();
         delete executor;
 
         return std::chrono::duration_cast<std::chrono::microseconds>(end - start).count(); // microseconds
     }
+};
+
+template<typename T>
+class conv2d_algo_selector {
+
 };
 
 }}} // namespace ppl::kernel::riscv
