@@ -63,7 +63,7 @@ public:
     ppl::common::RetCode Configure(uint32_t, ...) override;
 
 private:
-    bool can_defragement_;
+    uint32_t mm_policy_;
     BufferDesc shared_tmp_buffer_;
     uint64_t tmp_buffer_size_;
     std::unique_ptr<utils::BufferManager> buffer_manager_;
