@@ -21,6 +21,7 @@
 
 #include "ppl/kernel/riscv/fp16/reduce.h"
 #include "ppl/kernel/riscv/fp32/reduce.h"
+#include "ppl/kernel/riscv/int64/reduce.h"
 #include "ppl/nn/engines/riscv/kernels/onnx/reduce_min_kernel.h"
 
 namespace ppl { namespace nn { namespace riscv {
@@ -64,6 +65,9 @@ ppl::common::RetCode ReduceMinKernel::DoExecute(KernelExecContext* ctx) {
                                               data->GetShape(), reduced->GetShape(), fixed_axes.data(),
                                               fixed_axes.size());
     } else if (data_type == ppl::common::DATATYPE_INT64) {
+        return kernel::riscv::reduce_min_int64(data->GetBufferPtr<int64_t>(), reduced->GetBufferPtr<int64_t>(),
+                                              data->GetShape(), reduced->GetShape(), fixed_axes.data(),
+                                              fixed_axes.size());
     } else {
         LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";
         return ppl::common::RC_UNSUPPORTED;
