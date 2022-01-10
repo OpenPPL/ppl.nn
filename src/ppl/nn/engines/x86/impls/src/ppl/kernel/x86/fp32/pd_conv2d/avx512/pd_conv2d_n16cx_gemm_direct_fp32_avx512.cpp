@@ -93,7 +93,7 @@ void pd_conv2d_n16cx_gemm_direct_fp32_avx512_executor::cal_kernel_tunning_param(
     sp.ic_l2_cnt = div_up(sp.padded_ic, sp.ic_l2_blk);
 
     sp.mb_l3_blk = batch;
-    sp.grp_l3_blk = 1;
+    sp.grp_l3_blk = gd_p.group;
 
     if (sp.padded_oc > sp.padded_ic) {
         sp.oc_l2_blk = min(OC_L2_BLK_MAX_LARGE, sp.padded_oc);

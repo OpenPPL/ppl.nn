@@ -85,7 +85,7 @@ void pd_conv2d_n16cx_direct_ndarray_fp32_fma_executor::cal_kernel_tunning_param(
     const float l3_cap_all_core = (ppl::common::GetCpuCacheL3() == 0 ? (ASSUME_L3_BYTES * num_thread) : ppl::common::GetCpuCacheL3()) * L3_RATIO / sizeof(float);
 
     sp.mb_l3_blk = batch;
-    sp.grp_l3_blk = 1;
+    sp.grp_l3_blk = dr_p.group;
 
     sp.dr_unroll_w_start = -1;
     sp.dr_unroll_w_end = -1;
