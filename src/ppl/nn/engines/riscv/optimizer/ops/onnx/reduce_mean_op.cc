@@ -46,6 +46,8 @@ RetCode ReduceMeanOp::SelectFormat(const InputOutputInfo& info, vector<dataforma
         selected_output_formats->at(0) = DATAFORMAT_N8CX;
     } else if (DATAFORMAT_N4CX == selected_input_formats->at(0) && param_->keep_dims) {
         selected_output_formats->at(0) = DATAFORMAT_N4CX;
+    } else if (DATAFORMAT_N2CX == selected_input_formats->at(0) && param_->keep_dims) {
+        selected_output_formats->at(0) = DATAFORMAT_N2CX;
     }
 
     return RC_SUCCESS;
@@ -57,6 +59,8 @@ RetCode ReduceMeanOp::SelectDataType(const InputOutputInfo& info, std::vector<da
         selected_output_data_types->at(0) = DATATYPE_FLOAT16;
     } else if (DATATYPE_FLOAT32 == selected_input_data_types->at(0)) {
         selected_output_data_types->at(0) = DATATYPE_FLOAT32;
+    } else if (DATATYPE_INT64 == selected_input_data_types->at(0)) {
+        selected_output_data_types->at(0) = DATATYPE_INT64;
     }
 
     return RC_SUCCESS;
