@@ -14,7 +14,7 @@ on:
 
 jobs:
   build_and_test:
-    runs-on: [self-hosted, x64, win64]
+    runs-on: [self-hosted, x64, windows]
 
     steps:
       - name: Create Checkout Directory
