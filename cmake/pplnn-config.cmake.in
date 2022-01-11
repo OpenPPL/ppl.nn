@@ -51,10 +51,10 @@ if(PPLNN_USE_RISCV)
 endif()
 
 # TODO do not export protobuf
-if(NOT TARGET "protobuf::libprotobuf")
+if(NOT TARGET "protobuf::libprotobuf-lite")
     include(${__PPLNN_PACKAGE_ROOTDIR__}/lib/cmake/protobuf/protobuf-config.cmake)
 endif()
-list(APPEND __PPLNN_LINK_LIBRARIES__ "protobuf::libprotobuf")
+list(APPEND __PPLNN_LINK_LIBRARIES__ "protobuf::libprotobuf-lite")
 
 # --------------------------------------------------------------------------- #
 

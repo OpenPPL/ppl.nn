@@ -73,6 +73,7 @@ hpcc_declare_git_dep(pplcommon
 # --------------------------------------------------------------------------- #
 
 set(protobuf_BUILD_TESTS OFF CACHE BOOL "disable protobuf tests")
+set(protobuf_BUILD_PROTOC_BINARIES OFF CACHE BOOL "")
 
 hpcc_declare_pkg_dep(protobuf
     https://github.com/protocolbuffers/protobuf/releases/download/v3.12.4/protobuf-cpp-3.12.4.zip
