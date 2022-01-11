@@ -19,6 +19,7 @@
 
 #include "ppl/kernel/riscv/fp16/conv2d/tile_gemm/vec128/conv2d_n8cx_tile_gemm_fp16_vec128.h"
 #include "ppl/kernel/riscv/fp16/conv2d/tile_gemm/vec128/conv2d_n8cx_tile_gemm_cto8c_fp16_vec128.h"
+#include "ppl/kernel/riscv/fp16/conv2d/gemm/conv2d_n8cx_gemm_fp16_vec128.h"
 #include "ppl/kernel/riscv/fp16/conv2d/wg/vec128/conv2d_n8cx_wg_b2f3_fp16.h"
 #include "ppl/kernel/riscv/fp16/conv2d/wg/vec128/conv2d_n8cx_wg_b4f3_fp16.h"
 #include "ppl/kernel/riscv/fp16/conv2d/wg/vec128/conv2d_n8cx_wg_b6f3_fp16.h"
@@ -83,6 +84,11 @@ conv2d_offline_manager<__fp16>* conv2d_fp16_algo_selector::gen_algo(const conv2d
                algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
         conv_mgr = new conv2d_n8cx_tile_gemm_cto8c_fp16_offline_manager(param, algo_info, allocator);
 
+    } else if (algo_info.algo_type == conv2d_common_algo::gemm &&
+               algo_info.input_format == ppl::common::DATAFORMAT_N8CX &&
+               algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
+        conv_mgr = new conv2d_n8cx_gemm_fp16_offline_manager(param, algo_info, allocator);
+        
     } else if (algo_info.algo_type == conv2d_common_algo::naive &&
                algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
                algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
