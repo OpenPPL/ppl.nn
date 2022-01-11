@@ -77,6 +77,9 @@ Refer to [Documents](#documents) for more details.
   - RISCV
     - [Adding Ops](docs/en/riscv-doc/add_op.md)（[中文版](docs/cn/riscv-doc/add_op.md)）
     - [Benchmark](docs/en/riscv-doc/benchmark_tool.md)（[中文版](docs/cn/riscv-doc/benchmark_tool.md)）
+  - ARM
+    - [Adding Ops](docs/en/arm-doc/add_op.md)（[中文版](docs/cn/arm-doc/add_op.md)）
+    - [Benchmark](docs/en/arm-doc/benchmark_tool.md)（[中文版](docs/cn/arm-doc/benchmark_tool.md)）
 
 ### Contact Us
 
