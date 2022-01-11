@@ -12,19 +12,19 @@ if(NOT TARGET "pplcommon_static")
     include(${CMAKE_CURRENT_LIST_DIR}/pplcommon-config.cmake)
 endif()
 
-set_target_properties(pplkernelx86_static PROPERTIES
+set_target_properties(pplkernelriscv_static PROPERTIES
     INTERFACE_LINK_LIBRARIES "pplcommon_static")
 
 if(MSVC)
-    set_target_properties(pplkernelx86_static PROPERTIES
-        IMPORTED_LOCATION "${__PPLKERNELRISCV_PACKAGE_DIR__}/lib/libpplkernelx86_static.lib"
-        IMPORTED_LOCATION_DEBUG "${__PPLKERNELRISCV_PACKAGE_DIR__}/lib/libpplkernelx86_static.lib"
-        IMPORTED_LOCATION_RELEASE "${__PPLKERNELRISCV_PACKAGE_DIR__}/lib/libpplkernelx86_static.lib")
+    set_target_properties(pplkernelriscv_static PROPERTIES
+        IMPORTED_LOCATION "${__PPLKERNELRISCV_PACKAGE_DIR__}/lib/libpplkernelriscv_static.lib"
+        IMPORTED_LOCATION_DEBUG "${__PPLKERNELRISCV_PACKAGE_DIR__}/lib/libpplkernelriscv_static.lib"
+        IMPORTED_LOCATION_RELEASE "${__PPLKERNELRISCV_PACKAGE_DIR__}/lib/libpplkernelriscv_static.lib")
 else()
-    set_target_properties(pplkernelx86_static PROPERTIES
-        IMPORTED_LOCATION "${__PPLKERNELRISCV_PACKAGE_DIR__}/lib/libpplkernelx86_static.a"
-        IMPORTED_LOCATION_DEBUG "${__PPLKERNELRISCV_PACKAGE_DIR__}/lib/libpplkernelx86_static.a"
-        IMPORTED_LOCATION_RELEASE "${__PPLKERNELRISCV_PACKAGE_DIR__}/lib/libpplkernelx86_static.a")
+    set_target_properties(pplkernelriscv_static PROPERTIES
+        IMPORTED_LOCATION "${__PPLKERNELRISCV_PACKAGE_DIR__}/lib/libpplkernelriscv_static.a"
+        IMPORTED_LOCATION_DEBUG "${__PPLKERNELRISCV_PACKAGE_DIR__}/lib/libpplkernelriscv_static.a"
+        IMPORTED_LOCATION_RELEASE "${__PPLKERNELRISCV_PACKAGE_DIR__}/lib/libpplkernelriscv_static.a")
 endif()
 
 unset(__PPLKERNELRISCV_PACKAGE_DIR__)
