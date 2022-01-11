@@ -102,6 +102,34 @@ build.bat -G "Visual Studio 14 2015 Win64" -DHPCC_USE_CUDA=ON
 
 Headers and libraries are installed in `pplnn-build/install`.
 
+### Building ARM Engine
+
+#### Linux
+
+```bash
+./build.sh -DHPCC_USE_AARCH64=ON
+```
+
+Headers and libraries are installed in `pplnn-build/install`.
+
+If you want to enable openmp, please specify `HPCC_USE_OPENMP` as following:
+
+```bash
+./build.sh -DHPCC_USE_AARCH64=ON -DHPCC_USE_OPENMP=ON
+```
+
+If you want to enable FP16 inference, please specify `PPL_USE_ARMV8_2` (your compiler must have `armv8.2-a` ISA support):
+
+```bash
+./build.sh -DHPCC_USE_AARCH64=ON -DPPL_USE_ARMV8_2=ON
+```
+
+If your system has multiple NUMA nodes, it is recommended to build with `PPLNN_USE_NUMA` (please make sure `libnuma` has been installed in your system):
+
+```bash
+./build.sh -DHPCC_USE_AARCH64=ON -DPPLNN_USE_NUMA=ON
+```
+
 ### Buliding Python API support
 
 add `-DPPLNN_ENABLE_PYTHON_API=ON` to the build command if you want to use `PPLNN` in python:
