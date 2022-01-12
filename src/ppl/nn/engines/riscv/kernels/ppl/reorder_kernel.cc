@@ -76,6 +76,27 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
             CvtFp16ToFp32(data_cnt, input->GetBufferPtr<__fp16>(), output->GetBufferPtr<float>());
             return ppl::common::RC_SUCCESS;
 
+        } else if (input_type == ppl::common::DATATYPE_FLOAT16 && output_type == ppl::common::DATATYPE_FLOAT32 &&
+                   input_format == ppl::common::DATAFORMAT_N8CX && output_format == ppl::common::DATAFORMAT_N4CX) {
+            LOG(DEBUG) << "Reorder fp16 n8cx to fp32 n4cx";
+            N8cxFp16ToN4cxFp32((input->GetBufferPtr<__fp16>()), input_n, input_c, input_h, input_w,
+                              output->GetBufferPtr<float>());
+            return ppl::common::RC_SUCCESS;
+
+        } else if (input_type == ppl::common::DATATYPE_FLOAT32 && output_type == ppl::common::DATATYPE_FLOAT16 &&
+                   input_format == ppl::common::DATAFORMAT_N4CX && output_format == ppl::common::DATAFORMAT_N8CX) {
+            LOG(DEBUG) << "Reorder fp32 n4cx to fp16 n8cx";
+            N4cxFp32ToN8cxFp16((input->GetBufferPtr<float>()), input_n, input_c, input_h, input_w,
+                              output->GetBufferPtr<__fp16>());
+            return ppl::common::RC_SUCCESS;
+
+        } else if (input_type == ppl::common::DATATYPE_FLOAT32 && output_type == ppl::common::DATATYPE_FLOAT16 &&
+                   input_format == ppl::common::DATAFORMAT_N4CX && output_format == ppl::common::DATAFORMAT_NDARRAY) {
+            LOG(DEBUG) << "Reorder fp32 n4cx to fp16 nadrray";
+            N4cxFp32ToNdarrayFp16((input->GetBufferPtr<float>()), input_n, input_c, input_h, input_w,
+                              output->GetBufferPtr<__fp16>());
+            return ppl::common::RC_SUCCESS;
+
         } else if (input_type == ppl::common::DATATYPE_FLOAT16 && output_type == input_type &&
                    input_format == ppl::common::DATAFORMAT_NDARRAY && output_format == ppl::common::DATAFORMAT_N8CX) {
             LOG(DEBUG) << "Reorder fp16 ndarray to fp16 n8cx";

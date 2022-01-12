@@ -177,3 +177,21 @@ void NdarrayFp32ToN8cxFp16(const float* src, int64_t n, int64_t c, int64_t h, in
         }
     }
 }
+
+void N8cxFp16ToN4cxFp32(const __fp16* src, int64_t n, int64_t c, int64_t h, int64_t w, float* dst) {
+    float temp_buffer[n * c * h * w];
+    N8cxFp16ToNdarrayFp32(src, n, c, h, w, temp_buffer);
+    NdarrayToN4cxFp32(temp_buffer, n, c, h, w, dst);
+}
+
+void N4cxFp32ToN8cxFp16(const float* src, int64_t n, int64_t c, int64_t h, int64_t w, __fp16* dst) {
+    float temp_buffer[n * c * h * w];
+    N4cxToNdarrayFp32(src, n, c, h, w, temp_buffer);
+    NdarrayFp32ToN8cxFp16(temp_buffer, n, c, h, w, dst);
+}
+
+void N4cxFp32ToNdarrayFp16(const float* src, int64_t n, int64_t c, int64_t h, int64_t w, __fp16* dst) {
+    float temp_buffer[n * c * h * w];
+    N4cxToNdarrayFp32(src, n, c, h, w, temp_buffer);
+    CvtFp32ToFp16(n * c * h * w, temp_buffer, dst);
+}
