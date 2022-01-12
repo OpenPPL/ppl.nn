@@ -31,14 +31,12 @@ namespace ppl { namespace nn { namespace riscv {
 static void DummyDeleter(ppl::common::Allocator*) {}
 
 RuntimeRiscvDevice::RuntimeRiscvDevice(uint64_t alignment, uint32_t mm_policy)
-    : RiscvDevice(alignment), tmp_buffer_size_(0) {
-    can_defragement_ = false;
+    : RiscvDevice(alignment), mm_policy_(mm_policy), tmp_buffer_size_(0) {
     if (mm_policy == RISCV_MM_MRU) {
         auto allocator_ptr = RiscvDevice::GetAllocator();
         allocator_ = std::shared_ptr<Allocator>(allocator_ptr, DummyDeleter);
         buffer_manager_.reset(new utils::StackBufferManager(allocator_ptr));
     } else if (mm_policy == RISCV_MM_COMPACT) {
-        can_defragement_ = true;
         allocator_.reset(new utils::CpuBlockAllocator());
         buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment, 64u));
     }
@@ -54,7 +52,7 @@ RuntimeRiscvDevice::~RuntimeRiscvDevice() {
 }
 
 RetCode RuntimeRiscvDevice::AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
-    if (can_defragement_) {
+    if (mm_policy_ == RISCV_MM_COMPACT) {
         auto ret = buffer_manager_->Realloc(bytes, &shared_tmp_buffer_);
         if (RC_SUCCESS != ret) {
             return ret;
@@ -73,7 +71,7 @@ RetCode RuntimeRiscvDevice::AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
 }
 
 void RuntimeRiscvDevice::FreeTmpBuffer(BufferDesc* buffer) {
-    if (can_defragement_) {
+    if (mm_policy_ == RISCV_MM_COMPACT) {
         buffer_manager_->Free(&shared_tmp_buffer_);
     }
 }
@@ -81,17 +79,7 @@ void RuntimeRiscvDevice::FreeTmpBuffer(BufferDesc* buffer) {
 /* -------------------------------------------------------------------------- */
 
 RetCode RuntimeRiscvDevice::DoMemDefrag(RuntimeRiscvDevice* dev, va_list) {
-    if (!dev->can_defragement_) {
-        return RC_UNSUPPORTED;
-    }
-
-    auto mgr = dynamic_cast<utils::CompactBufferManager*>(dev->buffer_manager_.get());
-    if (dev->tmp_buffer_size_ > 0) {
-        mgr->Free(&dev->shared_tmp_buffer_);
-        dev->shared_tmp_buffer_.addr = nullptr;
-        dev->tmp_buffer_size_ = 0;
-    }
-    return mgr->Defragment();
+    return RC_SUCCESS;
 }
 
 RuntimeRiscvDevice::ConfHandlerFunc RuntimeRiscvDevice::conf_handlers_[] = {
