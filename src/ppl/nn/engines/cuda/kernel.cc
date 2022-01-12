@@ -139,12 +139,16 @@ RetCode CudaKernel::Execute(KernelExecContext* ctx) {
     for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto tensor = ctx->GetOutput<TensorImpl>(i);
         auto tensor_size = tensor->GetShape()->GetBytesIncludingPadding();
+        auto tensor_dim_count = tensor->GetShape()->GetDimCount();
+        std::string tensor_dims = "";
+        for (uint32_t j = 0; j < tensor_dim_count; ++j) {
+            tensor_dims += std::to_string(tensor->GetShape()->GetDim(j)) + " ";
+        }
         LOG(DEBUG) << "tensor size " << tensor_size;
         LOG(DEBUG) << "tensor datatype " << tensor->GetShape()->GetDataType() << " tensor dataformat "
                    << tensor->GetShape()->GetDataFormat();
-        LOG(DEBUG) << "tensor dimcount " << tensor->GetShape()->GetDimCount();
-        LOG(DEBUG) << "tensor n and c " << tensor->GetShape()->GetDim(0) << " " << tensor->GetShape()->GetDim(1);
-        LOG(DEBUG) << "tensor h and w " << tensor->GetShape()->GetDim(2) << " " << tensor->GetShape()->GetDim(3);
+        LOG(DEBUG) << "tensor dimcount " << tensor_dim_count;
+        LOG(DEBUG) << "tensor dims " << tensor_dims;
         total_size += tensor_size;
     }
     auto run_begin_ts = std::chrono::system_clock::now();
