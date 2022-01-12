@@ -37,4 +37,11 @@ void N8cxFp16ToNdarrayFp32(const __fp16* src, int64_t n, int64_t c, int64_t h, i
 
 // TODO Optimize
 void NdarrayFp32ToN8cxFp16(const float* src, int64_t n, int64_t c, int64_t h, int64_t w, __fp16* dst);
+
+void N8cxFp16ToN4cxFp32(const __fp16* src, int64_t n, int64_t c, int64_t h, int64_t w, float* dst);
+
+void N4cxFp32ToN8cxFp16(const float* src, int64_t n, int64_t c, int64_t h, int64_t w, __fp16* dst);
+
+void N4cxFp32ToNdarrayFp16(const float* src, int64_t n, int64_t c, int64_t h, int64_t w, __fp16* dst);
+
 #endif
