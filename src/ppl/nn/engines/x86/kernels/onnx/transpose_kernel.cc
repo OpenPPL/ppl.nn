@@ -55,8 +55,9 @@ ppl::common::RetCode TransposeKernel::DoExecute(KernelExecContext* ctx) {
     if (data_format == ppl::common::DATAFORMAT_N16CX) {
         if (data_type == ppl::common::DATATYPE_FLOAT32 &&
             transposed->GetShape()->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY &&
-            data->GetShape()->GetDimCount() == 4 && modified_perm == std::vector<int32_t>{0, 2, 3, 1} &&
-            MayUseISA(ppl::common::ISA_X86_AVX) && param_->reverse == false) { // actually N16CHW -> NHWC
+            data->GetShape()->GetDimCount() == 4 &&
+            modified_perm == std::vector<int32_t>{0, 2, 3, 1} &&
+            param_->reverse == false) { // actually N16CHW -> NHWC
             if (MayUseISA(ppl::common::ISA_X86_AVX)) {
                 return ppl::kernel::x86::reorder_n16cx_nxc_fp32_avx(data->GetShape(), data->GetBufferPtr<float>(),
                                                                     transposed->GetBufferPtr<float>());
