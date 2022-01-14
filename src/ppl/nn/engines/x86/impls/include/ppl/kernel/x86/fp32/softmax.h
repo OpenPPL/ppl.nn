@@ -22,6 +22,12 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
+ppl::common::RetCode softmax_ndarray_fp32_avx512(
+    const ppl::nn::TensorShape *src_shape,
+    const float *src,
+    const int64_t axis,
+    float *dst);
+
 ppl::common::RetCode softmax_ndarray_fp32_fma(
     const ppl::nn::TensorShape *src_shape,
     const float *src,
