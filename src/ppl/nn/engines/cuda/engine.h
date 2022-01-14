@@ -80,7 +80,7 @@ private:
     static ppl::common::RetCode SetKernelType(CudaEngine*, va_list);
     static ppl::common::RetCode SetInputDims(CudaEngine*, va_list);
     static ppl::common::RetCode SetUseDefaultAlgorithms(CudaEngine*, va_list);
-    static ppl::common::RetCode SetQuantFile(CudaEngine*, va_list);
+    static ppl::common::RetCode SetQuantInfo(CudaEngine*, va_list);
     static ppl::common::RetCode ExportAlgorithms(CudaEngine*, va_list);
     static ppl::common::RetCode ImportAlgorithms(CudaEngine*, va_list);
 

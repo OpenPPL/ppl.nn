@@ -127,6 +127,23 @@ static void SplitString(const char* str, unsigned int len, const char* delim, un
     f("", 0); // the last empty field
 }
 
+static RetCode ReadFileContent(const char* fname, string* buf) {
+    ifstream ifile;
+
+    ifile.open(fname, ios_base::in);
+    if (!ifile.is_open()) {
+        LOG(ERROR) << "open file[" << fname << "] failed.";
+        return RC_NOT_FOUND;
+    }
+
+    stringstream ss;
+    ss << ifile.rdbuf();
+    *buf = ss.str();
+
+    ifile.close();
+    return RC_SUCCESS;
+}
+
 static bool ParseInputShapes(const string& shape_str, vector<vector<int64_t>>* input_shapes) {
     bool ok = true;
 
@@ -213,7 +230,7 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
 
         datatype_t kernel_type = DATATYPE_UNKNOWN;
         for (datatype_t i = DATATYPE_UNKNOWN; i < DATATYPE_MAX; i++) {
-            if (GetDataTypeStr(i) == g_flag_kernel_type) {
+            if (GetDataTypeStr(i) == kernel_type_str) {
                 kernel_type = i;
                 break;
             }
@@ -227,7 +244,13 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     }
 
     if (!g_flag_quant_file.empty()) {
-        cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_QUANT_FILE, g_flag_quant_file.c_str());
+        string file_content;
+        auto status = ReadFileContent(g_flag_quant_file.c_str(), &file_content);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "read file[" << g_flag_quant_file << "] failed: " << GetRetCodeStr(status);
+            return false;
+        }
+        cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_QUANT_INFO, file_content.c_str());
     }
 
     if (!g_flag_export_algo_file.empty()) {
