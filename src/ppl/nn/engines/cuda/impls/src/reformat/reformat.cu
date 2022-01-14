@@ -151,8 +151,9 @@ __global__ void cuda_kernel_cvtformat<type, NHWC_NDARRAY>(                      
                                                                                                         \
     int64_t num = blockIdx.z;                                                                           \
     for (int n = num; n < param.n_outer; n += blockDim.z) {                                              \
+        for (int t = blockIdx.y; t < DivUp(param.n_inner, 32) ; t+= gridDim.y) { \
         int64_t idx_w = blockIdx.x * blockDim.x + threadIdx.x;                                          \
-        int64_t idx_h = blockIdx.y * blockDim.y + threadIdx.y;                                          \
+        int64_t idx_h = t * blockDim.y + threadIdx.y;                                          \
                                                                                                         \
         if (idx_w < param.src_pad && idx_h < param.n_inner) {                                           \
             int64_t offset = n * param.src_pad * param.n_inner + idx_h * param.src_pad + idx_w;         \
@@ -162,13 +163,14 @@ __global__ void cuda_kernel_cvtformat<type, NHWC_NDARRAY>(                      
         }                                                                                               \
         __syncthreads();                                                                                \
                                                                                                         \
-        idx_w = blockIdx.y * blockDim.y + threadIdx.x;                                                  \
+        idx_w = t * blockDim.y + threadIdx.x;                                                  \
         idx_h = blockIdx.x * blockDim.x + threadIdx.y;                                                  \
                                                                                                         \
         if (idx_w < param.n_inner && idx_h < param.dst_pad) {                                           \
             int64_t offset = n * param.dst_pad * param.n_inner + idx_h * param.n_inner + idx_w;         \
             output[offset] = share_val[threadIdx.x][threadIdx.y];                                       \
         }                                                                                               \
+        }\
     }                                                                                                   \
 }
 
@@ -416,7 +418,7 @@ void GenDimParam(
         dimBlock.x = DIM;
         dimBlock.y = DIM;
         dimGrid.x  = DivUp(param.src_pad, DIM);
-        dimGrid.y  = DivUp(param.n_inner, DIM);
+        dimGrid.y  = DivUp(param.n_inner, DIM) > MAX_DIM? MAX_DIM : DivUp(param.n_inner, DIM);
     } else if (mode == NDARRAY_NHWC) {
         dimBlock.x = DIM;
         dimBlock.y = DIM;

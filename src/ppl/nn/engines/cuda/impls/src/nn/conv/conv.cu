@@ -261,7 +261,7 @@ uint64_t PPLCUDAConvolutionGetCompilationBufSize(ppl::common::datatype_t type, c
     if (is_out_grp_pad)
         cvt_output_size = getCvtOutputSize(type, conv_param, num_flt_per_grp_pad);
 
-    uint32_t split_size = GetMaxSplitSize(type, conv_param, num_flt_per_grp_pad);
+    uint64_t split_size = GetMaxSplitSize(type, conv_param, num_flt_per_grp_pad);
 
     uint64_t total_size = cvt_input_size + cvt_output_size + split_size;
 
