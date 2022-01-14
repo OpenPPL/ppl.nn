@@ -15,8 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <deque>
-
 #include "ppl/nn/engines/x86/kernels/onnx/matmul_kernel.h"
 #include "ppl/kernel/x86/fp32/matmul.h"
 

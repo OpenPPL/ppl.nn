@@ -130,9 +130,17 @@ ppl::common::RetCode matmul_ndarray_fp32(
         src1_dims.push_front(1);
     }
 
-    const int32_t m = src0_dims[max_dim_count - 2];
-    const int32_t k = src0_dims[max_dim_count - 1];
-    const int32_t n = src1_dims[max_dim_count - 1];
+    const int64_t k = src0_dims[max_dim_count - 1];
+    const int64_t n = src1_dims[max_dim_count - 1];
+
+    if (src1_shape->GetElementsExcludingPadding() / (n * k) == 1) {
+        for (int64_t i = max_dim_count - 3; i >= 0; i--) {
+            src0_dims[max_dim_count - 2] *= src0_dims[i];
+            src0_dims[i] = 1;
+        }
+    }
+
+    const int64_t m = src0_dims[max_dim_count - 2];
 
     gemm_v2_param_fp32 param;
     param.M        = m;
