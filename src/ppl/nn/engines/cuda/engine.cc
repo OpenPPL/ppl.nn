@@ -177,26 +177,15 @@ static RetCode ReadFileContent(const char* fname, string* buf) {
     return RC_SUCCESS;
 }
 
-RetCode CudaEngine::SetQuantFile(CudaEngine* engine, va_list args) {
-    const char* json_file = va_arg(args, const char*);
-    if (!json_file) {
-        LOG(ERROR) << "empty quantization info filename.";
+RetCode CudaEngine::SetQuantInfo(CudaEngine* engine, va_list args) {
+    const char* json_str = va_arg(args, const char*);
+    if (!json_str) {
+        LOG(ERROR) << "empty quantization info string.";
         return RC_INVALID_VALUE;
-    }
-
-    string json_buffer;
-    auto status = ReadFileContent(json_file, &json_buffer);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "read quant info from file[" << json_file << "] failed.";
-        return RC_INVALID_VALUE;
-    }
-    if (json_buffer.empty()) {
-        LOG(WARNING) << "empty quant info file[" << json_file << "]. do nothing.";
-        return RC_SUCCESS;
     }
 
     QuantParamParser parser;
-    status = parser.ParseBuffer(json_buffer.c_str(), &engine->cuda_flags_.quant_info);
+    auto status = parser.ParseBuffer(json_str, &engine->cuda_flags_.quant_info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse quantization buffer failed: " << GetRetCodeStr(status);
         return status;
@@ -279,7 +268,7 @@ CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetKernelType, // CUDA_CONF_USE_DEFAULT_KERNEL_TYPE
     CudaEngine::SetInputDims, // CUDA_CONF_SET_INPUT_DIMS
     CudaEngine::SetUseDefaultAlgorithms, // CUDA_CONF_USE_DEFAULT_ALGORITHMS
-    CudaEngine::SetQuantFile, // CUDA_CONF_SET_QUANT_FILE
+    CudaEngine::SetQuantInfo, // CUDA_CONF_SET_QUANT_INFO
     CudaEngine::ExportAlgorithms, // CUDA_CONF_EXPORT_ALGORITHMS
     CudaEngine::ImportAlgorithms, // CUDA_CONF_IMPORT_ALGORITHMS
 };

@@ -223,7 +223,8 @@ def CreateCudaEngine(args):
             sys.exit(-1)
 
     if args.quant_file:
-        cuda_engine.Configure(pplnn.CUDA_CONF_SET_QUANT_FILE, args.quant_file)
+        with open(args.quant_file, 'r') as f:
+            cuda_engine.Configure(pplnn.CUDA_CONF_SET_QUANT_INFO, f.read())
 
     return cuda_engine
 

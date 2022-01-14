@@ -79,14 +79,14 @@ enum {
     CUDA_CONF_USE_DEFAULT_ALGORITHMS,
 
     /**
-       @param json_file a json file containing quantization information
+       @param json_str a json string(const char*) containing quantization information
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_SET_QUANT_FILE, json_file);
+       cuda_engine->Configure(CUDA_CONF_SET_QUANT_INFO, json_str);
        @endcode
     */
-    CUDA_CONF_SET_QUANT_FILE,
+    CUDA_CONF_SET_QUANT_INFO,
 
     /**
        @param json_file a json file used to store selected algos' index information
