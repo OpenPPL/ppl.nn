@@ -19,6 +19,7 @@
 #include "ppl/nn/common/logger.h"
 
 #include "ppl/kernel/x86/fp32/arithmetic_max6d.h"
+#include "ppl/kernel/x86/common/memory.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -43,14 +44,45 @@ ppl::common::RetCode PowKernel::DoExecute(KernelExecContext* ctx) {
     const auto data_type = A->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
+        if (B->GetShape()->IsScalar() && B->GetBufferPtr<float>()[0] == 1.0f) {
+            return ppl::kernel::x86::memory_copy(
+                A->GetBufferPtr<float>(),
+                A->GetShape()->GetBytesIncludingPadding(),
+                C->GetBufferPtr<float>());
+        }
+
+        if (B->GetShape()->IsScalar() && B->GetBufferPtr<float>()[0] == 2.0f) {
+            if (MayUseISA(ppl::common::ISA_X86_AVX)) {
+                return ppl::kernel::x86::mul_ndarray_max6d_fp32_avx(
+                    A->GetShape(),
+                    A->GetShape(),
+                    A->GetBufferPtr<float>(),
+                    A->GetBufferPtr<float>(),
+                    C->GetBufferPtr<float>());
+            } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
+                return ppl::kernel::x86::mul_ndarray_max6d_fp32_sse(
+                    A->GetShape(),
+                    A->GetShape(),
+                    A->GetBufferPtr<float>(),
+                    A->GetBufferPtr<float>(),
+                    C->GetBufferPtr<float>());
+            }
+        }
+
         if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-            return ppl::kernel::x86::pow_ndarray_max6d_fp32_avx(A->GetShape(), B->GetShape(),
-                                                                A->GetBufferPtr<float>(), B->GetBufferPtr<float>(),
-                                                                C->GetBufferPtr<float>());
+            return ppl::kernel::x86::pow_ndarray_max6d_fp32_avx(
+                A->GetShape(),
+                B->GetShape(),
+                A->GetBufferPtr<float>(),
+                B->GetBufferPtr<float>(),
+                C->GetBufferPtr<float>());
         } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-            return ppl::kernel::x86::pow_ndarray_max6d_fp32_sse(A->GetShape(), B->GetShape(),
-                                                                A->GetBufferPtr<float>(), B->GetBufferPtr<float>(),
-                                                                C->GetBufferPtr<float>());
+            return ppl::kernel::x86::pow_ndarray_max6d_fp32_sse(
+                A->GetShape(),
+                B->GetShape(),
+                A->GetBufferPtr<float>(),
+                B->GetBufferPtr<float>(),
+                C->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "get unsupported isa " << GetISA();
         }

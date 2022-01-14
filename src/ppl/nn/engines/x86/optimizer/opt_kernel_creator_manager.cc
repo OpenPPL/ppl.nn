@@ -198,11 +198,11 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("", "PRelu", 9, 16, PReluOp);
     // R
     REGISTER_OPT_KERNEL_CREATOR("", "Range", 11, 16, RangeOp);
-    REGISTER_OPT_KERNEL_CREATOR("", "ReduceMax", 11, 11, ReduceMaxOp);
-    REGISTER_OPT_KERNEL_CREATOR("", "ReduceMean", 11, 12, ReduceMeanOp);
-    REGISTER_OPT_KERNEL_CREATOR("", "ReduceMin", 11, 11, ReduceMinOp);
-    REGISTER_OPT_KERNEL_CREATOR("", "ReduceProd", 11, 12, ReduceProdOp);
-    REGISTER_OPT_KERNEL_CREATOR("", "ReduceSum", 11, 12, ReduceSumOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "ReduceMax", 1, 16, ReduceMaxOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "ReduceMean", 1, 16, ReduceMeanOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "ReduceMin", 1, 16, ReduceMinOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "ReduceProd", 1, 16, ReduceProdOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "ReduceSum", 1, 16, ReduceSumOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Relu", 6, 12, ReluOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Reshape", 5, 12, ReshapeOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Resize", 11, 12, ResizeOp);
@@ -214,8 +214,8 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("", "Shape", 1, 12, ShapeOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Sigmoid", 6, 12, SigmoidOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Slice", 11, 12, SliceOp);
-    REGISTER_OPT_KERNEL_CREATOR("", "Softmax", 11, 12, SoftmaxOp);
-    REGISTER_OPT_KERNEL_CREATOR("", "Split", 11, 12, SplitOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "Softmax", 1, 12, SoftmaxOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "Split", 2, 12, SplitOp);
     REGISTER_OPT_KERNEL_CREATOR("", "SplitToSequence", 11, 16, SplitToSequenceOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Sqrt", 6, 12, SqrtOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Squeeze", 11, 12, SqueezeOp);

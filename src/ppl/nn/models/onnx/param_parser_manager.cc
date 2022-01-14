@@ -190,11 +190,11 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "PRelu", 9, 16);
     // R
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Range", 11, 16);
-    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMax", 11, 11, ppl::nn::common::ReduceParam, ParseReduceParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMean", 11, 12, ppl::nn::common::ReduceParam, ParseReduceParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMin", 11, 11, ppl::nn::common::ReduceParam, ParseReduceParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ReduceProd", 11, 12, ppl::nn::common::ReduceParam, ParseReduceParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ReduceSum", 11, 12, ppl::nn::common::ReduceParam, ParseReduceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMax", 1, 16, ppl::nn::common::ReduceParam, ParseReduceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMean", 1, 16, ppl::nn::common::ReduceParam, ParseReduceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMin", 1, 16, ppl::nn::common::ReduceParam, ParseReduceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceProd", 1, 16, ppl::nn::common::ReduceParam, ParseReduceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceSum", 1, 16, ppl::nn::common::ReduceParam, ParseReduceParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Relu", 6, 12);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Reshape", 5, 12);
     PPL_REGISTER_OP_WITH_PARAM("", "Resize", 11, 12, ppl::nn::common::ResizeParam, ParseResizeParam);
@@ -207,8 +207,8 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Shape", 1, 12);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Sigmoid", 6, 12);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Slice", 11, 12);
-    PPL_REGISTER_OP_WITH_PARAM("", "Softmax", 11, 12, ppl::nn::common::SoftmaxParam, ParseSoftmaxParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Split", 11, 12, ppl::nn::common::SplitParam, ParseSplitParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Softmax", 1, 12, ppl::nn::common::SoftmaxParam, ParseSoftmaxParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Split", 2, 12, ppl::nn::common::SplitParam, ParseSplitParam);
     PPL_REGISTER_OP_WITH_PARAM("", "SplitToSequence", 11, 16, ppl::nn::common::SplitToSequenceParam,
                                ParseSplitToSequenceParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Sqrt", 6, 12);

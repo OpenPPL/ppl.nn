@@ -43,7 +43,10 @@ ppl::common::RetCode SoftmaxKernel::DoExecute(KernelExecContext* ctx) {
 
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
-            if (MayUseISA(ppl::common::ISA_X86_FMA)) {
+            if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
+                return ppl::kernel::x86::softmax_ndarray_fp32_avx512(input->GetShape(), input->GetBufferPtr<float>(),
+                                                                  real_axis, output->GetBufferPtr<float>());
+            } else if (MayUseISA(ppl::common::ISA_X86_FMA)) {
                 return ppl::kernel::x86::softmax_ndarray_fp32_fma(input->GetShape(), input->GetBufferPtr<float>(),
                                                                   real_axis, output->GetBufferPtr<float>());
             } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {

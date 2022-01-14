@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_X86_COMMON_MATH_SSE_H_
-#define __ST_PPL_KERNEL_X86_COMMON_MATH_SSE_H_
+#ifndef __ST_PPL_KERNEL_X86_COMMON_MATH_FMA_H_
+#define __ST_PPL_KERNEL_X86_COMMON_MATH_FMA_H_
 
 #include <immintrin.h>
 
