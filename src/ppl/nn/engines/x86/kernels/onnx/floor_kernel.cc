@@ -38,7 +38,7 @@ ppl::common::RetCode FloorKernel::DoExecute(KernelExecContext* ctx) {
     const auto data_type = input->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        if (MayUseISA(ppl::common::ISA_X86_FMA)) {
+        if (MayUseISA(ppl::common::ISA_X86_AVX)) {
             return ppl::kernel::x86::floor_fp32_avx(input->GetShape(), input->GetBufferPtr<float>(),
                                                     output->GetBufferPtr<float>());
         } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {

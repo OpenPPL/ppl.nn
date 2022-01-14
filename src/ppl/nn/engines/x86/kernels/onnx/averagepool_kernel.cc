@@ -106,7 +106,7 @@ ppl::common::RetCode AveragePoolKernel::DoExecute(KernelExecContext* ctx) {
                 return ppl::kernel::x86::averagepool2d_n16chw_blk1x8_fp32_avx(
                     X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
                     pad_h, pad_w, param_->mode, param_->ceil_mode, Y->GetBufferPtr<float>());
-            } else if (MayUseISA(ppl::common::ISA_X86_AVX)) {
+            } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
                 return ppl::kernel::x86::averagepool2d_n16chw_blk1x4_fp32_sse(
                     X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
                     pad_h, pad_w, param_->mode, param_->ceil_mode, Y->GetBufferPtr<float>());
