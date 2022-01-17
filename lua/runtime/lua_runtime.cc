@@ -16,8 +16,8 @@
 // under the License.
 
 #include "lua_runtime.h"
-#include "luacpp.h"
 #include "lua_tensor.h"
+#include "luacpp/luacpp.h"
 using namespace std;
 using namespace luacpp;
 using namespace ppl::common;

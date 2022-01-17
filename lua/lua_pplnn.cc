@@ -18,7 +18,7 @@
 #include <memory>
 using namespace std;
 
-#include "luacpp.h"
+#include "luacpp/luacpp.h"
 using namespace luacpp;
 
 #include "ppl/nn/common/common.h"

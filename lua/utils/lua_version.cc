@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/utils/version.h"
-#include "luacpp.h"
+#include "luacpp/luacpp.h"
 #include <memory>
 using namespace std;
 using namespace luacpp;

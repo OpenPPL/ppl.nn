@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/riscv/riscv_engine_options.h"
-#include "luacpp.h"
+#include "luacpp/luacpp.h"
 #include <memory>
 using namespace std;
 using namespace luacpp;

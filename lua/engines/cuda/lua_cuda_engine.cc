@@ -16,9 +16,9 @@
 // under the License.
 
 #include "../lua_engine.h"
-#include "luacpp.h"
 #include "ppl/nn/engines/cuda/cuda_options.h"
 #include "ppl/nn/common/logger.h"
+#include "luacpp/luacpp.h"
 #include <map>
 using namespace std;
 using namespace luacpp;

@@ -19,7 +19,7 @@
 #define _ST_HPC_PPL_NN_LUA_LUA_TYPE_CREATOR_H_
 
 #include "ppl/common/retcode.h"
-#include "luacpp.h"
+#include "luacpp/luacpp.h"
 
 namespace ppl { namespace nn { namespace lua {
 

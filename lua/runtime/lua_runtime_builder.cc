@@ -17,7 +17,7 @@
 
 #include "lua_runtime.h"
 #include "lua_runtime_builder.h"
-#include "luacpp.h"
+#include "luacpp/luacpp.h"
 using namespace std;
 using namespace luacpp;
 
