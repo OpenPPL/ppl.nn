@@ -15,11 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/common/common.h"
-#include "luacpp.h"
 #include <memory>
 using namespace std;
+
+#include "luacpp.h"
 using namespace luacpp;
+
+#include "ppl/nn/common/common.h"
+#include "ppl/nn/common/logger.h"
+#include "ppl/common/retcode.h"
+using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace lua {
 
@@ -50,6 +55,7 @@ void RegisterOnnxRuntimeBuilderFactory(const shared_ptr<LuaState>&, const shared
 
 }}}
 
+#include "lua_type_creator_manager.h"
 using namespace ppl::nn::lua;
 
 extern "C" {
@@ -59,6 +65,17 @@ int PPLNN_PUBLIC luaopen_luappl_nn(lua_State* l) {
     // may be used by module functions outside this function scope
     auto lstate = make_shared<LuaState>(l, false);
     auto lmodule = make_shared<LuaTable>(lstate->CreateTable());
+
+    auto mgr = LuaTypeCreatorManager::Instance();
+    for (uint32_t i = 0; i < mgr->GetCreatorCount(); ++i) {
+        auto creator = mgr->GetCreator(i);
+        auto status = creator->Register(lstate, lmodule);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "register lua type failed.";
+            lstate->CreateNil();
+            return 1;
+        }
+    }
 
     // NOTE register classes in order
 
