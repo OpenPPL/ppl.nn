@@ -18,7 +18,7 @@
 #include "../../engines/lua_engine.h"
 #include "ppl/nn/models/onnx/onnx_runtime_builder_factory.h"
 #include "../../runtime/lua_runtime_builder.h"
-#include "luacpp.h"
+#include "luacpp/luacpp.h"
 using namespace std;
 using namespace luacpp;
 

@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/x86/x86_engine_options.h"
-#include "luacpp.h"
+#include "luacpp/luacpp.h"
 #include <memory>
 using namespace std;
 using namespace luacpp;

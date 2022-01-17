@@ -17,8 +17,8 @@
 
 #include "ppl/nn/engines/riscv/engine_factory.h"
 #include "ppl/nn/common/logger.h"
-#include "luacpp.h"
 #include "../lua_engine.h"
+#include "luacpp/luacpp.h"
 using namespace std;
 using namespace luacpp;
 

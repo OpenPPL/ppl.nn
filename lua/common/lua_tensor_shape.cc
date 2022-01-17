@@ -16,7 +16,7 @@
 // under the License.
 
 #include "lua_tensor_shape.h"
-#include "luacpp.h"
+#include "luacpp/luacpp.h"
 #include <memory>
 using namespace std;
 using namespace luacpp;

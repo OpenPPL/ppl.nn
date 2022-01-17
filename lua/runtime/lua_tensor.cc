@@ -19,7 +19,7 @@
 #include "ppl/nn/common/logger.h"
 #include "../common/lua_tensor_shape.h"
 #include "lua_tensor.h"
-#include "luacpp.h"
+#include "luacpp/luacpp.h"
 #include <memory>
 using namespace std;
 using namespace luacpp;

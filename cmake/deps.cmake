@@ -68,7 +68,7 @@ set(PPLCOMMON_HOLD_DEPS ${PPLNN_HOLD_DEPS})
 
 hpcc_declare_git_dep(pplcommon
     https://github.com/openppl-public/ppl.common.git
-    3d184829a46cf89aa69533d5eccd0afb503f901b)
+    6af3052817fc9f040001b570e2e48a5ffd35669f)
 
 # --------------------------------------------------------------------------- #
 
@@ -105,8 +105,8 @@ hpcc_declare_pkg_dep(pybind11
 set(LUACPP_INSTALL OFF CACHE BOOL "")
 
 hpcc_declare_pkg_dep(luacpp
-    https://github.com/ouonline/lua-cpp/archive/6074d360820af5f1459f39b1a731b788be0643a0.zip
-    401fdb315bfb3863f789afdd1296084d)
+    https://github.com/ouonline/lua-cpp/archive/edc22b54bf5535691301b911b1967d44f399e317.zip
+    771d4c697c8d5f542302b9e96a8f213d)
 
 # --------------------------------------------------------------------------- #
 
