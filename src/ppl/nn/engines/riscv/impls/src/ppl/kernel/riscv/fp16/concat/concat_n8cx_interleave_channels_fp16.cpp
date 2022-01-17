@@ -19,11 +19,15 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode concat_n8cx_interleave_channels_fp16(const __fp16** src_list, __fp16* dst,
+ppl::common::RetCode concat_n8cx_interleave_channels_fp16(
+    const __fp16** src_list,
+    __fp16* dst,
 
-                                                          const ppl::nn::TensorShape** src_shape_list,
-                                                          const int32_t num_src, const int32_t axis,
-                                                          const int32_t c_dim_idx) {
+    const ppl::nn::TensorShape** src_shape_list,
+    const int32_t num_src,
+    const int32_t axis,
+    const int32_t c_dim_idx)
+{
     return concat_nbcx_interleave_channels<__fp16, 8>(src_list, dst, src_shape_list, num_src, axis, c_dim_idx);
 }
 

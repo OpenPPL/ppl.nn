@@ -23,10 +23,16 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <int64_t w_len>
-static void maxpool2d_n8chw_1x16_kernel_fp16(const __fp16* src, __fp16* dst,
+static void maxpool2d_n8chw_1x16_kernel_fp16(
+    const __fp16* src,
+    __fp16* dst,
 
-                                             const maxpool2d_param* param, const int64_t oh, const int64_t ow,
-                                             const int64_t ih_start_valid, const int64_t ih_end_valid) {
+    const maxpool2d_param* param,
+    const int64_t oh,
+    const int64_t ow,
+    const int64_t ih_start_valid,
+    const int64_t ih_end_valid)
+{
     const int32_t& kernel_h = param->kernel_h;
     const int32_t& kernel_w = param->kernel_w;
     const int32_t& pad_w = param->pad_w;
@@ -159,10 +165,16 @@ static const maxpool2d_n8chw_kernel_fp16_func maxpool2d_n8chw_1x16_kernel_select
     maxpool2d_n8chw_1x16_kernel_fp16<13>, maxpool2d_n8chw_1x16_kernel_fp16<14>, maxpool2d_n8chw_1x16_kernel_fp16<15>,
     maxpool2d_n8chw_1x16_kernel_fp16<16>};
 
-static inline void maxpool2d_n8chw_border_fp16(const __fp16* src, __fp16* dst,
+static inline void maxpool2d_n8chw_border_fp16(
+    const __fp16* src,
+    __fp16* dst,
 
-                                               const maxpool2d_param* param, const int64_t oh, const int64_t ow,
-                                               const int64_t ih_start_valid, const int64_t ih_end_valid) {
+    const maxpool2d_param* param,
+    const int64_t oh,
+    const int64_t ow,
+    const int64_t ih_start_valid,
+    const int64_t ih_end_valid)
+{
     const int32_t& kernel_h = param->kernel_h;
     const int32_t& kernel_w = param->kernel_w;
     const int32_t& stride_h = param->stride_h;
@@ -193,12 +205,19 @@ static inline void maxpool2d_n8chw_border_fp16(const __fp16* src, __fp16* dst,
     vsev_float16xm1(dst_p, vfmax, vl);
 }
 
-ppl::common::RetCode maxpool2d_n8chw_1x16_fp16(const ppl::nn::TensorShape* src_shape,
-                                               const ppl::nn::TensorShape* dst_shape, const int32_t kernel_h,
-                                               const int32_t kernel_w, const int32_t stride_h, const int32_t stride_w,
-                                               const int32_t pad_h, const int32_t pad_w,
+ppl::common::RetCode maxpool2d_n8chw_1x16_fp16(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const int32_t kernel_h,
+    const int32_t kernel_w,
+    const int32_t stride_h,
+    const int32_t stride_w,
+    const int32_t pad_h,
+    const int32_t pad_w,
 
-                                               const __fp16* src, __fp16* dst) {
+    const __fp16* src,
+    __fp16* dst)
+{
     const int32_t batch = src_shape->GetDim(0);
     const int32_t channels = src_shape->GetDim(1);
     const int32_t src_h = src_shape->GetDim(2);
@@ -230,8 +249,7 @@ ppl::common::RetCode maxpool2d_n8chw_1x16_fp16(const ppl::nn::TensorShape* src_s
                 maxpool2d_n8chw_1x16_kernel_select[15](src_, dst_, &param, oh, ow, ih_start_valid, ih_end_valid);
             }
             if (ow < dst_1x16_end_w) {
-                maxpool2d_n8chw_1x16_kernel_select[dst_1x16_end_w - ow - 1](src_, dst_, &param, oh, ow, ih_start_valid,
-                                                                            ih_end_valid);
+                maxpool2d_n8chw_1x16_kernel_select[dst_1x16_end_w - ow - 1](src_, dst_, &param, oh, ow, ih_start_valid, ih_end_valid);
                 ow = dst_1x16_end_w;
             }
             for (; ow < dst_w; ++ow) {

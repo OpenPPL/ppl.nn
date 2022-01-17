@@ -20,9 +20,14 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode split_n8cx_fp16(const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape** dst_shape_list,
-                                     const __fp16* src, const int32_t slice_axis, const int32_t num_dst,
-                                     __fp16** dst_list) {
+ppl::common::RetCode split_n8cx_fp16(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape** dst_shape_list,
+    const __fp16* src,
+    const int32_t slice_axis,
+    const int32_t num_dst,
+    __fp16** dst_list)
+{
     return split_nxcx<__fp16, 8>(src_shape, dst_shape_list, src, slice_axis, num_dst, dst_list);
 }
 

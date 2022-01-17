@@ -24,41 +24,60 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode resize2d_ndarray_pytorch_linear_floor_fp16(const ppl::nn::TensorShape* src_shape,
-                                                                const ppl::nn::TensorShape* dst_shape,
-                                                                const __fp16* src, const float scale_h,
-                                                                const float scale_w, __fp16* dst) {
+ppl::common::RetCode resize2d_ndarray_pytorch_linear_floor_fp16(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const __fp16* src,
+    const float scale_h,
+    const float scale_w,
+    __fp16* dst)
+{
     return resize2d_ndarray_pytorch_linear_floor_common<__fp16>(src_shape, dst_shape, src, scale_h, scale_w, dst);
 }
 
-ppl::common::RetCode resize2d_ndarray_asymmetric_nearest_floor_fp16(const ppl::nn::TensorShape* src_shape,
-                                                                    const ppl::nn::TensorShape* dst_shape,
-                                                                    const __fp16* src, const float scale_h,
-                                                                    const float scale_w, __fp16* dst) {
+ppl::common::RetCode resize2d_ndarray_asymmetric_nearest_floor_fp16(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const __fp16* src,
+    const float scale_h,
+    const float scale_w,
+    __fp16* dst)
+{
     return resize2d_ndarray_asymmetric_nearest_floor_common<__fp16>(src_shape, dst_shape, src, scale_h, scale_w, dst);
 }
 
-ppl::common::RetCode resize2d_ndarray_pytorch_cubic_floor_fp16(const ppl::nn::TensorShape* src_shape,
-                                                               const ppl::nn::TensorShape* dst_shape, const __fp16* src,
-                                                               const float scale_h, const float scale_w,
-                                                               const float cubic_coeff_a, __fp16* dst) {
-    return resize2d_ndarray_pytorch_cubic_floor_common<__fp16>(src_shape, dst_shape, src, scale_h, scale_w,
-                                                               cubic_coeff_a, dst);
+ppl::common::RetCode resize2d_ndarray_pytorch_cubic_floor_fp16(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const __fp16* src,
+    const float scale_h,
+    const float scale_w,
+    const float cubic_coeff_a,
+    __fp16* dst)
+{
+    return resize2d_ndarray_pytorch_cubic_floor_common<__fp16>(src_shape, dst_shape, src, scale_h, scale_w, cubic_coeff_a, dst);
 }
 
-ppl::common::RetCode resize2d_nbcx_pytorch_linear_floor_fp16(const ppl::nn::TensorShape* src_shape,
-                                                             const ppl::nn::TensorShape* dst_shape, const __fp16* src,
-                                                             const float scale_h, const float scale_w, __fp16* dst) {
-    return resize2d_nbcx_pytorch_linear_floor_common<float16xm1_t, __fp16, 8>(src_shape, dst_shape, src, scale_h,
-                                                                              scale_w, dst);
+ppl::common::RetCode resize2d_nbcx_pytorch_linear_floor_fp16(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const __fp16* src,
+    const float scale_h,
+    const float scale_w,
+    __fp16* dst)
+{
+    return resize2d_nbcx_pytorch_linear_floor_common<float16xm1_t, __fp16, 8>(src_shape, dst_shape, src, scale_h, scale_w, dst);
 }
 
-ppl::common::RetCode resize2d_nbcx_asymmetric_nearest_floor_fp16(const ppl::nn::TensorShape* src_shape,
-                                                                 const ppl::nn::TensorShape* dst_shape,
-                                                                 const __fp16* src, const float scale_h,
-                                                                 const float scale_w, __fp16* dst) {
-    return resize2d_nbcx_asymmetric_nearest_floor_common<float16xm1_t, __fp16, 8>(src_shape, dst_shape, src, scale_h,
-                                                                                  scale_w, dst);
+ppl::common::RetCode resize2d_nbcx_asymmetric_nearest_floor_fp16(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const __fp16* src,
+    const float scale_h,
+    const float scale_w,
+    __fp16* dst)
+{
+    return resize2d_nbcx_asymmetric_nearest_floor_common<float16xm1_t, __fp16, 8>(src_shape, dst_shape, src, scale_h, scale_w, dst);
 }
 
 }}} // namespace ppl::kernel::riscv

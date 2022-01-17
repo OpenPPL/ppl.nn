@@ -22,14 +22,20 @@
 #include <cstdio>
 namespace ppl { namespace kernel { namespace riscv {
 
-typedef void (*conv_wg_riscv_fp16_cvt_filter_blk_kernel_func_t)(const __fp16* filter,
-                                                                const __fp16* trans_mat, // TODO: should be removed
-                                                                int64_t filter_out_stride,
+typedef void (*conv_wg_riscv_fp16_cvt_filter_blk_kernel_func_t)(
+    const __fp16* filter,
+    const __fp16* trans_mat, // TODO: should be removed
+    int64_t filter_out_stride,
 
-                                                                __fp16* filter_cvt, int64_t filter_cvt_wg_tile_stride);
+    __fp16* filter_cvt,
+    int64_t filter_cvt_wg_tile_stride);
 
 template <int64_t wgb, int64_t wgf>
-size_t conv_wg_bxfxs1_get_cvt_filter_size_fp16(int64_t channels, int64_t num_outs, int64_t group) {
+size_t conv_wg_bxfxs1_get_cvt_filter_size_fp16(
+    int64_t channels,
+    int64_t num_outs,
+    int64_t group)
+{
     const int64_t wg_tile_len = wgb + wgf - 1;
     const int64_t wg_tile_size = wg_tile_len * wg_tile_len;
 
@@ -43,11 +49,20 @@ size_t conv_wg_bxfxs1_get_cvt_filter_size_fp16(int64_t channels, int64_t num_out
 }
 
 template <int64_t wgb, int64_t wgf>
-size_t conv_wg_bxfxs1_get_temp_buffer_size_fp16(int64_t src_h, int64_t src_w, int64_t channels, int64_t num_outs,
-                                                int64_t group, int64_t padding_h, int64_t padding_w,
+size_t conv_wg_bxfxs1_get_temp_buffer_size_fp16(
+    int64_t src_h,
+    int64_t src_w,
+    int64_t channels,
+    int64_t num_outs,
+    int64_t group,
+    int64_t padding_h,
+    int64_t padding_w,
 
-                                                int64_t blk_dst_h, int64_t blk_dst_w, int64_t blk_channels,
-                                                int64_t blk_num_outs) {
+    int64_t blk_dst_h,
+    int64_t blk_dst_w,
+    int64_t blk_channels,
+    int64_t blk_num_outs)
+{
     // pad blk param
     blk_dst_h = round_up(blk_dst_h, wgb);
     blk_dst_w = round_up(blk_dst_w, wgb);
@@ -96,10 +111,18 @@ size_t conv_wg_bxfxs1_get_temp_buffer_size_fp16(int64_t src_h, int64_t src_w, in
     return src_pad_size_for_group + dst_pad_size_for_group + src_pad_blk_size + src_trans_size + dst_trans_size;
 }
 
-template <int64_t wgb, int64_t wgf, conv_wg_riscv_fp16_cvt_filter_blk_kernel_func_t cvt_filter_blk_kernel>
-void conv_wg_bxfxs1_cvt_filter_blk_fp16(const __fp16* filter, const __fp16* trans_mat, int64_t channels,
-                                        int64_t num_outs, int64_t filter_out_stride, int64_t filter_kernel_size,
-                                        __fp16* filter_cvt) {
+template <int64_t wgb,
+    int64_t wgf,
+    conv_wg_riscv_fp16_cvt_filter_blk_kernel_func_t cvt_filter_blk_kernel>
+void conv_wg_bxfxs1_cvt_filter_blk_fp16(
+    const __fp16* filter,
+    const __fp16* trans_mat,
+    int64_t channels,
+    int64_t num_outs,
+    int64_t filter_out_stride,
+    int64_t filter_kernel_size,
+    __fp16* filter_cvt)
+{
     int64_t tile_len = wgb + wgf - 1;
     int64_t tile_size = tile_len * tile_len;
 
@@ -166,11 +189,20 @@ void conv_wg_bxfxs1_cvt_filter_blk_fp16(const __fp16* filter, const __fp16* tran
     }
 }
 
-template <int64_t wgb, int64_t wgf, conv_wg_riscv_fp16_cvt_filter_blk_kernel_func_t cvt_filter_blk_kernel>
-void conv_wg_bxfxs1_cvt_filter_fp16(const __fp16* filter, const __fp16* trans_mat, int64_t channels, int64_t num_outs,
-                                    int64_t group,
+template <int64_t wgb,
+    int64_t wgf,
+    conv_wg_riscv_fp16_cvt_filter_blk_kernel_func_t cvt_filter_blk_kernel>
+void conv_wg_bxfxs1_cvt_filter_fp16(
+    const __fp16* filter,
+    const __fp16* trans_mat,
+    int64_t channels,
+    int64_t num_outs,
+    int64_t group,
 
-                                    int64_t blk_channels, int64_t blk_num_outs, __fp16* filter_cvt) {
+    int64_t blk_channels,
+    int64_t blk_num_outs,
+    __fp16* filter_cvt)
+{
     const int64_t wg_tile_len = wgb + wgf - 1;
     const int64_t wg_tile_size = wg_tile_len * wg_tile_len;
 

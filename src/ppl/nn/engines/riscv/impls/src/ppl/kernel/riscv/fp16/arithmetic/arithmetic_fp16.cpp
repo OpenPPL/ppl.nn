@@ -22,11 +22,15 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <arithmetic_op_type_t _op, bool fuse_relu>
-static ppl::common::RetCode arithmetic_fp16(const ppl::nn::TensorShape* src0_shape,
-                                            const ppl::nn::TensorShape* src1_shape,
-                                            const ppl::nn::TensorShape* dst_shape,
+static ppl::common::RetCode arithmetic_fp16(
+    const ppl::nn::TensorShape* src0_shape,
+    const ppl::nn::TensorShape* src1_shape,
+    const ppl::nn::TensorShape* dst_shape,
 
-                                            const __fp16* src0, const __fp16* src1, __fp16* dst) {
+    const __fp16* src0,
+    const __fp16* src1,
+    __fp16* dst)
+{
     bool is_eltwise = src0_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding() &&
         src1_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding();
     if (is_eltwise) {
@@ -40,9 +44,15 @@ static ppl::common::RetCode arithmetic_fp16(const ppl::nn::TensorShape* src0_sha
     return ppl::common::RC_UNSUPPORTED;
 }
 
-ppl::common::RetCode add_fp16(const ppl::nn::TensorShape* src0_shape, const ppl::nn::TensorShape* src1_shape,
-                              const ppl::nn::TensorShape* dst_shape, const bool fuse_relu, const __fp16* src0,
-                              const __fp16* src1, __fp16* dst) {
+ppl::common::RetCode add_fp16(
+    const ppl::nn::TensorShape* src0_shape,
+    const ppl::nn::TensorShape* src1_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const bool fuse_relu,
+    const __fp16* src0,
+    const __fp16* src1,
+    __fp16* dst)
+{
     if (fuse_relu) {
         return arithmetic_fp16<ARITHMETIC_ADD, true>(src0_shape, src1_shape, dst_shape, src0, src1, dst);
     } else {
@@ -50,9 +60,15 @@ ppl::common::RetCode add_fp16(const ppl::nn::TensorShape* src0_shape, const ppl:
     }
 }
 
-ppl::common::RetCode sub_fp16(const ppl::nn::TensorShape* src0_shape, const ppl::nn::TensorShape* src1_shape,
-                              const ppl::nn::TensorShape* dst_shape, const bool fuse_relu, const __fp16* src0,
-                              const __fp16* src1, __fp16* dst) {
+ppl::common::RetCode sub_fp16(
+    const ppl::nn::TensorShape* src0_shape,
+    const ppl::nn::TensorShape* src1_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const bool fuse_relu,
+    const __fp16* src0,
+    const __fp16* src1,
+    __fp16* dst)
+{
     if (fuse_relu) {
         return arithmetic_fp16<ARITHMETIC_SUB, true>(src0_shape, src1_shape, dst_shape, src0, src1, dst);
     } else {
@@ -60,9 +76,15 @@ ppl::common::RetCode sub_fp16(const ppl::nn::TensorShape* src0_shape, const ppl:
     }
 }
 
-ppl::common::RetCode mul_fp16(const ppl::nn::TensorShape* src0_shape, const ppl::nn::TensorShape* src1_shape,
-                              const ppl::nn::TensorShape* dst_shape, const bool fuse_relu, const __fp16* src0,
-                              const __fp16* src1, __fp16* dst) {
+ppl::common::RetCode mul_fp16(
+    const ppl::nn::TensorShape* src0_shape,
+    const ppl::nn::TensorShape* src1_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const bool fuse_relu,
+    const __fp16* src0,
+    const __fp16* src1,
+    __fp16* dst)
+{
     if (fuse_relu) {
         return arithmetic_fp16<ARITHMETIC_MUL, true>(src0_shape, src1_shape, dst_shape, src0, src1, dst);
     } else {
@@ -70,9 +92,15 @@ ppl::common::RetCode mul_fp16(const ppl::nn::TensorShape* src0_shape, const ppl:
     }
 }
 
-ppl::common::RetCode div_fp16(const ppl::nn::TensorShape* src0_shape, const ppl::nn::TensorShape* src1_shape,
-                              const ppl::nn::TensorShape* dst_shape, const bool fuse_relu, const __fp16* src0,
-                              const __fp16* src1, __fp16* dst) {
+ppl::common::RetCode div_fp16(
+    const ppl::nn::TensorShape* src0_shape,
+    const ppl::nn::TensorShape* src1_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const bool fuse_relu,
+    const __fp16* src0,
+    const __fp16* src1,
+    __fp16* dst)
+{
     if (fuse_relu) {
         return arithmetic_fp16<ARITHMETIC_DIV, true>(src0_shape, src1_shape, dst_shape, src0, src1, dst);
     } else {

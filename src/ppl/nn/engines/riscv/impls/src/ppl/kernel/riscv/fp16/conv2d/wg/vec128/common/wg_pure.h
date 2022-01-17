@@ -41,24 +41,40 @@ struct conv2d_n8cx_wg_bxfxs1_fp16_vec128_extra_param {
     const __fp16* trans_mat_src;
     const __fp16* trans_mat_dst;
 };
-typedef void (*conv_wg_riscv_fp16_n8chw_src_trans_kernel_func_t)(const __fp16* src_pad,
-                                                                 const __fp16* trans_mat, // TODO: should be removed
-                                                                 int64_t src_pad_h_stride,
+typedef void (*conv_wg_riscv_fp16_n8chw_src_trans_kernel_func_t)(
+    const __fp16* src_pad,
+    const __fp16* trans_mat, // TODO: should be removed
+    int64_t src_pad_h_stride,
 
-                                                                 __fp16* src_trans_d, int64_t src_trans_wg_tile_stride);
+    __fp16* src_trans_d,
+    int64_t src_trans_wg_tile_stride);
 
-typedef void (*conv_wg_riscv_fp16_n8chw_dst_trans_kernel_func_t)(const __fp16* dst_trans, const __fp16* bias,
-                                                                 const __fp16* trans_mat, // TODO: should be removed
-                                                                 int64_t dst_trans_wg_tile_stride,
+typedef void (*conv_wg_riscv_fp16_n8chw_dst_trans_kernel_func_t)(
+    const __fp16* dst_trans,
+    const __fp16* bias,
+    const __fp16* trans_mat, // TODO: should be removed
+    int64_t dst_trans_wg_tile_stride,
 
-                                                                 __fp16* dst, int64_t dst_h_stride,
-                                                                 int64_t dst_h_offset, int64_t dst_w_offset,
-                                                                 int64_t dst_trans_h, int64_t dst_trans_w);
+    __fp16* dst,
+    int64_t dst_h_stride,
+    int64_t dst_h_offset,
+    int64_t dst_w_offset,
+    int64_t dst_trans_h,
+    int64_t dst_trans_w);
 
-template <int64_t wgb, int64_t wgf, conv_wg_riscv_fp16_n8chw_src_trans_kernel_func_t src_trans_kernel_func>
-void conv_wg_bxfxs1_src_blk_trans_fp16(const __fp16* src_pad, const __fp16* trans_mat, int64_t src_trans_pad_h,
-                                       int64_t src_trans_pad_w, int64_t pad_channels, int64_t num_h_tile,
-                                       int64_t num_w_tile, __fp16* src_trans_d) {
+template <int64_t wgb,
+    int64_t wgf,
+    conv_wg_riscv_fp16_n8chw_src_trans_kernel_func_t src_trans_kernel_func>
+void conv_wg_bxfxs1_src_blk_trans_fp16(
+    const __fp16* src_pad,
+    const __fp16* trans_mat,
+    int64_t src_trans_pad_h,
+    int64_t src_trans_pad_w,
+    int64_t pad_channels,
+    int64_t num_h_tile,
+    int64_t num_w_tile,
+    __fp16* src_trans_d)
+{
     int64_t tile_len = wgb + wgf - 1;
     int64_t tile_size = tile_len * tile_len;
     int64_t pad_channels_div8 = pad_channels / 8;
@@ -76,13 +92,25 @@ void conv_wg_bxfxs1_src_blk_trans_fp16(const __fp16* src_pad, const __fp16* tran
     }
 }
 
-template <int64_t wgb, int64_t wgf, conv_wg_riscv_fp16_n8chw_dst_trans_kernel_func_t dst_trans_kernel_func>
-void conv_wg_bxfxs1_dst_blk_trans_fp16(const __fp16* dst_trans, const __fp16* trans_mat, const __fp16* bias,
-                                       int64_t dst_trans_h, int64_t dst_trans_w, int64_t dst_trans_pad_h,
-                                       int64_t dst_trans_pad_w, int64_t pad_num_outs, int64_t num_h_tile,
-                                       int64_t num_w_tile,
+template <int64_t wgb,
+    int64_t wgf,
+    conv_wg_riscv_fp16_n8chw_dst_trans_kernel_func_t dst_trans_kernel_func>
+void conv_wg_bxfxs1_dst_blk_trans_fp16(
+    const __fp16* dst_trans,
+    const __fp16* trans_mat,
+    const __fp16* bias,
+    int64_t dst_trans_h,
+    int64_t dst_trans_w,
+    int64_t dst_trans_pad_h,
+    int64_t dst_trans_pad_w,
+    int64_t pad_num_outs,
+    int64_t num_h_tile,
+    int64_t num_w_tile,
 
-                                       __fp16* dst, int64_t dst_h, int64_t dst_w) {
+    __fp16* dst,
+    int64_t dst_h,
+    int64_t dst_w)
+{
     int64_t tile_len = wgb + wgf - 1;
     int64_t pad_num_outs_div8 = pad_num_outs / 8;
     int64_t dst_trans_tile_stride = num_h_tile * num_w_tile * pad_num_outs;
@@ -102,12 +130,21 @@ void conv_wg_bxfxs1_dst_blk_trans_fp16(const __fp16* dst_trans, const __fp16* tr
     }
 }
 
-static void conv_wg_s1_blocking_src_fp16(const __fp16* src, int64_t src_h, int64_t src_w, int64_t pad_channels,
-                                         int64_t flt_h, int64_t flt_w,
+static void conv_wg_s1_blocking_src_fp16(
+    const __fp16* src,
+    int64_t src_h,
+    int64_t src_w,
+    int64_t pad_channels,
+    int64_t flt_h,
+    int64_t flt_w,
 
-                                         int64_t src_h_beg, int64_t src_w_beg, int64_t blk_src_h, int64_t blk_src_w,
+    int64_t src_h_beg,
+    int64_t src_w_beg,
+    int64_t blk_src_h,
+    int64_t blk_src_w,
 
-                                         __fp16* src_pad) {
+    __fp16* src_pad)
+{
     int64_t src_h_idx = 0, src_w_idx = 0;
     int64_t src_h_pad_end = src_h_beg + blk_src_h;
     int64_t src_w_pad_end = src_w_beg + blk_src_w;
@@ -139,8 +176,7 @@ static void conv_wg_s1_blocking_src_fp16(const __fp16* src, int64_t src_h, int64
 
             if (src_w_idx < src_w_end) {
                 int64_t num_cpy = (src_w_end - src_w_idx) * 8;
-                memcpy(src_pad_d, src_per_channels + src_h_idx * src_h_stride + src_w_idx * 8,
-                       num_cpy * sizeof(__fp16));
+                memcpy(src_pad_d, src_per_channels + src_h_idx * src_h_stride + src_w_idx * 8, num_cpy * sizeof(__fp16));
                 src_pad_d += num_cpy;
                 src_w_idx = src_w_end;
             }
@@ -163,15 +199,31 @@ static void conv_wg_s1_blocking_src_fp16(const __fp16* src, int64_t src_h, int64
     }
 }
 
-template <int64_t wgb, int64_t wgf, conv_wg_riscv_fp16_n8chw_src_trans_kernel_func_t src_trans_kernel_func,
-          conv_wg_riscv_fp16_n8chw_dst_trans_kernel_func_t dst_trans_kernel_func>
-void conv_wg_bxfxs1_pure_fp16(const __fp16* src, const __fp16* trans_mat_src, const __fp16* trans_mat_dst,
-                              int64_t src_h, int64_t src_w, int64_t channels, int64_t num_outs, int64_t padding_h,
-                              int64_t padding_w,
+template <int64_t wgb,
+    int64_t wgf,
+    conv_wg_riscv_fp16_n8chw_src_trans_kernel_func_t src_trans_kernel_func,
+    conv_wg_riscv_fp16_n8chw_dst_trans_kernel_func_t dst_trans_kernel_func>
+void conv_wg_bxfxs1_pure_fp16(
+    const __fp16* src,
+    const __fp16* trans_mat_src,
+    const __fp16* trans_mat_dst,
+    int64_t src_h,
+    int64_t src_w,
+    int64_t channels,
+    int64_t num_outs,
+    int64_t padding_h,
+    int64_t padding_w,
 
-                              int64_t blk_dst_h, int64_t blk_dst_w, int64_t blk_channels, int64_t blk_num_outs,
+    int64_t blk_dst_h,
+    int64_t blk_dst_w,
+    int64_t blk_channels,
+    int64_t blk_num_outs,
 
-                              const __fp16* filter, const __fp16* bias, __fp16* temp_buffer, __fp16* dst) {
+    const __fp16* filter,
+    const __fp16* bias,
+    __fp16* temp_buffer,
+    __fp16* dst)
+{
     int64_t pad_channels = round_up(channels, 8);
     int64_t pad_num_outs = round_up(num_outs, 8);
 
@@ -298,28 +350,59 @@ void conv_wg_bxfxs1_pure_fp16(const __fp16* src, const __fp16* trans_mat_src, co
     }
 }
 
-template <int64_t wgb, int64_t wgf, conv_wg_riscv_fp16_n8chw_src_trans_kernel_func_t src_trans_kernel_func,
-          conv_wg_riscv_fp16_n8chw_dst_trans_kernel_func_t dst_trans_kernel_func>
-void conv_wg_bxfxs1_riscv_per_group_fp16(const __fp16* src, const __fp16* filter, const __fp16* bias,
-                                         __fp16* temp_buffer, __fp16* dst,
+template <int64_t wgb,
+    int64_t wgf,
+    conv_wg_riscv_fp16_n8chw_src_trans_kernel_func_t src_trans_kernel_func,
+    conv_wg_riscv_fp16_n8chw_dst_trans_kernel_func_t dst_trans_kernel_func>
+void conv_wg_bxfxs1_riscv_per_group_fp16(
+    const __fp16* src,
+    const __fp16* filter,
+    const __fp16* bias,
+    __fp16* temp_buffer,
+    __fp16* dst,
 
-                                         int64_t src_h, int64_t src_w, int64_t pad_h, int64_t pad_w, int64_t flt_h,
-                                         int64_t flt_w, int64_t stride_h, int64_t stride_w, int64_t hole_h,
-                                         int64_t hole_w, int64_t dst_h, int64_t dst_w, int64_t ic, int64_t oc,
+    int64_t src_h,
+    int64_t src_w,
+    int64_t pad_h,
+    int64_t pad_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t stride_h,
+    int64_t stride_w,
+    int64_t hole_h,
+    int64_t hole_w,
+    int64_t dst_h,
+    int64_t dst_w,
+    int64_t ic,
+    int64_t oc,
 
-                                         conv2d_n8cx_wg_bxfxs1_fp16_vec128_extra_param extra_info) {
+    conv2d_n8cx_wg_bxfxs1_fp16_vec128_extra_param extra_info)
+{
     int64_t real_blk_channels = round_up(extra_info.ic_blk, 8);
     int64_t real_blk_num_outs = round_up(extra_info.oc_blk, 8);
     int64_t real_blk_dst_h = round_up(extra_info.oh_blk, wgb);
     int64_t real_blk_dst_w = round_up(extra_info.ow_blk, wgb);
     conv_wg_bxfxs1_pure_fp16<wgb, wgf, src_trans_kernel_func, dst_trans_kernel_func>(
-        src, extra_info.trans_mat_src, extra_info.trans_mat_dst,
+        src,
+        extra_info.trans_mat_src,
+        extra_info.trans_mat_dst,
 
-        src_h, src_w, ic, oc, pad_h, pad_w,
+        src_h,
+        src_w,
+        ic,
+        oc,
+        pad_h,
+        pad_w,
 
-        real_blk_dst_h, real_blk_dst_w, real_blk_channels, real_blk_num_outs,
+        real_blk_dst_h,
+        real_blk_dst_w,
+        real_blk_channels,
+        real_blk_num_outs,
 
-        filter, bias, temp_buffer, dst);
+        filter,
+        bias,
+        temp_buffer,
+        dst);
 }
 
 template <int64_t wgb, int64_t wgf>

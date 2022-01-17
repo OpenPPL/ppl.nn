@@ -27,11 +27,18 @@ uint64_t conv2d_n8cx_tile_gemm_fp16_runtime_executor::cal_temp_buffer_size() {
     size_t temp_buffer_size = tile_gemm_get_temp_buffer_size_riscv_xcto8c_fp16<8>(
         src_shape_->GetDim(2), // src_h
         src_shape_->GetDim(3), // src_w
-        conv_param_->pad_h, conv_param_->pad_w, conv_param_->stride_h, conv_param_->stride_w, conv_param_->kernel_h,
-        conv_param_->kernel_w, conv_param_->dilation_h, conv_param_->dilation_w, conv_param_->channels,
-        conv_param_->group, conv_param_->num_output,
+        conv_param_->pad_h, conv_param_->pad_w,
+        conv_param_->stride_h, conv_param_->stride_w,
+        conv_param_->kernel_h, conv_param_->kernel_w,
+        conv_param_->dilation_h, conv_param_->dilation_w,
+        conv_param_->channels,
+        conv_param_->group,
+        conv_param_->num_output,
 
-        tunning_param_.m_blk, tunning_param_.oh_blk, tunning_param_.ow_blk, tunning_param_.num_thread);
+        tunning_param_.m_blk,
+        tunning_param_.oh_blk,
+        tunning_param_.ow_blk,
+        tunning_param_.num_thread);
 
     return temp_buffer_size;
 }
@@ -67,19 +74,35 @@ ppl::common::RetCode conv2d_n8cx_tile_gemm_fp16_runtime_executor::execute() {
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    conv_shell_riscv_fp16<conv_tile_gemm_tunning_info, 8, get_real_filter_size,
-                          conv_tile_gemm_riscv_xcto8c_per_group_fp16<8>>(
-        src_, cvt_filter_, cvt_bias_, (__fp16*)temp_buffer_, dst_,
+    conv_shell_riscv_fp16<conv_tile_gemm_tunning_info,
+        8,
+        get_real_filter_size,
+        conv_tile_gemm_riscv_xcto8c_per_group_fp16<8>>(
+        src_,
+        cvt_filter_,
+        cvt_bias_,
+        (__fp16*)temp_buffer_,
+        dst_,
 
         src_shape_->GetDim(2), // src_h
         src_shape_->GetDim(3), // src_w
-        conv_param_->pad_h, conv_param_->pad_w, conv_param_->kernel_h, conv_param_->kernel_w, conv_param_->stride_h,
-        conv_param_->stride_w, conv_param_->dilation_h, conv_param_->dilation_w, conv_param_->channels,
-        conv_param_->num_output, conv_param_->group,
+        conv_param_->pad_h, conv_param_->pad_w,
+        conv_param_->kernel_h, conv_param_->kernel_w,
+        conv_param_->stride_h, conv_param_->stride_w,
+        conv_param_->dilation_h, conv_param_->dilation_w,
+        conv_param_->channels,
+        conv_param_->num_output,
+        conv_param_->group,
         src_shape_->GetDim(0), // batch
 
-        {tunning_param_.m_blk, tunning_param_.k_blk, tunning_param_.oh_blk, tunning_param_.ow_blk,
-         tunning_param_.num_thread});
+        {
+            tunning_param_.m_blk,
+            tunning_param_.k_blk,
+            tunning_param_.oh_blk,
+            tunning_param_.ow_blk,
+            tunning_param_.num_thread
+        }
+    );
     return ppl::common::RC_SUCCESS;
 }
 
@@ -101,8 +124,12 @@ ppl::common::RetCode conv2d_n8cx_tile_gemm_fp16_offline_manager::fast_init_tunni
 }
 
 ppl::common::RetCode conv2d_n8cx_tile_gemm_fp16_offline_manager::pick_best_tunning_param(
-    const __fp16* src, const __fp16* filter, __fp16* dst, ppl::nn::TensorShape& src_shape,
-    ppl::nn::TensorShape& dst_shape) {
+    const __fp16* src,
+    const __fp16* filter,
+    __fp16* dst,
+    ppl::nn::TensorShape& src_shape,
+    ppl::nn::TensorShape& dst_shape)
+{
     const int64_t num_outs_per_group = param_.num_output / param_.group;
     tunning_param_.oh_blk = min(dst_shape.GetDim(2), tunning_param_.oh_blk);
     tunning_param_.ow_blk = min(dst_shape.GetDim(3), tunning_param_.ow_blk);
@@ -158,8 +185,7 @@ ppl::common::RetCode conv2d_n8cx_tile_gemm_fp16_offline_manager::gen_cvt_weights
     }
 
     {
-        cvt_filter_size_ = conv_tile_gemm_get_cvt_filter_size_riscv_xcto8c_fp16<8>(kernel_h, kernel_w, channels,
-                                                                                   num_output, num_group);
+        cvt_filter_size_ = conv_tile_gemm_get_cvt_filter_size_riscv_xcto8c_fp16<8>(kernel_h, kernel_w, channels, num_output, num_group);
 
         cvt_filter_ = (__fp16*)allocator_->Alloc(cvt_filter_size_);
         conv_tile_gemm_cvt_filter_riscv_xcto8c_fp16<8>(filter, kernel_h, kernel_w, num_output, channels, num_group,
