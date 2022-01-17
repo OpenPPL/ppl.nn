@@ -20,6 +20,7 @@
 
 #include "ppl/nn/ir/graph.h"
 #include "ppl/nn/runtime/kernel_exec_context.h"
+#include "ppl/nn/common/device.h"
 #include <string>
 
 namespace ppl { namespace nn {

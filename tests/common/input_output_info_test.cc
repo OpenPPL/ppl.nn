@@ -48,6 +48,17 @@ protected:
     vector<EdgeObject> edge_objects_;
 };
 
+class TestGetter final : public InputOutputInfo::AcquireObject {
+public:
+    TestGetter(vector<EdgeObject>* edge_objects) : edge_objects_(edge_objects) {}
+    EdgeObject* Acquire(edgeid_t eid, uint32_t) override {
+        return &edge_objects_->at(eid);
+    }
+
+private:
+    vector<EdgeObject>* edge_objects_;
+};
+
 TEST_F(InputOutputInfoTest, misc) {
     auto topo = builder_.GetGraph()->topo.get();
 
@@ -56,9 +67,8 @@ TEST_F(InputOutputInfoTest, misc) {
 
     InputOutputInfo info;
     info.SetNode(node);
-    info.SetAcquireObjectFunc([this](edgeid_t eid, uint32_t, Device*) -> EdgeObject* {
-        return &edge_objects_[eid];
-    });
+    TestGetter getter(&edge_objects_);
+    info.SetAcquireObject(&getter);
 
     auto edge = topo->GetEdgeByName("input_of_a");
     EXPECT_NE(nullptr, edge);

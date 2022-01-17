@@ -24,11 +24,13 @@
 #include "ppl/nn/engines/x86/x86_device.h"
 #include "ppl/nn/runtime/runtime_partition_info.h"
 #include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
+#include "ppl/nn/engines/x86/optimizer/tensor_getter.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
 class OptGraph final {
 public:
+    OptGraph() : tensor_getter_(&tensor_impls_) {}
     ppl::common::RetCode Init(ir::Graph*, utils::SharedResource*, RuntimePartitionInfo*);
     ppl::common::RetCode DoOptimize(X86Device*);
 
@@ -43,6 +45,7 @@ private:
     ir::Graph* graph_ = nullptr;
     RuntimePartitionInfo* info_ = nullptr;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>> tensor_impls_;
+    TensorGetter tensor_getter_;
 };
 
 }}} // namespace ppl::nn::x86
