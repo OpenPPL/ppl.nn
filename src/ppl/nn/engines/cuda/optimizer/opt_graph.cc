@@ -88,13 +88,7 @@ RetCode OptGraph::UpdateDims() {
     UpdateTopologicalSort();
 
     InputOutputInfo IOinfo;
-    IOinfo.SetAcquireObjectFunc([this](edgeid_t eid, uint32_t, Device*) -> EdgeObject* {
-        auto iter = tensor_impls_.find(eid);
-        if (iter == tensor_impls_.end()) {
-            return nullptr;
-        }
-        return iter->second.get();
-    });
+    IOinfo.SetAcquireObject(&tensor_getter_);
 
     for (uint32_t i = 0; i < sorted_node_ids_.size(); ++i) {
         auto node = topo->GetNodeById(sorted_node_ids_[i]);
@@ -403,13 +397,7 @@ RetCode OptGraph::UpdateType() {
     UpdateTopologicalSort();
 
     InputOutputInfo IOinfo;
-    IOinfo.SetAcquireObjectFunc([this](edgeid_t eid, uint32_t, Device*) -> EdgeObject* {
-        auto iter = tensor_impls_.find(eid);
-        if (iter == tensor_impls_.end()) {
-            return nullptr;
-        }
-        return iter->second.get();
-    });
+    IOinfo.SetAcquireObject(&tensor_getter_);
 
     for (uint32_t i = 0; i < sorted_node_ids_.size(); ++i) {
         auto node = topo->GetNodeById(sorted_node_ids_[i]);

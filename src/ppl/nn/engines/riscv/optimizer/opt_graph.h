@@ -25,11 +25,13 @@
 #include "ppl/nn/engines/riscv/riscv_engine_options.h"
 #include "ppl/nn/runtime/runtime_partition_info.h"
 #include "ppl/nn/engines/riscv/optimizer/opt_kernel.h"
+#include "ppl/nn/engines/riscv/optimizer/tensor_getter.h"
 
 namespace ppl { namespace nn { namespace riscv {
 
 class OptGraph final {
 public:
+    OptGraph() : tensor_getter_(&tensor_impls_) {}
     ppl::common::RetCode Init(ir::Graph*, utils::SharedResource*, RuntimePartitionInfo*, RiscvEngineOptions* options);
     ppl::common::RetCode DoOptimize(RiscvDevice*);
 
@@ -45,6 +47,7 @@ private:
     nn::RuntimePartitionInfo* info_ = nullptr;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>> tensor_impls_;
     RiscvEngineOptions* options_ = nullptr;
+    TensorGetter tensor_getter_;
 };
 
 }}} // namespace ppl::nn::riscv

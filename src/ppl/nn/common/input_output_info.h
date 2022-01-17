@@ -19,34 +19,33 @@
 #define _ST_HPC_PPL_NN_COMMON_INPUT_OUTPUT_INFO_H_
 
 #include "ppl/nn/ir/node.h"
-#include "ppl/nn/common/device.h"
 #include "ppl/nn/runtime/edge_object.h"
-#include <vector>
 
 namespace ppl { namespace nn {
 
 /**
    @class InputOutputInfo
-   @brief wrapper for getting input/output tensors of a node/kernel
+   @brief wrapper for getting input/output tensors of a kernel
 */
 class InputOutputInfo {
+public:
+    /** @brief a wrapper for getting the corresponding object of the specified id and type. */
+    class AcquireObject {
+    public:
+        virtual ~AcquireObject() {}
+        virtual EdgeObject* Acquire(edgeid_t eid, uint32_t etype) = 0;
+    };
+
 public:
     virtual ~InputOutputInfo() {}
 
     void SetNode(const ir::Node* node) {
         node_ = node;
     }
-    void SetDevice(Device* device) {
-        device_ = device;
-    }
 
-    /**
-       @brief set a getter function which requires an edgeid `eid` and `etype`
-       and returns the corresponding object.
-    */
-    void SetAcquireObjectFunc(
-        const std::function<EdgeObject*(edgeid_t eid, uint32_t etype, Device* device)>& acquire_object) {
-        acquire_object_func_ = acquire_object;
+    /** @brief sets a getter class which requires an edgeid `eid` and `etype` and returns the corresponding object. */
+    void SetAcquireObject(AcquireObject* getter) {
+        getter_ = getter;
     }
 
     uint32_t GetInputCount() const {
@@ -56,7 +55,7 @@ public:
     template <typename T>
     T* GetInput(uint32_t idx) const {
         auto eid = node_->GetInput(idx);
-        return static_cast<T*>(acquire_object_func_(eid, EdgeObjectType<T>::value, device_));
+        return static_cast<T*>(getter_->Acquire(eid, EdgeObjectType<T>::value));
     }
 
     uint32_t GetExtraInputCount() const {
@@ -66,7 +65,7 @@ public:
     template <typename T>
     T* GetExtraInput(uint32_t idx) const {
         auto eid = node_->GetExtraInput(idx);
-        return static_cast<T*>(acquire_object_func_(eid, EdgeObjectType<T>::value, device_));
+        return static_cast<T*>(getter_->Acquire(eid, EdgeObjectType<T>::value));
     }
 
     uint32_t GetOutputCount() const {
@@ -76,13 +75,12 @@ public:
     template <typename T>
     T* GetOutput(uint32_t idx) const {
         auto eid = node_->GetOutput(idx);
-        return static_cast<T*>(acquire_object_func_(eid, EdgeObjectType<T>::value, device_));
+        return static_cast<T*>(getter_->Acquire(eid, EdgeObjectType<T>::value));
     }
 
 protected:
     const ir::Node* node_ = nullptr;
-    Device* device_ = nullptr;
-    std::function<EdgeObject*(edgeid_t, uint32_t, Device*)> acquire_object_func_;
+    AcquireObject* getter_ = nullptr;
 };
 
 }} // namespace ppl::nn
