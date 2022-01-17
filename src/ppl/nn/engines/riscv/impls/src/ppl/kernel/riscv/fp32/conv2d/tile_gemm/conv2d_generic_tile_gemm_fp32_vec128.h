@@ -34,17 +34,27 @@ struct conv2d_nxcx_conv_tile_gemm_tunning_info {
 };
 
 template <int64_t atom_c>
-void conv2d_nxcx_tile_gemm_src_blk_im2col_fp32_vec128(const float* src, int64_t src_h, int64_t src_w, int64_t dst_h,
-                                                      int64_t dst_w, int64_t flt_h, int64_t flt_w, int64_t pad_h,
-                                                      int64_t pad_w, int64_t stride_h, int64_t stride_w,
-                                                      // int64_t hole_h,
-                                                      // int64_t hole_w,
-                                                      int64_t channels,
+void conv2d_nxcx_tile_gemm_src_blk_im2col_fp32_vec128(
+    const float* src,
+    int64_t src_h,
+    int64_t src_w,
+    int64_t dst_h,
+    int64_t dst_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t pad_h,
+    int64_t pad_w,
+    int64_t stride_h,
+    int64_t stride_w,
+    int64_t hole_h,
+    int64_t hole_w,
+    int64_t channels,
+    int64_t tile_gemm_dst_h_beg,
+    int64_t tile_gemm_dst_h_blk,
+    int64_t tile_gemm_dst_w_beg,
+    int64_t tile_gemm_dst_w_blk,
+    float* src_trans) {
 
-                                                      int64_t tile_gemm_dst_h_beg, int64_t tile_gemm_dst_h_blk,
-                                                      int64_t tile_gemm_dst_w_beg, int64_t tile_gemm_dst_w_blk,
-
-                                                      float* src_trans) {
     int64_t pad_channels = round_up(channels, atom_c);
     int64_t src_h_beg = tile_gemm_dst_h_beg * stride_h - pad_h;
     int64_t src_w_beg = tile_gemm_dst_w_beg * stride_w - pad_w;
@@ -56,23 +66,23 @@ void conv2d_nxcx_tile_gemm_src_blk_im2col_fp32_vec128(const float* src, int64_t 
     int64_t num_dst_w_blk_elem = tile_gemm_dst_w_blk * atom_c;
 
     for (int64_t ic = 0; ic < pad_channels; ic += atom_c) {
-        for (int64_t kh = 0; kh < flt_h; kh++) {
-            for (int64_t kw = 0; kw < flt_w; kw++) {
-                int64_t src_h_loc = src_h_beg + kh;
+        for (int64_t kh = 0, kh_with_hole = 0; kh < flt_h; kh++, kh_with_hole += hole_h) {
+            for (int64_t kw = 0, kw_with_hole = 0; kw < flt_w; kw++, kw_with_hole += hole_w) {
+                int64_t src_h_loc = src_h_beg + kh_with_hole;
                 int64_t dst_h_loc = 0;
 
                 // top padding
-                for (; src_h_loc < 0; src_h_loc += stride_h, dst_h_loc += 1) {
+                for (; src_h_loc < 0 && dst_h_loc < tile_gemm_dst_h_blk; src_h_loc += stride_h, dst_h_loc += 1) {
                     memset(src_trans, 0.f, num_dst_w_blk_elem * sizeof(float));
                     src_trans += num_dst_w_blk_elem;
                 }
 
                 auto src_img = src + src_h_stride * src_h_loc;
                 for (; src_h_loc < src_h && dst_h_loc < tile_gemm_dst_h_blk; src_h_loc += stride_h, dst_h_loc += 1) {
-                    int64_t src_w_loc = src_w_beg + kw;
+                    int64_t src_w_loc = src_w_beg + kw_with_hole;
                     int64_t dst_w_loc = 0;
                     // left padding
-                    for (; src_w_loc < 0; src_w_loc += stride_w, dst_w_loc += 1) {
+                    for (; src_w_loc < 0 && dst_w_loc < tile_gemm_dst_w_blk; src_w_loc += stride_w, dst_w_loc += 1) {
                         if (atom_c == 1) {
                             src_trans[0] = 0.0f;
                         } else {
@@ -82,8 +92,7 @@ void conv2d_nxcx_tile_gemm_src_blk_im2col_fp32_vec128(const float* src, int64_t 
                         src_trans += atom_c;
                     }
 
-                    for (; src_w_loc < src_w && dst_w_loc < tile_gemm_dst_w_blk;
-                         src_w_loc += stride_w, dst_w_loc += 1) {
+                    for (; src_w_loc < src_w && dst_w_loc < tile_gemm_dst_w_blk; src_w_loc += stride_w, dst_w_loc += 1) {
                         if (atom_c == 1) {
                             src_trans[0] = src_img[src_w_loc];
                         } else {
@@ -118,15 +127,28 @@ void conv2d_nxcx_tile_gemm_src_blk_im2col_fp32_vec128(const float* src, int64_t 
 }
 
 template <int64_t atom_ic>
-void conv2d_nxcx_conv_tile_gemm_riscv_per_group_fp32_vec128(const float* src, const float* filter, const float* bias,
-                                                            float* temp_buffer, float* dst,
+void conv2d_nxcx_conv_tile_gemm_riscv_per_group_fp32_vec128(
+    const float* src,
+    const float* filter,
+    const float* bias,
+    float* temp_buffer,
+    float* dst,
+    int64_t src_h,
+    int64_t src_w,
+    int64_t pad_h,
+    int64_t pad_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t stride_h,
+    int64_t stride_w,
+    int64_t hole_h,
+    int64_t hole_w,
+    int64_t dst_h,
+    int64_t dst_w,
+    int64_t ic,
+    int64_t oc,
+    conv2d_nxcx_conv_tile_gemm_tunning_info tunning_info) {
 
-                                                            int64_t src_h, int64_t src_w, int64_t pad_h, int64_t pad_w,
-                                                            int64_t flt_h, int64_t flt_w, int64_t stride_h,
-                                                            int64_t stride_w, int64_t hole_h, int64_t hole_w,
-                                                            int64_t dst_h, int64_t dst_w, int64_t ic, int64_t oc,
-
-                                                            conv2d_nxcx_conv_tile_gemm_tunning_info tunning_info) {
     const int64_t atom_oc = 4;
 
     int64_t tile_gemm_m_blk = round_up(tunning_info.tile_gemm_m_blk, atom_oc);
@@ -156,11 +178,26 @@ void conv2d_nxcx_conv_tile_gemm_riscv_per_group_fp32_vec128(const float* src, co
             auto filter_temp = filter;
 
             conv2d_nxcx_tile_gemm_src_blk_im2col_fp32_vec128<atom_ic>(
-                src, src_h, src_w, dst_h, dst_w, flt_h, flt_w, pad_h, pad_w, stride_h, stride_w, ic,
-
-                dst_h_beg, real_dst_h_blk, dst_w_beg, real_dst_w_blk,
-
-                src_trans);
+                src,
+                src_h,
+                src_w,
+                dst_h,
+                dst_w,
+                flt_h,
+                flt_w,
+                pad_h,
+                pad_w,
+                stride_h,
+                stride_w,
+                hole_h,
+                hole_w,
+                ic,
+                dst_h_beg,
+                real_dst_h_blk,
+                dst_w_beg,
+                real_dst_w_blk,
+                src_trans
+            );
 
             for (int64_t m_beg = 0; m_beg < total_m; m_beg += tile_gemm_m_blk) {
                 int64_t real_m_blk = min(tile_gemm_m_blk, total_m - m_beg);
@@ -173,13 +210,17 @@ void conv2d_nxcx_conv_tile_gemm_riscv_per_group_fp32_vec128(const float* src, co
                 auto dst_ptr = dst + m_beg * (dst_h * dst_w) + dst_h_beg * dst_w * atom_oc + dst_w_beg * atom_oc;
                 auto bias_ptr = bias + m_beg;
 
-                conv2d_n4cx_mem_dst_blk_trans_fp32_vec128<false>(dst_blk, real_dst_h_blk, real_dst_w_blk,
-
-                                                                 dst_ptr, dst_h, dst_w,
-
-                                                                 real_m_blk, real_dst_h_blk, real_dst_w_blk,
-
-                                                                 bias_ptr);
+                conv2d_n4cx_mem_dst_blk_trans_fp32_vec128<false>(
+                    dst_blk,
+                    real_dst_h_blk,
+                    real_dst_w_blk,
+                    dst_ptr,
+                    dst_h,
+                    dst_w,
+                    real_m_blk,
+                    real_dst_h_blk,
+                    real_dst_w_blk,
+                    bias_ptr);
 
                 filter_temp += real_m_blk * total_k;
             }

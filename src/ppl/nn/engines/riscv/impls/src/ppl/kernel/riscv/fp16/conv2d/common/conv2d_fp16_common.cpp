@@ -35,7 +35,7 @@ namespace ppl { namespace kernel { namespace riscv {
 
 conv2d_common_algo_info conv2d_fp16_algo_selector::select_best_algo(const void* filter, ppl::nn::TensorShape& src_shape,
                                                                     ppl::nn::TensorShape& dst_shape, const conv2d_common_param& param,
-                                                                    ppl::common::Allocator* allocator) {
+                                                                    Allocator* allocator) {
 
     static conv2d_common_algo_info unknown_info =
         {conv2d_common_algo::unknown, DATAFORMAT_UNKNOWN, DATAFORMAT_UNKNOWN, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
@@ -51,31 +51,36 @@ conv2d_common_algo_info conv2d_fp16_algo_selector::select_best_algo(const void* 
         {conv2d_common_algo::winograd_b6f3, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16}
     };
 
-    if (param.dilation_h != 1 || param.dilation_w != 1) {
-        return unknown_info;
-    }
-
     if (param.group == param.num_output && param.num_output == param.channels) {
         return {conv2d_common_algo::depthwise, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
     }
 
     std::vector<conv2d_common_algo_info> profiling_algo_info_vec;
-    if (ppl::common::DATAFORMAT_NDARRAY == src_shape.GetDataFormat()) {
+    if (DATAFORMAT_NDARRAY == src_shape.GetDataFormat()) {
         for (auto algo_info : ndarray_algo_info_lst) {
+            if (algo_info.algo_type == conv2d_common_algo::tile_gemm) {
+                if (param.group != 1) {
+                    continue;
+                }
+            }
+
             profiling_algo_info_vec.push_back(algo_info);
         }
-    } else if (ppl::common::DATAFORMAT_N8CX == src_shape.GetDataFormat()) {
+    } else if (DATAFORMAT_N8CX == src_shape.GetDataFormat()) {
         for (auto algo_info : n4cx_algo_info_lst) {
             if (algo_info.algo_type == conv2d_common_algo::winograd_b2f3) {
-                if (param.kernel_h != 3 || param.kernel_w != 3 || param.stride_h != 1 || param.stride_w != 1) {
+                if (param.kernel_h != 3 || param.kernel_w != 3 || param.stride_h != 1 || param.stride_w != 1 ||
+                    param.dilation_h != 1 || param.dilation_w != 1) {
                     continue;
                 }
             } else if (algo_info.algo_type == conv2d_common_algo::winograd_b4f3) {
-                if (param.kernel_h != 3 || param.kernel_w != 3 || param.stride_h != 1 || param.stride_w != 1) {
+                if (param.kernel_h != 3 || param.kernel_w != 3 || param.stride_h != 1 || param.stride_w != 1 ||
+                    param.dilation_h != 1 || param.dilation_w != 1) {
                     continue;
                 }
             } else if (algo_info.algo_type == conv2d_common_algo::winograd_b6f3) {
-                if (param.kernel_h != 3 || param.kernel_w != 3 || param.stride_h != 1 || param.stride_w != 1) {
+                if (param.kernel_h != 3 || param.kernel_w != 3 || param.stride_h != 1 || param.stride_w != 1 ||
+                    param.dilation_h != 1 || param.dilation_w != 1) {
                     continue;
                 }
             }
@@ -115,65 +120,39 @@ conv2d_common_algo_info conv2d_fp16_algo_selector::select_best_algo(const void* 
     }
 
     LOG(DEBUG) << "select best fp16 conv algo " << best_algo_info.algo_type;
+    if (best_algo_info.algo_type == conv2d_common_algo::unknown) {
+        best_algo_info = select_algo(src_shape, param);
+    }
     return best_algo_info;
 }
 
 conv2d_common_algo_info conv2d_fp16_algo_selector::select_algo(const ppl::nn::TensorShape& input_shape,
                                                                const conv2d_common_param& param) {
-    static conv2d_common_algo_info unknown_info = {
-        conv2d_common_algo::unknown,
-        ppl::common::DATAFORMAT_UNKNOWN,
-        ppl::common::DATAFORMAT_UNKNOWN,
-        ppl::common::DATATYPE_FLOAT16,
-        ppl::common::DATATYPE_FLOAT16};
+    static conv2d_common_algo_info unknown_info =
+        {conv2d_common_algo::unknown, DATAFORMAT_UNKNOWN, DATAFORMAT_UNKNOWN, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
 
-    if (param.dilation_h != 1 || param.dilation_w != 1) {
-        return unknown_info;
-    }
-
-    if (input_shape.GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
+    if (input_shape.GetDataFormat() == DATAFORMAT_NDARRAY) {
         if (param.group == 1) {
-            return {
-                conv2d_common_algo::tile_gemm,
-                ppl::common::DATAFORMAT_NDARRAY,
-                ppl::common::DATAFORMAT_N8CX,
-                ppl::common::DATATYPE_FLOAT16,
-                ppl::common::DATATYPE_FLOAT16};
+            return {conv2d_common_algo::tile_gemm, DATAFORMAT_NDARRAY, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
+        } else {
+            return {conv2d_common_algo::tile_gemm, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
         }
     }
 
-    if (input_shape.GetDataFormat() == ppl::common::DATAFORMAT_N8CX) {
-        if (param.group == param.num_output && param.num_output == param.channels) {
-            return {
-                conv2d_common_algo::depthwise,
-                ppl::common::DATAFORMAT_N8CX,
-                ppl::common::DATAFORMAT_N8CX,
-                ppl::common::DATATYPE_FLOAT16,
-                ppl::common::DATATYPE_FLOAT16};
-        } else {
-            if (param.kernel_h == 3 && param.kernel_w == 3 && param.stride_h == 1 && param.stride_w == 1) {
-                return {
-                    conv2d_common_algo::winograd_b4f3,
-                    ppl::common::DATAFORMAT_N8CX,
-                    ppl::common::DATAFORMAT_N8CX,
-                    ppl::common::DATATYPE_FLOAT16,
-                    ppl::common::DATATYPE_FLOAT16};
-            } else {
-                return {
-                    conv2d_common_algo::tile_gemm,
-                    ppl::common::DATAFORMAT_N8CX,
-                    ppl::common::DATAFORMAT_N8CX,
-                    ppl::common::DATATYPE_FLOAT16,
-                    ppl::common::DATATYPE_FLOAT16};
-            }
+    if (input_shape.GetDataFormat() == DATAFORMAT_N8CX) {
+        if (param.group == param.num_output && param.num_output == param.channels &&
+            param.dilation_h == 1 && param.dilation_w == 1) {
+
+            return {conv2d_common_algo::depthwise, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
         }
-    } else {
-        return {
-            conv2d_common_algo::tile_gemm,
-            ppl::common::DATAFORMAT_N8CX,
-            ppl::common::DATAFORMAT_N8CX,
-            ppl::common::DATATYPE_FLOAT16,
-            ppl::common::DATATYPE_FLOAT16};
+        if (param.kernel_h == 3 && param.kernel_w == 3 &&
+            param.stride_h == 1 && param.stride_w == 1 &&
+            param.dilation_h == 1 && param.dilation_w == 1) {
+
+            return {conv2d_common_algo::winograd_b4f3, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
+        }
+        
+        return {conv2d_common_algo::tile_gemm, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
     }
 
     return unknown_info;
@@ -181,40 +160,40 @@ conv2d_common_algo_info conv2d_fp16_algo_selector::select_algo(const ppl::nn::Te
 
 conv2d_offline_manager<__fp16>* conv2d_fp16_algo_selector::gen_algo(const conv2d_common_param& param,
                                                                     const conv2d_common_algo_info& algo_info,
-                                                                    ppl::common::Allocator* allocator) {
+                                                                    Allocator* allocator) {
     conv2d_offline_manager<__fp16>* conv_mgr = nullptr;
 
     if (algo_info.algo_type == conv2d_common_algo::tile_gemm &&
-        algo_info.input_format == ppl::common::DATAFORMAT_N8CX &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
+        algo_info.input_format == DATAFORMAT_N8CX &&
+        algo_info.output_format == DATAFORMAT_N8CX) {
         conv_mgr = new conv2d_n8cx_tile_gemm_fp16_offline_manager(param, algo_info, allocator);
     } else if (algo_info.algo_type == conv2d_common_algo::tile_gemm &&
-               algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
-               algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
+               algo_info.input_format == DATAFORMAT_NDARRAY &&
+               algo_info.output_format == DATAFORMAT_N8CX) {
         conv_mgr = new conv2d_n8cx_tile_gemm_cto8c_fp16_offline_manager(param, algo_info, allocator);
     } else if (algo_info.algo_type == conv2d_common_algo::gemm &&
-               algo_info.input_format == ppl::common::DATAFORMAT_N8CX &&
-               algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
+               algo_info.input_format == DATAFORMAT_N8CX &&
+               algo_info.output_format == DATAFORMAT_N8CX) {
         conv_mgr = new conv2d_n8cx_gemm_fp16_offline_manager(param, algo_info, allocator);
     } else if (algo_info.algo_type == conv2d_common_algo::naive &&
-               algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
-               algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
+               algo_info.input_format == DATAFORMAT_NDARRAY &&
+               algo_info.output_format == DATAFORMAT_N8CX) {
         conv_mgr = new conv2d_ndarray_naive_fp16_offline_manager(param, algo_info, allocator);
     } else if (algo_info.algo_type == conv2d_common_algo::winograd_b2f3 &&
-               algo_info.input_format == ppl::common::DATAFORMAT_N8CX &&
-               algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
+               algo_info.input_format == DATAFORMAT_N8CX &&
+               algo_info.output_format == DATAFORMAT_N8CX) {
         conv_mgr = new conv2d_n8cx_wg_b2f3_fp16_offline_manager(param, algo_info, allocator);
     } else if (algo_info.algo_type == conv2d_common_algo::winograd_b4f3 &&
-               algo_info.input_format == ppl::common::DATAFORMAT_N8CX &&
-               algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
+               algo_info.input_format == DATAFORMAT_N8CX &&
+               algo_info.output_format == DATAFORMAT_N8CX) {
         conv_mgr = new conv2d_n8cx_wg_b4f3_fp16_offline_manager(param, algo_info, allocator);
     } else if (algo_info.algo_type == conv2d_common_algo::winograd_b6f3 &&
-               algo_info.input_format == ppl::common::DATAFORMAT_N8CX &&
-               algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
+               algo_info.input_format == DATAFORMAT_N8CX &&
+               algo_info.output_format == DATAFORMAT_N8CX) {
         conv_mgr = new conv2d_n8cx_wg_b6f3_fp16_offline_manager(param, algo_info, allocator);
     } else if (algo_info.algo_type == conv2d_common_algo::depthwise &&
-               algo_info.input_format == ppl::common::DATAFORMAT_N8CX &&
-               algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
+               algo_info.input_format == DATAFORMAT_N8CX &&
+               algo_info.output_format == DATAFORMAT_N8CX) {
         conv_mgr = new conv2d_n8cx_dw_fp16_offline_manager(param, algo_info, allocator);
     }
 
