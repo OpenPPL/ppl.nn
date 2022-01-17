@@ -46,17 +46,15 @@ void tile_gemm_src_blk_im2col_nxchw(
     int64_t pad_w,
     int64_t stride_h,
     int64_t stride_w,
-    // int64_t hole_h,
-    // int64_t hole_w,
+    int64_t hole_h,
+    int64_t hole_w,
     int64_t channels,
-
     int64_t tile_gemm_dst_h_beg,
     int64_t tile_gemm_dst_h_blk,
     int64_t tile_gemm_dst_w_beg,
     int64_t tile_gemm_dst_w_blk,
+    __fp16* src_trans) {
 
-    __fp16* src_trans)
-{
     int64_t pad_channels = round_up(channels, atom_c);
     int64_t src_h_beg = tile_gemm_dst_h_beg * stride_h - pad_h;
     int64_t src_w_beg = tile_gemm_dst_w_beg * stride_w - pad_w;
@@ -68,23 +66,23 @@ void tile_gemm_src_blk_im2col_nxchw(
     int64_t num_dst_w_blk_elem = tile_gemm_dst_w_blk * atom_c;
 
     for (int64_t ic = 0; ic < pad_channels; ic += atom_c) {
-        for (int64_t kh = 0; kh < flt_h; kh++) {
-            for (int64_t kw = 0; kw < flt_w; kw++) {
-                int64_t src_h_loc = src_h_beg + kh;
+        for (int64_t kh = 0, kh_with_hole = 0; kh < flt_h; kh++, kh_with_hole += hole_h) {
+            for (int64_t kw = 0, kw_with_hole = 0; kw < flt_w; kw++, kw_with_hole += hole_w) {
+                int64_t src_h_loc = src_h_beg + kh_with_hole;
                 int64_t dst_h_loc = 0;
 
                 // top padding
-                for (; src_h_loc < 0; src_h_loc += stride_h, dst_h_loc += 1) {
+                for (; src_h_loc < 0 && dst_h_loc < tile_gemm_dst_h_blk; src_h_loc += stride_h, dst_h_loc += 1) {
                     memset(src_trans, 0.f, num_dst_w_blk_elem * sizeof(__fp16));
                     src_trans += num_dst_w_blk_elem;
                 }
 
                 auto src_img = src + src_h_stride * src_h_loc;
                 for (; src_h_loc < src_h && dst_h_loc < tile_gemm_dst_h_blk; src_h_loc += stride_h, dst_h_loc += 1) {
-                    int64_t src_w_loc = src_w_beg + kw;
+                    int64_t src_w_loc = src_w_beg + kw_with_hole;
                     int64_t dst_w_loc = 0;
                     // left padding
-                    for (; src_w_loc < 0; src_w_loc += stride_w, dst_w_loc += 1) {
+                    for (; src_w_loc < 0 && dst_w_loc < tile_gemm_dst_w_blk; src_w_loc += stride_w, dst_w_loc += 1) {
                         if (atom_c == 1) {
                             src_trans[0] = 0.0f;
                         } else {
@@ -94,8 +92,7 @@ void tile_gemm_src_blk_im2col_nxchw(
                         src_trans += atom_c;
                     }
 
-                    for (; src_w_loc < src_w && dst_w_loc < tile_gemm_dst_w_blk;
-                         src_w_loc += stride_w, dst_w_loc += 1) {
+                    for (; src_w_loc < src_w && dst_w_loc < tile_gemm_dst_w_blk; src_w_loc += stride_w, dst_w_loc += 1) {
                         if (atom_c == 1) {
                             src_trans[0] = src_img[src_w_loc];
                         } else {
@@ -136,7 +133,6 @@ void conv_tile_gemm_riscv_xcto8c_per_group_fp16(
     const __fp16* bias,
     __fp16* temp_buffer,
     __fp16* dst,
-
     int64_t src_h,
     int64_t src_w,
     int64_t pad_h,
@@ -151,9 +147,8 @@ void conv_tile_gemm_riscv_xcto8c_per_group_fp16(
     int64_t dst_w,
     int64_t ic,
     int64_t oc,
+    conv_tile_gemm_tunning_info tunning_info) {
 
-    conv_tile_gemm_tunning_info tunning_info)
-{
     const int64_t atom_oc = 8;
 
     int64_t tile_gemm_m_blk = round_up(tunning_info.tile_gemm_m_blk, atom_oc);
@@ -179,7 +174,6 @@ void conv_tile_gemm_riscv_xcto8c_per_group_fp16(
         for (int64_t dst_w_beg = 0; dst_w_beg < dst_w; dst_w_beg += tile_gemm_dst_w_blk) {
             int64_t real_dst_w_blk = min(tile_gemm_dst_w_blk, dst_w - dst_w_beg);
             int64_t real_n_blk = real_dst_h_blk * real_dst_w_blk;
-
             auto filter_temp = filter;
 
             tile_gemm_src_blk_im2col_nxchw<atom_ic>(
@@ -194,14 +188,15 @@ void conv_tile_gemm_riscv_xcto8c_per_group_fp16(
                 pad_w,
                 stride_h,
                 stride_w,
+                hole_h,
+                hole_w,
                 ic,
-
                 dst_h_beg,
                 real_dst_h_blk,
                 dst_w_beg,
                 real_dst_w_blk,
-
-                src_trans);
+                src_trans
+            );
 
             for (int64_t m_beg = 0; m_beg < total_m; m_beg += tile_gemm_m_blk) {
                 int64_t real_m_blk = min(tile_gemm_m_blk, total_m - m_beg);
@@ -217,16 +212,14 @@ void conv_tile_gemm_riscv_xcto8c_per_group_fp16(
                     dst_blk,
                     real_dst_h_blk,
                     real_dst_w_blk,
-
                     dst_ptr,
                     dst_h,
                     dst_w,
-
                     real_m_blk,
                     real_dst_h_blk,
                     real_dst_w_blk,
-
-                    bias_ptr);
+                    bias_ptr
+                );
 
                 filter_temp += real_m_blk * total_k;
             }
@@ -240,8 +233,8 @@ size_t conv_tile_gemm_get_cvt_filter_size_riscv_xcto8c_fp16(
     int64_t flt_w,
     int64_t channels,
     int64_t num_outs,
-    int64_t group)
-{
+    int64_t group) {
+
     const int64_t atom_oc = 8;
 
     int64_t num_outs_per_group = num_outs / group;
@@ -263,8 +256,8 @@ static void conv_tile_gemm_cvt_filter_xcto8c_kernel_fp16(
     int64_t channels,
     int64_t tile_gemm_m_blk,
     int64_t tile_gemm_k_blk,
-    __fp16* filter_cvt)
-{
+    __fp16* filter_cvt) {
+
     const int64_t atom_oc = 8;
 
     tile_gemm_m_blk = round_up(tile_gemm_m_blk, atom_oc);
@@ -312,8 +305,8 @@ void conv_tile_gemm_cvt_filter_riscv_xcto8c_fp16(
     int64_t group,
     int64_t tile_gemm_m_blk,
     int64_t tile_gemm_k_blk,
-    __fp16* filter_cvt)
-{
+    __fp16* filter_cvt) {
+
     const int64_t atom_oc = 8;
 
     tile_gemm_m_blk = round_up(tile_gemm_m_blk, atom_oc);
@@ -338,7 +331,8 @@ void conv_tile_gemm_cvt_filter_riscv_xcto8c_fp16(
             channels_per_group,
             tile_gemm_m_blk,
             tile_gemm_k_blk,
-            filter_cvt_per_group);
+            filter_cvt_per_group
+        );
 
         filter_per_group += filter_group_stride;
         filter_cvt_per_group += filter_cvt_group_stride;
@@ -360,12 +354,11 @@ size_t tile_gemm_get_temp_buffer_size_riscv_xcto8c_fp16(
     int64_t channels,
     int64_t group,
     int64_t num_outs,
-
     int64_t tile_gemm_m_blk,
     int64_t tile_gemm_dst_h_blk,
     int64_t tile_gemm_dst_w_blk,
-    int64_t num_threads)
-{
+    int64_t num_threads) {
+
     const int64_t atom_oc = 8;
 
     int64_t channels_per_group = channels / group;

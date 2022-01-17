@@ -27,18 +27,29 @@ uint64_t conv2d_n4cx_tile_gemm_fp32_runtime_executor::cal_temp_buffer_size() {
     size_t temp_buffer_size = conv2d_nxcx_tile_gemm_get_temp_buffer_size_fp32_vec128<4>(
         src_shape_->GetDim(2), // src_h
         src_shape_->GetDim(3), // src_w
-        conv_param_->pad_h, conv_param_->pad_w, conv_param_->stride_h, conv_param_->stride_w, conv_param_->kernel_h,
-        conv_param_->kernel_w, conv_param_->dilation_h, conv_param_->dilation_w, conv_param_->channels,
-        conv_param_->group, conv_param_->num_output,
-
-        tunning_param_.m_blk, tunning_param_.oh_blk, tunning_param_.ow_blk, tunning_param_.num_thread);
-
+        conv_param_->pad_h,
+        conv_param_->pad_w,
+        conv_param_->stride_h,
+        conv_param_->stride_w,
+        conv_param_->kernel_h,
+        conv_param_->kernel_w,
+        conv_param_->dilation_h,
+        conv_param_->dilation_w,
+        conv_param_->channels,
+        conv_param_->group,
+        conv_param_->num_output,
+        tunning_param_.m_blk,
+        tunning_param_.oh_blk,
+        tunning_param_.ow_blk,
+        tunning_param_.num_thread
+    );
+ 
     return temp_buffer_size;
 }
 
 void conv2d_n4cx_tile_gemm_fp32_runtime_executor::adjust_tunning_param() {
-    auto dst_h = src_shape_->GetDim(2);
-    auto dst_w = src_shape_->GetDim(3);
+    auto dst_h = dst_shape_->GetDim(2);
+    auto dst_w = dst_shape_->GetDim(3);
 
     tunning_param_.oh_blk = min(dst_h, tunning_param_.oh_blk);
     tunning_param_.ow_blk = min(dst_w, tunning_param_.ow_blk);
@@ -68,17 +79,33 @@ ppl::common::RetCode conv2d_n4cx_tile_gemm_fp32_runtime_executor::execute() {
     conv2d_shell_fp32<conv2d_nxcx_conv_tile_gemm_tunning_info, 4, conv2d_tile_gemm_get_real_filter_size,
                       conv2d_nxcx_conv_tile_gemm_riscv_per_group_fp32_vec128<4>>(
 
-        src_, cvt_filter_, cvt_bias_, (float*)temp_buffer_, dst_,
-
+        src_,
+        cvt_filter_,
+        cvt_bias_,
+        (float*)temp_buffer_,
+        dst_,
         src_shape_->GetDim(2), // src_h
         src_shape_->GetDim(3), // src_w
-        conv_param_->pad_h, conv_param_->pad_w, conv_param_->kernel_h, conv_param_->kernel_w, conv_param_->stride_h,
-        conv_param_->stride_w, conv_param_->dilation_h, conv_param_->dilation_w, conv_param_->channels,
-        conv_param_->num_output, conv_param_->group,
+        conv_param_->pad_h,
+        conv_param_->pad_w,
+        conv_param_->kernel_h,
+        conv_param_->kernel_w,
+        conv_param_->stride_h,
+        conv_param_->stride_w,
+        conv_param_->dilation_h,
+        conv_param_->dilation_w,
+        conv_param_->channels,
+        conv_param_->num_output,
+        conv_param_->group,
         src_shape_->GetDim(0), // batch
-
-        {tunning_param_.m_blk, tunning_param_.k_blk, tunning_param_.oh_blk, tunning_param_.ow_blk,
-         tunning_param_.num_thread});
+        {
+            tunning_param_.m_blk,
+            tunning_param_.k_blk,
+            tunning_param_.oh_blk,
+            tunning_param_.ow_blk,
+            tunning_param_.num_thread
+        }
+    );
 
     return ppl::common::RC_SUCCESS;
 }
@@ -156,13 +183,26 @@ ppl::common::RetCode conv2d_n4cx_tile_gemm_fp32_offline_manager::gen_cvt_weights
     }
 
     {
-        cvt_filter_size_ = conv2d_nxcx_conv_tile_gemm_get_cvt_filter_size_fp32_vec128<4>(kernel_h, kernel_w, channels,
-                                                                                         num_output, num_group);
+        cvt_filter_size_ = conv2d_nxcx_conv_tile_gemm_get_cvt_filter_size_fp32_vec128<4>(
+            kernel_h,
+            kernel_w,
+            channels,
+            num_output,
+            num_group
+        );
 
         cvt_filter_ = (float*)allocator_->Alloc(cvt_filter_size_);
-        conv2d_nxcx_conv_tile_gemm_cvt_filter_fp32_vec128<4>(filter, kernel_h, kernel_w, num_output, channels,
-                                                             num_group, tunning_param_.m_blk, tunning_param_.k_blk,
-                                                             cvt_filter_);
+        conv2d_nxcx_conv_tile_gemm_cvt_filter_fp32_vec128<4>(
+            filter,
+            kernel_h,
+            kernel_w,
+            num_output,
+            channels,
+            num_group,
+            tunning_param_.m_blk,
+            tunning_param_.k_blk,
+            cvt_filter_
+        );
     }
 
     return ppl::common::RC_SUCCESS;
