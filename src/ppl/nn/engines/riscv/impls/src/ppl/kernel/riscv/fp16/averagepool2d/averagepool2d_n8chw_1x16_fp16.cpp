@@ -23,10 +23,16 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <ppl::nn::common::PoolingParam::pooling_mode_t pooling_mode, int64_t w_len>
-static void averagepool2d_n8chw_1x16_kernel_fp16(const __fp16* src, __fp16* dst,
+static void averagepool2d_n8chw_1x16_kernel_fp16(
+    const __fp16* src,
+    __fp16* dst,
 
-                                                 const averagepool2d_param* param, const int64_t oh, const int64_t ow,
-                                                 const int64_t ih_start_valid, const int64_t ih_end_valid) {
+    const averagepool2d_param* param,
+    const int64_t oh,
+    const int64_t ow,
+    const int64_t ih_start_valid,
+    const int64_t ih_end_valid)
+{
     const int32_t& kernel_h = param->kernel_h;
     const int32_t& kernel_w = param->kernel_w;
     const int32_t& pad_w = param->pad_w;
@@ -238,10 +244,16 @@ static const averagepool2d_n8chw_kernel_fp16_func averagepool2d_n8chw_1x16_kerne
      averagepool2d_n8chw_1x16_kernel_fp16<ppl::nn::common::PoolingParam::POOLING_AVERAGE_EXCLUDE, 16>}};
 
 template <ppl::nn::common::PoolingParam::pooling_mode_t pooling_mode>
-static inline void averagepool2d_n8chw_border_fp16(const __fp16* src, __fp16* dst,
+static inline void averagepool2d_n8chw_border_fp16(
+    const __fp16* src,
+    __fp16* dst,
 
-                                                   const averagepool2d_param* param, const int64_t oh, const int64_t ow,
-                                                   const int64_t ih_start_valid, const int64_t ih_end_valid) {
+    const averagepool2d_param* param,
+    const int64_t oh,
+    const int64_t ow,
+    const int64_t ih_start_valid,
+    const int64_t ih_end_valid)
+{
     const int32_t& kernel_h = param->kernel_h;
     const int32_t& kernel_w = param->kernel_w;
     const int32_t& stride_h = param->stride_h;
@@ -281,13 +293,19 @@ static inline void averagepool2d_n8chw_border_fp16(const __fp16* src, __fp16* ds
 }
 
 template <ppl::nn::common::PoolingParam::pooling_mode_t pooling_mode>
-ppl::common::RetCode averagepool2d_n8chw_1x16_fp16_impl(const ppl::nn::TensorShape* src_shape,
-                                                        const ppl::nn::TensorShape* dst_shape, const int32_t kernel_h,
-                                                        const int32_t kernel_w, const int32_t stride_h,
-                                                        const int32_t stride_w, const int32_t pad_h,
-                                                        const int32_t pad_w,
+ppl::common::RetCode averagepool2d_n8chw_1x16_fp16_impl(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const int32_t kernel_h,
+    const int32_t kernel_w, 
+    const int32_t stride_h,
+    const int32_t stride_w,
+    const int32_t pad_h,
+    const int32_t pad_w,
 
-                                                        const __fp16* src, __fp16* dst) {
+    const __fp16* src,
+    __fp16* dst)
+{
     const int32_t batch = src_shape->GetDim(0);
     const int32_t channels = src_shape->GetDim(1);
     const int32_t src_h = src_shape->GetDim(2);
@@ -317,19 +335,15 @@ ppl::common::RetCode averagepool2d_n8chw_1x16_fp16_impl(const ppl::nn::TensorSha
             }
             for (; ow + 16 <= dst_1x16_end_w; ow += 16) {
                 if (pooling_mode == ppl::nn::common::PoolingParam::POOLING_AVERAGE_EXCLUDE)
-                    averagepool2d_n8chw_1x16_kernel_select[1][15](src_, dst_, &param, oh, ow, ih_start_valid,
-                                                                  ih_end_valid);
+                    averagepool2d_n8chw_1x16_kernel_select[1][15](src_, dst_, &param, oh, ow, ih_start_valid, ih_end_valid);
                 else if (pooling_mode == ppl::nn::common::PoolingParam::POOLING_AVERAGE_INCLUDE)
-                    averagepool2d_n8chw_1x16_kernel_select[0][15](src_, dst_, &param, oh, ow, ih_start_valid,
-                                                                  ih_end_valid);
+                    averagepool2d_n8chw_1x16_kernel_select[0][15](src_, dst_, &param, oh, ow, ih_start_valid, ih_end_valid);
             }
             if (ow < dst_1x16_end_w) {
                 if (pooling_mode == ppl::nn::common::PoolingParam::POOLING_AVERAGE_EXCLUDE)
-                    averagepool2d_n8chw_1x16_kernel_select[1][dst_1x16_end_w - ow - 1](src_, dst_, &param, oh, ow,
-                                                                                       ih_start_valid, ih_end_valid);
+                    averagepool2d_n8chw_1x16_kernel_select[1][dst_1x16_end_w - ow - 1](src_, dst_, &param, oh, ow, ih_start_valid, ih_end_valid);
                 else if (pooling_mode == ppl::nn::common::PoolingParam::POOLING_AVERAGE_INCLUDE)
-                    averagepool2d_n8chw_1x16_kernel_select[0][dst_1x16_end_w - ow - 1](src_, dst_, &param, oh, ow,
-                                                                                       ih_start_valid, ih_end_valid);
+                    averagepool2d_n8chw_1x16_kernel_select[0][dst_1x16_end_w - ow - 1](src_, dst_, &param, oh, ow, ih_start_valid, ih_end_valid);
                 ow = dst_1x16_end_w;
             }
             for (; ow < dst_w; ++ow) {
@@ -340,13 +354,20 @@ ppl::common::RetCode averagepool2d_n8chw_1x16_fp16_impl(const ppl::nn::TensorSha
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode averagepool2d_n8chw_1x16_fp16(const ppl::nn::TensorShape* src_shape,
-                                                   const ppl::nn::TensorShape* dst_shape, const int32_t kernel_h,
-                                                   const int32_t kernel_w, const int32_t stride_h,
-                                                   const int32_t stride_w, const int32_t pad_h, const int32_t pad_w,
-                                                   const int32_t pooling_mode,
+ppl::common::RetCode averagepool2d_n8chw_1x16_fp16(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const int32_t kernel_h,
+    const int32_t kernel_w,
+    const int32_t stride_h,
+    const int32_t stride_w,
+    const int32_t pad_h,
+    const int32_t pad_w,
+    const int32_t pooling_mode,
 
-                                                   const __fp16* src, __fp16* dst) {
+    const __fp16* src,
+    __fp16* dst)
+{
     if (pooling_mode == ppl::nn::common::PoolingParam::POOLING_AVERAGE_EXCLUDE) {
         return averagepool2d_n8chw_1x16_fp16_impl<ppl::nn::common::PoolingParam::POOLING_AVERAGE_EXCLUDE>(
             src_shape, dst_shape, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, src, dst);

@@ -24,8 +24,12 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <typename eT>
-ppl::common::RetCode argmax_ndarray(const ppl::nn::TensorShape* src_shape, const eT* src, const int64_t axis,
-                                    int64_t* dst) {
+ppl::common::RetCode argmax_ndarray(
+    const ppl::nn::TensorShape* src_shape,
+    const eT* src,
+    const int64_t axis,
+    int64_t* dst)
+{
     eT numeric_min = std::numeric_limits<eT>().min();
     if (std::is_same<eT, float>().value || std::is_same<eT, double>().value || std::is_same<eT, long double>().value) {
         numeric_min = -std::numeric_limits<eT>().max();

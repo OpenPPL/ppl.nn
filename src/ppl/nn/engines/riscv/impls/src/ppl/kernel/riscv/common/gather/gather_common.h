@@ -24,11 +24,17 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <typename T>
-ppl::common::RetCode gather_ndarray_common(const T* src, T* dst,
+ppl::common::RetCode gather_ndarray_common(
+    const T* src,
+    T* dst,
 
-                                           const int64_t* indices, const int64_t outer_dim, const int64_t gather_dim,
-                                           const int64_t inner_dim, const int64_t num_indices,
-                                           const int64_t indices_dim) {
+    const int64_t* indices,
+    const int64_t outer_dim,
+    const int64_t gather_dim,
+    const int64_t inner_dim,
+    const int64_t num_indices,
+    const int64_t indices_dim)
+{
     if (inner_dim >= 4) {
         for (int64_t o = 0; o < outer_dim; ++o) {
             for (int64_t k = 0; k < num_indices; ++k) {

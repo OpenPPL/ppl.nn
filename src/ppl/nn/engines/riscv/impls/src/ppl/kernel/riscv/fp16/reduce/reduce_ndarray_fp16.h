@@ -24,90 +24,47 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <reduce_op_type_t op>
-static void reduce_ndarray_lastdim_no_reduce_fp16(const __fp16* src, __fp16* dst,
+static void reduce_ndarray_lastdim_no_reduce_fp16(
+    const __fp16* src,
+    __fp16* dst,
 
-                                                  const int64_t dim_len) {
+    const int64_t dim_len)
+{
     const int64_t parall_d = 16;
     const int64_t unroll_len = parall_d * 8;
     const auto vl = vsetvli(8, RVV_E16, RVV_M1);
 
     int64_t i = 0;
     for (; i + unroll_len < dim_len; i += unroll_len) {
-        vsev_float16xm1(
-            dst + i + 0 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 0 * 8, vl), vlev_float16xm1(dst + i + 0 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 1 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 1 * 8, vl), vlev_float16xm1(dst + i + 1 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 2 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 2 * 8, vl), vlev_float16xm1(dst + i + 2 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 3 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 3 * 8, vl), vlev_float16xm1(dst + i + 3 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 4 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 4 * 8, vl), vlev_float16xm1(dst + i + 4 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 5 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 5 * 8, vl), vlev_float16xm1(dst + i + 5 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 6 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 6 * 8, vl), vlev_float16xm1(dst + i + 6 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 7 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 7 * 8, vl), vlev_float16xm1(dst + i + 7 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 8 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 8 * 8, vl), vlev_float16xm1(dst + i + 8 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 9 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 9 * 8, vl), vlev_float16xm1(dst + i + 9 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 10 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 10 * 8, vl), vlev_float16xm1(dst + i + 10 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 11 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 11 * 8, vl), vlev_float16xm1(dst + i + 11 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 12 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 12 * 8, vl), vlev_float16xm1(dst + i + 12 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 13 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 13 * 8, vl), vlev_float16xm1(dst + i + 13 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 14 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 14 * 8, vl), vlev_float16xm1(dst + i + 14 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 15 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 15 * 8, vl), vlev_float16xm1(dst + i + 15 * 8, vl)),
-            vl);
+        vsev_float16xm1(dst + i + 0 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 0 * 8, vl), vlev_float16xm1(dst + i + 0 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 1 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 1 * 8, vl), vlev_float16xm1(dst + i + 1 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 2 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 2 * 8, vl), vlev_float16xm1(dst + i + 2 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 3 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 3 * 8, vl), vlev_float16xm1(dst + i + 3 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 4 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 4 * 8, vl), vlev_float16xm1(dst + i + 4 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 5 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 5 * 8, vl), vlev_float16xm1(dst + i + 5 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 6 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 6 * 8, vl), vlev_float16xm1(dst + i + 6 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 7 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 7 * 8, vl), vlev_float16xm1(dst + i + 7 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 8 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 8 * 8, vl), vlev_float16xm1(dst + i + 8 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 9 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 9 * 8, vl), vlev_float16xm1(dst + i + 9 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 10 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 10 * 8, vl), vlev_float16xm1(dst + i + 10 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 11 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 11 * 8, vl), vlev_float16xm1(dst + i + 11 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 12 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 12 * 8, vl), vlev_float16xm1(dst + i + 12 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 13 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 13 * 8, vl), vlev_float16xm1(dst + i + 13 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 14 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 14 * 8, vl), vlev_float16xm1(dst + i + 14 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 15 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 15 * 8, vl), vlev_float16xm1(dst + i + 15 * 8, vl)), vl);
     }
     for (; i < dim_len; i += 8) {
-        vsev_float16xm1(dst + i,
-                        reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i, vl), vlev_float16xm1(dst + i, vl)), vl);
+        vsev_float16xm1(dst + i, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i, vl), vlev_float16xm1(dst + i, vl)), vl);
     }
 }
 
 template <reduce_op_type_t op>
-static void reduce_ndarray_lastdim_reduce_fp16(const __fp16* src, __fp16* dst,
+static void reduce_ndarray_lastdim_reduce_fp16(
+    const __fp16* src,
+    __fp16* dst,
 
-                                               const int64_t dim_len) {
+    const int64_t dim_len)
+{
     const auto vl = vsetvli(8, RVV_E16, RVV_M1);
     const __fp16 init_val = reduce_init_val_fp16<op>();
     float16xm1_t v_tmp0 = vfmvvf_float16xm1(init_val, vl);
@@ -183,10 +140,16 @@ static void reduce_ndarray_lastdim_reduce_fp16(const __fp16* src, __fp16* dst,
 }
 
 template <reduce_op_type_t op>
-static void reduce_ndarray_recursive_fp16(const __fp16* src, __fp16* dst,
+static void reduce_ndarray_recursive_fp16(
+    const __fp16* src,
+    __fp16* dst,
 
-                                          const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape,
-                                          const int64_t dim_idx, const int64_t* inc_src, const int64_t* inc_dst) {
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const int64_t dim_idx,
+    const int64_t* inc_src,
+    const int64_t* inc_dst)
+{
     const int64_t len = src_shape->GetDim(dim_idx);
     if (dim_idx == src_shape->GetDimCount() - 1) {
         if (src_shape->GetDim(dim_idx) == dst_shape->GetDim(dim_idx)) {
@@ -204,10 +167,15 @@ static void reduce_ndarray_recursive_fp16(const __fp16* src, __fp16* dst,
 }
 
 template <reduce_op_type_t op>
-ppl::common::RetCode reduce_ndarray_fp16(const __fp16* src, __fp16* dst,
+ppl::common::RetCode reduce_ndarray_fp16(
+    const __fp16* src,
+    __fp16* dst,
 
-                                         const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape,
-                                         const int32_t* axes, const int32_t num_axes) {
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const int32_t* axes,
+    const int32_t num_axes)
+{
     if (src_shape->GetDimCount() > PPL_RISCV_TENSOR_MAX_DIMS()) {
         return ppl::common::RC_UNSUPPORTED;
     }

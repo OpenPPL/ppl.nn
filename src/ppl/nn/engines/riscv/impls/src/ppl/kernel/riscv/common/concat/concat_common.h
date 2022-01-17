@@ -26,10 +26,14 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <typename T, int32_t c_blk>
-ppl::common::RetCode concat_nbcx(const T** src_list, T* dst,
+ppl::common::RetCode concat_nbcx(
+    const T** src_list,
+    T* dst,
 
-                                 const ppl::nn::TensorShape** src_shape_list, const int32_t num_src,
-                                 const int32_t c_axis) {
+    const ppl::nn::TensorShape** src_shape_list,
+    const int32_t num_src,
+    const int32_t c_axis)
+{
     const int32_t ndims = int32_t(src_shape_list[0]->GetDimCount());
     const int32_t axis = c_axis < 0 ? ndims + c_axis : c_axis;
     const int32_t c_dim_idx = 1;
@@ -88,10 +92,14 @@ ppl::common::RetCode concat_nbcx(const T** src_list, T* dst,
 }
 
 template <typename T>
-ppl::common::RetCode concat_ndarray(const T** src_list, T* dst,
+ppl::common::RetCode concat_ndarray(
+    const T** src_list,
+    T* dst,
 
-                                    const ppl::nn::TensorShape** src_shape_list, const int32_t num_src,
-                                    const int32_t c_axis) {
+    const ppl::nn::TensorShape** src_shape_list,
+    const int32_t num_src,
+    const int32_t c_axis)
+{
     const int32_t ndims = int32_t(src_shape_list[0]->GetDimCount());
     const int32_t axis = c_axis < 0 ? ndims + c_axis : c_axis;
 
@@ -123,10 +131,15 @@ ppl::common::RetCode concat_ndarray(const T** src_list, T* dst,
 }
 
 template <typename T, int32_t c_blk>
-ppl::common::RetCode concat_nbcx_interleave_channels(const T** src_list, T* dst,
+ppl::common::RetCode concat_nbcx_interleave_channels(
+    const T** src_list,
+    T* dst,
 
-                                                     const ppl::nn::TensorShape** src_shape_list, const int32_t num_src,
-                                                     const int32_t axis, const int32_t c_dim_idx) {
+    const ppl::nn::TensorShape** src_shape_list,
+    const int32_t num_src,
+    const int32_t axis,
+    const int32_t c_dim_idx)
+{
     const int32_t ndims = int32_t(src_shape_list[0]->GetDimCount());
     int64_t outer_dim = 1;
     int64_t inner_dim = 1;

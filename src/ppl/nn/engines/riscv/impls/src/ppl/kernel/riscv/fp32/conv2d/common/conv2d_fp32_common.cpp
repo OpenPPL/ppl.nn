@@ -124,9 +124,12 @@ conv2d_common_algo_info conv2d_fp32_algo_selector::select_best_algo(const void* 
 conv2d_common_algo_info conv2d_fp32_algo_selector::select_algo(const ppl::nn::TensorShape& input_shape,
                                                                const conv2d_common_param& param) {
     LOG(DEBUG) << "RISCV FP32 CONV select algo";
-    static conv2d_common_algo_info unknown_info = {conv2d_common_algo::unknown, ppl::common::DATAFORMAT_UNKNOWN,
-                                                   ppl::common::DATAFORMAT_UNKNOWN, ppl::common::DATATYPE_FLOAT32,
-                                                   ppl::common::DATATYPE_FLOAT32};
+    static conv2d_common_algo_info unknown_info = {
+        conv2d_common_algo::unknown,
+        ppl::common::DATAFORMAT_UNKNOWN,
+        ppl::common::DATAFORMAT_UNKNOWN,
+        ppl::common::DATATYPE_FLOAT32,
+        ppl::common::DATATYPE_FLOAT32};
 
     if (param.dilation_h != 1 || param.dilation_w != 1) {
         return unknown_info;
@@ -134,35 +137,58 @@ conv2d_common_algo_info conv2d_fp32_algo_selector::select_algo(const ppl::nn::Te
 
     if (ppl::common::DATAFORMAT_NDARRAY == input_shape.GetDataFormat()) {
         if (param.group == 1) {
-            return {conv2d_common_algo::tile_gemm, ppl::common::DATAFORMAT_NDARRAY, ppl::common::DATAFORMAT_N4CX,
-                    ppl::common::DATATYPE_FLOAT32, ppl::common::DATATYPE_FLOAT32};
+            return {
+                conv2d_common_algo::tile_gemm,
+                ppl::common::DATAFORMAT_NDARRAY,
+                ppl::common::DATAFORMAT_N4CX,
+                ppl::common::DATATYPE_FLOAT32,
+                ppl::common::DATATYPE_FLOAT32};
         }
     }
 
     if (ppl::common::DATAFORMAT_N4CX == input_shape.GetDataFormat()) {
         if (param.group == 1 && param.kernel_h == 1 && param.kernel_w == 1 && param.pad_h == 0 && param.pad_w == 0 &&
             param.stride_h == 1 && param.stride_w == 1 && param.dilation_h == 1 && param.dilation_w == 1) {
-            return {conv2d_common_algo::gemm, ppl::common::DATAFORMAT_N4CX, ppl::common::DATAFORMAT_N4CX,
-                    ppl::common::DATATYPE_FLOAT32, ppl::common::DATATYPE_FLOAT32};
+            return {
+                conv2d_common_algo::gemm,
+                ppl::common::DATAFORMAT_N4CX,
+                ppl::common::DATAFORMAT_N4CX,
+                ppl::common::DATATYPE_FLOAT32,
+                ppl::common::DATATYPE_FLOAT32};
         }
         if (param.group == param.num_output && param.num_output == param.channels) {
-            return {conv2d_common_algo::depthwise, ppl::common::DATAFORMAT_N4CX, ppl::common::DATAFORMAT_N4CX,
-                    ppl::common::DATATYPE_FLOAT32, ppl::common::DATATYPE_FLOAT32};
+            return {
+                conv2d_common_algo::depthwise,
+                ppl::common::DATAFORMAT_N4CX,
+                ppl::common::DATAFORMAT_N4CX,
+                ppl::common::DATATYPE_FLOAT32,
+                ppl::common::DATATYPE_FLOAT32};
         } else {
             if (param.kernel_h == 3 && param.kernel_w == 3 && param.stride_h == 1 && param.stride_w == 1) {
-                return {// conv2d_common_algo::winograd_b2f3,
-                        conv2d_common_algo::winograd_b4f3,
-                        // conv2d_common_algo::winograd_b6f3,
-                        ppl::common::DATAFORMAT_N4CX, ppl::common::DATAFORMAT_N4CX, ppl::common::DATATYPE_FLOAT32,
-                        ppl::common::DATATYPE_FLOAT32};
+                return {
+                    // conv2d_common_algo::winograd_b2f3,
+                    conv2d_common_algo::winograd_b4f3,
+                    // conv2d_common_algo::winograd_b6f3,
+                    ppl::common::DATAFORMAT_N4CX,
+                    ppl::common::DATAFORMAT_N4CX,
+                    ppl::common::DATATYPE_FLOAT32,
+                    ppl::common::DATATYPE_FLOAT32};
             } else {
-                return {conv2d_common_algo::tile_gemm, ppl::common::DATAFORMAT_N4CX, ppl::common::DATAFORMAT_N4CX,
-                        ppl::common::DATATYPE_FLOAT32, ppl::common::DATATYPE_FLOAT32};
+                return {
+                    conv2d_common_algo::tile_gemm,
+                    ppl::common::DATAFORMAT_N4CX,
+                    ppl::common::DATAFORMAT_N4CX,
+                    ppl::common::DATATYPE_FLOAT32,
+                    ppl::common::DATATYPE_FLOAT32};
             }
         }
     } else {
-        return {conv2d_common_algo::tile_gemm, ppl::common::DATAFORMAT_N4CX, ppl::common::DATAFORMAT_N4CX,
-                ppl::common::DATATYPE_FLOAT32, ppl::common::DATATYPE_FLOAT32};
+        return {
+            conv2d_common_algo::tile_gemm,
+            ppl::common::DATAFORMAT_N4CX,
+            ppl::common::DATAFORMAT_N4CX,
+            ppl::common::DATATYPE_FLOAT32,
+            ppl::common::DATATYPE_FLOAT32};
     }
 
     return unknown_info;

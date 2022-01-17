@@ -22,93 +22,75 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-typedef void (*conv_gemm_riscv_kernel_m8nx)(const __fp16* kernel_A, const __fp16* kernel_B, __fp16* kernel_C, int64_t k,
-                                            int64_t total_n);
+typedef void (*conv_gemm_riscv_kernel_m8nx)(const __fp16* kernel_A, const __fp16* kernel_B, __fp16* kernel_C, int64_t k, int64_t total_n);
 
-typedef void (*conv_gemm_riscv_kernel_func_type_t)(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                                   int64_t k);
+typedef void (*conv_gemm_riscv_kernel_func_type_t)(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void gemm_common_m8n16_left15_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                              int64_t k);
+void gemm_common_m8n16_left15_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 void gemm_common_m8n16_left15_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
-void gemm_common_m8n16_left14_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                              int64_t k);
+void gemm_common_m8n16_left14_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 void gemm_common_m8n16_left14_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
-void gemm_common_m8n16_left13_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                              int64_t k);
+void gemm_common_m8n16_left13_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 void gemm_common_m8n16_left13_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
-void gemm_common_m8n16_left12_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                              int64_t k);
+void gemm_common_m8n16_left12_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 void gemm_common_m8n16_left12_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
-void gemm_common_m8n16_left11_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                              int64_t k);
+void gemm_common_m8n16_left11_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 void gemm_common_m8n16_left11_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
-void gemm_common_m8n16_left10_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                              int64_t k);
+void gemm_common_m8n16_left10_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 void gemm_common_m8n16_left10_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
-void gemm_common_m8n16_left9_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                             int64_t k);
+void gemm_common_m8n16_left9_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 void gemm_common_m8n16_left9_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
-void gemm_common_m8n16_left8_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                             int64_t k);
+void gemm_common_m8n16_left8_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 void gemm_common_m8n16_left8_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
-void gemm_common_m8n16_left7_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                             int64_t k);
+void gemm_common_m8n16_left7_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 void gemm_common_m8n16_left7_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
-void gemm_common_m8n16_left6_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                             int64_t k);
+void gemm_common_m8n16_left6_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 void gemm_common_m8n16_left6_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
-void gemm_common_m8n16_left5_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                             int64_t k);
+void gemm_common_m8n16_left5_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 void gemm_common_m8n16_left5_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
-void gemm_common_m8n16_left4_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                             int64_t k);
+void gemm_common_m8n16_left4_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 void gemm_common_m8n16_left4_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
-void gemm_common_m8n16_left3_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                             int64_t k);
+void gemm_common_m8n16_left3_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 void gemm_common_m8n16_left3_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
-void gemm_common_m8n16_left2_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                             int64_t k);
+void gemm_common_m8n16_left2_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 void gemm_common_m8n16_left2_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
-void gemm_common_m8n16_left1_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                             int64_t k);
+void gemm_common_m8n16_left1_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 void gemm_common_m8n16_left1_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
-void gemm_common_m8n16_left0_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n,
-                                             int64_t k);
+void gemm_common_m8n16_left0_first_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
 void gemm_common_m8n16_left0_rv64_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k);
 
@@ -116,9 +98,18 @@ void gemm_common_m8n16_left0_rv64_fp16(const __fp16* A, const __fp16* B, __fp16*
 }
 #endif
 
-template <int64_t align_n, int64_t align_left_n, conv_gemm_riscv_kernel_m8nx core_func,
-          conv_gemm_riscv_kernel_m8nx core_left_func>
-static void conv_gemm_cto8c_kernel_fp16(const __fp16* A, const __fp16* B, __fp16* C, int64_t m, int64_t n, int64_t k) {
+template <int64_t align_n,
+    int64_t align_left_n,
+    conv_gemm_riscv_kernel_m8nx core_func,
+    conv_gemm_riscv_kernel_m8nx core_left_func>
+static void conv_gemm_cto8c_kernel_fp16(
+    const __fp16* A,
+    const __fp16* B,
+    __fp16* C,
+    int64_t m,
+    int64_t n,
+    int64_t k)
+{
     int64_t mi, ni;
 
     int64_t kernel_m_stride = k * 8;

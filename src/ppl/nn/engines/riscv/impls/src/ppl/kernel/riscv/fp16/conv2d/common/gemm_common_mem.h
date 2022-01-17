@@ -23,13 +23,21 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <bool with_relu>
-void conv_gemm_dst_blk_trans_o8_fp16(__fp16* dst_blk, int64_t dst_blk_h, int64_t dst_blk_w,
+void conv_gemm_dst_blk_trans_o8_fp16(
+    __fp16* dst_blk,
+    int64_t dst_blk_h,
+    int64_t dst_blk_w,
 
-                                     __fp16* dst, int64_t dst_h, int64_t dst_w,
+    __fp16* dst,
+    int64_t dst_h,
+    int64_t dst_w,
 
-                                     int64_t real_dst_blk_m, int64_t real_dst_blk_h, int64_t real_dst_blk_w,
+    int64_t real_dst_blk_m,
+    int64_t real_dst_blk_h,
+    int64_t real_dst_blk_w,
 
-                                     const __fp16* bias) {
+    const __fp16* bias)
+{
     const int64_t atom_c = 8;
     const int64_t num_unroll = 8;
     const auto vl = vsetvli(atom_c, RVV_E16, RVV_M1);

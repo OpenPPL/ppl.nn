@@ -34,17 +34,29 @@ struct conv_tile_gemm_tunning_info {
 };
 
 template <int64_t atom_c>
-void tile_gemm_src_blk_im2col_nxchw(const __fp16* src, int64_t src_h, int64_t src_w, int64_t dst_h, int64_t dst_w,
-                                    int64_t flt_h, int64_t flt_w, int64_t pad_h, int64_t pad_w, int64_t stride_h,
-                                    int64_t stride_w,
-                                    // int64_t hole_h,
-                                    // int64_t hole_w,
-                                    int64_t channels,
+void tile_gemm_src_blk_im2col_nxchw(
+    const __fp16* src,
+    int64_t src_h,
+    int64_t src_w,
+    int64_t dst_h,
+    int64_t dst_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t pad_h,
+    int64_t pad_w,
+    int64_t stride_h,
+    int64_t stride_w,
+    // int64_t hole_h,
+    // int64_t hole_w,
+    int64_t channels,
 
-                                    int64_t tile_gemm_dst_h_beg, int64_t tile_gemm_dst_h_blk,
-                                    int64_t tile_gemm_dst_w_beg, int64_t tile_gemm_dst_w_blk,
+    int64_t tile_gemm_dst_h_beg,
+    int64_t tile_gemm_dst_h_blk,
+    int64_t tile_gemm_dst_w_beg,
+    int64_t tile_gemm_dst_w_blk,
 
-                                    __fp16* src_trans) {
+    __fp16* src_trans)
+{
     int64_t pad_channels = round_up(channels, atom_c);
     int64_t src_h_beg = tile_gemm_dst_h_beg * stride_h - pad_h;
     int64_t src_w_beg = tile_gemm_dst_w_beg * stride_w - pad_w;
@@ -118,15 +130,30 @@ void tile_gemm_src_blk_im2col_nxchw(const __fp16* src, int64_t src_h, int64_t sr
 }
 
 template <int64_t atom_ic>
-void conv_tile_gemm_riscv_xcto8c_per_group_fp16(const __fp16* src, const __fp16* filter, const __fp16* bias,
-                                                __fp16* temp_buffer, __fp16* dst,
+void conv_tile_gemm_riscv_xcto8c_per_group_fp16(
+    const __fp16* src,
+    const __fp16* filter,
+    const __fp16* bias,
+    __fp16* temp_buffer,
+    __fp16* dst,
 
-                                                int64_t src_h, int64_t src_w, int64_t pad_h, int64_t pad_w,
-                                                int64_t flt_h, int64_t flt_w, int64_t stride_h, int64_t stride_w,
-                                                int64_t hole_h, int64_t hole_w, int64_t dst_h, int64_t dst_w,
-                                                int64_t ic, int64_t oc,
+    int64_t src_h,
+    int64_t src_w,
+    int64_t pad_h,
+    int64_t pad_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t stride_h,
+    int64_t stride_w,
+    int64_t hole_h,
+    int64_t hole_w,
+    int64_t dst_h,
+    int64_t dst_w,
+    int64_t ic,
+    int64_t oc,
 
-                                                conv_tile_gemm_tunning_info tunning_info) {
+    conv_tile_gemm_tunning_info tunning_info)
+{
     const int64_t atom_oc = 8;
 
     int64_t tile_gemm_m_blk = round_up(tunning_info.tile_gemm_m_blk, atom_oc);
@@ -155,12 +182,26 @@ void conv_tile_gemm_riscv_xcto8c_per_group_fp16(const __fp16* src, const __fp16*
 
             auto filter_temp = filter;
 
-            tile_gemm_src_blk_im2col_nxchw<atom_ic>(src, src_h, src_w, dst_h, dst_w, flt_h, flt_w, pad_h, pad_w,
-                                                    stride_h, stride_w, ic,
+            tile_gemm_src_blk_im2col_nxchw<atom_ic>(
+                src,
+                src_h,
+                src_w,
+                dst_h,
+                dst_w,
+                flt_h,
+                flt_w,
+                pad_h,
+                pad_w,
+                stride_h,
+                stride_w,
+                ic,
 
-                                                    dst_h_beg, real_dst_h_blk, dst_w_beg, real_dst_w_blk,
+                dst_h_beg,
+                real_dst_h_blk,
+                dst_w_beg,
+                real_dst_w_blk,
 
-                                                    src_trans);
+                src_trans);
 
             for (int64_t m_beg = 0; m_beg < total_m; m_beg += tile_gemm_m_blk) {
                 int64_t real_m_blk = min(tile_gemm_m_blk, total_m - m_beg);
@@ -172,13 +213,20 @@ void conv_tile_gemm_riscv_xcto8c_per_group_fp16(const __fp16* src, const __fp16*
                 auto dst_ptr = dst + m_beg * (dst_h * dst_w) + dst_h_beg * dst_w * atom_oc + dst_w_beg * atom_oc;
                 auto bias_ptr = bias + m_beg;
 
-                conv_gemm_dst_blk_trans_o8_fp16<false>(dst_blk, real_dst_h_blk, real_dst_w_blk,
+                conv_gemm_dst_blk_trans_o8_fp16<false>(
+                    dst_blk,
+                    real_dst_h_blk,
+                    real_dst_w_blk,
 
-                                                       dst_ptr, dst_h, dst_w,
+                    dst_ptr,
+                    dst_h,
+                    dst_w,
 
-                                                       real_m_blk, real_dst_h_blk, real_dst_w_blk,
+                    real_m_blk,
+                    real_dst_h_blk,
+                    real_dst_w_blk,
 
-                                                       bias_ptr);
+                    bias_ptr);
 
                 filter_temp += real_m_blk * total_k;
             }
@@ -187,8 +235,13 @@ void conv_tile_gemm_riscv_xcto8c_per_group_fp16(const __fp16* src, const __fp16*
 }
 
 template <int64_t atom_ic>
-size_t conv_tile_gemm_get_cvt_filter_size_riscv_xcto8c_fp16(int64_t flt_h, int64_t flt_w, int64_t channels,
-                                                            int64_t num_outs, int64_t group) {
+size_t conv_tile_gemm_get_cvt_filter_size_riscv_xcto8c_fp16(
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t channels,
+    int64_t num_outs,
+    int64_t group)
+{
     const int64_t atom_oc = 8;
 
     int64_t num_outs_per_group = num_outs / group;
@@ -202,9 +255,16 @@ size_t conv_tile_gemm_get_cvt_filter_size_riscv_xcto8c_fp16(int64_t flt_h, int64
 }
 
 template <int64_t atom_ic>
-static void conv_tile_gemm_cvt_filter_xcto8c_kernel_fp16(const __fp16* filter, int64_t flt_h, int64_t flt_w,
-                                                         int64_t num_outs, int64_t channels, int64_t tile_gemm_m_blk,
-                                                         int64_t tile_gemm_k_blk, __fp16* filter_cvt) {
+static void conv_tile_gemm_cvt_filter_xcto8c_kernel_fp16(
+    const __fp16* filter,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t num_outs,
+    int64_t channels,
+    int64_t tile_gemm_m_blk,
+    int64_t tile_gemm_k_blk,
+    __fp16* filter_cvt)
+{
     const int64_t atom_oc = 8;
 
     tile_gemm_m_blk = round_up(tile_gemm_m_blk, atom_oc);
@@ -243,9 +303,17 @@ static void conv_tile_gemm_cvt_filter_xcto8c_kernel_fp16(const __fp16* filter, i
 }
 
 template <int64_t atom_ic>
-void conv_tile_gemm_cvt_filter_riscv_xcto8c_fp16(const __fp16* filter, int64_t flt_h, int64_t flt_w, int64_t num_outs,
-                                                 int64_t channels, int64_t group, int64_t tile_gemm_m_blk,
-                                                 int64_t tile_gemm_k_blk, __fp16* filter_cvt) {
+void conv_tile_gemm_cvt_filter_riscv_xcto8c_fp16(
+    const __fp16* filter,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t num_outs,
+    int64_t channels,
+    int64_t group,
+    int64_t tile_gemm_m_blk,
+    int64_t tile_gemm_k_blk,
+    __fp16* filter_cvt)
+{
     const int64_t atom_oc = 8;
 
     tile_gemm_m_blk = round_up(tile_gemm_m_blk, atom_oc);
@@ -262,9 +330,15 @@ void conv_tile_gemm_cvt_filter_riscv_xcto8c_fp16(const __fp16* filter, int64_t f
     int64_t filter_cvt_group_stride = flt_h * flt_w * pad_num_outs_per_group * pad_channels_per_group;
 
     for (int64_t g = 0; g < group; g += 1) {
-        conv_tile_gemm_cvt_filter_xcto8c_kernel_fp16<atom_ic>(filter_per_group, flt_h, flt_w, num_outs_per_group,
-                                                              channels_per_group, tile_gemm_m_blk, tile_gemm_k_blk,
-                                                              filter_cvt_per_group);
+        conv_tile_gemm_cvt_filter_xcto8c_kernel_fp16<atom_ic>(
+            filter_per_group,
+            flt_h,
+            flt_w,
+            num_outs_per_group,
+            channels_per_group,
+            tile_gemm_m_blk,
+            tile_gemm_k_blk,
+            filter_cvt_per_group);
 
         filter_per_group += filter_group_stride;
         filter_cvt_per_group += filter_cvt_group_stride;
@@ -272,13 +346,26 @@ void conv_tile_gemm_cvt_filter_riscv_xcto8c_fp16(const __fp16* filter, int64_t f
 }
 
 template <int64_t atom_ic>
-size_t tile_gemm_get_temp_buffer_size_riscv_xcto8c_fp16(int64_t src_h, int64_t src_w, int64_t padding_h,
-                                                        int64_t padding_w, int64_t stride_h, int64_t stride_w,
-                                                        int64_t flt_h, int64_t flt_w, int64_t hole_h, int64_t hole_w,
-                                                        int64_t channels, int64_t group, int64_t num_outs,
+size_t tile_gemm_get_temp_buffer_size_riscv_xcto8c_fp16(
+    int64_t src_h,
+    int64_t src_w,
+    int64_t padding_h,
+    int64_t padding_w,
+    int64_t stride_h,
+    int64_t stride_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t hole_h,
+    int64_t hole_w,
+    int64_t channels,
+    int64_t group,
+    int64_t num_outs,
 
-                                                        int64_t tile_gemm_m_blk, int64_t tile_gemm_dst_h_blk,
-                                                        int64_t tile_gemm_dst_w_blk, int64_t num_threads) {
+    int64_t tile_gemm_m_blk,
+    int64_t tile_gemm_dst_h_blk,
+    int64_t tile_gemm_dst_w_blk,
+    int64_t num_threads)
+{
     const int64_t atom_oc = 8;
 
     int64_t channels_per_group = channels / group;

@@ -25,7 +25,11 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <typename T>
-ppl::common::RetCode transpose2d_ndarray(const T* src, T* dst, const ppl::nn::TensorShape* src_shape) {
+ppl::common::RetCode transpose2d_ndarray(
+    const T* src,
+    T* dst,
+    const ppl::nn::TensorShape* src_shape)
+{
     const int32_t src_h = src_shape->GetDim(0);
     const int32_t src_w = src_shape->GetDim(1);
 
@@ -38,9 +42,13 @@ ppl::common::RetCode transpose2d_ndarray(const T* src, T* dst, const ppl::nn::Te
 }
 
 template <typename T>
-ppl::common::RetCode transpose3d_ndarray(const T* src, T* dst,
+ppl::common::RetCode transpose3d_ndarray(
+    const T* src,
+    T* dst,
 
-                                         const int32_t* perm, const ppl::nn::TensorShape* src_shape) {
+    const int32_t* perm,
+    const ppl::nn::TensorShape* src_shape)
+{
     const int32_t channels = src_shape->GetDim(0);
     const int32_t src_h = src_shape->GetDim(1);
     const int32_t src_w = src_shape->GetDim(2);
@@ -73,9 +81,13 @@ ppl::common::RetCode transpose3d_ndarray(const T* src, T* dst,
 }
 
 template <typename T>
-ppl::common::RetCode transpose4d_ndarray(const T* src, T* dst,
+ppl::common::RetCode transpose4d_ndarray(
+    const T* src,
+    T* dst,
 
-                                         const int32_t* perm, const ppl::nn::TensorShape* src_shape) {
+    const int32_t* perm,
+    const ppl::nn::TensorShape* src_shape)
+{
     const int32_t batch = src_shape->GetDim(0);
     const int32_t channels = src_shape->GetDim(1);
     const int32_t src_h = src_shape->GetDim(2);
@@ -116,11 +128,19 @@ ppl::common::RetCode transpose4d_ndarray(const T* src, T* dst,
 }
 
 template <typename T>
-void transpose_ndarray_recursive(const int64_t* src_dims, const int64_t* src_stride, const int64_t* dst_stride,
-                                 const int32_t* perm, const uint32_t dim_idx, const uint32_t dim_count,
-                                 const int64_t base_in_offset, const int64_t base_out_offset,
+void transpose_ndarray_recursive(
+    const int64_t* src_dims,
+    const int64_t* src_stride,
+    const int64_t* dst_stride,
+    const int32_t* perm,
+    const uint32_t dim_idx,
+    const uint32_t dim_count,
+    const int64_t base_in_offset,
+    const int64_t base_out_offset,
 
-                                 const T* src, T* dst) {
+    const T* src,
+    T* dst)
+{
     const int64_t length = src_dims[dim_idx];
     if (dim_idx == dim_count - 1) {
         for (int64_t i = 0; i < length; i++) {
@@ -128,17 +148,30 @@ void transpose_ndarray_recursive(const int64_t* src_dims, const int64_t* src_str
         }
     } else {
         for (int64_t i = 0; i < length; i++) {
-            transpose_ndarray_recursive<T>(src_dims, src_stride, dst_stride, perm, dim_idx, dim_count, base_in_offset,
-                                           base_out_offset, src, dst);
+            transpose_ndarray_recursive<T>(
+                src_dims,
+                src_stride,
+                dst_stride,
+                perm,
+                dim_idx,
+                dim_count,
+                base_in_offset,
+                base_out_offset,
+                src,
+                dst);
         }
     }
 }
 
 template <typename T>
-ppl::common::RetCode transpose_ndarray(const T* src, T* dst,
+ppl::common::RetCode transpose_ndarray(
+    const T* src,
+    T* dst,
 
-                                       const int32_t* perm, const ppl::nn::TensorShape* src_shape,
-                                       const ppl::nn::TensorShape* dst_shape) {
+    const int32_t* perm,
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape)
+{
     const uint32_t dim_count = src_shape->GetDimCount();
 
     if (dim_count > PPL_RISCV_TENSOR_MAX_DIMS()) {
@@ -180,10 +213,14 @@ ppl::common::RetCode transpose_ndarray(const T* src, T* dst,
 }
 
 template <typename T>
-ppl::common::RetCode transpose_ndarray_continous2d(const T* src, T* dst,
+ppl::common::RetCode transpose_ndarray_continous2d(
+    const T* src,
+    T* dst,
 
-                                                   const ppl::nn::TensorShape* src_shape, const uint32_t axis0,
-                                                   const uint32_t axis1) {
+    const ppl::nn::TensorShape* src_shape,
+    const uint32_t axis0,
+    const uint32_t axis1)
+{
     const uint32_t dim_count = src_shape->GetDimCount();
     const int64_t dim0 = src_shape->GetDim(axis0);
     const int64_t dim1 = src_shape->GetDim(axis1);

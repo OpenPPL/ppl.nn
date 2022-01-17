@@ -19,17 +19,25 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode transpose_ndarray_fp16(const __fp16* src, __fp16* dst,
+ppl::common::RetCode transpose_ndarray_fp16(
+    const __fp16* src,
+    __fp16* dst,
 
-                                            const int32_t* perm, const ppl::nn::TensorShape* src_shape,
-                                            const ppl::nn::TensorShape* dst_shape) {
+    const int32_t* perm,
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape)
+{
     return transpose_ndarray<__fp16>(src, dst, perm, src_shape, dst_shape);
 }
 
-ppl::common::RetCode transpose_ndarray_continous2d_fp16(const __fp16* src, __fp16* dst,
+ppl::common::RetCode transpose_ndarray_continous2d_fp16(
+    const __fp16* src,
+    __fp16* dst,
 
-                                                        const ppl::nn::TensorShape* src_shape, const uint32_t axis0,
-                                                        const uint32_t axis1) {
+    const ppl::nn::TensorShape* src_shape,
+    const uint32_t axis0,
+    const uint32_t axis1)
+{
     return transpose_ndarray_continous2d<__fp16>(src, dst, src_shape, axis0, axis1);
 }
 

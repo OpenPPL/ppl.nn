@@ -24,8 +24,12 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <arithmetic_op_type_t _op, bool fuse_relu>
-static ppl::common::RetCode arithmetic_eltwise_fp16(const ppl::nn::TensorShape* dst_shape, const __fp16* src0,
-                                                    const __fp16* src1, __fp16* dst) {
+static ppl::common::RetCode arithmetic_eltwise_fp16(
+    const ppl::nn::TensorShape* dst_shape,
+    const __fp16* src0,
+    const __fp16* src1,
+    __fp16* dst)
+{
     const int64_t total_len = dst_shape->GetElementsIncludingPadding();
     const int64_t parall_d = 16;
     const int64_t unroll_len = parall_d * 8;
@@ -42,38 +46,22 @@ static ppl::common::RetCode arithmetic_eltwise_fp16(const ppl::nn::TensorShape* 
         float16xm1_t vfdata8, vfdata9, vfdata10, vfdata11;
         float16xm1_t vfdata12, vfdata13, vfdata14, vfdata15;
 
-        vfdata0 =
-            arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 0 * 8, vl), vlev_float16xm1(src1_ + 0 * 8, vl));
-        vfdata1 =
-            arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 1 * 8, vl), vlev_float16xm1(src1_ + 1 * 8, vl));
-        vfdata2 =
-            arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 2 * 8, vl), vlev_float16xm1(src1_ + 2 * 8, vl));
-        vfdata3 =
-            arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 3 * 8, vl), vlev_float16xm1(src1_ + 3 * 8, vl));
-        vfdata4 =
-            arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 4 * 8, vl), vlev_float16xm1(src1_ + 4 * 8, vl));
-        vfdata5 =
-            arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 5 * 8, vl), vlev_float16xm1(src1_ + 5 * 8, vl));
-        vfdata6 =
-            arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 6 * 8, vl), vlev_float16xm1(src1_ + 6 * 8, vl));
-        vfdata7 =
-            arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 7 * 8, vl), vlev_float16xm1(src1_ + 7 * 8, vl));
-        vfdata8 =
-            arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 8 * 8, vl), vlev_float16xm1(src1_ + 8 * 8, vl));
-        vfdata9 =
-            arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 9 * 8, vl), vlev_float16xm1(src1_ + 9 * 8, vl));
-        vfdata10 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 10 * 8, vl),
-                                                      vlev_float16xm1(src1_ + 10 * 8, vl));
-        vfdata11 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 11 * 8, vl),
-                                                      vlev_float16xm1(src1_ + 11 * 8, vl));
-        vfdata12 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 12 * 8, vl),
-                                                      vlev_float16xm1(src1_ + 12 * 8, vl));
-        vfdata13 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 13 * 8, vl),
-                                                      vlev_float16xm1(src1_ + 13 * 8, vl));
-        vfdata14 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 14 * 8, vl),
-                                                      vlev_float16xm1(src1_ + 14 * 8, vl));
-        vfdata15 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 15 * 8, vl),
-                                                      vlev_float16xm1(src1_ + 15 * 8, vl));
+        vfdata0 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 0 * 8, vl), vlev_float16xm1(src1_ + 0 * 8, vl));
+        vfdata1 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 1 * 8, vl), vlev_float16xm1(src1_ + 1 * 8, vl));
+        vfdata2 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 2 * 8, vl), vlev_float16xm1(src1_ + 2 * 8, vl));
+        vfdata3 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 3 * 8, vl), vlev_float16xm1(src1_ + 3 * 8, vl));
+        vfdata4 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 4 * 8, vl), vlev_float16xm1(src1_ + 4 * 8, vl));
+        vfdata5 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 5 * 8, vl), vlev_float16xm1(src1_ + 5 * 8, vl));
+        vfdata6 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 6 * 8, vl), vlev_float16xm1(src1_ + 6 * 8, vl));
+        vfdata7 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 7 * 8, vl), vlev_float16xm1(src1_ + 7 * 8, vl));
+        vfdata8 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 8 * 8, vl), vlev_float16xm1(src1_ + 8 * 8, vl));
+        vfdata9 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 9 * 8, vl), vlev_float16xm1(src1_ + 9 * 8, vl));
+        vfdata10 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 10 * 8, vl), vlev_float16xm1(src1_ + 10 * 8, vl));
+        vfdata11 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 11 * 8, vl), vlev_float16xm1(src1_ + 11 * 8, vl));
+        vfdata12 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 12 * 8, vl), vlev_float16xm1(src1_ + 12 * 8, vl));
+        vfdata13 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 13 * 8, vl), vlev_float16xm1(src1_ + 13 * 8, vl));
+        vfdata14 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 14 * 8, vl), vlev_float16xm1(src1_ + 14 * 8, vl));
+        vfdata15 = arithmetic_vector_kernel_fp16<_op>(vlev_float16xm1(src0_ + 15 * 8, vl), vlev_float16xm1(src1_ + 15 * 8, vl));
 
         if (fuse_relu) {
             vsev_float16xm1(dst_ + 0 * 8, vfmaxvf_float16xm1(vfdata0, (__fp16)0.0f, vl), vl);

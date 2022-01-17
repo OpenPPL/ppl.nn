@@ -24,90 +24,49 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <reduce_op_type_t op>
-void reduce_n8cx_lastdim_no_reduce_fp16(const __fp16* src, __fp16* dst,
+void reduce_n8cx_lastdim_no_reduce_fp16(
+    const __fp16* src,
+    __fp16* dst,
 
-                                        const int64_t dim_length, const int64_t remain_c) {
+    const int64_t dim_length,
+    const int64_t remain_c)
+{
     const int64_t parall_d = 16;
     const int64_t unroll_len = parall_d * 8;
     const auto vl = vsetvli(8, RVV_E16, RVV_M1);
 
     int64_t i = 0;
     for (; i + unroll_len < dim_length * 8; i += unroll_len) {
-        vsev_float16xm1(
-            dst + i + 0 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 0 * 8, vl), vlev_float16xm1(dst + i + 0 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 1 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 1 * 8, vl), vlev_float16xm1(dst + i + 1 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 2 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 2 * 8, vl), vlev_float16xm1(dst + i + 2 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 3 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 3 * 8, vl), vlev_float16xm1(dst + i + 3 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 4 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 4 * 8, vl), vlev_float16xm1(dst + i + 4 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 5 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 5 * 8, vl), vlev_float16xm1(dst + i + 5 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 6 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 6 * 8, vl), vlev_float16xm1(dst + i + 6 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 7 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 7 * 8, vl), vlev_float16xm1(dst + i + 7 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 8 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 8 * 8, vl), vlev_float16xm1(dst + i + 8 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 9 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 9 * 8, vl), vlev_float16xm1(dst + i + 9 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 10 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 10 * 8, vl), vlev_float16xm1(dst + i + 10 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 11 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 11 * 8, vl), vlev_float16xm1(dst + i + 11 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 12 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 12 * 8, vl), vlev_float16xm1(dst + i + 12 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 13 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 13 * 8, vl), vlev_float16xm1(dst + i + 13 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 14 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 14 * 8, vl), vlev_float16xm1(dst + i + 14 * 8, vl)),
-            vl);
-        vsev_float16xm1(
-            dst + i + 15 * 8,
-            reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 15 * 8, vl), vlev_float16xm1(dst + i + 15 * 8, vl)),
-            vl);
+        vsev_float16xm1(dst + i + 0 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 0 * 8, vl), vlev_float16xm1(dst + i + 0 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 1 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 1 * 8, vl), vlev_float16xm1(dst + i + 1 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 2 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 2 * 8, vl), vlev_float16xm1(dst + i + 2 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 3 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 3 * 8, vl), vlev_float16xm1(dst + i + 3 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 4 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 4 * 8, vl), vlev_float16xm1(dst + i + 4 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 5 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 5 * 8, vl), vlev_float16xm1(dst + i + 5 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 6 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 6 * 8, vl), vlev_float16xm1(dst + i + 6 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 7 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 7 * 8, vl), vlev_float16xm1(dst + i + 7 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 8 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 8 * 8, vl), vlev_float16xm1(dst + i + 8 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 9 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 9 * 8, vl), vlev_float16xm1(dst + i + 9 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 10 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 10 * 8, vl), vlev_float16xm1(dst + i + 10 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 11 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 11 * 8, vl), vlev_float16xm1(dst + i + 11 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 12 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 12 * 8, vl), vlev_float16xm1(dst + i + 12 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 13 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 13 * 8, vl), vlev_float16xm1(dst + i + 13 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 14 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 14 * 8, vl), vlev_float16xm1(dst + i + 14 * 8, vl)), vl);
+        vsev_float16xm1(dst + i + 15 * 8, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i + 15 * 8, vl), vlev_float16xm1(dst + i + 15 * 8, vl)), vl);
     }
     for (; i < dim_length * 8; i += 8) {
-        vsev_float16xm1(dst + i,
-                        reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i, vl), vlev_float16xm1(dst + i, vl)), vl);
+        vsev_float16xm1(dst + i, reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i, vl), vlev_float16xm1(dst + i, vl)), vl);
     }
 }
 
 template <reduce_op_type_t op>
-void reduce_n8cx_lastdim_reduce_w_fp16(const __fp16* src, __fp16* dst,
+void reduce_n8cx_lastdim_reduce_w_fp16(
+    const __fp16* src,
+    __fp16* dst,
 
-                                       const int64_t dim_length, const int64_t remain_c) {
+    const int64_t dim_length,
+    const int64_t remain_c)
+{
     const int64_t parall_d = 1;
     const int64_t unroll_len = parall_d * 8;
     const auto vl = vsetvli(8, RVV_E16, RVV_M1);
@@ -122,9 +81,13 @@ void reduce_n8cx_lastdim_reduce_w_fp16(const __fp16* src, __fp16* dst,
 }
 
 template <reduce_op_type_t op>
-void reduce_n8cx_lastdim_reduce_c_fp16(const __fp16* src, __fp16* dst,
+void reduce_n8cx_lastdim_reduce_c_fp16(
+    const __fp16* src,
+    __fp16* dst,
 
-                                       const int64_t dim_length, const int64_t remain_c) {
+    const int64_t dim_length,
+    const int64_t remain_c)
+{
     const auto vl = vsetvli(8, RVV_E16, RVV_M1);
     if (remain_c >= 8) {
         int64_t i = 0;
@@ -137,9 +100,13 @@ void reduce_n8cx_lastdim_reduce_c_fp16(const __fp16* src, __fp16* dst,
 }
 
 template <reduce_op_type_t op>
-void reduce_n8cx_lastdim_reduce_cw_fp16(const __fp16* src, __fp16* dst,
+void reduce_n8cx_lastdim_reduce_cw_fp16(
+    const __fp16* src,
+    __fp16* dst,
 
-                                        const int64_t dim_length, const int64_t remain_c) {
+    const int64_t dim_length,
+    const int64_t remain_c)
+{
     const auto vl = vsetvli(8, RVV_E16, RVV_M1);
 
     if (remain_c >= 8) {
@@ -156,11 +123,18 @@ void reduce_n8cx_lastdim_reduce_cw_fp16(const __fp16* src, __fp16* dst,
 }
 
 template <reduce_op_type_t op>
-void reduce_n8cx_recursive_fp16(const __fp16* src, __fp16* dst,
+void reduce_n8cx_recursive_fp16(
+    const __fp16* src,
+    __fp16* dst,
 
-                                const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape,
-                                const int64_t dim_idx, const int64_t* inc_src, const int64_t* inc_dst,
-                                const int64_t c_dim_idx, int64_t remain_c) {
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const int64_t dim_idx,
+    const int64_t* inc_src,
+    const int64_t* inc_dst,
+    const int64_t c_dim_idx,
+    int64_t remain_c)
+{
     if (dim_idx == src_shape->GetDimCount() - 1) {
         const bool reduce_on_w = src_shape->GetDim(dim_idx) != dst_shape->GetDim(dim_idx);
         const bool reduce_on_c = src_shape->GetDim(c_dim_idx) != dst_shape->GetDim(c_dim_idx);
@@ -187,10 +161,16 @@ void reduce_n8cx_recursive_fp16(const __fp16* src, __fp16* dst,
 }
 
 template <reduce_op_type_t op>
-ppl::common::RetCode reduce_n8cx_fp16(const __fp16* src, __fp16* dst,
+ppl::common::RetCode reduce_n8cx_fp16(
+    const __fp16* src,
+    __fp16* dst,
 
-                                      const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape,
-                                      const int32_t* axes, const int32_t num_axes, const int64_t c_dim_idx) {
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const int32_t* axes,
+    const int32_t num_axes,
+    const int64_t c_dim_idx)
+{
     if (src_shape->GetDimCount() > PPL_RISCV_TENSOR_MAX_DIMS()) {
         return ppl::common::RC_UNSUPPORTED;
     }

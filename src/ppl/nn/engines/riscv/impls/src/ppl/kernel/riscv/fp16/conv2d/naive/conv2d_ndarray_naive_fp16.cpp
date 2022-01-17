@@ -22,16 +22,28 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-static size_t conv_naive_cto8c_get_cvt_filter_size_fp16(int64_t flt_h, int64_t flt_w, int64_t channels, int64_t group,
-                                                        int64_t num_outs) {
+static size_t conv_naive_cto8c_get_cvt_filter_size_fp16(
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t channels,
+    int64_t group,
+    int64_t num_outs)
+{
     int64_t channels_per_group = channels / group;
     int64_t num_outs_per_group = num_outs / group;
     int64_t num_elem = flt_h * flt_w * channels_per_group * num_outs_per_group * group;
     return num_elem * sizeof(__fp16);
 }
 
-static void conv_naive_cto8c_cvt_filter_fp16(const __fp16* filter, int64_t flt_h, int64_t flt_w, int64_t num_outs,
-                                             int64_t channels, int64_t group, __fp16* filter_cvt) {
+static void conv_naive_cto8c_cvt_filter_fp16(
+    const __fp16* filter,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t num_outs,
+    int64_t channels,
+    int64_t group,
+    __fp16* filter_cvt)
+{
     int64_t channels_per_group = channels / group;
     int64_t num_outs_per_group = num_outs / group;
     int64_t num_elem = flt_h * flt_w * channels_per_group * num_outs_per_group * group;
@@ -40,10 +52,19 @@ static void conv_naive_cto8c_cvt_filter_fp16(const __fp16* filter, int64_t flt_h
     }
 }
 
-static size_t conv_naive_cto8c_get_temp_buffer_size_fp16(int64_t src_h, int64_t src_w, int64_t padding_h,
-                                                         int64_t padding_w, int64_t stride_h, int64_t stride_w,
-                                                         int64_t flt_h, int64_t flt_w, int64_t channels, int64_t group,
-                                                         int64_t num_outs) {
+static size_t conv_naive_cto8c_get_temp_buffer_size_fp16(
+    int64_t src_h,
+    int64_t src_w,
+    int64_t padding_h,
+    int64_t padding_w,
+    int64_t stride_h,
+    int64_t stride_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t channels,
+    int64_t group,
+    int64_t num_outs)
+{
     int64_t src_pad_h = src_h + 2 * padding_h;
     int64_t src_pad_w = src_w + 2 * padding_w;
 
@@ -56,8 +77,15 @@ static size_t conv_naive_cto8c_get_temp_buffer_size_fp16(int64_t src_h, int64_t 
     return src_pad_size + dst_pad_size;
 }
 
-static void conv_naive_padding_src_cvt_fp16(int64_t src_h, int64_t src_w, int64_t pad_h, int64_t pad_w,
-                                            int64_t channels, const __fp16* src, __fp16* src_cvt) {
+static void conv_naive_padding_src_cvt_fp16(
+    int64_t src_h,
+    int64_t src_w,
+    int64_t pad_h,
+    int64_t pad_w,
+    int64_t channels,
+    const __fp16* src,
+    __fp16* src_cvt)
+{
     int64_t src_pad_h = src_h + 2 * pad_h;
     int64_t src_pad_w = src_w + 2 * pad_w;
 
@@ -75,8 +103,13 @@ static void conv_naive_padding_src_cvt_fp16(int64_t src_h, int64_t src_w, int64_
     }
 }
 
-static void conv_naive_cto8c_dst_cvt_fp16(int64_t dst_h, int64_t dst_w, int64_t num_outs, __fp16* dst,
-                                          __fp16* dst_cvt) {
+static void conv_naive_cto8c_dst_cvt_fp16(
+    int64_t dst_h,
+    int64_t dst_w,
+    int64_t num_outs,
+    __fp16* dst,
+    __fp16* dst_cvt)
+{
     int64_t dst_out_stride = dst_h * dst_w;
     int64_t dst_out_8c_stride = dst_out_stride * 8;
     int64_t pad_num_outs = round_up(num_outs, 8);
@@ -98,10 +131,23 @@ static void conv_naive_cto8c_dst_cvt_fp16(int64_t dst_h, int64_t dst_w, int64_t 
     }
 }
 
-static void conv_naive_kernel_riscv_fp16(const __fp16* src, int64_t src_h, int64_t src_w, int64_t dst_h, int64_t dst_w,
-                                         int64_t flt_h, int64_t flt_w, int64_t stride_h, int64_t stride_w,
-                                         int64_t channels, int64_t num_outs, int64_t num_threads, const __fp16* filter,
-                                         const __fp16* bias, __fp16* dst) {
+static void conv_naive_kernel_riscv_fp16(
+    const __fp16* src,
+    int64_t src_h,
+    int64_t src_w,
+    int64_t dst_h,
+    int64_t dst_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t stride_h,
+    int64_t stride_w,
+    int64_t channels,
+    int64_t num_outs,
+    int64_t num_threads,
+    const __fp16* filter,
+    const __fp16* bias,
+    __fp16* dst)
+{
     int64_t src_channel_stride = src_h * src_w;
     int64_t filter_channel_stride = flt_h * flt_w;
     int64_t dst_out_stride = dst_h * dst_w;
@@ -137,14 +183,32 @@ static void conv_naive_kernel_riscv_fp16(const __fp16* src, int64_t src_h, int64
     }
 }
 
-static void conv_naive_cto8c_general_riscv_fp16(const __fp16* src, int64_t src_h, int64_t src_w, int64_t padding_h,
-                                                int64_t padding_w, int64_t flt_h, int64_t flt_w, int64_t stride_h,
-                                                int64_t stride_w, int64_t group, int64_t channels, int64_t num_outs,
-                                                int64_t batch, int64_t channel_blk_size, int64_t h_blk_size,
-                                                int64_t w_blk_size, int64_t num_threads, const __fp16* filter,
-                                                const __fp16* bias, __fp16* dst, __fp16* temp_buffer,
+static void conv_naive_cto8c_general_riscv_fp16(
+    const __fp16* src,
+    int64_t src_h,
+    int64_t src_w,
+    int64_t padding_h,
+    int64_t padding_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t stride_h,
+    int64_t stride_w,
+    int64_t group,
+    int64_t channels,
+    int64_t num_outs,
+    int64_t batch,
+    int64_t channel_blk_size,
+    int64_t h_blk_size,
+    int64_t w_blk_size,
+    int64_t num_threads,
+    const __fp16* filter,
+    const __fp16* bias,
+    __fp16* dst,
+    __fp16* temp_buffer,
 
-                                                bool with_relu, bool reflect_pad) {
+    bool with_relu,
+    bool reflect_pad)
+{
     int64_t src_pad_h = src_h + 2 * padding_h;
     int64_t src_pad_w = src_w + 2 * padding_w;
 
@@ -176,8 +240,7 @@ static void conv_naive_cto8c_general_riscv_fp16(const __fp16* src, int64_t src_h
             auto filter_per_group = filter + g * flt_group_stride;
             auto bias_per_group = bias + g * bias_group_stride;
 
-            conv_naive_padding_src_cvt_fp16(src_h, src_w, padding_h, padding_w, channels_per_group, src_per_group,
-                                            temp_src);
+            conv_naive_padding_src_cvt_fp16(src_h, src_w, padding_h, padding_w, channels_per_group, src_per_group, temp_src);
             conv_naive_kernel_riscv_fp16(temp_src, src_pad_h, src_pad_w, dst_h, dst_w, flt_h, flt_w, stride_h, stride_w,
                                          channels_per_group, num_outs_per_group, num_threads, filter_per_group,
                                          bias_per_group, temp_dst_per_group);
@@ -221,16 +284,25 @@ ppl::common::RetCode conv2d_ndarray_naive_fp16_runtime_executor::execute() {
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    conv_naive_cto8c_general_riscv_fp16(src_,
-                                        src_shape_->GetDim(2), // src_h
-                                        src_shape_->GetDim(3), // src_w
-                                        conv_param_->pad_h, conv_param_->pad_w, conv_param_->kernel_h,
-                                        conv_param_->kernel_w, conv_param_->stride_h, conv_param_->stride_w,
-                                        conv_param_->group, conv_param_->channels, conv_param_->num_output,
-                                        src_shape_->GetDim(0), // batch
-                                        0, 0, 0, 0, cvt_filter_, cvt_bias_, dst_, (__fp16*)temp_buffer_,
+    conv_naive_cto8c_general_riscv_fp16(
+        src_,
+        src_shape_->GetDim(2), // src_h
+        src_shape_->GetDim(3), // src_w
+        conv_param_->pad_h, conv_param_->pad_w,
+        conv_param_->kernel_h, conv_param_->kernel_w,
+        conv_param_->stride_h, conv_param_->stride_w,
+        conv_param_->group,
+        conv_param_->channels,
+        conv_param_->num_output,
+        src_shape_->GetDim(0), // batch
+        0, 0, 0, 0,
+        cvt_filter_,
+        cvt_bias_,
+        dst_,
+        (__fp16*)temp_buffer_,
 
-                                        false, false);
+        false,
+        false);
 
     return ppl::common::RC_SUCCESS;
 }

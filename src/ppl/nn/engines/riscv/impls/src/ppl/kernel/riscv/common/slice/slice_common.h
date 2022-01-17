@@ -24,10 +24,17 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <typename T>
-ppl::common::RetCode slice_ndarray_recursive(const ppl::nn::TensorShape* src_shape,
-                                             const ppl::nn::TensorShape* dst_shape, const T* src, const int64_t* starts,
-                                             const int64_t* steps, const int64_t* stride_in, const int64_t* stride_out,
-                                             const int64_t dim_idx, T* dst) {
+ppl::common::RetCode slice_ndarray_recursive(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const T* src,
+    const int64_t* starts,
+    const int64_t* steps,
+    const int64_t* stride_in,
+    const int64_t* stride_out,
+    const int64_t dim_idx,
+    T* dst)
+{
     const int64_t dim_count = src_shape->GetDimCount();
     const int64_t output_length = dst_shape->GetDim(dim_idx);
 
@@ -39,8 +46,16 @@ ppl::common::RetCode slice_ndarray_recursive(const ppl::nn::TensorShape* src_sha
     } else {
         for (int64_t i = 0; i < output_length; i++) {
             const int64_t src_i = starts[dim_idx] + i * steps[dim_idx];
-            slice_ndarray_recursive<T>(src_shape, dst_shape, src + src_i * stride_in[dim_idx], starts, steps, stride_in,
-                                       stride_out, dim_idx + 1, dst + i * stride_out[dim_idx]);
+            slice_ndarray_recursive<T>(
+                src_shape,
+                dst_shape,
+                src + src_i * stride_in[dim_idx],
+                starts,
+                steps,
+                stride_in,
+                stride_out,
+                dim_idx + 1,
+                dst + i * stride_out[dim_idx]);
         }
     }
 
@@ -48,9 +63,16 @@ ppl::common::RetCode slice_ndarray_recursive(const ppl::nn::TensorShape* src_sha
 }
 
 template <typename T>
-ppl::common::RetCode slice_ndarray_common(const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape,
-                                          const T* src, const int64_t* starts, const int64_t* steps,
-                                          const int64_t* axes, const int64_t axes_num, T* dst) {
+ppl::common::RetCode slice_ndarray_common(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const T* src,
+    const int64_t* starts,
+    const int64_t* steps,
+    const int64_t* axes,
+    const int64_t axes_num,
+    T* dst)
+{
     const int64_t dim_count = src_shape->GetDimCount();
     if (dim_count > PPL_RISCV_TENSOR_MAX_DIMS()) {
         return ppl::common::RC_UNSUPPORTED;
@@ -93,8 +115,16 @@ ppl::common::RetCode slice_ndarray_common(const ppl::nn::TensorShape* src_shape,
         stride_out[i] = dst_shape->GetDim(i + 1) * stride_out[i + 1];
     }
 
-    return slice_ndarray_recursive<T>(src_shape, dst_shape, src, real_starts, real_steps, stride_in, stride_out, 0,
-                                      dst);
+    return slice_ndarray_recursive<T>(
+        src_shape,
+        dst_shape,
+        src,
+        real_starts,
+        real_steps,
+        stride_in,
+        stride_out,
+        0,
+        dst);
 }
 
 }}} // namespace ppl::kernel::riscv

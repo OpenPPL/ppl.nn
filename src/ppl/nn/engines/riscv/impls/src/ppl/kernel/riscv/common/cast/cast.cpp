@@ -21,8 +21,12 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <typename srcT, typename dstT>
-ppl::common::RetCode cast_kernel(const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape,
-                                 const srcT* src, dstT* dst) {
+ppl::common::RetCode cast_kernel(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const srcT* src,
+    dstT* dst)
+{
     const bool out_bool = dst_shape->GetDataType() == ppl::common::DATATYPE_BOOL;
     const uint64_t length = src_shape->GetElementsIncludingPadding();
 
@@ -39,8 +43,12 @@ ppl::common::RetCode cast_kernel(const ppl::nn::TensorShape* src_shape, const pp
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode cast(const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape, const void* src,
-                          void* dst) {
+ppl::common::RetCode cast(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const void* src,
+    void* dst)
+{
 #define MAKE_CAST_TYPE(idt, odt) (((uint32_t)idt << 16) | (uint32_t)odt)
 
     auto idt = src_shape->GetDataType();

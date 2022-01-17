@@ -27,8 +27,14 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <typename eT>
-ppl::common::RetCode split_ndarray(const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape** dst_shape_list,
-                                   const eT* src, const int32_t slice_axis, const int32_t num_dst, eT** dst_list) {
+ppl::common::RetCode split_ndarray(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape** dst_shape_list,
+    const eT* src,
+    const int32_t slice_axis,
+    const int32_t num_dst,
+    eT** dst_list) 
+{
     const int32_t ndims = src_shape->GetDimCount();
     const int32_t fixed_axis = slice_axis < 0 ? slice_axis + ndims : slice_axis;
     const int64_t src_split_dim = src_shape->GetDim(fixed_axis);
@@ -63,10 +69,15 @@ ppl::common::RetCode split_ndarray(const ppl::nn::TensorShape* src_shape, const 
 }
 
 template <typename eT, int64_t c_blk>
-ppl::common::RetCode split_nxcx_interleave_channels(const ppl::nn::TensorShape* src_shape,
-                                                    const ppl::nn::TensorShape** dst_shape_list, const eT* src,
-                                                    const int32_t slice_axis, const int32_t num_dst,
-                                                    const int32_t c_dim_idx, eT** dst_list) {
+ppl::common::RetCode split_nxcx_interleave_channels(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape** dst_shape_list,
+    const eT* src,
+    const int32_t slice_axis,
+    const int32_t num_dst,
+    const int32_t c_dim_idx,
+    eT** dst_list)
+{
     const int32_t ndims = src_shape->GetDimCount();
 
     int64_t outer_dims = 1;
@@ -137,8 +148,14 @@ ppl::common::RetCode split_nxcx_interleave_channels(const ppl::nn::TensorShape* 
 }
 
 template <typename eT, int64_t c_blk>
-ppl::common::RetCode split_nxcx(const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape** dst_shape_list,
-                                const eT* src, const int32_t slice_axis, const int32_t num_dst, eT** dst_list) {
+ppl::common::RetCode split_nxcx(
+    const ppl::nn::TensorShape* src_shape, 
+    const ppl::nn::TensorShape** dst_shape_list,
+    const eT* src,
+    const int32_t slice_axis,
+    const int32_t num_dst,
+    eT** dst_list)
+{
     const int32_t ndims = src_shape->GetDimCount();
     const int32_t fixed_axis = slice_axis < 0 ? slice_axis + ndims : slice_axis;
     const int64_t c_dim_idx = 1;
@@ -146,8 +163,14 @@ ppl::common::RetCode split_nxcx(const ppl::nn::TensorShape* src_shape, const ppl
     if (fixed_axis == 1) {
         for (int32_t i = 0; i < num_dst - 1; i++) {
             if (dst_shape_list[i]->GetDim(c_dim_idx) % c_blk != 0) {
-                return split_nxcx_interleave_channels<eT, c_blk>(src_shape, dst_shape_list, src, slice_axis, num_dst,
-                                                                 c_dim_idx, dst_list);
+                return split_nxcx_interleave_channels<eT, c_blk>(
+                    src_shape,
+                    dst_shape_list,
+                    src,
+                    slice_axis,
+                    num_dst,
+                    c_dim_idx,
+                    dst_list);
             }
         }
     }

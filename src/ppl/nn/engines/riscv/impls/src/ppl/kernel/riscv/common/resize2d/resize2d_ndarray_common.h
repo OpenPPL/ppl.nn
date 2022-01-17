@@ -26,9 +26,14 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <typename T>
-ppl::common::RetCode resize2d_ndarray_pytorch_linear_floor_common(const ppl::nn::TensorShape* src_shape,
-                                                                  const ppl::nn::TensorShape* dst_shape, const T* src,
-                                                                  const float scale_h, const float scale_w, T* dst) {
+ppl::common::RetCode resize2d_ndarray_pytorch_linear_floor_common(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const T* src,
+    const float scale_h,
+    const float scale_w,
+    T* dst)
+{
     const int64_t num_imgs = src_shape->GetDim(0) * src_shape->GetDim(1);
     const int64_t src_h = src_shape->GetDim(2);
     const int64_t src_w = src_shape->GetDim(3);
@@ -83,10 +88,14 @@ ppl::common::RetCode resize2d_ndarray_pytorch_linear_floor_common(const ppl::nn:
 }
 
 template <typename T>
-ppl::common::RetCode resize2d_ndarray_asymmetric_nearest_floor_common(const ppl::nn::TensorShape* src_shape,
-                                                                      const ppl::nn::TensorShape* dst_shape,
-                                                                      const T* src, const float scale_h,
-                                                                      const float scale_w, T* dst) {
+ppl::common::RetCode resize2d_ndarray_asymmetric_nearest_floor_common(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const T* src,
+    const float scale_h,
+    const float scale_w,
+    T* dst)
+{
     const int64_t num_imgs = src_shape->GetDim(0) * src_shape->GetDim(1);
     const int64_t src_h = src_shape->GetDim(2);
     const int64_t src_w = src_shape->GetDim(3);
@@ -127,7 +136,11 @@ ppl::common::RetCode resize2d_ndarray_asymmetric_nearest_floor_common(const ppl:
     return ppl::common::RC_SUCCESS;
 }
 
-inline void calc_resize_cubic_coeff(const float r, const float A, float* coeff) {
+inline void calc_resize_cubic_coeff(
+    const float r,
+    const float A,
+    float* coeff)
+{
     coeff[0] = ((A * (r + 1) - 5 * A) * (r + 1) + 8 * A) * (r + 1) - 4 * A;
     coeff[1] = ((A + 2) * r - (A + 3)) * r * r + 1;
     coeff[2] = ((A + 2) * (1 - r) - (A + 3)) * (1 - r) * (1 - r) + 1;
@@ -135,7 +148,13 @@ inline void calc_resize_cubic_coeff(const float r, const float A, float* coeff) 
 }
 
 template <typename T>
-inline T get_value_bounded(const T* src, const int64_t h, const int64_t w, const int64_t src_h, const int64_t src_w) {
+inline T get_value_bounded(
+    const T* src,
+    const int64_t h,
+    const int64_t w,
+    const int64_t src_h,
+    const int64_t src_w)
+{
     int64_t h_ = max<int64_t>(min(h, src_h - 1), 0);
     int64_t w_ = max<int64_t>(min(w, src_w - 1), 0);
     return src[h_ * src_w + w_];
@@ -144,10 +163,15 @@ inline T get_value_bounded(const T* src, const int64_t h, const int64_t w, const
 #define SRC(h, w) (get_value_bounded(src_, (h), (w), src_h, src_w))
 
 template <typename T>
-ppl::common::RetCode resize2d_ndarray_pytorch_cubic_floor_common(const ppl::nn::TensorShape* src_shape,
-                                                                 const ppl::nn::TensorShape* dst_shape, const T* src,
-                                                                 const float scale_h, const float scale_w,
-                                                                 const float cubic_coeff_a, T* dst) {
+ppl::common::RetCode resize2d_ndarray_pytorch_cubic_floor_common(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const T* src,
+    const float scale_h,
+    const float scale_w,
+    const float cubic_coeff_a,
+    T* dst)
+{
     const int64_t num_imgs = src_shape->GetDim(0) * src_shape->GetDim(1);
     const int64_t src_h = src_shape->GetDim(2);
     const int64_t src_w = src_shape->GetDim(3);

@@ -26,8 +26,16 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-void conv_dw_src_padding_fp16(const __fp16* src, __fp16* src_padded, int64_t src_h, int64_t src_w, int64_t pad_l,
-                              int64_t pad_r, int64_t pad_t, int64_t pad_b) {
+void conv_dw_src_padding_fp16(
+    const __fp16* src,
+    __fp16* src_padded,
+    int64_t src_h,
+    int64_t src_w,
+    int64_t pad_l,
+    int64_t pad_r,
+    int64_t pad_t,
+    int64_t pad_b)
+{
     int64_t src_w_padded = src_w + pad_l + pad_r;
     int64_t src_padded_h_stride = src_w_padded * 8;
 
@@ -63,12 +71,22 @@ void conv_dw_src_padding_fp16(const __fp16* src, __fp16* src_padded, int64_t src
     }
 }
 
-size_t conv_dw_get_cvt_flt_size_fp16(int64_t flt_h, int64_t flt_w, int64_t channels) {
+size_t conv_dw_get_cvt_flt_size_fp16(
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t channels)
+{
     int64_t padded_channels = round_up(channels, 8);
     return size_t(flt_h * flt_w * padded_channels) * sizeof(__fp16);
 }
 
-void conv_dw_cvt_flt_fp16(const __fp16* flt, __fp16* cvt_flt, int64_t flt_h, int64_t flt_w, int64_t channels) {
+void conv_dw_cvt_flt_fp16(
+    const __fp16* flt,
+    __fp16* cvt_flt,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t channels)
+{
     int64_t i;
     int64_t flt_size = flt_h * flt_w;
     for (i = 0; i + 8 < channels; i += 8) {
@@ -93,8 +111,17 @@ void conv_dw_cvt_flt_fp16(const __fp16* flt, __fp16* cvt_flt, int64_t flt_h, int
     }
 }
 
-size_t conv_dw_get_temp_buffer_size_fp16(int64_t src_h, int64_t src_w, int64_t pad_h, int64_t pad_w, int64_t flt_h,
-                                         int64_t flt_w, int64_t stride_h, int64_t stride_w, int64_t channels) {
+size_t conv_dw_get_temp_buffer_size_fp16(
+    int64_t src_h,
+    int64_t src_w,
+    int64_t pad_h,
+    int64_t pad_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t stride_h,
+    int64_t stride_w,
+    int64_t channels)
+{
     int64_t padded_channels = round_up(channels, 8);
     int64_t src_padded_size = (src_h + pad_h * 2) * (src_w + pad_w * 2) * padded_channels;
     size_t temp_buffer_size = size_t(src_padded_size);
@@ -102,10 +129,20 @@ size_t conv_dw_get_temp_buffer_size_fp16(int64_t src_h, int64_t src_w, int64_t p
     return temp_buffer_size * sizeof(__fp16);
 }
 
-void conv_dw_kernel_riscv_fp16(const __fp16* src, const __fp16* flt, const __fp16* bias, __fp16* dst,
+void conv_dw_kernel_riscv_fp16(
+    const __fp16* src,
+    const __fp16* flt,
+    const __fp16* bias,
+    __fp16* dst,
 
-                               int64_t src_pad_w, int64_t dst_h, int64_t dst_w, int64_t flt_h, int64_t flt_w,
-                               int64_t stride_h, int64_t stride_w) {
+    int64_t src_pad_w,
+    int64_t dst_h,
+    int64_t dst_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t stride_h,
+    int64_t stride_w)
+{
     int64_t dst_w_div8 = dst_w >> 3;
     int64_t dst_w_left = dst_w - (dst_w_div8 << 3);
 
@@ -172,9 +209,17 @@ void conv_dw_kernel_riscv_fp16(const __fp16* src, const __fp16* flt, const __fp1
 }
 
 uint64_t conv2d_n8cx_dw_fp16_runtime_executor::cal_temp_buffer_size() {
-    size_t temp_buffer_size = conv_dw_get_temp_buffer_size_fp16(
-        src_shape_->GetDim(2), src_shape_->GetDim(3), conv_param_->pad_h, conv_param_->pad_w, conv_param_->kernel_h,
-        conv_param_->kernel_w, conv_param_->stride_h, conv_param_->stride_w, conv_param_->channels);
+    size_t temp_buffer_size = 
+        conv_dw_get_temp_buffer_size_fp16(
+            src_shape_->GetDim(2),
+            src_shape_->GetDim(3),
+            conv_param_->pad_h,
+            conv_param_->pad_w,
+            conv_param_->kernel_h,
+            conv_param_->kernel_w,
+            conv_param_->stride_h,
+            conv_param_->stride_w,
+            conv_param_->channels);
     return temp_buffer_size;
 }
 
@@ -332,20 +377,41 @@ ppl::common::RetCode conv2d_n8cx_dw_fp16_runtime_executor::execute() {
     }
 
     for (int64_t i = 0; i < padded_channels; i += 8) {
-        conv_dw_src_padding_fp16(src_ + i * src_h * src_w, (__fp16*)temp_buffer_ + i * src_h_padded * src_w_padded,
-                                 src_h, src_w, pad_w, pad_w, pad_h, pad_h);
+        conv_dw_src_padding_fp16(
+            src_ + i * src_h * src_w,
+            (__fp16*)temp_buffer_ + i * src_h_padded * src_w_padded,
+            src_h,
+            src_w,
+            pad_w,
+            pad_w,
+            pad_h,
+            pad_h);
         if ((kernel_h == 3 && kernel_w == 3 && stride_h == 1 && stride_w == 1) ||
             (kernel_h == 3 && kernel_w == 3 && stride_h == 2 && stride_w == 2) ||
             (kernel_h == 5 && kernel_w == 5 && stride_h == 1 && stride_w == 1)) {
-            dw_conv_kernel((__fp16*)temp_buffer_ + i * src_h_padded * src_w_padded,
-                           cvt_filter_ + i * kernel_h * kernel_w, cvt_bias_ + i, dst_ + i * dst_h * dst_w,
+            dw_conv_kernel(
+                (__fp16*)temp_buffer_ + i * src_h_padded * src_w_padded,
+                cvt_filter_ + i * kernel_h * kernel_w,
+                cvt_bias_ + i,
+                dst_ + i * dst_h * dst_w,
 
-                           src_w_padded, dst_h, dst_w);
+                src_w_padded,
+                dst_h,
+                dst_w);
         } else {
-            conv_dw_kernel_riscv_fp16((__fp16*)temp_buffer_ + i * src_h_padded * src_w_padded,
-                                      cvt_filter_ + i * kernel_h * kernel_w, cvt_bias_ + i, dst_ + i * dst_h * dst_w,
+            conv_dw_kernel_riscv_fp16(
+                (__fp16*)temp_buffer_ + i * src_h_padded * src_w_padded,
+                cvt_filter_ + i * kernel_h * kernel_w,
+                cvt_bias_ + i,
+                dst_ + i * dst_h * dst_w,
 
-                                      src_w_padded, dst_h, dst_w, kernel_h, kernel_w, stride_h, stride_w);
+                src_w_padded,
+                dst_h,
+                dst_w,
+                kernel_h,
+                kernel_w,
+                stride_h,
+                stride_w);
         }
     }
 
@@ -360,10 +426,13 @@ ppl::common::RetCode conv2d_n8cx_dw_fp16_offline_manager::fast_init_tunning_para
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode conv2d_n8cx_dw_fp16_offline_manager::pick_best_tunning_param(const __fp16* src,
-                                                                                  const __fp16* filter, __fp16* dst,
-                                                                                  ppl::nn::TensorShape& src_shape,
-                                                                                  ppl::nn::TensorShape& dst_shape) {
+ppl::common::RetCode conv2d_n8cx_dw_fp16_offline_manager::pick_best_tunning_param(
+    const __fp16* src,
+    const __fp16* filter,
+    __fp16* dst,
+    ppl::nn::TensorShape& src_shape,
+    ppl::nn::TensorShape& dst_shape)
+{
     return ppl::common::RC_SUCCESS;
 }
 

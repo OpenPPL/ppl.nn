@@ -19,9 +19,16 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode slice_ndarray_fp16(const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape,
-                                        const __fp16* src, const int64_t* starts, const int64_t* steps,
-                                        const int64_t* axes, const int64_t axes_num, __fp16* dst) {
+ppl::common::RetCode slice_ndarray_fp16(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const __fp16* src,
+    const int64_t* starts,
+    const int64_t* steps,
+    const int64_t* axes,
+    const int64_t axes_num,
+    __fp16* dst)
+{
     return slice_ndarray_common<__fp16>(src_shape, dst_shape, src, starts, steps, axes, axes_num, dst);
 }
 
