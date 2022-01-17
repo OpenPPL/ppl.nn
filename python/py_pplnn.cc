@@ -16,6 +16,9 @@
 // under the License.
 
 #include "pybind11/pybind11.h"
+#include "py_type_creator_manager.h"
+#include "ppl/nn/common/logger.h"
+using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace python {
 
@@ -48,6 +51,16 @@ void RegisterRuntime(pybind11::module*);
 void RegisterGetVersionString(pybind11::module*);
 
 PYBIND11_MODULE(nn, m) {
+    auto mgr = PyTypeCreatorManager::Instance();
+    for (uint32_t i = 0; i < mgr->GetCreatorCount(); ++i) {
+        auto creator = mgr->GetCreator(i);
+        auto status = creator->Register(&m);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "register python type failed.";
+            return;
+        }
+    }
+
 #ifdef PPLNN_USE_CUDA
     RegisterCudaEngineFactory(&m);
     RegisterCudaEngineOptions(&m);
