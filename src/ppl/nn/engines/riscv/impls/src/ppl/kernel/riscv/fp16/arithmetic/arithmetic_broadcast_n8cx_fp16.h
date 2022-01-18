@@ -40,7 +40,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n8cx_fp16(
 
     int64_t i = start;
     if (!c0_broadcast && !c1_broadcast) {
-        for (; i + unroll_len < end * 8; i += unroll_len) { // end ?
+        for (; i + unroll_len <= (end + 1) * 8; i += unroll_len) {
             const __fp16* src0_ = src0 + i;
             const __fp16* src1_ = src1 + i;
             __fp16* dst_ = dst + i;
@@ -103,7 +103,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n8cx_fp16(
                 vsev_float16xm1(dst_ + 15 * 8, vfdata15, vl);
             }
         }
-        for (; i < end * 8; i += 8) {
+        for (; i <= end * 8; i += 8) {
             const __fp16* src0_ = src0 + i;
             const __fp16* src1_ = src1 + i;
             __fp16* dst_ = dst + i;
@@ -117,7 +117,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n8cx_fp16(
             }
         }
     } else if (c0_broadcast) {
-        for (; i + unroll_len < end * 8; i += unroll_len) { //  end ?
+        for (; i + unroll_len <= (end + 1) * 8; i += unroll_len) {
             const __fp16* src0_ = src0 + i;
             const __fp16* src1_ = src1 + i;
             __fp16* dst_ = dst + i;
@@ -180,7 +180,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n8cx_fp16(
                 vsev_float16xm1(dst_ + 15 * 8, vfdata15, vl);
             }
         }
-        for (; i + 8 < end * 8; i += 8) {
+        for (; i <= end * 8; i += 8) {
             const __fp16* src0_ = src0 + i;
             const __fp16* src1_ = src1 + i;
             __fp16* dst_ = dst + i;
@@ -194,7 +194,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n8cx_fp16(
             }
         }
     } else if (c1_broadcast) {
-        for (; i + unroll_len < end * 8; i += unroll_len) {
+        for (; i + unroll_len <= (end + 1) * 8; i += unroll_len) {
             const __fp16* src0_ = src0 + i;
             const __fp16* src1_ = src1 + i;
             __fp16* dst_ = dst + i;
@@ -257,7 +257,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n8cx_fp16(
                 vsev_float16xm1(dst_ + 15 * 8, vfdata15, vl);
             }
         }
-        for (; i + 8 < end * 8; i += 8) {
+        for (; i <= end * 8; i += 8) {
             const __fp16* src0_ = src0 + i;
             const __fp16* src1_ = src1 + i;
             __fp16* dst_ = dst + i;
@@ -451,6 +451,7 @@ static ppl::common::RetCode arithmetic_broadcast_n8cx_fp16(
     for (int64_t i = 0; i < dim_count; i++) {
         if (dst_shape->GetDim(i) <= 1 && i < c_dim_dix) {
             real_c_dim_idx--;
+            continue;
         }
         real_src0_shape[real_dim_count] = padded_src0_shape[i];
         real_src1_shape[real_dim_count] = padded_src1_shape[i];
