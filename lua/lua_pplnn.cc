@@ -72,7 +72,7 @@ int PPLNN_PUBLIC luaopen_luappl_nn(lua_State* l) {
         auto status = creator->Register(lstate, lmodule);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "register lua type failed.";
-            lstate->CreateNil();
+            lstate->PushNil();
             return 1;
         }
     }
@@ -104,7 +104,7 @@ int PPLNN_PUBLIC luaopen_luappl_nn(lua_State* l) {
     RegisterRuntimeBuilder(lstate, lmodule);
     RegisterOnnxRuntimeBuilderFactory(lstate, lmodule);
 
-    lmodule->PushSelf();
+    lstate->Push(*lmodule);
     return 1;
 }
 
