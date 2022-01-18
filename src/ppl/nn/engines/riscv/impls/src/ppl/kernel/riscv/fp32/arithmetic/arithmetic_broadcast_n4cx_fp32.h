@@ -37,7 +37,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n4cx_fp32(const flo
 
     int64_t i = start;
     if (!c0_broadcast && !c1_broadcast) {
-        for (; i + unroll_len < end * C_BLK(); i += unroll_len) { // end ?
+        for (; i + unroll_len <= (end + 1) * C_BLK(); i += unroll_len) {
             const float* src0_ = src0 + i;
             const float* src1_ = src1 + i;
             float* dst_ = dst + i;
@@ -116,7 +116,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n4cx_fp32(const flo
                 vsev_float32xm1(dst_ + 15 * C_BLK(), vfdata15, vl);
             }
         }
-        for (; i < end * C_BLK(); i += C_BLK()) {
+        for (; i <= end * C_BLK(); i += C_BLK()) {
             const float* src0_ = src0 + i;
             const float* src1_ = src1 + i;
             float* dst_ = dst + i;
@@ -130,7 +130,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n4cx_fp32(const flo
             }
         }
     } else if (c0_broadcast) {
-        for (; i + unroll_len < end * C_BLK(); i += unroll_len) { //  end ?
+        for (; i + unroll_len <= (end + 1) * C_BLK(); i += unroll_len) {
             const float* src0_ = src0 + i;
             const float* src1_ = src1 + i;
             float* dst_ = dst + i;
@@ -193,7 +193,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n4cx_fp32(const flo
                 vsev_float32xm1(dst_ + 15 * C_BLK(), vfdata15, vl);
             }
         }
-        for (; i + C_BLK() < end * C_BLK(); i += C_BLK()) {
+        for (; i <= end * C_BLK(); i += C_BLK()) {
             const float* src0_ = src0 + i;
             const float* src1_ = src1 + i;
             float* dst_ = dst + i;
@@ -208,7 +208,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n4cx_fp32(const flo
             }
         }
     } else if (c1_broadcast) {
-        for (; i + unroll_len < end * C_BLK(); i += unroll_len) {
+        for (; i + unroll_len <= (end + 1) * C_BLK(); i += unroll_len) {
             const float* src0_ = src0 + i;
             const float* src1_ = src1 + i;
             float* dst_ = dst + i;
@@ -271,7 +271,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n4cx_fp32(const flo
                 vsev_float32xm1(dst_ + 15 * C_BLK(), vfdata15, vl);
             }
         }
-        for (; i + C_BLK() < end * C_BLK(); i += C_BLK()) {
+        for (; i <= end * C_BLK(); i += C_BLK()) {
             const float* src0_ = src0 + i;
             const float* src1_ = src1 + i;
             float* dst_ = dst + i;
@@ -295,8 +295,6 @@ static inline void arithmetic_broadcast_lastdim_src0_broadcast_n4cx_fp32(const f
                                                                          const int64_t start, const int64_t end,
                                                                          const bool c0_broadcast,
                                                                          const bool c1_broadcast) {
-    // const int64_t parall_d = 16;
-    // const int64_t unroll_len = parall_d * C_BLK();
     const auto vl = vsetvli(C_BLK(), RVV_E32, RVV_M1);
 
     float32xm1_t vbroadcast_src0;
@@ -437,6 +435,7 @@ static ppl::common::RetCode arithmetic_broadcast_n4cx_fp32(const float* src0, co
     for (int64_t i = 0; i < dim_count; i++) {
         if (dst_shape->GetDim(i) <= 1 && i < c_dim_dix) {
             real_c_dim_idx--;
+            continue;
         }
         real_src0_shape[real_dim_count] = padded_src0_shape[i];
         real_src1_shape[real_dim_count] = padded_src1_shape[i];
