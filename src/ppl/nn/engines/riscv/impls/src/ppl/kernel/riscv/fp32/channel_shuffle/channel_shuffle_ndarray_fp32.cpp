@@ -22,8 +22,12 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode channel_shuffle_ndarray_fp32(const ppl::nn::TensorShape* src_shape, const float* src,
-                                                  const int32_t group, float* dst) {
+ppl::common::RetCode channel_shuffle_ndarray_fp32(
+    const ppl::nn::TensorShape* src_shape,
+    const float* src,
+    const int32_t group,
+    float* dst)
+{
     const int64_t batch = src_shape->GetDim(0);
     const int64_t channels = src_shape->GetDim(1);
     const int64_t src_h = src_shape->GetDim(2);
@@ -32,18 +36,21 @@ ppl::common::RetCode channel_shuffle_ndarray_fp32(const ppl::nn::TensorShape* sr
     const int64_t mid_c2 = channels / group;
     int64_t mid_dims[5] = {batch, mid_c1, mid_c2, src_h, src_w};
 
-    // ppl::nn::TensorShape *mid_shape = new ppl::nn::TensorShape();
-    // mid_shape->Reshape(mid_dims, 5);
     ppl::nn::TensorShape& mid_shape = *(new ppl::nn::TensorShape());
     mid_shape.Reshape(mid_dims, 5);
 
     return transpose_ndarray_continous2d_fp32(src, dst, &mid_shape, 1, 2);
 }
 
-ppl::common::RetCode channel_shuffle_ndarray_concat_split_fp32(const ppl::nn::TensorShape* src0_shape,
-                                                               const ppl::nn::TensorShape* src1_shape,
-                                                               const float* src0, const float* src1,
-                                                               const int32_t group, float* dst0, float* dst1_optional) {
+ppl::common::RetCode channel_shuffle_ndarray_concat_split_fp32(
+    const ppl::nn::TensorShape* src0_shape,
+    const ppl::nn::TensorShape* src1_shape,
+    const float* src0,
+    const float* src1,
+    const int32_t group,
+    float* dst0,
+    float* dst1_optional)
+{
     const int64_t in_c1 = src0_shape->GetDim(1);
     const int64_t in_c2 = src1_shape->GetDim(1);
     const int64_t channels = in_c1 + in_c2;

@@ -44,247 +44,261 @@ ppl::common::RetCode conv2d_n4cx_wg_b2f3_fp32_runtime_executor::prepare() {
     return ppl::common::RC_SUCCESS;
 }
 
-inline void wg_b2f3s1_src_trans_kernel(const float* src_pad,
-                                       const float* trans_mat, // TODO: should be removed
-                                       int64_t src_pad_h_stride,
+inline void wg_b2f3s1_src_trans_kernel(
+    const float* src_pad,
+    const float* trans_mat, // TODO: should be removed
+    int64_t src_pad_h_stride,
 
-                                       float* src_trans_d, int64_t src_trans_wg_tile_stride) {
+    float* src_trans_d,
+    int64_t src_trans_wg_tile_stride)
+{
     // perf method
-    asm volatile("mv             t0,     %[src]          \n\t"
-                 "mv             t1,     %[src_offset]   \n\t"
-                 "addi           t2,     x0,     4       \n\t"
-                 "vsetvli        t6,     t2,     e32     \n\t"
+    asm volatile(
+        "mv             t0,     %[src]          \n\t"
+        "mv             t1,     %[src_offset]   \n\t"
+        "addi           t2,     x0,     4       \n\t"
+        "vsetvli        t6,     t2,     e32     \n\t"
 
-                 "vle.v          v0,     (t0)            \n\t"
-                 "add            t2,     t0,     t1      \n\t"
-                 "vle.v          v1,     (t2)            \n\t"
-                 "add            t2,     t2,     t1      \n\t"
-                 "vle.v          v2,     (t2)            \n\t"
-                 "add            t2,     t2,     t1      \n\t"
-                 "vle.v          v3,     (t2)            \n\t"
-                 "vfsub.vv       v16,    v0,     v2      \n\t"
-                 "vfadd.vv       v20,    v1,     v2      \n\t"
-                 "vfsub.vv       v24,    v2,     v1      \n\t"
-                 "vfsub.vv       v28,    v3,     v1      \n\t"
+        "vle.v          v0,     (t0)            \n\t"
+        "add            t2,     t0,     t1      \n\t"
+        "vle.v          v1,     (t2)            \n\t"
+        "add            t2,     t2,     t1      \n\t"
+        "vle.v          v2,     (t2)            \n\t"
+        "add            t2,     t2,     t1      \n\t"
+        "vle.v          v3,     (t2)            \n\t"
+        "vfsub.vv       v16,    v0,     v2      \n\t"
+        "vfadd.vv       v20,    v1,     v2      \n\t"
+        "vfsub.vv       v24,    v2,     v1      \n\t"
+        "vfsub.vv       v28,    v3,     v1      \n\t"
 
-                 "addi           t0,     t0,     16      \n\t"
-                 "vle.v          v0,     (t0)            \n\t"
-                 "add            t2,     t0,     t1      \n\t"
-                 "vle.v          v1,     (t2)            \n\t"
-                 "add            t2,     t2,     t1      \n\t"
-                 "vle.v          v2,     (t2)            \n\t"
-                 "add            t2,     t2,     t1      \n\t"
-                 "vle.v          v3,     (t2)            \n\t"
-                 "vfsub.vv       v17,    v0,     v2      \n\t"
-                 "vfadd.vv       v21,    v1,     v2      \n\t"
-                 "vfsub.vv       v25,    v2,     v1      \n\t"
-                 "vfsub.vv       v29,    v3,     v1      \n\t"
+        "addi           t0,     t0,     16      \n\t"
+        "vle.v          v0,     (t0)            \n\t"
+        "add            t2,     t0,     t1      \n\t"
+        "vle.v          v1,     (t2)            \n\t"
+        "add            t2,     t2,     t1      \n\t"
+        "vle.v          v2,     (t2)            \n\t"
+        "add            t2,     t2,     t1      \n\t"
+        "vle.v          v3,     (t2)            \n\t"
+        "vfsub.vv       v17,    v0,     v2      \n\t"
+        "vfadd.vv       v21,    v1,     v2      \n\t"
+        "vfsub.vv       v25,    v2,     v1      \n\t"
+        "vfsub.vv       v29,    v3,     v1      \n\t"
 
-                 "addi           t0,     t0,     16      \n\t"
-                 "vle.v          v0,     (t0)            \n\t"
-                 "add            t2,     t0,     t1      \n\t"
-                 "vle.v          v1,     (t2)            \n\t"
-                 "add            t2,     t2,     t1      \n\t"
-                 "vle.v          v2,     (t2)            \n\t"
-                 "add            t2,     t2,     t1      \n\t"
-                 "vle.v          v3,     (t2)            \n\t"
-                 "vfsub.vv       v18,    v0,     v2      \n\t"
-                 "vfadd.vv       v22,    v1,     v2      \n\t"
-                 "vfsub.vv       v26,    v2,     v1      \n\t"
-                 "vfsub.vv       v30,    v3,     v1      \n\t"
+        "addi           t0,     t0,     16      \n\t"
+        "vle.v          v0,     (t0)            \n\t"
+        "add            t2,     t0,     t1      \n\t"
+        "vle.v          v1,     (t2)            \n\t"
+        "add            t2,     t2,     t1      \n\t"
+        "vle.v          v2,     (t2)            \n\t"
+        "add            t2,     t2,     t1      \n\t"
+        "vle.v          v3,     (t2)            \n\t"
+        "vfsub.vv       v18,    v0,     v2      \n\t"
+        "vfadd.vv       v22,    v1,     v2      \n\t"
+        "vfsub.vv       v26,    v2,     v1      \n\t"
+        "vfsub.vv       v30,    v3,     v1      \n\t"
 
-                 "addi           t0,     t0,     16      \n\t"
-                 "vle.v          v0,     (t0)            \n\t"
-                 "add            t2,     t0,     t1      \n\t"
-                 "vle.v          v1,     (t2)            \n\t"
-                 "add            t2,     t2,     t1      \n\t"
-                 "vle.v          v2,     (t2)            \n\t"
-                 "add            t2,     t2,     t1      \n\t"
-                 "vle.v          v3,     (t2)            \n\t"
-                 "vfsub.vv       v19,    v0,     v2      \n\t"
-                 "vfadd.vv       v23,    v1,     v2      \n\t"
-                 "vfsub.vv       v27,    v2,     v1      \n\t"
-                 "vfsub.vv       v31,    v3,     v1      \n\t"
+        "addi           t0,     t0,     16      \n\t"
+        "vle.v          v0,     (t0)            \n\t"
+        "add            t2,     t0,     t1      \n\t"
+        "vle.v          v1,     (t2)            \n\t"
+        "add            t2,     t2,     t1      \n\t"
+        "vle.v          v2,     (t2)            \n\t"
+        "add            t2,     t2,     t1      \n\t"
+        "vle.v          v3,     (t2)            \n\t"
+        "vfsub.vv       v19,    v0,     v2      \n\t"
+        "vfadd.vv       v23,    v1,     v2      \n\t"
+        "vfsub.vv       v27,    v2,     v1      \n\t"
+        "vfsub.vv       v31,    v3,     v1      \n\t"
 
-                 "mv             t0,     %[dst]          \n\t"
-                 "mv             t1,     %[dst_offset]   \n\t"
+        "mv             t0,     %[dst]          \n\t"
+        "mv             t1,     %[dst_offset]   \n\t"
 
-                 "vfsub.vv       v0,     v16,    v18     \n\t"
-                 "vse.v          v0,     (t0)            \n\t"
-                 "add            t0,     t0,     t1      \n\t"
-                 "vfadd.vv       v1,     v17,    v18     \n\t"
-                 "vse.v          v1,     (t0)            \n\t"
-                 "add            t0,     t0,     t1      \n\t"
-                 "vfsub.vv       v2,     v18,    v17     \n\t"
-                 "vse.v          v2,     (t0)            \n\t"
-                 "add            t0,     t0,     t1      \n\t"
-                 "vfsub.vv       v3,     v19,    v17     \n\t"
-                 "vse.v          v3,     (t0)            \n\t"
-                 "add            t0,     t0,     t1      \n\t"
+        "vfsub.vv       v0,     v16,    v18     \n\t"
+        "vse.v          v0,     (t0)            \n\t"
+        "add            t0,     t0,     t1      \n\t"
+        "vfadd.vv       v1,     v17,    v18     \n\t"
+        "vse.v          v1,     (t0)            \n\t"
+        "add            t0,     t0,     t1      \n\t"
+        "vfsub.vv       v2,     v18,    v17     \n\t"
+        "vse.v          v2,     (t0)            \n\t"
+        "add            t0,     t0,     t1      \n\t"
+        "vfsub.vv       v3,     v19,    v17     \n\t"
+        "vse.v          v3,     (t0)            \n\t"
+        "add            t0,     t0,     t1      \n\t"
 
-                 "vfsub.vv       v0,     v20,    v22     \n\t"
-                 "vse.v          v0,     (t0)            \n\t"
-                 "add            t0,     t0,     t1      \n\t"
-                 "vfadd.vv       v1,     v21,    v22     \n\t"
-                 "vse.v          v1,     (t0)            \n\t"
-                 "add            t0,     t0,     t1      \n\t"
-                 "vfsub.vv       v2,     v22,    v21     \n\t"
-                 "vse.v          v2,     (t0)            \n\t"
-                 "add            t0,     t0,     t1      \n\t"
-                 "vfsub.vv       v3,     v23,    v21     \n\t"
-                 "vse.v          v3,     (t0)            \n\t"
-                 "add            t0,     t0,     t1      \n\t"
+        "vfsub.vv       v0,     v20,    v22     \n\t"
+        "vse.v          v0,     (t0)            \n\t"
+        "add            t0,     t0,     t1      \n\t"
+        "vfadd.vv       v1,     v21,    v22     \n\t"
+        "vse.v          v1,     (t0)            \n\t"
+        "add            t0,     t0,     t1      \n\t"
+        "vfsub.vv       v2,     v22,    v21     \n\t"
+        "vse.v          v2,     (t0)            \n\t"
+        "add            t0,     t0,     t1      \n\t"
+        "vfsub.vv       v3,     v23,    v21     \n\t"
+        "vse.v          v3,     (t0)            \n\t"
+        "add            t0,     t0,     t1      \n\t"
 
-                 "vfsub.vv       v0,     v24,    v26     \n\t"
-                 "vse.v          v0,     (t0)            \n\t"
-                 "add            t0,     t0,     t1      \n\t"
-                 "vfadd.vv       v1,     v25,    v26     \n\t"
-                 "vse.v          v1,     (t0)            \n\t"
-                 "add            t0,     t0,     t1      \n\t"
-                 "vfsub.vv       v2,     v26,    v25     \n\t"
-                 "vse.v          v2,     (t0)            \n\t"
-                 "add            t0,     t0,     t1      \n\t"
-                 "vfsub.vv       v3,     v27,    v25     \n\t"
-                 "vse.v          v3,     (t0)            \n\t"
-                 "add            t0,     t0,     t1      \n\t"
+        "vfsub.vv       v0,     v24,    v26     \n\t"
+        "vse.v          v0,     (t0)            \n\t"
+        "add            t0,     t0,     t1      \n\t"
+        "vfadd.vv       v1,     v25,    v26     \n\t"
+        "vse.v          v1,     (t0)            \n\t"
+        "add            t0,     t0,     t1      \n\t"
+        "vfsub.vv       v2,     v26,    v25     \n\t"
+        "vse.v          v2,     (t0)            \n\t"
+        "add            t0,     t0,     t1      \n\t"
+        "vfsub.vv       v3,     v27,    v25     \n\t"
+        "vse.v          v3,     (t0)            \n\t"
+        "add            t0,     t0,     t1      \n\t"
 
-                 "vfsub.vv       v0,     v28,    v30     \n\t"
-                 "vse.v          v0,     (t0)            \n\t"
-                 "add            t0,     t0,     t1      \n\t"
-                 "vfadd.vv       v1,     v29,    v30     \n\t"
-                 "vse.v          v1,     (t0)            \n\t"
-                 "add            t0,     t0,     t1      \n\t"
-                 "vfsub.vv       v2,     v30,    v29     \n\t"
-                 "vse.v          v2,     (t0)            \n\t"
-                 "add            t0,     t0,     t1      \n\t"
-                 "vfsub.vv       v3,     v31,    v29     \n\t"
-                 "vse.v          v3,     (t0)            \n\t"
-                 :
-                 : [src] "r"(src_pad), [dst] "r"(src_trans_d), [src_offset] "r"(src_pad_h_stride * 4),
-                   [dst_offset] "r"(src_trans_wg_tile_stride * 4)
-                 : "memory", "v0", "v1", "v2", "v3", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24",
-                   "v25", "v26", "v27", "v28", "v29", "v30", "v31", "t0", "t1", "t2", "t6");
+        "vfsub.vv       v0,     v28,    v30     \n\t"
+        "vse.v          v0,     (t0)            \n\t"
+        "add            t0,     t0,     t1      \n\t"
+        "vfadd.vv       v1,     v29,    v30     \n\t"
+        "vse.v          v1,     (t0)            \n\t"
+        "add            t0,     t0,     t1      \n\t"
+        "vfsub.vv       v2,     v30,    v29     \n\t"
+        "vse.v          v2,     (t0)            \n\t"
+        "add            t0,     t0,     t1      \n\t"
+        "vfsub.vv       v3,     v31,    v29     \n\t"
+        "vse.v          v3,     (t0)            \n\t"
+        :
+        : [src] "r"(src_pad), [dst] "r"(src_trans_d), [src_offset] "r"(src_pad_h_stride * 4),
+          [dst_offset] "r"(src_trans_wg_tile_stride * 4)
+        : "memory", "v0", "v1", "v2", "v3", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24",
+          "v25", "v26", "v27", "v28", "v29", "v30", "v31", "t0", "t1", "t2", "t6"
+    );
 }
 
-inline void wg_b2f3s1_dst_trans_kernel(const float* dst_trans, const float* bias,
-                                       const float* trans_mat, // TODO: should be removed
-                                       int64_t dst_trans_wg_tile_stride,
+inline void wg_b2f3s1_dst_trans_kernel(
+    const float* dst_trans,
+    const float* bias,
+    const float* trans_mat, // TODO: should be removed
+    int64_t dst_trans_wg_tile_stride,
 
-                                       float* dst, int64_t dst_h_stride, int64_t dst_h_offset, int64_t dst_w_offset,
-                                       int64_t dst_trans_h, int64_t dst_trans_w) {
+    float* dst,
+    int64_t dst_h_stride,
+    int64_t dst_h_offset,
+    int64_t dst_w_offset,
+    int64_t dst_trans_h,
+    int64_t dst_trans_w)
+{
     // perf method
-    asm volatile("addi           t0,     x0,     4       \n\t"
-                 "vsetvli        t1,     t0,     e32     \n\t"
+    asm volatile(
+        "addi           t0,     x0,     4       \n\t"
+        "vsetvli        t1,     t0,     e32     \n\t"
 
-                 "mv             t0,     %[src]          \n\t"
-                 "mv             t1,     %[src_offset0]  \n\t"
-                 "mv             t2,     %[src_offset1]  \n\t"
+        "mv             t0,     %[src]          \n\t"
+        "mv             t1,     %[src_offset0]  \n\t"
+        "mv             t2,     %[src_offset1]  \n\t"
 
-                 "vle.v          v0,     (t0)            \n\t"
-                 "add            t3,     t0,     t1      \n\t"
-                 "vle.v          v1,     (t3)            \n\t"
-                 "add            t3,     t3,     t1      \n\t"
-                 "vle.v          v2,     (t3)            \n\t"
-                 "add            t3,     t3,     t1      \n\t"
-                 "vle.v          v3,     (t3)            \n\t"
-                 "vfadd.vv       v16,    v0,     v1      \n\t"
-                 "vfadd.vv       v16,    v16,    v2      \n\t"
-                 "vfsub.vv       v20,    v1,     v2      \n\t"
-                 "vfadd.vv       v20,    v20,    v3      \n\t"
-                 "add            t0,     t0,     t2      \n\t"
+        "vle.v          v0,     (t0)            \n\t"
+        "add            t3,     t0,     t1      \n\t"
+        "vle.v          v1,     (t3)            \n\t"
+        "add            t3,     t3,     t1      \n\t"
+        "vle.v          v2,     (t3)            \n\t"
+        "add            t3,     t3,     t1      \n\t"
+        "vle.v          v3,     (t3)            \n\t"
+        "vfadd.vv       v16,    v0,     v1      \n\t"
+        "vfadd.vv       v16,    v16,    v2      \n\t"
+        "vfsub.vv       v20,    v1,     v2      \n\t"
+        "vfadd.vv       v20,    v20,    v3      \n\t"
+        "add            t0,     t0,     t2      \n\t"
 
-                 "vle.v          v0,     (t0)            \n\t"
-                 "add            t3,     t0,     t1      \n\t"
-                 "vle.v          v1,     (t3)            \n\t"
-                 "add            t3,     t3,     t1      \n\t"
-                 "vle.v          v2,     (t3)            \n\t"
-                 "add            t3,     t3,     t1      \n\t"
-                 "vle.v          v3,     (t3)            \n\t"
-                 "vfadd.vv       v17,    v0,     v1      \n\t"
-                 "vfadd.vv       v17,    v17,    v2      \n\t"
-                 "vfsub.vv       v21,    v1,     v2      \n\t"
-                 "vfadd.vv       v21,    v21,    v3      \n\t"
-                 "add            t0,     t0,     t2      \n\t"
+        "vle.v          v0,     (t0)            \n\t"
+        "add            t3,     t0,     t1      \n\t"
+        "vle.v          v1,     (t3)            \n\t"
+        "add            t3,     t3,     t1      \n\t"
+        "vle.v          v2,     (t3)            \n\t"
+        "add            t3,     t3,     t1      \n\t"
+        "vle.v          v3,     (t3)            \n\t"
+        "vfadd.vv       v17,    v0,     v1      \n\t"
+        "vfadd.vv       v17,    v17,    v2      \n\t"
+        "vfsub.vv       v21,    v1,     v2      \n\t"
+        "vfadd.vv       v21,    v21,    v3      \n\t"
+        "add            t0,     t0,     t2      \n\t"
 
-                 "vle.v          v0,     (t0)            \n\t"
-                 "add            t3,     t0,     t1      \n\t"
-                 "vle.v          v1,     (t3)            \n\t"
-                 "add            t3,     t3,     t1      \n\t"
-                 "vle.v          v2,     (t3)            \n\t"
-                 "add            t3,     t3,     t1      \n\t"
-                 "vle.v          v3,     (t3)            \n\t"
-                 "vfadd.vv       v18,    v0,     v1      \n\t"
-                 "vfadd.vv       v18,    v18,    v2      \n\t"
-                 "vfsub.vv       v22,    v1,     v2      \n\t"
-                 "vfadd.vv       v22,    v22,    v3      \n\t"
-                 "add            t0,     t0,     t2      \n\t"
+        "vle.v          v0,     (t0)            \n\t"
+        "add            t3,     t0,     t1      \n\t"
+        "vle.v          v1,     (t3)            \n\t"
+        "add            t3,     t3,     t1      \n\t"
+        "vle.v          v2,     (t3)            \n\t"
+        "add            t3,     t3,     t1      \n\t"
+        "vle.v          v3,     (t3)            \n\t"
+        "vfadd.vv       v18,    v0,     v1      \n\t"
+        "vfadd.vv       v18,    v18,    v2      \n\t"
+        "vfsub.vv       v22,    v1,     v2      \n\t"
+        "vfadd.vv       v22,    v22,    v3      \n\t"
+        "add            t0,     t0,     t2      \n\t"
 
-                 "vle.v          v0,     (t0)            \n\t"
-                 "add            t3,     t0,     t1      \n\t"
-                 "vle.v          v1,     (t3)            \n\t"
-                 "add            t3,     t3,     t1      \n\t"
-                 "vle.v          v2,     (t3)            \n\t"
-                 "add            t3,     t3,     t1      \n\t"
-                 "vle.v          v3,     (t3)            \n\t"
-                 "vfadd.vv       v19,    v0,     v1      \n\t"
-                 "vfadd.vv       v19,    v19,    v2      \n\t"
-                 "vfsub.vv       v23,    v1,     v2      \n\t"
-                 "vfadd.vv       v23,    v23,    v3      \n\t"
-                 "add            t0,     t0,     t2      \n\t"
+        "vle.v          v0,     (t0)            \n\t"
+        "add            t3,     t0,     t1      \n\t"
+        "vle.v          v1,     (t3)            \n\t"
+        "add            t3,     t3,     t1      \n\t"
+        "vle.v          v2,     (t3)            \n\t"
+        "add            t3,     t3,     t1      \n\t"
+        "vle.v          v3,     (t3)            \n\t"
+        "vfadd.vv       v19,    v0,     v1      \n\t"
+        "vfadd.vv       v19,    v19,    v2      \n\t"
+        "vfsub.vv       v23,    v1,     v2      \n\t"
+        "vfadd.vv       v23,    v23,    v3      \n\t"
+        "add            t0,     t0,     t2      \n\t"
 
-                 "mv             t0,     %[dst]          \n\t"
-                 "mv             t1,     %[dst_offset]   \n\t"
-                 "mv             t2,     %[h_offset]     \n\t"
-                 "mv             t3,     %[w_offset]     \n\t"
-                 "mv             t4,     %[dst_h]        \n\t"
-                 "mv             t5,     %[dst_w]        \n\t"
+        "mv             t0,     %[dst]          \n\t"
+        "mv             t1,     %[dst_offset]   \n\t"
+        "mv             t2,     %[h_offset]     \n\t"
+        "mv             t3,     %[w_offset]     \n\t"
+        "mv             t4,     %[dst_h]        \n\t"
+        "mv             t5,     %[dst_w]        \n\t"
 
-                 "vle.v          v8,     (%[bias])       \n\t"
-                 "bge            t2,     t4,     END     \n\t"
-                 "mv             t6,     t3              \n\t"
-                 "bge            t6,     t5,     L1      \n\t"
-                 "vfadd.vv       v0,     v16,    v17     \n\t"
-                 "vfadd.vv       v0,     v0,     v18     \n\t"
-                 "vfadd.vv       v0,     v0,     v8      \n\t"
-                 "vse.v          v0,     (t0)            \n\t"
-                 "addi           s2,     t0,     16      \n\t"
+        "vle.v          v8,     (%[bias])       \n\t"
+        "bge            t2,     t4,     END     \n\t"
+        "mv             t6,     t3              \n\t"
+        "bge            t6,     t5,     L1      \n\t"
+        "vfadd.vv       v0,     v16,    v17     \n\t"
+        "vfadd.vv       v0,     v0,     v18     \n\t"
+        "vfadd.vv       v0,     v0,     v8      \n\t"
+        "vse.v          v0,     (t0)            \n\t"
+        "addi           s2,     t0,     16      \n\t"
 
-                 "addi           t6,     t6,     1       \n\t"
-                 "bge            t6,     t5,     L1      \n\t"
-                 "vfsub.vv       v1,     v17,    v18     \n\t"
-                 "vfadd.vv       v1,     v1,     v19     \n\t"
-                 "vfadd.vv       v1,     v1,     v8      \n\t"
-                 "vse.v          v1,     (s2)            \n\t"
+        "addi           t6,     t6,     1       \n\t"
+        "bge            t6,     t5,     L1      \n\t"
+        "vfsub.vv       v1,     v17,    v18     \n\t"
+        "vfadd.vv       v1,     v1,     v19     \n\t"
+        "vfadd.vv       v1,     v1,     v8      \n\t"
+        "vse.v          v1,     (s2)            \n\t"
 
-                 "L1:                                    \n\t"
-                 "add            t0,     t0,     t1      \n\t"
-                 "addi           t2,     t2,     1       \n\t"
-                 "bge            t2,     t4,     END     \n\t"
-                 "mv             t6,     t3              \n\t"
-                 "bge            t6,     t5,     END     \n\t"
-                 "vfadd.vv       v0,     v20,    v21     \n\t"
-                 "vfadd.vv       v0,     v0,     v22     \n\t"
-                 "vfadd.vv       v0,     v0,     v8      \n\t"
-                 "vse.v          v0,     (t0)            \n\t"
-                 "addi           s2,     t0,     16      \n\t"
+        "L1:                                    \n\t"
+        "add            t0,     t0,     t1      \n\t"
+        "addi           t2,     t2,     1       \n\t"
+        "bge            t2,     t4,     END     \n\t"
+        "mv             t6,     t3              \n\t"
+        "bge            t6,     t5,     END     \n\t"
+        "vfadd.vv       v0,     v20,    v21     \n\t"
+        "vfadd.vv       v0,     v0,     v22     \n\t"
+        "vfadd.vv       v0,     v0,     v8      \n\t"
+        "vse.v          v0,     (t0)            \n\t"
+        "addi           s2,     t0,     16      \n\t"
 
-                 "addi           t6,     t6,     1       \n\t"
-                 "bge            t6,     t5,     END     \n\t"
-                 "vfsub.vv       v1,     v21,    v22     \n\t"
-                 "vfadd.vv       v1,     v1,     v23     \n\t"
-                 "vfadd.vv       v1,     v1,     v8      \n\t"
-                 "vse.v          v1,     (s2)            \n\t"
+        "addi           t6,     t6,     1       \n\t"
+        "bge            t6,     t5,     END     \n\t"
+        "vfsub.vv       v1,     v21,    v22     \n\t"
+        "vfadd.vv       v1,     v1,     v23     \n\t"
+        "vfadd.vv       v1,     v1,     v8      \n\t"
+        "vse.v          v1,     (s2)            \n\t"
 
-                 "END:                                   \n\t"
-                 "addi           x0,     x0,     1       \n\t"
-                 :
-                 : [src] "r"(dst_trans), [dst] "r"(dst), [src_offset0] "r"(dst_trans_wg_tile_stride * 16),
-                   [src_offset1] "r"(dst_trans_wg_tile_stride * 4), [dst_offset] "r"(dst_h_stride * 4),
-                   [h_offset] "r"(dst_h_offset), [w_offset] "r"(dst_w_offset), [dst_h] "r"(dst_trans_h),
-                   [dst_w] "r"(dst_trans_w), [bias] "r"(bias)
-                 : "memory", "v0", "v1", "v2", "v3", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24",
-                   "v25", "v26", "v27", "v28", "v29", "v30", "v31", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "s2",
-                   "v8");
+        "END:                                   \n\t"
+        "addi           x0,     x0,     1       \n\t"
+        :
+        : [src] "r"(dst_trans), [dst] "r"(dst), [src_offset0] "r"(dst_trans_wg_tile_stride * 16),
+          [src_offset1] "r"(dst_trans_wg_tile_stride * 4), [dst_offset] "r"(dst_h_stride * 4),
+          [h_offset] "r"(dst_h_offset), [w_offset] "r"(dst_w_offset), [dst_h] "r"(dst_trans_h),
+          [dst_w] "r"(dst_trans_w), [bias] "r"(bias)
+        : "memory", "v0", "v1", "v2", "v3", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24",
+          "v25", "v26", "v27", "v28", "v29", "v30", "v31", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "s2",
+          "v8"
+    );
 }
 
 ppl::common::RetCode conv2d_n4cx_wg_b2f3_fp32_runtime_executor::execute() {
@@ -297,26 +311,50 @@ ppl::common::RetCode conv2d_n4cx_wg_b2f3_fp32_runtime_executor::execute() {
     }
 
     const float trans_mat_src[4][4] = {
-        {1.0f, 0.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 1.0f, 0.0f}, {0.0f, -1.0f, 1.0f, 0.0f}, {0.0f, -1.0f, 0.0f, 1.0f}};
+        {1.0f, 0.0f, -1.0f, 0.0f},
+        {0.0f, 1.0f, 1.0f, 0.0f},
+        {0.0f, -1.0f, 1.0f, 0.0f},
+        {0.0f, -1.0f, 0.0f, 1.0f}};
 
-    const float trans_mat_dst[2][4] = {{1.0f, 1.0f, 1.0f, 0.0f}, {0.0f, 1.0f, -1.0f, 1.0f}};
+    const float trans_mat_dst[2][4] = {
+        {1.0f, 1.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, -1.0f, 1.0f}};
 
     const float* trans_mat_src_ = (const float*)trans_mat_src;
     const float* trans_mat_dst_ = (const float*)trans_mat_dst;
 
     conv2d_shell_fp32<
-        conv2d_n4cx_wg_bxfxs1_fp32_vec128_extra_param, 4, conv2d_get_real_filter_size<2, 3>,
-        conv2d_conv_wg_bxfxs1_riscv_per_group_fp32<2, 3, wg_b2f3s1_src_trans_kernel, wg_b2f3s1_dst_trans_kernel>>(
-        src_, cvt_filter_, cvt_bias_, (float*)temp_buffer_, dst_,
+        conv2d_n4cx_wg_bxfxs1_fp32_vec128_extra_param,
+        4,
+        conv2d_get_real_filter_size<2, 3>,
+        conv2d_conv_wg_bxfxs1_riscv_per_group_fp32<2, 3, wg_b2f3s1_src_trans_kernel, wg_b2f3s1_dst_trans_kernel>>
+    (
+        src_,
+        cvt_filter_,
+        cvt_bias_,
+        (float*)temp_buffer_,
+        dst_,
 
-        src_shape_->GetDim(2), src_shape_->GetDim(3), conv_param_->pad_h, conv_param_->pad_w, conv_param_->kernel_h,
-        conv_param_->kernel_w, conv_param_->stride_h, conv_param_->stride_w, conv_param_->dilation_h,
-        conv_param_->dilation_w, conv_param_->channels, conv_param_->num_output, conv_param_->group,
+        src_shape_->GetDim(2), src_shape_->GetDim(3),
+        conv_param_->pad_h, conv_param_->pad_w,
+        conv_param_->kernel_h, conv_param_->kernel_w, 
+        conv_param_->stride_h, conv_param_->stride_w,
+        conv_param_->dilation_h, conv_param_->dilation_w,
+        conv_param_->channels,
+        conv_param_->num_output,
+        conv_param_->group,
         src_shape_->GetDim(0),
 
-        {tunning_param_.oc_blk, tunning_param_.ic_blk, tunning_param_.oh_blk, tunning_param_.ow_blk,
+        {
+            tunning_param_.oc_blk,
+            tunning_param_.ic_blk,
+            tunning_param_.oh_blk,
+            tunning_param_.ow_blk,
 
-         trans_mat_src_, trans_mat_dst_});
+            trans_mat_src_,
+            trans_mat_dst_
+        }
+    );
 
     return ppl::common::RC_SUCCESS;
 }

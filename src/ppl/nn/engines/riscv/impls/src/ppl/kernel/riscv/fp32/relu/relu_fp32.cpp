@@ -22,7 +22,10 @@ namespace ppl { namespace kernel { namespace riscv {
 
 #define C_BLK() ((int64_t)4)
 
-ppl::common::RetCode relu_fp32(const ppl::nn::TensorShape* shape, const float* src, float* dst) {
+ppl::common::RetCode relu_fp32(
+    const ppl::nn::TensorShape* shape,
+    const float* src, float* dst)
+{
     const int64_t total_len = shape->GetElementsIncludingPadding();
     const int64_t parall_d = 32;
     const int64_t unroll_len = parall_d * C_BLK();
@@ -32,70 +35,38 @@ ppl::common::RetCode relu_fp32(const ppl::nn::TensorShape* shape, const float* s
     for (; idx + unroll_len < total_len; idx += unroll_len) {
         const float* src_ = src + idx;
         float* dst_ = dst + idx;
-        vsev_float32xm1(dst_ + 0 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 0 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 1 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 1 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 2 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 2 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 3 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 3 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 4 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 4 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 5 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 5 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 6 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 6 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 7 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 7 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 8 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 8 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 9 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 9 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 10 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 10 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 11 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 11 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 12 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 12 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 13 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 13 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 14 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 14 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 15 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 15 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 16 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 16 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 17 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 17 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 18 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 18 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 19 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 19 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 20 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 20 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 21 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 21 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 22 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 22 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 23 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 23 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 24 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 24 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 25 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 25 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 26 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 26 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 27 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 27 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 28 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 28 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 29 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 29 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 30 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 30 * C_BLK(), vl), (float)0.0f, vl), vl);
-        vsev_float32xm1(dst_ + 31 * C_BLK(),
-                        vfmaxvf_float32xm1(vlev_float32xm1(src_ + 31 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 0 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 0 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 1 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 1 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 2 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 2 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 3 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 3 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 4 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 4 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 5 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 5 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 6 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 6 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 7 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 7 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 8 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 8 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 9 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 9 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 10 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 10 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 11 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 11 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 12 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 12 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 13 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 13 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 14 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 14 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 15 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 15 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 16 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 16 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 17 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 17 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 18 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 18 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 19 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 19 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 20 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 20 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 21 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 21 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 22 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 22 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 23 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 23 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 24 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 24 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 25 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 25 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 26 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 26 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 27 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 27 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 28 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 28 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 29 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 29 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 30 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 30 * C_BLK(), vl), (float)0.0f, vl), vl);
+        vsev_float32xm1(dst_ + 31 * C_BLK(), vfmaxvf_float32xm1(vlev_float32xm1(src_ + 31 * C_BLK(), vl), (float)0.0f, vl), vl);
     }
     for (; idx < total_len; idx += C_BLK()) {
         const float* src_ = src + idx;

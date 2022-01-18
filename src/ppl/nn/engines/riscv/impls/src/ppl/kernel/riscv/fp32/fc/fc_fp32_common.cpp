@@ -23,8 +23,10 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-fc_common_algo_info fc_algo_selector_fp32::select_algo(const ppl::common::dataformat_t& src_format,
-                                                       const fc_common_param& param) {
+fc_common_algo_info fc_algo_selector_fp32::select_algo(
+    const ppl::common::dataformat_t& src_format,
+    const fc_common_param& param)
+{
     static fc_common_algo_info unknown_info = {fc_common_algo::unknown};
 
     if (true) {
@@ -34,8 +36,11 @@ fc_common_algo_info fc_algo_selector_fp32::select_algo(const ppl::common::datafo
     return unknown_info;
 }
 
-fc_manager<float>* fc_algo_selector_fp32::gen_algo(const fc_common_param& param, const fc_common_algo_info& algo_info,
-                                                   ppl::common::Allocator* allocator) {
+fc_manager<float>* fc_algo_selector_fp32::gen_algo(
+    const fc_common_param& param,
+    const fc_common_algo_info& algo_info,
+    ppl::common::Allocator* allocator)
+{
     fc_manager<float>* fc_mgr = nullptr;
     if (algo_info.algo_type == fc_common_algo::standard) {
         fc_mgr = new fc_fp32_vec128_manager(param, allocator);

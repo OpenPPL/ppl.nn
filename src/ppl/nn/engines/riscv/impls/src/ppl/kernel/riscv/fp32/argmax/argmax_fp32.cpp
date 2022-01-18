@@ -19,8 +19,12 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode argmax_ndarray_fp32(const ppl::nn::TensorShape* src_shape, const float* src, const int64_t axis,
-                                         int64_t* dst) {
+ppl::common::RetCode argmax_ndarray_fp32(
+    const ppl::nn::TensorShape* src_shape,
+    const float* src,
+    const int64_t axis,
+    int64_t* dst)
+{
     return argmax_ndarray<float>(src_shape, src, axis, dst);
 }
 

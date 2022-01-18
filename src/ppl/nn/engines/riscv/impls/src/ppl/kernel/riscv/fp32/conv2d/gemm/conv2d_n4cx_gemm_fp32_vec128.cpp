@@ -31,8 +31,13 @@ struct conv2d_n4cx_gemm_tunning_info {
     int64_t gemm_k_blk;
 };
 
-size_t conv2d_n4cx_gemm_get_cvt_filter_size_fp32_vec128(int64_t num_outs, int64_t channels, int64_t kernel_h,
-                                                        int64_t kernel_w, int64_t group) {
+size_t conv2d_n4cx_gemm_get_cvt_filter_size_fp32_vec128(
+    int64_t num_outs,
+    int64_t channels,
+    int64_t kernel_h,
+    int64_t kernel_w,
+    int64_t group)
+{
     int64_t channels_per_group = channels / group;
     int64_t num_outs_per_group = num_outs / group;
 
@@ -44,12 +49,25 @@ size_t conv2d_n4cx_gemm_get_cvt_filter_size_fp32_vec128(int64_t num_outs, int64_
     return size_t(group * cvt_filter_size_per_group) * sizeof(float);
 }
 
-size_t conv2d_n4cx_gemm_get_temp_buffer_size_fp32_vec128(int64_t src_h, int64_t src_w, int64_t channels,
-                                                         int64_t num_outs, int64_t group, int64_t pad_h, int64_t pad_w,
-                                                         int64_t flt_h, int64_t flt_w, int64_t hole_h, int64_t hole_w,
-                                                         int64_t stride_h, int64_t stride_w,
+size_t conv2d_n4cx_gemm_get_temp_buffer_size_fp32_vec128(
+    int64_t src_h,
+    int64_t src_w,
+    int64_t channels,
+    int64_t num_outs,
+    int64_t group,
+    int64_t pad_h,
+    int64_t pad_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t hole_h,
+    int64_t hole_w,
+    int64_t stride_h,
+    int64_t stride_w,
 
-                                                         int64_t tile_m, int64_t tile_n, int64_t tile_k) {
+    int64_t tile_m,
+    int64_t tile_n,
+    int64_t tile_k)
+{
     const int64_t atom_ic = 4;
     const int64_t atom_oc = 4;
     int64_t channels_per_group = channels / group;
@@ -85,11 +103,23 @@ size_t conv2d_n4cx_gemm_get_temp_buffer_size_fp32_vec128(int64_t src_h, int64_t 
 
 uint64_t conv2d_n4cx_gemm_fp32_runtime_executor::cal_temp_buffer_size() {
     size_t temp_buffer_size = conv2d_n4cx_gemm_get_temp_buffer_size_fp32_vec128(
-        src_shape_->GetDim(2), src_shape_->GetDim(3), conv_param_->channels, conv_param_->num_output,
-        conv_param_->group, conv_param_->pad_h, conv_param_->pad_w, conv_param_->kernel_h, conv_param_->kernel_w,
-        conv_param_->dilation_h, conv_param_->dilation_w, conv_param_->stride_h, conv_param_->stride_w,
+        src_shape_->GetDim(2),
+        src_shape_->GetDim(3),
+        conv_param_->channels,
+        conv_param_->num_output,
+        conv_param_->group,
+        conv_param_->pad_h,
+        conv_param_->pad_w,
+        conv_param_->kernel_h,
+        conv_param_->kernel_w,
+        conv_param_->dilation_h,
+        conv_param_->dilation_w,
+        conv_param_->stride_h,
+        conv_param_->stride_w,
 
-        tunning_param_.m_blk, tunning_param_.n_blk, tunning_param_.k_blk);
+        tunning_param_.m_blk,
+        tunning_param_.n_blk,
+        tunning_param_.k_blk);
 
     return temp_buffer_size;
 }
@@ -115,9 +145,15 @@ static int64_t conv2d_gemm_get_real_filter_size(const int64_t flt) {
     return flt;
 }
 
-void sgemm_riscv_n4cx_cvt_src(const float* src, float* dst,
+void sgemm_riscv_n4cx_cvt_src(
+    const float* src,
+    float* dst,
 
-                              int64_t K, int64_t N, int64_t k_blk, int64_t n_blk) {
+    int64_t K,
+    int64_t N,
+    int64_t k_blk,
+    int64_t n_blk)
+{
     int64_t atom_ic = 4;
     int64_t atom_oc = 4;
     int64_t real_K = K / atom_oc / atom_ic;
@@ -129,10 +165,20 @@ void sgemm_riscv_n4cx_cvt_src(const float* src, float* dst,
     }
 }
 
-void sgemm_riscv_n4cx_cvt_dst(const float* src, const float* bias, float* dst,
+void sgemm_riscv_n4cx_cvt_dst(
+    const float* src,
+    const float* bias,
+    float* dst,
 
-                              int64_t M, int64_t N, int64_t m_blk, int64_t n_blk, int64_t m_krnl, int64_t n_krnl,
-                              int64_t m_loop, int64_t n_loop) {
+    int64_t M,
+    int64_t N,
+    int64_t m_blk,
+    int64_t n_blk,
+    int64_t m_krnl,
+    int64_t n_krnl,
+    int64_t m_loop,
+    int64_t n_loop)
+{
     int64_t atom_oc = 4;
     int64_t real_n_blk = n_blk / atom_oc;
     int64_t real_n_krnl = n_krnl / atom_oc;
@@ -158,11 +204,24 @@ void sgemm_riscv_n4cx_cvt_dst(const float* src, const float* bias, float* dst,
     }
 }
 
-void im2col_riscv_n4cx_per_group(const float* src, float* dst,
+void im2col_riscv_n4cx_per_group(
+    const float* src,
+    float* dst,
 
-                                 int64_t padded_channels, int64_t src_h, int64_t src_w, int64_t flt_h, int64_t flt_w,
-                                 int64_t pad_h, int64_t pad_w, int64_t stride_h, int64_t stride_w, int64_t hole_h,
-                                 int64_t hole_w, int64_t dst_h, int64_t dst_w) {
+    int64_t padded_channels,
+    int64_t src_h,
+    int64_t src_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t pad_h,
+    int64_t pad_w,
+    int64_t stride_h,
+    int64_t stride_w,
+    int64_t hole_h,
+    int64_t hole_w,
+    int64_t dst_h,
+    int64_t dst_w)
+{
     int64_t num_4c = padded_channels / 4;
     int64_t outHW = dst_h * dst_w;
     for (int64_t c = 0; c < num_4c; c++) {
@@ -190,10 +249,20 @@ void im2col_riscv_n4cx_per_group(const float* src, float* dst,
     }
 }
 
-void sgemm_riscv_n4cx_per_group(const float* src, const float* filter, const float* bias, float* gemm_buffer,
-                                float* dst,
+void sgemm_riscv_n4cx_per_group(
+    const float* src,
+    const float* filter,
+    const float* bias,
+    float* gemm_buffer,
+    float* dst,
 
-                                int64_t M, int64_t N, int64_t K, int64_t m_blk, int64_t n_blk, int64_t k_blk) {
+    int64_t M,
+    int64_t N,
+    int64_t K,
+    int64_t m_blk,
+    int64_t n_blk,
+    int64_t k_blk)
+{
     int64_t atom_ic = 4;
     int64_t atom_oc = 4;
     int64_t gemm_src_num = (k_blk / atom_ic / atom_oc) * n_blk;
@@ -217,23 +286,41 @@ void sgemm_riscv_n4cx_per_group(const float* src, const float* filter, const flo
                 sgemm_riscv_n4cx_cvt_src(src_, gemm_src_loc, K, N, real_blk_k, real_blk_n);
 
                 if (first) {
-                    auto sgemm_n4cx_tile_kernel = conv2d_gemm_select_xcto4c_kernel_fp32_vec128<4, true>(
-                        real_blk_m * atom_oc, real_blk_n / atom_oc);
-                    sgemm_n4cx_tile_kernel(filter, gemm_src_loc, gemm_dst_loc + gemm_dst_stride, real_blk_m * atom_oc,
-                                           real_blk_n / atom_oc, real_blk_k / atom_oc);
+                    auto sgemm_n4cx_tile_kernel = conv2d_gemm_select_xcto4c_kernel_fp32_vec128<4, true>(real_blk_m * atom_oc, real_blk_n / atom_oc);
+                    sgemm_n4cx_tile_kernel(
+                        filter,
+                        gemm_src_loc,
+                        gemm_dst_loc + gemm_dst_stride,
+                        real_blk_m * atom_oc,
+                        real_blk_n / atom_oc,
+                        real_blk_k / atom_oc);
                 } else {
-                    auto sgemm_n4cx_tile_kernel = conv2d_gemm_select_xcto4c_kernel_fp32_vec128<4, false>(
-                        real_blk_m * atom_oc, real_blk_n / atom_oc);
-                    sgemm_n4cx_tile_kernel(filter, gemm_src_loc, gemm_dst_loc + gemm_dst_stride, real_blk_m * atom_oc,
-                                           real_blk_n / atom_oc, real_blk_k / atom_oc);
+                    auto sgemm_n4cx_tile_kernel = conv2d_gemm_select_xcto4c_kernel_fp32_vec128<4, false>(real_blk_m * atom_oc, real_blk_n / atom_oc);
+                    sgemm_n4cx_tile_kernel(
+                        filter,
+                        gemm_src_loc,
+                        gemm_dst_loc + gemm_dst_stride,
+                        real_blk_m * atom_oc,
+                        real_blk_n / atom_oc,
+                        real_blk_k / atom_oc);
                 }
 
                 if (k + real_blk_k == K) {
                     float* dst_offset = dst + m * N + n / atom_oc * atom_ic;
                     int64_t m_loop = real_blk_m / 1;
                     int64_t n_loop = real_blk_n / atom_oc;
-                    sgemm_riscv_n4cx_cvt_dst(gemm_dst_loc + gemm_dst_stride, bias + bias_offset, dst_offset, M, N,
-                                             real_blk_m, real_blk_n, 1, atom_oc, m_loop, n_loop);
+                    sgemm_riscv_n4cx_cvt_dst(
+                        gemm_dst_loc + gemm_dst_stride,
+                        bias + bias_offset,
+                        dst_offset,
+                        M,
+                        N,
+                        real_blk_m,
+                        real_blk_n,
+                        1,
+                        atom_oc,
+                        m_loop,
+                        n_loop);
                 }
                 gemm_dst_stride += real_blk_m * real_blk_n;
             }
@@ -243,14 +330,30 @@ void sgemm_riscv_n4cx_per_group(const float* src, const float* filter, const flo
     }
 }
 
-void conv2d_n4cx_gemm_per_group_fp32_vec128(const float* src, const float* filter, const float* bias,
-                                            float* temp_buffer, float* dst,
+void conv2d_n4cx_gemm_per_group_fp32_vec128(
+    const float* src,
+    const float* filter,
+    const float* bias,
+    float* temp_buffer,
+    float* dst,
 
-                                            int64_t src_h, int64_t src_w, int64_t pad_h, int64_t pad_w, int64_t flt_h,
-                                            int64_t flt_w, int64_t stride_h, int64_t stride_w, int64_t hole_h,
-                                            int64_t hole_w, int64_t dst_h, int64_t dst_w, int64_t ic, int64_t oc,
+    int64_t src_h,
+    int64_t src_w,
+    int64_t pad_h,
+    int64_t pad_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t stride_h,
+    int64_t stride_w,
+    int64_t hole_h,
+    int64_t hole_w,
+    int64_t dst_h,
+    int64_t dst_w,
+    int64_t ic,
+    int64_t oc,
 
-                                            conv2d_n4cx_gemm_tunning_info tunning_info) {
+    conv2d_n4cx_gemm_tunning_info tunning_info)
+{
     const int64_t atom_ic = 4;
     const int64_t atom_oc = 4;
 
@@ -275,12 +378,33 @@ void conv2d_n4cx_gemm_per_group_fp32_vec128(const float* src, const float* filte
     int64_t N = dst_h * dst_w * atom_oc;
     if (flt_h == 1 && flt_w == 1 && pad_h == 0 && pad_w == 0 && stride_h == 1 && stride_w == 1 && hole_h == 1 &&
         hole_w == 1) {
-        sgemm_riscv_n4cx_per_group(src, filter, bias, gemm_buffer, dst, M, N, K, gemm_m_blk, gemm_n_blk, gemm_k_blk);
+        sgemm_riscv_n4cx_per_group(
+            src,
+            filter,
+            bias,
+            gemm_buffer,
+            dst,
+            M, N, K,
+            gemm_m_blk, gemm_n_blk, gemm_k_blk);
     } else {
-        im2col_riscv_n4cx_per_group(src, im2col_buf, padded_ic, src_h, src_w, flt_h, flt_w, pad_h, pad_w, stride_h,
-                                    stride_w, hole_h, hole_w, dst_h, dst_w);
-        sgemm_riscv_n4cx_per_group(im2col_buf, filter, bias, gemm_buffer, dst, M, N, K, gemm_m_blk, gemm_n_blk,
-                                   gemm_k_blk);
+        im2col_riscv_n4cx_per_group(
+            src,
+            im2col_buf,
+            padded_ic,
+            src_h, src_w,
+            flt_h, flt_w,
+            pad_h, pad_w,
+            stride_h, stride_w,
+            hole_h, hole_w,
+            dst_h, dst_w);
+        sgemm_riscv_n4cx_per_group(
+            im2col_buf,
+            filter,
+            bias,
+            gemm_buffer,
+            dst,
+            M, N, K,
+            gemm_m_blk, gemm_n_blk, gemm_k_blk);
     }
 }
 
@@ -292,16 +416,34 @@ ppl::common::RetCode conv2d_n4cx_gemm_fp32_runtime_executor::execute() {
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    conv2d_shell_fp32<conv2d_n4cx_gemm_tunning_info, 4, conv2d_gemm_get_real_filter_size,
-                      conv2d_n4cx_gemm_per_group_fp32_vec128>(
-        src_, cvt_filter_, cvt_bias_, (float*)temp_buffer_, dst_,
+    conv2d_shell_fp32<conv2d_n4cx_gemm_tunning_info,
+        4,
+        conv2d_gemm_get_real_filter_size,
+        conv2d_n4cx_gemm_per_group_fp32_vec128>
+    (
+        src_,
+        cvt_filter_,
+        cvt_bias_,
+        (float*)temp_buffer_,
+        dst_,
 
-        src_shape_->GetDim(2), src_shape_->GetDim(3), conv_param_->pad_h, conv_param_->pad_w, conv_param_->kernel_h,
-        conv_param_->kernel_w, conv_param_->stride_h, conv_param_->stride_w, conv_param_->dilation_h,
-        conv_param_->dilation_w, conv_param_->channels, conv_param_->num_output, conv_param_->group,
+        src_shape_->GetDim(2),
+        src_shape_->GetDim(3),
+        conv_param_->pad_h, conv_param_->pad_w,
+        conv_param_->kernel_h, conv_param_->kernel_w,
+        conv_param_->stride_h, conv_param_->stride_w,
+        conv_param_->dilation_h, conv_param_->dilation_w,
+        conv_param_->channels,
+        conv_param_->num_output,
+        conv_param_->group,
         src_shape_->GetDim(0),
 
-        {tunning_param_.m_blk, tunning_param_.n_blk, tunning_param_.k_blk});
+        {
+            tunning_param_.m_blk,
+            tunning_param_.n_blk,
+            tunning_param_.k_blk
+        }
+    );
 
     return ppl::common::RC_SUCCESS;
 }
@@ -323,18 +465,33 @@ ppl::common::RetCode conv2d_n4cx_gemm_fp32_offline_manager::fast_init_tunning_pa
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode conv2d_n4cx_gemm_fp32_offline_manager::pick_best_tunning_param(const float* src,
-                                                                                    const float* filter, float* dst,
-                                                                                    ppl::nn::TensorShape& src_shape,
-                                                                                    ppl::nn::TensorShape& dst_shape) {
+ppl::common::RetCode conv2d_n4cx_gemm_fp32_offline_manager::pick_best_tunning_param(
+    const float* src,
+    const float* filter,
+    float* dst,
+    ppl::nn::TensorShape& src_shape,
+    ppl::nn::TensorShape& dst_shape)
+{
     return ppl::common::RC_SUCCESS;
 }
 
-void sgemm_riscv_n4cx_cvt_filter_per_group(const float* flt, float* flt_cvt,
+void sgemm_riscv_n4cx_cvt_filter_per_group(
+    const float* flt,
+    float* flt_cvt,
 
-                                           int64_t num_outs, int64_t channels, int64_t flt_h, int64_t flt_w, int64_t M,
-                                           int64_t K, int64_t M_pad, int64_t K_pad, int64_t m_blk, int64_t k_blk,
-                                           int64_t m_krnl, int64_t k_krnl) {
+    int64_t num_outs,
+    int64_t channels,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t M,
+    int64_t K,
+    int64_t M_pad,
+    int64_t K_pad,
+    int64_t m_blk,
+    int64_t k_blk,
+    int64_t m_krnl,
+    int64_t k_krnl)
+{
     for (int64_t mt = 0; mt < M_pad; mt += m_blk) {
         int64_t real_blk_m = min(m_blk, M_pad - mt);
         for (int64_t kt = 0; kt < K_pad; kt += k_blk) {
@@ -375,10 +532,18 @@ void sgemm_riscv_n4cx_cvt_filter_per_group(const float* flt, float* flt_cvt,
     }
 }
 
-void conv2d_n4cx_gemm_cvt_filter_fp32_vec128(const float* filter, float* filter_cvt,
+void conv2d_n4cx_gemm_cvt_filter_fp32_vec128(
+    const float* filter,
+    float* filter_cvt,
 
-                                             int64_t flt_h, int64_t flt_w, int64_t channels, int64_t num_outs,
-                                             int64_t group, int64_t m_blk, int64_t k_blk) {
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t channels,
+    int64_t num_outs,
+    int64_t group,
+    int64_t m_blk,
+    int64_t k_blk)
+{
     int64_t channels_per_group = channels / group;
     int64_t num_outs_per_group = num_outs / group;
     int64_t padded_channels_per_group = round_up(channels_per_group, 4);
@@ -389,9 +554,16 @@ void conv2d_n4cx_gemm_cvt_filter_fp32_vec128(const float* filter, float* filter_
 
     for (int64_t g = 0; g < group; g++) {
         sgemm_riscv_n4cx_cvt_filter_per_group(
-            filter + g * flt_size_per_group, filter_cvt + g * flt_cvt_size_per_group, num_outs_per_group,
-            channels_per_group, flt_h, flt_w, num_outs_per_group / 4, channels_per_group * flt_h * flt_w * 4,
-            padded_num_outs_per_group / 4, padded_channels_per_group * flt_h * flt_w * 4, m_blk, k_blk, 1, 4 * 4);
+            filter + g * flt_size_per_group,
+            filter_cvt + g * flt_cvt_size_per_group,
+            num_outs_per_group,
+            channels_per_group,
+            flt_h, flt_w,
+            num_outs_per_group / 4,
+            channels_per_group * flt_h * flt_w * 4,
+            padded_num_outs_per_group / 4,
+            padded_channels_per_group * flt_h * flt_w * 4,
+            m_blk, k_blk, 1, 4 * 4);
     }
 }
 
@@ -415,11 +587,23 @@ ppl::common::RetCode conv2d_n4cx_gemm_fp32_offline_manager::gen_cvt_weights(cons
     }
     // cvt filter
     {
-        cvt_filter_size_ =
-            conv2d_n4cx_gemm_get_cvt_filter_size_fp32_vec128(num_output, channels, kernel_h, kernel_w, num_group);
+        cvt_filter_size_ = conv2d_n4cx_gemm_get_cvt_filter_size_fp32_vec128(
+            num_output,
+            channels, 
+            kernel_h,
+            kernel_w,
+            num_group);
         cvt_filter_ = (float*)allocator_->Alloc(cvt_filter_size_);
-        conv2d_n4cx_gemm_cvt_filter_fp32_vec128(filter, cvt_filter_, kernel_h, kernel_w, channels, num_output,
-                                                num_group, tunning_param_.m_blk, tunning_param_.k_blk);
+        conv2d_n4cx_gemm_cvt_filter_fp32_vec128(
+            filter,
+            cvt_filter_,
+            kernel_h,
+            kernel_w,
+            channels,
+            num_output,
+            num_group,
+            tunning_param_.m_blk,
+            tunning_param_.k_blk);
     }
 
     return ppl::common::RC_SUCCESS;

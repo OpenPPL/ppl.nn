@@ -23,8 +23,13 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-typedef void (*conv2d_gemm_kernel_func_riscv_fp32_type_t)(const float* A, const float* B, float* C, const int64_t m,
-                                                          const int64_t n, const int64_t k);
+typedef void (*conv2d_gemm_kernel_func_riscv_fp32_type_t)(
+    const float* A,
+    const float* B,
+    float* C,
+    const int64_t m,
+    const int64_t n,
+    const int64_t k);
 
 template <bool first>
 conv2d_gemm_kernel_func_riscv_fp32_type_t conv2d_gemm_select_cto4c_kernel_fp32_vec128(int64_t m, int64_t n) {

@@ -26,8 +26,12 @@ namespace ppl { namespace kernel { namespace riscv {
 #define C_BLK() ((int64_t)4)
 
 template <arithmetic_op_type_t _op, bool fuse_relu>
-static ppl::common::RetCode arithmetic_eltwise_fp32(const ppl::nn::TensorShape* dst_shape, const float* src0,
-                                                    const float* src1, float* dst) {
+static ppl::common::RetCode arithmetic_eltwise_fp32(
+    const ppl::nn::TensorShape* dst_shape,
+    const float* src0,
+    const float* src1,
+    float* dst)
+{
     const int64_t total_len = dst_shape->GetElementsIncludingPadding();
     const int64_t parall_d = 16;
     const int64_t unroll_len = parall_d * C_BLK();
@@ -44,38 +48,22 @@ static ppl::common::RetCode arithmetic_eltwise_fp32(const ppl::nn::TensorShape* 
         float32xm1_t vfdata8, vfdata9, vfdata10, vfdata11;
         float32xm1_t vfdata12, vfdata13, vfdata14, vfdata15;
 
-        vfdata0 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 0 * C_BLK(), vl),
-                                                     vlev_float32xm1(src1_ + 0 * C_BLK(), vl));
-        vfdata1 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 1 * C_BLK(), vl),
-                                                     vlev_float32xm1(src1_ + 1 * C_BLK(), vl));
-        vfdata2 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 2 * C_BLK(), vl),
-                                                     vlev_float32xm1(src1_ + 2 * C_BLK(), vl));
-        vfdata3 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 3 * C_BLK(), vl),
-                                                     vlev_float32xm1(src1_ + 3 * C_BLK(), vl));
-        vfdata4 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 4 * C_BLK(), vl),
-                                                     vlev_float32xm1(src1_ + 4 * C_BLK(), vl));
-        vfdata5 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 5 * C_BLK(), vl),
-                                                     vlev_float32xm1(src1_ + 5 * C_BLK(), vl));
-        vfdata6 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 6 * C_BLK(), vl),
-                                                     vlev_float32xm1(src1_ + 6 * C_BLK(), vl));
-        vfdata7 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 7 * C_BLK(), vl),
-                                                     vlev_float32xm1(src1_ + 7 * C_BLK(), vl));
-        vfdata8 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 8 * C_BLK(), vl),
-                                                     vlev_float32xm1(src1_ + 8 * C_BLK(), vl));
-        vfdata9 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 9 * C_BLK(), vl),
-                                                     vlev_float32xm1(src1_ + 9 * C_BLK(), vl));
-        vfdata10 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 10 * C_BLK(), vl),
-                                                      vlev_float32xm1(src1_ + 10 * C_BLK(), vl));
-        vfdata11 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 11 * C_BLK(), vl),
-                                                      vlev_float32xm1(src1_ + 11 * C_BLK(), vl));
-        vfdata12 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 12 * C_BLK(), vl),
-                                                      vlev_float32xm1(src1_ + 12 * C_BLK(), vl));
-        vfdata13 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 13 * C_BLK(), vl),
-                                                      vlev_float32xm1(src1_ + 13 * C_BLK(), vl));
-        vfdata14 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 14 * C_BLK(), vl),
-                                                      vlev_float32xm1(src1_ + 14 * C_BLK(), vl));
-        vfdata15 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 15 * C_BLK(), vl),
-                                                      vlev_float32xm1(src1_ + 15 * C_BLK(), vl));
+        vfdata0 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 0 * C_BLK(), vl), vlev_float32xm1(src1_ + 0 * C_BLK(), vl));
+        vfdata1 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 1 * C_BLK(), vl), vlev_float32xm1(src1_ + 1 * C_BLK(), vl));
+        vfdata2 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 2 * C_BLK(), vl), vlev_float32xm1(src1_ + 2 * C_BLK(), vl));
+        vfdata3 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 3 * C_BLK(), vl), vlev_float32xm1(src1_ + 3 * C_BLK(), vl));
+        vfdata4 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 4 * C_BLK(), vl), vlev_float32xm1(src1_ + 4 * C_BLK(), vl));
+        vfdata5 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 5 * C_BLK(), vl), vlev_float32xm1(src1_ + 5 * C_BLK(), vl));
+        vfdata6 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 6 * C_BLK(), vl), vlev_float32xm1(src1_ + 6 * C_BLK(), vl));
+        vfdata7 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 7 * C_BLK(), vl), vlev_float32xm1(src1_ + 7 * C_BLK(), vl));
+        vfdata8 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 8 * C_BLK(), vl), vlev_float32xm1(src1_ + 8 * C_BLK(), vl));
+        vfdata9 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 9 * C_BLK(), vl), vlev_float32xm1(src1_ + 9 * C_BLK(), vl));
+        vfdata10 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 10 * C_BLK(), vl), vlev_float32xm1(src1_ + 10 * C_BLK(), vl));
+        vfdata11 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 11 * C_BLK(), vl), vlev_float32xm1(src1_ + 11 * C_BLK(), vl));
+        vfdata12 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 12 * C_BLK(), vl), vlev_float32xm1(src1_ + 12 * C_BLK(), vl));
+        vfdata13 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 13 * C_BLK(), vl), vlev_float32xm1(src1_ + 13 * C_BLK(), vl));
+        vfdata14 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 14 * C_BLK(), vl), vlev_float32xm1(src1_ + 14 * C_BLK(), vl));
+        vfdata15 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 15 * C_BLK(), vl), vlev_float32xm1(src1_ + 15 * C_BLK(), vl));
 
         if (fuse_relu) {
             vsev_float32xm1(dst_ + 0 * C_BLK(), vfmaxvf_float32xm1(vfdata0, (float)0.0f, vl), vl);
