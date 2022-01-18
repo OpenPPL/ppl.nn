@@ -26,8 +26,16 @@ namespace ppl { namespace kernel { namespace riscv {
 
 #define C_BLK() (int64_t(4))
 
-void conv_dw_src_padding_fp32(const float* src, float* src_padded, int64_t src_h, int64_t src_w, int64_t pad_l,
-                              int64_t pad_r, int64_t pad_t, int64_t pad_b) {
+void conv_dw_src_padding_fp32(
+    const float* src,
+    float* src_padded,
+    int64_t src_h,
+    int64_t src_w,
+    int64_t pad_l,
+    int64_t pad_r,
+    int64_t pad_t,
+    int64_t pad_b)
+{
     int64_t src_w_padded = src_w + pad_l + pad_r;
     int64_t src_padded_h_stride = src_w_padded * C_BLK();
 
@@ -63,12 +71,22 @@ void conv_dw_src_padding_fp32(const float* src, float* src_padded, int64_t src_h
     }
 }
 
-size_t conv_dw_get_cvt_flt_size_fp32(int64_t flt_h, int64_t flt_w, int64_t channels) {
+size_t conv_dw_get_cvt_flt_size_fp32(
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t channels)
+{
     int64_t padded_channels = round_up(channels, C_BLK());
     return size_t(flt_h * flt_w * padded_channels) * sizeof(float);
 }
 
-void conv_dw_cvt_flt_fp32(const float* flt, float* cvt_flt, int64_t flt_h, int64_t flt_w, int64_t channels) {
+void conv_dw_cvt_flt_fp32(
+    const float* flt,
+    float* cvt_flt,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t channels)
+{
     int64_t i;
     int64_t flt_size = flt_h * flt_w;
     for (i = 0; i + C_BLK() < channels; i += C_BLK()) {
@@ -93,8 +111,17 @@ void conv_dw_cvt_flt_fp32(const float* flt, float* cvt_flt, int64_t flt_h, int64
     }
 }
 
-size_t conv_dw_get_temp_buffer_size_fp32(int64_t src_h, int64_t src_w, int64_t pad_h, int64_t pad_w, int64_t flt_h,
-                                         int64_t flt_w, int64_t stride_h, int64_t stride_w, int64_t channels) {
+size_t conv_dw_get_temp_buffer_size_fp32(
+    int64_t src_h,
+    int64_t src_w,
+    int64_t pad_h,
+    int64_t pad_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t stride_h,
+    int64_t stride_w,
+    int64_t channels)
+{
     int64_t padded_channels = round_up(channels, C_BLK());
     int64_t src_padded_size = (src_h + pad_h * 2) * (src_w + pad_w * 2) * padded_channels;
     size_t temp_buffer_size = size_t(src_padded_size);
@@ -102,10 +129,20 @@ size_t conv_dw_get_temp_buffer_size_fp32(int64_t src_h, int64_t src_w, int64_t p
     return temp_buffer_size * sizeof(float);
 }
 
-void conv_dw_kernel_riscv_fp32(const float* src, const float* flt, const float* bias, float* dst,
+void conv_dw_kernel_riscv_fp32(
+    const float* src,
+    const float* flt,
+    const float* bias,
+    float* dst,
 
-                               int64_t src_pad_w, int64_t dst_h, int64_t dst_w, int64_t flt_h, int64_t flt_w,
-                               int64_t stride_h, int64_t stride_w) {
+    int64_t src_pad_w,
+    int64_t dst_h,
+    int64_t dst_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t stride_h,
+    int64_t stride_w)
+{
     int64_t dst_w_div4 = dst_w >> 2;
     int64_t dst_w_left = dst_w - (dst_w_div4 << 2);
 
@@ -126,14 +163,10 @@ void conv_dw_kernel_riscv_fp32(const float* src, const float* flt, const float* 
                         int64_t flt_idx = 0;
                         flt_idx += k + wk * C_BLK() + hk * flt_w * C_BLK();
                         int64_t dst_idx = dst_base_idx + k;
-                        int64_t src_idx0 = (i * stride_h + hk) * src_pad_w * C_BLK() +
-                            ((j * C_BLK() + 0) * stride_w + wk) * C_BLK() + k;
-                        int64_t src_idx1 = (i * stride_h + hk) * src_pad_w * C_BLK() +
-                            ((j * C_BLK() + 1) * stride_w + wk) * C_BLK() + k;
-                        int64_t src_idx2 = (i * stride_h + hk) * src_pad_w * C_BLK() +
-                            ((j * C_BLK() + 2) * stride_w + wk) * C_BLK() + k;
-                        int64_t src_idx3 = (i * stride_h + hk) * src_pad_w * C_BLK() +
-                            ((j * C_BLK() + 3) * stride_w + wk) * C_BLK() + k;
+                        int64_t src_idx0 = (i * stride_h + hk) * src_pad_w * C_BLK() + ((j * C_BLK() + 0) * stride_w + wk) * C_BLK() + k;
+                        int64_t src_idx1 = (i * stride_h + hk) * src_pad_w * C_BLK() + ((j * C_BLK() + 1) * stride_w + wk) * C_BLK() + k;
+                        int64_t src_idx2 = (i * stride_h + hk) * src_pad_w * C_BLK() + ((j * C_BLK() + 2) * stride_w + wk) * C_BLK() + k;
+                        int64_t src_idx3 = (i * stride_h + hk) * src_pad_w * C_BLK() + ((j * C_BLK() + 3) * stride_w + wk) * C_BLK() + k;
                         dst[dst_idx + (j * C_BLK() + 0) * C_BLK()] += src[src_idx0] * flt[flt_idx];
                         dst[dst_idx + (j * C_BLK() + 1) * C_BLK()] += src[src_idx1] * flt[flt_idx];
                         dst[dst_idx + (j * C_BLK() + 2) * C_BLK()] += src[src_idx2] * flt[flt_idx];
@@ -152,8 +185,7 @@ void conv_dw_kernel_riscv_fp32(const float* src, const float* flt, const float* 
                 for (int64_t wk = 0; wk < flt_w; wk++) {
                     for (int64_t k = 0; k < C_BLK(); k++) {
                         int64_t flt_idx = k + wk * C_BLK() + hk * flt_w * C_BLK();
-                        int64_t src_idx = (i * stride_h + hk) * src_pad_w * C_BLK() +
-                            ((dst_w_div4 * C_BLK() + j) * stride_w + wk) * C_BLK() + k;
+                        int64_t src_idx = (i * stride_h + hk) * src_pad_w * C_BLK() + ((dst_w_div4 * C_BLK() + j) * stride_w + wk) * C_BLK() + k;
                         int64_t dst_idx = k + (dst_w_div4 * C_BLK() + j) * C_BLK() + i * dst_w * C_BLK();
                         dst[dst_idx] += src[src_idx] * flt[flt_idx];
                     }
@@ -165,8 +197,16 @@ void conv_dw_kernel_riscv_fp32(const float* src, const float* flt, const float* 
 
 uint64_t conv2d_n4cx_dw_fp32_runtime_executor::cal_temp_buffer_size() {
     size_t temp_buffer_size = conv_dw_get_temp_buffer_size_fp32(
-        src_shape_->GetDim(2), src_shape_->GetDim(3), conv_param_->pad_h, conv_param_->pad_w, conv_param_->kernel_h,
-        conv_param_->kernel_w, conv_param_->stride_h, conv_param_->stride_w, conv_param_->channels);
+        src_shape_->GetDim(2),
+        src_shape_->GetDim(3),
+        conv_param_->pad_h,
+        conv_param_->pad_w,
+        conv_param_->kernel_h,
+        conv_param_->kernel_w,
+        conv_param_->stride_h,
+        conv_param_->stride_w,
+        conv_param_->channels
+    );
     return temp_buffer_size;
 }
 
@@ -205,8 +245,7 @@ ppl::common::RetCode conv2d_n4cx_dw_fp32_runtime_executor::execute() {
     int64_t src_h_padded = src_h + pad_h * 2;
     int64_t src_w_padded = src_w + pad_w * 2;
 
-    typedef void (*depthwise_riscv_kernel_fp32)(const float*, const float*, const float*, float*, int64_t, int64_t,
-                                                int64_t);
+    typedef void (*depthwise_riscv_kernel_fp32)(const float*, const float*, const float*, float*, int64_t, int64_t, int64_t);
     depthwise_riscv_kernel_fp32 dw_conv_kernel;
     if (kernel_h == 3 && kernel_w == 3 && stride_h == 1 && stride_w == 1) {
         switch (dst_w % 4) {
@@ -324,20 +363,38 @@ ppl::common::RetCode conv2d_n4cx_dw_fp32_runtime_executor::execute() {
     }
 
     for (int64_t i = 0; i < padded_channels; i += C_BLK()) {
-        conv_dw_src_padding_fp32(src_ + i * src_h * src_w, (float*)temp_buffer_ + i * src_h_padded * src_w_padded,
-                                 src_h, src_w, pad_w, pad_w, pad_h, pad_h);
+        conv_dw_src_padding_fp32(
+            src_ + i * src_h * src_w,
+            (float*)temp_buffer_ + i * src_h_padded * src_w_padded,
+            src_h, src_w,
+            pad_w, pad_w,
+            pad_h, pad_h);
         if ((kernel_h == 3 && kernel_w == 3 && stride_h == 1 && stride_w == 1) ||
             (kernel_h == 3 && kernel_w == 3 && stride_h == 2 && stride_w == 2) ||
             (kernel_h == 5 && kernel_w == 5 && stride_h == 1 && stride_w == 1)) {
-            dw_conv_kernel((float*)temp_buffer_ + i * src_h_padded * src_w_padded,
-                           cvt_filter_ + i * kernel_h * kernel_w, cvt_bias_ + i, dst_ + i * dst_h * dst_w,
+            dw_conv_kernel(
+                (float*)temp_buffer_ + i * src_h_padded * src_w_padded,
+                cvt_filter_ + i * kernel_h * kernel_w,
+                cvt_bias_ + i,
+                dst_ + i * dst_h * dst_w,
 
-                           src_w_padded, dst_h, dst_w);
+                src_w_padded,
+                dst_h,
+                dst_w);
         } else {
-            conv_dw_kernel_riscv_fp32((float*)temp_buffer_ + i * src_h_padded * src_w_padded,
-                                      cvt_filter_ + i * kernel_h * kernel_w, cvt_bias_ + i, dst_ + i * dst_h * dst_w,
+            conv_dw_kernel_riscv_fp32(
+                (float*)temp_buffer_ + i * src_h_padded * src_w_padded,
+                cvt_filter_ + i * kernel_h * kernel_w,
+                cvt_bias_ + i,
+                dst_ + i * dst_h * dst_w,
 
-                                      src_w_padded, dst_h, dst_w, kernel_h, kernel_w, stride_h, stride_w);
+                src_w_padded,
+                dst_h,
+                dst_w,
+                kernel_h,
+                kernel_w,
+                stride_h,
+                stride_w);
         }
     }
 

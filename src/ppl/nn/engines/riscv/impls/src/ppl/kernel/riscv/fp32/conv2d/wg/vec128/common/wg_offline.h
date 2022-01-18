@@ -24,14 +24,20 @@ namespace ppl { namespace kernel { namespace riscv {
 
 #define C_BLK() ((int64_t)4)
 
-typedef void (*conv_wg_riscv_fp32_cvt_filter_blk_kernel_func_t)(const float* filter,
-                                                                const float* trans_mat, // TODO: should be removed
-                                                                int64_t filter_out_stride,
+typedef void (*conv_wg_riscv_fp32_cvt_filter_blk_kernel_func_t)(
+    const float* filter,
+    const float* trans_mat, // TODO: should be removed
+    int64_t filter_out_stride,
 
-                                                                float* filter_cvt, int64_t filter_cvt_wg_tile_stride);
+    float* filter_cvt,
+    int64_t filter_cvt_wg_tile_stride);
 
 template <int64_t wgb, int64_t wgf>
-size_t conv_wg_bxfxs1_get_cvt_filter_size_fp32(int64_t channels, int64_t num_outs, int64_t group) {
+size_t conv_wg_bxfxs1_get_cvt_filter_size_fp32(
+    int64_t channels,
+    int64_t num_outs,
+    int64_t group)
+{
     const int64_t wg_tile_len = wgb + wgf - 1;
     const int64_t wg_tile_size = wg_tile_len * wg_tile_len;
 
@@ -45,11 +51,20 @@ size_t conv_wg_bxfxs1_get_cvt_filter_size_fp32(int64_t channels, int64_t num_out
 }
 
 template <int64_t wgb, int64_t wgf>
-size_t conv_wg_bxfxs1_get_temp_buffer_size_fp32(int64_t src_h, int64_t src_w, int64_t channels, int64_t num_outs,
-                                                int64_t group, int64_t padding_h, int64_t padding_w,
+size_t conv_wg_bxfxs1_get_temp_buffer_size_fp32(
+    int64_t src_h,
+    int64_t src_w,
+    int64_t channels,
+    int64_t num_outs,
+    int64_t group,
+    int64_t padding_h,
+    int64_t padding_w,
 
-                                                int64_t blk_dst_h, int64_t blk_dst_w, int64_t blk_channels,
-                                                int64_t blk_num_outs) {
+    int64_t blk_dst_h,
+    int64_t blk_dst_w,
+    int64_t blk_channels,
+    int64_t blk_num_outs)
+{
     // pad blk param
     blk_dst_h = round_up(blk_dst_h, wgb);
     blk_dst_w = round_up(blk_dst_w, wgb);
@@ -98,9 +113,18 @@ size_t conv_wg_bxfxs1_get_temp_buffer_size_fp32(int64_t src_h, int64_t src_w, in
     return src_pad_size_for_group + dst_pad_size_for_group + src_pad_blk_size + src_trans_size + dst_trans_size;
 }
 
-template <int64_t wgb, int64_t wgf, conv_wg_riscv_fp32_cvt_filter_blk_kernel_func_t cvt_filter_blk_kernel>
-void conv_wg_bxfxs1_cvt_filter_blk_fp32(const float* filter, const float* trans_mat, int64_t channels, int64_t num_outs,
-                                        int64_t filter_out_stride, int64_t filter_kernel_size, float* filter_cvt) {
+template <int64_t wgb,
+    int64_t wgf,
+    conv_wg_riscv_fp32_cvt_filter_blk_kernel_func_t cvt_filter_blk_kernel>
+void conv_wg_bxfxs1_cvt_filter_blk_fp32(
+    const float* filter,
+    const float* trans_mat,
+    int64_t channels,
+    int64_t num_outs,
+    int64_t filter_out_stride,
+    int64_t filter_kernel_size,
+    float* filter_cvt)
+{
     int64_t tile_len = wgb + wgf - 1;
     int64_t tile_size = tile_len * tile_len;
 
@@ -117,8 +141,12 @@ void conv_wg_bxfxs1_cvt_filter_blk_fp32(const float* filter, const float* trans_
             for (int64_t oc4 = 0; oc4 < C_BLK(); oc4++) {
                 int64_t flt_src_offset = (oc * C_BLK() + oc4) * filter_out_stride + ic * filter_kernel_size;
                 int64_t flt_cvt_offset = oc4 + ic * C_BLK() + oc * pad_channels * C_BLK();
-                cvt_filter_blk_kernel(filter + flt_src_offset, trans_mat, filter_out_stride,
-                                      filter_cvt + flt_cvt_offset, flt_cvt_tile_stride);
+                cvt_filter_blk_kernel(
+                    filter + flt_src_offset,
+                    trans_mat,
+                    filter_out_stride,
+                    filter_cvt + flt_cvt_offset,
+                    flt_cvt_tile_stride);
             }
         }
         // pad flt in IC
@@ -140,8 +168,12 @@ void conv_wg_bxfxs1_cvt_filter_blk_fp32(const float* filter, const float* trans_
             for (int64_t oc4 = 0; oc4 < num_outs_left; oc4++) {
                 int64_t flt_src_offset = (num_outs_div4 * C_BLK() + oc4) * filter_out_stride + ic * filter_kernel_size;
                 int64_t flt_cvt_offset = oc4 + ic * C_BLK() + num_outs_div4 * pad_channels * C_BLK();
-                cvt_filter_blk_kernel(filter + flt_src_offset, trans_mat, filter_out_stride,
-                                      filter_cvt + flt_cvt_offset, flt_cvt_tile_stride);
+                cvt_filter_blk_kernel(
+                    filter + flt_src_offset,
+                    trans_mat,
+                    filter_out_stride,
+                    filter_cvt + flt_cvt_offset,
+                    flt_cvt_tile_stride);
             }
             for (int64_t oc4 = num_outs_left; oc4 < C_BLK(); oc4++) {
                 int64_t flt_cvt_offset = oc4 + ic * C_BLK() + num_outs_div4 * pad_channels * C_BLK();
@@ -167,11 +199,20 @@ void conv_wg_bxfxs1_cvt_filter_blk_fp32(const float* filter, const float* trans_
     }
 }
 
-template <int64_t wgb, int64_t wgf, conv_wg_riscv_fp32_cvt_filter_blk_kernel_func_t cvt_filter_blk_kernel>
-void conv_wg_bxfxs1_cvt_filter_fp32(const float* filter, const float* trans_mat, int64_t channels, int64_t num_outs,
-                                    int64_t group,
+template <int64_t wgb,
+    int64_t wgf,
+    conv_wg_riscv_fp32_cvt_filter_blk_kernel_func_t cvt_filter_blk_kernel>
+void conv_wg_bxfxs1_cvt_filter_fp32(
+    const float* filter,
+    const float* trans_mat,
+    int64_t channels,
+    int64_t num_outs,
+    int64_t group,
 
-                                    int64_t blk_channels, int64_t blk_num_outs, float* filter_cvt) {
+    int64_t blk_channels,
+    int64_t blk_num_outs,
+    float* filter_cvt)
+{
     const int64_t wg_tile_len = wgb + wgf - 1;
     const int64_t wg_tile_size = wg_tile_len * wg_tile_len;
 
@@ -199,11 +240,15 @@ void conv_wg_bxfxs1_cvt_filter_fp32(const float* filter, const float* trans_mat,
             for (int64_t j = 0; j < channels_per_group; j += blk_channels) {
                 int64_t real_blk_channels = min(channels_per_group - j, blk_channels);
                 conv_wg_bxfxs1_cvt_filter_blk_fp32<wgb, wgf, cvt_filter_blk_kernel>(
-                    filter_per_group + i * filter_out_stride + j * filter_kernel_size, trans_mat, real_blk_channels,
-                    real_blk_num_outs, filter_out_stride, filter_kernel_size, filter_cvt_per_blk);
+                    filter_per_group + i * filter_out_stride + j * filter_kernel_size,
+                    trans_mat,
+                    real_blk_channels,
+                    real_blk_num_outs,
+                    filter_out_stride,
+                    filter_kernel_size,
+                    filter_cvt_per_blk);
 
-                filter_cvt_per_blk +=
-                    round_up(real_blk_num_outs, C_BLK()) * round_up(real_blk_channels, C_BLK()) * wg_tile_size;
+                filter_cvt_per_blk += round_up(real_blk_num_outs, C_BLK()) * round_up(real_blk_channels, C_BLK()) * wg_tile_size;
             }
         }
         filter_per_group += filter_group_stride;

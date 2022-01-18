@@ -27,10 +27,14 @@ namespace ppl { namespace kernel { namespace riscv {
 #define C_BLK() ((int64_t)4)
 
 template <arithmetic_op_type_t op, bool fuse_relu>
-static inline void arithmetic_broadcast_lastdim_no_broadcast_ndarray_fp32(const float* src0, const float* src1,
-                                                                          float* dst,
+static inline void arithmetic_broadcast_lastdim_no_broadcast_ndarray_fp32(
+    const float* src0,
+    const float* src1,
+    float* dst,
 
-                                                                          const int64_t start, const int64_t end) {
+    const int64_t start,
+    const int64_t end)
+{
     const int64_t parall_d = 16;
     const int64_t unroll_len = parall_d * C_BLK();
     const auto vl = vsetvli(C_BLK(), RVV_E32, RVV_M1);
@@ -46,38 +50,22 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_ndarray_fp32(const 
         float32xm1_t vfdata8, vfdata9, vfdata10, vfdata11;
         float32xm1_t vfdata12, vfdata13, vfdata14, vfdata15;
 
-        vfdata0 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 0 * C_BLK(), vl),
-                                                    vlev_float32xm1(src1_ + 0 * C_BLK(), vl));
-        vfdata1 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 1 * C_BLK(), vl),
-                                                    vlev_float32xm1(src1_ + 1 * C_BLK(), vl));
-        vfdata2 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 2 * C_BLK(), vl),
-                                                    vlev_float32xm1(src1_ + 2 * C_BLK(), vl));
-        vfdata3 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 3 * C_BLK(), vl),
-                                                    vlev_float32xm1(src1_ + 3 * C_BLK(), vl));
-        vfdata4 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 4 * C_BLK(), vl),
-                                                    vlev_float32xm1(src1_ + 4 * C_BLK(), vl));
-        vfdata5 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 5 * C_BLK(), vl),
-                                                    vlev_float32xm1(src1_ + 5 * C_BLK(), vl));
-        vfdata6 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 6 * C_BLK(), vl),
-                                                    vlev_float32xm1(src1_ + 6 * C_BLK(), vl));
-        vfdata7 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 7 * C_BLK(), vl),
-                                                    vlev_float32xm1(src1_ + 7 * C_BLK(), vl));
-        vfdata8 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 8 * C_BLK(), vl),
-                                                    vlev_float32xm1(src1_ + 8 * C_BLK(), vl));
-        vfdata9 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 9 * C_BLK(), vl),
-                                                    vlev_float32xm1(src1_ + 9 * C_BLK(), vl));
-        vfdata10 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 10 * C_BLK(), vl),
-                                                     vlev_float32xm1(src1_ + 10 * C_BLK(), vl));
-        vfdata11 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 11 * C_BLK(), vl),
-                                                     vlev_float32xm1(src1_ + 11 * C_BLK(), vl));
-        vfdata12 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 12 * C_BLK(), vl),
-                                                     vlev_float32xm1(src1_ + 12 * C_BLK(), vl));
-        vfdata13 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 13 * C_BLK(), vl),
-                                                     vlev_float32xm1(src1_ + 13 * C_BLK(), vl));
-        vfdata14 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 14 * C_BLK(), vl),
-                                                     vlev_float32xm1(src1_ + 14 * C_BLK(), vl));
-        vfdata15 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 15 * C_BLK(), vl),
-                                                     vlev_float32xm1(src1_ + 15 * C_BLK(), vl));
+        vfdata0 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 0 * C_BLK(), vl), vlev_float32xm1(src1_ + 0 * C_BLK(), vl));
+        vfdata1 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 1 * C_BLK(), vl), vlev_float32xm1(src1_ + 1 * C_BLK(), vl));
+        vfdata2 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 2 * C_BLK(), vl), vlev_float32xm1(src1_ + 2 * C_BLK(), vl));
+        vfdata3 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 3 * C_BLK(), vl), vlev_float32xm1(src1_ + 3 * C_BLK(), vl));
+        vfdata4 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 4 * C_BLK(), vl), vlev_float32xm1(src1_ + 4 * C_BLK(), vl));
+        vfdata5 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 5 * C_BLK(), vl), vlev_float32xm1(src1_ + 5 * C_BLK(), vl));
+        vfdata6 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 6 * C_BLK(), vl), vlev_float32xm1(src1_ + 6 * C_BLK(), vl));
+        vfdata7 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 7 * C_BLK(), vl), vlev_float32xm1(src1_ + 7 * C_BLK(), vl));
+        vfdata8 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 8 * C_BLK(), vl), vlev_float32xm1(src1_ + 8 * C_BLK(), vl));
+        vfdata9 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 9 * C_BLK(), vl), vlev_float32xm1(src1_ + 9 * C_BLK(), vl));
+        vfdata10 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 10 * C_BLK(), vl), vlev_float32xm1(src1_ + 10 * C_BLK(), vl));
+        vfdata11 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 11 * C_BLK(), vl), vlev_float32xm1(src1_ + 11 * C_BLK(), vl));
+        vfdata12 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 12 * C_BLK(), vl), vlev_float32xm1(src1_ + 12 * C_BLK(), vl));
+        vfdata13 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 13 * C_BLK(), vl), vlev_float32xm1(src1_ + 13 * C_BLK(), vl));
+        vfdata14 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 14 * C_BLK(), vl), vlev_float32xm1(src1_ + 14 * C_BLK(), vl));
+        vfdata15 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 15 * C_BLK(), vl), vlev_float32xm1(src1_ + 15 * C_BLK(), vl));
 
         if (fuse_relu) {
             vsev_float32xm1(dst_ + 0 * C_BLK(), vfmaxvf_float32xm1(vfdata0, (float)0.0f, vl), vl);
@@ -137,10 +125,14 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_ndarray_fp32(const 
 }
 
 template <arithmetic_op_type_t op, bool fuse_relu>
-static inline void arithmetic_broadcast_lastdim_src0_broadcast_ndarray_fp32(const float* src0, const float* src1,
-                                                                            float* dst,
+static inline void arithmetic_broadcast_lastdim_src0_broadcast_ndarray_fp32(
+    const float* src0,
+    const float* src1,
+    float* dst,
 
-                                                                            const int64_t start, const int64_t end) {
+    const int64_t start,
+    const int64_t end)
+{
     const int64_t parall_d = 16;
     const int64_t unroll_len = parall_d * C_BLK();
     const auto vl = vsetvli(C_BLK(), RVV_E32, RVV_M1);
@@ -232,10 +224,14 @@ static inline void arithmetic_broadcast_lastdim_src0_broadcast_ndarray_fp32(cons
 }
 
 template <arithmetic_op_type_t op, bool fuse_relu>
-static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_fp32(const float* src0, const float* src1,
-                                                                            float* dst,
+static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_fp32(
+    const float* src0,
+    const float* src1,
+    float* dst,
 
-                                                                            const int64_t start, const int64_t end) {
+    const int64_t start,
+    const int64_t end)
+{
     const int64_t parall_d = 16;
     const int64_t unroll_len = parall_d * C_BLK();
     const auto vl = vsetvli(C_BLK(), RVV_E32, RVV_M1);
@@ -328,11 +324,20 @@ static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_fp32(cons
 
 template <arithmetic_op_type_t op, bool fuse_relu>
 static ppl::common::RetCode arithmetic_broadcast_recursive_ndarray_fp32(
-    const float* src0, const float* src1, float* dst,
+    const float* src0,
+    const float* src1,
+    float* dst,
 
-    const int64_t* src0_shape, const int64_t* src1_shape, const int64_t* dst_shape, const int64_t* inc0,
-    const int64_t* inc1, const int64_t* inc_out, const int64_t dim_count, const int64_t dim_idx,
-    parallel_block* block) {
+    const int64_t* src0_shape,
+    const int64_t* src1_shape,
+    const int64_t* dst_shape,
+    const int64_t* inc0,
+    const int64_t* inc1,
+    const int64_t* inc_out,
+    const int64_t dim_count,
+    const int64_t dim_idx,
+    parallel_block* block)
+{
     bool is_first = is_first_dim(block, dim_idx);
     bool is_last = is_last_dim(block, dim_idx);
     const int64_t start = is_first ? block->start[dim_idx] : 0;
@@ -350,9 +355,19 @@ static ppl::common::RetCode arithmetic_broadcast_recursive_ndarray_fp32(
         for (block->idx[dim_idx] = start; block->idx[dim_idx] <= end; block->idx[dim_idx]++) {
             int64_t i = block->idx[dim_idx];
             arithmetic_broadcast_recursive_ndarray_fp32<op, fuse_relu>(
-                src0 + i * inc0[dim_idx], src1 + i * inc1[dim_idx], dst + i * inc_out[dim_idx],
+                src0 + i * inc0[dim_idx],
+                src1 + i * inc1[dim_idx],
+                dst + i * inc_out[dim_idx],
 
-                src0_shape, src1_shape, dst_shape, inc0, inc1, inc_out, dim_count, dim_idx + 1, block);
+                src0_shape,
+                src1_shape,
+                dst_shape,
+                inc0,
+                inc1,
+                inc_out,
+                dim_count,
+                dim_idx + 1,
+                block);
         }
     }
 
@@ -360,11 +375,15 @@ static ppl::common::RetCode arithmetic_broadcast_recursive_ndarray_fp32(
 }
 
 template <arithmetic_op_type_t op, bool fuse_relu>
-static ppl::common::RetCode arithmetic_broadcast_ndarray_fp32(const float* src0, const float* src1, float* dst,
+static ppl::common::RetCode arithmetic_broadcast_ndarray_fp32(
+    const float* src0,
+    const float* src1,
+    float* dst,
 
-                                                              const ppl::nn::TensorShape* src0_shape,
-                                                              const ppl::nn::TensorShape* src1_shape,
-                                                              const ppl::nn::TensorShape* dst_shape) {
+    const ppl::nn::TensorShape* src0_shape,
+    const ppl::nn::TensorShape* src1_shape,
+    const ppl::nn::TensorShape* dst_shape)
+{
     // pad 1 to input's high dims
     const int64_t dim_count = dst_shape->GetDimCount();
     if (dim_count > PPL_RISCV_TENSOR_MAX_DIMS()) {
@@ -397,10 +416,8 @@ static ppl::common::RetCode arithmetic_broadcast_ndarray_fp32(const float* src0,
     for (int64_t i = real_dim_count - 1; i >= 1; i--) {
         bool cur_dim_input0_need_broadcast = real_src0_shape[i] != real_src1_shape[i] && real_src0_shape[i] == 1;
         bool cur_dim_input1_need_broadcast = real_src0_shape[i] != real_src1_shape[i] && real_src1_shape[i] == 1;
-        bool prev_dim_input0_need_broadcast =
-            real_src0_shape[i - 1] != real_src1_shape[i - 1] && real_src0_shape[i - 1] == 1;
-        bool prev_dim_input1_need_broadcast =
-            real_src0_shape[i - 1] != real_src1_shape[i - 1] && real_src1_shape[i - 1] == 1;
+        bool prev_dim_input0_need_broadcast = real_src0_shape[i - 1] != real_src1_shape[i - 1] && real_src0_shape[i - 1] == 1;
+        bool prev_dim_input1_need_broadcast = real_src0_shape[i - 1] != real_src1_shape[i - 1] && real_src1_shape[i - 1] == 1;
 
         if (cur_dim_input0_need_broadcast == prev_dim_input0_need_broadcast && // can merge
             cur_dim_input1_need_broadcast == prev_dim_input1_need_broadcast) {
@@ -445,10 +462,20 @@ static ppl::common::RetCode arithmetic_broadcast_ndarray_fp32(const float* src0,
         }
     }
 
-    arithmetic_broadcast_recursive_ndarray_fp32<op, fuse_relu>(src0, src1, dst,
+    arithmetic_broadcast_recursive_ndarray_fp32<op, fuse_relu>(
+        src0,
+        src1,
+        dst,
 
-                                                               real_src0_shape, real_src1_shape, real_dst_shape, inc0,
-                                                               inc1, inc_out, real_dim_count, 0, &block);
+        real_src0_shape,
+        real_src1_shape,
+        real_dst_shape,
+        inc0,
+        inc1,
+        inc_out,
+        real_dim_count,
+        0,
+        &block);
 
     return ppl::common::RC_SUCCESS;
 }

@@ -21,8 +21,14 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <int64_t m, int64_t n, bool first>
-static void gemm_kernel_m16n7_ndarray_n4cx_fp32_vec128(const float* a, const float* b, float* c, const int64_t total_m,
-                                                       const int64_t total_n, const int64_t total_k) {
+static void gemm_kernel_m16n7_ndarray_n4cx_fp32_vec128(
+    const float* a,
+    const float* b,
+    float* c,
+    const int64_t total_m,
+    const int64_t total_n,
+    const int64_t total_k)
+{
     asm volatile(
         ".equ            IS_FIRST, %c[IS_FIRST]     \n\t"
         ".equ            ATOM_M, %c[ATOM_M]         \n\t"
@@ -36,7 +42,7 @@ static void gemm_kernel_m16n7_ndarray_n4cx_fp32_vec128(const float* a, const flo
         "mv              s4, %[C_LOC]               \n\t"
         "mv              s5, %[K]                   \n\t"
 
-        "0:                                             \n\t" // init
+        "0:                                         \n\t" // init
         ".if IS_FIRST == 1                          \n\t"
         "addi            s5, s5, -1                 \n\t"
         ".if ATOM_M > 0                             \n\t"
@@ -569,12 +575,19 @@ static void gemm_kernel_m16n7_ndarray_n4cx_fp32_vec128(const float* a, const flo
           [K] "r"(total_k), [A_NXT_LINE_STRIDE] "r"(total_k * 16), [A_BACK_STRIDE] "r"(m / 4 * total_k * 16 - 16),
           [B_NXT_LINE_STRIDE] "r"(total_n * 4), [C_NXT_LINE_STRIDE] "r"((total_n - n) * 16)
 
-        : "memory", "s2", "s3", "s4", "s5");
+        : "memory", "s2", "s3", "s4", "s5"
+    );
 }
 
 template <int64_t align_m, int64_t align_n, int64_t left_m, int64_t left_n, bool first>
-void gemm_ndarray_n4cx_fp32_vec128(const float* a, const float* b, float* c, const int64_t total_m,
-                                   const int64_t total_n, const int64_t total_k) {
+void gemm_ndarray_n4cx_fp32_vec128(
+    const float* a,
+    const float* b,
+    float* c,
+    const int64_t total_m,
+    const int64_t total_n,
+    const int64_t total_k)
+{
     const int64_t atom_k = 1;
     const int64_t atom_m = 4;
     const int64_t c_nxt_blk_stride = (align_m - atom_m) * total_n;
@@ -587,14 +600,12 @@ void gemm_ndarray_n4cx_fp32_vec128(const float* a, const float* b, float* c, con
         int64_t ni = 0;
         const float* temp_b = b;
         for (ni = 0; ni <= total_n - align_n; ni += align_n) {
-            gemm_kernel_m16n7_ndarray_n4cx_fp32_vec128<align_m, align_n, first>(temp_a, temp_b, temp_c, total_m,
-                                                                                total_n, total_k);
+            gemm_kernel_m16n7_ndarray_n4cx_fp32_vec128<align_m, align_n, first>(temp_a, temp_b, temp_c, total_m, total_n, total_k);
             temp_b += atom_k * align_n;
             temp_c += atom_m * align_n;
         }
         if (ni < total_n) {
-            gemm_kernel_m16n7_ndarray_n4cx_fp32_vec128<align_m, left_n, first>(temp_a, temp_b, temp_c, total_m, total_n,
-                                                                               total_k);
+            gemm_kernel_m16n7_ndarray_n4cx_fp32_vec128<align_m, left_n, first>(temp_a, temp_b, temp_c, total_m, total_n, total_k);
             temp_c += atom_m * left_n;
         }
         temp_c += c_nxt_blk_stride;
@@ -604,14 +615,12 @@ void gemm_ndarray_n4cx_fp32_vec128(const float* a, const float* b, float* c, con
         int64_t ni = 0;
         const float* temp_b = b;
         for (ni = 0; ni <= total_n - align_n; ni += align_n) {
-            gemm_kernel_m16n7_ndarray_n4cx_fp32_vec128<left_m, align_n, first>(temp_a, temp_b, temp_c, total_m, total_n,
-                                                                               total_k);
+            gemm_kernel_m16n7_ndarray_n4cx_fp32_vec128<left_m, align_n, first>(temp_a, temp_b, temp_c, total_m, total_n, total_k);
             temp_b += atom_k * align_n;
             temp_c += atom_m * align_n;
         }
         if (ni < total_n) {
-            gemm_kernel_m16n7_ndarray_n4cx_fp32_vec128<left_m, left_n, first>(temp_a, temp_b, temp_c, total_m, total_n,
-                                                                              total_k);
+            gemm_kernel_m16n7_ndarray_n4cx_fp32_vec128<left_m, left_n, first>(temp_a, temp_b, temp_c, total_m, total_n, total_k);
         }
     }
 }

@@ -26,90 +26,47 @@ namespace ppl { namespace kernel { namespace riscv {
 #define C_BLK() ((int64_t)4)
 
 template <reduce_op_type_t op>
-static void reduce_ndarray_lastdim_no_reduce_fp32(const float* src, float* dst,
+static void reduce_ndarray_lastdim_no_reduce_fp32(
+    const float* src,
+    float* dst,
 
-                                                  const int64_t dim_len) {
+    const int64_t dim_len)
+{
     const int64_t parall_d = 16;
     const int64_t unroll_len = parall_d * C_BLK();
     const auto vl = vsetvli(C_BLK(), RVV_E32, RVV_M1);
 
     int64_t i = 0;
     for (; i + unroll_len < dim_len; i += unroll_len) {
-        vsev_float32xm1(dst + i + 0 * C_BLK(),
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 0 * C_BLK(), vl),
-                                                      vlev_float32xm1(dst + i + 0 * C_BLK(), vl)),
-                        vl);
-        vsev_float32xm1(dst + i + 1 * C_BLK(),
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 1 * C_BLK(), vl),
-                                                      vlev_float32xm1(dst + i + 1 * C_BLK(), vl)),
-                        vl);
-        vsev_float32xm1(dst + i + 2 * C_BLK(),
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 2 * C_BLK(), vl),
-                                                      vlev_float32xm1(dst + i + 2 * C_BLK(), vl)),
-                        vl);
-        vsev_float32xm1(dst + i + 3 * C_BLK(),
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 3 * C_BLK(), vl),
-                                                      vlev_float32xm1(dst + i + 3 * C_BLK(), vl)),
-                        vl);
-        vsev_float32xm1(dst + i + 4 * C_BLK(),
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 4 * C_BLK(), vl),
-                                                      vlev_float32xm1(dst + i + 4 * C_BLK(), vl)),
-                        vl);
-        vsev_float32xm1(dst + i + 5 * C_BLK(),
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 5 * C_BLK(), vl),
-                                                      vlev_float32xm1(dst + i + 5 * C_BLK(), vl)),
-                        vl);
-        vsev_float32xm1(dst + i + 6 * C_BLK(),
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 6 * C_BLK(), vl),
-                                                      vlev_float32xm1(dst + i + 6 * C_BLK(), vl)),
-                        vl);
-        vsev_float32xm1(dst + i + 7 * C_BLK(),
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 7 * C_BLK(), vl),
-                                                      vlev_float32xm1(dst + i + 7 * C_BLK(), vl)),
-                        vl);
-        vsev_float32xm1(dst + i + 8 * C_BLK(),
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 8 * C_BLK(), vl),
-                                                      vlev_float32xm1(dst + i + 8 * C_BLK(), vl)),
-                        vl);
-        vsev_float32xm1(dst + i + 9 * C_BLK(),
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 9 * C_BLK(), vl),
-                                                      vlev_float32xm1(dst + i + 9 * C_BLK(), vl)),
-                        vl);
-        vsev_float32xm1(dst + i + 10 * C_BLK(),
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 10 * C_BLK(), vl),
-                                                      vlev_float32xm1(dst + i + 10 * C_BLK(), vl)),
-                        vl);
-        vsev_float32xm1(dst + i + 11 * C_BLK(),
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 11 * C_BLK(), vl),
-                                                      vlev_float32xm1(dst + i + 11 * C_BLK(), vl)),
-                        vl);
-        vsev_float32xm1(dst + i + 12 * C_BLK(),
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 12 * C_BLK(), vl),
-                                                      vlev_float32xm1(dst + i + 12 * C_BLK(), vl)),
-                        vl);
-        vsev_float32xm1(dst + i + 13 * C_BLK(),
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 13 * C_BLK(), vl),
-                                                      vlev_float32xm1(dst + i + 13 * C_BLK(), vl)),
-                        vl);
-        vsev_float32xm1(dst + i + 14 * C_BLK(),
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 14 * C_BLK(), vl),
-                                                      vlev_float32xm1(dst + i + 14 * C_BLK(), vl)),
-                        vl);
-        vsev_float32xm1(dst + i + 15 * C_BLK(),
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 15 * C_BLK(), vl),
-                                                      vlev_float32xm1(dst + i + 15 * C_BLK(), vl)),
-                        vl);
+        vsev_float32xm1(dst + i + 0 * C_BLK(), reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 0 * C_BLK(), vl), vlev_float32xm1(dst + i + 0 * C_BLK(), vl)), vl);
+        vsev_float32xm1(dst + i + 1 * C_BLK(), reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 1 * C_BLK(), vl), vlev_float32xm1(dst + i + 1 * C_BLK(), vl)), vl);
+        vsev_float32xm1(dst + i + 2 * C_BLK(), reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 2 * C_BLK(), vl), vlev_float32xm1(dst + i + 2 * C_BLK(), vl)), vl);
+        vsev_float32xm1(dst + i + 3 * C_BLK(), reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 3 * C_BLK(), vl), vlev_float32xm1(dst + i + 3 * C_BLK(), vl)), vl);
+        vsev_float32xm1(dst + i + 4 * C_BLK(), reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 4 * C_BLK(), vl), vlev_float32xm1(dst + i + 4 * C_BLK(), vl)), vl);
+        vsev_float32xm1(dst + i + 5 * C_BLK(), reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 5 * C_BLK(), vl), vlev_float32xm1(dst + i + 5 * C_BLK(), vl)), vl);
+        vsev_float32xm1(dst + i + 6 * C_BLK(), reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 6 * C_BLK(), vl), vlev_float32xm1(dst + i + 6 * C_BLK(), vl)), vl);
+        vsev_float32xm1(dst + i + 7 * C_BLK(), reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 7 * C_BLK(), vl), vlev_float32xm1(dst + i + 7 * C_BLK(), vl)), vl);
+        vsev_float32xm1(dst + i + 8 * C_BLK(), reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 8 * C_BLK(), vl), vlev_float32xm1(dst + i + 8 * C_BLK(), vl)), vl);
+        vsev_float32xm1(dst + i + 9 * C_BLK(), reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 9 * C_BLK(), vl), vlev_float32xm1(dst + i + 9 * C_BLK(), vl)), vl);
+        vsev_float32xm1(dst + i + 10 * C_BLK(), reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 10 * C_BLK(), vl), vlev_float32xm1(dst + i + 10 * C_BLK(), vl)), vl);
+        vsev_float32xm1(dst + i + 11 * C_BLK(), reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 11 * C_BLK(), vl), vlev_float32xm1(dst + i + 11 * C_BLK(), vl)), vl);
+        vsev_float32xm1(dst + i + 12 * C_BLK(), reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 12 * C_BLK(), vl), vlev_float32xm1(dst + i + 12 * C_BLK(), vl)), vl);
+        vsev_float32xm1(dst + i + 13 * C_BLK(), reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 13 * C_BLK(), vl), vlev_float32xm1(dst + i + 13 * C_BLK(), vl)), vl);
+        vsev_float32xm1(dst + i + 14 * C_BLK(), reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 14 * C_BLK(), vl), vlev_float32xm1(dst + i + 14 * C_BLK(), vl)), vl);
+        vsev_float32xm1(dst + i + 15 * C_BLK(), reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i + 15 * C_BLK(), vl), vlev_float32xm1(dst + i + 15 * C_BLK(), vl)), vl);
     }
     for (; i < dim_len; i += C_BLK()) {
-        vsev_float32xm1(dst + i,
-                        reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i, vl), vlev_float32xm1(dst + i, vl)), vl);
+        vsev_float32xm1(dst + i, reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i, vl), vlev_float32xm1(dst + i, vl)), vl);
     }
 }
 
 template <reduce_op_type_t op>
-static void reduce_ndarray_lastdim_reduce_fp32(const float* src, float* dst,
+static void reduce_ndarray_lastdim_reduce_fp32(
+    const float* src,
+    float* dst,
 
-                                               const int64_t dim_len) {
+    const int64_t dim_len)
+{
     const auto vl = vsetvli(C_BLK(), RVV_E32, RVV_M1);
     const float init_val = reduce_init_val_fp32<op>();
     float32xm1_t v_tmp0 = vfmvvf_float32xm1(init_val, vl);
@@ -185,10 +142,16 @@ static void reduce_ndarray_lastdim_reduce_fp32(const float* src, float* dst,
 }
 
 template <reduce_op_type_t op>
-static void reduce_ndarray_recursive_fp32(const float* src, float* dst,
+static void reduce_ndarray_recursive_fp32(
+    const float* src,
+    float* dst,
 
-                                          const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape,
-                                          const int64_t dim_idx, const int64_t* inc_src, const int64_t* inc_dst) {
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const int64_t dim_idx,
+    const int64_t* inc_src,
+    const int64_t* inc_dst)
+{
     const int64_t len = src_shape->GetDim(dim_idx);
     if (dim_idx == src_shape->GetDimCount() - 1) {
         if (src_shape->GetDim(dim_idx) == dst_shape->GetDim(dim_idx)) {
@@ -206,10 +169,15 @@ static void reduce_ndarray_recursive_fp32(const float* src, float* dst,
 }
 
 template <reduce_op_type_t op>
-ppl::common::RetCode reduce_ndarray_fp32(const float* src, float* dst,
+ppl::common::RetCode reduce_ndarray_fp32(
+    const float* src,
+    float* dst,
 
-                                         const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape,
-                                         const int32_t* axes, const int32_t num_axes) {
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const int32_t* axes,
+    const int32_t num_axes)
+{
     if (src_shape->GetDimCount() > PPL_RISCV_TENSOR_MAX_DIMS()) {
         return ppl::common::RC_UNSUPPORTED;
     }

@@ -53,13 +53,20 @@ ppl::common::RetCode conv2d_n4cx_direct_gemm_fp32_runtime_executor::execute() {
     auto gemm_func = conv2d_gemm_select_xcto4c_kernel_fp32_vec128<4, true>(pad_num_output, dst_h * dst_w);
     gemm_func(cvt_filter_, src_, dst_, pad_num_output, dst_h * dst_w, pad_channels);
 
-    conv2d_n4cx_mem_dst_blk_trans_fp32_vec128<false>(dst_, dst_h, dst_w,
+    conv2d_n4cx_mem_dst_blk_trans_fp32_vec128<false>(
+        dst_,
+        dst_h,
+        dst_w,
 
-                                                     dst_, dst_h, dst_w,
+        dst_,
+        dst_h,
+        dst_w,
 
-                                                     pad_num_output, dst_h, dst_w,
+        pad_num_output,
+        dst_h,
+        dst_w,
 
-                                                     cvt_bias_);
+        cvt_bias_);
 
     return ppl::common::RC_SUCCESS;
 }

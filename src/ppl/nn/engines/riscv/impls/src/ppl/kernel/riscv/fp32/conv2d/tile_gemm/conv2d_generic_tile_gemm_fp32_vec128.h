@@ -229,8 +229,13 @@ void conv2d_nxcx_conv_tile_gemm_riscv_per_group_fp32_vec128(
 }
 
 template <int64_t atom_ic>
-size_t conv2d_nxcx_conv_tile_gemm_get_cvt_filter_size_fp32_vec128(int64_t flt_h, int64_t flt_w, int64_t channels,
-                                                                  int64_t num_outs, int64_t group) {
+size_t conv2d_nxcx_conv_tile_gemm_get_cvt_filter_size_fp32_vec128(
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t channels,
+    int64_t num_outs,
+    int64_t group)
+{
     const int64_t atom_oc = 4;
 
     int64_t num_outs_per_group = num_outs / group;
@@ -244,10 +249,16 @@ size_t conv2d_nxcx_conv_tile_gemm_get_cvt_filter_size_fp32_vec128(int64_t flt_h,
 }
 
 template <int64_t atom_ic>
-static void conv2d_nxcx_conv_tile_gemm_cvt_filter_kernel_fp32_vec128(const float* filter, int64_t flt_h, int64_t flt_w,
-                                                                     int64_t num_outs, int64_t channels,
-                                                                     int64_t tile_gemm_m_blk, int64_t tile_gemm_k_blk,
-                                                                     float* filter_cvt) {
+static void conv2d_nxcx_conv_tile_gemm_cvt_filter_kernel_fp32_vec128(
+    const float* filter,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t num_outs,
+    int64_t channels,
+    int64_t tile_gemm_m_blk,
+    int64_t tile_gemm_k_blk,
+    float* filter_cvt)
+{
     const int64_t atom_oc = 4;
 
     tile_gemm_m_blk = round_up(tile_gemm_m_blk, atom_oc);
@@ -286,10 +297,17 @@ static void conv2d_nxcx_conv_tile_gemm_cvt_filter_kernel_fp32_vec128(const float
 }
 
 template <int64_t atom_ic>
-void conv2d_nxcx_conv_tile_gemm_cvt_filter_fp32_vec128(const float* filter, int64_t flt_h, int64_t flt_w,
-                                                       int64_t num_outs, int64_t channels, int64_t group,
-                                                       int64_t tile_gemm_m_blk, int64_t tile_gemm_k_blk,
-                                                       float* filter_cvt) {
+void conv2d_nxcx_conv_tile_gemm_cvt_filter_fp32_vec128(
+    const float* filter,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t num_outs,
+    int64_t channels,
+    int64_t group,
+    int64_t tile_gemm_m_blk,
+    int64_t tile_gemm_k_blk,
+    float* filter_cvt)
+{
     const int64_t atom_oc = 4;
 
     tile_gemm_m_blk = round_up(tile_gemm_m_blk, atom_oc);
@@ -317,10 +335,25 @@ void conv2d_nxcx_conv_tile_gemm_cvt_filter_fp32_vec128(const float* filter, int6
 
 template <int64_t atom_ic>
 size_t conv2d_nxcx_tile_gemm_get_temp_buffer_size_fp32_vec128(
-    int64_t src_h, int64_t src_w, int64_t padding_h, int64_t padding_w, int64_t stride_h, int64_t stride_w,
-    int64_t flt_h, int64_t flt_w, int64_t hole_h, int64_t hole_w, int64_t channels, int64_t group, int64_t num_outs,
+    int64_t src_h,
+    int64_t src_w,
+    int64_t padding_h,
+    int64_t padding_w,
+    int64_t stride_h,
+    int64_t stride_w,
+    int64_t flt_h,
+    int64_t flt_w,
+    int64_t hole_h,
+    int64_t hole_w,
+    int64_t channels,
+    int64_t group,
+    int64_t num_outs,
 
-    int64_t tile_gemm_m_blk, int64_t tile_gemm_dst_h_blk, int64_t tile_gemm_dst_w_blk, int64_t num_threads) {
+    int64_t tile_gemm_m_blk,
+    int64_t tile_gemm_dst_h_blk,
+    int64_t tile_gemm_dst_w_blk,
+    int64_t num_threads)
+{
     const int64_t atom_oc = 4;
 
     int64_t channels_per_group = channels / group;
