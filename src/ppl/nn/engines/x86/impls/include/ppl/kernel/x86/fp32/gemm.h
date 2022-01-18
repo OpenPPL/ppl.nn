@@ -65,6 +65,23 @@ ppl::common::RetCode gemm_fp32_fma(
     const gemm_post_t post,
     float *C);
 
+ppl::common::RetCode gemv_fp32_fma(
+    const float *A,
+    const float *B,
+    const float *V,
+    const float *H,
+    const gemm_v_type_t typeA,
+    const gemm_m_type_t typeB,
+    const gemm_v_type_t typeV,
+    const gemm_m_type_t typeH,
+    const int64_t N,
+    const int64_t K,
+    const int64_t ldb,
+    const float alpha,
+    const float beta,
+    const gemm_post_t post,
+    float *C);
+
 }}}; // namespace ppl::kernel::x86
 
 #endif //! __ST_PPL_KERNEL_X86_FP32_GEMM_H_

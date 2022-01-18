@@ -332,9 +332,9 @@ void gemm_fp32_fma_kernel(int64_t *param)
 #endif
 
 #define K_COMPUTE_STEP(K) do {\
-    if (u_nr > 0) ymm13 = _mm256_loadu_ps(kpacked_b + 0 * ldpacked_b + K * n_reg_elts);\
-    if (u_nr > 1) ymm14 = _mm256_loadu_ps(kpacked_b + 1 * ldpacked_b + K * n_reg_elts);\
-    if (u_nr > 2) ymm15 = _mm256_loadu_ps(kpacked_b + 2 * ldpacked_b + K * n_reg_elts);\
+    if (u_nr > 0) ymm13 = _mm256_loadu_ps(kpacked_b + 0 * ldpacked_b + K * N_REG_ELTS);\
+    if (u_nr > 1) ymm14 = _mm256_loadu_ps(kpacked_b + 1 * ldpacked_b + K * N_REG_ELTS);\
+    if (u_nr > 2) ymm15 = _mm256_loadu_ps(kpacked_b + 2 * ldpacked_b + K * N_REG_ELTS);\
     if (u_m > 0) {\
         ymm12 = _mm256_set1_ps(ka_m0[0 * lda + K]);\
         if (u_nr > 0) ymm0 = _mm256_fmadd_ps(ymm13, ymm12, ymm0);\
@@ -362,8 +362,8 @@ void gemm_fp32_fma_kernel(int64_t *param)
 } while (0)
 
     array_param_helper kp(param);
-    const int64_t n_reg_elts = gemm_kernel_fp32_fma::config::N_REG_ELTS;
-    const int64_t u_nr = div_up(u_n, n_reg_elts);
+    const int64_t N_REG_ELTS = gemm_kernel_fp32_fma::config::N_REG_ELTS;
+    const int64_t u_nr = div_up(u_n, N_REG_ELTS);
     const int64_t u_k = gemm_kernel_fp32_fma::config::UNROLL_K;
 
     const gemm_kernel_fp32_fma::flag_t flags = kp.pick<const gemm_kernel_fp32_fma::flag_t>(gemm_kernel_fp32_fma::param_def::FLAGS_IDX);
@@ -417,14 +417,14 @@ void gemm_fp32_fma_kernel(int64_t *param)
                 K_COMPUTE_STEP(7);
                 if (u_m > 0) ka_m0 += u_k;
                 if (u_m > 2) ka_m2 += u_k;
-                kpacked_b += u_k * n_reg_elts;
+                kpacked_b += u_k * N_REG_ELTS;
             }
             while (k > 0) {
                 --k;
                 K_COMPUTE_STEP(0);
                 if (u_m > 0) ka_m0 += 1;
                 if (u_m > 2) ka_m2 += 1;
-                kpacked_b += n_reg_elts;
+                kpacked_b += N_REG_ELTS;
             }
         }
         
@@ -458,27 +458,27 @@ void gemm_fp32_fma_kernel(int64_t *param)
                 const int64_t ldc = kp.pick<const int64_t>(gemm_kernel_fp32_fma::param_def::LDC_IDX);
                 const float *l_c = c_ptr;
                 if (u_m > 0) {
-                    if (u_nr > 0) ymm0 = _mm256_add_ps(_mm256_loadu_ps(l_c + 0 * n_reg_elts), ymm0);
-                    if (u_nr > 1) ymm1 = _mm256_add_ps(_mm256_loadu_ps(l_c + 1 * n_reg_elts), ymm1);
-                    if (u_nr > 2) ymm2 = _mm256_add_ps(_mm256_loadu_ps(l_c + 2 * n_reg_elts), ymm2);
+                    if (u_nr > 0) ymm0 = _mm256_add_ps(_mm256_loadu_ps(l_c + 0 * N_REG_ELTS), ymm0);
+                    if (u_nr > 1) ymm1 = _mm256_add_ps(_mm256_loadu_ps(l_c + 1 * N_REG_ELTS), ymm1);
+                    if (u_nr > 2) ymm2 = _mm256_add_ps(_mm256_loadu_ps(l_c + 2 * N_REG_ELTS), ymm2);
                 }
                 if (u_m > 1) {
                     l_c += ldc;
-                    if (u_nr > 0) ymm3 = _mm256_add_ps(_mm256_loadu_ps(l_c + 0 * n_reg_elts), ymm3);
-                    if (u_nr > 1) ymm4 = _mm256_add_ps(_mm256_loadu_ps(l_c + 1 * n_reg_elts), ymm4);
-                    if (u_nr > 2) ymm5 = _mm256_add_ps(_mm256_loadu_ps(l_c + 2 * n_reg_elts), ymm5);
+                    if (u_nr > 0) ymm3 = _mm256_add_ps(_mm256_loadu_ps(l_c + 0 * N_REG_ELTS), ymm3);
+                    if (u_nr > 1) ymm4 = _mm256_add_ps(_mm256_loadu_ps(l_c + 1 * N_REG_ELTS), ymm4);
+                    if (u_nr > 2) ymm5 = _mm256_add_ps(_mm256_loadu_ps(l_c + 2 * N_REG_ELTS), ymm5);
                 }
                 if (u_m > 2) {
                     l_c += ldc;
-                    if (u_nr > 0) ymm6 = _mm256_add_ps(_mm256_loadu_ps(l_c + 0 * n_reg_elts), ymm6);
-                    if (u_nr > 1) ymm7 = _mm256_add_ps(_mm256_loadu_ps(l_c + 1 * n_reg_elts), ymm7);
-                    if (u_nr > 2) ymm8 = _mm256_add_ps(_mm256_loadu_ps(l_c + 2 * n_reg_elts), ymm8);
+                    if (u_nr > 0) ymm6 = _mm256_add_ps(_mm256_loadu_ps(l_c + 0 * N_REG_ELTS), ymm6);
+                    if (u_nr > 1) ymm7 = _mm256_add_ps(_mm256_loadu_ps(l_c + 1 * N_REG_ELTS), ymm7);
+                    if (u_nr > 2) ymm8 = _mm256_add_ps(_mm256_loadu_ps(l_c + 2 * N_REG_ELTS), ymm8);
                 }
                 if (u_m > 3) {
                     l_c += ldc;
-                    if (u_nr > 0) ymm9 = _mm256_add_ps(_mm256_loadu_ps(l_c + 0 * n_reg_elts), ymm9);
-                    if (u_nr > 1) ymm10 = _mm256_add_ps(_mm256_loadu_ps(l_c + 1 * n_reg_elts), ymm10);
-                    if (u_nr > 2) ymm11 = _mm256_add_ps(_mm256_loadu_ps(l_c + 2 * n_reg_elts), ymm11);
+                    if (u_nr > 0) ymm9 = _mm256_add_ps(_mm256_loadu_ps(l_c + 0 * N_REG_ELTS), ymm9);
+                    if (u_nr > 1) ymm10 = _mm256_add_ps(_mm256_loadu_ps(l_c + 1 * N_REG_ELTS), ymm10);
+                    if (u_nr > 2) ymm11 = _mm256_add_ps(_mm256_loadu_ps(l_c + 2 * N_REG_ELTS), ymm11);
                 }
             }
 
@@ -533,27 +533,27 @@ void gemm_fp32_fma_kernel(int64_t *param)
             const int64_t ldc = kp.pick<const int64_t>(gemm_kernel_fp32_fma::param_def::LDC_IDX);
             float *l_c = c_ptr;
             if (u_m > 0) {
-                if (u_nr > 0) _mm256_storeu_ps(l_c + 0 * n_reg_elts, ymm0);
-                if (u_nr > 1) _mm256_storeu_ps(l_c + 1 * n_reg_elts, ymm1);
-                if (u_nr > 2) _mm256_storeu_ps(l_c + 2 * n_reg_elts, ymm2);
+                if (u_nr > 0) _mm256_storeu_ps(l_c + 0 * N_REG_ELTS, ymm0);
+                if (u_nr > 1) _mm256_storeu_ps(l_c + 1 * N_REG_ELTS, ymm1);
+                if (u_nr > 2) _mm256_storeu_ps(l_c + 2 * N_REG_ELTS, ymm2);
             }
             if (u_m > 1) {
                 l_c += ldc;
-                if (u_nr > 0) _mm256_storeu_ps(l_c + 0 * n_reg_elts, ymm3);
-                if (u_nr > 1) _mm256_storeu_ps(l_c + 1 * n_reg_elts, ymm4);
-                if (u_nr > 2) _mm256_storeu_ps(l_c + 2 * n_reg_elts, ymm5);
+                if (u_nr > 0) _mm256_storeu_ps(l_c + 0 * N_REG_ELTS, ymm3);
+                if (u_nr > 1) _mm256_storeu_ps(l_c + 1 * N_REG_ELTS, ymm4);
+                if (u_nr > 2) _mm256_storeu_ps(l_c + 2 * N_REG_ELTS, ymm5);
             }
             if (u_m > 2) {
                 l_c += ldc;
-                if (u_nr > 0) _mm256_storeu_ps(l_c + 0 * n_reg_elts, ymm6);
-                if (u_nr > 1) _mm256_storeu_ps(l_c + 1 * n_reg_elts, ymm7);
-                if (u_nr > 2) _mm256_storeu_ps(l_c + 2 * n_reg_elts, ymm8);
+                if (u_nr > 0) _mm256_storeu_ps(l_c + 0 * N_REG_ELTS, ymm6);
+                if (u_nr > 1) _mm256_storeu_ps(l_c + 1 * N_REG_ELTS, ymm7);
+                if (u_nr > 2) _mm256_storeu_ps(l_c + 2 * N_REG_ELTS, ymm8);
             }
             if (u_m > 3) {
                 l_c += ldc;
-                if (u_nr > 0) _mm256_storeu_ps(l_c + 0 * n_reg_elts, ymm9);
-                if (u_nr > 1) _mm256_storeu_ps(l_c + 1 * n_reg_elts, ymm10);
-                if (u_nr > 2) _mm256_storeu_ps(l_c + 2 * n_reg_elts, ymm11);
+                if (u_nr > 0) _mm256_storeu_ps(l_c + 0 * N_REG_ELTS, ymm9);
+                if (u_nr > 1) _mm256_storeu_ps(l_c + 1 * N_REG_ELTS, ymm10);
+                if (u_nr > 2) _mm256_storeu_ps(l_c + 2 * N_REG_ELTS, ymm11);
             }
         }
         { // next n block

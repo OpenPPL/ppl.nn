@@ -181,7 +181,6 @@ int main(int argc, char **argv) {
             "%d," CASE_STRING_FMT(),
             line_no, M, N, K, trans_A, trans_B, alpha, beta, c_type, fuse_flag, case_name
         );
-        std::cerr << "\n";
 DEBUG_TAG(A);
         const int64_t lda = trans_A ? M : K;
         const int64_t ldb = trans_B ? K : N;
@@ -266,11 +265,11 @@ DEBUG_TAG(D);
         param.beta = beta;
         param.trans_A = trans_A;
         param.trans_B = trans_B;
-#ifdef PPL_USE_X86_AVX512
-        param.isa_flag = ppl::common::ISA_X86_AVX512;
-#else
+// #ifdef PPL_USE_X86_AVX512
+//         param.isa_flag = ppl::common::ISA_X86_AVX512;
+// #else
         param.isa_flag = ppl::common::ISA_X86_FMA;
-#endif
+// #endif
         param.fuse_flag = fuse_flag;
         param.c_type = c_type;
 

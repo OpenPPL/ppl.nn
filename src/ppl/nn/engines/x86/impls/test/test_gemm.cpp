@@ -21,6 +21,7 @@
 #include <string.h>
 #include <chrono>
 #include <memory>
+#include <map>
 #include <inttypes.h>
 
 #if defined(__linux__) && defined(PPL_USE_X86_OMP)
@@ -54,6 +55,7 @@ Define_int32(min_iter, 20, "(20) min benchmark iterations");
 Define_float(min_second, 1.0f, "(1.0) min benchmark seconds");
 Define_bool(validate, false, "(false) do result validation");
 Define_float(eps, 1e-5f, "(1e-5) rel error trunk for validation");
+Define_string(isa, "auto", "sse, fma, avx512, auto");
 
 Define_float(alpha, 1.0f, "(1.0) gemm alpha");
 Define_float(beta, 0.0f, "(0.0) gemm beta");
@@ -65,6 +67,15 @@ Define_int32(type_h, 0, "(0) 0 for empty, 1 for no_trans");
 Define_int32(m, 0, "(0) override M");
 Define_int32(n, 0, "(0) override N");
 Define_int32(k, 0, "(0) override K");
+
+typedef typeof(ppl::kernel::x86::gemm_fp32_fma)* ppl_x86_benchmark_gemm_func_t;
+
+static std::map<std::string, ppl_x86_benchmark_gemm_func_t> isa_table =
+{
+    {"sse", nullptr},
+    {"fma", ppl::kernel::x86::gemm_fp32_fma},
+    {"avx512", nullptr},
+};
 
 int main(int argc, char **argv) {
     simple_flags::parse_args(argc, argv);
@@ -114,8 +125,8 @@ int main(int argc, char **argv) {
     std::cerr << "==============================================================\n";
     fprintf(
         stderr,
-        "num_threads=%d\nwarm_up=%d\nmin_iter=%d\nmin_second=%f\nvalidate=%d\neps=%f\n\n",
-        num_threads, Flag_warm_up, Flag_min_iter, Flag_min_second, Flag_validate, Flag_eps
+        "num_threads=%d\nwarm_up=%d\nmin_iter=%d\nmin_second=%f\nvalidate=%d\neps=%f\nisa=%s\n\n",
+        num_threads, Flag_warm_up, Flag_min_iter, Flag_min_second, Flag_validate, Flag_eps, Flag_isa.c_str()
     );
     std::cerr << "==============================================================\n";
     fprintf(
@@ -124,6 +135,27 @@ int main(int argc, char **argv) {
         Flag_alpha, Flag_beta, Flag_relu, Flag_type_a, Flag_type_b, Flag_type_v, Flag_type_h, Flag_m, Flag_n, Flag_k
     );
     std::cerr << "==============================================================\n";
+
+    auto benchmark_gemm_func = isa_table[Flag_isa];
+
+    if (Flag_isa == "auto") {
+        auto cpu_isa = ppl::common::GetCpuISA();
+        if ((cpu_isa & ppl::common::ISA_X86_AVX512) && !benchmark_gemm_func) {
+            benchmark_gemm_func = isa_table["avx512"];
+        }
+        if ((cpu_isa & ppl::common::ISA_X86_FMA) && !benchmark_gemm_func) {
+            benchmark_gemm_func = isa_table["fma"];
+        }
+        if ((cpu_isa & ppl::common::ISA_X86_SSE) && !benchmark_gemm_func) {
+            benchmark_gemm_func = isa_table["sse"];
+        }
+    }
+
+    if (benchmark_gemm_func == nullptr) {
+        std::cerr << "unsupported isa\n";
+        return -1;
+    }
+
     std::cerr << "begin tests\n";
     std::cerr << "line_no,case_string,min_ms,max_gflops,max_gbps,avg_ms,avg_gflops,avg_gbps\n";
 
@@ -284,7 +316,7 @@ DEBUG_TAG(C);
         }
 DEBUG_TAG(D);
         ppl::common::RetCode ret =
-            ppl::kernel::x86::gemm_fp32_fma(
+            benchmark_gemm_func(
                 A, B, V, H,
                 typeA, typeB, typeV, typeH,
                 M, N, K,
@@ -305,7 +337,7 @@ DEBUG_TAG(G);
 
         for (; tot_exe_iter < Flag_min_iter || tot_exe_us < Flag_min_second * 1e6; ++tot_exe_iter) {
             start = std::chrono::high_resolution_clock::now();
-            ppl::kernel::x86::gemm_fp32_fma(
+            benchmark_gemm_func(
                 A, B, V, H,
                 typeA, typeB, typeV, typeH,
                 M, N, K,
