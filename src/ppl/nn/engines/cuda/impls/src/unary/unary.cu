@@ -50,9 +50,6 @@ __device__ __inline__ half ppl_scalar_unary<Unary_Abs, half>(const half& in_val)
 template <>
 __device__ __inline__ int8_t ppl_scalar_unary<Unary_Abs, int8_t>(const int8_t& in_val)
 {
-#if  ((__CUDACC_VER_MAJOR__ * 10000) + (__CUDACC_VER_MINOR__ * 100) >= 110100)
-    return abs(in_val);
-#endif
     return in_val >= 0 ? in_val : -in_val; 
 }
 
