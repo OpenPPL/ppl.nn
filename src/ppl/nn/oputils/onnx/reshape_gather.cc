@@ -59,17 +59,16 @@ RetCode ReshapeGather(InputOutputInfo* info, const void* arg) {
             }
         }
     } else {
-        output->SetDimCount(r + q - 1);
+        output->SetDimCount(q + (r - 1));
         int32_t axis = param->axis < 0 ? param->axis + r : param->axis;
-        for (int32_t i = 0; i < q - 1; i++) {
-            output->SetDim(i, indices->GetDim(i));
-        }
         for (int32_t i = 0; i < axis; i++) {
-            output->SetDim(i + q - 1, data->GetDim(i));
+            output->SetDim(i, data->GetDim(i));
         }
-        output->SetDim(axis + q - 1, indices->GetDim(q - 1));
-        for (int32_t i = axis + 1; i < r; i++) {
-            output->SetDim(i + q - 1, data->GetDim(i));
+        for (int32_t i = 0; i < q; i++) {
+            output->SetDim(i + axis, indices->GetDim(i));
+        }
+        for (int32_t i = axis; i < r - 1; i++) {
+            output->SetDim(i + q, data->GetDim(i + 1));
         }
     }
     output->CalcPadding();
