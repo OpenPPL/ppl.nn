@@ -41,12 +41,16 @@ RetCode MulOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* s
     } else if (DATAFORMAT_N4CX == selected_input_formats->at(0)) {
         selected_input_formats->at(1) = DATAFORMAT_N4CX;
         selected_output_formats->at(0) = DATAFORMAT_N4CX;
+    } else if (DATAFORMAT_NDARRAY == selected_input_formats->at(0)) {
+        selected_input_formats->at(1) = DATAFORMAT_NDARRAY;
+        selected_output_formats->at(0) = DATAFORMAT_NDARRAY;
     }
 
     return RC_SUCCESS;
 }
 
-RetCode MulOp::SelectDataType(const InputOutputInfo& info, std::vector<datatype_t>* selected_input_data_types,
+RetCode MulOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
+                              std::vector<datatype_t>* selected_input_data_types,
                               std::vector<datatype_t>* selected_output_data_types) {
     if (DATATYPE_FLOAT16 == selected_input_data_types->at(0)) {
         selected_input_data_types->at(1) = DATATYPE_FLOAT16;
@@ -54,8 +58,10 @@ RetCode MulOp::SelectDataType(const InputOutputInfo& info, std::vector<datatype_
     } else if (DATATYPE_FLOAT32 == selected_input_data_types->at(0)) {
         selected_input_data_types->at(1) = DATATYPE_FLOAT32;
         selected_output_data_types->at(0) = DATATYPE_FLOAT32;
+    } else if (DATATYPE_INT64 == selected_input_data_types->at(0)) {
+        selected_input_data_types->at(1) = DATATYPE_INT64;
+        selected_output_data_types->at(0) = DATATYPE_INT64;
     }
-
     return RC_SUCCESS;
 }
 

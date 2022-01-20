@@ -102,7 +102,8 @@ RetCode ChannelShuffleOp::SelectFormat(const InputOutputInfo& info, vector<dataf
     return RC_SUCCESS;
 }
 
-RetCode ChannelShuffleOp::SelectDataType(const InputOutputInfo& info, vector<datatype_t>* selected_input_data_types,
+RetCode ChannelShuffleOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
+                                         vector<datatype_t>* selected_input_data_types,
                                          vector<datatype_t>* selected_output_data_types) {
     if (info.GetInputCount() == 2) {
         auto input_datatype1 = info.GetInput<TensorImpl>(0)->GetShape()->GetDataType();

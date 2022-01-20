@@ -48,7 +48,8 @@ RetCode TransposeOp::SelectFormat(const InputOutputInfo& info, vector<dataformat
     return RC_SUCCESS;
 }
 
-RetCode TransposeOp::SelectDataType(const InputOutputInfo& info, vector<dataformat_t>* selected_input_data_types,
+RetCode TransposeOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
+                                    vector<dataformat_t>* selected_input_data_types,
                                     vector<dataformat_t>* selected_output_data_types) {
     if (DATATYPE_FLOAT16 == selected_input_data_types->at(0)) {
         selected_output_data_types->at(0) = DATATYPE_FLOAT16;

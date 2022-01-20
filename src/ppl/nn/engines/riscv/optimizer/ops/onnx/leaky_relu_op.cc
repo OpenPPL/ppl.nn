@@ -40,11 +40,8 @@ RetCode LeakyReLUOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
-RetCode LeakyReLUOp::SelectFormat(
-    const InputOutputInfo& info,
-    std::vector<dataformat_t>* selected_input_formats,
-    std::vector<dataformat_t>* selected_output_formats)
-{
+RetCode LeakyReLUOp::SelectFormat(const InputOutputInfo& info, std::vector<dataformat_t>* selected_input_formats,
+                                  std::vector<dataformat_t>* selected_output_formats) {
     if (DATAFORMAT_N8CX == selected_input_formats->at(0)) {
         selected_output_formats->at(0) = DATAFORMAT_N8CX;
     } else if (DATAFORMAT_N4CX == selected_output_formats->at(0)) {
@@ -54,16 +51,11 @@ RetCode LeakyReLUOp::SelectFormat(
     return RC_SUCCESS;
 }
 
-RetCode LeakyReLUOp::SelectDataType(
-    const InputOutputInfo& info,
-    std::vector<datatype_t>* selected_input_data_types,
-    std::vector<datatype_t>* selected_output_data_types)
-{
-    if (DATATYPE_FLOAT16 == selected_input_data_types->at(0)) {
-        selected_output_data_types->at(0) = DATATYPE_FLOAT16;
-    } else if (DATATYPE_FLOAT32 == selected_input_data_types->at(0)) {
-        selected_output_data_types->at(0) = DATATYPE_FLOAT32;
-    }
+RetCode LeakyReLUOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
+                                    std::vector<datatype_t>* selected_input_data_types,
+                                    std::vector<datatype_t>* selected_output_data_types) {
+    selected_input_data_types->at(0) = forward_precision;
+    selected_output_data_types->at(0) = forward_precision;
 
     return RC_SUCCESS;
 }

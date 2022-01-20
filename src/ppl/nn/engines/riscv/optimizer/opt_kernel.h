@@ -72,7 +72,7 @@ public:
         return ppl::common::RC_SUCCESS;
     }
 
-    virtual ppl::common::RetCode SelectDataType(const InputOutputInfo& info,
+    virtual ppl::common::RetCode SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
                                                 std::vector<ppl::common::datatype_t>* selected_input_data_types,
                                                 std::vector<ppl::common::datatype_t>* selected_output_data_types) {
         auto input_type = selected_input_data_types->at(0);

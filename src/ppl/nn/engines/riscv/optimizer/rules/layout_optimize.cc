@@ -160,6 +160,7 @@ bool LayoutOptimize(const OptKernelOptions& options) {
             }
         }
 
+        auto forward_precision = options.engine_options->forward_precision;
         std::vector<ppl::common::dataformat_t> selected_input_formats(node->GetInputCount(),
                                                                       ppl::common::DATAFORMAT_NDARRAY);
         std::vector<ppl::common::datatype_t> selected_input_data_types(node->GetInputCount(),
@@ -176,10 +177,6 @@ bool LayoutOptimize(const OptKernelOptions& options) {
                 }
                 selected_input_formats[i] = tensors[edge_id]->GetShape()->GetDataFormat();
                 selected_input_data_types[i] = tensors[edge_id]->GetShape()->GetDataType();
-            }
-            if (options.engine_options->forward_precision == ppl::common::DATATYPE_FLOAT32 ||
-                options.engine_options->forward_precision == ppl::common::DATATYPE_FLOAT16 ) {
-                selected_input_data_types[0] = options.engine_options->forward_precision;
             }
 
             for (uint32_t i = 0; i < node->GetOutputCount(); i++) {
@@ -198,7 +195,8 @@ bool LayoutOptimize(const OptKernelOptions& options) {
                 return false;
             }
 
-            status = kernel->SelectDataType(IOinfo, &selected_input_data_types, &selected_output_data_types);
+            status = kernel->SelectDataType(IOinfo, forward_precision, &selected_input_data_types,
+                                            &selected_output_data_types);
             if (status != ppl::common::RC_SUCCESS) {
                 LOG(ERROR) << "kernel[" << node->GetName()
                            << "] SelectDataType failed: " << ppl::common::GetRetCodeStr(status);

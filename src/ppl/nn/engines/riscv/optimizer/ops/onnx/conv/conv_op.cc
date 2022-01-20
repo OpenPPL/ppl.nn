@@ -75,7 +75,7 @@ RetCode ConvOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* 
     return RC_INVALID_VALUE;
 }
 
-ppl::common::RetCode ConvOp::SelectDataType(const InputOutputInfo& info,
+ppl::common::RetCode ConvOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
                                             std::vector<ppl::common::datatype_t>* selected_input_data_types,
                                             std::vector<ppl::common::datatype_t>* selected_output_data_types) {
     if (conv2d_param_ && conv2d_param_->mgr &&
