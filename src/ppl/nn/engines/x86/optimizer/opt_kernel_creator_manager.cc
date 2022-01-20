@@ -31,6 +31,7 @@
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/depth_to_space_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/div_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/equal_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/onnx/erf_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/exp_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/expand_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/flatten_op.h"
@@ -161,6 +162,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("", "Div", 7, 12, DivOp);
     // E
     REGISTER_OPT_KERNEL_CREATOR("", "Equal", 11, 12, EqualOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "Erf", 1, 16, ErfOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Exp", 6, 12, ExpOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Expand", 8, 12, ExpandOp);
     // F
