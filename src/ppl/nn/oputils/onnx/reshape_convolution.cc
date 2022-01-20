@@ -17,6 +17,7 @@
 
 #include "ppl/nn/oputils/onnx/reshape_convolution.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
@@ -37,8 +38,10 @@ RetCode ReshapeConvolution(InputOutputInfo* info, const void* arg) {
     for (int32_t i = 0; i < kernel_dims; ++i) {
         const int32_t j = i + 2;
         const int32_t kernel_shape_eff = (w->GetDim(j) - 1) * param->dilations[i] + 1;
-        const int64_t out_dim = (x->GetDim(j) + param->pads[i] + param->pads[i + kernel_dims] - kernel_shape_eff) / param->strides[i] + 1;
+        const int64_t out_dim =
+            (x->GetDim(j) + param->pads[i] + param->pads[i + kernel_dims] - kernel_shape_eff) / param->strides[i] + 1;
         if (out_dim <= 0) {
+            LOG(DEBUG) << "ERROR: output dim[" << out_dim << "] < 0.";
             return RC_INVALID_VALUE;
         }
         y->SetDim(j, out_dim);

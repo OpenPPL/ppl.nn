@@ -17,6 +17,7 @@
 
 #include "ppl/nn/oputils/onnx/reshape_leaky_relu.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
@@ -24,6 +25,8 @@ namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeLeakyReLU(InputOutputInfo* info, const void*) {
     if (info->GetInputCount() != 1 || info->GetOutputCount() != 1) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2 or output count["
+                   << info->GetOutputCount() << "] != 1.";
         return RC_INVALID_VALUE;
     }
     const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();

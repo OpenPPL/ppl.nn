@@ -17,6 +17,7 @@
 
 #include "ppl/nn/oputils/onnx/reshape_maxunpool.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
@@ -26,9 +27,12 @@ RetCode ReshapeMaxUnpool(InputOutputInfo* info, const void* arg) {
     auto param = (const MaxUnpoolParam*)arg;
 
     if (info->GetInputCount() != 2 && info->GetInputCount() != 3) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2 or output count["
+                   << info->GetOutputCount() << "] != 3.";
         return RC_INVALID_VALUE;
     }
     if (info->GetOutputCount() != 1) {
+        LOG(DEBUG) << "ERROR: output count[" << info->GetOutputCount() << "] != 1.";
         return RC_INVALID_VALUE;
     }
 

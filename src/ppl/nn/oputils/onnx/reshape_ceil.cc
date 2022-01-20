@@ -17,12 +17,15 @@
 
 #include "ppl/nn/oputils/onnx/reshape_ceil.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeCeil(InputOutputInfo* info, const void* arg) {
     if (info->GetInputCount() != 1 || info->GetOutputCount() != 1) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 1 or output count["
+                   << info->GetOutputCount() << "] != 1.";
         return RC_INVALID_VALUE;
     }
 

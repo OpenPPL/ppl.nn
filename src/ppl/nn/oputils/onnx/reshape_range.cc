@@ -16,9 +16,10 @@
 // under the License.
 
 #include "ppl/nn/oputils/onnx/reshape_range.h"
+#include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 #include <algorithm>
 #include <cmath>
-#include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace oputils {
@@ -32,11 +33,21 @@ RetCode ReshapeRange(InputOutputInfo* info, double start, double limit, double d
 
 common::RetCode ReshapeRange(InputOutputInfo* info, const void*) {
     if (info->GetInputCount() != 3 || info->GetOutputCount() != 1) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 3 or output count["
+                   << info->GetOutputCount() << "] != 1.";
         return RC_INVALID_VALUE;
     }
 
-    if (!info->GetInput<TensorImpl>(0)->GetBufferPtr() || !info->GetInput<TensorImpl>(1)->GetBufferPtr() ||
-        !info->GetInput<TensorImpl>(2)->GetBufferPtr()) {
+    if (!info->GetInput<TensorImpl>(0)->GetBufferPtr()) {
+        LOG(DEBUG) << "ERROR: input[0] is empty.";
+        return RC_NOT_FOUND;
+    }
+    if (!info->GetInput<TensorImpl>(1)->GetBufferPtr()) {
+        LOG(DEBUG) << "ERROR: input[1] is empty.";
+        return RC_NOT_FOUND;
+    }
+    if (!info->GetInput<TensorImpl>(2)->GetBufferPtr()) {
+        LOG(DEBUG) << "ERROR: input[2] is empty.";
         return RC_NOT_FOUND;
     }
 
@@ -51,6 +62,7 @@ common::RetCode ReshapeRange(InputOutputInfo* info, const void*) {
         limit = *info->GetInput<TensorImpl>(1)->GetBufferPtr<float>();
         delta = *info->GetInput<TensorImpl>(2)->GetBufferPtr<float>();
     } else {
+        LOG(DEBUG) << "ERROR: unspoorted data type[" << GetDataTypeStr(data_type) << "].";
         return RC_UNSUPPORTED;
     }
 

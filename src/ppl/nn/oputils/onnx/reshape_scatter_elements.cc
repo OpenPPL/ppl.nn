@@ -17,12 +17,15 @@
 
 #include "ppl/nn/oputils/onnx/reshape_scatter_elements.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeScatterElements(InputOutputInfo* info, const void* arg) {
     if (info->GetInputCount() != 3 || info->GetOutputCount() != 1) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 3 or output count["
+                   << info->GetOutputCount() << "] != 1.";
         return RC_INVALID_VALUE;
     }
 
@@ -35,14 +38,22 @@ RetCode ReshapeScatterElements(InputOutputInfo* info, const void* arg) {
     const uint32_t q = input_indices.GetRealDimCount();
     const uint32_t u = input_updates.GetRealDimCount();
     if (r < 1 || q < 1) {
+        LOG(DEBUG) << "ERROR: input[0]'s dim count[" << r << "] < 1 or input[1]'s dim count[" << q << "] < 1.";
         return RC_INVALID_VALUE;
     }
-    if (r != q || q != u) {
+    if (r != q) {
+        LOG(DEBUG) << "ERROR: input[0]'s dim count[" << r << "] != input[1]'s dim count[" << q << "].";
+        return RC_INVALID_VALUE;
+    }
+    if (q != u) {
+        LOG(DEBUG) << "ERROR: input[1]'s dim count[" << q << "] != input[2]'s dim count[" << u << "].";
         return RC_INVALID_VALUE;
     }
 
     for (uint32_t i = 0; i < r; i++) {
         if (input_indices.GetDim(i) != input_updates.GetDim(i)) {
+            LOG(DEBUG) << "ERROR: input indices' dim[" << i << "] != input_updates' dim[" << i << "]: ["
+                       << input_indices.GetDim(i) << "] != [" << input_updates.GetDim(i) << "].";
             return RC_INVALID_VALUE;
         }
     }

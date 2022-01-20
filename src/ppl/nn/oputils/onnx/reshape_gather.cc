@@ -17,6 +17,7 @@
 
 #include "ppl/nn/oputils/onnx/reshape_gather.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
@@ -26,6 +27,8 @@ RetCode ReshapeGather(InputOutputInfo* info, const void* arg) {
     auto param = (const GatherParam*)arg;
 
     if (info->GetInputCount() != 2 || info->GetOutputCount() != 1) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2 or output count["
+                   << info->GetOutputCount() << "] != 1.";
         return RC_INVALID_VALUE;
     }
 
@@ -36,10 +39,12 @@ RetCode ReshapeGather(InputOutputInfo* info, const void* arg) {
     const int32_t r = data->GetRealDimCount();
     const int32_t q = indices->GetRealDimCount();
     if (r < 1) {
+        LOG(DEBUG) << "ERROR: input[0]'s dim count[" << r << "] < 1.";
         return RC_INVALID_VALUE;
     }
 
     if (param->axis < -r || param->axis > r - 1) {
+        LOG(DEBUG) << "ERROR: axis[" << param->axis << "] of param is out of range[" << -r << ", " << r - 1 << "].";
         return RC_INVALID_VALUE;
     }
 

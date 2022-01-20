@@ -127,23 +127,6 @@ static void SplitString(const char* str, unsigned int len, const char* delim, un
     f("", 0); // the last empty field
 }
 
-static RetCode ReadFileContent(const char* fname, string* buf) {
-    ifstream ifile;
-
-    ifile.open(fname, ios_base::in);
-    if (!ifile.is_open()) {
-        LOG(ERROR) << "open file[" << fname << "] failed.";
-        return RC_NOT_FOUND;
-    }
-
-    stringstream ss;
-    ss << ifile.rdbuf();
-    *buf = ss.str();
-
-    ifile.close();
-    return RC_SUCCESS;
-}
-
 static bool ParseInputShapes(const string& shape_str, vector<vector<int64_t>>* input_shapes) {
     bool ok = true;
 
@@ -193,7 +176,8 @@ Define_bool_opt("--use-cuda", g_flag_use_cuda, false, "use cuda engine");
 
 Define_bool_opt("--quick-select", g_flag_quick_select, false, "quick select algorithms for conv and gemm kernel");
 Define_uint32_opt("--device-id", g_flag_device_id, 0, "declare device id for cuda");
-Define_string_opt("--kernel-type", g_flag_kernel_type, "", "set kernel type for cuda inferencing. valid values: int8/16/32/64,float16/32");
+Define_string_opt("--kernel-type", g_flag_kernel_type, "",
+                  "set kernel type for cuda inferencing. valid values: int8/16/32/64,float16/32");
 
 Define_string_opt("--export-algo-file", g_flag_export_algo_file, "",
                   "Export the selected best algo info into the json file.");
@@ -205,6 +189,23 @@ Define_string_opt("--quant-file", g_flag_quant_file, "", "a json file containing
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/engines/cuda/cuda_options.h"
 #include "ppl/nn/utils/array.h"
+
+static RetCode ReadFileContent(const char* fname, string* buf) {
+    ifstream ifile;
+
+    ifile.open(fname, ios_base::in);
+    if (!ifile.is_open()) {
+        LOG(ERROR) << "open file[" << fname << "] failed.";
+        return RC_NOT_FOUND;
+    }
+
+    stringstream ss;
+    ss << ifile.rdbuf();
+    *buf = ss.str();
+
+    ifile.close();
+    return RC_SUCCESS;
+}
 
 static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     CudaEngineOptions options;
@@ -225,8 +226,7 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
 
     if (!g_flag_kernel_type.empty()) {
         string kernel_type_str(g_flag_kernel_type);
-        std::transform(g_flag_kernel_type.begin(), g_flag_kernel_type.end(),
-                       kernel_type_str.begin(), ::toupper);
+        std::transform(g_flag_kernel_type.begin(), g_flag_kernel_type.end(), kernel_type_str.begin(), ::toupper);
 
         datatype_t kernel_type = DATATYPE_UNKNOWN;
         for (datatype_t i = DATATYPE_UNKNOWN; i < DATATYPE_MAX; i++) {

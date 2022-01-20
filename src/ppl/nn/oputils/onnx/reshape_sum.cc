@@ -18,12 +18,14 @@
 #include "ppl/nn/oputils/onnx/reshape_sum.h"
 #include "ppl/nn/oputils/broadcast.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeSum(InputOutputInfo* info, const void*) {
     if (info->GetInputCount() < 2) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] < 2.";
         return RC_INVALID_VALUE;
     }
 
@@ -35,6 +37,7 @@ RetCode ReshapeSum(InputOutputInfo* info, const void*) {
     }
     multi_input_bc.CalcBroadCast();
     if (!multi_input_bc.CanBroadCast()) {
+        LOG(DEBUG) << "ERROR: cannot broadcast.";
         return RC_INVALID_VALUE;
     }
 

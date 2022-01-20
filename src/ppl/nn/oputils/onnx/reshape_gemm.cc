@@ -17,6 +17,7 @@
 
 #include "ppl/nn/oputils/onnx/reshape_gemm.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
@@ -24,6 +25,7 @@ namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeGemm(InputOutputInfo* info, const void* arg) {
     if (info->GetInputCount() < 2) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] < 2.";
         return RC_INVALID_VALUE;
     }
 

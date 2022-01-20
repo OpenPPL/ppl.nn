@@ -17,12 +17,15 @@
 
 #include "ppl/nn/oputils/onnx/reshape_non_max_suppression.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeNonMaxSuppression(InputOutputInfo* info, int64_t max_output_boxes_per_class) {
     if (info->GetInputCount() < 2 || info->GetOutputCount() != 1) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2 or output count["
+                   << info->GetOutputCount() << "] != 1.";
         return RC_INVALID_VALUE;
     }
 
@@ -31,11 +34,22 @@ RetCode ReshapeNonMaxSuppression(InputOutputInfo* info, int64_t max_output_boxes
     auto output = info->GetOutput<TensorImpl>(0)->GetShape();
 
     if (input_boxes.GetDimCount() != 3 || input_scores.GetDimCount() != 3) {
+        LOG(DEBUG) << "ERROR: input boxes' dim count[" << input_boxes.GetDimCount()
+                   << "] != 3 or input scores' dim count[" << input_scores.GetDimCount() << "] != 3.";
         return RC_INVALID_VALUE;
     }
-
-    if (input_boxes.GetDim(2) != 4 || input_boxes.GetDim(0) != input_scores.GetDim(0) ||
-        input_boxes.GetDim(1) != input_scores.GetDim(2)) {
+    if (input_boxes.GetDim(2) != 4) {
+        LOG(DEBUG) << "ERROR: input boxes' dim[2]'s value[" << input_boxes.GetDim(2) << "] != 4.";
+        return RC_INVALID_VALUE;
+    }
+    if (input_boxes.GetDim(0) != input_scores.GetDim(0)) {
+        LOG(DEBUG) << "ERROR: input boxes' dim[0] != input scores' dim[0]: [" << input_boxes.GetDim(0) << "] != ["
+                   << input_scores.GetDim(0) << "].";
+        return RC_INVALID_VALUE;
+    }
+    if (input_boxes.GetDim(1) != input_scores.GetDim(2)) {
+        LOG(DEBUG) << "ERROR: input boxes' dim[1] != input scores' dim[2]: [" << input_boxes.GetDim(1) << "] != ["
+                   << input_scores.GetDim(2) << "].";
         return RC_INVALID_VALUE;
     }
 
@@ -50,7 +64,8 @@ RetCode ReshapeNonMaxSuppression(InputOutputInfo* info, int64_t max_output_boxes
 
 RetCode ReshapeNonMaxSuppression(InputOutputInfo* info) {
     auto max_output_boxes_per_class = info->GetInputCount() > 2 ? info->GetInput<TensorImpl>(2) : nullptr;
-    return ReshapeNonMaxSuppression(info, max_output_boxes_per_class ? max_output_boxes_per_class->GetBufferPtr<int64_t>()[0] : 0);
+    return ReshapeNonMaxSuppression(
+        info, max_output_boxes_per_class ? max_output_boxes_per_class->GetBufferPtr<int64_t>()[0] : 0);
 }
 
 }}} // namespace ppl::nn::oputils

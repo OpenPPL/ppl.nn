@@ -17,6 +17,7 @@
 
 #include "ppl/nn/oputils/onnx/reshape_topk.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
@@ -33,6 +34,7 @@ RetCode ReshapeTopK(InputOutputInfo* info, const void* arg, int64_t k) {
     int32_t axis = param->axis;
 
     if (axis < -dim_count || axis > dim_count - 1) {
+        LOG(DEBUG) << "ERROR: axis[" << axis << "] is out of range[" << -dim_count << ", " << dim_count - 1 << "].";
         return RC_INVALID_VALUE;
     }
     if (axis < 0) {
@@ -56,11 +58,14 @@ RetCode ReshapeTopK(InputOutputInfo* info, const void* arg, int64_t k) {
 
 RetCode ReshapeTopK(InputOutputInfo* info, const void* arg) {
     if (info->GetInputCount() != 2 || info->GetOutputCount() != 2) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2 or output count["
+                   << info->GetOutputCount() << "] != 2.";
         return RC_INVALID_VALUE;
     }
 
     auto k_ptr = info->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
     if (!k_ptr) {
+        LOG(DEBUG) << "ERROR: input[1] is empty.";
         return RC_NOT_FOUND;
     }
 
