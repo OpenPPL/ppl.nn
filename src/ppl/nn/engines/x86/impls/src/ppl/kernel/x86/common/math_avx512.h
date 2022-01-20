@@ -23,6 +23,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 // an approximation of sigmoid
+// onnxruntime/core/mlas/lib/logistic.cpp
 static inline __m512 _avx512_sigmoid_ps(const __m512 var)
 {
     __m512 value = var;
@@ -50,6 +51,7 @@ static inline __m512 _avx512_sigmoid_ps(const __m512 var)
 }
 
 // an approximation of tanh
+// onnxruntime/core/mlas/lib/tanh.cpp
 static inline __m512 _avx512_tanh_ps(const __m512 var)
 {
     __m512 value = var;
@@ -77,6 +79,7 @@ static inline __m512 _avx512_tanh_ps(const __m512 var)
 }
 
 // an approximation of exp
+// https://github.com/reyoung/avx_mathfun/blob/master/avx_mathfun.h
 static inline __m512 _avx512_exp_ps(const __m512 __x)
 {
     __m512 tmp = _mm512_setzero_ps(), fx;
@@ -112,8 +115,48 @@ static inline __m512 _avx512_exp_ps(const __m512 __x)
     imm0         = _mm512_cvttps_epi32(fx);
     imm0         = _mm512_add_epi32(imm0, _mm512_set1_epi32(0x7f));
     imm0         = _mm512_slli_epi32(imm0, 23);
-    __m512 pow2n = _mm512_castsi512_ps(imm0);
+    __m512 pow2n = reinterpret_cast<__m512>(imm0);
     y            = _mm512_mul_ps(y, pow2n);
+    return y;
+}
+
+// an approximation of exp
+// onnxruntime/core/mlas/lib/erf.cpp, result aligned with std::erff
+static inline __m512 _avx512_erf_ps(const __m512 x) {
+    __m512 neg_zero = _mm512_set1_ps(-0.0f);
+    __m512 sign_mask = reinterpret_cast<__m512>(_mm512_and_si512(reinterpret_cast<__m512i>(x), reinterpret_cast<__m512i>(neg_zero)));
+    __m512 abs_value = reinterpret_cast<__m512>(_mm512_andnot_si512(reinterpret_cast<__m512i>(neg_zero), reinterpret_cast<__m512i>(x)));
+    abs_value = _mm512_min_ps(_mm512_set1_ps(3.925f), abs_value);
+    __m512 sq_value = _mm512_mul_ps(abs_value, abs_value);
+
+    __m512 r_small = _mm512_set1_ps(-5.99104969e-4f);
+    r_small = _mm512_fmadd_ps(r_small, sq_value, _mm512_set1_ps(4.99339588e-3f));
+    r_small = _mm512_fmadd_ps(r_small, sq_value, _mm512_set1_ps(-2.67667342e-2f));
+    r_small = _mm512_fmadd_ps(r_small, sq_value, _mm512_set1_ps(1.12818025e-1f));
+    r_small = _mm512_fmadd_ps(r_small, sq_value, _mm512_set1_ps(-3.76124859e-1f));
+    r_small = _mm512_fmadd_ps(r_small, sq_value, _mm512_set1_ps(1.28379151e-1f));
+    r_small = _mm512_fmadd_ps(r_small, abs_value, abs_value);
+    __mmask16 split_mask = _mm512_cmp_ps_mask(abs_value, _mm512_set1_ps(0.921875f), _CMP_GT_OS);
+
+    abs_value = _mm512_mask_mov_ps(_mm512_setzero_ps(), split_mask, abs_value); // clear smaller value into zero for bigger number calculation
+    __m512 r_big = _mm512_set1_ps(1.72948930e-5f);
+    r_big = _mm512_fmadd_ps(r_big, abs_value, _mm512_set1_ps(-3.83208680e-4f));
+    r_big = _mm512_fmadd_ps(r_big, abs_value, _mm512_set1_ps(3.88393435e-3f));
+    r_big = _mm512_fmadd_ps(r_big, abs_value, _mm512_set1_ps(-2.42545605e-2f));
+    r_big = _mm512_fmadd_ps(r_big, abs_value, _mm512_set1_ps(1.06777847e-1f));
+    r_big = _mm512_fmadd_ps(r_big, abs_value, _mm512_set1_ps(6.34846687e-1f));
+    r_big = _mm512_fmadd_ps(r_big, abs_value, _mm512_set1_ps(1.28717512e-1f));
+    r_big = _mm512_fmadd_ps(r_big, abs_value, abs_value);
+
+    // 1.0 - exp(-r_big), no need to do min()
+    r_big = reinterpret_cast<__m512>(_mm512_xor_si512(reinterpret_cast<__m512i>(r_big), reinterpret_cast<__m512i>(neg_zero))); // -r_big
+    __m512 y = _avx512_exp_ps(r_big);
+    y = _mm512_sub_ps(_mm512_set1_ps(1.0f), y);
+
+    // merge two splits results
+    y = _mm512_mask_mov_ps(r_small, split_mask, y);
+    y = reinterpret_cast<__m512>(_mm512_or_si512(reinterpret_cast<__m512i>(y), reinterpret_cast<__m512i>(sign_mask)));
+
     return y;
 }
 

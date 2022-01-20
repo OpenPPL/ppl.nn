@@ -23,6 +23,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 // an approximation of sigmoid
+// onnxruntime/core/mlas/lib/logistic.cpp
 static inline __m256 _fma_sigmoid_ps(const __m256 var)
 {
     __m256 value = var;
@@ -50,6 +51,7 @@ static inline __m256 _fma_sigmoid_ps(const __m256 var)
 }
 
 // an approximation of tanh
+// onnxruntime/core/mlas/lib/tanh.cpp
 static inline __m256 _fma_tanh_ps(const __m256 var)
 {
     __m256 value = var;
@@ -77,6 +79,7 @@ static inline __m256 _fma_tanh_ps(const __m256 var)
 }
 
 // an approximation of exp
+// https://github.com/reyoung/avx_mathfun/blob/master/avx_mathfun.h
 static inline __m256 _fma_exp_ps(const __m256 __x)
 {
     __m256 tmp = _mm256_setzero_ps(), fx;
@@ -115,6 +118,47 @@ static inline __m256 _fma_exp_ps(const __m256 __x)
     imm0         = _mm256_slli_epi32(imm0, 23);
     __m256 pow2n = _mm256_castsi256_ps(imm0);
     y            = _mm256_mul_ps(y, pow2n);
+    return y;
+}
+
+// an approximation of exp
+// onnxruntime/core/mlas/lib/erf.cpp, result aligned with std::erff
+static inline __m256 _fma_erf_ps(const __m256 x) {
+    __m256 neg_zero = _mm256_set1_ps(-0.0f);
+    __m256 sign_mask = _mm256_and_ps(x, neg_zero);
+    __m256 abs_value = _mm256_andnot_ps(neg_zero, x);
+    abs_value = _mm256_min_ps(_mm256_set1_ps(3.925f), abs_value);
+    __m256 sq_value = _mm256_mul_ps(abs_value, abs_value);
+
+    __m256 r_small = _mm256_set1_ps(-5.99104969e-4f);
+    r_small = _mm256_fmadd_ps(r_small, sq_value, _mm256_set1_ps(4.99339588e-3f));
+    r_small = _mm256_fmadd_ps(r_small, sq_value, _mm256_set1_ps(-2.67667342e-2f));
+    r_small = _mm256_fmadd_ps(r_small, sq_value, _mm256_set1_ps(1.12818025e-1f));
+    r_small = _mm256_fmadd_ps(r_small, sq_value, _mm256_set1_ps(-3.76124859e-1f));
+    r_small = _mm256_fmadd_ps(r_small, sq_value, _mm256_set1_ps(1.28379151e-1f));
+    r_small = _mm256_fmadd_ps(r_small, abs_value, abs_value);
+    __m256 split_mask = _mm256_cmp_ps(abs_value, _mm256_set1_ps(0.921875f), _CMP_GT_OS);
+    r_small = _mm256_andnot_ps(split_mask, r_small);
+
+    abs_value = _mm256_and_ps(split_mask, abs_value); // clear smaller value into zero for bigger number calculation
+    __m256 r_big = _mm256_set1_ps(1.72948930e-5f);
+    r_big = _mm256_fmadd_ps(r_big, abs_value, _mm256_set1_ps(-3.83208680e-4f));
+    r_big = _mm256_fmadd_ps(r_big, abs_value, _mm256_set1_ps(3.88393435e-3f));
+    r_big = _mm256_fmadd_ps(r_big, abs_value, _mm256_set1_ps(-2.42545605e-2f));
+    r_big = _mm256_fmadd_ps(r_big, abs_value, _mm256_set1_ps(1.06777847e-1f));
+    r_big = _mm256_fmadd_ps(r_big, abs_value, _mm256_set1_ps(6.34846687e-1f));
+    r_big = _mm256_fmadd_ps(r_big, abs_value, _mm256_set1_ps(1.28717512e-1f));
+    r_big = _mm256_fmadd_ps(r_big, abs_value, abs_value);
+
+    // 1.0 - exp(-r_big), no need to do min()
+    r_big = _mm256_xor_ps(r_big, neg_zero); // -r_big
+    __m256 y = _fma_exp_ps(r_big);
+    y = _mm256_sub_ps(_mm256_set1_ps(1.0f), y);
+
+    // merge two splits results
+    y = _mm256_or_ps(r_small, y);
+    y = _mm256_or_ps(y, sign_mask);
+
     return y;
 }
 
