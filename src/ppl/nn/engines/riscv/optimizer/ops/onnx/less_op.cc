@@ -34,7 +34,7 @@ RetCode LessOp::Init(const OptKernelOptions& options) {
 }
 
 RetCode LessOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
-                            vector<dataformat_t>* selected_output_formats) {
+                             vector<dataformat_t>* selected_output_formats) {
     if (DATAFORMAT_N8CX == selected_input_formats->at(0)) {
         selected_input_formats->at(1) = DATAFORMAT_N8CX;
         selected_output_formats->at(0) = DATAFORMAT_N8CX;
@@ -49,8 +49,9 @@ RetCode LessOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* 
     return RC_SUCCESS;
 }
 
-RetCode LessOp::SelectDataType(const InputOutputInfo& info, std::vector<datatype_t>* selected_input_data_types,
-                              std::vector<datatype_t>* selected_output_data_types) {
+RetCode LessOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
+                               std::vector<datatype_t>* selected_input_data_types,
+                               std::vector<datatype_t>* selected_output_data_types) {
     if (DATATYPE_FLOAT16 == selected_input_data_types->at(0)) {
         selected_input_data_types->at(1) = DATATYPE_FLOAT16;
         selected_output_data_types->at(0) = DATATYPE_FLOAT16;

@@ -63,21 +63,6 @@ RetCode SplitOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>*
     return RC_SUCCESS;
 }
 
-RetCode SplitOp::SelectDataType(const InputOutputInfo& info, std::vector<datatype_t>* selected_input_data_types,
-                                std::vector<datatype_t>* selected_output_data_types) {
-    if (DATATYPE_FLOAT16 == selected_input_data_types->at(0)) {
-        for (int32_t i = 0; i < selected_output_data_types->size(); i++) {
-            selected_output_data_types->at(i) = DATATYPE_FLOAT16;
-        }
-    } else if (DATATYPE_FLOAT32 == selected_input_data_types->at(0)) {
-        for (int32_t i = 0; i < selected_output_data_types->size(); i++) {
-            selected_output_data_types->at(i) = DATATYPE_FLOAT32;
-        }
-    }
-
-    return RC_SUCCESS;
-}
-
 KernelImpl* SplitOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<SplitKernel>(param_.get());
 }

@@ -22,6 +22,7 @@
 #include <chrono>
 
 #include "ppl/nn/engines/riscv/riscv_common_param.h"
+#include "ppl/nn/engines/riscv/utils/macros.h"
 #include "ppl/nn/runtime/opt_kernel.h"
 #include "ppl/nn/runtime/kernel_impl.h"
 #include "ppl/nn/engines/riscv/riscv_device.h"

@@ -43,7 +43,8 @@ RetCode ShapeOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>*
     return RC_SUCCESS;
 }
 
-RetCode ShapeOp::SelectDataType(const InputOutputInfo& info, vector<datatype_t>* selected_input_data_types,
+RetCode ShapeOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
+                                vector<datatype_t>* selected_input_data_types,
                                 vector<datatype_t>* selected_output_data_types) {
     selected_output_data_types->at(0) = DATATYPE_INT64;
     return RC_SUCCESS;

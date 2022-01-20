@@ -34,7 +34,7 @@ RetCode EqualOp::Init(const OptKernelOptions& options) {
 }
 
 RetCode EqualOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
-                            vector<dataformat_t>* selected_output_formats) {
+                              vector<dataformat_t>* selected_output_formats) {
     if (DATAFORMAT_N8CX == selected_input_formats->at(0)) {
         selected_input_formats->at(1) = DATAFORMAT_N8CX;
         selected_output_formats->at(0) = DATAFORMAT_N8CX;
@@ -44,22 +44,26 @@ RetCode EqualOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>*
     } else if (DATAFORMAT_N2CX == selected_input_formats->at(0)) {
         selected_input_formats->at(1) = DATAFORMAT_N2CX;
         selected_output_formats->at(0) = DATAFORMAT_N2CX;
+    } else if (DATAFORMAT_NDARRAY == selected_input_formats->at(0)) {
+        selected_input_formats->at(1) = DATAFORMAT_NDARRAY;
+        selected_output_formats->at(0) = DATAFORMAT_NDARRAY;
     }
 
     return RC_SUCCESS;
 }
 
-RetCode EqualOp::SelectDataType(const InputOutputInfo& info, std::vector<datatype_t>* selected_input_data_types,
-                              std::vector<datatype_t>* selected_output_data_types) {
+RetCode EqualOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
+                                std::vector<datatype_t>* selected_input_data_types,
+                                std::vector<datatype_t>* selected_output_data_types) {
     if (DATATYPE_FLOAT16 == selected_input_data_types->at(0)) {
         selected_input_data_types->at(1) = DATATYPE_FLOAT16;
-        selected_output_data_types->at(0) = DATATYPE_FLOAT16;
+        selected_output_data_types->at(0) = DATATYPE_UINT8;
     } else if (DATATYPE_FLOAT32 == selected_input_data_types->at(0)) {
         selected_input_data_types->at(1) = DATATYPE_FLOAT32;
-        selected_output_data_types->at(0) = DATATYPE_FLOAT32;
+        selected_output_data_types->at(0) = DATATYPE_UINT8;
     } else if (DATATYPE_INT64 == selected_input_data_types->at(0)) {
         selected_input_data_types->at(1) = DATATYPE_INT64;
-        selected_output_data_types->at(0) = DATATYPE_INT64;
+        selected_output_data_types->at(0) = DATATYPE_UINT8;
     }
 
     return RC_SUCCESS;

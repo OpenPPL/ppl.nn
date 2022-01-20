@@ -46,7 +46,13 @@
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/leaky_relu_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/equal_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/less_op.h"
-
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/topk_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/where_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/constant_of_shape_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/tile_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/squeeze_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/range_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/expand_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/ppl/shape_operation_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/ppl/reorder_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/ppl/channel_shuffle_op.h"
@@ -103,11 +109,13 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
 
     REGISTER_OPT_KERNEL_CREATOR("", "Conv", 1, 16, ConvOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Concat", 11, 12, ConcatOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "ConstantOfShape", 11, 12, ConstantOfShapeOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Clip", 11, 11, ClipOp);
 
     REGISTER_OPT_KERNEL_CREATOR("", "Div", 7, 12, DivOp);
 
     REGISTER_OPT_KERNEL_CREATOR("", "Equal", 11, 12, EqualOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "Expand", 8, 12, ExpandOp);
 
     REGISTER_OPT_KERNEL_CREATOR("", "Flatten", 11, 12, FlattenOp);
 
@@ -121,6 +129,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("", "MaxPool", 11, 11, MaxPoolOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Mul", 7, 12, MulOp);
 
+    REGISTER_OPT_KERNEL_CREATOR("", "Range", 11, 16, RangeOp);
     REGISTER_OPT_KERNEL_CREATOR("", "ReduceMean", 11, 12, ReduceMeanOp);
     REGISTER_OPT_KERNEL_CREATOR("", "ReduceMax", 11, 11, ReduceMaxOp);
     REGISTER_OPT_KERNEL_CREATOR("", "ReduceMin", 11, 11, ReduceMinOp);
@@ -133,12 +142,17 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("", "Sigmoid", 6, 12, SigmoidOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Softmax", 11, 12, SoftmaxOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Split", 11, 12, SplitOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "Squeeze", 11, 12, SqueezeOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Slice", 11, 12, SliceOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Sub", 7, 12, SubOp);
 
+    REGISTER_OPT_KERNEL_CREATOR("", "Tile", 6, 12, TileOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "TopK", 11, 16, TopKOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Transpose", 1, 12, TransposeOp);
 
     REGISTER_OPT_KERNEL_CREATOR("", "Unsqueeze", 11, 12, UnsqueezeOp);
+
+    REGISTER_OPT_KERNEL_CREATOR("", "Where", 9, 15, WhereOp);
     // mmcv custom op
 
     // ppl
