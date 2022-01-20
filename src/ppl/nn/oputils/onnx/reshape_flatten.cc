@@ -17,6 +17,7 @@
 
 #include "ppl/nn/oputils/onnx/reshape_flatten.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
@@ -25,6 +26,8 @@ namespace ppl { namespace nn { namespace oputils {
 RetCode ReshapeFlatten(InputOutputInfo* info, const void* arg) {
     auto param = (const FlattenParam*)arg;
     if (info->GetInputCount() != 1 || info->GetOutputCount() != 1) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 1 or output count["
+                   << info->GetOutputCount() << "] != 1.";
         return RC_INVALID_VALUE;
     }
 
@@ -33,6 +36,8 @@ RetCode ReshapeFlatten(InputOutputInfo* info, const void* arg) {
 
     const int32_t dim_count = input->GetShape()->GetDimCount();
     if (param->axis < -dim_count || param->axis > dim_count) {
+        LOG(DEBUG) << "ERROR: axis[" << param->axis << "] of param is out of range[" << -dim_count << ", " << dim_count
+                   << "].";
         return RC_INVALID_VALUE;
     }
 

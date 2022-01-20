@@ -18,6 +18,7 @@
 #include "ppl/nn/oputils/onnx/reshape_equal.h"
 #include "ppl/nn/oputils/broadcast.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace oputils {
@@ -34,6 +35,7 @@ RetCode ReshapeEqual(InputOutputInfo* info, const void* arg) {
     multi_bc.SetInputTensorShapes(lhs, rhs);
     multi_bc.CalcBroadCast();
     if (!multi_bc.CanBroadCast()) {
+        LOG(DEBUG) << "ERROR: cannot broadcast.";
         return RC_INVALID_VALUE;
     }
 

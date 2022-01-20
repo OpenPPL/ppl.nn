@@ -16,9 +16,10 @@
 // under the License.
 
 #include "ppl/nn/oputils/onnx/reshape_squeeze.h"
+#include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 #include <set>
 using namespace std;
-#include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
@@ -27,6 +28,8 @@ namespace ppl { namespace nn { namespace oputils {
 RetCode ReshapeSqueeze(InputOutputInfo* info, const void* arg) {
     auto param = (const SqueezeParam*)arg;
     if (info->GetInputCount() != 1 || info->GetOutputCount() != 1) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 1 or output count["
+                   << info->GetOutputCount() << "] != 1.";
         return RC_INVALID_VALUE;
     }
 
@@ -37,15 +40,20 @@ RetCode ReshapeSqueeze(InputOutputInfo* info, const void* arg) {
         if (param->axes.empty() || (param->axes.size() == 1 && (param->axes[0] == 0 || param->axes[0] == -1))) {
             output->ReshapeAsScalar();
         } else {
+            LOG(DEBUG) << "ERROR: axes in parameter are invalid.";
             return RC_INVALID_VALUE;
         }
     } else {
         // check parameters
         if (param->axes.size() > input.GetDimCount()) {
+            LOG(DEBUG) << "ERROR: axes' size[" << param->axes.size() << "] != input[0]'s dim count["
+                       << input.GetDimCount() << "].";
             return RC_INVALID_VALUE;
         }
         for (uint32_t i = 0; i < param->axes.size(); i++) {
             if (param->axes[i] >= (int32_t)input.GetDimCount() || param->axes[i] < -(int32_t)input.GetDimCount()) {
+                LOG(DEBUG) << "ERROR: axes[" << i << "] is out of range[" << -input.GetDimCount() << ", "
+                           << input.GetDimCount() << "].";
                 return RC_INVALID_VALUE;
             }
         }
@@ -63,6 +71,7 @@ RetCode ReshapeSqueeze(InputOutputInfo* info, const void* arg) {
             }
             for (auto it = real_axes.begin(); it != real_axes.end(); ++it) { // check if all squeeze dims are 1
                 if (input.GetDim(*it) != 1) {
+                    LOG(DEBUG) << "ERROR: input[0]'s dim[" << *it << "]'s value[" << input.GetDim(*it) << "] != 1.";
                     return RC_INVALID_VALUE;
                 }
             }

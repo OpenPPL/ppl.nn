@@ -16,8 +16,9 @@
 // under the License.
 
 #include "ppl/nn/oputils/onnx/reshape_reshape.h"
-#include <memory>
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
+#include <memory>
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace oputils {
@@ -28,6 +29,7 @@ RetCode ReshapeReshape(InputOutputInfo* info, const void*, const int64_t* shape_
     auto reshaped = info->GetOutput<TensorImpl>(0)->GetShape();
 
     if (shape->GetDimCount() != 1) {
+        LOG(DEBUG) << "ERROR: input[1]'s dim count[" << shape->GetDimCount() << "] != 1.";
         return RC_INVALID_VALUE;
     }
 
@@ -39,12 +41,15 @@ RetCode ReshapeReshape(InputOutputInfo* info, const void*, const int64_t* shape_
                 axis_need_infer = i;
                 reshaped->SetDim(i, 1);
             } else {
+                LOG(DEBUG) << "ERROR: axis_need_infer[" << axis_need_infer << "] != -1.";
                 return RC_INVALID_VALUE;
             }
         } else if (shape_data[i] == 0) {
             if (i < data->GetDimCount()) {
                 reshaped->SetDim(i, data->GetDim(i));
             } else {
+                LOG(DEBUG) << "ERROR: data's dim count[" << data->GetDimCount() << "] >= [" << i << "] when shape_data["
+                           << i << "] is 0.";
                 return RC_INVALID_VALUE;
             }
         } else {
@@ -57,7 +62,9 @@ RetCode ReshapeReshape(InputOutputInfo* info, const void*, const int64_t* shape_
         uint64_t pre_reshaped_nelem = reshaped->GetElementsExcludingPadding();
         if (pre_reshaped_nelem == 0) {
             reshaped->SetDim(axis_need_infer, 0);
-        } else if (data_nelem % pre_reshaped_nelem) {
+        } else if (data_nelem % pre_reshaped_nelem != 0) {
+            LOG(DEBUG) << "ERROR: data_nelem[" << data_nelem << "] % pre_reshaped_nelem[" << pre_reshaped_nelem
+                       << "] != 0";
             return RC_INVALID_VALUE;
         } else {
             reshaped->SetDim(axis_need_infer, data_nelem / pre_reshaped_nelem);
@@ -70,11 +77,13 @@ RetCode ReshapeReshape(InputOutputInfo* info, const void*, const int64_t* shape_
 
 RetCode ReshapeReshape(InputOutputInfo* info, const void* arg) {
     if (info->GetInputCount() != 2) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2.";
         return RC_INVALID_VALUE;
     }
 
     auto shape_data = info->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
     if (!shape_data) {
+        LOG(DEBUG) << "ERROR: input[1]'s is empty.";
         return RC_NOT_FOUND;
     }
     return ReshapeReshape(info, nullptr, shape_data);

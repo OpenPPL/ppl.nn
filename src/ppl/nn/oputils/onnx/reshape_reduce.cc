@@ -17,6 +17,7 @@
 
 #include "ppl/nn/oputils/onnx/reshape_reduce.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
@@ -29,6 +30,8 @@ RetCode ReshapeReduce(InputOutputInfo* info, const void* arg) {
 
     // check & prepare axes
     if (param->axes.size() > x->GetDimCount()) {
+        LOG(DEBUG) << "ERROR: axis's count[" << param->axes.size() << "] > input[0]'s dim count[" << x->GetDimCount()
+                   << "].";
         return RC_INVALID_VALUE;
     }
 
@@ -41,6 +44,8 @@ RetCode ReshapeReduce(InputOutputInfo* info, const void* arg) {
 
     for (uint32_t i = 0; i < fixed_axes.size(); i++) {
         if (fixed_axes[i] >= (int)dim_count || fixed_axes[i] < -(int)dim_count) {
+            LOG(DEBUG) << "ERROR: fixed axes[" << i << "]'s value[" << fixed_axes[i] << "] is out of range["
+                       << -dim_count << ", " << dim_count << "].";
             return RC_INVALID_VALUE;
         }
         if (fixed_axes[i] < 0) { // turn negative axes to positive axes

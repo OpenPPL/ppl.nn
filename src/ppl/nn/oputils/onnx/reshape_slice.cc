@@ -42,10 +42,12 @@ RetCode ReshapeSlice(InputOutputInfo* info, const int64_t* starts, const int64_t
         int64_t axis = axes[it];
         int64_t step_val = steps[it];
         if (axis < -dim_count || axis >= dim_count) {
+            LOG(DEBUG) << "ERROR: axis[ << axis << ] is out of range[" << -dim_count << ", " << dim_count << "].";
             return RC_INVALID_VALUE;
         }
         axis = axis < 0 ? axis + dim_count : axis;
         if (step_val == 0) {
+            LOG(DEBUG) << "ERROR: step is 0.";
             return RC_INVALID_VALUE;
         }
 
@@ -73,19 +75,30 @@ RetCode ReshapeSlice(InputOutputInfo* info, const int64_t* starts, const int64_t
 }
 
 RetCode ReshapeSlice(InputOutputInfo* info) {
-    if (info->GetInputCount() < 3 || info->GetInputCount() > 5 || info->GetOutputCount() != 1) {
+    if (info->GetInputCount() < 3 || info->GetInputCount() > 5) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] is out of range[3, 5].";
         return RC_INVALID_VALUE;
     }
+    if (info->GetOutputCount() != 1) {
+        LOG(DEBUG) << "ERROR: output count[" << info->GetOutputCount() << "] != 1.";
+        return RC_INVALID_VALUE;
+    }
+
     for (size_t i = 1; i < info->GetInputCount(); i++) {
         // starts, ends, axes, steps must be 1-D tensor
-        if (info->GetInput<TensorImpl>(i)->GetShape()->GetDimCount() != 1) {
+        auto in_shape = info->GetInput<TensorImpl>(i)->GetShape();
+        if (in_shape->GetDimCount() != 1) {
+            LOG(DEBUG) << "ERROR: input[" << i << "]'s dim count[" << in_shape->GetDimCount() << "] != 1.";
             return RC_INVALID_VALUE;
         }
     }
     const int axes_num = info->GetInput<TensorImpl>(1)->GetShape()->GetDim(0);
     for (size_t i = 2; i < info->GetInputCount(); i++) {
         // starts, end, axes, steps must have same length except for not defined
-        if (info->GetInput<TensorImpl>(i)->GetShape()->GetDim(0) != axes_num) {
+        auto in_shape = info->GetInput<TensorImpl>(i)->GetShape();
+        if (in_shape->GetDim(0) != axes_num) {
+            LOG(DEBUG) << "ERROR: input[" << i << "]'s dim[0]'s value[" << in_shape->GetDim(0) << "] !+ axes_num["
+                       << axes_num << "].";
             return RC_INVALID_VALUE;
         }
     }
@@ -94,7 +107,12 @@ RetCode ReshapeSlice(InputOutputInfo* info) {
     auto starts = info->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
     auto ends = info->GetInput<TensorImpl>(2)->GetBufferPtr<int64_t>();
 
-    if (starts == nullptr || ends == nullptr) {
+    if (!starts) {
+        LOG(DEBUG) << "ERROR: input[1] is empty.";
+        return RC_NOT_FOUND;
+    }
+    if (!ends) {
+        LOG(DEBUG) << "ERROR: input[2] is empty.";
         return RC_NOT_FOUND;
     }
 
@@ -103,7 +121,8 @@ RetCode ReshapeSlice(InputOutputInfo* info) {
     auto axes_tensor = info->GetInputCount() > 3 ? info->GetInput<TensorImpl>(3) : nullptr;
     if (axes_tensor) {
         axes = axes_tensor->GetBufferPtr<int64_t>();
-        if (axes == nullptr) {
+        if (!axes) {
+            LOG(DEBUG) << "ERROR: `axes` is empty.";
             return RC_NOT_FOUND;
         }
     } else {
@@ -119,7 +138,8 @@ RetCode ReshapeSlice(InputOutputInfo* info) {
     auto steps_tensor = info->GetInputCount() > 4 ? info->GetInput<TensorImpl>(4) : nullptr;
     if (steps_tensor) {
         steps = steps_tensor->GetBufferPtr<int64_t>();
-        if (steps == nullptr) {
+        if (!steps) {
+            LOG(DEBUG) << "ERROR: `steps` is empty.";
             return RC_NOT_FOUND;
         }
     } else {

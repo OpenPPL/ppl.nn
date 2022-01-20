@@ -18,12 +18,14 @@
 #include "ppl/nn/oputils/onnx/reshape_matmul.h"
 #include "ppl/nn/oputils/broadcast.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeMatMul(InputOutputInfo* info, const void*) {
     if (info->GetInputCount() != 2) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2.";
         return RC_INVALID_VALUE;
     }
 
@@ -33,6 +35,7 @@ RetCode ReshapeMatMul(InputOutputInfo* info, const void*) {
     MatMulBroadCaster matmul_bc;
     matmul_bc.SetInputTensorShapes(lhs, rhs);
     if (!matmul_bc.CanBroadCast()) {
+        LOG(DEBUG) << "ERROR: cannot broadcast.";
         return RC_INVALID_VALUE;
     }
 

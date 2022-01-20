@@ -18,6 +18,7 @@
 #include "ppl/nn/oputils/onnx/reshape_expand.h"
 #include "ppl/nn/oputils/broadcast.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace oputils {
@@ -34,7 +35,8 @@ RetCode ReshapeExpand(InputOutputInfo* info, const void*, const int64_t* shape_p
 
     MultiDirectionalBroadCaster broad_caster;
     broad_caster.SetInputTensorShapes(in_shape0, expand_shape);
-    if (broad_caster.CanBroadCast() == false) {
+    if (!broad_caster.CanBroadCast()) {
+        LOG(DEBUG) << "ERROR: cannot broadcast.";
         return RC_INVALID_VALUE;
     }
 
@@ -49,11 +51,14 @@ RetCode ReshapeExpand(InputOutputInfo* info, const void*, const int64_t* shape_p
 
 RetCode ReshapeExpand(InputOutputInfo* info, const void*) {
     if (info->GetInputCount() != 2 || info->GetOutputCount() != 1) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2 or output count["
+                   << info->GetOutputCount() << "] != 1.";
         return RC_INVALID_VALUE;
     }
 
     auto shape_ptr = info->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
     if (shape_ptr == nullptr) {
+        LOG(DEBUG) << "ERROR: input[1] is empty.";
         return RC_NOT_FOUND;
     }
     return ReshapeExpand(info, nullptr, shape_ptr);

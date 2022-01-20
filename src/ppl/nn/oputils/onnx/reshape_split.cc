@@ -17,6 +17,7 @@
 
 #include "ppl/nn/oputils/onnx/reshape_split.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
@@ -31,6 +32,8 @@ RetCode ReshapeSplit(InputOutputInfo* info, const void* arg) {
         uint32_t in_dim = shape.GetDim(split_axis);
         uint32_t split_dim = in_dim / info->GetOutputCount();
         if (split_dim * info->GetOutputCount() != in_dim) {
+            LOG(DEBUG) << "ERROR: split_dim[" << split_dim << "] * output_count[" << info->GetOutputCount()
+                       << "] != in_dim[" << in_dim << "]";
             return RC_INVALID_VALUE;
         }
 
@@ -45,14 +48,18 @@ RetCode ReshapeSplit(InputOutputInfo* info, const void* arg) {
         return RC_SUCCESS;
     }
     if (info->GetOutputCount() != param->split_point.size()) {
+        LOG(DEBUG) << "ERROR: output_count[" << info->GetOutputCount() << "] != split point size["
+                   << param->split_point.size() << "]";
         return RC_INVALID_VALUE;
     }
 
-    uint32_t sumDim = 0;
+    uint32_t sum_dim = 0;
     for (uint32_t i = 0; i < param->split_point.size(); ++i) {
-        sumDim += param->split_point[i];
+        sum_dim += param->split_point[i];
     }
-    if (sumDim != shape.GetDim(split_axis)) {
+    if (sum_dim != shape.GetDim(split_axis)) {
+        LOG(DEBUG) << "ERROR: sum_dim[" << sum_dim << "] != dim[" << shape.GetDim(split_axis) << "] of axis["
+                   << split_axis << "]";
         return RC_INVALID_VALUE;
     }
 

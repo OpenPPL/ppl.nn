@@ -17,6 +17,7 @@
 
 #include "ppl/nn/oputils/onnx/reshape_constant_of_shape.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
@@ -28,6 +29,7 @@ RetCode ReshapeConstantOfShape(InputOutputInfo* info, const void* arg, const int
     auto output_shape = info->GetOutput<TensorImpl>(0)->GetShape();
 
     if (input_shape->GetDataType() != DATATYPE_INT64) {
+        LOG(DEBUG) << "ERROR: input[0]'s data type[" << GetDataTypeStr(input_shape->GetDataType()) << "] is not int64.";
         return RC_INVALID_VALUE;
     }
 
@@ -40,6 +42,7 @@ RetCode ReshapeConstantOfShape(InputOutputInfo* info, const void* arg, const int
     for (size_t i = 0; i < output_dim_count; i++) {
         int64_t dim = input_host[i];
         if (dim < 0) {
+            LOG(DEBUG) << "ERROR: input[" << i << "]'s dim[" << dim << "] < 0.";
             return RC_INVALID_VALUE;
         } else if (dim == 0) {
             output_shape->ReshapeAsScalar();
@@ -49,6 +52,7 @@ RetCode ReshapeConstantOfShape(InputOutputInfo* info, const void* arg, const int
 
     auto param = (const ConstantOfShapeParam*)arg;
     if (param->data_type == DATATYPE_UNKNOWN) {
+        LOG(DEBUG) << "ERROR: unknown param data type.";
         return RC_UNSUPPORTED;
     }
 
@@ -59,11 +63,14 @@ RetCode ReshapeConstantOfShape(InputOutputInfo* info, const void* arg, const int
 
 RetCode ReshapeConstantOfShape(InputOutputInfo* info, const void* arg) {
     if (info->GetInputCount() != 1 || info->GetOutputCount() != 1) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 1 or output count["
+                   << info->GetOutputCount() << "] != 1.";
         return RC_INVALID_VALUE;
     }
 
     auto input = info->GetInput<TensorImpl>(0);
     if (!input->GetBufferPtr()) {
+        LOG(DEBUG) << "ERROR: input[0] has no data.";
         return RC_NOT_FOUND;
     }
 

@@ -103,7 +103,9 @@ RetCode ExecuteKernel(KernelImpl* kernel, KernelExecContext* ctx,
     auto status = AfterExecuteKernel(kernel, ctx, release_func);
 
     if (exec_status != RC_SUCCESS) {
-        LOG(ERROR) << "exec kernel[" << kernel->GetName() << "] failed: " << GetRetCodeStr(exec_status);
+        auto& type = kernel->GetNode()->GetType();
+        LOG(ERROR) << "exec kernel[" << kernel->GetName() << "] of type[" << type.domain << ":" << type.name << ":"
+                   << type.version << "] failed: " << GetRetCodeStr(exec_status);
         return exec_status;
     }
 

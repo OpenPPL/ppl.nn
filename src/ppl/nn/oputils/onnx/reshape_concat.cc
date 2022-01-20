@@ -17,6 +17,7 @@
 
 #include "ppl/nn/oputils/onnx/reshape_concat.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
@@ -37,7 +38,11 @@ RetCode ReshapeConcat(InputOutputInfo* info, const void* arg) {
             }
         } else {
             for (uint32_t j = 1; j < info->GetInputCount(); ++j) {
-                if (info->GetInput<TensorImpl>(j)->GetShape()->GetDim(i) != in_shape0.GetDim(i)) {
+                auto input = info->GetInput<TensorImpl>(j);
+                if (input->GetShape()->GetDim(i) != in_shape0.GetDim(i)) {
+                    LOG(DEBUG) << "ERROR: input[" << j << "]'s dim[" << i << "]'s value["
+                               << input->GetShape()->GetDim(i) << "] != input[0]'s dim[" << i << "]'s value["
+                               << in_shape0.GetDim(i) << "].";
                     return RC_INVALID_VALUE;
                 }
             }

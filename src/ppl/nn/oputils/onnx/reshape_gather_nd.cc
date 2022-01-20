@@ -17,6 +17,7 @@
 
 #include "ppl/nn/oputils/onnx/reshape_gather_nd.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
@@ -24,6 +25,8 @@ namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeGatherND(InputOutputInfo* info, const void*) {
     if (info->GetInputCount() != 2 || info->GetOutputCount() != 1) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2 or output count["
+                   << info->GetOutputCount() << "] != 1.";
         return RC_INVALID_VALUE;
     }
 
@@ -34,10 +37,12 @@ RetCode ReshapeGatherND(InputOutputInfo* info, const void*) {
     const uint32_t r = input_data->GetRealDimCount();
     const uint32_t q = input_indices->GetRealDimCount();
     if (r < 1 || q < 1) {
+        LOG(DEBUG) << "ERROR: input[0]'s dim count[" << r << "] < 1 or input[1]'s dim count[" << q << "] < 1.";
         return RC_INVALID_VALUE;
     }
     const uint32_t last_indices_dim = input_indices->GetDim(q - 1);
     if (last_indices_dim < 1 || last_indices_dim > r) {
+        LOG(DEBUG) << "ERROR: last index dim[" << last_indices_dim << "] is out of range[1, " << r << "].";
         return RC_INVALID_VALUE;
     }
     const uint32_t output_dim_count = q + r - last_indices_dim - 1;

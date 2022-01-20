@@ -16,8 +16,9 @@
 // under the License.
 
 #include "ppl/nn/oputils/onnx/reshape_unsqueeze.h"
-#include <algorithm>
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
+#include <algorithm>
 using namespace ppl::common;
 using namespace ppl::nn::common;
 
@@ -32,6 +33,8 @@ RetCode ReshapeUnsqueeze(InputOutputInfo* info, const void* arg) {
 
     for (uint32_t i = 0; i < param->axes.size(); ++i) {
         if (param->axes[i] < (int32_t)(-out_dim_count) || param->axes[i] >= (int32_t)out_dim_count) {
+            LOG(DEBUG) << "ERROR: axes[" << i << "]'s value[" << param->axes[i] << "] is out of range["
+                       << -out_dim_count << ", " << out_dim_count << "].";
             return RC_INVALID_VALUE;
         }
         if (param->axes[i] < 0) {
