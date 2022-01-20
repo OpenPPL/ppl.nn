@@ -21,6 +21,7 @@
 #include <string.h>
 #include <chrono>
 #include <memory>
+#include <map>
 #include <inttypes.h>
 
 #if defined(__linux__) && defined(PPL_USE_X86_OMP)
@@ -45,7 +46,7 @@
 #define DEBUG_TAG(X)
 #endif
 
-#define CASE_STRING_FMT() "m%" PRId64 "n%" PRId64 "k%" PRId64 "_trans_A%dtrans_B%d_alpha%fbeta%f_C%d_fuse%d_n%s"
+#define CASE_STRING_FMT() "m%" PRId64 "n%" PRId64 "k%" PRId64 "_n%s"
 
 Define_bool_opt("--help", Flag_help, false, "show these help information");
 Define_string(cfg, "", "(required) fc config file, format:" CASE_STRING_FMT());
@@ -54,6 +55,24 @@ Define_int32(min_iter, 20, "(20) min benchmark iterations");
 Define_float(min_second, 1.0f, "(1.0) min benchmark seconds");
 Define_bool(validate, false, "(false) do result validation");
 Define_float(eps, 1e-5f, "(1e-5) rel error trunk for validation");
+Define_string(isa, "auto", "sse, fma, avx512, auto");
+
+Define_float(alpha, 1.0f, "(1.0) gemm alpha");
+Define_float(beta, 0.0f, "(0.0) gemm beta");
+Define_int32(relu, 0, "(0) fuse relu, 0 for none, 1 for relu");
+Define_int32(type_a, 0, "(0) 0 for no_trans, 1 for trans");
+Define_int32(type_b, 0, "(0) 0 for no_trans, 1 for trans");
+Define_int32(type_c, 0, "(0) 0 for empty, 1 for scalar, 2 for col vector, 3 for row vector, 1 for matrix");
+Define_int32(m, 0, "(0) override M");
+Define_int32(n, 0, "(0) override N");
+Define_int32(k, 0, "(0) override K");
+
+static std::map<std::string, ppl::common::isa_t> isa_table =
+{
+    {"sse", ppl::common::ISA_X86_SSE},
+    {"fma", ppl::common::ISA_X86_FMA},
+    {"avx512", ppl::common::ISA_X86_AVX512},
+};
 
 ppl::common::RetCode gemm_v2_ref_fp32(const ppl::kernel::x86::gemm_v2_param_fp32& param) {
 #ifdef PPL_USE_X86_OMP_COLLAPSE
@@ -142,6 +161,12 @@ int main(int argc, char **argv) {
         num_threads, Flag_warm_up, Flag_min_iter, Flag_min_second, Flag_validate, Flag_eps
     );
     std::cerr << "==============================================================\n";
+    fprintf(
+        stderr,
+        "alpha=%f\nbeta=%f\nrelu=%d\ntype_a=%d\ntype_b=%d\ntype_c=%d\nM=%d\nN=%d\nK=%d\n\n",
+        Flag_alpha, Flag_beta, Flag_relu, Flag_type_a, Flag_type_b, Flag_type_c, Flag_m, Flag_n, Flag_k
+    );
+    std::cerr << "==============================================================\n";
     std::cerr << "begin tests\n";
     std::cerr << "line_no,case_string,min_ms,max_gflops,max_gbps,avg_ms,avg_gflops,avg_gbps\n";
 
@@ -162,24 +187,28 @@ int main(int argc, char **argv) {
 
         char case_name[100];
         int64_t M, N, K;
-        int32_t trans_A, trans_B;
-        float alpha, beta;
-        int32_t c_type;
-        int32_t fuse_flag;
+        int32_t trans_A = Flag_type_a, trans_B = Flag_type_b;
+        float alpha = Flag_alpha, beta = Flag_beta;
+        int32_t c_type = Flag_type_c;
+        int32_t fuse_flag = Flag_relu;
 
-        if (10 != sscanf(
+        if (4 != sscanf(
             line,
             CASE_STRING_FMT() "\n",
-            &M, &N, &K, &trans_A, &trans_B, &alpha, &beta, &c_type, &fuse_flag, case_name
+            &M, &N, &K, case_name
         )) {
             std::cerr << line_no << "," << line << ",invalid format\n";
             continue;
         }
 
+        if (Flag_m) M = Flag_m;
+        if (Flag_n) N = Flag_n;
+        if (Flag_k) K = Flag_k;
+
         fprintf(
             stderr,
             "%d," CASE_STRING_FMT(),
-            line_no, M, N, K, trans_A, trans_B, alpha, beta, c_type, fuse_flag, case_name
+            line_no, M, N, K, case_name
         );
 DEBUG_TAG(A);
         const int64_t lda = trans_A ? M : K;
@@ -265,11 +294,19 @@ DEBUG_TAG(D);
         param.beta = beta;
         param.trans_A = trans_A;
         param.trans_B = trans_B;
-// #ifdef PPL_USE_X86_AVX512
-//         param.isa_flag = ppl::common::ISA_X86_AVX512;
-// #else
-        param.isa_flag = ppl::common::ISA_X86_FMA;
-// #endif
+        param.isa_flag = isa_table[Flag_isa];
+        if (Flag_isa == "auto") {
+            auto cpu_isa = ppl::common::GetCpuISA();
+            if ((cpu_isa & ppl::common::ISA_X86_AVX512) && !param.isa_flag) {
+                param.isa_flag = isa_table["avx512"];
+            }
+            if ((cpu_isa & ppl::common::ISA_X86_FMA) && !param.isa_flag) {
+                param.isa_flag = isa_table["fma"];
+            }
+            if ((cpu_isa & ppl::common::ISA_X86_SSE) && !param.isa_flag) {
+                param.isa_flag = isa_table["sse"];
+            }
+        }
         param.fuse_flag = fuse_flag;
         param.c_type = c_type;
 
