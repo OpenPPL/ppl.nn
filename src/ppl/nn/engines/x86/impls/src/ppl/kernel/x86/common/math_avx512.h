@@ -22,6 +22,14 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
+#ifdef PPL_USE_X86_MSVC
+#define _avx512_cast512i_512f(x) _mm512_castsi512_ps(x)
+#define _avx512_cast512f_512i(x) _mm512_castps_si512(x)
+#else
+#define _avx512_cast512i_512f(x) reinterpret_cast<__m512>(x)
+#define _avx512_cast512f_512i(x) reinterpret_cast<__m512i>(x)
+#endif
+
 // an approximation of sigmoid
 // onnxruntime/core/mlas/lib/logistic.cpp
 static inline __m512 _avx512_sigmoid_ps(const __m512 var)
@@ -115,7 +123,7 @@ static inline __m512 _avx512_exp_ps(const __m512 __x)
     imm0         = _mm512_cvttps_epi32(fx);
     imm0         = _mm512_add_epi32(imm0, _mm512_set1_epi32(0x7f));
     imm0         = _mm512_slli_epi32(imm0, 23);
-    __m512 pow2n = reinterpret_cast<__m512>(imm0);
+    __m512 pow2n = _avx512_cast512i_512f(imm0);
     y            = _mm512_mul_ps(y, pow2n);
     return y;
 }
@@ -124,8 +132,8 @@ static inline __m512 _avx512_exp_ps(const __m512 __x)
 // onnxruntime/core/mlas/lib/erf.cpp, result aligned with std::erff
 static inline __m512 _avx512_erf_ps(const __m512 x) {
     __m512 neg_zero = _mm512_set1_ps(-0.0f);
-    __m512 sign_mask = reinterpret_cast<__m512>(_mm512_and_si512(reinterpret_cast<__m512i>(x), reinterpret_cast<__m512i>(neg_zero)));
-    __m512 abs_value = reinterpret_cast<__m512>(_mm512_andnot_si512(reinterpret_cast<__m512i>(neg_zero), reinterpret_cast<__m512i>(x)));
+    __m512 sign_mask = _avx512_cast512i_512f(_mm512_and_si512(_avx512_cast512f_512i(x), _avx512_cast512f_512i(neg_zero)));
+    __m512 abs_value = _avx512_cast512i_512f(_mm512_andnot_si512(_avx512_cast512f_512i(neg_zero), _avx512_cast512f_512i(x)));
     abs_value = _mm512_min_ps(_mm512_set1_ps(3.925f), abs_value);
     __m512 sq_value = _mm512_mul_ps(abs_value, abs_value);
 
@@ -149,13 +157,13 @@ static inline __m512 _avx512_erf_ps(const __m512 x) {
     r_big = _mm512_fmadd_ps(r_big, abs_value, abs_value);
 
     // 1.0 - exp(-r_big), no need to do min()
-    r_big = reinterpret_cast<__m512>(_mm512_xor_si512(reinterpret_cast<__m512i>(r_big), reinterpret_cast<__m512i>(neg_zero))); // -r_big
+    r_big = _avx512_cast512i_512f(_mm512_xor_si512(_avx512_cast512f_512i(r_big), _avx512_cast512f_512i(neg_zero))); // -r_big
     __m512 y = _avx512_exp_ps(r_big);
     y = _mm512_sub_ps(_mm512_set1_ps(1.0f), y);
 
     // merge two splits results
     y = _mm512_mask_mov_ps(r_small, split_mask, y);
-    y = reinterpret_cast<__m512>(_mm512_or_si512(reinterpret_cast<__m512i>(y), reinterpret_cast<__m512i>(sign_mask)));
+    y = _avx512_cast512i_512f(_mm512_or_si512(_avx512_cast512f_512i(y), _avx512_cast512f_512i(sign_mask)));
 
     return y;
 }
