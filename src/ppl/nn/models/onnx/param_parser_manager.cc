@@ -151,6 +151,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Dropout", 10, 11);
     // E
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Equal", 11, 12);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Erf", 1, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Exp", 6, 12);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Expand", 8, 12);
     // F

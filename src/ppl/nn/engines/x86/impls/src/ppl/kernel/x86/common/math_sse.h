@@ -23,6 +23,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 // an approximation of sigmoid
+// onnxruntime/core/mlas/lib/logistic.cpp
 static inline __m128 _sse_sigmoid_ps(const __m128 var)
 {
     __m128 value = var;
@@ -59,6 +60,7 @@ static inline __m128 _sse_sigmoid_ps(const __m128 var)
 }
 
 // an approximation of tanh
+// onnxruntime/core/mlas/lib/tanh.cpp
 static inline __m128 _sse_tanh_ps(const __m128 var)
 {
     __m128 value = var;
@@ -95,6 +97,7 @@ static inline __m128 _sse_tanh_ps(const __m128 var)
 }
 
 // an approximation of exp
+// https://github.com/reyoung/avx_mathfun/blob/master/avx_mathfun.h
 static inline __m128 _sse_exp_ps(const __m128 __x)
 {
     __m128 tmp = _mm_setzero_ps(), fx;
@@ -140,6 +143,47 @@ static inline __m128 _sse_exp_ps(const __m128 __x)
     imm0         = _mm_slli_epi32(imm0, 23);
     __m128 pow2n = _mm_castsi128_ps(imm0);
     y            = _mm_mul_ps(y, pow2n);
+    return y;
+}
+
+// an approximation of exp
+// onnxruntime/core/mlas/lib/erf.cpp, result aligned with std::erff
+static inline __m128 _sse_erf_ps(const __m128 x) {
+    __m128 neg_zero = _mm_set1_ps(-0.0f);
+    __m128 sign_mask = _mm_and_ps(x, neg_zero);
+    __m128 abs_value = _mm_andnot_ps(neg_zero, x);
+    abs_value = _mm_min_ps(_mm_set1_ps(3.925f), abs_value);
+    __m128 sq_value = _mm_mul_ps(abs_value, abs_value);
+
+    __m128 r_small = _mm_set1_ps(-5.99104969e-4f);
+    r_small = _mm_add_ps(_mm_mul_ps(r_small, sq_value), _mm_set1_ps(4.99339588e-3f));
+    r_small = _mm_add_ps(_mm_mul_ps(r_small, sq_value), _mm_set1_ps(-2.67667342e-2f));
+    r_small = _mm_add_ps(_mm_mul_ps(r_small, sq_value), _mm_set1_ps(1.12818025e-1f));
+    r_small = _mm_add_ps(_mm_mul_ps(r_small, sq_value), _mm_set1_ps(-3.76124859e-1f));
+    r_small = _mm_add_ps(_mm_mul_ps(r_small, sq_value), _mm_set1_ps(1.28379151e-1f));
+    r_small = _mm_add_ps(_mm_mul_ps(r_small, abs_value), abs_value);
+    __m128 split_mask = _mm_cmpgt_ps(abs_value, _mm_set1_ps(0.921875f));
+    r_small = _mm_andnot_ps(split_mask, r_small);
+
+    abs_value = _mm_and_ps(split_mask, abs_value); // clear smaller value into zero for bigger number calculation
+    __m128 r_big = _mm_set1_ps(1.72948930e-5f);
+    r_big = _mm_add_ps(_mm_mul_ps(r_big, abs_value), _mm_set1_ps(-3.83208680e-4f));
+    r_big = _mm_add_ps(_mm_mul_ps(r_big, abs_value), _mm_set1_ps(3.88393435e-3f));
+    r_big = _mm_add_ps(_mm_mul_ps(r_big, abs_value), _mm_set1_ps(-2.42545605e-2f));
+    r_big = _mm_add_ps(_mm_mul_ps(r_big, abs_value), _mm_set1_ps(1.06777847e-1f));
+    r_big = _mm_add_ps(_mm_mul_ps(r_big, abs_value), _mm_set1_ps(6.34846687e-1f));
+    r_big = _mm_add_ps(_mm_mul_ps(r_big, abs_value), _mm_set1_ps(1.28717512e-1f));
+    r_big = _mm_add_ps(_mm_mul_ps(r_big, abs_value), abs_value);
+
+    // 1.0 - exp(-r_big), no need to do min()
+    r_big = _mm_xor_ps(r_big, neg_zero); // -r_big
+    __m128 y = _sse_exp_ps(r_big);
+    y = _mm_sub_ps(_mm_set1_ps(1.0f), y);
+
+    // merge two splits results
+    y = _mm_or_ps(r_small, y);
+    y = _mm_or_ps(y, sign_mask);
+
     return y;
 }
 
