@@ -28,7 +28,7 @@
 #define __FLT_MAX__ 3.402823466e+38F
 #endif
 
-static std::vector<depthwise_kernel_info> func_vec;
+static std::map<ppl::common::datatype_t, KernelList> func_map;
 
 void PPLCUDADepthwiseConvertFilter(
     cudaStream_t& stream,
@@ -75,13 +75,16 @@ int PPLCUDADepthwiseSelectKernel(
     float out_scale)
 {
     GETPARAM
-    if(func_vec.empty())  InitKernelList(func_vec, type);
+    if(func_map.empty())  InitKernelList(func_map, type);
+    auto func_vec = func_map[type];
+
     int kernel_id = 0;
     float min_time = FLT_MAX;
     float elapsed;
     cudaEvent_t begin, end;
     cudaEventCreate(&begin);
     cudaEventCreate(&end);
+
     for (uint32_t id = 0; id < func_vec.size(); id++) {
         if (!CanSupport(func_vec[id], conv_param))
             continue;
@@ -145,7 +148,8 @@ void PPLCUDADepthwiseForwardCudaImp(
 {
 
     GETPARAM
-    if (func_vec.empty()) InitKernelList(func_vec, type);
+    if (func_map.empty()) InitKernelList(func_map, type);
+    auto func_vec = func_map[type];
     int tile_height, tile_width, elems;
     GenConfigure(func_vec[kernel_id], conv_param, &tile_height, &tile_width, &elems);
     DivModFast padc_fast(paddingc);
