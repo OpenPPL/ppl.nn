@@ -21,6 +21,7 @@
 
 #include "ppl/kernel/x86/fp32/arithmetic.h"
 #include "ppl/kernel/x86/int64/arithmetic.h"
+#include "ppl/kernel/x86/int32/arithmetic.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -76,6 +77,9 @@ ppl::common::RetCode DivKernel::DoExecute(KernelExecContext* ctx) {
     } else if (data_type == common::DATATYPE_INT64) {
         return kernel::x86::div_int64(A->GetShape(), B->GetShape(), C->GetShape(), lA->GetBufferPtr<const int64_t>(),
                                       lB->GetBufferPtr<const int64_t>(), C->GetBufferPtr<int64_t>());
+    } else if (data_type == common::DATATYPE_INT32) {
+        return kernel::x86::div_int32(A->GetShape(), B->GetShape(), C->GetShape(), lA->GetBufferPtr<const int32_t>(),
+                                      lB->GetBufferPtr<const int32_t>(), C->GetBufferPtr<int32_t>());
     } else {
         LOG(ERROR) << "unsupported datatype " << common::GetDataTypeStr(data_type);
         return ppl::common::RC_UNSUPPORTED;

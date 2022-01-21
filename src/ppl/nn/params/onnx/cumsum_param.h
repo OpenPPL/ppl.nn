@@ -15,23 +15,22 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_EXP_OP_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_EXP_OP_H_
+#ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_CUMSUM_PARAM_H_
+#define _ST_HPC_PPL_NN_PARAMS_ONNX_CUMSUM_PARAM_H_
 
-#include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
+#include <stdint.h>
 
-namespace ppl { namespace nn { namespace x86 {
+namespace ppl { namespace nn { namespace common {
 
-class ExpOp final : public X86OptKernel {
-public:
-    ExpOp(const ir::Node* node) : X86OptKernel(node) {}
-    ppl::common::RetCode Init(const OptKernelOptions& options) override;
-    KernelImpl* CreateKernelImpl() const override;
-    ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
-                                      std::vector<ppl::common::dataformat_t>* selected_input_formats,
-                                      std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
+struct CumSumParam {
+    int32_t exclusive;
+    int32_t reverse;
+
+    bool operator==(const CumSumParam& p) const {
+        return this->exclusive == p.exclusive && this->reverse == p.reverse;
+    }
 };
 
-}}} // namespace ppl::nn::x86
+}}} // namespace ppl::nn::common
 
 #endif

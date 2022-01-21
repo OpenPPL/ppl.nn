@@ -15,73 +15,73 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_X86_INT64_ARITHMETIC_ARITHMETIC_BROADCAST_NDARRAY_INT64_H_
-#define __ST_PPL_KERNEL_X86_INT64_ARITHMETIC_ARITHMETIC_BROADCAST_NDARRAY_INT64_H_
+#ifndef __ST_PPL_KERNEL_X86_COMMON_ARITHMETIC_ARITHMETIC_BROADCAST_NDARRAY_COMMON_H_
+#define __ST_PPL_KERNEL_X86_COMMON_ARITHMETIC_ARITHMETIC_BROADCAST_NDARRAY_COMMON_H_
 
-#include "arithmetic_kernel_int64.h"
+#include "ppl/kernel/x86/common/arithmetic/arithmetic_kernel_common.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
-template <arithmetic_op_type_t _op>
-static inline void arithmetic_broadcast_lastdim_no_broadcast_ndarray_int64(
-    const int64_t *src0,
-    const int64_t *src1,
+template <typename eT, arithmetic_op_type_t _op>
+static inline void arithmetic_broadcast_lastdim_no_broadcast_ndarray_common(
+    const eT *src0,
+    const eT *src1,
     const int64_t start,
     const int64_t end,
-    int64_t *dst)
+    eT *dst)
 {
     const int64_t unroll_len = 8;
 
     int64_t i = start;
     for (; i + unroll_len - 1 <= end; i += unroll_len) {
-        dst[i + 0] = arithmetic_scalar_kernel_int64<_op>(src0[i + 0], src1[i + 0]);
-        dst[i + 1] = arithmetic_scalar_kernel_int64<_op>(src0[i + 1], src1[i + 1]);
-        dst[i + 2] = arithmetic_scalar_kernel_int64<_op>(src0[i + 2], src1[i + 2]);
-        dst[i + 3] = arithmetic_scalar_kernel_int64<_op>(src0[i + 3], src1[i + 3]);
-        dst[i + 4] = arithmetic_scalar_kernel_int64<_op>(src0[i + 4], src1[i + 4]);
-        dst[i + 5] = arithmetic_scalar_kernel_int64<_op>(src0[i + 5], src1[i + 5]);
-        dst[i + 6] = arithmetic_scalar_kernel_int64<_op>(src0[i + 6], src1[i + 6]);
-        dst[i + 7] = arithmetic_scalar_kernel_int64<_op>(src0[i + 7], src1[i + 7]);
+        dst[i + 0] = arithmetic_scalar_kernel_common<eT, _op>(src0[i + 0], src1[i + 0]);
+        dst[i + 1] = arithmetic_scalar_kernel_common<eT, _op>(src0[i + 1], src1[i + 1]);
+        dst[i + 2] = arithmetic_scalar_kernel_common<eT, _op>(src0[i + 2], src1[i + 2]);
+        dst[i + 3] = arithmetic_scalar_kernel_common<eT, _op>(src0[i + 3], src1[i + 3]);
+        dst[i + 4] = arithmetic_scalar_kernel_common<eT, _op>(src0[i + 4], src1[i + 4]);
+        dst[i + 5] = arithmetic_scalar_kernel_common<eT, _op>(src0[i + 5], src1[i + 5]);
+        dst[i + 6] = arithmetic_scalar_kernel_common<eT, _op>(src0[i + 6], src1[i + 6]);
+        dst[i + 7] = arithmetic_scalar_kernel_common<eT, _op>(src0[i + 7], src1[i + 7]);
     }
     for (; i <= end; i++) {
-        dst[i] = arithmetic_scalar_kernel_int64<_op>(src0[i], src1[i]);
+        dst[i] = arithmetic_scalar_kernel_common<eT, _op>(src0[i], src1[i]);
     }
 }
 
-template <arithmetic_op_type_t _op>
-static inline void arithmetic_broadcast_lastdim_src0_broadcast_ndarray_int64(
-    const int64_t *src0,
-    const int64_t *src1,
+template <typename eT, arithmetic_op_type_t _op>
+static inline void arithmetic_broadcast_lastdim_src0_broadcast_ndarray_common(
+    const eT *src0,
+    const eT *src1,
     const int64_t start,
     const int64_t end,
-    int64_t *dst)
+    eT *dst)
 {
     const int64_t broadcast_val = src0[0];
     const int64_t unroll_len    = 8;
 
     int64_t i = start;
     for (; i + unroll_len - 1 <= end; i += unroll_len) {
-        dst[i + 0] = arithmetic_scalar_kernel_int64<_op>(broadcast_val, src1[i + 0]);
-        dst[i + 1] = arithmetic_scalar_kernel_int64<_op>(broadcast_val, src1[i + 1]);
-        dst[i + 2] = arithmetic_scalar_kernel_int64<_op>(broadcast_val, src1[i + 2]);
-        dst[i + 3] = arithmetic_scalar_kernel_int64<_op>(broadcast_val, src1[i + 3]);
-        dst[i + 4] = arithmetic_scalar_kernel_int64<_op>(broadcast_val, src1[i + 4]);
-        dst[i + 5] = arithmetic_scalar_kernel_int64<_op>(broadcast_val, src1[i + 5]);
-        dst[i + 6] = arithmetic_scalar_kernel_int64<_op>(broadcast_val, src1[i + 6]);
-        dst[i + 7] = arithmetic_scalar_kernel_int64<_op>(broadcast_val, src1[i + 7]);
+        dst[i + 0] = arithmetic_scalar_kernel_common<eT, _op>(broadcast_val, src1[i + 0]);
+        dst[i + 1] = arithmetic_scalar_kernel_common<eT, _op>(broadcast_val, src1[i + 1]);
+        dst[i + 2] = arithmetic_scalar_kernel_common<eT, _op>(broadcast_val, src1[i + 2]);
+        dst[i + 3] = arithmetic_scalar_kernel_common<eT, _op>(broadcast_val, src1[i + 3]);
+        dst[i + 4] = arithmetic_scalar_kernel_common<eT, _op>(broadcast_val, src1[i + 4]);
+        dst[i + 5] = arithmetic_scalar_kernel_common<eT, _op>(broadcast_val, src1[i + 5]);
+        dst[i + 6] = arithmetic_scalar_kernel_common<eT, _op>(broadcast_val, src1[i + 6]);
+        dst[i + 7] = arithmetic_scalar_kernel_common<eT, _op>(broadcast_val, src1[i + 7]);
     }
     for (; i <= end; i++) {
-        dst[i] = arithmetic_scalar_kernel_int64<_op>(broadcast_val, src1[i]);
+        dst[i] = arithmetic_scalar_kernel_common<eT, _op>(broadcast_val, src1[i]);
     }
 }
 
-template <arithmetic_op_type_t _op>
-static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_int64(
-    const int64_t *src0,
-    const int64_t *src1,
+template <typename eT, arithmetic_op_type_t _op>
+static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_common(
+    const eT *src0,
+    const eT *src1,
     const int64_t start,
     const int64_t end,
-    int64_t *dst)
+    eT *dst)
 {
     const int64_t broadcast_val = src1[0];
 
@@ -89,24 +89,24 @@ static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_int64(
 
     int64_t i = start;
     for (; i + unroll_len - 1 <= end; i += unroll_len) {
-        dst[i + 0] = arithmetic_scalar_kernel_int64<_op>(src0[i + 0], broadcast_val);
-        dst[i + 1] = arithmetic_scalar_kernel_int64<_op>(src0[i + 1], broadcast_val);
-        dst[i + 2] = arithmetic_scalar_kernel_int64<_op>(src0[i + 2], broadcast_val);
-        dst[i + 3] = arithmetic_scalar_kernel_int64<_op>(src0[i + 3], broadcast_val);
-        dst[i + 4] = arithmetic_scalar_kernel_int64<_op>(src0[i + 4], broadcast_val);
-        dst[i + 5] = arithmetic_scalar_kernel_int64<_op>(src0[i + 5], broadcast_val);
-        dst[i + 6] = arithmetic_scalar_kernel_int64<_op>(src0[i + 6], broadcast_val);
-        dst[i + 7] = arithmetic_scalar_kernel_int64<_op>(src0[i + 7], broadcast_val);
+        dst[i + 0] = arithmetic_scalar_kernel_common<eT, _op>(src0[i + 0], broadcast_val);
+        dst[i + 1] = arithmetic_scalar_kernel_common<eT, _op>(src0[i + 1], broadcast_val);
+        dst[i + 2] = arithmetic_scalar_kernel_common<eT, _op>(src0[i + 2], broadcast_val);
+        dst[i + 3] = arithmetic_scalar_kernel_common<eT, _op>(src0[i + 3], broadcast_val);
+        dst[i + 4] = arithmetic_scalar_kernel_common<eT, _op>(src0[i + 4], broadcast_val);
+        dst[i + 5] = arithmetic_scalar_kernel_common<eT, _op>(src0[i + 5], broadcast_val);
+        dst[i + 6] = arithmetic_scalar_kernel_common<eT, _op>(src0[i + 6], broadcast_val);
+        dst[i + 7] = arithmetic_scalar_kernel_common<eT, _op>(src0[i + 7], broadcast_val);
     }
     for (; i <= end; i++) {
-        dst[i] = arithmetic_scalar_kernel_int64<_op>(src0[i], broadcast_val);
+        dst[i] = arithmetic_scalar_kernel_common<eT, _op>(src0[i], broadcast_val);
     }
 }
 
-template <arithmetic_op_type_t _op>
-static ppl::common::RetCode arithmetic_broadcast_recursive_ndarray_int64(
-    const int64_t *src0,
-    const int64_t *src1,
+template <typename eT, arithmetic_op_type_t _op>
+static ppl::common::RetCode arithmetic_broadcast_recursive_ndarray_common(
+    const eT *src0,
+    const eT *src1,
     const int64_t *src0_shape,
     const int64_t *src1_shape,
     const int64_t *dst_shape,
@@ -116,7 +116,7 @@ static ppl::common::RetCode arithmetic_broadcast_recursive_ndarray_int64(
     const int64_t dim_count,
     const int64_t dim_idx,
     parallel_block *block,
-    int64_t *dst)
+    eT *dst)
 {
     bool is_first       = is_first_dim(block, dim_idx);
     bool is_last        = is_last_dim(block, dim_idx);
@@ -125,16 +125,16 @@ static ppl::common::RetCode arithmetic_broadcast_recursive_ndarray_int64(
 
     if (dim_idx == dim_count - 1) { // last dim
         if (src0_shape[dim_idx] == src1_shape[dim_idx]) {
-            arithmetic_broadcast_lastdim_no_broadcast_ndarray_int64<_op>(src0, src1, start, end, dst);
+            arithmetic_broadcast_lastdim_no_broadcast_ndarray_common<eT, _op>(src0, src1, start, end, dst);
         } else if (src0_shape[dim_idx] == 1) { // broadcast src0
-            arithmetic_broadcast_lastdim_src0_broadcast_ndarray_int64<_op>(src0, src1, start, end, dst);
+            arithmetic_broadcast_lastdim_src0_broadcast_ndarray_common<eT, _op>(src0, src1, start, end, dst);
         } else if (src1_shape[dim_idx] == 1) { // broadcast src1
-            arithmetic_broadcast_lastdim_src1_broadcast_ndarray_int64<_op>(src0, src1, start, end, dst);
+            arithmetic_broadcast_lastdim_src1_broadcast_ndarray_common<eT, _op>(src0, src1, start, end, dst);
         }
     } else {
         for (block->idx[dim_idx] = start; block->idx[dim_idx] <= end; block->idx[dim_idx]++) {
             int64_t i = block->idx[dim_idx];
-            arithmetic_broadcast_recursive_ndarray_int64<_op>(
+            arithmetic_broadcast_recursive_ndarray_common<eT, _op>(
                 src0 + i * inc0[dim_idx],
                 src1 + i * inc1[dim_idx],
                 src0_shape,
@@ -153,14 +153,14 @@ static ppl::common::RetCode arithmetic_broadcast_recursive_ndarray_int64(
     return ppl::common::RC_SUCCESS;
 }
 
-template <arithmetic_op_type_t _op>
-static ppl::common::RetCode arithmetic_broadcast_ndarray_int64(
+template <typename eT, arithmetic_op_type_t _op>
+static ppl::common::RetCode arithmetic_broadcast_ndarray_common(
     const ppl::nn::TensorShape *src0_shape,
     const ppl::nn::TensorShape *src1_shape,
     const ppl::nn::TensorShape *dst_shape,
-    const int64_t *src0,
-    const int64_t *src1,
-    int64_t *dst)
+    const eT *src0,
+    const eT *src1,
+    eT *dst)
 {
     // pad 1 to input's high dims
     const int64_t dim_count = dst_shape->GetDimCount();
@@ -245,7 +245,7 @@ static ppl::common::RetCode arithmetic_broadcast_ndarray_int64(
 
     PRAGMA_OMP_PARALLEL_FOR()
     for (int64_t i = 0; i < num_threads; i++) {
-        arithmetic_broadcast_recursive_ndarray_int64<_op>(
+        arithmetic_broadcast_recursive_ndarray_common<eT, _op>(
             src0,
             src1,
             real_src0_shape,
@@ -265,4 +265,4 @@ static ppl::common::RetCode arithmetic_broadcast_ndarray_int64(
 
 }}}; // namespace ppl::kernel::x86
 
-#endif // __ST_PPL_KERNEL_X86_INT64_ARITHMETIC_ARITHMETIC_BROADCAST_NDARRAY_INT64_H_
+#endif // __ST_PPL_KERNEL_X86_COMMON_ARITHMETIC_ARITHMETIC_BROADCAST_NDARRAY_COMMON_H_

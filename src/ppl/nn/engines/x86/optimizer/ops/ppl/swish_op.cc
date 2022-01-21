@@ -32,18 +32,8 @@ RetCode SwishOp::Init(const OptKernelOptions& options) {
 
 RetCode SwishOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
                               vector<dataformat_t>* selected_output_formats) {
-    auto input_format = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
-
-    if (input_format == DATAFORMAT_N16CX) {
-        selected_input_formats->at(0) = DATAFORMAT_N16CX;
-        selected_output_formats->at(0) = DATAFORMAT_N16CX;
-    }
-
-    if (input_format == DATAFORMAT_NDARRAY) {
-        selected_input_formats->at(0) = DATAFORMAT_NDARRAY;
-        selected_output_formats->at(0) = DATAFORMAT_NDARRAY;
-    }
-
+    selected_input_formats->at(0) = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
+    selected_output_formats->at(0) = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
     return RC_SUCCESS;
 }
 

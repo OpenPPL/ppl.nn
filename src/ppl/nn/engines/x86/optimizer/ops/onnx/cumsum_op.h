@@ -15,28 +15,24 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/x86/optimizer/ops/onnx/exp_op.h"
-#include "ppl/nn/engines/x86/kernels/onnx/exp_kernel.h"
-using namespace std;
-using namespace ppl::common;
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_CUMSUM_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_CUMSUM_OP_H_
+
+#include "ppl/nn/params/onnx/cumsum_param.h"
+#include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode ExpOp::Init(const OptKernelOptions& options) {
-    infer_dims_func_ = GenericInferDims;
-    infer_type_func_ = GenericInferType;
-    return RC_SUCCESS;
-}
+class CumSumOp final : public X86OptKernel {
+public:
+    CumSumOp(const ir::Node* node) : X86OptKernel(node) {}
+    ppl::common::RetCode Init(const OptKernelOptions& options) override;
+    KernelImpl* CreateKernelImpl() const override;
 
-RetCode ExpOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
-                             vector<dataformat_t>* selected_output_formats) {
-    selected_input_formats->at(0) = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
-    selected_output_formats->at(0) = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
-    return RC_SUCCESS;
-}
-
-KernelImpl* ExpOp::CreateKernelImpl() const {
-    return CreateKernelImplWithoutParam<ExpKernel>();
-}
+private:
+    std::shared_ptr<ppl::nn::common::CumSumParam> param_;
+};
 
 }}} // namespace ppl::nn::x86
+
+#endif

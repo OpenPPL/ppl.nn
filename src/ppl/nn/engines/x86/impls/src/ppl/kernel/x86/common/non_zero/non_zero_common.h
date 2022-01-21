@@ -66,6 +66,7 @@ ppl::common::RetCode non_zero_ndarray_common(
         }
     }
 
+    PRAGMA_OMP_PARALLEL_FOR()
     for (int64_t i = 0; i < dim_count; i++) {
         memcpy(dst + i * *non_zero_num, temp_output + i * stride_out, *non_zero_num * sizeof(int64_t));
     }

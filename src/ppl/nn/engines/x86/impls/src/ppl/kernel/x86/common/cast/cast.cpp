@@ -64,20 +64,44 @@ ppl::common::RetCode cast(
     switch (MAKE_CAST_TYPE(idt, odt)) {
         case MAKE_CAST_TYPE(ppl::common::DATATYPE_FLOAT32, ppl::common::DATATYPE_INT64):
             return cast_kernel<float, int64_t>(src_shape, dst_shape, (float*)src, (int64_t*)dst);
+        case MAKE_CAST_TYPE(ppl::common::DATATYPE_FLOAT32, ppl::common::DATATYPE_INT32):
+            return cast_kernel<float, int32_t>(src_shape, dst_shape, (float*)src, (int32_t*)dst);
         case MAKE_CAST_TYPE(ppl::common::DATATYPE_FLOAT32, ppl::common::DATATYPE_BOOL):
             return cast_kernel<float, uint8_t>(src_shape, dst_shape, (float*)src, (uint8_t*)dst);
+        case MAKE_CAST_TYPE(ppl::common::DATATYPE_FLOAT32, ppl::common::DATATYPE_FLOAT64):
+            return cast_kernel<float, double>(src_shape, dst_shape, (float*)src, (double*)dst);
+        case MAKE_CAST_TYPE(ppl::common::DATATYPE_INT32, ppl::common::DATATYPE_FLOAT32):
+            return cast_kernel<int32_t, float>(src_shape, dst_shape, (int32_t*)src, (float*)dst);
+        case MAKE_CAST_TYPE(ppl::common::DATATYPE_INT32, ppl::common::DATATYPE_FLOAT64):
+            return cast_kernel<int32_t, double>(src_shape, dst_shape, (int32_t*)src, (double*)dst);
+        case MAKE_CAST_TYPE(ppl::common::DATATYPE_INT32, ppl::common::DATATYPE_INT64):
+            return cast_kernel<int32_t, int64_t>(src_shape, dst_shape, (int32_t*)src, (int64_t*)dst);
+        case MAKE_CAST_TYPE(ppl::common::DATATYPE_INT32, ppl::common::DATATYPE_BOOL):
+            return cast_kernel<int32_t, uint8_t>(src_shape, dst_shape, (int32_t*)src, (uint8_t*)dst);
         case MAKE_CAST_TYPE(ppl::common::DATATYPE_INT64, ppl::common::DATATYPE_FLOAT32):
             return cast_kernel<int64_t, float>(src_shape, dst_shape, (int64_t*)src, (float*)dst);
+        case MAKE_CAST_TYPE(ppl::common::DATATYPE_INT64, ppl::common::DATATYPE_FLOAT64):
+            return cast_kernel<int64_t, double>(src_shape, dst_shape, (int64_t*)src, (double*)dst);
+        case MAKE_CAST_TYPE(ppl::common::DATATYPE_INT64, ppl::common::DATATYPE_INT32):
+            return cast_kernel<int64_t, int32_t>(src_shape, dst_shape, (int64_t*)src, (int32_t*)dst);
         case MAKE_CAST_TYPE(ppl::common::DATATYPE_INT64, ppl::common::DATATYPE_BOOL):
             return cast_kernel<int64_t, uint8_t>(src_shape, dst_shape, (int64_t*)src, (uint8_t*)dst);
         case MAKE_CAST_TYPE(ppl::common::DATATYPE_BOOL, ppl::common::DATATYPE_FLOAT32):
             return cast_kernel<uint8_t, float>(src_shape, dst_shape, (uint8_t*)src, (float*)dst);
+        case MAKE_CAST_TYPE(ppl::common::DATATYPE_BOOL, ppl::common::DATATYPE_FLOAT64):
+            return cast_kernel<uint8_t, double>(src_shape, dst_shape, (uint8_t*)src, (double*)dst);
+        case MAKE_CAST_TYPE(ppl::common::DATATYPE_BOOL, ppl::common::DATATYPE_INT32):
+            return cast_kernel<uint8_t, int32_t>(src_shape, dst_shape, (uint8_t*)src, (int32_t*)dst);
         case MAKE_CAST_TYPE(ppl::common::DATATYPE_BOOL, ppl::common::DATATYPE_INT64):
             return cast_kernel<uint8_t, int64_t>(src_shape, dst_shape, (uint8_t*)src, (int64_t*)dst);
-        case MAKE_CAST_TYPE(ppl::common::DATATYPE_FLOAT32, ppl::common::DATATYPE_FLOAT64):
-            return cast_kernel<float, double>(src_shape, dst_shape, (float*)src, (double*)dst);
         case MAKE_CAST_TYPE(ppl::common::DATATYPE_FLOAT64, ppl::common::DATATYPE_FLOAT32):
             return cast_kernel<double, float>(src_shape, dst_shape, (double*)src, (float*)dst);
+        case MAKE_CAST_TYPE(ppl::common::DATATYPE_FLOAT64, ppl::common::DATATYPE_INT32):
+            return cast_kernel<double, int32_t>(src_shape, dst_shape, (double*)src, (int32_t*)dst);
+        case MAKE_CAST_TYPE(ppl::common::DATATYPE_FLOAT64, ppl::common::DATATYPE_INT64):
+            return cast_kernel<double, int64_t>(src_shape, dst_shape, (double*)src, (int64_t*)dst);
+        case MAKE_CAST_TYPE(ppl::common::DATATYPE_FLOAT64, ppl::common::DATATYPE_BOOL):
+            return cast_kernel<double, uint8_t>(src_shape, dst_shape, (double*)src, (uint8_t*)dst);
         default:
             return ppl::common::RC_UNSUPPORTED;
     }
