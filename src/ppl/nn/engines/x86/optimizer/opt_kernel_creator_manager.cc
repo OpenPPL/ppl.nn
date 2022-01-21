@@ -28,6 +28,7 @@
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/clip_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/concat_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/constant_of_shape_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/onnx/cos_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/cumsum_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/depth_to_space_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/div_op.h"
@@ -75,6 +76,7 @@
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/sequence_at_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/shape_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/sigmoid_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/onnx/sin_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/slice_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/softmax_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/split_op.h"
@@ -158,6 +160,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("", "ConstantOfShape", 9, 16, ConstantOfShapeOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Conv", 1, 16, ConvOp);
     REGISTER_OPT_KERNEL_CREATOR("", "ConvTranspose", 11, 16, ConvTransposeOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "Cos", 1, 16, CosOp);
     REGISTER_OPT_KERNEL_CREATOR("", "CumSum", 1, 16, CumSumOp);
     // D
     REGISTER_OPT_KERNEL_CREATOR("", "DepthToSpace", 11, 12, DepthToSpaceOp);
@@ -217,6 +220,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("", "SequenceAt", 11, 16, SequenceAtOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Shape", 1, 12, ShapeOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Sigmoid", 6, 12, SigmoidOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "Sin", 1, 16, SinOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Slice", 11, 12, SliceOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Softmax", 1, 12, SoftmaxOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Split", 2, 12, SplitOp);

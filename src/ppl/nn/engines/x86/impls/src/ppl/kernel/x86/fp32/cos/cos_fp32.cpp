@@ -21,14 +21,14 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-ppl::common::RetCode sigmoid_fp32(
+ppl::common::RetCode cos_fp32(
     const ppl::nn::TensorShape *x_shape,
     const float *x,
     float *y)
 {
-#define _OP_SS(Y, X)                  \
-    do {                              \
-        Y = 1.0f / (1.0f + expf(-X)); \
+#define _OP_SS(Y, X) \
+    do {             \
+        Y = cosf(X); \
     } while (0)
 
     const int64_t n_elem      = x_shape->GetElementsIncludingPadding();
