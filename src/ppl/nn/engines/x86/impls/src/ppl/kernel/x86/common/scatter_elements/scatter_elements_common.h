@@ -19,7 +19,7 @@
 #define __ST_PPL_KERNEL_X86_COMMON_SCATTER_ELEMENTS_SCATTER_ELEMENTS_COMMON_H_
 
 #include "ppl/kernel/x86/common/internal_include.h"
-#include <string.h> // memcpy
+#include "ppl/kernel/x86/common/memory.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
@@ -33,7 +33,7 @@ ppl::common::RetCode scatter_elements_ndarray_common(
     const int64_t axis,
     eT *dst)
 {
-    memcpy(dst, src, src_shape->GetBytesExcludingPadding());
+    memory_copy(src, src_shape->GetBytesExcludingPadding(), dst);
 
     const int64_t dim_count    = src_shape->GetDimCount();
     const int64_t scatter_axis = axis < 0 ? axis + dim_count : axis;
@@ -55,6 +55,11 @@ ppl::common::RetCode scatter_elements_ndarray_common(
         indices_inner_dims *= indices_shape->GetDim(i);
     }
 
+#ifndef PPL_USE_X86_OMP_COLLAPSE
+    PRAGMA_OMP_PARALLEL_FOR()
+#else
+    PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)
+#endif
     for (int64_t i = 0; i < indices_outer_dims; i++) {
         for (int64_t j = 0; j < indices_scatter_dims; j++) {
             for (int64_t k = 0; k < indices_inner_dims; k++) {

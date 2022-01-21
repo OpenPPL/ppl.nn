@@ -31,10 +31,7 @@ RetCode LeakyReluOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeLeakyReLU(info, nullptr);
-    };
-
+    infer_dims_func_ = GenericInferDims;
     infer_type_func_ = GenericInferType;
 
     return RC_SUCCESS;
@@ -42,10 +39,8 @@ RetCode LeakyReluOp::Init(const OptKernelOptions& options) {
 
 RetCode LeakyReluOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
                                   vector<dataformat_t>* selected_output_formats) {
-    if (info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat() == DATAFORMAT_N16CX) {
-        selected_input_formats->at(0) = DATAFORMAT_N16CX;
-        selected_output_formats->at(0) = DATAFORMAT_N16CX;
-    }
+    selected_input_formats->at(0) = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
+    selected_output_formats->at(0) = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
     return RC_SUCCESS;
 }
 

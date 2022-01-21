@@ -15,23 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_EXP_OP_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_EXP_OP_H_
+#include "ppl/kernel/x86/common/internal_include.h"
+#include "ppl/kernel/x86/common/cumsum/cumsum_common.h"
 
-#include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
+namespace ppl { namespace kernel { namespace x86 {
 
-namespace ppl { namespace nn { namespace x86 {
+ppl::common::RetCode cumsum_ndarray_fp32(
+    const ppl::nn::TensorShape *x_shape,
+    const float *x,
+    const int64_t axis,
+    const int64_t exclusive,
+    const int64_t reverse,
+    float *y)
+{
+    return cumsum_ndarray<float>(x_shape, x, axis, exclusive, reverse, y);
+}
 
-class ExpOp final : public X86OptKernel {
-public:
-    ExpOp(const ir::Node* node) : X86OptKernel(node) {}
-    ppl::common::RetCode Init(const OptKernelOptions& options) override;
-    KernelImpl* CreateKernelImpl() const override;
-    ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
-                                      std::vector<ppl::common::dataformat_t>* selected_input_formats,
-                                      std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
-};
-
-}}} // namespace ppl::nn::x86
-
-#endif
+}}}; // namespace ppl::kernel::x86

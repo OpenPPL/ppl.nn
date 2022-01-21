@@ -28,6 +28,13 @@ RetCode LogOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
+RetCode LogOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
+                             vector<dataformat_t>* selected_output_formats) {
+    selected_input_formats->at(0) = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
+    selected_output_formats->at(0) = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
+    return RC_SUCCESS;
+}
+
 KernelImpl* LogOp::CreateKernelImpl() const {
     return CreateKernelImplWithoutParam<LogKernel>();
 }

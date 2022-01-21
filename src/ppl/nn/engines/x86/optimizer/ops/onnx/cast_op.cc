@@ -31,9 +31,7 @@ RetCode CastOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeCast(info, param_.get());
-    };
+    infer_dims_func_ = GenericInferDims;
 
     infer_type_func_ = [this](InputOutputInfo* info) -> void {
         info->GetOutput<TensorImpl>(0)->GetShape()->SetDataType(this->param_->to);

@@ -15,38 +15,30 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_X86_INT64_ARITHMETIC_ARITHMETIC_KERNEL_INT64_H_
-#define __ST_PPL_KERNEL_X86_INT64_ARITHMETIC_ARITHMETIC_KERNEL_INT64_H_
-
-#include <immintrin.h>
+#ifndef __ST_PPL_KERNEL_X86_COMMON_ARITHMETIC_ARITHMETIC_KERNEL_COMMON_H_
+#define __ST_PPL_KERNEL_X86_COMMON_ARITHMETIC_ARITHMETIC_KERNEL_COMMON_H_
 
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/kernel/x86/common/arithmetic/arithmetic_common.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
-template <arithmetic_op_type_t _op>
-inline int64_t arithmetic_scalar_kernel_int64(int64_t a, int64_t b);
+template <typename eT, arithmetic_op_type_t _op>
+static inline int64_t arithmetic_scalar_kernel_common(eT a, eT b) {
+    static_assert(_op >= 0 && _op < 4, "unsupported op type");
 
-template <>
-inline int64_t arithmetic_scalar_kernel_int64<ARITHMETIC_ADD>(int64_t a, int64_t b)
-{
-    return a + b;
-}
-template <>
-inline int64_t arithmetic_scalar_kernel_int64<ARITHMETIC_SUB>(int64_t a, int64_t b)
-{
-    return a - b;
-}
-template <>
-inline int64_t arithmetic_scalar_kernel_int64<ARITHMETIC_MUL>(int64_t a, int64_t b)
-{
-    return a * b;
-}
-template <>
-inline int64_t arithmetic_scalar_kernel_int64<ARITHMETIC_DIV>(int64_t a, int64_t b)
-{
-    return a / b;
+    if (_op == ARITHMETIC_ADD) {
+        return a + b;
+    }
+    if (_op == ARITHMETIC_SUB) {
+        return a - b;
+    }
+    if (_op == ARITHMETIC_MUL) {
+        return a * b;
+    }
+    if (_op == ARITHMETIC_DIV) {
+        return a / b;
+    }
 }
 
 struct parallel_block {
@@ -56,7 +48,7 @@ struct parallel_block {
     int64_t idx[PPL_X86_TENSOR_MAX_DIMS()];
 };
 
-inline void pad_shape(
+static inline void pad_shape(
     const ppl::nn::TensorShape *shape,
     const int64_t padded_dim_count,
     int64_t *padded_shape)
@@ -70,7 +62,7 @@ inline void pad_shape(
     }
 }
 
-inline void idx2dims(
+static inline void idx2dims(
     const int64_t idx,
     const int64_t *shape,
     const int64_t dim_count,
@@ -83,7 +75,7 @@ inline void idx2dims(
     }
 }
 
-inline bool is_first_dim(parallel_block* block, const int64_t dim_idx)
+static inline bool is_first_dim(parallel_block* block, const int64_t dim_idx)
 {
     bool is_first = true;
     for (int64_t i = 0; i < dim_idx; i++) {
@@ -95,7 +87,7 @@ inline bool is_first_dim(parallel_block* block, const int64_t dim_idx)
     return is_first;
 }
 
-inline bool is_last_dim(parallel_block* block, const int64_t dim_idx)
+static inline bool is_last_dim(parallel_block* block, const int64_t dim_idx)
 {
     bool is_last = true;
     for (int64_t i = 0; i < dim_idx; i++) {
@@ -109,4 +101,4 @@ inline bool is_last_dim(parallel_block* block, const int64_t dim_idx)
 
 }}}; // namespace ppl::kernel::x86
 
-#endif // __ST_PPL_KERNEL_X86_INT64_ARITHMETIC_ARITHMETIC_KERNEL_INT64_H_
+#endif // __ST_PPL_KERNEL_X86_COMMON_ARITHMETIC_ARITHMETIC_KERNEL_COMMON_H_
