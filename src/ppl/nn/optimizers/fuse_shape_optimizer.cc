@@ -228,7 +228,7 @@ void UpdateGraph(ir::Node* node, PPLShapeOperationParam* shape_param, ir::Graph*
     for (auto it = shape_param->alpha.begin(); it != shape_param->alpha.end(); ++it) {
         auto edge = topo->GetEdgeById(it->first);
 
-        bool flag = false;
+        bool flag = IsGraphOutput(graph, edge->GetId());
         vector<nodeid_t> to_be_deleted;
         for (auto edge_it = edge->CreateConsumerIter(); edge_it.IsValid(); edge_it.Forward()) {
             auto temp_node_id = edge_it.Get();
