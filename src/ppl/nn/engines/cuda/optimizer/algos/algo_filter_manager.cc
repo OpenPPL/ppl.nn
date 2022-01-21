@@ -45,7 +45,7 @@ AlgoFilterManager::AlgoFilterManager() {
     REGISTER_ALGO_FILTER_INFO("Gemm", gemm_imp_);
     REGISTER_ALGO_FILTER_INFO("LSTM", lstm_imp_);
     REGISTER_ALGO_FILTER_INFO("MMCVModulatedDeformConv2d", deform_conv_imp_);
-    REGISTER_ALGO_FILTER_INFO("MatMul", gemm_imp_);
+    REGISTER_ALGO_FILTER_INFO("MatMul", matmul_imp_);
     REGISTER_ALGO_FILTER_INFO("Normal", normal_imp_);
 }
 

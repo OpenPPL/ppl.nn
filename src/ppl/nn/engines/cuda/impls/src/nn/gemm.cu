@@ -30,8 +30,8 @@
 
 #define TIMES 4
 
-static std::vector<kernel_info_t> g_kvec;
-static bool is_g_kvec_set = false;
+std::vector<kernel_info_t> g_kvec;
+bool is_g_kvec_set = false;
 
 #define FAKE_CONV_PARAM              \
     int in_hw               = 1;     \
