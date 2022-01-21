@@ -187,6 +187,166 @@ static inline __m128 _sse_erf_ps(const __m128 x) {
     return y;
 }
 
+// an approximation of cos
+// http://gruntthepeon.free.fr/ssemath/sse_mathfun.h
+static inline __m128 _sse_cos_ps(const __m128 __x) {
+    __m128 vmm1, vmm2, vmm3, x, y;
+    __m128i emm0, emm2;
+
+    /* take the absolute value */
+    x = _mm_and_ps(__x, _mm_castsi128_ps(_mm_set1_epi32(~0x80000000)));
+    
+    /* scale by 4/Pi */
+    y = _mm_mul_ps(x, _mm_set1_ps(1.27323954473516f));
+
+    /* store the integer part of y in mm0 */
+    emm2 = _mm_cvttps_epi32(y);
+    /* j=(j+1) & (~1) (see the cephes sources) */
+    emm2 = _mm_add_epi32(emm2, _mm_set1_epi32(1));
+    emm2 = _mm_and_si128(emm2, _mm_set1_epi32(~1));
+    y = _mm_cvtepi32_ps(emm2);
+
+    emm2 = _mm_sub_epi32(emm2, _mm_set1_epi32(2));
+    
+    /* get the swap sign flag */
+    emm0 = _mm_andnot_si128(emm2, _mm_set1_epi32(4));
+    emm0 = _mm_slli_epi32(emm0, 29);
+    /* get the polynom selection mask */
+    emm2 = _mm_and_si128(emm2, _mm_set1_epi32(2));
+    emm2 = _mm_cmpeq_epi32(emm2, _mm_setzero_si128());
+    
+    __m128 sign_bit = _mm_castsi128_ps(emm0);
+    __m128 poly_mask = _mm_castsi128_ps(emm2);
+
+    /* The magic pass: "Extended precision modular arithmetic" 
+        x = ((x - y * DP1) - y * DP2) - y * DP3; */
+    vmm1 = _mm_mul_ps(y, _mm_set1_ps(-0.78515625f));
+    vmm2 = _mm_mul_ps(y, _mm_set1_ps(-2.4187564849853515625e-4f));
+    vmm3 = _mm_mul_ps(y, _mm_set1_ps(-3.77489497744594108e-8f));
+    x = _mm_add_ps(x, vmm1);
+    x = _mm_add_ps(x, vmm2);
+    x = _mm_add_ps(x, vmm3);
+    
+    /* Evaluate the first polynom  (0 <= x <= Pi/4) */
+    y = _mm_set1_ps(2.443315711809948E-005f);
+    __m128 z = _mm_mul_ps(x, x);
+
+    y = _mm_mul_ps(y, z);
+    y = _mm_add_ps(y, _mm_set1_ps(-1.388731625493765E-003f));
+    y = _mm_mul_ps(y, z);
+    y = _mm_add_ps(y, _mm_set1_ps(4.166664568298827E-002f));
+    y = _mm_mul_ps(y, z);
+    y = _mm_mul_ps(y, z);
+    __m128 tmp = _mm_mul_ps(z, _mm_set1_ps(0.5f));
+    y = _mm_sub_ps(y, tmp);
+    y = _mm_add_ps(y, _mm_set1_ps(1.0f));
+    
+    /* Evaluate the second polynom  (Pi/4 <= x <= 0) */
+
+    __m128 y2 = _mm_set1_ps(-1.9515295891E-4f);
+    y2 = _mm_mul_ps(y2, z);
+    y2 = _mm_add_ps(y2, _mm_set1_ps(8.3321608736E-3f));
+    y2 = _mm_mul_ps(y2, z);
+    y2 = _mm_add_ps(y2, _mm_set1_ps(-1.6666654611E-1f));
+    y2 = _mm_mul_ps(y2, z);
+    y2 = _mm_mul_ps(y2, x);
+    y2 = _mm_add_ps(y2, x);
+
+    /* select the correct result from the two polynoms */  
+    vmm3 = poly_mask;
+    y2 = _mm_and_ps(vmm3, y2); //, vmm3);
+    y = _mm_andnot_ps(vmm3, y);
+    y = _mm_add_ps(y,y2);
+    /* update the sign */
+    y = _mm_xor_ps(y, sign_bit);
+
+    return y;
+}
+
+// an approximation of sin
+// http://gruntthepeon.free.fr/ssemath/sse_mathfun.h
+static inline __m128 _sse_sin_ps(const __m128 __x) {
+    __m128 vmm1, vmm2, vmm3, sign_bit, x, y;
+    __m128i emm0, emm2;
+
+    sign_bit = __x;
+    /* take the absolute value */
+    x = _mm_and_ps(__x, _mm_castsi128_ps(_mm_set1_epi32(~0x80000000)));
+    /* extract the sign bit (upper one) */
+    sign_bit = _mm_and_ps(sign_bit, _mm_castsi128_ps(_mm_set1_epi32(0x80000000)));
+    
+    /* scale by 4/Pi */
+    y = _mm_mul_ps(x, _mm_set1_ps(1.27323954473516f));
+
+    /* store the integer part of y in mm0 */
+    emm2 = _mm_cvttps_epi32(y);
+    /* j=(j+1) & (~1) (see the cephes sources) */
+    emm2 = _mm_add_epi32(emm2, _mm_set1_epi32(1));
+    emm2 = _mm_and_si128(emm2, _mm_set1_epi32(~1));
+    y = _mm_cvtepi32_ps(emm2);
+
+    /* get the swap sign flag */
+    emm0 = _mm_and_si128(emm2, _mm_set1_epi32(4));
+    emm0 = _mm_slli_epi32(emm0, 29);
+    /* get the polynom selection mask 
+        there is one polynom for 0 <= x <= Pi/4
+        and another one for Pi/4<x<=Pi/2
+
+        Both branches will be computed.
+    */
+    emm2 = _mm_and_si128(emm2, _mm_set1_epi32(2));
+    emm2 = _mm_cmpeq_epi32(emm2, _mm_setzero_si128());
+    
+    __m128 swap_sign_bit = _mm_castsi128_ps(emm0);
+    __m128 poly_mask = _mm_castsi128_ps(emm2);
+    sign_bit = _mm_xor_ps(sign_bit, swap_sign_bit);
+
+    
+    /* The magic pass: "Extended precision modular arithmetic" 
+        x = ((x - y * DP1) - y * DP2) - y * DP3; */
+    vmm1 = _mm_mul_ps(y, _mm_set1_ps(-0.78515625f));
+    vmm2 = _mm_mul_ps(y, _mm_set1_ps(-2.4187564849853515625e-4f));
+    vmm3 = _mm_mul_ps(y, _mm_set1_ps(-3.77489497744594108e-8f));
+    x = _mm_add_ps(x, vmm1);
+    x = _mm_add_ps(x, vmm2);
+    x = _mm_add_ps(x, vmm3);
+
+    /* Evaluate the first polynom  (0 <= x <= Pi/4) */
+     y = _mm_set1_ps(2.443315711809948E-005f);
+    __m128 z = _mm_mul_ps(x, x);
+
+    y = _mm_mul_ps(y, z);
+    y = _mm_add_ps(y, _mm_set1_ps(-1.388731625493765E-003f));
+    y = _mm_mul_ps(y, z);
+    y = _mm_add_ps(y, _mm_set1_ps(4.166664568298827E-002f));
+    y = _mm_mul_ps(y, z);
+    y = _mm_mul_ps(y, z);
+    __m128 tmp = _mm_mul_ps(z, _mm_set1_ps(0.5f));
+    y = _mm_sub_ps(y, tmp);
+    y = _mm_add_ps(y, _mm_set1_ps(1.0f));
+    
+    /* Evaluate the second polynom  (Pi/4 <= x <= 0) */
+
+    __m128 y2 = _mm_set1_ps(-1.9515295891E-4f);
+    y2 = _mm_mul_ps(y2, z);
+    y2 = _mm_add_ps(y2, _mm_set1_ps(8.3321608736E-3f));
+    y2 = _mm_mul_ps(y2, z);
+    y2 = _mm_add_ps(y2, _mm_set1_ps(-1.6666654611E-1f));
+    y2 = _mm_mul_ps(y2, z);
+    y2 = _mm_mul_ps(y2, x);
+    y2 = _mm_add_ps(y2, x);
+
+    /* select the correct result from the two polynoms */  
+    vmm3 = poly_mask;
+    y2 = _mm_and_ps(vmm3, y2); //, vmm3);
+    y = _mm_andnot_ps(vmm3, y);
+    y = _mm_add_ps(y,y2);
+    /* update the sign */
+    y = _mm_xor_ps(y, sign_bit);
+
+    return y;
+}
+
 }}}; // namespace ppl::kernel::x86
 
 #endif

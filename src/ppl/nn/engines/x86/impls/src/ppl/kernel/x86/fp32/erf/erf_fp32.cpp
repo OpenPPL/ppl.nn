@@ -15,7 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <immintrin.h>
 #include <math.h>
 
 #include "ppl/kernel/x86/common/internal_include.h"
