@@ -18,7 +18,7 @@
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/matmul_op.h"
 
 #include "ppl/nn/common/logger.h"
-#include "ppl/nn/engines/cuda/kernels/onnx/gemm_kernel.h"
+#include "ppl/nn/engines/cuda/kernels/onnx/matmul_kernel.h"
 #include "ppl/nn/oputils/onnx/reshape_matmul.h"
 
 using namespace std;
@@ -77,7 +77,7 @@ void MatMulOp::CopyParam(void*& param) {
 }
 
 KernelImpl* MatMulOp::CreateKernelImpl() const {
-    return CreateKernelImplWithParam<GemmKernel>(&param_);
+    return CreateKernelImplWithParam<MatMulKernel>(&param_);
 }
 
 }}} // namespace ppl::nn::cuda

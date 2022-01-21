@@ -91,7 +91,9 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
     uint spf_id    = blockIdx.z % flt_hw;
     uint grp_id    = blockIdx.z / flt_hw;
 #elif defined(ENABLE_FUSE)
-    uint grp_id                     = blockIdx.z;
+    uint grp_id    = blockIdx.z % num_grp;
+    // only for batch gemm, can also work in parallel multi-convs fusion.
+    uint batch_id  = blockIdx.z / num_grp;
 #endif
 
     uint num_chl_per_grp_pad_v8 = num_chl_per_grp_pad >> 3;
@@ -115,7 +117,10 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
     uint dCv4_base = spf_id * num_flt_per_grp_pad_v8 * num_grp * out_hw * in_num +
                      grp_id * num_flt_per_grp_pad_v8;
 #elif defined(ENABLE_FUSE)
-    uint dCv4_base                  = grp_id * num_flt_per_grp_pad_v8;
+    uint dCv4_base   = grp_id * num_flt_per_grp_pad_v8 +
+                     batch_id * num_grp * num_flt_per_grp_pad_v8 * out_hw * in_num;
+    dA += batch_id * num_grp * num_chl_per_grp_pad_v8 * in_hw * in_num;
+    dB += batch_id * num_chl_per_grp_pad_v8 * flt_hw * num_grp * num_flt_per_grp;
 #endif
 
     uint mma_idx = local_tid % MMA_SIZE_X_IN_THD;
