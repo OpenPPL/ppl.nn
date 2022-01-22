@@ -52,12 +52,6 @@ public:
 
     // ----- configurations ----- //
 
-    /**
-       @brief replaces all blocks with a single block.
-       @note make sure that this device is not used when calling DoMemDefrag().
-    */
-    static ppl::common::RetCode DoMemDefrag(RuntimeRiscvDevice*, va_list);
-
     typedef ppl::common::RetCode (*ConfHandlerFunc)(RuntimeRiscvDevice*, va_list);
     static ConfHandlerFunc conf_handlers_[RISCV_DEV_CONF_MAX];
 

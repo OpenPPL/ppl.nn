@@ -34,9 +34,9 @@ GemmOp::~GemmOp() {
 }
 
 RetCode GemmOp::Init(const OptKernelOptions& options) {
-    if (RISCV_USE_FP16 == options.engine_options->forward_precision) {
+    if (DATATYPE_FLOAT16 == options.engine_options->forward_precision) {
         return InitFC<__fp16>(options);
-    } else if (RISCV_USE_FP32 == options.engine_options->forward_precision) {
+    } else if (DATATYPE_FLOAT32 == options.engine_options->forward_precision) {
         return InitFC<float>(options);
     } else {
         return RC_UNSUPPORTED;

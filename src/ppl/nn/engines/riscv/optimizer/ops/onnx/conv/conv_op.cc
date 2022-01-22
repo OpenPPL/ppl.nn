@@ -55,9 +55,9 @@ RetCode ConvOp::Init(const OptKernelOptions& options) {
 }
 
 ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const OptKernelOptions& options) {
-    if (RISCV_USE_FP16 == options.engine_options->forward_precision) {
+    if (DATATYPE_FLOAT16 == options.engine_options->forward_precision) {
         return SelectAlgorithmGeneric<__fp16>(info, options);
-    } else if (RISCV_USE_FP32 == options.engine_options->forward_precision) {
+    } else if (DATATYPE_FLOAT32 == options.engine_options->forward_precision) {
         return SelectAlgorithmGeneric<float>(info, options);
     } else {
         return RC_UNSUPPORTED;

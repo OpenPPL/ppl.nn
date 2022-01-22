@@ -356,9 +356,9 @@ static inline bool RegisterRiscvEngine(vector<unique_ptr<Engine>>* engines) {
     }
 
     if (g_flag_use_fp16) {
-        options.forward_precision = RISCV_USE_FP16;
+        options.forward_precision = DATATYPE_FLOAT16;
     } else {
-        options.forward_precision = RISCV_USE_FP32;
+        options.forward_precision = DATATYPE_FLOAT32;
     }
     options.dynamic_tuning_level = g_flag_tuning_level;
 
@@ -391,7 +391,7 @@ static inline bool RegisterArmEngine(vector<unique_ptr<Engine>>* engines) {
 
     if (g_flag_use_fp16) {
         options.forward_precision = ppl::common::DATATYPE_FLOAT16;
-    } else{
+    } else {
         options.forward_precision = ppl::common::DATATYPE_FLOAT32;
     }
     options.graph_optimization_level = ARM_OPT_ENABLE_ALL;

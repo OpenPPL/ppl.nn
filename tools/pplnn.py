@@ -231,9 +231,9 @@ def CreateCudaEngine(args):
 def CreateRiscvEngine(args):
     riscv_options = pplnn.RiscvEngineOptions()
     if args.use_fp16:
-        riscv_options.forward_precision = pplnn.RISCV_USE_FP16
+        riscv_options.forward_precision = pplcommon.DATATYPE_FLOAT16
     else:
-        riscv_options.forward_precision = pplnn.RISCV_USE_FP32
+        riscv_options.forward_precision = pplcommon.DATATYPE_FLOAT32
 
     riscv_engine = pplnn.RiscvEngineFactory.Create(riscv_options)
     if not riscv_engine:

@@ -177,10 +177,9 @@ bool LayoutOptimize(const OptKernelOptions& options) {
                 selected_input_formats[i] = tensors[edge_id]->GetShape()->GetDataFormat();
                 selected_input_data_types[i] = tensors[edge_id]->GetShape()->GetDataType();
             }
-            if (options.engine_options->forward_precision == RISCV_USE_FP32) {
-                selected_input_data_types[0] = ppl::common::DATATYPE_FLOAT32;
-            } else if (options.engine_options->forward_precision == RISCV_USE_FP16) {
-                selected_input_data_types[0] = ppl::common::DATATYPE_FLOAT16;
+            if (options.engine_options->forward_precision == ppl::common::DATATYPE_FLOAT32 ||
+                options.engine_options->forward_precision == ppl::common::DATATYPE_FLOAT16 ) {
+                selected_input_data_types[0] = options.engine_options->forward_precision;
             }
 
             for (uint32_t i = 0; i < node->GetOutputCount(); i++) {
