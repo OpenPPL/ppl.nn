@@ -24,9 +24,6 @@ void RegisterRiscvEngineOptions(pybind11::module* m) {
     pybind11::class_<RiscvEngineOptions>(*m, "RiscvEngineOptions")
         .def(pybind11::init<>())
         .def_readwrite("forward_precision", &RiscvEngineOptions::forward_precision);
-
-    m->attr("RISCV_USE_FP16") = (uint32_t)RISCV_USE_FP16;
-    m->attr("RISCV_USE_FP32") = (uint32_t)RISCV_USE_FP32;
 }
 
 }}} // namespace ppl::nn::python

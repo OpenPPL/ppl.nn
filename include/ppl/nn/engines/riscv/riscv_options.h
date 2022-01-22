@@ -20,11 +20,6 @@
 
 namespace ppl { namespace nn {
 
-enum {
-    RISCV_USE_FP16 = 0,
-    RISCV_USE_FP32 = 1,
-};
-
 /** @brief memory management policies */
 enum {
     /** less memory usage, may cause performance loss */
@@ -36,9 +31,6 @@ enum {
 
 /** @brief options for riscv::DeviceContext::Configure() */
 enum {
-    /** @brief memory defragmentation. make sure that device is not used when performing defragmentations. */
-    RISCV_DEV_CONF_MEM_DEFRAG = 0,
-
     RISCV_DEV_CONF_MAX,
 };
 

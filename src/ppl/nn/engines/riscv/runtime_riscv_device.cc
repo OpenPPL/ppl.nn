@@ -78,14 +78,6 @@ void RuntimeRiscvDevice::FreeTmpBuffer(BufferDesc* buffer) {
 
 /* -------------------------------------------------------------------------- */
 
-RetCode RuntimeRiscvDevice::DoMemDefrag(RuntimeRiscvDevice* dev, va_list) {
-    return RC_SUCCESS;
-}
-
-RuntimeRiscvDevice::ConfHandlerFunc RuntimeRiscvDevice::conf_handlers_[] = {
-    DoMemDefrag, // RISCV_DEV_CONF_MEM_DEFRAG
-};
-
 RetCode RuntimeRiscvDevice::Configure(uint32_t option, ...) {
     if (option >= RISCV_DEV_CONF_MAX) {
         LOG(ERROR) << "invalid option[" << option << "] >= [" << RISCV_DEV_CONF_MAX << "]";
