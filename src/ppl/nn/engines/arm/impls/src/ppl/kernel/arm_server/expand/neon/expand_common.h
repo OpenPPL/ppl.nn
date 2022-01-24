@@ -128,8 +128,8 @@ ppl::common::RetCode expand_ndarray_common(
     ppl::nn::TensorShape padded_input_shape = pad_shape(src_shape, max_dim_count);
 
     // prepare incs
-    int64_t stride_src[max_dim_count] = {0};
-    int64_t stride_dst[max_dim_count] = {0};
+    std::vector<int64_t> stride_src(max_dim_count);
+    std::vector<int64_t> stride_dst(max_dim_count);
 
     stride_src[max_dim_count - 1]  = 1;
     stride_dst[max_dim_count - 1] = 1;
@@ -138,7 +138,7 @@ ppl::common::RetCode expand_ndarray_common(
         stride_dst[i] = stride_dst[i + 1] * dst_shape->GetDim(i + 1);
     }
 
-    return expand_ndarray_recursive<eT>(&padded_input_shape, dst_shape, src, stride_src, stride_dst, 0, false, dst);
+    return expand_ndarray_recursive<eT>(&padded_input_shape, dst_shape, src, stride_src.data(), stride_dst.data(), 0, false, dst);
 }
 
 }}}}; // namespace ppl::kernel::arm_server::neon

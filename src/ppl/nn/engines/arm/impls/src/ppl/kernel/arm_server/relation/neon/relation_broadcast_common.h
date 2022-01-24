@@ -336,34 +336,34 @@ static ppl::common::RetCode relation_broadcast_common(
     const int64_t c_dim_idx = 1;
 
     const int64_t max_dim_count              = dst_shape->GetDimCount();
-    int64_t padded_src0_shape[max_dim_count] = {0};
-    int64_t padded_src1_shape[max_dim_count] = {0};
-    relation_pad_shape(src0_shape, max_dim_count, padded_src0_shape);
-    relation_pad_shape(src1_shape, max_dim_count, padded_src1_shape);
+    std::vector<int64_t> padded_src0_shape(max_dim_count);
+    std::vector<int64_t> padded_src1_shape(max_dim_count);
+    relation_pad_shape(src0_shape, max_dim_count, padded_src0_shape.data());
+    relation_pad_shape(src1_shape, max_dim_count, padded_src1_shape.data());
 
     int64_t compressed_dim_count                 = 0;
-    int64_t compressed_src0_shape[max_dim_count] = {0};
-    int64_t compressed_src1_shape[max_dim_count] = {0};
-    int64_t compressed_dst_shape[max_dim_count]  = {0};
-    relation_compress_shape(padded_src0_shape, padded_src1_shape, max_dim_count, &compressed_dim_count, compressed_src0_shape, compressed_src1_shape, compressed_dst_shape, c_dim_idx);
+    std::vector<int64_t> compressed_src0_shape(max_dim_count);
+    std::vector<int64_t> compressed_src1_shape(max_dim_count);
+    std::vector<int64_t> compressed_dst_shape(max_dim_count);
+    relation_compress_shape(padded_src0_shape.data(), padded_src1_shape.data(), max_dim_count, &compressed_dim_count, compressed_src0_shape.data(), compressed_src1_shape.data(), compressed_dst_shape.data(), c_dim_idx);
 
-    int64_t inc0[compressed_dim_count]    = {0};
-    int64_t inc1[compressed_dim_count]    = {0};
-    int64_t inc_out[compressed_dim_count] = {0};
-    relation_prepare_incs<c_blk>(compressed_src0_shape, compressed_src1_shape, compressed_dst_shape, compressed_dim_count, c_dim_idx, inc0, inc1, inc_out);
+    std::vector<int64_t> inc0(compressed_dim_count);
+    std::vector<int64_t> inc1(compressed_dim_count);
+    std::vector<int64_t> inc_out(compressed_dim_count);
+    relation_prepare_incs<c_blk>(compressed_src0_shape.data(), compressed_src1_shape.data(), compressed_dst_shape.data(), compressed_dim_count, c_dim_idx, inc0.data(), inc1.data(), inc_out.data());
 
     const float omp_div_task_time_ratio       = 20.0f; // assume omp create thread may be 20x slower than one element arthimetic process
-    single_parallel_loop_config_t loop_config = select_single_parallel_loop(compressed_dst_shape, compressed_dim_count, omp_div_task_time_ratio);
+    single_parallel_loop_config_t loop_config = select_single_parallel_loop(compressed_dst_shape.data(), compressed_dim_count, omp_div_task_time_ratio);
 
     return relation_broadcast_recursive_common<eT, c_blk, op_type>(
-        compressed_src0_shape,
-        compressed_src1_shape,
-        compressed_dst_shape,
+        compressed_src0_shape.data(),
+        compressed_src1_shape.data(),
+        compressed_dst_shape.data(),
         src0,
         src1,
-        inc0,
-        inc1,
-        inc_out,
+        inc0.data(),
+        inc1.data(),
+        inc_out.data(),
         compressed_dim_count,
         0,
         c_dim_idx,
