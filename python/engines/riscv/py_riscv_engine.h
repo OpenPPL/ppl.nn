@@ -25,6 +25,9 @@ namespace ppl { namespace nn { namespace python {
 
 struct PyRiscvEngine final {
     PyRiscvEngine(Engine* p) : ptr(p) {}
+    operator std::shared_ptr<Engine> () const {
+        return ptr;
+    }
     std::shared_ptr<Engine> ptr;
 };
 
