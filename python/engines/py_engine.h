@@ -21,10 +21,34 @@
 #include "ppl/nn/engines/engine.h"
 #include <memory>
 
+#ifdef PPLNN_USE_X86
+#include "x86/py_x86_engine.h"
+#endif
+#ifdef PPLNN_USE_CUDA
+#include "cuda/py_cuda_engine.h"
+#endif
+#ifdef PPLNN_USE_RISCV
+#include "riscv/py_riscv_engine.h"
+#endif
+
 namespace ppl { namespace nn { namespace python {
 
 struct PyEngine final {
-    PyEngine(const std::shared_ptr<Engine>& e) : ptr(e) {}
+#ifdef PPLNN_USE_X86
+    PyEngine(const PyX86Engine& e) {
+        ptr = e.ptr;
+    }
+#endif
+#ifdef PPLNN_USE_CUDA
+    PyEngine(const PyCudaEngine& e) {
+        ptr = e.ptr;
+    }
+#endif
+#ifdef PPLNN_USE_RISCV
+    PyEngine(const PyRiscvEngine& e) {
+        ptr = e.ptr;
+    }
+#endif
     std::shared_ptr<Engine> ptr;
 };
 

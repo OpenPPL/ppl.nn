@@ -25,9 +25,6 @@ namespace ppl { namespace nn { namespace python {
 
 struct PyX86Engine final {
     PyX86Engine(Engine* p) : ptr(p) {}
-    operator std::shared_ptr<Engine> () const {
-        return ptr;
-    }
     std::shared_ptr<Engine> ptr;
 };
 
