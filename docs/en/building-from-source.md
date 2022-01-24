@@ -118,10 +118,10 @@ If you want to enable openmp, please specify `HPCC_USE_OPENMP` as following:
 ./build.sh -DHPCC_USE_AARCH64=ON -DHPCC_USE_OPENMP=ON
 ```
 
-If you want to enable FP16 inference, please specify `PPL_USE_ARMV8_2` (your compiler must have `armv8.2-a` ISA support):
+If you want to enable FP16 inference, please specify `PPLNN_USE_ARMV8_2` (your compiler must have `armv8.2-a` ISA support):
 
 ```bash
-./build.sh -DHPCC_USE_AARCH64=ON -DPPL_USE_ARMV8_2=ON
+./build.sh -DHPCC_USE_AARCH64=ON -DPPLNN_USE_ARMV8_2=ON
 ```
 
 If your system has multiple NUMA nodes, it is recommended to build with `PPLNN_USE_NUMA` (please make sure `libnuma` has been installed in your system):

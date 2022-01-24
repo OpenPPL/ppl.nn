@@ -79,7 +79,7 @@ ppl::common::RetCode clip(
     switch (data_type) {
         case ppl::common::DATATYPE_FLOAT32: return clip_common<float>(src_shape, (const float *)src, (const float *)min_ptr, (const float *)max_ptr, (float *)dst);
         case ppl::common::DATATYPE_INT64: return clip_common<int64_t>(src_shape, (const int64_t *)src, (const int64_t *)min_ptr, (const int64_t *)max_ptr, (int64_t *)dst);
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
         case ppl::common::DATATYPE_FLOAT16: return clip_common<__fp16>(src_shape, (const __fp16 *)src, (const __fp16 *)min_ptr, (const __fp16 *)max_ptr, (__fp16 *)dst);
 #endif
         default: break;

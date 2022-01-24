@@ -99,7 +99,7 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
             return ppl::common::RC_UNSUPPORTED;
         }
     }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
     else if (data_type == ppl::common::DATATYPE_FLOAT16) {
         if (MayUseISA(ppl::common::ISA_ARMV8_2)) {
             sgemm_m1 = 32;

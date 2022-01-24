@@ -204,7 +204,7 @@ inline int64_t reduce_vector_to_scalar_kernel<int64_t, int64x2_t, REDUCE_PROD>(c
     return reduced * vgetq_lane_s64(val, 0) * vgetq_lane_s64(val, 1);
 }
 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 template <>
 inline __fp16 reduce_scalar_kernel<__fp16, REDUCE_MAX>(const __fp16 val, const __fp16 reduced)
 {

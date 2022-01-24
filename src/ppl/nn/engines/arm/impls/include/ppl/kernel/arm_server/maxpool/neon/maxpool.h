@@ -43,7 +43,7 @@ ppl::common::RetCode maxpool2d_n4cx_fp32(
     const int32_t dilation_w,
     const int32_t global_pooling);
 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 ppl::common::RetCode maxpool2d_n8cx_fp16(
     const __fp16 *src,
     __fp16 *dst,

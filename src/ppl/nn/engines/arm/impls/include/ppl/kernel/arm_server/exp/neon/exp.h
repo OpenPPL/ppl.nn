@@ -27,7 +27,7 @@ ppl::common::RetCode exp_fp32(
     const float *x,
     float *y);
 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 ppl::common::RetCode exp_fp16(
     const ppl::nn::TensorShape *x_shape,
     const __fp16 *x,

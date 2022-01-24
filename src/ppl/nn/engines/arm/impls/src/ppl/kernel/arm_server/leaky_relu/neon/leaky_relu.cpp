@@ -65,7 +65,7 @@ ppl::common::RetCode leaky_relu_fp32(
     return ppl::common::RC_SUCCESS;
 }
 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 ppl::common::RetCode leaky_relu_fp16(
     const ppl::nn::TensorShape *src_shape,
     const __fp16 *src,

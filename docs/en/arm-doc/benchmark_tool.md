@@ -10,10 +10,10 @@ For compilation method of pplnn, please refer to: [building-from-source.md](../.
 
 ARM architecture uses openmp as the thread pool, so if you need to test multi-thread performance, please compile with `-DHPCC_USE_OPENMP=ON`.  
 
-If you want to benchmark FP16 inference, please compile with `-DPPL_USE_ARMV8_2=ON` (need compiler support `armv8.2-a` ISA).  
+If you want to benchmark FP16 inference, please compile with `-DPPLNN_USE_ARMV8_2=ON` (need compiler support `armv8.2-a` ISA).  
 
 ```bash
-./build.sh -DHPCC_USE_AARCH64=ON -DHPCC_USE_OPENMP=ON -DPPL_USE_ARMV8_2=ON
+./build.sh -DHPCC_USE_AARCH64=ON -DHPCC_USE_OPENMP=ON -DPPLNN_USE_ARMV8_2=ON
 ```
 
 If there are multiple NUMA nodes in your system, it is recommended to build with `-DPPLNN_USE_NUMA=ON` (please make sure `libnuma` has been installed in your system). 
@@ -122,7 +122,7 @@ When there are multiple inputs, `--reshaped-inputs` is separated by commas ','.
 build command:
 
 ```bash
-./build.sh -DHPCC_USE_AARCH64=ON -DCMAKE_BUILD_TYPE=Release -DHPCC_USE_OPENMP=ON -DPPL_USE_ARMV8_2=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON -DPPLNN_USE_NUMA=ON
+./build.sh -DHPCC_USE_AARCH64=ON -DCMAKE_BUILD_TYPE=Release -DHPCC_USE_OPENMP=ON -DPPLNN_USE_ARMV8_2=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON -DPPLNN_USE_NUMA=ON
 ```
 
 benchmark command:
@@ -268,7 +268,7 @@ latest updated at 2022-01-21
 build command:
 
 ```bash
-./build.sh -DHPCC_USE_AARCH64=ON -DCMAKE_BUILD_TYPE=Release -DHPCC_USE_OPENMP=ON -DPPL_USE_ARMV8_2=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON
+./build.sh -DHPCC_USE_AARCH64=ON -DCMAKE_BUILD_TYPE=Release -DHPCC_USE_OPENMP=ON -DPPLNN_USE_ARMV8_2=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON
 ```
 
 benchmark command:

@@ -51,7 +51,7 @@ ppl::common::RetCode relation(
             return relation_broadcast_common<float, 4, op_type>(src0_shape, src1_shape, dst_shape, (const float *)src0, (const float *)src1, (uint8_t* )dst);
         }
     }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
     if (std::is_same<eT, __fp16>::value) {
         if (data_format == ppl::common::DATAFORMAT_N8CX) { // fp16 n8cx
             return relation_broadcast_common<__fp16, 8, op_type>(src0_shape, src1_shape, dst_shape, (const __fp16 *)src0, (const __fp16 *)src1, (uint8_t* )dst);
@@ -75,7 +75,7 @@ ppl::common::RetCode relation_wrapper(
     switch (data_type) {
         case ppl::common::DATATYPE_FLOAT32: return relation<float, op_type>(src0_shape, src1_shape, dst_shape, (const float *)src0, (const float *)src1, dst);
         case ppl::common::DATATYPE_INT64: return relation<int64_t, op_type>(src0_shape, src1_shape, dst_shape, (const int64_t *)src0, (const int64_t *)src1, dst);
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
         case ppl::common::DATATYPE_FLOAT16: return relation<__fp16, op_type>(src0_shape, src1_shape, dst_shape, (const __fp16 *)src0, (const __fp16 *)src1, dst);
 #endif
         default: break;

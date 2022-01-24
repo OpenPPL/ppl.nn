@@ -28,7 +28,7 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 // fp16
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 size_t ppl_arm_server_kernel_fp16_fc_get_converted_filter_size(
     const int64_t num_in,
     const int64_t num_out);
@@ -317,7 +317,7 @@ public:
 
             return ppl::common::RC_SUCCESS;
         }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
         else if (dtype == ppl::common::DATATYPE_FLOAT16) {
             cvt_bias_size_ = num_output;
             cvt_bias_      = (__fp16 *)allocator_->Alloc(cvt_bias_size_ * sizeof(__fp16));
@@ -366,7 +366,7 @@ public:
 };
 
 // fp16
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 size_t ppl_arm_server_kernel_fp16_fc_get_buffer_size(
     const int64_t num_in,
     const int64_t num_out,

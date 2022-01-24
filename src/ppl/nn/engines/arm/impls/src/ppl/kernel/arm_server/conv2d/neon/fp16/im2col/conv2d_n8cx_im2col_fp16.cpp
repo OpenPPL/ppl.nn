@@ -17,7 +17,7 @@
 
 #include "ppl/kernel/arm_server/conv2d/neon/fp16/im2col/conv2d_n8cx_im2col_fp16.h"
 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 
 #include <arm_neon.h>
 #include <chrono>

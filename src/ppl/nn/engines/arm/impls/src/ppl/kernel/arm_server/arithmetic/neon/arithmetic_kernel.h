@@ -116,7 +116,7 @@ inline int64x2_t arithmetic_vector_kernel<int64x2_t, ARITHMETIC_DIV>(const int64
     return vdiv(v0, v1);
 }
 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 
 template <>
 inline __fp16 arithmetic_scalar_kernel<__fp16, ARITHMETIC_ADD>(const __fp16 s0, const __fp16 s1)

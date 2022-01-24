@@ -92,7 +92,7 @@ ppl::common::RetCode softmax_fp32(
     return ppl::common::RC_SUCCESS;
 }
 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 ppl::common::RetCode softmax_fp16(
     const ppl::nn::TensorShape &input_shape,
     const __fp16 *input,
@@ -185,7 +185,7 @@ ppl::common::RetCode softmax(
 
     switch (data_type) {
         case ppl::common::DATATYPE_FLOAT32: return softmax_fp32(*src_shape, (const float *)src, (float *)dst, axis);
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
         case ppl::common::DATATYPE_FLOAT16: return softmax_fp16(*src_shape, (const __fp16 *)src, (__fp16 *)dst, axis);
 #endif
         default: break;

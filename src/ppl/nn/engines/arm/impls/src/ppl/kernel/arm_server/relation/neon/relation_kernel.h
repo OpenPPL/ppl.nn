@@ -92,7 +92,7 @@ inline uint8_t relation_scalar_kernel<int64_t, RELATION_NOT_EQUAL>(int64_t a, in
     return a != b ? 1 : 0;
 }
 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 
 template <>
 inline uint8_t relation_scalar_kernel<__fp16, RELATION_GREATER>(__fp16 a, __fp16 b)
@@ -198,7 +198,7 @@ inline int64x2_t relation_vector_kernel<int64x2_t, RELATION_NOT_EQUAL>(const int
     return vreinterpretq_s64_u64(vceqzq_u64(vceqq_s64(v0, v1)));
 }
 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 
 template <>
 inline float16x8_t relation_vector_kernel<float16x8_t, RELATION_GREATER>(const float16x8_t v0, const float16x8_t v1){
