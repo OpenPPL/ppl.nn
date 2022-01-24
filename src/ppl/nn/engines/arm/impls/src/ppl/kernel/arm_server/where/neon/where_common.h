@@ -118,12 +118,12 @@ ppl::common::RetCode where_ndarray_common(
     // pad input dim
     const uint64_t max_dim_count             = dst_shape->GetDimCount();
     const uint64_t dims = 8;
-    int64_t padded_cond_shape[max_dim_count] = {0};
-    int64_t padded_src0_shape[max_dim_count] = {0};
-    int64_t padded_src1_shape[max_dim_count] = {0};
-    where_pad_shape(cond_shape, max_dim_count, padded_cond_shape);
-    where_pad_shape(src0_shape, max_dim_count, padded_src0_shape);
-    where_pad_shape(src1_shape, max_dim_count, padded_src1_shape);
+    std::vector<int64_t> padded_cond_shape(max_dim_count);
+    std::vector<int64_t> padded_src0_shape(max_dim_count);
+    std::vector<int64_t> padded_src1_shape(max_dim_count);
+    where_pad_shape(cond_shape, max_dim_count, padded_cond_shape.data());
+    where_pad_shape(src0_shape, max_dim_count, padded_src0_shape.data());
+    where_pad_shape(src1_shape, max_dim_count, padded_src1_shape.data());
 
     // prepare incs
     int64_t inc_cond[dims] = {0};
