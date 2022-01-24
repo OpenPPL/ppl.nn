@@ -122,7 +122,7 @@ conv2d_offline_manager *conv2d_algo_selector::fast_gen_algo(
                 dw_mgr = new conv2d_n4cx_depthwise_fp32_offline_manager(param, allocator);
             }
         }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
         else if (target_algo.data_type == ppl::common::DATATYPE_FLOAT16) {
             if (target_algo.input_format == ppl::common::DATAFORMAT_N8CX) {
                 dw_mgr = new conv2d_n8cx_depthwise_fp16_offline_manager(param, allocator);
@@ -148,7 +148,7 @@ conv2d_offline_manager *conv2d_algo_selector::fast_gen_algo(
         if (target_algo.data_type == ppl::common::DATATYPE_FLOAT32) {
             direct_nd_mgr = new conv2d_direct_ndarray_fp32_offline_manager(param, allocator);
         }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
         else if (target_algo.data_type == ppl::common::DATATYPE_FLOAT16) {
             direct_nd_mgr = new conv2d_direct_ndarray_fp16_offline_manager(param, allocator);
         }
@@ -214,7 +214,7 @@ conv2d_offline_manager *conv2d_algo_selector::fast_gen_algo(
             }
 
         }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
         else if (target_algo.data_type == ppl::common::DATATYPE_FLOAT16 &&
                  target_algo.input_format == ppl::common::DATAFORMAT_N8CX) {
             switch (target_algo.algo_type) {
@@ -251,7 +251,7 @@ conv2d_offline_manager *conv2d_algo_selector::fast_gen_algo(
             target_algo.input_format = ppl::common::DATAFORMAT_N4CX;
             im2col_mgr               = new conv2d_n4cx_im2col_fp32_offline_manager(param, allocator);
         }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
         else if (target_algo.data_type == ppl::common::DATATYPE_FLOAT16) {
             target_algo.input_format = ppl::common::DATAFORMAT_N8CX;
             im2col_mgr               = new conv2d_n8cx_im2col_fp16_offline_manager(param, allocator);
@@ -276,7 +276,7 @@ conv2d_offline_manager *conv2d_algo_selector::fast_gen_algo(
             direct_mgr = new conv2d_n4cx_direct_fp32_offline_manager(param, allocator);
         }
     }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
     else if (target_algo.data_type == ppl::common::DATATYPE_FLOAT16) {
         if (target_algo.input_format == ppl::common::DATAFORMAT_N8CX) {
             direct_mgr = new conv2d_n8cx_direct_fp16_offline_manager(param, allocator);
@@ -307,7 +307,7 @@ static conv2d_offline_manager *get_conv2d_offline_manager_with_algo(
             if (datatype == ppl::common::DATATYPE_FLOAT32) {
                 return new conv2d_n4cx_direct_fp32_offline_manager(param, allocator);
             }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
             else if (datatype == ppl::common::DATATYPE_FLOAT16) {
                 return new conv2d_n8cx_direct_fp16_offline_manager(param, allocator);
             }
@@ -318,7 +318,7 @@ static conv2d_offline_manager *get_conv2d_offline_manager_with_algo(
             if (datatype == ppl::common::DATATYPE_FLOAT32) {
                 return new conv2d_wgb2f3_fp32_offline_manager(param, allocator);
             }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
             else if (datatype == ppl::common::DATATYPE_FLOAT16) {
                 return new conv2d_wgb2f3_fp16_offline_manager(param, allocator);
             }
@@ -329,7 +329,7 @@ static conv2d_offline_manager *get_conv2d_offline_manager_with_algo(
             if (datatype == ppl::common::DATATYPE_FLOAT32) {
                 return new conv2d_wgb4f3_fp32_offline_manager(param, allocator);
             }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
             else if (datatype == ppl::common::DATATYPE_FLOAT16) {
                 return new conv2d_wgb4f3_fp16_offline_manager(param, allocator);
             }
@@ -340,7 +340,7 @@ static conv2d_offline_manager *get_conv2d_offline_manager_with_algo(
             if (datatype == ppl::common::DATATYPE_FLOAT32) {
                 return new conv2d_n4cx_im2col_fp32_offline_manager(param, allocator);
             }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
             else if (datatype == ppl::common::DATATYPE_FLOAT16) {
                 return new conv2d_n8cx_im2col_fp16_offline_manager(param, allocator);
             }
@@ -441,7 +441,7 @@ conv2d_offline_manager *conv2d_algo_selector::gen_fast_algo(
                 dw_mgr = new conv2d_n4cx_depthwise_fp32_offline_manager(param, allocator);
             }
         }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
         else if (target_algo.data_type == ppl::common::DATATYPE_FLOAT16) {
             if (target_algo.input_format == ppl::common::DATAFORMAT_N8CX) {
                 dw_mgr = new conv2d_n8cx_depthwise_fp16_offline_manager(param, allocator);
@@ -466,7 +466,7 @@ conv2d_offline_manager *conv2d_algo_selector::gen_fast_algo(
         if (target_algo.data_type == ppl::common::DATATYPE_FLOAT32) {
             direct_ndarray_mgr = new conv2d_direct_ndarray_fp32_offline_manager(param, allocator);
         }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
         else if (target_algo.data_type == ppl::common::DATATYPE_FLOAT16) {
             direct_ndarray_mgr = new conv2d_direct_ndarray_fp16_offline_manager(param, allocator);
         }

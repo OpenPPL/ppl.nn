@@ -18,7 +18,7 @@
 #ifndef PPL_ARM_SERVER_KERNEL_SRC_FP16_FC_SGEMM_KERNEL_H_
 #define PPL_ARM_SERVER_KERNEL_SRC_FP16_FC_SGEMM_KERNEL_H_
 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 
 #include <iostream>
 #include <cstdlib>

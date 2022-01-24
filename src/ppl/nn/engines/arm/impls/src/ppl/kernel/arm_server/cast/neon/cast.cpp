@@ -82,7 +82,7 @@ ppl::common::RetCode cast(
                 return cast_kernel<float, double>(src_shape, dst_shape, (float *)src, (double *)dst);
             case CAST_TYPE(ppl::common::DATATYPE_FLOAT64, ppl::common::DATATYPE_FLOAT32):
                 return cast_kernel<double, float>(src_shape, dst_shape, (double *)src, (float *)dst);
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
             case CAST_TYPE(ppl::common::DATATYPE_FLOAT16, ppl::common::DATATYPE_INT64):
                 return cast_kernel<__fp16, int64_t>(src_shape, dst_shape, (__fp16 *)src, (int64_t *)dst);
             case CAST_TYPE(ppl::common::DATATYPE_FLOAT16, ppl::common::DATATYPE_BOOL):

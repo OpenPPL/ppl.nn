@@ -241,7 +241,7 @@ ppl::common::RetCode LeakyReLUKernel::DoExecute(KernelExecContext* ctx) {
                                                                   param_->alpha, y->GetBufferPtr<float>());
         }
     } 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
     else if (data_type == ppl::common::DATATYPE_FLOAT16) {  // fp16 implementation, need armv8.2-a ISA support
         if (MayUseISA(ppl::common::ISA_ARMV8_2)) {
             return ppl::kernel::arm_server::neon::leaky_relu_fp16(x->GetShape(), x->GetBufferPtr<__fp16>(),
@@ -305,7 +305,7 @@ ppl::common::RetCode leaky_relu_fp32(
     const float alpha,
     float *dst);
 
-#ifdef PPL_USE_ARM_SERVER_FP16  // need compiler to support armv8.2-a ISA
+#ifdef PPLNN_USE_ARMV8_2_FP16  // need compiler to support armv8.2-a ISA
 ppl::common::RetCode leaky_relu_fp16(
     const ppl::nn::TensorShape *src_shape,
     const __fp16 *src,
@@ -332,7 +332,7 @@ Since there are several newly added .cpp files, it's required to delete CMakeCac
 
 #### 5.2. FP16 Compile Definitions
 
-All code used armv8.2-a instruction(typically FP16 instruction) should be placed in compile definition `PPL_USE_ARM_SERVER_FP16`, in order to pass compile when the compiler does not support armv8.2-a ISA.
+All code used armv8.2-a instruction(typically FP16 instruction) should be placed in compile definition `PPLNN_USE_ARMV8_2_FP16`, in order to pass compile when the compiler does not support armv8.2-a ISA.
 
 #### 5.3. Other Reference Examples
 

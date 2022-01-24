@@ -188,7 +188,7 @@ static ppl::common::RetCode batchnorm_wrapper(
             return batchnorm_nbcx_common<float, 4, fuse_relu>(src_shape, (const float *)src, (const float *)mean, (const float *)variance, (const float *)scale, (const float *)shift, var_eps, (float *)dst);
         }
     }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
     if (std::is_same<eT, __fp16>::value) {
         if (data_format == ppl::common::DATAFORMAT_N8CX) { // fp16 n8cx
             return batchnorm_nbcx_common<__fp16, 8, fuse_relu>(src_shape, (const __fp16 *)src, (const __fp16 *)mean, (const __fp16 *)variance, (const __fp16 *)scale, (const __fp16 *)shift, var_eps, (__fp16 *)dst);
@@ -214,7 +214,7 @@ ppl::common::RetCode batchnorm(
     if (fuse_relu) {
         switch (data_type) {
             case ppl::common::DATATYPE_FLOAT32: return batchnorm_wrapper<float, true>(src_shape, src, mean, variance, scale, shift, var_eps, dst);
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
             case ppl::common::DATATYPE_FLOAT16: return batchnorm_wrapper<__fp16, true>(src_shape, src, mean, variance, scale, shift, var_eps, dst);
 #endif
             default: break;
@@ -222,7 +222,7 @@ ppl::common::RetCode batchnorm(
     } else {
         switch (data_type) {
             case ppl::common::DATATYPE_FLOAT32: return batchnorm_wrapper<float, false>(src_shape, src, mean, variance, scale, shift, var_eps, dst);
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
             case ppl::common::DATATYPE_FLOAT16: return batchnorm_wrapper<__fp16, false>(src_shape, src, mean, variance, scale, shift, var_eps, dst);
 #endif
             default: break;

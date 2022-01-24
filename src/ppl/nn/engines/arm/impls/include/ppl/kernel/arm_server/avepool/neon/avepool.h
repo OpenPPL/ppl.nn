@@ -42,7 +42,7 @@ ppl::common::RetCode avepool2d_n4cx_fp32(
     const int32_t global_pooling,
     const bool count_include_pad);
 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 ppl::common::RetCode avepool2d_n8cx_fp16(
     const __fp16 *src,
     __fp16 *dst,

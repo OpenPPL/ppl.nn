@@ -77,7 +77,7 @@ static void pack_four(
 
         free(tmp); 
     } 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
     else if (std::is_same<vecType, float16x8_t>::value) {
         len = 32;
         uint16_t* tmp = (uint16_t *)malloc(sizeof(uint16_t) * len);
@@ -128,7 +128,7 @@ static void pack_one(
 
         free(tmp);
     } 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
     else if (std::is_same<vecType, float16x8_t>::value){
         len = 2;
         uint16_t* tmp = (uint16_t *)malloc(sizeof(uint16_t) * len);

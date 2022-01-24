@@ -35,7 +35,7 @@ namespace ppl { namespace nn { namespace arm {
 RetCode ArmEngine::Init(const ArmEngineOptions& options) {
     options_ = options;
 
-#ifndef PPL_USE_ARM_SERVER_FP16
+#ifndef PPLNN_USE_ARMV8_2_FP16
     if (options_.forward_precision == ppl::common::DATATYPE_FLOAT16) {
         LOG(ERROR) << "current build not support FP16.";
         return RC_UNSUPPORTED;

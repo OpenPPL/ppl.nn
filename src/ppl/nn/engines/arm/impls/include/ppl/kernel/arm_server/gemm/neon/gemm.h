@@ -45,7 +45,7 @@ public:
 };
 typedef uint32_t gemm_C_type_t;
 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 size_t ppl_arm_server_kernel_fp16_gemm_get_buffer_size(
     const int64_t sgemm_m1,
     const int64_t sgemm_n1);

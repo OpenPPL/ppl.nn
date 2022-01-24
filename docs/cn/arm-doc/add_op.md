@@ -239,7 +239,7 @@ ppl::common::RetCode LeakyReLUKernel::DoExecute(KernelExecContext* ctx) {
                                                                   param_->alpha, y->GetBufferPtr<float>());
         }
     } 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
     else if (data_type == ppl::common::DATATYPE_FLOAT16) {  // fp16 实现，需要 armv8.2-a 指令集支持
         if (MayUseISA(ppl::common::ISA_ARMV8_2)) {
             return ppl::kernel::arm_server::neon::leaky_relu_fp16(x->GetShape(), x->GetBufferPtr<__fp16>(),
@@ -303,7 +303,7 @@ ppl::common::RetCode leaky_relu_fp32(
     const float alpha,
     float *dst);
 
-#ifdef PPL_USE_ARM_SERVER_FP16  // 需要编译器支持 armv8.2-a 指令集
+#ifdef PPLNN_USE_ARMV8_2_FP16  // 需要编译器支持 armv8.2-a 指令集
 ppl::common::RetCode leaky_relu_fp16(
     const ppl::nn::TensorShape *src_shape,
     const __fp16 *src,
@@ -330,7 +330,7 @@ kernel函数的实现放在ppl.nn/src/ppl/nn/engines/arm/impls/src/ppl/kernel/ar
 
 #### 5.2. FP16 编译宏
 
-所有要用到 armv8.2-a 指令的代码（最典型的就是 FP16 的指令），都需要放在宏`PPL_USE_ARM_SERVER_FP16`中，避免编译器不支持 armv8.2-a 时无法通过编译。
+所有要用到 armv8.2-a 指令的代码（最典型的就是 FP16 的指令），都需要放在宏`PPLNN_USE_ARMV8_2_FP16`中，避免编译器不支持 armv8.2-a 时无法通过编译。
 
 #### 5.3. 其他的参考例子
 

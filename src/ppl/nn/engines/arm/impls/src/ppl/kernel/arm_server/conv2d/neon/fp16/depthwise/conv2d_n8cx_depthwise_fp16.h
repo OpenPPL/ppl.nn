@@ -17,7 +17,7 @@
 
 #ifndef __ST_PPL_KERNEL_ARM_SERVER_CONV2D_NEON_FP16_DEPTHWISE_CONV2D_N8CX_DEPTHWISE_FP16_H_
 #define __ST_PPL_KERNEL_ARM_SERVER_CONV2D_NEON_FP16_DEPTHWISE_CONV2D_N8CX_DEPTHWISE_FP16_H_
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 
 #include "ppl/kernel/arm_server/conv2d/neon/conv2d.h"
 #include "ppl/kernel/arm_server/common/internal_include.h"

@@ -67,7 +67,7 @@ static ppl::common::RetCode resize2d_wrapper(
             }
         }
     }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
     if (std::is_same<eT, __fp16>::value) {
         if (data_format == ppl::common::DATAFORMAT_N8CX) {
             if (param->coord_trans_mode == param->RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL &&
@@ -101,7 +101,7 @@ ppl::common::RetCode resize2d(
     const auto data_type = src_shape->GetDataType();
     switch (data_type) {
         case ppl::common::DATATYPE_FLOAT32: return resize2d_wrapper<float>(src_shape, dst_shape, (const float *)src, scale_h, scale_w, param, (float *)dst);
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
         case ppl::common::DATATYPE_FLOAT16: return resize2d_wrapper<__fp16>(src_shape, dst_shape, (const __fp16 *)src, scale_h, scale_w, param, (__fp16 *)dst);
 #endif
         default: break;

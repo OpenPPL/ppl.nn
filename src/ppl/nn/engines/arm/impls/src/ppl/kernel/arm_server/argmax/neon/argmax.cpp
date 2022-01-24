@@ -77,7 +77,7 @@ ppl::common::RetCode argmax(
     switch (data_type) {
         case ppl::common::DATATYPE_FLOAT32: return argmax_ndarray_common<float>(src_shape, (const float *)src, axis, dst);
         case ppl::common::DATATYPE_INT64: return argmax_ndarray_common<int64_t>(src_shape, (const int64_t *)src, axis, dst);
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
         case ppl::common::DATATYPE_FLOAT16: return argmax_ndarray_common<__fp16>(src_shape, (const __fp16 *)src, axis, dst);
 #endif
         default: break;

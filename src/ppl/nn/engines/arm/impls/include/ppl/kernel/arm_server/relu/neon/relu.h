@@ -27,7 +27,7 @@ ppl::common::RetCode relu_fp32(
     const float *input,
     float *output);
 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 ppl::common::RetCode relu_fp16(
     const ppl::nn::TensorShape *in_shape,
     const __fp16 *input,

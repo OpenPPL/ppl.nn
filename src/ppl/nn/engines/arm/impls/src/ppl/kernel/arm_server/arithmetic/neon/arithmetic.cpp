@@ -51,7 +51,7 @@ ppl::common::RetCode arithmetic(
             return arithmetic_broadcast_nbcx_common<float, 4, op_type, fuse_relu>(src0_shape, src1_shape, dst_shape, (const float *)src0, (const float *)src1, (float *)dst);
         }
     }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
     if (std::is_same<eT, __fp16>::value) {
         if (data_format == ppl::common::DATAFORMAT_N8CX) { // fp16 n8cx
             return arithmetic_broadcast_nbcx_common<__fp16, 8, op_type, fuse_relu>(src0_shape, src1_shape, dst_shape, (const __fp16 *)src0, (const __fp16 *)src1, (__fp16 *)dst);
@@ -77,7 +77,7 @@ ppl::common::RetCode arithmetic_wrapper(
         switch (data_type) {
             case ppl::common::DATATYPE_FLOAT32: return arithmetic<float, op_type, true>(src0_shape, src1_shape, dst_shape, (const float *)src0, (const float *)src1, (float *)dst);
             case ppl::common::DATATYPE_INT64: return arithmetic<int64_t, op_type, true>(src0_shape, src1_shape, dst_shape, (const int64_t *)src0, (const int64_t *)src1, (int64_t *)dst);
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
             case ppl::common::DATATYPE_FLOAT16: return arithmetic<__fp16, op_type, true>(src0_shape, src1_shape, dst_shape, (const __fp16 *)src0, (const __fp16 *)src1, (__fp16 *)dst);
 #endif
             default: break;
@@ -86,7 +86,7 @@ ppl::common::RetCode arithmetic_wrapper(
         switch (data_type) {
             case ppl::common::DATATYPE_FLOAT32: return arithmetic<float, op_type, false>(src0_shape, src1_shape, dst_shape, (const float *)src0, (const float *)src1, (float *)dst);
             case ppl::common::DATATYPE_INT64: return arithmetic<int64_t, op_type, false>(src0_shape, src1_shape, dst_shape, (const int64_t *)src0, (const int64_t *)src1, (int64_t *)dst);
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
             case ppl::common::DATATYPE_FLOAT16: return arithmetic<__fp16, op_type, false>(src0_shape, src1_shape, dst_shape, (const __fp16 *)src0, (const __fp16 *)src1, (__fp16 *)dst);
 #endif
             default: break;

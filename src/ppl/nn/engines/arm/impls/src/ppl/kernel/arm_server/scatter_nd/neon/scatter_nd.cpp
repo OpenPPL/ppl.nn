@@ -95,7 +95,7 @@ ppl::common::RetCode scatter_nd_ndarray(
         case ppl::common::DATATYPE_FLOAT32: return scatter_nd_ndarray_commmon<float>((const float*)src, (const float*)updates, indices, 
                                                                                         strides, src_length, inner_dim, num_indices, 
                                                                                         indices_dim, (float*)dst);
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
         case ppl::common::DATATYPE_FLOAT16: return scatter_nd_ndarray_commmon<__fp16>((const __fp16*)src, (const __fp16*)updates, indices,
                                                                                         strides, src_length, inner_dim, num_indices,
                                                                                         indices_dim, (__fp16*)dst);

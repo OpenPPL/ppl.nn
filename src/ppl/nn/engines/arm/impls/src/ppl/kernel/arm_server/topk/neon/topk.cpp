@@ -153,7 +153,7 @@ ppl::common::RetCode topk(
     switch (data_type)
     {
         case ppl::common::DATATYPE_FLOAT32: return topk_ndarray<float>(src_shape, value_shape, indices_shape, (const float*)src, k, axis, largest, sorted, temp_buffer, (float *)values, indices);
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
         case ppl::common::DATATYPE_FLOAT16: return topk_ndarray<__fp16>(src_shape, value_shape, indices_shape, (const __fp16*)src, k, axis, largest, sorted, temp_buffer, (__fp16 *)values, indices);
 #endif    
     default: break;

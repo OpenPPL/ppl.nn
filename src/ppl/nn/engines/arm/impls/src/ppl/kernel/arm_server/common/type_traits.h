@@ -626,7 +626,7 @@ inline uint16x4_t vsqrt(const uint16x4_t& v0)
 
 /********************** fp16 x 8 **********************/
 
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
 template <>
 struct DT<__fp16, 8> {
     typedef float16x8_t vecDT;

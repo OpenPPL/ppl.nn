@@ -64,7 +64,7 @@ static ppl::common::RetCode reduce(
             return reduce_nbcx_common<float, 4, op_type>(src_shape, dst_shape, (const float *)src, real_axes.data(), num_axes, (float *)dst);
         }
     }
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
     if (std::is_same<eT, __fp16>::value) {
         if (data_format == ppl::common::DATAFORMAT_N8CX) {
             return reduce_nbcx_common<__fp16, 8, op_type>(src_shape, dst_shape, (const __fp16 *)src, real_axes.data(), num_axes, (__fp16 *)dst);
@@ -88,7 +88,7 @@ static ppl::common::RetCode reduce_wrapper(
     switch (data_type) {
         case ppl::common::DATATYPE_FLOAT32: return reduce<float, op_type>(src_shape, dst_shape, (const float *)src, axes, num_axes, (float *)dst);
         case ppl::common::DATATYPE_INT64: return reduce<int64_t, op_type>(src_shape, dst_shape, (const int64_t *)src, axes, num_axes, (int64_t *)dst);
-#ifdef PPL_USE_ARM_SERVER_FP16
+#ifdef PPLNN_USE_ARMV8_2_FP16
         case ppl::common::DATATYPE_FLOAT16: return reduce<__fp16, op_type>(src_shape, dst_shape, (const __fp16 *)src, axes, num_axes, (__fp16 *)dst);
 #endif
         default: break;
