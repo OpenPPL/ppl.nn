@@ -7,6 +7,7 @@ on:
   pull_request:
     branches: [ master ]
     paths-ignore: ['.**', 'docker/**', 'docs/**', 'samples/**', README.md,
+                   'cmake/arm.cmake', 'cmake/cuda.cmake', 'cmake/riscv.cmake',
                    'include/ppl/nn/engines/arm/**', 'src/ppl/nn/engines/arm/**',
                    'include/ppl/nn/engines/cuda/**', 'src/ppl/nn/engines/cuda/**',
                    'include/ppl/nn/engines/riscv/**', 'src/ppl/nn/engines/riscv/**']

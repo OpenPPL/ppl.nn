@@ -7,6 +7,7 @@ on:
   pull_request:
     branches: [ master ]
     paths:
+      - 'cmake/arm.cmake'
       - 'include/ppl/nn/engines/arm/**'
       - 'src/ppl/nn/engines/arm/**'
       - 'src/ppl/nn/optimizers/**'
