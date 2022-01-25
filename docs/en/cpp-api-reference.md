@@ -90,13 +90,13 @@ Sets various runtime options defined in `runtime_options.h`. Parameters vary dep
 uint32_t GetInputCount() const;
 ```
 
-Gets the number of input of the associated graph.
+Returns the number of input of the associated graph.
 
 ```c++
 Tensor* GetInputTensor(uint32_t idx) const;
 ```
 
-Gets the input tensor at position `idx`. Note that `idx` should be less than the number of inputs.
+Returns the input tensor at position `idx`. Note that `idx` should be less than the number of inputs.
 
 ```c++
 ppl::common::RetCode Run();
@@ -108,32 +108,32 @@ Runs the model with given inputs. Input data MUST be filled via the returned val
 uint32_t GetOutputCount() const;
 ```
 
-Gets the number of outputs of the associated graph.
+Returns the number of outputs of the associated graph.
 
 
 ```c++
 Tensor* GetOutputTensor(uint32_t idx) const;
 ```
 
-Gets the output tensor at position `idx`. Note that `idx` should be less than the number of outputs.
+Returns the output tensor at position `idx`. Note that `idx` should be less than the number of outputs.
 
 ```c++
 uint32_t GetDeviceContextCount() const;
 ```
 
-Gets the number of `DeviceContext` used by this `Runtime` instance.
+Returns the number of `DeviceContext` used by this `Runtime` instance.
 
 ```c++
 DeviceContext* GetDeviceContext(uint32_t idx) const;
 ```
 
-Gets the `DeviceContext` at position `idx`. Note that `idx` should be less than `GetDeviceContextCount()`.
+Returns the `DeviceContext` at position `idx`. Note that `idx` should be less than `GetDeviceContextCount()`.
 
 ```c++
 ppl::common::RetCode GetProfilingStatistics(ProfilingStatistics*) const;
 ```
 
-Gets profiling statistics of each kernel. Note that this function is available if `PPLNN_ENABLE_KERNEL_PROFILING` is enable.
+Returns profiling statistics of each kernel. Note that this function is available if `PPLNN_ENABLE_KERNEL_PROFILING` is enable.
 
 ## Tensor
 
@@ -144,17 +144,22 @@ This structure represents the input/output data.
 #### Functions
 
 ```c++
-ppl::common::TensorShape& GetShape();
-const ppl::common::TensorShape& GetShape() const;
+ppl::common::TensorShape* GetShape() const;
 ```
 
-Gets the shape of this tensor.
+Returns the shape of this tensor.
 
 ```c++
 ppl::common::RetCode ReallocBuffer();
 ```
 
 Reallocates a buffer according to its shape.
+
+```c++
+void FreeBuffer();
+```
+
+Frees the data buffer.
 
 ```c++
 ppl::common::RetCode CopyToHost(void* dst) const;
@@ -184,7 +189,7 @@ Converts data to inner buffer from `src` with the shape `src_desc`. Note that in
 DeviceContext* GetDeviceContext() const;
 ```
 
-Gets context of the underlying `Device`.
+Returns context of the underlying `Device`.
 
 ```c++
 void SetBufferPtr(void* buf);
@@ -216,7 +221,7 @@ Sets global logger for pplnn internal logging.
 Logger* GetCurrentLogger();
 ```
 
-Gets the logger for pplnn internal logging. Default is a `StdioLogger` that prints logs to stdout/stderr.
+Returns the logger for pplnn internal logging. Default is a `StdioLogger` that prints logs to stdout/stderr.
 
 ```c++
 void Logger::SetLogLevel(uint32_t);

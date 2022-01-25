@@ -64,7 +64,7 @@ Copies tensor's data to host in NDARRAY format. We can use `numpy.array` to crea
 dev_ctx = Tensor::GetDeviceContext()
 ```
 
-Gets context of the underlying `Device`.
+Returns context of the underlying `Device`.
 
 ```python
 addr = Tensor::GetBufferPtr()

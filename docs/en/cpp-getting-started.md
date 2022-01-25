@@ -27,21 +27,23 @@ to create an engine running on NVIDIA GPUs.
 
 ### Creating a RuntimeBuilder
 
-We create a `RuntimeBuilder` with the following function:
+We can create a `RuntimeBuilder` with the following function:
 
 ```c++
 RuntimeBuilder* OnnxRuntimeBuilderFactory::Create(
-    const char* model_file, Engine** engines, uint32_t engine_num);
+    const char* model_file, Engine** engine_ptrs, uint32_t engine_num);
 ```
 
-where the second parameter `engines` is the `x86_engine` we created:
+where the second parameter `engine_ptrs` is the `x86_engine` we created:
 
 ```c++
-vector<unique_ptr<Engine>> engines;
-engines.emplace_back(unique_ptr<Engine>(x86_engine));
+vector<Engine*> engine_ptrs;
+engines.push_back(x86_engine);
 ```
 
-`PPLNN` supports multiple engines running in the same model. For example:
+Note that the caller **MUST** guarantee that elements of `engine_ptrs` are valid during the life cycle of the `Runtime` object.
+
+`PPLNN` also supports multiple engines running in the same model. For example:
 
 ```c++
 Engine* x86_engine = X86EngineFactory::Create(X86EngineOptions());
@@ -88,9 +90,9 @@ and fill input data(using random data in this example):
 ```c++
 for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
     auto t = runtime->GetInputTensor(c);
-    auto& shape = t->GetShape();
+    auto shape = t->GetShape();
 
-    auto nr_element = shape.GetBytesIncludingPadding() / sizeof(float);
+    auto nr_element = shape->GetBytesIncludingPadding() / sizeof(float);
     vector<float> buffer(nr_element);
 
     // fill random input data
@@ -106,7 +108,7 @@ for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
     }
 
     // our random data is treated as NDARRAY
-    TensorShape src_desc = t->GetShape();
+    TensorShape src_desc = *t->GetShape();
     src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
 
     // input tensors may require different data format
@@ -133,12 +135,12 @@ Iterates each output:
 for (uint32_t c = 0; c < runtime->GetOutputCount(); ++c) {
     auto t = runtime->GetOutputTensor(c);
 
-    TensorShape dst_desc = t->GetShape();
-    dst_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-    auto bytes = dst_desc.GetBytesIncludingPadding();
+    const TensorShape* dst_desc = t->GetShape();
+    dst_desc->SetDataFormat(DATAFORMAT_NDARRAY);
+    auto bytes = dst_desc->GetBytesIncludingPadding();
     vector<char> buffer(bytes);
 
-    auto status = t->ConvertToHost((void*)buffer.data(), dst_desc);
+    auto status = t->ConvertToHost((void*)buffer.data(), *dst_desc);
     // ......
 }
 ```
