@@ -68,7 +68,7 @@ Define_int32(m, 0, "(0) override M");
 Define_int32(n, 0, "(0) override N");
 Define_int32(k, 0, "(0) override K");
 
-typedef typeof(ppl::kernel::x86::gemm_fp32_fma)* ppl_x86_benchmark_gemm_func_t;
+typedef decltype(ppl::kernel::x86::gemm_fp32_fma)* ppl_x86_benchmark_gemm_func_t;
 
 static std::map<std::string, ppl_x86_benchmark_gemm_func_t> isa_table =
 {
