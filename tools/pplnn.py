@@ -29,7 +29,7 @@ from pyppl import common as pplcommon
 
 # ---------------------------------------------------------------------------- #
 
-g_supported_devices = ["x86", "cuda", "riscv"]
+g_supported_devices = ["x86", "cuda", "riscv", "arm"]
 
 g_pplnntype2numpytype = {
     pplcommon.DATATYPE_INT8 : np.int8,
@@ -73,6 +73,7 @@ def ParseCommandLineArgs():
     for dev in g_supported_devices:
         parser.add_argument("--use-" + dev, dest = "use_" + dev, action = "store_true",
                             default = False, required = False)
+
         if dev == "x86":
             parser.add_argument("--disable-avx512", dest = "disable_avx512", action = "store_true",
                                 default = False, required = False)
@@ -91,9 +92,18 @@ def ParseCommandLineArgs():
                                 help = "set kernel type for cuda inferencing. valid values: int8/16/32/64,float16/32")
             parser.add_argument("--quant-file", type = str, default = "", required = False,
                                 help = "a json file containing quantization information")
-        elif dev == "riscv":
-            parser.add_argument("--use-fp16", dest = "use_fp16", action = "store_true",
-                                default = False, required = False)
+        elif dev == "arm":
+            parser.add_argument("--wg-level", type = int, default = 3, required = False,
+                                help = "select winograd level[0-3]. 0: wingorad off."
+                                " 1: turn on winograd and automatically select block size."
+                                " 2: use winograd block 2 if possible. 3: use winograd block 4 if possible")
+            parser.add_argument("--tuning-level", type = int, default = 1, required = False,
+                                help = "select conv algo dynamic tuning level[0-1]. 0: off. 1: on")
+            parser.add_argument("--numa-node-id", type = int, default = -1, required = False,
+                                help = "bind arm engine to specified numa node, range [0, numa_max_node), -1 means not bind")
+
+    parser.add_argument("--use-fp16", dest = "use_fp16", action = "store_true",
+                        default = False, required = False, help = "infer with fp16. avaliable for arm8.2 and riscv.")
 
     parser.add_argument("--onnx-model", type = str, default = "", required = False,
                         help = "onnx model file")
@@ -242,6 +252,31 @@ def CreateRiscvEngine(args):
 
     return riscv_engine
 
+def CreateArmEngine(args):
+    arm_options = pplnn.ArmEngineOptions()
+
+    if args.mm_policy == "perf":
+        arm_options.mm_policy = pplnn.ARM_MM_MRU
+    elif args.mm_policy == "mem":
+        arm_options.mm_policy = pplnn.ARM_MM_COMPACT
+
+    if args.use_fp16:
+        arm_options.forward_precision = pplcommon.DATATYPE_FLOAT16
+    else:
+        arm_options.forward_precision = pplcommon.DATATYPE_FLOAT32
+
+    arm_options.graph_optimization_level = pplnn.ARM_OPT_ENABLE_ALL
+    arm_options.winograd_level = args.wg_level
+    arm_options.dynamic_tuning_level = args.tuning_level
+    arm_options.numa_node_id = args.numa_node_id
+
+    arm_engine = pplnn.ArmEngineFactory.Create(arm_options)
+    if not arm_engine:
+        logging.error("create arm engin failed.")
+        sys.exit(-1)
+
+    return arm_engine
+
 def RegisterEngines(args):
     engines = []
     if args.use_x86:
@@ -255,6 +290,10 @@ def RegisterEngines(args):
     if args.use_riscv:
         riscv_engine = CreateRiscvEngine(args)
         engines.append(riscv_engine)
+
+    if args.use_arm:
+        arm_engine = CreateArmEngine(args)
+        engines.append(arm_engine)
 
     return engines
 

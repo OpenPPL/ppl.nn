@@ -47,6 +47,11 @@ if(PPLNN_USE_RISCV)
     list(APPEND PPLNN_PYTHON_API_SRC ${PPLNN_PYTHON_RISCV_SRC})
 endif()
 
+if(PPLNN_USE_ARM)
+    file(GLOB_RECURSE PPLNN_PYTHON_ARM_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/arm/*.cc)
+    list(APPEND PPLNN_PYTHON_API_SRC ${PPLNN_PYTHON_ARM_SRC})
+endif()
+
 add_library(pypplnn_shared SHARED ${PPLNN_PYTHON_API_SRC})
 target_link_libraries(pypplnn_shared PUBLIC pplnn_static ${PYTHON3_LIBRARIES})
 target_include_directories(pypplnn_shared PUBLIC
