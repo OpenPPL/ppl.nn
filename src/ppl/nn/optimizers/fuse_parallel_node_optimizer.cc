@@ -103,8 +103,6 @@ static inline bool NodeTypeMatched(const SkippedNodeType& t1, const ir::Node::Ty
 // fuse parallel nodes which have same inputs & same params
 ppl::common::RetCode FuseParallelNodeOptimizer::Optimize(ir::Graph* graph) const {
     static const std::vector<SkippedNodeType> skipped_node_types{
-        {"", "Conv"}, // cannot compare param correctly
-        {"", "Reshape"}, // cannot compare param correctly
         {"", "If"}, // has subgraph
         {"", "Loop"} // has subgraph
     };
