@@ -35,7 +35,38 @@ struct ConvolutionParam {
     int32_t bias_term; // written in op ctx, for multi-input layer fusion
 
     bool operator==(const ConvolutionParam& p) const {
-        return false; // has attr written in op ctx
+        if (this->group != p.group) {
+            return false;
+        }
+        if (false
+            || this->kernel_shape.size() != p.kernel_shape.size()
+            || this->dilations.size() != p.dilations.size()
+            || this->strides.size() != p.strides.size()
+            || this->pads.size() != p.pads.size())
+        {
+            return false;
+        }
+        for (size_t i = 0; i < this->kernel_shape.size(); ++i) {
+            if (this->kernel_shape[i] != p.kernel_shape[i]) {
+                return false;
+            }
+        }
+        for (size_t i = 0; i < this->dilations.size(); ++i) {
+            if (this->dilations[i] != p.dilations[i]) {
+                return false;
+            }
+        }
+        for (size_t i = 0; i < this->strides.size(); ++i) {
+            if (this->strides[i] != p.strides[i]) {
+                return false;
+            }
+        }
+        for (size_t i = 0; i < this->pads.size(); ++i) {
+            if (this->pads[i] != p.pads[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 };
 
