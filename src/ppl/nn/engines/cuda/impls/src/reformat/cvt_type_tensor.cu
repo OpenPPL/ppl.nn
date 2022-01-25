@@ -72,6 +72,12 @@ __global__ void cuda_kernel_cvt<INT8_FLOAT16>(size_t num_elems, const void* inpu
     JUDGE(num_elems)
     ((half*)output)[id] = __float2half(_int82float(((int8_t*)input)[id], param.i_step, param.i_zero_point));
 }
+template <>
+__global__ void cuda_kernel_cvt<FLOAT16_INT8>(size_t num_elems, const void* input, ReFormatParam param, void* output)
+{
+    JUDGE(num_elems)
+    ((int8_t*)output)[id] = _float2int8((float)*((__half*)input + id), param.o_step, param.o_zero_point);
+}
 
 template <>
 __global__ void cuda_kernel_cvt<INT8_FLOAT32>(size_t num_elems, const void* input, ReFormatParam param, void* output)
