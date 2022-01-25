@@ -46,22 +46,22 @@ struct ConvolutionParam {
         {
             return false;
         }
-        for (size_t i = 0; i < this->kernel_shape.size(); ++i) {
+        for (uint32_t i = 0; i < this->kernel_shape.size(); ++i) {
             if (this->kernel_shape[i] != p.kernel_shape[i]) {
                 return false;
             }
         }
-        for (size_t i = 0; i < this->dilations.size(); ++i) {
+        for (uint32_t i = 0; i < this->dilations.size(); ++i) {
             if (this->dilations[i] != p.dilations[i]) {
                 return false;
             }
         }
-        for (size_t i = 0; i < this->strides.size(); ++i) {
+        for (uint32_t i = 0; i < this->strides.size(); ++i) {
             if (this->strides[i] != p.strides[i]) {
                 return false;
             }
         }
-        for (size_t i = 0; i < this->pads.size(); ++i) {
+        for (uint32_t i = 0; i < this->pads.size(); ++i) {
             if (this->pads[i] != p.pads[i]) {
                 return false;
             }

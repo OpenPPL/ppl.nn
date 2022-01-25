@@ -33,11 +33,24 @@ ppl::common::RetCode CastKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("to: %d\n", param_->to);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    PPLNN_X86_REALLOC_TENSOR_BUFFER(output);
-    PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
-
-    return kernel::x86::cast(input->GetShape(), output->GetShape(), input->GetBufferPtr(), output->GetBufferPtr());
+    if (ppl::common::GetSizeOfDataType(input->GetShape()->GetDataType()) == ppl::common::GetSizeOfDataType(output->GetShape()->GetDataType())
+        && input->GetEdge()->CalcConsumerCount() == 1
+        && input->GetType() == TENSORTYPE_NORMAL) {
+        // inplace
+        output->TransferBufferFrom(input);
+        PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
+        if (input->GetShape()->GetDataType() == output->GetShape()->GetDataType()) {
+            // no need to do any thing
+            return ppl::common::RC_SUCCESS;
+        }
+        return kernel::x86::cast(input->GetShape(), output->GetShape(), output->GetBufferPtr(), output->GetBufferPtr());
+    } else {
+        PPLNN_X86_REALLOC_TENSOR_BUFFER(output);
+        PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
+        return kernel::x86::cast(input->GetShape(), output->GetShape(), input->GetBufferPtr(), output->GetBufferPtr());
+    }
 }
 
 }}} // namespace ppl::nn::x86

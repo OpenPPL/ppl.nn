@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/kernel/x86/common/internal_include.h"
-#include <string.h>
+#include "ppl/kernel/x86/common/memory.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
@@ -57,8 +57,7 @@ ppl::common::RetCode cast(
     auto odt = dst_shape->GetDataType();
 
     if (idt == odt) {
-        memcpy(dst, src, dst_shape->GetBytesIncludingPadding());
-        return ppl::common::RC_SUCCESS;
+        return memory_copy(src, dst_shape->GetBytesIncludingPadding(), dst);
     }
 
     switch (MAKE_CAST_TYPE(idt, odt)) {
