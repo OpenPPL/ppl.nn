@@ -135,6 +135,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
                     const int64_t dst_w = Y->GetShape()->GetDim(3);
                     const int64_t batch = X->GetShape()->GetDim(0);
                     const int64_t num_tiles = batch * ((dst_h + 3) / 4) * ((dst_w + 3) / 4);
+                    const bool align_tiles = (dst_h % 4 == 0) && (dst_w % 4) == 0;
 
                     const int64_t num_threads = ppl::kernel::x86::get_omp_max_threads();
                     if (num_threads > 4) { // Maybe memory bound. Just maybe.
@@ -147,8 +148,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
                             return true;
                         }
                     }
-
-                    return num_tiles < 12;
+                    return num_tiles < (align_tiles ? 10 : 12);
                 };
                 conv2d_param_->algo_info.algo_type = ppl::kernel::x86::conv2d_fp32_algo::WINOGRAD_B4F3;
             }
