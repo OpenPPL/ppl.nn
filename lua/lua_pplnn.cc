@@ -46,6 +46,12 @@ void RegisterRiscvEngine(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>
 void RegisterRiscvEngineFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 #endif
 
+#ifdef PPLNN_USE_ARM
+void RegisterArmEngineOptions(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
+void RegisterArmEngine(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
+void RegisterArmEngineFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
+#endif
+
 void RegisterGetVersionString(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterTensorShape(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterTensor(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
@@ -95,6 +101,12 @@ int PPLNN_PUBLIC luaopen_luappl_nn(lua_State* l) {
     RegisterRiscvEngineOptions(lstate, lmodule);
     RegisterRiscvEngine(lstate, lmodule);
     RegisterRiscvEngineFactory(lstate, lmodule);
+#endif
+
+#ifdef PPLNN_USE_ARM
+    RegisterArmEngineOptions(lstate, lmodule);
+    RegisterArmEngine(lstate, lmodule);
+    RegisterArmEngineFactory(lstate, lmodule);
 #endif
 
     RegisterGetVersionString(lstate, lmodule);

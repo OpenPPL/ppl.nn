@@ -31,6 +31,11 @@ if(PPLNN_USE_RISCV)
     list(APPEND PPLNN_LUA_API_SRC ${PPLNN_LUA_RISCV_SRC})
 endif()
 
+if(PPLNN_USE_ARM)
+    file(GLOB_RECURSE PPLNN_LUA_ARM_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/arm/*.cc)
+    list(APPEND PPLNN_LUA_API_SRC ${PPLNN_LUA_ARM_SRC})
+endif()
+
 add_library(luapplnn_shared SHARED ${PPLNN_LUA_API_SRC})
 target_compile_features(luapplnn_shared PRIVATE cxx_std_14)
 target_link_libraries(luapplnn_shared PUBLIC pplnn_static luacpp_static ${LUA_LIBRARIES})
