@@ -28,7 +28,7 @@ if(NOT ((CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 
         message(FATAL_ERROR
             "[FATAL_ERROR]:\n"
             "Compiler does not support AVX512F due to the compiler version is too old.\n"
-            "We STRONGLY SUGGEST to upgrade the compliler version to gcc>=4.9.2 to enable AVX512F, clang>=6.0.0, MSVC>=1910.\n"
+            "We STRONGLY SUGGEST to upgrade the compliler version to gcc>4.9.2 to enable AVX512F, clang>=6.0.0, MSVC>1910.\n"
             "Another NOT RECOMENDED option is disabling AVX512F by setting cmake option `PPL_USE_X86_AVX512=OFF`\n")
     endif()
 endif()
