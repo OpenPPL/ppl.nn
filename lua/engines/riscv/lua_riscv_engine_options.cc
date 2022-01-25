@@ -26,6 +26,20 @@ namespace ppl { namespace nn { namespace lua {
 void RegisterRiscvEngineOptions(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
     auto lclass = lstate->CreateClass<RiscvEngineOptions>()
         .DefConstructor()
+        .DefMember("mm_policy",
+                   [](const RiscvEngineOptions* options) -> uint32_t {
+                       return options->mm_policy;
+                   },
+                   [](RiscvEngineOptions* options, uint32_t v) -> void {
+                       options->mm_policy = v;
+                   })
+        .DefMember("tuning_level",
+                   [](const RiscvEngineOptions* options) -> uint32_t {
+                       return options->dynamic_tuning_level;
+                   },
+                   [](RiscvEngineOptions* options, uint32_t v) -> void {
+                       options->dynamic_tuning_level = v;
+                   })
         .DefMember("forward_precision",
                    [](const RiscvEngineOptions* options) -> uint32_t {
                        return options->forward_precision;
@@ -34,9 +48,6 @@ void RegisterRiscvEngineOptions(const shared_ptr<LuaState>& lstate, const shared
                        options->forward_precision = v;
                    });
     lmodule->Set("RiscvEngineOptions", lclass);
-
-    lmodule->SetInteger("RISCV_USE_FP16", RISCV_USE_FP16);
-    lmodule->SetInteger("RISCV_USE_FP32", RISCV_USE_FP32);
 }
 
 }}}
