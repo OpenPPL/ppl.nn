@@ -109,7 +109,7 @@ static const map<uint32_t, ConfigFunc> g_opt2func = {
 };
 
 void RegisterCudaEngine(pybind11::module* m) {
-    pybind11::class_<PyCudaEngine>(*m, "CudaEngine")
+    pybind11::class_<PyCudaEngine, PyEngine>(*m, "CudaEngine")
         .def("__bool__",
              [](const PyCudaEngine& engine) -> bool {
                  return (engine.ptr.get());

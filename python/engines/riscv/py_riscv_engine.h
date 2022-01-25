@@ -18,14 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_PYTHON_PY_RISCV_ENGINE_H_
 #define _ST_HPC_PPL_NN_PYTHON_PY_RISCV_ENGINE_H_
 
-#include "ppl/nn/engines/engine.h"
-#include <memory>
+#include "../py_engine.h"
 
 namespace ppl { namespace nn { namespace python {
 
-struct PyRiscvEngine final {
-    PyRiscvEngine(Engine* p) : ptr(p) {}
-    std::shared_ptr<Engine> ptr;
+struct PyRiscvEngine final : public PyEngine {
+    PyRiscvEngine(Engine* p) : PyEngine(p) {}
 };
 
 }}} // namespace ppl::nn::python
