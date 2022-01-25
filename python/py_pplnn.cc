@@ -40,6 +40,12 @@ void RegisterRiscvEngineOptions(pybind11::module*);
 void RegisterRiscvEngine(pybind11::module*);
 #endif
 
+#ifdef PPLNN_USE_ARM
+void RegisterArmEngineFactory(pybind11::module*);
+void RegisterArmEngineOptions(pybind11::module*);
+void RegisterArmEngine(pybind11::module*);
+#endif
+
 void RegisterTensorShape(pybind11::module*);
 void RegisterTensor(pybind11::module*);
 void RegisterNdArray(pybind11::module*);
@@ -87,6 +93,12 @@ PYBIND11_MODULE(nn, m) {
     RegisterRiscvEngineFactory(&m);
     RegisterRiscvEngineOptions(&m);
     RegisterRiscvEngine(&m);
+#endif
+
+#ifdef PPLNN_USE_ARM
+    RegisterArmEngineFactory(&m);
+    RegisterArmEngineOptions(&m);
+    RegisterArmEngine(&m);
 #endif
 }
 
