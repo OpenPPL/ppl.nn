@@ -39,7 +39,7 @@ static const map<uint32_t, ConfigFunc> g_opt2func = {
 };
 
 void RegisterX86Engine(pybind11::module* m) {
-    pybind11::class_<PyX86Engine>(*m, "X86Engine")
+    pybind11::class_<PyX86Engine, PyEngine>(*m, "X86Engine")
         .def("__bool__",
              [](const PyX86Engine& engine) -> bool {
                  return (engine.ptr.get());

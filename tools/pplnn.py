@@ -246,15 +246,15 @@ def RegisterEngines(args):
     engines = []
     if args.use_x86:
         x86_engine = CreateX86Engine(args)
-        engines.append(pplnn.Engine(x86_engine))
+        engines.append(x86_engine)
 
     if args.use_cuda:
         cuda_engine = CreateCudaEngine(args)
-        engines.append(pplnn.Engine(cuda_engine))
+        engines.append(cuda_engine)
 
     if args.use_riscv:
         riscv_engine = CreateRiscvEngine(args)
-        engines.append(pplnn.Engine(riscv_engine))
+        engines.append(riscv_engine)
 
     return engines
 

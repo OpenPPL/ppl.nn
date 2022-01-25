@@ -51,6 +51,16 @@ void RegisterRuntime(pybind11::module*);
 void RegisterGetVersionString(pybind11::module*);
 
 PYBIND11_MODULE(nn, m) {
+    RegisterTensorShape(&m);
+    RegisterTensor(&m);
+    RegisterNdArray(&m);
+    RegisterEngine(&m);
+    RegisterOnnxRuntimeBuilderFactory(&m);
+    RegisterRuntimeBuilder(&m);
+    RegisterDeviceContext(&m);
+    RegisterRuntime(&m);
+    RegisterGetVersionString(&m);
+
     auto mgr = PyTypeCreatorManager::Instance();
     for (uint32_t i = 0; i < mgr->GetCreatorCount(); ++i) {
         auto creator = mgr->GetCreator(i);
@@ -78,16 +88,6 @@ PYBIND11_MODULE(nn, m) {
     RegisterRiscvEngineOptions(&m);
     RegisterRiscvEngine(&m);
 #endif
-
-    RegisterTensorShape(&m);
-    RegisterTensor(&m);
-    RegisterNdArray(&m);
-    RegisterEngine(&m);
-    RegisterOnnxRuntimeBuilderFactory(&m);
-    RegisterRuntimeBuilder(&m);
-    RegisterDeviceContext(&m);
-    RegisterRuntime(&m);
-    RegisterGetVersionString(&m);
 }
 
 }}} // namespace ppl::nn::python

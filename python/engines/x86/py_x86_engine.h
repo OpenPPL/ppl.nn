@@ -18,14 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_PYTHON_PY_X86_ENGINE_H_
 #define _ST_HPC_PPL_NN_PYTHON_PY_X86_ENGINE_H_
 
-#include "ppl/nn/engines/engine.h"
-#include <memory>
+#include "../py_engine.h"
 
 namespace ppl { namespace nn { namespace python {
 
-struct PyX86Engine final {
-    PyX86Engine(Engine* p) : ptr(p) {}
-    std::shared_ptr<Engine> ptr;
+struct PyX86Engine final : public PyEngine {
+    PyX86Engine(Engine* p) : PyEngine(p) {}
 };
 
 }}} // namespace ppl::nn::python

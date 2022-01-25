@@ -27,7 +27,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace python {
 
 void RegisterRiscvEngine(pybind11::module* m) {
-    pybind11::class_<PyRiscvEngine>(*m, "RiscvEngine")
+    pybind11::class_<PyRiscvEngine, PyEngine>(*m, "RiscvEngine")
         .def("__bool__",
              [](const PyRiscvEngine& engine) -> bool {
                  return (engine.ptr.get());

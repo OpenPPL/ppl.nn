@@ -23,15 +23,6 @@ namespace ppl { namespace nn { namespace python {
 
 void RegisterEngine(pybind11::module* m) {
     pybind11::class_<PyEngine>(*m, "Engine")
-#ifdef PPLNN_USE_X86
-        .def(pybind11::init<PyX86Engine>())
-#endif
-#ifdef PPLNN_USE_CUDA
-        .def(pybind11::init<PyCudaEngine>())
-#endif
-#ifdef PPLNN_USE_RISCV
-        .def(pybind11::init<PyRiscvEngine>())
-#endif
         .def("__bool__", [](const PyEngine& engine) -> bool {
             return (engine.ptr.get());
         });
