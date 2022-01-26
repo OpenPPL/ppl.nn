@@ -17,6 +17,7 @@
 
 #include <new>
 
+#include "ppl/nn/engines/riscv/riscv_engine_options.h"
 #include "ppl/kernel/riscv/fp16/conv2d/tile_gemm/vec128/conv2d_n8cx_tile_gemm_fp16_vec128.h"
 #include "ppl/kernel/riscv/fp16/conv2d/tile_gemm/vec128/conv2d_n8cx_tile_gemm_cto8c_fp16_vec128.h"
 #include "ppl/kernel/riscv/fp16/conv2d/gemm/conv2d_n8cx_gemm_fp16_vec128.h"
@@ -33,23 +34,19 @@ using namespace ppl::common;
 
 namespace ppl { namespace kernel { namespace riscv {
 
-conv2d_common_algo_info conv2d_fp16_algo_selector::select_best_algo(const void* filter, ppl::nn::TensorShape& src_shape,
-                                                                    ppl::nn::TensorShape& dst_shape, const conv2d_common_param& param,
-                                                                    Allocator* allocator) {
-
+conv2d_common_algo_info conv2d_fp16_algo_selector::select_best_algo(const void* filter, ppl::nn::TensorShape& src_shape, ppl::nn::TensorShape& dst_shape, const conv2d_common_param& param, Allocator* allocator, const ppl::nn::RiscvEngineOptions* engine_options)
+{
     static conv2d_common_algo_info unknown_info =
         {conv2d_common_algo::unknown, DATAFORMAT_UNKNOWN, DATAFORMAT_UNKNOWN, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
 
     static conv2d_common_algo_info ndarray_algo_info_lst[] = {
-        {conv2d_common_algo::tile_gemm, DATAFORMAT_NDARRAY, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16}
-    };
+        {conv2d_common_algo::tile_gemm, DATAFORMAT_NDARRAY, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16}};
 
     static conv2d_common_algo_info n4cx_algo_info_lst[] = {
         {conv2d_common_algo::tile_gemm, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16},
         {conv2d_common_algo::winograd_b2f3, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16},
         {conv2d_common_algo::winograd_b4f3, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16},
-        {conv2d_common_algo::winograd_b6f3, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16}
-    };
+        {conv2d_common_algo::winograd_b6f3, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16}};
 
     if (param.group == param.num_output && param.num_output == param.channels) {
         return {conv2d_common_algo::depthwise, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
@@ -69,17 +66,20 @@ conv2d_common_algo_info conv2d_fp16_algo_selector::select_best_algo(const void* 
     } else if (DATAFORMAT_N8CX == src_shape.GetDataFormat()) {
         for (auto algo_info : n4cx_algo_info_lst) {
             if (algo_info.algo_type == conv2d_common_algo::winograd_b2f3) {
-                if (param.kernel_h != 3 || param.kernel_w != 3 || param.stride_h != 1 || param.stride_w != 1 ||
+                if ((ppl::nn::RISCV_WG_ON != engine_options->winograd_level && ppl::nn::RISCV_WG_ON_B2 != engine_options->winograd_level) ||
+                    param.kernel_h != 3 || param.kernel_w != 3 || param.stride_h != 1 || param.stride_w != 1 ||
                     param.dilation_h != 1 || param.dilation_w != 1) {
                     continue;
                 }
             } else if (algo_info.algo_type == conv2d_common_algo::winograd_b4f3) {
-                if (param.kernel_h != 3 || param.kernel_w != 3 || param.stride_h != 1 || param.stride_w != 1 ||
+                if ((ppl::nn::RISCV_WG_ON != engine_options->winograd_level && ppl::nn::RISCV_WG_ON_B4 != engine_options->winograd_level) ||
+                    param.kernel_h != 3 || param.kernel_w != 3 || param.stride_h != 1 || param.stride_w != 1 ||
                     param.dilation_h != 1 || param.dilation_w != 1) {
                     continue;
                 }
             } else if (algo_info.algo_type == conv2d_common_algo::winograd_b6f3) {
-                if (param.kernel_h != 3 || param.kernel_w != 3 || param.stride_h != 1 || param.stride_w != 1 ||
+                if ((ppl::nn::RISCV_WG_ON != engine_options->winograd_level && ppl::nn::RISCV_WG_ON_B6 != engine_options->winograd_level) ||
+                    param.kernel_h != 3 || param.kernel_w != 3 || param.stride_h != 1 || param.stride_w != 1 ||
                     param.dilation_h != 1 || param.dilation_w != 1) {
                     continue;
                 }
@@ -89,14 +89,14 @@ conv2d_common_algo_info conv2d_fp16_algo_selector::select_best_algo(const void* 
         }
     }
 
-    const int32_t exe_count = 1;
-    double best_time = DBL_MAX;
+    const int32_t exe_count                = 1;
+    double best_time                       = DBL_MAX;
     conv2d_common_algo_info best_algo_info = unknown_info;
 
     for (auto algo_info : profiling_algo_info_vec) {
         conv2d_offline_manager<__fp16>* conv_manager = gen_algo(param, algo_info, allocator);
-        auto ori_input_format = src_shape.GetDataFormat();
-        auto ori_output_format = dst_shape.GetDataFormat();
+        auto ori_input_format                        = src_shape.GetDataFormat();
+        auto ori_output_format                       = dst_shape.GetDataFormat();
         src_shape.SetDataFormat(algo_info.input_format);
         dst_shape.SetDataFormat(algo_info.output_format);
         std::vector<__fp16> dst(dst_shape.GetElementsIncludingPadding(), 0.f);
@@ -113,7 +113,7 @@ conv2d_common_algo_info conv2d_fp16_algo_selector::select_best_algo(const void* 
         dst.resize(0);
 
         if (profiling_time < best_time) {
-            best_time = profiling_time;
+            best_time      = profiling_time;
             best_algo_info = algo_info;
         }
         delete conv_manager;
@@ -121,13 +121,15 @@ conv2d_common_algo_info conv2d_fp16_algo_selector::select_best_algo(const void* 
 
     LOG(DEBUG) << "select best fp16 conv algo " << best_algo_info.algo_type;
     if (best_algo_info.algo_type == conv2d_common_algo::unknown) {
-        best_algo_info = select_algo(src_shape, param);
+        best_algo_info = select_algo(src_shape, param, engine_options);
     }
     return best_algo_info;
 }
 
 conv2d_common_algo_info conv2d_fp16_algo_selector::select_algo(const ppl::nn::TensorShape& input_shape,
-                                                               const conv2d_common_param& param) {
+                                                               const conv2d_common_param& param,
+                                                               const ppl::nn::RiscvEngineOptions* engine_options)
+{
     static conv2d_common_algo_info unknown_info =
         {conv2d_common_algo::unknown, DATAFORMAT_UNKNOWN, DATAFORMAT_UNKNOWN, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
 
@@ -142,16 +144,22 @@ conv2d_common_algo_info conv2d_fp16_algo_selector::select_algo(const ppl::nn::Te
     if (input_shape.GetDataFormat() == DATAFORMAT_N8CX) {
         if (param.group == param.num_output && param.num_output == param.channels &&
             param.dilation_h == 1 && param.dilation_w == 1) {
-
             return {conv2d_common_algo::depthwise, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
         }
         if (param.kernel_h == 3 && param.kernel_w == 3 &&
             param.stride_h == 1 && param.stride_w == 1 &&
             param.dilation_h == 1 && param.dilation_w == 1) {
-
-            return {conv2d_common_algo::winograd_b4f3, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
+            if (ppl::nn::RISCV_WG_OFF == engine_options->winograd_level) {
+                return {conv2d_common_algo::tile_gemm, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
+            } else if (ppl::nn::RISCV_WG_ON_B2 == engine_options->winograd_level) {
+                return {conv2d_common_algo::winograd_b2f3, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
+            } else if (ppl::nn::RISCV_WG_ON == engine_options->winograd_level || ppl::nn::RISCV_WG_ON_B4 == engine_options->winograd_level) {
+                return {conv2d_common_algo::winograd_b4f3, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
+            } else if (ppl::nn::RISCV_WG_ON_B6 == engine_options->winograd_level) {
+                return {conv2d_common_algo::winograd_b6f3, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
+            }
         }
-        
+
         return {conv2d_common_algo::tile_gemm, DATAFORMAT_N8CX, DATAFORMAT_N8CX, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
     }
 
@@ -160,7 +168,8 @@ conv2d_common_algo_info conv2d_fp16_algo_selector::select_algo(const ppl::nn::Te
 
 conv2d_offline_manager<__fp16>* conv2d_fp16_algo_selector::gen_algo(const conv2d_common_param& param,
                                                                     const conv2d_common_algo_info& algo_info,
-                                                                    Allocator* allocator) {
+                                                                    Allocator* allocator)
+{
     conv2d_offline_manager<__fp16>* conv_mgr = nullptr;
 
     if (algo_info.algo_type == conv2d_common_algo::tile_gemm &&
