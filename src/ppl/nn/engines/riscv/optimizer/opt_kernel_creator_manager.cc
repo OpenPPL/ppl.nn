@@ -43,6 +43,9 @@
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/slice_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/argmax_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/resize_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/leaky_relu_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/equal_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/less_op.h"
 
 #include "ppl/nn/engines/riscv/optimizer/ops/ppl/shape_operation_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/ppl/reorder_op.h"
@@ -104,11 +107,16 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
 
     REGISTER_OPT_KERNEL_CREATOR("", "Div", 7, 12, DivOp);
 
+    REGISTER_OPT_KERNEL_CREATOR("", "Equal", 11, 12, EqualOp);
+
     REGISTER_OPT_KERNEL_CREATOR("", "Flatten", 11, 12, FlattenOp);
 
     REGISTER_OPT_KERNEL_CREATOR("", "Gather", 11, 12, GatherOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Gemm", 11, 12, GemmOp);
     REGISTER_OPT_KERNEL_CREATOR("", "GlobalAveragePool", 1, 16, AveragePoolOp);
+
+    REGISTER_OPT_KERNEL_CREATOR("", "LeakyRelu", 6, 16, LeakyReLUOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "Less", 9, 12, LessOp);
 
     REGISTER_OPT_KERNEL_CREATOR("", "MaxPool", 11, 11, MaxPoolOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Mul", 7, 12, MulOp);
