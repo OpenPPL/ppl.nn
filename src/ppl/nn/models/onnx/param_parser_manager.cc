@@ -22,6 +22,7 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_argmax_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_batchnormalization_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_cast_param.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_clip_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_concat_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_constant_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_constant_of_shape_param.h"
@@ -36,6 +37,8 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_if_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_leaky_relu_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_loop_param.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_lrn_param.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_lstm_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_maxunpool_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_non_max_suppression_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_pad_param.h"
@@ -51,8 +54,6 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_topk_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_transpose_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_unsqueeze_param.h"
-#include "ppl/nn/models/onnx/parsers/onnx/parse_lrn_param.h"
-#include "ppl/nn/models/onnx/parsers/onnx/parse_lstm_param.h"
 
 #include "ppl/nn/models/onnx/parsers/mmcv/parse_mmcv_gridsample_param.h"
 #include "ppl/nn/models/onnx/parsers/mmcv/parse_mmcv_modulated_deform_conv2d_param.h"
@@ -138,6 +139,7 @@ ParamParserManager::ParamParserManager() {
     // C
     PPL_REGISTER_OP_WITH_PARAM("", "Cast", 9, 12, ppl::nn::common::CastParam, ParseCastParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Ceil", 6, 12);
+    PPL_REGISTER_OP_WITH_PARAM("", "Clip", 6, 10, ppl::nn::common::ClipParam, ParseClipParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Clip", 11, 11);
     PPL_REGISTER_OP_WITH_PARAM("", "Concat", 11, 12, ppl::nn::common::ConcatParam, ParseConcatParam);
     PPL_REGISTER_OP_WITH_PARAM("", "Constant", 9, 16, ppl::nn::common::ConstantParam, ParseConstantParam);
