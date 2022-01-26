@@ -29,6 +29,7 @@ struct PPLNN_PUBLIC RiscvEngineOptions final {
     uint32_t forward_precision = 0;
     uint32_t mm_policy = RISCV_MM_COMPACT;
     uint32_t dynamic_tuning_level = 0;
+    uint32_t winograd_level = RISCV_WG_ON;
 };
 
 }} // namespace ppl::nn

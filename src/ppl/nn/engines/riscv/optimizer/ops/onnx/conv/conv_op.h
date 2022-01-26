@@ -76,26 +76,31 @@ private:
 
     template <typename T>
     ppl::kernel::riscv::conv2d_common_algo_info SelectConvAlgorithm(
-        const ppl::nn::TensorShape& input_shape, const ppl::kernel::riscv::conv2d_common_param& param) {
+        const ppl::nn::TensorShape& input_shape, const ppl::kernel::riscv::conv2d_common_param& param,
+        const RiscvEngineOptions* engine_options) {
         if (typeid(T) == typeid(__fp16)) {
-            return ppl::kernel::riscv::conv2d_fp16_algo_selector::select_algo(input_shape, param);
+            return ppl::kernel::riscv::conv2d_fp16_algo_selector::select_algo(input_shape, param, engine_options);
         } else if (typeid(T) == typeid(float)) {
-            return ppl::kernel::riscv::conv2d_fp32_algo_selector::select_algo(input_shape, param);
+            return ppl::kernel::riscv::conv2d_fp32_algo_selector::select_algo(input_shape, param, engine_options);
         } else {
-            return ppl::kernel::riscv::conv2d_fp32_algo_selector::select_algo(input_shape, param);
+            return ppl::kernel::riscv::conv2d_fp32_algo_selector::select_algo(input_shape, param, engine_options);
         }
     }
 
     template <typename T>
-    ppl::kernel::riscv::conv2d_common_algo_info SelectBestConvAlgorithm(const void* filter, ppl::nn::TensorShape& src_shape,
-                                                                        ppl::nn::TensorShape& dst_shape, const ppl::kernel::riscv::conv2d_common_param& param,
-                                                                        ppl::common::Allocator* allocator) {
+    ppl::kernel::riscv::conv2d_common_algo_info SelectBestConvAlgorithm(
+        const void* filter, ppl::nn::TensorShape& src_shape, ppl::nn::TensorShape& dst_shape,
+        const ppl::kernel::riscv::conv2d_common_param& param, ppl::common::Allocator* allocator,
+        const RiscvEngineOptions* engine_options) {
         if (typeid(T) == typeid(__fp16)) {
-            return ppl::kernel::riscv::conv2d_fp16_algo_selector::select_best_algo(filter, src_shape, dst_shape, param, allocator);
+            return ppl::kernel::riscv::conv2d_fp16_algo_selector::select_best_algo(filter, src_shape, dst_shape, param,
+                                                                                   allocator, engine_options);
         } else if (typeid(T) == typeid(float)) {
-            return ppl::kernel::riscv::conv2d_fp32_algo_selector::select_best_algo(filter, src_shape, dst_shape, param, allocator);
+            return ppl::kernel::riscv::conv2d_fp32_algo_selector::select_best_algo(filter, src_shape, dst_shape, param,
+                                                                                   allocator, engine_options);
         } else {
-            return ppl::kernel::riscv::conv2d_fp32_algo_selector::select_best_algo(filter, src_shape, dst_shape, param, allocator);
+            return ppl::kernel::riscv::conv2d_fp32_algo_selector::select_best_algo(filter, src_shape, dst_shape, param,
+                                                                                   allocator, engine_options);
         }
     }
 
@@ -178,15 +183,13 @@ private:
         {
             ppl::kernel::riscv::conv2d_common_algo_info algo_info;
             if (0 == options.engine_options->dynamic_tuning_level) {
-                algo_info = SelectConvAlgorithm<T>(*info.GetInput<TensorImpl>(0)->GetShape(), conv2d_param_->param);
+                algo_info = SelectConvAlgorithm<T>(*info.GetInput<TensorImpl>(0)->GetShape(), conv2d_param_->param,
+                                                   options.engine_options);
             } else {
-                algo_info = SelectBestConvAlgorithm<T>(
-                    weight_data_cvt.data(),
-                    *info.GetInput<TensorImpl>(0)->GetShape(),
-                    *info.GetOutput<TensorImpl>(0)->GetShape(),
-                    conv2d_param_->param,
-                    options.device->GetAllocator()
-                );
+                algo_info =
+                    SelectBestConvAlgorithm<T>(weight_data_cvt.data(), *info.GetInput<TensorImpl>(0)->GetShape(),
+                                               *info.GetOutput<TensorImpl>(0)->GetShape(), conv2d_param_->param,
+                                               options.device->GetAllocator(), options.engine_options);
             }
             if (algo_info.algo_type == ppl::kernel::riscv::conv2d_common_algo::unknown) {
                 LOG(ERROR) << "Conv select algorithm failed";
@@ -194,7 +197,8 @@ private:
             }
             conv2d_param_->algo_info = algo_info;
 
-            ppl::kernel::riscv::conv2d_offline_manager<T>* mgr = GenConvAlgorithm<T>(conv2d_param_->param, algo_info, options.device->GetAllocator());
+            ppl::kernel::riscv::conv2d_offline_manager<T>* mgr =
+                GenConvAlgorithm<T>(conv2d_param_->param, algo_info, options.device->GetAllocator());
             {
                 if (nullptr == mgr) {
                     return ppl::common::RC_UNSUPPORTED;
@@ -212,7 +216,8 @@ private:
                     std::vector<T> tunning_src, tunning_dst;
                     tunning_src.resize(src_shape.GetElementsIncludingPadding());
                     tunning_dst.resize(dst_shape.GetElementsIncludingPadding());
-                    mgr->pick_best_tunning_param(tunning_src.data(), weight_data_cvt.data(), tunning_dst.data(), src_shape, dst_shape);
+                    mgr->pick_best_tunning_param(tunning_src.data(), weight_data_cvt.data(), tunning_dst.data(),
+                                                 src_shape, dst_shape);
 
                     tunning_src.resize(0);
                     tunning_dst.resize(0);

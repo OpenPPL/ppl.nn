@@ -20,6 +20,24 @@
 
 namespace ppl { namespace nn {
 
+/** @brief winograd level */
+enum {
+    /** turn off winograd */
+    RISCV_WG_OFF = 0,
+
+    /** use winograd and select block size automatically */
+    RISCV_WG_ON = 1,
+
+    /** use winograd blk2 if possible */
+    RISCV_WG_ON_B2 = 2,
+
+    /** use wingorad blk4 if possible */
+    RISCV_WG_ON_B4 = 3,
+
+    /** use wingorad blk6 if possible */
+    RISCV_WG_ON_B6 = 4,
+};
+
 /** @brief memory management policies */
 enum {
     /** less memory usage, may cause performance loss */
