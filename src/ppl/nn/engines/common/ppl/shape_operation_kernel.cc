@@ -35,7 +35,7 @@ ppl::common::RetCode PPLShapeOperationKernel::DoExecute(KernelExecContext* ctx) 
         shape->GetShape()->SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         shape->GetShape()->SetDataType(ppl::common::DATATYPE_INT64);
         if (matrix.scalar) {
-            shape->GetShape()->ReshapeAsScalar();
+            shape->GetShape()->SetDataFormat(ppl::common::DATAFORMAT_SCALAR);
         } else {
             shape->GetShape()->Reshape({dim_size});
         }

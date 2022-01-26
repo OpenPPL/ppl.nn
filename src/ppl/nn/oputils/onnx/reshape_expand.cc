@@ -42,7 +42,7 @@ RetCode ReshapeExpand(InputOutputInfo* info, const void*, const int64_t* shape_p
 
     auto& output_shape = broad_caster.OutputTensorShape();
     if (output_shape.IsScalar()) {
-        out_shape0->ReshapeAsScalar();
+        out_shape0->SetDataFormat(DATAFORMAT_SCALAR);
     } else {
         out_shape0->Reshape(output_shape.GetDims(), output_shape.GetDimCount());
     }

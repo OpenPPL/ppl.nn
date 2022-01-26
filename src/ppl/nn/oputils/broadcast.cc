@@ -39,7 +39,7 @@ void MultiDirectionalBroadCaster::CalcBroadCast(void) {
 
     if (shape_min->IsScalar()) { // one is scalar, will always broadcast
         if (shape_max->IsScalar()) {
-            output_tensor_shape_.ReshapeAsScalar();
+            output_tensor_shape_.SetDataFormat(DATAFORMAT_SCALAR);
         } else {
             output_tensor_shape_.Reshape(shape_max->GetDims(), shape_max->GetDimCount());
         }

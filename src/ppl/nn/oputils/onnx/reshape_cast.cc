@@ -41,7 +41,7 @@ RetCode ReshapeCast(InputOutputInfo* info, const void* arg) {
 
     output->SetDataType(param->to);
     if (input->IsScalar()) {
-        output->ReshapeAsScalar();
+        output->SetDataFormat(DATAFORMAT_SCALAR);
     } else {
         output->Reshape(input->GetDims(), input->GetDimCount());
     }

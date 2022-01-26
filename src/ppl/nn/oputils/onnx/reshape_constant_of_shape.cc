@@ -45,7 +45,7 @@ RetCode ReshapeConstantOfShape(InputOutputInfo* info, const void* arg, const int
             LOG(DEBUG) << "ERROR: input[" << i << "]'s dim[" << dim << "] < 0.";
             return RC_INVALID_VALUE;
         } else if (dim == 0) {
-            output_shape->ReshapeAsScalar();
+            output_shape->SetDataFormat(DATAFORMAT_SCALAR);
         }
         output_dims[i] = dim;
     }

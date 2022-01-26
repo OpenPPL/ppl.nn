@@ -31,7 +31,7 @@ RetCode ReorderOp::Init(const OptKernelOptions& options) {
         }
 
         if (input.IsScalar()) {
-            output.ReshapeAsScalar();
+            output.SetDataFormat(DATAFORMAT_SCALAR);
         } else {
             output.Reshape(input.GetDims(), input.GetDimCount());
         }

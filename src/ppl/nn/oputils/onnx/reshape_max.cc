@@ -43,7 +43,7 @@ RetCode ReshapeMax(InputOutputInfo* info, const void*) {
 
     auto& output_shape = multi_input_bc.OutputTensorShape();
     if (output_shape.IsScalar()) {
-        out->ReshapeAsScalar();
+        out->SetDataFormat(DATAFORMAT_SCALAR);
     } else {
         out->Reshape(output_shape.GetDims(), output_shape.GetDimCount());
     }

@@ -45,7 +45,7 @@ common::RetCode ReshapeWhere(InputOutputInfo* info, const void* arg) {
 
     auto& output_shape = multi_input_bc.OutputTensorShape();
     if (output_shape.IsScalar()) {
-        out->GetShape()->ReshapeAsScalar();
+        out->GetShape()->SetDataFormat(DATAFORMAT_SCALAR);
     } else {
         out->GetShape()->Reshape(output_shape.GetDims(), output_shape.GetDimCount());
     }

@@ -38,7 +38,7 @@ RetCode ReshapeSqueeze(InputOutputInfo* info, const void* arg) {
 
     if (input.IsScalar()) {
         if (param->axes.empty() || (param->axes.size() == 1 && (param->axes[0] == 0 || param->axes[0] == -1))) {
-            output->ReshapeAsScalar();
+            output->SetDataFormat(DATAFORMAT_SCALAR);
         } else {
             LOG(DEBUG) << "ERROR: axes in parameter are invalid.";
             return RC_INVALID_VALUE;

@@ -127,7 +127,7 @@ protected:
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
             auto& out_shape = *info->GetOutput<TensorImpl>(i)->GetShape();
             if (in_shape0.IsScalar()) {
-                out_shape.ReshapeAsScalar();
+                out_shape.SetDataFormat(ppl::common::DATAFORMAT_SCALAR);
             } else {
                 out_shape.Reshape(in_shape0.GetDims(), in_shape0.GetDimCount());
             }

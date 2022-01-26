@@ -38,7 +38,7 @@ RetCode ReshapeReduce(InputOutputInfo* info, const void* arg) {
     const uint32_t dim_count = x->GetDimCount();
     auto fixed_axes = param->axes;
     if (param->axes.empty()) { // empty axes means reduce all dimss
-        y->ReshapeAsScalar();
+        y->SetDataFormat(DATAFORMAT_SCALAR);
         return RC_SUCCESS;
     }
 
@@ -68,7 +68,7 @@ RetCode ReshapeReduce(InputOutputInfo* info, const void* arg) {
             y->SetDimCount(y->GetDimCount() - 1);
         }
         if (y->GetDimCount() == 0) {
-            y->ReshapeAsScalar();
+            y->SetDataFormat(DATAFORMAT_SCALAR);
         }
     }
     y->CalcPadding();

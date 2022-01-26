@@ -34,7 +34,7 @@ RetCode ReshapeFloor(InputOutputInfo* info, const void* arg) {
 
     output->SetDataType(DATATYPE_FLOAT32);
     if (input->IsScalar()) {
-        output->ReshapeAsScalar();
+        output->SetDataFormat(DATAFORMAT_SCALAR);
     } else {
         output->Reshape(input->GetDims(), input->GetDimCount());
     }

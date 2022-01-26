@@ -32,7 +32,7 @@ RetCode ReshapeLeakyReLU(InputOutputInfo* info, const void*) {
     const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
     auto out_shape0 = info->GetOutput<TensorImpl>(0)->GetShape();
     if (in_shape0.IsScalar()) {
-        out_shape0->ReshapeAsScalar();
+        out_shape0->SetDataFormat(DATAFORMAT_SCALAR);
     } else {
         out_shape0->Reshape(in_shape0.GetDims(), in_shape0.GetDimCount());
     }

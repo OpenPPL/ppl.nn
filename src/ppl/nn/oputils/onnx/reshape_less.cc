@@ -42,7 +42,7 @@ RetCode ReshapeLess(InputOutputInfo* info, const void*) {
 
     auto& output_shape = multi_bc.OutputTensorShape();
     if (output_shape.IsScalar()) {
-        info->GetOutput<TensorImpl>(0)->GetShape()->ReshapeAsScalar();
+        info->GetOutput<TensorImpl>(0)->GetShape()->SetDataFormat(DATAFORMAT_SCALAR);
     } else {
         info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(output_shape.GetDims(), output_shape.GetDimCount());
     }
