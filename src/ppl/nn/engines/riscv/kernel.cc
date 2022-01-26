@@ -20,6 +20,11 @@
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/utils/cpu_timing_guard.h"
 
+// #define RISCV_PERLAYER_DEBUG
+#ifdef RISCV_PERLAYER_DEBUG
+#include <fstream>
+#endif
+
 using namespace std;
 using namespace ppl::common;
 
@@ -76,6 +81,39 @@ RetCode RiscvKernel::Execute(KernelExecContext* ctx) {
 
     if (CanDoExecute(*ctx)) {
         status = DoExecute(ctx);
+
+#ifdef RISCV_PERLAYER_DEBUG
+        LOG(INFO) << GetName();
+        for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
+            auto tensor = ctx->GetOutput<TensorImpl>(i);
+            TensorShape &dst_shape = *(tensor->GetShape());
+            auto bytes = dst_shape.GetBytesIncludingPadding();
+            vector<char> buffer(dst_shape.GetElementsExcludingPadding());
+
+            if (dst_shape.GetDimCount() == 1) {
+                LOG(INFO) << dst_shape.GetDim(0);
+            } else if (dst_shape.GetDimCount() == 2) {
+                LOG(INFO) << dst_shape.GetDim(0) << " " << dst_shape.GetDim(1);
+            } else if (dst_shape.GetDimCount() == 3) {
+                LOG(INFO) << dst_shape.GetDim(0) << " " << dst_shape.GetDim(1) << " " << dst_shape.GetDim(2);
+            } else if (dst_shape.GetDimCount() == 4) {
+                LOG(INFO) << dst_shape.GetDim(0) << " " << dst_shape.GetDim(1) << " " << dst_shape.GetDim(2) << " "
+                << dst_shape.GetDim(3);
+            } else {
+                LOG(INFO) << "Dst Shape exceed 4 dims !";
+            }
+
+            const string pplnn_out = "./pplnn_out-";
+            const string out_file_name = pplnn_out + GetName() + "_" + to_string(i) + ".dat";
+            ofstream ofs(out_file_name, ios_base::out | ios_base::binary | ios_base::trunc);
+            if (!ofs.is_open()) {
+                LOG(ERROR) << "open output file[" << out_file_name << "]";
+                return false;
+            }
+            ofs.write(tensor->GetBufferPtr<char>(), bytes);
+        }
+#endif
+
     }
 
     return status;
