@@ -29,7 +29,6 @@ private:
     static const uint32_t kAxisC = 1;
 
 private:
-    bool is_scalar_;
     ppl::common::datatype_t data_type_;
     ppl::common::dataformat_t data_format_;
     std::vector<int64_t> dims_;
@@ -44,7 +43,7 @@ private:
 
 public:
     TensorShape()
-        : is_scalar_(false), data_type_(ppl::common::DATATYPE_UNKNOWN), data_format_(ppl::common::DATAFORMAT_UNKNOWN) {}
+        : data_type_(ppl::common::DATATYPE_UNKNOWN), data_format_(ppl::common::DATAFORMAT_UNKNOWN) {}
 
     TensorShape(const TensorShape& other) = default;
     TensorShape& operator=(const TensorShape& other) = default;
@@ -53,13 +52,13 @@ public:
         return dims_.size();
     };
     uint32_t GetDimCount() const {
-        if (is_scalar_) {
+        if (IsScalar()) {
             return 1;
         }
         return dims_.size();
     }
     int64_t GetDim(uint32_t which) const {
-        if (is_scalar_) {
+        if (IsScalar()) {
             return 1;
         }
         return dims_[which];
@@ -68,13 +67,13 @@ public:
         return dims_.data();
     }
     uint16_t GetPadding0(uint32_t which) const {
-        if (is_scalar_) {
+        if (which >= padding0_.size()) {
             return 0;
         }
         return padding0_[which];
     }
     uint16_t GetPadding1(uint32_t which) const {
-        if (is_scalar_) {
+        if (which >= padding1_.size()) {
             return 0;
         }
         return padding1_[which];
@@ -134,17 +133,10 @@ public:
         dims_.clear();
         padding0_.clear();
         padding1_.clear();
-        is_scalar_ = true;
     }
 
     void Reshape(const int64_t* dims, uint32_t dim_count) {
         DoResize(dim_count);
-        if (dim_count == 0) {
-            is_scalar_ = true;
-            return;
-        }
-
-        is_scalar_ = false;
         for (uint32_t i = 0; i < dim_count; ++i) {
             dims_[i] = dims[i];
         }
@@ -166,12 +158,11 @@ public:
     }
     void SetDimCount(uint32_t dc) {
         DoResize(dc);
-        is_scalar_ = (dc == 0);
     }
 
     uint64_t GetElementsIncludingPadding() const {
         if (dims_.empty()) {
-            return is_scalar_ ? 1 : 0;
+            return IsScalar() ? 1 : 0;
         }
         uint64_t accu = 1;
         for (uint32_t i = 0; i < dims_.size(); ++i) {
@@ -181,7 +172,7 @@ public:
     }
     uint64_t GetElementsExcludingPadding() const {
         if (dims_.empty()) {
-            return is_scalar_ ? 1 : 0;
+            return IsScalar() ? 1 : 0;
         }
         uint64_t accu = 1;
         for (uint32_t i = 0; i < dims_.size(); ++i) {
@@ -197,7 +188,7 @@ public:
     }
     uint64_t GetElementsFromDimensionIncludingPadding(uint32_t which) const {
         if (dims_.empty()) {
-            return is_scalar_ ? 1 : 0;
+            return IsScalar() ? 1 : 0;
         }
         uint64_t accu = 1;
         for (uint32_t i = which; i < dims_.size(); ++i) {
@@ -207,7 +198,7 @@ public:
     }
     uint64_t GetElementsToDimensionIncludingPadding(uint32_t which) const {
         if (dims_.empty()) {
-            return is_scalar_ ? 1 : 0;
+            return IsScalar() ? 1 : 0;
         }
         uint64_t accu = 1;
         for (uint32_t i = 0; i < which; ++i) {
@@ -217,7 +208,7 @@ public:
     }
     uint64_t GetElementsFromDimensionExcludingPadding(uint32_t which) const {
         if (dims_.empty()) {
-            return is_scalar_ ? 1 : 0;
+            return IsScalar() ? 1 : 0;
         }
         uint64_t accu = 1;
         for (uint32_t i = which; i < dims_.size(); ++i) {
@@ -227,7 +218,7 @@ public:
     }
     uint64_t GetElementsToDimensionExcludingPadding(uint32_t which) const {
         if (dims_.empty()) {
-            return is_scalar_ ? 1 : 0;
+            return IsScalar() ? 1 : 0;
         }
         uint64_t accu = 1;
         for (uint32_t i = 0; i < which; ++i) {
@@ -249,7 +240,6 @@ public:
     }
 
     void Clear() {
-        is_scalar_ = false;
         data_type_ = ppl::common::DATATYPE_UNKNOWN;
         data_format_ = ppl::common::DATAFORMAT_UNKNOWN;
         dims_.clear();
@@ -258,11 +248,11 @@ public:
     }
 
     bool IsScalar() const {
-        return is_scalar_;
+        return (dims_.empty() && data_type_ != ppl::common::DATATYPE_UNKNOWN);
     }
 
     bool IsEmpty() const {
-        if (is_scalar_) {
+        if (IsScalar()) {
             return false;
         }
         if (dims_.empty()) {
