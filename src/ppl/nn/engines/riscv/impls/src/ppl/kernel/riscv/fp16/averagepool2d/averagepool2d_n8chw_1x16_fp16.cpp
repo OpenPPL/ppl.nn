@@ -19,8 +19,11 @@
 #include "ppl/kernel/riscv/common/internal_include.h"
 #include "ppl/kernel/riscv/common/averagepool2d/averagepool2d_common.h"
 #include "ppl/nn/params/onnx/pooling_param.h"
+#include "ppl/common/log.h"
 
 namespace ppl { namespace kernel { namespace riscv {
+
+#define C_BLK() 8
 
 template <ppl::nn::common::PoolingParam::pooling_mode_t pooling_mode, int64_t w_len>
 static void averagepool2d_n8chw_1x16_kernel_fp16(
@@ -375,6 +378,52 @@ ppl::common::RetCode averagepool2d_n8chw_1x16_fp16(
     }
 
     return ppl::common::RC_INVALID_VALUE;
+}
+
+ppl::common::RetCode averagepool2d_n8chw_global_fp16(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* dst_shape,
+
+    const __fp16* src,
+    __fp16* dst)
+{
+    const int32_t batch    = src_shape->GetDim(0);
+    const int32_t channels = src_shape->GetDim(1);
+    const int32_t src_h    = src_shape->GetDim(2);
+    const int32_t src_w    = src_shape->GetDim(3);
+    const int32_t dst_h    = dst_shape->GetDim(2);
+    const int32_t dst_w    = dst_shape->GetDim(3);
+
+    const int32_t padded_channels = round_up(channels, C_BLK());
+    const float recp_ave_divider  = 1.0f / (src_h * src_w);
+    const auto vl16               = vsetvli(8, RVV_E16, RVV_M1);
+    const auto vl32               = vsetvli(4, RVV_E32, RVV_M2);
+
+    for (int64_t nc = 0; nc < batch * padded_channels; nc += C_BLK()) {
+        const __fp16* src_ = src + nc * src_h * src_w;
+        __fp16* dst_       = dst + nc;
+
+        float32xm2_t v_dst_fp32_l = vfmvvf_float32xm2(0.0f, vl32);
+        float32xm2_t v_dst_fp32_h = vfmvvf_float32xm2(0.0f, vl32);
+        for (int64_t i = 0; i < src_h * src_w; i++) {
+            // handle low 4 elements of float16
+            float16xm1_t v_src_fp16_l = vlev_float16xm1(src_ + i * C_BLK() + 0 * 4, vl16);
+            float32xm2_t v_src_fp32_l = vfwcvtffv_float32xm2_float16xm1(v_src_fp16_l, vl16);
+            v_dst_fp32_l              = vfaddvv_float32xm2(v_dst_fp32_l, v_src_fp32_l, vl32);
+            // handle high 4 elements of float16
+            float16xm1_t v_src_fp16_h = vlev_float16xm1(src_ + i * C_BLK() + 1 * 4, vl16);
+            float32xm2_t v_src_fp32_h = vfwcvtffv_float32xm2_float16xm1(v_src_fp16_h, vl16);
+            v_dst_fp32_h              = vfaddvv_float32xm2(v_dst_fp32_h, v_src_fp32_h, vl32);
+        }
+        v_dst_fp32_l              = vfmulvf_float32xm2(v_dst_fp32_l, recp_ave_divider, vl32);
+        v_dst_fp32_h              = vfmulvf_float32xm2(v_dst_fp32_h, recp_ave_divider, vl32);
+        float16xm1_t v_dst_fp16_l = vfncvtffv_float16xm1_float32xm2(v_dst_fp32_l, vl16);
+        float16xm1_t v_dst_fp16_h = vfncvtffv_float16xm1_float32xm2(v_dst_fp32_h, vl16);
+        vsev_float16xm1(dst_ + 0 * 4, v_dst_fp16_l, vl16);
+        vsev_float16xm1(dst_ + 1 * 4, v_dst_fp16_h, vl16);
+    }
+
+    return ppl::common::RC_SUCCESS;
 }
 
 }}}; // namespace ppl::kernel::riscv

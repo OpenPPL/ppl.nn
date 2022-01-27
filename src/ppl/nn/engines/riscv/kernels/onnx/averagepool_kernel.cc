@@ -91,10 +91,15 @@ ppl::common::RetCode AveragePoolKernel::DoExecute(KernelExecContext* ctx) {
     const auto data_format = X->GetShape()->GetDataFormat();
 
     if (data_format == ppl::common::DATAFORMAT_N8CX && data_type == ppl::common::DATATYPE_FLOAT16) {
-        return ppl::kernel::riscv::averagepool2d_n8chw_1x16_fp16(
-            X->GetShape(), Y->GetShape(), kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, param_->mode,
+        if (param_->global_pooling) {
+            return ppl::kernel::riscv::averagepool2d_n8chw_global_fp16(
+                X->GetShape(), Y->GetShape(), X->GetBufferPtr<const __fp16>(), Y->GetBufferPtr<__fp16>());
+        } else {
+            return ppl::kernel::riscv::averagepool2d_n8chw_1x16_fp16(
+                X->GetShape(), Y->GetShape(), kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, param_->mode,
 
-            X->GetBufferPtr<const __fp16>(), Y->GetBufferPtr<__fp16>());
+                X->GetBufferPtr<const __fp16>(), Y->GetBufferPtr<__fp16>());
+        }
     } else if (data_format == ppl::common::DATAFORMAT_N4CX && data_type == ppl::common::DATATYPE_FLOAT32) {
         return ppl::kernel::riscv::averagepool2d_n4cx_1x16_fp32(
             X->GetShape(), Y->GetShape(), kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, param_->mode,
