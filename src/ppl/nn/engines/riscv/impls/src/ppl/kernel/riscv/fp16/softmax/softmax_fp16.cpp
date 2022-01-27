@@ -57,24 +57,15 @@ ppl::common::RetCode softmax_ndarray_fp16(
         for (int64_t k = 0; k < 8; k++) {
             fmax = std::max(fmax, max_data[k]);
         }
-        vfmax = vfmvvf_float16xm1(fmax, vl);
-        // src - max
-        for (j = 0; j + 8 < inner_dim; j += 8) {
-            const __fp16* src_p = src_ + j;
-            __fp16* dst_p       = dst_ + j;
-            vsev_float16xm1(dst_p, vfsubvv_float16xm1(vlev_float16xm1(src_p, vl), vfmax, vl), vl);
-        }
-        for (; j < inner_dim; j++) {
-            dst_[j] = src_[j] - fmax;
-        }
-        // Σ(exp(src - max))
+        // Σ(exp(src - max)) -- precision-tuning
         float sum = 0.0f;
         for (j = 0; j < inner_dim; j++) {
-            sum += exp((float)dst_[j]);
+            sum += exp((float)src_[j] - fmax);
         }
+        float recp_sum = (double)1.0 / sum;
         // final result
         for (j = 0; j < inner_dim; j++) {
-            dst_[j] = (__fp16)(exp((float)dst_[j]) * (1.0f / sum));
+            dst_[j] = (__fp16)(exp((float)src_[j] - fmax) * recp_sum);
         }
     }
     return ppl::common::RC_SUCCESS;

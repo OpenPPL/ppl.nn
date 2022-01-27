@@ -45,11 +45,8 @@ RetCode SoftmaxOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t
 
 RetCode SoftmaxOp::SelectDataType(const InputOutputInfo& info, std::vector<datatype_t>* selected_input_data_types,
                                   std::vector<datatype_t>* selected_output_data_types) {
-    if (DATATYPE_FLOAT16 == selected_input_data_types->at(0)) {
-        selected_output_data_types->at(0) = DATATYPE_FLOAT16;
-    } else if (DATATYPE_FLOAT32 == selected_input_data_types->at(0)) {
-        selected_output_data_types->at(0) = DATATYPE_FLOAT32;
-    }
+    selected_input_data_types->at(0) = DATATYPE_FLOAT32;
+    selected_output_data_types->at(0) = DATATYPE_FLOAT32;
 
     return RC_SUCCESS;
 }
