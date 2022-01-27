@@ -127,10 +127,9 @@ public:
     }
 
     void ReshapeAsScalar() {
-        padding0_.clear();
-        padding1_.clear();
-        dims_.resize(1);
+        DoResize(1);
         dims_[0] = 1;
+        padding0_[0] = padding1_[0] = 1;
     }
 
     void Reshape(const int64_t* dims, uint32_t dim_count) {
