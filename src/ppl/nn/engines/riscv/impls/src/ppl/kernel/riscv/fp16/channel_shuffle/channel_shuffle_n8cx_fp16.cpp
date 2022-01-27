@@ -59,26 +59,26 @@ ppl::common::RetCode channel_shuffle_n8cx_fp16(
     const int32_t group,
     __fp16* dst)
 {
-    const int64_t batch = src_shape->GetDim(0);
+    const int64_t batch    = src_shape->GetDim(0);
     const int64_t channels = src_shape->GetDim(1);
-    const int64_t height = src_shape->GetDim(2);
-    const int64_t width = src_shape->GetDim(3);
+    const int64_t height   = src_shape->GetDim(2);
+    const int64_t width    = src_shape->GetDim(3);
 
-    const int64_t c_blk = 8;
+    const int64_t c_blk              = 8;
     const int64_t channels_per_group = channels / group;
-    const int64_t pad_c = round_up(channels, c_blk);
-    const int64_t _3D = pad_c * height * width;
-    const int64_t _2D = height * width;
+    const int64_t pad_c              = round_up(channels, c_blk);
+    const int64_t _3D                = pad_c * height * width;
+    const int64_t _2D                = height * width;
 
     for (int64_t b = 0; b < batch; b++) {
         for (int64_t oc = 0; oc < channels; oc += c_blk) {
             const int64_t oc_len_efficient = min(channels - oc, c_blk);
-            __fp16* base_dst = dst + b * _3D * oc * _2D;
-            const __fp16* base_src[8] = {0};
+            __fp16* base_dst               = dst + b * _3D * oc * _2D;
+            const __fp16* base_src[8]      = {0};
             for (int64_t i = 0; i < oc_len_efficient; i++) {
-                const int64_t ic = (oc + i) % group * channels_per_group + (oc + i) / group;
+                const int64_t ic        = (oc + i) % group * channels_per_group + (oc + i) / group;
                 const int64_t padded_ic = round(ic, c_blk);
-                base_src[i] = src + b * _3D + padded_ic * _2D + ic % c_blk;
+                base_src[i]             = src + b * _3D + padded_ic * _2D + ic % c_blk;
             }
             if (oc_len_efficient == 8)
                 channel_shuffle_n8cx_kernel<8>(base_src, _2D, base_dst);
@@ -135,33 +135,33 @@ ppl::common::RetCode channel_shuffle_n8cx_concat_split_fp16(
     __fp16* dst0,
     __fp16* dst1_optional)
 {
-    const int64_t in_c1 = src0_shape->GetDim(1);
-    const int64_t in_c2 = src1_shape->GetDim(1);
+    const int64_t in_c1    = src0_shape->GetDim(1);
+    const int64_t in_c2    = src1_shape->GetDim(1);
     const int64_t channels = in_c1 + in_c2;
     if (dst1_optional && channels % 2) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    __fp16* dst1 = dst1_optional;
+    __fp16* dst1         = dst1_optional;
     const int64_t out_c1 = dst1 ? channels / 2 : channels;
     const int64_t out_c2 = dst1 ? channels / 2 : 0;
 
-    const int64_t batch = src0_shape->GetDim(0);
-    const int64_t src_h = src0_shape->GetDim(2);
-    const int64_t src_w = src0_shape->GetDim(3);
+    const int64_t batch      = src0_shape->GetDim(0);
+    const int64_t src_h      = src0_shape->GetDim(2);
+    const int64_t src_w      = src0_shape->GetDim(3);
     const int64_t inner_dims = src_h * src_w;
 
-    const int64_t c_blk = 8;
+    const int64_t c_blk              = 8;
     const int64_t channels_per_group = channels / group;
-    const int64_t padded_in_c1 = round_up(in_c1, c_blk);
-    const int64_t padded_in_c2 = round_up(in_c2, c_blk);
-    const int64_t padded_out_c1 = round_up(out_c1, c_blk);
-    const int64_t padded_out_c2 = round_up(out_c2, c_blk);
+    const int64_t padded_in_c1       = round_up(in_c1, c_blk);
+    const int64_t padded_in_c2       = round_up(in_c2, c_blk);
+    const int64_t padded_out_c1      = round_up(out_c1, c_blk);
+    const int64_t padded_out_c2      = round_up(out_c2, c_blk);
 
     for (int64_t b = 0; b < batch; b++) {
         for (int64_t oc = 0; oc < channels; oc += c_blk) {
             const int64_t oc_len_efficient = min(channels - oc, c_blk);
-            const __fp16* base_src[8] = {0};
-            __fp16* base_dst[8] = {0};
+            const __fp16* base_src[8]      = {0};
+            __fp16* base_dst[8]            = {0};
             for (int64_t i = 0; i < oc_len_efficient; i++) {
                 const int64_t cur_oc = oc + i;
                 const int64_t cur_ic = cur_oc % group * channels_per_group + cur_oc / group;
@@ -169,17 +169,17 @@ ppl::common::RetCode channel_shuffle_n8cx_concat_split_fp16(
                 __fp16* dst_;
                 if (cur_ic < in_c1) {
                     const int64_t round_ic = round(cur_ic, c_blk);
-                    src_ = src0 + b * padded_in_c1 * inner_dims + round_ic * inner_dims + (cur_ic - round_ic);
+                    src_                   = src0 + b * padded_in_c1 * inner_dims + round_ic * inner_dims + (cur_ic - round_ic);
                 } else {
                     const int64_t round_ic = round(cur_ic - in_c1, c_blk);
-                    src_ = src1 + b * padded_in_c2 * inner_dims + round_ic * inner_dims + (cur_ic - in_c1 - round_ic);
+                    src_                   = src1 + b * padded_in_c2 * inner_dims + round_ic * inner_dims + (cur_ic - in_c1 - round_ic);
                 }
                 if (cur_oc < out_c1) {
                     const int64_t round_oc = round(cur_oc, c_blk);
-                    dst_ = dst0 + b * padded_out_c1 * inner_dims + round_oc * inner_dims + (cur_oc - round_oc);
+                    dst_                   = dst0 + b * padded_out_c1 * inner_dims + round_oc * inner_dims + (cur_oc - round_oc);
                 } else {
                     const int64_t round_oc = round(cur_oc - out_c1, c_blk);
-                    dst_ = dst1 + b * padded_out_c2 * inner_dims + round_oc * inner_dims + (cur_oc - out_c1 - round_oc);
+                    dst_                   = dst1 + b * padded_out_c2 * inner_dims + round_oc * inner_dims + (cur_oc - out_c1 - round_oc);
                 }
                 base_src[i] = src_;
                 base_dst[i] = dst_;

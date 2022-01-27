@@ -24,7 +24,7 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 // enum relation_op_type_t {
-//     RELATION_GREATER          = 0, 
+//     RELATION_GREATER          = 0,
 //     RELATION_GREATER_OR_EQUAL = 1,
 //     RELATION_LESS             = 2,
 //     RELATION_LESS_OR_EQUAL    = 3,
@@ -39,10 +39,10 @@ static void pack_four(
     register_ve<T, vlen>& v2,
     register_ve<T, vlen>& v3,
     register_v<uint_type<T>, vlen>& vmask,
-    uint8_t* dst
-) {
+    uint8_t* dst)
+{
     constexpr int32_t c_blk = vlen / 8 / sizeof(T);
-    uint64_t vl = vsetvli<T, vlen>(c_blk);
+    uint64_t vl             = vsetvli<T, vlen>(c_blk);
 
     uint8_t* tmp_dst = dst;
 
@@ -61,10 +61,10 @@ template <typename T, int32_t vlen>
 static void pack_one(
     register_ve<T, vlen>& v0,
     register_v<uint_type<T>, vlen>& vmask,
-    uint8_t* dst
-) {
+    uint8_t* dst)
+{
     constexpr int32_t c_blk = vlen / 8 / sizeof(T);
-    uint64_t vl = vsetvli<T, vlen>(c_blk);
+    uint64_t vl             = vsetvli<T, vlen>(c_blk);
 
     uint8_t* tmp_dst = dst;
 
@@ -76,10 +76,10 @@ static void pack_one(
 }
 
 inline void pad_shape(
-    const ppl::nn::TensorShape *shape,
+    const ppl::nn::TensorShape* shape,
     const int64_t padded_dim_count,
-    int64_t *padded_shape
-) {
+    int64_t* padded_shape)
+{
     const int64_t dim_diff = padded_dim_count - shape->GetRealDimCount();
     for (int64_t i = 0; i < dim_diff; i++) {
         padded_shape[i] = 1;
@@ -90,15 +90,15 @@ inline void pad_shape(
 }
 
 inline void compress_shape(
-    const int64_t *src0_shape,
-    const int64_t *src1_shape,
+    const int64_t* src0_shape,
+    const int64_t* src1_shape,
     const int64_t dim_count,
-    int64_t *compressed_dim_count,
-    int64_t *compressed_src0_shape,
-    int64_t *compressed_src1_shape,
-    int64_t *compressed_dst_shape,
-    const int64_t c_dim_idx = -1
-) {
+    int64_t* compressed_dim_count,
+    int64_t* compressed_src0_shape,
+    int64_t* compressed_src1_shape,
+    int64_t* compressed_dst_shape,
+    const int64_t c_dim_idx = -1)
+{
     bool src0_broadcast[dim_count];
     bool src1_broadcast[dim_count];
     for (int64_t i = 0; i < dim_count; i++) {
@@ -107,8 +107,8 @@ inline void compress_shape(
     }
 
     int64_t compressed_dim_idx = 0;
-    compressed_src0_shape[0] = src0_shape[0];
-    compressed_src1_shape[0] = src1_shape[0];
+    compressed_src0_shape[0]   = src0_shape[0];
+    compressed_src1_shape[0]   = src1_shape[0];
 
     for (int64_t i = 1; i < dim_count; i++) {
         if (i == c_dim_idx) {
@@ -140,6 +140,6 @@ inline void compress_shape(
     }
 }
 
-}}};
+}}}; // namespace ppl::kernel::riscv
 
 #endif

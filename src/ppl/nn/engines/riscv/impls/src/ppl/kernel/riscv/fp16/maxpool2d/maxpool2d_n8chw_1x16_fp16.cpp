@@ -35,13 +35,13 @@ static void maxpool2d_n8chw_1x16_kernel_fp16(
 {
     const int32_t& kernel_h = param->kernel_h;
     const int32_t& kernel_w = param->kernel_w;
-    const int32_t& pad_w = param->pad_w;
-    const int32_t& src_w = param->src_w;
-    const int32_t& dst_w = param->dst_w;
+    const int32_t& pad_w    = param->pad_w;
+    const int32_t& src_w    = param->src_w;
+    const int32_t& dst_w    = param->dst_w;
     const int32_t& stride_w = param->stride_w;
 
     const int32_t iw_start_valid = -pad_w + ow * stride_w;
-    const int32_t iw_end_valid = iw_start_valid + kernel_w;
+    const int32_t iw_end_valid   = iw_start_valid + kernel_w;
 
     const auto vl = vsetvli(8, RVV_E16, RVV_M1);
     float16xm1_t vfmax0, vfmax1, vfmax2, vfmax3;
@@ -155,14 +155,23 @@ static void maxpool2d_n8chw_1x16_kernel_fp16(
         vsev_float16xm1(dst_p + 15 * 8, vfmax15, vl);
 }
 
-typedef void (*maxpool2d_n8chw_kernel_fp16_func)(const __fp16*, __fp16*, const maxpool2d_param*, const int64_t,
-                                                 const int64_t, const int64_t, const int64_t);
+typedef void (*maxpool2d_n8chw_kernel_fp16_func)(const __fp16*, __fp16*, const maxpool2d_param*, const int64_t, const int64_t, const int64_t, const int64_t);
 static const maxpool2d_n8chw_kernel_fp16_func maxpool2d_n8chw_1x16_kernel_select[16]{
-    maxpool2d_n8chw_1x16_kernel_fp16<1>,  maxpool2d_n8chw_1x16_kernel_fp16<2>,  maxpool2d_n8chw_1x16_kernel_fp16<3>,
-    maxpool2d_n8chw_1x16_kernel_fp16<4>,  maxpool2d_n8chw_1x16_kernel_fp16<5>,  maxpool2d_n8chw_1x16_kernel_fp16<6>,
-    maxpool2d_n8chw_1x16_kernel_fp16<7>,  maxpool2d_n8chw_1x16_kernel_fp16<8>,  maxpool2d_n8chw_1x16_kernel_fp16<9>,
-    maxpool2d_n8chw_1x16_kernel_fp16<10>, maxpool2d_n8chw_1x16_kernel_fp16<11>, maxpool2d_n8chw_1x16_kernel_fp16<12>,
-    maxpool2d_n8chw_1x16_kernel_fp16<13>, maxpool2d_n8chw_1x16_kernel_fp16<14>, maxpool2d_n8chw_1x16_kernel_fp16<15>,
+    maxpool2d_n8chw_1x16_kernel_fp16<1>,
+    maxpool2d_n8chw_1x16_kernel_fp16<2>,
+    maxpool2d_n8chw_1x16_kernel_fp16<3>,
+    maxpool2d_n8chw_1x16_kernel_fp16<4>,
+    maxpool2d_n8chw_1x16_kernel_fp16<5>,
+    maxpool2d_n8chw_1x16_kernel_fp16<6>,
+    maxpool2d_n8chw_1x16_kernel_fp16<7>,
+    maxpool2d_n8chw_1x16_kernel_fp16<8>,
+    maxpool2d_n8chw_1x16_kernel_fp16<9>,
+    maxpool2d_n8chw_1x16_kernel_fp16<10>,
+    maxpool2d_n8chw_1x16_kernel_fp16<11>,
+    maxpool2d_n8chw_1x16_kernel_fp16<12>,
+    maxpool2d_n8chw_1x16_kernel_fp16<13>,
+    maxpool2d_n8chw_1x16_kernel_fp16<14>,
+    maxpool2d_n8chw_1x16_kernel_fp16<15>,
     maxpool2d_n8chw_1x16_kernel_fp16<16>};
 
 static inline void maxpool2d_n8chw_border_fp16(
@@ -179,26 +188,26 @@ static inline void maxpool2d_n8chw_border_fp16(
     const int32_t& kernel_w = param->kernel_w;
     const int32_t& stride_h = param->stride_h;
     const int32_t& stride_w = param->stride_w;
-    const int32_t& pad_h = param->pad_h;
-    const int32_t& pad_w = param->pad_w;
+    const int32_t& pad_h    = param->pad_h;
+    const int32_t& pad_w    = param->pad_w;
 
     const int32_t& src_h = param->src_h;
     const int32_t& src_w = param->src_w;
     const int32_t& dst_h = param->dst_h;
     const int32_t& dst_w = param->dst_w;
 
-    int64_t iw_start = -pad_w + ow * stride_w;
-    int64_t iw_end = iw_start + kernel_w;
+    int64_t iw_start       = -pad_w + ow * stride_w;
+    int64_t iw_end         = iw_start + kernel_w;
     int64_t iw_start_valid = max(iw_start, int64_t(0));
-    int64_t iw_end_valid = min(iw_end, int64_t(src_w));
+    int64_t iw_end_valid   = min(iw_end, int64_t(src_w));
 
-    const auto vl = vsetvli(8, RVV_E16, RVV_M1);
+    const auto vl      = vsetvli(8, RVV_E16, RVV_M1);
     float16xm1_t vfmax = vfmvvf_float16xm1(-__FLT_MAX__, vl);
     for (int64_t ih = ih_start_valid; ih < ih_end_valid; ih++) {
         for (int64_t iw = iw_start_valid; iw < iw_end_valid; iw++) {
             const __fp16* src_p = src + (ih * src_w + iw) * 8;
-            float16xm1_t v0 = vlev_float16xm1(src_p, vl);
-            vfmax = vfmaxvv_float16xm1(vfmax, v0, vl);
+            float16xm1_t v0     = vlev_float16xm1(src_p, vl);
+            vfmax               = vfmaxvv_float16xm1(vfmax, v0, vl);
         }
     }
     __fp16* dst_p = dst + (oh * dst_w + ow) * 8;
@@ -218,28 +227,27 @@ ppl::common::RetCode maxpool2d_n8chw_1x16_fp16(
     const __fp16* src,
     __fp16* dst)
 {
-    const int32_t batch = src_shape->GetDim(0);
+    const int32_t batch    = src_shape->GetDim(0);
     const int32_t channels = src_shape->GetDim(1);
-    const int32_t src_h = src_shape->GetDim(2);
-    const int32_t src_w = src_shape->GetDim(3);
-    const int32_t dst_h = dst_shape->GetDim(2);
-    const int32_t dst_w = dst_shape->GetDim(3);
+    const int32_t src_h    = src_shape->GetDim(2);
+    const int32_t src_w    = src_shape->GetDim(3);
+    const int32_t dst_h    = dst_shape->GetDim(2);
+    const int32_t dst_w    = dst_shape->GetDim(3);
 
-    const maxpool2d_param param = {kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w,
-                                   batch,    channels, src_h,    src_w,    dst_h, dst_w};
+    const maxpool2d_param param = {kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, batch, channels, src_h, src_w, dst_h, dst_w};
 
-    int32_t padded_channels = (channels + 8 - 1) / 8 * 8;
+    int32_t padded_channels  = (channels + 8 - 1) / 8 * 8;
     int32_t dst_1x16_start_w = max((pad_w + stride_w - 1) / stride_w, 0);
-    int32_t dst_1x16_end_w = min((src_w + pad_w - kernel_w) / stride_w + 1, dst_w);
+    int32_t dst_1x16_end_w   = min((src_w + pad_w - kernel_w) / stride_w + 1, dst_w);
 
     for (int64_t nc = 0; nc < batch * padded_channels; nc += 8) {
         const __fp16* src_ = src + nc * src_h * src_w;
-        __fp16* dst_ = dst + nc * dst_h * dst_w;
+        __fp16* dst_       = dst + nc * dst_h * dst_w;
         for (int64_t oh = 0; oh < dst_h; oh++) {
-            int64_t ih_start = -pad_h + oh * stride_h;
-            int64_t ih_end = ih_start + kernel_h;
+            int64_t ih_start       = -pad_h + oh * stride_h;
+            int64_t ih_end         = ih_start + kernel_h;
             int64_t ih_start_valid = max(ih_start, int64_t(0));
-            int64_t ih_end_valid = min(ih_end, int64_t(src_h));
+            int64_t ih_end_valid   = min(ih_end, int64_t(src_h));
 
             int64_t ow = 0;
             for (; ow < dst_1x16_start_w; ++ow) {

@@ -41,7 +41,7 @@ ppl::common::RetCode gather_ndarray_common(
                 for (int64_t i = 0; i < indices_dim; ++i) {
                     T* dst_l = dst + o * num_indices * indices_dim * inner_dim;
                     dst_l += k * indices_dim * inner_dim + i * inner_dim;
-                    int64_t index = indices[k * indices_dim + i];
+                    int64_t index  = indices[k * indices_dim + i];
                     const T* src_l = src + o * gather_dim * inner_dim + index * inner_dim;
                     memcpy(dst_l, src_l, inner_dim * sizeof(T));
                 }
@@ -53,7 +53,7 @@ ppl::common::RetCode gather_ndarray_common(
                 T* dst_l = dst + o * num_indices * indices_dim * inner_dim;
                 dst_l += k * indices_dim * inner_dim;
                 const int64_t* indices_l = indices + k * indices_dim;
-                const T* src_l = src + o * gather_dim * inner_dim;
+                const T* src_l           = src + o * gather_dim * inner_dim;
                 if (inner_dim == 2) {
                     for (int64_t i = 0; i < indices_dim; ++i) {
                         dst_l[0] = src_l[indices_l[0] + 0];
@@ -75,9 +75,9 @@ ppl::common::RetCode gather_ndarray_common(
     } else {
         for (int64_t o = 0; o < outer_dim; ++o) {
             for (int64_t k = 0; k < num_indices; ++k) {
-                T* dst_l = dst + o * num_indices * indices_dim + k * indices_dim;
+                T* dst_l                 = dst + o * num_indices * indices_dim + k * indices_dim;
                 const int64_t* indices_l = indices + k * indices_dim;
-                const T* src_l = src + o * gather_dim;
+                const T* src_l           = src + o * gather_dim;
                 for (int64_t i = 0; i < indices_dim; ++i) {
                     dst_l[0] = src_l[indices_l[0]];
                     ++dst_l;

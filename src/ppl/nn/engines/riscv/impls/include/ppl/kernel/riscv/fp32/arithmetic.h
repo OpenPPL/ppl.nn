@@ -26,21 +26,13 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode add_fp32(const ppl::nn::TensorShape* src0_shape, const ppl::nn::TensorShape* src1_shape,
-                              const ppl::nn::TensorShape* dst_shape, const bool fuse_relu, const float* src0,
-                              const float* src1, float* dst);
+ppl::common::RetCode add_fp32(const ppl::nn::TensorShape* src0_shape, const ppl::nn::TensorShape* src1_shape, const ppl::nn::TensorShape* dst_shape, const bool fuse_relu, const float* src0, const float* src1, float* dst);
 
-ppl::common::RetCode sub_fp32(const ppl::nn::TensorShape* src0_shape, const ppl::nn::TensorShape* src1_shape,
-                              const ppl::nn::TensorShape* dst_shape, const bool fuse_relu, const float* src0,
-                              const float* src1, float* dst);
+ppl::common::RetCode sub_fp32(const ppl::nn::TensorShape* src0_shape, const ppl::nn::TensorShape* src1_shape, const ppl::nn::TensorShape* dst_shape, const bool fuse_relu, const float* src0, const float* src1, float* dst);
 
-ppl::common::RetCode mul_fp32(const ppl::nn::TensorShape* src0_shape, const ppl::nn::TensorShape* src1_shape,
-                              const ppl::nn::TensorShape* dst_shape, const bool fuse_relu, const float* src0,
-                              const float* src1, float* dst);
+ppl::common::RetCode mul_fp32(const ppl::nn::TensorShape* src0_shape, const ppl::nn::TensorShape* src1_shape, const ppl::nn::TensorShape* dst_shape, const bool fuse_relu, const float* src0, const float* src1, float* dst);
 
-ppl::common::RetCode div_fp32(const ppl::nn::TensorShape* src0_shape, const ppl::nn::TensorShape* src1_shape,
-                              const ppl::nn::TensorShape* dst_shape, const bool fuse_relu, const float* src0,
-                              const float* src1, float* dst);
+ppl::common::RetCode div_fp32(const ppl::nn::TensorShape* src0_shape, const ppl::nn::TensorShape* src1_shape, const ppl::nn::TensorShape* dst_shape, const bool fuse_relu, const float* src0, const float* src1, float* dst);
 
 }}}; //  namespace ppl::kernel::riscv
 

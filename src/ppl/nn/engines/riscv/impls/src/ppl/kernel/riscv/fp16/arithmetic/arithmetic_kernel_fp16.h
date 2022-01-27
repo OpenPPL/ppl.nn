@@ -28,19 +28,23 @@ template <arithmetic_op_type_t _op>
 inline float16xm1_t arithmetic_vector_kernel_fp16(float16xm1_t a, float16xm1_t b);
 
 template <>
-inline float16xm1_t arithmetic_vector_kernel_fp16<ARITHMETIC_ADD>(float16xm1_t a, float16xm1_t b) {
+inline float16xm1_t arithmetic_vector_kernel_fp16<ARITHMETIC_ADD>(float16xm1_t a, float16xm1_t b)
+{
     return vfaddvv_float16xm1(a, b, vsetvli(8, RVV_E16, RVV_M1));
 }
 template <>
-inline float16xm1_t arithmetic_vector_kernel_fp16<ARITHMETIC_SUB>(float16xm1_t a, float16xm1_t b) {
+inline float16xm1_t arithmetic_vector_kernel_fp16<ARITHMETIC_SUB>(float16xm1_t a, float16xm1_t b)
+{
     return vfsubvv_float16xm1(a, b, vsetvli(8, RVV_E16, RVV_M1));
 }
 template <>
-inline float16xm1_t arithmetic_vector_kernel_fp16<ARITHMETIC_MUL>(float16xm1_t a, float16xm1_t b) {
+inline float16xm1_t arithmetic_vector_kernel_fp16<ARITHMETIC_MUL>(float16xm1_t a, float16xm1_t b)
+{
     return vfmulvv_float16xm1(a, b, vsetvli(8, RVV_E16, RVV_M1));
 }
 template <>
-inline float16xm1_t arithmetic_vector_kernel_fp16<ARITHMETIC_DIV>(float16xm1_t a, float16xm1_t b) {
+inline float16xm1_t arithmetic_vector_kernel_fp16<ARITHMETIC_DIV>(float16xm1_t a, float16xm1_t b)
+{
     return vfdivvv_float16xm1(a, b, vsetvli(8, RVV_E16, RVV_M1));
 }
 
@@ -48,19 +52,23 @@ template <arithmetic_op_type_t _op>
 inline __fp16 arithmetic_scalar_kernel_fp16(__fp16 a, __fp16 b);
 
 template <>
-inline __fp16 arithmetic_scalar_kernel_fp16<ARITHMETIC_ADD>(__fp16 a, __fp16 b) {
+inline __fp16 arithmetic_scalar_kernel_fp16<ARITHMETIC_ADD>(__fp16 a, __fp16 b)
+{
     return a + b;
 }
 template <>
-inline __fp16 arithmetic_scalar_kernel_fp16<ARITHMETIC_SUB>(__fp16 a, __fp16 b) {
+inline __fp16 arithmetic_scalar_kernel_fp16<ARITHMETIC_SUB>(__fp16 a, __fp16 b)
+{
     return a - b;
 }
 template <>
-inline __fp16 arithmetic_scalar_kernel_fp16<ARITHMETIC_MUL>(__fp16 a, __fp16 b) {
+inline __fp16 arithmetic_scalar_kernel_fp16<ARITHMETIC_MUL>(__fp16 a, __fp16 b)
+{
     return a * b;
 }
 template <>
-inline __fp16 arithmetic_scalar_kernel_fp16<ARITHMETIC_DIV>(__fp16 a, __fp16 b) {
+inline __fp16 arithmetic_scalar_kernel_fp16<ARITHMETIC_DIV>(__fp16 a, __fp16 b)
+{
     return a / b;
 }
 
@@ -89,7 +97,7 @@ inline void idx2dims(
     const int64_t idx,
     const int64_t* shape,
     const int64_t dim_count,
-    int64_t* dims) 
+    int64_t* dims)
 {
     int64_t _idx = idx;
     for (int64_t i = dim_count - 1; i >= 0; i--) {

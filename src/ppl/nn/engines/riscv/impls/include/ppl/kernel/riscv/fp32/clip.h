@@ -22,8 +22,7 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode clip_fp32(const ppl::nn::TensorShape* shape, const float clip_max, const float clip_min,
-                               const float* src, float* dst);
+ppl::common::RetCode clip_fp32(const ppl::nn::TensorShape* shape, const float clip_max, const float clip_min, const float* src, float* dst);
 
 }}}; //  namespace ppl::kernel::riscv
 

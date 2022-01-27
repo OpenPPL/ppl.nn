@@ -35,31 +35,31 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_ndarray_fp32(
     const int64_t start,
     const int64_t end)
 {
-    const int64_t parall_d = 16;
+    const int64_t parall_d   = 16;
     const int64_t unroll_len = parall_d * C_BLK();
-    const auto vl = vsetvli(C_BLK(), RVV_E32, RVV_M1);
+    const auto vl            = vsetvli(C_BLK(), RVV_E32, RVV_M1);
 
     int64_t i = start;
     for (; i + unroll_len < end; i += unroll_len) {
         const float* src0_ = src0 + i;
         const float* src1_ = src1 + i;
-        float* dst_ = dst + i;
+        float* dst_        = dst + i;
 
         float32xm1_t vfdata0, vfdata1, vfdata2, vfdata3;
         float32xm1_t vfdata4, vfdata5, vfdata6, vfdata7;
         float32xm1_t vfdata8, vfdata9, vfdata10, vfdata11;
         float32xm1_t vfdata12, vfdata13, vfdata14, vfdata15;
 
-        vfdata0 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 0 * C_BLK(), vl), vlev_float32xm1(src1_ + 0 * C_BLK(), vl));
-        vfdata1 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 1 * C_BLK(), vl), vlev_float32xm1(src1_ + 1 * C_BLK(), vl));
-        vfdata2 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 2 * C_BLK(), vl), vlev_float32xm1(src1_ + 2 * C_BLK(), vl));
-        vfdata3 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 3 * C_BLK(), vl), vlev_float32xm1(src1_ + 3 * C_BLK(), vl));
-        vfdata4 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 4 * C_BLK(), vl), vlev_float32xm1(src1_ + 4 * C_BLK(), vl));
-        vfdata5 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 5 * C_BLK(), vl), vlev_float32xm1(src1_ + 5 * C_BLK(), vl));
-        vfdata6 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 6 * C_BLK(), vl), vlev_float32xm1(src1_ + 6 * C_BLK(), vl));
-        vfdata7 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 7 * C_BLK(), vl), vlev_float32xm1(src1_ + 7 * C_BLK(), vl));
-        vfdata8 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 8 * C_BLK(), vl), vlev_float32xm1(src1_ + 8 * C_BLK(), vl));
-        vfdata9 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 9 * C_BLK(), vl), vlev_float32xm1(src1_ + 9 * C_BLK(), vl));
+        vfdata0  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 0 * C_BLK(), vl), vlev_float32xm1(src1_ + 0 * C_BLK(), vl));
+        vfdata1  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 1 * C_BLK(), vl), vlev_float32xm1(src1_ + 1 * C_BLK(), vl));
+        vfdata2  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 2 * C_BLK(), vl), vlev_float32xm1(src1_ + 2 * C_BLK(), vl));
+        vfdata3  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 3 * C_BLK(), vl), vlev_float32xm1(src1_ + 3 * C_BLK(), vl));
+        vfdata4  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 4 * C_BLK(), vl), vlev_float32xm1(src1_ + 4 * C_BLK(), vl));
+        vfdata5  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 5 * C_BLK(), vl), vlev_float32xm1(src1_ + 5 * C_BLK(), vl));
+        vfdata6  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 6 * C_BLK(), vl), vlev_float32xm1(src1_ + 6 * C_BLK(), vl));
+        vfdata7  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 7 * C_BLK(), vl), vlev_float32xm1(src1_ + 7 * C_BLK(), vl));
+        vfdata8  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 8 * C_BLK(), vl), vlev_float32xm1(src1_ + 8 * C_BLK(), vl));
+        vfdata9  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 9 * C_BLK(), vl), vlev_float32xm1(src1_ + 9 * C_BLK(), vl));
         vfdata10 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 10 * C_BLK(), vl), vlev_float32xm1(src1_ + 10 * C_BLK(), vl));
         vfdata11 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 11 * C_BLK(), vl), vlev_float32xm1(src1_ + 11 * C_BLK(), vl));
         vfdata12 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 12 * C_BLK(), vl), vlev_float32xm1(src1_ + 12 * C_BLK(), vl));
@@ -106,7 +106,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_ndarray_fp32(
     for (; i + C_BLK() < end; i += C_BLK()) {
         const float* src0_ = src0 + i;
         const float* src1_ = src1 + i;
-        float* dst_ = dst + i;
+        float* dst_        = dst + i;
 
         float32xm1_t vfdata;
         vfdata = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_, vl), vlev_float32xm1(src1_, vl));
@@ -133,33 +133,33 @@ static inline void arithmetic_broadcast_lastdim_src0_broadcast_ndarray_fp32(
     const int64_t start,
     const int64_t end)
 {
-    const int64_t parall_d = 16;
+    const int64_t parall_d   = 16;
     const int64_t unroll_len = parall_d * C_BLK();
-    const auto vl = vsetvli(C_BLK(), RVV_E32, RVV_M1);
+    const auto vl            = vsetvli(C_BLK(), RVV_E32, RVV_M1);
 
-    const float broadcast_val = src0[0];
+    const float broadcast_val    = src0[0];
     float32xm1_t v_broadcast_val = vfmvvf_float32xm1(broadcast_val, vl);
 
     int64_t i = start;
     for (; i + unroll_len < end; i += unroll_len) {
         const float* src1_ = src1 + i;
-        float* dst_ = dst + i;
+        float* dst_        = dst + i;
 
         float32xm1_t vfdata0, vfdata1, vfdata2, vfdata3;
         float32xm1_t vfdata4, vfdata5, vfdata6, vfdata7;
         float32xm1_t vfdata8, vfdata9, vfdata10, vfdata11;
         float32xm1_t vfdata12, vfdata13, vfdata14, vfdata15;
 
-        vfdata0 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 0 * C_BLK(), vl));
-        vfdata1 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 1 * C_BLK(), vl));
-        vfdata2 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 2 * C_BLK(), vl));
-        vfdata3 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 3 * C_BLK(), vl));
-        vfdata4 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 4 * C_BLK(), vl));
-        vfdata5 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 5 * C_BLK(), vl));
-        vfdata6 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 6 * C_BLK(), vl));
-        vfdata7 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 7 * C_BLK(), vl));
-        vfdata8 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 8 * C_BLK(), vl));
-        vfdata9 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 9 * C_BLK(), vl));
+        vfdata0  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 0 * C_BLK(), vl));
+        vfdata1  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 1 * C_BLK(), vl));
+        vfdata2  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 2 * C_BLK(), vl));
+        vfdata3  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 3 * C_BLK(), vl));
+        vfdata4  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 4 * C_BLK(), vl));
+        vfdata5  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 5 * C_BLK(), vl));
+        vfdata6  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 6 * C_BLK(), vl));
+        vfdata7  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 7 * C_BLK(), vl));
+        vfdata8  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 8 * C_BLK(), vl));
+        vfdata9  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 9 * C_BLK(), vl));
         vfdata10 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 10 * C_BLK(), vl));
         vfdata11 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 11 * C_BLK(), vl));
         vfdata12 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_ + 12 * C_BLK(), vl));
@@ -205,7 +205,7 @@ static inline void arithmetic_broadcast_lastdim_src0_broadcast_ndarray_fp32(
     }
     for (; i + C_BLK() < end; i += C_BLK()) {
         const float* src1_ = src1 + i;
-        float* dst_ = dst + i;
+        float* dst_        = dst + i;
 
         float32xm1_t vfdata;
         vfdata = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src1_, vl));
@@ -232,33 +232,33 @@ static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_fp32(
     const int64_t start,
     const int64_t end)
 {
-    const int64_t parall_d = 16;
+    const int64_t parall_d   = 16;
     const int64_t unroll_len = parall_d * C_BLK();
-    const auto vl = vsetvli(C_BLK(), RVV_E32, RVV_M1);
+    const auto vl            = vsetvli(C_BLK(), RVV_E32, RVV_M1);
 
-    const float broadcast_val = src1[0];
+    const float broadcast_val    = src1[0];
     float32xm1_t v_broadcast_val = vfmvvf_float32xm1(broadcast_val, vl);
 
     int64_t i = start;
     for (; i + unroll_len < end; i += unroll_len) {
         const float* src0_ = src0 + i;
-        float* dst_ = dst + i;
+        float* dst_        = dst + i;
 
         float32xm1_t vfdata0, vfdata1, vfdata2, vfdata3;
         float32xm1_t vfdata4, vfdata5, vfdata6, vfdata7;
         float32xm1_t vfdata8, vfdata9, vfdata10, vfdata11;
         float32xm1_t vfdata12, vfdata13, vfdata14, vfdata15;
 
-        vfdata0 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 0 * C_BLK(), vl));
-        vfdata1 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 1 * C_BLK(), vl));
-        vfdata2 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 2 * C_BLK(), vl));
-        vfdata3 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 3 * C_BLK(), vl));
-        vfdata4 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 4 * C_BLK(), vl));
-        vfdata5 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 5 * C_BLK(), vl));
-        vfdata6 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 6 * C_BLK(), vl));
-        vfdata7 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 7 * C_BLK(), vl));
-        vfdata8 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 8 * C_BLK(), vl));
-        vfdata9 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 9 * C_BLK(), vl));
+        vfdata0  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 0 * C_BLK(), vl));
+        vfdata1  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 1 * C_BLK(), vl));
+        vfdata2  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 2 * C_BLK(), vl));
+        vfdata3  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 3 * C_BLK(), vl));
+        vfdata4  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 4 * C_BLK(), vl));
+        vfdata5  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 5 * C_BLK(), vl));
+        vfdata6  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 6 * C_BLK(), vl));
+        vfdata7  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 7 * C_BLK(), vl));
+        vfdata8  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 8 * C_BLK(), vl));
+        vfdata9  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 9 * C_BLK(), vl));
         vfdata10 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 10 * C_BLK(), vl));
         vfdata11 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 11 * C_BLK(), vl));
         vfdata12 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 12 * C_BLK(), vl));
@@ -304,7 +304,7 @@ static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_fp32(
     }
     for (; i + C_BLK() < end; i += C_BLK()) {
         const float* src0_ = src0 + i;
-        float* dst_ = dst + i;
+        float* dst_        = dst + i;
 
         float32xm1_t vfdata;
         vfdata = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_, vl));
@@ -338,10 +338,10 @@ static ppl::common::RetCode arithmetic_broadcast_recursive_ndarray_fp32(
     const int64_t dim_idx,
     parallel_block* block)
 {
-    bool is_first = is_first_dim(block, dim_idx);
-    bool is_last = is_last_dim(block, dim_idx);
+    bool is_first       = is_first_dim(block, dim_idx);
+    bool is_last        = is_last_dim(block, dim_idx);
     const int64_t start = is_first ? block->start[dim_idx] : 0;
-    const int64_t end = is_last ? block->end[dim_idx] : dst_shape[dim_idx] - 1;
+    const int64_t end   = is_last ? block->end[dim_idx] : dst_shape[dim_idx] - 1;
 
     if (dim_idx == dim_count - 1) {
         if (src0_shape[dim_idx] == src1_shape[dim_idx]) {
@@ -396,10 +396,10 @@ static ppl::common::RetCode arithmetic_broadcast_ndarray_fp32(
     pad_shape(src1_shape, dim_count, padded_src1_shape);
 
     // compress dims
-    int64_t real_dim_count = 0;
+    int64_t real_dim_count                               = 0;
     int64_t real_src0_shape[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
     int64_t real_src1_shape[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
-    int64_t real_dst_shape[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
+    int64_t real_dst_shape[PPL_RISCV_TENSOR_MAX_DIMS()]  = {0};
 
     // remove 1 on high dims to compress dim count
     for (int64_t i = 0; i < dim_count; i++) {
@@ -408,14 +408,14 @@ static ppl::common::RetCode arithmetic_broadcast_ndarray_fp32(
         }
         real_src0_shape[real_dim_count] = padded_src0_shape[i];
         real_src1_shape[real_dim_count] = padded_src1_shape[i];
-        real_dst_shape[real_dim_count] = dst_shape->GetDim(i);
+        real_dst_shape[real_dim_count]  = dst_shape->GetDim(i);
         real_dim_count++;
     }
 
     // merge low dims
     for (int64_t i = real_dim_count - 1; i >= 1; i--) {
-        bool cur_dim_input0_need_broadcast = real_src0_shape[i] != real_src1_shape[i] && real_src0_shape[i] == 1;
-        bool cur_dim_input1_need_broadcast = real_src0_shape[i] != real_src1_shape[i] && real_src1_shape[i] == 1;
+        bool cur_dim_input0_need_broadcast  = real_src0_shape[i] != real_src1_shape[i] && real_src0_shape[i] == 1;
+        bool cur_dim_input1_need_broadcast  = real_src0_shape[i] != real_src1_shape[i] && real_src1_shape[i] == 1;
         bool prev_dim_input0_need_broadcast = real_src0_shape[i - 1] != real_src1_shape[i - 1] && real_src0_shape[i - 1] == 1;
         bool prev_dim_input1_need_broadcast = real_src0_shape[i - 1] != real_src1_shape[i - 1] && real_src1_shape[i - 1] == 1;
 
@@ -430,18 +430,18 @@ static ppl::common::RetCode arithmetic_broadcast_ndarray_fp32(
         }
     }
 
-    int64_t inc0[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
-    int64_t inc1[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
+    int64_t inc0[PPL_RISCV_TENSOR_MAX_DIMS()]    = {0};
+    int64_t inc1[PPL_RISCV_TENSOR_MAX_DIMS()]    = {0};
     int64_t inc_out[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
 
-    int64_t stride0 = 1;
-    int64_t stride1 = 1;
+    int64_t stride0    = 1;
+    int64_t stride1    = 1;
     int64_t stride_out = 1;
 
     // prepare incs
     for (int64_t i = real_dim_count - 1; i >= 0; i--) {
-        inc0[i] = real_src0_shape[i] == 1 ? 0 : stride0;
-        inc1[i] = real_src1_shape[i] == 1 ? 0 : stride1;
+        inc0[i]    = real_src0_shape[i] == 1 ? 0 : stride0;
+        inc1[i]    = real_src1_shape[i] == 1 ? 0 : stride1;
         inc_out[i] = stride_out;
 
         stride0 *= real_src0_shape[i];
@@ -453,7 +453,7 @@ static ppl::common::RetCode arithmetic_broadcast_ndarray_fp32(
     parallel_block block;
     {
         int64_t start_idx = 0;
-        int64_t end_idx = total_len - 1;
+        int64_t end_idx   = total_len - 1;
         idx2dims(start_idx, real_dst_shape, real_dim_count, block.start);
         idx2dims(end_idx, real_dst_shape, real_dim_count, block.end);
         block.id = 0;

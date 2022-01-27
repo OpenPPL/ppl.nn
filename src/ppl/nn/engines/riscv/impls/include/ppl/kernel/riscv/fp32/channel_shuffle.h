@@ -22,22 +22,26 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode channel_shuffle_ndarray_fp32(const ppl::nn::TensorShape* src_shape, const float* src,
-                                                  const int32_t group, float* dst);
+ppl::common::RetCode channel_shuffle_ndarray_fp32(const ppl::nn::TensorShape* src_shape, const float* src, const int32_t group, float* dst);
 
 // 2nd output is optional, do not fuse split while it is empty
 ppl::common::RetCode channel_shuffle_ndarray_concat_split_fp32(const ppl::nn::TensorShape* src0_shape,
                                                                const ppl::nn::TensorShape* src1_shape,
-                                                               const float* src0, const float* src1,
-                                                               const int32_t group, float* dst0, float* dst1_optional);
+                                                               const float* src0,
+                                                               const float* src1,
+                                                               const int32_t group,
+                                                               float* dst0,
+                                                               float* dst1_optional);
 
-ppl::common::RetCode channel_shuffle_n4cx_fp32(const ppl::nn::TensorShape* src_shape, const float* src,
-                                               const int32_t group, float* dst);
+ppl::common::RetCode channel_shuffle_n4cx_fp32(const ppl::nn::TensorShape* src_shape, const float* src, const int32_t group, float* dst);
 
 // 2nd output is optional, do not fuse split while it is empty
 ppl::common::RetCode channel_shuffle_n4cx_concat_split_fp32(const ppl::nn::TensorShape* src0_shape,
-                                                            const ppl::nn::TensorShape* src1_shape, const float* src0,
-                                                            const float* src1, const int32_t group, float* dst0,
+                                                            const ppl::nn::TensorShape* src1_shape,
+                                                            const float* src0,
+                                                            const float* src1,
+                                                            const int32_t group,
+                                                            float* dst0,
                                                             float* dst1_optional);
 
 }}}; // namespace ppl::kernel::riscv

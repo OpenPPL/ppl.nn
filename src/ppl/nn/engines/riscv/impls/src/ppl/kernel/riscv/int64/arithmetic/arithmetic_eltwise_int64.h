@@ -26,43 +26,43 @@ namespace ppl { namespace kernel { namespace riscv {
 #define C_BLK() ((int64_t)2)
 
 template <arithmetic_op_type_t _op, bool fuse_relu>
-static ppl::common::RetCode arithmetic_eltwise_int64(const ppl::nn::TensorShape* dst_shape, const int64_t* src0,
-                                                     const int64_t* src1, int64_t* dst) {
-    const int64_t total_len = dst_shape->GetElementsIncludingPadding();
-    const int64_t parall_d = 16;
+static ppl::common::RetCode arithmetic_eltwise_int64(const ppl::nn::TensorShape* dst_shape, const int64_t* src0, const int64_t* src1, int64_t* dst)
+{
+    const int64_t total_len  = dst_shape->GetElementsIncludingPadding();
+    const int64_t parall_d   = 16;
     const int64_t unroll_len = parall_d * C_BLK();
-    const auto vl = vsetvli(C_BLK(), RVV_E64, RVV_M1);
+    const auto vl            = vsetvli(C_BLK(), RVV_E64, RVV_M1);
 
     int64_t idx = 0;
     for (; idx + unroll_len < total_len; idx += unroll_len) {
         const int64_t* src0_ = src0 + idx;
         const int64_t* src1_ = src1 + idx;
-        int64_t* dst_ = dst + idx;
+        int64_t* dst_        = dst + idx;
 
         int64xm1_t vdata0, vdata1, vdata2, vdata3;
         int64xm1_t vdata4, vdata5, vdata6, vdata7;
         int64xm1_t vdata8, vdata9, vdata10, vdata11;
         int64xm1_t vdata12, vdata13, vdata14, vdata15;
 
-        vdata0 = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 0 * C_BLK(), vl),
+        vdata0  = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 0 * C_BLK(), vl),
                                                      vlev_int64xm1(src1_ + 0 * C_BLK(), vl));
-        vdata1 = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 1 * C_BLK(), vl),
+        vdata1  = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 1 * C_BLK(), vl),
                                                      vlev_int64xm1(src1_ + 1 * C_BLK(), vl));
-        vdata2 = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 2 * C_BLK(), vl),
+        vdata2  = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 2 * C_BLK(), vl),
                                                      vlev_int64xm1(src1_ + 2 * C_BLK(), vl));
-        vdata3 = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 3 * C_BLK(), vl),
+        vdata3  = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 3 * C_BLK(), vl),
                                                      vlev_int64xm1(src1_ + 3 * C_BLK(), vl));
-        vdata4 = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 4 * C_BLK(), vl),
+        vdata4  = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 4 * C_BLK(), vl),
                                                      vlev_int64xm1(src1_ + 4 * C_BLK(), vl));
-        vdata5 = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 5 * C_BLK(), vl),
+        vdata5  = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 5 * C_BLK(), vl),
                                                      vlev_int64xm1(src1_ + 5 * C_BLK(), vl));
-        vdata6 = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 6 * C_BLK(), vl),
+        vdata6  = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 6 * C_BLK(), vl),
                                                      vlev_int64xm1(src1_ + 6 * C_BLK(), vl));
-        vdata7 = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 7 * C_BLK(), vl),
+        vdata7  = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 7 * C_BLK(), vl),
                                                      vlev_int64xm1(src1_ + 7 * C_BLK(), vl));
-        vdata8 = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 8 * C_BLK(), vl),
+        vdata8  = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 8 * C_BLK(), vl),
                                                      vlev_int64xm1(src1_ + 8 * C_BLK(), vl));
-        vdata9 = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 9 * C_BLK(), vl),
+        vdata9  = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 9 * C_BLK(), vl),
                                                      vlev_int64xm1(src1_ + 9 * C_BLK(), vl));
         vdata10 = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_ + 10 * C_BLK(), vl),
                                                       vlev_int64xm1(src1_ + 10 * C_BLK(), vl));
@@ -116,7 +116,7 @@ static ppl::common::RetCode arithmetic_eltwise_int64(const ppl::nn::TensorShape*
     for (; idx < total_len; idx += C_BLK()) {
         const int64_t* src0_ = src0 + idx;
         const int64_t* src1_ = src1 + idx;
-        int64_t* dst_ = dst + idx;
+        int64_t* dst_        = dst + idx;
 
         int64xm1_t vdata;
         vdata = arithmetic_vector_kernel_int64<_op>(vlev_int64xm1(src0_, vl), vlev_int64xm1(src1_, vl));

@@ -24,23 +24,31 @@ namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode reduce_max_fp32(const float* src, float* dst,
 
-                                     const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape,
-                                     const int32_t* axes, const int32_t num_axes);
+                                     const ppl::nn::TensorShape* src_shape,
+                                     const ppl::nn::TensorShape* dst_shape,
+                                     const int32_t* axes,
+                                     const int32_t num_axes);
 
 ppl::common::RetCode reduce_min_fp32(const float* src, float* dst,
 
-                                     const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape,
-                                     const int32_t* axes, const int32_t num_axes);
+                                     const ppl::nn::TensorShape* src_shape,
+                                     const ppl::nn::TensorShape* dst_shape,
+                                     const int32_t* axes,
+                                     const int32_t num_axes);
 
 ppl::common::RetCode reduce_mean_fp32(const float* src, float* dst,
 
-                                      const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape,
-                                      const int32_t* axes, const int32_t num_axes);
+                                      const ppl::nn::TensorShape* src_shape,
+                                      const ppl::nn::TensorShape* dst_shape,
+                                      const int32_t* axes,
+                                      const int32_t num_axes);
 
 ppl::common::RetCode reduce_sum_fp32(const float* src, float* dst,
 
-                                     const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape,
-                                     const int32_t* axes, const int32_t num_axes);
+                                     const ppl::nn::TensorShape* src_shape,
+                                     const ppl::nn::TensorShape* dst_shape,
+                                     const int32_t* axes,
+                                     const int32_t num_axes);
 
 }}}; // namespace ppl::kernel::riscv
 

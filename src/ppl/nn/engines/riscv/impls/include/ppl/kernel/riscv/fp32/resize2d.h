@@ -23,27 +23,40 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode reisze2d_ndarray_pytorch_linear_floor_fp32(const ppl::nn::TensorShape* src_shape,
-                                                                const ppl::nn::TensorShape* dst_shape, const float* src,
-                                                                const float scale_h, const float scale_w, float* dst);
+                                                                const ppl::nn::TensorShape* dst_shape,
+                                                                const float* src,
+                                                                const float scale_h,
+                                                                const float scale_w,
+                                                                float* dst);
 
 ppl::common::RetCode reisze2d_ndarray_pytorch_cubic_floor_fp32(const ppl::nn::TensorShape* src_shape,
-                                                               const ppl::nn::TensorShape* dst_shape, const float* src,
-                                                               const float scale_h, const float scale_w,
-                                                               const float cubic_coeff_a, float* dst);
+                                                               const ppl::nn::TensorShape* dst_shape,
+                                                               const float* src,
+                                                               const float scale_h,
+                                                               const float scale_w,
+                                                               const float cubic_coeff_a,
+                                                               float* dst);
 
 ppl::common::RetCode reisze2d_ndarray_asymmetric_nearest_floor_fp32(const ppl::nn::TensorShape* src_shape,
                                                                     const ppl::nn::TensorShape* dst_shape,
-                                                                    const float* src, const float scale_h,
-                                                                    const float scale_w, float* dst);
+                                                                    const float* src,
+                                                                    const float scale_h,
+                                                                    const float scale_w,
+                                                                    float* dst);
 
 ppl::common::RetCode resize2d_nbcx_pytorch_linear_floor_fp32(const ppl::nn::TensorShape* src_shape,
-                                                             const ppl::nn::TensorShape* dst_shape, const float* src,
-                                                             const float scale_h, const float scale_w, float* dst);
+                                                             const ppl::nn::TensorShape* dst_shape,
+                                                             const float* src,
+                                                             const float scale_h,
+                                                             const float scale_w,
+                                                             float* dst);
 
 ppl::common::RetCode resize2d_nbcx_asymmetric_nearest_floor_fp32(const ppl::nn::TensorShape* src_shape,
                                                                  const ppl::nn::TensorShape* dst_shape,
-                                                                 const float* src, const float scale_h,
-                                                                 const float scale_w, float* dst);
+                                                                 const float* src,
+                                                                 const float scale_h,
+                                                                 const float scale_w,
+                                                                 float* dst);
 
 }}}; // namespace ppl::kernel::riscv
 

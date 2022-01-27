@@ -20,16 +20,17 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode relu_fp16(const ppl::nn::TensorShape* shape, const __fp16* src, __fp16* dst) {
-    const int64_t total_len = shape->GetElementsIncludingPadding();
-    const int64_t parall_d = 32;
+ppl::common::RetCode relu_fp16(const ppl::nn::TensorShape* shape, const __fp16* src, __fp16* dst)
+{
+    const int64_t total_len  = shape->GetElementsIncludingPadding();
+    const int64_t parall_d   = 32;
     const int64_t unroll_len = parall_d * 8;
-    const auto vl = vsetvli(8, RVV_E16, RVV_M1);
+    const auto vl            = vsetvli(8, RVV_E16, RVV_M1);
 
     int64_t idx = 0;
     for (; idx + unroll_len < total_len; idx += unroll_len) {
         const __fp16* src_ = src + idx;
-        __fp16* dst_ = dst + idx;
+        __fp16* dst_       = dst + idx;
         vsev_float16xm1(dst_ + 0 * 8, vfmaxvf_float16xm1(vlev_float16xm1(src_ + 0 * 8, vl), (__fp16)0.0f, vl), vl);
         vsev_float16xm1(dst_ + 1 * 8, vfmaxvf_float16xm1(vlev_float16xm1(src_ + 1 * 8, vl), (__fp16)0.0f, vl), vl);
         vsev_float16xm1(dst_ + 2 * 8, vfmaxvf_float16xm1(vlev_float16xm1(src_ + 2 * 8, vl), (__fp16)0.0f, vl), vl);
@@ -65,7 +66,7 @@ ppl::common::RetCode relu_fp16(const ppl::nn::TensorShape* shape, const __fp16* 
     }
     for (; idx < total_len; idx += 8) {
         const __fp16* src_ = src + idx;
-        __fp16* dst_ = dst + idx;
+        __fp16* dst_       = dst + idx;
         vsev_float16xm1(dst_, vfmaxvf_float16xm1(vlev_float16xm1(src_, vl), (__fp16)0.0f, vl), vl);
     }
 

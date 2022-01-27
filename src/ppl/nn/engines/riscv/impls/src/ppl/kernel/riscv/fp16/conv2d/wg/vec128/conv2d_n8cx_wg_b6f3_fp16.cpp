@@ -23,7 +23,8 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-void conv2d_n8cx_wg_b6f3_fp16_runtime_executor::adjust_tunning_param() {
+void conv2d_n8cx_wg_b6f3_fp16_runtime_executor::adjust_tunning_param()
+{
     auto dst_h = dst_shape_->GetDim(2);
     auto dst_w = dst_shape_->GetDim(3);
 
@@ -34,7 +35,8 @@ void conv2d_n8cx_wg_b6f3_fp16_runtime_executor::adjust_tunning_param() {
     tunning_param_.oc_blk = min(round_up(conv_param_->num_output / conv_param_->group, 8), tunning_param_.oc_blk);
 }
 
-ppl::common::RetCode conv2d_n8cx_wg_b6f3_fp16_runtime_executor::prepare() {
+ppl::common::RetCode conv2d_n8cx_wg_b6f3_fp16_runtime_executor::prepare()
+{
     if (!conv_param_ || !src_shape_ || !dst_shape_) {
         return ppl::common::RC_INVALID_VALUE;
     }
@@ -230,12 +232,8 @@ inline void wg_b6f3s1_src_trans_kernel(
 
         "addi           x0,     x0,         1           \n\t"
         :
-        : [src] "r"(src_pad), [dst] "r"(src_trans_d), [mat] "r"(trans_mat), [tmp] "r"(tmp),
-          [src_ofst] "r"(src_pad_h_stride * 2), [dst_ofst] "r"(src_trans_wg_tile_stride * 2)
-        : "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13",
-          "v14", "v15", "v24", "v25", "v26", "v30", "v31", "t0", "t1", "t2", "t3", "t4", "f0", "f1", "f2",
-          "f3", "f4", "f5", "f6", "f7", "s2", "s3", "s4"
-    );
+        : [src] "r"(src_pad), [dst] "r"(src_trans_d), [mat] "r"(trans_mat), [tmp] "r"(tmp), [src_ofst] "r"(src_pad_h_stride * 2), [dst_ofst] "r"(src_trans_wg_tile_stride * 2)
+        : "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15", "v24", "v25", "v26", "v30", "v31", "t0", "t1", "t2", "t3", "t4", "f0", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "s2", "s3", "s4");
 }
 
 inline void wg_b6f3s1_dst_trans_kernel(
@@ -426,17 +424,12 @@ inline void wg_b6f3s1_dst_trans_kernel(
         "END:                                               \n\t"
         "addi           x0,         x0,         1           \n\t"
         :
-        : [src] "r"(dst_trans), [dst] "r"(dst), [mat] "r"(trans_mat), [tmp] "r"(tmp), [bias] "r"(bias),
-          [src_ofst0] "r"(dst_trans_wg_tile_stride * 16), [dst_ofst] "r"(dst_h_stride * 2),
-          [src_ofst1] "r"(dst_trans_wg_tile_stride * 2), [h_ofst] "r"(dst_h_offset),
-          [w_ofst] "r"(dst_w_offset), [dst_h] "r"(dst_trans_h), [dst_w] "r"(dst_trans_w)
-        : "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13",
-          "v16", "v17", "v18", "v19", "v20", "v21", "v24", "t0", "t1", "t2", "t3", "t4", "f0", "f1", "f2",
-          "f3", "f4", "s2", "s3", "s4", "s5"
-    );
+        : [src] "r"(dst_trans), [dst] "r"(dst), [mat] "r"(trans_mat), [tmp] "r"(tmp), [bias] "r"(bias), [src_ofst0] "r"(dst_trans_wg_tile_stride * 16), [dst_ofst] "r"(dst_h_stride * 2), [src_ofst1] "r"(dst_trans_wg_tile_stride * 2), [h_ofst] "r"(dst_h_offset), [w_ofst] "r"(dst_w_offset), [dst_h] "r"(dst_trans_h), [dst_w] "r"(dst_trans_w)
+        : "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v16", "v17", "v18", "v19", "v20", "v21", "v24", "t0", "t1", "t2", "t3", "t4", "f0", "f1", "f2", "f3", "f4", "s2", "s3", "s4", "s5");
 }
 
-ppl::common::RetCode conv2d_n8cx_wg_b6f3_fp16_runtime_executor::execute() {
+ppl::common::RetCode conv2d_n8cx_wg_b6f3_fp16_runtime_executor::execute()
+{
     const conv2d_common_param& cp = *conv_param_;
 
     LOG(DEBUG) << "n8cx wg b6f3: execute";
@@ -445,18 +438,17 @@ ppl::common::RetCode conv2d_n8cx_wg_b6f3_fp16_runtime_executor::execute() {
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    const __fp16 trans_mat_src_[16] = {5.25f, 0.0f, 4.25f, 0.0f, 0.5f, 0.0f, 0.25f, 0.0f,
-                                       2.5f,  0.0f, 1.25f, 0.0f, 2.0f, 0.0f, 4.0f,  0.0f};
-    ((__uint16_t*)trans_mat_src_)[1] = 0xffff;
-    ((__uint16_t*)trans_mat_src_)[3] = 0xffff;
-    ((__uint16_t*)trans_mat_src_)[5] = 0xffff;
-    ((__uint16_t*)trans_mat_src_)[7] = 0xffff;
-    ((__uint16_t*)trans_mat_src_)[9] = 0xffff;
+    const __fp16 trans_mat_src_[16]   = {5.25f, 0.0f, 4.25f, 0.0f, 0.5f, 0.0f, 0.25f, 0.0f, 2.5f, 0.0f, 1.25f, 0.0f, 2.0f, 0.0f, 4.0f, 0.0f};
+    ((__uint16_t*)trans_mat_src_)[1]  = 0xffff;
+    ((__uint16_t*)trans_mat_src_)[3]  = 0xffff;
+    ((__uint16_t*)trans_mat_src_)[5]  = 0xffff;
+    ((__uint16_t*)trans_mat_src_)[7]  = 0xffff;
+    ((__uint16_t*)trans_mat_src_)[9]  = 0xffff;
     ((__uint16_t*)trans_mat_src_)[11] = 0xffff;
     ((__uint16_t*)trans_mat_src_)[13] = 0xffff;
     ((__uint16_t*)trans_mat_src_)[15] = 0xffff;
 
-    const __fp16 trans_mat_dst_[10] = {32.0f, 0.0f, 16.0f, 0.0f, 8.0f, 0.0f, 4.0f, 0.0f, 2.0f, 0.0f};
+    const __fp16 trans_mat_dst_[10]  = {32.0f, 0.0f, 16.0f, 0.0f, 8.0f, 0.0f, 4.0f, 0.0f, 2.0f, 0.0f};
     ((__uint16_t*)trans_mat_dst_)[1] = 0xffff;
     ((__uint16_t*)trans_mat_dst_)[3] = 0xffff;
     ((__uint16_t*)trans_mat_dst_)[5] = 0xffff;
@@ -489,16 +481,13 @@ ppl::common::RetCode conv2d_n8cx_wg_b6f3_fp16_runtime_executor::execute() {
         conv_param_->group,
         src_shape_->GetDim(0),
 
-        {
-            tunning_param_.oc_blk,
-            tunning_param_.ic_blk,
-            tunning_param_.oh_blk,
-            tunning_param_.ow_blk,
+        {tunning_param_.oc_blk,
+         tunning_param_.ic_blk,
+         tunning_param_.oh_blk,
+         tunning_param_.ow_blk,
 
-            trans_mat_src_,
-            trans_mat_dst_
-        }
-    );
+         trans_mat_src_,
+         trans_mat_dst_});
 
     return ppl::common::RC_SUCCESS;
 }

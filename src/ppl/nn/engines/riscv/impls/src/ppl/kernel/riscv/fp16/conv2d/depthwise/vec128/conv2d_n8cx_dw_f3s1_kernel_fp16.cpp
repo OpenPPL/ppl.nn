@@ -321,10 +321,6 @@ void conv_dw_f3s1_h1w4_kernel_riscv_fp16(
         "add            t0,     t0,     t4      \n\t" // h_loop
         "blt            s3,     t5,     0b      \n\t"
         :
-        : [ATOM_W] "i"(atom_w), [SRC] "r"(src), [FLT] "r"(flt), [DST] "r"(dst), [BIAS] "r"(bias),
-          [H_STRIDE] "r"(src_pad_w * 8 * 2), [DST_H] "r"(dst_h), [DST_W] "r"(dst_w)
-        : "memory", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "s2", "s3", "s4", "s5", "s7", "v0", "v1", "v2",
-          "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17",
-          "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31"
-    );
+        : [ATOM_W] "i"(atom_w), [SRC] "r"(src), [FLT] "r"(flt), [DST] "r"(dst), [BIAS] "r"(bias), [H_STRIDE] "r"(src_pad_w * 8 * 2), [DST_H] "r"(dst_h), [DST_W] "r"(dst_w)
+        : "memory", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "s2", "s3", "s4", "s5", "s7", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31");
 }

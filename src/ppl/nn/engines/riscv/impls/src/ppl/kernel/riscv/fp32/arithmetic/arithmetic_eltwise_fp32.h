@@ -32,32 +32,32 @@ static ppl::common::RetCode arithmetic_eltwise_fp32(
     const float* src1,
     float* dst)
 {
-    const int64_t total_len = dst_shape->GetElementsIncludingPadding();
-    const int64_t parall_d = 16;
+    const int64_t total_len  = dst_shape->GetElementsIncludingPadding();
+    const int64_t parall_d   = 16;
     const int64_t unroll_len = parall_d * C_BLK();
-    const auto vl = vsetvli(C_BLK(), RVV_E32, RVV_M1);
+    const auto vl            = vsetvli(C_BLK(), RVV_E32, RVV_M1);
 
     int64_t idx = 0;
     for (; idx + unroll_len < total_len; idx += unroll_len) {
         const float* src0_ = src0 + idx;
         const float* src1_ = src1 + idx;
-        float* dst_ = dst + idx;
+        float* dst_        = dst + idx;
 
         float32xm1_t vfdata0, vfdata1, vfdata2, vfdata3;
         float32xm1_t vfdata4, vfdata5, vfdata6, vfdata7;
         float32xm1_t vfdata8, vfdata9, vfdata10, vfdata11;
         float32xm1_t vfdata12, vfdata13, vfdata14, vfdata15;
 
-        vfdata0 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 0 * C_BLK(), vl), vlev_float32xm1(src1_ + 0 * C_BLK(), vl));
-        vfdata1 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 1 * C_BLK(), vl), vlev_float32xm1(src1_ + 1 * C_BLK(), vl));
-        vfdata2 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 2 * C_BLK(), vl), vlev_float32xm1(src1_ + 2 * C_BLK(), vl));
-        vfdata3 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 3 * C_BLK(), vl), vlev_float32xm1(src1_ + 3 * C_BLK(), vl));
-        vfdata4 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 4 * C_BLK(), vl), vlev_float32xm1(src1_ + 4 * C_BLK(), vl));
-        vfdata5 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 5 * C_BLK(), vl), vlev_float32xm1(src1_ + 5 * C_BLK(), vl));
-        vfdata6 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 6 * C_BLK(), vl), vlev_float32xm1(src1_ + 6 * C_BLK(), vl));
-        vfdata7 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 7 * C_BLK(), vl), vlev_float32xm1(src1_ + 7 * C_BLK(), vl));
-        vfdata8 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 8 * C_BLK(), vl), vlev_float32xm1(src1_ + 8 * C_BLK(), vl));
-        vfdata9 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 9 * C_BLK(), vl), vlev_float32xm1(src1_ + 9 * C_BLK(), vl));
+        vfdata0  = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 0 * C_BLK(), vl), vlev_float32xm1(src1_ + 0 * C_BLK(), vl));
+        vfdata1  = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 1 * C_BLK(), vl), vlev_float32xm1(src1_ + 1 * C_BLK(), vl));
+        vfdata2  = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 2 * C_BLK(), vl), vlev_float32xm1(src1_ + 2 * C_BLK(), vl));
+        vfdata3  = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 3 * C_BLK(), vl), vlev_float32xm1(src1_ + 3 * C_BLK(), vl));
+        vfdata4  = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 4 * C_BLK(), vl), vlev_float32xm1(src1_ + 4 * C_BLK(), vl));
+        vfdata5  = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 5 * C_BLK(), vl), vlev_float32xm1(src1_ + 5 * C_BLK(), vl));
+        vfdata6  = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 6 * C_BLK(), vl), vlev_float32xm1(src1_ + 6 * C_BLK(), vl));
+        vfdata7  = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 7 * C_BLK(), vl), vlev_float32xm1(src1_ + 7 * C_BLK(), vl));
+        vfdata8  = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 8 * C_BLK(), vl), vlev_float32xm1(src1_ + 8 * C_BLK(), vl));
+        vfdata9  = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 9 * C_BLK(), vl), vlev_float32xm1(src1_ + 9 * C_BLK(), vl));
         vfdata10 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 10 * C_BLK(), vl), vlev_float32xm1(src1_ + 10 * C_BLK(), vl));
         vfdata11 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 11 * C_BLK(), vl), vlev_float32xm1(src1_ + 11 * C_BLK(), vl));
         vfdata12 = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_ + 12 * C_BLK(), vl), vlev_float32xm1(src1_ + 12 * C_BLK(), vl));
@@ -104,7 +104,7 @@ static ppl::common::RetCode arithmetic_eltwise_fp32(
     for (; idx < total_len; idx += C_BLK()) {
         const float* src0_ = src0 + idx;
         const float* src1_ = src1 + idx;
-        float* dst_ = dst + idx;
+        float* dst_        = dst + idx;
 
         float32xm1_t vfdata;
         vfdata = arithmetic_vector_kernel_fp32<_op>(vlev_float32xm1(src0_, vl), vlev_float32xm1(src1_, vl));

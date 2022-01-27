@@ -28,19 +28,23 @@ template <arithmetic_op_type_t _op>
 inline float32xm1_t arithmetic_vector_kernel_fp32(float32xm1_t a, float32xm1_t b);
 
 template <>
-inline float32xm1_t arithmetic_vector_kernel_fp32<ARITHMETIC_ADD>(float32xm1_t a, float32xm1_t b) {
+inline float32xm1_t arithmetic_vector_kernel_fp32<ARITHMETIC_ADD>(float32xm1_t a, float32xm1_t b)
+{
     return vfaddvv_float32xm1(a, b, vsetvli(4, RVV_E32, RVV_M1));
 }
 template <>
-inline float32xm1_t arithmetic_vector_kernel_fp32<ARITHMETIC_SUB>(float32xm1_t a, float32xm1_t b) {
+inline float32xm1_t arithmetic_vector_kernel_fp32<ARITHMETIC_SUB>(float32xm1_t a, float32xm1_t b)
+{
     return vfsubvv_float32xm1(a, b, vsetvli(4, RVV_E32, RVV_M1));
 }
 template <>
-inline float32xm1_t arithmetic_vector_kernel_fp32<ARITHMETIC_MUL>(float32xm1_t a, float32xm1_t b) {
+inline float32xm1_t arithmetic_vector_kernel_fp32<ARITHMETIC_MUL>(float32xm1_t a, float32xm1_t b)
+{
     return vfmulvv_float32xm1(a, b, vsetvli(4, RVV_E32, RVV_M1));
 }
 template <>
-inline float32xm1_t arithmetic_vector_kernel_fp32<ARITHMETIC_DIV>(float32xm1_t a, float32xm1_t b) {
+inline float32xm1_t arithmetic_vector_kernel_fp32<ARITHMETIC_DIV>(float32xm1_t a, float32xm1_t b)
+{
     return vfdivvv_float32xm1(a, b, vsetvli(4, RVV_E32, RVV_M1));
 }
 
@@ -48,19 +52,23 @@ template <arithmetic_op_type_t _op>
 inline float arithmetic_scalar_kernel_fp32(float a, float b);
 
 template <>
-inline float arithmetic_scalar_kernel_fp32<ARITHMETIC_ADD>(float a, float b) {
+inline float arithmetic_scalar_kernel_fp32<ARITHMETIC_ADD>(float a, float b)
+{
     return a + b;
 }
 template <>
-inline float arithmetic_scalar_kernel_fp32<ARITHMETIC_SUB>(float a, float b) {
+inline float arithmetic_scalar_kernel_fp32<ARITHMETIC_SUB>(float a, float b)
+{
     return a - b;
 }
 template <>
-inline float arithmetic_scalar_kernel_fp32<ARITHMETIC_MUL>(float a, float b) {
+inline float arithmetic_scalar_kernel_fp32<ARITHMETIC_MUL>(float a, float b)
+{
     return a * b;
 }
 template <>
-inline float arithmetic_scalar_kernel_fp32<ARITHMETIC_DIV>(float a, float b) {
+inline float arithmetic_scalar_kernel_fp32<ARITHMETIC_DIV>(float a, float b)
+{
     return a / b;
 }
 

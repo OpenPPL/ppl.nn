@@ -30,8 +30,7 @@ namespace ppl { namespace kernel { namespace riscv {
 class fc_algo_selector_fp32 {
 public:
     static fc_common_algo_info select_algo(const ppl::common::dataformat_t& src_format, const fc_common_param& param);
-    static fc_manager<float>* gen_algo(const fc_common_param& param, const fc_common_algo_info& algo_info,
-                                       ppl::common::Allocator* allocator);
+    static fc_manager<float>* gen_algo(const fc_common_param& param, const fc_common_algo_info& algo_info, ppl::common::Allocator* allocator);
 };
 }}}; // namespace ppl::kernel::riscv
 

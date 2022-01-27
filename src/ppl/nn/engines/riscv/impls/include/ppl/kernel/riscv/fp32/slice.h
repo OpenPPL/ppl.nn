@@ -22,9 +22,7 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode slice_ndarray_fp32(const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape,
-                                        const float* src, const int64_t* starts, const int64_t* steps,
-                                        const int64_t* axes, const int64_t axes_num, float* dst);
+ppl::common::RetCode slice_ndarray_fp32(const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape, const float* src, const int64_t* starts, const int64_t* steps, const int64_t* axes, const int64_t axes_num, float* dst);
 
 }}}; // namespace ppl::kernel::riscv
 

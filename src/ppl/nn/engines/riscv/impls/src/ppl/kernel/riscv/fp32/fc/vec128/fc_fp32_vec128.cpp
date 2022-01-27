@@ -41,7 +41,7 @@ void fc_cvt_flt_riscv_fp32(
             for (int32_t k = 0; k < C_BLK(); k++) {
                 int32_t dst_idx = 0;
                 dst_idx += k + ic * C_BLK() + oc * padded_channels * C_BLK();
-                int32_t oc_idx = oc * C_BLK() + k;
+                int32_t oc_idx  = oc * C_BLK() + k;
                 int32_t src_idx = 0;
                 src_idx += ic + oc_idx * channels;
                 if (oc_idx >= num_outs || ic >= channels)
@@ -62,7 +62,8 @@ void hgemm_n4chw_mxn4_riscv_fp32(
 
     int32_t channels, // padded
     int32_t num_outs // padded
-) {
+)
+{
     asm volatile(
         ".equ           ATOM_M, %c[ATOM_M]      \n\t"
 
@@ -276,10 +277,8 @@ void hgemm_n4chw_mxn4_riscv_fp32(
         ".endif                                 \n\t"
 
         :
-        : [ATOM_M] "i"(atom_m), [SRC] "r"(src), [FLT] "r"(flt), [DST] "r"(dst), [BIAS] "r"(bias),
-          [IC] "r"(channels), [IHSTD] "r"(channels * 4), [OHSTD] "r"(num_outs * 4)
-        : "memory", "t0", "t1", "t2", "t3", "t4"
-    );
+        : [ATOM_M] "i"(atom_m), [SRC] "r"(src), [FLT] "r"(flt), [DST] "r"(dst), [BIAS] "r"(bias), [IC] "r"(channels), [IHSTD] "r"(channels * 4), [OHSTD] "r"(num_outs * 4)
+        : "memory", "t0", "t1", "t2", "t3", "t4");
 }
 
 typedef void (*hgemm_n4chw_riscv_kernel_fp32_func)(const float*, const float*, const float*, float*, int32_t, int32_t);
@@ -333,12 +332,14 @@ void fc_n4chw_riscv_fp32(
 
 void fc_fp32_vec128_executor::cal_kernel_tunning_param() {}
 
-uint64_t fc_fp32_vec128_executor::cal_temp_buffer_size() {
+uint64_t fc_fp32_vec128_executor::cal_temp_buffer_size()
+{
     LOG(DEBUG) << "FC cal_temp_buffer_size";
     return 1;
 }
 
-ppl::common::RetCode fc_fp32_vec128_executor::prepare() {
+ppl::common::RetCode fc_fp32_vec128_executor::prepare()
+{
     if (!fc_param_ || !src_shape_ || !dst_shape_) {
         return ppl::common::RC_INVALID_VALUE;
     }
@@ -349,7 +350,8 @@ ppl::common::RetCode fc_fp32_vec128_executor::prepare() {
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode fc_fp32_vec128_executor::execute() {
+ppl::common::RetCode fc_fp32_vec128_executor::execute()
+{
     if (!fc_param_ || !cvt_filter_ || !cvt_bias_ || !src_ || !dst_ || !temp_buffer_) {
         return ppl::common::RC_INVALID_VALUE;
     }
@@ -358,11 +360,14 @@ ppl::common::RetCode fc_fp32_vec128_executor::execute() {
     const int32_t batch = 1;
     fc_n4chw_riscv_fp32(src_, cvt_filter_, cvt_bias_, dst_,
 
-                        batch, fc_param_->channels, fc_param_->num_output);
+                        batch,
+                        fc_param_->channels,
+                        fc_param_->num_output);
     return common::RC_SUCCESS;
 }
 
-ppl::common::RetCode fc_fp32_vec128_manager::gen_cvt_weights(const float* filter, const float* bias) {
+ppl::common::RetCode fc_fp32_vec128_manager::gen_cvt_weights(const float* filter, const float* bias)
+{
     if (cvt_bias_ != nullptr || cvt_filter_ != nullptr) {
         return ppl::common::RC_PERMISSION_DENIED;
     }
@@ -370,7 +375,7 @@ ppl::common::RetCode fc_fp32_vec128_manager::gen_cvt_weights(const float* filter
     const int32_t padded_oc = round_up(param_.num_output, C_BLK());
     {
         cvt_bias_size_ = padded_oc;
-        cvt_bias_ = (float*)allocator_->Alloc(cvt_bias_size_ * sizeof(float));
+        cvt_bias_      = (float*)allocator_->Alloc(cvt_bias_size_ * sizeof(float));
         if (cvt_bias_ == nullptr) {
             return ppl::common::RC_OUT_OF_MEMORY;
         }
@@ -380,8 +385,8 @@ ppl::common::RetCode fc_fp32_vec128_manager::gen_cvt_weights(const float* filter
 
     {
         const int32_t padded_ic = round_up(param_.channels, C_BLK());
-        cvt_filter_size_ = padded_ic * padded_oc * sizeof(float);
-        cvt_filter_ = (float*)allocator_->Alloc(cvt_filter_size_);
+        cvt_filter_size_        = padded_ic * padded_oc * sizeof(float);
+        cvt_filter_             = (float*)allocator_->Alloc(cvt_filter_size_);
         if (cvt_filter_ == nullptr) {
             return ppl::common::RC_OUT_OF_MEMORY;
         }
@@ -390,7 +395,8 @@ ppl::common::RetCode fc_fp32_vec128_manager::gen_cvt_weights(const float* filter
     return ppl::common::RC_SUCCESS;
 }
 
-fc_executor<float>* fc_fp32_vec128_manager::gen_executor() {
+fc_executor<float>* fc_fp32_vec128_manager::gen_executor()
+{
     return new fc_fp32_vec128_executor(&param_, cvt_filter_, cvt_bias_);
 }
 

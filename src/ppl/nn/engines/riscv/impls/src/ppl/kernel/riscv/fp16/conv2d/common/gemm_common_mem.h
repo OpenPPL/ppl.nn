@@ -38,22 +38,22 @@ void conv_gemm_dst_blk_trans_o8_fp16(
 
     const __fp16* bias)
 {
-    const int64_t atom_c = 8;
+    const int64_t atom_c     = 8;
     const int64_t num_unroll = 8;
-    const auto vl = vsetvli(atom_c, RVV_E16, RVV_M1);
-    float16xm1_t _vzero = vfmvvf_float16xm1(0.f, vl);
+    const auto vl            = vsetvli(atom_c, RVV_E16, RVV_M1);
+    float16xm1_t _vzero      = vfmvvf_float16xm1(0.f, vl);
 
     for (int64_t mi = 0; mi < real_dst_blk_m; mi += atom_c) {
-        auto temp_dst = dst + mi * dst_h * dst_w;
-        auto temp_dst_blk = dst_blk + mi * dst_blk_h * dst_blk_w;
+        auto temp_dst       = dst + mi * dst_h * dst_w;
+        auto temp_dst_blk   = dst_blk + mi * dst_blk_h * dst_blk_w;
         float16xm1_t _vbias = vlev_float16xm1(bias, vl);
 
         for (int64_t hi = 0; hi < real_dst_blk_h; hi += 1) {
             int64_t wi;
             for (wi = 0; wi <= real_dst_blk_w - num_unroll; wi += num_unroll) {
-                int64_t temp_dst_loc = wi * atom_c;
+                int64_t temp_dst_loc  = wi * atom_c;
                 auto this_dst_blk_ptr = temp_dst_blk + temp_dst_loc;
-                auto this_dst_ptr = temp_dst + temp_dst_loc;
+                auto this_dst_ptr     = temp_dst + temp_dst_loc;
 
                 float16xm1_t _v0 = vlev_float16xm1(this_dst_blk_ptr + atom_c * 0, vl);
                 float16xm1_t _v1 = vlev_float16xm1(this_dst_blk_ptr + atom_c * 1, vl);
@@ -95,12 +95,12 @@ void conv_gemm_dst_blk_trans_o8_fp16(
             }
 
             for (; wi < real_dst_blk_w; wi += 1) {
-                int64_t temp_dst_loc = wi * atom_c;
+                int64_t temp_dst_loc  = wi * atom_c;
                 auto this_dst_blk_ptr = temp_dst_blk + temp_dst_loc;
-                auto this_dst_ptr = temp_dst + temp_dst_loc;
+                auto this_dst_ptr     = temp_dst + temp_dst_loc;
 
                 float16xm1_t _v0 = vlev_float16xm1(this_dst_blk_ptr + 0, vl);
-                _v0 = vfaddvv_float16xm1(_v0, _vbias, vl);
+                _v0              = vfaddvv_float16xm1(_v0, _vbias, vl);
                 if (with_relu) {
                     _v0 = vfmaxvv_float16xm1(_v0, _vzero, vl);
                 }

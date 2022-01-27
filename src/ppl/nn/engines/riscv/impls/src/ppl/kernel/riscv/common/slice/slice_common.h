@@ -35,13 +35,13 @@ ppl::common::RetCode slice_ndarray_recursive(
     const int64_t dim_idx,
     T* dst)
 {
-    const int64_t dim_count = src_shape->GetDimCount();
+    const int64_t dim_count     = src_shape->GetDimCount();
     const int64_t output_length = dst_shape->GetDim(dim_idx);
 
     if (dim_idx == dim_count - 1) {
         for (int64_t i = 0; i < output_length; i++) {
             const int64_t src_i = starts[dim_idx] + i * steps[dim_idx];
-            dst[i] = src[src_i];
+            dst[i]              = src[src_i];
         }
     } else {
         for (int64_t i = 0; i < output_length; i++) {
@@ -79,7 +79,7 @@ ppl::common::RetCode slice_ndarray_common(
     }
 
     int64_t real_starts[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
-    int64_t real_steps[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
+    int64_t real_steps[PPL_RISCV_TENSOR_MAX_DIMS()]  = {0};
 
     if (axes_num == dim_count) {
         memcpy(real_starts, starts, axes_num * sizeof(int64_t));
@@ -87,11 +87,11 @@ ppl::common::RetCode slice_ndarray_common(
     } else if (axes_num < dim_count) {
         for (int64_t i = 0; i < dim_count; i++) {
             real_starts[i] = 0;
-            real_steps[i] = 1;
+            real_steps[i]  = 1;
         }
         for (int64_t i = 0; i < axes_num; i++) {
             real_starts[axes[i]] = starts[i];
-            real_steps[axes[i]] = steps[i];
+            real_steps[axes[i]]  = steps[i];
         }
     } else {
         return ppl::common::RC_INVALID_VALUE;
@@ -106,12 +106,12 @@ ppl::common::RetCode slice_ndarray_common(
         }
     }
 
-    int64_t stride_in[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
+    int64_t stride_in[PPL_RISCV_TENSOR_MAX_DIMS()]  = {0};
     int64_t stride_out[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
-    stride_in[dim_count - 1] = 1;
-    stride_out[dim_count - 1] = 1;
+    stride_in[dim_count - 1]                        = 1;
+    stride_out[dim_count - 1]                       = 1;
     for (int64_t i = dim_count - 2; i >= 0; i--) {
-        stride_in[i] = src_shape->GetDim(i + 1) * stride_in[i + 1];
+        stride_in[i]  = src_shape->GetDim(i + 1) * stride_in[i + 1];
         stride_out[i] = dst_shape->GetDim(i + 1) * stride_out[i + 1];
     }
 

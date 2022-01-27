@@ -29,7 +29,8 @@ inline void wb_b4f3s1_cvt_filter_blk_kernel(
     int64_t filter_out_stride,
 
     float* filter_cvt,
-    int64_t filter_cvt_wg_tile_stride) {
+    int64_t filter_cvt_wg_tile_stride)
+{
     float tmp[6][3];
     for (int64_t i = 0; i < 6; i++) {
         tmp[i][0] = trans_mat[i * 3 + 0] * filter[0] + trans_mat[i * 3 + 1] * filter[3] + trans_mat[i * 3 + 2] * filter[6];
@@ -45,7 +46,8 @@ inline void wb_b4f3s1_cvt_filter_blk_kernel(
     }
 }
 
-uint64_t conv2d_n4cx_wg_b4f3_fp32_runtime_executor::cal_temp_buffer_size() {
+uint64_t conv2d_n4cx_wg_b4f3_fp32_runtime_executor::cal_temp_buffer_size()
+{
     LOG(DEBUG) << "n4cx wg b4f3: cal temp buffer size";
 
     size_t temp_buffer_size = conv_wg_bxfxs1_get_temp_buffer_size_fp32<4, 3>(
@@ -64,11 +66,13 @@ uint64_t conv2d_n4cx_wg_b4f3_fp32_runtime_executor::cal_temp_buffer_size() {
     return temp_buffer_size;
 }
 
-bool conv2d_n4cx_wg_b4f3_fp32_offline_manager::is_supported() {
+bool conv2d_n4cx_wg_b4f3_fp32_offline_manager::is_supported()
+{
     return true;
 }
 
-ppl::common::RetCode conv2d_n4cx_wg_b4f3_fp32_offline_manager::fast_init_tunning_param() {
+ppl::common::RetCode conv2d_n4cx_wg_b4f3_fp32_offline_manager::fast_init_tunning_param()
+{
     tunning_param_.oh_blk = 28;
     tunning_param_.ow_blk = 28;
     tunning_param_.ic_blk = 64;
@@ -98,7 +102,7 @@ ppl::common::RetCode conv2d_n4cx_wg_b4f3_fp32_offline_manager::pick_best_tunning
                      tunning_param_.ow_blk += 28) {
                     double this_time = profile_tunning_param(src, filter, dst, src_shape, dst_shape);
                     if (this_time < best_time) {
-                        best_time = this_time;
+                        best_time         = this_time;
                         best_tunnig_param = tunning_param_;
                     }
                     if (this_time < inner_prev_time) {
@@ -127,20 +131,20 @@ ppl::common::RetCode conv2d_n4cx_wg_b4f3_fp32_offline_manager::gen_cvt_weights(
     LOG(DEBUG) << "n4cx wg b4f3: gen cvt weight";
 
     const int64_t num_output = param_.num_output;
-    const int64_t channels = param_.channels;
-    const int64_t kernel_h = param_.kernel_h;
-    const int64_t kernel_w = param_.kernel_w;
-    const int64_t group = param_.group;
+    const int64_t channels   = param_.channels;
+    const int64_t kernel_h   = param_.kernel_h;
+    const int64_t kernel_w   = param_.kernel_w;
+    const int64_t group      = param_.group;
 
     {
         cvt_bias_size_ = round_up(num_output, 4);
-        cvt_bias_ = (float*)allocator_->Alloc(cvt_bias_size_ * sizeof(float));
+        cvt_bias_      = (float*)allocator_->Alloc(cvt_bias_size_ * sizeof(float));
         memcpy(cvt_bias_, bias, num_output * sizeof(float));
         memset(cvt_bias_ + num_output, 0.0f, (cvt_bias_size_ - num_output) * sizeof(float));
     }
     {
         cvt_filter_size_ = conv_wg_bxfxs1_get_cvt_filter_size_fp32<4, 3>(channels, num_output, group);
-        cvt_filter_ = (float*)allocator_->Alloc(cvt_filter_size_);
+        cvt_filter_      = (float*)allocator_->Alloc(cvt_filter_size_);
 
         const float trans_mat[6][3] = {
             {1.0f / 4, 0.0f, 0.0f},

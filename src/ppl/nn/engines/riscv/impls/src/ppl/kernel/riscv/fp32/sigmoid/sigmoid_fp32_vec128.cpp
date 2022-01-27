@@ -22,10 +22,11 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-static inline float32xm1_t _vector128_sigmoid(const float32xm1_t var, const uint64_t vl) {
+static inline float32xm1_t _vector128_sigmoid(const float32xm1_t var, const uint64_t vl)
+{
     float32xm1_t value = var;
-    value = vfmaxvf_float32xm1(value, -18.0f, vl);
-    value = vfminvf_float32xm1(value, 18.0f, vl);
+    value              = vfmaxvf_float32xm1(value, -18.0f, vl);
+    value              = vfminvf_float32xm1(value, 18.0f, vl);
 
     float32xm1_t value_squared = vfmulvv_float32xm1(value, value, vl);
 
@@ -56,8 +57,9 @@ static inline float32xm1_t _vector128_sigmoid(const float32xm1_t var, const uint
     return dst;
 }
 
-ppl::common::RetCode sigmoid_fp32_vec128(const ppl::nn::TensorShape* x_shape, const float* x, float* y) {
-    const auto vl = vsetvli(4, RVV_E32, RVV_M1);
+ppl::common::RetCode sigmoid_fp32_vec128(const ppl::nn::TensorShape* x_shape, const float* x, float* y)
+{
+    const auto vl        = vsetvli(4, RVV_E32, RVV_M1);
     const int64_t n_elem = x_shape->GetElementsIncludingPadding();
 
     int64_t i = 0;

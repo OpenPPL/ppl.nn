@@ -37,8 +37,8 @@ ppl::common::RetCode argmax_ndarray(
     const int64_t real_axis = axis < 0 ? axis + src_shape->GetDimCount() : axis;
 
     const int64_t argmax_dim = src_shape->GetDim(real_axis);
-    int64_t outer_dim = 1;
-    int64_t inner_dim = 1;
+    int64_t outer_dim        = 1;
+    int64_t inner_dim        = 1;
     for (uint32_t i = 0; i < real_axis; i++) {
         outer_dim *= src_shape->GetDim(i);
     }
@@ -49,11 +49,11 @@ ppl::common::RetCode argmax_ndarray(
     for (int64_t i = 0; i < outer_dim; ++i) {
         for (int64_t j = 0; j < inner_dim; ++j) {
             eT max_value = numeric_min;
-            int64_t idx = 0;
+            int64_t idx  = 0;
             for (int64_t k = 0; k < argmax_dim; ++k) {
                 if (src[(i * argmax_dim + k) * inner_dim + j] > max_value) {
                     max_value = src[(i * argmax_dim + k) * inner_dim + j];
-                    idx = k;
+                    idx       = k;
                 }
             }
             dst[i * inner_dim + j] = idx;

@@ -24,7 +24,8 @@ namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode flatten_n4cx_fp32(const float* src, float* dst,
 
-                                       const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape);
+                                       const ppl::nn::TensorShape* src_shape,
+                                       const ppl::nn::TensorShape* dst_shape);
 
 }}}; //  namespace ppl::kernel::riscv
 

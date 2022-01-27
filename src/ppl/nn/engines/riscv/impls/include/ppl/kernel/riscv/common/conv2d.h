@@ -43,20 +43,23 @@ struct conv2d_common_param {
     int64_t num_output;
     int64_t group;
 
-    __fp16 sparse_level() const {
+    __fp16 sparse_level() const
+    {
         // TODO: are there any better index for sparse_level?
         const int32_t sparse_h = stride_h * dilation_h;
         const int32_t sparse_w = stride_w * dilation_w;
         return __fp16(sparse_h * sparse_w) / __fp16(kernel_h * kernel_w);
     }
 
-    bool is_depthwise() const {
+    bool is_depthwise() const
+    {
         return true && group != 1 && group == channels && group == num_output;
     }
 
-    bool is_pointwise() const {
+    bool is_pointwise() const
+    {
         return true && kernel_h == 1 && kernel_w == 1 && pad_h == 0 && pad_w == 0 && dilation_h == 1 &&
-            dilation_w == 1 && !is_depthwise();
+               dilation_w == 1 && !is_depthwise();
     }
 };
 
@@ -64,13 +67,13 @@ typedef uint32_t conv2d_common_algo_t;
 
 class conv2d_common_algo {
 public:
-    static const conv2d_common_algo_t unknown = 0;
-    static const conv2d_common_algo_t naive = 2;
-    static const conv2d_common_algo_t depthwise = 3;
-    static const conv2d_common_algo_t tile_gemm = 4;
-    static const conv2d_common_algo_t gemm = 5;
-    static const conv2d_common_algo_t direct_gemm = 6;
-    static const conv2d_common_algo_t direct = 7;
+    static const conv2d_common_algo_t unknown       = 0;
+    static const conv2d_common_algo_t naive         = 2;
+    static const conv2d_common_algo_t depthwise     = 3;
+    static const conv2d_common_algo_t tile_gemm     = 4;
+    static const conv2d_common_algo_t gemm          = 5;
+    static const conv2d_common_algo_t direct_gemm   = 6;
+    static const conv2d_common_algo_t direct        = 7;
     static const conv2d_common_algo_t winograd_b2f3 = 32;
     static const conv2d_common_algo_t winograd_b4f3 = 33;
     static const conv2d_common_algo_t winograd_b6f3 = 34;
@@ -88,12 +91,12 @@ class conv2d_base_runtime_executor {
 public:
     conv2d_base_runtime_executor() {}
 
-    virtual uint64_t cal_temp_buffer_size() = 0;
-    virtual ppl::common::RetCode prepare() = 0;
-    virtual ppl::common::RetCode execute() = 0;
+    virtual uint64_t cal_temp_buffer_size()                                      = 0;
+    virtual ppl::common::RetCode prepare()                                       = 0;
+    virtual ppl::common::RetCode execute()                                       = 0;
     virtual ppl::common::RetCode set_src_tensor(ppl::nn::TensorImpl& src_tensor) = 0;
     virtual ppl::common::RetCode set_dst_tensor(ppl::nn::TensorImpl& src_tensor) = 0;
-    virtual void set_temp_buffer(void* temp_buffer) = 0;
+    virtual void set_temp_buffer(void* temp_buffer)                              = 0;
 
     virtual ~conv2d_base_runtime_executor() {}
 };
@@ -142,88 +145,110 @@ public:
         , temp_buffer_(nullptr) {}
 
     virtual uint64_t cal_temp_buffer_size() = 0;
-    virtual ppl::common::RetCode prepare() = 0;
-    virtual ppl::common::RetCode execute() = 0;
+    virtual ppl::common::RetCode prepare()  = 0;
+    virtual ppl::common::RetCode execute()  = 0;
     virtual ~conv2d_runtime_executor() {}
 
-    virtual ppl::common::RetCode set_src_tensor(ppl::nn::TensorImpl& src_tensor) override {
+    virtual ppl::common::RetCode set_src_tensor(ppl::nn::TensorImpl& src_tensor) override
+    {
         set_src_shape(src_tensor.GetShape());
         set_src(src_tensor.GetBufferPtr<T>());
         return ppl::common::RC_SUCCESS;
     };
-    virtual ppl::common::RetCode set_dst_tensor(ppl::nn::TensorImpl& dst_tensor) override {
+    virtual ppl::common::RetCode set_dst_tensor(ppl::nn::TensorImpl& dst_tensor) override
+    {
         set_dst_shape(dst_tensor.GetShape());
         set_dst(dst_tensor.GetBufferPtr<T>());
         return ppl::common::RC_SUCCESS;
     };
 
-    void set_conv_param(const conv2d_common_param* conv_param) {
+    void set_conv_param(const conv2d_common_param* conv_param)
+    {
         conv_param_ = conv_param;
     }
-    const conv2d_common_param* conv_param() const {
+    const conv2d_common_param* conv_param() const
+    {
         return conv_param_;
     };
 
-    void set_cvt_filter(const T* cvt_filter) {
+    void set_cvt_filter(const T* cvt_filter)
+    {
         cvt_filter_ = cvt_filter;
     }
-    const T* cvt_filter() const {
+    const T* cvt_filter() const
+    {
         return cvt_filter_;
     }
 
-    void set_cvt_bias(const T* cvt_bias) {
+    void set_cvt_bias(const T* cvt_bias)
+    {
         cvt_bias_ = cvt_bias;
     }
-    const T* cvt_bias() const {
+    const T* cvt_bias() const
+    {
         return cvt_bias_;
     }
 
-    void set_src(const T* src) {
+    void set_src(const T* src)
+    {
         src_ = src;
     }
-    const T* src() const {
+    const T* src() const
+    {
         return src_;
     }
 
-    void set_src_shape(const ppl::nn::TensorShape* src_shape) {
+    void set_src_shape(const ppl::nn::TensorShape* src_shape)
+    {
         src_shape_ = src_shape;
     }
-    const ppl::nn::TensorShape* src_shape() const {
+    const ppl::nn::TensorShape* src_shape() const
+    {
         return src_shape_;
     };
 
-    void set_dst(T* dst) {
+    void set_dst(T* dst)
+    {
         dst_ = dst;
     }
-    T* dst() const {
+    T* dst() const
+    {
         return dst_;
     }
 
-    void set_dst_shape(const ppl::nn::TensorShape* dst_shape) {
+    void set_dst_shape(const ppl::nn::TensorShape* dst_shape)
+    {
         dst_shape_ = dst_shape;
     }
-    const ppl::nn::TensorShape* dst_shape() const {
+    const ppl::nn::TensorShape* dst_shape() const
+    {
         return dst_shape_;
     }
 
-    void set_sum_src(const T* sum_src) {
+    void set_sum_src(const T* sum_src)
+    {
         sum_src_ = sum_src;
     }
-    const T* sum_src() const {
+    const T* sum_src() const
+    {
         return sum_src_;
     }
 
-    void set_sum_src_shape(const ppl::nn::TensorShape* sum_src_shape) {
+    void set_sum_src_shape(const ppl::nn::TensorShape* sum_src_shape)
+    {
         sum_src_shape_ = sum_src_shape;
     }
-    const ppl::nn::TensorShape* sum_src_shape() const {
+    const ppl::nn::TensorShape* sum_src_shape() const
+    {
         return sum_src_shape_;
     }
 
-    void set_temp_buffer(void* temp_buffer) override {
+    void set_temp_buffer(void* temp_buffer) override
+    {
         temp_buffer_ = temp_buffer;
     }
-    void* temp_buffer() const {
+    void* temp_buffer() const
+    {
         return temp_buffer_;
     }
 };
@@ -235,14 +260,16 @@ protected:
 public:
     conv2d_base_offline_manager() {}
 
-    conv2d_common_algo_info& algo_info() {
+    conv2d_common_algo_info& algo_info()
+    {
         return algo_info_;
     }
-    void set_algo_info(conv2d_common_algo_info& algo) {
+    void set_algo_info(conv2d_common_algo_info& algo)
+    {
         algo_info_ = algo;
     }
     virtual conv2d_base_runtime_executor* gen_executor() = 0;
-    virtual void release_cvt_weights() = 0;
+    virtual void release_cvt_weights()                   = 0;
     virtual ~conv2d_base_offline_manager() {}
 };
 
@@ -266,54 +293,65 @@ public:
         , cvt_filter_size_(0)
         , cvt_bias_size_(0) {}
 
-    conv2d_offline_manager(const conv2d_common_param& param, const conv2d_common_algo_info& algo_info,
-                           ppl::common::Allocator* allocator)
+    conv2d_offline_manager(const conv2d_common_param& param, const conv2d_common_algo_info& algo_info, ppl::common::Allocator* allocator)
         : conv2d_base_offline_manager()
         , allocator_(allocator)
         , cvt_filter_(nullptr)
         , cvt_bias_(nullptr)
         , cvt_filter_size_(0)
-        , cvt_bias_size_(0) {
-        param_ = param;
+        , cvt_bias_size_(0)
+    {
+        param_     = param;
         algo_info_ = algo_info;
     }
 
-    void set_param(const conv2d_common_param& param) {
+    void set_param(const conv2d_common_param& param)
+    {
         param_ = param;
     }
-    const conv2d_common_param& param() const {
+    const conv2d_common_param& param() const
+    {
         return param_;
     }
-    void set_allocator(ppl::common::Allocator* allocator) {
+    void set_allocator(ppl::common::Allocator* allocator)
+    {
         allocator_ = allocator;
     }
-    ppl::common::Allocator* allocator() {
+    ppl::common::Allocator* allocator()
+    {
         return allocator_;
     }
 
-    void set_cvt_filter(const T* cvt_filter, const uint64_t cvt_filter_size) {
-        cvt_filter_ = const_cast<T*>(cvt_filter);
+    void set_cvt_filter(const T* cvt_filter, const uint64_t cvt_filter_size)
+    {
+        cvt_filter_      = const_cast<T*>(cvt_filter);
         cvt_filter_size_ = cvt_filter_size;
     }
-    const T* cvt_filter() const {
+    const T* cvt_filter() const
+    {
         return cvt_filter_;
     }
-    uint64_t cvt_filter_size() const {
+    uint64_t cvt_filter_size() const
+    {
         return cvt_filter_size_;
     }
 
-    void set_cvt_bias(const T* cvt_bias, const uint64_t cvt_bias_size) {
-        cvt_bias_ = const_cast<T*>(cvt_bias);
+    void set_cvt_bias(const T* cvt_bias, const uint64_t cvt_bias_size)
+    {
+        cvt_bias_      = const_cast<T*>(cvt_bias);
         cvt_bias_size_ = cvt_bias_size;
     }
-    const T* cvt_bias() const {
+    const T* cvt_bias() const
+    {
         return cvt_bias_;
     }
-    uint64_t cvt_bias_size() const {
+    uint64_t cvt_bias_size() const
+    {
         return cvt_bias_size_;
     }
 
-    void release_cvt_weights() {
+    void release_cvt_weights()
+    {
         if (cvt_filter_) {
             allocator_->Free(cvt_filter_);
             cvt_filter_ = nullptr;
@@ -325,18 +363,15 @@ public:
         }
     }
 
-    virtual ppl::common::RetCode fast_init_tunning_param() = 0;
-    virtual ppl::common::RetCode pick_best_tunning_param(const T* src, const T* filter, T* dst,
-                                                         ppl::nn::TensorShape& src_shape,
-                                                         ppl::nn::TensorShape& dst_shape) = 0;
-    virtual bool is_supported() = 0;
-    virtual ppl::common::RetCode gen_cvt_weights(const T* filter, const T* bias) = 0;
-    virtual conv2d_base_runtime_executor* gen_executor() = 0;
+    virtual ppl::common::RetCode fast_init_tunning_param()                                                                                                        = 0;
+    virtual ppl::common::RetCode pick_best_tunning_param(const T* src, const T* filter, T* dst, ppl::nn::TensorShape& src_shape, ppl::nn::TensorShape& dst_shape) = 0;
+    virtual bool is_supported()                                                                                                                                   = 0;
+    virtual ppl::common::RetCode gen_cvt_weights(const T* filter, const T* bias)                                                                                  = 0;
+    virtual conv2d_base_runtime_executor* gen_executor()                                                                                                          = 0;
     virtual ~conv2d_offline_manager() {}
 
-    double profile_tunning_param(const T* src, const T* filter, T* dst, const ppl::nn::TensorShape& src_shape,
-                                 const ppl::nn::TensorShape& dst_shape, const int32_t exe_count=1) {
-
+    double profile_tunning_param(const T* src, const T* filter, T* dst, const ppl::nn::TensorShape& src_shape, const ppl::nn::TensorShape& dst_shape, const int32_t exe_count = 1)
+    {
         conv2d_offline_manager<T>& offline_manager = *this;
         std::vector<T> zero_bias(offline_manager.param().num_output, 0.0f);
         offline_manager.fast_init_tunning_param();
@@ -375,9 +410,8 @@ public:
     }
 };
 
-template<typename T>
+template <typename T>
 class conv2d_algo_selector {
-
 };
 
 }}} // namespace ppl::kernel::riscv

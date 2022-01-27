@@ -36,12 +36,12 @@ ppl::common::RetCode flatten_nbcx(
     if (src_shape->GetDimCount() != 4) {
         return ppl::common::RC_UNSUPPORTED;
     }
-    const int64_t batch = src_shape->GetDim(0);
+    const int64_t batch    = src_shape->GetDim(0);
     const int64_t channels = src_shape->GetDim(1);
-    const int64_t src_h = src_shape->GetDim(2);
-    const int64_t src_w = src_shape->GetDim(3);
+    const int64_t src_h    = src_shape->GetDim(2);
+    const int64_t src_w    = src_shape->GetDim(3);
 
-    const int64_t pad_c = round_up(channels, c_blk);
+    const int64_t pad_c   = round_up(channels, c_blk);
     const int64_t size_2D = src_h * src_w;
     // const int64_t size_3D  = channels * src_h * src_w;
     const int64_t size_3D = pad_c * size_2D;
@@ -60,13 +60,13 @@ ppl::common::RetCode flatten_nbcx(
     const int64_t pad_3D = round_up(channels * size_2D, c_blk);
     for (int64_t b = 0; b < batch; ++b) {
         const T* src_ = src + b * size_3D;
-        T* dst_ = dst + b * pad_3D;
+        T* dst_       = dst + b * pad_3D;
         for (int64_t i = 0; i < pad_3D; ++i) {
             if (i < size_3D) {
-                int64_t c_idx = i / size_2D;
-                int64_t hw_idx = i % size_2D;
+                int64_t c_idx   = i / size_2D;
+                int64_t hw_idx  = i % size_2D;
                 int64_t src_idx = (c_idx / c_blk) * size_2D * c_blk + hw_idx * c_blk + c_idx % c_blk;
-                dst_[i] = src_[src_idx];
+                dst_[i]         = src_[src_idx];
             } else {
                 dst_[i] = 0;
             }

@@ -42,12 +42,12 @@ ppl::common::RetCode softmax_ndarray_fp32(
     const auto vl = vsetvli(C_BLK(), RVV_E32, RVV_M1);
 
     for (int64_t i = 0; i < outer_dim; i++) {
-        const float* src_ = src + i * inner_dim;
-        float* dst_ = dst + i * inner_dim;
+        const float* src_  = src + i * inner_dim;
+        float* dst_        = dst + i * inner_dim;
         // find max
         float32xm1_t vfmax = vfmvvf_float32xm1(-__FLT_MAX__, vl);
-        float fmax = (float)(-__FLT_MAX__);
-        int64_t j = 0;
+        float fmax         = (float)(-__FLT_MAX__);
+        int64_t j          = 0;
         for (; j + C_BLK() < inner_dim; j += C_BLK()) {
             vfmax = vfmaxvv_float32xm1(vfmax, vlev_float32xm1(src_ + j, vl), vl);
         }
@@ -63,7 +63,7 @@ ppl::common::RetCode softmax_ndarray_fp32(
         // src - max
         for (j = 0; j + C_BLK() < inner_dim; j += C_BLK()) {
             const float* src_p = src_ + j;
-            float* dst_p = dst_ + j;
+            float* dst_p       = dst_ + j;
             vsev_float32xm1(dst_p, vfsubvv_float32xm1(vlev_float32xm1(src_p, vl), vfmax, vl), vl);
         }
         for (; j < inner_dim; j++) {
