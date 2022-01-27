@@ -29,10 +29,10 @@ inline void relation_broadcast_nbcx_lastdim_no_broadcast_common(
     const int64_t length,
     const bool c0_broadcast,
     const bool c1_broadcast,
-    uint8_t* dst
-) {
+    uint8_t* dst)
+{
     constexpr int32_t c_blk = vlen / 8 / sizeof(T);
-    uint64_t vl = vsetvli<T, vlen>(c_blk);
+    uint64_t vl             = vsetvli<T, vlen>(c_blk);
 
     std::vector<uint_type<T>> lst(c_blk, 1);
     register_v<uint_type<T>, vlen> v_mask = vlev<uint_type<T>, vlen>(lst.data(), vl);
@@ -68,10 +68,10 @@ inline void relation_broadcast_nbcx_lastdim_broadcast0_common(
     const int64_t length,
     const bool c0_broadcast,
     const bool c1_broadcast,
-    uint8_t* dst
-) {
+    uint8_t* dst)
+{
     constexpr int32_t c_blk = vlen / 8 / sizeof(T);
-    uint64_t vl = vsetvli<T, vlen>(c_blk);
+    uint64_t vl             = vsetvli<T, vlen>(c_blk);
 
     std::vector<uint_type<T>> lst(c_blk, 1);
     register_v<uint_type<T>, vlen> v_mask = vlev<uint_type<T>, vlen>(lst.data(), vl);
@@ -107,10 +107,10 @@ inline void relation_broadcast_nbcx_lastdim_broadcast1_common(
     const int64_t length,
     const bool c0_broadcast,
     const bool c1_broadcast,
-    uint8_t* dst
-) {
+    uint8_t* dst)
+{
     constexpr int32_t c_blk = vlen / 8 / sizeof(T);
-    uint64_t vl = vsetvli<T, vlen>(c_blk);
+    uint64_t vl             = vsetvli<T, vlen>(c_blk);
 
     std::vector<uint_type<T>> lst(c_blk, 1);
     register_v<uint_type<T>, vlen> v_mask = vlev<uint_type<T>, vlen>(lst.data(), vl);
@@ -136,26 +136,26 @@ inline void relation_broadcast_nbcx_lastdim_broadcast1_common(
             register_ve<T, vlen> v_dst = vrelation_vv<op, T, vlen>(v_src0, v_src1, vl);
             pack_one<T, vlen>(v_dst, v_mask, dst + i * c_blk);
         }
-    }    
+    }
 }
 
 template <relation_op_type_t op, typename T, int32_t vlen>
 static ppl::common::RetCode relation_broadcast_nbcx_recursive_common(
-    const int64_t *src0_shape,
-    const int64_t *src1_shape,
-    const int64_t *dst_shape,
-    const T *src0,
-    const T *src1,
-    const int64_t *inc0,
-    const int64_t *inc1,
-    const int64_t *inc_out,
+    const int64_t* src0_shape,
+    const int64_t* src1_shape,
+    const int64_t* dst_shape,
+    const T* src0,
+    const T* src1,
+    const int64_t* inc0,
+    const int64_t* inc1,
+    const int64_t* inc_out,
     const int64_t dim_count,
     const int64_t dim_idx,
     const int64_t c_dim_idx,
-    uint8_t *dst
-) {
+    uint8_t* dst)
+{
     constexpr int32_t c_blk = vlen / 8 / sizeof(T);
-    const int64_t length = dim_idx == c_dim_idx ? div_up(dst_shape[dim_idx], c_blk) : dst_shape[dim_idx];
+    const int64_t length    = dim_idx == c_dim_idx ? div_up(dst_shape[dim_idx], c_blk) : dst_shape[dim_idx];
     if (dim_idx == dim_count - 1) {
         const bool c0_broadcast = src0_shape[c_dim_idx] != src1_shape[c_dim_idx] && src0_shape[c_dim_idx] == 1;
         const bool c1_broadcast = src0_shape[c_dim_idx] != src1_shape[c_dim_idx] && src1_shape[c_dim_idx] == 1;
@@ -180,8 +180,7 @@ static ppl::common::RetCode relation_broadcast_nbcx_recursive_common(
                 dim_count,
                 dim_idx + 1,
                 c_dim_idx,
-                dst + i * inc_out[dim_idx]
-            );
+                dst + i * inc_out[dim_idx]);
         }
     }
 
@@ -190,26 +189,26 @@ static ppl::common::RetCode relation_broadcast_nbcx_recursive_common(
 
 template <relation_op_type_t op, typename T, int32_t vlen>
 static ppl::common::RetCode relation_broadcast_nbcx_common(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::nn::TensorShape* src0_shape,
+    const ppl::nn::TensorShape* src1_shape,
+    const ppl::nn::TensorShape* dst_shape,
     const T* src0,
     const T* src1,
-    uint8_t* dst
-) {
+    uint8_t* dst)
+{
     constexpr int32_t c_blk = vlen / 8 / sizeof(T);
     const int64_t c_dim_idx = 1;
 
-    const int64_t max_dim_count = dst_shape->GetDimCount();
+    const int64_t max_dim_count              = dst_shape->GetDimCount();
     int64_t padded_src0_shape[max_dim_count] = {0};
     int64_t padded_src1_shape[max_dim_count] = {0};
     pad_shape(src0_shape, max_dim_count, padded_src0_shape);
     pad_shape(src1_shape, max_dim_count, padded_src1_shape);
 
-    int64_t compressed_dim_count = 0;
+    int64_t compressed_dim_count                 = 0;
     int64_t compressed_src0_shape[max_dim_count] = {0};
     int64_t compressed_src1_shape[max_dim_count] = {0};
-    int64_t compressed_dst_shape[max_dim_count] = {0};
+    int64_t compressed_dst_shape[max_dim_count]  = {0};
     compress_shape(
         padded_src0_shape,
         padded_src1_shape,
@@ -217,22 +216,21 @@ static ppl::common::RetCode relation_broadcast_nbcx_common(
         &compressed_dim_count,
         compressed_src0_shape,
         compressed_src1_shape,
-        compressed_dst_shape
-    );
+        compressed_dst_shape);
 
-    int64_t inc0[compressed_dim_count] = {0};
-    int64_t inc1[compressed_dim_count] = {0};
+    int64_t inc0[compressed_dim_count]    = {0};
+    int64_t inc1[compressed_dim_count]    = {0};
     int64_t inc_out[compressed_dim_count] = {0};
-    int64_t stride0    = c_blk;
-    int64_t stride1    = c_blk;
-    int64_t stride_out = c_blk;
+    int64_t stride0                       = c_blk;
+    int64_t stride1                       = c_blk;
+    int64_t stride_out                    = c_blk;
     for (int64_t i = compressed_dim_count - 1; i >= 0; i--) {
         inc0[i]    = compressed_src0_shape[i] == 1 ? 0 : stride0;
         inc1[i]    = compressed_src1_shape[i] == 1 ? 0 : stride1;
         inc_out[i] = stride_out;
 
-        stride0    *= i == c_dim_idx ? div_up(compressed_src0_shape[i], c_blk) : compressed_src0_shape[i];
-        stride1    *= i == c_dim_idx ? div_up(compressed_src1_shape[i], c_blk) : compressed_src1_shape[i];
+        stride0 *= i == c_dim_idx ? div_up(compressed_src0_shape[i], c_blk) : compressed_src0_shape[i];
+        stride1 *= i == c_dim_idx ? div_up(compressed_src1_shape[i], c_blk) : compressed_src1_shape[i];
         stride_out *= i == c_dim_idx ? div_up(compressed_dst_shape[i], c_blk) : compressed_dst_shape[i];
     }
 
@@ -251,6 +249,6 @@ static ppl::common::RetCode relation_broadcast_nbcx_common(
         dst);
 }
 
-}}};
+}}}; // namespace ppl::kernel::riscv
 
 #endif

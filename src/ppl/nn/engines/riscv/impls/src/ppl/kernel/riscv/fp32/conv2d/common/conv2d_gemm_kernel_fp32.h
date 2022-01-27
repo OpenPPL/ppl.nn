@@ -32,7 +32,8 @@ typedef void (*conv2d_gemm_kernel_func_riscv_fp32_type_t)(
     const int64_t k);
 
 template <bool first>
-conv2d_gemm_kernel_func_riscv_fp32_type_t conv2d_gemm_select_cto4c_kernel_fp32_vec128(int64_t m, int64_t n) {
+conv2d_gemm_kernel_func_riscv_fp32_type_t conv2d_gemm_select_cto4c_kernel_fp32_vec128(int64_t m, int64_t n)
+{
     switch (m % 16) {
         case 4:
             switch (n % 7) {
@@ -107,7 +108,8 @@ conv2d_gemm_kernel_func_riscv_fp32_type_t conv2d_gemm_select_cto4c_kernel_fp32_v
 }
 
 template <bool first>
-conv2d_gemm_kernel_func_riscv_fp32_type_t conv2d_gemm_select_4cto4c_kernel_fp32_vec128(int64_t m, int64_t n) {
+conv2d_gemm_kernel_func_riscv_fp32_type_t conv2d_gemm_select_4cto4c_kernel_fp32_vec128(int64_t m, int64_t n)
+{
     switch (m % 16) {
         case 4:
             switch (n % 7) {
@@ -182,7 +184,8 @@ conv2d_gemm_kernel_func_riscv_fp32_type_t conv2d_gemm_select_4cto4c_kernel_fp32_
 }
 
 template <int64_t src_atom_c, bool first>
-conv2d_gemm_kernel_func_riscv_fp32_type_t conv2d_gemm_select_xcto4c_kernel_fp32_vec128(int64_t m, int64_t n) {
+conv2d_gemm_kernel_func_riscv_fp32_type_t conv2d_gemm_select_xcto4c_kernel_fp32_vec128(int64_t m, int64_t n)
+{
     switch (src_atom_c) {
         case 1:
             return conv2d_gemm_select_cto4c_kernel_fp32_vec128<first>(m, n);

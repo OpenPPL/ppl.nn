@@ -23,7 +23,8 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-void conv2d_n4cx_wg_b2f3_fp32_runtime_executor::adjust_tunning_param() {
+void conv2d_n4cx_wg_b2f3_fp32_runtime_executor::adjust_tunning_param()
+{
     auto dst_h = dst_shape_->GetDim(2);
     auto dst_w = dst_shape_->GetDim(3);
 
@@ -34,7 +35,8 @@ void conv2d_n4cx_wg_b2f3_fp32_runtime_executor::adjust_tunning_param() {
     tunning_param_.oc_blk = min(round_up(conv_param_->num_output / conv_param_->group, 4), tunning_param_.oc_blk);
 }
 
-ppl::common::RetCode conv2d_n4cx_wg_b2f3_fp32_runtime_executor::prepare() {
+ppl::common::RetCode conv2d_n4cx_wg_b2f3_fp32_runtime_executor::prepare()
+{
     if (!conv_param_ || !src_shape_ || !dst_shape_) {
         return ppl::common::RC_INVALID_VALUE;
     }
@@ -164,11 +166,8 @@ inline void wg_b2f3s1_src_trans_kernel(
         "vfsub.vv       v3,     v31,    v29     \n\t"
         "vse.v          v3,     (t0)            \n\t"
         :
-        : [src] "r"(src_pad), [dst] "r"(src_trans_d), [src_offset] "r"(src_pad_h_stride * 4),
-          [dst_offset] "r"(src_trans_wg_tile_stride * 4)
-        : "memory", "v0", "v1", "v2", "v3", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24",
-          "v25", "v26", "v27", "v28", "v29", "v30", "v31", "t0", "t1", "t2", "t6"
-    );
+        : [src] "r"(src_pad), [dst] "r"(src_trans_d), [src_offset] "r"(src_pad_h_stride * 4), [dst_offset] "r"(src_trans_wg_tile_stride * 4)
+        : "memory", "v0", "v1", "v2", "v3", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "t0", "t1", "t2", "t6");
 }
 
 inline void wg_b2f3s1_dst_trans_kernel(
@@ -291,17 +290,12 @@ inline void wg_b2f3s1_dst_trans_kernel(
         "END:                                   \n\t"
         "addi           x0,     x0,     1       \n\t"
         :
-        : [src] "r"(dst_trans), [dst] "r"(dst), [src_offset0] "r"(dst_trans_wg_tile_stride * 16),
-          [src_offset1] "r"(dst_trans_wg_tile_stride * 4), [dst_offset] "r"(dst_h_stride * 4),
-          [h_offset] "r"(dst_h_offset), [w_offset] "r"(dst_w_offset), [dst_h] "r"(dst_trans_h),
-          [dst_w] "r"(dst_trans_w), [bias] "r"(bias)
-        : "memory", "v0", "v1", "v2", "v3", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24",
-          "v25", "v26", "v27", "v28", "v29", "v30", "v31", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "s2",
-          "v8"
-    );
+        : [src] "r"(dst_trans), [dst] "r"(dst), [src_offset0] "r"(dst_trans_wg_tile_stride * 16), [src_offset1] "r"(dst_trans_wg_tile_stride * 4), [dst_offset] "r"(dst_h_stride * 4), [h_offset] "r"(dst_h_offset), [w_offset] "r"(dst_w_offset), [dst_h] "r"(dst_trans_h), [dst_w] "r"(dst_trans_w), [bias] "r"(bias)
+        : "memory", "v0", "v1", "v2", "v3", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "s2", "v8");
 }
 
-ppl::common::RetCode conv2d_n4cx_wg_b2f3_fp32_runtime_executor::execute() {
+ppl::common::RetCode conv2d_n4cx_wg_b2f3_fp32_runtime_executor::execute()
+{
     const conv2d_common_param& cp = *conv_param_;
 
     LOG(DEBUG) << "n4cx wg b2f3: execute";
@@ -327,34 +321,35 @@ ppl::common::RetCode conv2d_n4cx_wg_b2f3_fp32_runtime_executor::execute() {
         conv2d_n4cx_wg_bxfxs1_fp32_vec128_extra_param,
         4,
         conv2d_get_real_filter_size<2, 3>,
-        conv2d_conv_wg_bxfxs1_riscv_per_group_fp32<2, 3, wg_b2f3s1_src_trans_kernel, wg_b2f3s1_dst_trans_kernel>>
-    (
+        conv2d_conv_wg_bxfxs1_riscv_per_group_fp32<2, 3, wg_b2f3s1_src_trans_kernel, wg_b2f3s1_dst_trans_kernel>>(
         src_,
         cvt_filter_,
         cvt_bias_,
         (float*)temp_buffer_,
         dst_,
 
-        src_shape_->GetDim(2), src_shape_->GetDim(3),
-        conv_param_->pad_h, conv_param_->pad_w,
-        conv_param_->kernel_h, conv_param_->kernel_w, 
-        conv_param_->stride_h, conv_param_->stride_w,
-        conv_param_->dilation_h, conv_param_->dilation_w,
+        src_shape_->GetDim(2),
+        src_shape_->GetDim(3),
+        conv_param_->pad_h,
+        conv_param_->pad_w,
+        conv_param_->kernel_h,
+        conv_param_->kernel_w,
+        conv_param_->stride_h,
+        conv_param_->stride_w,
+        conv_param_->dilation_h,
+        conv_param_->dilation_w,
         conv_param_->channels,
         conv_param_->num_output,
         conv_param_->group,
         src_shape_->GetDim(0),
 
-        {
-            tunning_param_.oc_blk,
-            tunning_param_.ic_blk,
-            tunning_param_.oh_blk,
-            tunning_param_.ow_blk,
+        {tunning_param_.oc_blk,
+         tunning_param_.ic_blk,
+         tunning_param_.oh_blk,
+         tunning_param_.ow_blk,
 
-            trans_mat_src_,
-            trans_mat_dst_
-        }
-    );
+         trans_mat_src_,
+         trans_mat_dst_});
 
     return ppl::common::RC_SUCCESS;
 }

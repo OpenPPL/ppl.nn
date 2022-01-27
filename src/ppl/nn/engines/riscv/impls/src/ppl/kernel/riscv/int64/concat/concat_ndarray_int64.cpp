@@ -22,8 +22,10 @@ namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode concat_ndarray_int64(const int64_t** src_list, int64_t* dst,
 
-                                          const ppl::nn::TensorShape** src_shape_list, const int32_t num_src,
-                                          const int32_t axis) {
+                                          const ppl::nn::TensorShape** src_shape_list,
+                                          const int32_t num_src,
+                                          const int32_t axis)
+{
     return concat_ndarray<int64_t>(src_list, dst, src_shape_list, num_src, axis);
 }
 

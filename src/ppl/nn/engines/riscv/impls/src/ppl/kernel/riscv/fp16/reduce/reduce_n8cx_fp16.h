@@ -31,9 +31,9 @@ void reduce_n8cx_lastdim_no_reduce_fp16(
     const int64_t dim_length,
     const int64_t remain_c)
 {
-    const int64_t parall_d = 16;
+    const int64_t parall_d   = 16;
     const int64_t unroll_len = parall_d * 8;
-    const auto vl = vsetvli(8, RVV_E16, RVV_M1);
+    const auto vl            = vsetvli(8, RVV_E16, RVV_M1);
 
     int64_t i = 0;
     for (; i + unroll_len < dim_length * 8; i += unroll_len) {
@@ -67,9 +67,9 @@ void reduce_n8cx_lastdim_reduce_w_fp16(
     const int64_t dim_length,
     const int64_t remain_c)
 {
-    const int64_t parall_d = 1;
+    const int64_t parall_d   = 1;
     const int64_t unroll_len = parall_d * 8;
-    const auto vl = vsetvli(8, RVV_E16, RVV_M1);
+    const auto vl            = vsetvli(8, RVV_E16, RVV_M1);
 
     float16xm1_t v_reduce_val = vlev_float16xm1(dst, vl);
 
@@ -93,7 +93,7 @@ void reduce_n8cx_lastdim_reduce_c_fp16(
         int64_t i = 0;
         for (; i < dim_length * 8; i += 8) {
             __fp16 reduce_val = reduce_vector_all_lanes_kernel_fp16<op>(vlev_float16xm1(src + i, vl));
-            dst[i] = reduce_scalar_kernel_fp16<op>(dst[i], reduce_val);
+            dst[i]            = reduce_scalar_kernel_fp16<op>(dst[i], reduce_val);
         }
     } else { // if remain_c is aligned to C_BLK(), this branch is useless -- make sure 'src_shape[1]' is aligned
     }
@@ -117,7 +117,7 @@ void reduce_n8cx_lastdim_reduce_cw_fp16(
             v_reduce_val = reduce_vector_kernel_fp16<op>(vlev_float16xm1(src + i, vl), v_reduce_val);
         }
         __fp16 reduce_val = reduce_vector_all_lanes_kernel_fp16<op>(v_reduce_val);
-        dst[0] = reduce_scalar_kernel_fp16<op>(reduce_val, dst[0]);
+        dst[0]            = reduce_scalar_kernel_fp16<op>(reduce_val, dst[0]);
     } else { // if remain_c is aligned to C_BLK(), this branch is useless -- make sure 'src_shape[1]' is aligned
     }
 }
@@ -136,8 +136,8 @@ void reduce_n8cx_recursive_fp16(
     int64_t remain_c)
 {
     if (dim_idx == src_shape->GetDimCount() - 1) {
-        const bool reduce_on_w = src_shape->GetDim(dim_idx) != dst_shape->GetDim(dim_idx);
-        const bool reduce_on_c = src_shape->GetDim(c_dim_idx) != dst_shape->GetDim(c_dim_idx);
+        const bool reduce_on_w   = src_shape->GetDim(dim_idx) != dst_shape->GetDim(dim_idx);
+        const bool reduce_on_c   = src_shape->GetDim(c_dim_idx) != dst_shape->GetDim(c_dim_idx);
         const int64_t dim_length = src_shape->GetDim(dim_idx);
         if (!reduce_on_c && !reduce_on_w) {
             reduce_n8cx_lastdim_no_reduce_fp16<op>(src, dst, dim_length, remain_c);
@@ -154,8 +154,7 @@ void reduce_n8cx_recursive_fp16(
             if (dim_idx == c_dim_idx) {
                 remain_c = src_shape->GetDim(c_dim_idx) - i * 8;
             }
-            reduce_n8cx_recursive_fp16<op>(src + i * inc_src[dim_idx], dst + i * inc_dst[dim_idx], src_shape, dst_shape,
-                                           dim_idx + 1, inc_src, inc_dst, c_dim_idx, remain_c);
+            reduce_n8cx_recursive_fp16<op>(src + i * inc_src[dim_idx], dst + i * inc_dst[dim_idx], src_shape, dst_shape, dim_idx + 1, inc_src, inc_dst, c_dim_idx, remain_c);
         }
     }
 }
@@ -183,17 +182,17 @@ ppl::common::RetCode reduce_n8cx_fp16(
 
     reduce_preprocess_fp16<op>(dst, padded_dst_shape.GetElementsIncludingPadding());
 
-    int64_t dim_count = padded_dst_shape.GetDimCount();
+    int64_t dim_count                            = padded_dst_shape.GetDimCount();
     int64_t inc_src[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
     int64_t inc_dst[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
-    int64_t stride_src = 8;
-    int64_t stride_dst = 8;
+    int64_t stride_src                           = 8;
+    int64_t stride_dst                           = 8;
 
     for (int64_t i = dim_count - 1; i >= 0; i--) {
         int64_t src_dim = src_shape->GetDim(i);
         int64_t dst_dim = padded_dst_shape.GetDim(i);
-        inc_src[i] = src_dim == 1 ? 0 : stride_src;
-        inc_dst[i] = dst_dim == 1 ? 0 : stride_dst;
+        inc_src[i]      = src_dim == 1 ? 0 : stride_src;
+        inc_dst[i]      = dst_dim == 1 ? 0 : stride_dst;
 
         if (i == c_dim_idx) {
             src_dim = div_up(src_dim, 8);
@@ -203,8 +202,7 @@ ppl::common::RetCode reduce_n8cx_fp16(
         stride_dst *= dst_dim;
     }
 
-    reduce_n8cx_recursive_fp16<op>(src, dst, src_shape, &padded_dst_shape, 0, inc_src, inc_dst, c_dim_idx,
-                                   src_shape->GetDim(c_dim_idx));
+    reduce_n8cx_recursive_fp16<op>(src, dst, src_shape, &padded_dst_shape, 0, inc_src, inc_dst, c_dim_idx, src_shape->GetDim(c_dim_idx));
 
     int64_t reduce_factor = 1;
     for (int64_t i = 0; i < dim_count; i++) {

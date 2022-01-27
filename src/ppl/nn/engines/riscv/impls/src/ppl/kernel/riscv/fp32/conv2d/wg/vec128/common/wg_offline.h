@@ -38,11 +38,11 @@ size_t conv_wg_bxfxs1_get_cvt_filter_size_fp32(
     int64_t num_outs,
     int64_t group)
 {
-    const int64_t wg_tile_len = wgb + wgf - 1;
+    const int64_t wg_tile_len  = wgb + wgf - 1;
     const int64_t wg_tile_size = wg_tile_len * wg_tile_len;
 
-    int64_t channels_per_group = channels / group;
-    int64_t num_outs_per_group = num_outs / group;
+    int64_t channels_per_group     = channels / group;
+    int64_t num_outs_per_group     = num_outs / group;
     int64_t pad_channels_per_group = round_up(channels_per_group, C_BLK());
     int64_t pad_num_outs_per_group = round_up(num_outs_per_group, C_BLK());
 
@@ -69,17 +69,17 @@ size_t conv_wg_bxfxs1_get_temp_buffer_size_fp32(
     blk_dst_h = round_up(blk_dst_h, wgb);
     blk_dst_w = round_up(blk_dst_w, wgb);
 
-    const int64_t wg_tile_len = wgb + wgf - 1;
+    const int64_t wg_tile_len  = wgb + wgf - 1;
     const int64_t wg_tile_size = wg_tile_len * wg_tile_len;
 
-    int64_t channels_per_group = channels / group;
-    int64_t num_outs_per_group = num_outs / group;
+    int64_t channels_per_group     = channels / group;
+    int64_t num_outs_per_group     = num_outs / group;
     int64_t pad_channels_per_group = round_up(channels_per_group, C_BLK());
     int64_t pad_num_outs_per_group = round_up(num_outs_per_group, C_BLK());
 
     const int64_t flt_stride = 1;
-    int64_t dst_h = (src_h + 2 * padding_h) - wgf + flt_stride;
-    int64_t dst_w = (src_w + 2 * padding_w) - wgf + flt_stride;
+    int64_t dst_h            = (src_h + 2 * padding_h) - wgf + flt_stride;
+    int64_t dst_w            = (src_w + 2 * padding_w) - wgf + flt_stride;
 
     // fix blk pad
     blk_channels = round_up(min(blk_channels, channels_per_group), C_BLK());
@@ -98,8 +98,8 @@ size_t conv_wg_bxfxs1_get_temp_buffer_size_fp32(
     int64_t num_tile_per_blk = (blk_dst_pad_h / wgb) * (blk_dst_pad_w / wgb);
 
     size_t src_pad_blk_size = pad_channels_per_group * blk_src_pad_h * blk_src_pad_w * sizeof(float);
-    size_t src_trans_size = wg_tile_size * pad_channels_per_group * num_tile_per_blk * sizeof(float);
-    size_t dst_trans_size = wg_tile_size * blk_num_outs * num_tile_per_blk * sizeof(float);
+    size_t src_trans_size   = wg_tile_size * pad_channels_per_group * num_tile_per_blk * sizeof(float);
+    size_t dst_trans_size   = wg_tile_size * blk_num_outs * num_tile_per_blk * sizeof(float);
 
     size_t src_pad_size_for_group = 0;
     size_t dst_pad_size_for_group = 0;
@@ -114,8 +114,8 @@ size_t conv_wg_bxfxs1_get_temp_buffer_size_fp32(
 }
 
 template <int64_t wgb,
-    int64_t wgf,
-    conv_wg_riscv_fp32_cvt_filter_blk_kernel_func_t cvt_filter_blk_kernel>
+          int64_t wgf,
+          conv_wg_riscv_fp32_cvt_filter_blk_kernel_func_t cvt_filter_blk_kernel>
 void conv_wg_bxfxs1_cvt_filter_blk_fp32(
     const float* filter,
     const float* trans_mat,
@@ -125,15 +125,15 @@ void conv_wg_bxfxs1_cvt_filter_blk_fp32(
     int64_t filter_kernel_size,
     float* filter_cvt)
 {
-    int64_t tile_len = wgb + wgf - 1;
+    int64_t tile_len  = wgb + wgf - 1;
     int64_t tile_size = tile_len * tile_len;
 
     int64_t num_outs_div4 = num_outs / C_BLK();
     int64_t channels_div4 = channels / C_BLK();
     int64_t num_outs_left = num_outs - num_outs_div4 * C_BLK();
     int64_t channels_left = channels - channels_div4 * C_BLK();
-    int64_t pad_channels = round_up(channels, C_BLK());
-    int64_t pad_num_outs = round_up(num_outs, C_BLK());
+    int64_t pad_channels  = round_up(channels, C_BLK());
+    int64_t pad_num_outs  = round_up(num_outs, C_BLK());
 
     int64_t flt_cvt_tile_stride = pad_num_outs * pad_channels;
     for (int64_t oc = 0; oc < num_outs_div4; oc++) {
@@ -155,7 +155,7 @@ void conv_wg_bxfxs1_cvt_filter_blk_fp32(
                 int64_t flt_cvt_offset = oc4 + ic * C_BLK() + oc * pad_channels * C_BLK();
                 for (int64_t i = 0; i < tile_len; i++) {
                     for (int64_t j = 0; j < tile_len; j++) {
-                        int64_t flt_cvt_idx = (i * tile_len + j) * flt_cvt_tile_stride;
+                        int64_t flt_cvt_idx                      = (i * tile_len + j) * flt_cvt_tile_stride;
                         filter_cvt[flt_cvt_offset + flt_cvt_idx] = 0.0f;
                     }
                 }
@@ -179,7 +179,7 @@ void conv_wg_bxfxs1_cvt_filter_blk_fp32(
                 int64_t flt_cvt_offset = oc4 + ic * C_BLK() + num_outs_div4 * pad_channels * C_BLK();
                 for (int64_t i = 0; i < tile_len; i++) {
                     for (int64_t j = 0; j < tile_len; j++) {
-                        int64_t flt_cvt_idx = (i * tile_len + j) * flt_cvt_tile_stride;
+                        int64_t flt_cvt_idx                      = (i * tile_len + j) * flt_cvt_tile_stride;
                         filter_cvt[flt_cvt_offset + flt_cvt_idx] = 0.0f;
                     }
                 }
@@ -190,7 +190,7 @@ void conv_wg_bxfxs1_cvt_filter_blk_fp32(
                 int64_t flt_cvt_offset = oc4 + ic * C_BLK() + num_outs_div4 * pad_channels * C_BLK();
                 for (int64_t i = 0; i < tile_len; i++) {
                     for (int64_t j = 0; j < tile_len; j++) {
-                        int64_t flt_cvt_idx = (i * tile_len + j) * flt_cvt_tile_stride;
+                        int64_t flt_cvt_idx                      = (i * tile_len + j) * flt_cvt_tile_stride;
                         filter_cvt[flt_cvt_offset + flt_cvt_idx] = 0.0f;
                     }
                 }
@@ -200,8 +200,8 @@ void conv_wg_bxfxs1_cvt_filter_blk_fp32(
 }
 
 template <int64_t wgb,
-    int64_t wgf,
-    conv_wg_riscv_fp32_cvt_filter_blk_kernel_func_t cvt_filter_blk_kernel>
+          int64_t wgf,
+          conv_wg_riscv_fp32_cvt_filter_blk_kernel_func_t cvt_filter_blk_kernel>
 void conv_wg_bxfxs1_cvt_filter_fp32(
     const float* filter,
     const float* trans_mat,
@@ -213,11 +213,11 @@ void conv_wg_bxfxs1_cvt_filter_fp32(
     int64_t blk_num_outs,
     float* filter_cvt)
 {
-    const int64_t wg_tile_len = wgb + wgf - 1;
+    const int64_t wg_tile_len  = wgb + wgf - 1;
     const int64_t wg_tile_size = wg_tile_len * wg_tile_len;
 
-    int64_t channels_per_group = channels / group;
-    int64_t num_outs_per_group = num_outs / group;
+    int64_t channels_per_group     = channels / group;
+    int64_t num_outs_per_group     = num_outs / group;
     int64_t pad_channels_per_group = round_up(channels_per_group, C_BLK());
     int64_t pad_num_outs_per_group = round_up(num_outs_per_group, C_BLK());
 
@@ -226,11 +226,11 @@ void conv_wg_bxfxs1_cvt_filter_fp32(
     blk_num_outs = round_up(min(blk_num_outs, num_outs_per_group), C_BLK());
 
     int64_t filter_kernel_size = wgf * wgf;
-    int64_t filter_out_stride = channels_per_group * filter_kernel_size;
+    int64_t filter_out_stride  = channels_per_group * filter_kernel_size;
 
-    auto filter_per_group = filter;
-    auto filter_cvt_per_group = filter_cvt;
-    int64_t filter_group_stride = filter_kernel_size * num_outs_per_group * channels_per_group;
+    auto filter_per_group           = filter;
+    auto filter_cvt_per_group       = filter_cvt;
+    int64_t filter_group_stride     = filter_kernel_size * num_outs_per_group * channels_per_group;
     int64_t filter_cvt_group_stride = wg_tile_size * pad_num_outs_per_group * pad_channels_per_group;
 
     for (int64_t g = 0; g < group; g += 1) {

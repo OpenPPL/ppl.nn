@@ -28,7 +28,6 @@ ppl::common::RetCode leaky_relu_n8cx_fp16(
     const float alpha,
     __fp16 *dst);
 
-
 }}}; // namespace ppl::kernel::riscv
 
 #endif

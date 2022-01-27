@@ -20,7 +20,8 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode gather_ndarray_fp16(
-    const __fp16* src, __fp16* dst,
+    const __fp16* src,
+    __fp16* dst,
 
     const int64_t* indices,
     const int64_t outer_dim,

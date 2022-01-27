@@ -21,9 +21,9 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 enum reduce_op_type_t {
-    REDUCE_MAX = 0,
-    REDUCE_MIN = 1,
-    REDUCE_SUM = 2,
+    REDUCE_MAX  = 0,
+    REDUCE_MIN  = 1,
+    REDUCE_SUM  = 2,
     REDUCE_MEAN = 3,
     REDUCE_PROD = 4,
 };

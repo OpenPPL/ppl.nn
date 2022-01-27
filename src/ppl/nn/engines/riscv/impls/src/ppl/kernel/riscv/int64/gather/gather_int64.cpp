@@ -21,11 +21,14 @@ namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode gather_ndarray_int64(const int64_t* src, int64_t* dst,
 
-                                          const int64_t* indices, const int64_t outer_dim, const int64_t gather_dim,
-                                          const int64_t inner_dim, const int64_t num_indices,
-                                          const int64_t indices_dim) {
-    return gather_ndarray_common<int64_t>(src, dst, indices, outer_dim, gather_dim, inner_dim, num_indices,
-                                          indices_dim);
+                                          const int64_t* indices,
+                                          const int64_t outer_dim,
+                                          const int64_t gather_dim,
+                                          const int64_t inner_dim,
+                                          const int64_t num_indices,
+                                          const int64_t indices_dim)
+{
+    return gather_ndarray_common<int64_t>(src, dst, indices, outer_dim, gather_dim, inner_dim, num_indices, indices_dim);
 }
 
 }}} // namespace ppl::kernel::riscv

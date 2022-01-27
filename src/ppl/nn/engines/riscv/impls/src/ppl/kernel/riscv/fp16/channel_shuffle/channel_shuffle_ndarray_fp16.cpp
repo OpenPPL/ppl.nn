@@ -22,15 +22,15 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode channel_shuffle_ndarray_fp16(const ppl::nn::TensorShape* src_shape, const __fp16* src,
-                                                  const int32_t group, __fp16* dst) {
-    const int64_t batch = src_shape->GetDim(0);
+ppl::common::RetCode channel_shuffle_ndarray_fp16(const ppl::nn::TensorShape* src_shape, const __fp16* src, const int32_t group, __fp16* dst)
+{
+    const int64_t batch    = src_shape->GetDim(0);
     const int64_t channels = src_shape->GetDim(1);
-    const int64_t src_h = src_shape->GetDim(2);
-    const int64_t src_w = src_shape->GetDim(3);
-    const int64_t mid_c1 = group;
-    const int64_t mid_c2 = channels / group;
-    int64_t mid_dims[5] = {batch, mid_c1, mid_c2, src_h, src_w};
+    const int64_t src_h    = src_shape->GetDim(2);
+    const int64_t src_w    = src_shape->GetDim(3);
+    const int64_t mid_c1   = group;
+    const int64_t mid_c2   = channels / group;
+    int64_t mid_dims[5]    = {batch, mid_c1, mid_c2, src_h, src_w};
 
     // ppl::nn::TensorShape *mid_shape = new ppl::nn::TensorShape();
     ppl::nn::TensorShape& mid_shape = *(new ppl::nn::TensorShape());
@@ -42,31 +42,34 @@ ppl::common::RetCode channel_shuffle_ndarray_fp16(const ppl::nn::TensorShape* sr
 
 ppl::common::RetCode channel_shuffle_ndarray_concat_split_fp16(const ppl::nn::TensorShape* src0_shape,
                                                                const ppl::nn::TensorShape* src1_shape,
-                                                               const __fp16* src0, const __fp16* src1,
-                                                               const int32_t group, __fp16* dst0,
-                                                               __fp16* dst1_optional) {
-    const int64_t in_c1 = src0_shape->GetDim(1);
-    const int64_t in_c2 = src1_shape->GetDim(1);
+                                                               const __fp16* src0,
+                                                               const __fp16* src1,
+                                                               const int32_t group,
+                                                               __fp16* dst0,
+                                                               __fp16* dst1_optional)
+{
+    const int64_t in_c1    = src0_shape->GetDim(1);
+    const int64_t in_c2    = src1_shape->GetDim(1);
     const int64_t channels = in_c1 + in_c2;
     if (dst1_optional && channels % 2) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    __fp16* dst1 = dst1_optional;
+    __fp16* dst1         = dst1_optional;
     const int64_t out_c1 = dst1 ? channels / 2 : channels;
     const int64_t out_c2 = dst1 ? channels / 2 : 0;
 
-    const int64_t batch = src0_shape->GetDim(0);
-    const int64_t src_h = src0_shape->GetDim(2);
-    const int64_t src_w = src0_shape->GetDim(3);
+    const int64_t batch      = src0_shape->GetDim(0);
+    const int64_t src_h      = src0_shape->GetDim(2);
+    const int64_t src_w      = src0_shape->GetDim(3);
     const int64_t inner_dims = src_h * src_w;
-    const int64_t mid_c1 = group;
-    const int64_t mid_c2 = channels / group;
+    const int64_t mid_c1     = group;
+    const int64_t mid_c2     = channels / group;
 
     // (batch, in_c1 + in_c2, src_h, src_w) -> (batch, mid_c1, mid_c2, src_h, src_w)
     for (int64_t b = 0; b < batch; b++) {
         for (int64_t j = 0; j < mid_c2; j++) {
             for (int64_t i = 0; i < mid_c1; i++) {
-                const int64_t cur_in_c = i * mid_c2 + j;
+                const int64_t cur_in_c  = i * mid_c2 + j;
                 const int64_t cur_out_c = j * mid_c1 + i;
                 const __fp16* src_;
                 __fp16* dst_;

@@ -59,7 +59,7 @@ static void conv2d_shell_divide_src_for_group_fp32(
     const int64_t atom_c = 4;
 
     int64_t pad_ic_per_gp = round_up(ic_per_gp, atom_c);
-    auto pad_src_per_gp = pad_src;
+    auto pad_src_per_gp   = pad_src;
 
     for (int64_t g = 0; g < group; g++) {
         int64_t ci = 0;
@@ -100,13 +100,13 @@ static void conv2d_shell_merge_dst_for_group_fp32(
     const int64_t atom_c = 4;
 
     int64_t pad_oc_per_gp = round_up(oc_per_gp, atom_c);
-    int64_t oc = oc_per_gp * group;
+    int64_t oc            = oc_per_gp * group;
 
     int64_t ci = 0;
     for (; ci <= oc - atom_c; ci += atom_c) {
         for (int64_t hwi = 0; hwi < dst_hw; hwi++) {
             for (int64_t cj = 0; cj < atom_c; cj += 1) {
-                int64_t gp_idx = (ci + cj) / oc_per_gp;
+                int64_t gp_idx          = (ci + cj) / oc_per_gp;
                 int64_t gp_inner_oc_idx = (ci + cj) % oc_per_gp;
                 dst[ci * dst_hw + hwi * atom_c + cj] =
                     pad_dst[gp_idx * pad_oc_per_gp * dst_hw + (gp_inner_oc_idx / atom_c) * dst_hw * atom_c +
@@ -120,7 +120,7 @@ static void conv2d_shell_merge_dst_for_group_fp32(
         for (int64_t hwi = 0; hwi < dst_hw; hwi += 1) {
             int64_t cj = 0;
             for (; cj < num_oc_left; cj += 1) {
-                int64_t gp_idx = (ci + cj) / oc_per_gp;
+                int64_t gp_idx          = (ci + cj) / oc_per_gp;
                 int64_t gp_inner_oc_idx = (ci + cj) % oc_per_gp;
                 dst[ci * dst_hw + hwi * atom_c + cj] =
                     pad_dst[gp_idx * pad_oc_per_gp * dst_hw + (gp_inner_oc_idx / atom_c) * dst_hw * atom_c +
@@ -134,9 +134,9 @@ static void conv2d_shell_merge_dst_for_group_fp32(
 }
 
 template <typename T,
-    int64_t atom_ic,
-    conv2d_get_real_filter_size_func_type_t get_real_filter_size,
-    conv2d_per_group_fp32_func_type_t<T> conv_per_group>
+          int64_t atom_ic,
+          conv2d_get_real_filter_size_func_type_t get_real_filter_size,
+          conv2d_per_group_fp32_func_type_t<T> conv_per_group>
 static void conv2d_shell_fp32(
     const float* src,
     const float* filter,
@@ -165,13 +165,13 @@ static void conv2d_shell_fp32(
 
     int64_t flt_h_with_hole = hole_h * (flt_h - 1) + 1;
     int64_t flt_w_with_hole = hole_w * (flt_w - 1) + 1;
-    int64_t src_pad_h = src_h + 2 * pad_h;
-    int64_t src_pad_w = src_w + 2 * pad_w;
-    int64_t dst_h = (src_pad_h - flt_h_with_hole + stride_h) / stride_h;
-    int64_t dst_w = (src_pad_w - flt_w_with_hole + stride_w) / stride_w;
+    int64_t src_pad_h       = src_h + 2 * pad_h;
+    int64_t src_pad_w       = src_w + 2 * pad_w;
+    int64_t dst_h           = (src_pad_h - flt_h_with_hole + stride_h) / stride_h;
+    int64_t dst_w           = (src_pad_w - flt_w_with_hole + stride_w) / stride_w;
 
-    int64_t ic_per_gp = ic / group;
-    int64_t oc_per_gp = oc / group;
+    int64_t ic_per_gp     = ic / group;
+    int64_t oc_per_gp     = oc / group;
     int64_t pad_ic_per_gp = round_up(ic_per_gp, atom_ic);
     int64_t pad_oc_per_gp = round_up(oc_per_gp, atom_oc);
 
@@ -193,12 +193,18 @@ static void conv2d_shell_fp32(
                 temp_buffer,
                 dst_per_batch_ptr,
 
-                src_h, src_w,
-                pad_h, pad_w,
-                flt_h, flt_w,
-                stride_h, stride_w,
-                hole_h, hole_w,
-                dst_h, dst_w,
+                src_h,
+                src_w,
+                pad_h,
+                pad_w,
+                flt_h,
+                flt_w,
+                stride_h,
+                stride_w,
+                hole_h,
+                hole_w,
+                dst_h,
+                dst_w,
                 ic_per_gp,
                 oc_per_gp,
 
@@ -210,7 +216,7 @@ static void conv2d_shell_fp32(
 
         int64_t src_pad_size_per_gp = pad_ic_per_gp * src_h * src_w;
         int64_t dst_pad_size_per_gp = pad_oc_per_gp * dst_h * dst_w;
-        int64_t filter_gp_stride = pad_ic_per_gp * pad_oc_per_gp * real_flt_h * real_flt_w;
+        int64_t filter_gp_stride    = pad_ic_per_gp * pad_oc_per_gp * real_flt_h * real_flt_w;
 
         int64_t src_div_per_batch_size = 0;
         if (ic_per_gp % atom_ic != 0) {
@@ -222,8 +228,8 @@ static void conv2d_shell_fp32(
             dst_div_per_batch_size = group * dst_pad_size_per_gp;
         }
 
-        auto src_div_loc = temp_buffer;
-        auto dst_div_loc = src_div_loc + src_div_per_batch_size;
+        auto src_div_loc      = temp_buffer;
+        auto dst_div_loc      = src_div_loc + src_div_per_batch_size;
         auto conv_temp_buffer = dst_div_loc + dst_div_per_batch_size;
 
         for (int64_t i = 0; i < batch; i += 1) {
@@ -239,10 +245,10 @@ static void conv2d_shell_fp32(
             }
 
             for (int64_t g = 0; g < group; g += 1) {
-                auto src_per_gp_ptr = src_per_batch_ptr + g * src_pad_size_per_gp;
-                auto dst_per_gp_ptr = dst_per_batch_ptr + g * dst_pad_size_per_gp;
+                auto src_per_gp_ptr    = src_per_batch_ptr + g * src_pad_size_per_gp;
+                auto dst_per_gp_ptr    = dst_per_batch_ptr + g * dst_pad_size_per_gp;
                 auto filter_per_gp_ptr = filter + g * filter_gp_stride;
-                auto bias_per_gp_ptr = bias + g * oc_per_gp;
+                auto bias_per_gp_ptr   = bias + g * oc_per_gp;
 
                 conv_per_group(
                     src_per_gp_ptr,
@@ -251,12 +257,18 @@ static void conv2d_shell_fp32(
                     conv_temp_buffer,
                     dst_per_gp_ptr,
 
-                    src_h, src_w,
-                    pad_h, pad_w,
-                    flt_h, flt_w,
-                    stride_h, stride_w,
-                    hole_h, hole_w,
-                    dst_h, dst_w,
+                    src_h,
+                    src_w,
+                    pad_h,
+                    pad_w,
+                    flt_h,
+                    flt_w,
+                    stride_h,
+                    stride_w,
+                    hole_h,
+                    hole_w,
+                    dst_h,
+                    dst_w,
                     ic_per_gp,
                     oc_per_gp,
 

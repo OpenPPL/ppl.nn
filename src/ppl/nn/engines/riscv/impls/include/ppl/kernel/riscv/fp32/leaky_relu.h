@@ -28,7 +28,6 @@ ppl::common::RetCode leaky_relu_n4cx_fp32(
     const float alpha,
     float *dst);
 
-
 }}}; // namespace ppl::kernel::riscv
 
 #endif

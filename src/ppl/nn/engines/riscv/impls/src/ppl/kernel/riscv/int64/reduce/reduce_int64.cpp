@@ -23,14 +23,14 @@ namespace ppl { namespace kernel { namespace riscv {
 
 template <reduce_op_type_t op>
 ppl::common::RetCode reduce_int64(
-    const int64_t* src, 
+    const int64_t* src,
     int64_t* dst,
 
-    const ppl::nn::TensorShape* src_shape, 
+    const ppl::nn::TensorShape* src_shape,
     const ppl::nn::TensorShape* dst_shape,
-    const int32_t* axes, 
-    const int32_t num_axes) {
-
+    const int32_t* axes,
+    const int32_t num_axes)
+{
     if (src_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding()) {
         memcpy(dst, src, src_shape->GetBytesIncludingPadding());
         return ppl::common::RC_SUCCESS;
@@ -66,14 +66,14 @@ ppl::common::RetCode reduce_int64(
 }
 
 ppl::common::RetCode reduce_max_int64(
-    const int64_t* src, 
+    const int64_t* src,
     int64_t* dst,
 
     const ppl::nn::TensorShape* src_shape,
     const ppl::nn::TensorShape* dst_shape,
     const int32_t* axes,
-    const int32_t num_axes) {
-
+    const int32_t num_axes)
+{
     return reduce_int64<REDUCE_MAX>(src, dst, src_shape, dst_shape, axes, num_axes);
 }
 
@@ -84,8 +84,8 @@ ppl::common::RetCode reduce_min_int64(
     const ppl::nn::TensorShape* src_shape,
     const ppl::nn::TensorShape* dst_shape,
     const int32_t* axes,
-    const int32_t num_axes) {
-
+    const int32_t num_axes)
+{
     return reduce_int64<REDUCE_MIN>(src, dst, src_shape, dst_shape, axes, num_axes);
 }
 
@@ -95,9 +95,9 @@ ppl::common::RetCode reduce_mean_int64(
 
     const ppl::nn::TensorShape* src_shape,
     const ppl::nn::TensorShape* dst_shape,
-    const int32_t* axes, 
-    const int32_t num_axes) {
-
+    const int32_t* axes,
+    const int32_t num_axes)
+{
     return reduce_int64<REDUCE_MEAN>(src, dst, src_shape, dst_shape, axes, num_axes);
 }
 
@@ -108,8 +108,8 @@ ppl::common::RetCode reduce_sum_int64(
     const ppl::nn::TensorShape* src_shape,
     const ppl::nn::TensorShape* dst_shape,
     const int32_t* axes,
-    const int32_t num_axes) {
-        
+    const int32_t num_axes)
+{
     return reduce_int64<REDUCE_SUM>(src, dst, src_shape, dst_shape, axes, num_axes);
 }
 

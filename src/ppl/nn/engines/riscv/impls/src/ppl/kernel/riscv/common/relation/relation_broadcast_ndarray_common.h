@@ -28,10 +28,10 @@ inline void relation_broadcast_ndarray_lastdim_no_broadcast_common(
     const T* src0,
     const T* src1,
     const int64_t length,
-    uint8_t* dst
-) {
+    uint8_t* dst)
+{
     constexpr int32_t c_blk = vlen / 8 / sizeof(T);
-    uint64_t vl = vsetvli<T, vlen>(c_blk);
+    uint64_t vl             = vsetvli<T, vlen>(c_blk);
 
     const int64_t simd_w      = c_blk;
     const int64_t unroll_len  = simd_w * 4;
@@ -69,16 +69,16 @@ inline void relation_broadcast_ndarray_lastdim_broadcast0_common(
     const T* src0,
     const T* src1,
     const int64_t length,
-    uint8_t* dst
-) {
+    uint8_t* dst)
+{
     constexpr int32_t c_blk = vlen / 8 / sizeof(T);
-    uint64_t vl = vsetvli<T, vlen>(c_blk);
+    uint64_t vl             = vsetvli<T, vlen>(c_blk);
 
     const int64_t simd_w      = c_blk;
     const int64_t unroll_len  = simd_w * 4;
     const int64_t unroll_body = round(length, unroll_len);
 
-    const T broadcast_val = src0[0];
+    const T broadcast_val               = src0[0];
     register_v<T, vlen> v_broadcast_val = vmvvx<T, vlen>(broadcast_val, vl);
     std::vector<uint_type<T>> lst(c_blk, 1);
     register_v<uint_type<T>, vlen> v_mask = vlev<uint_type<T>, vlen>(lst.data(), vl);
@@ -106,16 +106,16 @@ inline void relation_broadcast_ndarray_lastdim_broadcast1_common(
     const T* src0,
     const T* src1,
     const int64_t length,
-    uint8_t* dst
-) {
+    uint8_t* dst)
+{
     constexpr int32_t c_blk = vlen / 8 / sizeof(T);
-    uint64_t vl = vsetvli<T, vlen>(c_blk);
+    uint64_t vl             = vsetvli<T, vlen>(c_blk);
 
     const int64_t simd_w      = c_blk;
     const int64_t unroll_len  = simd_w * 4;
     const int64_t unroll_body = round(length, unroll_len);
 
-    const T broadcast_val = src1[0];
+    const T broadcast_val               = src1[0];
     register_v<T, vlen> v_broadcast_val = vmvvx<T, vlen>(broadcast_val, vl);
     std::vector<uint_type<T>> lst(c_blk, 1);
     register_v<uint_type<T>, vlen> v_mask = vlev<uint_type<T>, vlen>(lst.data(), vl);
@@ -145,13 +145,13 @@ static ppl::common::RetCode relation_broadcast_ndarray_recursive_common(
     const int64_t* dst_shape,
     const T* src0,
     const T* src1,
-    const int64_t *inc0,
-    const int64_t *inc1,
-    const int64_t *inc_out,
+    const int64_t* inc0,
+    const int64_t* inc1,
+    const int64_t* inc_out,
     const int64_t dim_count,
     const int64_t dim_idx,
-    uint8_t* dst
-) {
+    uint8_t* dst)
+{
     const int64_t length = dst_shape[dim_idx];
     if (dim_idx == dim_count - 1) {
         if (src0_shape[dim_idx] == src1_shape[dim_idx]) {
@@ -174,8 +174,7 @@ static ppl::common::RetCode relation_broadcast_ndarray_recursive_common(
                 inc_out,
                 dim_count,
                 dim_idx + 1,
-                dst + i * inc_out[dim_idx]
-            );
+                dst + i * inc_out[dim_idx]);
         }
     }
 
@@ -184,23 +183,23 @@ static ppl::common::RetCode relation_broadcast_ndarray_recursive_common(
 
 template <relation_op_type_t op, typename T, int32_t vlen>
 static ppl::common::RetCode relation_broadcast_ndarray_common(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::nn::TensorShape* src0_shape,
+    const ppl::nn::TensorShape* src1_shape,
+    const ppl::nn::TensorShape* dst_shape,
     const T* src0,
     const T* src1,
-    uint8_t* dst
-) {
-    const int64_t max_dim_count = dst_shape->GetDimCount();
+    uint8_t* dst)
+{
+    const int64_t max_dim_count              = dst_shape->GetDimCount();
     int64_t padded_src0_shape[max_dim_count] = {0};
     int64_t padded_src1_shape[max_dim_count] = {0};
     pad_shape(src0_shape, max_dim_count, padded_src0_shape);
     pad_shape(src1_shape, max_dim_count, padded_src1_shape);
 
-    int64_t compressed_dim_count = 0;
+    int64_t compressed_dim_count                 = 0;
     int64_t compressed_src0_shape[max_dim_count] = {0};
     int64_t compressed_src1_shape[max_dim_count] = {0};
-    int64_t compressed_dst_shape[max_dim_count] = {0};
+    int64_t compressed_dst_shape[max_dim_count]  = {0};
     compress_shape(
         padded_src0_shape,
         padded_src1_shape,
@@ -208,22 +207,21 @@ static ppl::common::RetCode relation_broadcast_ndarray_common(
         &compressed_dim_count,
         compressed_src0_shape,
         compressed_src1_shape,
-        compressed_dst_shape
-    );
+        compressed_dst_shape);
 
-    int64_t inc0[compressed_dim_count] = {0};
-    int64_t inc1[compressed_dim_count] = {0};
+    int64_t inc0[compressed_dim_count]    = {0};
+    int64_t inc1[compressed_dim_count]    = {0};
     int64_t inc_out[compressed_dim_count] = {0};
-    int64_t stride0    = 1;
-    int64_t stride1    = 1;
-    int64_t stride_out = 1;
+    int64_t stride0                       = 1;
+    int64_t stride1                       = 1;
+    int64_t stride_out                    = 1;
     for (int64_t i = compressed_dim_count - 1; i >= 0; i--) {
         inc0[i]    = compressed_src0_shape[i] == 1 ? 0 : stride0;
         inc1[i]    = compressed_src1_shape[i] == 1 ? 0 : stride1;
         inc_out[i] = stride_out;
 
-        stride0    *= compressed_src0_shape[i];
-        stride1    *= compressed_src1_shape[i];
+        stride0 *= compressed_src0_shape[i];
+        stride1 *= compressed_src1_shape[i];
         stride_out *= compressed_dst_shape[i];
     }
 
@@ -241,6 +239,6 @@ static ppl::common::RetCode relation_broadcast_ndarray_common(
         dst);
 }
 
-}}};
+}}}; // namespace ppl::kernel::riscv
 
 #endif

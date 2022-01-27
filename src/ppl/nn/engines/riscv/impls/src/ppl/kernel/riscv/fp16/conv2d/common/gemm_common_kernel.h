@@ -99,9 +99,9 @@ void gemm_common_m8n16_left0_rv64_fp16(const __fp16* A, const __fp16* B, __fp16*
 #endif
 
 template <int64_t align_n,
-    int64_t align_left_n,
-    conv_gemm_riscv_kernel_m8nx core_func,
-    conv_gemm_riscv_kernel_m8nx core_left_func>
+          int64_t align_left_n,
+          conv_gemm_riscv_kernel_m8nx core_func,
+          conv_gemm_riscv_kernel_m8nx core_left_func>
 static void conv_gemm_cto8c_kernel_fp16(
     const __fp16* A,
     const __fp16* B,
@@ -132,89 +132,66 @@ static void conv_gemm_cto8c_kernel_fp16(
 }
 
 template <bool first>
-conv_gemm_riscv_kernel_func_type_t conv_gemm_select_cto8c_kernel_fp16(int64_t n) {
+conv_gemm_riscv_kernel_func_type_t conv_gemm_select_cto8c_kernel_fp16(int64_t n)
+{
     // TODO: add "int64_t m" to parameters
     switch (n % 24) {
         case 0:
-            return conv_gemm_cto8c_kernel_fp16<24, 0, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<0>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 0, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<0>>;
         case 1:
-            return conv_gemm_cto8c_kernel_fp16<24, 1, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<1>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 1, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<1>>;
         case 2:
-            return conv_gemm_cto8c_kernel_fp16<24, 2, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<2>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 2, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<2>>;
         case 3:
-            return conv_gemm_cto8c_kernel_fp16<24, 3, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<3>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 3, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<3>>;
         case 4:
-            return conv_gemm_cto8c_kernel_fp16<24, 4, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<4>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 4, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<4>>;
         case 5:
-            return conv_gemm_cto8c_kernel_fp16<24, 5, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<5>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 5, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<5>>;
         case 6:
-            return conv_gemm_cto8c_kernel_fp16<24, 6, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<6>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 6, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<6>>;
         case 7:
-            return conv_gemm_cto8c_kernel_fp16<24, 7, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<7>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 7, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<7>>;
         case 8:
-            return conv_gemm_cto8c_kernel_fp16<24, 8, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<8>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 8, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<8>>;
         case 9:
-            return conv_gemm_cto8c_kernel_fp16<24, 9, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<9>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 9, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<9>>;
         case 10:
-            return conv_gemm_cto8c_kernel_fp16<24, 10, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<10>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 10, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<10>>;
         case 11:
-            return conv_gemm_cto8c_kernel_fp16<24, 11, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<11>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 11, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<11>>;
         case 12:
-            return conv_gemm_cto8c_kernel_fp16<24, 12, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<12>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 12, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<12>>;
         case 13:
-            return conv_gemm_cto8c_kernel_fp16<24, 13, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<13>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 13, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<13>>;
         case 14:
-            return conv_gemm_cto8c_kernel_fp16<24, 14, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<14>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 14, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<14>>;
         case 15:
-            return conv_gemm_cto8c_kernel_fp16<24, 15, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<15>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 15, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<15>>;
         case 16:
-            return conv_gemm_cto8c_kernel_fp16<24, 16, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<16>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 16, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<16>>;
         case 17:
-            return conv_gemm_cto8c_kernel_fp16<24, 17, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<17>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 17, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<17>>;
         case 18:
-            return conv_gemm_cto8c_kernel_fp16<24, 18, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<18>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 18, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<18>>;
         case 19:
-            return conv_gemm_cto8c_kernel_fp16<24, 19, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<19>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 19, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<19>>;
         case 20:
-            return conv_gemm_cto8c_kernel_fp16<24, 20, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<20>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 20, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<20>>;
         case 21:
-            return conv_gemm_cto8c_kernel_fp16<24, 21, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<21>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 21, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<21>>;
         case 22:
-            return conv_gemm_cto8c_kernel_fp16<24, 22, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<22>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 22, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<22>>;
         case 23:
-            return conv_gemm_cto8c_kernel_fp16<24, 23, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                               conv_gemm_cto8c_m8nx_kernel_core_fp16<23>>;
+            return conv_gemm_cto8c_kernel_fp16<24, 23, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<23>>;
     }
-    return conv_gemm_cto8c_kernel_fp16<24, 0, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>,
-                                       conv_gemm_cto8c_m8nx_kernel_core_fp16<0>>;
+    return conv_gemm_cto8c_kernel_fp16<24, 0, conv_gemm_cto8c_m8nx_kernel_core_fp16<24>, conv_gemm_cto8c_m8nx_kernel_core_fp16<0>>;
     ;
 }
 
 template <bool first>
-conv_gemm_riscv_kernel_func_type_t conv_gemm_select_kernel_fp16(int64_t n) {
+conv_gemm_riscv_kernel_func_type_t conv_gemm_select_kernel_fp16(int64_t n)
+{
     switch (n % 16) {
         case 0:
             return first ? gemm_common_m8n16_left0_first_rv64_fp16 : gemm_common_m8n16_left0_rv64_fp16;
@@ -253,7 +230,8 @@ conv_gemm_riscv_kernel_func_type_t conv_gemm_select_kernel_fp16(int64_t n) {
 }
 
 template <int64_t src_atom_c, bool first>
-conv_gemm_riscv_kernel_func_type_t conv_gemm_select_xcto8c_kernel_fp16(int64_t m, int64_t n) {
+conv_gemm_riscv_kernel_func_type_t conv_gemm_select_xcto8c_kernel_fp16(int64_t m, int64_t n)
+{
     switch (src_atom_c) {
         case 1:
             return conv_gemm_select_cto8c_kernel_fp16<first>(n);

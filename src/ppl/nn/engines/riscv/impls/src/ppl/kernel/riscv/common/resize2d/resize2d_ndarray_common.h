@@ -35,28 +35,28 @@ ppl::common::RetCode resize2d_ndarray_pytorch_linear_floor_common(
     T* dst)
 {
     const int64_t num_imgs = src_shape->GetDim(0) * src_shape->GetDim(1);
-    const int64_t src_h = src_shape->GetDim(2);
-    const int64_t src_w = src_shape->GetDim(3);
-    const int64_t dst_h = dst_shape->GetDim(2);
-    const int64_t dst_w = dst_shape->GetDim(3);
-    const float hscale = 1.0f / scale_h;
-    const float wscale = 1.0f / scale_w;
+    const int64_t src_h    = src_shape->GetDim(2);
+    const int64_t src_w    = src_shape->GetDim(3);
+    const int64_t dst_h    = dst_shape->GetDim(2);
+    const int64_t dst_w    = dst_shape->GetDim(3);
+    const float hscale     = 1.0f / scale_h;
+    const float wscale     = 1.0f / scale_w;
 
     for (int64_t ni = 0; ni < num_imgs; ++ni) {
         const T* src_ = src + ni * src_h * src_w;
-        T* dst_ = dst + ni * dst_h * dst_w;
+        T* dst_       = dst + ni * dst_h * dst_w;
         for (int64_t oh = 0; oh < dst_h; ++oh) {
             float ih = dst_h > 1 ? (oh + 0.5f) * hscale - 0.5f : 0;
             int64_t h0, h1;
             float h0_lambda, h1_lambda;
             if (ih < 0) {
-                h0 = 0;
-                h1 = 0;
+                h0        = 0;
+                h1        = 0;
                 h0_lambda = 1;
                 h1_lambda = 0;
             } else {
-                h0 = (int64_t)ih;
-                h1 = h0 + (h0 < src_h - 1);
+                h0        = (int64_t)ih;
+                h1        = h0 + (h0 < src_h - 1);
                 h1_lambda = ih - h0;
                 h0_lambda = 1.0f - h1_lambda;
             }
@@ -66,20 +66,20 @@ ppl::common::RetCode resize2d_ndarray_pytorch_linear_floor_common(
                 int64_t w0, w1;
                 float w0_lambda, w1_lambda;
                 if (iw < 0) {
-                    w0 = 0;
-                    w1 = 0;
+                    w0        = 0;
+                    w1        = 0;
                     w0_lambda = 1;
                     w1_lambda = 0;
                 } else {
-                    w0 = (int64_t)iw;
-                    w1 = w0 + (w0 < src_w - 1);
+                    w0        = (int64_t)iw;
+                    w1        = w0 + (w0 < src_w - 1);
                     w1_lambda = iw - w0;
                     w0_lambda = 1.0f - w1_lambda;
                 }
 
                 dst_[oh * dst_w + ow] = src_[h0 * src_w + w0] * h0_lambda * w0_lambda +
-                    src_[h0 * src_w + w1] * h0_lambda * w1_lambda + src_[h1 * src_w + w0] * h1_lambda * w0_lambda +
-                    src_[h1 * src_w + w1] * h1_lambda * w1_lambda;
+                                        src_[h0 * src_w + w1] * h0_lambda * w1_lambda + src_[h1 * src_w + w0] * h1_lambda * w0_lambda +
+                                        src_[h1 * src_w + w1] * h1_lambda * w1_lambda;
             }
         }
     }
@@ -97,12 +97,12 @@ ppl::common::RetCode resize2d_ndarray_asymmetric_nearest_floor_common(
     T* dst)
 {
     const int64_t num_imgs = src_shape->GetDim(0) * src_shape->GetDim(1);
-    const int64_t src_h = src_shape->GetDim(2);
-    const int64_t src_w = src_shape->GetDim(3);
-    const int64_t dst_h = dst_shape->GetDim(2);
-    const int64_t dst_w = dst_shape->GetDim(3);
-    const float hscale = 1.0f / scale_h;
-    const float wscale = 1.0f / scale_w;
+    const int64_t src_h    = src_shape->GetDim(2);
+    const int64_t src_w    = src_shape->GetDim(3);
+    const int64_t dst_h    = dst_shape->GetDim(2);
+    const int64_t dst_w    = dst_shape->GetDim(3);
+    const float hscale     = 1.0f / scale_h;
+    const float wscale     = 1.0f / scale_w;
 
     std::vector<int64_t> iw_list(dst_w);
     for (int64_t i = 0; i < dst_w; i++) {
@@ -111,12 +111,12 @@ ppl::common::RetCode resize2d_ndarray_asymmetric_nearest_floor_common(
 
     for (int64_t ni = 0; ni < num_imgs; ++ni) {
         const T* src_ = src + ni * src_h * src_w;
-        T* dst_ = dst + ni * dst_h * dst_w;
+        T* dst_       = dst + ni * dst_h * dst_w;
         for (int64_t oh = 0; oh < dst_h; ++oh) {
-            int64_t ih = static_cast<int64_t>(oh * hscale);
+            int64_t ih     = static_cast<int64_t>(oh * hscale);
             const T* src_p = src_ + ih * src_w;
-            T* dst_p = dst_ + oh * dst_w;
-            int64_t ow = 0;
+            T* dst_p       = dst_ + oh * dst_w;
+            int64_t ow     = 0;
             for (; ow + 8 < dst_w; ow += 8) {
                 dst_p[ow + 0] = src_p[iw_list[ow + 0]];
                 dst_p[ow + 1] = src_p[iw_list[ow + 1]];
@@ -173,19 +173,19 @@ ppl::common::RetCode resize2d_ndarray_pytorch_cubic_floor_common(
     T* dst)
 {
     const int64_t num_imgs = src_shape->GetDim(0) * src_shape->GetDim(1);
-    const int64_t src_h = src_shape->GetDim(2);
-    const int64_t src_w = src_shape->GetDim(3);
-    const int64_t dst_h = dst_shape->GetDim(2);
-    const int64_t dst_w = dst_shape->GetDim(3);
-    const float hscale = 1.0f / scale_h;
-    const float wscale = 1.0f / scale_w;
+    const int64_t src_h    = src_shape->GetDim(2);
+    const int64_t src_w    = src_shape->GetDim(3);
+    const int64_t dst_h    = dst_shape->GetDim(2);
+    const int64_t dst_w    = dst_shape->GetDim(3);
+    const float hscale     = 1.0f / scale_h;
+    const float wscale     = 1.0f / scale_w;
 
     std::vector<int64_t> sy_tab(dst_h);
     std::vector<float> coeff_y_tab(dst_h * 4);
     for (int64_t oh = 0; oh < dst_h; ++oh) {
-        float ih = dst_h > 1 ? (oh + 0.5f) * hscale - 0.5f : 0;
+        float ih   = dst_h > 1 ? (oh + 0.5f) * hscale - 0.5f : 0;
         int64_t sy = ::floor(ih);
-        float fy = ih - sy;
+        float fy   = ih - sy;
         sy_tab[oh] = sy;
 
         float* coeff_y = coeff_y_tab.data() + 4 * oh;
@@ -195,9 +195,9 @@ ppl::common::RetCode resize2d_ndarray_pytorch_cubic_floor_common(
     std::vector<int64_t> sx_tab(dst_w);
     std::vector<float> coeff_x_tab(dst_w * 4);
     for (int64_t ow = 0; ow < dst_w; ++ow) {
-        float iw = dst_w > 1 ? (ow + 0.5f) * wscale - 0.5f : 0;
+        float iw   = dst_w > 1 ? (ow + 0.5f) * wscale - 0.5f : 0;
         int64_t sx = ::floor(iw);
-        float fx = iw - sx;
+        float fx   = iw - sx;
         sx_tab[ow] = sx;
 
         float* coeff_x = coeff_x_tab.data() + 4 * ow;
@@ -207,23 +207,23 @@ ppl::common::RetCode resize2d_ndarray_pytorch_cubic_floor_common(
     for (int64_t ni = 0; ni < num_imgs; ++ni) {
         for (int64_t oh = 0; oh < dst_h; ++oh) {
             const T* src_ = src + ni * src_h * src_w;
-            T* dst_ = dst + ni * dst_h * dst_w;
+            T* dst_       = dst + ni * dst_h * dst_w;
 
-            const int64_t sy = sy_tab[oh];
+            const int64_t sy     = sy_tab[oh];
             const float* coeff_y = coeff_y_tab.data() + 4 * oh;
             for (int64_t ow = 0; ow < dst_w; ++ow) {
-                const int64_t sx = sx_tab[ow];
+                const int64_t sx     = sx_tab[ow];
                 const float* coeff_x = coeff_x_tab.data() + 4 * ow;
 
                 dst_[oh * dst_w + ow] = SRC(sy - 1, sx - 1) * coeff_x[0] * coeff_y[0] +
-                    SRC(sy, sx - 1) * coeff_x[0] * coeff_y[1] + SRC(sy + 1, sx - 1) * coeff_x[0] * coeff_y[2] +
-                    SRC(sy + 2, sx - 1) * coeff_x[0] * coeff_y[3] + SRC(sy - 1, sx) * coeff_x[1] * coeff_y[0] +
-                    SRC(sy, sx) * coeff_x[1] * coeff_y[1] + SRC(sy + 1, sx) * coeff_x[1] * coeff_y[2] +
-                    SRC(sy + 2, sx) * coeff_x[1] * coeff_y[3] + SRC(sy - 1, sx + 1) * coeff_x[2] * coeff_y[0] +
-                    SRC(sy, sx + 1) * coeff_x[2] * coeff_y[1] + SRC(sy + 1, sx + 1) * coeff_x[2] * coeff_y[2] +
-                    SRC(sy + 2, sx + 1) * coeff_x[2] * coeff_y[3] + SRC(sy - 1, sx + 2) * coeff_x[3] * coeff_y[0] +
-                    SRC(sy, sx + 2) * coeff_x[3] * coeff_y[1] + SRC(sy + 1, sx + 2) * coeff_x[3] * coeff_y[2] +
-                    SRC(sy + 2, sx + 2) * coeff_x[3] * coeff_y[3];
+                                        SRC(sy, sx - 1) * coeff_x[0] * coeff_y[1] + SRC(sy + 1, sx - 1) * coeff_x[0] * coeff_y[2] +
+                                        SRC(sy + 2, sx - 1) * coeff_x[0] * coeff_y[3] + SRC(sy - 1, sx) * coeff_x[1] * coeff_y[0] +
+                                        SRC(sy, sx) * coeff_x[1] * coeff_y[1] + SRC(sy + 1, sx) * coeff_x[1] * coeff_y[2] +
+                                        SRC(sy + 2, sx) * coeff_x[1] * coeff_y[3] + SRC(sy - 1, sx + 1) * coeff_x[2] * coeff_y[0] +
+                                        SRC(sy, sx + 1) * coeff_x[2] * coeff_y[1] + SRC(sy + 1, sx + 1) * coeff_x[2] * coeff_y[2] +
+                                        SRC(sy + 2, sx + 1) * coeff_x[2] * coeff_y[3] + SRC(sy - 1, sx + 2) * coeff_x[3] * coeff_y[0] +
+                                        SRC(sy, sx + 2) * coeff_x[3] * coeff_y[1] + SRC(sy + 1, sx + 2) * coeff_x[3] * coeff_y[2] +
+                                        SRC(sy + 2, sx + 2) * coeff_x[3] * coeff_y[3];
             }
         }
     }

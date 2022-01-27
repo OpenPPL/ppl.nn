@@ -31,7 +31,7 @@ static size_t conv_naive_cto8c_get_cvt_filter_size_fp16(
 {
     int64_t channels_per_group = channels / group;
     int64_t num_outs_per_group = num_outs / group;
-    int64_t num_elem = flt_h * flt_w * channels_per_group * num_outs_per_group * group;
+    int64_t num_elem           = flt_h * flt_w * channels_per_group * num_outs_per_group * group;
     return num_elem * sizeof(__fp16);
 }
 
@@ -46,7 +46,7 @@ static void conv_naive_cto8c_cvt_filter_fp16(
 {
     int64_t channels_per_group = channels / group;
     int64_t num_outs_per_group = num_outs / group;
-    int64_t num_elem = flt_h * flt_w * channels_per_group * num_outs_per_group * group;
+    int64_t num_elem           = flt_h * flt_w * channels_per_group * num_outs_per_group * group;
     for (int64_t i = 0; i < num_elem; i++) {
         filter_cvt[i] = filter[i];
     }
@@ -110,9 +110,9 @@ static void conv_naive_cto8c_dst_cvt_fp16(
     __fp16* dst,
     __fp16* dst_cvt)
 {
-    int64_t dst_out_stride = dst_h * dst_w;
+    int64_t dst_out_stride    = dst_h * dst_w;
     int64_t dst_out_8c_stride = dst_out_stride * 8;
-    int64_t pad_num_outs = round_up(num_outs, 8);
+    int64_t pad_num_outs      = round_up(num_outs, 8);
     for (int64_t i = 0; i < pad_num_outs; i += 8) {
         for (int64_t dst_h_loc = 0; dst_h_loc < dst_h; dst_h_loc++) {
             for (int64_t dst_w_loc = 0; dst_w_loc < dst_w; dst_w_loc++) {
@@ -148,9 +148,9 @@ static void conv_naive_kernel_riscv_fp16(
     const __fp16* bias,
     __fp16* dst)
 {
-    int64_t src_channel_stride = src_h * src_w;
+    int64_t src_channel_stride    = src_h * src_w;
     int64_t filter_channel_stride = flt_h * flt_w;
-    int64_t dst_out_stride = dst_h * dst_w;
+    int64_t dst_out_stride        = dst_h * dst_w;
 
     for (int64_t i = 0; i < num_outs; ++i) {
         auto dst_per_out = dst + i * dst_out_stride;
@@ -215,20 +215,20 @@ static void conv_naive_cto8c_general_riscv_fp16(
     int64_t dst_h = (src_pad_h - flt_h + stride_h) / stride_h;
     int64_t dst_w = (src_pad_w - flt_w + stride_w) / stride_w;
 
-    int64_t channels_per_group = channels / group;
-    int64_t num_outs_per_group = num_outs / group;
-    int64_t pad_num_outs = round_up(num_outs, 8);
+    int64_t channels_per_group     = channels / group;
+    int64_t num_outs_per_group     = num_outs / group;
+    int64_t pad_num_outs           = round_up(num_outs, 8);
     int64_t pad_num_outs_per_group = round_up(num_outs_per_group, 8);
 
-    int64_t src_batch_stride = channels * src_h * src_w;
-    int64_t dst_batch_stride = pad_num_outs * dst_h * dst_w;
+    int64_t src_batch_stride      = channels * src_h * src_w;
+    int64_t dst_batch_stride      = pad_num_outs * dst_h * dst_w;
     int64_t temp_src_batch_stride = channels * src_pad_h * src_pad_w;
     int64_t temp_dst_batch_stride = num_outs * dst_h * dst_w;
 
-    int64_t flt_group_stride = num_outs_per_group * channels_per_group * flt_h * flt_w;
+    int64_t flt_group_stride  = num_outs_per_group * channels_per_group * flt_h * flt_w;
     int64_t bias_group_stride = num_outs_per_group;
-    auto temp_src = temp_buffer;
-    auto temp_dst = temp_buffer + temp_src_batch_stride;
+    auto temp_src             = temp_buffer;
+    auto temp_dst             = temp_buffer + temp_src_batch_stride;
 
     for (int64_t b = 0; b < batch; b++) {
         auto src_per_batch = src + b * src_batch_stride;
@@ -237,13 +237,11 @@ static void conv_naive_cto8c_general_riscv_fp16(
 
         for (int64_t g = 0; g < group; g++) {
             auto temp_dst_per_group = temp_dst + g * num_outs_per_group * dst_h * dst_w;
-            auto filter_per_group = filter + g * flt_group_stride;
-            auto bias_per_group = bias + g * bias_group_stride;
+            auto filter_per_group   = filter + g * flt_group_stride;
+            auto bias_per_group     = bias + g * bias_group_stride;
 
             conv_naive_padding_src_cvt_fp16(src_h, src_w, padding_h, padding_w, channels_per_group, src_per_group, temp_src);
-            conv_naive_kernel_riscv_fp16(temp_src, src_pad_h, src_pad_w, dst_h, dst_w, flt_h, flt_w, stride_h, stride_w,
-                                         channels_per_group, num_outs_per_group, num_threads, filter_per_group,
-                                         bias_per_group, temp_dst_per_group);
+            conv_naive_kernel_riscv_fp16(temp_src, src_pad_h, src_pad_w, dst_h, dst_w, flt_h, flt_w, stride_h, stride_w, channels_per_group, num_outs_per_group, num_threads, filter_per_group, bias_per_group, temp_dst_per_group);
 
             src_per_group += channels_per_group * src_h * src_w;
         }
@@ -251,21 +249,30 @@ static void conv_naive_cto8c_general_riscv_fp16(
     }
 }
 
-uint64_t conv2d_ndarray_naive_fp16_runtime_executor::cal_temp_buffer_size() {
+uint64_t conv2d_ndarray_naive_fp16_runtime_executor::cal_temp_buffer_size()
+{
     LOG(DEBUG) << "ndarray naive conv: cal temp buffer size";
 
     size_t temp_buffer_size = conv_naive_cto8c_get_temp_buffer_size_fp16(
         src_shape_->GetDim(2), // src_h
         src_shape_->GetDim(3), // src_w
-        conv_param_->pad_h, conv_param_->pad_w, conv_param_->stride_h, conv_param_->stride_w, conv_param_->kernel_h,
-        conv_param_->kernel_w, conv_param_->channels, conv_param_->group, conv_param_->num_output);
+        conv_param_->pad_h,
+        conv_param_->pad_w,
+        conv_param_->stride_h,
+        conv_param_->stride_w,
+        conv_param_->kernel_h,
+        conv_param_->kernel_w,
+        conv_param_->channels,
+        conv_param_->group,
+        conv_param_->num_output);
 
     return temp_buffer_size;
 }
 
 void conv2d_ndarray_naive_fp16_runtime_executor::adjust_tunning_param() {}
 
-ppl::common::RetCode conv2d_ndarray_naive_fp16_runtime_executor::prepare() {
+ppl::common::RetCode conv2d_ndarray_naive_fp16_runtime_executor::prepare()
+{
     if (!conv_param_ || !src_shape_ || !dst_shape_) {
         return ppl::common::RC_INVALID_VALUE;
     }
@@ -275,7 +282,8 @@ ppl::common::RetCode conv2d_ndarray_naive_fp16_runtime_executor::prepare() {
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode conv2d_ndarray_naive_fp16_runtime_executor::execute() {
+ppl::common::RetCode conv2d_ndarray_naive_fp16_runtime_executor::execute()
+{
     const conv2d_common_param& cp = *conv_param_;
 
     LOG(DEBUG) << "ndarray naive conv: execute";
@@ -288,14 +296,20 @@ ppl::common::RetCode conv2d_ndarray_naive_fp16_runtime_executor::execute() {
         src_,
         src_shape_->GetDim(2), // src_h
         src_shape_->GetDim(3), // src_w
-        conv_param_->pad_h, conv_param_->pad_w,
-        conv_param_->kernel_h, conv_param_->kernel_w,
-        conv_param_->stride_h, conv_param_->stride_w,
+        conv_param_->pad_h,
+        conv_param_->pad_w,
+        conv_param_->kernel_h,
+        conv_param_->kernel_w,
+        conv_param_->stride_h,
+        conv_param_->stride_w,
         conv_param_->group,
         conv_param_->channels,
         conv_param_->num_output,
         src_shape_->GetDim(0), // batch
-        0, 0, 0, 0,
+        0,
+        0,
+        0,
+        0,
         cvt_filter_,
         cvt_bias_,
         dst_,
@@ -307,36 +321,43 @@ ppl::common::RetCode conv2d_ndarray_naive_fp16_runtime_executor::execute() {
     return ppl::common::RC_SUCCESS;
 }
 
-bool conv2d_ndarray_naive_fp16_offline_manager::is_supported() {
+bool conv2d_ndarray_naive_fp16_offline_manager::is_supported()
+{
     return true;
 }
 
-ppl::common::RetCode conv2d_ndarray_naive_fp16_offline_manager::fast_init_tunning_param() {
+ppl::common::RetCode conv2d_ndarray_naive_fp16_offline_manager::fast_init_tunning_param()
+{
     return ppl::common::RC_SUCCESS;
 }
 
 ppl::common::RetCode conv2d_ndarray_naive_fp16_offline_manager::pick_best_tunning_param(
-    const __fp16* src, const __fp16* filter, __fp16* dst, ppl::nn::TensorShape& src_shape,
-    ppl::nn::TensorShape& dst_shape) {
+    const __fp16* src,
+    const __fp16* filter,
+    __fp16* dst,
+    ppl::nn::TensorShape& src_shape,
+    ppl::nn::TensorShape& dst_shape)
+{
     return ppl::common::RC_SUCCESS;
 }
 
 ppl::common::RetCode conv2d_ndarray_naive_fp16_offline_manager::gen_cvt_weights(const __fp16* filter,
-                                                                                const __fp16* bias) {
+                                                                                const __fp16* bias)
+{
     if (cvt_bias_ != nullptr || cvt_filter_ != nullptr) {
         return ppl::common::RC_PERMISSION_DENIED;
     }
     LOG(DEBUG) << "ndarray naive conv: gen cvt weights";
 
     const int64_t num_output = param_.num_output;
-    const int64_t channels = param_.channels;
-    const int64_t kernel_h = param_.kernel_h;
-    const int64_t kernel_w = param_.kernel_w;
-    const int64_t num_group = param_.group;
+    const int64_t channels   = param_.channels;
+    const int64_t kernel_h   = param_.kernel_h;
+    const int64_t kernel_w   = param_.kernel_w;
+    const int64_t num_group  = param_.group;
 
     {
         cvt_bias_size_ = round_up(num_output, 8);
-        cvt_bias_ = (__fp16*)allocator_->Alloc(cvt_bias_size_ * sizeof(__fp16));
+        cvt_bias_      = (__fp16*)allocator_->Alloc(cvt_bias_size_ * sizeof(__fp16));
         memcpy(cvt_bias_, bias, num_output * sizeof(__fp16));
         memset(cvt_bias_ + num_output, 0.f, (cvt_bias_size_ - num_output) * sizeof(__fp16));
     }

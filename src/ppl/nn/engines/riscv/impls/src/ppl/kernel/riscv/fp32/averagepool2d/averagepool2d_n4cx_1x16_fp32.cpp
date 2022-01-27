@@ -37,13 +37,13 @@ static void averagepool2d_n4cx_1x16_kernel_fp32(
 {
     const int32_t& kernel_h = param->kernel_h;
     const int32_t& kernel_w = param->kernel_w;
-    const int32_t& pad_w = param->pad_w;
-    const int32_t& src_w = param->src_w;
-    const int32_t& dst_w = param->dst_w;
+    const int32_t& pad_w    = param->pad_w;
+    const int32_t& src_w    = param->src_w;
+    const int32_t& dst_w    = param->dst_w;
     const int32_t& stride_w = param->stride_w;
 
     const int32_t iw_start_valid = -pad_w + ow * stride_w;
-    const int32_t iw_end_valid = iw_start_valid + kernel_w;
+    const int32_t iw_end_valid   = iw_start_valid + kernel_w;
 
     int64_t win_size = 0;
     if (pooling_mode == ppl::nn::common::PoolingParam::POOLING_AVERAGE_EXCLUDE) {
@@ -209,8 +209,7 @@ static void averagepool2d_n4cx_1x16_kernel_fp32(
         vsev_float32xm1(dst_p + 15 * C_BLK(), vfmulvf_float32xm1(vfave15, ave_divider, vl), vl);
 }
 
-typedef void (*averagepool2d_n4cx_kernel_fp32_func)(const float*, float*, const averagepool2d_param*, const int64_t,
-                                                    const int64_t, const int64_t, const int64_t);
+typedef void (*averagepool2d_n4cx_kernel_fp32_func)(const float*, float*, const averagepool2d_param*, const int64_t, const int64_t, const int64_t, const int64_t);
 static const averagepool2d_n4cx_kernel_fp32_func averagepool2d_n4cx_1x16_kernel_select[2][16]{
     {averagepool2d_n4cx_1x16_kernel_fp32<ppl::nn::common::PoolingParam::POOLING_AVERAGE_INCLUDE, 1>,
      averagepool2d_n4cx_1x16_kernel_fp32<ppl::nn::common::PoolingParam::POOLING_AVERAGE_INCLUDE, 2>,
@@ -260,18 +259,18 @@ static inline void averagepool2d_n4cx_border_fp32(
     const int32_t& kernel_w = param->kernel_w;
     const int32_t& stride_h = param->stride_h;
     const int32_t& stride_w = param->stride_w;
-    const int32_t& pad_h = param->pad_h;
-    const int32_t& pad_w = param->pad_w;
+    const int32_t& pad_h    = param->pad_h;
+    const int32_t& pad_w    = param->pad_w;
 
     const int32_t& src_h = param->src_h;
     const int32_t& src_w = param->src_w;
     const int32_t& dst_h = param->dst_h;
     const int32_t& dst_w = param->dst_w;
 
-    int64_t iw_start = -pad_w + ow * stride_w;
-    int64_t iw_end = iw_start + kernel_w;
+    int64_t iw_start       = -pad_w + ow * stride_w;
+    int64_t iw_end         = iw_start + kernel_w;
     int64_t iw_start_valid = max(iw_start, int64_t(0));
-    int64_t iw_end_valid = min(iw_end, int64_t(src_w));
+    int64_t iw_end_valid   = min(iw_end, int64_t(src_w));
 
     int64_t win_size = 0;
     if (pooling_mode == ppl::nn::common::PoolingParam::POOLING_AVERAGE_EXCLUDE) {
@@ -281,12 +280,12 @@ static inline void averagepool2d_n4cx_border_fp32(
     }
     float ave_divider = (float)(1.0f / win_size);
 
-    const auto vl = vsetvli(C_BLK(), RVV_E32, RVV_M1);
+    const auto vl      = vsetvli(C_BLK(), RVV_E32, RVV_M1);
     float32xm1_t vfave = vfmvvf_float32xm1(0.0f, vl);
     for (int64_t ih = ih_start_valid; ih < ih_end_valid; ih++) {
         for (int64_t iw = iw_start_valid; iw < iw_end_valid; iw++) {
             const float* src_p = src + (ih * src_w + iw) * C_BLK();
-            vfave = vfaddvv_float32xm1(vfave, vlev_float32xm1(src_p, vl), vl);
+            vfave              = vfaddvv_float32xm1(vfave, vlev_float32xm1(src_p, vl), vl);
         }
     }
 
@@ -308,28 +307,27 @@ ppl::common::RetCode averagepool2d_n4cx_1x16_fp32_impl(
     const float* src,
     float* dst)
 {
-    const int32_t batch = src_shape->GetDim(0);
+    const int32_t batch    = src_shape->GetDim(0);
     const int32_t channels = src_shape->GetDim(1);
-    const int32_t src_h = src_shape->GetDim(2);
-    const int32_t src_w = src_shape->GetDim(3);
-    const int32_t dst_h = dst_shape->GetDim(2);
-    const int32_t dst_w = dst_shape->GetDim(3);
+    const int32_t src_h    = src_shape->GetDim(2);
+    const int32_t src_w    = src_shape->GetDim(3);
+    const int32_t dst_h    = dst_shape->GetDim(2);
+    const int32_t dst_w    = dst_shape->GetDim(3);
 
-    const averagepool2d_param param = {kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w,
-                                       batch,    channels, src_h,    src_w,    dst_h, dst_w};
+    const averagepool2d_param param = {kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, batch, channels, src_h, src_w, dst_h, dst_w};
 
     const int32_t padded_channels = (channels + 8 - 1) / 8 * 8;
-    int32_t dst_1x16_start_w = max((pad_w + stride_w - 1) / stride_w, 0);
-    int32_t dst_1x16_end_w = min((src_w + pad_w - kernel_w) / stride_w + 1, dst_w);
+    int32_t dst_1x16_start_w      = max((pad_w + stride_w - 1) / stride_w, 0);
+    int32_t dst_1x16_end_w        = min((src_w + pad_w - kernel_w) / stride_w + 1, dst_w);
 
     for (int64_t nc = 0; nc < batch * padded_channels; nc += C_BLK()) {
         const float* src_ = src + nc * src_h * src_w;
-        float* dst_ = dst + nc * dst_h * dst_w;
+        float* dst_       = dst + nc * dst_h * dst_w;
         for (int64_t oh = 0; oh < dst_h; oh++) {
-            int64_t ih_start = -pad_h + oh * stride_h;
-            int64_t ih_end = ih_start + kernel_h;
+            int64_t ih_start       = -pad_h + oh * stride_h;
+            int64_t ih_end         = ih_start + kernel_h;
             int64_t ih_start_valid = max(ih_start, int64_t(0));
-            int64_t ih_end_valid = min(ih_end, int64_t(src_h));
+            int64_t ih_end_valid   = min(ih_end, int64_t(src_h));
 
             int64_t ow = 0;
             for (; ow < dst_1x16_start_w; ++ow) {

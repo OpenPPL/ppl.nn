@@ -22,8 +22,7 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode softmax_ndarray_fp32(const ppl::nn::TensorShape* shape, const int64_t axis, const float* src,
-                                          float* dst);
+ppl::common::RetCode softmax_ndarray_fp32(const ppl::nn::TensorShape* shape, const int64_t axis, const float* src, float* dst);
 
 }}}; // namespace ppl::kernel::riscv
 

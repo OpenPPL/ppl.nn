@@ -24,12 +24,11 @@ namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode transpose_ndarray_fp32(const float* src, float* dst,
 
-                                            const int32_t* perm, const ppl::nn::TensorShape* src_shape,
+                                            const int32_t* perm,
+                                            const ppl::nn::TensorShape* src_shape,
                                             const ppl::nn::TensorShape* dst_shape);
 
-ppl::common::RetCode transpose_ndarray_continous2d_fp32(const float* src, float* dst,
-                                                        const ppl::nn::TensorShape* src_shape, const uint32_t axis0,
-                                                        const uint32_t axis1);
+ppl::common::RetCode transpose_ndarray_continous2d_fp32(const float* src, float* dst, const ppl::nn::TensorShape* src_shape, const uint32_t axis0, const uint32_t axis1);
 
 }}}; //  namespace ppl::kernel::riscv
 

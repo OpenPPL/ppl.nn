@@ -33,9 +33,9 @@ void reduce_n4cx_lastdim_no_reduce_fp32(
     const int64_t dim_length,
     const int64_t remain_c)
 {
-    const int64_t parall_d = 16;
+    const int64_t parall_d   = 16;
     const int64_t unroll_len = parall_d * C_BLK();
-    const auto vl = vsetvli(C_BLK(), RVV_E32, RVV_M1);
+    const auto vl            = vsetvli(C_BLK(), RVV_E32, RVV_M1);
 
     int64_t i = 0;
     for (; i + unroll_len < dim_length * C_BLK(); i += unroll_len) {
@@ -69,9 +69,9 @@ void reduce_n4cx_lastdim_reduce_w_fp32(
     const int64_t dim_length,
     const int64_t remain_c)
 {
-    const int64_t parall_d = 1;
+    const int64_t parall_d   = 1;
     const int64_t unroll_len = parall_d * C_BLK();
-    const auto vl = vsetvli(C_BLK(), RVV_E32, RVV_M1);
+    const auto vl            = vsetvli(C_BLK(), RVV_E32, RVV_M1);
 
     float32xm1_t v_reduce_val = vlev_float32xm1(dst, vl);
 
@@ -95,7 +95,7 @@ void reduce_n4cx_lastdim_reduce_c_fp32(
         int64_t i = 0;
         for (; i < dim_length * C_BLK(); i += C_BLK()) {
             float reduce_val = reduce_vector_all_lanes_kernel_fp32<op>(vlev_float32xm1(src + i, vl));
-            dst[i] = reduce_scalar_kernel_fp32<op>(dst[i], reduce_val);
+            dst[i]           = reduce_scalar_kernel_fp32<op>(dst[i], reduce_val);
         }
     } else { // if remain_c is aligned to C_BLK(), this branch is useless -- make sure 'src_shape[1]' is aligned
     }
@@ -119,7 +119,7 @@ void reduce_n4cx_lastdim_reduce_cw_fp32(
             v_reduce_val = reduce_vector_kernel_fp32<op>(vlev_float32xm1(src + i, vl), v_reduce_val);
         }
         float reduce_val = reduce_vector_all_lanes_kernel_fp32<op>(v_reduce_val);
-        dst[0] = reduce_scalar_kernel_fp32<op>(reduce_val, dst[0]);
+        dst[0]           = reduce_scalar_kernel_fp32<op>(reduce_val, dst[0]);
     } else { // // if remain_c is aligned to C_BLK(), this branch is useless -- make sure 'src_shape[1]' is aligned
     }
 }
@@ -138,8 +138,8 @@ void reduce_n4cx_recursive_fp32(
     int64_t remain_c)
 {
     if (dim_idx == src_shape->GetDimCount() - 1) {
-        const bool reduce_on_w = src_shape->GetDim(dim_idx) != dst_shape->GetDim(dim_idx);
-        const bool reduce_on_c = src_shape->GetDim(c_dim_idx) != dst_shape->GetDim(c_dim_idx);
+        const bool reduce_on_w   = src_shape->GetDim(dim_idx) != dst_shape->GetDim(dim_idx);
+        const bool reduce_on_c   = src_shape->GetDim(c_dim_idx) != dst_shape->GetDim(c_dim_idx);
         const int64_t dim_length = src_shape->GetDim(dim_idx);
         if (!reduce_on_c && !reduce_on_w) {
             reduce_n4cx_lastdim_no_reduce_fp32<op>(src, dst, dim_length, remain_c);
@@ -194,17 +194,17 @@ ppl::common::RetCode reduce_n4cx_fp32(
 
     reduce_preprocess_fp32<op>(dst, padded_dst_shape.GetElementsIncludingPadding());
 
-    int64_t dim_count = padded_dst_shape.GetDimCount();
+    int64_t dim_count                            = padded_dst_shape.GetDimCount();
     int64_t inc_src[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
     int64_t inc_dst[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
-    int64_t stride_src = C_BLK();
-    int64_t stride_dst = C_BLK();
+    int64_t stride_src                           = C_BLK();
+    int64_t stride_dst                           = C_BLK();
 
     for (int64_t i = dim_count - 1; i >= 0; i--) {
         int64_t src_dim = src_shape->GetDim(i);
         int64_t dst_dim = padded_dst_shape.GetDim(i);
-        inc_src[i] = src_dim == 1 ? 0 : stride_src;
-        inc_dst[i] = dst_dim == 1 ? 0 : stride_dst;
+        inc_src[i]      = src_dim == 1 ? 0 : stride_src;
+        inc_dst[i]      = dst_dim == 1 ? 0 : stride_dst;
 
         if (i == c_dim_idx) {
             src_dim = div_up(src_dim, C_BLK());

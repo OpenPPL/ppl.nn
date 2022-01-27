@@ -29,15 +29,15 @@ ppl::common::RetCode clip_fp32(
     const float* src,
     float* dst)
 {
-    const int64_t total_len = shape->GetElementsIncludingPadding();
-    const int64_t parall_d = 32;
+    const int64_t total_len  = shape->GetElementsIncludingPadding();
+    const int64_t parall_d   = 32;
     const int64_t unroll_len = parall_d * C_BLK();
-    const auto vl = vsetvli(C_BLK(), RVV_E32, RVV_M1);
+    const auto vl            = vsetvli(C_BLK(), RVV_E32, RVV_M1);
 
     int64_t idx = 0;
     for (; idx + unroll_len < total_len; idx += unroll_len) {
         const float* src_ = src + idx;
-        float* dst_ = dst + idx;
+        float* dst_       = dst + idx;
         vsev_float32xm1(dst_ + 0 * C_BLK(), vfmaxvf_float32xm1(vfminvf_float32xm1(vlev_float32xm1(src_ + 0 * C_BLK(), vl), (float)clip_max, vl), (float)clip_min, vl), vl);
         vsev_float32xm1(dst_ + 1 * C_BLK(), vfmaxvf_float32xm1(vfminvf_float32xm1(vlev_float32xm1(src_ + 1 * C_BLK(), vl), (float)clip_max, vl), (float)clip_min, vl), vl);
         vsev_float32xm1(dst_ + 2 * C_BLK(), vfmaxvf_float32xm1(vfminvf_float32xm1(vlev_float32xm1(src_ + 2 * C_BLK(), vl), (float)clip_max, vl), (float)clip_min, vl), vl);
@@ -73,7 +73,7 @@ ppl::common::RetCode clip_fp32(
     }
     for (; idx < total_len; idx += C_BLK()) {
         const float* src_ = src + idx;
-        float* dst_ = dst + idx;
+        float* dst_       = dst + idx;
         vsev_float32xm1(dst_, vfmaxvf_float32xm1(vfminvf_float32xm1(vlev_float32xm1(src_, vl), (float)clip_max, vl), (float)clip_min, vl), vl);
     }
 

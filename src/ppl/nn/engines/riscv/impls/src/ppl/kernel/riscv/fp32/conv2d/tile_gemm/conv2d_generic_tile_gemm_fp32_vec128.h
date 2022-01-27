@@ -53,15 +53,15 @@ void conv2d_nxcx_tile_gemm_src_blk_im2col_fp32_vec128(
     int64_t tile_gemm_dst_h_blk,
     int64_t tile_gemm_dst_w_beg,
     int64_t tile_gemm_dst_w_blk,
-    float* src_trans) {
-
+    float* src_trans)
+{
     int64_t pad_channels = round_up(channels, atom_c);
-    int64_t src_h_beg = tile_gemm_dst_h_beg * stride_h - pad_h;
-    int64_t src_w_beg = tile_gemm_dst_w_beg * stride_w - pad_w;
+    int64_t src_h_beg    = tile_gemm_dst_h_beg * stride_h - pad_h;
+    int64_t src_w_beg    = tile_gemm_dst_w_beg * stride_w - pad_w;
 
-    int64_t src_h_stride = atom_c * src_w;
+    int64_t src_h_stride       = atom_c * src_w;
     int64_t src_channel_stride = src_h * src_h_stride;
-    int64_t img_h_stride = stride_h * src_h_stride;
+    int64_t img_h_stride       = stride_h * src_h_stride;
 
     int64_t num_dst_w_blk_elem = tile_gemm_dst_w_blk * atom_c;
 
@@ -147,25 +147,25 @@ void conv2d_nxcx_conv_tile_gemm_riscv_per_group_fp32_vec128(
     int64_t dst_w,
     int64_t ic,
     int64_t oc,
-    conv2d_nxcx_conv_tile_gemm_tunning_info tunning_info) {
-
+    conv2d_nxcx_conv_tile_gemm_tunning_info tunning_info)
+{
     const int64_t atom_oc = 4;
 
-    int64_t tile_gemm_m_blk = round_up(tunning_info.tile_gemm_m_blk, atom_oc);
-    int64_t tile_gemm_k_blk = round_up(tunning_info.tile_gemm_k_blk, atom_ic);
+    int64_t tile_gemm_m_blk     = round_up(tunning_info.tile_gemm_m_blk, atom_oc);
+    int64_t tile_gemm_k_blk     = round_up(tunning_info.tile_gemm_k_blk, atom_ic);
     int64_t tile_gemm_dst_h_blk = min(dst_h, tunning_info.tile_gemm_dst_h_blk);
     int64_t tile_gemm_dst_w_blk = min(dst_w, tunning_info.tile_gemm_dst_w_blk);
 
-    int64_t pad_ic = round_up(ic, atom_ic);
-    int64_t pad_oc = round_up(oc, atom_oc);
+    int64_t pad_ic  = round_up(ic, atom_ic);
+    int64_t pad_oc  = round_up(oc, atom_oc);
     int64_t total_m = pad_oc;
     int64_t total_k = flt_h * flt_w * pad_ic;
 
     int64_t src_trans_size = total_k * tile_gemm_dst_h_blk * tile_gemm_dst_w_blk;
-    auto src_trans = temp_buffer;
-    auto dst_blk = src_trans + src_trans_size;
+    auto src_trans         = temp_buffer;
+    auto dst_blk           = src_trans + src_trans_size;
 
-    int64_t src_h_stride = atom_ic * src_w;
+    int64_t src_h_stride    = atom_ic * src_w;
     int64_t filter_m_stride = tile_gemm_m_blk * total_k;
 
     // blk loops, TODO: k_blk
@@ -173,7 +173,7 @@ void conv2d_nxcx_conv_tile_gemm_riscv_per_group_fp32_vec128(
         int64_t real_dst_h_blk = min(tile_gemm_dst_h_blk, dst_h - dst_h_beg);
         for (int64_t dst_w_beg = 0; dst_w_beg < dst_w; dst_w_beg += tile_gemm_dst_w_blk) {
             int64_t real_dst_w_blk = min(tile_gemm_dst_w_blk, dst_w - dst_w_beg);
-            int64_t real_n_blk = real_dst_h_blk * real_dst_w_blk;
+            int64_t real_n_blk     = real_dst_h_blk * real_dst_w_blk;
 
             auto filter_temp = filter;
 
@@ -196,18 +196,17 @@ void conv2d_nxcx_conv_tile_gemm_riscv_per_group_fp32_vec128(
                 real_dst_h_blk,
                 dst_w_beg,
                 real_dst_w_blk,
-                src_trans
-            );
+                src_trans);
 
             for (int64_t m_beg = 0; m_beg < total_m; m_beg += tile_gemm_m_blk) {
-                int64_t real_m_blk = min(tile_gemm_m_blk, total_m - m_beg);
+                int64_t real_m_blk     = min(tile_gemm_m_blk, total_m - m_beg);
                 int64_t real_pad_m_blk = round_up(real_m_blk, atom_oc);
                 auto gemm_func =
                     conv2d_gemm_select_xcto4c_kernel_fp32_vec128<atom_ic, true>(real_pad_m_blk, real_n_blk);
 
                 gemm_func(filter_temp, src_trans, dst_blk, real_pad_m_blk, real_n_blk, total_k);
 
-                auto dst_ptr = dst + m_beg * (dst_h * dst_w) + dst_h_beg * dst_w * atom_oc + dst_w_beg * atom_oc;
+                auto dst_ptr  = dst + m_beg * (dst_h * dst_w) + dst_h_beg * dst_w * atom_oc + dst_w_beg * atom_oc;
                 auto bias_ptr = bias + m_beg;
 
                 conv2d_n4cx_mem_dst_blk_trans_fp32_vec128<false>(
@@ -238,13 +237,13 @@ size_t conv2d_nxcx_conv_tile_gemm_get_cvt_filter_size_fp32_vec128(
 {
     const int64_t atom_oc = 4;
 
-    int64_t num_outs_per_group = num_outs / group;
-    int64_t channels_per_group = channels / group;
+    int64_t num_outs_per_group     = num_outs / group;
+    int64_t channels_per_group     = channels / group;
     int64_t pad_num_outs_per_group = round_up(num_outs_per_group, atom_oc);
     int64_t pad_channels_per_group = round_up(channels_per_group, atom_ic);
 
     int64_t num_cvt_filter_elem = pad_num_outs_per_group * pad_channels_per_group * group * flt_h * flt_w;
-    auto cvt_filter_size = num_cvt_filter_elem * sizeof(float);
+    auto cvt_filter_size        = num_cvt_filter_elem * sizeof(float);
     return cvt_filter_size;
 }
 
@@ -266,9 +265,9 @@ static void conv2d_nxcx_conv_tile_gemm_cvt_filter_kernel_fp32_vec128(
     tile_gemm_k_blk = tile_gemm_k_blk / (flt_h * flt_w);
 
     int64_t n;
-    int64_t pad_channels = round_up(channels, atom_ic);
-    int64_t pad_num_outs = round_up(num_outs, atom_oc);
-    int64_t flt_size = flt_h * flt_w;
+    int64_t pad_channels         = round_up(channels, atom_ic);
+    int64_t pad_num_outs         = round_up(num_outs, atom_oc);
+    int64_t flt_size             = flt_h * flt_w;
     int64_t tile_gemm_k_blk_left = round_up(pad_channels, tile_gemm_k_blk) - pad_channels;
     memset(filter_cvt, 0, pad_channels * pad_num_outs * flt_size * sizeof(float));
 
@@ -313,20 +312,19 @@ void conv2d_nxcx_conv_tile_gemm_cvt_filter_fp32_vec128(
     tile_gemm_m_blk = round_up(tile_gemm_m_blk, atom_oc);
     tile_gemm_k_blk = round_up(tile_gemm_k_blk, atom_ic);
 
-    int64_t num_outs_per_group = num_outs / group;
-    int64_t channels_per_group = channels / group;
+    int64_t num_outs_per_group     = num_outs / group;
+    int64_t channels_per_group     = channels / group;
     int64_t pad_num_outs_per_group = round_up(num_outs_per_group, atom_oc);
     int64_t pad_channels_per_group = round_up(channels_per_group, atom_ic);
 
-    auto filter_per_group = filter;
-    auto filter_cvt_per_group = filter_cvt;
-    int64_t filter_group_stride = flt_h * flt_w * num_outs_per_group * channels_per_group;
+    auto filter_per_group           = filter;
+    auto filter_cvt_per_group       = filter_cvt;
+    int64_t filter_group_stride     = flt_h * flt_w * num_outs_per_group * channels_per_group;
     int64_t filter_cvt_group_stride = flt_h * flt_w * pad_num_outs_per_group * pad_channels_per_group;
 
     for (int64_t g = 0; g < group; g += 1) {
         conv2d_nxcx_conv_tile_gemm_cvt_filter_kernel_fp32_vec128<atom_ic>(
-            filter_per_group, flt_h, flt_w, num_outs_per_group, channels_per_group, tile_gemm_m_blk, tile_gemm_k_blk,
-            filter_cvt_per_group);
+            filter_per_group, flt_h, flt_w, num_outs_per_group, channels_per_group, tile_gemm_m_blk, tile_gemm_k_blk, filter_cvt_per_group);
 
         filter_per_group += filter_group_stride;
         filter_cvt_per_group += filter_cvt_group_stride;
@@ -356,16 +354,16 @@ size_t conv2d_nxcx_tile_gemm_get_temp_buffer_size_fp32_vec128(
 {
     const int64_t atom_oc = 4;
 
-    int64_t channels_per_group = channels / group;
-    int64_t num_outs_per_group = num_outs / group;
+    int64_t channels_per_group     = channels / group;
+    int64_t num_outs_per_group     = num_outs / group;
     int64_t pad_channels_per_group = round_up(channels_per_group, atom_ic);
     int64_t pad_num_outs_per_group = round_up(num_outs_per_group, atom_oc);
-    int64_t flt_h_with_hole = hole_h * (flt_h - 1) + 1;
-    int64_t flt_w_with_hole = hole_w * (flt_w - 1) + 1;
-    int64_t src_pad_h = src_h + 2 * padding_h;
-    int64_t src_pad_w = src_w + 2 * padding_w;
-    int64_t dst_h = (src_pad_h - flt_h_with_hole + stride_h) / stride_h;
-    int64_t dst_w = (src_pad_w - flt_w_with_hole + stride_w) / stride_w;
+    int64_t flt_h_with_hole        = hole_h * (flt_h - 1) + 1;
+    int64_t flt_w_with_hole        = hole_w * (flt_w - 1) + 1;
+    int64_t src_pad_h              = src_h + 2 * padding_h;
+    int64_t src_pad_w              = src_w + 2 * padding_w;
+    int64_t dst_h                  = (src_pad_h - flt_h_with_hole + stride_h) / stride_h;
+    int64_t dst_w                  = (src_pad_w - flt_w_with_hole + stride_w) / stride_w;
 
     tile_gemm_dst_h_blk = min(tile_gemm_dst_h_blk, dst_h);
     tile_gemm_dst_w_blk = min(tile_gemm_dst_w_blk, dst_w);
@@ -382,7 +380,7 @@ size_t conv2d_nxcx_tile_gemm_get_temp_buffer_size_fp32_vec128(
     }
 
     const int64_t tile_gemm_k_blk = flt_h * flt_w * pad_channels_per_group;
-    size_t src_trans_size = tile_gemm_k_blk * tile_gemm_dst_h_blk * tile_gemm_dst_w_blk * num_threads * sizeof(float);
+    size_t src_trans_size         = tile_gemm_k_blk * tile_gemm_dst_h_blk * tile_gemm_dst_w_blk * num_threads * sizeof(float);
     size_t dst_blocking_size =
         tile_gemm_m_blk * tile_gemm_dst_h_blk * tile_gemm_dst_w_blk * num_threads * sizeof(float);
 

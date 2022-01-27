@@ -23,9 +23,9 @@ ppl::common::RetCode leaky_relu_n8cx_fp16(
     const ppl::nn::TensorShape *src_shape,
     const __fp16 *src,
     const float alpha,
-    __fp16 *dst
-) {
+    __fp16 *dst)
+{
     return leaky_relu_nbcx_common<__fp16, 128>(src_shape, src, alpha, dst);
 }
 
-}}};
+}}}; // namespace ppl::kernel::riscv

@@ -34,13 +34,13 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
     asm volatile(
         ".equ            IS_FIRST, %c[IS_FIRST]     \n\t"
         ".equ            ATOM_M, %c[ATOM_M]         \n\t"
-        ".equ            ATOM_N, %c[ATOM_N]         \n\t"       
+        ".equ            ATOM_N, %c[ATOM_N]         \n\t"
         "addi            s3, zero, 4                \n\t"
-        "vsetvli         s2, s3, e32                \n\t"       
+        "vsetvli         s2, s3, e32                \n\t"
         "mv              s2, %[A_LOC]               \n\t"
         "mv              s3, %[B_LOC]               \n\t"
         "mv              s4, %[C_LOC]               \n\t"
-        "mv              s5, %[K]                   \n\t"       
+        "mv              s5, %[K]                   \n\t"
         "0:                                         \n\t" // init
         ".if IS_FIRST == 1                          \n\t"
         "addi            s5, s5, -4                 \n\t"
@@ -81,7 +81,7 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         ".endif                                     \n\t"
         ".if ATOM_N > 6                             \n\t"
         "flw             f6, 96(s3)                 \n\t"
-        ".endif                                     \n\t"       
+        ".endif                                     \n\t"
         ".if ATOM_M > 0                             \n\t"
         ".if ATOM_N > 0                             \n\t"
         "vfmul.vf        v4, v0, f0                 \n\t"
@@ -173,7 +173,7 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         ".if ATOM_N > 6                             \n\t"
         "vfmul.vf        v31, v3, f6                \n\t"
         ".endif                                     \n\t"
-        ".endif                                     \n\t"       
+        ".endif                                     \n\t"
         ".if ATOM_M > 0                             \n\t"
         "vle.v           v0, (s2)                   \n\t"
         "add             s2, s2, %[A_NXT_LINE_STRIDE]\n\t"
@@ -211,7 +211,7 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         ".endif                                     \n\t"
         ".if ATOM_N > 6                             \n\t"
         "flw             f6, 100(s3)                \n\t"
-        ".endif                                     \n\t"       
+        ".endif                                     \n\t"
         ".if ATOM_M > 0                             \n\t"
         ".if ATOM_N > 0                             \n\t"
         "vfmacc.vf       v4, f0, v0                 \n\t"
@@ -303,7 +303,7 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         ".if ATOM_N > 6                             \n\t"
         "vfmacc.vf       v31, f6, v3                \n\t"
         ".endif                                     \n\t"
-        ".endif                                     \n\t"       
+        ".endif                                     \n\t"
         ".if ATOM_M > 0                             \n\t"
         "vle.v           v0, (s2)                   \n\t"
         "add             s2, s2, %[A_NXT_LINE_STRIDE]\n\t"
@@ -341,7 +341,7 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         ".endif                                     \n\t"
         ".if ATOM_N > 6                             \n\t"
         "flw             f6, 104(s3)                \n\t"
-        ".endif                                     \n\t"       
+        ".endif                                     \n\t"
         ".if ATOM_M > 0                             \n\t"
         ".if ATOM_N > 0                             \n\t"
         "vfmacc.vf       v4, f0, v0                 \n\t"
@@ -433,7 +433,7 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         ".if ATOM_N > 6                             \n\t"
         "vfmacc.vf       v31, f6, v3                \n\t"
         ".endif                                     \n\t"
-        ".endif                                     \n\t"       
+        ".endif                                     \n\t"
         ".if ATOM_M > 0                             \n\t"
         "vle.v           v0, (s2)                   \n\t"
         "add             s2, s2, %[A_NXT_LINE_STRIDE]\n\t"
@@ -471,7 +471,7 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         ".endif                                     \n\t"
         ".if ATOM_N > 6                             \n\t"
         "flw             f6, 108(s3)                \n\t"
-        ".endif                                     \n\t"       
+        ".endif                                     \n\t"
         ".if ATOM_M > 0                             \n\t"
         ".if ATOM_N > 0                             \n\t"
         "vfmacc.vf       v4, f0, v0                 \n\t"
@@ -563,7 +563,7 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         ".if ATOM_N > 6                             \n\t"
         "vfmacc.vf       v31, f6, v3                \n\t"
         ".endif                                     \n\t"
-        ".endif                                     \n\t"       
+        ".endif                                     \n\t"
         "add             s3, s3, %[B_NXT_LINE_STRIDE]\n\t"
         "beq             s5, zero, 2f               \n\t"
         ".else                                      \n\t"
@@ -692,7 +692,7 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         "add             s4, s4, %[C_NXT_LINE_STRIDE]\n\t"
         ".endif                                     \n\t"
         "mv              s4, %[C_LOC]               \n\t"
-        ".endif                                     \n\t"       
+        ".endif                                     \n\t"
         "1:                                             \n\t" // loop k
         "addi            s5, s5, -4                 \n\t"
         ".if ATOM_M > 0                             \n\t"
@@ -732,7 +732,7 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         ".endif                                     \n\t"
         ".if ATOM_N > 6                             \n\t"
         "flw             f6, 96(s3)                 \n\t"
-        ".endif                                     \n\t"       
+        ".endif                                     \n\t"
         ".if ATOM_M > 0                             \n\t"
         ".if ATOM_N > 0                             \n\t"
         "vfmacc.vf       v4, f0, v0                 \n\t"
@@ -824,7 +824,7 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         ".if ATOM_N > 6                             \n\t"
         "vfmacc.vf       v31, f6, v3                \n\t"
         ".endif                                     \n\t"
-        ".endif                                     \n\t"       
+        ".endif                                     \n\t"
         ".if ATOM_M > 0                             \n\t"
         "vle.v           v0, (s2)                   \n\t"
         "add             s2, s2, %[A_NXT_LINE_STRIDE]\n\t"
@@ -862,7 +862,7 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         ".endif                                     \n\t"
         ".if ATOM_N > 6                             \n\t"
         "flw             f6, 100(s3)                \n\t"
-        ".endif                                     \n\t"       
+        ".endif                                     \n\t"
         ".if ATOM_M > 0                             \n\t"
         ".if ATOM_N > 0                             \n\t"
         "vfmacc.vf       v4, f0, v0                 \n\t"
@@ -954,7 +954,7 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         ".if ATOM_N > 6                             \n\t"
         "vfmacc.vf       v31, f6, v3                \n\t"
         ".endif                                     \n\t"
-        ".endif                                     \n\t"       
+        ".endif                                     \n\t"
         ".if ATOM_M > 0                             \n\t"
         "vle.v           v0, (s2)                   \n\t"
         "add             s2, s2, %[A_NXT_LINE_STRIDE]\n\t"
@@ -992,7 +992,7 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         ".endif                                     \n\t"
         ".if ATOM_N > 6                             \n\t"
         "flw             f6, 104(s3)                \n\t"
-        ".endif                                     \n\t"       
+        ".endif                                     \n\t"
         ".if ATOM_M > 0                             \n\t"
         ".if ATOM_N > 0                             \n\t"
         "vfmacc.vf       v4, f0, v0                 \n\t"
@@ -1084,7 +1084,7 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         ".if ATOM_N > 6                             \n\t"
         "vfmacc.vf       v31, f6, v3                \n\t"
         ".endif                                     \n\t"
-        ".endif                                     \n\t"       
+        ".endif                                     \n\t"
         ".if ATOM_M > 0                             \n\t"
         "vle.v           v0, (s2)                   \n\t"
         "add             s2, s2, %[A_NXT_LINE_STRIDE]\n\t"
@@ -1122,7 +1122,7 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         ".endif                                     \n\t"
         ".if ATOM_N > 6                             \n\t"
         "flw             f6, 108(s3)                \n\t"
-        ".endif                                     \n\t"       
+        ".endif                                     \n\t"
         ".if ATOM_M > 0                             \n\t"
         ".if ATOM_N > 0                             \n\t"
         "vfmacc.vf       v4, f0, v0                 \n\t"
@@ -1346,21 +1346,18 @@ static void gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128(
         ".endif                                     \n\t"
 
         :
-        : [ATOM_M] "i"(m), [ATOM_N] "i"(n), [IS_FIRST] "i"(first), [A_LOC] "r"(a), [B_LOC] "r"(b),
-          [C_LOC] "r"(c), [K] "r"(total_k), [A_NXT_LINE_STRIDE] "r"(total_k * 16),
-          [A_BACK_STRIDE] "r"(m / 4 * total_k * 16 - 16), [B_NXT_LINE_STRIDE] "r"(total_n * 16),
+        : [ATOM_M] "i"(m), [ATOM_N] "i"(n), [IS_FIRST] "i"(first), [A_LOC] "r"(a), [B_LOC] "r"(b), [C_LOC] "r"(c), [K] "r"(total_k), [A_NXT_LINE_STRIDE] "r"(total_k * 16), [A_BACK_STRIDE] "r"(m / 4 * total_k * 16 - 16), [B_NXT_LINE_STRIDE] "r"(total_n * 16),
           // [B_NXT_LINE_STRIDE]"r"(n * 16),
           [C_NXT_LINE_STRIDE] "r"((total_n - n) * 16)
 
-        : "memory", "s2", "s3", "s4", "s5"
-    );
+        : "memory", "s2", "s3", "s4", "s5");
 }
 
 template <int64_t align_n>
 static void gemm_kernel_n4xc_n4xc_transpose_fp32_vec128(
     const float* src,
     float* dst,
-    int64_t n, 
+    int64_t n,
     int64_t k,
     int64_t nxt_line_stride)
 {
@@ -1393,8 +1390,8 @@ void gemm_n4cx_n4cx_fp32_vec128(
     const int64_t total_n,
     const int64_t total_k)
 {
-    const int64_t atom_k = 4;
-    const int64_t atom_m = 4;
+    const int64_t atom_k           = 4;
+    const int64_t atom_m           = 4;
     const int64_t c_nxt_blk_stride = (align_m - atom_m) * total_n;
     const int64_t a_nxt_blk_stride = align_m * total_k;
 
@@ -1404,11 +1401,11 @@ void gemm_n4cx_n4cx_fp32_vec128(
     // b = transpose_b;
     // }
 
-    int64_t mi = 0;
+    int64_t mi          = 0;
     const float* temp_a = a;
-    float* temp_c = c;
+    float* temp_c       = c;
     for (mi = 0; mi <= total_m - align_m; mi += align_m) {
-        int64_t ni = 0;
+        int64_t ni          = 0;
         const float* temp_b = b;
         for (ni = 0; ni <= total_n - align_n; ni += align_n) {
             gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128<align_m, align_n, first>(temp_a, temp_b, temp_c, total_m, total_n, total_k);
@@ -1423,7 +1420,7 @@ void gemm_n4cx_n4cx_fp32_vec128(
         temp_a += a_nxt_blk_stride;
     }
     if (mi < total_m) {
-        int64_t ni = 0;
+        int64_t ni          = 0;
         const float* temp_b = b;
         for (ni = 0; ni <= total_n - align_n; ni += align_n) {
             gemm_kernel_m16n7_n4cx_n4cx_fp32_vec128<left_m, align_n, first>(temp_a, temp_b, temp_c, total_m, total_n, total_k);

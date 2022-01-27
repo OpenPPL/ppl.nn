@@ -27,10 +27,10 @@ static ppl::common::RetCode relation_eltwise_common(
     const ppl::nn::TensorShape *dst_shape,
     const T *src0,
     const T *src1,
-    uint8_t *dst
-) {
+    uint8_t *dst)
+{
     constexpr int32_t c_blk = vlen / 8 / sizeof(T);
-    uint64_t vl = vsetvli<T, vlen>(c_blk);
+    uint64_t vl             = vsetvli<T, vlen>(c_blk);
 
     const int64_t simd_w      = c_blk;
     const int64_t length      = dst_shape->GetElementsIncludingPadding();
@@ -66,6 +66,6 @@ static ppl::common::RetCode relation_eltwise_common(
     return ppl::common::RC_SUCCESS;
 }
 
-}}};
+}}}; // namespace ppl::kernel::riscv
 
 #endif

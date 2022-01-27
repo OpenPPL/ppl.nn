@@ -26,8 +26,8 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
 
     int64_t src_pad_w,
     int64_t dst_h,
-    int64_t dst_w
-) {
+    int64_t dst_w)
+{
     asm volatile(
         ".equ           ATOM_W, %c[ATOM_W]      \n\t"
 
@@ -112,7 +112,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vle.v          v23,    (s5)            \n\t"
         "addi           s5,     s5,     16      \n\t"
         // calculate
-            // f00
+        // f00
         "vfmacc.vv      v0,     v24,    v8      \n\t"
         "vfmacc.vv      v1,     v24,    v9      \n\t"
         "vfmacc.vv      v2,     v24,    v10     \n\t"
@@ -121,7 +121,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v24,    v17     \n\t"
         "vfmacc.vv      v6,     v24,    v18     \n\t"
         "vfmacc.vv      v7,     v24,    v19     \n\t"
-            // f01
+        // f01
         "vfmacc.vv      v0,     v25,    v9      \n\t"
         "vfmacc.vv      v1,     v25,    v10     \n\t"
         "vfmacc.vv      v2,     v25,    v11     \n\t"
@@ -130,7 +130,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v25,    v18     \n\t"
         "vfmacc.vv      v6,     v25,    v19     \n\t"
         "vfmacc.vv      v7,     v25,    v20     \n\t"
-            //f02
+        //f02
         "vfmacc.vv      v0,     v26,    v10     \n\t"
         "vfmacc.vv      v1,     v26,    v11     \n\t"
         "vfmacc.vv      v2,     v26,    v12     \n\t"
@@ -139,7 +139,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v26,    v19     \n\t"
         "vfmacc.vv      v6,     v26,    v20     \n\t"
         "vfmacc.vv      v7,     v26,    v21     \n\t"
-            //f03
+        //f03
         "vfmacc.vv      v0,     v27,    v11     \n\t"
         "vfmacc.vv      v1,     v27,    v12     \n\t"
         "vfmacc.vv      v2,     v27,    v13     \n\t"
@@ -148,7 +148,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v27,    v20     \n\t"
         "vfmacc.vv      v6,     v27,    v21     \n\t"
         "vfmacc.vv      v7,     v27,    v22     \n\t"
-            //f04
+        //f04
         "vfmacc.vv      v0,     v28,    v12     \n\t"
         "vfmacc.vv      v1,     v28,    v13     \n\t"
         "vfmacc.vv      v2,     v28,    v14     \n\t"
@@ -187,7 +187,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vle.v          v15,    (s5)            \n\t"
         "addi           s5,     s5,     16      \n\t"
         // calculate
-            // f10
+        // f10
         "vfmacc.vv      v0,     v24,    v16     \n\t"
         "vfmacc.vv      v1,     v24,    v17     \n\t"
         "vfmacc.vv      v2,     v24,    v18     \n\t"
@@ -196,7 +196,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v24,    v9      \n\t"
         "vfmacc.vv      v6,     v24,    v10     \n\t"
         "vfmacc.vv      v7,     v24,    v11     \n\t"
-            //f11
+        //f11
         "vfmacc.vv      v0,     v25,    v17     \n\t"
         "vfmacc.vv      v1,     v25,    v18     \n\t"
         "vfmacc.vv      v2,     v25,    v19     \n\t"
@@ -205,7 +205,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v25,    v10     \n\t"
         "vfmacc.vv      v6,     v25,    v11     \n\t"
         "vfmacc.vv      v7,     v25,    v12     \n\t"
-            //f12
+        //f12
         "vfmacc.vv      v0,     v26,    v18     \n\t"
         "vfmacc.vv      v1,     v26,    v19     \n\t"
         "vfmacc.vv      v2,     v26,    v20     \n\t"
@@ -214,7 +214,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v26,    v11     \n\t"
         "vfmacc.vv      v6,     v26,    v12     \n\t"
         "vfmacc.vv      v7,     v26,    v13     \n\t"
-            //f13
+        //f13
         "vfmacc.vv      v0,     v27,    v19     \n\t"
         "vfmacc.vv      v1,     v27,    v20     \n\t"
         "vfmacc.vv      v2,     v27,    v21     \n\t"
@@ -223,7 +223,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v27,    v12     \n\t"
         "vfmacc.vv      v6,     v27,    v13     \n\t"
         "vfmacc.vv      v7,     v27,    v14     \n\t"
-            //f14
+        //f14
         "vfmacc.vv      v0,     v28,    v20     \n\t"
         "vfmacc.vv      v1,     v28,    v21     \n\t"
         "vfmacc.vv      v2,     v28,    v22     \n\t"
@@ -262,7 +262,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vle.v          v23,    (s5)            \n\t"
         "addi           s5,     s5,     16      \n\t"
         // calculate
-            //f20
+        //f20
         "vfmacc.vv      v0,     v24,    v8      \n\t"
         "vfmacc.vv      v1,     v24,    v9      \n\t"
         "vfmacc.vv      v2,     v24,    v10     \n\t"
@@ -271,7 +271,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v24,    v17     \n\t"
         "vfmacc.vv      v6,     v24,    v18     \n\t"
         "vfmacc.vv      v7,     v24,    v19     \n\t"
-            //f21
+        //f21
         "vfmacc.vv      v0,     v25,    v9      \n\t"
         "vfmacc.vv      v1,     v25,    v10     \n\t"
         "vfmacc.vv      v2,     v25,    v11     \n\t"
@@ -280,7 +280,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v25,    v18     \n\t"
         "vfmacc.vv      v6,     v25,    v19     \n\t"
         "vfmacc.vv      v7,     v25,    v20     \n\t"
-            //f22
+        //f22
         "vfmacc.vv      v0,     v26,    v10     \n\t"
         "vfmacc.vv      v1,     v26,    v11     \n\t"
         "vfmacc.vv      v2,     v26,    v12     \n\t"
@@ -289,7 +289,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v26,    v19     \n\t"
         "vfmacc.vv      v6,     v26,    v20     \n\t"
         "vfmacc.vv      v7,     v26,    v21     \n\t"
-            //f23
+        //f23
         "vfmacc.vv      v0,     v27,    v11     \n\t"
         "vfmacc.vv      v1,     v27,    v12     \n\t"
         "vfmacc.vv      v2,     v27,    v13     \n\t"
@@ -298,7 +298,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v27,    v20     \n\t"
         "vfmacc.vv      v6,     v27,    v21     \n\t"
         "vfmacc.vv      v7,     v27,    v22     \n\t"
-            //f24
+        //f24
         "vfmacc.vv      v0,     v28,    v12     \n\t"
         "vfmacc.vv      v1,     v28,    v13     \n\t"
         "vfmacc.vv      v2,     v28,    v14     \n\t"
@@ -337,7 +337,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vle.v          v15,    (s5)            \n\t"
         "addi           s5,     s5,     16      \n\t"
         // calculate
-            //f30
+        //f30
         "vfmacc.vv      v0,     v24,    v16     \n\t"
         "vfmacc.vv      v1,     v24,    v17     \n\t"
         "vfmacc.vv      v2,     v24,    v18     \n\t"
@@ -346,7 +346,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v24,    v9      \n\t"
         "vfmacc.vv      v6,     v24,    v10     \n\t"
         "vfmacc.vv      v7,     v24,    v11     \n\t"
-            //f31
+        //f31
         "vfmacc.vv      v0,     v25,    v17     \n\t"
         "vfmacc.vv      v1,     v25,    v18     \n\t"
         "vfmacc.vv      v2,     v25,    v19     \n\t"
@@ -355,7 +355,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v25,    v10     \n\t"
         "vfmacc.vv      v6,     v25,    v11     \n\t"
         "vfmacc.vv      v7,     v25,    v12     \n\t"
-            //f32
+        //f32
         "vfmacc.vv      v0,     v26,    v18     \n\t"
         "vfmacc.vv      v1,     v26,    v19     \n\t"
         "vfmacc.vv      v2,     v26,    v20     \n\t"
@@ -364,7 +364,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v26,    v11     \n\t"
         "vfmacc.vv      v6,     v26,    v12     \n\t"
         "vfmacc.vv      v7,     v26,    v13     \n\t"
-            //f33
+        //f33
         "vfmacc.vv      v0,     v27,    v19     \n\t"
         "vfmacc.vv      v1,     v27,    v20     \n\t"
         "vfmacc.vv      v2,     v27,    v21     \n\t"
@@ -373,7 +373,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v27,    v12     \n\t"
         "vfmacc.vv      v6,     v27,    v13     \n\t"
         "vfmacc.vv      v7,     v27,    v14     \n\t"
-            //f34
+        //f34
         "vfmacc.vv      v0,     v28,    v20     \n\t"
         "vfmacc.vv      v1,     v28,    v21     \n\t"
         "vfmacc.vv      v2,     v28,    v22     \n\t"
@@ -412,7 +412,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vle.v          v23,    (s5)            \n\t"
         "addi           s5,     s5,     16      \n\t"
         // calculate
-            //f40
+        //f40
         "vfmacc.vv      v0,     v24,    v8      \n\t"
         "vfmacc.vv      v1,     v24,    v9      \n\t"
         "vfmacc.vv      v2,     v24,    v10     \n\t"
@@ -421,7 +421,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v24,    v17     \n\t"
         "vfmacc.vv      v6,     v24,    v18     \n\t"
         "vfmacc.vv      v7,     v24,    v19     \n\t"
-            //f41
+        //f41
         "vfmacc.vv      v0,     v25,    v9      \n\t"
         "vfmacc.vv      v1,     v25,    v10     \n\t"
         "vfmacc.vv      v2,     v25,    v11     \n\t"
@@ -430,7 +430,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v25,    v18     \n\t"
         "vfmacc.vv      v6,     v25,    v19     \n\t"
         "vfmacc.vv      v7,     v25,    v20     \n\t"
-            //f42
+        //f42
         "vfmacc.vv      v0,     v26,    v10     \n\t"
         "vfmacc.vv      v1,     v26,    v11     \n\t"
         "vfmacc.vv      v2,     v26,    v12     \n\t"
@@ -439,7 +439,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v26,    v19     \n\t"
         "vfmacc.vv      v6,     v26,    v20     \n\t"
         "vfmacc.vv      v7,     v26,    v21     \n\t"
-            //f43
+        //f43
         "vfmacc.vv      v0,     v27,    v11     \n\t"
         "vfmacc.vv      v1,     v27,    v12     \n\t"
         "vfmacc.vv      v2,     v27,    v13     \n\t"
@@ -448,7 +448,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vfmacc.vv      v5,     v27,    v20     \n\t"
         "vfmacc.vv      v6,     v27,    v21     \n\t"
         "vfmacc.vv      v7,     v27,    v22     \n\t"
-            //f44
+        //f44
         "vfmacc.vv      v0,     v28,    v12     \n\t"
         "vfmacc.vv      v1,     v28,    v13     \n\t"
         "vfmacc.vv      v2,     v28,    v14     \n\t"
@@ -467,7 +467,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "addi           s9,     s9,     16      \n\t"
         "vse.v          v3,     (s9)            \n\t"
         "addi           s9,     s9,     16      \n\t"
-        
+
         "add            s11,    s11,    t4      \n\t"
         "vse.v          v4,     (s11)           \n\t"
         "addi           s9,     s11,    16      \n\t"
@@ -551,7 +551,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "addi           s5,     s5,     16      \n\t"
         ".endif                                 \n\t"
         // calculate
-            // f00
+        // f00
         "vfmacc.vv      v0,     v24,    v8      \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v24,    v9      \n\t"
@@ -566,7 +566,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v24,    v18     \n\t"
         ".endif                                 \n\t"
-            // f01
+        // f01
         "vfmacc.vv      v0,     v25,    v9      \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v25,    v10     \n\t"
@@ -582,7 +582,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v25,    v19     \n\t"
         ".endif                                 \n\t"
-            //f02
+        //f02
         "vfmacc.vv      v0,     v26,    v10     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v26,    v11     \n\t"
@@ -597,7 +597,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v26,    v20     \n\t"
         ".endif                                 \n\t"
-            //f03
+        //f03
         "vfmacc.vv      v0,     v27,    v11     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v27,    v12     \n\t"
@@ -612,7 +612,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v27,    v21     \n\t"
         ".endif                                 \n\t"
-            //f04
+        //f04
         "vfmacc.vv      v0,     v28,    v12     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v28,    v13     \n\t"
@@ -659,7 +659,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "addi           s5,     s5,     16      \n\t"
         ".endif                                 \n\t"
         // calculate
-            // f10
+        // f10
         "vfmacc.vv      v0,     v24,    v16     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v24,    v17     \n\t"
@@ -674,7 +674,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v24,    v10     \n\t"
         ".endif                                 \n\t"
-            //f11
+        //f11
         "vfmacc.vv      v0,     v25,    v17     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v25,    v18     \n\t"
@@ -689,7 +689,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v25,    v11     \n\t"
         ".endif                                 \n\t"
-            //f12
+        //f12
         "vfmacc.vv      v0,     v26,    v18     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v26,    v19     \n\t"
@@ -704,7 +704,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v26,    v12     \n\t"
         ".endif                                 \n\t"
-            //f13
+        //f13
         "vfmacc.vv      v0,     v27,    v19     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v27,    v20     \n\t"
@@ -719,7 +719,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v27,    v13     \n\t"
         ".endif                                 \n\t"
-            //f14
+        //f14
         "vfmacc.vv      v0,     v28,    v20     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v28,    v21     \n\t"
@@ -766,7 +766,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "addi           s5,     s5,     16      \n\t"
         ".endif                                 \n\t"
         // calculate
-            //f20
+        //f20
         "vfmacc.vv      v0,     v24,    v8      \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v24,    v9      \n\t"
@@ -781,7 +781,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v24,    v18     \n\t"
         ".endif                                 \n\t"
-            //f21
+        //f21
         "vfmacc.vv      v0,     v25,    v9      \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v25,    v10     \n\t"
@@ -797,7 +797,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v25,    v19     \n\t"
         ".endif                                 \n\t"
-            //f22
+        //f22
         "vfmacc.vv      v0,     v26,    v10     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v26,    v11     \n\t"
@@ -812,7 +812,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v26,    v20     \n\t"
         ".endif                                 \n\t"
-            //f23
+        //f23
         "vfmacc.vv      v0,     v27,    v11     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v27,    v12     \n\t"
@@ -827,7 +827,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v27,    v21     \n\t"
         ".endif                                 \n\t"
-            //f24
+        //f24
         "vfmacc.vv      v0,     v28,    v12     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v28,    v13     \n\t"
@@ -874,7 +874,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "addi           s5,     s5,     16      \n\t"
         ".endif                                 \n\t"
         // calculate
-            //f30
+        //f30
         "vfmacc.vv      v0,     v24,    v16     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v24,    v17     \n\t"
@@ -889,7 +889,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v24,    v10     \n\t"
         ".endif                                 \n\t"
-            //f31
+        //f31
         "vfmacc.vv      v0,     v25,    v17     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v25,    v18     \n\t"
@@ -904,7 +904,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v25,    v11     \n\t"
         ".endif                                 \n\t"
-            //f32
+        //f32
         "vfmacc.vv      v0,     v26,    v18     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v26,    v19     \n\t"
@@ -919,7 +919,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v26,    v12     \n\t"
         ".endif                                 \n\t"
-            //f33
+        //f33
         "vfmacc.vv      v0,     v27,    v19     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v27,    v20     \n\t"
@@ -934,7 +934,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v27,    v13     \n\t"
         ".endif                                 \n\t"
-            //f34
+        //f34
         "vfmacc.vv      v0,     v28,    v20     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v28,    v21     \n\t"
@@ -981,7 +981,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "addi           s5,     s5,     16      \n\t"
         ".endif                                 \n\t"
         // calculate
-            //f40
+        //f40
         "vfmacc.vv      v0,     v24,    v8      \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v24,    v9      \n\t"
@@ -996,7 +996,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v24,    v18     \n\t"
         ".endif                                 \n\t"
-            //f41
+        //f41
         "vfmacc.vv      v0,     v25,    v9      \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v25,    v10     \n\t"
@@ -1012,7 +1012,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v25,    v19     \n\t"
         ".endif                                 \n\t"
-            //f42
+        //f42
         "vfmacc.vv      v0,     v26,    v10     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v26,    v11     \n\t"
@@ -1027,7 +1027,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v26,    v20     \n\t"
         ".endif                                 \n\t"
-            //f43
+        //f43
         "vfmacc.vv      v0,     v27,    v11     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v27,    v12     \n\t"
@@ -1042,7 +1042,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v6,     v27,    v21     \n\t"
         ".endif                                 \n\t"
-            //f44
+        //f44
         "vfmacc.vv      v0,     v28,    v12     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v28,    v13     \n\t"
@@ -1134,27 +1134,27 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "addi           s5,     s5,     16      \n\t"
         "vle.v          v15,    (s5)            \n\t"
         // calculate
-            // f00
+        // f00
         "vfmacc.vv      v0,     v24,    v8      \n\t"
         "vfmacc.vv      v1,     v24,    v9      \n\t"
         "vfmacc.vv      v2,     v24,    v10     \n\t"
         "vfmacc.vv      v3,     v24,    v11     \n\t"
-            // f01
+        // f01
         "vfmacc.vv      v0,     v25,    v9      \n\t"
         "vfmacc.vv      v1,     v25,    v10     \n\t"
         "vfmacc.vv      v2,     v25,    v11     \n\t"
         "vfmacc.vv      v3,     v25,    v12     \n\t"
-            //f02
+        //f02
         "vfmacc.vv      v0,     v26,    v10     \n\t"
         "vfmacc.vv      v1,     v26,    v11     \n\t"
         "vfmacc.vv      v2,     v26,    v12     \n\t"
         "vfmacc.vv      v3,     v26,    v13     \n\t"
-            //f03
+        //f03
         "vfmacc.vv      v0,     v27,    v11     \n\t"
         "vfmacc.vv      v1,     v27,    v12     \n\t"
         "vfmacc.vv      v2,     v27,    v13     \n\t"
         "vfmacc.vv      v3,     v27,    v14     \n\t"
-            //f04
+        //f04
         "vfmacc.vv      v0,     v28,    v12     \n\t"
         "vfmacc.vv      v1,     v28,    v13     \n\t"
         "vfmacc.vv      v2,     v28,    v14     \n\t"
@@ -1189,27 +1189,27 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vle.v          v23,    (s5)            \n\t"
         "addi           s5,     s5,     16      \n\t"
         // calculate
-            // f10
+        // f10
         "vfmacc.vv      v0,     v24,    v16     \n\t"
         "vfmacc.vv      v1,     v24,    v17     \n\t"
         "vfmacc.vv      v2,     v24,    v18     \n\t"
         "vfmacc.vv      v3,     v24,    v19     \n\t"
-            //f11
+        //f11
         "vfmacc.vv      v0,     v25,    v17     \n\t"
         "vfmacc.vv      v1,     v25,    v18     \n\t"
         "vfmacc.vv      v2,     v25,    v19     \n\t"
         "vfmacc.vv      v3,     v25,    v20     \n\t"
-            //f12
+        //f12
         "vfmacc.vv      v0,     v26,    v18     \n\t"
         "vfmacc.vv      v1,     v26,    v19     \n\t"
         "vfmacc.vv      v2,     v26,    v20     \n\t"
         "vfmacc.vv      v3,     v26,    v21     \n\t"
-            //f13
+        //f13
         "vfmacc.vv      v0,     v27,    v19     \n\t"
         "vfmacc.vv      v1,     v27,    v20     \n\t"
         "vfmacc.vv      v2,     v27,    v21     \n\t"
         "vfmacc.vv      v3,     v27,    v22     \n\t"
-            //f14
+        //f14
         "vfmacc.vv      v0,     v28,    v20     \n\t"
         "vfmacc.vv      v1,     v28,    v21     \n\t"
         "vfmacc.vv      v2,     v28,    v22     \n\t"
@@ -1244,27 +1244,27 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vle.v          v15,    (s5)            \n\t"
         "addi           s5,     s5,     16      \n\t"
         // calculate
-            //f20
+        //f20
         "vfmacc.vv      v0,     v24,    v8      \n\t"
         "vfmacc.vv      v1,     v24,    v9      \n\t"
         "vfmacc.vv      v2,     v24,    v10     \n\t"
         "vfmacc.vv      v3,     v24,    v11     \n\t"
-            //f21
+        //f21
         "vfmacc.vv      v0,     v25,    v9      \n\t"
         "vfmacc.vv      v1,     v25,    v10     \n\t"
         "vfmacc.vv      v2,     v25,    v11     \n\t"
         "vfmacc.vv      v3,     v25,    v12     \n\t"
-            //f22
+        //f22
         "vfmacc.vv      v0,     v26,    v10     \n\t"
         "vfmacc.vv      v1,     v26,    v11     \n\t"
         "vfmacc.vv      v2,     v26,    v12     \n\t"
         "vfmacc.vv      v3,     v26,    v13     \n\t"
-            //f23
+        //f23
         "vfmacc.vv      v0,     v27,    v11     \n\t"
         "vfmacc.vv      v1,     v27,    v12     \n\t"
         "vfmacc.vv      v2,     v27,    v13     \n\t"
         "vfmacc.vv      v3,     v27,    v14     \n\t"
-            //f24
+        //f24
         "vfmacc.vv      v0,     v28,    v12     \n\t"
         "vfmacc.vv      v1,     v28,    v13     \n\t"
         "vfmacc.vv      v2,     v28,    v14     \n\t"
@@ -1299,27 +1299,27 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vle.v          v23,    (s5)            \n\t"
         "addi           s5,     s5,     16      \n\t"
         // calculate
-            //f30
+        //f30
         "vfmacc.vv      v0,     v24,    v16     \n\t"
         "vfmacc.vv      v1,     v24,    v17     \n\t"
         "vfmacc.vv      v2,     v24,    v18     \n\t"
         "vfmacc.vv      v3,     v24,    v19     \n\t"
-            //f31
+        //f31
         "vfmacc.vv      v0,     v25,    v17     \n\t"
         "vfmacc.vv      v1,     v25,    v18     \n\t"
         "vfmacc.vv      v2,     v25,    v19     \n\t"
         "vfmacc.vv      v3,     v25,    v20     \n\t"
-            //f32
+        //f32
         "vfmacc.vv      v0,     v26,    v18     \n\t"
         "vfmacc.vv      v1,     v26,    v19     \n\t"
         "vfmacc.vv      v2,     v26,    v20     \n\t"
         "vfmacc.vv      v3,     v26,    v21     \n\t"
-            //f33
+        //f33
         "vfmacc.vv      v0,     v27,    v19     \n\t"
         "vfmacc.vv      v1,     v27,    v20     \n\t"
         "vfmacc.vv      v2,     v27,    v21     \n\t"
         "vfmacc.vv      v3,     v27,    v22     \n\t"
-            //f34
+        //f34
         "vfmacc.vv      v0,     v28,    v20     \n\t"
         "vfmacc.vv      v1,     v28,    v21     \n\t"
         "vfmacc.vv      v2,     v28,    v22     \n\t"
@@ -1354,27 +1354,27 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "vle.v          v15,    (s5)            \n\t"
         "addi           s5,     s5,     16      \n\t"
         // calculate
-            //f40
+        //f40
         "vfmacc.vv      v0,     v24,    v8      \n\t"
         "vfmacc.vv      v1,     v24,    v9      \n\t"
         "vfmacc.vv      v2,     v24,    v10     \n\t"
         "vfmacc.vv      v3,     v24,    v11     \n\t"
-            //f41
+        //f41
         "vfmacc.vv      v0,     v25,    v9      \n\t"
         "vfmacc.vv      v1,     v25,    v10     \n\t"
         "vfmacc.vv      v2,     v25,    v11     \n\t"
         "vfmacc.vv      v3,     v25,    v12     \n\t"
-            //f42
+        //f42
         "vfmacc.vv      v0,     v26,    v10     \n\t"
         "vfmacc.vv      v1,     v26,    v11     \n\t"
         "vfmacc.vv      v2,     v26,    v12     \n\t"
         "vfmacc.vv      v3,     v26,    v13     \n\t"
-            //f43
+        //f43
         "vfmacc.vv      v0,     v27,    v11     \n\t"
         "vfmacc.vv      v1,     v27,    v12     \n\t"
         "vfmacc.vv      v2,     v27,    v13     \n\t"
         "vfmacc.vv      v3,     v27,    v14     \n\t"
-            //f44
+        //f44
         "vfmacc.vv      v0,     v28,    v12     \n\t"
         "vfmacc.vv      v1,     v28,    v13     \n\t"
         "vfmacc.vv      v2,     v28,    v14     \n\t"
@@ -1437,7 +1437,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "addi           s5,     s5,     16      \n\t"
         ".endif                                 \n\t"
         // calculate
-            // f00
+        // f00
         "vfmacc.vv      v0,     v24,    v8      \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v24,    v9      \n\t"
@@ -1445,7 +1445,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v24,    v10     \n\t"
         ".endif                                 \n\t"
-            // f01
+        // f01
         "vfmacc.vv      v0,     v25,    v9      \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v25,    v10     \n\t"
@@ -1453,7 +1453,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v25,    v11     \n\t"
         ".endif                                 \n\t"
-            //f02
+        //f02
         "vfmacc.vv      v0,     v26,    v10     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v26,    v11     \n\t"
@@ -1461,7 +1461,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v26,    v12     \n\t"
         ".endif                                 \n\t"
-            //f03
+        //f03
         "vfmacc.vv      v0,     v27,    v11     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v27,    v12     \n\t"
@@ -1469,7 +1469,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v27,    v13     \n\t"
         ".endif                                 \n\t"
-            //f04
+        //f04
         "vfmacc.vv      v0,     v28,    v12     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v28,    v13     \n\t"
@@ -1509,7 +1509,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "addi           s5,     s5,     16      \n\t"
         ".endif                                 \n\t"
         // calculate
-            // f10
+        // f10
         "vfmacc.vv      v0,     v24,    v16     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v24,    v17     \n\t"
@@ -1517,7 +1517,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v24,    v18     \n\t"
         ".endif                                 \n\t"
-            //f11
+        //f11
         "vfmacc.vv      v0,     v25,    v17     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v25,    v18     \n\t"
@@ -1525,7 +1525,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v25,    v19     \n\t"
         ".endif                                 \n\t"
-            //f12
+        //f12
         "vfmacc.vv      v0,     v26,    v18     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v26,    v19     \n\t"
@@ -1533,7 +1533,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v26,    v20     \n\t"
         ".endif                                 \n\t"
-            //f13
+        //f13
         "vfmacc.vv      v0,     v27,    v19     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v27,    v20     \n\t"
@@ -1541,7 +1541,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v27,    v21     \n\t"
         ".endif                                 \n\t"
-            //f14
+        //f14
         "vfmacc.vv      v0,     v28,    v20     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v28,    v21     \n\t"
@@ -1581,7 +1581,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "addi           s5,     s5,     16      \n\t"
         ".endif                                 \n\t"
         // calculate
-            //f20
+        //f20
         "vfmacc.vv      v0,     v24,    v8      \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v24,    v9      \n\t"
@@ -1589,7 +1589,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v24,    v10     \n\t"
         ".endif                                 \n\t"
-            //f21
+        //f21
         "vfmacc.vv      v0,     v25,    v9      \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v25,    v10     \n\t"
@@ -1597,7 +1597,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v25,    v11     \n\t"
         ".endif                                 \n\t"
-            //f22
+        //f22
         "vfmacc.vv      v0,     v26,    v10     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v26,    v11     \n\t"
@@ -1605,7 +1605,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v26,    v12     \n\t"
         ".endif                                 \n\t"
-            //f23
+        //f23
         "vfmacc.vv      v0,     v27,    v11     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v27,    v12     \n\t"
@@ -1613,7 +1613,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v27,    v13     \n\t"
         ".endif                                 \n\t"
-            //f24
+        //f24
         "vfmacc.vv      v0,     v28,    v12     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v28,    v13     \n\t"
@@ -1653,7 +1653,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "addi           s5,     s5,     16      \n\t"
         ".endif                                 \n\t"
         // calculate
-            //f30
+        //f30
         "vfmacc.vv      v0,     v24,    v16     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v24,    v17     \n\t"
@@ -1661,7 +1661,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v24,    v18     \n\t"
         ".endif                                 \n\t"
-            //f31
+        //f31
         "vfmacc.vv      v0,     v25,    v17     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v25,    v18     \n\t"
@@ -1669,7 +1669,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v25,    v19     \n\t"
         ".endif                                 \n\t"
-            //f32
+        //f32
         "vfmacc.vv      v0,     v26,    v18     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v26,    v19     \n\t"
@@ -1677,7 +1677,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v26,    v20     \n\t"
         ".endif                                 \n\t"
-            //f33
+        //f33
         "vfmacc.vv      v0,     v27,    v19     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v27,    v20     \n\t"
@@ -1685,7 +1685,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v27,    v21     \n\t"
         ".endif                                 \n\t"
-            //f34
+        //f34
         "vfmacc.vv      v0,     v28,    v20     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v28,    v21     \n\t"
@@ -1725,7 +1725,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "addi           s5,     s5,     16      \n\t"
         ".endif                                 \n\t"
         // calculate
-            //f40
+        //f40
         "vfmacc.vv      v0,     v24,    v8      \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v24,    v9      \n\t"
@@ -1733,7 +1733,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v24,    v10     \n\t"
         ".endif                                 \n\t"
-            //f41
+        //f41
         "vfmacc.vv      v0,     v25,    v9      \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v25,    v10     \n\t"
@@ -1741,7 +1741,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v25,    v11     \n\t"
         ".endif                                 \n\t"
-            //f42
+        //f42
         "vfmacc.vv      v0,     v26,    v10     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v26,    v11     \n\t"
@@ -1749,7 +1749,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v26,    v12     \n\t"
         ".endif                                 \n\t"
-            //f43
+        //f43
         "vfmacc.vv      v0,     v27,    v11     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v27,    v12     \n\t"
@@ -1757,7 +1757,7 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         ".if ATOM_W > 2                         \n\t"
         "vfmacc.vv      v2,     v27,    v13     \n\t"
         ".endif                                 \n\t"
-            //f44
+        //f44
         "vfmacc.vv      v0,     v28,    v12     \n\t"
         ".if ATOM_W > 1                         \n\t"
         "vfmacc.vv      v1,     v28,    v13     \n\t"
@@ -1781,11 +1781,6 @@ void conv_dw_f5s1_h2w4_kernel_riscv_fp16(
         "7:                                     \n\t"
         "nop                                    \n\t"
         :
-        : [ATOM_W] "i" (atom_w), [SRC] "r" (src), [FLT] "r" (flt), [DST] "r" (dst), [BIAS] "r" (bias),
-          [H_STD] "r" (src_pad_w * 8 * 2), [DT_H] "r" (dst_h), [DT_W] "r" (dst_w)
-        : "memory", "t0", "t1", "t2", "t3", "t4", "t5", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11",
-          "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15",
-          "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29"
-    );
-
+        : [ATOM_W] "i"(atom_w), [SRC] "r"(src), [FLT] "r"(flt), [DST] "r"(dst), [BIAS] "r"(bias), [H_STD] "r"(src_pad_w * 8 * 2), [DT_H] "r"(dst_h), [DT_W] "r"(dst_w)
+        : "memory", "t0", "t1", "t2", "t3", "t4", "t5", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29");
 }

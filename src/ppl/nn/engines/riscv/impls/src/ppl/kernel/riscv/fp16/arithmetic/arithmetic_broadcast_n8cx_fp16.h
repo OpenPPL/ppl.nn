@@ -34,39 +34,39 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n8cx_fp16(
     const bool c0_broadcast,
     const bool c1_broadcast)
 {
-    const int64_t parall_d = 16;
+    const int64_t parall_d   = 16;
     const int64_t unroll_len = parall_d * 8;
-    const auto vl = vsetvli(8, RVV_E16, RVV_M1);
+    const auto vl            = vsetvli(8, RVV_E16, RVV_M1);
 
     int64_t i = start;
     if (!c0_broadcast && !c1_broadcast) {
         for (; i + unroll_len <= (end + 1) * 8; i += unroll_len) {
             const __fp16* src0_ = src0 + i;
             const __fp16* src1_ = src1 + i;
-            __fp16* dst_ = dst + i;
+            __fp16* dst_        = dst + i;
 
             float16xm1_t vfdata0, vfdata1, vfdata2, vfdata3;
             float16xm1_t vfdata4, vfdata5, vfdata6, vfdata7;
             float16xm1_t vfdata8, vfdata9, vfdata10, vfdata11;
             float16xm1_t vfdata12, vfdata13, vfdata14, vfdata15;
 
-            vfdata0 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vlev_float16xm1(src1_ + 0 * 8, vl));
-            vfdata1 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 1 * 8, vl), vlev_float16xm1(src1_ + 1 * 8, vl));
-            vfdata2 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 2 * 8, vl), vlev_float16xm1(src1_ + 2 * 8, vl));
-            vfdata3 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 3 * 8, vl), vlev_float16xm1(src1_ + 3 * 8, vl));
-            vfdata4 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 4 * 8, vl), vlev_float16xm1(src1_ + 4 * 8, vl));
-            vfdata5 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 5 * 8, vl), vlev_float16xm1(src1_ + 5 * 8, vl));
-            vfdata6 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 6 * 8, vl), vlev_float16xm1(src1_ + 6 * 8, vl));
-            vfdata7 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 7 * 8, vl), vlev_float16xm1(src1_ + 7 * 8, vl));
-            vfdata8 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 8 * 8, vl), vlev_float16xm1(src1_ + 8 * 8, vl));
-            vfdata9 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 9 * 8, vl), vlev_float16xm1(src1_ + 9 * 8, vl));
+            vfdata0  = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vlev_float16xm1(src1_ + 0 * 8, vl));
+            vfdata1  = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 1 * 8, vl), vlev_float16xm1(src1_ + 1 * 8, vl));
+            vfdata2  = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 2 * 8, vl), vlev_float16xm1(src1_ + 2 * 8, vl));
+            vfdata3  = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 3 * 8, vl), vlev_float16xm1(src1_ + 3 * 8, vl));
+            vfdata4  = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 4 * 8, vl), vlev_float16xm1(src1_ + 4 * 8, vl));
+            vfdata5  = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 5 * 8, vl), vlev_float16xm1(src1_ + 5 * 8, vl));
+            vfdata6  = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 6 * 8, vl), vlev_float16xm1(src1_ + 6 * 8, vl));
+            vfdata7  = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 7 * 8, vl), vlev_float16xm1(src1_ + 7 * 8, vl));
+            vfdata8  = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 8 * 8, vl), vlev_float16xm1(src1_ + 8 * 8, vl));
+            vfdata9  = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 9 * 8, vl), vlev_float16xm1(src1_ + 9 * 8, vl));
             vfdata10 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 10 * 8, vl), vlev_float16xm1(src1_ + 10 * 8, vl));
             vfdata11 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 11 * 8, vl), vlev_float16xm1(src1_ + 11 * 8, vl));
             vfdata12 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 12 * 8, vl), vlev_float16xm1(src1_ + 12 * 8, vl));
             vfdata13 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 13 * 8, vl), vlev_float16xm1(src1_ + 13 * 8, vl));
             vfdata14 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 14 * 8, vl), vlev_float16xm1(src1_ + 14 * 8, vl));
             vfdata15 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 15 * 8, vl), vlev_float16xm1(src1_ + 15 * 8, vl));
- 
+
             if (fuse_relu) {
                 vsev_float16xm1(dst_ + 0 * 8, vfmaxvf_float16xm1(vfdata0, (__fp16)0.0f, vl), vl);
                 vsev_float16xm1(dst_ + 1 * 8, vfmaxvf_float16xm1(vfdata1, (__fp16)0.0f, vl), vl);
@@ -106,7 +106,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n8cx_fp16(
         for (; i <= end * 8; i += 8) {
             const __fp16* src0_ = src0 + i;
             const __fp16* src1_ = src1 + i;
-            __fp16* dst_ = dst + i;
+            __fp16* dst_        = dst + i;
 
             float16xm1_t vfdata;
             vfdata = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_, vl), vlev_float16xm1(src1_, vl));
@@ -120,7 +120,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n8cx_fp16(
         for (; i + unroll_len <= (end + 1) * 8; i += unroll_len) {
             const __fp16* src0_ = src0 + i;
             const __fp16* src1_ = src1 + i;
-            __fp16* dst_ = dst + i;
+            __fp16* dst_        = dst + i;
 
             float16xm1_t vfdata0, vfdata1, vfdata2, vfdata3;
             float16xm1_t vfdata4, vfdata5, vfdata6, vfdata7;
@@ -128,22 +128,22 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n8cx_fp16(
             float16xm1_t vfdata12, vfdata13, vfdata14, vfdata15;
 
             float16xm1_t vsrc0 = vfmvvf_float16xm1(*src0_, vl);
-            vfdata0 = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 0 * 8, vl));
-            vfdata1 = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 1 * 8, vl));
-            vfdata2 = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 2 * 8, vl));
-            vfdata3 = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 3 * 8, vl));
-            vfdata4 = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 4 * 8, vl));
-            vfdata5 = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 5 * 8, vl));
-            vfdata6 = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 6 * 8, vl));
-            vfdata7 = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 7 * 8, vl));
-            vfdata8 = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 8 * 8, vl));
-            vfdata9 = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 9 * 8, vl));
-            vfdata10 = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 10 * 8, vl));
-            vfdata11 = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 11 * 8, vl));
-            vfdata12 = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 12 * 8, vl));
-            vfdata13 = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 13 * 8, vl));
-            vfdata14 = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 14 * 8, vl));
-            vfdata15 = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 15 * 8, vl));
+            vfdata0            = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 0 * 8, vl));
+            vfdata1            = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 1 * 8, vl));
+            vfdata2            = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 2 * 8, vl));
+            vfdata3            = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 3 * 8, vl));
+            vfdata4            = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 4 * 8, vl));
+            vfdata5            = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 5 * 8, vl));
+            vfdata6            = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 6 * 8, vl));
+            vfdata7            = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 7 * 8, vl));
+            vfdata8            = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 8 * 8, vl));
+            vfdata9            = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 9 * 8, vl));
+            vfdata10           = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 10 * 8, vl));
+            vfdata11           = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 11 * 8, vl));
+            vfdata12           = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 12 * 8, vl));
+            vfdata13           = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 13 * 8, vl));
+            vfdata14           = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 14 * 8, vl));
+            vfdata15           = arithmetic_vector_kernel_fp16<op>(vsrc0, vlev_float16xm1(src1_ + 15 * 8, vl));
 
             if (fuse_relu) {
                 vsev_float16xm1(dst_ + 1 * 8, vfmaxvf_float16xm1(vfdata1, (__fp16)0.0f, vl), vl);
@@ -183,7 +183,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n8cx_fp16(
         for (; i <= end * 8; i += 8) {
             const __fp16* src0_ = src0 + i;
             const __fp16* src1_ = src1 + i;
-            __fp16* dst_ = dst + i;
+            __fp16* dst_        = dst + i;
 
             float16xm1_t vfdata;
             vfdata = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_, vl), vlev_float16xm1(src1_, vl)); //  broadcast ?
@@ -197,7 +197,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n8cx_fp16(
         for (; i + unroll_len <= (end + 1) * 8; i += unroll_len) {
             const __fp16* src0_ = src0 + i;
             const __fp16* src1_ = src1 + i;
-            __fp16* dst_ = dst + i;
+            __fp16* dst_        = dst + i;
 
             float16xm1_t vfdata0, vfdata1, vfdata2, vfdata3;
             float16xm1_t vfdata4, vfdata5, vfdata6, vfdata7;
@@ -205,22 +205,22 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n8cx_fp16(
             float16xm1_t vfdata12, vfdata13, vfdata14, vfdata15;
 
             float16xm1_t vsrc1 = vfmvvf_float16xm1(*src1_, vl);
-            vfdata0 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
-            vfdata1 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
-            vfdata2 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
-            vfdata3 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
-            vfdata4 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
-            vfdata5 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
-            vfdata6 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
-            vfdata7 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
-            vfdata8 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
-            vfdata9 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
-            vfdata10 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
-            vfdata11 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
-            vfdata12 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
-            vfdata13 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
-            vfdata14 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
-            vfdata15 = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
+            vfdata0            = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
+            vfdata1            = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
+            vfdata2            = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
+            vfdata3            = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
+            vfdata4            = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
+            vfdata5            = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
+            vfdata6            = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
+            vfdata7            = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
+            vfdata8            = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
+            vfdata9            = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
+            vfdata10           = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
+            vfdata11           = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
+            vfdata12           = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
+            vfdata13           = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
+            vfdata14           = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
+            vfdata15           = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_ + 0 * 8, vl), vsrc1);
 
             if (fuse_relu) {
                 vsev_float16xm1(dst_ + 1 * 8, vfmaxvf_float16xm1(vfdata1, (__fp16)0.0f, vl), vl);
@@ -260,7 +260,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_n8cx_fp16(
         for (; i <= end * 8; i += 8) {
             const __fp16* src0_ = src0 + i;
             const __fp16* src1_ = src1 + i;
-            __fp16* dst_ = dst + i;
+            __fp16* dst_        = dst + i;
 
             float16xm1_t vfdata;
             vfdata = arithmetic_vector_kernel_fp16<op>(vlev_float16xm1(src0_, vl), vlev_float16xm1(src1_, vl)); //  broadcast ?
@@ -299,7 +299,7 @@ static inline void arithmetic_broadcast_lastdim_src0_broadcast_n8cx_fp16(
     if (!c1_broadcast) {
         for (; i <= end; i++) {
             float16xm1_t vsrc1 = vlev_float16xm1(src1 + i * 8, vl);
-            float16xm1_t vdst = arithmetic_vector_kernel_fp16<op>(vbroadcast_src0, vsrc1);
+            float16xm1_t vdst  = arithmetic_vector_kernel_fp16<op>(vbroadcast_src0, vsrc1);
             if (fuse_relu) {
                 vdst = vfmaxvf_float16xm1(vdst, (__fp16)0.0f, vl);
             }
@@ -308,7 +308,7 @@ static inline void arithmetic_broadcast_lastdim_src0_broadcast_n8cx_fp16(
     } else {
         for (; i <= end; i++) {
             float16xm1_t vsrc1 = vfmvvf_float16xm1(*(src1 + i * 8), vl);
-            float16xm1_t vdst = arithmetic_vector_kernel_fp16<op>(vbroadcast_src0, vsrc1);
+            float16xm1_t vdst  = arithmetic_vector_kernel_fp16<op>(vbroadcast_src0, vsrc1);
             if (fuse_relu) {
                 vdst = vfmaxvf_float16xm1(vdst, (__fp16)0.0f, vl);
             }
@@ -341,7 +341,7 @@ static inline void arithmetic_broadcast_lastdim_src1_broadcast_n8cx_fp16(
     if (!c0_broadcast) {
         for (; i <= end; i++) {
             float16xm1_t vsrc0 = vlev_float16xm1(src0 + i * 8, vl);
-            float16xm1_t vdst = arithmetic_vector_kernel_fp16<op>(vsrc0, vbroadcast_src1);
+            float16xm1_t vdst  = arithmetic_vector_kernel_fp16<op>(vsrc0, vbroadcast_src1);
             if (fuse_relu) {
                 vdst = vfmaxvf_float16xm1(vdst, (__fp16)0.0f, vl);
             }
@@ -350,7 +350,7 @@ static inline void arithmetic_broadcast_lastdim_src1_broadcast_n8cx_fp16(
     } else {
         for (; i <= end; i++) {
             float16xm1_t vsrc0 = vfmvvf_float16xm1(*(src0 + i * 8), vl);
-            float16xm1_t vdst = arithmetic_vector_kernel_fp16<op>(vsrc0, vbroadcast_src1);
+            float16xm1_t vdst  = arithmetic_vector_kernel_fp16<op>(vsrc0, vbroadcast_src1);
             if (fuse_relu) {
                 vdst = vfmaxvf_float16xm1(vdst, (__fp16)0.0f, vl);
             }
@@ -377,10 +377,10 @@ static ppl::common::RetCode arithmetic_broadcast_recursive_n8cx_fp16(
     const int64_t c1_broadcast,
     parallel_block* block)
 {
-    bool is_first = is_first_dim(block, dim_idx);
-    bool is_last = is_last_dim(block, dim_idx);
+    bool is_first       = is_first_dim(block, dim_idx);
+    bool is_last        = is_last_dim(block, dim_idx);
     const int64_t start = is_first ? block->start[dim_idx] : 0;
-    const int64_t end = is_last ? block->end[dim_idx] : dst_shape[dim_idx] - 1;
+    const int64_t end   = is_last ? block->end[dim_idx] : dst_shape[dim_idx] - 1;
 
     if (dim_idx == dim_count - 1) {
         if (src0_shape[dim_idx] == src1_shape[dim_idx]) {
@@ -440,11 +440,11 @@ static ppl::common::RetCode arithmetic_broadcast_n8cx_fp16(
     const bool c1_broadcast = padded_src0_shape[c_dim_dix] != padded_src1_shape[c_dim_dix] && padded_src1_shape[c_dim_dix] == 1;
 
     // compress dims
-    int64_t real_dim_count = 0;
-    int64_t real_c_dim_idx = c_dim_dix;
+    int64_t real_dim_count                               = 0;
+    int64_t real_c_dim_idx                               = c_dim_dix;
     int64_t real_src0_shape[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
     int64_t real_src1_shape[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
-    int64_t real_dst_shape[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
+    int64_t real_dst_shape[PPL_RISCV_TENSOR_MAX_DIMS()]  = {0};
 
     // remove 1 on high dims to compress dim count
     // stop at C dim
@@ -455,15 +455,15 @@ static ppl::common::RetCode arithmetic_broadcast_n8cx_fp16(
         }
         real_src0_shape[real_dim_count] = padded_src0_shape[i];
         real_src1_shape[real_dim_count] = padded_src1_shape[i];
-        real_dst_shape[real_dim_count] = dst_shape->GetDim(i);
+        real_dst_shape[real_dim_count]  = dst_shape->GetDim(i);
         real_dim_count++;
     }
 
     // merge low dims
     // stop at C dim
     for (int64_t i = real_dim_count - 1; i >= real_c_dim_idx + 2; i--) {
-        bool cur_dim_input0_need_broadcast = real_src0_shape[i] != real_src1_shape[i] && real_src0_shape[i] == 1;
-        bool cur_dim_input1_need_broadcast = real_src0_shape[i] != real_src1_shape[i] && real_src1_shape[i] == 1;
+        bool cur_dim_input0_need_broadcast  = real_src0_shape[i] != real_src1_shape[i] && real_src0_shape[i] == 1;
+        bool cur_dim_input1_need_broadcast  = real_src0_shape[i] != real_src1_shape[i] && real_src1_shape[i] == 1;
         bool prev_dim_input0_need_broadcast = real_src0_shape[i - 1] != real_src1_shape[i - 1] && real_src0_shape[i - 1] == 1;
         bool prev_dim_input1_need_broadcast = real_src0_shape[i - 1] != real_src1_shape[i - 1] && real_src1_shape[i - 1] == 1;
 
@@ -478,22 +478,22 @@ static ppl::common::RetCode arithmetic_broadcast_n8cx_fp16(
         }
     }
 
-    int64_t inc0[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
-    int64_t inc1[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
+    int64_t inc0[PPL_RISCV_TENSOR_MAX_DIMS()]    = {0};
+    int64_t inc1[PPL_RISCV_TENSOR_MAX_DIMS()]    = {0};
     int64_t inc_out[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
 
     // div C dim by 8 and set stride_w to 8;
-    int64_t stride0 = 8;
-    int64_t stride1 = 8;
-    int64_t stride_out = 8;
+    int64_t stride0                 = 8;
+    int64_t stride1                 = 8;
+    int64_t stride_out              = 8;
     real_src0_shape[real_c_dim_idx] = div_up(real_src0_shape[real_c_dim_idx], 8);
     real_src1_shape[real_c_dim_idx] = div_up(real_src1_shape[real_c_dim_idx], 8);
-    real_dst_shape[real_c_dim_idx] = div_up(real_dst_shape[real_c_dim_idx], 8);
+    real_dst_shape[real_c_dim_idx]  = div_up(real_dst_shape[real_c_dim_idx], 8);
 
     // prepare incs
     for (int64_t i = real_dim_count - 1; i >= 0; i--) {
-        inc0[i] = real_src0_shape[i] == 1 ? 0 : stride0;
-        inc1[i] = real_src1_shape[i] == 1 ? 0 : stride1;
+        inc0[i]    = real_src0_shape[i] == 1 ? 0 : stride0;
+        inc1[i]    = real_src1_shape[i] == 1 ? 0 : stride1;
         inc_out[i] = stride_out;
 
         stride0 *= real_src0_shape[i];
@@ -505,7 +505,7 @@ static ppl::common::RetCode arithmetic_broadcast_n8cx_fp16(
     parallel_block block;
     {
         int64_t start_idx = 0;
-        int64_t end_idx = total_len - 1;
+        int64_t end_idx   = total_len - 1;
         idx2dims(start_idx, real_dst_shape, real_dim_count, block.start);
         idx2dims(end_idx, real_dst_shape, real_dim_count, block.end);
         block.id = 0;

@@ -27,7 +27,7 @@ ppl::common::RetCode cast_kernel(
     const srcT* src,
     dstT* dst)
 {
-    const bool out_bool = dst_shape->GetDataType() == ppl::common::DATATYPE_BOOL;
+    const bool out_bool   = dst_shape->GetDataType() == ppl::common::DATATYPE_BOOL;
     const uint64_t length = src_shape->GetElementsIncludingPadding();
 
     if (out_bool) {

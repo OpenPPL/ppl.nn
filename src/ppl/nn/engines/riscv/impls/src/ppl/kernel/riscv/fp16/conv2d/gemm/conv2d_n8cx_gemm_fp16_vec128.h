@@ -34,9 +34,9 @@ struct conv2d_n8cx_gemm_fp16_vec128_tunning_param {
 class conv2d_n8cx_gemm_fp16_runtime_executor final : public conv2d_runtime_executor<__fp16> {
 public:
     conv2d_n8cx_gemm_fp16_runtime_executor() {}
-    conv2d_n8cx_gemm_fp16_runtime_executor(const conv2d_common_param* conv_param, const __fp16* cvt_filter,
-                                           const __fp16* bias, conv2d_n8cx_gemm_fp16_vec128_tunning_param tunning_param)
-        : conv2d_runtime_executor<__fp16>(conv_param, cvt_filter, bias), tunning_param_(tunning_param) {}
+    conv2d_n8cx_gemm_fp16_runtime_executor(const conv2d_common_param* conv_param, const __fp16* cvt_filter, const __fp16* bias, conv2d_n8cx_gemm_fp16_vec128_tunning_param tunning_param)
+        : conv2d_runtime_executor<__fp16>(conv_param, cvt_filter, bias)
+        , tunning_param_(tunning_param) {}
 
     // calculate overall temp buffer size
     uint64_t cal_temp_buffer_size() override;
@@ -55,17 +55,15 @@ private:
 class conv2d_n8cx_gemm_fp16_offline_manager final : public conv2d_offline_manager<__fp16> {
 public:
     conv2d_n8cx_gemm_fp16_offline_manager() {}
-    conv2d_n8cx_gemm_fp16_offline_manager(const conv2d_common_param& param, const conv2d_common_algo_info& algo_info,
-                                          ppl::common::Allocator* allocator)
+    conv2d_n8cx_gemm_fp16_offline_manager(const conv2d_common_param& param, const conv2d_common_algo_info& algo_info, ppl::common::Allocator* allocator)
         : conv2d_offline_manager<__fp16>(param, algo_info, allocator) {}
     bool is_supported() override;
     ppl::common::RetCode gen_cvt_weights(const __fp16* filter, const __fp16* bias) override;
     ppl::common::RetCode fast_init_tunning_param() override;
-    ppl::common::RetCode pick_best_tunning_param(const __fp16* src, const __fp16* filter, __fp16* dst,
-                                                 ppl::nn::TensorShape& src_shape,
-                                                 ppl::nn::TensorShape& dst_shape) override;
+    ppl::common::RetCode pick_best_tunning_param(const __fp16* src, const __fp16* filter, __fp16* dst, ppl::nn::TensorShape& src_shape, ppl::nn::TensorShape& dst_shape) override;
 
-    conv2d_base_runtime_executor* gen_executor() override {
+    conv2d_base_runtime_executor* gen_executor() override
+    {
         return new conv2d_n8cx_gemm_fp16_runtime_executor(&param_, cvt_filter_, cvt_bias_, tunning_param_);
     }
 

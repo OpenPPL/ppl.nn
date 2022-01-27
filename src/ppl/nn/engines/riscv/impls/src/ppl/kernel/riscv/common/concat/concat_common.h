@@ -34,8 +34,8 @@ ppl::common::RetCode concat_nbcx(
     const int32_t num_src,
     const int32_t c_axis)
 {
-    const int32_t ndims = int32_t(src_shape_list[0]->GetDimCount());
-    const int32_t axis = c_axis < 0 ? ndims + c_axis : c_axis;
+    const int32_t ndims     = int32_t(src_shape_list[0]->GetDimCount());
+    const int32_t axis      = c_axis < 0 ? ndims + c_axis : c_axis;
     const int32_t c_dim_idx = 1;
 
     int64_t outer_dim = 1;
@@ -56,7 +56,7 @@ ppl::common::RetCode concat_nbcx(
     }
 
     std::vector<int64_t> dst_offset(num_src);
-    dst_offset[0] = 0;
+    dst_offset[0]          = 0;
     int64_t dst_concat_dim = 0;
     if (axis == c_dim_idx) {
         for (int32_t i = 1; i < num_src; i++) {
@@ -101,7 +101,7 @@ ppl::common::RetCode concat_ndarray(
     const int32_t c_axis)
 {
     const int32_t ndims = int32_t(src_shape_list[0]->GetDimCount());
-    const int32_t axis = c_axis < 0 ? ndims + c_axis : c_axis;
+    const int32_t axis  = c_axis < 0 ? ndims + c_axis : c_axis;
 
     int64_t outer_dim = 1;
     int64_t inner_dim = 1;
@@ -141,8 +141,8 @@ ppl::common::RetCode concat_nbcx_interleave_channels(
     const int32_t c_dim_idx)
 {
     const int32_t ndims = int32_t(src_shape_list[0]->GetDimCount());
-    int64_t outer_dim = 1;
-    int64_t inner_dim = 1;
+    int64_t outer_dim   = 1;
+    int64_t inner_dim   = 1;
     for (int32_t i = 0; i < c_dim_idx; ++i) {
         outer_dim *= src_shape_list[0]->GetDim(i);
     }
@@ -157,22 +157,22 @@ ppl::common::RetCode concat_nbcx_interleave_channels(
     }
 
     const int64_t dst_channels = dst_offset[num_src - 1] + src_shape_list[num_src - 1]->GetDim(c_dim_idx);
-    const int64_t padded_oc = round_up(dst_channels, c_blk);
+    const int64_t padded_oc    = round_up(dst_channels, c_blk);
 
     for (int64_t i = 0; i < outer_dim; i++) {
         for (int64_t n = 0; n < num_src; n++) {
             const int32_t src_channels = src_shape_list[n]->GetDim(c_dim_idx);
-            const int32_t padded_ic = round_up(src_channels, c_blk);
+            const int32_t padded_ic    = round_up(src_channels, c_blk);
             for (int32_t ic = 0; ic < padded_ic; ic += c_blk) {
                 const int32_t oc = dst_offset[n] + ic;
-                const T* src_ = src_list[n] + i * padded_ic * inner_dim + ic * inner_dim;
-                T* dst_ = dst + i * padded_oc * inner_dim + round(oc, c_blk) * inner_dim;
+                const T* src_    = src_list[n] + i * padded_ic * inner_dim + ic * inner_dim;
+                T* dst_          = dst + i * padded_oc * inner_dim + round(oc, c_blk) * inner_dim;
                 if (oc % c_blk == 0) { //  no interleave on this xc
                     memcpy(dst_, src_, inner_dim * c_blk * sizeof(T));
                 } else { //  has interleave on this xc
                     const int32_t c_offset = c_blk - (oc % c_blk);
-                    const int32_t c_end = min(src_channels - ic, (int32_t)c_blk);
-                    T* dst_next_xc = dst_ + c_blk * inner_dim;
+                    const int32_t c_end    = min(src_channels - ic, (int32_t)c_blk);
+                    T* dst_next_xc         = dst_ + c_blk * inner_dim;
                     for (int64_t id = 0; id < inner_dim; id++) {
                         // interleave copy
                         for (int32_t c = 0; c < c_offset; c++) {

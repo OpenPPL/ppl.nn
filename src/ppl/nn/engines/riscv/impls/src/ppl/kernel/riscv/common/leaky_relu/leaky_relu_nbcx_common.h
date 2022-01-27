@@ -33,11 +33,11 @@ ppl::common::RetCode leaky_relu_nbcx_common(
     const ppl::nn::TensorShape *src_shape,
     const T *src,
     const float alpha,
-    T *dst
-) {
+    T *dst)
+{
     uint64_t vl;
     constexpr int32_t c_blk = v_len / (sizeof(T) * 8);
-    vl = vsetvli<T, v_len>(c_blk);
+    vl                      = vsetvli<T, v_len>(c_blk);
 
     const int64_t n_elem      = src_shape->GetElementsIncludingPadding();
     const int64_t simd_w      = c_blk;
@@ -72,6 +72,6 @@ ppl::common::RetCode leaky_relu_nbcx_common(
     return ppl::common::RC_SUCCESS;
 }
 
-}}};
+}}}; // namespace ppl::kernel::riscv
 
 #endif

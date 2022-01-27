@@ -31,7 +31,7 @@ static ppl::common::RetCode arithmetic_fp32(
     float* dst)
 {
     bool is_eltwise = src0_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding() &&
-        src1_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding();
+                      src1_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding();
     if (is_eltwise) {
         return arithmetic_eltwise_fp32<_op, fuse_relu>(dst_shape, src0, src1, dst);
     } else if (dst_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {

@@ -33,10 +33,10 @@ ppl::common::RetCode split_ndarray(
     const eT* src,
     const int32_t slice_axis,
     const int32_t num_dst,
-    eT** dst_list) 
+    eT** dst_list)
 {
-    const int32_t ndims = src_shape->GetDimCount();
-    const int32_t fixed_axis = slice_axis < 0 ? slice_axis + ndims : slice_axis;
+    const int32_t ndims         = src_shape->GetDimCount();
+    const int32_t fixed_axis    = slice_axis < 0 ? slice_axis + ndims : slice_axis;
     const int64_t src_split_dim = src_shape->GetDim(fixed_axis);
 
     int64_t outer_dims = 1;
@@ -58,7 +58,7 @@ ppl::common::RetCode split_ndarray(
     for (int32_t i = 0; i < outer_dims; i++) {
         for (int32_t n = 0; n < num_dst; n++) {
             const eT* p_src = src + i * src_split_dim * inner_dims + src_offset[n] * inner_dims;
-            eT* p_dst = dst_list[n] + i * dst_shape_list[n]->GetDim(fixed_axis) * inner_dims;
+            eT* p_dst       = dst_list[n] + i * dst_shape_list[n]->GetDim(fixed_axis) * inner_dims;
 
             const size_t size = dst_shape_list[n]->GetDim(fixed_axis) * inner_dims * sizeof(eT);
             memcpy(p_dst, p_src, size);
@@ -97,25 +97,24 @@ ppl::common::RetCode split_nxcx_interleave_channels(
     }
 
     const int64_t src_channels = src_shape->GetDim(c_dim_idx);
-    const int64_t padded_ic = round_up(src_channels, c_blk);
+    const int64_t padded_ic    = round_up(src_channels, c_blk);
 
     const int64_t start_inner_dims = 0;
-    const int64_t end_inner_dims = inner_dims;
+    const int64_t end_inner_dims   = inner_dims;
 
     for (int64_t i = 0; i < outer_dims; i++) {
         for (int32_t n = 0; n < num_dst; n++) {
             const int32_t dst_channels = dst_shape_list[n]->GetDim(c_dim_idx);
-            const int32_t padded_oc = round_up(dst_channels, c_blk);
+            const int32_t padded_oc    = round_up(dst_channels, c_blk);
             for (int32_t oc = 0; oc < padded_oc; oc += c_blk) {
                 const int32_t ic = src_offset[n] + oc;
-                const eT* p_src = src + i * padded_ic * inner_dims + round(ic, c_blk) * inner_dims;
-                eT* p_dst = dst_list[n] + i * padded_oc * inner_dims + oc * inner_dims;
+                const eT* p_src  = src + i * padded_ic * inner_dims + round(ic, c_blk) * inner_dims;
+                eT* p_dst        = dst_list[n] + i * padded_oc * inner_dims + oc * inner_dims;
                 if (ic % c_blk == 0) { // no interleave on this xc
-                    memcpy(p_dst + start_inner_dims * c_blk, p_src + start_inner_dims * c_blk,
-                           (end_inner_dims - start_inner_dims) * c_blk * sizeof(eT));
+                    memcpy(p_dst + start_inner_dims * c_blk, p_src + start_inner_dims * c_blk, (end_inner_dims - start_inner_dims) * c_blk * sizeof(eT));
                 } else { // has interleave on this xc
-                    const int32_t c_offset = c_blk - (ic % c_blk);
-                    const int32_t c_end = min(dst_channels - oc, (int32_t)c_blk);
+                    const int32_t c_offset  = c_blk - (ic % c_blk);
+                    const int32_t c_end     = min(dst_channels - oc, (int32_t)c_blk);
                     const eT* p_src_next_xc = p_src + c_blk * inner_dims;
 
                     if (oc + c_blk == padded_oc && dst_channels < padded_oc) { // last xc need to pad 0
@@ -149,16 +148,16 @@ ppl::common::RetCode split_nxcx_interleave_channels(
 
 template <typename eT, int64_t c_blk>
 ppl::common::RetCode split_nxcx(
-    const ppl::nn::TensorShape* src_shape, 
+    const ppl::nn::TensorShape* src_shape,
     const ppl::nn::TensorShape** dst_shape_list,
     const eT* src,
     const int32_t slice_axis,
     const int32_t num_dst,
     eT** dst_list)
 {
-    const int32_t ndims = src_shape->GetDimCount();
+    const int32_t ndims      = src_shape->GetDimCount();
     const int32_t fixed_axis = slice_axis < 0 ? slice_axis + ndims : slice_axis;
-    const int64_t c_dim_idx = 1;
+    const int64_t c_dim_idx  = 1;
 
     if (fixed_axis == 1) {
         for (int32_t i = 0; i < num_dst - 1; i++) {
@@ -194,7 +193,7 @@ ppl::common::RetCode split_nxcx(
 
     std::vector<int64_t> src_offset;
     src_offset.resize(num_dst);
-    src_offset[0] = 0;
+    src_offset[0]         = 0;
     int64_t src_split_dim = 0;
     if (fixed_axis == c_dim_idx) {
         for (int32_t i = 1; i < num_dst; i++) {
@@ -212,7 +211,7 @@ ppl::common::RetCode split_nxcx(
         for (int32_t i = 0; i < outer_dims; i++) {
             for (int32_t n = 0; n < num_dst; n++) {
                 const eT* p_src = src + i * src_split_dim * inner_dims + src_offset[n] * inner_dims;
-                eT* p_dst = dst_list[n] + i * div_up(dst_shape_list[n]->GetDim(fixed_axis), c_blk) * inner_dims;
+                eT* p_dst       = dst_list[n] + i * div_up(dst_shape_list[n]->GetDim(fixed_axis), c_blk) * inner_dims;
 
                 const size_t size = div_up(dst_shape_list[n]->GetDim(fixed_axis), c_blk) * inner_dims * sizeof(eT);
                 memcpy(p_dst, p_src, size);
@@ -222,7 +221,7 @@ ppl::common::RetCode split_nxcx(
         for (int32_t i = 0; i < outer_dims; i++) {
             for (int32_t n = 0; n < num_dst; n++) {
                 const eT* p_src = src + i * src_split_dim * inner_dims + src_offset[n] * inner_dims;
-                eT* p_dst = dst_list[n] + i * dst_shape_list[n]->GetDim(fixed_axis) * inner_dims;
+                eT* p_dst       = dst_list[n] + i * dst_shape_list[n]->GetDim(fixed_axis) * inner_dims;
 
                 const size_t size = dst_shape_list[n]->GetDim(fixed_axis) * inner_dims * sizeof(eT);
                 memcpy(p_dst, p_src, size);

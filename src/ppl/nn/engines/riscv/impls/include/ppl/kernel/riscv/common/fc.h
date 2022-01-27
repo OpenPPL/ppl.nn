@@ -47,7 +47,7 @@ typedef uint32_t fc_common_algo_t;
 
 class fc_common_algo {
 public:
-    static const fc_common_algo_t unknown = 0;
+    static const fc_common_algo_t unknown  = 0;
     static const fc_common_algo_t standard = 1;
 };
 
@@ -58,11 +58,11 @@ struct fc_common_algo_info {
 class fc_base_executor {
 public:
     fc_base_executor() {}
-    virtual uint64_t cal_temp_buffer_size() = 0;
-    virtual ppl::common::RetCode prepare() = 0;
-    virtual ppl::common::RetCode execute() = 0;
-    virtual void set_temp_buffer(void* temp_buffer) = 0;
-    virtual const fc_common_param* fc_param() const = 0;
+    virtual uint64_t cal_temp_buffer_size()                                      = 0;
+    virtual ppl::common::RetCode prepare()                                       = 0;
+    virtual ppl::common::RetCode execute()                                       = 0;
+    virtual void set_temp_buffer(void* temp_buffer)                              = 0;
+    virtual const fc_common_param* fc_param() const                              = 0;
     virtual ppl::common::RetCode set_src_tensor(ppl::nn::TensorImpl& src_tensor) = 0;
     virtual ppl::common::RetCode set_dst_tensor(ppl::nn::TensorImpl& src_tensor) = 0;
     virtual ~fc_base_executor() {}
@@ -106,74 +106,92 @@ public:
         , temp_buffer_(nullptr) {}
 
     virtual uint64_t cal_temp_buffer_size() = 0;
-    virtual ppl::common::RetCode prepare() = 0;
-    virtual ppl::common::RetCode execute() = 0;
+    virtual ppl::common::RetCode prepare()  = 0;
+    virtual ppl::common::RetCode execute()  = 0;
     virtual ~fc_executor() {}
 
-    virtual ppl::common::RetCode set_src_tensor(ppl::nn::TensorImpl& src_tensor) override {
+    virtual ppl::common::RetCode set_src_tensor(ppl::nn::TensorImpl& src_tensor) override
+    {
         set_src_shape(src_tensor.GetShape());
         set_src(src_tensor.GetBufferPtr<T>());
         return ppl::common::RC_SUCCESS;
     };
-    virtual ppl::common::RetCode set_dst_tensor(ppl::nn::TensorImpl& dst_tensor) override {
+    virtual ppl::common::RetCode set_dst_tensor(ppl::nn::TensorImpl& dst_tensor) override
+    {
         set_dst_shape(dst_tensor.GetShape());
         set_dst(dst_tensor.GetBufferPtr<T>());
         return ppl::common::RC_SUCCESS;
     };
 
-    void set_fc_param(const fc_common_param* fc_param) {
+    void set_fc_param(const fc_common_param* fc_param)
+    {
         fc_param_ = fc_param;
     }
-    const fc_common_param* fc_param() const override {
+    const fc_common_param* fc_param() const override
+    {
         return fc_param_;
     };
 
-    void set_cvt_filter(const T* cvt_filter) {
+    void set_cvt_filter(const T* cvt_filter)
+    {
         cvt_filter_ = cvt_filter;
     }
-    const T* cvt_filter() const {
+    const T* cvt_filter() const
+    {
         return cvt_filter_;
     }
 
-    void set_cvt_bias(const T* cvt_bias) {
+    void set_cvt_bias(const T* cvt_bias)
+    {
         cvt_bias_ = cvt_bias;
     }
-    const T* cvt_bias() const {
+    const T* cvt_bias() const
+    {
         return cvt_bias_;
     }
 
-    void set_src(const T* src) {
+    void set_src(const T* src)
+    {
         src_ = src;
     }
-    const T* src() const {
+    const T* src() const
+    {
         return src_;
     }
 
-    void set_src_shape(const ppl::nn::TensorShape* src_shape) {
+    void set_src_shape(const ppl::nn::TensorShape* src_shape)
+    {
         src_shape_ = src_shape;
     }
-    const ppl::nn::TensorShape* src_shape() const {
+    const ppl::nn::TensorShape* src_shape() const
+    {
         return src_shape_;
     };
 
-    void set_dst(T* dst) {
+    void set_dst(T* dst)
+    {
         dst_ = dst;
     }
-    T* dst() const {
+    T* dst() const
+    {
         return dst_;
     }
 
-    void set_dst_shape(const ppl::nn::TensorShape* dst_shape) {
+    void set_dst_shape(const ppl::nn::TensorShape* dst_shape)
+    {
         dst_shape_ = dst_shape;
     }
-    const ppl::nn::TensorShape* dst_shape() const {
+    const ppl::nn::TensorShape* dst_shape() const
+    {
         return dst_shape_;
     }
 
-    void set_temp_buffer(void* temp_buffer) {
+    void set_temp_buffer(void* temp_buffer)
+    {
         temp_buffer_ = temp_buffer;
     }
-    void* temp_buffer() const {
+    void* temp_buffer() const
+    {
         return temp_buffer_;
     }
 };
@@ -181,10 +199,10 @@ public:
 class fc_base_manager {
 public:
     fc_base_manager() {}
-    virtual void release_cvt_weights() = 0;
-    virtual fc_base_executor* gen_executor() = 0;
+    virtual void release_cvt_weights()                   = 0;
+    virtual fc_base_executor* gen_executor()             = 0;
     virtual void set_param(const fc_common_param& param) = 0;
-    virtual const fc_common_param& param() const = 0;
+    virtual const fc_common_param& param() const         = 0;
     virtual ~fc_base_manager() {}
 };
 
@@ -214,47 +232,59 @@ public:
         , cvt_filter_(nullptr)
         , cvt_bias_(nullptr)
         , cvt_filter_size_(0)
-        , cvt_bias_size_(0) {
+        , cvt_bias_size_(0)
+    {
         param_ = param;
     }
 
-    void set_param(const fc_common_param& param) override {
+    void set_param(const fc_common_param& param) override
+    {
         param_ = param;
     }
-    const fc_common_param& param() const override {
+    const fc_common_param& param() const override
+    {
         return param_;
     };
 
-    void set_allocator(ppl::common::Allocator* allocator) {
+    void set_allocator(ppl::common::Allocator* allocator)
+    {
         allocator_ = allocator;
     }
-    ppl::common::Allocator* allocator() {
+    ppl::common::Allocator* allocator()
+    {
         return allocator_;
     }
 
-    void set_cvt_filter(const T* cvt_filter, const uint64_t& cvt_filter_size) {
-        cvt_filter_ = const_cast<T*>(cvt_filter);
+    void set_cvt_filter(const T* cvt_filter, const uint64_t& cvt_filter_size)
+    {
+        cvt_filter_      = const_cast<T*>(cvt_filter);
         cvt_filter_size_ = cvt_filter_size;
     }
-    const T* cvt_filter() const {
+    const T* cvt_filter() const
+    {
         return cvt_filter_;
     }
-    uint64_t cvt_filter_size() const {
+    uint64_t cvt_filter_size() const
+    {
         return cvt_filter_size_;
     }
 
-    void set_cvt_bias(const T* cvt_bias, const uint64_t& cvt_bias_size) {
-        cvt_bias_ = const_cast<T*>(cvt_bias);
+    void set_cvt_bias(const T* cvt_bias, const uint64_t& cvt_bias_size)
+    {
+        cvt_bias_      = const_cast<T*>(cvt_bias);
         cvt_bias_size_ = cvt_bias_size;
     }
-    const T* cvt_bias() const {
+    const T* cvt_bias() const
+    {
         return cvt_bias_;
     }
-    uint64_t cvt_bias_size() const {
+    uint64_t cvt_bias_size() const
+    {
         return cvt_bias_size_;
     }
 
-    void release_cvt_weights() {
+    void release_cvt_weights()
+    {
         if (cvt_filter_) {
             allocator_->Free(cvt_filter_);
             cvt_filter_ = nullptr;
@@ -267,7 +297,7 @@ public:
     }
 
     virtual ppl::common::RetCode gen_cvt_weights(const T* filter, const T* bias) = 0;
-    virtual fc_executor<T>* gen_executor() = 0;
+    virtual fc_executor<T>* gen_executor()                                       = 0;
 
     virtual ~fc_manager() {}
 };

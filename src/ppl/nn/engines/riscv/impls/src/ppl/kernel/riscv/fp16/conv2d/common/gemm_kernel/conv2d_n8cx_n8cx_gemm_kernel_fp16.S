@@ -3589,3 +3589,4 @@ gemm_common_m8n16_left1_rv64_fp16:
 
     this_restore_caller
     ret
+

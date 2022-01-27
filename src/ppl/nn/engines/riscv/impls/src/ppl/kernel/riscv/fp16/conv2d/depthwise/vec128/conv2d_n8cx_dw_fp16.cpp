@@ -36,7 +36,7 @@ void conv_dw_src_padding_fp16(
     int64_t pad_t,
     int64_t pad_b)
 {
-    int64_t src_w_padded = src_w + pad_l + pad_r;
+    int64_t src_w_padded        = src_w + pad_l + pad_r;
     int64_t src_padded_h_stride = src_w_padded * 8;
 
     // top pad
@@ -151,7 +151,7 @@ void conv_dw_kernel_riscv_fp16(
             int64_t dst_base_idx = 0;
             dst_base_idx += i * dst_w * 8;
             for (int64_t k = 0; k < 8; k++) {
-                int64_t dst_idx = dst_base_idx + k;
+                int64_t dst_idx                = dst_base_idx + k;
                 dst[dst_idx + (j * 8 + 0) * 8] = bias[k];
                 dst[dst_idx + (j * 8 + 1) * 8] = bias[k];
                 dst[dst_idx + (j * 8 + 2) * 8] = bias[k];
@@ -166,7 +166,7 @@ void conv_dw_kernel_riscv_fp16(
                     for (int64_t k = 0; k < 8; k++) {
                         int64_t flt_idx = 0;
                         flt_idx += k + wk * 8 + hk * flt_w * 8;
-                        int64_t dst_idx = dst_base_idx + k;
+                        int64_t dst_idx  = dst_base_idx + k;
                         int64_t src_idx0 = (i * stride_h + hk) * src_pad_w * 8 + ((j * 8 + 0) * stride_w + wk) * 8 + k;
                         int64_t src_idx1 = (i * stride_h + hk) * src_pad_w * 8 + ((j * 8 + 1) * stride_w + wk) * 8 + k;
                         int64_t src_idx2 = (i * stride_h + hk) * src_pad_w * 8 + ((j * 8 + 2) * stride_w + wk) * 8 + k;
@@ -208,8 +208,9 @@ void conv_dw_kernel_riscv_fp16(
     }
 }
 
-uint64_t conv2d_n8cx_dw_fp16_runtime_executor::cal_temp_buffer_size() {
-    size_t temp_buffer_size = 
+uint64_t conv2d_n8cx_dw_fp16_runtime_executor::cal_temp_buffer_size()
+{
+    size_t temp_buffer_size =
         conv_dw_get_temp_buffer_size_fp16(
             src_shape_->GetDim(2),
             src_shape_->GetDim(3),
@@ -225,7 +226,8 @@ uint64_t conv2d_n8cx_dw_fp16_runtime_executor::cal_temp_buffer_size() {
 
 void conv2d_n8cx_dw_fp16_runtime_executor::adjust_tunning_param() {}
 
-ppl::common::RetCode conv2d_n8cx_dw_fp16_runtime_executor::prepare() {
+ppl::common::RetCode conv2d_n8cx_dw_fp16_runtime_executor::prepare()
+{
     if (!conv_param_ || !src_shape_ || !dst_shape_) {
         return ppl::common::RC_INVALID_VALUE;
     }
@@ -233,7 +235,8 @@ ppl::common::RetCode conv2d_n8cx_dw_fp16_runtime_executor::prepare() {
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode conv2d_n8cx_dw_fp16_runtime_executor::execute() {
+ppl::common::RetCode conv2d_n8cx_dw_fp16_runtime_executor::execute()
+{
     const conv2d_common_param& cp = *conv_param_;
 
     if (src_ == nullptr || cvt_bias_ == nullptr || cvt_filter_ == nullptr || temp_buffer_ == nullptr ||
@@ -246,8 +249,8 @@ ppl::common::RetCode conv2d_n8cx_dw_fp16_runtime_executor::execute() {
     const int64_t kernel_w = conv_param_->kernel_w;
     const int64_t stride_h = conv_param_->stride_h;
     const int64_t stride_w = conv_param_->stride_w;
-    const int64_t pad_h = conv_param_->pad_h;
-    const int64_t pad_w = conv_param_->pad_w;
+    const int64_t pad_h    = conv_param_->pad_h;
+    const int64_t pad_w    = conv_param_->pad_w;
 
     const int64_t src_h = src_shape_->GetDim(2);
     const int64_t src_w = src_shape_->GetDim(3);
@@ -255,11 +258,10 @@ ppl::common::RetCode conv2d_n8cx_dw_fp16_runtime_executor::execute() {
     const int64_t dst_w = dst_shape_->GetDim(3);
 
     int64_t padded_channels = round_up(channels, 8);
-    int64_t src_h_padded = src_h + pad_h * 2;
-    int64_t src_w_padded = src_w + pad_w * 2;
+    int64_t src_h_padded    = src_h + pad_h * 2;
+    int64_t src_w_padded    = src_w + pad_w * 2;
 
-    typedef void (*depthwise_riscv_kernel_fp16)(const __fp16*, const __fp16*, const __fp16*, __fp16*, int64_t, int64_t,
-                                                int64_t);
+    typedef void (*depthwise_riscv_kernel_fp16)(const __fp16*, const __fp16*, const __fp16*, __fp16*, int64_t, int64_t, int64_t);
     depthwise_riscv_kernel_fp16 dw_conv_kernel;
     if (kernel_h == 3 && kernel_w == 3 && stride_h == 1 && stride_w == 1) {
         switch (dst_w % 4) {
@@ -418,11 +420,13 @@ ppl::common::RetCode conv2d_n8cx_dw_fp16_runtime_executor::execute() {
     return ppl::common::RC_SUCCESS;
 }
 
-bool conv2d_n8cx_dw_fp16_offline_manager::is_supported() {
+bool conv2d_n8cx_dw_fp16_offline_manager::is_supported()
+{
     return true;
 }
 
-ppl::common::RetCode conv2d_n8cx_dw_fp16_offline_manager::fast_init_tunning_param() {
+ppl::common::RetCode conv2d_n8cx_dw_fp16_offline_manager::fast_init_tunning_param()
+{
     return ppl::common::RC_SUCCESS;
 }
 
@@ -436,19 +440,20 @@ ppl::common::RetCode conv2d_n8cx_dw_fp16_offline_manager::pick_best_tunning_para
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode conv2d_n8cx_dw_fp16_offline_manager::gen_cvt_weights(const __fp16* filter, const __fp16* bias) {
+ppl::common::RetCode conv2d_n8cx_dw_fp16_offline_manager::gen_cvt_weights(const __fp16* filter, const __fp16* bias)
+{
     if (cvt_bias_ != nullptr || cvt_filter_ != nullptr) {
         return ppl::common::RC_PERMISSION_DENIED;
     }
 
     const int64_t num_output = param_.num_output;
-    const int64_t channels = param_.channels;
-    const int64_t kernel_h = param_.kernel_h;
-    const int64_t kernel_w = param_.kernel_w;
+    const int64_t channels   = param_.channels;
+    const int64_t kernel_h   = param_.kernel_h;
+    const int64_t kernel_w   = param_.kernel_w;
 
     {
         cvt_bias_size_ = round_up(num_output, 8);
-        cvt_bias_ = (__fp16*)allocator_->Alloc(cvt_bias_size_ * sizeof(__fp16));
+        cvt_bias_      = (__fp16*)allocator_->Alloc(cvt_bias_size_ * sizeof(__fp16));
         memcpy(cvt_bias_, bias, num_output * sizeof(__fp16));
         memset(cvt_bias_ + num_output, 0.f, (cvt_bias_size_ - num_output) * sizeof(__fp16));
     }
