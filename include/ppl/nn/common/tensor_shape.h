@@ -49,18 +49,15 @@ public:
     TensorShape& operator=(const TensorShape& other) = default;
 
     uint32_t GetRealDimCount() const {
-        return dims_.size();
-    };
-    uint32_t GetDimCount() const {
         if (IsScalar()) {
-            return 1;
+            return 0;
         }
         return dims_.size();
     }
+    uint32_t GetDimCount() const {
+        return dims_.size();
+    }
     int64_t GetDim(uint32_t which) const {
-        if (IsScalar()) {
-            return 1;
-        }
         return dims_[which];
     }
     const int64_t* GetDims() const {
@@ -130,9 +127,10 @@ public:
     }
 
     void ReshapeAsScalar() {
-        dims_.clear();
         padding0_.clear();
         padding1_.clear();
+        dims_.resize(1);
+        dims_[0] = 1;
     }
 
     void Reshape(const int64_t* dims, uint32_t dim_count) {
@@ -162,7 +160,7 @@ public:
 
     uint64_t GetElementsIncludingPadding() const {
         if (dims_.empty()) {
-            return IsScalar() ? 1 : 0;
+            return 0;
         }
         uint64_t accu = 1;
         for (uint32_t i = 0; i < dims_.size(); ++i) {
@@ -172,7 +170,7 @@ public:
     }
     uint64_t GetElementsExcludingPadding() const {
         if (dims_.empty()) {
-            return IsScalar() ? 1 : 0;
+            return 0;
         }
         uint64_t accu = 1;
         for (uint32_t i = 0; i < dims_.size(); ++i) {
@@ -188,7 +186,7 @@ public:
     }
     uint64_t GetElementsFromDimensionIncludingPadding(uint32_t which) const {
         if (dims_.empty()) {
-            return IsScalar() ? 1 : 0;
+            return 0;
         }
         uint64_t accu = 1;
         for (uint32_t i = which; i < dims_.size(); ++i) {
@@ -198,7 +196,7 @@ public:
     }
     uint64_t GetElementsToDimensionIncludingPadding(uint32_t which) const {
         if (dims_.empty()) {
-            return IsScalar() ? 1 : 0;
+            return 0;
         }
         uint64_t accu = 1;
         for (uint32_t i = 0; i < which; ++i) {
@@ -208,7 +206,7 @@ public:
     }
     uint64_t GetElementsFromDimensionExcludingPadding(uint32_t which) const {
         if (dims_.empty()) {
-            return IsScalar() ? 1 : 0;
+            return 0;
         }
         uint64_t accu = 1;
         for (uint32_t i = which; i < dims_.size(); ++i) {
@@ -218,7 +216,7 @@ public:
     }
     uint64_t GetElementsToDimensionExcludingPadding(uint32_t which) const {
         if (dims_.empty()) {
-            return IsScalar() ? 1 : 0;
+            return 0;
         }
         uint64_t accu = 1;
         for (uint32_t i = 0; i < which; ++i) {
@@ -239,22 +237,11 @@ public:
         return ppl::common::GetSizeOfDataType(data_type_) * GetElementsFromDimensionExcludingPadding(which);
     }
 
-    void Clear() {
-        data_type_ = ppl::common::DATATYPE_UNKNOWN;
-        data_format_ = ppl::common::DATAFORMAT_UNKNOWN;
-        dims_.clear();
-        padding0_.clear();
-        padding1_.clear();
-    }
-
     bool IsScalar() const {
-        return (dims_.empty() && data_type_ != ppl::common::DATATYPE_UNKNOWN);
+        return (dims_.size() == 1 && dims_[0] == 1);
     }
 
     bool IsEmpty() const {
-        if (IsScalar()) {
-            return false;
-        }
         if (dims_.empty()) {
             return true;
         }
