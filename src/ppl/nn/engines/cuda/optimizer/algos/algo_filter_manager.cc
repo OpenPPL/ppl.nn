@@ -34,6 +34,11 @@ const AlgoFilter* AlgoFilterManager::FindKernel(const std::string& type) const {
         type2algo_[impl].AppendAlgo(&classname);   \
     } while (0)
 
+template <typename T>
+void AlgoFilterManager::Register(const std::string& kernel_type, T& algo_type) {
+    REGISTER_ALGO_FILTER_INFO(kernel_type, algo_type);
+}
+
 AlgoFilterManager::AlgoFilterManager() {
     REGISTER_ALGO_FILTER_INFO("Conv", turing_hmma_imp_);
     REGISTER_ALGO_FILTER_INFO("Conv", turing_imma_imp_);

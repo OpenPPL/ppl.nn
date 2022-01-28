@@ -55,6 +55,8 @@ public:
     }
 
     const AlgoFilter* FindKernel(const std::string& kernel_type) const;
+    template <typename T>
+    void Register(const std::string& kernel_type, T& algo_type);
 
 private:
     AlgoFilterManager();
