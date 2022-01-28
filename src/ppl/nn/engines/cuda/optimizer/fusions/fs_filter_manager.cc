@@ -30,6 +30,15 @@ Fusion* FsFilterManager::FindFusion(const std::string& kernel_type) const {
     return ref->second;
 }
 
+template <typename T>
+void FsFilterManager::Register(const std::string& kernel_type, T& fusion_type) {
+    type2fusion_.emplace(kernel_type, &fusion_type);
+}
+
+void FsFilterManager::Remove(const std::string& kernel_type) {
+    type2fusion_.erase(kernel_type);
+}
+
 FsFilterManager::FsFilterManager() {
     type2fusion_.emplace("AveragePool", &averagepool_fs_);
     type2fusion_.emplace("Concat", &concat_fs_);

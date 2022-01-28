@@ -38,6 +38,9 @@ public:
     }
 
     Fusion* FindFusion(const std::string& kernel_type) const;
+    template <typename T>
+    void Register(const std::string& kernel_type, T& fusion_type);
+    void Remove(const std::string& kernel_type);
 
 private:
     FsFilterManager();

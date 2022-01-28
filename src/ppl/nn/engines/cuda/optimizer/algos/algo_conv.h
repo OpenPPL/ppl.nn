@@ -33,6 +33,8 @@ public:
         conv_formats_.emplace(DATAFORMAT_NHWC8, nhwc8);
         std::set<dataformat_t> nhwc16{DATAFORMAT_NHWC16};
         conv_formats_.emplace(DATAFORMAT_NHWC16, nhwc16);
+        std::set<dataformat_t> nchw{DATAFORMAT_NDARRAY};
+        conv_formats_.emplace(DATAFORMAT_NDARRAY, nchw);
     }
 
     const std::map<dataformat_t, std::set<dataformat_t>> Getformats(const std::string& type_name) const override {
