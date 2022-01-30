@@ -25,32 +25,46 @@ cuda_engine = pplnn.CudaEngineFactory.Create(cuda_options)
 
 to create an engine running on NVIDIA GPUs.
 
-### Creating a RuntimeBuilder
+### Creating an OnnxRuntimeBuilder
 
 Use
 
 ```python
-onnx_model_file = "/path/to/onnx_model_file"
-engines = [pplnn.Engine(x86_engine)] # or engines = [pplnn.Engine(cuda_engine)]
-runtime_builder = pplnn.OnnxRuntimeBuilderFactory.CreateFromFile(onnx_model_file, engines)
+runtime_builder = pplnn.OnnxRuntimeBuilderFactory.Create()
 ```
 
-to create a `RuntimeBuilder`, which is used for creating `Runtime` instances. Note that `x86_engine` and `cuda_engine` need to be converted to `Engine` explicitly.
-
-`PPLNN` also supports multiple engines running in the same model. For example:
-
-```python
-engines = [pplnn.Engine(x86_engine), pplnn.Engine(cuda_engine)]
-runtime_builder = pplnn.OnnxRuntimeBuilderFactory.CreateFromFile(onnx_model_file, engines)
-```
-
-`PPLNN` will partition the model into several parts and assign different ops to these engines according to configurations.
+to create a `OnnxRuntimeBuilder`, which is used for creating `Runtime` instances.
 
 ### Creating a Runtime Instance
 
 ```python
+onnx_model_file = "/path/to/onnx_model_file"
+engines = [x86_engine] # or engines = [cuda_engine]
+status = runtime_builder.InitFromFile(onnx_model_file, engines)
+```
+
+initializes the `OnnxRuntimeBuilder` instance.
+
+`PPLNN` also supports multiple engines running in the same model. For example:
+
+```python
+engines = [x86_engine, cuda_engine]
+status = runtime_builder.InitFromFile(onnx_model_file, engines)
+```
+
+The model will be partitioned into several parts and assign different ops to these engines according to configurations.
+
+```python
+status = runtime_builder.Preprocess()
+```
+
+does some preparations before creating `Runtime` instances.
+
+```python
 runtime = runtime_builder.CreateRuntime()
 ```
+
+creates a `Runtime` instances.
 
 ### Filling Inputs
 

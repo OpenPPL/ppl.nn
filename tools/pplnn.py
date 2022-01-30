@@ -522,9 +522,19 @@ if __name__ == "__main__":
         logging.error("no engine is specified. run '" + sys.argv[0] + " -h' to see supported device types marked with '--use-*'.")
         sys.exit(-1)
 
-    runtime_builder = pplnn.OnnxRuntimeBuilderFactory.CreateFromFile(args.onnx_model, engines)
+    runtime_builder = pplnn.OnnxRuntimeBuilderFactory.Create()
     if not runtime_builder:
-        logging.error("create RuntimeBuilder failed.")
+        logging.error("create OnnxRuntimeBuilder failed.")
+        sys.exit(-1)
+
+    status = runtime_builder.InitFromFile(args.onnx_model, engines)
+    if status != pplcommon.RC_SUCCESS:
+        logging.error("init OnnxRuntimeBuilder failed: " + pplcommon.GetRetCodeStr(status))
+        sys.exit(-1)
+
+    status = runtime_builder.Preprocess()
+    if status != pplcommon.RC_SUCCESS:
+        logging.error("OnnxRuntimeBuilder preprocess failed: " + pplcommon.GetRetCodeStr(status))
         sys.exit(-1)
 
     runtime = runtime_builder.CreateRuntime()

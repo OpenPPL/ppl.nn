@@ -244,9 +244,21 @@ if next(engines) == nil then
     os.exit(-1)
 end
 
-local runtime_builder = pplnn.OnnxRuntimeBuilderFactory:CreateFromFile(args.onnx_model, engines)
+local runtime_builder = pplnn.OnnxRuntimeBuilderFactory:Create()
 if runtime_builder == nil then
-    logging.error("create RuntimeBuilder failed.")
+    logging.error("create OnnxRuntimeBuilder failed.")
+    os.exit(-1)
+end
+
+local status = runtime_builder:InitFromFile(args.onnx_model, engines)
+if status ~= pplcommon.RC_SUCCESS then
+    logging.error("init OnnxRuntimeBuilder failed: " .. pplcommon.GetRetCodeStr(status))
+    os.exit(-1)
+end
+
+status = runtime_builder:Preprocess()
+if status ~= pplcommon.RC_SUCCESS then
+    logging.error("OnnxRuntimeBuilder preprocess failed: " .. pplcommon.GetRetCodeStr(status))
     os.exit(-1)
 end
 

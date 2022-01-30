@@ -47,24 +47,32 @@ Used to create an `RuntimeBuilder`.
 #### Functions
 
 ```c++
-RuntimeBuilder* Create(const char* model_file, Engine** engines, uint32_t engine_num);
+OnnxRuntimeBuilder* Create();
 ```
 
-Creates an `RuntimeBuilder` instance from an ONNX model file. The first parameter is the model file path, the second is engines that may be used to evaluate the compute graph. Note that callers should guarantee that `engines` is valid during inferencing.
+Creates an `OnnxRuntimeBuilder` instance.
 
-```c++
-RuntimeBuilder* Create(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num);
-```
+## OnnxRuntimeBuilder
 
-Creates an `RuntimeBuilder` instance from an ONNX buffer. Note that callers should guarantee that `engines` is valid during inferencing.
+Defined in [include/ppl/nn/models/onnx/onnx_runtime_builder.h](../../include/ppl/nn/models/onnx/runtime_builder.h).
 
-## RuntimeBuilder
-
-Defined in [include/ppl/nn/runtime/runtime_builder.h](../../include/ppl/nn/runtime/runtime_builder.h).
-
-`RuntimeBuilder` is used to create `Runtime` instances. It contains read-only data that a `Runtime` needs.
+`OnnxRuntimeBuilder` is used to create `Runtime` instances.
 
 #### Functions
+
+```c++
+ppl::common::RetCode Init(const char* model_file, Engine** engines, uint32_t engine_num);
+ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num);
+```
+
+Initializes an `OnnxRuntimeBuilder` instance from an ONNX model file or buffer. The first parameter is the model file path, the second is engines that may be used to evaluate the compute graph. Note that callers should guarantee that `engines` is valid during inferencing.
+
+```c++
+ppl::common::RetCode Preprocess();
+```
+
+prepare for creating `Runtime` instances.
+
 
 ```c++
 Runtime* CreateRuntime();

@@ -81,15 +81,27 @@ Sets the tensor buffer area to `addr` which is an integer and can be casted to `
 ### OnnxRuntimeBuilderFactory
 
 ```python
-runtime_builder = OnnxRuntimeBuilderFactory::CreateFromFile(onnx_model_file, engines)
+runtime_builder = OnnxRuntimeBuilderFactory.Create()
 ```
 
-Creates an `RuntimeBuilder` instance from an ONNX model. `engines` is a list of `Engine` instances that may be used to evaluate the model.
+creates an `OnnxRuntimeBuilder` instance.
 
-### RuntimeBuilder
+### OnnxRuntimeBuilder
 
 ```python
-runtime = RuntimeBuilder::CreateRuntime()
+status = runtime_builder.InitFromFile(onnx_model_file, engines)
+```
+
+Initializes an `OnnxRuntimeBuilder` instance from an ONNX model. `engines` is a list of `Engine` instances that may be used to evaluate the model.
+
+```python
+status = runtime_builder.Preprocess()
+```
+
+does some preparations before creating `Runtime` instances.
+
+```python
+runtime = runtime_builder.CreateRuntime()
 ```
 
 Creates a `Runtime` instance for inferencing.

@@ -122,10 +122,21 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
     engine_ptrs.emplace_back(engines[0].get());
 
     // create onnx runtime builder according to onnx model & engines registered before
-    auto builder = unique_ptr<RuntimeBuilder>(
-        OnnxRuntimeBuilderFactory::Create(onnx_model_path, engine_ptrs.data(), engine_ptrs.size()));
+    auto builder = unique_ptr<OnnxRuntimeBuilder>(OnnxRuntimeBuilderFactory::Create());
     if (!builder) {
-        fprintf(stderr, "create RuntimeBuilder from onnx model %s failed!\n", onnx_model_path);
+        fprintf(stderr, "create OnnxRuntimeBuilder from onnx model %s failed!\n", onnx_model_path);
+        return -1;
+    }
+
+    auto status = builder->Init(onnx_model_path, engine_ptrs.data(), engine_ptrs.size());
+    if (status != RC_SUCCESS) {
+        fprintf(stderr, "init OnnxRuntimeBuilder failed: %s\n", GetRetCodeStr(status));
+        return -1;
+    }
+
+    status = builder->Preprocess();
+    if (status != RC_SUCCESS) {
+        fprintf(stderr, "builder preprocess failed: %s\n", GetRetCodeStr(status));
         return -1;
     }
 
@@ -149,7 +160,7 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
 
     const std::vector<int64_t> input_shape{1, channels, height, width};
     input_tensor->GetShape()->Reshape(input_shape); // pplnn can reshape input dynamically even if onnx model has static input shape
-    auto status = input_tensor->ReallocBuffer();   // must do this after tensor's shape has changed
+    status = input_tensor->ReallocBuffer();   // must do this after tensor's shape has changed
     if (status != RC_SUCCESS) {
         fprintf(stderr, "ReallocBuffer for tensor [%s] failed: %s\n", input_tensor->GetName(), GetRetCodeStr(status));
         return -1;

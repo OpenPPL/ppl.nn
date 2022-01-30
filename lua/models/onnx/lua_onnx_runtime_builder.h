@@ -15,20 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_LUA_LUA_RUNTIME_BUILDER_H_
-#define _ST_HPC_PPL_NN_LUA_LUA_RUNTIME_BUILDER_H_
+#ifndef _ST_HPC_PPL_NN_LUA_LUA_ONNX_RUNTIME_BUILDER_H_
+#define _ST_HPC_PPL_NN_LUA_LUA_ONNX_RUNTIME_BUILDER_H_
 
-#include "ppl/nn/runtime/runtime_builder.h"
-#include "ppl/nn/engines/engine.h"
+#include "ppl/nn/models/onnx/onnx_runtime_builder.h"
 #include <memory>
 
 namespace ppl { namespace nn { namespace lua {
 
-struct LuaRuntimeBuilder final {
-    LuaRuntimeBuilder(const std::vector<std::shared_ptr<Engine>>& englist, RuntimeBuilder* b)
-        : engines(englist), ptr(b) {}
+struct LuaOnnxRuntimeBuilder final {
+    LuaOnnxRuntimeBuilder(OnnxRuntimeBuilder* b) : ptr(b) {}
+    std::unique_ptr<OnnxRuntimeBuilder> ptr;
     std::vector<std::shared_ptr<Engine>> engines; // retian engines
-    std::unique_ptr<RuntimeBuilder> ptr;
 };
 
 }}}
