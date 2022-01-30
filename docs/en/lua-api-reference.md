@@ -71,18 +71,30 @@ Returns engine's name.
 ### OnnxRuntimeBuilderFactory
 
 ```lua
-runtime_builder = OnnxRuntimeBuilderFactory:CreateFromFile(onnx_model_file, engines)
+runtime_builder = OnnxRuntimeBuilderFactory:Create()
 ```
 
-Creates an `RuntimeBuilder` instance from an ONNX model. `engines` is a list of `Engine` instances that may be used to evaluate the model.
+Creates an `OnnxRuntimeBuilder` instance.
 
-### RuntimeBuilder
+### OnnxRuntimeBuilder
+
+```lua
+status = runtime_builder:InitFromFile(onnx_model_file, engines)
+```
+
+initializes `runtime_builder` from an ONNX model. `engines` is a list of `Engine` instances that may be used to evaluate the model.
+
+```lua
+status = runtime_builder:Preprocess()
+```
+
+does some preparations before creating `Runtime` instances.
 
 ```lua
 runtime = RuntimeBuilder:CreateRuntime()
 ```
 
-Creates a `Runtime` instance for inferencing.
+creates a `Runtime` instance for inferencing.
 
 ### Runtime
 

@@ -23,17 +23,19 @@
 #include "ppl/nn/engines/engine_impl.h"
 #include "ppl/nn/utils/shared_resource.h"
 #include "ppl/nn/runtime/runtime.h"
-#include "ppl/nn/runtime/runtime_builder.h"
 #include "ppl/nn/runtime/runtime_graph_info.h"
 #include "ppl/nn/runtime/runtime_aux_info.h"
+#include "ppl/nn/models/onnx/onnx_runtime_builder.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
-class RuntimeBuilderImpl final : public RuntimeBuilder {
+class RuntimeBuilderImpl final : public OnnxRuntimeBuilder {
 public:
     RuntimeBuilderImpl();
     ~RuntimeBuilderImpl();
-    ppl::common::RetCode Init(const char* model_buf, size_t buf_len, std::vector<EngineImpl*>&&);
+    ppl::common::RetCode Init(const char* model_file, Engine** engines, uint32_t engine_num) override;
+    ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num) override;
+    ppl::common::RetCode Preprocess() override;
     Runtime* CreateRuntime() override;
 
 private:

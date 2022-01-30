@@ -30,27 +30,41 @@ to create an engine running on NVIDIA GPUs.
 Use
 
 ```lua
-onnx_model_file = "/path/to/onnx_model_file"
-engines = [x86_engine] # or engines = [cuda_engine]
-runtime_builder = pplnn.OnnxRuntimeBuilderFactory:CreateFromFile(onnx_model_file, engines)
+runtime_builder = pplnn.OnnxRuntimeBuilderFactory:Create()
 ```
 
-to create a `RuntimeBuilder`, which is used for creating `Runtime` instances.
+to create a `OnnxRuntimeBuilder`, which is used for creating `Runtime` instances.
+
+### Creating a Runtime Instance
+
+```lua
+onnx_model_file = "/path/to/onnx_model_file"
+engines = [x86_engine] # or engines = [cuda_engine]
+status = runtime_builder:InitFromFile(onnx_model_file, engines)
+```
+
+initializes the `OnnxRuntimeBuilder` instance.
 
 `PPLNN` also supports multiple engines running in the same model. For example:
 
 ```lua
 engines = [x86_engine, cuda_engine]
-runtime_builder = pplnn.OnnxRuntimeBuilderFactory:CreateFromFile(onnx_model_file, engines)
+status = runtime_builder:InitFromFile(onnx_model_file, engines)
 ```
 
 `PPLNN` will partition the model into several parts and assign different ops to these engines according to configurations.
 
-### Creating a Runtime Instance
+```lua
+runtime_builder:Preprocess()
+```
+
+does some preparations before creating `Runtime` instances.
 
 ```lua
 runtime = runtime_builder:CreateRuntime()
 ```
+
+creates a `Runtime` instance.
 
 ### Filling Inputs
 

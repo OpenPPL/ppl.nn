@@ -19,6 +19,7 @@
 #include "ppl/nn/engines/x86/engine_factory.h"
 #include <random>
 #include <iostream>
+#include <memory>
 using namespace std;
 using namespace ppl::nn;
 using namespace ppl::common;
@@ -29,13 +30,13 @@ static bool SetRandomInputs(Runtime* runtime) {
         auto& shape = *t->GetShape();
 
         auto nr_element = shape.GetBytesIncludingPadding() / sizeof(float);
-        unique_ptr<float[]> buffer(new float[nr_element]);
+        vector<float> buffer(nr_element);
 
         // fill random input data
         std::default_random_engine eng;
         std::uniform_real_distribution<float> dis(-1.0f, 1.0f);
         for (uint32_t i = 0; i < nr_element; ++i) {
-            buffer.get()[i] = dis(eng);
+            buffer[i] = dis(eng);
         }
 
         auto status = t->ReallocBuffer();
@@ -49,7 +50,7 @@ static bool SetRandomInputs(Runtime* runtime) {
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
 
         // input tensors may require different data format
-        status = t->ConvertFromHost(buffer.get(), src_desc);
+        status = t->ConvertFromHost(buffer.data(), src_desc);
         if (status != RC_SUCCESS) {
             cerr << "set tensor[" << t->GetName() << "] content failed: " << GetRetCodeStr(status) << endl;
             return false;
@@ -100,8 +101,13 @@ static void PrintInputOutputInfo(const Runtime* runtime) {
 int main(void) {
     const char* model_file = "tests/testdata/conv.onnx";
 
-    auto x86_engine = X86EngineFactory::Create(X86EngineOptions());
+    auto builder = unique_ptr<OnnxRuntimeBuilder>(OnnxRuntimeBuilderFactory::Create());
+    if (!builder) {
+        cerr << "create RuntimeBuilder failed." << endl;
+        return -1;
+    }
 
+    auto x86_engine = X86EngineFactory::Create(X86EngineOptions());
     vector<unique_ptr<Engine>> engines;
     engines.emplace_back(unique_ptr<Engine>(x86_engine));
 
@@ -109,11 +115,17 @@ int main(void) {
     for (uint32_t i = 0; i < engines.size(); ++i) {
         engine_ptrs[i] = engines[i].get();
     }
-    auto builder = unique_ptr<RuntimeBuilder>(
-        OnnxRuntimeBuilderFactory::Create(model_file, engine_ptrs.data(), engine_ptrs.size()));
-    if (!builder) {
-        cerr << "create RuntimeBuilder failed." << endl;
+
+    auto status = builder->Init(model_file, engine_ptrs.data(), engine_ptrs.size());
+    if (status != RC_SUCCESS) {
+        cerr << "init OnnxRuntimeBuilder failed: " << GetRetCodeStr(status) << endl;
         return -1;
+    }
+
+    status = builder->Preprocess();
+    if (status != RC_SUCCESS) {
+        cerr << "builder preprocess failed: " << GetRetCodeStr(status) << endl;
+        return status;
     }
 
     auto runtime = unique_ptr<Runtime>(builder->CreateRuntime());
@@ -127,7 +139,7 @@ int main(void) {
         return -1;
     }
 
-    auto status = runtime->Run();
+    status = runtime->Run();
     if (status != RC_SUCCESS) {
         cerr << "Run() failed: " << GetRetCodeStr(status) << endl;
         return -1;

@@ -56,7 +56,7 @@ void RegisterGetVersionString(const shared_ptr<LuaState>&, const shared_ptr<LuaT
 void RegisterTensorShape(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterTensor(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterRuntime(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
-void RegisterRuntimeBuilder(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
+void RegisterOnnxRuntimeBuilder(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterOnnxRuntimeBuilderFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 
 }}}
@@ -113,7 +113,7 @@ int PPLNN_PUBLIC luaopen_luappl_nn(lua_State* l) {
     RegisterTensorShape(lstate, lmodule);
     RegisterTensor(lstate, lmodule);
     RegisterRuntime(lstate, lmodule);
-    RegisterRuntimeBuilder(lstate, lmodule);
+    RegisterOnnxRuntimeBuilder(lstate, lmodule);
     RegisterOnnxRuntimeBuilderFactory(lstate, lmodule);
 
     lstate->Push(*lmodule);

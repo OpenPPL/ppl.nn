@@ -17,7 +17,7 @@
 
 #include "../../engines/lua_engine.h"
 #include "ppl/nn/models/onnx/onnx_runtime_builder_factory.h"
-#include "../../runtime/lua_runtime_builder.h"
+#include "lua_onnx_runtime_builder.h"
 #include "luacpp/luacpp.h"
 using namespace std;
 using namespace luacpp;
@@ -25,28 +25,17 @@ using namespace luacpp;
 namespace ppl { namespace nn { namespace lua {
 
 void RegisterOnnxRuntimeBuilderFactory(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
-    auto builder_class = LuaClass<LuaRuntimeBuilder>(lmodule->Get("RuntimeBuilder"));
+    auto builder_class = LuaClass<LuaOnnxRuntimeBuilder>(lmodule->Get("OnnxRuntimeBuilder"));
 
     auto lclass = lstate->CreateClass<OnnxRuntimeBuilderFactory>()
-        .DefStatic("CreateFromFile", [builder_class, lstate](const char* model_file, const LuaTable& engines) -> LuaObject {
-            vector<shared_ptr<Engine>> engine_list;
-            engines.ForEach([&engine_list](uint32_t, const LuaObject& value) -> bool {
-                engine_list.push_back(LuaUserData(value).Get<LuaEngine>()->ptr);
-                return true;
-            });
-
-            vector<Engine*> engine_ptrs(engine_list.size());
-            for (uint32_t i = 0; i < engine_list.size(); ++i) {
-                engine_ptrs[i] = engine_list[i].get();
-            }
-
-            auto builder = OnnxRuntimeBuilderFactory::Create(model_file, engine_ptrs.data(), engine_ptrs.size());
+        .DefStatic("Create", [builder_class, lstate]() -> LuaObject {
+            auto builder = OnnxRuntimeBuilderFactory::Create();
             if (!builder) {
                 return lstate->CreateNil();
             }
-
-            return builder_class.CreateUserData(engine_list, builder);
+            return builder_class.CreateUserData(builder);
         });
+
     lmodule->Set("OnnxRuntimeBuilderFactory", lclass);
 }
 
