@@ -69,6 +69,22 @@ inline T0 round_up(const T0 a, const T1 b)
     return (a + tb - static_cast<T0>(1)) / tb * tb;
 }
 
+template <typename DataType, typename IndexType>
+inline void argsort(const DataType *src, IndexType *indices, const int64_t length, const bool dec = true)
+{
+    for (int64_t i = 0; i < length; ++i)
+        indices[i] = static_cast<IndexType>(i);
+    if (dec) {
+        std::stable_sort(indices, indices + length, [&src](const IndexType &ind0, const IndexType &ind1) {
+            return src[ind0] > src[ind1];
+        });
+    } else {
+        std::stable_sort(indices, indices + length, [&src](const IndexType &ind0, const IndexType &ind1) {
+            return src[ind0] < src[ind1];
+        });
+    }
+}
+
 }}}; // namespace ppl::kernel::riscv
 
 #endif
