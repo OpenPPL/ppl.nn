@@ -60,8 +60,8 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
     float scale_h = (float)Y->GetShape()->GetDim(2) / X->GetShape()->GetDim(2);
     float scale_w = (float)Y->GetShape()->GetDim(3) / X->GetShape()->GetDim(3);
 
-    auto has_scales =
-        scales && scales->GetShape()->GetDimCount() == 1 && scales->GetShape()->GetDim(0) == X->GetShape()->GetDimCount();
+    auto has_scales = scales && scales->GetShape()->GetDimCount() == 1 &&
+        scales->GetShape()->GetDim(0) == X->GetShape()->GetDimCount();
 
     if (has_scales) {
         const float* scales_data = scales->GetBufferPtr<float>();
@@ -80,11 +80,11 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
         if (param_->coord_trans_mode == param_->RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL &&
             param_->mode == param_->RESIZE_MODE_CUBIC) {
             if (data_type == ppl::common::DATATYPE_FLOAT16) {
-                return kernel::riscv::reisze2d_ndarray_pytorch_cubic_floor_fp16(
+                return kernel::riscv::resize2d_ndarray_pytorch_cubic_floor_fp16(
                     X->GetShape(), Y->GetShape(), X->GetBufferPtr<__fp16>(), scale_h, scale_w, param_->cubic_coeff_a,
                     Y->GetBufferPtr<__fp16>());
             } else if (data_type == ppl::common::DATATYPE_FLOAT32) {
-                return kernel::riscv::reisze2d_ndarray_pytorch_cubic_floor_fp32(
+                return kernel::riscv::resize2d_ndarray_pytorch_cubic_floor_fp32(
                     X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w, param_->cubic_coeff_a,
                     Y->GetBufferPtr<float>());
             }
@@ -92,25 +92,23 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
         if (param_->coord_trans_mode == param_->RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL &&
             param_->mode == param_->RESIZE_MODE_LINEAR) {
             if (data_type == ppl::common::DATATYPE_FLOAT16) {
-                return kernel::riscv::reisze2d_ndarray_pytorch_linear_floor_fp16(X->GetShape(), Y->GetShape(),
+                return kernel::riscv::resize2d_ndarray_pytorch_linear_floor_fp16(X->GetShape(), Y->GetShape(),
                                                                                  X->GetBufferPtr<__fp16>(), scale_h,
                                                                                  scale_w, Y->GetBufferPtr<__fp16>());
             } else if (data_type == ppl::common::DATATYPE_FLOAT32) {
-                return kernel::riscv::reisze2d_ndarray_pytorch_linear_floor_fp32(X->GetShape(), Y->GetShape(),
-                                                                                 X->GetBufferPtr<float>(), scale_h,
-                                                                                 scale_w, Y->GetBufferPtr<float>());
+                return kernel::riscv::resize2d_ndarray_pytorch_linear_floor_fp32(
+                    X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w, Y->GetBufferPtr<float>());
             }
         }
         if (param_->coord_trans_mode == param_->RESIZE_COORD_TRANS_MODE_ASYMMETRIC &&
             param_->mode == param_->RESIZE_MODE_NEAREST) {
             if (data_type == ppl::common::DATATYPE_FLOAT16) {
-                return kernel::riscv::reisze2d_ndarray_asymmetric_nearest_floor_fp16(
+                return kernel::riscv::resize2d_ndarray_asymmetric_nearest_floor_fp16(
                     X->GetShape(), Y->GetShape(), X->GetBufferPtr<__fp16>(), scale_h, scale_w,
                     Y->GetBufferPtr<__fp16>());
             } else if (data_type == ppl::common::DATATYPE_FLOAT32) {
-                return kernel::riscv::reisze2d_ndarray_asymmetric_nearest_floor_fp32(X->GetShape(), Y->GetShape(),
-                                                                                     X->GetBufferPtr<float>(), scale_h,
-                                                                                     scale_w, Y->GetBufferPtr<float>());
+                return kernel::riscv::resize2d_ndarray_asymmetric_nearest_floor_fp32(
+                    X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), scale_h, scale_w, Y->GetBufferPtr<float>());
             }
         }
     } else if (data_format == ppl::common::DATAFORMAT_N4CX && data_type == ppl::common::DATATYPE_FLOAT32) {
