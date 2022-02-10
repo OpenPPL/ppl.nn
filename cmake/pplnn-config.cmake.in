@@ -16,6 +16,7 @@ set(__PPLNN_LINK_LIBRARIES__)
 # exported definitions
 
 set(PPLNN_USE_X86 @PPLNN_USE_X86@)
+set(PPLNN_USE_ARM @PPLNN_USE_ARM@)
 set(PPLNN_USE_RISCV @PPLNN_USE_RISCV@)
 set(PPLNN_USE_CUDA @PPLNN_USE_CUDA@)
 
@@ -34,6 +35,13 @@ if(PPLNN_USE_X86)
         include(${CMAKE_CURRENT_LIST_DIR}/pplkernelx86-config.cmake)
     endif()
     list(APPEND __PPLNN_LINK_LIBRARIES__ "pplkernelx86_static")
+endif()
+
+if(PPLNN_USE_ARM)
+    if(NOT TARGET "pplkernelarmserver_static")
+        include(${CMAKE_CURRENT_LIST_DIR}/pplkernelarmserver-config.cmake)
+    endif()
+    list(APPEND __PPLNN_LINK_LIBRARIES__ "pplkernelarmserver_static")
 endif()
 
 if(PPLNN_USE_CUDA)

@@ -54,22 +54,23 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang
     list(APPEND PPL_KERNEL_ARM_SERVER_COMPILE_OPTIONS "-fno-rtti;-fno-exceptions;-fno-builtin;-Wall;-Wextra;-Wno-unused-parameter;-Wno-unknown-pragmas")
 endif()
 
-if(PPLNN_USE_ARMV8_2_FP16) 
+if(PPLNN_USE_ARMV8_2_FP16)
     list(APPEND PPL_KERNEL_ARM_SERVER_COMPILE_OPTIONS "-march=armv8.2-a+fp16")
 endif()
 
 #### #### #### #### ####
 ### targets ############
 #### #### #### #### ####
-add_library(PPLKernelArmServer ${PPL_KERNEL_ARM_SERVER_SRC})
-target_link_libraries(PPLKernelArmServer PRIVATE ${PPL_KERNEL_ARM_SERVER_LINK_LIBRARIES})
-target_include_directories(PPLKernelArmServer 
+add_library(pplkernelarmserver_static STATIC ${PPL_KERNEL_ARM_SERVER_SRC})
+target_link_libraries(pplkernelarmserver_static PRIVATE ${PPL_KERNEL_ARM_SERVER_LINK_LIBRARIES})
+target_include_directories(pplkernelarmserver_static
     PUBLIC ${PPL_KERNEL_ARM_SERVER_INCLUDE_DIRECTORIES}
     PRIVATE ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES}
     PRIVATE ${PPLNN_ARM_ENGINE_INCLUDE_DIRECTORIES})
-target_compile_options(PPLKernelArmServer PRIVATE ${PPL_KERNEL_ARM_SERVER_COMPILE_OPTIONS})
-target_compile_definitions(PPLKernelArmServer PRIVATE ${PPL_KERNEL_ARM_SERVER_COMPILE_DEFINITIONS})
+target_compile_options(pplkernelarmserver_static PRIVATE ${PPL_KERNEL_ARM_SERVER_COMPILE_OPTIONS})
+target_compile_definitions(pplkernelarmserver_static PRIVATE ${PPL_KERNEL_ARM_SERVER_COMPILE_DEFINITIONS})
 
 if(PPLNN_INSTALL)
-    install(TARGETS PPLKernelArmServer ARCHIVE DESTINATION lib)
+    install(TARGETS pplkernelarmserver_static DESTINATION lib)
+    install(FILES ${CMAKE_CURRENT_LIST_DIR}/pplkernelarmserver-config.cmake DESTINATION lib/cmake/ppl)
 endif()
