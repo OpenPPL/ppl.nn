@@ -17,9 +17,9 @@ set_target_properties(pplkernelcuda_static PROPERTIES
 
 if(MSVC)
     set_target_properties(pplkernelcuda_static PROPERTIES
-        IMPORTED_LOCATION "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/libpplkernelcuda_static.lib"
-        IMPORTED_LOCATION_DEBUG "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/libpplkernelcuda_static.lib"
-        IMPORTED_LOCATION_RELEASE "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/libpplkernelcuda_static.lib")
+        IMPORTED_LOCATION "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/pplkernelcuda_static.lib"
+        IMPORTED_LOCATION_DEBUG "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/pplkernelcuda_static.lib"
+        IMPORTED_LOCATION_RELEASE "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/pplkernelcuda_static.lib")
 else()
     set_target_properties(pplkernelcuda_static PROPERTIES
         IMPORTED_LOCATION "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/libpplkernelcuda_static.a"

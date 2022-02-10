@@ -63,9 +63,9 @@ set_target_properties(pplnn_static PROPERTIES
 
 if(MSVC)
     set_target_properties(pplnn_static PROPERTIES
-        IMPORTED_LOCATION "${__PPLNN_PACKAGE_ROOTDIR__}/lib/libpplnn_static.lib"
-        IMPORTED_LOCATION_DEBUG "${__PPLNN_PACKAGE_ROOTDIR__}/lib/libpplnn_static.lib"
-        IMPORTED_LOCATION_RELEASE "${__PPLNN_PACKAGE_ROOTDIR__}/lib/libpplnn_static.lib")
+        IMPORTED_LOCATION "${__PPLNN_PACKAGE_ROOTDIR__}/lib/pplnn_static.lib"
+        IMPORTED_LOCATION_DEBUG "${__PPLNN_PACKAGE_ROOTDIR__}/lib/pplnn_static.lib"
+        IMPORTED_LOCATION_RELEASE "${__PPLNN_PACKAGE_ROOTDIR__}/lib/pplnn_static.lib")
 else()
     set_target_properties(pplnn_static PROPERTIES
         IMPORTED_LOCATION "${__PPLNN_PACKAGE_ROOTDIR__}/lib/libpplnn_static.a"
