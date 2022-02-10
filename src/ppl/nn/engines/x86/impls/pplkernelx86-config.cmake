@@ -17,9 +17,9 @@ set_target_properties(pplkernelx86_static PROPERTIES
 
 if(MSVC)
     set_target_properties(pplkernelx86_static PROPERTIES
-        IMPORTED_LOCATION "${__PPLKERNELX86_PACKAGE_DIR__}/lib/libpplkernelx86_static.lib"
-        IMPORTED_LOCATION_DEBUG "${__PPLKERNELX86_PACKAGE_DIR__}/lib/libpplkernelx86_static.lib"
-        IMPORTED_LOCATION_RELEASE "${__PPLKERNELX86_PACKAGE_DIR__}/lib/libpplkernelx86_static.lib")
+        IMPORTED_LOCATION "${__PPLKERNELX86_PACKAGE_DIR__}/lib/pplkernelx86_static.lib"
+        IMPORTED_LOCATION_DEBUG "${__PPLKERNELX86_PACKAGE_DIR__}/lib/pplkernelx86_static.lib"
+        IMPORTED_LOCATION_RELEASE "${__PPLKERNELX86_PACKAGE_DIR__}/lib/pplkernelx86_static.lib")
 else()
     set_target_properties(pplkernelx86_static PROPERTIES
         IMPORTED_LOCATION "${__PPLKERNELX86_PACKAGE_DIR__}/lib/libpplkernelx86_static.a"
