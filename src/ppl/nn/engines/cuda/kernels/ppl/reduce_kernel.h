@@ -15,33 +15,30 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_REDUCE_PARAM_H_
-#define _ST_HPC_PPL_NN_PARAMS_ONNX_REDUCE_PARAM_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_ONNX_REDUCE_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_ONNX_REDUCE_KERNEL_H_
 
-#include <stdint.h>
-#include <vector>
+#include "ppl/nn/engines/cuda/kernel.h"
 
-namespace ppl { namespace nn { namespace common {
+#include "ppl/nn/params/onnx/reduce_param.h"
 
-struct ReduceParam {
-    typedef enum { 
-        ReduceSum     = 0,
-        ReduceMax     = 1,
-        ReduceMin     = 2,
-        ReduceProd    = 3,
-        ReduceMean    = 4,
-        ReduceUnknown = 5,
-    } reduce_type_t;
+namespace ppl { namespace nn { namespace cuda {
 
-    reduce_type_t reduce_type;
-    std::vector<int32_t> axes;
-    bool keep_dims;
+class ReduceKernel : public CudaKernel {
+public:
+    ReduceKernel(const ir::Node* node) : CudaKernel(node) {}
 
-    bool operator==(const ReduceParam& p) const {
-        return this->axes == p.axes && this->keep_dims == p.keep_dims;
+    void SetParam(const ppl::nn::common::ReduceParam* p) {
+        param_ = p;
     }
+
+private:
+    ppl::common::RetCode DoExecute(KernelExecContext*) override;
+
+private:
+    const ppl::nn::common::ReduceParam* param_ = nullptr;
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::cuda
 
 #endif
