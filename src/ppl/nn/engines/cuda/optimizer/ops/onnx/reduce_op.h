@@ -15,33 +15,26 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_REDUCE_PARAM_H_
-#define _ST_HPC_PPL_NN_PARAMS_ONNX_REDUCE_PARAM_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_REDUCE_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_REDUCE_OP_H_
 
-#include <stdint.h>
-#include <vector>
+#include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 
-namespace ppl { namespace nn { namespace common {
+#include "ppl/nn/params/onnx/reduce_param.h"
 
-struct ReduceParam {
-    typedef enum { 
-        ReduceSum     = 0,
-        ReduceMax     = 1,
-        ReduceMin     = 2,
-        ReduceProd    = 3,
-        ReduceMean    = 4,
-        ReduceUnknown = 5,
-    } reduce_type_t;
+namespace ppl { namespace nn { namespace cuda {
 
-    reduce_type_t reduce_type;
-    std::vector<int32_t> axes;
-    bool keep_dims;
+class ReduceOp final : public CudaOptKernel {
+public:
+    ReduceOp(const ir::Node* node) : CudaOptKernel(node) {}
+    KernelImpl* CreateKernelImpl() const override;
+    ppl::common::RetCode Init(const OptKernelOptions&) override;
+    ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
-    bool operator==(const ReduceParam& p) const {
-        return this->axes == p.axes && this->keep_dims == p.keep_dims;
-    }
+private:
+    ppl::nn::common::ReduceParam param_;
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::cuda
 
 #endif
