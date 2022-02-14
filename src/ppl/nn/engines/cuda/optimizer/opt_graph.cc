@@ -223,6 +223,7 @@ RetCode OptGraph::FuseOperator() {
 
 RetCode OptGraph::AddBridgeKernels() {
     auto topo = graph_->topo.get();
+    auto& tensor_params = args_->quant_info.tensor_params;
     uint32_t count = 0;
     OptKernelOptions options(graph_, resource_);
 
@@ -265,6 +266,9 @@ RetCode OptGraph::AddBridgeKernels() {
 
             bridge_kernel.get()->Init(options);
             info_->kernels.emplace(new_node->GetId(), std::move(bridge_kernel));
+            auto tensor_pair = tensor_params.find(edge->GetName());
+            if (tensor_pair != tensor_params.end())
+                tensor_params.emplace(new_edge->GetName(), tensor_pair->second);
             count++;
         }
 
@@ -303,6 +307,9 @@ RetCode OptGraph::AddBridgeKernels() {
 
                 bridge_kernel.get()->Init(options);
                 info_->kernels.emplace(new_node->GetId(), std::move(bridge_kernel));
+                auto tensor_pair = tensor_params.find(edge->GetName());
+                if (tensor_pair != tensor_params.end())
+                    tensor_params.emplace(new_edge->GetName(), tensor_pair->second);
                 count++;
             }
         }
@@ -337,24 +344,7 @@ RetCode OptGraph::InitQuantization() {
     for (auto iter = topo->CreateEdgeIter(); iter->IsValid(); iter->Forward()) {
         auto edge = iter->Get();
         auto pair = tensor_params.find(edge->GetName());
-        // Try to copy quant info from otherside of bridge node
-        if (pair == tensor_params.end()) {
-            if (edge->GetProducer() != INVALID_NODEID) {
-                auto pre_node = topo->GetNodeById(edge->GetProducer());
-                if (pre_node->GetType().name == "Bridge") {
-                    auto new_edge = topo->GetEdgeById(pre_node->GetInput(0));
-                    pair = tensor_params.find(new_edge->GetName());
-                }
-            }
-            if (edge->CalcConsumerCount() == 1) {
-                auto post_node = topo->GetNodeById(edge->CreateConsumerIter().Get());
-                if (post_node->GetType().name == "Bridge") {
-                    auto new_edge = topo->GetEdgeById(post_node->GetOutput(0));
-                    pair = tensor_params.find(new_edge->GetName());
-                }
-            }
-        }
-        // Still can not find quant info. It means quant info is not exist.
+        // Can not find quant info. It means quant info is not exist.
         if (pair == tensor_params.end()) {
             continue;
         }
