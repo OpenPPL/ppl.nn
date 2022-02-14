@@ -15,22 +15,22 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/riscv/optimizer/ops/onnx/not_op.h"
-#include "ppl/nn/engines/riscv/kernels/onnx/not_kernel.h"
+#ifndef __ST_PPL_KERNEL_RISCV_FP32_MMCV_GRIDSAMPLE_H_
+#define __ST_PPL_KERNEL_RISCV_FP32_MMCV_GRIDSAMPLE_H_
 
-using namespace std;
-using namespace ppl::common;
+#include "ppl/kernel/riscv/common/general_include.h"
 
-namespace ppl { namespace nn { namespace riscv {
+namespace ppl { namespace kernel { namespace riscv {
 
-RetCode NotOp::Init(const OptKernelOptions& options) {
-    infer_dims_func_ = GenericInferDims;
-    infer_type_func_ = GenericInferType;
-    return RC_SUCCESS;
-}
+ppl::common::RetCode mmcv_gridsample_bilinear_n4cx_fp32(
+    const ppl::nn::TensorShape* src_shape,
+    const ppl::nn::TensorShape* grid_shape,
+    const float* src,
+    const float* grid,
+    const bool align_corners,
+    const int64_t padding_mode,
+    float* dst);
 
-KernelImpl* NotOp::CreateKernelImpl() const {
-    return CreateKernelImplWithoutParam<NotKernel>();
-}
+}}}; // namespace ppl::kernel::riscv
 
-}}}; // namespace ppl::nn::riscv
+#endif

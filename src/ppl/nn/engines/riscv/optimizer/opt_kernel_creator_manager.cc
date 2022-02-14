@@ -53,6 +53,14 @@
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/squeeze_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/range_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/expand_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/not_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/sqrt_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/log_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/floor_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/exp_op.h"
+
+#include "ppl/nn/engines/riscv/optimizer/ops/mmcv/mmcv_gridsample_op.h"
+
 #include "ppl/nn/engines/riscv/optimizer/ops/ppl/shape_operation_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/ppl/reorder_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/ppl/channel_shuffle_op.h"
@@ -116,8 +124,10 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
 
     REGISTER_OPT_KERNEL_CREATOR("", "Equal", 11, 12, EqualOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Expand", 8, 12, ExpandOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "Exp", 6, 16, ExpOp);
 
     REGISTER_OPT_KERNEL_CREATOR("", "Flatten", 11, 12, FlattenOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "Floor", 6, 12, FloorOp);
 
     REGISTER_OPT_KERNEL_CREATOR("", "Gather", 11, 12, GatherOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Gemm", 11, 12, GemmOp);
@@ -125,9 +135,12 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
 
     REGISTER_OPT_KERNEL_CREATOR("", "LeakyRelu", 6, 16, LeakyReLUOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Less", 9, 12, LessOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "Log", 6, 16, LogOp);
 
     REGISTER_OPT_KERNEL_CREATOR("", "MaxPool", 11, 11, MaxPoolOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Mul", 7, 12, MulOp);
+
+    REGISTER_OPT_KERNEL_CREATOR("", "Not", 1, 16, NotOp);
 
     REGISTER_OPT_KERNEL_CREATOR("", "Range", 11, 16, RangeOp);
     REGISTER_OPT_KERNEL_CREATOR("", "ReduceMean", 11, 12, ReduceMeanOp);
@@ -145,6 +158,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("", "Squeeze", 11, 12, SqueezeOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Slice", 11, 12, SliceOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Sub", 7, 12, SubOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "Sqrt", 6, 16, SqrtOp);
 
     REGISTER_OPT_KERNEL_CREATOR("", "Tile", 6, 12, TileOp);
     REGISTER_OPT_KERNEL_CREATOR("", "TopK", 11, 16, TopKOp);
@@ -154,6 +168,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
 
     REGISTER_OPT_KERNEL_CREATOR("", "Where", 9, 15, WhereOp);
     // mmcv custom op
+    REGISTER_OPT_KERNEL_CREATOR("mmcv", "grid_sampler", 1, 1, MMCVGridSampleOp);
 
     // ppl
     REGISTER_OPT_KERNEL_CREATOR("ppl", "Shape", 1, 1, PPLShapeOperationOp);

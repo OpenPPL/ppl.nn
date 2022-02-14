@@ -25,6 +25,8 @@ file(GLOB_RECURSE PPLKERNELRISCV_FP16_VEC128_SRC src/ppl/kernel/riscv/fp16/*_fp1
 file(GLOB_RECURSE PPLKERNELRISCV_INT64_COMMON_SRC src/ppl/kernel/riscv/int64/*_int64.cpp src/ppl/kernel/riscv/int64/*_int64_common.cpp)
 file(GLOB_RECURSE PPLKERNELRISCV_INT64_VEC128_SRC src/ppl/kernel/riscv/int64/*_int64_vec128.cpp)
 file(GLOB_RECURSE PPLKERNELRISCV_FP16_ASM_SRC src/ppl/kernel/riscv/fp16/*.S)
+file(GLOB_RECURSE PPLKERNELRISCV_BOOL_COMMON_SRC src/ppl/kernel/riscv/bool/*_bool.cpp src/ppl/kernel/riscv/bool/*_bool_common.cpp)
+file(GLOB_RECURSE PPLKERNELRISCV_BOOL_VEC128_SRC src/ppl/kernel/riscv/bool/*_bool_vec128.cpp)
 
 set(PPLKERNELRISCV_VEC128_FLAGS )
 
@@ -38,6 +40,8 @@ set(PPLKERNELRISCV_SRC
     ${PPLKERNELRISCV_FP16_VEC128_SRC}
     ${PPLKERNELRISCV_INT64_COMMON_SRC}
     ${PPLKERNELRISCV_INT64_VEC128_SRC}
+    ${PPLKERNELRISCV_BOOL_COMMON_SRC}
+    ${PPLKERNELRISCV_BOOL_VEC128_SRC}
     ${PPLKERNELRISCV_FP16_ASM_SRC}
 )
 

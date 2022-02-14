@@ -20,7 +20,7 @@
 
 #include "ppl/nn/engines/riscv/kernel.h"
 
-namespace ppl { namespace kernel { namespace riscv {
+namespace ppl { namespace nn { namespace riscv {
 
 class NotKernel : public RiscvKernel {
 public:
@@ -30,6 +30,6 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 };
 
-}}};
+}}}; // namespace ppl::nn::riscv
 
 #endif

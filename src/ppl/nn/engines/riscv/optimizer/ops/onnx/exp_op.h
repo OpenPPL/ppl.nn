@@ -15,26 +15,26 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIMIZER_OPS_ONNX_NOT_OP_H_
-#define _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIMIZER_OPS_ONNX_NOT_OP_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIMIZER_OPS_ONNX_EXP_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIMIZER_OPS_ONNX_EXP_OP_H_
 
 #include "ppl/nn/engines/riscv/optimizer/opt_kernel.h"
 
 namespace ppl { namespace nn { namespace riscv {
 
-class NotOp final : public RiscvOptKernel {
+class ExpOp final : public RiscvOptKernel {
 public:
-    NotOp(const ir::Node* node) : RiscvOptKernel(node) {}
+    ExpOp(const ir::Node* node) : RiscvOptKernel(node) {}
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
-    // ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
-    //                                   std::vector<ppl::common::dataformat_t>* selected_input_formats,
-    //                                   std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
-    // ppl::common::RetCode SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
-    //                                     std::vector<ppl::common::datatype_t>* selected_input_data_types,
-    //                                     std::vector<ppl::common::datatype_t>* selected_output_data_types) override;
+    ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
+                                      std::vector<ppl::common::dataformat_t>* selected_input_formats,
+                                      std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
+    ppl::common::RetCode SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
+                                        std::vector<ppl::common::datatype_t>* selected_input_data_types,
+                                        std::vector<ppl::common::datatype_t>* selected_output_data_types) override;
 };
 
-}}} // namespace ppl::nn::riscv
+}}}; // namespace ppl::nn::riscv
 
 #endif

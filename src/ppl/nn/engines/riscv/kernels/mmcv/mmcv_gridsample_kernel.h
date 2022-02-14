@@ -15,22 +15,29 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/riscv/optimizer/ops/onnx/not_op.h"
-#include "ppl/nn/engines/riscv/kernels/onnx/not_kernel.h"
+#ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_KERNELS_MMCV_MMCV_GRIDSAMPLE_H_
+#define _ST_HPC_PPL_NN_ENGINES_RISCV_KERNELS_MMCV_MMCV_GRIDSAMPLE_H_
 
-using namespace std;
-using namespace ppl::common;
+#include "ppl/nn/engines/riscv/kernel.h"
+#include "ppl/nn/params/mmcv/mmcv_gridsample_param.h"
 
 namespace ppl { namespace nn { namespace riscv {
 
-RetCode NotOp::Init(const OptKernelOptions& options) {
-    infer_dims_func_ = GenericInferDims;
-    infer_type_func_ = GenericInferType;
-    return RC_SUCCESS;
-}
+class MMCVGridSampleKernel : public RiscvKernel {
+public:
+    MMCVGridSampleKernel(const ir::Node* node) : RiscvKernel(node) {}
 
-KernelImpl* NotOp::CreateKernelImpl() const {
-    return CreateKernelImplWithoutParam<NotKernel>();
-}
+    void SetParam(const ppl::nn::common::MMCVGridSampleParam* p) {
+        param_ = p;
+    }
+
+private:
+    ppl::common::RetCode DoExecute(KernelExecContext*) override;
+
+private:
+    const ppl::nn::common::MMCVGridSampleParam* param_ = nullptr;
+};
 
 }}}; // namespace ppl::nn::riscv
+
+#endif
