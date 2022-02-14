@@ -15,22 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/riscv/optimizer/ops/onnx/not_op.h"
-#include "ppl/nn/engines/riscv/kernels/onnx/not_kernel.h"
+#ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_KERNELS_ONNX_LOG_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_RISCV_KERNELS_ONNX_LOG_KERNEL_H_
 
-using namespace std;
-using namespace ppl::common;
+#include "ppl/nn/engines/riscv/kernel.h"
 
 namespace ppl { namespace nn { namespace riscv {
 
-RetCode NotOp::Init(const OptKernelOptions& options) {
-    infer_dims_func_ = GenericInferDims;
-    infer_type_func_ = GenericInferType;
-    return RC_SUCCESS;
-}
+class LogKernel : public RiscvKernel {
+public:
+    LogKernel(const ir::Node* node) : RiscvKernel(node) {}
 
-KernelImpl* NotOp::CreateKernelImpl() const {
-    return CreateKernelImplWithoutParam<NotKernel>();
-}
+private:
+    ppl::common::RetCode DoExecute(KernelExecContext*) override;
+};
 
 }}}; // namespace ppl::nn::riscv
+
+#endif

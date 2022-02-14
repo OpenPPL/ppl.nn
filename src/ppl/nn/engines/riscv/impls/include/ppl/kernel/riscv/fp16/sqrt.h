@@ -15,22 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/riscv/optimizer/ops/onnx/not_op.h"
-#include "ppl/nn/engines/riscv/kernels/onnx/not_kernel.h"
+#ifndef __ST_PPL_KERNEL_RISCV_FP16_SQRT_H_
+#define __ST_PPL_KERNEL_RISCV_FP16_SQRT_H_
 
-using namespace std;
-using namespace ppl::common;
+#include "ppl/kernel/riscv/common/general_include.h"
 
-namespace ppl { namespace nn { namespace riscv {
+namespace ppl { namespace kernel { namespace riscv {
 
-RetCode NotOp::Init(const OptKernelOptions& options) {
-    infer_dims_func_ = GenericInferDims;
-    infer_type_func_ = GenericInferType;
-    return RC_SUCCESS;
-}
+ppl::common::RetCode sqrt_fp16(
+    const ppl::nn::TensorShape* shape,
+    const __fp16* src,
+    __fp16* dst);
 
-KernelImpl* NotOp::CreateKernelImpl() const {
-    return CreateKernelImplWithoutParam<NotKernel>();
-}
+}}}; // namespace ppl::kernel::riscv
 
-}}}; // namespace ppl::nn::riscv
+#endif //  __ST_PPL_KERNEL_RISCV_FP16_SQRT_H_
