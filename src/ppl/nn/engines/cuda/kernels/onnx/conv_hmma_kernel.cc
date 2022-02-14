@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/cuda/kernels/onnx/conv_hmma_kernel.h"
+#include "ppl/common/cuda/cuda_types.h"
 
 #include <cuda_fp16.h>
 
@@ -37,7 +38,10 @@ ppl::common::RetCode ConvHmmaKernel::BeforeExecute(KernelExecContext* ctx) {
             if (ptr == edge2buffer->end()) {
                 BufferDesc buffer;
                 auto concat_shape = *tensor->GetShape();
-                concat_shape.SetDim(1, param_->extra_param.fuse_info.channel_size);
+                auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(concat_shape.GetDataFormat());
+                auto channel_size = param_->extra_param.fuse_info.channel_size;
+                auto channel_size_pad = (channel_size + align_size - 1) / align_size * align_size;
+                concat_shape.SetDim(1, channel_size_pad);
                 status = device->Realloc(concat_shape, &buffer);
                 if (status != RC_SUCCESS) {
                     LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
