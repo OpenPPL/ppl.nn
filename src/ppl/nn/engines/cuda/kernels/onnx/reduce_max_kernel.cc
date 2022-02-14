@@ -34,15 +34,20 @@ ppl::common::RetCode ReduceMaxKernel::DoExecute(KernelExecContext* ctx) {
     if (param_->axes.empty()) { // empty axes means reduce all dims
         n_reduce =
             accumulate(input_shape.GetDims(), input_shape.GetDims() + dim_count, n_reduce, std::multiplies<uint32_t>());
-    } else if (param_->axes.size() == 1) {
-        uint32_t real_axis = (param_->axes[0] + dim_count) % dim_count;
-        n_reduce = input_shape.GetDim(real_axis);
-        n_outer =
-            accumulate(input_shape.GetDims(), input_shape.GetDims() + real_axis, n_outer, std::multiplies<uint32_t>());
-        n_inner = accumulate(input_shape.GetDims() + real_axis + 1, input_shape.GetDims() + dim_count, n_inner,
-                             std::multiplies<uint32_t>());
     } else {
-        return ppl::common::RC_UNSUPPORTED;
+        std::vector<uint32_t> real_axis(param_->axes.size());
+
+        for (uint32_t i = 0; i < param_->axes.size(); ++i) {
+            real_axis[i] = (param_->axes[i] + dim_count) % dim_count;
+            if (i > 0 && real_axis[i] != real_axis[i - 1] + 1) {
+                return ppl::common::RC_UNSUPPORTED;
+            }
+            n_reduce *= input_shape.GetDim(real_axis[i]);
+        }
+        n_outer = accumulate(input_shape.GetDims(), input_shape.GetDims() + real_axis[0], n_outer,
+                             std::multiplies<uint32_t>());
+        n_inner = accumulate(input_shape.GetDims() + real_axis[param_->axes.size() - 1] + 1,
+                             input_shape.GetDims() + dim_count, n_inner, std::multiplies<uint32_t>());
     }
 
     PPLReduceDimDes des(n_inner, n_reduce, n_outer);
