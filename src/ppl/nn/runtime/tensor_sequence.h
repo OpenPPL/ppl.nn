@@ -18,16 +18,38 @@
 #ifndef _ST_HPC_PPL_NN_RUNTIME_TENSOR_SEQUENCE_H_
 #define _ST_HPC_PPL_NN_RUNTIME_TENSOR_SEQUENCE_H_
 
-#include "ppl/nn/runtime/sequence.h"
+#include "ppl/nn/runtime/edge_object.h"
 #include "ppl/nn/common/tensor_buffer_info.h"
+#include <vector>
 
 namespace ppl { namespace nn {
 
-typedef Sequence<TensorBufferInfo> TensorSequence;
+class TensorSequence;
 
 template <>
 struct EdgeObjectType<TensorSequence> final {
     static const uint32_t value = EdgeObject::T_TENSOR_SEQUENCE;
+};
+
+class TensorSequence final : public EdgeObject {
+public:
+    TensorSequence(const ir::Edge* edge) : EdgeObject(edge, EdgeObjectType<TensorSequence>::value) {}
+
+    uint32_t GetElementCount() const {
+        return elements_.size();
+    }
+    TensorBufferInfo* GetElement(uint32_t idx) {
+        return &elements_[idx];
+    }
+    const TensorBufferInfo* GetElement(uint32_t idx) const {
+        return &elements_[idx];
+    }
+    void EmplaceBack(TensorBufferInfo&& value) {
+        elements_.emplace_back(std::move(value));
+    }
+
+private:
+    std::vector<TensorBufferInfo> elements_;
 };
 
 }} // namespace ppl::nn

@@ -27,7 +27,6 @@ class EdgeObject {
 public:
     /** EdgeObject types */
     enum {
-        T_UNKNOWN,
         T_EDGE_OBJECT,
         T_TENSOR,
         T_TENSOR_SEQUENCE,
@@ -62,9 +61,7 @@ private:
 };
 
 template <typename T>
-struct EdgeObjectType final {
-    static const uint32_t value = EdgeObject::T_UNKNOWN;
-};
+struct EdgeObjectType final {};
 
 template <>
 struct EdgeObjectType<EdgeObject> final {
