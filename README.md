@@ -51,8 +51,6 @@ Refer to [Documents](#documents) for more details.
 ### Documents
 
 * Ops and Models
-  - [Supported Precison](docs/en/supported-ops-and-platforms.md)
-  - [Supported Ops and Platforms](docs/en/supported-ops-and-platforms.md)
   - [Converting ONNX Opset](docs/en/onnx-model-opset-convert-guide.md)
   - [Generating ONNX models from OpenMMLab](docs/en/model-convert-guide.md)
 * [Building from Source](docs/en/building-from-source.md)
@@ -69,12 +67,15 @@ Refer to [Documents](#documents) for more details.
 * Develop Guide
   - [Adding New Engines and Ops](docs/en/add-new-engines-and-ops.md)
   - X86
+    - [Supported Ops and Platforms](docs/en/x86-doc/supported-ops-and-platforms.md)
     - [Adding Ops](docs/en/x86-doc/add_op.md)（[中文版](docs/cn/x86-doc/add_op.md)）
     - [Benchmark](docs/en/x86-doc/benchmark_tool.md)（[中文版](docs/cn/x86-doc/benchmark_tool.md)）
   - CUDA
+    - [Supported Ops and Platforms](docs/en/cuda-doc/supported-ops-and-platforms.md)
     - [Adding Ops](docs/en/cuda-doc/add_op.md)（[中文版](docs/cn/cuda-doc/add_op.md)）
     - [Benchmark](docs/en/cuda-doc/benchmark_tool.md)（[中文版](docs/cn/cuda-doc/benchmark_tool.md)）
   - RISCV
+    - [Supported Ops and Platforms](docs/en/riscv-doc/supported-ops-and-platforms.md)
     - [Adding Ops](docs/en/riscv-doc/add_op.md)（[中文版](docs/cn/riscv-doc/add_op.md)）
     - [Benchmark](docs/en/riscv-doc/benchmark_tool.md)（[中文版](docs/cn/riscv-doc/benchmark_tool.md)）
   - ARM
