@@ -119,6 +119,31 @@ RetCode ArmEngine::ProcessGraph(utils::SharedResource* resource, ir::Graph* grap
     return RC_SUCCESS;
 }
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+RetCode ArmEngine::LoadConstant(edgeid_t eid, const void* data, uint64_t size, const TensorShape& shape,
+                                RuntimeConstantInfo* info) {
+    return utils::GenericLoadConstant(eid, data, size, shape, &device_, info, (size == 0));
+}
+
+OptKernel* ArmEngine::CreateOptKernel(const ir::Node* node) const {
+    auto& type = node->GetType();
+    auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
+    if (!creator) {
+        LOG(ERROR) << "cannot find creator for node[" << node->GetName() << "] of type[" << type.domain << ":"
+                   << type.name << ":" << type.version << "]";
+        return nullptr;
+    }
+
+    auto opt_kernel = creator(node);
+    if (!opt_kernel) {
+        LOG(ERROR) << "create kernel[" << node->GetName() << "] failed: oom.";
+        return nullptr;
+    }
+
+    return opt_kernel;
+}
+#endif
+
 ArmEngine::ConfHandlerFunc ArmEngine::conf_handlers_[] = {};
 
 RetCode ArmEngine::Configure(uint32_t option, ...) {

@@ -42,6 +42,15 @@ public:
     KernelImpl* CreateKernelImpl() const override {
         return new TmpKernelOne(GetNode());
     }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode SerializeData(utils::DataStream*) const override {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+    ppl::common::RetCode DeserializeData(const void*, uint64_t) override {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+#endif
 };
 
 class TmpOptKernelTwo : public OptKernel {
@@ -50,6 +59,15 @@ public:
     KernelImpl* CreateKernelImpl() const override {
         return new TmpKernelTwo(GetNode());
     }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode SerializeData(utils::DataStream*) const override {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+    ppl::common::RetCode DeserializeData(const void*, uint64_t) override {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+#endif
 };
 
 }}} // namespace ppl::nn::test

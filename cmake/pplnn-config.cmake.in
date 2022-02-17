@@ -20,6 +20,9 @@ set(PPLNN_USE_ARM @PPLNN_USE_ARM@)
 set(PPLNN_USE_RISCV @PPLNN_USE_RISCV@)
 set(PPLNN_USE_CUDA @PPLNN_USE_CUDA@)
 
+set(PPLNN_ENABLE_ONNX_MODEL @PPLNN_ENABLE_ONNX_MODEL@)
+set(PPLNN_ENABLE_PMX_MODEL @PPLNN_ENABLE_PMX_MODEL@)
+
 set(PPLNN_INCLUDE_DIRS "${__PPLNN_PACKAGE_ROOTDIR__}/include")
 set(PPLNN_LIBRARIES "pplnn_static")
 
@@ -58,11 +61,12 @@ if(PPLNN_USE_RISCV)
     list(APPEND __PPLNN_LINK_LIBRARIES__ "pplkernelcuda_static")
 endif()
 
-# TODO do not export protobuf
-if(NOT TARGET "protobuf::libprotobuf-lite")
-    include(${__PPLNN_PACKAGE_ROOTDIR__}/lib/cmake/protobuf/protobuf-config.cmake)
+if(PPLNN_ENABLE_ONNX_MODEL)
+    if(NOT TARGET "protobuf::libprotobuf-lite")
+        include(${__PPLNN_PACKAGE_ROOTDIR__}/lib/cmake/protobuf/protobuf-config.cmake)
+    endif()
+    list(APPEND __PPLNN_LINK_LIBRARIES__ "protobuf::libprotobuf-lite")
 endif()
-list(APPEND __PPLNN_LINK_LIBRARIES__ "protobuf::libprotobuf-lite")
 
 # --------------------------------------------------------------------------- #
 

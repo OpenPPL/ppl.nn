@@ -9,9 +9,15 @@ option(PPLNN_BUILD_TESTS "build all tests" ON)
 option(PPLNN_BUILD_TOOLS "build tools" ON)
 option(PPLNN_BUILD_SAMPLES "build samples" ON)
 option(PPLNN_INSTALL "install ppl headers and libs" ON)
+
 option(PPLNN_ENABLE_KERNEL_PROFILING "enable profiling for each kernel" OFF)
+
+option(PPLNN_ENABLE_ONNX_MODEL "enable onnx format support" ON)
+option(PPLNN_ENABLE_PMX_MODEL "enable pmx format support. pmx format is under heavily developing and should not be used in production environment." OFF)
+
 option(PPLNN_ENABLE_PYTHON_API "enable python api support" OFF)
 option(PPLNN_ENABLE_LUA_API "enable lua api support" OFF)
+
 option(PPLNN_HOLD_DEPS "don't update dependencies" OFF)
 
 # --------------------------------------------------------------------------- #
@@ -29,7 +35,6 @@ set(PPLNN_LINK_DIRECTORIES)
 # dependencies
 
 include(cmake/deps.cmake)
-include(cmake/protobuf.cmake)
 include(cmake/rapidjson.cmake)
 
 # --------------------------------------------------------------------------- #
@@ -38,8 +43,18 @@ include(cmake/rapidjson.cmake)
 
 include(cmake/version.cmake)
 
-file(GLOB_RECURSE PPLNN_MODELS_SRC
-    src/ppl/nn/models/*.cc)
+set(PPLNN_MODELS_SRC)
+if(PPLNN_ENABLE_ONNX_MODEL)
+    list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_ENABLE_ONNX_MODEL)
+    file(GLOB_RECURSE PPLNN_MODEL_ONNX_SRC src/ppl/nn/models/onnx/*.cc)
+    list(APPEND PPLNN_MODELS_SRC ${PPLNN_MODEL_ONNX_SRC})
+endif()
+if(PPLNN_ENABLE_PMX_MODEL)
+    list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_ENABLE_PMX_MODEL)
+    file(GLOB_RECURSE PPLNN_MODEL_PMX_SRC src/ppl/nn/models/pmx/*.cc)
+    list(APPEND PPLNN_MODELS_SRC ${PPLNN_MODEL_PMX_SRC})
+endif()
+
 file(GLOB_RECURSE PPLNN_BUILTIN_ENGINE_SRC
     src/ppl/nn/engines/common/*.cc)
 file(GLOB_RECURSE PPLNN_OPUTILS_SRC
@@ -61,7 +76,7 @@ list(APPEND PPLNN_INCLUDE_DIRECTORIES
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-list(APPEND PPLNN_LINK_LIBRARIES pplcommon_static libprotobuf-lite)
+list(APPEND PPLNN_LINK_LIBRARIES pplcommon_static)
 
 if(PPLNN_ENABLE_KERNEL_PROFILING)
     list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_ENABLE_KERNEL_PROFILING)
@@ -107,23 +122,25 @@ target_compile_definitions(pplnn_static PUBLIC ${PPLNN_COMPILE_DEFINITIONS})
 target_compile_features(pplnn_static PRIVATE cxx_std_11)
 
 target_include_directories(pplnn_static PRIVATE
-    ${rapidjson_SOURCE_DIR}/include
-    ${protobuf_SOURCE_DIR}/src)
+    ${rapidjson_SOURCE_DIR}/include)
+
+if(PPLNN_ENABLE_ONNX_MODEL)
+    include(cmake/protobuf.cmake)
+    target_link_libraries(pplnn_static PUBLIC libprotobuf-lite)
+    target_include_directories(pplnn_static PRIVATE ${protobuf_SOURCE_DIR}/src)
+endif()
+
+if(PPLNN_ENABLE_PMX_MODEL)
+    hpcc_populate_dep(flatbuffers)
+    target_include_directories(pplnn_static PRIVATE ${flatbuffers_SOURCE_DIR}/include)
+endif()
 
 # --------------------------------------------------------------------------- #
 
 # installation
 
 if(PPLNN_INSTALL)
-    install(DIRECTORY include DESTINATION .)
-    install(TARGETS pplnn_static DESTINATION lib)
-
-    set(PPLNN_CMAKE_CONFIG_FILE ${CMAKE_CURRENT_BINARY_DIR}/generated/pplnn-config.cmake)
-    configure_file(${CMAKE_CURRENT_LIST_DIR}/cmake/pplnn-config.cmake.in
-        ${PPLNN_CMAKE_CONFIG_FILE}
-        @ONLY)
-    install(FILES ${PPLNN_CMAKE_CONFIG_FILE} DESTINATION lib/cmake/ppl)
-    unset(PPLNN_CMAKE_CONFIG_FILE)
+    include(cmake/install.cmake)
 endif()
 
 # --------------------------------------------------------------------------- #

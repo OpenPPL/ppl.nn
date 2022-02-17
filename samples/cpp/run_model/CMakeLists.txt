@@ -1,4 +1,5 @@
-if(NOT HPCC_USE_X86_64)
+if(NOT PPLNN_USE_X86 OR NOT PPLNN_ENABLE_ONNX_MODEL)
+    message(WARNING "x86 and onnx support are disabled. `classification` will not be built.")
     return()
 endif()
 

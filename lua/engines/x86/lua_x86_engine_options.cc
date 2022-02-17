@@ -26,13 +26,13 @@ namespace ppl { namespace nn { namespace lua {
 void RegisterX86EngineOptions(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
     auto lclass = lstate->CreateClass<X86EngineOptions>()
         .DefConstructor()
-        .DefMember("mm_policy",
-                   [](const X86EngineOptions* options) -> uint32_t {
-                       return options->mm_policy;
-                   },
-                   [](X86EngineOptions* options, uint32_t v) -> void {
-                       options->mm_policy = v;
-                   });
+        .DefMember<uint32_t>("mm_policy",
+                             [](const X86EngineOptions* options) -> uint32_t {
+                                 return options->mm_policy;
+                             },
+                             [](X86EngineOptions* options, uint32_t v) -> void {
+                                 options->mm_policy = v;
+                             });
     lmodule->Set("X86EngineOptions", lclass);
 
     lmodule->SetInteger("X86_MM_MRU", X86_MM_MRU);

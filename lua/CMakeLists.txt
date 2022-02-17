@@ -11,7 +11,6 @@ hpcc_populate_dep(luacpp)
 
 file(GLOB_RECURSE PPLNN_LUA_API_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/common/*.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/models/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/utils/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/lua_pplnn.cc)
@@ -34,6 +33,16 @@ endif()
 if(PPLNN_USE_ARM)
     file(GLOB_RECURSE PPLNN_LUA_ARM_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/arm/*.cc)
     list(APPEND PPLNN_LUA_API_SRC ${PPLNN_LUA_ARM_SRC})
+endif()
+
+if(PPLNN_ENABLE_ONNX_MODEL)
+    file(GLOB_RECURSE PPLNN_LUA_ONNX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/models/onnx/*.cc)
+    list(APPEND PPLNN_LUA_API_SRC ${PPLNN_LUA_ONNX_SRC})
+endif()
+
+if(PPLNN_ENABLE_PMX_MODEL)
+    file(GLOB_RECURSE PPLNN_LUA_PMX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/models/pmx/*.cc)
+    list(APPEND PPLNN_LUA_API_SRC ${PPLNN_LUA_PMX_SRC})
 endif()
 
 add_library(luapplnn_shared SHARED ${PPLNN_LUA_API_SRC})

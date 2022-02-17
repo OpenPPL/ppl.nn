@@ -18,8 +18,9 @@
 #ifndef _ST_HPC_PPL_NN_PYTHON_PY_ONNX_RUNTIME_BUILDER_H_
 #define _ST_HPC_PPL_NN_PYTHON_PY_ONNX_RUNTIME_BUILDER_H_
 
-#include "../../engines/py_engine.h"
+#include "ppl/nn/engines/engine.h"
 #include "ppl/nn/models/onnx/onnx_runtime_builder.h"
+#include <vector>
 #include <memory>
 
 namespace ppl { namespace nn { namespace python {
@@ -27,7 +28,7 @@ namespace ppl { namespace nn { namespace python {
 struct PyOnnxRuntimeBuilder final {
     PyOnnxRuntimeBuilder(OnnxRuntimeBuilder* b) : ptr(b) {}
     std::unique_ptr<OnnxRuntimeBuilder> ptr;
-    std::vector<PyEngine> engines; // retain engines
+    std::vector<std::shared_ptr<Engine>> engines; // retain engines
 };
 
 }}} // namespace ppl::nn::python

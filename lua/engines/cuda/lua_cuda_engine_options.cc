@@ -26,20 +26,20 @@ namespace ppl { namespace nn { namespace lua {
 void RegisterCudaEngineOptions(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
     auto lclass = lstate->CreateClass<CudaEngineOptions>()
         .DefConstructor()
-        .DefMember("device_id",
-                   [](const CudaEngineOptions* options) -> uint32_t {
-                       return options->device_id;
-                   },
-                   [](CudaEngineOptions* options, uint32_t v) -> void {
-                       options->device_id = v;
-                   })
-        .DefMember("mm_policy",
-                   [](const CudaEngineOptions* options) -> uint32_t {
-                       return options->mm_policy;
-                   },
-                   [](CudaEngineOptions* options, uint32_t v) -> void {
-                       options->mm_policy = v;
-                   });
+        .DefMember<uint32_t>("device_id",
+                             [](const CudaEngineOptions* options) -> uint32_t {
+                                 return options->device_id;
+                             },
+                             [](CudaEngineOptions* options, uint32_t v) -> void {
+                                 options->device_id = v;
+                             })
+        .DefMember<uint32_t>("mm_policy",
+                             [](const CudaEngineOptions* options) -> uint32_t {
+                                 return options->mm_policy;
+                             },
+                             [](CudaEngineOptions* options, uint32_t v) -> void {
+                                 options->mm_policy = v;
+                             });
     lmodule->Set("CudaEngineOptions", lclass);
 
     lmodule->SetInteger("CUDA_MM_COMPACT", CUDA_MM_COMPACT);

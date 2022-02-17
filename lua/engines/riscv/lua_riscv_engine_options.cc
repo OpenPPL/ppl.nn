@@ -26,27 +26,27 @@ namespace ppl { namespace nn { namespace lua {
 void RegisterRiscvEngineOptions(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
     auto lclass = lstate->CreateClass<RiscvEngineOptions>()
         .DefConstructor()
-        .DefMember("mm_policy",
-                   [](const RiscvEngineOptions* options) -> uint32_t {
-                       return options->mm_policy;
-                   },
-                   [](RiscvEngineOptions* options, uint32_t v) -> void {
-                       options->mm_policy = v;
-                   })
-        .DefMember("tuning_level",
-                   [](const RiscvEngineOptions* options) -> uint32_t {
-                       return options->dynamic_tuning_level;
-                   },
-                   [](RiscvEngineOptions* options, uint32_t v) -> void {
-                       options->dynamic_tuning_level = v;
-                   })
-        .DefMember("forward_precision",
-                   [](const RiscvEngineOptions* options) -> uint32_t {
-                       return options->forward_precision;
-                   },
-                   [](RiscvEngineOptions* options, uint32_t v) -> void {
-                       options->forward_precision = v;
-                   });
+        .DefMember<uint32_t>("mm_policy",
+                             [](const RiscvEngineOptions* options) -> uint32_t {
+                                 return options->mm_policy;
+                             },
+                             [](RiscvEngineOptions* options, uint32_t v) -> void {
+                                 options->mm_policy = v;
+                             })
+        .DefMember<uint32_t>("tuning_level",
+                             [](const RiscvEngineOptions* options) -> uint32_t {
+                                 return options->dynamic_tuning_level;
+                             },
+                             [](RiscvEngineOptions* options, uint32_t v) -> void {
+                                 options->dynamic_tuning_level = v;
+                             })
+        .DefMember<uint32_t>("forward_precision",
+                             [](const RiscvEngineOptions* options) -> uint32_t {
+                                 return options->forward_precision;
+                             },
+                             [](RiscvEngineOptions* options, uint32_t v) -> void {
+                                 options->forward_precision = v;
+                             });
     lmodule->Set("RiscvEngineOptions", lclass);
 }
 

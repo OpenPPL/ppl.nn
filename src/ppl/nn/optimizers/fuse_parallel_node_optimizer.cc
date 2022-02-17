@@ -19,7 +19,6 @@
 #include <map>
 
 #include "ppl/nn/optimizers/fuse_parallel_node_optimizer.h"
-#include "ppl/nn/models/onnx/param_parser_manager.h"
 #include "ppl/nn/params/param_utils_manager.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;

@@ -44,7 +44,7 @@ static inline ppl::common::RetCode CopyTensorBuffer(const TensorImpl& src, Tenso
 ppl::common::RetCode LoadConstants(const ir::Graph&, Device*, std::map<edgeid_t, RuntimeConstantInfo>*,
                                    const std::set<edgeid_t>* = nullptr);
 
-ppl::common::RetCode GenericLoadConstant(edgeid_t eid, const ir::Constant& constant, const TensorShape& shape,
+ppl::common::RetCode GenericLoadConstant(edgeid_t eid, const void* data, uint64_t size, const TensorShape& shape,
                                          Device* device, RuntimeConstantInfo* info, bool omit_data = false);
 
 void IrShape2TensorShape(const ir::Shape&, TensorShape*);

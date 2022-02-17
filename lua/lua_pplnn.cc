@@ -26,6 +26,8 @@ using namespace luacpp;
 #include "ppl/common/retcode.h"
 using namespace ppl::common;
 
+#include "lua_type_creator_manager.h"
+
 namespace ppl { namespace nn { namespace lua {
 
 #ifdef PPLNN_USE_X86
@@ -56,18 +58,19 @@ void RegisterGetVersionString(const shared_ptr<LuaState>&, const shared_ptr<LuaT
 void RegisterTensorShape(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterTensor(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterRuntime(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
+
+#ifdef PPLNN_ENABLE_ONNX_MODEL
 void RegisterOnnxRuntimeBuilder(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterOnnxRuntimeBuilderFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
+#endif
 
-}}}
-
-#include "lua_type_creator_manager.h"
-using namespace ppl::nn::lua;
-
-extern "C" {
+#ifdef PPLNN_ENABLE_PMX_MODEL
+void RegisterPmxRuntimeBuilder(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
+void RegisterPmxRuntimeBuilderFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
+#endif
 
 /* require("luappl.nn") */
-int PPLNN_PUBLIC luaopen_luappl_nn(lua_State* l) {
+extern "C" int PPLNN_PUBLIC luaopen_luappl_nn(lua_State* l) {
     // may be used by module functions outside this function scope
     auto lstate = make_shared<LuaState>(l, false);
     auto lmodule = make_shared<LuaTable>(lstate->CreateTable());
@@ -113,11 +116,19 @@ int PPLNN_PUBLIC luaopen_luappl_nn(lua_State* l) {
     RegisterTensorShape(lstate, lmodule);
     RegisterTensor(lstate, lmodule);
     RegisterRuntime(lstate, lmodule);
+
+#ifdef PPLNN_ENABLE_ONNX_MODEL
     RegisterOnnxRuntimeBuilder(lstate, lmodule);
     RegisterOnnxRuntimeBuilderFactory(lstate, lmodule);
+#endif
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    RegisterPmxRuntimeBuilder(lstate, lmodule);
+    RegisterPmxRuntimeBuilderFactory(lstate, lmodule);
+#endif
 
     lstate->Push(*lmodule);
     return 1;
 }
 
-}
+}}} // namespace ppl::nn::lua

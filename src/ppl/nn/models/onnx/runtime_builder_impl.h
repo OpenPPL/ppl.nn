@@ -37,6 +37,7 @@ public:
     ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num) override;
     ppl::common::RetCode Preprocess() override;
     Runtime* CreateRuntime() override;
+    ppl::common::RetCode Serialize(const char* output_file, const char* fmt) const override;
 
 private:
     ir::Graph graph_;

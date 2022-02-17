@@ -1,0 +1,109 @@
+namespace ppl.nn.pmx;
+
+file_identifier "OPPL";
+
+table Edge {
+    name: string;
+}
+
+table NodeType {
+    domain: string;
+    name: string;
+    version: uint64;
+}
+
+table Node {
+    name: string;
+    type: NodeType;
+    inputs: [uint32];
+    outputs: [uint32];
+    extra_inputs: [uint32];
+}
+
+table GraphTopo {
+    name: string;
+    edges: [Edge];
+    nodes: [Node];
+    constants: [uint32];
+    inputs: [uint32];
+    outputs: [uint32];
+    extra_inputs: [uint32];
+}
+
+table NodeInfo {
+    node_id: uint32;
+    data: [ubyte];
+}
+
+table Constant {
+    edge_id: uint32;
+    data: [ubyte];
+}
+
+enum DataType : uint32 {
+    UNKNOWN = 0,
+    BOOL,
+    INT8,
+    UINT8,
+    INT16,
+    UINT16,
+    INT32,
+    UINT32,
+    INT64,
+    UINT64,
+    FLOAT16,
+    FLOAT32,
+    FLOAT64,
+    BFLOAT16,
+    INT4B,
+    COMPLEX64,
+    COMPLEX128,
+}
+
+enum DataFormat : uint32 {
+    UNKNOWN = 0,
+    NDARRAY,
+    NHWC8,
+    NHWC16,
+    N2CX,
+    N4CX,
+    N8CX,
+    N16CX,
+    N32CX,
+}
+
+table Shape {
+    edge_id: uint32;
+    data_type: DataType;
+    data_format: DataFormat;
+    dims: [int64];
+}
+
+table Partition {
+    engine_id: uint32;
+    nodes: [NodeInfo];
+    constants: [Constant];
+}
+
+table GraphData {
+    shapes: [Shape];
+    partitions: [Partition];
+}
+
+table Graph {
+    topo: GraphTopo;
+    data: GraphData;
+}
+
+table Engine {
+    name: string;
+    data: [ubyte];
+}
+
+table Model {
+    version: string;
+    engines: [Engine];
+    graph: Graph;
+}
+
+root_type Model;

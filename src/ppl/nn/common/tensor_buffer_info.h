@@ -51,13 +51,10 @@ public:
     */
     void SetBuffer(const BufferDesc& buf, Device* device = nullptr, bool is_buffer_owner = false);
 
-    /**
-       @brief returns buffer_ to caller and reset buffer_.
-       @note IsBufferOwner() is unspecified after DetachBuffer().
-    */
+    /** @brief returns buffer_ to caller and reset buffer_. */
     BufferDesc DetachBuffer();
 
-    /** @brief free internal buffer */
+    /** @brief frees the internal buffer */
     void FreeBuffer();
 
     ppl::common::RetCode ReallocBuffer();

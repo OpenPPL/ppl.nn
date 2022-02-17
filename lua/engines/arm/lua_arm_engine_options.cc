@@ -26,13 +26,13 @@ namespace ppl { namespace nn { namespace lua {
 void RegisterArmEngineOptions(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
     auto lclass = lstate->CreateClass<ArmEngineOptions>()
         .DefConstructor()
-        .DefMember("forward_precision",
-                   [](const ArmEngineOptions* options) -> uint32_t {
-                       return options->forward_precision;
-                   },
-                   [](ArmEngineOptions* options, uint32_t v) -> void {
-                       options->forward_precision = v;
-                   });
+        .DefMember<uint32_t>("forward_precision",
+                             [](const ArmEngineOptions* options) -> uint32_t {
+                                 return options->forward_precision;
+                             },
+                             [](ArmEngineOptions* options, uint32_t v) -> void {
+                                 options->forward_precision = v;
+                             });
     lmodule->Set("ArmEngineOptions", lclass);
 }
 

@@ -95,8 +95,7 @@ private:
     const vector<Node*>* node_ptrs_;
 };
 
-PartialGraphTopo::PartialGraphTopo(GraphTopo* parent, const string& name, const vector<nodeid_t>& nodes)
-    : GraphTopo(name) {
+PartialGraphTopo::PartialGraphTopo(GraphTopo* parent, const vector<nodeid_t>& nodes) {
     parent_ = parent;
 
     node_ptrs_.resize(parent->GetMaxNodeId(), nullptr);
