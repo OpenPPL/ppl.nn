@@ -36,8 +36,8 @@ struct OptKernelOptions {
     ir::GraphData* graph_data = nullptr;
     ir::GraphTopo* graph_topo = nullptr;
     X86Device* device = nullptr;
-    RuntimePartitionInfo *info = nullptr;
-    std::map<edgeid_t, std::unique_ptr<TensorImpl>> *tensors = nullptr;
+    RuntimePartitionInfo* info = nullptr;
+    std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors = nullptr;
 };
 
 class X86OptKernel : public OptKernel {
@@ -74,9 +74,18 @@ public:
         common_param_.output_formats[idx] = format;
     }
 
-    virtual ppl::common::RetCode OmitConstantsData(std::map<edgeid_t, int64_t> *constants_data_refcount) {
+    virtual ppl::common::RetCode OmitConstantsData(std::map<edgeid_t, int64_t>* constants_data_refcount) {
         return ppl::common::RC_SUCCESS;
     }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode SerializeData(utils::DataStream*) const override {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+    ppl::common::RetCode DeserializeData(const void*, uint64_t) override {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+#endif
 
 protected:
     template <typename T>

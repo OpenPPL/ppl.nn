@@ -24,8 +24,9 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace test {
 
 GraphBuilder::GraphBuilder(const string& graph_name) {
-    graph_.topo = make_shared<ir::FullGraphTopo>(graph_name);
+    graph_.topo = make_shared<ir::FullGraphTopo>();
     graph_.data = make_shared<ir::GraphData>();
+    graph_.topo->SetName(graph_name);
 }
 
 RetCode GraphBuilder::AddNode(const string& name, const ir::Node::Type& type, const vector<string>& inputs,

@@ -90,7 +90,7 @@ RetCode CopyBuffer(const BufferDesc& src_buf, const TensorShape& src_shape, cons
 
 /* -------------------------------------------------------------------------- */
 
-RetCode GenericLoadConstant(edgeid_t eid, const ir::Constant& constant, const TensorShape& shape, Device* device,
+RetCode GenericLoadConstant(edgeid_t eid, const void* data, uint64_t size, const TensorShape& shape, Device* device,
                             RuntimeConstantInfo* info, bool omit_data) {
     info->Reshape(shape);
 
@@ -102,7 +102,7 @@ RetCode GenericLoadConstant(edgeid_t eid, const ir::Constant& constant, const Te
             return status;
         }
 
-        status = device->CopyFromHost(&info->GetBufferDesc(), constant.data.data(), shape);
+        status = device->CopyFromHost(&info->GetBufferDesc(), data, shape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
             return status;
@@ -151,7 +151,8 @@ RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, Runt
         }
 
         RuntimeConstantInfo& constant_info = ret_pair.first->second;
-        auto status = GenericLoadConstant(eid, constant_ref->second, tensor_shape, device, &constant_info, omit_data);
+        auto status = GenericLoadConstant(eid, constant_ref->second.data.data(), constant_ref->second.data.size(),
+                                          tensor_shape, device, &constant_info, omit_data);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "load constant[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;

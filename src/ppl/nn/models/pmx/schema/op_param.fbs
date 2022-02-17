@@ -1,0 +1,4 @@
+namespace ppl.nn.pmx;
+
+union OpParam {
+}

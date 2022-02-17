@@ -35,6 +35,18 @@ public:
     bool Supports(const ir::Node* node) const override;
     ppl::common::RetCode ProcessGraph(utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*) override;
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode LoadConstant(edgeid_t, const void*, uint64_t, const TensorShape&,
+                                      RuntimeConstantInfo*) override;
+    OptKernel* CreateOptKernel(const ir::Node*) const override;
+    ppl::common::RetCode SerializeData(utils::DataStream*) const override {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+    ppl::common::RetCode DeserializeData(const void*, uint64_t) override {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+#endif
+
 private:
     ppl::common::RetCode DoOptimize(ir::Graph*, utils::SharedResource*, RuntimePartitionInfo*);
 

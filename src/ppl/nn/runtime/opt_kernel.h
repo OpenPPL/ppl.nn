@@ -20,6 +20,7 @@
 
 #include "ppl/nn/ir/graph.h"
 #include "ppl/nn/runtime/kernel_impl.h"
+#include "ppl/nn/utils/data_stream.h"
 
 namespace ppl { namespace nn {
 
@@ -41,6 +42,11 @@ public:
 
     /** @brief create a KernelImpl used in runtime stage */
     virtual KernelImpl* CreateKernelImpl() const = 0;
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    virtual ppl::common::RetCode SerializeData(utils::DataStream*) const = 0;
+    virtual ppl::common::RetCode DeserializeData(const void*, uint64_t) = 0;
+#endif
 
 private:
     const ir::Node* node_;

@@ -66,7 +66,7 @@ static vector<nodeid_t> FindLowestCommonAncestors(nodeid_t a, nodeid_t b, const 
     auto end_iter = std::set_intersection(ancestors_of_a.begin(), ancestors_of_a.end(), ancestors_of_b.begin(),
                                           ancestors_of_b.end(), common_nodes.begin());
     common_nodes.resize(end_iter - common_nodes.begin());
-    ir::PartialGraphTopo sub_topo(const_cast<ir::GraphTopo*>(topo), "", common_nodes);
+    ir::PartialGraphTopo sub_topo(const_cast<ir::GraphTopo*>(topo), common_nodes);
     vector<nodeid_t> ret;
     for (uint32_t i = 0; i < sub_topo.GetOutputCount(); ++i) {
         ret.push_back(sub_topo.GetOutput(i));

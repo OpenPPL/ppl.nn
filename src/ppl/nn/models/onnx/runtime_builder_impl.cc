@@ -25,6 +25,10 @@
 using namespace std;
 using namespace ppl::common;
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/pmx_serializer.h"
+#endif
+
 namespace ppl { namespace nn { namespace onnx {
 
 RuntimeBuilderImpl::RuntimeBuilderImpl() {
@@ -96,6 +100,21 @@ Runtime* RuntimeBuilderImpl::CreateRuntime() {
     }
 
     return runtime;
+}
+
+RetCode RuntimeBuilderImpl::Serialize(const char* output_file, const char* fmt) const {
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    if (fmt != string("pmx")) {
+        LOG(ERROR) << "model format[" << fmt << "] is not supported.";
+        return RC_UNSUPPORTED;
+    }
+
+    pmx::PmxSerializer serializer;
+    return serializer.Serialize(output_file, graph_.topo.get(), resource_->engines, *graph_info_);
+#else
+    LOG(ERROR) << "model format[" << fmt << "] is not supported.";
+    return RC_UNSUPPORTED;
+#endif
 }
 
 }}} // namespace ppl::nn::onnx

@@ -15,7 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/onnx/onnx_runtime_builder_factory.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/utils/version.h"
 #include "ppl/common/file_mapping.h"
@@ -34,6 +33,16 @@ using namespace ppl::nn;
 using namespace ppl::common;
 using namespace std;
 
+#include "ppl/nn/runtime/runtime.h"
+
+#ifdef PPLNN_ENABLE_ONNX_MODEL
+#include "ppl/nn/models/onnx/onnx_runtime_builder_factory.h"
+#endif
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/pmx_runtime_builder_factory.h"
+#endif
+
 /* -------------------------------------------------------------------------- */
 
 #include "simple_flags.h"
@@ -41,7 +50,14 @@ using namespace std;
 Define_bool_opt("--help", g_flag_help, false, "show these help information");
 Define_bool_opt("--version", g_flag_version, false, "show version info");
 
+#ifdef PPLNN_ENABLE_ONNX_MODEL
 Define_string_opt("--onnx-model", g_flag_onnx_model, "", "onnx model file");
+#endif
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+Define_string_opt("--pmx-model", g_flag_pmx_model, "", "pmx model file");
+Define_string_opt("--save-pmx-model", g_flag_save_pmx_model, "", "dump model to <filename> in pmx format");
+#endif
 
 Define_string_opt("--mm-policy", g_flag_mm_policy, "mem",
                   "\"perf\" => better performance, or \"mem\" => less memory usage");
@@ -339,7 +355,10 @@ static inline bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
 
 Define_bool_opt("--use-riscv", g_flag_use_riscv, false, "use riscv engine");
 Define_bool_opt("--use-fp16", g_flag_use_fp16, false, "infer with riscv fp16 (use fp32 by default)");
-Define_int32_opt("--wg-level", g_flag_wg_level, 1, "select winograd level[0-4]. 0: wingorad off. 1: turn on winograd and automatically select block size. 2: use winograd block 2 if possible. 3: use winograd block 4 if possible. 4: use winograd block 6 if possible");
+Define_int32_opt(
+    "--wg-level", g_flag_wg_level, 1,
+    "select winograd level[0-4]. 0: wingorad off. 1: turn on winograd and automatically select block size. 2: use "
+    "winograd block 2 if possible. 3: use winograd block 4 if possible. 4: use winograd block 6 if possible");
 Define_int32_opt("--tuning-level", g_flag_tuning_level, 0, "select conv algo dynamic tuning level[0-1]. 0: off. 1: on");
 
 #include "ppl/nn/engines/riscv/engine_factory.h"
@@ -377,9 +396,12 @@ static inline bool RegisterRiscvEngine(vector<unique_ptr<Engine>>* engines) {
 
 Define_bool_opt("--use-arm", g_flag_use_arm, false, "use arm engine");
 Define_bool_opt("--use-fp16", g_flag_use_fp16, false, "infer with armv8.2 fp16");
-Define_int32_opt("--wg-level", g_flag_wg_level, 3, "select winograd level[0-3]. 0: wingorad off. 1: turn on winograd and automatically select block size. 2: use winograd block 2 if possible. 3: use winograd block 4 if possible");
+Define_int32_opt("--wg-level", g_flag_wg_level, 3,
+                 "select winograd level[0-3]. 0: wingorad off. 1: turn on winograd and automatically select block "
+                 "size. 2: use winograd block 2 if possible. 3: use winograd block 4 if possible");
 Define_int32_opt("--tuning-level", g_flag_tuning_level, 1, "select conv algo dynamic tuning level[0-1]. 0: off. 1: on");
-Define_int32_opt("--numa-node-id", g_flag_numa_node_id, -1, "bind arm engine to specified numa node, range [0, numa_max_node), -1 means not bind");
+Define_int32_opt("--numa-node-id", g_flag_numa_node_id, -1,
+                 "bind arm engine to specified numa node, range [0, numa_max_node), -1 means not bind");
 
 #include "ppl/nn/engines/arm/engine_factory.h"
 
@@ -1002,9 +1024,11 @@ static bool Profiling(const vector<string>& input_data, Runtime* runtime) {
     uint32_t run_count = 0;
     while (run_dur < g_flag_min_profiling_seconds * 1000 || run_count < g_flag_min_profiling_iterations) {
         auto run_begin_ts = std::chrono::system_clock::now();
-        if (g_flag_perf_with_io) SetInputs(input_data, runtime);
+        if (g_flag_perf_with_io)
+            SetInputs(input_data, runtime);
         runtime->Run();
-        if (g_flag_perf_with_io) GetOutputs(runtime);
+        if (g_flag_perf_with_io)
+            GetOutputs(runtime);
         auto run_end_ts = std::chrono::system_clock::now();
         auto diff = std::chrono::duration_cast<std::chrono::microseconds>(run_end_ts - run_begin_ts);
         run_dur += (double)diff.count() / 1000;
@@ -1026,6 +1050,14 @@ static bool Profiling(const vector<string>& input_data, Runtime* runtime) {
 
     LOG(INFO) << "Profiling End";
     return true;
+}
+
+static inline bool HasMultipleModelOptions() {
+#if defined(PPLNN_ENABLE_PMX_MODEL) && defined(PPLNN_ENABLE_ONNX_MODEL)
+    return (!g_flag_onnx_model.empty() && !g_flag_pmx_model.empty());
+#else
+    return false;
+#endif
 }
 
 int main(int argc, char* argv[]) {
@@ -1062,8 +1094,14 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
+    if (HasMultipleModelOptions()) {
+        LOG(ERROR) << "multiple model options are specified.";
+        return -1;
+    }
+
     unique_ptr<Runtime> runtime;
 
+#ifdef PPLNN_ENABLE_ONNX_MODEL
     if (!g_flag_onnx_model.empty()) {
         vector<Engine*> engine_ptrs(engines.size());
         for (uint32_t i = 0; i < engines.size(); ++i) {
@@ -1087,8 +1125,49 @@ int main(int argc, char* argv[]) {
             return status;
         }
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+        if (!g_flag_save_pmx_model.empty()) {
+            auto status = builder->Serialize(g_flag_save_pmx_model.c_str(), "pmx");
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "save ppl model failed: " << GetRetCodeStr(status);
+                return -1;
+            }
+        }
+#endif
+
         runtime.reset(builder->CreateRuntime());
     }
+#endif
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    if (!g_flag_pmx_model.empty()) {
+        vector<Engine*> engine_ptrs(engines.size());
+        for (uint32_t i = 0; i < engines.size(); ++i) {
+            engine_ptrs[i] = engines[i].get();
+        }
+        auto builder = unique_ptr<PmxRuntimeBuilder>(PmxRuntimeBuilderFactory::Create());
+        if (!builder) {
+            LOG(ERROR) << "create PmxRuntimeBuilder failed.";
+            return -1;
+        }
+
+        auto status = builder->Init(g_flag_pmx_model.c_str(), engine_ptrs.data(), engine_ptrs.size());
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "init PmxRuntimeBuilder failed: " << GetRetCodeStr(status);
+            return -1;
+        }
+
+        if (!g_flag_save_pmx_model.empty()) {
+            auto status = builder->Serialize(g_flag_save_pmx_model.c_str(), "pmx");
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "save ppl model failed: " << GetRetCodeStr(status);
+                return -1;
+            }
+        }
+
+        runtime.reset(builder->CreateRuntime());
+    }
+#endif
 
     if (!runtime) {
         LOG(ERROR) << "CreateRuntime failed.";

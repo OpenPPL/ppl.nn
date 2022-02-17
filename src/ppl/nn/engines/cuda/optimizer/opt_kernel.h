@@ -42,9 +42,10 @@ struct SharedResource;
 namespace ppl { namespace nn { namespace cuda {
 
 struct OptKernelOptions {
-    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, utils::SharedResource* resource, CudaArgs* args, CompileInfo* compile_set,
-                     CudaDevice* device, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
-                     std::vector<CudaTensorQuant>* quants, std::map<std::string, CudaArgs::AlgoSelects>* algos)
+    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, utils::SharedResource* resource, CudaArgs* args,
+                     CompileInfo* compile_set, CudaDevice* device,
+                     std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors, std::vector<CudaTensorQuant>* quants,
+                     std::map<std::string, CudaArgs::AlgoSelects>* algos)
         : graph(graph)
         , info(info)
         , resource(resource)
@@ -109,6 +110,15 @@ public:
     ppl::common::RetCode InferUnsafeDims(InputOutputInfo* info, std::set<uint32_t>* illegal_inputs) const {
         return infer_unsafe_dims_func_(info, illegal_inputs);
     }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode SerializeData(utils::DataStream*) const override {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+    ppl::common::RetCode DeserializeData(const void*, uint64_t) override {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+#endif
 
 protected:
     ppl::common::RetCode SetCommonParam(const OptKernelOptions&);

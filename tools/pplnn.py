@@ -108,6 +108,11 @@ def ParseCommandLineArgs():
     parser.add_argument("--onnx-model", type = str, default = "", required = False,
                         help = "onnx model file")
 
+    parser.add_argument("--pmx-model", type = str, default = "", required = False,
+                        help = "pmx model file")
+    parser.add_argument("--save-pmx-model", type = str, default = "", required = False,
+                        help = "dump model to <filename> in pmx format")
+
     parser.add_argument("--mm-policy", type = str, default = "perf", required = False,
                         help = "\"perf\" => better performance, or \"mem\" => less memory usage")
 
@@ -503,6 +508,9 @@ def PrintInputOutputInfo(runtime):
 
 # ---------------------------------------------------------------------------- #
 
+def HasMultipleModelOptions(args):
+    return args.onnx_model and args.pmx_model
+
 if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -513,8 +521,8 @@ if __name__ == "__main__":
         logging.info("PPLNN version: " + pplnn.GetVersionString())
         sys.exit(0)
 
-    if not args.onnx_model:
-        logging.error("'--onnx-model' is not specified.")
+    if HasMultipleModelOptions(args):
+        logging.error("multi --*-model options are specified.")
         sys.exit(-1)
 
     engines = RegisterEngines(args)
@@ -522,24 +530,55 @@ if __name__ == "__main__":
         logging.error("no engine is specified. run '" + sys.argv[0] + " -h' to see supported device types marked with '--use-*'.")
         sys.exit(-1)
 
-    runtime_builder = pplnn.OnnxRuntimeBuilderFactory.Create()
-    if not runtime_builder:
-        logging.error("create OnnxRuntimeBuilder failed.")
-        sys.exit(-1)
+    if args.onnx_model:
+        runtime_builder = pplnn.OnnxRuntimeBuilderFactory.Create()
+        if not runtime_builder:
+            logging.error("create OnnxRuntimeBuilder failed.")
+            sys.exit(-1)
 
-    status = runtime_builder.InitFromFile(args.onnx_model, engines)
-    if status != pplcommon.RC_SUCCESS:
-        logging.error("init OnnxRuntimeBuilder failed: " + pplcommon.GetRetCodeStr(status))
-        sys.exit(-1)
+        status = runtime_builder.InitFromFile(args.onnx_model, engines)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("init OnnxRuntimeBuilder failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
 
-    status = runtime_builder.Preprocess()
-    if status != pplcommon.RC_SUCCESS:
-        logging.error("OnnxRuntimeBuilder preprocess failed: " + pplcommon.GetRetCodeStr(status))
-        sys.exit(-1)
+        status = runtime_builder.Preprocess()
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("OnnxRuntimeBuilder preprocess failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
 
-    runtime = runtime_builder.CreateRuntime()
-    if not runtime:
-        logging.error("create Runtime instance failed.")
+        runtime = runtime_builder.CreateRuntime()
+        if not runtime:
+            logging.error("create Runtime instance failed.")
+            sys.exit(-1)
+
+        if args.save_pmx_model:
+            status = runtime_builder.Serialize(args.save_pmx_model, "pmx")
+            if status != pplcommon.RC_SUCCESS:
+                logging.error("serialize to pmx model failed: " + pplcommon.GetRetCodeStr(status))
+                sys.exit(-1)
+    elif args.pmx_model:
+        runtime_builder = pplnn.PmxRuntimeBuilderFactory.Create()
+        if not runtime_builder:
+            logging.error("create RuntimeBuilder failed.")
+            sys.exit(-1)
+
+        status = runtime_builder.InitFromFile(args.pmx_model, engines)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("init PmxRuntimeBuilder failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+        runtime = runtime_builder.CreateRuntime()
+        if not runtime:
+            logging.error("create Runtime instance failed.")
+            sys.exit(-1)
+
+        if args.save_pmx_model:
+            status = runtime_builder.Serialize(args.save_pmx_model, "pmx")
+            if status != pplcommon.RC_SUCCESS:
+                logging.error("serialize to pmx model failed: " + pplcommon.GetRetCodeStr(status))
+                sys.exit(-1)
+    else:
+        logging.error("no model is specified.")
         sys.exit(-1)
 
     in_shapes = ParseInShapes(args.in_shapes)

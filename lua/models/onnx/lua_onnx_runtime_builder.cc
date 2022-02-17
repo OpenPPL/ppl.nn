@@ -55,6 +55,10 @@ void RegisterOnnxRuntimeBuilder(const shared_ptr<LuaState>& lstate, const shared
                            return lstate->CreateNil();
                        }
                        return runtime_class.CreateUserData(lbuilder->engines, runtime);
+                   })
+        .DefMember("Serialize",
+                   [](LuaOnnxRuntimeBuilder* lbuilder, const char* output_file, const char* fmt) -> RetCode {
+                       return lbuilder->ptr->Serialize(output_file, fmt);
                    });
     lmodule->Set("OnnxRuntimeBuilder", lclass);
 }

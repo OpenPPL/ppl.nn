@@ -40,8 +40,8 @@ RetCode OptGraph::InitKernels(const ir::Graph* graph) {
         auto& type = node->GetType();
         auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
         if (!creator) {
-            LOG(ERROR) << "cannot find creator for X86OptKernel[" << node->GetName() << "] type[" << type.domain << ":"
-                       << type.name << "]";
+            LOG(ERROR) << "cannot find creator for X86OptKernel[" << node->GetName() << "] of type[" << type.domain
+                       << ":" << type.name << "]";
             return RC_NOT_FOUND;
         }
 

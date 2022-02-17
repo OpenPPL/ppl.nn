@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "../../engines/py_engine.h"
 #include "../../runtime/py_runtime.h"
 #include "py_onnx_runtime_builder.h"
 #include "pybind11/pybind11.h"
@@ -32,12 +33,14 @@ void RegisterOnnxRuntimeBuilder(pybind11::module* m) {
              })
         .def("InitFromFile",
              [](PyOnnxRuntimeBuilder& builder, const char* model_file, const vector<PyEngine>& engines) -> RetCode {
+                 vector<shared_ptr<Engine>> engine_list(engines.size());
                  vector<Engine*> engine_ptrs(engines.size());
                  for (uint32_t i = 0; i < engines.size(); ++i) {
+                     engine_list[i] = engines[i].ptr;
                      engine_ptrs[i] = engines[i].ptr.get();
                  }
 
-                 builder.engines = engines;
+                 builder.engines = std::move(engine_list);
                  return builder.ptr->Init(model_file, engine_ptrs.data(), engine_ptrs.size());
              })
         .def("Preprocess",
@@ -47,6 +50,10 @@ void RegisterOnnxRuntimeBuilder(pybind11::module* m) {
         .def("CreateRuntime",
              [](PyOnnxRuntimeBuilder& builder) -> PyRuntime {
                  return PyRuntime(builder.engines, builder.ptr->CreateRuntime());
+             })
+        .def("Serialize",
+             [](const PyOnnxRuntimeBuilder& builder, const char* output_file, const char* fmt) -> RetCode {
+                 return builder.ptr->Serialize(output_file, fmt);
              });
 }
 

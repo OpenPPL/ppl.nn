@@ -50,22 +50,38 @@ void RegisterTensorShape(pybind11::module*);
 void RegisterTensor(pybind11::module*);
 void RegisterNdArray(pybind11::module*);
 void RegisterEngine(pybind11::module*);
-void RegisterOnnxRuntimeBuilderFactory(pybind11::module*);
-void RegisterOnnxRuntimeBuilder(pybind11::module*);
 void RegisterDeviceContext(pybind11::module*);
 void RegisterRuntime(pybind11::module*);
 void RegisterGetVersionString(pybind11::module*);
+
+#ifdef PPLNN_ENABLE_ONNX_MODEL
+void RegisterOnnxRuntimeBuilder(pybind11::module*);
+void RegisterOnnxRuntimeBuilderFactory(pybind11::module*);
+#endif
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+void RegisterPmxRuntimeBuilder(pybind11::module*);
+void RegisterPmxRuntimeBuilderFactory(pybind11::module*);
+#endif
 
 PYBIND11_MODULE(nn, m) {
     RegisterTensorShape(&m);
     RegisterTensor(&m);
     RegisterNdArray(&m);
     RegisterEngine(&m);
-    RegisterOnnxRuntimeBuilderFactory(&m);
-    RegisterOnnxRuntimeBuilder(&m);
     RegisterDeviceContext(&m);
     RegisterRuntime(&m);
     RegisterGetVersionString(&m);
+
+#ifdef PPLNN_ENABLE_ONNX_MODEL
+    RegisterOnnxRuntimeBuilderFactory(&m);
+    RegisterOnnxRuntimeBuilder(&m);
+#endif
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    RegisterPmxRuntimeBuilderFactory(&m);
+    RegisterPmxRuntimeBuilder(&m);
+#endif
 
     auto mgr = PyTypeCreatorManager::Instance();
     for (uint32_t i = 0; i < mgr->GetCreatorCount(); ++i) {

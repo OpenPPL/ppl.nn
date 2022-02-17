@@ -254,10 +254,10 @@ static RetCode GenPartitionsInfo(const vector<pair<EngineImpl*, vector<nodeid_t>
             sub_graph.topo = graph->topo;
             sub_graph.data = graph->data;
         } else {
-            sub_graph.topo = make_shared<ir::PartialGraphTopo>(
-                graph->topo.get(), graph->topo->GetName() + "." + partition.first->GetName() + "." + std::to_string(p),
-                partition.second);
+            sub_graph.topo = make_shared<ir::PartialGraphTopo>(graph->topo.get(), partition.second);
             sub_graph.data = graph->data;
+            sub_graph.topo->SetName(graph->topo->GetName() + "." + partition.first->GetName() + "." +
+                                    std::to_string(p));
         }
 
         auto engine = partition.first;
