@@ -133,8 +133,12 @@ class PPLModel(object):
 
     def _create_x86_engine(self):
         x86_options = pplnn.X86EngineOptions()
+        x86_options.mm_policy = pplnn.X86_MM_COMPACT
         x86_engine = pplnn.X86EngineFactory.Create(x86_options)
-        self._engines.append(pplnn.Engine(x86_engine))
+        if not x86_engine:
+            logging.error("create x86 engine failed.")
+            sys.exit(-1)
+        self._engines.append(x86_engine)
 
     def _create_cuda_engine(self):
         cuda_options = pplnn.CudaEngineOptions()
@@ -143,9 +147,19 @@ class PPLModel(object):
         self._engines.append(pplnn.Engine(cuda_engine))
 
     def _create_runtime(self, model_file_name):
-        runtime_builder = pplnn.OnnxRuntimeBuilderFactory.CreateFromFile(model_file_name, self._engines)
+        runtime_builder = pplnn.OnnxRuntimeBuilderFactory.Create()
         if not runtime_builder:
             logging.error("create RuntimeBuilder failed.")
+            sys.exit(-1)
+
+        status = runtime_builder.InitFromFile(model_file_name, self._engines)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("init OnnxRuntimeBuilder failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+        status = runtime_builder.Preprocess()
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("OnnxRuntimeBuilder preprocess failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
 
         self._runtime = runtime_builder.CreateRuntime()
