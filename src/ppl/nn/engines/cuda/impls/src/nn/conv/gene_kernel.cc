@@ -477,65 +477,65 @@ ppl::common::RetCode Fp16CodeGeneFactor::ReplaceFusionForIdxn(std::string& file_
     const std::set<std::string> relu_set{"Relu", "Clip", "PRelu", "LeakyRelu", "Sigmoid"};
     int fuse_size = fuse_info.types.size();
 
-    for (uint32_t i = 1; i <= 4; i *= 2) {
-        int fuse_index = 0;
+    int fuse_index = 0;
 
-        auto begin = file_res.find("uint concat_v1_off0 = 0;");
-        auto end   = file_res.find("#endif", begin);
+    auto begin = file_res.find("uint concat_v1_off0 = 0;");
+    auto inter = file_res.find("SET_CONCAT_OFF_V1", begin);
+    auto end   = file_res.find("#endif", inter);
 
-        std::stringstream file_str;
-        file_str << "uint concat_v1_off0 = dCv1_idy[0] * num_flt_v2;\n";
-        file_str << "uint concat_v1_off1 = dCv1_idy[1] * num_flt_v2;\n";
+    std::stringstream file_str;
+    file_str << "uint concat_v1_off0 = dCv1_idy[0] * num_flt_v2;\n";
+    file_str << "uint concat_v1_off1 = dCv1_idy[1] * num_flt_v2;\n";
 
-        if (fuse_index < fuse_size && relu_set.find(fuse_info.types[fuse_index]) != relu_set.end()) {
-            auto type = fuse_info.types[fuse_index];
-            if (type == "Relu") {
-                file_str << "JIT_FUSE_RELU_2x" << i << "_V1()\n";
-            } else if (type == "Clip") {
-                file_str << "JIT_FUSE_CLIP_2x" << i << "_V1(clip_max, clip_min)\n";
-            } else if (type == "PRelu") {
-                file_str << "JIT_FUSE_PRELU_2x" << i << "_V1(has_prelu, prelu)\n";
-            } else if (type == "LeakyRelu") {
-                file_str << "JIT_FUSE_LEAKY_2x" << i << "_V1(leaky)\n";
-            } else if (type == "Sigmoid") {
-                file_str << "JIT_FUSE_SIGMOID_2x" << i << "_V1()\n";
-            } else {
-                LOG(ERROR) << "Fuse conv with op[" << type << "] failed.";
-                return ppl::common::RC_UNSUPPORTED;
-            }
-            fuse_index++;
+    if (fuse_index < fuse_size && relu_set.find(fuse_info.types[fuse_index]) != relu_set.end()) {
+        auto type = fuse_info.types[fuse_index];
+        if (type == "Relu") {
+            file_str << "JIT_FUSE_RELU_V1()\n";
+        } else if (type == "Clip") {
+            file_str << "JIT_FUSE_CLIP_V1(clip_max, clip_min)\n";
+        } else if (type == "PRelu") {
+            file_str << "JIT_FUSE_PRELU_V1(has_prelu, prelu)\n";
+        } else if (type == "LeakyRelu") {
+            file_str << "JIT_FUSE_LEAKY_V1(leaky)\n";
+        } else if (type == "Sigmoid") {
+            file_str << "JIT_FUSE_SIGMOID_V1()\n";
+        } else {
+            LOG(ERROR) << "Fuse conv with op[" << type << "] failed.";
+            return ppl::common::RC_UNSUPPORTED;
         }
-
-        if (fuse_index < fuse_size && fuse_info.types[fuse_index] == "Add") {
-            file_str << "JIT_FUSE_ELT_2x" << i << "_V1(pre_data)\n";
-            fuse_index++;
-        }
-
-        if (fuse_index < fuse_size && relu_set.find(fuse_info.types[fuse_index]) != relu_set.end()) {
-            auto type = fuse_info.types[fuse_index];
-            if (type == "Relu") {
-                file_str << "JIT_FUSE_RELU_2x" << i << "_V1()\n";
-            } else if (type == "Clip") {
-                file_str << "JIT_FUSE_CLIP_2x" << i << "_V1(elt_clip_max, elt_clip_min)\n";
-            } else if (type == "PRelu") {
-                file_str << "JIT_FUSE_PRELU_2x" << i << "_V1(has_elt_prelu, elt_prelu)\n";
-            } else if (type == "LeakyRelu") {
-                file_str << "JIT_FUSE_LEAKY_2x" << i << "_V1(elt_leaky)\n";
-            } else if (type == "Sigmoid") {
-                file_str << "JIT_FUSE_SIGMOID_2x" << i << "_V1()\n";
-            } else {
-                LOG(ERROR) << "Fuse conv with op[" << type << "] failed.";
-                return ppl::common::RC_UNSUPPORTED;
-            }
-            fuse_index++;
-        }
-
-        if (fuse_info.channel_offset >= 0) {
-            file_str << "JIT_SET_CONCAT_OFF_V1(concat_v1_off0, concat_v1_off1);\n";
-        }
-
-        file_res.replace(begin, end - begin, file_str.str());
+        fuse_index++;
     }
+
+    if (fuse_index < fuse_size && fuse_info.types[fuse_index] == "Add") {
+        file_str << "JIT_FUSE_ELT_V1(pre_data)\n";
+        fuse_index++;
+    }
+
+    if (fuse_index < fuse_size && relu_set.find(fuse_info.types[fuse_index]) != relu_set.end()) {
+        auto type = fuse_info.types[fuse_index];
+        if (type == "Relu") {
+            file_str << "JIT_FUSE_RELU_V1()\n";
+        } else if (type == "Clip") {
+            file_str << "JIT_FUSE_CLIP_V1(elt_clip_max, elt_clip_min)\n";
+        } else if (type == "PRelu") {
+            file_str << "JIT_FUSE_PRELU_V1(has_elt_prelu, elt_prelu)\n";
+        } else if (type == "LeakyRelu") {
+            file_str << "JIT_FUSE_LEAKY_V1(elt_leaky)\n";
+        } else if (type == "Sigmoid") {
+            file_str << "JIT_FUSE_SIGMOID_V1()\n";
+        } else {
+            LOG(ERROR) << "Fuse conv with op[" << type << "] failed.";
+            return ppl::common::RC_UNSUPPORTED;
+        }
+        fuse_index++;
+    }
+
+    if (fuse_info.channel_offset >= 0) {
+        file_str << "JIT_SET_CONCAT_OFF_V1(concat_v1_off0, concat_v1_off1);\n";
+    }
+
+    file_res.replace(begin, end - begin, file_str.str());
+    
     return ppl::common::RC_SUCCESS;
 }
 

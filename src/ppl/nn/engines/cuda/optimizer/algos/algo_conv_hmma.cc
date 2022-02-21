@@ -82,7 +82,8 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
         shape_in0.SetDim(2, shape_in1.GetDim(2));
         shape_in0.SetDim(3, shape_in1.GetDim(3));
     }
-    const std::string& key_str = node->GetName();
+    // const std::string& key_str = node->GetName();
+    const std::string& key_str = GetConvShapeString(temp_conv_param);
     auto algo_info = options.algos->find(key_str);
     if (algo_info != options.algos->end()) {
         attr_param_.extra_param.algo_info.algo_name = algo_info->second.kname;

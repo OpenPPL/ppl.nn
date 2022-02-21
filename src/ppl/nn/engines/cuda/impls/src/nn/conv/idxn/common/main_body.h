@@ -23,17 +23,16 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
     int C[C_ITEMS_PER_THD];
 
     __half *hC   = (__half *)C;
-    __half2 *h2C = (__half2 *)C;
 
 #if TILE_K_PER_STEP == 8
     int *dAv1 = (int *)dA;
     int *dBv1 = (int *)dB;
 #elif TILE_K_PER_STEP == 16
-    int2 *dAv2                  = (int2 *)dA;
-    int2 *dBv2                  = (int2 *)dB;
+    int2 *dAv2 = (int2 *) dA;
+    int2 *dBv2 = (int2 *) dB;
 #elif TILE_K_PER_STEP == 32
-    int4 *dAv4                  = (int4 *)dA;
-    int4 *dBv4                  = (int4 *)dB;
+    int4 *dAv4 = (int4 *) dA;
+    int4 *dBv4 = (int4 *) dB;
 #endif
     int *dCv1 = (int *)dC;
 
@@ -68,9 +67,9 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
 #if TILE_K_PER_STEP == 8
     uint flt_hwc_v2 = flt_hw * flt_chl_per_grp_pad_v2;
 #elif TILE_K_PER_STEP == 16
-    uint flt_hwc_v4             = flt_hw * flt_chl_per_grp_pad_v4;
+    uint flt_hwc_v4 = flt_hw * flt_chl_per_grp_pad_v4;
 #elif TILE_K_PER_STEP == 32
-    uint flt_hwc_v8             = flt_hw * flt_chl_per_grp_pad_v8;
+    uint flt_hwc_v8 = flt_hw * flt_chl_per_grp_pad_v8;
 #endif
 
     bool dCv1_y_valid[BLK_M_PER_MMA];
@@ -81,6 +80,9 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
                   tid_y;
 
     dCv1_idy[1] = dCv1_idy[0] + TILE_M_V1_PER_MMA_HALF;
+
+    dCv1_y_valid[0] = (dCv1_idy[0] < out_nhw);
+    dCv1_y_valid[1] = (dCv1_idy[1] < out_nhw);
 
     bool dCv1_x_valid[NUM_N_STEPS];
     uint dCv1_idx[NUM_N_STEPS];
@@ -100,9 +102,9 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
 #if TILE_K_PER_STEP == 8
     const int ZEROv1 = 0;
 #elif TILE_K_PER_STEP == 16
-    const int2 ZEROv2           = {0, 0};
+    const int2 ZEROv2 = {0, 0};
 #elif TILE_K_PER_STEP == 32
-    const int4 ZEROv4           = {0, 0, 0, 0};
+    const int4 ZEROv4 = {0, 0, 0, 0};
 #endif
 
     __shared__ int4 sm_base_v4[SM_IN_ID_SIZE + SM_IN_OFF_SIZE];
@@ -124,7 +126,12 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
     int *reg_dBv1 = (int *)reg_dBv4;
 #endif
 
-#if (TILE_M_PER_CTA > CTA_SIZE_IN_THD)
+#if (TILE_M_PER_CTA == 4 * CTA_SIZE_IN_THD)
+    SET_IN_Mv1_ID(tid, sm_base_v4);
+    SET_IN_Mv1_ID(tid + CTA_SIZE_IN_THD * 1, sm_base_v4);
+    SET_IN_Mv1_ID(tid + CTA_SIZE_IN_THD * 2, sm_base_v4);
+    SET_IN_Mv1_ID(tid + CTA_SIZE_IN_THD * 3, sm_base_v4);
+#elif (TILE_M_PER_CTA == 2 * CTA_SIZE_IN_THD)
     SET_IN_Mv1_ID(tid, sm_base_v4);
     SET_IN_Mv1_ID(tid + CTA_SIZE_IN_THD, sm_base_v4);
 #elif (TILE_M_PER_CTA == CTA_SIZE_IN_THD)
@@ -239,79 +246,37 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
     }
 
 #pragma unroll
-    for (int step = 0; step < NUM_M_STEPS; step++) {
-        dCv1_y_valid[0] = (dCv1_idy[0] < out_nhw);
-        dCv1_y_valid[1] = (dCv1_idy[1] < out_nhw);
+    for(int step = 0; step < NUM_M_STEPS; step++)
+    {
+        uint Cv1_off  = step * TILE_N_V2_PER_THD * BLK_M_PER_MMA;
 
-        uint Cv1_off = step * TILE_N_V2_PER_THD * BLK_M_PER_MMA;
-
-#if TILE_N_PER_WARP == 8
-
-        ADD_BIAS_2x1_V1(has_bias, bias, step);
+        ADD_BIAS_V1(has_bias, bias);
 
 #if defined(ENABLE_FUSE)
         uint concat_v1_off0 = 0;
         uint concat_v1_off1 = 0;
+#ifdef PPLNN_ENABLE_CUDA_JIT
+        FUSE_PRELU_V1(has_prelu, prelu, leaky);
+#endif
 
-        FUSE_RELU_2x1_V1(has_relu);
-        FUSE_CLIP_2x1_V1(has_clip, clip_max, clip_min);
-        FUSE_PRELU_2x1_V1(has_prelu, prelu, leaky);
+        FUSE_RELU_V1(has_relu);
+        FUSE_CLIP_V1(has_clip, clip_max, clip_min);
+#ifdef PPLNN_ENABLE_CUDA_JIT
+        FUSE_PRELU_V1(has_prelu, prelu, leaky);
+#endif
 
-        FUSE_ELT_2x1_V1(has_elt, pre_data);
-        FUSE_RELU_2x1_V1(has_elt_relu);
-        FUSE_CLIP_2x1_V1(has_elt_clip, elt_clip_max, elt_clip_min);
-        FUSE_PRELU_2x1_V1(has_elt_prelu, elt_prelu, elt_leaky);
+
+        FUSE_ELT_V1(has_elt, pre_data);
+        FUSE_RELU_V1(has_elt_relu);
+        FUSE_CLIP_V1(has_elt_clip, elt_clip_max, elt_clip_min);
+#ifdef PPLNN_ENABLE_CUDA_JIT
+        FUSE_PRELU_V1(has_elt_prelu, elt_prelu, elt_leaky);
+#endif
 
         SET_CONCAT_OFF_V1(has_concat, concat_v1_off0, concat_v1_off1);
 #endif
 
-        OUTPUT_2x1_BY_INT1();
-#elif TILE_N_PER_WARP == 16
-
-        ADD_BIAS_2x2_V1(has_bias, bias, step);
-
-#if defined(ENABLE_FUSE)
-        uint concat_v1_off0 = 0;
-        uint concat_v1_off1 = 0;
-
-        FUSE_RELU_2x2_V1(has_relu);
-        FUSE_CLIP_2x2_V1(has_clip, clip_max, clip_min);
-        FUSE_PRELU_2x2_V1(has_prelu, prelu, leaky);
-
-        FUSE_ELT_2x2_V1(has_elt, pre_data);
-        FUSE_RELU_2x2_V1(has_elt_relu);
-        FUSE_CLIP_2x2_V1(has_elt_clip, elt_clip_max, elt_clip_min);
-        FUSE_PRELU_2x2_V1(has_elt_prelu, elt_prelu, elt_leaky);
-
-        SET_CONCAT_OFF_V1(has_concat, concat_v1_off0, concat_v1_off1);
-#endif
-
-        OUTPUT_2x2_BY_INT1();
-#elif TILE_N_PER_WARP == 32
-
-        ADD_BIAS_2x4_V1(has_bias, bias, step);
-
-#if defined(ENABLE_FUSE)
-        uint concat_v1_off0 = 0;
-        uint concat_v1_off1 = 0;
-
-        FUSE_RELU_2x4_V1(has_relu);
-        FUSE_CLIP_2x4_V1(has_clip, clip_max, clip_min);
-        FUSE_PRELU_2x4_V1(has_prelu, prelu, leaky);
-
-        FUSE_ELT_2x4_V1(has_elt, pre_data);
-        FUSE_RELU_2x4_V1(has_elt_relu);
-        FUSE_CLIP_2x4_V1(has_elt_clip, elt_clip_max, elt_clip_min);
-        FUSE_PRELU_2x4_V1(has_elt_prelu, elt_prelu, elt_leaky);
-
-        SET_CONCAT_OFF_V1(has_concat, concat_v1_off0, concat_v1_off1);
-#endif
-
-        OUTPUT_2x4_BY_INT1();
-#endif
-
-        dCv1_idy[0] += TILE_M_PER_STEP;
-        dCv1_idy[1] += TILE_M_PER_STEP;
+        OUTPUT_BY_INT1();
     }
 
 #endif // __CUDA_ARCH__

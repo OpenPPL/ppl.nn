@@ -1,4 +1,4 @@
-#!/ usr / bin / env python3
+#!/usr/bin/env python3
 
 """generate idxn conv kernels dynamically
 """
@@ -6,6 +6,9 @@
 import os
 import sys
 import hashlib
+
+def CeilDiv(x, y):
+    return -(x // -y)
 
 class KernelInfo:
     def __init__(self, path, s_size, k_num, cta_y_num, cta_x_num, warp_y, warp_x):
@@ -32,14 +35,95 @@ class KernelInfo:
 
         self.WARP_SIZE = 32
         self.MMA_Y = 16
+        self.MMA_K = 8
         self.MMA_X = 8
         self.MMA_Y_HALF = self.MMA_Y / 2
+
+        self.INT4_TO_4INT = 4
+        self.INT4_TO_16BYTE = 16
+        self.HALF_SIZE = 2
+        self.PB_PER_TURING_SM = 4
+
+        self.CPI_HMMA1688 = 8.06
+        self.CPI_L1_LDG128 = 8
+        self.HMMA_LATENCY = 14
+        self.DRAM_LATENCY = 220
+
+        self.MAX_REG_NUM_PER_THD = 255
+        self.MAX_REG_NUM_PER_CTA = 65536
+        self.MAX_SMEM_SIZE_PER_CTA = 49152
 
         self.cta_num = cta_y_num * cta_x_num
         self.cta_size = self.cta_num * self.WARP_SIZE
 
         self.dAvn_size = self.warp_y / self.MMA_Y_HALF
         self.dBvn_size = self.warp_x / self.MMA_X
+
+    def GetCompGmemRatio(self):
+        pb_num_per_cta = self.cta_num if self.cta_num < self.PB_PER_TURING_SM else self.PB_PER_TURING_SM
+
+        cycles_hmma = (self.CPI_HMMA1688 * (self.cta_y / self.MMA_Y) * (self.cta_x / self.MMA_X) * (self.s_size / self.MMA_K) / pb_num_per_cta) + self.HMMA_LATENCY
+
+        cycles_ldg = self.CPI_L1_LDG128 * CeilDiv( (self.cta_y + self.cta_x) * self.s_size * self.HALF_SIZE, (self.INT4_TO_16BYTE * self.WARP_SIZE) ) + self.DRAM_LATENCY
+
+        comp_gmem_ratio = cycles_hmma / cycles_ldg
+
+        return comp_gmem_ratio
+
+    def GetSMemUsage(self):
+
+        return (self.cta_y + self.cta_size) * self.INT4_TO_4INT
+
+    def GetRegUsage(self):
+        ret = 0
+
+        reg_c_v1 = CeilDiv(self.cta_y * self.cta_x, (self.HALF_SIZE * self.cta_size))
+
+        mma_m_num = self.warp_y // self.MMA_Y
+        mma_n_num = self.warp_x // self.MMA_X
+
+        mma_m_num_x2 = mma_m_num * 2 # for 16x8x8 shape
+
+        if self.s_size == 8: # c2 type
+            reg_a_v1 = mma_m_num_x2 * 1
+            reg_b_v1 = mma_n_num    * 1
+        elif self.s_size == 16: # c4 type
+            reg_a_v1 = mma_m_num_x2 * 2
+            reg_b_v1 = mma_n_num    * 2
+        elif self.s_size == 32: # c8 type
+            reg_a_v1 = mma_m_num_x2 * 4
+            reg_b_v1 = mma_n_num    * 4
+
+        reg_a_idx = (mma_m_num_x2 + 1) * self.INT4_TO_4INT
+        reg_b_idx = mma_n_num * 2
+
+        reg_c_idx = mma_n_num * 2 + 4
+
+        reg_common_idx = 20
+
+        ret = reg_a_v1 + reg_b_v1 + reg_c_v1 + max(reg_a_idx + reg_b_idx, reg_c_idx) + reg_common_idx
+
+        return ret
+
+    def IsKernelFeasible(self):
+        if self.cta_size > 512 or self.cta_size < 64:
+            return False
+
+        reg_usage_per_thd = self.GetRegUsage()
+        reg_usage_per_cta = reg_usage_per_thd * self.cta_size
+        if reg_usage_per_thd > self.MAX_REG_NUM_PER_THD or reg_usage_per_cta > self.MAX_REG_NUM_PER_CTA:
+            return False
+
+        smem_usage = self.GetSMemUsage()
+        if smem_usage > self.MAX_SMEM_SIZE_PER_CTA:
+            return False
+
+        comp_gmem_ratio = self.GetCompGmemRatio()
+        if comp_gmem_ratio >= 2 or comp_gmem_ratio <= 0.5:
+            return False
+
+        return True
+
 
     def GenKernel(self):
         f = open(os.path.join(self.path, self.fname), "w")
@@ -199,21 +283,25 @@ def GenAllKernels(parent_path):
 
     for s_size in [8, 16, 32]:
         for k_num in [1, 2]:
-            for warp_y in [16, 32, 64]:
-                for warp_x in [8, 16, 32]:
+            for warp_y in [16, 32, 64, 128]:
+                for warp_x in [8, 16, 32, 64]:
                     for cta_y_num in [1, 2, 4]:
                         for cta_x_num in [1, 2, 4]:
                             if cta_y_num == 4 and cta_x_num == 4:
                                 continue
+                            if warp_y == 128 and warp_x == 64:
+                                continue
 
                             kernel = KernelInfo(parent_path, s_size, k_num, cta_y_num, cta_x_num, warp_y, warp_x)
 
-                            kernel.GenKernel()
+                            if kernel.IsKernelFeasible():
+                                kernel.GenKernel()
 
-                            idx_header_file.AppendKernel(kernel.kname)
-                            idx_source_file.AppendKernel(kernel.fname)
+                                idx_header_file.AppendKernel(kernel.kname)
+                                idx_source_file.AppendKernel(kernel.fname)
 
-                            init_file.AppendKernel(s_size, kernel.kname)
+                                init_file.AppendKernel(s_size, kernel.kname)
+
     idx_header_file.Close()
     idx_source_file.Close()
 

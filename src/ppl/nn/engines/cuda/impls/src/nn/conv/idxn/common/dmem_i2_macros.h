@@ -232,3 +232,104 @@
         _in.w    = _in_id[7].w + _in_off.w;                                                                      \
         _regA[7] = (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
     }
+
+#define LOAD_dAv2_SIZE16(_regA, _dAv2, _in_id, _in_off)                                                          \
+    {                                                                                                            \
+        int4 _in;                                                                                                \
+                                                                                                                 \
+        _in.x    = (_in_id[0].x + _in_off.x) * _INT4_TO_2INT2_;                                                  \
+        _in.y    = _in_id[0].y + _in_off.y;                                                                      \
+        _in.z    = _in_id[0].z + _in_off.z;                                                                      \
+        _in.w    = _in_id[0].w + _in_off.w;                                                                      \
+        _regA[0] = (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
+                                                                                                                 \
+        _in.x    = (_in_id[1].x + _in_off.x) * _INT4_TO_2INT2_;                                                  \
+        _in.y    = _in_id[1].y + _in_off.y;                                                                      \
+        _in.z    = _in_id[1].z + _in_off.z;                                                                      \
+        _in.w    = _in_id[1].w + _in_off.w;                                                                      \
+        _regA[1] = (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
+                                                                                                                 \
+        _in.x    = (_in_id[2].x + _in_off.x) * _INT4_TO_2INT2_;                                                  \
+        _in.y    = _in_id[2].y + _in_off.y;                                                                      \
+        _in.z    = _in_id[2].z + _in_off.z;                                                                      \
+        _in.w    = _in_id[2].w + _in_off.w;                                                                      \
+        _regA[2] = (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
+                                                                                                                 \
+        _in.x    = (_in_id[3].x + _in_off.x) * _INT4_TO_2INT2_;                                                  \
+        _in.y    = _in_id[3].y + _in_off.y;                                                                      \
+        _in.z    = _in_id[3].z + _in_off.z;                                                                      \
+        _in.w    = _in_id[3].w + _in_off.w;                                                                      \
+        _regA[3] = (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
+                                                                                                                 \
+        _in.x    = (_in_id[4].x + _in_off.x) * _INT4_TO_2INT2_;                                                  \
+        _in.y    = _in_id[4].y + _in_off.y;                                                                      \
+        _in.z    = _in_id[4].z + _in_off.z;                                                                      \
+        _in.w    = _in_id[4].w + _in_off.w;                                                                      \
+        _regA[4] = (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
+                                                                                                                 \
+        _in.x    = (_in_id[5].x + _in_off.x) * _INT4_TO_2INT2_;                                                  \
+        _in.y    = _in_id[5].y + _in_off.y;                                                                      \
+        _in.z    = _in_id[5].z + _in_off.z;                                                                      \
+        _in.w    = _in_id[5].w + _in_off.w;                                                                      \
+        _regA[5] = (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
+                                                                                                                 \
+        _in.x    = (_in_id[6].x + _in_off.x) * _INT4_TO_2INT2_;                                                  \
+        _in.y    = _in_id[6].y + _in_off.y;                                                                      \
+        _in.z    = _in_id[6].z + _in_off.z;                                                                      \
+        _in.w    = _in_id[6].w + _in_off.w;                                                                      \
+        _regA[6] = (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
+                                                                                                                 \
+        _in.x    = (_in_id[7].x + _in_off.x) * _INT4_TO_2INT2_;                                                  \
+        _in.y    = _in_id[7].y + _in_off.y;                                                                      \
+        _in.z    = _in_id[7].z + _in_off.z;                                                                      \
+        _in.w    = _in_id[7].w + _in_off.w;                                                                      \
+        _regA[7] = (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
+                                                                                                                 \
+        _in.x    = (_in_id[8].x + _in_off.x) * _INT4_TO_2INT2_;                                                  \
+        _in.y    = _in_id[8].y + _in_off.y;                                                                      \
+        _in.z    = _in_id[8].z + _in_off.z;                                                                      \
+        _in.w    = _in_id[8].w + _in_off.w;                                                                      \
+        _regA[8] = (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
+                                                                                                                 \
+        _in.x    = (_in_id[9].x + _in_off.x) * _INT4_TO_2INT2_;                                                  \
+        _in.y    = _in_id[9].y + _in_off.y;                                                                      \
+        _in.z    = _in_id[9].z + _in_off.z;                                                                      \
+        _in.w    = _in_id[9].w + _in_off.w;                                                                      \
+        _regA[9] = (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
+                                                                                                                 \
+        _in.x    = (_in_id[10].x + _in_off.x) * _INT4_TO_2INT2_;                                                 \
+        _in.y    = _in_id[10].y + _in_off.y;                                                                     \
+        _in.z    = _in_id[10].z + _in_off.z;                                                                     \
+        _in.w    = _in_id[10].w + _in_off.w;                                                                     \
+        _regA[10]= (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
+                                                                                                                 \
+        _in.x    = (_in_id[11].x + _in_off.x) * _INT4_TO_2INT2_;                                                 \
+        _in.y    = _in_id[11].y + _in_off.y;                                                                     \
+        _in.z    = _in_id[11].z + _in_off.z;                                                                     \
+        _in.w    = _in_id[11].w + _in_off.w;                                                                     \
+        _regA[11]= (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
+                                                                                                                 \
+        _in.x    = (_in_id[12].x + _in_off.x) * _INT4_TO_2INT2_;                                                 \
+        _in.y    = _in_id[12].y + _in_off.y;                                                                     \
+        _in.z    = _in_id[12].z + _in_off.z;                                                                     \
+        _in.w    = _in_id[12].w + _in_off.w;                                                                     \
+        _regA[12]= (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
+                                                                                                                 \
+        _in.x    = (_in_id[13].x + _in_off.x) * _INT4_TO_2INT2_;                                                 \
+        _in.y    = _in_id[13].y + _in_off.y;                                                                     \
+        _in.z    = _in_id[13].z + _in_off.z;                                                                     \
+        _in.w    = _in_id[13].w + _in_off.w;                                                                     \
+        _regA[13]= (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
+                                                                                                                 \
+        _in.x    = (_in_id[14].x + _in_off.x) * _INT4_TO_2INT2_;                                                 \
+        _in.y    = _in_id[14].y + _in_off.y;                                                                     \
+        _in.z    = _in_id[14].z + _in_off.z;                                                                     \
+        _in.w    = _in_id[14].w + _in_off.w;                                                                     \
+        _regA[14]= (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
+                                                                                                                 \
+        _in.x    = (_in_id[15].x + _in_off.x) * _INT4_TO_2INT2_;                                                 \
+        _in.y    = _in_id[15].y + _in_off.y;                                                                     \
+        _in.z    = _in_id[15].z + _in_off.z;                                                                     \
+        _in.w    = _in_id[15].w + _in_off.w;                                                                     \
+        _regA[15]= (BatchInRange(_in.w) && WidthInRange(_in.y) && HeightInRange(_in.z)) ? _dAv2[_in.x] : ZEROv2; \
+    }

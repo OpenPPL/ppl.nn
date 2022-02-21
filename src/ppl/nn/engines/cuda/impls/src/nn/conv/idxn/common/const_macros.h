@@ -338,3 +338,17 @@
 #elif CTA_SIZE_X_IN_WARP == 4
 #define CTA_SIZE_X_IN_BITS 2
 #endif
+
+////////////////////////////////////////
+// fuse macros
+////////////////////////////////////////
+
+#define HADD2_INST(_d, _a, _b) \
+        asm volatile("add.ftz.f16x2 %0, %1, %2;\n":   "=r"(_d): "r"(_a), "r"(_b));
+
+#define HMAX2_INST(_d, _a, _b, _c) \
+        asm volatile("vmax2.s32.s32.s32 %0, %1, %2, %3;\n":   "=r"(_d): "r"(_a), "r"(_b), "r"(_c));
+
+#define HMIN2_INST(_d, _a, _b, _c) \
+        asm volatile("vmin2.s32.s32.s32 %0, %1, %2, %3;\n":   "=r"(_d): "r"(_a), "r"(_b), "r"(_c));
+

@@ -7,6 +7,9 @@ import os
 import sys
 import hashlib
 
+def CeilDiv(x, y):
+    return -(x // -y)
+
 class KernelInfo:
     def __init__(self, path, flt_size, s_size, k_num, cta_y_num, cta_x_num, warp_y, warp_x, buf_size):
         self.path = path
@@ -34,14 +37,38 @@ class KernelInfo:
         self.kname = "nv2spkConv_hmma1688_nhwc_" + self.flt_size + self.kconfig
         self.fname = self.flt_size + "/2spk_"  + self.flt_size + self.kconfig + ".cu"
 
+        self.HALF_SIZE = 2
         self.WARP_SIZE = 32
+        self.WARP_SIZE_Y = 8
+        self.WARP_SIZE_X = 4
         self.INT4_TO_4HALF2 = 8
+        self.INT4_TO_4INT = 4
+        self.INT4_TO_16BYTE = 16
         self.MMA_Y = 16
+        self.MMA_K = 8
         self.MMA_X = 8
         self.MMA_Y_HALF = self.MMA_Y / 2
+        self.PB_PER_TURING_SM = 4
+
+        self.CPI_HMMA1688 = 8.06
+        self.CPI_L1_LDG128 = 8
+        self.HMMA_LATENCY = 14
+        self.LDSM1_LATENCY = 19
+        self.STS128_LATENCY = 23
+        self.DRAM_LATENCY = 220
+
+        self.MAX_REG_NUM_PER_THD = 255
+        self.MAX_REG_NUM_PER_CTA = 65536
+
+        self.MAX_SMEM_V4_PER_CTA = 3072 # 48KB per cta
+
+        self.thd_y = self.warp_y // self.WARP_SIZE_Y
+        self.thd_x = self.warp_x // self.WARP_SIZE_X
 
         self.cta_num = cta_y_num * cta_x_num
         self.cta_size = self.cta_num * self.k_num * self.WARP_SIZE
+
+        self.thd_num_per_set = self.cta_num * self.WARP_SIZE
 
         self.sAv4_size = warp_y / self.INT4_TO_4HALF2
         self.sBv4_size = warp_x / self.INT4_TO_4HALF2
@@ -71,14 +98,69 @@ class KernelInfo:
         else:
             sys.exit(1)
 
-    def ExceedScope(self):
-        MAX_SMEM_V4_PER_CTA = 3072 # 48KB per cta
+    def GetSMemUsage(self):
 
         sm_a_v4 = self.cta_y * self.k_size * self.buf_size / self.INT4_TO_4HALF2
         sm_b_v4 = self.cta_x * self.k_size * self.buf_size / self.INT4_TO_4HALF2
         sm_c_v4 = self.cta_y * self.cta_x / self.INT4_TO_4HALF2
 
-        return max(sm_a_v4 + sm_b_v4, sm_c_v4 * self.k_num) > MAX_SMEM_V4_PER_CTA
+        return max(sm_a_v4 + sm_b_v4, sm_c_v4 * self.k_num)
+
+    def GetRegUsage(self):
+        ret = 0
+
+        reg_a_v4 = CeilDiv(self.cta_y * self.k_size, (self.HALF_SIZE * self.INT4_TO_4INT * self.cta_size))
+        reg_b_v4 = CeilDiv(self.cta_x * self.k_size, (self.HALF_SIZE * self.INT4_TO_4INT * self.cta_size))
+        reg_c_v4 = CeilDiv(self.cta_y * self.cta_x,  (self.HALF_SIZE * self.INT4_TO_4INT * self.thd_num_per_set))
+
+        reg_a_v1 = reg_a_v4 * self.INT4_TO_4INT
+        reg_b_v1 = reg_b_v4 * self.INT4_TO_4INT
+        reg_c_v1 = reg_c_v4 * self.INT4_TO_4INT
+
+        reg_a_buf_v1 = self.thd_y * self.buf_size
+        reg_b_buf_v1 = self.thd_x // self.HALF_SIZE * self.buf_size
+
+        reg_a_idx = reg_a_v4 * 2
+        reg_b_idx = reg_b_v4 * 2
+
+        reg_reduce_v1 = self.k_num * self.INT4_TO_4INT
+
+        reg_common_idx = 40
+
+        ret = reg_a_v1 + reg_b_v1 + reg_c_v1 + reg_a_buf_v1 + reg_b_buf_v1 + reg_a_idx + reg_b_idx + reg_reduce_v1 + reg_common_idx
+
+        return ret
+
+    def GetCompMem2Ratio(self):
+        pb_num_per_cta = self.cta_num if self.cta_num < self.PB_PER_TURING_SM else self.PB_PER_TURING_SM
+
+        cycles_comp = self.CPI_HMMA1688 * ( (self.cta_y / self.MMA_Y) * (self.cta_x / self.MMA_X) * (self.k_size / self.MMA_K) / pb_num_per_cta) + self.HMMA_LATENCY + self.LDSM1_LATENCY
+
+        cycles_mem2 = self.CPI_L1_LDG128 * CeilDiv( (self.cta_y + self.cta_x) * self.k_size * self.HALF_SIZE, (self.INT4_TO_16BYTE * self.WARP_SIZE) ) + self.DRAM_LATENCY + self.STS128_LATENCY
+
+        comp_mem2_ratio = cycles_comp / cycles_mem2
+
+        return comp_mem2_ratio
+
+    def IsKernelFeasible(self):
+        if self.cta_size > 512 or self.cta_size < 64:
+            return False
+
+        reg_usage_per_thd = self.GetRegUsage()
+        reg_usage_per_cta = reg_usage_per_thd * self.cta_size
+        if reg_usage_per_thd > self.MAX_REG_NUM_PER_THD or reg_usage_per_cta > self.MAX_REG_NUM_PER_CTA:
+            return False
+
+        smem_usage = self.GetSMemUsage()
+        if smem_usage > self.MAX_SMEM_V4_PER_CTA:
+            return False
+
+        comp_mem2_ratio = self.GetCompMem2Ratio()
+        if comp_mem2_ratio >= 2 or comp_mem2_ratio <= 0.5:
+            return False
+
+        return True
+
 
     def GenKernel(self):
         f = open(os.path.join(self.path, self.fname), "w")
@@ -349,7 +431,7 @@ def GenAllKernels(parent_path):
 
                                     kernel = KernelInfo(parent_path, flt_size, s_size, k_num, cta_y_num, cta_x_num, warp_y, warp_x, buf_size)
 
-                                    if not kernel.ExceedScope():
+                                    if kernel.IsKernelFeasible():
                                         kernel.GenKernel()
                                         lut_header_file.AppendKernel(kernel.kname)
                                         spk_header_file.AppendKernel(kernel.kname)
