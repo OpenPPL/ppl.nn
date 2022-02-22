@@ -829,10 +829,21 @@ void RunOnNumaNode(int32_t numa_node_id, double& avg_run_dur) {
         for (uint32_t i = 0; i < engines.size(); ++i) {
             engine_ptrs[i] = engines[i].get();
         }
-        auto builder = unique_ptr<RuntimeBuilder>(
-            OnnxRuntimeBuilderFactory::Create(g_flag_onnx_model.c_str(), engine_ptrs.data(), engine_ptrs.size()));
+        auto builder = unique_ptr<OnnxRuntimeBuilder>(OnnxRuntimeBuilderFactory::Create());
         if (!builder) {
             LOG(ERROR) << "create RuntimeBuilder failed.";
+            return;
+        }
+
+        auto status = builder->Init(g_flag_onnx_model.c_str(), engine_ptrs.data(), engine_ptrs.size());
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "create OnnxRuntimeBuilder failed: " << GetRetCodeStr(status);
+            return;
+        }
+
+        status = builder->Preprocess();
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "onnx preprocess failed: " << GetRetCodeStr(status);
             return;
         }
 
