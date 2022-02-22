@@ -37,7 +37,8 @@ table NodeInfo {
 
 table Constant {
     edge_id: uint32;
-    data: [ubyte];
+    data_offset: uint64;
+    data_bytes: uint64;
 }
 
 enum DataType : uint32 {
@@ -88,6 +89,7 @@ table Partition {
 table GraphData {
     shapes: [Shape];
     partitions: [Partition];
+    shared_data: [ubyte];
 }
 
 table Graph {
@@ -101,7 +103,7 @@ table Engine {
 }
 
 table Model {
-    version: string;
+    version: uint64;
     engines: [Engine];
     graph: Graph;
 }

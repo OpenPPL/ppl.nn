@@ -87,7 +87,7 @@ RetCode RuntimeBuilderImpl::Init(const char* model_buf, uint64_t buf_len, ppl::n
         return RC_OTHER_ERROR;
     }
 
-    LOG(INFO) << "ppl model version: " << fb_model->version()->c_str();
+    LOG(INFO) << "ppl model version: " << fb_model->version();
 
     vector<EngineImpl*> seq2engine;
     status = ParseEngines(fb_model->engines(), resource_->engines, &seq2engine);
