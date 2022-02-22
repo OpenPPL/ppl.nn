@@ -15,41 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_ARM_SERVER_GEMM_NEON_GEMM_H_
-#define __ST_PPL_KERNEL_ARM_SERVER_GEMM_NEON_GEMM_H_
+#ifndef __ST_PPL_KERNEL_ARM_SERVER_GEMM_NEON_OUTER_GEMM_NDARRAY_OUTER_H_
+#define __ST_PPL_KERNEL_ARM_SERVER_GEMM_NEON_OUTER_GEMM_NDARRAY_OUTER_H_
 
-#include "ppl/kernel/arm_server/common/general_include.h"
-#include "ppl/common/generic_cpu_allocator.h"
-#include "ppl/common/sys.h"
+#include "ppl/kernel/arm_server/common/internal_include.h"
+#include "ppl/kernel/arm_server/gemm/neon/gemm.h"
 
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
-class gemm_fuse_flag {
-public:
-    enum {
-        NONE = 0,
-        RELU = 1 << 0,
-    };
-};
-typedef uint32_t gemm_fuse_flag_t;
-
-class gemm_C_type {
-public:
-    enum {
-        EMPTY    = 0,
-        SCALAR   = 1,
-        VECTOR_H = 2,
-        VECTOR_W = 3,
-        MATRIX   = 4,
-    };
-};
-typedef uint32_t gemm_C_type_t;
-
-ppl::common::RetCode gemm_ndarray(
-    const void *A,
-    const void *B,
-    const void *C,
-    const ppl::common::datatype_t data_type,
+template <typename eT>
+ppl::common::RetCode gemm_ndarray_common_outer(
+    const eT* A,
+    const eT* B,
+    const eT* C,
     const int64_t M,
     const int64_t N,
     const int64_t K,
@@ -62,8 +40,8 @@ ppl::common::RetCode gemm_ndarray(
     const float beta,
     const int64_t ldy,
     const gemm_C_type_t c_type,
-    void *Y);
+    eT* Y);
 
-}}}}; // namespace ppl::kernel::arm_server::neon
+}}}} // namespace ppl::kernel::arm_server::neon
 
-#endif
+#endif // !__ST_PPL_KERNEL_ARM_SERVER_GEMM_NEON_OUTER_GEMM_NDARRAY_OUTER_H_

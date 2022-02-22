@@ -37,22 +37,21 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     }
     PPLNN_ARM_DEBUG_TRACE("Output [Y]:\n");
     PPL_ARM_TENSOR_PRINT_DEBUG_MSG(Y);
-    PPLNN_ARM_DEBUG_TRACE("trans_A: %d\n", param_->transA);
-    PPLNN_ARM_DEBUG_TRACE("trans_B: %d\n", param_->transB);
+    PPLNN_ARM_DEBUG_TRACE("transA: %d\n", param_->transA);
+    PPLNN_ARM_DEBUG_TRACE("transB: %d\n", param_->transB);
     PPLNN_ARM_DEBUG_TRACE("alpha: %f\n", param_->alpha);
     PPLNN_ARM_DEBUG_TRACE("beta: %f\n", param_->beta);
     PPLNN_ARM_DEBUG_TRACE("isa: %u\n", GetISA());
 
     const auto data_type = A->GetShape()->GetDataType();
-    if ((data_type != ppl::common::DATATYPE_FLOAT32 &&
-         data_type != ppl::common::DATATYPE_FLOAT16    )                  ||
-        A->GetShape()->GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY     ) {
+    if ((data_type != ppl::common::DATATYPE_FLOAT32 && data_type != ppl::common::DATATYPE_FLOAT16) ||
+        A->GetShape()->GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY) {
         LOG(ERROR) << "only support fp32/fp16 ndarray now.";
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    if (param_->transA || param_->transB) {
-        LOG(ERROR) << "only support anbn now.";
+    if (data_type == ppl::common::DATATYPE_FLOAT16 && !MayUseISA(ppl::common::ISA_ARMV8_2)) {
+        LOG(ERROR) << "fp16 needs isa >= armv8.2.";
         return ppl::common::RC_UNSUPPORTED;
     }
 
@@ -71,139 +70,42 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     const int32_t K = A->GetShape()->GetDim(AKdim);
     const int32_t N = param_->N == 0 ? B->GetShape()->GetDim(BNdim) : param_->N;
 
-    void *src_A = A->GetBufferPtr<void>();
-    void *src_B = B->GetBufferPtr<void>();
-    void *dst_Y = Y->GetBufferPtr<void>();
+    void* src_A = A->GetBufferPtr<void>();
+    void* src_B = B->GetBufferPtr<void>();
+    void* dst_Y = Y->GetBufferPtr<void>();
     int32_t lda = param_->transA ? M : K;
     int32_t ldb = param_->transB ? K : N;
     int32_t ldy = N;
     auto alpha = param_->alpha;
     auto beta = param_->beta;
-    auto trans_A = param_->transA;
-    auto trans_B = param_->transB;
-    auto isa_flag = GetISA();
+    auto transA = param_->transA;
+    auto transB = param_->transB;
 
-    uint32_t fuse_type;
-    if (gemm_fuse_relu_) {
-        fuse_type = ppl::kernel::arm_server::neon::gemm_fuse_flag::RELU;
-    } else {
-        fuse_type = ppl::kernel::arm_server::neon::gemm_fuse_flag::NONE;
-    }
-    void *src_C = nullptr;
+    void* src_C = nullptr;
     auto c_type = ppl::kernel::arm_server::neon::gemm_C_type::EMPTY;
-    // TODO: fully support gemm op
-    (void)trans_A;
-    (void)trans_B;
-    (void)isa_flag;
-    (void)fuse_type;
-    (void)c_type;
 
     auto ldc = 0;
     if (C != nullptr && !C->GetShape()->IsEmpty()) {
-        src_C = C->GetBufferPtr<float>();
-        if (C->GetShape()->GetDimCount() == 2) {
-            if (C->GetShape()->GetDim(0) == Y->GetShape()->GetDim(0) && C->GetShape()->GetDim(1) == Y->GetShape()->GetDim(1)) {
+        src_C = C->GetBufferPtr<void>();
+        if (C->GetShape()->GetElementsExcludingPadding() == 1) {
+            c_type = ppl::kernel::arm_server::neon::gemm_C_type::SCALAR;
+        } else if (C->GetShape()->GetDimCount() == 1) {
+            c_type = ppl::kernel::arm_server::neon::gemm_C_type::VECTOR_W;
+            ldc = C->GetShape()->GetDim(0);
+        } else if (C->GetShape()->GetDimCount() == 2) {
+            if (C->GetShape()->GetDim(0) == 1) {
+                c_type = ppl::kernel::arm_server::neon::gemm_C_type::VECTOR_W;
+            } else if (C->GetShape()->GetDim(1) == 1) {
+                c_type = ppl::kernel::arm_server::neon::gemm_C_type::VECTOR_H;
+            } else {
                 c_type = ppl::kernel::arm_server::neon::gemm_C_type::MATRIX;
-                ldc = C->GetShape()->GetDim(1);
             }
+            ldc = C->GetShape()->GetDim(1);
         }
     }
 
-    if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        if (MayUseISA(ppl::common::ISA_ARMV8)) {
-            sgemm_m1 = 80;
-            sgemm_n1 = 32;
-            sgemm_k1 = 128;
-            sgemm_m3 = 2560;
-            sgemm_k3 = 5120;
-
-            BufferDesc tmp_buffer_desc;
-
-            uint64_t tmp_buffer_size = ppl::kernel::arm_server::neon::ppl_arm_server_kernel_fp32_gemm_get_buffer_size(
-                sgemm_m1, sgemm_n1);
-
-            auto status = GetArmDevice()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
-            if (status != ppl::common::RC_SUCCESS) {
-                LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
-                        << "] failed: " << ppl::common::GetRetCodeStr(status);
-                return status;
-            }
-            return ppl::kernel::arm_server::neon::gemm_fp32(
-                (const float *)src_A,
-                (const float *)src_B,
-                (const float *)src_C,
-                (float *)dst_Y,
-                (float *)tmp_buffer_desc.addr,
-                M,
-                N,
-                K,
-                lda,
-                ldb,
-                ldc,
-                ldy,
-                alpha,
-                beta,
-                sgemm_m1,
-                sgemm_n1,
-                sgemm_k1,
-                sgemm_m3,
-                sgemm_k3);
-        }
-        else {
-            LOG(ERROR) << "unsupported datatype: " << ppl::common::GetDataTypeStr(data_type) 
-                    << "with isa " << GetISA() << ".";
-            return ppl::common::RC_UNSUPPORTED;
-        }
-    }
-#ifdef PPLNN_USE_ARMV8_2_FP16
-    else if (data_type == ppl::common::DATATYPE_FLOAT16) {
-        if (MayUseISA(ppl::common::ISA_ARMV8_2)) {
-            sgemm_m1 = 80;
-            sgemm_n1 = 64;
-            sgemm_k1 = 128;
-            sgemm_m3 = 2560;
-            sgemm_k3 = 5120;
-
-            BufferDesc tmp_buffer_desc;
-
-            uint64_t tmp_buffer_size = ppl::kernel::arm_server::neon::ppl_arm_server_kernel_fp16_gemm_get_buffer_size(
-                sgemm_m1, sgemm_n1);
-
-            auto status = GetArmDevice()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
-            if (status != ppl::common::RC_SUCCESS) {
-                LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
-                        << "] failed: " << ppl::common::GetRetCodeStr(status);
-                return status;
-            }
-            return ppl::kernel::arm_server::neon::gemm_fp16(
-                (const __fp16 *)src_A,
-                (const __fp16 *)src_B,
-                (const __fp16 *)src_C,
-                (__fp16 *)dst_Y,
-                (__fp16 *)tmp_buffer_desc.addr,
-                M,
-                N,
-                K,
-                lda,
-                ldb,
-                ldc,
-                ldy,
-                alpha,
-                beta,
-                sgemm_m1,
-                sgemm_n1,
-                sgemm_k1,
-                sgemm_m3,
-                sgemm_k3);
-        }
-        else {
-            LOG(ERROR) << "unsupported datatype: " << ppl::common::GetDataTypeStr(data_type) 
-                    << "with isa " << GetISA() << ".";
-            return ppl::common::RC_UNSUPPORTED;
-        }
-    }
-#endif
-    return ppl::common::RC_UNSUPPORTED;
+    return ppl::kernel::arm_server::neon::gemm_ndarray(src_A, src_B, src_C, data_type, M, N, K, lda, ldb, ldc, transA,
+                                                       transB, alpha, beta, ldy, c_type, dst_Y);
 }
 
 }}} // namespace ppl::nn::arm
