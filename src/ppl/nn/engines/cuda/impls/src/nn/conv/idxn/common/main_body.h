@@ -255,14 +255,11 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
 #if defined(ENABLE_FUSE)
         uint concat_v1_off0 = 0;
         uint concat_v1_off1 = 0;
-#ifdef PPLNN_ENABLE_CUDA_JIT
-        FUSE_PRELU_V1(has_prelu, prelu, leaky);
-#endif
 
         FUSE_RELU_V1(has_relu);
         FUSE_CLIP_V1(has_clip, clip_max, clip_min);
 #ifdef PPLNN_ENABLE_CUDA_JIT
-        FUSE_PRELU_V1(has_prelu, prelu, leaky);
+        // FUSE_PRELU_V1(has_prelu, prelu, leaky);
 #endif
 
 
@@ -270,7 +267,7 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
         FUSE_RELU_V1(has_elt_relu);
         FUSE_CLIP_V1(has_elt_clip, elt_clip_max, elt_clip_min);
 #ifdef PPLNN_ENABLE_CUDA_JIT
-        FUSE_PRELU_V1(has_elt_prelu, elt_prelu, elt_leaky);
+        // FUSE_PRELU_V1(has_elt_prelu, elt_prelu, elt_leaky);
 #endif
 
         SET_CONCAT_OFF_V1(has_concat, concat_v1_off0, concat_v1_off1);

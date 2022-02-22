@@ -36,7 +36,7 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
 
 #if defined(ENABLE_FUSE)
     __half2 *h2R = (__half2 *)Rv4;
-    __half *hR = (__half *)Rv4;
+    // __half *hR = (__half *)Rv4;
 #endif
 
     uint tid       =  threadIdx.x;
@@ -497,12 +497,12 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
 
         FUSE_RELU_V4(has_relu);
         FUSE_CLIP_V4(has_clip, clip_max, clip_min);
-        FUSE_PRELU_V4(has_prelu, prelu, leaky);
+        // FUSE_PRELU_V4(has_prelu, prelu, leaky);
 
         FUSE_ELT_V4(has_elt, pre_data);
         FUSE_RELU_V4(has_elt_relu);
         FUSE_CLIP_V4(has_elt_clip, elt_clip_max, elt_clip_min);
-        FUSE_PRELU_V4(has_elt_prelu, elt_prelu, elt_leaky);
+        // FUSE_PRELU_V4(has_elt_prelu, elt_prelu, elt_leaky);
 
         SET_CONCAT_OFF_V4(has_concat, concat_v4_off);
 #endif

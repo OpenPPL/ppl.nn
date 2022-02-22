@@ -57,6 +57,21 @@
                 {                                                                   \
                     Rv1[i] = __vmaxs2(Rv1[i], 0);                                   \
                 }                                                                   \
+            }                                                                       \
+        }                                                                           \
+    }
+
+#if 0
+#define FUSE_RELU_V4(_has_relu)                                                     \
+    {                                                                               \
+        if (_has_relu && dCv4_x_valid && dCv4_y_valid) {                            \
+            if (_has_relu == 1) {                                                   \
+                int *Rv1 = (int *)Rv4;                                              \
+                                                                                    \
+                _Pragma("unroll") for (int i = 0; i < _INT4_TO_4HALF2_; i++)        \
+                {                                                                   \
+                    Rv1[i] = __vmaxs2(Rv1[i], 0);                                   \
+                }                                                                   \
             } else if (_has_relu == 2) {                                            \
                 __half *hR = (__half*)Rv4;                                          \
                 _Pragma("unroll") for (int i = 0; i < _INT4_TO_8HALF_; i++)         \
@@ -66,6 +81,7 @@
             }                                                                       \
         }                                                                           \
     }
+#endif
 
 #define FUSE_CLIP_V4(_has_clip, _clip_max, _clip_min)                             \
     {                                                                             \
