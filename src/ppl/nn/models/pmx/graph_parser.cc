@@ -140,6 +140,49 @@ static RetCode ParseGraphDataShapes(const GraphData* fb_data, map<edgeid_t, Tens
     return RC_SUCCESS;
 }
 
+class PmxConstantVisitor final : public ConstantVisitor {
+public:
+    PmxConstantVisitor(const ir::GraphTopo* topo, const uint8_t* shared_data, const RuntimeGraphInfo* info,
+                       const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Constant>>* fb_constants)
+        : topo_(topo), shared_data_(shared_data), info_(info), fb_constants_(fb_constants) {}
+
+    uint64_t CalcTotalBytes() const override {
+        uint64_t total_bytes = 0;
+        for (auto y = fb_constants_->begin(); y != fb_constants_->end(); ++y) {
+            auto fb_constant = *y;
+            total_bytes += fb_constant->data_bytes();
+        }
+        return total_bytes;
+    }
+
+    RetCode ForEach(const function<RetCode(edgeid_t, const void*, uint64_t, const TensorShape&)>& f) const override {
+        for (auto y = fb_constants_->begin(); y != fb_constants_->end(); ++y) {
+            auto fb_constant = *y;
+            auto edge = topo_->GetEdgeById(fb_constant->edge_id());
+
+            auto shape_ref = info_->shapes.find(fb_constant->edge_id());
+            if (shape_ref == info_->shapes.end()) {
+                LOG(ERROR) << "cannot find shape of constant[" << edge->GetName() << "]";
+                return RC_NOT_FOUND;
+            }
+
+            auto status = f(fb_constant->edge_id(), shared_data_ + fb_constant->data_offset(),
+                            fb_constant->data_bytes(), shape_ref->second);
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "exec callback for constant[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
+                return status;
+            }
+        }
+        return RC_SUCCESS;
+    }
+
+private:
+    const ir::GraphTopo* topo_;
+    const uint8_t* shared_data_;
+    const RuntimeGraphInfo* info_;
+    const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Constant>>* fb_constants_;
+};
+
 static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::GraphTopo* topo,
                                         const vector<EngineImpl*>& seq2engine, RuntimeGraphInfo* info) {
     auto fb_partitions = fb_data->partitions();
@@ -177,30 +220,11 @@ static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::Grap
             partition.ops.emplace_back(std::move(op));
         }
 
-        for (auto y = fb_partition->constants()->begin(); y != fb_partition->constants()->end(); ++y) {
-            auto fb_constant = *y;
-            auto edge = topo->GetEdgeById(fb_constant->edge_id());
-
-            auto ret_pair = partition.constants.insert(make_pair(fb_constant->edge_id(), RuntimeConstantInfo()));
-            if (!ret_pair.second) {
-                LOG(ERROR) << "duplicated constant of edgeid[" << fb_constant->edge_id() << "]";
-                return RC_EXISTS;
-            }
-
-            auto shape_ref = info->shapes.find(fb_constant->edge_id());
-            if (shape_ref == info->shapes.end()) {
-                LOG(ERROR) << "cannot find shape of constant[" << edge->GetName() << "]";
-                return RC_NOT_FOUND;
-            }
-
-            RuntimeConstantInfo& constant = ret_pair.first->second;
-            auto status = engine->LoadConstant(fb_constant->edge_id(),
-                                               fb_data->shared_data()->data() + fb_constant->data_offset(),
-                                               fb_constant->data_bytes(), shape_ref->second, &constant);
-            if (status != RC_SUCCESS) {
-                LOG(ERROR) << "load constant[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
-                return status;
-            }
+        PmxConstantVisitor visitor(topo, fb_data->shared_data()->data(), info, fb_partition->constants());
+        auto status = engine->LoadConstants(visitor, &partition.constants);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "LoadConstants of engine[" << engine->GetName() << "] failed: " << GetRetCodeStr(status);
+            return status;
         }
 
         info->partitions.emplace_back(std::move(partition));
