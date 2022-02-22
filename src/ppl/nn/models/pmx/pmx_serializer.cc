@@ -201,9 +201,28 @@ static RetCode CreateFbShapes(SerializationInfo* sinfo, const map<edgeid_t, Tens
     return RC_SUCCESS;
 }
 
+static pair<uint64_t, uint64_t> FindOrInsertData(const vector<uint8_t>& data, vector<uint8_t>* shared_data,
+                                                 vector<pair<uint64_t, uint64_t>>* shared_data_items) {
+    for (auto o = shared_data_items->begin(); o != shared_data_items->end(); ++o) {
+        if (data.size() != o->second) {
+            continue;
+        }
+        if (memcmp(data.data(), shared_data->data() + o->first, o->second) == 0) {
+            return *o;
+        }
+    }
+
+    auto new_data_item = pair<uint64_t, uint64_t>(shared_data->size(), data.size());
+    shared_data->resize(shared_data->size() + data.size());
+    memcpy(shared_data->data() + new_data_item.first, data.data(), data.size());
+    shared_data_items->push_back(new_data_item);
+    return new_data_item;
+}
+
 static RetCode CreateFbConstants(SerializationInfo* sinfo, const ir::GraphTopo* topo,
                                  const map<edgeid_t, RuntimeConstantInfo>& constants,
-                                 Offset<Vector<Offset<pmx::Constant>>>* fb_constants) {
+                                 Offset<Vector<Offset<pmx::Constant>>>* fb_constants, vector<uint8_t>* shared_data,
+                                 vector<pair<uint64_t, uint64_t>>* shared_data_items) {
     const vector<edgeid_t>& edgeid2seq = sinfo->edgeid2seq;
 
     vector<Offset<pmx::Constant>> constant_vec;
@@ -215,23 +234,27 @@ static RetCode CreateFbConstants(SerializationInfo* sinfo, const ir::GraphTopo* 
         TensorShape dst_shape = *info.GetShape();
         dst_shape.SetDataFormat(DATAFORMAT_NDARRAY);
 
-        vector<uint8_t> data;
         auto device = info.GetDevice();
-        if (device) {
-            auto bytes = dst_shape.GetBytesIncludingPadding();
-            if (bytes > 0) {
-                data.resize(bytes);
-                auto converter = device->GetDataConverter();
-                auto status = converter->ConvertToHost(data.data(), dst_shape, info.GetBufferPtr(), *info.GetShape());
-                if (status != RC_SUCCESS) {
-                    auto edge = topo->GetEdgeById(it->first);
-                    LOG(ERROR) << "copy data of tensor[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
-                    return status;
-                }
-            }
+        if (!device) {
+            continue;
         }
 
-        auto fb_constant = pmx::CreateConstantDirect(sinfo->builder, edgeid2seq[it->first], &data);
+        auto bytes = dst_shape.GetBytesIncludingPadding();
+        if (bytes == 0) {
+            continue;
+        }
+
+        vector<uint8_t> data(bytes);
+        auto converter = device->GetDataConverter();
+        auto status = converter->ConvertToHost(data.data(), dst_shape, info.GetBufferPtr(), *info.GetShape());
+        if (status != RC_SUCCESS) {
+            auto edge = topo->GetEdgeById(it->first);
+            LOG(ERROR) << "copy data of tensor[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
+            return status;
+        }
+
+        auto ret_pair = FindOrInsertData(data, shared_data, shared_data_items);
+        auto fb_constant = pmx::CreateConstant(sinfo->builder, edgeid2seq[it->first], ret_pair.first, ret_pair.second);
         constant_vec.emplace_back(std::move(fb_constant));
     }
 
@@ -273,7 +296,8 @@ static RetCode CreateFbPartitionNodes(SerializationInfo* sinfo, const vector<std
 }
 
 static RetCode CreateFbPartition(SerializationInfo* sinfo, const RuntimeGraphInfo::Partition& partition,
-                                 const ir::GraphTopo* topo, Offset<pmx::Partition>* fb_partition) {
+                                 const ir::GraphTopo* topo, Offset<pmx::Partition>* fb_partition,
+                                 vector<uint8_t>* shared_data, vector<pair<uint64_t, uint64_t>>* shared_data_items) {
     const map<EngineImpl*, uint32_t>& engine2seq = sinfo->engine2seq;
     auto ref = engine2seq.find(partition.engine);
     if (ref == engine2seq.end()) {
@@ -289,7 +313,7 @@ static RetCode CreateFbPartition(SerializationInfo* sinfo, const RuntimeGraphInf
     }
 
     Offset<Vector<Offset<pmx::Constant>>> fb_constants;
-    status = CreateFbConstants(sinfo, topo, partition.constants, &fb_constants);
+    status = CreateFbConstants(sinfo, topo, partition.constants, &fb_constants, shared_data, shared_data_items);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "create constants failed: " << GetRetCodeStr(status);
         return status;
@@ -300,7 +324,8 @@ static RetCode CreateFbPartition(SerializationInfo* sinfo, const RuntimeGraphInf
 }
 
 static RetCode CreateFbPartitions(SerializationInfo* sinfo, const vector<RuntimeGraphInfo::Partition>& partitions,
-                                  const ir::GraphTopo* topo, Offset<Vector<Offset<pmx::Partition>>>* fb_partitions) {
+                                  const ir::GraphTopo* topo, Offset<Vector<Offset<pmx::Partition>>>* fb_partitions,
+                                  vector<uint8_t>* shared_data, vector<pair<uint64_t, uint64_t>>* shared_data_items) {
     const map<EngineImpl*, uint32_t>& engine2seq = sinfo->engine2seq;
 
     vector<Offset<pmx::Partition>> partition_vec;
@@ -314,7 +339,7 @@ static RetCode CreateFbPartitions(SerializationInfo* sinfo, const vector<Runtime
         }
 
         Offset<pmx::Partition> fb_partition;
-        auto status = CreateFbPartition(sinfo, *p, topo, &fb_partition);
+        auto status = CreateFbPartition(sinfo, *p, topo, &fb_partition, shared_data, shared_data_items);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "CreateFbPartition failed: " << GetRetCodeStr(status);
             return status;
@@ -336,14 +361,17 @@ static RetCode CreateFbGraphData(SerializationInfo* sinfo, const ir::GraphTopo* 
         return status;
     }
 
+    vector<uint8_t> shared_data;
+    vector<pair<uint64_t, uint64_t>> shared_data_items;
     Offset<Vector<Offset<pmx::Partition>>> fb_partitions;
-    status = CreateFbPartitions(sinfo, info.partitions, topo, &fb_partitions);
+    status = CreateFbPartitions(sinfo, info.partitions, topo, &fb_partitions, &shared_data, &shared_data_items);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "CreateFbPartition failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    *fb_data = CreateGraphData(sinfo->builder, fb_shapes, fb_partitions);
+    auto fb_shared_data = sinfo->builder.CreateVector<uint8_t>(shared_data);
+    *fb_data = CreateGraphData(sinfo->builder, fb_shapes, fb_partitions, fb_shared_data);
     return RC_SUCCESS;
 }
 
@@ -369,8 +397,6 @@ static RetCode CreateFbGraph(SerializationInfo* sinfo, const ir::GraphTopo* topo
 
 static RetCode CreateFbModel(SerializationInfo* sinfo, const ir::GraphTopo* topo, const vector<EngineImpl*>& engines,
                              const RuntimeGraphInfo& info, Offset<pmx::Model>* fb_model) {
-    auto fb_version = sinfo->builder.CreateString("1");
-
     Offset<Vector<Offset<pmx::Engine>>> fb_engines;
     auto status = CreateFbEngines(sinfo, topo, engines, &fb_engines);
     if (status != RC_SUCCESS) {
@@ -385,7 +411,7 @@ static RetCode CreateFbModel(SerializationInfo* sinfo, const ir::GraphTopo* topo
         return status;
     }
 
-    *fb_model = pmx::CreateModel(sinfo->builder, fb_version, fb_engines, fb_graph);
+    *fb_model = pmx::CreateModel(sinfo->builder, 1, fb_engines, fb_graph);
     return RC_SUCCESS;
 }
 
@@ -425,7 +451,8 @@ static RetCode WriteModel(const FlatBufferBuilder& builder, const std::string& f
 
 RetCode PmxSerializer::Serialize(const string& output_file, const ir::GraphTopo* topo,
                                  const vector<EngineImpl*>& engines, const RuntimeGraphInfo& info) {
-    LOG(WARNING) << "pmx format is under heavily developing and may change in the future. do not use it in production environment.";
+    LOG(WARNING) << "pmx format is under heavily developing and may change in the future. do not use it in production "
+                    "environment.";
 
     SerializationInfo sinfo;
     InitSerializationInfo(topo, info.partitions, &sinfo);

@@ -610,19 +610,23 @@ struct Constant FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef ConstantBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_EDGE_ID = 4,
-    VT_DATA = 6
+    VT_DATA_OFFSET = 6,
+    VT_DATA_BYTES = 8
   };
   uint32_t edge_id() const {
     return GetField<uint32_t>(VT_EDGE_ID, 0);
   }
-  const flatbuffers::Vector<uint8_t> *data() const {
-    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_DATA);
+  uint64_t data_offset() const {
+    return GetField<uint64_t>(VT_DATA_OFFSET, 0);
+  }
+  uint64_t data_bytes() const {
+    return GetField<uint64_t>(VT_DATA_BYTES, 0);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_EDGE_ID) &&
-           VerifyOffset(verifier, VT_DATA) &&
-           verifier.VerifyVector(data()) &&
+           VerifyField<uint64_t>(verifier, VT_DATA_OFFSET) &&
+           VerifyField<uint64_t>(verifier, VT_DATA_BYTES) &&
            verifier.EndTable();
   }
 };
@@ -634,8 +638,11 @@ struct ConstantBuilder {
   void add_edge_id(uint32_t edge_id) {
     fbb_.AddElement<uint32_t>(Constant::VT_EDGE_ID, edge_id, 0);
   }
-  void add_data(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> data) {
-    fbb_.AddOffset(Constant::VT_DATA, data);
+  void add_data_offset(uint64_t data_offset) {
+    fbb_.AddElement<uint64_t>(Constant::VT_DATA_OFFSET, data_offset, 0);
+  }
+  void add_data_bytes(uint64_t data_bytes) {
+    fbb_.AddElement<uint64_t>(Constant::VT_DATA_BYTES, data_bytes, 0);
   }
   explicit ConstantBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -651,22 +658,13 @@ struct ConstantBuilder {
 inline flatbuffers::Offset<Constant> CreateConstant(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t edge_id = 0,
-    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> data = 0) {
+    uint64_t data_offset = 0,
+    uint64_t data_bytes = 0) {
   ConstantBuilder builder_(_fbb);
-  builder_.add_data(data);
+  builder_.add_data_bytes(data_bytes);
+  builder_.add_data_offset(data_offset);
   builder_.add_edge_id(edge_id);
   return builder_.Finish();
-}
-
-inline flatbuffers::Offset<Constant> CreateConstantDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    uint32_t edge_id = 0,
-    const std::vector<uint8_t> *data = nullptr) {
-  auto data__ = data ? _fbb.CreateVector<uint8_t>(*data) : 0;
-  return ppl::nn::pmx::CreateConstant(
-      _fbb,
-      edge_id,
-      data__);
 }
 
 struct Shape FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -839,13 +837,17 @@ struct GraphData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef GraphDataBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_SHAPES = 4,
-    VT_PARTITIONS = 6
+    VT_PARTITIONS = 6,
+    VT_SHARED_DATA = 8
   };
   const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Shape>> *shapes() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Shape>> *>(VT_SHAPES);
   }
   const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Partition>> *partitions() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Partition>> *>(VT_PARTITIONS);
+  }
+  const flatbuffers::Vector<uint8_t> *shared_data() const {
+    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_SHARED_DATA);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -855,6 +857,8 @@ struct GraphData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyOffset(verifier, VT_PARTITIONS) &&
            verifier.VerifyVector(partitions()) &&
            verifier.VerifyVectorOfTables(partitions()) &&
+           VerifyOffset(verifier, VT_SHARED_DATA) &&
+           verifier.VerifyVector(shared_data()) &&
            verifier.EndTable();
   }
 };
@@ -868,6 +872,9 @@ struct GraphDataBuilder {
   }
   void add_partitions(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Partition>>> partitions) {
     fbb_.AddOffset(GraphData::VT_PARTITIONS, partitions);
+  }
+  void add_shared_data(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> shared_data) {
+    fbb_.AddOffset(GraphData::VT_SHARED_DATA, shared_data);
   }
   explicit GraphDataBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -883,8 +890,10 @@ struct GraphDataBuilder {
 inline flatbuffers::Offset<GraphData> CreateGraphData(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Shape>>> shapes = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Partition>>> partitions = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Partition>>> partitions = 0,
+    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> shared_data = 0) {
   GraphDataBuilder builder_(_fbb);
+  builder_.add_shared_data(shared_data);
   builder_.add_partitions(partitions);
   builder_.add_shapes(shapes);
   return builder_.Finish();
@@ -893,13 +902,16 @@ inline flatbuffers::Offset<GraphData> CreateGraphData(
 inline flatbuffers::Offset<GraphData> CreateGraphDataDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const std::vector<flatbuffers::Offset<ppl::nn::pmx::Shape>> *shapes = nullptr,
-    const std::vector<flatbuffers::Offset<ppl::nn::pmx::Partition>> *partitions = nullptr) {
+    const std::vector<flatbuffers::Offset<ppl::nn::pmx::Partition>> *partitions = nullptr,
+    const std::vector<uint8_t> *shared_data = nullptr) {
   auto shapes__ = shapes ? _fbb.CreateVector<flatbuffers::Offset<ppl::nn::pmx::Shape>>(*shapes) : 0;
   auto partitions__ = partitions ? _fbb.CreateVector<flatbuffers::Offset<ppl::nn::pmx::Partition>>(*partitions) : 0;
+  auto shared_data__ = shared_data ? _fbb.CreateVector<uint8_t>(*shared_data) : 0;
   return ppl::nn::pmx::CreateGraphData(
       _fbb,
       shapes__,
-      partitions__);
+      partitions__,
+      shared_data__);
 }
 
 struct Graph FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -1027,8 +1039,8 @@ struct Model FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_ENGINES = 6,
     VT_GRAPH = 8
   };
-  const flatbuffers::String *version() const {
-    return GetPointer<const flatbuffers::String *>(VT_VERSION);
+  uint64_t version() const {
+    return GetField<uint64_t>(VT_VERSION, 0);
   }
   const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Engine>> *engines() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Engine>> *>(VT_ENGINES);
@@ -1038,8 +1050,7 @@ struct Model FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_VERSION) &&
-           verifier.VerifyString(version()) &&
+           VerifyField<uint64_t>(verifier, VT_VERSION) &&
            VerifyOffset(verifier, VT_ENGINES) &&
            verifier.VerifyVector(engines()) &&
            verifier.VerifyVectorOfTables(engines()) &&
@@ -1053,8 +1064,8 @@ struct ModelBuilder {
   typedef Model Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_version(flatbuffers::Offset<flatbuffers::String> version) {
-    fbb_.AddOffset(Model::VT_VERSION, version);
+  void add_version(uint64_t version) {
+    fbb_.AddElement<uint64_t>(Model::VT_VERSION, version, 0);
   }
   void add_engines(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Engine>>> engines) {
     fbb_.AddOffset(Model::VT_ENGINES, engines);
@@ -1075,26 +1086,25 @@ struct ModelBuilder {
 
 inline flatbuffers::Offset<Model> CreateModel(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> version = 0,
+    uint64_t version = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Engine>>> engines = 0,
     flatbuffers::Offset<ppl::nn::pmx::Graph> graph = 0) {
   ModelBuilder builder_(_fbb);
+  builder_.add_version(version);
   builder_.add_graph(graph);
   builder_.add_engines(engines);
-  builder_.add_version(version);
   return builder_.Finish();
 }
 
 inline flatbuffers::Offset<Model> CreateModelDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    const char *version = nullptr,
+    uint64_t version = 0,
     const std::vector<flatbuffers::Offset<ppl::nn::pmx::Engine>> *engines = nullptr,
     flatbuffers::Offset<ppl::nn::pmx::Graph> graph = 0) {
-  auto version__ = version ? _fbb.CreateString(version) : 0;
   auto engines__ = engines ? _fbb.CreateVector<flatbuffers::Offset<ppl::nn::pmx::Engine>>(*engines) : 0;
   return ppl::nn::pmx::CreateModel(
       _fbb,
-      version__,
+      version,
       engines__,
       graph);
 }

@@ -193,13 +193,10 @@ static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::Grap
                 return RC_NOT_FOUND;
             }
 
-            if (fb_constant->data()->size() == 0) {
-                continue;
-            }
-
             RuntimeConstantInfo& constant = ret_pair.first->second;
-            auto status = engine->LoadConstant(fb_constant->edge_id(), fb_constant->data()->data(),
-                                               fb_constant->data()->size(), shape_ref->second, &constant);
+            auto status = engine->LoadConstant(fb_constant->edge_id(),
+                                               fb_data->shared_data()->data() + fb_constant->data_offset(),
+                                               fb_constant->data_bytes(), shape_ref->second, &constant);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "load constant[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
                 return status;
