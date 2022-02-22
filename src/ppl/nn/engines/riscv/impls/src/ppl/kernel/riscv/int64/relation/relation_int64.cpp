@@ -34,9 +34,9 @@ ppl::common::RetCode relation_int64(
                             src1_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding();
 
     if (is_eltwise) {
-        return relation_eltwise_common<op, int64_t, vlen>(dst_shape, src0, src1, dst);
+        return relation_eltwise_scalar_common<op, int64_t, vlen>(dst_shape, src0, src1, dst);
     } else if (ppl::common::DATAFORMAT_NDARRAY == src0_shape->GetDataFormat()) {
-        return relation_broadcast_ndarray_common<op, int64_t, vlen>(src0_shape, src1_shape, dst_shape, src0, src1, dst);
+        return relation_broadcast_ndarray_scalar_common<op, int64_t, vlen>(src0_shape, src1_shape, dst_shape, src0, src1, dst);
     } else if (ppl::common::DATAFORMAT_N8CX == src0_shape->GetDataFormat()) {
         return relation_broadcast_nbcx_common<op, int64_t, vlen>(src0_shape, src1_shape, dst_shape, src0, src1, dst);
     }

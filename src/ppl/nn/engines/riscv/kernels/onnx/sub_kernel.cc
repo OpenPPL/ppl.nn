@@ -56,9 +56,9 @@ ppl::common::RetCode SubKernel::DoExecute(KernelExecContext* ctx) {
                                        A->GetBufferPtr<const float>(), B->GetBufferPtr<const float>(),
                                        C->GetBufferPtr<float>());
     } else if (output_data_type == common::DATATYPE_INT64) {
-        return kernel::riscv::sub_int64(A->GetShape(), B->GetShape(), C->GetShape(), false,
-                                        A->GetBufferPtr<const int64_t>(), B->GetBufferPtr<const int64_t>(),
-                                        C->GetBufferPtr<int64_t>());
+        return kernel::riscv::sub_scalar_int64(A->GetShape(), B->GetShape(), C->GetShape(), false,
+                                               A->GetBufferPtr<const int64_t>(), B->GetBufferPtr<const int64_t>(),
+                                               C->GetBufferPtr<int64_t>());
     }
 
     return ppl::common::RC_UNSUPPORTED;

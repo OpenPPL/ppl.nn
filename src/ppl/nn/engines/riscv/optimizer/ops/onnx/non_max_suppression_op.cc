@@ -58,13 +58,13 @@ RetCode NonMaxSupressionOp::SelectDataType(const InputOutputInfo& info, ppl::com
     selected_input_data_types->at(0) = DATATYPE_FLOAT32;
     selected_input_data_types->at(1) = DATATYPE_FLOAT32;
     if (selected_input_data_types->size() > 2) {
-        selected_input_data_types->at(2) = DATATYPE_UINT64;
+        selected_input_data_types->at(2) = DATATYPE_INT64;
     }
     for (uint32_t i = 3; i < selected_input_data_types->size(); i++) {
         selected_input_data_types->at(i) = DATATYPE_FLOAT32;
     }
 
-    selected_output_data_types->at(0) = DATATYPE_FLOAT32;
+    selected_output_data_types->at(0) = DATATYPE_INT64;
 
     return RC_SUCCESS;
 }

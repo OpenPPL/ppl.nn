@@ -58,13 +58,15 @@
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/log_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/floor_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/exp_op.h"
-
-#include "ppl/nn/engines/riscv/optimizer/ops/mmcv/mmcv_gridsample_op.h"
-
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/cast_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/scatter_nd_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/non_max_suppression_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/conv_transpose_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/roialign_op.h"
+
+#include "ppl/nn/engines/riscv/optimizer/ops/mmcv/mmcv_gridsample_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/mmcv/mmcv_roialign_op.h"
+
 #include "ppl/nn/engines/riscv/optimizer/ops/ppl/shape_operation_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/ppl/reorder_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/ppl/channel_shuffle_op.h"
@@ -119,6 +121,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("", "ArgMax", 11, 11, ArgmaxOp);
     REGISTER_OPT_KERNEL_CREATOR("", "AveragePool", 11, 16, AveragePoolOp);
 
+    REGISTER_OPT_KERNEL_CREATOR("", "Cast", 9, 12, CastOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Clip", 11, 11, ClipOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Concat", 11, 12, ConcatOp);
     REGISTER_OPT_KERNEL_CREATOR("", "ConstantOfShape", 11, 12, ConstantOfShapeOp);
@@ -156,6 +159,7 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("", "Relu", 6, 12, ReluOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Reshape", 5, 12, ReshapeOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Resize", 11, 12, ResizeOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "RoiAlign", 10, 15, RoiAlignOp);
 
     REGISTER_OPT_KERNEL_CREATOR("", "ScatterND", 11, 12, ScatterNDOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Shape", 1, 12, ShapeOp);

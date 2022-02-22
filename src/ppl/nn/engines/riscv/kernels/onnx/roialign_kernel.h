@@ -15,25 +15,27 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIMIZER_OPS_ONNX_RESIZE_OP_H_
-#define _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIMIZER_OPS_ONNX_RESIZE_OP_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_KERNELS_ONNX_ROIALIGN_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_RISCV_KERNELS_ONNX_ROIALIGN_KERNEL_H_
 
-#include "ppl/nn/params/onnx/resize_param.h"
-#include "ppl/nn/engines/riscv/optimizer/opt_kernel.h"
+#include "ppl/nn/engines/riscv/kernel.h"
+#include "ppl/nn/params/onnx/roialign_param.h"
 
 namespace ppl { namespace nn { namespace riscv {
 
-class ResizeOp final : public RiscvOptKernel {
+class RoiAlignKernel : public RiscvKernel {
 public:
-    ResizeOp(const ir::Node* node) : RiscvOptKernel(node) {}
-    ppl::common::RetCode Init(const OptKernelOptions& options) override;
-    KernelImpl* CreateKernelImpl() const override;
-    ppl::common::RetCode SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
-                                        std::vector<ppl::common::datatype_t>* selected_input_data_types,
-                                        std::vector<ppl::common::datatype_t>* selected_output_data_types) override;
+    RoiAlignKernel(const ir::Node* node) : RiscvKernel(node) {}
+
+    void SetParam(const ppl::nn::common::RoiAlignParam* p) {
+        param_ = p;
+    }
 
 private:
-    std::shared_ptr<ppl::nn::common::ResizeParam> param_;
+    ppl::common::RetCode DoExecute(KernelExecContext*) override;
+
+private:
+    const ppl::nn::common::RoiAlignParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::riscv

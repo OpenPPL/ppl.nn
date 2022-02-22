@@ -42,6 +42,15 @@ RetCode ExpandOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>
     return RC_SUCCESS;
 }
 
+RetCode ExpandOp::SelectDataType(const InputOutputInfo& info, datatype_t forward_precision,
+                                 std::vector<datatype_t>* selected_input_data_types,
+                                 std::vector<datatype_t>* selected_output_data_types) {
+    selected_input_data_types->at(1) = DATATYPE_INT64;
+    selected_output_data_types->at(0) = selected_input_data_types->at(0);
+
+    return RC_SUCCESS;
+}
+
 KernelImpl* ExpandOp::CreateKernelImpl() const {
     return CreateKernelImplWithoutParam<ExpandKernel>();
 }

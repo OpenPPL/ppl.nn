@@ -40,25 +40,15 @@ ppl::common::RetCode reduce_int64(
     }
 
     int32_t real_axes[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
+    // sort axes
     for (int64_t i = 0; i < num_axes; i++) {
         real_axes[i] = axes[i] >= 0 ? axes[i] : axes[i] + src_shape->GetDimCount();
     }
     std::sort(real_axes, real_axes + num_axes);
 
-    bool continous_reduce_axis = true;
-    for (int64_t i = 0; i < num_axes - 1; i++) {
-        if (real_axes[i + 1] - real_axes[i] != 1) {
-            continous_reduce_axis = false;
-            break;
-        }
-    }
-
     if (src_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
-        if (continous_reduce_axis) {
-        } else {
-            return reduce_ndarray_int64<op>(src, dst, src_shape, dst_shape, real_axes, num_axes);
-        }
-    } else if (src_shape->GetDataFormat() == ppl::common::DATAFORMAT_N4CX) {
+        return reduce_ndarray_int64<op>(src, dst, src_shape, dst_shape, real_axes, num_axes);
+    } else if (src_shape->GetDataFormat() == ppl::common::DATAFORMAT_N2CX) {
         return reduce_n2cx_int64<op>(src, dst, src_shape, dst_shape, real_axes, num_axes, 1);
     }
 

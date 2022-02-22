@@ -33,6 +33,30 @@ RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
     }
     infer_type_func_ = GenericInferType;
     infer_dims_func_ = GenericInferDims;
+    infer_type_func_ = [](InputOutputInfo* info) -> void {
+        GenericInferType(info);
+        info->GetOutput<TensorImpl>(0)->GetShape()->SetDataType(DATATYPE_INT64);
+    };
+
+    return RC_SUCCESS;
+}
+
+RetCode PPLShapeOperationOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
+                                          vector<dataformat_t>* selected_output_formats) {
+    auto num_output = selected_output_formats->size();
+    for (uint64_t i = 0; i < num_output; i += 1) {
+        selected_output_formats->at(i) = DATAFORMAT_NDARRAY;
+    }
+    return RC_SUCCESS;
+}
+
+RetCode PPLShapeOperationOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
+                                            std::vector<datatype_t>* selected_input_data_types,
+                                            std::vector<datatype_t>* selected_output_data_types) {
+    auto num_output = selected_output_data_types->size();
+    for (uint64_t i = 0; i < num_output; i += 1) {
+        selected_output_data_types->at(i) = DATATYPE_INT64;
+    }
     return RC_SUCCESS;
 }
 

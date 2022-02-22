@@ -15,17 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIMIZER_OPS_ONNX_CAST_OP_H_
-#define _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIMIZER_OPS_ONNX_CAST_OP_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIMIZER_OPS_ONNX_ROIALIGN_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIMIZER_OPS_ONNX_ROIALIGN_OP_H_
 
-#include "ppl/nn/params/onnx/cast_param.h"
+#include "ppl/nn/params/onnx/roialign_param.h"
 #include "ppl/nn/engines/riscv/optimizer/opt_kernel.h"
 
 namespace ppl { namespace nn { namespace riscv {
 
-class CastOp final : public RiscvOptKernel {
+class RoiAlignOp final : public RiscvOptKernel {
 public:
-    CastOp(const ir::Node* node) : RiscvOptKernel(node) {}
+    RoiAlignOp(const ir::Node* node) : RiscvOptKernel(node) {}
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
@@ -36,7 +36,7 @@ public:
                                         std::vector<ppl::common::datatype_t>* selected_output_data_types) override;
 
 private:
-    std::shared_ptr<ppl::nn::common::CastParam> param_;
+    std::shared_ptr<ppl::nn::common::RoiAlignParam> param_;
 };
 
 }}} // namespace ppl::nn::riscv

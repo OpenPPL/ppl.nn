@@ -77,6 +77,17 @@ We use runtime-compiling version by default. If you want to use static version (
 ```bash
 ./build.sh -DHPCC_USE_CUDA=ON -DPPLNN_ENABLE_CUDA_JIT=OFF
 ```
+
+#### Windows
+
+Using vs2015 for example:
+
+```
+build.bat -G "Visual Studio 14 2015 Win64" -DHPCC_USE_CUDA=ON
+```
+
+Headers and libraries are installed in `pplnn-build/install`.
+
 ### Building RISCV Engine
 
 #### AllWinner D1
@@ -90,14 +101,6 @@ export RISCV_ROOT_PATH=/path/to/riscv64-linux-x86_64-20210512
 Build pplnn:
 ```bash
 ./build.sh -DHPCC_TOOLCHAIN_DIR=$RISCV_ROOT_PATH -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/riscv64-linux-gnu.cmake -DHPCC_USE_RISCV=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON -DPPLNN_ENABLE_PYTHON_API=OFF -DPPLNN_ENABLE_LUA_API=OFF -DCMAKE_INSTALL_PREFIX=pplnn-build/install
-```
-
-#### Windows
-
-Using vs2015 for example:
-
-```
-build.bat -G "Visual Studio 14 2015 Win64" -DHPCC_USE_CUDA=ON
 ```
 
 Headers and libraries are installed in `pplnn-build/install`.

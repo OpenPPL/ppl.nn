@@ -26,6 +26,32 @@ namespace ppl { namespace kernel { namespace riscv {
 #define C_BLK() ((int64_t)2)
 
 template <reduce_op_type_t op>
+static void reduce_ndarray_lastdim_no_reduce_scalar_int64(
+    const int64_t* src,
+    int64_t* dst,
+
+    const int64_t dim_len)
+{
+    for (int64_t i = 0; i < dim_len; i++) {
+        dst[i] = reduce_scalar_kernel_int64<op>(src[i], dst[i]);
+    }
+}
+
+template <reduce_op_type_t op>
+static void reduce_ndarray_lastdim_reduce_scalar_int64(
+    const int64_t* src,
+    int64_t* dst,
+    const int64_t dim_len)
+{
+    const int64_t init_val = reduce_init_val_int64<op>();
+    int64_t reduce_val     = init_val;
+    for (int64_t i = 0; i < dim_len; i++) {
+        reduce_val = reduce_scalar_kernel_int64<op>(src[i], reduce_val);
+    }
+    dst[0] = reduce_val;
+}
+
+template <reduce_op_type_t op>
 static void reduce_ndarray_lastdim_no_reduce_int64(
     const int64_t* src,
     int64_t* dst,
@@ -205,9 +231,9 @@ static void reduce_ndarray_recursive_int64(
     const int64_t len = src_shape->GetDim(dim_idx);
     if (dim_idx == src_shape->GetDimCount() - 1) {
         if (src_shape->GetDim(dim_idx) == dst_shape->GetDim(dim_idx)) {
-            reduce_ndarray_lastdim_no_reduce_int64<op>(src, dst, src_shape->GetDim(dim_idx));
+            reduce_ndarray_lastdim_no_reduce_scalar_int64<op>(src, dst, src_shape->GetDim(dim_idx));
         } else {
-            reduce_ndarray_lastdim_reduce_int64<op>(src, dst, src_shape->GetDim(dim_idx));
+            reduce_ndarray_lastdim_reduce_scalar_int64<op>(src, dst, src_shape->GetDim(dim_idx));
         }
     } else {
         for (int64_t i = 0; i < len; i++) {
@@ -237,7 +263,7 @@ ppl::common::RetCode reduce_ndarray_int64(
         padded_dst_shape.SetDim(axes[i], 1);
     }
 
-    reduce_preprocess_int64<op>(dst, padded_dst_shape.GetElementsIncludingPadding());
+    reduce_preprocess_scalar_int64<op>(dst, padded_dst_shape.GetElementsIncludingPadding());
 
     int64_t dim_count                            = padded_dst_shape.GetDimCount();
     int64_t inc_src[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};

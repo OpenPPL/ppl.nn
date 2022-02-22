@@ -37,6 +37,7 @@ RetCode ScatterNDOp::SelectFormat(const InputOutputInfo& info, vector<dataformat
                                   vector<dataformat_t>* selected_output_formats) {
     selected_input_formats->at(0) = DATAFORMAT_NDARRAY;
     selected_input_formats->at(1) = DATAFORMAT_NDARRAY;
+    selected_input_formats->at(2) = DATAFORMAT_NDARRAY;
     selected_output_formats->at(0) = DATAFORMAT_NDARRAY;
 
     return RC_SUCCESS;
@@ -45,11 +46,12 @@ RetCode ScatterNDOp::SelectFormat(const InputOutputInfo& info, vector<dataformat
 RetCode ScatterNDOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
                                     std::vector<datatype_t>* selected_input_data_types,
                                     std::vector<datatype_t>* selected_output_data_types) {
+    selected_input_data_types->at(1) = DATATYPE_INT64;
     if (DATATYPE_FLOAT16 == selected_input_data_types->at(0)) {
-        selected_input_data_types->at(1) = DATATYPE_FLOAT16;
+        selected_input_data_types->at(2) = DATATYPE_FLOAT16;
         selected_output_data_types->at(0) = DATATYPE_FLOAT16;
     } else if (DATATYPE_FLOAT32 == selected_input_data_types->at(0)) {
-        selected_input_data_types->at(1) = DATATYPE_FLOAT32;
+        selected_input_data_types->at(2) = DATATYPE_FLOAT32;
         selected_output_data_types->at(0) = DATATYPE_FLOAT32;
     }
     return RC_SUCCESS;
