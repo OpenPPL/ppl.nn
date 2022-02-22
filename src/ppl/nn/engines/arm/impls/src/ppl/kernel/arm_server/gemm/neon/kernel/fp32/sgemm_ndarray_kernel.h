@@ -15,33 +15,24 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_ONNX_GEMM_KERNEL_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_ONNX_GEMM_KERNEL_H_
+#ifndef __ST_PPL_KERNEL_ARM_SERVER_GEMM_NEON_KERNEL_FP32_SGEMM_NDARRAY_KERNEL_H_
+#define __ST_PPL_KERNEL_ARM_SERVER_GEMM_NEON_KERNEL_FP32_SGEMM_NDARRAY_KERNEL_H_
 
-#include "ppl/nn/engines/arm/kernel.h"
-#include "ppl/nn/params/onnx/gemm_param.h"
+#include "ppl/kernel/arm_server/common/internal_include.h"
 
-namespace ppl { namespace nn { namespace arm {
+namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
-class GemmKernel : public ArmKernel {
-public:
-    GemmKernel(const ir::Node* node) : ArmKernel(node) {}
+typedef void (*sgemm_ndarray_kernel_func_t)(
+    const float* A, 
+    const float* B, 
+    const int K, 
+    const int lda, 
+    const int ldb, 
+    const int ldc, 
+    float* C);
 
-    void SetParam(const ppl::nn::common::GemmParam* p) {
-        param_ = p;
-    }
-    void SetFuseReLU(bool fuse_relu) {
-        gemm_fuse_relu_ = fuse_relu;
-    }
+extern const sgemm_ndarray_kernel_func_t sgemm_ndarray_kernel_tn_max8x12_func_table[2][2][2][8][3];
 
-private:
-    ppl::common::RetCode DoExecute(KernelExecContext*) override;
+}}}}
 
-private:
-    const ppl::nn::common::GemmParam* param_ = nullptr;
-    bool gemm_fuse_relu_ = false;
-};
-
-}}} // namespace ppl::nn::arm
-
-#endif
+#endif  // !__ST_PPL_KERNEL_ARM_SERVER_GEMM_NEON_KERNEL_FP32_SGEMM_NDARRAY_KERNEL_H_
