@@ -24,6 +24,10 @@
 #include "ppl/nn/engines/engine.h"
 #include "ppl/nn/engines/engine_context.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/common/constant_visitor.h"
+#endif
+
 namespace ppl { namespace nn {
 
 namespace utils {
@@ -51,18 +55,17 @@ public:
     virtual EngineContext* CreateEngineContext() = 0;
 
     /** @brief tells whether this engine implements `node`. */
-    virtual bool Supports(const ir::Node* node) const = 0;
+    virtual bool Supports(const ir::Node*) const = 0;
 
     /**
        @brief optimize the compute graph `graph` and fill `info`
        @param graph graph to be optimized and can be modified
        @note DO NOT modify input and output edges
     */
-    virtual ppl::common::RetCode ProcessGraph(utils::SharedResource*, ir::Graph* graph, RuntimePartitionInfo* info) = 0;
+    virtual ppl::common::RetCode ProcessGraph(utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*) = 0;
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    virtual ppl::common::RetCode LoadConstant(edgeid_t, const void*, uint64_t, const TensorShape&,
-                                              RuntimeConstantInfo*) = 0;
+    virtual ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, RuntimeConstantInfo>*) = 0;
 
     virtual OptKernel* CreateOptKernel(const ir::Node*) const = 0;
 

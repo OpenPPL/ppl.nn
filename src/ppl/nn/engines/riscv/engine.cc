@@ -126,9 +126,24 @@ RetCode RiscvEngine::ProcessGraph(utils::SharedResource* resource, ir::Graph* gr
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-RetCode RiscvEngine::LoadConstant(edgeid_t eid, const void* data, uint64_t size, const TensorShape& shape,
-                                  RuntimeConstantInfo* info) {
-    return utils::GenericLoadConstant(eid, data, size, shape, &device_, info, (size == 0));
+RetCode RiscvEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, RuntimeConstantInfo>* eid2info) {
+    auto dev = &device_;
+    return visitor.ForEach(
+        [eid2info, dev](edgeid_t eid, const void* data, uint64_t size, const TensorShape& shape) -> RetCode {
+            RuntimeConstantInfo info;
+            auto status = utils::GenericLoadConstant(eid, data, size, shape, dev, &info);
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "load constant failed: " << GetRetCodeStr(status);
+                return status;
+            }
+
+            auto ret_pair = eid2info->emplace(eid, std::move(info));
+            if (!ret_pair.second) {
+                LOG(ERROR) << "constant of id[" << eid << "] already exists.";
+                return RC_EXISTS;
+            }
+            return RC_SUCCESS;
+        });
 }
 
 OptKernel* RiscvEngine::CreateOptKernel(const ir::Node* node) const {

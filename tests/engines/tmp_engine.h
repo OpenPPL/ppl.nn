@@ -50,8 +50,7 @@ public:
         return ppl::common::RC_SUCCESS;
     }
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    ppl::common::RetCode LoadConstant(edgeid_t, const void*, uint64_t, const TensorShape&,
-                                      RuntimeConstantInfo*) override {
+    ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, RuntimeConstantInfo>*) override {
         return ppl::common::RC_SUCCESS;
     }
     OptKernel* CreateOptKernel(const ir::Node* node) const override {
@@ -96,8 +95,7 @@ public:
         return ppl::common::RC_SUCCESS;
     }
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    ppl::common::RetCode LoadConstant(edgeid_t, const void*, uint64_t, const TensorShape&,
-                                      RuntimeConstantInfo*) override {
+    ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, RuntimeConstantInfo>*) override {
         return ppl::common::RC_SUCCESS;
     }
     OptKernel* CreateOptKernel(const ir::Node* node) const override {
@@ -141,8 +139,7 @@ public:
         return ppl::common::RC_SUCCESS;
     }
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    ppl::common::RetCode LoadConstant(edgeid_t, const void*, uint64_t, const TensorShape&,
-                                      RuntimeConstantInfo*) override {
+    ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, RuntimeConstantInfo>*) override {
         return ppl::common::RC_SUCCESS;
     }
     OptKernel* CreateOptKernel(const ir::Node* node) const override {
@@ -187,8 +184,7 @@ public:
     }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    ppl::common::RetCode LoadConstant(edgeid_t, const void*, uint64_t, const TensorShape&,
-                                      RuntimeConstantInfo*) override {
+    ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, RuntimeConstantInfo>*) override {
         return ppl::common::RC_SUCCESS;
     }
     OptKernel* CreateOptKernel(const ir::Node* node) const override {

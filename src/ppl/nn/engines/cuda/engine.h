@@ -60,6 +60,7 @@ struct CudaArgs {
 class CudaEngine final : public EngineImpl {
 public:
     CudaEngine() : EngineImpl("cuda") {}
+    ~CudaEngine();
     ppl::common::RetCode Init(const CudaEngineOptions& options);
     ppl::common::RetCode Configure(uint32_t, ...) override;
     EngineContext* CreateEngineContext() override;
@@ -68,8 +69,7 @@ public:
     ppl::common::RetCode CompileCudaModule(ir::Graph*, utils::SharedResource*, RuntimePartitionInfo*);
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    ppl::common::RetCode LoadConstant(edgeid_t, const void*, uint64_t, const TensorShape&,
-                                      RuntimeConstantInfo*) override;
+    ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, RuntimeConstantInfo>*) override;
     OptKernel* CreateOptKernel(const ir::Node*) const override;
     ppl::common::RetCode SerializeData(utils::DataStream*) const override {
         return ppl::common::RC_UNSUPPORTED;
@@ -103,6 +103,7 @@ private:
     BufferedCudaDevice device_;
     CudaArgs cuda_flags_;
     CudaEngineOptions options_;
+    std::vector<BufferDesc> constant_buffers_;
     CUDAModuleManager cuda_manager_;
     CompileInfo compile_set_;
 };

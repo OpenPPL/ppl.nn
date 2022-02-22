@@ -35,6 +35,12 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
+CudaEngine::~CudaEngine() {
+    for (auto b = constant_buffers_.begin(); b != constant_buffers_.end(); ++b) {
+        device_.Free(&(*b));
+    }
+}
+
 RetCode CudaEngine::Init(const CudaEngineOptions& options) {
     options_ = options;
     return device_.Init(options);
@@ -108,9 +114,50 @@ RetCode CudaEngine::ProcessGraph(utils::SharedResource* resource, ir::Graph* gra
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-RetCode CudaEngine::LoadConstant(edgeid_t eid, const void* data, uint64_t size, const TensorShape& shape,
-                                 RuntimeConstantInfo* info) {
-    return utils::GenericLoadConstant(eid, data, size, shape, &device_, info);
+RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, RuntimeConstantInfo>* eid2info) {
+    uint64_t total_bytes = visitor.CalcTotalBytes();
+    if (total_bytes == 0) {
+        return RC_SUCCESS;
+    }
+
+    BufferDesc block;
+    auto status = device_.Realloc(total_bytes, &block);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "alloc [" << total_bytes << "] bytes failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    auto dev = &device_;
+    uint64_t offset = 0;
+    status = visitor.ForEach([eid2info, dev, &block, &offset](edgeid_t eid, const void* data, uint64_t size,
+                                                              const TensorShape& shape) -> RetCode {
+        BufferDesc buf;
+        buf.addr = (char*)block.addr + offset;
+        auto status = dev->CopyFromHost(&buf, data, shape);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "copy constant data of eid[" << eid << "] failed: " << GetRetCodeStr(status);
+            return status;
+        }
+
+        RuntimeConstantInfo info;
+        info.SetBuffer(buf, dev);
+        info.Reshape(shape);
+        auto ret_pair = eid2info->emplace(eid, std::move(info));
+        if (!ret_pair.second) {
+            LOG(ERROR) << "constant of id[" << eid << "] already exists.";
+            return RC_EXISTS;
+        }
+        offset += size;
+        return RC_SUCCESS;
+    });
+
+    if (status == RC_SUCCESS) {
+        constant_buffers_.push_back(block);
+    } else {
+        device_.Free(&block);
+    }
+
+    return status;
 }
 
 OptKernel* CudaEngine::CreateOptKernel(const ir::Node* node) const {
