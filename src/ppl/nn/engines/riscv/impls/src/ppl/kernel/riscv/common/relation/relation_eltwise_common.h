@@ -23,6 +23,21 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <relation_op_type_t op, typename T, int32_t vlen>
+static ppl::common::RetCode relation_eltwise_scalar_common(
+    const ppl::nn::TensorShape *dst_shape,
+    const T *src0,
+    const T *src1,
+    uint8_t *dst)
+{
+    const int64_t length = dst_shape->GetElementsIncludingPadding();
+    for (int64_t i = 0; i < length; i++) {
+        dst[i] = relation_scalar_kernel<op, T>(src0[i], src1[i]);
+    }
+
+    return ppl::common::RC_SUCCESS;
+}
+
+template <relation_op_type_t op, typename T, int32_t vlen>
 static ppl::common::RetCode relation_eltwise_common(
     const ppl::nn::TensorShape *dst_shape,
     const T *src0,

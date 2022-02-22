@@ -24,6 +24,145 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 template <relation_op_type_t op, typename T, int32_t vlen>
+inline void relation_broadcast_ndarray_lastdim_no_broadcast_scalar_common(
+    const T* src0,
+    const T* src1,
+    const int64_t length,
+    uint8_t* dst)
+{
+    for (int64_t i = 0; i < length; i++) {
+        dst[i] = relation_scalar_kernel<op, T>(src0[i], src1[i]);
+    }
+}
+
+template <relation_op_type_t op, typename T, int32_t vlen>
+inline void relation_broadcast_ndarray_lastdim_broadcast0_scalar_common(
+    const T* src0,
+    const T* src1,
+    const int64_t length,
+    uint8_t* dst)
+{
+    const T broadcast_val = src0[0];
+    for (int64_t i = 0; i < length; i++) {
+        dst[i] = relation_scalar_kernel<op, T>(broadcast_val, src1[i]);
+    }
+}
+
+template <relation_op_type_t op, typename T, int32_t vlen>
+inline void relation_broadcast_ndarray_lastdim_broadcast1_scalar_common(
+    const T* src0,
+    const T* src1,
+    const int64_t length,
+    uint8_t* dst)
+{
+    const T broadcast_val = src1[0];
+    for (int64_t i = 0; i < length; i++) {
+        dst[i] = relation_scalar_kernel<op, T>(src0[i], broadcast_val);
+    }
+}
+
+template <relation_op_type_t op, typename T, int32_t vlen>
+static ppl::common::RetCode relation_broadcast_ndarray_recursive_scalar_common(
+    const int64_t* src0_shape,
+    const int64_t* src1_shape,
+    const int64_t* dst_shape,
+    const T* src0,
+    const T* src1,
+    const int64_t* inc0,
+    const int64_t* inc1,
+    const int64_t* inc_out,
+    const int64_t dim_count,
+    const int64_t dim_idx,
+    uint8_t* dst)
+{
+    const int64_t length = dst_shape[dim_idx];
+    if (dim_idx == dim_count - 1) {
+        if (src0_shape[dim_idx] == src1_shape[dim_idx]) {
+            relation_broadcast_ndarray_lastdim_no_broadcast_scalar_common<op, T, vlen>(src0, src1, length, dst);
+        } else if (src0_shape[dim_idx] == 1) {
+            relation_broadcast_ndarray_lastdim_broadcast0_scalar_common<op, T, vlen>(src0, src1, length, dst);
+        } else if (src1_shape[dim_idx] == 1) {
+            relation_broadcast_ndarray_lastdim_broadcast1_scalar_common<op, T, vlen>(src0, src1, length, dst);
+        }
+    } else {
+        for (int64_t i = 0; i < length; i++) {
+            relation_broadcast_ndarray_recursive_scalar_common<op, T, vlen>(
+                src0_shape,
+                src1_shape,
+                dst_shape,
+                src0 + i * inc0[dim_idx],
+                src1 + i * inc1[dim_idx],
+                inc0,
+                inc1,
+                inc_out,
+                dim_count,
+                dim_idx + 1,
+                dst + i * inc_out[dim_idx]);
+        }
+    }
+
+    return ppl::common::RC_SUCCESS;
+}
+
+template <relation_op_type_t op, typename T, int32_t vlen>
+static ppl::common::RetCode relation_broadcast_ndarray_scalar_common(
+    const ppl::nn::TensorShape* src0_shape,
+    const ppl::nn::TensorShape* src1_shape,
+    const ppl::nn::TensorShape* dst_shape,
+    const T* src0,
+    const T* src1,
+    uint8_t* dst)
+{
+    const int64_t max_dim_count              = dst_shape->GetDimCount();
+    int64_t padded_src0_shape[max_dim_count] = {0};
+    int64_t padded_src1_shape[max_dim_count] = {0};
+    pad_shape(src0_shape, max_dim_count, padded_src0_shape);
+    pad_shape(src1_shape, max_dim_count, padded_src1_shape);
+
+    int64_t compressed_dim_count                 = 0;
+    int64_t compressed_src0_shape[max_dim_count] = {0};
+    int64_t compressed_src1_shape[max_dim_count] = {0};
+    int64_t compressed_dst_shape[max_dim_count]  = {0};
+    compress_shape(
+        padded_src0_shape,
+        padded_src1_shape,
+        max_dim_count,
+        &compressed_dim_count,
+        compressed_src0_shape,
+        compressed_src1_shape,
+        compressed_dst_shape);
+
+    int64_t inc0[compressed_dim_count]    = {0};
+    int64_t inc1[compressed_dim_count]    = {0};
+    int64_t inc_out[compressed_dim_count] = {0};
+    int64_t stride0                       = 1;
+    int64_t stride1                       = 1;
+    int64_t stride_out                    = 1;
+    for (int64_t i = compressed_dim_count - 1; i >= 0; i--) {
+        inc0[i]    = compressed_src0_shape[i] == 1 ? 0 : stride0;
+        inc1[i]    = compressed_src1_shape[i] == 1 ? 0 : stride1;
+        inc_out[i] = stride_out;
+
+        stride0 *= compressed_src0_shape[i];
+        stride1 *= compressed_src1_shape[i];
+        stride_out *= compressed_dst_shape[i];
+    }
+
+    return relation_broadcast_ndarray_recursive_scalar_common<op, T, vlen>(
+        compressed_src0_shape,
+        compressed_src1_shape,
+        compressed_dst_shape,
+        src0,
+        src1,
+        inc0,
+        inc1,
+        inc_out,
+        compressed_dim_count,
+        0,
+        dst);
+}
+
+template <relation_op_type_t op, typename T, int32_t vlen>
 inline void relation_broadcast_ndarray_lastdim_no_broadcast_common(
     const T* src0,
     const T* src1,

@@ -57,14 +57,12 @@ RetCode EqualOp::SelectDataType(const InputOutputInfo& info, ppl::common::dataty
                                 std::vector<datatype_t>* selected_output_data_types) {
     if (DATATYPE_FLOAT16 == selected_input_data_types->at(0)) {
         selected_input_data_types->at(1) = DATATYPE_FLOAT16;
-        selected_output_data_types->at(0) = DATATYPE_UINT8;
     } else if (DATATYPE_FLOAT32 == selected_input_data_types->at(0)) {
         selected_input_data_types->at(1) = DATATYPE_FLOAT32;
-        selected_output_data_types->at(0) = DATATYPE_UINT8;
     } else if (DATATYPE_INT64 == selected_input_data_types->at(0)) {
         selected_input_data_types->at(1) = DATATYPE_INT64;
-        selected_output_data_types->at(0) = DATATYPE_UINT8;
     }
+    selected_output_data_types->at(0) = DATATYPE_BOOL;
 
     return RC_SUCCESS;
 }

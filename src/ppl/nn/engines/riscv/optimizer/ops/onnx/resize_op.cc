@@ -40,6 +40,13 @@ RetCode ResizeOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
+RetCode ResizeOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
+                                 std::vector<datatype_t>* selected_input_data_types,
+                                 std::vector<datatype_t>* selected_output_data_types) {
+    selected_output_data_types->at(0) = selected_input_data_types->at(0);
+    return RC_SUCCESS;
+}
+
 KernelImpl* ResizeOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<ResizeKernel>(param_.get());
 }

@@ -32,9 +32,7 @@ namespace ppl { namespace nn { namespace riscv {
 
 class RiscvKernel : public KernelImpl {
 public:
-    RiscvKernel(const ir::Node* node) : KernelImpl(node) {
-        LOG(DEBUG) << node->GetType().name << " " << GetName();
-    }
+    RiscvKernel(const ir::Node* node) : KernelImpl(node) {}
     RiscvKernel(RiscvKernel&&) = default;
     ppl::common::RetCode Execute(KernelExecContext* ctx) override;
 

@@ -52,7 +52,7 @@ RetCode ConstantOfShapeOp::SelectFormat(const InputOutputInfo& info, vector<data
 RetCode ConstantOfShapeOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
                                           std::vector<dataformat_t>* selected_input_data_types,
                                           std::vector<dataformat_t>* selected_output_data_types) {
-    selected_output_data_types->at(0) = DATATYPE_INT64;
+    selected_output_data_types->at(0) = param_->data_type;
     return RC_SUCCESS;
 }
 

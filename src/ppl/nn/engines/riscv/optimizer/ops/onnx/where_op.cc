@@ -50,7 +50,7 @@ RetCode WhereOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>*
 RetCode WhereOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
                                 std::vector<datatype_t>* selected_input_data_types,
                                 std::vector<datatype_t>* selected_output_data_types) {
-    selected_input_data_types->at(0) = DATATYPE_UINT8;
+    selected_input_data_types->at(0) = DATATYPE_BOOL;
     if (DATATYPE_FLOAT16 == selected_input_data_types->at(1)) {
         selected_input_data_types->at(2) = DATATYPE_FLOAT16;
         selected_output_data_types->at(0) = DATATYPE_FLOAT16;

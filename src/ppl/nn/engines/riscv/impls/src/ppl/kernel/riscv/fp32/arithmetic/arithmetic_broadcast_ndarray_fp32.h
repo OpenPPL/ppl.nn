@@ -40,7 +40,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_ndarray_fp32(
     const auto vl            = vsetvli(C_BLK(), RVV_E32, RVV_M1);
 
     int64_t i = start;
-    for (; i + unroll_len < end; i += unroll_len) {
+    for (; i + unroll_len <= end; i += unroll_len) {
         const float* src0_ = src0 + i;
         const float* src1_ = src1 + i;
         float* dst_        = dst + i;
@@ -103,7 +103,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_ndarray_fp32(
             vsev_float32xm1(dst_ + 15 * C_BLK(), vfdata15, vl);
         }
     }
-    for (; i + C_BLK() < end; i += C_BLK()) {
+    for (; i + C_BLK() <= end; i += C_BLK()) {
         const float* src0_ = src0 + i;
         const float* src1_ = src1 + i;
         float* dst_        = dst + i;
@@ -116,7 +116,7 @@ static inline void arithmetic_broadcast_lastdim_no_broadcast_ndarray_fp32(
             vsev_float32xm1(dst_, vfdata, vl);
         }
     }
-    for (; i < end; i++) {
+    for (; i <= end; i++) {
         dst[i] = arithmetic_scalar_kernel_fp32<op>(src0[i], src1[i]);
         if (fuse_relu) {
             dst[i] = std::max(dst[i], (float)0.0f);
@@ -141,7 +141,7 @@ static inline void arithmetic_broadcast_lastdim_src0_broadcast_ndarray_fp32(
     float32xm1_t v_broadcast_val = vfmvvf_float32xm1(broadcast_val, vl);
 
     int64_t i = start;
-    for (; i + unroll_len < end; i += unroll_len) {
+    for (; i + unroll_len <= end; i += unroll_len) {
         const float* src1_ = src1 + i;
         float* dst_        = dst + i;
 
@@ -203,7 +203,7 @@ static inline void arithmetic_broadcast_lastdim_src0_broadcast_ndarray_fp32(
             vsev_float32xm1(dst_ + 15 * C_BLK(), vfdata15, vl);
         }
     }
-    for (; i + C_BLK() < end; i += C_BLK()) {
+    for (; i + C_BLK() <= end; i += C_BLK()) {
         const float* src1_ = src1 + i;
         float* dst_        = dst + i;
 
@@ -215,7 +215,7 @@ static inline void arithmetic_broadcast_lastdim_src0_broadcast_ndarray_fp32(
             vsev_float32xm1(dst_, vfdata, vl);
         }
     }
-    for (; i < end; i++) {
+    for (; i <= end; i++) {
         dst[i] = arithmetic_scalar_kernel_fp32<op>(broadcast_val, src1[i]);
         if (fuse_relu) {
             dst[i] = std::max(dst[i], (float)0.0f);
@@ -240,7 +240,7 @@ static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_fp32(
     float32xm1_t v_broadcast_val = vfmvvf_float32xm1(broadcast_val, vl);
 
     int64_t i = start;
-    for (; i + unroll_len < end; i += unroll_len) {
+    for (; i + unroll_len <= end; i += unroll_len) {
         const float* src0_ = src0 + i;
         float* dst_        = dst + i;
 
@@ -302,7 +302,7 @@ static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_fp32(
             vsev_float32xm1(dst_ + 15 * C_BLK(), vfdata15, vl);
         }
     }
-    for (; i + C_BLK() < end; i += C_BLK()) {
+    for (; i + C_BLK() <= end; i += C_BLK()) {
         const float* src0_ = src0 + i;
         float* dst_        = dst + i;
 
@@ -314,7 +314,7 @@ static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_fp32(
             vsev_float32xm1(dst_, vfdata, vl);
         }
     }
-    for (; i < end; i++) {
+    for (; i <= end; i++) {
         dst[i] = arithmetic_scalar_kernel_fp32<op>(broadcast_val, src0[i]);
         if (fuse_relu) {
             dst[i] = std::max(dst[i], (float)0.0f);

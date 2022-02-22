@@ -49,10 +49,15 @@ RetCode DivOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* s
 RetCode DivOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
                               std::vector<datatype_t>* selected_input_data_types,
                               std::vector<datatype_t>* selected_output_data_types) {
-    selected_input_data_types->at(0) = forward_precision;
-    selected_input_data_types->at(1) = forward_precision;
-    selected_output_data_types->at(0) = forward_precision;
-
+    if (DATATYPE_INT64 == selected_input_data_types->at(0)) {
+        selected_input_data_types->at(0) = DATATYPE_INT64;
+        selected_input_data_types->at(1) = DATATYPE_INT64;
+        selected_output_data_types->at(0) = DATATYPE_INT64;
+    } else {
+        selected_input_data_types->at(0) = forward_precision;
+        selected_input_data_types->at(1) = forward_precision;
+        selected_output_data_types->at(0) = forward_precision;
+    }
     return RC_SUCCESS;
 }
 

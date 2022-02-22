@@ -48,6 +48,15 @@ inline int64_t reduce_init_val_int64<REDUCE_MIN>(void)
 
 //
 template <reduce_op_type_t op>
+static void reduce_preprocess_scalar_int64(int64_t* dst, int64_t len)
+{
+    const int64_t init_val = reduce_init_val_int64<op>();
+    for (int64_t i = 0; i < len; i += 1) {
+        dst[i] = init_val;
+    }
+}
+
+template <reduce_op_type_t op>
 static void reduce_preprocess_int64(int64_t* dst, int64_t len)
 {
     const int64_t init_val      = reduce_init_val_int64<op>();

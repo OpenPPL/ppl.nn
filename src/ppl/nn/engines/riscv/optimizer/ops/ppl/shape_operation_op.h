@@ -29,6 +29,12 @@ public:
     PPLShapeOperationOp(const ir::Node* node) : RiscvOptKernel(node), op_(node) {}
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
+    ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
+                                      std::vector<ppl::common::dataformat_t>* selected_input_formats,
+                                      std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
+    ppl::common::RetCode SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
+                                        std::vector<ppl::common::datatype_t>* selected_input_data_types,
+                                        std::vector<ppl::common::datatype_t>* selected_output_data_types) override;
 
 private:
     std::shared_ptr<ppl::nn::common::PPLShapeOperationParam> param_;

@@ -42,6 +42,20 @@ RetCode CastOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
+RetCode CastOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
+                             vector<dataformat_t>* selected_output_formats) {
+    selected_input_formats->at(0) = DATAFORMAT_NDARRAY;
+    selected_output_formats->at(0) = DATAFORMAT_NDARRAY;
+    return RC_SUCCESS;
+}
+
+RetCode CastOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
+                               std::vector<datatype_t>* selected_input_data_types,
+                               std::vector<datatype_t>* selected_output_data_types) {
+    selected_output_data_types->at(0) = this->param_->to;
+    return RC_SUCCESS;
+}
+
 KernelImpl* CastOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<CastKernel>(param_.get());
 }
