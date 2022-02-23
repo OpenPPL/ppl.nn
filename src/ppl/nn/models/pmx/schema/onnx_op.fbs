@@ -1,4 +1,4 @@
-namespace ppl.nn.pmx;
+namespace ppl.nn.pmx.onnx;
 
 table ConvParam {
     group: int32;
