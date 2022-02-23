@@ -1,4 +1,20 @@
 namespace ppl.nn.pmx;
 
-union OpParam {
+table ConvParam {
+    group: int32;
+    dilations: [int32];
+    kernel_shape: [int32];
+    pads: [int32];
+    strides: [int32];
+    data_: [ubyte]; // private data of ppl implementations
 }
+
+union OpParamType {
+    ConvParam,
+}
+
+table OpParam {
+    value: OpParamType;
+}
+
+root_type OpParam;
