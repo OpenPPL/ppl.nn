@@ -18,16 +18,16 @@
 #ifndef _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_CONV_H_
 #define _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_CONV_H_
 
-#include "ppl/nn/models/pmx/generated/op_param_generated.h"
+#include "ppl/nn/models/pmx/generated/onnx_op_generated.h"
 #include "ppl/nn/params/onnx/convolution_param.h"
 
-namespace ppl { namespace nn { namespace pmx {
+namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
 void SerializeConvParam(const ppl::nn::common::ConvolutionParam&, const void*, uint64_t,
                         flatbuffers::FlatBufferBuilder*);
 
-void DeserializeConvParam(const pmx::ConvParam&, ppl::nn::common::ConvolutionParam*);
+void DeserializeConvParam(const ConvParam&, ppl::nn::common::ConvolutionParam*);
 
-}}} // namespace ppl::nn::pmx
+}}}} // namespace ppl::nn::pmx::onnx
 
 #endif

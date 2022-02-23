@@ -20,7 +20,7 @@
 using namespace flatbuffers;
 using namespace ppl::nn::common;
 
-namespace ppl { namespace nn { namespace pmx {
+namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
 void SerializeConvParam(const ConvolutionParam& param, const void* data, uint64_t size,
                         flatbuffers::FlatBufferBuilder* builder) {
@@ -32,9 +32,8 @@ void SerializeConvParam(const ConvolutionParam& param, const void* data, uint64_
     if (data && size > 0) {
         fb_data = builder->CreateVector<uint8_t>((const uint8_t*)data, size);
     }
-    auto fb_param =
-        pmx::CreateConvParam(*builder, param.group, fb_dilations, fb_kernel_shape, fb_pads, fb_strides, fb_data);
-    pmx::CreateOpParam(*builder, OpParamType_ConvParam, fb_param.Union());
+    auto fb_param = CreateConvParam(*builder, param.group, fb_dilations, fb_kernel_shape, fb_pads, fb_strides, fb_data);
+    CreateOpParam(*builder, OpParamType_ConvParam, fb_param.Union());
 }
 
 void DeserializeConvParam(const ConvParam& fb_param, ConvolutionParam* param) {
@@ -45,4 +44,4 @@ void DeserializeConvParam(const ConvParam& fb_param, ConvolutionParam* param) {
     utils::Fbvec2Stdvec(fb_param.strides(), &param->strides);
 }
 
-}}} // namespace ppl::nn::pmx
+}}}} // namespace ppl::nn::pmx::onnx
