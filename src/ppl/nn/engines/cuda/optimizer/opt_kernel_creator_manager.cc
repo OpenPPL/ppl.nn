@@ -35,6 +35,8 @@
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/gather_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/gather_nd_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/gemm_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/global_average_pool_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/global_max_pool_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/greater_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/identity_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/leaky_relu_op.h"
@@ -164,7 +166,8 @@ OptKernelCreatorManager::OptKernelCreatorManager() {
     REGISTER_OPT_KERNEL_CREATOR("", "Gather", 11, 12, GatherOp);
     REGISTER_OPT_KERNEL_CREATOR("", "GatherND", 11, 11, GatherNDOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Gemm", 11, 12, GemmOp);
-    REGISTER_OPT_KERNEL_CREATOR("", "GlobalAveragePool", 1, 16, AveragePoolOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "GlobalAveragePool", 1, 16, GlobalAveragePoolOp);
+    REGISTER_OPT_KERNEL_CREATOR("", "GlobalMaxPool", 11, 13, GlobalMaxPoolOp);
     REGISTER_OPT_KERNEL_CREATOR("", "Greater", 9, 12, GreaterOp);
     // I
     REGISTER_OPT_KERNEL_CREATOR("", "Identity", 1, 12, IdentityOp);
