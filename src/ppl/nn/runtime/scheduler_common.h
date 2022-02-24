@@ -18,16 +18,11 @@
 #ifndef _ST_HPC_PPL_NN_RUNTIME_SCHEDULER_COMMON_H_
 #define _ST_HPC_PPL_NN_RUNTIME_SCHEDULER_COMMON_H_
 
-#include "ppl/nn/runtime/tensor_impl.h"
-#include "ppl/nn/runtime/runtime_graph.h"
+#include "ppl/nn/runtime/edge_object.h"
 #include "ppl/nn/runtime/profiler.h"
-#include <stdint.h>
-#include <vector>
+#include <functional>
 
 namespace ppl { namespace nn { namespace utils {
-
-/** @brief put inputs/extra_inputs/outputs/constants into a vector */
-std::vector<EdgeObject*> InitObjectInUse(edgeid_t max_edge_id, RuntimeGraph* graph);
 
 ppl::common::RetCode ExecuteKernel(KernelImpl*, KernelExecContext*,
                                    const std::function<ppl::common::RetCode(EdgeObject*, nodeid_t)>& release_func,

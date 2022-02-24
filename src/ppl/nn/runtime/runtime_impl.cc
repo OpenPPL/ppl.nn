@@ -53,10 +53,8 @@ static EngineContext* FindOrCreateEngineContext(EngineImpl* engine, map<EngineIm
     return ctx;
 }
 
-static RetCode InitRuntimeGraphKernels(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                       vector<unique_ptr<EngineContext>>* engctx, RuntimeGraph* graph) {
-    graph->nodeid2kernel.resize(topo->GetMaxNodeId());
-
+static RetCode InitRuntimeGraphResourceKernels(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
+                                               vector<unique_ptr<EngineContext>>* engctx, RuntimeGraphResource* graph) {
     map<EngineImpl*, EngineContext*> eng2ctx;
     for (auto partition = info.partitions.begin(); partition != info.partitions.end(); ++partition) {
         auto ctx = FindOrCreateEngineContext(partition->engine, &eng2ctx, engctx);
@@ -90,9 +88,8 @@ static KernelImpl* FindKernelByName(const vector<unique_ptr<KernelImpl>>& kernel
     return nullptr;
 }
 
-static RetCode InitRuntimeGraphInputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info, RuntimeGraph* graph) {
-    graph->inputs.reserve(topo->GetInputCount());
-
+static RetCode InitRuntimeGraphResourceInputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
+                                              RuntimeGraphResource* graph) {
     for (uint32_t i = 0; i < topo->GetInputCount(); ++i) {
         auto eid = topo->GetInput(i);
         auto edge = topo->GetEdgeById(eid);
@@ -124,16 +121,14 @@ static RetCode InitRuntimeGraphInputs(const ir::GraphTopo* topo, const RuntimeGr
             }
         }
 
-        graph->inputs.push_back(tensor);
+        graph->edgeid2object[eid] = tensor;
     }
 
     return RC_SUCCESS;
 }
 
-static RetCode InitRuntimeGraphExtraInputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                           RuntimeGraph* graph) {
-    graph->extra_inputs.reserve(topo->GetExtraInputCount());
-
+static RetCode InitRuntimeGraphResourceExtraInputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
+                                                   RuntimeGraphResource* graph) {
     for (uint32_t i = 0; i < topo->GetExtraInputCount(); ++i) {
         auto eid = topo->GetExtraInput(i);
         auto edge = topo->GetEdgeById(eid);
@@ -164,15 +159,14 @@ static RetCode InitRuntimeGraphExtraInputs(const ir::GraphTopo* topo, const Runt
             }
         }
 
-        graph->extra_inputs.push_back(tensor);
+        graph->edgeid2object[eid] = tensor;
     }
 
     return RC_SUCCESS;
 }
 
-RetCode InitRuntimeGraphOutputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info, RuntimeGraph* graph) {
-    graph->outputs.reserve(topo->GetOutputCount());
-
+RetCode InitRuntimeGraphResourceOutputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
+                                        RuntimeGraphResource* graph) {
     for (uint32_t i = 0; i < topo->GetOutputCount(); ++i) {
         auto eid = topo->GetOutput(i);
         auto edge = topo->GetEdgeById(eid);
@@ -198,17 +192,15 @@ RetCode InitRuntimeGraphOutputs(const ir::GraphTopo* topo, const RuntimeGraphInf
             }
         }
 
-        graph->outputs.push_back(tensor);
+        graph->edgeid2object[eid] = tensor;
     }
 
     return RC_SUCCESS;
 }
 
-static RetCode InitRuntimeGraphConstants(const ir::GraphTopo* topo, const RuntimeGraphInfo& info, RuntimeGraph* graph) {
-    auto constants = &graph->constants;
+static RetCode InitRuntimeGraphResourceConstants(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
+                                                 RuntimeGraphResource* graph) {
     auto tensors = &graph->tensors;
-
-    constants->reserve(topo->GetConstantCount());
 
     for (auto p = info.partitions.begin(); p != info.partitions.end(); ++p) {
         for (auto c = p->constants.begin(); c != p->constants.end(); ++c) {
@@ -224,7 +216,7 @@ static RetCode InitRuntimeGraphConstants(const ir::GraphTopo* topo, const Runtim
                 auto tensor = &ret_pair.first->second;
                 tensor->SetBuffer(c->second.GetBufferDesc(), c->second.GetDevice());
                 *tensor->GetShape() = *c->second.GetShape();
-                constants->push_back(tensor);
+                graph->edgeid2object[eid] = tensor;
             }
         }
     }
@@ -232,34 +224,38 @@ static RetCode InitRuntimeGraphConstants(const ir::GraphTopo* topo, const Runtim
     return RC_SUCCESS;
 }
 
-RetCode RuntimeImpl::InitRuntimeGraph(const ir::GraphTopo* topo, const RuntimeGraphInfo& info, RuntimeGraph* graph) {
-    auto status = InitRuntimeGraphKernels(topo, info, &engctx_, graph);
+RetCode RuntimeImpl::InitRuntimeGraphResource(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
+                                              RuntimeGraphResource* graph) {
+    graph->nodeid2kernel.resize(topo->GetMaxNodeId());
+    graph->edgeid2object.resize(topo->GetMaxEdgeId());
+
+    auto status = InitRuntimeGraphResourceKernels(topo, info, &engctx_, graph);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "InitRuntimeGraphKernels failed: " << GetRetCodeStr(status);
+        LOG(ERROR) << "InitRuntimeGraphResourceKernels failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = InitRuntimeGraphConstants(topo, info, graph);
+    status = InitRuntimeGraphResourceConstants(topo, info, graph);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "InitRuntimeGraphConstants failed: " << GetRetCodeStr(status);
+        LOG(ERROR) << "InitRuntimeGraphResourceConstants failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = InitRuntimeGraphInputs(topo, info, graph);
+    status = InitRuntimeGraphResourceInputs(topo, info, graph);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "InitRuntimeGraphInputs failed: " << GetRetCodeStr(status);
+        LOG(ERROR) << "InitRuntimeGraphResourceInputs failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = InitRuntimeGraphExtraInputs(topo, info, graph);
+    status = InitRuntimeGraphResourceExtraInputs(topo, info, graph);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "InitRuntimeGraphExtraInputs failed: " << GetRetCodeStr(status);
+        LOG(ERROR) << "InitRuntimeGraphResourceExtraInputs failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = InitRuntimeGraphOutputs(topo, info, graph);
+    status = InitRuntimeGraphResourceOutputs(topo, info, graph);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "InitRuntimeGraphOutputs failed: " << GetRetCodeStr(status);
+        LOG(ERROR) << "InitRuntimeGraphResourceOutputs failed: " << GetRetCodeStr(status);
         return status;
     }
 
@@ -276,9 +272,9 @@ RetCode RuntimeImpl::Init(const shared_ptr<ir::GraphTopo>& topo, const shared_pt
 
     profiler_.Init(&conf_, &graph_, aux_info.get());
 
-    auto status = InitRuntimeGraph(topo.get(), *info, &graph_);
+    auto status = InitRuntimeGraphResource(topo.get(), *info, &graph_);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "InitRuntimeGraph failed: " << GetRetCodeStr(status);
+        LOG(ERROR) << "InitRuntimeGraphResource failed: " << GetRetCodeStr(status);
         return status;
     }
 

@@ -22,7 +22,8 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn {
 
-void Profiler::Init(const RuntimeInternalConf* conf, const RuntimeGraph* graph, const RuntimeAuxInfo* aux_info) {
+void Profiler::Init(const RuntimeInternalConf* conf, const RuntimeGraphResource* graph,
+                    const RuntimeAuxInfo* aux_info) {
     conf_ = conf;
     graph_ = graph;
     aux_info_ = aux_info;

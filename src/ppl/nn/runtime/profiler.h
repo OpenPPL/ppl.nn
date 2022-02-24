@@ -20,7 +20,7 @@
 
 #include "ppl/nn/runtime/kernel_impl.h"
 #include "ppl/nn/runtime/runtime_internal_conf.h"
-#include "ppl/nn/runtime/runtime_graph.h"
+#include "ppl/nn/runtime/runtime_graph_resource.h"
 #include "ppl/nn/runtime/runtime_aux_info.h"
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
@@ -32,7 +32,7 @@ namespace ppl { namespace nn {
 
 class Profiler final {
 public:
-    void Init(const RuntimeInternalConf* conf, const RuntimeGraph* graph, const RuntimeAuxInfo* aux_info);
+    void Init(const RuntimeInternalConf* conf, const RuntimeGraphResource* graph, const RuntimeAuxInfo* aux_info);
 
     bool IsProfilingEnabled() const {
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
@@ -61,7 +61,7 @@ private:
 
 private:
     const RuntimeInternalConf* conf_;
-    const RuntimeGraph* graph_;
+    const RuntimeGraphResource* graph_;
     const RuntimeAuxInfo* aux_info_;
 };
 

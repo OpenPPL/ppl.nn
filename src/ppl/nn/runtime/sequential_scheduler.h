@@ -26,16 +26,14 @@ namespace ppl { namespace nn {
 
 class SequentialScheduler final : public Scheduler {
 public:
-    ppl::common::RetCode Init(const ir::GraphTopo* topo, const RuntimeAuxInfo* aux_info, RuntimeGraph* g) override;
+    ppl::common::RetCode Init(const ir::GraphTopo* topo, const RuntimeAuxInfo* aux_info,
+                              RuntimeGraphResource* g) override;
     ppl::common::RetCode Run(Profiler*) override;
 
 private:
     const ir::GraphTopo* topo_;
     const RuntimeAuxInfo* aux_info_;
-    RuntimeGraph* graph_;
-
-    /** used to hold objects that are used during Run() */
-    std::vector<EdgeObject*> edgeid2object_;
+    RuntimeGraphResource* graph_;
 
     /** used to accelerlate tensor allocations */
     ppl::common::ObjectPool<TensorImpl> tensor_pool_;

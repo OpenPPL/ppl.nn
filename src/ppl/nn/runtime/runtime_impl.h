@@ -20,7 +20,7 @@
 
 #include "ppl/nn/ir/graph.h"
 #include "ppl/nn/runtime/runtime.h"
-#include "ppl/nn/runtime/runtime_graph.h"
+#include "ppl/nn/runtime/runtime_graph_resource.h"
 #include "ppl/nn/runtime/runtime_graph_info.h"
 #include "ppl/nn/runtime/runtime_aux_info.h"
 #include "ppl/nn/runtime/runtime_internal_conf.h"
@@ -40,17 +40,20 @@ public:
                               const std::shared_ptr<utils::SharedResource>&);
 
     TensorImpl* GetInputTensorImpl(uint32_t idx) const {
-        return graph_.inputs[idx];
+        auto eid = topo_->GetInput(idx);
+        return static_cast<TensorImpl*>(graph_.edgeid2object[eid]);
     }
     TensorImpl* GetOutputTensorImpl(uint32_t idx) const {
-        return graph_.outputs[idx];
+        auto eid = topo_->GetOutput(idx);
+        return static_cast<TensorImpl*>(graph_.edgeid2object[eid]);
     }
 
     uint32_t GetExtraInputCount() const {
-        return graph_.extra_inputs.size();
+        return topo_->GetExtraInputCount();
     }
     TensorImpl* GetExtraInputTensorImpl(uint32_t idx) const {
-        return graph_.extra_inputs[idx];
+        auto eid = topo_->GetExtraInput(idx);
+        return static_cast<TensorImpl*>(graph_.edgeid2object[eid]);
     }
 
     // ----- //
@@ -58,17 +61,19 @@ public:
     ppl::common::RetCode Configure(uint32_t, ...) override;
 
     uint32_t GetInputCount() const override {
-        return graph_.inputs.size();
+        return topo_->GetInputCount();
     }
     Tensor* GetInputTensor(uint32_t idx) const override {
-        return GetInputTensorImpl(idx);
+        auto eid = topo_->GetInput(idx);
+        return static_cast<TensorImpl*>(graph_.edgeid2object[eid]);
     }
 
     uint32_t GetOutputCount() const override {
-        return graph_.outputs.size();
+        return topo_->GetOutputCount();
     }
     Tensor* GetOutputTensor(uint32_t idx) const override {
-        return GetOutputTensorImpl(idx);
+        auto eid = topo_->GetOutput(idx);
+        return static_cast<TensorImpl*>(graph_.edgeid2object[eid]);
     }
 
     ppl::common::RetCode Run() override;
@@ -83,7 +88,7 @@ public:
     ppl::common::RetCode GetProfilingStatistics(ProfilingStatistics* stat) const override;
 
 private:
-    ppl::common::RetCode InitRuntimeGraph(const ir::GraphTopo*, const RuntimeGraphInfo&, RuntimeGraph*);
+    ppl::common::RetCode InitRuntimeGraphResource(const ir::GraphTopo*, const RuntimeGraphInfo&, RuntimeGraphResource*);
 
     /**
        @brief blocks until all operations finish.
@@ -92,7 +97,7 @@ private:
     ppl::common::RetCode Sync();
 
 private:
-    RuntimeGraph graph_;
+    RuntimeGraphResource graph_;
     std::unique_ptr<Scheduler> sched_;
     std::vector<std::unique_ptr<EngineContext>> engctx_;
     RuntimeInternalConf conf_;
