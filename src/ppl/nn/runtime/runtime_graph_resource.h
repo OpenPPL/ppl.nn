@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_RUNTIME_RUNTIME_GRAPH_H_
-#define _ST_HPC_PPL_NN_RUNTIME_RUNTIME_GRAPH_H_
+#ifndef _ST_HPC_PPL_NN_RUNTIME_RUNTIME_GRAPH_RESOURCE_H_
+#define _ST_HPC_PPL_NN_RUNTIME_RUNTIME_GRAPH_RESOURCE_H_
 
 #include "ppl/nn/runtime/kernel_impl.h"
 #include "ppl/nn/runtime/tensor_impl.h"
@@ -25,33 +25,21 @@
 namespace ppl { namespace nn {
 
 /**
-   @class RuntimeGraph
-   @brief data used in runtime stage
+   @class RuntimeGraphResource
+   @brief resource used in runtime stage
 */
-struct RuntimeGraph {
+struct RuntimeGraphResource final {
     void Clear() {
-        inputs.clear();
-        extra_inputs.clear();
-        constants.clear();
-        outputs.clear();
         tensors.clear();
+        edgeid2object.clear();
         nodeid2kernel.clear();
     }
 
-    /** input tensors of the graph except constants */
-    std::vector<TensorImpl*> inputs;
-
-    /** extra inputs used by this graph */
-    std::vector<TensorImpl*> extra_inputs;
-
-    /** constant tensors */
-    std::vector<TensorImpl*> constants;
-
-    /** output tensors of the graph */
-    std::vector<TensorImpl*> outputs;
-
     /** union of inputs/extra_inputs/constants/outputs */
     std::map<edgeid_t, TensorImpl> tensors;
+
+    /** objects that are used during Run() */
+    std::vector<EdgeObject*> edgeid2object;
 
     /** kernels list where the subscriptor is KernelImpl::GetNode()::GetId() */
     std::vector<std::unique_ptr<KernelImpl>> nodeid2kernel;

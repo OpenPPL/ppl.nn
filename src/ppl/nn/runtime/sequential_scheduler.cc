@@ -27,11 +27,10 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn {
 
-RetCode SequentialScheduler::Init(const ir::GraphTopo* topo, const RuntimeAuxInfo* aux_info, RuntimeGraph* g) {
+RetCode SequentialScheduler::Init(const ir::GraphTopo* topo, const RuntimeAuxInfo* aux_info, RuntimeGraphResource* g) {
     graph_ = g;
     topo_ = topo;
     aux_info_ = aux_info;
-    edgeid2object_ = utils::InitObjectInUse(topo->GetMaxEdgeId(), g);
     return RC_SUCCESS;
 }
 
@@ -89,7 +88,7 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
     auto release_object_func = [this](EdgeObject* object, nodeid_t user) -> RetCode {
         auto eid = object->GetEdge()->GetId();
         if (aux_info_->tensor_last_consumer[eid] == user) {
-            auto obj = edgeid2object_[eid];
+            auto obj = graph_->edgeid2object[eid];
             if (obj->GetObjectType() == EdgeObject::T_TENSOR) {
                 tensor_pool_.Free(static_cast<TensorImpl*>(obj));
             } else if (obj->GetObjectType() == EdgeObject::T_TENSOR_SEQUENCE) {
@@ -98,15 +97,15 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
                 LOG(ERROR) << "invalid edge object type[" << obj->GetObjectType() << "]";
                 return RC_INVALID_VALUE;
             }
-            edgeid2object_[eid] = nullptr;
+            graph_->edgeid2object[eid] = nullptr;
         }
         return RC_SUCCESS;
     };
 
 #ifndef NDEBUG
     set<edgeid_t> edges_before;
-    for (uint32_t i = 0; i < edgeid2object_.size(); ++i) {
-        if (edgeid2object_[i]) {
+    for (uint32_t i = 0; i < graph_->edgeid2object.size(); ++i) {
+        if (graph_->edgeid2object[i]) {
             edges_before.insert(i);
         }
     }
@@ -115,7 +114,7 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
     KernelExecContext ctx;
     ctx.SetProfilingFlag(profiler->IsProfilingEnabled());
 
-    SchedulerAcquireObject getter(topo_, &edgeid2object_, &tensor_pool_, &tensor_sequence_pool_);
+    SchedulerAcquireObject getter(topo_, &graph_->edgeid2object, &tensor_pool_, &tensor_sequence_pool_);
     ctx.SetAcquireObject(&getter);
 
     for (auto x = aux_info_->sorted_nodes.begin(); x != aux_info_->sorted_nodes.end(); ++x) {
@@ -132,8 +131,8 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
 
 #ifndef NDEBUG
     set<edgeid_t> edges_after;
-    for (uint32_t i = 0; i < edgeid2object_.size(); ++i) {
-        if (edgeid2object_[i]) {
+    for (uint32_t i = 0; i < graph_->edgeid2object.size(); ++i) {
+        if (graph_->edgeid2object[i]) {
             edges_after.insert(i);
         }
     }
