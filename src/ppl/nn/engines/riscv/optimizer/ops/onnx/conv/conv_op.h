@@ -24,7 +24,7 @@
 #include "ppl/nn/engines/riscv/impls/include/ppl/kernel/riscv/common/conv2d.h"
 #include "ppl/nn/engines/riscv/impls/include/ppl/kernel/riscv/fp16/conv2d.h"
 #include "ppl/nn/engines/riscv/impls/include/ppl/kernel/riscv/fp32/conv2d.h"
-#include "ppl/nn/params/onnx/convolution_param.h"
+#include "ppl/nn/params/onnx/conv_param.h"
 #include "ppl/nn/engines/riscv/params/conv_param.h"
 #include "ppl/nn/engines/riscv/optimizer/opt_kernel.h"
 #include "ppl/nn/engines/riscv/utils/fp16fp32_cvt.h"
@@ -113,7 +113,7 @@ private:
         const int64_t kernel_dims = weight_shape.dims.size() - 2;
 
         {
-            const ppl::nn::common::ConvolutionParam& conv_param = *param_;
+            const ppl::nn::common::ConvParam& conv_param = *param_;
             for (int64_t i = 0; i < kernel_dims; ++i) {
                 if (conv_param.pads[i] != conv_param.pads[i + kernel_dims]) {
                     return ppl::common::RC_UNSUPPORTED;
@@ -233,7 +233,7 @@ private:
 
 private:
     Convolution2DParam* conv2d_param_;
-    std::shared_ptr<ppl::nn::common::ConvolutionParam> param_;
+    std::shared_ptr<ppl::nn::common::ConvParam> param_;
 };
 
 }}} // namespace ppl::nn::riscv

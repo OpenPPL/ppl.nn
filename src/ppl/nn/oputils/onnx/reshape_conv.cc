@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/oputils/onnx/reshape_convolution.h"
+#include "ppl/nn/oputils/onnx/reshape_conv.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
@@ -23,8 +23,8 @@ using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace oputils {
 
-RetCode ReshapeConvolution(InputOutputInfo* info, const void* arg) {
-    auto param = (const ConvolutionParam*)arg;
+RetCode ReshapeConv(InputOutputInfo* info, const void* arg) {
+    auto param = (const ConvParam*)arg;
     auto x = info->GetInput<TensorImpl>(0)->GetShape();
     auto w = info->GetInput<TensorImpl>(1)->GetShape();
     auto y = info->GetOutput<TensorImpl>(0)->GetShape();

@@ -19,7 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_CUDA_PARAMS_CONV_EXTRA_PARAM_H_
 
 #include "ppl/nn/engines/cuda/cuda_device.h"
-#include "ppl/nn/oputils/onnx/reshape_convolution.h"
+#include "ppl/nn/oputils/onnx/reshape_conv.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 #include "ppl/nn/engines/cuda/params/clip_extra_param.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
@@ -40,7 +40,7 @@ struct ConvExtraParam {
 
 struct CudaConvParam final {
     int32_t bias_term = 0;
-    ppl::nn::common::ConvolutionParam param;
+    ppl::nn::common::ConvParam param;
     ConvExtraParam extra_param;
 };
 

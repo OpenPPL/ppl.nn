@@ -15,15 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/onnx/parsers/onnx/parse_convolution_param.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_conv_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseConvolutionParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
-                                           ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::ConvolutionParam*>(arg);
+ppl::common::RetCode ParseConvParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
+                                    ir::Node*, ir::GraphTopo*) {
+    auto param = static_cast<ppl::nn::common::ConvParam*>(arg);
 
     param->group = utils::GetNodeAttrByKey(pb_node, "group", 1);
     param->kernel_shape = utils::GetNodeAttrsByKey<int32_t>(pb_node, "kernel_shape");

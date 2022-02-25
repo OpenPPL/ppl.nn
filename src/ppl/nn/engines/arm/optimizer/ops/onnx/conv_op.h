@@ -18,7 +18,7 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_ARM_OPTIMIZER_ONNX_OPS_ONNX_CONV_OP_H_
 #define _ST_HPC_PPL_NN_ENGINES_ARM_OPTIMIZER_ONNX_OPS_ONNX_CONV_OP_H_
 
-#include "ppl/nn/params/onnx/convolution_param.h"
+#include "ppl/nn/params/onnx/conv_param.h"
 #include "ppl/nn/engines/arm/params/conv_param.h"
 #include "ppl/nn/engines/arm/optimizer/opt_kernel.h"
 
@@ -45,7 +45,7 @@ public:
 
 private:
     Convolution2DParam* conv2d_param_;
-    std::shared_ptr<ppl::nn::common::ConvolutionParam> param_;
+    std::shared_ptr<ppl::nn::common::ConvParam> param_;
 };
 
 }}} // namespace ppl::nn::arm
