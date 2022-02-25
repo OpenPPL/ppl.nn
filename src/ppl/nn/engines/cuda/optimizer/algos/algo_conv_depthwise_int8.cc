@@ -78,7 +78,7 @@ double DepthwiseDirectInt8::ExcuteTimer(const ir::Node* node, OptKernelOptions& 
     auto shape_in2 = TensorShape();
     const TensorShape& shape_out = *options.tensors->find(node->GetOutput(0))->second->GetShape();
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
-    ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_.param, temp_conv_param);
+    ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_, temp_conv_param);
 
     auto input_id0 = options.tensors->find(node->GetInput(0))->second->GetEdge()->GetId();
     auto input_id1 = options.tensors->find(node->GetInput(1))->second->GetEdge()->GetId();
@@ -154,7 +154,7 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
 
     RetCode status;
     conv_param_t temp_conv_param;
-    ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_.param, temp_conv_param);
+    ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_, temp_conv_param);
 
     // Add quant to conv inputs
     auto channel_pad = (shape_in1.GetDim(0) + align_size - 1) / align_size * align_size;

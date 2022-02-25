@@ -81,12 +81,10 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
     const ir::Shape& weight_shape = graph_data->shapes.find(node->GetInput(1))->second;
     const int64_t kernel_dims = weight_shape.dims.size() - 2;
 
-    param_->bias_term = (node->GetInputCount() == 3) ? 1 : 0;
-    param_->num_output = weight_shape.dims[0];
-    param_->channels = weight_shape.dims[1] * param_->group;
+    bias_term_ = (node->GetInputCount() == 3) ? 1 : 0;
 
     // Check Param
-    const ppl::nn::common::ConvolutionParam& conv_param = *param_.get();
+    const ppl::nn::common::ConvolutionParam& conv_param = *param_;
     for (int64_t i = 0; i < kernel_dims; ++i) {
         if (conv_param.pads[i] != conv_param.pads[i + kernel_dims]) {
             return ppl::common::RC_UNSUPPORTED;
@@ -101,6 +99,9 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
             return ppl::common::RC_OUT_OF_MEMORY;
         }
 
+        const int32_t num_output = weight_shape.dims[0];
+        const int32_t channels = weight_shape.dims[1] * param_->group;
+
         ppl::kernel::x86::conv2d_fp32_param& conv2d_param = conv2d_param_->param;
         conv2d_param.kernel_h = conv_param.kernel_shape[0];
         conv2d_param.kernel_w = conv_param.kernel_shape[1];
@@ -111,8 +112,8 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
         conv2d_param.dilation_h = conv_param.dilations[0];
         conv2d_param.dilation_w = conv_param.dilations[1];
         conv2d_param.group = conv_param.group;
-        conv2d_param.num_output = conv_param.num_output;
-        conv2d_param.channels = conv_param.channels;
+        conv2d_param.num_output = num_output;
+        conv2d_param.channels = channels;
         conv2d_param.fuse_flag = 0;
 
         conv2d_param_->algo_info = ppl::kernel::x86::conv2d_algo_selector::select_algo(
@@ -193,7 +194,7 @@ RetCode ConvOp::OmitConstantsData(std::map<edgeid_t, int64_t> *constants_data_re
         if (it != constants_data_refcount->end()) {
             it->second--;
         }
-        if (param_->bias_term) {
+        if (bias_term_) {
             auto bias_id = GetNode()->GetInput(2);
             it = constants_data_refcount->find(bias_id);
             if (it != constants_data_refcount->end()) {

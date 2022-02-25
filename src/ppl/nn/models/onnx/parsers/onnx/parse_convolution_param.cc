@@ -25,14 +25,11 @@ ppl::common::RetCode ParseConvolutionParam(const ::onnx::NodeProto& pb_node, con
                                            ir::Node*, ir::GraphTopo*) {
     auto param = static_cast<ppl::nn::common::ConvolutionParam*>(arg);
 
+    param->group = utils::GetNodeAttrByKey(pb_node, "group", 1);
     param->kernel_shape = utils::GetNodeAttrsByKey<int32_t>(pb_node, "kernel_shape");
     param->dilations = utils::GetNodeAttrsByKey<int32_t>(pb_node, "dilations");
     param->strides = utils::GetNodeAttrsByKey<int32_t>(pb_node, "strides");
     param->pads = utils::GetNodeAttrsByKey<int32_t>(pb_node, "pads");
-    param->group = utils::GetNodeAttrByKey(pb_node, "group", 1);
-    param->channels = 0; // set by opcontext
-    param->num_output = 0; // set by opcontext
-    param->bias_term = 0; // set by opcontext
 
     uint32_t kernel_dims = param->kernel_shape.size();
     if (kernel_dims == 0) {

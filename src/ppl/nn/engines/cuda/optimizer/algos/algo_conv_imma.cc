@@ -71,7 +71,7 @@ double TuringIMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
     conv_param_t temp_conv_param;
     fuse_param_t temp_fuse_param;
-    ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_.param, temp_conv_param);
+    ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_, temp_conv_param);
 
     // input H or W is too small
     if (shape_in0.GetDim(2) + 2 * temp_conv_param.pad_height < shape_in1.GetDim(2) ||
@@ -177,7 +177,7 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
 
     RetCode status;
     conv_param_t temp_conv_param;
-    ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_.param, temp_conv_param);
+    ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_, temp_conv_param);
 
     // Add quant to conv inputs
     auto group = ((CudaConvParam*)options.param)->param.group;
@@ -279,7 +279,7 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
     reinterpret_cast<CudaConvParam*>(options.param)->extra_param.algo_info.is_initializer_weight =
         weight_iter != data->constants.end();
 
-    if (attr_param_.param.bias_term == 0) {
+    if (attr_param_.bias_term == 0) {
         return RC_SUCCESS;
     }
 

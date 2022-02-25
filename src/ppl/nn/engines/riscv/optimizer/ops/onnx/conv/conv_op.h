@@ -112,12 +112,8 @@ private:
         const ir::Shape& weight_shape = graph_data->shapes.find(node->GetInput(1))->second;
         const int64_t kernel_dims = weight_shape.dims.size() - 2;
 
-        param_->bias_term = (node->GetInputCount() == 3) ? 1 : 0;
-        param_->num_output = weight_shape.dims[0];
-        param_->channels = weight_shape.dims[1] * param_->group;
-
         {
-            const ppl::nn::common::ConvolutionParam& conv_param = *param_.get();
+            const ppl::nn::common::ConvolutionParam& conv_param = *param_;
             for (int64_t i = 0; i < kernel_dims; ++i) {
                 if (conv_param.pads[i] != conv_param.pads[i + kernel_dims]) {
                     return ppl::common::RC_UNSUPPORTED;
@@ -132,6 +128,9 @@ private:
                     return ppl::common::RC_OUT_OF_MEMORY;
                 }
 
+                const int32_t num_output = weight_shape.dims[0];
+                const int32_t channels = weight_shape.dims[1] * param_->group;
+
                 ppl::kernel::riscv::conv2d_common_param& conv2d_kernel_param = conv2d_param_->param;
                 conv2d_kernel_param.kernel_h = conv_param.kernel_shape[0];
                 conv2d_kernel_param.kernel_w = conv_param.kernel_shape[1];
@@ -142,8 +141,8 @@ private:
                 conv2d_kernel_param.dilation_h = conv_param.dilations[0];
                 conv2d_kernel_param.dilation_w = conv_param.dilations[1];
                 conv2d_kernel_param.group = conv_param.group;
-                conv2d_kernel_param.num_output = conv_param.num_output;
-                conv2d_kernel_param.channels = conv_param.channels;
+                conv2d_kernel_param.num_output = num_output;
+                conv2d_kernel_param.channels = channels;
             } else {
                 LOG(ERROR) << "Unsupported kernel dim: " << kernel_dims;
                 return ppl::common::RC_UNSUPPORTED;
