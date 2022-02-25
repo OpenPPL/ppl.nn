@@ -15,17 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_CONVOLUTION_H_
-#define _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_CONVOLUTION_H_
+#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PARSE_CONV_PARAM_H_
+#define _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PARSE_CONV_PARAM_H_
 
 #include "ppl/common/retcode.h"
-#include "ppl/nn/params/onnx/convolution_param.h"
-#include "ppl/nn/common/input_output_info.h"
+#include "ppl/nn/params/onnx/conv_param.h"
+#include "ppl/nn/ir/graph.h"
+#include "ppl/nn/models/onnx/generated/onnx.pb.h"
+#include <map>
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ReshapeConvolution(InputOutputInfo*, const void*);
+ppl::common::RetCode ParseConvParam(const ::onnx::NodeProto& pb_node, const std::map<std::string, uint64_t>& op_sets,
+                                    void* arg, ir::Node*, ir::GraphTopo*);
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx
 
 #endif

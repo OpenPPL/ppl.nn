@@ -61,7 +61,7 @@ int GetRelueType(const std::string& name) {
 RetCode ConvertToForwardConvParam(const TensorShape& shape_in0, const TensorShape& shape_in1,
                                   const TensorShape& shape_out, const CudaConvParam& cuda_param,
                                   conv_param_t& conv_param) {
-    const ConvolutionParam& normal_param = cuda_param.param;
+    const ConvParam& normal_param = cuda_param.param;
 
     conv_param.in_height = shape_in0.GetDim(2);
     conv_param.in_width = shape_in0.GetDim(3);

@@ -26,7 +26,7 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_concat_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_constant_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_constant_of_shape_param.h"
-#include "ppl/nn/models/onnx/parsers/onnx/parse_convolution_param.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_conv_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_convtranspose_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_cumsum_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_depth_to_space_param.h"
@@ -145,7 +145,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITH_PARAM("", "Constant", 9, 16, ppl::nn::common::ConstantParam, ParseConstantParam);
     PPL_REGISTER_OP_WITH_PARAM("", "ConstantOfShape", 9, 16, ppl::nn::common::ConstantOfShapeParam,
                                ParseConstantOfShapeParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Conv", 1, 16, ppl::nn::common::ConvolutionParam, ParseConvolutionParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Conv", 1, 16, ppl::nn::common::ConvParam, ParseConvParam);
     PPL_REGISTER_OP_WITH_PARAM("", "ConvTranspose", 11, 16, ppl::nn::common::ConvTransposeParam,
                                ParseConvTransposeParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Cos", 1, 16);

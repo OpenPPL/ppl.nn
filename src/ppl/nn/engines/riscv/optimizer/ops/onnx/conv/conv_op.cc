@@ -18,7 +18,7 @@
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/conv/conv_op.h"
 #include "ppl/nn/engines/riscv/impls/include/ppl/kernel/riscv/fp16/conv2d.h"
 #include "ppl/nn/engines/riscv/kernels/onnx/conv/conv2d_kernel.h"
-#include "ppl/nn/oputils/onnx/reshape_convolution.h"
+#include "ppl/nn/oputils/onnx/reshape_conv.h"
 #include "ppl/nn/engines/riscv/riscv_engine_options.h"
 #include "ppl/nn/common/logger.h"
 #include <cstring>
@@ -46,7 +46,7 @@ RetCode ConvOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeConvolution(info, param_.get());
+        return oputils::ReshapeConv(info, param_.get());
     };
 
     infer_type_func_ = GenericInferType;

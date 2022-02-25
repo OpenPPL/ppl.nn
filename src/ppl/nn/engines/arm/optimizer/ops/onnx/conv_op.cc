@@ -21,7 +21,7 @@
 
 #include "ppl/nn/engines/arm/kernels/onnx/conv2d_kernel.h"
 #include "ppl/nn/engines/arm/utils/data_trans.h"
-#include "ppl/nn/oputils/onnx/reshape_convolution.h"
+#include "ppl/nn/oputils/onnx/reshape_conv.h"
 #include "ppl/nn/common/logger.h"
 
 using namespace std;
@@ -51,7 +51,7 @@ RetCode ConvOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeConvolution(info, param_.get());
+        return oputils::ReshapeConv(info, param_.get());
     };
 
     infer_type_func_ = GenericInferType;
@@ -88,7 +88,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
     const int64_t kernel_dims = weight_shape.dims.size() - 2;
 
     // Check Param
-    const ppl::nn::common::ConvolutionParam& conv_param = *param_;
+    const ppl::nn::common::ConvParam& conv_param = *param_;
     for (int64_t i = 0; i < kernel_dims; ++i) {
         if (conv_param.pads[i] != conv_param.pads[i + kernel_dims]) {
             return ppl::common::RC_UNSUPPORTED;

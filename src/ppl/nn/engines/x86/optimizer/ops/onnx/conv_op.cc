@@ -18,7 +18,7 @@
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/conv_op.h"
 #include "ppl/nn/engines/x86/kernels/onnx/conv2d_dynamic_kernel.h"
 #include "ppl/nn/engines/x86/kernels/onnx/conv2d_kernel.h"
-#include "ppl/nn/oputils/onnx/reshape_convolution.h"
+#include "ppl/nn/oputils/onnx/reshape_conv.h"
 #include "ppl/nn/common/logger.h"
 
 #include "ppl/kernel/x86/common/threading_tools.h"
@@ -48,7 +48,7 @@ RetCode ConvOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeConvolution(info, param_.get());
+        return oputils::ReshapeConv(info, param_.get());
     };
 
     infer_type_func_ = GenericInferType;
@@ -84,7 +84,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
     bias_term_ = (node->GetInputCount() == 3) ? 1 : 0;
 
     // Check Param
-    const ppl::nn::common::ConvolutionParam& conv_param = *param_;
+    const ppl::nn::common::ConvParam& conv_param = *param_;
     for (int64_t i = 0; i < kernel_dims; ++i) {
         if (conv_param.pads[i] != conv_param.pads[i + kernel_dims]) {
             return ppl::common::RC_UNSUPPORTED;

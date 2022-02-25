@@ -20,7 +20,7 @@
 #include "ppl/nn/engines/cuda/kernels/onnx/conv_hmma_kernel.h"
 #include "ppl/nn/engines/cuda/kernels/onnx/conv_imma_kernel.h"
 #include "ppl/nn/engines/cuda/kernels/onnx/conv_depthwise_kernel.h"
-#include "ppl/nn/oputils/onnx/reshape_convolution.h"
+#include "ppl/nn/oputils/onnx/reshape_conv.h"
 #include "ppl/nn/common/logger.h"
 
 using namespace std;
@@ -43,7 +43,7 @@ void ConvOp::CopyParam(void*& param) {
 }
 
 RetCode ConvOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ConvolutionParam>(options, &param_.param);
+    auto status = GenericLoadParam<ConvParam>(options, &param_.param);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
@@ -89,11 +89,11 @@ RetCode ConvOp::Init(const OptKernelOptions& options) {
         if (inshape->GetDimCount() < 4) {
             inshape->Reshape(info->GetInput<TensorImpl>(1)->GetShape()->GetDims(), 4);
         }
-        auto status = oputils::ReshapeConvolution(info, &(param_.param));
+        auto status = oputils::ReshapeConv(info, &(param_.param));
         if (info->GetOutputCount() > 1 && param_.extra_param.fuse_info.channel_offset >= 0) {
             auto postshape = info->GetOutput<TensorImpl>(1);
             postshape->GetShape()->Reshape(info->GetInput<TensorImpl>(0)->GetShape()->GetDims(),
-                                          info->GetInput<TensorImpl>(0)->GetShape()->GetRealDimCount());
+                                           info->GetInput<TensorImpl>(0)->GetShape()->GetRealDimCount());
             postshape->GetShape()->SetDim(1, param_.extra_param.fuse_info.channel_size);
         }
         return status;

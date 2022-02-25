@@ -18,12 +18,11 @@
 #include "ppl/nn/models/pmx/utils.h"
 #include "ppl/nn/models/pmx/oputils/onnx/conv.h"
 using namespace flatbuffers;
-using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-void SerializeConvParam(const ConvolutionParam& param, const void* data, uint64_t size,
-                        flatbuffers::FlatBufferBuilder* builder) {
+void SerializeConvParam(const ppl::nn::common::ConvParam& param, const void* data, uint64_t size,
+                        FlatBufferBuilder* builder) {
     auto fb_dilations = builder->CreateVector(param.dilations);
     auto fb_kernel_shape = builder->CreateVector(param.kernel_shape);
     auto fb_pads = builder->CreateVector(param.pads);
@@ -36,7 +35,7 @@ void SerializeConvParam(const ConvolutionParam& param, const void* data, uint64_
     CreateOpParam(*builder, OpParamType_ConvParam, fb_param.Union());
 }
 
-void DeserializeConvParam(const ConvParam& fb_param, ConvolutionParam* param) {
+void DeserializeConvParam(const ConvParam& fb_param, ppl::nn::common::ConvParam* param) {
     param->group = fb_param.group();
     utils::Fbvec2Stdvec(fb_param.dilations(), &param->dilations);
     utils::Fbvec2Stdvec(fb_param.kernel_shape(), &param->kernel_shape);
