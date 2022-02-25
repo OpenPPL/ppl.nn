@@ -38,19 +38,20 @@ struct ConvExtraParam {
     ConvFusionInfo fuse_info;
 };
 
-struct CudaConvParam {
+struct CudaConvParam final {
+    int32_t bias_term = 0;
     ppl::nn::common::ConvolutionParam param;
     ConvExtraParam extra_param;
 };
 
 ppl::common::RetCode ConvertToForwardConvParam(const TensorShape& shape_in0, const TensorShape& shape_in1,
                                                const TensorShape& shape_out,
-                                               ppl::nn::common::ConvolutionParam normal_param,
+                                               const CudaConvParam& cuda_param,
                                                conv_param_t& conv_param);
 
-ppl::common::RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* devive, ConvFusionInfo fuse_info,
+ppl::common::RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* devive, const ConvFusionInfo& fuse_info,
                                                fuse_param_t& fuse_param);
-                                
+
 void LoadAlgoInfo(const std::string& file_path, const algo_param_t& algo_param, const std::string& key_str);
 
 }}} // namespace ppl::nn::cuda
