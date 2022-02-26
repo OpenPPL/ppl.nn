@@ -1,6 +1,34 @@
+include "types.fbs";
+
 namespace ppl.nn.pmx.onnx;
 
+table ArgMaxParam {
+    axis: int32 = 0;
+    keepdims: int32 = 1;
+}
+
+table BatchNormalizationParam {
+    epsilon: float32 = 1e-05;
+    momentum: float32 = 0.9;
+}
+
+table CastParam {
+    to: int32;
+}
+
+table ConcatParam {
+    axis: int32;
+}
+
+enum AutoPadType : uint32 {
+    NOSET = 0,
+    SAME_UPPER,
+    SAME_LOWER,
+    VALID,
+}
+
 table ConvParam {
+    auto_pad: AutoPadType;
     group: int32;
     dilations: [int32];
     kernel_shape: [int32];
@@ -9,8 +37,247 @@ table ConvParam {
     data_: [ubyte]; // private data of ppl implementations
 }
 
+table ConvTransposeParam {
+    auto_pad: AutoPadType;
+    group: int32;
+    dilations: [int32];
+    kernel_shape: [int32];
+    output_padding: [int32];
+    output_shape: [int32];
+    pads: [int32];
+    strides: [int32];
+}
+
+table CumSumParam {
+    exclusive: int32 = 0;
+    reverse: int32 = 0;
+}
+
+enum DepthToSpaceMode : uint32 {
+    DCR = 0,
+    CRD = 1,
+}
+
+table DepthToSpaceParam {
+    blocksize: int32;
+    mode: DepthToSpaceMode = DCR;
+}
+
+table FlattenParam {
+    axis: int32 = 1;
+}
+
+table GatherNDParam {
+    batch_dims: int32 = 0; // since opset 12
+}
+
+table GatherParam {
+    axis: int32 = 0;
+}
+
+table GemmParam {
+    alpha: float32 = 1.0;
+    beta: float32 = 1.0;
+    trans_a: int32 = 0;
+    trans_b: int32 = 0;
+}
+
+table LeakyReluParam {
+    alpha: float32 = 0.01;
+}
+
+table LRNParam {
+    alpha: float32 = 0.0001;
+    beta: float32 = 0.75;
+    bias: float32 = 1.0;
+    size: int32;
+}
+
+enum LSTMActivationType : uint32 {
+    RELU,
+    TANH,
+    SIGMOID,
+    AFFINE,
+    LEAKY_RELU,
+    THRESHOLDED_RELU,
+    SCALED_TANH,
+    HARD_SIGMOID,
+    ELU,
+    SOFTSIGN,
+    SOFTPLUS,
+}
+
+enum LSTMDirectionType : uint32 {
+    FORWARD = 0,
+    REVERSE,
+    BIDIRECTIONAL,
+}
+
+table LSTMParam {
+    activation_alpha: [float32];
+    activation_beta: [float32];
+    activations: [LSTMActivationType];
+    clip: float32;
+    direction: LSTMDirectionType = FORWARD;
+    hidden_size: int32;
+    input_forget: int32 = 0;
+}
+
+table MaxUnpoolParam {
+    kernel_shape: [int32];
+    pads: [int32];
+    strides: [int32];
+}
+
+table NonMaxSuppressionParam {
+    center_poinx_box: int32 = 0;
+}
+
+enum PadMode : uint32 {
+    CONSTANT = 0,
+    REFLECT,
+    EDGE,
+}
+
+table PadParam {
+    mode: PadMode = CONSTANT;
+}
+
+table PoolingParam {
+    auto_pad: AutoPadType = NOSET;
+    ceil_mode: int32 = 0;
+    count_include_pad: int32 = 0;
+    storage_order: int32;
+    dilations: [int32];
+    kernel_shape: [int32];
+    pads: [int32];
+    strides: [int32];
+}
+
+enum ReduceType : uint32 {
+    REDUCE_SUM = 0,
+    REDUCE_MAX,
+    REDUCE_MIN,
+    REDUCE_PROD,
+    REDUCE_MEAN,
+}
+
+table ReduceParam {
+    type: ReduceType;
+    keepdims: int32 = 1;
+    axes: [int32];
+}
+
+enum ResizeCoordTransMode : uint32 {
+    HALF_PIXEL = 0,
+    PYTORCH_HALF_PIXEL,
+    ALIGN_CORNERS,
+    ASYMMETRIC,
+    TF_HALF_PIXEL_FOR_NN,
+    TF_CROP_AND_RESIZE,
+}
+
+enum ResizeMode : uint32 {
+    NEAREST = 0,
+    LINEAR,
+    CUBIC,
+}
+
+enum ResizeNearestMode : uint32 {
+    ROUND_PREFER_FLOOR,
+    ROUND_PREFER_CEIL,
+    FLOOR,
+    CEIL,
+}
+
+table ResizeParam {
+    coord_trans_mode: ResizeCoordTransMode;
+    cubic_coeff_a: float32 = -0.75;
+    exclude_outsize: int32 = 0;
+    extrapolation_value: float32 = 0.0;
+    mode: ResizeMode = NEAREST;
+    nearest_mode: ResizeNearestMode = ROUND_PREFER_FLOOR;
+}
+
+enum RoiAlignMode : uint32 {
+    ROIALIGN_AVG = 0,
+    ROIALIGN_MAX,
+}
+
+table RoiAlignParam {
+    mode: RoiAlignMode;
+    output_height: int32 = 1;
+    output_width: int32 = 1;
+    sampling_ratio: int32 = 0;
+    spatial_scale: float32 = 1.0;
+}
+
+table ScatterElementsParam {
+    axis: int32 = 0;
+}
+
+table SoftmaxParam {
+    axis: int32 = 1;
+}
+
+table SplitParam {
+    axis: int32 = 0;
+    split_point: [int32];
+}
+
+table SplitToSequenceParam {
+    axis: int32 = 0;
+    keepdims: int32 = 1;
+}
+
+table SqueezeParam {
+    axes: [int32];
+}
+
+table TopKParam {
+    axis: int32 = -1;
+    largest: int32 = 1;
+    sorted: int32 = 1;
+}
+
+table TransposeParam {
+    perm: [int32];
+}
+
+table UnsqueezeParam {
+    axes: [int32];
+}
+
 union OpParamType {
+    ArgMaxParam,
+    BatchNormalizationParam,
+    CastParam,
+    ConcatParam,
     ConvParam,
+    ConvTransposeParam,
+    CumSumParam,
+    DepthToSpaceParam,
+    FlattenParam,
+    GatherNDParam,
+    GemmParam,
+    LeakyReluParam,
+    LRNParam,
+    LSTMParam,
+    MaxUnpoolParam,
+    NonMaxSuppressionParam,
+    PadParam,
+    PoolingParam,
+    ReduceParam,
+    ResizeParam,
+    RoiAlignParam,
+    ScatterElementsParam,
+    SoftmaxParam,
+    SplitParam,
+    SplitToSequenceParam,
+    SqueezeParam,
+    TopKParam,
+    TransposeParam,
+    UnsqueezeParam,
 }
 
 table OpParam {

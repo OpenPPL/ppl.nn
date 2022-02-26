@@ -27,7 +27,7 @@ class MMCVROIAlignKernel : public X86Kernel {
 public:
     MMCVROIAlignKernel(const ir::Node* node) : X86Kernel(node) {}
 
-    void SetParam(const ppl::nn::common::MMCVROIAlignParam* p) {
+    void SetParam(const ppl::nn::common::MMCVRoiAlignParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::MMCVROIAlignParam* param_ = nullptr;
+    const ppl::nn::common::MMCVRoiAlignParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::x86

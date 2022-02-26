@@ -163,8 +163,8 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITH_PARAM("", "Flatten", 11, 12, ppl::nn::common::FlattenParam, ParseFlattenParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Floor", 6, 12);
     // G
-    PPL_REGISTER_OP_WITH_PARAM("", "Gather", 11, 12, ppl::nn::common::GatherParam, ParseGatherParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "GatherND", 11, 11, ppl::nn::common::GatherNDParam, ParseGatherNDParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Gather", 1, 16, ppl::nn::common::GatherParam, ParseGatherParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "GatherND", 11, 16, ppl::nn::common::GatherNDParam, ParseGatherNDParam);
     PPL_REGISTER_OP_WITH_PARAM("", "Gemm", 11, 12, ppl::nn::common::GemmParam, ParseGemmParam);
     PPL_REGISTER_OP_WITH_PARAM("", "GlobalAveragePool", 1, 16, ppl::nn::common::PoolingParam, ParsePoolingParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Greater", 9, 12);
@@ -172,7 +172,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Identity", 1, 12);
     PPL_REGISTER_OP_WITH_PARAM("", "If", 11, 12, ppl::nn::common::IfParam, ParseIfParam);
     // L
-    PPL_REGISTER_OP_WITH_PARAM("", "LeakyRelu", 6, 16, ppl::nn::common::LeakyReLUParam, ParseLeakyReLUParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "LeakyRelu", 6, 16, ppl::nn::common::LeakyReluParam, ParseLeakyReluParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Less", 9, 12);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Log", 6, 12);
     PPL_REGISTER_OP_WITH_PARAM("", "Loop", 11, 12, ppl::nn::common::LoopParam, ParseLoopParam);
@@ -204,7 +204,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Relu", 6, 12);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Reshape", 5, 12);
     PPL_REGISTER_OP_WITH_PARAM("", "Resize", 11, 12, ppl::nn::common::ResizeParam, ParseResizeParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "RoiAlign", 10, 15, ppl::nn::common::ROIAlignParam, ParseROIAlignParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "RoiAlign", 10, 15, ppl::nn::common::RoiAlignParam, ParseRoiAlignParam);
     // S
     PPL_REGISTER_OP_WITH_PARAM("", "ScatterElements", 11, 12, ppl::nn::common::ScatterElementsParam,
                                ParseScatterElementsParam);
@@ -235,8 +235,8 @@ ParamParserManager::ParamParserManager() {
     // mmcv op param parser
     PPL_REGISTER_OP_WITH_PARAM("mmcv", "grid_sampler", 1, 1, ppl::nn::common::MMCVGridSampleParam,
                                ParseMMCVGridSampleParam);
-    PPL_REGISTER_OP_WITH_PARAM("mmcv", "MMCVRoiAlign", 1, 1, ppl::nn::common::MMCVROIAlignParam,
-                               ParseMMCVROIAlignParam);
+    PPL_REGISTER_OP_WITH_PARAM("mmcv", "MMCVRoiAlign", 1, 1, ppl::nn::common::MMCVRoiAlignParam,
+                               ParseMMCVRoiAlignParam);
     PPL_REGISTER_OP_WITH_PARAM("mmcv", "MMCVModulatedDeformConv2d", 1, 1,
                                ppl::nn::common::MMCVModulatedDeformConv2dParam, ParseMMCVModulatedDeformConv2dParam);
     PPL_REGISTER_OP_WITH_PARAM("mmcv", "NonMaxSuppression", 1, 1, ppl::nn::common::MMCVNMSParam, ParseMMCVNMSParam);

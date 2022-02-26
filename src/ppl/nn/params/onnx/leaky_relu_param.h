@@ -22,10 +22,10 @@
 
 namespace ppl { namespace nn { namespace common {
 
-struct LeakyReLUParam {
+struct LeakyReluParam final {
     float alpha;
 
-    bool operator==(const LeakyReLUParam& p) const {
+    bool operator==(const LeakyReluParam& p) const {
         return this->alpha == p.alpha;
     }
 };

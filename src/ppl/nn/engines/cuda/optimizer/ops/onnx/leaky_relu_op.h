@@ -36,7 +36,7 @@ public:
     void CopyParam(void*& param) override;
 
 private:
-    ppl::nn::common::LeakyReLUParam param_;
+    ppl::nn::common::LeakyReluParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

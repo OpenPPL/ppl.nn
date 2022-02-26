@@ -17,6 +17,7 @@
 
 #include "ppl/nn/models/onnx/parsers/onnx/parse_conv_param.h"
 #include "ppl/nn/models/onnx/utils.h"
+#include "ppl/nn/common/logger.h"
 using namespace std;
 
 namespace ppl { namespace nn { namespace onnx {
@@ -24,6 +25,20 @@ namespace ppl { namespace nn { namespace onnx {
 ppl::common::RetCode ParseConvParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
                                     ir::Node*, ir::GraphTopo*) {
     auto param = static_cast<ppl::nn::common::ConvParam*>(arg);
+
+    auto auto_pad_str = utils::GetNodeAttrByKey<string>(pb_node, "auto_pad", "NOSET");
+    if (auto_pad_str == "NOSET") {
+        param->auto_pad = ppl::nn::common::ConvParam::NOSET;
+    } else if (auto_pad_str == "SAME_UPPER") {
+        param->auto_pad = ppl::nn::common::ConvParam::SAME_UPPER;
+    } else if (auto_pad_str == "SAME_LOWER") {
+        param->auto_pad = ppl::nn::common::ConvParam::SAME_LOWER;
+    } else if (auto_pad_str == "VALID") {
+        param->auto_pad = ppl::nn::common::ConvParam::VALID;
+    } else {
+        LOG(ERROR) << "unsupported auto_pad type: " << auto_pad_str;
+        return ppl::common::RC_UNSUPPORTED;
+    }
 
     param->group = utils::GetNodeAttrByKey(pb_node, "group", 1);
     param->kernel_shape = utils::GetNodeAttrsByKey<int32_t>(pb_node, "kernel_shape");

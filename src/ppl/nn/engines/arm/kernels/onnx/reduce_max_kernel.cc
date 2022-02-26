@@ -43,7 +43,7 @@ ppl::common::RetCode ReduceMaxKernel::DoExecute(KernelExecContext* ctx) {
     for (uint32_t i = 0; i < fixed_axes.size(); ++i) {
         PPLNN_ARM_DEBUG_TRACE("axes[%d]: %d\n", i, fixed_axes[i]);
     }
-    PPLNN_ARM_DEBUG_TRACE("keepdims: %d\n", param_->keep_dims);
+    PPLNN_ARM_DEBUG_TRACE("keepdims: %d\n", param_->keepdims);
     PPLNN_ARM_DEBUG_TRACE("isa: %u\n", GetISA());
 
     return ppl::kernel::arm_server::neon::reduce_max(data->GetShape(), reduced->GetShape(),

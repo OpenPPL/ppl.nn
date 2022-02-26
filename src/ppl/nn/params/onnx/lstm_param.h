@@ -33,7 +33,7 @@ struct LSTMParam {
         ACT_LEAKY_RELU,
         ACT_THRESHOLDED_RELU,
         ACT_SCALED_TANH,
-        ACT_HARD_SIGMIOD,
+        ACT_HARD_SIGMOID,
         ACT_ELU,
         ACT_SOFTSIGN,
         ACT_SOFTPLUS

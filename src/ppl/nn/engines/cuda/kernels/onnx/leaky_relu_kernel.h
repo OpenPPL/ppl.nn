@@ -28,7 +28,7 @@ class LeakyReluKernel : public CudaKernel {
 public:
     LeakyReluKernel(const ir::Node* node) : CudaKernel(node) {}
 
-    void SetParam(const ppl::nn::common::LeakyReLUParam* p) {
+    void SetParam(const ppl::nn::common::LeakyReluParam* p) {
         param_ = p;
     }
 
@@ -36,7 +36,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::LeakyReLUParam* param_ = nullptr;
+    const ppl::nn::common::LeakyReluParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::cuda

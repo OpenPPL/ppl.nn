@@ -22,11 +22,11 @@
 
 namespace ppl { namespace nn { namespace common {
 
-struct DepthToSpaceParam {
+struct DepthToSpaceParam final {
     enum { DCR = 0, CRD = 1 };
 
-    int32_t blocksize;
-    int32_t mode;
+    uint32_t blocksize;
+    uint32_t mode;
 
     bool operator==(const DepthToSpaceParam& p) const {
         return this->blocksize == p.blocksize && this->mode == p.mode;

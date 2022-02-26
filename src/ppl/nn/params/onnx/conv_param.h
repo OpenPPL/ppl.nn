@@ -24,6 +24,8 @@
 namespace ppl { namespace nn { namespace common {
 
 struct ConvParam final {
+    enum { NOSET = 0, SAME_UPPER, SAME_LOWER, VALID};
+    uint32_t auto_pad;
     int32_t group;
     std::vector<int32_t> kernel_shape;
     std::vector<int32_t> dilations;
@@ -31,7 +33,7 @@ struct ConvParam final {
     std::vector<int32_t> pads;
 
     bool operator==(const ConvParam& p) const {
-        return (group == p.group && kernel_shape == p.kernel_shape && dilations == p.dilations &&
+        return (auto_pad == p.auto_pad && group == p.group && kernel_shape == p.kernel_shape && dilations == p.dilations &&
                 strides == p.strides && pads == p.pads);
     }
 };

@@ -20,11 +20,10 @@
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace oputils {
 
-RetCode ReshapeTile(InputOutputInfo* info, const void* arg, const int64_t* repeats) {
+RetCode ReshapeTile(InputOutputInfo* info, const void*, const int64_t* repeats) {
     if (info->GetInputCount() != 2 || info->GetOutputCount() != 1) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2 or output count["
                    << info->GetOutputCount() << "] != 1.";
@@ -61,7 +60,7 @@ RetCode ReshapeTile(InputOutputInfo* info, const void* arg, const int64_t* repea
     return RC_SUCCESS;
 }
 
-RetCode ReshapeTile(InputOutputInfo* info, const void* arg) {
+RetCode ReshapeTile(InputOutputInfo* info, const void*) {
     if (info->GetInputCount() != 2 || info->GetOutputCount() != 1) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2 or output count["
                    << info->GetOutputCount() << "] != 1.";
@@ -74,7 +73,7 @@ RetCode ReshapeTile(InputOutputInfo* info, const void* arg) {
         return RC_NOT_FOUND;
     }
 
-    return ReshapeTile(info, arg, repeats);
+    return ReshapeTile(info, nullptr, repeats);
 }
 
 }}} // namespace ppl::nn::oputils

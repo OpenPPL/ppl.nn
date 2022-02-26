@@ -36,7 +36,7 @@ ppl::common::RetCode ParseLSTMParam(const ::onnx::NodeProto& pb_node, const map<
         {"LeakyRelu", ppl::nn::common::LSTMParam::ACT_LEAKY_RELU},
         {"ThresholdedRelu", ppl::nn::common::LSTMParam::ACT_THRESHOLDED_RELU},
         {"ScaledTanh", ppl::nn::common::LSTMParam::ACT_SCALED_TANH},
-        {"HardSigmoid", ppl::nn::common::LSTMParam::ACT_HARD_SIGMIOD},
+        {"HardSigmoid", ppl::nn::common::LSTMParam::ACT_HARD_SIGMOID},
         {"Elu", ppl::nn::common::LSTMParam::ACT_ELU},
         {"Softsign", ppl::nn::common::LSTMParam::ACT_SOFTSIGN},
         {"Softplus", ppl::nn::common::LSTMParam::ACT_SOFTPLUS},

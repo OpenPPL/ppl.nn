@@ -23,8 +23,8 @@
 
 namespace ppl { namespace nn { namespace common {
 
-struct ReduceParam {
-    typedef enum { 
+struct ReduceParam final {
+    typedef enum {
         ReduceSum     = 0,
         ReduceMax     = 1,
         ReduceMin     = 2,
@@ -33,12 +33,12 @@ struct ReduceParam {
         ReduceUnknown = 5,
     } reduce_type_t;
 
-    reduce_type_t reduce_type;
+    reduce_type_t type;
+    int32_t keepdims;
     std::vector<int32_t> axes;
-    bool keep_dims;
 
     bool operator==(const ReduceParam& p) const {
-        return this->axes == p.axes && this->keep_dims == p.keep_dims;
+        return (type == p.type && keepdims == p.keepdims && axes == p.axes);
     }
 };
 

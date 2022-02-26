@@ -33,7 +33,7 @@ public:
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
 
 private:
-    std::shared_ptr<ppl::nn::common::LeakyReLUParam> param_;
+    std::shared_ptr<ppl::nn::common::LeakyReluParam> param_;
 };
 
 }}} // namespace ppl::nn::x86

@@ -26,7 +26,7 @@
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseLeakyReLUParam(const ::onnx::NodeProto& pb_node,
+ppl::common::RetCode ParseLeakyReluParam(const ::onnx::NodeProto& pb_node,
                                          const std::map<std::string, uint64_t>& op_sets, void* arg, ir::Node*,
                                          ir::GraphTopo*);
 

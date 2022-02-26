@@ -29,14 +29,14 @@ namespace ppl { namespace nn { namespace cuda {
 
 void LeakyReluOp::CopyParam(void*& param) {
     if (param == nullptr) {
-        param = new LeakyReLUParam();
+        param = new LeakyReluParam();
     }
-    *(LeakyReLUParam*)param = param_;
+    *(LeakyReluParam*)param = param_;
     return;
 }
 
 RetCode LeakyReluOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<LeakyReLUParam>(options, &param_);
+    auto status = GenericLoadParam<LeakyReluParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;

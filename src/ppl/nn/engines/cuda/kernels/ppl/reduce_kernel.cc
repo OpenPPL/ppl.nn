@@ -30,7 +30,7 @@ ppl::common::RetCode ReduceKernel::DoExecute(KernelExecContext* ctx) {
     const TensorShape& input_shape = *input->GetShape();
     uint32_t n_outer = 1, n_reduce = 1, n_inner = 1;
 
-    switch (param_->reduce_type)
+    switch (param_->type)
     {
     case ReduceMax:
         param = ReduceMax;

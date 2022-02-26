@@ -21,9 +21,9 @@ using namespace std;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseMMCVROIAlignParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
+ppl::common::RetCode ParseMMCVRoiAlignParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
                                             ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::MMCVROIAlignParam*>(arg);
+    auto param = static_cast<ppl::nn::common::MMCVRoiAlignParam*>(arg);
 
     param->aligned = utils::GetNodeAttrByKey<int64_t>(pb_node, "aligned", 0);
     param->aligned_height = utils::GetNodeAttrByKey<int64_t>(pb_node, "output_height", 0);

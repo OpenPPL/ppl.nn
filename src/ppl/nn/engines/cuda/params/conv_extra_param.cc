@@ -114,10 +114,10 @@ RetCode ConvertToLeakyrelu(uint32_t fuse_index, InputOutputInfo* info, CudaDevic
                            fuse_param_t& fuse_param) {
     if (fuse_index == 0) {
         fuse_param.has_prelu = 1;
-        fuse_param.leaky = ((LeakyReLUParam*)fuse_info.fuse_attrs[fuse_index])->alpha;
+        fuse_param.leaky = ((LeakyReluParam*)fuse_info.fuse_attrs[fuse_index])->alpha;
     } else {
         fuse_param.has_elt_prelu = 1;
-        fuse_param.elt_leaky = ((LeakyReLUParam*)fuse_info.fuse_attrs[fuse_index])->alpha;
+        fuse_param.elt_leaky = ((LeakyReluParam*)fuse_info.fuse_attrs[fuse_index])->alpha;
     }
 
     return RC_SUCCESS;

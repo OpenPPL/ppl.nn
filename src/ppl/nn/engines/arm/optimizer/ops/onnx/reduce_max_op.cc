@@ -49,7 +49,7 @@ RetCode ReduceMaxOp::SelectFormat(const InputOutputInfo& info,
 
     if (dim_count > 0) { // dims has been infered
         if (input_shape.GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY) { // for NBCX
-            if (param_->keep_dims == true) {
+            if (param_->keepdims == true) {
                 selected_data_format = input_shape.GetDataFormat();
             } else {
                 const int64_t remain_dim_count = dim_count - param_->axes.size();
