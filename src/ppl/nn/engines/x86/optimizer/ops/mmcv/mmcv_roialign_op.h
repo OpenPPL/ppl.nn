@@ -33,7 +33,7 @@ public:
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
 
 private:
-    std::shared_ptr<ppl::nn::common::MMCVROIAlignParam> param_;
+    std::shared_ptr<ppl::nn::common::MMCVRoiAlignParam> param_;
 };
 
 }}} // namespace ppl::nn::x86

@@ -28,7 +28,7 @@ using namespace ppl::nn::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode ROIAlignOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ROIAlignParam>(options, &param_);
+    auto status = GenericLoadParam<RoiAlignParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;

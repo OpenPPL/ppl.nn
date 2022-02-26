@@ -36,7 +36,7 @@ public:
                                         std::vector<ppl::common::datatype_t>* selected_output_data_types) override;
 
 private:
-    std::shared_ptr<ppl::nn::common::MMCVROIAlignParam> param_;
+    std::shared_ptr<ppl::nn::common::MMCVRoiAlignParam> param_;
 };
 
 }}} // namespace ppl::nn::riscv

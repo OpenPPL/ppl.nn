@@ -21,9 +21,9 @@ using namespace std;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseLeakyReLUParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
+ppl::common::RetCode ParseLeakyReluParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
                                          ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::LeakyReLUParam*>(arg);
+    auto param = static_cast<ppl::nn::common::LeakyReluParam*>(arg);
     param->alpha = utils::GetNodeAttrByKey<float>(pb_node, "alpha", 0.01);
     return ppl::common::RC_SUCCESS;
 }

@@ -27,7 +27,7 @@ RetCode ReshapeMMCVROIAlign(InputOutputInfo* info, const void* arg) {
         return RC_INVALID_VALUE;
     }
 
-    auto param = (const MMCVROIAlignParam*)arg;
+    auto param = (const MMCVRoiAlignParam*)arg;
 
     auto input = info->GetInput<TensorImpl>(0)->GetShape();
     auto rois = info->GetInput<TensorImpl>(1)->GetShape();

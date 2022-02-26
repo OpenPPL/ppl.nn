@@ -45,7 +45,7 @@ RetCode TransposeOp::SelectFormat(const InputOutputInfo& info, vector<dataformat
     if (info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat() ==
             DATAFORMAT_N16CX && // actually change N16CHW -> NHWC
         info.GetInput<TensorImpl>(0)->GetShape()->GetDataType() == DATATYPE_FLOAT32 &&
-        param_->perm == std::vector<int32_t>{0, 2, 3, 1} && param_->reverse == false) {
+        param_->perm == std::vector<int32_t>{0, 2, 3, 1}) {
         selected_input_formats->at(0) = DATAFORMAT_N16CX;
         selected_output_formats->at(0) = DATAFORMAT_NDARRAY;
     }

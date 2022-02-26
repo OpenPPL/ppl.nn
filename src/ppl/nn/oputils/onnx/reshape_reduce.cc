@@ -55,7 +55,7 @@ RetCode ReshapeReduce(InputOutputInfo* info, const void* arg) {
 
     // reshape
     y->Reshape(x->GetDims(), x->GetDimCount());
-    if (param->keep_dims) {
+    if (param->keepdims) {
         for (uint32_t a = 0; a < fixed_axes.size(); ++a) {
             y->SetDim(fixed_axes[a], 1);
         }

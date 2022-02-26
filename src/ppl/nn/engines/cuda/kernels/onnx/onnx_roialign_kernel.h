@@ -28,7 +28,7 @@ class ONNXROIAlignKernel : public CudaKernel {
 public:
     ONNXROIAlignKernel(const ir::Node* node) : CudaKernel(node) {}
 
-    void SetParam(const ppl::nn::common::ROIAlignParam* p) {
+    void SetParam(const ppl::nn::common::RoiAlignParam* p) {
         param_ = p;
     }
 
@@ -36,7 +36,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::ROIAlignParam* param_ = nullptr;
+    const ppl::nn::common::RoiAlignParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::cuda

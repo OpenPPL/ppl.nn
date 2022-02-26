@@ -42,11 +42,11 @@ RetCode ReduceMinOp::Init(const OptKernelOptions& options) {
 
 RetCode ReduceMinOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
                                   vector<dataformat_t>* selected_output_formats) {
-    if (DATAFORMAT_N8CX == selected_input_formats->at(0) && param_->keep_dims) {
+    if (DATAFORMAT_N8CX == selected_input_formats->at(0) && param_->keepdims) {
         selected_output_formats->at(0) = DATAFORMAT_N8CX;
-    } else if (DATAFORMAT_N4CX == selected_input_formats->at(0) && param_->keep_dims) {
+    } else if (DATAFORMAT_N4CX == selected_input_formats->at(0) && param_->keepdims) {
         selected_output_formats->at(0) = DATAFORMAT_N4CX;
-    } else if (DATAFORMAT_N2CX == selected_input_formats->at(0) && param_->keep_dims) {
+    } else if (DATAFORMAT_N2CX == selected_input_formats->at(0) && param_->keepdims) {
         selected_output_formats->at(0) = DATAFORMAT_N2CX;
     }
 

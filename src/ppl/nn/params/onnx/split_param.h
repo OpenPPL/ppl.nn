@@ -23,12 +23,12 @@
 
 namespace ppl { namespace nn { namespace common {
 
-struct SplitParam {
-    std::vector<int32_t> split_point;
+struct SplitParam final {
     int32_t axis;
+    std::vector<int32_t> split_point;
 
     bool operator==(const SplitParam& p) const {
-        return this->split_point == p.split_point && this->axis == p.axis;
+        return (axis == p.axis && split_point == p.split_point);
     }
 };
 

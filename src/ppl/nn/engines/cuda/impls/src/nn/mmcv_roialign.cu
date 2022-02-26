@@ -189,7 +189,7 @@ ppl::common::RetCode PPLCUDAMMCVROIAlignForwardImp(
     const void* rois,
     ppl::nn::TensorShape* output_shape,
     void* output,
-    ppl::nn::common::MMCVROIAlignParam param)
+    ppl::nn::common::MMCVRoiAlignParam param)
 {
     int block_size    = 256;
     int channels      = input_shape->GetDim(1);

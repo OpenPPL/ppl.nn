@@ -53,7 +53,7 @@ ppl::common::RetCode ReduceSumKernel::DoExecute(KernelExecContext* ctx) {
     for (uint32_t i = 0; i < fixed_axes.size(); ++i) {
         PPLNN_RISCV_DEBUG_TRACE("axes[%d]: %d\n", i, fixed_axes[i]);
     }
-    PPLNN_RISCV_DEBUG_TRACE("keepdims: %d\n", param_->keep_dims);
+    PPLNN_RISCV_DEBUG_TRACE("keepdims: %d\n", param_->keepdims);
 
     auto data_type = data->GetShape()->GetDataType();
     if (data_type == ppl::common::DATATYPE_FLOAT16) {

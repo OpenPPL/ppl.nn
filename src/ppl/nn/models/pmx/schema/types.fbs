@@ -1,0 +1,33 @@
+namespace ppl.nn.pmx;
+
+enum DataType : uint32 {
+    UNKNOWN = 0,
+    BOOL,
+    INT8,
+    UINT8,
+    INT16,
+    UINT16,
+    INT32,
+    UINT32,
+    INT64,
+    UINT64,
+    FLOAT16,
+    FLOAT32,
+    FLOAT64,
+    BFLOAT16,
+    INT4B,
+    COMPLEX64,
+    COMPLEX128,
+}
+
+enum DataFormat : uint32 {
+    UNKNOWN = 0,
+    NDARRAY,
+    NHWC8,
+    NHWC16,
+    N2CX,
+    N4CX,
+    N8CX,
+    N16CX,
+    N32CX,
+}

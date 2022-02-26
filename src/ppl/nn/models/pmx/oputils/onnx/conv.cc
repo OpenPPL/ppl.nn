@@ -31,11 +31,12 @@ void SerializeConvParam(const ppl::nn::common::ConvParam& param, const void* dat
     if (data && size > 0) {
         fb_data = builder->CreateVector<uint8_t>((const uint8_t*)data, size);
     }
-    auto fb_param = CreateConvParam(*builder, param.group, fb_dilations, fb_kernel_shape, fb_pads, fb_strides, fb_data);
+    auto fb_param = CreateConvParam(*builder, static_cast<AutoPadType>(param.auto_pad), param.group, fb_dilations, fb_kernel_shape, fb_pads, fb_strides, fb_data);
     CreateOpParam(*builder, OpParamType_ConvParam, fb_param.Union());
 }
 
 void DeserializeConvParam(const ConvParam& fb_param, ppl::nn::common::ConvParam* param) {
+    param->auto_pad = static_cast<uint32_t>(fb_param.auto_pad());
     param->group = fb_param.group();
     utils::Fbvec2Stdvec(fb_param.dilations(), &param->dilations);
     utils::Fbvec2Stdvec(fb_param.kernel_shape(), &param->kernel_shape);

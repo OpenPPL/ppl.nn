@@ -22,12 +22,11 @@
 
 namespace ppl { namespace nn { namespace common {
 
-struct FlattenParam {
+struct FlattenParam final {
     int32_t axis;
-    int32_t end_axis;
 
     bool operator==(const FlattenParam& p) const {
-        return this->axis == p.axis && this->end_axis == p.end_axis;
+        return axis == p.axis;
     }
 };
 

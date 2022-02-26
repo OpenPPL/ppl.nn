@@ -22,9 +22,9 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx { namespace utils {
 
-template <>
-vector<int32_t> GetNodeAttrsByKey<int32_t>(const ::onnx::NodeProto& node, const char* key) {
-    vector<int32_t> result;
+template <typename T>
+static vector<T> GetIntsByKey(const ::onnx::NodeProto& node, const char* key) {
+    vector<T> result;
     for (int32_t i = 0; i < node.attribute_size(); i++) {
         const ::onnx::AttributeProto& attribute = node.attribute(i);
         if (attribute.name() == key) {
@@ -36,6 +36,16 @@ vector<int32_t> GetNodeAttrsByKey<int32_t>(const ::onnx::NodeProto& node, const 
         }
     }
     return result;
+}
+
+template <>
+vector<int32_t> GetNodeAttrsByKey<int32_t>(const ::onnx::NodeProto& node, const char* key) {
+    return GetIntsByKey<int32_t>(node, key);
+}
+
+template <>
+vector<uint32_t> GetNodeAttrsByKey<uint32_t>(const ::onnx::NodeProto& node, const char* key) {
+    return GetIntsByKey<uint32_t>(node, key);
 }
 
 template <>
@@ -72,6 +82,11 @@ vector<string> GetNodeAttrsByKey<string>(const ::onnx::NodeProto& node, const ch
 
 template <>
 int32_t GetAttrValue<int32_t>(const ::onnx::AttributeProto& attribute) {
+    return attribute.i();
+}
+
+template <>
+uint32_t GetAttrValue<uint32_t>(const ::onnx::AttributeProto& attribute) {
     return attribute.i();
 }
 
