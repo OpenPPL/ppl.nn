@@ -101,12 +101,6 @@ static void PrintInputOutputInfo(const Runtime* runtime) {
 int main(void) {
     const char* model_file = "tests/testdata/conv.onnx";
 
-    auto builder = unique_ptr<OnnxRuntimeBuilder>(OnnxRuntimeBuilderFactory::Create());
-    if (!builder) {
-        cerr << "create RuntimeBuilder failed." << endl;
-        return -1;
-    }
-
     auto x86_engine = X86EngineFactory::Create(X86EngineOptions());
     vector<unique_ptr<Engine>> engines;
     engines.emplace_back(unique_ptr<Engine>(x86_engine));
@@ -114,6 +108,12 @@ int main(void) {
     vector<Engine*> engine_ptrs(engines.size());
     for (uint32_t i = 0; i < engines.size(); ++i) {
         engine_ptrs[i] = engines[i].get();
+    }
+
+    auto builder = unique_ptr<OnnxRuntimeBuilder>(OnnxRuntimeBuilderFactory::Create());
+    if (!builder) {
+        cerr << "create RuntimeBuilder failed." << endl;
+        return -1;
     }
 
     auto status = builder->Init(model_file, engine_ptrs.data(), engine_ptrs.size());
