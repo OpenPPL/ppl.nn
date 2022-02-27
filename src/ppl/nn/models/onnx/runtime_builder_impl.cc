@@ -38,6 +38,8 @@ RuntimeBuilderImpl::RuntimeBuilderImpl() {
 }
 
 RuntimeBuilderImpl::~RuntimeBuilderImpl() {
+    graph_.topo.reset();
+    graph_.data.reset();
     aux_info_.reset();
     graph_info_.reset();
     resource_.reset();
