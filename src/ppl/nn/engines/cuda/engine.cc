@@ -36,9 +36,11 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 CudaEngine::~CudaEngine() {
+#ifdef PPLNN_ENABLE_PMX_MODEL
     for (auto b = constant_buffers_.begin(); b != constant_buffers_.end(); ++b) {
         device_.Free(&(*b));
     }
+#endif
 }
 
 RetCode CudaEngine::Init(const CudaEngineOptions& options) {

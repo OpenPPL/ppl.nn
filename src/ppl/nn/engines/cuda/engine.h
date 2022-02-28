@@ -103,7 +103,9 @@ private:
     BufferedCudaDevice device_;
     CudaArgs cuda_flags_;
     CudaEngineOptions options_;
+#ifdef PPLNN_ENABLE_PMX_MODEL
     std::vector<BufferDesc> constant_buffers_;
+#endif
     CUDAModuleManager cuda_manager_;
     CompileInfo compile_set_;
 };
