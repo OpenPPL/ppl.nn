@@ -36,6 +36,8 @@ public:
     ppl::common::RetCode ProcessGraph(utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*) override;
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
+    OptKernel* CreateOptKernel(const ir::Node* node) const override;
+    ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, RuntimeConstantInfo>*) override;
     ppl::common::RetCode SerializeData(utils::DataStream*) const override {
         return ppl::common::RC_UNSUPPORTED;
     }

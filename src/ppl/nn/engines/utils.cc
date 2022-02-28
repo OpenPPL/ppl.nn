@@ -162,4 +162,23 @@ RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, Runt
     return RC_SUCCESS;
 }
 
+RetCode LoadConstants(const ConstantVisitor& visitor, Device* dev, map<edgeid_t, RuntimeConstantInfo>* eid2info) {
+    return visitor.ForEach(
+        [eid2info, dev](edgeid_t eid, const void* data, uint64_t size, const TensorShape& shape) -> RetCode {
+            RuntimeConstantInfo info;
+            auto status = utils::GenericLoadConstant(eid, data, size, shape, dev, &info);
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "load constant failed: " << GetRetCodeStr(status);
+                return status;
+            }
+
+            auto ret_pair = eid2info->emplace(eid, std::move(info));
+            if (!ret_pair.second) {
+                LOG(ERROR) << "constant of id[" << eid << "] already exists.";
+                return RC_EXISTS;
+            }
+            return RC_SUCCESS;
+        });
+}
+
 }}} // namespace ppl::nn::utils

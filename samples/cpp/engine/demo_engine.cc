@@ -55,4 +55,12 @@ RetCode DemoEngine::ProcessGraph(utils::SharedResource*, ir::Graph* graph, Runti
     return RC_SUCCESS;
 }
 
+OptKernel* DemoEngine::CreateOptKernel(const ir::Node* node) const {
+    return new DemoOptKernel(node);
+}
+
+RetCode DemoEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, RuntimeConstantInfo>* eid2info) {
+    return utils::LoadConstants(visitor, &device_, eid2info);
+}
+
 }}} // namespace ppl::nn::demo
