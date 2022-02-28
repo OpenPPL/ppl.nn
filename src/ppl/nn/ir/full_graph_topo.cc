@@ -111,12 +111,10 @@ public:
         }
     }
 
-    bool DelConsumer(nodeid_t nid) override {
-        auto old_size = consumers_.size();
+    void DelConsumer(nodeid_t nid) override {
         utils::VectorRemoveOneIf(consumers_, [nid](nodeid_t id) -> bool {
             return (id == nid);
         });
-        return (consumers_.size() != old_size);
     }
 
     void ClearConsumer() override {
