@@ -20,6 +20,8 @@ option(PPLNN_ENABLE_LUA_API "enable lua api support" OFF)
 
 option(PPLNN_HOLD_DEPS "don't update dependencies" OFF)
 
+option(PPLNN_ENABLE_SANITIZE_OPTIONS "use -fsanitize options to check memory errors. Note that this option is only available for GCC and Clang." OFF)
+
 # --------------------------------------------------------------------------- #
 
 # variables
