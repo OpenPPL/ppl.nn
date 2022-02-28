@@ -26,7 +26,7 @@ namespace ppl { namespace nn { namespace common {
 class ConverterOp final : public OptKernel {
 public:
     ConverterOp(const ir::Node* node) : OptKernel(node) {}
-    KernelImpl* CreateKernelImpl() const {
+    KernelImpl* CreateKernelImpl() const override {
         return new ConverterKernel(GetNode());
     }
 #ifdef PPLNN_ENABLE_PMX_MODEL
