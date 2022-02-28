@@ -55,11 +55,8 @@ public:
     /** @brief add a node specified by `nid` to edge's consumer list */
     virtual void AddConsumer(nodeid_t) = 0;
 
-    /**
-       @brief remove consumer specified by `nid`
-       @return true if `nid` is found, false otherwise.
-    */
-    virtual bool DelConsumer(nodeid_t nid) = 0;
+    /** @brief remove consumer specified by `nid` */
+    virtual void DelConsumer(nodeid_t nid) = 0;
 
     /** @brief remove all consumers */
     virtual void ClearConsumer() = 0;

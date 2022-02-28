@@ -71,12 +71,10 @@ public:
         parent_edge_->AddConsumer(nid);
     }
 
-    bool DelConsumer(nodeid_t nid) override {
-        bool found = false;
+    void DelConsumer(nodeid_t nid) override {
         if (nid < node_ptrs_->size() && node_ptrs_->at(nid)) {
-            found = parent_edge_->DelConsumer(nid);
+            parent_edge_->DelConsumer(nid);
         }
-        return found;
     }
 
     void ClearConsumer() override {
