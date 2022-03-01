@@ -88,13 +88,6 @@ Define_bool_opt("--perf-with-io", g_flag_perf_with_io, false, "profiling with io
 
 /* -------------------------------------------------------------------------- */
 
-template <typename T>
-static string ToString(T v) {
-    stringstream ss;
-    ss << v;
-    return ss.str();
-}
-
 static vector<int64_t> GenerateRandomDims(uint32_t dim_count) {
     static const uint32_t max_dim = 640;
     static const uint32_t min_dim = 128;
@@ -489,9 +482,9 @@ static string GetDimsStr(const Tensor* tensor) {
         return string();
     }
 
-    string res = ToString(shape->GetDim(0));
+    string res = std::to_string(shape->GetDim(0));
     for (uint32_t i = 1; i < shape->GetDimCount(); ++i) {
-        res += "_" + ToString(shape->GetDim(i));
+        res += "_" + std::to_string(shape->GetDim(i));
     }
 
     return res;
@@ -867,7 +860,7 @@ static void PrintInputOutputInfo(const Runtime* runtime) {
         string dims_str;
         auto shape = tensor->GetShape();
         for (uint32_t j = 0; j < shape->GetDimCount(); ++j) {
-            dims_str += " " + ToString(shape->GetDim(j));
+            dims_str += " " + std::to_string(shape->GetDim(j));
         }
         LOG(INFO) << "    dim(s):" << dims_str;
 
@@ -886,7 +879,7 @@ static void PrintInputOutputInfo(const Runtime* runtime) {
         string dims_str;
         auto shape = tensor->GetShape();
         for (uint32_t j = 0; j < shape->GetDimCount(); ++j) {
-            dims_str += " " + ToString(shape->GetDim(j));
+            dims_str += " " + std::to_string(shape->GetDim(j));
         }
         LOG(INFO) << "    dim(s):" << dims_str;
 
@@ -1122,7 +1115,7 @@ int main(int argc, char* argv[]) {
         status = builder->Preprocess();
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "onnx preprocess failed: " << GetRetCodeStr(status);
-            return status;
+            return -1;
         }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL

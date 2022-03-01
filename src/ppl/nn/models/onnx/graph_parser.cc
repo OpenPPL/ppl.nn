@@ -108,10 +108,8 @@ static RetCode ParseGraphInput(const ::onnx::GraphProto& pb_graph, ir::GraphTopo
     return RC_SUCCESS;
 }
 
-static string GenNodeName(uint32_t anonymous_node_count) {
-    char buf[64];
-    auto len = sprintf(buf, "ppl_anonymous_node_%u", anonymous_node_count);
-    return string(buf, len);
+static inline string GenNodeName(uint32_t anonymous_node_count) {
+    return "ppl_anonymous_node_" + std::to_string(anonymous_node_count);
 }
 
 static RetCode ParseNodeInfo(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>& op_sets,
