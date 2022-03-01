@@ -67,13 +67,15 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     auto shape_out = *options.tensors->find(node->GetOutput(0))->second->GetShape();
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
 
-    auto dim_count = shape_in0.GetDimCount();
+    auto dim_count0 = shape_in0.GetDimCount();
+    auto dim_count1 = shape_in1.GetDimCount();
+    auto out_dim_count = shape_out.GetDimCount();
 
     conv_param_t temp_conv_param;
     fuse_param_t temp_fuse_param;
-    temp_conv_param.in_num = attr_param_.param.transA ? shape_in0.GetDim(dim_count-1) : shape_in0.GetDim(dim_count-2);
-    temp_conv_param.num_chl = attr_param_.param.transB ? shape_in1.GetDim(dim_count-1) : shape_in1.GetDim(dim_count-2);
-    temp_conv_param.num_flt = attr_param_.param.transB ? shape_in1.GetDim(dim_count-2) : shape_in1.GetDim(dim_count-1);
+    temp_conv_param.in_num = attr_param_.param.transA ? shape_in0.GetDim(dim_count0-1) : shape_in0.GetDim(dim_count0-2);
+    temp_conv_param.num_chl = attr_param_.param.transB ? shape_in1.GetDim(dim_count1-1) : shape_in1.GetDim(dim_count1-2);
+    temp_conv_param.num_flt = attr_param_.param.transB ? shape_in1.GetDim(dim_count1-2) : shape_in1.GetDim(dim_count1-1);
     temp_conv_param.in_height = 1;
     temp_conv_param.in_width = 1;
     temp_conv_param.flt_height = 1;
@@ -87,6 +89,7 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     temp_conv_param.hole_height = 1;
     temp_conv_param.hole_width = 1;
     temp_conv_param.num_grp = 1;
+    temp_conv_param.has_bias = 0;
 
     const std::string& key_str = node->GetName();
     auto algo_info = options.algos->find(key_str);
@@ -116,17 +119,16 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     }
 
     // Padding
-    auto batch = 0;
-    for(uint32_t i = 0; i < dim_count-2; i++){
-        batch += shape_in0.GetDim(i);
+    auto batch = 1;
+    for(uint32_t i = 0; i < dim_count0-2; i++){
+        batch *= shape_in0.GetDim(i);
     }
-    batch = batch? batch : 1;
-    auto K = shape_in0.GetDim(dim_count-1);
-    auto N = shape_in1.GetDim(dim_count-1);
+    auto K = shape_in0.GetDim(dim_count0-1);
+    auto N = shape_in1.GetDim(dim_count1-1);
 
-    shape_in0.SetDim(dim_count-1, (K + align_size - 1) / align_size * align_size);
-    shape_in1.SetDim(dim_count-2, (K + align_size - 1) / align_size * align_size);
-    shape_out.SetDim(dim_count-1, (N + align_size - 1) / align_size * align_size);
+    shape_in0.SetDim(dim_count0-1, (K + align_size - 1) / align_size * align_size);
+    shape_in1.SetDim(dim_count1-2, (K + align_size - 1) / align_size * align_size);
+    shape_out.SetDim(out_dim_count-1, (N + align_size - 1) / align_size * align_size);
     if (attr_param_.param.bias_term) {
         shape_in2 = *options.tensors->find(node->GetInput(2))->second->GetShape();
         shape_in2.SetDim(0, (shape_in2.GetDim(0) + align_size - 1) / align_size * align_size);
