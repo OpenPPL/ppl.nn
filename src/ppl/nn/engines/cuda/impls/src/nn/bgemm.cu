@@ -140,11 +140,10 @@ ppl::common::RetCode PPLCUDABgemmModifyWeights(
     int pad_size = GetPadSize(type);
 
     int dim_count = weight_shape->GetDimCount();
-    int batch = 0;
+    int batch = 1;
     for (int i = 0; i < dim_count-2; i++){
-        batch += weight_shape->GetDim(i);
+        batch *= weight_shape->GetDim(i);
     }
-    batch = batch!=0? batch : 1;
     const int dim0 = weight_shape->GetDim(dim_count - 2); // original shape 
     const int dim1 = weight_shape->GetDim(dim_count - 1);
     const int dim0_pad = Align(dim0, pad_size);
@@ -196,14 +195,13 @@ ppl::common::RetCode PPLCUDABgemmPadInput(
     auto type    = input_shape->GetDataType();
     int pad_size = GetPadSize(type);
 
-    int dim_count = input_shape->GetDimCount();
-    uint64_t batch = 0;
-    for (int i = 0; i < dim_count-2; i++){
-        batch += input_shape->GetDim(i);
+    int dim_count0 = input_shape->GetDimCount();
+    uint64_t batch = 1;
+    for (int i = 0; i < dim_count0-2; i++){
+        batch *= input_shape->GetDim(i);
     }
-    batch = batch!=0? batch : 1;
-    const int dim0 = input_shape->GetDim(dim_count - 2); // original shape 
-    const int dim1 = input_shape->GetDim(dim_count - 1);
+    const int dim0 = input_shape->GetDim(dim_count0 - 2); // original shape 
+    const int dim1 = input_shape->GetDim(dim_count0 - 1);
     const int dim1_pad = Align(dim1, pad_size);
     dim3 block(512,1,1);
     dim3 grid(1,1,1);
@@ -247,11 +245,10 @@ ppl::common::RetCode PPLCUDABgemmCvtOutput(
     int pad_size = GetPadSize(type);
 
     int dim_count = output_shape->GetDimCount();
-    uint64_t batch = 0;
+    uint64_t batch = 1;
     for (int i = 0; i < dim_count-2; i++){
-        batch += output_shape->GetDim(i);
+        batch *= output_shape->GetDim(i);
     }
-    batch = batch!=0? batch : 1;
     const int dim0 = output_shape->GetDim(dim_count - 2); // original shape 
     const int dim1 = output_shape->GetDim(dim_count - 1);
     const int dim1_pad = Align(dim1, pad_size);
@@ -394,18 +391,18 @@ double PPLCUDABgemmSelectKernel(
     int pad_size = GetPadSize(type);
 
     // FIXME use non-paded N in conv1x1 for input
-    auto dim_count = input_shape->GetDimCount();
-    if (input_shape->GetDim(dim_count-1) != weight_shape->GetDim(dim_count-2))
+    auto dim_count0 = input_shape->GetDimCount();
+    auto dim_count1 = weight_shape->GetDimCount();
+    if (input_shape->GetDim(dim_count0-1) != weight_shape->GetDim(dim_count1-2))
         return FLT_MAX;
     //FIXME Dim is 64 bit?
-    uint64_t batch = 0;
+    uint64_t batch = 1;
     for (uint32_t i = 0; i < input_shape->GetDimCount()-2; i++){
-        batch += input_shape->GetDim(i);
+        batch *= input_shape->GetDim(i);
     }
-    batch = batch!=0? batch : 1;
-    int M     = input_shape->GetDim(dim_count-2);
-    int K_pad = input_shape->GetDim(dim_count-1);
-    int N     = weight_shape->GetDim(dim_count-1);
+    int M     = input_shape->GetDim(dim_count0-2);
+    int K_pad = input_shape->GetDim(dim_count0-1);
+    int N     = weight_shape->GetDim(dim_count1-1);
     int N_pad = Align(N, pad_size);
 
     int concat_offset_v8 = fuse_param.concat_offset / pad_size;
@@ -516,16 +513,16 @@ ppl::common::RetCode PPLCUDABgemmForwardImp(
     //int M     = transA ? input_shape->GetDim(1) : input_shape->GetDim(0);
 
     //FIXME Dim is 64 bit?
-    uint64_t batch = 0;
-    uint32_t dim_count = input_shape->GetDimCount();
-    for (uint32_t i = 0; i < dim_count -2; i++){
-        batch += input_shape->GetDim(i);
+    uint64_t batch = 1;
+    uint32_t dim_count0 = input_shape->GetDimCount();
+    auto dim_count1 = weight_shape->GetDimCount();
+    for (uint32_t i = 0; i < dim_count0 -2; i++){
+        batch *= input_shape->GetDim(i);
     }
-    batch = batch!=0? batch : 1;
-    int M     = input_shape->GetDim(dim_count - 2);
-    int K     = input_shape->GetDim(dim_count - 1);
+    int M     = input_shape->GetDim(dim_count0 - 2);
+    int K     = input_shape->GetDim(dim_count0- 1);
     int K_pad = Align(K, pad_size);
-    int N     = weight_shape->GetDim(dim_count - 1);
+    int N     = weight_shape->GetDim(dim_count1 - 1);
     int N_pad = Align(N, pad_size);
 
 

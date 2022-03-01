@@ -30,6 +30,7 @@ OpCompiler* OpCompilerManager::FindCompiler(const std::string& kernel_type) cons
 OpCompilerManager::OpCompilerManager() {
     type2compiler_.emplace("Conv", &conv_);
     type2compiler_.emplace("Gemm", &gemm_);
+    type2compiler_.emplace("MatMul", &gemm_);
     type2compiler_.emplace("ConvTranspose", &convtranspose_);
     type2compiler_.emplace("LSTM", &normal_);
     type2compiler_.emplace("MMCVModulatedDeformConv2d", &normal_);
