@@ -91,19 +91,19 @@ static RetCode CreateFbNodes(SerializationInfo* sinfo, const ir::GraphTopo* topo
         auto& type = node->GetType();
         auto fb_type = pmx::CreateNodeTypeDirect(sinfo->builder, type.domain.c_str(), type.name.c_str(), type.version);
 
-        vector<uint32_t> inputs(topo->GetInputCount());
-        for (uint32_t i = 0; i < topo->GetInputCount(); ++i) {
-            inputs[i] = edgeid2seq[topo->GetInput(i)];
+        vector<uint32_t> inputs(node->GetInputCount());
+        for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
+            inputs[i] = edgeid2seq[node->GetInput(i)];
         }
 
-        vector<uint32_t> outputs(topo->GetOutputCount());
-        for (uint32_t i = 0; i < topo->GetOutputCount(); ++i) {
-            outputs[i] = edgeid2seq[topo->GetOutput(i)];
+        vector<uint32_t> outputs(node->GetOutputCount());
+        for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
+            outputs[i] = edgeid2seq[node->GetOutput(i)];
         }
 
-        vector<uint32_t> extra_inputs(topo->GetExtraInputCount());
-        for (uint32_t i = 0; i < topo->GetExtraInputCount(); ++i) {
-            extra_inputs[i] = edgeid2seq[topo->GetExtraInput(i)];
+        vector<uint32_t> extra_inputs(node->GetExtraInputCount());
+        for (uint32_t i = 0; i < node->GetExtraInputCount(); ++i) {
+            extra_inputs[i] = edgeid2seq[node->GetExtraInput(i)];
         }
 
         nodes[i] =
@@ -262,9 +262,10 @@ static RetCode CreateFbConstants(SerializationInfo* sinfo, const ir::GraphTopo* 
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbNodeInfo(SerializationInfo* sinfo, const OptKernel* op, Offset<pmx::NodeInfo>* fb_node_info) {
+static RetCode CreateFbNodeInfo(SerializationInfo* sinfo, const SerializationContext& ctx, const OptKernel* op,
+                                Offset<pmx::NodeInfo>* fb_node_info) {
     utils::BufferDataStream content;
-    auto status = op->SerializeData(&content);
+    auto status = op->SerializeData(ctx, &content);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "serialize data of op[" << op->GetNode()->GetName() << "] failed: " << GetRetCodeStr(status);
         return status;
@@ -278,10 +279,14 @@ static RetCode CreateFbNodeInfo(SerializationInfo* sinfo, const OptKernel* op, O
 
 static RetCode CreateFbPartitionNodes(SerializationInfo* sinfo, const vector<std::unique_ptr<OptKernel>>& ops,
                                       Offset<Vector<Offset<pmx::NodeInfo>>>* fb_nodes) {
+    SerializationContext ser_ctx;
+    ser_ctx.nid2seq = &sinfo->nodeid2seq;
+    ser_ctx.eid2seq = &sinfo->edgeid2seq;
+
     vector<Offset<pmx::NodeInfo>> node_info_list;
     for (uint32_t i = 0; i < ops.size(); ++i) {
         Offset<pmx::NodeInfo> fb_node_info;
-        auto status = CreateFbNodeInfo(sinfo, ops[i].get(), &fb_node_info);
+        auto status = CreateFbNodeInfo(sinfo, ser_ctx, ops[i].get(), &fb_node_info);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "create node info of [" << ops[i]->GetNode()->GetName()
                        << "] failed: " << GetRetCodeStr(status);
