@@ -162,6 +162,10 @@ __inline__ void InitializeKernelContainer(std::vector<kernel_info_t> &g_kernel_c
         InitializeInt82spkConvFSKernelContainer(g_int8_kernel_container);
 
         InitializeInt8IdxnConvKernelContainer(g_int8_kernel_container);
+
+        InitializeInt8SwzlConvF1KernelContainer(g_int8_kernel_container);
+        InitializeInt8SwzlConvF3KernelContainer(g_int8_kernel_container);
+        InitializeInt8SwzlConvFNKernelContainer(g_int8_kernel_container);
 #endif
     }
     is_g_int8_kernel_container_initialized = true;
@@ -258,7 +262,42 @@ double PPLCUDAConvolutionSelectKernelInt8(
 
     const int SPLITK_OPTIONS[] = {1, 2, 4, 8};
 
+#if 0
+    int8_t *t = new int8_t[16*224*224];
+        int m = 0;
+    for(int i = 0; i < 16*224*224; i++){
+        //t[i] = i%16 <3 ? 1 : 0;
+        int th = i/16/224;
+        int tw = (i/16)%224;
+        int tc = i%16;
+        t[i] = 0;
+        if(th<4&&
+        (tw>=36*2-3&&tw<36*2-3+7) &&
+        (tc<3)){
+            t[i] = m;
+            if(tc == 2)    m++;
+            m = m%7;
+        }
+        //if(th==0 && tw == 36*2-3 && tc==0)    t[i] = -126;
+    }
+    cudaMemcpy(pad_input, t, 16*224*224, cudaMemcpyHostToDevice);
+    //for(int i = 0; i < 16*224*224; i++) t[i] = i%16 <3 ? i/16/7/7%4+1 : 0;//(i/(128*9)) % 4;
+    for(int i = 0; i < 16*224*224; i++) t[i] = i%16 <3&&i/16/7/7==32 ? 1 : 0;//(i/(128*9)) % 4;
+    //for(int i = 0; i < 16*224*224; i++) t[i] = i%16 <3 ? 1 : 0;//(i/(128*9)) % 4;
+    cudaMemcpy(d_flt, t, 64*16*7*7, cudaMemcpyHostToDevice);
+    cudaMemset(bias, 0, 64*sizeof(float));
+    //printf("lalalalala\n");
+    //cudaMemset(d_flt, 64*64*3*3, 1);
+    float scale[256] = {1.f};
+    for(int i = 0 ; i < 256; i++) scale[i] = 1.f;
+    cudaMemcpy(quant_param.d_flt_scale, scale, 256*sizeof(float), cudaMemcpyHostToDevice);
+    quant_param.in_scale = 1.f;
+    quant_param.out_scale = 0.1f;
+
+    for(unsigned int spk = 0; spk < 1; spk++) {
+#else
     for(unsigned int spk = 0; spk < 4; spk++) {
+#endif
         unsigned int splitk = SPLITK_OPTIONS[spk];
 
         for(unsigned int kid = 0; kid < g_int8_kernel_container.size(); kid++) {
@@ -303,8 +342,10 @@ double PPLCUDAConvolutionSelectKernelInt8(
 
                     (g_int8_kernel_container[kid].int8_idx_kptr)<<<grid_size, block_size, 0, stream>>>(INT8_IDX_KPARAM_LIST);
                 }
-                else if(g_int8_kernel_container[kid].ktype == CONV_2SPK_F1 || g_int8_kernel_container[kid].ktype == CONV_2SPK_F3 || \
-                        g_int8_kernel_container[kid].ktype == CONV_2SPK_FN || g_int8_kernel_container[kid].ktype == CONV_2SPK_FS) {
+                else if(g_int8_kernel_container[kid].ktype == CONV_2SPK_F1 || g_int8_kernel_container[kid].ktype == CONV_2SPK_F3 ||
+                        g_int8_kernel_container[kid].ktype == CONV_2SPK_FN || g_int8_kernel_container[kid].ktype == CONV_2SPK_FS ||
+                        g_int8_kernel_container[kid].ktype == CONV_SWZL_F1 || g_int8_kernel_container[kid].ktype == CONV_SWZL_F3 ||
+                        g_int8_kernel_container[kid].ktype == CONV_SWZL_FN) {
 
 	                int kloop_num = (flt_hw / splitf) * DivUp(num_chl_per_grp_pad, g_int8_kernel_container[kid].tile_k_per_cta);
 
@@ -318,11 +359,42 @@ double PPLCUDAConvolutionSelectKernelInt8(
                     InitializeFilterLut(flt_lut_size, flt_lut.idx, conv_param.flt_height, conv_param.flt_width, num_chl_per_grp_pad,
                             g_int8_kernel_container[kid].tile_k_per_cta, pad_size);
 
+
                     if(splitk == 1) {
                         (g_int8_kernel_container[kid].int8_lut_kptr)<<<grid_size, block_size, 0, stream>>>(INT8_LUT_KPARAM_LIST);
+#if 0
+    cudaDeviceSynchronize();
+    auto e = cudaGetLastError();
+    printf("%s, last error code: %d\n", g_int8_kernel_container[kid].kname.c_str(), e);
+    cudaDeviceSynchronize();
+    printf("%s, %d\t", g_int8_kernel_container[kid].kname.c_str(), kid);
+                    const int s = 64*112*112;
+                    int8_t *t = new int8_t[s];
+                    cudaMemcpy(t, conv_out, s, cudaMemcpyDeviceToHost);
+                    int flag = 0;
+                    for(int a = 0; a < s; a++){
+                        int oc = a%64;
+                        int h = a/64/112;
+                        int w = a/64%112;
+                        int r = min(2*h - 3 + 7, 7);
+                        r = min(224 - (2*h - 3), r);
+                        int s = min(2*w - 3 + 7, 7);
+                        s = min(224 - (2*w - 3), s);
+                        //int8_t ref = (oc%4+1)*3*r*s/10;//(a%256%4)*128*9/100;
+                        int8_t ref = (1)*3*r*s/10;//(a%256%4)*128*9/100;
+                        if(a==36*64+32)
+                        if(t[a] != ref+1 && t[a] != ref){
+                            printf("-----------------error(%d,%d,%d,%d,%d,%d)\t", a, (int)t[a], ref, oc%4+1, r, s);
+                            flag = 1;
+                            if(a >=32*64) break;
+                        }
+                    }
+                    delete[] t;
+                    //if(flag)    break;
+#endif
 
                     }
-		        else {
+		            else {
                         int num_chl_per_spk_head, num_chl_per_spk_tail;
                         InitializeNumChlPerSpk(num_chl_per_spk_head, num_chl_per_spk_tail, conv_param.num_chl, conv_param.num_grp, pad_size, g_int8_kernel_container[kid].tile_k_per_cta, splitk);
     
@@ -360,6 +432,7 @@ double PPLCUDAConvolutionSelectKernelInt8(
 
     }
 
+    //printf("%s, %d\n", g_int8_kernel_container[algo_param.kid].kname.c_str(), algo_param.kid);
     if(is_out_grp_pad) {
         PPLCUDAConvolutionCvtOutput(stream, d_output, final_out, type, conv_param);
     }
@@ -391,6 +464,7 @@ void PPLCUDAConvolutionForwardImpInt8(
     unsigned int kid = algo_param.kid;
     unsigned int splitk = algo_param.splitk;
     unsigned int splitf = algo_param.splitf;
+    //printf("%s, %d\n", g_int8_kernel_container[kid].kname.c_str(), kid);
 
     int pad_size = GetPadSize(type);
 
@@ -467,8 +541,10 @@ void PPLCUDAConvolutionForwardImpInt8(
 
         (g_int8_kernel_container[kid].int8_idx_kptr)<<<grid_size, block_size, 0, stream>>>(INT8_IDX_KPARAM_LIST);
 
-    } else if(g_int8_kernel_container[kid].ktype == CONV_2SPK_F1 || g_int8_kernel_container[kid].ktype == CONV_2SPK_F3 || \
-            g_int8_kernel_container[kid].ktype == CONV_2SPK_FN || g_int8_kernel_container[kid].ktype == CONV_2SPK_FS ) {
+    } else if(g_int8_kernel_container[kid].ktype == CONV_2SPK_F1 || g_int8_kernel_container[kid].ktype == CONV_2SPK_F3 ||
+              g_int8_kernel_container[kid].ktype == CONV_2SPK_FN || g_int8_kernel_container[kid].ktype == CONV_2SPK_FS ||
+              g_int8_kernel_container[kid].ktype == CONV_SWZL_F1 || g_int8_kernel_container[kid].ktype == CONV_SWZL_F3 ||
+              g_int8_kernel_container[kid].ktype == CONV_SWZL_FN) {
 
 	    int kloop_num = (flt_hw / splitf) * DivUp(num_chl_per_grp_pad, g_int8_kernel_container[kid].tile_k_per_cta);
 

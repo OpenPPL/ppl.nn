@@ -392,8 +392,6 @@ double PPLCUDAConvolutionSelectKernel(
         unsigned int splitk = SPLITK_OPTIONS[spk];
 
         for (unsigned int kid = 0; kid < g_kernel_container.size(); kid++) {
-if (g_kernel_container[kid].kname != "nv2spkConv_hmma1688_nhwc_fs_b64x64_w64x32_k32_s16_buf1")
-    continue;
             unsigned int splitf = (g_kernel_container[kid].ktype == CONV_2SPK_FS) ? flt_hw : 1;
 
             if (!g_kernel_container[kid].CheckKernelTypeFeasible(conv_param.flt_height, conv_param.flt_width, num_chl_per_grp, splitk))

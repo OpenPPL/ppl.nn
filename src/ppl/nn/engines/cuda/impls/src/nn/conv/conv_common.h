@@ -560,4 +560,8 @@ void InitializeInt82spkConvFNKernelContainer(std::vector<kernel_info_t> & kernel
 void InitializeInt82spkConvFSKernelContainer(std::vector<kernel_info_t> & kernel_container);
 
 void InitializeInt8IdxnConvKernelContainer(std::vector<kernel_info_t> & kernel_container);
+
+void InitializeInt8SwzlConvF1KernelContainer(std::vector<kernel_info_t> & kernel_container);
+void InitializeInt8SwzlConvF3KernelContainer(std::vector<kernel_info_t> & kernel_container);
+void InitializeInt8SwzlConvFNKernelContainer(std::vector<kernel_info_t> & kernel_container);
 #endif
