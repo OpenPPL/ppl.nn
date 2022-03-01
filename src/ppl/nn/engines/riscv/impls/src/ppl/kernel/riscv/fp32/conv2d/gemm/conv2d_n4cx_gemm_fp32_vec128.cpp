@@ -234,8 +234,8 @@ void im2col_riscv_n4cx_per_group(
                 for (int64_t i = 0; i < outHW; i++) {
                     int64_t out_h   = i / dst_w;
                     int64_t out_w   = i % dst_w;
-                    int64_t iw_loc  = out_w * stride_w + wk - pad_w;
-                    int64_t ih_loc  = out_h * stride_h + hk - pad_h;
+                    int64_t iw_loc  = out_w * stride_w + wk * hole_w - pad_w;
+                    int64_t ih_loc  = out_h * stride_h + hk * hole_h - pad_h;
                     int64_t src_idx = (c * src_h * src_w + ih_loc * src_w + iw_loc) * 4;
                     int64_t dst_idx = c * flt_h * flt_w * outHW * 4 + (hk * flt_w + wk) * outHW * 4 + i * 4;
                     if (ih_loc < 0 || ih_loc >= src_h || iw_loc < 0 || iw_loc >= src_w) {
