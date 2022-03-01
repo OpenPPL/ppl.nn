@@ -23,8 +23,7 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-void SerializeConvParam(const ppl::nn::common::ConvParam&, const void*, uint64_t, flatbuffers::FlatBufferBuilder*);
-
+flatbuffers::Offset<ConvParam> SerializeConvParam(const ppl::nn::common::ConvParam&, flatbuffers::FlatBufferBuilder*);
 void DeserializeConvParam(const ConvParam&, ppl::nn::common::ConvParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx

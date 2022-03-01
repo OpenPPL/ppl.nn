@@ -21,18 +21,13 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-void SerializeConvParam(const ppl::nn::common::ConvParam& param, const void* data, uint64_t size,
-                        FlatBufferBuilder* builder) {
+Offset<ConvParam> SerializeConvParam(const ppl::nn::common::ConvParam& param, FlatBufferBuilder* builder) {
     auto fb_dilations = builder->CreateVector(param.dilations);
     auto fb_kernel_shape = builder->CreateVector(param.kernel_shape);
     auto fb_pads = builder->CreateVector(param.pads);
     auto fb_strides = builder->CreateVector(param.strides);
-    Offset<Vector<uint8_t>> fb_data = 0;
-    if (data && size > 0) {
-        fb_data = builder->CreateVector<uint8_t>((const uint8_t*)data, size);
-    }
-    auto fb_param = CreateConvParam(*builder, static_cast<AutoPadType>(param.auto_pad), param.group, fb_dilations, fb_kernel_shape, fb_pads, fb_strides, fb_data);
-    CreateOpParam(*builder, OpParamType_ConvParam, fb_param.Union());
+    return CreateConvParam(*builder, static_cast<AutoPadType>(param.auto_pad), param.group, fb_dilations,
+                           fb_kernel_shape, fb_pads, fb_strides);
 }
 
 void DeserializeConvParam(const ConvParam& fb_param, ppl::nn::common::ConvParam* param) {
