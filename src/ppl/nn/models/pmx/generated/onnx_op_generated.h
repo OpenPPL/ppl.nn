@@ -904,8 +904,7 @@ struct ConvParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_DILATIONS = 8,
     VT_KERNEL_SHAPE = 10,
     VT_PADS = 12,
-    VT_STRIDES = 14,
-    VT_DATA_ = 16
+    VT_STRIDES = 14
   };
   ppl::nn::pmx::onnx::AutoPadType auto_pad() const {
     return static_cast<ppl::nn::pmx::onnx::AutoPadType>(GetField<uint32_t>(VT_AUTO_PAD, 0));
@@ -925,9 +924,6 @@ struct ConvParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::Vector<int32_t> *strides() const {
     return GetPointer<const flatbuffers::Vector<int32_t> *>(VT_STRIDES);
   }
-  const flatbuffers::Vector<uint8_t> *data_() const {
-    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_DATA_);
-  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_AUTO_PAD) &&
@@ -940,8 +936,6 @@ struct ConvParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyVector(pads()) &&
            VerifyOffset(verifier, VT_STRIDES) &&
            verifier.VerifyVector(strides()) &&
-           VerifyOffset(verifier, VT_DATA_) &&
-           verifier.VerifyVector(data_()) &&
            verifier.EndTable();
   }
 };
@@ -968,9 +962,6 @@ struct ConvParamBuilder {
   void add_strides(flatbuffers::Offset<flatbuffers::Vector<int32_t>> strides) {
     fbb_.AddOffset(ConvParam::VT_STRIDES, strides);
   }
-  void add_data_(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> data_) {
-    fbb_.AddOffset(ConvParam::VT_DATA_, data_);
-  }
   explicit ConvParamBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -989,10 +980,8 @@ inline flatbuffers::Offset<ConvParam> CreateConvParam(
     flatbuffers::Offset<flatbuffers::Vector<int32_t>> dilations = 0,
     flatbuffers::Offset<flatbuffers::Vector<int32_t>> kernel_shape = 0,
     flatbuffers::Offset<flatbuffers::Vector<int32_t>> pads = 0,
-    flatbuffers::Offset<flatbuffers::Vector<int32_t>> strides = 0,
-    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> data_ = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<int32_t>> strides = 0) {
   ConvParamBuilder builder_(_fbb);
-  builder_.add_data_(data_);
   builder_.add_strides(strides);
   builder_.add_pads(pads);
   builder_.add_kernel_shape(kernel_shape);
@@ -1009,13 +998,11 @@ inline flatbuffers::Offset<ConvParam> CreateConvParamDirect(
     const std::vector<int32_t> *dilations = nullptr,
     const std::vector<int32_t> *kernel_shape = nullptr,
     const std::vector<int32_t> *pads = nullptr,
-    const std::vector<int32_t> *strides = nullptr,
-    const std::vector<uint8_t> *data_ = nullptr) {
+    const std::vector<int32_t> *strides = nullptr) {
   auto dilations__ = dilations ? _fbb.CreateVector<int32_t>(*dilations) : 0;
   auto kernel_shape__ = kernel_shape ? _fbb.CreateVector<int32_t>(*kernel_shape) : 0;
   auto pads__ = pads ? _fbb.CreateVector<int32_t>(*pads) : 0;
   auto strides__ = strides ? _fbb.CreateVector<int32_t>(*strides) : 0;
-  auto data___ = data_ ? _fbb.CreateVector<uint8_t>(*data_) : 0;
   return ppl::nn::pmx::onnx::CreateConvParam(
       _fbb,
       auto_pad,
@@ -1023,8 +1010,7 @@ inline flatbuffers::Offset<ConvParam> CreateConvParamDirect(
       dilations__,
       kernel_shape__,
       pads__,
-      strides__,
-      data___);
+      strides__);
 }
 
 struct ConvTransposeParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -2670,7 +2656,8 @@ struct OpParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef OpParamBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_VALUE_TYPE = 4,
-    VT_VALUE = 6
+    VT_VALUE = 6,
+    VT_DATA_ = 8
   };
   ppl::nn::pmx::onnx::OpParamType value_type() const {
     return static_cast<ppl::nn::pmx::onnx::OpParamType>(GetField<uint8_t>(VT_VALUE_TYPE, 0));
@@ -2766,11 +2753,16 @@ struct OpParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const ppl::nn::pmx::onnx::UnsqueezeParam *value_as_UnsqueezeParam() const {
     return value_type() == ppl::nn::pmx::onnx::OpParamType_UnsqueezeParam ? static_cast<const ppl::nn::pmx::onnx::UnsqueezeParam *>(value()) : nullptr;
   }
+  const flatbuffers::Vector<uint8_t> *data_() const {
+    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_DATA_);
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint8_t>(verifier, VT_VALUE_TYPE) &&
            VerifyOffset(verifier, VT_VALUE) &&
            VerifyOpParamType(verifier, value(), value_type()) &&
+           VerifyOffset(verifier, VT_DATA_) &&
+           verifier.VerifyVector(data_()) &&
            verifier.EndTable();
   }
 };
@@ -2901,6 +2893,9 @@ struct OpParamBuilder {
   void add_value(flatbuffers::Offset<void> value) {
     fbb_.AddOffset(OpParam::VT_VALUE, value);
   }
+  void add_data_(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> data_) {
+    fbb_.AddOffset(OpParam::VT_DATA_, data_);
+  }
   explicit OpParamBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -2915,11 +2910,26 @@ struct OpParamBuilder {
 inline flatbuffers::Offset<OpParam> CreateOpParam(
     flatbuffers::FlatBufferBuilder &_fbb,
     ppl::nn::pmx::onnx::OpParamType value_type = ppl::nn::pmx::onnx::OpParamType_NONE,
-    flatbuffers::Offset<void> value = 0) {
+    flatbuffers::Offset<void> value = 0,
+    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> data_ = 0) {
   OpParamBuilder builder_(_fbb);
+  builder_.add_data_(data_);
   builder_.add_value(value);
   builder_.add_value_type(value_type);
   return builder_.Finish();
+}
+
+inline flatbuffers::Offset<OpParam> CreateOpParamDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    ppl::nn::pmx::onnx::OpParamType value_type = ppl::nn::pmx::onnx::OpParamType_NONE,
+    flatbuffers::Offset<void> value = 0,
+    const std::vector<uint8_t> *data_ = nullptr) {
+  auto data___ = data_ ? _fbb.CreateVector<uint8_t>(*data_) : 0;
+  return ppl::nn::pmx::onnx::CreateOpParam(
+      _fbb,
+      value_type,
+      value,
+      data___);
 }
 
 inline bool VerifyOpParamType(flatbuffers::Verifier &verifier, const void *obj, OpParamType type) {

@@ -34,7 +34,6 @@ table ConvParam {
     kernel_shape: [int32];
     pads: [int32];
     strides: [int32];
-    data_: [ubyte]; // private data of ppl implementations
 }
 
 table ConvTransposeParam {
@@ -282,6 +281,7 @@ union OpParamType {
 
 table OpParam {
     value: OpParamType;
+    data_: [ubyte]; // private data for different implementations or user-defined ops
 }
 
 root_type OpParam;
