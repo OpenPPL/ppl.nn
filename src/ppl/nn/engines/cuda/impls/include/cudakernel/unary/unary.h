@@ -69,4 +69,25 @@ ppl::common::RetCode PPLCUDAUnaryCeilForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output);
 
+ppl::common::RetCode PPLCUDAUnaryErfForwardImp(
+    cudaStream_t stream,
+    const ppl::nn::TensorShape* input_shape,
+    const void* input,
+    const ppl::nn::TensorShape* output_shape,
+    void* output);
+
+ppl::common::RetCode PPLCUDAUnarySinForwardImp(
+    cudaStream_t stream,
+    const ppl::nn::TensorShape* input_shape,
+    const void* input,
+    const ppl::nn::TensorShape* output_shape,
+    void* output);
+
+ppl::common::RetCode PPLCUDAUnaryCosForwardImp(
+    cudaStream_t stream,
+    const ppl::nn::TensorShape* input_shape,
+    const void* input,
+    const ppl::nn::TensorShape* output_shape,
+    void* output);
+
 #endif // PPLCUDA_KERNEL_INCLUDE_UNARY_UNARY_H_

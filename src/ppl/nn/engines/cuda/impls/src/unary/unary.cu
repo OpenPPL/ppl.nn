@@ -28,6 +28,9 @@ enum UnaryOpType {
     Unary_Floor,
     Unary_Ceil,
     Unary_OpNum,
+    Unary_Erf,
+    Unary_Sin,
+    Unary_Cos,
     Unary_ForceWord = INT_MAX,
 };
 
@@ -169,6 +172,61 @@ __device__ __inline__ int8_t ppl_scalar_unary<Unary_Ceil, int8_t>(const int8_t& 
     return int8_t(ceil(float(in_val)));
 }
 
+template <>
+__device__ __inline__ float ppl_scalar_unary<Unary_Erf, float>(const float& in_val)
+{
+    return erf(in_val);
+}
+
+template <>
+__device__ __inline__ half ppl_scalar_unary<Unary_Erf, half>(const half& in_val)
+{
+    return __float2half(erf(__half2float(in_val)));
+}
+
+template <>
+__device__ __inline__ int8_t ppl_scalar_unary<Unary_Erf, int8_t>(const int8_t& in_val)
+{
+    return int8_t(erf(float(in_val)));
+}
+
+template <>
+__device__ __inline__ float ppl_scalar_unary<Unary_Sin, float>(const float& in_val)
+{
+    return sin(in_val);
+}
+
+template <>
+__device__ __inline__ half ppl_scalar_unary<Unary_Sin, half>(const half& in_val)
+{
+    return __float2half(sin(__half2float(in_val)));
+}
+
+template <>
+__device__ __inline__ int8_t ppl_scalar_unary<Unary_Sin, int8_t>(const int8_t& in_val)
+{
+    return int8_t(sin(float(in_val)));
+}
+
+template <>
+__device__ __inline__ float ppl_scalar_unary<Unary_Cos, float>(const float& in_val)
+{
+    return cos(in_val);
+}
+
+template <>
+__device__ __inline__ half ppl_scalar_unary<Unary_Cos, half>(const half& in_val)
+{
+    return __float2half(cos(__half2float(in_val)));
+}
+
+template <>
+__device__ __inline__ int8_t ppl_scalar_unary<Unary_Cos, int8_t>(const int8_t& in_val)
+{
+    return int8_t(cos(float(in_val)));
+}
+
+
 #endif
 
 template <UnaryOpType OpT, typename DataT>
@@ -216,5 +274,8 @@ UNARY_INSTANT(Sigmoid);
 UNARY_INSTANT(Sqrt);
 UNARY_INSTANT(Floor);
 UNARY_INSTANT(Ceil);
+UNARY_INSTANT(Erf);
+UNARY_INSTANT(Sin);
+UNARY_INSTANT(Cos);
 
 #undef UNARY_INSTANT
