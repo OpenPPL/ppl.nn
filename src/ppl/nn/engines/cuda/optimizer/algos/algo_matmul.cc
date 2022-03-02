@@ -71,6 +71,24 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     auto dim_count1 = shape_in1.GetDimCount();
     auto out_dim_count = shape_out.GetDimCount();
 
+    { // Give the default kernel
+        if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
+            attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";
+        } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
+            attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_imma8816_nhwc_f1_b64x64_w64x32_k32_s16_buf1";
+        } else {
+            return ALGO_MAX_TIME;
+        }
+        attr_param_.extra_param.algo_info.kid = 0;
+        attr_param_.extra_param.algo_info.splitk = 1;
+        attr_param_.extra_param.algo_info.splitf = 1;
+        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
+    }
+
+    if (dim_count0 < 2 || dim_count1 < 2) {
+        return 0.0f;
+    }
+
     conv_param_t temp_conv_param;
     fuse_param_t temp_fuse_param;
     temp_conv_param.in_num = attr_param_.param.transA ? shape_in0.GetDim(dim_count0-1) : shape_in0.GetDim(dim_count0-2);
@@ -109,20 +127,8 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
         attr_param_.extra_param.algo_info.splitk = algo_info->second.splitk;
         attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
         PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
-	attr_param_.extra_param.algo_info.gemm_batch = batch;
+	    attr_param_.extra_param.algo_info.gemm_batch = batch;
         return 0.0f;
-    } else { // Give the default kernel
-        if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
-            attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";
-        } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
-            attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_imma8816_nhwc_f1_b64x64_w64x32_k32_s16_buf1";
-        } else {
-            return ALGO_MAX_TIME;
-        }
-        attr_param_.extra_param.algo_info.kid = 0;
-        attr_param_.extra_param.algo_info.splitk = 1;
-        attr_param_.extra_param.algo_info.splitf = 1;
-        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
     }
 
     if (options.args->quick_select) {

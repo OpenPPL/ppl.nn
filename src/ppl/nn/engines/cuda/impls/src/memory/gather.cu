@@ -90,6 +90,8 @@ ppl::common::RetCode PPLCUDAGatherForwardImp(
         cudaMemcpy(indices_data.get(), indices, indices_data_size, cudaMemcpyDeviceToHost);
         int inner_size   = input_shape->GetBytesIncludingPadding() / input_shape->GetDim(0);
         int input_offset = get_indices_val(indices_element_size, 0, indices_data.get());
+        int input_axis_size = input_shape->GetDim(axis);
+        input_offset        = input_offset < 0 ? input_offset + input_axis_size : input_offset;
         cudaMemcpy(output, static_cast<const char*>(input) + input_offset * inner_size, output_shape->GetBytesIncludingPadding(), cudaMemcpyDeviceToDevice);
         return ppl::common::RC_SUCCESS;
     }
