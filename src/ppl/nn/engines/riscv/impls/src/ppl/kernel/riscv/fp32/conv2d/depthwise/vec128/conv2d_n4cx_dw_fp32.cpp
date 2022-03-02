@@ -141,7 +141,9 @@ void conv_dw_kernel_riscv_fp32(
     int64_t flt_h,
     int64_t flt_w,
     int64_t stride_h,
-    int64_t stride_w)
+    int64_t stride_w,
+    int64_t hole_h,
+    int64_t hole_w)
 {
     int64_t dst_w_div4 = dst_w >> 2;
     int64_t dst_w_left = dst_w - (dst_w_div4 << 2);
@@ -163,10 +165,10 @@ void conv_dw_kernel_riscv_fp32(
                         int64_t flt_idx = 0;
                         flt_idx += k + wk * C_BLK() + hk * flt_w * C_BLK();
                         int64_t dst_idx  = dst_base_idx + k;
-                        int64_t src_idx0 = (i * stride_h + hk) * src_pad_w * C_BLK() + ((j * C_BLK() + 0) * stride_w + wk) * C_BLK() + k;
-                        int64_t src_idx1 = (i * stride_h + hk) * src_pad_w * C_BLK() + ((j * C_BLK() + 1) * stride_w + wk) * C_BLK() + k;
-                        int64_t src_idx2 = (i * stride_h + hk) * src_pad_w * C_BLK() + ((j * C_BLK() + 2) * stride_w + wk) * C_BLK() + k;
-                        int64_t src_idx3 = (i * stride_h + hk) * src_pad_w * C_BLK() + ((j * C_BLK() + 3) * stride_w + wk) * C_BLK() + k;
+                        int64_t src_idx0 = (i * stride_h + hk * hole_h) * src_pad_w * C_BLK() + ((j * C_BLK() + 0) * stride_w + wk * hole_w) * C_BLK() + k;
+                        int64_t src_idx1 = (i * stride_h + hk * hole_h) * src_pad_w * C_BLK() + ((j * C_BLK() + 1) * stride_w + wk * hole_w) * C_BLK() + k;
+                        int64_t src_idx2 = (i * stride_h + hk * hole_h) * src_pad_w * C_BLK() + ((j * C_BLK() + 2) * stride_w + wk * hole_w) * C_BLK() + k;
+                        int64_t src_idx3 = (i * stride_h + hk * hole_h) * src_pad_w * C_BLK() + ((j * C_BLK() + 3) * stride_w + wk * hole_w) * C_BLK() + k;
                         dst[dst_idx + (j * C_BLK() + 0) * C_BLK()] += src[src_idx0] * flt[flt_idx];
                         dst[dst_idx + (j * C_BLK() + 1) * C_BLK()] += src[src_idx1] * flt[flt_idx];
                         dst[dst_idx + (j * C_BLK() + 2) * C_BLK()] += src[src_idx2] * flt[flt_idx];
@@ -185,7 +187,7 @@ void conv_dw_kernel_riscv_fp32(
                 for (int64_t wk = 0; wk < flt_w; wk++) {
                     for (int64_t k = 0; k < C_BLK(); k++) {
                         int64_t flt_idx = k + wk * C_BLK() + hk * flt_w * C_BLK();
-                        int64_t src_idx = (i * stride_h + hk) * src_pad_w * C_BLK() + ((dst_w_div4 * C_BLK() + j) * stride_w + wk) * C_BLK() + k;
+                        int64_t src_idx = (i * stride_h + hk * hole_h) * src_pad_w * C_BLK() + ((dst_w_div4 * C_BLK() + j) * stride_w + wk * hole_w) * C_BLK() + k;
                         int64_t dst_idx = k + (dst_w_div4 * C_BLK() + j) * C_BLK() + i * dst_w * C_BLK();
                         dst[dst_idx] += src[src_idx] * flt[flt_idx];
                     }
@@ -237,6 +239,8 @@ ppl::common::RetCode conv2d_n4cx_dw_fp32_runtime_executor::execute()
     const int64_t stride_w = conv_param_->stride_w;
     const int64_t pad_h    = conv_param_->pad_h;
     const int64_t pad_w    = conv_param_->pad_w;
+    const int64_t hole_h   = conv_param_->dilation_h;
+    const int64_t hole_w   = conv_param_->dilation_w;
 
     const int64_t src_h = src_shape_->GetDim(2);
     const int64_t src_w = src_shape_->GetDim(3);
@@ -249,116 +253,96 @@ ppl::common::RetCode conv2d_n4cx_dw_fp32_runtime_executor::execute()
 
     typedef void (*depthwise_riscv_kernel_fp32)(const float*, const float*, const float*, float*, int64_t, int64_t, int64_t);
     depthwise_riscv_kernel_fp32 dw_conv_kernel;
-    if (kernel_h == 3 && kernel_w == 3 && stride_h == 1 && stride_w == 1) {
+    if (kernel_h == 3 && kernel_w == 3 && stride_h == 1 && stride_w == 1 && hole_h == 1 && hole_w == 1) {
         switch (dst_w % 4) {
-            case 0: {
+            case 0:
                 dw_conv_kernel = conv_dw_f3s1_h1w4_kernel_riscv_fp32<0>;
                 break;
-            }
-            case 1: {
+            case 1:
                 dw_conv_kernel = conv_dw_f3s1_h1w4_kernel_riscv_fp32<1>;
                 break;
-            }
-            case 2: {
+            case 2:
                 dw_conv_kernel = conv_dw_f3s1_h1w4_kernel_riscv_fp32<2>;
                 break;
-            }
-            case 3: {
+            case 3:
                 dw_conv_kernel = conv_dw_f3s1_h1w4_kernel_riscv_fp32<3>;
                 break;
-            }
             default:
                 break;
         }
-    } else if (kernel_h == 3 && kernel_w == 3 && stride_h == 2 && stride_w == 2) {
+    } else if (kernel_h == 3 && kernel_w == 3 && stride_h == 2 && stride_w == 2 && hole_h == 1 && hole_w == 1) {
         switch (dst_h % 3) {
-            case 0: {
+            case 0:
                 switch (dst_w % 4) {
-                    case 0: {
+                    case 0:
                         dw_conv_kernel = conv_dw_f3s2_h3w4_kernel_riscv_fp32<0, 0>;
                         break;
-                    }
-                    case 1: {
+                    case 1:
                         dw_conv_kernel = conv_dw_f3s2_h3w4_kernel_riscv_fp32<0, 1>;
                         break;
-                    }
-                    case 2: {
+                    case 2:
                         dw_conv_kernel = conv_dw_f3s2_h3w4_kernel_riscv_fp32<0, 2>;
                         break;
-                    }
-                    case 3: {
+                    case 3:
                         dw_conv_kernel = conv_dw_f3s2_h3w4_kernel_riscv_fp32<0, 3>;
                         break;
-                    }
                     default:
                         break;
                 }
-            }; break;
-            case 1: {
+                break;
+            case 1:
                 switch (dst_w % 4) {
-                    case 0: {
+                    case 0:
                         dw_conv_kernel = conv_dw_f3s2_h3w4_kernel_riscv_fp32<1, 0>;
                         break;
-                    }
-                    case 1: {
+                    case 1:
                         dw_conv_kernel = conv_dw_f3s2_h3w4_kernel_riscv_fp32<1, 1>;
                         break;
-                    }
-                    case 2: {
+                    case 2:
                         dw_conv_kernel = conv_dw_f3s2_h3w4_kernel_riscv_fp32<1, 2>;
                         break;
-                    }
-                    case 3: {
+                    case 3:
                         dw_conv_kernel = conv_dw_f3s2_h3w4_kernel_riscv_fp32<1, 3>;
                         break;
-                    }
                     default:
                         break;
                 }
-            }; break;
-            case 2: {
+                break;
+            case 2:
                 switch (dst_w % 4) {
-                    case 0: {
+                    case 0:
                         dw_conv_kernel = conv_dw_f3s2_h3w4_kernel_riscv_fp32<2, 0>;
                         break;
-                    }
-                    case 1: {
+                    case 1:
                         dw_conv_kernel = conv_dw_f3s2_h3w4_kernel_riscv_fp32<2, 1>;
                         break;
-                    }
-                    case 2: {
+                    case 2:
                         dw_conv_kernel = conv_dw_f3s2_h3w4_kernel_riscv_fp32<2, 2>;
                         break;
-                    }
-                    case 3: {
+                    case 3:
                         dw_conv_kernel = conv_dw_f3s2_h3w4_kernel_riscv_fp32<2, 3>;
                         break;
-                    }
                     default:
                         break;
                 }
-            }; break;
+                break;
             default:
                 break;
         }
-    } else if (kernel_h == 5 && kernel_w == 5 && stride_h == 1 && stride_w == 1) {
+    } else if (kernel_h == 5 && kernel_w == 5 && stride_h == 1 && stride_w == 1 && hole_h == 1 && hole_w == 1) {
         switch (dst_w % 4) {
-            case 0: {
+            case 0:
                 dw_conv_kernel = conv_dw_f5s1_h2w4_kernel_riscv_fp32<0>;
                 break;
-            }
-            case 1: {
+            case 1:
                 dw_conv_kernel = conv_dw_f5s1_h2w4_kernel_riscv_fp32<1>;
                 break;
-            }
-            case 2: {
+            case 2:
                 dw_conv_kernel = conv_dw_f5s1_h2w4_kernel_riscv_fp32<2>;
                 break;
-            }
-            case 3: {
+            case 3:
                 dw_conv_kernel = conv_dw_f5s1_h2w4_kernel_riscv_fp32<3>;
                 break;
-            }
             default:
                 break;
         }
@@ -374,9 +358,10 @@ ppl::common::RetCode conv2d_n4cx_dw_fp32_runtime_executor::execute()
             pad_w,
             pad_h,
             pad_h);
-        if ((kernel_h == 3 && kernel_w == 3 && stride_h == 1 && stride_w == 1) ||
-            (kernel_h == 3 && kernel_w == 3 && stride_h == 2 && stride_w == 2) ||
-            (kernel_h == 5 && kernel_w == 5 && stride_h == 1 && stride_w == 1)) {
+        if (((kernel_h == 3 && kernel_w == 3 && stride_h == 1 && stride_w == 1) ||
+             (kernel_h == 3 && kernel_w == 3 && stride_h == 2 && stride_w == 2) ||
+             (kernel_h == 5 && kernel_w == 5 && stride_h == 1 && stride_w == 1)) &&
+            (hole_h == 1 && hole_w == 1)) {
             dw_conv_kernel(
                 (float*)temp_buffer_ + i * src_h_padded * src_w_padded,
                 cvt_filter_ + i * kernel_h * kernel_w,
@@ -399,7 +384,9 @@ ppl::common::RetCode conv2d_n4cx_dw_fp32_runtime_executor::execute()
                 kernel_h,
                 kernel_w,
                 stride_h,
-                stride_w);
+                stride_w,
+                hole_h,
+                hole_w);
         }
     }
 
