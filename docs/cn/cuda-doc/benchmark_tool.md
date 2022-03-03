@@ -2,6 +2,20 @@
 
 **注：Openppl.cuda目前仅支持Turing fp16 和 int8。ONNX模型无需手动转换，框架解析过程会自动转换到fp16精度。**
 
+### cuda独有参数解析
+
+`--use-cuda` 使用CUDA的必选项
+
+`--kernel-type`  指定一个数据类型，强制所有op按此类型执行算子，目前可选项包括 int8,float16.
+
+`--quick-select` 跳过Conv/Gemm/Matmul的常规选算法，直接指定一个通用算法执行算子。可以节约预处理时间，但是性能会变差。建议在算子非常多的模型中使用这个参数。
+
+`--export-algo-file` 导出选算法的结果到一个json文件，用于下一次执行该模型时导入
+
+`--import-algo-file` 导入之前保存的json文件，OpenPPL会根据文件选择算法而不用重新花费时间做选算法的过程，可以在第二次执行模型时减少预处理时间，同时保证最优的执行性能。
+
+`--quant-file` 适用于执行量化模型，需要添加一个量化文件，一个简单的量化文件参见[样例](../../../tests/testdata/quant_test.json).
+
 ### Fp16 测试
 
 执行语句:

@@ -1,6 +1,7 @@
 ## Supported precision
 
-CUDA only supports FP16 precision on Turing Devices.
+CUDA only supports FP16 precision and int8 precision on Turing Devices. 
+If you want to use int8 percision, you should maintain a json file like [sample quant file](../../../tests/testdata/quant_test.json)
 
 ## Supported operators and opsets
 
@@ -20,9 +21,12 @@ CUDA only supports FP16 precision on Turing Devices.
 | ConstantOfShape    | 9~16   | &check;            |
 | Conv               | 11~16  | &check;            |
 | ConvTranspose      | 11~16  | &check;            |
+| Cos                | 1~16   | &check;            |
+| CumSum             | 1~16   | &check;            |
 | DepthToSpace       | 11~12  | &check;            |
 | Div                | 7~12   | &check;            |
 | Equal              | 11~12  | &check;            |
+| Erf                | 1~16   | &check;            |
 | Exp                | 6~12   | &check;            |
 | Expand             | 8~12   | &check;            |
 | Flatten            | 11~12  | &check;            |
@@ -64,6 +68,7 @@ CUDA only supports FP16 precision on Turing Devices.
 | SequenceAt         | 11~16  | &check;            |
 | Shape              | 1~12   | &check;            |
 | Sigmoid            | 6~12   | &check;            |
+| Sin                | 1~16   | &check;            |
 | Slice              | 11~12  | &check;            |
 | Softmax            | 11~12  | &check;            |
 | Split              | 11~12  | &check;            |
@@ -80,15 +85,17 @@ CUDA only supports FP16 precision on Turing Devices.
 
 * MMCV
 
-| Op Type           | Op Set | Linux/Windows CUDA |
-|:-----------------:|:------:|:------------------:|
-| NonMaxSuppression | 1      | &check;            |
-| RoiAlign          | 1      | &check;            |
-| grid_sample       | 1      | &check;            |
+| Op Type                 | Op Set | Linux/Windows CUDA |
+|:-----------------------:|:------:|:------------------:|
+| grid_sample             | 1      | &check;            |
+| ModulatedDeformConv2d   | 1      | &check;            |
+| NonMaxSuppression       | 1      | &check;            |
+| RoiAlign                | 1      | &check;            |
 
 * PPL
 
 | Op Type                              | Op Set | Linux/Windows CUDA |
 |:------------------------------------:|:------:|:------------------:|
 | ChannelShuffle                       | 1      | &check;            |
+| Reduce                               | 1      | &check;            |
 | [ShapeOperation](shape_operation.md) | 1      | &check;            |

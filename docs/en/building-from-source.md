@@ -72,11 +72,6 @@ If you want to use specified CUDA toolkit version, please specify `CUDA_TOOLKIT_
 ./build.sh -DHPCC_USE_CUDA=ON -DCUDA_TOOLKIT_ROOT_DIR=/path/to/cuda-toolkit-root-dir
 ```
 
-We use runtime-compiling version by default. If you want to use static version (build all kernels in advance), please specify `PPLNN_ENABLE_CUDA_JIT` as following:
-
-```bash
-./build.sh -DHPCC_USE_CUDA=ON -DPPLNN_ENABLE_CUDA_JIT=OFF
-```
 
 #### Windows
 
@@ -87,6 +82,26 @@ build.bat -G "Visual Studio 14 2015 Win64" -DHPCC_USE_CUDA=ON
 ```
 
 Headers and libraries are installed in `pplnn-build/install`.
+
+#### Other useful options
+
+We use runtime-compiling version by default. If you want to use static version (build all kernels in advance), please specify `PPLNN_ENABLE_CUDA_JIT` as following:
+
+```bash
+./build.sh -DHPCC_USE_CUDA=ON -DPPLNN_ENABLE_CUDA_JIT=OFF
+```
+
+If you want to run debug model, please specify `CMAKE_BUILD_TYPE` as following:
+
+```bash
+./build.sh -DHPCC_USE_CUDA=ON -DCMAKE_BUILD_TYPE=Debug
+```
+
+If you want to profile running time for each kernel, please specify `PPLNN_ENABLE_KERNEL_PROFILING` as following and add arg `--enable-profiling` during executing pplnn.
+
+```bash
+./build.sh -DHPCC_USE_CUDA=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON
+```
 
 ### Building RISCV Engine
 

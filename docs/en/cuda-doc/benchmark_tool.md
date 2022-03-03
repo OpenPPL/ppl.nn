@@ -2,6 +2,21 @@
 
 **Note: Openppl.cuda only supports Turing fp16 and int8. ONNX model does not need to convert manually, it will be done in inference process. **
 
+### Explanation of cuda private args
+
+`--use-cuda` means use cuda for inferencing. You must add it.
+
+`--kernel-type`  means set a certain kernel type. Valid values include int8,float16. For example, if you set kernel type to int8, all the kernels will be executed in int8 percision.
+
+`--quick-select` means skip algo selects and use a default kernel for Conv/Gemm/Matmul. It can save preprocessing time. However, the performance is worse. We suggest you to use it for the models that has a large number of kernels.
+
+`--export-algo-file` means export the selected best algo info into the json file. The json file will be used when you run the same model.
+
+`--import-algo-file` means import the json file. OpenPPL will use the algo info directly and jump algo select step. This way can save preprocessing time in the second time and keep the highest performance.
+
+`--quant-file` means read file for quantization. A basic json file is shown here: [sample quant file](../../../tests/testdata/quant_test.json).
+
+
 ### Fp16 test
 
 Execute the command:
