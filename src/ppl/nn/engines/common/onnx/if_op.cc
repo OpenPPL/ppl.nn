@@ -25,11 +25,22 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace common {
 
+IfOp::~IfOp() {
+    // make sure that engines are released at last.
+    then_topo_.reset();
+    then_info_.Clear();
+    else_topo_.reset();
+    else_info_.Clear();
+
+    then_engines_.clear();
+    else_engines_.clear();
+}
+
 RetCode IfOp::Init(utils::SharedResource* resource, IfParam* if_param) {
     extra_inputs_of_then_graph_ = if_param->then_extra_input_indices_in_host_node;
     extra_inputs_of_else_graph_ = if_param->else_extra_input_indices_in_host_node;
 
-    auto status = utils::ProcessGraph(resource, &if_param->then_branch, &then_info_);
+    auto status = utils::ProcessGraph(resource, &if_param->then_branch, &then_info_, &then_engines_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "ProcessGraph then_branch of kernel [" << node_->GetName()
                    << "] failed: " << GetRetCodeStr(status);
@@ -43,7 +54,7 @@ RetCode IfOp::Init(utils::SharedResource* resource, IfParam* if_param) {
         return status;
     }
 
-    status = utils::ProcessGraph(resource, &if_param->else_branch, &else_info_);
+    status = utils::ProcessGraph(resource, &if_param->else_branch, &else_info_, &else_engines_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "ProcessGraph else_branch failed: " << GetRetCodeStr(status);
         return status;
@@ -56,18 +67,16 @@ RetCode IfOp::Init(utils::SharedResource* resource, IfParam* if_param) {
         return status;
     }
 
-    resource_ = resource;
-    then_graph_ = if_param->then_branch;
-    else_graph_ = if_param->else_branch;
+    then_topo_ = if_param->then_branch.topo;
+    else_topo_ = if_param->else_branch.topo;
 
     return RC_SUCCESS;
 }
 
 KernelImpl* IfOp::CreateKernelImpl() const {
     auto kernel = unique_ptr<IfKernel>(new IfKernel(node_));
-    auto status = kernel->SetExecutionInfo(then_graph_.topo, &then_info_, &then_aux_info_, &extra_inputs_of_then_graph_,
-                                           else_graph_.topo, &else_info_, &else_aux_info_, &extra_inputs_of_else_graph_,
-                                           resource_);
+    auto status = kernel->SetExecutionInfo(then_topo_, &then_info_, &then_aux_info_, &extra_inputs_of_then_graph_,
+                                           else_topo_, &else_info_, &else_aux_info_, &extra_inputs_of_else_graph_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "SetExecutionInfo of kernel[" << kernel->GetName() << "] failed:" << GetRetCodeStr(status);
         return nullptr;

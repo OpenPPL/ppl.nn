@@ -25,7 +25,7 @@
 
 namespace ppl { namespace nn {
 
-struct RuntimePartitionInfo {
+struct RuntimePartitionInfo final {
     std::map<edgeid_t, RuntimeConstantInfo> constants;
     std::map<nodeid_t, std::unique_ptr<OptKernel>> kernels;
 };

@@ -32,8 +32,7 @@ public:
                                           const std::vector<uint32_t>* extra_inputs_of_then_branch,
                                           const std::shared_ptr<ir::GraphTopo>& else_topo,
                                           const RuntimeGraphInfo* else_info, const RuntimeAuxInfo* else_aux_info,
-                                          const std::vector<uint32_t>* extra_inputs_of_else_branch,
-                                          utils::SharedResource*);
+                                          const std::vector<uint32_t>* extra_inputs_of_else_branch);
 
 protected:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;

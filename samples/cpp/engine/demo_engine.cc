@@ -55,6 +55,10 @@ RetCode DemoEngine::ProcessGraph(utils::SharedResource*, ir::Graph* graph, Runti
     return RC_SUCCESS;
 }
 
+EngineImpl* DemoEngine::Create() {
+    return new DemoEngine();
+}
+
 #ifdef PPLNN_ENABLE_PMX_MODEL
 OptKernel* DemoEngine::CreateOptKernel(const ir::Node* node) const {
     return new DemoOptKernel(node);

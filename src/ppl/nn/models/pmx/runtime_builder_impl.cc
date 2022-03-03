@@ -30,7 +30,6 @@ namespace ppl { namespace nn { namespace pmx {
 
 RuntimeBuilderImpl::RuntimeBuilderImpl() {
     topo_ = make_shared<ir::FullGraphTopo>();
-    resource_ = make_shared<utils::SharedResource>();
     graph_info_ = make_shared<RuntimeGraphInfo>();
     aux_info_ = make_shared<RuntimeAuxInfo>();
 }
@@ -38,7 +37,6 @@ RuntimeBuilderImpl::RuntimeBuilderImpl() {
 RuntimeBuilderImpl::~RuntimeBuilderImpl() {
     aux_info_.reset();
     graph_info_.reset();
-    resource_.reset();
     topo_.reset();
 }
 
@@ -76,9 +74,9 @@ RetCode RuntimeBuilderImpl::Init(const char* model_buf, uint64_t buf_len, ppl::n
                                  uint32_t engine_num) {
     RetCode status;
 
-    resource_->engines.resize(engine_num);
+    resource_.engines.resize(engine_num);
     for (uint32_t i = 0; i < engine_num; ++i) {
-        resource_->engines[i] = static_cast<EngineImpl*>(engines[i]);
+        resource_.engines[i] = static_cast<EngineImpl*>(engines[i]);
     }
 
     auto fb_model = pmx::GetModel(model_buf);
@@ -90,7 +88,7 @@ RetCode RuntimeBuilderImpl::Init(const char* model_buf, uint64_t buf_len, ppl::n
     LOG(INFO) << "ppl model version: " << fb_model->version();
 
     vector<EngineImpl*> seq2engine;
-    status = ParseEngines(fb_model->engines(), resource_->engines, &seq2engine);
+    status = ParseEngines(fb_model->engines(), resource_.engines, &seq2engine);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "ParseEngines failed: " << GetRetCodeStr(status);
         return status;
@@ -127,7 +125,7 @@ Runtime* RuntimeBuilderImpl::CreateRuntime() {
         return nullptr;
     }
 
-    auto status = runtime->Init(topo_, graph_info_, aux_info_, resource_);
+    auto status = runtime->Init(topo_, graph_info_, aux_info_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init runtime failed: " << GetRetCodeStr(status);
         delete runtime;
@@ -144,7 +142,7 @@ RetCode RuntimeBuilderImpl::Serialize(const char* output_file, const char* fmt) 
     }
 
     pmx::PmxSerializer serializer;
-    return serializer.Serialize(output_file, topo_.get(), resource_->engines, *graph_info_);
+    return serializer.Serialize(output_file, topo_.get(), resource_.engines, *graph_info_);
 }
 
 }}} // namespace ppl::nn::pmx

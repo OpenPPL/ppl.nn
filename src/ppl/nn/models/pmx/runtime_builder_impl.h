@@ -39,8 +39,8 @@ public:
     ppl::common::RetCode Serialize(const char* output_file, const char* fmt) const override;
 
 private:
+    utils::SharedResource resource_;
     std::shared_ptr<ir::GraphTopo> topo_;
-    std::shared_ptr<utils::SharedResource> resource_;
     std::shared_ptr<RuntimeGraphInfo> graph_info_;
     std::shared_ptr<RuntimeAuxInfo> aux_info_;
 };

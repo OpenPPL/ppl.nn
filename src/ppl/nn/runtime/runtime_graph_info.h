@@ -41,6 +41,12 @@ struct RuntimeGraphInfo final {
         std::vector<std::unique_ptr<OptKernel>> ops;
         std::map<edgeid_t, RuntimeConstantInfo> constants;
     };
+
+    void Clear() {
+        shapes.clear();
+        partitions.clear();
+    }
+
     std::map<edgeid_t, TensorShape> shapes;
     std::vector<Partition> partitions;
 };

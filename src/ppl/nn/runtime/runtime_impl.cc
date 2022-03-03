@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/common/logger.h"
-#include "ppl/nn/engines/engine.h"
+#include "ppl/nn/engines/engine_impl.h"
 #include "ppl/nn/runtime/runtime_impl.h"
 #include "ppl/nn/runtime/sequential_scheduler.h"
 #include "ppl/nn/runtime/runtime_internal_conf.h"
@@ -28,11 +28,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn {
 
 RuntimeImpl::~RuntimeImpl() {
-    // NOTE: released before SharedResource
     sched_.reset();
     graph_.Clear();
-    graph_info_.reset();
     engctx_.clear();
+    graph_info_.reset();
 }
 
 static EngineContext* FindOrCreateEngineContext(EngineImpl* engine, map<EngineImpl*, EngineContext*>* eng2ctx,
@@ -263,9 +262,7 @@ RetCode RuntimeImpl::InitRuntimeGraphResource(const ir::GraphTopo* topo, const R
 }
 
 RetCode RuntimeImpl::Init(const shared_ptr<ir::GraphTopo>& topo, const shared_ptr<const RuntimeGraphInfo>& info,
-                          const shared_ptr<const RuntimeAuxInfo>& aux_info,
-                          const shared_ptr<utils::SharedResource>& resource) {
-    resource_ = resource;
+                          const shared_ptr<const RuntimeAuxInfo>& aux_info) {
     graph_info_ = info;
     aux_info_ = aux_info;
     topo_ = topo;

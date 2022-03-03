@@ -64,12 +64,15 @@ public:
     */
     virtual ppl::common::RetCode ProcessGraph(utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*) = 0;
 
+    /** @brief creates an instance of the same type as this engine */
+    virtual EngineImpl* Create() = 0;
+
 #ifdef PPLNN_ENABLE_PMX_MODEL
     virtual ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, RuntimeConstantInfo>*) = 0;
 
     virtual OptKernel* CreateOptKernel(const ir::Node*) const = 0;
 
-    virtual ppl::common::RetCode SerializeData(utils::DataStream*) const = 0;
+    virtual ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const = 0;
     virtual ppl::common::RetCode DeserializeData(const void*, uint64_t) = 0;
 #endif
 

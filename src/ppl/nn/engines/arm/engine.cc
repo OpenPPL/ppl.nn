@@ -18,6 +18,7 @@
 #include "ppl/nn/engines/arm/engine.h"
 #include <stdarg.h>
 #include "ppl/nn/engines/arm/engine_context.h"
+#include "ppl/nn/engines/arm/engine_factory.h"
 #include "ppl/nn/engines/arm/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/engines/arm/optimizer/opt_graph.h"
 #include "ppl/nn/common/logger.h"
@@ -117,6 +118,10 @@ RetCode ArmEngine::ProcessGraph(utils::SharedResource* resource, ir::Graph* grap
     }
 
     return RC_SUCCESS;
+}
+
+EngineImpl* ArmEngine::Create() {
+    return static_cast<EngineImpl*>(ArmEngineFactory::Create(options_));
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL

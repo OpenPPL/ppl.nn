@@ -32,7 +32,6 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace onnx {
 
 RuntimeBuilderImpl::RuntimeBuilderImpl() {
-    resource_ = make_shared<utils::SharedResource>();
     graph_info_ = make_shared<RuntimeGraphInfo>();
     aux_info_ = make_shared<RuntimeAuxInfo>();
 }
@@ -42,16 +41,15 @@ RuntimeBuilderImpl::~RuntimeBuilderImpl() {
     graph_.data.reset();
     aux_info_.reset();
     graph_info_.reset();
-    resource_.reset();
 }
 
 RetCode RuntimeBuilderImpl::Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num) {
-    resource_->engines.resize(engine_num);
+    resource_.engines.resize(engine_num);
     for (uint32_t i = 0; i < engine_num; ++i) {
-        resource_->engines[i] = static_cast<EngineImpl*>(engines[i]);
+        resource_.engines[i] = static_cast<EngineImpl*>(engines[i]);
     }
 
-    resource_->graph_partitioner = make_shared<EngineGraphPartitioner>();
+    resource_.graph_partitioner = make_shared<EngineGraphPartitioner>();
 
     auto status = ModelParser::Parse(model_buf, buf_len, &graph_);
     if (status != RC_SUCCESS) {
@@ -73,7 +71,7 @@ RetCode RuntimeBuilderImpl::Init(const char* model_file, Engine** engines, uint3
 }
 
 RetCode RuntimeBuilderImpl::Preprocess() {
-    auto status = utils::ProcessGraph(resource_.get(), &graph_, graph_info_.get());
+    auto status = utils::ProcessGraph(&resource_, &graph_, graph_info_.get());
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "process graph failed: " << GetRetCodeStr(status);
         return status;
@@ -94,7 +92,7 @@ Runtime* RuntimeBuilderImpl::CreateRuntime() {
         return nullptr;
     }
 
-    auto status = runtime->Init(graph_.topo, graph_info_, aux_info_, resource_);
+    auto status = runtime->Init(graph_.topo, graph_info_, aux_info_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init runtime failed: " << GetRetCodeStr(status);
         delete runtime;
@@ -112,7 +110,7 @@ RetCode RuntimeBuilderImpl::Serialize(const char* output_file, const char* fmt) 
     }
 
     pmx::PmxSerializer serializer;
-    return serializer.Serialize(output_file, graph_.topo.get(), resource_->engines, *graph_info_);
+    return serializer.Serialize(output_file, graph_.topo.get(), resource_.engines, *graph_info_);
 #else
     LOG(ERROR) << "model format[" << fmt << "] is not supported.";
     return RC_UNSUPPORTED;

@@ -17,7 +17,7 @@
 
 #include "ppl/nn/models/pmx/generated/pmx_generated.h"
 #include "ppl/nn/models/pmx/pmx_serializer.h"
-#include "ppl/nn/models/pmx/serialization_info.h"
+#include "ppl/nn/models/pmx/serialization_context.h"
 #include "ppl/nn/runtime/opt_kernel.h"
 #include "ppl/nn/engines/engine_impl.h"
 #include "ppl/nn/common/logger.h"
@@ -31,21 +31,23 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx {
 
-static RetCode CreateFbEngine(SerializationInfo* sinfo, const EngineImpl* engine, Offset<pmx::Engine>* fb_engine) {
+static RetCode CreateFbEngine(FlatBufferBuilder* builder, const SerializationContext& ctx, const EngineImpl* engine,
+                              Offset<pmx::Engine>* fb_engine) {
     utils::BufferDataStream content;
-    auto status = engine->SerializeData(&content);
+    auto status = engine->SerializeData(ctx, &content);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "serialize data of engine[" << engine->GetName() << "] failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    auto fb_content = sinfo->builder.CreateVector<uint8_t>((const uint8_t*)content.GetData(), content.GetSize());
-    auto fb_name = sinfo->builder.CreateString(engine->GetName());
-    *fb_engine = pmx::CreateEngine(sinfo->builder, fb_name, fb_content);
+    auto fb_content = builder->CreateVector<uint8_t>((const uint8_t*)content.GetData(), content.GetSize());
+    auto fb_name = builder->CreateString(engine->GetName());
+    *fb_engine = pmx::CreateEngine(*builder, fb_name, fb_content);
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbEngines(SerializationInfo* sinfo, const ir::GraphTopo* topo, const vector<EngineImpl*>& engines,
+static RetCode CreateFbEngines(FlatBufferBuilder* builder, const SerializationContext& ctx, const ir::GraphTopo* topo,
+                               const vector<EngineImpl*>& engines, map<EngineImpl*, uint32_t>* engine2seq,
                                Offset<Vector<Offset<pmx::Engine>>>* fb_engines) {
     vector<Offset<pmx::Engine>> engine_vec;
     engine_vec.reserve(engines.size());
@@ -53,111 +55,112 @@ static RetCode CreateFbEngines(SerializationInfo* sinfo, const ir::GraphTopo* to
     for (uint32_t i = 0; i < engines.size(); ++i) {
         auto engine = engines[i];
         Offset<pmx::Engine> fb_engine;
-        auto status = CreateFbEngine(sinfo, engine, &fb_engine);
+        auto status = CreateFbEngine(builder, ctx, engine, &fb_engine);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "CreateFbEngine[" << engine->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
         }
         engine_vec.emplace_back(std::move(fb_engine));
+        engine2seq->insert(make_pair(engines[i], i));
     }
 
-    *fb_engines = sinfo->builder.CreateVector<Offset<pmx::Engine>>(engine_vec);
+    *fb_engines = builder->CreateVector<Offset<pmx::Engine>>(engine_vec);
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbEdges(SerializationInfo* sinfo, const ir::GraphTopo* topo,
+static RetCode CreateFbEdges(FlatBufferBuilder* builder, const SerializationContext& ctx, const ir::GraphTopo* topo,
                              Offset<Vector<Offset<pmx::Edge>>>* fb_edges) {
-    const vector<edgeid_t>& seq2edgeid = sinfo->seq2edgeid;
+    const vector<edgeid_t>& seq2eid = ctx.seq2eid;
 
-    vector<Offset<pmx::Edge>> edges(seq2edgeid.size());
-    for (uint32_t i = 0; i < seq2edgeid.size(); ++i) {
-        auto edge = topo->GetEdgeById(seq2edgeid[i]);
-        edges[i] = pmx::CreateEdgeDirect(sinfo->builder, edge->GetName().c_str());
+    vector<Offset<pmx::Edge>> edges(seq2eid.size());
+    for (uint32_t i = 0; i < seq2eid.size(); ++i) {
+        auto edge = topo->GetEdgeById(seq2eid[i]);
+        edges[i] = pmx::CreateEdgeDirect(*builder, edge->GetName().c_str());
     }
 
-    *fb_edges = sinfo->builder.CreateVector<Offset<pmx::Edge>>(edges);
+    *fb_edges = builder->CreateVector<Offset<pmx::Edge>>(edges);
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbNodes(SerializationInfo* sinfo, const ir::GraphTopo* topo,
+static RetCode CreateFbNodes(FlatBufferBuilder* builder, const SerializationContext& ctx, const ir::GraphTopo* topo,
                              Offset<Vector<Offset<pmx::Node>>>* fb_nodes) {
-    const vector<nodeid_t>& seq2nodeid = sinfo->seq2nodeid;
-    const vector<edgeid_t>& edgeid2seq = sinfo->edgeid2seq;
+    const vector<nodeid_t>& seq2nid = ctx.seq2nid;
+    const vector<edgeid_t>& eid2seq = ctx.eid2seq;
 
-    vector<Offset<pmx::Node>> nodes(seq2nodeid.size());
-    for (uint32_t i = 0; i < seq2nodeid.size(); ++i) {
-        auto node = topo->GetNodeById(seq2nodeid[i]);
+    vector<Offset<pmx::Node>> nodes(seq2nid.size());
+    for (uint32_t i = 0; i < seq2nid.size(); ++i) {
+        auto node = topo->GetNodeById(seq2nid[i]);
 
         auto& type = node->GetType();
-        auto fb_type = pmx::CreateNodeTypeDirect(sinfo->builder, type.domain.c_str(), type.name.c_str(), type.version);
+        auto fb_type = pmx::CreateNodeTypeDirect(*builder, type.domain.c_str(), type.name.c_str(), type.version);
 
         vector<uint32_t> inputs(node->GetInputCount());
         for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
-            inputs[i] = edgeid2seq[node->GetInput(i)];
+            inputs[i] = eid2seq[node->GetInput(i)];
         }
 
         vector<uint32_t> outputs(node->GetOutputCount());
         for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
-            outputs[i] = edgeid2seq[node->GetOutput(i)];
+            outputs[i] = eid2seq[node->GetOutput(i)];
         }
 
         vector<uint32_t> extra_inputs(node->GetExtraInputCount());
         for (uint32_t i = 0; i < node->GetExtraInputCount(); ++i) {
-            extra_inputs[i] = edgeid2seq[node->GetExtraInput(i)];
+            extra_inputs[i] = eid2seq[node->GetExtraInput(i)];
         }
 
-        nodes[i] =
-            pmx::CreateNodeDirect(sinfo->builder, node->GetName().c_str(), fb_type, &inputs, &outputs, &extra_inputs);
+        nodes[i] = pmx::CreateNodeDirect(*builder, node->GetName().c_str(), fb_type, &inputs, &outputs, &extra_inputs);
     }
 
-    *fb_nodes = sinfo->builder.CreateVector<Offset<pmx::Node>>(nodes);
+    *fb_nodes = builder->CreateVector<Offset<pmx::Node>>(nodes);
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbGraphTopo(SerializationInfo* sinfo, const ir::GraphTopo* topo, Offset<pmx::GraphTopo>* fb_topo) {
-    auto fb_name = sinfo->builder.CreateString(topo->GetName().c_str());
+static RetCode CreateFbGraphTopo(FlatBufferBuilder* builder, const SerializationContext& ctx, const ir::GraphTopo* topo,
+                                 Offset<pmx::GraphTopo>* fb_topo) {
+    auto fb_name = builder->CreateString(topo->GetName().c_str());
 
     Offset<Vector<Offset<pmx::Edge>>> fb_edges;
-    auto status = CreateFbEdges(sinfo, topo, &fb_edges);
+    auto status = CreateFbEdges(builder, ctx, topo, &fb_edges);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "CreateFbEdges failed: " << GetRetCodeStr(status);
         return status;
     }
 
     Offset<Vector<Offset<pmx::Node>>> fb_nodes;
-    status = CreateFbNodes(sinfo, topo, &fb_nodes);
+    status = CreateFbNodes(builder, ctx, topo, &fb_nodes);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "CreateFbNodes failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    const vector<edgeid_t>& edgeid2seq = sinfo->edgeid2seq;
+    const vector<edgeid_t>& eid2seq = ctx.eid2seq;
 
     vector<uint32_t> constants(topo->GetConstantCount());
     for (uint32_t i = 0; i < topo->GetConstantCount(); ++i) {
-        constants[i] = edgeid2seq[topo->GetConstant(i)];
+        constants[i] = eid2seq[topo->GetConstant(i)];
     }
-    auto fb_constants = sinfo->builder.CreateVector<uint32_t>(constants);
+    auto fb_constants = builder->CreateVector<uint32_t>(constants);
 
     vector<uint32_t> inputs(topo->GetInputCount());
     for (uint32_t i = 0; i < topo->GetInputCount(); ++i) {
-        inputs[i] = edgeid2seq[topo->GetInput(i)];
+        inputs[i] = eid2seq[topo->GetInput(i)];
     }
-    auto fb_inputs = sinfo->builder.CreateVector<uint32_t>(inputs);
+    auto fb_inputs = builder->CreateVector<uint32_t>(inputs);
 
     vector<uint32_t> outputs(topo->GetOutputCount());
     for (uint32_t i = 0; i < topo->GetOutputCount(); ++i) {
-        outputs[i] = edgeid2seq[topo->GetOutput(i)];
+        outputs[i] = eid2seq[topo->GetOutput(i)];
     }
-    auto fb_outputs = sinfo->builder.CreateVector<uint32_t>(outputs);
+    auto fb_outputs = builder->CreateVector<uint32_t>(outputs);
 
     vector<uint32_t> extra_inputs(topo->GetInputCount());
     for (uint32_t i = 0; i < topo->GetExtraInputCount(); ++i) {
-        extra_inputs[i] = edgeid2seq[topo->GetExtraInput(i)];
+        extra_inputs[i] = eid2seq[topo->GetExtraInput(i)];
     }
-    auto fb_extra_inputs = sinfo->builder.CreateVector<uint32_t>(extra_inputs);
+    auto fb_extra_inputs = builder->CreateVector<uint32_t>(extra_inputs);
 
-    *fb_topo = pmx::CreateGraphTopo(sinfo->builder, fb_name, fb_edges, fb_nodes, fb_constants, fb_inputs, fb_outputs,
+    *fb_topo = pmx::CreateGraphTopo(*builder, fb_name, fb_edges, fb_nodes, fb_constants, fb_inputs, fb_outputs,
                                     fb_extra_inputs);
     return RC_SUCCESS;
 }
@@ -176,9 +179,9 @@ static const pmx::DataFormat g_format_ppl2fb[] = {
     pmx::DataFormat_N8CX,    pmx::DataFormat_N16CX,   pmx::DataFormat_N32CX,
 };
 
-static RetCode CreateFbShapes(SerializationInfo* sinfo, const map<edgeid_t, TensorShape>& shapes,
-                              Offset<Vector<Offset<pmx::Shape>>>* fb_shapes) {
-    const vector<edgeid_t>& edgeid2seq = sinfo->edgeid2seq;
+static RetCode CreateFbShapes(FlatBufferBuilder* builder, const SerializationContext& ctx,
+                              const map<edgeid_t, TensorShape>& shapes, Offset<Vector<Offset<pmx::Shape>>>* fb_shapes) {
+    const vector<edgeid_t>& eid2seq = ctx.eid2seq;
 
     vector<Offset<pmx::Shape>> shape_vec;
     shape_vec.reserve(shapes.size());
@@ -191,13 +194,12 @@ static RetCode CreateFbShapes(SerializationInfo* sinfo, const map<edgeid_t, Tens
             dims.push_back(shape.GetDim(j));
         }
 
-        auto fb_shape =
-            pmx::CreateShapeDirect(sinfo->builder, edgeid2seq[it->first], g_type_ppl2fb[shape.GetDataType()],
-                                   g_format_ppl2fb[shape.GetDataFormat()], &dims);
+        auto fb_shape = pmx::CreateShapeDirect(*builder, eid2seq[it->first], g_type_ppl2fb[shape.GetDataType()],
+                                               g_format_ppl2fb[shape.GetDataFormat()], &dims);
         shape_vec.emplace_back(std::move(fb_shape));
     }
 
-    *fb_shapes = sinfo->builder.CreateVector<Offset<pmx::Shape>>(shape_vec);
+    *fb_shapes = builder->CreateVector<Offset<pmx::Shape>>(shape_vec);
     return RC_SUCCESS;
 }
 
@@ -219,11 +221,11 @@ static pair<uint64_t, uint64_t> FindOrInsertData(const vector<uint8_t>& data, ve
     return new_data_item;
 }
 
-static RetCode CreateFbConstants(SerializationInfo* sinfo, const ir::GraphTopo* topo,
+static RetCode CreateFbConstants(FlatBufferBuilder* builder, const SerializationContext& ctx, const ir::GraphTopo* topo,
                                  const map<edgeid_t, RuntimeConstantInfo>& constants,
                                  Offset<Vector<Offset<pmx::Constant>>>* fb_constants, vector<uint8_t>* shared_data,
                                  vector<pair<uint64_t, uint64_t>>* shared_data_items) {
-    const vector<edgeid_t>& edgeid2seq = sinfo->edgeid2seq;
+    const vector<edgeid_t>& eid2seq = ctx.eid2seq;
 
     vector<Offset<pmx::Constant>> constant_vec;
     constant_vec.reserve(constants.size());
@@ -254,15 +256,15 @@ static RetCode CreateFbConstants(SerializationInfo* sinfo, const ir::GraphTopo* 
         }
 
         auto ret_pair = FindOrInsertData(data, shared_data, shared_data_items);
-        auto fb_constant = pmx::CreateConstant(sinfo->builder, edgeid2seq[it->first], ret_pair.first, ret_pair.second);
+        auto fb_constant = pmx::CreateConstant(*builder, eid2seq[it->first], ret_pair.first, ret_pair.second);
         constant_vec.emplace_back(std::move(fb_constant));
     }
 
-    *fb_constants = sinfo->builder.CreateVector<Offset<pmx::Constant>>(constant_vec);
+    *fb_constants = builder->CreateVector<Offset<pmx::Constant>>(constant_vec);
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbNodeInfo(SerializationInfo* sinfo, const SerializationContext& ctx, const OptKernel* op,
+static RetCode CreateFbNodeInfo(FlatBufferBuilder* builder, const SerializationContext& ctx, const OptKernel* op,
                                 Offset<pmx::NodeInfo>* fb_node_info) {
     utils::BufferDataStream content;
     auto status = op->SerializeData(ctx, &content);
@@ -271,22 +273,19 @@ static RetCode CreateFbNodeInfo(SerializationInfo* sinfo, const SerializationCon
         return status;
     }
 
-    auto fb_content = sinfo->builder.CreateVector<uint8_t>((const uint8_t*)content.GetData(), content.GetSize());
-    *fb_node_info = pmx::CreateNodeInfo(sinfo->builder, sinfo->nodeid2seq[op->GetNode()->GetId()], fb_content);
+    auto fb_content = builder->CreateVector<uint8_t>((const uint8_t*)content.GetData(), content.GetSize());
+    *fb_node_info = pmx::CreateNodeInfo(*builder, ctx.nid2seq[op->GetNode()->GetId()], fb_content);
 
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbPartitionNodes(SerializationInfo* sinfo, const vector<std::unique_ptr<OptKernel>>& ops,
+static RetCode CreateFbPartitionNodes(FlatBufferBuilder* builder, const SerializationContext& ctx,
+                                      const vector<std::unique_ptr<OptKernel>>& ops,
                                       Offset<Vector<Offset<pmx::NodeInfo>>>* fb_nodes) {
-    SerializationContext ser_ctx;
-    ser_ctx.nid2seq = &sinfo->nodeid2seq;
-    ser_ctx.eid2seq = &sinfo->edgeid2seq;
-
     vector<Offset<pmx::NodeInfo>> node_info_list;
     for (uint32_t i = 0; i < ops.size(); ++i) {
         Offset<pmx::NodeInfo> fb_node_info;
-        auto status = CreateFbNodeInfo(sinfo, ser_ctx, ops[i].get(), &fb_node_info);
+        auto status = CreateFbNodeInfo(builder, ctx, ops[i].get(), &fb_node_info);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "create node info of [" << ops[i]->GetNode()->GetName()
                        << "] failed: " << GetRetCodeStr(status);
@@ -296,14 +295,14 @@ static RetCode CreateFbPartitionNodes(SerializationInfo* sinfo, const vector<std
         node_info_list.emplace_back(std::move(fb_node_info));
     }
 
-    *fb_nodes = sinfo->builder.CreateVector<Offset<pmx::NodeInfo>>(node_info_list);
+    *fb_nodes = builder->CreateVector<Offset<pmx::NodeInfo>>(node_info_list);
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbPartition(SerializationInfo* sinfo, const RuntimeGraphInfo::Partition& partition,
-                                 const ir::GraphTopo* topo, Offset<pmx::Partition>* fb_partition,
+static RetCode CreateFbPartition(FlatBufferBuilder* builder, const SerializationContext& ctx,
+                                 const RuntimeGraphInfo::Partition& partition, const ir::GraphTopo* topo,
+                                 const map<EngineImpl*, uint32_t>& engine2seq, Offset<pmx::Partition>* fb_partition,
                                  vector<uint8_t>* shared_data, vector<pair<uint64_t, uint64_t>>* shared_data_items) {
-    const map<EngineImpl*, uint32_t>& engine2seq = sinfo->engine2seq;
     auto ref = engine2seq.find(partition.engine);
     if (ref == engine2seq.end()) {
         LOG(ERROR) << "cannot find seq of engine[" << partition.engine->GetName() << "]";
@@ -311,28 +310,28 @@ static RetCode CreateFbPartition(SerializationInfo* sinfo, const RuntimeGraphInf
     }
 
     Offset<Vector<Offset<pmx::NodeInfo>>> fb_nodes;
-    auto status = CreateFbPartitionNodes(sinfo, partition.ops, &fb_nodes);
+    auto status = CreateFbPartitionNodes(builder, ctx, partition.ops, &fb_nodes);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "cannot create nodes for partition of engine[" << partition.engine->GetName() << "]";
         return status;
     }
 
     Offset<Vector<Offset<pmx::Constant>>> fb_constants;
-    status = CreateFbConstants(sinfo, topo, partition.constants, &fb_constants, shared_data, shared_data_items);
+    status = CreateFbConstants(builder, ctx, topo, partition.constants, &fb_constants, shared_data, shared_data_items);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "create constants failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    *fb_partition = pmx::CreatePartition(sinfo->builder, ref->second, fb_nodes, fb_constants);
+    *fb_partition = pmx::CreatePartition(*builder, ref->second, fb_nodes, fb_constants);
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbPartitions(SerializationInfo* sinfo, const vector<RuntimeGraphInfo::Partition>& partitions,
-                                  const ir::GraphTopo* topo, Offset<Vector<Offset<pmx::Partition>>>* fb_partitions,
-                                  vector<uint8_t>* shared_data, vector<pair<uint64_t, uint64_t>>* shared_data_items) {
-    const map<EngineImpl*, uint32_t>& engine2seq = sinfo->engine2seq;
-
+static RetCode CreateFbPartitions(FlatBufferBuilder* builder, const SerializationContext& ctx,
+                                  const vector<RuntimeGraphInfo::Partition>& partitions, const ir::GraphTopo* topo,
+                                  const map<EngineImpl*, uint32_t>& engine2seq,
+                                  Offset<Vector<Offset<pmx::Partition>>>* fb_partitions, vector<uint8_t>* shared_data,
+                                  vector<pair<uint64_t, uint64_t>>* shared_data_items) {
     vector<Offset<pmx::Partition>> partition_vec;
     partition_vec.reserve(partitions.size());
 
@@ -344,7 +343,8 @@ static RetCode CreateFbPartitions(SerializationInfo* sinfo, const vector<Runtime
         }
 
         Offset<pmx::Partition> fb_partition;
-        auto status = CreateFbPartition(sinfo, *p, topo, &fb_partition, shared_data, shared_data_items);
+        auto status =
+            CreateFbPartition(builder, ctx, *p, topo, engine2seq, &fb_partition, shared_data, shared_data_items);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "CreateFbPartition failed: " << GetRetCodeStr(status);
             return status;
@@ -353,14 +353,15 @@ static RetCode CreateFbPartitions(SerializationInfo* sinfo, const vector<Runtime
         partition_vec.emplace_back(std::move(fb_partition));
     }
 
-    *fb_partitions = sinfo->builder.CreateVector<Offset<pmx::Partition>>(partition_vec);
+    *fb_partitions = builder->CreateVector<Offset<pmx::Partition>>(partition_vec);
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbGraphData(SerializationInfo* sinfo, const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
+static RetCode CreateFbGraphData(FlatBufferBuilder* builder, const SerializationContext& ctx, const ir::GraphTopo* topo,
+                                 const RuntimeGraphInfo& info, const map<EngineImpl*, uint32_t>& engine2seq,
                                  Offset<pmx::GraphData>* fb_data) {
     Offset<Vector<Offset<pmx::Shape>>> fb_shapes;
-    auto status = CreateFbShapes(sinfo, info.shapes, &fb_shapes);
+    auto status = CreateFbShapes(builder, ctx, info.shapes, &fb_shapes);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "CreateFbShapes failed: " << GetRetCodeStr(status);
         return status;
@@ -369,78 +370,80 @@ static RetCode CreateFbGraphData(SerializationInfo* sinfo, const ir::GraphTopo* 
     vector<uint8_t> shared_data;
     vector<pair<uint64_t, uint64_t>> shared_data_items;
     Offset<Vector<Offset<pmx::Partition>>> fb_partitions;
-    status = CreateFbPartitions(sinfo, info.partitions, topo, &fb_partitions, &shared_data, &shared_data_items);
+    status = CreateFbPartitions(builder, ctx, info.partitions, topo, engine2seq, &fb_partitions, &shared_data,
+                                &shared_data_items);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "CreateFbPartition failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    auto fb_shared_data = sinfo->builder.CreateVector<uint8_t>(shared_data);
-    *fb_data = CreateGraphData(sinfo->builder, fb_shapes, fb_partitions, fb_shared_data);
+    auto fb_shared_data = builder->CreateVector<uint8_t>(shared_data);
+    *fb_data = CreateGraphData(*builder, fb_shapes, fb_partitions, fb_shared_data);
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbGraph(SerializationInfo* sinfo, const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
+static RetCode CreateFbGraph(FlatBufferBuilder* builder, const SerializationContext& ctx, const ir::GraphTopo* topo,
+                             const RuntimeGraphInfo& info, const map<EngineImpl*, uint32_t>& engine2seq,
                              Offset<pmx::Graph>* fb_graph) {
     Offset<pmx::GraphTopo> fb_topo;
-    auto status = CreateFbGraphTopo(sinfo, topo, &fb_topo);
+    auto status = CreateFbGraphTopo(builder, ctx, topo, &fb_topo);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "CreateFbGraphTopo failed: " << GetRetCodeStr(status);
         return status;
     }
 
     Offset<pmx::GraphData> fb_data;
-    status = CreateFbGraphData(sinfo, topo, info, &fb_data);
+    status = CreateFbGraphData(builder, ctx, topo, info, engine2seq, &fb_data);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "CreateFbGraphData failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    *fb_graph = pmx::CreateGraph(sinfo->builder, fb_topo, fb_data);
+    *fb_graph = pmx::CreateGraph(*builder, fb_topo, fb_data);
     return RC_SUCCESS;
 }
 
-static RetCode CreateFbModel(SerializationInfo* sinfo, const ir::GraphTopo* topo, const vector<EngineImpl*>& engines,
-                             const RuntimeGraphInfo& info, Offset<pmx::Model>* fb_model) {
+static void InitSerializationContext(const ir::GraphTopo* topo, SerializationContext* ctx) {
+    ctx->nid2seq.resize(topo->GetMaxNodeId(), INVALID_NODEID);
+    ctx->seq2nid.reserve(topo->GetMaxNodeId());
+    for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
+        auto node = it->Get();
+        ctx->nid2seq[node->GetId()] = ctx->seq2nid.size();
+        ctx->seq2nid.push_back(node->GetId());
+    }
+
+    ctx->eid2seq.resize(topo->GetMaxEdgeId(), INVALID_EDGEID);
+    ctx->seq2eid.reserve(topo->GetMaxEdgeId());
+    for (auto it = topo->CreateEdgeIter(); it->IsValid(); it->Forward()) {
+        auto edge = it->Get();
+        ctx->eid2seq[edge->GetId()] = ctx->seq2eid.size();
+        ctx->seq2eid.push_back(edge->GetId());
+    }
+}
+
+static RetCode CreateFbModel(FlatBufferBuilder* builder, const ir::GraphTopo* topo, const vector<EngineImpl*>& engines,
+                             const RuntimeGraphInfo& info) {
+    SerializationContext ctx;
+    InitSerializationContext(topo, &ctx);
+
+    map<EngineImpl*, uint32_t> engine2seq;
     Offset<Vector<Offset<pmx::Engine>>> fb_engines;
-    auto status = CreateFbEngines(sinfo, topo, engines, &fb_engines);
+    auto status = CreateFbEngines(builder, ctx, topo, engines, &engine2seq, &fb_engines);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "CreateFbEngines failed: " << GetRetCodeStr(status);
         return status;
     }
 
     Offset<pmx::Graph> fb_graph;
-    status = CreateFbGraph(sinfo, topo, info, &fb_graph);
+    status = CreateFbGraph(builder, ctx, topo, info, engine2seq, &fb_graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "CreateFbGraph failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    *fb_model = pmx::CreateModel(sinfo->builder, 1, fb_engines, fb_graph);
+    auto fb_model = pmx::CreateModel(*builder, 1, fb_engines, fb_graph);
+    builder->Finish(fb_model);
     return RC_SUCCESS;
-}
-
-static void InitSerializationInfo(const ir::GraphTopo* topo, const vector<RuntimeGraphInfo::Partition>& partitions,
-                                  SerializationInfo* sinfo) {
-    for (auto it = partitions.begin(); it != partitions.end(); ++it) {
-        sinfo->engine2seq.insert(make_pair(it->engine, sinfo->engine2seq.size()));
-    }
-
-    sinfo->nodeid2seq.resize(topo->GetMaxNodeId(), INVALID_NODEID);
-    sinfo->seq2nodeid.reserve(topo->GetMaxNodeId());
-    for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
-        auto node = it->Get();
-        sinfo->nodeid2seq[node->GetId()] = sinfo->seq2nodeid.size();
-        sinfo->seq2nodeid.push_back(node->GetId());
-    }
-
-    sinfo->edgeid2seq.resize(topo->GetMaxEdgeId(), INVALID_EDGEID);
-    sinfo->seq2edgeid.reserve(topo->GetMaxEdgeId());
-    for (auto it = topo->CreateEdgeIter(); it->IsValid(); it->Forward()) {
-        auto edge = it->Get();
-        sinfo->edgeid2seq[edge->GetId()] = sinfo->seq2edgeid.size();
-        sinfo->seq2edgeid.push_back(edge->GetId());
-    }
 }
 
 static RetCode WriteModel(const FlatBufferBuilder& builder, const std::string& filename) {
@@ -459,18 +462,15 @@ RetCode PmxSerializer::Serialize(const string& output_file, const ir::GraphTopo*
     LOG(WARNING) << "pmx format is under heavily developing and may change in the future. do not use it in production "
                     "environment.";
 
-    SerializationInfo sinfo;
-    InitSerializationInfo(topo, info.partitions, &sinfo);
+    flatbuffers::FlatBufferBuilder builder;
 
-    Offset<pmx::Model> fb_model;
-    auto status = CreateFbModel(&sinfo, topo, engines, info, &fb_model);
+    auto status = CreateFbModel(&builder, topo, engines, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "CreateFbModel failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    sinfo.builder.Finish(fb_model);
-    status = WriteModel(sinfo.builder, output_file);
+    status = WriteModel(builder, output_file);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "WriteModel failed: " << GetRetCodeStr(status);
         return status;

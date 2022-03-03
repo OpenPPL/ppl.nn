@@ -19,6 +19,7 @@
 #include "ppl/nn/engines/riscv/engine.h"
 #include "ppl/nn/engines/riscv/kernel.h"
 #include "ppl/nn/engines/riscv/engine_context.h"
+#include "ppl/nn/engines/riscv/engine_factory.h"
 #include "ppl/nn/engines/riscv/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/engines/riscv/optimizer/opt_graph.h"
 #include "ppl/nn/runtime/runtime_partition_info.h"
@@ -123,6 +124,10 @@ RetCode RiscvEngine::ProcessGraph(utils::SharedResource* resource, ir::Graph* gr
     }
 
     return RC_SUCCESS;
+}
+
+EngineImpl* RiscvEngine::Create() {
+    return static_cast<EngineImpl*>(RiscvEngineFactory::Create(options_));
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
