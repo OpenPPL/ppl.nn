@@ -46,13 +46,15 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
     LOG(DEBUG) << "reorder from data type " << ppl::common::GetDataTypeStr(input_type) << " to "
                << ppl::common::GetDataTypeStr(output_type);
 
-    int64_t input_n = input->GetShape()->GetDim(0);
-    int64_t input_c = input->GetShape()->GetDim(1);
-    int64_t input_h, input_w;
+    int64_t input_n, input_c, input_h, input_w;
     if (input->GetShape()->GetDimCount() == 2) {
+        input_n = input->GetShape()->GetDim(0);
+        input_c = input->GetShape()->GetDim(1);
         input_h = 1;
         input_w = 1;
     } else if (input->GetShape()->GetDimCount() == 4) {
+        input_n = input->GetShape()->GetDim(0);
+        input_c = input->GetShape()->GetDim(1);
         input_h = input->GetShape()->GetDim(2);
         input_w = input->GetShape()->GetDim(3);
     } else if (input_format != output_format) {

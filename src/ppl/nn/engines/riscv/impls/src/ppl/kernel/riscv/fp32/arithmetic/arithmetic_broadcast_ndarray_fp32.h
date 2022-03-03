@@ -249,22 +249,22 @@ static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_fp32(
         float32xm1_t vfdata8, vfdata9, vfdata10, vfdata11;
         float32xm1_t vfdata12, vfdata13, vfdata14, vfdata15;
 
-        vfdata0  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 0 * C_BLK(), vl));
-        vfdata1  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 1 * C_BLK(), vl));
-        vfdata2  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 2 * C_BLK(), vl));
-        vfdata3  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 3 * C_BLK(), vl));
-        vfdata4  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 4 * C_BLK(), vl));
-        vfdata5  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 5 * C_BLK(), vl));
-        vfdata6  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 6 * C_BLK(), vl));
-        vfdata7  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 7 * C_BLK(), vl));
-        vfdata8  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 8 * C_BLK(), vl));
-        vfdata9  = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 9 * C_BLK(), vl));
-        vfdata10 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 10 * C_BLK(), vl));
-        vfdata11 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 11 * C_BLK(), vl));
-        vfdata12 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 12 * C_BLK(), vl));
-        vfdata13 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 13 * C_BLK(), vl));
-        vfdata14 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 14 * C_BLK(), vl));
-        vfdata15 = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_ + 15 * C_BLK(), vl));
+        vfdata0  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 0  * C_BLK(), vl), v_broadcast_val);
+        vfdata1  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 1  * C_BLK(), vl), v_broadcast_val);
+        vfdata2  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 2  * C_BLK(), vl), v_broadcast_val);
+        vfdata3  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 3  * C_BLK(), vl), v_broadcast_val);
+        vfdata4  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 4  * C_BLK(), vl), v_broadcast_val);
+        vfdata5  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 5  * C_BLK(), vl), v_broadcast_val);
+        vfdata6  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 6  * C_BLK(), vl), v_broadcast_val);
+        vfdata7  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 7  * C_BLK(), vl), v_broadcast_val);
+        vfdata8  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 8  * C_BLK(), vl), v_broadcast_val);
+        vfdata9  = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 9  * C_BLK(), vl), v_broadcast_val);
+        vfdata10 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 10 * C_BLK(), vl), v_broadcast_val);
+        vfdata11 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 11 * C_BLK(), vl), v_broadcast_val);
+        vfdata12 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 12 * C_BLK(), vl), v_broadcast_val);
+        vfdata13 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 13 * C_BLK(), vl), v_broadcast_val);
+        vfdata14 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 14 * C_BLK(), vl), v_broadcast_val);
+        vfdata15 = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_ + 15 * C_BLK(), vl), v_broadcast_val);
 
         if (fuse_relu) {
             vsev_float32xm1(dst_ + 0 * C_BLK(), vfmaxvf_float32xm1(vfdata0, (float)0.0f, vl), vl);
@@ -307,7 +307,7 @@ static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_fp32(
         float* dst_        = dst + i;
 
         float32xm1_t vfdata;
-        vfdata = arithmetic_vector_kernel_fp32<op>(v_broadcast_val, vlev_float32xm1(src0_, vl));
+        vfdata = arithmetic_vector_kernel_fp32<op>(vlev_float32xm1(src0_, vl), v_broadcast_val);
         if (fuse_relu) {
             vsev_float32xm1(dst_, vfmaxvf_float32xm1(vfdata, (float)0.0f, vl), vl);
         } else {
@@ -315,7 +315,7 @@ static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_fp32(
         }
     }
     for (; i <= end; i++) {
-        dst[i] = arithmetic_scalar_kernel_fp32<op>(broadcast_val, src0[i]);
+        dst[i] = arithmetic_scalar_kernel_fp32<op>(src0[i], broadcast_val);
         if (fuse_relu) {
             dst[i] = std::max(dst[i], (float)0.0f);
         }

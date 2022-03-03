@@ -98,6 +98,10 @@ private:
             return status;
         }
 
+        if (param_->alpha != 1 || param_->beta != 1 || param_->transB != 1) {
+            return ppl::common::RC_UNSUPPORTED;
+        }
+
         auto node = GetNode();
         auto graph_data = options.graph_data;
 

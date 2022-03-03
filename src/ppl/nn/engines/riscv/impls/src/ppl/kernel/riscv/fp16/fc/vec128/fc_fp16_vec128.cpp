@@ -429,8 +429,7 @@ ppl::common::RetCode fc_fp16_vec128_executor::execute()
     const int32_t batch = 1;
     LOG(DEBUG) << "FC execute";
     fc_n8chw_riscv_fp16(src_, cvt_filter_, cvt_bias_, dst_,
-
-                        batch,
+                        src_shape_->GetDim(0),
                         fc_param_->channels,
                         fc_param_->num_output);
 

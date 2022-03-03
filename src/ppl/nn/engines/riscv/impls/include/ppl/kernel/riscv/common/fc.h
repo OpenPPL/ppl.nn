@@ -53,6 +53,10 @@ public:
 
 struct fc_common_algo_info {
     fc_common_algo_t algo_type;
+    ppl::common::dataformat_t input_format;
+    ppl::common::dataformat_t output_format;
+    ppl::common::datatype_t input_data_type;
+    ppl::common::datatype_t output_data_type;
 };
 
 class fc_base_executor {
