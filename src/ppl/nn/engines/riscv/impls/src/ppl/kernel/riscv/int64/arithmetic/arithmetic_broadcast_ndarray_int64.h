@@ -67,7 +67,7 @@ static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_scalar_in
 {
     const int64_t broadcast_val = src1[0];
     for (int64_t i = start; i <= end; i++) {
-        dst[i] = arithmetic_scalar_kernel_int64<op>(broadcast_val, src0[i]);
+        dst[i] = arithmetic_scalar_kernel_int64<op>(src0[i], broadcast_val);
         if (fuse_relu) {
             dst[i] = std::max(dst[i], (int64_t)0);
         }
@@ -108,7 +108,6 @@ static ppl::common::RetCode arithmetic_broadcast_recursive_ndarray_scalar_int64(
             int64_t i = block->idx[dim_idx];
             arithmetic_broadcast_recursive_ndarray_scalar_int64<op, fuse_relu>(
                 src0 + i * inc0[dim_idx], src1 + i * inc1[dim_idx], dst + i * inc_out[dim_idx],
-
                 src0_shape,
                 src1_shape,
                 dst_shape,
@@ -126,7 +125,6 @@ static ppl::common::RetCode arithmetic_broadcast_recursive_ndarray_scalar_int64(
 
 template <arithmetic_op_type_t op, bool fuse_relu>
 static ppl::common::RetCode arithmetic_broadcast_ndarray_scalar_int64(const int64_t* src0, const int64_t* src1, int64_t* dst,
-
                                                                       const ppl::nn::TensorShape* src0_shape,
                                                                       const ppl::nn::TensorShape* src1_shape,
                                                                       const ppl::nn::TensorShape* dst_shape)
@@ -442,22 +440,22 @@ static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_int64(
         int64xm1_t vdata8, vdata9, vdata10, vdata11;
         int64xm1_t vdata12, vdata13, vdata14, vdata15;
 
-        vdata0  = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_ + 0 * 2, vl));
-        vdata1  = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_ + 1 * 2, vl));
-        vdata2  = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_ + 2 * 2, vl));
-        vdata3  = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_ + 3 * 2, vl));
-        vdata4  = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_ + 4 * 2, vl));
-        vdata5  = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_ + 5 * 2, vl));
-        vdata6  = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_ + 6 * 2, vl));
-        vdata7  = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_ + 7 * 2, vl));
-        vdata8  = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_ + 8 * 2, vl));
-        vdata9  = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_ + 9 * 2, vl));
-        vdata10 = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_ + 10 * 2, vl));
-        vdata11 = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_ + 11 * 2, vl));
-        vdata12 = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_ + 12 * 2, vl));
-        vdata13 = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_ + 13 * 2, vl));
-        vdata14 = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_ + 14 * 2, vl));
-        vdata15 = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_ + 15 * 2, vl));
+        vdata0  = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_ + 0  * 2, vl), v_broadcast_val);
+        vdata1  = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_ + 1  * 2, vl), v_broadcast_val);
+        vdata2  = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_ + 2  * 2, vl), v_broadcast_val);
+        vdata3  = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_ + 3  * 2, vl), v_broadcast_val);
+        vdata4  = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_ + 4  * 2, vl), v_broadcast_val);
+        vdata5  = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_ + 5  * 2, vl), v_broadcast_val);
+        vdata6  = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_ + 6  * 2, vl), v_broadcast_val);
+        vdata7  = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_ + 7  * 2, vl), v_broadcast_val);
+        vdata8  = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_ + 8  * 2, vl), v_broadcast_val);
+        vdata9  = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_ + 9  * 2, vl), v_broadcast_val);
+        vdata10 = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_ + 10 * 2, vl), v_broadcast_val);
+        vdata11 = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_ + 11 * 2, vl), v_broadcast_val);
+        vdata12 = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_ + 12 * 2, vl), v_broadcast_val);
+        vdata13 = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_ + 13 * 2, vl), v_broadcast_val);
+        vdata14 = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_ + 14 * 2, vl), v_broadcast_val);
+        vdata15 = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_ + 15 * 2, vl), v_broadcast_val);
 
         if (fuse_relu) {
             vsev_int64xm1(dst_ + 0 * 2, vmaxvx_int64xm1(vdata0, (int64_t)0, vl), vl);
@@ -500,7 +498,7 @@ static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_int64(
         int64_t* dst_        = dst + i;
 
         int64xm1_t vdata;
-        vdata = arithmetic_vector_kernel_int64<op>(v_broadcast_val, vlev_int64xm1(src0_, vl));
+        vdata = arithmetic_vector_kernel_int64<op>(vlev_int64xm1(src0_, vl), v_broadcast_val);
         if (fuse_relu) {
             vsev_int64xm1(dst_, vmaxvx_int64xm1(vdata, (int64_t)0, vl), vl);
         } else {
@@ -508,7 +506,7 @@ static inline void arithmetic_broadcast_lastdim_src1_broadcast_ndarray_int64(
         }
     }
     for (; i <= end; i++) {
-        dst[i] = arithmetic_scalar_kernel_int64<op>(broadcast_val, src0[i]);
+        dst[i] = arithmetic_scalar_kernel_int64<op>(src0[i], broadcast_val);
         if (fuse_relu) {
             dst[i] = std::max(dst[i], (int64_t)0);
         }

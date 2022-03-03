@@ -29,7 +29,12 @@ fc_common_algo_info fc_algo_selector_fp16::select_algo(const ppl::common::datafo
     static fc_common_algo_info unknown_info = {fc_common_algo::unknown};
 
     if (true) {
-        return {fc_common_algo::standard};
+        return {
+            fc_common_algo::standard,
+            ppl::common::DATAFORMAT_N8CX,
+            ppl::common::DATAFORMAT_N8CX,
+            ppl::common::DATATYPE_FLOAT16,
+            ppl::common::DATATYPE_FLOAT16};
     }
 
     return unknown_info;

@@ -45,11 +45,9 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
 
 RetCode GemmOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
                              vector<dataformat_t>* selected_output_formats) {
-    if (DATAFORMAT_N8CX == selected_input_formats->at(0)) {
-        selected_output_formats->at(0) = DATAFORMAT_N8CX;
-    } else if (DATAFORMAT_N4CX == selected_input_formats->at(0)) {
-        selected_output_formats->at(0) = DATAFORMAT_N4CX;
-    }
+
+    selected_input_formats->at(0) = fc_param_->algo_info.input_format;
+    selected_output_formats->at(0) = fc_param_->algo_info.output_format;
 
     return RC_SUCCESS;
 }

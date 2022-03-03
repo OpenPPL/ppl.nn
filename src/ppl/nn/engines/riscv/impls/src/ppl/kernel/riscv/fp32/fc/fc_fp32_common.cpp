@@ -30,7 +30,13 @@ fc_common_algo_info fc_algo_selector_fp32::select_algo(
     static fc_common_algo_info unknown_info = {fc_common_algo::unknown};
 
     if (true) {
-        return {fc_common_algo::standard};
+        return {
+            fc_common_algo::standard,
+            ppl::common::DATAFORMAT_N4CX,
+            ppl::common::DATAFORMAT_N4CX,
+            ppl::common::DATATYPE_FLOAT32,
+            ppl::common::DATATYPE_FLOAT32
+        };
     }
 
     return unknown_info;

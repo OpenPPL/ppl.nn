@@ -19,59 +19,78 @@
 #define __ST_PPL_KERNEL_RISCV_COMMON_SLICE_COMMON_H_
 
 #include "ppl/kernel/riscv/common/internal_include.h"
+#include "ppl/kernel/riscv/common/threading_tools.h"
 #include <string.h>
 
 namespace ppl { namespace kernel { namespace riscv {
 
-template <typename T>
+template <typename eT>
 ppl::common::RetCode slice_ndarray_recursive(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
-    const T* src,
-    const int64_t* starts,
-    const int64_t* steps,
-    const int64_t* stride_in,
-    const int64_t* stride_out,
+    const single_parallel_loop_config_t &pc,
+    const ppl::nn::TensorShape *src_shape,
+    const ppl::nn::TensorShape *dst_shape,
+    const eT *src,
+    const int64_t *starts,
+    const int64_t *steps,
+    const int64_t *stride_in,
+    const int64_t *stride_out,
     const int64_t dim_idx,
-    T* dst)
+    eT *dst)
 {
     const int64_t dim_count     = src_shape->GetDimCount();
     const int64_t output_length = dst_shape->GetDim(dim_idx);
 
     if (dim_idx == dim_count - 1) {
-        for (int64_t i = 0; i < output_length; i++) {
-            const int64_t src_i = starts[dim_idx] + i * steps[dim_idx];
-            dst[i]              = src[src_i];
+        if (pc.depth_of_loop == dim_idx && output_length > 1) {
+            const int64_t len_per_thread = div_up(output_length, pc.num_threads);
+            PRAGMA_OMP_PARALLEL_FOR()
+            for (int64_t t = 0; t < pc.num_threads; ++t) {
+                const int64_t start_idx = t * len_per_thread;
+                const int64_t end_idx = min<int64_t>(start_idx + len_per_thread, output_length);
+                for (int64_t i = start_idx; i < end_idx; i++) {
+                    const int64_t src_i = starts[dim_idx] + i * steps[dim_idx];
+                    dst[i]              = src[src_i];
+                }
+            }
+        } else {
+            for (int64_t i = 0; i < output_length; i++) {
+                const int64_t src_i = starts[dim_idx] + i * steps[dim_idx];
+                dst[i]              = src[src_i];
+            }
         }
     } else {
-        for (int64_t i = 0; i < output_length; i++) {
-            const int64_t src_i = starts[dim_idx] + i * steps[dim_idx];
-            slice_ndarray_recursive<T>(
-                src_shape,
-                dst_shape,
-                src + src_i * stride_in[dim_idx],
-                starts,
-                steps,
-                stride_in,
-                stride_out,
-                dim_idx + 1,
-                dst + i * stride_out[dim_idx]);
+        if (pc.depth_of_loop == dim_idx && output_length > 1) {
+            const int64_t len_per_thread = div_up(output_length, pc.num_threads);
+            PRAGMA_OMP_PARALLEL_FOR()
+            for (int64_t t = 0; t < pc.num_threads; ++t) {
+                const int64_t start_idx = t * len_per_thread;
+                const int64_t end_idx = min<int64_t>(start_idx + len_per_thread, output_length);
+                for (int64_t i = start_idx; i < end_idx; i++) {
+                    const int64_t src_i = starts[dim_idx] + i * steps[dim_idx];
+                    slice_ndarray_recursive<eT>(pc, src_shape, dst_shape, src + src_i * stride_in[dim_idx], starts, steps, stride_in, stride_out, dim_idx + 1, dst + i * stride_out[dim_idx]);
+                }
+            }
+        } else {
+            for (int64_t i = 0; i < output_length; i++) {
+                const int64_t src_i = starts[dim_idx] + i * steps[dim_idx];
+                slice_ndarray_recursive<eT>(pc, src_shape, dst_shape, src + src_i * stride_in[dim_idx], starts, steps, stride_in, stride_out, dim_idx + 1, dst + i * stride_out[dim_idx]);
+            }
         }
     }
 
     return ppl::common::RC_SUCCESS;
 }
 
-template <typename T>
+template <typename eT>
 ppl::common::RetCode slice_ndarray_common(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
-    const T* src,
-    const int64_t* starts,
-    const int64_t* steps,
-    const int64_t* axes,
+    const ppl::nn::TensorShape *src_shape,
+    const ppl::nn::TensorShape *dst_shape,
+    const eT *src,
+    const int64_t *starts,
+    const int64_t *steps,
+    const int64_t *axes,
     const int64_t axes_num,
-    T* dst)
+    eT *dst)
 {
     const int64_t dim_count = src_shape->GetDimCount();
     if (dim_count > PPL_RISCV_TENSOR_MAX_DIMS()) {
@@ -79,7 +98,7 @@ ppl::common::RetCode slice_ndarray_common(
     }
 
     int64_t real_starts[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
-    int64_t real_steps[PPL_RISCV_TENSOR_MAX_DIMS()]  = {0};
+    int64_t real_steps[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
 
     if (axes_num == dim_count) {
         memcpy(real_starts, starts, axes_num * sizeof(int64_t));
@@ -106,25 +125,19 @@ ppl::common::RetCode slice_ndarray_common(
         }
     }
 
-    int64_t stride_in[PPL_RISCV_TENSOR_MAX_DIMS()]  = {0};
+    int64_t stride_in[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
     int64_t stride_out[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
-    stride_in[dim_count - 1]                        = 1;
-    stride_out[dim_count - 1]                       = 1;
+    stride_in[dim_count - 1]  = 1;
+    stride_out[dim_count - 1] = 1;
     for (int64_t i = dim_count - 2; i >= 0; i--) {
         stride_in[i]  = src_shape->GetDim(i + 1) * stride_in[i + 1];
         stride_out[i] = dst_shape->GetDim(i + 1) * stride_out[i + 1];
     }
 
-    return slice_ndarray_recursive<T>(
-        src_shape,
-        dst_shape,
-        src,
-        real_starts,
-        real_steps,
-        stride_in,
-        stride_out,
-        0,
-        dst);
+    std::vector<int64_t> loops(dst_shape->GetDims(), dst_shape->GetDims() + dim_count);
+    auto pc = select_single_parallel_loop(loops, ppl::common::ISA_UNKNOWN, sizeof(eT), sizeof(eT), sizeof(eT), 1);
+
+    return slice_ndarray_recursive<eT>(pc, src_shape, dst_shape, src, real_starts, real_steps, stride_in, stride_out, 0, dst);
 }
 
 }}} // namespace ppl::kernel::riscv
