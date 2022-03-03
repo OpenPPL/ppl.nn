@@ -428,7 +428,8 @@ static RetCode InsertConverterNodesForInputs(ir::Graph* graph, const vector<Engi
     return RC_SUCCESS;
 }
 
-RetCode ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimeGraphInfo* info) {
+RetCode ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimeGraphInfo* info,
+                     vector<unique_ptr<EngineImpl>>* sub_engines) {
     GraphOptimizerManager optimizer_mgr;
     auto status = optimizer_mgr.Process(graph);
     if (status != RC_SUCCESS) {
@@ -436,8 +437,26 @@ RetCode ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimeG
         return status;
     }
 
+    vector<EngineImpl*>* engine_list = nullptr;
+
+    vector<EngineImpl*> sub_engine_ptrs;
+    if (sub_engines) {
+        for (auto x = resource->engines.begin(); x != resource->engines.end(); ++x) {
+            auto e = (*x)->Create();
+            if (!e) {
+                LOG(ERROR) << "create instance of engine[" << (*x)->GetName() << "] failed.";
+                return RC_OTHER_ERROR;
+            }
+            sub_engines->emplace_back(unique_ptr<EngineImpl>(e));
+            sub_engine_ptrs.push_back(e);
+        }
+        engine_list = &sub_engine_ptrs;
+    } else {
+        engine_list = &resource->engines;
+    }
+
     vector<pair<EngineImpl*, vector<nodeid_t>>> partitions;
-    status = resource->graph_partitioner->Partition(resource->engines, graph->topo.get(), &partitions);
+    status = resource->graph_partitioner->Partition(*engine_list, graph->topo.get(), &partitions);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "partitioning graph[" << graph->topo->GetName() << "] failed: " << GetRetCodeStr(status);
         return status;

@@ -25,8 +25,15 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace common {
 
+LoopOp::~LoopOp() {
+    // make sure that engines are released at last.
+    topo_.reset();
+    graph_info_.Clear();
+    engines_.clear();
+}
+
 RetCode LoopOp::Init(utils::SharedResource* resource, LoopParam* loop_param, LoopConcatOutputFunc concat_output_func) {
-    auto status = utils::ProcessGraph(resource, &loop_param->graph, &graph_info_);
+    auto status = utils::ProcessGraph(resource, &loop_param->graph, &graph_info_, &engines_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "ProcessGraph failed: " << GetRetCodeStr(status);
         return status;
@@ -38,8 +45,7 @@ RetCode LoopOp::Init(utils::SharedResource* resource, LoopParam* loop_param, Loo
         return status;
     }
 
-    graph_ = loop_param->graph;
-    resource_ = resource;
+    topo_ = loop_param->graph.topo;
     concat_output_func_ = concat_output_func;
 
     return RC_SUCCESS;
@@ -47,7 +53,7 @@ RetCode LoopOp::Init(utils::SharedResource* resource, LoopParam* loop_param, Loo
 
 KernelImpl* LoopOp::CreateKernelImpl() const {
     auto kernel = unique_ptr<LoopKernel>(new LoopKernel(node_));
-    auto status = kernel->SetExecutionInfo(graph_.topo, &graph_info_, &aux_info_, resource_, concat_output_func_);
+    auto status = kernel->SetExecutionInfo(topo_, &graph_info_, &aux_info_, concat_output_func_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "SetExecutionInfo of kernel[" << kernel->GetName() << "] failed: " << GetRetCodeStr(status);
         return nullptr;

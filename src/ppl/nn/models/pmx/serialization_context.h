@@ -21,12 +21,14 @@
 namespace ppl { namespace nn { namespace pmx {
 
 struct SerializationContext final {
-    /** mapping in-memory node ids to sequential numbers */
-    const std::vector<nodeid_t>* nid2seq;
-    /** mapping in-memory edge ids to sequential numbers */
-    const std::vector<edgeid_t>* eid2seq;
+    /** mappings between in-memory node ids and sequential numbers */
+    std::vector<nodeid_t> nid2seq;
+    std::vector<nodeid_t> seq2nid;
+    /** mappings between in-memory edge ids and sequential numbers */
+    std::vector<edgeid_t> eid2seq;
+    std::vector<edgeid_t> seq2eid;
 };
 
-}}}
+}}} // namespace ppl::nn::pmx
 
 #endif

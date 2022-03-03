@@ -21,6 +21,7 @@
 #include "ppl/nn/runtime/runtime_graph_info.h"
 #include "ppl/nn/engines/common/onnx/loop_kernel.h"
 #include "ppl/nn/params/onnx/loop_param.h"
+#include "ppl/nn/engines/engine_impl.h"
 
 namespace ppl { namespace nn { namespace utils {
 struct SharedResource;
@@ -30,17 +31,18 @@ namespace ppl { namespace nn { namespace common {
 
 class LoopOp final {
 public:
-    LoopOp(const ir::Node* node) : node_(node), resource_(nullptr) {}
+    LoopOp(const ir::Node* node) : node_(node) {}
+    ~LoopOp();
     ppl::common::RetCode Init(utils::SharedResource*, LoopParam*, LoopConcatOutputFunc);
     KernelImpl* CreateKernelImpl() const;
 
 private:
     const ir::Node* node_;
-    utils::SharedResource* resource_;
-    ir::Graph graph_;
+    std::shared_ptr<ir::GraphTopo> topo_;
     RuntimeGraphInfo graph_info_;
     RuntimeAuxInfo aux_info_;
     LoopConcatOutputFunc concat_output_func_;
+    std::vector<std::unique_ptr<EngineImpl>> engines_;
 };
 
 }}} // namespace ppl::nn::common

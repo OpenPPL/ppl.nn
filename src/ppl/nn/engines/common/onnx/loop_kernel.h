@@ -29,7 +29,7 @@ class LoopKernel final : public CommonKernelImpl {
 public:
     LoopKernel(const ir::Node* node) : CommonKernelImpl(node) {}
     ppl::common::RetCode SetExecutionInfo(const std::shared_ptr<ir::GraphTopo>&, const RuntimeGraphInfo*,
-                                          const RuntimeAuxInfo*, utils::SharedResource*, LoopConcatOutputFunc func);
+                                          const RuntimeAuxInfo*, LoopConcatOutputFunc func);
 
 protected:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;

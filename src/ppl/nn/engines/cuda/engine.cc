@@ -23,6 +23,7 @@
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/engines/utils.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_graph.h"
+#include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/cuda/module/op_compile_manager.h"
 #include "ppl/nn/quantization/quant_param_parser.cc"
@@ -113,6 +114,10 @@ RetCode CudaEngine::ProcessGraph(utils::SharedResource* resource, ir::Graph* gra
     }
 
     return RC_SUCCESS;
+}
+
+EngineImpl* CudaEngine::Create() {
+    return static_cast<EngineImpl*>(CudaEngineFactory::Create(options_));
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL

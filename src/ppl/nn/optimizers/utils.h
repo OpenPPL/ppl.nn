@@ -29,8 +29,12 @@ namespace ppl { namespace nn { namespace utils {
    @param resource global resources object
    @param graph that needed to be processed
    @param info fields needed
+   @param sub_engines if `sub_engines` is not null, this function will create new engine instances
+          using resource->engines->Create() and use the newly created engines to process `graph`.
+          newly created engines will be stored in `sub_engines`
 */
-ppl::common::RetCode ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimeGraphInfo* info);
+ppl::common::RetCode ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimeGraphInfo* info,
+                                  std::vector<std::unique_ptr<EngineImpl>>* sub_engines = nullptr);
 
 }}} // namespace ppl::nn::utils
 

@@ -32,12 +32,10 @@ RetCode IfKernel::SetExecutionInfo(const shared_ptr<ir::GraphTopo>& then_topo, c
                                    const vector<uint32_t>* extra_inputs_of_then_branch,
                                    const shared_ptr<ir::GraphTopo>& else_topo, const RuntimeGraphInfo* else_info,
                                    const RuntimeAuxInfo* else_aux_info,
-                                   const vector<uint32_t>* extra_inputs_of_else_branch,
-                                   utils::SharedResource* resource) {
-    auto status = then_branch_.Init(then_topo,
-                                    shared_ptr<const RuntimeGraphInfo>(then_info, EmptyDeleter<const RuntimeGraphInfo>),
-                                    shared_ptr<const RuntimeAuxInfo>(then_aux_info, EmptyDeleter<const RuntimeAuxInfo>),
-                                    shared_ptr<utils::SharedResource>(resource, EmptyDeleter<utils::SharedResource>));
+                                   const vector<uint32_t>* extra_inputs_of_else_branch) {
+    auto status = then_branch_.Init(
+        then_topo, shared_ptr<const RuntimeGraphInfo>(then_info, EmptyDeleter<const RuntimeGraphInfo>),
+        shared_ptr<const RuntimeAuxInfo>(then_aux_info, EmptyDeleter<const RuntimeAuxInfo>));
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init if kernel[" << GetName() << "] then_branch failed: " << GetRetCodeStr(status);
         return status;
@@ -45,8 +43,7 @@ RetCode IfKernel::SetExecutionInfo(const shared_ptr<ir::GraphTopo>& then_topo, c
 
     status = else_branch_.Init(else_topo,
                                shared_ptr<const RuntimeGraphInfo>(else_info, EmptyDeleter<const RuntimeGraphInfo>),
-                               shared_ptr<const RuntimeAuxInfo>(else_aux_info, EmptyDeleter<const RuntimeAuxInfo>),
-                               shared_ptr<utils::SharedResource>(resource, EmptyDeleter<utils::SharedResource>));
+                               shared_ptr<const RuntimeAuxInfo>(else_aux_info, EmptyDeleter<const RuntimeAuxInfo>));
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init if kernel[" << GetName() << "] else_branch failed: " << GetRetCodeStr(status);
         return status;

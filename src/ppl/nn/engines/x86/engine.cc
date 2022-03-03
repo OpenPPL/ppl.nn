@@ -21,6 +21,7 @@
 #include "ppl/nn/engines/x86/engine_context.h"
 #include "ppl/nn/engines/x86/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/engines/x86/optimizer/opt_graph.h"
+#include "ppl/nn/engines/x86/engine_factory.h"
 #include "ppl/nn/engines/utils.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/kernel/x86/common/simd_tools.h"
@@ -129,6 +130,10 @@ RetCode X86Engine::ProcessGraph(utils::SharedResource* resource, ir::Graph* grap
     }
 
     return RC_SUCCESS;
+}
+
+EngineImpl* X86Engine::Create() {
+    return static_cast<EngineImpl*>(X86EngineFactory::Create(options_));
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL

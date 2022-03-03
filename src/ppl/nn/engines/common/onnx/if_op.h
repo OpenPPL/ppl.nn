@@ -21,6 +21,7 @@
 #include "ppl/nn/runtime/runtime_graph_info.h"
 #include "ppl/nn/runtime/runtime_aux_info.h"
 #include "ppl/nn/params/onnx/if_param.h"
+#include "ppl/nn/engines/engine_impl.h"
 
 namespace ppl { namespace nn { namespace utils {
 struct SharedResource;
@@ -30,23 +31,25 @@ namespace ppl { namespace nn { namespace common {
 
 class IfOp final {
 public:
-    IfOp(const ir::Node* node) : node_(node), resource_(nullptr) {}
+    IfOp(const ir::Node* node) : node_(node) {}
+    ~IfOp();
     ppl::common::RetCode Init(utils::SharedResource*, IfParam*);
     KernelImpl* CreateKernelImpl() const;
 
 private:
     const ir::Node* node_;
-    utils::SharedResource* resource_;
 
-    ir::Graph then_graph_;
+    std::shared_ptr<ir::GraphTopo> then_topo_;
     RuntimeGraphInfo then_info_;
     RuntimeAuxInfo then_aux_info_;
     std::vector<uint32_t> extra_inputs_of_then_graph_; // indices in ir::Node::GetExtraInput()
+    std::vector<std::unique_ptr<EngineImpl>> then_engines_;
 
-    ir::Graph else_graph_;
+    std::shared_ptr<ir::GraphTopo> else_topo_;
     RuntimeGraphInfo else_info_;
     RuntimeAuxInfo else_aux_info_;
     std::vector<uint32_t> extra_inputs_of_else_graph_; // indices in ir::Node::GetExtraInput()
+    std::vector<std::unique_ptr<EngineImpl>> else_engines_;
 };
 
 }}} // namespace ppl::nn::common

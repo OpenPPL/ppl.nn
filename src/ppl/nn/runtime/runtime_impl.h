@@ -19,13 +19,13 @@
 #define _ST_HPC_PPL_NN_RUNTIME_RUNTIME_IMPL_H_
 
 #include "ppl/nn/ir/graph.h"
+#include "ppl/nn/engines/engine_context.h"
 #include "ppl/nn/runtime/runtime.h"
 #include "ppl/nn/runtime/runtime_graph_resource.h"
 #include "ppl/nn/runtime/runtime_graph_info.h"
 #include "ppl/nn/runtime/runtime_aux_info.h"
 #include "ppl/nn/runtime/runtime_internal_conf.h"
 #include "ppl/nn/runtime/scheduler.h"
-#include "ppl/nn/utils/shared_resource.h"
 #include "ppl/nn/runtime/profiler.h"
 
 namespace ppl { namespace nn {
@@ -36,8 +36,7 @@ public:
     ~RuntimeImpl();
 
     ppl::common::RetCode Init(const std::shared_ptr<ir::GraphTopo>&, const std::shared_ptr<const RuntimeGraphInfo>&,
-                              const std::shared_ptr<const RuntimeAuxInfo>&,
-                              const std::shared_ptr<utils::SharedResource>&);
+                              const std::shared_ptr<const RuntimeAuxInfo>&);
 
     TensorImpl* GetInputTensorImpl(uint32_t idx) const {
         auto eid = topo_->GetInput(idx);
@@ -106,9 +105,8 @@ private:
     // ----- shared data ----- //
 
     std::shared_ptr<ir::GraphTopo> topo_;
-    std::shared_ptr<const RuntimeGraphInfo> graph_info_;
     std::shared_ptr<const RuntimeAuxInfo> aux_info_;
-    std::shared_ptr<utils::SharedResource> resource_;
+    std::shared_ptr<const RuntimeGraphInfo> graph_info_;
 
 private:
     /*
