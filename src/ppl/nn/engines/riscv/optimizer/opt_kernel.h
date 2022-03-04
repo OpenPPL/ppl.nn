@@ -62,6 +62,33 @@ public:
         }
     }
 
+    virtual ppl::common::RetCode SelectInputOutput(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
+                                                    std::vector<ppl::common::dataformat_t>* selected_input_formats,
+                                                    std::vector<ppl::common::dataformat_t>* selected_output_formats,
+                                                    std::vector<ppl::common::datatype_t>* selected_input_data_types,
+                                                    std::vector<ppl::common::datatype_t>* selected_output_data_types) {
+
+        {
+            auto status = SelectFormat(info, selected_input_formats, selected_output_formats);
+            if (status != ppl::common::RC_SUCCESS) {
+                LOG(ERROR) << "kernel[" << GetNode()->GetName()
+                            << "] SelectFormat failed: " << ppl::common::GetRetCodeStr(status);
+                return ppl::common::RC_UNSUPPORTED;
+            }
+        }
+
+        {
+            auto status = SelectDataType(info, forward_precision, selected_input_data_types, selected_output_data_types);
+            if (status != ppl::common::RC_SUCCESS) {
+                LOG(ERROR) << "kernel[" << GetNode()->GetName()
+                            << "] SelectDataType failed: " << ppl::common::GetRetCodeStr(status);
+                return ppl::common::RC_UNSUPPORTED;
+            }   
+        }
+
+        return ppl::common::RC_SUCCESS;
+    }
+
     virtual ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
                                               std::vector<ppl::common::dataformat_t>* selected_input_formats,
                                               std::vector<ppl::common::dataformat_t>* selected_output_formats) {

@@ -50,13 +50,17 @@ RetCode AddOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype
                               std::vector<datatype_t>* selected_input_data_types,
                               std::vector<datatype_t>* selected_output_data_types) {
 
-    if (selected_input_data_types->at(0) == DATATYPE_INT64) {
-        selected_input_data_types->at(1) = DATATYPE_INT64;
-        selected_output_data_types->at(0) = DATATYPE_INT64;
+    if (selected_input_data_types[0] == selected_input_data_types[1]) {
+        selected_output_data_types[0] = selected_input_data_types[0];
     } else {
-        selected_input_data_types->at(0) = forward_precision;
-        selected_input_data_types->at(1) = forward_precision;
-        selected_output_data_types->at(0) = forward_precision;
+        if (selected_input_data_types->at(0) == DATATYPE_INT64) {
+            selected_input_data_types->at(1) = DATATYPE_INT64;
+            selected_output_data_types->at(0) = DATATYPE_INT64;
+        } else {
+            selected_input_data_types->at(0) = forward_precision;
+            selected_input_data_types->at(1) = forward_precision;
+            selected_output_data_types->at(0) = forward_precision;
+        }
     }
 
     return RC_SUCCESS;

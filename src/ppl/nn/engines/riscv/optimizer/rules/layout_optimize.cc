@@ -188,18 +188,10 @@ bool LayoutOptimize(const OptKernelOptions& options) {
                 selected_output_data_types[i] = tensors[edge_id]->GetShape()->GetDataType();
             }
 
-            auto status = kernel->SelectFormat(IOinfo, &selected_input_formats, &selected_output_formats);
+            auto status = kernel->SelectInputOutput(IOinfo, forward_precision,
+                &selected_input_formats, &selected_output_formats, &selected_input_data_types, &selected_output_data_types);
             if (status != ppl::common::RC_SUCCESS) {
-                LOG(ERROR) << "kernel[" << node->GetName()
-                           << "] SelectFormat failed: " << ppl::common::GetRetCodeStr(status);
                 return false;
-            }
-
-            status = kernel->SelectDataType(IOinfo, forward_precision, &selected_input_data_types,
-                                            &selected_output_data_types);
-            if (status != ppl::common::RC_SUCCESS) {
-                LOG(ERROR) << "kernel[" << node->GetName()
-                           << "] SelectDataType failed: " << ppl::common::GetRetCodeStr(status);
             }
         }
 
