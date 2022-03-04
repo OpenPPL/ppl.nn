@@ -33,22 +33,7 @@ RetCode MMCVROIAlignOp::Init(const OptKernelOptions& options) {
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         auto ret = oputils::ReshapeMMCVROIAlign(info, param_.get());
-        if (ret != RC_SUCCESS) {
-            return ret;
-        }
-
-        auto input0 = info->GetInput<TensorImpl>(0);
-        auto input1 = info->GetInput<TensorImpl>(1);
-        if (input0->GetShape()->GetDataType() != DATATYPE_FLOAT32 ||
-            input1->GetShape()->GetDataType() != DATATYPE_FLOAT32) {
-            LOG(ERROR) << "input tensor x & rois only support fp32 now.";
-            return RC_UNSUPPORTED;
-        }
-        if (input1->GetShape()->GetDataFormat() != DATAFORMAT_NDARRAY) {
-            LOG(ERROR) << "only support ndarray now.";
-            return RC_UNSUPPORTED;
-        }
-        return RC_SUCCESS;
+        return ret;
     };
 
     infer_type_func_ = GenericInferType;
@@ -59,6 +44,7 @@ RetCode MMCVROIAlignOp::Init(const OptKernelOptions& options) {
 RetCode MMCVROIAlignOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
                                      vector<dataformat_t>* selected_output_formats) {
     selected_input_formats->at(0) = DATAFORMAT_NDARRAY;
+    selected_input_formats->at(1) = DATAFORMAT_NDARRAY;
     selected_output_formats->at(0) = DATAFORMAT_NDARRAY;
     return RC_SUCCESS;
 }
@@ -67,6 +53,7 @@ RetCode MMCVROIAlignOp::SelectDataType(const InputOutputInfo& info, ppl::common:
                                        std::vector<datatype_t>* selected_input_data_types,
                                        std::vector<datatype_t>* selected_output_data_types) {
     selected_input_data_types->at(0) = DATATYPE_FLOAT32;
+    selected_input_data_types->at(1) = DATATYPE_FLOAT32;
     selected_output_data_types->at(0) = DATATYPE_FLOAT32;
     return RC_SUCCESS;
 }
