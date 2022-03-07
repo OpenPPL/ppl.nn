@@ -233,22 +233,19 @@ static RetCode CreateFbConstants(FlatBufferBuilder* builder, const Serialization
     for (auto it = constants.begin(); it != constants.end(); ++it) {
         const RuntimeConstantInfo& info = it->second;
 
-        TensorShape dst_shape = *info.GetShape();
-        dst_shape.SetDataFormat(DATAFORMAT_NDARRAY);
-
         auto device = info.GetDevice();
         if (!device) {
             continue;
         }
 
-        auto bytes = dst_shape.GetBytesIncludingPadding();
+        const TensorShape* shape = info.GetShape();
+        auto bytes = shape->GetBytesIncludingPadding();
         if (bytes == 0) {
             continue;
         }
 
         vector<uint8_t> data(bytes);
-        auto converter = device->GetDataConverter();
-        auto status = converter->ConvertToHost(data.data(), dst_shape, info.GetBufferPtr(), *info.GetShape());
+        auto status = device->CopyToHost(data.data(), info.GetBufferPtr(), bytes);
         if (status != RC_SUCCESS) {
             auto edge = topo->GetEdgeById(it->first);
             LOG(ERROR) << "copy data of tensor[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
