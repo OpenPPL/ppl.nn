@@ -33,7 +33,7 @@ public:
     bool Supports(const ir::Node*) const override {
         return true;
     }
-    ppl::common::RetCode ProcessGraph(utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*) override;
+    ppl::common::RetCode ProcessGraph(const utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*) override;
     EngineImpl* Create() override;
 
 #ifdef PPLNN_ENABLE_PMX_MODEL

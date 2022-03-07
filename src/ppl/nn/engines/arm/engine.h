@@ -33,7 +33,7 @@ public:
     ppl::common::RetCode Configure(uint32_t, ...) override;
     EngineContext* CreateEngineContext() override;
     bool Supports(const ir::Node* node) const override;
-    ppl::common::RetCode ProcessGraph(utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*) override;
+    ppl::common::RetCode ProcessGraph(const utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*) override;
     EngineImpl* Create() override;
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
@@ -48,7 +48,7 @@ public:
 #endif
 
 private:
-    ppl::common::RetCode DoOptimize(ir::Graph*, utils::SharedResource*, RuntimePartitionInfo*);
+    ppl::common::RetCode DoOptimize(const utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(ArmEngine*, va_list);
     static ConfHandlerFunc conf_handlers_[ARM_CONF_MAX];

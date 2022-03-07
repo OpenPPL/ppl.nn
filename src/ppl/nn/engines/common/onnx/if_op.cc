@@ -36,11 +36,33 @@ IfOp::~IfOp() {
     else_engines_.clear();
 }
 
-RetCode IfOp::Init(utils::SharedResource* resource, IfParam* if_param) {
+static RetCode InitNewSharedResource(const utils::SharedResource* resource, utils::SharedResource* new_resource,
+                                     vector<unique_ptr<EngineImpl>>* engines) {
+    for (auto x = resource->engines.begin(); x != resource->engines.end(); ++x) {
+        auto e = (*x)->Create();
+        if (!e) {
+            LOG(ERROR) << "create instance of engine[" << (*x)->GetName() << "] failed.";
+            return RC_OTHER_ERROR;
+        }
+        engines->emplace_back(unique_ptr<EngineImpl>(e));
+        new_resource->engines.push_back(e);
+    }
+    new_resource->graph_partitioner = resource->graph_partitioner;
+    return RC_SUCCESS;
+}
+
+RetCode IfOp::Init(const utils::SharedResource* resource, IfParam* if_param) {
     extra_inputs_of_then_graph_ = if_param->then_extra_input_indices_in_host_node;
     extra_inputs_of_else_graph_ = if_param->else_extra_input_indices_in_host_node;
 
-    auto status = utils::ProcessGraph(resource, &if_param->then_branch, &then_info_, &then_engines_);
+    utils::SharedResource new_then_resource;
+    auto status = InitNewSharedResource(resource, &new_then_resource, &then_engines_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "init SharedResource failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    status = utils::ProcessGraph(&new_then_resource, &if_param->then_branch, &then_info_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "ProcessGraph then_branch of kernel [" << node_->GetName()
                    << "] failed: " << GetRetCodeStr(status);
@@ -54,7 +76,14 @@ RetCode IfOp::Init(utils::SharedResource* resource, IfParam* if_param) {
         return status;
     }
 
-    status = utils::ProcessGraph(resource, &if_param->else_branch, &else_info_, &else_engines_);
+    utils::SharedResource new_else_resource;
+    status = InitNewSharedResource(resource, &new_else_resource, &else_engines_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "init SharedResource failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    status = utils::ProcessGraph(&new_else_resource, &if_param->else_branch, &else_info_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "ProcessGraph else_branch failed: " << GetRetCodeStr(status);
         return status;

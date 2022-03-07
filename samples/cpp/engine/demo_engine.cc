@@ -39,7 +39,7 @@ static RetCode FillKernels(const ir::Graph* graph, RuntimePartitionInfo* info) {
     return RC_SUCCESS;
 }
 
-RetCode DemoEngine::ProcessGraph(utils::SharedResource*, ir::Graph* graph, RuntimePartitionInfo* info) {
+RetCode DemoEngine::ProcessGraph(const utils::SharedResource*, ir::Graph* graph, RuntimePartitionInfo* info) {
     auto status = utils::LoadConstants(*graph, &device_, &info->constants);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "FillConstants failed: " << GetRetCodeStr(status);

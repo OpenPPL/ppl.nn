@@ -33,8 +33,8 @@ struct SharedResource;
 
 namespace ppl { namespace nn { namespace riscv {
 
-struct OptKernelOptions {
-    utils::SharedResource* resource = nullptr;
+struct OptKernelOptions final {
+    const utils::SharedResource* resource = nullptr;
     ir::GraphData* graph_data = nullptr;
     ir::GraphTopo* graph_topo = nullptr;
     RiscvDevice* device = nullptr;

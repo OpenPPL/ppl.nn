@@ -35,8 +35,8 @@ struct SharedResource;
 
 namespace ppl { namespace nn { namespace arm {
 
-struct OptKernelOptions {
-    utils::SharedResource* resource = nullptr;
+struct OptKernelOptions final {
+    const utils::SharedResource* resource = nullptr;
     ir::GraphData* graph_data = nullptr;
     ir::GraphTopo* graph_topo = nullptr;
     ArmDevice* device = nullptr;

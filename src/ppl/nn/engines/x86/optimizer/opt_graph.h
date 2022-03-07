@@ -31,7 +31,7 @@ namespace ppl { namespace nn { namespace x86 {
 class OptGraph final {
 public:
     OptGraph() : tensor_getter_(&tensor_impls_) {}
-    ppl::common::RetCode Init(ir::Graph*, utils::SharedResource*, RuntimePartitionInfo*);
+    ppl::common::RetCode Init(const utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*);
     ppl::common::RetCode DoOptimize(X86Device*);
 
 private:
@@ -41,7 +41,7 @@ private:
     ppl::common::RetCode TryToInferDims(X86Device* device);
 
 private:
-    utils::SharedResource* resource_ = nullptr;
+    const utils::SharedResource* resource_ = nullptr;
     ir::Graph* graph_ = nullptr;
     RuntimePartitionInfo* info_ = nullptr;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>> tensor_impls_;
