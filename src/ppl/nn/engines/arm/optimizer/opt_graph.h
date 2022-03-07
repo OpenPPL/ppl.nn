@@ -31,7 +31,7 @@ namespace ppl { namespace nn { namespace arm {
 class OptGraph final {
 public:
     OptGraph() : tensor_getter_(&tensor_impls_) {}
-    ppl::common::RetCode Init(ir::Graph*, utils::SharedResource*, RuntimePartitionInfo*, ArmEngineOptions*);
+    ppl::common::RetCode Init(const utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*, ArmEngineOptions*);
     ppl::common::RetCode DoOptimize(ArmDevice*);
 
 private:
@@ -39,7 +39,8 @@ private:
     ppl::common::RetCode InitTensorImpls();
     ppl::common::RetCode AddReorderOp(const OptKernelOptions& options, const edgeid_t& edge_id, const nodeid_t& node_id,
                                       const int32_t& reorder_type, const ppl::common::dataformat_t& reorder_in_format,
-                                      const ppl::common::dataformat_t& reorder_out_format, const ppl::common::datatype_t& reorder_in_type,
+                                      const ppl::common::dataformat_t& reorder_out_format,
+                                      const ppl::common::datatype_t& reorder_in_type,
                                       const ppl::common::datatype_t& reorder_out_type);
     ppl::common::RetCode StitchGraph(const OptKernelOptions& options);
     ppl::common::RetCode TryToInferType(ArmDevice* device);
@@ -49,7 +50,7 @@ private:
                                             ArmOptKernel** kernel);
 
 private:
-    utils::SharedResource* resource_ = nullptr;
+    const utils::SharedResource* resource_ = nullptr;
     ir::Graph* graph_ = nullptr;
     RuntimePartitionInfo* info_ = nullptr;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>> tensor_impls_;
@@ -57,6 +58,6 @@ private:
     TensorGetter tensor_getter_;
 };
 
-}}} // namespace ppl::nn::ARM
+}}} // namespace ppl::nn::arm
 
 #endif

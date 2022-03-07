@@ -32,8 +32,21 @@ LoopOp::~LoopOp() {
     engines_.clear();
 }
 
-RetCode LoopOp::Init(utils::SharedResource* resource, LoopParam* loop_param, LoopConcatOutputFunc concat_output_func) {
-    auto status = utils::ProcessGraph(resource, &loop_param->graph, &graph_info_, &engines_);
+RetCode LoopOp::Init(const utils::SharedResource* resource, LoopParam* loop_param,
+                     LoopConcatOutputFunc concat_output_func) {
+    utils::SharedResource new_resource;
+    for (auto x = resource->engines.begin(); x != resource->engines.end(); ++x) {
+        auto e = (*x)->Create();
+        if (!e) {
+            LOG(ERROR) << "create instance of engine[" << (*x)->GetName() << "] failed.";
+            return RC_OTHER_ERROR;
+        }
+        engines_.emplace_back(unique_ptr<EngineImpl>(e));
+        new_resource.engines.push_back(e);
+    }
+    new_resource.graph_partitioner = resource->graph_partitioner;
+
+    auto status = utils::ProcessGraph(&new_resource, &loop_param->graph, &graph_info_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "ProcessGraph failed: " << GetRetCodeStr(status);
         return status;

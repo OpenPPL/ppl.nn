@@ -77,7 +77,7 @@ RetCode OptGraph::InitTensorImpls() {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::Init(ir::Graph* graph, utils::SharedResource* resource, RuntimePartitionInfo* info,
+RetCode OptGraph::Init(const utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info,
                        RiscvEngineOptions* options) {
     resource_ = resource;
     graph_ = graph;

@@ -41,9 +41,9 @@ struct SharedResource;
 
 namespace ppl { namespace nn { namespace cuda {
 
-struct OptKernelOptions {
-    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, utils::SharedResource* resource, CudaArgs* args,
-                     CompileInfo* compile_set, CudaDevice* device,
+struct OptKernelOptions final {
+    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* resource,
+                     CudaArgs* args, CompileInfo* compile_set, CudaDevice* device,
                      std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors, std::vector<CudaTensorQuant>* quants,
                      std::map<std::string, CudaArgs::AlgoSelects>* algos)
         : graph(graph)
@@ -56,17 +56,17 @@ struct OptKernelOptions {
         , quants(quants)
         , algos(algos) {}
 
-    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, utils::SharedResource* resource,
+    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* resource,
                      std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors)
         : graph(graph), info(info), resource(resource), tensors(tensors) {}
-    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, utils::SharedResource* resource, CudaDevice* device,
-                     CUDAModuleManager* manager)
+    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* resource,
+                     CudaDevice* device, CUDAModuleManager* manager)
         : graph(graph), info(info), resource(resource), device(device), cuda_module_manager(manager) {}
-    OptKernelOptions(ir::Graph* graph, utils::SharedResource* resource) : graph(graph), resource(resource) {}
+    OptKernelOptions(ir::Graph* graph, const utils::SharedResource* resource) : graph(graph), resource(resource) {}
 
     ir::Graph* graph;
     RuntimePartitionInfo* info;
-    utils::SharedResource* resource;
+    const utils::SharedResource* resource;
     CudaArgs* args;
     CompileInfo* compile_set;
     CudaDevice* device;

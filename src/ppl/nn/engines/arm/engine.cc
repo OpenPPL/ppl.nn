@@ -88,9 +88,9 @@ bool ArmEngine::Supports(const ir::Node* node) const {
     return (OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version) != nullptr);
 }
 
-RetCode ArmEngine::DoOptimize(ir::Graph* graph, utils::SharedResource* resource, RuntimePartitionInfo* info) {
+RetCode ArmEngine::DoOptimize(const utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
     OptGraph opt_graph;
-    auto status = opt_graph.Init(graph, resource, info, &options_);
+    auto status = opt_graph.Init(resource, graph, info, &options_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init OptGraph failed: " << GetRetCodeStr(status);
         return status;
@@ -104,8 +104,8 @@ RetCode ArmEngine::DoOptimize(ir::Graph* graph, utils::SharedResource* resource,
     return RC_SUCCESS;
 }
 
-RetCode ArmEngine::ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
-    auto status = DoOptimize(graph, resource, info);
+RetCode ArmEngine::ProcessGraph(const utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
+    auto status = DoOptimize(resource, graph, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "DoOptimize failed: " << GetRetCodeStr(status);
         return status;

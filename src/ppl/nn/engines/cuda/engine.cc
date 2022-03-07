@@ -65,8 +65,8 @@ bool CudaEngine::Supports(const ir::Node* node) const {
     return (OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version) != nullptr);
 }
 
-RetCode CudaEngine::DoOptimize(ir::Graph* graph, utils::SharedResource* resource, RuntimePartitionInfo* info) {
-    OptGraph opt_graph(graph, info, resource, &cuda_flags_, &compile_set_);
+RetCode CudaEngine::DoOptimize(const utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
+    OptGraph opt_graph(resource, graph, info, &cuda_flags_, &compile_set_);
     auto status = opt_graph.DoOptimize(&device_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "OptGraph DoOptimeize failed: " << GetRetCodeStr(status);
@@ -74,13 +74,13 @@ RetCode CudaEngine::DoOptimize(ir::Graph* graph, utils::SharedResource* resource
     }
 
 #ifdef PPLNN_ENABLE_CUDA_JIT
-    status = CompileCudaModule(graph, resource, info);
+    status = CompileCudaModule(resource, graph, info);
 #endif
 
     return RC_SUCCESS;
 }
 
-ppl::common::RetCode CudaEngine::CompileCudaModule(ir::Graph* graph, utils::SharedResource* resource,
+ppl::common::RetCode CudaEngine::CompileCudaModule(const utils::SharedResource* resource, ir::Graph* graph,
                                                    RuntimePartitionInfo* info) {
     auto op_compiler_manager = OpCompilerManager::Instance();
     for (auto it = compile_set_.begin(); it != compile_set_.end(); it++) {
@@ -99,8 +99,8 @@ ppl::common::RetCode CudaEngine::CompileCudaModule(ir::Graph* graph, utils::Shar
     return RC_SUCCESS;
 }
 
-RetCode CudaEngine::ProcessGraph(utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
-    auto status = DoOptimize(graph, resource, info);
+RetCode CudaEngine::ProcessGraph(const utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
+    auto status = DoOptimize(resource, graph, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "DoOptimize failed: " << GetRetCodeStr(status);
         return status;

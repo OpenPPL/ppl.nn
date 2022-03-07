@@ -34,8 +34,8 @@ namespace ppl { namespace nn { namespace cuda {
 
 class OptGraph final {
 public:
-    OptGraph(ir::Graph* graph, RuntimePartitionInfo* info, utils::SharedResource* resource, CudaArgs* args, CompileInfo* compile_set)
-        : graph_(graph), info_(info), resource_(resource), args_(args), compile_set_(compile_set), tensor_getter_(&tensor_impls_) {}
+    OptGraph(const utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info, CudaArgs* args, CompileInfo* compile_set)
+        : resource_(resource), graph_(graph), info_(info), args_(args), compile_set_(compile_set), tensor_getter_(&tensor_impls_) {}
     ~OptGraph();
 
     ppl::common::RetCode DoOptimize(CudaDevice*);
@@ -54,9 +54,9 @@ private:
     void UpdateTopologicalSort();
 
 private:
+    const utils::SharedResource* resource_;
     ir::Graph* graph_;
     RuntimePartitionInfo* info_;
-    utils::SharedResource* resource_;
     CudaArgs* args_;
     CompileInfo* compile_set_;
     std::set<nodeid_t> illegal_dims_;

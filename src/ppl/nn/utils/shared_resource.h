@@ -25,7 +25,7 @@
 
 namespace ppl { namespace nn { namespace utils {
 
-struct SharedResource {
+struct SharedResource final {
     std::vector<EngineImpl*> engines; // engines are allocated/freed by the caller
     std::shared_ptr<GraphPartitioner> graph_partitioner;
 };
