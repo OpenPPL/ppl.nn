@@ -31,6 +31,10 @@
 #include "rapidjson/document.h"
 #include "rapidjson/error/error.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/engines/cuda/macros.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 
@@ -121,8 +125,12 @@ EngineImpl* CudaEngine::Create() {
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
+static inline uint64_t Align(uint64_t v, uint64_t alignment) {
+    return (v + alignment - 1) & (~(alignment - 1));
+}
+
 RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, RuntimeConstantInfo>* eid2info) {
-    uint64_t total_bytes = visitor.CalcTotalBytes();
+    uint64_t total_bytes = visitor.CalcTotalBytes(CUDA_DEFAULT_ALIGNMENT);
     if (total_bytes == 0) {
         return RC_SUCCESS;
     }
@@ -154,7 +162,7 @@ RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, 
             LOG(ERROR) << "constant of id[" << eid << "] already exists.";
             return RC_EXISTS;
         }
-        offset += size;
+        offset += Align(size, CUDA_DEFAULT_ALIGNMENT);
         return RC_SUCCESS;
     });
 
