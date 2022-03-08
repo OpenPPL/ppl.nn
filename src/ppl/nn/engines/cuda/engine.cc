@@ -129,7 +129,7 @@ static inline uint64_t Align(uint64_t v, uint64_t alignment) {
     return (v + alignment - 1) & (~(alignment - 1));
 }
 
-RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, RuntimeConstantInfo>* eid2info) {
+RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, BufferInfo>* eid2info) {
     uint64_t total_bytes = visitor.CalcTotalBytes(CUDA_DEFAULT_ALIGNMENT);
     if (total_bytes == 0) {
         return RC_SUCCESS;
@@ -154,9 +154,8 @@ RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, 
             return status;
         }
 
-        RuntimeConstantInfo info;
+        BufferInfo info;
         info.SetBuffer(buf, dev);
-        info.Reshape(shape);
         auto ret_pair = eid2info->emplace(eid, std::move(info));
         if (!ret_pair.second) {
             LOG(ERROR) << "constant of id[" << eid << "] already exists.";

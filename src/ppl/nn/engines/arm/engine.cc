@@ -125,7 +125,7 @@ EngineImpl* ArmEngine::Create() {
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-RetCode ArmEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, RuntimeConstantInfo>* eid2info) {
+RetCode ArmEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, BufferInfo>* eid2info) {
     return utils::LoadConstants(visitor, &device_, eid2info);
 }
 

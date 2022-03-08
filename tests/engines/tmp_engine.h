@@ -54,7 +54,7 @@ public:
         return new TmpEngine();
     }
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, RuntimeConstantInfo>*) override {
+    ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override {
         return ppl::common::RC_SUCCESS;
     }
     OptKernel* CreateOptKernel(const ir::Node* node) const override {
@@ -103,7 +103,7 @@ public:
         return new TmpEngine1();
     }
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, RuntimeConstantInfo>*) override {
+    ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override {
         return ppl::common::RC_SUCCESS;
     }
     OptKernel* CreateOptKernel(const ir::Node* node) const override {
@@ -151,7 +151,7 @@ public:
         return new TmpEngine2();
     }
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, RuntimeConstantInfo>*) override {
+    ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override {
         return ppl::common::RC_SUCCESS;
     }
     OptKernel* CreateOptKernel(const ir::Node* node) const override {
@@ -199,7 +199,7 @@ public:
         return new TmpEngine3();
     }
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, RuntimeConstantInfo>*) override {
+    ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override {
         return ppl::common::RC_SUCCESS;
     }
     OptKernel* CreateOptKernel(const ir::Node* node) const override {

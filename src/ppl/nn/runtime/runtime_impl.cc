@@ -212,9 +212,15 @@ static RetCode InitRuntimeGraphResourceConstants(const ir::GraphTopo* topo, cons
 
             auto ret_pair = tensors->insert(make_pair(eid, TensorImpl(edge, TENSORTYPE_RESERVED)));
             if (ret_pair.second) {
+                auto shape_ref = info.shapes.find(eid);
+                if (shape_ref == info.shapes.end()) {
+                    LOG(ERROR) << "cannot find shape of constant[" << edge->GetName() << "]";
+                    return RC_NOT_FOUND;
+                }
+
                 auto tensor = &ret_pair.first->second;
                 tensor->SetBuffer(c->second.GetBufferDesc(), c->second.GetDevice());
-                *tensor->GetShape() = *c->second.GetShape();
+                *tensor->GetShape() = shape_ref->second;
                 graph->edgeid2object[eid] = tensor;
             }
         }
