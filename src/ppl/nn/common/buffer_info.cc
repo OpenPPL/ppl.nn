@@ -15,29 +15,28 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/common/tensor_buffer_info.h"
+#include "ppl/nn/common/buffer_info.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
 
 namespace ppl { namespace nn {
 
-TensorBufferInfo::~TensorBufferInfo() {
+BufferInfo::~BufferInfo() {
     FreeBuffer();
 }
 
-TensorBufferInfo::TensorBufferInfo(TensorBufferInfo&& info) {
+BufferInfo::BufferInfo(BufferInfo&& info) {
     is_buffer_owner_ = info.is_buffer_owner_;
     buffer_ = info.buffer_;
     device_ = info.device_;
-    shape_ = std::move(info.shape_);
 
     info.buffer_.addr = nullptr;
     info.device_ = nullptr;
     info.is_buffer_owner_ = false;
 }
 
-TensorBufferInfo& TensorBufferInfo::operator=(TensorBufferInfo&& info) {
+BufferInfo& BufferInfo::operator=(BufferInfo&& info) {
     if (is_buffer_owner_ && device_) {
         device_->Free(&buffer_);
     }
@@ -45,7 +44,6 @@ TensorBufferInfo& TensorBufferInfo::operator=(TensorBufferInfo&& info) {
     is_buffer_owner_ = info.is_buffer_owner_;
     buffer_ = info.buffer_;
     device_ = info.device_;
-    shape_ = std::move(info.shape_);
 
     info.buffer_.addr = nullptr;
     info.device_ = nullptr;
@@ -54,9 +52,9 @@ TensorBufferInfo& TensorBufferInfo::operator=(TensorBufferInfo&& info) {
     return *this;
 }
 
-RetCode TensorBufferInfo::SetDevice(Device* dev) {
+RetCode BufferInfo::SetDevice(Device* dev) {
     if (buffer_.addr) {
-        LOG(ERROR) << "TensorBufferInfo::SetDevice() failed: buffer is not empty";
+        LOG(ERROR) << "BufferInfo::SetDevice() failed: buffer is not empty";
         return RC_PERMISSION_DENIED;
     }
     if (!dev) {
@@ -68,7 +66,7 @@ RetCode TensorBufferInfo::SetDevice(Device* dev) {
     return RC_SUCCESS;
 }
 
-void TensorBufferInfo::SetBuffer(const BufferDesc& buf, Device* device, bool is_buffer_owner) {
+void BufferInfo::SetBuffer(const BufferDesc& buf, Device* device, bool is_buffer_owner) {
     if (is_buffer_owner_ && device_) {
         device_->Free(&buffer_);
     }
@@ -81,7 +79,7 @@ void TensorBufferInfo::SetBuffer(const BufferDesc& buf, Device* device, bool is_
     is_buffer_owner_ = is_buffer_owner;
 }
 
-RetCode TensorBufferInfo::ReallocBuffer() {
+RetCode BufferInfo::ReallocBuffer(const TensorShape& shape) {
     if (!device_) {
         LOG(ERROR) << "ReallocBuffer() failed: device not set.";
         return RC_PERMISSION_DENIED;
@@ -91,9 +89,9 @@ RetCode TensorBufferInfo::ReallocBuffer() {
         buffer_.addr = nullptr;
     }
 
-    auto status = device_->Realloc(shape_, &buffer_);
+    auto status = device_->Realloc(shape, &buffer_);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "Realloc [" << shape_.GetBytesIncludingPadding() << "] bytes failed: " << GetRetCodeStr(status);
+        LOG(ERROR) << "Realloc [" << shape.GetBytesIncludingPadding() << "] bytes failed: " << GetRetCodeStr(status);
         return status;
     }
 
@@ -102,14 +100,14 @@ RetCode TensorBufferInfo::ReallocBuffer() {
     return RC_SUCCESS;
 }
 
-BufferDesc TensorBufferInfo::DetachBuffer() {
+BufferDesc BufferInfo::DetachBuffer() {
     auto ret = buffer_;
     buffer_.addr = nullptr;
     is_buffer_owner_ = false;
     return ret;
 }
 
-void TensorBufferInfo::FreeBuffer() {
+void BufferInfo::FreeBuffer() {
     if (is_buffer_owner_ && device_) {
         device_->Free(&buffer_);
         is_buffer_owner_ = false;
