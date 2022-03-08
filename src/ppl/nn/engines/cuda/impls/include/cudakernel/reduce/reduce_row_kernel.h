@@ -88,15 +88,19 @@ __inline __device__ void ppl_reduce_row_li(Operator op, PPLReduceDimDes des, Red
     block_reduce_row<T, Operator, ReduceSize>(op, shared_data, val);
     __syncthreads();
     if (MultiBlock) {
-        if (param == ReduceMean) {
-            shared_data[0] = Math<acc_type, dst_type, acc_type>::div(shared_data[0], (long long)des.n_reduce);
+        if (threadIdx.x == 0 && threadIdx.y == 0) {
+            if (param == ReduceMean) {
+                shared_data[0] = Math<acc_type, dst_type, acc_type>::div(shared_data[0], (long long)des.n_reduce);
+            }
+            PPLAtomicWrite<dst_type, Operator>(op.dst + blockIdx.x, static_cast<dst_type>(shared_data[0]), op);
         }
-        PPLAtomicWrite<dst_type, Operator>(op.dst + blockIdx.x, static_cast<dst_type>(shared_data[0]), op);
     } else {
-        if (param == ReduceMean) {
-            shared_data[0] = Math<acc_type, dst_type, acc_type>::div(shared_data[0], (long long)des.n_reduce);
+        if (threadIdx.x == 0 && threadIdx.y == 0) {
+            if (param == ReduceMean) {
+                shared_data[0] = Math<acc_type, dst_type, acc_type>::div(shared_data[0], (long long)des.n_reduce);
+            }
+            op.out(blockIdx.x, shared_data[0]);
         }
-        op.out(blockIdx.x, shared_data[0]);
     }
 }
 
