@@ -136,6 +136,7 @@ static RetCode ParseGraphDataShapes(const GraphData* fb_data, map<edgeid_t, Tens
         for (uint32_t i = 0; i < fb_shape->dims()->size(); ++i) {
             shape.SetDim(i, fb_shape->dims()->Get(i));
         }
+        shape.CalcPadding();
     }
     return RC_SUCCESS;
 }
