@@ -32,7 +32,7 @@ using namespace ppl::nn::common;
 namespace ppl { namespace nn { namespace cuda {
 
 int GetRelueType(const std::string& name) {
-    if (name == "Relu")
+    if (name == "Relu" || name == "ReLU")
         return 0;
     if (name == "Clip")
         return 1;
@@ -167,7 +167,8 @@ RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* device, con
         fuse_index++;
     }
 
-    if (fuse_index < fuse_size && fuse_info.types[fuse_index] == "Add") {
+    if (fuse_index < fuse_size && 
+        (fuse_info.types[fuse_index] == "Add" || fuse_info.types[fuse_index] == "Eltwise")) {
         fuse_param.has_elt = true;
         uint32_t elt_input = fuse_info.input_ind[fuse_index];
         fuse_param.pre_data = info->GetInput<TensorImpl>(elt_input)->GetBufferPtr();

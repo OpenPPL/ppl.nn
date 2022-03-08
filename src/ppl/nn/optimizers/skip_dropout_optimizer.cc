@@ -34,7 +34,7 @@ inline bool IsGraphOutput(const ir::Graph* graph, edgeid_t edge_id) {
 RetCode SkipDropoutOptimizer::Optimize(ir::Graph* graph) const {
     for(auto it = graph->topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
         auto node = it->Get();
-        if(node->GetType().domain.empty() && node->GetType().name == "Dropout") {
+        if(node->GetType().name == "Dropout") {
             auto input_edge = graph->topo->GetEdgeById(node->GetInput(0));
             if(input_edge->CalcConsumerCount() != 1 || IsGraphOutput(graph, input_edge->GetId())) {
                 continue;

@@ -28,6 +28,12 @@ using namespace ppl::nn::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
+    auto status = GenericLoadParam<ChannelShuffleParam>(options, &param_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
