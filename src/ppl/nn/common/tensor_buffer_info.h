@@ -19,56 +19,55 @@
 #define _ST_HPC_PPL_NN_COMMON_TENSOR_BUFFER_INFO_H_
 
 #include "ppl/nn/common/tensor_shape.h"
-#include "ppl/nn/common/device.h"
+#include "ppl/nn/common/buffer_info.h"
 
 namespace ppl { namespace nn {
 
+/** refer to `BufferInfo` for API descriptions */
 class TensorBufferInfo final {
 public:
-    TensorBufferInfo() : is_buffer_owner_(false), device_(nullptr) {}
-    TensorBufferInfo(TensorBufferInfo&&);
-    TensorBufferInfo& operator=(TensorBufferInfo&&);
-    ~TensorBufferInfo();
+    TensorBufferInfo() {}
+    TensorBufferInfo(TensorBufferInfo&&) = default;
+    TensorBufferInfo& operator=(TensorBufferInfo&&) = default;
 
     bool IsBufferOwner() const {
-        return is_buffer_owner_;
+        return info_.IsBufferOwner();
     }
 
-    /**
-       @brief set device used to manage buffer of this tensor
-       @note fails when buffer_.addr is not null
-    */
-    ppl::common::RetCode SetDevice(Device* dev);
+    ppl::common::RetCode SetDevice(Device* dev) {
+        return info_.SetDevice(dev);
+    }
 
     Device* GetDevice() const {
-        return device_;
+        return info_.GetDevice();
     }
 
-    /**
-       @brief set a buffer `buf` allocated by `device` as this tensor's buffer.
-       old buffer of this tensor will be freed or detached.
-       @note if `device` is nullptr, make sure that `buf` can be read/written by device_.
-    */
-    void SetBuffer(const BufferDesc& buf, Device* device = nullptr, bool is_buffer_owner = false);
+    void SetBuffer(const BufferDesc& buf, Device* device = nullptr, bool is_buffer_owner = false) {
+        return info_.SetBuffer(buf, device, is_buffer_owner);
+    }
 
-    /** @brief returns buffer_ to caller and reset buffer_. */
-    BufferDesc DetachBuffer();
+    BufferDesc DetachBuffer() {
+        return info_.DetachBuffer();
+    }
 
-    /** @brief frees the internal buffer */
-    void FreeBuffer();
+    void FreeBuffer() {
+        info_.FreeBuffer();
+    }
 
-    ppl::common::RetCode ReallocBuffer();
+    ppl::common::RetCode ReallocBuffer() {
+        return info_.ReallocBuffer(shape_);
+    }
 
     template <typename T = void>
     T* GetBufferPtr() const {
-        return static_cast<T*>(buffer_.addr);
+        return info_.GetBufferPtr<T>();
     }
 
     BufferDesc& GetBufferDesc() {
-        return buffer_;
+        return info_.GetBufferDesc();
     }
     const BufferDesc& GetBufferDesc() const {
-        return buffer_;
+        return info_.GetBufferDesc();
     }
 
     TensorShape* GetShape() const {
@@ -80,9 +79,7 @@ public:
     }
 
 private:
-    bool is_buffer_owner_;
-    BufferDesc buffer_;
-    Device* device_;
+    BufferInfo info_;
     mutable TensorShape shape_;
 
 private:
