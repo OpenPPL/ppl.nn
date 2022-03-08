@@ -70,7 +70,7 @@ public:
     ppl::common::RetCode CompileCudaModule(const utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*);
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, RuntimeConstantInfo>*) override;
+    ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override;
     OptKernel* CreateOptKernel(const ir::Node*) const override;
     ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override {
         return ppl::common::RC_UNSUPPORTED;

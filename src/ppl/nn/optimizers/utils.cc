@@ -244,9 +244,10 @@ static RetCode CollectOps(const ir::GraphTopo* topo, map<nodeid_t, unique_ptr<Op
     return RC_SUCCESS;
 }
 
-static RetCode GenPartitionsInfo(const vector<pair<EngineImpl*, vector<nodeid_t>>>& partitions,
-                                 const utils::SharedResource* resource, ir::Graph* graph,
-                                 vector<RuntimeGraphInfo::Partition>* info_list) {
+static RetCode GenPartitionsInfoAndShapes(const vector<pair<EngineImpl*, vector<nodeid_t>>>& partitions,
+                                          const utils::SharedResource* resource, ir::Graph* graph,
+                                          map<edgeid_t, TensorShape>* shapes,
+                                          vector<RuntimeGraphInfo::Partition>* par_list) {
     for (uint32_t p = 0; p < partitions.size(); ++p) {
         auto& partition = partitions[p];
         ir::Graph sub_graph;
@@ -271,14 +272,26 @@ static RetCode GenPartitionsInfo(const vector<pair<EngineImpl*, vector<nodeid_t>
 
         RuntimeGraphInfo::Partition par_info;
         par_info.engine = engine;
-        par_info.constants = std::move(subgraph_info.constants);
 
         status = CollectOps(sub_graph.topo.get(), &subgraph_info.kernels, &par_info.ops);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "collect optkernels failed: " << GetRetCodeStr(status);
             return status;
         }
-        info_list->emplace_back(std::move(par_info));
+
+        for (auto c = subgraph_info.constants.begin(); c != subgraph_info.constants.end(); ++c) {
+            auto ret_pair = par_info.constants.insert(make_pair(c->first, BufferInfo()));
+            if (ret_pair.second) {
+                auto& src = c->second;
+                auto& dst = ret_pair.first->second;
+                dst.SetBuffer(src.GetBufferDesc(), src.GetDevice(), src.IsBufferOwner());
+                src.DetachBuffer();
+
+                shapes->insert(make_pair(c->first, *src.GetShape()));
+            }
+        }
+
+        par_list->emplace_back(std::move(par_info));
     }
 
     return RC_SUCCESS;
@@ -470,9 +483,9 @@ RetCode ProcessGraph(const utils::SharedResource* resource, ir::Graph* graph, Ru
       subgraphs MUST be created after inserting converter nodes. because subgraphs cannot visit
       edges that are directly inserted in the main graph.
     */
-    status = GenPartitionsInfo(partitions, resource, graph, &info->partitions);
+    status = GenPartitionsInfoAndShapes(partitions, resource, graph, &info->shapes, &info->partitions);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "GenPartitionsInfo failed:" << GetRetCodeStr(status);
+        LOG(ERROR) << "GenPartitionsInfoAndShapes failed:" << GetRetCodeStr(status);
         return status;
     }
 
@@ -484,12 +497,26 @@ RetCode ProcessGraph(const utils::SharedResource* resource, ir::Graph* graph, Ru
         info->partitions.emplace_back(std::move(par_info)); // one converter is treated as a single partition
     }
 
-    // save input shapes for runtime
+    // save necessary shapes for runtime
+    auto topo = graph->topo.get();
     auto graph_data = graph->data.get();
-    for (auto it = graph_data->shapes.begin(); it != graph_data->shapes.end(); ++it) {
-        TensorShape tensor_shape;
-        utils::IrShape2TensorShape(it->second, &tensor_shape);
-        info->shapes.insert(make_pair(it->first, tensor_shape));
+    for (uint32_t i = 0; i < topo->GetInputCount(); ++i) {
+        auto ref = graph_data->shapes.find(topo->GetInput(i));
+        if (ref != graph_data->shapes.end()) {
+            auto ret_pair = info->shapes.insert(make_pair(ref->first, TensorShape()));
+            if (ret_pair.second) {
+                utils::IrShape2TensorShape(ref->second, &ret_pair.first->second);
+            }
+        }
+    }
+    for (uint32_t i = 0; i < topo->GetOutputCount(); ++i) {
+        auto ref = graph_data->shapes.find(topo->GetOutput(i));
+        if (ref != graph_data->shapes.end()) {
+            auto ret_pair = info->shapes.insert(make_pair(ref->first, TensorShape()));
+            if (ret_pair.second) {
+                utils::IrShape2TensorShape(ref->second, &ret_pair.first->second);
+            }
+        }
     }
 
 #ifndef NDEBUG

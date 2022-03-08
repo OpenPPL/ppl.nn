@@ -137,7 +137,7 @@ EngineImpl* X86Engine::Create() {
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-RetCode X86Engine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, RuntimeConstantInfo>* eid2info) {
+RetCode X86Engine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, BufferInfo>* eid2info) {
     return utils::LoadConstants(visitor, &device_, eid2info);
 }
 

@@ -19,8 +19,8 @@
 #define _ST_HPC_PPL_NN_RUNTIME_RUNTIME_GRAPH_INFO_H_
 
 #include "ppl/nn/common/tensor_shape.h"
+#include "ppl/nn/common/buffer_info.h"
 #include "ppl/nn/runtime/opt_kernel.h"
-#include "ppl/nn/runtime/runtime_constant_info.h"
 #include <vector>
 #include <map>
 
@@ -39,7 +39,7 @@ struct RuntimeGraphInfo final {
 
         EngineImpl* engine = nullptr;
         std::vector<std::unique_ptr<OptKernel>> ops;
-        std::map<edgeid_t, RuntimeConstantInfo> constants;
+        std::map<edgeid_t, BufferInfo> constants;
     };
 
     void Clear() {

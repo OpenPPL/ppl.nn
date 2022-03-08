@@ -222,7 +222,7 @@ static pair<uint64_t, uint64_t> FindOrInsertData(const vector<uint8_t>& data, ve
 }
 
 static RetCode CreateFbConstants(FlatBufferBuilder* builder, const SerializationContext& ctx, const ir::GraphTopo* topo,
-                                 const map<edgeid_t, RuntimeConstantInfo>& constants,
+                                 const map<edgeid_t, BufferInfo>& constants, const map<edgeid_t, TensorShape>& shapes,
                                  Offset<Vector<Offset<pmx::Constant>>>* fb_constants, vector<uint8_t>* shared_data,
                                  vector<pair<uint64_t, uint64_t>>* shared_data_items) {
     const vector<edgeid_t>& eid2seq = ctx.eid2seq;
@@ -231,15 +231,21 @@ static RetCode CreateFbConstants(FlatBufferBuilder* builder, const Serialization
     constant_vec.reserve(constants.size());
 
     for (auto it = constants.begin(); it != constants.end(); ++it) {
-        const RuntimeConstantInfo& info = it->second;
+        auto edge = topo->GetEdgeById(it->first);
+        const BufferInfo& info = it->second;
 
         auto device = info.GetDevice();
         if (!device) {
             continue;
         }
 
-        const TensorShape* shape = info.GetShape();
-        auto bytes = shape->GetBytesIncludingPadding();
+        auto shape_ref = shapes.find(it->first);
+        if (shape_ref == shapes.end()) {
+            LOG(ERROR) << "cannot find shape of constant[" << edge->GetName() << "]";
+            return RC_NOT_FOUND;
+        }
+
+        auto bytes = shape_ref->second.GetBytesIncludingPadding();
         if (bytes == 0) {
             continue;
         }
@@ -247,7 +253,6 @@ static RetCode CreateFbConstants(FlatBufferBuilder* builder, const Serialization
         vector<uint8_t> data(bytes);
         auto status = device->CopyToHost(data.data(), info.GetBufferPtr(), bytes);
         if (status != RC_SUCCESS) {
-            auto edge = topo->GetEdgeById(it->first);
             LOG(ERROR) << "copy data of tensor[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
         }
@@ -297,9 +302,10 @@ static RetCode CreateFbPartitionNodes(FlatBufferBuilder* builder, const Serializ
 }
 
 static RetCode CreateFbPartition(FlatBufferBuilder* builder, const SerializationContext& ctx,
-                                 const RuntimeGraphInfo::Partition& partition, const ir::GraphTopo* topo,
-                                 const map<EngineImpl*, uint32_t>& engine2seq, Offset<pmx::Partition>* fb_partition,
-                                 vector<uint8_t>* shared_data, vector<pair<uint64_t, uint64_t>>* shared_data_items) {
+                                 const RuntimeGraphInfo::Partition& partition, const map<edgeid_t, TensorShape>& shapes,
+                                 const ir::GraphTopo* topo, const map<EngineImpl*, uint32_t>& engine2seq,
+                                 Offset<pmx::Partition>* fb_partition, vector<uint8_t>* shared_data,
+                                 vector<pair<uint64_t, uint64_t>>* shared_data_items) {
     auto ref = engine2seq.find(partition.engine);
     if (ref == engine2seq.end()) {
         LOG(ERROR) << "cannot find seq of engine[" << partition.engine->GetName() << "]";
@@ -314,7 +320,8 @@ static RetCode CreateFbPartition(FlatBufferBuilder* builder, const Serialization
     }
 
     Offset<Vector<Offset<pmx::Constant>>> fb_constants;
-    status = CreateFbConstants(builder, ctx, topo, partition.constants, &fb_constants, shared_data, shared_data_items);
+    status = CreateFbConstants(builder, ctx, topo, partition.constants, shapes, &fb_constants, shared_data,
+                               shared_data_items);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "create constants failed: " << GetRetCodeStr(status);
         return status;
@@ -325,7 +332,8 @@ static RetCode CreateFbPartition(FlatBufferBuilder* builder, const Serialization
 }
 
 static RetCode CreateFbPartitions(FlatBufferBuilder* builder, const SerializationContext& ctx,
-                                  const vector<RuntimeGraphInfo::Partition>& partitions, const ir::GraphTopo* topo,
+                                  const vector<RuntimeGraphInfo::Partition>& partitions,
+                                  const map<edgeid_t, TensorShape>& shapes, const ir::GraphTopo* topo,
                                   const map<EngineImpl*, uint32_t>& engine2seq,
                                   Offset<Vector<Offset<pmx::Partition>>>* fb_partitions, vector<uint8_t>* shared_data,
                                   vector<pair<uint64_t, uint64_t>>* shared_data_items) {
@@ -340,8 +348,8 @@ static RetCode CreateFbPartitions(FlatBufferBuilder* builder, const Serializatio
         }
 
         Offset<pmx::Partition> fb_partition;
-        auto status =
-            CreateFbPartition(builder, ctx, *p, topo, engine2seq, &fb_partition, shared_data, shared_data_items);
+        auto status = CreateFbPartition(builder, ctx, *p, shapes, topo, engine2seq, &fb_partition, shared_data,
+                                        shared_data_items);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "CreateFbPartition failed: " << GetRetCodeStr(status);
             return status;
@@ -367,8 +375,8 @@ static RetCode CreateFbGraphData(FlatBufferBuilder* builder, const Serialization
     vector<uint8_t> shared_data;
     vector<pair<uint64_t, uint64_t>> shared_data_items;
     Offset<Vector<Offset<pmx::Partition>>> fb_partitions;
-    status = CreateFbPartitions(builder, ctx, info.partitions, topo, engine2seq, &fb_partitions, &shared_data,
-                                &shared_data_items);
+    status = CreateFbPartitions(builder, ctx, info.partitions, info.shapes, topo, engine2seq, &fb_partitions,
+                                &shared_data, &shared_data_items);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "CreateFbPartition failed: " << GetRetCodeStr(status);
         return status;

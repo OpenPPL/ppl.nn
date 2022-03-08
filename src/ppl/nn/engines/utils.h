@@ -22,6 +22,7 @@
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/runtime/runtime_graph_info.h"
 #include "ppl/nn/common/constant_visitor.h"
+#include "ppl/nn/runtime/runtime_constant_info.h"
 #include <map>
 
 namespace ppl { namespace nn { namespace utils {
@@ -45,10 +46,13 @@ static inline ppl::common::RetCode CopyTensorBuffer(const TensorImpl& src, Tenso
 ppl::common::RetCode LoadConstants(const ir::Graph&, Device*, std::map<edgeid_t, RuntimeConstantInfo>*,
                                    const std::set<edgeid_t>* = nullptr);
 
-ppl::common::RetCode LoadConstants(const ConstantVisitor&, Device*, std::map<edgeid_t, RuntimeConstantInfo>*);
+ppl::common::RetCode LoadConstants(const ConstantVisitor&, Device*, std::map<edgeid_t, BufferInfo>*);
 
-ppl::common::RetCode GenericLoadConstant(edgeid_t eid, const void* data, uint64_t size, const TensorShape& shape,
-                                         Device* device, RuntimeConstantInfo* info, bool omit_data = false);
+ppl::common::RetCode GenericLoadConstant(const void* data, uint64_t size, const TensorShape& shape, Device* device,
+                                         RuntimeConstantInfo* info, bool omit_data = false);
+
+ppl::common::RetCode GenericLoadConstant(const void* data, uint64_t size, const TensorShape& shape, Device* device,
+                                         BufferInfo* info);
 
 void IrShape2TensorShape(const ir::Shape&, TensorShape*);
 

@@ -131,7 +131,7 @@ EngineImpl* RiscvEngine::Create() {
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-RetCode RiscvEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, RuntimeConstantInfo>* eid2info) {
+RetCode RiscvEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, BufferInfo>* eid2info) {
     return utils::LoadConstants(visitor, &device_, eid2info);
 }
 
