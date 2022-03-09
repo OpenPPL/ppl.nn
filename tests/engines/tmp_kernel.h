@@ -47,7 +47,7 @@ public:
     ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override {
         return ppl::common::RC_UNSUPPORTED;
     }
-    ppl::common::RetCode DeserializeData(const void*, uint64_t) override {
+    ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void*, uint64_t) override {
         return ppl::common::RC_UNSUPPORTED;
     }
 #endif
@@ -64,7 +64,7 @@ public:
     ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override {
         return ppl::common::RC_UNSUPPORTED;
     }
-    ppl::common::RetCode DeserializeData(const void*, uint64_t) override {
+    ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void*, uint64_t) override {
         return ppl::common::RC_UNSUPPORTED;
     }
 #endif

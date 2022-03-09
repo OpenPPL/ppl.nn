@@ -24,6 +24,7 @@
 #ifdef PPLNN_ENABLE_PMX_MODEL
 #include "ppl/nn/utils/data_stream.h"
 #include "ppl/nn/models/pmx/serialization_context.h"
+#include "ppl/nn/models/pmx/deserialization_context.h"
 #endif
 
 namespace ppl { namespace nn {
@@ -49,7 +50,7 @@ public:
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
     virtual ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const = 0;
-    virtual ppl::common::RetCode DeserializeData(const void*, uint64_t) = 0;
+    virtual ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void*, uint64_t) = 0;
 #endif
 
 private:
