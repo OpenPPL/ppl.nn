@@ -199,6 +199,7 @@ static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::Grap
 
         RuntimeGraphInfo::Partition partition;
         partition.engine = engine;
+        DeserializationContext dummy_ctx;
 
         for (auto y = fb_partition->nodes()->begin(); y != fb_partition->nodes()->end(); ++y) {
             auto fb_node = *y;
@@ -216,7 +217,7 @@ static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::Grap
                 return RC_NOT_FOUND;
             }
 
-            auto status = op->DeserializeData(fb_node->data()->data(), fb_node->data()->size());
+            auto status = op->DeserializeData(dummy_ctx, fb_node->data()->data(), fb_node->data()->size());
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "deserialize of op[" << node->GetName() << "] failed: " << GetRetCodeStr(status);
                 return status;
