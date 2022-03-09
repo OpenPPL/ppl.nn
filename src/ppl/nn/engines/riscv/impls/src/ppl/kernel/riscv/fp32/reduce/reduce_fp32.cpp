@@ -18,6 +18,8 @@
 #include <algorithm>
 #include "ppl/kernel/riscv/fp32/reduce/reduce_n4cx_fp32.h"
 #include "ppl/kernel/riscv/fp32/reduce/reduce_ndarray_fp32.h"
+#include "ppl/kernel/riscv/fp32/reduce/reduce_single_axis_ndarray_fp32.h"
+#include "ppl/common/log.h"
 
 namespace ppl { namespace kernel { namespace riscv {
 
@@ -55,6 +57,7 @@ ppl::common::RetCode reduce_fp32(
 
     if (src_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
         if (continous_reduce_axis) {
+            return reduce_single_axis_ndarray_fp32<op>(src, dst, src_shape, dst_shape, real_axes, num_axes);
         } else {
             return reduce_ndarray_fp32<op>(src, dst, src_shape, dst_shape, real_axes, num_axes);
         }

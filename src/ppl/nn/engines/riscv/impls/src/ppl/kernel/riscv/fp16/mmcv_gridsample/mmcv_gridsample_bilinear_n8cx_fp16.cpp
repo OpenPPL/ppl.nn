@@ -72,15 +72,14 @@ ppl::common::RetCode mmcv_gridsample_bilinear_n8cx_fp16_kernel(
                     float wgt_sw = n_l * e_l;
                     float wgt_se = n_l * w_l;
 
-                    float16xm1_t nw_val = within_bounds_2d(y_n, x_w, src_h, src_w) ? vlev_float16xm1(src_p + (y_n * src_w + x_w) * C_BLK(), vl) : vfzero;
-                    float16xm1_t ne_val = within_bounds_2d(y_n, x_e, src_h, src_w) ? vlev_float16xm1(src_p + (y_n * src_w + x_e) * C_BLK(), vl) : vfzero;
-                    float16xm1_t sw_val = within_bounds_2d(y_s, x_w, src_h, src_w) ? vlev_float16xm1(src_p + (y_s * src_w + x_w) * C_BLK(), vl) : vfzero;
-                    float16xm1_t se_val = within_bounds_2d(y_s, x_e, src_h, src_w) ? vlev_float16xm1(src_p + (y_s * src_w + x_e) * C_BLK(), vl) : vfzero;
+                    float16xm1_t nw_val = within_bounds_2d(y_n, x_w, src_h, src_w) ? vfmulvf_float16xm1(vlev_float16xm1(src_p + (y_n * src_w + x_w) * C_BLK(), vl), (__fp16)wgt_nw, vl) : vfzero;
+                    float16xm1_t ne_val = within_bounds_2d(y_n, x_e, src_h, src_w) ? vfmulvf_float16xm1(vlev_float16xm1(src_p + (y_n * src_w + x_e) * C_BLK(), vl), (__fp16)wgt_ne, vl) : vfzero;
+                    float16xm1_t sw_val = within_bounds_2d(y_s, x_w, src_h, src_w) ? vfmulvf_float16xm1(vlev_float16xm1(src_p + (y_s * src_w + x_w) * C_BLK(), vl), (__fp16)wgt_sw, vl) : vfzero;
+                    float16xm1_t se_val = within_bounds_2d(y_s, x_e, src_h, src_w) ? vfmulvf_float16xm1(vlev_float16xm1(src_p + (y_s * src_w + x_e) * C_BLK(), vl), (__fp16)wgt_se, vl) : vfzero;
 
-                    float16xm1_t out_val = vfmulvf_float16xm1(nw_val, (__fp16)wgt_nw, vl);
-                    out_val              = vfmaccvf_float16xm1(out_val, (__fp16)wgt_ne, ne_val, vl);
-                    out_val              = vfmaccvf_float16xm1(out_val, (__fp16)wgt_sw, sw_val, vl);
-                    out_val              = vfmaccvf_float16xm1(out_val, (__fp16)wgt_se, se_val, vl);
+                    float16xm1_t out_val = vfaddvv_float16xm1(nw_val, ne_val, vl);
+                    out_val              = vfaddvv_float16xm1(out_val, sw_val, vl);
+                    out_val              = vfaddvv_float16xm1(out_val, se_val, vl);
 
                     vsev_float16xm1(dst_p + (h * dst_w + w) * C_BLK(), out_val, vl);
                 }
