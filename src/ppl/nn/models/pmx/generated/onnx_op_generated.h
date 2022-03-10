@@ -486,31 +486,32 @@ enum OpParamType : uint8_t {
   OpParamType_CumSumParam = 7,
   OpParamType_DepthToSpaceParam = 8,
   OpParamType_FlattenParam = 9,
-  OpParamType_GatherNDParam = 10,
-  OpParamType_GemmParam = 11,
-  OpParamType_LeakyReluParam = 12,
-  OpParamType_LRNParam = 13,
-  OpParamType_LSTMParam = 14,
-  OpParamType_MaxUnpoolParam = 15,
-  OpParamType_NonMaxSuppressionParam = 16,
-  OpParamType_PadParam = 17,
-  OpParamType_PoolingParam = 18,
-  OpParamType_ReduceParam = 19,
-  OpParamType_ResizeParam = 20,
-  OpParamType_RoiAlignParam = 21,
-  OpParamType_ScatterElementsParam = 22,
-  OpParamType_SoftmaxParam = 23,
-  OpParamType_SplitParam = 24,
-  OpParamType_SplitToSequenceParam = 25,
-  OpParamType_SqueezeParam = 26,
-  OpParamType_TopKParam = 27,
-  OpParamType_TransposeParam = 28,
-  OpParamType_UnsqueezeParam = 29,
+  OpParamType_GatherParam = 10,
+  OpParamType_GatherNDParam = 11,
+  OpParamType_GemmParam = 12,
+  OpParamType_LeakyReluParam = 13,
+  OpParamType_LRNParam = 14,
+  OpParamType_LSTMParam = 15,
+  OpParamType_MaxUnpoolParam = 16,
+  OpParamType_NonMaxSuppressionParam = 17,
+  OpParamType_PadParam = 18,
+  OpParamType_PoolingParam = 19,
+  OpParamType_ReduceParam = 20,
+  OpParamType_ResizeParam = 21,
+  OpParamType_RoiAlignParam = 22,
+  OpParamType_ScatterElementsParam = 23,
+  OpParamType_SoftmaxParam = 24,
+  OpParamType_SplitParam = 25,
+  OpParamType_SplitToSequenceParam = 26,
+  OpParamType_SqueezeParam = 27,
+  OpParamType_TopKParam = 28,
+  OpParamType_TransposeParam = 29,
+  OpParamType_UnsqueezeParam = 30,
   OpParamType_MIN = OpParamType_NONE,
   OpParamType_MAX = OpParamType_UnsqueezeParam
 };
 
-inline const OpParamType (&EnumValuesOpParamType())[30] {
+inline const OpParamType (&EnumValuesOpParamType())[31] {
   static const OpParamType values[] = {
     OpParamType_NONE,
     OpParamType_ArgMaxParam,
@@ -522,6 +523,7 @@ inline const OpParamType (&EnumValuesOpParamType())[30] {
     OpParamType_CumSumParam,
     OpParamType_DepthToSpaceParam,
     OpParamType_FlattenParam,
+    OpParamType_GatherParam,
     OpParamType_GatherNDParam,
     OpParamType_GemmParam,
     OpParamType_LeakyReluParam,
@@ -547,7 +549,7 @@ inline const OpParamType (&EnumValuesOpParamType())[30] {
 }
 
 inline const char * const *EnumNamesOpParamType() {
-  static const char * const names[31] = {
+  static const char * const names[32] = {
     "NONE",
     "ArgMaxParam",
     "BatchNormalizationParam",
@@ -558,6 +560,7 @@ inline const char * const *EnumNamesOpParamType() {
     "CumSumParam",
     "DepthToSpaceParam",
     "FlattenParam",
+    "GatherParam",
     "GatherNDParam",
     "GemmParam",
     "LeakyReluParam",
@@ -627,6 +630,10 @@ template<> struct OpParamTypeTraits<ppl::nn::pmx::onnx::DepthToSpaceParam> {
 
 template<> struct OpParamTypeTraits<ppl::nn::pmx::onnx::FlattenParam> {
   static const OpParamType enum_value = OpParamType_FlattenParam;
+};
+
+template<> struct OpParamTypeTraits<ppl::nn::pmx::onnx::GatherParam> {
+  static const OpParamType enum_value = OpParamType_GatherParam;
 };
 
 template<> struct OpParamTypeTraits<ppl::nn::pmx::onnx::GatherNDParam> {
@@ -1775,14 +1782,14 @@ inline flatbuffers::Offset<MaxUnpoolParam> CreateMaxUnpoolParamDirect(
 struct NonMaxSuppressionParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef NonMaxSuppressionParamBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_CENTER_POINX_BOX = 4
+    VT_CENTER_POINT_BOX = 4
   };
-  int32_t center_poinx_box() const {
-    return GetField<int32_t>(VT_CENTER_POINX_BOX, 0);
+  int32_t center_point_box() const {
+    return GetField<int32_t>(VT_CENTER_POINT_BOX, 0);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_CENTER_POINX_BOX) &&
+           VerifyField<int32_t>(verifier, VT_CENTER_POINT_BOX) &&
            verifier.EndTable();
   }
 };
@@ -1791,8 +1798,8 @@ struct NonMaxSuppressionParamBuilder {
   typedef NonMaxSuppressionParam Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_center_poinx_box(int32_t center_poinx_box) {
-    fbb_.AddElement<int32_t>(NonMaxSuppressionParam::VT_CENTER_POINX_BOX, center_poinx_box, 0);
+  void add_center_point_box(int32_t center_point_box) {
+    fbb_.AddElement<int32_t>(NonMaxSuppressionParam::VT_CENTER_POINT_BOX, center_point_box, 0);
   }
   explicit NonMaxSuppressionParamBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1807,9 +1814,9 @@ struct NonMaxSuppressionParamBuilder {
 
 inline flatbuffers::Offset<NonMaxSuppressionParam> CreateNonMaxSuppressionParam(
     flatbuffers::FlatBufferBuilder &_fbb,
-    int32_t center_poinx_box = 0) {
+    int32_t center_point_box = 0) {
   NonMaxSuppressionParamBuilder builder_(_fbb);
-  builder_.add_center_poinx_box(center_poinx_box);
+  builder_.add_center_point_box(center_point_box);
   return builder_.Finish();
 }
 
@@ -2075,7 +2082,7 @@ struct ResizeParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_COORD_TRANS_MODE = 4,
     VT_CUBIC_COEFF_A = 6,
-    VT_EXCLUDE_OUTSIZE = 8,
+    VT_EXCLUDE_OUTSIDE = 8,
     VT_EXTRAPOLATION_VALUE = 10,
     VT_MODE = 12,
     VT_NEAREST_MODE = 14
@@ -2086,8 +2093,8 @@ struct ResizeParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   float cubic_coeff_a() const {
     return GetField<float>(VT_CUBIC_COEFF_A, -0.75f);
   }
-  int32_t exclude_outsize() const {
-    return GetField<int32_t>(VT_EXCLUDE_OUTSIZE, 0);
+  int32_t exclude_outside() const {
+    return GetField<int32_t>(VT_EXCLUDE_OUTSIDE, 0);
   }
   float extrapolation_value() const {
     return GetField<float>(VT_EXTRAPOLATION_VALUE, 0.0f);
@@ -2102,7 +2109,7 @@ struct ResizeParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_COORD_TRANS_MODE) &&
            VerifyField<float>(verifier, VT_CUBIC_COEFF_A) &&
-           VerifyField<int32_t>(verifier, VT_EXCLUDE_OUTSIZE) &&
+           VerifyField<int32_t>(verifier, VT_EXCLUDE_OUTSIDE) &&
            VerifyField<float>(verifier, VT_EXTRAPOLATION_VALUE) &&
            VerifyField<uint32_t>(verifier, VT_MODE) &&
            VerifyField<uint32_t>(verifier, VT_NEAREST_MODE) &&
@@ -2120,8 +2127,8 @@ struct ResizeParamBuilder {
   void add_cubic_coeff_a(float cubic_coeff_a) {
     fbb_.AddElement<float>(ResizeParam::VT_CUBIC_COEFF_A, cubic_coeff_a, -0.75f);
   }
-  void add_exclude_outsize(int32_t exclude_outsize) {
-    fbb_.AddElement<int32_t>(ResizeParam::VT_EXCLUDE_OUTSIZE, exclude_outsize, 0);
+  void add_exclude_outside(int32_t exclude_outside) {
+    fbb_.AddElement<int32_t>(ResizeParam::VT_EXCLUDE_OUTSIDE, exclude_outside, 0);
   }
   void add_extrapolation_value(float extrapolation_value) {
     fbb_.AddElement<float>(ResizeParam::VT_EXTRAPOLATION_VALUE, extrapolation_value, 0.0f);
@@ -2147,7 +2154,7 @@ inline flatbuffers::Offset<ResizeParam> CreateResizeParam(
     flatbuffers::FlatBufferBuilder &_fbb,
     ppl::nn::pmx::onnx::ResizeCoordTransMode coord_trans_mode = ppl::nn::pmx::onnx::ResizeCoordTransMode_HALF_PIXEL,
     float cubic_coeff_a = -0.75f,
-    int32_t exclude_outsize = 0,
+    int32_t exclude_outside = 0,
     float extrapolation_value = 0.0f,
     ppl::nn::pmx::onnx::ResizeMode mode = ppl::nn::pmx::onnx::ResizeMode_NEAREST,
     ppl::nn::pmx::onnx::ResizeNearestMode nearest_mode = ppl::nn::pmx::onnx::ResizeNearestMode_ROUND_PREFER_FLOOR) {
@@ -2155,7 +2162,7 @@ inline flatbuffers::Offset<ResizeParam> CreateResizeParam(
   builder_.add_nearest_mode(nearest_mode);
   builder_.add_mode(mode);
   builder_.add_extrapolation_value(extrapolation_value);
-  builder_.add_exclude_outsize(exclude_outsize);
+  builder_.add_exclude_outside(exclude_outside);
   builder_.add_cubic_coeff_a(cubic_coeff_a);
   builder_.add_coord_trans_mode(coord_trans_mode);
   return builder_.Finish();
@@ -2693,6 +2700,9 @@ struct OpParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const ppl::nn::pmx::onnx::FlattenParam *value_as_FlattenParam() const {
     return value_type() == ppl::nn::pmx::onnx::OpParamType_FlattenParam ? static_cast<const ppl::nn::pmx::onnx::FlattenParam *>(value()) : nullptr;
   }
+  const ppl::nn::pmx::onnx::GatherParam *value_as_GatherParam() const {
+    return value_type() == ppl::nn::pmx::onnx::OpParamType_GatherParam ? static_cast<const ppl::nn::pmx::onnx::GatherParam *>(value()) : nullptr;
+  }
   const ppl::nn::pmx::onnx::GatherNDParam *value_as_GatherNDParam() const {
     return value_type() == ppl::nn::pmx::onnx::OpParamType_GatherNDParam ? static_cast<const ppl::nn::pmx::onnx::GatherNDParam *>(value()) : nullptr;
   }
@@ -2801,6 +2811,10 @@ template<> inline const ppl::nn::pmx::onnx::DepthToSpaceParam *OpParam::value_as
 
 template<> inline const ppl::nn::pmx::onnx::FlattenParam *OpParam::value_as<ppl::nn::pmx::onnx::FlattenParam>() const {
   return value_as_FlattenParam();
+}
+
+template<> inline const ppl::nn::pmx::onnx::GatherParam *OpParam::value_as<ppl::nn::pmx::onnx::GatherParam>() const {
+  return value_as_GatherParam();
 }
 
 template<> inline const ppl::nn::pmx::onnx::GatherNDParam *OpParam::value_as<ppl::nn::pmx::onnx::GatherNDParam>() const {
@@ -2971,6 +2985,10 @@ inline bool VerifyOpParamType(flatbuffers::Verifier &verifier, const void *obj, 
     }
     case OpParamType_FlattenParam: {
       auto ptr = reinterpret_cast<const ppl::nn::pmx::onnx::FlattenParam *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case OpParamType_GatherParam: {
+      auto ptr = reinterpret_cast<const ppl::nn::pmx::onnx::GatherParam *>(obj);
       return verifier.VerifyTable(ptr);
     }
     case OpParamType_GatherNDParam: {
