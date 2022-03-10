@@ -129,7 +129,7 @@ table MaxUnpoolParam {
 }
 
 table NonMaxSuppressionParam {
-    center_poinx_box: int32 = 0;
+    center_point_box: int32 = 0;
 }
 
 enum PadMode : uint32 {
@@ -192,7 +192,7 @@ enum ResizeNearestMode : uint32 {
 table ResizeParam {
     coord_trans_mode: ResizeCoordTransMode;
     cubic_coeff_a: float32 = -0.75;
-    exclude_outsize: int32 = 0;
+    exclude_outside: int32 = 0;
     extrapolation_value: float32 = 0.0;
     mode: ResizeMode = NEAREST;
     nearest_mode: ResizeNearestMode = ROUND_PREFER_FLOOR;
@@ -257,6 +257,7 @@ union OpParamType {
     CumSumParam,
     DepthToSpaceParam,
     FlattenParam,
+    GatherParam,
     GatherNDParam,
     GemmParam,
     LeakyReluParam,
