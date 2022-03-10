@@ -186,6 +186,9 @@ RetCode ParseTensorProto(const ::onnx::TensorProto& pb_tensor, string* data, ir:
         } else if (pb_tensor.int32_data().size() > 0) { // bool may be stored in int32_data
             data->assign((const char*)pb_tensor.int32_data().data(), pb_tensor.int32_data().size() * sizeof(int32_t));
         }
+    } else if (onnx_data_type == ::onnx::TensorProto_DataType_INT8 ||
+               onnx_data_type == ::onnx::TensorProto_DataType_UINT8) {
+        *data = pb_tensor.raw_data();
     } else {
         auto onnx_pb_type = (::onnx::TensorProto_DataType)onnx_data_type;
         LOG(ERROR) << "unsupported onnx data type[" << ::onnx::TensorProto_DataType_Name(onnx_pb_type) << "] of tensor["
