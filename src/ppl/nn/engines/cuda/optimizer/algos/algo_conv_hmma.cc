@@ -96,7 +96,6 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
         PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
     }
 
-    return 0.0f;
     if (options.args->quick_select) {
         return 0.0f;
     }
