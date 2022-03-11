@@ -15,24 +15,29 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_COMMON_CONSTANT_VISITOR_H_
-#define _ST_HPC_PPL_NN_COMMON_CONSTANT_VISITOR_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_DATA_VISITOR_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_DATA_VISITOR_H_
 
-#include "ppl/nn/ir/edge.h"
-#include "ppl/nn/common/tensor_shape.h"
-#include <functional>
+#include "ppl/nn/common/data_visitor.h"
+#include "ppl/nn/runtime/tensor_impl.h"
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace cuda {
 
-class ConstantVisitor {
+class CudaDataVisitor final : public DataVisitor {
 public:
-    virtual ~ConstantVisitor() {}
-    /** @param alignment each constant should align to. MUST be power of 2 */
-    virtual uint64_t CalcTotalBytes(uint64_t alignment = 0) const = 0;
-    virtual ppl::common::RetCode ForEach(const std::function<ppl::common::RetCode(const ir::Edge*, const void*, uint64_t,
-                                                                                  const TensorShape&)>&) const = 0;
+    CudaDataVisitor(const std::map<std::string, TensorImpl>* n2c) : name2constant_(n2c) {}
+    Tensor* GetConstant(const char* name) const override {
+        auto ref = name2constant_->find(name);
+        if (ref == name2constant_->end()) {
+            return nullptr;
+        }
+        return const_cast<TensorImpl*>(&ref->second);
+    }
+
+private:
+    const std::map<std::string, TensorImpl>* name2constant_;
 };
 
-}} // namespace ppl::nn
+}}} // namespace ppl::nn::cuda
 
 #endif

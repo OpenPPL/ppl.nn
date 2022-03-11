@@ -182,7 +182,7 @@ RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, Runt
 
 RetCode LoadConstants(const ConstantVisitor& visitor, Device* dev, map<edgeid_t, BufferInfo>* eid2info) {
     return visitor.ForEach(
-        [eid2info, dev](edgeid_t eid, const void* data, uint64_t size, const TensorShape& shape) -> RetCode {
+        [eid2info, dev](const ir::Edge* edge, const void* data, uint64_t size, const TensorShape& shape) -> RetCode {
             BufferInfo info;
             auto status = utils::GenericLoadConstant(data, size, shape, dev, &info);
             if (status != RC_SUCCESS) {
@@ -190,9 +190,9 @@ RetCode LoadConstants(const ConstantVisitor& visitor, Device* dev, map<edgeid_t,
                 return status;
             }
 
-            auto ret_pair = eid2info->emplace(eid, std::move(info));
+            auto ret_pair = eid2info->emplace(edge->GetId(), std::move(info));
             if (!ret_pair.second) {
-                LOG(ERROR) << "constant of id[" << eid << "] already exists.";
+                LOG(ERROR) << "constant[" << edge->GetName() << "] already exists.";
                 return RC_EXISTS;
             }
             return RC_SUCCESS;

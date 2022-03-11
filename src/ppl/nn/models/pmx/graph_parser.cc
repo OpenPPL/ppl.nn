@@ -160,7 +160,8 @@ public:
         return total_bytes;
     }
 
-    RetCode ForEach(const function<RetCode(edgeid_t, const void*, uint64_t, const TensorShape&)>& f) const override {
+    RetCode ForEach(
+        const function<RetCode(const ir::Edge*, const void*, uint64_t, const TensorShape&)>& f) const override {
         for (auto y = fb_constants_->begin(); y != fb_constants_->end(); ++y) {
             auto fb_constant = *y;
             auto edge = topo_->GetEdgeById(fb_constant->edge_id());
@@ -171,8 +172,8 @@ public:
                 return RC_NOT_FOUND;
             }
 
-            auto status = f(fb_constant->edge_id(), shared_data_ + fb_constant->data_offset(),
-                            fb_constant->data_bytes(), shape_ref->second);
+            auto status =
+                f(edge, shared_data_ + fb_constant->data_offset(), fb_constant->data_bytes(), shape_ref->second);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "exec callback for constant[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
                 return status;

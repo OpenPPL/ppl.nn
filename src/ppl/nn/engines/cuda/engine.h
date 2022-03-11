@@ -27,6 +27,8 @@
 #include "ppl/nn/engines/cuda/cuda_options.h"
 #include "ppl/nn/engines/cuda/cuda_common_param.h"
 #include "ppl/nn/engines/cuda/engine_context.h"
+#include "ppl/nn/engines/cuda/cuda_data_visitor.h"
+#include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/quantization/quant_param_parser.h"
 #include "ppl/nn/engines/cuda/module/cuda_module.h"
 
@@ -59,7 +61,7 @@ struct CudaArgs {
 
 class CudaEngine final : public EngineImpl {
 public:
-    CudaEngine() : EngineImpl("cuda") {}
+    CudaEngine() : EngineImpl("cuda"), data_visitor_(&name2constant_) {}
     ~CudaEngine();
     ppl::common::RetCode Init(const CudaEngineOptions& options);
     ppl::common::RetCode Configure(uint32_t, ...) override;
@@ -96,6 +98,7 @@ private:
     static ppl::common::RetCode SetQuantInfo(CudaEngine*, va_list);
     static ppl::common::RetCode ExportAlgorithms(CudaEngine*, va_list);
     static ppl::common::RetCode ImportAlgorithms(CudaEngine*, va_list);
+    static ppl::common::RetCode GetDataVisitor(CudaEngine*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(CudaEngine*, va_list);
     static ConfHandlerFunc conf_handlers_[CUDA_CONF_MAX];
@@ -109,6 +112,10 @@ private:
 #endif
     CUDAModuleManager cuda_manager_;
     CompileInfo compile_set_;
+
+    /** for DataVisitor */
+    std::map<std::string, TensorImpl> name2constant_;
+    CudaDataVisitor data_visitor_;
 };
 
 }}} // namespace ppl::nn::cuda
