@@ -108,6 +108,17 @@ enum {
     */
     CUDA_CONF_IMPORT_ALGORITHMS,
 
+    /**
+       @param visitor a pointer
+
+       @note example:
+       @code{.cpp}
+       DataVisitor* visitor = nullptr;
+       cuda_engine->Configure(CUDA_CONF_GET_DATA_VISITOR, &visitor);
+       @endcode
+    */
+    CUDA_CONF_GET_DATA_VISITOR,
+
     /** max value */
     CUDA_CONF_MAX,
 };

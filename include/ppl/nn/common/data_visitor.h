@@ -15,22 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_COMMON_CONSTANT_VISITOR_H_
-#define _ST_HPC_PPL_NN_COMMON_CONSTANT_VISITOR_H_
+#ifndef _ST_HPC_PPL_NN_COMMON_DATA_VISITOR_H_
+#define _ST_HPC_PPL_NN_COMMON_DATA_VISITOR_H_
 
-#include "ppl/nn/ir/edge.h"
-#include "ppl/nn/common/tensor_shape.h"
-#include <functional>
+#include "ppl/nn/runtime/tensor.h"
 
 namespace ppl { namespace nn {
 
-class ConstantVisitor {
+class PPLNN_PUBLIC DataVisitor {
 public:
-    virtual ~ConstantVisitor() {}
-    /** @param alignment each constant should align to. MUST be power of 2 */
-    virtual uint64_t CalcTotalBytes(uint64_t alignment = 0) const = 0;
-    virtual ppl::common::RetCode ForEach(const std::function<ppl::common::RetCode(const ir::Edge*, const void*, uint64_t,
-                                                                                  const TensorShape&)>&) const = 0;
+    virtual ~DataVisitor() {}
+    virtual Tensor* GetConstant(const char* name) const = 0;
 };
 
 }} // namespace ppl::nn

@@ -19,6 +19,8 @@
 
 #include <stdarg.h>
 #include <algorithm>
+#include <fstream>
+#include <sstream>
 
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/engines/utils.h"
@@ -26,7 +28,7 @@
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/cuda/module/op_compile_manager.h"
-#include "ppl/nn/quantization/quant_param_parser.cc"
+#include "ppl/nn/quantization/quant_param_parser.h"
 #include "ppl/nn/utils/array.h"
 #include "rapidjson/document.h"
 #include "rapidjson/error/error.h"
@@ -110,11 +112,19 @@ RetCode CudaEngine::ProcessGraph(const utils::SharedResource* resource, ir::Grap
         return status;
     }
 
-    // load rest of constants that are not used by ops. e.g. `cond` of Loop
-    status = utils::LoadConstants(*graph, &device_, &info->constants);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "load constants failed: " << GetRetCodeStr(status);
-        return status;
+    // transfer constant buffer ownership to name2constant_
+    auto topo = graph->topo.get();
+    for (auto c = info->constants.begin(); c != info->constants.end(); ++c) {
+        auto edge = topo->GetEdgeById(c->first);
+        RuntimeConstantInfo& info = c->second;
+
+        TensorImpl t(edge, TENSORTYPE_RESERVED);
+        *t.GetShape() = *info.GetShape();
+        t.SetBuffer(info.GetBufferDesc(), info.GetDevice(), info.IsBufferOwner());
+
+        info.DetachBuffer();
+        info.SetBuffer(t.GetBufferDesc(), t.GetDevice()); // now `info` doesn't own the buffer
+        name2constant_.emplace(edge->GetName(), std::move(t));
     }
 
     return RC_SUCCESS;
@@ -142,25 +152,33 @@ RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, 
         return status;
     }
 
-    auto dev = &device_;
     uint64_t offset = 0;
-    status = visitor.ForEach([eid2info, dev, &block, &offset](edgeid_t eid, const void* data, uint64_t size,
-                                                              const TensorShape& shape) -> RetCode {
+    status = visitor.ForEach([this, eid2info, &block, &offset](const ir::Edge* edge, const void* data, uint64_t size,
+                                                               const TensorShape& shape) -> RetCode {
+        auto dev = &device_;
+
         BufferDesc buf;
         buf.addr = (char*)block.addr + offset;
         auto status = dev->CopyFromHost(&buf, data, shape);
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "copy constant data of eid[" << eid << "] failed: " << GetRetCodeStr(status);
+            LOG(ERROR) << "copy data of constant[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
         }
 
         BufferInfo info;
         info.SetBuffer(buf, dev);
-        auto ret_pair = eid2info->emplace(eid, std::move(info));
+        auto ret_pair = eid2info->emplace(edge->GetId(), std::move(info));
         if (!ret_pair.second) {
-            LOG(ERROR) << "constant of id[" << eid << "] already exists.";
+            LOG(ERROR) << "constant[" << edge->GetName() << "] already exists.";
             return RC_EXISTS;
         }
+
+        // save a copy in name2constant_ for DataVisitor
+        TensorImpl t(edge, TENSORTYPE_RESERVED);
+        t.SetBuffer(buf, dev);
+        *t.GetShape() = shape;
+        name2constant_.emplace(edge->GetName(), std::move(t));
+
         offset += Align(size, CUDA_DEFAULT_ALIGNMENT);
         return RC_SUCCESS;
     });
@@ -348,6 +366,12 @@ RetCode CudaEngine::ImportAlgorithms(CudaEngine* engine, va_list args) {
     return RC_SUCCESS;
 }
 
+RetCode CudaEngine::GetDataVisitor(CudaEngine* engine, va_list args) {
+    auto p_visitor = va_arg(args, DataVisitor**);
+    *p_visitor = &engine->data_visitor_;
+    return RC_SUCCESS;
+}
+
 CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetOutputFormat, // CUDA_CONF_SET_OUTPUT_DATA_FORMAT
     CudaEngine::SetOutputType, // CUDA_CONF_SET_OUTPUT_TYPE
@@ -357,6 +381,7 @@ CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetQuantInfo, // CUDA_CONF_SET_QUANT_INFO
     CudaEngine::ExportAlgorithms, // CUDA_CONF_EXPORT_ALGORITHMS
     CudaEngine::ImportAlgorithms, // CUDA_CONF_IMPORT_ALGORITHMS
+    CudaEngine::GetDataVisitor, // CUDA_CONF_GET_DATA_VISITOR
 };
 
 RetCode CudaEngine::Configure(uint32_t option, ...) {
