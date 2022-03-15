@@ -74,6 +74,16 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     conv_param_t temp_conv_param;
     fuse_param_t temp_fuse_param;
     temp_conv_param.in_num = attr_param_.param.transA ? shape_in0.GetDim(dim_count0-1) : shape_in0.GetDim(dim_count0-2);
+    int m_id = dim_count0 - 2;
+    if(temp_conv_param.in_num == 1){
+	int m_id = dim_count0 - 3;
+        while(m_id && shape_in0.GetDim(m_id)==1)    m_id--;
+        temp_conv_param.in_num = shape_in0.GetDim(m_id);
+    }
+    int batch = 1;
+    for(int i = 0; i < m_id; i++){
+        batch *= shape_in0.GetDim(i);
+    }
     temp_conv_param.num_chl = attr_param_.param.transB ? shape_in1.GetDim(dim_count1-1) : shape_in1.GetDim(dim_count1-2);
     temp_conv_param.num_flt = attr_param_.param.transB ? shape_in1.GetDim(dim_count1-2) : shape_in1.GetDim(dim_count1-1);
     temp_conv_param.in_height = 1;
@@ -99,6 +109,7 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
         attr_param_.extra_param.algo_info.splitk = algo_info->second.splitk;
         attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
         PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
+	attr_param_.extra_param.algo_info.gemm_batch = batch;
         return 0.0f;
     } else { // Give the default kernel
         if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
@@ -119,10 +130,6 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     }
 
     // Padding
-    auto batch = 1;
-    for(uint32_t i = 0; i < dim_count0-2; i++){
-        batch *= shape_in0.GetDim(i);
-    }
     auto K = shape_in0.GetDim(dim_count0-1);
     auto N = shape_in1.GetDim(dim_count1-1);
 

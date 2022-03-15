@@ -309,7 +309,7 @@ double PPLCUDABgemmJITSelectKernel(
 
     int size_x    = DivUp(conv_param.in_num * conv_param.out_height * conv_param.out_width, algo_param.tiles.m_cta);
     int size_y    = DivUp(num_flt_per_grp_pad, algo_param.tiles.n_cta);
-    int grid_size = size_x * size_y;
+    int grid_size = size_x * size_y * algo_param.gemm_batch;
 
     std::vector<std::string> knames;
     std::vector<algo_param_t> params;
@@ -396,11 +396,13 @@ double PPLCUDABgemmSelectKernel(
     if (input_shape->GetDim(dim_count0-1) != weight_shape->GetDim(dim_count1-2))
         return FLT_MAX;
     //FIXME Dim is 64 bit?
+    int m_id = dim_count0 - 2;
+    while(m_id && input_shape->GetDim(m_id)==1)    m_id--;
+    int M = input_shape->GetDim(m_id);
     uint64_t batch = 1;
-    for (uint32_t i = 0; i < input_shape->GetDimCount()-2; i++){
+    for (int i = 0; i < m_id; i++){
         batch *= input_shape->GetDim(i);
     }
-    int M     = input_shape->GetDim(dim_count0-2);
     int K_pad = input_shape->GetDim(dim_count0-1);
     int N     = weight_shape->GetDim(dim_count1-1);
     int N_pad = Align(N, pad_size);
@@ -464,6 +466,7 @@ double PPLCUDABgemmSelectKernel(
                 }
             }
         }
+
         cudaEventRecord(end, stream);
         cudaEventSynchronize(end);
         cudaEventElapsedTime(&elapsed, begin, end);
@@ -513,13 +516,16 @@ ppl::common::RetCode PPLCUDABgemmForwardImp(
     //int M     = transA ? input_shape->GetDim(1) : input_shape->GetDim(0);
 
     //FIXME Dim is 64 bit?
-    uint64_t batch = 1;
-    uint32_t dim_count0 = input_shape->GetDimCount();
+    //int M     = input_shape->GetDim(dim_count0 - 2);
+    auto dim_count0 = input_shape->GetDimCount();
     auto dim_count1 = weight_shape->GetDimCount();
-    for (uint32_t i = 0; i < dim_count0 -2; i++){
+    int m_id = dim_count0 - 2;
+    while(m_id && input_shape->GetDim(m_id)==1)    m_id--;
+    int M = input_shape->GetDim(m_id);
+    uint64_t batch = 1;
+    for (int i = 0; i < m_id; i++){
         batch *= input_shape->GetDim(i);
     }
-    int M     = input_shape->GetDim(dim_count0 - 2);
     int K     = input_shape->GetDim(dim_count0- 1);
     int K_pad = Align(K, pad_size);
     int N     = weight_shape->GetDim(dim_count1 - 1);

@@ -71,6 +71,7 @@ struct algo_param_t {
     unsigned int splitk        = 1;
     unsigned int splitf        = 1;
     bool is_initializer_weight = true;
+    unsigned int gemm_batch    = 1;
 
     void UseDefaultF1Kernel()
     {
@@ -85,6 +86,7 @@ struct algo_param_t {
         tiles.flt_size        = 1;
         tiles.buf             = 1;
         kid                   = 0;
+        gemm_batch            = 1;
     };
 };
 

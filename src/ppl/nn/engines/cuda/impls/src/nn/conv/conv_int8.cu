@@ -262,42 +262,7 @@ double PPLCUDAConvolutionSelectKernelInt8(
 
     const int SPLITK_OPTIONS[] = {1, 2, 4, 8};
 
-#if 0
-    int8_t *t = new int8_t[16*224*224];
-        int m = 0;
-    for(int i = 0; i < 16*224*224; i++){
-        //t[i] = i%16 <3 ? 1 : 0;
-        int th = i/16/224;
-        int tw = (i/16)%224;
-        int tc = i%16;
-        t[i] = 0;
-        if(th<4&&
-        (tw>=36*2-3&&tw<36*2-3+7) &&
-        (tc<3)){
-            t[i] = m;
-            if(tc == 2)    m++;
-            m = m%7;
-        }
-        //if(th==0 && tw == 36*2-3 && tc==0)    t[i] = -126;
-    }
-    cudaMemcpy(pad_input, t, 16*224*224, cudaMemcpyHostToDevice);
-    //for(int i = 0; i < 16*224*224; i++) t[i] = i%16 <3 ? i/16/7/7%4+1 : 0;//(i/(128*9)) % 4;
-    for(int i = 0; i < 16*224*224; i++) t[i] = i%16 <3&&i/16/7/7==32 ? 1 : 0;//(i/(128*9)) % 4;
-    //for(int i = 0; i < 16*224*224; i++) t[i] = i%16 <3 ? 1 : 0;//(i/(128*9)) % 4;
-    cudaMemcpy(d_flt, t, 64*16*7*7, cudaMemcpyHostToDevice);
-    cudaMemset(bias, 0, 64*sizeof(float));
-    //printf("lalalalala\n");
-    //cudaMemset(d_flt, 64*64*3*3, 1);
-    float scale[256] = {1.f};
-    for(int i = 0 ; i < 256; i++) scale[i] = 1.f;
-    cudaMemcpy(quant_param.d_flt_scale, scale, 256*sizeof(float), cudaMemcpyHostToDevice);
-    quant_param.in_scale = 1.f;
-    quant_param.out_scale = 0.1f;
-
-    for(unsigned int spk = 0; spk < 1; spk++) {
-#else
     for(unsigned int spk = 0; spk < 4; spk++) {
-#endif
         unsigned int splitk = SPLITK_OPTIONS[spk];
 
         for(unsigned int kid = 0; kid < g_int8_kernel_container.size(); kid++) {
@@ -362,37 +327,6 @@ double PPLCUDAConvolutionSelectKernelInt8(
 
                     if(splitk == 1) {
                         (g_int8_kernel_container[kid].int8_lut_kptr)<<<grid_size, block_size, 0, stream>>>(INT8_LUT_KPARAM_LIST);
-#if 0
-    cudaDeviceSynchronize();
-    auto e = cudaGetLastError();
-    printf("%s, last error code: %d\n", g_int8_kernel_container[kid].kname.c_str(), e);
-    cudaDeviceSynchronize();
-    printf("%s, %d\t", g_int8_kernel_container[kid].kname.c_str(), kid);
-                    const int s = 64*112*112;
-                    int8_t *t = new int8_t[s];
-                    cudaMemcpy(t, conv_out, s, cudaMemcpyDeviceToHost);
-                    int flag = 0;
-                    for(int a = 0; a < s; a++){
-                        int oc = a%64;
-                        int h = a/64/112;
-                        int w = a/64%112;
-                        int r = min(2*h - 3 + 7, 7);
-                        r = min(224 - (2*h - 3), r);
-                        int s = min(2*w - 3 + 7, 7);
-                        s = min(224 - (2*w - 3), s);
-                        //int8_t ref = (oc%4+1)*3*r*s/10;//(a%256%4)*128*9/100;
-                        int8_t ref = (1)*3*r*s/10;//(a%256%4)*128*9/100;
-                        if(a==36*64+32)
-                        if(t[a] != ref+1 && t[a] != ref){
-                            printf("-----------------error(%d,%d,%d,%d,%d,%d)\t", a, (int)t[a], ref, oc%4+1, r, s);
-                            flag = 1;
-                            if(a >=32*64) break;
-                        }
-                    }
-                    delete[] t;
-                    //if(flag)    break;
-#endif
-
                     }
 		            else {
                         int num_chl_per_spk_head, num_chl_per_spk_tail;
@@ -432,7 +366,6 @@ double PPLCUDAConvolutionSelectKernelInt8(
 
     }
 
-    //printf("%s, %d\n", g_int8_kernel_container[algo_param.kid].kname.c_str(), algo_param.kid);
     if(is_out_grp_pad) {
         PPLCUDAConvolutionCvtOutput(stream, d_output, final_out, type, conv_param);
     }
@@ -464,7 +397,6 @@ void PPLCUDAConvolutionForwardImpInt8(
     unsigned int kid = algo_param.kid;
     unsigned int splitk = algo_param.splitk;
     unsigned int splitf = algo_param.splitf;
-    //printf("%s, %d\n", g_int8_kernel_container[kid].kname.c_str(), kid);
 
     int pad_size = GetPadSize(type);
 
@@ -474,7 +406,6 @@ void PPLCUDAConvolutionForwardImpInt8(
     int num_chl_per_grp_pad = Align(num_chl_per_grp, pad_size);
     int num_flt_per_grp_pad = Align(num_flt_per_grp, pad_size);
 
-    //printf("kernel name: %d, %d, %s\n", splitk, splitf, g_int8_kernel_container[kid].kname.c_str());
     int in_hw  = conv_param.in_height * conv_param.in_width;
     int flt_hw = conv_param.flt_height * conv_param.flt_width;
     int out_hw = conv_param.out_height * conv_param.out_width;
