@@ -104,7 +104,7 @@ ppl::common::RetCode ConvHmmaKernel::DoExecute(KernelExecContext* ctx) {
     PPLCUDAConvolutionForwardImp(
         stream, shape_in0.GetDataType(), (int4*)ctx->GetInput<TensorImpl>(0)->GetBufferPtr(),
         (int4*)ctx->GetInput<TensorImpl>(1)->GetBufferPtr(), (int4*)ctx->GetOutput<TensorImpl>(0)->GetBufferPtr(),
-        param_->param.bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, (int4*)tmp_buffer,
+        param_->bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, (int4*)tmp_buffer,
         algo_param, temp_conv_param, temp_fuse_param);
 #endif
     LOG(DEBUG) << "Excute HMMA conv with kernel id:" << param_->extra_param.algo_info.kid

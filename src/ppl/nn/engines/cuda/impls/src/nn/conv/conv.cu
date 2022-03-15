@@ -990,7 +990,7 @@ double PPLCUDAConvolutionJitSelectKernel(
 
                 int size_x    = DivUp(conv_param.in_num * conv_param.out_height * conv_param.out_width, algo_param.tiles.m_cta);
                 int size_y    = DivUp(num_flt_per_grp_pad, algo_param.tiles.n_cta);
-                int grid_size = size_x * size_y * conv_param.num_grp;
+                int grid_size = size_x * size_y * conv_param.num_grp * algo_param.gemm_batch;
 
                 if (num_chl_per_grp <= 32) { // Use non-shared memory algo for small channel
                     algo_param.tiles.flt_pad_size = algo_param.tiles.k_per_step / 4;
@@ -1179,7 +1179,7 @@ void PPLCUDAConvolutionForwardJitImp(
         grid_size.x = DivUp(conv_param.in_num * conv_param.out_height * conv_param.out_width, tile_m);
         grid_size.y = DivUp(num_flt_per_grp_pad, tile_n);
     }
-    grid_size.z = conv_param.num_grp * splitk * splitf;
+    grid_size.z = conv_param.num_grp * splitk * splitf * algo_param.gemm_batch;
 
     const int4 *pre_data  = (const int4 *)fuse_param.pre_data;
     const void *prelu     = (const void *)fuse_param.prelu;
