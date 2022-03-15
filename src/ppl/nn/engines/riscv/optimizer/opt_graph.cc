@@ -39,7 +39,7 @@ RetCode OptGraph::InitKernels(const ir::Graph* graph) {
     for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
         auto node = it->Get();
         auto& type = node->GetType();
-        auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
+        auto creator = OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version);
         if (!creator) {
             LOG(ERROR) << "cannot find creator for RiscvOptKernel[" << node->GetName() << "] type[" << type.domain
                        << ":" << type.name << "]";

@@ -31,24 +31,28 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace lua {
 
 #ifdef PPLNN_USE_X86
+void RegisterX86BuiltinOpImpls();
 void RegisterX86EngineOptions(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterX86Engine(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterX86EngineFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 #endif
 
 #ifdef PPLNN_USE_CUDA
+void RegisterCudaBuiltinOpImpls();
 void RegisterCudaEngineOptions(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterCudaEngine(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterCudaEngineFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 #endif
 
 #ifdef PPLNN_USE_RISCV
+void RegisterRiscvBuiltinOpImpls();
 void RegisterRiscvEngineOptions(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterRiscvEngine(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterRiscvEngineFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 #endif
 
 #ifdef PPLNN_USE_ARM
+void RegisterArmBuiltinOpImpls();
 void RegisterArmEngineOptions(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterArmEngine(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterArmEngineFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
@@ -89,24 +93,28 @@ extern "C" int PPLNN_PUBLIC luaopen_luappl_nn(lua_State* l) {
     // NOTE register classes in order
 
 #ifdef PPLNN_USE_CUDA
+    RegisterCudaBuiltinOpImpls();
     RegisterCudaEngineOptions(lstate, lmodule);
     RegisterCudaEngine(lstate, lmodule);
     RegisterCudaEngineFactory(lstate, lmodule);
 #endif
 
 #ifdef PPLNN_USE_X86
+    RegisterX86BuiltinOpImpls();
     RegisterX86EngineOptions(lstate, lmodule);
     RegisterX86Engine(lstate, lmodule);
     RegisterX86EngineFactory(lstate, lmodule);
 #endif
 
 #ifdef PPLNN_USE_RISCV
+    RegisterRiscvBuiltinOpImpls();
     RegisterRiscvEngineOptions(lstate, lmodule);
     RegisterRiscvEngine(lstate, lmodule);
     RegisterRiscvEngineFactory(lstate, lmodule);
 #endif
 
 #ifdef PPLNN_USE_ARM
+    RegisterArmBuiltinOpImpls();
     RegisterArmEngineOptions(lstate, lmodule);
     RegisterArmEngine(lstate, lmodule);
     RegisterArmEngineFactory(lstate, lmodule);

@@ -31,7 +31,7 @@ inline ppl::common::RetCode CreateX86OptKernel(
     X86OptKernel** kernel) {
     auto& type = node->GetType();
 
-    auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
+    auto creator = OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version);
     if (!creator) {
         LOG(ERROR) << "cannot find creator for X86OptKernel[" << node->GetName() << "] type[" << type.domain << ":"
                    << type.name << "]";

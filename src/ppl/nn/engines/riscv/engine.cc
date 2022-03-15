@@ -45,7 +45,7 @@ ppl::common::RetCode RiscvEngine::Configure(uint32_t, ...) {
 
 bool RiscvEngine::Supports(const ir::Node* node) const {
     auto& type = node->GetType();
-    bool ok = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version) != nullptr;
+    bool ok = OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version) != nullptr;
     return ok;
 }
 
@@ -137,7 +137,7 @@ RetCode RiscvEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t,
 
 OptKernel* RiscvEngine::CreateOptKernel(const ir::Node* node) const {
     auto& type = node->GetType();
-    auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
+    auto creator = OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version);
     if (!creator) {
         LOG(ERROR) << "cannot find creator for node[" << node->GetName() << "] of type[" << type.domain << ":"
                    << type.name << ":" << type.version << "]";

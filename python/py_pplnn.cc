@@ -23,24 +23,28 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace python {
 
 #ifdef PPLNN_USE_CUDA
+void RegisterCudaBuiltinOpImpls();
 void RegisterCudaEngineFactory(pybind11::module*);
 void RegisterCudaEngineOptions(pybind11::module*);
 void RegisterCudaEngine(pybind11::module*);
 #endif
 
 #ifdef PPLNN_USE_X86
+void RegisterX86BuiltinOpImpls();
 void RegisterX86EngineFactory(pybind11::module*);
 void RegisterX86EngineOptions(pybind11::module*);
 void RegisterX86Engine(pybind11::module*);
 #endif
 
 #ifdef PPLNN_USE_RISCV
+void RegisterRiscvBuiltinOpImpls();
 void RegisterRiscvEngineFactory(pybind11::module*);
 void RegisterRiscvEngineOptions(pybind11::module*);
 void RegisterRiscvEngine(pybind11::module*);
 #endif
 
 #ifdef PPLNN_USE_ARM
+void RegisterArmBuiltinOpImpls();
 void RegisterArmEngineFactory(pybind11::module*);
 void RegisterArmEngineOptions(pybind11::module*);
 void RegisterArmEngine(pybind11::module*);
@@ -94,24 +98,28 @@ PYBIND11_MODULE(nn, m) {
     }
 
 #ifdef PPLNN_USE_CUDA
+    RegisterCudaBuiltinOpImpls();
     RegisterCudaEngineFactory(&m);
     RegisterCudaEngineOptions(&m);
     RegisterCudaEngine(&m);
 #endif
 
 #ifdef PPLNN_USE_X86
+    RegisterX86BuiltinOpImpls();
     RegisterX86EngineFactory(&m);
     RegisterX86EngineOptions(&m);
     RegisterX86Engine(&m);
 #endif
 
 #ifdef PPLNN_USE_RISCV
+    RegisterRiscvBuiltinOpImpls();
     RegisterRiscvEngineFactory(&m);
     RegisterRiscvEngineOptions(&m);
     RegisterRiscvEngine(&m);
 #endif
 
 #ifdef PPLNN_USE_ARM
+    RegisterArmBuiltinOpImpls();
     RegisterArmEngineFactory(&m);
     RegisterArmEngineOptions(&m);
     RegisterArmEngine(&m);

@@ -90,7 +90,7 @@ static ppl::common::RetCode AddReorderOp(
     }
 
     auto& type = reorder_node->GetType();
-    auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
+    auto creator = OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version);
     if (!creator) {
         LOG(ERROR) << "cannot find creator for X86OptKernel[" << reorder_node->GetName() << "] type[" << type.domain
                    << ":" << type.name << "]";

@@ -1,6 +1,6 @@
 This section introduces some public classes and functions of `PPLNN`.
 
-## Engine
+## Engine and Ops
 
 Defined in [include/ppl/nn/engines/engine.h](../../include/ppl/nn/engines/engine.h).
 
@@ -18,17 +18,21 @@ Sets various options for this engine. Parameters vary depending on the first par
 
 A built-in engine factory that is used to create engines running on x86-compatible CPUs.
 
+If you want to use built-in op implementations, you should call `ppl::nn::x86::RegisterBuiltinOps()` manually.
+
 #### Functions
 
 ```c++
 Engine* X86EngineFactory::Create(const X86EngineOptions& options);
 ```
 
-Creates an X86 engine instance with the given options.
+Creates an X86 engine instance with the specified options.
 
 ## CudaEngineFactory
 
 A built-in engine factory that is used to create engines running on NVIDIA GPUs.
+
+If you want to use built-in op implementations, you should call `ppl::nn::cuda::RegisterBuiltinOps()` manually.
 
 #### Functions
 
@@ -36,13 +40,39 @@ A built-in engine factory that is used to create engines running on NVIDIA GPUs.
 Engine* CudaEngineFactory::Create(const CudaEngineOptions& options);
 ```
 
-Creates a CUDA engine instance with the given options.
+Creates a CUDA engine instance with the specified options.
+
+## ArmEngineFactory
+
+A built-in engine factory that is used to create engines running on arm aarch64 CPUs.
+
+If you want to use built-in op implementations, you should call `ppl::nn::arm::RegisterBuiltinOps()` manually.
+
+#### Functions
+
+```c++
+Engine* ArmEngineFactory::Create(const ArmEngineOptions& options);
+```
+
+Creates a ARM engine instance with the specified options.
+
+## RiscvEngineFactory
+
+A built-in engine factory that is used to create engines running on riscv64 CPUs.
+
+If you want to use built-in op implementations, you should call `ppl::nn::riscv::RegisterBuiltinOps()` manually.
+
+#### Functions
+
+```c++
+Engine* RiscvEngineFactory::Create(const RiscvEngineOptions& options);
+```
+
+Creates an RISCV engine instance with the specified options.
 
 ## OnnxRuntimeBuilderFactory
 
 Defined in [include/ppl/nn/models/onnx/onnx_runtime_builder_factory.h](../../include/ppl/nn/models/onnx/onnx_runtime_builder_factory.h).
-
-Used to create an `RuntimeBuilder`.
 
 #### Functions
 
@@ -66,6 +96,46 @@ ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engi
 ```
 
 Initializes an `OnnxRuntimeBuilder` instance from an ONNX model file or buffer. The first parameter is the model file path, the second is engines that may be used to evaluate the compute graph. Note that callers should guarantee that `engines` is valid during inferencing.
+
+```c++
+ppl::common::RetCode Preprocess();
+```
+
+prepare for creating `Runtime` instances.
+
+
+```c++
+Runtime* CreateRuntime();
+```
+
+Creates a `Runtime` instance which is used to evaluate a compute graph.
+
+## PmxRuntimeBuilderFactory
+
+Defined in [include/ppl/nn/models/pmx/pmx_runtime_builder_factory.h](../../include/ppl/nn/models/pmx/pmx_runtime_builder_factory.h).
+
+#### Functions
+
+```c++
+PmxRuntimeBuilder* Create();
+```
+
+Creates an `PmxRuntimeBuilder` instance.
+
+## PmxRuntimeBuilder
+
+Defined in [include/ppl/nn/models/pmx/pmx_runtime_builder.h](../../include/ppl/nn/models/pmx/pmx_runtime_builder.h).
+
+`PmxRuntimeBuilder` is used to create `Runtime` instances.
+
+#### Functions
+
+```c++
+ppl::common::RetCode Init(const char* model_file, Engine** engines, uint32_t engine_num);
+ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num);
+```
+
+Initializes an `PmxRuntimeBuilder` instance from an PMX model file or buffer. The first parameter is the model file path, the second is engines that may be used to evaluate the compute graph. Note that callers should guarantee that `engines` is valid during inferencing.
 
 ```c++
 ppl::common::RetCode Preprocess();

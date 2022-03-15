@@ -15,28 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/arm/optimizer/opt_kernel_creator_manager.h"
-#include "ppl/nn/common/logger.h"
-using namespace std;
-using namespace ppl::common;
+#ifndef _ST_HPC_PPL_NN_ENGINES_ARM_ARM_OPS_H_
+#define _ST_HPC_PPL_NN_ENGINES_ARM_ARM_OPS_H_
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode OptKernelCreatorManager::Register(const string& domain, const string& type, const utils::VersionRange& ver,
-                                          OptKernelCreator creator) {
-    return mgr_.Register(domain, type, ver, creator);
-}
-
-OptKernelCreator OptKernelCreatorManager::Find(const string& domain, const string& type, uint64_t version) const {
-    auto ret = mgr_.Find(domain, type, version);
-    if (ret) {
-        return *ret;
-    }
-    return nullptr;
-}
-
-void OptKernelCreatorManager::Remove(const string& domain, const string& type) {
-    mgr_.Remove(domain, type);
-}
+void RegisterBuiltinOpImpls();
 
 }}} // namespace ppl::nn::arm
+
+#endif

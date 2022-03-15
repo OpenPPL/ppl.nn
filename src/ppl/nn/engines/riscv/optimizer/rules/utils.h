@@ -29,7 +29,7 @@ inline ppl::common::RetCode CreateRiscvOptKernel(const OptKernelOptions& options
                                                  RiscvOptKernel** kernel) {
     auto& type = node->GetType();
 
-    auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
+    auto creator = OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version);
     if (!creator) {
         LOG(ERROR) << "cannot find creator for RiscvOptKernel[" << node->GetName() << "] type[" << type.domain << ":"
                    << type.name << "]";
