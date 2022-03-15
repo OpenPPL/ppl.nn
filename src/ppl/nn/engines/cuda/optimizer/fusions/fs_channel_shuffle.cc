@@ -266,8 +266,8 @@ const RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, cons
 
         node->SetType(ir::Node::Type("ppl", "ChannelShuffle", 1));
         // node->SetName(node_name);
-        auto creator = OptKernelCreatorManager::Instance()->Find(node->GetType().domain, node->GetType().name,
-                                                                 node->GetType().version);
+        auto creator = OptKernelCreatorManager::GetInstance()->Find(node->GetType().domain, node->GetType().name,
+                                                                    node->GetType().version);
         if (!creator) {
             LOG(ERROR) << "Cannot find creator for channel shuffle kernel";
             return RC_UNSUPPORTED;

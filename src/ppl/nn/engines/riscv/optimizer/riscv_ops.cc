@@ -1,0 +1,174 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
+#include "ppl/nn/engines/riscv/optimizer/opt_kernel_creator_manager.h"
+using namespace std;
+using namespace ppl::common;
+
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/conv/conv_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/add_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/sub_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/mul_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/div_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/relu_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/reshape_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/shape_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/sigmoid_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/split_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/unsqueeze_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/max_pool_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/average_pool_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/flatten_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/softmax_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/gemm_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/clip_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/reduce_mean_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/reduce_max_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/reduce_min_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/reduce_sum_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/concat_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/transpose_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/gather_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/slice_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/argmax_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/resize_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/leaky_relu_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/equal_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/less_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/topk_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/where_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/constant_of_shape_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/tile_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/squeeze_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/range_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/expand_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/not_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/sqrt_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/log_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/floor_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/exp_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/cast_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/scatter_nd_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/non_max_suppression_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/conv_transpose_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/onnx/roialign_op.h"
+
+#include "ppl/nn/engines/riscv/optimizer/ops/mmcv/mmcv_gridsample_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/mmcv/mmcv_roialign_op.h"
+
+#include "ppl/nn/engines/riscv/optimizer/ops/ppl/shape_operation_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/ppl/reorder_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/ppl/channel_shuffle_op.h"
+
+namespace ppl { namespace nn { namespace riscv {
+
+template <typename T>
+static RiscvOptKernel* GenericCreateOptKernel(const ir::Node* node) {
+    return new T(node);
+}
+
+template <typename T>
+static void RegisterOptKernelCreator(const string& domain, const string& type, uint64_t first_version,
+                                     uint64_t last_version) {
+    if (last_version < first_version) {
+        LOG(ERROR) << "register op[" << domain << ":" << type << "] failed: last_version[" << last_version
+                   << "] < first_version[" << first_version << "]";
+        exit(-1);
+    }
+    auto status = OptKernelCreatorManager::GetInstance()->Register(
+        domain, type, utils::VersionRange(first_version, last_version), GenericCreateOptKernel<T>);
+    if (status != RC_SUCCESS) {
+        exit(-1);
+    }
+}
+
+// NOTE: sorted in alphabet order
+void RegisterBuiltinOpImpls() {
+    // onnx op default domain is ""
+    RegisterOptKernelCreator<AddOp>("", "Add", 7, 12);
+    RegisterOptKernelCreator<ArgmaxOp>("", "ArgMax", 11, 11);
+    RegisterOptKernelCreator<AveragePoolOp>("", "AveragePool", 11, 16);
+
+    RegisterOptKernelCreator<CastOp>("", "Cast", 9, 12);
+    RegisterOptKernelCreator<ClipOp>("", "Clip", 11, 11);
+    RegisterOptKernelCreator<ConcatOp>("", "Concat", 11, 12);
+    RegisterOptKernelCreator<ConstantOfShapeOp>("", "ConstantOfShape", 11, 12);
+    RegisterOptKernelCreator<ConvOp>("", "Conv", 1, 16);
+    RegisterOptKernelCreator<ConvTransposeOp>("", "ConvTranspose", 11, 16);
+
+    RegisterOptKernelCreator<DivOp>("", "Div", 7, 12);
+
+    RegisterOptKernelCreator<EqualOp>("", "Equal", 11, 12);
+    RegisterOptKernelCreator<ExpandOp>("", "Expand", 8, 12);
+    RegisterOptKernelCreator<ExpOp>("", "Exp", 6, 16);
+
+    RegisterOptKernelCreator<FlattenOp>("", "Flatten", 11, 12);
+    RegisterOptKernelCreator<FloorOp>("", "Floor", 6, 12);
+
+    RegisterOptKernelCreator<GatherOp>("", "Gather", 11, 12);
+    RegisterOptKernelCreator<GemmOp>("", "Gemm", 11, 12);
+    RegisterOptKernelCreator<AveragePoolOp>("", "GlobalAveragePool", 1, 16);
+
+    RegisterOptKernelCreator<LeakyReLUOp>("", "LeakyRelu", 6, 16);
+    RegisterOptKernelCreator<LessOp>("", "Less", 9, 12);
+    RegisterOptKernelCreator<LogOp>("", "Log", 6, 16);
+
+    RegisterOptKernelCreator<MaxPoolOp>("", "MaxPool", 11, 11);
+    RegisterOptKernelCreator<MulOp>("", "Mul", 7, 12);
+
+    RegisterOptKernelCreator<NotOp>("", "Not", 1, 16);
+    RegisterOptKernelCreator<NonMaxSupressionOp>("", "NonMaxSuppression", 11, 16);
+
+    RegisterOptKernelCreator<RangeOp>("", "Range", 11, 16);
+    RegisterOptKernelCreator<ReduceMeanOp>("", "ReduceMean", 11, 12);
+    RegisterOptKernelCreator<ReduceMaxOp>("", "ReduceMax", 11, 11);
+    RegisterOptKernelCreator<ReduceMinOp>("", "ReduceMin", 11, 11);
+    RegisterOptKernelCreator<ReduceSumOp>("", "ReduceSum", 11, 12);
+    RegisterOptKernelCreator<ReluOp>("", "Relu", 6, 12);
+    RegisterOptKernelCreator<ReshapeOp>("", "Reshape", 5, 12);
+    RegisterOptKernelCreator<ResizeOp>("", "Resize", 11, 12);
+    RegisterOptKernelCreator<RoiAlignOp>("", "RoiAlign", 10, 15);
+
+    RegisterOptKernelCreator<ScatterNDOp>("", "ScatterND", 11, 12);
+    RegisterOptKernelCreator<ShapeOp>("", "Shape", 1, 12);
+    RegisterOptKernelCreator<SigmoidOp>("", "Sigmoid", 6, 12);
+    RegisterOptKernelCreator<SoftmaxOp>("", "Softmax", 11, 12);
+    RegisterOptKernelCreator<SplitOp>("", "Split", 11, 12);
+    RegisterOptKernelCreator<SqueezeOp>("", "Squeeze", 11, 12);
+    RegisterOptKernelCreator<SliceOp>("", "Slice", 11, 12);
+    RegisterOptKernelCreator<SubOp>("", "Sub", 7, 12);
+    RegisterOptKernelCreator<SqrtOp>("", "Sqrt", 6, 16);
+
+    RegisterOptKernelCreator<TileOp>("", "Tile", 6, 12);
+    RegisterOptKernelCreator<TopKOp>("", "TopK", 11, 16);
+    RegisterOptKernelCreator<TransposeOp>("", "Transpose", 1, 12);
+
+    RegisterOptKernelCreator<UnsqueezeOp>("", "Unsqueeze", 11, 12);
+
+    RegisterOptKernelCreator<WhereOp>("", "Where", 9, 15);
+
+    // mmcv custom op
+    RegisterOptKernelCreator<MMCVGridSampleOp>("mmcv", "grid_sampler", 1, 1);
+    RegisterOptKernelCreator<MMCVROIAlignOp>("mmcv", "MMCVRoiAlign", 1, 1);
+
+    // ppl
+    RegisterOptKernelCreator<PPLShapeOperationOp>("ppl", "Shape", 1, 1);
+    RegisterOptKernelCreator<ReorderOp>("ppl", "Reorder", 1, 1);
+    RegisterOptKernelCreator<ChannelShuffleOp>("ppl", "ChannelShuffle", 1, 1);
+}
+
+}}} // namespace ppl::nn::riscv

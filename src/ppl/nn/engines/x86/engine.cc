@@ -52,7 +52,7 @@ EngineContext* X86Engine::CreateEngineContext() {
 
 bool X86Engine::Supports(const ir::Node* node) const {
     auto& type = node->GetType();
-    return (OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version) != nullptr);
+    return (OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version) != nullptr);
 }
 
 RetCode X86Engine::DoOptimize(const utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
@@ -143,7 +143,7 @@ RetCode X86Engine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, B
 
 OptKernel* X86Engine::CreateOptKernel(const ir::Node* node) const {
     auto& type = node->GetType();
-    auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
+    auto creator = OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version);
     if (!creator) {
         LOG(ERROR) << "cannot find creator for node[" << node->GetName() << "] of type[" << type.domain << ":"
                    << type.name << ":" << type.version << "]";

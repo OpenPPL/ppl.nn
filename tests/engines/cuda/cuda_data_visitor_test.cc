@@ -17,6 +17,7 @@
 
 #include "ppl/nn/models/onnx/onnx_runtime_builder_factory.h"
 #include "ppl/nn/engines/cuda/engine_factory.h"
+#include "ppl/nn/engines/cuda/cuda_ops.h"
 #include "ppl/nn/common/data_visitor.h"
 #include "gtest/gtest.h"
 using namespace std;
@@ -26,6 +27,8 @@ using namespace ppl::common;
 TEST(CudaDataVisitorTest, get_constant) {
     auto engine = unique_ptr<Engine>(CudaEngineFactory::Create(CudaEngineOptions()));
     auto builder = unique_ptr<OnnxRuntimeBuilder>(OnnxRuntimeBuilderFactory::Create());
+
+    ppl::nn::cuda::RegisterBuiltinOpImpls();
 
     auto ep = engine.get();
     auto status = builder->Init((PPLNN_TESTDATA_DIR + string("/conv.onnx")).c_str(), &ep, 1);

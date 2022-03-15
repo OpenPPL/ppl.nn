@@ -41,7 +41,7 @@ RetCode OptGraph::InitKernels(const ir::Graph* graph) {
     for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
         auto node = it->Get();
         auto& type = node->GetType();
-        auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
+        auto creator = OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version);
         if (!creator) {
             LOG(ERROR) << "cannot find creator for ArmOptKernel[" << node->GetName() << "] type[" << type.domain << ":"
                        << type.name << "]";
@@ -162,7 +162,7 @@ RetCode OptGraph::AddReorderOp(const OptKernelOptions& options, const edgeid_t& 
     }
 
     auto type = reorder_node->GetType();
-    auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
+    auto creator = OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version);
     if (!creator) {
         LOG(ERROR) << "cannot find creator for ArmOptKernel[" << reorder_node->GetName() << "] type[" << type.domain
                    << ":" << type.name << "]";
@@ -434,7 +434,7 @@ ppl::common::RetCode OptGraph::CreateArmOptKernel(const OptKernelOptions& option
                                                   ArmOptKernel** kernel) {
     auto& type = node->GetType();
 
-    auto creator = OptKernelCreatorManager::Instance()->Find(type.domain, type.name, type.version);
+    auto creator = OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version);
     if (!creator) {
         LOG(ERROR) << "Cannot find creator for ArmOptKernel[" << node->GetName() << "] type[" << type.domain << ":"
                    << type.name << "]";

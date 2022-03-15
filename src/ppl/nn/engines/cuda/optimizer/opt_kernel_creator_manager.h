@@ -27,7 +27,7 @@ typedef CudaOptKernel* (*OptKernelCreator)(const ir::Node*);
 
 class OptKernelCreatorManager {
 public:
-    static OptKernelCreatorManager* Instance() {
+    static OptKernelCreatorManager* GetInstance() {
         static OptKernelCreatorManager mgr;
         return &mgr;
     }
@@ -41,7 +41,7 @@ private:
     utils::OpInfoManager<OptKernelCreator> mgr_;
 
 private:
-    OptKernelCreatorManager();
+    OptKernelCreatorManager() {}
 };
 
 }}} // namespace ppl::nn::cuda
