@@ -34,10 +34,10 @@ RetCode RiscvKernel::BeforeExecute(KernelExecContext* ctx) {
     auto status = Reshape(ctx);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "reshape kernel[" << GetName() << "] failed: " << GetRetCodeStr(status);
-        return status;        
+        return status;
     }
 
-    for (uint32_t i = 0;  i < ctx->GetOutputCount(); ++i) {
+    for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto tensor = ctx->GetOutput<TensorImpl>(i);
         status = tensor->ReallocBuffer();
         if (status != RC_SUCCESS) {
@@ -83,28 +83,21 @@ RetCode RiscvKernel::Execute(KernelExecContext* ctx) {
         status = DoExecute(ctx);
 
 #ifdef RISCV_PERLAYER_DEBUG
-        LOG(INFO) << GetName();
         for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
             auto tensor = ctx->GetOutput<TensorImpl>(i);
-            TensorShape &dst_shape = *(tensor->GetShape());
+            TensorShape& dst_shape = *(tensor->GetShape());
             auto bytes = dst_shape.GetBytesIncludingPadding();
             vector<char> buffer(dst_shape.GetElementsExcludingPadding());
 
-            if (dst_shape.GetDimCount() == 1) {
-                LOG(INFO) << dst_shape.GetDim(0);
-            } else if (dst_shape.GetDimCount() == 2) {
-                LOG(INFO) << dst_shape.GetDim(0) << " " << dst_shape.GetDim(1);
-            } else if (dst_shape.GetDimCount() == 3) {
-                LOG(INFO) << dst_shape.GetDim(0) << " " << dst_shape.GetDim(1) << " " << dst_shape.GetDim(2);
-            } else if (dst_shape.GetDimCount() == 4) {
-                LOG(INFO) << dst_shape.GetDim(0) << " " << dst_shape.GetDim(1) << " " << dst_shape.GetDim(2) << " "
-                << dst_shape.GetDim(3);
-            } else {
-                LOG(INFO) << "Dst Shape exceed 4 dims !";
+            string shape_out = "-";
+            for (int64_t n = 0; n < dst_shape.GetDimCount(); n++) {
+                string dim_info = (n == 0) ? to_string(dst_shape.GetDim(n)) : ("_" + to_string(dst_shape.GetDim(n)));
+                shape_out += dim_info;
             }
 
-            const string pplnn_out = "./pplnn_out-";
-            const string out_file_name = pplnn_out + GetName() + "_" + to_string(i) + ".dat";
+            string out_file_name =
+                "pplnn_out-" + GetName() + "-" + ppl::common::GetDataFormatStr(dst_shape.GetDataFormat()) + "-";
+            out_file_name += ppl::common::GetDataTypeStr(dst_shape.GetDataType()) + shape_out + ".dat";
             ofstream ofs(out_file_name, ios_base::out | ios_base::binary | ios_base::trunc);
             if (!ofs.is_open()) {
                 LOG(ERROR) << "open output file[" << out_file_name << "]";
@@ -113,7 +106,6 @@ RetCode RiscvKernel::Execute(KernelExecContext* ctx) {
             ofs.write(tensor->GetBufferPtr<char>(), bytes);
         }
 #endif
-
     }
 
     return status;
