@@ -165,7 +165,7 @@ ppl::common::RetCode reduce_single_axis_ndarray_fp16(
                 if (reduce_body_no_inner_dim) {
                     float16xm1_t res0 = vfmvvf_float16xm1(init_val, vl);
                     for (int64_t r = 0; r < reduce_body_no_inner_dim; r += C_BLK()) {
-                        reduce_vector_kernel_fp16<op>(vlev_float16xm1(base_src + r, vl), res0);
+                        res0 = reduce_vector_kernel_fp16<op>(vlev_float16xm1(base_src + r, vl), res0);
                     }
                     reduce_val = reduce_vector_all_lanes_kernel_fp16<op>(res0);
                 }
