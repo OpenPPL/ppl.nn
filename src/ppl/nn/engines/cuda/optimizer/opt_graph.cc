@@ -531,6 +531,14 @@ RetCode OptGraph::LoadConstants(CudaDevice* device) {
             graph_quants[preedge_id] = graph_quants[postedge_id];
         }
     }
+
+    // load the rest of constants that are not quantized
+    auto status = utils::LoadConstants(*graph_, device, &info_->constants);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load constants failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
     return RC_SUCCESS;
 }
 
