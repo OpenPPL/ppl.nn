@@ -109,11 +109,8 @@ static void RegisterOptKernelCreator(const string& domain, const string& type, u
                    << "] < first_version[" << first_version << "]";
         exit(-1);
     }
-    auto status = OptKernelCreatorManager::GetInstance()->Register(
-        domain, type, utils::VersionRange(first_version, last_version), GenericCreateOptKernel<T>);
-    if (status != RC_SUCCESS) {
-        exit(-1);
-    }
+    OptKernelCreatorManager::GetInstance()->Register(domain, type, utils::VersionRange(first_version, last_version),
+                                                     GenericCreateOptKernel<T>);
 }
 
 // NOTE: sorted in alphabet order
