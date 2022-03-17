@@ -56,7 +56,7 @@ void RegisterNdArray(pybind11::module*);
 void RegisterEngine(pybind11::module*);
 void RegisterDeviceContext(pybind11::module*);
 void RegisterRuntime(pybind11::module*);
-void RegisterGetVersionString(pybind11::module*);
+void RegisterVersion(pybind11::module*);
 
 #ifdef PPLNN_ENABLE_ONNX_MODEL
 void RegisterOnnxRuntimeBuilder(pybind11::module*);
@@ -75,7 +75,7 @@ PYBIND11_MODULE(nn, m) {
     RegisterEngine(&m);
     RegisterDeviceContext(&m);
     RegisterRuntime(&m);
-    RegisterGetVersionString(&m);
+    RegisterVersion(&m);
 
 #ifdef PPLNN_ENABLE_ONNX_MODEL
     RegisterOnnxRuntimeBuilderFactory(&m);

@@ -15,12 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_UTILS_VERSION_H_
-#define _ST_HPC_PPL_NN_UTILS_VERSION_H_
+#ifndef _ST_HPC_PPL_NN_UTILS_COMMIT_H_
+#define _ST_HPC_PPL_NN_UTILS_COMMIT_H_
 
 namespace ppl { namespace nn {
 
-const char* GetVersionString();
+const char* GetCommitString();
 
 }} // namespace ppl::nn
 

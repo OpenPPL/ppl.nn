@@ -515,10 +515,12 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
+    logging.info("PPLNN version: [" + str(pplnn.PPLNN_VERSION_MAJOR) + "." + str(pplnn.PPLNN_VERSION_MINOR) + "." +
+                 str(pplnn.PPLNN_VERSION_PATCH) + "], commit: [" + pplnn.GetCommitString() + "]")
+
     args = ParseCommandLineArgs()
 
     if args.display_version:
-        logging.info("PPLNN version: " + pplnn.GetVersionString())
         sys.exit(0)
 
     if HasMultipleModelOptions(args):

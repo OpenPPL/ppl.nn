@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/utils/version.h"
+#include "ppl/nn/utils/commit.h"
 #include "luacpp/luacpp.h"
 #include <memory>
 using namespace std;
@@ -23,10 +23,13 @@ using namespace luacpp;
 
 namespace ppl { namespace nn { namespace lua {
 
-void RegisterGetVersionString(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
-    lmodule->Set("GetVersionString", lstate->CreateFunction([]() -> const char* {
-        return GetVersionString();
+void RegisterVersion(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
+    lmodule->Set("GetCommitString", lstate->CreateFunction([]() -> const char* {
+        return GetCommitString();
     }));
+    lmodule->SetInteger("PPLNN_VERSION_MAJOR", PPLNN_VERSION_MAJOR);
+    lmodule->SetInteger("PPLNN_VERSION_MINOR", PPLNN_VERSION_MINOR);
+    lmodule->SetInteger("PPLNN_VERSION_PATCH", PPLNN_VERSION_PATCH);
 }
 
-}}}
+}}} // namespace ppl::nn::lua
