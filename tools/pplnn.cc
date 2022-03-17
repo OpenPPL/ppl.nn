@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/common/logger.h"
-#include "ppl/nn/utils/version.h"
+#include "ppl/nn/utils/commit.h"
 #include "ppl/common/file_mapping.h"
 #include <string.h>
 #include <chrono>
@@ -1082,11 +1082,12 @@ int main(int argc, char* argv[]) {
         return 0;
     }
     if (g_flag_version) {
-        cout << GetVersionString() << endl;
+        cout << GetCommitString() << endl;
         return 0;
     }
 
-    LOG(INFO) << "ppl.nn version: " << GetVersionString();
+    LOG(INFO) << "ppl.nn version: [" << PPLNN_VERSION_MAJOR << "." << PPLNN_VERSION_MINOR << "." << PPLNN_VERSION_PATCH
+              << "], commit: [" << GetCommitString() << "]";
 
     auto prepare_begin_ts = std::chrono::system_clock::now();
 
