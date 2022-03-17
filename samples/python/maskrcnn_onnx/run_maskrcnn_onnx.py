@@ -144,7 +144,7 @@ class PPLModel(object):
         cuda_options = pplnn.CudaEngineOptions()
         cuda_options.device_id = 0
         cuda_engine = pplnn.CudaEngineFactory.Create(cuda_options)
-        self._engines.append(pplnn.Engine(cuda_engine))
+        self._engines.append(cuda_engine)
 
     def _create_runtime(self, model_file_name):
         runtime_builder = pplnn.OnnxRuntimeBuilderFactory.Create()
