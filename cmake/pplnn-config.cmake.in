@@ -26,6 +26,10 @@ set(PPLNN_ENABLE_PMX_MODEL @PPLNN_ENABLE_PMX_MODEL@)
 set(PPLNN_INCLUDE_DIRS "${__PPLNN_PACKAGE_ROOTDIR__}/include")
 set(PPLNN_LIBRARIES "pplnn_static")
 
+set(PPLNN_VERSION_MAJOR @PPLNN_VERSION_MAJOR@)
+set(PPLNN_VERSION_MINOR @PPLNN_VERSION_MINOR@)
+set(PPLNN_VERSION_PATCH @PPLNN_VERSION_PATCH@)
+
 # --------------------------------------------------------------------------- #
 
 if(NOT TARGET "pplcommon_static")
@@ -70,8 +74,14 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
+set(__PPLNN_VERSION_DEFINITIONS__
+    PPLNN_VERSION_MAJOR=${PPLNN_VERSION_MAJOR}
+    PPLNN_VERSION_MINOR=${PPLNN_VERSION_MINOR}
+    PPLNN_VERSION_PATCH=${PPLNN_VERSION_PATCH})
+
 set_target_properties(pplnn_static PROPERTIES
-    INTERFACE_LINK_LIBRARIES "${__PPLNN_LINK_LIBRARIES__}")
+    INTERFACE_LINK_LIBRARIES "${__PPLNN_LINK_LIBRARIES__}"
+    INTERFACE_COMPILE_DEFINITIONS "${__PPLNN_VERSION_DEFINITIONS__}")
 
 if(MSVC)
     set_target_properties(pplnn_static PROPERTIES
@@ -87,5 +97,6 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
+unset(__PPLNN_VERSION_DEFINITIONS__)
 unset(__PPLNN_LINK_LIBRARIES__)
 unset(__PPLNN_PACKAGE_ROOTDIR__)
