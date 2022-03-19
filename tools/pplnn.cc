@@ -1160,6 +1160,12 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
+        status = builder->Preprocess();
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "pmx preprocess failed: " << GetRetCodeStr(status);
+            return -1;
+        }
+
         if (!g_flag_save_pmx_model.empty()) {
             auto status = builder->Serialize(g_flag_save_pmx_model.c_str(), "pmx");
             if (status != RC_SUCCESS) {

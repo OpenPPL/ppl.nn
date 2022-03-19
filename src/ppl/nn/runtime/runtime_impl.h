@@ -36,7 +36,8 @@ public:
     ~RuntimeImpl();
 
     ppl::common::RetCode Init(const std::shared_ptr<ir::GraphTopo>&, const std::shared_ptr<const RuntimeGraphInfo>&,
-                              const std::shared_ptr<const RuntimeAuxInfo>&);
+                              const std::shared_ptr<const RuntimeAuxInfo>&,
+                              const std::set<edgeid_t>& reserved_edges = {});
 
     TensorImpl* GetInputTensorImpl(uint32_t idx) const {
         auto eid = topo_->GetInput(idx);
@@ -75,6 +76,8 @@ public:
         return static_cast<TensorImpl*>(graph_.edgeid2object[eid]);
     }
 
+    Tensor* GetTensorByName(const char* name) const override;
+
     ppl::common::RetCode Run() override;
 
     uint32_t GetDeviceContextCount() const override {
@@ -87,7 +90,8 @@ public:
     ppl::common::RetCode GetProfilingStatistics(ProfilingStatistics* stat) const override;
 
 private:
-    ppl::common::RetCode InitRuntimeGraphResource(const ir::GraphTopo*, const RuntimeGraphInfo&, RuntimeGraphResource*);
+    ppl::common::RetCode InitRuntimeGraphResource(const ir::GraphTopo*, const RuntimeGraphInfo&,
+                                                  const std::set<edgeid_t>& reserved_edgeids, RuntimeGraphResource*);
 
     /**
        @brief blocks until all operations finish.

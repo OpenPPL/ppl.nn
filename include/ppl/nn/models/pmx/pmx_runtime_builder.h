@@ -43,8 +43,12 @@ public:
     virtual ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines,
                                       uint32_t engine_num) = 0;
 
+    virtual ppl::common::RetCode Configure(uint32_t option, ...) = 0;
+
+    virtual ppl::common::RetCode Preprocess() = 0;
+
     /** @brief creates a Runtime instance */
-    virtual Runtime* CreateRuntime() = 0;
+    virtual Runtime* CreateRuntime() const = 0;
 
     virtual ppl::common::RetCode Serialize(const char* output_file, const char* fmt) const = 0;
 };

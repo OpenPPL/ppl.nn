@@ -15,28 +15,25 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_RUNTIME_RUNTIME_AUX_INFO_H_
-#define _ST_HPC_PPL_NN_RUNTIME_RUNTIME_AUX_INFO_H_
-
-#include "ppl/nn/common/types.h"
-#include "ppl/nn/runtime/runtime_graph_info.h"
-#include <vector>
+#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_ONNX_RUNTIME_BUILDER_OPRIONS_H_
+#define _ST_HPC_PPL_NN_MODELS_ONNX_ONNX_RUNTIME_BUILDER_OPRIONS_H_
 
 namespace ppl { namespace nn {
 
-/**
-   @class RuntimeAuxInfo
-   @brief auxiliary info for runtime stage
-*/
-struct RuntimeAuxInfo final {
-    /** node ids in topological order */
-    std::vector<nodeid_t> sorted_nodes;
+enum {
+    /**
+       @brief mark a tensor as reserved in order to avoid reusing it duing inferencing
 
-    /** a tensor can be released right after the last consumer finish executing in `sorted_nodes` */
-    std::vector<nodeid_t> tensor_last_consumer;
+       @note example:
+       @code{.cpp}
+       const char* tensor_name;
+       runtime_builder->Configure(ORB_CONF_RESERVE_TENSOR, tensor_name);
+       @endcode
+    */
+    ORB_CONF_RESERVE_TENSOR = 0,
+
+    ORB_CONF_MAX,
 };
-
-ppl::common::RetCode GenerateRuntimeAuxInfo(const ir::GraphTopo*, const std::set<edgeid_t>&, RuntimeAuxInfo*);
 
 }} // namespace ppl::nn
 

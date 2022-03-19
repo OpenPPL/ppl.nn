@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include <stdarg.h>
 #include "ppl/common/file_mapping.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/runtime/runtime_impl.h"
@@ -100,12 +101,6 @@ RetCode RuntimeBuilderImpl::Init(const char* model_buf, uint64_t buf_len, ppl::n
         return status;
     }
 
-    status = GenerateRuntimeAuxInfo(topo_.get(), aux_info_.get());
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "GenerateRuntimeAuxInfo failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
     return RC_SUCCESS;
 }
 
@@ -119,13 +114,23 @@ RetCode RuntimeBuilderImpl::Init(const char* model_file, ppl::nn::Engine** engin
     return Init(fm.Data(), fm.Size(), engines, engine_num);
 }
 
-Runtime* RuntimeBuilderImpl::CreateRuntime() {
+RetCode RuntimeBuilderImpl::Preprocess() {
+    auto status = GenerateRuntimeAuxInfo(topo_.get(), resource_.reserved_edgeids, aux_info_.get());
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "GenerateRuntimeAuxInfo failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    return RC_SUCCESS;
+}
+
+Runtime* RuntimeBuilderImpl::CreateRuntime() const {
     auto runtime = new RuntimeImpl();
     if (!runtime) {
         return nullptr;
     }
 
-    auto status = runtime->Init(topo_, graph_info_, aux_info_);
+    auto status = runtime->Init(topo_, graph_info_, aux_info_, resource_.reserved_edgeids);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init runtime failed: " << GetRetCodeStr(status);
         delete runtime;
@@ -143,6 +148,39 @@ RetCode RuntimeBuilderImpl::Serialize(const char* output_file, const char* fmt) 
 
     pmx::PmxSerializer serializer;
     return serializer.Serialize(output_file, topo_.get(), resource_.engines, *graph_info_);
+}
+
+/* -------------------------------------------------------------------------- */
+
+RetCode RuntimeBuilderImpl::ReserveTensor(RuntimeBuilderImpl* impl, va_list args) {
+    auto tensor_name = va_arg(args, const char*);
+
+    auto edge = impl->topo_->GetEdgeByName(tensor_name);
+    if (!edge) {
+        LOG(ERROR) << "ReserveTensor: cannot find tensor named[" << tensor_name << "]";
+        return RC_NOT_FOUND;
+    }
+
+    impl->resource_.reserved_edgeids.insert(edge->GetId());
+    return RC_SUCCESS;
+}
+
+RuntimeBuilderImpl::ConfHandlerFunc RuntimeBuilderImpl::conf_handlers_[] = {
+    RuntimeBuilderImpl::ReserveTensor,
+};
+
+RetCode RuntimeBuilderImpl::Configure(uint32_t option, ...) {
+    if (option >= PRB_CONF_MAX) {
+        LOG(ERROR) << "invalid option[" << option << "] >= [" << PRB_CONF_MAX << "]";
+        return RC_INVALID_VALUE;
+    }
+
+    va_list args;
+    va_start(args, option);
+    auto status = conf_handlers_[option](this, args);
+    va_end(args);
+
+    return status;
 }
 
 }}} // namespace ppl::nn::pmx

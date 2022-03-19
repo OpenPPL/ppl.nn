@@ -24,7 +24,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn {
 
 /** @brief calculate each edge's reference count in `topo`. */
-static vector<uint32_t> CalcEdgeRefcount(const ir::GraphTopo* topo) {
+static vector<uint32_t> CalcEdgeRefcount(const ir::GraphTopo* topo, const set<edgeid_t>& reserved_edgeids) {
     vector<uint32_t> edge_refcount(topo->GetMaxEdgeId(), 0);
 
     for (auto it = topo->CreateEdgeIter(); it->IsValid(); it->Forward()) {
@@ -57,7 +57,7 @@ static vector<uint32_t> CalcEdgeRefcount(const ir::GraphTopo* topo) {
     }
 
     /*
-      inputs/extra_inputs/outputs/constants cannot be freed or reused during Run(),
+      inputs/extra_inputs/outputs/constants/reserved_edgeids cannot be freed or reused during Run(),
       we increase their refcounts to ensure that their refcounts will always > 0
       during runtime.
     */
@@ -77,16 +77,18 @@ static vector<uint32_t> CalcEdgeRefcount(const ir::GraphTopo* topo) {
         auto eid = topo->GetOutput(i);
         ++edge_refcount[eid];
     }
+    for (auto x = reserved_edgeids.begin(); x != reserved_edgeids.end(); ++x) {
+        ++edge_refcount[*x];
+    }
 
     return edge_refcount;
 }
 
-static RetCode InitTensorLastConsumer(const ir::GraphTopo* topo, const vector<nodeid_t>& snodes,
-                                      vector<nodeid_t>* tensor_last_consumer) {
+static RetCode InitTensorLastConsumer(const ir::GraphTopo* topo, const vector<nodeid_t>& sorted_nodes,
+                                      const set<edgeid_t>& reserved_edgeids, vector<nodeid_t>* tensor_last_consumer) {
     tensor_last_consumer->resize(topo->GetMaxEdgeId(), topo->GetMaxNodeId());
 
-    auto sorted_nodes = snodes;
-    auto edge_refcount = CalcEdgeRefcount(topo);
+    auto edge_refcount = CalcEdgeRefcount(topo, reserved_edgeids);
 
     for (auto x = sorted_nodes.begin(); x != sorted_nodes.end(); ++x) {
         auto node = topo->GetNodeById(*x);
@@ -145,12 +147,12 @@ static RetCode InitTensorLastConsumer(const ir::GraphTopo* topo, const vector<no
     return RC_SUCCESS;
 }
 
-RetCode GenerateRuntimeAuxInfo(const ir::GraphTopo* topo, RuntimeAuxInfo* info) {
+RetCode GenerateRuntimeAuxInfo(const ir::GraphTopo* topo, const set<edgeid_t>& reserved_edgeids, RuntimeAuxInfo* info) {
     utils::DfsDeeperFirst(topo, [info](nodeid_t nid) -> void {
         info->sorted_nodes.push_back(nid);
     });
 
-    auto status = InitTensorLastConsumer(topo, info->sorted_nodes, &info->tensor_last_consumer);
+    auto status = InitTensorLastConsumer(topo, info->sorted_nodes, reserved_edgeids, &info->tensor_last_consumer);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitTensorLastConsumer failed: " << GetRetCodeStr(status);
         return status;

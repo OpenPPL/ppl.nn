@@ -569,6 +569,11 @@ if __name__ == "__main__":
             logging.error("init PmxRuntimeBuilder failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
 
+        status = runtime_builder.Preprocess()
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("PmxRuntimeBuilder preprocess failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
         runtime = runtime_builder.CreateRuntime()
         if not runtime:
             logging.error("create Runtime instance failed.")

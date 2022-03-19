@@ -26,6 +26,7 @@
 #include "ppl/nn/runtime/runtime_graph_info.h"
 #include "ppl/nn/runtime/runtime_aux_info.h"
 #include "ppl/nn/models/onnx/onnx_runtime_builder.h"
+#include "ppl/nn/models/onnx/onnx_runtime_builder_options.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
@@ -35,9 +36,16 @@ public:
     ~RuntimeBuilderImpl();
     ppl::common::RetCode Init(const char* model_file, Engine** engines, uint32_t engine_num) override;
     ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num) override;
+    ppl::common::RetCode Configure(uint32_t, ...) override;
     ppl::common::RetCode Preprocess() override;
-    Runtime* CreateRuntime() override;
+    Runtime* CreateRuntime() const override;
     ppl::common::RetCode Serialize(const char* output_file, const char* fmt) const override;
+
+private:
+    static ppl::common::RetCode ReserveTensor(RuntimeBuilderImpl*, va_list);
+
+    typedef ppl::common::RetCode (*ConfHandlerFunc)(RuntimeBuilderImpl*, va_list);
+    static ConfHandlerFunc conf_handlers_[ORB_CONF_MAX];
 
 private:
     ir::Graph graph_;

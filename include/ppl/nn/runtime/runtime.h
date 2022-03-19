@@ -76,6 +76,12 @@ public:
     */
     virtual Tensor* GetOutputTensor(uint32_t idx) const = 0;
 
+    /**
+       @note the specified tensor(except for input/output/constant tensors) MUST be reserved first (usually by calling
+       RuntimeBuilder::Configure). returns nullptr otherwise.
+    */
+    virtual Tensor* GetTensorByName(const char*) const = 0;
+
     /** @brief get the number of `DeviceContext` used by this `Runtime` instance */
     virtual uint32_t GetDeviceContextCount() const = 0;
 
