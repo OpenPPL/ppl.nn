@@ -50,10 +50,8 @@ Refer to [Documents](#documents) for more details.
 
 ### Documents
 
-* Ops and Models
-  - [Converting ONNX Opset](docs/en/onnx-model-opset-convert-guide.md)
-  - [Generating ONNX models from OpenMMLab](docs/en/model-convert-guide.md)
 * [Building from Source](docs/en/building-from-source.md)
+* [How to Integrate](docs/en/how-to-integrate.md)
 * APIs
   - C++
     - [Getting Started](docs/en/cpp-getting-started.md)
@@ -81,6 +79,9 @@ Refer to [Documents](#documents) for more details.
   - ARM
     - [Adding Ops](docs/en/arm-doc/add_op.md)（[中文版](docs/cn/arm-doc/add_op.md)）
     - [Benchmark](docs/en/arm-doc/benchmark_tool.md)（[中文版](docs/cn/arm-doc/benchmark_tool.md)）
+* Models
+  - [Converting ONNX Opset](docs/en/onnx-model-opset-convert-guide.md)
+  - [Generating ONNX models from OpenMMLab](docs/en/model-convert-guide.md)
 
 ### Contact Us
 
