@@ -112,21 +112,6 @@ RetCode CudaEngine::ProcessGraph(const utils::SharedResource* resource, ir::Grap
         return status;
     }
 
-    // transfer constant buffer ownership to name2constant_
-    auto topo = graph->topo.get();
-    for (auto c = info->constants.begin(); c != info->constants.end(); ++c) {
-        auto edge = topo->GetEdgeById(c->first);
-        RuntimeConstantInfo& info = c->second;
-
-        TensorImpl t(edge, TENSORTYPE_RESERVED);
-        *t.GetShape() = *info.GetShape();
-        t.SetBuffer(info.GetBufferDesc(), info.GetDevice(), info.IsBufferOwner());
-
-        info.DetachBuffer();
-        info.SetBuffer(t.GetBufferDesc(), t.GetDevice()); // now `info` doesn't own the buffer
-        name2constant_.emplace(edge->GetName(), std::move(t));
-    }
-
     return RC_SUCCESS;
 }
 
@@ -172,12 +157,6 @@ RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, 
             LOG(ERROR) << "constant[" << edge->GetName() << "] already exists.";
             return RC_EXISTS;
         }
-
-        // save a copy in name2constant_ for DataVisitor
-        TensorImpl t(edge, TENSORTYPE_RESERVED);
-        t.SetBuffer(buf, dev);
-        *t.GetShape() = shape;
-        name2constant_.emplace(edge->GetName(), std::move(t));
 
         offset += Align(size, CUDA_DEFAULT_ALIGNMENT);
         return RC_SUCCESS;
@@ -366,12 +345,6 @@ RetCode CudaEngine::ImportAlgorithms(CudaEngine* engine, va_list args) {
     return RC_SUCCESS;
 }
 
-RetCode CudaEngine::GetDataVisitor(CudaEngine* engine, va_list args) {
-    auto p_visitor = va_arg(args, DataVisitor**);
-    *p_visitor = &engine->data_visitor_;
-    return RC_SUCCESS;
-}
-
 CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetOutputFormat, // CUDA_CONF_SET_OUTPUT_DATA_FORMAT
     CudaEngine::SetOutputType, // CUDA_CONF_SET_OUTPUT_TYPE
@@ -381,7 +354,6 @@ CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetQuantInfo, // CUDA_CONF_SET_QUANT_INFO
     CudaEngine::ExportAlgorithms, // CUDA_CONF_EXPORT_ALGORITHMS
     CudaEngine::ImportAlgorithms, // CUDA_CONF_IMPORT_ALGORITHMS
-    CudaEngine::GetDataVisitor, // CUDA_CONF_GET_DATA_VISITOR
 };
 
 RetCode CudaEngine::Configure(uint32_t option, ...) {
