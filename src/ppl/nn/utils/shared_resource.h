@@ -28,6 +28,7 @@ namespace ppl { namespace nn { namespace utils {
 struct SharedResource final {
     std::vector<EngineImpl*> engines; // engines are allocated/freed by the caller
     std::shared_ptr<GraphPartitioner> graph_partitioner;
+    std::set<edgeid_t> reserved_edgeids;
 };
 
 }}} // namespace ppl::nn::utils

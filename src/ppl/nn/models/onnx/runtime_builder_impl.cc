@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include <stdarg.h>
 #include "ppl/common/file_mapping.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/optimizers/utils.h"
@@ -77,7 +78,7 @@ RetCode RuntimeBuilderImpl::Preprocess() {
         return status;
     }
 
-    status = GenerateRuntimeAuxInfo(graph_.topo.get(), aux_info_.get());
+    status = GenerateRuntimeAuxInfo(graph_.topo.get(), resource_.reserved_edgeids, aux_info_.get());
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenerateRuntimeAuxInfo failed: " << GetRetCodeStr(status);
         return status;
@@ -86,13 +87,13 @@ RetCode RuntimeBuilderImpl::Preprocess() {
     return RC_SUCCESS;
 }
 
-Runtime* RuntimeBuilderImpl::CreateRuntime() {
+Runtime* RuntimeBuilderImpl::CreateRuntime() const {
     auto runtime = new RuntimeImpl();
     if (!runtime) {
         return nullptr;
     }
 
-    auto status = runtime->Init(graph_.topo, graph_info_, aux_info_);
+    auto status = runtime->Init(graph_.topo, graph_info_, aux_info_, resource_.reserved_edgeids);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init runtime failed: " << GetRetCodeStr(status);
         delete runtime;
@@ -115,6 +116,39 @@ RetCode RuntimeBuilderImpl::Serialize(const char* output_file, const char* fmt) 
     LOG(ERROR) << "model format[" << fmt << "] is not supported.";
     return RC_UNSUPPORTED;
 #endif
+}
+
+/* -------------------------------------------------------------------------- */
+
+RetCode RuntimeBuilderImpl::ReserveTensor(RuntimeBuilderImpl* impl, va_list args) {
+    auto tensor_name = va_arg(args, const char*);
+
+    auto edge = impl->graph_.topo->GetEdgeByName(tensor_name);
+    if (!edge) {
+        LOG(ERROR) << "ReserveTensor: cannot find tensor named[" << tensor_name << "]";
+        return RC_NOT_FOUND;
+    }
+
+    impl->resource_.reserved_edgeids.insert(edge->GetId());
+    return RC_SUCCESS;
+}
+
+RuntimeBuilderImpl::ConfHandlerFunc RuntimeBuilderImpl::conf_handlers_[] = {
+    RuntimeBuilderImpl::ReserveTensor,
+};
+
+RetCode RuntimeBuilderImpl::Configure(uint32_t option, ...) {
+    if (option >= ORB_CONF_MAX) {
+        LOG(ERROR) << "invalid option[" << option << "] >= [" << ORB_CONF_MAX << "]";
+        return RC_INVALID_VALUE;
+    }
+
+    va_list args;
+    va_start(args, option);
+    auto status = conf_handlers_[option](this, args);
+    va_end(args);
+
+    return status;
 }
 
 }}} // namespace ppl::nn::onnx

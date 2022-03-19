@@ -229,8 +229,17 @@ static RetCode InitRuntimeGraphResourceConstants(const ir::GraphTopo* topo, cons
     return RC_SUCCESS;
 }
 
+static void InitRuntimeGraphResourceReservedTensors(const ir::GraphTopo* topo, const set<edgeid_t>& reserved_edgeids,
+                                                    RuntimeGraphResource* graph) {
+    for (auto x = reserved_edgeids.begin(); x != reserved_edgeids.end(); ++x) {
+        auto edge = topo->GetEdgeById(*x);
+        auto ret_pair = graph->tensors.insert(make_pair(*x, TensorImpl(edge, TENSORTYPE_RESERVED)));
+        graph->edgeid2object[*x] = &ret_pair.first->second;
+    }
+}
+
 RetCode RuntimeImpl::InitRuntimeGraphResource(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                              RuntimeGraphResource* graph) {
+                                              const set<edgeid_t>& reserved_edgeids, RuntimeGraphResource* graph) {
     graph->nodeid2kernel.resize(topo->GetMaxNodeId());
     graph->edgeid2object.resize(topo->GetMaxEdgeId());
 
@@ -264,18 +273,20 @@ RetCode RuntimeImpl::InitRuntimeGraphResource(const ir::GraphTopo* topo, const R
         return status;
     }
 
+    InitRuntimeGraphResourceReservedTensors(topo, reserved_edgeids, graph);
+
     return RC_SUCCESS;
 }
 
 RetCode RuntimeImpl::Init(const shared_ptr<ir::GraphTopo>& topo, const shared_ptr<const RuntimeGraphInfo>& info,
-                          const shared_ptr<const RuntimeAuxInfo>& aux_info) {
+                          const shared_ptr<const RuntimeAuxInfo>& aux_info, const set<edgeid_t>& reserved_edgeids) {
     graph_info_ = info;
     aux_info_ = aux_info;
     topo_ = topo;
 
     profiler_.Init(&conf_, &graph_, aux_info.get());
 
-    auto status = InitRuntimeGraphResource(topo.get(), *info, &graph_);
+    auto status = InitRuntimeGraphResource(topo.get(), *info, reserved_edgeids, &graph_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResource failed: " << GetRetCodeStr(status);
         return status;
@@ -328,6 +339,16 @@ RetCode RuntimeImpl::GetProfilingStatistics(ProfilingStatistics* stat) const {
     LOG(ERROR) << "this version does not support profiling.";
     return RC_UNSUPPORTED;
 #endif
+}
+
+Tensor* RuntimeImpl::GetTensorByName(const char* name) const {
+    const string name_s(name);
+    for (auto x = graph_.tensors.begin(); x != graph_.tensors.end(); ++x) {
+        if (x->second.GetName() == name_s) {
+            return const_cast<TensorImpl*>(&x->second);
+        }
+    }
+    return nullptr;
 }
 
 /* -------------------------------------------------------------------------- */

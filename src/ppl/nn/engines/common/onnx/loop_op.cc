@@ -52,7 +52,7 @@ RetCode LoopOp::Init(const utils::SharedResource* resource, LoopParam* loop_para
         return status;
     }
 
-    status = GenerateRuntimeAuxInfo(loop_param->graph.topo.get(), &aux_info_);
+    status = GenerateRuntimeAuxInfo(loop_param->graph.topo.get(), {}, &aux_info_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenerateRuntimeAuxInfo failed: " << GetRetCodeStr(status);
         return status;

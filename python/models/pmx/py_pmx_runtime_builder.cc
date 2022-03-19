@@ -43,6 +43,10 @@ void RegisterPmxRuntimeBuilder(pybind11::module* m) {
                  builder.engines = std::move(engine_list);
                  return builder.ptr->Init(model_file, engine_ptrs.data(), engine_ptrs.size());
              })
+        .def("Preprocess",
+             [](PyPmxRuntimeBuilder& builder) -> RetCode {
+                 return builder.ptr->Preprocess();
+             })
         .def("CreateRuntime",
              [](PyPmxRuntimeBuilder& builder) -> PyRuntime {
                  return PyRuntime(builder.engines, builder.ptr->CreateRuntime());

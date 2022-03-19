@@ -35,7 +35,7 @@ struct RuntimeGraphResource final {
         nodeid2kernel.clear();
     }
 
-    /** union of inputs/extra_inputs/constants/outputs */
+    /** union of inputs/extra_inputs/constants/outputs/reserved_edgeids */
     std::map<edgeid_t, TensorImpl> tensors;
 
     /** objects that are used during Run() */

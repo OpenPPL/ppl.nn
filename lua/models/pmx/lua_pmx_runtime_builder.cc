@@ -44,6 +44,10 @@ void RegisterPmxRuntimeBuilder(const shared_ptr<LuaState>& lstate, const shared_
                        lbuilder->engines = std::move(engine_list);
                        return lbuilder->ptr->Init(model_file, engine_ptrs.data(), engine_ptrs.size());
                    })
+        .DefMember("Preprocess",
+                   [](LuaPmxRuntimeBuilder* lbuilder) -> RetCode {
+                       return lbuilder->ptr->Preprocess();
+                   })
         .DefMember("CreateRuntime",
                    [runtime_class, lstate](LuaPmxRuntimeBuilder* lbuilder) -> LuaObject {
                        auto runtime = lbuilder->ptr->CreateRuntime();
