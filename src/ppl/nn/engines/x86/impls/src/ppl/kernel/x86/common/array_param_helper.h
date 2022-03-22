@@ -27,11 +27,11 @@ class array_param_helper
 public:
     array_param_helper(int64_t *param) : param_(param) {}
     
-    template<typename T> T& pick(const int64_t idx) {
+    template<typename T> inline T& pick(const int64_t idx) {
         return *(T*)(param_ + idx);
     }
 
-    template<typename T> T pick(const int64_t idx) const { 
+    template<typename T> inline T pick(const int64_t idx) const { 
         return *(T*)(param_ + idx);
     }
 

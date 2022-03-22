@@ -48,7 +48,6 @@ public:
         static const int64_t N_REG_ELTS = 8;
         static const int64_t MAX_M_BLK = MAX_M_REGS * M_REG_ELTS;
         static const int64_t MAX_N_BLK = MAX_N_REGS * N_REG_ELTS;
-        static const int64_t UNROLL_K = 8;
     };
 
     typedef int64_t flag_t;
@@ -59,10 +58,10 @@ public:
     };
 
     gemm_kernel_fp32_fma(int64_t *param) : param_(param) { }
-    void set_param(int64_t *param) { this->param_ = param; }
-    int64_t *param() { return param_; }
+    inline void set_param(int64_t *param) { this->param_ = param; }
+    inline int64_t *param() { return param_; }
 
-    void execute(const int64_t m_reg, const int64_t n_reg) {
+    inline void execute(const int64_t m_reg, const int64_t n_reg) {
         table_[n_reg - 1][m_reg - 1](param_);
     }
 

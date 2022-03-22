@@ -73,6 +73,7 @@
 
 #define PPL_X86_TENSOR_MAX_DIMS() 8
 #define PPL_X86_CACHELINE_BYTES() 64
+#define PPL_X86_PAGE_BYTES() 4096
 
 #ifdef PPL_USE_X86_DARWIN
 #define PPL_X86_INLINE_ASM_ALIGN() ".align 4\n"

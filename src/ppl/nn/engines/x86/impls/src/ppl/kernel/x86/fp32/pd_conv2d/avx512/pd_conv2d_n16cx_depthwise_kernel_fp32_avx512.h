@@ -62,10 +62,10 @@ public:
     };
 
     pd_conv2d_n16cx_depthwise_kernel_fp32_avx512(int64_t *param) : param_(param) { }
-    void set_param(int64_t *param) { this->param_ = param; }
-    int64_t *param() { return param_; }
+    inline void set_param(int64_t *param) { this->param_ = param; }
+    inline int64_t *param() { return param_; }
 
-    void execute(const int64_t nt_store, const int64_t spec_stride_w, const int64_t w_reg) {
+    inline void execute(const int64_t nt_store, const int64_t spec_stride_w, const int64_t w_reg) {
         table_[nt_store][spec_stride_w][w_reg - 1](param_);
     }
 
