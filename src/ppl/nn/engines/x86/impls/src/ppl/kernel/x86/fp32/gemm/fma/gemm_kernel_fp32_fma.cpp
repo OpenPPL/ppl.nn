@@ -25,7 +25,7 @@ namespace ppl { namespace kernel { namespace x86 {
 #ifdef PPL_USE_X86_INLINE_ASM
 
 template<int64_t u_m, int64_t u_n>
-void gemm_fp32_fma_kernel_core(int64_t *param)
+void gemm_m4_kernel_fp32_fma_core(int64_t *param)
 {
     __asm__ __volatile__ (
         ".equ P_BYTES, 8\n"
@@ -93,7 +93,7 @@ void gemm_fp32_fma_kernel_core(int64_t *param)
 "4:\n" // label_k_body
         ".irp K,0,1,2,3,4,5,6,7\n"
         ".if U_NR > 0\n vmovups (\\K * N_REG_ELTS * D_BYTES)(%%rbx), %%ymm12\n .endif\n"
-        ".if U_NR > 1\n vmovups (\\K * N_REG_ELTS * D_BYTES)(%%rbx, %%r12, 1), %%ymm13\n .endif\n"
+        ".if U_NR > 1\n vmovups (\\K * N_REG_ELTS * D_BYTES)(%%rbx, %%r12), %%ymm13\n .endif\n"
         ".if U_NR > 2\n vmovups (\\K * N_REG_ELTS * D_BYTES)(%%rbx, %%r12, 2), %%ymm14\n .endif\n"
         ".if U_M > 0\n"
         "vbroadcastss (\\K * D_BYTES)(%%r9), %%ymm15\n"
@@ -102,7 +102,7 @@ void gemm_fp32_fma_kernel_core(int64_t *param)
         ".if U_NR > 2\n vfmadd231ps %%ymm14, %%ymm15, %%ymm2\n .endif\n"
         ".endif\n"
         ".if U_M > 1\n"
-        "vbroadcastss (\\K * D_BYTES)(%%r9, %%r11, 1), %%ymm15\n"
+        "vbroadcastss (\\K * D_BYTES)(%%r9, %%r11), %%ymm15\n"
         ".if U_NR > 0\n vfmadd231ps %%ymm12, %%ymm15, %%ymm3\n .endif\n"
         ".if U_NR > 1\n vfmadd231ps %%ymm13, %%ymm15, %%ymm4\n .endif\n"
         ".if U_NR > 2\n vfmadd231ps %%ymm14, %%ymm15, %%ymm5\n .endif\n"
@@ -114,7 +114,7 @@ void gemm_fp32_fma_kernel_core(int64_t *param)
         ".if U_NR > 2\n vfmadd231ps %%ymm14, %%ymm15, %%ymm8\n .endif\n"
         ".endif\n"
         ".if U_M > 3\n"
-        "vbroadcastss (\\K * D_BYTES)(%%r8, %%r11, 1), %%ymm15\n"
+        "vbroadcastss (\\K * D_BYTES)(%%r8, %%r11), %%ymm15\n"
         ".if U_NR > 0\n vfmadd231ps %%ymm12, %%ymm15, %%ymm9\n .endif\n"
         ".if U_NR > 1\n vfmadd231ps %%ymm13, %%ymm15, %%ymm10\n .endif\n"
         ".if U_NR > 2\n vfmadd231ps %%ymm14, %%ymm15, %%ymm11\n .endif\n"
@@ -130,7 +130,7 @@ void gemm_fp32_fma_kernel_core(int64_t *param)
         "je 6f\n" // label_finalize_session
 "5:\n" // label_k_remain
         ".if U_NR > 0\n vmovups (0 * N_REG_ELTS * D_BYTES)(%%rbx), %%ymm12\n .endif\n"
-        ".if U_NR > 1\n vmovups (0 * N_REG_ELTS * D_BYTES)(%%rbx, %%r12, 1), %%ymm13\n .endif\n"
+        ".if U_NR > 1\n vmovups (0 * N_REG_ELTS * D_BYTES)(%%rbx, %%r12), %%ymm13\n .endif\n"
         ".if U_NR > 2\n vmovups (0 * N_REG_ELTS * D_BYTES)(%%rbx, %%r12, 2), %%ymm14\n .endif\n"
         ".if U_M > 0\n"
         "vbroadcastss (0 * D_BYTES)(%%r9), %%ymm15\n"
@@ -164,6 +164,14 @@ void gemm_fp32_fma_kernel_core(int64_t *param)
         "jne 5b\n" // label_k_remain
 
 "6:\n" // label_finalize_session
+        ".if U_M > 1\n"
+        "mov LDC_IDX(%[param]), %%r9\n" // ldc
+        "shl $LOG2_D_BYTES, %%r9\n"
+        ".endif\n"
+        ".if U_M > 2\n"
+        "lea (%%r14, %%r9, 2), %%r10\n" // l_c_m2 = c_ptr + 2 * ldc
+        ".endif\n"
+
         "mov ALPHA_IDX(%[param]), %%ecx\n"
         "cmp $0x3f800000, %%ecx\n" // alpha == 1.0f
         "je 7f\n" // label_apply_alpha_end
@@ -192,30 +200,25 @@ void gemm_fp32_fma_kernel_core(int64_t *param)
         "mov FLAGS_IDX(%[param]),  %%r11\n"
         "test $KERNEL_FLAG_LOAD_C, %%r11\n"
         "jz 8f\n" // label_load_c_end
-        "mov %%r14, %%r10\n" // c_ptr -> l_c
         ".if U_M > 0\n"
-        ".if U_NR > 0\n vaddps (0 * N_REG_ELTS * D_BYTES)(%%r10), %%ymm0, %%ymm0\n .endif\n"
-        ".if U_NR > 1\n vaddps (1 * N_REG_ELTS * D_BYTES)(%%r10), %%ymm1, %%ymm1\n .endif\n"
-        ".if U_NR > 2\n vaddps (2 * N_REG_ELTS * D_BYTES)(%%r10), %%ymm2, %%ymm2\n .endif\n"
+        ".if U_NR > 0\n vaddps (0 * N_REG_ELTS * D_BYTES)(%%r14), %%ymm0, %%ymm0\n .endif\n"
+        ".if U_NR > 1\n vaddps (1 * N_REG_ELTS * D_BYTES)(%%r14), %%ymm1, %%ymm1\n .endif\n"
+        ".if U_NR > 2\n vaddps (2 * N_REG_ELTS * D_BYTES)(%%r14), %%ymm2, %%ymm2\n .endif\n"
         ".endif\n"
         ".if U_M > 1\n"
-        "mov LDC_IDX(%[param]), %%r9\n"
-        "lea (%%r10, %%r9, D_BYTES), %%r10\n"
-        ".if U_NR > 0\n vaddps (0 * N_REG_ELTS * D_BYTES)(%%r10), %%ymm3, %%ymm3\n .endif\n"
-        ".if U_NR > 1\n vaddps (1 * N_REG_ELTS * D_BYTES)(%%r10), %%ymm4, %%ymm4\n .endif\n"
-        ".if U_NR > 2\n vaddps (2 * N_REG_ELTS * D_BYTES)(%%r10), %%ymm5, %%ymm5\n .endif\n"
+        ".if U_NR > 0\n vaddps (0 * N_REG_ELTS * D_BYTES)(%%r14, %%r9), %%ymm3, %%ymm3\n .endif\n"
+        ".if U_NR > 1\n vaddps (1 * N_REG_ELTS * D_BYTES)(%%r14, %%r9), %%ymm4, %%ymm4\n .endif\n"
+        ".if U_NR > 2\n vaddps (2 * N_REG_ELTS * D_BYTES)(%%r14, %%r9), %%ymm5, %%ymm5\n .endif\n"
         ".endif\n"
         ".if U_M > 2\n"
-        "lea (%%r10, %%r9, D_BYTES), %%r10\n"
         ".if U_NR > 0\n vaddps (0 * N_REG_ELTS * D_BYTES)(%%r10), %%ymm6, %%ymm6\n .endif\n"
         ".if U_NR > 1\n vaddps (1 * N_REG_ELTS * D_BYTES)(%%r10), %%ymm7, %%ymm7\n .endif\n"
         ".if U_NR > 2\n vaddps (2 * N_REG_ELTS * D_BYTES)(%%r10), %%ymm8, %%ymm8\n .endif\n"
         ".endif\n"
         ".if U_M > 3\n"
-        "lea (%%r10, %%r9, D_BYTES), %%r10\n"
-        ".if U_NR > 0\n vaddps (0 * N_REG_ELTS * D_BYTES)(%%r10), %%ymm9, %%ymm9\n .endif\n"
-        ".if U_NR > 1\n vaddps (1 * N_REG_ELTS * D_BYTES)(%%r10), %%ymm10, %%ymm10\n .endif\n"
-        ".if U_NR > 2\n vaddps (2 * N_REG_ELTS * D_BYTES)(%%r10), %%ymm11, %%ymm11\n .endif\n"
+        ".if U_NR > 0\n vaddps (0 * N_REG_ELTS * D_BYTES)(%%r10, %%r9), %%ymm9, %%ymm9\n .endif\n"
+        ".if U_NR > 1\n vaddps (1 * N_REG_ELTS * D_BYTES)(%%r10, %%r9), %%ymm10, %%ymm10\n .endif\n"
+        ".if U_NR > 2\n vaddps (2 * N_REG_ELTS * D_BYTES)(%%r10, %%r9), %%ymm11, %%ymm11\n .endif\n"
         ".endif\n"
 "8:\n" // label_load_c_end
         "test $(KERNEL_FLAG_RELU | KERNEL_FLAG_RELU6), %%r11\n"
@@ -268,32 +271,27 @@ void gemm_fp32_fma_kernel_core(int64_t *param)
         ".endif\n"
 "9:\n" // label_relu_end
 
-        "mov %%r14, %%r10\n" // c_ptr -> l_c
         ".if U_M > 0\n"
-        ".if U_NR > 0\n vmovups %%ymm0, (0 * N_REG_ELTS * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_NR > 1\n vmovups %%ymm1, (1 * N_REG_ELTS * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_NR > 2\n vmovups %%ymm2, (2 * N_REG_ELTS * D_BYTES)(%%r10)\n .endif\n"
+        ".if U_NR > 0\n vmovups %%ymm0, (0 * N_REG_ELTS * D_BYTES)(%%r14)\n .endif\n"
+        ".if U_NR > 1\n vmovups %%ymm1, (1 * N_REG_ELTS * D_BYTES)(%%r14)\n .endif\n"
+        ".if U_NR > 2\n vmovups %%ymm2, (2 * N_REG_ELTS * D_BYTES)(%%r14)\n .endif\n"
         ".endif\n"
         ".if U_M > 1\n"
-        "mov LDC_IDX(%[param]), %%r9\n"
-        "lea (%%r10, %%r9, D_BYTES), %%r10\n"
-        ".if U_NR > 0\n vmovups %%ymm3, (0 * N_REG_ELTS * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_NR > 1\n vmovups %%ymm4, (1 * N_REG_ELTS * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_NR > 2\n vmovups %%ymm5, (2 * N_REG_ELTS * D_BYTES)(%%r10)\n .endif\n"
+        ".if U_NR > 0\n vmovups %%ymm3, (0 * N_REG_ELTS * D_BYTES)(%%r14, %%r9)\n .endif\n"
+        ".if U_NR > 1\n vmovups %%ymm4, (1 * N_REG_ELTS * D_BYTES)(%%r14, %%r9)\n .endif\n"
+        ".if U_NR > 2\n vmovups %%ymm5, (2 * N_REG_ELTS * D_BYTES)(%%r14, %%r9)\n .endif\n"
         ".endif\n"
         ".if U_M > 2\n"
-        "lea (%%r10, %%r9, D_BYTES), %%r10\n"
         ".if U_NR > 0\n vmovups %%ymm6, (0 * N_REG_ELTS * D_BYTES)(%%r10)\n .endif\n"
         ".if U_NR > 1\n vmovups %%ymm7, (1 * N_REG_ELTS * D_BYTES)(%%r10)\n .endif\n"
         ".if U_NR > 2\n vmovups %%ymm8, (2 * N_REG_ELTS * D_BYTES)(%%r10)\n .endif\n"
         ".endif\n"
         ".if U_M > 3\n"
-        "lea (%%r10, %%r9, D_BYTES), %%r10\n"
-        ".if U_NR > 0\n vmovups %%ymm9, (0 * N_REG_ELTS * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_NR > 1\n vmovups %%ymm10, (1 * N_REG_ELTS * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_NR > 2\n vmovups %%ymm11, (2 * N_REG_ELTS * D_BYTES)(%%r10)\n .endif\n"
+        ".if U_NR > 0\n vmovups %%ymm9, (0 * N_REG_ELTS * D_BYTES)(%%r10, %%r9)\n .endif\n"
+        ".if U_NR > 1\n vmovups %%ymm10, (1 * N_REG_ELTS * D_BYTES)(%%r10, %%r9)\n .endif\n"
+        ".if U_NR > 2\n vmovups %%ymm11, (2 * N_REG_ELTS * D_BYTES)(%%r10, %%r9)\n .endif\n"
         ".endif\n"
-        ".if U_NR == 1 || U_NR == 3\n lea (%%r15, %%r12, 1), %%r15\n .endif\n" // packed_b_ptr += ldpacked_b
+        ".if U_NR == 1 || U_NR == 3\n lea (%%r15, %%r12), %%r15\n .endif\n" // packed_b_ptr += ldpacked_b
         ".if U_NR == 2 || U_NR == 3\n lea (%%r15, %%r12, 2), %%r15\n .endif\n" // packed_b_ptr += 2 * ldpacked_b
         "lea (U_N * D_BYTES)(%%r14), %%r14\n" // c_ptr += u_n
         "sub $U_N, %%r13\n" // n -= u_n
@@ -323,11 +321,11 @@ void gemm_fp32_fma_kernel_core(int64_t *param)
 #endif
 
 template<int64_t u_m, int64_t u_n>
-void gemm_fp32_fma_kernel(int64_t *param)
+void gemm_m4_kernel_fp32_fma(int64_t *param)
 {
 
 #ifdef PPL_USE_X86_INLINE_ASM
-    gemm_fp32_fma_kernel_core<u_m, u_n>(param);
+    gemm_m4_kernel_fp32_fma_core<u_m, u_n>(param);
     return;
 #endif
 
@@ -364,7 +362,7 @@ void gemm_fp32_fma_kernel(int64_t *param)
     array_param_helper kp(param);
     const int64_t N_REG_ELTS = gemm_kernel_fp32_fma::config::N_REG_ELTS;
     const int64_t u_nr = div_up(u_n, N_REG_ELTS);
-    const int64_t u_k = gemm_kernel_fp32_fma::config::UNROLL_K;
+    const int64_t u_k = 8;
 
     const gemm_kernel_fp32_fma::flag_t flags = kp.pick<const gemm_kernel_fp32_fma::flag_t>(gemm_kernel_fp32_fma::param_def::FLAGS_IDX);
     const float *packed_b_ptr = kp.pick<const float*>(gemm_kernel_fp32_fma::param_def::PACKED_B_PTR_IDX);
@@ -454,31 +452,32 @@ void gemm_fp32_fma_kernel(int64_t *param)
                 }
             }
 
+            const int64_t ldc = kp.pick<const int64_t>(gemm_kernel_fp32_fma::param_def::LDC_IDX);
+            float *l_c_m0;
+            float *l_c_m2;
+            if (u_m > 0) l_c_m0 = c_ptr;
+            if (u_m > 2) l_c_m2 = l_c_m0 + 2 * ldc;
+
             if (flags & gemm_kernel_fp32_fma::flag::LOAD_C) {
-                const int64_t ldc = kp.pick<const int64_t>(gemm_kernel_fp32_fma::param_def::LDC_IDX);
-                const float *l_c = c_ptr;
                 if (u_m > 0) {
-                    if (u_nr > 0) ymm0 = _mm256_add_ps(_mm256_loadu_ps(l_c + 0 * N_REG_ELTS), ymm0);
-                    if (u_nr > 1) ymm1 = _mm256_add_ps(_mm256_loadu_ps(l_c + 1 * N_REG_ELTS), ymm1);
-                    if (u_nr > 2) ymm2 = _mm256_add_ps(_mm256_loadu_ps(l_c + 2 * N_REG_ELTS), ymm2);
+                    if (u_nr > 0) ymm0 = _mm256_add_ps(_mm256_loadu_ps(l_c_m0 + 0 * ldc + 0 * N_REG_ELTS), ymm0);
+                    if (u_nr > 1) ymm1 = _mm256_add_ps(_mm256_loadu_ps(l_c_m0 + 0 * ldc + 1 * N_REG_ELTS), ymm1);
+                    if (u_nr > 2) ymm2 = _mm256_add_ps(_mm256_loadu_ps(l_c_m0 + 0 * ldc + 2 * N_REG_ELTS), ymm2);
                 }
                 if (u_m > 1) {
-                    l_c += ldc;
-                    if (u_nr > 0) ymm3 = _mm256_add_ps(_mm256_loadu_ps(l_c + 0 * N_REG_ELTS), ymm3);
-                    if (u_nr > 1) ymm4 = _mm256_add_ps(_mm256_loadu_ps(l_c + 1 * N_REG_ELTS), ymm4);
-                    if (u_nr > 2) ymm5 = _mm256_add_ps(_mm256_loadu_ps(l_c + 2 * N_REG_ELTS), ymm5);
+                    if (u_nr > 0) ymm3 = _mm256_add_ps(_mm256_loadu_ps(l_c_m0 + 1 * ldc + 0 * N_REG_ELTS), ymm3);
+                    if (u_nr > 1) ymm4 = _mm256_add_ps(_mm256_loadu_ps(l_c_m0 + 1 * ldc + 1 * N_REG_ELTS), ymm4);
+                    if (u_nr > 2) ymm5 = _mm256_add_ps(_mm256_loadu_ps(l_c_m0 + 1 * ldc + 2 * N_REG_ELTS), ymm5);
                 }
                 if (u_m > 2) {
-                    l_c += ldc;
-                    if (u_nr > 0) ymm6 = _mm256_add_ps(_mm256_loadu_ps(l_c + 0 * N_REG_ELTS), ymm6);
-                    if (u_nr > 1) ymm7 = _mm256_add_ps(_mm256_loadu_ps(l_c + 1 * N_REG_ELTS), ymm7);
-                    if (u_nr > 2) ymm8 = _mm256_add_ps(_mm256_loadu_ps(l_c + 2 * N_REG_ELTS), ymm8);
+                    if (u_nr > 0) ymm6 = _mm256_add_ps(_mm256_loadu_ps(l_c_m2 + 0 * ldc + 0 * N_REG_ELTS), ymm6);
+                    if (u_nr > 1) ymm7 = _mm256_add_ps(_mm256_loadu_ps(l_c_m2 + 0 * ldc + 1 * N_REG_ELTS), ymm7);
+                    if (u_nr > 2) ymm8 = _mm256_add_ps(_mm256_loadu_ps(l_c_m2 + 0 * ldc + 2 * N_REG_ELTS), ymm8);
                 }
                 if (u_m > 3) {
-                    l_c += ldc;
-                    if (u_nr > 0) ymm9 = _mm256_add_ps(_mm256_loadu_ps(l_c + 0 * N_REG_ELTS), ymm9);
-                    if (u_nr > 1) ymm10 = _mm256_add_ps(_mm256_loadu_ps(l_c + 1 * N_REG_ELTS), ymm10);
-                    if (u_nr > 2) ymm11 = _mm256_add_ps(_mm256_loadu_ps(l_c + 2 * N_REG_ELTS), ymm11);
+                    if (u_nr > 0) ymm9 = _mm256_add_ps(_mm256_loadu_ps(l_c_m2 + 1 * ldc + 0 * N_REG_ELTS), ymm9);
+                    if (u_nr > 1) ymm10 = _mm256_add_ps(_mm256_loadu_ps(l_c_m2 + 1 * ldc + 1 * N_REG_ELTS), ymm10);
+                    if (u_nr > 2) ymm11 = _mm256_add_ps(_mm256_loadu_ps(l_c_m2 + 1 * ldc + 2 * N_REG_ELTS), ymm11);
                 }
             }
 
@@ -530,30 +529,27 @@ void gemm_fp32_fma_kernel(int64_t *param)
                 }
             }
 
-            const int64_t ldc = kp.pick<const int64_t>(gemm_kernel_fp32_fma::param_def::LDC_IDX);
-            float *l_c = c_ptr;
-            if (u_m > 0) {
-                if (u_nr > 0) _mm256_storeu_ps(l_c + 0 * N_REG_ELTS, ymm0);
-                if (u_nr > 1) _mm256_storeu_ps(l_c + 1 * N_REG_ELTS, ymm1);
-                if (u_nr > 2) _mm256_storeu_ps(l_c + 2 * N_REG_ELTS, ymm2);
-            }
-            if (u_m > 1) {
-                l_c += ldc;
-                if (u_nr > 0) _mm256_storeu_ps(l_c + 0 * N_REG_ELTS, ymm3);
-                if (u_nr > 1) _mm256_storeu_ps(l_c + 1 * N_REG_ELTS, ymm4);
-                if (u_nr > 2) _mm256_storeu_ps(l_c + 2 * N_REG_ELTS, ymm5);
-            }
-            if (u_m > 2) {
-                l_c += ldc;
-                if (u_nr > 0) _mm256_storeu_ps(l_c + 0 * N_REG_ELTS, ymm6);
-                if (u_nr > 1) _mm256_storeu_ps(l_c + 1 * N_REG_ELTS, ymm7);
-                if (u_nr > 2) _mm256_storeu_ps(l_c + 2 * N_REG_ELTS, ymm8);
-            }
-            if (u_m > 3) {
-                l_c += ldc;
-                if (u_nr > 0) _mm256_storeu_ps(l_c + 0 * N_REG_ELTS, ymm9);
-                if (u_nr > 1) _mm256_storeu_ps(l_c + 1 * N_REG_ELTS, ymm10);
-                if (u_nr > 2) _mm256_storeu_ps(l_c + 2 * N_REG_ELTS, ymm11);
+            {
+                if (u_m > 0) {
+                    if (u_nr > 0) _mm256_storeu_ps(l_c_m0 + 0 * ldc + 0 * N_REG_ELTS, ymm0);
+                    if (u_nr > 1) _mm256_storeu_ps(l_c_m0 + 0 * ldc + 1 * N_REG_ELTS, ymm1);
+                    if (u_nr > 2) _mm256_storeu_ps(l_c_m0 + 0 * ldc + 2 * N_REG_ELTS, ymm2);
+                }
+                if (u_m > 1) {
+                    if (u_nr > 0) _mm256_storeu_ps(l_c_m0 + 1 * ldc + 0 * N_REG_ELTS, ymm3);
+                    if (u_nr > 1) _mm256_storeu_ps(l_c_m0 + 1 * ldc + 1 * N_REG_ELTS, ymm4);
+                    if (u_nr > 2) _mm256_storeu_ps(l_c_m0 + 1 * ldc + 2 * N_REG_ELTS, ymm5);
+                }
+                if (u_m > 2) {
+                    if (u_nr > 0) _mm256_storeu_ps(l_c_m2 + 0 * ldc + 0 * N_REG_ELTS, ymm6);
+                    if (u_nr > 1) _mm256_storeu_ps(l_c_m2 + 0 * ldc + 1 * N_REG_ELTS, ymm7);
+                    if (u_nr > 2) _mm256_storeu_ps(l_c_m2 + 0 * ldc + 2 * N_REG_ELTS, ymm8);
+                }
+                if (u_m > 3) {
+                    if (u_nr > 0) _mm256_storeu_ps(l_c_m2 + 1 * ldc + 0 * N_REG_ELTS, ymm9);
+                    if (u_nr > 1) _mm256_storeu_ps(l_c_m2 + 1 * ldc + 1 * N_REG_ELTS, ymm10);
+                    if (u_nr > 2) _mm256_storeu_ps(l_c_m2 + 1 * ldc + 2 * N_REG_ELTS, ymm11);
+                }
             }
         }
         { // next n block
@@ -569,22 +565,22 @@ const gemm_kernel_fp32_fma::func_t
     gemm_kernel_fp32_fma::table_[config::MAX_N_REGS][config::MAX_M_REGS] =
 {
     {
-        gemm_fp32_fma_kernel<1, 1 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
-        gemm_fp32_fma_kernel<2, 1 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
-        gemm_fp32_fma_kernel<3, 1 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
-        gemm_fp32_fma_kernel<4, 1 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_m4_kernel_fp32_fma<1, 1 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_m4_kernel_fp32_fma<2, 1 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_m4_kernel_fp32_fma<3, 1 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_m4_kernel_fp32_fma<4, 1 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
     },
     {
-        gemm_fp32_fma_kernel<1, 2 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
-        gemm_fp32_fma_kernel<2, 2 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
-        gemm_fp32_fma_kernel<3, 2 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
-        gemm_fp32_fma_kernel<4, 2 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_m4_kernel_fp32_fma<1, 2 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_m4_kernel_fp32_fma<2, 2 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_m4_kernel_fp32_fma<3, 2 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_m4_kernel_fp32_fma<4, 2 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
     },
     {
-        gemm_fp32_fma_kernel<1, 3 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
-        gemm_fp32_fma_kernel<2, 3 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
-        gemm_fp32_fma_kernel<3, 3 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
-        gemm_fp32_fma_kernel<4, 3 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_m4_kernel_fp32_fma<1, 3 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_m4_kernel_fp32_fma<2, 3 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_m4_kernel_fp32_fma<3, 3 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
+        gemm_m4_kernel_fp32_fma<4, 3 * gemm_kernel_fp32_fma::config::N_REG_ELTS>,
     },
 };
 

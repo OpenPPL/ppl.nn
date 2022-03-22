@@ -63,10 +63,10 @@ public:
     };
 
     conv2d_n16cx_gemm_direct_kernel_fp32_fma(int64_t *param) : param_(param) { }
-    void set_param(int64_t *param) { this->param_ = param; }
-    int64_t *param() { return param_; }
+    inline void set_param(int64_t *param) { this->param_ = param; }
+    inline int64_t *param() { return param_; }
 
-    void execute(const int64_t nt_store, const int64_t oc_reg, const int64_t s_reg) {
+    inline void execute(const int64_t nt_store, const int64_t oc_reg, const int64_t s_reg) {
         table_[nt_store][oc_reg - 1][s_reg - 1](param_);
     }
 

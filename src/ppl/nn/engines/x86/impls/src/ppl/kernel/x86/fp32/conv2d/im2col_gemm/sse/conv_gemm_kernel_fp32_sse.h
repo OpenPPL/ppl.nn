@@ -65,10 +65,10 @@ public:
     };
 
     conv_gemm_kernel_fp32_sse(int64_t *param) : param_(param) { }
-    void set_param(int64_t *param) { this->param_ = param; }
-    int64_t *param() { return param_; }
+    inline void set_param(int64_t *param) { this->param_ = param; }
+    inline int64_t *param() { return param_; }
 
-    void execute(const int64_t n_regb) {
+    inline void execute(const int64_t n_regb) {
         table_[n_regb - 1](param_);
     }
 
