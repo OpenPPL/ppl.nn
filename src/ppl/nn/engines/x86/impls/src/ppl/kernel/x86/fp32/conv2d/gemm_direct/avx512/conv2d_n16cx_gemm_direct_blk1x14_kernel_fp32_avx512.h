@@ -30,7 +30,6 @@ namespace ppl { namespace kernel { namespace x86 {
 template <bool nt_store, int32_t u_s>
 void conv2d_n16cx_gemm_direct_fp32_avx512_blk1x14_kernel_core(int64_t *param)
 {
-    static const float six[1] = {6.0f};
     __asm__ __volatile__ (
         ".equ P_BYTES, 8\n"
         ".equ D_BYTES, 4\n"
@@ -63,6 +62,8 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_blk1x14_kernel_core(int64_t *param)
         "mov HIS_PTR_IDX(%[param]), %%r13\n"
         "mov DST_PTR_IDX(%[param]), %%r14\n"
         "mov SPACE_IDX(%[param]), %%r15\n"
+        "mov DST_OCB_STRIDE_IDX(%[param]), %%r10\n"
+        "lea (%%r14, %%r10, D_BYTES), %%rdx\n"
 "1:\n" // label_init_session
         "mov FLT_OCB_STRIDE_IDX(%[param]), %%r9\n"
         "test $KERNEL_FLAG_LD_BIAS, %%r11\n"
@@ -257,84 +258,90 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_blk1x14_kernel_core(int64_t *param)
         ".else\n" // .if U_S < 6
         "mov $IC_DATA_BLK, %%r9\n"
 "9:\n" // label_ic
-        "vmovups (0 * OC_DATA_BLK * D_BYTES)(%%rbx), %%zmm28\n"
-        "vmovups (0 * OC_DATA_BLK * D_BYTES)(%%rcx), %%zmm29\n"
-        "prefetcht0 ((0 * OC_DATA_BLK + IC_DATA_BLK * OC_DATA_BLK) * D_BYTES)(%%rbx)\n"
-        "prefetcht0 ((0 * OC_DATA_BLK + IC_DATA_BLK * OC_DATA_BLK) * D_BYTES)(%%rcx)\n"
-        "lea (OC_DATA_BLK * D_BYTES)(%%rbx), %%rbx\n"
-        "lea (OC_DATA_BLK * D_BYTES)(%%rcx), %%rcx\n"
+        ".irp IC,0,1\n"
+        "vmovups (\\IC * OC_DATA_BLK * D_BYTES)(%%rbx), %%zmm28\n"
+        "vmovups (\\IC * OC_DATA_BLK * D_BYTES)(%%rcx), %%zmm29\n"
         ".if U_S > 0\n"
-        "vbroadcastss ((0 + 0 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm30\n"
+        "vbroadcastss ((\\IC + 0 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm30\n"
         "vfmadd231ps %%zmm28, %%zmm30, %%zmm0\n"
         "vfmadd231ps %%zmm29, %%zmm30, %%zmm14\n"
         ".endif\n"
         ".if U_S > 1\n"
-        "vbroadcastss ((0 + 1 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm31\n"
+        "vbroadcastss ((\\IC + 1 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm31\n"
         "vfmadd231ps %%zmm28, %%zmm31, %%zmm1\n"
         "vfmadd231ps %%zmm29, %%zmm31, %%zmm15\n"
         ".endif\n"
         ".if U_S > 2\n"
-        "vbroadcastss ((0 + 2 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm30\n"
+        "vbroadcastss ((\\IC + 2 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm30\n"
         "vfmadd231ps %%zmm28, %%zmm30, %%zmm2\n"
         "vfmadd231ps %%zmm29, %%zmm30, %%zmm16\n"
         ".endif\n"
         ".if U_S > 3\n"
-        "vbroadcastss ((0 + 3 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm31\n"
+        "vbroadcastss ((\\IC + 3 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm31\n"
         "vfmadd231ps %%zmm28, %%zmm31, %%zmm3\n"
         "vfmadd231ps %%zmm29, %%zmm31, %%zmm17\n"
         ".endif\n"
         ".if U_S > 4\n"
-        "vbroadcastss ((0 + 4 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm30\n"
+        "vbroadcastss ((\\IC + 4 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm30\n"
+        "prefetcht0 ((\\IC * OC_DATA_BLK + IC_DATA_BLK * OC_DATA_BLK) * D_BYTES)(%%rbx)\n"
         "vfmadd231ps %%zmm28, %%zmm30, %%zmm4\n"
         "vfmadd231ps %%zmm29, %%zmm30, %%zmm18\n"
         ".endif\n"
         ".if U_S > 5\n"
-        "vbroadcastss ((0 + 5 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm31\n"
+        "vbroadcastss ((\\IC + 5 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm31\n"
         "vfmadd231ps %%zmm28, %%zmm31, %%zmm5\n"
         "vfmadd231ps %%zmm29, %%zmm31, %%zmm19\n"
         ".endif\n"
         ".if U_S > 6\n"
-        "vbroadcastss ((0 + 6 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm30\n"
+        "vbroadcastss ((\\IC + 6 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm30\n"
         "vfmadd231ps %%zmm28, %%zmm30, %%zmm6\n"
         "vfmadd231ps %%zmm29, %%zmm30, %%zmm20\n"
         ".endif\n"
         ".if U_S > 7\n"
-        "vbroadcastss ((0 + 7 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm31\n"
+        "vbroadcastss ((\\IC + 7 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm31\n"
         "vfmadd231ps %%zmm28, %%zmm31, %%zmm7\n"
         "vfmadd231ps %%zmm29, %%zmm31, %%zmm21\n"
         ".endif\n"
         ".if U_S > 8\n"
-        "vbroadcastss ((0 + 8 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm30\n"
+        "vbroadcastss ((\\IC + 8 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm30\n"
+        ".endif\n"
+        ".if U_S > 4\n"
+        "prefetcht0 ((\\IC * OC_DATA_BLK + IC_DATA_BLK * OC_DATA_BLK) * D_BYTES)(%%rcx)\n"
+        ".endif\n"
+        ".if U_S > 8\n"
         "vfmadd231ps %%zmm28, %%zmm30, %%zmm8\n"
         "vfmadd231ps %%zmm29, %%zmm30, %%zmm22\n"
         ".endif\n"
         ".if U_S > 9\n"
-        "vbroadcastss ((0 + 9 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm31\n"
+        "vbroadcastss ((\\IC + 9 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm31\n"
         "vfmadd231ps %%zmm28, %%zmm31, %%zmm9\n"
         "vfmadd231ps %%zmm29, %%zmm31, %%zmm23\n"
         ".endif\n"
         ".if U_S > 10\n"
-        "vbroadcastss ((0 + 10 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm30\n"
+        "vbroadcastss ((\\IC + 10 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm30\n"
         "vfmadd231ps %%zmm28, %%zmm30, %%zmm10\n"
         "vfmadd231ps %%zmm29, %%zmm30, %%zmm24\n"
         ".endif\n"
         ".if U_S > 11\n"
-        "vbroadcastss ((0 + 11 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm31\n"
+        "vbroadcastss ((\\IC + 11 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm31\n"
         "vfmadd231ps %%zmm28, %%zmm31, %%zmm11\n"
         "vfmadd231ps %%zmm29, %%zmm31, %%zmm25\n"
         ".endif\n"
         ".if U_S > 12\n"
-        "vbroadcastss ((0 + 12 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm30\n"
+        "vbroadcastss ((\\IC + 12 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm30\n"
         "vfmadd231ps %%zmm28, %%zmm30, %%zmm12\n"
         "vfmadd231ps %%zmm29, %%zmm30, %%zmm26\n"
         ".endif\n"
         ".if U_S > 13\n"
-        "vbroadcastss ((0 + 13 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm31\n"
+        "vbroadcastss ((\\IC + 13 * IC_DATA_BLK) * D_BYTES)(%%rax), %%zmm31\n"
         "vfmadd231ps %%zmm28, %%zmm31, %%zmm13\n"
         "vfmadd231ps %%zmm29, %%zmm31, %%zmm27\n"
         ".endif\n"
-        "lea D_BYTES(%%rax), %%rax\n"
-        "sub $1, %%r9\n"
+        ".endr\n"
+        "lea (2 * OC_DATA_BLK * D_BYTES)(%%rbx), %%rbx\n"
+        "lea (2 * OC_DATA_BLK * D_BYTES)(%%rcx), %%rcx\n"
+        "lea (2 * D_BYTES)(%%rax), %%rax\n"
+        "sub $2, %%r9\n"
         "cmp $0, %%r9\n"
         "jne 9b\n" // label_ic
         "lea (-IC_DATA_BLK * D_BYTES)(%%rax, %%r8, D_BYTES), %%rax\n"
@@ -458,7 +465,9 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_blk1x14_kernel_core(int64_t *param)
         ".if U_S > 13\n vmaxps %%zmm30, %%zmm27, %%zmm27\n .endif\n"
         "test $KERNEL_FLAG_RELU6, %%r11\n"
         "jz 8f\n" // label_relu_end
-        "vbroadcastss (%[six]), %%zmm31\n"
+        "mov $0x40c00000, %%ecx\n"
+        "vmovd %%ecx, %%xmm31\n"
+        "vbroadcastss %%xmm31, %%zmm31\n" // 6.0
         ".if U_S > 0\n vminps %%zmm31, %%zmm0, %%zmm0\n .endif\n"
         ".if U_S > 1\n vminps %%zmm31, %%zmm1, %%zmm1\n .endif\n"
         ".if U_S > 2\n vminps %%zmm31, %%zmm2, %%zmm2\n .endif\n"
@@ -488,8 +497,6 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_blk1x14_kernel_core(int64_t *param)
         ".if U_S > 12\n vminps %%zmm31, %%zmm26, %%zmm26\n .endif\n"
         ".if U_S > 13\n vminps %%zmm31, %%zmm27, %%zmm27\n .endif\n"
 "8:\n" // label_relu_end
-        "mov DST_OCB_STRIDE_IDX(%[param]), %%r10\n"
-        "lea (%%r14, %%r10, D_BYTES), %%r10\n"
         ".if NT_STORE\n"
         ".if U_S > 0\n vmovntps %%zmm0, (0 * OC_DATA_BLK * D_BYTES)(%%r14)\n .endif\n"
         ".if U_S > 1\n vmovntps %%zmm1, (1 * OC_DATA_BLK * D_BYTES)(%%r14)\n .endif\n"
@@ -505,20 +512,20 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_blk1x14_kernel_core(int64_t *param)
         ".if U_S > 11\n vmovntps %%zmm11, (11 * OC_DATA_BLK * D_BYTES)(%%r14)\n .endif\n"
         ".if U_S > 12\n vmovntps %%zmm12, (12 * OC_DATA_BLK * D_BYTES)(%%r14)\n .endif\n"
         ".if U_S > 13\n vmovntps %%zmm13, (13 * OC_DATA_BLK * D_BYTES)(%%r14)\n .endif\n"
-        ".if U_S > 0\n vmovntps %%zmm14, (0 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 1\n vmovntps %%zmm15, (1 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 2\n vmovntps %%zmm16, (2 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 3\n vmovntps %%zmm17, (3 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 4\n vmovntps %%zmm18, (4 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 5\n vmovntps %%zmm19, (5 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 6\n vmovntps %%zmm20, (6 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 7\n vmovntps %%zmm21, (7 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 8\n vmovntps %%zmm22, (8 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 9\n vmovntps %%zmm23, (9 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 10\n vmovntps %%zmm24, (10 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 11\n vmovntps %%zmm25, (11 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 12\n vmovntps %%zmm26, (12 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 13\n vmovntps %%zmm27, (13 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
+        ".if U_S > 0\n vmovntps %%zmm14, (0 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 1\n vmovntps %%zmm15, (1 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 2\n vmovntps %%zmm16, (2 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 3\n vmovntps %%zmm17, (3 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 4\n vmovntps %%zmm18, (4 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 5\n vmovntps %%zmm19, (5 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 6\n vmovntps %%zmm20, (6 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 7\n vmovntps %%zmm21, (7 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 8\n vmovntps %%zmm22, (8 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 9\n vmovntps %%zmm23, (9 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 10\n vmovntps %%zmm24, (10 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 11\n vmovntps %%zmm25, (11 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 12\n vmovntps %%zmm26, (12 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 13\n vmovntps %%zmm27, (13 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
         ".else\n"
         ".if U_S > 0\n vmovups %%zmm0, (0 * OC_DATA_BLK * D_BYTES)(%%r14)\n .endif\n"
         ".if U_S > 1\n vmovups %%zmm1, (1 * OC_DATA_BLK * D_BYTES)(%%r14)\n .endif\n"
@@ -534,31 +541,31 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_blk1x14_kernel_core(int64_t *param)
         ".if U_S > 11\n vmovups %%zmm11, (11 * OC_DATA_BLK * D_BYTES)(%%r14)\n .endif\n"
         ".if U_S > 12\n vmovups %%zmm12, (12 * OC_DATA_BLK * D_BYTES)(%%r14)\n .endif\n"
         ".if U_S > 13\n vmovups %%zmm13, (13 * OC_DATA_BLK * D_BYTES)(%%r14)\n .endif\n"
-        ".if U_S > 0\n vmovups %%zmm14, (0 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 1\n vmovups %%zmm15, (1 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 2\n vmovups %%zmm16, (2 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 3\n vmovups %%zmm17, (3 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 4\n vmovups %%zmm18, (4 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 5\n vmovups %%zmm19, (5 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 6\n vmovups %%zmm20, (6 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 7\n vmovups %%zmm21, (7 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 8\n vmovups %%zmm22, (8 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 9\n vmovups %%zmm23, (9 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 10\n vmovups %%zmm24, (10 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 11\n vmovups %%zmm25, (11 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 12\n vmovups %%zmm26, (12 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
-        ".if U_S > 13\n vmovups %%zmm27, (13 * OC_DATA_BLK * D_BYTES)(%%r10)\n .endif\n"
+        ".if U_S > 0\n vmovups %%zmm14, (0 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 1\n vmovups %%zmm15, (1 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 2\n vmovups %%zmm16, (2 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 3\n vmovups %%zmm17, (3 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 4\n vmovups %%zmm18, (4 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 5\n vmovups %%zmm19, (5 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 6\n vmovups %%zmm20, (6 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 7\n vmovups %%zmm21, (7 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 8\n vmovups %%zmm22, (8 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 9\n vmovups %%zmm23, (9 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 10\n vmovups %%zmm24, (10 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 11\n vmovups %%zmm25, (11 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 12\n vmovups %%zmm26, (12 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
+        ".if U_S > 13\n vmovups %%zmm27, (13 * OC_DATA_BLK * D_BYTES)(%%rdx)\n .endif\n"
         ".endif\n"
         "sub $U_S, %%r15\n"
         "cmp $0, %%r15\n"
         "lea (U_S * IC_DATA_BLK * D_BYTES)(%%r12), %%r12\n"
         "lea (U_S * OC_DATA_BLK * D_BYTES)(%%r13), %%r13\n"
         "lea (U_S * OC_DATA_BLK * D_BYTES)(%%r14), %%r14\n"
+        "lea (U_S * OC_DATA_BLK * D_BYTES)(%%rdx), %%rdx\n"
         "jne 1b\n" // label_init_session
         :
         :
         [param]                       "r" (param),
-        [six]                         "r" (six),
         [NT_STORE]                    "i" (nt_store),
         [U_S]                         "i" (u_s),
         [IC_DATA_BLK]                 "i" (conv2d_n16cx_gemm_direct_kernel_fp32_avx512::config::IC_DATA_BLK),
@@ -569,7 +576,7 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_blk1x14_kernel_core(int64_t *param)
         [KERNEL_FLAG_RELU6]           "i" (conv2d_n16cx_gemm_direct_kernel_fp32_avx512::flag::RELU6)
         :
         "cc",
-        "rax", "rbx", "rcx",
+        "rax", "rbx", "rcx", "rdx",
         "r8" , "r9" , "r10", "r11", "r12", "r13", "r14", "r15",
         "zmm0" , "zmm1" , "zmm2" , "zmm3" , "zmm4" , "zmm5" , "zmm6" , "zmm7" ,
         "zmm8" , "zmm9" , "zmm10", "zmm11", "zmm12", "zmm13", "zmm14", "zmm15",
@@ -809,11 +816,12 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_blk1x14_kernel(int64_t *param)
         if (u_ocb > 1) icb_flt_o32 = icb_flt_o16 + flt_ocb_stride;
         while (channels >= IC_DATA_BLK) {
             channels -= IC_DATA_BLK;
-            for (int64_t ic = 0; ic < IC_DATA_BLK; ++ic) {
+            for (int64_t ic = 0; ic < IC_DATA_BLK; ic += 2) {
                 IC_COMPUTE_STEP(0);
-                icb_src += 1;
-                if (u_ocb > 0) icb_flt_o16 += OC_DATA_BLK;
-                if (u_ocb > 1) icb_flt_o32 += OC_DATA_BLK;
+                IC_COMPUTE_STEP(1);
+                icb_src += 2;
+                if (u_ocb > 0) icb_flt_o16 += 2 * OC_DATA_BLK;
+                if (u_ocb > 1) icb_flt_o32 += 2 * OC_DATA_BLK;
             }
             icb_src += src_icb_stride - IC_DATA_BLK;
         }

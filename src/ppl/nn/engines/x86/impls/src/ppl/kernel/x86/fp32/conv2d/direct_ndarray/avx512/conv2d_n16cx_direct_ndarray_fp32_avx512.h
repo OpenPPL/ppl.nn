@@ -43,6 +43,7 @@ private:
         int64_t padded_oc;
 
         // Kernel tunning
+        int64_t ow_l2_blk;
         int64_t oc_l2_blk;
         int32_t use_nt_store;
         int64_t unroll_ow_start;

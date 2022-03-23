@@ -34,6 +34,7 @@
 #define IC_L2_BLK_MAX()        (16 * CH_DT_BLK())
 #define IC_L2_BLK_TAIL_RATIO() 0.334
 #define OC_L2_BLK_MAX()        (4 * CH_DT_BLK())
+#define OW_L2_BLK_MAX()        96
 
 #define PADDING_POLICY_NOPAD() 0
 #define PADDING_POLICY_PREPAD() 1
@@ -147,6 +148,9 @@ void conv2d_n16cx_direct_fp32_fma_executor::cal_kernel_tunning_param()
     }
 
     sp.oc_l2_blk = min<int64_t>(OC_L2_BLK_MAX(), sp.padded_oc);
+    sp.ow_l2_blk = dst_w;
+    if (sp.ow_l2_blk >= 2 * OW_L2_BLK_MAX()) sp.ow_l2_blk = round_up(OW_L2_BLK_MAX(), sp.ow_kr_blk);
+    else if (sp.ow_l2_blk > 1.5 * OW_L2_BLK_MAX()) sp.ow_l2_blk = round_up(div_up(sp.ow_l2_blk, 2), sp.ow_kr_blk);
 
     sp.use_nt_store = 0;
     if (batch * cp.group * sp.padded_oc * dst_h * dst_w > l3_cap_all_core * 2) {
@@ -314,7 +318,7 @@ ppl::common::RetCode conv2d_n16cx_direct_fp32_fma_executor::execute()
                 share_param[CHANNELS_IDX()] = icl2_eff;
                 PICK_PARAM(uint64_t, share_param, FLAGS_IDX()) = kernel_flags;
 #ifdef PPL_USE_X86_OMP_COLLAPSE
-                PRAGMA_OMP_FOR_COLLAPSE(4)
+                PRAGMA_OMP_FOR_COLLAPSE(5)
 #endif
                 for (int64_t g = 0; g < gpl3_eff; ++g) {
                     for (int64_t b = 0; b < mbl3_eff; ++b) {
@@ -323,77 +327,86 @@ ppl::common::RetCode conv2d_n16cx_direct_fp32_fma_executor::execute()
 #endif
                         for (int64_t ocl2 = 0; ocl2 < padded_reg_oc; ocl2 += sp.oc_l2_blk) {
                             for (int64_t oh = 0; oh < dst_h; ++oh) {
-                                int64_t private_param[PRIV_PARAM_LEN()];
-                                const int64_t ocl2_eff = min<int64_t>(padded_reg_oc - ocl2, sp.oc_l2_blk);
-                                const int64_t ih       = oh * cp.stride_h - cp.pad_h;
-                                private_param[KH_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - ih, 0), ext_kernel_h - 1), cp.dilation_h);
-                                private_param[KH_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_h - ih, ext_kernel_h), 0), cp.dilation_h);
-                                const int64_t ow_unroll_len  = sp.unroll_ow_end - sp.unroll_ow_start;
-                                const int64_t ow_unroll_body = round(ow_unroll_len, sp.ow_kr_blk);
-                                const int64_t ow_unroll_tail = ow_unroll_len - ow_unroll_body;
-                                const float *l_src  = base_src + b * base_src_b_stride + g * base_src_g_stride + ih * base_src_h_stride - cp.pad_w * CH_DT_BLK();
-                                const float *l_his  = base_his + b * his_b_stride + g * dst_g_stride + ocl2 * dst_h * dst_w + oh * dst_h_stride;
-                                float *l_dst        = base_dst + b * dst_b_stride + g * dst_g_stride + ocl2 * dst_h * dst_w + oh * dst_h_stride;
-                                const float *l_flt  = base_flt + g * flt_g_stride + ocl2 * sp.ic_l2_blk * cp.kernel_h * cp.kernel_w;
-                                const float *l_bias = cvt_bias_ + (g + gpl3) * sp.padded_oc + ocl2;
-                                for (int64_t oc = ocl2; oc < ocl2 + ocl2_eff; oc += CH_DT_BLK()) {
-                                    const int64_t oc_eff = min<int64_t>(ocl2 + ocl2_eff - oc, CH_DT_BLK());
-                                    const int64_t oc_sel = div_up(oc_eff, CH_RF_BLK()) - 1;
+                                for (int64_t owl2 = 0; owl2 < dst_w; owl2 += sp.ow_l2_blk) {
+                                    int64_t private_param[PRIV_PARAM_LEN()];
+                                    const int64_t ocl2_eff = min<int64_t>(padded_reg_oc - ocl2, sp.oc_l2_blk);
+                                    const int64_t owl2_eff = min<int64_t>(dst_w - owl2, sp.ow_l2_blk);
+                                    const int64_t ih       = oh * cp.stride_h - cp.pad_h;
+                                    const int64_t iwl2     = owl2 * cp.stride_w - cp.pad_w;
+                                    private_param[KH_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - ih, 0), ext_kernel_h - 1), cp.dilation_h);
+                                    private_param[KH_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_h - ih, ext_kernel_h), 0), cp.dilation_h);
+                                    int64_t unroll_owl2_start = max(sp.unroll_ow_start, owl2);
+                                    int64_t unroll_owl2_end   = min(sp.unroll_ow_end, owl2 + owl2_eff);
+                                    if (unroll_owl2_start >= unroll_owl2_end || unroll_owl2_start < 0 || unroll_owl2_end < 0) {
+                                        unroll_owl2_start = unroll_owl2_end = owl2 + owl2_eff;
+                                    }
+                                    const int64_t owl2_unroll_len  = unroll_owl2_end - unroll_owl2_start;
+                                    const int64_t owl2_unroll_body = round(owl2_unroll_len, sp.ow_kr_blk);
+                                    const int64_t owl2_unroll_tail = owl2_unroll_len - owl2_unroll_body;
+                                    const float *l_src  = base_src + b * base_src_b_stride + g * base_src_g_stride + ih * base_src_h_stride + iwl2 * CH_DT_BLK();
+                                    const float *l_his  = base_his + b * his_b_stride + g * dst_g_stride + ocl2 * dst_h * dst_w + oh * dst_h_stride + owl2 * CH_DT_BLK();
+                                    float *l_dst        = base_dst + b * dst_b_stride + g * dst_g_stride + ocl2 * dst_h * dst_w + oh * dst_h_stride + owl2 * CH_DT_BLK();
+                                    const float *l_flt  = base_flt + g * flt_g_stride + ocl2 * sp.ic_l2_blk * cp.kernel_h * cp.kernel_w;
+                                    const float *l_bias = cvt_bias_ + (g + gpl3) * sp.padded_oc + ocl2;
+                                    for (int64_t oc = ocl2; oc < ocl2 + ocl2_eff; oc += CH_DT_BLK()) {
+                                        const int64_t oc_eff = min<int64_t>(ocl2 + ocl2_eff - oc, CH_DT_BLK());
+                                        const int64_t oc_sel = div_up(oc_eff, CH_RF_BLK()) - 1;
 
-                                    PICK_PARAM(const float *, private_param, SRC_IDX())  = l_src;
-                                    PICK_PARAM(const float *, private_param, HIS_IDX())  = l_his;
-                                    PICK_PARAM(float *, private_param, DST_IDX())        = l_dst;
-                                    PICK_PARAM(const float *, private_param, FLT_IDX())  = l_flt;
-                                    PICK_PARAM(const float *, private_param, BIAS_IDX()) = l_bias;
+                                        PICK_PARAM(const float *, private_param, SRC_IDX())  = l_src;
+                                        PICK_PARAM(const float *, private_param, HIS_IDX())  = l_his;
+                                        PICK_PARAM(float *, private_param, DST_IDX())        = l_dst;
+                                        PICK_PARAM(const float *, private_param, FLT_IDX())  = l_flt;
+                                        PICK_PARAM(const float *, private_param, BIAS_IDX()) = l_bias;
 
-                                    for (int64_t ow = 0; ow < sp.unroll_ow_start; ++ow) {
-                                        const int64_t iw              = ow * cp.stride_w - cp.pad_w;
-                                        if (cp.dilation_w == 1) {
-                                            private_param[KW_START_IDX()] = min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1);
-                                            private_param[KW_END_IDX()]   = max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0);
-                                        } else {
-                                            private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1), cp.dilation_w);
-                                            private_param[KW_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0), cp.dilation_w);
+                                        for (int64_t ow = owl2; ow < unroll_owl2_start; ++ow) {
+                                            const int64_t iw              = ow * cp.stride_w - cp.pad_w;
+                                            if (cp.dilation_w == 1) {
+                                                private_param[KW_START_IDX()] = min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1);
+                                                private_param[KW_END_IDX()]   = max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0);
+                                            } else {
+                                                private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1), cp.dilation_w);
+                                                private_param[KW_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0), cp.dilation_w);
+                                            }
+                                            conv2d_n16cx_direct_kernel_fp32_fma_pad_table[nt_store_sel][oc_sel](private_param, share_param);
+                                            PICK_PARAM(const float *, private_param, SRC_IDX()) += src_sw_stride;
+                                            PICK_PARAM(const float *, private_param, HIS_IDX()) += CH_DT_BLK();
+                                            PICK_PARAM(float *, private_param, DST_IDX()) += CH_DT_BLK();
                                         }
-                                        conv2d_n16cx_direct_kernel_fp32_fma_pad_table[nt_store_sel][oc_sel](private_param, share_param);
-                                        PICK_PARAM(const float *, private_param, SRC_IDX()) += src_sw_stride;
-                                        PICK_PARAM(const float *, private_param, HIS_IDX()) += CH_DT_BLK();
-                                        PICK_PARAM(float *, private_param, DST_IDX()) += CH_DT_BLK();
-                                    }
 
-                                    if (ow_unroll_body) {
-                                        private_param[OW_IDX()] = ow_unroll_body;
-                                        conv2d_n16cx_direct_kernel_fp32_fma_blk_table[nt_store_sel][stride_w_sel][oc_sel][sp.ow_kr_blk - 1](private_param, share_param);
-                                        PICK_PARAM(const float *, private_param, SRC_IDX()) += ow_unroll_body * src_sw_stride;
-                                        PICK_PARAM(const float *, private_param, HIS_IDX()) += ow_unroll_body * CH_DT_BLK();
-                                        PICK_PARAM(float *, private_param, DST_IDX()) += ow_unroll_body * CH_DT_BLK();
-                                    }
-                                    if (ow_unroll_tail) {
-                                        private_param[OW_IDX()] = ow_unroll_tail;
-                                        conv2d_n16cx_direct_kernel_fp32_fma_blk_table[nt_store_sel][stride_w_sel][oc_sel][ow_unroll_tail - 1](private_param, share_param);
-                                        PICK_PARAM(const float *, private_param, SRC_IDX()) += ow_unroll_tail * src_sw_stride;
-                                        PICK_PARAM(const float *, private_param, HIS_IDX()) += ow_unroll_tail * CH_DT_BLK();
-                                        PICK_PARAM(float *, private_param, DST_IDX()) += ow_unroll_tail * CH_DT_BLK();
-                                    }
-
-                                    for (int64_t ow = sp.unroll_ow_end; ow < dst_w; ++ow) {
-                                        const int64_t iw              = ow * cp.stride_w - cp.pad_w;
-                                        if (cp.dilation_w == 1) {
-                                            private_param[KW_START_IDX()] = min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1);
-                                            private_param[KW_END_IDX()]   = max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0);
-                                        } else {
-                                            private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1), cp.dilation_w);
-                                            private_param[KW_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0), cp.dilation_w);
+                                        if (owl2_unroll_body) {
+                                            private_param[OW_IDX()] = owl2_unroll_body;
+                                            conv2d_n16cx_direct_kernel_fp32_fma_blk_table[nt_store_sel][stride_w_sel][oc_sel][sp.ow_kr_blk - 1](private_param, share_param);
+                                            PICK_PARAM(const float *, private_param, SRC_IDX()) += owl2_unroll_body * src_sw_stride;
+                                            PICK_PARAM(const float *, private_param, HIS_IDX()) += owl2_unroll_body * CH_DT_BLK();
+                                            PICK_PARAM(float *, private_param, DST_IDX()) += owl2_unroll_body * CH_DT_BLK();
                                         }
-                                        conv2d_n16cx_direct_kernel_fp32_fma_pad_table[nt_store_sel][oc_sel](private_param, share_param);
-                                        PICK_PARAM(const float *, private_param, SRC_IDX()) += src_sw_stride;
-                                        PICK_PARAM(const float *, private_param, HIS_IDX()) += CH_DT_BLK();
-                                        PICK_PARAM(float *, private_param, DST_IDX()) += CH_DT_BLK();
+                                        if (owl2_unroll_tail) {
+                                            private_param[OW_IDX()] = owl2_unroll_tail;
+                                            conv2d_n16cx_direct_kernel_fp32_fma_blk_table[nt_store_sel][stride_w_sel][oc_sel][owl2_unroll_tail - 1](private_param, share_param);
+                                            PICK_PARAM(const float *, private_param, SRC_IDX()) += owl2_unroll_tail * src_sw_stride;
+                                            PICK_PARAM(const float *, private_param, HIS_IDX()) += owl2_unroll_tail * CH_DT_BLK();
+                                            PICK_PARAM(float *, private_param, DST_IDX()) += owl2_unroll_tail * CH_DT_BLK();
+                                        }
+
+                                        for (int64_t ow = unroll_owl2_end; ow < owl2 + owl2_eff; ++ow) {
+                                            const int64_t iw              = ow * cp.stride_w - cp.pad_w;
+                                            if (cp.dilation_w == 1) {
+                                                private_param[KW_START_IDX()] = min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1);
+                                                private_param[KW_END_IDX()]   = max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0);
+                                            } else {
+                                                private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1), cp.dilation_w);
+                                                private_param[KW_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0), cp.dilation_w);
+                                            }
+                                            conv2d_n16cx_direct_kernel_fp32_fma_pad_table[nt_store_sel][oc_sel](private_param, share_param);
+                                            PICK_PARAM(const float *, private_param, SRC_IDX()) += src_sw_stride;
+                                            PICK_PARAM(const float *, private_param, HIS_IDX()) += CH_DT_BLK();
+                                            PICK_PARAM(float *, private_param, DST_IDX()) += CH_DT_BLK();
+                                        }
+                                        l_bias += CH_DT_BLK();
+                                        l_flt  += CH_DT_BLK() * sp.ic_l2_blk * cp.kernel_h * cp.kernel_w;
+                                        l_dst  += CH_DT_BLK() * dst_h * dst_w;
+                                        l_his  += CH_DT_BLK() * dst_h * dst_w;
                                     }
-                                    l_bias += CH_DT_BLK();
-                                    l_flt  += CH_DT_BLK() * sp.ic_l2_blk * cp.kernel_h * cp.kernel_w;
-                                    l_dst  += CH_DT_BLK() * dst_h * dst_w;
-                                    l_his  += CH_DT_BLK() * dst_h * dst_w;
                                 }
                             }
                         }

@@ -31,6 +31,8 @@ void conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel(int64_t *param)
 #define KW_COMPUTE_STEP() do {\
     if (u_ocb > 0) zmm28 = _mm512_loadu_ps(ic_flt_o16);\
     if (u_ocb > 1) zmm29 = _mm512_loadu_ps(ic_flt_o32);\
+    if (u_ocb > 0) _mm_prefetch((const char*)(ic_flt_o16 + OC_DATA_BLK * OC_DATA_BLK), _MM_HINT_T0);\
+    if (u_ocb > 1) _mm_prefetch((const char*)(ic_flt_o32 + OC_DATA_BLK * OC_DATA_BLK), _MM_HINT_T0);\
     if (u_w > 0) {\
         zmm30 = _mm512_set1_ps(ic_src_w0[0 * stride_w]);\
         if (u_ocb > 0) zmm0  = _mm512_fmadd_ps(zmm28, zmm30, zmm0);\

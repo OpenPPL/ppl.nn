@@ -32,6 +32,7 @@ void conv2d_n16cx_direct_fp32_fma_blk1x6_kernel(
 #define IC_COMPUTE_STEP(IC) do {\
     if (oc_len > 0 * CH_RF_BLK()) ymm14 = _mm256_loadu_ps(icb_flt + 0 * CH_RF_BLK() + (IC) * CH_DT_BLK());\
     if (oc_len > 1 * CH_RF_BLK()) ymm15 = _mm256_loadu_ps(icb_flt + 1 * CH_RF_BLK() + (IC) * CH_DT_BLK());\
+    _mm_prefetch((const char*)(icb_flt + (IC) * CH_DT_BLK() + CH_DT_BLK() * CH_DT_BLK()), _MM_HINT_T0);\
     if (w_len > 0) {\
         ymm12 = _mm256_set1_ps(k_src[(IC) + 0 * src_sw_stride]);\
         if (oc_len > 0 * CH_RF_BLK()) ymm0 = _mm256_fmadd_ps(ymm14, ymm12, ymm0);\

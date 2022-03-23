@@ -30,7 +30,6 @@ namespace ppl { namespace kernel { namespace x86 {
 template <bool nt_store, int32_t u_s>
 void conv2d_n16cx_gemm_direct_fp32_avx512_blk1x31_kernel_core(int64_t *param)
 {
-    static const float six[1] = {6.0f};
     __asm__ __volatile__ (
         ".equ P_BYTES, 8\n"
         ".equ D_BYTES, 4\n"
@@ -338,7 +337,9 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_blk1x31_kernel_core(int64_t *param)
         ".if U_S > 30\n vmaxps %%zmm31, %%zmm30, %%zmm30\n .endif\n"
         "test $KERNEL_FLAG_RELU6, %%r11\n"
         "jz 8f\n" // label_relu_end
-        "vbroadcastss (%[six]), %%zmm31\n"
+        "mov $0x40c00000, %%ecx\n"
+        "vmovd %%ecx, %%xmm31\n"
+        "vbroadcastss %%xmm31, %%zmm31\n" // 6.0
         ".if U_S > 0\n vminps %%zmm31, %%zmm0, %%zmm0\n .endif\n"
         ".if U_S > 1\n vminps %%zmm31, %%zmm1, %%zmm1\n .endif\n"
         ".if U_S > 2\n vminps %%zmm31, %%zmm2, %%zmm2\n .endif\n"
@@ -445,7 +446,6 @@ void conv2d_n16cx_gemm_direct_fp32_avx512_blk1x31_kernel_core(int64_t *param)
         :
         :
         [param]                       "r" (param),
-        [six]                         "r" (six),
         [NT_STORE]                    "i" (nt_store),
         [U_S]                         "i" (u_s),
         [IC_DATA_BLK]                 "i" (conv2d_n16cx_gemm_direct_kernel_fp32_avx512::config::IC_DATA_BLK),
