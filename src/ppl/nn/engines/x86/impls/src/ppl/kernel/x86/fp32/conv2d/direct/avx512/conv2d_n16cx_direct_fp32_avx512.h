@@ -45,6 +45,7 @@ private:
 
         // Kernel tunning
         int64_t ow_kr_blk;
+        int64_t ow_l2_blk;
         int64_t ic_l2_blk;
         int64_t ic_l2_cnt;
         int64_t oc_kr_blk;

@@ -96,6 +96,7 @@ Define_bool(disable_avx512, false, "(false) disable avx512 for auto select algo"
 static bool Flag_disable_avx512 = true;
 #endif
 Define_bool(disable_avx_fma3, false, "(false) disable avx, fma3, avx512 for auto select algo");
+Define_bool(core_bind, false, "(false)core binding");
 
 /*
 
@@ -311,6 +312,7 @@ int main(int argc, char **argv) {
     int32_t num_threads = 1;
 #if defined(__linux__) && defined(PPL_USE_X86_OMP)
     num_threads = omp_get_max_threads();
+    if (Flag_core_bind) {
 #pragma omp parallel
     {
 #define handle_error_en(en, msg) do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
@@ -322,6 +324,7 @@ int main(int argc, char **argv) {
             handle_error_en(s, "pthread_setaffinity_np");
         }
 #undef handle_error_en
+    }
     }
 #endif
 

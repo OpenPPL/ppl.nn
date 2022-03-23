@@ -246,12 +246,18 @@ void conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel(
             const float *k_src = icb_src;
             for (int64_t kh = kh_start; kh < kh_end; ++kh) {
                 for (int64_t kw = 0; kw < kernel_w; ++kw) {
-                    for (int64_t ic = 0; ic < CH_DT_BLK(); ++ic) {
+                    for (int64_t ic = 0; ic < CH_DT_BLK(); ic += 4) {
                         IC_COMPUTE_STEP(0);
                         IC_PREFETCH_STEP(0);
-                        k_src += 1;
-                        icb_flt_o16 += CH_DT_BLK();
-                        icb_flt_o48 += CH_DT_BLK();
+                        IC_COMPUTE_STEP(1);
+                        IC_PREFETCH_STEP(1);
+                        IC_COMPUTE_STEP(2);
+                        IC_PREFETCH_STEP(2);
+                        IC_COMPUTE_STEP(3);
+                        IC_PREFETCH_STEP(3);
+                        k_src += 4;
+                        icb_flt_o16 += 4 * CH_DT_BLK();
+                        icb_flt_o48 += 4 * CH_DT_BLK();
                     }
                     k_src += src_dw_stride - CH_DT_BLK();
                 }

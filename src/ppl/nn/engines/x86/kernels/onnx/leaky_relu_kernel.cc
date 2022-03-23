@@ -32,18 +32,25 @@ ppl::common::RetCode LeakyReluKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("alpha: %f\n", param_->alpha);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    PPLNN_X86_REALLOC_TENSOR_BUFFER(y);
+    auto lx = x;
+    if (x->GetEdge()->CalcConsumerCount() == 1 && x->GetType() == TENSORTYPE_NORMAL) {
+        y->TransferBufferFrom(x);
+        lx = y;
+    } else {
+        PPLNN_X86_REALLOC_TENSOR_BUFFER(y);
+    }
+
     PPLNN_X86_DEBUG_TRACE("Output [y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
 
-    const auto data_type = x->GetShape()->GetDataType();
+    const auto data_type = lx->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
         if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-            return kernel::x86::leaky_relu_fp32_avx(y->GetShape(), x->GetBufferPtr<float>(), param_->alpha,
+            return kernel::x86::leaky_relu_fp32_avx(y->GetShape(), lx->GetBufferPtr<float>(), param_->alpha,
                                                     y->GetBufferPtr<float>());
         } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-            return kernel::x86::leaky_relu_fp32_sse(y->GetShape(), x->GetBufferPtr<float>(), param_->alpha,
+            return kernel::x86::leaky_relu_fp32_sse(y->GetShape(), lx->GetBufferPtr<float>(), param_->alpha,
                                                     y->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "get unsupported isa " << GetISA();
