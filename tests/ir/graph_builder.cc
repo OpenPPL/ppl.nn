@@ -30,7 +30,7 @@ GraphBuilder::GraphBuilder(const string& graph_name) {
 }
 
 RetCode GraphBuilder::AddNode(const string& name, const ir::Node::Type& type, const vector<string>& inputs,
-                              const vector<string>& outputs) {
+                              const vector<string>& outputs, const vector<string>& extra_inputs) {
     auto topo = graph_.topo.get();
     auto ret_pair = topo->AddNode(name);
     if (!ret_pair.second) {
@@ -59,16 +59,36 @@ RetCode GraphBuilder::AddNode(const string& name, const ir::Node::Type& type, co
         edge->SetProducer(node->GetId());
     }
 
+    if (extra_inputs.size() > 0) {
+        extra_inputs_[node->GetId()] = extra_inputs;
+    }
+
     return RC_SUCCESS;
 }
 
 RetCode GraphBuilder::Finalize() {
     auto topo = graph_.topo.get();
 
+    set<edgeid_t> extra_input_ids;
+    for (auto x = extra_inputs_.begin(); x != extra_inputs_.end(); ++x) {
+        auto node = graph_.topo->GetNodeById(x->first);
+        for (auto y = x->second.begin(); y != x->second.end(); ++y) {
+            auto edge = topo->GetEdgeByName(*y);
+            if (!edge) {
+                auto ret_pair = topo->AddEdge(*y);
+                edge = ret_pair.first;
+                topo->MarkAsExtraInput(edge->GetId());
+                extra_input_ids.insert(edge->GetId());
+            }
+            node->AddExtraInput(edge->GetId());
+        }
+    }
     for (auto it = topo->CreateEdgeIter(); it->IsValid(); it->Forward()) {
         auto edge = it->Get();
         if (edge->GetProducer() == INVALID_NODEID) {
-            topo->MarkAsInput(edge->GetId());
+            if (extra_input_ids.find(edge->GetId()) == extra_input_ids.end()) {
+                topo->MarkAsInput(edge->GetId());
+            }
         }
         if (edge->CalcConsumerCount() == 0) {
             topo->MarkAsOutput(edge->GetId());

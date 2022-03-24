@@ -24,152 +24,85 @@ using namespace std;
 using namespace ppl::nn;
 using namespace ppl::nn::test;
 
-class PartialGraphTopoTest : public testing::Test {
-protected:
-    void SetUp() {
-        graph_builder_.AddNode("c", ir::Node::Type("test", "echo", 1), {"output_of_b"}, {"cc"});
-        graph_builder_.AddNode("b", ir::Node::Type("test", "echo", 1), {"ab"}, {"output_of_b"});
-        graph_builder_.AddNode("a", ir::Node::Type("test", "echo", 1), {"input_of_a"}, {"ab"});
-        graph_builder_.Finalize();
+class PartialGraphTopoTest : public testing::Test {};
+
+TEST_F(PartialGraphTopoTest, constructor) {
+    auto parent_topo = builder_.GetGraph()->topo.get();
+
+    set<string> nodes = {"b", "c", "d"};
+    auto nid_b = parent_topo->GetNodeByName("b")->GetId();
+    auto nid_c = parent_topo->GetNodeByName("c")->GetId();
+    auto nid_d = parent_topo->GetNodeByName("d")->GetId();
+
+    ir::PartialGraphTopo partial_topo(parent_topo, {nid_b, nid_c, nid_d});
+
+    EXPECT_EQ(1, partial_topo.GetInputCount());
+    auto edge = partial_topo.GetEdgeById(partial_topo.GetInput(0));
+    EXPECT_EQ(string("out1"), edge->GetName());
+
+    EXPECT_EQ(1, partial_topo.GetOutputCount());
+    edge = partial_topo.GetEdgeById(partial_topo.GetOutput(0));
+    EXPECT_EQ(string("out4"), edge->GetName());
+
+    uint32_t node_counter = 0;
+    for (auto it = partial_topo.CreateNodeIter(); it->IsValid(); it->Forward()) {
+        auto node = it->Get();
+        EXPECT_TRUE(nodes.find(node->GetName()) != nodes.end());
+        ++node_counter;
     }
-
-    GraphBuilder graph_builder_;
-};
-
-// test PartialGraphtopo's api
-TEST_F(PartialGraphTopoTest, partial_graph_topo_AddNode_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    const string node_name = "test_node_name";
-    auto ret_pair = topo->AddNode(node_name);
-    EXPECT_TRUE(ret_pair.second);
-    EXPECT_EQ(ret_pair.first->GetName(), node_name);
+    EXPECT_TRUE(node_counter == nodes.size());
 }
 
-TEST_F(PartialGraphTopoTest, partial_graph_topo_CreateNodeIter_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto iter = topo->CreateNodeIter();
-    EXPECT_TRUE(iter->IsValid());
+TEST_F(PartialGraphTopoTest, extra_input_1) {
+    GraphBuilder builder;
+    builder.AddNode("a", ir::Node::Type("test", "op1", 1), {"in1"}, {"out1"});
+    builder.AddNode("b", ir::Node::Type("test", "op1", 1), {"out1"}, {"out2"}, {"extra_b1", "in1"});
+    builder.AddNode("c", ir::Node::Type("test", "op1", 1), {"out2"}, {"out3"});
+    builder.Finalize();
+
+    auto topo = builder.GetGraph()->topo.get();
+    EXPECT_EQ(1, topo->GetExtraInputCount());
+
+    auto nodeid_a = topo->GetNodeByName("a")->GetId();
+    auto nodeid_b = topo->GetNodeByName("b")->GetId();
+    ir::PartialGraphTopo partial_topo(topo, {nodeid_a, nodeid_b});
+
+    EXPECT_EQ(1, partial_topo.GetInputCount());
+    EXPECT_EQ(string("in1"), partial_topo.GetEdgeById(partial_topo.GetInput(0))->GetName());
+
+    EXPECT_EQ(1, partial_topo.GetOutputCount());
+    EXPECT_EQ(string("out2"), partial_topo.GetEdgeById(partial_topo.GetOutput(0))->GetName());
+
+    set<string> expected_extra_inputs = {"extra_b1"};
+    EXPECT_EQ(1, partial_topo.GetExtraInputCount());
+    EXPECT_EQ(string("extra_b1"), partial_topo.GetEdgeById(partial_topo.GetExtraInput(0))->GetName());
 }
 
-TEST_F(PartialGraphTopoTest, partial_graph_topo_GetMaxNodeId_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto res = topo->GetMaxNodeId();
-    EXPECT_EQ(res, 3);
-}
+TEST_F(PartialGraphTopoTest, extra_input_2) {
+    GraphBuilder builder;
+    builder.AddNode("a", ir::Node::Type("test", "op1", 1), {"in1"}, {"out1"});
+    builder.AddNode("b", ir::Node::Type("test", "op1", 1), {"out1"}, {"out2"}, {"extra_b1", "extra_b2"});
+    builder.AddNode("c", ir::Node::Type("test", "op1", 1), {"out2"}, {"out3"});
+    builder.Finalize();
 
-TEST_F(PartialGraphTopoTest, partial_grapg_topo_GetNodeById_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto res_node = topo->GetNodeById(0);
-    cout << res_node->GetName() << endl;
-    EXPECT_EQ(res_node->GetName(), "c");
-}
+    auto topo = builder.GetGraph()->topo.get();
+    set<string> expected_extra_inputs = {"extra_b1", "extra_b2"};
 
-TEST_F(PartialGraphTopoTest, partial_graph_topo_DelNodeById_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto ret_pair = topo->AddNode("tmp");
-    EXPECT_TRUE(ret_pair.second);
-    nodeid_t expected_nodeid = 3;
-    EXPECT_EQ(expected_nodeid, ret_pair.first->GetId());
-    topo->DelNodeById(expected_nodeid);
-    auto res = topo->GetNodeById(expected_nodeid);
-    EXPECT_EQ(res, nullptr);
-}
+    EXPECT_EQ(2, topo->GetExtraInputCount());
 
-TEST_F(PartialGraphTopoTest, partial_graph_topo_AddEdge_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    string edge_name = "tmp";
-    auto ret_pair = topo->AddEdge(edge_name);
-    EXPECT_TRUE(ret_pair.second);
-    EXPECT_EQ(ret_pair.first->GetName(), edge_name);
-}
+    auto nodeid_b = topo->GetNodeByName("b")->GetId();
+    ir::PartialGraphTopo partial_topo(topo, {nodeid_b});
 
-TEST_F(PartialGraphTopoTest, partial_graph_topo_CreateEdgeIter_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto iter = topo->CreateEdgeIter();
-    EXPECT_TRUE(iter->IsValid());
-}
+    EXPECT_EQ(1, partial_topo.GetInputCount());
+    EXPECT_EQ(string("out1"), partial_topo.GetEdgeById(partial_topo.GetInput(0))->GetName());
 
-TEST_F(PartialGraphTopoTest, partial_graph_topo_GetMaxEdgeId_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto id = topo->GetMaxEdgeId();
-    EXPECT_EQ(id, 4);
-}
+    EXPECT_EQ(1, partial_topo.GetOutputCount());
+    EXPECT_EQ(string("out2"), partial_topo.GetEdgeById(partial_topo.GetOutput(0))->GetName());
 
-TEST_F(PartialGraphTopoTest, partial_graph_topo_GetEdgeById_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto res_edge = topo->GetEdgeById(0);
-    EXPECT_EQ(res_edge->GetName(), "output_of_b");
-}
-
-TEST_F(PartialGraphTopoTest, partial_graph_topo_DelEdgeById_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto ret_pair = topo->AddEdge("tmp");
-    EXPECT_TRUE(ret_pair.second);
-    topo->DelEdgeById(4);
-    auto res = topo->GetEdgeById(4);
-    EXPECT_EQ(res, nullptr);
-}
-
-// test PartialGrahpEdge's api
-TEST_F(PartialGraphTopoTest, partial_edge_GetId_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
-    auto edge_id = edge->GetId();
-    EXPECT_EQ(0, edge_id);
-}
-
-TEST_F(PartialGraphTopoTest, partial_edge_SetNameAndGetName_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
-    const string edge_name = "tmp";
-    edge->SetName(edge_name);
-    EXPECT_EQ(edge->GetName(), edge_name);
-}
-
-TEST_F(PartialGraphTopoTest, partial_edge_SetProducerAndGetProducer_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
-    edge->SetProducer(10);
-    auto producer = edge->GetProducer();
-    EXPECT_EQ(producer, 10);
-}
-
-TEST_F(PartialGraphTopoTest, partial_edge_CreateConsumerIter_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
-    auto consumerIter = edge->CreateConsumerIter();
-    EXPECT_TRUE(consumerIter.IsValid());
-}
-
-TEST_F(PartialGraphTopoTest, partial_edge_CalcConsumerCount_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
-    auto consumers_count = edge->CalcConsumerCount();
-    EXPECT_EQ(consumers_count, 1);
-}
-
-TEST_F(PartialGraphTopoTest, partial_edge_AddConsumer_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
-    edge->AddConsumer(10);
-    auto constumers_count = edge->CalcConsumerCount();
-    EXPECT_EQ(constumers_count, 2);
-}
-
-TEST_F(PartialGraphTopoTest, partial_edge_DelConsumer_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
-    auto consumerIter = edge->CreateConsumerIter();
-    edge->DelConsumer(consumerIter.Get());
-    auto constumers_count = edge->CalcConsumerCount();
-    EXPECT_EQ(constumers_count, 0);
-}
-
-TEST_F(PartialGraphTopoTest, partial_edge_ClearConsumer_Test) {
-    auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
-    auto consumerIter = edge->CreateConsumerIter();
-    edge->ClearConsumer();
-    auto constumers_count = edge->CalcConsumerCount();
-    EXPECT_EQ(constumers_count, 0);
+    EXPECT_EQ(2, partial_topo.GetExtraInputCount());
+    for (uint32_t i = 0; i < partial_topo.GetExtraInputCount(); ++i) {
+        auto eid = partial_topo.GetExtraInput(i);
+        auto edge = partial_topo.GetEdgeById(eid);
+        EXPECT_TRUE(expected_extra_inputs.find(edge->GetName()) != expected_extra_inputs.end());
+    }
 }
