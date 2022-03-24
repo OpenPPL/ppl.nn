@@ -53,6 +53,7 @@ static EngineContext* FindOrCreateEngineContext(EngineImpl* engine, map<EngineIm
 }
 
 static RetCode InitRuntimeGraphResourceKernels(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
+                                               const vector<bool>& valid_node_flags,
                                                vector<unique_ptr<EngineContext>>* engctx, RuntimeGraphResource* graph) {
     map<EngineImpl*, EngineContext*> eng2ctx;
     for (auto partition = info.partitions.begin(); partition != info.partitions.end(); ++partition) {
@@ -64,6 +65,10 @@ static RetCode InitRuntimeGraphResourceKernels(const ir::GraphTopo* topo, const 
 
         auto dev = ctx->GetDevice();
         for (auto o = partition->ops.begin(); o != partition->ops.end(); ++o) {
+            if (!valid_node_flags[o->get()->GetNode()->GetId()]) {
+                continue;
+            }
+
             auto impl = (*o)->CreateKernelImpl();
             if (!impl) {
                 LOG(ERROR) << "create kernel[" << (*o)->GetNode()->GetName() << "] failed.";
@@ -198,12 +203,16 @@ RetCode InitRuntimeGraphResourceOutputs(const ir::GraphTopo* topo, const Runtime
 }
 
 static RetCode InitRuntimeGraphResourceConstants(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                                 RuntimeGraphResource* graph) {
+                                                 const vector<bool>& valid_edge_flags, RuntimeGraphResource* graph) {
     auto tensors = &graph->tensors;
 
     for (auto p = info.partitions.begin(); p != info.partitions.end(); ++p) {
         for (auto c = p->constants.begin(); c != p->constants.end(); ++c) {
             auto eid = c->first;
+            if (!valid_edge_flags[eid]) {
+                continue;
+            }
+
             auto edge = topo->GetEdgeById(eid);
             if (!edge) {
                 LOG(ERROR) << "cannot find edge info of constant[" << eid << "]";
@@ -243,13 +252,13 @@ RetCode RuntimeImpl::InitRuntimeGraphResource(const ir::GraphTopo* topo, const R
     graph->nodeid2kernel.resize(topo->GetMaxNodeId());
     graph->edgeid2object.resize(topo->GetMaxEdgeId());
 
-    auto status = InitRuntimeGraphResourceKernels(topo, info, &engctx_, graph);
+    auto status = InitRuntimeGraphResourceKernels(topo, info, aux_info_->valid_node_flags, &engctx_, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResourceKernels failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = InitRuntimeGraphResourceConstants(topo, info, graph);
+    status = InitRuntimeGraphResourceConstants(topo, info, aux_info_->valid_edge_flags, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResourceConstants failed: " << GetRetCodeStr(status);
         return status;

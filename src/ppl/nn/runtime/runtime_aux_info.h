@@ -34,6 +34,9 @@ struct RuntimeAuxInfo final {
 
     /** a tensor can be released right after the last consumer finish executing in `sorted_nodes` */
     std::vector<nodeid_t> tensor_last_consumer;
+
+    std::vector<bool> valid_node_flags;
+    std::vector<bool> valid_edge_flags;
 };
 
 ppl::common::RetCode GenerateRuntimeAuxInfo(const ir::GraphTopo*, const std::set<edgeid_t>&, RuntimeAuxInfo*);

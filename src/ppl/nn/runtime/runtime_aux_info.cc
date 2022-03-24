@@ -147,6 +147,21 @@ static RetCode InitTensorLastConsumer(const ir::GraphTopo* topo, const vector<no
     return RC_SUCCESS;
 }
 
+static void InitValidNodeFlags(nodeid_t max_node_id, const vector<nodeid_t>& nodes, vector<bool>* flags) {
+    flags->resize(max_node_id, false);
+    for (auto x = nodes.begin(); x != nodes.end(); ++x) {
+        flags->at(*x) = true;
+    }
+}
+
+static void InitValidEdgeFlags(const ir::GraphTopo* topo, vector<bool>* flags) {
+    flags->resize(topo->GetMaxEdgeId(), false);
+    for (auto it = topo->CreateEdgeIter(); it->IsValid(); it->Forward()) {
+        auto edge = it->Get();
+        flags->at(edge->GetId()) = true;
+    }
+}
+
 RetCode GenerateRuntimeAuxInfo(const ir::GraphTopo* topo, const set<edgeid_t>& reserved_edgeids, RuntimeAuxInfo* info) {
     utils::DfsDeeperFirst(topo, [info](nodeid_t nid) -> void {
         info->sorted_nodes.push_back(nid);
@@ -157,6 +172,9 @@ RetCode GenerateRuntimeAuxInfo(const ir::GraphTopo* topo, const set<edgeid_t>& r
         LOG(ERROR) << "InitTensorLastConsumer failed: " << GetRetCodeStr(status);
         return status;
     }
+
+    InitValidNodeFlags(topo->GetMaxNodeId(), info->sorted_nodes, &info->valid_node_flags);
+    InitValidEdgeFlags(topo, &info->valid_edge_flags);
 
     return RC_SUCCESS;
 }

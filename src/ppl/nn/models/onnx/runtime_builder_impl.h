@@ -22,9 +22,7 @@
 #include "ppl/nn/ir/graph.h"
 #include "ppl/nn/engines/engine_impl.h"
 #include "ppl/nn/utils/shared_resource.h"
-#include "ppl/nn/runtime/runtime.h"
-#include "ppl/nn/runtime/runtime_graph_info.h"
-#include "ppl/nn/runtime/runtime_aux_info.h"
+#include "ppl/nn/runtime/partial_runtime_creator.h"
 #include "ppl/nn/models/onnx/onnx_runtime_builder.h"
 #include "ppl/nn/models/onnx/onnx_runtime_builder_options.h"
 
@@ -38,7 +36,9 @@ public:
     ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num) override;
     ppl::common::RetCode Configure(uint32_t, ...) override;
     ppl::common::RetCode Preprocess() override;
-    Runtime* CreateRuntime() const override;
+    Runtime* CreateRuntime() override;
+    Runtime* CreateRuntime(const char** begin_ops, uint32_t begin_op_num, const char** end_ops,
+                           uint32_t end_op_num) override;
     ppl::common::RetCode Serialize(const char* output_file, const char* fmt) const override;
 
 private:
@@ -52,6 +52,11 @@ private:
     utils::SharedResource resource_;
     std::shared_ptr<RuntimeGraphInfo> graph_info_;
     std::shared_ptr<RuntimeAuxInfo> aux_info_;
+    PartialRuntimeCreator partial_runtime_creator_;
+
+private:
+    RuntimeBuilderImpl(const RuntimeBuilderImpl&) = delete;
+    RuntimeBuilderImpl& operator=(const RuntimeBuilderImpl&) = delete;
 };
 
 }}} // namespace ppl::nn::onnx

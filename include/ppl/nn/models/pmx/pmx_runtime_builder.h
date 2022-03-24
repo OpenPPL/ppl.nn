@@ -47,8 +47,12 @@ public:
 
     virtual ppl::common::RetCode Preprocess() = 0;
 
-    /** @brief creates a Runtime instance */
-    virtual Runtime* CreateRuntime() const = 0;
+    /** @brief creates a `Runtime` instance */
+    virtual Runtime* CreateRuntime() = 0;
+
+    /** @brief creates a `Runtime` instance which runs specified part of a graph */
+    virtual Runtime* CreateRuntime(const char** begin_ops, uint32_t begin_op_num, const char** end_ops,
+                                   uint32_t end_op_num) = 0;
 
     virtual ppl::common::RetCode Serialize(const char* output_file, const char* fmt) const = 0;
 };
