@@ -26,6 +26,7 @@
 #include "ppl/nn/models/onnx/onnx_runtime_builder_factory.h"
 #include "ppl/nn/engines/x86/engine_factory.h"
 #include "ppl/nn/engines/x86/x86_engine_options.h"
+#include "ppl/nn/engines/x86/x86_ops.h"
 
 #include "imagenet_labels.h"
 
@@ -113,6 +114,7 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
     printf("image preprocess succeed!\n");
 
     /************************ 2. create runtime builder from onnx model *************************/
+    ppl::nn::x86::RegisterBuiltinOpImpls();  // register Ops
     auto x86_engine = X86EngineFactory::Create(X86EngineOptions()); // create x86 engine with default options
 
     // register all engines you want to use
