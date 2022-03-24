@@ -22,6 +22,7 @@
 #include "ppl/nn/ir/graph.h"
 #include <string>
 #include <vector>
+#include <map>
 
 namespace ppl { namespace nn { namespace test {
 
@@ -29,7 +30,8 @@ class GraphBuilder final {
 public:
     GraphBuilder(const std::string& graph_name = "");
     ppl::common::RetCode AddNode(const std::string& name, const ir::Node::Type& type,
-                                 const std::vector<std::string>& inputs, const std::vector<std::string>& outputs);
+                                 const std::vector<std::string>& inputs, const std::vector<std::string>& outputs,
+                                 const std::vector<std::string>& extra_inputs = {});
     ppl::common::RetCode Finalize();
     ir::Graph* GetGraph() const {
         return &graph_;
@@ -37,6 +39,7 @@ public:
 
 private:
     mutable ir::Graph graph_;
+    std::map<nodeid_t, std::vector<std::string>> extra_inputs_;
 };
 
 }}} // namespace ppl::nn::test

@@ -110,12 +110,6 @@ PartialGraphTopo::PartialGraphTopo(GraphTopo* parent, const vector<nodeid_t>& no
                 edge_ptrs_[eid] = parent->GetEdgeById(eid);
             }
         }
-        for (uint32_t j = 0; j < node->GetExtraInputCount(); ++j) {
-            auto eid = node->GetExtraInput(j);
-            if (eid != INVALID_EDGEID) {
-                edge_ptrs_[eid] = parent->GetEdgeById(eid);
-            }
-        }
         for (uint32_t j = 0; j < node->GetOutputCount(); ++j) {
             auto eid = node->GetOutput(j);
             edge_ptrs_[eid] = parent->GetEdgeById(eid);
@@ -128,8 +122,8 @@ PartialGraphTopo::PartialGraphTopo(GraphTopo* parent, const vector<nodeid_t>& no
     }
 
     // override input/output edges
-    for (uint32_t i = 0; i < edge_ptrs_.size(); ++i) {
-        auto edge = edge_ptrs_[i];
+    for (uint32_t eid = 0; eid < edge_ptrs_.size(); ++eid) {
+        auto edge = edge_ptrs_[eid];
         if (!edge) {
             continue;
         }
@@ -140,23 +134,39 @@ PartialGraphTopo::PartialGraphTopo(GraphTopo* parent, const vector<nodeid_t>& no
         }
 
         auto producer_id = edge->GetProducer();
-        if (producer_id >= node_ptrs_.size()) {
-            inputs_.push_back(i);
-        } else if (!node_ptrs_[producer_id]) { // has outer producer, marked as extra input
+        // has outer producer, marked as input
+        if (producer_id >= node_ptrs_.size() || !node_ptrs_[producer_id]) {
             auto new_edge = new PartialGraphEdge(edge, &node_ptrs_);
-            override_edges_.emplace(i, unique_ptr<Edge>(new_edge));
-            edge_ptrs_[i] = new_edge;
-            extra_inputs_.push_back(i);
+            override_edges_.emplace(eid, unique_ptr<Edge>(new_edge));
+            edge_ptrs_[eid] = new_edge;
+            inputs_.push_back(eid);
         } else {
             for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
                 auto consumer_id = it.Get();
-                if (!node_ptrs_[consumer_id]) { // has outer consumer, marked as output
+                // has outer consumer, marked as output
+                if (consumer_id >= node_ptrs_.size() || !node_ptrs_[consumer_id]) {
                     auto new_edge = new PartialGraphEdge(edge, &node_ptrs_);
-                    override_edges_.emplace(i, unique_ptr<Edge>(new_edge));
-                    edge_ptrs_[i] = new_edge;
-                    outputs_.push_back(i);
+                    override_edges_.emplace(eid, unique_ptr<Edge>(new_edge));
+                    edge_ptrs_[eid] = new_edge;
+                    outputs_.push_back(eid);
                     break;
                 }
+            }
+        }
+    }
+
+    // handling nodes' extra inputs
+    for (uint32_t i = 0; i < nodes.size(); ++i) {
+        auto node = parent->GetNodeById(nodes[i]);
+        for (uint32_t j = 0; j < node->GetExtraInputCount(); ++j) {
+            auto eid = node->GetExtraInput(j);
+            // if an extra input of a node is not a normal edge, it is an extra input of the graph
+            if (eid != INVALID_EDGEID && !edge_ptrs_[eid]) {
+                auto edge = parent->GetEdgeById(eid);
+                auto new_edge = new PartialGraphEdge(edge, &node_ptrs_);
+                override_edges_.emplace(eid, unique_ptr<Edge>(new_edge));
+                edge_ptrs_[eid] = new_edge;
+                extra_inputs_.push_back(eid);
             }
         }
     }
