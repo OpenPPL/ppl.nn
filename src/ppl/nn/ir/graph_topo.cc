@@ -256,13 +256,13 @@ set<nodeid_t> GraphTopo::FindAncestors(nodeid_t nid) const {
     return dedup;
 }
 
-set<nodeid_t> GraphTopo::FindLeafNodes() const {
-    set<nodeid_t> leaf_nodes;
+vector<nodeid_t> GraphTopo::FindLeafNodes() const {
+    vector<nodeid_t> leaf_nodes;
     for (auto it = CreateEdgeIter(); it->IsValid(); it->Forward()) {
         auto edge = it->Get();
         auto producer_id = edge->GetProducer();
         if (producer_id != INVALID_NODEID && edge->CalcConsumerCount() == 0) {
-            leaf_nodes.insert(producer_id);
+            leaf_nodes.push_back(producer_id);
         }
     }
     return leaf_nodes;

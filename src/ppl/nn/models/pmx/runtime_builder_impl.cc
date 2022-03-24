@@ -101,6 +101,8 @@ RetCode RuntimeBuilderImpl::Init(const char* model_buf, uint64_t buf_len, ppl::n
         return status;
     }
 
+    partial_runtime_creator_.Init(topo_.get(), graph_info_, aux_info_);
+
     return RC_SUCCESS;
 }
 
@@ -124,7 +126,7 @@ RetCode RuntimeBuilderImpl::Preprocess() {
     return RC_SUCCESS;
 }
 
-Runtime* RuntimeBuilderImpl::CreateRuntime() const {
+Runtime* RuntimeBuilderImpl::CreateRuntime() {
     auto runtime = new RuntimeImpl();
     if (!runtime) {
         return nullptr;
@@ -138,6 +140,11 @@ Runtime* RuntimeBuilderImpl::CreateRuntime() const {
     }
 
     return runtime;
+}
+
+Runtime* RuntimeBuilderImpl::CreateRuntime(const char** begin_ops, uint32_t begin_op_num, const char** end_ops,
+                                           uint32_t end_op_num) {
+    return partial_runtime_creator_.Create(begin_ops, begin_op_num, end_ops, end_op_num, resource_.reserved_edgeids);
 }
 
 RetCode RuntimeBuilderImpl::Serialize(const char* output_file, const char* fmt) const {

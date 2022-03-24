@@ -27,7 +27,15 @@ using namespace ppl::nn::test;
 class PartialGraphTopoTest : public testing::Test {};
 
 TEST_F(PartialGraphTopoTest, constructor) {
-    auto parent_topo = builder_.GetGraph()->topo.get();
+    GraphBuilder builder;
+    builder.AddNode("a", ir::Node::Type("test", "op1", 1), {"in1"}, {"out1"});
+    builder.AddNode("b", ir::Node::Type("test", "op1", 1), {"out1"}, {"out2"});
+    builder.AddNode("c", ir::Node::Type("test", "op1", 1), {"out2"}, {"out3"});
+    builder.AddNode("d", ir::Node::Type("test", "op1", 1), {"out3"}, {"out4"});
+    builder.AddNode("e", ir::Node::Type("test", "op1", 1), {"out4"}, {"out5"});
+    builder.Finalize();
+
+    auto parent_topo = builder.GetGraph()->topo.get();
 
     set<string> nodes = {"b", "c", "d"};
     auto nid_b = parent_topo->GetNodeByName("b")->GetId();
