@@ -25,12 +25,13 @@
 
 namespace ppl { namespace nn { namespace utils {
 
-void Dfs(nodeid_t max_node_id, const std::function<nodeid_t()>& get_next_node,
-         const std::function<void(nodeid_t, const std::function<void(nodeid_t)>&)>& for_each_predecessor,
-         const std::function<void(nodeid_t)>& process,
-         const std::function<bool(nodeid_t, nodeid_t)>& less_than = nullptr);
+void ReversedDfs(nodeid_t max_node_id,
+                 const std::function<void(const std::function<void(nodeid_t)>&)>& for_each_end_node,
+                 const std::function<void(nodeid_t, const std::function<void(nodeid_t)>&)>& for_each_predecessor,
+                 const std::function<void(nodeid_t)>& process_in_order, const std::function<bool(nodeid_t)>& stop = {},
+                 const std::function<bool(nodeid_t, nodeid_t)>& less_than = {});
 
-void Bfs(nodeid_t max_node_id, const std::function<nodeid_t()>& get_next_node,
+void Bfs(nodeid_t max_node_id, const std::function<void(const std::function<void(nodeid_t)>&)>& for_each_node,
          const std::function<uint32_t(nodeid_t)>& get_predecessor_count,
          const std::function<void(nodeid_t, const std::function<void(nodeid_t)>&)>& for_each_successor,
          const std::function<void(nodeid_t, uint32_t level)>& process);

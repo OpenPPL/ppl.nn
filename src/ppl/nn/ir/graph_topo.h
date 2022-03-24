@@ -173,6 +173,9 @@ public:
     */
     ppl::common::RetCode ReplaceWithNode(const std::string& node_name, const Node::Type& node_type);
 
+    /** @brief find leaf nodes of this graph */
+    std::set<nodeid_t> FindLeafNodes() const;
+
     /** @brief find predecessors of the given node in this graph */
     std::vector<nodeid_t> FindPredecessors(nodeid_t) const;
 

@@ -74,16 +74,13 @@ TEST_F(IrUtilsTest, Dfs) {
     auto topo = builder_.GetGraph()->topo.get();
     vector<nodeid_t> sorted_nodes;
 
-    auto node_iter = topo->CreateNodeIter();
-    utils::Dfs(
+    utils::ReversedDfs(
         topo->GetMaxNodeId(),
-        [&node_iter]() -> nodeid_t {
-            if (node_iter->IsValid()) {
-                auto node = node_iter->Get();
-                node_iter->Forward();
-                return node->GetId();
+        [topo](const function<void(nodeid_t)>& f) -> void {
+            auto end_nodes = topo->FindLeafNodes();
+            for (auto x = end_nodes.begin(); x != end_nodes.end(); ++x) {
+                f(*x);
             }
-            return INVALID_NODEID;
         },
         [topo](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
             auto prevs = topo->FindPredecessors(nid);
@@ -104,16 +101,12 @@ TEST_F(IrUtilsTest, Bfs) {
     auto topo = builder_.GetGraph()->topo.get();
     vector<nodeid_t> sorted_nodes;
 
-    auto node_iter = topo->CreateNodeIter();
     utils::Bfs(
         topo->GetMaxNodeId(),
-        [&node_iter]() -> nodeid_t {
-            if (node_iter->IsValid()) {
-                auto node = node_iter->Get();
-                node_iter->Forward();
-                return node->GetId();
+        [topo](const function<void(nodeid_t)>& f) -> void {
+            for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
+                f(it->Get()->GetId());
             }
-            return INVALID_NODEID;
         },
         [topo](nodeid_t nid) -> uint32_t {
             auto prevs = topo->FindPredecessors(nid);
@@ -144,4 +137,37 @@ TEST_F(IrUtilsTest, DfsDeeperFirst) {
     cout << "nil" << endl;
 
     EXPECT_TRUE(IsBefore("a", "h", topo, sorted_nodes));
+}
+
+TEST_F(IrUtilsTest, ReversedDfs) {
+    auto topo = builder_.GetGraph()->topo.get();
+    set<string> begin_nodes = {"c", "d", "h"};
+    set<string> end_nodes = {"i"};
+
+    vector<nodeid_t> sorted_nodes;
+    utils::ReversedDfs(
+        topo->GetMaxNodeId(),
+        [topo, &end_nodes](const function<void(nodeid_t)>& f) -> void {
+            for (auto x = end_nodes.begin(); x != end_nodes.end(); ++x) {
+                f(topo->GetNodeByName(*x)->GetId());
+            }
+        },
+        [topo](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
+            auto prevs = topo->FindPredecessors(nid);
+            for (auto x : prevs) {
+                f(x);
+            }
+        },
+        [&sorted_nodes](nodeid_t nid) -> void {
+            sorted_nodes.push_back(nid);
+        },
+        [topo, &begin_nodes](nodeid_t current) -> bool {
+            return (begin_nodes.find(topo->GetNodeById(current)->GetName()) != begin_nodes.end());
+        });
+
+    set<string> nodes = {"c", "d", "e", "f", "g", "h", "i"};
+    EXPECT_EQ(nodes.size(), sorted_nodes.size());
+    for (auto x = sorted_nodes.begin(); x != sorted_nodes.end(); ++x) {
+        EXPECT_TRUE(nodes.find(topo->GetNodeById(*x)->GetName()) != nodes.end());
+    }
 }
