@@ -28,18 +28,15 @@ struct DfsNodeInfo final {
     bool resolved;
 };
 
-void Dfs(nodeid_t max_node_id, const function<nodeid_t()>& get_next_node,
-         const function<void(nodeid_t, const function<void(nodeid_t)>&)>& for_each_predecessor,
-         const function<void(nodeid_t)>& process, const function<bool(nodeid_t, nodeid_t)>& less_than) {
+void ReversedDfs(nodeid_t max_node_id, const function<void(const function<void(nodeid_t)>&)>& for_each_end_node,
+                 const function<void(nodeid_t, const function<void(nodeid_t)>&)>& for_each_predecessor,
+                 const function<void(nodeid_t)>& process_in_order, const function<bool(nodeid_t)>& stop,
+                 const function<bool(nodeid_t, nodeid_t)>& less_than) {
     vector<DfsNodeInfo> node_stack;
     node_stack.reserve(max_node_id);
-    while (true) {
-        auto nid = get_next_node();
-        if (nid >= max_node_id) {
-            break;
-        }
-        node_stack.push_back(DfsNodeInfo(nid, false));
-    }
+    for_each_end_node([&node_stack](nodeid_t nid) -> void {
+        node_stack.emplace_back(nid, false);
+    });
 
     vector<bool> visited(max_node_id, false);
 
@@ -48,7 +45,7 @@ void Dfs(nodeid_t max_node_id, const function<nodeid_t()>& get_next_node,
         node_stack.pop_back();
 
         if (item.resolved) {
-            process(item.id);
+            process_in_order(item.id);
             continue;
         }
 
@@ -57,26 +54,29 @@ void Dfs(nodeid_t max_node_id, const function<nodeid_t()>& get_next_node,
         }
 
         visited[item.id] = true;
-        item.resolved = true;
-        node_stack.push_back(item);
+        node_stack.emplace_back(item.id, true);
+
+        if (stop && stop(item.id)) {
+            continue;
+        }
 
         if (less_than) {
-            vector<nodeid_t> next_ids;
-            for_each_predecessor(item.id, [&visited, &next_ids](nodeid_t next) -> void {
-                if (!visited[next]) {
-                    next_ids.push_back(next);
+            vector<nodeid_t> prev_ids;
+            for_each_predecessor(item.id, [&visited, &prev_ids](nodeid_t prev) -> void {
+                if (!visited[prev]) {
+                    prev_ids.push_back(prev);
                 }
             });
-            if (!next_ids.empty()) {
-                std::sort(next_ids.begin(), next_ids.end(), less_than);
-                for (auto x = next_ids.begin(); x != next_ids.end(); ++x) {
-                    node_stack.push_back(DfsNodeInfo(*x, false));
+            if (!prev_ids.empty()) {
+                std::sort(prev_ids.begin(), prev_ids.end(), less_than);
+                for (auto x = prev_ids.begin(); x != prev_ids.end(); ++x) {
+                    node_stack.emplace_back(*x, false);
                 }
             }
         } else {
-            for_each_predecessor(item.id, [&visited, &node_stack](nodeid_t next) -> void {
-                if (!visited[next]) {
-                    node_stack.push_back(DfsNodeInfo(next, false));
+            for_each_predecessor(item.id, [&visited, &node_stack](nodeid_t prev) -> void {
+                if (!visited[prev]) {
+                    node_stack.emplace_back(prev, false);
                 }
             });
         }
@@ -89,23 +89,19 @@ struct BfsNodeInfo final {
     uint32_t level;
 };
 
-void Bfs(nodeid_t max_node_id, const function<nodeid_t()>& get_next_node,
+void Bfs(nodeid_t max_node_id, const function<void(const function<void(nodeid_t)>&)>& for_each_node,
          const function<uint32_t(nodeid_t)>& get_predecessor_count,
          const function<void(nodeid_t, const function<void(nodeid_t)>&)>& for_each_successor,
          const function<void(nodeid_t, uint32_t)>& process) {
     queue<BfsNodeInfo> q;
     vector<nodeid_t> refcount(max_node_id, 0);
 
-    while (true) {
-        auto nid = get_next_node();
-        if (nid >= max_node_id) {
-            break;
-        }
+    for_each_node([&refcount, &get_predecessor_count, &q](nodeid_t nid) -> void {
         refcount[nid] = get_predecessor_count(nid);
         if (refcount[nid] == 0) {
             q.push(BfsNodeInfo(nid, 0));
         }
-    }
+    });
 
     while (!q.empty()) {
         auto item = q.front();
@@ -125,16 +121,12 @@ void Bfs(nodeid_t max_node_id, const function<nodeid_t()>& get_next_node,
 void DfsDeeperFirst(const ir::GraphTopo* topo, const function<void(nodeid_t)>& process) {
     // get node levels for second stage
     vector<uint32_t> nid2level(topo->GetMaxNodeId(), 0);
-    auto node_iter = topo->CreateNodeIter();
     Bfs(
         topo->GetMaxNodeId(),
-        [&node_iter]() -> nodeid_t {
-            if (node_iter->IsValid()) {
-                auto node = node_iter->Get();
-                node_iter->Forward();
-                return node->GetId();
+        [topo](const function<void(nodeid_t)>& f) -> void {
+            for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
+                f(it->Get()->GetId());
             }
-            return INVALID_NODEID;
         },
         [topo](nodeid_t nid) -> uint32_t {
             return topo->FindPredecessors(nid).size();
@@ -149,16 +141,13 @@ void DfsDeeperFirst(const ir::GraphTopo* topo, const function<void(nodeid_t)>& p
             nid2level[nid] = level;
         });
 
-    node_iter->Reset();
-    Dfs(
+    ReversedDfs(
         topo->GetMaxNodeId(),
-        [&node_iter]() -> nodeid_t {
-            if (node_iter->IsValid()) {
-                auto node = node_iter->Get();
-                node_iter->Forward();
-                return node->GetId();
+        [topo](const function<void(nodeid_t)>& f) -> void {
+            auto leaf_nodes = topo->FindLeafNodes();
+            for (auto x = leaf_nodes.begin(); x != leaf_nodes.end(); ++x) {
+                f(*x);
             }
-            return INVALID_NODEID;
         },
         [topo](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
             auto prevs = topo->FindPredecessors(nid);
@@ -166,7 +155,7 @@ void DfsDeeperFirst(const ir::GraphTopo* topo, const function<void(nodeid_t)>& p
                 f(x);
             }
         },
-        process,
+        process, {},
         [&nid2level](nodeid_t a, nodeid_t b) -> bool {
             // nodes in the longer path will be evaluated first
             return (nid2level[a] < nid2level[b]);

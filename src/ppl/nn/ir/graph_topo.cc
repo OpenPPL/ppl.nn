@@ -256,17 +256,26 @@ set<nodeid_t> GraphTopo::FindAncestors(nodeid_t nid) const {
     return dedup;
 }
 
+set<nodeid_t> GraphTopo::FindLeafNodes() const {
+    set<nodeid_t> leaf_nodes;
+    for (auto it = CreateEdgeIter(); it->IsValid(); it->Forward()) {
+        auto edge = it->Get();
+        auto producer_id = edge->GetProducer();
+        if (producer_id != INVALID_NODEID && edge->CalcConsumerCount() == 0) {
+            leaf_nodes.insert(producer_id);
+        }
+    }
+    return leaf_nodes;
+}
+
 void GraphTopo::TopologicalSort(const function<void(nodeid_t)>& callback) const {
-    auto node_iter = CreateNodeIter();
-    utils::Dfs(
+    utils::ReversedDfs(
         GetMaxNodeId(),
-        [&node_iter]() -> nodeid_t {
-            if (node_iter->IsValid()) {
-                auto ret = node_iter->Get();
-                node_iter->Forward();
-                return ret->GetId();
+        [this](const function<void(nodeid_t)>& f) -> void {
+            auto leaf_nodes = FindLeafNodes();
+            for (auto x = leaf_nodes.begin(); x != leaf_nodes.end(); ++x) {
+                f(*x);
             }
-            return INVALID_NODEID;
         },
         [this](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
             auto prevs = this->FindPredecessors(nid);
