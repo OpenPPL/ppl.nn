@@ -115,11 +115,12 @@ set(LUACPP_INSTALL OFF CACHE BOOL "")
 set(LUACPP_BUILD_TESTS OFF CACHE BOOL "")
 
 hpcc_declare_pkg_dep(luacpp
-    https://github.com/ouonline/lua-cpp/archive/2111ff6a2b62d274146da2e63a4110378c7b8f4a.zip
-    df71529137ac74d35980ed33c6a0f316)
+    https://github.com/ouonline/lua-cpp/archive/7f2cb9fdfa208b8757b2d490ff943c78700bc882.zip
+    87332cd233dcad8b750ec4dbec7d1b9e)
 
 # --------------------------------------------------------------------------- #
 
+set(BUILD_GMOCK OFF CACHE BOOL "")
 set(INSTALL_GTEST OFF CACHE BOOL "")
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
 
