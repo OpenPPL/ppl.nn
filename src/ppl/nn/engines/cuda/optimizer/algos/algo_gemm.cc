@@ -178,15 +178,15 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
     }
 #else
     // Do Select
-    if (shape_in0.GetDataType() == ppl::common::DATATYPE_FLOAT16) {
-        timer = PPLCUDAGemmSelectKernel(stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
+    int device_id = options.device->GetDeviceId();
+    if (shape_in0.GetDataType()==ppl::common::DATATYPE_FLOAT16) {
+        timer = PPLCUDAGemmSelectKernel(device_id, stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
                                         bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr,
                                         attr_param_.param, temp_fuse_param, attr_param_.extra_param.algo_info);
-    } else if (shape_in0.GetDataType() == ppl::common::DATATYPE_INT8) {
-        timer = PPLCUDAGemmSelectKernelInt8(stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
-                                            bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr,
-                                            attr_param_.param, temp_quant_param, temp_fuse_param,
-                                            attr_param_.extra_param.algo_info);
+    } else if (shape_in0.GetDataType()==ppl::common::DATATYPE_INT8) {
+        timer = PPLCUDAGemmSelectKernelInt8(device_id, stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
+                                        bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr,
+                                        attr_param_.param, temp_quant_param, temp_fuse_param, attr_param_.extra_param.algo_info);
     }
 #endif
     CudaArgs::AlgoSelects algo_select;

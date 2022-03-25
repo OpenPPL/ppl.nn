@@ -56,10 +56,8 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
     fuse_param_t temp_fuse_param;
     ConvertToForwardFuseParam(ctx, GetCudaDevice(), param_->extra_param.fuse_info, temp_fuse_param);
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
-    status = PPLCUDAConvTransposeForward(
-                    GetStream(), module, X->GetShape(), X->GetBufferPtr(), W->GetBufferPtr(), b_data,
-                    Y->GetShape(), Y->GetBufferPtr(),
-                    &param_->param, param_->extra_param.algo_info, temp_fuse_param, tmp_buffer);
+    status = PPLCUDAConvTransposeForward(GetDeviceId(), GetStream(), module, X->GetShape(), X->GetBufferPtr(), W->GetBufferPtr(), b_data,
+                                         &param_->param, param_->extra_param.algo_info, tmp_buffer, Y->GetShape(), Y->GetBufferPtr());
 
     return status;
 }

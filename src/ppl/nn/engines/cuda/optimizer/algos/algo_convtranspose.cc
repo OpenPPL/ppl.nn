@@ -112,6 +112,22 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
 #ifdef PPLNN_ENABLE_CUDA_JIT
     // Do select
     LOG(INFO) << "Compiling " << node->GetName();
+    int device_id = options.device->GetDeviceId();
+    PPLCUDAConvolutionPredictKernel(shape_in0.GetDataType(), attr_param_.extra_param.algo_info, temp_conv_param);
+    auto timer = PPLCUDAGemmJITSelectKernel(device_id, stream, shape_in0.GetDataType(), &shape_in0, input_buffer.addr, &shape_in1,
+                                            weight_buffer.addr, bias_buffer.addr, &shape_out, output_buffer.addr,
+                                            temp_buffer.addr, temp_conv_param, temp_fuse_param,
+                                            attr_param_.extra_param.algo_info);
+#else
+    // Do Select
+    ppl::nn::common::GemmParam param;
+    param.transA = 0;
+    param.transB = 0;
+    param.bias_term = temp_conv_param.has_bias;
+    int device_id = options.device->GetDeviceId();
+    auto timer = PPLCUDAGemmSelectKernel(device_id, stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
+                                         bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr,
+                                         param, temp_fuse_param, attr_param_.extra_param.algo_info);
 #endif
     // Do Select
     auto timer = PPLCUDAConvTransposeSelectKernel(device_id, stream, &shape_in0, input_buffer.addr,
@@ -185,9 +201,9 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
             return status;
         }
 
-        PPLCUDAConvTransposeCvt(stream, filter_input_buffer.addr, filter_temp_buffer.addr,
-                                weight_constat_info.GetBufferDesc().addr, &shape_in1, &attr_param_.param);
-        postshape.SetDataFormat(ppl::common::DATAFORMAT_NHWC8);
+        int device_id = options.device->GetDeviceId();
+        PPLCUDAConvTransposeCvt(device_id, stream, filter_input_buffer.addr, filter_temp_buffer.addr, weight_constat_info.GetBufferDesc().addr,
+                                &shape_in1, &attr_param_.param);
 
         options.info->constants.emplace(preedge_id, std::move(weight_constat_info));
         *options.tensors->find(preedge_id)->second->GetShape() = postshape;

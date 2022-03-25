@@ -93,8 +93,8 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
         PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
         return 0.0f;
     } else { // Give the default kernel
-        attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_fn_b128x128_w64x64_k32_s32_buf1";
-        attr_param_.extra_param.algo_info.kid = 5100;
+        attr_param_.extra_param.algo_info.algo_name = "nvSwzlSm75Fp16Conv_hmma1688_nhwc_fn_b256x32_w64x32_k64_buf2";
+        attr_param_.extra_param.algo_info.kid = 5727;
         attr_param_.extra_param.algo_info.splitk = 1;
         attr_param_.extra_param.algo_info.splitf = 1;
         PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
@@ -136,7 +136,8 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
                                                    attr_param_.extra_param.algo_info, temp_conv_param, temp_fuse_param);
 #else
     // Do select
-    auto timer = PPLCUDAConvolutionSelectKernel(stream, shape_in0.GetDataType(), (int4*)input_buffer.addr,
+    int device_id = options.device->GetDeviceId();
+    auto timer = PPLCUDAConvolutionSelectKernel(device_id, stream, shape_in0.GetDataType(), (int4*)input_buffer.addr,
                                                 (int4*)weight_buffer.addr, (int4*)output_buffer.addr,
                                                 (int4*)bias_buffer.addr, (int4*)temp_buffer.addr,
                                                 attr_param_.extra_param.algo_info, temp_conv_param, temp_fuse_param);

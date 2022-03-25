@@ -342,31 +342,31 @@ def GenAllKernels(parent_path):
         lut_source_file = LutSourceFile(parent_path, flt_size)
         spk_source_file = SpkSourceFile(parent_path, flt_size)
 
-        for buf_size in [1, 2]:
-            for s_size in [16, 32, 64]:
-                for k_num in [1, 2, 4]:
-                    #for warp_y in [16, 32, 64, 128]:
-                    for warp_y in [8, 16, 32, 64, 128]:
-                        for warp_x in [8, 16, 32, 64]:
-                        #for warp_x in [8, 16, 32, 64, 128]:
-                            for cta_y_num in [1, 2, 4]:
-                                for cta_x_num in [1, 2, 4]:
-                                    if warp_y == 128 and warp_x == 64:
-                                        continue
-                                    if cta_y_num == 4 and cta_x_num == 4:
-                                        continue
+        #for buf_size in [1, 2]:
+        #    for s_size in [16, 32, 64]:
+        #        for k_num in [1, 2, 4]:
+        #            #for warp_y in [16, 32, 64, 128]:
+        #            for warp_y in [8, 16, 32, 64, 128]:
+        #                for warp_x in [8, 16, 32, 64]:
+        #                #for warp_x in [8, 16, 32, 64, 128]:
+        #                    for cta_y_num in [1, 2, 4]:
+        #                        for cta_x_num in [1, 2, 4]:
+        #                            if warp_y == 128 and warp_x == 64:
+        #                                continue
+        #                            if cta_y_num == 4 and cta_x_num == 4:
+        #                                continue
 
-                                    kernel = KernelInfo(parent_path, flt_size, s_size, k_num, cta_y_num, cta_x_num, warp_y, warp_x, buf_size)
+        #                            kernel = KernelInfo(parent_path, flt_size, s_size, k_num, cta_y_num, cta_x_num, warp_y, warp_x, buf_size)
 
-                                    if not kernel.ExceedScope():
-                                        kernel.GenKernel()
-                                        lut_header_file.AppendKernel(kernel.kname)
-                                        spk_header_file.AppendKernel(kernel.kname)
+        #                            if not kernel.ExceedScope():
+        #                                kernel.GenKernel()
+        #                                lut_header_file.AppendKernel(kernel.kname)
+        #                                spk_header_file.AppendKernel(kernel.kname)
 
-                                        lut_source_file.AppendKernel(kernel.fname)
-                                        spk_source_file.AppendKernel(kernel.fname)
+        #                                lut_source_file.AppendKernel(kernel.fname)
+        #                                spk_source_file.AppendKernel(kernel.fname)
 
-                                        init_file.AppendKernel(kernel.kname)
+        #                                init_file.AppendKernel(kernel.kname)
         lut_header_file.Close()
         spk_header_file.Close()
 

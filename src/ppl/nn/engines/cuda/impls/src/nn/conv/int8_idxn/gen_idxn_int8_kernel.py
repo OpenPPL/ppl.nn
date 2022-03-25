@@ -199,24 +199,24 @@ def GenAllKernels(parent_path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-    for s_size in [16, 32, 64]:
-        for k_num in [1, 2]:
-            #for warp_y in [16, 32, 64]:
-            for warp_y in [16, 32]:
-                for warp_x in [8, 16, 32]:
-                    for cta_y_num in [1, 2, 4]:
-                        for cta_x_num in [1, 2, 4]:
-                            if cta_y_num == 4 and cta_x_num == 4:
-                                continue
+    #for s_size in [16, 32, 64]:
+    #    for k_num in [1, 2]:
+    #        #for warp_y in [16, 32, 64]:
+    #        for warp_y in [16, 32]:
+    #            for warp_x in [8, 16, 32]:
+    #                for cta_y_num in [1, 2, 4]:
+    #                    for cta_x_num in [1, 2, 4]:
+    #                        if cta_y_num == 4 and cta_x_num == 4:
+    #                            continue
 
-                            kernel = KernelInfo(parent_path, s_size, k_num, cta_y_num, cta_x_num, warp_y, warp_x)
+    #                        kernel = KernelInfo(parent_path, s_size, k_num, cta_y_num, cta_x_num, warp_y, warp_x)
 
-                            kernel.GenKernel()
+    #                        kernel.GenKernel()
 
-                            idx_header_file.AppendKernel(kernel.kname)
-                            idx_source_file.AppendKernel(kernel.fname)
+    #                        idx_header_file.AppendKernel(kernel.kname)
+    #                        idx_source_file.AppendKernel(kernel.fname)
 
-                            init_file.AppendKernel(s_size, kernel.kname)
+    #                        init_file.AppendKernel(s_size, kernel.kname)
     idx_header_file.Close()
     idx_source_file.Close()
 

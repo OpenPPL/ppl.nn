@@ -54,6 +54,7 @@ double PPLCUDAGemmJITSelectKernel(
     uint64_t workspace = (uint64_t)8 * 1024 * 1024 * 1024);
 
 double PPLCUDAGemmSelectKernel(
+    int device_id,
     const cudaStream_t& stream,
     const ppl::nn::TensorShape* input_shape,
     const void* input,
@@ -68,6 +69,7 @@ double PPLCUDAGemmSelectKernel(
     algo_param_t& algo_param);
 
 ppl::common::RetCode PPLCUDAGemmForwardImp(
+    int device_id,
     const cudaStream_t& stream,
     ppl::nn::cuda::CUDAModule* module,
     const ppl::nn::TensorShape* input_shape,
@@ -122,6 +124,7 @@ double PPLCUDAGemmJITSelectKernelInt8(
     uint64_t workspace = (uint64_t)8 * 1024 * 1024 * 1024);
 
 double PPLCUDAGemmSelectKernelInt8(
+    int device_id,
     const cudaStream_t &stream,
     const ppl::nn::TensorShape *input_shape,
     const void *input,
@@ -137,6 +140,7 @@ double PPLCUDAGemmSelectKernelInt8(
     algo_param_t &algo_param);
 
 ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
+    int device_id,
     const cudaStream_t &stream,
     ppl::nn::cuda::CUDAModule *module,
     const ppl::nn::TensorShape *input_shape,

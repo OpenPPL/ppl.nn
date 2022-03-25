@@ -125,17 +125,18 @@ ppl::common::RetCode ConvImmaKernel::DoExecute(KernelExecContext* ctx) {
     auto tmp_buffer = tmp_buffer_desc.addr;
 
     auto stream = GetStream();
+    int device_id = GetDeviceId();
 
 #ifdef PPLNN_ENABLE_CUDA_JIT
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
     PPLCUDAConvolutionForwardJitImpInt8(
-        stream, module->GetKernelFunc(), shape_in0.GetDataType(), (int4*)input->GetBufferPtr(),
+        device_id, stream, module->GetKernelFunc(), shape_in0.GetDataType(), (int4*)input->GetBufferPtr(),
         (int4*)weight->GetBufferPtr(), (int4*)output->GetBufferPtr(),
         param_->bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, (int4*)tmp_buffer,
         algo_param, temp_conv_param, temp_quant_param, temp_fuse_param);
 #else
     PPLCUDAConvolutionForwardImpInt8(
-        stream, shape_in0.GetDataType(), (int4*)input->GetBufferPtr(),
+        device_id, stream, shape_in0.GetDataType(), (int4*)input->GetBufferPtr(),
         (int4*)weight->GetBufferPtr(), (int4*)output->GetBufferPtr(),
         param_->bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, (int4*)tmp_buffer,
         algo_param, temp_conv_param, temp_quant_param, temp_fuse_param);

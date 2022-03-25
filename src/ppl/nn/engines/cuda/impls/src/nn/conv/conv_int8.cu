@@ -98,6 +98,62 @@
             fuse_param.has_concat,         concat_offset_v8,                            \
             concat_stride_v8
 
+#define INT8_SWZL_SPK_KPARAM_LIST                          \
+        d_flt,                                             \
+        pad_input,                                         \
+        conv_out,                                          \
+        kloop_num,                                         \
+        in_lut,                   in_lut_size,             \
+        flt_lut,                  flt_lut_size,            \
+        num_chl_per_spk_head,                              \
+        num_chl_per_spk_tail,                              \
+        in_hw, out_hw,                                     \
+        flt_hw, splitk,                                    \
+        conv_param.in_height,     conv_param.in_width,     \
+        conv_param.in_num,        conv_param.num_grp,      \
+        num_chl_per_grp,          num_chl_per_grp_pad,     \
+        conv_param.flt_height,    conv_param.flt_width,    \
+        num_flt_per_grp,          num_flt_per_grp_pad,     \
+        conv_param.out_height,    conv_param.out_width,    \
+        conv_param.stride_height, conv_param.stride_width, \
+        conv_param.pad_height,    conv_param.pad_width,    \
+        conv_param.hole_height,   conv_param.hole_width,   \
+        conv_param.has_bias,      (int *)bias,             \
+        quant_param.in_scale,     quant_param.d_flt_scale
+
+
+#define INT8_SWZL_LUT_KPARAM_LIST \
+            d_flt,                                                                      \
+            pad_input,                                                                  \
+            conv_out,                                                                   \
+            kloop_num,                                                                  \
+            in_lut,                        in_lut_size,                                 \
+    	    flt_lut,                       flt_lut_size,                                \
+            in_hw,                         out_hw,                                      \
+            flt_hw,                        splitk,                                      \
+            conv_param.in_height,          conv_param.in_width,                         \
+            conv_param.in_num,             conv_param.num_grp,                          \
+            num_chl_per_grp,               num_chl_per_grp_pad,                         \
+            conv_param.flt_height,         conv_param.flt_width,                        \
+            num_flt_per_grp,               num_flt_per_grp_pad,                         \
+            conv_param.out_height,         conv_param.out_width,                        \
+            conv_param.stride_height,      conv_param.stride_width,                     \
+            conv_param.pad_height,         conv_param.pad_width,                        \
+            conv_param.hole_height,        conv_param.hole_width,                       \
+            conv_param.has_bias,           bias,                                        \
+            quant_param.in_scale,          quant_param.d_flt_scale,                     \
+            quant_param.out_scale,         quant_param.pre_scale,                       \
+            fuse_param.has_activation,     clip_min,                                    \
+            fuse_param.has_clip,           clip_max,                                    \
+            fuse_param.has_prelu,          (const void *) fuse_param.prelu,             \
+            fuse_param.has_elt,            (const int4 *) fuse_param.pre_data,          \
+            fuse_param.has_elt_activation, elt_clip_min,                                \
+            fuse_param.has_elt_clip,       elt_clip_max,                                \
+            fuse_param.has_elt_prelu,      (const void *) fuse_param.elt_prelu,         \
+            leaky,                         elt_leaky,                                   \
+            fuse_param.has_concat,         concat_offset_v8,                            \
+            concat_stride_v8
+
 
 #define INT8_IDX_KPARAM_LIST \
             pad_input,                                                                  \
@@ -147,28 +203,77 @@
             concat_stride_v8,                                                           \
             quant_param.out_scale,         quant_param.pre_scale                        \
 
-static std::vector<kernel_info_t> g_int8_kernel_container;
-static bool is_g_int8_kernel_container_initialized = false;
+static std::vector<kernel_info_t> g_int8_kvec;
+static bool is_g_int8_kvec_initialized = false;
 
 static std::unordered_map<size_t, algo_param_t> g_conv_shape_hash;
 
-__inline__ void InitializeKernelContainer(std::vector<kernel_info_t> &g_kernel_container, ppl::common::datatype_t type)
+__inline__ void InitializeInt8ConvKernelContainer(std::vector<kernel_info_t> &g_int8_kvec, int device_id, ppl::common::datatype_t type)
 {
-    if (type == ppl::common::DATATYPE_INT8) {
+    cudaDeviceProp device_prop;
+    cudaGetDeviceProperties(&device_prop, device_id);
+
+    if(type == ppl::common::DATATYPE_INT8) {
 #ifndef PPLNN_ENABLE_CUDA_JIT
-        InitializeInt82spkConvF1KernelContainer(g_int8_kernel_container);
-        InitializeInt82spkConvF3KernelContainer(g_int8_kernel_container);
-        InitializeInt82spkConvFNKernelContainer(g_int8_kernel_container);
-        InitializeInt82spkConvFSKernelContainer(g_int8_kernel_container);
+        if (device_prop.major == 7 && device_prop.minor == 5) {
+            // sm75 kernels
+            Initialize2spkSM75Int8Imma8816ConvF1KernelContainer(g_int8_kvec);
+            Initialize2spkSM75Int8Imma8816ConvF3KernelContainer(g_int8_kvec);
+            Initialize2spkSM75Int8Imma8816ConvFNKernelContainer(g_int8_kvec);
+            Initialize2spkSM75Int8Imma8816ConvFSKernelContainer(g_int8_kvec);
 
-        InitializeInt8IdxnConvKernelContainer(g_int8_kernel_container);
+            InitializeIdxnSM75Int8Imma8816ConvKernelContainer(g_int8_kvec);
 
-        InitializeInt8SwzlConvF1KernelContainer(g_int8_kernel_container);
-        InitializeInt8SwzlConvF3KernelContainer(g_int8_kernel_container);
-        InitializeInt8SwzlConvFNKernelContainer(g_int8_kernel_container);
+            InitializeSwzlSM75Int8Imma8816ConvF1KernelContainer(g_int8_kvec);
+            InitializeSwzlSM75Int8Imma8816ConvF3KernelContainer(g_int8_kvec);
+            InitializeSwzlSM75Int8Imma8816ConvFNKernelContainer(g_int8_kvec);
+        } else if (device_prop.major > 8 || (device_prop.major == 8 && device_prop.minor >= 0)) {
+            // sm75 kernels
+            Initialize2spkSM75Int8Imma8816ConvF1KernelContainer(g_int8_kvec);
+            Initialize2spkSM75Int8Imma8816ConvF3KernelContainer(g_int8_kvec);
+            Initialize2spkSM75Int8Imma8816ConvFNKernelContainer(g_int8_kvec);
+            Initialize2spkSM75Int8Imma8816ConvFSKernelContainer(g_int8_kvec);
+
+            InitializeIdxnSM75Int8Imma8816ConvKernelContainer(g_int8_kvec);
+
+            InitializeSwzlSM75Int8Imma8816ConvF1KernelContainer(g_int8_kvec);
+            InitializeSwzlSM75Int8Imma8816ConvF3KernelContainer(g_int8_kvec);
+            InitializeSwzlSM75Int8Imma8816ConvFNKernelContainer(g_int8_kvec);
+
+            // sm80 kernels
+            Initialize2spkSM80Int8Imma8816ConvF1KernelContainer(g_int8_kvec);
+            Initialize2spkSM80Int8Imma8816ConvF3KernelContainer(g_int8_kvec);
+            Initialize2spkSM80Int8Imma8816ConvFNKernelContainer(g_int8_kvec);
+            Initialize2spkSM80Int8Imma8816ConvFSKernelContainer(g_int8_kvec);
+
+            InitializeSwzlSM80Int8Imma8816ConvF1KernelContainer(g_int8_kvec);
+            InitializeSwzlSM80Int8Imma8816ConvF3KernelContainer(g_int8_kvec);
+            InitializeSwzlSM80Int8Imma8816ConvFNKernelContainer(g_int8_kvec);
+
+            Initialize2spkSM80Int8Imma16816ConvF1KernelContainer(g_int8_kvec);
+            Initialize2spkSM80Int8Imma16816ConvF3KernelContainer(g_int8_kvec);
+            Initialize2spkSM80Int8Imma16816ConvFNKernelContainer(g_int8_kvec);
+            Initialize2spkSM80Int8Imma16816ConvFSKernelContainer(g_int8_kvec);
+
+            Initialize2spkSM80Int8Imma16832ConvF1KernelContainer(g_int8_kvec);
+            Initialize2spkSM80Int8Imma16832ConvF3KernelContainer(g_int8_kvec);
+            Initialize2spkSM80Int8Imma16832ConvFNKernelContainer(g_int8_kvec);
+            Initialize2spkSM80Int8Imma16832ConvFSKernelContainer(g_int8_kvec);
+
+            InitializeIdxnSM80Int8Imma16816ConvKernelContainer(g_int8_kvec);
+
+            InitializeSwzlSM80Int8Imma16816ConvF1KernelContainer(g_int8_kvec);
+            InitializeSwzlSM80Int8Imma16816ConvF3KernelContainer(g_int8_kvec);
+            InitializeSwzlSM80Int8Imma16816ConvFNKernelContainer(g_int8_kvec);
+
+            InitializeSwzlSM80Int8Imma16832ConvF1KernelContainer(g_int8_kvec);
+            InitializeSwzlSM80Int8Imma16832ConvF3KernelContainer(g_int8_kvec);
+            InitializeSwzlSM80Int8Imma16832ConvFNKernelContainer(g_int8_kvec);
+        }
 #endif
     }
-    is_g_int8_kernel_container_initialized = true;
+
+    is_g_int8_kvec_initialized = true;
 }
 
 __inline__ size_t GetConvShapeHashKey(conv_param_t &conv_param)
@@ -179,6 +284,7 @@ __inline__ size_t GetConvShapeHashKey(conv_param_t &conv_param)
 /* -----------------  INT8 KERNEL ------------------ */
 
 double PPLCUDAConvolutionSelectKernelInt8(
+        int device_id,
         cudaStream_t &stream, 
         ppl::common::datatype_t type,
         int4* d_input,
@@ -192,8 +298,11 @@ double PPLCUDAConvolutionSelectKernelInt8(
         fuse_param_t &fuse_param,
 	    uint64_t workspace)
 {
-    if(!is_g_int8_kernel_container_initialized)
-        InitializeKernelContainer(g_int8_kernel_container, type);
+    cudaDeviceProp device_prop;
+    cudaGetDeviceProperties(&device_prop, device_id);
+
+    if(!is_g_int8_kvec_initialized)
+        InitializeInt8ConvKernelContainer(g_int8_kvec, device_id, type);
 
     size_t conv_shape_hash = GetConvShapeHashKey(conv_param);
 
@@ -265,74 +374,102 @@ double PPLCUDAConvolutionSelectKernelInt8(
     for(unsigned int spk = 0; spk < 4; spk++) {
         unsigned int splitk = SPLITK_OPTIONS[spk];
 
-        for(unsigned int kid = 0; kid < g_int8_kernel_container.size(); kid++) {
+        for(unsigned int kid = 0; kid < g_int8_kvec.size(); kid++) {
+            unsigned int splitf = (g_int8_kvec[kid].ktype == CONV_2SPK_FS) ? flt_hw : 1;
 
-            unsigned int splitf = (g_int8_kernel_container[kid].ktype == CONV_2SPK_FS) ? flt_hw : 1;
-            if(!g_int8_kernel_container[kid].CheckKernelTypeFeasibleInt8(conv_param.flt_height, conv_param.flt_width, num_chl_per_grp, splitk)) continue;
+            if(!g_int8_kvec[kid].CheckKernelTypeFeasibleInt8(conv_param.flt_height, conv_param.flt_width, num_chl_per_grp, splitk)) continue;
 
-            if(!g_int8_kernel_container[kid].CheckSplitkFeasible(num_chl_per_grp, splitk)) continue;
+            if (!g_int8_kvec[kid].CheckSMemSizeFeasible(device_prop))
+                continue;
 
-            if(!g_int8_kernel_container[kid].CheckSplitfFeasible(splitf, splitk)) continue;
+            if (!g_int8_kvec[kid].CheckGpuArchFeasible(device_prop))
+                continue;
 
+            if(!g_int8_kvec[kid].CheckSplitkFeasible(num_chl_per_grp, splitk))
+                continue;
+
+            if(!g_int8_kvec[kid].CheckSplitfFeasible(splitf, splitk))
+                continue;
 
             int4 *conv_out = (splitk > 1 || splitf > 1) ? splitk_buf : final_out;
 
             dim3 block_size, grid_size;
 
-            block_size.x = g_int8_kernel_container[kid].cta_size_in_thd;
+            block_size.x = g_int8_kvec[kid].cta_size_in_thd;
             block_size.y = 1;
             block_size.z = 1;
 
-            grid_size.x = DivUp(conv_param.in_num * conv_param.out_height * conv_param.out_width, g_int8_kernel_container[kid].tile_m_per_cta);
-            grid_size.y = DivUp(num_flt_per_grp_pad, g_int8_kernel_container[kid].tile_n_per_cta);
+            int smem_size = g_int8_kvec[kid].smem_size;
+
+            if(g_int8_kvec[kid].ktype == CONV_SWZL_F1 || g_int8_kvec[kid].ktype == CONV_SWZL_F3 || \
+                    g_int8_kvec[kid].ktype == CONV_SWZL_FN) {
+                grid_size.x = DivUp(conv_param.in_num * conv_param.out_height * conv_param.out_width, g_int8_kvec[kid].tile_n_per_cta);
+                grid_size.y = DivUp(num_flt_per_grp_pad, g_int8_kvec[kid].tile_m_per_cta);
+            } else {
+                grid_size.x = DivUp(conv_param.in_num * conv_param.out_height * conv_param.out_width, g_int8_kvec[kid].tile_m_per_cta);
+                grid_size.y = DivUp(num_flt_per_grp_pad, g_int8_kvec[kid].tile_n_per_cta);
+            }
+
             grid_size.z = conv_param.num_grp * splitk * splitf;
 
 	        cudaEventRecord(begin, stream);
 
 	        for(int i = 0; i < TIMES; i++) {
-                if(g_int8_kernel_container[kid].ktype == CONV_IDXN_C2 || g_int8_kernel_container[kid].ktype == CONV_IDXN_C4 || \
-                        g_int8_kernel_container[kid].ktype == CONV_IDXN_C32) {
-                    int tile_k_per_step = g_int8_kernel_container[kid].tile_k_per_step;
+                if(g_int8_kvec[kid].ktype == CONV_IDXN_C4 || g_int8_kvec[kid].ktype == CONV_IDXN_C8 || \
+                        g_int8_kvec[kid].ktype == CONV_IDXN_C64) {
+                    int tile_k_per_step = g_int8_kvec[kid].tile_k_per_step;
 
                     int img_pad_size    = pad_size;
-                    int flt_pad_size    = g_int8_kernel_container[kid].flt_pad_size;
+                    int flt_pad_size    = g_int8_kvec[kid].flt_pad_size;
                     int out_nhw         = out_hw * conv_param.in_num;
 
                     int in_chl_per_grp_pad = Align(num_chl_per_grp, img_pad_size);
                     int flt_chl_per_grp_pad = Align(num_chl_per_grp, flt_pad_size);
                     int num_flt_per_grp_pad = Align(num_flt_per_grp, img_pad_size);
 
-	                int kloop_num        = DivUp(flt_hw * flt_chl_per_grp_pad, g_int8_kernel_container[kid].tile_k_per_cta);
-                    int koff_num_pad      = Align(kloop_num * (g_int8_kernel_container[kid].tile_k_per_cta / flt_pad_size), WARP_SIZE);
+	                int kloop_num        = DivUp(flt_hw * flt_chl_per_grp_pad, g_int8_kvec[kid].tile_k_per_cta);
+                    int koff_num_pad      = Align(kloop_num * (g_int8_kvec[kid].tile_k_per_cta / flt_pad_size), WARP_SIZE);
 
-                    (g_int8_kernel_container[kid].int8_idx_kptr)<<<grid_size, block_size, 0, stream>>>(INT8_IDX_KPARAM_LIST);
+                    (g_int8_kvec[kid].int8_idx_kptr)<<<grid_size, block_size, 0, stream>>>(INT8_IDX_KPARAM_LIST);
                 }
-                else if(g_int8_kernel_container[kid].ktype == CONV_2SPK_F1 || g_int8_kernel_container[kid].ktype == CONV_2SPK_F3 ||
-                        g_int8_kernel_container[kid].ktype == CONV_2SPK_FN || g_int8_kernel_container[kid].ktype == CONV_2SPK_FS ||
-                        g_int8_kernel_container[kid].ktype == CONV_SWZL_F1 || g_int8_kernel_container[kid].ktype == CONV_SWZL_F3 ||
-                        g_int8_kernel_container[kid].ktype == CONV_SWZL_FN) {
+                else if(g_int8_kvec[kid].ktype == CONV_2SPK_F1 || g_int8_kvec[kid].ktype == CONV_2SPK_F3 || \
+                        g_int8_kvec[kid].ktype == CONV_2SPK_FN || g_int8_kvec[kid].ktype == CONV_2SPK_FS || \
+                        g_int8_kvec[kid].ktype == CONV_SWZL_F1 || g_int8_kvec[kid].ktype == CONV_SWZL_F3 || \
+                        g_int8_kvec[kid].ktype == CONV_SWZL_FN) {
 
-	                int kloop_num = (flt_hw / splitf) * DivUp(num_chl_per_grp_pad, g_int8_kernel_container[kid].tile_k_per_cta);
+	                int kloop_num = (flt_hw / splitf) * DivUp(num_chl_per_grp_pad, g_int8_kvec[kid].tile_k_per_cta);
 
                     lut_t in_lut, flt_lut;
                     int in_lut_size, flt_lut_size;
                 
                     InitializeInputLut(in_lut_size, in_lut.idx, conv_param.flt_height, conv_param.flt_width, conv_param.in_height,
                             conv_param.in_width, conv_param.pad_height, conv_param.pad_width, conv_param.hole_height, conv_param.hole_width,
-                            num_chl_per_grp_pad, conv_param.num_grp, g_int8_kernel_container[kid].tile_k_per_cta, pad_size);
+                            num_chl_per_grp_pad, conv_param.num_grp, g_int8_kvec[kid].tile_k_per_cta, pad_size);
 
                     InitializeFilterLut(flt_lut_size, flt_lut.idx, conv_param.flt_height, conv_param.flt_width, num_chl_per_grp_pad,
-                            g_int8_kernel_container[kid].tile_k_per_cta, pad_size);
+                            g_int8_kvec[kid].tile_k_per_cta, pad_size);
 
 
                     if(splitk == 1) {
-                        (g_int8_kernel_container[kid].int8_lut_kptr)<<<grid_size, block_size, 0, stream>>>(INT8_LUT_KPARAM_LIST);
-                    }
-		            else {
+                        g_int8_kvec[kid].AdaptInt8LutKernelSMemSize();
+
+                        if(g_int8_kvec[kid].ktype == CONV_SWZL_F1 || g_int8_kvec[kid].ktype == CONV_SWZL_F3 || g_int8_kvec[kid].ktype == CONV_SWZL_FN)
+                            (g_int8_kvec[kid].int8_lut_kptr)<<<grid_size, block_size, smem_size, stream>>>(INT8_SWZL_LUT_KPARAM_LIST);
+                        else {
+                            (g_int8_kvec[kid].int8_lut_kptr)<<<grid_size, block_size, smem_size, stream>>>(INT8_LUT_KPARAM_LIST);
+                        }
+                    } else {
                         int num_chl_per_spk_head, num_chl_per_spk_tail;
-                        InitializeNumChlPerSpk(num_chl_per_spk_head, num_chl_per_spk_tail, conv_param.num_chl, conv_param.num_grp, pad_size, g_int8_kernel_container[kid].tile_k_per_cta, splitk);
+                        InitializeNumChlPerSpk(num_chl_per_spk_head, num_chl_per_spk_tail, conv_param.num_chl, conv_param.num_grp, pad_size, g_int8_kvec[kid].tile_k_per_cta, splitk);
+
+                        g_int8_kvec[kid].AdaptInt8SpkKernelSMemSize();
+
+                        if(g_int8_kvec[kid].ktype == CONV_SWZL_F1 || g_int8_kvec[kid].ktype == CONV_SWZL_F3 || g_int8_kvec[kid].ktype == CONV_SWZL_FN)
+                            (g_int8_kvec[kid].int8_spk_kptr)<<<grid_size, block_size, smem_size, stream>>>(INT8_SWZL_SPK_KPARAM_LIST);
+                        else {
+                            (g_int8_kvec[kid].int8_spk_kptr)<<<grid_size, block_size, smem_size, stream>>>(INT8_SPK_KPARAM_LIST);
+                        }
     
-                        (g_int8_kernel_container[kid].int8_spk_kptr)<<<grid_size, block_size, 0, stream>>>(INT8_SPK_KPARAM_LIST);
                     }
 
                     if(splitk > 1 || splitf > 1) {
@@ -379,6 +516,7 @@ double PPLCUDAConvolutionSelectKernelInt8(
 }
 
 void PPLCUDAConvolutionForwardImpInt8(
+        int device_id,
         cudaStream_t &stream, 
         ppl::common::datatype_t type,
         int4* d_input,
@@ -391,8 +529,8 @@ void PPLCUDAConvolutionForwardImpInt8(
         quant_param_t &quant_param,
         fuse_param_t &fuse_param)
 {
-    if(!is_g_int8_kernel_container_initialized)
-        InitializeKernelContainer(g_int8_kernel_container, type);
+    if(!is_g_int8_kvec_initialized)
+        InitializeInt8ConvKernelContainer(g_int8_kvec, device_id, type);
 
     unsigned int kid = algo_param.kid;
     unsigned int splitk = algo_param.splitk;
@@ -448,18 +586,27 @@ void PPLCUDAConvolutionForwardImpInt8(
 
     dim3 block_size, grid_size;
 
-    block_size.x = g_int8_kernel_container[kid].cta_size_in_thd;
+    block_size.x = g_int8_kvec[kid].cta_size_in_thd;
     block_size.y = 1;
     block_size.z = 1;
 
-    grid_size.x  = DivUp(conv_param.in_num * conv_param.out_height * conv_param.out_width, g_int8_kernel_container[kid].tile_m_per_cta);
-    grid_size.y  = DivUp(num_flt_per_grp_pad, g_int8_kernel_container[kid].tile_n_per_cta);
+    int smem_size = g_int8_kvec[kid].smem_size;
+
+    if(g_int8_kvec[kid].ktype == CONV_SWZL_F1 || g_int8_kvec[kid].ktype == CONV_SWZL_F3 || \
+            g_int8_kvec[kid].ktype == CONV_SWZL_FN) {
+        grid_size.x = DivUp(conv_param.in_num * conv_param.out_height * conv_param.out_width, g_int8_kvec[kid].tile_n_per_cta);
+        grid_size.y = DivUp(num_flt_per_grp_pad, g_int8_kvec[kid].tile_m_per_cta);
+    } else {
+        grid_size.x = DivUp(conv_param.in_num * conv_param.out_height * conv_param.out_width, g_int8_kvec[kid].tile_m_per_cta);
+        grid_size.y = DivUp(num_flt_per_grp_pad, g_int8_kvec[kid].tile_n_per_cta);
+    }
+
     grid_size.z  = conv_param.num_grp * splitk * splitf;
 
-    if(g_int8_kernel_container[kid].ktype == CONV_IDXN_C2 || g_int8_kernel_container[kid].ktype == CONV_IDXN_C4 || \
-            g_int8_kernel_container[kid].ktype == CONV_IDXN_C32) {
+    if(g_int8_kvec[kid].ktype == CONV_IDXN_C4 || g_int8_kvec[kid].ktype == CONV_IDXN_C8 || \
+            g_int8_kvec[kid].ktype == CONV_IDXN_C64) {
         int img_pad_size = pad_size;
-        int flt_pad_size = g_int8_kernel_container[kid].flt_pad_size;
+        int flt_pad_size = g_int8_kvec[kid].flt_pad_size;
 
         int out_nhw = out_hw * conv_param.in_num;
 
@@ -467,36 +614,46 @@ void PPLCUDAConvolutionForwardImpInt8(
         int flt_chl_per_grp_pad = Align(num_chl_per_grp, flt_pad_size);
         int num_flt_per_grp_pad = Align(num_flt_per_grp, img_pad_size);
 
-	    int kloop_num = DivUp(flt_hw * flt_chl_per_grp_pad, g_int8_kernel_container[kid].tile_k_per_cta);
-        int koff_num_pad = Align(kloop_num * (g_int8_kernel_container[kid].tile_k_per_cta / flt_pad_size), WARP_SIZE);
+	    int kloop_num = DivUp(flt_hw * flt_chl_per_grp_pad, g_int8_kvec[kid].tile_k_per_cta);
+        int koff_num_pad = Align(kloop_num * (g_int8_kvec[kid].tile_k_per_cta / flt_pad_size), WARP_SIZE);
 
-        (g_int8_kernel_container[kid].int8_idx_kptr)<<<grid_size, block_size, 0, stream>>>(INT8_IDX_KPARAM_LIST);
+        (g_int8_kvec[kid].int8_idx_kptr)<<<grid_size, block_size, 0, stream>>>(INT8_IDX_KPARAM_LIST);
 
-    } else if(g_int8_kernel_container[kid].ktype == CONV_2SPK_F1 || g_int8_kernel_container[kid].ktype == CONV_2SPK_F3 ||
-              g_int8_kernel_container[kid].ktype == CONV_2SPK_FN || g_int8_kernel_container[kid].ktype == CONV_2SPK_FS ||
-              g_int8_kernel_container[kid].ktype == CONV_SWZL_F1 || g_int8_kernel_container[kid].ktype == CONV_SWZL_F3 ||
-              g_int8_kernel_container[kid].ktype == CONV_SWZL_FN) {
+    } else if(g_int8_kvec[kid].ktype == CONV_2SPK_F1 || g_int8_kvec[kid].ktype == CONV_2SPK_F3 || \
+              g_int8_kvec[kid].ktype == CONV_2SPK_FN || g_int8_kvec[kid].ktype == CONV_2SPK_FS || \
+              g_int8_kvec[kid].ktype == CONV_SWZL_F1 || g_int8_kvec[kid].ktype == CONV_SWZL_F3 || \
+              g_int8_kvec[kid].ktype == CONV_SWZL_FN) {
 
-	    int kloop_num = (flt_hw / splitf) * DivUp(num_chl_per_grp_pad, g_int8_kernel_container[kid].tile_k_per_cta);
+	    int kloop_num = (flt_hw / splitf) * DivUp(num_chl_per_grp_pad, g_int8_kvec[kid].tile_k_per_cta);
 
         lut_t in_lut, flt_lut;
         int in_lut_size, flt_lut_size;
     
         InitializeInputLut(in_lut_size, in_lut.idx, conv_param.flt_height, conv_param.flt_width, conv_param.in_height,
                 conv_param.in_width, conv_param.pad_height, conv_param.pad_width, conv_param.hole_height, conv_param.hole_width,
-                num_chl_per_grp_pad, conv_param.num_grp, g_int8_kernel_container[kid].tile_k_per_cta, pad_size);
+                num_chl_per_grp_pad, conv_param.num_grp, g_int8_kvec[kid].tile_k_per_cta, pad_size);
 
         InitializeFilterLut(flt_lut_size, flt_lut.idx, conv_param.flt_height, conv_param.flt_width, num_chl_per_grp_pad,
-                g_int8_kernel_container[kid].tile_k_per_cta, pad_size);
+                g_int8_kvec[kid].tile_k_per_cta, pad_size);
 
         if(splitk == 1) {
-            (g_int8_kernel_container[kid].int8_lut_kptr)<<<grid_size, block_size, 0, stream>>>(INT8_LUT_KPARAM_LIST);
-        }
-	    else {
-            int num_chl_per_spk_head, num_chl_per_spk_tail;
-            InitializeNumChlPerSpk(num_chl_per_spk_head, num_chl_per_spk_tail, conv_param.num_chl, conv_param.num_grp, pad_size, g_int8_kernel_container[kid].tile_k_per_cta, splitk);
+            g_int8_kvec[kid].AdaptInt8LutKernelSMemSize();
 
-            (g_int8_kernel_container[kid].int8_spk_kptr)<<<grid_size, block_size, 0, stream>>>(INT8_SPK_KPARAM_LIST);
+            if(g_int8_kvec[kid].ktype == CONV_SWZL_F1 || g_int8_kvec[kid].ktype == CONV_SWZL_F3 || g_int8_kvec[kid].ktype == CONV_SWZL_FN)
+                (g_int8_kvec[kid].int8_lut_kptr)<<<grid_size, block_size, smem_size, stream>>>(INT8_SWZL_LUT_KPARAM_LIST);
+            else {
+                (g_int8_kvec[kid].int8_lut_kptr)<<<grid_size, block_size, smem_size, stream>>>(INT8_LUT_KPARAM_LIST);
+            }
+        } else {
+            int num_chl_per_spk_head, num_chl_per_spk_tail;
+            InitializeNumChlPerSpk(num_chl_per_spk_head, num_chl_per_spk_tail, conv_param.num_chl, conv_param.num_grp, pad_size, g_int8_kvec[kid].tile_k_per_cta, splitk);
+
+            g_int8_kvec[kid].AdaptInt8SpkKernelSMemSize();
+
+            if(g_int8_kvec[kid].ktype == CONV_SWZL_F1 || g_int8_kvec[kid].ktype == CONV_SWZL_F3 || g_int8_kvec[kid].ktype == CONV_SWZL_FN)
+                (g_int8_kvec[kid].int8_spk_kptr)<<<grid_size, block_size, smem_size, stream>>>(INT8_SWZL_SPK_KPARAM_LIST);
+            else
+                (g_int8_kvec[kid].int8_spk_kptr)<<<grid_size, block_size, smem_size, stream>>>(INT8_SPK_KPARAM_LIST);
         }
     }
     
@@ -604,6 +761,7 @@ ppl::common::RetCode PPLCUDAConvolutionPredictKernelInt8(
 }
 
 float AlgoForwardTimeInt8(
+    int device_id,
     cudaStream_t &stream,
     std::vector<string> name,
     string code,
@@ -792,13 +950,14 @@ double PPLCUDAConvolutionJitSelectKernelInt8(
     }
     int index = 0;
     std::vector<const char *> compile_params;
-    elapsed = AlgoForwardTimeInt8(stream, knames, total_source, index, compile_params, device_id, true, type, d_input, d_flt, d_output, bias, d_temp_buf, params, conv_param, quant_param, fuse_param, workspace);
+    elapsed = AlgoForwardTimeInt8(device_id, stream, knames, total_source, index, compile_params, device_id, true, type, d_input, d_flt, d_output, bias, d_temp_buf, params, conv_param, quant_param, fuse_param, workspace);
 
     algo_param                         = params[index];
     return elapsed;
 }
 
 void PPLCUDAConvolutionForwardJitImpInt8(
+    int device_id,
     cudaStream_t &stream,
     CUfunction function,
     ppl::common::datatype_t type,

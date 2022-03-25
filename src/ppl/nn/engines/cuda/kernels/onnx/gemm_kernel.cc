@@ -89,11 +89,12 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     ConvertToForwardFuseParam(ctx, GetCudaDevice(), param_->extra_param.fuse_info, temp_fuse_param);
 
     auto stream = GetStream();
+    int device_id = GetDeviceId();
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
 
     const TensorShape& shape_in0 = *input->GetShape();
     if (shape_in0.GetDataType()==ppl::common::DATATYPE_FLOAT16) {
-        status = PPLCUDAGemmForwardImp(stream, module, input->GetShape(), input->GetBufferPtr(),
+        status = PPLCUDAGemmForwardImp(device_id, stream, module, input->GetShape(), input->GetBufferPtr(),
                                    weight->GetShape(), weight->GetBufferPtr(), bias,
                                    output->GetShape(), output->GetBufferPtr(),
                                    param_->param, tmp_buffer, temp_fuse_param, param_->extra_param.algo_info);
@@ -122,8 +123,7 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
              temp_quant_param.out_scale = 1 / GetCommonParam()->cuda_tensor_info->at(param_->extra_param.fuse_info.concat_edge_id).scale[0];
         }
 
-
-        status = PPLCUDAGemmForwardImpInt8(stream, module, input->GetShape(), input->GetBufferPtr(),
+        status = PPLCUDAGemmForwardImpInt8(device_id, stream, module, input->GetShape(), input->GetBufferPtr(),
                                    weight->GetShape(), weight->GetBufferPtr(), bias,
                                    output->GetShape(), output->GetBufferPtr(),
                                    param_->param, tmp_buffer, temp_quant_param,

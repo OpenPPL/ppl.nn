@@ -40,6 +40,11 @@ public:
         return cuda_device->GetStream();
     }
 
+    int GetDeviceId() const {
+        auto cuda_device = static_cast<const CudaDevice*>(GetDevice());
+        return cuda_device->GetDeviceId();
+    }
+
     void SetCommonParam(const CudaCommonParam* p) {
         common_param_ = p;
     }

@@ -32,8 +32,8 @@
 #define TIMES 4
 
 // defined in gemm.cu
-extern std::vector<kernel_info_t> g_kvec;
-extern bool is_g_kvec_set;
+extern std::vector<kernel_info_t> g_fp16_kvec;
+extern bool is_g_fp16_kvec_set;
 
 #define FAKE_CONV_PARAM              \
     int in_hw               = 1;     \
@@ -60,7 +60,7 @@ extern bool is_g_kvec_set;
     int hole_width          = 1;
 
 #define GEMM_FUNC_PARAM                                               \
-    input0_tmp,                                                       \
+        input0_tmp,                                                   \
         tmp_weight,                                                   \
         final_out,                                                    \
         kLoopNum,                                                     \
@@ -89,7 +89,7 @@ extern bool is_g_kvec_set;
         fuse_param.has_concat, concat_offset_v8,                      \
         concat_stride_v8
 
-extern void init_f1_kvec(std::vector<kernel_info_t> &g_kvec, ppl::common::datatype_t type);
+extern void init_f1_kvec(std::vector<kernel_info_t> &g_fp16_kvec, int device_id, ppl::common::datatype_t type);
 
 uint64_t PPLBgemmCUDAGetBufSize(
     const ppl::nn::TensorShape *input_shape,
@@ -363,13 +363,14 @@ double PPLCUDABgemmJITSelectKernel(
 
     int index = 0;
     std::vector<const char *> compile_params;
-    elapsed = AlgoForwardTime(stream, knames, total_source, index, compile_params, device_id, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, fuse_param, workspace);
+    elapsed = AlgoForwardTime(device_id, stream, knames, total_source, index, compile_params, device_id, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, fuse_param, workspace);
 
     algo_param = params[index];
     return elapsed;
 }
 
 double PPLCUDABgemmSelectKernel(
+    int device_id,
     const cudaStream_t &stream,
     const ppl::nn::TensorShape *input_shape,
     const void *input,
@@ -382,9 +383,12 @@ double PPLCUDABgemmSelectKernel(
     const fuse_param_t &fuse_param,
     algo_param_t &algo_param)
 {
+    cudaDeviceProp device_prop;
+    cudaGetDeviceProperties(&device_prop, device_id);
+
     auto type = weight_shape->GetDataType();
-    if (!is_g_kvec_set)
-        init_f1_kvec(g_kvec, type);
+    if (!is_g_fp16_kvec_set)
+        init_f1_kvec(g_fp16_kvec, device_id, type);
 
     int pad_size = GetPadSize(type);
 
@@ -433,12 +437,22 @@ double PPLCUDABgemmSelectKernel(
     // transpose
     int4 *input0_tmp = (int4 *)input;
 
-    for (unsigned int kid = 0; kid < g_kvec.size(); kid++) {
-        int tile_m_per_cta = g_kvec[kid].tile_m_per_cta;
-        int tile_n_per_cta = g_kvec[kid].tile_n_per_cta;
-        int tile_k_per_cta = g_kvec[kid].tile_k_per_cta;
+    for (unsigned int kid = 0; kid < g_fp16_kvec.size(); kid++) {
+        int tile_m_per_cta = g_fp16_kvec[kid].tile_m_per_cta;
+        int tile_n_per_cta = g_fp16_kvec[kid].tile_n_per_cta;
+        int tile_k_per_cta = g_fp16_kvec[kid].tile_k_per_cta;
 
-        int cta_size_in_thd = g_kvec[kid].cta_size_in_thd;
+        int cta_size_in_thd = g_fp16_kvec[kid].cta_size_in_thd;
+        int smem_size       = g_fp16_kvec[kid].smem_size;
+
+        if (!g_fp16_kvec[kid].CheckSMemSizeFeasible(device_prop))
+                continue;
+
+        if (!g_fp16_kvec[kid].CheckGpuArchFeasible(device_prop))
+                continue;
+
+        g_fp16_kvec[kid].AdaptLutKernelSMemSize();
+
         dim3 block_size, grid_size;
         block_size.x = cta_size_in_thd;
         block_size.y = 1;
@@ -450,21 +464,21 @@ double PPLCUDABgemmSelectKernel(
 
         cudaEventRecord(begin, stream);
         for (int i = 0; i < TIMES; i++) {
-            if (g_kvec[kid].ktype == CONV_2SPK_F1) {
+            if (g_fp16_kvec[kid].ktype == CONV_2SPK_F1) {
                 FAKE_CONV_PARAM
                 int kLoopNum = DivUp(K_pad, tile_k_per_cta);
                 lut_t in_lut, flt_lut;
                 while (batch > 65535) {
                     grid_size.z = 65535;
                     batch -= 65535;
-                    (g_kvec[kid].lut_kptr)<<<grid_size, block_size, 0, stream>>>(GEMM_FUNC_PARAM);
+                    (g_fp16_kvec[kid].lut_kptr)<<<grid_size, block_size, smem_size, stream>>>(GEMM_FUNC_PARAM);
                     input0_tmp += (uint64_t)65535 * M * K_pad / pad_size;// int4
                     tmp_weight += (uint64_t)65535 * N * K_pad / pad_size;// void
                     final_out += (uint64_t)65535 * M * N_pad / pad_size;// int4
                 }
                 if (batch > 0){
                     grid_size.z = batch;
-                    (g_kvec[kid].lut_kptr)<<<grid_size, block_size, 0, stream>>>(GEMM_FUNC_PARAM);
+                    (g_fp16_kvec[kid].lut_kptr)<<<grid_size, block_size, smem_size, stream>>>(GEMM_FUNC_PARAM);
                 }
             }
         }
@@ -488,6 +502,7 @@ double PPLCUDABgemmSelectKernel(
 
 // (B, M, K_pad) * ((B,)N, K_pad) = (B, M, N_pad)
 ppl::common::RetCode PPLCUDABgemmForwardImp(
+    int device_id,
     const cudaStream_t &stream,
     ppl::nn::cuda::CUDAModule *module,
     const ppl::nn::TensorShape *input_shape,
@@ -503,8 +518,8 @@ ppl::common::RetCode PPLCUDABgemmForwardImp(
 {
     auto type = weight_shape->GetDataType();
 #ifndef PPLNN_ENABLE_CUDA_JIT
-    if (!is_g_kvec_set)
-        init_f1_kvec(g_kvec, type);
+    if (!is_g_fp16_kvec_set)
+        init_f1_kvec(g_fp16_kvec, device_id, type);
 #endif
     int pad_size = GetPadSize(type);
     //int transA   = param.transA;
@@ -558,10 +573,11 @@ ppl::common::RetCode PPLCUDABgemmForwardImp(
     int cta_size_in_thd = algo_param.tiles.cta_size_in_thd;
 #else
     int kid             = algo_param.kid;
-    int tile_m_per_cta  = g_kvec[kid].tile_m_per_cta;
-    int tile_n_per_cta  = g_kvec[kid].tile_n_per_cta;
-    int tile_k_per_cta  = g_kvec[kid].tile_k_per_cta;
-    int cta_size_in_thd = g_kvec[kid].cta_size_in_thd;
+    int tile_m_per_cta  = g_fp16_kvec[kid].tile_m_per_cta;
+    int tile_n_per_cta  = g_fp16_kvec[kid].tile_n_per_cta;
+    int tile_k_per_cta  = g_fp16_kvec[kid].tile_k_per_cta;
+    int cta_size_in_thd = g_fp16_kvec[kid].cta_size_in_thd;
+    int smem_size       = g_fp16_kvec[kid].smem_size;
 #endif
     dim3 block_size, grid_size;
 
@@ -596,14 +612,16 @@ ppl::common::RetCode PPLCUDABgemmForwardImp(
     while (batch > 65535) {
         grid_size.z = 65535;
         batch -= 65535;
-        (g_kvec[kid].lut_kptr)<<<grid_size, block_size, 0, stream>>>(GEMM_FUNC_PARAM);
+        g_fp16_kvec[kid].AdaptLutKernelSMemSize();
+        (g_fp16_kvec[kid].lut_kptr)<<<grid_size, block_size, smem_size, stream>>>(GEMM_FUNC_PARAM);
         input0_tmp += (uint64_t)65535 * M * K_pad / pad_size;// int4
         tmp_weight += (uint64_t)65535 * N * K_pad / pad_size;// void
         final_out += (uint64_t)65535 * M * N_pad / pad_size;// int4
     }
     if (batch > 0){
         grid_size.z = batch;
-        (g_kvec[kid].lut_kptr)<<<grid_size, block_size, 0, stream>>>(GEMM_FUNC_PARAM);
+        g_fp16_kvec[kid].AdaptLutKernelSMemSize();
+        (g_fp16_kvec[kid].lut_kptr)<<<grid_size, block_size, smem_size, stream>>>(GEMM_FUNC_PARAM);
     }
 #endif
     return status;
