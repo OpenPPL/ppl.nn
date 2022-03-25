@@ -66,10 +66,10 @@ protected:
     }
 
     X86Device* GetX86Device() {
-        return reinterpret_cast<X86Device*>(GetDevice());
+        return reinterpret_cast<X86Device*>(GetEngineContext()->GetDevice());
     }
     const X86Device* GetX86Device() const {
-        return reinterpret_cast<const X86Device*>(GetDevice());
+        return reinterpret_cast<const X86Device*>(GetEngineContext()->GetDevice());
     }
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING

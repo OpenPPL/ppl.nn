@@ -104,7 +104,7 @@ ppl::common::RetCode ConvDepthwiseKernel::DoExecute(KernelExecContext* ctx) {
                                       temp_conv_param, shape_out.GetDataType());
     }
     BufferDescGuard __tmp_buffer_guard__(&weight_buffer, [this](BufferDesc* buffer) {
-        GetDevice()->Free(buffer);
+        GetCudaDevice()->Free(buffer);
     });
 
 

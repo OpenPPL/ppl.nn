@@ -83,7 +83,7 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
                                       &param_->param);
     }
     BufferDescGuard __tmp_buffer_guard__(&weight_buffer, [this](BufferDesc* buffer) {
-        GetDevice()->Free(buffer);
+        GetCudaDevice()->Free(buffer);
     });
 
     BufferDesc input0_buffer;
@@ -104,12 +104,12 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
         auto stream = GetStream();
         PPLCUDABgemmPadInput(stream, input0->GetShape(), input0->GetBufferPtr(), input0_buffer.addr,
                                       &param_->param);
-        bmm_input0 = input0_buffer.addr; 
+        bmm_input0 = input0_buffer.addr;
     } else {
         bmm_input0 = input0->GetBufferPtr();
     }
     BufferDescGuard __input0_buffer_guard__(&input0_buffer, [this](BufferDesc* buffer) {
-        GetDevice()->Free(buffer);
+        GetCudaDevice()->Free(buffer);
     });
 
     auto newshapeout = *output->GetShape();
@@ -117,7 +117,7 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
     auto N_pad = (N + align_size-1) / align_size * align_size;
     BufferDesc output_buffer;
     bool is_output_pad = N != N_pad;
-    void *bgemm_out; 
+    void *bgemm_out;
     if (is_output_pad){
         newshapeout.SetDim(dim_count-1, N_pad);
         auto status = GetCudaDevice()->Realloc(newshapeout, &output_buffer);
@@ -130,9 +130,9 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
         bgemm_out = output->GetBufferPtr();
     }
     BufferDescGuard __output_buffer_guard__(&output_buffer, [this](BufferDesc* buffer) {
-        GetDevice()->Free(buffer);
+        GetCudaDevice()->Free(buffer);
     });
-    
+
     fuse_param_t temp_fuse_param;
     ConvertToForwardFuseParam(ctx, GetCudaDevice(), param_->extra_param.fuse_info, temp_fuse_param);
 
