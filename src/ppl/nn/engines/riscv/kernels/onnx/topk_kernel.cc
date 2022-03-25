@@ -18,6 +18,7 @@
 #include "ppl/nn/engines/riscv/kernels/onnx/topk_kernel.h"
 #include "ppl/nn/engines/riscv/utils/macros.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/utils/destructor.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/kernel/riscv/fp32/topk.h"
 #include "ppl/kernel/riscv/fp16/topk.h"
@@ -64,8 +65,8 @@ ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-        GetRiscvDevice()->FreeTmpBuffer(buffer);
+    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+        GetRiscvDevice()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
     PPLNN_RISCV_DEBUG_TRACE("buffer: %p\n", tmp_buffer);

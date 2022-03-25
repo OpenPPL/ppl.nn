@@ -16,7 +16,7 @@
 // under the License.
 
 #include <inttypes.h>
-
+#include "ppl/nn/utils/destructor.h"
 #include "ppl/nn/engines/x86/kernels/ppl/post_depthwise_conv2d_kernel.h"
 
 #define CASE_STRING_FMT() \
@@ -42,14 +42,14 @@ ppl::common::RetCode PostDepthwiseConv2dKernel::SeparateExecute(KernelExecContex
     PPLNN_X86_DEBUG_TRACE("DataFormat: %s\n", ppl::common::GetDataFormatStr(inter_shape.GetDataFormat()));
 
     BufferDesc inter_buffer_desc;
-    auto status = GetEngineContext()->GetDevice()->Realloc(inter_shape, &inter_buffer_desc);
+    auto status = GetX86Device()->Realloc(inter_shape, &inter_buffer_desc);
     if (status != ppl::common::RC_SUCCESS) {
         LOG(ERROR) << "alloc InterTensor size[" << inter_shape.GetBytesIncludingPadding() << "] for kernel[" << GetName()
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    BufferDescGuard inter_buffer_guard(&inter_buffer_desc, [this](BufferDesc* buffer) -> void {
-            GetX86Device()->Free(buffer);
+    utils::Destructor inter_buffer_guard([this, &inter_buffer_desc]() -> void {
+            GetX86Device()->Free(&inter_buffer_desc);
     });
     auto inter_buffer = (float*)inter_buffer_desc.addr;
 
@@ -62,8 +62,8 @@ ppl::common::RetCode PostDepthwiseConv2dKernel::SeparateExecute(KernelExecContex
                     << "] failed: " << ppl::common::GetRetCodeStr(status);
             return status;
         }
-        BufferDescGuard __tmp_buffer_guard(&conv_tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-            GetX86Device()->FreeTmpBuffer(buffer);
+        utils::Destructor __tmp_buffer_guard([this, &conv_tmp_buffer_desc]() -> void {
+            GetX86Device()->FreeTmpBuffer(&conv_tmp_buffer_desc);
         });
         auto conv_tmp_buffer = conv_tmp_buffer_desc.addr;
         PPLNN_X86_DEBUG_TRACE("conv buffer: %p\n", conv_tmp_buffer);
@@ -97,8 +97,8 @@ ppl::common::RetCode PostDepthwiseConv2dKernel::SeparateExecute(KernelExecContex
                     << "] failed: " << ppl::common::GetRetCodeStr(status);
             return status;
         }
-        BufferDescGuard __tmp_buffer_guard(&depthwise_conv_tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-            GetX86Device()->FreeTmpBuffer(buffer);
+        utils::Destructor __tmp_buffer_guard([this, &depthwise_conv_tmp_buffer_desc]() -> void {
+            GetX86Device()->FreeTmpBuffer(&depthwise_conv_tmp_buffer_desc);
         });
         auto depthwise_conv_tmp_buffer = depthwise_conv_tmp_buffer_desc.addr;
         PPLNN_X86_DEBUG_TRACE("depthwise conv buffer: %p\n", depthwise_conv_tmp_buffer);
@@ -130,8 +130,8 @@ ppl::common::RetCode PostDepthwiseConv2dKernel::FuseExecute(KernelExecContext* c
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-        GetX86Device()->FreeTmpBuffer(buffer);
+    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+        GetX86Device()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
     PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);

@@ -15,26 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_COMMON_BUFFER_DESC_H_
-#define _ST_HPC_PPL_NN_COMMON_BUFFER_DESC_H_
+#include "ppl/nn/utils/destructor.h"
+#include "gtest/gtest.h"
+using namespace ppl::nn;
 
-#include <stdint.h>
-
-namespace ppl { namespace nn {
-
-struct BufferDesc final {
-    BufferDesc(void* a = nullptr) : addr(a) {}
-
-    /** pointer to data area */
-    void* addr;
-
-    /** used by engines with different meanings. this union is invalid if `addr` is nullptr. */
-    union {
-        uint64_t desc;
-        void* info;
-    };
-};
-
-}} // namespace ppl::nn
-
-#endif
+TEST(DestructorTest, misc) {
+    const int original_value = 10;
+    const int expected_value = 20;
+    int a = original_value;
+    {
+        utils::Destructor __a__([&a, &expected_value]() -> void {
+            a = expected_value;
+        });
+    }
+    EXPECT_EQ(expected_value, a);
+    EXPECT_NE(original_value, a);
+}

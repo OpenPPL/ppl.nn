@@ -15,26 +15,31 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_COMMON_BUFFER_DESC_H_
-#define _ST_HPC_PPL_NN_COMMON_BUFFER_DESC_H_
+#ifndef _ST_HPC_PPL_NN_UTILS_DESTRUCTOR_H_
+#define _ST_HPC_PPL_NN_UTILS_DESTRUCTOR_H_
 
-#include <stdint.h>
+#include <functional>
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace utils {
 
-struct BufferDesc final {
-    BufferDesc(void* a = nullptr) : addr(a) {}
+class Destructor final {
+public:
+    Destructor(const std::function<void()>& f) : f_(f) {}
+    Destructor(std::function<void()>&& f) : f_(std::move(f)) {}
+    Destructor(Destructor&&) = default;
+    Destructor& operator=(Destructor&&) = default;
+    ~Destructor() {
+        f_();
+    }
 
-    /** pointer to data area */
-    void* addr;
+private:
+    std::function<void()> f_;
 
-    /** used by engines with different meanings. this union is invalid if `addr` is nullptr. */
-    union {
-        uint64_t desc;
-        void* info;
-    };
+private:
+    Destructor(const Destructor&) = delete;
+    Destructor& operator=(const Destructor&) = delete;
 };
 
-}} // namespace ppl::nn
+}}} // namespace ppl::nn::utils
 
 #endif

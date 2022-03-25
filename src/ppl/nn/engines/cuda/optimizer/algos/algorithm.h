@@ -26,6 +26,7 @@
 #include "ppl/common/types.h"
 #include "ppl/nn/ir/graph.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
+#include "ppl/nn/utils/destructor.h"
 
 #define ALGO_MAX_TIME (3.0e+10)
 
@@ -36,8 +37,8 @@
         LOG(DEBUG) << "alloc " #buffer_name " tensor failed";                                \
         return callback;                                                                     \
     }                                                                                        \
-    BufferDescGuard __##buffer_name##_guard__(&buffer_name, [&options](BufferDesc* buffer) { \
-        options.device->Free(buffer);                                                        \
+    utils::Destructor __##buffer_name##_guard__([&options, &buffer_name]() -> void { \
+        options.device->Free(&buffer_name);                                                        \
     });
 
 namespace ppl { namespace nn { namespace cuda {

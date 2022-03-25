@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/cuda/kernels/onnx/constant_of_shape_kernel.h"
+#include "ppl/nn/utils/destructor.h"
 #include "ppl/nn/common/logger.h"
 #include "cudakernel/memory/constant_of_shape.h"
 
@@ -36,8 +37,8 @@ ppl::common::RetCode ConstantOfShapeKernel::DoExecute(KernelExecContext* ctx) {
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [&cuda_device](BufferDesc* buffer) -> void {
-        cuda_device->FreeTmpBuffer(buffer);
+    utils::Destructor __tmp_buffer_guard__([&cuda_device, &tmp_buffer_desc]() -> void {
+        cuda_device->Free(&tmp_buffer_desc);
     });
 
     auto output = ctx->GetOutput<TensorImpl>(0);

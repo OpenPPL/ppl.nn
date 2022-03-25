@@ -18,6 +18,7 @@
 #include "ppl/nn/engines/riscv/kernels/onnx/gather_kernel.h"
 #include "ppl/nn/engines/riscv/utils/macros.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/utils/destructor.h"
 #include "ppl/nn/common/logger.h"
 
 #include "ppl/kernel/riscv/fp32/gather.h"
@@ -59,8 +60,8 @@ ppl::common::RetCode GatherKernel::DoExecute(KernelExecContext* ctx) {
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-        GetRiscvDevice()->FreeTmpBuffer(buffer);
+    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+        GetRiscvDevice()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto real_indices = (int64_t*)tmp_buffer_desc.addr;
     auto indices_data = indices->GetBufferPtr<const int64_t>();
