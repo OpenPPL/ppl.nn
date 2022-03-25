@@ -49,7 +49,7 @@ static vector<uint32_t> CalcEdgeRefcount(const ir::GraphTopo* topo, const set<ed
 
         /*
           edge_refcount = consumer_count + producer_count
-          if a object's producer does not exist, which means that it is an input object,
+          if an object's producer does not exist, which means that it is an input object,
           we increase its refcount to make sure that the refcount will always > 0 during
           runtime.
         */

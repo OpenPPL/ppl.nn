@@ -42,7 +42,7 @@ RetCode ReshapeSlice(InputOutputInfo* info, const int64_t* starts, const int64_t
         int64_t axis = axes[it];
         int64_t step_val = steps[it];
         if (axis < -dim_count || axis >= dim_count) {
-            LOG(DEBUG) << "ERROR: axis[ << axis << ] is out of range[" << -dim_count << ", " << dim_count << "].";
+            LOG(DEBUG) << "ERROR: axis[" << axis << "] is out of range[" << -dim_count << ", " << dim_count << "].";
             return RC_INVALID_VALUE;
         }
         axis = axis < 0 ? axis + dim_count : axis;

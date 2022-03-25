@@ -63,7 +63,7 @@ if(PPLNN_USE_RISCV)
     if(NOT TARGET "pplkernelriscv_static")
         include(${CMAKE_CURRENT_LIST_DIR}/pplkernelriscv-config.cmake)
     endif()
-    list(APPEND __PPLNN_LINK_LIBRARIES__ "pplkernelcuda_static")
+    list(APPEND __PPLNN_LINK_LIBRARIES__ "pplkernelriscv_static")
 endif()
 
 if(PPLNN_ENABLE_ONNX_MODEL)

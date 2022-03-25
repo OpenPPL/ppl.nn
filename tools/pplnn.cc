@@ -1081,13 +1081,13 @@ int main(int argc, char* argv[]) {
         simple_flags::print_args_info();
         return 0;
     }
+
+    cout << "ppl.nn version: [" << PPLNN_VERSION_MAJOR << "." << PPLNN_VERSION_MINOR << "." << PPLNN_VERSION_PATCH
+         << "], commit: [" << GetCommitString() << "]" << endl;
+
     if (g_flag_version) {
-        cout << GetCommitString() << endl;
         return 0;
     }
-
-    LOG(INFO) << "ppl.nn version: [" << PPLNN_VERSION_MAJOR << "." << PPLNN_VERSION_MINOR << "." << PPLNN_VERSION_PATCH
-              << "], commit: [" << GetCommitString() << "]";
 
     auto prepare_begin_ts = std::chrono::system_clock::now();
 
