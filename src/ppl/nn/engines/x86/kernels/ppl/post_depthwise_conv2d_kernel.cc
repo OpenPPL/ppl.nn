@@ -42,7 +42,7 @@ ppl::common::RetCode PostDepthwiseConv2dKernel::SeparateExecute(KernelExecContex
     PPLNN_X86_DEBUG_TRACE("DataFormat: %s\n", ppl::common::GetDataFormatStr(inter_shape.GetDataFormat()));
 
     BufferDesc inter_buffer_desc;
-    auto status = GetDevice()->Realloc(inter_shape, &inter_buffer_desc);
+    auto status = GetEngineContext()->GetDevice()->Realloc(inter_shape, &inter_buffer_desc);
     if (status != ppl::common::RC_SUCCESS) {
         LOG(ERROR) << "alloc InterTensor size[" << inter_shape.GetBytesIncludingPadding() << "] for kernel[" << GetName()
                    << "] failed: " << ppl::common::GetRetCodeStr(status);

@@ -75,7 +75,7 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
                                       &param_->param);
     }
     BufferDescGuard __tmp_buffer_guard__(&weight_buffer, [this](BufferDesc* buffer) {
-        GetDevice()->Free(buffer);
+        GetCudaDevice()->Free(buffer);
     });
 
     TensorShape bias_shape;

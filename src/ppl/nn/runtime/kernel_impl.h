@@ -20,14 +20,14 @@
 
 #include "ppl/nn/ir/graph.h"
 #include "ppl/nn/runtime/kernel_exec_context.h"
-#include "ppl/nn/common/device.h"
+#include "ppl/nn/engines/engine_context.h"
 #include <string>
 
 namespace ppl { namespace nn {
 
 class KernelImpl {
 public:
-    KernelImpl(const ir::Node* node) : node_(node), device_(nullptr) {}
+    KernelImpl(const ir::Node* node) : node_(node), engctx_(nullptr) {}
     KernelImpl(KernelImpl&&) = default;
     KernelImpl& operator=(KernelImpl&&) = default;
     virtual ~KernelImpl() {}
@@ -47,14 +47,14 @@ public:
         return node_->GetType();
     }
 
-    /** @brief set the device that this kernel uses in execution. */
-    void SetDevice(Device* d) {
-        device_ = d;
+    /** @brief set engine context that this kernel uses during execution. */
+    void SetEngineContext(EngineContext* ctx) {
+        engctx_ = ctx;
     }
 
-    /** @brief get the device where this kernel runs. */
-    Device* GetDevice() const {
-        return device_;
+    /** @brief get the EngineContext which this kernel uses. */
+    EngineContext* GetEngineContext() const {
+        return engctx_;
     }
 
     /**
@@ -75,8 +75,8 @@ private:
     /** assiciated node in the compute graph */
     const ir::Node* node_;
 
-    /** device which this kernel runs on */
-    Device* device_;
+    /** EngineContext which this kernel uses */
+    EngineContext* engctx_;
 
 private:
     KernelImpl(const KernelImpl&) = delete;

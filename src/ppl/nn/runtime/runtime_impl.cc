@@ -63,7 +63,6 @@ static RetCode InitRuntimeGraphResourceKernels(const ir::GraphTopo* topo, const 
             return RC_OTHER_ERROR;
         }
 
-        auto dev = ctx->GetDevice();
         for (auto o = partition->ops.begin(); o != partition->ops.end(); ++o) {
             if (!valid_node_flags[o->get()->GetNode()->GetId()]) {
                 continue;
@@ -74,7 +73,7 @@ static RetCode InitRuntimeGraphResourceKernels(const ir::GraphTopo* topo, const 
                 LOG(ERROR) << "create kernel[" << (*o)->GetNode()->GetName() << "] failed.";
                 return RC_OTHER_ERROR;
             }
-            impl->SetDevice(dev);
+            impl->SetEngineContext(ctx);
             graph->nodeid2kernel[(*o)->GetNode()->GetId()].reset(impl);
         }
     }
@@ -114,7 +113,7 @@ static RetCode InitRuntimeGraphResourceInputs(const ir::GraphTopo* topo, const R
                     LOG(ERROR) << "cannot find consumer[" << consumer->GetName() << "] of [" << edge->GetName() << "]";
                     return RC_NOT_FOUND;
                 }
-                tensor->SetDevice(kernel->GetDevice());
+                tensor->SetDevice(kernel->GetEngineContext()->GetDevice());
                 break;
             }
 
@@ -153,7 +152,7 @@ static RetCode InitRuntimeGraphResourceExtraInputs(const ir::GraphTopo* topo, co
                     LOG(ERROR) << "cannot find consumer[" << consumer->GetName() << "] of [" << edge->GetName() << "]";
                     return RC_NOT_FOUND;
                 }
-                tensor->SetDevice(kernel->GetDevice());
+                tensor->SetDevice(kernel->GetEngineContext()->GetDevice());
                 break;
             }
 
@@ -187,7 +186,7 @@ RetCode InitRuntimeGraphResourceOutputs(const ir::GraphTopo* topo, const Runtime
                     LOG(ERROR) << "cannot find producer[" << producer->GetName() << "] of [" << edge->GetName() << "]";
                     return RC_NOT_FOUND;
                 }
-                tensor->SetDevice(kernel->GetDevice());
+                tensor->SetDevice(kernel->GetEngineContext()->GetDevice());
             }
 
             auto shape_ref = info.shapes.find(edge->GetId());
