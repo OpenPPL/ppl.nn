@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/cuda/kernels/onnx/non_zero_kernel.h"
-
+#include "ppl/nn/utils/destructor.h"
 #include "cudakernel/nn/non_zero.h"
 
 namespace ppl { namespace nn { namespace cuda {
@@ -35,8 +35,8 @@ ppl::common::RetCode NonZeroKernel::DoExecute(KernelExecContext* ctx) {
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-        GetCudaDevice()->FreeTmpBuffer(buffer);
+    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+        GetCudaDevice()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
 

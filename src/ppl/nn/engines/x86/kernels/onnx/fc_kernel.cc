@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/x86/kernels/onnx/fc_kernel.h"
+#include "ppl/nn/utils/destructor.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -57,8 +58,8 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
                    << "] failed: " << ppl::common::GetRetCodeStr(rc);
         return rc;
     }
-    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-        GetX86Device()->FreeTmpBuffer(buffer);
+    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+        GetX86Device()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
     PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);

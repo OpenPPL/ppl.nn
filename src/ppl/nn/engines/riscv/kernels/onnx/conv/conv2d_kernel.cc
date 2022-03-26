@@ -19,6 +19,7 @@
 #include "ppl/nn/engines/riscv/kernels/onnx/conv/conv2d_kernel.h"
 #include "ppl/nn/engines/riscv/utils/macros.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/utils/destructor.h"
 #include "ppl/nn/common/logger.h"
 
 #define CASE_STRING_FMT() "g%ld_mb%d_ic%ldih%diw%d_oc%ldoh%dow%d_kh%ldkw%ldsh%ldsw%ldph%ldpw%lddh%lddw%ld_n%s"
@@ -52,8 +53,8 @@ ppl::common::RetCode Conv2dKernel::DoExecute(KernelExecContext* ctx) {
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-        GetRiscvDevice()->FreeTmpBuffer(buffer);
+    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+        GetRiscvDevice()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
     cur_executor->set_temp_buffer(tmp_buffer);

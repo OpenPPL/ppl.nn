@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/x86/kernels/onnx/matmul_kernel.h"
+#include "ppl/nn/utils/destructor.h"
 #include "ppl/kernel/x86/fp32/matmul.h"
 
 namespace ppl { namespace nn { namespace x86 {
@@ -52,8 +53,8 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-        GetX86Device()->FreeTmpBuffer(buffer);
+    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+        GetX86Device()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
     PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
