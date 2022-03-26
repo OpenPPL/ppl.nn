@@ -18,6 +18,7 @@
 #include "ppl/nn/engines/riscv/kernels/onnx/fc_kernel.h"
 #include "ppl/nn/engines/riscv/utils/macros.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/utils/destructor.h"
 
 namespace ppl { namespace nn { namespace riscv {
 
@@ -51,8 +52,8 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
                    << "] failed: " << ppl::common::GetRetCodeStr(rc);
         return rc;
     }
-    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-        GetRiscvDevice()->FreeTmpBuffer(buffer);
+    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+        GetRiscvDevice()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
 

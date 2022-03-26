@@ -17,6 +17,7 @@
 
 #include "ppl/nn/engines/utils.h"
 #include "ppl/nn/utils/generic_cpu_device.h"
+#include "ppl/nn/utils/destructor.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
@@ -60,8 +61,8 @@ RetCode CopyBuffer(const BufferDesc& src_buf, const TensorShape& src_shape, cons
         if (status != RC_SUCCESS) {
             return status;
         }
-        BufferDescGuard __tmp_buffer_guard__(&tmp_buffer_desc, [tmp_cpu_device](BufferDesc* buffer) {
-            tmp_cpu_device->Free(buffer);
+        utils::Destructor __tmp_buffer_guard__([tmp_cpu_device, &tmp_buffer_desc]() -> void {
+            tmp_cpu_device->Free(&tmp_buffer_desc);
         });
         auto tmp_buffer = tmp_buffer_desc.addr;
 

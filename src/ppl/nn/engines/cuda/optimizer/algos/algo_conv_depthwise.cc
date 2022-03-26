@@ -164,8 +164,8 @@ RetCode DepthwiseDirect::ModifyParam(ir::Node* node, OptKernelOptions& options) 
             LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
             return status;
         }
-        BufferDescGuard __device_src_guard__(&temp_buffer, [&options](BufferDesc* buffer) {
-            options.device->Free(buffer);
+        utils::Destructor __device_src_guard__([&options, &temp_buffer]() -> void {
+            options.device->Free(&temp_buffer);
         });
 
         RuntimeConstantInfo constant_info;

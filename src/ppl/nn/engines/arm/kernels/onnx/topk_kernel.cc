@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/arm/kernels/onnx/topk_kernel.h"
+#include "ppl/nn/utils/destructor.h"
 #include "ppl/kernel/arm_server/topk/neon/topk.h"
 
 namespace ppl { namespace nn { namespace arm {
@@ -36,8 +37,8 @@ ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-        GetArmDevice()->FreeTmpBuffer(buffer);
+    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+        GetArmDevice()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
 

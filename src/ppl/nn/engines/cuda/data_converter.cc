@@ -24,6 +24,7 @@
 #include "ppl/nn/common/types.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/cuda/cuda_device.h"
+#include "ppl/nn/utils/destructor.h"
 #include "cudakernel/reformat/reformat.h"
 
 using namespace std;
@@ -44,8 +45,8 @@ RetCode CudaDataConverter::ConvertToHost(void* dst, const TensorShape& dst_desc,
         LOG(ERROR) << "alloc tmp buffer for dst tensor failed";
         return status;
     }
-    BufferDescGuard __tmp_buffer_guard__(&tmp_buffer_desc, [this](BufferDesc* buffer) {
-        device_->Free(buffer);
+    utils::Destructor __tmp_buffer_guard__([this, &tmp_buffer_desc]() -> void {
+        device_->Free(&tmp_buffer_desc);
     });
 
     status = Convert(&tmp_buffer_desc, dst_desc, src, src_desc);
@@ -76,8 +77,8 @@ RetCode CudaDataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& d
         LOG(ERROR) << "alloc tmp buffer for dst tensor failed";
         return status;
     }
-    BufferDescGuard __tmp_buffer_guard__(&tmp_buffer_desc, [this](BufferDesc* buffer) {
-        device_->Free(buffer);
+    utils::Destructor __tmp_buffer_guard__([this, &tmp_buffer_desc]() -> void {
+        device_->Free(&tmp_buffer_desc);
     });
 
     status = device_->CopyFromHost(&tmp_buffer_desc, src, src_desc);
@@ -131,8 +132,8 @@ RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc,
             LOG(ERROR) << "alloc tmp buffer for dst tensor failed";
             return status;
         }
-        BufferDescGuard __tmp_buffer_guard__(&tmp_buffer_desc, [this](BufferDesc* buffer) {
-            device_->Free(buffer);
+        utils::Destructor __tmp_buffer_guard__([this, &tmp_buffer_desc]() -> void {
+            device_->Free(&tmp_buffer_desc);
         });
 
         PPLCUDADataConvert(device_->GetStream(), src.addr, dst->addr, tmp_buffer_desc.addr, param);
@@ -155,8 +156,8 @@ RetCode CudaDataConverter::ConvertToHost(void* dst, const TensorShape& dst_desc,
         LOG(ERROR) << "alloc tmp buffer for dst tensor failed";
         return status;
     }
-    BufferDescGuard __tmp_buffer_guard__(&tmp_buffer_desc, [this](BufferDesc* buffer) {
-        device_->Free(buffer);
+    utils::Destructor __tmp_buffer_guard__([this, &tmp_buffer_desc]() -> void {
+        device_->Free(&tmp_buffer_desc);
     });
 
     status = Convert(&tmp_buffer_desc, dst_desc, dst_quant, src, src_desc, src_quant);
@@ -188,8 +189,8 @@ RetCode CudaDataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& d
         LOG(ERROR) << "alloc tmp buffer for dst tensor failed";
         return status;
     }
-    BufferDescGuard __tmp_buffer_guard__(&tmp_buffer_desc, [this](BufferDesc* buffer) {
-        device_->Free(buffer);
+    utils::Destructor __tmp_buffer_guard__([this, &tmp_buffer_desc]() -> void {
+        device_->Free(&tmp_buffer_desc);
     });
 
     status = device_->CopyFromHost(&tmp_buffer_desc, src, src_desc);
@@ -228,16 +229,16 @@ RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc,
         LOG(ERROR) << "alloc tmp buffer for dst tensor failed";
         return status;
     }
+    utils::Destructor __in_scale_buf_guard__([this, &in_scale_buf]() -> void {
+        device_->Free(&in_scale_buf);
+    });
     status = device_->Realloc(param.quant_dim_size*sizeof(float), &out_scale_buf);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "alloc tmp buffer for dst tensor failed";
         return status;
     }
-    BufferDescGuard __in_scale_buf_guard__(&in_scale_buf, [this](BufferDesc* buffer) {
-        device_->Free(buffer);
-    });
-    BufferDescGuard __out_scale_buf_guard__(&out_scale_buf, [this](BufferDesc* buffer) {
-        device_->Free(buffer);
+    utils::Destructor __out_scale_buf_guard__([this, &out_scale_buf]() -> void {
+        device_->Free(&out_scale_buf);
     });
 
     if (param.mix_type && (src_quant.per_channel || dst_quant.per_channel)) {
@@ -279,8 +280,8 @@ RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc,
             LOG(ERROR) << "alloc tmp buffer for dst tensor failed";
             return status;
         }
-        BufferDescGuard __tmp_buffer_guard__(&tmp_buffer_desc, [this](BufferDesc* buffer) {
-            device_->Free(buffer);
+        utils::Destructor __tmp_buffer_guard__([this, &tmp_buffer_desc]() -> void {
+            device_->Free(&tmp_buffer_desc);
         });
 
 

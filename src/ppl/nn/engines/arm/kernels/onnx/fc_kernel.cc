@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/arm/kernels/onnx/fc_kernel.h"
+#include "ppl/nn/utils/destructor.h"
 #include "ppl/kernel/arm_server/fc/neon/fc.h"
 
 namespace ppl { namespace nn { namespace arm {
@@ -70,8 +71,8 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
                         << "] failed: " << ppl::common::GetRetCodeStr(rc);
                 return rc;
             }
-            BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-                GetArmDevice()->FreeTmpBuffer(buffer);
+            utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+                GetArmDevice()->FreeTmpBuffer(&tmp_buffer_desc);
             });
 
             const float * cvt_filter = (const float *)executor_->cvt_filter();
@@ -94,7 +95,7 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
 
         }
         else {
-            LOG(ERROR) << "unsupported datatype: " << ppl::common::GetDataTypeStr(data_type) 
+            LOG(ERROR) << "unsupported datatype: " << ppl::common::GetDataTypeStr(data_type)
                     << "with isa " << GetISA() << ".";
             return ppl::common::RC_UNSUPPORTED;
         }
@@ -126,8 +127,8 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
                         << "] failed: " << ppl::common::GetRetCodeStr(rc);
                 return rc;
             }
-            BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-                GetArmDevice()->FreeTmpBuffer(buffer);
+            utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+                GetArmDevice()->FreeTmpBuffer(&tmp_buffer_desc);
             });
 
             const __fp16 * cvt_filter = (const __fp16 *)executor_->cvt_filter();
@@ -135,7 +136,7 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
             const __fp16 * input  = A->GetBufferPtr<__fp16>();
                   __fp16 * output = Y->GetBufferPtr<__fp16>();
                   __fp16 * tmp_buffer_ptr = (__fp16 *)tmp_buffer_desc.addr;
-            
+
             PPLNN_ARM_DEBUG_TRACE("buffer: %p\n", tmp_buffer_ptr);
             PPLNN_ARM_DEBUG_TRACE("isa: %u\n", GetISA());
 
@@ -149,7 +150,7 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
             return rc;
         }
         else {
-            LOG(ERROR) << "unsupported datatype: " << ppl::common::GetDataTypeStr(data_type) 
+            LOG(ERROR) << "unsupported datatype: " << ppl::common::GetDataTypeStr(data_type)
                     << "with isa " << GetISA() << ".";
             return ppl::common::RC_UNSUPPORTED;
         }

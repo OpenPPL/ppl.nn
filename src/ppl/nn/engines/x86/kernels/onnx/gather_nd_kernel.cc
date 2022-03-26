@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/x86/kernels/onnx/gather_nd_kernel.h"
-
+#include "ppl/nn/utils/destructor.h"
 #include "ppl/kernel/x86/fp32/gather_nd.h"
 
 namespace ppl { namespace nn { namespace x86 {
@@ -60,8 +60,8 @@ ppl::common::RetCode GatherNdKernel::DoExecute(KernelExecContext* ctx) {
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    BufferDescGuard __tmp_buffer_guard(&tmp_buffer_desc, [this](BufferDesc* buffer) -> void {
-        GetX86Device()->FreeTmpBuffer(buffer);
+    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+        GetX86Device()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto real_indices = (int64_t*)tmp_buffer_desc.addr;
     auto indices_data = indices->GetBufferPtr<const int64_t>();

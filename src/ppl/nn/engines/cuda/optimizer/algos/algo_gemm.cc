@@ -294,8 +294,8 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
             LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
             return status;
         }
-        BufferDescGuard __device_src_guard__(&temp_weight_buffer, [&options](BufferDesc* buffer) {
-            options.device->Free(buffer);
+        utils::Destructor __device_src_guard__([&options, &temp_weight_buffer]() -> void {
+            options.device->Free(&temp_weight_buffer);
         });
 
         if (shape_in0.GetDataType() == ppl::common::DATATYPE_FLOAT16) {
