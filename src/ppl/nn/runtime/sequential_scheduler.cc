@@ -120,7 +120,7 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
     for (auto x = aux_info_->sorted_nodes.begin(); x != aux_info_->sorted_nodes.end(); ++x) {
         auto kernel = graph_->nodeid2kernel[*x].get();
         ctx.SetNode(kernel->GetNode());
-        getter.SetDevice(kernel->GetDevice());
+        getter.SetDevice(kernel->GetEngineContext()->GetDevice());
 
         auto status = utils::ExecuteKernel(kernel, &ctx, release_object_func, profiler);
         if (status != RC_SUCCESS) {

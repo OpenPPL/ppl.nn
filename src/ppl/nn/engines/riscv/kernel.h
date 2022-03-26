@@ -69,10 +69,10 @@ protected:
     }
 
     RiscvDevice* GetRiscvDevice() {
-        return reinterpret_cast<RiscvDevice*>(GetDevice());
+        return reinterpret_cast<RiscvDevice*>(GetEngineContext()->GetDevice());
     }
     const RiscvDevice* GetRiscvDevice() const {
-        return reinterpret_cast<const RiscvDevice*>(GetDevice());
+        return reinterpret_cast<const RiscvDevice*>(GetEngineContext()->GetDevice());
     }
 
 private:

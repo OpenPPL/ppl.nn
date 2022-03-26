@@ -116,7 +116,7 @@ bool CudaKernel::CanDoExecute(const KernelExecContext& ctx) const {
 
 RetCode CudaKernel::Execute(KernelExecContext* ctx) {
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-    CudaTimingGuard __timing_guard__(static_cast<CudaDevice*>(GetDevice())->GetStream(), &exec_begin_event_,
+    CudaTimingGuard __timing_guard__(GetCudaDevice()->GetStream(), &exec_begin_event_,
                                      &exec_end_event_, ctx->IsProfilingEnabled());
 #endif
 
@@ -166,7 +166,7 @@ RetCode CudaKernel::Execute(KernelExecContext* ctx) {
               << " ms and memory cost " << total_size;
 #endif
 
-    barrier_.Update(static_cast<CudaDevice*>(GetDevice())->GetStream());
+    barrier_.Update(GetCudaDevice()->GetStream());
 
     return status;
 }
