@@ -20,7 +20,6 @@
 
 #include "ppl/nn/engines/common/common_kernel_impl.h"
 #include "ppl/nn/runtime/runtime_impl.h"
-#include "ppl/nn/runtime/runtime_graph_info.h"
 
 namespace ppl { namespace nn { namespace common {
 
@@ -29,9 +28,11 @@ public:
     IfKernel(const ir::Node* node) : CommonKernelImpl(node) {}
     ppl::common::RetCode SetExecutionInfo(const std::shared_ptr<ir::GraphTopo>& then_topo,
                                           const RuntimeGraphInfo* then_info, const RuntimeAuxInfo* then_aux_info,
+                                          const RuntimeInitInfo* then_init_info,
                                           const std::vector<uint32_t>* extra_inputs_of_then_branch,
                                           const std::shared_ptr<ir::GraphTopo>& else_topo,
                                           const RuntimeGraphInfo* else_info, const RuntimeAuxInfo* else_aux_info,
+                                          const RuntimeInitInfo* else_init_info,
                                           const std::vector<uint32_t>* extra_inputs_of_else_branch);
 
 protected:

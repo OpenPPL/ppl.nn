@@ -56,7 +56,7 @@ RetCode RuntimeBuilderImpl::Init(const char* model_buf, uint64_t buf_len, Engine
         return status;
     }
 
-    partial_runtime_creator_.Init(graph_.topo.get(), graph_info_, aux_info_);
+    partial_runtime_creator_.Init(graph_.topo.get(), graph_info_, &init_info_.name2nodeid);
 
     return RC_SUCCESS;
 }
@@ -78,9 +78,15 @@ RetCode RuntimeBuilderImpl::Preprocess() {
         return status;
     }
 
-    status = GenerateRuntimeAuxInfo(graph_.topo.get(), resource_.reserved_edgeids, aux_info_.get());
+    status = aux_info_->Init(graph_.topo.get(), resource_.reserved_edgeids);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenerateRuntimeAuxInfo failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    status = init_info_.Init(graph_.topo.get());
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "GenerateRuntimeInitInfo failed: " << GetRetCodeStr(status);
         return status;
     }
 
@@ -93,7 +99,7 @@ Runtime* RuntimeBuilderImpl::CreateRuntime() {
         return nullptr;
     }
 
-    auto status = runtime->Init(graph_.topo, graph_info_, aux_info_, resource_.reserved_edgeids);
+    auto status = runtime->Init(graph_.topo, graph_info_, aux_info_, init_info_, resource_.reserved_edgeids);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init runtime failed: " << GetRetCodeStr(status);
         delete runtime;

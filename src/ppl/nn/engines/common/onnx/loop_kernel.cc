@@ -27,12 +27,14 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace common {
 
 template <typename T>
-void EmptyDeleter(T*) {}
+void DummyDeleter(T*) {}
 
 RetCode LoopKernel::SetExecutionInfo(const shared_ptr<ir::GraphTopo>& topo, const RuntimeGraphInfo* info,
-                                     const RuntimeAuxInfo* aux_info, LoopConcatOutputFunc func) {
-    auto status = subgraph_.Init(topo, shared_ptr<const RuntimeGraphInfo>(info, EmptyDeleter<const RuntimeGraphInfo>),
-                                 shared_ptr<const RuntimeAuxInfo>(aux_info, EmptyDeleter<const RuntimeAuxInfo>));
+                                     const RuntimeAuxInfo* aux_info, const RuntimeInitInfo* init_info,
+                                     LoopConcatOutputFunc func) {
+    auto status =
+        subgraph_.Init(topo, shared_ptr<const RuntimeGraphInfo>(info, DummyDeleter<const RuntimeGraphInfo>),
+                       shared_ptr<const RuntimeAuxInfo>(aux_info, DummyDeleter<const RuntimeAuxInfo>), *init_info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init loop kernel[" << GetName() << "] failed: " << GetRetCodeStr(status);
         return status;

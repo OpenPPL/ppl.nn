@@ -20,7 +20,6 @@
 
 #include "ppl/nn/ir/graph_topo.h"
 #include "ppl/nn/runtime/runtime_graph_info.h"
-#include "ppl/nn/runtime/runtime_aux_info.h"
 #include "ppl/nn/runtime/runtime_impl.h"
 #include <memory>
 #include <unordered_map>
@@ -29,8 +28,9 @@ namespace ppl { namespace nn {
 
 class PartialRuntimeCreator final {
 public:
-    PartialRuntimeCreator() : topo_(nullptr) {}
-    void Init(const ir::GraphTopo*, const std::shared_ptr<RuntimeGraphInfo>&, const std::shared_ptr<RuntimeAuxInfo>&);
+    PartialRuntimeCreator() : topo_(nullptr), name2nodeid_(nullptr) {}
+    void Init(const ir::GraphTopo*, const std::shared_ptr<RuntimeGraphInfo>&,
+              const std::map<std::string, nodeid_t>* name2nodeid);
     RuntimeImpl* Create(const char** begin_ops, uint32_t begin_op_num, const char** end_ops, uint32_t end_op_num,
                         const std::set<nodeid_t>& reserved_edgeids);
 
@@ -46,6 +46,7 @@ private:
     struct PartialRuntimeResource final {
         std::shared_ptr<ir::GraphTopo> topo;
         std::shared_ptr<RuntimeAuxInfo> aux_info;
+        RuntimeInitInfo init_info;
         std::set<nodeid_t> reserved_edgeids;
     };
 
@@ -63,16 +64,16 @@ private:
     };
 
     static void InitBeginEndOps(const char** begin_ops, uint32_t begin_op_num, const char** end_ops,
-                                uint32_t end_op_num, const std::map<std::string, uint32_t>& name2idx, BeginEndOps* ops);
+                                uint32_t end_op_num, const std::map<std::string, nodeid_t>& name2nodeid,
+                                BeginEndOps* ops);
     static ppl::common::RetCode InitPartialRuntimeResource(const ir::GraphTopo* topo,
                                                            const std::set<nodeid_t>& reserved_edgeids,
                                                            const BeginEndOps& ops, PartialRuntimeResource* resource);
 
 private:
     const ir::GraphTopo* topo_;
+    const std::map<std::string, nodeid_t>* name2nodeid_;
     std::shared_ptr<RuntimeGraphInfo> graph_info_;
-    std::shared_ptr<RuntimeAuxInfo> aux_info_;
-    std::map<std::string, nodeid_t> name2nid_;
     std::unordered_map<BeginEndOps, PartialRuntimeResource, BeginEndOpsHash> ops2resource_;
 
 private:

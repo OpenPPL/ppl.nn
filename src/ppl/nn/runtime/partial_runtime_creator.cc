@@ -24,25 +24,16 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn {
 
-static void InitOpName2NodeId(const ir::GraphTopo* topo, const std::vector<nodeid_t>& nids,
-                              map<string, uint32_t>* name2nid) {
-    for (uint32_t i = 0; i < nids.size(); ++i) {
-        auto node = topo->GetNodeById(nids[i]);
-        name2nid->insert(make_pair(string(node->GetName()), nids[i]));
-    }
-}
-
-void PartialRuntimeCreator::Init(const ir::GraphTopo* topo, const std::shared_ptr<RuntimeGraphInfo>& info,
-                                 const std::shared_ptr<RuntimeAuxInfo>& aux_info) {
+void PartialRuntimeCreator::Init(const ir::GraphTopo* topo, const shared_ptr<RuntimeGraphInfo>& info,
+                                 const map<string, nodeid_t>* name2nodeid) {
     topo_ = topo;
     graph_info_ = info;
-    aux_info_ = aux_info;
-    InitOpName2NodeId(topo, aux_info_->sorted_nodes, &name2nid_);
+    name2nodeid_ = name2nodeid;
 }
 
 template <typename ContainerType>
-static RetCode ConvertName2NodeId(const char** names, uint32_t name_num, const map<string, uint32_t>& name2nid,
-                                  ContainerType* nids) {
+static RetCode ConvertNames2NodeIds(const char** names, uint32_t name_num, const map<string, nodeid_t>& name2nid,
+                                    ContainerType* nids) {
     for (uint32_t i = 0; i < name_num; ++i) {
         auto ref = name2nid.find(names[i]);
         if (ref == name2nid.end()) {
@@ -55,10 +46,12 @@ static RetCode ConvertName2NodeId(const char** names, uint32_t name_num, const m
 }
 
 void PartialRuntimeCreator::InitBeginEndOps(const char** begin_ops, uint32_t begin_op_num, const char** end_ops,
-                                            uint32_t end_op_num, const map<string, uint32_t>& name2nid,
+                                            uint32_t end_op_num, const map<string, nodeid_t>& name2nid,
                                             BeginEndOps* ops) {
-    ConvertName2NodeId(begin_ops, begin_op_num, name2nid, &ops->begin);
-    ConvertName2NodeId(end_ops, end_op_num, name2nid, &ops->end);
+    ConvertNames2NodeIds(begin_ops, begin_op_num, name2nid, &ops->begin);
+    std::sort(ops->begin.begin(), ops->begin.end());
+    ConvertNames2NodeIds(end_ops, end_op_num, name2nid, &ops->end);
+    std::sort(ops->end.begin(), ops->end.end());
 }
 
 RetCode PartialRuntimeCreator::InitPartialRuntimeResource(const ir::GraphTopo* topo,
@@ -95,9 +88,15 @@ RetCode PartialRuntimeCreator::InitPartialRuntimeResource(const ir::GraphTopo* t
     }
 
     resource->aux_info = make_shared<RuntimeAuxInfo>();
-    auto status = GenerateRuntimeAuxInfo(resource->topo.get(), resource->reserved_edgeids, resource->aux_info.get());
+    auto status = resource->aux_info->Init(resource->topo.get(), resource->reserved_edgeids);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init RuntimeAuxInfo failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    status = resource->init_info.Init(resource->topo.get());
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "init RuntimeInitInfo failed: " << GetRetCodeStr(status);
         return status;
     }
 
@@ -107,7 +106,7 @@ RetCode PartialRuntimeCreator::InitPartialRuntimeResource(const ir::GraphTopo* t
 RuntimeImpl* PartialRuntimeCreator::Create(const char** begin_ops, uint32_t begin_op_num, const char** end_ops,
                                            uint32_t end_op_num, const set<nodeid_t>& reserved_edgeids) {
     BeginEndOps ops;
-    InitBeginEndOps(begin_ops, begin_op_num, end_ops, end_op_num, name2nid_, &ops);
+    InitBeginEndOps(begin_ops, begin_op_num, end_ops, end_op_num, *name2nodeid_, &ops);
 
     auto ret_pair = ops2resource_.insert(make_pair(ops, PartialRuntimeResource()));
     PartialRuntimeResource* resource = &ret_pair.first->second;
@@ -120,7 +119,8 @@ RuntimeImpl* PartialRuntimeCreator::Create(const char** begin_ops, uint32_t begi
     }
 
     auto runtime = new RuntimeImpl();
-    auto status = runtime->Init(resource->topo, graph_info_, resource->aux_info, resource->reserved_edgeids);
+    auto status =
+        runtime->Init(resource->topo, graph_info_, resource->aux_info, resource->init_info, resource->reserved_edgeids);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init runtime failed: " << GetRetCodeStr(status);
         delete runtime;

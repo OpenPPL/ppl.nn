@@ -25,25 +25,25 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace common {
 
 template <typename T>
-void EmptyDeleter(T*) {}
+void DummyDeleter(T*) {}
 
 RetCode IfKernel::SetExecutionInfo(const shared_ptr<ir::GraphTopo>& then_topo, const RuntimeGraphInfo* then_info,
-                                   const RuntimeAuxInfo* then_aux_info,
+                                   const RuntimeAuxInfo* then_aux_info, const RuntimeInitInfo* then_init_info,
                                    const vector<uint32_t>* extra_inputs_of_then_branch,
                                    const shared_ptr<ir::GraphTopo>& else_topo, const RuntimeGraphInfo* else_info,
-                                   const RuntimeAuxInfo* else_aux_info,
+                                   const RuntimeAuxInfo* else_aux_info, const RuntimeInitInfo* else_init_info,
                                    const vector<uint32_t>* extra_inputs_of_else_branch) {
     auto status = then_branch_.Init(
-        then_topo, shared_ptr<const RuntimeGraphInfo>(then_info, EmptyDeleter<const RuntimeGraphInfo>),
-        shared_ptr<const RuntimeAuxInfo>(then_aux_info, EmptyDeleter<const RuntimeAuxInfo>));
+        then_topo, shared_ptr<const RuntimeGraphInfo>(then_info, DummyDeleter<const RuntimeGraphInfo>),
+        shared_ptr<const RuntimeAuxInfo>(then_aux_info, DummyDeleter<const RuntimeAuxInfo>), *then_init_info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init if kernel[" << GetName() << "] then_branch failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = else_branch_.Init(else_topo,
-                               shared_ptr<const RuntimeGraphInfo>(else_info, EmptyDeleter<const RuntimeGraphInfo>),
-                               shared_ptr<const RuntimeAuxInfo>(else_aux_info, EmptyDeleter<const RuntimeAuxInfo>));
+    status = else_branch_.Init(
+        else_topo, shared_ptr<const RuntimeGraphInfo>(else_info, DummyDeleter<const RuntimeGraphInfo>),
+        shared_ptr<const RuntimeAuxInfo>(else_aux_info, DummyDeleter<const RuntimeAuxInfo>), *else_init_info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init if kernel[" << GetName() << "] else_branch failed: " << GetRetCodeStr(status);
         return status;

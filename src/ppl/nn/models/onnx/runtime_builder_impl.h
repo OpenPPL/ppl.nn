@@ -52,6 +52,7 @@ private:
     utils::SharedResource resource_;
     std::shared_ptr<RuntimeGraphInfo> graph_info_;
     std::shared_ptr<RuntimeAuxInfo> aux_info_;
+    RuntimeInitInfo init_info_;
     PartialRuntimeCreator partial_runtime_creator_;
 
 private:

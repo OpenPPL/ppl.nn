@@ -32,15 +32,14 @@ protected:
         auto topo = builder_.GetGraph()->topo.get();
         cout << "graph -> " << utils::ToGraphviz(topo) << endl;
 
-        aux_info_ = make_shared<RuntimeAuxInfo>();
-        auto status = GenerateRuntimeAuxInfo(topo, {}, aux_info_.get());
+        auto status = init_info_.Init(topo);
         EXPECT_EQ(RC_SUCCESS, status);
     }
 
 protected:
-    shared_ptr<RuntimeAuxInfo> aux_info_;
     shared_ptr<RuntimeGraphInfo> graph_info_;
     vector<unique_ptr<EngineImpl>> engines_;
+    RuntimeInitInfo init_info_;
     GraphBuilder builder_;
 };
 
@@ -48,12 +47,12 @@ TEST_F(PartialRuntimeCreatorTest, partial1) {
     auto topo = builder_.GetGraph()->topo.get();
 
     PartialRuntimeCreator creator;
-    creator.Init(topo, graph_info_, aux_info_);
+    creator.Init(topo, graph_info_, &init_info_.name2nodeid);
 
     const char* begin_ops[] = {"c", "d", "h"};
     const char* end_ops[] = {"i"};
 
-    auto runtime = creator.Create(begin_ops, 3, end_ops, 1, {});
+    auto runtime = unique_ptr<RuntimeImpl>(creator.Create(begin_ops, 3, end_ops, 1, {}));
     EXPECT_TRUE(runtime != nullptr);
 
     auto input_count = runtime->GetInputCount();
