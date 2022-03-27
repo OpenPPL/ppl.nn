@@ -32,6 +32,7 @@ public:
     }
 
 private:
+    uint64_t CalcTmpBufferSize(const KernelExecContext&) const override;
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
