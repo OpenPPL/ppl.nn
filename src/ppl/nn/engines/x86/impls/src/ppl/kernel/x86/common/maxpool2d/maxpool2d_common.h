@@ -23,19 +23,19 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 struct maxpool2d_param {
-    int32_t kernel_h;
-    int32_t kernel_w;
-    int32_t stride_h;
-    int32_t stride_w;
-    int32_t pad_h;
-    int32_t pad_w;
+    int64_t kernel_h;
+    int64_t kernel_w;
+    int64_t stride_h;
+    int64_t stride_w;
+    int64_t pad_h;
+    int64_t pad_w;
 
-    int32_t batch;
-    int32_t channels;
-    int32_t src_h;
-    int32_t src_w;
-    int32_t dst_h;
-    int32_t dst_w;
+    int64_t batch;
+    int64_t channels;
+    int64_t src_h;
+    int64_t src_w;
+    int64_t dst_h;
+    int64_t dst_w;
 };
 
 }}}; // namespace ppl::kernel::x86

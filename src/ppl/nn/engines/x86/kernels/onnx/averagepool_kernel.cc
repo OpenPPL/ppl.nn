@@ -17,8 +17,23 @@
 
 #include "ppl/nn/engines/x86/kernels/onnx/averagepool_kernel.h"
 #include "ppl/kernel/x86/fp32/averagepool2d.h"
+#include "ppl/nn/utils/destructor.h"
 
 namespace ppl { namespace nn { namespace x86 {
+
+uint64_t AveragePoolKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
+    auto src = ctx.GetInput<TensorImpl>(0);
+    auto dst = ctx.GetOutput<TensorImpl>(0);
+    int64_t pad_w = 0;
+    if (param_->global_pooling == 0 && param_->pads.size() >= 2) {
+        pad_w = param_->pads[1];
+    }
+    if (MayUseISA(ppl::common::ISA_X86_SSE)) {
+        return kernel::x86::averagepool_fp32_get_buffer_bytes(src->GetShape(), dst->GetShape(), pad_w);
+    } else {
+        return 64u;
+    }
+}
 
 ppl::common::RetCode AveragePoolKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_REQUIRED_INPUT(X, 0);
@@ -43,17 +58,17 @@ ppl::common::RetCode AveragePoolKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    const int32_t src_h = X->GetShape()->GetDim(2);
-    const int32_t src_w = X->GetShape()->GetDim(3);
+    const int64_t src_h = X->GetShape()->GetDim(2);
+    const int64_t src_w = X->GetShape()->GetDim(3);
 
-    int32_t kernel_h;
-    int32_t kernel_w;
-    int32_t stride_h;
-    int32_t stride_w;
-    int32_t pad_h;
-    int32_t pad_w;
-    int32_t dilation_h;
-    int32_t dilation_w;
+    int64_t kernel_h;
+    int64_t kernel_w;
+    int64_t stride_h;
+    int64_t stride_w;
+    int64_t pad_h;
+    int64_t pad_w;
+    int64_t dilation_h;
+    int64_t dilation_w;
     if (param_->global_pooling) {
         kernel_h = src_h;
         kernel_w = src_w;
@@ -88,6 +103,20 @@ ppl::common::RetCode AveragePoolKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("strides: %d %d\n", stride_h, stride_w);
     PPLNN_X86_DEBUG_TRACE("pads: %d %d\n", pad_h, pad_w);
 
+    BufferDesc tmp_buffer_desc;
+    auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
+    auto status = GetX86Device()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
+    if (status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
+                   << "] failed: " << ppl::common::GetRetCodeStr(status);
+        return status;
+    }
+    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+        GetX86Device()->FreeTmpBuffer(&tmp_buffer_desc);
+    });
+    auto tmp_buffer = tmp_buffer_desc.addr;
+    PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
+
     const auto data_type = X->GetShape()->GetDataType();
     const auto data_format = X->GetShape()->GetDataFormat();
 
@@ -118,9 +147,12 @@ ppl::common::RetCode AveragePoolKernel::DoExecute(KernelExecContext* ctx) {
         }
     } else if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
-            return ppl::kernel::x86::averagepool2d_nchw_normal_fp32(
+            // return ppl::kernel::x86::averagepool2d_nchw_normal_fp32(
+            //     X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
+            //     pad_h, pad_w, param_->mode, param_->ceil_mode, Y->GetBufferPtr<float>());
+            return ppl::kernel::x86::averagepool2d_ndarray_normal_fp32_sse(
                 X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w, pad_h,
-                pad_w, param_->mode, param_->ceil_mode, Y->GetBufferPtr<float>());
+                pad_w, param_->mode, param_->ceil_mode, tmp_buffer, Y->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";
         }
