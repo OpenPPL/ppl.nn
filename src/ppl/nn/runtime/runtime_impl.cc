@@ -81,18 +81,8 @@ static RetCode InitRuntimeGraphResourceKernels(const ir::GraphTopo* topo, const 
     return RC_SUCCESS;
 }
 
-static KernelImpl* FindKernelByName(const vector<unique_ptr<KernelImpl>>& kernels, const string& name) {
-    for (auto it = kernels.begin(); it != kernels.end(); ++it) {
-        auto kernel = it->get();
-        if (kernel && kernel->GetName() == name) {
-            return kernel;
-        }
-    }
-    return nullptr;
-}
-
 static RetCode InitRuntimeGraphResourceInputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                              RuntimeGraphResource* graph) {
+                                              const map<string, nodeid_t>& name2nodeid, RuntimeGraphResource* graph) {
     for (uint32_t i = 0; i < topo->GetInputCount(); ++i) {
         auto eid = topo->GetInput(i);
         auto edge = topo->GetEdgeById(eid);
@@ -107,12 +97,14 @@ static RetCode InitRuntimeGraphResourceInputs(const ir::GraphTopo* topo, const R
                     continue;
                 }
 
-                // Consumers of an edge are in the same engine. This is guranteed by optimizer.
-                auto kernel = FindKernelByName(graph->nodeid2kernel, consumer->GetName());
-                if (!kernel) {
+                auto nid_ref = name2nodeid.find(consumer->GetName());
+                if (nid_ref == name2nodeid.end()) {
                     LOG(ERROR) << "cannot find consumer[" << consumer->GetName() << "] of [" << edge->GetName() << "]";
                     return RC_NOT_FOUND;
                 }
+
+                // Consumers of an input are in the same engine. This is guranteed by optimizer.
+                auto kernel = graph->nodeid2kernel[nid_ref->second].get();
                 tensor->SetDevice(kernel->GetEngineContext()->GetDevice());
                 break;
             }
@@ -131,6 +123,7 @@ static RetCode InitRuntimeGraphResourceInputs(const ir::GraphTopo* topo, const R
 }
 
 static RetCode InitRuntimeGraphResourceExtraInputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
+                                                   const map<string, nodeid_t>& name2nodeid,
                                                    RuntimeGraphResource* graph) {
     for (uint32_t i = 0; i < topo->GetExtraInputCount(); ++i) {
         auto eid = topo->GetExtraInput(i);
@@ -146,12 +139,14 @@ static RetCode InitRuntimeGraphResourceExtraInputs(const ir::GraphTopo* topo, co
                     continue;
                 }
 
-                // Consumers of an edge are in the same engine. This is guranteed by optimizer.
-                auto kernel = FindKernelByName(graph->nodeid2kernel, consumer->GetName());
-                if (!kernel) {
+                auto nid_ref = name2nodeid.find(consumer->GetName());
+                if (nid_ref == name2nodeid.end()) {
                     LOG(ERROR) << "cannot find consumer[" << consumer->GetName() << "] of [" << edge->GetName() << "]";
                     return RC_NOT_FOUND;
                 }
+
+                // Consumers of an input are in the same engine. This is guranteed by optimizer.
+                auto kernel = graph->nodeid2kernel[nid_ref->second].get();
                 tensor->SetDevice(kernel->GetEngineContext()->GetDevice());
                 break;
             }
@@ -169,7 +164,7 @@ static RetCode InitRuntimeGraphResourceExtraInputs(const ir::GraphTopo* topo, co
 }
 
 RetCode InitRuntimeGraphResourceOutputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                        RuntimeGraphResource* graph) {
+                                        const map<string, nodeid_t>& name2nodeid, RuntimeGraphResource* graph) {
     for (uint32_t i = 0; i < topo->GetOutputCount(); ++i) {
         auto eid = topo->GetOutput(i);
         auto edge = topo->GetEdgeById(eid);
@@ -181,11 +176,14 @@ RetCode InitRuntimeGraphResourceOutputs(const ir::GraphTopo* topo, const Runtime
             auto producer_id = edge->GetProducer();
             if (producer_id != INVALID_NODEID) {
                 auto producer = topo->GetNodeById(producer_id);
-                auto kernel = FindKernelByName(graph->nodeid2kernel, producer->GetName());
-                if (!kernel) {
+
+                auto nid_ref = name2nodeid.find(producer->GetName());
+                if (nid_ref == name2nodeid.end()) {
                     LOG(ERROR) << "cannot find producer[" << producer->GetName() << "] of [" << edge->GetName() << "]";
                     return RC_NOT_FOUND;
                 }
+
+                auto kernel = graph->nodeid2kernel[nid_ref->second].get();
                 tensor->SetDevice(kernel->GetEngineContext()->GetDevice());
             }
 
@@ -246,36 +244,37 @@ static void InitRuntimeGraphResourceReservedTensors(const ir::GraphTopo* topo, c
     }
 }
 
-RetCode RuntimeImpl::InitRuntimeGraphResource(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                              const set<edgeid_t>& reserved_edgeids, RuntimeGraphResource* graph) {
+static RetCode InitRuntimeGraphResource(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
+                                        const RuntimeInitInfo& init_info, const set<edgeid_t>& reserved_edgeids,
+                                        vector<unique_ptr<EngineContext>>* engctx, RuntimeGraphResource* graph) {
     graph->nodeid2kernel.resize(topo->GetMaxNodeId());
     graph->edgeid2object.resize(topo->GetMaxEdgeId());
 
-    auto status = InitRuntimeGraphResourceKernels(topo, info, aux_info_->valid_node_flags, &engctx_, graph);
+    auto status = InitRuntimeGraphResourceKernels(topo, info, init_info.valid_node_flags, engctx, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResourceKernels failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = InitRuntimeGraphResourceConstants(topo, info, aux_info_->valid_edge_flags, graph);
+    status = InitRuntimeGraphResourceConstants(topo, info, init_info.valid_edge_flags, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResourceConstants failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = InitRuntimeGraphResourceInputs(topo, info, graph);
+    status = InitRuntimeGraphResourceInputs(topo, info, init_info.name2nodeid, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResourceInputs failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = InitRuntimeGraphResourceExtraInputs(topo, info, graph);
+    status = InitRuntimeGraphResourceExtraInputs(topo, info, init_info.name2nodeid, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResourceExtraInputs failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = InitRuntimeGraphResourceOutputs(topo, info, graph);
+    status = InitRuntimeGraphResourceOutputs(topo, info, init_info.name2nodeid, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResourceOutputs failed: " << GetRetCodeStr(status);
         return status;
@@ -287,14 +286,15 @@ RetCode RuntimeImpl::InitRuntimeGraphResource(const ir::GraphTopo* topo, const R
 }
 
 RetCode RuntimeImpl::Init(const shared_ptr<ir::GraphTopo>& topo, const shared_ptr<const RuntimeGraphInfo>& info,
-                          const shared_ptr<const RuntimeAuxInfo>& aux_info, const set<edgeid_t>& reserved_edgeids) {
+                          const shared_ptr<const RuntimeAuxInfo>& aux_info, const RuntimeInitInfo& init_info,
+                          const set<edgeid_t>& reserved_edgeids) {
     graph_info_ = info;
     aux_info_ = aux_info;
     topo_ = topo;
 
     profiler_.Init(&conf_, &graph_, aux_info.get());
 
-    auto status = InitRuntimeGraphResource(topo.get(), *info, reserved_edgeids, &graph_);
+    auto status = InitRuntimeGraphResource(topo.get(), *info, init_info, reserved_edgeids, &engctx_, &graph_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResource failed: " << GetRetCodeStr(status);
         return status;

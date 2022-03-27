@@ -41,6 +41,7 @@ private:
     std::shared_ptr<ir::GraphTopo> topo_;
     RuntimeGraphInfo graph_info_;
     RuntimeAuxInfo aux_info_;
+    RuntimeInitInfo init_info_;
     LoopConcatOutputFunc concat_output_func_;
     std::vector<std::unique_ptr<EngineImpl>> engines_;
 };

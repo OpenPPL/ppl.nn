@@ -24,6 +24,7 @@
 #include "ppl/nn/runtime/runtime_graph_resource.h"
 #include "ppl/nn/runtime/runtime_graph_info.h"
 #include "ppl/nn/runtime/runtime_aux_info.h"
+#include "ppl/nn/runtime/runtime_init_info.h"
 #include "ppl/nn/runtime/runtime_internal_conf.h"
 #include "ppl/nn/runtime/scheduler.h"
 #include "ppl/nn/runtime/profiler.h"
@@ -36,7 +37,7 @@ public:
     ~RuntimeImpl();
 
     ppl::common::RetCode Init(const std::shared_ptr<ir::GraphTopo>&, const std::shared_ptr<const RuntimeGraphInfo>&,
-                              const std::shared_ptr<const RuntimeAuxInfo>&,
+                              const std::shared_ptr<const RuntimeAuxInfo>&, const RuntimeInitInfo&,
                               const std::set<edgeid_t>& reserved_edges = {});
 
     TensorImpl* GetInputTensorImpl(uint32_t idx) const {
@@ -90,9 +91,6 @@ public:
     ppl::common::RetCode GetProfilingStatistics(ProfilingStatistics* stat) const override;
 
 private:
-    ppl::common::RetCode InitRuntimeGraphResource(const ir::GraphTopo*, const RuntimeGraphInfo&,
-                                                  const std::set<edgeid_t>& reserved_edgeids, RuntimeGraphResource*);
-
     /**
        @brief blocks until all operations finish.
        @note MUST be called before getting outputs or profiling statistics in case some engine may run asynchronously.

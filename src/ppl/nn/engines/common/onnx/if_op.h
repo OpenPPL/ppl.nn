@@ -20,6 +20,7 @@
 
 #include "ppl/nn/runtime/runtime_graph_info.h"
 #include "ppl/nn/runtime/runtime_aux_info.h"
+#include "ppl/nn/runtime/runtime_init_info.h"
 #include "ppl/nn/params/onnx/if_param.h"
 #include "ppl/nn/engines/engine_impl.h"
 
@@ -42,12 +43,14 @@ private:
     std::shared_ptr<ir::GraphTopo> then_topo_;
     RuntimeGraphInfo then_info_;
     RuntimeAuxInfo then_aux_info_;
+    RuntimeInitInfo then_init_info_;
     std::vector<uint32_t> extra_inputs_of_then_graph_; // indices in ir::Node::GetExtraInput()
     std::vector<std::unique_ptr<EngineImpl>> then_engines_;
 
     std::shared_ptr<ir::GraphTopo> else_topo_;
     RuntimeGraphInfo else_info_;
     RuntimeAuxInfo else_aux_info_;
+    RuntimeInitInfo else_init_info_;
     std::vector<uint32_t> extra_inputs_of_else_graph_; // indices in ir::Node::GetExtraInput()
     std::vector<std::unique_ptr<EngineImpl>> else_engines_;
 };

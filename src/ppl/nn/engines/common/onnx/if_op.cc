@@ -69,9 +69,16 @@ RetCode IfOp::Init(const utils::SharedResource* resource, IfParam* if_param) {
         return status;
     }
 
-    status = GenerateRuntimeAuxInfo(if_param->then_branch.topo.get(), {}, &then_aux_info_);
+    status = then_aux_info_.Init(if_param->then_branch.topo.get(), {});
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenerateRuntimeAuxInfo for then_branch of kernel[" << node_->GetName()
+                   << "] failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    status = then_init_info_.Init(if_param->then_branch.topo.get());
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "GenerateRuntimeInitInfo for then_branch of kernel[" << node_->GetName()
                    << "] failed: " << GetRetCodeStr(status);
         return status;
     }
@@ -89,9 +96,16 @@ RetCode IfOp::Init(const utils::SharedResource* resource, IfParam* if_param) {
         return status;
     }
 
-    status = GenerateRuntimeAuxInfo(if_param->else_branch.topo.get(), {}, &else_aux_info_);
+    status = else_aux_info_.Init(if_param->else_branch.topo.get(), {});
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenerateRuntimeAuxInfo for else_branch of kernel[" << node_->GetName()
+                   << "] failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    status = else_init_info_.Init(if_param->else_branch.topo.get());
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "GenerateRuntimeInitInfo for else_branch of kernel[" << node_->GetName()
                    << "] failed: " << GetRetCodeStr(status);
         return status;
     }
@@ -104,8 +118,9 @@ RetCode IfOp::Init(const utils::SharedResource* resource, IfParam* if_param) {
 
 KernelImpl* IfOp::CreateKernelImpl() const {
     auto kernel = unique_ptr<IfKernel>(new IfKernel(node_));
-    auto status = kernel->SetExecutionInfo(then_topo_, &then_info_, &then_aux_info_, &extra_inputs_of_then_graph_,
-                                           else_topo_, &else_info_, &else_aux_info_, &extra_inputs_of_else_graph_);
+    auto status = kernel->SetExecutionInfo(then_topo_, &then_info_, &then_aux_info_, &then_init_info_,
+                                           &extra_inputs_of_then_graph_, else_topo_, &else_info_, &else_aux_info_,
+                                           &else_init_info_, &extra_inputs_of_else_graph_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "SetExecutionInfo of kernel[" << kernel->GetName() << "] failed:" << GetRetCodeStr(status);
         return nullptr;

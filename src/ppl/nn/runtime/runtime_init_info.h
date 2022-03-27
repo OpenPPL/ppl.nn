@@ -15,29 +15,28 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_RUNTIME_RUNTIME_AUX_INFO_H_
-#define _ST_HPC_PPL_NN_RUNTIME_RUNTIME_AUX_INFO_H_
+#ifndef _ST_HPC_PPL_NN_RUNTIME_RUNTIME_INIT_INFO_H_
+#define _ST_HPC_PPL_NN_RUNTIME_RUNTIME_INIT_INFO_H_
 
 #include "ppl/common/retcode.h"
 #include "ppl/nn/common/types.h"
 #include "ppl/nn/ir/graph_topo.h"
-#include <set>
+#include <map>
+#include <string>
 #include <vector>
 
 namespace ppl { namespace nn {
 
 /**
-   @class RuntimeAuxInfo
-   @brief auxiliary info for runtime stage
+   @class RuntimeInitInfo
+   @brief for runtime initialization
 */
-struct RuntimeAuxInfo final {
-    ppl::common::RetCode Init(const ir::GraphTopo*, const std::set<edgeid_t>&);
+struct RuntimeInitInfo final {
+    ppl::common::RetCode Init(const ir::GraphTopo*);
 
-    /** node ids in topological order */
-    std::vector<nodeid_t> sorted_nodes;
-
-    /** a tensor can be released right after the last consumer finish executing in `sorted_nodes` */
-    std::vector<nodeid_t> tensor_last_consumer;
+    std::vector<bool> valid_node_flags;
+    std::vector<bool> valid_edge_flags;
+    std::map<std::string, nodeid_t> name2nodeid;
 };
 
 }} // namespace ppl::nn
