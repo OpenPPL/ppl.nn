@@ -40,11 +40,11 @@ static void averagepool2d_n16chw_1x8_kernel_fp32_avx(
     const int64_t pool_len,
     float *dst)
 {
-    const int32_t &kernel_w = param->kernel_w;
-    const int32_t &pad_w    = param->pad_w;
+    const int64_t &kernel_w = param->kernel_w;
+    const int64_t &pad_w    = param->pad_w;
 
-    const int32_t &src_w = param->src_w;
-    const int32_t &dst_w = param->dst_w;
+    const int64_t &src_w = param->src_w;
+    const int64_t &dst_w = param->dst_w;
 
     const int64_t stride_w = spec_stride_w ? spec_stride_w : param->stride_w;
 
@@ -161,16 +161,16 @@ static inline void averagepool2d_n16chw_border_fp32_avx(
     const int64_t ow,
     float *dst)
 {
-    const int32_t &kernel_h = param->kernel_h;
-    const int32_t &kernel_w = param->kernel_w;
-    const int32_t &stride_h = param->stride_h;
-    const int32_t &stride_w = param->stride_w;
-    const int32_t &pad_h    = param->pad_h;
-    const int32_t &pad_w    = param->pad_w;
+    const int64_t &kernel_h = param->kernel_h;
+    const int64_t &kernel_w = param->kernel_w;
+    const int64_t &stride_h = param->stride_h;
+    const int64_t &stride_w = param->stride_w;
+    const int64_t &pad_h    = param->pad_h;
+    const int64_t &pad_w    = param->pad_w;
 
-    const int32_t &src_h = param->src_h;
-    const int32_t &src_w = param->src_w;
-    const int32_t &dst_w = param->dst_w;
+    const int64_t &src_h = param->src_h;
+    const int64_t &src_w = param->src_w;
+    const int64_t &dst_w = param->dst_w;
 
     const int64_t c_blk_len = POOLING_CHANNELS_BLOCK();
 
@@ -216,20 +216,20 @@ ppl::common::RetCode averagepool2d_n16chw_blk1x8_fp32_avx_impl(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
     const float *src,
-    const int32_t kernel_h,
-    const int32_t kernel_w,
-    const int32_t stride_h,
-    const int32_t stride_w,
-    const int32_t pad_h,
-    const int32_t pad_w,
+    const int64_t kernel_h,
+    const int64_t kernel_w,
+    const int64_t stride_h,
+    const int64_t stride_w,
+    const int64_t pad_h,
+    const int64_t pad_w,
     float *dst)
 {
-    const int32_t batch    = src_shape->GetDim(0);
-    const int32_t channels = src_shape->GetDim(1);
-    const int32_t src_h    = src_shape->GetDim(2);
-    const int32_t src_w    = src_shape->GetDim(3);
-    const int32_t dst_h    = dst_shape->GetDim(2);
-    const int32_t dst_w    = dst_shape->GetDim(3);
+    const int64_t batch    = src_shape->GetDim(0);
+    const int64_t channels = src_shape->GetDim(1);
+    const int64_t src_h    = src_shape->GetDim(2);
+    const int64_t src_w    = src_shape->GetDim(3);
+    const int64_t dst_h    = dst_shape->GetDim(2);
+    const int64_t dst_w    = dst_shape->GetDim(3);
 
     const averagepool2d_param param = {kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, batch, channels, src_h, src_w, dst_h, dst_w};
 
@@ -303,14 +303,14 @@ ppl::common::RetCode averagepool2d_n16chw_blk1x8_fp32_avx(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
     const float *src,
-    const int32_t kernel_h,
-    const int32_t kernel_w,
-    const int32_t stride_h,
-    const int32_t stride_w,
-    const int32_t pad_h,
-    const int32_t pad_w,
-    const int32_t pooling_mode,
-    const int32_t ceil_mode,
+    const int64_t kernel_h,
+    const int64_t kernel_w,
+    const int64_t stride_h,
+    const int64_t stride_w,
+    const int64_t pad_h,
+    const int64_t pad_w,
+    const int64_t pooling_mode,
+    const int64_t ceil_mode,
     float *dst)
 {
     if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE) {

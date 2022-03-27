@@ -25,21 +25,21 @@ ppl::common::RetCode maxpool2d_nchw_with_indices_fp32(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
     const float *src,
-    const int32_t kernel_h,
-    const int32_t kernel_w,
-    const int32_t stride_h,
-    const int32_t stride_w,
-    const int32_t pad_h,
-    const int32_t pad_w,
+    const int64_t kernel_h,
+    const int64_t kernel_w,
+    const int64_t stride_h,
+    const int64_t stride_w,
+    const int64_t pad_h,
+    const int64_t pad_w,
     float *dst,
     int64_t *indices)
 {
-    const int32_t batch    = src_shape->GetDim(0);
-    const int32_t channels = src_shape->GetDim(1);
-    const int32_t src_h    = src_shape->GetDim(2);
-    const int32_t src_w    = src_shape->GetDim(3);
-    const int32_t dst_h    = dst_shape->GetDim(2);
-    const int32_t dst_w    = dst_shape->GetDim(3);
+    const int64_t batch    = src_shape->GetDim(0);
+    const int64_t channels = src_shape->GetDim(1);
+    const int64_t src_h    = src_shape->GetDim(2);
+    const int64_t src_w    = src_shape->GetDim(3);
+    const int64_t dst_h    = dst_shape->GetDim(2);
+    const int64_t dst_w    = dst_shape->GetDim(3);
 #ifdef PPL_USE_X86_OMP_COLLAPSE
     PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(3)
 #else

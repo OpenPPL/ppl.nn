@@ -17,8 +17,23 @@
 
 #include "ppl/nn/engines/x86/kernels/onnx/maxpool_kernel.h"
 #include "ppl/kernel/x86/fp32/maxpool2d.h"
+#include "ppl/nn/utils/destructor.h"
 
 namespace ppl { namespace nn { namespace x86 {
+
+uint64_t MaxPoolKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
+    auto src = ctx.GetInput<TensorImpl>(0);
+    auto dst = ctx.GetOutput<TensorImpl>(0);
+    int64_t pad_w = 0;
+    if (param_->global_pooling == 0 && param_->pads.size() >= 2) {
+        pad_w = param_->pads[1];
+    }
+    if (MayUseISA(ppl::common::ISA_X86_SSE)) {
+        return kernel::x86::maxpool2d_fp32_get_buffer_bytes(src->GetShape(), dst->GetShape(), pad_w);
+    } else {
+        return 64u;
+    }
+}
 
 ppl::common::RetCode MaxPoolKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_REQUIRED_INPUT(X, 0);
@@ -43,17 +58,17 @@ ppl::common::RetCode MaxPoolKernel::DoExecute(KernelExecContext* ctx) {
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(Indices);
     }
 
-    const int32_t src_h = X->GetShape()->GetDim(2);
-    const int32_t src_w = X->GetShape()->GetDim(3);
+    const int64_t src_h = X->GetShape()->GetDim(2);
+    const int64_t src_w = X->GetShape()->GetDim(3);
 
-    int32_t kernel_h;
-    int32_t kernel_w;
-    int32_t stride_h;
-    int32_t stride_w;
-    int32_t pad_h;
-    int32_t pad_w;
-    int32_t dilation_h;
-    int32_t dilation_w;
+    int64_t kernel_h;
+    int64_t kernel_w;
+    int64_t stride_h;
+    int64_t stride_w;
+    int64_t pad_h;
+    int64_t pad_w;
+    int64_t dilation_h;
+    int64_t dilation_w;
     if (param_->global_pooling) {
         kernel_h = src_h;
         kernel_w = src_w;
@@ -92,6 +107,20 @@ ppl::common::RetCode MaxPoolKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("global_pooling: %d\n", param_->global_pooling);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
+    BufferDesc tmp_buffer_desc;
+    auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
+    auto status = GetX86Device()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
+    if (status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
+                   << "] failed: " << ppl::common::GetRetCodeStr(status);
+        return status;
+    }
+    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+        GetX86Device()->FreeTmpBuffer(&tmp_buffer_desc);
+    });
+    auto tmp_buffer = tmp_buffer_desc.addr;
+    PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
+
     const auto data_type = X->GetShape()->GetDataType();
     const auto data_format = X->GetShape()->GetDataFormat();
 
@@ -103,18 +132,18 @@ ppl::common::RetCode MaxPoolKernel::DoExecute(KernelExecContext* ctx) {
 #ifdef PPL_USE_X86_AVX512
                 else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
                     return ppl::kernel::x86::maxpool2d_n16chw_blk1x16_fp32_avx512(
-                        X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h,
-                        stride_w, pad_h, pad_w, Y->GetBufferPtr<float>());
+                        X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
+                        pad_h, pad_w, Y->GetBufferPtr<float>());
                 }
 #endif
                 else if (MayUseISA(ppl::common::ISA_X86_AVX)) {
                     return ppl::kernel::x86::maxpool2d_n16chw_blk1x8_fp32_avx(
-                        X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h,
-                        stride_w, pad_h, pad_w, Y->GetBufferPtr<float>());
+                        X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
+                        pad_h, pad_w, Y->GetBufferPtr<float>());
                 } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
                     return ppl::kernel::x86::maxpool2d_n16chw_blk1x4_fp32_sse(
-                        X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h,
-                        stride_w, pad_h, pad_w, Y->GetBufferPtr<float>());
+                        X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
+                        pad_h, pad_w, Y->GetBufferPtr<float>());
                 } else {
                     LOG(ERROR) << "get unsupported isa " << GetISA() << ".";
                 }
@@ -123,9 +152,12 @@ ppl::common::RetCode MaxPoolKernel::DoExecute(KernelExecContext* ctx) {
             }
         } else if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
             if (data_type == ppl::common::DATATYPE_FLOAT32) {
-                return ppl::kernel::x86::maxpool2d_nchw_normal_fp32(
+                // return ppl::kernel::x86::maxpool2d_nchw_normal_fp32(
+                //     X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
+                //     pad_h, pad_w, Y->GetBufferPtr<float>());
+                return ppl::kernel::x86::maxpool2d_ndarray_normal_fp32_sse(
                     X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
-                    pad_h, pad_w, Y->GetBufferPtr<float>());
+                    pad_h, pad_w, tmp_buffer, Y->GetBufferPtr<float>());
             } else {
                 LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";
             }
