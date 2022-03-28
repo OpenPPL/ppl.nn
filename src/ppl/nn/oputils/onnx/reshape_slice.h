@@ -24,7 +24,7 @@
 namespace ppl { namespace nn { namespace oputils {
 
 ppl::common::RetCode ReshapeSlice(InputOutputInfo* info, const int64_t* starts, const int64_t* ends,
-                                  const int64_t* axes, const int64_t* steps);
+                                  const int64_t* axes, const int64_t* steps, const int64_t axes_num);
 
 ppl::common::RetCode ReshapeSlice(InputOutputInfo*);
 

@@ -26,7 +26,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeSlice(InputOutputInfo* info, const int64_t* starts, const int64_t* ends, const int64_t* axes,
-                     const int64_t* steps) {
+                     const int64_t* steps, const int64_t axes_num) {
     const TensorShape& shape = *info->GetInput<TensorImpl>(0)->GetShape();
     int dim_count = shape.GetDimCount();
 
@@ -35,7 +35,6 @@ RetCode ReshapeSlice(InputOutputInfo* info, const int64_t* starts, const int64_t
         output_dim[it] = shape.GetDim(it);
     }
 
-    const int axes_num = info->GetInput<TensorImpl>(1)->GetShape()->GetDim(0);
     for (int it = 0; it < axes_num; ++it) {
         int64_t start_val = starts[it];
         int64_t end_val = ends[it];
@@ -97,7 +96,7 @@ RetCode ReshapeSlice(InputOutputInfo* info) {
         // starts, end, axes, steps must have same length except for not defined
         auto in_shape = info->GetInput<TensorImpl>(i)->GetShape();
         if (in_shape->GetDim(0) != axes_num) {
-            LOG(DEBUG) << "ERROR: input[" << i << "]'s dim[0]'s value[" << in_shape->GetDim(0) << "] !+ axes_num["
+            LOG(DEBUG) << "ERROR: input[" << i << "]'s dim[0]'s value[" << in_shape->GetDim(0) << "] != axes_num["
                        << axes_num << "].";
             return RC_INVALID_VALUE;
         }
@@ -147,7 +146,7 @@ RetCode ReshapeSlice(InputOutputInfo* info) {
         steps = steps_vec.data();
     }
 
-    return ReshapeSlice(info, starts, ends, axes, steps);
+    return ReshapeSlice(info, starts, ends, axes, steps, axes_num);
 }
 
 }}} // namespace ppl::nn::oputils

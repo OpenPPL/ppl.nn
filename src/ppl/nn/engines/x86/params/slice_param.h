@@ -15,23 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/onnx/parsers/onnx/parse_softmax_param.h"
-#include "ppl/nn/models/onnx/utils.h"
-using namespace std;
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_PARAMS_SLICE_PARAM_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_PARAMS_SLICE_PARAM_H_
 
-namespace ppl { namespace nn { namespace onnx {
+#include <stdint.h>
+#include <vector>
 
-ppl::common::RetCode ParseSoftmaxParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>& op_sets, void* arg,
-                                       ir::Node*, ir::GraphTopo*) {
-    auto it = op_sets.find(pb_node.domain());
-    if (it == op_sets.end()) {
-        return ppl::common::RC_INVALID_VALUE;
-    }
-    auto opset = it->second;
+namespace ppl { namespace nn { namespace x86 {
 
-    auto param = static_cast<ppl::nn::common::SoftmaxParam*>(arg);
-    param->axis = utils::GetNodeAttrByKey(pb_node, "axis", opset >= 13 ? -1 : 1);
-    return ppl::common::RC_SUCCESS;
-}
+struct SliceParam {
+    std::vector<int64_t> starts;
+    std::vector<int64_t> ends;
+    std::vector<int64_t> axes;
+    std::vector<int64_t> steps;
+};
 
-}}} // namespace ppl::nn::onnx
+}}}; // namespace ppl::nn::x86
+
+#endif

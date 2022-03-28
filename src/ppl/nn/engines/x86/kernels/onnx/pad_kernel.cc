@@ -23,16 +23,44 @@ namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_REQUIRED_INPUT(x, 0);
-    PPLNN_X86_OPTIONAL_INPUT(constant, 1);
+    PPLNN_X86_OPTIONAL_INPUT(pads, 1);
+    PPLNN_X86_OPTIONAL_INPUT(constant, 2);
     PPLNN_X86_REQUIRED_OUTPUT(y, 0);
 
-    float constant_value = constant ? (constant->GetBufferPtr<float>())[0] : 0;
+    float constant_value = param_->value;
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [x]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(x);
 
+    const uint32_t dim_count = x->GetShape()->GetDimCount();
+    std::vector<int64_t> pads_value(2 * dim_count, 0);
+
+    if (pads) {
+        PPLNN_X86_DEBUG_TRACE("Input [pads]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(pads);
+        auto pads_data = ctx->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
+        for (uint32_t i = 0; i < 2 * dim_count; ++i) {
+            pads_value[i] = pads_data[i];
+        }
+    } else {
+        for (uint32_t i = 0; i < 2 * dim_count; ++i) {
+            pads_value[i] = (int64_t)param_->pads[i];
+        }
+    }
+
+    if (constant) {
+        PPLNN_X86_DEBUG_TRACE("Input [constant]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(constant);
+        constant_value = (constant->GetBufferPtr<float>())[0];
+    }
+
     PPLNN_X86_DEBUG_TRACE("pad mode: %d\n", param_->mode);
+    PPLNN_X86_DEBUG_TRACE("pads: ");
+    for (uint32_t i = 0; i < 2 * dim_count; ++i) {
+        PPLNN_X86_DEBUG_TRACE("%ld ", pads_value[i]);
+    }
+    PPLNN_X86_DEBUG_TRACE("\n");
     PPLNN_X86_DEBUG_TRACE("constant_value: %f\n", constant_value);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
@@ -40,10 +68,8 @@ ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
 
-    const int dim_count = x->GetShape()->GetDimCount();
-    auto pads_data = ctx->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
-    auto start_pads = pads_data;
-    auto end_pads = pads_data + dim_count;
+    auto start_pads = pads_value.data();
+    auto end_pads = pads_value.data() + dim_count;
 
     if (x->GetShape()->GetElementsExcludingPadding() ==
         y->GetShape()->GetElementsExcludingPadding()) { // no padding at all, just copy

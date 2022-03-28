@@ -25,17 +25,18 @@ using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace oputils {
 
-RetCode ReshapePad(InputOutputInfo* info, const void* arg, const int64_t* start_pads, const int64_t* end_pads) {
+template<typename Tpad>
+RetCode ReshapePad(InputOutputInfo* info, const void* arg, const Tpad* start_pads, const Tpad* end_pads) {
     auto param = (const PadParam*)arg;
 
     const TensorShape& shape = *info->GetInput<TensorImpl>(0)->GetShape();
-    int dim_count = shape.GetDimCount();
+    uint32_t dim_count = shape.GetDimCount();
     int64_t output_dim[PAD_PARAM_MAX_DIM_SIZE];
 
-    for (int it = 0; it < dim_count; ++it) {
-        int start_pad = start_pads[it];
-        int end_pad = end_pads[it];
-        int cur_dim_size = shape.GetDim(it);
+    for (uint32_t it = 0; it < dim_count; ++it) {
+        Tpad start_pad = start_pads[it];
+        Tpad end_pad = end_pads[it];
+        int64_t cur_dim_size = shape.GetDim(it);
 
         if (start_pad < 0 || end_pad < 0) {
             LOG(DEBUG) << "ERROR: start pad[" << start_pad << "] < 0 or end pad[" << end_pad << "] < 0.";
@@ -58,31 +59,42 @@ RetCode ReshapePad(InputOutputInfo* info, const void* arg) {
     const TensorShape& shape = *info->GetInput<TensorImpl>(0)->GetShape();
     uint32_t dim_count = shape.GetDimCount();
 
-    auto pad = info->GetInput<TensorImpl>(1);
-    auto pad_shape = pad->GetShape();
-    if (pad_shape->GetDimCount() != 1) {
-        LOG(DEBUG) << "ERROR: pad shape's dim count[" << pad_shape->GetDimCount() << "] != 1.";
-        return RC_INVALID_VALUE;
-    }
-    if (pad_shape->GetDim(0) != 2 * dim_count) {
-        LOG(DEBUG) << "ERROR: pad shape's dim[0]'s value[" << pad_shape->GetDim(0) << "] != 2 * dim_count[" << dim_count
-                   << "].";
-        return RC_INVALID_VALUE;
-    }
-    if (pad_shape->GetDataType() != DATATYPE_INT64) {
-        LOG(DEBUG) << "ERROR: pad shape's data type[" << GetDataTypeStr(pad_shape->GetDataType()) << "] is not int64.";
-        return RC_INVALID_VALUE;
-    }
+    if (info->GetInputCount() > 1) {
+        auto pad = info->GetInput<TensorImpl>(1);
+        auto pad_shape = pad->GetShape();
+        if (pad_shape->GetDimCount() != 1) {
+            LOG(DEBUG) << "ERROR: pad shape's dim count[" << pad_shape->GetDimCount() << "] != 1.";
+            return RC_INVALID_VALUE;
+        }
+        if (pad_shape->GetDim(0) != 2 * dim_count) {
+            LOG(DEBUG) << "ERROR: pad shape's dim[0]'s value[" << pad_shape->GetDim(0) << "] != 2 * dim_count[" << dim_count
+                    << "].";
+            return RC_INVALID_VALUE;
+        }
+        if (pad_shape->GetDataType() != DATATYPE_INT64) {
+            LOG(DEBUG) << "ERROR: pad shape's data type[" << GetDataTypeStr(pad_shape->GetDataType()) << "] is not int64.";
+            return RC_INVALID_VALUE;
+        }
 
-    auto pads_data = pad->GetBufferPtr<int64_t>();
-    if (!pads_data) {
-        LOG(DEBUG) << "ERROR: input[1]' pad data is empty.";
-        return RC_NOT_FOUND;
+        auto pads_data = pad->GetBufferPtr<int64_t>();
+        if (!pads_data) {
+            LOG(DEBUG) << "ERROR: input[1]' pad data is empty.";
+            return RC_NOT_FOUND;
+        }
+        auto start_pads = pads_data;
+        auto end_pads = pads_data + dim_count;
+        return ReshapePad(info, arg, start_pads, end_pads);
+    } else {
+        auto p = (const PadParam*)arg;
+        if ((uint32_t)p->pads.size() != 2 * dim_count) {
+            LOG(DEBUG) << "ERROR: pads size[" << p->pads.size() << "] != 2 * dim_count[" << dim_count
+                    << "].";
+            return RC_INVALID_VALUE;
+        }
+        auto start_pads = p->pads.data();
+        auto end_pads = p->pads.data() + dim_count;
+        return ReshapePad(info, arg, start_pads, end_pads);
     }
-    auto start_pads = pads_data;
-    auto end_pads = pads_data + dim_count;
-
-    return ReshapePad(info, arg, start_pads, end_pads);
 }
 
 }}} // namespace ppl::nn::oputils

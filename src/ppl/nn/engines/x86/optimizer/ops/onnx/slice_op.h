@@ -19,6 +19,8 @@
 #define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_SLICE_OP_H_
 
 #include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
+#include "ppl/nn/engines/x86/params/slice_param.h"
+#include "ppl/nn/params/onnx/slice_param.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -27,6 +29,10 @@ public:
     SliceOp(const ir::Node* node) : X86OptKernel(node) {}
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
+
+private:
+    ppl::nn::x86::SliceParam aux_param_;
+    std::shared_ptr<ppl::nn::common::SliceParam> param_;
 };
 
 }}} // namespace ppl::nn::x86

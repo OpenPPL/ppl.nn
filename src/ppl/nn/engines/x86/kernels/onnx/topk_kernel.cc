@@ -29,25 +29,36 @@ uint64_t TopKKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
 }
 
 ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
-    PPLNN_X86_REQUIRED_INPUT(x, 0);
-    PPLNN_X86_REQUIRED_INPUT(k, 1);
-    PPLNN_X86_REQUIRED_OUTPUT(values, 0);
-    PPLNN_X86_REQUIRED_OUTPUT(indices, 1);
+    PPLNN_X86_REQUIRED_INPUT(X, 0);
+    PPLNN_X86_OPTIONAL_INPUT(K, 1);
+    PPLNN_X86_REQUIRED_OUTPUT(Values, 0);
+    PPLNN_X86_REQUIRED_OUTPUT(Indices, 1);
+
+    int64_t k_val = param_->k;
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
-    PPLNN_X86_DEBUG_TRACE("Input [x]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(x);
-    PPLNN_X86_DEBUG_TRACE("Input [k]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(k);
+    PPLNN_X86_DEBUG_TRACE("Input [X]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(X);
+    if (K) {
+        PPLNN_X86_DEBUG_TRACE("Input [K]:\n");
+        PPL_X86_TENSOR_PRINT_DEBUG_MSG(K);
+        k_val = K->GetBufferPtr<const int64_t>()[0];
+    }
 
+    PPLNN_X86_DEBUG_TRACE("k: %ld\n", k_val);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    PPLNN_X86_REALLOC_TENSOR_BUFFER(values);
-    PPLNN_X86_DEBUG_TRACE("Output [values]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(values);
-    PPLNN_X86_REALLOC_TENSOR_BUFFER(indices);
-    PPLNN_X86_DEBUG_TRACE("Output [indices]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(indices);
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(Values);
+    PPLNN_X86_DEBUG_TRACE("Output [Values]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Values);
+    PPLNN_X86_REALLOC_TENSOR_BUFFER(Indices);
+    PPLNN_X86_DEBUG_TRACE("Output [Indices]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(Indices);
+
+    if (k_val == -1) {
+        LOG(ERROR) << "Get undefined k";
+        return ppl::common::RC_UNSUPPORTED;
+    }
 
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
@@ -63,15 +74,14 @@ ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
     auto tmp_buffer = tmp_buffer_desc.addr;
     PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
 
-    const int64_t k_value = ctx->GetInput<TensorImpl>(1)->GetBufferPtr<const int64_t>()[0];
-    uint32_t axis = param_->axis < 0 ? param_->axis + x->GetShape()->GetDimCount() : param_->axis;
+    uint32_t axis = param_->axis < 0 ? param_->axis + X->GetShape()->GetDimCount() : param_->axis;
 
-    auto data_type = x->GetShape()->GetDataType();
+    auto data_type = X->GetShape()->GetDataType();
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        return kernel::x86::topk_ndarray_fp32(x->GetShape(), values->GetShape(), indices->GetShape(),
-                                              x->GetBufferPtr<const float>(), k_value, axis, param_->largest,
-                                              param_->sorted, tmp_buffer, values->GetBufferPtr<float>(),
-                                              indices->GetBufferPtr<int64_t>());
+        return kernel::x86::topk_ndarray_fp32(X->GetShape(), Values->GetShape(), Indices->GetShape(),
+                                              X->GetBufferPtr<const float>(), k_val, axis, param_->largest,
+                                              param_->sorted, tmp_buffer, Values->GetBufferPtr<float>(),
+                                              Indices->GetBufferPtr<int64_t>());
     } else {
         LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";
     }

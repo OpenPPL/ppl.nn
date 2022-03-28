@@ -35,8 +35,6 @@ ppl::common::RetCode max_unpool_nchw_fp32(
     const int64_t dst_h    = dst_shape->GetDim(2);
     const int64_t dst_w    = dst_shape->GetDim(3);
 
-    memset(dst, 0, batch * channels * dst_h * dst_w * sizeof(float));
-
 #ifdef PPL_USE_X86_OMP_COLLAPSE
     PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)
 #endif
@@ -48,6 +46,8 @@ ppl::common::RetCode max_unpool_nchw_fp32(
             const float *p_src       = src + (n * channels + c) * src_h * src_w;
             const int64_t *p_indices = indices + (n * channels + c) * src_h * src_w;
             float *p_dst             = dst + (n * channels + c) * dst_h * dst_w;
+
+            memset(p_dst, 0, dst_h * dst_w * sizeof(float));
 
             const int64_t indices_offset = c * dst_h * dst_w;
             for (int64_t ih = 0; ih < src_h; ih++) {

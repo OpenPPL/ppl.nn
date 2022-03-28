@@ -15,23 +15,24 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/onnx/parsers/onnx/parse_softmax_param.h"
-#include "ppl/nn/models/onnx/utils.h"
-using namespace std;
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/onnx/slice.h"
+using namespace flatbuffers;
 
-namespace ppl { namespace nn { namespace onnx {
+namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-ppl::common::RetCode ParseSoftmaxParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>& op_sets, void* arg,
-                                       ir::Node*, ir::GraphTopo*) {
-    auto it = op_sets.find(pb_node.domain());
-    if (it == op_sets.end()) {
-        return ppl::common::RC_INVALID_VALUE;
-    }
-    auto opset = it->second;
-
-    auto param = static_cast<ppl::nn::common::SoftmaxParam*>(arg);
-    param->axis = utils::GetNodeAttrByKey(pb_node, "axis", opset >= 13 ? -1 : 1);
-    return ppl::common::RC_SUCCESS;
+Offset<SliceParam> SerializeSliceParam(const ppl::nn::common::SliceParam& param, FlatBufferBuilder* builder) {
+    return CreateSliceParam(
+        *builder,
+        builder->CreateVector(param.axes),
+        builder->CreateVector(param.ends),
+        builder->CreateVector(param.starts));
 }
 
-}}} // namespace ppl::nn::onnx
+void DeserializeSliceParam(const SliceParam& fb_param, ppl::nn::common::SliceParam* param) {
+    utils::Fbvec2Stdvec(fb_param.axes(), &param->axes);
+    utils::Fbvec2Stdvec(fb_param.ends(), &param->ends);
+    utils::Fbvec2Stdvec(fb_param.starts(), &param->starts);
+}
+
+}}}} // namespace ppl::nn::pmx::onnx

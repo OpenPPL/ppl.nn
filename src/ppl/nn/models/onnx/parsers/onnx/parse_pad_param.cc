@@ -36,6 +36,10 @@ ppl::common::RetCode ParsePadParam(const ::onnx::NodeProto& pb_node, const map<s
         LOG(ERROR) << "Invalid pad mode " << mode << ".";
         return ppl::common::RC_INVALID_VALUE;
     }
+
+    param->value = utils::GetNodeAttrByKey<float>(pb_node, "value", 0.0f);
+    param->pads = utils::GetNodeAttrsByKey<int32_t>(pb_node, "pads");
+
     return ppl::common::RC_SUCCESS;
 }
 

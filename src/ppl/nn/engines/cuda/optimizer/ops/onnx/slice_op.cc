@@ -134,7 +134,7 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
             kernel_param.ends[it] = end_val;
         }
         return oputils::ReshapeSlice(info, kernel_param.starts, kernel_param.ends, kernel_param.axes,
-                                     kernel_param.steps);
+                                     kernel_param.steps, kernel_param.axes_num);
     };
 
     return RC_SUCCESS;
