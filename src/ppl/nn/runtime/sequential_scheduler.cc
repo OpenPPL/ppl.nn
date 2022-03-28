@@ -113,6 +113,7 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
 
     KernelExecContext ctx;
     ctx.SetProfilingFlag(profiler->IsProfilingEnabled());
+    ctx.SetTensorLastConsumerList(&aux_info_->tensor_last_consumer);
 
     SchedulerAcquireObject getter(topo_, &graph_->edgeid2object, &tensor_pool_, &tensor_sequence_pool_);
     ctx.SetAcquireObject(&getter);
