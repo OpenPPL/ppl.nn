@@ -39,7 +39,8 @@ public:
         return *tensor_->GetShape();
     }
     ppl::common::RetCode ConvertFromHost(const pybind11::buffer&);
-    PyNdArray ConvertToHost() const;
+    /** passing unknown means to use original type and format */
+    PyNdArray ConvertToHost(ppl::common::datatype_t, ppl::common::dataformat_t) const;
 
 private:
     Tensor* tensor_;
