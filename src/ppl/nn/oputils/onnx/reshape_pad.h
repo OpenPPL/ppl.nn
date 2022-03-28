@@ -23,8 +23,8 @@
 
 namespace ppl { namespace nn { namespace oputils {
 
-ppl::common::RetCode ReshapePad(InputOutputInfo* info, const void* arg, const int64_t* start_pads,
-                                const int64_t* end_pads);
+template<typename Tpad>
+ppl::common::RetCode ReshapePad(InputOutputInfo* info, const void* arg, const Tpad* start_pads, const Tpad* end_pads);
 
 ppl::common::RetCode ReshapePad(InputOutputInfo*, const void*);
 

@@ -19,6 +19,7 @@
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_PAD_PARAM_H_
 
 #include <stdint.h>
+#include <vector>
 
 namespace ppl { namespace nn { namespace common {
 
@@ -29,9 +30,11 @@ struct PadParam {
     enum { PAD_MODE_CONSTANT = 0, PAD_MODE_REFLECT = 1, PAD_MODE_EDGE = 2 };
 
     pad_mode_t mode = PAD_MODE_CONSTANT;
+    std::vector<int32_t> pads;
+    float value;
 
     bool operator==(const PadParam& p) const {
-        return this->mode == p.mode;
+        return this->mode == p.mode && this->value == p.value && this->pads == p.pads;
     }
 };
 

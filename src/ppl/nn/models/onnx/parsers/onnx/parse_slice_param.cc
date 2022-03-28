@@ -15,22 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/onnx/parsers/onnx/parse_softmax_param.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_slice_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseSoftmaxParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>& op_sets, void* arg,
-                                       ir::Node*, ir::GraphTopo*) {
-    auto it = op_sets.find(pb_node.domain());
-    if (it == op_sets.end()) {
-        return ppl::common::RC_INVALID_VALUE;
-    }
-    auto opset = it->second;
-
-    auto param = static_cast<ppl::nn::common::SoftmaxParam*>(arg);
-    param->axis = utils::GetNodeAttrByKey(pb_node, "axis", opset >= 13 ? -1 : 1);
+ppl::common::RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
+                                     ir::Node*, ir::GraphTopo*) {
+    auto param = static_cast<ppl::nn::common::SliceParam*>(arg);
+    param->axes = utils::GetNodeAttrsByKey<int32_t>(pb_node, "axes");
+    param->ends = utils::GetNodeAttrsByKey<int32_t>(pb_node, "ends");
+    param->starts = utils::GetNodeAttrsByKey<int32_t>(pb_node, "starts");
+    
     return ppl::common::RC_SUCCESS;
 }
 

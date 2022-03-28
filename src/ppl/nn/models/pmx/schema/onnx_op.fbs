@@ -140,6 +140,8 @@ enum PadMode : uint32 {
 
 table PadParam {
     mode: PadMode = CONSTANT;
+    pads: [int32];              // for opset < 11
+    value: float32 = 0.0;        // for opset < 11
 }
 
 table PoolingParam {
@@ -215,6 +217,12 @@ table ScatterElementsParam {
     axis: int32 = 0;
 }
 
+table SliceParam {
+    axes: [int32];
+    ends: [int32];
+    starts: [int32];
+}
+
 table SoftmaxParam {
     axis: int32 = 1;
 }
@@ -237,6 +245,7 @@ table TopKParam {
     axis: int32 = -1;
     largest: int32 = 1;
     sorted: int32 = 1;
+    k: int32 = -1;      // for opset < 10
 }
 
 table TransposeParam {

@@ -20,13 +20,24 @@
 using namespace std;
 
 namespace ppl { namespace nn { namespace onnx {
-ppl::common::RetCode ParseTopKParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
+ppl::common::RetCode ParseTopKParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>& op_sets, void* arg,
                                     ir::Node*, ir::GraphTopo*) {
+    auto it = op_sets.find(pb_node.domain());
+    if (it == op_sets.end()) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    auto opset = it->second;
+
     auto param = static_cast<ppl::nn::common::TopKParam*>(arg);
 
     param->axis = utils::GetNodeAttrByKey<int32_t>(pb_node, "axis", -1);
     param->largest = utils::GetNodeAttrByKey<int32_t>(pb_node, "largest", 1);
     param->sorted = utils::GetNodeAttrByKey<int32_t>(pb_node, "sorted", 1);
+    param->k = utils::GetNodeAttrByKey<int32_t>(pb_node, "k", -1);
+
+    if (opset < 10 && param->k == -1) {
+        return ppl::common::RC_NOT_FOUND;
+    }
 
     return ppl::common::RC_SUCCESS;
 }

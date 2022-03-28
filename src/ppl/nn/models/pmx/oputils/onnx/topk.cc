@@ -22,13 +22,14 @@ using namespace flatbuffers;
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
 Offset<TopKParam> SerializeTopKParam(const ppl::nn::common::TopKParam& param, FlatBufferBuilder* builder) {
-    return CreateTopKParam(*builder, param.axis, param.largest, param.sorted);
+    return CreateTopKParam(*builder, param.axis, param.largest, param.sorted, param.k);
 }
 
 void DeserializeTopKParam(const TopKParam& fb_param, ppl::nn::common::TopKParam* param) {
     param->axis = fb_param.axis();
     param->largest = fb_param.largest();
     param->sorted = fb_param.sorted();
+    param->k = fb_param.k();
 }
 
 }}}} // namespace ppl::nn::pmx::onnx
