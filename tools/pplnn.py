@@ -463,10 +463,14 @@ def SaveOutputsOneByOne(save_data_dir, runtime):
     for i in range(runtime.GetOutputCount()):
         tensor = runtime.GetOutputTensor(i)
         out_file_name = save_data_dir + "/pplnn_output-" + tensor.GetName() + ".dat"
-        dims = tensor.GetShape().GetDims()
+        shape = tensor.GetShape()
+        dims = shape.GetDims()
         element_count = CalcElementCount(dims)
         if element_count > 0:
-            tensor_data = tensor.ConvertToHost()
+            dst_data_type = shape.GetDataType()
+            if dst_data_type == pplcommon.DATATYPE_FLOAT16: # convert fp16 to fp32 when saving to file
+                dst_data_type = pplcommon.DATATYPE_FLOAT32
+            tensor_data = tensor.ConvertToHost(dst_data_type)
             if not tensor_data:
                 logging.error("copy data from tensor[" + tensor.GetName() + "] failed.")
                 sys.exit(-1)

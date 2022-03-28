@@ -80,14 +80,19 @@ RetCode PyTensor::ConvertFromHost(const pybind11::buffer& b) {
     return RC_SUCCESS;
 }
 
-PyNdArray PyTensor::ConvertToHost() const {
+PyNdArray PyTensor::ConvertToHost(datatype_t data_type, dataformat_t data_format) const {
     PyNdArray arr;
     if (tensor_->GetShape()->GetBytesExcludingPadding() == 0) {
         return arr;
     }
 
     TensorShape dst_shape = *tensor_->GetShape();
-    dst_shape.SetDataFormat(DATAFORMAT_NDARRAY);
+    if (data_type != DATATYPE_UNKNOWN) {
+        dst_shape.SetDataType(data_type);
+    }
+    if (data_format != DATAFORMAT_UNKNOWN) {
+        dst_shape.SetDataFormat(data_format);
+    }
 
     arr.data.resize(dst_shape.GetBytesExcludingPadding());
     auto status = tensor_->ConvertToHost(arr.data.data(), dst_shape);
@@ -135,7 +140,10 @@ void RegisterTensor(pybind11::module* m) {
         .def("GetName", &PyTensor::GetName, pybind11::return_value_policy::reference)
         .def("GetShape", &PyTensor::GetConstShape, pybind11::return_value_policy::reference)
         .def("ConvertFromHost", &PyTensor::ConvertFromHost)
-        .def("ConvertToHost", &PyTensor::ConvertToHost, pybind11::return_value_policy::move);
+        // use original data type and format if `datatype` or `dataformat` are unknown
+        .def("ConvertToHost", &PyTensor::ConvertToHost, pybind11::return_value_policy::move,
+             pybind11::arg("datatype") = (ppl::common::datatype_t)ppl::common::DATATYPE_UNKNOWN,
+             pybind11::arg("dataformat") = (ppl::common::dataformat_t)ppl::common::DATAFORMAT_NDARRAY);
 }
 
 }}} // namespace ppl::nn::python
