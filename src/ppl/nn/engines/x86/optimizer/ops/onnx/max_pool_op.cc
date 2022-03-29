@@ -31,6 +31,12 @@ RetCode MaxPoolOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
+    if (!param_->global_pooling && param_->kernel_shape.size() != 2) {
+        LOG(ERROR) << "Only support MaxPool2d currently. Get unsupported kernel_dims="
+            << param_->kernel_shape.size() << ", which is MaxPool(" << param_->kernel_shape.size() << "d)";
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         return oputils::ReshapePooling(info, param_.get());
     };
