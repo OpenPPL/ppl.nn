@@ -26,6 +26,7 @@ bool FuseBatchNormalizationReLU(const OptKernelOptions &options) {
     bool graph_changed = false;
     auto graph_topo = options.graph_topo;
     auto info = options.info;
+    auto &tensors = *options.tensors;
 
     for (auto it = graph_topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
         auto node = it->Get();
@@ -39,7 +40,7 @@ bool FuseBatchNormalizationReLU(const OptKernelOptions &options) {
             }
             auto bn_output_edge = graph_topo->GetEdgeById(bn_node->GetOutput(0));
             if (!bn_output_edge || bn_output_edge->CalcConsumerCount() != 1 ||
-                IsGraphOutput(graph_topo, bn_output_edge->GetId())) {
+                IsReservedEdge(tensors, bn_output_edge->GetId())) {
                 continue;
             }
 
@@ -66,6 +67,7 @@ bool FuseBatchNormalizationReLU(const OptKernelOptions &options) {
 
             // LOG(INFO) << "merge kernel " << bn_node->GetName() << " and " << relu_node->GetName() << ".";
             info->kernels.erase(relu_node->GetId());
+            tensors.erase(bn_output_edge->GetId());
             graph_topo->DelNodeById(relu_node->GetId());
             graph_topo->DelEdgeById(bn_output_edge->GetId());
 

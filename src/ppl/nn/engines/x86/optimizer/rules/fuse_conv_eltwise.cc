@@ -59,7 +59,7 @@ bool FuseConvEltwise(const OptKernelOptions &options) {
             ir::Edge* src_sum_edge = nullptr;
             auto add_op = (AddOp*)info->kernels[add_node->GetId()].get();
             if (!conv_node && input_edge_0->GetProducer() != INVALID_NODEID && input_edge_0->CalcConsumerCount() == 1 &&
-                !IsGraphOutput(graph_topo, input_edge_0->GetId())) {
+                !IsReservedEdge(tensors, input_edge_0->GetId())) {
                 auto predecessor_node_0 = graph_topo->GetNodeById(input_edge_0->GetProducer());
                 if (predecessor_node_0->GetType().domain == "" && predecessor_node_0->GetType().name == "Conv") {
                     auto conv_op = (ConvOp*)info->kernels[predecessor_node_0->GetId()].get();
@@ -74,7 +74,7 @@ bool FuseConvEltwise(const OptKernelOptions &options) {
             }
 
             if (!conv_node && input_edge_1->GetProducer() != INVALID_NODEID && input_edge_1->CalcConsumerCount() == 1 &&
-                !IsGraphOutput(graph_topo, input_edge_1->GetId())) {
+                !IsReservedEdge(tensors, input_edge_1->GetId())) {
                 auto predecessor_node_1 = graph_topo->GetNodeById(input_edge_1->GetProducer());
                 if (predecessor_node_1->GetType().domain == "" && predecessor_node_1->GetType().name == "Conv") {
                     auto conv_op = (ConvOp*)info->kernels[predecessor_node_1->GetId()].get();
@@ -102,6 +102,7 @@ bool FuseConvEltwise(const OptKernelOptions &options) {
 
             // LOG(INFO) << "fuse add " << add_node->GetName() << ".";
             info->kernels.erase(add_node->GetId());
+            tensors.erase(conv_output_edge_id);
             graph_topo->DelNodeById(add_node->GetId());
             graph_topo->DelEdgeById(conv_output_edge_id);
 

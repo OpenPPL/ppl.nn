@@ -55,11 +55,10 @@ inline ppl::common::RetCode CreateX86OptKernel(
     return ppl::common::RC_SUCCESS;
 }
 
-inline bool IsGraphOutput(const ir::GraphTopo* graph_topo, edgeid_t edge_id) {
-    for (uint32_t i = 0; i < graph_topo->GetOutputCount(); i++) {
-        if (graph_topo->GetOutput(i) == edge_id) {
-            return true;
-        }
+inline bool IsReservedEdge(const std::map<edgeid_t, std::unique_ptr<TensorImpl>> &tensors, edgeid_t edge_id) {
+    auto it = tensors.find(edge_id);
+    if (it != tensors.end()) {
+        return it->second.get()->GetType() == TENSORTYPE_RESERVED;
     }
     return false;
 }

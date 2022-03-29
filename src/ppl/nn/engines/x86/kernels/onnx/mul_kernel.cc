@@ -48,10 +48,10 @@ ppl::common::RetCode MulKernel::DoExecute(KernelExecContext* ctx) {
 
     auto lA = A;
     auto lB = B;
-    if (A->GetEdge()->CalcConsumerCount() == 1 && A->GetType() == TENSORTYPE_NORMAL && TensorShapeEqual(*A->GetShape(), *C->GetShape())) {
+    if (ctx->IsLastConsumerOfInput(0) && A->GetType() == TENSORTYPE_NORMAL && TensorShapeEqual(*A->GetShape(), *C->GetShape())) {
         C->TransferBufferFrom(A);
         lA = C;
-    } else if (B->GetEdge()->CalcConsumerCount() == 1 && B->GetType() == TENSORTYPE_NORMAL && TensorShapeEqual(*B->GetShape(), *C->GetShape())) {
+    } else if (ctx->IsLastConsumerOfInput(1) && B->GetType() == TENSORTYPE_NORMAL && TensorShapeEqual(*B->GetShape(), *C->GetShape())) {
         C->TransferBufferFrom(B);
         lB = C;
     } else {

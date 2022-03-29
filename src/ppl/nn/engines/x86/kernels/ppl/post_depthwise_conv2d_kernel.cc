@@ -78,7 +78,7 @@ ppl::common::RetCode PostDepthwiseConv2dKernel::SeparateExecute(KernelExecContex
             return rc;
         }
 
-         if (X->GetEdge()->CalcConsumerCount() == 1 && X->GetType() == TENSORTYPE_NORMAL) {
+         if (ctx->IsLastConsumerOfInput(0) && X->GetType() == TENSORTYPE_NORMAL) {
             PPLNN_X86_DEBUG_TRACE("Free Input [X]\n");
             X->FreeBuffer();
         }

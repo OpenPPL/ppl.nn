@@ -31,12 +31,12 @@ namespace ppl { namespace nn { namespace x86 {
 class OptGraph final {
 public:
     OptGraph() : tensor_getter_(&tensor_impls_) {}
-    ppl::common::RetCode Init(ir::Graph*, RuntimePartitionInfo*);
+    ppl::common::RetCode Init(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*);
     ppl::common::RetCode DoOptimize(const utils::SharedResource&, X86Device*);
 
 private:
     ppl::common::RetCode InitKernels(const ir::Graph* graph);
-    ppl::common::RetCode InitTensorImpls();
+    ppl::common::RetCode InitTensorImpls(const utils::SharedResource&);
     ppl::common::RetCode TryToInferType(X86Device* device);
     ppl::common::RetCode TryToInferDims(X86Device* device);
 

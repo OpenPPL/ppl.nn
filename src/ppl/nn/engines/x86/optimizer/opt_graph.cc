@@ -17,6 +17,7 @@
 
 #include <string.h>
 
+#include "ppl/nn/utils/shared_resource.h"
 #include "ppl/nn/engines/x86/optimizer/opt_graph.h"
 #include "ppl/nn/engines/x86/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/engines/x86/optimizer/opt_rule_manager.h"
@@ -57,14 +58,28 @@ RetCode OptGraph::InitKernels(const ir::Graph* graph) {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::InitTensorImpls() {
+RetCode OptGraph::InitTensorImpls(const utils::SharedResource& resource) {
     tensor_impls_.clear();
     auto& shapes = graph_->data->shapes;
+    std::set<edgeid_t> io_edgeids;
+    for (uint32_t i = 0; i < graph_->topo->GetInputCount(); ++i) {
+        io_edgeids.insert(graph_->topo->GetInput(i));
+    }
+    for (uint32_t i = 0; i < graph_->topo->GetOutputCount(); ++i) {
+        io_edgeids.insert(graph_->topo->GetOutput(i));
+    }
+    for (uint32_t i = 0; i < graph_->topo->GetExtraInputCount(); ++i) {
+        io_edgeids.insert(graph_->topo->GetExtraInput(i));
+    }
+    
     for (auto it = graph_->topo->CreateEdgeIter(); it->IsValid(); it->Forward()) {
         auto edge = it->Get();
         auto edge_id = edge->GetId();
-        auto tensor_type = graph_->data->constants.find(edge_id) == graph_->data->constants.end() ? TENSORTYPE_NORMAL
-                                                                                                  : TENSORTYPE_RESERVED;
+        bool is_constant = graph_->data->constants.find(edge_id) != graph_->data->constants.end();
+        bool is_reserved = resource.reserved_edgeids.find(edge_id) != resource.reserved_edgeids.end();
+        bool is_io_edge = io_edgeids.find(edge_id) != io_edgeids.end();
+
+        auto tensor_type = (is_constant || is_reserved || is_io_edge) ? TENSORTYPE_RESERVED : TENSORTYPE_NORMAL;
         TensorImpl* tensor = new TensorImpl(edge, tensor_type);
         if (shapes.find(edge_id) != shapes.end()) {
             utils::IrShape2TensorShape(shapes[edge_id], tensor->GetShape());
@@ -76,7 +91,7 @@ RetCode OptGraph::InitTensorImpls() {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::Init(ir::Graph* graph, RuntimePartitionInfo* info) {
+RetCode OptGraph::Init(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
     graph_ = graph;
     info_ = info;
 
@@ -86,7 +101,7 @@ RetCode OptGraph::Init(ir::Graph* graph, RuntimePartitionInfo* info) {
         return status;
     }
 
-    status = InitTensorImpls();
+    status = InitTensorImpls(resource);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init tensor impls failed: " << GetRetCodeStr(status);
         return status;

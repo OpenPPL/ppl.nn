@@ -73,7 +73,7 @@ ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
 
     if (x->GetShape()->GetElementsExcludingPadding() ==
         y->GetShape()->GetElementsExcludingPadding()) { // no padding at all, just copy
-        if (x->GetEdge()->CalcConsumerCount() == 1 && x->GetType() == TENSORTYPE_NORMAL) {
+        if (ctx->IsLastConsumerOfInput(0) && x->GetType() == TENSORTYPE_NORMAL) {
             y->TransferBufferFrom(x);
         } else {
             return ppl::kernel::x86::memory_copy(x->GetBufferPtr(), x->GetShape()->GetBytesIncludingPadding(), y->GetBufferPtr());

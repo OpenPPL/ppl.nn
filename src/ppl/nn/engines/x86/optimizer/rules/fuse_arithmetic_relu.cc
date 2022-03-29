@@ -53,7 +53,7 @@ bool FuseArithmeticReLU(const OptKernelOptions &options) {
             auto arithmetic_node = node;
             auto arithmetic_output_edge = graph_topo->GetEdgeById(arithmetic_node->GetOutput(0));
             if (!arithmetic_output_edge || arithmetic_output_edge->CalcConsumerCount() != 1 ||
-                IsGraphOutput(graph_topo, arithmetic_output_edge->GetId())) {
+                IsReservedEdge(tensors, arithmetic_output_edge->GetId())) {
                 continue;
             }
             auto arithmetic_output_edge_shape = tensors[arithmetic_output_edge->GetId()]->GetShape();
@@ -99,6 +99,7 @@ bool FuseArithmeticReLU(const OptKernelOptions &options) {
             relu_output_edge->SetProducer(arithmetic_node->GetId());
 
             info->kernels.erase(relu_node->GetId());
+            tensors.erase(arithmetic_output_edge->GetId());
             graph_topo->DelNodeById(relu_node->GetId());
             graph_topo->DelEdgeById(arithmetic_output_edge->GetId());
 

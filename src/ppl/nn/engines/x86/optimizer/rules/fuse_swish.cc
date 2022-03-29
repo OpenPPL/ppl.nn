@@ -34,7 +34,7 @@ bool FuseSwish(const OptKernelOptions &options) {
         if (node->GetType().domain == "" && node->GetType().name == "Sigmoid") {
             auto sigmoid_node = node;
             auto sigmoid_output_edge = graph_topo->GetEdgeById(sigmoid_node->GetOutput(0));
-            if (sigmoid_output_edge->CalcConsumerCount() != 1 || IsGraphOutput(graph_topo, sigmoid_output_edge->GetId())) {
+            if (sigmoid_output_edge->CalcConsumerCount() != 1 || IsReservedEdge(tensors, sigmoid_output_edge->GetId())) {
                 continue;
             }
             auto sigmoid_input_edge = graph_topo->GetEdgeById(sigmoid_node->GetInput(0));
