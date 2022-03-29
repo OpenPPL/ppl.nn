@@ -47,6 +47,20 @@ RetCode ConvOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
+    auto node = GetNode();
+    auto graph_data = options.graph_data;
+    const ir::Shape& weight_shape = graph_data->shapes.find(node->GetInput(1))->second;
+
+    const int64_t kernel_dims = param_->kernel_shape.size() == 0 ?
+                                (weight_shape.dims.size() - 2) :
+                                param_->kernel_shape.size();
+
+    if (kernel_dims != 2) {
+        LOG(ERROR) << "Only support Conv2d currently. Get unsupported kernel_dims="
+            << kernel_dims << ", which is Conv(" << kernel_dims << "d)";
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         return oputils::ReshapeConv(info, param_.get());
     };
@@ -79,14 +93,18 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
     }
 
     const ir::Shape& weight_shape = graph_data->shapes.find(node->GetInput(1))->second;
-    const int64_t kernel_dims = weight_shape.dims.size() - 2;
 
     bias_term_ = (node->GetInputCount() == 3) ? 1 : 0;
 
     // Check Param
     const ppl::nn::common::ConvParam& conv_param = *param_;
+    const int64_t kernel_dims = param_->kernel_shape.size() == 0 ?
+                                (weight_shape.dims.size() - 2) :
+                                param_->kernel_shape.size();
+
     for (int64_t i = 0; i < kernel_dims; ++i) {
         if (conv_param.pads[i] != conv_param.pads[i + kernel_dims]) {
+            LOG(ERROR) << "only support symmetrical pads now.";
             return ppl::common::RC_UNSUPPORTED;
         }
     }
