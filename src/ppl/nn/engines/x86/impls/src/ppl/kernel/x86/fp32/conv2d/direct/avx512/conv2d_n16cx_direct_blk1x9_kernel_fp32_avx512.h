@@ -353,8 +353,8 @@ void conv2d_n16cx_direct_fp32_avx512_blk1x9_kernel(
                 if (w_len > 4) zmm22 = _mm512_min_ps(zmm22, zmm31);
                 if (w_len > 5) zmm23 = _mm512_min_ps(zmm23, zmm31);
                 if (w_len > 6) zmm24 = _mm512_min_ps(zmm24, zmm31);
-                if (w_len > 5) zmm25 = _mm512_min_ps(zmm25, zmm31);
-                if (w_len > 6) zmm26 = _mm512_min_ps(zmm26, zmm31);
+                if (w_len > 7) zmm25 = _mm512_min_ps(zmm25, zmm31);
+                if (w_len > 8) zmm26 = _mm512_min_ps(zmm26, zmm31);
             }
         }
 
