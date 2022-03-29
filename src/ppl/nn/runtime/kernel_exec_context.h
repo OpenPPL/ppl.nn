@@ -34,17 +34,17 @@ public:
     bool IsProfilingEnabled() const {
         return is_profiling_enabled_;
     }
-    void SetTensorLastConsumerList(const std::vector<nodeid_t>* l) {
-        tensor_last_consumer_ = l;
+    void SetEdgeLastConsumerList(const std::vector<nodeid_t>* l) {
+        edge_last_consumer_ = l;
     }
     bool IsLastConsumerOfInput(uint32_t idx) const {
         auto eid = node_->GetInput(idx);
-        return (tensor_last_consumer_->at(eid) == node_->GetId());
+        return (edge_last_consumer_->at(eid) == node_->GetId());
     }
 
 private:
     bool is_profiling_enabled_ = false;
-    const std::vector<nodeid_t>* tensor_last_consumer_ = nullptr;
+    const std::vector<nodeid_t>* edge_last_consumer_ = nullptr;
 };
 
 }} // namespace ppl::nn

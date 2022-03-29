@@ -84,9 +84,9 @@ static vector<uint32_t> CalcEdgeRefcount(const ir::GraphTopo* topo, const set<ed
     return edge_refcount;
 }
 
-static RetCode InitTensorLastConsumer(const ir::GraphTopo* topo, const vector<nodeid_t>& sorted_nodes,
-                                      const set<edgeid_t>& reserved_edgeids, vector<nodeid_t>* tensor_last_consumer) {
-    tensor_last_consumer->resize(topo->GetMaxEdgeId(), topo->GetMaxNodeId());
+static RetCode InitEdgeLastConsumer(const ir::GraphTopo* topo, const vector<nodeid_t>& sorted_nodes,
+                                    const set<edgeid_t>& reserved_edgeids, vector<nodeid_t>* edge_last_consumer) {
+    edge_last_consumer->resize(topo->GetMaxEdgeId(), INVALID_NODEID);
 
     auto edge_refcount = CalcEdgeRefcount(topo, reserved_edgeids);
 
@@ -103,7 +103,7 @@ static RetCode InitTensorLastConsumer(const ir::GraphTopo* topo, const vector<no
             if (rc > 0) {
                 --rc;
                 if (rc == 0) {
-                    tensor_last_consumer->at(eid) = node->GetId();
+                    edge_last_consumer->at(eid) = node->GetId();
                 }
             } else {
                 LOG(ERROR) << "invalid refcount of edge[" << topo->GetEdgeById(eid)->GetName() << "]";
@@ -121,7 +121,7 @@ static RetCode InitTensorLastConsumer(const ir::GraphTopo* topo, const vector<no
             if (rc > 0) {
                 --rc;
                 if (rc == 0) {
-                    tensor_last_consumer->at(eid) = node->GetId();
+                    edge_last_consumer->at(eid) = node->GetId();
                 }
             } else {
                 LOG(ERROR) << "invalid refcount of edge[" << topo->GetEdgeById(eid)->GetName() << "]";
@@ -135,7 +135,7 @@ static RetCode InitTensorLastConsumer(const ir::GraphTopo* topo, const vector<no
             if (rc > 0) {
                 --rc;
                 if (rc == 0) {
-                    tensor_last_consumer->at(eid) = node->GetId();
+                    edge_last_consumer->at(eid) = node->GetId();
                 }
             } else {
                 LOG(ERROR) << "invalid refcount of edge[" << topo->GetEdgeById(eid)->GetName() << "]";
@@ -152,9 +152,9 @@ RetCode RuntimeAuxInfo::Init(const ir::GraphTopo* topo, const set<edgeid_t>& res
         this->sorted_nodes.push_back(nid);
     });
 
-    auto status = InitTensorLastConsumer(topo, sorted_nodes, reserved_edgeids, &tensor_last_consumer);
+    auto status = InitEdgeLastConsumer(topo, sorted_nodes, reserved_edgeids, &edge_last_consumer);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "InitTensorLastConsumer failed: " << GetRetCodeStr(status);
+        LOG(ERROR) << "InitEdgeLastConsumer failed: " << GetRetCodeStr(status);
         return status;
     }
 

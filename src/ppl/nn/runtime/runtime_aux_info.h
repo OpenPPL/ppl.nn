@@ -36,8 +36,8 @@ struct RuntimeAuxInfo final {
     /** node ids in topological order */
     std::vector<nodeid_t> sorted_nodes;
 
-    /** a tensor can be released right after the last consumer finish executing in `sorted_nodes` */
-    std::vector<nodeid_t> tensor_last_consumer;
+    /** an `EdgeObject` can be released right after the last consumer finish executing in `sorted_nodes` */
+    std::vector<nodeid_t> edge_last_consumer;
 };
 
 }} // namespace ppl::nn
