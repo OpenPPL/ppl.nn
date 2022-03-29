@@ -37,7 +37,6 @@ uint64_t ConvTransposeKernel::CalcTmpBufferSize(const KernelExecContext& ctx) co
 }
 
 ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
-    LOG(INFO) << "kernel";
     PPLNN_RISCV_REQUIRED_INPUT(X, 0);
     PPLNN_RISCV_REQUIRED_INPUT(W, 1);
     PPLNN_RISCV_OPTIONAL_INPUT(B, 2);

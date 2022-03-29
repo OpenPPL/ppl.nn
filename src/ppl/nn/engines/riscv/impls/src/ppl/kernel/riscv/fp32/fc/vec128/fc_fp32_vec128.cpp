@@ -25,34 +25,6 @@ namespace ppl { namespace kernel { namespace riscv {
 
 #define C_BLK() ((int64_t)4)
 
-void fc_cvt_flt_riscv_fp32(
-    const float* flt,
-    float* flt_cvt,
-
-    int32_t num_outs,
-    int32_t channels)
-{
-    int32_t padded_channels = round_up(channels, C_BLK());
-    int32_t padded_num_outs = round_up(num_outs, C_BLK());
-
-    int32_t padded_num_outs_div4 = padded_num_outs / C_BLK();
-    for (int32_t oc = 0; oc < padded_num_outs_div4; oc++) {
-        for (int32_t ic = 0; ic < padded_channels; ic++) {
-            for (int32_t k = 0; k < C_BLK(); k++) {
-                int32_t dst_idx = 0;
-                dst_idx += k + ic * C_BLK() + oc * padded_channels * C_BLK();
-                int32_t oc_idx  = oc * C_BLK() + k;
-                int32_t src_idx = 0;
-                src_idx += ic + oc_idx * channels;
-                if (oc_idx >= num_outs || ic >= channels)
-                    flt_cvt[dst_idx] = 0;
-                else
-                    flt_cvt[dst_idx] = flt[src_idx];
-            }
-        }
-    }
-}
-
 template <int64_t atom_m>
 void hgemm_n4chw_mxn4_riscv_fp32(
     const float* src,
@@ -299,8 +271,8 @@ void fc_n4chw_riscv_fp32(
     float* dst,
 
     const int32_t batch,
-    const int32_t channels,
-    const int32_t num_outs)
+    const int32_t num_outs,
+    const int32_t channels)
 {
     int32_t padded_channels = round_up(channels, C_BLK());
     int32_t padded_num_outs = round_up(num_outs, C_BLK());
@@ -330,12 +302,28 @@ void fc_n4chw_riscv_fp32(
     }
 }
 
-void fc_fp32_vec128_executor::cal_kernel_tunning_param() {}
+void fc_fp32_vec128_executor::cal_kernel_tunning_param()
+{
+    tunning_param_.m_blk = 16;
+    tunning_param_.n_blk = 16;
+    tunning_param_.k_blk = fc_param_->channels;
+}
 
 uint64_t fc_fp32_vec128_executor::cal_temp_buffer_size()
 {
     LOG(DEBUG) << "FC cal_temp_buffer_size";
-    return 1;
+    constexpr int64_t atom_oc = 4;
+    constexpr int64_t atom_ic = 4;
+
+    tunning_param_.m_blk = min(tunning_param_.m_blk, src_shape_->GetDim(0));
+    tunning_param_.n_blk = min(tunning_param_.n_blk, fc_param_->num_output);
+    tunning_param_.k_blk = min(tunning_param_.k_blk, fc_param_->channels);
+
+    return fc_common_cal_temp_buffer_size<float, atom_oc, atom_ic>(
+        src_shape_->GetDim(0), // m
+        fc_param_->num_output, // n
+        fc_param_->channels, // k
+        tunning_param_);
 }
 
 ppl::common::RetCode fc_fp32_vec128_executor::prepare()
@@ -357,11 +345,25 @@ ppl::common::RetCode fc_fp32_vec128_executor::execute()
     }
 
     LOG(DEBUG) << "FC execute";
-    const int32_t batch = 1;
-    fc_n4chw_riscv_fp32(src_, cvt_filter_, cvt_bias_, dst_,
-                        src_shape_->GetDim(0),
-                        fc_param_->channels,
-                        fc_param_->num_output);
+
+    tunning_param_.m_blk = min(tunning_param_.m_blk, src_shape_->GetDim(0));
+    tunning_param_.n_blk = min(tunning_param_.n_blk, fc_param_->num_output);
+    tunning_param_.k_blk = min(tunning_param_.k_blk, fc_param_->channels);
+
+    constexpr int64_t atom_oc = 4;
+    constexpr int64_t atom_ic = 4;
+    fc_common_blocking_execute<float, atom_oc, atom_ic>(
+        src_,
+        cvt_filter_,
+        cvt_bias_,
+        dst_,
+        temp_buffer_,
+        src_shape_->GetDim(0),
+        fc_param_->channels,
+        fc_param_->num_output,
+        tunning_param_,
+        fc_n4chw_riscv_fp32);
+
     return common::RC_SUCCESS;
 }
 
@@ -389,7 +391,7 @@ ppl::common::RetCode fc_fp32_vec128_manager::gen_cvt_weights(const float* filter
         if (cvt_filter_ == nullptr) {
             return ppl::common::RC_OUT_OF_MEMORY;
         }
-        fc_cvt_flt_riscv_fp32(filter, cvt_filter_, param_.num_output, param_.channels);
+        fc_common_cvt_flt_to_nxcx<float, C_BLK()>(filter, cvt_filter_, param_.num_output, param_.channels);
     }
     return ppl::common::RC_SUCCESS;
 }

@@ -23,6 +23,8 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
+#define C_BLK() ((int64_t)8)
+
 void fc_cvt_flt_riscv_fp16(
     const __fp16* flt,
     __fp16* flt_cvt,
@@ -369,8 +371,8 @@ void fc_n8chw_riscv_fp16(
     __fp16* dst,
 
     const int32_t batch,
-    const int32_t channels,
-    const int32_t num_outs)
+    const int32_t num_outs,
+    const int32_t channels)
 {
     int32_t padded_channels = (channels + 8 - 1) / 8 * 8;
     int32_t padded_num_outs = (num_outs + 8 - 1) / 8 * 8;
@@ -400,12 +402,28 @@ void fc_n8chw_riscv_fp16(
     }
 }
 
-void fc_fp16_vec128_executor::cal_kernel_tunning_param() {}
+void fc_fp16_vec128_executor::cal_kernel_tunning_param()
+{
+    tunning_param_.m_blk = 16;
+    tunning_param_.n_blk = 16;
+    tunning_param_.k_blk = fc_param_->channels;
+}
 
 uint64_t fc_fp16_vec128_executor::cal_temp_buffer_size()
 {
     LOG(DEBUG) << "FC cal_temp_buffer_size";
-    return 1;
+    constexpr int64_t atom_oc = 8;
+    constexpr int64_t atom_ic = 8;
+
+    tunning_param_.m_blk = min(tunning_param_.m_blk, src_shape_->GetDim(0));
+    tunning_param_.n_blk = min(tunning_param_.n_blk, fc_param_->num_output);
+    tunning_param_.k_blk = min(tunning_param_.k_blk, fc_param_->channels);
+
+    return fc_common_cal_temp_buffer_size<__fp16, atom_oc, atom_ic>(
+        src_shape_->GetDim(0), // m
+        fc_param_->num_output, // n
+        fc_param_->channels, // k
+        tunning_param_);
 }
 
 ppl::common::RetCode fc_fp16_vec128_executor::prepare()
@@ -426,12 +444,25 @@ ppl::common::RetCode fc_fp16_vec128_executor::execute()
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    const int32_t batch = 1;
     LOG(DEBUG) << "FC execute";
-    fc_n8chw_riscv_fp16(src_, cvt_filter_, cvt_bias_, dst_,
-                        src_shape_->GetDim(0),
-                        fc_param_->channels,
-                        fc_param_->num_output);
+
+    tunning_param_.m_blk = min(tunning_param_.m_blk, src_shape_->GetDim(0));
+    tunning_param_.n_blk = min(tunning_param_.n_blk, fc_param_->num_output);
+    tunning_param_.k_blk = min(tunning_param_.k_blk, fc_param_->channels);
+
+    constexpr int64_t atom_oc = 8;
+    constexpr int64_t atom_ic = 8;
+    fc_common_blocking_execute<__fp16, atom_oc, atom_ic>(
+        src_,
+        cvt_filter_,
+        cvt_bias_,
+        dst_,
+        temp_buffer_,
+        src_shape_->GetDim(0),
+        fc_param_->channels,
+        fc_param_->num_output,
+        tunning_param_,
+        fc_n8chw_riscv_fp16);
 
     return common::RC_SUCCESS;
 }
@@ -460,7 +491,7 @@ ppl::common::RetCode fc_fp16_vec128_manager::gen_cvt_weights(const __fp16* filte
         if (cvt_filter_ == nullptr) {
             return ppl::common::RC_OUT_OF_MEMORY;
         }
-        fc_cvt_flt_riscv_fp16(filter, cvt_filter_, param_.num_output, param_.channels);
+        fc_common_cvt_flt_to_nxcx<__fp16, C_BLK()>(filter, cvt_filter_, param_.num_output, param_.channels);
     }
 
     return ppl::common::RC_SUCCESS;

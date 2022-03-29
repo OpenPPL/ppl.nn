@@ -19,6 +19,7 @@
 
 #include "ppl/kernel/riscv/fp32/fc.h"
 #include "ppl/kernel/riscv/fp32/fc/vec128/fc_fp32_vec128.h"
+#include "ppl/kernel/riscv/fp32/fc/vec128/fc_ndarray_fp32_vec128.h"
 #include "ppl/common/log.h"
 
 namespace ppl { namespace kernel { namespace riscv {
@@ -28,15 +29,22 @@ fc_common_algo_info fc_algo_selector_fp32::select_algo(
     const fc_common_param& param)
 {
     static fc_common_algo_info unknown_info = {fc_common_algo::unknown};
-
-    if (true) {
+    if (false) {
+    } else if (src_format == ppl::common::DATAFORMAT_NDARRAY) {
+        return {
+            fc_common_algo::standard,
+            ppl::common::DATAFORMAT_NDARRAY,
+            ppl::common::DATAFORMAT_NDARRAY,
+            ppl::common::DATATYPE_FLOAT32,
+            ppl::common::DATATYPE_FLOAT32
+        };
+    } else {
         return {
             fc_common_algo::standard,
             ppl::common::DATAFORMAT_N4CX,
             ppl::common::DATAFORMAT_N4CX,
             ppl::common::DATATYPE_FLOAT32,
-            ppl::common::DATATYPE_FLOAT32
-        };
+            ppl::common::DATATYPE_FLOAT32};
     }
 
     return unknown_info;
@@ -48,7 +56,9 @@ fc_manager<float>* fc_algo_selector_fp32::gen_algo(
     ppl::common::Allocator* allocator)
 {
     fc_manager<float>* fc_mgr = nullptr;
-    if (algo_info.algo_type == fc_common_algo::standard) {
+    if (algo_info.algo_type == fc_common_algo::standard && algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY) {
+        fc_mgr = new fc_ndarray_fp32_vec128_manager(param, allocator);
+    } else if (algo_info.algo_type == fc_common_algo::standard && algo_info.input_format == ppl::common::DATAFORMAT_N4CX) {
         fc_mgr = new fc_fp32_vec128_manager(param, allocator);
     } else {
         LOG(ERROR) << "FC gen algo failed.";

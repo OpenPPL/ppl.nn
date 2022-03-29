@@ -45,6 +45,9 @@ RetCode CastOp::Init(const OptKernelOptions& options) {
 RetCode CastOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
                                std::vector<datatype_t>* selected_input_data_types,
                                std::vector<datatype_t>* selected_output_data_types) {
+    if (this->param_->to == ppl::common::DATATYPE_FLOAT32) {
+        this->param_->to = forward_precision;
+    }
     selected_output_data_types->at(0) = this->param_->to;
     return RC_SUCCESS;
 }
