@@ -37,7 +37,7 @@ public:
         auto& type = node->GetType();
         return (supported_types_.find(type.name) != supported_types_.end());
     }
-    ppl::common::RetCode ProcessGraph(const utils::SharedResource*, ir::Graph* graph,
+    ppl::common::RetCode ProcessGraph(const utils::SharedResource&, ir::Graph* graph,
                                       RuntimePartitionInfo* info) override {
         auto topo = graph->topo.get();
         for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
@@ -86,7 +86,7 @@ public:
         auto& type = node->GetType();
         return (type.name == "op1");
     }
-    ppl::common::RetCode ProcessGraph(const utils::SharedResource*, ir::Graph* graph,
+    ppl::common::RetCode ProcessGraph(const utils::SharedResource&, ir::Graph* graph,
                                       RuntimePartitionInfo* info) override {
         auto topo = graph->topo.get();
         for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
@@ -134,7 +134,7 @@ public:
         auto& type = node->GetType();
         return (type.name == "op2");
     }
-    ppl::common::RetCode ProcessGraph(const utils::SharedResource*, ir::Graph* graph,
+    ppl::common::RetCode ProcessGraph(const utils::SharedResource&, ir::Graph* graph,
                                       RuntimePartitionInfo* info) override {
         auto topo = graph->topo.get();
         for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
@@ -182,7 +182,7 @@ public:
         auto& type = node->GetType();
         return (type.name == "op3");
     }
-    ppl::common::RetCode ProcessGraph(const utils::SharedResource*, ir::Graph* graph,
+    ppl::common::RetCode ProcessGraph(const utils::SharedResource&, ir::Graph* graph,
                                       RuntimePartitionInfo* info) override {
         auto topo = graph->topo.get();
         for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {

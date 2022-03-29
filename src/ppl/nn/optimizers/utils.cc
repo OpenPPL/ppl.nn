@@ -245,7 +245,7 @@ static RetCode CollectOps(const ir::GraphTopo* topo, map<nodeid_t, unique_ptr<Op
 }
 
 static RetCode GenPartitionsInfoAndShapes(const vector<pair<EngineImpl*, vector<nodeid_t>>>& partitions,
-                                          const utils::SharedResource* resource, ir::Graph* graph,
+                                          const utils::SharedResource& resource, ir::Graph* graph,
                                           map<edgeid_t, TensorShape>* shapes,
                                           vector<RuntimeGraphInfo::Partition>* par_list) {
     for (uint32_t p = 0; p < partitions.size(); ++p) {
@@ -441,7 +441,7 @@ static RetCode InsertConverterNodesForInputs(ir::Graph* graph, const vector<Engi
     return RC_SUCCESS;
 }
 
-RetCode ProcessGraph(const utils::SharedResource* resource, ir::Graph* graph, RuntimeGraphInfo* info) {
+RetCode ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, RuntimeGraphInfo* info) {
     GraphOptimizerManager optimizer_mgr;
     auto status = optimizer_mgr.Process(graph);
     if (status != RC_SUCCESS) {
@@ -450,7 +450,7 @@ RetCode ProcessGraph(const utils::SharedResource* resource, ir::Graph* graph, Ru
     }
 
     vector<pair<EngineImpl*, vector<nodeid_t>>> partitions;
-    status = resource->graph_partitioner->Partition(resource->engines, graph->topo.get(), &partitions);
+    status = resource.graph_partitioner->Partition(resource.engines, graph->topo.get(), &partitions);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "partitioning graph[" << graph->topo->GetName() << "] failed: " << GetRetCodeStr(status);
         return status;

@@ -76,8 +76,7 @@ RetCode OptGraph::InitTensorImpls() {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::Init(const utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
-    resource_ = resource;
+RetCode OptGraph::Init(ir::Graph* graph, RuntimePartitionInfo* info) {
     graph_ = graph;
     info_ = info;
 
@@ -169,9 +168,9 @@ RetCode OptGraph::TryToInferDims(X86Device* device) {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::DoOptimize(X86Device* device) {
+RetCode OptGraph::DoOptimize(const utils::SharedResource& resource, X86Device* device) {
     OptKernelOptions options;
-    options.resource = resource_;
+    options.resource = &resource;
     options.graph_data = graph_->data.get();
     options.graph_topo = graph_->topo.get();
     options.tensors = &tensor_impls_;

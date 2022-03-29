@@ -72,7 +72,7 @@ RetCode RuntimeBuilderImpl::Init(const char* model_file, Engine** engines, uint3
 }
 
 RetCode RuntimeBuilderImpl::Preprocess() {
-    auto status = utils::ProcessGraph(&resource_, &graph_, graph_info_.get());
+    auto status = utils::ProcessGraph(resource_, &graph_, graph_info_.get());
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "process graph failed: " << GetRetCodeStr(status);
         return status;

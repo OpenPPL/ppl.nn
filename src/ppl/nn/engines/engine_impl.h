@@ -62,7 +62,7 @@ public:
        @param graph graph to be optimized and can be modified
        @note DO NOT modify input and output edges
     */
-    virtual ppl::common::RetCode ProcessGraph(const utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*) = 0;
+    virtual ppl::common::RetCode ProcessGraph(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*) = 0;
 
     /** @brief creates an instance of the same type as this engine */
     virtual EngineImpl* Create() = 0;

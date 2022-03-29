@@ -30,7 +30,7 @@ namespace ppl { namespace nn { namespace utils {
    @param graph that needed to be processed
    @param info fields needed
 */
-ppl::common::RetCode ProcessGraph(const utils::SharedResource* resource, ir::Graph* graph, RuntimeGraphInfo* info);
+ppl::common::RetCode ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, RuntimeGraphInfo* info);
 
 }}} // namespace ppl::nn::utils
 

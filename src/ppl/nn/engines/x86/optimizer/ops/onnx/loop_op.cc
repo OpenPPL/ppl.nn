@@ -51,7 +51,7 @@ RetCode LoopOp::Init(const OptKernelOptions& options) {
     }
 
     auto loop_param = static_cast<ppl::nn::common::LoopParam*>(attr_ref->second.get());
-    return op_.Init(options.resource, loop_param, ConcatOutputs);
+    return op_.Init(*options.resource, loop_param, ConcatOutputs);
 }
 
 KernelImpl* LoopOp::CreateKernelImpl() const {

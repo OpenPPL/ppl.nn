@@ -75,7 +75,7 @@ RetCode OptGraph::InitKernels() {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::UpdateDims() {
+RetCode OptGraph::UpdateDims(const utils::SharedResource& resource) {
     auto topo = graph_->topo.get();
     auto data = graph_->data.get();
 
@@ -84,7 +84,7 @@ RetCode OptGraph::UpdateDims() {
         sorted_node_ids.push_back(nid);
     });
 
-    OptKernelOptions options(graph_, resource_);
+    OptKernelOptions options(graph_, &resource);
     UpdateTopologicalSort();
 
     InputOutputInfo IOinfo;
@@ -201,12 +201,12 @@ RetCode OptGraph::UpdateDims() {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::FuseOperator() {
+RetCode OptGraph::FuseOperator(const utils::SharedResource& resource) {
     ir::GraphTopo* topo = graph_->topo.get();
     UpdateTopologicalSort();
     auto fs_filter_manager = FsFilterManager::Instance();
 
-    OptKernelOptions options(graph_, info_, resource_, &tensor_impls_);
+    OptKernelOptions options(graph_, info_, &resource, &tensor_impls_);
     int32_t index = LastLegalNodeIndex();
 
     for (int32_t i = sorted_node_ids_.size() - 1; i >= 0; --i) {
@@ -221,11 +221,11 @@ RetCode OptGraph::FuseOperator() {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::AddBridgeKernels() {
+RetCode OptGraph::AddBridgeKernels(const utils::SharedResource& resource) {
     auto topo = graph_->topo.get();
     auto& tensor_params = args_->quant_info.tensor_params;
     uint32_t count = 0;
-    OptKernelOptions options(graph_, resource_);
+    OptKernelOptions options(graph_, &resource);
 
     for (auto iter = topo->CreateNodeIter(); iter->IsValid(); iter->Forward()) {
         auto node = iter->Get();
@@ -442,12 +442,12 @@ RetCode OptGraph::UpdateType() {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::SelectAlgos(CudaDevice* device) {
+RetCode OptGraph::SelectAlgos(const utils::SharedResource& resource, CudaDevice* device) {
     auto topo = graph_->topo.get();
     auto& graph_quants = args_->tensor_quants.find(topo->GetName())->second;
     auto& graph_algos = args_->alog_selects;
 
-    OptKernelOptions options(graph_, info_, resource_, args_, compile_set_, device, &tensor_impls_, &graph_quants, &graph_algos);
+    OptKernelOptions options(graph_, info_, &resource, args_, compile_set_, device, &tensor_impls_, &graph_quants, &graph_algos);
     UpdateTopologicalSort();
 
     AlgoGraph algo_graph(topo);
@@ -573,26 +573,26 @@ RetCode OptGraph::DeleteBridgeKernels() {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::DoOptimize(CudaDevice* device) {
+RetCode OptGraph::DoOptimize(const utils::SharedResource& resource, CudaDevice* device) {
     auto status = InitKernels();
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init kernels failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = UpdateDims();
+    status = UpdateDims(resource);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Update dims failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = FuseOperator();
+    status = FuseOperator(resource);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Fuse operators failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = AddBridgeKernels();
+    status = AddBridgeKernels(resource);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Add Bridge nodes failed: " << GetRetCodeStr(status);
         return status;
@@ -610,7 +610,7 @@ RetCode OptGraph::DoOptimize(CudaDevice* device) {
         return status;
     }
 
-    status = SelectAlgos(device);
+    status = SelectAlgos(resource, device);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Selec algos for each kernel failed: " << GetRetCodeStr(status);
         return status;
@@ -628,7 +628,7 @@ RetCode OptGraph::DoOptimize(CudaDevice* device) {
         return status;
     }
 
-    status = FuseOperator();
+    status = FuseOperator(resource);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Fuse operators failed: " << GetRetCodeStr(status);
         return status;

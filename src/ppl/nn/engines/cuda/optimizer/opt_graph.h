@@ -34,27 +34,26 @@ namespace ppl { namespace nn { namespace cuda {
 
 class OptGraph final {
 public:
-    OptGraph(const utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info, CudaArgs* args, CompileInfo* compile_set)
-        : resource_(resource), graph_(graph), info_(info), args_(args), compile_set_(compile_set), tensor_getter_(&tensor_impls_) {}
+    OptGraph(ir::Graph* graph, RuntimePartitionInfo* info, CudaArgs* args, CompileInfo* compile_set)
+        : graph_(graph), info_(info), args_(args), compile_set_(compile_set), tensor_getter_(&tensor_impls_) {}
     ~OptGraph();
 
-    ppl::common::RetCode DoOptimize(CudaDevice*);
+    ppl::common::RetCode DoOptimize(const utils::SharedResource&, CudaDevice*);
 
 private:
     ppl::common::RetCode InitKernels();
     ppl::common::RetCode InitQuantization();
-    ppl::common::RetCode UpdateDims();
-    ppl::common::RetCode FuseOperator();
-    ppl::common::RetCode AddBridgeKernels();
+    ppl::common::RetCode UpdateDims(const utils::SharedResource& resource);
+    ppl::common::RetCode FuseOperator(const utils::SharedResource& resource);
+    ppl::common::RetCode AddBridgeKernels(const utils::SharedResource& resource);
     ppl::common::RetCode UpdateType();
-    ppl::common::RetCode SelectAlgos(CudaDevice*);
+    ppl::common::RetCode SelectAlgos(const utils::SharedResource&, CudaDevice*);
     ppl::common::RetCode LoadConstants(CudaDevice*);
     ppl::common::RetCode DeleteBridgeKernels();
     int32_t LastLegalNodeIndex();
     void UpdateTopologicalSort();
 
 private:
-    const utils::SharedResource* resource_;
     ir::Graph* graph_;
     RuntimePartitionInfo* info_;
     CudaArgs* args_;

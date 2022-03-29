@@ -34,7 +34,7 @@ class IfOp final {
 public:
     IfOp(const ir::Node* node) : node_(node) {}
     ~IfOp();
-    ppl::common::RetCode Init(const utils::SharedResource*, IfParam*);
+    ppl::common::RetCode Init(const utils::SharedResource&, IfParam*);
     KernelImpl* CreateKernelImpl() const;
 
 private:

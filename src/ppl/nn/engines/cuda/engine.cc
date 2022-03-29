@@ -71,9 +71,9 @@ bool CudaEngine::Supports(const ir::Node* node) const {
     return (OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version) != nullptr);
 }
 
-RetCode CudaEngine::DoOptimize(const utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
-    OptGraph opt_graph(resource, graph, info, &cuda_flags_, &compile_set_);
-    auto status = opt_graph.DoOptimize(&device_);
+RetCode CudaEngine::DoOptimize(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
+    OptGraph opt_graph(graph, info, &cuda_flags_, &compile_set_);
+    auto status = opt_graph.DoOptimize(resource, &device_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "OptGraph DoOptimeize failed: " << GetRetCodeStr(status);
         return status;
@@ -86,7 +86,7 @@ RetCode CudaEngine::DoOptimize(const utils::SharedResource* resource, ir::Graph*
     return RC_SUCCESS;
 }
 
-ppl::common::RetCode CudaEngine::CompileCudaModule(const utils::SharedResource* resource, ir::Graph* graph,
+ppl::common::RetCode CudaEngine::CompileCudaModule(const utils::SharedResource& resource, ir::Graph* graph,
                                                    RuntimePartitionInfo* info) {
     auto op_compiler_manager = OpCompilerManager::Instance();
     for (auto it = compile_set_.begin(); it != compile_set_.end(); it++) {
@@ -98,14 +98,14 @@ ppl::common::RetCode CudaEngine::CompileCudaModule(const utils::SharedResource* 
         if (op_compiler == nullptr)
             continue;
 
-        const OptKernelOptions options(graph, info, resource, &device_, &cuda_manager_);
+        const OptKernelOptions options(graph, info, &resource, &device_, &cuda_manager_);
         op_compiler->Compile(op, options);
     }
 
     return RC_SUCCESS;
 }
 
-RetCode CudaEngine::ProcessGraph(const utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
+RetCode CudaEngine::ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
     auto status = DoOptimize(resource, graph, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "DoOptimize failed: " << GetRetCodeStr(status);

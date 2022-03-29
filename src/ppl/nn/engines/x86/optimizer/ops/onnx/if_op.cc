@@ -34,7 +34,7 @@ RetCode IfOp::Init(const OptKernelOptions& options) {
     }
 
     auto if_param = static_cast<ppl::nn::common::IfParam*>(attr_ref->second.get());
-    return op_.Init(options.resource, if_param);
+    return op_.Init(*options.resource, if_param);
 }
 
 KernelImpl* IfOp::CreateKernelImpl() const {

@@ -35,7 +35,7 @@ public:
     ppl::common::RetCode Configure(uint32_t, ...) override;
     EngineContext* CreateEngineContext() override;
     bool Supports(const ir::Node*) const override;
-    ppl::common::RetCode ProcessGraph(const utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*) override;
+    ppl::common::RetCode ProcessGraph(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*) override;
     EngineImpl* Create() override;
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
@@ -50,7 +50,7 @@ public:
 #endif
 
 private:
-    ppl::common::RetCode DoOptimize(const utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*);
+    ppl::common::RetCode DoOptimize(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*);
     ppl::common::RetCode CalDataOmittedConstants(const ir::Graph&, const RuntimePartitionInfo&,
                                                  std::set<edgeid_t>*) const;
 
