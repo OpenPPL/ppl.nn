@@ -87,7 +87,7 @@ private:
 RetCode SequentialScheduler::Run(Profiler* profiler) {
     auto release_object_func = [this](EdgeObject* object, nodeid_t user) -> RetCode {
         auto eid = object->GetEdge()->GetId();
-        if (aux_info_->tensor_last_consumer[eid] == user) {
+        if (aux_info_->edge_last_consumer[eid] == user) {
             auto obj = graph_->edgeid2object[eid];
             if (obj->GetObjectType() == EdgeObject::T_TENSOR) {
                 tensor_pool_.Free(static_cast<TensorImpl*>(obj));
@@ -113,7 +113,7 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
 
     KernelExecContext ctx;
     ctx.SetProfilingFlag(profiler->IsProfilingEnabled());
-    ctx.SetTensorLastConsumerList(&aux_info_->tensor_last_consumer);
+    ctx.SetEdgeLastConsumerList(&aux_info_->edge_last_consumer);
 
     SchedulerAcquireObject getter(topo_, &graph_->edgeid2object, &tensor_pool_, &tensor_sequence_pool_);
     ctx.SetAcquireObject(&getter);
