@@ -68,7 +68,7 @@ void conv2d_n16cx_direct_ndarray_fp32_avx512_blk1x14_kernel(int64_t *param)
         if (u_ocb > 0) zmm6  = _mm512_fmadd_ps(zmm28, zmm30, zmm6);\
         if (u_ocb > 1) zmm20 = _mm512_fmadd_ps(zmm29, zmm30, zmm20);\
     }\
-    if (u_w > 6) {\
+    if (u_w > 7) {\
         zmm31 = _mm512_set1_ps(ic_src_w5[2 * stride_w]);\
         if (u_ocb > 0) zmm7  = _mm512_fmadd_ps(zmm28, zmm31, zmm7);\
         if (u_ocb > 1) zmm21 = _mm512_fmadd_ps(zmm29, zmm31, zmm21);\
