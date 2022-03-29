@@ -22,6 +22,7 @@
 #include "ppl/nn/oputils/onnx/reshape_conv.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 #include "ppl/nn/engines/cuda/params/clip_extra_param.h"
+#include "ppl/nn/params/onnx/leaky_relu_param.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
 #include "cudakernel/nn/conv/depthwise.h"
 #include "cudakernel/nn/conv/group_padding.h"
@@ -39,7 +40,6 @@ struct ConvExtraParam {
 };
 
 struct CudaConvParam final {
-    int32_t bias_term = 0;
     ppl::nn::onnx::ConvParam param;
     ConvExtraParam extra_param;
 };

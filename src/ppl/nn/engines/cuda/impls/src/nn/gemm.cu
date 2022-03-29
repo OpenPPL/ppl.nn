@@ -227,29 +227,27 @@ ppl::common::RetCode PPLCUDAGemmModifyBias(
     void *bias,
     const ppl::nn::onnx::GemmParam *param)
 {
-    if (param->bias_term) {
-        auto type    = bias_shape->GetDataType();
-        int pad_size = GetPadSize(infer_type);
-        float beta   = param->beta;
-        int N        = bias_shape->GetDim(0);
-        int N_pad    = Align(N, pad_size);
-        if (type == ppl::common::DATATYPE_FLOAT32) {
-            if (bias_shape->IsScalar())
-                return ppl::common::RC_UNSUPPORTED;
-            if (beta != 0.f && beta != 1.f) {
-                int grid_size = DivUp(N_pad, 512);
-                scale<float><<<grid_size, 512, 0, stream>>>((float *)bias, beta, N_pad);
-            }
-        } else if (type == ppl::common::DATATYPE_FLOAT16) {
-            if (bias_shape->IsScalar())
-                return ppl::common::RC_UNSUPPORTED;
-            if (beta != 0.f && beta != 1.f) {
-                int grid_size = DivUp(N_pad, 512);
-                scale<__half><<<grid_size, 512, 0, stream>>>((__half *)bias, beta, N_pad);
-            }
-        } else {
+    auto type    = bias_shape->GetDataType();
+    int pad_size = GetPadSize(infer_type);
+    float beta   = param->beta;
+    int N        = bias_shape->GetDim(0);
+    int N_pad    = Align(N, pad_size);
+    if (type == ppl::common::DATATYPE_FLOAT32) {
+        if (bias_shape->IsScalar())
             return ppl::common::RC_UNSUPPORTED;
+        if (beta != 0.f && beta != 1.f) {
+            int grid_size = DivUp(N_pad, 512);
+            scale<float><<<grid_size, 512, 0, stream>>>((float *)bias, beta, N_pad);
         }
+    } else if (type == ppl::common::DATATYPE_FLOAT16) {
+        if (bias_shape->IsScalar())
+            return ppl::common::RC_UNSUPPORTED;
+        if (beta != 0.f && beta != 1.f) {
+            int grid_size = DivUp(N_pad, 512);
+            scale<__half><<<grid_size, 512, 0, stream>>>((__half *)bias, beta, N_pad);
+        }
+    } else {
+        return ppl::common::RC_UNSUPPORTED;
     }
     return ppl::common::RC_SUCCESS;
 }
@@ -388,7 +386,7 @@ double PPLCUDAGemmSelectKernel(
     __half2 clip_max     = __float2half2_rn(fuse_param.clip_max);
     __half2 elt_clip_min = __float2half2_rn(fuse_param.elt_clip_min);
     __half2 elt_clip_max = __float2half2_rn(fuse_param.elt_clip_max);
-    bool has_bias        = param.bias_term; // beta != 0.f;
+    bool has_bias        = algo_param.has_bias; // beta != 0.f;
 
     float minTime = FLT_MAX;
     int best_kid  = -1;
@@ -547,7 +545,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
     int kLoopNum = DivUp(K_pad, tile_k_per_cta);
     lut_t in_lut, flt_lut;
 
-    bool has_bias    = param.bias_term; // beta != 0.f;
+    bool has_bias    = algo_param.has_bias; // beta != 0.f;
     int4 *input0_tmp = (int4 *)input;
     if (transA == 1) {
         dim3 grid(DivUp(K_pad, 32), DivUp(M, 32), 1);

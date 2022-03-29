@@ -34,6 +34,8 @@
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
 #include "ppl/nn/engines/cuda/macros.h"
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/cuda/pmx/generated/cuda_engine_generated.h"
 #endif
 
 using namespace std;
@@ -185,7 +187,50 @@ OptKernel* CudaEngine::CreateOptKernel(const ir::Node* node) const {
         return nullptr;
     }
 
+    auto param = opt_kernel->GetCommparam();
+    auto& quant = cuda_flags_.tensor_quants;
+    param->cuda_tensor_info = const_cast<std::vector<ppl::nn::cuda::CudaTensorQuant>*>(&quant);
     return opt_kernel;
+}
+
+ppl::common::RetCode CudaEngine::SerializeData(const pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    auto& quant = cuda_flags_.tensor_quants;
+    flatbuffers::FlatBufferBuilder builder;
+    std::vector<flatbuffers::Offset<pmx::cuda::CudaTensorQuant>> quant_vec;
+    quant_vec.resize(ctx.seq2eid.size());
+
+    for (uint32_t i = 0; i < ctx.seq2eid.size(); ++i) {
+        auto original_eid = ctx.seq2eid[i];
+        auto fb_tensor_quant = pmx::cuda::CreateCudaTensorQuantDirect(
+            builder,
+            quant[original_eid].format,
+            quant[original_eid].type,
+            quant[original_eid].per_channel,
+            quant[original_eid].bit_width,
+            &quant[original_eid].scale,
+            &quant[original_eid].zero_point);
+        quant_vec[i] = fb_tensor_quant;
+    }
+    auto fb_tensor_quants = pmx::cuda::CreateTensorQuantsDirect(builder, &quant_vec);
+    auto fb_cuda_engine_param = pmx::cuda::CreateCudaEngineParam(builder, pmx::cuda::CudaEngineParamType_TensorQuants, fb_tensor_quants.Union());
+    pmx::cuda::FinishCudaEngineParamBuffer(builder, fb_cuda_engine_param);
+    return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+}
+
+ppl::common::RetCode CudaEngine::DeserializeData(const void* base, uint64_t size) {
+    auto fb_cuda_engine_param = pmx::cuda::GetCudaEngineParam(base);
+    auto fb_tensor_quants = fb_cuda_engine_param->value_as_TensorQuants()->tensor_quants();
+    for (uint32_t i = 0; i < fb_tensor_quants->size(); ++i) {
+        CudaTensorQuant quant;
+        quant.format = fb_tensor_quants->Get(i)->format();
+        quant.type = fb_tensor_quants->Get(i)->type();
+        quant.per_channel = fb_tensor_quants->Get(i)->per_channel();
+        quant.bit_width = fb_tensor_quants->Get(i)->bit_width();
+        ppl::nn::pmx::utils::Fbvec2Stdvec(fb_tensor_quants->Get(i)->scale(), &quant.scale);
+        ppl::nn::pmx::utils::Fbvec2Stdvec(fb_tensor_quants->Get(i)->zero_point(), &quant.scale);
+        cuda_flags_.tensor_quants.push_back(quant);
+    }
+    return ppl::common::RC_SUCCESS;
 }
 #endif
 

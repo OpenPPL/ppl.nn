@@ -57,9 +57,6 @@ bool GemmAlgorithm::IsSupported(const ir::Node* node, const OptKernelOptions& op
 double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& options) {
     this->attr_param_ = *(reinterpret_cast<CudaGemmParam*>(options.param));
     options.compile_set->emplace(node->GetId());
-    if (node->GetInputCount() == 3) {
-        attr_param_.param.bias_term = 1;
-    }
 
     auto shape_in0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
     auto shape_in1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
@@ -127,7 +124,7 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
     // Padding
     shape_in1.SetDim(0, (shape_in1.GetDim(0) + align_size - 1) / align_size * align_size);
     shape_in1.SetDim(1, (shape_in1.GetDim(1) + align_size - 1) / align_size * align_size);
-    if (attr_param_.param.bias_term) {
+    if (attr_param_.extra_param.algo_info.has_bias) {
         shape_in2 = *options.tensors->find(node->GetInput(2))->second->GetShape();
         shape_in2.SetDim(0, (shape_in2.GetDim(0) + align_size - 1) / align_size * align_size);
     }
@@ -331,10 +328,10 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
         options.quants->at(preedge_id).format = postshape.GetDataFormat();
         options.quants->at(preedge_id).type = postshape.GetDataType();
     } else {
-        reinterpret_cast<CudaGemmParam*>(options.param)->extra_param.is_initializer_weight = 0;
+        reinterpret_cast<CudaGemmParam*>(options.param)->extra_param.algo_info.is_initializer_weight = 0;
     }
 
-    if (attr_param_.param.bias_term == 0) {
+    if (attr_param_.extra_param.algo_info.has_bias == false) {
         return RC_SUCCESS;
     }
 

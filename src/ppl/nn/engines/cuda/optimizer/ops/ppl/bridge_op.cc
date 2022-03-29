@@ -25,8 +25,7 @@ using namespace std;
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
-
-RetCode BridgeOp::Init(const OptKernelOptions& options) {
+BridgeOp::BridgeOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         auto& in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
         auto& out_shape = *info->GetOutput<TensorImpl>(0)->GetShape();
@@ -48,7 +47,9 @@ RetCode BridgeOp::Init(const OptKernelOptions& options) {
         info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(in_shape0.GetDims(), in_shape0.GetRealDimCount());
         return RC_SUCCESS;
     };
+}
 
+RetCode BridgeOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 

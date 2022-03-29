@@ -427,7 +427,6 @@ ppl::common::RetCode PPLCUDADeformConvForward(
     shape_c.SetDataType(ppl::common::DATATYPE_FLOAT16); \
     ppl::nn::onnx::GemmParam gemm_param;              \
     fuse_param_t fuse_param;                            \
-    gemm_param.bias_term = 0;                           \
     gemm_param.transA    = 0;                           \
     gemm_param.transB    = 1;                           \
     gemm_param.alpha     = 1.f;                         \

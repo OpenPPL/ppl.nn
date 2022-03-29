@@ -1,0 +1,24 @@
+namespace ppl.nn.pmx.cuda;
+
+table CudaTensorQuant {
+    format : int;
+    type : int;
+    per_channel : bool;
+    bit_width : int;
+    scale : [float];
+    zero_point : [float];
+}
+
+table TensorQuants {
+    tensor_quants : [CudaTensorQuant];
+}
+
+union CudaEngineParamType {
+    TensorQuants,
+}
+
+table CudaEngineParam {
+    value: CudaEngineParamType;
+}
+
+root_type CudaEngineParam;

@@ -61,7 +61,7 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     // convert filter only if the filter tensor is an output of another kernel
     BufferDesc weight_buffer;
     auto newshape = *weight->GetShape();
-    if (!param_->extra_param.is_initializer_weight) {
+    if (!param_->extra_param.algo_info.is_initializer_weight) {
         auto align_size = 8;
         newshape.SetDim(0, (newshape.GetDim(0) + align_size - 1) / align_size * align_size);
 
@@ -113,7 +113,7 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
             if (ret == tps.end())
                LOG(ERROR) << "fuse_info types error: no add op";
             int  id  =  ret - tps.begin();
-            auto elt_index = param_->extra_param.fuse_info.input_ind[id];
+            auto elt_index = param_->extra_param.fuse_info.input_inds[id];
             auto elt = ctx->GetInput<TensorImpl>(elt_index);
             auto elt_quant = GetCommonParam()->cuda_tensor_info->at(elt->GetEdge()->GetId());
             temp_quant_param.pre_scale = elt_quant.scale[0];

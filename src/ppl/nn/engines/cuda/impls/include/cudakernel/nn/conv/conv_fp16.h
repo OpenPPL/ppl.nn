@@ -72,6 +72,7 @@ struct algo_param_t {
     unsigned int splitf        = 1;
     bool is_initializer_weight = true;
     unsigned int gemm_batch    = 1;
+    bool has_bias = true;
 
     void UseDefaultF1Kernel()
     {
@@ -122,7 +123,7 @@ struct fuse_param_t {
 
 struct fuse_info_t {
     std::vector<std::string> types; // support fuse relu + add + relu right now
-    std::vector<uint32_t> input_ind; // save fused kernel's input index
+    std::vector<int32_t> input_inds; // save fused kernel's input index
     std::vector<void*> fuse_attrs; // save fused kernel's attributes
     int channel_size   = -1; // save total channel size for concat
     int channel_offset = -1; // save output offset if we fuse concat

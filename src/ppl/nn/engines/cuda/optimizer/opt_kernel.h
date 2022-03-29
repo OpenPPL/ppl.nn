@@ -98,6 +98,10 @@ public:
         return &common_param_;
     }
 
+    void* GetCommparamModule() const {
+        return common_param_.module;
+    }
+
     ppl::common::RetCode InferType(InputOutputInfo* info, std::vector<CudaTensorQuant>* quant,
                                    ppl::common::datatype_t type) const {
         return infer_type_func_(info, quant, type);
@@ -297,10 +301,10 @@ private:
             TensorShape& tensor_shape = *info->GetOutput<TensorImpl>(i)->GetShape();
             auto edge_id = info->GetOutput<TensorImpl>(i)->GetEdge()->GetId();
             auto data_type = (*common_param_.cuda_tensor_info)[edge_id].type;
-            auto data_foramt = (*common_param_.cuda_tensor_info)[edge_id].format;
+            auto data_format = (*common_param_.cuda_tensor_info)[edge_id].format;
             tensor_shape.SetDataType(data_type == ppl::common::DATATYPE_UNKNOWN ? pre_shape->GetDataType() : data_type);
-            tensor_shape.SetDataFormat(data_foramt == ppl::common::DATAFORMAT_UNKNOWN ? pre_shape->GetDataFormat()
-                                                                                      : data_foramt);
+            tensor_shape.SetDataFormat(data_format == ppl::common::DATAFORMAT_UNKNOWN ? pre_shape->GetDataFormat()
+                                                                                      : data_format);
         }
     }
 

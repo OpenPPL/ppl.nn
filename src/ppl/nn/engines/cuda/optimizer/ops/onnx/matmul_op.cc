@@ -29,7 +29,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 RetCode MatMulOp::Init(const OptKernelOptions& options) {
     param_.param.num_output = 1;
-    param_.param.bias_term = 0; // 0 or 1
+    param_.extra_param.algo_info.has_bias = GetNode()->GetInputCount() > 2 ? true : false;
     param_.param.alpha = 1;
     param_.param.beta = 1;
     param_.param.transA = 0;

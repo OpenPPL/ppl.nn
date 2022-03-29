@@ -57,9 +57,6 @@ bool MatMulAlgorithm::IsSupported(const ir::Node* node, const OptKernelOptions& 
 double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& options) {
     this->attr_param_ = *(reinterpret_cast<CudaGemmParam*>(options.param));
     options.compile_set->emplace(node->GetId());
-    if (node->GetInputCount() == 3) {
-        attr_param_.param.bias_term = 1;
-    }
 
     auto shape_in0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
     auto shape_in1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
@@ -142,7 +139,7 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     shape_in0.SetDim(dim_count0-1, (K + align_size - 1) / align_size * align_size);
     shape_in1.SetDim(dim_count1-2, (K + align_size - 1) / align_size * align_size);
     shape_out.SetDim(out_dim_count-1, (N + align_size - 1) / align_size * align_size);
-    if (attr_param_.param.bias_term) {
+    if (attr_param_.extra_param.algo_info.has_bias) {
         shape_in2 = *options.tensors->find(node->GetInput(2))->second->GetShape();
         shape_in2.SetDim(0, (shape_in2.GetDim(0) + align_size - 1) / align_size * align_size);
     }

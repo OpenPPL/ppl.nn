@@ -17,7 +17,6 @@
 
 #include "ppl/nn/engines/cuda/params/conv_extra_param.h"
 
-#include "ppl/nn/params/onnx/leaky_relu_param.h"
 #include "ppl/nn/common/logger.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
@@ -74,9 +73,6 @@ RetCode ConvertToForwardConvParam(const TensorShape& shape_in0, const TensorShap
     unsigned int flt_pad_size;
     GetPadSize(in_pad_size, shape_in0.GetDataType());
     GetPadSize(flt_pad_size, shape_in1.GetDataType());
-    // conv_param.num_chl_pad = (conv_param.num_chl + 7) / 8 * 8;
-    // conv_param.num_flt_pad = (conv_param.num_flt + 7) / 8 * 8;
-    // std::cout << "in pad size: " << in_pad_size << " flt_pad_size: " << flt_pad_size << std::endl;
     conv_param.num_chl_pad = Align(conv_param.num_chl, in_pad_size);
     conv_param.num_flt_pad = Align(conv_param.num_flt, flt_pad_size);
     conv_param.flt_height = shape_in1.GetDim(2);
@@ -89,7 +85,7 @@ RetCode ConvertToForwardConvParam(const TensorShape& shape_in0, const TensorShap
     conv_param.pad_width = normal_param.pads[1];
     conv_param.hole_height = normal_param.dilations[0];
     conv_param.hole_width = normal_param.dilations[1];
-    conv_param.has_bias = cuda_param.bias_term;
+    conv_param.has_bias = cuda_param.extra_param.algo_info.has_bias;
     return RC_SUCCESS;
 }
 #undef GetPadSize
@@ -97,7 +93,7 @@ RetCode ConvertToForwardConvParam(const TensorShape& shape_in0, const TensorShap
 
 RetCode ConvertToPrelu(uint32_t fuse_index, InputOutputInfo* info, CudaDevice* device, ConvFusionInfo fuse_info,
                        fuse_param_t& fuse_param) {
-    uint32_t prelu_input = fuse_info.input_ind[fuse_index];
+    uint32_t prelu_input = fuse_info.input_inds[fuse_index];
     const TensorShape& shape = *info->GetInput<TensorImpl>(prelu_input)->GetShape();
 
     if (fuse_index == 0) {
@@ -170,7 +166,7 @@ RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* device, con
 
     if (fuse_index < fuse_size && (fuse_info.types[fuse_index] == "Add" || fuse_info.types[fuse_index] == "Eltwise")) {
         fuse_param.has_elt = true;
-        uint32_t elt_input = fuse_info.input_ind[fuse_index];
+        uint32_t elt_input = fuse_info.input_inds[fuse_index];
         fuse_param.pre_data = info->GetInput<TensorImpl>(elt_input)->GetBufferPtr();
         fuse_index++;
     }
