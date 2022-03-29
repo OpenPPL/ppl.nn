@@ -79,9 +79,7 @@ RetCode OptGraph::InitTensorImpls() {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::Init(const utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info,
-                       ArmEngineOptions* options) {
-    resource_ = resource;
+RetCode OptGraph::Init(ir::Graph* graph, RuntimePartitionInfo* info, ArmEngineOptions* options) {
     graph_ = graph;
     info_ = info;
     options_ = options;
@@ -458,9 +456,9 @@ ppl::common::RetCode OptGraph::CreateArmOptKernel(const OptKernelOptions& option
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::DoOptimize(ArmDevice* device) {
+RetCode OptGraph::DoOptimize(const utils::SharedResource& resource, ArmDevice* device) {
     OptKernelOptions options;
-    options.resource = resource_;
+    options.resource = &resource;
     options.graph_data = graph_->data.get();
     options.graph_topo = graph_->topo.get();
     options.device = device;

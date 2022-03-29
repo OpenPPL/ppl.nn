@@ -55,15 +55,15 @@ bool X86Engine::Supports(const ir::Node* node) const {
     return (OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version) != nullptr);
 }
 
-RetCode X86Engine::DoOptimize(const utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
+RetCode X86Engine::DoOptimize(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
     OptGraph opt_graph;
-    auto status = opt_graph.Init(resource, graph, info);
+    auto status = opt_graph.Init(graph, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init OptGraph failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = opt_graph.DoOptimize(&device_);
+    status = opt_graph.DoOptimize(resource, &device_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "OptGraph DoOptimize failed: " << GetRetCodeStr(status);
         return status;
@@ -109,7 +109,7 @@ ppl::common::RetCode X86Engine::CalDataOmittedConstants(const ir::Graph& graph, 
     return ppl::common::RC_SUCCESS;
 }
 
-RetCode X86Engine::ProcessGraph(const utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
+RetCode X86Engine::ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
     auto status = DoOptimize(resource, graph, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "DoOptimize failed: " << GetRetCodeStr(status);

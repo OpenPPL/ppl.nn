@@ -35,15 +35,14 @@ protected:
         engines_.emplace_back(unique_ptr<EngineImpl>(new TmpEngine1()));
         engines_.emplace_back(unique_ptr<EngineImpl>(new TmpEngine2()));
 
-        resource_ = make_shared<utils::SharedResource>();
-        resource_->engines.resize(2);
-        resource_->engines[0] = engines_[0].get();
-        resource_->engines[1] = engines_[1].get();
-        resource_->graph_partitioner = make_shared<SpecialTypeGraphPartitioner>();
+        resource_.engines.resize(2);
+        resource_.engines[0] = engines_[0].get();
+        resource_.engines[1] = engines_[1].get();
+        resource_.graph_partitioner = make_shared<SpecialTypeGraphPartitioner>();
     }
 
     vector<unique_ptr<EngineImpl>> engines_;
-    shared_ptr<utils::SharedResource> resource_;
+    utils::SharedResource resource_;
 };
 
 TEST_F(OptimizerUtilsTest, basic_partition) {
@@ -58,7 +57,7 @@ TEST_F(OptimizerUtilsTest, basic_partition) {
     auto topo = graph->topo.get();
 
     auto graph_info = make_shared<RuntimeGraphInfo>();
-    auto status = utils::ProcessGraph(resource_.get(), graph, graph_info.get());
+    auto status = utils::ProcessGraph(resource_, graph, graph_info.get());
     EXPECT_EQ(RC_SUCCESS, status);
 
     LOG(DEBUG) << utils::ToGraphviz(topo);
@@ -88,7 +87,7 @@ TEST_F(OptimizerUtilsTest, converters_for_input) {
     auto topo = graph->topo.get();
 
     auto graph_info = make_shared<RuntimeGraphInfo>();
-    auto status = utils::ProcessGraph(resource_.get(), graph, graph_info.get());
+    auto status = utils::ProcessGraph(resource_, graph, graph_info.get());
     EXPECT_EQ(RC_SUCCESS, status);
 
     LOG(DEBUG) << utils::ToGraphviz(topo);
@@ -147,7 +146,7 @@ TEST_F(OptimizerUtilsTest, partition_sorting) {
     EXPECT_TRUE(node_i != nullptr);
 
     RuntimeGraphInfo graph_info;
-    auto status = utils::ProcessGraph(resource_.get(), graph, &graph_info);
+    auto status = utils::ProcessGraph(resource_, graph, &graph_info);
     EXPECT_EQ(RC_SUCCESS, status);
 
     LOG(DEBUG) << utils::ToGraphviz(topo);

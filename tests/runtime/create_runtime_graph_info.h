@@ -47,7 +47,7 @@ static inline std::shared_ptr<RuntimeGraphInfo> CreateRuntimeGraphInfoForTest(
     resource.graph_partitioner = std::make_shared<EngineGraphPartitioner>();
 
     auto graph_info = std::make_shared<RuntimeGraphInfo>();
-    auto status = utils::ProcessGraph(&resource, graph, graph_info.get());
+    auto status = utils::ProcessGraph(resource, graph, graph_info.get());
     EXPECT_EQ(ppl::common::RC_SUCCESS, status);
 
     EXPECT_EQ(1, graph_info->partitions.size());

@@ -42,13 +42,13 @@ struct SharedResource;
 namespace ppl { namespace nn { namespace cuda {
 
 struct OptKernelOptions final {
-    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* resource,
+    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* r,
                      CudaArgs* args, CompileInfo* compile_set, CudaDevice* device,
                      std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors, std::vector<CudaTensorQuant>* quants,
                      std::map<std::string, CudaArgs::AlgoSelects>* algos)
         : graph(graph)
         , info(info)
-        , resource(resource)
+        , resource(r)
         , args(args)
         , compile_set(compile_set)
         , device(device)
@@ -56,13 +56,13 @@ struct OptKernelOptions final {
         , quants(quants)
         , algos(algos) {}
 
-    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* resource,
+    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* r,
                      std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors)
-        : graph(graph), info(info), resource(resource), tensors(tensors) {}
-    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* resource,
+        : graph(graph), info(info), resource(r), tensors(tensors) {}
+    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* r,
                      CudaDevice* device, CUDAModuleManager* manager)
-        : graph(graph), info(info), resource(resource), device(device), cuda_module_manager(manager) {}
-    OptKernelOptions(ir::Graph* graph, const utils::SharedResource* resource) : graph(graph), resource(resource) {}
+        : graph(graph), info(info), resource(r), device(device), cuda_module_manager(manager) {}
+    OptKernelOptions(ir::Graph* graph, const utils::SharedResource* r) : graph(graph), resource(r) {}
 
     ir::Graph* graph;
     RuntimePartitionInfo* info;

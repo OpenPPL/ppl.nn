@@ -31,8 +31,8 @@ namespace ppl { namespace nn { namespace arm {
 class OptGraph final {
 public:
     OptGraph() : tensor_getter_(&tensor_impls_) {}
-    ppl::common::RetCode Init(const utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*, ArmEngineOptions*);
-    ppl::common::RetCode DoOptimize(ArmDevice*);
+    ppl::common::RetCode Init(ir::Graph*, RuntimePartitionInfo*, ArmEngineOptions*);
+    ppl::common::RetCode DoOptimize(const utils::SharedResource&, ArmDevice*);
 
 private:
     ppl::common::RetCode InitKernels(const ir::Graph* graph);
@@ -50,7 +50,6 @@ private:
                                             ArmOptKernel** kernel);
 
 private:
-    const utils::SharedResource* resource_ = nullptr;
     ir::Graph* graph_ = nullptr;
     RuntimePartitionInfo* info_ = nullptr;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>> tensor_impls_;

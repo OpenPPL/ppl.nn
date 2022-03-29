@@ -32,9 +32,8 @@ namespace ppl { namespace nn { namespace riscv {
 class OptGraph final {
 public:
     OptGraph() : tensor_getter_(&tensor_impls_) {}
-    ppl::common::RetCode Init(const utils::SharedResource*, ir::Graph*, RuntimePartitionInfo*,
-                              RiscvEngineOptions* options);
-    ppl::common::RetCode DoOptimize(RiscvDevice*);
+    ppl::common::RetCode Init(ir::Graph*, RuntimePartitionInfo*, RiscvEngineOptions* options);
+    ppl::common::RetCode DoOptimize(const utils::SharedResource&, RiscvDevice*);
 
 private:
     ppl::common::RetCode InitKernels(const ir::Graph* graph);
@@ -43,7 +42,6 @@ private:
     ppl::common::RetCode TryToInferDims(RiscvDevice* device);
 
 private:
-    const utils::SharedResource* resource_ = nullptr;
     ir::Graph* graph_ = nullptr;
     nn::RuntimePartitionInfo* info_ = nullptr;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>> tensor_impls_;

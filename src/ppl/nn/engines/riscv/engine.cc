@@ -49,15 +49,15 @@ bool RiscvEngine::Supports(const ir::Node* node) const {
     return ok;
 }
 
-RetCode RiscvEngine::DoOptimize(const utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
+RetCode RiscvEngine::DoOptimize(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
     OptGraph opt_graph;
-    auto status = opt_graph.Init(resource, graph, info, &options_);
+    auto status = opt_graph.Init(graph, info, &options_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init OptGraph failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = opt_graph.DoOptimize(&device_);
+    status = opt_graph.DoOptimize(resource, &device_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "OptGraph DoOptimize failed: " << GetRetCodeStr(status);
         return status;
@@ -103,7 +103,7 @@ ppl::common::RetCode RiscvEngine::CalDataOmittedConstants(const ir::Graph& graph
     return ppl::common::RC_SUCCESS;
 }
 
-RetCode RiscvEngine::ProcessGraph(const utils::SharedResource* resource, ir::Graph* graph, RuntimePartitionInfo* info) {
+RetCode RiscvEngine::ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
     auto status = DoOptimize(resource, graph, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "DoOptimize failed: " << GetRetCodeStr(status);
