@@ -20,6 +20,7 @@
 
 #include "ppl/kernel/riscv/fp16/fc.h"
 #include "ppl/kernel/riscv/common/internal_include.h"
+#include "ppl/kernel/riscv/common/fc/fc_common.h"
 
 namespace ppl { namespace kernel { namespace riscv {
 
@@ -36,6 +37,7 @@ public:
     ppl::common::RetCode execute() override;
 
 private:
+    fc_tunning_param tunning_param_;
     void cal_kernel_tunning_param();
     friend fc_fp16_vec128_manager;
 };
@@ -47,6 +49,9 @@ public:
         : fc_manager<__fp16>(param, allocator) {}
     ppl::common::RetCode gen_cvt_weights(const __fp16* filter, const __fp16* bias) override;
     fc_executor<__fp16>* gen_executor() override;
+
+private:
+    fc_tunning_param tunning_param_;
 };
 
 }}}; // namespace ppl::kernel::riscv

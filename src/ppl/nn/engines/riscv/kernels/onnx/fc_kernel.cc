@@ -40,10 +40,6 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
         return rc;
     }
 
-    if (A->GetShape()->GetDataFormat() != common::DATAFORMAT_N4CX && A->GetShape()->GetDataFormat() != common::DATAFORMAT_N8CX) {
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
     rc = GetRiscvDevice()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);

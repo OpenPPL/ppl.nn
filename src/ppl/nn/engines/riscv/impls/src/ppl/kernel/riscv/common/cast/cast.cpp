@@ -62,6 +62,8 @@ ppl::common::RetCode cast(
     switch (MAKE_CAST_TYPE(idt, odt)) {
         case MAKE_CAST_TYPE(ppl::common::DATATYPE_FLOAT16, ppl::common::DATATYPE_INT64):
             return cast_kernel<__fp16, int64_t>(src_shape, dst_shape, (__fp16*)src, (int64_t*)dst);
+        case MAKE_CAST_TYPE(ppl::common::DATATYPE_FLOAT16, ppl::common::DATATYPE_BOOL):
+            return cast_kernel<__fp16, uint8_t>(src_shape, dst_shape, (__fp16*)src, (uint8_t*)dst);
 
         case MAKE_CAST_TYPE(ppl::common::DATATYPE_FLOAT32, ppl::common::DATATYPE_INT64):
             return cast_kernel<float, int64_t>(src_shape, dst_shape, (float*)src, (int64_t*)dst);
@@ -80,6 +82,8 @@ ppl::common::RetCode cast(
         case MAKE_CAST_TYPE(ppl::common::DATATYPE_INT64, ppl::common::DATATYPE_BOOL):
             return cast_kernel<int64_t, uint8_t>(src_shape, dst_shape, (int64_t*)src, (uint8_t*)dst);
 
+        case MAKE_CAST_TYPE(ppl::common::DATATYPE_BOOL, ppl::common::DATATYPE_FLOAT16):
+            return cast_kernel<uint8_t, __fp16>(src_shape, dst_shape, (uint8_t*)src, (__fp16*)dst);
         case MAKE_CAST_TYPE(ppl::common::DATATYPE_BOOL, ppl::common::DATATYPE_FLOAT32):
             return cast_kernel<uint8_t, float>(src_shape, dst_shape, (uint8_t*)src, (float*)dst);
         case MAKE_CAST_TYPE(ppl::common::DATATYPE_BOOL, ppl::common::DATATYPE_INT64):
