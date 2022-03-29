@@ -33,7 +33,7 @@ ppl::common::RetCode UnsqueezeKernel::DoExecute(KernelExecContext* ctx) {
     }
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    if (data->GetEdge()->CalcConsumerCount() == 1 && data->GetType() == TENSORTYPE_NORMAL) {
+    if (ctx->IsLastConsumerOfInput(0) && data->GetType() == TENSORTYPE_NORMAL) {
         expanded->TransferBufferFrom(data);
         PPLNN_X86_DEBUG_TRACE("Output [expanded]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(expanded);

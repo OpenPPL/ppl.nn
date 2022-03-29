@@ -57,7 +57,7 @@ bool X86Engine::Supports(const ir::Node* node) const {
 
 RetCode X86Engine::DoOptimize(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
     OptGraph opt_graph;
-    auto status = opt_graph.Init(graph, info);
+    auto status = opt_graph.Init(resource, graph, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init OptGraph failed: " << GetRetCodeStr(status);
         return status;

@@ -38,7 +38,7 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
     const ppl::common::dataformat_t input_format = input->GetShape()->GetDataFormat();
     const ppl::common::dataformat_t output_format = output->GetShape()->GetDataFormat();
 
-    const bool may_inplace = input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL;
+    const bool may_inplace = ctx->IsLastConsumerOfInput(0) && input->GetType() == TENSORTYPE_NORMAL;
 
     if (ppl::common::GetSizeOfDataType(data_type) == 4) {
         if (input_format == ppl::common::DATAFORMAT_NDARRAY && output_format == ppl::common::DATAFORMAT_N16CX) {

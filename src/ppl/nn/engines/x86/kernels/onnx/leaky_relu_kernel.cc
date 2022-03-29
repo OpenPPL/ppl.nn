@@ -33,7 +33,7 @@ ppl::common::RetCode LeakyReluKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     auto lx = x;
-    if (x->GetEdge()->CalcConsumerCount() == 1 && x->GetType() == TENSORTYPE_NORMAL) {
+    if (ctx->IsLastConsumerOfInput(0) && x->GetType() == TENSORTYPE_NORMAL) {
         y->TransferBufferFrom(x);
         lx = y;
     } else {

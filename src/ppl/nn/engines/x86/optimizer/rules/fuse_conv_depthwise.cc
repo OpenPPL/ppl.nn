@@ -32,8 +32,12 @@ bool FuseConvDepthwise(const OptKernelOptions &options) {
         auto node = it->Get();
         if (node->GetType().domain == "" && node->GetType().name == "Conv") {
             auto conv_node = node;
-            auto conv_out_edge = graph_topo->GetEdgeById(node->GetOutput(0));
+            auto conv_output_edge_id = conv_node->GetOutput(0);
+            auto conv_out_edge = graph_topo->GetEdgeById(conv_output_edge_id);
             if (conv_out_edge->CalcConsumerCount() != 1) {
+                continue;
+            }
+            if (IsReservedEdge(tensors, conv_output_edge_id)) {
                 continue;
             }
             auto next_node = graph_topo->GetNodeById(conv_out_edge->CreateConsumerIter().Get());

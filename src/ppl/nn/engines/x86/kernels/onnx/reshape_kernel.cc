@@ -32,7 +32,7 @@ ppl::common::RetCode ReshapeKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(shape);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    if (data->GetEdge()->CalcConsumerCount() == 1 && data->GetType() == TENSORTYPE_NORMAL) {
+    if (ctx->IsLastConsumerOfInput(0) && data->GetType() == TENSORTYPE_NORMAL) {
         reshaped->TransferBufferFrom(data);
         PPLNN_X86_DEBUG_TRACE("Output [reshaped]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(reshaped);

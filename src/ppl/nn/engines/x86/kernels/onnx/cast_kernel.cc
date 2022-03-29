@@ -34,7 +34,7 @@ ppl::common::RetCode CastKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     if (ppl::common::GetSizeOfDataType(input->GetShape()->GetDataType()) == ppl::common::GetSizeOfDataType(output->GetShape()->GetDataType())
-        && input->GetEdge()->CalcConsumerCount() == 1
+        && ctx->IsLastConsumerOfInput(0)
         && input->GetType() == TENSORTYPE_NORMAL) {
         // inplace
         output->TransferBufferFrom(input);

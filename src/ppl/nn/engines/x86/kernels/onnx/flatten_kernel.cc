@@ -32,7 +32,7 @@ ppl::common::RetCode FlattenKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("axis: %d\n", param_->axis);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL) {
+    if (ctx->IsLastConsumerOfInput(0) && input->GetType() == TENSORTYPE_NORMAL) {
         output->TransferBufferFrom(input);
         PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);

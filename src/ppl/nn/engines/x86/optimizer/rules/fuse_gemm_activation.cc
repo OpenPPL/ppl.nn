@@ -37,7 +37,7 @@ bool FuseGemmActivation(const OptKernelOptions &options) {
             if (gemm_output_edge->CalcConsumerCount() != 1) {
                 continue;
             }
-            if (IsGraphOutput(graph_topo, gemm_output_edge_id)) {
+            if (IsReservedEdge(tensors, gemm_output_edge_id)) {
                 continue;
             }
 
