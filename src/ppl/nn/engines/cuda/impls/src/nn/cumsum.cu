@@ -1,5 +1,5 @@
 #include "cudakernel/nn/cumsum.h"
-#include <cub/cub.cuh>
+#include "cudakernel/common/common.cuh"
 
 
 constexpr inline int ceil_div(int n, int m) {
@@ -123,7 +123,114 @@ __global__ void tensor_kernel_scan_innermost_dim(
       row_buf, tgt_, src_, num_rows, row_size, init);
 }
 
+template<typename T>
+__device__ T ScanWarp(T val) {
+  int32_t lane = threadIdx.x & 31;
+  T tmp = __shfl_up_sync(0xffffffff, val, 1);
+  if (lane >= 1) {
+    val += tmp;
+  }
+  tmp = __shfl_up_sync(0xffffffff, val, 2);
+  if (lane >= 2) {
+    val += tmp;
+  }
+  tmp = __shfl_up_sync(0xffffffff, val, 4);
+  if (lane >= 4) {
+    val += tmp;
+  }
+  tmp = __shfl_up_sync(0xffffffff, val, 8);
+  if (lane >= 8) {
+    val += tmp;
+  }
+  tmp = __shfl_up_sync(0xffffffff, val, 16);
+  if (lane >= 16) {
+    val += tmp;
+  }
+  return val;
+}
 
+
+template<typename T>
+__device__ __forceinline__ T ScanBlock(T val) {
+  int32_t warp_id = threadIdx.x >> 5;
+  int32_t lane = threadIdx.x & 31;
+  __shared__ T warp_sum[32];
+  // scan each warp
+  val = ScanWarp(val);
+  __syncthreads();
+  // write sum of each warp to warp_sum
+  if (lane == 31) {
+    warp_sum[warp_id] = val;
+  }
+  __syncthreads();
+  // use a single warp to scan warp_sum
+  if (warp_id == 0) {
+    warp_sum[lane] = ScanWarp(warp_sum[lane]);
+  }
+  __syncthreads();
+  // add base
+  if (warp_id > 0) {
+    val += warp_sum[warp_id - 1];
+  }
+  __syncthreads();
+  return val;
+}
+
+
+
+
+
+
+
+
+template<typename T>
+__global__ void ReducePartSumKernelSinglePass(const T* input,
+                                              T* g_part_sum, int n,
+                                              int part_size) {
+  // this block process input[part_begin:part_end]
+  size_t part_begin = blockIdx.x * part_size;
+  size_t part_end = (blockIdx.x + 1) * part_size < n ? (blockIdx.x + 1) * part_size : n;
+  // part_sum
+  T part_sum = 0;
+  for (size_t i = part_begin + threadIdx.x; i < part_end; i += blockDim.x) {
+    part_sum += input[i];
+  }
+  part_sum = BlockReduceSum(part_sum);
+  if (threadIdx.x == 0) {
+    g_part_sum[blockIdx.x] = part_sum;
+  }
+}
+
+template<typename T>
+__global__ void ScanWithBaseSumSinglePass(const T* input,
+                                          T* g_base_sum, T* output,
+                                          int n, int part_size) {
+  // base sum
+  __shared__ T base_sum;
+  if (threadIdx.x == 0) {
+    if (blockIdx.x == 0) {
+      base_sum = 0;
+    } else {
+      base_sum = g_base_sum[blockIdx.x - 1];
+    }
+  }
+  __syncthreads();
+  // this block process input[part_begin:part_end]
+  size_t part_begin = blockIdx.x * part_size;
+  size_t part_end = (blockIdx.x + 1) * part_size;
+  for (size_t i = part_begin + threadIdx.x; i < part_end; i += blockDim.x) {
+    T val = i < n ? input[i] : 0;
+    val = ScanBlock<T>(val);
+    if (i < n) {
+      output[i] = val + base_sum;
+    }
+    __syncthreads();
+    if (threadIdx.x == blockDim.x - 1) {
+      base_sum += val;
+    }
+    __syncthreads();
+  }
+}
 
 
 ppl::common::RetCode PPLCUDACumsumForwardImp(
@@ -133,44 +240,50 @@ ppl::common::RetCode PPLCUDACumsumForwardImp(
     const void* input,
     void* output)
 {
-    int num_elems = input_shape->GetElementsIncludingPadding();
-    int num_dims = input_shape->GetDimCount();
-    int row_size = input_shape->GetDim(axis);
-    if(row_size == num_elems) {
-      void *d_temp_storage = NULL;
-      size_t temp_storage_bytes = 0;
-      cub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, (const float*)input, (float*)output, num_elems);
-// Allocate temporary storage for inclusive prefix sum
-      cudaMalloc(&d_temp_storage, temp_storage_bytes);
-// Run inclusive prefix sum
-      cub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, (const float*)input, (float*)output, num_elems);
-      cudaFree(d_temp_storage);
-    } else if(axis == num_dims - 1) {
-        int num_rows = num_elems / row_size;
-        dim3 threads(16, 32);
-        dim3 grid(ceil_div(num_rows, threads.y));
-        tensor_kernel_scan_innermost_dim<float, 16, 32><<<grid, threads, 0, stream>>>(
-        (float*)output, (const float*)input, num_rows, row_size, 0);
+  int num_elems = input_shape->GetElementsIncludingPadding();
+  int num_dims = input_shape->GetDimCount();
+  int row_size = input_shape->GetDim(axis);
 
-    } else {
-        int num_orows = 1;
-        int num_irows = 1;
-        for(int i = 0; i < axis; i++)
-            num_orows *= input_shape->GetDim(i);
-        for(int i = axis + 1; i < num_dims; i++)
-            num_irows *= input_shape->GetDim(i);
-
-        dim3 threads(std::min(512, num_irows));
-        dim3 grid(num_orows, ceil_div(num_irows, threads.x));
-
-        tensor_kernel_scan_outer_dim<float><<<grid, threads, 0, stream>>>(
-            (float*)output, (const float*)input,
-            num_orows, num_irows, row_size, 0);
-
-    }
-    return ppl::common::RC_SUCCESS;
-
-
-
-
+  #define CASE(TYPE)           \
+  if(row_size == num_elems) {       \
+    size_t part_num = 1024;           \
+    size_t part_size = (num_elems + part_num - 1) / part_num;        \
+    TYPE* part_sum = nullptr;                                   \
+    cudaMalloc((void**)part_sum, part_num*sizeof(TYPE));            \
+    ReducePartSumKernelSinglePass<TYPE><<<part_num, 1024, 0, stream>>>((const TYPE*)input, (TYPE*)part_sum, num_elems, part_size);   \
+    ScanWithBaseSumSinglePass<TYPE><<<1, 1024, 0, stream>>>(         \
+        (const TYPE*)part_sum, (TYPE*)part_sum, (TYPE*)part_sum, part_num, part_num);          \
+    ScanWithBaseSumSinglePass<TYPE><<<part_num, 1024, 0, stream>>>(               \
+        (const TYPE*)input, (TYPE*)part_sum, (TYPE*)output, num_elems, part_size);      \
+  } else if(axis == num_dims - 1) {                 \
+      int num_rows = num_elems / row_size;              \
+      dim3 threads(16, 32);                      \
+      dim3 grid(ceil_div(num_rows, threads.y));            \
+      tensor_kernel_scan_innermost_dim<TYPE, 16, 32><<<grid, threads, 0, stream>>>(          \
+      (TYPE*)output, (const TYPE*)input, num_rows, row_size, 0);            \
+  } else {                                                                    \
+      int num_orows = 1;                                        \
+      int num_irows = 1;                                     \
+      for(int i = 0; i < axis; i++)                        \
+          num_orows *= input_shape->GetDim(i);              \
+      for(int i = axis + 1; i < num_dims; i++)                    \
+          num_irows *= input_shape->GetDim(i);                  \
+      dim3 threads(num_irows < 512 ? num_irows : 512);                            \
+      dim3 grid(num_orows, ceil_div(num_irows, threads.x));                    \
+      tensor_kernel_scan_outer_dim<TYPE><<<grid, threads, 0, stream>>>(               \
+          (TYPE*)output, (const TYPE*)input,                                \
+          num_orows, num_irows, row_size, 0);                            \
+  }                                                                     \
+  return ppl::common::RC_SUCCESS;         
+  if (input_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
+    CASE(float)
+  } else if (input_shape->GetDataType() == ppl::common::DATATYPE_INT16) {
+    CASE(int16_t)
+  } else if (input_shape->GetDataType() == ppl::common::DATATYPE_INT32) {
+    CASE(int32_t)
+  } else if (input_shape->GetDataType() == ppl::common::DATATYPE_INT64) {
+    CASE(int64_t)
+  } else {
+    return ppl::common::RC_UNSUPPORTED;
+  }
 }
