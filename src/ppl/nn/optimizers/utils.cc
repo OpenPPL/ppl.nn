@@ -52,10 +52,7 @@ static ir::Edge* CreateEdge(const string& name_prefix, ir::GraphTopo* topo) {
     uint32_t suffix_num = 0;
     pair<ir::Edge*, bool> ret_pair = {nullptr, false};
     do {
-        // older android ndk does not support std::to_string
-        char buf[8];
-        int buf_len = sprintf(buf, "%u", suffix_num);
-        const string edge_name = name_prefix + "_" + string(buf, buf_len);
+        const string edge_name = name_prefix + "_" + std::to_string(suffix_num);
         ++suffix_num;
         if (suffix_num > 1000) {
             LOG(ERROR) << "create edge[" << name_prefix << "] failed after trying 1000 times.";
@@ -73,10 +70,7 @@ static ir::Node* CreateConverterNode(const string& name_prefix, ir::GraphTopo* t
 
     uint32_t suffix_num = 0;
     do {
-        // older android ndk does not support std::to_string
-        char buf[8];
-        int buf_len = sprintf(buf, "%u", suffix_num);
-        const string node_name(name_prefix + "_" + string(buf, buf_len));
+        const string node_name = name_prefix + "_" + std::to_string(suffix_num);
         ret_pair = topo->AddNode(node_name);
         ++suffix_num;
         if (suffix_num > 1000) {
@@ -126,6 +120,7 @@ static void CollectCommonEdges(const set<edgeid_t>& parent_outputs, const vector
     }
 }
 
+/** add converter nodes to copy/convert outputs to target devices */
 static ir::Node* AddConverterNodeAndOutputs(const vector<edgeid_t>& common_edges, const vector<nodeid_t>& successors,
                                             const string& name_prefix, ir::GraphTopo* topo) {
     auto converter_node = CreateConverterNode(name_prefix, topo);
@@ -141,7 +136,7 @@ static ir::Node* AddConverterNodeAndOutputs(const vector<edgeid_t>& common_edges
         return nullptr;
     }
 
-    // set converter node's inputs and outputs
+    // set converter node's inputs and outputs: copy/convert inputs to outputs
     for (uint32_t i = 0; i < common_edges.size(); ++i) {
         converter_node->AddInput(common_edges[i]);
         converter_node->AddOutput(new_outputs[i]);
@@ -153,6 +148,7 @@ static ir::Node* AddConverterNodeAndOutputs(const vector<edgeid_t>& common_edges
         out_edge->SetProducer(converter_node->GetId());
     }
 
+    // replace old inputs of successors with converted edges
     for (auto x = successors.begin(); x != successors.end(); ++x) {
         auto successor = topo->GetNodeById(*x);
 
@@ -207,10 +203,11 @@ static RetCode InsertConverterNodesForPartitions(const vector<EngineImpl*>& node
         }
 
         for (auto x = engine_node_groups.begin(); x != engine_node_groups.end(); ++x) {
-            // common edges between parent and successors that are assigned to this engine
+            // common edges between parent and successors that are assigned to the same engine
             vector<edgeid_t> common_edges;
             CollectCommonEdges(parent_outputs, x->second, topo, &common_edges);
 
+            // copy/convert inputs(common_edges) to outputs and replace inputs of successors
             auto converter_node =
                 AddConverterNodeAndOutputs(common_edges, x->second, "converter_of_" + parent->GetName(), topo);
             if (!converter_node) {
@@ -456,6 +453,7 @@ RetCode ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, Ru
         return status;
     }
 
+    // the second parameter is the producer engine of converter node's outputs
     vector<pair<nodeid_t, EngineImpl*>> converter_nodes;
     if (partitions.size() > 1) {
         auto node2engine = GenNode2Engine(partitions, graph->topo->GetMaxNodeId());
