@@ -17,10 +17,11 @@
 
 #include "ppl/nn/engines/common/ppl/shape_operation_kernel.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace common {
 
-ppl::common::RetCode PPLShapeOperationKernel::DoExecute(KernelExecContext* ctx) {
+RetCode PPLShapeOperationKernel::DoExecute(KernelExecContext* ctx) {
     auto data = ctx->GetInput<TensorImpl>(0);
     auto input_dim_size = ctx->GetInput<TensorImpl>(0)->GetShape()->GetRealDimCount();
     for (size_t i = 0; i < ctx->GetOutputCount(); ++i) {
@@ -32,14 +33,20 @@ ppl::common::RetCode PPLShapeOperationKernel::DoExecute(KernelExecContext* ctx) 
         }
         auto& matrix = pair->second;
         auto dim_size = matrix.real_dim < 0 ? input_dim_size : matrix.real_dim;
-        shape->GetShape()->SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-        shape->GetShape()->SetDataType(ppl::common::DATATYPE_INT64);
+        shape->GetShape()->SetDataFormat(DATAFORMAT_NDARRAY);
+        shape->GetShape()->SetDataType(DATATYPE_INT64);
         if (matrix.scalar) {
             shape->GetShape()->ReshapeAsScalar();
         } else {
             shape->GetShape()->Reshape({dim_size});
         }
-        shape->ReallocBuffer();
+
+        shape->SetDevice(GetEngineContext()->GetDevice());
+        auto status = shape->ReallocBuffer();
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "allocate memory for tensor[" << shape->GetName() << "] failed: " << GetRetCodeStr(status);
+            return status;
+        }
 
         std::unique_ptr<int64_t[]> shape_host(new int64_t[dim_size]);
         for (uint32_t j = 0; j < dim_size; ++j) {
@@ -55,7 +62,7 @@ ppl::common::RetCode PPLShapeOperationKernel::DoExecute(KernelExecContext* ctx) 
         }
         shape->CopyFromHost(shape_host.get());
     }
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::common

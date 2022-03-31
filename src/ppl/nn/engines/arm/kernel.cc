@@ -34,6 +34,7 @@ ppl::common::RetCode ArmKernel::BeforeExecute(KernelExecContext* ctx) {
 
     for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto tensor = ctx->GetOutput<TensorImpl>(i);
+        tensor->SetDevice(GetArmDevice());
         status = tensor->ReallocBuffer();
         if (status != ppl::common::RC_SUCCESS) {
             LOG(ERROR) << "ReallocBuffer for tensor[" << tensor->GetName()

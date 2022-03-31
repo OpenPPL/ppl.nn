@@ -45,6 +45,7 @@ ppl::common::RetCode ConcatKernel::BeforeExecute(KernelExecContext* ctx) {
     for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto tensor = ctx->GetOutput<TensorImpl>(i);
         auto device = GetCudaDevice();
+        tensor->SetDevice(device);
         auto edge2buffer = device->GetEdge2Buffer();
         auto ptr = edge2buffer->find(GetNode()->GetOutput(i));
         if (ptr != edge2buffer->end()) {

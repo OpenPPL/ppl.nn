@@ -228,13 +228,14 @@ static RetCode InitSubgraphInputs(const KernelExecContext& ctx, bool keep_going,
     return RC_SUCCESS;
 }
 
-static RetCode SetOutputsFromInputs(const LoopInfo& info, const string& loop_kernel_name, Device* tmp_cpu_device,
-                                    RuntimeImpl* subgraph, KernelExecContext* ctx) {
+static RetCode SetOutputsFromInputs(const LoopInfo& info, const string& loop_kernel_name,Device* kernel_dev,
+                                    Device* tmp_cpu_device, RuntimeImpl* subgraph, KernelExecContext* ctx) {
     // copy loop carried deps from loop's input
     for (uint32_t i = 0; i < info.loop_carried_dep_num; ++i) {
         auto src = ctx->GetInput<TensorImpl>(i + 2); // skip `M` and `cond`
         auto dst = ctx->GetOutput<TensorImpl>(i);
 
+        dst->SetDevice(kernel_dev);
         *dst->GetShape() = *src->GetShape();
 
         auto status = utils::CopyTensorBuffer(*src, dst, tmp_cpu_device);
@@ -269,7 +270,7 @@ static RetCode SetOutputsFromInputs(const LoopInfo& info, const string& loop_ker
     return RC_SUCCESS;
 }
 
-static RetCode SetOutputsFromSubgraph(const LoopInfo& info, Device* tmp_cpu_device,
+static RetCode SetOutputsFromSubgraph(const LoopInfo& info, Device* kernel_dev, Device* tmp_cpu_device,
                                       LoopConcatOutputFunc concat_output_func, RuntimeImpl* subgraph,
                                       KernelExecContext* ctx) {
     // copy loop carried deps from subgraph's output
@@ -277,6 +278,7 @@ static RetCode SetOutputsFromSubgraph(const LoopInfo& info, Device* tmp_cpu_devi
         auto src = subgraph->GetOutputTensorImpl(i + 1);
         auto dst = ctx->GetOutput<TensorImpl>(i);
 
+        dst->SetDevice(kernel_dev);
         *dst->GetShape() = *src->GetShape();
 
         // srcs are already synchronized by subgraph->Sync()
@@ -365,8 +367,10 @@ RetCode LoopKernel::DoExecute(KernelExecContext* ctx) {
         return status;
     }
 
+    auto device = GetEngineContext()->GetDevice();
+
     if (!keep_going) {
-        return SetOutputsFromInputs(loop_info, GetName(), &tmp_cpu_device, &subgraph_, ctx);
+        return SetOutputsFromInputs(loop_info, GetName(), device, &tmp_cpu_device, &subgraph_, ctx);
     }
 
     const int64_t max_trip_count = GetMaxTripCount(*ctx);
@@ -407,14 +411,14 @@ RetCode LoopKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     if (trip_count == 0) {
-        status = SetOutputsFromInputs(loop_info, GetName(), &tmp_cpu_device, &subgraph_, ctx);
+        status = SetOutputsFromInputs(loop_info, GetName(), device, &tmp_cpu_device, &subgraph_, ctx);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "SetOutputsFromInputs of loop kernel[" << GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
         }
     } else {
         SaveSubgraphOutputs(&subgraph_, &loop_info);
-        status = SetOutputsFromSubgraph(loop_info, &tmp_cpu_device, concat_output_func_, &subgraph_, ctx);
+        status = SetOutputsFromSubgraph(loop_info, device, &tmp_cpu_device, concat_output_func_, &subgraph_, ctx);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "SetOutputsFromSubgraph of loop kernel[" << GetName()
                        << "] failed: " << GetRetCodeStr(status);

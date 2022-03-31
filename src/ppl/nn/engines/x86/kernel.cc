@@ -62,6 +62,7 @@ RetCode X86Kernel::Execute(KernelExecContext* ctx) {
         // TODO: discard the boundary case of conv/pool/deconv, and try to remove this thing
         for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
             auto tensor = ctx->GetOutput<TensorImpl>(i);
+            tensor->SetDevice(GetX86Device());
             status = tensor->ReallocBuffer();
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "ReallocBuffer for tensor[" << tensor->GetName() << "] failed: " << GetRetCodeStr(status);

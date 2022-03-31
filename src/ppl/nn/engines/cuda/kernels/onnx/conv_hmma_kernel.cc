@@ -31,6 +31,7 @@ ppl::common::RetCode ConvHmmaKernel::BeforeExecute(KernelExecContext* ctx) {
     for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto tensor = ctx->GetOutput<TensorImpl>(i);
         auto device = GetCudaDevice();
+        tensor->SetDevice(device);
         auto concat_edge_id = param_->extra_param.fuse_info.concat_edge_id;
         if (param_->extra_param.fuse_info.channel_offset >= 0) {
             auto edge2buffer = device->GetEdge2Buffer();

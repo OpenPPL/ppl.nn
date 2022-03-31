@@ -69,6 +69,7 @@ RetCode CudaKernel::BeforeExecute(KernelExecContext* ctx) {
 
     for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto tensor = ctx->GetOutput<TensorImpl>(i);
+        tensor->SetDevice(GetCudaDevice());
         status = tensor->ReallocBuffer();
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "ReallocBuffer for tensor[" << tensor->GetName() << "] failed: " << GetRetCodeStr(status);
@@ -116,8 +117,8 @@ bool CudaKernel::CanDoExecute(const KernelExecContext& ctx) const {
 
 RetCode CudaKernel::Execute(KernelExecContext* ctx) {
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-    CudaTimingGuard __timing_guard__(GetCudaDevice()->GetStream(), &exec_begin_event_,
-                                     &exec_end_event_, ctx->IsProfilingEnabled());
+    CudaTimingGuard __timing_guard__(GetCudaDevice()->GetStream(), &exec_begin_event_, &exec_end_event_,
+                                     ctx->IsProfilingEnabled());
 #endif
 
     auto status = BeforeExecute(ctx);

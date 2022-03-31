@@ -74,6 +74,7 @@
 
 #define PPLNN_X86_REALLOC_TENSOR_BUFFER(X) \
     do {\
+        X->SetDevice(GetX86Device());\
         auto status = X->ReallocBuffer();\
         if (status != ppl::common::RC_SUCCESS) {\
             LOG(ERROR) << "ReallocBuffer for tensor[" << X->GetName() << "] failed: " << ppl::common::GetRetCodeStr(status);\

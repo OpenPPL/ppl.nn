@@ -30,11 +30,13 @@ RetCode ConverterKernel::DoExecute(KernelExecContext* ctx) {
         return RC_INVALID_VALUE;
     }
 
+    auto kernel_device = GetEngineContext()->GetDevice();
     utils::GenericCpuDevice tmp_cpu_device;
     for (uint32_t i = 0; i < ctx->GetInputCount(); ++i) {
         auto src = ctx->GetInput<TensorImpl>(i);
         auto dst = ctx->GetOutput<TensorImpl>(i);
 
+        dst->SetDevice(kernel_device);
         auto src_barrier = src->GetBarrier();
         if (src_barrier) {
             auto status = src_barrier->Sync();
