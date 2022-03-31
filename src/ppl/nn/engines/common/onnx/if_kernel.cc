@@ -82,11 +82,12 @@ static RetCode SetExtraInputs(const KernelExecContext& ctx, const vector<uint32_
     return RC_SUCCESS;
 }
 
-static RetCode SetOutputs(RuntimeImpl* subgraph, KernelExecContext* ctx, Device* tmp_cpu_device) {
+static RetCode SetOutputs(RuntimeImpl* subgraph, KernelExecContext* ctx, Device* kernel_dev, Device* tmp_cpu_device) {
     for (uint32_t i = 0; i < subgraph->GetOutputCount(); ++i) {
         auto src = subgraph->GetOutputTensorImpl(i);
         auto dst = ctx->GetOutput<TensorImpl>(i);
 
+        dst->SetDevice(kernel_dev);
         *dst->GetShape() = *src->GetShape();
 
         // outputs are already synchronized by subgraph->Sync()
@@ -166,7 +167,7 @@ RetCode IfKernel::DoExecute(KernelExecContext* ctx) {
         return status;
     }
 
-    return SetOutputs(subgraph, ctx, &tmp_cpu_device);
+    return SetOutputs(subgraph, ctx, GetEngineContext()->GetDevice(), &tmp_cpu_device);
 }
 
 }}} // namespace ppl::nn::common

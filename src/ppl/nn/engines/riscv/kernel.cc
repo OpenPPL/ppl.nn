@@ -39,6 +39,7 @@ RetCode RiscvKernel::BeforeExecute(KernelExecContext* ctx) {
 
     for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto tensor = ctx->GetOutput<TensorImpl>(i);
+        tensor->SetDevice(GetRiscvDevice());
         status = tensor->ReallocBuffer();
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "ReallocBuffer for tensor[" << tensor->GetName() << "] failed: " << GetRetCodeStr(status);

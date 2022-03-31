@@ -38,12 +38,8 @@ class SchedulerAcquireObject final : public InputOutputInfo::AcquireObject {
 public:
     SchedulerAcquireObject(const ir::GraphTopo* topo, vector<EdgeObject*>* edgeid2object,
                            ObjectPool<TensorImpl>* tensor_pool, ObjectPool<TensorSequence>* tensor_sequence_pool)
-        : device_(nullptr), topo_(topo), edgeid2object_(edgeid2object), tensor_pool_(tensor_pool)
+        : topo_(topo), edgeid2object_(edgeid2object), tensor_pool_(tensor_pool)
         , tensor_sequence_pool_(tensor_sequence_pool) {}
-
-    void SetDevice(Device* d) {
-        device_ = d;
-    }
 
     EdgeObject* Acquire(edgeid_t eid, uint32_t etype) override {
         if (eid >= edgeid2object_->size()) {
@@ -56,7 +52,6 @@ public:
 
             if (etype == EdgeObject::T_TENSOR) {
                 auto tensor = tensor_pool_->Alloc(edge, TENSORTYPE_NORMAL);
-                tensor->SetDevice(device_);
                 object = tensor;
             } else if (etype == EdgeObject::T_TENSOR_SEQUENCE) {
                 object = tensor_sequence_pool_->Alloc(edge);
@@ -77,7 +72,6 @@ public:
     };
 
 private:
-    Device* device_;
     const ir::GraphTopo* topo_;
     vector<EdgeObject*>* edgeid2object_;
     ObjectPool<TensorImpl>* tensor_pool_;
@@ -121,7 +115,6 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
     for (auto x = aux_info_->sorted_nodes.begin(); x != aux_info_->sorted_nodes.end(); ++x) {
         auto kernel = graph_->nodeid2kernel[*x].get();
         ctx.SetNode(kernel->GetNode());
-        getter.SetDevice(kernel->GetEngineContext()->GetDevice());
 
         auto status = utils::ExecuteKernel(kernel, &ctx, release_object_func, profiler);
         if (status != RC_SUCCESS) {
