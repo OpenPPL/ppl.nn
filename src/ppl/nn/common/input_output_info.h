@@ -20,6 +20,7 @@
 
 #include "ppl/nn/ir/node.h"
 #include "ppl/nn/runtime/edge_object.h"
+#include <functional>
 
 namespace ppl { namespace nn {
 
@@ -29,23 +30,15 @@ namespace ppl { namespace nn {
 */
 class InputOutputInfo {
 public:
-    /** @brief a wrapper for getting the corresponding object of the specified id and type. */
-    class AcquireObject {
-    public:
-        virtual ~AcquireObject() {}
-        virtual EdgeObject* Acquire(edgeid_t eid, uint32_t etype) = 0;
-    };
-
-public:
     virtual ~InputOutputInfo() {}
 
     void SetNode(const ir::Node* node) {
         node_ = node;
     }
 
-    /** @brief sets a getter class which requires an edgeid `eid` and `etype` and returns the corresponding object. */
-    void SetAcquireObject(AcquireObject* getter) {
-        getter_ = getter;
+    /** @brief sets a getter function which accepts edgeid `eid` and `etype` and returns the corresponding object. */
+    void SetAcquireFunc(const std::function<EdgeObject*(edgeid_t, uint32_t)>& f) {
+        acquire_func_ = f;
     }
 
     uint32_t GetInputCount() const {
@@ -55,7 +48,7 @@ public:
     template <typename T>
     T* GetInput(uint32_t idx) const {
         auto eid = node_->GetInput(idx);
-        return static_cast<T*>(getter_->Acquire(eid, EdgeObjectType<T>::value));
+        return static_cast<T*>(acquire_func_(eid, EdgeObjectType<T>::value));
     }
 
     uint32_t GetExtraInputCount() const {
@@ -65,7 +58,7 @@ public:
     template <typename T>
     T* GetExtraInput(uint32_t idx) const {
         auto eid = node_->GetExtraInput(idx);
-        return static_cast<T*>(getter_->Acquire(eid, EdgeObjectType<T>::value));
+        return static_cast<T*>(acquire_func_(eid, EdgeObjectType<T>::value));
     }
 
     uint32_t GetOutputCount() const {
@@ -75,12 +68,12 @@ public:
     template <typename T>
     T* GetOutput(uint32_t idx) const {
         auto eid = node_->GetOutput(idx);
-        return static_cast<T*>(getter_->Acquire(eid, EdgeObjectType<T>::value));
+        return static_cast<T*>(acquire_func_(eid, EdgeObjectType<T>::value));
     }
 
 protected:
     const ir::Node* node_ = nullptr;
-    AcquireObject* getter_ = nullptr;
+    std::function<EdgeObject*(edgeid_t, uint32_t)> acquire_func_;
 };
 
 }} // namespace ppl::nn

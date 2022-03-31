@@ -17,7 +17,6 @@
 
 #include "ppl/nn/engines/riscv/optimizer/rules/utils.h"
 #include "ppl/nn/engines/riscv/optimizer/opt_rule_manager.h"
-#include "ppl/nn/engines/riscv/optimizer/tensor_getter.h"
 
 namespace ppl { namespace nn { namespace riscv {
 
@@ -148,8 +147,13 @@ bool LayoutOptimize(const OptKernelOptions& options) {
 
         InputOutputInfo IOinfo;
         IOinfo.SetNode(node);
-        TensorGetter tensor_getter(&tensors);
-        IOinfo.SetAcquireObject(&tensor_getter);
+        IOinfo.SetAcquireFunc([&tensors](edgeid_t eid, uint32_t) -> EdgeObject* {
+            auto iter = tensors.find(eid);
+            if (iter == tensors.end()) {
+                return nullptr;
+            }
+            return iter->second.get();
+        });
 
         {
             auto status = kernel->SelectAlgorithm(IOinfo, options);

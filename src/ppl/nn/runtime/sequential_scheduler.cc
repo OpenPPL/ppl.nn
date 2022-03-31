@@ -34,27 +34,21 @@ RetCode SequentialScheduler::Init(const ir::GraphTopo* topo, const RuntimeAuxInf
     return RC_SUCCESS;
 }
 
-class SchedulerAcquireObject final : public InputOutputInfo::AcquireObject {
-public:
-    SchedulerAcquireObject(const ir::GraphTopo* topo, vector<EdgeObject*>* edgeid2object,
-                           ObjectPool<TensorImpl>* tensor_pool, ObjectPool<TensorSequence>* tensor_sequence_pool)
-        : topo_(topo), edgeid2object_(edgeid2object), tensor_pool_(tensor_pool)
-        , tensor_sequence_pool_(tensor_sequence_pool) {}
-
-    EdgeObject* Acquire(edgeid_t eid, uint32_t etype) override {
-        if (eid >= edgeid2object_->size()) {
+RetCode SequentialScheduler::Run(Profiler* profiler) {
+    auto acquire_object_func = [this](edgeid_t eid, uint32_t etype) -> EdgeObject* {
+        if (eid >= graph_->edgeid2object.size()) {
             return nullptr;
         }
 
-        auto object = edgeid2object_->at(eid);
+        auto object = graph_->edgeid2object[eid];
         if (!object) {
             auto edge = topo_->GetEdgeById(eid);
 
             if (etype == EdgeObject::T_TENSOR) {
-                auto tensor = tensor_pool_->Alloc(edge, TENSORTYPE_NORMAL);
+                auto tensor = tensor_pool_.Alloc(edge, TENSORTYPE_NORMAL);
                 object = tensor;
             } else if (etype == EdgeObject::T_TENSOR_SEQUENCE) {
-                object = tensor_sequence_pool_->Alloc(edge);
+                object = tensor_sequence_pool_.Alloc(edge);
             } else if (etype == EdgeObject::T_EDGE_OBJECT) {
                 return nullptr;
             } else {
@@ -66,19 +60,11 @@ public:
                 LOG(ERROR) << "create output object[" << edge->GetName() << "] failed, oom";
                 return nullptr;
             }
-            edgeid2object_->at(eid) = object;
+            graph_->edgeid2object[eid] = object;
         }
         return object;
     };
 
-private:
-    const ir::GraphTopo* topo_;
-    vector<EdgeObject*>* edgeid2object_;
-    ObjectPool<TensorImpl>* tensor_pool_;
-    ObjectPool<TensorSequence>* tensor_sequence_pool_;
-};
-
-RetCode SequentialScheduler::Run(Profiler* profiler) {
     auto release_object_func = [this](EdgeObject* object, nodeid_t user) -> RetCode {
         auto eid = object->GetEdge()->GetId();
         if (aux_info_->edge_last_consumer[eid] == user) {
@@ -106,11 +92,9 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
 #endif
 
     KernelExecContext ctx;
+    ctx.SetAcquireFunc(acquire_object_func);
     ctx.SetProfilingFlag(profiler->IsProfilingEnabled());
     ctx.SetEdgeLastConsumerList(&aux_info_->edge_last_consumer);
-
-    SchedulerAcquireObject getter(topo_, &graph_->edgeid2object, &tensor_pool_, &tensor_sequence_pool_);
-    ctx.SetAcquireObject(&getter);
 
     for (auto x = aux_info_->sorted_nodes.begin(); x != aux_info_->sorted_nodes.end(); ++x) {
         auto kernel = graph_->nodeid2kernel[*x].get();
