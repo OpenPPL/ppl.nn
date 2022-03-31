@@ -29,6 +29,17 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
+OptGraph::OptGraph(ir::Graph* graph, RuntimePartitionInfo* info, CudaArgs* args, CompileInfo* compile_set)
+        : graph_(graph), info_(info), args_(args), compile_set_(compile_set) {
+    acquire_tensor_func_ = [this](edgeid_t eid, uint32_t) -> EdgeObject* {
+        auto it = tensor_impls_.find(eid);
+        if (it == tensor_impls_.end()) {
+            return nullptr;
+        }
+        return it->second.get();
+    };
+}
+
 OptGraph::~OptGraph() {
     // destroy tensors before default_cpu_device_
     tensor_impls_.clear();
@@ -88,7 +99,7 @@ RetCode OptGraph::UpdateDims(const utils::SharedResource& resource) {
     UpdateTopologicalSort();
 
     InputOutputInfo IOinfo;
-    IOinfo.SetAcquireObject(&tensor_getter_);
+    IOinfo.SetAcquireFunc(acquire_tensor_func_);
 
     for (uint32_t i = 0; i < sorted_node_ids_.size(); ++i) {
         auto node = topo->GetNodeById(sorted_node_ids_[i]);
@@ -387,7 +398,7 @@ RetCode OptGraph::UpdateType() {
     UpdateTopologicalSort();
 
     InputOutputInfo IOinfo;
-    IOinfo.SetAcquireObject(&tensor_getter_);
+    IOinfo.SetAcquireFunc(acquire_tensor_func_);
 
     for (uint32_t i = 0; i < sorted_node_ids_.size(); ++i) {
         auto node = topo->GetNodeById(sorted_node_ids_[i]);

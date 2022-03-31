@@ -71,7 +71,7 @@ RetCode OptGraph::InitTensorImpls(const utils::SharedResource& resource) {
     for (uint32_t i = 0; i < graph_->topo->GetExtraInputCount(); ++i) {
         io_edgeids.insert(graph_->topo->GetExtraInput(i));
     }
-    
+
     for (auto it = graph_->topo->CreateEdgeIter(); it->IsValid(); it->Forward()) {
         auto edge = it->Get();
         auto edge_id = edge->GetId();
@@ -107,6 +107,14 @@ RetCode OptGraph::Init(const utils::SharedResource& resource, ir::Graph* graph, 
         return status;
     }
 
+    acquire_tensor_func_ = [this](edgeid_t eid, uint32_t) -> EdgeObject* {
+        auto it = tensor_impls_.find(eid);
+        if (it == tensor_impls_.end()) {
+            return nullptr;
+        }
+        return it->second.get();
+    };
+
     return RC_SUCCESS;
 }
 
@@ -136,7 +144,7 @@ RetCode OptGraph::TryToInferType(X86Device* device) {
 
         InputOutputInfo IOinfo;
         IOinfo.SetNode(node);
-        IOinfo.SetAcquireObject(&tensor_getter_);
+        IOinfo.SetAcquireFunc(acquire_tensor_func_);
 
         auto kernel = (X86OptKernel*)(info_->kernels[node_id].get());
         kernel->InferType(&IOinfo);
@@ -171,7 +179,7 @@ RetCode OptGraph::TryToInferDims(X86Device* device) {
 
         InputOutputInfo IOinfo;
         IOinfo.SetNode(node);
-        IOinfo.SetAcquireObject(&tensor_getter_);
+        IOinfo.SetAcquireFunc(acquire_tensor_func_);
 
         auto kernel = (X86OptKernel*)(info_->kernels[node_id].get());
         auto status = kernel->InferDims(&IOinfo);

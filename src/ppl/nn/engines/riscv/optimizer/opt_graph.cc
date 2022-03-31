@@ -94,6 +94,14 @@ RetCode OptGraph::Init(ir::Graph* graph, RuntimePartitionInfo* info, RiscvEngine
         return status;
     }
 
+    acquire_tensor_func_ = [this](edgeid_t eid, uint32_t) -> EdgeObject* {
+        auto it = tensor_impls_.find(eid);
+        if (it == tensor_impls_.end()) {
+            return nullptr;
+        }
+        return it->second.get();
+    };
+
     return RC_SUCCESS;
 }
 
@@ -123,7 +131,7 @@ RetCode OptGraph::TryToInferType(RiscvDevice* device) {
 
         InputOutputInfo IOinfo;
         IOinfo.SetNode(node);
-        IOinfo.SetAcquireObject(&tensor_getter_);
+        IOinfo.SetAcquireFunc(acquire_tensor_func_);
 
         auto kernel = (RiscvOptKernel*)(info_->kernels[node_id].get());
         kernel->InferType(&IOinfo);
@@ -158,7 +166,7 @@ RetCode OptGraph::TryToInferDims(RiscvDevice* device) {
 
         InputOutputInfo IOinfo;
         IOinfo.SetNode(node);
-        IOinfo.SetAcquireObject(&tensor_getter_);
+        IOinfo.SetAcquireFunc(acquire_tensor_func_);
 
         auto kernel = (RiscvOptKernel*)(info_->kernels[node_id].get());
         auto status = kernel->InferDims(&IOinfo);

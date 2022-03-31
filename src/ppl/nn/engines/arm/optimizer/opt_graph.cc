@@ -96,6 +96,14 @@ RetCode OptGraph::Init(ir::Graph* graph, RuntimePartitionInfo* info, ArmEngineOp
         return status;
     }
 
+    acquire_tensor_func_ = [this](edgeid_t eid, uint32_t) -> EdgeObject* {
+        auto it = tensor_impls_.find(eid);
+        if (it == tensor_impls_.end()) {
+            return nullptr;
+        }
+        return it->second.get();
+    };
+
     return RC_SUCCESS;
 }
 
@@ -234,7 +242,7 @@ RetCode OptGraph::StitchGraph(const OptKernelOptions& options) {
 
         InputOutputInfo IOinfo;
         IOinfo.SetNode(node);
-        IOinfo.SetAcquireObject(&tensor_getter_);
+        IOinfo.SetAcquireFunc(acquire_tensor_func_);
 
         auto status = kernel->SelectAlgorithm(IOinfo, options);
         if (status != RC_SUCCESS) {
@@ -377,7 +385,7 @@ RetCode OptGraph::TryToInferType(ArmDevice* device) {
 
         InputOutputInfo IOinfo;
         IOinfo.SetNode(node);
-        IOinfo.SetAcquireObject(&tensor_getter_);
+        IOinfo.SetAcquireFunc(acquire_tensor_func_);
 
         auto kernel = (ArmOptKernel*)(info_->kernels[node_id].get());
         kernel->InferTypes(&IOinfo);
@@ -416,7 +424,7 @@ RetCode OptGraph::TryToInferDims(ArmDevice* device) {
 
         InputOutputInfo IOinfo;
         IOinfo.SetNode(node);
-        IOinfo.SetAcquireObject(&tensor_getter_);
+        IOinfo.SetAcquireFunc(acquire_tensor_func_);
 
         auto kernel = (ArmOptKernel*)(info_->kernels[node_id].get());
         auto status = kernel->InferDims(&IOinfo);

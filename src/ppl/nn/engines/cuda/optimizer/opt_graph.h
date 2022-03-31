@@ -24,7 +24,6 @@
 
 #include "ppl/nn/engines/cuda/optimizer/fusions/fs_filter_manager.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
-#include "ppl/nn/engines/cuda/optimizer/tensor_getter.h"
 #include "ppl/nn/engines/cuda/engine.h"
 #include "ppl/nn/ir/graph.h"
 #include "ppl/nn/runtime/runtime_graph_info.h"
@@ -34,8 +33,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 class OptGraph final {
 public:
-    OptGraph(ir::Graph* graph, RuntimePartitionInfo* info, CudaArgs* args, CompileInfo* compile_set)
-        : graph_(graph), info_(info), args_(args), compile_set_(compile_set), tensor_getter_(&tensor_impls_) {}
+    OptGraph(ir::Graph* graph, RuntimePartitionInfo* info, CudaArgs* args, CompileInfo* compile_set);
     ~OptGraph();
 
     ppl::common::RetCode DoOptimize(const utils::SharedResource&, CudaDevice*);
@@ -62,7 +60,7 @@ private:
     utils::GenericCpuDevice default_cpu_device_;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>> tensor_impls_;
     std::vector<nodeid_t> sorted_node_ids_;
-    TensorGetter tensor_getter_;
+    std::function<EdgeObject*(edgeid_t, uint32_t)> acquire_tensor_func_;
 };
 
 }}} // namespace ppl::nn::cuda
