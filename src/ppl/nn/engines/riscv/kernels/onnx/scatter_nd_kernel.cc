@@ -40,7 +40,7 @@ ppl::common::RetCode ScatterNdKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_DEBUG_TRACE("Input [updates]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(updates);
 
-    PPLNN_RISCV_REALLOC_TENSOR_BUFFER(y);
+    // PPLNN_RISCV_REALLOC_TENSOR_BUFFER(y);
     PPLNN_RISCV_DEBUG_TRACE("Output [y]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(y);
 

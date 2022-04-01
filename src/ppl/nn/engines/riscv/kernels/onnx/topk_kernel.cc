@@ -50,10 +50,10 @@ ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_DEBUG_TRACE("Input [k]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(k);
 
-    PPLNN_RISCV_REALLOC_TENSOR_BUFFER(values);
+    // PPLNN_RISCV_REALLOC_TENSOR_BUFFER(values);
     PPLNN_RISCV_DEBUG_TRACE("Output [values]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(values);
-    PPLNN_RISCV_REALLOC_TENSOR_BUFFER(indices);
+    // PPLNN_RISCV_REALLOC_TENSOR_BUFFER(indices);
     PPLNN_RISCV_DEBUG_TRACE("Output [indices]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(indices);
 

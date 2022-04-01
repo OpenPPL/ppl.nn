@@ -36,7 +36,7 @@ ppl::common::RetCode TileKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_DEBUG_TRACE("Input [B]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(B);
 
-    PPLNN_RISCV_REALLOC_TENSOR_BUFFER(C);
+    // PPLNN_RISCV_REALLOC_TENSOR_BUFFER(C);
     PPLNN_RISCV_DEBUG_TRACE("Output [C]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(C);
 
