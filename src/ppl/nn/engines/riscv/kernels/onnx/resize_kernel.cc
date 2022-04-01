@@ -80,7 +80,7 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_DEBUG_TRACE("exclude_outside: %d\n", param_->exclude_outside);
     PPLNN_RISCV_DEBUG_TRACE("extrapolation_value: %f\n", param_->extrapolation_value);
 
-    PPLNN_RISCV_REALLOC_TENSOR_BUFFER(Y);
+    // PPLNN_RISCV_REALLOC_TENSOR_BUFFER(Y);
     PPLNN_RISCV_DEBUG_TRACE("Output [Y]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(Y);
 

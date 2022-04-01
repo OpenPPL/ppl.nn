@@ -65,7 +65,7 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
     const int32_t dst_h = Y->GetShape()->GetDim(2);
     const int32_t dst_w = Y->GetShape()->GetDim(3);
 
-    PPLNN_RISCV_REALLOC_TENSOR_BUFFER(Y);
+    // PPLNN_RISCV_REALLOC_TENSOR_BUFFER(Y);
     PPLNN_RISCV_DEBUG_TRACE("Output [Y]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(Y);
 

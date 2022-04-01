@@ -45,7 +45,7 @@ ppl::common::RetCode NonMaxSuppressionKernel::DoExecute(KernelExecContext* ctx) 
     PPLNN_RISCV_DEBUG_TRACE("iou_threshold: %f\n", iou_threshold);
     PPLNN_RISCV_DEBUG_TRACE("score_threshold: %f\n", score_threshold);
 
-    PPLNN_RISCV_REALLOC_TENSOR_BUFFER(output);
+    // PPLNN_RISCV_REALLOC_TENSOR_BUFFER(output);
     PPLNN_RISCV_DEBUG_TRACE("Output [output]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(output);
 

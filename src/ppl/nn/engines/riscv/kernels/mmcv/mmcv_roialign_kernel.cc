@@ -33,7 +33,7 @@ ppl::common::RetCode MMCVROIAlignKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_DEBUG_TRACE("Input [rois]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(rois);
 
-    PPLNN_RISCV_REALLOC_TENSOR_BUFFER(output);
+    // PPLNN_RISCV_REALLOC_TENSOR_BUFFER(output);
     PPLNN_RISCV_DEBUG_TRACE("Output [output]:\n");
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(output);
 
