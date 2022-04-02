@@ -97,64 +97,64 @@ static void RegisterOptKernelCreator(const string& domain, const string& type, u
 void RegisterBuiltinOpImpls() {
     // onnx op default domain is ""
     RegisterOptKernelCreator<AddOp>("", "Add", 7, 12);
-    RegisterOptKernelCreator<ArgmaxOp>("", "ArgMax", 11, 11);
-    RegisterOptKernelCreator<AveragePoolOp>("", "AveragePool", 11, 16);
+    RegisterOptKernelCreator<ArgmaxOp>("", "ArgMax", 1, 11);
+    RegisterOptKernelCreator<AveragePoolOp>("", "AveragePool", 1, 16);
 
     RegisterOptKernelCreator<CastOp>("", "Cast", 9, 12);
-    RegisterOptKernelCreator<ClipOp>("", "Clip", 11, 11);
-    RegisterOptKernelCreator<ConcatOp>("", "Concat", 11, 12);
-    RegisterOptKernelCreator<ConstantOfShapeOp>("", "ConstantOfShape", 11, 12);
+    RegisterOptKernelCreator<ClipOp>("", "Clip", 6, 16);
+    RegisterOptKernelCreator<ConcatOp>("", "Concat", 4, 16);
+    RegisterOptKernelCreator<ConstantOfShapeOp>("", "ConstantOfShape", 9, 16);
     RegisterOptKernelCreator<ConvOp>("", "Conv", 1, 16);
-    RegisterOptKernelCreator<ConvTransposeOp>("", "ConvTranspose", 11, 16);
+    RegisterOptKernelCreator<ConvTransposeOp>("", "ConvTranspose", 1, 16);
 
     RegisterOptKernelCreator<DivOp>("", "Div", 7, 12);
 
-    RegisterOptKernelCreator<EqualOp>("", "Equal", 11, 12);
+    RegisterOptKernelCreator<EqualOp>("", "Equal", 7, 16);
     RegisterOptKernelCreator<ExpandOp>("", "Expand", 8, 12);
     RegisterOptKernelCreator<ExpOp>("", "Exp", 6, 16);
 
-    RegisterOptKernelCreator<FlattenOp>("", "Flatten", 11, 12);
-    RegisterOptKernelCreator<FloorOp>("", "Floor", 6, 12);
+    RegisterOptKernelCreator<FlattenOp>("", "Flatten", 1, 16);
+    RegisterOptKernelCreator<FloorOp>("", "Floor", 6, 16);
 
-    RegisterOptKernelCreator<GatherOp>("", "Gather", 11, 12);
-    RegisterOptKernelCreator<GemmOp>("", "Gemm", 11, 12);
+    RegisterOptKernelCreator<GatherOp>("", "Gather", 1, 16);
+    RegisterOptKernelCreator<GemmOp>("", "Gemm", 9, 16);
     RegisterOptKernelCreator<AveragePoolOp>("", "GlobalAveragePool", 1, 16);
 
     RegisterOptKernelCreator<LeakyReLUOp>("", "LeakyRelu", 6, 16);
     RegisterOptKernelCreator<LessOp>("", "Less", 9, 12);
     RegisterOptKernelCreator<LogOp>("", "Log", 6, 16);
 
-    RegisterOptKernelCreator<MaxPoolOp>("", "MaxPool", 11, 11);
+    RegisterOptKernelCreator<MaxPoolOp>("", "MaxPool", 1, 16);
     RegisterOptKernelCreator<MulOp>("", "Mul", 7, 12);
 
     RegisterOptKernelCreator<NotOp>("", "Not", 1, 16);
-    RegisterOptKernelCreator<NonMaxSupressionOp>("", "NonMaxSuppression", 11, 16);
+    RegisterOptKernelCreator<NonMaxSupressionOp>("", "NonMaxSuppression", 10, 16);
 
     RegisterOptKernelCreator<RangeOp>("", "Range", 11, 16);
-    RegisterOptKernelCreator<ReduceMeanOp>("", "ReduceMean", 11, 12);
-    RegisterOptKernelCreator<ReduceMaxOp>("", "ReduceMax", 11, 11);
-    RegisterOptKernelCreator<ReduceMinOp>("", "ReduceMin", 11, 11);
-    RegisterOptKernelCreator<ReduceSumOp>("", "ReduceSum", 11, 12);
+    RegisterOptKernelCreator<ReduceMeanOp>("", "ReduceMean", 1, 16);
+    RegisterOptKernelCreator<ReduceMaxOp>("", "ReduceMax", 1, 16);
+    RegisterOptKernelCreator<ReduceMinOp>("", "ReduceMin", 1, 16);
+    RegisterOptKernelCreator<ReduceSumOp>("", "ReduceSum", 1, 16);
     RegisterOptKernelCreator<ReluOp>("", "Relu", 6, 12);
     RegisterOptKernelCreator<ReshapeOp>("", "Reshape", 5, 12);
     RegisterOptKernelCreator<ResizeOp>("", "Resize", 11, 12);
     RegisterOptKernelCreator<RoiAlignOp>("", "RoiAlign", 10, 15);
 
-    RegisterOptKernelCreator<ScatterNDOp>("", "ScatterND", 11, 12);
+    RegisterOptKernelCreator<ScatterNDOp>("", "ScatterND", 11, 15);
     RegisterOptKernelCreator<ShapeOp>("", "Shape", 1, 12);
     RegisterOptKernelCreator<SigmoidOp>("", "Sigmoid", 6, 12);
-    RegisterOptKernelCreator<SoftmaxOp>("", "Softmax", 11, 12);
-    RegisterOptKernelCreator<SplitOp>("", "Split", 11, 12);
-    RegisterOptKernelCreator<SqueezeOp>("", "Squeeze", 11, 12);
-    RegisterOptKernelCreator<SliceOp>("", "Slice", 11, 12);
+    RegisterOptKernelCreator<SoftmaxOp>("", "Softmax", 1, 16);
+    RegisterOptKernelCreator<SplitOp>("", "Split", 2, 12);
+    RegisterOptKernelCreator<SqueezeOp>("", "Squeeze", 1, 12);
+    RegisterOptKernelCreator<SliceOp>("", "Slice", 1, 16);
     RegisterOptKernelCreator<SubOp>("", "Sub", 7, 12);
     RegisterOptKernelCreator<SqrtOp>("", "Sqrt", 6, 16);
 
     RegisterOptKernelCreator<TileOp>("", "Tile", 6, 12);
-    RegisterOptKernelCreator<TopKOp>("", "TopK", 11, 16);
+    RegisterOptKernelCreator<TopKOp>("", "TopK", 1, 16);
     RegisterOptKernelCreator<TransposeOp>("", "Transpose", 1, 12);
 
-    RegisterOptKernelCreator<UnsqueezeOp>("", "Unsqueeze", 11, 12);
+    RegisterOptKernelCreator<UnsqueezeOp>("", "Unsqueeze", 1, 12);
 
     RegisterOptKernelCreator<WhereOp>("", "Where", 9, 15);
 

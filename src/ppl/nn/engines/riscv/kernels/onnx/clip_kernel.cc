@@ -46,8 +46,8 @@ ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    __fp16 min_val = -FLT_MAX;
-    __fp16 max_val = FLT_MAX;
+    __fp16 min_val = param_->min_value;
+    __fp16 max_val = param_->max_value;
     if (min_tensor) {
         min_val = (__fp16)(min_tensor->GetBufferPtr<float>())[0];
     }
@@ -70,10 +70,10 @@ ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_DEBUG_TRACE("min_val: %f\n", min_val);
     PPLNN_RISCV_DEBUG_TRACE("max_val: %f\n", max_val);
 
-    if (input_data_type == common::DATATYPE_FLOAT16) {
+    if (input_data_type == ppl::common::DATATYPE_FLOAT16) {
         return kernel::riscv::clip_fp16(input->GetShape(), max_val, min_val, input->GetBufferPtr<__fp16>(),
                                         output->GetBufferPtr<__fp16>());
-    } else if (input_data_type == common::DATATYPE_FLOAT32) {
+    } else if (input_data_type == ppl::common::DATATYPE_FLOAT32) {
         return kernel::riscv::clip_fp32(input->GetShape(), max_val, min_val, input->GetBufferPtr<float>(),
                                         output->GetBufferPtr<float>());
     } else {

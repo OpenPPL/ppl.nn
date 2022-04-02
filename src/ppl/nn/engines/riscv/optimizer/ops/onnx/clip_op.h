@@ -18,6 +18,7 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIMIZER_OPS_ONNX_CLIP_OP_H_
 #define _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIMIZER_OPS_ONNX_CLIP_OP_H_
 
+#include "ppl/nn/params/onnx/clip_param.h"
 #include "ppl/nn/engines/riscv/optimizer/opt_kernel.h"
 
 namespace ppl { namespace nn { namespace riscv {
@@ -33,6 +34,9 @@ public:
     ppl::common::RetCode SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
                                         std::vector<ppl::common::datatype_t>* selected_input_data_types,
                                         std::vector<ppl::common::datatype_t>* selected_output_data_types) override;
+
+private:
+    std::shared_ptr<ppl::nn::common::ClipParam> param_;
 };
 
 }}} // namespace ppl::nn::riscv
