@@ -18,18 +18,20 @@
 #include "ppl/nn/models/onnx/parsers/mmcv/parse_mmcv_gridsample_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseMMCVGridSampleParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
-                                              ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::MMCVGridSampleParam*>(arg);
+RetCode ParseMMCVGridSampleParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
+                                 void* arg) {
+    auto param = static_cast<MMCVGridSampleParam*>(arg);
 
     param->align_corners = utils::GetNodeAttrByKey<int64_t>(pb_node, "align_corners", 0);
     param->interpolation_mode = utils::GetNodeAttrByKey<int64_t>(pb_node, "interpolation_mode", 0);
     param->padding_mode = utils::GetNodeAttrByKey<int64_t>(pb_node, "padding_mode", 0);
 
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

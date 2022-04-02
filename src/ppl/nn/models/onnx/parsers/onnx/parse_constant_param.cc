@@ -20,12 +20,14 @@
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-static RetCode DoParseTensorProto(const ::onnx::TensorProto& pb_tensor, ppl::nn::common::ConstantParam* param) {
+static RetCode DoParseTensorProto(const ::onnx::TensorProto& pb_tensor, const char* model_file_dir,
+                                  ConstantParam* param) {
     ir::Shape shape;
-    auto status = utils::ParseTensorProto(pb_tensor, &param->data, &shape);
+    auto status = utils::ParseTensorProto(pb_tensor, model_file_dir, &param->data, &shape);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse `value` failed: " << GetRetCodeStr(status);
         return status;
@@ -40,9 +42,8 @@ static RetCode DoParseTensorProto(const ::onnx::TensorProto& pb_tensor, ppl::nn:
 
 static const unordered_set<string> g_unsupported_fields = {"sparse_value", "value_string", "value_strings"};
 
-RetCode ParseConstantParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg, ir::Node*,
-                           ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::ConstantParam*>(arg);
+RetCode ParseConstantParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+    auto param = static_cast<ConstantParam*>(arg);
 
     for (int i = 0; i < pb_node.attribute_size(); i++) {
         const ::onnx::AttributeProto& attribute = pb_node.attribute(i);
@@ -52,7 +53,7 @@ RetCode ParseConstantParam(const ::onnx::NodeProto& pb_node, const map<string, u
         }
 
         if (attribute.name() == "value") {
-            return DoParseTensorProto(attribute.t(), param);
+            return DoParseTensorProto(attribute.t(), args.model_file_dir, param);
         } else if (attribute.name() == "value_int") {
             int64_t v = attribute.i();
             param->data_type = DATATYPE_INT64;

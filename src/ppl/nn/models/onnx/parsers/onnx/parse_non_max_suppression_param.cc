@@ -18,14 +18,16 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_non_max_suppression_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseNonMaxSuppressionParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&,
-                                                 void* arg, ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::NonMaxSuppressionParam*>(arg);
+RetCode ParseNonMaxSuppressionParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
+                                    void* arg) {
+    auto param = static_cast<NonMaxSuppressionParam*>(arg);
     param->center_point_box = utils::GetNodeAttrByKey<int>(pb_node, "center_point_box", 0);
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

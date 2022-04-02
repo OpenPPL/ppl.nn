@@ -19,23 +19,24 @@
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseLRNParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg, ir::Node*,
-                                   ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::LRNParam*>(arg);
+RetCode ParseLRNParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+    auto param = static_cast<LRNParam*>(arg);
     int32_t size = utils::GetNodeAttrByKey<int32_t>(pb_node, "size", INT32_MAX);
     if (size == INT32_MAX) {
         LOG(ERROR) << "size is required.";
-        return ppl::common::RC_INVALID_VALUE;
+        return RC_INVALID_VALUE;
     }
 
     param->size = size;
     param->alpha = utils::GetNodeAttrByKey<float>(pb_node, "alpha", 0.0001f);
     param->beta = utils::GetNodeAttrByKey<float>(pb_node, "beta", 0.75f);
     param->bias = utils::GetNodeAttrByKey<float>(pb_node, "bias", 1.0f);
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

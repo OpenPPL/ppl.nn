@@ -43,7 +43,7 @@ T GetNodeAttrByKey(const ::onnx::NodeProto& node, const char* key, T default_val
 
 const ::onnx::TensorProto* GetTensorProtoByKey(const ::onnx::NodeProto&, const char* key);
 
-ppl::common::RetCode ParseTensorProto(const ::onnx::TensorProto&, std::string*, ir::Shape*);
+ppl::common::RetCode ParseTensorProto(const ::onnx::TensorProto&, const char* model_file_dir, std::string*, ir::Shape*);
 
 ppl::common::datatype_t ConvertOnnxDataTypeToPplDataType(int32_t data_type);
 

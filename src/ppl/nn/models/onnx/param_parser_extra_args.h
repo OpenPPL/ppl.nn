@@ -15,21 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/onnx/parsers/onnx/parse_cumsum_param.h"
-#include "ppl/nn/models/onnx/utils.h"
-using namespace std;
-using namespace ppl::common;
-using namespace ppl::nn::common;
+#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARAM_PARSER_EXTRS_ARGS_H
+#define _ST_HPC_PPL_NN_MODELS_ONNX_PARAM_PARSER_EXTRS_ARGS_H
+
+#include "ppl/nn/ir/graph_topo.h"
+#include <map>
+#include <string>
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseCumSumParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
-    auto cumsum_param = static_cast<CumSumParam*>(arg);
-
-    cumsum_param->exclusive = utils::GetNodeAttrByKey<int32_t>(pb_node, "exclusive", 0);
-    cumsum_param->reverse = utils::GetNodeAttrByKey<int32_t>(pb_node, "reverse", 0);
-
-    return RC_SUCCESS;
-}
+struct ParamParserExtraArgs final {
+    const std::map<std::string, uint64_t>* op_set;
+    const char* model_file_dir;
+    ir::GraphTopo* topo;
+};
 
 }}} // namespace ppl::nn::onnx
+
+#endif

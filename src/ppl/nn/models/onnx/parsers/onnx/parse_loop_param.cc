@@ -21,12 +21,12 @@
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseLoopParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>& op_sets, void* arg,
-                       ir::Node* node, ir::GraphTopo* topo) {
-    auto param = static_cast<ppl::nn::common::LoopParam*>(arg);
+RetCode ParseLoopParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node, void* arg) {
+    auto param = static_cast<LoopParam*>(arg);
     if (pb_node.attribute_size() != 1) {
         LOG(ERROR) << "invalid attribute size[" << pb_node.attribute_size() << "] != 1.";
         return RC_INVALID_VALUE;
@@ -38,14 +38,13 @@ RetCode ParseLoopParam(const ::onnx::NodeProto& pb_node, const map<string, uint6
     }
 
     GraphParser parser;
-    auto status = parser.Parse(attr.g(), op_sets, &(param->graph));
+    auto status = parser.Parse(attr.g(), *args.op_set, args.model_file_dir, &(param->graph));
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "parse subgraph of loop pb_node[" << pb_node.name() << "] failed: "
-                   << GetRetCodeStr(status);
+        LOG(ERROR) << "parse subgraph of loop pb_node[" << pb_node.name() << "] failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    utils::ResolveExtraInputs(param->graph.topo.get(), node, topo);
+    utils::ResolveExtraInputs(param->graph.topo.get(), node, args.topo);
 
     return RC_SUCCESS;
 }

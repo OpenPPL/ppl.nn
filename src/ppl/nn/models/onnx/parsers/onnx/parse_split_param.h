@@ -18,16 +18,14 @@
 #ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PARSE_SPLIT_PARAM_H_
 #define _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PARSE_SPLIT_PARAM_H_
 
-#include "ppl/nn/params/onnx/split_param.h"
 #include "ppl/common/retcode.h"
-#include "ppl/nn/ir/graph.h"
+#include "ppl/nn/params/onnx/split_param.h"
+#include "ppl/nn/models/onnx/param_parser_extra_args.h"
 #include "ppl/nn/models/onnx/generated/onnx.pb.h"
-#include <map>
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseSplitParam(const ::onnx::NodeProto& pb_node, const std::map<std::string, uint64_t>& op_sets,
-                                     void* arg, ir::Node*, ir::GraphTopo*);
+ppl::common::RetCode ParseSplitParam(const ::onnx::NodeProto&, const ParamParserExtraArgs&, ir::Node*, void*);
 
 }}} // namespace ppl::nn::onnx
 

@@ -18,12 +18,14 @@
 #include "ppl/nn/models/onnx/parsers/mmcv/parse_mmcv_modulated_deform_conv2d_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseMMCVModulatedDeformConv2dParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&,
-                                                         void* arg, ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::MMCVModulatedDeformConv2dParam*>(arg);
+RetCode ParseMMCVModulatedDeformConv2dParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args,
+                                            ir::Node*, void* arg) {
+    auto param = static_cast<MMCVModulatedDeformConv2dParam*>(arg);
 
     param->kernel_size[0] = 0; // set by opcontext, for converted filter
     param->kernel_size[1] = 0; // set by opcontext, for converted filter
@@ -41,7 +43,7 @@ ppl::common::RetCode ParseMMCVModulatedDeformConv2dParam(const ::onnx::NodeProto
     size_t kernel_dims = 2;
 
     if (dilation.size() != kernel_dims || stride.size() != kernel_dims || padding.size() != kernel_dims) {
-        return ppl::common::RC_INVALID_VALUE;
+        return RC_INVALID_VALUE;
     }
 
     param->stride[0] = stride[0];
@@ -53,7 +55,7 @@ ppl::common::RetCode ParseMMCVModulatedDeformConv2dParam(const ::onnx::NodeProto
     param->dilation[0] = dilation[0];
     param->dilation[1] = dilation[1];
 
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

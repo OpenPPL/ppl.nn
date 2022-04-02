@@ -19,31 +19,33 @@
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseReduceParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
-                                      ir::Node* node, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::ReduceParam*>(arg);
+RetCode ParseReduceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node,
+                         void* arg) {
+    auto param = static_cast<ReduceParam*>(arg);
 
-    if (node->GetType().name == "ReduceSum")  {
-        param->type = ppl::nn::common::ReduceParam::ReduceSum;
-    } else if (node->GetType().name == "ReduceMax")  {
-        param->type = ppl::nn::common::ReduceParam::ReduceMax;
-    } else if (node->GetType().name == "ReduceMin")  {
-        param->type = ppl::nn::common::ReduceParam::ReduceMin;
-    } else if (node->GetType().name == "ReduceProd")  {
-        param->type = ppl::nn::common::ReduceParam::ReduceProd;
-    } else if (node->GetType().name == "ReduceMean")  {
-        param->type = ppl::nn::common::ReduceParam::ReduceMean;
+    if (node->GetType().name == "ReduceSum") {
+        param->type = ReduceParam::ReduceSum;
+    } else if (node->GetType().name == "ReduceMax") {
+        param->type = ReduceParam::ReduceMax;
+    } else if (node->GetType().name == "ReduceMin") {
+        param->type = ReduceParam::ReduceMin;
+    } else if (node->GetType().name == "ReduceProd") {
+        param->type = ReduceParam::ReduceProd;
+    } else if (node->GetType().name == "ReduceMean") {
+        param->type = ReduceParam::ReduceMean;
     } else {
-        param->type = ppl::nn::common::ReduceParam::ReduceUnknown;
+        param->type = ReduceParam::ReduceUnknown;
     }
 
     param->axes = utils::GetNodeAttrsByKey<int32_t>(pb_node, "axes");
     param->keepdims = utils::GetNodeAttrByKey<int>(pb_node, "keepdims", 1);
 
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

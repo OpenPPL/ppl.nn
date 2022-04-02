@@ -18,12 +18,14 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_convtranspose_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseConvTransposeParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
-                                             ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::ConvTransposeParam*>(arg);
+RetCode ParseConvTransposeParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
+                                void* arg) {
+    auto param = static_cast<ConvTransposeParam*>(arg);
 
     param->auto_pad = utils::GetNodeAttrByKey<string>(pb_node, "auto_pad", "");
     param->dilations = utils::GetNodeAttrsByKey<int32_t>(pb_node, "dilations");
@@ -34,7 +36,7 @@ ppl::common::RetCode ParseConvTransposeParam(const ::onnx::NodeProto& pb_node, c
     param->strides = utils::GetNodeAttrsByKey<int32_t>(pb_node, "strides");
     param->group = utils::GetNodeAttrByKey<int64_t>(pb_node, "group", 1);
 
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

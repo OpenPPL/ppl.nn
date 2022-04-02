@@ -25,13 +25,10 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-static RetCode ParseGraphInitializer(const ::onnx::GraphProto& pb_graph, ir::GraphTopo* topo, ir::GraphData* data) {
+static RetCode ParseGraphInitializer(const ::onnx::GraphProto& pb_graph, const char* model_file_dir,
+                                     ir::GraphTopo* topo, ir::GraphData* data) {
     for (int i = 0; i < pb_graph.initializer_size(); ++i) {
         const ::onnx::TensorProto& pb_initializer = pb_graph.initializer(i);
-        if (pb_initializer.external_data_size() > 0) {
-            LOG(ERROR) << "external data is not supported now.";
-            return RC_UNSUPPORTED;
-        }
 
         auto ret_pair = topo->AddEdge(pb_initializer.name());
         if (!ret_pair.second) {
@@ -42,7 +39,7 @@ static RetCode ParseGraphInitializer(const ::onnx::GraphProto& pb_graph, ir::Gra
 
         ir::Shape shape;
         ir::Constant constant;
-        auto status = utils::ParseTensorProto(pb_initializer, &constant.data, &shape);
+        auto status = utils::ParseTensorProto(pb_initializer, model_file_dir, &constant.data, &shape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "ParseTensorProto failed: " << GetRetCodeStr(status);
             return status;
@@ -112,8 +109,9 @@ static inline string GenNodeName(uint32_t anonymous_node_count) {
     return "ppl_anonymous_node_" + std::to_string(anonymous_node_count);
 }
 
-static RetCode ParseNodeInfo(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>& op_sets,
-                             ir::GraphTopo* topo, ir::GraphData* data, uint32_t* anonymous_node_count) {
+static RetCode ParseNodeInfo(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::GraphData* data,
+                             uint32_t* anonymous_node_count) {
+    auto topo = args.topo;
     string node_name;
     if (pb_node.name().empty()) {
         node_name = GenNodeName(*anonymous_node_count);
@@ -129,8 +127,8 @@ static RetCode ParseNodeInfo(const ::onnx::NodeProto& pb_node, const map<string,
     }
     auto node = ret_pair.first;
 
-    auto op_set_ref = op_sets.find(pb_node.domain());
-    if (op_set_ref == op_sets.end()) {
+    auto op_set_ref = args.op_set->find(pb_node.domain());
+    if (op_set_ref == args.op_set->end()) {
         LOG(ERROR) << "domain[" << pb_node.domain() << "] is not imported.";
         return RC_INVALID_VALUE;
     }
@@ -180,7 +178,7 @@ static RetCode ParseNodeInfo(const ::onnx::NodeProto& pb_node, const map<string,
     }
 
     auto param = VoidPtr(parser_info->create_param(), parser_info->destroy_param);
-    auto status = parser_info->parse_param(pb_node, op_sets, param.get(), node, topo);
+    auto status = parser_info->parse_param(pb_node, args, node, param.get());
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse attr of node[" << node_name << "] failed: " << GetRetCodeStr(status);
         return status;
@@ -191,11 +189,17 @@ static RetCode ParseNodeInfo(const ::onnx::NodeProto& pb_node, const map<string,
     return RC_SUCCESS;
 }
 
-static RetCode ParseGraphNode(const ::onnx::GraphProto& pb_graph, const map<string, uint64_t>& op_sets,
-                              ir::GraphTopo* topo, ir::GraphData* data, uint32_t* anonymous_node_count) {
+static RetCode ParseGraphNode(const ::onnx::GraphProto& pb_graph, const map<string, uint64_t>& op_set,
+                              const char* model_file_dir, ir::GraphTopo* topo, ir::GraphData* data,
+                              uint32_t* anonymous_node_count) {
+    ParamParserExtraArgs args;
+    args.op_set = &op_set;
+    args.model_file_dir = model_file_dir;
+    args.topo = topo;
+
     for (int i = 0; i < pb_graph.node_size(); ++i) {
         auto& pb_node = pb_graph.node(i);
-        auto status = ParseNodeInfo(pb_node, op_sets, topo, data, anonymous_node_count);
+        auto status = ParseNodeInfo(pb_node, args, data, anonymous_node_count);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "ParseNodeInfo for node[" << pb_node.name() << "] failed: " << GetRetCodeStr(status);
             return status;
@@ -238,7 +242,8 @@ static RetCode ParseGraphOutput(const ::onnx::GraphProto& pb_graph, ir::GraphTop
     return RC_SUCCESS;
 }
 
-RetCode GraphParser::Parse(const ::onnx::GraphProto& pb_graph, const map<string, uint64_t>& op_sets, ir::Graph* graph) {
+RetCode GraphParser::Parse(const ::onnx::GraphProto& pb_graph, const map<string, uint64_t>& op_set,
+                           const char* model_file_dir, ir::Graph* graph) {
     graph->topo = make_shared<ir::FullGraphTopo>();
     graph->data = make_shared<ir::GraphData>();
 
@@ -247,7 +252,7 @@ RetCode GraphParser::Parse(const ::onnx::GraphProto& pb_graph, const map<string,
 
     topo->SetName(pb_graph.name());
 
-    auto status = ParseGraphInitializer(pb_graph, topo, data);
+    auto status = ParseGraphInitializer(pb_graph, model_file_dir, topo, data);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "ParseGraphInitializer failed.";
         return status;
@@ -259,7 +264,7 @@ RetCode GraphParser::Parse(const ::onnx::GraphProto& pb_graph, const map<string,
         return status;
     }
 
-    status = ParseGraphNode(pb_graph, op_sets, topo, data, &anonymous_node_count_);
+    status = ParseGraphNode(pb_graph, op_set, model_file_dir, topo, data, &anonymous_node_count_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "ParseGraphNode failed.";
         return status;

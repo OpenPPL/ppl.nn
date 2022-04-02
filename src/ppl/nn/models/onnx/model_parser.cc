@@ -60,7 +60,7 @@ static map<string, uint64_t> ParseOpSets(const ::onnx::ModelProto pb_model) {
     return res;
 }
 
-RetCode ModelParser::Parse(const char* buf, uint64_t buf_len, ir::Graph* graph) {
+RetCode ModelParser::Parse(const char* buf, uint64_t buf_len, const char* model_file_dir, ir::Graph* graph) {
     ::onnx::ModelProto pb_model;
     if (!ParseFromBinaryBuffer(buf, buf_len, &pb_model)) {
         LOG(ERROR) << "load onnx model from model buffer failed.";
@@ -75,7 +75,7 @@ RetCode ModelParser::Parse(const char* buf, uint64_t buf_len, ir::Graph* graph) 
     map<string, uint64_t> op_sets = ParseOpSets(pb_model);
 
     GraphParser graph_parser;
-    auto status = graph_parser.Parse(pb_model.graph(), op_sets, graph);
+    auto status = graph_parser.Parse(pb_model.graph(), op_sets, model_file_dir, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse graph failed: " << GetRetCodeStr(status);
         return status;

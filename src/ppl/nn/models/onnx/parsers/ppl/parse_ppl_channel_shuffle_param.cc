@@ -18,17 +18,16 @@
 #include "ppl/nn/models/onnx/parsers/ppl/parse_ppl_channel_shuffle_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseChannelShuffleParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
-                                              ir::Node*, ir::GraphTopo*) {
-    auto channel_shuffle_param = static_cast<ppl::nn::common::ChannelShuffleParam*>(arg);
-
-    int32_t group = utils::GetNodeAttrByKey<int32_t>(pb_node, "group", 1);
-    channel_shuffle_param->group = utils::ConvertOnnxDataTypeToPplDataType(group);
-
-    return ppl::common::RC_SUCCESS;
+RetCode ParseChannelShuffleParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
+                                 void* arg) {
+    auto param = static_cast<ChannelShuffleParam*>(arg);
+    param->group = utils::GetNodeAttrByKey<int32_t>(pb_node, "group", 1);
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

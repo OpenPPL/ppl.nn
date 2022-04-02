@@ -18,12 +18,13 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_gemm_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseGemmParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
-                                    ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::GemmParam*>(arg);
+RetCode ParseGemmParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+    auto param = static_cast<GemmParam*>(arg);
 
     param->alpha = utils::GetNodeAttrByKey<float>(pb_node, "alpha", 1.0f);
     param->beta = utils::GetNodeAttrByKey<float>(pb_node, "beta", 1.0f);
@@ -31,7 +32,7 @@ ppl::common::RetCode ParseGemmParam(const ::onnx::NodeProto& pb_node, const map<
     param->transB = utils::GetNodeAttrByKey<int32_t>(pb_node, "transB", 0);
     param->N = 0; // set by opcontext
 
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

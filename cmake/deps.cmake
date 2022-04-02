@@ -68,7 +68,7 @@ set(PPLCOMMON_HOLD_DEPS ${PPLNN_HOLD_DEPS})
 
 hpcc_declare_git_dep(pplcommon
     https://github.com/openppl-public/ppl.common.git
-    a0cde88ad23fe18f690343219e57f914008dee9c)
+    acdaa80417cda72f040dcdb564db8f4df04ad58d)
 
 # --------------------------------------------------------------------------- #
 

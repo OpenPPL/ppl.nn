@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/utils/utils.h"
+#include "ppl/nn/common/logger.h"
 #include <fstream>
 #include <sstream>
 using namespace std;

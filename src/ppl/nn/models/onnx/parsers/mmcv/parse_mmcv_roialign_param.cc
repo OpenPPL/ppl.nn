@@ -18,12 +18,14 @@
 #include "ppl/nn/models/onnx/parsers/mmcv/parse_mmcv_roialign_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseMMCVRoiAlignParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
-                                            ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::MMCVRoiAlignParam*>(arg);
+RetCode ParseMMCVRoiAlignParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
+                               void* arg) {
+    auto param = static_cast<MMCVRoiAlignParam*>(arg);
 
     param->aligned = utils::GetNodeAttrByKey<int64_t>(pb_node, "aligned", 0);
     param->aligned_height = utils::GetNodeAttrByKey<int64_t>(pb_node, "output_height", 0);
@@ -32,7 +34,7 @@ ppl::common::RetCode ParseMMCVRoiAlignParam(const ::onnx::NodeProto& pb_node, co
     param->sampling_ratio = utils::GetNodeAttrByKey<float>(pb_node, "sampling_ratio", 0);
     param->spatial_scale = utils::GetNodeAttrByKey<float>(pb_node, "spatial_scale", 0);
 
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

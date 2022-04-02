@@ -19,25 +19,26 @@
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseConstantOfShapeParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&,
-                                               void* arg, ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::ConstantOfShapeParam*>(arg);
+RetCode ParseConstantOfShapeParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
+                                  void* arg) {
+    auto param = static_cast<ConstantOfShapeParam*>(arg);
 
     const ::onnx::TensorProto* value = utils::GetTensorProtoByKey(pb_node, "value");
     if (value == nullptr) {
         float f = 0.0;
-        param->data_type = ppl::common::DATATYPE_FLOAT32;
+        param->data_type = DATATYPE_FLOAT32;
         param->dims.push_back(1);
         param->data.assign((const char*)&f, sizeof(f));
     } else {
         ir::Shape shape;
-        auto status = utils::ParseTensorProto(*value, &param->data, &shape);
-        if (status != ppl::common::RC_SUCCESS) {
-            LOG(ERROR) << "parse attribute of node[" << pb_node.name()
-                       << "] failed: " << ppl::common::GetRetCodeStr(status);
+        auto status = utils::ParseTensorProto(*value, args.model_file_dir, &param->data, &shape);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "parse attribute of node[" << pb_node.name() << "] failed: " << GetRetCodeStr(status);
             return status;
         }
 
@@ -45,7 +46,7 @@ ppl::common::RetCode ParseConstantOfShapeParam(const ::onnx::NodeProto& pb_node,
         param->dims = std::move(shape.dims);
     }
 
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

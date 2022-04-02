@@ -18,17 +18,18 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_topk_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
-ppl::common::RetCode ParseTopKParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>& op_sets, void* arg,
-                                    ir::Node*, ir::GraphTopo*) {
-    auto it = op_sets.find(pb_node.domain());
-    if (it == op_sets.end()) {
-        return ppl::common::RC_INVALID_VALUE;
+RetCode ParseTopKParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+    auto it = args.op_set->find(pb_node.domain());
+    if (it == args.op_set->end()) {
+        return RC_INVALID_VALUE;
     }
     auto opset = it->second;
 
-    auto param = static_cast<ppl::nn::common::TopKParam*>(arg);
+    auto param = static_cast<TopKParam*>(arg);
 
     param->axis = utils::GetNodeAttrByKey<int32_t>(pb_node, "axis", -1);
     param->largest = utils::GetNodeAttrByKey<int32_t>(pb_node, "largest", 1);
@@ -36,9 +37,9 @@ ppl::common::RetCode ParseTopKParam(const ::onnx::NodeProto& pb_node, const map<
     param->k = utils::GetNodeAttrByKey<int32_t>(pb_node, "k", -1);
 
     if (opset < 10 && param->k == -1) {
-        return ppl::common::RC_NOT_FOUND;
+        return RC_NOT_FOUND;
     }
 
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 }}} // namespace ppl::nn::onnx

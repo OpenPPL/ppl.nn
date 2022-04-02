@@ -19,22 +19,23 @@
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseConcatParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
-                                      ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::ConcatParam*>(arg);
+RetCode ParseConcatParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+    auto param = static_cast<ConcatParam*>(arg);
 
     int32_t axis = utils::GetNodeAttrByKey<int32_t>(pb_node, "axis", INT32_MAX);
     if (axis == INT32_MAX) {
         LOG(ERROR) << "axis is required.";
-        return ppl::common::RC_INVALID_VALUE;
+        return RC_INVALID_VALUE;
     }
 
     param->axis = axis;
 
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

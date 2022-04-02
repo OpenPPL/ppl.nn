@@ -19,12 +19,12 @@
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseClipParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg, ir::Node*,
-                       ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::ClipParam*>(arg);
+RetCode ParseClipParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+    auto param = static_cast<ClipParam*>(arg);
     param->min_value = utils::GetNodeAttrByKey<float>(pb_node, "min", numeric_limits<float>::lowest());
     param->max_value = utils::GetNodeAttrByKey<float>(pb_node, "max", numeric_limits<float>::max());
     return RC_SUCCESS;
