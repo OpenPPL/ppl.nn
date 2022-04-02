@@ -15,24 +15,29 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_UTILS_UTILS_H_
-#define _ST_HPC_PPL_NN_UTILS_UTILS_H_
-
-#include "ppl/nn/ir/node.h"
+#include "ppl/nn/utils/utils.h"
+#include <fstream>
+#include <sstream>
+using namespace std;
+using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace utils {
 
-static inline bool IsPplConverterNode(const ir::Node* node) {
-    auto& type = node->GetType();
-    return (type.name == "Converter" && type.domain == "ppl");
-}
+RetCode ReadFileContent(const char* fname, string* buf) {
+    ifstream ifile;
 
-static inline ir::Node::Type MakePplConverterNodeType() {
-    return ir::Node::Type("ppl", "Converter", 1);
-}
+    ifile.open(fname, ios_base::in);
+    if (!ifile.is_open()) {
+        LOG(ERROR) << "open file[" << fname << "] failed.";
+        return RC_NOT_FOUND;
+    }
 
-RetCode ReadFileContent(const char* fname, std::string* buf);
+    stringstream ss;
+    ss << ifile.rdbuf();
+    *buf = ss.str();
+
+    ifile.close();
+    return RC_SUCCESS;
+}
 
 }}} // namespace ppl::nn::utils
-
-#endif

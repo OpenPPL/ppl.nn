@@ -19,8 +19,6 @@
 
 #include <stdarg.h>
 #include <algorithm>
-#include <fstream>
-#include <sstream>
 
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/engines/utils.h"
@@ -30,6 +28,7 @@
 #include "ppl/nn/engines/cuda/module/op_compile_manager.h"
 #include "ppl/nn/quantization/quant_param_parser.h"
 #include "ppl/nn/utils/array.h"
+#include "ppl/nn/utils/utils.h"
 #include "rapidjson/document.h"
 #include "rapidjson/error/error.h"
 
@@ -243,23 +242,6 @@ RetCode CudaEngine::SetUseDefaultAlgorithms(CudaEngine* engine, va_list args) {
     return RC_SUCCESS;
 }
 
-static RetCode ReadFileContent(const char* fname, string* buf) {
-    ifstream ifile;
-
-    ifile.open(fname, ios_base::in);
-    if (!ifile.is_open()) {
-        LOG(ERROR) << "open file[" << fname << "] failed.";
-        return RC_NOT_FOUND;
-    }
-
-    stringstream ss;
-    ss << ifile.rdbuf();
-    *buf = ss.str();
-
-    ifile.close();
-    return RC_SUCCESS;
-}
-
 RetCode CudaEngine::SetQuantInfo(CudaEngine* engine, va_list args) {
     const char* json_str = va_arg(args, const char*);
     if (!json_str) {
@@ -293,7 +275,7 @@ RetCode CudaEngine::ImportAlgorithms(CudaEngine* engine, va_list args) {
     }
 
     string json_buffer;
-    auto status = ReadFileContent(json_file, &json_buffer);
+    auto status = utils::ReadFileContent(json_file, &json_buffer);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "read algo info from file[" << json_file << "] failed.";
         return RC_INVALID_VALUE;
