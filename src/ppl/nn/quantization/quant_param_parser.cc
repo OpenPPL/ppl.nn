@@ -16,9 +16,8 @@
 // under the License.
 
 #include "ppl/nn/quantization/quant_param_parser.h"
+#include "ppl/nn/utils/utils.h"
 #include "ppl/nn/common/logger.h"
-#include <fstream>
-#include <sstream>
 using namespace std;
 using namespace ppl::common;
 
@@ -61,23 +60,6 @@ static RetCode ParseParam(const rapidjson::Value& v, QuantParam* param) {
         param->fields.insert(make_pair(key, value));
     }
 
-    return RC_SUCCESS;
-}
-
-static RetCode ReadFileContent(const char* fname, string* buf) {
-    ifstream ifile;
-
-    ifile.open(fname, ios_base::in);
-    if (!ifile.is_open()) {
-        LOG(ERROR) << "open quant file[" << fname << "] failed.";
-        return RC_NOT_FOUND;
-    }
-
-    stringstream ss;
-    ss << ifile.rdbuf();
-    *buf = ss.str();
-
-    ifile.close();
     return RC_SUCCESS;
 }
 
@@ -130,7 +112,7 @@ RetCode QuantParamParser::ParseBuffer(const char* buf, QuantParamInfo* info) {
 
 RetCode QuantParamParser::ParseFile(const char* fname, QuantParamInfo* info) {
     string buf;
-    auto status = ReadFileContent(fname, &buf);
+    auto status = utils::ReadFileContent(fname, &buf);
     if (status != RC_SUCCESS) {
         return status;
     }
