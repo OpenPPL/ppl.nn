@@ -15,28 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_KERNELS_ONNX_CLIP_KERNEL_H_
-#define _ST_HPC_PPL_NN_ENGINES_RISCV_KERNELS_ONNX_CLIP_KERNEL_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_PARAMS_SLICE_PARAM_H_
+#define _ST_HPC_PPL_NN_ENGINES_RISCV_PARAMS_SLICE_PARAM_H_
 
-#include "ppl/nn/engines/riscv/kernel.h"
-#include "ppl/nn/params/onnx/clip_param.h"
+#include <stdint.h>
+#include <vector>
 
 namespace ppl { namespace nn { namespace riscv {
 
-class ClipKernel : public RiscvKernel {
-public:
-    ClipKernel(const ir::Node* node) : RiscvKernel(node) {}
-    void SetParam(const ppl::nn::common::ClipParam* p) {
-        param_ = p;
-    }
-
-private:
-    ppl::common::RetCode DoExecute(KernelExecContext*) override;
-    bool CanDoExecute(const KernelExecContext&) const override;
-
-    const ppl::nn::common::ClipParam* param_ = nullptr;
+struct SliceParam {
+    std::vector<int64_t> starts;
+    std::vector<int64_t> ends;
+    std::vector<int64_t> axes;
+    std::vector<int64_t> steps;
 };
 
-}}} // namespace ppl::nn::riscv
+}}}; // namespace ppl::nn::riscv
 
 #endif
