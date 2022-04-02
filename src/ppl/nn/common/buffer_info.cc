@@ -53,10 +53,6 @@ BufferInfo& BufferInfo::operator=(BufferInfo&& info) {
 }
 
 RetCode BufferInfo::SetDevice(Device* dev) {
-    if (buffer_.addr) {
-        LOG(ERROR) << "BufferInfo::SetDevice() failed: buffer is not empty";
-        return RC_PERMISSION_DENIED;
-    }
     if (!dev) {
         LOG(ERROR) << "SetDevice failed: device is empty.";
         return RC_INVALID_VALUE;

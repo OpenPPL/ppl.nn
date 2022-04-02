@@ -35,7 +35,7 @@ TEST(TensorBufferInfoTest, with_buffer) {
     utils::GenericCpuDevice device;
     auto info = GenRandomTensorBufferInfo(&device);
     EXPECT_EQ(&device, info.GetDevice());
-    EXPECT_NE(RC_SUCCESS, info.SetDevice(&device)); // cannot set device if buffer is not empty
+    EXPECT_EQ(RC_SUCCESS, info.SetDevice(&device)); // set device even if buffer is not empty
     info.FreeBuffer();
 }
 

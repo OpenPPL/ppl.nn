@@ -74,7 +74,7 @@ TEST_F(TensorImplTest, empty) {
 TEST_F(TensorImplTest, with_buffer) {
     auto tensor = ConstructFp32TensorWithCpuDevice();
     EXPECT_EQ(RC_SUCCESS, tensor.ReallocBuffer());
-    EXPECT_NE(RC_SUCCESS, tensor.SetDevice(&cpu_device_)); // cannot set device if buffer is not empty
+    EXPECT_EQ(RC_SUCCESS, tensor.SetDevice(&cpu_device_)); // set device even if buffer is not empty
     tensor.FreeBuffer();
 }
 
