@@ -19,26 +19,28 @@
 #include "ppl/nn/models/onnx/utils.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseDepthToSpaceParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
-                                            ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::DepthToSpaceParam*>(arg);
+RetCode ParseDepthToSpaceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
+                               void* arg) {
+    auto param = static_cast<DepthToSpaceParam*>(arg);
 
     const std::string mode = utils::GetNodeAttrByKey<std::string>(pb_node, "mode", "DCR");
     if (mode == "DCR") {
-        param->mode = ppl::nn::common::DepthToSpaceParam::DCR;
+        param->mode = DepthToSpaceParam::DCR;
     } else if (mode == "CRD") {
-        param->mode = ppl::nn::common::DepthToSpaceParam::CRD;
+        param->mode = DepthToSpaceParam::CRD;
     } else {
         LOG(ERROR) << "invalid DepthToSpace mode `" << mode << "`.";
-        return ppl::common::RC_INVALID_VALUE;
+        return RC_INVALID_VALUE;
     }
 
     param->blocksize = utils::GetNodeAttrByKey<int32_t>(pb_node, "blocksize", 0);
 
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

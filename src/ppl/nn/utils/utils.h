@@ -18,7 +18,9 @@
 #ifndef _ST_HPC_PPL_NN_UTILS_UTILS_H_
 #define _ST_HPC_PPL_NN_UTILS_UTILS_H_
 
+#include "ppl/common/retcode.h"
 #include "ppl/nn/ir/node.h"
+#include <string>
 
 namespace ppl { namespace nn { namespace utils {
 
@@ -31,7 +33,7 @@ static inline ir::Node::Type MakePplConverterNodeType() {
     return ir::Node::Type("ppl", "Converter", 1);
 }
 
-RetCode ReadFileContent(const char* fname, std::string* buf);
+ppl::common::RetCode ReadFileContent(const char* fname, std::string* buf);
 
 }}} // namespace ppl::nn::utils
 

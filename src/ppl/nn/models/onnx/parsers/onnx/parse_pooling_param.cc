@@ -19,12 +19,13 @@
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParsePoolingParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
-                                       ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::PoolingParam*>(arg);
+RetCode ParsePoolingParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+    auto param = static_cast<PoolingParam*>(arg);
 
     param->kernel_shape = utils::GetNodeAttrsByKey<int32_t>(pb_node, "kernel_shape");
     param->dilations = utils::GetNodeAttrsByKey<int32_t>(pb_node, "dilations");
@@ -37,31 +38,31 @@ ppl::common::RetCode ParsePoolingParam(const ::onnx::NodeProto& pb_node, const m
     std::string auto_pad = utils::GetNodeAttrByKey<std::string>(pb_node, "auto_pad", std::string());
     if (!auto_pad.empty()) {
         LOG(ERROR) << "auto_pad is a DEPRECATED attribute and not supported.";
-        return ppl::common::RC_UNSUPPORTED;
+        return RC_UNSUPPORTED;
     }
 
     if (pb_node.op_type() == "GlobalAveragePool") {
         param->global_pooling = true;
-        param->mode = ppl::nn::common::PoolingParam::POOLING_AVERAGE_EXCLUDE;
-        return ppl::common::RC_SUCCESS;
+        param->mode = PoolingParam::POOLING_AVERAGE_EXCLUDE;
+        return RC_SUCCESS;
     } else {
         param->global_pooling = false;
     }
 
     if (pb_node.op_type() == "MaxPool") {
-        param->mode = ppl::nn::common::PoolingParam::POOLING_MAX;
+        param->mode = PoolingParam::POOLING_MAX;
     } else if (pb_node.op_type() == "AveragePool") {
         if (count_include_pad) {
-            param->mode = ppl::nn::common::PoolingParam::POOLING_AVERAGE_INCLUDE;
+            param->mode = PoolingParam::POOLING_AVERAGE_INCLUDE;
         } else {
-            param->mode = ppl::nn::common::PoolingParam::POOLING_AVERAGE_EXCLUDE;
+            param->mode = PoolingParam::POOLING_AVERAGE_EXCLUDE;
         }
     } else {
         LOG(ERROR) << "unexpected op type: " << pb_node.op_type();
-        return ppl::common::RC_INVALID_VALUE;
+        return RC_INVALID_VALUE;
     }
 
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

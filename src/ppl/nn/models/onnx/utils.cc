@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "ppl/common/file_mapping.h"
+#include "ppl/nn/utils/utils.h"
 #include "ppl/nn/models/onnx/utils.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
@@ -144,18 +146,60 @@ datatype_t ConvertOnnxDataTypeToPplDataType(int32_t onnx_data_type) {
     return dt_map[onnx_data_type];
 }
 
-RetCode ParseTensorProto(const ::onnx::TensorProto& pb_tensor, string* data, ir::Shape* shape) {
-    const int32_t onnx_data_type = pb_tensor.data_type();
-    const datatype_t ppl_data_type = utils::ConvertOnnxDataTypeToPplDataType(onnx_data_type);
-    const uint32_t elem_size = GetSizeOfDataType(ppl_data_type);
-
-    shape->data_type = ppl_data_type;
-    shape->data_format = DATAFORMAT_NDARRAY; // default data format
-    for (int j = 0; j < pb_tensor.dims_size(); ++j) {
-        auto dim = pb_tensor.dims(j);
-        shape->dims.push_back(dim);
+static RetCode LoadExternalData(const ::onnx::TensorProto& pb_tensor, const char* model_file_dir, string* data) {
+    if (!model_file_dir) {
+        LOG(ERROR) << "`model_file_dir` is null while there are external data of tensor[" << pb_tensor.name() << "].";
+        return RC_INVALID_VALUE;
     }
 
+    const string* location = nullptr;
+    const string* checksum = nullptr;
+    uint64_t offset = 0, length = UINT64_MAX;
+    for (int i = 0; i < pb_tensor.external_data_size(); ++i) {
+        const string& key = pb_tensor.external_data(i).key();
+        const string& value = pb_tensor.external_data(i).value();
+        if (key == "location") {
+            location = &value;
+        } else if (key == "offset") {
+            offset = std::stoll(value);
+        } else if (key == "length") {
+            length = std::stoll(value);
+        } else if (key == "checksum") {
+            checksum = &value;
+        } else {
+            LOG(ERROR) << "unrecognized key[" << key << "] in `external_data` field of TensorProto.";
+            return RC_UNSUPPORTED;
+        }
+    }
+
+    if (!location) {
+        LOG(ERROR) << "cannot find `location` of tensor[" << pb_tensor.name() << "] in `external_data` field.";
+        return RC_NOT_FOUND;
+    }
+    if (location->empty()) {
+        LOG(ERROR) << "`location` is empty of tensor[" << pb_tensor.name() << "].";
+        return RC_INVALID_VALUE;
+    }
+    if (checksum) {
+        LOG(WARNING) << "skip checksum checking.";
+    }
+
+    FileMapping fm;
+    const string full_path = string(model_file_dir) + "/" + *location;
+    auto status = fm.Init(full_path.c_str(), offset, length);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "mapping file[" << *location << "] in dir[" << model_file_dir
+                   << "] error: " << fm.GetErrorMessage();
+        return status;
+    }
+
+    data->assign(fm.Data(), fm.Size());
+    return RC_SUCCESS;
+}
+
+static RetCode LoadInternalData(const ::onnx::TensorProto& pb_tensor, datatype_t ppl_data_type, string* data) {
+    const int32_t onnx_data_type = pb_tensor.data_type();
+    const uint32_t elem_size = GetSizeOfDataType(ppl_data_type);
     if (onnx_data_type == ::onnx::TensorProto_DataType_FLOAT) {
         if (!pb_tensor.raw_data().empty()) {
             *data = pb_tensor.raw_data();
@@ -197,6 +241,28 @@ RetCode ParseTensorProto(const ::onnx::TensorProto& pb_tensor, string* data, ir:
     }
 
     return RC_SUCCESS;
+}
+
+RetCode ParseTensorProto(const ::onnx::TensorProto& pb_tensor, const char* model_file_dir, string* data,
+                         ir::Shape* shape) {
+    const int32_t onnx_data_type = pb_tensor.data_type();
+    const datatype_t ppl_data_type = utils::ConvertOnnxDataTypeToPplDataType(onnx_data_type);
+
+    shape->data_type = ppl_data_type;
+    shape->data_format = DATAFORMAT_NDARRAY; // default data format
+    for (int j = 0; j < pb_tensor.dims_size(); ++j) {
+        auto dim = pb_tensor.dims(j);
+        shape->dims.push_back(dim);
+    }
+
+    RetCode status;
+    if (pb_tensor.data_location() == ::onnx::TensorProto_DataLocation_EXTERNAL) {
+        status = LoadExternalData(pb_tensor, model_file_dir, data);
+    } else {
+        status = LoadInternalData(pb_tensor, ppl_data_type, data);
+    }
+
+    return status;
 }
 
 void ResolveExtraInputs(ir::GraphTopo* current, ir::Node* parent_node, ir::GraphTopo* parent_graph) {

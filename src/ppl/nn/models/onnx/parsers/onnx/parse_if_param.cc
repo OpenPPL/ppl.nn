@@ -21,6 +21,7 @@
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
@@ -57,9 +58,8 @@ static RetCode CollectExtraInputIndices(const ir::GraphTopo* current, const ir::
     return RC_SUCCESS;
 }
 
-RetCode ParseIfParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>& op_sets, void* arg, ir::Node* node,
-                     ir::GraphTopo* topo) {
-    auto param = (ppl::nn::common::IfParam*)arg;
+RetCode ParseIfParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node, void* arg) {
+    auto param = (IfParam*)arg;
     for (int i = 0; i < pb_node.attribute_size(); ++i) {
         auto& attr = pb_node.attribute(i);
         if (attr.type() != ::onnx::AttributeProto_AttributeType_GRAPH) {
@@ -70,14 +70,14 @@ RetCode ParseIfParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_
 
         if (attr.name() == "then_branch") {
             GraphParser parser;
-            auto status = parser.Parse(attr.g(), op_sets, &param->then_branch);
+            auto status = parser.Parse(attr.g(), *args.op_set, args.model_file_dir, &param->then_branch);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "parse then_branch of if op[" << pb_node.name() << "] failed: " << GetRetCodeStr(status);
                 return status;
             }
 
-            utils::ResolveExtraInputs(param->then_branch.topo.get(), node, topo);
-            status = CollectExtraInputIndices(param->then_branch.topo.get(), node, topo,
+            utils::ResolveExtraInputs(param->then_branch.topo.get(), node, args.topo);
+            status = CollectExtraInputIndices(param->then_branch.topo.get(), node, args.topo,
                                               &param->then_extra_input_indices_in_host_node);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "CollectExtraInputIndices of then branch failed: " << GetRetCodeStr(status);
@@ -85,14 +85,14 @@ RetCode ParseIfParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_
             }
         } else if (attr.name() == "else_branch") {
             GraphParser parser;
-            auto status = parser.Parse(attr.g(), op_sets, &param->else_branch);
+            auto status = parser.Parse(attr.g(), *args.op_set, args.model_file_dir, &param->else_branch);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "parse else_branch of if op[" << pb_node.name() << "] failed: " << GetRetCodeStr(status);
                 return status;
             }
 
-            utils::ResolveExtraInputs(param->else_branch.topo.get(), node, topo);
-            status = CollectExtraInputIndices(param->else_branch.topo.get(), node, topo,
+            utils::ResolveExtraInputs(param->else_branch.topo.get(), node, args.topo);
+            status = CollectExtraInputIndices(param->else_branch.topo.get(), node, args.topo,
                                               &param->else_extra_input_indices_in_host_node);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "CollectExtraInputIndices of else branch failed: " << GetRetCodeStr(status);

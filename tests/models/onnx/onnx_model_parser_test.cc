@@ -30,6 +30,6 @@ TEST_F(ModelParserTest, TestModelParser) {
     const string onnx_file = PPLNN_TESTDATA_DIR + string("/conv.onnx");
     FileMapping fm;
     EXPECT_EQ(RC_SUCCESS, fm.Init(onnx_file.c_str()));
-    auto res = onnx::ModelParser::Parse(fm.Data(), fm.Size(), &graph);
+    auto res = onnx::ModelParser::Parse(fm.Data(), fm.Size(), nullptr, &graph);
     EXPECT_EQ(RC_SUCCESS, res);
 }

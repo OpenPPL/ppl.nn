@@ -18,15 +18,16 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_argmax_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseArgMaxParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
-                                      ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::ArgMaxParam*>(arg);
+RetCode ParseArgMaxParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+    auto param = static_cast<ArgMaxParam*>(arg);
     param->axis = utils::GetNodeAttrByKey<int32_t>(pb_node, "axis", 0);
     param->keepdims = utils::GetNodeAttrByKey<int32_t>(pb_node, "keepdims", 1);
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

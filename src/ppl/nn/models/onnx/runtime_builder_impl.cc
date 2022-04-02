@@ -42,7 +42,8 @@ RuntimeBuilderImpl::~RuntimeBuilderImpl() {
     graph_info_.reset();
 }
 
-RetCode RuntimeBuilderImpl::Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num) {
+RetCode RuntimeBuilderImpl::Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num,
+                                 const char* model_file_dir) {
     resource_.engines.resize(engine_num);
     for (uint32_t i = 0; i < engine_num; ++i) {
         resource_.engines[i] = static_cast<EngineImpl*>(engines[i]);
@@ -50,7 +51,7 @@ RetCode RuntimeBuilderImpl::Init(const char* model_buf, uint64_t buf_len, Engine
 
     resource_.graph_partitioner = make_shared<EngineGraphPartitioner>();
 
-    auto status = ModelParser::Parse(model_buf, buf_len, &graph_);
+    auto status = ModelParser::Parse(model_buf, buf_len, model_file_dir, &graph_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse graph failed: " << GetRetCodeStr(status);
         return status;
@@ -68,7 +69,16 @@ RetCode RuntimeBuilderImpl::Init(const char* model_file, Engine** engines, uint3
         LOG(ERROR) << "Init filemapping from file [" << model_file << "] faild: " << GetRetCodeStr(status);
         return status;
     }
-    return Init(fm.Data(), fm.Size(), engines, engine_num);
+
+    string parent_dir;
+    auto pos = string(model_file).find_last_of("/\\");
+    if (pos == string::npos) {
+        parent_dir = ".";
+    } else {
+        parent_dir.assign(model_file, pos);
+    }
+
+    return Init(fm.Data(), fm.Size(), engines, engine_num, parent_dir.c_str());
 }
 
 RetCode RuntimeBuilderImpl::Preprocess() {

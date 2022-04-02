@@ -19,28 +19,29 @@
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParsePadParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg, ir::Node*,
-                                   ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::PadParam*>(arg);
+RetCode ParsePadParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+    auto param = static_cast<PadParam*>(arg);
     std::string mode = utils::GetNodeAttrByKey<std::string>(pb_node, "mode", "constant");
     if (mode == "constant") {
-        param->mode = ppl::nn::common::PadParam::PAD_MODE_CONSTANT;
+        param->mode = PadParam::PAD_MODE_CONSTANT;
     } else if (mode == "reflect") {
-        param->mode = ppl::nn::common::PadParam::PAD_MODE_REFLECT;
+        param->mode = PadParam::PAD_MODE_REFLECT;
     } else if (mode == "edge") {
-        param->mode = ppl::nn::common::PadParam::PAD_MODE_EDGE;
+        param->mode = PadParam::PAD_MODE_EDGE;
     } else {
         LOG(ERROR) << "Invalid pad mode " << mode << ".";
-        return ppl::common::RC_INVALID_VALUE;
+        return RC_INVALID_VALUE;
     }
 
     param->value = utils::GetNodeAttrByKey<float>(pb_node, "value", 0.0f);
     param->pads = utils::GetNodeAttrsByKey<int32_t>(pb_node, "pads");
 
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

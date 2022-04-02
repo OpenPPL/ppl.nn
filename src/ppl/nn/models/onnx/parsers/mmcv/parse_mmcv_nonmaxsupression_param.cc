@@ -18,17 +18,18 @@
 #include "ppl/nn/models/onnx/parsers/mmcv/parse_mmcv_nonmaxsupression_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseMMCVNMSParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
-                                       ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::MMCVNMSParam*>(arg);
+RetCode ParseMMCVNMSParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+    auto param = static_cast<MMCVNMSParam*>(arg);
 
     param->iou_threshold = utils::GetNodeAttrByKey<float>(pb_node, "iou_threshold", 0);
     param->offset = utils::GetNodeAttrByKey<int32_t>(pb_node, "offset", 0);
 
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

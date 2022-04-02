@@ -18,15 +18,16 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_split_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseSplitParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
-                                     ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::SplitParam*>(arg);
+RetCode ParseSplitParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+    auto param = static_cast<SplitParam*>(arg);
     param->axis = utils::GetNodeAttrByKey(pb_node, "axis", 0);
     param->split_point = utils::GetNodeAttrsByKey<int32_t>(pb_node, "split");
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

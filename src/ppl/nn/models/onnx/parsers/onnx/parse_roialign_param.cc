@@ -19,26 +19,27 @@
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
+using namespace ppl::common;
+using namespace ppl::nn::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseRoiAlignParam(const ::onnx::NodeProto& pb_node, const map<string, uint64_t>&, void* arg,
-                                        ir::Node*, ir::GraphTopo*) {
-    auto param = static_cast<ppl::nn::common::RoiAlignParam*>(arg);
+RetCode ParseRoiAlignParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+    auto param = static_cast<RoiAlignParam*>(arg);
     const std::string mode = utils::GetNodeAttrByKey<std::string>(pb_node, "mode", "avg");
     if (mode == "avg") {
-        param->mode = ppl::nn::common::RoiAlignParam::AVG;
+        param->mode = RoiAlignParam::AVG;
     } else if (mode == "max") {
-        param->mode = ppl::nn::common::RoiAlignParam::MAX;
+        param->mode = RoiAlignParam::MAX;
     } else {
         LOG(ERROR) << "Invalid mode " << mode << ".";
-        return ppl::common::RC_INVALID_VALUE;
+        return RC_INVALID_VALUE;
     }
     param->output_height = utils::GetNodeAttrByKey<uint32_t>(pb_node, "output_height", 1);
     param->output_width = utils::GetNodeAttrByKey<uint32_t>(pb_node, "output_width", 1);
     param->sampling_ratio = utils::GetNodeAttrByKey<uint32_t>(pb_node, "sampling_ratio", 0);
     param->spatial_scale = utils::GetNodeAttrByKey<float>(pb_node, "spatial_scale", 1.0f);
-    return ppl::common::RC_SUCCESS;
+    return RC_SUCCESS;
 }
 
 }}} // namespace ppl::nn::onnx

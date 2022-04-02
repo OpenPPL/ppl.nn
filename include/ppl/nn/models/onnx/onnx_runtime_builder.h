@@ -38,10 +38,11 @@ public:
     /**
        @brief init from a model buffer
        @param engines used to process this model
+       @param model_file_dir used to parse external data. can be nullptr if no external data.
        @note engines are managed by the caller
     */
-    virtual ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines,
-                                      uint32_t engine_num) = 0;
+    virtual ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num,
+                                      const char* model_file_dir = nullptr) = 0;
 
     virtual ppl::common::RetCode Configure(uint32_t, ...) = 0;
 
