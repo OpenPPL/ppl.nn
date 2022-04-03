@@ -24,15 +24,15 @@
 
 namespace ppl { namespace nn { namespace arm {
 
-class PPLShapeOperationOp final : public ArmOptKernel {
+class ShapeOperationOp final : public ArmOptKernel {
 public:
-    PPLShapeOperationOp(const ir::Node* node) : ArmOptKernel(node), op_(node) {}
+    ShapeOperationOp(const ir::Node* node) : ArmOptKernel(node), op_(node) {}
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
 
 private:
-    std::shared_ptr<ppl::nn::common::PPLShapeOperationParam> param_;
-    ppl::nn::common::PPLShapeOperationOp op_;
+    std::shared_ptr<ppl::nn::internal::ShapeOperationParam> param_;
+    ppl::nn::common::ShapeOperationOp op_;
 };
 
 }}} // namespace ppl::nn::arm

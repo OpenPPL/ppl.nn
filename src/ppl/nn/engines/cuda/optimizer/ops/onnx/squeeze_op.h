@@ -32,7 +32,7 @@ public:
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
 private:
-    ppl::nn::common::SqueezeParam param_;
+    ppl::nn::onnx::SqueezeParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

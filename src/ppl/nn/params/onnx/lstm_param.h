@@ -22,7 +22,7 @@
 #include <vector>
 #include <string>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 struct LSTMParam {
     typedef enum {
@@ -54,15 +54,13 @@ struct LSTMParam {
     int32_t input_forget;
 
     bool operator==(const LSTMParam& p) const {
-        const bool val_eq =
-            this->direction == p.direction &&
-            this->hidden_size == p.hidden_size &&
-            this->input_forget == p.input_forget &&
-            this->clip == p.clip;
-        bool list_eq =
-            this->activation_alpha.size() == p.activation_alpha.size() &&
-            this->activation_beta.size() == p.activation_beta.size() &&
-            this->activations.size() == p.activations.size();
+        const bool val_eq = (this->direction == p.direction &&
+                             this->hidden_size == p.hidden_size &&
+                             this->input_forget == p.input_forget &&
+                             this->clip == p.clip);
+        bool list_eq = (this->activation_alpha.size() == p.activation_alpha.size() &&
+                        this->activation_beta.size() == p.activation_beta.size() &&
+                        this->activations.size() == p.activations.size());
         if (list_eq) {
             for (size_t i = 0; i < this->activation_alpha.size(); ++i) {
                 if (this->activation_alpha[i] != p.activation_alpha[i]) {
@@ -83,11 +81,11 @@ struct LSTMParam {
                 }
             }
         }
-_LABEL_onnx_lstm_param_exit_list_cmp:
+    _LABEL_onnx_lstm_param_exit_list_cmp:
         return list_eq && val_eq;
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

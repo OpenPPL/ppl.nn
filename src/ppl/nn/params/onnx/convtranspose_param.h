@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 struct ConvTransposeParam {
     std::string auto_pad;
@@ -41,6 +41,6 @@ struct ConvTransposeParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

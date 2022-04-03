@@ -27,7 +27,7 @@ class NonMaxSuppressionKernel : public RiscvKernel {
 public:
     NonMaxSuppressionKernel(const ir::Node* node) : RiscvKernel(node) {}
 
-    void SetParam(const ppl::nn::common::NonMaxSuppressionParam* p) {
+    void SetParam(const ppl::nn::onnx::NonMaxSuppressionParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::NonMaxSuppressionParam* param_ = nullptr;
+    const ppl::nn::onnx::NonMaxSuppressionParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::riscv

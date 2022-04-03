@@ -9,7 +9,7 @@
 #include <vector>
 #include <string>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace internal {
 
 struct ShapeMatrix {
     static const int64_t MAXDIMSIZE = 8;
@@ -91,10 +91,10 @@ struct ShapeMatrix {
     bool scalar = false;
 };
 
-struct PPLShapeOperationParam {
+struct ShapeOperationParam final {
     std::map<edgeid_t, ShapeMatrix> alpha;
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::internal
 
 #endif

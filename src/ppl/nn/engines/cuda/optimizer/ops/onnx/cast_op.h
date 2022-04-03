@@ -36,7 +36,7 @@ public:
     };
 
 private:
-    ppl::nn::common::CastParam param_;
+    ppl::nn::onnx::CastParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

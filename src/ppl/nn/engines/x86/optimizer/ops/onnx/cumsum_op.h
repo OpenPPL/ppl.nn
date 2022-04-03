@@ -30,7 +30,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    std::shared_ptr<ppl::nn::common::CumSumParam> param_;
+    std::shared_ptr<ppl::nn::onnx::CumSumParam> param_;
 };
 
 }}} // namespace ppl::nn::x86

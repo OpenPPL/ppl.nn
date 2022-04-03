@@ -27,7 +27,7 @@ class TopKKernel : public X86Kernel {
 public:
     TopKKernel(const ir::Node* node) : X86Kernel(node) {}
 
-    void SetParam(const ppl::nn::common::TopKParam* p) {
+    void SetParam(const ppl::nn::onnx::TopKParam* p) {
         param_ = p;
     }
 
@@ -36,7 +36,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::TopKParam* param_ = nullptr;
+    const ppl::nn::onnx::TopKParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::x86

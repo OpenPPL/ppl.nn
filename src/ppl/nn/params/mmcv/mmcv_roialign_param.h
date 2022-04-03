@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <string>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace mmcv {
 
 struct MMCVRoiAlignParam {
     int64_t aligned;
@@ -38,6 +38,6 @@ struct MMCVRoiAlignParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::mmcv
 
 #endif

@@ -21,7 +21,7 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<PoolingParam> SerializePoolingParam(const ppl::nn::common::PoolingParam& param, FlatBufferBuilder* builder) {
+Offset<PoolingParam> SerializePoolingParam(const ppl::nn::onnx::PoolingParam& param, FlatBufferBuilder* builder) {
     auto fb_dilations = builder->CreateVector(param.dilations);
     auto fb_kernel_shape = builder->CreateVector(param.kernel_shape);
     auto fb_pads = builder->CreateVector(param.pads);
@@ -30,7 +30,7 @@ Offset<PoolingParam> SerializePoolingParam(const ppl::nn::common::PoolingParam& 
                               fb_pads, fb_strides);
 }
 
-void DeserializePoolingParam(const PoolingParam& fb_param, ppl::nn::common::PoolingParam* param) {
+void DeserializePoolingParam(const PoolingParam& fb_param, ppl::nn::onnx::PoolingParam* param) {
     param->ceil_mode = fb_param.ceil_mode();
     utils::Fbvec2Stdvec(fb_param.dilations(), &param->dilations);
     utils::Fbvec2Stdvec(fb_param.kernel_shape(), &param->kernel_shape);

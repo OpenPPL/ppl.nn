@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<ArgMaxParam> SerializeArgMaxParam(const ppl::nn::common::ArgMaxParam&,
+flatbuffers::Offset<ArgMaxParam> SerializeArgMaxParam(const ppl::nn::onnx::ArgMaxParam&,
                                                       flatbuffers::FlatBufferBuilder*);
-void DeserializeArgMaxParam(const ArgMaxParam&, ppl::nn::common::ArgMaxParam*);
+void DeserializeArgMaxParam(const ArgMaxParam&, ppl::nn::onnx::ArgMaxParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

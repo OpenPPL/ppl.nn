@@ -23,8 +23,8 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace common {
 
-KernelImpl* PPLShapeOperationOp::CreateKernelImpl() const {
-    auto kernel = new PPLShapeOperationKernel(node_);
+KernelImpl* ShapeOperationOp::CreateKernelImpl() const {
+    auto kernel = new ShapeOperationKernel(node_);
     return kernel;
 }
 

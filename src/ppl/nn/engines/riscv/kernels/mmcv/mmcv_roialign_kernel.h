@@ -27,7 +27,7 @@ class MMCVROIAlignKernel : public RiscvKernel {
 public:
     MMCVROIAlignKernel(const ir::Node* node) : RiscvKernel(node) {}
 
-    void SetParam(const ppl::nn::common::MMCVRoiAlignParam* p) {
+    void SetParam(const ppl::nn::mmcv::MMCVRoiAlignParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::MMCVRoiAlignParam* param_ = nullptr;
+    const ppl::nn::mmcv::MMCVRoiAlignParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::riscv

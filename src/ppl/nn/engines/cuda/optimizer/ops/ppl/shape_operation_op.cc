@@ -26,7 +26,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ppl::nn::common::PPLShapeOperationParam>(options, &param_);
+    auto status = GenericLoadParam<ppl::nn::internal::ShapeOperationParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
@@ -41,7 +41,7 @@ RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        auto param = (ppl::nn::common::PPLShapeOperationParam*)this->GetParam();
+        auto param = (ppl::nn::internal::ShapeOperationParam*)this->GetParam();
         auto input_dim_size = info->GetInput<TensorImpl>(0)->GetShape()->GetRealDimCount();
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
             auto output_shape = info->GetOutput<TensorImpl>(i)->GetShape();
@@ -72,7 +72,7 @@ RetCode PPLShapeOperationOp::Finalize(const OptKernelOptions& options) {
 
 KernelImpl* PPLShapeOperationOp::CreateKernelImpl() const {
     auto kernel = op_.CreateKernelImpl();
-    ((ppl::nn::common::PPLShapeOperationKernel*)kernel)->SetParam(&param_);
+    ((ppl::nn::common::ShapeOperationKernel*)kernel)->SetParam(&param_);
     return kernel;
 }
 

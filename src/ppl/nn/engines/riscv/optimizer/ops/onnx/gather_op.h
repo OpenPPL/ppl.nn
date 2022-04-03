@@ -36,7 +36,7 @@ public:
                                         std::vector<ppl::common::datatype_t>* selected_output_data_types) override;
 
 private:
-    std::shared_ptr<ppl::nn::common::GatherParam> param_;
+    std::shared_ptr<ppl::nn::onnx::GatherParam> param_;
 };
 
 }}} // namespace ppl::nn::riscv

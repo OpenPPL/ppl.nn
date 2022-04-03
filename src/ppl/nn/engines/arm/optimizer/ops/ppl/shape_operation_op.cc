@@ -25,8 +25,8 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ppl::nn::common::PPLShapeOperationParam>(options, &param_);
+RetCode ShapeOperationOp::Init(const OptKernelOptions& options) {
+    auto status = GenericLoadParam<ppl::nn::internal::ShapeOperationParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
@@ -36,9 +36,9 @@ RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
-KernelImpl* PPLShapeOperationOp::CreateKernelImpl() const {
+KernelImpl* ShapeOperationOp::CreateKernelImpl() const {
     auto kernel = op_.CreateKernelImpl();
-    ((ppl::nn::common::PPLShapeOperationKernel*)kernel)->SetParam(param_.get());
+    ((ppl::nn::common::ShapeOperationKernel*)kernel)->SetParam(param_.get());
     return kernel;
 }
 

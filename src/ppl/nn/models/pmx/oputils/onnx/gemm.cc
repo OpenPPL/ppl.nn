@@ -21,11 +21,11 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<GemmParam> SerializeGemmParam(const ppl::nn::common::GemmParam& param, FlatBufferBuilder* builder) {
+Offset<GemmParam> SerializeGemmParam(const ppl::nn::onnx::GemmParam& param, FlatBufferBuilder* builder) {
     return CreateGemmParam(*builder, param.alpha, param.beta, param.transA, param.transB);
 }
 
-void DeserializeGemmParam(const GemmParam& fb_param, ppl::nn::common::GemmParam* param) {
+void DeserializeGemmParam(const GemmParam& fb_param, ppl::nn::onnx::GemmParam* param) {
     param->alpha = fb_param.alpha();
     param->beta = fb_param.beta();
     param->transA = fb_param.trans_a();

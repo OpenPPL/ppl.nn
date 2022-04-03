@@ -21,11 +21,11 @@
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::common;
+using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace oputils {
 
-template<typename Tpad>
+template <typename Tpad>
 RetCode ReshapePad(InputOutputInfo* info, const void* arg, const Tpad* start_pads, const Tpad* end_pads) {
     auto param = (const PadParam*)arg;
 
@@ -67,12 +67,13 @@ RetCode ReshapePad(InputOutputInfo* info, const void* arg) {
             return RC_INVALID_VALUE;
         }
         if (pad_shape->GetDim(0) != 2 * dim_count) {
-            LOG(DEBUG) << "ERROR: pad shape's dim[0]'s value[" << pad_shape->GetDim(0) << "] != 2 * dim_count[" << dim_count
-                    << "].";
+            LOG(DEBUG) << "ERROR: pad shape's dim[0]'s value[" << pad_shape->GetDim(0) << "] != 2 * dim_count["
+                       << dim_count << "].";
             return RC_INVALID_VALUE;
         }
         if (pad_shape->GetDataType() != DATATYPE_INT64) {
-            LOG(DEBUG) << "ERROR: pad shape's data type[" << GetDataTypeStr(pad_shape->GetDataType()) << "] is not int64.";
+            LOG(DEBUG) << "ERROR: pad shape's data type[" << GetDataTypeStr(pad_shape->GetDataType())
+                       << "] is not int64.";
             return RC_INVALID_VALUE;
         }
 
@@ -87,8 +88,7 @@ RetCode ReshapePad(InputOutputInfo* info, const void* arg) {
     } else {
         auto p = (const PadParam*)arg;
         if ((uint32_t)p->pads.size() != 2 * dim_count) {
-            LOG(DEBUG) << "ERROR: pads size[" << p->pads.size() << "] != 2 * dim_count[" << dim_count
-                    << "].";
+            LOG(DEBUG) << "ERROR: pads size[" << p->pads.size() << "] != 2 * dim_count[" << dim_count << "].";
             return RC_INVALID_VALUE;
         }
         auto start_pads = p->pads.data();

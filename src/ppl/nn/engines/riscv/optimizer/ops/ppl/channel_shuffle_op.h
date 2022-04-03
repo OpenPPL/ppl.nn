@@ -37,7 +37,7 @@ public:
     void SetGroup(int64_t group);
 
 private:
-    std::shared_ptr<ppl::nn::common::ChannelShuffleParam> param_;
+    std::shared_ptr<ppl::nn::internal::ChannelShuffleParam> param_;
 };
 
 }}} // namespace ppl::nn::riscv

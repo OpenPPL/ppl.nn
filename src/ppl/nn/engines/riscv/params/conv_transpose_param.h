@@ -27,7 +27,7 @@
 namespace ppl { namespace nn { namespace riscv {
 
 struct ConvTransposeParam {
-    std::shared_ptr<ppl::nn::common::ConvTransposeParam> param;
+    std::shared_ptr<ppl::nn::onnx::ConvTransposeParam> param;
     ppl::kernel::riscv::conv_transpose_common_algo_info algo_info;
     std::shared_ptr<void> weight;
     std::shared_ptr<void> bias;

@@ -28,7 +28,7 @@ struct ConvTransposeExtraParam {
 };
 
 struct CudaConvTransposeParam {
-    ppl::nn::common::ConvTransposeParam param;
+    ppl::nn::onnx::ConvTransposeParam param;
     ConvTransposeExtraParam extra_param;
 };
 

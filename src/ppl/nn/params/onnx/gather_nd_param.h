@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 struct GatherNDParam {
     int32_t batch_dims; // this attribute not included in opset=11, so will not process this
@@ -31,6 +31,6 @@ struct GatherNDParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

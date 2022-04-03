@@ -82,7 +82,7 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
         attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
         PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
         return 0.0f;
-    }  else { // Give the default kernel
+    } else { // Give the default kernel
         attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";
         attr_param_.extra_param.algo_info.kid = 0;
         attr_param_.extra_param.algo_info.splitk = 1;
@@ -118,23 +118,23 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
     LOG(INFO) << "Compiling " << node->GetName();
     int device_id = options.device->GetDeviceId();
     PPLCUDAConvolutionPredictKernel(shape_in0.GetDataType(), attr_param_.extra_param.algo_info, temp_conv_param);
-    auto timer = PPLCUDAGemmJITSelectKernel(device_id, stream, shape_in0.GetDataType(), &shape_in0, input_buffer.addr, &shape_in1,
-                                            weight_buffer.addr, bias_buffer.addr, &shape_out, output_buffer.addr,
-                                            temp_buffer.addr, temp_conv_param, temp_fuse_param,
+    auto timer = PPLCUDAGemmJITSelectKernel(device_id, stream, shape_in0.GetDataType(), &shape_in0, input_buffer.addr,
+                                            &shape_in1, weight_buffer.addr, bias_buffer.addr, &shape_out,
+                                            output_buffer.addr, temp_buffer.addr, temp_conv_param, temp_fuse_param,
                                             attr_param_.extra_param.algo_info);
 #else
     // Do Select
-    ppl::nn::common::GemmParam param;
+    ppl::nn::onnx::GemmParam param;
     param.transA = 0;
     param.transB = 0;
     param.bias_term = temp_conv_param.has_bias;
     auto timer = PPLCUDAGemmSelectKernel(stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
-                                         bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr,
-                                         param, temp_fuse_param, attr_param_.extra_param.algo_info);
+                                         bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr, param,
+                                         temp_fuse_param, attr_param_.extra_param.algo_info);
 #endif
     CudaArgs::AlgoSelects algo_select;
-    algo_select.kname  = attr_param_.extra_param.algo_info.algo_name;
-    algo_select.kid    = attr_param_.extra_param.algo_info.kid;
+    algo_select.kname = attr_param_.extra_param.algo_info.algo_name;
+    algo_select.kid = attr_param_.extra_param.algo_info.kid;
     algo_select.splitk = attr_param_.extra_param.algo_info.splitk;
     algo_select.splitf = attr_param_.extra_param.algo_info.splitf;
     options.algos->emplace(key_str, std::move(algo_select));
@@ -178,7 +178,8 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
             weight_constat_info.SetBuffer(buffer, options.device, true);
         }
 
-        auto size = pplConvTransposeGetFilterBufSizeCudaFp32(shape_in1.GetDim(0), shape_in1.GetDim(1), shape_in1.GetDim(2), shape_in1.GetDim(3));
+        auto size = pplConvTransposeGetFilterBufSizeCudaFp32(shape_in1.GetDim(0), shape_in1.GetDim(1),
+                                                             shape_in1.GetDim(2), shape_in1.GetDim(3));
         ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_temp_buffer, size, RC_OUT_OF_MEMORY)
         ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_input_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
         status = options.device->GetDataConverter()->ConvertFromHost(&filter_input_buffer, postshape,
@@ -188,8 +189,8 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
             return status;
         }
 
-        PPLCUDAConvTransposeCvt(stream, filter_input_buffer.addr, filter_temp_buffer.addr, weight_constat_info.GetBufferDesc().addr,
-                                &shape_in1, &attr_param_.param);
+        PPLCUDAConvTransposeCvt(stream, filter_input_buffer.addr, filter_temp_buffer.addr,
+                                weight_constat_info.GetBufferDesc().addr, &shape_in1, &attr_param_.param);
 
         options.info->constants.emplace(preedge_id, std::move(weight_constat_info));
         *options.tensors->find(preedge_id)->second->GetShape() = postshape;

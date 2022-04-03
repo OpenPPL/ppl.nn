@@ -32,7 +32,7 @@ public:
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
 private:
-    ppl::nn::common::SplitParam param_;
+    ppl::nn::onnx::SplitParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

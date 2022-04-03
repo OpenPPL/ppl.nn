@@ -36,7 +36,7 @@ public:
     };
 
 private:
-    ppl::nn::common::SoftmaxParam param_;
+    ppl::nn::onnx::SoftmaxParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

@@ -35,7 +35,7 @@ public:
     };
 
 private:
-    ppl::nn::common::ChannelShuffleParam param_;
+    ppl::nn::internal::ChannelShuffleParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

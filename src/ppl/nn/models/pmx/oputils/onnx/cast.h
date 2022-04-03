@@ -23,8 +23,8 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<CastParam> SerializeCastParam(const ppl::nn::common::CastParam&, flatbuffers::FlatBufferBuilder*);
-void DeserializeCastParam(const CastParam&, ppl::nn::common::CastParam*);
+flatbuffers::Offset<CastParam> SerializeCastParam(const ppl::nn::onnx::CastParam&, flatbuffers::FlatBufferBuilder*);
+void DeserializeCastParam(const CastParam&, ppl::nn::onnx::CastParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

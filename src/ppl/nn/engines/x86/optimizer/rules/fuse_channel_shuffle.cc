@@ -46,7 +46,7 @@ inline void GetSliceParam(const ir::Node* node, const ir::GraphTopo* graph_topo,
             auto it = constants.find(starts_edge->GetId());
             const auto starts_data = it->second.data;
             starts = std::vector<int64_t>((const int64_t*)starts_data.data(),
-                                        (const int64_t*)starts_data.data() + starts_data.size() / sizeof(int64_t));
+                                          (const int64_t*)starts_data.data() + starts_data.size() / sizeof(int64_t));
         }
 
         auto ends_edge = graph_topo->GetEdgeById(node->GetInput(2));
@@ -70,7 +70,7 @@ inline void GetSliceParam(const ir::Node* node, const ir::GraphTopo* graph_topo,
             auto it = constants.find(steps_edge->GetId());
             const auto steps_data = it->second.data;
             steps = std::vector<int64_t>((const int64_t*)steps_data.data(),
-                                        (const int64_t*)steps_data.data() + steps_data.size() / sizeof(int64_t));
+                                         (const int64_t*)steps_data.data() + steps_data.size() / sizeof(int64_t));
         }
     } else {
         auto& attrs = graph_data->attrs;
@@ -78,7 +78,7 @@ inline void GetSliceParam(const ir::Node* node, const ir::GraphTopo* graph_topo,
         if (node_attr == attrs.end()) {
             return;
         }
-        common::SliceParam* param = (common::SliceParam*)node_attr->second.get();
+        auto param = (ppl::nn::onnx::SliceParam*)node_attr->second.get();
         axes.assign(param->axes.begin(), param->axes.end());
         ends.assign(param->ends.begin(), param->ends.end());
         starts.assign(param->starts.begin(), param->starts.end());
@@ -179,7 +179,7 @@ bool FuseChannelShuffle(const OptKernelOptions& options) {
             if (attrs.find(trans_node_id) == attrs.end()) {
                 continue;
             }
-            common::TransposeParam* transpose_param = (common::TransposeParam*)attrs[trans_node_id].get();
+            auto transpose_param = (ppl::nn::onnx::TransposeParam*)attrs[trans_node_id].get();
             auto perm = transpose_param->perm;
             if (perm.size() != 5) {
                 continue;
@@ -204,7 +204,7 @@ bool FuseChannelShuffle(const OptKernelOptions& options) {
                 reshape1_prev_node->GetType().domain == "" && reshape1_prev_node->GetType().name == "Concat" &&
                 reshape1_prev_node->GetInputCount() == 2) // only support two input concat
             {
-                auto concat_param = (common::ConcatParam*)attrs[reshape1_prev_node->GetId()].get();
+                auto concat_param = (ppl::nn::onnx::ConcatParam*)attrs[reshape1_prev_node->GetId()].get();
                 if (concat_param->axis == 1) {
                     int32_t sum_channels = 0;
                     for (uint32_t i = 0; i < reshape1_prev_node->GetInputCount(); i++) {
@@ -221,7 +221,8 @@ bool FuseChannelShuffle(const OptKernelOptions& options) {
 
             // check next split/slice
             std::vector<ir::Node*> reshape2_next_nodes;
-            for (auto consumer_it = reshape2_output_edge->CreateConsumerIter(); consumer_it.IsValid(); consumer_it.Forward()) {
+            for (auto consumer_it = reshape2_output_edge->CreateConsumerIter(); consumer_it.IsValid();
+                 consumer_it.Forward()) {
                 reshape2_next_nodes.push_back(graph_topo->GetNodeById(consumer_it.Get()));
             }
 
@@ -231,7 +232,7 @@ bool FuseChannelShuffle(const OptKernelOptions& options) {
                     reshape2_next_node->GetType().name == "Split" &&
                     reshape2_next_node->GetOutputCount() == group) // only support 2 output split
                 {
-                    auto split_param = (common::SplitParam*)attrs[reshape2_next_node->GetId()].get();
+                    auto split_param = (ppl::nn::onnx::SplitParam*)attrs[reshape2_next_node->GetId()].get();
                     if (split_param->axis == 1) {
                         int32_t sum_channels = 0;
                         for (uint32_t i = 0; i < reshape2_next_node->GetOutputCount(); i++) {
@@ -246,10 +247,8 @@ bool FuseChannelShuffle(const OptKernelOptions& options) {
                     }
                 }
             } else if (reshape2_next_nodes.size() == 2 && group == 2) { // check next two slice
-                if (reshape2_next_nodes[0] != nullptr &&
-                    reshape2_next_nodes[1] != nullptr &&
-                    reshape2_next_nodes[0]->GetType().domain == "" &&
-                    reshape2_next_nodes[1]->GetType().domain == "" &&
+                if (reshape2_next_nodes[0] != nullptr && reshape2_next_nodes[1] != nullptr &&
+                    reshape2_next_nodes[0]->GetType().domain == "" && reshape2_next_nodes[1]->GetType().domain == "" &&
                     reshape2_next_nodes[0]->GetType().name == "Slice" &&
                     reshape2_next_nodes[1]->GetType().name == "Slice") {
                     std::vector<int64_t> starts0, ends0, axes0, steps0;
@@ -277,12 +276,9 @@ bool FuseChannelShuffle(const OptKernelOptions& options) {
 
             /******************** do optimize ***********************/
             /** 1. create & register fused op **/
-            std::string channel_shuffle_node_name =
-                "ChannelShuffle_" +
-                (fuse_concat ? (reshape1_prev_node->GetName() + "_") : "") +
-                reshape1_node->GetName() + "_" +
-                trans_node->GetName() + "_" +
-                reshape2_node->GetName() +
+            std::string channel_shuffle_node_name = "ChannelShuffle_" +
+                (fuse_concat ? (reshape1_prev_node->GetName() + "_") : "") + reshape1_node->GetName() + "_" +
+                trans_node->GetName() + "_" + reshape2_node->GetName() +
                 (fuse_split ? ("_" + reshape2_next_nodes[0]->GetName()) : "") +
                 (fuse_slice ? ("_" + reshape2_next_nodes[0]->GetName() + "_" + reshape2_next_nodes[1]->GetName()) : "");
             auto node_ret_pair = graph_topo->AddNode(channel_shuffle_node_name);
@@ -295,7 +291,7 @@ bool FuseChannelShuffle(const OptKernelOptions& options) {
 
             auto param_ref = graph_data->attrs.find(channel_shuffle_node->GetId());
             if (param_ref == graph_data->attrs.end()) {
-                auto channel_shuffle_param = std::make_shared<ppl::nn::common::ChannelShuffleParam>();
+                auto channel_shuffle_param = std::make_shared<ppl::nn::internal::ChannelShuffleParam>();
                 channel_shuffle_param->group = group;
                 graph_data->attrs[channel_shuffle_node->GetId()] = channel_shuffle_param;
             } else {

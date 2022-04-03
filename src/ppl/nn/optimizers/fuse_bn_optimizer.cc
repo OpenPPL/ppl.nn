@@ -160,8 +160,8 @@ static bool FuseConvBatchNormalization(ir::Graph* graph) {
 
             float eps = 1e-5;
             if (attrs.find(bn_node->GetId()) != attrs.end()) {
-                const ppl::nn::common::BatchNormalizationParam* param =
-                    (const ppl::nn::common::BatchNormalizationParam*)attrs[bn_node->GetId()].get();
+                const ppl::nn::onnx::BatchNormalizationParam* param =
+                    (const ppl::nn::onnx::BatchNormalizationParam*)attrs[bn_node->GetId()].get();
                 eps = param->epsilon;
             }
 

@@ -27,7 +27,7 @@ namespace ppl { namespace nn { namespace cuda {
 class ScatterElementsKernel : public CudaKernel {
 public:
     ScatterElementsKernel(const ir::Node* node) : CudaKernel(node) {}
-    void SetParam(const ppl::nn::common::ScatterElementsParam* p) {
+    void SetParam(const ppl::nn::onnx::ScatterElementsParam* p) {
         param_ = p;
     }
 
@@ -36,7 +36,7 @@ private:
     bool CanDoExecute(const KernelExecContext&) const override;
 
 private:
-    const ppl::nn::common::ScatterElementsParam* param_ = nullptr;
+    const ppl::nn::onnx::ScatterElementsParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::cuda

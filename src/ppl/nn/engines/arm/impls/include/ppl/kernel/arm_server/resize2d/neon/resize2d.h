@@ -29,7 +29,7 @@ ppl::common::RetCode resize2d(
     const void *src,
     const float scale_h,
     const float scale_w,
-    const ppl::nn::common::ResizeParam *param,
+    const ppl::nn::onnx::ResizeParam *param,
     void *dst);
 
 }}}}; // namespace ppl::kernel::arm_server::neon

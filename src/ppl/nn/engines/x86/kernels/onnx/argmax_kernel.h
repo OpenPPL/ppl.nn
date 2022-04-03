@@ -27,7 +27,7 @@ class ArgMaxKernel : public X86Kernel {
 public:
     ArgMaxKernel(const ir::Node* node) : X86Kernel(node) {}
 
-    void SetParam(const ppl::nn::common::ArgMaxParam* p) {
+    void SetParam(const ppl::nn::onnx::ArgMaxParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::ArgMaxParam* param_ = nullptr;
+    const ppl::nn::onnx::ArgMaxParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::x86

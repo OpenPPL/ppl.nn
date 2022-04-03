@@ -42,7 +42,7 @@ public:
 
 private:
     ppl::nn::arm::FCParam* fc_param_;
-    std::shared_ptr<ppl::nn::common::GemmParam> param_;
+    std::shared_ptr<ppl::nn::onnx::GemmParam> param_;
     bool gemm_fuse_relu_ = false;
 };
 

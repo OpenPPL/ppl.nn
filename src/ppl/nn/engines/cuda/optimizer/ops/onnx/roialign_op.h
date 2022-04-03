@@ -32,7 +32,7 @@ public:
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
 private:
-    ppl::nn::common::RoiAlignParam param_;
+    ppl::nn::onnx::RoiAlignParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

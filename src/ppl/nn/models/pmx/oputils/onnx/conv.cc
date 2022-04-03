@@ -21,7 +21,7 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<ConvParam> SerializeConvParam(const ppl::nn::common::ConvParam& param, FlatBufferBuilder* builder) {
+Offset<ConvParam> SerializeConvParam(const ppl::nn::onnx::ConvParam& param, FlatBufferBuilder* builder) {
     auto fb_dilations = builder->CreateVector(param.dilations);
     auto fb_kernel_shape = builder->CreateVector(param.kernel_shape);
     auto fb_pads = builder->CreateVector(param.pads);
@@ -30,7 +30,7 @@ Offset<ConvParam> SerializeConvParam(const ppl::nn::common::ConvParam& param, Fl
                            fb_kernel_shape, fb_pads, fb_strides);
 }
 
-void DeserializeConvParam(const ConvParam& fb_param, ppl::nn::common::ConvParam* param) {
+void DeserializeConvParam(const ConvParam& fb_param, ppl::nn::onnx::ConvParam* param) {
     param->auto_pad = static_cast<uint32_t>(fb_param.auto_pad());
     param->group = fb_param.group();
     utils::Fbvec2Stdvec(fb_param.dilations(), &param->dilations);

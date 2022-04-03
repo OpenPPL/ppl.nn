@@ -22,7 +22,7 @@
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::common;
+using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 

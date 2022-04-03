@@ -27,7 +27,7 @@ class ReduceMeanKernel : public RiscvKernel {
 public:
     ReduceMeanKernel(const ir::Node* node) : RiscvKernel(node) {}
 
-    void SetParam(const ppl::nn::common::ReduceParam* p) {
+    void SetParam(const ppl::nn::onnx::ReduceParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::ReduceParam* param_ = nullptr;
+    const ppl::nn::onnx::ReduceParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::riscv

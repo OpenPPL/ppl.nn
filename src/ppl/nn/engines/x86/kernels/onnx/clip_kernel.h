@@ -27,7 +27,7 @@ class ClipKernel : public X86Kernel {
 public:
     ClipKernel(const ir::Node* node) : X86Kernel(node) {}
 
-    void SetParam(const ppl::nn::common::ClipParam* p) {
+    void SetParam(const ppl::nn::onnx::ClipParam* p) {
         param_ = p;
     }
 
@@ -36,7 +36,7 @@ private:
 
     bool CanDoExecute(const KernelExecContext&) const override;
 
-    const ppl::nn::common::ClipParam* param_ = nullptr;
+    const ppl::nn::onnx::ClipParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::x86

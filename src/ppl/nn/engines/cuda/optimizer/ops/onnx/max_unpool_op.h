@@ -32,7 +32,7 @@ public:
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
 private:
-    ppl::nn::common::MaxUnpoolParam param_;
+    ppl::nn::onnx::MaxUnpoolParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

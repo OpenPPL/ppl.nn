@@ -20,7 +20,7 @@
 
 #include "ppl/nn/ir/graph.h"
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 struct IfParam {
     ir::Graph then_branch;
@@ -38,6 +38,6 @@ struct IfParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

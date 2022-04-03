@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <string>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace mmcv {
 
 struct MMCVGridSampleParam {
     int64_t align_corners;
@@ -34,6 +34,6 @@ struct MMCVGridSampleParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::mmcv
 
 #endif

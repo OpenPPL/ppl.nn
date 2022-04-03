@@ -45,7 +45,7 @@ public:
 
 private:
     Convolution2DParam* conv2d_param_;
-    std::shared_ptr<ppl::nn::common::ConvParam> param_;
+    std::shared_ptr<ppl::nn::onnx::ConvParam> param_;
 };
 
 }}} // namespace ppl::nn::arm

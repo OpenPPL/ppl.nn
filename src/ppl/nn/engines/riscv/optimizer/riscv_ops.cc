@@ -163,7 +163,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<MMCVROIAlignOp>("mmcv", "MMCVRoiAlign", 1, 1);
 
     // ppl
-    RegisterOptKernelCreator<PPLShapeOperationOp>("ppl", "Shape", 1, 1);
+    RegisterOptKernelCreator<ShapeOperationOp>("ppl", "Shape", 1, 1);
     RegisterOptKernelCreator<ReorderOp>("ppl", "Reorder", 1, 1);
     RegisterOptKernelCreator<ChannelShuffleOp>("ppl", "ChannelShuffle", 1, 1);
 }

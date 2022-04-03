@@ -27,7 +27,7 @@ class MMCVModulatedDeformConv2dKernel : public CudaKernel {
 public:
     MMCVModulatedDeformConv2dKernel(const ir::Node* node) : CudaKernel(node) {}
 
-    void SetParam(const ppl::nn::common::MMCVModulatedDeformConv2dParam* p) {
+    void SetParam(const ppl::nn::mmcv::MMCVModulatedDeformConv2dParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::MMCVModulatedDeformConv2dParam* param_ = nullptr;
+    const ppl::nn::mmcv::MMCVModulatedDeformConv2dParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::cuda

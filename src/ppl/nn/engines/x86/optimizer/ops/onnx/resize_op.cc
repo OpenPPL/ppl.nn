@@ -44,7 +44,7 @@ RetCode ResizeOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>
                                vector<dataformat_t>* selected_output_formats) {
     auto input_format = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
     if (input_format == DATAFORMAT_N16CX &&
-        param_->mode != ppl::nn::common::ResizeParam::RESIZE_MODE_CUBIC) { // cubic only support ndarray now
+        param_->mode != ppl::nn::onnx::ResizeParam::RESIZE_MODE_CUBIC) { // cubic only support ndarray now
         selected_input_formats->at(0) = DATAFORMAT_N16CX;
         selected_output_formats->at(0) = DATAFORMAT_N16CX;
     }

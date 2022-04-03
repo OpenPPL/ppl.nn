@@ -42,7 +42,7 @@ ppl::common::RetCode DepthToSpaceKernel::DoExecute(KernelExecContext* ctx) {
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
         if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
-            if (param_->mode == ppl::nn::common::DepthToSpaceParam::CRD) {
+            if (param_->mode == ppl::nn::onnx::DepthToSpaceParam::CRD) {
                 return kernel::x86::depth_to_space_ndarray_crd_fp32(input->GetShape(), output->GetShape(),
                                                                     input->GetBufferPtr<const float>(),
                                                                     param_->blocksize, output->GetBufferPtr<float>());

@@ -24,11 +24,11 @@
 
 namespace ppl { namespace nn { namespace common {
 
-class PPLShapeOperationKernel : public CommonKernelImpl {
+class ShapeOperationKernel : public CommonKernelImpl {
 public:
-    PPLShapeOperationKernel(const ir::Node* node) : CommonKernelImpl(node) {}
+    ShapeOperationKernel(const ir::Node* node) : CommonKernelImpl(node) {}
 
-    void SetParam(const ppl::nn::common::PPLShapeOperationParam* p) {
+    void SetParam(const ppl::nn::internal::ShapeOperationParam* p) {
         param_ = p;
     }
 
@@ -36,7 +36,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::PPLShapeOperationParam* param_ = nullptr;
+    const ppl::nn::internal::ShapeOperationParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::common

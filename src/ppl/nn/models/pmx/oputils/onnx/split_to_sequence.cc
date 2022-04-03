@@ -15,18 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_CONVTRANSPOSE_H_
-#define _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_CONVTRANSPOSE_H_
-
-#include "ppl/nn/models/pmx/generated/onnx_op_generated.h"
-#include "ppl/nn/params/onnx/convtranspose_param.h"
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/onnx/split_to_sequence.h"
+using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<ConvTransposeParam> SerializeConvTransposeParam(const ppl::nn::common::ConvTransposeParam&,
-                                                                    flatbuffers::FlatBufferBuilder*);
-void DeserializeConvTransposeParam(const ConvTransposeParam&, ppl::nn::common::ConvTransposeParam*);
+Offset<SplitToSequenceParam> SerializeSplitToSequenceParam(const ppl::nn::onnx::SplitToSequenceParam& param,
+                                                           FlatBufferBuilder* builder) {
+    return CreateSplitToSequenceParam(*builder, param.axis, param.keepdims);
+}
+
+void DeserializeSplitToSequenceParam(const SplitToSequenceParam& fb_param, ppl::nn::onnx::SplitToSequenceParam* param) {
+    param->axis = fb_param.axis();
+    param->keepdims = fb_param.keepdims();
+}
 
 }}}} // namespace ppl::nn::pmx::onnx
-
-#endif

@@ -23,8 +23,8 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<PadParam> SerializePadParam(const ppl::nn::common::PadParam&, flatbuffers::FlatBufferBuilder*);
-void DeserializePadParam(const PadParam&, ppl::nn::common::PadParam*);
+flatbuffers::Offset<PadParam> SerializePadParam(const ppl::nn::onnx::PadParam&, flatbuffers::FlatBufferBuilder*);
+void DeserializePadParam(const PadParam&, ppl::nn::onnx::PadParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

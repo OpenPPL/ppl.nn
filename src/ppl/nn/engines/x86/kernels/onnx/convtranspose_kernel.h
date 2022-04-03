@@ -27,7 +27,7 @@ class ConvTransposeKernel : public X86Kernel {
 public:
     ConvTransposeKernel(const ir::Node* node) : X86Kernel(node) {}
 
-    void SetParam(const ppl::nn::common::ConvTransposeParam* p) {
+    void SetParam(const ppl::nn::onnx::ConvTransposeParam* p) {
         param_ = p;
     }
 
@@ -36,7 +36,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::ConvTransposeParam* param_ = nullptr;
+    const ppl::nn::onnx::ConvTransposeParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::x86

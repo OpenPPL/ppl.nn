@@ -30,7 +30,7 @@ static ppl::common::RetCode resize2d_wrapper(
     const eT *src,
     const float scale_h,
     const float scale_w,
-    const ppl::nn::common::ResizeParam *param,
+    const ppl::nn::onnx::ResizeParam *param,
     eT *dst)
 {
     const auto data_format = src_shape->GetDataFormat();
@@ -95,7 +95,7 @@ ppl::common::RetCode resize2d(
     const void *src,
     const float scale_h,
     const float scale_w,
-    const ppl::nn::common::ResizeParam *param,
+    const ppl::nn::onnx::ResizeParam *param,
     void *dst)
 {
     const auto data_type = src_shape->GetDataType();

@@ -20,6 +20,7 @@
 #include "ppl/nn/params/onnx/constant_param.h"
 using namespace std;
 using namespace ppl::common;
+using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn {
 
@@ -46,7 +47,7 @@ ppl::common::RetCode ConstantNodeOptimizer::Optimize(ir::Graph* graph) const {
                 graph->topo->DelEdgeById(edge_id);
                 return RC_NOT_FOUND;
             }
-            const common::ConstantParam* param = (const common::ConstantParam*)param_it->second.get();
+            auto param = (const ConstantParam*)param_it->second.get();
 
             // copy constant info to graph
             auto constant_ret = constants.insert(make_pair(edge_id, ir::Constant()));

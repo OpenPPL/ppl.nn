@@ -21,13 +21,13 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<ResizeParam> SerializeResizeParam(const ppl::nn::common::ResizeParam& param, FlatBufferBuilder* builder) {
+Offset<ResizeParam> SerializeResizeParam(const ppl::nn::onnx::ResizeParam& param, FlatBufferBuilder* builder) {
     return CreateResizeParam(*builder, static_cast<ResizeCoordTransMode>(param.coord_trans_mode), param.cubic_coeff_a,
                              param.exclude_outside, param.extrapolation_value, static_cast<ResizeMode>(param.mode),
                              static_cast<ResizeNearestMode>(param.nearest_mode));
 }
 
-void DeserializeResizeParam(const ResizeParam& fb_param, ppl::nn::common::ResizeParam* param) {
+void DeserializeResizeParam(const ResizeParam& fb_param, ppl::nn::onnx::ResizeParam* param) {
     param->coord_trans_mode = static_cast<uint32_t>(fb_param.coord_trans_mode());
     param->cubic_coeff_a = fb_param.cubic_coeff_a();
     param->exclude_outside = fb_param.exclude_outside();

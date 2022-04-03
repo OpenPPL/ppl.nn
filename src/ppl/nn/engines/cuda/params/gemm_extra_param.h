@@ -30,7 +30,7 @@ struct GemmExtraParam {
 };
 
 struct CudaGemmParam {
-    ppl::nn::common::GemmParam param;
+    ppl::nn::onnx::GemmParam param;
     GemmExtraParam extra_param;
 };
 

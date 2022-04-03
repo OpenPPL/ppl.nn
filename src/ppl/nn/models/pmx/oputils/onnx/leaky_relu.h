@@ -15,20 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/pmx/utils.h"
-#include "ppl/nn/models/pmx/oputils/onnx/batchnorm.h"
-using namespace flatbuffers;
+#ifndef _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_LEAKYRELU_H_
+#define _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_LEAKYRELU_H_
+
+#include "ppl/nn/models/pmx/generated/onnx_op_generated.h"
+#include "ppl/nn/params/onnx/leaky_relu_param.h"
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<BatchNormalizationParam> SerializeBatchNormalizationParam(const ppl::nn::common::BatchNormalizationParam& param,
-                                                                 flatbuffers::FlatBufferBuilder* builder) {
-    return CreateBatchNormalizationParam(*builder, param.epsilon, param.momentum);
-}
-void DeserializeBatchNormalizationParam(const BatchNormalizationParam& fb_param,
-                                        ppl::nn::common::BatchNormalizationParam* param) {
-    param->epsilon = fb_param.epsilon();
-    param->momentum = fb_param.momentum();
-}
+flatbuffers::Offset<LeakyReluParam> SerializeLeakyReluParam(const ppl::nn::onnx::LeakyReluParam&,
+                                                            flatbuffers::FlatBufferBuilder*);
+void DeserializeLeakyReluParam(const LeakyReluParam&, ppl::nn::onnx::LeakyReluParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
+
+#endif

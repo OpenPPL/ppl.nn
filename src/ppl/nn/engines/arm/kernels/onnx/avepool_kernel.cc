@@ -52,7 +52,7 @@ ppl::common::RetCode AvePoolKernel::DoExecute(KernelExecContext* ctx) {
     }
     dilation_h = param_->dilations.size() >= 1 ? param_->dilations[0] : 1;
     dilation_w = param_->dilations.size() >= 2 ? param_->dilations[1] : 1;
-    bool include_pads = (param_->mode == ppl::nn::common::PoolingParam::POOLING_AVERAGE_INCLUDE);
+    bool include_pads = (param_->mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_INCLUDE);
 
     PPLNN_ARM_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_ARM_DEBUG_TRACE("Input [in]:\n");

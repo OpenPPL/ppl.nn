@@ -2,7 +2,7 @@
 #include "ppl/nn/models/pmx/oputils/onnx/topk.h"
 
 using namespace std;
-using namespace ppl::nn::common;
+using namespace ppl::nn::onnx;
 using namespace ppl::nn::pmx::onnx;
 
 TEST_F(PmxTest, test_topk) {

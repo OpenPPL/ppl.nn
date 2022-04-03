@@ -27,7 +27,7 @@ class UnsqueezeKernel : public X86Kernel {
 public:
     UnsqueezeKernel(const ir::Node* node) : X86Kernel(node) {}
 
-    void SetParam(const ppl::nn::common::UnsqueezeParam* p) {
+    void SetParam(const ppl::nn::onnx::UnsqueezeParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::UnsqueezeParam* param_ = nullptr;
+    const ppl::nn::onnx::UnsqueezeParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::x86

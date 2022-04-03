@@ -27,7 +27,7 @@ struct BatchNormalizationExtraParam {
 };
 
 struct CudaBatchNormalizationParam {
-    ppl::nn::common::BatchNormalizationParam param;
+    ppl::nn::onnx::BatchNormalizationParam param;
     BatchNormalizationExtraParam extra_param;
 };
 

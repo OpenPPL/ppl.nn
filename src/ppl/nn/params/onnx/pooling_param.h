@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <vector>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 struct PoolingParam {
     typedef enum { POOLING_MAX = 0, POOLING_AVERAGE_EXCLUDE = 1, POOLING_AVERAGE_INCLUDE = 2 } pooling_mode_t;
@@ -41,6 +41,6 @@ struct PoolingParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

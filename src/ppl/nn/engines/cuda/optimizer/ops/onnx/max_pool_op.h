@@ -32,7 +32,7 @@ public:
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
 private:
-    ppl::nn::common::PoolingParam param_;
+    ppl::nn::onnx::PoolingParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

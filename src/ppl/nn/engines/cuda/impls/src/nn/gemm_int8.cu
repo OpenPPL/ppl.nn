@@ -128,7 +128,7 @@ ppl::common::RetCode PPLCUDAGemmModifyWeightsInt8(
     ppl::nn::TensorShape *weight_shape,
     void *weight,
     void *tmp_weight, // if need transpose
-    const ppl::nn::common::GemmParam *param)
+    const ppl::nn::onnx::GemmParam *param)
 {
     int transB   = param->transB;
     auto type    = weight_shape->GetDataType();
@@ -266,7 +266,7 @@ double PPLCUDAGemmSelectKernelInt8(
     const ppl::nn::TensorShape *output_shape,
     void *output,
     void *temp_buffer,
-    const ppl::nn::common::GemmParam &param,
+    const ppl::nn::onnx::GemmParam &param,
     const quant_param_t &quant_param,
     const fuse_param_t &fuse_param,
     algo_param_t &algo_param)
@@ -365,7 +365,7 @@ ppl::common::RetCode PPLCUDAGemvForwardImpInt8(
     const void *weight,
     const void *bias,
     void *output,
-    const ppl::nn::common::GemmParam &param,
+    const ppl::nn::onnx::GemmParam &param,
     void *temp_buffer,
     const quant_param_t &quant_param,
     const fuse_param_t &fuse_param);
@@ -380,7 +380,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
     const void *bias,
     const ppl::nn::TensorShape *output_shape,
     void *output,
-    const ppl::nn::common::GemmParam &param,
+    const ppl::nn::onnx::GemmParam &param,
     void *temp_buffer,
     const quant_param_t &quant_param,
     fuse_param_t &fuse_param,
@@ -845,7 +845,7 @@ ppl::common::RetCode PPLCUDAGemvForwardImpInt8(
     const void *weight,
     const void *bias,
     void *output,
-    const ppl::nn::common::GemmParam &param,
+    const ppl::nn::onnx::GemmParam &param,
     void *temp_buffer,
     const quant_param_t &quant_param,
     const fuse_param_t &fuse_param)

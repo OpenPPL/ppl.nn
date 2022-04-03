@@ -38,7 +38,7 @@ public:
     }
 
 private:
-    std::shared_ptr<ppl::nn::common::BatchNormalizationParam> param_;
+    std::shared_ptr<ppl::nn::onnx::BatchNormalizationParam> param_;
     bool fuse_relu_ = false;
 };
 

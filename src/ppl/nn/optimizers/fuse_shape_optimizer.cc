@@ -9,7 +9,8 @@
 
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::common;
+using namespace ppl::nn::onnx;
+using namespace ppl::nn::internal;
 
 namespace ppl { namespace nn {
 
@@ -22,17 +23,16 @@ inline bool IsGraphOutput(const ir::Graph* graph, edgeid_t edge_id) {
     return false;
 }
 
-bool CanFuse(ir::Node* node, PPLShapeOperationParam* shape_param, ir::Graph* graph) {
+bool CanFuse(ir::Node* node, ShapeOperationParam* shape_param, ir::Graph* graph) {
     auto& constants = graph->data->constants;
     auto topo = graph->topo.get();
-    const std::set<std::string> fuse_ops{"Add", "Cast", "Concat", "Div", "Gather", "Mul", "Slice", "Sub", "Squeeze", "Unsqueeze"};
-    if (!node || node->GetType().domain != "" ||
-        fuse_ops.find(node->GetType().name) == fuse_ops.end()) {
+    const set<string> fuse_ops{"Add", "Cast", "Concat", "Div", "Gather", "Mul", "Slice", "Sub", "Squeeze", "Unsqueeze"};
+    if (!node || node->GetType().domain != "" || fuse_ops.find(node->GetType().name) == fuse_ops.end()) {
         return false;
     }
 
     // all node's inputs can not be graph output
-    for (uint32_t i = 0; i< node->GetInputCount(); ++i) {
+    for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
         auto edge_id = node->GetInput(i);
         auto edge = topo->GetEdgeById(edge_id);
         if (edge_id == INVALID_EDGEID || topo->GetOutput(edge->GetName()) != INVALID_EDGEID) {
@@ -41,7 +41,7 @@ bool CanFuse(ir::Node* node, PPLShapeOperationParam* shape_param, ir::Graph* gra
     }
 
     // all node's inputs must be one of Shape op's output or Constant
-    for (uint32_t i = 0; i< node->GetInputCount(); ++i) {
+    for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
         auto edge_id = node->GetInput(i);
         if (shape_param->alpha.find(edge_id) == shape_param->alpha.end() &&
             constants.find(edge_id) == constants.end()) {
@@ -51,7 +51,8 @@ bool CanFuse(ir::Node* node, PPLShapeOperationParam* shape_param, ir::Graph* gra
     return true;
 }
 
-RetCode UpdateMatrixForNextNode(ir::Node* node, std::vector<edgeid_t>* edge_array, PPLShapeOperationParam* shape_param, ir::Graph* graph) {
+RetCode UpdateMatrixForNextNode(ir::Node* node, vector<edgeid_t>* edge_array, ShapeOperationParam* shape_param,
+                                ir::Graph* graph) {
     auto& constants = graph->data->constants;
     auto& attributes = graph->data->attrs;
     auto& shapes = graph->data->shapes;
@@ -64,7 +65,7 @@ RetCode UpdateMatrixForNextNode(ir::Node* node, std::vector<edgeid_t>* edge_arra
     auto matrix = pre_matrix_left;
 
     // TODO: Xusi calc shape for different op
-    if (node->GetType().name == "Cast") {  // Only support cast to int64
+    if (node->GetType().name == "Cast") { // Only support cast to int64
         auto param_ref = attributes.find(node->GetId());
         if (param_ref == attributes.end()) {
             return RC_NOT_FOUND;
@@ -119,7 +120,7 @@ RetCode UpdateMatrixForNextNode(ir::Node* node, std::vector<edgeid_t>* edge_arra
             return RC_UNSUPPORTED;
         }
         matrix.scalar = true;
-        matrix.Gather(gather_indices[0], gather_indices[0]+1);
+        matrix.Gather(gather_indices[0], gather_indices[0] + 1);
     } else if (node->GetType().name == "Slice") { // Only support slice from head.
         // starts
         auto start_id = node->GetInput(1);
@@ -143,7 +144,7 @@ RetCode UpdateMatrixForNextNode(ir::Node* node, std::vector<edgeid_t>* edge_arra
         if (end_dims.size() != 0 && (end_dims.size() != 1 || end_dims[0] != 1)) {
             return RC_UNSUPPORTED;
         }
-        if (start_input[0] < 0 || end_input[0] < 0 || end_input[0] > ppl::nn::common::ShapeMatrix::MAXDIMSIZE) {
+        if (start_input[0] < 0 || end_input[0] < 0 || end_input[0] > ShapeMatrix::MAXDIMSIZE) {
             return RC_UNSUPPORTED;
         }
         matrix.Gather(start_input[0], end_input[0]);
@@ -165,8 +166,8 @@ RetCode UpdateMatrixForNextNode(ir::Node* node, std::vector<edgeid_t>* edge_arra
             if (arith_dims.size() != 0 && (arith_dims.size() != 1 || arith_dims[0] != 1)) {
                 return RC_UNSUPPORTED;
             }
-            for (uint32_t i = 0; i < matrix.real_dim; ++i) {  // jump if shape has been divided
-                if (matrix.denominator[i][ppl::nn::common::ShapeMatrix::MAXDIMSIZE] != 1) {
+            for (uint32_t i = 0; i < matrix.real_dim; ++i) { // jump if shape has been divided
+                if (matrix.denominator[i][ShapeMatrix::MAXDIMSIZE] != 1) {
                     return RC_UNSUPPORTED;
                 }
             }
@@ -187,7 +188,7 @@ RetCode UpdateMatrixForNextNode(ir::Node* node, std::vector<edgeid_t>* edge_arra
     shape_param->alpha.emplace(edge_id, matrix);
 
     // delete node and all its input edge (avoid delete one more times)
-    for (uint32_t i = 0; i< node->GetInputCount(); ++i) {
+    for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
         auto input_edge_id = node->GetInput(i);
         if (input_edge_id == INVALID_EDGEID) {
             continue;
@@ -206,7 +207,7 @@ RetCode UpdateMatrixForNextNode(ir::Node* node, std::vector<edgeid_t>* edge_arra
     return RC_SUCCESS;
 }
 
-void FuseNextNode(edgeid_t edge_id, std::vector<edgeid_t>* edge_array, PPLShapeOperationParam* shape_param, ir::Graph* graph) {
+void FuseNextNode(edgeid_t edge_id, vector<edgeid_t>* edge_array, ShapeOperationParam* shape_param, ir::Graph* graph) {
     auto& topo = graph->topo;
     auto edge = topo->GetEdgeById(edge_id);
     for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
@@ -222,7 +223,7 @@ void FuseNextNode(edgeid_t edge_id, std::vector<edgeid_t>* edge_array, PPLShapeO
     return;
 }
 
-void UpdateGraph(ir::Node* node, PPLShapeOperationParam* shape_param, ir::Graph* graph) {
+void UpdateGraph(ir::Node* node, ShapeOperationParam* shape_param, ir::Graph* graph) {
     auto topo = graph->topo.get();
     bool first_add = true;
     for (auto it = shape_param->alpha.begin(); it != shape_param->alpha.end(); ++it) {
@@ -268,10 +269,10 @@ RetCode FuseShapeOptimizer::Optimize(ir::Graph* graph) const {
         node->SetType(ir::Node::Type{"ppl", "Shape", 1});
         node->SetName(node->GetName() + "_Fused");
 
-        PPLShapeOperationParam shape_param;
+        ShapeOperationParam shape_param;
         ShapeMatrix temp_matrix;
         shape_param.alpha.emplace(node->GetOutput(0), temp_matrix);
-        std::vector<edgeid_t> edge_array{node->GetOutput(0)};
+        vector<edgeid_t> edge_array{node->GetOutput(0)};
         for (uint32_t i = 0; i < edge_array.size(); ++i) {
             auto edge_id = edge_array[i];
             if (IsGraphOutput(graph, edge_id)) {
@@ -279,7 +280,7 @@ RetCode FuseShapeOptimizer::Optimize(ir::Graph* graph) const {
             }
             FuseNextNode(edge_id, &edge_array, &shape_param, graph);
         }
-        shared_ptr<PPLShapeOperationParam> sp = make_shared<PPLShapeOperationParam>(shape_param);
+        shared_ptr<ShapeOperationParam> sp = make_shared<ShapeOperationParam>(shape_param);
         graph->data->attrs.emplace(node->GetId(), std::move(sp));
         UpdateGraph(node, &shape_param, graph);
     }

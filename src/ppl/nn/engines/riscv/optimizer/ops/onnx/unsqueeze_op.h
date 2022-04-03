@@ -30,7 +30,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    std::shared_ptr<ppl::nn::common::UnsqueezeParam> param_;
+    std::shared_ptr<ppl::nn::onnx::UnsqueezeParam> param_;
 };
 
 }}} // namespace ppl::nn::riscv

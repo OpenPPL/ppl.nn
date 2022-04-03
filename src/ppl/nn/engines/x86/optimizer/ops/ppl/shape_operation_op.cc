@@ -25,8 +25,8 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ppl::nn::common::PPLShapeOperationParam>(options, &param_);
+RetCode ShapeOperationOp::Init(const OptKernelOptions& options) {
+    auto status = GenericLoadParam<ppl::nn::internal::ShapeOperationParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
@@ -34,15 +34,15 @@ RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
-RetCode PPLShapeOperationOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
-                              vector<dataformat_t>* selected_output_formats) {
+RetCode ShapeOperationOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
+                                       vector<dataformat_t>* selected_output_formats) {
     selected_input_formats->at(0) = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
     return RC_SUCCESS;
 }
 
-KernelImpl* PPLShapeOperationOp::CreateKernelImpl() const {
+KernelImpl* ShapeOperationOp::CreateKernelImpl() const {
     auto kernel = op_.CreateKernelImpl();
-    ((ppl::nn::common::PPLShapeOperationKernel*)kernel)->SetParam(param_.get());
+    ((ppl::nn::common::ShapeOperationKernel*)kernel)->SetParam(param_.get());
     return kernel;
 }
 

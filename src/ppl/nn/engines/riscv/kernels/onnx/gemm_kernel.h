@@ -27,7 +27,7 @@ class GemmKernel : public RiscvKernel {
 public:
     GemmKernel(const ir::Node* node) : RiscvKernel(node) {}
 
-    void SetParam(const ppl::nn::common::GemmParam* p) {
+    void SetParam(const ppl::nn::onnx::GemmParam* p) {
         param_ = p;
     }
     void SetFuseReLU(bool fuse_relu) {
@@ -38,7 +38,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::GemmParam* param_ = nullptr;
+    const ppl::nn::onnx::GemmParam* param_ = nullptr;
     bool gemm_fuse_relu_ = false;
 };
 

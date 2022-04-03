@@ -36,7 +36,7 @@ public:
                                         std::vector<ppl::common::datatype_t>* selected_output_data_types) override;
 
 private:
-    std::shared_ptr<ppl::nn::common::PoolingParam> param_;
+    std::shared_ptr<ppl::nn::onnx::PoolingParam> param_;
 };
 
 }}} // namespace ppl::nn::riscv

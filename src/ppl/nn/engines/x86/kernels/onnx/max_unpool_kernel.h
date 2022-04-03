@@ -27,7 +27,7 @@ class MaxUnpoolKernel : public X86Kernel {
 public:
     MaxUnpoolKernel(const ir::Node* node) : X86Kernel(node) {}
 
-    void SetParam(const ppl::nn::common::MaxUnpoolParam* p) {
+    void SetParam(const ppl::nn::onnx::MaxUnpoolParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::MaxUnpoolParam* param_ = nullptr;
+    const ppl::nn::onnx::MaxUnpoolParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::x86

@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<ReduceParam> SerializeReduceParam(const ppl::nn::common::ReduceParam&,
+flatbuffers::Offset<ReduceParam> SerializeReduceParam(const ppl::nn::onnx::ReduceParam&,
                                                       flatbuffers::FlatBufferBuilder*);
-void DeserializeReduceParam(const ReduceParam&, ppl::nn::common::ReduceParam*);
+void DeserializeReduceParam(const ReduceParam&, ppl::nn::onnx::ReduceParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

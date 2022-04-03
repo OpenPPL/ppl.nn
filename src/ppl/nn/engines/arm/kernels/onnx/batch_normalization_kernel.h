@@ -27,7 +27,7 @@ class BatchNormalizationKernel : public ArmKernel {
 public:
     BatchNormalizationKernel(const ir::Node* node) : ArmKernel(node) {}
 
-    void SetParam(const ppl::nn::common::BatchNormalizationParam* p) {
+    void SetParam(const ppl::nn::onnx::BatchNormalizationParam* p) {
         param_ = p;
     }
 
@@ -39,7 +39,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::BatchNormalizationParam* param_ = nullptr;
+    const ppl::nn::onnx::BatchNormalizationParam* param_ = nullptr;
     bool fuse_relu_ = false;
 };
 

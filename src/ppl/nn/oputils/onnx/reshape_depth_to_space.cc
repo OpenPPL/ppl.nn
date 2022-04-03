@@ -18,7 +18,7 @@
 #include "ppl/nn/oputils/onnx/reshape_depth_to_space.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
-using namespace ppl::nn::common;
+using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace oputils {
 

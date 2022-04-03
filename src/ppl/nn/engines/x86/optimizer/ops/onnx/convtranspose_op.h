@@ -30,7 +30,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    std::shared_ptr<ppl::nn::common::ConvTransposeParam> param_;
+    std::shared_ptr<ppl::nn::onnx::ConvTransposeParam> param_;
 };
 
 }}} // namespace ppl::nn::x86

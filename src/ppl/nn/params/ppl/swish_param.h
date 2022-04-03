@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace internal {
 
 struct SwishParam {
     float beta;
@@ -30,6 +30,6 @@ struct SwishParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::internal
 
 #endif

@@ -27,7 +27,7 @@ class SplitKernel : public RiscvKernel {
 public:
     SplitKernel(const ir::Node* node) : RiscvKernel(node) {}
 
-    void SetParam(const ppl::nn::common::SplitParam* p) {
+    void SetParam(const ppl::nn::onnx::SplitParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::SplitParam* param_ = nullptr;
+    const ppl::nn::onnx::SplitParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::riscv

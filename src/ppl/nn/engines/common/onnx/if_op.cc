@@ -51,7 +51,7 @@ static RetCode InitNewSharedResource(const utils::SharedResource& resource, util
     return RC_SUCCESS;
 }
 
-RetCode IfOp::Init(const utils::SharedResource& resource, IfParam* if_param) {
+RetCode IfOp::Init(const utils::SharedResource& resource, ppl::nn::onnx::IfParam* if_param) {
     extra_inputs_of_then_graph_ = if_param->then_extra_input_indices_in_host_node;
     extra_inputs_of_else_graph_ = if_param->else_extra_input_indices_in_host_node;
 

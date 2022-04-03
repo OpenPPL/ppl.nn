@@ -88,7 +88,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
     const int64_t kernel_dims = weight_shape.dims.size() - 2;
 
     // Check Param
-    const ppl::nn::common::ConvParam& conv_param = *param_;
+    const ppl::nn::onnx::ConvParam& conv_param = *param_;
     for (int64_t i = 0; i < kernel_dims; ++i) {
         if (conv_param.pads[i] != conv_param.pads[i + kernel_dims]) {
             return ppl::common::RC_UNSUPPORTED;
@@ -136,7 +136,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
         }
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
         LOG(INFO) << "Op " << node->GetName() << " selected conv algorithm: "
-            << ppl::kernel::arm_server::neon::get_conv_algo_str(selected_algo.algo_type);
+                  << ppl::kernel::arm_server::neon::get_conv_algo_str(selected_algo.algo_type);
 #endif
 
         ppl::common::RetCode normal_cvt_weights_ret = ppl::common::RC_SUCCESS;
@@ -153,7 +153,8 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
                 normal_cvt_weights_ret = conv2d_param_->mgr->gen_cvt_weights(weight_data, zero_bias.data());
 
                 if (conv2d_param_->fallback_mgr) {
-                    fallback_cvt_weights_ret = conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data, zero_bias.data());
+                    fallback_cvt_weights_ret =
+                        conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data, zero_bias.data());
                 }
             }
         } else if (selected_algo.data_type == ppl::common::DATATYPE_FLOAT16) {
@@ -165,17 +166,20 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
                 vector<__fp16> bias_data_fp16;
                 bias_data_fp16.resize(bias_len * sizeof(__fp16));
                 Fp32ToFp16(bias_data, bias_len, bias_data_fp16.data());
-                normal_cvt_weights_ret = conv2d_param_->mgr->gen_cvt_weights(weight_data_fp16.data(), bias_data_fp16.data());
+                normal_cvt_weights_ret =
+                    conv2d_param_->mgr->gen_cvt_weights(weight_data_fp16.data(), bias_data_fp16.data());
 
                 if (conv2d_param_->fallback_mgr) {
-                    fallback_cvt_weights_ret = conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data_fp16.data(), bias_data_fp16.data());
+                    fallback_cvt_weights_ret =
+                        conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data_fp16.data(), bias_data_fp16.data());
                 }
             } else {
                 std::vector<__fp16> zero_bias(conv2d_kernel_param.num_output, 0.0f);
                 normal_cvt_weights_ret = conv2d_param_->mgr->gen_cvt_weights(weight_data_fp16.data(), zero_bias.data());
 
                 if (conv2d_param_->fallback_mgr) {
-                    fallback_cvt_weights_ret = conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data_fp16.data(), zero_bias.data());
+                    fallback_cvt_weights_ret =
+                        conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data_fp16.data(), zero_bias.data());
                 }
             }
         } else {
@@ -245,7 +249,7 @@ bool ConvOp::TryFuseSum(void) {
     if (param.fuse_flag) { // already fused sum, relu or relu6
         return false;
     }
-    param.fuse_flag |= ppl::kernel::arm_server::neon::/*  */conv_fuse_flag::SUM;
+    param.fuse_flag |= ppl::kernel::arm_server::neon::conv_fuse_flag::SUM;
     conv2d_param_->mgr->set_param(param);
     return true;
 }

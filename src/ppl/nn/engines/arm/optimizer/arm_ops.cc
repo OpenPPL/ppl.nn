@@ -164,7 +164,7 @@ void RegisterBuiltinOpImpls() {
     // ppl
     RegisterOptKernelCreator<ChannelShuffleOp>("ppl", "ChannelShuffle", 1, 1);
     RegisterOptKernelCreator<ReorderOp>("ppl", "Reorder", 1, 1);
-    RegisterOptKernelCreator<PPLShapeOperationOp>("ppl", "Shape", 1, 1);
+    RegisterOptKernelCreator<ShapeOperationOp>("ppl", "Shape", 1, 1);
 }
 
 }}} // namespace ppl::nn::arm

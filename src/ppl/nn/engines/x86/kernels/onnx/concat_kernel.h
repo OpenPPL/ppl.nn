@@ -27,7 +27,7 @@ class ConcatKernel : public X86Kernel {
 public:
     ConcatKernel(const ir::Node* node) : X86Kernel(node) {}
 
-    void SetParam(const ppl::nn::common::ConcatParam* p) {
+    void SetParam(const ppl::nn::onnx::ConcatParam* p) {
         param_ = p;
     }
 
@@ -37,7 +37,7 @@ private:
     bool CanDoExecute(const KernelExecContext&) const override;
 
 private:
-    const ppl::nn::common::ConcatParam* param_ = nullptr;
+    const ppl::nn::onnx::ConcatParam* param_ = nullptr;
     std::vector<const void*> src_list_;
     std::vector<const TensorShape*> src_shape_list_;
 };

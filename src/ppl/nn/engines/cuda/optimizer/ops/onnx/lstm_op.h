@@ -22,7 +22,7 @@
 
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 
-using namespace ppl::nn::common;
+using namespace ppl::nn::onnx;
 namespace ppl { namespace nn { namespace cuda {
 
 class LstmOp final : public CudaOptKernel {

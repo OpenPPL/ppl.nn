@@ -26,7 +26,7 @@ ppl::common::RetCode TransposeKernel::DoExecute(KernelExecContext* ctx) {
     auto output = ctx->GetOutput<TensorImpl>(0);
     const TensorShape& in_shape0 = *input->GetShape();
 
-    ppl::nn::common::TransposeParam modified_param = *param_;
+    ppl::nn::onnx::TransposeParam modified_param = *param_;
     if (modified_param.perm.empty()) {
         int32_t dim_count = in_shape0.GetDimCount();
         modified_param.perm.resize(dim_count);

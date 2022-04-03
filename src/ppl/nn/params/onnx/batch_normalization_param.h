@@ -18,7 +18,7 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_BATCH_NORMALIZATION_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_BATCH_NORMALIZATION_PARAM_H_
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 struct BatchNormalizationParam {
     float epsilon;
@@ -29,6 +29,6 @@ struct BatchNormalizationParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

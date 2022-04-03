@@ -24,9 +24,9 @@
 
 namespace ppl { namespace nn { namespace riscv {
 
-class PPLShapeOperationOp final : public RiscvOptKernel {
+class ShapeOperationOp final : public RiscvOptKernel {
 public:
-    PPLShapeOperationOp(const ir::Node* node) : RiscvOptKernel(node), op_(node) {}
+    ShapeOperationOp(const ir::Node* node) : RiscvOptKernel(node), op_(node) {}
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
@@ -37,8 +37,8 @@ public:
                                         std::vector<ppl::common::datatype_t>* selected_output_data_types) override;
 
 private:
-    std::shared_ptr<ppl::nn::common::PPLShapeOperationParam> param_;
-    ppl::nn::common::PPLShapeOperationOp op_;
+    std::shared_ptr<ppl::nn::internal::ShapeOperationParam> param_;
+    ppl::nn::common::ShapeOperationOp op_;
 };
 
 }}} // namespace ppl::nn::riscv

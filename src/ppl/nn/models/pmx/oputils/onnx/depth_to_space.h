@@ -15,20 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/pmx/utils.h"
-#include "ppl/nn/models/pmx/oputils/onnx/scatterelements.h"
-using namespace flatbuffers;
+#ifndef _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_DEPTHTOSPACE_H_
+#define _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_DEPTHTOSPACE_H_
+
+#include "ppl/nn/models/pmx/generated/onnx_op_generated.h"
+#include "ppl/nn/params/onnx/depth_to_space_param.h"
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<ScatterElementsParam> SerializeScatterElementsParam(const ppl::nn::common::ScatterElementsParam& param,
-                                                           FlatBufferBuilder* builder) {
-    return CreateScatterElementsParam(*builder, param.axis);
-}
-
-void DeserializeScatterElementsParam(const ScatterElementsParam& fb_param,
-                                     ppl::nn::common::ScatterElementsParam* param) {
-    param->axis = fb_param.axis();
-}
+flatbuffers::Offset<DepthToSpaceParam> SerializeDepthToSpaceParam(const ppl::nn::onnx::DepthToSpaceParam&,
+                                                                  flatbuffers::FlatBufferBuilder*);
+void DeserializeDepthToSpaceParam(const DepthToSpaceParam&, ppl::nn::onnx::DepthToSpaceParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
+
+#endif

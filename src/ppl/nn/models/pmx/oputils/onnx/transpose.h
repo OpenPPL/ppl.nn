@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<TransposeParam> SerializeTransposeParam(const ppl::nn::common::TransposeParam&,
+flatbuffers::Offset<TransposeParam> SerializeTransposeParam(const ppl::nn::onnx::TransposeParam&,
                                                             flatbuffers::FlatBufferBuilder*);
-void DeserializeTransposeParam(const TransposeParam&, ppl::nn::common::TransposeParam*);
+void DeserializeTransposeParam(const TransposeParam&, ppl::nn::onnx::TransposeParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

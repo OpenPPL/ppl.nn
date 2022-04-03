@@ -37,7 +37,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    std::shared_ptr<ppl::nn::common::PadParam> param_;
+    std::shared_ptr<ppl::nn::onnx::PadParam> param_;
 };
 
 }}} // namespace ppl::nn::arm

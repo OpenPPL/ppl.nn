@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<RoiAlignParam> SerializeRoiAlignParam(const ppl::nn::common::RoiAlignParam&,
+flatbuffers::Offset<RoiAlignParam> SerializeRoiAlignParam(const ppl::nn::onnx::RoiAlignParam&,
                                                           flatbuffers::FlatBufferBuilder*);
-void DeserializeRoiAlignParam(const RoiAlignParam&, ppl::nn::common::RoiAlignParam*);
+void DeserializeRoiAlignParam(const RoiAlignParam&, ppl::nn::onnx::RoiAlignParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

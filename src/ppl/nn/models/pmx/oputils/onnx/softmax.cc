@@ -21,11 +21,11 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<SoftmaxParam> SerializeSoftmaxParam(const ppl::nn::common::SoftmaxParam& param, FlatBufferBuilder* builder) {
+Offset<SoftmaxParam> SerializeSoftmaxParam(const ppl::nn::onnx::SoftmaxParam& param, FlatBufferBuilder* builder) {
     return CreateSoftmaxParam(*builder, param.axis);
 }
 
-void DeserializeSoftmaxParam(const SoftmaxParam& fb_param, ppl::nn::common::SoftmaxParam* param) {
+void DeserializeSoftmaxParam(const SoftmaxParam& fb_param, ppl::nn::onnx::SoftmaxParam* param) {
     param->axis = fb_param.axis();
 }
 

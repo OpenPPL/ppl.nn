@@ -16,19 +16,17 @@
 // under the License.
 
 #include "ppl/nn/models/pmx/utils.h"
-#include "ppl/nn/models/pmx/oputils/onnx/nonmaxsuppression.h"
+#include "ppl/nn/models/pmx/oputils/onnx/gather_nd.h"
 using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<NonMaxSuppressionParam> SerializeNonMaxSuppressionParam(const ppl::nn::common::NonMaxSuppressionParam& param,
-                                                               FlatBufferBuilder* builder) {
-    return CreateNonMaxSuppressionParam(*builder, param.center_point_box);
+Offset<GatherNDParam> SerializeGatherNDParam(const ppl::nn::onnx::GatherNDParam& param, FlatBufferBuilder* builder) {
+    return CreateGatherNDParam(*builder, param.batch_dims);
 }
 
-void DeserializeNonMaxSuppressionParam(const NonMaxSuppressionParam& fb_param,
-                                       ppl::nn::common::NonMaxSuppressionParam* param) {
-    param->center_point_box = fb_param.center_point_box();
+void DeserializeGatherNDParam(const GatherNDParam& fb_param, ppl::nn::onnx::GatherNDParam* param) {
+    param->batch_dims = fb_param.batch_dims();
 }
 
 }}}} // namespace ppl::nn::pmx::onnx

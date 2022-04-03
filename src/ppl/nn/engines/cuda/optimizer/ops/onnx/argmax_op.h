@@ -32,7 +32,7 @@ public:
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
 private:
-    ppl::nn::common::ArgMaxParam param_;
+    ppl::nn::onnx::ArgMaxParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

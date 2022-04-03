@@ -23,8 +23,8 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<LRNParam> SerializeLRNParam(const ppl::nn::common::LRNParam&, flatbuffers::FlatBufferBuilder*);
-void DeserializeLRNParam(const LRNParam&, ppl::nn::common::LRNParam*);
+flatbuffers::Offset<LRNParam> SerializeLRNParam(const ppl::nn::onnx::LRNParam&, flatbuffers::FlatBufferBuilder*);
+void DeserializeLRNParam(const LRNParam&, ppl::nn::onnx::LRNParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

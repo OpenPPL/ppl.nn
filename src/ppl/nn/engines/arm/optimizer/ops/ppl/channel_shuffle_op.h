@@ -33,7 +33,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    std::shared_ptr<ppl::nn::common::ChannelShuffleParam> param_;
+    std::shared_ptr<ppl::nn::internal::ChannelShuffleParam> param_;
 };
 
 }}} // namespace ppl::nn::arm

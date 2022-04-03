@@ -27,7 +27,7 @@ class TransposeKernel : public RiscvKernel {
 public:
     TransposeKernel(const ir::Node* node) : RiscvKernel(node) {}
 
-    void SetParam(const ppl::nn::common::TransposeParam* p) {
+    void SetParam(const ppl::nn::onnx::TransposeParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::TransposeParam* param_ = nullptr;
+    const ppl::nn::onnx::TransposeParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::riscv

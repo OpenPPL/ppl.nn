@@ -54,15 +54,15 @@ ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
     const void* constant_value = constant == nullptr ? nullptr : constant->GetBufferPtr<void>();
 
     switch (param_->mode) {
-        case ppl::nn::common::PadParam::PAD_MODE_CONSTANT:
+        case ppl::nn::onnx::PadParam::PAD_MODE_CONSTANT:
             return ppl::kernel::arm_server::neon::pad_constant(x->GetShape(), y->GetShape(), x->GetBufferPtr<void>(),
                                                                start_pads, end_pads, constant_value,
                                                                y->GetBufferPtr<void>());
-        case ppl::nn::common::PadParam::PAD_MODE_REFLECT:
+        case ppl::nn::onnx::PadParam::PAD_MODE_REFLECT:
             return ppl::kernel::arm_server::neon::pad_reflect(x->GetShape(), y->GetShape(), x->GetBufferPtr<void>(),
                                                               start_pads, end_pads, constant_value,
                                                               y->GetBufferPtr<void>());
-        case ppl::nn::common::PadParam::PAD_MODE_EDGE:
+        case ppl::nn::onnx::PadParam::PAD_MODE_EDGE:
             return ppl::kernel::arm_server::neon::pad_edge(x->GetShape(), y->GetShape(), x->GetBufferPtr<void>(),
                                                            start_pads, end_pads, constant_value,
                                                            y->GetBufferPtr<void>());

@@ -30,7 +30,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    std::shared_ptr<ppl::nn::common::FlattenParam> param_;
+    std::shared_ptr<ppl::nn::onnx::FlattenParam> param_;
 };
 
 }}} // namespace ppl::nn::riscv
