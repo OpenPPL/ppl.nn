@@ -15,20 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/pmx/utils.h"
-#include "ppl/nn/models/pmx/oputils/onnx/depthtospace.h"
-using namespace flatbuffers;
+#ifndef _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_SPLIT_TO_SEQUENCE_H_
+#define _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_SPLIT_TO_SEQUENCE_H_
+
+#include "ppl/nn/models/pmx/generated/onnx_op_generated.h"
+#include "ppl/nn/params/onnx/split_to_sequence_param.h"
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<DepthToSpaceParam> SerializeDepthToSpaceParam(const ppl::nn::common::DepthToSpaceParam& param,
-                                                     FlatBufferBuilder* builder) {
-    return CreateDepthToSpaceParam(*builder, param.blocksize, static_cast<DepthToSpaceMode>(param.mode));
-}
-
-void DeserializeDepthToSpaceParam(const DepthToSpaceParam& fb_param, ppl::nn::common::DepthToSpaceParam* param) {
-    param->mode = static_cast<uint32_t>(fb_param.mode());
-    param->blocksize = fb_param.blocksize();
-}
+flatbuffers::Offset<SplitToSequenceParam> SerializeSplitToSequenceParam(const ppl::nn::onnx::SplitToSequenceParam&,
+                                                                        flatbuffers::FlatBufferBuilder*);
+void DeserializeSplitToSequenceParam(const SplitToSequenceParam&, ppl::nn::onnx::SplitToSequenceParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
+
+#endif

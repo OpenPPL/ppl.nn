@@ -37,7 +37,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    std::shared_ptr<ppl::nn::common::LeakyReluParam> param_;
+    std::shared_ptr<ppl::nn::onnx::LeakyReluParam> param_;
 };
 
 }}} // namespace ppl::nn::arm

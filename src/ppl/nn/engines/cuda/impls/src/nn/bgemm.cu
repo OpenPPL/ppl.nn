@@ -132,7 +132,7 @@ ppl::common::RetCode PPLCUDABgemmModifyWeights(
     ppl::nn::TensorShape *weight_shape,
     void *weight,
     void *tmp_weight, // if need pad transpose
-    const ppl::nn::common::GemmParam *param)
+    const ppl::nn::onnx::GemmParam *param)
 {
     //int transB   = param->transB;
     //float alpha  = param->alpha;
@@ -190,7 +190,7 @@ ppl::common::RetCode PPLCUDABgemmPadInput(
     ppl::nn::TensorShape *input_shape,
     void *input,
     void *tmp_input, // if need transpose
-    const ppl::nn::common::GemmParam *param)
+    const ppl::nn::onnx::GemmParam *param)
 {
     auto type    = input_shape->GetDataType();
     int pad_size = GetPadSize(type);
@@ -380,7 +380,7 @@ double PPLCUDABgemmSelectKernel(
     const ppl::nn::TensorShape *output_shape,
     void *output,
     void *temp_buffer,
-    const ppl::nn::common::GemmParam &param,
+    const ppl::nn::onnx::GemmParam &param,
     const fuse_param_t &fuse_param,
     algo_param_t &algo_param)
 {
@@ -494,7 +494,7 @@ ppl::common::RetCode PPLCUDABgemmForwardImp(
     void *weight,
     const ppl::nn::TensorShape *output_shape,
     void *output,
-    const ppl::nn::common::GemmParam &param,
+    const ppl::nn::onnx::GemmParam &param,
     void *temp_buffer,
     fuse_param_t &fuse_param,
     const algo_param_t &algo_param)

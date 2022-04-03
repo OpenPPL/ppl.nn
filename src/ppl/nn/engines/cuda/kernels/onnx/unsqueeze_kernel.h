@@ -28,7 +28,7 @@ class UnsqueezeKernel : public CudaKernel {
 public:
     UnsqueezeKernel(const ir::Node* node) : CudaKernel(node) {}
 
-    void SetParam(const ppl::nn::common::UnsqueezeParam* p) {
+    void SetParam(const ppl::nn::onnx::UnsqueezeParam* p) {
         param_ = p;
     }
 
@@ -36,7 +36,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::UnsqueezeParam* param_ = nullptr;
+    const ppl::nn::onnx::UnsqueezeParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::cuda

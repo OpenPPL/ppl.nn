@@ -20,7 +20,7 @@
 
 #include "ppl/nn/ir/graph.h"
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 struct LRNParam {
     float alpha;
@@ -33,6 +33,6 @@ struct LRNParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

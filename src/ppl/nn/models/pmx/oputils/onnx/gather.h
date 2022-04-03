@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<GatherParam> SerializeGatherParam(const ppl::nn::common::GatherParam&,
+flatbuffers::Offset<GatherParam> SerializeGatherParam(const ppl::nn::onnx::GatherParam&,
                                                       flatbuffers::FlatBufferBuilder*);
-void DeserializeGatherParam(const GatherParam&, ppl::nn::common::GatherParam*);
+void DeserializeGatherParam(const GatherParam&, ppl::nn::onnx::GatherParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

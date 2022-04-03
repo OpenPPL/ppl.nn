@@ -63,7 +63,7 @@ double PPLCUDAGemmSelectKernel(
     const ppl::nn::TensorShape* output_shape,
     void* output,
     void* temp_buffer,
-    const ppl::nn::common::GemmParam& param,
+    const ppl::nn::onnx::GemmParam& param,
     const fuse_param_t& fuse_param,
     algo_param_t& algo_param);
 
@@ -77,7 +77,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
     const void* bias,
     const ppl::nn::TensorShape* output_shape,
     void* output,
-    const ppl::nn::common::GemmParam& param,
+    const ppl::nn::onnx::GemmParam& param,
     void* temp_buffer,
     fuse_param_t& fuse_param,
     const algo_param_t& algo_param);
@@ -87,21 +87,21 @@ ppl::common::RetCode PPLCUDAGemmModifyWeights(
     ppl::nn::TensorShape* weight_shape,
     void* weight,
     void* out_weight,
-    const ppl::nn::common::GemmParam* param);
+    const ppl::nn::onnx::GemmParam* param);
 
 ppl::common::RetCode PPLCUDAGemmModifyBias(
     const cudaStream_t& stream,
     const ppl::common::datatype_t infer_type,
     const ppl::nn::TensorShape* bias_shape,
     void* bias,
-    const ppl::nn::common::GemmParam* param);
+    const ppl::nn::onnx::GemmParam* param);
 
 ppl::common::RetCode PPLCUDAGemmModifyWeightsInt8(
     const cudaStream_t &stream,
     ppl::nn::TensorShape *weight_shape,
     void *weight,
     void *tmp_weight, // if need transpose
-    const ppl::nn::common::GemmParam *param);
+    const ppl::nn::onnx::GemmParam *param);
 
 double PPLCUDAGemmJITSelectKernelInt8(
     int device_id,
@@ -131,7 +131,7 @@ double PPLCUDAGemmSelectKernelInt8(
     const ppl::nn::TensorShape *output_shape,
     void *output,
     void *temp_buffer,
-    const ppl::nn::common::GemmParam &param,
+    const ppl::nn::onnx::GemmParam &param,
     const quant_param_t &quant_param,
     const fuse_param_t &fuse_param,
     algo_param_t &algo_param);
@@ -146,7 +146,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
     const void *bias,
     const ppl::nn::TensorShape *output_shape,
     void *output,
-    const ppl::nn::common::GemmParam &param,
+    const ppl::nn::onnx::GemmParam &param,
     void *temp_buffer,
     const quant_param_t &quant_param,
     fuse_param_t &fuse_param,

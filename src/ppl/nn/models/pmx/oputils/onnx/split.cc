@@ -21,12 +21,12 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<SplitParam> SerializeSplitParam(const ppl::nn::common::SplitParam& param, FlatBufferBuilder* builder) {
+Offset<SplitParam> SerializeSplitParam(const ppl::nn::onnx::SplitParam& param, FlatBufferBuilder* builder) {
     auto fb_split_point = builder->CreateVector(param.split_point);
     return CreateSplitParam(*builder, param.axis, fb_split_point);
 }
 
-void DeserializeSplitParam(const SplitParam& fb_param, ppl::nn::common::SplitParam* param) {
+void DeserializeSplitParam(const SplitParam& fb_param, ppl::nn::onnx::SplitParam* param) {
     param->axis = fb_param.axis();
     utils::Fbvec2Stdvec(fb_param.split_point(), &param->split_point);
 }

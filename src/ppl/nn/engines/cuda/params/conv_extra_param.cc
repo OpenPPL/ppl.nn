@@ -27,7 +27,7 @@
 #include <sstream>
 
 using namespace ppl::common;
-using namespace ppl::nn::common;
+using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -45,18 +45,19 @@ int GetRelueType(const std::string& name) {
     return -1;
 }
 
-#define GetPadSize(pad_size, type){ \
-    pad_size = 0; \
-    if (type == DATATYPE_FLOAT32) { \
-            pad_size = 4; \
-    } else if (type == DATATYPE_FLOAT16) { \
-            pad_size = 8; \
-    } else if (type == DATATYPE_INT8) { \
-            pad_size = 16; \
-    } \
-}
+#define GetPadSize(pad_size, type)             \
+    {                                          \
+        pad_size = 0;                          \
+        if (type == DATATYPE_FLOAT32) {        \
+            pad_size = 4;                      \
+        } else if (type == DATATYPE_FLOAT16) { \
+            pad_size = 8;                      \
+        } else if (type == DATATYPE_INT8) {    \
+            pad_size = 16;                     \
+        }                                      \
+    }
 
-#define Align(x, y) ( ((x)+(y)-1) / (y) * (y) )
+#define Align(x, y) (((x) + (y)-1) / (y) * (y))
 
 RetCode ConvertToForwardConvParam(const TensorShape& shape_in0, const TensorShape& shape_in1,
                                   const TensorShape& shape_out, const CudaConvParam& cuda_param,
@@ -73,9 +74,9 @@ RetCode ConvertToForwardConvParam(const TensorShape& shape_in0, const TensorShap
     unsigned int flt_pad_size;
     GetPadSize(in_pad_size, shape_in0.GetDataType());
     GetPadSize(flt_pad_size, shape_in1.GetDataType());
-    //conv_param.num_chl_pad = (conv_param.num_chl + 7) / 8 * 8;
-    //conv_param.num_flt_pad = (conv_param.num_flt + 7) / 8 * 8;
-    //std::cout << "in pad size: " << in_pad_size << " flt_pad_size: " << flt_pad_size << std::endl;
+    // conv_param.num_chl_pad = (conv_param.num_chl + 7) / 8 * 8;
+    // conv_param.num_flt_pad = (conv_param.num_flt + 7) / 8 * 8;
+    // std::cout << "in pad size: " << in_pad_size << " flt_pad_size: " << flt_pad_size << std::endl;
     conv_param.num_chl_pad = Align(conv_param.num_chl, in_pad_size);
     conv_param.num_flt_pad = Align(conv_param.num_flt, flt_pad_size);
     conv_param.flt_height = shape_in1.GetDim(2);
@@ -167,8 +168,7 @@ RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* device, con
         fuse_index++;
     }
 
-    if (fuse_index < fuse_size && 
-        (fuse_info.types[fuse_index] == "Add" || fuse_info.types[fuse_index] == "Eltwise")) {
+    if (fuse_index < fuse_size && (fuse_info.types[fuse_index] == "Add" || fuse_info.types[fuse_index] == "Eltwise")) {
         fuse_param.has_elt = true;
         uint32_t elt_input = fuse_info.input_ind[fuse_index];
         fuse_param.pre_data = info->GetInput<TensorImpl>(elt_input)->GetBufferPtr();

@@ -1,8 +1,8 @@
 #include "pmx_utils.h"
-#include "ppl/nn/models/pmx/oputils/onnx/splittosequence.h"
+#include "ppl/nn/models/pmx/oputils/onnx/split_to_sequence.h"
 
 using namespace std;
-using namespace ppl::nn::common;
+using namespace ppl::nn::onnx;
 using namespace ppl::nn::pmx::onnx;
 
 TEST_F(PmxTest, test_splittosequence) {

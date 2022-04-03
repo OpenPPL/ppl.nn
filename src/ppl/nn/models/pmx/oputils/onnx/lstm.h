@@ -23,8 +23,8 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<LSTMParam> SerializeLSTMParam(const ppl::nn::common::LSTMParam&, flatbuffers::FlatBufferBuilder*);
-void DeserializeLSTMParam(const LSTMParam&, ppl::nn::common::LSTMParam*);
+flatbuffers::Offset<LSTMParam> SerializeLSTMParam(const ppl::nn::onnx::LSTMParam&, flatbuffers::FlatBufferBuilder*);
+void DeserializeLSTMParam(const LSTMParam&, ppl::nn::onnx::LSTMParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

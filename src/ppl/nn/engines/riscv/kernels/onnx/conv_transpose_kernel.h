@@ -38,7 +38,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::ConvTransposeParam* param_ = nullptr;
+    const ppl::nn::onnx::ConvTransposeParam* param_ = nullptr;
     const ppl::nn::riscv::ConvTransposeParam* conv_transpose_param_ = nullptr;
 };
 

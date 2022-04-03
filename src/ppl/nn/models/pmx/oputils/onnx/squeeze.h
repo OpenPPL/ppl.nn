@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<SqueezeParam> SerializeSqueezeParam(const ppl::nn::common::SqueezeParam&,
+flatbuffers::Offset<SqueezeParam> SerializeSqueezeParam(const ppl::nn::onnx::SqueezeParam&,
                                                         flatbuffers::FlatBufferBuilder*);
-void DeserializeSqueezeParam(const SqueezeParam&, ppl::nn::common::SqueezeParam*);
+void DeserializeSqueezeParam(const SqueezeParam&, ppl::nn::onnx::SqueezeParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

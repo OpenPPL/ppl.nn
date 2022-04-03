@@ -21,15 +21,15 @@
 #include <stdint.h>
 #include <vector>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 struct ReduceParam final {
     typedef enum {
-        ReduceSum     = 0,
-        ReduceMax     = 1,
-        ReduceMin     = 2,
-        ReduceProd    = 3,
-        ReduceMean    = 4,
+        ReduceSum = 0,
+        ReduceMax = 1,
+        ReduceMin = 2,
+        ReduceProd = 3,
+        ReduceMean = 4,
         ReduceUnknown = 5,
     } reduce_type_t;
 
@@ -42,6 +42,6 @@ struct ReduceParam final {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

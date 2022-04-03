@@ -24,9 +24,9 @@
 
 namespace ppl { namespace nn { namespace x86 {
 
-class PPLShapeOperationOp final : public X86OptKernel {
+class ShapeOperationOp final : public X86OptKernel {
 public:
-    PPLShapeOperationOp(const ir::Node* node) : X86OptKernel(node), op_(node) {}
+    ShapeOperationOp(const ir::Node* node) : X86OptKernel(node), op_(node) {}
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
@@ -34,8 +34,8 @@ public:
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
 
 private:
-    std::shared_ptr<ppl::nn::common::PPLShapeOperationParam> param_;
-    ppl::nn::common::PPLShapeOperationOp op_;
+    std::shared_ptr<ppl::nn::internal::ShapeOperationParam> param_;
+    ppl::nn::common::ShapeOperationOp op_;
 };
 
 }}} // namespace ppl::nn::x86

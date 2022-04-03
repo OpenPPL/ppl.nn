@@ -21,13 +21,12 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<TransposeParam> SerializeTransposeParam(const ppl::nn::common::TransposeParam& param,
-                                               FlatBufferBuilder* builder) {
+Offset<TransposeParam> SerializeTransposeParam(const ppl::nn::onnx::TransposeParam& param, FlatBufferBuilder* builder) {
     auto fb_perm = builder->CreateVector(param.perm);
     return CreateTransposeParam(*builder, fb_perm);
 }
 
-void DeserializeTransposeParam(const TransposeParam& fb_param, ppl::nn::common::TransposeParam* param) {
+void DeserializeTransposeParam(const TransposeParam& fb_param, ppl::nn::onnx::TransposeParam* param) {
     utils::Fbvec2Stdvec(fb_param.perm(), &param->perm);
 }
 

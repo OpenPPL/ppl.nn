@@ -40,7 +40,7 @@ public:
                                         std::vector<ppl::common::datatype_t>* selected_output_data_types) override;
 
 private:
-    std::shared_ptr<ppl::nn::common::ConvTransposeParam> param_;
+    std::shared_ptr<ppl::nn::onnx::ConvTransposeParam> param_;
     std::shared_ptr<ppl::nn::riscv::ConvTransposeParam> conv_transpose_param_;
 };
 

@@ -27,7 +27,7 @@ class PadKernel : public ArmKernel {
 public:
     PadKernel(const ir::Node* node) : ArmKernel(node) {}
 
-    void SetParam(const ppl::nn::common::PadParam* p) {
+    void SetParam(const ppl::nn::onnx::PadParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::PadParam* param_ = nullptr;
+    const ppl::nn::onnx::PadParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::arm

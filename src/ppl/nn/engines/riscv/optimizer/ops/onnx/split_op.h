@@ -33,7 +33,7 @@ public:
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
 
 private:
-    std::shared_ptr<ppl::nn::common::SplitParam> param_;
+    std::shared_ptr<ppl::nn::onnx::SplitParam> param_;
 };
 
 }}} // namespace ppl::nn::riscv

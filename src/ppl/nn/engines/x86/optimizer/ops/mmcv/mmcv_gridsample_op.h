@@ -30,7 +30,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    std::shared_ptr<ppl::nn::common::MMCVGridSampleParam> param_;
+    std::shared_ptr<ppl::nn::mmcv::MMCVGridSampleParam> param_;
 };
 
 }}} // namespace ppl::nn::x86

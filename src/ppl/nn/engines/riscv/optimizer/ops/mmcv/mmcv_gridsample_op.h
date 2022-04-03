@@ -36,7 +36,7 @@ public:
                                         std::vector<ppl::common::datatype_t>* selected_output_data_types) override;
 
 private:
-    std::shared_ptr<ppl::nn::common::MMCVGridSampleParam> param_;
+    std::shared_ptr<ppl::nn::mmcv::MMCVGridSampleParam> param_;
     ppl::common::dataformat_t format_;
 };
 

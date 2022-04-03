@@ -28,7 +28,7 @@ class DepthToSpaceKernel : public CudaKernel {
 public:
     DepthToSpaceKernel(const ir::Node* node) : CudaKernel(node) {}
 
-    void SetParam(const ppl::nn::common::DepthToSpaceParam* p) {
+    void SetParam(const ppl::nn::onnx::DepthToSpaceParam* p) {
         param_ = p;
     }
 
@@ -36,7 +36,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::DepthToSpaceParam* param_ = nullptr;
+    const ppl::nn::onnx::DepthToSpaceParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::cuda

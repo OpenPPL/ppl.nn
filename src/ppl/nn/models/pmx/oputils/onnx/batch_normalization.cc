@@ -15,18 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_SPLITTOSEQUENCE_H_
-#define _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_SPLITTOSEQUENCE_H_
-
-#include "ppl/nn/models/pmx/generated/onnx_op_generated.h"
-#include "ppl/nn/params/onnx/split_to_sequence_param.h"
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/onnx/batch_normalization.h"
+using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<SplitToSequenceParam> SerializeSplitToSequenceParam(const ppl::nn::common::SplitToSequenceParam&,
-                                                                        flatbuffers::FlatBufferBuilder*);
-void DeserializeSplitToSequenceParam(const SplitToSequenceParam&, ppl::nn::common::SplitToSequenceParam*);
+Offset<BatchNormalizationParam> SerializeBatchNormalizationParam(const ppl::nn::onnx::BatchNormalizationParam& param,
+                                                                 flatbuffers::FlatBufferBuilder* builder) {
+    return CreateBatchNormalizationParam(*builder, param.epsilon, param.momentum);
+}
+void DeserializeBatchNormalizationParam(const BatchNormalizationParam& fb_param,
+                                        ppl::nn::onnx::BatchNormalizationParam* param) {
+    param->epsilon = fb_param.epsilon();
+    param->momentum = fb_param.momentum();
+}
 
 }}}} // namespace ppl::nn::pmx::onnx
-
-#endif

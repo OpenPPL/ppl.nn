@@ -23,8 +23,8 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<TopKParam> SerializeTopKParam(const ppl::nn::common::TopKParam&, flatbuffers::FlatBufferBuilder*);
-void DeserializeTopKParam(const TopKParam&, ppl::nn::common::TopKParam*);
+flatbuffers::Offset<TopKParam> SerializeTopKParam(const ppl::nn::onnx::TopKParam&, flatbuffers::FlatBufferBuilder*);
+void DeserializeTopKParam(const TopKParam&, ppl::nn::onnx::TopKParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

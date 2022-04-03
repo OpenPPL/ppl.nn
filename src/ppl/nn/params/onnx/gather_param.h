@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 struct GatherParam {
     int32_t axis;
@@ -30,6 +30,6 @@ struct GatherParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

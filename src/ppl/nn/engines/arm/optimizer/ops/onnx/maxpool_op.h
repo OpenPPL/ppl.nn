@@ -28,8 +28,8 @@ public:
     MaxPoolOp(const ir::Node* node) : ArmOptKernel(node) {}
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
-                                        std::vector<ppl::common::dataformat_t>* selected_input_formats,
-                                        std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
+                                      std::vector<ppl::common::dataformat_t>* selected_input_formats,
+                                      std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
     ppl::common::RetCode SelectDataType(const InputOutputInfo& info,
                                         std::vector<ppl::common::datatype_t>* selected_input_types,
                                         std::vector<ppl::common::datatype_t>* selected_output_types,
@@ -37,7 +37,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    std::shared_ptr<ppl::nn::common::PoolingParam> param_;
+    std::shared_ptr<ppl::nn::onnx::PoolingParam> param_;
 };
 
 }}} // namespace ppl::nn::arm

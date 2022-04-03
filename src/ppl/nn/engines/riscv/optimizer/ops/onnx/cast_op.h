@@ -33,7 +33,7 @@ public:
                                         std::vector<ppl::common::datatype_t>* selected_output_data_types) override;
 
 private:
-    std::shared_ptr<ppl::nn::common::CastParam> param_;
+    std::shared_ptr<ppl::nn::onnx::CastParam> param_;
 };
 
 }}} // namespace ppl::nn::riscv

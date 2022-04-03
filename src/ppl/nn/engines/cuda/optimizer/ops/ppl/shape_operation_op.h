@@ -36,8 +36,8 @@ public:
     };
 
 private:
-    ppl::nn::common::PPLShapeOperationParam param_;
-    ppl::nn::common::PPLShapeOperationOp op_;
+    ppl::nn::internal::ShapeOperationParam param_;
+    ppl::nn::common::ShapeOperationOp op_;
 };
 
 }}} // namespace ppl::nn::cuda

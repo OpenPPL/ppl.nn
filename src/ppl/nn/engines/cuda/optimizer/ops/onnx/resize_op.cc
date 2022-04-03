@@ -20,11 +20,11 @@
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/cuda/kernels/onnx/resize_kernel.h"
 #include "ppl/nn/oputils/onnx/reshape_resize.h"
-#include<iostream>
+#include <iostream>
 
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::common;
+using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace cuda {
 

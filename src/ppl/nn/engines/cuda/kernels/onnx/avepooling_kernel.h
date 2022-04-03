@@ -28,7 +28,7 @@ class AvePoolingKernel : public CudaKernel {
 public:
     AvePoolingKernel(const ir::Node* node) : CudaKernel(node) {}
 
-    void SetParam(const ppl::nn::common::PoolingParam* p) {
+    void SetParam(const ppl::nn::onnx::PoolingParam* p) {
         param_ = p;
     }
 
@@ -36,7 +36,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::PoolingParam* param_ = nullptr;
+    const ppl::nn::onnx::PoolingParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::cuda

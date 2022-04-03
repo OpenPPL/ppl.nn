@@ -31,7 +31,7 @@ public:
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
 private:
-    std::shared_ptr<ppl::nn::common::CumSumParam> param_;
+    std::shared_ptr<ppl::nn::onnx::CumSumParam> param_;
 };
 
 }}} // namespace ppl::nn::cuda

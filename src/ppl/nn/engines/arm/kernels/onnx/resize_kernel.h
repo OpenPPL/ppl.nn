@@ -27,7 +27,7 @@ class ResizeKernel : public ArmKernel {
 public:
     ResizeKernel(const ir::Node* node) : ArmKernel(node) {}
 
-    void SetParam(const ppl::nn::common::ResizeParam* p) {
+    void SetParam(const ppl::nn::onnx::ResizeParam* p) {
         param_ = p;
     }
 
@@ -37,7 +37,7 @@ private:
     bool CanDoExecute(const KernelExecContext&) const override;
 
 private:
-    const ppl::nn::common::ResizeParam* param_ = nullptr;
+    const ppl::nn::onnx::ResizeParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::arm

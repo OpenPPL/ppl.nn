@@ -21,12 +21,12 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<SqueezeParam> SerializeSqueezeParam(const ppl::nn::common::SqueezeParam& param, FlatBufferBuilder* builder) {
+Offset<SqueezeParam> SerializeSqueezeParam(const ppl::nn::onnx::SqueezeParam& param, FlatBufferBuilder* builder) {
     auto fb_axes = builder->CreateVector(param.axes);
     return CreateSqueezeParam(*builder, fb_axes);
 }
 
-void DeserializeSqueezeParam(const SqueezeParam& fb_param, ppl::nn::common::SqueezeParam* param) {
+void DeserializeSqueezeParam(const SqueezeParam& fb_param, ppl::nn::onnx::SqueezeParam* param) {
     utils::Fbvec2Stdvec(fb_param.axes(), &param->axes);
 }
 

@@ -31,5 +31,5 @@ ppl::common::RetCode PPLCUDAMMCVROIAlignForwardImp(
     const void* rois,
     ppl::nn::TensorShape* output_shape,
     void* output,
-    ppl::nn::common::MMCVRoiAlignParam param);
+    ppl::nn::mmcv::MMCVRoiAlignParam param);
 #endif // PPLCUDA_KERNEL_INCLUDE_MMCV_ROIALIGN_ROIALIGN_H_

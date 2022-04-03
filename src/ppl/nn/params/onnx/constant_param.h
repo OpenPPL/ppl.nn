@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 struct ConstantParam {
     ppl::common::datatype_t data_type;
@@ -35,6 +35,6 @@ struct ConstantParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

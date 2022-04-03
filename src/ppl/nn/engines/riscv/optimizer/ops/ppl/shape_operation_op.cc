@@ -25,8 +25,8 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace riscv {
 
-RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ppl::nn::common::PPLShapeOperationParam>(options, &param_);
+RetCode ShapeOperationOp::Init(const OptKernelOptions& options) {
+    auto status = GenericLoadParam<ppl::nn::internal::ShapeOperationParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
@@ -41,8 +41,8 @@ RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
-RetCode PPLShapeOperationOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
-                                          vector<dataformat_t>* selected_output_formats) {
+RetCode ShapeOperationOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
+                                       vector<dataformat_t>* selected_output_formats) {
     auto num_output = selected_output_formats->size();
     for (uint64_t i = 0; i < num_output; i += 1) {
         selected_output_formats->at(i) = DATAFORMAT_NDARRAY;
@@ -50,9 +50,9 @@ RetCode PPLShapeOperationOp::SelectFormat(const InputOutputInfo& info, vector<da
     return RC_SUCCESS;
 }
 
-RetCode PPLShapeOperationOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
-                                            std::vector<datatype_t>* selected_input_data_types,
-                                            std::vector<datatype_t>* selected_output_data_types) {
+RetCode ShapeOperationOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
+                                         std::vector<datatype_t>* selected_input_data_types,
+                                         std::vector<datatype_t>* selected_output_data_types) {
     auto num_output = selected_output_data_types->size();
     for (uint64_t i = 0; i < num_output; i += 1) {
         selected_output_data_types->at(i) = DATATYPE_INT64;
@@ -60,9 +60,9 @@ RetCode PPLShapeOperationOp::SelectDataType(const InputOutputInfo& info, ppl::co
     return RC_SUCCESS;
 }
 
-KernelImpl* PPLShapeOperationOp::CreateKernelImpl() const {
+KernelImpl* ShapeOperationOp::CreateKernelImpl() const {
     auto kernel = op_.CreateKernelImpl();
-    ((ppl::nn::common::PPLShapeOperationKernel*)kernel)->SetParam(param_.get());
+    ((ppl::nn::common::ShapeOperationKernel*)kernel)->SetParam(param_.get());
     return kernel;
 }
 

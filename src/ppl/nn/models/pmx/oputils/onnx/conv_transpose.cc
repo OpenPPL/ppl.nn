@@ -16,12 +16,12 @@
 // under the License.
 
 #include "ppl/nn/models/pmx/utils.h"
-#include "ppl/nn/models/pmx/oputils/onnx/convtranspose.h"
+#include "ppl/nn/models/pmx/oputils/onnx/conv_transpose.h"
 using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<ConvTransposeParam> SerializeConvTransposeParam(const ppl::nn::common::ConvTransposeParam& param,
+Offset<ConvTransposeParam> SerializeConvTransposeParam(const ppl::nn::onnx::ConvTransposeParam& param,
                                                        FlatBufferBuilder* builder) {
     auto fb_dilations = builder->CreateVector(param.dilations);
     auto fb_kernel_shape = builder->CreateVector(param.kernel_shape);
@@ -43,7 +43,7 @@ Offset<ConvTransposeParam> SerializeConvTransposeParam(const ppl::nn::common::Co
                                     fb_kernel_shape, fb_output_padding, fb_output_shape, fb_pads, fb_strides);
 }
 
-void DeserializeConvTransposeParam(const ConvTransposeParam& fb_param, ppl::nn::common::ConvTransposeParam* param) {
+void DeserializeConvTransposeParam(const ConvTransposeParam& fb_param, ppl::nn::onnx::ConvTransposeParam* param) {
     switch (fb_param.auto_pad()) {
         case AutoPadType_NOSET:
             param->auto_pad = "NOSET";

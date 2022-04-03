@@ -21,15 +21,12 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<SliceParam> SerializeSliceParam(const ppl::nn::common::SliceParam& param, FlatBufferBuilder* builder) {
-    return CreateSliceParam(
-        *builder,
-        builder->CreateVector(param.axes),
-        builder->CreateVector(param.ends),
-        builder->CreateVector(param.starts));
+Offset<SliceParam> SerializeSliceParam(const ppl::nn::onnx::SliceParam& param, FlatBufferBuilder* builder) {
+    return CreateSliceParam(*builder, builder->CreateVector(param.axes), builder->CreateVector(param.ends),
+                            builder->CreateVector(param.starts));
 }
 
-void DeserializeSliceParam(const SliceParam& fb_param, ppl::nn::common::SliceParam* param) {
+void DeserializeSliceParam(const SliceParam& fb_param, ppl::nn::onnx::SliceParam* param) {
     utils::Fbvec2Stdvec(fb_param.axes(), &param->axes);
     utils::Fbvec2Stdvec(fb_param.ends(), &param->ends);
     utils::Fbvec2Stdvec(fb_param.starts(), &param->starts);

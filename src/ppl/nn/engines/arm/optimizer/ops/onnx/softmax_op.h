@@ -33,7 +33,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    std::shared_ptr<ppl::nn::common::SoftmaxParam> param_;
+    std::shared_ptr<ppl::nn::onnx::SoftmaxParam> param_;
 };
 
 }}} // namespace ppl::nn::arm

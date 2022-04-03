@@ -20,7 +20,7 @@
 
 #include "ppl/nn/ir/graph.h"
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 struct LoopParam {
     ir::Graph graph;
@@ -30,6 +30,6 @@ struct LoopParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

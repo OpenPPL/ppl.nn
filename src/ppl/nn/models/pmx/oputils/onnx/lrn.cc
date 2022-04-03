@@ -21,11 +21,11 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<LRNParam> SerializeLRNParam(const ppl::nn::common::LRNParam& param, FlatBufferBuilder* builder) {
+Offset<LRNParam> SerializeLRNParam(const ppl::nn::onnx::LRNParam& param, FlatBufferBuilder* builder) {
     return CreateLRNParam(*builder, param.alpha, param.beta, param.bias, param.size);
 }
 
-void DeserializeLRNParam(const LRNParam& fb_param, ppl::nn::common::LRNParam* param) {
+void DeserializeLRNParam(const LRNParam& fb_param, ppl::nn::onnx::LRNParam* param) {
     param->alpha = fb_param.alpha();
     param->beta = fb_param.beta();
     param->bias = fb_param.bias();

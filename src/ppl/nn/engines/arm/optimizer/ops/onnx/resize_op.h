@@ -37,7 +37,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    std::shared_ptr<ppl::nn::common::ResizeParam> param_;
+    std::shared_ptr<ppl::nn::onnx::ResizeParam> param_;
 };
 
 }}} // namespace ppl::nn::arm

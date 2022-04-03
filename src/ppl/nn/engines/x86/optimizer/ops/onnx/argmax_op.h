@@ -30,7 +30,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    std::shared_ptr<ppl::nn::common::ArgMaxParam> param_;
+    std::shared_ptr<ppl::nn::onnx::ArgMaxParam> param_;
 };
 
 }}} // namespace ppl::nn::x86

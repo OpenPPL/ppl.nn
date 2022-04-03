@@ -30,7 +30,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    std::shared_ptr<ppl::nn::common::ConstantOfShapeParam> param_;
+    std::shared_ptr<ppl::nn::onnx::ConstantOfShapeParam> param_;
 };
 
 }}} // namespace ppl::nn::x86

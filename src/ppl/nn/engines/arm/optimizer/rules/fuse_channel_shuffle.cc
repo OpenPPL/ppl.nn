@@ -167,7 +167,7 @@ bool FuseChannelShuffleRule::Apply(const OptKernelOptions& options) {
             if (attrs.find(trans_node_id) == attrs.end()) {
                 continue;
             }
-            common::TransposeParam* transpose_param = (common::TransposeParam*)attrs[trans_node_id].get();
+            auto transpose_param = (ppl::nn::onnx::TransposeParam*)attrs[trans_node_id].get();
             auto perm = transpose_param->perm;
             if (perm.size() != 5) {
                 continue;
@@ -192,7 +192,7 @@ bool FuseChannelShuffleRule::Apply(const OptKernelOptions& options) {
                 reshape1_prev_node->GetType().domain == "" && reshape1_prev_node->GetType().name == "Concat" &&
                 reshape1_prev_node->GetInputCount() == 2) // only support two input concat
             {
-                auto concat_param = (common::ConcatParam*)attrs[reshape1_prev_node->GetId()].get();
+                auto concat_param = (ppl::nn::onnx::ConcatParam*)attrs[reshape1_prev_node->GetId()].get();
                 if (concat_param->axis == 1) {
                     int32_t sum_channels = 0;
                     for (uint32_t i = 0; i < reshape1_prev_node->GetInputCount(); i++) {
@@ -220,7 +220,7 @@ bool FuseChannelShuffleRule::Apply(const OptKernelOptions& options) {
                     reshape2_next_node->GetType().name == "Split" &&
                     reshape2_next_node->GetOutputCount() == (uint32_t)group) // only support 2 output split
                 {
-                    auto split_param = (common::SplitParam*)attrs[reshape2_next_node->GetId()].get();
+                    auto split_param = (ppl::nn::onnx::SplitParam*)attrs[reshape2_next_node->GetId()].get();
                     if (split_param->axis == 1) {
                         int32_t sum_channels = 0;
                         for (uint32_t i = 0; i < reshape2_next_node->GetOutputCount(); i++) {
@@ -278,7 +278,7 @@ bool FuseChannelShuffleRule::Apply(const OptKernelOptions& options) {
 
             auto param_ref = graph_data->attrs.find(channel_shuffle_node->GetId());
             if (param_ref == graph_data->attrs.end()) {
-                auto channel_shuffle_param = std::make_shared<ppl::nn::common::ChannelShuffleParam>();
+                auto channel_shuffle_param = std::make_shared<ppl::nn::internal::ChannelShuffleParam>();
                 channel_shuffle_param->group = group;
                 graph_data->attrs[channel_shuffle_node->GetId()] = channel_shuffle_param;
             } else {

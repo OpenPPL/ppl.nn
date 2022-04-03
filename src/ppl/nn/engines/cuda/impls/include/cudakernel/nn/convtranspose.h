@@ -35,7 +35,7 @@ uint64_t pplConvTransposeGetFilterBufSizeCudaFp32(
 uint64_t PPLConvTransposeGetBufSizeCuda(
     ppl::nn::TensorShape* input_shape,
     ppl::nn::TensorShape* output_shape,
-    const ppl::nn::common::ConvTransposeParam* param);
+    const ppl::nn::onnx::ConvTransposeParam* param);
 
 ppl::common::RetCode PPLCUDAConvTransposeCvt(
     cudaStream_t stream,
@@ -43,7 +43,7 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
     void* temp_buffer,
     void* out_filter,
     const ppl::nn::TensorShape* filter_shape,
-    const ppl::nn::common::ConvTransposeParam* param);
+    const ppl::nn::onnx::ConvTransposeParam* param);
 
 ppl::common::RetCode PPLCUDAConvTransposeForward(
     cudaStream_t stream,
@@ -52,7 +52,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
     const void* input,
     const void* trans_filter,
     const void* bias,
-    const ppl::nn::common::ConvTransposeParam* param,
+    const ppl::nn::onnx::ConvTransposeParam* param,
     algo_param_t algo_param,
     void* temp_buffer,
     ppl::nn::TensorShape* output_shape,

@@ -342,7 +342,7 @@ ppl::common::RetCode PPLCUDAMMCVGridSampleForwardImp(
     const void* input1,
     ppl::nn::TensorShape* output_shape,
     void* output,
-    ppl::nn::common::MMCVGridSampleParam param)
+    ppl::nn::mmcv::MMCVGridSampleParam param)
 {
     int block_size    = 256;
     int out_n         = output_shape->GetDim(0);

@@ -30,7 +30,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    std::shared_ptr<ppl::nn::common::MMCVModulatedDeformConv2dParam> param_;
+    std::shared_ptr<ppl::nn::mmcv::MMCVModulatedDeformConv2dParam> param_;
 };
 
 }}} // namespace ppl::nn::x86

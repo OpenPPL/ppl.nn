@@ -33,7 +33,7 @@ public:
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
 
 private:
-    std::shared_ptr<ppl::nn::common::ArgMaxParam> param_;
+    std::shared_ptr<ppl::nn::onnx::ArgMaxParam> param_;
 };
 
 }}} // namespace ppl::nn::riscv

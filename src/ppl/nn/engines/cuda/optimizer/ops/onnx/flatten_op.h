@@ -32,7 +32,7 @@ public:
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
 private:
-    ppl::nn::common::FlattenParam param_;
+    ppl::nn::onnx::FlattenParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

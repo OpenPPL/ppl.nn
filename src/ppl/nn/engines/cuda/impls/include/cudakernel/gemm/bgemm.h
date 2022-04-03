@@ -62,7 +62,7 @@ double PPLCUDABgemmSelectKernel(
     const ppl::nn::TensorShape* output_shape,
     void* output,
     void* temp_buffer,
-    const ppl::nn::common::GemmParam& param,
+    const ppl::nn::onnx::GemmParam& param,
     const fuse_param_t& fuse_param,
     algo_param_t& algo_param);
 
@@ -75,7 +75,7 @@ ppl::common::RetCode PPLCUDABgemmForwardImp(
     void* weight,
     const ppl::nn::TensorShape* output_shape,
     void* output,
-    const ppl::nn::common::GemmParam& param,
+    const ppl::nn::onnx::GemmParam& param,
     void* temp_buffer,
     fuse_param_t& fuse_param,
     const algo_param_t& algo_param);
@@ -85,7 +85,7 @@ ppl::common::RetCode PPLCUDABgemmModifyWeights(
     ppl::nn::TensorShape* weight_shape,
     void* weight,
     void* out_weight,
-    const ppl::nn::common::GemmParam* param);
+    const ppl::nn::onnx::GemmParam* param);
 
 ppl::common::RetCode PPLCUDABgemmCvtOutput(
     const cudaStream_t &stream,
@@ -97,7 +97,7 @@ ppl::common::RetCode PPLCUDABgemmPadInput(
     ppl::nn::TensorShape *input_shape,
     void *input,
     void *tmp_input, // if need transpose
-    const ppl::nn::common::GemmParam *param);
+    const ppl::nn::onnx::GemmParam *param);
 
 
 #endif // PPLCUDA_KERNEL_INCLUDE_GEMM_BGEMM_H_

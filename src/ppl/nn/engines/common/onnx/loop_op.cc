@@ -32,7 +32,7 @@ LoopOp::~LoopOp() {
     engines_.clear();
 }
 
-RetCode LoopOp::Init(const utils::SharedResource& resource, LoopParam* loop_param,
+RetCode LoopOp::Init(const utils::SharedResource& resource, ppl::nn::onnx::LoopParam* loop_param,
                      LoopConcatOutputFunc concat_output_func) {
     utils::SharedResource new_resource;
     for (auto x = resource.engines.begin(); x != resource.engines.end(); ++x) {

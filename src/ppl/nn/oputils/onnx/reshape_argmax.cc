@@ -18,7 +18,7 @@
 #include "ppl/nn/oputils/onnx/reshape_argmax.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
-using namespace ppl::nn::common;
+using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace oputils {
 

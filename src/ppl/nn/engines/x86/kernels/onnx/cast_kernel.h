@@ -27,7 +27,7 @@ class CastKernel : public X86Kernel {
 public:
     CastKernel(const ir::Node* node) : X86Kernel(node) {}
 
-    void SetParam(const ppl::nn::common::CastParam* p) {
+    void SetParam(const ppl::nn::onnx::CastParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::CastParam* param_ = nullptr;
+    const ppl::nn::onnx::CastParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::x86

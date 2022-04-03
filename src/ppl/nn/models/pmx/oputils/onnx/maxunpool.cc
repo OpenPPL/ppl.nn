@@ -21,15 +21,14 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<MaxUnpoolParam> SerializeMaxUnpoolParam(const ppl::nn::common::MaxUnpoolParam& param,
-                                               FlatBufferBuilder* builder) {
+Offset<MaxUnpoolParam> SerializeMaxUnpoolParam(const ppl::nn::onnx::MaxUnpoolParam& param, FlatBufferBuilder* builder) {
     auto fb_kernel_shape = builder->CreateVector(param.kernel_shape);
     auto fb_pads = builder->CreateVector(param.pads);
     auto fb_strides = builder->CreateVector(param.strides);
     return CreateMaxUnpoolParam(*builder, fb_kernel_shape, fb_pads, fb_strides);
 }
 
-void DeserializeMaxUnpoolParam(const MaxUnpoolParam& fb_param, ppl::nn::common::MaxUnpoolParam* param) {
+void DeserializeMaxUnpoolParam(const MaxUnpoolParam& fb_param, ppl::nn::onnx::MaxUnpoolParam* param) {
     utils::Fbvec2Stdvec(fb_param.kernel_shape(), &param->kernel_shape);
     utils::Fbvec2Stdvec(fb_param.pads(), &param->pads);
     utils::Fbvec2Stdvec(fb_param.strides(), &param->strides);

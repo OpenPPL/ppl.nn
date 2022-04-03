@@ -26,7 +26,7 @@ namespace ppl { namespace nn { namespace riscv {
 class ClipKernel : public RiscvKernel {
 public:
     ClipKernel(const ir::Node* node) : RiscvKernel(node) {}
-    void SetParam(const ppl::nn::common::ClipParam* p) {
+    void SetParam(const ppl::nn::onnx::ClipParam* p) {
         param_ = p;
     }
 
@@ -34,7 +34,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
     bool CanDoExecute(const KernelExecContext&) const override;
 
-    const ppl::nn::common::ClipParam* param_ = nullptr;
+    const ppl::nn::onnx::ClipParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::riscv

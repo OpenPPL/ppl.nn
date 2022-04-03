@@ -31,7 +31,7 @@ public:
                                       std::vector<ppl::common::dataformat_t>* selected_input_formats,
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
     KernelImpl* CreateKernelImpl() const override;
-    bool TryFuseReLU() { 
+    bool TryFuseReLU() {
         fuse_relu_ = true;
         return true;
     }
@@ -40,7 +40,7 @@ public:
     }
 
 private:
-    std::shared_ptr<ppl::nn::common::BatchNormalizationParam> param_;
+    std::shared_ptr<ppl::nn::onnx::BatchNormalizationParam> param_;
     bool fuse_relu_ = false;
 };
 

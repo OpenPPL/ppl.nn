@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<PoolingParam> SerializePoolingParam(const ppl::nn::common::PoolingParam&,
+flatbuffers::Offset<PoolingParam> SerializePoolingParam(const ppl::nn::onnx::PoolingParam&,
                                                         flatbuffers::FlatBufferBuilder*);
-void DeserializePoolingParam(const PoolingParam&, ppl::nn::common::PoolingParam*);
+void DeserializePoolingParam(const PoolingParam&, ppl::nn::onnx::PoolingParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

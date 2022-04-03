@@ -16,18 +16,18 @@
 // under the License.
 
 #include "ppl/nn/models/pmx/utils.h"
-#include "ppl/nn/models/pmx/oputils/onnx/leakrelu.h"
+#include "ppl/nn/models/pmx/oputils/onnx/scatter_elements.h"
 using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<LeakyReluParam> SerializeLeakyReluParam(const ppl::nn::common::LeakyReluParam& param,
-                                               FlatBufferBuilder* builder) {
-    return CreateLeakyReluParam(*builder, param.alpha);
+Offset<ScatterElementsParam> SerializeScatterElementsParam(const ppl::nn::onnx::ScatterElementsParam& param,
+                                                           FlatBufferBuilder* builder) {
+    return CreateScatterElementsParam(*builder, param.axis);
 }
 
-void DeserializeLeakyReluParam(const LeakyReluParam& fb_param, ppl::nn::common::LeakyReluParam* param) {
-    param->alpha = fb_param.alpha();
+void DeserializeScatterElementsParam(const ScatterElementsParam& fb_param, ppl::nn::onnx::ScatterElementsParam* param) {
+    param->axis = fb_param.axis();
 }
 
 }}}} // namespace ppl::nn::pmx::onnx

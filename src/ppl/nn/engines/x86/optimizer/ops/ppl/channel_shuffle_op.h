@@ -34,7 +34,7 @@ public:
     void SetGroup(int group);
 
 private:
-    std::shared_ptr<ppl::nn::common::ChannelShuffleParam> param_;
+    std::shared_ptr<ppl::nn::internal::ChannelShuffleParam> param_;
 };
 
 }}} // namespace ppl::nn::x86

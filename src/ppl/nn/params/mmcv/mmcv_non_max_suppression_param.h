@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace mmcv {
 
 struct MMCVNMSParam {
     float iou_threshold;
@@ -31,6 +31,6 @@ struct MMCVNMSParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::mmcv
 
 #endif

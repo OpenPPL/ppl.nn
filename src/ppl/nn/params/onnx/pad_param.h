@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <vector>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 #define PAD_PARAM_MAX_DIM_SIZE 5
 
@@ -38,6 +38,6 @@ struct PadParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

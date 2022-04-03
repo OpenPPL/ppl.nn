@@ -32,7 +32,7 @@ public:
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
 private:
-    ppl::nn::common::ResizeParam param_;
+    ppl::nn::onnx::ResizeParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

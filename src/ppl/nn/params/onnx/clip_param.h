@@ -20,7 +20,7 @@
 
 #include <limits>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 /** @brief this param is for opset 6 */
 struct ClipParam final {
@@ -32,6 +32,6 @@ struct ClipParam final {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

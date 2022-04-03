@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_NONMAXSUPPRESSION_H_
-#define _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_NONMAXSUPPRESSION_H_
+#ifndef _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_NON_MAX_SUPPRESSION_H_
+#define _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_NON_MAX_SUPPRESSION_H_
 
 #include "ppl/nn/models/pmx/generated/onnx_op_generated.h"
 #include "ppl/nn/params/onnx/non_max_suppression_param.h"
@@ -24,8 +24,8 @@
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
 flatbuffers::Offset<NonMaxSuppressionParam> SerializeNonMaxSuppressionParam(
-    const ppl::nn::common::NonMaxSuppressionParam&, flatbuffers::FlatBufferBuilder*);
-void DeserializeNonMaxSuppressionParam(const NonMaxSuppressionParam&, ppl::nn::common::NonMaxSuppressionParam*);
+    const ppl::nn::onnx::NonMaxSuppressionParam&, flatbuffers::FlatBufferBuilder*);
+void DeserializeNonMaxSuppressionParam(const NonMaxSuppressionParam&, ppl::nn::onnx::NonMaxSuppressionParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

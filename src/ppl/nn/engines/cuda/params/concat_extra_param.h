@@ -27,7 +27,7 @@ struct ConcatExtraParam {
 };
 
 struct CudaConcatParam {
-    ppl::nn::common::ConcatParam param;
+    ppl::nn::onnx::ConcatParam param;
     ConcatExtraParam extra_param;
 };
 

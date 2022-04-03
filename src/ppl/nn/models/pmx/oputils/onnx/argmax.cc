@@ -21,11 +21,11 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<ArgMaxParam> SerializeArgMaxParam(const ppl::nn::common::ArgMaxParam& param, FlatBufferBuilder* builder) {
+Offset<ArgMaxParam> SerializeArgMaxParam(const ppl::nn::onnx::ArgMaxParam& param, FlatBufferBuilder* builder) {
     return CreateArgMaxParam(*builder, param.axis, param.keepdims);
 }
 
-void DeserializeArgMaxParam(const ArgMaxParam& fb_param, ppl::nn::common::ArgMaxParam* param) {
+void DeserializeArgMaxParam(const ArgMaxParam& fb_param, ppl::nn::onnx::ArgMaxParam* param) {
     param->axis = fb_param.axis();
     param->keepdims = fb_param.keepdims();
 }

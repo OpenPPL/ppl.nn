@@ -51,13 +51,12 @@ RetCode ConvOp::Init(const OptKernelOptions& options) {
     auto graph_data = options.graph_data;
     const ir::Shape& weight_shape = graph_data->shapes.find(node->GetInput(1))->second;
 
-    const int64_t kernel_dims = param_->kernel_shape.size() == 0 ?
-                                (weight_shape.dims.size() - 2) :
-                                param_->kernel_shape.size();
+    const int64_t kernel_dims =
+        param_->kernel_shape.size() == 0 ? (weight_shape.dims.size() - 2) : param_->kernel_shape.size();
 
     if (kernel_dims != 2) {
-        LOG(ERROR) << "Only support Conv2d currently. Get unsupported kernel_dims="
-            << kernel_dims << ", which is Conv(" << kernel_dims << "d)";
+        LOG(ERROR) << "Only support Conv2d currently. Get unsupported kernel_dims=" << kernel_dims << ", which is Conv("
+                   << kernel_dims << "d)";
         return ppl::common::RC_UNSUPPORTED;
     }
 
@@ -97,10 +96,9 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
     bias_term_ = (node->GetInputCount() == 3) ? 1 : 0;
 
     // Check Param
-    const ppl::nn::common::ConvParam& conv_param = *param_;
-    const int64_t kernel_dims = param_->kernel_shape.size() == 0 ?
-                                (weight_shape.dims.size() - 2) :
-                                param_->kernel_shape.size();
+    const ppl::nn::onnx::ConvParam& conv_param = *param_;
+    const int64_t kernel_dims =
+        param_->kernel_shape.size() == 0 ? (weight_shape.dims.size() - 2) : param_->kernel_shape.size();
 
     for (int64_t i = 0; i < kernel_dims; ++i) {
         if (conv_param.pads[i] != conv_param.pads[i + kernel_dims]) {
@@ -205,7 +203,7 @@ RetCode ConvOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* 
     return RC_SUCCESS;
 }
 
-RetCode ConvOp::OmitConstantsData(std::map<edgeid_t, int64_t> *constants_data_refcount) {
+RetCode ConvOp::OmitConstantsData(std::map<edgeid_t, int64_t>* constants_data_refcount) {
     if (conv2d_param_ && conv2d_param_->algo_info.algo_type != ppl::kernel::x86::conv2d_fp32_algo::UNKNOWN) {
         auto weight_id = GetNode()->GetInput(1);
         auto it = constants_data_refcount->find(weight_id);

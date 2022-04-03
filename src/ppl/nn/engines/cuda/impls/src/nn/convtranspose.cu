@@ -251,7 +251,7 @@ uint64_t pplConvTransposeGetTempBufSizeCudaFp32(
 uint64_t PPLConvTransposeGetBufSizeCuda(
     ppl::nn::TensorShape* input_shape,
     ppl::nn::TensorShape* output_shape,
-    const ppl::nn::common::ConvTransposeParam* param)
+    const ppl::nn::onnx::ConvTransposeParam* param)
 {
     int batch     = input_shape->GetDim(0);
     int in_c      = input_shape->GetDim(1);
@@ -330,7 +330,7 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
     void* temp_buffer,
     void* out_filter,
     const ppl::nn::TensorShape* filter_shape,
-    const ppl::nn::common::ConvTransposeParam* param)
+    const ppl::nn::onnx::ConvTransposeParam* param)
 {
     int in_c     = filter_shape->GetDim(1);
     int out_c    = filter_shape->GetDim(0);
@@ -353,7 +353,7 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
     __half* cvt_filter   = (__half*)temp_buffer;
     pplConvTransposeConvertFilter<__half>(stream, (__half*)in_filter, num_filters, num_channels, kernel_h, kernel_w, cvt_filter);
 
-    ppl::nn::common::TransposeParam trans_param;
+    ppl::nn::onnx::TransposeParam trans_param;
     trans_param.perm.push_back(1);
     trans_param.perm.push_back(0);
 
@@ -379,7 +379,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
     const void* input,
     const void* trans_filter,
     const void* bias,
-    const ppl::nn::common::ConvTransposeParam* param,
+    const ppl::nn::onnx::ConvTransposeParam* param,
     algo_param_t algo_param,
     void* temp_buffer,
     ppl::nn::TensorShape* output_shape,
@@ -418,7 +418,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
         __half* pad_out_data = pad_in_data + Align(padN * padK, 128 / sizeof(__half));
         __half* out_data     = pad_out_data + Align(M * padN, 128 / sizeof(__half));
 
-        ppl::nn::common::TransposeParam trans_param;
+        ppl::nn::onnx::TransposeParam trans_param;
         trans_param.perm.push_back(1);
         trans_param.perm.push_back(0);
         __half* trans_in_data = out_data + Align(M * N, 128 / sizeof(__half));
@@ -435,7 +435,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
         out_a_shape.Reshape({padM, padK});
         out_b_shape.Reshape({padN, padK});
 
-        ppl::nn::common::GemmParam gemm_param;
+        ppl::nn::onnx::GemmParam gemm_param;
         fuse_param_t fuse_param;
         gemm_param.bias_term = 0;
         gemm_param.transA    = 0;

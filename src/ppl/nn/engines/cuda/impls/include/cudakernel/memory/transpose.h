@@ -24,7 +24,7 @@
 
 ppl::common::RetCode PPLCUDATransposeForwardImp(
     cudaStream_t stream,
-    ppl::nn::common::TransposeParam param,
+    ppl::nn::onnx::TransposeParam param,
     const ppl::nn::TensorShape* input_shape,
     const void* input,
     const ppl::nn::TensorShape* output_shape,

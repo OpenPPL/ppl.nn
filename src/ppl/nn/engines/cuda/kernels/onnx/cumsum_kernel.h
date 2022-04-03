@@ -27,14 +27,15 @@ class CumSumKernel : public CudaKernel {
 public:
     CumSumKernel(const ir::Node* node) : CudaKernel(node) {}
 
-    void SetParam(const ppl::nn::common::CumSumParam* p) {
+    void SetParam(const ppl::nn::onnx::CumSumParam* p) {
         param_ = p;
     }
 
 private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
+
 private:
-    const ppl::nn::common::CumSumParam* param_ = nullptr;
+    const ppl::nn::onnx::CumSumParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::cuda

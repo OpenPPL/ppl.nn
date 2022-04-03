@@ -1,8 +1,8 @@
 #include "pmx_utils.h"
-#include "ppl/nn/models/pmx/oputils/onnx/batchnorm.h"
+#include "ppl/nn/models/pmx/oputils/onnx/batch_normalization.h"
 
 using namespace std;
-using namespace ppl::nn::common;
+using namespace ppl::nn::onnx;
 using namespace ppl::nn::pmx::onnx;
 
 TEST_F(PmxTest, test_batchnorm) {

@@ -10,15 +10,15 @@ namespace ppl { namespace nn { namespace cuda {
 class LstmKernel : public CudaKernel {
 public:
     LstmKernel(const ir::Node* node) : CudaKernel(node) {}
-    void SetParam(const ppl::nn::common::LSTMParam* p) {
+    void SetParam(const ppl::nn::onnx::LSTMParam* p) {
         param_ = p;
-        if (p->direction == ppl::nn::common::LSTMParam::DIR_FORWARD) {
+        if (p->direction == ppl::nn::onnx::LSTMParam::DIR_FORWARD) {
             direction_ = RnnDirection::forward;
         }
-        if (p->direction == ppl::nn::common::LSTMParam::DIR_REVERSE) {
+        if (p->direction == ppl::nn::onnx::LSTMParam::DIR_REVERSE) {
             direction_ = RnnDirection::reverse;
         }
-        if (p->direction == ppl::nn::common::LSTMParam::DIR_BIDIRECTIONAL) {
+        if (p->direction == ppl::nn::onnx::LSTMParam::DIR_BIDIRECTIONAL) {
             direction_ = RnnDirection::bidirectional;
         }
     }
@@ -26,7 +26,7 @@ public:
 private:
     bool CanDoExecute(const KernelExecContext& ctx) const override;
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
-    const ppl::nn::common::LSTMParam *param_ = nullptr;
+    const ppl::nn::onnx::LSTMParam* param_ = nullptr;
     unsigned int direction_;
 };
 

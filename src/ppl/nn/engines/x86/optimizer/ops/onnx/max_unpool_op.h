@@ -30,7 +30,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    std::shared_ptr<ppl::nn::common::MaxUnpoolParam> param_;
+    std::shared_ptr<ppl::nn::onnx::MaxUnpoolParam> param_;
 };
 
 }}} // namespace ppl::nn::x86

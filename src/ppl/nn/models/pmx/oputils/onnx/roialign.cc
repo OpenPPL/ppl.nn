@@ -21,12 +21,12 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<RoiAlignParam> SerializeRoiAlignParam(const ppl::nn::common::RoiAlignParam& param, FlatBufferBuilder* builder) {
+Offset<RoiAlignParam> SerializeRoiAlignParam(const ppl::nn::onnx::RoiAlignParam& param, FlatBufferBuilder* builder) {
     return CreateRoiAlignParam(*builder, static_cast<RoiAlignMode>(param.mode), param.output_height, param.output_width,
                                param.sampling_ratio, param.spatial_scale);
 }
 
-void DeserializeRoiAlignParam(const RoiAlignParam& fb_param, ppl::nn::common::RoiAlignParam* param) {
+void DeserializeRoiAlignParam(const RoiAlignParam& fb_param, ppl::nn::onnx::RoiAlignParam* param) {
     param->mode = static_cast<uint32_t>(fb_param.mode());
     param->output_height = fb_param.output_height();
     param->output_width = fb_param.output_width();

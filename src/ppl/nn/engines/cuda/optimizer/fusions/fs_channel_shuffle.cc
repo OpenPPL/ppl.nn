@@ -57,7 +57,7 @@ const bool ChannelShuffleFusion::CanFuseFirstReshape(ir::Node* node, const OptKe
 
     auto attr_pair = data->attrs.find(shape_node_id);
     if (attr_pair != data->attrs.end()) {
-        auto param = (const ppl::nn::common::PPLShapeOperationParam*)(attr_pair->second.get());
+        auto param = (const ppl::nn::internal::ShapeOperationParam*)(attr_pair->second.get());
         auto matrix = param->alpha.find(shape_edge_id)->second;
         if (matrix.numerator[1][matrix.MAXDIMSIZE] / matrix.denominator[1][matrix.MAXDIMSIZE] != 2) {
             return false;
@@ -75,7 +75,7 @@ const bool ChannelShuffleFusion::CanFuseTranspose(ir::Node* node, const OptKerne
     auto attr_pair = data->attrs.find(node->GetId());
 
     if (attr_pair != data->attrs.end()) {
-        auto param = (const ppl::nn::common::TransposeParam*)(attr_pair->second.get());
+        auto param = (const ppl::nn::onnx::TransposeParam*)(attr_pair->second.get());
         std::vector<int32_t> shape{0, 2, 1, 3, 4};
         if (param->perm == shape) {
             return true;
@@ -104,7 +104,7 @@ const bool ChannelShuffleFusion::CanFuseSecondReshape(ir::Node* node, const OptK
     auto shape_node_id = topo->GetEdgeById(shape_edge_id)->GetProducer();
     auto attr_pair = data->attrs.find(shape_node_id);
     if (attr_pair != data->attrs.end()) {
-        auto param = (const ppl::nn::common::PPLShapeOperationParam*)(attr_pair->second.get());
+        auto param = (const ppl::nn::internal::ShapeOperationParam*)(attr_pair->second.get());
         auto matrix = param->alpha.find(shape_edge_id)->second;
         if (matrix.numerator[1][matrix.MAXDIMSIZE] / matrix.denominator[1][matrix.MAXDIMSIZE] != -1) {
             return false;
@@ -278,7 +278,7 @@ const RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, cons
             LOG(ERROR) << "create Kernel failed: oom";
             return RC_UNSUPPORTED;
         }
-        auto param = (ppl::nn::common::ChannelShuffleParam*)opt_kernel->GetParam();
+        auto param = (ppl::nn::internal::ChannelShuffleParam*)opt_kernel->GetParam();
         if (param == nullptr) {
             LOG(ERROR) << "Can not find param.";
             return RC_NOT_FOUND;

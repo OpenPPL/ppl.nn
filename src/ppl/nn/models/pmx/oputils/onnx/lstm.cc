@@ -21,7 +21,7 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<LSTMParam> SerializeLSTMParam(const ppl::nn::common::LSTMParam& param, FlatBufferBuilder* builder) {
+Offset<LSTMParam> SerializeLSTMParam(const ppl::nn::onnx::LSTMParam& param, FlatBufferBuilder* builder) {
     auto fb_activation_alpha = builder->CreateVector(param.activation_alpha);
     auto fb_activation_beta = builder->CreateVector(param.activation_beta);
     std::vector<uint32_t> temp_activations(param.activations.size());
@@ -33,16 +33,15 @@ Offset<LSTMParam> SerializeLSTMParam(const ppl::nn::common::LSTMParam& param, Fl
                            static_cast<LSTMDirectionType>(param.direction), param.hidden_size, param.input_forget);
 }
 
-void DeserializeLSTMParam(const LSTMParam& fb_param, ppl::nn::common::LSTMParam* param) {
+void DeserializeLSTMParam(const LSTMParam& fb_param, ppl::nn::onnx::LSTMParam* param) {
     utils::Fbvec2Stdvec(fb_param.activation_alpha(), &param->activation_alpha);
     utils::Fbvec2Stdvec(fb_param.activation_beta(), &param->activation_beta);
     param->activations.resize(fb_param.activations()->size());
     for (uint32_t i = 0; i < fb_param.activations()->size(); i++) {
-        param->activations.at(i) =
-            static_cast<ppl::nn::common::LSTMParam::activation_t>(fb_param.activations()->Get(i));
+        param->activations.at(i) = static_cast<ppl::nn::onnx::LSTMParam::activation_t>(fb_param.activations()->Get(i));
     }
     param->clip = fb_param.clip();
-    param->direction = static_cast<ppl::nn::common::LSTMParam::direction_t>(fb_param.direction());
+    param->direction = static_cast<ppl::nn::onnx::LSTMParam::direction_t>(fb_param.direction());
     param->hidden_size = fb_param.hidden_size();
     param->input_forget = fb_param.input_forget();
 }

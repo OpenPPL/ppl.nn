@@ -30,12 +30,12 @@ public:
     ~GemmOp();
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
-    ppl::common::RetCode OmitConstantsData(std::map<edgeid_t, int64_t> *constants_data_refcount) override;
+    ppl::common::RetCode OmitConstantsData(std::map<edgeid_t, int64_t>* constants_data_refcount) override;
     bool TryFuseReLU();
 
 private:
     FCParam* fc_param_;
-    std::shared_ptr<ppl::nn::common::GemmParam> param_;
+    std::shared_ptr<ppl::nn::onnx::GemmParam> param_;
     bool gemm_fuse_relu_ = false;
 };
 

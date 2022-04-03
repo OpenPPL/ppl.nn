@@ -27,7 +27,7 @@ class SoftmaxKernel : public RiscvKernel {
 public:
     SoftmaxKernel(const ir::Node* node) : RiscvKernel(node) {}
 
-    void SetParam(const ppl::nn::common::SoftmaxParam* p) {
+    void SetParam(const ppl::nn::onnx::SoftmaxParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::SoftmaxParam* param_ = nullptr;
+    const ppl::nn::onnx::SoftmaxParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::riscv

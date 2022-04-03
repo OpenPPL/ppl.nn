@@ -36,7 +36,7 @@ public:
                                         std::vector<ppl::common::datatype_t>* selected_output_data_types) override;
 
 private:
-    std::shared_ptr<ppl::nn::common::ConstantOfShapeParam> param_;
+    std::shared_ptr<ppl::nn::onnx::ConstantOfShapeParam> param_;
 };
 
 }}} // namespace ppl::nn::riscv

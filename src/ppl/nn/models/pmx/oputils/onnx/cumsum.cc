@@ -21,11 +21,11 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<CumSumParam> SerializeCumSumParam(const ppl::nn::common::CumSumParam& param, FlatBufferBuilder* builder) {
+Offset<CumSumParam> SerializeCumSumParam(const ppl::nn::onnx::CumSumParam& param, FlatBufferBuilder* builder) {
     return CreateCumSumParam(*builder, param.exclusive, param.reverse);
 }
 
-void DeserializeCumSumParam(const CumSumParam& fb_param, ppl::nn::common::CumSumParam* param) {
+void DeserializeCumSumParam(const CumSumParam& fb_param, ppl::nn::onnx::CumSumParam* param) {
     param->exclusive = fb_param.exclusive();
     param->reverse = fb_param.reverse();
 }

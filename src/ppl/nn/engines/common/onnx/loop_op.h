@@ -33,7 +33,7 @@ class LoopOp final {
 public:
     LoopOp(const ir::Node* node) : node_(node) {}
     ~LoopOp();
-    ppl::common::RetCode Init(const utils::SharedResource&, LoopParam*, LoopConcatOutputFunc);
+    ppl::common::RetCode Init(const utils::SharedResource&, ppl::nn::onnx::LoopParam*, LoopConcatOutputFunc);
     KernelImpl* CreateKernelImpl() const;
 
 private:

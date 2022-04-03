@@ -113,7 +113,7 @@ private:
         const int64_t kernel_dims = weight_shape.dims.size() - 2;
 
         {
-            const ppl::nn::common::ConvParam& conv_param = *param_;
+            const ppl::nn::onnx::ConvParam& conv_param = *param_;
             for (int64_t i = 0; i < kernel_dims; ++i) {
                 if (conv_param.pads[i] != conv_param.pads[i + kernel_dims]) {
                     return ppl::common::RC_UNSUPPORTED;
@@ -233,7 +233,7 @@ private:
 
 private:
     Convolution2DParam* conv2d_param_;
-    std::shared_ptr<ppl::nn::common::ConvParam> param_;
+    std::shared_ptr<ppl::nn::onnx::ConvParam> param_;
 };
 
 }}} // namespace ppl::nn::riscv

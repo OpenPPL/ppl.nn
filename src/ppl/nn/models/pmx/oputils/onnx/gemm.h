@@ -23,8 +23,8 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<GemmParam> SerializeGemmParam(const ppl::nn::common::GemmParam&, flatbuffers::FlatBufferBuilder*);
-void DeserializeGemmParam(const GemmParam&, ppl::nn::common::GemmParam*);
+flatbuffers::Offset<GemmParam> SerializeGemmParam(const ppl::nn::onnx::GemmParam&, flatbuffers::FlatBufferBuilder*);
+void DeserializeGemmParam(const GemmParam&, ppl::nn::onnx::GemmParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

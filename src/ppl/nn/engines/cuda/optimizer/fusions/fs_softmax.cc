@@ -39,7 +39,7 @@ const RetCode SoftmaxFusion::FuseNode(ir::Node* node, bool reliable, const OptKe
 
     auto pre_node = topo->GetNodeById(pre_edge->GetProducer());
     auto post_node = topo->GetNodeById(post_edge->CreateConsumerIter().Get());
-    
+
     if (node->GetInputCount() != 1 || node->GetOutputCount() != 1) {
         return RC_UNSUPPORTED;
     }
@@ -54,23 +54,23 @@ const RetCode SoftmaxFusion::FuseNode(ir::Node* node, bool reliable, const OptKe
     auto pre_kernel = (CudaOptKernel*)(options.info->kernels.find(pre_node->GetId())->second.get());
     auto post_kernel = (CudaOptKernel*)(options.info->kernels.find(post_node->GetId())->second.get());
 
-    auto softmax_param = (ppl::nn::common::SoftmaxParam*)(kernel->GetParam());
+    auto softmax_param = (ppl::nn::onnx::SoftmaxParam*)(kernel->GetParam());
     if (softmax_param->axis != 3) {
         return RC_UNSUPPORTED;
     }
-    std::vector<int32_t> perm = {0,3,2,1};
-    auto pre_transpose_param = (ppl::nn::common::TransposeParam*)(pre_kernel->GetParam());
+    std::vector<int32_t> perm = {0, 3, 2, 1};
+    auto pre_transpose_param = (ppl::nn::onnx::TransposeParam*)(pre_kernel->GetParam());
     if (pre_transpose_param->perm != perm) {
         return RC_UNSUPPORTED;
     }
-    auto post_transpose_param = (ppl::nn::common::TransposeParam*)(post_kernel->GetParam());
+    auto post_transpose_param = (ppl::nn::onnx::TransposeParam*)(post_kernel->GetParam());
     if (post_transpose_param->perm != perm) {
         return RC_UNSUPPORTED;
     }
 
     LOG(DEBUG) << "Give a better layout for node[" << node->GetName() << "].";
-    pre_transpose_param->perm = std::vector<int32_t>{0,2,3,1};
-    post_transpose_param->perm = std::vector<int32_t>{0,3,1,2};
+    pre_transpose_param->perm = std::vector<int32_t>{0, 2, 3, 1};
+    post_transpose_param->perm = std::vector<int32_t>{0, 3, 1, 2};
 
     return RC_SUCCESS;
 }

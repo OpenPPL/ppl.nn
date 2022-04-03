@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<CumSumParam> SerializeCumSumParam(const ppl::nn::common::CumSumParam&,
+flatbuffers::Offset<CumSumParam> SerializeCumSumParam(const ppl::nn::onnx::CumSumParam&,
                                                       flatbuffers::FlatBufferBuilder*);
-void DeserializeCumSumParam(const CumSumParam&, ppl::nn::common::CumSumParam*);
+void DeserializeCumSumParam(const CumSumParam&, ppl::nn::onnx::CumSumParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

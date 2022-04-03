@@ -33,5 +33,5 @@ ppl::common::RetCode PPLCUDAROIAlignForwardImp(
     const void* batch_indices,
     ppl::nn::TensorShape* output_shape,
     void* output,
-    ppl::nn::common::RoiAlignParam param);
+    ppl::nn::onnx::RoiAlignParam param);
 #endif // PPLCUDA_KERNEL_INCLUDE_ONNX_ROIALIGN_ROIALIGN_H_

@@ -32,7 +32,7 @@ public:
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
 private:
-    ppl::nn::common::MMCVGridSampleParam param_;
+    ppl::nn::mmcv::MMCVGridSampleParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

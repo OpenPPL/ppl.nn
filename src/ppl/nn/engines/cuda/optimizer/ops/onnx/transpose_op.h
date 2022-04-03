@@ -36,7 +36,7 @@ public:
     };
 
 private:
-    ppl::nn::common::TransposeParam param_;
+    ppl::nn::onnx::TransposeParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

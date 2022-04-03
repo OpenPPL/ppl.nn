@@ -27,7 +27,7 @@ class GatherNdKernel : public X86Kernel {
 public:
     GatherNdKernel(const ir::Node* node) : X86Kernel(node) {}
 
-    void SetParam(const ppl::nn::common::GatherNDParam* p) {
+    void SetParam(const ppl::nn::onnx::GatherNDParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::GatherNDParam* param_ = nullptr;
+    const ppl::nn::onnx::GatherNDParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::x86

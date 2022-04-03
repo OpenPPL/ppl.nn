@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace internal {
 
 struct ChannelShuffleParam {
     int32_t group;
@@ -30,6 +30,6 @@ struct ChannelShuffleParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::internal
 
 #endif

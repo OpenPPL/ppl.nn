@@ -31,7 +31,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    ppl::nn::common::MMCVModulatedDeformConv2dParam param_;
+    ppl::nn::mmcv::MMCVModulatedDeformConv2dParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

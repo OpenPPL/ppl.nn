@@ -23,9 +23,8 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<SliceParam> SerializeSliceParam(const ppl::nn::common::SliceParam&,
-                                                    flatbuffers::FlatBufferBuilder*);
-void DeserializeSliceParam(const SliceParam&, ppl::nn::common::SliceParam*);
+flatbuffers::Offset<SliceParam> SerializeSliceParam(const ppl::nn::onnx::SliceParam&, flatbuffers::FlatBufferBuilder*);
+void DeserializeSliceParam(const SliceParam&, ppl::nn::onnx::SliceParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

@@ -19,7 +19,7 @@
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
-using namespace ppl::nn::common;
+using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace oputils {
 

@@ -21,11 +21,11 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<FlattenParam> SerializeFlattenParam(const ppl::nn::common::FlattenParam& param, FlatBufferBuilder* builder) {
+Offset<FlattenParam> SerializeFlattenParam(const ppl::nn::onnx::FlattenParam& param, FlatBufferBuilder* builder) {
     return CreateFlattenParam(*builder, param.axis);
 }
 
-void DeserializeFlattenParam(const FlattenParam& fb_param, ppl::nn::common::FlattenParam* param) {
+void DeserializeFlattenParam(const FlattenParam& fb_param, ppl::nn::onnx::FlattenParam* param) {
     param->axis = fb_param.axis();
 }
 

@@ -31,8 +31,9 @@ public:
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
                                       std::vector<ppl::common::dataformat_t>* selected_input_formats,
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
+
 private:
-    std::shared_ptr<ppl::nn::common::ClipParam> param_;
+    std::shared_ptr<ppl::nn::onnx::ClipParam> param_;
 };
 
 }}} // namespace ppl::nn::x86

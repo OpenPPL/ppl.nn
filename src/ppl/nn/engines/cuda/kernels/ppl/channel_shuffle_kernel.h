@@ -27,7 +27,7 @@ class ChannelShuffleKernel : public CudaKernel {
 public:
     ChannelShuffleKernel(const ir::Node* node) : CudaKernel(node) {}
 
-    void SetParam(const ppl::nn::common::ChannelShuffleParam* p) {
+    void SetParam(const ppl::nn::internal::ChannelShuffleParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::ChannelShuffleParam* param_ = nullptr;
+    const ppl::nn::internal::ChannelShuffleParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::cuda

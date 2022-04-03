@@ -21,10 +21,10 @@
 #include <stdint.h>
 #include <vector>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 struct ConvParam final {
-    enum { NOSET = 0, SAME_UPPER, SAME_LOWER, VALID};
+    enum { NOSET = 0, SAME_UPPER, SAME_LOWER, VALID };
     uint32_t auto_pad;
     int32_t group;
     std::vector<int32_t> kernel_shape;
@@ -33,11 +33,11 @@ struct ConvParam final {
     std::vector<int32_t> pads;
 
     bool operator==(const ConvParam& p) const {
-        return (auto_pad == p.auto_pad && group == p.group && kernel_shape == p.kernel_shape && dilations == p.dilations &&
-                strides == p.strides && pads == p.pads);
+        return (auto_pad == p.auto_pad && group == p.group && kernel_shape == p.kernel_shape &&
+                dilations == p.dilations && strides == p.strides && pads == p.pads);
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

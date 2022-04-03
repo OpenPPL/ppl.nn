@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<MaxUnpoolParam> SerializeMaxUnpoolParam(const ppl::nn::common::MaxUnpoolParam&,
+flatbuffers::Offset<MaxUnpoolParam> SerializeMaxUnpoolParam(const ppl::nn::onnx::MaxUnpoolParam&,
                                                             flatbuffers::FlatBufferBuilder*);
-void DeserializeMaxUnpoolParam(const MaxUnpoolParam&, ppl::nn::common::MaxUnpoolParam*);
+void DeserializeMaxUnpoolParam(const MaxUnpoolParam&, ppl::nn::onnx::MaxUnpoolParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

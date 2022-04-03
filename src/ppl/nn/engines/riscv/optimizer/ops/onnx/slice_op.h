@@ -35,7 +35,7 @@ public:
 
 private:
     ppl::nn::riscv::SliceParam aux_param_;
-    std::shared_ptr<ppl::nn::common::SliceParam> param_;
+    std::shared_ptr<ppl::nn::onnx::SliceParam> param_;
 };
 
 }}} // namespace ppl::nn::riscv

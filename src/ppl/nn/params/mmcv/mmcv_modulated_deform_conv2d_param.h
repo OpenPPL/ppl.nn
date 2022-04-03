@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace mmcv {
 
 struct MMCVModulatedDeformConv2dParam {
     int64_t kernel_size[2]; // written in op ctx
@@ -30,7 +30,7 @@ struct MMCVModulatedDeformConv2dParam {
     int64_t groups;
     int64_t deform_groups;
 
-    int64_t channels;  // written in op ctx
+    int64_t channels; // written in op ctx
     int64_t num_output; // written in op ctx
     int64_t bias_term; // written in op ctx, for multi-input layer fusion
 
@@ -39,6 +39,6 @@ struct MMCVModulatedDeformConv2dParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::mmcv
 
 #endif

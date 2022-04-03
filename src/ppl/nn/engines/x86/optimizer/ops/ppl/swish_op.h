@@ -36,7 +36,7 @@ public:
     };
 
 private:
-    std::shared_ptr<ppl::nn::common::SwishParam> param_;
+    std::shared_ptr<ppl::nn::internal::SwishParam> param_;
 };
 
 }}} // namespace ppl::nn::x86

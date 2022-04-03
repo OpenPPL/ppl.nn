@@ -27,7 +27,7 @@ class RoiAlignKernel : public RiscvKernel {
 public:
     RoiAlignKernel(const ir::Node* node) : RiscvKernel(node) {}
 
-    void SetParam(const ppl::nn::common::RoiAlignParam* p) {
+    void SetParam(const ppl::nn::onnx::RoiAlignParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::RoiAlignParam* param_ = nullptr;
+    const ppl::nn::onnx::RoiAlignParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::riscv

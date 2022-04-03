@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <vector>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 struct MaxUnpoolParam {
     std::vector<int32_t> kernel_shape;
@@ -33,6 +33,6 @@ struct MaxUnpoolParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

@@ -24,7 +24,7 @@
 
 ppl::common::RetCode PPLCUDADepthToSpaceForwardImp(
     cudaStream_t stream,
-    ppl::nn::common::DepthToSpaceParam param,
+    ppl::nn::onnx::DepthToSpaceParam param,
     const ppl::nn::TensorShape* input_shape,
     const void* input,
     const ppl::nn::TensorShape* output_shape,

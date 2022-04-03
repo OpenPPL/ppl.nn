@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<ConcatParam> SerializeConcatParam(const ppl::nn::common::ConcatParam&,
+flatbuffers::Offset<ConcatParam> SerializeConcatParam(const ppl::nn::onnx::ConcatParam&,
                                                       flatbuffers::FlatBufferBuilder*);
-void DeserializeConcatParam(const ConcatParam&, ppl::nn::common::ConcatParam*);
+void DeserializeConcatParam(const ConcatParam&, ppl::nn::onnx::ConcatParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

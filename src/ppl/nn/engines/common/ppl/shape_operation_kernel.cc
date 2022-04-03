@@ -21,7 +21,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace common {
 
-RetCode PPLShapeOperationKernel::DoExecute(KernelExecContext* ctx) {
+RetCode ShapeOperationKernel::DoExecute(KernelExecContext* ctx) {
     auto data = ctx->GetInput<TensorImpl>(0);
     auto input_dim_size = ctx->GetInput<TensorImpl>(0)->GetShape()->GetRealDimCount();
     for (size_t i = 0; i < ctx->GetOutputCount(); ++i) {
@@ -50,11 +50,12 @@ RetCode PPLShapeOperationKernel::DoExecute(KernelExecContext* ctx) {
 
         std::unique_ptr<int64_t[]> shape_host(new int64_t[dim_size]);
         for (uint32_t j = 0; j < dim_size; ++j) {
-            int64_t numer = matrix.numerator[j][ppl::nn::common::ShapeMatrix::MAXDIMSIZE];
-            int64_t denom = matrix.denominator[j][ppl::nn::common::ShapeMatrix::MAXDIMSIZE];
+            int64_t numer = matrix.numerator[j][ppl::nn::internal::ShapeMatrix::MAXDIMSIZE];
+            int64_t denom = matrix.denominator[j][ppl::nn::internal::ShapeMatrix::MAXDIMSIZE];
             for (uint32_t k = 0; k < data->GetShape()->GetDimCount(); ++k) {
                 if (matrix.numerator[j][k]) {
-                    numer = numer * matrix.denominator[j][k] + denom * data->GetShape()->GetDim(k) * matrix.numerator[j][k];
+                    numer =
+                        numer * matrix.denominator[j][k] + denom * data->GetShape()->GetDim(k) * matrix.numerator[j][k];
                     denom = denom * matrix.denominator[j][k];
                 }
             }

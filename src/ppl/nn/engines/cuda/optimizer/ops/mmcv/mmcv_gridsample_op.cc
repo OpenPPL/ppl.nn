@@ -23,7 +23,7 @@
 
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::common;
+using namespace ppl::nn::mmcv;
 
 namespace ppl { namespace nn { namespace cuda {
 

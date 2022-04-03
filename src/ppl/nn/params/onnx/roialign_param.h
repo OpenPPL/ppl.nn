@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 struct RoiAlignParam final {
     enum { AVG = 0, MAX = 1 };
@@ -37,6 +37,6 @@ struct RoiAlignParam final {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

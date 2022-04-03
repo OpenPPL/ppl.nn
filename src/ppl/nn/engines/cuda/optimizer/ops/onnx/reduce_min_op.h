@@ -32,7 +32,7 @@ public:
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
 private:
-    ppl::nn::common::ReduceParam param_;
+    ppl::nn::onnx::ReduceParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

@@ -36,7 +36,7 @@ public:
     };
 
 private:
-    ppl::nn::common::UnsqueezeParam param_;
+    ppl::nn::onnx::UnsqueezeParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

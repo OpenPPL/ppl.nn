@@ -23,9 +23,9 @@
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<SoftmaxParam> SerializeSoftmaxParam(const ppl::nn::common::SoftmaxParam&,
+flatbuffers::Offset<SoftmaxParam> SerializeSoftmaxParam(const ppl::nn::onnx::SoftmaxParam&,
                                                         flatbuffers::FlatBufferBuilder*);
-void DeserializeSoftmaxParam(const SoftmaxParam&, ppl::nn::common::SoftmaxParam*);
+void DeserializeSoftmaxParam(const SoftmaxParam&, ppl::nn::onnx::SoftmaxParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

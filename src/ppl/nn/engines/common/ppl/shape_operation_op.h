@@ -24,9 +24,9 @@
 
 namespace ppl { namespace nn { namespace common {
 
-class PPLShapeOperationOp final {
+class ShapeOperationOp final {
 public:
-    PPLShapeOperationOp(const ir::Node* node) : node_(node) {}
+    ShapeOperationOp(const ir::Node* node) : node_(node) {}
     KernelImpl* CreateKernelImpl() const;
 
 private:

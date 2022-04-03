@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <vector>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 struct UnsqueezeParam {
     std::vector<int32_t> axes;
@@ -31,6 +31,6 @@ struct UnsqueezeParam {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

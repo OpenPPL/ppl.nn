@@ -27,7 +27,7 @@ class LeakyReLUKernel : public RiscvKernel {
 public:
     LeakyReLUKernel(const ir::Node* node) : RiscvKernel(node) {}
 
-    void SetParam(const ppl::nn::common::LeakyReluParam* p) {
+    void SetParam(const ppl::nn::onnx::LeakyReluParam* p) {
         param_ = p;
     }
 
@@ -35,7 +35,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::LeakyReluParam* param_ = nullptr;
+    const ppl::nn::onnx::LeakyReluParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::riscv

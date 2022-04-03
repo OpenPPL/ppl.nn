@@ -27,7 +27,7 @@ class MMCVNonMaxSuppressionKernel : public CudaKernel {
 public:
     MMCVNonMaxSuppressionKernel(const ir::Node* node) : CudaKernel(node) {}
 
-    void SetParam(const ppl::nn::common::MMCVNMSParam* p) {
+    void SetParam(const ppl::nn::mmcv::MMCVNMSParam* p) {
         param_ = p;
     }
 
@@ -36,7 +36,7 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::common::MMCVNMSParam* param_ = nullptr;
+    const ppl::nn::mmcv::MMCVNMSParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::cuda

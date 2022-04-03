@@ -19,7 +19,7 @@
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::common;
+using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 RetCode ParseTopKParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {

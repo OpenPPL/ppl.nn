@@ -43,7 +43,8 @@ static bool IsReLU6(const ir::GraphData* graph_data, const ir::Node* clip_node) 
         if (min_edge_shape == shapes.end() || max_edge_shape == shapes.end()) {
             return false;
         }
-        if (min_edge_shape->second.data_type != ppl::common::DATATYPE_FLOAT32 || max_edge_shape->second.data_type != ppl::common::DATATYPE_FLOAT32) {
+        if (min_edge_shape->second.data_type != ppl::common::DATATYPE_FLOAT32 ||
+            max_edge_shape->second.data_type != ppl::common::DATATYPE_FLOAT32) {
             return false;
         }
 
@@ -57,7 +58,7 @@ static bool IsReLU6(const ir::GraphData* graph_data, const ir::Node* clip_node) 
         if (it == graph_data->attrs.end()) {
             return false;
         }
-        auto p = (const common::ClipParam*)(it->second.get());
+        auto p = (const ppl::nn::onnx::ClipParam*)(it->second.get());
         if (p->min_value == 0.0f && p->max_value == 6.0f) {
             return true;
         }
@@ -65,11 +66,11 @@ static bool IsReLU6(const ir::GraphData* graph_data, const ir::Node* clip_node) 
     return false;
 }
 
-bool FuseConvActivation(const OptKernelOptions &options) {
+bool FuseConvActivation(const OptKernelOptions& options) {
     bool graphchanged = false;
     auto graph_topo = options.graph_topo;
     auto graph_data = options.graph_data;
-    auto &tensors = *options.tensors;
+    auto& tensors = *options.tensors;
     auto info = options.info;
 
     for (auto it = graph_topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
@@ -128,7 +129,6 @@ bool FuseConvActivation(const OptKernelOptions &options) {
             conv_node->ReplaceOutput(conv_output_edge_id, activation_output_edge_id);
             activation_output_edge->SetProducer(conv_node->GetId());
 
-            // LOG(INFO) << "merge kernel " << activation_node->GetName() << " into kernel " << conv_node->GetName() << ".";
             info->kernels.erase(activation_node_id);
             tensors.erase(conv_output_edge_id);
             graph_topo->DelNodeById(activation_node_id);
@@ -142,4 +142,3 @@ bool FuseConvActivation(const OptKernelOptions &options) {
 }
 
 }}} // namespace ppl::nn::x86
-

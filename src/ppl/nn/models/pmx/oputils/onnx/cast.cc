@@ -21,10 +21,10 @@ using namespace flatbuffers;
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-Offset<CastParam> SerializeCastParam(const ppl::nn::common::CastParam& param, flatbuffers::FlatBufferBuilder* builder) {
+Offset<CastParam> SerializeCastParam(const ppl::nn::onnx::CastParam& param, flatbuffers::FlatBufferBuilder* builder) {
     return CreateCastParam(*builder, param.to);
 }
-void DeserializeCastParam(const CastParam& fb_param, ppl::nn::common::CastParam* param) {
+void DeserializeCastParam(const CastParam& fb_param, ppl::nn::onnx::CastParam* param) {
     param->to = fb_param.to();
 }
 

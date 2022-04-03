@@ -15,17 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_SCATTERELEMENTS_H_
-#define _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_SCATTERELEMENTS_H_
+#ifndef _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_GATHERND_H_
+#define _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_ONNX_GATHERND_H_
 
 #include "ppl/nn/models/pmx/generated/onnx_op_generated.h"
-#include "ppl/nn/params/onnx/scatter_elements_param.h"
+#include "ppl/nn/params/onnx/gather_nd_param.h"
 
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
-flatbuffers::Offset<ScatterElementsParam> SerializeScatterElementsParam(const ppl::nn::common::ScatterElementsParam&,
-                                                                        flatbuffers::FlatBufferBuilder*);
-void DeserializeScatterElementsParam(const ScatterElementsParam&, ppl::nn::common::ScatterElementsParam*);
+flatbuffers::Offset<GatherNDParam> SerializeGatherNDParam(const ppl::nn::onnx::GatherNDParam&,
+                                                          flatbuffers::FlatBufferBuilder*);
+void DeserializeGatherNDParam(const GatherNDParam&, ppl::nn::onnx::GatherNDParam*);
 
 }}}} // namespace ppl::nn::pmx::onnx
 

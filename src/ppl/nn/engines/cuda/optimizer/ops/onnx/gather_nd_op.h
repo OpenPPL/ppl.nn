@@ -32,7 +32,7 @@ public:
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
 private:
-    ppl::nn::common::GatherNDParam param_;
+    ppl::nn::onnx::GatherNDParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

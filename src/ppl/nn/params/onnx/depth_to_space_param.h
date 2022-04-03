@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 struct DepthToSpaceParam final {
     enum { DCR = 0, CRD = 1 };
@@ -33,6 +33,6 @@ struct DepthToSpaceParam final {
     }
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

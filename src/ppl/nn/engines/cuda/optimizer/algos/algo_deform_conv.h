@@ -51,7 +51,7 @@ public:
                         ppl::common::dataformat_t input_format, ppl::common::dataformat_t output_format) override;
 
 private:
-    ppl::nn::common::MMCVModulatedDeformConv2dParam* param_ = nullptr;
+    ppl::nn::mmcv::MMCVModulatedDeformConv2dParam* param_ = nullptr;
     std::map<dataformat_t, std::set<dataformat_t>> conv_formats_;
 };
 

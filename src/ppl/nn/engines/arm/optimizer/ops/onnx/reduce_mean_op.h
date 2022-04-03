@@ -33,7 +33,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    std::shared_ptr<ppl::nn::common::ReduceParam> param_;
+    std::shared_ptr<ppl::nn::onnx::ReduceParam> param_;
 };
 
 }}} // namespace ppl::nn::arm

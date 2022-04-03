@@ -1,8 +1,8 @@
 #include "pmx_utils.h"
-#include "ppl/nn/models/pmx/oputils/onnx/gathernd.h"
+#include "ppl/nn/models/pmx/oputils/onnx/gather_nd.h"
 
 using namespace std;
-using namespace ppl::nn::common;
+using namespace ppl::nn::onnx;
 using namespace ppl::nn::pmx::onnx;
 
 TEST_F(PmxTest, test_gathernd) {
