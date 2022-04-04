@@ -1007,6 +1007,64 @@ __global__ void ppl_cukernel_pooling_max_common_half2_NHWC(
 #endif
 }
 
+template <typename T, int ITER>
+__global__ void ppl_cukernel_pooling_max_f2s2_half_NHWC(
+    const T* input,
+    T* output,
+    int batch,
+    int pad_channels,
+    int in_height,
+    int in_width,
+    int out_height,
+    int out_width,
+    int kernel_height,
+    int kernel_width,
+    int pad_height,
+    int pad_width) // stride is 2
+{
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
+    int c_idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (c_idx >= pad_channels)
+        return;
+    int hw_idx = blockIdx.y * blockDim.y + threadIdx.y;
+    int b_idx  = blockIdx.z;
+
+    int in_off  = b_idx * in_height * in_width * pad_channels + c_idx;
+    int out_off = b_idx * out_height * out_width * pad_channels + c_idx;
+
+    int ox = hw_idx % out_width;
+    int oy = hw_idx / out_height;
+
+    // pooling
+    T res;
+    half* res_ptr = reinterpret_cast<half*>(&res);
+    #pragma unroll
+    for (int i = 0; i < ITER; i++) res_ptr[i] = HALF_MIN;
+    for (int ky = 0; ky < kernel_height; ky++) {
+        for (int kx = 0; kx < kernel_width; kx++) {
+            // load input
+            int ix        = (ox << 1) - pad_width + kx;
+            int iy        = (oy << 1) - pad_height + ky;
+            int in_off_hw = (iy * in_width + ix) * pad_channels;
+            bool pred     = (ix >= 0 && ix < in_width) && (iy >= 0 && iy < in_height);
+            if (pred) {
+                T ival    = input[in_off + in_off_hw];
+                half* ival_ptr = reinterpret_cast<half*>(&ival);
+                #pragma unroll
+                for (int i = 0; i < ITER; ++i) {
+                    res_ptr[i] = __hgt(res_ptr[i], ival_ptr[i]) ? res_ptr[i] : ival_ptr[i];
+                }
+            }
+        }
+    }
+    if (oy < out_height) {
+        int out_off_h  = oy * out_width * pad_channels;
+        int out_off_w  = ox * pad_channels;
+        output[out_off + out_off_h + out_off_w] = res;
+    }
+#endif
+}
+
 template <int TILE_H, int TILE_W, typename T>
 __global__ void ppl_cukernel_pooling_max_common_NHWC(
     const T* input,
@@ -1509,17 +1567,33 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImpFp16(
         } else if (f2 && s2) {
             int partH             = out_height;
             int partW             = out_width;
-            int padChannelsDivide = (pad_channels >> 1);
             dim3 dim_block(32, 8, 1);
             dim3 dim_grid;
-            dim_grid.x = (padChannelsDivide + dim_block.x - 1) / dim_block.x;
             dim_grid.y = (partH * partW + dim_block.y - 1) / dim_block.y;
-            // dim_grid.y = padChannelsDivide;
             dim_grid.z = batch;
-            ppl_cukernel_pooling_max_common_half2_NHWC<1, 1><<<dim_grid,
+            if (pad_channels >= 256 && (pad_channels % 256 == 0)) {
+                int padChannelsDivide = (pad_channels >> 3);
+                dim_grid.x = (padChannelsDivide + dim_block.x - 1) / dim_block.x;
+                ppl_cukernel_pooling_max_f2s2_half_NHWC<float4, 8><<<dim_grid,
                                                                 dim_block,
                                                                 0,
-                                                                stream>>>((const half2*)input, (half2*)output, batch, padChannelsDivide, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, pad_height, pad_width);
+                                                                stream>>>((const float4*)input, (float4*)output, batch, padChannelsDivide, in_height, in_width, out_height, out_width, kernel_height, kernel_width, pad_height, pad_width);
+            } else if (pad_channels < 256 && (pad_channels % 64) == 0) {
+                int padChannelsDivide = (pad_channels >> 3);
+                dim_block.x = 8;
+                dim_grid.x = (padChannelsDivide + dim_block.x - 1) / dim_block.x;
+                ppl_cukernel_pooling_max_f2s2_half_NHWC<float4, 8><<<dim_grid,
+                                                                dim_block,
+                                                                0,
+                                                                stream>>>((const float4*)input, (float4*)output, batch, padChannelsDivide, in_height, in_width, out_height, out_width, kernel_height, kernel_width, pad_height, pad_width);
+            } else {
+                int padChannelsDivide = (pad_channels >> 1);
+                dim_grid.x = (padChannelsDivide + dim_block.x - 1) / dim_block.x;
+                ppl_cukernel_pooling_max_common_half2_NHWC<1, 1><<<dim_grid,
+                                                                    dim_block,
+                                                                    0,
+                                                                    stream>>>((const half2*)input, (half2*)output, batch, padChannelsDivide, in_height, in_width, out_height, out_width, kernel_height, kernel_width, stride_height, stride_width, pad_height, pad_width);
+            }
         } else {
             ppl_cukernel_pooling_max_common_half2_NHWC<4, 1><<<dim_grid,
                                                                 dim_block,
