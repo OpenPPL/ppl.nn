@@ -32,7 +32,7 @@ using namespace ppl::nn::onnx;
 namespace ppl { namespace nn { namespace cuda {
 
 int GetRelueType(const std::string& name) {
-    if (name == "Relu" || name == "ReLU")
+    if (name == "Relu" || name == "ReLU" || name == "ReLU3d")
         return 0;
     if (name == "Clip")
         return 1;
@@ -126,7 +126,7 @@ RetCode ConvertToLeakyrelu(uint32_t fuse_index, InputOutputInfo* info, CudaDevic
 
 RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* device, const ConvFusionInfo& fuse_info,
                                   fuse_param_t& fuse_param) {
-    const std::set<std::string> relu_set{"Relu", "Clip", "PRelu", "LeakyRelu", "Sigmoid"};
+    const std::set<std::string> relu_set{"Relu", "ReLU", "ReLU3d", "Clip", "PRelu", "LeakyRelu", "Sigmoid"};
     int fuse_index = 0;
     int fuse_size = fuse_info.types.size();
 
