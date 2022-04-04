@@ -65,6 +65,7 @@ __global__ void ppl_cukernel_batchnorm_withmeanvar(
     const T* mean,
     const T* var,
     float eps,
+    bool with_relu,
     T* output)
 {
     typedef Math<T, T, T> OpMath;
@@ -82,7 +83,11 @@ __global__ void ppl_cukernel_batchnorm_withmeanvar(
     T mean_val    = mean[c_idx];
     T var_val     = var[c_idx];
     T std         = ppl_get_std<T>(var_val, t_eps);
-    output[index] = OpMath::add(OpMath::mul(OpMath::mul(OpMath::sub(input[index], mean_val), std), scale_val), B_val);
+    T dst_val = OpMath::add(OpMath::mul(OpMath::mul(OpMath::sub(input[index], mean_val), std), scale_val), B_val);
+    if (with_relu) {
+        dst_val = ppl_relu<T>(dst_val);
+    }
+    output[index] = dst_val;
 }
 
 template <typename T>
@@ -192,9 +197,9 @@ ppl::common::RetCode PPLCUDABatchNormalizationForwardImp(
     if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
         DivModFast channel_fast(hw_count);
         if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
-            ppl_cukernel_batchnorm_withmeanvar<float><<<grid_size, block_size, 0, stream>>>(num_elems, channel_fast, channels, (const float*)input, (const float*)scale, (const float*)B, (const float*)mean, (const float*)var, epsilon, (float*)output);
+            ppl_cukernel_batchnorm_withmeanvar<float><<<grid_size, block_size, 0, stream>>>(num_elems, channel_fast, channels, (const float*)input, (const float*)scale, (const float*)B, (const float*)mean, (const float*)var, epsilon, with_relu, (float*)output);
         } else if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
-            ppl_cukernel_batchnorm_withmeanvar<half><<<grid_size, block_size, 0, stream>>>(num_elems, channel_fast, channels, (const half*)input, (const half*)scale, (const half*)B, (const half*)mean, (const half*)var, epsilon, (half*)output);
+            ppl_cukernel_batchnorm_withmeanvar<half><<<grid_size, block_size, 0, stream>>>(num_elems, channel_fast, channels, (const half*)input, (const half*)scale, (const half*)B, (const half*)mean, (const half*)var, epsilon, with_relu, (half*)output);
         }
     } else {
         DivModFast channel_fast(channels);
