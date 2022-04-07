@@ -31,7 +31,7 @@ x86 only supports FP32 precision on AVX512/FMA.
 | Exp                | 6~16   | &check;                     |
 | Expand             | 8~16   | &check;                     |
 | Flatten            | 1~16   | &check;                     |
-| Floor              | 16~16  | &check;                     |
+| Floor              | 6~16   | &check;                     |
 | Gather             | 1~16   | &check;                     |
 | GatherND           | 11     | &check;                     |
 | Gemm               | 9~16   | &check;                     |
@@ -73,7 +73,7 @@ x86 only supports FP32 precision on AVX512/FMA.
 | Sigmoid            | 6~16   | &check;                     |
 | Sin                | 7~16   | &check;                     |
 | Slice              | 1~16   | &check;                     |
-| Softmax            | 1~16   | &check;                     |
+| Softmax            | 1~12   | &check;                     |
 | Split              | 2~12   | &check;                     |
 | SplitToSequence    | 11~16  | &check;                     |
 | Sqrt               | 6~16   | &check;                     |
