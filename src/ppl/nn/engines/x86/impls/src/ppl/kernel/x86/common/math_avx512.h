@@ -100,7 +100,7 @@ static inline __m512 _avx512_exp_ps(const __m512 __x)
 
     fx = _mm512_fmadd_ps(x, _mm512_set1_ps(1.44269504088896341), _mm512_set1_ps(0.5f));
 
-    tmp = _mm512_floor_ps(fx);
+    tmp = _mm512_roundscale_ps(fx, _MM_FROUND_TO_NEG_INF);
 
     __mmask16 mask = _mm512_cmp_ps_mask(tmp, fx, _CMP_GT_OS);
     fx          = _mm512_mask_sub_ps(tmp, mask, tmp, one);
