@@ -27,6 +27,15 @@ OpCompiler* OpCompilerManager::FindCompiler(const std::string& kernel_type) cons
     return res->second;
 }
 
+template <typename T>
+void OpCompilerManager::Register(const std::string& kernel_type, T& fusion_type) {
+    type2compiler_.emplace(kernel_type, &fusion_type);
+}
+
+void OpCompilerManager::Remove(const std::string& kernel_type) {
+    type2compiler_.erase(kernel_type);
+}
+
 OpCompilerManager::OpCompilerManager() {
     type2compiler_.emplace("Conv", &conv_);
     type2compiler_.emplace("Gemm", &gemm_);
