@@ -33,6 +33,9 @@ public:
         return &mgr;
     }
     OpCompiler* FindCompiler(const std::string& kernel_type) const;
+    template <typename T>
+    void Register(const std::string& kernel_type, T& fusion_type);
+    void Remove(const std::string& kernel_type);
 
 private:
     OpCompilerManager();
