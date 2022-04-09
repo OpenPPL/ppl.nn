@@ -136,6 +136,7 @@ static __device__ float2 __f2add(float2 val0, float2 val1) {
     return res;
 }
 
+template<int TILE_C, int TILE_HW>
 __global__ void ppl_cukernel_pooling_ave_global_shuffle_half2_NHWC(
     const half2* input,
     half2* output,
@@ -155,7 +156,7 @@ __global__ void ppl_cukernel_pooling_ave_global_shuffle_half2_NHWC(
         half2 ival = input[b_offset * HW + i * pad_channels + c];
         res        = __f2add(res, __half22float2(ival));
     }
-    __shared__ float2 sum_buffer[8][32];
+    __shared__ float2 sum_buffer[TILE_HW][TILE_C];
     sum_buffer[threadIdx.y][threadIdx.x] = res;
     __syncthreads();
 
@@ -173,6 +174,48 @@ __global__ void ppl_cukernel_pooling_ave_global_shuffle_half2_NHWC(
         res.x = res.x / HW;
         res.y = res.y / HW;
         output[b_offset + c] = __float22half2_rn(res);
+    }
+#endif
+}
+
+__global__ void ppl_cukernel_pooling_ave_global_shuffle_half2_NHWC_atomic(
+    const half2* input,
+    half2* output,
+    int batch,
+    int pad_channels,
+    int HW)
+{
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
+    int c        = blockIdx.x * blockDim.x + threadIdx.x;
+    int b_offset = blockIdx.z * pad_channels;
+    if (c >= pad_channels)
+        return;
+
+    float2 res = float2{0.f, 0.f};
+    // main loop
+    for (int i = threadIdx.y + blockDim.y * blockIdx.y;
+                i < HW; i += blockDim.y * gridDim.y) {
+        half2 ival = input[b_offset * HW + i * pad_channels + c];
+        res        = __f2add(res, __half22float2(ival));
+    }
+    __shared__ float2 sum_buffer[32][8];
+    sum_buffer[threadIdx.y][threadIdx.x] = res;
+    __syncthreads();
+
+    for (int i = (blockDim.y >> 1); i > 0; i = (i >> 1)) {
+        if (threadIdx.y < i) {
+            float2 res                           = sum_buffer[threadIdx.y + i][threadIdx.x];
+            res                                  = __f2add(res, sum_buffer[threadIdx.y][threadIdx.x]);
+            sum_buffer[threadIdx.y][threadIdx.x] = res;
+            __syncthreads();
+        }
+    }
+    // store output
+    if (threadIdx.y == 0) {
+        float2 res = sum_buffer[threadIdx.y][threadIdx.x];
+        res.x = res.x / HW;
+        res.y = res.y / HW;
+        atomicAdd(&output[b_offset + c], __float22half2_rn(res));
     }
 #endif
 }
@@ -229,24 +272,48 @@ ppl::common::RetCode PPLCUDAGlobalAvePoolingForwardImpFp16(
     // int out_height = output_shape.GetDim(2); int out_width = output_shape.GetDim(3);
     int in_height    = input_shape->GetDim(2);
     int in_width     = input_shape->GetDim(3);
+    int in_hw = in_height * in_width;
 
-    dim3 dim_block(32, 4, 1);
     dim3 dim_grid(1, 1, batch);
-
     if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
+        dim3 dim_block(32, 4, 1);
         dim_grid.y = (pad_channels + dim_block.y - 1) / dim_block.y;
-        ppl_cukernel_pooling_ave_global_shuffle_half<<<dim_grid, dim_block, 0, stream>>>((const half*)input, (half*)output, batch, pad_channels, in_height * in_width);
+        ppl_cukernel_pooling_ave_global_shuffle_half<<<dim_grid, dim_block, 0, stream>>>((const half*)input, (half*)output, batch, pad_channels, in_hw);
     } else if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8 ||
                output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC16) {
         // use half2, default padded
         dim3 dim_block(32, 8, 1); // (c, hw, 1)
         int padChannelsDivide = (pad_channels >> 1); // half2
         int channel_blocks    = (padChannelsDivide + dim_block.x - 1) / dim_block.x;
-        dim3 dim_grid(channel_blocks, 1, batch);
-        ppl_cukernel_pooling_ave_global_shuffle_half2_NHWC<<<dim_grid,
-                                                              dim_block,
-                                                              0,
-                                                              stream>>>((const half2*)input, (half2*)output, batch, padChannelsDivide, in_height * in_width);
+        constexpr int block_threshold = 64;
+        constexpr int hw_threshold = 128;
+        if (channel_blocks * batch < block_threshold && in_hw > hw_threshold) {
+            dim3 dim_block(8, 32, 1); // (c, hw, 1)
+            int channel_blocks    = (padChannelsDivide + dim_block.x - 1) / dim_block.x;
+            dim3 dim_grid(channel_blocks, 1, batch);
+            if (channel_blocks * batch < block_threshold) {
+                int hw_blocks_limit = 8;
+                int hw_blocks =  (in_hw + dim_block.y - 1) / dim_block.y;
+                hw_blocks = hw_blocks_limit < hw_blocks ? hw_blocks_limit : hw_blocks;
+                dim3 dim_grid(channel_blocks, hw_blocks, batch);
+                cudaMemsetAsync(output, 0, output_shape->GetBytesIncludingPadding(), stream);
+                ppl_cukernel_pooling_ave_global_shuffle_half2_NHWC_atomic<<<dim_grid,
+                                                                    dim_block,
+                                                                    0,
+                                                                    stream>>>((const half2*)input, (half2*)output, batch, padChannelsDivide, in_hw);
+            } else {
+                ppl_cukernel_pooling_ave_global_shuffle_half2_NHWC<8, 32><<<dim_grid,
+                                                                    dim_block,
+                                                                    0,
+                                                                    stream>>>((const half2*)input, (half2*)output, batch, padChannelsDivide, in_hw);
+            }
+        } else {
+            dim3 dim_grid(channel_blocks, 1, batch);
+            ppl_cukernel_pooling_ave_global_shuffle_half2_NHWC<32, 8><<<dim_grid,
+                                                                dim_block,
+                                                                0,
+                                                                stream>>>((const half2*)input, (half2*)output, batch, padChannelsDivide, in_hw);
+        }
     } else {
         return ppl::common::RC_UNSUPPORTED;
     }
