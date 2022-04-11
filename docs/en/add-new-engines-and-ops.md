@@ -19,7 +19,7 @@ bool EngineImpl::Supports(const ir::Node* node) const;
 Tell if this engine can run an op specified by `node`.
 
 ```c++
-ppl::common::RetCode EngineImpl::ProcessGraph(utils::SharedResource*, ir::Graph* graph,
+ppl::common::RetCode EngineImpl::ProcessGraph(const utils::SharedResource&, ir::Graph* graph,
                                               RuntimePartitionInfo* info);
 ```
 
@@ -28,13 +28,19 @@ Optimize `graph` and fill results into `info`.
 `RuntimePartitionInfo` is defined as following:
 
 ```c++
-struct RuntimePartitionInfo {
+struct RuntimePartitionInfo final {
     std::map<edgeid_t, RuntimeConstantInfo> constants;
     std::map<nodeid_t, std::unique_ptr<OptKernel>> kernels;
 };
 ```
 
 `constants` are read-only and used by multiple `Runtime` instances. `kernels` are a list of `OptKernel` that are used to create `KernelImpl` instances.
+
+```c++
+EngineImpl* Create() const;
+```
+
+Creates an instance of the same type as this engine.
 
 ##### 2. Define and Implement a Class Inherited from EngineContext
 
@@ -93,10 +99,10 @@ which can be used to register parser routines for new ops:
 
 ```c++
 typedef void* (*CreateParamFunc)();
-typedef ppl::common::RetCode (*ParseParamFunc)(const ::onnx::NodeProto&, void* param, ir::Node*, ir::GraphTopo*);
+typedef ppl::common::RetCode (*ParseParamFunc)(const ::onnx::NodeProto&, const ParamParserExtraArgs&, ir::Node*, void*);
 typedef void (*DeleteParamFunc)(void* param);
 
-struct ParserInfo {
+struct ParserInfo final {
     CreateParamFunc create_param;
     ParseParamFunc parse_param;
     DeleteParamFunc destroy_param;

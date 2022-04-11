@@ -92,10 +92,10 @@ Defined in [include/ppl/nn/models/onnx/onnx_runtime_builder.h](../../include/ppl
 
 ```c++
 ppl::common::RetCode Init(const char* model_file, Engine** engines, uint32_t engine_num);
-ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num);
+ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num, const char* model_file_dir = nullptr);
 ```
 
-Initializes an `OnnxRuntimeBuilder` instance from an ONNX model file or buffer. The first parameter is the model file path, the second is engines that may be used to evaluate the compute graph. Note that callers should guarantee that `engines` is valid during inferencing.
+Initializes an `OnnxRuntimeBuilder` instance from an ONNX model file or buffer. The first parameter is the model file path, the second is engines that may be used to evaluate the compute graph. Note that callers should guarantee that `engines` is valid during inferencing. `model_file_dir` is used to parse external data and can be `nullptr` if there is no external data.
 
 ```c++
 ppl::common::RetCode Preprocess();
