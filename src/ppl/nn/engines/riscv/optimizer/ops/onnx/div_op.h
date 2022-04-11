@@ -33,6 +33,16 @@ public:
     ppl::common::RetCode SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
                                         std::vector<ppl::common::datatype_t>* selected_input_data_types,
                                         std::vector<ppl::common::datatype_t>* selected_output_data_types) override;
+    bool TryFuseReLU() {
+        fuse_relu_ = true;
+        return true;
+    }
+    bool HasFuseReLU() {
+        return fuse_relu_;
+    }
+
+private:
+    bool fuse_relu_ = false;
 };
 
 }}} // namespace ppl::nn::riscv

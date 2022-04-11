@@ -18,6 +18,9 @@
 #include "ppl/nn/engines/riscv/optimizer/opt_rule_manager.h"
 #include "ppl/nn/common/logger.h"
 
+#include "ppl/nn/engines/riscv/optimizer/rules/fuse_arithmetic_relu.h"
+#include "ppl/nn/engines/riscv/optimizer/rules/fuse_conv_eltwise.h"
+#include "ppl/nn/engines/riscv/optimizer/rules/fuse_conv_activation.h"
 #include "ppl/nn/engines/riscv/optimizer/rules/fuse_channel_shuffle.h"
 #include "ppl/nn/engines/riscv/optimizer/rules/layout_optimize.h"
 
@@ -82,6 +85,10 @@ OptRuleManager::~OptRuleManager() {}
 OptRuleManager::OptRuleManager() {
     REGISTER_OPT_RULE("", "LayoutOptimize", LayoutOptimize);
     REGISTER_OPT_RULE("BeforeLayoutOptimize", "FuseChannelShuffle", FuseChannelShuffle);
+
+    // REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseConvActivation", FuseConvActivation);
+    // REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseConvEltwise", FuseConvEltwise);
+    REGISTER_OPT_RULE("AfterLayoutOptimize", "FuseArithmeticReLU", FuseArithmeticReLU);
 }
 
 }}} // namespace ppl::nn::riscv

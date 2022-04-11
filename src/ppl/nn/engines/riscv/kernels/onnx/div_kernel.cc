@@ -48,15 +48,15 @@ ppl::common::RetCode DivKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     if (output_data_type == common::DATATYPE_FLOAT16) {
-        return kernel::riscv::div_fp16(A->GetShape(), B->GetShape(), C->GetShape(), false,
+        return kernel::riscv::div_fp16(A->GetShape(), B->GetShape(), C->GetShape(), fuse_relu_,
                                        A->GetBufferPtr<const __fp16>(), B->GetBufferPtr<const __fp16>(),
                                        C->GetBufferPtr<__fp16>());
     } else if (output_data_type == common::DATATYPE_FLOAT32) {
-        return kernel::riscv::div_fp32(A->GetShape(), B->GetShape(), C->GetShape(), false,
+        return kernel::riscv::div_fp32(A->GetShape(), B->GetShape(), C->GetShape(), fuse_relu_,
                                        A->GetBufferPtr<const float>(), B->GetBufferPtr<const float>(),
                                        C->GetBufferPtr<float>());
     } else if (output_data_type == common::DATATYPE_INT64) {
-        return kernel::riscv::div_scalar_int64(A->GetShape(), B->GetShape(), C->GetShape(), false,
+        return kernel::riscv::div_scalar_int64(A->GetShape(), B->GetShape(), C->GetShape(), fuse_relu_,
                                                A->GetBufferPtr<const int64_t>(), B->GetBufferPtr<const int64_t>(),
                                                C->GetBufferPtr<int64_t>());
     } else {

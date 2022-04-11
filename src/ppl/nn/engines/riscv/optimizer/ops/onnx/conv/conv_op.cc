@@ -87,6 +87,43 @@ ppl::common::RetCode ConvOp::SelectDataType(const InputOutputInfo& info, ppl::co
     return RC_INVALID_VALUE;
 }
 
+bool ConvOp::TryFuseReLU(void) {
+    if (!conv2d_param_ || !conv2d_param_->mgr ||
+        conv2d_param_->mgr->algo_info().algo_type == ppl::kernel::riscv::conv2d_common_algo::unknown) {
+        return false;
+    }
+    ppl::kernel::riscv::conv2d_common_param param = conv2d_param_->mgr->param();
+    param.fuse_flag |= ppl::kernel::riscv::conv_fuse_flag::RELU;
+    conv2d_param_->mgr->set_param(param);
+    return true;
+}
+
+bool ConvOp::TryFuseReLU6(void) {
+    if (!conv2d_param_ || !conv2d_param_->mgr ||
+        conv2d_param_->mgr->algo_info().algo_type == ppl::kernel::riscv::conv2d_common_algo::unknown) {
+        return false;
+    }
+    ppl::kernel::riscv::conv2d_common_param param = conv2d_param_->mgr->param();
+    param.fuse_flag |= ppl::kernel::riscv::conv_fuse_flag::RELU;
+    param.fuse_flag |= ppl::kernel::riscv::conv_fuse_flag::RELU6;
+    conv2d_param_->mgr->set_param(param);
+    return true;
+}
+
+bool ConvOp::TryFuseSum(void) {
+    if (!conv2d_param_ || !conv2d_param_->mgr ||
+        conv2d_param_->mgr->algo_info().algo_type == ppl::kernel::riscv::conv2d_common_algo::unknown) {
+        return false;
+    }
+    ppl::kernel::riscv::conv2d_common_param param = conv2d_param_->mgr->param();
+    if (param.fuse_flag) { // already fused sum, relu or relu6
+        return false;
+    }
+    param.fuse_flag |= ppl::kernel::riscv::conv_fuse_flag::SUM;
+    conv2d_param_->mgr->set_param(param);
+    return true;
+}
+
 KernelImpl* ConvOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<Conv2dKernel>(conv2d_param_);
 }

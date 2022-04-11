@@ -52,7 +52,6 @@ RetCode MulOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* s
 RetCode MulOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
                               std::vector<datatype_t>* selected_input_data_types,
                               std::vector<datatype_t>* selected_output_data_types) {
-
     if (selected_input_data_types[0] == selected_input_data_types[1]) {
         selected_output_data_types[0] = selected_input_data_types[0];
     } else {
@@ -70,7 +69,11 @@ RetCode MulOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype
 }
 
 KernelImpl* MulOp::CreateKernelImpl() const {
-    return CreateKernelImplWithoutParam<MulKernel>();
+    auto kernel = CreateKernelImplWithoutParam<MulKernel>();
+    if (kernel) {
+        kernel->SetFuseReLU(fuse_relu_);
+    }
+    return kernel;
 }
 
 }}} // namespace ppl::nn::riscv

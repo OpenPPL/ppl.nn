@@ -26,8 +26,13 @@ class DivKernel : public RiscvKernel {
 public:
     DivKernel(const ir::Node* node) : RiscvKernel(node) {}
 
+    void SetFuseReLU(bool fuse_relu) {
+        fuse_relu_ = fuse_relu;
+    }
+
 private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
+    bool fuse_relu_ = false;
 };
 
 }}} // namespace ppl::nn::riscv
