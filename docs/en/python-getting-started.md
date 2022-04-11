@@ -52,7 +52,7 @@ engines = [x86_engine, cuda_engine]
 status = runtime_builder.InitFromFile(onnx_model_file, engines)
 ```
 
-The model will be partitioned into several parts and assign different ops to these engines according to configurations.
+The model will be partitioned into several parts and assign different ops to these engines automatically.
 
 ```python
 status = runtime_builder.Preprocess()

@@ -41,7 +41,7 @@ Then Initializes that `OnnxRuntimeBuilder` instance by one of
 
 ```c++
 ppl::common::RetCode Init(const char* model_file, Engine** engine_ptrs, uint32_t engine_num);
-ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engine_ptrs, uint32_t engine_num);
+ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engine_ptrs, uint32_t engine_num, const char* model_file_dir);
 ```
 
 where the parameter `engine_ptrs` is the `x86_engine` we created:
@@ -66,13 +66,13 @@ engines.emplace_back(unique_ptr<Engine>(cuda_engine));
 
 const char* model_file = "/path/to/onnx/model";
 // use x86 and cuda engines to run this model
-vector<Engine*> engine_ptrs = {x86_engine.get(), cuda_engine.get()};
-RuntimeBuilder* builder = OnnxRuntimeBuilderFactory::Create();
+vector<Engine*> engine_ptrs = {x86_engine, cuda_engine};
+auto builder = OnnxRuntimeBuilderFactory::Create();
 status = builder->Init(model_file, engine_ptrs.data(), engine_ptrs.size());
 ...
 ```
 
-`PPLNN` will partition the model and assign different ops to these engines according to configurations.
+`PPLNN` will partition the model and assign different ops to these engines automatically.
 
 ### Creating a Runtime
 
