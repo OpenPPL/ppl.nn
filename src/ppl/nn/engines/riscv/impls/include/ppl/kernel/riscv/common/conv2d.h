@@ -30,6 +30,18 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
+typedef uint32_t conv_fuse_flag_t;
+
+class conv_fuse_flag {
+public:
+    enum {
+        NONE  = 0,
+        RELU  = 1 << 0,
+        RELU6 = 1 << 1,
+        SUM   = 1 << 2,
+    };
+};
+
 struct conv2d_common_param {
     int64_t kernel_h;
     int64_t kernel_w;
@@ -42,6 +54,7 @@ struct conv2d_common_param {
     int64_t channels;
     int64_t num_output;
     int64_t group;
+    conv_fuse_flag_t fuse_flag;
 
     __fp16 sparse_level() const
     {
@@ -268,8 +281,10 @@ public:
     {
         algo_info_ = algo;
     }
-    virtual conv2d_base_runtime_executor* gen_executor() = 0;
-    virtual void release_cvt_weights()                   = 0;
+    virtual conv2d_base_runtime_executor* gen_executor()     = 0;
+    virtual void release_cvt_weights()                       = 0;
+    virtual void set_param(const conv2d_common_param& param) = 0;
+    virtual const conv2d_common_param& param()               = 0;
     virtual ~conv2d_base_offline_manager() {}
 };
 
@@ -309,7 +324,7 @@ public:
     {
         param_ = param;
     }
-    const conv2d_common_param& param() const
+    const conv2d_common_param& param()
     {
         return param_;
     }

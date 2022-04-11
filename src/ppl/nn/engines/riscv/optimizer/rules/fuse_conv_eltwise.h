@@ -15,25 +15,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_KERNELS_ONNX_MUL_KERNEL_H_
-#define _ST_HPC_PPL_NN_ENGINES_RISCV_KERNELS_ONNX_MUL_KERNEL_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIMIZER_RULES_FUSE_CONV_ELTWISE_H_
+#define _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIMIZER_RULES_FUSE_CONV_ELTWISE_H_
 
-#include "ppl/nn/engines/riscv/kernel.h"
+#include "ppl/nn/engines/riscv/optimizer/opt_kernel.h"
 
 namespace ppl { namespace nn { namespace riscv {
 
-class MulKernel : public RiscvKernel {
-public:
-    MulKernel(const ir::Node* node) : RiscvKernel(node) {}
-
-    void SetFuseReLU(bool fuse_relu) {
-        fuse_relu_ = fuse_relu;
-    }
-
-private:
-    ppl::common::RetCode DoExecute(KernelExecContext*) override;
-    bool fuse_relu_ = false;
-};
+bool FuseConvEltwise(const OptKernelOptions& options);
 
 }}} // namespace ppl::nn::riscv
 

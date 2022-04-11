@@ -44,6 +44,9 @@ public:
                                         std::vector<ppl::common::datatype_t>* selected_input_data_types,
                                         std::vector<ppl::common::datatype_t>* selected_output_data_types) override;
     ppl::common::RetCode SelectAlgorithm(const InputOutputInfo& info, const OptKernelOptions& options) override;
+    bool TryFuseReLU(void); // fuse_conv_activation
+    bool TryFuseReLU6(void); // fuse_conv_activation
+    bool TryFuseSum(void); // fuse_conv_eltwise
 
 private:
     template <typename T>
