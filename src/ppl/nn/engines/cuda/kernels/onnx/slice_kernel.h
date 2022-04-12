@@ -21,6 +21,7 @@
 #include "ppl/nn/engines/cuda/kernel.h"
 
 #include "cudakernel/memory/slice.h"
+#include "ppl/nn/params/onnx/slice_param.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -30,6 +31,9 @@ public:
 
 private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
+
+private:
+    ppl::nn::onnx::SliceParam* param_;
 };
 
 }}} // namespace ppl::nn::cuda

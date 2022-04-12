@@ -26,6 +26,24 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode ClipOp::Init(const OptKernelOptions& options) {
+    if (GetNode()->GetInputCount() > 1) {
+        auto data = options.graph->data.get();
+        auto min_edge_id = GetNode()->GetInput(1);
+        if (min_edge_id != INVALID_EDGEID) {
+            param_.min_value = *((float*)data->constants[min_edge_id].data.data());
+        }
+        auto max_edge_id = GetNode()->GetInput(2);
+        if (max_edge_id != INVALID_EDGEID) {
+            param_.max_value = *((float*)data->constants[max_edge_id].data.data());
+        }
+    } else {
+        auto status = GenericLoadParam(options, &param_);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
+            return status;
+        }
+    }
+
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
@@ -46,15 +64,6 @@ RetCode ClipOp::Init(const OptKernelOptions& options) {
 
     infer_dims_func_ = GenericInferDims;
 
-    auto data = options.graph->data.get();
-    auto min_edge_id = GetNode()->GetInput(1);
-    if (min_edge_id != INVALID_EDGEID) {
-        param_.min_val = *((float*)data->constants[min_edge_id].data.data());
-    }
-    auto max_edge_id = GetNode()->GetInput(2);
-    if (max_edge_id != INVALID_EDGEID) {
-        param_.max_val = *((float*)data->constants[max_edge_id].data.data());
-    }
     return RC_SUCCESS;
 }
 

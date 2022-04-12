@@ -82,7 +82,6 @@ ppl::common::RetCode PPLCUDAPadForwardImp(
     PadKernelParam param,
     ppl::nn::TensorShape* input_shape,
     const void* input,
-    ppl::nn::TensorShape* pads_shape,
     const int64_t* pads,
     ppl::nn::TensorShape* output_shape,
     void* output)
