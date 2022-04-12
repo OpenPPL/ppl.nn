@@ -43,33 +43,41 @@ RetCode PadOp::Init(const OptKernelOptions& options) {
         } else {
             status = InferDefaultType(info, type);
         }
-        auto shape = info->GetInput<TensorImpl>(1)->GetShape();
-        shape->SetDataType(DATATYPE_INT64);
+
+        if (info->GetInputCount() >= 2) {
+            auto shape = info->GetInput<TensorImpl>(1)->GetShape();
+            shape->SetDataType(DATATYPE_INT64);
+        }
         return status;
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         const TensorShape& shape = *info->GetInput<TensorImpl>(0)->GetShape();
         uint32_t dim_count = shape.GetDimCount();
-        auto pad = info->GetInput<TensorImpl>(1);
-        if (pad->GetShape()->GetDimCount() != 1 || pad->GetShape()->GetDim(0) != 2 * dim_count ||
-            pad->GetShape()->GetDataType() != DATATYPE_INT64) {
-            return RC_INVALID_VALUE;
-        }
 
-        int pad_elems = pad->GetShape()->GetElementsIncludingPadding();
-        unique_ptr<int64_t[]> pad_data(new int64_t[pad_elems]);
-        for (int it = 0; it < pad_elems; pad_data[it] = 0, ++it)
-            ;
-        if (pad->GetBufferPtr() != nullptr) {
-            auto status = pad->CopyToHost(pad_data.get());
-            if (status != RC_SUCCESS) {
-                LOG(ERROR) << "Copy pad data failed: " << GetRetCodeStr(status);
-                return status;
+        if (info->GetInputCount() == 1) {
+            LOG(ERROR) << "pad name for singe input " << GetNode()->GetName();
+            return oputils::ReshapePad(info, &param_);
+        } else {
+            auto pad = info->GetInput<TensorImpl>(1);
+            if (pad->GetShape()->GetDimCount() != 1 || pad->GetShape()->GetDim(0) != 2 * dim_count ||
+                pad->GetShape()->GetDataType() != DATATYPE_INT64) {
+                return RC_INVALID_VALUE;
             }
-        }
+            int pad_elems = pad->GetShape()->GetElementsIncludingPadding();
+            unique_ptr<int64_t[]> pad_data(new int64_t[pad_elems]);
+            for (int it = 0; it < pad_elems; pad_data[it] = 0, ++it)
+                ;
+            if (pad->GetBufferPtr() != nullptr) {
+                auto status = pad->CopyToHost(pad_data.get());
+                if (status != RC_SUCCESS) {
+                    LOG(ERROR) << "Copy pad data failed: " << GetRetCodeStr(status);
+                    return status;
+                }
+            }
 
-        return oputils::ReshapePad(info, &param_, pad_data.get(), pad_data.get() + dim_count);
+            return oputils::ReshapePad(info, &param_, pad_data.get(), pad_data.get() + dim_count);
+        }
     };
 
     return RC_SUCCESS;

@@ -20,16 +20,39 @@
 #include <memory>
 
 #include "cudakernel/memory/pad.h"
+#include "ppl/nn/utils/destructor.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
 ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
-    auto pads = ctx->GetInput<TensorImpl>(1);
     auto output = ctx->GetOutput<TensorImpl>(0);
+    
+    void* pad_buffer; 
+    BufferDesc tmp_buffer_desc;
+    if (ctx->GetInputCount() > 1) {
+        pad_buffer = ctx->GetInput<TensorImpl>(1)->GetBufferPtr();
+    } else {
+        auto size = input->GetShape()->GetDimCount();
+        auto status = GetCudaDevice()->AllocTmpBuffer(size * sizeof(int64_t), &tmp_buffer_desc);
+        if (status != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "alloc tmp buffer size[" << size << "] for kernel[" << GetName()
+                    << "] failed: " << ppl::common::GetRetCodeStr(status);
+            return status;
+        }
+        pad_buffer = tmp_buffer_desc.addr;
+        std::vector<int64_t> pads;
+        pads.resize(size);
+        for (uint32_t i = 0; i < size; ++i) {
+            pads[i] = param_->pads[i];
+        }
+        GetCudaDevice()->CopyFromHost(&tmp_buffer_desc, (void*)pads.data(), size * sizeof(int64_t));
+    }
+    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+        GetCudaDevice()->FreeTmpBuffer(&tmp_buffer_desc);
+    });
 
     PadKernelParam kernel_param;
-
     kernel_param.mode = param_->mode;
     if (ctx->GetInputCount() >= 3) {
         auto constant_data = ctx->GetInput<TensorImpl>(2);
@@ -46,7 +69,7 @@ ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
         output->TransferBufferFrom(input);
     } else {
         status = PPLCUDAPadForwardImp(GetStream(), kernel_param, input->GetShape(), input->GetBufferPtr(),
-                                      pads->GetShape(), pads->GetBufferPtr<int64_t>(), output->GetShape(),
+                                      (const int64_t*)pad_buffer, output->GetShape(),
                                       output->GetBufferPtr());
     }
     return status;

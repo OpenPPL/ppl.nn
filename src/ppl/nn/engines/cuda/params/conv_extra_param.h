@@ -21,10 +21,10 @@
 #include "ppl/nn/engines/cuda/cuda_device.h"
 #include "ppl/nn/oputils/onnx/reshape_conv.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
-#include "ppl/nn/engines/cuda/params/clip_extra_param.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
 #include "cudakernel/nn/conv/depthwise.h"
 #include "cudakernel/nn/conv/group_padding.h"
+#include "ppl/nn/params/onnx/clip_param.h"
 
 using namespace ppl::common;
 

@@ -131,7 +131,7 @@ RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* device, con
     int fuse_size = fuse_info.types.size();
 
     RetCode status;
-    ClipParam* param;
+    onnx::ClipParam* param;
 
     if (fuse_index < fuse_size && relu_set.find(fuse_info.types[fuse_index]) != relu_set.end()) {
         int type = GetRelueType(fuse_info.types[fuse_index]);
@@ -141,9 +141,9 @@ RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* device, con
                 break;
             case 1: // Clip
                 fuse_param.has_clip = true;
-                param = (ClipParam*)fuse_info.fuse_attrs[fuse_index];
-                fuse_param.clip_min = param->min_val;
-                fuse_param.clip_max = param->max_val;
+                param = (onnx::ClipParam*)fuse_info.fuse_attrs[fuse_index];
+                fuse_param.clip_min = param->min_value;
+                fuse_param.clip_max = param->max_value;
                 break;
             case 2: // PRelu
                 status = ConvertToPrelu(fuse_index, info, device, fuse_info, fuse_param);
@@ -183,9 +183,9 @@ RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* device, con
                 break;
             case 1: // Clip
                 fuse_param.has_elt_clip = true;
-                param = (ClipParam*)fuse_info.fuse_attrs[fuse_index];
-                fuse_param.elt_clip_min = param->min_val;
-                fuse_param.elt_clip_max = param->max_val;
+                param = (onnx::ClipParam*)fuse_info.fuse_attrs[fuse_index];
+                fuse_param.elt_clip_min = param->min_value;
+                fuse_param.elt_clip_max = param->max_value;
                 break;
             case 2: // PRelu
                 status = ConvertToPrelu(fuse_index, info, device, fuse_info, fuse_param);

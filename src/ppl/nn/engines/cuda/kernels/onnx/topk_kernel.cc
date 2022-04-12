@@ -47,14 +47,17 @@ ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
     auto tmp_buffer = tmp_buffer_desc.addr;
 
     auto x = ctx->GetInput<TensorImpl>(0);
-    int64_t k_value;
+    int64_t k_value = param_->k;
     auto k = ctx->GetInput<TensorImpl>(1);
     auto values = ctx->GetOutput<TensorImpl>(0);
     auto indices = ctx->GetOutput<TensorImpl>(1);
-    status = k->CopyToHost(&k_value);
-    if (status != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "Copy k value failed: " << ppl::common::GetRetCodeStr(status);
-        return status;
+
+    if (indices) {
+        status = k->CopyToHost(&k_value);
+        if (status != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "Copy k value failed: " << ppl::common::GetRetCodeStr(status);
+            return status;
+        }
     }
 
     uint32_t axis = param_->axis < 0 ? param_->axis + x->GetShape()->GetDimCount() : param_->axis;

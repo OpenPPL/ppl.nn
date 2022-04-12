@@ -341,8 +341,8 @@ double PPLCUDABgemmJITSelectKernel(
         kernel_info_t temp_kernel(-1, ktype, algo_param.algo_name.c_str());
         if (!temp_kernel.CheckKernelTilesFeasible(type, device_id))
             continue;
-        if (!temp_kernel.CheckKernelTypeFeasible(conv_param.flt_height, conv_param.flt_width, num_chl_per_grp, splitk))
-            continue;
+        // if (!temp_kernel.CheckKernelTypeFeasible(conv_param.flt_height, conv_param.flt_width, num_chl_per_grp, splitk))
+        //     continue;
         if (!temp_kernel.CheckSplitkFeasible(num_chl_per_grp, splitk))
             continue;
         if (!temp_kernel.CheckSplitfFeasible(splitf, splitk))

@@ -100,14 +100,14 @@ const RetCode GemmFusion::FuseNode(ir::Node* node, bool reliable, const OptKerne
                 next_kernel->CopyParam(temp_param);
                 param->extra_param.fuse_info.fuse_attrs.emplace_back(std::move(temp_param));
             } else {
-                auto clip_param = new ClipParam();
+                auto clip_param = new onnx::ClipParam();
                 auto min_iter = data->constants.find(nextnode->GetInput(1));
                 if (min_iter != data->constants.end()) {
-                    clip_param->min_val = *(float*)(min_iter->second.data.data());
+                    clip_param->min_value = *(float*)(min_iter->second.data.data());
                 }
                 auto max_iter = data->constants.find(nextnode->GetInput(2));
                 if (max_iter != data->constants.end()) {
-                    clip_param->max_val = *(float*)(max_iter->second.data.data());
+                    clip_param->max_value = *(float*)(max_iter->second.data.data());
                 }
                 param->extra_param.fuse_info.fuse_attrs.emplace_back((void*)clip_param);
             }

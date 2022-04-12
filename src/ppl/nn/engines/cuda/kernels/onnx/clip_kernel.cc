@@ -35,7 +35,7 @@ ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
     ppl::common::RetCode status = PPLCUDAClipForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(),
-                                                        output->GetShape(), output->GetBufferPtr(), param_->min_val, param_->max_val);
+                                                        output->GetShape(), output->GetBufferPtr(), param_->min_value, param_->max_value);
     return status;
 }
 
