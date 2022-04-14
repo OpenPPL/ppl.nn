@@ -26,11 +26,13 @@
 #include <cuda_runtime.h>
 
 
-uint64_t pplConvTransposeGetFilterBufSizeCudaFp32(
-    const int num_filters,
-    const int num_channels,
-    const int filter_height,
-    const int filter_width);
+uint64_t PPLConvTransposeGetFilterBufSizeCudaFp16(
+    const ppl::nn::TensorShape* weight_shape);
+
+uint64_t PPLConvTransposeGetCompilationBufSizeCuda(
+    ppl::nn::TensorShape* input_shape,
+    ppl::nn::TensorShape* output_shape,
+    const ppl::nn::onnx::ConvTransposeParam* param);
 
 uint64_t PPLConvTransposeGetBufSizeCuda(
     ppl::nn::TensorShape* input_shape,
@@ -52,10 +54,25 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
     const void* input,
     const void* trans_filter,
     const void* bias,
+    ppl::nn::TensorShape* output_shape,
+    void* output,
     const ppl::nn::onnx::ConvTransposeParam* param,
     algo_param_t algo_param,
+    fuse_param_t &fuse_param,
+    void* temp_buffer);
+
+double PPLCUDAConvTransposeSelectKernel(
+    int device_id,
+    cudaStream_t& stream,
+    //ppl::nn::cuda::CUDAModule* module,
+    ppl::nn::TensorShape* input_shape,
+    const void* input,
+    const void* rev_flt,
+    const void* bias,
     void* temp_buffer,
     ppl::nn::TensorShape* output_shape,
-    void* output);
+    void* output,
+    const ppl::nn::onnx::ConvTransposeParam* param,
+    algo_param_t& algo_param);
 
 #endif // PPLCUDA_KERNEL_INCLUDE_CONVTRANSPOSE_CONVTRANSPOSE_H_

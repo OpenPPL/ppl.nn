@@ -547,7 +547,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
     int kLoopNum = DivUp(K_pad, tile_k_per_cta);
     lut_t in_lut, flt_lut;
 
-    bool has_bias    = param.bias_term; // beta != 0.f;
+    int has_bias    = param.bias_term; // beta != 0.f;
     int4 *input0_tmp = (int4 *)input;
     if (transA == 1) {
         dim3 grid(DivUp(K_pad, 32), DivUp(M, 32), 1);
