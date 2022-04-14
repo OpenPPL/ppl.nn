@@ -15,24 +15,24 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/optimizer/fusions/fs_gemm.h"
+#include "ppl/nn/engines/cuda/optimizer/fusions/fs_convtranspose.h"
 
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
-#include "ppl/nn/engines/cuda/params/gemm_extra_param.h"
+#include "ppl/nn/engines/cuda/params/convtranspose_extra_param.h"
 #include "ppl/nn/common/logger.h"
 
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-const bool GemmFusion::CanFuse(ir::Node* nextnode, const OptKernelOptions& options, uint32_t flag) {
+const bool ConvTransposeFusion::CanFuse(ir::Node* nextnode, const OptKernelOptions& options, uint32_t flag) {
     if (fuse_type.find(nextnode->GetType().name) != fuse_type.end()) {
         return true;
     }
     return false;
 }
 
-const RetCode GemmFusion::FuseGemmWithNextNode(ir::Node* node, ir::Node* nextnode, const OptKernelOptions& options) {
+const RetCode ConvTransposeFusion::FuseConvTransposeWithNextNode(ir::Node* node, ir::Node* nextnode, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto connect_edge_id = node->GetOutput(0);
 
@@ -63,12 +63,12 @@ const RetCode GemmFusion::FuseGemmWithNextNode(ir::Node* node, ir::Node* nextnod
     return RC_SUCCESS;
 }
 
-const RetCode GemmFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
+const RetCode ConvTransposeFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto data = options.graph->data.get();
     auto node_id = node->GetId();
     auto opt_kernel = (CudaOptKernel*)(options.info->kernels[node_id].get());
-    CudaGemmParam* param = (CudaGemmParam*)opt_kernel->GetParam();
+    CudaConvTransposeParam* param = (CudaConvTransposeParam*)opt_kernel->GetParam();
 
     for (uint32_t i = 0; i < 1 && node->GetOutputCount() == 1; ++i) {
         auto edge_id = node->GetOutput(0);
@@ -112,7 +112,7 @@ const RetCode GemmFusion::FuseNode(ir::Node* node, bool reliable, const OptKerne
                 param->extra_param.fuse_info.fuse_attrs.emplace_back((void*)clip_param);
             }
             options.info->kernels.erase(nextnode_id);
-            FuseGemmWithNextNode(node, nextnode, options);
+            FuseConvTransposeWithNextNode(node, nextnode, options);
         }
     }
     return RC_SUCCESS;
