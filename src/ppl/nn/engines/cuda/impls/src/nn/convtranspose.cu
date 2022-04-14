@@ -20,7 +20,8 @@
 #include "cudakernel/memory/transpose.h"
 #include "cudakernel/common/common.h"
 #include "ppl/nn/params/onnx/transpose_param.h"
-#include "ppl/nn/params/onnx/gemm_param.h"
+#include "cudakernel/nn/conv/conv_fp16.h"
+#include <float.h>
 #include <cuda_fp16.h>
 
 #define CUDA_KERNEL_LOOP(i, n)                          \
@@ -28,161 +29,8 @@
          i < (n);                                       \
          i += blockDim.x * gridDim.x)
 
-template <typename T>
-__global__ void ppl_col2im_gpu_kernel(
-    const int n,
-    const T* data_col,
-    const int height,
-    const int width,
-    const int channels,
-    const int kernel_h,
-    const int kernel_w,
-    const int pad_h,
-    const int pad_w,
-    const int stride_h,
-    const int stride_w,
-    const int hole_h,
-    const int hole_w,
-    const int height_col,
-    const int width_col,
-    const float beta,
-    T* data_im)
-{
-    CUDA_KERNEL_LOOP(index, n)
-    {
-        T val               = 0;
-        const int w_im      = index % width + pad_w;
-        const int h_im      = (index / width) % height + pad_h;
-        const int c_im      = index / (width * height);
-        int kernel_extern_w = (kernel_w - 1) * hole_w + 1;
-        int kernel_extern_h = (kernel_h - 1) * hole_h + 1;
-        // compute the start and end of the output
-        const int w_col_start =
-            (w_im < kernel_extern_w) ? 0 : (w_im - kernel_extern_w) / stride_w + 1;
-        const int w_col_end =
-            min(w_im / stride_w + 1, width_col);
-        const int h_col_start =
-            (h_im < kernel_extern_h) ? 0 : (h_im - kernel_extern_h) / stride_h + 1;
-        const int h_col_end =
-            min(h_im / stride_h + 1, height_col);
-        // equivalent implementation
-        for (int h_col = h_col_start; h_col < h_col_end; ++h_col) {
-            for (int w_col = w_col_start; w_col < w_col_end; ++w_col) {
-                int h_k = (h_im - h_col * stride_h);
-                int w_k = (w_im - w_col * stride_w);
-                if (h_k % hole_h == 0 && w_k % hole_w == 0) {
-                    h_k /= hole_h;
-                    w_k /= hole_w;
-                    int data_col_index = (((c_im * kernel_h + h_k) * kernel_w + w_k) * height_col + h_col) * width_col + w_col;
-                    val                = Math<T, T, T>::add(val, data_col[data_col_index]);
-                }
-            }
-        }
-        data_im[index] = Math<T, T, T>::add(val, (beta == 0 ? (T)0 : data_im[index]));
-    }
-}
 
-template <typename T>
-void ppl_col2im_gpu(
-    cudaStream_t stream,
-    const T* data_col,
-    int channels,
-    int height,
-    int width,
-    int kernel_h,
-    int kernel_w,
-    int pad_h,
-    int pad_w,
-    int stride_h,
-    int stride_w,
-    int hole_h,
-    int hole_w,
-    int height_col,
-    int width_col,
-    const float beta,
-    T* data_im)
-{
-    int num_kernels = channels * height * width;
-    ppl_col2im_gpu_kernel<T><<<(num_kernels + 1024 - 1) / 1024, 1024, 0, stream>>>(
-        num_kernels, data_col, height, width, channels, kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, hole_h, hole_w, height_col, width_col, beta, data_im);
-}
-
-template <typename T>
-__global__ void ppl_cukernel_matrix_padding(
-    const T* input,
-    int inHeight,
-    int inWidth,
-    T* output,
-    int out_height,
-    int out_width)
-{
-    int w_idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int h_idx = blockIdx.y * blockDim.y + threadIdx.y;
-    if (w_idx >= inWidth || h_idx >= inHeight)
-        return;
-    uint64_t in_index  = h_idx * inWidth + w_idx;
-    uint64_t out_index = h_idx * out_width + w_idx;
-    output[out_index]  = input[in_index];
-}
-
-template <typename T>
-void cuda_matrix_padding(
-    cudaStream_t stream,
-    const T* input,
-    int inHeight,
-    int inWidth,
-    T* output,
-    int out_height,
-    int out_width)
-{
-    cudaMemset(output, 0, out_height * out_width * sizeof(T));
-    dim3 blockSize(16, 16, 1);
-    dim3 gridSize((inWidth + 15) / 16, (inHeight + 15) / 16, 1);
-    ppl_cukernel_matrix_padding<T><<<gridSize, blockSize, 0, stream>>>(
-        input, inHeight, inWidth, output, out_height, out_width);
-}
-
-template <typename T>
-void __global__ addVectorToMatrixColumnKernel(
-    int numRows,
-    int numCols,
-    int stride,
-    float alpha,
-    const T* bias,
-    float beta,
-    T* out)
-{
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
-    if (index >= numRows * numCols)
-        return;
-    int row_idx        = index / numCols;
-    int col_idx        = index % numCols;
-    uint64_t out_index = row_idx * stride + col_idx;
-    uint64_t in_index  = index;
-
-    out[out_index] = Math<T, T, T>::add(
-        Math<T, T, T>::mul((T)alpha, bias[row_idx]),
-        ((beta == 0) ? (T)0 : Math<T, T, T>::mul((T)beta, out[in_index])));
-}
-
-template <typename T>
-void addVectorToMatrixColumn(
-    cudaStream_t stream,
-    int M,
-    int N,
-    int stride,
-    float alpha,
-    const T* biasData,
-    float beta,
-    T* outData)
-{
-    const uint64_t count = M * N;
-    const int blockSize  = 128;
-    const int gridSize   = (count + blockSize - 1) / blockSize;
-    addVectorToMatrixColumnKernel<T><<<gridSize, blockSize, 0, stream>>>(M, N, stride, alpha, biasData, beta, outData);
-}
-
-uint64_t pplConvTransposeGetFilterBufSizeCudaFp32(
+uint64_t pplConvTransposeGetFilterBufSizeCudaFp16(
     const int num_filters,
     const int num_channels,
     const int filter_height,
@@ -198,27 +46,6 @@ uint64_t pplConvTransposeGetFilterBufSizeCudaFp32(
 
     size_t dst = Align(padM * padK * sizeof(__half), 128);
     return dst * 2; // transpose buf
-}
-
-template <typename T>
-void pplConvTransposeConvertFilter(
-    cudaStream_t stream,
-    const T* filter,
-    int num_filters,
-    int num_channels,
-    int filter_height,
-    int filter_width,
-    T* cvt_filter)
-{
-    int M = num_filters;
-    M *= filter_height;
-    M *= filter_width;
-    size_t K = num_channels;
-
-    size_t padM = Align(M, 1);
-    size_t padK = Align(K, 8);
-    // no need to transpose, just
-    cuda_matrix_padding<T>(stream, filter, K, M, cvt_filter, padK, padM);
 }
 
 uint64_t pplConvTransposeGetTempBufSizeCudaFp32(
@@ -260,7 +87,7 @@ uint64_t PPLConvTransposeGetBufSizeCuda(
     int out_c     = output_shape->GetDim(1);
     int out_h     = output_shape->GetDim(2);
     int out_w     = output_shape->GetDim(3);
-    int group     = param->group;
+    //int group     = param->group;
     int kernel_h  = param->kernel_shape[0];
     int kernel_w  = param->kernel_shape[1];
     int pad_h     = param->pads[0];
@@ -270,59 +97,69 @@ uint64_t PPLConvTransposeGetBufSizeCuda(
     int hole_h    = param->dilations[0];
     int hole_w    = param->dilations[1];
     uint64_t size = 0;
+    int cvt_h = stride_h * (in_h-1) + 1;
+    int cvt_w = stride_w * (in_w-1) + 1;
     if (input_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
-        size += pplConvTransposeGetFilterBufSizeCudaFp32(out_c, in_c, kernel_h, kernel_w) +
-                pplConvTransposeGetTempBufSizeCudaFp32(group, in_c, in_h, in_w, out_c, kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, hole_h, hole_w);
+        size = (uint64_t)batch*cvt_h*cvt_w*Align(in_c, 8)*sizeof(__half);
     } else {
         return 0;
     }
-
-    // NT gemm
-    int transA = 0;
-    int M      = out_c * kernel_h * kernel_w;
-    int K      = in_c;
-    int padM   = Align(M, 1);
-    int padK   = Align(K, 8);
-    ppl::nn::TensorShape a_shape;
-    a_shape.Reshape({padM, padK});
-    a_shape.SetDataType(input_shape->GetDataType());
-    size += PPLGemmCUDAGetBufSize(&a_shape, transA);
-
     return size;
 }
 
-template <typename T>
-__global__ void remove_padding(
-    T* pad_data,
-    T* data,
-    const int M,
-    const int padN,
-    const int N)
-{
-    int64_t off    = blockIdx.x * 256 + threadIdx.x;
-    int m_id       = off / N;
-    int n_id       = off % N;
-    int64_t in_off = (int64_t)m_id * padN + n_id;
 
-    if (off < M * N)
-        data[off] = pad_data[in_off];
+/*
+   if stride != 1
+   half
+   mapped by output shape
+   DivUp(out hw, cta_size)
+
+   nhwc and nhwuvc are both paded
+*/
+__global__ void nhwc2nhwuvc(const void *input, void *cvt_input,
+        const int batch, const int in_height, const int in_width, const int in_c_v4,
+        const int out_height, const int out_width,
+        const int stride_h, const int stride_w){
+    int tid = blockIdx.x*blockDim.x + threadIdx.x;
+    int c_id  = tid % in_c_v4;
+    int nhw_id = tid / in_c_v4;
+    int w_id = nhw_id % out_width;
+    int h_id = nhw_id / out_width % out_height;
+    int n_id = nhw_id / out_width / out_height;
+
+    int in_w_id = w_id / stride_w;
+    int in_h_id = h_id / stride_h;
+
+    bool in_range = n_id < batch &&
+                    h_id % stride_h == 0 &&
+                    w_id % stride_w == 0;
+    int in_off = n_id * in_height * in_width * in_c_v4 +
+                 in_h_id * in_width * in_c_v4 +
+                 in_w_id * in_c_v4 + c_id;
+    int4 zeros = {0,0,0,0};
+    ((int4*)cvt_input)[tid] = in_range? ((int4*)input)[in_off] : zeros; 
 }
-template <typename T>
-T* RemovePadding(
-    const cudaStream_t& stream,
-    T* pad_data,
-    T* data,
-    const int M,
-    const int padN,
-    const int N)
-{
-    if (padN == N)
-        return pad_data;
-    int block_size = 256;
-    int grid       = (M * N + 255) / 256;
-    remove_padding<T><<<grid, block_size, 0, stream>>>(pad_data, data, M, padN, N);
-    return data;
+
+/*
+   //kcrs2crsk_pad
+   origin flt: ckrs
+   pre flt: crsk_pad
+   and reverse rs order
+*/
+__global__ void reverse_flt(void *flt, void *rev_flt, const int C, const int R, const int S, const int K_v4_pad){
+    int tid = blockIdx.x*blockDim.x + threadIdx.x;
+    int k_id = tid % K_v4_pad;
+    int rs_id = (tid / K_v4_pad) % (R*S);
+    int c_id = (tid / K_v4_pad) / (R*S);
+    bool in_range = c_id < C;
+
+    int rev_rs_id = R*S - rs_id - 1;
+    int out_off = c_id * R*S*K_v4_pad +
+                  rev_rs_id * K_v4_pad +
+                  k_id;
+    if(in_range)    ((int4*)rev_flt)[out_off] = ((int4*)flt)[tid];
 }
+
 
 ppl::common::RetCode PPLCUDAConvTransposeCvt(
     cudaStream_t stream,
@@ -332,8 +169,8 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
     const ppl::nn::TensorShape* filter_shape,
     const ppl::nn::onnx::ConvTransposeParam* param)
 {
-    int in_c     = filter_shape->GetDim(1);
-    int out_c    = filter_shape->GetDim(0);
+    int conv_in_c  = filter_shape->GetDim(1);
+    int conv_out_c = filter_shape->GetDim(0);
     int kernel_h = param->kernel_shape[0];
     int kernel_w = param->kernel_shape[1];
     int pad_h    = param->pads[0];
@@ -342,16 +179,11 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
     int stride_w = param->strides[1];
     int hole_h   = param->dilations[0];
     int hole_w   = param->dilations[1];
-    int num_channels     = in_c;
-    int num_filters      = out_c;
-    int M                = out_c * kernel_h * kernel_w;
-    int K                = in_c;
+    int num_filters      = conv_out_c;
+    int M                = conv_in_c * kernel_h * kernel_w;
+    int K                = num_filters;
     int padM             = Align(M, 1);
     int padK             = Align(K, 8);
-
-    // cvt filter
-    __half* cvt_filter   = (__half*)temp_buffer;
-    pplConvTransposeConvertFilter<__half>(stream, (__half*)in_filter, num_filters, num_channels, kernel_h, kernel_w, cvt_filter);
 
     ppl::nn::onnx::TransposeParam trans_param;
     trans_param.perm.push_back(1);
@@ -360,24 +192,36 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
     ppl::nn::TensorShape a_shape, out_a_shape;
     a_shape.SetDataType(filter_shape->GetDataType());
     out_a_shape.SetDataType(filter_shape->GetDataType());
-    a_shape.Reshape({padK, M});
+    a_shape.Reshape({K, M});
     out_a_shape.Reshape({padM, padK});
 
+    __half* trans_flt = (__half*)temp_buffer;
+    //k_pad-crs 2 crsk_pad
     ppl::common::RetCode status = PPLCUDATransposeForwardImp(stream,
                                                              trans_param,
                                                              &a_shape,
-                                                             cvt_filter,
+                                                             in_filter,
                                                              &out_a_shape,
-                                                             out_filter);
+                                                             trans_flt);
+
+    int cta_size = 256;
+    int rev_grid = DivUp(M*padK, cta_size);
+    //crsk_pad 2 rev crsk_pad
+    reverse_flt<<<rev_grid, cta_size, 0, stream>>>(trans_flt, out_filter, conv_in_c, kernel_h, kernel_w, padK/8);
+
     return ppl::common::RC_SUCCESS;
 }
 
+/*
+   flt: reversed crsk_pad
+   input: nhwc_pad
+*/
 ppl::common::RetCode PPLCUDAConvTransposeForward(
     cudaStream_t stream,
     ppl::nn::cuda::CUDAModule* module,
     ppl::nn::TensorShape* input_shape,
     const void* input,
-    const void* trans_filter,
+    const void* rev_flt,
     const void* bias,
     const ppl::nn::onnx::ConvTransposeParam* param,
     algo_param_t algo_param,
@@ -400,75 +244,145 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
     int stride_w = param->strides[1];
     int hole_h   = param->dilations[0];
     int hole_w   = param->dilations[1];
+    if (hole_h != 1 || hole_w != 1)
+        return ppl::common::RC_UNSUPPORTED;
 
     if (input_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
-        int num_channels     = in_c;
-        int num_filters      = out_c;
-        int height           = in_h;
-        int width            = in_w;
-        int out_height       = out_h;
-        int out_width        = out_w;
-        int M                = out_c * kernel_h * kernel_w;
-        int N                = in_w * in_h;
-        int K                = in_c;
-        int padM             = Align(M, 1);
-        int padN             = Align(N, 8);
-        int padK             = Align(K, 8);
-        __half* pad_in_data  = (__half*)temp_buffer;
-        __half* pad_out_data = pad_in_data + Align(padN * padK, 128 / sizeof(__half));
-        __half* out_data     = pad_out_data + Align(M * padN, 128 / sizeof(__half));
-
-        ppl::nn::onnx::TransposeParam trans_param;
-        trans_param.perm.push_back(1);
-        trans_param.perm.push_back(0);
-        __half* trans_in_data = out_data + Align(M * N, 128 / sizeof(__half));
-
-        ppl::nn::TensorShape a_shape, b_shape, c_shape, out_a_shape, out_b_shape;
-        a_shape.SetDataType(input_shape->GetDataType());
-        b_shape.SetDataType(input_shape->GetDataType());
-        c_shape.SetDataType(output_shape->GetDataType());
-        out_a_shape.SetDataType(input_shape->GetDataType());
-        out_b_shape.SetDataType(input_shape->GetDataType());
-        a_shape.Reshape({padK, M});
-        b_shape.Reshape({padK, padN});
-        c_shape.Reshape({M, padN});
-        out_a_shape.Reshape({padM, padK});
-        out_b_shape.Reshape({padN, padK});
-
-        ppl::nn::onnx::GemmParam gemm_param;
-        fuse_param_t fuse_param;
-        gemm_param.bias_term = 0;
-        gemm_param.transA    = 0;
-        gemm_param.transB    = 1;
-        gemm_param.alpha     = 1.f;
-        gemm_param.beta      = 1.f;
-        gemm_param.N         = padN;
-        for (int n = 0; n < batch; ++n) {
-            int offset_in  = n * num_channels * height * width;
-            int offset_out = n * num_filters * out_height * out_width;
-            cuda_matrix_padding<__half>(stream, ((__half*)input) + offset_in, K, N, pad_in_data, padK, padN);
-
-            PPLCUDATransposeForwardImp(stream,
-                                       trans_param,
-                                       &b_shape,
-                                       pad_in_data,
-                                       &out_b_shape,
-                                       trans_in_data);
-
-            // NT
-            ppl::nn::TensorShape a_shape, b_shape, c_shape;
-            // input transpose KxN -> NxK    weight transpose KxM -> MxK
-            PPLCUDAGemmForwardImp(stream, module, &out_a_shape, trans_filter, &out_b_shape, trans_in_data, NULL, &c_shape, pad_out_data, gemm_param, NULL, fuse_param, algo_param);
-
-            __half* tmp = RemovePadding<__half>(stream, pad_out_data, out_data, M, padN, N);
-            ppl_col2im_gpu<__half>(stream, (const __half*)tmp, num_filters, out_height, out_width, kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, hole_h, hole_w, height, width, 0.f, ((__half*)output) + offset_out);
-
-            if (NULL != bias) {
-                addVectorToMatrixColumn<__half>(stream, num_filters, out_height * out_width, out_height * out_width, 1.f, (__half*)bias, 1.f, ((__half*)output) + offset_out);
-            }
+        void* cvt_input  = (__half*)temp_buffer;
+        int in_c_v4 = DivUp(in_c, 8);
+        int cvt_in_h = stride_h * (in_h-1) + 1;
+        int cvt_in_w = stride_w * (in_w-1) + 1;
+        // nhwc to stride-dilated nhwc
+        if(stride_h != 1 || stride_w != 1){
+            int cta_size = 256;
+            dim3 grid(DivUp(batch*cvt_in_h*cvt_in_w*in_c_v4, cta_size));
+            nhwc2nhwuvc<<<grid, cta_size, 0, stream>>>(input, cvt_input,
+                        batch, in_h, in_w, in_c_v4,
+                        cvt_in_h, cvt_in_w,
+                        stride_h, stride_w);
         }
+        else{
+            cvt_input = (void*)input;
+        }
+
+        //fake conv
+        conv_param_t conv_param;
+        conv_param.in_num = batch;
+        conv_param.num_chl = in_c;
+        conv_param.num_flt = out_c;
+        conv_param.num_chl_pad = Align(in_c, 8);
+        conv_param.num_flt_pad = Align(out_c, 8);
+        conv_param.num_grp = 1;
+        conv_param.in_height = cvt_in_h;
+        conv_param.in_width = cvt_in_w;
+        conv_param.flt_height = kernel_h;
+        conv_param.flt_width = kernel_w;
+        conv_param.pad_height = kernel_h - 1- pad_h;
+        conv_param.pad_width = kernel_w - 1- pad_w;
+        conv_param.stride_height = 1;
+        conv_param.stride_width = 1;
+        conv_param.hole_height = 1;
+        conv_param.hole_width = 1;
+        conv_param.out_height = cvt_in_h + 2*(kernel_h-1-pad_h) - (kernel_h-1);
+        conv_param.out_width = cvt_in_w + 2*(kernel_w-1-pad_w) - (kernel_w-1);
+        conv_param.has_bias = NULL!=bias;
+
+        //algo_param_t algo_param;
+        fuse_param_t fuse_param;
+
+
+        int4 *d_temp_buf = (int4*)cvt_input + batch*cvt_in_h*cvt_in_w*in_c_v4;
+        PPLCUDAConvolutionForwardImp(
+            stream, ppl::common::DATATYPE_FLOAT16,
+            (int4 *)cvt_input, (int4*)rev_flt, (int4*)output,
+            (int4*)bias, (int4*)d_temp_buf,
+            algo_param, conv_param, fuse_param);
         return ppl::common::RC_SUCCESS;
-    } else {
+    }
+    else{
         return ppl::common::RC_UNSUPPORTED;
     }
+}
+
+
+double PPLCUDAConvTransposeSelectKernel(
+    cudaStream_t& stream,
+    ppl::nn::TensorShape* input_shape,
+    const void* input,
+    const void* rev_flt,
+    const void* bias,
+    void* temp_buffer,
+    ppl::nn::TensorShape* output_shape,
+    void* output,
+    const ppl::nn::onnx::ConvTransposeParam* param,
+    algo_param_t& algo_param)
+{
+    int batch    = input_shape->GetDim(0);
+    int in_c     = input_shape->GetDim(1);
+    int in_h     = input_shape->GetDim(2);
+    int in_w     = input_shape->GetDim(3);
+    int out_c    = output_shape->GetDim(1);
+    int out_h    = output_shape->GetDim(2);
+    int out_w    = output_shape->GetDim(3);
+    int kernel_h = param->kernel_shape[0];
+    int kernel_w = param->kernel_shape[1];
+    int pad_h    = param->pads[0];
+    int pad_w    = param->pads[1];
+    int stride_h = param->strides[0];
+    int stride_w = param->strides[1];
+    int hole_h   = param->dilations[0];
+    int hole_w   = param->dilations[1];
+    double min_time = FLT_MAX;
+    if (hole_h != 1 || hole_w != 1)
+        return min_time;
+
+    if (input_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
+        void* cvt_input  = (__half*)temp_buffer;
+        int in_c_v4 = DivUp(in_c, 8);
+        int cvt_in_h = stride_h * (in_h-1) + 1;
+        int cvt_in_w = stride_w * (in_w-1) + 1;
+        // nhwc to stride-dilated nhwc
+        if(stride_h != 1 || stride_w != 1){
+            int cta_size = 256;
+            dim3 grid(DivUp(batch*cvt_in_h*cvt_in_w*in_c_v4, cta_size));
+            nhwc2nhwuvc<<<grid, cta_size, 0, stream>>>(input, cvt_input,
+                        batch, in_h, in_w, in_c_v4,
+                        cvt_in_h, cvt_in_w,
+                        stride_h, stride_w);
+        }
+        else{
+            cvt_input = (void*)input;
+        }
+
+        //fake conv
+        fuse_param_t fuse_param;
+        conv_param_t conv_param;
+        conv_param.in_num = batch;
+        conv_param.num_chl = in_c;
+        conv_param.num_flt = out_c;
+        conv_param.num_chl_pad = Align(in_c, 8);
+        conv_param.num_flt_pad = Align(out_c, 8);
+        conv_param.num_grp = 1;
+        conv_param.in_height = cvt_in_h;
+        conv_param.in_width = cvt_in_w;
+        conv_param.flt_height = kernel_h;
+        conv_param.flt_width = kernel_w;
+        conv_param.pad_height = kernel_h - 1- pad_h;
+        conv_param.pad_width = kernel_w - 1- pad_w;
+        conv_param.stride_height = 1;
+        conv_param.stride_width = 1;
+        conv_param.hole_height = 1;
+        conv_param.hole_width = 1;
+        conv_param.out_height = cvt_in_h + 2*(kernel_h-1-pad_h) - (kernel_h-1);
+        conv_param.out_width = cvt_in_w + 2*(kernel_w-1-pad_w) - (kernel_w-1);
+        conv_param.has_bias = NULL!=bias;
+
+        int4 *d_temp_buf = (int4*)cvt_input + batch*cvt_in_h*cvt_in_w*in_c_v4;
+        min_time = PPLCUDAConvolutionSelectKernel(
+                            stream, ppl::common::DATATYPE_FLOAT16,
+                            (int4 *)cvt_input, (int4*)rev_flt, (int4*)output,
+                            (int4*)bias, (int4*)d_temp_buf,
+                            algo_param, conv_param, fuse_param);
+    }
+    return min_time;
 }
