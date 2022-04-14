@@ -486,11 +486,15 @@ struct Constant FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef ConstantBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_EDGE_ID = 4,
-    VT_DATA_OFFSET = 6,
-    VT_DATA_BYTES = 8
+    VT_FLAGS = 6,
+    VT_DATA_OFFSET = 8,
+    VT_DATA_BYTES = 10
   };
   uint32_t edge_id() const {
     return GetField<uint32_t>(VT_EDGE_ID, 0);
+  }
+  uint32_t flags() const {
+    return GetField<uint32_t>(VT_FLAGS, 0);
   }
   uint64_t data_offset() const {
     return GetField<uint64_t>(VT_DATA_OFFSET, 0);
@@ -501,6 +505,7 @@ struct Constant FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_EDGE_ID) &&
+           VerifyField<uint32_t>(verifier, VT_FLAGS) &&
            VerifyField<uint64_t>(verifier, VT_DATA_OFFSET) &&
            VerifyField<uint64_t>(verifier, VT_DATA_BYTES) &&
            verifier.EndTable();
@@ -513,6 +518,9 @@ struct ConstantBuilder {
   flatbuffers::uoffset_t start_;
   void add_edge_id(uint32_t edge_id) {
     fbb_.AddElement<uint32_t>(Constant::VT_EDGE_ID, edge_id, 0);
+  }
+  void add_flags(uint32_t flags) {
+    fbb_.AddElement<uint32_t>(Constant::VT_FLAGS, flags, 0);
   }
   void add_data_offset(uint64_t data_offset) {
     fbb_.AddElement<uint64_t>(Constant::VT_DATA_OFFSET, data_offset, 0);
@@ -534,11 +542,13 @@ struct ConstantBuilder {
 inline flatbuffers::Offset<Constant> CreateConstant(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t edge_id = 0,
+    uint32_t flags = 0,
     uint64_t data_offset = 0,
     uint64_t data_bytes = 0) {
   ConstantBuilder builder_(_fbb);
   builder_.add_data_bytes(data_bytes);
   builder_.add_data_offset(data_offset);
+  builder_.add_flags(flags);
   builder_.add_edge_id(edge_id);
   return builder_.Finish();
 }

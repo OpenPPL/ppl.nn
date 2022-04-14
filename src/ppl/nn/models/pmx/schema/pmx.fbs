@@ -39,6 +39,7 @@ table NodeInfo {
 
 table Constant {
     edge_id: uint32;
+    flags: uint32;
     data_offset: uint64;
     data_bytes: uint64;
 }
