@@ -258,7 +258,7 @@ static RetCode CreateFbConstants(FlatBufferBuilder* builder, const Serialization
         }
 
         auto ret_pair = FindOrInsertData(data, shared_data, shared_data_items);
-        auto fb_constant = pmx::CreateConstant(*builder, eid2seq[it->first], ret_pair.first, ret_pair.second);
+        auto fb_constant = pmx::CreateConstant(*builder, eid2seq[it->first], 0, ret_pair.first, ret_pair.second);
         constant_vec.emplace_back(std::move(fb_constant));
     }
 
