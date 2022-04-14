@@ -20,12 +20,11 @@
 #include <chrono>
 
 #include "ppl/common/cuda/cuda_types.h"
-#include "cudakernel/gemm/gemm.h"
+#include "cudakernel/nn/conv/conv_fp16.h"
 #include "cudakernel/nn/convtranspose.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/utils/utils.h"
 
-//#include "cudakernel/gemm/gemm.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
@@ -53,26 +52,6 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
     auto shape_out = *options.tensors->find(node->GetOutput(0))->second->GetShape();
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
 
-    conv_param_t temp_conv_param;
-    fuse_param_t temp_fuse_param;
-    temp_conv_param.in_num = shape_in0.GetDim(0);
-    temp_conv_param.num_chl = shape_in1.GetDim(0);
-    temp_conv_param.num_flt = shape_in1.GetDim(1);
-    temp_conv_param.in_height = 1;
-    temp_conv_param.in_width = 1;
-    temp_conv_param.flt_height = 1;
-    temp_conv_param.flt_width = 1;
-    temp_conv_param.out_height = 1;
-    temp_conv_param.out_width = 1;
-    temp_conv_param.pad_height = 1;
-    temp_conv_param.pad_width = 1;
-    temp_conv_param.stride_height = 1;
-    temp_conv_param.stride_width = 1;
-    temp_conv_param.hole_height = 1;
-    temp_conv_param.hole_width = 1;
-    temp_conv_param.num_grp = 1;
-    temp_conv_param.has_bias = node->GetInputCount() > 2;
-
     const std::string& key_str = node->GetName();
     auto algo_info = options.algos->find(key_str);
     if (algo_info != options.algos->end()) {
@@ -83,8 +62,22 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
         PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
         return 0.0f;
     } else { // Give the default kernel
-        attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";
-        attr_param_.extra_param.algo_info.kid = 0;
+        auto stride_h = attr_param_.param.strides[0];
+        auto stride_w = attr_param_.param.strides[1];
+        if (stride_h != 1 || stride_w != 1){
+            if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
+                attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";
+            } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
+                attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_imma8816_nhwc_f1_b64x64_w64x32_k32_s16_buf1";
+            } else {
+                return ALGO_MAX_TIME;
+            }
+            attr_param_.extra_param.algo_info.kid = 0;
+        }
+        else {
+            attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_fn_b128x128_w64x64_k32_s32_buf1";
+            attr_param_.extra_param.algo_info.kid = 5100;
+        }
         attr_param_.extra_param.algo_info.splitk = 1;
         attr_param_.extra_param.algo_info.splitf = 1;
         PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
@@ -97,9 +90,11 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
     // Padding
     shape_in1.SetDim(0, (shape_in1.GetDim(0) + align_size - 1) / align_size * align_size);
     shape_in1.SetDim(1, (shape_in1.GetDim(1) + align_size - 1) / align_size * align_size);
-    if (temp_conv_param.has_bias) {
+    //if (temp_conv_param.has_bias) {
+    if (node->GetInputCount() > 2) {
         shape_in2 = *options.tensors->find(node->GetInput(2))->second->GetShape();
-        shape_in2.SetDim(0, (shape_in2.GetDim(0) + align_size - 1) / align_size * align_size);
+        //for weight shape(K,C,R,S), C is the output channel
+        shape_in2.SetDim(1, (shape_in2.GetDim(1) + align_size - 1) / align_size * align_size);
     }
 
     RetCode status;
@@ -108,30 +103,21 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
     ALLOC_BUFFERF_FOR_ALGO_SELECT(bias_buffer, shape_in2.GetBytesIncludingPadding(), ALGO_MAX_TIME)
     ALLOC_BUFFERF_FOR_ALGO_SELECT(output_buffer, shape_out.GetBytesIncludingPadding(), ALGO_MAX_TIME)
 
-    uint64_t size = PPLGemmCUDAGetBufSize(&shape_in0, 0);
+    uint64_t size = PPLConvTransposeGetCompilationBufSizeCuda(&shape_in0, &shape_out, &attr_param_.param);
     ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, size, ALGO_MAX_TIME)
 
     auto stream = options.device->GetStream();
 
+    int device_id = options.device->GetDeviceId();
 #ifdef PPLNN_ENABLE_CUDA_JIT
     // Do select
     LOG(INFO) << "Compiling " << node->GetName();
-    int device_id = options.device->GetDeviceId();
-    PPLCUDAConvolutionPredictKernel(shape_in0.GetDataType(), attr_param_.extra_param.algo_info, temp_conv_param);
-    auto timer = PPLCUDAGemmJITSelectKernel(device_id, stream, shape_in0.GetDataType(), &shape_in0, input_buffer.addr,
-                                            &shape_in1, weight_buffer.addr, bias_buffer.addr, &shape_out,
-                                            output_buffer.addr, temp_buffer.addr, temp_conv_param, temp_fuse_param,
-                                            attr_param_.extra_param.algo_info);
-#else
-    // Do Select
-    ppl::nn::onnx::GemmParam param;
-    param.transA = 0;
-    param.transB = 0;
-    param.bias_term = temp_conv_param.has_bias;
-    auto timer = PPLCUDAGemmSelectKernel(stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
-                                         bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr, param,
-                                         temp_fuse_param, attr_param_.extra_param.algo_info);
 #endif
+    // Do Select
+    auto timer = PPLCUDAConvTransposeSelectKernel(device_id, stream, &shape_in0, input_buffer.addr,
+                            weight_buffer.addr, bias_buffer.addr, temp_buffer.addr,
+                            &shape_out, output_buffer.addr, &attr_param_.param,
+                            attr_param_.extra_param.algo_info);
     CudaArgs::AlgoSelects algo_select;
     algo_select.kname = attr_param_.extra_param.algo_info.algo_name;
     algo_select.kid = attr_param_.extra_param.algo_info.kid;
@@ -161,9 +147,19 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
         auto preedge_id = weight_node->GetInput(0);
         auto postedge_id = node->GetInput(1);
         const TensorShape& preshape = *options.tensors->find(preedge_id)->second->GetShape();
-        const TensorShape& postshape = *options.tensors->find(postedge_id)->second->GetShape();
+        //const TensorShape& postshape = *options.tensors->find(postedge_id)->second->GetShape();
+        TensorShape postshape = *options.tensors->find(postedge_id)->second->GetShape();
+        postshape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         auto newshape = postshape;
+        int stride_h = attr_param_.param.strides[0];
+        int stride_w = attr_param_.param.strides[1];
+        int kernel_u = (newshape.GetDim(2)+stride_h-1) / stride_h;
+        int kernel_v = (newshape.GetDim(3)+stride_w-1) / stride_w;
+        int pattern_num = stride_h * stride_w;
         newshape.SetDim(0, (newshape.GetDim(0) + align_size - 1) / align_size * align_size);
+        newshape.SetDim(1, (newshape.GetDim(1) + align_size - 1) / align_size * align_size);
+        newshape.SetDim(2, pattern_num);
+        newshape.SetDim(3, kernel_u*kernel_v);
 
         RuntimeConstantInfo weight_constat_info;
         {
@@ -174,12 +170,12 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
                 return status;
             }
 
+
             weight_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
             weight_constat_info.SetBuffer(buffer, options.device, true);
         }
 
-        auto size = pplConvTransposeGetFilterBufSizeCudaFp32(shape_in1.GetDim(0), shape_in1.GetDim(1),
-                                                             shape_in1.GetDim(2), shape_in1.GetDim(3));
+        auto size = PPLConvTransposeGetFilterBufSizeCudaFp16(&shape_in1);
         ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_temp_buffer, size, RC_OUT_OF_MEMORY)
         ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_input_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
         status = options.device->GetDataConverter()->ConvertFromHost(&filter_input_buffer, postshape,
@@ -191,6 +187,7 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
 
         PPLCUDAConvTransposeCvt(stream, filter_input_buffer.addr, filter_temp_buffer.addr,
                                 weight_constat_info.GetBufferDesc().addr, &shape_in1, &attr_param_.param);
+        postshape.SetDataFormat(ppl::common::DATAFORMAT_NHWC8);
 
         options.info->constants.emplace(preedge_id, std::move(weight_constat_info));
         *options.tensors->find(preedge_id)->second->GetShape() = postshape;
@@ -199,6 +196,58 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
     }
     reinterpret_cast<CudaConvTransposeParam*>(options.param)->extra_param.algo_info.is_initializer_weight =
         weight_iter != data->constants.end();
+
+
+    if (node->GetInputCount() <= 2) {
+        return RC_SUCCESS;
+    }
+    // Split bias format to group padding
+    auto bias_edge = topo->GetEdge(node->GetInput(2));
+    auto bias_node = topo->GetNode(bias_edge->GetProducer());
+    auto bias_iter = data->constants.find(bias_node->GetInput(0));
+    if (bias_iter != data->constants.end() && // is a constant tensor and has not be loaded
+        options.info->constants.find(bias_node->GetInput(0)) == options.info->constants.end()) {
+        auto preedge_id = bias_node->GetInput(0);
+        auto postedge_id = node->GetInput(2);
+        const TensorShape& preshape = *options.tensors->find(preedge_id)->second->GetShape();
+        const TensorShape& postshape = *options.tensors->find(postedge_id)->second->GetShape();
+        auto newshape = postshape;
+        int out_c_pad = (newshape.GetDim(0) + align_size-1)/align_size*align_size;
+        newshape.SetDim(0, out_c_pad);
+        RuntimeConstantInfo bias_constat_info;
+        {
+            BufferDesc buffer;
+            status = options.device->Realloc(newshape, &buffer);
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
+                return status;
+            }
+
+            bias_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
+            bias_constat_info.SetBuffer(buffer, options.device, true);
+        }
+
+        ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
+        status = options.device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
+                                                                     bias_iter->second.data.data(), preshape);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
+            return status;
+        }
+
+        conv_param_t temp_conv_param;
+        temp_conv_param.num_flt = postshape.GetDim(0);
+        temp_conv_param.num_grp = 1;
+        temp_conv_param.num_flt_pad = newshape.GetDim(0);
+        PPLCUDAConvolutionCvtBias(stream, bias_constat_info.GetBufferDesc().addr, temp_buffer.addr,
+                                  shape_in0.GetDataType(), temp_conv_param);
+        options.info->constants.emplace(preedge_id, std::move(bias_constat_info));
+        *options.tensors->find(preedge_id)->second->GetShape() = postshape;
+        options.quants->at(preedge_id) = options.quants->at(postedge_id);
+        options.quants->at(preedge_id).format = postshape.GetDataFormat();
+        options.quants->at(preedge_id).type = postshape.GetDataType();
+    }
+
     return RC_SUCCESS;
 }
 
