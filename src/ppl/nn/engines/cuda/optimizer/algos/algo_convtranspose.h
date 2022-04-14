@@ -29,8 +29,8 @@ namespace ppl { namespace nn { namespace cuda {
 class ConvTransposeAlgorithm : public Algorithm {
 public:
     ConvTransposeAlgorithm() {
-        std::set<dataformat_t> ndarray{DATAFORMAT_NDARRAY};
-        conv_transpose_formats_.emplace(DATAFORMAT_NDARRAY, ndarray);
+        std::set<dataformat_t> ndarray{DATAFORMAT_NHWC8};
+        conv_transpose_formats_.emplace(DATAFORMAT_NHWC8, ndarray);
     }
 
     const std::map<dataformat_t, std::set<dataformat_t>> Getformats(const std::string& type_name) const override {
