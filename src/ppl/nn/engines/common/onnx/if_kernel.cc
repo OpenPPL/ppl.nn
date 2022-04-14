@@ -167,7 +167,7 @@ RetCode IfKernel::DoExecute(KernelExecContext* ctx) {
         return status;
     }
 
-    return SetOutputs(subgraph, ctx, GetEngineContext()->GetDevice(), &tmp_cpu_device);
+    return SetOutputs(subgraph, ctx, GetDevice(), &tmp_cpu_device);
 }
 
 }}} // namespace ppl::nn::common

@@ -41,7 +41,7 @@ RetCode ShapeOperationKernel::DoExecute(KernelExecContext* ctx) {
             shape->GetShape()->Reshape({dim_size});
         }
 
-        shape->SetDevice(GetEngineContext()->GetDevice());
+        shape->SetDevice(GetDevice());
         auto status = shape->ReallocBuffer();
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "allocate memory for tensor[" << shape->GetName() << "] failed: " << GetRetCodeStr(status);
