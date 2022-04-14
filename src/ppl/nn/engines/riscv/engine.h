@@ -30,13 +30,16 @@ namespace ppl { namespace nn { namespace riscv {
 
 class RiscvEngine final : public EngineImpl {
 public:
-    RiscvEngine() : EngineImpl("riscv"), device_(RISCV_DEFAULT_ALIGNMENT) {}
+    RiscvEngine() : device_(RISCV_DEFAULT_ALIGNMENT) {}
     ppl::common::RetCode Init(const RiscvEngineOptions& options);
     ppl::common::RetCode Configure(uint32_t, ...) override;
     EngineContext* CreateEngineContext() override;
     bool Supports(const ir::Node*) const override;
     ppl::common::RetCode ProcessGraph(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*) override;
     EngineImpl* Create() override;
+    const char* GetName() const override {
+        return device_.GetType();
+    }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override;

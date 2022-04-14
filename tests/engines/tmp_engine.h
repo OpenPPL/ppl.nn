@@ -26,7 +26,7 @@ namespace ppl { namespace nn { namespace test {
 
 class TmpEngine final : public EngineImpl {
 public:
-    TmpEngine() : EngineImpl("TmpEngine"), supported_types_{"op1", "op2", "op3"} {}
+    TmpEngine() : supported_types_{"op1", "op2", "op3"} {}
     ppl::common::RetCode Configure(uint32_t, ...) override {
         return ppl::common::RC_UNSUPPORTED;
     }
@@ -53,6 +53,9 @@ public:
     EngineImpl* Create() override {
         return new TmpEngine();
     }
+    const char* GetName() const override {
+        return "TmpEngine";
+    }
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override {
         return ppl::common::RC_SUCCESS;
@@ -75,7 +78,6 @@ private:
 
 class TmpEngine1 final : public EngineImpl {
 public:
-    TmpEngine1() : EngineImpl("TmpEngine1") {}
     ppl::common::RetCode Configure(uint32_t, ...) override {
         return ppl::common::RC_UNSUPPORTED;
     }
@@ -102,6 +104,9 @@ public:
     EngineImpl* Create() override {
         return new TmpEngine1();
     }
+    const char* GetName() const override {
+        return "TmpEngine1";
+    }
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override {
         return ppl::common::RC_SUCCESS;
@@ -123,7 +128,6 @@ private:
 
 class TmpEngine2 final : public EngineImpl {
 public:
-    TmpEngine2() : EngineImpl("TmpEngine2") {}
     ppl::common::RetCode Configure(uint32_t, ...) override {
         return ppl::common::RC_UNSUPPORTED;
     }
@@ -150,6 +154,9 @@ public:
     EngineImpl* Create() override {
         return new TmpEngine2();
     }
+    const char* GetName() const override {
+        return "TmpEngine2";
+    }
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override {
         return ppl::common::RC_SUCCESS;
@@ -171,7 +178,6 @@ private:
 
 class TmpEngine3 final : public EngineImpl {
 public:
-    TmpEngine3() : EngineImpl("TmpEngine3") {}
     ppl::common::RetCode Configure(uint32_t, ...) override {
         return ppl::common::RC_UNSUPPORTED;
     }
@@ -197,6 +203,9 @@ public:
     }
     EngineImpl* Create() override {
         return new TmpEngine3();
+    }
+    const char* GetName() const override {
+        return "TmpEngine3";
     }
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override {

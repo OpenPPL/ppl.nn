@@ -59,7 +59,6 @@ struct CudaArgs {
 
 class CudaEngine final : public EngineImpl {
 public:
-    CudaEngine() : EngineImpl("cuda") {}
     ~CudaEngine();
     ppl::common::RetCode Init(const CudaEngineOptions& options);
     ppl::common::RetCode Configure(uint32_t, ...) override;
@@ -68,6 +67,9 @@ public:
     ppl::common::RetCode ProcessGraph(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*) override;
     EngineImpl* Create() override;
     ppl::common::RetCode CompileCudaModule(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*);
+    const char* GetName() const override {
+        return device_.GetType();
+    }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override;

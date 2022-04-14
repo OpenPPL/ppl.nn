@@ -25,7 +25,6 @@ namespace ppl { namespace nn { namespace demo {
 
 class DemoEngine final : public EngineImpl {
 public:
-    DemoEngine() : EngineImpl("demo") {}
     ppl::common::RetCode Configure(uint32_t, ...) override {
         return ppl::common::RC_UNSUPPORTED;
     }
@@ -35,6 +34,9 @@ public:
     }
     ppl::common::RetCode ProcessGraph(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*) override;
     EngineImpl* Create() override;
+    const char* GetName() const override {
+        return "demo";
+    }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
     OptKernel* CreateOptKernel(const ir::Node* node) const override;

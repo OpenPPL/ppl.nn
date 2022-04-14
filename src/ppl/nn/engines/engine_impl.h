@@ -42,14 +42,7 @@ struct RuntimePartitionInfo;
 */
 class EngineImpl : public Engine {
 public:
-    /** @param name engine's name */
-    EngineImpl(const std::string& name) : name_(name) {}
-
     virtual ~EngineImpl() {}
-
-    const char* GetName() const override final {
-        return name_.c_str();
-    }
 
     /** @brief create a `Device` instance for `Runtime` instances */
     virtual EngineContext* CreateEngineContext() = 0;
@@ -75,9 +68,6 @@ public:
     virtual ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const = 0;
     virtual ppl::common::RetCode DeserializeData(const void*, uint64_t) = 0;
 #endif
-
-private:
-    const std::string name_;
 };
 
 }} // namespace ppl::nn

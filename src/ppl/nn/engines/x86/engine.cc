@@ -32,7 +32,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-X86Engine::X86Engine() : EngineImpl("x86"), device_(X86_DEFAULT_ALIGNMENT, ppl::common::GetCpuISA()) {
+X86Engine::X86Engine() : device_(X86_DEFAULT_ALIGNMENT, ppl::common::GetCpuISA()) {
 #ifndef PPL_USE_X86_AVX512
     auto isa = device_.GetISA();
     isa &= ~ppl::common::ISA_X86_AVX512;
