@@ -25,6 +25,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 struct ConvTransposeExtraParam {
     ConvAlgoInfo algo_info;
+    ConvFusionInfo fuse_info;
 };
 
 struct CudaConvTransposeParam {
