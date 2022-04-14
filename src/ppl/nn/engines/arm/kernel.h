@@ -64,10 +64,10 @@ protected:
     }
 
     ArmDevice* GetArmDevice() {
-        return reinterpret_cast<ArmDevice*>(GetEngineContext()->GetDevice());
+        return reinterpret_cast<ArmDevice*>(GetDevice());
     }
     const ArmDevice* GetArmDevice() const {
-        return reinterpret_cast<const ArmDevice*>(GetEngineContext()->GetDevice());
+        return reinterpret_cast<const ArmDevice*>(GetDevice());
     }
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING

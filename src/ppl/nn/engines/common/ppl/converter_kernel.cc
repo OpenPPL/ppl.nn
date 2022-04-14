@@ -30,7 +30,7 @@ RetCode ConverterKernel::DoExecute(KernelExecContext* ctx) {
         return RC_INVALID_VALUE;
     }
 
-    auto kernel_device = GetEngineContext()->GetDevice();
+    auto kernel_device = GetDevice();
     utils::GenericCpuDevice tmp_cpu_device;
     for (uint32_t i = 0; i < ctx->GetInputCount(); ++i) {
         auto src = ctx->GetInput<TensorImpl>(i);

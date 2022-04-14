@@ -73,7 +73,7 @@ static RetCode InitRuntimeGraphResourceKernels(const ir::GraphTopo* topo, const 
                 LOG(ERROR) << "create kernel[" << (*o)->GetNode()->GetName() << "] failed.";
                 return RC_OTHER_ERROR;
             }
-            impl->SetEngineContext(ctx);
+            impl->SetDevice(ctx->GetDevice());
             graph->nodeid2kernel[(*o)->GetNode()->GetId()].reset(impl);
         }
     }
@@ -105,7 +105,7 @@ static RetCode InitRuntimeGraphResourceInputs(const ir::GraphTopo* topo, const R
 
                 // Consumers of an input are in the same engine. This is guranteed by optimizer.
                 auto kernel = graph->nodeid2kernel[nid_ref->second].get();
-                tensor->SetDevice(kernel->GetEngineContext()->GetDevice());
+                tensor->SetDevice(kernel->GetDevice());
                 break;
             }
 
@@ -147,7 +147,7 @@ static RetCode InitRuntimeGraphResourceExtraInputs(const ir::GraphTopo* topo, co
 
                 // Consumers of an input are in the same engine. This is guranteed by optimizer.
                 auto kernel = graph->nodeid2kernel[nid_ref->second].get();
-                tensor->SetDevice(kernel->GetEngineContext()->GetDevice());
+                tensor->SetDevice(kernel->GetDevice());
                 break;
             }
 
@@ -184,7 +184,7 @@ RetCode InitRuntimeGraphResourceOutputs(const ir::GraphTopo* topo, const Runtime
                 }
 
                 auto kernel = graph->nodeid2kernel[nid_ref->second].get();
-                tensor->SetDevice(kernel->GetEngineContext()->GetDevice());
+                tensor->SetDevice(kernel->GetDevice());
             }
 
             auto shape_ref = info.shapes.find(edge->GetId());

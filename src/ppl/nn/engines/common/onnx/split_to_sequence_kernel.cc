@@ -155,7 +155,7 @@ static RetCode CheckInputDataType(TensorImpl* input0) {
 RetCode SplitToSequenceKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto split = ctx->GetInput<TensorImpl>(1);
-    auto device = GetEngineContext()->GetDevice();
+    auto device = GetDevice();
 
     auto status = CheckInputDataType(input);
     if (status != RC_SUCCESS) {
