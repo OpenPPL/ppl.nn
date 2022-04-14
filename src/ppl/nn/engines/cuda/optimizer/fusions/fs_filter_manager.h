@@ -25,6 +25,7 @@
 #include "ppl/nn/engines/cuda/optimizer/fusions/fs_concat.h"
 #include "ppl/nn/engines/cuda/optimizer/fusions/fs_conv.h"
 #include "ppl/nn/engines/cuda/optimizer/fusions/fs_gemm.h"
+#include "ppl/nn/engines/cuda/optimizer/fusions/fs_convtranspose.h"
 #include "ppl/nn/engines/cuda/optimizer/fusions/fs_softmax.h"
 #include "ppl/nn/engines/cuda/optimizer/fusions/fs_batch_normalization.h"
 #include "ppl/nn/engines/cuda/optimizer/fusions/fs_instance_normalization.h"
@@ -53,6 +54,7 @@ private:
     ChannelShuffleFusion channel_shuffle_fs_;
     ConvFusion conv_fs_;
     GemmFusion gemm_fs_;
+    ConvTransposeFusion convtranspose_fs_;
     SoftmaxFusion softmax_fs_;
     BatchNormalizationFusion batchnorm_fs_;
     InstanceNormalizationFusion instancenorm_fs_;
