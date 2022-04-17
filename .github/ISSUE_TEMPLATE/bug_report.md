@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-## What are the problems?(snapshots or detailed error messages)
+## What are the problems?(screenshots or detailed error messages)
 
 ## Which version(commit id or tag) of ppl.nn is used?
 
@@ -21,4 +21,4 @@ assignees: ''
 
 ## minimal code snippets for reproducing these problems(if necessary)
 
-## models and inputs for reproducing these problems (sends them to openppl.ai@hotmail.com if necessary)
+## models and inputs for reproducing these problems (send them to openppl.ai@hotmail.com if necessary)
