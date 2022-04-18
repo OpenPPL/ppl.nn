@@ -19,7 +19,6 @@
 
 #include <chrono>
 
-
 #include "ppl/common/cuda/cuda_types.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/utils/utils.h"
@@ -44,7 +43,11 @@ bool TuringHMMAImpgemm::IsSupported(const ir::Node* node, const OptKernelOptions
                                     dataformat_t input_format) const {
     uint32_t group = (reinterpret_cast<CudaConvParam*>(options.param))->param.group;
     // check if conv is depthwise
+    const TensorShape& tensor0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
     const TensorShape& tensor1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
+    if (tensor0.GetDataType() != ppl::common::DATATYPE_FLOAT16) {
+        return false;
+    }
     if (group == tensor1.GetDim(0) && tensor1.GetDim(1) == 1 && group != 1) {
         return false;
     }
@@ -138,8 +141,8 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
                                                 attr_param_.extra_param.algo_info, temp_conv_param, temp_fuse_param);
 #endif
     CudaArgs::AlgoSelects algo_select;
-    algo_select.kname  = attr_param_.extra_param.algo_info.algo_name;
-    algo_select.kid    = attr_param_.extra_param.algo_info.kid;
+    algo_select.kname = attr_param_.extra_param.algo_info.algo_name;
+    algo_select.kid = attr_param_.extra_param.algo_info.kid;
     algo_select.splitk = attr_param_.extra_param.algo_info.splitk;
     algo_select.splitf = attr_param_.extra_param.algo_info.splitf;
     options.algos->emplace(key_str, std::move(algo_select));

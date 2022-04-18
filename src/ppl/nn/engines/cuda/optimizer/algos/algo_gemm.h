@@ -33,6 +33,8 @@ public:
         gemm_formats_.emplace(DATAFORMAT_NHWC8, nhwc8);
         std::set<dataformat_t> nhwc16{DATAFORMAT_NHWC16};
         gemm_formats_.emplace(DATAFORMAT_NHWC16, nhwc16);
+        std::set<dataformat_t> nchw{DATAFORMAT_NDARRAY};
+        gemm_formats_.emplace(DATAFORMAT_NDARRAY, nchw);
     }
 
     const std::map<dataformat_t, std::set<dataformat_t>> Getformats(const std::string& type_name) const override {
@@ -42,8 +44,7 @@ public:
 public:
     void GetAttrParam(void*& param) const override;
     void DeleteAttrParam(void*& param) override;
-    bool IsSupported(const ir::Node* node, const OptKernelOptions& options,
-                     dataformat_t input_format) const override;
+    bool IsSupported(const ir::Node* node, const OptKernelOptions& options, dataformat_t input_format) const override;
     double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) override;
     RetCode ModifyParam(ir::Node* node, OptKernelOptions& options) override;
     void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
