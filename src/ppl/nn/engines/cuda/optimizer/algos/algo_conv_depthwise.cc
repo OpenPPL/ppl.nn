@@ -44,8 +44,12 @@ bool DepthwiseDirect::IsSupported(const ir::Node* node, const OptKernelOptions& 
                                   dataformat_t input_format) const {
     uint32_t group = (reinterpret_cast<CudaConvParam*>(options.param))->param.group;
     // check if conv is depthwise
+    const TensorShape& tensor0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
     const TensorShape& tensor1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
     if (group != tensor1.GetDim(0) || tensor1.GetDim(1) != 1 || group == 1) {
+        return false;
+    }
+    if (tensor0.GetDataType() != ppl::common::DATATYPE_FLOAT16) {
         return false;
     }
     // check if conv is quantization
@@ -118,13 +122,16 @@ double DepthwiseDirect::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
 
     // Do select
     auto stream = options.device->GetStream();
-    auto kernel_id = PPLCUDADepthwiseSelectKernel(stream, input_buffer.addr, weight_buffer.addr, bias_buffer.addr, 1,
-                                                  temp_conv_param, temp_fuse_param, output_buffer.addr, shape_out.GetDataType(), input_quant0.scale[0], (float*)quant_buffer.addr, output_quant.scale[0]);
+    auto kernel_id =
+        PPLCUDADepthwiseSelectKernel(stream, input_buffer.addr, weight_buffer.addr, bias_buffer.addr, 1,
+                                     temp_conv_param, temp_fuse_param, output_buffer.addr, shape_out.GetDataType(),
+                                     input_quant0.scale[0], (float*)quant_buffer.addr, output_quant.scale[0]);
     attr_param_.extra_param.algo_info.kid = kernel_id;
 
     auto run_begin_ts = std::chrono::system_clock::now();
     PPLCUDADepthwiseForwardCudaImp(stream, kernel_id, input_buffer.addr, weight_buffer.addr, bias_buffer.addr,
-                                   temp_conv_param, temp_fuse_param, output_buffer.addr, shape_out.GetDataType(), input_quant0.scale[0], (float*)quant_buffer.addr, output_quant.scale[0]);
+                                   temp_conv_param, temp_fuse_param, output_buffer.addr, shape_out.GetDataType(),
+                                   input_quant0.scale[0], (float*)quant_buffer.addr, output_quant.scale[0]);
     auto run_end_ts = std::chrono::system_clock::now();
     auto diff = std::chrono::duration_cast<std::chrono::microseconds>(run_end_ts - run_begin_ts);
     double timer = (double)diff.count() / 1000;
@@ -193,10 +200,10 @@ RetCode DepthwiseDirect::ModifyParam(ir::Node* node, OptKernelOptions& options) 
         const TensorShape& shape_in1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
         const TensorShape& shape_out = *options.tensors->find(node->GetOutput(0))->second->GetShape();
 
-
         ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_, temp_conv_param);
         auto stream = options.device->GetStream();
-        PPLCUDADepthwiseConvertFilter(stream, temp_buffer.addr, constant_info.GetBufferDesc().addr, temp_conv_param, shape_out.GetDataType());
+        PPLCUDADepthwiseConvertFilter(stream, temp_buffer.addr, constant_info.GetBufferDesc().addr, temp_conv_param,
+                                      shape_out.GetDataType());
 
         options.info->constants.emplace(preedge_id, std::move(constant_info));
         *options.tensors->find(preedge_id)->second->GetShape() = postshape;
