@@ -12,6 +12,18 @@ file(GLOB_RECURSE PPLNN_ARM_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/arm/*.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/arm/*.S)
 list(APPEND PPLNN_SOURCES ${PPLNN_ARM_SRC})
 
+if(${ANDROID_ABI} STREQUAL "arm64-v8a")
+    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-asm-operand-widths")
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+        add_link_options("-llog")
+        add_link_options("-static-openmp")
+    endif()
+
+    set(PPLNN_USE_ARM OFF)
+endif()
+
 add_subdirectory(src/ppl/nn/engines/arm/impls)
 
 list(APPEND PPLNN_LINK_LIBRARIES pplkernelarmserver_static)
