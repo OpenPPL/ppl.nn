@@ -47,7 +47,7 @@ endif()
 
 FetchContent_Declare(hpcc
     GIT_REPOSITORY https://github.com/openppl-public/hpcc.git
-    GIT_TAG 1b714b9f895374413e3c4b7f33ff24e34bd71d71
+    GIT_TAG 888a2960c20ed7c5a8cff5a1dc0c18244feec38e
     SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
     SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
@@ -68,7 +68,7 @@ set(PPLCOMMON_HOLD_DEPS ${PPLNN_HOLD_DEPS})
 
 hpcc_declare_git_dep(pplcommon
     https://github.com/openppl-public/ppl.common.git
-    acdaa80417cda72f040dcdb564db8f4df04ad58d)
+    edaee076831a619af032348d5c5f2c304aa49c7b)
 
 # --------------------------------------------------------------------------- #
 
@@ -106,8 +106,8 @@ set(PYBIND11_NOPYTHON ON CACHE BOOL "do not find python")
 set(PYBIND11_FINDPYTHON OFF CACHE BOOL "do not find python")
 
 hpcc_declare_pkg_dep(pybind11
-    https://github.com/pybind/pybind11/archive/refs/tags/v2.8.1.zip
-    9a6be23096afcafe9f4124a5054776eb)
+    https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.zip
+    399d924015f477723ddedbf6f044ab5b)
 
 # --------------------------------------------------------------------------- #
 
@@ -115,8 +115,8 @@ set(LUACPP_INSTALL OFF CACHE BOOL "")
 set(LUACPP_BUILD_TESTS OFF CACHE BOOL "")
 
 hpcc_declare_pkg_dep(luacpp
-    https://github.com/ouonline/lua-cpp/archive/7f2cb9fdfa208b8757b2d490ff943c78700bc882.zip
-    87332cd233dcad8b750ec4dbec7d1b9e)
+    https://github.com/ouonline/lua-cpp/archive/34c24e173a668f6738f07ee41730e4b4efcfe047.zip
+    bd0c825ec7c4befe814529be8fd4ac02)
 
 # --------------------------------------------------------------------------- #
 
