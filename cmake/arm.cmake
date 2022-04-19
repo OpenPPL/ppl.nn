@@ -1,5 +1,6 @@
 option(PPLNN_USE_ARMV8_2 "Build arm server kernel with armv8.2-a support." ON)
 option(PPLNN_USE_NUMA "build with libnuma" OFF)
+option(PPLNN_USE_ANDROID_NDK "build with android ndk" OFF)
 
 set(PPLNN_USE_ARM ON)
 set(PPLCOMMON_USE_ARMV8_2 ${PPLNN_USE_ARMV8_2})
@@ -12,7 +13,11 @@ file(GLOB_RECURSE PPLNN_ARM_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/arm/*.cc ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/arm/*.S)
 list(APPEND PPLNN_SOURCES ${PPLNN_ARM_SRC})
 
-if(${ANDROID_ABI} STREQUAL "arm64-v8a")
+if ((DEFINED ANDROID_PLATFORM) AND (DEFINED ANDROID_ABI) AND (EXISTS ${CMAKE_TOOLCHAIN_FILE}))
+    set(PPLNN_USE_ANDROID_NDK ON)
+endif()
+
+if(PPLNN_USE_ANDROID_NDK)
     # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-asm-operand-widths")
     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
@@ -21,7 +26,7 @@ if(${ANDROID_ABI} STREQUAL "arm64-v8a")
         add_link_options("-static-openmp")
     endif()
 
-    set(PPLNN_USE_ARM OFF)
+    set(PPLNN_USE_NUMA OFF)
 endif()
 
 add_subdirectory(src/ppl/nn/engines/arm/impls)
