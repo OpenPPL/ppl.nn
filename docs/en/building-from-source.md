@@ -148,6 +148,12 @@ If your system has multiple NUMA nodes, it is recommended to build with `PPLNN_U
 ./build.sh -DHPCC_USE_AARCH64=ON -DPPLNN_USE_NUMA=ON
 ```
 
+If you want to run on mobile platforms, please use the Android NDK package:
+
+```bash
+./build.sh -DHPCC_USE_AARCH64=ON -DANDROID_PLATFORM=android-22 -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=ON -DCMAKE_TOOLCHAIN_FILE=<path_to_android_ndk_package>/android-ndk-r22b/build/cmake/android.toolchain.cmake
+```
+
 ### Buliding Python API support
 
 add `-DPPLNN_ENABLE_PYTHON_API=ON` to the build command if you want to use `PPLNN` in python:

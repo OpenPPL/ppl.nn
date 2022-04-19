@@ -17,7 +17,9 @@ set(PPL_KERNEL_ARM_SERVER_LINK_LIBRARIES )
 if(PPL_USE_ARM_SERVER_OMP)
     find_package(Threads REQUIRED)
     find_package(OpenMP REQUIRED)
-    list(APPEND PPL_KERNEL_ARM_SERVER_LINK_LIBRARIES OpenMP::OpenMP_CXX)
+    if(NOT PPLNN_USE_ANDROID_NDK)
+        list(APPEND PPL_KERNEL_ARM_SERVER_LINK_LIBRARIES OpenMP::OpenMP_CXX)
+    endif()
 endif()
 
 list(APPEND PPL_KERNEL_ARM_SERVER_LINK_LIBRARIES pplcommon_static)
@@ -62,6 +64,9 @@ endif()
 ### targets ############
 #### #### #### #### ####
 add_library(pplkernelarmserver_static STATIC ${PPL_KERNEL_ARM_SERVER_SRC})
+if(PPLNN_USE_ANDROID_NDK)
+    target_link_options(pplkernelarmserver_static PRIVATE "-static-openmp")
+endif()
 target_link_libraries(pplkernelarmserver_static PRIVATE ${PPL_KERNEL_ARM_SERVER_LINK_LIBRARIES})
 target_include_directories(pplkernelarmserver_static
     PUBLIC ${PPL_KERNEL_ARM_SERVER_INCLUDE_DIRECTORIES}

@@ -18,8 +18,8 @@
 #ifndef __ST_PPL_KERNEL_ARM_SERVER_RESIZE2D_NEON_RESIZE2D_NDARRAY_COMMON_H_
 #define __ST_PPL_KERNEL_ARM_SERVER_RESIZE2D_NEON_RESIZE2D_NDARRAY_COMMON_H_
 
+#include <cmath>
 #include <vector>
-#include <math.h>
 #include <arm_neon.h>
 
 #include "ppl/kernel/arm_server/common/internal_include.h"

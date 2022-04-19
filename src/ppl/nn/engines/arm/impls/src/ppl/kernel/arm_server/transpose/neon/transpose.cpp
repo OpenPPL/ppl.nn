@@ -30,7 +30,7 @@ struct continuous_dims {
     int64_t start = 0;
     int64_t end   = 0;
     int64_t idx   = 0;
-    bool operator<(const continuous_dims &p)
+    bool operator<(const continuous_dims &p) const
     {
         return this->start < p.start;
     }
