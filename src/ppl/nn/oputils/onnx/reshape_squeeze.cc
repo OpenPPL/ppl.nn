@@ -27,8 +27,8 @@ namespace ppl { namespace nn { namespace oputils {
 
 RetCode ReshapeSqueeze(InputOutputInfo* info, const void* arg) {
     auto param = (const SqueezeParam*)arg;
-    if (info->GetInputCount() != 1 || info->GetOutputCount() != 1) {
-        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 1 or output count["
+    if (info->GetInputCount() > 2 || info->GetOutputCount() != 1) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] > 2 or output count["
                    << info->GetOutputCount() << "] != 1.";
         return RC_INVALID_VALUE;
     }

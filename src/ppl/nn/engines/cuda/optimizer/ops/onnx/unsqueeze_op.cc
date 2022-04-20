@@ -29,7 +29,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 RetCode UnsqueezeOp::Init(const OptKernelOptions& options) {
     auto status = GenericLoadParam<UnsqueezeParam>(options, &param_);
-    if (status != RC_SUCCESS) {
+    if (status != RC_SUCCESS && GetNode()->GetType().version < 13) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
     }
@@ -43,10 +43,24 @@ RetCode UnsqueezeOp::Init(const OptKernelOptions& options) {
         } else {
             status = InferDefaultType(info, type);
         }
+        if (info->GetInputCount() > 1) {
+            auto shape = info->GetInput<TensorImpl>(1)->GetShape();
+            shape->SetDataType(DATATYPE_INT64);
+        }
         return status;
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        if (info->GetInputCount() > 1) {
+            auto axes_input = info->GetInput<TensorImpl>(1);
+            auto size = axes_input->GetShape()->GetElementsExcludingPadding();
+            this->param_.axes.resize(size);
+            auto axes_data = (int64_t*)malloc(size*sizeof(int64_t));
+            axes_input->CopyToHost(axes_data);
+            for (uint32_t i = 0; i < size; ++i) {
+                this->param_.axes[i] = axes_data[i];
+            }
+        }
         return oputils::ReshapeUnsqueeze(info, &param_);
     };
 

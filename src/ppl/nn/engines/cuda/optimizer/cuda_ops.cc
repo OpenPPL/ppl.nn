@@ -71,11 +71,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/pad_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/pow_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/range_op.h"
-#include "ppl/nn/engines/cuda/optimizer/ops/onnx/reduce_max_op.h"
-#include "ppl/nn/engines/cuda/optimizer/ops/onnx/reduce_min_op.h"
-#include "ppl/nn/engines/cuda/optimizer/ops/onnx/reduce_mean_op.h"
-#include "ppl/nn/engines/cuda/optimizer/ops/onnx/reduce_prod_op.h"
-#include "ppl/nn/engines/cuda/optimizer/ops/onnx/reduce_sum_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/reduce_l2_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/relu_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/reshape_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/resize_op.h"
@@ -186,6 +182,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<PowOp>("", "Pow", 7, 11);
     // R
     RegisterOptKernelCreator<RangeOp>("", "Range", 11, 16);
+    RegisterOptKernelCreator<ReduceL2Op>("", "ReduceL2", 1, 16);
     RegisterOptKernelCreator<ReduceOp>("", "ReduceMax", 1, 16);
     RegisterOptKernelCreator<ReduceOp>("", "ReduceMean", 1, 16);
     RegisterOptKernelCreator<ReduceOp>("", "ReduceMin", 1, 16);
