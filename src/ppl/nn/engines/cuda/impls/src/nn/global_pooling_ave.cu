@@ -235,19 +235,19 @@ __global__ void ppl_cukernel_pooling_ave_global_shuffle_int8_NHWC(
     if (c >= pad_channels)
         return;
 
-    int32_t res = 0;
+    int64_t res = 0;
     // main loop
     for (int i = threadIdx.y; i < HW; i += blockDim.y) {
         int8_t ival = input[b_offset * HW + i * pad_channels + c];
         res = res + ival;
     }
-    __shared__ int32_t sum_buffer[8][32];
+    __shared__ int64_t sum_buffer[8][32];
     sum_buffer[threadIdx.y][threadIdx.x] = res;
     __syncthreads();
 
     for (int i = (blockDim.y >> 1); i > 0; i = (i >> 1)) {
         if (threadIdx.y < i) {
-            int32_t res                            = sum_buffer[threadIdx.y + i][threadIdx.x];
+            int64_t res                            = sum_buffer[threadIdx.y + i][threadIdx.x];
             res                                   = res + sum_buffer[threadIdx.y][threadIdx.x];
             sum_buffer[threadIdx.y][threadIdx.x] = res;
             __syncthreads();
