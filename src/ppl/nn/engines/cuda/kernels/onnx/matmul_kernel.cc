@@ -67,7 +67,6 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
     // convert filter only if the filter tensor is an output of another kernel
     BufferDesc weight_buffer;
     auto newshape = *weight->GetShape();
-    //if (!param_->extra_param.is_initializer_weight) {
     {
         auto align_size = 8;
         auto dim_count = newshape.GetDimCount();

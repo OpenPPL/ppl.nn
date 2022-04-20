@@ -15,15 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/kernels/onnx/reduce_mean_kernel.h"
+#include "ppl/nn/engines/cuda/kernels/onnx/reduce_l2_kernel.h"
 
 #include <numeric>
 
 #include "cudakernel/reduce/reduce.h"
+#include "cudakernel/unary/unary.h"
+#include "ppl/nn/utils/destructor.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-ppl::common::RetCode ReduceMeanKernel::DoExecute(KernelExecContext* ctx) {
+ppl::common::RetCode ReduceL2Kernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
     ReduceParam param = ReduceMean;
@@ -51,9 +53,26 @@ ppl::common::RetCode ReduceMeanKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     PPLReduceDimDes des(n_inner, n_reduce, n_outer);
-    ppl::common::RetCode status =
-        PPLCUDAReduceForwardImp(GetStream(), param, des, input->GetShape(), input->GetBufferPtr(), output->GetShape(),
-                                output->GetBufferPtr());
+    BufferDesc tmp_buffer_desc;
+    auto size = input->GetShape()->GetBytesIncludingPadding();
+    auto status = GetCudaDevice()->AllocTmpBuffer(size, &tmp_buffer_desc);
+    if (status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "alloc tmp buffer size[" << size << "] for kernel[" << GetName()
+                << "] failed: " << ppl::common::GetRetCodeStr(status);
+        return status;
+    }
+    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+        GetCudaDevice()->FreeTmpBuffer(&tmp_buffer_desc);
+    });
+
+    status = PPLCUDAUnarySquareForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(),
+                                                        input->GetShape(), tmp_buffer_desc.addr);
+    if (status != ppl::common::RC_SUCCESS) return status;
+    status = PPLCUDAReduceForwardImp(GetStream(), param, des, input->GetShape(), tmp_buffer_desc.addr, output->GetShape(),
+                                                        output->GetBufferPtr());
+    if (status != ppl::common::RC_SUCCESS) return status;
+    status = PPLCUDAUnarySqrtForwardImp(GetStream(), output->GetShape(), output->GetBufferPtr(),
+                                                        output->GetShape(), output->GetBufferPtr());
     return status;
 }
 

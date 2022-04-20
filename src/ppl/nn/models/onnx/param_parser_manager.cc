@@ -195,6 +195,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "PRelu", 6, 16);
     // R
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Range", 11, 16);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceL2", 1, 16, ppl::nn::onnx::ReduceParam, ParseReduceParam);
     PPL_REGISTER_OP_WITH_PARAM("", "ReduceMax", 1, 16, ppl::nn::onnx::ReduceParam, ParseReduceParam);
     PPL_REGISTER_OP_WITH_PARAM("", "ReduceMean", 1, 16, ppl::nn::onnx::ReduceParam, ParseReduceParam);
     PPL_REGISTER_OP_WITH_PARAM("", "ReduceMin", 1, 16, ppl::nn::onnx::ReduceParam, ParseReduceParam);
@@ -218,7 +219,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITH_PARAM("", "SplitToSequence", 11, 16, ppl::nn::onnx::SplitToSequenceParam,
                                ParseSplitToSequenceParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Sqrt", 6, 16);
-    PPL_REGISTER_OP_WITH_PARAM("", "Squeeze", 1, 12, ppl::nn::onnx::SqueezeParam, ParseSqueezeParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Squeeze", 1, 16, ppl::nn::onnx::SqueezeParam, ParseSqueezeParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Sub", 7, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Sum", 6, 16);
     // T
@@ -227,7 +228,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITH_PARAM("", "TopK", 1, 16, ppl::nn::onnx::TopKParam, ParseTopKParam);
     PPL_REGISTER_OP_WITH_PARAM("", "Transpose", 1, 16, ppl::nn::onnx::TransposeParam, ParseTransposeParam);
     // U
-    PPL_REGISTER_OP_WITH_PARAM("", "Unsqueeze", 1, 12, ppl::nn::onnx::UnsqueezeParam, ParseUnsqueezeParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Unsqueeze", 1, 16, ppl::nn::onnx::UnsqueezeParam, ParseUnsqueezeParam);
     // W
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Where", 9, 16);
 

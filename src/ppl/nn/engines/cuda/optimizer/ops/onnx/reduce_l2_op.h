@@ -15,28 +15,24 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_ONNX_REDUCE_MAX_KERNEL_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_ONNX_REDUCE_MAX_KERNEL_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_REDUCE_L2_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_REDUCE_L2_OP_H_
 
-#include "ppl/nn/engines/cuda/kernel.h"
+#include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 
 #include "ppl/nn/params/onnx/reduce_param.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-class ReduceMaxKernel : public CudaKernel {
+class ReduceL2Op final : public CudaOptKernel {
 public:
-    ReduceMaxKernel(const ir::Node* node) : CudaKernel(node) {}
-
-    void SetParam(const ppl::nn::onnx::ReduceParam* p) {
-        param_ = p;
-    }
-
-private:
-    ppl::common::RetCode DoExecute(KernelExecContext*) override;
+    ReduceL2Op(const ir::Node* node) : CudaOptKernel(node) {}
+    KernelImpl* CreateKernelImpl() const override;
+    ppl::common::RetCode Init(const OptKernelOptions&) override;
+    ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
 private:
-    const ppl::nn::onnx::ReduceParam* param_ = nullptr;
+    ppl::nn::onnx::ReduceParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

@@ -30,6 +30,7 @@ struct ReduceParam final {
         ReduceMin = 2,
         ReduceProd = 3,
         ReduceMean = 4,
+        ReduceL2 = 5,
         ReduceUnknown = 5,
     } reduce_type_t;
 

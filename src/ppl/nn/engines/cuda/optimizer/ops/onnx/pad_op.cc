@@ -56,7 +56,6 @@ RetCode PadOp::Init(const OptKernelOptions& options) {
         uint32_t dim_count = shape.GetDimCount();
 
         if (info->GetInputCount() == 1) {
-            LOG(ERROR) << "pad name for singe input " << GetNode()->GetName();
             return oputils::ReshapePad(info, &param_);
         } else {
             auto pad = info->GetInput<TensorImpl>(1);

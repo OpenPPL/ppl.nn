@@ -48,6 +48,13 @@ ppl::common::RetCode PPLCUDAUnarySqrtForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output);
 
+ppl::common::RetCode PPLCUDAUnarySquareForwardImp(
+    cudaStream_t stream,
+    const ppl::nn::TensorShape* input_shape,
+    const void* input,
+    const ppl::nn::TensorShape* output_shape,
+    void* output);
+
 ppl::common::RetCode PPLCUDAUnaryTanHForwardImp(
     cudaStream_t stream,
     const ppl::nn::TensorShape* input_shape,

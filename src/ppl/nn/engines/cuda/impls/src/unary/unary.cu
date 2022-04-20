@@ -24,6 +24,7 @@ enum UnaryOpType {
     Unary_Relu,
     Unary_Sigmoid,
     Unary_Sqrt,
+    Unary_Square,
     Unary_TanH,
     Unary_Floor,
     Unary_Ceil,
@@ -116,6 +117,24 @@ template <>
 __device__ __inline__ int8_t ppl_scalar_unary<Unary_Sqrt, int8_t>(const int8_t& in_val)
 {
     return int8_t(sqrt(float(in_val)));
+}
+
+template <>
+__device__ __inline__ float ppl_scalar_unary<Unary_Square, float>(const float& in_val)
+{
+    return in_val * in_val;
+}
+
+template <>
+__device__ __inline__ half ppl_scalar_unary<Unary_Square, half>(const half& in_val)
+{
+    return in_val * in_val;
+}
+
+template <>
+__device__ __inline__ int8_t ppl_scalar_unary<Unary_Square, int8_t>(const int8_t& in_val)
+{
+    return in_val * in_val;
 }
 
 template <>
@@ -272,6 +291,7 @@ UNARY_INSTANT(Relu);
 UNARY_INSTANT(TanH);
 UNARY_INSTANT(Sigmoid);
 UNARY_INSTANT(Sqrt);
+UNARY_INSTANT(Square);
 UNARY_INSTANT(Floor);
 UNARY_INSTANT(Ceil);
 UNARY_INSTANT(Erf);
