@@ -28,11 +28,16 @@ uint64_t MaxPoolKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     if (param_->global_pooling == 0 && param_->pads.size() >= 2) {
         pad_w = param_->pads[1];
     }
-    if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-        return kernel::x86::maxpool2d_fp32_get_buffer_bytes(src->GetShape(), dst->GetShape(), pad_w);
-    } else {
+
+    const auto data_type = src->GetShape()->GetDataType();
+    const auto data_format = src->GetShape()->GetDataFormat();
+    if (data_format != ppl::common::DATAFORMAT_NDARRAY)
         return 64u;
-    }
+    if (data_type != ppl::common::DATATYPE_FLOAT32)
+        return 64u;
+    if (MayUseISA(ppl::common::ISA_X86_SSE))
+        return kernel::x86::maxpool2d_fp32_get_buffer_bytes(src->GetShape(), dst->GetShape(), pad_w);
+    return 64u;
 }
 
 ppl::common::RetCode MaxPoolKernel::DoExecute(KernelExecContext* ctx) {
@@ -131,17 +136,17 @@ ppl::common::RetCode MaxPoolKernel::DoExecute(KernelExecContext* ctx) {
                 }
 #ifdef PPL_USE_X86_AVX512
                 else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
-                    return ppl::kernel::x86::maxpool2d_n16chw_blk1x16_fp32_avx512(
+                    return ppl::kernel::x86::maxpool2d_n16cx_blk1x16_fp32_avx512(
                         X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
                         pad_h, pad_w, Y->GetBufferPtr<float>());
                 }
 #endif
                 else if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-                    return ppl::kernel::x86::maxpool2d_n16chw_blk1x8_fp32_avx(
+                    return ppl::kernel::x86::maxpool2d_n16cx_blk1x8_fp32_avx(
                         X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
                         pad_h, pad_w, Y->GetBufferPtr<float>());
                 } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-                    return ppl::kernel::x86::maxpool2d_n16chw_blk1x4_fp32_sse(
+                    return ppl::kernel::x86::maxpool2d_n16cx_blk1x4_fp32_sse(
                         X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
                         pad_h, pad_w, Y->GetBufferPtr<float>());
                 } else {
@@ -152,12 +157,15 @@ ppl::common::RetCode MaxPoolKernel::DoExecute(KernelExecContext* ctx) {
             }
         } else if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
             if (data_type == ppl::common::DATATYPE_FLOAT32) {
-                // return ppl::kernel::x86::maxpool2d_nchw_normal_fp32(
-                //     X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
-                //     pad_h, pad_w, Y->GetBufferPtr<float>());
-                return ppl::kernel::x86::maxpool2d_ndarray_normal_fp32_sse(
-                    X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
-                    pad_h, pad_w, tmp_buffer, Y->GetBufferPtr<float>());
+                if (MayUseISA(ppl::common::ISA_X86_SSE)) {
+                    return ppl::kernel::x86::maxpool2d_ndarray_normal_fp32_sse(
+                        X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
+                        pad_h, pad_w, tmp_buffer, Y->GetBufferPtr<float>());
+                } else {
+                    return ppl::kernel::x86::maxpool2d_ndarray_normal_fp32(
+                        X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
+                        pad_h, pad_w, Y->GetBufferPtr<float>());
+                }
             } else {
                 LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";
             }
@@ -167,7 +175,7 @@ ppl::common::RetCode MaxPoolKernel::DoExecute(KernelExecContext* ctx) {
     } else if (ctx->GetOutputCount() == 2) {
         if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
             if (data_type == ppl::common::DATATYPE_FLOAT32) {
-                return ppl::kernel::x86::maxpool2d_nchw_with_indices_fp32(
+                return ppl::kernel::x86::maxpool2d_ndarray_with_indices_fp32(
                     X->GetShape(), Y->GetShape(), X->GetBufferPtr<float>(), kernel_h, kernel_w, stride_h, stride_w,
                     pad_h, pad_w, Y->GetBufferPtr<float>(), Indices->GetBufferPtr<int64_t>());
             } else {

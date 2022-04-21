@@ -21,43 +21,35 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-ppl::common::RetCode max_unpool_nchw_fp32(
+ppl::common::RetCode max_unpool_ndarray_fp32(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
     const float *src,
     const int64_t *indices,
     float *dst)
 {
-    const int64_t batch    = src_shape->GetDim(0);
-    const int64_t channels = src_shape->GetDim(1);
-    const int64_t src_h    = src_shape->GetDim(2);
-    const int64_t src_w    = src_shape->GetDim(3);
-    const int64_t dst_h    = dst_shape->GetDim(2);
-    const int64_t dst_w    = dst_shape->GetDim(3);
+    auto dim_count = src_shape->GetDimCount();
+    const int64_t channels_dim = dim_count > 1 ? src_shape->GetDim(1) : 1;
+    const int64_t outer_dim = src_shape->GetDim(0) * channels_dim;
+    int64_t src_inner_dim = 1;
+    int64_t dst_inner_dim = 1;
+    for (uint32_t i = 2; i < dim_count; ++i) {
+        src_inner_dim *= src_shape->GetDim(i);
+        dst_inner_dim *= dst_shape->GetDim(i);
+    }
 
-#ifdef PPL_USE_X86_OMP_COLLAPSE
-    PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)
-#endif
-    for (int64_t n = 0; n < batch; n++) {
-#ifndef PPL_USE_X86_OMP_COLLAPSE
-        PRAGMA_OMP_PARALLEL_FOR()
-#endif
-        for (int64_t c = 0; c < channels; c++) {
-            const float *p_src       = src + (n * channels + c) * src_h * src_w;
-            const int64_t *p_indices = indices + (n * channels + c) * src_h * src_w;
-            float *p_dst             = dst + (n * channels + c) * dst_h * dst_w;
+    PRAGMA_OMP_PARALLEL_FOR()
+    for (int64_t n = 0; n < outer_dim; n++) {
+        const float *p_src       = src + n * src_inner_dim;
+        const int64_t *p_indices = indices + n * src_inner_dim;
+        float *p_dst             = dst + n * dst_inner_dim;
 
-            memset(p_dst, 0, dst_h * dst_w * sizeof(float));
+        memset(p_dst, 0, dst_inner_dim * sizeof(float));
 
-            const int64_t indices_offset = c * dst_h * dst_w;
-            for (int64_t ih = 0; ih < src_h; ih++) {
-                for (int64_t iw = 0; iw < src_w; iw++) {
-                    const int64_t src_index = ih * src_w + iw;
-                    const float data        = p_src[src_index];
-                    const int64_t dst_index = p_indices[src_index] - indices_offset;
-                    p_dst[dst_index]        = data;
-                }
-            }
+        const int64_t c = n % channels_dim;
+        const int64_t indices_offset = c * dst_inner_dim;
+        for (int64_t i = 0; i < src_inner_dim; ++i) {
+            p_dst[p_indices[i] - indices_offset] = p_src[i];
         }
     }
 

@@ -22,10 +22,10 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-// averagepool2d n16chw blk
+// averagepool2d n16cx blk
 
 #ifdef PPL_USE_X86_AVX512
-ppl::common::RetCode averagepool2d_n16chw_blk1x16_fp32_avx512(
+ppl::common::RetCode averagepool2d_n16cx_blk1x16_fp32_avx512(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
     const float *src,
@@ -40,7 +40,7 @@ ppl::common::RetCode averagepool2d_n16chw_blk1x16_fp32_avx512(
     float *dst);
 #endif
 
-ppl::common::RetCode averagepool2d_n16chw_blk1x8_fp32_avx(
+ppl::common::RetCode averagepool2d_n16cx_blk1x8_fp32_avx(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
     const float *src,
@@ -54,7 +54,7 @@ ppl::common::RetCode averagepool2d_n16chw_blk1x8_fp32_avx(
     const int64_t ceil_mode,
     float *dst);
 
-ppl::common::RetCode averagepool2d_n16chw_blk1x4_fp32_sse(
+ppl::common::RetCode averagepool2d_n16cx_blk1x4_fp32_sse(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
     const float *src,
@@ -68,9 +68,9 @@ ppl::common::RetCode averagepool2d_n16chw_blk1x4_fp32_sse(
     const int64_t ceil_mode,
     float *dst);
 
-// averagepool2d nchw normal
+// averagepool2d ndarray normal
 
-ppl::common::RetCode averagepool2d_nchw_normal_fp32(
+ppl::common::RetCode averagepool2d_ndarray_normal_fp32(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
     const float *src,

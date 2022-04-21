@@ -114,7 +114,7 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
             }
 #endif
             else if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-                return kernel::x86::resize2d_n16chw_pytorch_2linear_floor_fp32_avx(X->GetShape(), Y->GetShape(),
+                return kernel::x86::resize2d_n16cx_pytorch_2linear_floor_fp32_avx(X->GetShape(), Y->GetShape(),
                                                                                    X->GetBufferPtr<float>(), scale_h,
                                                                                    scale_w, Y->GetBufferPtr<float>());
             }

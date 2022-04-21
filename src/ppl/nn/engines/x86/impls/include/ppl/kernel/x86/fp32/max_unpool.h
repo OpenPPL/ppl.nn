@@ -22,7 +22,7 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-ppl::common::RetCode max_unpool_nchw_fp32(
+ppl::common::RetCode max_unpool_ndarray_fp32(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
     const float *src,
