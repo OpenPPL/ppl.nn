@@ -30,7 +30,7 @@ namespace ppl { namespace kernel { namespace x86 {
 #define SIMD_W()                 8
 
 template <int64_t spec_stride_w, int64_t w_len>
-static void maxpool2d_n16chw_1x8_kernel_fp32_avx(
+static void maxpool2d_n16cx_1x8_kernel_fp32_avx(
     const float *src,
     const maxpool2d_param *param,
     const int64_t oh,
@@ -114,44 +114,44 @@ static void maxpool2d_n16chw_1x8_kernel_fp32_avx(
     if (w_len >= 8) _mm256_storeu_ps(p_dst + 7 * c_blk_len + 1 * SIMD_W(), ymm15);
 }
 
-typedef void (*maxpool2d_n16chw_kernel_fp32_avx_func_t)(const float *, const maxpool2d_param *, const int64_t, const int64_t, const int64_t, const int64_t, float *);
-static const maxpool2d_n16chw_kernel_fp32_avx_func_t maxpool2d_n16chw_1x8_kernel_func_table[STRIDE_W_OPT()][POOLING_DST_W() + 1]{
+typedef void (*maxpool2d_n16cx_kernel_fp32_avx_func_t)(const float *, const maxpool2d_param *, const int64_t, const int64_t, const int64_t, const int64_t, float *);
+static const maxpool2d_n16cx_kernel_fp32_avx_func_t maxpool2d_n16cx_1x8_kernel_func_table[STRIDE_W_OPT()][POOLING_DST_W() + 1]{
     {
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<0, 0>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<0, 1>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<0, 2>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<0, 3>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<0, 4>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<0, 5>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<0, 6>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<0, 7>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<0, 8>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<0, 0>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<0, 1>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<0, 2>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<0, 3>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<0, 4>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<0, 5>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<0, 6>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<0, 7>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<0, 8>,
     },
     {
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<1, 0>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<1, 1>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<1, 2>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<1, 3>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<1, 4>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<1, 5>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<1, 6>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<1, 7>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<1, 8>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<1, 0>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<1, 1>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<1, 2>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<1, 3>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<1, 4>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<1, 5>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<1, 6>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<1, 7>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<1, 8>,
     },
     {
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<2, 0>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<2, 1>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<2, 2>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<2, 3>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<2, 4>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<2, 5>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<2, 6>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<2, 7>,
-        maxpool2d_n16chw_1x8_kernel_fp32_avx<2, 8>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<2, 0>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<2, 1>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<2, 2>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<2, 3>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<2, 4>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<2, 5>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<2, 6>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<2, 7>,
+        maxpool2d_n16cx_1x8_kernel_fp32_avx<2, 8>,
     },
 };
 
-static inline void maxpool2d_n16chw_border_fp32_avx(
+static inline void maxpool2d_n16cx_border_fp32_avx(
     const float *src,
     const maxpool2d_param *param,
     const int64_t oh,
@@ -197,7 +197,7 @@ static inline void maxpool2d_n16chw_border_fp32_avx(
     }
 }
 
-ppl::common::RetCode maxpool2d_n16chw_blk1x8_fp32_avx(
+ppl::common::RetCode maxpool2d_n16cx_blk1x8_fp32_avx(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
     const float *src,
@@ -232,7 +232,7 @@ ppl::common::RetCode maxpool2d_n16chw_blk1x8_fp32_avx(
             float *p_dst       = dst + bc * dst_h * dst_w;
             for (int64_t oh = 0; oh < dst_h; ++oh) {
                 for (int64_t ow = 0; ow < dst_w; ++ow) {
-                    maxpool2d_n16chw_border_fp32_avx(p_src, &param, oh, ow, p_dst);
+                    maxpool2d_n16cx_border_fp32_avx(p_src, &param, oh, ow, p_dst);
                 }
             }
         }
@@ -259,17 +259,17 @@ ppl::common::RetCode maxpool2d_n16chw_blk1x8_fp32_avx(
 
             int64_t ow = 0;
             for (; ow < dst_kernel_start_w; ++ow) {
-                maxpool2d_n16chw_border_fp32_avx(p_src, &param, oh, ow, p_dst);
+                maxpool2d_n16cx_border_fp32_avx(p_src, &param, oh, ow, p_dst);
             }
             for (; ow + POOLING_DST_W() <= dst_kernel_end_w; ow += POOLING_DST_W()) {
-                maxpool2d_n16chw_1x8_kernel_func_table[stride_w_select][POOLING_DST_W()](p_src, &param, oh, ow, ihstart, ihend, p_dst);
+                maxpool2d_n16cx_1x8_kernel_func_table[stride_w_select][POOLING_DST_W()](p_src, &param, oh, ow, ihstart, ihend, p_dst);
             }
             if (ow < dst_kernel_end_w) {
-                maxpool2d_n16chw_1x8_kernel_func_table[stride_w_select][dst_kernel_end_w - ow](p_src, &param, oh, ow, ihstart, ihend, p_dst);
+                maxpool2d_n16cx_1x8_kernel_func_table[stride_w_select][dst_kernel_end_w - ow](p_src, &param, oh, ow, ihstart, ihend, p_dst);
                 ow = dst_kernel_end_w;
             }
             for (; ow < dst_w; ++ow) {
-                maxpool2d_n16chw_border_fp32_avx(p_src, &param, oh, ow, p_dst);
+                maxpool2d_n16cx_border_fp32_avx(p_src, &param, oh, ow, p_dst);
             }
         }
     }

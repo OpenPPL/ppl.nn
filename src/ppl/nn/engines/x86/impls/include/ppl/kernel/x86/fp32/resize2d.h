@@ -73,7 +73,7 @@ ppl::common::RetCode reisze2d_n16cx_asymmetric_nearest_floor_fp32_avx(
     const float scale_w,
     float *dst);
 
-ppl::common::RetCode resize2d_n16chw_pytorch_2linear_floor_fp32_avx(
+ppl::common::RetCode resize2d_n16cx_pytorch_2linear_floor_fp32_avx(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
     const float *src,

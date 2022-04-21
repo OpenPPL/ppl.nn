@@ -38,17 +38,12 @@ ppl::common::RetCode MaxUnpoolKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
 
-    if (x->GetShape()->GetDimCount() != 4 || indices->GetShape()->GetDimCount() != 4) {
-        LOG(ERROR) << "only support 4-D Tensor now.";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
     const auto data_type = x->GetShape()->GetDataType();
     const auto data_format = x->GetShape()->GetDataFormat();
 
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
-            return ppl::kernel::x86::max_unpool_nchw_fp32(x->GetShape(), y->GetShape(), x->GetBufferPtr<float>(),
+            return ppl::kernel::x86::max_unpool_ndarray_fp32(x->GetShape(), y->GetShape(), x->GetBufferPtr<float>(),
                                                           indices->GetBufferPtr<int64_t>(), y->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "unsupported data type " << ppl::common::GetDataTypeStr(data_type) << ".";
