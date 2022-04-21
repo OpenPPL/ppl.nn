@@ -317,7 +317,7 @@ DEBUG_TAG(O);
                     ppl::kernel::x86::gemm_v_type::ROW_VEC,
                     ppl::kernel::x86::gemm_m_type::EMPTY,
                     M, N, K, K, K, N, 0,
-                    1.0f, 1.0f,
+                    1.0f, 0.0f, 1.0f, 0.0f,
                     ppl::kernel::x86::gemm_post::NONE,
                     dst_ref)) {
                 std::cerr << "," << "gemm_ref_fp32 failed\n";

@@ -128,16 +128,16 @@ ppl::common::RetCode lstm_ref_fp32(
                 gemm_v_type::ROW_VEC, gemm_m_type::EMPTY,
                 batch, rnn_num_gate::LSTM * hidden_size, input_size,
                 input_size, input_size, rnn_num_gate::LSTM * hidden_size, 0,
-                1.0f, 1.0f, gemm_post::NONE, gate_buf);
+                1.0f, 0.0f, 1.0f, 0.0f, gemm_post::NONE, gate_buf);
 
             const float alpha = !Y_h_prev ? 0.0f : 1.0f; // some hack, gemm will skip aAxB if alpha is 0
             gemm_ref_fp32( // h_0[nd]*R[nd]_{iofc}^T+Rb_{iofc}
-                Y_h_prev, nd_R, nd_Rb, gate_buf,
+                Y_h_prev, nd_R, nd_Rb, nullptr,
                 gemm_m_type::NOTRANS, gemm_m_type::TRANS,
                 gemm_v_type::ROW_VEC, gemm_m_type::NOTRANS,
                 batch, rnn_num_gate::LSTM * hidden_size, hidden_size,
                 hidden_size, hidden_size, rnn_num_gate::LSTM * hidden_size, rnn_num_gate::LSTM * hidden_size,
-                alpha, 1.0f, gemm_post::NONE, gate_buf);
+                alpha, 1.0f, 1.0f, 0.0f, gemm_post::NONE, gate_buf);
 
             if (is_first_seq && !Y_h_prev) {
                 Y_h_prev = nd_Yh; // preprocess Y_h_prev

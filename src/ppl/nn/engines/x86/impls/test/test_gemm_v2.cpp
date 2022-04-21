@@ -71,7 +71,9 @@ static std::map<std::string, ppl::common::isa_t> isa_table =
 {
     {"sse", ppl::common::ISA_X86_SSE},
     {"fma", ppl::common::ISA_X86_FMA},
+#ifdef PPL_USE_X86_AVX512
     {"avx512", ppl::common::ISA_X86_AVX512},
+#endif
 };
 
 ppl::common::RetCode gemm_v2_ref_fp32(const ppl::kernel::x86::gemm_v2_param_fp32& param) {

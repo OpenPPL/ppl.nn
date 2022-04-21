@@ -50,31 +50,36 @@
 
 Define_bool_opt("--help", Flag_help, false, "show these help information");
 Define_string(cfg, "", "(required) fc config file, format:" CASE_STRING_FMT());
-Define_int32(warm_up, 10, "(10) warm up iterations");
-Define_int32(min_iter, 20, "(20) min benchmark iterations");
+Define_int32(warm_up, 2, "(2) warm up iterations");
+Define_int32(min_iter, 10, "(10) min benchmark iterations");
 Define_float(min_second, 1.0f, "(1.0) min benchmark seconds");
 Define_bool(validate, false, "(false) do result validation");
 Define_float(eps, 1e-5f, "(1e-5) rel error trunk for validation");
-Define_string(isa, "auto", "sse, fma, avx512, auto");
+Define_string(isa, "auto", "(auto)sse, fma, avx512, auto");
+Define_bool(core_bind, false, "(false)core binding");
 
 Define_float(alpha, 1.0f, "(1.0) gemm alpha");
-Define_float(beta, 0.0f, "(0.0) gemm beta");
+Define_float(beta, 0.0f, "(0.0) gemm c beta");
+Define_float(beta_bias, 1.0f, "(0.0) gemm bias beta");
+Define_float(beta_sum, 1.0f, "(0.0) gemm sum input beta");
 Define_int32(relu, 0, "(0) fuse relu, 0 for none, 1 for relu, 6 for relu6");
 Define_int32(type_a, 0, "(0) 0 for no_trans, 1 for trans");
 Define_int32(type_b, 0, "(0) 0 for no_trans, 1 for trans");
-Define_int32(type_v, 0, "(0) 0 for empty, 1 for scalar, 2 for col vector, 3 for row vector");
-Define_int32(type_h, 0, "(0) 0 for empty, 1 for no_trans");
-Define_int32(m, 0, "(0) override M");
-Define_int32(n, 0, "(0) override N");
-Define_int32(k, 0, "(0) override K");
+Define_int32(type_bias, 0, "(0) 0 for empty, 1 for scalar, 2 for col vector, 3 for row vector");
+Define_int32(type_sum, 0, "(0) 0 for empty, 1 for no_trans");
+Define_int32(m, -1, "(-1) override M");
+Define_int32(n, -1, "(-1) override N");
+Define_int32(k, -1, "(-1) override K");
 
-typedef decltype(ppl::kernel::x86::gemm_fp32_fma)* ppl_x86_benchmark_gemm_func_t;
+typedef decltype(ppl::kernel::x86::gemm_ref_fp32)* ppl_x86_benchmark_gemm_func_t;
 
 static std::map<std::string, ppl_x86_benchmark_gemm_func_t> isa_table =
 {
     {"sse", nullptr},
     {"fma", ppl::kernel::x86::gemm_fp32_fma},
-    {"avx512", nullptr},
+#ifdef PPL_USE_X86_AVX512
+    {"avx512", ppl::kernel::x86::gemm_fp32_avx512},
+#endif
 };
 
 int main(int argc, char **argv) {
@@ -102,6 +107,7 @@ int main(int argc, char **argv) {
     int32_t num_threads = 1;
 #if defined(__linux__) && defined(PPL_USE_X86_OMP)
     num_threads = omp_get_max_threads();
+    if (Flag_core_bind) {
 #pragma omp parallel
     {
 #define handle_error_en(en, msg) do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
@@ -113,6 +119,7 @@ int main(int argc, char **argv) {
             handle_error_en(s, "pthread_setaffinity_np");
         }
 #undef handle_error_en
+    }
     }
 #endif
 
@@ -131,8 +138,8 @@ int main(int argc, char **argv) {
     std::cerr << "==============================================================\n";
     fprintf(
         stderr,
-        "alpha=%f\nbeta=%f\nrelu=%d\ntype_a=%d\ntype_b=%d\ntype_v=%d\ntype_h=%d\nM=%d\nN=%d\nK=%d\n\n",
-        Flag_alpha, Flag_beta, Flag_relu, Flag_type_a, Flag_type_b, Flag_type_v, Flag_type_h, Flag_m, Flag_n, Flag_k
+        "alpha=%f\nbeta=%f\nbeta_bias=%f\nbeta_sum=%f\nrelu=%d\ntype_a=%d\ntype_b=%d\ntype_bias=%d\ntype_sum=%d\nM=%d\nN=%d\nK=%d\n\n",
+        Flag_alpha, Flag_beta, Flag_beta_bias, Flag_beta_sum, Flag_relu, Flag_type_a, Flag_type_b, Flag_type_bias, Flag_type_sum, Flag_m, Flag_n, Flag_k
     );
     std::cerr << "==============================================================\n";
 
@@ -168,8 +175,8 @@ int main(int argc, char **argv) {
 
     ppl::kernel::x86::gemm_m_type_t typeA;
     ppl::kernel::x86::gemm_m_type_t typeB;
-    ppl::kernel::x86::gemm_v_type_t typeV;
-    ppl::kernel::x86::gemm_m_type_t typeH;
+    ppl::kernel::x86::gemm_v_type_t typebias;
+    ppl::kernel::x86::gemm_m_type_t typesum;
     ppl::kernel::x86::gemm_post_t post_flag;
 
     switch (Flag_type_a) {
@@ -184,16 +191,16 @@ int main(int argc, char **argv) {
     }
     const bool is_trans_b = Flag_type_b == 1;
 
-    switch (Flag_type_v) {
-        case 1: typeV = ppl::kernel::x86::gemm_v_type::SCALAR; break;
-        case 2: typeV = ppl::kernel::x86::gemm_v_type::COL_VEC; break;
-        case 3: typeV = ppl::kernel::x86::gemm_v_type::ROW_VEC; break;
-        default: typeV = ppl::kernel::x86::gemm_v_type::EMPTY; break;
+    switch (Flag_type_bias) {
+        case 1: typebias = ppl::kernel::x86::gemm_v_type::SCALAR; break;
+        case 2: typebias = ppl::kernel::x86::gemm_v_type::COL_VEC; break;
+        case 3: typebias = ppl::kernel::x86::gemm_v_type::ROW_VEC; break;
+        default: typebias = ppl::kernel::x86::gemm_v_type::EMPTY; break;
     }
 
-    switch (Flag_type_h) {
-        case 1: typeH = ppl::kernel::x86::gemm_m_type::NOTRANS; break;
-        default: typeH = ppl::kernel::x86::gemm_m_type::EMPTY; break;
+    switch (Flag_type_sum) {
+        case 1: typesum = ppl::kernel::x86::gemm_m_type::NOTRANS; break;
+        default: typesum = ppl::kernel::x86::gemm_m_type::EMPTY; break;
     }
 
     switch (Flag_relu) {
@@ -226,9 +233,9 @@ int main(int argc, char **argv) {
             continue;
         }
 
-        if (Flag_m > 0) M = Flag_m;
-        if (Flag_n > 0) N = Flag_n;
-        if (Flag_k > 0) K = Flag_k;
+        if (Flag_m >= 0) M = Flag_m;
+        if (Flag_n >= 0) N = Flag_n;
+        if (Flag_k >= 0) K = Flag_k;
 
         fprintf(
             stderr,
@@ -239,28 +246,28 @@ int main(int argc, char **argv) {
 DEBUG_TAG(A);
         const int64_t lda = is_trans_a ? M : K;
         const int64_t ldb = is_trans_b ? K : N;
-        const int64_t ldh = N;
+        const int64_t ldsum = N;
         const int64_t ldc = N;
         const int64_t A_num_elements = M * K;
         const int64_t B_num_elements = K * N;
         const int64_t C_num_elements = M * N;
-        const int64_t H_num_elements = Flag_type_h ? C_num_elements : 0;
+        const int64_t sum_num_elements = Flag_type_sum ? C_num_elements : 0;
         const int64_t A_num_bytes = A_num_elements * sizeof(float);
         const int64_t B_num_bytes = B_num_elements * sizeof(float);
         const int64_t C_num_bytes = C_num_elements * sizeof(float);
-        const int64_t H_num_bytes = Flag_type_h ? C_num_bytes : 0;
+        const int64_t sum_num_bytes = Flag_type_sum ? C_num_bytes : 0;
 
-        int64_t V_num_elements;
-        switch (Flag_type_v) {
-            case 1: V_num_elements = 1; break;
-            case 2: V_num_elements = M; break;
-            case 3: V_num_elements = N; break;
-            default: V_num_elements = 0; break;
+        int64_t bias_num_elements;
+        switch (Flag_type_bias) {
+            case 1: bias_num_elements = 1; break;
+            case 2: bias_num_elements = M; break;
+            case 3: bias_num_elements = N; break;
+            default: bias_num_elements = 0; break;
         }
-        const int64_t V_num_bytes = V_num_elements * sizeof(float);
+        const int64_t bias_num_bytes = bias_num_elements * sizeof(float);
 
         const double gops = (double)M * N * K * 2 / 1e9;
-        const double gbs = (double)(A_num_bytes + B_num_bytes + C_num_bytes + V_num_bytes + H_num_bytes) / 1e9;
+        const double gbs = (double)(A_num_bytes + B_num_bytes + C_num_bytes + bias_num_bytes + sum_num_bytes) / 1e9;
 DEBUG_TAG(B);
         ppl::common::GenericCpuAllocator allocator(PPL_X86_CACHELINE_BYTES());
 
@@ -271,22 +278,21 @@ DEBUG_TAG(B);
             std::cerr << ", A or B or C out of memory\n";
             return -1;
         }
-        memset(C, 0, C_num_bytes);
 
-        float* V = nullptr;
-        if (V_num_bytes > 0) {
-            V = (float*)allocator.Alloc(V_num_bytes);
-            if (!V) {
-                std::cerr << ", V out of memory\n";
+        float* bias = nullptr;
+        if (bias_num_bytes > 0) {
+            bias = (float*)allocator.Alloc(bias_num_bytes);
+            if (!bias) {
+                std::cerr << ", bias out of memory\n";
                 return -1;
             }
         }
 
-        float* H = nullptr;
-        if (H_num_bytes > 0) {
-            H = (float*)allocator.Alloc(H_num_bytes);
-            if (!H) {
-                std::cerr << ", H out of memory\n";
+        float* sum = nullptr;
+        if (sum_num_bytes > 0) {
+            sum = (float*)allocator.Alloc(sum_num_bytes);
+            if (!sum) {
+                std::cerr << ", sum out of memory\n";
                 return -1;
             }
         }
@@ -298,11 +304,14 @@ DEBUG_TAG(C);
         for (int64_t i = 0; i < B_num_elements; i++) {
             B[i] = (rand() % data_mod + data_shift) * data_scale;
         }
-        for (int64_t i = 0; i < V_num_elements; i++) {
-            V[i] = (rand() % data_mod + data_shift) * data_scale;
+        for (int64_t i = 0; i < C_num_elements; i++) {
+            C[i] = (rand() % data_mod + data_shift) * data_scale;
         }
-        for (int64_t i = 0; i < H_num_elements; i++) {
-            H[i] = (rand() % data_mod + data_shift) * data_scale;
+        for (int64_t i = 0; i < bias_num_elements; i++) {
+            bias[i] = (rand() % data_mod + data_shift) * data_scale;
+        }
+        for (int64_t i = 0; i < sum_num_elements; i++) {
+            sum[i] = (rand() % data_mod + data_shift) * data_scale;
         }
 
         float* C_ref = nullptr;
@@ -312,20 +321,22 @@ DEBUG_TAG(C);
                 std::cerr << "," << "C_ref out of memory\n";
                 return -1;
             }
-            memset(C_ref, 0, C_num_bytes);
+            memcpy(C_ref, C, C_num_bytes);
         }
 DEBUG_TAG(D);
-        ppl::common::RetCode ret =
-            benchmark_gemm_func(
-                A, B, V, H,
-                typeA, typeB, typeV, typeH,
-                M, N, K,
-                lda, ldb, ldc, ldh,
-                Flag_alpha, Flag_beta,
-                post_flag, C);
-        if (ret != ppl::common::RC_SUCCESS) {
-            fprintf(stderr, "execute failed!\n");
-            return -1;
+        for (int64_t w = 0; w < Flag_warm_up; ++w) {
+            ppl::common::RetCode ret =
+                benchmark_gemm_func(
+                    A, B, bias, sum,
+                    typeA, typeB, typebias, typesum,
+                    M, N, K,
+                    lda, ldb, ldc, ldsum,
+                    Flag_alpha, Flag_beta, Flag_beta_bias, Flag_beta_sum,
+                    post_flag, C);
+            if (ret != ppl::common::RC_SUCCESS) {
+                fprintf(stderr, "execute failed!\n");
+                return -1;
+            }
         }
 
 DEBUG_TAG(G);
@@ -337,14 +348,19 @@ DEBUG_TAG(G);
 
         for (; tot_exe_iter < Flag_min_iter || tot_exe_us < Flag_min_second * 1e6; ++tot_exe_iter) {
             start = std::chrono::high_resolution_clock::now();
-            benchmark_gemm_func(
-                A, B, V, H,
-                typeA, typeB, typeV, typeH,
-                M, N, K,
-                lda, ldb, ldc, ldh,
-                Flag_alpha, Flag_beta,
-                post_flag, C);
+            ppl::common::RetCode ret =
+                benchmark_gemm_func(
+                    A, B, bias, sum,
+                    typeA, typeB, typebias, typesum,
+                    M, N, K,
+                    lda, ldb, ldc, ldsum,
+                    Flag_alpha, Flag_beta, Flag_beta_bias, Flag_beta_sum,
+                    post_flag, C);
             end = std::chrono::high_resolution_clock::now();
+            if (ret != ppl::common::RC_SUCCESS) {
+                fprintf(stderr, "execute failed!\n");
+                return -1;
+            }
             double dur = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() / 1e3;
             tot_exe_us += dur;
             if (dur < min_exe_us) {
@@ -364,11 +380,11 @@ DEBUG_TAG(G);
 
         if (Flag_validate) {
             if (ppl::common::RC_SUCCESS != ppl::kernel::x86::gemm_ref_fp32(
-                A, B, V, H,
-                typeA, typeB, typeV, typeH,
+                A, B, bias, sum,
+                typeA, typeB, typebias, typesum,
                 M, N, K,
-                lda, ldb, ldc, ldh,
-                Flag_alpha, Flag_beta,
+                lda, ldb, ldc, ldsum,
+                Flag_alpha, Flag_beta, Flag_beta_bias, Flag_beta_sum,
                 post_flag, C_ref)) {
                 std::cerr << "," << "gemm_ref_fp32 failed\n";
                 return -1;
@@ -381,15 +397,15 @@ DEBUG_TAG(G);
         all_case_gflops += avg_gflops;
         all_case_gbps += avg_gbps;
         all_case_us += avg_exe_us;
-DEBUG_TAG(H);
+DEBUG_TAG(sum);
         allocator.Free(A);
         allocator.Free(B);
         allocator.Free(C);
-        if (V) {
-            allocator.Free(V);
+        if (bias) {
+            allocator.Free(bias);
         }
-        if (H) {
-            allocator.Free(H);
+        if (sum) {
+            allocator.Free(sum);
         }
         if (C_ref) {
             allocator.Free(C_ref);

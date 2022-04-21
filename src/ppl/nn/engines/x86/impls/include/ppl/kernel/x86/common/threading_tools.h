@@ -34,6 +34,26 @@ void set_omp_core_binding(const int32_t *cores, const int32_t num_cores, const i
 
 int32_t get_omp_max_threads();
 
+template<typename T1, typename T2>
+void parallel_task_distribution_1d(
+    const T1 thread_id,
+    const T1 num_threads,
+    const T2 tasks,
+    T2 *offset,
+    T2 *length)
+{
+    const T2 task_thr = tasks / num_threads;
+    const T2 task_rem = tasks - task_thr * num_threads;
+
+    if (thread_id < task_rem) {
+        *offset = task_thr * thread_id + thread_id;
+        *length = task_thr + 1;
+    } else {
+        *offset = task_thr * thread_id + task_rem;
+        *length = task_thr;
+    }
+}
+
 struct single_parallel_loop_config_t {
     int64_t depth_of_loop;
     int64_t num_threads;

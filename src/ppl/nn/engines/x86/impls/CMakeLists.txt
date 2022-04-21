@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(PPLKernelX86)
 
 option(PPL_USE_X86_OMP "Build x86 kernel with openmp support." OFF)
-option(PPL_USE_X86_AVX512 "Build x86 kernel with openmp support." ON)
+option(PPL_USE_X86_AVX512 "Build x86 kernel with avx512 support." ON)
 
 if(MSVC)
 set(PPLKERNELX86_COMPILE_OPTIONS )

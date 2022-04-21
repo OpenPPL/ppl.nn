@@ -15,14 +15,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_X86_FP32_GEMM_FMA_GEMM_KERNEL_FP32_FMA_H_
-#define __ST_PPL_KERNEL_X86_FP32_GEMM_FMA_GEMM_KERNEL_FP32_FMA_H_
+#ifndef __ST_PPL_KERNEL_X86_FP32_GEMM_AVX512_GEMM_KERNEL_FP32_AVX512_H_
+#define __ST_PPL_KERNEL_X86_FP32_GEMM_AVX512_GEMM_KERNEL_FP32_AVX512_H_
 
 #include "ppl/kernel/x86/common/internal_include.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
-class gemm_kernel_fp32_fma {
+class gemm_kernel_fp32_avx512 {
 public:
     typedef void (*func_t)(int64_t*);
 
@@ -43,20 +43,19 @@ public:
         static const int64_t FLAGS_IDX = 13;
         static const int64_t PRF_C_LDK_IDX = 14;
         static const int64_t MASK_IDX = 15;
-        static const int64_t MASK_LENGTH = 4;
-        static const int64_t LENGTH = 20;
+        static const int64_t LENGTH = 16;
     };
 
     struct config {
-        static const int64_t MAX_M_REGS = 4;
+        static const int64_t MAX_M_REGS = 8;
         static const int64_t MAX_N_REGS = 3;
         static const int64_t M_REG_ELTS = 1;
-        static const int64_t N_REG_ELTS = 8;
+        static const int64_t N_REG_ELTS = 16;
         static const int64_t MAX_M_BLK = MAX_M_REGS * M_REG_ELTS;
         static const int64_t MAX_N_BLK = MAX_N_REGS * N_REG_ELTS;
         static const int64_t NEED_MASK_OPT = 2;
         static const int64_t PRF_C_LDK_MEM = 128;
-        static const int64_t PRF_C_LDK_L3  = 64;
+        static const int64_t PRF_C_LDK_L3  = 48;
     };
 
     typedef int64_t flag_t;
@@ -70,18 +69,9 @@ public:
         static const flag_t RELU6 = (1 << 12);
     };
 
-    gemm_kernel_fp32_fma(int64_t *param) : param_(param) { }
+    gemm_kernel_fp32_avx512(int64_t *param) : param_(param) { }
     inline void set_param(int64_t *param) { this->param_ = param; }
     inline int64_t *param() { return param_; }
-
-    inline void gen_mask(const int64_t mask) {
-        const int64_t b = mask;
-        const int64_t e = config::N_REG_ELTS;
-        int32_t *p = (int32_t*)(param_ + param_def::MASK_IDX);
-        int64_t i = 0;
-        for (; i < b; ++i) p[i] = 0xffffffff;
-        for (; i < e; ++i) p[i] = 0x00000000;
-    }
 
     inline void execute(const int64_t need_mask, const int64_t m_reg, const int64_t n_reg) {
         table_[need_mask][n_reg - 1][m_reg - 1](param_);
