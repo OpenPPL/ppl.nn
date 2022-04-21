@@ -126,22 +126,22 @@ ppl::common::RetCode lstm_fp32_fma(
             const float *Y_c_prev = is_first_seq ? nd_init_c : nd_Yc;
             float *sY = nd_Y + mapped_seq_index * num_direction * batch * hidden_size;
 
-            gemm_fp32_fma( // X[s]*W[nd]_{iofc}^T+Wb_{iofc}
+            gemm_fp32_fma( // gate = X[s]*W[nd]_{iofc}^T+Wb_{iofc}
                 sX, nd_W, nd_Wb, nullptr,
                 gemm_m_type::NOTRANS, gemm_m_type::TRANS,
                 gemm_v_type::ROW_VEC, gemm_m_type::EMPTY,
                 batch, rnn_num_gate::LSTM * hidden_size, input_size,
                 input_size, input_size, rnn_num_gate::LSTM * hidden_size, 0,
-                1.0f, 1.0f, gemm_post::NONE, gate_buf);
+                1.0f, 0.0f, 1.0f, 0.0f, gemm_post::NONE, gate_buf);
 
-            const float alpha = !Y_h_prev ? 0.0f : 1.0f; // some hack, gemm will skip aAxB if alpha is 0
-            gemm_fp32_fma( // h_0[nd]*R[nd]_{iofc}^T+Rb_{iofc}
-                Y_h_prev, nd_R, nd_Rb, gate_buf,
+            const float thisK = !Y_h_prev ? 0 : hidden_size; // some hack
+            gemm_fp32_fma( // gate += h_0[nd]*R[nd]_{iofc}^T+Rb_{iofc}
+                Y_h_prev, nd_R, nd_Rb, nullptr,
                 gemm_m_type::NOTRANS, gemm_m_type::TRANS,
                 gemm_v_type::ROW_VEC, gemm_m_type::NOTRANS,
-                batch, rnn_num_gate::LSTM * hidden_size, hidden_size,
+                batch, rnn_num_gate::LSTM * hidden_size, thisK,
                 hidden_size, hidden_size, rnn_num_gate::LSTM * hidden_size, rnn_num_gate::LSTM * hidden_size,
-                alpha, 1.0f, gemm_post::NONE, gate_buf);
+                1.0f, 1.0f, 1.0f, 0.0f, gemm_post::NONE, gate_buf);
 
             if (is_first_seq && !Y_h_prev) {
                 Y_h_prev = nd_Yh; // preprocess Y_h_prev

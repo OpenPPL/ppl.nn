@@ -23,23 +23,25 @@ namespace ppl { namespace kernel { namespace x86 {
 ppl::common::RetCode gemm_ref_fp32(
     const float *A,
     const float *B,
-    const float *V, // vector C
-    const float *H, // matrix C
+    const float *bias,
+    const float *sum,
     const gemm_m_type_t typeA,
     const gemm_m_type_t typeB,
-    const gemm_v_type_t typeV,
-    const gemm_m_type_t typeH,
+    const gemm_v_type_t typebias,
+    const gemm_m_type_t typesum,
     const int64_t M,
     const int64_t N,
     const int64_t K,
     const int64_t lda,
     const int64_t ldb,
     const int64_t ldc,
-    const int64_t ldh,
+    const int64_t ldsum,
     const float alpha,
     const float beta,
+    const float beta_bias,
+    const float beta_sum,
     const gemm_post_t post,
-    float *Y)
+    float *C)
 {
     if (typeA == gemm_m_type::PACKED || typeB == gemm_m_type::PACKED) {
         return ppl::common::RC_UNSUPPORTED;
@@ -57,44 +59,31 @@ ppl::common::RetCode gemm_ref_fp32(
             float y = 0.0f;
             if (alpha != 0.0f && typeA != gemm_m_type::EMPTY && typeB != gemm_m_type::EMPTY) {
                 if (!trans_A && !trans_B) { // MK, KN; NN
-                    for (int64_t k = 0; k < K; ++k) {
+                    for (int64_t k = 0; k < K; ++k)
                         y += A[m * lda + k] * B[k * ldb + n];
-                    }
                 }
                 if (trans_A && !trans_B) { // KM, KN; TN
-                    for (int64_t k = 0; k < K; ++k) {
+                    for (int64_t k = 0; k < K; ++k)
                         y += A[k * lda + m] * B[k * ldb + n];
-                    }
                 }
                 if (trans_A && trans_B) { // KM, NK; TT
-                    for (int64_t k = 0; k < K; ++k) {
+                    for (int64_t k = 0; k < K; ++k)
                         y += A[k * lda + m] * B[n * ldb + k];
-                    }
                 }
                 if (!trans_A && trans_B) { // MK, NK; NT
-                    for (int64_t k = 0; k < K; ++k) {
+                    for (int64_t k = 0; k < K; ++k)
                         y += A[m * lda + k] * B[n * ldb + k];
-                    }
                 }
                 y *= alpha;
             }
-            if (beta != 0.0f) {
-                if (V) {
-                    if (typeV == gemm_v_type::ROW_VEC) y += beta * V[n];
-                    if (typeV == gemm_v_type::COL_VEC) y += beta * V[m];
-                    if (typeV == gemm_v_type::SCALAR) y += beta * V[0];
-                }
-                if (H) {
-                    if (typeH == gemm_m_type::NOTRANS) y += beta * H[m * ldh + n];
-                }
-            }
-            if (post & (gemm_post::RELU6 | gemm_post::RELU)) {
-                y = max(y, 0.0f);
-            }
-            if (post & gemm_post::RELU6) {
-                y = min(y, 6.0f);
-            }
-            Y[m * ldc + n] = y;
+            if (beta != 0.0f) y += beta * C[m * ldc + n];
+            if (typebias == gemm_v_type::ROW_VEC) y += beta_bias * bias[n];
+            if (typebias == gemm_v_type::COL_VEC) y += beta_bias * bias[m];
+            if (typebias == gemm_v_type::SCALAR) y += beta_bias * bias[0];
+            if (typesum == gemm_m_type::NOTRANS) y += beta_sum * sum[m * ldsum + n];
+            if (post & (gemm_post::RELU6 | gemm_post::RELU)) y = max(y, 0.0f);
+            if (post & gemm_post::RELU6) y = min(y, 6.0f);
+            C[m * ldc + n] = y;
         }
     }
     return ppl::common::RC_SUCCESS;

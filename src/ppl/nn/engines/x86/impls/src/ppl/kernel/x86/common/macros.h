@@ -47,6 +47,7 @@
 #define PRAGMA_OMP_FOR_NOWAIT() PPL_X86_PRAGMA(omp for nowait)
 #define PRAGMA_OMP_FOR() PPL_X86_PRAGMA(omp for)
 #define PRAGMA_OMP_SINGLE()   PPL_X86_PRAGMA(omp single)
+#define PRAGMA_OMP_BARRIER()  PPL_X86_PRAGMA(omp barrier)
 #define PPL_OMP_NUM_THREADS() omp_get_num_threads()
 #define PPL_OMP_MAX_THREADS() omp_get_max_threads()
 #define PPL_OMP_THREAD_ID()   omp_get_thread_num()
@@ -57,6 +58,7 @@
 #define PRAGMA_OMP_FOR_NOWAIT()
 #define PRAGMA_OMP_FOR()
 #define PRAGMA_OMP_SINGLE()
+#define PRAGMA_OMP_BARRIER()
 #define PPL_OMP_NUM_THREADS() 1
 #define PPL_OMP_MAX_THREADS() 1
 #define PPL_OMP_THREAD_ID()   0
