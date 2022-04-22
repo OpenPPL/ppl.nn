@@ -336,7 +336,7 @@ ppl::common::RetCode conv2d_n16cx_direct_fp32_avx512_executor::execute()
                                     const int64_t owl2_eff = min<int64_t>(dst_w - owl2, sp.ow_l2_blk);
                                     const int64_t ih       = oh * cp.stride_h - cp.pad_h;
                                     const int64_t iwl2     = owl2 * cp.stride_w - cp.pad_w;
-                                    private_param[KH_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - ih, 0), ext_kernel_h - 1), cp.dilation_h);
+                                    private_param[KH_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - ih, 0), ext_kernel_h), cp.dilation_h);
                                     private_param[KH_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_h - ih, ext_kernel_h), 0), cp.dilation_h);
                                     int64_t unroll_owl2_start = max(sp.unroll_ow_start, owl2);
                                     int64_t unroll_owl2_end   = min(sp.unroll_ow_end, owl2 + owl2_eff);
@@ -364,10 +364,10 @@ ppl::common::RetCode conv2d_n16cx_direct_fp32_avx512_executor::execute()
                                         for (int64_t ow = owl2; ow < unroll_owl2_start; ++ow) {
                                             const int64_t iw              = ow * cp.stride_w - cp.pad_w;
                                             if (cp.dilation_w == 1) {
-                                                private_param[KW_START_IDX()] = min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1);
+                                                private_param[KW_START_IDX()] = min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w);
                                                 private_param[KW_END_IDX()]   = max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0);
                                             } else {
-                                                private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1), cp.dilation_w);
+                                                private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w), cp.dilation_w);
                                                 private_param[KW_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0), cp.dilation_w);
                                             }
                                             conv2d_n16cx_direct_kernel_fp32_avx512_pad_table[nt_store_sel][oc_sel](share_param, private_param);
@@ -396,10 +396,10 @@ ppl::common::RetCode conv2d_n16cx_direct_fp32_avx512_executor::execute()
                                         for (int64_t ow = unroll_owl2_end; ow < owl2 + owl2_eff; ++ow) {
                                             const int64_t iw              = ow * cp.stride_w - cp.pad_w;
                                             if (cp.dilation_w == 1) {
-                                                private_param[KW_START_IDX()] = min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1);
+                                                private_param[KW_START_IDX()] = min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w);
                                                 private_param[KW_END_IDX()]   = max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0);
                                             } else {
-                                                private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1), cp.dilation_w);
+                                                private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w), cp.dilation_w);
                                                 private_param[KW_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0), cp.dilation_w);
                                             }
                                             conv2d_n16cx_direct_kernel_fp32_avx512_pad_table[nt_store_sel][oc_sel](share_param, private_param);

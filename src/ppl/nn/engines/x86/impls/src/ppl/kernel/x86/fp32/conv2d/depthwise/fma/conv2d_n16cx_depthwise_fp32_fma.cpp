@@ -218,10 +218,10 @@ ppl::common::RetCode conv2d_n16cx_depthwise_fp32_fma_executor::execute()
         for (int64_t oh = 0; oh < dst_h; ++oh) {
             const int64_t ih = oh * cp.stride_h - cp.pad_h;
             if (cp.dilation_h == 1) {
-                private_param[KH_START_IDX()] = min<int64_t>(max<int64_t>(0 - ih, 0), cp.kernel_h - 1);
+                private_param[KH_START_IDX()] = min<int64_t>(max<int64_t>(0 - ih, 0), cp.kernel_h);
                 private_param[KH_END_IDX()]   = max<int64_t>(min<int64_t>(src_h - ih, cp.kernel_h), 0);
             } else {
-                private_param[KH_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - ih, 0), ext_kernel_h - 1), cp.dilation_h);
+                private_param[KH_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - ih, 0), ext_kernel_h), cp.dilation_h);
                 private_param[KH_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_h - ih, ext_kernel_h), 0), cp.dilation_h);
             }
 
@@ -232,10 +232,10 @@ ppl::common::RetCode conv2d_n16cx_depthwise_fp32_fma_executor::execute()
             for (int64_t ow = 0; ow < sp.unroll_ow_start; ++ow) {
                 const int64_t iw = ow * cp.stride_w - cp.pad_w;
                 if (cp.dilation_w == 1) { // avoid too much index compute
-                    private_param[KW_START_IDX()] = min<int64_t>(max<int64_t>(0 - iw, 0), cp.kernel_w - 1);
+                    private_param[KW_START_IDX()] = min<int64_t>(max<int64_t>(0 - iw, 0), cp.kernel_w);
                     private_param[KW_END_IDX()]   = max<int64_t>(min<int64_t>(src_w - iw, cp.kernel_w), 0);
                 } else {
-                    private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1), cp.dilation_w);
+                    private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w), cp.dilation_w);
                     private_param[KW_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0), cp.dilation_w);
                 }
                 conv2d_n16cx_depthwise_kernel_fp32_fma_pad_table[nt_store_sel](private_param, share_param);
@@ -262,10 +262,10 @@ ppl::common::RetCode conv2d_n16cx_depthwise_fp32_fma_executor::execute()
             for (int64_t ow = sp.unroll_ow_end; ow < dst_w; ++ow) {
                 const int64_t iw = ow * cp.stride_w - cp.pad_w;
                 if (cp.dilation_w == 1) {
-                    private_param[KW_START_IDX()] = min<int64_t>(max<int64_t>(0 - iw, 0), cp.kernel_w - 1);
+                    private_param[KW_START_IDX()] = min<int64_t>(max<int64_t>(0 - iw, 0), cp.kernel_w);
                     private_param[KW_END_IDX()]   = max<int64_t>(min<int64_t>(src_w - iw, cp.kernel_w), 0);
                 } else {
-                    private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w - 1), cp.dilation_w);
+                    private_param[KW_START_IDX()] = div_up(min<int64_t>(max<int64_t>(0 - iw, 0), ext_kernel_w), cp.dilation_w);
                     private_param[KW_END_IDX()]   = div_up(max<int64_t>(min<int64_t>(src_w - iw, ext_kernel_w), 0), cp.dilation_w);
                 }
                 conv2d_n16cx_depthwise_kernel_fp32_fma_pad_table[nt_store_sel](private_param, share_param);
