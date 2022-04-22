@@ -168,7 +168,7 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_executor::execute()
                         const int64_t owl2_eff = min<int64_t>(dst_w - owl2, sp.ow_l2_blk);
                         const int64_t ih       = oh * cp.stride_h - cp.pad_h;
                         const int64_t iwl2     = owl2 * cp.stride_w - cp.pad_w;
-                        const int64_t kh_start = min<int64_t>(max<int64_t>(0 - ih, 0), cp.kernel_h - 1);
+                        const int64_t kh_start = min<int64_t>(max<int64_t>(0 - ih, 0), cp.kernel_h);
                         const int64_t kh_end   = max<int64_t>(min<int64_t>(src_h - ih, cp.kernel_h), 0);
 
                         const int64_t nt_store_sel   = sp.use_nt_store;
@@ -212,7 +212,7 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_executor::execute()
 
                             for (int64_t ow = owl2; ow < unroll_owl2_start; ++ow) {
                                 const int64_t iw       = ow * cp.stride_w - cp.pad_w;
-                                const int64_t kw_start = min<int64_t>(max<int64_t>(0 - iw, 0), cp.kernel_w - 1);
+                                const int64_t kw_start = min<int64_t>(max<int64_t>(0 - iw, 0), cp.kernel_w);
                                 const int64_t kw_end   = max<int64_t>(min<int64_t>(src_w - iw, cp.kernel_w), 0);
                                 ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::KW_START_IDX) = kw_start;
                                 ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::KW_END_IDX)   = kw_end;
@@ -230,7 +230,7 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_avx512_executor::execute()
 
                             for (int64_t ow = unroll_owl2_end; ow < owl2 + owl2_eff; ++ow) {
                                 const int64_t iw       = ow * cp.stride_w - cp.pad_w;
-                                const int64_t kw_start = min<int64_t>(max<int64_t>(0 - iw, 0), cp.kernel_w - 1);
+                                const int64_t kw_start = min<int64_t>(max<int64_t>(0 - iw, 0), cp.kernel_w);
                                 const int64_t kw_end   = max<int64_t>(min<int64_t>(src_w - iw, cp.kernel_w), 0);
                                 ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::KW_START_IDX) = kw_start;
                                 ker_p.pick<int64_t>(conv2d_n16cx_direct_ndarray_kernel_fp32_avx512::param_def::KW_END_IDX)   = kw_end;
