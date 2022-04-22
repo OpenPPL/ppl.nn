@@ -30,7 +30,7 @@ namespace ppl { namespace nn { namespace riscv {
 
 class RiscvEngine final : public EngineImpl {
 public:
-    RiscvEngine() : EngineImpl("riscv"), device_(RISCV_DEFAULT_ALIGNMENT) {}
+    RiscvEngine();
     ppl::common::RetCode Init(const RiscvEngineOptions& options);
     ppl::common::RetCode Configure(uint32_t, ...) override;
     EngineContext* CreateEngineContext() override;

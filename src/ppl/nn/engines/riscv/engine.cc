@@ -30,6 +30,13 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace riscv {
 
+RiscvEngine::RiscvEngine() : EngineImpl("riscv"), device_(RISCV_DEFAULT_ALIGNMENT) {
+    if (OptKernelCreatorManager::GetInstance()->GetSize() == 0) {
+        LOG(WARNING) << "Empty op implementation set. Did you forget to call `ppl::nn::riscv::RegisterBuiltinOpImpls()`"
+                        "before creating riscv engines?";
+    }
+}
+
 ppl::common::RetCode RiscvEngine::Init(const RiscvEngineOptions& options) {
     options_ = options;
     return ppl::common::RC_SUCCESS;

@@ -273,7 +273,7 @@ const RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, cons
             return RC_UNSUPPORTED;
         }
 
-        auto opt_kernel = unique_ptr<CudaOptKernel>(creator(node));
+        auto opt_kernel = unique_ptr<CudaOptKernel>((*creator)(node));
         if (!opt_kernel) {
             LOG(ERROR) << "create Kernel failed: oom";
             return RC_UNSUPPORTED;

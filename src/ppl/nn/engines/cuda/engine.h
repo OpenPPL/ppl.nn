@@ -59,7 +59,7 @@ struct CudaArgs {
 
 class CudaEngine final : public EngineImpl {
 public:
-    CudaEngine() : EngineImpl("cuda") {}
+    CudaEngine();
     ~CudaEngine();
     ppl::common::RetCode Init(const CudaEngineOptions& options);
     ppl::common::RetCode Configure(uint32_t, ...) override;

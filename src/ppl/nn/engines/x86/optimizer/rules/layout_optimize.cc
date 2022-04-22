@@ -96,7 +96,7 @@ static ppl::common::RetCode AddReorderOp(
         return ppl::common::RC_NOT_FOUND;
     }
 
-    auto opt_kernel = std::unique_ptr<X86OptKernel>(creator(reorder_node));
+    auto opt_kernel = std::unique_ptr<X86OptKernel>((*creator)(reorder_node));
     if (!opt_kernel) {
         LOG(ERROR) << "create X86OptKernel failed: oom";
         return ppl::common::RC_OUT_OF_MEMORY;

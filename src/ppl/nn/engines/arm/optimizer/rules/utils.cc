@@ -31,7 +31,7 @@ ppl::common::RetCode CreateArmOptKernel(const OptKernelOptions& options, const i
         return ppl::common::RC_NOT_FOUND;
     }
 
-    auto opt_kernel = std::unique_ptr<ArmOptKernel>(creator(node));
+    auto opt_kernel = std::unique_ptr<ArmOptKernel>((*creator)(node));
     if (!opt_kernel) {
         LOG(ERROR) << "create ArmOptKernel failed: oom";
         return ppl::common::RC_OUT_OF_MEMORY;

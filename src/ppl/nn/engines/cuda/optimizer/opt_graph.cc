@@ -74,7 +74,7 @@ RetCode OptGraph::InitKernels() {
             return RC_NOT_FOUND;
         }
 
-        auto opt_kernel = unique_ptr<CudaOptKernel>(creator(node));
+        auto opt_kernel = unique_ptr<CudaOptKernel>((*creator)(node));
         if (!opt_kernel) {
             LOG(ERROR) << "create CudaOptKernel failed: oom";
             return RC_OUT_OF_MEMORY;
@@ -263,7 +263,7 @@ RetCode OptGraph::AddBridgeKernels(const utils::SharedResource& resource) {
             auto new_node = ret_pair.first;
 
             new_node->SetType(ir::Node::Type("ppl", "Bridge", 1));
-            auto bridge_kernel = unique_ptr<CudaOptKernel>(creator(new_node));
+            auto bridge_kernel = unique_ptr<CudaOptKernel>((*creator)(new_node));
             ((BridgeOp*)bridge_kernel.get())->AddInternalBridgeNode(node, new_node, edge, graph_);
 
             auto preedge_id = new_node->GetInput(0);
@@ -297,7 +297,7 @@ RetCode OptGraph::AddBridgeKernels(const utils::SharedResource& resource) {
                 auto new_node = ret_pair.first;
 
                 new_node->SetType(ir::Node::Type("ppl", "Bridge", 1));
-                auto bridge_kernel = unique_ptr<CudaOptKernel>(creator(new_node));
+                auto bridge_kernel = unique_ptr<CudaOptKernel>((*creator)(new_node));
                 ((BridgeOp*)bridge_kernel.get())->AddFinalBridgeNode(node, new_node, edge, graph_);
 
                 auto preedge_id = new_node->GetInput(0);

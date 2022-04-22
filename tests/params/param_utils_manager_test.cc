@@ -27,7 +27,7 @@ static bool TestParamEqualFunc(const void* param_0, const void* param_1) {
 TEST(ParamUtilsManagerTest, misc) {
     ParamUtils info;
     info.equal = TestParamEqualFunc;
-    auto mgr = ParamUtilsManager::Instance();
+    auto mgr = ParamUtilsManager::GetInstance();
     mgr->Register("domain", "type", utils::VersionRange(0, 0), info);
     auto ret = mgr->Find("domain", "type", 0);
     EXPECT_NE(nullptr, ret);

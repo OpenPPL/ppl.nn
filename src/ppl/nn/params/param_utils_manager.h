@@ -26,28 +26,7 @@ struct ParamUtils final {
     bool (*equal)(const void* param_0, const void* param_1);
 };
 
-class ParamUtilsManager final {
-public:
-    static ParamUtilsManager* Instance() {
-        static ParamUtilsManager mgr;
-        return &mgr;
-    }
-
-    ppl::common::RetCode Register(const std::string& domain, const std::string& type, const utils::VersionRange& ver,
-                                  const ParamUtils& item) {
-        return mgr_.Register(domain, type, ver, item);
-    }
-
-    const ParamUtils* Find(const std::string& domain, const std::string& type, uint64_t version) const {
-        return mgr_.Find(domain, type, version);
-    }
-
-private:
-    utils::OpInfoManager<ParamUtils> mgr_;
-
-private:
-    ParamUtilsManager() {}
-};
+using ParamUtilsManager = utils::OpInfoManager<ParamUtils>;
 
 }} // namespace ppl::nn
 

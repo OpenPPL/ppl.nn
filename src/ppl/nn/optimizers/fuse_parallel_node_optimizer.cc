@@ -75,7 +75,7 @@ static bool CanFuseAsOneNode(const ir::Graph* graph, const ir::Node* node_0, con
         }
     }
 
-    auto op_utils = ParamUtilsManager::Instance()->Find(node_0->GetType().domain, node_0->GetType().name,
+    auto op_utils = ParamUtilsManager::GetInstance()->Find(node_0->GetType().domain, node_0->GetType().name,
                                                         node_0->GetType().version);
     if (!op_utils) {
         return true;
