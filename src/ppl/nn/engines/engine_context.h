@@ -19,6 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_ENGINE_CONTEXT_H_
 
 #include "ppl/nn/common/device.h"
+#include "ppl/nn/runtime/runtime_graph_resource.h"
 
 namespace ppl { namespace nn {
 
@@ -38,7 +39,7 @@ public:
     virtual Device* GetDevice() = 0;
 
     /** @brief called before Scheduler::Run(). */
-    virtual ppl::common::RetCode BeforeRun() {
+    virtual ppl::common::RetCode BeforeRun(const ir::GraphTopo*, RuntimeGraphResource*) {
         return ppl::common::RC_SUCCESS;
     }
 };

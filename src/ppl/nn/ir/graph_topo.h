@@ -57,6 +57,9 @@ public:
     GraphTopo() {}
     virtual ~GraphTopo() {}
 
+    /** @brief is a complete graph */
+    virtual bool IsComplete() const = 0;
+
     // ----- //
 
     void SetName(const std::string& name) {
