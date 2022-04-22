@@ -323,7 +323,7 @@ RetCode RuntimeImpl::Run() {
     RetCode status;
 
     for (auto x = engctx_.begin(); x != engctx_.end(); ++x) {
-        status = x->get()->BeforeRun();
+        status = x->get()->BeforeRun(topo_.get(), &graph_);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "BeforeRun() of EngineContext[" << x->get()->GetName()
                        << "] failed: " << GetRetCodeStr(status);
