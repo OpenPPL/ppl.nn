@@ -25,24 +25,7 @@ namespace ppl { namespace nn { namespace x86 {
 
 typedef X86OptKernel* (*OptKernelCreator)(const ir::Node*);
 
-class OptKernelCreatorManager final {
-public:
-    static OptKernelCreatorManager* GetInstance() {
-        static OptKernelCreatorManager mgr;
-        return &mgr;
-    }
-
-    ppl::common::RetCode Register(const std::string& domain, const std::string& type, const utils::VersionRange&,
-                                  OptKernelCreator);
-    OptKernelCreator Find(const std::string& domain, const std::string& type, uint64_t version) const;
-    void Remove(const std::string& domain, const std::string& type);
-
-private:
-    utils::OpInfoManager<OptKernelCreator> mgr_;
-
-private:
-    OptKernelCreatorManager() {}
-};
+using OptKernelCreatorManager = utils::OpInfoManager<OptKernelCreator>;
 
 }}} // namespace ppl::nn::x86
 

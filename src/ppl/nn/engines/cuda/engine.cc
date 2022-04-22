@@ -41,6 +41,13 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
+CudaEngine::CudaEngine() : EngineImpl("cuda") {
+    if (OptKernelCreatorManager::GetInstance()->GetSize() == 0) {
+        LOG(WARNING) << "Empty op implementation set. Did you forget to call `ppl::nn::cuda::RegisterBuiltinOpImpls()` "
+                        "before creating cuda engines?";
+    }
+}
+
 CudaEngine::~CudaEngine() {
 #ifdef PPLNN_ENABLE_PMX_MODEL
     for (auto b = constant_buffers_.begin(); b != constant_buffers_.end(); ++b) {
@@ -179,7 +186,7 @@ OptKernel* CudaEngine::CreateOptKernel(const ir::Node* node) const {
         return nullptr;
     }
 
-    auto opt_kernel = creator(node);
+    auto opt_kernel = (*creator)(node);
     if (!opt_kernel) {
         LOG(ERROR) << "create kernel[" << node->GetName() << "] failed: oom.";
         return nullptr;

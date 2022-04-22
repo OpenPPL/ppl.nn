@@ -48,7 +48,7 @@ RetCode OptGraph::InitKernels(const ir::Graph* graph) {
             return RC_NOT_FOUND;
         }
 
-        auto opt_kernel = unique_ptr<ArmOptKernel>(creator(node));
+        auto opt_kernel = unique_ptr<ArmOptKernel>((*creator)(node));
         if (!opt_kernel) {
             LOG(ERROR) << "create ArmOptKernel failed: oom";
             return RC_OUT_OF_MEMORY;
@@ -175,7 +175,7 @@ RetCode OptGraph::AddReorderOp(const OptKernelOptions& options, const edgeid_t& 
         return RC_NOT_FOUND;
     }
 
-    auto opt_kernel = unique_ptr<ArmOptKernel>(creator(reorder_node));
+    auto opt_kernel = unique_ptr<ArmOptKernel>((*creator)(reorder_node));
     if (!opt_kernel) {
         LOG(ERROR) << "create ArmOptKernel failed: oom";
         return RC_OUT_OF_MEMORY;
@@ -447,7 +447,7 @@ ppl::common::RetCode OptGraph::CreateArmOptKernel(const OptKernelOptions& option
         return RC_NOT_FOUND;
     }
 
-    auto opt_kernel = unique_ptr<ArmOptKernel>(creator(node));
+    auto opt_kernel = unique_ptr<ArmOptKernel>((*creator)(node));
     if (!opt_kernel) {
         LOG(ERROR) << "Create ArmOptKernel failed: oom";
         return RC_OUT_OF_MEMORY;

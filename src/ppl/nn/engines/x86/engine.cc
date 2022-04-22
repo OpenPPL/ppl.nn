@@ -33,6 +33,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace x86 {
 
 X86Engine::X86Engine() : EngineImpl("x86"), device_(X86_DEFAULT_ALIGNMENT, ppl::common::GetCpuISA()) {
+    if (OptKernelCreatorManager::GetInstance()->GetSize() == 0) {
+        LOG(WARNING) << "Empty op implementation set. Did you forget to call `ppl::nn::x86::RegisterBuiltinOpImpls()` "
+                        "before creating x86 engines?";
+    }
 #ifndef PPL_USE_X86_AVX512
     auto isa = device_.GetISA();
     isa &= ~ppl::common::ISA_X86_AVX512;
@@ -150,7 +154,7 @@ OptKernel* X86Engine::CreateOptKernel(const ir::Node* node) const {
         return nullptr;
     }
 
-    auto opt_kernel = creator(node);
+    auto opt_kernel = (*creator)(node);
     if (!opt_kernel) {
         LOG(ERROR) << "create kernel[" << node->GetName() << "] failed: oom.";
         return nullptr;

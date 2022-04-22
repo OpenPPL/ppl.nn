@@ -36,6 +36,15 @@ struct VersionRange final {
 template <typename T>
 class OpInfoManager final {
 public:
+    static OpInfoManager* GetInstance() {
+        static OpInfoManager mgr;
+        return &mgr;
+    }
+
+    uint64_t GetSize() const {
+        return info_.size();
+    }
+
     ppl::common::RetCode Register(const std::string& domain, const std::string& type, const VersionRange& ver,
                                   const T& item) {
         auto& versions = info_[domain][type];

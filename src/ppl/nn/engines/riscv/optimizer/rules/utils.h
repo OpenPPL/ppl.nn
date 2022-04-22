@@ -36,7 +36,7 @@ inline ppl::common::RetCode CreateRiscvOptKernel(const OptKernelOptions& options
         return ppl::common::RC_NOT_FOUND;
     }
 
-    auto opt_kernel = std::unique_ptr<RiscvOptKernel>(creator(node));
+    auto opt_kernel = std::unique_ptr<RiscvOptKernel>((*creator)(node));
     if (!opt_kernel) {
         LOG(ERROR) << "create RiscvOptKernel failed: oom";
         return ppl::common::RC_OUT_OF_MEMORY;

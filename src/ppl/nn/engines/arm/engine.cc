@@ -33,6 +33,13 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
+ArmEngine::ArmEngine() : EngineImpl("arm"), device_(ARM_DEFAULT_ALIGNMENT, ppl::common::GetCpuISA()) {
+    if (OptKernelCreatorManager::GetInstance()->GetSize() == 0) {
+        LOG(WARNING) << "Empty op implementation set. Did you forget to call `ppl::nn::arm::RegisterBuiltinOpImpls()` "
+                        "before creating arm engines?";
+    }
+}
+
 RetCode ArmEngine::Init(const ArmEngineOptions& options) {
     options_ = options;
 
@@ -138,7 +145,7 @@ OptKernel* ArmEngine::CreateOptKernel(const ir::Node* node) const {
         return nullptr;
     }
 
-    auto opt_kernel = creator(node);
+    auto opt_kernel = (*creator)(node);
     if (!opt_kernel) {
         LOG(ERROR) << "create kernel[" << node->GetName() << "] failed: oom.";
         return nullptr;
