@@ -49,6 +49,9 @@ struct GatherParamBuilder;
 struct GemmParam;
 struct GemmParamBuilder;
 
+struct InstanceNormalizationParam;
+struct InstanceNormalizationParamBuilder;
+
 struct LeakyReluParam;
 struct LeakyReluParamBuilder;
 
@@ -492,29 +495,30 @@ enum OpParamType : uint8_t {
   OpParamType_GatherParam = 10,
   OpParamType_GatherNDParam = 11,
   OpParamType_GemmParam = 12,
-  OpParamType_LeakyReluParam = 13,
-  OpParamType_LRNParam = 14,
-  OpParamType_LSTMParam = 15,
-  OpParamType_MaxUnpoolParam = 16,
-  OpParamType_NonMaxSuppressionParam = 17,
-  OpParamType_PadParam = 18,
-  OpParamType_PoolingParam = 19,
-  OpParamType_ReduceParam = 20,
-  OpParamType_ResizeParam = 21,
-  OpParamType_RoiAlignParam = 22,
-  OpParamType_ScatterElementsParam = 23,
-  OpParamType_SoftmaxParam = 24,
-  OpParamType_SplitParam = 25,
-  OpParamType_SplitToSequenceParam = 26,
-  OpParamType_SqueezeParam = 27,
-  OpParamType_TopKParam = 28,
-  OpParamType_TransposeParam = 29,
-  OpParamType_UnsqueezeParam = 30,
+  OpParamType_InstanceNormalizationParam = 13,
+  OpParamType_LeakyReluParam = 14,
+  OpParamType_LRNParam = 15,
+  OpParamType_LSTMParam = 16,
+  OpParamType_MaxUnpoolParam = 17,
+  OpParamType_NonMaxSuppressionParam = 18,
+  OpParamType_PadParam = 19,
+  OpParamType_PoolingParam = 20,
+  OpParamType_ReduceParam = 21,
+  OpParamType_ResizeParam = 22,
+  OpParamType_RoiAlignParam = 23,
+  OpParamType_ScatterElementsParam = 24,
+  OpParamType_SoftmaxParam = 25,
+  OpParamType_SplitParam = 26,
+  OpParamType_SplitToSequenceParam = 27,
+  OpParamType_SqueezeParam = 28,
+  OpParamType_TopKParam = 29,
+  OpParamType_TransposeParam = 30,
+  OpParamType_UnsqueezeParam = 31,
   OpParamType_MIN = OpParamType_NONE,
   OpParamType_MAX = OpParamType_UnsqueezeParam
 };
 
-inline const OpParamType (&EnumValuesOpParamType())[31] {
+inline const OpParamType (&EnumValuesOpParamType())[32] {
   static const OpParamType values[] = {
     OpParamType_NONE,
     OpParamType_ArgMaxParam,
@@ -529,6 +533,7 @@ inline const OpParamType (&EnumValuesOpParamType())[31] {
     OpParamType_GatherParam,
     OpParamType_GatherNDParam,
     OpParamType_GemmParam,
+    OpParamType_InstanceNormalizationParam,
     OpParamType_LeakyReluParam,
     OpParamType_LRNParam,
     OpParamType_LSTMParam,
@@ -552,7 +557,7 @@ inline const OpParamType (&EnumValuesOpParamType())[31] {
 }
 
 inline const char * const *EnumNamesOpParamType() {
-  static const char * const names[32] = {
+  static const char * const names[33] = {
     "NONE",
     "ArgMaxParam",
     "BatchNormalizationParam",
@@ -566,6 +571,7 @@ inline const char * const *EnumNamesOpParamType() {
     "GatherParam",
     "GatherNDParam",
     "GemmParam",
+    "InstanceNormalizationParam",
     "LeakyReluParam",
     "LRNParam",
     "LSTMParam",
@@ -645,6 +651,10 @@ template<> struct OpParamTypeTraits<ppl::nn::pmx::onnx::GatherNDParam> {
 
 template<> struct OpParamTypeTraits<ppl::nn::pmx::onnx::GemmParam> {
   static const OpParamType enum_value = OpParamType_GemmParam;
+};
+
+template<> struct OpParamTypeTraits<ppl::nn::pmx::onnx::InstanceNormalizationParam> {
+  static const OpParamType enum_value = OpParamType_InstanceNormalizationParam;
 };
 
 template<> struct OpParamTypeTraits<ppl::nn::pmx::onnx::LeakyReluParam> {
@@ -1461,6 +1471,47 @@ inline flatbuffers::Offset<GemmParam> CreateGemmParam(
   builder_.add_trans_a(trans_a);
   builder_.add_beta(beta);
   builder_.add_alpha(alpha);
+  return builder_.Finish();
+}
+
+struct InstanceNormalizationParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef InstanceNormalizationParamBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_EPSILON = 4
+  };
+  float epsilon() const {
+    return GetField<float>(VT_EPSILON, 1e-05f);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<float>(verifier, VT_EPSILON) &&
+           verifier.EndTable();
+  }
+};
+
+struct InstanceNormalizationParamBuilder {
+  typedef InstanceNormalizationParam Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_epsilon(float epsilon) {
+    fbb_.AddElement<float>(InstanceNormalizationParam::VT_EPSILON, epsilon, 1e-05f);
+  }
+  explicit InstanceNormalizationParamBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<InstanceNormalizationParam> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<InstanceNormalizationParam>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<InstanceNormalizationParam> CreateInstanceNormalizationParam(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    float epsilon = 1e-05f) {
+  InstanceNormalizationParamBuilder builder_(_fbb);
+  builder_.add_epsilon(epsilon);
   return builder_.Finish();
 }
 
@@ -2835,6 +2886,9 @@ struct OpParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const ppl::nn::pmx::onnx::GemmParam *value_as_GemmParam() const {
     return value_type() == ppl::nn::pmx::onnx::OpParamType_GemmParam ? static_cast<const ppl::nn::pmx::onnx::GemmParam *>(value()) : nullptr;
   }
+  const ppl::nn::pmx::onnx::InstanceNormalizationParam *value_as_InstanceNormalizationParam() const {
+    return value_type() == ppl::nn::pmx::onnx::OpParamType_InstanceNormalizationParam ? static_cast<const ppl::nn::pmx::onnx::InstanceNormalizationParam *>(value()) : nullptr;
+  }
   const ppl::nn::pmx::onnx::LeakyReluParam *value_as_LeakyReluParam() const {
     return value_type() == ppl::nn::pmx::onnx::OpParamType_LeakyReluParam ? static_cast<const ppl::nn::pmx::onnx::LeakyReluParam *>(value()) : nullptr;
   }
@@ -2949,6 +3003,10 @@ template<> inline const ppl::nn::pmx::onnx::GatherNDParam *OpParam::value_as<ppl
 
 template<> inline const ppl::nn::pmx::onnx::GemmParam *OpParam::value_as<ppl::nn::pmx::onnx::GemmParam>() const {
   return value_as_GemmParam();
+}
+
+template<> inline const ppl::nn::pmx::onnx::InstanceNormalizationParam *OpParam::value_as<ppl::nn::pmx::onnx::InstanceNormalizationParam>() const {
+  return value_as_InstanceNormalizationParam();
 }
 
 template<> inline const ppl::nn::pmx::onnx::LeakyReluParam *OpParam::value_as<ppl::nn::pmx::onnx::LeakyReluParam>() const {
@@ -3123,6 +3181,10 @@ inline bool VerifyOpParamType(flatbuffers::Verifier &verifier, const void *obj, 
     }
     case OpParamType_GemmParam: {
       auto ptr = reinterpret_cast<const ppl::nn::pmx::onnx::GemmParam *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case OpParamType_InstanceNormalizationParam: {
+      auto ptr = reinterpret_cast<const ppl::nn::pmx::onnx::InstanceNormalizationParam *>(obj);
       return verifier.VerifyTable(ptr);
     }
     case OpParamType_LeakyReluParam: {

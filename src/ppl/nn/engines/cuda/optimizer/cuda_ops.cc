@@ -53,6 +53,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/greater_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/identity_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/if_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/instance_normalization_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/leaky_relu_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/less_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/log_op.h"
@@ -160,6 +161,7 @@ void RegisterBuiltinOpImpls() {
     // I
     RegisterOptKernelCreator<IdentityOp>("", "Identity", 1, 12);
     RegisterOptKernelCreator<IfOp>("", "If", 1, 12);
+    RegisterOptKernelCreator<InstanceNormalizationOp>("", "InstanceNormalization", 6, 13);
     // L
     RegisterOptKernelCreator<LeakyReluOp>("", "LeakyRelu", 6, 16);
     RegisterOptKernelCreator<LessOp>("", "Less", 9, 12);

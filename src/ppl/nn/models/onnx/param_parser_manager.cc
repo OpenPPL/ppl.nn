@@ -35,6 +35,7 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_gather_nd_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_gemm_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_if_param.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_instancenormalization_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_leaky_relu_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_loop_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_lrn_param.h"
@@ -170,6 +171,8 @@ ParamParserManager::ParamParserManager() {
     // I
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Identity", 1, 13);
     PPL_REGISTER_OP_WITH_PARAM("", "If", 1, 12, ppl::nn::onnx::IfParam, ParseIfParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "InstanceNormalization", 6, 13, ppl::nn::onnx::InstanceNormalizationParam,
+                               ParseInstanceNormalizationParam);
     // L
     PPL_REGISTER_OP_WITH_PARAM("", "LeakyRelu", 6, 16, ppl::nn::onnx::LeakyReluParam, ParseLeakyReluParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Less", 7, 16);

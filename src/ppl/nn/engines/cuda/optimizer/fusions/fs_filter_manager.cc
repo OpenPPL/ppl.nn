@@ -47,6 +47,7 @@ FsFilterManager::FsFilterManager() {
     type2fusion_.emplace("Reshape", &channel_shuffle_fs_);
     type2fusion_.emplace("Softmax", &softmax_fs_);
     type2fusion_.emplace("BatchNormalization", &batchnorm_fs_);
+    type2fusion_.emplace("InstanceNormalization", &instancenorm_fs_);
 
 }
 
