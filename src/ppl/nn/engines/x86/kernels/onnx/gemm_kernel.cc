@@ -64,9 +64,9 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
         BNdim = 0;
     }
 
-    const int32_t M = A->GetShape()->GetDim(AMdim);
-    const int32_t K = A->GetShape()->GetDim(AKdim);
-    const int32_t N = param_->N == 0 ? B->GetShape()->GetDim(BNdim) : param_->N;
+    const int64_t M = A->GetShape()->GetDim(AMdim);
+    const int64_t K = A->GetShape()->GetDim(AKdim);
+    const int64_t N = param_->N == 0 ? B->GetShape()->GetDim(BNdim) : param_->N;
 
     ppl::kernel::x86::gemm_v2_param_fp32 param;
     param.src_A = A->GetBufferPtr<float>();
@@ -84,7 +84,7 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     param.trans_B = param_->transB;
     param.isa_flag = GetISA();
 
-    if (gemm_fuse_relu_) {
+    if (fuse_relu_) {
         param.fuse_flag = ppl::kernel::x86::gemm_v2_fuse_flag::RELU;
     } else {
         param.fuse_flag = ppl::kernel::x86::gemm_v2_fuse_flag::NONE;

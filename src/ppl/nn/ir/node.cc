@@ -40,12 +40,20 @@ void Node::AddOutput(edgeid_t eid) {
     utils::VectorAddUnique(outputs_, eid);
 }
 
+void Node::InsertOutput(uint32_t idx, edgeid_t eid) {
+    utils::VectorInsertUnique(outputs_, idx, eid);
+}
+
 uint32_t Node::ReplaceOutput(edgeid_t old_value, edgeid_t new_value) {
     return DoReplace(outputs_.data(), outputs_.size(), old_value, new_value);
 }
 
 void Node::AddExtraInput(edgeid_t eid) {
     utils::VectorAddUnique(extra_inputs_, eid);
+}
+
+void Node::InsertExtraInput(uint32_t idx, edgeid_t eid) {
+    utils::VectorInsertUnique(extra_inputs_, idx, eid);
 }
 
 uint32_t Node::ReplaceExtraInput(edgeid_t old_value, edgeid_t new_value) {

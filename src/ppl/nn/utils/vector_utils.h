@@ -64,6 +64,14 @@ uint32_t VectorAddUnique(std::vector<T>& vec, const T& value) {
 }
 
 template <typename T>
+void VectorInsertUnique(std::vector<T>& vec, const uint32_t idx, const T& value) {
+    auto _idx = VectorFind(vec, value);
+    if (_idx == vec.size()) {
+        vec.insert(vec.begin() + idx, value);
+    }
+}
+
+template <typename T>
 class VecIter {
 private:
     static bool DefaultFilter(const T&) {
