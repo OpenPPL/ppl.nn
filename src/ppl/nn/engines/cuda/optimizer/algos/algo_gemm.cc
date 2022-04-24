@@ -45,18 +45,17 @@ void GemmAlgorithm::GetAttrParam(void*& param) const {
 bool GemmAlgorithm::IsSupported(const ir::Node* node, const OptKernelOptions& options,
                                 dataformat_t input_format) const {
     const TensorShape& tensor0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
-    if (tensor0.GetDataType() != ppl::common::DATATYPE_FLOAT16 && tensor0.GetDataType() != ppl::common::DATATYPE_INT8) {
+    if (tensor0.GetDataType() != DATATYPE_FLOAT16 && tensor0.GetDataType() != DATATYPE_INT8) {
         return false;
     }
     if (input_format != DATAFORMAT_NHWC16 && input_format != DATAFORMAT_NHWC8) {
         return false;
     }
     // check if conv is quantization
-    auto quant0 = options.quants->at(node->GetInput(0));
-    if (quant0.type == DATATYPE_INT8 && input_format != DATAFORMAT_NHWC16) {
+    if (tensor0.GetDataType() == DATATYPE_INT8 && input_format != DATAFORMAT_NHWC16) {
         return false;
     }
-    if (quant0.type == DATATYPE_INT16 && input_format != DATAFORMAT_NHWC8) {
+    if (tensor0.GetDataType() == DATATYPE_FLOAT16 && input_format != DATAFORMAT_NHWC8) {
         return false;
     }
     return true;
