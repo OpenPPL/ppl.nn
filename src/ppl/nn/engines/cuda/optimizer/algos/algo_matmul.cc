@@ -102,6 +102,10 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     for(int i = 0; i < m_id; i++){
         batch *= shape_in0.GetDim(i);
     }
+    if (dim_count1 == 2){
+        temp_conv_param.in_num *= batch;
+        batch = 1;
+    }
     temp_conv_param.num_chl = attr_param_.param.transB ? shape_in1.GetDim(dim_count1-1) : shape_in1.GetDim(dim_count1-2);
     temp_conv_param.num_flt = attr_param_.param.transB ? shape_in1.GetDim(dim_count1-2) : shape_in1.GetDim(dim_count1-1);
     temp_conv_param.in_height = 1;

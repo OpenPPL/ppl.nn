@@ -32,8 +32,9 @@ bool MatMulKernel::CanDoExecute(const KernelExecContext& ctx) const {
         return false;
     }
     // K must be the same
-    uint32_t size = input0.GetDimCount();
-    if (input0.GetDim(size - 1) != input1.GetDim(size - 2)) {
+    uint32_t dim_count0 = input0.GetDimCount();
+    uint32_t dim_count1 = input1.GetDimCount();
+    if (input0.GetDim(dim_count0 - 1) != input1.GetDim(dim_count1 - 2)) {
         return false;
     }
 
@@ -111,15 +112,16 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
         GetCudaDevice()->Free(&input0_buffer);
     });
 
-    auto newshapeout = *output->GetShape();
-    auto N = newshapeout.GetDim(dim_count - 1);
+    auto newshape_out = *output->GetShape();
+    auto out_dim_count = newshape_out.GetDimCount();
+    auto N = newshape_out.GetDim(out_dim_count - 1);
     auto N_pad = (N + align_size-1) / align_size * align_size;
     BufferDesc output_buffer;
     bool is_output_pad = N != N_pad;
     void *bgemm_out;
     if (is_output_pad){
-        newshapeout.SetDim(dim_count-1, N_pad);
-        auto status = GetCudaDevice()->Realloc(newshapeout, &output_buffer);
+        newshape_out.SetDim(out_dim_count-1, N_pad);
+        auto status = GetCudaDevice()->Realloc(newshape_out, &output_buffer);
         if (status != ppl::common::RC_SUCCESS) {
             LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
             return status;
