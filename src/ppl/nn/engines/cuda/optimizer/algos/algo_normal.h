@@ -82,6 +82,7 @@ private:
                                          "AveragePool",
                                          "GlobalAveragePool",
                                          "BatchNormalization",
+                                         "InstanceNormalization",
                                          "Slice",
                                          "Split",
                                          "Sigmoid",

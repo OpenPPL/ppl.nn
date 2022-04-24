@@ -81,6 +81,10 @@ table GemmParam {
     trans_b: int32 = 0;
 }
 
+table InstanceNormalizationParam {
+    epsilon: float32 = 1e-05;
+}
+
 table LeakyReluParam {
     alpha: float32 = 0.01;
 }
