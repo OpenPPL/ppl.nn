@@ -31,7 +31,7 @@ public:
         param_ = p;
     }
     void SetFuseReLU(bool fuse_relu) {
-        gemm_fuse_relu_ = fuse_relu;
+        fuse_relu_ = fuse_relu;
     }
 
 private:
@@ -39,7 +39,7 @@ private:
 
 private:
     const ppl::nn::onnx::GemmParam* param_ = nullptr;
-    bool gemm_fuse_relu_ = false;
+    bool fuse_relu_ = false;
 };
 
 }}} // namespace ppl::nn::x86

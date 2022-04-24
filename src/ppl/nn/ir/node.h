@@ -82,6 +82,10 @@ public:
         inputs_.push_back(eid);
     }
 
+    void InsertInput(uint32_t idx, edgeid_t eid) {
+        inputs_.insert(inputs_.begin() + idx, eid);
+    }
+
     /**
        @brief replace `old_value` with `new_value` in inputs,
        keeping `new_value` is in the same place as `old_value`.
@@ -100,6 +104,7 @@ public:
 
     /** @note outputs don't contain duplicated edges */
     void AddOutput(edgeid_t);
+    void InsertOutput(uint32_t, edgeid_t);
 
     /**
        @brief replace `old_value` with `new_value` in outputs,
@@ -119,6 +124,7 @@ public:
 
     /** @note extra inputs don't contain duplicated edges */
     void AddExtraInput(edgeid_t);
+    void InsertExtraInput(uint32_t, edgeid_t);
 
     /**
        @brief replaces `old_value` with `new_value` in extra inputs,

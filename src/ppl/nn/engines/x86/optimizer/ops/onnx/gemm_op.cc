@@ -58,7 +58,7 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
         }
     }
 
-    param_->bias_term = (node->GetInputCount() == 3) ? 1 : 0;
+    param_->bias_term = (node->GetInputCount() == 3) ? true : false;
 
     if (!param_->transA && param_->transB && weight_data != nullptr) {
         if (!fc_param_) {
@@ -118,7 +118,7 @@ RetCode GemmOp::OmitConstantsData(std::map<edgeid_t, int64_t> *constants_data_re
 }
 
 bool GemmOp::TryFuseReLU() {
-    gemm_fuse_relu_ = true;
+    fuse_relu_ = true;
     if (fc_param_ && fc_param_->algo_info.algo_type != ppl::kernel::x86::fc_fp32_algo::UNKNOWN) {
         ppl::kernel::x86::fc_fp32_param param = fc_param_->mgr->param();
         param.fuse_flag |= ppl::kernel::x86::fc_fuse_flag::RELU;
@@ -132,7 +132,7 @@ KernelImpl* GemmOp::CreateKernelImpl() const {
         return CreateKernelImplWithParam<FCKernel>(fc_param_);
     } else {
         auto kernel = CreateKernelImplWithParam<GemmKernel>(param_.get());
-        kernel->SetFuseReLU(gemm_fuse_relu_);
+        kernel->SetFuseReLU(fuse_relu_);
         return kernel;
     }
 }

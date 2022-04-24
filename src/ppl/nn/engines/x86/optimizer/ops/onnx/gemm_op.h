@@ -36,7 +36,7 @@ public:
 private:
     FCParam* fc_param_;
     std::shared_ptr<ppl::nn::onnx::GemmParam> param_;
-    bool gemm_fuse_relu_ = false;
+    bool fuse_relu_ = false;
 };
 
 }}} // namespace ppl::nn::x86
