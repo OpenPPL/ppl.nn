@@ -153,8 +153,6 @@ ppl::common::RetCode PPLCUDABgemmModifyWeights(
 
         dim3 grid(DivUp(dim0_pad, 32), DivUp(dim1, 32), batch);
         dim3 block(32, 32, 1);
-        weight_shape->SetDim(0, dim1);
-        weight_shape->SetDim(1, dim0_pad);
         switch (type) {
             case ppl::common::DATATYPE_FLOAT32: {
                 TRANSWEIGHT(float)
@@ -403,6 +401,10 @@ double PPLCUDABgemmSelectKernel(
     for (int i = 0; i < m_id; i++){
         batch *= input_shape->GetDim(i);
     }
+    if (dim_count1 == 2){
+        M *= batch;
+        batch = 1;
+    }
     int K_pad = input_shape->GetDim(dim_count0-1);
     int N     = weight_shape->GetDim(dim_count1-1);
     int N_pad = Align(N, pad_size);
@@ -484,7 +486,7 @@ double PPLCUDABgemmSelectKernel(
     return minTime;
 }
 
-// (B, M, K_pad) * (B, N, K_pad) = (B, M, N_pad)
+// (B, M, K_pad) * ((B,)N, K_pad) = (B, M, N_pad)
 ppl::common::RetCode PPLCUDABgemmForwardImp(
     const cudaStream_t &stream,
     ppl::nn::cuda::CUDAModule *module,
@@ -525,6 +527,10 @@ ppl::common::RetCode PPLCUDABgemmForwardImp(
     uint64_t batch = 1;
     for (int i = 0; i < m_id; i++){
         batch *= input_shape->GetDim(i);
+    }
+    if (dim_count1 == 2){
+        M *= batch;
+        batch = 1;
     }
     int K     = input_shape->GetDim(dim_count0- 1);
     int K_pad = Align(K, pad_size);
