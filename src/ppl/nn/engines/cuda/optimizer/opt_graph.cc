@@ -119,40 +119,12 @@ RetCode OptGraph::UpdateDims(const utils::SharedResource& resource) {
             }
 
             auto edge = topo->GetEdgeById(edge_id);
-            if (topo->GetInput(edge->GetName()) != INVALID_EDGEID &&
-                topo->GetConstant(edge->GetName()) == INVALID_EDGEID) { // input j is a graph input edge
-                auto ir_shape = data->shapes.find(edge_id);
-                if (ir_shape == data->shapes.end()) {
-                    LOG(ERROR) << "cannot find input shape in data map.";
-                    return RC_INVALID_VALUE;
-                }
-
-                const vector<int64_t>* dims = nullptr;
-                if (j >= args_->input_dims.size()) {
-                    dims = &args_->default_dims;
-                } else {
-                    if (args_->input_dims[j].empty()) {
-                        dims = &args_->default_dims;
-                    } else {
-                        dims = &args_->input_dims[j];
-                    }
-                }
-
-                if (ir_shape->second.dims.size() == dims->size()) {
-                    for (uint32_t k = 0; k < ir_shape->second.dims.size(); ++k) {
-                        if (ir_shape->second.dims[k] == 1 && dims->at(k) != 0) {
-                            ir_shape->second.dims[k] = dims->at(k);
-                        }
-                    }
-                }
-            }
-
             auto impl_pair = tensor_impls_.insert(
                 make_pair(edge_id, unique_ptr<TensorImpl>(new TensorImpl(edge, TENSORTYPE_NORMAL))));
             if (impl_pair.second) {
                 // default shape
                 TensorShape temp_tensor_shape;
-                temp_tensor_shape.Reshape({1, 3, 128, 128});
+                temp_tensor_shape.Reshape({1, 3, 224, 224});
                 temp_tensor_shape.SetDataFormat(DATAFORMAT_NDARRAY);
                 temp_tensor_shape.SetDataType(DATATYPE_UNKNOWN);
 
@@ -160,6 +132,22 @@ RetCode OptGraph::UpdateDims(const utils::SharedResource& resource) {
                 auto ir_shape = data->shapes.find(edge_id);
                 if (ir_shape != data->shapes.end()) {
                     utils::IrShape2TensorShape(ir_shape->second, &temp_tensor_shape);
+                }
+
+                if (topo->GetInput(edge->GetName()) != INVALID_EDGEID &&
+                    topo->GetConstant(edge->GetName()) == INVALID_EDGEID) { // input j is a graph input edge
+                    if (ir_shape == data->shapes.end()) {
+                        LOG(ERROR) << "cannot find input shape in data map.";
+                        return RC_INVALID_VALUE;
+                    }
+
+                    if (j < args_->input_dims.size() && !args_->input_dims[j].empty()) { // args include input shape
+                        const vector<int64_t>* dims = &args_->input_dims[j];
+                        temp_tensor_shape.SetDimCount(dims->size());
+                        for (uint32_t k = 0; k < dims->size(); ++k) {
+                            temp_tensor_shape.SetDim(k, dims->at(k));
+                        }
+                    }
                 }
 
                 *impl_pair.first->second->GetShape() = temp_tensor_shape;
