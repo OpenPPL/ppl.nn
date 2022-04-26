@@ -23,6 +23,7 @@ enum RelationOpType {
     Relation_Unknown = 0,
     Relation_Equal,
     Relation_Greater,
+    Relation_Greater_Or_Equal,
     Relation_Less,
     Relation_OpNum,
     Relation_ForceWord = INT_MAX,
@@ -64,6 +65,11 @@ __device__ inline bool ppl_relation_scalar<Relation_Greater, float>(float a, flo
     return a > b;
 }
 template <>
+__device__ inline bool ppl_relation_scalar<Relation_Greater_Or_Equal, float>(float a, float b)
+{
+    return a >= b;
+}
+template <>
 __device__ inline bool ppl_relation_scalar<Relation_Less, float>(float a, float b)
 {
     return a < b;
@@ -78,6 +84,11 @@ template <>
 __device__ inline bool ppl_relation_scalar<Relation_Greater, int64_t>(int64_t a, int64_t b)
 {
     return a > b;
+}
+template <>
+__device__ inline bool ppl_relation_scalar<Relation_Greater_Or_Equal, int64_t>(int64_t a, int64_t b)
+{
+    return a >= b;
 }
 template <>
 __device__ inline bool ppl_relation_scalar<Relation_Less, int64_t>(int64_t a, int64_t b)
@@ -102,6 +113,15 @@ __device__ inline bool ppl_relation_scalar_fp16<Relation_Greater>(half a, half b
 {
 #if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
     return __hgt(a, b);
+#else
+    return 0;
+#endif
+}
+template <>
+__device__ inline bool ppl_relation_scalar_fp16<Relation_Greater_Or_Equal>(half a, half b)
+{
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
+    return __hgt(a, b) || __heq(a, b);
 #else
     return 0;
 #endif
@@ -581,6 +601,7 @@ ppl::common::RetCode PPLCUDARelationForwardImp(
 
 INSTANT(Equal);
 INSTANT(Greater);
+INSTANT(Greater_Or_Equal);
 INSTANT(Less);
 
 #undef INSTANT
