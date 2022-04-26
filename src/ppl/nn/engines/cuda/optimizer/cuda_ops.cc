@@ -157,7 +157,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<GatherNDOp>("", "GatherND", 11, 11);
     RegisterOptKernelCreator<GemmOp>("", "Gemm", 11, 12);
     RegisterOptKernelCreator<GlobalAveragePoolOp>("", "GlobalAveragePool", 1, 16);
-    RegisterOptKernelCreator<GlobalMaxPoolOp>("", "GlobalMaxPool", 11, 13);
+    RegisterOptKernelCreator<GlobalMaxPoolOp>("", "GlobalMaxPool", 1, 16);
     RegisterOptKernelCreator<GreaterOp>("", "Greater", 9, 16);
     RegisterOptKernelCreator<GreaterOrEqualOp>("", "GreaterOrEqual", 9, 16);
     // I
@@ -202,7 +202,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<SequenceAtOp>("", "SequenceAt", 11, 16);
     RegisterOptKernelCreator<ShapeOp>("", "Shape", 1, 12);
     RegisterOptKernelCreator<SigmoidOp>("", "Sigmoid", 6, 12);
-    RegisterOptKernelCreator<SinOp>("", "Sin", 7, 16);
+    RegisterOptKernelCreator<SinOp>("", "Sin", 1, 16);
     RegisterOptKernelCreator<SliceOp>("", "Slice", 1, 16);
     RegisterOptKernelCreator<SoftmaxOp>("", "Softmax", 1, 12);
     RegisterOptKernelCreator<SplitOp>("", "Split", 2, 12);
