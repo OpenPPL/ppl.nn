@@ -51,6 +51,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/global_average_pool_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/global_max_pool_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/greater_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/greater_or_equal_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/identity_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/if_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/instance_normalization_op.h"
@@ -157,14 +158,15 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<GemmOp>("", "Gemm", 11, 12);
     RegisterOptKernelCreator<GlobalAveragePoolOp>("", "GlobalAveragePool", 1, 16);
     RegisterOptKernelCreator<GlobalMaxPoolOp>("", "GlobalMaxPool", 11, 13);
-    RegisterOptKernelCreator<GreaterOp>("", "Greater", 9, 12);
+    RegisterOptKernelCreator<GreaterOp>("", "Greater", 9, 16);
+    RegisterOptKernelCreator<GreaterOrEqualOp>("", "GreaterOrEqual", 9, 16);
     // I
     RegisterOptKernelCreator<IdentityOp>("", "Identity", 1, 12);
     RegisterOptKernelCreator<IfOp>("", "If", 1, 12);
     RegisterOptKernelCreator<InstanceNormalizationOp>("", "InstanceNormalization", 6, 13);
     // L
     RegisterOptKernelCreator<LeakyReluOp>("", "LeakyRelu", 6, 16);
-    RegisterOptKernelCreator<LessOp>("", "Less", 9, 12);
+    RegisterOptKernelCreator<LessOp>("", "Less", 9, 16);
     RegisterOptKernelCreator<LogOp>("", "Log", 6, 12);
     RegisterOptKernelCreator<LoopOp>("", "Loop", 1, 12);
     RegisterOptKernelCreator<LstmOp>("", "LSTM", 7, 13);

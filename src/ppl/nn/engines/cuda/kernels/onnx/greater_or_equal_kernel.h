@@ -15,21 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/kernels/onnx/greater_kernel.h"
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_ONNX_GREATER_OR_EQUAL_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_ONNX_GREATER_OR_EQUAL_KERNEL_H_
 
-#include "cudakernel/arithmetic/relation.h"
+#include "ppl/nn/engines/cuda/kernel.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-ppl::common::RetCode GreaterKernel::DoExecute(KernelExecContext* ctx) {
-    auto input0 = ctx->GetInput<TensorImpl>(0);
-    auto input1 = ctx->GetInput<TensorImpl>(1);
-    auto output = ctx->GetOutput<TensorImpl>(0);
+class GreaterOrEqualKernel : public CudaKernel {
+public:
+    GreaterOrEqualKernel(const ir::Node* node) : CudaKernel(node) {}
 
-    ppl::common::RetCode status =
-        PPLCUDARelationGreaterForwardImp(GetStream(), input0->GetShape(), input0->GetBufferPtr(), input1->GetShape(),
-                                         input1->GetBufferPtr(), output->GetShape(), output->GetBufferPtr<bool>());
-    return status;
-}
+private:
+    ppl::common::RetCode DoExecute(KernelExecContext*) override;
+};
 
 }}} // namespace ppl::nn::cuda
+
+#endif

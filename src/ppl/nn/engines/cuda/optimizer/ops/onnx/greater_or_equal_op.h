@@ -15,21 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/kernels/onnx/greater_kernel.h"
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_GREATER_OR_EQUAL_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_GREATER_OR_EQUAL_OP_H_
 
-#include "cudakernel/arithmetic/relation.h"
+#include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-ppl::common::RetCode GreaterKernel::DoExecute(KernelExecContext* ctx) {
-    auto input0 = ctx->GetInput<TensorImpl>(0);
-    auto input1 = ctx->GetInput<TensorImpl>(1);
-    auto output = ctx->GetOutput<TensorImpl>(0);
-
-    ppl::common::RetCode status =
-        PPLCUDARelationGreaterForwardImp(GetStream(), input0->GetShape(), input0->GetBufferPtr(), input1->GetShape(),
-                                         input1->GetBufferPtr(), output->GetShape(), output->GetBufferPtr<bool>());
-    return status;
-}
+class GreaterOrEqualOp final : public CudaOptKernel {
+public:
+    GreaterOrEqualOp(const ir::Node* node) : CudaOptKernel(node) {}
+    KernelImpl* CreateKernelImpl() const override;
+    ppl::common::RetCode Init(const OptKernelOptions&) override;
+    ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
+};
 
 }}} // namespace ppl::nn::cuda
+
+#endif
