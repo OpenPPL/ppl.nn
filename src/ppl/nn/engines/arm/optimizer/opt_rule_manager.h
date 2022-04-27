@@ -45,6 +45,8 @@ public:
     ppl::common::RetCode ApplyRules(const OptKernelOptions& options, const OptRuleLevel max_opt_level,
                                     const std::string& tag_filter = "", const std::string& name_filter = "") const;
 
+    ppl::common::RetCode Register(OptRule* rule);
+
 private:
     std::vector<std::shared_ptr<OptRule>> rule_all_;
 

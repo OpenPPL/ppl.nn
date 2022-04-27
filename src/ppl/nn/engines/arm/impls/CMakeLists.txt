@@ -31,6 +31,7 @@ set(PPLNN_ARM_ENGINE_INCLUDE_DIRECTORIES ${PPLNN_SOURCE_DIR}/src/ ${PPLNN_SOURCE
 ### file globbing ######
 #### #### #### #### ####
 file(GLOB_RECURSE PPL_KERNEL_ARM_SERVER_SRC ${CMAKE_CURRENT_LIST_DIR}/src/*)
+list(APPEND PPL_KERNEL_ARM_SERVER_SOURCES ${PPL_KERNEL_ARM_SERVER_SRC})
 list(APPEND PPL_KERNEL_ARM_SERVER_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}/include)
 list(APPEND PPL_KERNEL_ARM_SERVER_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}/src)
 
@@ -63,7 +64,7 @@ endif()
 #### #### #### #### ####
 ### targets ############
 #### #### #### #### ####
-add_library(pplkernelarmserver_static STATIC ${PPL_KERNEL_ARM_SERVER_SRC})
+add_library(pplkernelarmserver_static STATIC ${PPL_KERNEL_ARM_SERVER_SOURCES})
 if(PPLNN_USE_ANDROID_NDK)
     target_link_options(pplkernelarmserver_static PRIVATE "-static-openmp")
 endif()
