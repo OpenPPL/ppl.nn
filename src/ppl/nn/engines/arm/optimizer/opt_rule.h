@@ -25,6 +25,7 @@
 namespace ppl { namespace nn { namespace arm {
 
 enum OptRuleLevel {
+    OPT_RULE_MUST_BE_DONE = -1,
     OPT_RULE_NO_OPT = 0,
     OPT_RULE_LEVEL_0 = 1,
     OPT_RULE_LEVEL_1 = 2,

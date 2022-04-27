@@ -85,6 +85,11 @@ ppl::common::RetCode OptRuleManager::ApplyRules(const OptKernelOptions& options,
     return RC_SUCCESS;
 }
 
+ppl::common::RetCode OptRuleManager::Register(OptRule* rule) {
+    rule_all_.emplace_back(rule);
+    return RC_SUCCESS;
+}
+
 OptRuleManager::OptRuleManager() {
     rule_all_.emplace_back(new FuseChannelShuffleRule);
     rule_all_.emplace_back(new FuseConvActivationRule);

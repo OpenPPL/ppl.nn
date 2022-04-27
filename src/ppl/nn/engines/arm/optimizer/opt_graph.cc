@@ -84,7 +84,22 @@ RetCode OptGraph::Init(ir::Graph* graph, RuntimePartitionInfo* info, ArmEngineOp
     info_ = info;
     options_ = options;
 
-    auto status = InitKernels(graph);
+    OptKernelOptions opt_kernel_options;
+    opt_kernel_options.graph_data = graph_->data.get(); // only a part of info can be used on Init stage
+    opt_kernel_options.graph_topo = graph_->topo.get();
+    opt_kernel_options.info = info_;
+    opt_kernel_options.engine_options = options_;
+
+    // do before init optimize
+    const auto opt_rule_manager = OptRuleManager::Instance();
+    const auto max_opt_level = opt_rule_manager->GetMaxOptLevel(options_->graph_optimization_level);
+    auto status = opt_rule_manager->ApplyRules(opt_kernel_options, max_opt_level, "BeforeInitOptimize", "");
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "Run BeforeInitOptimize failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    status = InitKernels(graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init kernels failed: " << GetRetCodeStr(status);
         return status;
