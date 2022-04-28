@@ -37,6 +37,9 @@ ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_ARM_OPTIONAL_INPUT(max_tensor, 2);
     PPLNN_ARM_REQUIRED_OUTPUT(output, 0);
 
+    const float pmin_val = param_->min_value;
+    const float pmax_val = param_->max_value;
+
     PPLNN_ARM_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_ARM_DEBUG_TRACE("Input [input]:\n");
     PPL_ARM_TENSOR_PRINT_DEBUG_MSG(input);
@@ -48,6 +51,8 @@ ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
         PPLNN_ARM_DEBUG_TRACE("Input [max]:\n");
         PPL_ARM_TENSOR_PRINT_DEBUG_MSG(max_tensor);
     }
+    PPLNN_ARM_DEBUG_TRACE("Min value: %f\n", pmin_val);
+    PPLNN_ARM_DEBUG_TRACE("Max_value: %f\n", pmax_val);
     PPLNN_ARM_DEBUG_TRACE("Output [output]:\n");
     PPL_ARM_TENSOR_PRINT_DEBUG_MSG(output);
     PPLNN_ARM_DEBUG_TRACE("isa: %u\n", GetISA());
@@ -60,7 +65,8 @@ ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
 
     return ppl::kernel::arm_server::neon::clip(
         input->GetShape(), input->GetBufferPtr<void>(), min_tensor ? min_tensor->GetBufferPtr<void>() : nullptr,
-        max_tensor ? max_tensor->GetBufferPtr<void>() : nullptr, output->GetBufferPtr<void>());
+        max_tensor ? max_tensor->GetBufferPtr<void>() : nullptr, pmin_val, pmax_val,
+        output->GetBufferPtr<void>());
 }
 
 }}} // namespace ppl::nn::arm
