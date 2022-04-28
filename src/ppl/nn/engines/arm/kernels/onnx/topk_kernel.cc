@@ -42,21 +42,32 @@ ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
 
-    auto x = ctx->GetInput<TensorImpl>(0);
-    auto k = ctx->GetInput<TensorImpl>(1);
-    auto values = ctx->GetOutput<TensorImpl>(0);
-    auto indices = ctx->GetOutput<TensorImpl>(1);
+    PPLNN_ARM_REQUIRED_INPUT(x, 0);
+    PPLNN_ARM_OPTIONAL_INPUT(k, 1);
+    PPLNN_ARM_REQUIRED_OUTPUT(values, 0);
+    PPLNN_ARM_REQUIRED_OUTPUT(indices, 1);
+
+    int64_t k_val = param_->k;
 
     PPLNN_ARM_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_ARM_DEBUG_TRACE("Input [x]:\n");
     PPL_ARM_TENSOR_PRINT_DEBUG_MSG(x);
-    PPLNN_ARM_DEBUG_TRACE("Input [k]:\n");
-    PPL_ARM_TENSOR_PRINT_DEBUG_MSG(k);
+    if (k) {
+        PPLNN_ARM_DEBUG_TRACE("Input [k]:\n");
+        PPL_ARM_TENSOR_PRINT_DEBUG_MSG(k);
+        k_val = k->GetBufferPtr<const int64_t>()[0];
+    }
+    PPLNN_ARM_DEBUG_TRACE("k: %ld\n", k_val);
     PPLNN_ARM_DEBUG_TRACE("Output [values]:\n");
     PPL_ARM_TENSOR_PRINT_DEBUG_MSG(values);
     PPLNN_ARM_DEBUG_TRACE("Output [indices]:\n");
     PPL_ARM_TENSOR_PRINT_DEBUG_MSG(indices);
     PPLNN_ARM_DEBUG_TRACE("isa: %u\n", GetISA());
+
+    if (k_val == -1) {
+        LOG(ERROR) << "Get undefined k";
+        return ppl::common::RC_UNSUPPORTED;
+    }
 
     const auto data_type = x->GetShape()->GetDataType();
     const auto data_format = x->GetShape()->GetDataFormat();
@@ -68,12 +79,10 @@ ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    const int64_t k_value = ctx->GetInput<TensorImpl>(1)->GetBufferPtr<const int64_t>()[0];
     uint32_t axis = param_->axis < 0 ? param_->axis + x->GetShape()->GetDimCount() : param_->axis;
 
-
     return ppl::kernel::arm_server::neon::topk(x->GetShape(), values->GetShape(), indices->GetShape(),
-                                            x->GetBufferPtr<void>(), k_value, axis, param_->largest,
+                                            x->GetBufferPtr<void>(), k_val, axis, param_->largest,
                                             param_->sorted, tmp_buffer, values->GetBufferPtr<void>(),
                                             indices->GetBufferPtr<int64_t>());
 

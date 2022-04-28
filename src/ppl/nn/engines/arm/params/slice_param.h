@@ -15,26 +15,22 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_ARM_OPTIMIZER_OPS_ONNX_CLIP_OP_H_
-#define _ST_HPC_PPL_NN_ENGINES_ARM_OPTIMIZER_OPS_ONNX_CLIP_OP_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_ARM_PARAMS_SLICE_PARAM_H_
+#define _ST_HPC_PPL_NN_ENGINES_ARM_PARAMS_SLICE_PARAM_H_
 
-#include "ppl/nn/params/onnx/clip_param.h"
-#include "ppl/nn/engines/arm/optimizer/opt_kernel.h"
+#include <stdint.h>
+#include <vector>
 
 namespace ppl { namespace nn { namespace arm {
 
-class ClipOp final : public ArmOptKernel {
-public:
-    ClipOp(const ir::Node* node) : ArmOptKernel(node) {}
-    ppl::common::RetCode Init(const OptKernelOptions& options) override;
-    ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
-                                      std::vector<ppl::common::dataformat_t>* selected_input_formats,
-                                      std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
-    KernelImpl* CreateKernelImpl() const override;
-private:
-    std::shared_ptr<ppl::nn::onnx::ClipParam> param_;
+struct SliceParam {
+    std::vector<int64_t> starts;
+    std::vector<int64_t> ends;
+    std::vector<int64_t> axes;
+    std::vector<int64_t> steps;
 };
 
-}}} // namespace ppl::nn::arm
+}}}; // namespace ppl::nn::x86
+
 
 #endif

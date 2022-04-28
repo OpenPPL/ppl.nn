@@ -32,13 +32,6 @@ RetCode PadOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        uint32_t dim_count = info->GetInput<TensorImpl>(0)->GetShape()->GetDimCount();
-        auto pad = info->GetInput<TensorImpl>(1);
-        if (pad->GetShape()->GetDimCount() != 1 || pad->GetShape()->GetDim(0) != 2 * dim_count ||
-            pad->GetShape()->GetDataType() != DATATYPE_INT64) {
-            return RC_INVALID_VALUE;
-        }
-
         auto ret = oputils::ReshapePad(info, param_.get());
         if (ret != RC_SUCCESS) {
             return ret;

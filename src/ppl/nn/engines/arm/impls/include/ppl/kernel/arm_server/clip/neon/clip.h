@@ -27,6 +27,8 @@ ppl::common::RetCode clip(
     const void *src,
     const void *min_ptr,
     const void *max_ptr,
+    const float min_val,
+    const float max_val,
     void *dst);
 
 }}}}; // namespace ppl::kernel::arm_server::neon

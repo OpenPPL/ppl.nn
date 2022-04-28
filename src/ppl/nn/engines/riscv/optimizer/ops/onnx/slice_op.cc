@@ -32,7 +32,6 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         if (info->GetOutputCount() != 1) {
-            LOG(ERROR) << "output count[" << info->GetOutputCount() << "] != 1.";
             return RC_INVALID_VALUE;
         }
         

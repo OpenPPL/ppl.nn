@@ -41,7 +41,7 @@ RetCode ClipOp::SelectFormat(const InputOutputInfo& info,
 }
 
 KernelImpl* ClipOp::CreateKernelImpl() const {
-    return CreateKernelImplWithoutParam<ClipKernel>();
+    return CreateKernelImplWithParam<ClipKernel>(param_.get());
 }
 
 }}} // namespace ppl::nn::arm

@@ -28,10 +28,12 @@ static ppl::common::RetCode clip_common(
     const eT *src,
     const eT *min_ptr,
     const eT *max_ptr,
+    const eT min_val,
+    const eT max_val,
     eT *dst)
 {
-    eT clip_min = min_ptr == nullptr ? numeric_min<eT>() : min_ptr[0];
-    eT clip_max = max_ptr == nullptr ? numeric_max<eT>() : max_ptr[0];
+    eT clip_min = min_ptr == nullptr ? min_val : min_ptr[0];
+    eT clip_max = max_ptr == nullptr ? max_val : max_ptr[0];
 
     constexpr int32_t eN = 128 / 8 / sizeof(eT);
     typedef typename DT<eT, eN>::vecDT vecType;
@@ -73,14 +75,16 @@ ppl::common::RetCode clip(
     const void *src,
     const void *min_ptr,
     const void *max_ptr,
+    const float min_val,
+    const float max_val,
     void *dst)
 {
     const auto data_type = src_shape->GetDataType();
     switch (data_type) {
-        case ppl::common::DATATYPE_FLOAT32: return clip_common<float>(src_shape, (const float *)src, (const float *)min_ptr, (const float *)max_ptr, (float *)dst);
-        case ppl::common::DATATYPE_INT64: return clip_common<int64_t>(src_shape, (const int64_t *)src, (const int64_t *)min_ptr, (const int64_t *)max_ptr, (int64_t *)dst);
+        case ppl::common::DATATYPE_FLOAT32: return clip_common<float>(src_shape, (const float *)src, (const float *)min_ptr, (const float *)max_ptr, min_val, max_val, (float *)dst);
+        case ppl::common::DATATYPE_INT64: return clip_common<int64_t>(src_shape, (const int64_t *)src, (const int64_t *)min_ptr, (const int64_t *)max_ptr, static_cast<int64_t>(min_val), static_cast<int64_t>(max_val), (int64_t *)dst);
 #ifdef PPLNN_USE_ARMV8_2_FP16
-        case ppl::common::DATATYPE_FLOAT16: return clip_common<__fp16>(src_shape, (const __fp16 *)src, (const __fp16 *)min_ptr, (const __fp16 *)max_ptr, (__fp16 *)dst);
+        case ppl::common::DATATYPE_FLOAT16: return clip_common<__fp16>(src_shape, (const __fp16 *)src, (const __fp16 *)min_ptr, (const __fp16 *)max_ptr, static_cast<__fp16>(min_val), static_cast<__fp16>(max_val), (__fp16 *)dst);
 #endif
         default: break;
     }
