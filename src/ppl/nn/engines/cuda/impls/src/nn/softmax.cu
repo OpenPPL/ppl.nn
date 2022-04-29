@@ -28,7 +28,7 @@ uint64_t PPLSoftmaxGetTempBufferSize(
     const ppl::nn::TensorShape* input_shape,
     int axis)
 {
-    int N = input_shape->GetElementsToDimensionIncludingPadding(axis);
+    int N = input_shape->GetElementsIncludingPadding() / input_shape->GetDim(axis);
     return N * ppl::common::GetSizeOfDataType(input_shape->GetDataType());
 }
 
@@ -42,22 +42,25 @@ ppl::common::RetCode PPLCUDASoftmaxForwardImp(
     int axis)
 {
     int N = input_shape->GetElementsToDimensionIncludingPadding(axis);
-    int D = input_shape->GetElementsFromDimensionIncludingPadding(axis);
+    int R = input_shape->GetDim(axis);
+    int D = input_shape->GetElementsFromDimensionIncludingPadding(axis + 1);
     // reduce max
-    PPLReduceDimDes reduce_desc(1, D, N);
+    PPLReduceDimDes reduce_desc(D, R, N);
     ReduceParam reduce_max = ReduceMax;
     void* max_sum_output   = temp_buffer;
     ppl::nn::TensorShape max_sum_shape(*input_shape);
+    max_sum_shape.SetDimCount(3);
     max_sum_shape.SetDim(0, N);
     max_sum_shape.SetDim(1, 1);
-    max_sum_shape.SetDimCount(2);
+    max_sum_shape.SetDim(2, D);
     
     auto status = PPLCUDAReduceForwardImp(stream, reduce_max, reduce_desc, input_shape, input, &max_sum_shape, max_sum_output);
     // sub
     ppl::nn::TensorShape nd_shape(*input_shape);
+    nd_shape.SetDimCount(3);
     nd_shape.SetDim(0, N);
-    nd_shape.SetDim(1, D);
-    nd_shape.SetDimCount(2);
+    nd_shape.SetDim(1, R);
+    nd_shape.SetDim(2, D);
     status = PPLCUDAArithMeticSubForwardImp(stream, &nd_shape, input, &max_sum_shape, max_sum_output, &nd_shape, output,1,1,1);
     // exp
     status                 = PPLCUDAExpForwardImp(stream, &nd_shape, output, &nd_shape, output);
