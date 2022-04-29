@@ -38,28 +38,18 @@ ppl::common::RetCode SoftmaxKernel::DoExecute(KernelExecContext* ctx) {
 
     const auto data_type = input->GetShape()->GetDataType();
     const auto data_format = input->GetShape()->GetDataFormat();
-
-    const int64_t real_axis = param_->axis < 0 ? param_->axis + input->GetShape()->GetDimCount() : param_->axis;
-
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
-            if (false) {
-            }
-#ifdef PPL_USE_X86_AVX512
-            else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
-                return ppl::kernel::x86::softmax_ndarray_fp32_avx512(input->GetShape(), input->GetBufferPtr<float>(),
-                                                                  real_axis, output->GetBufferPtr<float>());
-            }
-#endif
-            else if (MayUseISA(ppl::common::ISA_X86_FMA)) {
-                return ppl::kernel::x86::softmax_ndarray_fp32_fma(input->GetShape(), input->GetBufferPtr<float>(),
-                                                                  real_axis, output->GetBufferPtr<float>());
-            } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-                return ppl::kernel::x86::softmax_ndarray_fp32_sse(input->GetShape(), input->GetBufferPtr<float>(),
-                                                                  real_axis, output->GetBufferPtr<float>());
+            if (GetNode()->GetType().version < 13) {
+                return ppl::kernel::x86::softmax_ndarray_fp32(
+                    GetX86Device()->GetISA(),
+                    input->GetShape(), input->GetBufferPtr<float>(),
+                    param_->axis, output->GetBufferPtr<float>());
             } else {
-                return ppl::kernel::x86::softmax_ndarray_fp32(input->GetShape(), input->GetBufferPtr<float>(),
-                                                              real_axis, output->GetBufferPtr<float>());
+                return ppl::kernel::x86::softmax13_ndarray_fp32(
+                    GetX86Device()->GetISA(),
+                    input->GetShape(), input->GetBufferPtr<float>(),
+                    param_->axis, output->GetBufferPtr<float>());
             }
         } else {
             LOG(ERROR) << "unsupported data type " << ppl::common::GetDataTypeStr(data_type) << ".";
