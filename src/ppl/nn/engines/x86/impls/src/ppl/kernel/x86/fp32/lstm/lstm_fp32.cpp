@@ -28,7 +28,7 @@ static inline float sigmoidf(const float x) {
     return 1.0f / (1.0f + expf(-x));
 }
 
-uint64_t lstm_ref_fp32_get_buffer_bytes(
+uint64_t lstm_fp32_ref_get_buffer_bytes(
     const ppl::nn::TensorShape *X_shape,
     const rnn_direction_t direction,
     const int64_t hidden_size,
@@ -49,7 +49,7 @@ uint64_t lstm_ref_fp32_get_buffer_bytes(
     return (gate_buff_size + yh_size + yc_size) * sizeof(float);
 }
 
-ppl::common::RetCode lstm_ref_fp32(
+ppl::common::RetCode lstm_fp32_ref(
     const ppl::nn::TensorShape *X_shape,
     const float *X,
     const float *X_weight,
@@ -122,7 +122,7 @@ ppl::common::RetCode lstm_ref_fp32(
             const float *Y_c_prev = is_first_seq ? nd_init_c : nd_Yc;
             float *sY = nd_Y + mapped_seq_index * num_direction * batch * hidden_size;
 
-            gemm_ref_fp32( // X[s]*W[nd]_{iofc}^T+Wb_{iofc}
+            gemm_fp32_ref( // X[s]*W[nd]_{iofc}^T+Wb_{iofc}
                 sX, nd_W, nd_Wb, nullptr,
                 gemm_m_type::NOTRANS, gemm_m_type::TRANS,
                 gemm_v_type::ROW_VEC, gemm_m_type::EMPTY,
@@ -131,7 +131,7 @@ ppl::common::RetCode lstm_ref_fp32(
                 1.0f, 0.0f, 1.0f, 0.0f, gemm_post::NONE, gate_buf);
 
             const float alpha = !Y_h_prev ? 0.0f : 1.0f; // some hack, gemm will skip aAxB if alpha is 0
-            gemm_ref_fp32( // h_0[nd]*R[nd]_{iofc}^T+Rb_{iofc}
+            gemm_fp32_ref( // h_0[nd]*R[nd]_{iofc}^T+Rb_{iofc}
                 Y_h_prev, nd_R, nd_Rb, nullptr,
                 gemm_m_type::NOTRANS, gemm_m_type::TRANS,
                 gemm_v_type::ROW_VEC, gemm_m_type::NOTRANS,

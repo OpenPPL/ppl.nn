@@ -768,7 +768,7 @@ uint64_t gemm_fp32_fma_get_packed_b_bytes(
     return sizeof(float) * K * round_up(N, gemm_kernel_fp32_fma::config::N_REG_ELTS);
 }
 
-ppl::common::RetCode gemm_pack_b_fp32_fma(
+ppl::common::RetCode gemm_fp32_fma_pack_b(
     const float *B,
     const gemm_m_type_t typeB,
     const int64_t N,

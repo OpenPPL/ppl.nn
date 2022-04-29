@@ -741,7 +741,7 @@ DEBUG_TAG(N);
 
 DEBUG_TAG(O);
         if (Flag_validate) {
-            if (ppl::common::RC_SUCCESS != ppl::kernel::x86::conv2d_ref_fp32(
+            if (ppl::common::RC_SUCCESS != ppl::kernel::x86::conv2d_fp32_ref(
                     &src_shape,
                     &dst_shape,
                     &dst_shape,
@@ -751,7 +751,7 @@ DEBUG_TAG(O);
                     bias,
                     param,
                     dst_ref)) {
-                std::cerr << "," << "conv2d_ref_fp32 failed\n";
+                std::cerr << "," << "conv2d_fp32_ref failed\n";
                 return -1;
             }
             if (algoinfo.output_format != ppl::common::DATAFORMAT_NDARRAY) {

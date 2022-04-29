@@ -23,7 +23,7 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-uint64_t lstm_ref_fp32_get_buffer_bytes(
+uint64_t lstm_fp32_ref_get_buffer_bytes(
     const ppl::nn::TensorShape *X_shape,
     const rnn_direction_t direction,
     const int64_t hidden_size,
@@ -31,7 +31,7 @@ uint64_t lstm_ref_fp32_get_buffer_bytes(
     const bool has_Y_h,
     const bool has_Y_c);
 
-ppl::common::RetCode lstm_ref_fp32(
+ppl::common::RetCode lstm_fp32_ref(
     const ppl::nn::TensorShape *X_shape,
     const float *X,
     const float *X_weight,

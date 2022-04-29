@@ -69,7 +69,7 @@ struct conv2d_fp32_param {
     }
 };
 
-ppl::common::RetCode conv2d_ref_fp32(
+ppl::common::RetCode conv2d_fp32_ref(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *sum_src_shape,
     const ppl::nn::TensorShape *dst_shape,

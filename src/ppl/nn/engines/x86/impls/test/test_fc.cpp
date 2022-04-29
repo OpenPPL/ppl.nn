@@ -310,7 +310,7 @@ DEBUG_TAG(N);
 
 DEBUG_TAG(O);
         if (Flag_validate) {
-            if (ppl::common::RC_SUCCESS != ppl::kernel::x86::gemm_ref_fp32(
+            if (ppl::common::RC_SUCCESS != ppl::kernel::x86::gemm_fp32_ref(
                     src, filter, bias, nullptr,
                     ppl::kernel::x86::gemm_m_type::NOTRANS,
                     ppl::kernel::x86::gemm_m_type::TRANS,
@@ -320,7 +320,7 @@ DEBUG_TAG(O);
                     1.0f, 0.0f, 1.0f, 0.0f,
                     ppl::kernel::x86::gemm_post::NONE,
                     dst_ref)) {
-                std::cerr << "," << "gemm_ref_fp32 failed\n";
+                std::cerr << "," << "gemm_fp32_ref failed\n";
                 return -1;
             }
             std::cerr << ",";

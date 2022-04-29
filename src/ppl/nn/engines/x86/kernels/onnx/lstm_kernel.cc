@@ -46,7 +46,7 @@ uint64_t LSTMKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
         return kernel::x86::lstm_fp32_fma_get_buffer_bytes(
             X->GetShape(), direction_, param_->hidden_size, has_Y, has_Y_h, has_Y_c);
     } else {
-        return kernel::x86::lstm_ref_fp32_get_buffer_bytes(
+        return kernel::x86::lstm_fp32_ref_get_buffer_bytes(
             X->GetShape(), direction_, param_->hidden_size, has_Y, has_Y_h, has_Y_c);
     }
 }
@@ -167,7 +167,7 @@ ppl::common::RetCode LSTMKernel::DoExecute(KernelExecContext* ctx) {
                 P_data, B_data, sequence_lens_data, initial_h_data, initial_c_data,
                 direction_, param_->hidden_size, tmp_buffer, Y_data, Y_h_data, Y_c_data);
         } else {
-            return kernel::x86::lstm_ref_fp32(
+            return kernel::x86::lstm_fp32_ref(
                 X->GetShape(), X->GetBufferPtr<const float>(),
                 W->GetBufferPtr<const float>(), R->GetBufferPtr<const float>(),
                 P_data, B_data, sequence_lens_data, initial_h_data, initial_c_data,
