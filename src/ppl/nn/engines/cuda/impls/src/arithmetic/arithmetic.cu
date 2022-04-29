@@ -607,7 +607,7 @@ __global__ void ppl_cukernel_arithmetic_one_dimension(
     T *output) {
     uint64_t index = blockIdx.x * blockDim.x + threadIdx.x;
     if (index >= num_elems) return;
-    int calc_index = index / inner_dim;
+    int calc_index = index % inner_dim;
     uint64_t offset0 = first_shorter ? calc_index : index;
     uint64_t offset1 = first_shorter ? index : calc_index;
     output[index] = ppl_arithmetic_scalar<op_type, T>(input0[offset0], input1[offset1]);
@@ -626,7 +626,7 @@ __global__ void ppl_cukernel_arithmetic_one_dimension_int8(
     float out_scale = 0) {
     uint64_t index = blockIdx.x * blockDim.x + threadIdx.x;
     if (index >= num_elems) return;
-    int calc_index = index / inner_dim;
+    int calc_index = index % inner_dim;
     uint64_t offset0 = first_shorter ? calc_index : index;
     uint64_t offset1 = first_shorter ? index : calc_index;
     output[index] = ppl_arithmetic_scalar_int8<op_type, T>(input0[offset0], input1[offset1], in_scale0, in_scale1, out_scale);
@@ -697,7 +697,7 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImp(
             ppl_cukernel_arithmetic_one_scalar<op_type, T><<<grid_size, block_size, 0,
                 stream>>>(num_elems, first_shorter, (const T*)input0, (const T*)input1, (T*)output);
         } else {
-            int inner_dim = output_shape->GetElementsIncludingPadding() / input_shape0->GetDim(0);
+            int inner_dim = first_shorter ? input_shape0->GetDim(0) : input_shape1->GetDim(0);
             ppl_cukernel_arithmetic_one_dimension<op_type, T><<<grid_size, block_size, 0,
                 stream>>>(num_elems, inner_dim, first_shorter, (const T*)input0, (const T*)input1, (T*)output);
         }
@@ -801,7 +801,7 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImpInt8(
             ppl_cukernel_arithmetic_one_scalar_int8<op_type, T><<<grid_size, block_size, 0,
                 stream>>>(num_elems, first_shorter, (const T*)input0, (const T*)input1, (T*)output, in_scale0, in_scale1, out_scale);
         } else {
-            int inner_dim = output_shape->GetElementsIncludingPadding() / input_shape0->GetDim(0);
+            int inner_dim = first_shorter ? input_shape0->GetDim(0) : input_shape1->GetDim(0);
             ppl_cukernel_arithmetic_one_dimension_int8<op_type, T><<<grid_size, block_size, 0,
                 stream>>>(num_elems, inner_dim, first_shorter, (const T*)input0, (const T*)input1, (T*)output, in_scale0, in_scale1, out_scale);
         }
