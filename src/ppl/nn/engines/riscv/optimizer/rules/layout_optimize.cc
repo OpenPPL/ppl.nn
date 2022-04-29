@@ -52,7 +52,7 @@ static ppl::common::RetCode AddReorderOp(const OptKernelOptions& options, const 
         return ppl::common::RC_EXISTS;
     }
     ir::Node* reorder_node = node_ret_pair.first; // TODO: change name for easy to understand
-    reorder_node->SetType(ir::Node::Type("ppl", "Reorder", 1));
+    reorder_node->SetType(ir::Node::Type("pmx", "Reorder", 1));
 
     std::string reorder_edge_name = reorder_node_name + "_edge";
     auto edge_ret_pair = graph_topo->AddEdge(reorder_edge_name);

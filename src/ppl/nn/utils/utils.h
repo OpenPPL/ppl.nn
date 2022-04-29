@@ -26,11 +26,11 @@ namespace ppl { namespace nn { namespace utils {
 
 static inline bool IsPplConverterNode(const ir::Node* node) {
     auto& type = node->GetType();
-    return (type.name == "Converter" && type.domain == "ppl");
+    return (type.name == "Converter" && type.domain == "pmx");
 }
 
 static inline ir::Node::Type MakePplConverterNodeType() {
-    return ir::Node::Type("ppl", "Converter", 1);
+    return ir::Node::Type("pmx", "Converter", 1);
 }
 
 ppl::common::RetCode ReadFileContent(const char* fname, std::string* buf);

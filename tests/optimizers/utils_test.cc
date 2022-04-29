@@ -72,7 +72,7 @@ TEST_F(OptimizerUtilsTest, basic_partition) {
     EXPECT_TRUE(next_of_b != nullptr);
 
     auto& type = next_of_b->GetType();
-    EXPECT_EQ("ppl", type.domain);
+    EXPECT_EQ("pmx", type.domain);
     EXPECT_EQ("Converter", type.name);
     EXPECT_EQ(1, type.version);
 }
@@ -102,7 +102,7 @@ TEST_F(OptimizerUtilsTest, converters_for_input) {
         auto nid = it.Get();
         auto node = topo->GetNode(nid);
         auto& type = node->GetType();
-        if (type.domain == "ppl" && type.name == "Converter" && type.version == 1) {
+        if (type.domain == "pmx" && type.name == "Converter" && type.version == 1) {
             ++converter_count;
         }
     }

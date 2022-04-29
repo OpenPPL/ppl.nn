@@ -23,7 +23,7 @@
 #include "ppl/nn/engines/riscv/optimizer/opt_rule_manager.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/onnx/conv/conv_op.h"
-#include "ppl/nn/engines/riscv/optimizer/ops/ppl/channel_shuffle_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/pmx/channel_shuffle_op.h"
 #include "ppl/nn/params/onnx/transpose_param.h"
 #include "ppl/nn/params/onnx/concat_param.h"
 #include "ppl/nn/params/onnx/split_param.h"
@@ -283,11 +283,11 @@ bool FuseChannelShuffle(const OptKernelOptions& options) {
                 continue;
             }
             ir::Node* channel_shuffle_node = node_ret_pair.first;
-            channel_shuffle_node->SetType(ir::Node::Type("ppl", "ChannelShuffle", 1));
+            channel_shuffle_node->SetType(ir::Node::Type("pmx", "ChannelShuffle", 1));
 
             auto param_ref = graph_data->attrs.find(channel_shuffle_node->GetId());
             if (param_ref == graph_data->attrs.end()) {
-                auto channel_shuffle_param = std::make_shared<ppl::nn::internal::ChannelShuffleParam>();
+                auto channel_shuffle_param = std::make_shared<ppl::nn::pmx::ChannelShuffleParam>();
                 channel_shuffle_param->group = group;
                 graph_data->attrs[channel_shuffle_node->GetId()] = channel_shuffle_param;
             } else {

@@ -21,10 +21,11 @@
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/params/onnx/transpose_param.h"
-#include "ppl/nn/params/ppl/channel_shuffle_param.h"
-#include "ppl/nn/params/ppl/shape_operation_param.h"
+#include "ppl/nn/params/pmx/channel_shuffle_param.h"
+#include "ppl/nn/params/pmx/shape_operation_param.h"
 
 using namespace ppl::common;
+using namespace ppl::nn::pmx;
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -57,7 +58,7 @@ const bool ChannelShuffleFusion::CanFuseFirstReshape(ir::Node* node, const OptKe
 
     auto attr_pair = data->attrs.find(shape_node_id);
     if (attr_pair != data->attrs.end()) {
-        auto param = (const ppl::nn::internal::ShapeOperationParam*)(attr_pair->second.get());
+        auto param = (const ShapeOperationParam*)(attr_pair->second.get());
         auto matrix = param->alpha.find(shape_edge_id)->second;
         if (matrix.numerator[1][matrix.MAXDIMSIZE] / matrix.denominator[1][matrix.MAXDIMSIZE] != 2) {
             return false;
@@ -104,7 +105,7 @@ const bool ChannelShuffleFusion::CanFuseSecondReshape(ir::Node* node, const OptK
     auto shape_node_id = topo->GetEdge(shape_edge_id)->GetProducer();
     auto attr_pair = data->attrs.find(shape_node_id);
     if (attr_pair != data->attrs.end()) {
-        auto param = (const ppl::nn::internal::ShapeOperationParam*)(attr_pair->second.get());
+        auto param = (const ShapeOperationParam*)(attr_pair->second.get());
         auto matrix = param->alpha.find(shape_edge_id)->second;
         if (matrix.numerator[1][matrix.MAXDIMSIZE] / matrix.denominator[1][matrix.MAXDIMSIZE] != -1) {
             return false;
@@ -264,7 +265,7 @@ const RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, cons
             FuseWithNextNodes(node, options);
         }
 
-        node->SetType(ir::Node::Type("ppl", "ChannelShuffle", 1));
+        node->SetType(ir::Node::Type("pmx", "ChannelShuffle", 1));
         // node->SetName(node_name);
         auto creator = OptKernelCreatorManager::GetInstance()->Find(node->GetType().domain, node->GetType().name,
                                                                     node->GetType().version);
@@ -278,7 +279,7 @@ const RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, cons
             LOG(ERROR) << "create Kernel failed: oom";
             return RC_UNSUPPORTED;
         }
-        auto param = (ppl::nn::internal::ChannelShuffleParam*)opt_kernel->GetParam();
+        auto param = (ChannelShuffleParam*)opt_kernel->GetParam();
         if (param == nullptr) {
             LOG(ERROR) << "Can not find param.";
             return RC_NOT_FOUND;

@@ -70,9 +70,9 @@ using namespace ppl::common;
 #include "ppl/nn/engines/riscv/optimizer/ops/mmcv/mmcv_gridsample_op.h"
 #include "ppl/nn/engines/riscv/optimizer/ops/mmcv/mmcv_roialign_op.h"
 
-#include "ppl/nn/engines/riscv/optimizer/ops/ppl/shape_operation_op.h"
-#include "ppl/nn/engines/riscv/optimizer/ops/ppl/reorder_op.h"
-#include "ppl/nn/engines/riscv/optimizer/ops/ppl/channel_shuffle_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/pmx/shape_operation_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/pmx/reorder_op.h"
+#include "ppl/nn/engines/riscv/optimizer/ops/pmx/channel_shuffle_op.h"
 
 namespace ppl { namespace nn { namespace riscv {
 
@@ -162,10 +162,10 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<MMCVGridSampleOp>("mmcv", "grid_sampler", 1, 1);
     RegisterOptKernelCreator<MMCVROIAlignOp>("mmcv", "MMCVRoiAlign", 1, 1);
 
-    // ppl
-    RegisterOptKernelCreator<ShapeOperationOp>("ppl", "Shape", 1, 1);
-    RegisterOptKernelCreator<ReorderOp>("ppl", "Reorder", 1, 1);
-    RegisterOptKernelCreator<ChannelShuffleOp>("ppl", "ChannelShuffle", 1, 1);
+    // pmx
+    RegisterOptKernelCreator<ShapeOperationOp>("pmx", "Shape", 1, 1);
+    RegisterOptKernelCreator<ReorderOp>("pmx", "Reorder", 1, 1);
+    RegisterOptKernelCreator<ChannelShuffleOp>("pmx", "ChannelShuffle", 1, 1);
 }
 
 }}} // namespace ppl::nn::riscv

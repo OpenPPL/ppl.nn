@@ -18,7 +18,7 @@
 #include "ppl/nn/engines/x86/optimizer/rules/fuse_swish.h"
 #include "ppl/nn/engines/x86/optimizer/rules/utils.h"
 #include "ppl/nn/engines/x86/optimizer/opt_rule_manager.h"
-#include "ppl/nn/engines/x86/optimizer/ops/ppl/swish_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/pmx/swish_op.h"
 #include "ppl/nn/common/logger.h"
 
 namespace ppl { namespace nn { namespace x86 {
@@ -72,7 +72,7 @@ bool FuseSwish(const OptKernelOptions &options) {
                 //                                               |-------------------------------------------------------------------------->|
                 const std::string swish_node_name =
                     "Fused_Swish_" + sigmoid_node->GetName() + "_" + last_mul_node->GetName();
-                const ir::Node::Type type("ppl", "Swish", 1);
+                const ir::Node::Type type("pmx", "Swish", 1);
 
                 // add node to graph topo
                 auto node_ret_pair = graph_topo->AddNode(swish_node_name);

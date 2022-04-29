@@ -21,7 +21,7 @@
 #include "ppl/nn/engines/cuda/engine.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/engines/cuda/optimizer/algos/algo_graph.h"
-#include "ppl/nn/engines/cuda/optimizer/ops/ppl/bridge_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/pmx/bridge_op.h"
 #include "ppl/nn/engines/utils.h"
 
 using namespace std;
@@ -242,7 +242,7 @@ RetCode OptGraph::AddBridgeKernels(const utils::SharedResource& resource) {
                 continue;
             }
 
-            auto creator = OptKernelCreatorManager::GetInstance()->Find("ppl", "Bridge", 1);
+            auto creator = OptKernelCreatorManager::GetInstance()->Find("pmx", "Bridge", 1);
             auto ret_pair = topo->AddNode("Bridge_Node_" + node->GetName() + "_" + edge->GetName());
             if (!ret_pair.second) {
                 LOG(ERROR) << "create a new node for [" << edge->GetName() << "] failed.";
@@ -250,7 +250,7 @@ RetCode OptGraph::AddBridgeKernels(const utils::SharedResource& resource) {
             }
             auto new_node = ret_pair.first;
 
-            new_node->SetType(ir::Node::Type("ppl", "Bridge", 1));
+            new_node->SetType(ir::Node::Type("pmx", "Bridge", 1));
             auto bridge_kernel = unique_ptr<CudaOptKernel>((*creator)(new_node));
             ((BridgeOp*)bridge_kernel.get())->AddInternalBridgeNode(node, new_node, edge, graph_);
 
@@ -275,7 +275,7 @@ RetCode OptGraph::AddBridgeKernels(const utils::SharedResource& resource) {
             auto edge = topo->GetEdge(node->GetOutput(j));
             if (topo->GetOutput(edge->GetName()) != INVALID_EDGEID || // it is marked as an output node
                 edge->CalcConsumerCount() == 0) { // it is an finel node for the graph
-                auto creator = OptKernelCreatorManager::GetInstance()->Find("ppl", "Bridge", 1);
+                auto creator = OptKernelCreatorManager::GetInstance()->Find("pmx", "Bridge", 1);
 
                 auto ret_pair = topo->AddNode("Bridge_Final_" + node->GetName() + "_" + edge->GetName());
                 if (!ret_pair.second) {
@@ -284,7 +284,7 @@ RetCode OptGraph::AddBridgeKernels(const utils::SharedResource& resource) {
                 }
                 auto new_node = ret_pair.first;
 
-                new_node->SetType(ir::Node::Type("ppl", "Bridge", 1));
+                new_node->SetType(ir::Node::Type("pmx", "Bridge", 1));
                 auto bridge_kernel = unique_ptr<CudaOptKernel>((*creator)(new_node));
                 ((BridgeOp*)bridge_kernel.get())->AddFinalBridgeNode(node, new_node, edge, graph_);
 

@@ -18,7 +18,7 @@
 #include "ppl/nn/engines/x86/optimizer/rules/fuse_conv_depthwise.h"
 #include "ppl/nn/engines/x86/optimizer/rules/utils.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/conv_op.h"
-#include "ppl/nn/engines/x86/optimizer/ops/ppl/post_depthwise_conv_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/pmx/post_depthwise_conv_op.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -55,7 +55,7 @@ bool FuseConvDepthwise(const OptKernelOptions &options) {
 
             const std::string pd_conv2d_node_name =
                     "PostDepthwiseConv_" + conv_node->GetName() + "_" + next_node->GetName();
-            const ir::Node::Type type("ppl", "PostDepthwiseConv", 1);
+            const ir::Node::Type type("pmx", "PostDepthwiseConv", 1);
 
             // add node to graph topo
             auto node_ret_pair = graph_topo->AddNode(pd_conv2d_node_name);
