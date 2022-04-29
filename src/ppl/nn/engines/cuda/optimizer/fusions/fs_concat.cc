@@ -43,8 +43,8 @@ const bool ConcatFusion::CanFuse(ir::Node* prenode, const OptKernelOptions& opti
         return false;
     }
 
-    if (prenode->GetType().name != "Conv" || 
-        prenode->GetType().name != "Convolution" || 
+    if ((prenode->GetType().name != "Conv" && 
+        prenode->GetType().name != "Convolution") || 
         prenode->GetOutputCount() != 1 || 
         offset_channel_size % size != 0 ||
         shape.GetDim(1) % size != 0) {
