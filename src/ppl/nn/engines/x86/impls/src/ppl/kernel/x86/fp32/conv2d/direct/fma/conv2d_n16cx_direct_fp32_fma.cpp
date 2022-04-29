@@ -23,7 +23,6 @@
 #include "ppl/kernel/x86/common/avx_tools.h"
 #include "ppl/kernel/x86/fp32/conv2d/direct/fma/conv2d_n16cx_direct_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/conv2d/direct/fma/conv2d_n16cx_direct_kernel_fp32_fma.h"
-#include "ppl/common/sys.h"
 
 #define ASSUME_L2_BYTES() (256 * 1024)
 #define ASSUME_L2_WAYS()  4

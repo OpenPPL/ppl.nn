@@ -19,7 +19,6 @@
 #define __ST_PPL_KERNEL_X86_COMMON_GEMM_V2_COMMON_H_
 
 #include "ppl/kernel/x86/common/general_include.h"
-#include "ppl/common/sys.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 

@@ -42,9 +42,10 @@ public:
         static const int64_t BETA_SUM_IDX = 12;
         static const int64_t FLAGS_IDX = 13;
         static const int64_t PRF_C_LDK_IDX = 14;
-        static const int64_t MASK_IDX = 15;
+        static const int64_t NEXT_B_PTR_IDX = 15;
+        static const int64_t MASK_IDX = 16;
         static const int64_t MASK_LENGTH = 4;
-        static const int64_t LENGTH = 20;
+        static const int64_t LENGTH = 32;
     };
 
     struct config {

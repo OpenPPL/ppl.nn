@@ -24,7 +24,6 @@
 #include "ppl/kernel/x86/fp32/pd_conv2d/fma/pd_conv2d_n16cx_direct_ndarray_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/pd_conv2d/fma/pd_conv2d_n16cx_depthwise_kernel_fp32_fma.h"
 #include "ppl/kernel/x86/common/array_param_helper.h"
-#include "ppl/common/sys.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 

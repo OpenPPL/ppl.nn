@@ -25,7 +25,6 @@
 #include "ppl/kernel/x86/common/threading_tools.h"
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/common/log.h"
-#include "ppl/common/sys.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 

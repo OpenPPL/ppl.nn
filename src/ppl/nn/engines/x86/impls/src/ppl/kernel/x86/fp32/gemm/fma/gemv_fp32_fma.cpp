@@ -47,10 +47,10 @@ void gemv_t_kernel_fp32_fma(
     float *lC = C;
 
     const int64_t K_REG_ELTS = 8;
-    const int64_t u_k = K_REG_ELTS;
+    const int64_t u_k = 2 * K_REG_ELTS;
     const bool apply_beta = beta != 0.0f;
     for (int64_t n = 0; n < N; n += u_n) {
-        __m256 ymm0, ymm1, ymm2, ymm3, ymm4;
+        __m256 ymm0, ymm1, ymm2, ymm3, ymm4, ymm5;
         float r0, r1, r2, r3;
 
         r0 = 0.0f;
@@ -71,11 +71,16 @@ void gemv_t_kernel_fp32_fma(
             if (u_n > 2) ymm2 = _mm256_setzero_ps();
             if (u_n > 3) ymm3 = _mm256_setzero_ps();
             for (; k <= K - u_k; k += u_k) {
-                ymm4 = _mm256_loadu_ps(rA);
-                if (u_n > 0) ymm0 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 0 * ldb), ymm4, ymm0);
-                if (u_n > 1) ymm1 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 1 * ldb), ymm4, ymm1);
-                if (u_n > 2) ymm2 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 0 * ldb), ymm4, ymm2);
-                if (u_n > 3) ymm3 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 1 * ldb), ymm4, ymm3);
+                ymm4 = _mm256_loadu_ps(rA + 0 * K_REG_ELTS);
+                ymm5 = _mm256_loadu_ps(rA + 1 * K_REG_ELTS);
+                if (u_n > 0) ymm0 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 0 * ldb + 0 * K_REG_ELTS), ymm4, ymm0);
+                if (u_n > 1) ymm1 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 1 * ldb + 0 * K_REG_ELTS), ymm4, ymm1);
+                if (u_n > 2) ymm2 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 0 * ldb + 0 * K_REG_ELTS), ymm4, ymm2);
+                if (u_n > 3) ymm3 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 1 * ldb + 0 * K_REG_ELTS), ymm4, ymm3);
+                if (u_n > 0) ymm0 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 0 * ldb + 1 * K_REG_ELTS), ymm5, ymm0);
+                if (u_n > 1) ymm1 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 1 * ldb + 1 * K_REG_ELTS), ymm5, ymm1);
+                if (u_n > 2) ymm2 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 0 * ldb + 1 * K_REG_ELTS), ymm5, ymm2);
+                if (u_n > 3) ymm3 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 1 * ldb + 1 * K_REG_ELTS), ymm5, ymm3);
                 rA += u_k;
                 if (u_n > 0) rB0 += u_k;
                 if (u_n > 2) rB2 += u_k;

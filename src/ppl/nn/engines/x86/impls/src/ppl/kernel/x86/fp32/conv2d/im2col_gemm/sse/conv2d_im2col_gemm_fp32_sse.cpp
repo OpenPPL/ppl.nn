@@ -25,7 +25,6 @@
 #include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/sse/conv2d_im2col_gemm_fp32_sse.h"
 #include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/sse/conv_gemm_kernel_fp32_sse.h"
 #include "ppl/kernel/x86/common/array_param_helper.h"
-#include "ppl/common/sys.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 

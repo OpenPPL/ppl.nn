@@ -18,7 +18,6 @@
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/kernel/x86/fp32/transpose/avx/transpose_fp32_avx.h"
 #include "ppl/kernel/x86/common/avx_tools.h"
-#include "ppl/common/sys.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 

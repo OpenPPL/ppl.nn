@@ -20,6 +20,46 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
+uint64_t gemm_ref_fp32_get_packed_b_bytes(
+    const int64_t N,
+    const int64_t K)
+{
+    return sizeof(float) * K * N;
+}
+
+ppl::common::RetCode gemm_ref_pack_b_fp32(
+    const float *B,
+    const gemm_m_type_t typeB,
+    const int64_t N,
+    const int64_t K,
+    const int64_t ldb,
+    float *packedB)
+{
+    if (N <= 0 || K <= 0) {
+        return ppl::common::RC_SUCCESS;
+    }
+
+    const bool is_trans_b = typeB == gemm_m_type::TRANS;
+
+    if (is_trans_b) {
+        PRAGMA_OMP_PARALLEL_FOR()
+        for (int64_t n = 0; n < N; ++n) {
+            for (int64_t k = 0; k < K; ++k) {
+                packedB[n * K + k] = B[n * ldb + k];
+            }
+        }
+    } else {
+        PRAGMA_OMP_PARALLEL_FOR()
+        for (int64_t n = 0; n < N; ++n) {
+            for (int64_t k = 0; k < K; ++k) {
+                packedB[n * K + k] = B[k * ldb + n];
+            }
+        }
+    }
+
+    return ppl::common::RC_SUCCESS;
+}
+
 ppl::common::RetCode gemm_ref_fp32(
     const float *A,
     const float *B,
@@ -43,11 +83,12 @@ ppl::common::RetCode gemm_ref_fp32(
     const gemm_post_t post,
     float *C)
 {
-    if (typeA == gemm_m_type::PACKED || typeB == gemm_m_type::PACKED) {
+    if (typeA == gemm_m_type::PACKED) {
         return ppl::common::RC_UNSUPPORTED;
     }
     const bool trans_A = typeA == gemm_m_type::TRANS;
-    const bool trans_B = typeB == gemm_m_type::TRANS;
+    const bool trans_B = typeB == gemm_m_type::TRANS || typeB == gemm_m_type::PACKED;
+    const int64_t lldb = typeB == gemm_m_type::PACKED ? K : ldb;
 #ifdef PPL_USE_X86_OMP_COLLAPSE
     PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)
 #endif
@@ -60,19 +101,19 @@ ppl::common::RetCode gemm_ref_fp32(
             if (alpha != 0.0f && typeA != gemm_m_type::EMPTY && typeB != gemm_m_type::EMPTY) {
                 if (!trans_A && !trans_B) { // MK, KN; NN
                     for (int64_t k = 0; k < K; ++k)
-                        y += A[m * lda + k] * B[k * ldb + n];
+                        y += A[m * lda + k] * B[k * lldb + n];
                 }
                 if (trans_A && !trans_B) { // KM, KN; TN
                     for (int64_t k = 0; k < K; ++k)
-                        y += A[k * lda + m] * B[k * ldb + n];
+                        y += A[k * lda + m] * B[k * lldb + n];
                 }
                 if (trans_A && trans_B) { // KM, NK; TT
                     for (int64_t k = 0; k < K; ++k)
-                        y += A[k * lda + m] * B[n * ldb + k];
+                        y += A[k * lda + m] * B[n * lldb + k];
                 }
                 if (!trans_A && trans_B) { // MK, NK; NT
                     for (int64_t k = 0; k < K; ++k)
-                        y += A[m * lda + k] * B[n * ldb + k];
+                        y += A[m * lda + k] * B[n * lldb + k];
                 }
                 y *= alpha;
             }
