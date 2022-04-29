@@ -19,10 +19,11 @@
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_CAST_PARAM_H_
 
 #include <stdint.h>
+#include "ppl/nn/ir/attr.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct CastParam {
+struct CastParam final : public ir::TypedAttr<CastParam> {
     int32_t to;
 
     bool operator==(const CastParam& p) const {

@@ -18,12 +18,13 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_REDUCE_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_REDUCE_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 #include <vector>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct ReduceParam final {
+struct ReduceParam final : public ir::TypedAttr<ReduceParam> {
     typedef enum {
         ReduceSum = 0,
         ReduceMax = 1,

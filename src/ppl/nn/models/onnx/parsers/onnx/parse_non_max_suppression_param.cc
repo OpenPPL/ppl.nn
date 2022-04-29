@@ -24,7 +24,7 @@ using namespace ppl::nn::onnx;
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseNonMaxSuppressionParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
-                                    void* arg) {
+                                    ir::Attr* arg) {
     auto param = static_cast<NonMaxSuppressionParam*>(arg);
     param->center_point_box = utils::GetNodeAttrByKey<int>(pb_node, "center_point_box", 0);
     return RC_SUCCESS;

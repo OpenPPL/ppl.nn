@@ -24,7 +24,7 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseConvParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseConvParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<ConvParam*>(arg);
 
     auto auto_pad_str = utils::GetNodeAttrByKey<string>(pb_node, "auto_pad", "NOSET");

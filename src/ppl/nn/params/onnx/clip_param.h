@@ -19,11 +19,12 @@
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_CLIP_PARAM_H_
 
 #include <limits>
+#include "ppl/nn/ir/attr.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
 /** @brief this param is for opset 6 */
-struct ClipParam final {
+struct ClipParam final : public ir::TypedAttr<ClipParam> {
     float min_value = std::numeric_limits<float>::lowest();
     float max_value = std::numeric_limits<float>::max();
 

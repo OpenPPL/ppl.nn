@@ -18,11 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_SCATTER_ELEMENTS_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_SCATTER_ELEMENTS_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct ScatterElementsParam {
+struct ScatterElementsParam final : public ir::TypedAttr<ScatterElementsParam> {
     int32_t axis;
 
     bool operator==(const ScatterElementsParam& p) const {

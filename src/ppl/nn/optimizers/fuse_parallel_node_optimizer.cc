@@ -19,7 +19,6 @@
 #include <map>
 
 #include "ppl/nn/optimizers/fuse_parallel_node_optimizer.h"
-#include "ppl/nn/params/param_utils_manager.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
@@ -75,19 +74,13 @@ static bool CanFuseAsOneNode(const ir::Graph* graph, const ir::Node* node_0, con
         }
     }
 
-    auto op_utils = ParamUtilsManager::GetInstance()->Find(node_0->GetType().domain, node_0->GetType().name,
-                                                        node_0->GetType().version);
-    if (!op_utils) {
-        return true;
-    }
-
     auto param_it_0 = graph->data->attrs.find(node_0->GetId());
     auto param_it_1 = graph->data->attrs.find(node_1->GetId());
     if (param_it_0 == graph->data->attrs.end() || param_it_1 == graph->data->attrs.end()) {
         return false;
     }
 
-    return op_utils->equal(param_it_0->second.get(), param_it_1->second.get());
+    return param_it_0->second->Equals(param_it_1->second.get());
 }
 
 struct SkippedNodeType final {

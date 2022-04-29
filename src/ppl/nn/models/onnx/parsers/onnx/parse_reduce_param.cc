@@ -25,7 +25,7 @@ using namespace ppl::nn::onnx;
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseReduceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node,
-                         void* arg) {
+                         ir::Attr* arg) {
     auto param = static_cast<ReduceParam*>(arg);
 
     if (node->GetType().name == "ReduceSum") {

@@ -18,11 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_RESIZE_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_RESIZE_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct ResizeParam {
+struct ResizeParam final : public ir::TypedAttr<ResizeParam> {
     enum {
         RESIZE_COORD_TRANS_MODE_HALF_PIXEL = 0,
         RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL = 1,

@@ -23,7 +23,8 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseSoftmaxParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseSoftmaxParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
+                          ir::Attr* arg) {
     auto it = args.op_set->find(pb_node.domain());
     if (it == args.op_set->end()) {
         return RC_INVALID_VALUE;

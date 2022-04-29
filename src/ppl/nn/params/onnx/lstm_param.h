@@ -18,13 +18,14 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_LSTM_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_LSTM_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 #include <vector>
 #include <string>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct LSTMParam {
+struct LSTMParam final : public ir::TypedAttr<LSTMParam> {
     typedef enum {
         ACT_RELU = 0,
         ACT_TANH,
@@ -54,10 +55,8 @@ struct LSTMParam {
     int32_t input_forget;
 
     bool operator==(const LSTMParam& p) const {
-        const bool val_eq = (this->direction == p.direction &&
-                             this->hidden_size == p.hidden_size &&
-                             this->input_forget == p.input_forget &&
-                             this->clip == p.clip);
+        const bool val_eq = (this->direction == p.direction && this->hidden_size == p.hidden_size &&
+                             this->input_forget == p.input_forget && this->clip == p.clip);
         bool list_eq = (this->activation_alpha.size() == p.activation_alpha.size() &&
                         this->activation_beta.size() == p.activation_beta.size() &&
                         this->activations.size() == p.activations.size());

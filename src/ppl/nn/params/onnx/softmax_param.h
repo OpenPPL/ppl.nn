@@ -18,11 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_SOFTMAX_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_SOFTMAX_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct SoftmaxParam {
+struct SoftmaxParam final : public ir::TypedAttr<SoftmaxParam> {
     int32_t axis;
 
     bool operator==(const SoftmaxParam& p) const {

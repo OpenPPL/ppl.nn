@@ -24,7 +24,7 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParsePadParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParsePadParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<PadParam*>(arg);
     std::string mode = utils::GetNodeAttrByKey<std::string>(pb_node, "mode", "constant");
     if (mode == "constant") {

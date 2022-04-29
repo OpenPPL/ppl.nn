@@ -23,7 +23,8 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseGatherNDParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseGatherNDParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
+                           ir::Attr* arg) {
     auto param = static_cast<GatherNDParam*>(arg);
     param->batch_dims = utils::GetNodeAttrByKey<int32_t>(pb_node, "batch_dims", 0);
     return RC_SUCCESS;

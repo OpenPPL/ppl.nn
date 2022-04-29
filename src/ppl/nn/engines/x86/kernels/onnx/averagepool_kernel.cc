@@ -103,10 +103,10 @@ ppl::common::RetCode AveragePoolKernel::DoExecute(KernelExecContext* ctx) {
         }
     }
 
-    PPLNN_X86_DEBUG_TRACE("kernel_shape: %d %d\n", kernel_h, kernel_w);
-    PPLNN_X86_DEBUG_TRACE("dilations: %d %d\n", dilation_h, dilation_w);
-    PPLNN_X86_DEBUG_TRACE("strides: %d %d\n", stride_h, stride_w);
-    PPLNN_X86_DEBUG_TRACE("pads: %d %d\n", pad_h, pad_w);
+    PPLNN_X86_DEBUG_TRACE("kernel_shape: %ld %ld\n", kernel_h, kernel_w);
+    PPLNN_X86_DEBUG_TRACE("dilations: %ld %ld\n", dilation_h, dilation_w);
+    PPLNN_X86_DEBUG_TRACE("strides: %ld %ld\n", stride_h, stride_w);
+    PPLNN_X86_DEBUG_TRACE("pads: %ld %ld\n", pad_h, pad_w);
 
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_size = CalcTmpBufferSize(*ctx);

@@ -19,13 +19,14 @@
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_CONSTANT_OF_SHAPE_PARAM_H_
 
 #include "ppl/common/types.h"
+#include "ppl/nn/ir/attr.h"
 #include <string>
 #include <vector>
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct ConstantOfShapeParam {
+struct ConstantOfShapeParam final : public ir::TypedAttr<ConstantOfShapeParam> {
     ppl::common::datatype_t data_type;
     std::vector<int64_t> dims;
     std::string data;

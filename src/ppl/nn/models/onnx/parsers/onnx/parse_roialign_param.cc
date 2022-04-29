@@ -24,7 +24,8 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseRoiAlignParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseRoiAlignParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
+                           ir::Attr* arg) {
     auto param = static_cast<RoiAlignParam*>(arg);
     const std::string mode = utils::GetNodeAttrByKey<std::string>(pb_node, "mode", "avg");
     if (mode == "avg") {

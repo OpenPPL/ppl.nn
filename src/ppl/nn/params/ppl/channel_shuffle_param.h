@@ -18,11 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_PPL_CHANNEL_SHUFFLE_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_PPL_CHANNEL_SHUFFLE_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace internal {
 
-struct ChannelShuffleParam {
+struct ChannelShuffleParam final : public ir::TypedAttr<ChannelShuffleParam> {
     int32_t group;
 
     bool operator==(const ChannelShuffleParam& p) const {

@@ -24,7 +24,7 @@ using namespace ppl::nn::onnx;
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseScatterElementsParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
-                                  void* arg) {
+                                  ir::Attr* arg) {
     auto param = static_cast<ScatterElementsParam*>(arg);
     param->axis = utils::GetNodeAttrByKey(pb_node, "axis", 0);
     return RC_SUCCESS;

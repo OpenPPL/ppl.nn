@@ -19,6 +19,7 @@
 #define _ST_HPC_PPL_NN_IR_GRAPH_DATA_H_
 
 #include "ppl/common/types.h"
+#include "ppl/nn/ir/attr.h"
 #include <string>
 #include <vector>
 #include <map>
@@ -38,7 +39,7 @@ struct Constant final {
 struct GraphData final {
     std::map<edgeid_t, Constant> constants;
     std::map<edgeid_t, Shape> shapes;
-    std::map<nodeid_t, std::shared_ptr<void>> attrs; // attrs can be shared with cpu engines
+    std::map<nodeid_t, std::shared_ptr<Attr>> attrs; // attrs can be shared with cpu engines
 };
 
 }}} // namespace ppl::nn::ir

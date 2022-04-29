@@ -18,12 +18,13 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_SLICE_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_SLICE_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <vector>
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct SliceParam final {
+struct SliceParam final : public ir::TypedAttr<SliceParam> {
     std::vector<int32_t> axes;
     std::vector<int32_t> ends;
     std::vector<int32_t> starts;

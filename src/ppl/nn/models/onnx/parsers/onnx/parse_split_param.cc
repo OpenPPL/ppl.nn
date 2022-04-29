@@ -23,7 +23,7 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseSplitParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseSplitParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<SplitParam*>(arg);
     param->axis = utils::GetNodeAttrByKey(pb_node, "axis", 0);
     param->split_point = utils::GetNodeAttrsByKey<int32_t>(pb_node, "split");

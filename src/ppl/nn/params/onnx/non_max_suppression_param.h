@@ -18,11 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_NON_MAX_SUPRESSION_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_NON_MAX_SUPRESSION_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct NonMaxSuppressionParam {
+struct NonMaxSuppressionParam final : public ir::TypedAttr<NonMaxSuppressionParam> {
     int32_t center_point_box;
 
     bool operator==(const NonMaxSuppressionParam& p) const {

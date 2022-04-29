@@ -18,12 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_MMCV_MMCV_GRIDSAMPLE_PARAM_H
 #define _ST_HPC_PPL_NN_PARAMS_MMCV_MMCV_GRIDSAMPLE_PARAM_H
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
-#include <string>
 
 namespace ppl { namespace nn { namespace mmcv {
 
-struct MMCVGridSampleParam {
+struct MMCVGridSampleParam final : public ir::TypedAttr<MMCVGridSampleParam> {
     int64_t align_corners;
     int64_t interpolation_mode;
     int64_t padding_mode;

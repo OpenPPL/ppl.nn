@@ -23,7 +23,7 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseArgMaxParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseArgMaxParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<ArgMaxParam*>(arg);
     param->axis = utils::GetNodeAttrByKey<int32_t>(pb_node, "axis", 0);
     param->keepdims = utils::GetNodeAttrByKey<int32_t>(pb_node, "keepdims", 1);

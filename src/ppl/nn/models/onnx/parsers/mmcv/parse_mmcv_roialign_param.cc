@@ -24,7 +24,7 @@ using namespace ppl::nn::mmcv;
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseMMCVRoiAlignParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
-                               void* arg) {
+                               ir::Attr* arg) {
     auto param = static_cast<MMCVRoiAlignParam*>(arg);
 
     param->aligned = utils::GetNodeAttrByKey<int64_t>(pb_node, "aligned", 0);

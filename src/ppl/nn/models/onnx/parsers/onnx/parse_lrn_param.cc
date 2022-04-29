@@ -24,7 +24,7 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseLRNParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseLRNParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<LRNParam*>(arg);
     int32_t size = utils::GetNodeAttrByKey<int32_t>(pb_node, "size", INT32_MAX);
     if (size == INT32_MAX) {
