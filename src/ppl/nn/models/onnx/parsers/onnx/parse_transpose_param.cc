@@ -24,7 +24,8 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseTransposeParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseTransposeParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
+                            ir::Attr* arg) {
     auto param = static_cast<TransposeParam*>(arg);
     param->perm = utils::GetNodeAttrsByKey<int32_t>(pb_node, "perm");
     return RC_SUCCESS;

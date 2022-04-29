@@ -18,13 +18,14 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_CONVTRANSPOSE_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_CONVTRANSPOSE_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 #include <string>
 #include <vector>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct ConvTransposeParam {
+struct ConvTransposeParam final : public ir::TypedAttr<ConvTransposeParam> {
     std::string auto_pad;
     int64_t group;
     std::vector<int32_t> dilations;

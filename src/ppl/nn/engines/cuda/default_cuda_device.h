@@ -19,8 +19,8 @@
 #define _ST_HPC_PPL_NN_ENGINES_CUDA_DEFAULT_CUDA_DEVICE_H_
 
 #include "ppl/common/allocator.h"
-
 #include "ppl/nn/engines/cuda/cuda_device.h"
+#include <memory>
 
 namespace ppl { namespace nn { namespace cuda {
 

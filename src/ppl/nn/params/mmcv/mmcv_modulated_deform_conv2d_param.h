@@ -18,24 +18,22 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_MMCV_MMCV_MODULATED_DEFORM_CONV2D_PARAM_H
 #define _ST_HPC_PPL_NN_PARAMS_MMCV_MMCV_MODULATED_DEFORM_CONV2D_PARAM_H
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace mmcv {
 
-struct MMCVModulatedDeformConv2dParam {
-    int64_t kernel_size[2]; // written in op ctx
+struct MMCVModulatedDeformConv2dParam final : public ir::TypedAttr<MMCVModulatedDeformConv2dParam> {
     int64_t stride[2];
     int64_t padding[2];
     int64_t dilation[2];
     int64_t groups;
     int64_t deform_groups;
 
-    int64_t channels; // written in op ctx
-    int64_t num_output; // written in op ctx
-    int64_t bias_term; // written in op ctx, for multi-input layer fusion
-
     bool operator==(const MMCVModulatedDeformConv2dParam& p) const {
-        return false; // has attr written in op ctx
+        return (stride[0] == p.stride[0] && stride[1] == p.stride[1] && padding[0] == p.padding[0] &&
+                padding[1] == p.padding[1] && dilation[0] == p.dilation[0] && dilation[1] == p.dilation[1] &&
+                groups == p.groups && deform_groups == p.deform_groups);
     }
 };
 

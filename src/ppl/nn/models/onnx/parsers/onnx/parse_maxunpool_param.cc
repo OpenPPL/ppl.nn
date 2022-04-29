@@ -23,7 +23,8 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseMaxUnpoolParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseMaxUnpoolParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
+                            ir::Attr* arg) {
     auto param = static_cast<MaxUnpoolParam*>(arg);
 
     param->kernel_shape = utils::GetNodeAttrsByKey<int32_t>(pb_node, "kernel_shape");

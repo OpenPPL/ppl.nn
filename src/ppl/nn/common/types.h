@@ -19,8 +19,6 @@
 #define _ST_HPC_PPL_NN_COMMON_TYPES_H_
 
 #include <stdint.h>
-#include <memory>
-#include <functional>
 
 namespace ppl { namespace nn {
 
@@ -31,8 +29,6 @@ enum {
     TENSORTYPE_RESERVED,
 };
 typedef uint32_t tensortype_t;
-
-typedef std::unique_ptr<void, std::function<void(void*)>> VoidPtr;
 
 static const uint32_t INVALID_NODEID = UINT32_MAX;
 static const uint32_t INVALID_EDGEID = UINT32_MAX;

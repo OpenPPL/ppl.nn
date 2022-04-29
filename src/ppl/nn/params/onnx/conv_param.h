@@ -18,12 +18,13 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_CONV_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_CONV_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 #include <vector>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct ConvParam final {
+struct ConvParam final : public ir::TypedAttr<ConvParam> {
     enum { NOSET = 0, SAME_UPPER, SAME_LOWER, VALID };
     uint32_t auto_pad;
     int32_t group;

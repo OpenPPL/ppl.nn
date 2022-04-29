@@ -24,7 +24,7 @@ using namespace ppl::nn::mmcv;
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseMMCVGridSampleParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
-                                 void* arg) {
+                                 ir::Attr* arg) {
     auto param = static_cast<MMCVGridSampleParam*>(arg);
 
     param->align_corners = utils::GetNodeAttrByKey<int64_t>(pb_node, "align_corners", 0);

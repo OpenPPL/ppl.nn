@@ -18,12 +18,13 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_TRANSPOSE_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_TRANSPOSE_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 #include <vector>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct TransposeParam {
+struct TransposeParam final : public ir::TypedAttr<TransposeParam> {
     std::vector<int32_t> perm;
 
     bool operator==(const TransposeParam& p) const {

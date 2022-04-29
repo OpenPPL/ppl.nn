@@ -19,10 +19,11 @@
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_CONCAT_PARAM_H_
 
 #include <stdint.h>
+#include "ppl/nn/ir/attr.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct ConcatParam {
+struct ConcatParam final : public ir::TypedAttr<ConcatParam> {
     int32_t axis;
 
     bool operator==(const ConcatParam& p) const {

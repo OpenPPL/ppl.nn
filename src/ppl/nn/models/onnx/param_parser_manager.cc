@@ -16,7 +16,6 @@
 // under the License.
 
 #include "ppl/nn/models/onnx/param_parser_manager.h"
-#include "ppl/nn/params/param_utils_manager.h"
 
 // NOTE: sorted in alphabet order
 #include "ppl/nn/models/onnx/parsers/onnx/parse_argmax_param.h"
@@ -79,44 +78,31 @@ const ParserInfo* ParamParserManager::Find(const string& domain, const string& t
 }
 
 template <typename T>
-void* CreateParam() {
+ir::Attr* CreateParam() {
     return new T();
 }
 
 template <typename T>
-void DeleteParam(void* ptr) {
+void DeleteParam(ir::Attr* ptr) {
     delete static_cast<T*>(ptr);
 }
 
-template <typename T>
-bool ParamEqual(const void* param_0, const void* param_1) {
-    return *static_cast<const T*>(param_0) == *static_cast<const T*>(param_1);
-}
-
-#define PPL_REGISTER_OP_WITH_PARAM(domain, type, first_version, last_version, param_type, parse_param_func)       \
-    do {                                                                                                          \
-        if (last_version < first_version) {                                                                       \
-            LOG(ERROR) << "register op[" << domain << ":" << type << "] failed: last_version[" << last_version    \
-                       << "] < first_version[" << first_version << "]";                                           \
-            exit(-1);                                                                                             \
-        }                                                                                                         \
-                                                                                                                  \
-        ParserInfo parse_info;                                                                                    \
-        parse_info.create_param = CreateParam<param_type>;                                                        \
-        parse_info.parse_param = parse_param_func;                                                                \
-        parse_info.destroy_param = DeleteParam<param_type>;                                                       \
-        auto status = Register(domain, type, utils::VersionRange(first_version, last_version), parse_info);       \
-        if (status != RC_SUCCESS) {                                                                               \
-            exit(-1);                                                                                             \
-        }                                                                                                         \
-                                                                                                                  \
-        ParamUtils u;                                                                                             \
-        u.equal = ParamEqual<param_type>;                                                                         \
-        status = ParamUtilsManager::GetInstance()->Register(domain, type,                                         \
-                                                            utils::VersionRange(first_version, last_version), u); \
-        if (status != RC_SUCCESS) {                                                                               \
-            exit(-1);                                                                                             \
-        }                                                                                                         \
+#define PPL_REGISTER_OP_WITH_PARAM(domain, type, first_version, last_version, param_type, parse_param_func)    \
+    do {                                                                                                       \
+        if (last_version < first_version) {                                                                    \
+            LOG(ERROR) << "register op[" << domain << ":" << type << "] failed: last_version[" << last_version \
+                       << "] < first_version[" << first_version << "]";                                        \
+            exit(-1);                                                                                          \
+        }                                                                                                      \
+                                                                                                               \
+        ParserInfo parse_info;                                                                                 \
+        parse_info.create_param = CreateParam<param_type>;                                                     \
+        parse_info.parse_param = parse_param_func;                                                             \
+        parse_info.destroy_param = DeleteParam<param_type>;                                                    \
+        auto status = Register(domain, type, utils::VersionRange(first_version, last_version), parse_info);    \
+        if (status != RC_SUCCESS) {                                                                            \
+            exit(-1);                                                                                          \
+        }                                                                                                      \
     } while (0)
 
 #define PPL_REGISTER_OP_WITHOUT_PARAM(domain, type, first_version, last_version)              \

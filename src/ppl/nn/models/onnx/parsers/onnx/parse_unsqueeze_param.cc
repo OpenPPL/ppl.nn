@@ -24,7 +24,8 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseUnsqueezeParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseUnsqueezeParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
+                            ir::Attr* arg) {
     auto param = static_cast<UnsqueezeParam*>(arg);
 
     param->axes = utils::GetNodeAttrsByKey<int32_t>(pb_node, "axes");

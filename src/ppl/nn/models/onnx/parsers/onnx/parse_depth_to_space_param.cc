@@ -25,7 +25,7 @@ using namespace ppl::nn::onnx;
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseDepthToSpaceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
-                               void* arg) {
+                               ir::Attr* arg) {
     auto param = static_cast<DepthToSpaceParam*>(arg);
 
     const std::string mode = utils::GetNodeAttrByKey<std::string>(pb_node, "mode", "DCR");

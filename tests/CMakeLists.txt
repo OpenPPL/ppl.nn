@@ -19,7 +19,6 @@ file(GLOB_RECURSE PPLNN_TEST_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/common/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/ir/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/optimizers/*.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/params/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/quantization/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/utils/*.cc

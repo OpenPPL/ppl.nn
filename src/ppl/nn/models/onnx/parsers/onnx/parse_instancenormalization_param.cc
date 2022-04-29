@@ -24,7 +24,7 @@ using namespace ppl::nn::onnx;
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseInstanceNormalizationParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
-                                     void* arg) {
+                                        ir::Attr* arg) {
     auto param = static_cast<InstanceNormalizationParam*>(arg);
     param->epsilon = utils::GetNodeAttrByKey<float>(pb_node, "epsilon", 1e-5);
     return RC_SUCCESS;

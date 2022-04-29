@@ -18,11 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_MMCV_MMCV_NONMAXSUPPRESSION_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_MMCV_MMCV_NONMAXSUPPRESSION_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace mmcv {
 
-struct MMCVNMSParam {
+struct MMCVNMSParam final : public ir::TypedAttr<MMCVNMSParam> {
     float iou_threshold;
     int64_t offset;
 

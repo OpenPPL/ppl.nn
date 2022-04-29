@@ -23,7 +23,8 @@ using namespace ppl::nn::mmcv;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseMMCVNMSParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseMMCVNMSParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
+                          ir::Attr* arg) {
     auto param = static_cast<MMCVNMSParam*>(arg);
 
     param->iou_threshold = utils::GetNodeAttrByKey<float>(pb_node, "iou_threshold", 0);

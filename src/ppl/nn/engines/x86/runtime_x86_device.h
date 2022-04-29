@@ -21,6 +21,7 @@
 #include "ppl/nn/engines/x86/x86_device.h"
 #include "ppl/nn/utils/buffer_manager.h"
 #include "ppl/common/allocator.h"
+#include <memory>
 
 namespace ppl { namespace nn { namespace x86 {
 

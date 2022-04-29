@@ -15,19 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_PARAMS_PARAM_UTILS_MANAGER_H_
-#define _ST_HPC_PPL_NN_PARAMS_PARAM_UTILS_MANAGER_H_
+#ifndef _ST_HPC_PPL_NN_IR_ATTR_H_
+#define _ST_HPC_PPL_NN_IR_ATTR_H_
 
-#include "ppl/nn/utils/op_info_manager.h"
+namespace ppl { namespace nn { namespace ir {
 
-namespace ppl { namespace nn {
-
-struct ParamUtils final {
-    bool (*equal)(const void* param_0, const void* param_1);
+struct Attr {
+    virtual ~Attr() {}
+    virtual bool Equals(const Attr* p) const = 0;
 };
 
-using ParamUtilsManager = utils::OpInfoManager<ParamUtils>;
+template <typename T>
+struct TypedAttr : public Attr {
+    bool Equals(const Attr* p) const override final {
+        return (*static_cast<const T*>(this) == *static_cast<const T*>(p));
+    }
+};
 
-}} // namespace ppl::nn
+}}} // namespace ppl::nn::ir
 
 #endif

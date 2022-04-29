@@ -18,11 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_CUMSUM_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_CUMSUM_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct CumSumParam {
+struct CumSumParam final : public ir::TypedAttr<CumSumParam> {
     int32_t exclusive;
     int32_t reverse;
 

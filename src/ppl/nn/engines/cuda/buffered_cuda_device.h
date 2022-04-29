@@ -22,6 +22,7 @@
 
 #include "ppl/nn/utils/buffer_manager.h"
 #include "ppl/nn/engines/cuda/cuda_device.h"
+#include <memory>
 
 namespace ppl { namespace nn { namespace cuda {
 

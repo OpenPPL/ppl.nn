@@ -18,11 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_SPLIT_TO_SEQUENCE_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_SPLIT_TO_SEQUENCE_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct SplitToSequenceParam {
+struct SplitToSequenceParam final : public ir::TypedAttr<SplitToSequenceParam> {
     int32_t axis;
     int32_t keepdims;
 

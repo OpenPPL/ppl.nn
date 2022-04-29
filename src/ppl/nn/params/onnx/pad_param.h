@@ -18,6 +18,7 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_PAD_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_PAD_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 #include <vector>
 
@@ -25,7 +26,7 @@ namespace ppl { namespace nn { namespace onnx {
 
 #define PAD_PARAM_MAX_DIM_SIZE 5
 
-struct PadParam {
+struct PadParam final : public ir::TypedAttr<PadParam> {
     typedef uint32_t pad_mode_t;
     enum { PAD_MODE_CONSTANT = 0, PAD_MODE_REFLECT = 1, PAD_MODE_EDGE = 2 };
 

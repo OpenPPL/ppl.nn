@@ -24,7 +24,7 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseConcatParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseConcatParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<ConcatParam*>(arg);
 
     int32_t axis = utils::GetNodeAttrByKey<int32_t>(pb_node, "axis", INT32_MAX);

@@ -26,7 +26,7 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseLSTMParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseLSTMParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<LSTMParam*>(arg);
 
     static const map<string, LSTMParam::activation_t> act_map = {

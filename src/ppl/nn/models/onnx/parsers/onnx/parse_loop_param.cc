@@ -25,7 +25,8 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseLoopParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node, void* arg) {
+RetCode ParseLoopParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node,
+                       ir::Attr* arg) {
     auto param = static_cast<LoopParam*>(arg);
     if (pb_node.attribute_size() != 1) {
         LOG(ERROR) << "invalid attribute size[" << pb_node.attribute_size() << "] != 1.";

@@ -18,11 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_GATHER_ND_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_GATHER_ND_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct GatherNDParam {
+struct GatherNDParam final : public ir::TypedAttr<GatherNDParam> {
     int32_t batch_dims; // this attribute not included in opset=11, so will not process this
                         // attribute now
 

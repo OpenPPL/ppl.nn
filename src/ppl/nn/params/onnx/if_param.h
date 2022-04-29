@@ -19,10 +19,11 @@
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_IF_PARAM_H_
 
 #include "ppl/nn/ir/graph.h"
+#include "ppl/nn/ir/attr.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct IfParam {
+struct IfParam final : public ir::TypedAttr<IfParam> {
     ir::Graph then_branch;
     ir::Graph else_branch;
 

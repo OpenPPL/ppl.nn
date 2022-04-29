@@ -25,7 +25,8 @@
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseScatterElementsParam(const ::onnx::NodeProto&, const ParamParserExtraArgs&, ir::Node*, void*);
+ppl::common::RetCode ParseScatterElementsParam(const ::onnx::NodeProto&, const ParamParserExtraArgs&, ir::Node*,
+                                               ir::Attr*);
 
 }}} // namespace ppl::nn::onnx
 

@@ -23,7 +23,7 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseCumSumParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseCumSumParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto cumsum_param = static_cast<CumSumParam*>(arg);
 
     cumsum_param->exclusive = utils::GetNodeAttrByKey<int32_t>(pb_node, "exclusive", 0);

@@ -18,11 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_LEAKY_RELU_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_LEAKY_RELU_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct LeakyReluParam final {
+struct LeakyReluParam final : public ir::TypedAttr<LeakyReluParam> {
     float alpha;
 
     bool operator==(const LeakyReluParam& p) const {

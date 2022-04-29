@@ -103,10 +103,10 @@ ppl::common::RetCode MaxPoolKernel::DoExecute(KernelExecContext* ctx) {
         }
     }
 
-    PPLNN_X86_DEBUG_TRACE("kernel_shape: %d %d\n", kernel_h, kernel_w);
-    PPLNN_X86_DEBUG_TRACE("dilations: %d %d\n", dilation_h, dilation_w);
-    PPLNN_X86_DEBUG_TRACE("strides: %d %d\n", stride_h, stride_w);
-    PPLNN_X86_DEBUG_TRACE("pads: %d %d\n", pad_h, pad_w);
+    PPLNN_X86_DEBUG_TRACE("kernel_shape: %ld %ld\n", kernel_h, kernel_w);
+    PPLNN_X86_DEBUG_TRACE("dilations: %ld %ld\n", dilation_h, dilation_w);
+    PPLNN_X86_DEBUG_TRACE("strides: %ld %ld\n", stride_h, stride_w);
+    PPLNN_X86_DEBUG_TRACE("pads: %ld %ld\n", pad_h, pad_w);
     PPLNN_X86_DEBUG_TRACE("mode: %d\n", param_->mode);
     PPLNN_X86_DEBUG_TRACE("ceil_mode: %d\n", param_->ceil_mode);
     PPLNN_X86_DEBUG_TRACE("global_pooling: %d\n", param_->global_pooling);

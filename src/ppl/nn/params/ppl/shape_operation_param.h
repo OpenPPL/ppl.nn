@@ -3,6 +3,7 @@
 
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/common/types.h"
+#include "ppl/nn/ir/attr.h"
 
 #include <stdint.h>
 
@@ -11,7 +12,7 @@
 
 namespace ppl { namespace nn { namespace internal {
 
-struct ShapeMatrix {
+struct ShapeMatrix final {
     static const int64_t MAXDIMSIZE = 8;
 
     ShapeMatrix() {
@@ -91,8 +92,11 @@ struct ShapeMatrix {
     bool scalar = false;
 };
 
-struct ShapeOperationParam final {
+struct ShapeOperationParam final : public ir::TypedAttr<ShapeOperationParam> {
     std::map<edgeid_t, ShapeMatrix> alpha;
+    bool operator==(const ShapeOperationParam&) const {
+        return false;
+    }
 };
 
 }}} // namespace ppl::nn::internal

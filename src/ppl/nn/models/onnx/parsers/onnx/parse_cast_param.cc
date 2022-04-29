@@ -23,7 +23,7 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseCastParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseCastParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto cast_param = static_cast<CastParam*>(arg);
     int32_t to = utils::GetNodeAttrByKey<int32_t>(pb_node, "to", 1);
     cast_param->to = utils::ConvertOnnxDataTypeToPplDataType(to);

@@ -26,7 +26,7 @@
 namespace ppl { namespace nn { namespace onnx {
 
 ppl::common::RetCode ParseMMCVModulatedDeformConv2dParam(const ::onnx::NodeProto&, const ParamParserExtraArgs&,
-                                                         ir::Node*, void*);
+                                                         ir::Node*, ir::Attr*);
 
 }}} // namespace ppl::nn::onnx
 

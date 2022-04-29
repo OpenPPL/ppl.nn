@@ -18,12 +18,13 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_MAXUNPOOL_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_MAXUNPOOL_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 #include <vector>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct MaxUnpoolParam {
+struct MaxUnpoolParam final : public ir::TypedAttr<MaxUnpoolParam> {
     std::vector<int32_t> kernel_shape;
     std::vector<int32_t> pads;
     std::vector<int32_t> strides;

@@ -23,7 +23,7 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseGemmParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseGemmParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<GemmParam*>(arg);
 
     param->alpha = utils::GetNodeAttrByKey<float>(pb_node, "alpha", 1.0f);

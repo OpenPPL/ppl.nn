@@ -22,6 +22,7 @@
 #include "ppl/nn/engines/riscv/riscv_options.h"
 #include "ppl/nn/utils/buffer_manager.h"
 #include "ppl/nn/common/logger.h"
+#include <memory>
 
 namespace ppl { namespace nn { namespace riscv {
 

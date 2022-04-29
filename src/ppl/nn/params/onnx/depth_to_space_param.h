@@ -18,11 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_DEPTH_TO_SPACE_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_DEPTH_TO_SPACE_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct DepthToSpaceParam final {
+struct DepthToSpaceParam final : public ir::TypedAttr<DepthToSpaceParam> {
     enum { DCR = 0, CRD = 1 };
 
     uint32_t blocksize;

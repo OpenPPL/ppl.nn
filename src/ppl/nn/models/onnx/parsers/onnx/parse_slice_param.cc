@@ -23,7 +23,7 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<SliceParam*>(arg);
     param->axes = utils::GetNodeAttrsByKey<int32_t>(pb_node, "axes");
     param->ends = utils::GetNodeAttrsByKey<int32_t>(pb_node, "ends");

@@ -42,7 +42,8 @@ static RetCode DoParseTensorProto(const ::onnx::TensorProto& pb_tensor, const ch
 
 static const unordered_set<string> g_unsupported_fields = {"sparse_value", "value_string", "value_strings"};
 
-RetCode ParseConstantParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseConstantParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
+                           ir::Attr* arg) {
     auto param = static_cast<ConstantParam*>(arg);
 
     for (int i = 0; i < pb_node.attribute_size(); i++) {

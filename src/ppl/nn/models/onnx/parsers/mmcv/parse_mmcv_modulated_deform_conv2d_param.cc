@@ -24,14 +24,8 @@ using namespace ppl::nn::mmcv;
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseMMCVModulatedDeformConv2dParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args,
-                                            ir::Node*, void* arg) {
+                                            ir::Node*, ir::Attr* arg) {
     auto param = static_cast<MMCVModulatedDeformConv2dParam*>(arg);
-
-    param->kernel_size[0] = 0; // set by opcontext, for converted filter
-    param->kernel_size[1] = 0; // set by opcontext, for converted filter
-    param->channels = 0; // set by opcontext, for converted filter
-    param->num_output = 0; // set by opcontext, for converted filter
-    param->bias_term = 0; // set by opcontext, for multi-input layer fusion
 
     param->groups = utils::GetNodeAttrByKey(pb_node, "groups", 1);
     param->deform_groups = utils::GetNodeAttrByKey(pb_node, "deform_groups", 1);

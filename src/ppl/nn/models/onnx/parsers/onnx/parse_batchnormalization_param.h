@@ -26,7 +26,7 @@
 namespace ppl { namespace nn { namespace onnx {
 
 ppl::common::RetCode ParseBatchNormalizationParam(const ::onnx::NodeProto&, const ParamParserExtraArgs&, ir::Node*,
-                                                  void*);
+                                                  ir::Attr*);
 
 }}} // namespace ppl::nn::onnx
 

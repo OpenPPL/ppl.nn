@@ -18,11 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_ROIALIGN_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_ROIALIGN_PARAM_H_
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct RoiAlignParam final {
+struct RoiAlignParam final : public ir::TypedAttr<RoiAlignParam> {
     enum { AVG = 0, MAX = 1 };
 
     uint32_t mode;

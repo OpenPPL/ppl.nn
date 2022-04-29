@@ -23,7 +23,7 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseClipParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, void* arg) {
+RetCode ParseClipParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<ClipParam*>(arg);
     param->min_value = utils::GetNodeAttrByKey<float>(pb_node, "min", numeric_limits<float>::lowest());
     param->max_value = utils::GetNodeAttrByKey<float>(pb_node, "max", numeric_limits<float>::max());

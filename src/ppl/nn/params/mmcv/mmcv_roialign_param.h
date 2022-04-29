@@ -18,12 +18,13 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_MMCV_MMCV_ROIALIGN_PARAM_H
 #define _ST_HPC_PPL_NN_PARAMS_MMCV_MMCV_ROIALIGN_PARAM_H
 
+#include "ppl/nn/ir/attr.h"
 #include <stdint.h>
 #include <string>
 
 namespace ppl { namespace nn { namespace mmcv {
 
-struct MMCVRoiAlignParam {
+struct MMCVRoiAlignParam final : public ir::TypedAttr<MMCVRoiAlignParam> {
     int64_t aligned;
     int64_t aligned_height;
     int64_t aligned_width;

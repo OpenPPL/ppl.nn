@@ -25,7 +25,7 @@ using namespace ppl::nn::onnx;
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseConstantOfShapeParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
-                                  void* arg) {
+                                  ir::Attr* arg) {
     auto param = static_cast<ConstantOfShapeParam*>(arg);
 
     const ::onnx::TensorProto* value = utils::GetTensorProtoByKey(pb_node, "value");

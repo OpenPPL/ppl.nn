@@ -22,6 +22,7 @@
 #include "ppl/nn/engines/arm/arm_options.h"
 #include "ppl/nn/utils/buffer_manager.h"
 #include "ppl/common/allocator.h"
+#include <memory>
 
 namespace ppl { namespace nn { namespace arm {
 

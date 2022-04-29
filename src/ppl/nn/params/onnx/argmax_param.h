@@ -19,10 +19,11 @@
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_ARGMAX_PARAM_H_
 
 #include <stdint.h>
+#include "ppl/nn/ir/attr.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
-struct ArgMaxParam {
+struct ArgMaxParam final : public ir::TypedAttr<ArgMaxParam> {
     int32_t axis;
     int32_t keepdims;
 
