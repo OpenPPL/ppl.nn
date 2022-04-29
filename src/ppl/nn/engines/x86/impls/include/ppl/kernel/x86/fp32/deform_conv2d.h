@@ -22,7 +22,7 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-uint64_t deform_conv2d_ref_fp32_get_buffer_bytes(
+uint64_t deform_conv2d_fp32_ref_get_buffer_bytes(
     const int64_t dst_h,
     const int64_t dst_w,
     const int64_t group,
@@ -30,7 +30,7 @@ uint64_t deform_conv2d_ref_fp32_get_buffer_bytes(
     const int64_t kernel_h,
     const int64_t kernel_w);
 
-ppl::common::RetCode deform_conv2d_ref_fp32(
+ppl::common::RetCode deform_conv2d_fp32_ref(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
     const float *src,

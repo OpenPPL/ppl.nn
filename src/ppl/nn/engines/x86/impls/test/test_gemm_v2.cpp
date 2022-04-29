@@ -76,7 +76,7 @@ static std::map<std::string, ppl::common::isa_t> isa_table =
 #endif
 };
 
-ppl::common::RetCode gemm_v2_ref_fp32(const ppl::kernel::x86::gemm_v2_param_fp32& param) {
+ppl::common::RetCode gemm_v2_fp32_ref(const ppl::kernel::x86::gemm_v2_param_fp32& param) {
 #ifdef PPL_USE_X86_OMP_COLLAPSE
     PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)
 #else
@@ -337,7 +337,7 @@ DEBUG_TAG(F);
 
         if (Flag_validate) {
             param.dst_Y = dst_ref;
-            gemm_v2_ref_fp32(param);
+            gemm_v2_fp32_ref(param);
             check_array_error(dst, dst_ref, dst_num_elements, Flag_eps);
         }
 DEBUG_TAG(G);

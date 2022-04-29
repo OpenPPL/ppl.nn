@@ -71,13 +71,13 @@ Define_int32(m, -1, "(-1) override M");
 Define_int32(n, -1, "(-1) override N");
 Define_int32(k, -1, "(-1) override K");
 
-typedef decltype(ppl::kernel::x86::gemm_ref_fp32)* ppl_x86_gemm_func_t;
-typedef decltype(ppl::kernel::x86::gemm_ref_pack_b_fp32)* ppl_x86_gemm_pack_b_func_t;
-typedef decltype(ppl::kernel::x86::gemm_ref_fp32_get_packed_b_bytes)* ppl_x86_gemm_get_packed_b_bytes_func_t;
+typedef decltype(ppl::kernel::x86::gemm_fp32_ref)* ppl_x86_gemm_func_t;
+typedef decltype(ppl::kernel::x86::gemm_fp32_ref_pack_b)* ppl_x86_gemm_pack_b_func_t;
+typedef decltype(ppl::kernel::x86::gemm_fp32_ref_get_packed_b_bytes)* ppl_x86_gemm_get_packed_b_bytes_func_t;
 
 static std::map<std::string, ppl_x86_gemm_func_t> gemm_func_table =
 {
-    {"noarch", ppl::kernel::x86::gemm_ref_fp32},
+    {"noarch", ppl::kernel::x86::gemm_fp32_ref},
     {"sse", nullptr},
     {"fma", ppl::kernel::x86::gemm_fp32_fma},
 #ifdef PPL_USE_X86_AVX512
@@ -87,17 +87,17 @@ static std::map<std::string, ppl_x86_gemm_func_t> gemm_func_table =
 
 static std::map<std::string, ppl_x86_gemm_pack_b_func_t> gemm_pack_b_func_table =
 {
-    {"noarch", ppl::kernel::x86::gemm_ref_pack_b_fp32},
+    {"noarch", ppl::kernel::x86::gemm_fp32_ref_pack_b},
     {"sse", nullptr},
-    {"fma", ppl::kernel::x86::gemm_pack_b_fp32_fma},
+    {"fma", ppl::kernel::x86::gemm_fp32_fma_pack_b},
 #ifdef PPL_USE_X86_AVX512
-    {"avx512", ppl::kernel::x86::gemm_pack_b_fp32_avx512},
+    {"avx512", ppl::kernel::x86::gemm_fp32_avx512_pack_b},
 #endif
 };
 
 static std::map<std::string, ppl_x86_gemm_get_packed_b_bytes_func_t> gemm_get_packed_b_bytes_func_table =
 {
-    {"noarch", ppl::kernel::x86::gemm_ref_fp32_get_packed_b_bytes},
+    {"noarch", ppl::kernel::x86::gemm_fp32_ref_get_packed_b_bytes},
     {"sse", nullptr},
     {"fma", ppl::kernel::x86::gemm_fp32_fma_get_packed_b_bytes},
 #ifdef PPL_USE_X86_AVX512
@@ -435,14 +435,14 @@ DEBUG_TAG(G);
             avg_exe_us / 1e3, avg_gflops, avg_gbps);
 
         if (Flag_validate) {
-            if (ppl::common::RC_SUCCESS != ppl::kernel::x86::gemm_ref_fp32(
+            if (ppl::common::RC_SUCCESS != ppl::kernel::x86::gemm_fp32_ref(
                 A, B, bias, sum,
                 typeA, typeB, typebias, typesum,
                 M, N, K,
                 lda, ldb, ldc, ldsum,
                 Flag_alpha, Flag_beta, Flag_beta_bias, Flag_beta_sum,
                 post_flag, C_ref)) {
-                std::cerr << "," << "gemm_ref_fp32 failed\n";
+                std::cerr << "," << "gemm_fp32_ref failed\n";
                 return -1;
             }
             std::cerr << ",";

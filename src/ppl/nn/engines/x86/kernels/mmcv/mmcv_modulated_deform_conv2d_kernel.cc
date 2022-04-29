@@ -30,7 +30,7 @@ uint64_t MMCVModulatedDeformConv2dKernel::CalcTmpBufferSize(const KernelExecCont
             output->GetShape()->GetDim(2), output->GetShape()->GetDim(3), param_->groups,
             channels, weight->GetShape()->GetDim(2), weight->GetShape()->GetDim(3));
     } else {
-        return ppl::kernel::x86::deform_conv2d_ref_fp32_get_buffer_bytes(
+        return ppl::kernel::x86::deform_conv2d_fp32_ref_get_buffer_bytes(
             output->GetShape()->GetDim(2), output->GetShape()->GetDim(3), param_->groups,
             channels, weight->GetShape()->GetDim(2), weight->GetShape()->GetDim(3));
     }
@@ -98,7 +98,7 @@ ppl::common::RetCode MMCVModulatedDeformConv2dKernel::DoExecute(KernelExecContex
             param_->padding[0], param_->padding[1], param_->dilation[0], param_->dilation[1],
             tmp_buffer, output->GetBufferPtr<float>());
     } else {
-        return ppl::kernel::x86::deform_conv2d_ref_fp32(
+        return ppl::kernel::x86::deform_conv2d_fp32_ref(
             input->GetShape(), output->GetShape(),
             input->GetBufferPtr<const float>(), offset->GetBufferPtr<const float>(),
             mask->GetBufferPtr<const float>(), weight->GetBufferPtr<const float>(), b_data,

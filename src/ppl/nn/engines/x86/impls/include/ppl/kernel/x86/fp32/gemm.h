@@ -24,12 +24,12 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 uint64_t gemm_fp32_get_packed_b_bytes(
-    ppl::common::isa_t isa,
+    const ppl::common::isa_t isa,
     const int64_t N,
     const int64_t K);
 
 ppl::common::RetCode gemm_pack_b_fp32(
-    ppl::common::isa_t isa,
+    const ppl::common::isa_t isa,
     const float *B,
     const gemm_m_type_t typeB,
     const int64_t N,
@@ -38,7 +38,7 @@ ppl::common::RetCode gemm_pack_b_fp32(
     float *packedB);
 
 ppl::common::RetCode gemm_fp32(
-    ppl::common::isa_t isa,
+    const ppl::common::isa_t isa,
     const float *A,
     const float *B,
     const float *bias,
@@ -61,11 +61,11 @@ ppl::common::RetCode gemm_fp32(
     const gemm_post_t post,
     float *C);
 
-uint64_t gemm_ref_fp32_get_packed_b_bytes(
+uint64_t gemm_fp32_ref_get_packed_b_bytes(
     const int64_t N,
     const int64_t K);
 
-ppl::common::RetCode gemm_ref_pack_b_fp32(
+ppl::common::RetCode gemm_fp32_ref_pack_b(
     const float *B,
     const gemm_m_type_t typeB,
     const int64_t N,
@@ -73,7 +73,7 @@ ppl::common::RetCode gemm_ref_pack_b_fp32(
     const int64_t ldb,
     float *packedB);
 
-ppl::common::RetCode gemm_ref_fp32(
+ppl::common::RetCode gemm_fp32_ref(
     const float *A,
     const float *B,
     const float *bias,
@@ -100,7 +100,7 @@ uint64_t gemm_fp32_fma_get_packed_b_bytes(
     const int64_t N,
     const int64_t K);
 
-ppl::common::RetCode gemm_pack_b_fp32_fma(
+ppl::common::RetCode gemm_fp32_fma_pack_b(
     const float *B,
     const gemm_m_type_t typeB,
     const int64_t N,
@@ -155,7 +155,7 @@ uint64_t gemm_fp32_avx512_get_packed_b_bytes(
     const int64_t N,
     const int64_t K);
 
-ppl::common::RetCode gemm_pack_b_fp32_avx512(
+ppl::common::RetCode gemm_fp32_avx512_pack_b(
     const float *B,
     const gemm_m_type_t typeB,
     const int64_t N,
