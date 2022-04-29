@@ -55,8 +55,8 @@ Define_int32(min_iter, 10, "(10) min benchmark iterations");
 Define_float(min_second, 1.0f, "(1.0) min benchmark seconds");
 Define_bool(validate, false, "(false) do result validation");
 Define_float(eps, 1e-5f, "(1e-5) rel error trunk for validation");
-Define_string(isa, "auto", "(auto)sse, fma, avx512, auto");
-Define_bool(core_bind, false, "(false)core binding");
+Define_string(isa, "auto", "(auto) sse, fma, avx512, auto, noarch");
+Define_bool(core_bind, false, "(false) core binding");
 
 Define_float(alpha, 1.0f, "(1.0) gemm alpha");
 Define_float(beta, 0.0f, "(0.0) gemm c beta");
@@ -64,21 +64,44 @@ Define_float(beta_bias, 1.0f, "(0.0) gemm bias beta");
 Define_float(beta_sum, 1.0f, "(0.0) gemm sum input beta");
 Define_int32(relu, 0, "(0) fuse relu, 0 for none, 1 for relu, 6 for relu6");
 Define_int32(type_a, 0, "(0) 0 for no_trans, 1 for trans");
-Define_int32(type_b, 0, "(0) 0 for no_trans, 1 for trans");
+Define_int32(type_b, 0, "(0) 0 for no_trans, 1 for trans, 2 for packed");
 Define_int32(type_bias, 0, "(0) 0 for empty, 1 for scalar, 2 for col vector, 3 for row vector");
 Define_int32(type_sum, 0, "(0) 0 for empty, 1 for no_trans");
 Define_int32(m, -1, "(-1) override M");
 Define_int32(n, -1, "(-1) override N");
 Define_int32(k, -1, "(-1) override K");
 
-typedef decltype(ppl::kernel::x86::gemm_ref_fp32)* ppl_x86_benchmark_gemm_func_t;
+typedef decltype(ppl::kernel::x86::gemm_ref_fp32)* ppl_x86_gemm_func_t;
+typedef decltype(ppl::kernel::x86::gemm_ref_pack_b_fp32)* ppl_x86_gemm_pack_b_func_t;
+typedef decltype(ppl::kernel::x86::gemm_ref_fp32_get_packed_b_bytes)* ppl_x86_gemm_get_packed_b_bytes_func_t;
 
-static std::map<std::string, ppl_x86_benchmark_gemm_func_t> isa_table =
+static std::map<std::string, ppl_x86_gemm_func_t> gemm_func_table =
 {
+    {"noarch", ppl::kernel::x86::gemm_ref_fp32},
     {"sse", nullptr},
     {"fma", ppl::kernel::x86::gemm_fp32_fma},
 #ifdef PPL_USE_X86_AVX512
     {"avx512", ppl::kernel::x86::gemm_fp32_avx512},
+#endif
+};
+
+static std::map<std::string, ppl_x86_gemm_pack_b_func_t> gemm_pack_b_func_table =
+{
+    {"noarch", ppl::kernel::x86::gemm_ref_pack_b_fp32},
+    {"sse", nullptr},
+    {"fma", ppl::kernel::x86::gemm_pack_b_fp32_fma},
+#ifdef PPL_USE_X86_AVX512
+    {"avx512", ppl::kernel::x86::gemm_pack_b_fp32_avx512},
+#endif
+};
+
+static std::map<std::string, ppl_x86_gemm_get_packed_b_bytes_func_t> gemm_get_packed_b_bytes_func_table =
+{
+    {"noarch", ppl::kernel::x86::gemm_ref_fp32_get_packed_b_bytes},
+    {"sse", nullptr},
+    {"fma", ppl::kernel::x86::gemm_fp32_fma_get_packed_b_bytes},
+#ifdef PPL_USE_X86_AVX512
+    {"avx512", ppl::kernel::x86::gemm_fp32_avx512_get_packed_b_bytes},
 #endif
 };
 
@@ -143,28 +166,36 @@ int main(int argc, char **argv) {
     );
     std::cerr << "==============================================================\n";
 
-    auto benchmark_gemm_func = isa_table[Flag_isa];
+    auto gemm_func = gemm_func_table[Flag_isa];
+    auto gemm_pack_b_func = gemm_pack_b_func_table[Flag_isa];
+    auto gemm_get_packed_b_bytes_func = gemm_get_packed_b_bytes_func_table[Flag_isa];
 
     if (Flag_isa == "auto") {
         auto cpu_isa = ppl::common::GetCpuISA();
-        if ((cpu_isa & ppl::common::ISA_X86_AVX512) && !benchmark_gemm_func) {
-            benchmark_gemm_func = isa_table["avx512"];
+        if ((cpu_isa & ppl::common::ISA_X86_AVX512) && !gemm_func) {
+            auto isa_str = "avx512";
+            gemm_func = gemm_func_table[isa_str];
+            gemm_pack_b_func = gemm_pack_b_func_table[isa_str];
+            gemm_get_packed_b_bytes_func = gemm_get_packed_b_bytes_func_table[isa_str];
         }
-        if ((cpu_isa & ppl::common::ISA_X86_FMA) && !benchmark_gemm_func) {
-            benchmark_gemm_func = isa_table["fma"];
+        if ((cpu_isa & ppl::common::ISA_X86_FMA) && !gemm_func) {
+            auto isa_str = "fma";
+            gemm_func = gemm_func_table[isa_str];
+            gemm_pack_b_func = gemm_pack_b_func_table[isa_str];
+            gemm_get_packed_b_bytes_func = gemm_get_packed_b_bytes_func_table[isa_str];
         }
-        if ((cpu_isa & ppl::common::ISA_X86_SSE) && !benchmark_gemm_func) {
-            benchmark_gemm_func = isa_table["sse"];
+        if ((cpu_isa & ppl::common::ISA_X86_SSE) && !gemm_func) {
+            auto isa_str = "sse";
+            gemm_func = gemm_func_table[isa_str];
+            gemm_pack_b_func = gemm_pack_b_func_table[isa_str];
+            gemm_get_packed_b_bytes_func = gemm_get_packed_b_bytes_func_table[isa_str];
         }
     }
 
-    if (benchmark_gemm_func == nullptr) {
+    if (gemm_func == nullptr) {
         std::cerr << "unsupported isa\n";
         return -1;
     }
-
-    std::cerr << "begin tests\n";
-    std::cerr << "line_no,case_string,min_ms,max_gflops,max_gbps,avg_ms,avg_gflops,avg_gbps\n";
 
     char line[512];
     int line_no = 0;
@@ -175,6 +206,7 @@ int main(int argc, char **argv) {
 
     ppl::kernel::x86::gemm_m_type_t typeA;
     ppl::kernel::x86::gemm_m_type_t typeB;
+    ppl::kernel::x86::gemm_m_type_t typeBB;
     ppl::kernel::x86::gemm_v_type_t typebias;
     ppl::kernel::x86::gemm_m_type_t typesum;
     ppl::kernel::x86::gemm_post_t post_flag;
@@ -190,6 +222,8 @@ int main(int argc, char **argv) {
         default: typeB = ppl::kernel::x86::gemm_m_type::NOTRANS; break;
     }
     const bool is_trans_b = Flag_type_b == 1;
+    const bool is_packed_b = Flag_type_b == 2;
+    typeBB = is_packed_b ? ppl::kernel::x86::gemm_m_type::PACKED : typeB;
 
     switch (Flag_type_bias) {
         case 1: typebias = ppl::kernel::x86::gemm_v_type::SCALAR; break;
@@ -208,6 +242,16 @@ int main(int argc, char **argv) {
         case 6: post_flag = ppl::kernel::x86::gemm_post::RELU6; break;
         default: post_flag = ppl::kernel::x86::gemm_post::NONE; break;
     }
+
+    if (is_packed_b) {
+        if (!gemm_get_packed_b_bytes_func || !gemm_pack_b_func) {
+            std::cerr << "do not support packed b with this isa\n";
+            return -1;
+        }
+    }
+
+    std::cerr << "begin tests\n";
+    std::cerr << "line_no,case_string,min_ms,max_gflops,max_gbps,avg_ms,avg_gflops,avg_gbps\n";
 
     const int32_t data_mod = 7;
     const int32_t data_shift = -3;
@@ -314,6 +358,18 @@ DEBUG_TAG(C);
             sum[i] = (rand() % data_mod + data_shift) * data_scale;
         }
 
+        float *packedB = nullptr;
+        float *BB = B;
+        if (is_packed_b) {
+            packedB = (float*)allocator.Alloc(gemm_get_packed_b_bytes_func(N ,K));
+            auto ret = gemm_pack_b_func(B, typeB, N, K, ldb, packedB);
+            if (ret != ppl::common::RC_SUCCESS) {
+                std::cerr << "," << "pack B failed\n";
+                return -1;
+            }
+            BB = packedB;
+        }
+
         float* C_ref = nullptr;
         if (Flag_validate) {
             C_ref = (float*)allocator.Alloc(C_num_bytes);
@@ -326,9 +382,9 @@ DEBUG_TAG(C);
 DEBUG_TAG(D);
         for (int64_t w = 0; w < Flag_warm_up; ++w) {
             ppl::common::RetCode ret =
-                benchmark_gemm_func(
-                    A, B, bias, sum,
-                    typeA, typeB, typebias, typesum,
+                gemm_func(
+                    A, BB, bias, sum,
+                    typeA, typeBB, typebias, typesum,
                     M, N, K,
                     lda, ldb, ldc, ldsum,
                     Flag_alpha, Flag_beta, Flag_beta_bias, Flag_beta_sum,
@@ -349,9 +405,9 @@ DEBUG_TAG(G);
         for (; tot_exe_iter < Flag_min_iter || tot_exe_us < Flag_min_second * 1e6; ++tot_exe_iter) {
             start = std::chrono::high_resolution_clock::now();
             ppl::common::RetCode ret =
-                benchmark_gemm_func(
-                    A, B, bias, sum,
-                    typeA, typeB, typebias, typesum,
+                gemm_func(
+                    A, BB, bias, sum,
+                    typeA, typeBB, typebias, typesum,
                     M, N, K,
                     lda, ldb, ldc, ldsum,
                     Flag_alpha, Flag_beta, Flag_beta_bias, Flag_beta_sum,
@@ -401,6 +457,9 @@ DEBUG_TAG(sum);
         allocator.Free(A);
         allocator.Free(B);
         allocator.Free(C);
+        if (packedB) {
+            allocator.Free(packedB);
+        }
         if (bias) {
             allocator.Free(bias);
         }

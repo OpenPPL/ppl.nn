@@ -18,7 +18,6 @@
 #include <immintrin.h>
 
 #include "ppl/kernel/x86/common/internal_include.h"
-#include "ppl/common/sys.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 

@@ -23,6 +23,7 @@
 #include "ppl/nn/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "ppl/common/x86/sysinfo.h"
+#include "ppl/common/sys.h"
 
 #include "ppl/kernel/x86/common/config.h"
 

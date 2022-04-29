@@ -22,7 +22,6 @@
 #include "ppl/kernel/x86/fp32/fc/fma/fc_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/fma/conv_gemm_kernel_fp32_fma.h"
 #include "ppl/kernel/x86/common/avx_tools.h"
-#include "ppl/common/sys.h"
 
 #define CH_DT_BLK() M6_N_DT_BLK()
 #define OC_RF_BLK() N_RF_BLK()

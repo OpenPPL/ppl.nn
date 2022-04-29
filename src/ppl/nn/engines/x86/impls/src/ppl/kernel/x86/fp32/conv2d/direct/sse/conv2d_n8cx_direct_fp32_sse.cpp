@@ -23,7 +23,6 @@
 #include "ppl/kernel/x86/common/sse_tools.h"
 #include "ppl/kernel/x86/fp32/conv2d/direct/sse/conv2d_n8cx_direct_fp32_sse.h"
 #include "ppl/kernel/x86/fp32/conv2d/direct/sse/conv2d_n8cx_direct_kernel_fp32_sse.h"
-#include "ppl/common/sys.h"
 
 #define ASSUME_L2_BYTES() (256 * 1024)
 #define ASSUME_L2_WAYS()  4

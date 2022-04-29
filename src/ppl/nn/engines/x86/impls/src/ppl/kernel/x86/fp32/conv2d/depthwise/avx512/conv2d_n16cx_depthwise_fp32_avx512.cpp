@@ -23,7 +23,6 @@
 #include "ppl/kernel/x86/common/avx_tools.h"
 #include "ppl/kernel/x86/fp32/conv2d/depthwise/avx512/conv2d_n16cx_depthwise_fp32_avx512.h"
 #include "ppl/kernel/x86/fp32/conv2d/depthwise/avx512/conv2d_n16cx_depthwise_kernel_fp32_avx512.h"
-#include "ppl/common/sys.h"
 
 #define ASSUME_L2_BYTES() (256 * 1024)
 #define ASSUME_L2_WAYS()  4

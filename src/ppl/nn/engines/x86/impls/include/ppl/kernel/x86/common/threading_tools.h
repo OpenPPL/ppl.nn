@@ -21,7 +21,6 @@
 #include <vector>
 
 #include "ppl/kernel/x86/common/general_include.h"
-#include "ppl/common/sys.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 

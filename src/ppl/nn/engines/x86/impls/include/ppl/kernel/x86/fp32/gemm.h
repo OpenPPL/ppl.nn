@@ -23,6 +23,56 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
+uint64_t gemm_fp32_get_packed_b_bytes(
+    ppl::common::isa_t isa,
+    const int64_t N,
+    const int64_t K);
+
+ppl::common::RetCode gemm_pack_b_fp32(
+    ppl::common::isa_t isa,
+    const float *B,
+    const gemm_m_type_t typeB,
+    const int64_t N,
+    const int64_t K,
+    const int64_t ldb,
+    float *packedB);
+
+ppl::common::RetCode gemm_fp32(
+    ppl::common::isa_t isa,
+    const float *A,
+    const float *B,
+    const float *bias,
+    const float *sum,
+    const gemm_m_type_t typeA,
+    const gemm_m_type_t typeB,
+    const gemm_v_type_t typebias,
+    const gemm_m_type_t typesum,
+    const int64_t M,
+    const int64_t N,
+    const int64_t K,
+    const int64_t lda,
+    const int64_t ldb,
+    const int64_t ldc,
+    const int64_t ldsum,
+    const float alpha,
+    const float beta,
+    const float beta_bias,
+    const float beta_sum,
+    const gemm_post_t post,
+    float *C);
+
+uint64_t gemm_ref_fp32_get_packed_b_bytes(
+    const int64_t N,
+    const int64_t K);
+
+ppl::common::RetCode gemm_ref_pack_b_fp32(
+    const float *B,
+    const gemm_m_type_t typeB,
+    const int64_t N,
+    const int64_t K,
+    const int64_t ldb,
+    float *packedB);
+
 ppl::common::RetCode gemm_ref_fp32(
     const float *A,
     const float *B,
@@ -45,6 +95,18 @@ ppl::common::RetCode gemm_ref_fp32(
     const float beta_sum,
     const gemm_post_t post,
     float *C);
+
+uint64_t gemm_fp32_fma_get_packed_b_bytes(
+    const int64_t N,
+    const int64_t K);
+
+ppl::common::RetCode gemm_pack_b_fp32_fma(
+    const float *B,
+    const gemm_m_type_t typeB,
+    const int64_t N,
+    const int64_t K,
+    const int64_t ldb,
+    float *packedB);
 
 ppl::common::RetCode gemm_fp32_fma(
     const float *A,
@@ -89,6 +151,18 @@ ppl::common::RetCode gemv_fp32_fma(
     float *C);
 
 #ifdef PPL_USE_X86_AVX512
+uint64_t gemm_fp32_avx512_get_packed_b_bytes(
+    const int64_t N,
+    const int64_t K);
+
+ppl::common::RetCode gemm_pack_b_fp32_avx512(
+    const float *B,
+    const gemm_m_type_t typeB,
+    const int64_t N,
+    const int64_t K,
+    const int64_t ldb,
+    float *packedB);
+
 ppl::common::RetCode gemm_fp32_avx512(
     const float *A,
     const float *B,

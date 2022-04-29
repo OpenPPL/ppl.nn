@@ -47,7 +47,8 @@ void gemm_m4n24_kernel_fp32_fma_core(int64_t *param) {
         ".equ BETA_SUM_IDX,     (12 * P_BYTES)\n"
         ".equ FLAGS_IDX,        (13 * P_BYTES)\n"
         ".equ PRF_C_LDK_IDX,    (14 * P_BYTES)\n"
-        ".equ MASK_IDX,         (15 * P_BYTES)\n"
+        ".equ NEXT_B_PTR_IDX,   (15 * P_BYTES)\n"
+        ".equ MASK_IDX,         (16 * P_BYTES)\n"
 
         ".equ N_REG_ELTS, %c[N_REG_ELTS]\n"
         ".equ NEED_MASK, %c[NEED_MASK]\n"
@@ -75,8 +76,7 @@ void gemm_m4n24_kernel_fp32_fma_core(int64_t *param) {
         ".if U_NR > 1\n vmovups (1 * N_REG_ELTS * D_BYTES + 0 * U_N * D_BYTES)(%%rbx), %%ymm13\n .endif\n"
         ".if U_NR > 2\n vmovups (2 * N_REG_ELTS * D_BYTES + 0 * U_N * D_BYTES)(%%rbx), %%ymm14\n .endif\n"
         ".if U_NR > 2 && !NEED_MASK\n"
-        "imul $(U_N * D_BYTES), %%rax, %%rcx\n"
-        "lea (%%rbx, %%rcx), %%r8\n"                // next b_ptr for prefetching <= do not have register double buffer
+        "mov NEXT_B_PTR_IDX(%[param]), %%r8\n"      // next_b_ptr for prefetching <= do not have register double buffer
         ".endif\n"
 
         "mov FLAGS_IDX(%[param]),        %%rsi\n"
@@ -1038,8 +1038,7 @@ void gemm_m4n24_kernel_fp32_fma(int64_t *param)
     if (u_nr > 0) ymm12 = _mm256_loadu_ps(b_ptr + 0 * N_REG_ELTS + 0 * u_n);
     if (u_nr > 1) ymm13 = _mm256_loadu_ps(b_ptr + 1 * N_REG_ELTS + 0 * u_n);
     if (u_nr > 2) ymm14 = _mm256_loadu_ps(b_ptr + 2 * N_REG_ELTS + 0 * u_n);
-    auto next_b_ptr = b_ptr;
-    if (u_nr > 2 && !need_mask) next_b_ptr += k * u_n;
+    auto next_b_ptr = (u_nr > 2 && !need_mask) ? kp.pick<const float*>(gemm_kernel_fp32_fma::param_def::NEXT_B_PTR_IDX) : nullptr;
 
     auto flags = kp.pick<const gemm_kernel_fp32_fma::flag_t>(gemm_kernel_fp32_fma::param_def::FLAGS_IDX);
     auto a_ptr = kp.pick<const float*>(gemm_kernel_fp32_fma::param_def::A_PTR_IDX);
