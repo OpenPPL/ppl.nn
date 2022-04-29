@@ -138,7 +138,7 @@ RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, Runt
 
     for (uint32_t i = 0; i < topo->GetConstantCount(); ++i) {
         auto eid = topo->GetConstant(i);
-        auto edge = topo->GetEdgeById(eid);
+        auto edge = topo->GetEdge(eid);
         if (edge == nullptr) {
             LOG(ERROR) << "cannot get edge of constant[edgeid=" << eid << "]";
             return RC_NOT_FOUND;

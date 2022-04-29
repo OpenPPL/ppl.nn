@@ -36,8 +36,8 @@ static ppl::common::RetCode AddReorderOp(
     auto info = options.info;
     auto &tensors = *options.tensors;
 
-    auto edge = graph_topo->GetEdgeById(edge_id);
-    auto node = graph_topo->GetNodeById(node_id);
+    auto edge = graph_topo->GetEdge(edge_id);
+    auto node = graph_topo->GetNode(node_id);
 
     std::string reorder_node_name = "";
     if (reorder_type == REORDER_INPUT) {
@@ -135,13 +135,13 @@ static ppl::common::RetCode FuseReorderOp(const OptKernelOptions& options) {
         auto node = node_it->Get();
         if (node->GetType().domain == "ppl" && node->GetType().name == "Reorder") {
             auto input_edge_id = node->GetInput(0);
-            auto input_edge = graph_topo->GetEdgeById(input_edge_id);
+            auto input_edge = graph_topo->GetEdge(input_edge_id);
 
             // find reorder op group with same output_format so that can be merged together
             std::map<ppl::common::dataformat_t, std::vector<ir::Node*>> reorder_op_groups;
             for (auto it = input_edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
-                auto consumer_node = graph_topo->GetNodeById(it.Get());
-                if (consumer_node->GetType().domain == "ppl" && consumer_node->GetType().name == "Reorder") {
+                auto consumer_node = graph_topo->GetNode(it.Get());
+                if (consumer_node->GetType().domain == "pmx" && consumer_node->GetType().name == "Reorder") {
                     auto output_edge_id = consumer_node->GetOutput(0);
                     auto output_format = tensors[output_edge_id]->GetShape()->GetDataFormat();
 
@@ -164,13 +164,13 @@ static ppl::common::RetCode FuseReorderOp(const OptKernelOptions& options) {
                 //            ...
                 //            -> op_group[i](del_node) -> del_output_edge    -> consumer_node_i
                 auto merged_output_edge_id = op_group[0]->GetOutput(0);
-                auto merged_output_edge = graph_topo->GetEdgeById(merged_output_edge_id);
+                auto merged_output_edge = graph_topo->GetEdge(merged_output_edge_id);
                 for (uint32_t i = 1; i < op_group.size(); i++) {
                     auto del_node_id = op_group[i]->GetId();
                     auto del_output_edge_id = op_group[i]->GetOutput(0);
-                    auto del_output_edge = graph_topo->GetEdgeById(del_output_edge_id);
+                    auto del_output_edge = graph_topo->GetEdge(del_output_edge_id);
                     auto consumer_node_id = del_output_edge->CreateConsumerIter().Get(); // only has one consumer
-                    auto consumer_node = graph_topo->GetNodeById(consumer_node_id);
+                    auto consumer_node = graph_topo->GetNode(consumer_node_id);
 
                     merged_output_edge->AddConsumer(consumer_node_id);
                     consumer_node->ReplaceInput(del_output_edge_id, merged_output_edge_id);
@@ -179,8 +179,8 @@ static ppl::common::RetCode FuseReorderOp(const OptKernelOptions& options) {
                     // LOG(INFO) << "kernel " << op_group[i]->GetName() << " is merged into kernel " <<
                     // op_group[0]->GetName() << ".";
                     info->kernels.erase(del_node_id);
-                    graph_topo->DelNodeById(del_node_id);
-                    graph_topo->DelEdgeById(del_output_edge_id);
+                    graph_topo->DelNode(del_node_id);
+                    graph_topo->DelEdge(del_output_edge_id);
                 }
             }
         }

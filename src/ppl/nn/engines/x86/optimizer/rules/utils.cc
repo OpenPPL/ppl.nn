@@ -55,10 +55,10 @@ ppl::common::RetCode ReplaceSubgraphWithOneNode(
     std::set<ir::Edge*> inner_edges;
     for (auto node : nodes) {
         for (uint32_t i = 0; i < node->GetInputCount(); i++) {
-            inner_edges.insert(graph_topo->GetEdgeById(node->GetInput(i)));
+            inner_edges.insert(graph_topo->GetEdge(node->GetInput(i)));
         }
         for (uint32_t i = 0; i < node->GetOutputCount(); i++) {
-            inner_edges.insert(graph_topo->GetEdgeById(node->GetOutput(i)));
+            inner_edges.insert(graph_topo->GetEdge(node->GetOutput(i)));
         }
     }
     for (auto input : inputs) {
@@ -95,14 +95,14 @@ ppl::common::RetCode ReplaceSubgraphWithOneNode(
         if (inner_edge->CalcConsumerCount() == 0 &&
             graph_data->constants.find(inner_edge->GetId()) == graph_data->constants.end()) {
             tensors.erase(inner_edge->GetId());
-            graph_topo->DelEdgeById(inner_edge->GetId());
+            graph_topo->DelEdge(inner_edge->GetId());
         }
     }
 
     // delete nodes
     for (auto node : nodes) {
         info->kernels.erase(node->GetId());
-        graph_topo->DelNodeById(node->GetId());
+        graph_topo->DelNode(node->GetId());
     }
 
     return ppl::common::RC_SUCCESS;

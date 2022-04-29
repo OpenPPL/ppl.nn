@@ -55,21 +55,14 @@ pair<Node*, bool> FullGraphTopo::AddNode(const string& name) {
     return make_pair(node, true);
 }
 
-Node* FullGraphTopo::GetNodeById(nodeid_t nid) {
+Node* FullGraphTopo::GetNode(nodeid_t nid) const {
     if (nid >= nodes_.size()) {
         return nullptr;
     }
     return nodes_[nid].get();
 }
 
-const Node* FullGraphTopo::GetNodeById(nodeid_t nid) const {
-    if (nid >= nodes_.size()) {
-        return nullptr;
-    }
-    return nodes_[nid].get();
-}
-
-void FullGraphTopo::DelNodeById(nodeid_t nid) {
+void FullGraphTopo::DelNode(nodeid_t nid) {
     if (nid < nodes_.size() && nodes_[nid]) {
         nodes_[nid].reset();
     }
@@ -144,21 +137,14 @@ pair<Edge*, bool> FullGraphTopo::AddEdge(const string& name) {
     return make_pair(edge, true);
 }
 
-Edge* FullGraphTopo::GetEdgeById(edgeid_t eid) {
+Edge* FullGraphTopo::GetEdge(edgeid_t eid) const {
     if (eid >= edges_.size()) {
         return nullptr;
     }
     return edges_[eid].get();
 }
 
-const Edge* FullGraphTopo::GetEdgeById(edgeid_t eid) const {
-    if (eid >= edges_.size()) {
-        return nullptr;
-    }
-    return edges_[eid].get();
-}
-
-void FullGraphTopo::DelEdgeById(edgeid_t eid) {
+void FullGraphTopo::DelEdge(edgeid_t eid) {
     if (eid >= edges_.size()) {
         return;
     }

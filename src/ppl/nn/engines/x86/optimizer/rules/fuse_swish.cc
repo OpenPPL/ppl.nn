@@ -33,24 +33,24 @@ bool FuseSwish(const OptKernelOptions &options) {
         auto node = it->Get();
         if (node->GetType().domain == "" && node->GetType().name == "Sigmoid") {
             auto sigmoid_node = node;
-            auto sigmoid_output_edge = graph_topo->GetEdgeById(sigmoid_node->GetOutput(0));
+            auto sigmoid_output_edge = graph_topo->GetEdge(sigmoid_node->GetOutput(0));
             if (sigmoid_output_edge->CalcConsumerCount() != 1 || IsReservedEdge(tensors, sigmoid_output_edge->GetId())) {
                 continue;
             }
-            auto sigmoid_input_edge = graph_topo->GetEdgeById(sigmoid_node->GetInput(0));
+            auto sigmoid_input_edge = graph_topo->GetEdge(sigmoid_node->GetInput(0));
 
-            auto successor_node = graph_topo->GetNodeById(sigmoid_output_edge->CreateConsumerIter().Get());
+            auto successor_node = graph_topo->GetNode(sigmoid_output_edge->CreateConsumerIter().Get());
             if (!successor_node || successor_node->GetType().domain != "" || successor_node->GetType().name != "Mul") {
                 continue;
             }
             auto last_mul_node = successor_node;
 
-            auto last_mul_input_edge0 = graph_topo->GetEdgeById(last_mul_node->GetInput(0));
-            auto last_mul_input_edge1 = graph_topo->GetEdgeById(last_mul_node->GetInput(1));
+            auto last_mul_input_edge0 = graph_topo->GetEdge(last_mul_node->GetInput(0));
+            auto last_mul_input_edge1 = graph_topo->GetEdge(last_mul_node->GetInput(1));
             if (!last_mul_input_edge0 || !last_mul_input_edge1) {
                 continue;
             }
-            auto last_mul_output_edge = graph_topo->GetEdgeById(last_mul_node->GetOutput(0));
+            auto last_mul_output_edge = graph_topo->GetEdge(last_mul_node->GetOutput(0));
 
             ir::Edge* last_mul_inner_input_edge;
             ir::Edge* last_mul_outer_input_edge;
@@ -92,7 +92,7 @@ bool FuseSwish(const OptKernelOptions &options) {
                 auto status = CreateX86OptKernel(options, swish_node, &swish_opt_kernel);
                 if (status != ppl::common::RC_SUCCESS) {
                     LOG(ERROR) << "Create OptKernel [" << swish_node_name << "] failed: " << ppl::common::GetRetCodeStr(status);
-                    graph_topo->DelNodeById(node->GetId());
+                    graph_topo->DelNode(node->GetId());
                     continue;
                 }
 
@@ -113,9 +113,9 @@ bool FuseSwish(const OptKernelOptions &options) {
 
                 // LOG(INFO) << "successfully merged node " << sigmoid_node->GetName() << " and "
                 //            << last_mul_node->GetName() << " into node " << swish_node->GetName() << ".";
-                graph_topo->DelEdgeById(sigmoid_output_edge->GetId());
-                graph_topo->DelNodeById(sigmoid_node->GetId());
-                graph_topo->DelNodeById(last_mul_node->GetId());
+                graph_topo->DelEdge(sigmoid_output_edge->GetId());
+                graph_topo->DelNode(sigmoid_node->GetId());
+                graph_topo->DelNode(last_mul_node->GetId());
 
                 graph_changed = true;
             }

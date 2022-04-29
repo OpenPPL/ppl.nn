@@ -152,8 +152,8 @@ RetCode DepthwiseDirect::ModifyParam(ir::Node* node, OptKernelOptions& options) 
 
     auto topo = options.graph->topo.get();
     auto data = options.graph->data.get();
-    auto weight_edge = topo->GetEdgeById(node->GetInput(1));
-    auto weight_node = topo->GetNodeById(weight_edge->GetProducer());
+    auto weight_edge = topo->GetEdge(node->GetInput(1));
+    auto weight_node = topo->GetNode(weight_edge->GetProducer());
     auto preedge_id = weight_node->GetInput(0);
     auto postedge_id = node->GetInput(1);
 

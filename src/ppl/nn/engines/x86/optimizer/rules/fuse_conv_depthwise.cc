@@ -33,14 +33,14 @@ bool FuseConvDepthwise(const OptKernelOptions &options) {
         if (node->GetType().domain == "" && node->GetType().name == "Conv") {
             auto conv_node = node;
             auto conv_output_edge_id = conv_node->GetOutput(0);
-            auto conv_out_edge = graph_topo->GetEdgeById(conv_output_edge_id);
+            auto conv_out_edge = graph_topo->GetEdge(conv_output_edge_id);
             if (conv_out_edge->CalcConsumerCount() != 1) {
                 continue;
             }
             if (IsReservedEdge(tensors, conv_output_edge_id)) {
                 continue;
             }
-            auto next_node = graph_topo->GetNodeById(conv_out_edge->CreateConsumerIter().Get());
+            auto next_node = graph_topo->GetNode(conv_out_edge->CreateConsumerIter().Get());
             if (next_node->GetType().domain != "" || next_node->GetType().name != "Conv") {
                 continue;
             }
@@ -70,13 +70,13 @@ bool FuseConvDepthwise(const OptKernelOptions &options) {
             bool conv_has_bias = conv_kernel->GetBiasTerm();
             bool depthwise_has_bias = post_conv_kernel->GetBiasTerm();
 
-            auto conv_input = graph_topo->GetEdgeById(conv_node->GetInput(0));
-            auto conv_w = graph_topo->GetEdgeById(conv_node->GetInput(1));
-            auto conv_b = conv_has_bias ? graph_topo->GetEdgeById(conv_node->GetInput(2)) : nullptr;
-            auto conv_output = graph_topo->GetEdgeById(conv_node->GetOutput(0)); // depthwise input
-            auto depthwise_w = graph_topo->GetEdgeById(next_node->GetInput(1));
-            auto depthwise_b = depthwise_has_bias ? graph_topo->GetEdgeById(next_node->GetInput(2)) : nullptr;
-            auto depthwise_output = graph_topo->GetEdgeById(next_node->GetOutput(0));
+            auto conv_input = graph_topo->GetEdge(conv_node->GetInput(0));
+            auto conv_w = graph_topo->GetEdge(conv_node->GetInput(1));
+            auto conv_b = conv_has_bias ? graph_topo->GetEdge(conv_node->GetInput(2)) : nullptr;
+            auto conv_output = graph_topo->GetEdge(conv_node->GetOutput(0)); // depthwise input
+            auto depthwise_w = graph_topo->GetEdge(next_node->GetInput(1));
+            auto depthwise_b = depthwise_has_bias ? graph_topo->GetEdge(next_node->GetInput(2)) : nullptr;
+            auto depthwise_output = graph_topo->GetEdge(next_node->GetOutput(0));
             pd_conv2d_node->AddInput(conv_input->GetId());
             pd_conv2d_node->AddOutput(depthwise_output->GetId());
 
@@ -85,7 +85,7 @@ bool FuseConvDepthwise(const OptKernelOptions &options) {
             auto status = CreateX86OptKernel(options, pd_conv2d_node, &opt_kernel);
             if (status != ppl::common::RC_SUCCESS) {
                 LOG(ERROR) << "Create OptKernel [" << pd_conv2d_node_name << "] failed: " << ppl::common::GetRetCodeStr(status);
-                graph_topo->DelNodeById(node->GetId());
+                graph_topo->DelNode(node->GetId());
                 continue;
             }
 
@@ -119,17 +119,17 @@ bool FuseConvDepthwise(const OptKernelOptions &options) {
             if (del_depthwise_b) tensors.erase(depthwise_b->GetId());
 
             // delete unused node & edge
-            graph_topo->DelNodeById(conv_node->GetId());
-            graph_topo->DelNodeById(next_node->GetId());
-            graph_topo->DelEdgeById(conv_output->GetId());
+            graph_topo->DelNode(conv_node->GetId());
+            graph_topo->DelNode(next_node->GetId());
+            graph_topo->DelEdge(conv_output->GetId());
             auto conv_w_id = conv_w->GetId();
             auto conv_b_id = conv_b->GetId();
             auto depthwise_w_id = depthwise_w->GetId();
             auto depthwise_b_id = depthwise_b->GetId();
-            if (del_conv_w) graph_topo->DelEdgeById(conv_w_id);
-            if (del_conv_b) graph_topo->DelEdgeById(conv_b_id);
-            if (del_depthwise_w) graph_topo->DelEdgeById(depthwise_w_id);
-            if (del_depthwise_b) graph_topo->DelEdgeById(depthwise_b_id);
+            if (del_conv_w) graph_topo->DelEdge(conv_w_id);
+            if (del_conv_b) graph_topo->DelEdge(conv_b_id);
+            if (del_depthwise_w) graph_topo->DelEdge(depthwise_w_id);
+            if (del_depthwise_b) graph_topo->DelEdge(depthwise_b_id);
 
             graph_changed = true;
         }

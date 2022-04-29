@@ -85,14 +85,14 @@ static RetCode InitRuntimeGraphResourceInputs(const ir::GraphTopo* topo, const R
                                               const map<string, nodeid_t>& name2nodeid, RuntimeGraphResource* graph) {
     for (uint32_t i = 0; i < topo->GetInputCount(); ++i) {
         auto eid = topo->GetInput(i);
-        auto edge = topo->GetEdgeById(eid);
+        auto edge = topo->GetEdge(eid);
         auto ret_pair = graph->tensors.insert(make_pair(eid, TensorImpl(edge, TENSORTYPE_RESERVED)));
         auto tensor = &ret_pair.first->second;
 
         if (ret_pair.second) {
             // finds a consumer to get device for this input
             for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
-                auto consumer = topo->GetNodeById(it.Get());
+                auto consumer = topo->GetNode(it.Get());
                 if (utils::IsPplConverterNode(consumer)) {
                     continue;
                 }
@@ -127,14 +127,14 @@ static RetCode InitRuntimeGraphResourceExtraInputs(const ir::GraphTopo* topo, co
                                                    RuntimeGraphResource* graph) {
     for (uint32_t i = 0; i < topo->GetExtraInputCount(); ++i) {
         auto eid = topo->GetExtraInput(i);
-        auto edge = topo->GetEdgeById(eid);
+        auto edge = topo->GetEdge(eid);
         auto ret_pair = graph->tensors.insert(make_pair(eid, TensorImpl(edge, TENSORTYPE_RESERVED)));
         auto tensor = &ret_pair.first->second;
 
         if (ret_pair.second) {
             // finds a consumer to get device for this extra input
             for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
-                auto consumer = topo->GetNodeById(it.Get());
+                auto consumer = topo->GetNode(it.Get());
                 if (utils::IsPplConverterNode(consumer)) {
                     continue;
                 }
@@ -167,7 +167,7 @@ RetCode InitRuntimeGraphResourceOutputs(const ir::GraphTopo* topo, const Runtime
                                         const map<string, nodeid_t>& name2nodeid, RuntimeGraphResource* graph) {
     for (uint32_t i = 0; i < topo->GetOutputCount(); ++i) {
         auto eid = topo->GetOutput(i);
-        auto edge = topo->GetEdgeById(eid);
+        auto edge = topo->GetEdge(eid);
 
         auto ret_pair = graph->tensors.insert(make_pair(eid, TensorImpl(edge, TENSORTYPE_RESERVED)));
         auto tensor = &ret_pair.first->second;
@@ -175,7 +175,7 @@ RetCode InitRuntimeGraphResourceOutputs(const ir::GraphTopo* topo, const Runtime
         if (ret_pair.second) {
             auto producer_id = edge->GetProducer();
             if (producer_id != INVALID_NODEID) {
-                auto producer = topo->GetNodeById(producer_id);
+                auto producer = topo->GetNode(producer_id);
 
                 auto nid_ref = name2nodeid.find(producer->GetName());
                 if (nid_ref == name2nodeid.end()) {
@@ -210,7 +210,7 @@ static RetCode InitRuntimeGraphResourceConstants(const ir::GraphTopo* topo, cons
                 continue;
             }
 
-            auto edge = topo->GetEdgeById(eid);
+            auto edge = topo->GetEdge(eid);
             if (!edge) {
                 LOG(ERROR) << "cannot find edge info of constant[" << eid << "]";
                 return RC_NOT_FOUND;
@@ -238,7 +238,7 @@ static RetCode InitRuntimeGraphResourceConstants(const ir::GraphTopo* topo, cons
 static void InitRuntimeGraphResourceReservedTensors(const ir::GraphTopo* topo, const set<edgeid_t>& reserved_edgeids,
                                                     RuntimeGraphResource* graph) {
     for (auto x = reserved_edgeids.begin(); x != reserved_edgeids.end(); ++x) {
-        auto edge = topo->GetEdgeById(*x);
+        auto edge = topo->GetEdge(*x);
         auto ret_pair = graph->tensors.insert(make_pair(*x, TensorImpl(edge, TENSORTYPE_RESERVED)));
         graph->edgeid2object[*x] = &ret_pair.first->second;
     }

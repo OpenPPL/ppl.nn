@@ -58,17 +58,17 @@ TEST_F(TestSpecialTypeGraphPartioner, partitioned_by_engine) {
     auto topo = builder.GetGraph()->topo.get();
     cout << utils::ToGraphviz(topo) << endl;
 
-    auto node_a = topo->GetNodeByName("a");
+    auto node_a = topo->GetNode("a");
     EXPECT_TRUE(node_a != nullptr);
-    auto node_b = topo->GetNodeByName("b");
+    auto node_b = topo->GetNode("b");
     EXPECT_TRUE(node_b != nullptr);
-    auto node_c = topo->GetNodeByName("c");
+    auto node_c = topo->GetNode("c");
     EXPECT_TRUE(node_c != nullptr);
-    auto node_d = topo->GetNodeByName("d");
+    auto node_d = topo->GetNode("d");
     EXPECT_TRUE(node_d != nullptr);
-    auto node_e = topo->GetNodeByName("e");
+    auto node_e = topo->GetNode("e");
     EXPECT_TRUE(node_e != nullptr);
-    auto node_f = topo->GetNodeByName("f");
+    auto node_f = topo->GetNode("f");
     EXPECT_TRUE(node_f != nullptr);
 
     SpecialTypeGraphPartitioner partitioner;
@@ -82,7 +82,7 @@ TEST_F(TestSpecialTypeGraphPartioner, partitioned_by_engine) {
 
         cout << "partition[" << i << "] with engine[" << partitions[i].first->GetName() << "]: ";
         for (auto x = partitions[i].second.begin(); x != partitions[i].second.end(); ++x) {
-            cout << topo->GetNodeById(*x)->GetName() << " ";
+            cout << topo->GetNode(*x)->GetName() << " ";
         }
         cout << endl;
 
@@ -118,17 +118,17 @@ TEST_F(TestSpecialTypeGraphPartioner, partition_root_node) {
     auto topo = builder.GetGraph()->topo.get();
     cout << utils::ToGraphviz(topo) << endl;
 
-    auto node_a = topo->GetNodeByName("a");
+    auto node_a = topo->GetNode("a");
     EXPECT_TRUE(node_a != nullptr);
-    auto node_b = topo->GetNodeByName("b");
+    auto node_b = topo->GetNode("b");
     EXPECT_TRUE(node_b != nullptr);
-    auto node_c = topo->GetNodeByName("c");
+    auto node_c = topo->GetNode("c");
     EXPECT_TRUE(node_c != nullptr);
-    auto node_d = topo->GetNodeByName("d");
+    auto node_d = topo->GetNode("d");
     EXPECT_TRUE(node_d != nullptr);
-    auto node_e = topo->GetNodeByName("e");
+    auto node_e = topo->GetNode("e");
     EXPECT_TRUE(node_e != nullptr);
-    auto node_f = topo->GetNodeByName("f");
+    auto node_f = topo->GetNode("f");
     EXPECT_TRUE(node_f != nullptr);
 
     SpecialTypeGraphPartitioner partitioner;
@@ -142,7 +142,7 @@ TEST_F(TestSpecialTypeGraphPartioner, partition_root_node) {
 
         cout << "partition[" << i << "] with engine[" << partitions[i].first->GetName() << "]: ";
         for (auto x = partitions[i].second.begin(); x != partitions[i].second.end(); ++x) {
-            cout << topo->GetNodeById(*x)->GetName() << " ";
+            cout << topo->GetNode(*x)->GetName() << " ";
         }
         cout << endl;
 
@@ -177,17 +177,17 @@ TEST_F(TestSpecialTypeGraphPartioner, partition_by_types) {
     auto topo = builder.GetGraph()->topo.get();
     cout << utils::ToGraphviz(topo) << endl;
 
-    auto node_a = topo->GetNodeByName("a");
+    auto node_a = topo->GetNode("a");
     EXPECT_TRUE(node_a != nullptr);
-    auto node_b = topo->GetNodeByName("b");
+    auto node_b = topo->GetNode("b");
     EXPECT_TRUE(node_b != nullptr);
-    auto node_c = topo->GetNodeByName("c");
+    auto node_c = topo->GetNode("c");
     EXPECT_TRUE(node_c != nullptr);
-    auto node_d = topo->GetNodeByName("d");
+    auto node_d = topo->GetNode("d");
     EXPECT_TRUE(node_d != nullptr);
-    auto node_e = topo->GetNodeByName("e");
+    auto node_e = topo->GetNode("e");
     EXPECT_TRUE(node_e != nullptr);
-    auto node_f = topo->GetNodeByName("f");
+    auto node_f = topo->GetNode("f");
     EXPECT_TRUE(node_f != nullptr);
 
     SpecialTypeGraphPartitioner partitioner;
@@ -203,7 +203,7 @@ TEST_F(TestSpecialTypeGraphPartioner, partition_by_types) {
 
         cout << "partition[" << i << "] with engine[" << partitions[i].first->GetName() << "]: ";
         for (auto x = node_ids.begin(); x != node_ids.end(); ++x) {
-            cout << topo->GetNodeById(*x)->GetName() << " ";
+            cout << topo->GetNode(*x)->GetName() << " ";
         }
         cout << endl;
 

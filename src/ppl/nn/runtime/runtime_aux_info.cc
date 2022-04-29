@@ -32,7 +32,7 @@ static vector<uint32_t> CalcEdgeRefcount(const ir::GraphTopo* topo, const set<ed
 
         uint32_t refcount = 0;
         for (auto iter = edge->CreateConsumerIter(); iter.IsValid(); iter.Forward()) {
-            auto next = topo->GetNodeById(iter.Get());
+            auto next = topo->GetNode(iter.Get());
             for (uint32_t i = 0; i < next->GetInputCount(); ++i) {
                 auto eid = next->GetInput(i);
                 if (eid == edge->GetId()) {
@@ -91,7 +91,7 @@ static RetCode InitEdgeLastConsumer(const ir::GraphTopo* topo, const vector<node
     auto edge_refcount = CalcEdgeRefcount(topo, reserved_edgeids);
 
     for (auto x = sorted_nodes.begin(); x != sorted_nodes.end(); ++x) {
-        auto node = topo->GetNodeById(*x);
+        auto node = topo->GetNode(*x);
 
         for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
             auto eid = node->GetInput(i);
@@ -106,7 +106,7 @@ static RetCode InitEdgeLastConsumer(const ir::GraphTopo* topo, const vector<node
                     edge_last_consumer->at(eid) = node->GetId();
                 }
             } else {
-                LOG(ERROR) << "invalid refcount of edge[" << topo->GetEdgeById(eid)->GetName() << "]";
+                LOG(ERROR) << "invalid refcount of edge[" << topo->GetEdge(eid)->GetName() << "]";
                 return RC_INVALID_VALUE;
             }
         }
@@ -124,7 +124,7 @@ static RetCode InitEdgeLastConsumer(const ir::GraphTopo* topo, const vector<node
                     edge_last_consumer->at(eid) = node->GetId();
                 }
             } else {
-                LOG(ERROR) << "invalid refcount of edge[" << topo->GetEdgeById(eid)->GetName() << "]";
+                LOG(ERROR) << "invalid refcount of edge[" << topo->GetEdge(eid)->GetName() << "]";
                 return RC_INVALID_VALUE;
             }
         }
@@ -138,7 +138,7 @@ static RetCode InitEdgeLastConsumer(const ir::GraphTopo* topo, const vector<node
                     edge_last_consumer->at(eid) = node->GetId();
                 }
             } else {
-                LOG(ERROR) << "invalid refcount of edge[" << topo->GetEdgeById(eid)->GetName() << "]";
+                LOG(ERROR) << "invalid refcount of edge[" << topo->GetEdge(eid)->GetName() << "]";
                 return RC_INVALID_VALUE;
             }
         }

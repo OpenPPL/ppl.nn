@@ -96,9 +96,8 @@ public:
     nodeid_t GetMaxNodeId() const override {
         return parent_->GetMaxNodeId();
     }
-    Node* GetNodeById(nodeid_t id) override;
-    const Node* GetNodeById(nodeid_t id) const override;
-    void DelNodeById(nodeid_t id) override;
+    Node* GetNode(nodeid_t id) const override;
+    void DelNode(nodeid_t id) override;
 
     // ----- //
 
@@ -116,9 +115,8 @@ public:
     edgeid_t GetMaxEdgeId() const override {
         return parent_->GetMaxEdgeId();
     }
-    Edge* GetEdgeById(edgeid_t id) override;
-    const Edge* GetEdgeById(edgeid_t id) const override;
-    void DelEdgeById(edgeid_t) override;
+    Edge* GetEdge(edgeid_t id) const override;
+    void DelEdge(edgeid_t) override;
 
 private:
     GraphTopo* parent_;

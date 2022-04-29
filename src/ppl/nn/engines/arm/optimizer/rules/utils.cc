@@ -59,13 +59,13 @@ std::set<ir::Edge*> GetSequenceNodesInnerEdges(ir::GraphTopo* graph_topo, std::v
     auto end_node = sequence_nodes[sequence_nodes.size() - 1];
     for (auto node : sequence_nodes) {
         for (uint32_t i = 0; i < node->GetInputCount(); i++) {
-            auto input_edge = graph_topo->GetEdgeById(node->GetInput(i));
+            auto input_edge = graph_topo->GetEdge(node->GetInput(i));
             if (!IsNodeInputEdge(start_node, input_edge)) {
                 inner_edges.insert(input_edge);
             }
         }
         for (uint32_t i = 0; i < node->GetOutputCount(); i++) {
-            auto output_edge = graph_topo->GetEdgeById(node->GetOutput(i));
+            auto output_edge = graph_topo->GetEdge(node->GetOutput(i));
             if (!IsNodeOutputEdge(end_node, output_edge)) {
                 inner_edges.insert(output_edge);
             }
@@ -122,14 +122,14 @@ ppl::common::RetCode ReplaceSequenceNodes(const OptKernelOptions& options, std::
         if (inner_edge->CalcConsumerCount() == 0 &&
             graph_data->constants.find(inner_edge->GetId()) == graph_data->constants.end()) {
             tensors.erase(inner_edge->GetId());
-            graph_topo->DelEdgeById(inner_edge->GetId());
+            graph_topo->DelEdge(inner_edge->GetId());
         }
     }
 
     // delete nodes
     for (auto node : sequence_nodes) {
         info->kernels.erase(node->GetId());
-        graph_topo->DelNodeById(node->GetId());
+        graph_topo->DelNode(node->GetId());
     }
 
     return ppl::common::RC_SUCCESS;
@@ -170,10 +170,10 @@ ppl::common::RetCode ReplaceSubgraphWithOneNode(const OptKernelOptions& options,
     std::set<ir::Edge*> inner_edges;
     for (auto node : nodes) {
         for (uint32_t i = 0; i < node->GetInputCount(); i++) {
-            inner_edges.insert(graph_topo->GetEdgeById(node->GetInput(i)));
+            inner_edges.insert(graph_topo->GetEdge(node->GetInput(i)));
         }
         for (uint32_t i = 0; i < node->GetOutputCount(); i++) {
-            inner_edges.insert(graph_topo->GetEdgeById(node->GetOutput(i)));
+            inner_edges.insert(graph_topo->GetEdge(node->GetOutput(i)));
         }
     }
     for (auto input : inputs) {
@@ -210,14 +210,14 @@ ppl::common::RetCode ReplaceSubgraphWithOneNode(const OptKernelOptions& options,
         if (inner_edge->CalcConsumerCount() == 0 &&
             graph_data->constants.find(inner_edge->GetId()) == graph_data->constants.end()) {
             tensors.erase(inner_edge->GetId());
-            graph_topo->DelEdgeById(inner_edge->GetId());
+            graph_topo->DelEdge(inner_edge->GetId());
         }
     }
 
     // delete nodes
     for (auto node : nodes) {
         info->kernels.erase(node->GetId());
-        graph_topo->DelNodeById(node->GetId());
+        graph_topo->DelNode(node->GetId());
     }
 
     return ppl::common::RC_SUCCESS;
@@ -241,16 +241,16 @@ bool IsReLU6(const ir::GraphTopo* graph_topo, const ir::GraphData* graph_data, c
     auto max_constant_it = constants.find(max_edge_id);
 
     if (min_constant_it == constants.end()) { // maybe insert a reorder op between initializer and clip
-        auto min_edge = graph_topo->GetEdgeById(min_edge_id);
+        auto min_edge = graph_topo->GetEdge(min_edge_id);
         if (min_edge == nullptr) {
             return false;
         }
-        auto reorder_node = graph_topo->GetNodeById(min_edge->GetProducer());
-        if (reorder_node == nullptr || reorder_node->GetType().domain != "ppl" ||
+        auto reorder_node = graph_topo->GetNode(min_edge->GetProducer());
+        if (reorder_node == nullptr || reorder_node->GetType().domain != "pmx" ||
             reorder_node->GetType().name != "Reorder") {
             return false;
         }
-        auto reorder_input = graph_topo->GetEdgeById(reorder_node->GetInput(0));
+        auto reorder_input = graph_topo->GetEdge(reorder_node->GetInput(0));
         if (reorder_input == nullptr) {
             return false;
         }
@@ -259,16 +259,16 @@ bool IsReLU6(const ir::GraphTopo* graph_topo, const ir::GraphData* graph_data, c
         min_constant_it = constants.find(reorder_input->GetId());
     }
     if (max_constant_it == constants.end()) { // maybe insert a reorder op between initializer and clip
-        auto max_edge = graph_topo->GetEdgeById(max_edge_id);
+        auto max_edge = graph_topo->GetEdge(max_edge_id);
         if (max_edge == nullptr) {
             return false;
         }
-        auto reorder_node = graph_topo->GetNodeById(max_edge->GetProducer());
-        if (reorder_node == nullptr || reorder_node->GetType().domain != "ppl" ||
+        auto reorder_node = graph_topo->GetNode(max_edge->GetProducer());
+        if (reorder_node == nullptr || reorder_node->GetType().domain != "pmx" ||
             reorder_node->GetType().name != "Reorder") {
             return false;
         }
-        auto reorder_input = graph_topo->GetEdgeById(reorder_node->GetInput(0));
+        auto reorder_input = graph_topo->GetEdge(reorder_node->GetInput(0));
         if (reorder_input == nullptr) {
             return false;
         }
@@ -313,13 +313,13 @@ ppl::common::RetCode DelActivationNode(const OptKernelOptions& options, ir::Node
     auto info = options.info;
     auto& tensors = *options.tensors;
 
-    auto input_edge = graph_topo->GetEdgeById(node->GetInput(0));
-    auto predecessor_node = graph_topo->GetNodeById(input_edge->GetProducer());
+    auto input_edge = graph_topo->GetEdge(node->GetInput(0));
+    auto predecessor_node = graph_topo->GetNode(input_edge->GetProducer());
     if (predecessor_node == nullptr) {
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    auto output_edge = graph_topo->GetEdgeById(node->GetOutput(0));
+    auto output_edge = graph_topo->GetEdge(node->GetOutput(0));
     if (output_edge == nullptr) {
         return ppl::common::RC_INVALID_VALUE;
     }
@@ -328,7 +328,7 @@ ppl::common::RetCode DelActivationNode(const OptKernelOptions& options, ir::Node
     output_edge->SetProducer(predecessor_node->GetId());
 
     for (uint32_t i = 0; i < node->GetInputCount(); i++) {
-        auto input_edge = graph_topo->GetEdgeById(node->GetInput(i));
+        auto input_edge = graph_topo->GetEdge(node->GetInput(i));
         if (input_edge) {
             input_edge->DelConsumer(node->GetId());
         }
@@ -336,12 +336,12 @@ ppl::common::RetCode DelActivationNode(const OptKernelOptions& options, ir::Node
             graph_data->constants.find(input_edge->GetId()) == graph_data->constants.end() &&
             !IsGraphInput(graph_topo, input_edge) && !IsGraphOutput(graph_topo, input_edge)) {
             tensors.erase(input_edge->GetId());
-            graph_topo->DelEdgeById(input_edge->GetId());
+            graph_topo->DelEdge(input_edge->GetId());
         }
     }
 
     info->kernels.erase(node->GetId());
-    graph_topo->DelNodeById(node->GetId());
+    graph_topo->DelNode(node->GetId());
 
     return ppl::common::RC_SUCCESS;
 }

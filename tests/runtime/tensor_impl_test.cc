@@ -42,7 +42,7 @@ protected:
 protected:
     TensorImpl ConstructFp32TensorWithCpuDevice() {
         auto topo = builder_.GetGraph()->topo.get();
-        auto edge = topo->GetEdgeById(1);
+        auto edge = topo->GetEdge(1);
         EXPECT_NE(nullptr, edge);
 
         TensorImpl tensor(edge, EdgeObject::T_TENSOR);

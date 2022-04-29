@@ -33,7 +33,7 @@ bool FuseGemmActivation(const OptKernelOptions &options) {
         if (node->GetType().domain == "" && node->GetType().name == "Gemm") {
             auto gemm_node = node;
             auto gemm_output_edge_id = gemm_node->GetOutput(0);
-            auto gemm_output_edge = graph_topo->GetEdgeById(gemm_output_edge_id);
+            auto gemm_output_edge = graph_topo->GetEdge(gemm_output_edge_id);
             if (gemm_output_edge->CalcConsumerCount() != 1) {
                 continue;
             }
@@ -42,7 +42,7 @@ bool FuseGemmActivation(const OptKernelOptions &options) {
             }
 
             auto successor_node_id = gemm_output_edge->CreateConsumerIter().Get();
-            auto successor_node = graph_topo->GetNodeById(successor_node_id);
+            auto successor_node = graph_topo->GetNode(successor_node_id);
             if (successor_node->GetType().domain != "") {
                 continue;
             }
@@ -59,7 +59,7 @@ bool FuseGemmActivation(const OptKernelOptions &options) {
             auto activation_node = successor_node;
             auto activation_node_id = activation_node->GetId();
             auto activation_output_edge_id = activation_node->GetOutput(0);
-            auto activation_output_edge = graph_topo->GetEdgeById(activation_output_edge_id);
+            auto activation_output_edge = graph_topo->GetEdge(activation_output_edge_id);
             // gemm_node -> gemm_output_edge -> activation_node -> activation_output_edge
             // gemm_node                                      -> activation_output_edge
             gemm_node->ReplaceOutput(gemm_output_edge_id, activation_output_edge_id);
@@ -69,8 +69,8 @@ bool FuseGemmActivation(const OptKernelOptions &options) {
             // gemm_node->GetName() << ".";
             info->kernels.erase(activation_node_id);
             tensors.erase(gemm_output_edge_id);
-            graph_topo->DelNodeById(activation_node_id);
-            graph_topo->DelEdgeById(gemm_output_edge_id);
+            graph_topo->DelNode(activation_node_id);
+            graph_topo->DelEdge(gemm_output_edge_id);
 
             graph_changed = true;
         }

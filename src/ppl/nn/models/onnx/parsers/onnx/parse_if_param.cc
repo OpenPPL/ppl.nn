@@ -27,7 +27,7 @@ namespace ppl { namespace nn { namespace onnx {
 
 static uint32_t FindExtraInputIndex(const string& name, const ir::Node* node, const ir::GraphTopo* topo) {
     for (uint32_t i = 0; i < node->GetExtraInputCount(); ++i) {
-        auto edge = topo->GetEdgeById(node->GetExtraInput(i));
+        auto edge = topo->GetEdge(node->GetExtraInput(i));
         if (edge->GetName() == name) {
             return i;
         }
@@ -44,7 +44,7 @@ static RetCode CollectExtraInputIndices(const ir::GraphTopo* current, const ir::
                                         const ir::GraphTopo* parent_topo, vector<uint32_t>* indices) {
     indices->reserve(current->GetExtraInputCount());
     for (uint32_t i = 0; i < current->GetExtraInputCount(); ++i) {
-        auto edge = current->GetEdgeById(current->GetExtraInput(i));
+        auto edge = current->GetEdge(current->GetExtraInput(i));
         auto idx = FindExtraInputIndex(edge->GetName(), parent_node, parent_topo);
         if (idx == parent_node->GetExtraInputCount()) {
             LOG(ERROR) << "cannot find extra input[" << edge->GetName() << "] of subgraph[" << current->GetName()

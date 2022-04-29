@@ -42,7 +42,7 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
 
         auto object = graph_->edgeid2object[eid];
         if (!object) {
-            auto edge = topo_->GetEdgeById(eid);
+            auto edge = topo_->GetEdge(eid);
 
             if (etype == EdgeObject::T_TENSOR) {
                 auto tensor = tensor_pool_.Alloc(edge, TENSORTYPE_NORMAL);
@@ -122,7 +122,7 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
     if (!diff_before2after.empty()) {
         LOG(ERROR) << "edge(s) in `before` but not in `after`:";
         for (auto x = diff_before2after.begin(); x != diff_before2after.end(); ++x) {
-            auto edge = topo_->GetEdgeById(*x);
+            auto edge = topo_->GetEdge(*x);
             LOG(ERROR) << " " << edge->GetName();
         }
     }
@@ -134,7 +134,7 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
     if (!diff_after2before.empty()) {
         LOG(ERROR) << "edge(s) in `after` but not in `before`:";
         for (auto x = diff_after2before.begin(); x != diff_after2before.end(); ++x) {
-            auto edge = topo_->GetEdgeById(*x);
+            auto edge = topo_->GetEdge(*x);
             LOG(ERROR) << " " << edge->GetName();
         }
     }

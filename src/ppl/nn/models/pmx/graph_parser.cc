@@ -52,15 +52,15 @@ static RetCode ParseGraphTopoNodes(const GraphTopo* fb_topo, ir::GraphTopo* topo
             ir::Node::Type(fb_node_type->domain()->c_str(), fb_node_type->name()->c_str(), fb_node_type->version()));
 
         for (auto e = fb_node->inputs()->begin(); e != fb_node->inputs()->end(); ++e) {
-            auto edge = topo->GetEdgeById(*e);
+            auto edge = topo->GetEdge(*e);
             node->AddInput(edge->GetId());
             edge->AddConsumer(node->GetId());
         }
         for (auto e = fb_node->outputs()->begin(); e != fb_node->outputs()->end(); ++e) {
-            auto edge = topo->GetEdgeById(*e);
+            auto edge = topo->GetEdge(*e);
             node->AddOutput(edge->GetId());
             if (edge->GetProducer() != INVALID_NODEID) {
-                auto parent = topo->GetNodeById(edge->GetProducer());
+                auto parent = topo->GetNode(edge->GetProducer());
                 LOG(ERROR) << "multiple producer [" << parent->GetName() << "] and [" << node->GetName()
                            << "] of edge [" << edge->GetName() << "]";
                 return RC_INVALID_VALUE;
@@ -68,7 +68,7 @@ static RetCode ParseGraphTopoNodes(const GraphTopo* fb_topo, ir::GraphTopo* topo
             edge->SetProducer(node->GetId());
         }
         for (auto e = fb_node->extra_inputs()->begin(); e != fb_node->extra_inputs()->end(); ++e) {
-            auto edge = topo->GetEdgeById(*e);
+            auto edge = topo->GetEdge(*e);
             node->AddExtraInput(edge->GetId());
             edge->AddConsumer(node->GetId());
         }
@@ -164,7 +164,7 @@ public:
         const function<RetCode(const ir::Edge*, const void*, uint64_t, const TensorShape&)>& f) const override {
         for (auto y = fb_constants_->begin(); y != fb_constants_->end(); ++y) {
             auto fb_constant = *y;
-            auto edge = topo_->GetEdgeById(fb_constant->edge_id());
+            auto edge = topo_->GetEdge(fb_constant->edge_id());
 
             auto shape_ref = info_->shapes.find(fb_constant->edge_id());
             if (shape_ref == info_->shapes.end()) {
@@ -205,7 +205,7 @@ static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::Grap
         for (auto y = fb_partition->nodes()->begin(); y != fb_partition->nodes()->end(); ++y) {
             auto fb_node = *y;
 
-            auto node = topo->GetNodeById(fb_node->node_id());
+            auto node = topo->GetNode(fb_node->node_id());
             if (!node) {
                 LOG(ERROR) << "cannot find node of id[" << fb_node->node_id() << "] in partition of engine["
                            << engine->GetName() << "]";

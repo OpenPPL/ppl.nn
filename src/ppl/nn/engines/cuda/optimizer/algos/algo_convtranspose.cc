@@ -146,8 +146,8 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
     this->attr_param_ = *(reinterpret_cast<CudaConvTransposeParam*>(options.param));
     auto topo = options.graph->topo.get();
     auto data = options.graph->data.get();
-    auto weight_edge = topo->GetEdgeById(node->GetInput(1));
-    auto weight_node = topo->GetNodeById(weight_edge->GetProducer());
+    auto weight_edge = topo->GetEdge(node->GetInput(1));
+    auto weight_node = topo->GetNode(weight_edge->GetProducer());
 
     const TensorShape& shape_in0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
     const TensorShape& shape_in1 = *options.tensors->find(node->GetInput(1))->second->GetShape();

@@ -101,18 +101,18 @@ PartialGraphTopo::PartialGraphTopo(GraphTopo* parent, const vector<nodeid_t>& no
 
     // set valid node and edge ptrs from parent
     for (uint32_t i = 0; i < nodes.size(); ++i) {
-        auto node = parent->GetNodeById(nodes[i]);
+        auto node = parent->GetNode(nodes[i]);
         node_ptrs_[nodes[i]] = node;
 
         for (uint32_t j = 0; j < node->GetInputCount(); ++j) {
             auto eid = node->GetInput(j);
             if (eid != INVALID_EDGEID) {
-                edge_ptrs_[eid] = parent->GetEdgeById(eid);
+                edge_ptrs_[eid] = parent->GetEdge(eid);
             }
         }
         for (uint32_t j = 0; j < node->GetOutputCount(); ++j) {
             auto eid = node->GetOutput(j);
-            edge_ptrs_[eid] = parent->GetEdgeById(eid);
+            edge_ptrs_[eid] = parent->GetEdge(eid);
         }
     }
 
@@ -157,12 +157,12 @@ PartialGraphTopo::PartialGraphTopo(GraphTopo* parent, const vector<nodeid_t>& no
 
     // handling nodes' extra inputs
     for (uint32_t i = 0; i < nodes.size(); ++i) {
-        auto node = parent->GetNodeById(nodes[i]);
+        auto node = parent->GetNode(nodes[i]);
         for (uint32_t j = 0; j < node->GetExtraInputCount(); ++j) {
             auto eid = node->GetExtraInput(j);
             // if an extra input of a node is not a normal edge, it is an extra input of the graph
             if (eid != INVALID_EDGEID && !edge_ptrs_[eid]) {
-                auto edge = parent->GetEdgeById(eid);
+                auto edge = parent->GetEdge(eid);
                 auto new_edge = new PartialGraphEdge(edge, &node_ptrs_);
                 override_edges_.emplace(eid, unique_ptr<Edge>(new_edge));
                 edge_ptrs_[eid] = new_edge;
@@ -191,24 +191,17 @@ pair<Node*, bool> PartialGraphTopo::AddNode(const string& name) {
     return ret_pair;
 }
 
-Node* PartialGraphTopo::GetNodeById(nodeid_t nid) {
+Node* PartialGraphTopo::GetNode(nodeid_t nid) const {
     if (nid >= node_ptrs_.size()) {
         return nullptr;
     }
     return node_ptrs_[nid];
 }
 
-const Node* PartialGraphTopo::GetNodeById(nodeid_t nid) const {
-    if (nid >= node_ptrs_.size()) {
-        return nullptr;
-    }
-    return node_ptrs_[nid];
-}
-
-void PartialGraphTopo::DelNodeById(nodeid_t nid) {
+void PartialGraphTopo::DelNode(nodeid_t nid) {
     if (node_ptrs_[nid]) {
         node_ptrs_[nid] = nullptr;
-        parent_->DelNodeById(nid);
+        parent_->DelNode(nid);
     }
 }
 
@@ -231,25 +224,18 @@ pair<Edge*, bool> PartialGraphTopo::AddEdge(const string& name) {
     return ret_pair;
 }
 
-const Edge* PartialGraphTopo::GetEdgeById(edgeid_t eid) const {
+Edge* PartialGraphTopo::GetEdge(edgeid_t eid) const {
     if (eid >= edge_ptrs_.size()) {
         return nullptr;
     }
     return edge_ptrs_[eid];
 }
 
-Edge* PartialGraphTopo::GetEdgeById(edgeid_t eid) {
-    if (eid >= edge_ptrs_.size()) {
-        return nullptr;
-    }
-    return edge_ptrs_[eid];
-}
-
-void PartialGraphTopo::DelEdgeById(edgeid_t eid) {
+void PartialGraphTopo::DelEdge(edgeid_t eid) {
     if (eid < edge_ptrs_.size()) {
         if (edge_ptrs_[eid]) {
             edge_ptrs_[eid] = nullptr;
-            parent_->DelEdgeById(eid);
+            parent_->DelEdge(eid);
             override_edges_.erase(eid);
         }
     }

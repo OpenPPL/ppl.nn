@@ -86,17 +86,17 @@ const RetCode AveragePoolFusion::FuseWithPreviousPad(ir::Node* node, ir::Node* p
     auto topo = options.graph->topo.get();
     auto connect_edge_id = node->GetInput(0);
     auto pre_edge_id = prenode->GetInput(0);
-    auto pre_edge = topo->GetEdgeById(pre_edge_id);
+    auto pre_edge = topo->GetEdge(pre_edge_id);
     auto pad_edge_id = prenode->GetInput(1);
-    auto pad_edge = topo->GetEdgeById(pad_edge_id);
+    auto pad_edge = topo->GetEdge(pad_edge_id);
 
     pre_edge->DelConsumer(prenode->GetId());
     pre_edge->AddConsumer(node->GetId());
     pad_edge->DelConsumer(prenode->GetId());
     node->ReplaceInput(connect_edge_id, pre_edge_id);
 
-    topo->DelEdgeById(connect_edge_id);
-    topo->DelNodeById(prenode->GetId());
+    topo->DelEdge(connect_edge_id);
+    topo->DelNode(prenode->GetId());
     return RC_SUCCESS;
 }
 
@@ -109,7 +109,7 @@ const RetCode AveragePoolFusion::FuseNode(ir::Node* node, bool reliable, const O
         return RC_UNSUPPORTED;
     }
 
-    auto edge = topo->GetEdgeById(edge_id);
+    auto edge = topo->GetEdge(edge_id);
     if (edge->CalcConsumerCount() != 1) {
         return RC_UNSUPPORTED;
     }
@@ -119,7 +119,7 @@ const RetCode AveragePoolFusion::FuseNode(ir::Node* node, bool reliable, const O
         return RC_UNSUPPORTED;
     }
 
-    auto prenode = topo->GetNodeById(prenode_id);
+    auto prenode = topo->GetNode(prenode_id);
     if (node->GetInputCount() != 1 || node->GetOutputCount() != 1) {
         return RC_UNSUPPORTED;
     }
@@ -143,9 +143,9 @@ const RetCode AveragePoolFusion::FuseNode(ir::Node* node, bool reliable, const O
         }
         param->mode = PoolingParam::POOLING_AVERAGE_INCLUDE;
         options.info->kernels.erase(prenode_id);
-        if (topo->GetEdgeById(prenode->GetInput(1))->CalcConsumerCount() == 0) {
+        if (topo->GetEdge(prenode->GetInput(1))->CalcConsumerCount() == 0) {
             data->constants.erase(prenode->GetInput(1));
-            topo->DelEdgeById(prenode->GetInput(1));
+            topo->DelEdge(prenode->GetInput(1));
         }
         FuseWithPreviousPad(node, prenode, options);
     }

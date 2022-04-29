@@ -81,7 +81,7 @@ bool FuseConvActivation(const OptKernelOptions& options) {
         if (node->GetType().domain == "" && node->GetType().name == "Conv") {
             auto conv_node = node;
             auto conv_output_edge_id = conv_node->GetOutput(0);
-            auto conv_output_edge = graph_topo->GetEdgeById(conv_output_edge_id);
+            auto conv_output_edge = graph_topo->GetEdge(conv_output_edge_id);
             if (conv_output_edge->CalcConsumerCount() != 1) {
                 continue;
             }
@@ -90,7 +90,7 @@ bool FuseConvActivation(const OptKernelOptions& options) {
             }
 
             auto successor_node_id = conv_output_edge->CreateConsumerIter().Get();
-            auto successor_node = graph_topo->GetNodeById(successor_node_id);
+            auto successor_node = graph_topo->GetNode(successor_node_id);
             if (successor_node->GetType().domain != "") {
                 continue;
             }
@@ -106,17 +106,17 @@ bool FuseConvActivation(const OptKernelOptions& options) {
                 }
                 // remove relu6's input max/min connect in advance
                 if (successor_node->GetInputCount() == 3) {
-                    auto min_edge = graph_topo->GetEdgeById(successor_node->GetInput(1));
-                    auto max_edge = graph_topo->GetEdgeById(successor_node->GetInput(2));
+                    auto min_edge = graph_topo->GetEdge(successor_node->GetInput(1));
+                    auto max_edge = graph_topo->GetEdge(successor_node->GetInput(2));
                     min_edge->DelConsumer(successor_node->GetId());
                     max_edge->DelConsumer(successor_node->GetId());
                     if (min_edge->CalcConsumerCount() == 0 && !IsGraphOutput(graph_topo, min_edge->GetId())) {
                         graph_data->constants.erase(min_edge->GetId());
-                        graph_topo->DelEdgeById(min_edge->GetId());
+                        graph_topo->DelEdge(min_edge->GetId());
                     }
                     if (max_edge->CalcConsumerCount() == 0 && !IsGraphOutput(graph_topo, max_edge->GetId())) {
                         graph_data->constants.erase(max_edge->GetId());
-                        graph_topo->DelEdgeById(max_edge->GetId());
+                        graph_topo->DelEdge(max_edge->GetId());
                     }
                 }
             } else {
@@ -126,7 +126,7 @@ bool FuseConvActivation(const OptKernelOptions& options) {
             auto activation_node = successor_node;
             auto activation_node_id = activation_node->GetId();
             auto activation_output_edge_id = activation_node->GetOutput(0);
-            auto activation_output_edge = graph_topo->GetEdgeById(activation_output_edge_id);
+            auto activation_output_edge = graph_topo->GetEdge(activation_output_edge_id);
             // from :
             // conv_node -> conv_output_edge -> activation_node -> activation_output_edge
             // to   :
@@ -136,8 +136,8 @@ bool FuseConvActivation(const OptKernelOptions& options) {
 
             info->kernels.erase(activation_node_id);
             // tensors.erase(conv_output_edge_id);
-            graph_topo->DelNodeById(activation_node_id);
-            graph_topo->DelEdgeById(conv_output_edge_id);
+            graph_topo->DelNode(activation_node_id);
+            graph_topo->DelEdge(conv_output_edge_id);
 
             graph_changed = true;
         }

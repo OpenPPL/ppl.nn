@@ -168,7 +168,7 @@ RetCode RuntimeBuilderImpl::Serialize(const char* output_file, const char* fmt) 
 RetCode RuntimeBuilderImpl::ReserveTensor(RuntimeBuilderImpl* impl, va_list args) {
     auto tensor_name = va_arg(args, const char*);
 
-    auto edge = impl->topo_->GetEdgeByName(tensor_name);
+    auto edge = impl->topo_->GetEdge(tensor_name);
     if (!edge) {
         LOG(ERROR) << "ReserveTensor: cannot find tensor named[" << tensor_name << "]";
         return RC_NOT_FOUND;

@@ -34,7 +34,7 @@ ppl::common::RetCode ConstantNodeOptimizer::Optimize(ir::Graph* graph) const {
         auto node = it->Get();
         if (node->GetType().domain.empty() && node->GetType().name == "Constant") {
             auto constant_node = node;
-            auto edge = graph->topo->GetEdgeById(node->GetOutput(0));
+            auto edge = graph->topo->GetEdge(node->GetOutput(0));
             if (!edge) {
                 LOG(ERROR) << "cannot find constant node[" << constant_node->GetName() << "]'s output edge.";
                 return RC_NOT_FOUND;
@@ -44,7 +44,7 @@ ppl::common::RetCode ConstantNodeOptimizer::Optimize(ir::Graph* graph) const {
             auto param_it = attrs.find(constant_node->GetId());
             if (param_it == attrs.end()) {
                 LOG(ERROR) << "cannot find constant node[" << constant_node->GetName() << "]'s param.";
-                graph->topo->DelEdgeById(edge_id);
+                graph->topo->DelEdge(edge_id);
                 return RC_NOT_FOUND;
             }
             auto param = (const ConstantParam*)param_it->second.get();
@@ -62,7 +62,7 @@ ppl::common::RetCode ConstantNodeOptimizer::Optimize(ir::Graph* graph) const {
 
             // delete constant node
             edge->SetProducer(INVALID_NODEID); // clear producer
-            graph->topo->DelNodeById(constant_node->GetId());
+            graph->topo->DelNode(constant_node->GetId());
         }
     }
 

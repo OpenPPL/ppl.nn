@@ -164,7 +164,7 @@ RetCode SpecialTypeGraphPartitioner::Partition(const vector<EngineImpl*>& engine
 
     for (uint32_t i = 0; i < sorted_nodes.size(); ++i) {
         auto nid = sorted_nodes[i];
-        auto node = topo->GetNodeById(nid);
+        auto node = topo->GetNode(nid);
 
         auto engine = FindEngine(engines, node);
         if (!engine) {

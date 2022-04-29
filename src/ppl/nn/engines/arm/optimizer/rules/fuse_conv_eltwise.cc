@@ -35,8 +35,8 @@ bool FuseConvEltwiseRule::Apply(const OptKernelOptions& options) {
         auto node = it->Get();
         if (node->GetType().domain == "" && node->GetType().name == "Add") { // only support conv add fuse now
             auto add_node = node;
-            auto input_edge_0 = graph_topo->GetEdgeById(node->GetInput(0));
-            auto input_edge_1 = graph_topo->GetEdgeById(node->GetInput(1));
+            auto input_edge_0 = graph_topo->GetEdge(node->GetInput(0));
+            auto input_edge_1 = graph_topo->GetEdge(node->GetInput(1));
 
             // check if eltwise
             auto& input_shape_0 = *tensors[input_edge_0->GetId()]->GetShape();
@@ -63,7 +63,7 @@ bool FuseConvEltwiseRule::Apply(const OptKernelOptions& options) {
             auto add_op = (AddOp*)info->kernels[add_node->GetId()].get();
             if (!conv_node && input_edge_0->GetProducer() != INVALID_NODEID && input_edge_0->CalcConsumerCount() == 1 &&
                 !IsGraphOutput(graph_topo, input_edge_0->GetId())) {
-                auto predecessor_node_0 = graph_topo->GetNodeById(input_edge_0->GetProducer());
+                auto predecessor_node_0 = graph_topo->GetNode(input_edge_0->GetProducer());
                 if (predecessor_node_0->GetType().domain == "" && predecessor_node_0->GetType().name == "Conv") {
                     auto conv_op = (ConvOp*)info->kernels[predecessor_node_0->GetId()].get();
                     if (conv_op->TryFuseSum()) {
@@ -78,7 +78,7 @@ bool FuseConvEltwiseRule::Apply(const OptKernelOptions& options) {
 
             if (!conv_node && input_edge_1->GetProducer() != INVALID_NODEID && input_edge_1->CalcConsumerCount() == 1 &&
                 !IsGraphOutput(graph_topo, input_edge_1->GetId())) {
-                auto predecessor_node_1 = graph_topo->GetNodeById(input_edge_1->GetProducer());
+                auto predecessor_node_1 = graph_topo->GetNode(input_edge_1->GetProducer());
                 if (predecessor_node_1->GetType().domain == "" && predecessor_node_1->GetType().name == "Conv") {
                     auto conv_op = (ConvOp*)info->kernels[predecessor_node_1->GetId()].get();
                     if (conv_op->TryFuseSum()) {
@@ -96,7 +96,7 @@ bool FuseConvEltwiseRule::Apply(const OptKernelOptions& options) {
             }
 
             auto conv_output_edge_id = conv_node->GetOutput(0);
-            auto add_output_edge = graph_topo->GetEdgeById(add_node->GetOutput(0));
+            auto add_output_edge = graph_topo->GetEdge(add_node->GetOutput(0));
 
             conv_node->AddInput(src_sum_edge->GetId()); // add src_sum_edge as input[-1] of conv_node
             src_sum_edge->AddConsumer(conv_node->GetId());
@@ -108,8 +108,8 @@ bool FuseConvEltwiseRule::Apply(const OptKernelOptions& options) {
             LOG(INFO) << "fuse add " << add_node->GetName()<< " into kernel " << conv_node->GetName() << ".";
 #endif
             info->kernels.erase(add_node->GetId());
-            graph_topo->DelNodeById(add_node->GetId());
-            graph_topo->DelEdgeById(conv_output_edge_id);
+            graph_topo->DelNode(add_node->GetId());
+            graph_topo->DelEdge(conv_output_edge_id);
 
             graph_changed = true;
         }
