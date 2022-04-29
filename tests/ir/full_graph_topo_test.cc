@@ -59,7 +59,7 @@ TEST_F(FullGraphTopoTest, full_graph_topo_GetMaxNodeId_Test) {
 
 TEST_F(FullGraphTopoTest, full_grapg_topo_GetNodeById_Test) {
     auto topo = graph_builder_.GetGraph()->topo.get();
-    auto res_node = topo->GetNodeById(0);
+    auto res_node = topo->GetNode(0);
     cout << res_node->GetName() << endl;
     EXPECT_EQ(res_node->GetName(), "c");
 }
@@ -70,8 +70,8 @@ TEST_F(FullGraphTopoTest, full_graph_topo_DelNodeById_Test) {
     EXPECT_TRUE(ret_pair.second);
     nodeid_t expected_nodeid = 3;
     EXPECT_EQ(expected_nodeid, ret_pair.first->GetId());
-    topo->DelNodeById(expected_nodeid);
-    auto res = topo->GetNodeById(expected_nodeid);
+    topo->DelNode(expected_nodeid);
+    auto res = topo->GetNode(expected_nodeid);
     EXPECT_EQ(res, nullptr);
 }
 
@@ -97,7 +97,7 @@ TEST_F(FullGraphTopoTest, full_graph_topo_GetMaxEdgeId_Test) {
 
 TEST_F(FullGraphTopoTest, full_graph_topo_GetEdgeById_Test) {
     auto topo = graph_builder_.GetGraph()->topo.get();
-    auto res_edge = topo->GetEdgeById(0);
+    auto res_edge = topo->GetEdge(0);
     EXPECT_EQ(res_edge->GetName(), "output_of_b");
 }
 
@@ -105,22 +105,22 @@ TEST_F(FullGraphTopoTest, full_graph_topo_DelEdgeById_Test) {
     auto topo = graph_builder_.GetGraph()->topo.get();
     auto ret_pair = topo->AddEdge("tmp");
     EXPECT_TRUE(ret_pair.second);
-    topo->DelEdgeById(4);
-    auto res = topo->GetEdgeById(4);
+    topo->DelEdge(4);
+    auto res = topo->GetEdge(4);
     EXPECT_EQ(res, nullptr);
 }
 
 // test FullGrahpEdge's api
 TEST_F(FullGraphTopoTest, full_edge_GetId_Test) {
     auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
+    auto edge = topo->GetEdge(0);
     auto edge_id = edge->GetId();
     EXPECT_EQ(0, edge_id);
 }
 
 TEST_F(FullGraphTopoTest, full_edge_SetNameAndGetName_Test) {
     auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
+    auto edge = topo->GetEdge(0);
     const string edge_name = "tmp";
     edge->SetName(edge_name);
     EXPECT_EQ(edge->GetName(), edge_name);
@@ -128,7 +128,7 @@ TEST_F(FullGraphTopoTest, full_edge_SetNameAndGetName_Test) {
 
 TEST_F(FullGraphTopoTest, full_edge_SetProducerAndGetProducer_Test) {
     auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
+    auto edge = topo->GetEdge(0);
     edge->SetProducer(10);
     auto producer = edge->GetProducer();
     EXPECT_EQ(producer, 10);
@@ -136,21 +136,21 @@ TEST_F(FullGraphTopoTest, full_edge_SetProducerAndGetProducer_Test) {
 
 TEST_F(FullGraphTopoTest, full_edge_CreateConsumerIter_Test) {
     auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
+    auto edge = topo->GetEdge(0);
     auto consumerIter = edge->CreateConsumerIter();
     EXPECT_TRUE(consumerIter.IsValid());
 }
 
 TEST_F(FullGraphTopoTest, full_edge_CalcConsumerCount_Test) {
     auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
+    auto edge = topo->GetEdge(0);
     auto consumers_count = edge->CalcConsumerCount();
     EXPECT_EQ(consumers_count, 1);
 }
 
 TEST_F(FullGraphTopoTest, full_edge_AddConsumer_Test) {
     auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
+    auto edge = topo->GetEdge(0);
     edge->AddConsumer(10);
     auto constumers_count = edge->CalcConsumerCount();
     EXPECT_EQ(constumers_count, 2);
@@ -158,7 +158,7 @@ TEST_F(FullGraphTopoTest, full_edge_AddConsumer_Test) {
 
 TEST_F(FullGraphTopoTest, full_edge_DelConsumer_Test) {
     auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
+    auto edge = topo->GetEdge(0);
     auto consumerIter = edge->CreateConsumerIter();
     edge->DelConsumer(consumerIter.Get());
     auto constumers_count = edge->CalcConsumerCount();
@@ -167,7 +167,7 @@ TEST_F(FullGraphTopoTest, full_edge_DelConsumer_Test) {
 
 TEST_F(FullGraphTopoTest, full_edge_ClearConsumer_Test) {
     auto topo = graph_builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
+    auto edge = topo->GetEdge(0);
     auto consumerIter = edge->CreateConsumerIter();
     edge->ClearConsumer();
     auto constumers_count = edge->CalcConsumerCount();

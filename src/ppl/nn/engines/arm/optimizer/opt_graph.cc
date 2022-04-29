@@ -131,8 +131,8 @@ RetCode OptGraph::AddReorderOp(const OptKernelOptions& options, const edgeid_t& 
                                const ppl::common::dataformat_t& reorder_out_format,
                                const ppl::common::datatype_t& reorder_in_type,
                                const ppl::common::datatype_t& reorder_out_type) {
-    auto edge = graph_->topo->GetEdgeById(edge_id);
-    auto node = graph_->topo->GetNodeById(node_id);
+    auto edge = graph_->topo->GetEdge(edge_id);
+    auto node = graph_->topo->GetNode(node_id);
 
     std::string reorder_node_name = "";
     if (reorder_type == REORDER_INPUT) {
@@ -381,10 +381,10 @@ RetCode OptGraph::TryToInferType(ArmDevice* device) {
 
     /** try to infer types for each node's input and output*/
     for (auto node_id : sorted_nodes) {
-        auto node = graph_->topo->GetNodeById(node_id);
+        auto node = graph_->topo->GetNode(node_id);
         bool all_inputs_has_type = true;
         for (uint32_t i = 0; i < node->GetInputCount(); i++) {
-            auto input_edge = graph_->topo->GetEdgeById(node->GetInput(i));
+            auto input_edge = graph_->topo->GetEdge(node->GetInput(i));
             if (!input_edge) { // some op may have emtpy input
                 continue;
             }
@@ -420,10 +420,10 @@ RetCode OptGraph::TryToInferDims(ArmDevice* device) {
     });
 
     for (auto node_id : sorted_nodes) {
-        auto node = graph_->topo->GetNodeById(node_id);
+        auto node = graph_->topo->GetNode(node_id);
         bool all_inputs_has_dims = true;
         for (uint32_t i = 0; i < node->GetInputCount(); i++) {
-            auto input_edge = graph_->topo->GetEdgeById(node->GetInput(i));
+            auto input_edge = graph_->topo->GetEdge(node->GetInput(i));
             if (!input_edge) { // some op may have emtpy input
                 continue;
             }

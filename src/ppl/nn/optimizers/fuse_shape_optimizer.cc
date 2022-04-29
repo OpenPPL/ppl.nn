@@ -34,7 +34,7 @@ bool CanFuse(ir::Node* node, ShapeOperationParam* shape_param, ir::Graph* graph)
     // all node's inputs can not be graph output
     for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
         auto edge_id = node->GetInput(i);
-        auto edge = topo->GetEdgeById(edge_id);
+        auto edge = topo->GetEdge(edge_id);
         if (edge_id == INVALID_EDGEID || topo->GetOutput(edge->GetName()) != INVALID_EDGEID) {
             return false;
         }
@@ -194,25 +194,25 @@ RetCode UpdateMatrixForNextNode(ir::Node* node, vector<edgeid_t>* edge_array, Sh
             continue;
         }
         if (constants.find(input_edge_id) != constants.end()) {
-            auto constants_edge = graph->topo->GetEdgeById(input_edge_id);
+            auto constants_edge = graph->topo->GetEdge(input_edge_id);
             constants_edge->DelConsumer(node->GetId());
             if (constants_edge->CalcConsumerCount() == 0) {
                 constants.erase(input_edge_id);
-                graph->topo->DelEdgeById(input_edge_id);
+                graph->topo->DelEdge(input_edge_id);
             }
         }
     }
 
-    graph->topo->DelNodeById(node->GetId());
+    graph->topo->DelNode(node->GetId());
     return RC_SUCCESS;
 }
 
 void FuseNextNode(edgeid_t edge_id, vector<edgeid_t>* edge_array, ShapeOperationParam* shape_param, ir::Graph* graph) {
     auto& topo = graph->topo;
-    auto edge = topo->GetEdgeById(edge_id);
+    auto edge = topo->GetEdge(edge_id);
     for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
         auto next_node_id = it.Get();
-        auto next_node = topo->GetNodeById(next_node_id);
+        auto next_node = topo->GetNode(next_node_id);
         if (next_node == nullptr) {
             continue;
         }
@@ -227,13 +227,13 @@ void UpdateGraph(ir::Node* node, ShapeOperationParam* shape_param, ir::Graph* gr
     auto topo = graph->topo.get();
     bool first_add = true;
     for (auto it = shape_param->alpha.begin(); it != shape_param->alpha.end(); ++it) {
-        auto edge = topo->GetEdgeById(it->first);
+        auto edge = topo->GetEdge(it->first);
 
         bool flag = IsGraphOutput(graph, edge->GetId());
         vector<nodeid_t> to_be_deleted;
         for (auto edge_it = edge->CreateConsumerIter(); edge_it.IsValid(); edge_it.Forward()) {
             auto temp_node_id = edge_it.Get();
-            if (topo->GetNodeById(temp_node_id) != nullptr) {
+            if (topo->GetNode(temp_node_id) != nullptr) {
                 flag = true;
             } else {
                 to_be_deleted.push_back(temp_node_id);
@@ -252,7 +252,7 @@ void UpdateGraph(ir::Node* node, ShapeOperationParam* shape_param, ir::Graph* gr
                 node->AddOutput(it->first);
             }
         } else {
-            topo->DelEdgeById(it->first);
+            topo->DelEdge(it->first);
         }
     }
     LOG(DEBUG) << "Output count " << node->GetOutputCount() << " for fused shape node[" << node->GetName() << "]";

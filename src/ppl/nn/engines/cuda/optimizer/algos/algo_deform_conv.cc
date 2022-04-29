@@ -37,8 +37,8 @@ RetCode DeformConvAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& optio
     this->param_ = (reinterpret_cast<ppl::nn::mmcv::MMCVModulatedDeformConv2dParam*>(options.param));
     auto topo = options.graph->topo.get();
     auto data = options.graph->data.get();
-    auto weight_edge = topo->GetEdgeById(node->GetInput(3));
-    auto weight_node = topo->GetNodeById(weight_edge->GetProducer());
+    auto weight_edge = topo->GetEdge(node->GetInput(3));
+    auto weight_node = topo->GetNode(weight_edge->GetProducer());
 
     RetCode status;
 

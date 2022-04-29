@@ -71,9 +71,9 @@ RetCode GraphBuilder::Finalize() {
 
     set<edgeid_t> extra_input_ids;
     for (auto x = extra_inputs_.begin(); x != extra_inputs_.end(); ++x) {
-        auto node = graph_.topo->GetNodeById(x->first);
+        auto node = graph_.topo->GetNode(x->first);
         for (auto y = x->second.begin(); y != x->second.end(); ++y) {
-            auto edge = topo->GetEdgeByName(*y);
+            auto edge = topo->GetEdge(*y);
             if (!edge) {
                 auto ret_pair = topo->AddEdge(*y);
                 edge = ret_pair.first;

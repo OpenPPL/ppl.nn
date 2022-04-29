@@ -46,9 +46,9 @@ protected:
 
 static bool IsBefore(const string& a, const string& b, const ir::GraphTopo* topo,
                      const vector<nodeid_t>& sorted_nodes) {
-    auto node_a = topo->GetNodeByName(a);
+    auto node_a = topo->GetNode(a);
     EXPECT_TRUE(node_a != nullptr);
-    auto node_b = topo->GetNodeByName(b);
+    auto node_b = topo->GetNode(b);
     EXPECT_TRUE(node_b != nullptr);
 
     uint32_t node_a_pos = 0;
@@ -89,7 +89,7 @@ TEST_F(IrUtilsTest, Dfs) {
             }
         },
         [topo, &sorted_nodes](nodeid_t nid) -> void {
-            cout << topo->GetNodeById(nid)->GetName() << " -> ";
+            cout << topo->GetNode(nid)->GetName() << " -> ";
             sorted_nodes.push_back(nid);
         });
     cout << "nil" << endl;
@@ -119,7 +119,7 @@ TEST_F(IrUtilsTest, Bfs) {
             }
         },
         [topo, &sorted_nodes](nodeid_t nid, uint32_t) -> void {
-            cout << topo->GetNodeById(nid)->GetName() << " -> ";
+            cout << topo->GetNode(nid)->GetName() << " -> ";
             sorted_nodes.push_back(nid);
         });
     cout << "nil" << endl;
@@ -131,7 +131,7 @@ TEST_F(IrUtilsTest, DfsDeeperFirst) {
     auto topo = builder_.GetGraph()->topo.get();
     vector<nodeid_t> sorted_nodes;
     utils::DfsDeeperFirst(topo, [&topo, &sorted_nodes](nodeid_t nid) -> void {
-        cout << topo->GetNodeById(nid)->GetName() << " -> ";
+        cout << topo->GetNode(nid)->GetName() << " -> ";
         sorted_nodes.push_back(nid);
     });
     cout << "nil" << endl;
@@ -149,7 +149,7 @@ TEST_F(IrUtilsTest, ReversedDfs) {
         topo->GetMaxNodeId(),
         [topo, &end_nodes](const function<void(nodeid_t)>& f) -> void {
             for (auto x = end_nodes.begin(); x != end_nodes.end(); ++x) {
-                f(topo->GetNodeByName(*x)->GetId());
+                f(topo->GetNode(*x)->GetId());
             }
         },
         [topo](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
@@ -162,12 +162,12 @@ TEST_F(IrUtilsTest, ReversedDfs) {
             sorted_nodes.push_back(nid);
         },
         [topo, &begin_nodes](nodeid_t current) -> bool {
-            return (begin_nodes.find(topo->GetNodeById(current)->GetName()) != begin_nodes.end());
+            return (begin_nodes.find(topo->GetNode(current)->GetName()) != begin_nodes.end());
         });
 
     set<string> nodes = {"c", "d", "e", "f", "g", "h", "i"};
     EXPECT_EQ(nodes.size(), sorted_nodes.size());
     for (auto x = sorted_nodes.begin(); x != sorted_nodes.end(); ++x) {
-        EXPECT_TRUE(nodes.find(topo->GetNodeById(*x)->GetName()) != nodes.end());
+        EXPECT_TRUE(nodes.find(topo->GetNode(*x)->GetName()) != nodes.end());
     }
 }

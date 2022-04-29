@@ -83,7 +83,7 @@ ppl::common::RetCode X86Engine::CalDataOmittedConstants(const ir::Graph& graph, 
     std::map<edgeid_t, int64_t> constants_data_refcount;
     for (uint32_t i = 0; i < graph.topo->GetConstantCount(); ++i) {
         auto edge_id = graph.topo->GetConstant(i);
-        auto edge = graph.topo->GetEdgeById(edge_id);
+        auto edge = graph.topo->GetEdge(edge_id);
         if (edge == nullptr) {
             LOG(ERROR) << "Edge of Constant[edgeid=" << edge_id << "] not found";
             return RC_NOT_FOUND;

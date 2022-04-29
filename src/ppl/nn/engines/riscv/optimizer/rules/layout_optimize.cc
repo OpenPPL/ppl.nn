@@ -34,8 +34,8 @@ static ppl::common::RetCode AddReorderOp(const OptKernelOptions& options, const 
     auto info = options.info;
     auto& tensors = *options.tensors;
 
-    auto edge = graph_topo->GetEdgeById(edge_id);
-    auto node = graph_topo->GetNodeById(node_id);
+    auto edge = graph_topo->GetEdge(edge_id);
+    auto node = graph_topo->GetNode(node_id);
 
     std::string reorder_node_name = "";
     if (reorder_type == REORDER_INPUT) {

@@ -62,7 +62,7 @@ inline bool IsGraphInput(const ir::GraphTopo* graph_topo, ir::Edge* edge) {
 inline std::vector<ir::Edge*> GetInputEdges(ir::GraphTopo* graph_topo, ir::Node* node) {
     std::vector<ir::Edge*> input_edges(node->GetInputCount(), nullptr);
     for (uint32_t i = 0; i < node->GetInputCount(); i++) {
-        input_edges[i] = graph_topo->GetEdgeById(node->GetInput(i));
+        input_edges[i] = graph_topo->GetEdge(node->GetInput(i));
     }
     return input_edges;
 }
@@ -70,7 +70,7 @@ inline std::vector<ir::Edge*> GetInputEdges(ir::GraphTopo* graph_topo, ir::Node*
 inline std::vector<ir::Edge*> GetOutputEdges(ir::GraphTopo* graph_topo, ir::Node* node) {
     std::vector<ir::Edge*> output_edges(node->GetOutputCount(), nullptr);
     for (uint32_t i = 0; i < node->GetOutputCount(); i++) {
-        output_edges[i] = graph_topo->GetEdgeById(node->GetOutput(i));
+        output_edges[i] = graph_topo->GetEdge(node->GetOutput(i));
     }
     return output_edges;
 }

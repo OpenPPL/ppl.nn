@@ -29,20 +29,20 @@ ir::Node* AlgoGraph::FindBackwardNode(ir::Node* node, uint32_t index) {
     if (node == nullptr) {
         return nullptr;
     }
-    auto input_edge = topo_->GetEdgeById(node->GetInput(index));
-    return topo_->GetNodeById(input_edge->GetProducer());
+    auto input_edge = topo_->GetEdge(node->GetInput(index));
+    return topo_->GetNode(input_edge->GetProducer());
 }
 
 ir::Node* AlgoGraph::FindForwardNode(ir::Node* node) {
     if (node == nullptr) {
         return nullptr;
     }
-    ir::Edge* tensor = topo_->GetEdgeById(node->GetOutput(0));
+    ir::Edge* tensor = topo_->GetEdge(node->GetOutput(0));
     auto consumer_iter = tensor->CreateConsumerIter();
     if (!consumer_iter.IsValid()) {
         return nullptr;
     }
-    return topo_->GetNodeById(consumer_iter.Get()); // consumer0
+    return topo_->GetNode(consumer_iter.Get()); // consumer0
 }
 
 double AlgoGraph::GetSumTime(AlgoNode* algo_node) {
@@ -59,7 +59,7 @@ uint32_t AlgoGraph::GetConsumerCount(AlgoNode* algo_node, ir::Graph* ir_graph) {
     auto node = algo_node->node;
     for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
         auto edge_id = node->GetOutput(i);
-        auto edge = ir_graph->topo->GetEdgeById(edge_id);
+        auto edge = ir_graph->topo->GetEdge(edge_id);
         count += edge->CalcConsumerCount();
     }
     return count;

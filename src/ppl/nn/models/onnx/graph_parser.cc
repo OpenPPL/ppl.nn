@@ -213,7 +213,7 @@ static RetCode ParseGraphOutput(const ::onnx::GraphProto& pb_graph, ir::GraphTop
     for (int i = 0; i < pb_graph.output_size(); ++i) {
         const ::onnx::ValueInfoProto& pb_output = pb_graph.output(i);
 
-        auto edge = topo->GetEdgeByName(pb_output.name());
+        auto edge = topo->GetEdge(pb_output.name());
         if (!edge) {
             LOG(ERROR) << "cannot find output[" << pb_output.name() << "] in edges.";
             return RC_NOT_FOUND;

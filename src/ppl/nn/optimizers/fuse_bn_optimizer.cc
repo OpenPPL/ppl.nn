@@ -36,7 +36,7 @@ inline bool IsGraphOutput(const ir::Graph* graph, edgeid_t edge_id) {
 }
 
 inline bool IsInitializerAndFp32NDArray(const ir::Graph* graph, edgeid_t edge_id) {
-    auto tensor = graph->topo->GetEdgeById(edge_id);
+    auto tensor = graph->topo->GetEdge(edge_id);
     if (!tensor || graph->data->constants.find(edge_id) == graph->data->constants.end() ||
         graph->data->shapes.find(edge_id) == graph->data->shapes.end() ||
         graph->data->shapes[edge_id].data_type != DATATYPE_FLOAT32 ||
@@ -59,8 +59,8 @@ static bool FuseConvBatchNormalization(ir::Graph* graph) {
         if (node->GetType().domain == "" && node->GetType().name == "BatchNormalization") {
             // check topo pattern
             auto bn_node = node;
-            auto bn_input_edge = graph->topo->GetEdgeById(node->GetInput(0));
-            auto bn_output_edge = graph->topo->GetEdgeById(node->GetOutput(0));
+            auto bn_input_edge = graph->topo->GetEdge(node->GetInput(0));
+            auto bn_output_edge = graph->topo->GetEdge(node->GetOutput(0));
 
             if (bn_node->GetOutputCount() > 1) { // training phase BN, not to fuse
                 continue;
@@ -72,7 +72,7 @@ static bool FuseConvBatchNormalization(ir::Graph* graph) {
                 continue;
             }
 
-            auto predecessor_node = graph->topo->GetNodeById(bn_input_edge->GetProducer());
+            auto predecessor_node = graph->topo->GetNode(bn_input_edge->GetProducer());
             if (predecessor_node == nullptr || predecessor_node->GetType().domain != "" ||
                 predecessor_node->GetType().name != "Conv") {
                 continue;
@@ -98,9 +98,9 @@ static bool FuseConvBatchNormalization(ir::Graph* graph) {
             }
 
             // check if conv is conv2d
-            auto conv_filter_edge = graph->topo->GetEdgeById(conv_node->GetInput(1));
+            auto conv_filter_edge = graph->topo->GetEdge(conv_node->GetInput(1));
             auto conv_bias_edge =
-                conv_node->GetInputCount() > 2 ? graph->topo->GetEdgeById(conv_node->GetInput(2)) : nullptr;
+                conv_node->GetInputCount() > 2 ? graph->topo->GetEdge(conv_node->GetInput(2)) : nullptr;
             const auto& conv_filter_dims = shapes[conv_filter_edge->GetId()].dims;
             if (conv_filter_dims.size() != 4) { // not conv2d
                 continue;
@@ -183,16 +183,16 @@ static bool FuseConvBatchNormalization(ir::Graph* graph) {
             conv_node->ReplaceOutput(bn_input_edge->GetId(), bn_output_edge->GetId());
             bn_output_edge->SetProducer(conv_node->GetId());
             for (uint32_t i = 1; i < bn_node->GetInputCount(); i++) {
-                auto initializer_edge = graph->topo->GetEdgeById(bn_node->GetInput(i));
+                auto initializer_edge = graph->topo->GetEdge(bn_node->GetInput(i));
                 initializer_edge->DelConsumer(bn_node->GetId());
                 if (initializer_edge->CalcConsumerCount() == 0 && !IsGraphOutput(graph, initializer_edge->GetId())) {
                     constants.erase(initializer_edge->GetId());
-                    graph->topo->DelEdgeById(initializer_edge->GetId());
+                    graph->topo->DelEdge(initializer_edge->GetId());
                 }
             }
 
-            graph->topo->DelNodeById(bn_node->GetId());
-            graph->topo->DelEdgeById(bn_input_edge->GetId());
+            graph->topo->DelNode(bn_node->GetId());
+            graph->topo->DelEdge(bn_input_edge->GetId());
 
             graph_changed = true;
         }
@@ -213,28 +213,28 @@ static RetCode FuseConvMul(ir::Graph* graph) {
         if (node->GetType().domain == "" && node->GetType().name == "Conv") {
             // check topo pattern
             auto conv_node = node;
-            auto conv_filter_edge = graph->topo->GetEdgeById(conv_node->GetInput(1));
+            auto conv_filter_edge = graph->topo->GetEdge(conv_node->GetInput(1));
             auto conv_bias_edge =
-                conv_node->GetInputCount() >= 3 ? graph->topo->GetEdgeById(conv_node->GetInput(2)) : nullptr;
-            auto conv_output_edge = graph->topo->GetEdgeById(conv_node->GetOutput(0));
+                conv_node->GetInputCount() >= 3 ? graph->topo->GetEdge(conv_node->GetInput(2)) : nullptr;
+            auto conv_output_edge = graph->topo->GetEdge(conv_node->GetOutput(0));
             if (!conv_output_edge || conv_output_edge->CalcConsumerCount() != 1 ||
                 IsGraphOutput(graph, conv_output_edge->GetId())) {
                 continue;
             }
 
-            auto successor = graph->topo->GetNodeById(conv_output_edge->CreateConsumerIter().Get());
+            auto successor = graph->topo->GetNode(conv_output_edge->CreateConsumerIter().Get());
             if (!successor || successor->GetType().domain != "" || successor->GetType().name != "Mul") {
                 continue;
             }
             auto mul_node = successor;
-            auto mul_output_edge = graph->topo->GetEdgeById(mul_node->GetOutput(0));
+            auto mul_output_edge = graph->topo->GetEdge(mul_node->GetOutput(0));
             if (!mul_output_edge || mul_output_edge->CalcConsumerCount() != 1 ||
                 IsGraphOutput(graph, mul_output_edge->GetId())) {
                 continue;
             }
-            auto scale_edge = graph->topo->GetEdgeById(mul_node->GetInput(1));
+            auto scale_edge = graph->topo->GetEdge(mul_node->GetInput(1));
             if (scale_edge == conv_output_edge) {
-                scale_edge = graph->topo->GetEdgeById(mul_node->GetInput(0));
+                scale_edge = graph->topo->GetEdge(mul_node->GetInput(0));
             }
 
             // check if related weights are all initializer, has valid shape and are fp32 ndarray
@@ -329,10 +329,10 @@ static RetCode FuseConvMul(ir::Graph* graph) {
 
             if (scale_edge->CalcConsumerCount() == 0 && !IsGraphOutput(graph, scale_edge->GetId())) {
                 constants.erase(scale_edge->GetId());
-                graph->topo->DelEdgeById(scale_edge->GetId());
+                graph->topo->DelEdge(scale_edge->GetId());
             }
-            graph->topo->DelEdgeById(conv_output_edge->GetId());
-            graph->topo->DelNodeById(mul_node->GetId());
+            graph->topo->DelEdge(conv_output_edge->GetId());
+            graph->topo->DelNode(mul_node->GetId());
 
             graph_changed = true;
         }
@@ -353,28 +353,28 @@ static RetCode FuseConvAdd(ir::Graph* graph) {
         if (node->GetType().domain == "" && node->GetType().name == "Conv") {
             // check topo pattern
             auto conv_node = node;
-            auto conv_filter_edge = graph->topo->GetEdgeById(conv_node->GetInput(1));
+            auto conv_filter_edge = graph->topo->GetEdge(conv_node->GetInput(1));
             auto conv_bias_edge =
-                conv_node->GetInputCount() >= 3 ? graph->topo->GetEdgeById(conv_node->GetInput(2)) : nullptr;
-            auto conv_output_edge = graph->topo->GetEdgeById(conv_node->GetOutput(0));
+                conv_node->GetInputCount() >= 3 ? graph->topo->GetEdge(conv_node->GetInput(2)) : nullptr;
+            auto conv_output_edge = graph->topo->GetEdge(conv_node->GetOutput(0));
             if (!conv_output_edge || conv_output_edge->CalcConsumerCount() != 1 ||
                 IsGraphOutput(graph, conv_output_edge->GetId())) {
                 continue;
             }
 
-            auto successor = graph->topo->GetNodeById(conv_output_edge->CreateConsumerIter().Get());
+            auto successor = graph->topo->GetNode(conv_output_edge->CreateConsumerIter().Get());
             if (!successor || successor->GetType().domain != "" || successor->GetType().name != "Add") {
                 continue;
             }
             auto add_node = successor;
-            auto add_output_edge = graph->topo->GetEdgeById(add_node->GetOutput(0));
+            auto add_output_edge = graph->topo->GetEdge(add_node->GetOutput(0));
             if (!add_output_edge || add_output_edge->CalcConsumerCount() != 1 ||
                 IsGraphOutput(graph, add_output_edge->GetId())) {
                 continue;
             }
-            auto shift_edge = graph->topo->GetEdgeById(add_node->GetInput(1));
+            auto shift_edge = graph->topo->GetEdge(add_node->GetInput(1));
             if (shift_edge == conv_output_edge) {
-                shift_edge = graph->topo->GetEdgeById(add_node->GetInput(0));
+                shift_edge = graph->topo->GetEdge(add_node->GetInput(0));
             }
 
             // check if related weights are all initializer, has valid shape and are fp32 ndarray
@@ -484,10 +484,10 @@ static RetCode FuseConvAdd(ir::Graph* graph) {
 
             if (shift_edge->CalcConsumerCount() == 0 && !IsGraphOutput(graph, shift_edge->GetId())) {
                 constants.erase(shift_edge->GetId());
-                graph->topo->DelEdgeById(shift_edge->GetId());
+                graph->topo->DelEdge(shift_edge->GetId());
             }
-            graph->topo->DelEdgeById(conv_output_edge->GetId());
-            graph->topo->DelNodeById(add_node->GetId());
+            graph->topo->DelEdge(conv_output_edge->GetId());
+            graph->topo->DelNode(add_node->GetId());
 
             graph_changed = true;
         }

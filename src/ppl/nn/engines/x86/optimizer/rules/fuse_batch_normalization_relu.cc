@@ -38,13 +38,13 @@ bool FuseBatchNormalizationReLU(const OptKernelOptions &options) {
             if (bn_node->GetInputCount() != 5) {
                 continue;
             }
-            auto bn_output_edge = graph_topo->GetEdgeById(bn_node->GetOutput(0));
+            auto bn_output_edge = graph_topo->GetEdge(bn_node->GetOutput(0));
             if (!bn_output_edge || bn_output_edge->CalcConsumerCount() != 1 ||
                 IsReservedEdge(tensors, bn_output_edge->GetId())) {
                 continue;
             }
 
-            auto successor_node = graph_topo->GetNodeById(bn_output_edge->CreateConsumerIter().Get());
+            auto successor_node = graph_topo->GetNode(bn_output_edge->CreateConsumerIter().Get());
             if (!successor_node) {
                 continue;
             }
@@ -52,7 +52,7 @@ bool FuseBatchNormalizationReLU(const OptKernelOptions &options) {
                 continue;
             }
             auto relu_node = successor_node;
-            auto relu_output_edge = graph_topo->GetEdgeById(relu_node->GetOutput(0));
+            auto relu_output_edge = graph_topo->GetEdge(relu_node->GetOutput(0));
 
             auto bn_kernel_it = info->kernels.find(bn_node->GetId());
             if (bn_kernel_it == info->kernels.end()) {
@@ -68,8 +68,8 @@ bool FuseBatchNormalizationReLU(const OptKernelOptions &options) {
             // LOG(INFO) << "merge kernel " << bn_node->GetName() << " and " << relu_node->GetName() << ".";
             info->kernels.erase(relu_node->GetId());
             tensors.erase(bn_output_edge->GetId());
-            graph_topo->DelNodeById(relu_node->GetId());
-            graph_topo->DelEdgeById(bn_output_edge->GetId());
+            graph_topo->DelNode(relu_node->GetId());
+            graph_topo->DelEdge(bn_output_edge->GetId());
 
             graph_changed = true;
         }

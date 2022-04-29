@@ -31,7 +31,7 @@ const RetCode ConvFusion::FuseConvWithNextNode(ir::Node* node, ir::Node* nextnod
 
     for (uint32_t i = 0; i < nextnode->GetOutputCount(); ++i) {
         auto edge_id = nextnode->GetOutput(i);
-        auto temp_edge = topo->GetEdgeById(edge_id);
+        auto temp_edge = topo->GetEdge(edge_id);
         temp_edge->SetProducer(node->GetId());
         if (i == 0) {
             node->ReplaceOutput(connect_edge_id, edge_id);
@@ -45,14 +45,14 @@ const RetCode ConvFusion::FuseConvWithNextNode(ir::Node* node, ir::Node* nextnod
         if (edge_id == connect_edge_id || edge_id == INVALID_EDGEID) {
             continue;
         }
-        ir::Edge* edge = topo->GetEdgeById(edge_id);
+        ir::Edge* edge = topo->GetEdge(edge_id);
         edge->DelConsumer(nextnode->GetId());
         edge->AddConsumer(node->GetId());
         node->AddInput(edge_id);
     }
 
-    topo->DelEdgeById(connect_edge_id);
-    topo->DelNodeById(nextnode->GetId());
+    topo->DelEdge(connect_edge_id);
+    topo->DelNode(nextnode->GetId());
     return RC_SUCCESS;
 }
 
@@ -65,16 +65,16 @@ const bool ConvFusion::FuseTest(ir::Node* node, const OptKernelOptions& options,
     CudaConvParam* param = (CudaConvParam*)opt_kernel->GetParam();
 
     auto edge_id = node->GetOutput(0);
-    auto edge = topo->GetEdgeById(edge_id);
+    auto edge = topo->GetEdge(edge_id);
     if (topo->GetOutput(edge->GetName()) != INVALID_EDGEID) { // Can not fuse an output edge
         return false;
     }
-    if (topo->GetEdgeById(edge_id)->CalcConsumerCount() != 1) { // Can not fuse multi-consumer edge
+    if (topo->GetEdge(edge_id)->CalcConsumerCount() != 1) { // Can not fuse multi-consumer edge
         return false;
     }
 
-    auto nextnode_id = topo->GetEdgeById(edge_id)->CreateConsumerIter().Get(); // Get Output(0)
-    auto nextnode = topo->GetNodeById(nextnode_id);
+    auto nextnode_id = topo->GetEdge(edge_id)->CreateConsumerIter().Get(); // Get Output(0)
+    auto nextnode = topo->GetNode(nextnode_id);
 
     if (canfuse(nextnode, options)) {
         LOG(DEBUG) << "Fuse node[" << node->GetName() << "] and nextnode[" << nextnode->GetName() << "]";

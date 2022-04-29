@@ -35,7 +35,7 @@ protected:
         auto topo = builder_.GetGraph()->topo.get();
         edge_objects_.reserve(topo->GetMaxEdgeId());
         for (edgeid_t i = 0; i < topo->GetMaxEdgeId(); ++i) {
-            auto edge = topo->GetEdgeById(i);
+            auto edge = topo->GetEdge(i);
             if (!edge) {
                 continue;
             }
@@ -51,7 +51,7 @@ protected:
 TEST_F(InputOutputInfoTest, misc) {
     auto topo = builder_.GetGraph()->topo.get();
 
-    auto node = topo->GetNodeById(0);
+    auto node = topo->GetNode(0);
     EXPECT_EQ("a", node->GetName());
 
     InputOutputInfo info;
@@ -60,11 +60,11 @@ TEST_F(InputOutputInfoTest, misc) {
         return &edge_objects_[eid];
     });
 
-    auto edge = topo->GetEdgeByName("input_of_a");
+    auto edge = topo->GetEdge("input_of_a");
     EXPECT_NE(nullptr, edge);
     EXPECT_EQ(&edge_objects_[0], info.GetInput<EdgeObject>(0));
 
-    edge = topo->GetEdgeByName("output_of_a");
+    edge = topo->GetEdge("output_of_a");
     EXPECT_NE(nullptr, edge);
     EXPECT_EQ(&edge_objects_[1], info.GetOutput<EdgeObject>(0));
 }

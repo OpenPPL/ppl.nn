@@ -100,7 +100,7 @@ RetCode BridgeOp::AddFinalBridgeNode(ir::Node* node, ir::Node* new_node, ir::Edg
 
     for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
         auto node_id = it.Get();
-        auto node = topo->GetNodeById(node_id);
+        auto node = topo->GetNode(node_id);
         node->ReplaceInput(edge->GetId(), new_edge->GetId());
         new_edge->AddConsumer(node_id);
     }
@@ -117,29 +117,29 @@ RetCode BridgeOp::DeleteBridgeNode(ir::Node* node, ir::Graph* graph,
     auto preedge_id = node->GetInput(0);
     auto postedge_id = node->GetOutput(0);
 
-    if (topo->GetEdgeById(postedge_id)->CalcConsumerCount() == 0) { // final bridge node
+    if (topo->GetEdge(postedge_id)->CalcConsumerCount() == 0) { // final bridge node
         return RC_UNSUPPORTED;
     }
 
-    auto nextnode_id = topo->GetEdgeById(postedge_id)->CreateConsumerIter().Get(); // consumer0
+    auto nextnode_id = topo->GetEdge(postedge_id)->CreateConsumerIter().Get(); // consumer0
     auto prequant = quants->at(preedge_id);
     auto postquant = quants->at(postedge_id);
 
-    auto preedge = topo->GetEdgeById(preedge_id);
-    auto nextnode = topo->GetNodeById(nextnode_id);
+    auto preedge = topo->GetEdge(preedge_id);
+    auto nextnode = topo->GetNode(nextnode_id);
     if (prequant.format == postquant.format && // two edge has the same format
         prequant.type == postquant.type && // two edge has the same type
         (prequant.type != DATATYPE_INT8 || EqualQuant(prequant, postquant)) && // two edge has the same quant
-        topo->GetInput(topo->GetEdgeById(preedge_id)->GetName()) == INVALID_EDGEID && // and preedge is not graph input
-        topo->GetExtraInput(topo->GetEdgeById(preedge_id)->GetName()) == INVALID_EDGEID && // and preedge is not graph extrainput
-        topo->GetOutput(topo->GetEdgeById(postedge_id)->GetName()) == INVALID_EDGEID) { // and postedge is not graph output
+        topo->GetInput(topo->GetEdge(preedge_id)->GetName()) == INVALID_EDGEID && // and preedge is not graph input
+        topo->GetExtraInput(topo->GetEdge(preedge_id)->GetName()) == INVALID_EDGEID && // and preedge is not graph extrainput
+        topo->GetOutput(topo->GetEdge(postedge_id)->GetName()) == INVALID_EDGEID) { // and postedge is not graph output
 
         preedge->DelConsumer(node->GetId());
         preedge->AddConsumer(nextnode_id);
         nextnode->ReplaceInput(postedge_id, preedge_id);
 
-        topo->DelEdgeById(postedge_id);
-        topo->DelNodeById(node->GetId());
+        topo->DelEdge(postedge_id);
+        topo->DelNode(node->GetId());
 
         return RC_SUCCESS;
     } else {

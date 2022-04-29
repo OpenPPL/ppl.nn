@@ -89,9 +89,8 @@ public:
     nodeid_t GetMaxNodeId() const override {
         return nodes_.size();
     }
-    Node* GetNodeById(nodeid_t id) override;
-    const Node* GetNodeById(nodeid_t id) const override;
-    void DelNodeById(nodeid_t id) override;
+    Node* GetNode(nodeid_t id) const override;
+    void DelNode(nodeid_t id) override;
 
     // ----- //
 
@@ -105,9 +104,8 @@ public:
     edgeid_t GetMaxEdgeId() const override {
         return edges_.size();
     }
-    Edge* GetEdgeById(edgeid_t id) override;
-    const Edge* GetEdgeById(edgeid_t id) const override;
-    void DelEdgeById(edgeid_t) override;
+    Edge* GetEdge(edgeid_t id) const override;
+    void DelEdge(edgeid_t) override;
 
 private:
     std::vector<std::unique_ptr<Edge>> edges_;

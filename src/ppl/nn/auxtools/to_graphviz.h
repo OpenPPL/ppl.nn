@@ -39,14 +39,14 @@ static string ToGraphviz(const ir::GraphTopo* topo) {
         if (edge->GetProducer() == INVALID_NODEID) {
             begin_node_name = "NIL-BEGIN";
         } else {
-            auto node = topo->GetNodeById(edge->GetProducer());
+            auto node = topo->GetNode(edge->GetProducer());
             begin_node_name = GenNodeIdStr(node);
         }
 
         auto consumer_iter = edge->CreateConsumerIter();
         if (consumer_iter.IsValid()) {
             do {
-                auto node = topo->GetNodeById(consumer_iter.Get());
+                auto node = topo->GetNode(consumer_iter.Get());
                 content += "\"" + begin_node_name + "\" -> \"" + GenNodeIdStr(node) + "\" [label=\"" + edge->GetName() +
                     "\"]\n";
                 consumer_iter.Forward();

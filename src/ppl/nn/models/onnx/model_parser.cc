@@ -85,7 +85,7 @@ RetCode ModelParser::Parse(const char* buf, uint64_t buf_len, const char* model_
         auto topo = graph->topo.get();
         LOG(ERROR) << "unresolved extra input of graph[" << topo->GetName() << "]:";
         for (uint32_t i = 0; i < topo->GetExtraInputCount(); ++i) {
-            LOG(ERROR) << "    -> " << topo->GetEdgeById(topo->GetExtraInput(i))->GetName();
+            LOG(ERROR) << "    -> " << topo->GetEdge(topo->GetExtraInput(i))->GetName();
         }
         return RC_NOT_FOUND;
     }

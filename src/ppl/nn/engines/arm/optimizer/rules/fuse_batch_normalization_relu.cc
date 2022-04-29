@@ -39,13 +39,13 @@ bool FuseBatchNormalizationReLURule::Apply(const OptKernelOptions& options) {
             if (bn_node->GetInputCount() != 5) {
                 continue;
             }
-            auto bn_output_edge = graph_topo->GetEdgeById(bn_node->GetOutput(0));
+            auto bn_output_edge = graph_topo->GetEdge(bn_node->GetOutput(0));
             if (!bn_output_edge || bn_output_edge->CalcConsumerCount() != 1 ||
                 IsGraphOutput(graph_topo, bn_output_edge->GetId())) {
                 continue;
             }
 
-            auto successor_node = graph_topo->GetNodeById(bn_output_edge->CreateConsumerIter().Get());
+            auto successor_node = graph_topo->GetNode(bn_output_edge->CreateConsumerIter().Get());
             if (!successor_node) {
                 continue;
             }

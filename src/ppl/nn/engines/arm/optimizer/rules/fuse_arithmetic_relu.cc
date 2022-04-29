@@ -53,7 +53,7 @@ bool FuseArithmeticReLURule::Apply(const OptKernelOptions& options) {
             }
 
             auto arithmetic_node = node;
-            auto arithmetic_output_edge = graph_topo->GetEdgeById(arithmetic_node->GetOutput(0));
+            auto arithmetic_output_edge = graph_topo->GetEdge(arithmetic_node->GetOutput(0));
             if (!arithmetic_output_edge || arithmetic_output_edge->CalcConsumerCount() != 1 ||
                 IsGraphOutput(graph_topo, arithmetic_output_edge->GetId())) {
                 continue;
@@ -66,7 +66,7 @@ bool FuseArithmeticReLURule::Apply(const OptKernelOptions& options) {
                 continue;
             }
 
-            auto successor_node = graph_topo->GetNodeById(arithmetic_output_edge->CreateConsumerIter().Get());
+            auto successor_node = graph_topo->GetNode(arithmetic_output_edge->CreateConsumerIter().Get());
             if (!successor_node) {
                 continue;
             }
@@ -74,7 +74,7 @@ bool FuseArithmeticReLURule::Apply(const OptKernelOptions& options) {
                 continue;
             }
             auto relu_node = successor_node;
-            auto relu_output_edge = graph_topo->GetEdgeById(relu_node->GetOutput(0));
+            auto relu_output_edge = graph_topo->GetEdge(relu_node->GetOutput(0));
 
             auto arithmetic_kernel_it = info->kernels.find(arithmetic_node->GetId());
             if (arithmetic_kernel_it == info->kernels.end()) {
@@ -105,8 +105,8 @@ bool FuseArithmeticReLURule::Apply(const OptKernelOptions& options) {
             LOG(INFO) << "merge " << relu_node->GetName() << " into " << arithmetic_node->GetName() << ".";
 #endif
             info->kernels.erase(relu_node->GetId());
-            graph_topo->DelNodeById(relu_node->GetId());
-            graph_topo->DelEdgeById(arithmetic_output_edge->GetId());
+            graph_topo->DelNode(relu_node->GetId());
+            graph_topo->DelEdge(arithmetic_output_edge->GetId());
 
             graph_changed = true;
         }

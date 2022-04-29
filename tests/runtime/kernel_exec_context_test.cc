@@ -40,15 +40,15 @@ protected:
 TEST_F(KernelExecContextTest, misc) {
     auto topo = builder_.GetGraph()->topo.get();
 
-    auto node = topo->GetNodeById(0);
+    auto node = topo->GetNode(0);
     EXPECT_EQ("a", node->GetName());
 
     KernelExecContext ctx;
     ctx.SetNode(node);
 
-    auto edge = topo->GetEdgeByName("input_of_a");
+    auto edge = topo->GetEdge("input_of_a");
     EXPECT_NE(nullptr, edge);
 
-    edge = topo->GetEdgeByName("output_of_a");
+    edge = topo->GetEdge("output_of_a");
     EXPECT_NE(nullptr, edge);
 }

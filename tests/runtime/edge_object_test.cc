@@ -37,7 +37,7 @@ protected:
 
 TEST_F(EdgeObjectTest, misc) {
     auto topo = builder_.GetGraph()->topo.get();
-    auto edge = topo->GetEdgeById(0);
+    auto edge = topo->GetEdge(0);
     EXPECT_NE(nullptr, edge);
 
     EdgeObject object(edge, EdgeObject::T_EDGE_OBJECT);

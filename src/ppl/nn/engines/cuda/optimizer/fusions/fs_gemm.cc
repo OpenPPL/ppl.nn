@@ -38,7 +38,7 @@ const RetCode GemmFusion::FuseGemmWithNextNode(ir::Node* node, ir::Node* nextnod
 
     for (uint32_t i = 0; i < nextnode->GetOutputCount(); ++i) {
         auto edge_id = nextnode->GetOutput(i);
-        auto temp_edge = topo->GetEdgeById(edge_id);
+        auto temp_edge = topo->GetEdge(edge_id);
         temp_edge->SetProducer(node->GetId());
         if (i == 0) {
             node->ReplaceOutput(connect_edge_id, edge_id);
@@ -52,14 +52,14 @@ const RetCode GemmFusion::FuseGemmWithNextNode(ir::Node* node, ir::Node* nextnod
         if (edge_id == connect_edge_id || edge_id == INVALID_EDGEID) {
             continue;
         }
-        ir::Edge* edge = topo->GetEdgeById(edge_id);
+        ir::Edge* edge = topo->GetEdge(edge_id);
         edge->DelConsumer(nextnode->GetId());
         edge->AddConsumer(node->GetId());
         node->AddInput(edge_id);
     }
 
-    topo->DelEdgeById(connect_edge_id);
-    topo->DelNodeById(nextnode->GetId());
+    topo->DelEdge(connect_edge_id);
+    topo->DelNode(nextnode->GetId());
     return RC_SUCCESS;
 }
 
@@ -72,18 +72,18 @@ const RetCode GemmFusion::FuseNode(ir::Node* node, bool reliable, const OptKerne
 
     for (uint32_t i = 0; i < 1 && node->GetOutputCount() == 1; ++i) {
         auto edge_id = node->GetOutput(0);
-        auto edge = topo->GetEdgeById(edge_id);
+        auto edge = topo->GetEdge(edge_id);
         if (topo->GetOutput(edge->GetName()) != INVALID_EDGEID) { // Can not fuse an output edge
             break;
         }
 
-        auto iter = topo->GetEdgeById(edge_id)->CreateConsumerIter();
+        auto iter = topo->GetEdge(edge_id)->CreateConsumerIter();
         if (!iter.IsValid()) {
             break;
         }
 
         auto nextnode_id = iter.Get();
-        auto nextnode = topo->GetNodeById(nextnode_id);
+        auto nextnode = topo->GetNode(nextnode_id);
 
         iter.Forward();
         if (iter.IsValid()) { // Do not fuse if the edge has more than one consumer

@@ -97,7 +97,7 @@ ppl::common::RetCode CudaEngine::CompileCudaModule(const utils::SharedResource& 
     auto op_compiler_manager = OpCompilerManager::Instance();
     for (auto it = compile_set_.begin(); it != compile_set_.end(); it++) {
         auto node_id = *it;
-        ir::Node* op = graph->topo.get()->GetNodeById(node_id);
+        ir::Node* op = graph->topo.get()->GetNode(node_id);
         if (!op)
             continue;
         auto op_compiler = op_compiler_manager->FindCompiler(op->GetType().name);

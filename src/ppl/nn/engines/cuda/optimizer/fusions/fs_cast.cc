@@ -35,20 +35,20 @@ const bool CastFusion::CanFuse(ir::Node* node, ir::Node* prenode) {
 const RetCode CastFusion::FuseWithPreviousCast(ir::Node* node, ir::Node* prenode, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto connect_edge_id = node->GetInput(0);
-    auto connect_edge = topo->GetEdgeById(connect_edge_id);
+    auto connect_edge = topo->GetEdge(connect_edge_id);
     auto next_edge_id = node->GetOutput(0);
-    auto next_edge = topo->GetEdgeById(next_edge_id);
+    auto next_edge = topo->GetEdge(next_edge_id);
 
     for (auto it = next_edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
         auto tempnode_id = it.Get();
-        auto tempnode = topo->GetNodeById(tempnode_id);
+        auto tempnode = topo->GetNode(tempnode_id);
         connect_edge->AddConsumer(tempnode_id);
         tempnode->ReplaceInput(next_edge_id, connect_edge_id);
     }
 
     connect_edge->DelConsumer(node->GetId());
-    topo->DelEdgeById(next_edge->GetId());
-    topo->DelNodeById(node->GetId());
+    topo->DelEdge(next_edge->GetId());
+    topo->DelNode(node->GetId());
     return RC_SUCCESS;
 }
 
@@ -60,17 +60,17 @@ const RetCode CastFusion::FuseNode(ir::Node* node, bool reliable, const OptKerne
         return RC_UNSUPPORTED;
     }
 
-    auto prenode_id = topo->GetEdgeById(edge_id)->GetProducer();
+    auto prenode_id = topo->GetEdge(edge_id)->GetProducer();
     if (prenode_id == INVALID_NODEID) {
         return RC_UNSUPPORTED;
     }
 
-    auto prenode = topo->GetNodeById(prenode_id);
+    auto prenode = topo->GetNode(prenode_id);
     if (node->GetInputCount() != 1 || node->GetOutputCount() != 1) {
         return RC_UNSUPPORTED;
     }
 
-    auto edge = topo->GetEdgeById(node->GetOutput(0));
+    auto edge = topo->GetEdge(node->GetOutput(0));
     if (topo->GetOutput(edge->GetName()) != INVALID_EDGEID) { // Can not fuse an output edge
         return RC_UNSUPPORTED;
     }

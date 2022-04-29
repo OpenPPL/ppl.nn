@@ -202,8 +202,8 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
     this->attr_param_ = *(reinterpret_cast<CudaGemmParam*>(options.param));
     auto topo = options.graph->topo.get();
     auto data = options.graph->data.get();
-    auto weight_edge = topo->GetEdgeById(node->GetInput(1));
-    auto weight_node = topo->GetNodeById(weight_edge->GetProducer());
+    auto weight_edge = topo->GetEdge(node->GetInput(1));
+    auto weight_node = topo->GetNode(weight_edge->GetProducer());
 
     const TensorShape& shape_in0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
     const TensorShape& shape_in1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
@@ -344,8 +344,8 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
     }
 
     // scale bias
-    auto bias_edge = topo->GetEdgeById(node->GetInput(2));
-    auto bias_node = topo->GetNodeById(bias_edge->GetProducer());
+    auto bias_edge = topo->GetEdge(node->GetInput(2));
+    auto bias_node = topo->GetNode(bias_edge->GetProducer());
     auto bias_iter = data->constants.find(bias_node->GetInput(0));
 
     if (bias_iter != data->constants.end() && // is a constant tensor and has not be loaded

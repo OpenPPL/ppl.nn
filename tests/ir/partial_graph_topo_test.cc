@@ -38,18 +38,18 @@ TEST_F(PartialGraphTopoTest, constructor) {
     auto parent_topo = builder.GetGraph()->topo.get();
 
     set<string> nodes = {"b", "c", "d"};
-    auto nid_b = parent_topo->GetNodeByName("b")->GetId();
-    auto nid_c = parent_topo->GetNodeByName("c")->GetId();
-    auto nid_d = parent_topo->GetNodeByName("d")->GetId();
+    auto nid_b = parent_topo->GetNode("b")->GetId();
+    auto nid_c = parent_topo->GetNode("c")->GetId();
+    auto nid_d = parent_topo->GetNode("d")->GetId();
 
     ir::PartialGraphTopo partial_topo(parent_topo, {nid_b, nid_c, nid_d});
 
     EXPECT_EQ(1, partial_topo.GetInputCount());
-    auto edge = partial_topo.GetEdgeById(partial_topo.GetInput(0));
+    auto edge = partial_topo.GetEdge(partial_topo.GetInput(0));
     EXPECT_EQ(string("out1"), edge->GetName());
 
     EXPECT_EQ(1, partial_topo.GetOutputCount());
-    edge = partial_topo.GetEdgeById(partial_topo.GetOutput(0));
+    edge = partial_topo.GetEdge(partial_topo.GetOutput(0));
     EXPECT_EQ(string("out4"), edge->GetName());
 
     uint32_t node_counter = 0;
@@ -71,19 +71,19 @@ TEST_F(PartialGraphTopoTest, extra_input_1) {
     auto topo = builder.GetGraph()->topo.get();
     EXPECT_EQ(1, topo->GetExtraInputCount());
 
-    auto nodeid_a = topo->GetNodeByName("a")->GetId();
-    auto nodeid_b = topo->GetNodeByName("b")->GetId();
+    auto nodeid_a = topo->GetNode("a")->GetId();
+    auto nodeid_b = topo->GetNode("b")->GetId();
     ir::PartialGraphTopo partial_topo(topo, {nodeid_a, nodeid_b});
 
     EXPECT_EQ(1, partial_topo.GetInputCount());
-    EXPECT_EQ(string("in1"), partial_topo.GetEdgeById(partial_topo.GetInput(0))->GetName());
+    EXPECT_EQ(string("in1"), partial_topo.GetEdge(partial_topo.GetInput(0))->GetName());
 
     EXPECT_EQ(1, partial_topo.GetOutputCount());
-    EXPECT_EQ(string("out2"), partial_topo.GetEdgeById(partial_topo.GetOutput(0))->GetName());
+    EXPECT_EQ(string("out2"), partial_topo.GetEdge(partial_topo.GetOutput(0))->GetName());
 
     set<string> expected_extra_inputs = {"extra_b1"};
     EXPECT_EQ(1, partial_topo.GetExtraInputCount());
-    EXPECT_EQ(string("extra_b1"), partial_topo.GetEdgeById(partial_topo.GetExtraInput(0))->GetName());
+    EXPECT_EQ(string("extra_b1"), partial_topo.GetEdge(partial_topo.GetExtraInput(0))->GetName());
 }
 
 TEST_F(PartialGraphTopoTest, extra_input_2) {
@@ -98,19 +98,19 @@ TEST_F(PartialGraphTopoTest, extra_input_2) {
 
     EXPECT_EQ(2, topo->GetExtraInputCount());
 
-    auto nodeid_b = topo->GetNodeByName("b")->GetId();
+    auto nodeid_b = topo->GetNode("b")->GetId();
     ir::PartialGraphTopo partial_topo(topo, {nodeid_b});
 
     EXPECT_EQ(1, partial_topo.GetInputCount());
-    EXPECT_EQ(string("out1"), partial_topo.GetEdgeById(partial_topo.GetInput(0))->GetName());
+    EXPECT_EQ(string("out1"), partial_topo.GetEdge(partial_topo.GetInput(0))->GetName());
 
     EXPECT_EQ(1, partial_topo.GetOutputCount());
-    EXPECT_EQ(string("out2"), partial_topo.GetEdgeById(partial_topo.GetOutput(0))->GetName());
+    EXPECT_EQ(string("out2"), partial_topo.GetEdge(partial_topo.GetOutput(0))->GetName());
 
     EXPECT_EQ(2, partial_topo.GetExtraInputCount());
     for (uint32_t i = 0; i < partial_topo.GetExtraInputCount(); ++i) {
         auto eid = partial_topo.GetExtraInput(i);
-        auto edge = partial_topo.GetEdgeById(eid);
+        auto edge = partial_topo.GetEdge(eid);
         EXPECT_TRUE(expected_extra_inputs.find(edge->GetName()) != expected_extra_inputs.end());
     }
 }

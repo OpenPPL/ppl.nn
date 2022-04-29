@@ -62,13 +62,13 @@ TEST_F(OptimizerUtilsTest, basic_partition) {
 
     LOG(DEBUG) << utils::ToGraphviz(topo);
 
-    auto node_b = topo->GetNodeByName("b");
+    auto node_b = topo->GetNode("b");
     EXPECT_TRUE(node_b != nullptr);
 
     auto next_ids = topo->FindSuccessors(node_b->GetId());
     EXPECT_EQ(1, next_ids.size());
 
-    auto next_of_b = topo->GetNodeById(next_ids[0]);
+    auto next_of_b = topo->GetNode(next_ids[0]);
     EXPECT_TRUE(next_of_b != nullptr);
 
     auto& type = next_of_b->GetType();
@@ -92,7 +92,7 @@ TEST_F(OptimizerUtilsTest, converters_for_input) {
 
     LOG(DEBUG) << utils::ToGraphviz(topo);
 
-    auto edge_in1 = topo->GetEdgeByName("in1");
+    auto edge_in1 = topo->GetEdge("in1");
     EXPECT_TRUE(edge_in1 != nullptr);
     uint32_t consumer_count = edge_in1->CalcConsumerCount();
     EXPECT_EQ(2, consumer_count);
@@ -100,7 +100,7 @@ TEST_F(OptimizerUtilsTest, converters_for_input) {
     uint32_t converter_count = 0;
     for (auto it = edge_in1->CreateConsumerIter(); it.IsValid(); it.Forward()) {
         auto nid = it.Get();
-        auto node = topo->GetNodeById(nid);
+        auto node = topo->GetNode(nid);
         auto& type = node->GetType();
         if (type.domain == "ppl" && type.name == "Converter" && type.version == 1) {
             ++converter_count;
@@ -126,23 +126,23 @@ TEST_F(OptimizerUtilsTest, partition_sorting) {
     auto graph = builder.GetGraph();
     auto topo = graph->topo.get();
 
-    auto node_a = topo->GetNodeByName("a");
+    auto node_a = topo->GetNode("a");
     EXPECT_TRUE(node_a != nullptr);
-    auto node_b = topo->GetNodeByName("b");
+    auto node_b = topo->GetNode("b");
     EXPECT_TRUE(node_b != nullptr);
-    auto node_c = topo->GetNodeByName("c");
+    auto node_c = topo->GetNode("c");
     EXPECT_TRUE(node_c != nullptr);
-    auto node_d = topo->GetNodeByName("d");
+    auto node_d = topo->GetNode("d");
     EXPECT_TRUE(node_d != nullptr);
-    auto node_e = topo->GetNodeByName("e");
+    auto node_e = topo->GetNode("e");
     EXPECT_TRUE(node_e != nullptr);
-    auto node_f = topo->GetNodeByName("f");
+    auto node_f = topo->GetNode("f");
     EXPECT_TRUE(node_f != nullptr);
-    auto node_g = topo->GetNodeByName("g");
+    auto node_g = topo->GetNode("g");
     EXPECT_TRUE(node_g != nullptr);
-    auto node_h = topo->GetNodeByName("h");
+    auto node_h = topo->GetNode("h");
     EXPECT_TRUE(node_h != nullptr);
-    auto node_i = topo->GetNodeByName("i");
+    auto node_i = topo->GetNode("i");
     EXPECT_TRUE(node_i != nullptr);
 
     RuntimeGraphInfo graph_info;

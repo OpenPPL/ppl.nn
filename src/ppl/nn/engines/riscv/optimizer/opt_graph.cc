@@ -112,10 +112,10 @@ RetCode OptGraph::TryToInferType(RiscvDevice* device) {
     });
 
     for (auto node_id : sorted_nodes) {
-        auto node = graph_->topo->GetNodeById(node_id);
+        auto node = graph_->topo->GetNode(node_id);
         bool all_inputs_has_type = true;
         for (uint32_t i = 0; i < node->GetInputCount(); i++) {
-            auto input_edge = graph_->topo->GetEdgeById(node->GetInput(i));
+            auto input_edge = graph_->topo->GetEdge(node->GetInput(i));
             if (!input_edge) { // some op may have emtpy input
                 continue;
             }
@@ -147,10 +147,10 @@ RetCode OptGraph::TryToInferDims(RiscvDevice* device) {
     });
 
     for (auto node_id : sorted_nodes) {
-        auto node = graph_->topo->GetNodeById(node_id);
+        auto node = graph_->topo->GetNode(node_id);
         bool all_inputs_has_dims = true;
         for (uint32_t i = 0; i < node->GetInputCount(); i++) {
-            auto input_edge = graph_->topo->GetEdgeById(node->GetInput(i));
+            auto input_edge = graph_->topo->GetEdge(node->GetInput(i));
             if (!input_edge) { // some op may have emtpy input
                 continue;
             }

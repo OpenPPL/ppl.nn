@@ -40,7 +40,7 @@ protected:
 
 TEST_F(KernelImplTest, misc) {
     auto topo = builder_.GetGraph()->topo.get();
-    auto node = topo->GetNodeById(0);
+    auto node = topo->GetNode(0);
     EXPECT_EQ("a", node->GetName());
 
     TestKernel kernels(node);

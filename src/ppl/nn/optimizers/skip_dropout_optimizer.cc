@@ -35,18 +35,18 @@ RetCode SkipDropoutOptimizer::Optimize(ir::Graph* graph) const {
     for(auto it = graph->topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
         auto node = it->Get();
         if(node->GetType().name == "Dropout") {
-            auto input_edge = graph->topo->GetEdgeById(node->GetInput(0));
+            auto input_edge = graph->topo->GetEdge(node->GetInput(0));
             if(input_edge->CalcConsumerCount() != 1 || IsGraphOutput(graph, input_edge->GetId())) {
                 continue;
             }
-            auto output_edge = graph->topo->GetEdgeById(node->GetOutput(0));
-            auto node_pre = graph->topo->GetNodeById(input_edge->GetProducer());	
+            auto output_edge = graph->topo->GetEdge(node->GetOutput(0));
+            auto node_pre = graph->topo->GetNode(input_edge->GetProducer());	
             node_pre->ReplaceOutput(input_edge->GetId(), output_edge->GetId());
             output_edge->SetProducer(node_pre->GetId());
 
-            graph->topo->DelEdgeById(input_edge->GetId());
-            graph->topo->DelEdgeById(node->GetOutput(1));
-            graph->topo->DelNodeById(node->GetId());
+            graph->topo->DelEdge(input_edge->GetId());
+            graph->topo->DelEdge(node->GetOutput(1));
+            graph->topo->DelNode(node->GetId());
         }
     }
 

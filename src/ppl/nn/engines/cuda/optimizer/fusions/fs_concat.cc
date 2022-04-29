@@ -51,7 +51,7 @@ const bool ConcatFusion::CanFuse(ir::Node* prenode, const OptKernelOptions& opti
         return false;
     }
 
-    auto edge = topo->GetEdgeById(prenode->GetOutput(0));
+    auto edge = topo->GetEdge(prenode->GetOutput(0));
     if (edge->CalcConsumerCount() > 1) {
         return false;
     }
@@ -78,8 +78,8 @@ const RetCode ConcatFusion::FuseNode(ir::Node* node, bool reliable, const OptKer
         if (edge_id == INVALID_EDGEID) {
             continue;
         }
-        auto prenode_id = topo->GetEdgeById(edge_id)->GetProducer();
-        auto prenode = topo->GetNodeById(prenode_id);
+        auto prenode_id = topo->GetEdge(edge_id)->GetProducer();
+        auto prenode = topo->GetNode(prenode_id);
 
         if (i < MAX_MASK_SIZE && CanFuse(prenode, options, offset_channel_size)) {
             LOG(DEBUG) << "Fuse lastnode[" << prenode->GetName() << "] and node[" << node->GetName()

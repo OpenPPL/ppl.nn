@@ -267,7 +267,7 @@ RetCode ParseTensorProto(const ::onnx::TensorProto& pb_tensor, const char* model
 
 void ResolveExtraInputs(ir::GraphTopo* current, ir::Node* parent_node, ir::GraphTopo* parent_graph) {
     for (uint32_t i = 0; i < current->GetExtraInputCount(); ++i) {
-        auto edge = current->GetEdgeById(current->GetExtraInput(i));
+        auto edge = current->GetEdge(current->GetExtraInput(i));
 
         auto ret_pair = parent_graph->AddEdge(edge->GetName());
         auto edge_of_parent = ret_pair.first;

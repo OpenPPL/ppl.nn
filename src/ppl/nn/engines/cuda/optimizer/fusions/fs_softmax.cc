@@ -30,15 +30,15 @@ namespace ppl { namespace nn { namespace cuda {
 
 const RetCode SoftmaxFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
-    auto pre_edge = topo->GetEdgeById(node->GetInput(0));
-    auto post_edge = topo->GetEdgeById(node->GetOutput(0));
+    auto pre_edge = topo->GetEdge(node->GetInput(0));
+    auto post_edge = topo->GetEdge(node->GetOutput(0));
 
     if (pre_edge->GetProducer() == INVALID_NODEID || post_edge->CalcConsumerCount() == 0) {
         return RC_UNSUPPORTED;
     }
 
-    auto pre_node = topo->GetNodeById(pre_edge->GetProducer());
-    auto post_node = topo->GetNodeById(post_edge->CreateConsumerIter().Get());
+    auto pre_node = topo->GetNode(pre_edge->GetProducer());
+    auto post_node = topo->GetNode(post_edge->CreateConsumerIter().Get());
 
     if (node->GetInputCount() != 1 || node->GetOutputCount() != 1) {
         return RC_UNSUPPORTED;

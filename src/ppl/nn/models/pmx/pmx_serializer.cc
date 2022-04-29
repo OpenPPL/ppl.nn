@@ -74,7 +74,7 @@ static RetCode CreateFbEdges(FlatBufferBuilder* builder, const SerializationCont
 
     vector<Offset<pmx::Edge>> edges(seq2eid.size());
     for (uint32_t i = 0; i < seq2eid.size(); ++i) {
-        auto edge = topo->GetEdgeById(seq2eid[i]);
+        auto edge = topo->GetEdge(seq2eid[i]);
         edges[i] = pmx::CreateEdgeDirect(*builder, edge->GetName().c_str());
     }
 
@@ -89,7 +89,7 @@ static RetCode CreateFbNodes(FlatBufferBuilder* builder, const SerializationCont
 
     vector<Offset<pmx::Node>> nodes(seq2nid.size());
     for (uint32_t i = 0; i < seq2nid.size(); ++i) {
-        auto node = topo->GetNodeById(seq2nid[i]);
+        auto node = topo->GetNode(seq2nid[i]);
 
         auto& type = node->GetType();
         auto fb_type = pmx::CreateNodeTypeDirect(*builder, type.domain.c_str(), type.name.c_str(), type.version);
@@ -231,7 +231,7 @@ static RetCode CreateFbConstants(FlatBufferBuilder* builder, const Serialization
     constant_vec.reserve(constants.size());
 
     for (auto it = constants.begin(); it != constants.end(); ++it) {
-        auto edge = topo->GetEdgeById(it->first);
+        auto edge = topo->GetEdge(it->first);
         const BufferInfo& info = it->second;
 
         auto device = info.GetDevice();

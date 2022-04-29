@@ -47,7 +47,7 @@ static inline bool FindNext(nodeid_t next, nodeid_t node, const ir::GraphTopo* t
 }
 
 static inline bool FindConsumer(nodeid_t cid, edgeid_t eid, const ir::GraphTopo* topo) {
-    auto edge = topo->GetEdgeById(eid);
+    auto edge = topo->GetEdge(eid);
     for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
         if (it.Get() == cid) {
             return true;
@@ -69,7 +69,7 @@ static bool DiffNodes(const set<nodeid_t>& node_dedup, const set<nodeid_t>& all_
     if (!diff_result_used2all.empty()) {
         LOG(ERROR) << "diff node set used <=> all:";
         for (auto x = diff_result_used2all.begin(); x != diff_result_used2all.end(); ++x) {
-            auto node = topo->GetNodeById(*x);
+            auto node = topo->GetNode(*x);
             LOG(ERROR) << "    " << node->GetName();
         }
     }
@@ -82,7 +82,7 @@ static bool DiffNodes(const set<nodeid_t>& node_dedup, const set<nodeid_t>& all_
     if (!diff_result_all2used.empty()) {
         LOG(ERROR) << "diff node set all <=> used:";
         for (auto x = diff_result_all2used.begin(); x != diff_result_all2used.end(); ++x) {
-            auto node = topo->GetNodeById(*x);
+            auto node = topo->GetNode(*x);
             LOG(ERROR) << "    " << node->GetName();
         }
     }
@@ -105,7 +105,7 @@ static bool DiffEdges(const set<edgeid_t>& edge_dedup, const set<edgeid_t>& all_
     if (!diff_result_used2all.empty()) {
         LOG(ERROR) << "diff edge set used <=> all:";
         for (auto x = diff_result_used2all.begin(); x != diff_result_used2all.end(); ++x) {
-            auto edge = topo->GetEdgeById(*x);
+            auto edge = topo->GetEdge(*x);
             LOG(ERROR) << "    " << edge->GetName();
         }
     }
@@ -126,7 +126,7 @@ static bool ValidateConstants(const ir::Graph& graph) {
         auto eid = topo->GetConstant(i);
         auto ref = data->constants.find(eid);
         if (ref == data->constants.end()) {
-            auto edge = topo->GetEdgeById(eid);
+            auto edge = topo->GetEdge(eid);
             LOG(ERROR) << "cannot find data of constant[" << edge->GetName() << "]";
             return false;
         }
@@ -154,7 +154,7 @@ static bool ValidateGraphTopo(const ir::GraphTopo* topo) {
 
     while (!q.empty()) {
         auto nid = q.front();
-        auto node = topo->GetNodeById(nid);
+        auto node = topo->GetNode(nid);
         q.pop();
         node_dedup.insert(nid);
 
@@ -167,7 +167,7 @@ static bool ValidateGraphTopo(const ir::GraphTopo* topo) {
             }
 
             if (!FindPrev(nid, snid, topo)) {
-                auto next = topo->GetNodeById(snid);
+                auto next = topo->GetNode(snid);
                 LOG(ERROR) << "cannot find node[" << node->GetName() << "] in successor[" << next->GetName()
                            << "]'s predecessor list.";
                 return false;
@@ -183,7 +183,7 @@ static bool ValidateGraphTopo(const ir::GraphTopo* topo) {
             }
 
             if (!FindNext(nid, pnid, topo)) {
-                auto prev = topo->GetNodeById(pnid);
+                auto prev = topo->GetNode(pnid);
                 LOG(ERROR) << "cannot find node[" << node->GetName() << "] in predecessor[" << prev->GetName()
                            << "]'s successor list.";
                 return false;
@@ -196,7 +196,7 @@ static bool ValidateGraphTopo(const ir::GraphTopo* topo) {
                 continue;
             }
             if (!FindConsumer(nid, in, topo)) {
-                auto edge = topo->GetEdgeById(in);
+                auto edge = topo->GetEdge(in);
                 LOG(ERROR) << "cannot find node[" << node->GetName() << "] in edge[" << edge->GetName()
                            << "]'s consumer list.";
                 return false;
@@ -210,7 +210,7 @@ static bool ValidateGraphTopo(const ir::GraphTopo* topo) {
                 continue;
             }
             if (!FindConsumer(nid, in, topo)) {
-                auto edge = topo->GetEdgeById(in);
+                auto edge = topo->GetEdge(in);
                 LOG(ERROR) << "cannot find node[" << node->GetName() << "] in edge[" << edge->GetName()
                            << "]'s consumer list.";
                 return false;
@@ -220,7 +220,7 @@ static bool ValidateGraphTopo(const ir::GraphTopo* topo) {
 
         for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
             auto out = node->GetOutput(i);
-            auto edge = topo->GetEdgeById(out);
+            auto edge = topo->GetEdge(out);
             if (edge->GetProducer() != nid) {
                 LOG(ERROR) << "edge[" << edge->GetName() << "]'s producer is not [" << node->GetName() << "]";
                 return false;

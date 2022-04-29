@@ -86,7 +86,7 @@ static ir::Node* CreateConverterNode(const string& name_prefix, ir::GraphTopo* t
 
 static RetCode CreateNewOutputs(const vector<edgeid_t>& edges, ir::GraphTopo* topo, vector<edgeid_t>* new_outputs) {
     for (auto x = edges.begin(); x != edges.end(); ++x) {
-        auto edge = topo->GetEdgeById(*x);
+        auto edge = topo->GetEdge(*x);
         auto new_edge = CreateEdge("converted_output_for_" + edge->GetName(), topo);
         if (!new_edge) {
             LOG(ERROR) << "create converted input for edge[" << edge->GetName() << "] failed.";
@@ -104,7 +104,7 @@ static void CollectCommonEdges(const set<edgeid_t>& parent_outputs, const vector
                                const ir::GraphTopo* topo, vector<edgeid_t>* common_edges) {
     common_edges->reserve(parent_outputs.size());
     for (auto x = successors.begin(); x != successors.end(); ++x) {
-        auto successor = topo->GetNodeById(*x);
+        auto successor = topo->GetNode(*x);
         for (uint32_t i = 0; i < successor->GetInputCount(); ++i) {
             auto eid = successor->GetInput(i);
             if (parent_outputs.find(eid) != parent_outputs.end()) {
@@ -141,24 +141,24 @@ static ir::Node* AddConverterNodeAndOutputs(const vector<edgeid_t>& common_edges
         converter_node->AddInput(common_edges[i]);
         converter_node->AddOutput(new_outputs[i]);
 
-        auto in_edge = topo->GetEdgeById(common_edges[i]);
+        auto in_edge = topo->GetEdge(common_edges[i]);
         in_edge->AddConsumer(converter_node->GetId());
 
-        auto out_edge = topo->GetEdgeById(new_outputs[i]);
+        auto out_edge = topo->GetEdge(new_outputs[i]);
         out_edge->SetProducer(converter_node->GetId());
     }
 
     // replace old inputs of successors with converted edges
     for (auto x = successors.begin(); x != successors.end(); ++x) {
-        auto successor = topo->GetNodeById(*x);
+        auto successor = topo->GetNode(*x);
 
         for (uint32_t i = 0; i < common_edges.size(); ++i) {
             uint32_t count_a = successor->ReplaceInput(common_edges[i], new_outputs[i]);
             uint32_t count_b = successor->ReplaceExtraInput(common_edges[i], new_outputs[i]);
             if (count_a > 0 || count_b > 0) {
-                auto in_edge = topo->GetEdgeById(common_edges[i]);
+                auto in_edge = topo->GetEdge(common_edges[i]);
                 in_edge->DelConsumer(*x);
-                auto out_edge = topo->GetEdgeById(new_outputs[i]);
+                auto out_edge = topo->GetEdge(new_outputs[i]);
                 out_edge->AddConsumer(*x);
             }
         }
@@ -174,7 +174,7 @@ static RetCode InsertConverterNodesForPartitions(const vector<EngineImpl*>& node
 
     // newly inserted converter nodes' ids start from max_node_id
     for (nodeid_t nid = 0; nid < max_node_id; ++nid) {
-        auto parent = topo->GetNodeById(nid);
+        auto parent = topo->GetNode(nid);
         if (!parent) {
             continue;
         }
@@ -301,7 +301,7 @@ static RetCode CopyConstantsForDevices(const vector<EngineImpl*>& node2engine, i
 
     for (uint32_t i = 0; i < topo->GetConstantCount(); ++i) {
         auto eid = topo->GetConstant(i);
-        auto edge = topo->GetEdgeById(eid);
+        auto edge = topo->GetEdge(eid);
 
         if (edge->CalcConsumerCount() == 1) {
             continue;
@@ -351,7 +351,7 @@ static RetCode CopyConstantsForDevices(const vector<EngineImpl*>& node2engine, i
 
             // replace inputs and extra inputs of consumers
             for (auto nid = it->second.begin(); nid != it->second.end(); ++nid) {
-                auto node = topo->GetNodeById(*nid);
+                auto node = topo->GetNode(*nid);
                 new_edge->AddConsumer(*nid);
                 edge->DelConsumer(*nid);
                 node->ReplaceInput(eid, new_edge_id);
@@ -370,7 +370,7 @@ static RetCode InsertConverterNodesForInputs(ir::Graph* graph, const vector<Engi
 
     for (uint32_t i = 0; i < topo->GetInputCount(); ++i) {
         auto eid = topo->GetInput(i);
-        auto edge = topo->GetEdgeById(eid);
+        auto edge = topo->GetEdge(eid);
 
         if (edge->CalcConsumerCount() <= 1) {
             continue;
@@ -408,7 +408,7 @@ static RetCode InsertConverterNodesForInputs(ir::Graph* graph, const vector<Engi
                 ret_pair.first->second = converter_node->GetId();
                 converter_nodes->push_back(make_pair(converter_node->GetId(), engine));
             } else {
-                converter_node = topo->GetNodeById(ret_pair.first->second);
+                converter_node = topo->GetNode(ret_pair.first->second);
             }
 
             auto new_output = CreateEdge("converted_output_of_" + edge->GetName(), topo);
@@ -428,7 +428,7 @@ static RetCode InsertConverterNodesForInputs(ir::Graph* graph, const vector<Engi
                 edge->DelConsumer(*x);
                 new_output->AddConsumer(*x);
 
-                auto consumer = topo->GetNodeById(*x);
+                auto consumer = topo->GetNode(*x);
                 consumer->ReplaceInput(eid, new_output_id);
                 consumer->ReplaceExtraInput(eid, new_output_id);
             }
@@ -491,7 +491,7 @@ RetCode ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, Ru
     for (auto x = converter_nodes.begin(); x != converter_nodes.end(); ++x) {
         RuntimeGraphInfo::Partition par_info;
         par_info.engine = x->second;
-        par_info.ops.emplace_back(unique_ptr<OptKernel>(new common::ConverterOp(graph->topo->GetNodeById(x->first))));
+        par_info.ops.emplace_back(unique_ptr<OptKernel>(new common::ConverterOp(graph->topo->GetNode(x->first))));
         info->partitions.emplace_back(std::move(par_info)); // one converter is treated as a single partition
     }
 

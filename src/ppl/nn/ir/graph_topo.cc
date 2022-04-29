@@ -34,18 +34,14 @@ static Node* FindNode(const ir::GraphTopo* topo, const string& name) {
     return nullptr;
 }
 
-Node* GraphTopo::GetNodeByName(const string& name) {
-    return FindNode(this, name);
-}
-
-const Node* GraphTopo::GetNodeByName(const string& name) const {
+Node* GraphTopo::GetNode(const string& name) const {
     return FindNode(this, name);
 }
 
 static edgeid_t FindEdgeId(const string& name, const vector<edgeid_t>& edge_ids, const GraphTopo* topo) {
     for (uint32_t i = 0; i < edge_ids.size(); ++i) {
         auto eid = edge_ids[i];
-        auto edge = topo->GetEdgeById(eid);
+        auto edge = topo->GetEdge(eid);
         if (edge && edge->GetName() == name) {
             return eid;
         }
@@ -53,17 +49,7 @@ static edgeid_t FindEdgeId(const string& name, const vector<edgeid_t>& edge_ids,
     return INVALID_EDGEID;
 }
 
-Edge* GraphTopo::GetEdgeByName(const std::string& name) {
-    for (auto it = CreateEdgeIter(); it->IsValid(); it->Forward()) {
-        auto edge = it->Get();
-        if (edge->GetName() == name) {
-            return edge;
-        }
-    }
-    return nullptr;
-}
-
-const Edge* GraphTopo::GetEdgeByName(const std::string& name) const {
+Edge* GraphTopo::GetEdge(const std::string& name) const {
     for (auto it = CreateEdgeIter(); it->IsValid(); it->Forward()) {
         auto edge = it->Get();
         if (edge->GetName() == name) {
@@ -115,41 +101,41 @@ RetCode GraphTopo::ReplaceWithNode(const string& node_name, const Node::Type& no
     node->SetType(node_type);
 
     for (auto it = inputs_.begin(); it != inputs_.end(); ++it) {
-        GetEdgeById(*it)->ClearConsumer();
+        GetEdge(*it)->ClearConsumer();
     }
     for (auto it = extra_inputs_.begin(); it != extra_inputs_.end(); ++it) {
-        GetEdgeById(*it)->ClearConsumer();
+        GetEdge(*it)->ClearConsumer();
     }
     for (auto it = constants_.begin(); it != constants_.end(); ++it) {
-        GetEdgeById(*it)->ClearConsumer();
+        GetEdge(*it)->ClearConsumer();
     }
     // some outputs may be constants or intermediate edges
     for (auto it = outputs_.begin(); it != outputs_.end(); ++it) {
-        GetEdgeById(*it)->ClearConsumer();
+        GetEdge(*it)->ClearConsumer();
     }
 
     vector<bool> reserved_edges(GetMaxEdgeId(), false);
 
     for (auto it = inputs_.begin(); it != inputs_.end(); ++it) {
-        auto edge = GetEdgeById(*it);
+        auto edge = GetEdge(*it);
         node->AddInput(*it);
         edge->AddConsumer(node->GetId());
         reserved_edges[*it] = true;
     }
     for (auto it = extra_inputs_.begin(); it != extra_inputs_.end(); ++it) {
-        auto edge = GetEdgeById(*it);
+        auto edge = GetEdge(*it);
         node->AddInput(*it); // all extra inputs are treated as normal inputs
         edge->AddConsumer(node->GetId());
         reserved_edges[*it] = true;
     }
     for (auto it = constants_.begin(); it != constants_.end(); ++it) {
-        auto edge = GetEdgeById(*it);
+        auto edge = GetEdge(*it);
         node->AddInput(*it); // all constants are treated as normal inputs
         edge->AddConsumer(node->GetId());
         reserved_edges[*it] = true;
     }
     for (auto it = outputs_.begin(); it != outputs_.end(); ++it) {
-        auto edge = GetEdgeById(*it);
+        auto edge = GetEdge(*it);
         node->AddOutput(*it);
         edge->SetProducer(node->GetId());
         reserved_edges[*it] = true;
@@ -157,19 +143,19 @@ RetCode GraphTopo::ReplaceWithNode(const string& node_name, const Node::Type& no
 
     for (edgeid_t i = 0; i < reserved_edges.size(); ++i) {
         if (!reserved_edges[i]) {
-            DelEdgeById(i);
+            DelEdge(i);
         }
     }
 
     for (nodeid_t i = 0; i < node->GetId(); ++i) {
-        DelNodeById(i);
+        DelNode(i);
     }
 
     return RC_SUCCESS;
 }
 
 static void DoFindPredecessors(edgeid_t eid, const GraphTopo* topo, vector<nodeid_t>* res) {
-    auto edge = topo->GetEdgeById(eid);
+    auto edge = topo->GetEdge(eid);
     auto pid = edge->GetProducer();
     if (pid != INVALID_NODEID) {
         if (std::find(res->begin(), res->end(), pid) == res->end()) {
@@ -179,7 +165,7 @@ static void DoFindPredecessors(edgeid_t eid, const GraphTopo* topo, vector<nodei
 }
 
 vector<nodeid_t> GraphTopo::FindPredecessors(nodeid_t nid) const {
-    auto node = GetNodeById(nid);
+    auto node = GetNode(nid);
 
     vector<nodeid_t> res;
     for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
@@ -198,12 +184,12 @@ vector<nodeid_t> GraphTopo::FindPredecessors(nodeid_t nid) const {
 }
 
 vector<nodeid_t> GraphTopo::FindSuccessors(nodeid_t nid) const {
-    auto node = GetNodeById(nid);
+    auto node = GetNode(nid);
 
     vector<nodeid_t> res;
     for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
         auto eid = node->GetOutput(i);
-        auto edge = GetEdgeById(eid);
+        auto edge = GetEdge(eid);
         for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
             auto nid = it.Get();
             if (std::find(res.begin(), res.end(), nid) == res.end()) {
@@ -222,12 +208,12 @@ set<nodeid_t> GraphTopo::FindAncestors(nodeid_t nid) const {
     while (!q.empty()) {
         nid = q.front();
         q.pop();
-        auto node = GetNodeById(nid);
+        auto node = GetNode(nid);
 
         for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
             auto eid = node->GetInput(i);
             if (eid != INVALID_EDGEID) {
-                auto edge = GetEdgeById(eid);
+                auto edge = GetEdge(eid);
                 auto pid = edge->GetProducer();
                 if (pid != INVALID_NODEID) {
                     auto ret_pair = dedup.insert(pid);
@@ -241,7 +227,7 @@ set<nodeid_t> GraphTopo::FindAncestors(nodeid_t nid) const {
         for (uint32_t i = 0; i < node->GetExtraInputCount(); ++i) {
             auto eid = node->GetExtraInput(i);
             if (eid != INVALID_EDGEID) {
-                auto edge = GetEdgeById(eid);
+                auto edge = GetEdge(eid);
                 auto pid = edge->GetProducer();
                 if (pid != INVALID_NODEID) {
                     auto ret_pair = dedup.insert(pid);
