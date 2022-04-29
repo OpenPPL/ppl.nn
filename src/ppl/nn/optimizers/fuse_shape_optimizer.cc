@@ -1,7 +1,7 @@
 #include "ppl/nn/optimizers/fuse_shape_optimizer.h"
 
 #include "ppl/nn/common/logger.h"
-#include "ppl/nn/params/ppl/shape_operation_param.h"
+#include "ppl/nn/params/pmx/shape_operation_param.h"
 #include "ppl/nn/params/onnx/cast_param.h"
 #include "ppl/nn/params/onnx/concat_param.h"
 
@@ -10,7 +10,7 @@
 using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
-using namespace ppl::nn::internal;
+using namespace ppl::nn::pmx;
 
 namespace ppl { namespace nn {
 
@@ -266,7 +266,7 @@ RetCode FuseShapeOptimizer::Optimize(ir::Graph* graph) const {
         if (!node || node->GetType().domain != "" || node->GetType().name != "Shape") {
             continue;
         }
-        node->SetType(ir::Node::Type{"ppl", "Shape", 1});
+        node->SetType(ir::Node::Type{"pmx", "Shape", 1});
         node->SetName(node->GetName() + "_Fused");
 
         ShapeOperationParam shape_param;

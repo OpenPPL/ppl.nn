@@ -61,7 +61,7 @@
 #include "ppl/nn/models/onnx/parsers/mmcv/parse_mmcv_nonmaxsupression_param.h"
 #include "ppl/nn/models/onnx/parsers/mmcv/parse_mmcv_roialign_param.h"
 
-#include "ppl/nn/models/onnx/parsers/ppl/parse_ppl_channel_shuffle_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_ppl_channel_shuffle_param.h"
 
 using namespace std;
 using namespace ppl::common;
@@ -230,7 +230,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITH_PARAM("mmcv", "NonMaxSuppression", 1, 1, ppl::nn::mmcv::MMCVNMSParam, ParseMMCVNMSParam);
 
     // ppl op param parser
-    PPL_REGISTER_OP_WITH_PARAM("ppl", "ChannelShuffle", 1, 1, ppl::nn::internal::ChannelShuffleParam,
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "ChannelShuffle", 1, 1, ppl::nn::pmx::ChannelShuffleParam,
                                ParseChannelShuffleParam);
 }
 

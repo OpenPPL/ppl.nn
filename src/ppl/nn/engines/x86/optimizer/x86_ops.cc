@@ -98,11 +98,11 @@ using namespace ppl::common;
 #include "ppl/nn/engines/x86/optimizer/ops/mmcv/mmcv_modulated_deform_conv2d_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/mmcv/mmcv_non_max_suppression_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/mmcv/mmcv_roialign_op.h"
-#include "ppl/nn/engines/x86/optimizer/ops/ppl/reorder_op.h"
-#include "ppl/nn/engines/x86/optimizer/ops/ppl/channel_shuffle_op.h"
-#include "ppl/nn/engines/x86/optimizer/ops/ppl/shape_operation_op.h"
-#include "ppl/nn/engines/x86/optimizer/ops/ppl/swish_op.h"
-#include "ppl/nn/engines/x86/optimizer/ops/ppl/post_depthwise_conv_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/pmx/reorder_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/pmx/channel_shuffle_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/pmx/shape_operation_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/pmx/swish_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/pmx/post_depthwise_conv_op.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -226,12 +226,12 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<MMCVROIAlignOp>("mmcv", "MMCVRoiAlign", 1, 1);
     RegisterOptKernelCreator<MMCVModulatedDeformConv2dOp>("mmcv", "MMCVModulatedDeformConv2d", 1, 1);
 
-    // ppl
-    RegisterOptKernelCreator<ChannelShuffleOp>("ppl", "ChannelShuffle", 1, 1);
-    RegisterOptKernelCreator<ReorderOp>("ppl", "Reorder", 1, 1);
-    RegisterOptKernelCreator<ShapeOperationOp>("ppl", "Shape", 1, 1);
-    RegisterOptKernelCreator<SwishOp>("ppl", "Swish", 1, 1);
-    RegisterOptKernelCreator<PostDepthwiseConvOp>("ppl", "PostDepthwiseConv", 1, 1);
+    // pmx
+    RegisterOptKernelCreator<ChannelShuffleOp>("pmx", "ChannelShuffle", 1, 1);
+    RegisterOptKernelCreator<ReorderOp>("pmx", "Reorder", 1, 1);
+    RegisterOptKernelCreator<ShapeOperationOp>("pmx", "Shape", 1, 1);
+    RegisterOptKernelCreator<SwishOp>("pmx", "Swish", 1, 1);
+    RegisterOptKernelCreator<PostDepthwiseConvOp>("pmx", "PostDepthwiseConv", 1, 1);
 }
 
 }}} // namespace ppl::nn::x86

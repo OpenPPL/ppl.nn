@@ -68,10 +68,10 @@ using namespace ppl::common;
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/transpose_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/unsqueeze_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/where_op.h"
-#include "ppl/nn/engines/arm/optimizer/ops/ppl/shape_operation_op.h"
-#include "ppl/nn/engines/arm/optimizer/ops/ppl/channel_shuffle_op.h"
-#include "ppl/nn/engines/arm/optimizer/ops/ppl/reorder_op.h"
-#include "ppl/nn/engines/arm/optimizer/ops/ppl/shape_operation_op.h"
+#include "ppl/nn/engines/arm/optimizer/ops/pmx/shape_operation_op.h"
+#include "ppl/nn/engines/arm/optimizer/ops/pmx/channel_shuffle_op.h"
+#include "ppl/nn/engines/arm/optimizer/ops/pmx/reorder_op.h"
+#include "ppl/nn/engines/arm/optimizer/ops/pmx/shape_operation_op.h"
 
 namespace ppl { namespace nn { namespace arm {
 
@@ -159,12 +159,11 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<UnsqueezeOp>("", "Unsqueeze", 1, 12);
     // W
     RegisterOptKernelCreator<WhereOp>("", "Where", 9, 16);
-    // mmcv custom op
 
-    // ppl
-    RegisterOptKernelCreator<ChannelShuffleOp>("ppl", "ChannelShuffle", 1, 1);
-    RegisterOptKernelCreator<ReorderOp>("ppl", "Reorder", 1, 1);
-    RegisterOptKernelCreator<ShapeOperationOp>("ppl", "Shape", 1, 1);
+    // pmx
+    RegisterOptKernelCreator<ChannelShuffleOp>("pmx", "ChannelShuffle", 1, 1);
+    RegisterOptKernelCreator<ReorderOp>("pmx", "Reorder", 1, 1);
+    RegisterOptKernelCreator<ShapeOperationOp>("pmx", "Shape", 1, 1);
 }
 
 }}} // namespace ppl::nn::arm

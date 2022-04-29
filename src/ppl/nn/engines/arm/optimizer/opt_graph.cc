@@ -149,7 +149,7 @@ RetCode OptGraph::AddReorderOp(const OptKernelOptions& options, const edgeid_t& 
         return RC_EXISTS;
     }
     ir::Node* reorder_node = node_ret_pair.first;
-    reorder_node->SetType(ir::Node::Type("ppl", "Reorder", 1));
+    reorder_node->SetType(ir::Node::Type("pmx", "Reorder", 1));
 
     std::string reorder_edge_name = reorder_node_name + "_edge";
     auto edge_ret_pair = graph_->topo->AddEdge(reorder_edge_name);

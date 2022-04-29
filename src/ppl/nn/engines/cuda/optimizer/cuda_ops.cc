@@ -19,10 +19,10 @@
 using namespace std;
 using namespace ppl::common;
 
-#include "ppl/nn/engines/cuda/optimizer/ops/ppl/bridge_op.h"
-#include "ppl/nn/engines/cuda/optimizer/ops/ppl/channel_shuffle_op.h"
-#include "ppl/nn/engines/cuda/optimizer/ops/ppl/shape_operation_op.h"
-#include "ppl/nn/engines/cuda/optimizer/ops/ppl/reduce_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/pmx/bridge_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/pmx/channel_shuffle_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/pmx/shape_operation_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/pmx/reduce_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/conv_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/add_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/and_op.h"
@@ -226,10 +226,10 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<MMCVModulatedDeformConv2dOp>("mmcv", "MMCVModulatedDeformConv2d", 1, 1);
     RegisterOptKernelCreator<MMCVNonMaxSupressionOp>("mmcv", "NonMaxSuppression", 1, 1);
 
-    // ppl customize op domain is "ppl"
-    RegisterOptKernelCreator<BridgeOp>("ppl", "Bridge", 1, 1);
-    RegisterOptKernelCreator<ChannelShuffleOp>("ppl", "ChannelShuffle", 1, 1);
-    RegisterOptKernelCreator<PPLShapeOperationOp>("ppl", "Shape", 1, 1);
+    // ppl customize op domain is "pmx"
+    RegisterOptKernelCreator<BridgeOp>("pmx", "Bridge", 1, 1);
+    RegisterOptKernelCreator<ChannelShuffleOp>("pmx", "ChannelShuffle", 1, 1);
+    RegisterOptKernelCreator<PPLShapeOperationOp>("pmx", "Shape", 1, 1);
 }
 
 }}} // namespace ppl::nn::cuda

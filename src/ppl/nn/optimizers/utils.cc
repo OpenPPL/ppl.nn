@@ -18,7 +18,7 @@
 #include "ppl/nn/optimizers/utils.h"
 #include "ppl/nn/optimizers/engine_graph_partitioner.h"
 #include "ppl/nn/optimizers/graph_optimizer_manager.h"
-#include "ppl/nn/engines/common/ppl/converter_op.h"
+#include "ppl/nn/engines/common/pmx/converter_op.h"
 #include "ppl/nn/engines/utils.h"
 #include "ppl/nn/ir/partial_graph_topo.h"
 #include "ppl/nn/ir/utils.h"
