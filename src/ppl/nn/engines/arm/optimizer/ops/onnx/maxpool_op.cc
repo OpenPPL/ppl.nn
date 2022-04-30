@@ -32,7 +32,7 @@ RetCode MaxPoolOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapePooling(info, param_.get());
+        return onnx::ReshapePooling(info, param_.get());
     };
 
     infer_type_func_ = GenericInferType;
@@ -40,23 +40,19 @@ RetCode MaxPoolOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
-RetCode MaxPoolOp::SelectFormat(const InputOutputInfo& info,
-        vector<dataformat_t>* selected_input_formats,
-        vector<dataformat_t>* selected_output_formats) {
+RetCode MaxPoolOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
+                                vector<dataformat_t>* selected_output_formats) {
     auto input_datatype = info.GetInput<TensorImpl>(0)->GetShape()->GetDataType();
-    selected_input_formats->at(0) = selected_output_formats->at(0) =
-        (input_datatype == DATATYPE_FLOAT16)
-        ?   DATAFORMAT_N8CX 
-        :   ((input_datatype == DATATYPE_FLOAT32)
-            ?   DATAFORMAT_N4CX
-            :   DATAFORMAT_UNKNOWN);
+    selected_input_formats->at(0) = selected_output_formats->at(0) = (input_datatype == DATATYPE_FLOAT16)
+        ? DATAFORMAT_N8CX
+        : ((input_datatype == DATATYPE_FLOAT32) ? DATAFORMAT_N4CX : DATAFORMAT_UNKNOWN);
     return RC_SUCCESS;
 }
 
 RetCode MaxPoolOp::SelectDataType(const InputOutputInfo& info,
-                                 std::vector<ppl::common::datatype_t>* selected_input_types,
-                                 std::vector<ppl::common::datatype_t>* selected_output_types,
-                                 const ppl::common::datatype_t preferred_fp_datatype) {
+                                  std::vector<ppl::common::datatype_t>* selected_input_types,
+                                  std::vector<ppl::common::datatype_t>* selected_output_types,
+                                  const ppl::common::datatype_t preferred_fp_datatype) {
     GenericSelectDataType(info, selected_input_types, selected_output_types, preferred_fp_datatype);
     return RC_SUCCESS;
 }

@@ -20,9 +20,9 @@
 
 #include "ppl/nn/engines/common/common_kernel_impl.h"
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
-class SequenceAtKernel final : public CommonKernelImpl {
+class SequenceAtKernel final : public common::CommonKernelImpl {
 public:
     SequenceAtKernel(const ir::Node* node) : CommonKernelImpl(node) {}
 
@@ -30,6 +30,6 @@ protected:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

@@ -20,7 +20,7 @@
 #include <algorithm>
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn {
 
 void MultiDirectionalBroadCaster::CalcBroadCast(void) {
     TensorShape* shape_min;
@@ -201,4 +201,4 @@ void MatMulBroadCaster::CalcBroadCast(void) {
     output_tensor_shape_.Reshape(output_dims);
 }
 
-}}} // namespace ppl::nn::oputils
+}} // namespace ppl::nn

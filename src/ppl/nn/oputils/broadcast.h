@@ -21,7 +21,7 @@
 #include "ppl/nn/common/tensor_shape.h"
 #include <vector>
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn {
 
 class BroadCaster {
 public:
@@ -142,6 +142,6 @@ public:
     void CalcBroadCast(void) override;
 };
 
-}}} // namespace ppl::nn::oputils
+}} // namespace ppl::nn
 
 #endif

@@ -33,7 +33,7 @@ RetCode MMCVGridSampleOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeMMCVGridSample(info, param_.get());
+        return mmcv::ReshapeMMCVGridSample(info, param_.get());
     };
 
     infer_type_func_ = GenericInferType;

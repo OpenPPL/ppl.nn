@@ -70,7 +70,7 @@ RetCode NonMaxSupressionOp::Init(const OptKernelOptions& options) {
             }
         }
 
-        return oputils::ReshapeNonMaxSuppression(info, max_output_boxes_per_class);
+        return onnx::ReshapeNonMaxSuppression(info, max_output_boxes_per_class);
     };
 
     return RC_SUCCESS;

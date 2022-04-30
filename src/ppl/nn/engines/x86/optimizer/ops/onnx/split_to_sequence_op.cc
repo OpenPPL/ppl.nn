@@ -33,7 +33,7 @@ RetCode SplitToSequenceOp::Init(const OptKernelOptions& options) {
     }
 
     auto param = static_cast<ppl::nn::onnx::SplitToSequenceParam*>(attr_ref->second.get());
-    op_.Init(param->axis, param->keepdims, common::SplitToSequenceOp::GenericSplitFunc);
+    op_.Init(param->axis, param->keepdims, onnx::SplitToSequenceOp::GenericSplitFunc);
     return RC_SUCCESS;
 }
 

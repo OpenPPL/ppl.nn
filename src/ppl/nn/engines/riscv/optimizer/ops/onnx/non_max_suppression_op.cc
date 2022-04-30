@@ -32,7 +32,7 @@ RetCode NonMaxSupressionOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeNonMaxSuppression(info);
+        return onnx::ReshapeNonMaxSuppression(info);
     };
 
     infer_type_func_ = [](InputOutputInfo* info) -> void {

@@ -28,7 +28,7 @@ RetCode LessOp::Init(const OptKernelOptions& options) {
         if (info->GetInput<TensorImpl>(0)->GetShape()->GetDataFormat() != DATAFORMAT_NDARRAY) {
             return RC_UNSUPPORTED;
         }
-        return oputils::ReshapeLess(info, nullptr);
+        return onnx::ReshapeLess(info, nullptr);
     };
 
     infer_type_func_ = [](InputOutputInfo* info) -> void {

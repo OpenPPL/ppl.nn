@@ -60,7 +60,7 @@ RetCode TopKOp::Init(const OptKernelOptions& options) {
             LOG(ERROR) << "Copy value k failed: " << GetRetCodeStr(status);
             return status;
         }
-        return oputils::ReshapeTopK(info, &param_, k);
+        return onnx::ReshapeTopK(info, &param_, k);
     };
 
     infer_unsafe_dims_func_ = [](InputOutputInfo* info, std::set<uint32_t>* illegal_inputs) -> RetCode {

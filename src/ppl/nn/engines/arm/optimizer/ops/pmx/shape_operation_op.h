@@ -32,7 +32,7 @@ public:
 
 private:
     std::shared_ptr<ppl::nn::pmx::ShapeOperationParam> param_;
-    ppl::nn::common::ShapeOperationOp op_;
+    ppl::nn::pmx::ShapeOperationOp op_;
 };
 
 }}} // namespace ppl::nn::arm

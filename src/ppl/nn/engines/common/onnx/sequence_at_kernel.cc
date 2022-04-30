@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 RetCode SequenceAtKernel::DoExecute(KernelExecContext* ctx) {
     auto seq = ctx->GetInput<TensorSequence>(0);
@@ -79,4 +79,4 @@ RetCode SequenceAtKernel::DoExecute(KernelExecContext* ctx) {
     return status;
 }
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx

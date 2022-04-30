@@ -32,7 +32,7 @@ RetCode LeakyReLUOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeLeakyReLU(info, param_.get());
+        return onnx::ReshapeLeakyReLU(info, param_.get());
     };
 
     infer_type_func_ = GenericInferType;

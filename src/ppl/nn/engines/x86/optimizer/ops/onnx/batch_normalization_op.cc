@@ -32,7 +32,7 @@ RetCode BatchNormalizationOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeBatchNormalization(info, param_.get());
+        return onnx::ReshapeBatchNormalization(info, param_.get());
     };
 
     infer_type_func_ = GenericInferType;

@@ -20,7 +20,7 @@
 using namespace ppl::common;
 using namespace ppl::nn::mmcv;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace mmcv {
 
 RetCode ReshapeMMCVModulatedDeformConv2d(InputOutputInfo* info, const void* arg) {
     auto param = (const MMCVModulatedDeformConv2dParam*)arg;
@@ -48,4 +48,4 @@ RetCode ReshapeMMCVModulatedDeformConv2d(InputOutputInfo* info, const void* arg)
     return RC_SUCCESS;
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::mmcv

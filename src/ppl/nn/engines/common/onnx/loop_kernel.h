@@ -21,11 +21,11 @@
 #include "ppl/nn/engines/common/common_kernel_impl.h"
 #include "ppl/nn/runtime/runtime_impl.h"
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 typedef ppl::common::RetCode (*LoopConcatOutputFunc)(const std::vector<TensorBufferInfo>&, BufferDesc*);
 
-class LoopKernel final : public CommonKernelImpl {
+class LoopKernel final : public common::CommonKernelImpl {
 public:
     LoopKernel(const ir::Node* node) : CommonKernelImpl(node) {}
     ppl::common::RetCode SetExecutionInfo(const std::shared_ptr<ir::GraphTopo>&, const RuntimeGraphInfo*,
@@ -39,6 +39,6 @@ private:
     LoopConcatOutputFunc concat_output_func_;
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

@@ -35,18 +35,17 @@ RetCode ConvTransposeOp::Init(const OptKernelOptions& options) {
     auto graph_data = options.graph_data;
     const ir::Shape& weight_shape = graph_data->shapes.find(node->GetInput(1))->second;
 
-    const int64_t kernel_dims = param_->kernel_shape.size() == 0 ?
-                                (weight_shape.dims.size() - 2) :
-                                param_->kernel_shape.size();
+    const int64_t kernel_dims =
+        param_->kernel_shape.size() == 0 ? (weight_shape.dims.size() - 2) : param_->kernel_shape.size();
 
     if (kernel_dims != 2) {
-        LOG(ERROR) << "Only support ConvTranspose2d currently. Get unsupported kernel_dims="
-            << kernel_dims << ", which is ConvTranspose(" << kernel_dims << "d)";
+        LOG(ERROR) << "Only support ConvTranspose2d currently. Get unsupported kernel_dims=" << kernel_dims
+                   << ", which is ConvTranspose(" << kernel_dims << "d)";
         return ppl::common::RC_UNSUPPORTED;
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeConvTranspose(info, param_.get());
+        return onnx::ReshapeConvTranspose(info, param_.get());
     };
 
     infer_type_func_ = GenericInferType;

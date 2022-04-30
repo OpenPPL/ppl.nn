@@ -21,9 +21,9 @@
 #include "ppl/nn/engines/common/common_kernel_impl.h"
 #include "ppl/nn/runtime/runtime_impl.h"
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
-class IfKernel final : public CommonKernelImpl {
+class IfKernel final : public common::CommonKernelImpl {
 public:
     IfKernel(const ir::Node* node) : CommonKernelImpl(node) {}
     ppl::common::RetCode SetExecutionInfo(const std::shared_ptr<ir::GraphTopo>& then_topo,
@@ -44,6 +44,6 @@ private:
     const std::vector<uint32_t>* extra_inputs_of_else_branch_ = nullptr;
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

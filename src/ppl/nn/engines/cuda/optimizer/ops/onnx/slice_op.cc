@@ -62,8 +62,7 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
             auto axes_num = param_.starts.size();
             kernel_param.axes_num = axes_num;
 
-            if (param_.starts.size() != axes_num || 
-                param_.ends.size() != axes_num ||
+            if (param_.starts.size() != axes_num || param_.ends.size() != axes_num ||
                 (param_.axes.size() != axes_num && param_.axes.size() != 0)) {
                 return RC_INVALID_VALUE;
             }
@@ -78,7 +77,7 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
                     kernel_param.axes[i] = i;
                 }
             }
-        } else {                // For op version >= 10
+        } else { // For op version >= 10
             { // starts
                 auto input = info->GetInput<TensorImpl>(1);
                 if (input->GetBufferPtr() == nullptr) {
@@ -163,8 +162,8 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
             kernel_param.starts[it] = start_val;
             kernel_param.ends[it] = end_val;
         }
-        return oputils::ReshapeSlice(info, kernel_param.starts, kernel_param.ends, kernel_param.axes,
-                                     kernel_param.steps, kernel_param.axes_num);
+        return onnx::ReshapeSlice(info, kernel_param.starts, kernel_param.ends, kernel_param.axes, kernel_param.steps,
+                                  kernel_param.axes_num);
     };
 
     return RC_SUCCESS;

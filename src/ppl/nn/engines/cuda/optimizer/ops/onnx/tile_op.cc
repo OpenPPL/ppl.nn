@@ -60,7 +60,7 @@ RetCode TileOp::Init(const OptKernelOptions& options) {
             return status;
         }
 
-        return oputils::ReshapeTile(info, nullptr, repeat_data.data());
+        return onnx::ReshapeTile(info, nullptr, repeat_data.data());
     };
 
     return RC_SUCCESS;

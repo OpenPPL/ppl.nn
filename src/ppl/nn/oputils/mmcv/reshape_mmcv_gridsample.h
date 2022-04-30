@@ -22,10 +22,10 @@
 #include "ppl/nn/params/mmcv/mmcv_gridsample_param.h"
 #include "ppl/nn/common/input_output_info.h"
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace mmcv {
 
 ppl::common::RetCode ReshapeMMCVGridSample(InputOutputInfo*, const void*);
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::mmcv
 
 #endif

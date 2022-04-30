@@ -32,7 +32,7 @@ RetCode RoiAlignOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        auto ret = oputils::ReshapeROIAlign(info, param_.get());
+        auto ret = onnx::ReshapeROIAlign(info, param_.get());
         if (ret != RC_SUCCESS) {
             return ret;
         }
@@ -60,8 +60,7 @@ RetCode RoiAlignOp::Init(const OptKernelOptions& options) {
 }
 
 RetCode RoiAlignOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
-                             vector<dataformat_t>* selected_output_formats) {
-
+                                 vector<dataformat_t>* selected_output_formats) {
     selected_input_formats->at(0) = DATAFORMAT_NDARRAY;
     selected_input_formats->at(1) = DATAFORMAT_NDARRAY;
     selected_input_formats->at(2) = DATAFORMAT_NDARRAY;
@@ -71,8 +70,8 @@ RetCode RoiAlignOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_
 }
 
 RetCode RoiAlignOp::SelectDataType(const InputOutputInfo& info, ppl::common::datatype_t forward_precision,
-                               std::vector<datatype_t>* selected_input_data_types,
-                               std::vector<datatype_t>* selected_output_data_types) {
+                                   std::vector<datatype_t>* selected_input_data_types,
+                                   std::vector<datatype_t>* selected_output_data_types) {
     selected_input_data_types->at(0) = DATATYPE_FLOAT32;
     selected_input_data_types->at(1) = DATATYPE_FLOAT32;
     selected_input_data_types->at(2) = DATATYPE_INT64;

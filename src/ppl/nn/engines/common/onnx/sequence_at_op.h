@@ -20,7 +20,7 @@
 
 #include "ppl/nn/runtime/kernel_impl.h"
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 class SequenceAtOp final {
 public:
@@ -31,6 +31,6 @@ private:
     const ir::Node* node_;
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

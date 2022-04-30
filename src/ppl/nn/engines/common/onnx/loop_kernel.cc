@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 template <typename T>
 void DummyDeleter(T*) {}
@@ -228,7 +228,7 @@ static RetCode InitSubgraphInputs(const KernelExecContext& ctx, bool keep_going,
     return RC_SUCCESS;
 }
 
-static RetCode SetOutputsFromInputs(const LoopInfo& info, const string& loop_kernel_name,Device* kernel_dev,
+static RetCode SetOutputsFromInputs(const LoopInfo& info, const string& loop_kernel_name, Device* kernel_dev,
                                     Device* tmp_cpu_device, RuntimeImpl* subgraph, KernelExecContext* ctx) {
     // copy loop carried deps from loop's input
     for (uint32_t i = 0; i < info.loop_carried_dep_num; ++i) {
@@ -429,4 +429,4 @@ RetCode LoopKernel::DoExecute(KernelExecContext* ctx) {
     return RC_SUCCESS;
 }
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx

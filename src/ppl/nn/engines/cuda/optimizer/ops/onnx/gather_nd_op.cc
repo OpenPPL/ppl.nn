@@ -49,7 +49,7 @@ RetCode GatherNDOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeGatherND(info, &param_);
+        return onnx::ReshapeGatherND(info, &param_);
     };
 
     return RC_SUCCESS;

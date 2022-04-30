@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace arm {
 
 RetCode EqualOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeEqual(info, nullptr);
+        return onnx::ReshapeEqual(info, nullptr);
     };
 
     infer_type_func_ = [](InputOutputInfo* info) -> void {

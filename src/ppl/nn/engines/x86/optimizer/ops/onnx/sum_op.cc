@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace x86 {
 
 RetCode SumOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeSum(info, nullptr);
+        return onnx::ReshapeSum(info, nullptr);
     };
 
     infer_type_func_ = GenericInferType;

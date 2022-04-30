@@ -23,10 +23,10 @@
 #include "ppl/nn/common/input_output_info.h"
 #include <vector>
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 ppl::common::RetCode ReshapeSplit(InputOutputInfo*, const void*);
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx
 
 #endif

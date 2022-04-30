@@ -21,7 +21,7 @@
 #include "ppl/nn/runtime/kernel_impl.h"
 #include "ppl/nn/engines/common/onnx/split_to_sequence_kernel.h"
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 class SplitToSequenceOp final {
 public:
@@ -40,6 +40,6 @@ private:
     SplitToSequenceKernel::SplitFunc split_func_;
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

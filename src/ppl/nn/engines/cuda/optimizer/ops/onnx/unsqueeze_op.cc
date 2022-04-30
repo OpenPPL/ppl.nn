@@ -55,13 +55,13 @@ RetCode UnsqueezeOp::Init(const OptKernelOptions& options) {
             auto axes_input = info->GetInput<TensorImpl>(1);
             auto size = axes_input->GetShape()->GetElementsExcludingPadding();
             this->param_.axes.resize(size);
-            auto axes_data = (int64_t*)malloc(size*sizeof(int64_t));
+            auto axes_data = (int64_t*)malloc(size * sizeof(int64_t));
             axes_input->CopyToHost(axes_data);
             for (uint32_t i = 0; i < size; ++i) {
                 this->param_.axes[i] = axes_data[i];
             }
         }
-        return oputils::ReshapeUnsqueeze(info, &param_);
+        return onnx::ReshapeUnsqueeze(info, &param_);
     };
 
     return RC_SUCCESS;

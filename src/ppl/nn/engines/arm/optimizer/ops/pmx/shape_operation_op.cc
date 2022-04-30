@@ -38,7 +38,7 @@ RetCode ShapeOperationOp::Init(const OptKernelOptions& options) {
 
 KernelImpl* ShapeOperationOp::CreateKernelImpl() const {
     auto kernel = op_.CreateKernelImpl();
-    ((ppl::nn::common::ShapeOperationKernel*)kernel)->SetParam(param_.get());
+    ((ppl::nn::pmx::ShapeOperationKernel*)kernel)->SetParam(param_.get());
     return kernel;
 }
 

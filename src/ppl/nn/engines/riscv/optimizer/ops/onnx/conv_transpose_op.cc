@@ -45,7 +45,7 @@ RetCode ConvTransposeOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeConvTranspose(info, param_.get());
+        return onnx::ReshapeConvTranspose(info, param_.get());
     };
 
     infer_type_func_ = GenericInferType;

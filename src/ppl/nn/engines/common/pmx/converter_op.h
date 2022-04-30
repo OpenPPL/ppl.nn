@@ -21,7 +21,7 @@
 #include "ppl/nn/runtime/opt_kernel.h"
 #include "ppl/nn/engines/common/pmx/converter_kernel.h"
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace pmx {
 
 class ConverterOp final : public OptKernel {
 public:
@@ -39,6 +39,6 @@ public:
 #endif
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::pmx
 
 #endif

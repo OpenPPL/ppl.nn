@@ -38,7 +38,7 @@ RetCode AndOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeAnd(info, nullptr);
+        return onnx::ReshapeAnd(info, nullptr);
     };
 
     return RC_SUCCESS;

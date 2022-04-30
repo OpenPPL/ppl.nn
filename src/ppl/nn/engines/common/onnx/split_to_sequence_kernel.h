@@ -21,9 +21,9 @@
 #include "ppl/nn/engines/common/common_kernel_impl.h"
 #include "ppl/nn/params/onnx/split_to_sequence_param.h"
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
-class SplitToSequenceKernel final : public CommonKernelImpl {
+class SplitToSequenceKernel final : public common::CommonKernelImpl {
 public:
     typedef std::function<ppl::common::RetCode(uint64_t dims_before_axis, uint64_t dims_from_axis,
                                                uint64_t dims_after_axis, uint32_t dims_of_chunk, uint32_t element_size,
@@ -44,6 +44,6 @@ private:
     SplitFunc split_func_;
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

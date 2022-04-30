@@ -32,7 +32,7 @@ RetCode TopKOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeTopK(info, param_.get());
+        return onnx::ReshapeTopK(info, param_.get());
     };
 
     infer_type_func_ = [](InputOutputInfo* info) -> void {

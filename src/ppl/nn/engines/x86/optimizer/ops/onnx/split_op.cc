@@ -32,7 +32,7 @@ RetCode SplitOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        auto ret = oputils::ReshapeSplit(info, param_.get());
+        auto ret = onnx::ReshapeSplit(info, param_.get());
         if (ret != RC_SUCCESS) {
             return ret;
         }

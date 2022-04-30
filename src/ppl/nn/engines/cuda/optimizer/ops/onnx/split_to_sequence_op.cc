@@ -33,7 +33,7 @@ RetCode SplitToSequenceOp::Init(const OptKernelOptions& options) {
     }
 
     auto param = static_cast<SplitToSequenceParam*>(attr_ref->second.get());
-    op_.Init(param->axis, param->keepdims, common::SplitToSequenceOp::GenericSplitFunc);
+    op_.Init(param->axis, param->keepdims, onnx::SplitToSequenceOp::GenericSplitFunc);
 
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;

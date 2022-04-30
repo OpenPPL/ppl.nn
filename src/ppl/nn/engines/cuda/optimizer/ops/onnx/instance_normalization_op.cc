@@ -55,7 +55,7 @@ RetCode InstanceNormalizationOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeInstanceNormalization(info, nullptr);
+        return onnx::ReshapeInstanceNormalization(info, nullptr);
     };
 
     return RC_SUCCESS;

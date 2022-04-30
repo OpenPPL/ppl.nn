@@ -42,7 +42,7 @@ RetCode ScatterNDOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeScatterND(info, nullptr);
+        return onnx::ReshapeScatterND(info, nullptr);
     };
 
     return RC_SUCCESS;

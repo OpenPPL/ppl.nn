@@ -50,7 +50,7 @@ RetCode MatMulOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeMatMul(info, nullptr);
+        return onnx::ReshapeMatMul(info, nullptr);
     };
 
     return RC_SUCCESS;

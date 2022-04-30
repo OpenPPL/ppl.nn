@@ -26,7 +26,7 @@ namespace ppl { namespace nn { namespace arm {
 
 RetCode TileOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        auto ret = oputils::ReshapeTile(info, nullptr);
+        auto ret = onnx::ReshapeTile(info, nullptr);
         if (ret != RC_SUCCESS) {
             return ret;
         }

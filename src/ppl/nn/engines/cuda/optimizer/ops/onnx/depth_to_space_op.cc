@@ -47,7 +47,7 @@ RetCode DepthToSpaceOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeDepthToSpace(info, &param_);
+        return onnx::ReshapeDepthToSpace(info, &param_);
     };
 
     return RC_SUCCESS;

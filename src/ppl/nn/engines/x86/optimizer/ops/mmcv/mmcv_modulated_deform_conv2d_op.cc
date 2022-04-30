@@ -32,7 +32,7 @@ RetCode MMCVModulatedDeformConv2dOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeMMCVModulatedDeformConv2d(info, param_.get());
+        return mmcv::ReshapeMMCVModulatedDeformConv2d(info, param_.get());
     };
 
     infer_type_func_ = GenericInferType;

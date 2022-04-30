@@ -40,7 +40,7 @@ RetCode FloorOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeFloor(info, nullptr);
+        return onnx::ReshapeFloor(info, nullptr);
     };
 
     return RC_SUCCESS;

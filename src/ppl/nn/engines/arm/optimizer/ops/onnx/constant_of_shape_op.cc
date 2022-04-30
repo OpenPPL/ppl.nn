@@ -31,7 +31,7 @@ RetCode ConstantOfShapeOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeConstantOfShape(info, param_.get());
+        return onnx::ReshapeConstantOfShape(info, param_.get());
     };
 
     infer_type_func_ = [this](InputOutputInfo* info) -> void {

@@ -23,7 +23,7 @@
 using namespace std;
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 LoopOp::~LoopOp() {
     // make sure that engines are released at last.
@@ -81,4 +81,4 @@ KernelImpl* LoopOp::CreateKernelImpl() const {
     return kernel.release();
 }
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx

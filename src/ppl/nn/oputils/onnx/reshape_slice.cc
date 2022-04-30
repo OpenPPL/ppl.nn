@@ -23,7 +23,7 @@ using namespace std;
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 RetCode ReshapeSlice(InputOutputInfo* info, const int64_t* starts, const int64_t* ends, const int64_t* axes,
                      const int64_t* steps, const int64_t axes_num) {
@@ -149,4 +149,4 @@ RetCode ReshapeSlice(InputOutputInfo* info) {
     return ReshapeSlice(info, starts, ends, axes, steps, axes_num);
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx

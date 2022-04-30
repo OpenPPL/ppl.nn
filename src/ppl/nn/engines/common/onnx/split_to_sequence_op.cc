@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 void SplitToSequenceOp::Init(uint64_t axis, uint64_t keepdims, const SplitToSequenceKernel::SplitFunc& f) {
     axis_ = axis;
@@ -71,4 +71,4 @@ RetCode SplitToSequenceOp::GenericSplitFunc(uint64_t dims_before_axis, uint64_t 
     return RC_SUCCESS;
 }
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx

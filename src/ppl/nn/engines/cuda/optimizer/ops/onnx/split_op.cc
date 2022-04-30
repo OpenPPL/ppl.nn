@@ -49,7 +49,7 @@ RetCode SplitOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeSplit(info, &param_);
+        return onnx::ReshapeSplit(info, &param_);
     };
 
     return RC_SUCCESS;

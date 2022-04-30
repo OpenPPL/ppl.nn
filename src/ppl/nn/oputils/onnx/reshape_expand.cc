@@ -21,7 +21,7 @@
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 RetCode ReshapeExpand(InputOutputInfo* info, const void*, const int64_t* shape_ptr) {
     auto shape = info->GetInput<TensorImpl>(1);
@@ -64,4 +64,4 @@ RetCode ReshapeExpand(InputOutputInfo* info, const void*) {
     return ReshapeExpand(info, nullptr, shape_ptr);
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx

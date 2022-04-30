@@ -20,10 +20,10 @@
 using namespace std;
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 KernelImpl* SequenceAtOp::CreateKernelImpl() const {
     return new SequenceAtKernel(node_);
 }
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx

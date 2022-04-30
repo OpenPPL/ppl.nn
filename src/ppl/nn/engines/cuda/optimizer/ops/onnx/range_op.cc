@@ -60,7 +60,7 @@ RetCode RangeOp::Init(const OptKernelOptions& options) {
                 LOG(ERROR) << "Copy delta failed: " << GetRetCodeStr(status);
                 return status;
             }
-            return oputils::ReshapeRange(info, start, limit, delta);
+            return onnx::ReshapeRange(info, start, limit, delta);
         } else if (data_type == DATATYPE_FLOAT32) {
             float start = 0.0f, limit = 0.0f, delta = 1.0f;
             auto status = info->GetInput<TensorImpl>(0)->CopyToHost(&start);
@@ -78,7 +78,7 @@ RetCode RangeOp::Init(const OptKernelOptions& options) {
                 LOG(ERROR) << "Copy delta failed: " << GetRetCodeStr(status);
                 return status;
             }
-            return oputils::ReshapeRange(info, start, limit, delta);
+            return onnx::ReshapeRange(info, start, limit, delta);
         } else {
             return RC_UNSUPPORTED;
         }

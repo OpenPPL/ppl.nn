@@ -19,7 +19,7 @@
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace mmcv {
 
 RetCode ReshapeMMCVNonMaxSuppression(InputOutputInfo* info, const void*) {
     if (info->GetInputCount() != 2 || info->GetOutputCount() != 1) {
@@ -44,4 +44,4 @@ RetCode ReshapeMMCVNonMaxSuppression(InputOutputInfo* info, const void*) {
     return RC_SUCCESS;
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::mmcv

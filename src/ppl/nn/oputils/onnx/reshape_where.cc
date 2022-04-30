@@ -23,7 +23,7 @@
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 common::RetCode ReshapeWhere(InputOutputInfo* info, const void* arg) {
     if (info->GetInputCount() != 3) {
@@ -52,4 +52,4 @@ common::RetCode ReshapeWhere(InputOutputInfo* info, const void* arg) {
     return RC_SUCCESS;
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx

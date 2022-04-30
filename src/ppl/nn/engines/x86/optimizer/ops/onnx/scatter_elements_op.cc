@@ -31,7 +31,7 @@ RetCode ScatterElementsOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeScatterElements(info, nullptr);
+        return onnx::ReshapeScatterElements(info, nullptr);
     };
 
     infer_type_func_ = GenericInferType;

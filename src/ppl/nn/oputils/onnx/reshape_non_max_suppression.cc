@@ -20,7 +20,7 @@
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 RetCode ReshapeNonMaxSuppression(InputOutputInfo* info, int64_t max_output_boxes_per_class) {
     if (info->GetInputCount() < 2 || info->GetOutputCount() != 1) {
@@ -68,4 +68,4 @@ RetCode ReshapeNonMaxSuppression(InputOutputInfo* info) {
         info, max_output_boxes_per_class ? max_output_boxes_per_class->GetBufferPtr<int64_t>()[0] : 0);
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx

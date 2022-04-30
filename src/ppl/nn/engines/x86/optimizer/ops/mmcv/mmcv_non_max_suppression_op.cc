@@ -32,7 +32,7 @@ RetCode MMCVNonMaxSuppressionOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeMMCVNonMaxSuppression(info, param_.get());
+        return mmcv::ReshapeMMCVNonMaxSuppression(info, param_.get());
     };
 
     infer_type_func_ = [](InputOutputInfo* info) -> void {

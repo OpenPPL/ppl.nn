@@ -26,7 +26,7 @@ namespace ppl { namespace nn { namespace arm {
 
 RetCode ReshapeOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeReshape(info, nullptr);
+        return onnx::ReshapeReshape(info, nullptr);
     };
 
     infer_type_func_ = GenericInferType;

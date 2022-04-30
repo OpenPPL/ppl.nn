@@ -60,7 +60,7 @@ RetCode ReshapeOp::Init(const OptKernelOptions& options) {
             return status;
         }
 
-        return oputils::ReshapeReshape(info, nullptr, shape_data.get());
+        return onnx::ReshapeReshape(info, nullptr, shape_data.get());
     };
 
     return RC_SUCCESS;
