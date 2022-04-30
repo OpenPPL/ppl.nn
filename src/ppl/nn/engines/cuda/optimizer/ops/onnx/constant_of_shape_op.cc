@@ -57,7 +57,7 @@ RetCode ConstantOfShapeOp::Init(const OptKernelOptions& options) {
             return status;
         }
 
-        return oputils::ReshapeConstantOfShape(info, &param_, input_host.get());
+        return onnx::ReshapeConstantOfShape(info, &param_, input_host.get());
     };
 
     return RC_SUCCESS;

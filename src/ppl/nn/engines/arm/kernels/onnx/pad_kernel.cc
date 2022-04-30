@@ -39,70 +39,68 @@ ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
         PPLNN_ARM_DEBUG_TRACE("Input [pads]:\n");
         PPL_ARM_TENSOR_PRINT_DEBUG_MSG(pads);
         auto pads_data = pads->GetBufferPtr<int64_t>();
-        for (uint32_t i = 0; i < 2 * dim_count; ++i) {
+        for (int64_t i = 0; i < 2 * dim_count; ++i) {
             pads_value[i] = pads_data[i];
         }
-    }
-    else {
-        for (uint32_t i = 0; i < 2 * dim_count; ++i) {
+    } else {
+        for (int64_t i = 0; i < 2 * dim_count; ++i) {
             pads_value[i] = (int64_t)param_->pads[i];
         }
     }
 
     uint64_t cvt_param_const_val = (uint64_t)0;
-    void *constant_value = &cvt_param_const_val;
+    void* constant_value = &cvt_param_const_val;
     if (constant) {
         PPLNN_ARM_DEBUG_TRACE("Input [constant]:\n");
         PPL_ARM_TENSOR_PRINT_DEBUG_MSG(constant);
         constant_value = constant->GetBufferPtr<void>();
-    }
-    else {
+    } else {
         const auto data_type = x->GetShape()->GetDataType();
-        switch (data_type)
-        {
-        case ppl::common::DATATYPE_UINT8:
-            *((uint8_t*)constant_value) = static_cast<uint8_t>(param_const_val);
-            break;
-        case ppl::common::DATATYPE_UINT16:
-            *((uint16_t*)constant_value) = static_cast<uint16_t>(param_const_val);
-            break;
-        case ppl::common::DATATYPE_UINT32:
-            *((uint32_t*)constant_value) = static_cast<uint32_t>(param_const_val);
-            break;
-        case ppl::common::DATATYPE_UINT64:
-            *((uint64_t*)constant_value) = static_cast<uint64_t>(param_const_val);
-            break;
-        
-        case ppl::common::DATATYPE_FLOAT16:
-            *((__fp16*)constant_value) = static_cast<__fp16>(param_const_val);
-            break;
-        case ppl::common::DATATYPE_FLOAT32:
-            *((float*)constant_value) = static_cast<float>(param_const_val);
-            break;
-        case ppl::common::DATATYPE_FLOAT64:
-            *((double*)constant_value) = static_cast<double>(param_const_val);
-            break;
-        
-        case ppl::common::DATATYPE_INT8:
-            *((int8_t*)constant_value) = static_cast<int8_t>(param_const_val);
-            break;
-        case ppl::common::DATATYPE_INT16:
-            *((int16_t*)constant_value) = static_cast<int16_t>(param_const_val);
-            break;
-        case ppl::common::DATATYPE_INT32:
-            *((int32_t*)constant_value) = static_cast<int32_t>(param_const_val);
-            break;
-        case ppl::common::DATATYPE_INT64:
-            *((int64_t*)constant_value) = static_cast<int64_t>(param_const_val);
-            break;
-        
-        case ppl::common::DATATYPE_BOOL:
-            *((bool*)constant_value) = static_cast<bool>(param_const_val);
-            break;
-        
-        default:
-            LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";
-            return ppl::common::RC_UNSUPPORTED;;
+        switch (data_type) {
+            case ppl::common::DATATYPE_UINT8:
+                *((uint8_t*)constant_value) = static_cast<uint8_t>(param_const_val);
+                break;
+            case ppl::common::DATATYPE_UINT16:
+                *((uint16_t*)constant_value) = static_cast<uint16_t>(param_const_val);
+                break;
+            case ppl::common::DATATYPE_UINT32:
+                *((uint32_t*)constant_value) = static_cast<uint32_t>(param_const_val);
+                break;
+            case ppl::common::DATATYPE_UINT64:
+                *((uint64_t*)constant_value) = static_cast<uint64_t>(param_const_val);
+                break;
+
+            case ppl::common::DATATYPE_FLOAT16:
+                *((__fp16*)constant_value) = static_cast<__fp16>(param_const_val);
+                break;
+            case ppl::common::DATATYPE_FLOAT32:
+                *((float*)constant_value) = static_cast<float>(param_const_val);
+                break;
+            case ppl::common::DATATYPE_FLOAT64:
+                *((double*)constant_value) = static_cast<double>(param_const_val);
+                break;
+
+            case ppl::common::DATATYPE_INT8:
+                *((int8_t*)constant_value) = static_cast<int8_t>(param_const_val);
+                break;
+            case ppl::common::DATATYPE_INT16:
+                *((int16_t*)constant_value) = static_cast<int16_t>(param_const_val);
+                break;
+            case ppl::common::DATATYPE_INT32:
+                *((int32_t*)constant_value) = static_cast<int32_t>(param_const_val);
+                break;
+            case ppl::common::DATATYPE_INT64:
+                *((int64_t*)constant_value) = static_cast<int64_t>(param_const_val);
+                break;
+
+            case ppl::common::DATATYPE_BOOL:
+                *((bool*)constant_value) = static_cast<bool>(param_const_val);
+                break;
+
+            default:
+                LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";
+                return ppl::common::RC_UNSUPPORTED;
+                ;
         }
     }
 
@@ -124,7 +122,6 @@ ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
         }
         return ppl::common::RC_SUCCESS;
     }
-
 
     switch (param_->mode) {
         case ppl::nn::onnx::PadParam::PAD_MODE_CONSTANT:

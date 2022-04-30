@@ -56,7 +56,7 @@ RetCode PadOp::Init(const OptKernelOptions& options) {
         uint32_t dim_count = shape.GetDimCount();
 
         if (info->GetInputCount() == 1) {
-            return oputils::ReshapePad(info, &param_);
+            return onnx::ReshapePad(info, &param_);
         } else {
             auto pad = info->GetInput<TensorImpl>(1);
             if (pad->GetShape()->GetDimCount() != 1 || pad->GetShape()->GetDim(0) != 2 * dim_count ||
@@ -75,7 +75,7 @@ RetCode PadOp::Init(const OptKernelOptions& options) {
                 }
             }
 
-            return oputils::ReshapePad(info, &param_, pad_data.get(), pad_data.get() + dim_count);
+            return onnx::ReshapePad(info, &param_, pad_data.get(), pad_data.get() + dim_count);
         }
     };
 

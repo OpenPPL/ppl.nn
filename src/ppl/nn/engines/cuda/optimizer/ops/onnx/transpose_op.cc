@@ -62,7 +62,7 @@ RetCode TransposeOp::Init(const OptKernelOptions& options) {
             return RC_UNSUPPORTED;
         }
 
-        return oputils::ReshapeTranspose(info, &modified_param);
+        return onnx::ReshapeTranspose(info, &modified_param);
     };
 
     return RC_SUCCESS;

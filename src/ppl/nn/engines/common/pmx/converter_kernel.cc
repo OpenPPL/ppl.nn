@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace pmx {
 
 RetCode ConverterKernel::DoExecute(KernelExecContext* ctx) {
     if (ctx->GetInputCount() != ctx->GetOutputCount()) {
@@ -60,4 +60,4 @@ RetCode ConverterKernel::DoExecute(KernelExecContext* ctx) {
     return RC_SUCCESS;
 }
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::pmx

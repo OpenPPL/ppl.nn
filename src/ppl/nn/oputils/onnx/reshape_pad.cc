@@ -23,7 +23,7 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 template <typename Tpad>
 RetCode ReshapePad(InputOutputInfo* info, const void* arg, const Tpad* start_pads, const Tpad* end_pads) {
@@ -97,4 +97,4 @@ RetCode ReshapePad(InputOutputInfo* info, const void* arg) {
     }
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx

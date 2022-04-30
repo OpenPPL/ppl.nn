@@ -21,7 +21,7 @@
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 RetCode ReshapeGatherND(InputOutputInfo* info, const void*) {
     if (info->GetInputCount() != 2 || info->GetOutputCount() != 1) {
@@ -58,4 +58,4 @@ RetCode ReshapeGatherND(InputOutputInfo* info, const void*) {
     return RC_SUCCESS;
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx

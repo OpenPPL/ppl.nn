@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 void SplitToSequenceKernel::SetExecutionInfo(uint64_t axis, uint64_t keepdims, const SplitFunc& f) {
     axis_ = axis;
@@ -239,4 +239,4 @@ RetCode SplitToSequenceKernel::DoExecute(KernelExecContext* ctx) {
     return RC_SUCCESS;
 }
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx

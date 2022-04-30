@@ -89,7 +89,7 @@ RetCode ConvOp::Init(const OptKernelOptions& options) {
         if (inshape->GetDimCount() < 4) {
             inshape->Reshape(info->GetInput<TensorImpl>(1)->GetShape()->GetDims(), 4);
         }
-        auto status = oputils::ReshapeConv(info, &(param_.param));
+        auto status = onnx::ReshapeConv(info, &(param_.param));
         if (info->GetOutputCount() > 1 && param_.extra_param.fuse_info.channel_offset >= 0) {
             auto postshape = info->GetOutput<TensorImpl>(1);
             postshape->GetShape()->Reshape(info->GetInput<TensorImpl>(0)->GetShape()->GetDims(),

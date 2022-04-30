@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 RetCode ReshapeTile(InputOutputInfo* info, const void*, const int64_t* repeats) {
     if (info->GetInputCount() != 2 || info->GetOutputCount() != 1) {
@@ -76,4 +76,4 @@ RetCode ReshapeTile(InputOutputInfo* info, const void*) {
     return ReshapeTile(info, nullptr, repeats);
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx

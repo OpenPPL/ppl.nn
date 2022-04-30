@@ -73,7 +73,7 @@ RetCode PPLShapeOperationOp::Finalize(const OptKernelOptions& options) {
 
 KernelImpl* PPLShapeOperationOp::CreateKernelImpl() const {
     auto kernel = op_.CreateKernelImpl();
-    ((ppl::nn::common::ShapeOperationKernel*)kernel)->SetParam(&param_);
+    ((ppl::nn::pmx::ShapeOperationKernel*)kernel)->SetParam(&param_);
     return kernel;
 }
 

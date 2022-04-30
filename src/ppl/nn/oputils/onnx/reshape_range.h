@@ -21,11 +21,11 @@
 #include "ppl/common/retcode.h"
 #include "ppl/nn/common/input_output_info.h"
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 ppl::common::RetCode ReshapeRange(InputOutputInfo*, double start, double limit, double delta);
 ppl::common::RetCode ReshapeRange(InputOutputInfo*, const void*);
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx
 
 #endif

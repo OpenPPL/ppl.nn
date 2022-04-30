@@ -23,7 +23,7 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 RetCode ReshapeResize(InputOutputInfo* info, const void* arg, const float* roi_data, const float* scales_data,
                       const int64_t* sizes_data) {
@@ -131,4 +131,4 @@ RetCode ReshapeResize(InputOutputInfo* info, const void* arg) {
     return ReshapeResize(info, arg, roi_data, scales_data, sizes_data);
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx

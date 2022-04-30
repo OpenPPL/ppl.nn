@@ -36,7 +36,7 @@ public:
     }
 
 private:
-    common::SequenceAtOp op_;
+    onnx::SequenceAtOp op_;
 };
 
 }}} // namespace ppl::nn::x86

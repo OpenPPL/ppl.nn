@@ -22,7 +22,7 @@
 
 #include "ppl/nn/params/pmx/shape_operation_param.h"
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace pmx {
 
 class ShapeOperationOp final {
 public:
@@ -33,6 +33,6 @@ private:
     const ir::Node* node_;
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::pmx
 
 #endif

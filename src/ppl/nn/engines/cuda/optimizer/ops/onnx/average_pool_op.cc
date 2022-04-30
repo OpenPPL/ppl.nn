@@ -47,7 +47,7 @@ RetCode AveragePoolOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapePooling(info, &param_);
+        return onnx::ReshapePooling(info, &param_);
     };
 
     return RC_SUCCESS;

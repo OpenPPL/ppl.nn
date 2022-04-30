@@ -96,7 +96,7 @@ RetCode ResizeOp::Init(const OptKernelOptions& options) {
             }
         }
 
-        auto status = oputils::ReshapeResize(info, &param_, roi_data, scales_data, sizes_data);
+        auto status = onnx::ReshapeResize(info, &param_, roi_data, scales_data, sizes_data);
 
         // release memory
         if (roi_data)

@@ -40,7 +40,7 @@ RetCode MinOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeMax(info, nullptr);
+        return onnx::ReshapeMax(info, nullptr);
     };
 
     return RC_SUCCESS;

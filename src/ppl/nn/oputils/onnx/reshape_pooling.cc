@@ -22,7 +22,7 @@
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 RetCode ReshapePooling(InputOutputInfo* info, const void* arg) {
     auto param = (const PoolingParam*)arg;
@@ -77,4 +77,4 @@ RetCode ReshapePooling(InputOutputInfo* info, const void* arg) {
     return RC_SUCCESS;
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx

@@ -21,7 +21,7 @@
 #include <memory>
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 RetCode ReshapeReshape(InputOutputInfo* info, const void*, const int64_t* shape_data) {
     auto data = info->GetInput<TensorImpl>(0)->GetShape();
@@ -89,4 +89,4 @@ RetCode ReshapeReshape(InputOutputInfo* info, const void* arg) {
     return ReshapeReshape(info, nullptr, shape_data);
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx

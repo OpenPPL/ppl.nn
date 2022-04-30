@@ -491,7 +491,7 @@ RetCode ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, Ru
     for (auto x = converter_nodes.begin(); x != converter_nodes.end(); ++x) {
         RuntimeGraphInfo::Partition par_info;
         par_info.engine = x->second;
-        par_info.ops.emplace_back(unique_ptr<OptKernel>(new common::ConverterOp(graph->topo->GetNode(x->first))));
+        par_info.ops.emplace_back(unique_ptr<OptKernel>(new pmx::ConverterOp(graph->topo->GetNode(x->first))));
         info->partitions.emplace_back(std::move(par_info)); // one converter is treated as a single partition
     }
 

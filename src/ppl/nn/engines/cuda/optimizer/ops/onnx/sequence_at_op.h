@@ -29,8 +29,7 @@ public:
     SequenceAtOp(const ir::Node* node) : CudaOptKernel(node), op_(node) {}
 
     ppl::common::RetCode Init(const OptKernelOptions&) override {
-        infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant,
-                                  datatype_t type) -> RetCode {
+        infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
             if (type == DATATYPE_UNKNOWN) {
                 return InferInheritedType(info);
             } else if (type == DATATYPE_INT8) {
@@ -63,7 +62,7 @@ public:
     }
 
 private:
-    common::SequenceAtOp op_;
+    onnx::SequenceAtOp op_;
 };
 
 }}} // namespace ppl::nn::cuda

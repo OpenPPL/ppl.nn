@@ -53,7 +53,7 @@ RetCode LessOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeLess(info, nullptr);
+        return onnx::ReshapeLess(info, nullptr);
     };
 
     return RC_SUCCESS;

@@ -22,7 +22,7 @@
 #include <cmath>
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 RetCode ReshapeRange(InputOutputInfo* info, double start, double limit, double delta) {
     auto output = info->GetOutput<TensorImpl>(0);
@@ -73,4 +73,4 @@ common::RetCode ReshapeRange(InputOutputInfo* info, const void*) {
     return RC_SUCCESS;
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx

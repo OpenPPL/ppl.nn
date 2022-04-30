@@ -64,7 +64,7 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
             for (size_t i = 0; i < info->GetInputCount(); i++) {
                 if (info->GetInput<TensorImpl>(i)->GetShape()->GetDataFormat() != DATAFORMAT_NDARRAY) {
                     LOG(ERROR) << "unsupported data format: "
-                            << GetDataFormatStr(info->GetInput<TensorImpl>(i)->GetShape()->GetDataFormat());
+                               << GetDataFormatStr(info->GetInput<TensorImpl>(i)->GetShape()->GetDataFormat());
                     return RC_UNSUPPORTED;
                 }
             }
@@ -89,7 +89,7 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
             this->slice_aux_param_.axes.resize(axes_num);
             this->slice_aux_param_.steps.resize(axes_num, 1);
 
-             // prepare starts, ends, axes, steps
+            // prepare starts, ends, axes, steps
             auto starts = info->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
             auto ends = info->GetInput<TensorImpl>(2)->GetBufferPtr<int64_t>();
 
@@ -155,14 +155,12 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
                     this->slice_aux_param_.ends[i] = p->ends[i];
                 }
             } else {
-                LOG(ERROR) << "ends.size[" << p->ends.size() << "] != axes_num["
-                            << axes_num << "].";
+                LOG(ERROR) << "ends.size[" << p->ends.size() << "] != axes_num[" << axes_num << "].";
             }
 
             if (p->axes.size()) {
                 if (p->axes.size() != axes_num) {
-                    LOG(ERROR) << "axes.size[" << p->axes.size() << "] != axes_num["
-                            << axes_num << "].";
+                    LOG(ERROR) << "axes.size[" << p->axes.size() << "] != axes_num[" << axes_num << "].";
                 }
                 for (uint32_t i = 0; i < axes_num; ++i) {
                     this->slice_aux_param_.axes[i] = p->axes[i];
@@ -174,12 +172,9 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
             }
         }
 
-        auto ret = oputils::ReshapeSlice(info,
-                                         this->slice_aux_param_.starts.data(),
-                                         this->slice_aux_param_.ends.data(),
-                                         this->slice_aux_param_.axes.data(),
-                                         this->slice_aux_param_.steps.data(),
-                                         this->slice_aux_param_.starts.size());
+        auto ret = onnx::ReshapeSlice(info, this->slice_aux_param_.starts.data(), this->slice_aux_param_.ends.data(),
+                                      this->slice_aux_param_.axes.data(), this->slice_aux_param_.steps.data(),
+                                      this->slice_aux_param_.starts.size());
         if (ret != RC_SUCCESS) {
             return ret;
         }

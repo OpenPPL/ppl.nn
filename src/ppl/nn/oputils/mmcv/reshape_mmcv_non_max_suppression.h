@@ -21,10 +21,10 @@
 #include "ppl/common/retcode.h"
 #include "ppl/nn/common/input_output_info.h"
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace mmcv {
 
 ppl::common::RetCode ReshapeMMCVNonMaxSuppression(InputOutputInfo*, const void*);
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::mmcv
 
 #endif

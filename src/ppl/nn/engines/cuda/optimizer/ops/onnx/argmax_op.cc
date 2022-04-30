@@ -41,7 +41,7 @@ RetCode ArgmaxOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeArgMax(info, &param_);
+        return onnx::ReshapeArgMax(info, &param_);
     };
 
     return RC_SUCCESS;

@@ -22,7 +22,7 @@
 
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 RetCode ReshapeGlobalPooling(InputOutputInfo* info) {
     auto x = info->GetInput<TensorImpl>(0)->GetShape();
@@ -44,4 +44,4 @@ RetCode ReshapeGlobalPooling(InputOutputInfo* info) {
     return RC_SUCCESS;
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx

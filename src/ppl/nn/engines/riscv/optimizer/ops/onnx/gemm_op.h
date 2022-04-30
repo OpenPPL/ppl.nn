@@ -156,7 +156,7 @@ private:
         }
 
         infer_dims_func_ = [this](InputOutputInfo* info) -> ppl::common::RetCode {
-            return oputils::ReshapeGemm(info, param_.get());
+            return onnx::ReshapeGemm(info, param_.get());
         };
 
         infer_type_func_ = GenericInferType;

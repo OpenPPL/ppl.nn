@@ -54,7 +54,7 @@ RetCode MaxUnPoolOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeMaxUnpool(info, &param_);
+        return onnx::ReshapeMaxUnpool(info, &param_);
     };
 
     return RC_SUCCESS;

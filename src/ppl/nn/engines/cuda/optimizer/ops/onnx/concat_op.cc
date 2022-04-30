@@ -47,7 +47,7 @@ RetCode ConcatOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeConcat(info, &param_);
+        return onnx::ReshapeConcat(info, &param_);
     };
 
     infer_unsafe_dims_func_ = [](InputOutputInfo* info, std::set<uint32_t>* illegal_inputs) -> RetCode {

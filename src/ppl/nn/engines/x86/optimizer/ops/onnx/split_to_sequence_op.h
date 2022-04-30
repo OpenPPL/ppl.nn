@@ -30,7 +30,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    common::SplitToSequenceOp op_;
+    onnx::SplitToSequenceOp op_;
 };
 
 }}} // namespace ppl::nn::x86

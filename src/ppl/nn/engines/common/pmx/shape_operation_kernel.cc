@@ -19,7 +19,7 @@
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace pmx {
 
 RetCode ShapeOperationKernel::DoExecute(KernelExecContext* ctx) {
     auto data = ctx->GetInput<TensorImpl>(0);
@@ -66,4 +66,4 @@ RetCode ShapeOperationKernel::DoExecute(KernelExecContext* ctx) {
     return RC_SUCCESS;
 }
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::pmx

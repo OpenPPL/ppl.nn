@@ -35,7 +35,7 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
             LOG(ERROR) << "output count[" << info->GetOutputCount() << "] != 1.";
             return RC_INVALID_VALUE;
         }
-        
+
         if (info->GetInput<TensorImpl>(0)->GetShape()->GetDataType() != DATATYPE_FLOAT32 &&
             info->GetInput<TensorImpl>(0)->GetShape()->GetDataType() != DATATYPE_INT64) {
             LOG(ERROR) << "unsupported data type: "
@@ -70,7 +70,7 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
                 auto in_shape = info->GetInput<TensorImpl>(i)->GetShape();
                 if (in_shape->GetDim(0) != axes_num) {
                     LOG(ERROR) << "input[" << i << "]'s dim[0]'s value[" << in_shape->GetDim(0) << "] != axes_num["
-                            << axes_num << "].";
+                               << axes_num << "].";
                     return RC_INVALID_VALUE;
                 }
             }
@@ -146,14 +146,12 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
                     this->aux_param_.ends[i] = p->ends[i];
                 }
             } else {
-                LOG(ERROR) << "ends.size[" << p->ends.size() << "] != axes_num["
-                            << axes_num << "].";
+                LOG(ERROR) << "ends.size[" << p->ends.size() << "] != axes_num[" << axes_num << "].";
             }
 
             if (p->axes.size()) {
                 if (p->axes.size() != axes_num) {
-                    LOG(ERROR) << "axes.size[" << p->axes.size() << "] != axes_num["
-                            << axes_num << "].";
+                    LOG(ERROR) << "axes.size[" << p->axes.size() << "] != axes_num[" << axes_num << "].";
                 }
                 for (uint32_t i = 0; i < axes_num; ++i) {
                     this->aux_param_.axes[i] = p->axes[i];
@@ -165,13 +163,9 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
             }
         }
 
-        auto ret = oputils::ReshapeSlice(
-            info,
-            this->aux_param_.starts.data(),
-            this->aux_param_.ends.data(),
-            this->aux_param_.axes.data(),
-            this->aux_param_.steps.data(),
-            this->aux_param_.starts.size());
+        auto ret = onnx::ReshapeSlice(info, this->aux_param_.starts.data(), this->aux_param_.ends.data(),
+                                      this->aux_param_.axes.data(), this->aux_param_.steps.data(),
+                                      this->aux_param_.starts.size());
         if (ret != RC_SUCCESS) {
             return ret;
         }

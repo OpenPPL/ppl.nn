@@ -56,7 +56,7 @@ RetCode ExpandOp::Init(const OptKernelOptions& options) {
             return status;
         }
 
-        return oputils::ReshapeExpand(info, nullptr, shape_data.data());
+        return onnx::ReshapeExpand(info, nullptr, shape_data.data());
     };
 
     return RC_SUCCESS;

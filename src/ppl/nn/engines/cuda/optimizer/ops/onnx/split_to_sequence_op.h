@@ -35,7 +35,7 @@ public:
     }
 
 private:
-    common::SplitToSequenceOp op_;
+    onnx::SplitToSequenceOp op_;
 };
 
 }}} // namespace ppl::nn::cuda

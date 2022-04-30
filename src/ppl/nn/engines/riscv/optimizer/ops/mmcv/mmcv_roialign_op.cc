@@ -32,7 +32,7 @@ RetCode MMCVROIAlignOp::Init(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        auto ret = oputils::ReshapeMMCVROIAlign(info, param_.get());
+        auto ret = mmcv::ReshapeMMCVROIAlign(info, param_.get());
         return ret;
     };
 

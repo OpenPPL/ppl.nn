@@ -21,11 +21,11 @@
 using namespace std;
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace pmx {
 
 KernelImpl* ShapeOperationOp::CreateKernelImpl() const {
     auto kernel = new ShapeOperationKernel(node_);
     return kernel;
 }
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::pmx

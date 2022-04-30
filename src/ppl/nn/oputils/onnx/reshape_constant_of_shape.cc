@@ -21,7 +21,7 @@
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 RetCode ReshapeConstantOfShape(InputOutputInfo* info, const void* arg, const int64_t* input_host) {
     auto input = info->GetInput<TensorImpl>(0);
@@ -78,4 +78,4 @@ RetCode ReshapeConstantOfShape(InputOutputInfo* info, const void* arg) {
     return ReshapeConstantOfShape(info, arg, input_host);
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx

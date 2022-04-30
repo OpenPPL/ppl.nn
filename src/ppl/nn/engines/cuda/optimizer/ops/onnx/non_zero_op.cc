@@ -34,7 +34,7 @@ RetCode NonZeroOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeNonZero(info, nullptr);
+        return onnx::ReshapeNonZero(info, nullptr);
     };
 
     return RC_SUCCESS;

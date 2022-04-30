@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 template <typename T>
 void DummyDeleter(T*) {}
@@ -170,4 +170,4 @@ RetCode IfKernel::DoExecute(KernelExecContext* ctx) {
     return SetOutputs(subgraph, ctx, GetDevice(), &tmp_cpu_device);
 }
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx

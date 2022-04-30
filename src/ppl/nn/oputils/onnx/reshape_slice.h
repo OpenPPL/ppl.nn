@@ -21,13 +21,13 @@
 #include "ppl/common/retcode.h"
 #include "ppl/nn/common/input_output_info.h"
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 ppl::common::RetCode ReshapeSlice(InputOutputInfo* info, const int64_t* starts, const int64_t* ends,
                                   const int64_t* axes, const int64_t* steps, const int64_t axes_num);
 
 ppl::common::RetCode ReshapeSlice(InputOutputInfo*);
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx
 
 #endif

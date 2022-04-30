@@ -22,13 +22,13 @@
 
 #include "ppl/nn/params/pmx/shape_operation_param.h"
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace pmx {
 
-class ShapeOperationKernel : public CommonKernelImpl {
+class ShapeOperationKernel : public common::CommonKernelImpl {
 public:
     ShapeOperationKernel(const ir::Node* node) : CommonKernelImpl(node) {}
 
-    void SetParam(const ppl::nn::pmx::ShapeOperationParam* p) {
+    void SetParam(const ShapeOperationParam* p) {
         param_ = p;
     }
 
@@ -36,9 +36,9 @@ private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    const ppl::nn::pmx::ShapeOperationParam* param_ = nullptr;
+    const ShapeOperationParam* param_ = nullptr;
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::pmx
 
 #endif

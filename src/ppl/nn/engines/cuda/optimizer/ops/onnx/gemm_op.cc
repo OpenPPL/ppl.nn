@@ -69,7 +69,7 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeGemm(info, &param_.param);
+        return onnx::ReshapeGemm(info, &param_.param);
     };
 
     return RC_SUCCESS;

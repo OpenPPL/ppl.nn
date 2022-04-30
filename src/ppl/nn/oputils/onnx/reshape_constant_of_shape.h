@@ -22,11 +22,11 @@
 #include "ppl/nn/params/onnx/constant_of_shape_param.h"
 #include "ppl/nn/common/input_output_info.h"
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 ppl::common::RetCode ReshapeConstantOfShape(InputOutputInfo* info, const void* arg, const int64_t* input_host);
 ppl::common::RetCode ReshapeConstantOfShape(InputOutputInfo*, const void*);
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx
 
 #endif

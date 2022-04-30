@@ -30,7 +30,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    common::IfOp op_;
+    onnx::IfOp op_;
 };
 
 }}} // namespace ppl::nn::x86

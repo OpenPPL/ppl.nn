@@ -28,7 +28,7 @@ namespace ppl { namespace nn { namespace utils {
 struct SharedResource;
 }}} // namespace ppl::nn::utils
 
-namespace ppl { namespace nn { namespace common {
+namespace ppl { namespace nn { namespace onnx {
 
 class IfOp final {
 public:
@@ -55,6 +55,6 @@ private:
     std::vector<std::unique_ptr<EngineImpl>> else_engines_;
 };
 
-}}} // namespace ppl::nn::common
+}}} // namespace ppl::nn::onnx
 
 #endif

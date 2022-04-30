@@ -40,7 +40,7 @@ RetCode LstmOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeLSTM(info, &param_);
+        return onnx::ReshapeLSTM(info, &param_);
     };
 
     return RC_SUCCESS;

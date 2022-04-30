@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace riscv {
 
 RetCode LessOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeLess(info, nullptr);
+        return onnx::ReshapeLess(info, nullptr);
     };
 
     infer_type_func_ = GenericInferType;

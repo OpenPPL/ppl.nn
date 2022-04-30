@@ -20,7 +20,7 @@
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 RetCode ReshapeScatterElements(InputOutputInfo* info, const void* arg) {
     if (info->GetInputCount() != 3 || info->GetOutputCount() != 1) {
@@ -62,4 +62,4 @@ RetCode ReshapeScatterElements(InputOutputInfo* info, const void* arg) {
     return RC_SUCCESS;
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx

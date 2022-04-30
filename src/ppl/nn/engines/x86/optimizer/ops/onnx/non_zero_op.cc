@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace x86 {
 
 RetCode NonZeroOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeNonZero(info, nullptr);
+        return onnx::ReshapeNonZero(info, nullptr);
     };
 
     infer_type_func_ = [](InputOutputInfo* info) -> void {

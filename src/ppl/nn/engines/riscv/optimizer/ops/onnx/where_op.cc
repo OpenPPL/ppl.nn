@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace riscv {
 
 RetCode WhereOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeWhere(info, nullptr);
+        return onnx::ReshapeWhere(info, nullptr);
     };
 
     infer_type_func_ = [](InputOutputInfo* info) -> void {

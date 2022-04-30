@@ -44,7 +44,7 @@ RetCode GlobalMaxPoolOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeGlobalPooling(info);
+        return onnx::ReshapeGlobalPooling(info);
     };
 
     return RC_SUCCESS;

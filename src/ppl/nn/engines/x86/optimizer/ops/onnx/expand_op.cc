@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace x86 {
 
 RetCode ExpandOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeExpand(info, nullptr);
+        return onnx::ReshapeExpand(info, nullptr);
     };
 
     infer_type_func_ = GenericInferType;

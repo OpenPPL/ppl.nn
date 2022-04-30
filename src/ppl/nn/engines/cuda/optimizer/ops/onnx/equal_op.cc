@@ -53,7 +53,7 @@ RetCode EqualOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeEqual(info, nullptr);
+        return onnx::ReshapeEqual(info, nullptr);
     };
 
     return RC_SUCCESS;

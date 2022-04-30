@@ -22,7 +22,7 @@
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace onnx {
 
 RetCode ReshapeTopK(InputOutputInfo* info, const void* arg, int64_t k) {
     auto param = (const TopKParam*)arg;
@@ -79,4 +79,4 @@ RetCode ReshapeTopK(InputOutputInfo* info, const void* arg) {
     return ReshapeTopK(info, arg, k);
 }
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::onnx

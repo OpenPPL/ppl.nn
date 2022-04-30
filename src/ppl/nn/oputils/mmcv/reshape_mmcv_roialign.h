@@ -22,10 +22,10 @@
 #include "ppl/nn/params/mmcv/mmcv_roialign_param.h"
 #include "ppl/nn/common/input_output_info.h"
 
-namespace ppl { namespace nn { namespace oputils {
+namespace ppl { namespace nn { namespace mmcv {
 
 ppl::common::RetCode ReshapeMMCVROIAlign(InputOutputInfo*, const void*);
 
-}}} // namespace ppl::nn::oputils
+}}} // namespace ppl::nn::mmcv
 
 #endif

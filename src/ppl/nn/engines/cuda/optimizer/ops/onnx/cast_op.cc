@@ -41,7 +41,7 @@ RetCode CastOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return oputils::ReshapeCast(info, &param_);
+        return onnx::ReshapeCast(info, &param_);
     };
 
     return RC_SUCCESS;
