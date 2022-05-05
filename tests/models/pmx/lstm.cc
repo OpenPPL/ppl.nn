@@ -7,8 +7,8 @@ using namespace ppl::nn::pmx::onnx;
 
 TEST_F(PmxTest, test_lstm) {
     DEFINE_ARG(LSTMParam, lstm);
-    lstm_param1.activation_alpha = {0.23};
-    lstm_param1.activation_beta = {0.33};
+    lstm_param1.activation_alpha = {0.23f};
+    lstm_param1.activation_beta = {0.33f};
     lstm_param1.activations = {ppl::nn::onnx::LSTMParam::ACT_ELU};
     lstm_param1.clip = 0.34;
     lstm_param1.direction = ppl::nn::onnx::LSTMParam::DIR_REVERSE;
