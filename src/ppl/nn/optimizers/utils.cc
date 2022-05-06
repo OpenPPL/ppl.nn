@@ -495,6 +495,8 @@ RetCode ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, Ru
         info->partitions.emplace_back(std::move(par_info)); // one converter is treated as a single partition
     }
 
+    LOG(INFO) << "total partition(s) of graph[" << graph->topo->GetName() << "]: " << info->partitions.size() << ".";
+
     // save necessary shapes for runtime
     auto topo = graph->topo.get();
     auto graph_data = graph->data.get();

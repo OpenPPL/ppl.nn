@@ -20,7 +20,7 @@
 #include "tests/engines/tmp_engine.h"
 #include "ppl/nn/optimizers/utils.h"
 #include "ppl/nn/auxtools/to_graphviz.h"
-#include "ppl/nn/optimizers/special_type_graph_partitioner.h"
+#include "ppl/nn/optimizers/engine_graph_partitioner.h"
 #include "ppl/nn/common/logger.h"
 #include <utility>
 #include <memory>
@@ -38,7 +38,7 @@ protected:
         resource_.engines.resize(2);
         resource_.engines[0] = engines_[0].get();
         resource_.engines[1] = engines_[1].get();
-        resource_.graph_partitioner = make_shared<SpecialTypeGraphPartitioner>();
+        resource_.graph_partitioner = make_shared<EngineGraphPartitioner>();
     }
 
     vector<unique_ptr<EngineImpl>> engines_;
