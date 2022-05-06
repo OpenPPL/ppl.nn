@@ -497,7 +497,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
             gemm_param.transA    = 0;
             gemm_param.transB    = 1;
             gemm_param.alpha     = 1.f;
-            gemm_param.beta      = 1.f;
+            gemm_param.beta      = 0.f;
             gemm_param.N         = N_pad;
             ppl::nn::TensorShape a_shape, b_shape, c_shape;
             a_shape.SetDataType(input_shape->GetDataType());
@@ -510,8 +510,8 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
             void *gemm_buf = NULL;
             void *gemm_output = (int4*)temp_buffer + cvt_in_size_v4;
 
-            //PPLCUDAGemmForwardImp(stream, module, &a_shape, cvt_input, &b_shape, rev_flt, 
-            //        gemm_bias, &c_shape, gemm_output, gemm_param, gemm_buf, gemm_fuse_param, algo_param);
+            PPLCUDAGemmForwardImp(stream, module, &a_shape, cvt_input, &b_shape, rev_flt, 
+                    gemm_bias, &c_shape, gemm_output, gemm_param, gemm_buf, gemm_fuse_param, algo_param);
 
 
             //cvt gemm_output to nhwc
