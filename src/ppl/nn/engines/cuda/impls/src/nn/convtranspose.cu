@@ -510,8 +510,14 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
             void *gemm_buf = NULL;
             void *gemm_output = (int4*)temp_buffer + cvt_in_size_v4;
 
+{cudaDeviceSynchronize();
+auto e = cudaGetLastError();
+printf("new nhwc2nhwkerc: %d\n", e);}
             PPLCUDAGemmForwardImp(stream, module, &a_shape, cvt_input, &b_shape, rev_flt, 
                     gemm_bias, &c_shape, gemm_output, gemm_param, gemm_buf, gemm_fuse_param, algo_param);
+{cudaDeviceSynchronize();
+auto e = cudaGetLastError();
+printf("new nhwc2nhwkerc: %d\n", e);}
 
 
             //cvt gemm_output to nhwc

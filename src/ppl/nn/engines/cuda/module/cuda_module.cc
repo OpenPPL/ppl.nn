@@ -22,7 +22,6 @@ namespace ppl { namespace nn { namespace cuda {
 CUfunction CUDAModule::GetKernelFunc() {
     std::lock_guard<std::mutex> lock(mutex_);
     if (module_ == nullptr) {
-        printf("%s\n", source_code_.second.c_str());
         PPL_CUDA_SAFE_CALL(cuModuleLoadDataEx(&module_, source_code_.second.c_str(), 0, 0, 0));
     }
     if (func_ == nullptr) {
