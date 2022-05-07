@@ -62,6 +62,7 @@ target_link_libraries(pplkernelriscv_static ${PPLKERNELRISCV_LINK_LIBRARIES})
 target_include_directories(pplkernelriscv_static
     PUBLIC include ${PPLKERNELRISCV_INCLUDE_DIRECTORIES}
     PRIVATE src ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES})
+set_target_properties(pplkernelriscv_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(pplkernelriscv_static PRIVATE ${PPLKERNELRISCV_COMPILE_DEFINITIONS})
 target_compile_options(pplkernelriscv_static PRIVATE ${PPLKERNELRISCV_COMPILE_OPTIONS})
 
@@ -69,15 +70,3 @@ if(PPLNN_INSTALL)
     install(TARGETS pplkernelriscv_static DESTINATION lib)
     install(FILES ${CMAKE_CURRENT_LIST_DIR}/pplkernelriscv-config.cmake DESTINATION lib/cmake/ppl)
 endif()
-
-################### Test ###################
-
-# set(PPLNN_TOOLS_DIR ${PPLNN_SOURCE_DIR}/tools)
-# add_executable(test_conv2d test/test_conv2d.cpp ${PPLNN_TOOLS_DIR}/simple_flags.cc)
-# target_include_directories(test_conv2d
-#     PUBLIC include ${PPLKERNELRISCV_INCLUDE_DIRECTORIES}
-#     PRIVATE src ${PPLNN_TOOLS_DIR} ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES})
-# target_compile_options(test_conv2d PRIVATE ${PPLKERNELRISCV_COMPILE_OPTIONS})
-# target_compile_definitions(test_conv2d PRIVATE ${PPLKERNELRISCV_COMPILE_DEFINITIONS})
-# target_compile_features(test_conv2d PRIVATE cxx_std_11)
-# target_link_libraries(test_conv2d PRIVATE pplkernelriscv_static ${PPLKERNELRISCV_LINK_LIBRARIES})

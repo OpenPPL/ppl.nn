@@ -68,7 +68,7 @@ set(PPLCOMMON_HOLD_DEPS ${PPLNN_HOLD_DEPS})
 
 hpcc_declare_git_dep(pplcommon
     https://github.com/openppl-public/ppl.common.git
-    85224cddca43936483c910cc9e42c1a95db92920)
+    76402e4a8939dd2f19b050b65ba398ea3996446e)
 
 # --------------------------------------------------------------------------- #
 
@@ -76,8 +76,8 @@ set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "disable tests")
 set(FLATBUFFERS_INSTALL OFF CACHE BOOL "disable installation")
 
 hpcc_declare_pkg_dep(flatbuffers
-    https://github.com/google/flatbuffers/archive/refs/tags/v2.0.5.zip
-    3696253a7676171e600118d35d52b037)
+    https://github.com/google/flatbuffers/archive/refs/tags/v2.0.0.zip
+    9e5d08df19d5ff127c352d1466ce58a7)
 
 # --------------------------------------------------------------------------- #
 
@@ -115,8 +115,8 @@ set(LUACPP_INSTALL OFF CACHE BOOL "")
 set(LUACPP_BUILD_TESTS OFF CACHE BOOL "")
 
 hpcc_declare_pkg_dep(luacpp
-    https://github.com/ouonline/lua-cpp/archive/34c24e173a668f6738f07ee41730e4b4efcfe047.zip
-    bd0c825ec7c4befe814529be8fd4ac02)
+    https://github.com/ouonline/lua-cpp/archive/d79c270eee56646f22eba76c71f1ff1c0e5f9ac6.zip
+    c067bcb0618f179867d293e179f75ffc)
 
 # --------------------------------------------------------------------------- #
 
