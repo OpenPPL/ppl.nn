@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class UnsqueezeOp final : public ArmOptKernel {
 public:
-    UnsqueezeOp(const ir::Node* node) : ArmOptKernel(node) {}
+    UnsqueezeOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
                                       std::vector<ppl::common::dataformat_t>* selected_input_formats,

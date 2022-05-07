@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class ResizeOp final : public ArmOptKernel {
 public:
-    ResizeOp(const ir::Node* node) : ArmOptKernel(node) {}
+    ResizeOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     ppl::common::RetCode SelectDataType(const InputOutputInfo& info,
                                         std::vector<ppl::common::datatype_t>* selected_input_types,

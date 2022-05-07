@@ -23,7 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode LessOp::Init(const OptKernelOptions& options) {
+LessOp::LessOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         if (info->GetInput<TensorImpl>(0)->GetShape()->GetDataFormat() != DATAFORMAT_NDARRAY) {
             return RC_UNSUPPORTED;
@@ -34,7 +34,9 @@ RetCode LessOp::Init(const OptKernelOptions& options) {
     infer_type_func_ = [](InputOutputInfo* info) -> void {
         info->GetOutput<TensorImpl>(0)->GetShape()->SetDataType(DATATYPE_BOOL);
     };
+}
 
+RetCode LessOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 

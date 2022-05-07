@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class TopKOp final : public ArmOptKernel {
 public:
-    TopKOp(const ir::Node* node) : ArmOptKernel(node) {}
+    TopKOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 

@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class ReorderOp final : public ArmOptKernel {
 public:
-    ReorderOp(const ir::Node* node) : ArmOptKernel(node) {}
+    ReorderOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 };

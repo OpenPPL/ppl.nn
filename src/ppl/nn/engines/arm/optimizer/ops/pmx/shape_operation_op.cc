@@ -25,14 +25,17 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
+ShapeOperationOp::ShapeOperationOp(const ir::Node* node) : ArmOptKernel(node), op_(node) {
+    infer_type_func_ = GenericInferType;
+    infer_dims_func_ = GenericInferDims;
+}
+
 RetCode ShapeOperationOp::Init(const OptKernelOptions& options) {
     auto status = GenericLoadParam<ppl::nn::pmx::ShapeOperationParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
     }
-    infer_type_func_ = GenericInferType;
-    infer_dims_func_ = GenericInferDims;
     return RC_SUCCESS;
 }
 

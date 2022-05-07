@@ -24,7 +24,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode WhereOp::Init(const OptKernelOptions& options) {
+WhereOp::WhereOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeWhere(info, nullptr);
     };
@@ -34,7 +34,9 @@ RetCode WhereOp::Init(const OptKernelOptions& options) {
         info->GetOutput<TensorImpl>(0)->GetShape()->SetDataType(
             info->GetInput<TensorImpl>(1)->GetShape()->GetDataType());
     };
+}
 
+RetCode WhereOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 

@@ -23,7 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode EqualOp::Init(const OptKernelOptions& options) {
+EqualOp::EqualOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeEqual(info, nullptr);
     };
@@ -31,7 +31,9 @@ RetCode EqualOp::Init(const OptKernelOptions& options) {
     infer_type_func_ = [](InputOutputInfo* info) -> void {
         info->GetOutput<TensorImpl>(0)->GetShape()->SetDataType(DATATYPE_BOOL);
     };
+}
 
+RetCode EqualOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 

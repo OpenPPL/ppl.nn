@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class BatchNormalizationOp final : public ArmOptKernel {
 public:
-    BatchNormalizationOp(const ir::Node* node) : ArmOptKernel(node) {}
+    BatchNormalizationOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
                                       std::vector<ppl::common::dataformat_t>* selected_input_formats,

@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class EqualOp final : public ArmOptKernel {
 public:
-    EqualOp(const ir::Node* node) : ArmOptKernel(node) {}
+    EqualOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 };

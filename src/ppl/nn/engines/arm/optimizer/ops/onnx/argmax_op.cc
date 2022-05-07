@@ -24,13 +24,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode ArgMaxOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam(options, &param_);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
+ArgMaxOp::ArgMaxOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeArgMax(info, param_.get());
     };
@@ -38,6 +32,14 @@ RetCode ArgMaxOp::Init(const OptKernelOptions& options) {
     infer_type_func_ = [](InputOutputInfo* info) {
         info->GetOutput<TensorImpl>(0)->GetShape()->SetDataType(DATATYPE_INT64);
     };
+}
+
+RetCode ArgMaxOp::Init(const OptKernelOptions& options) {
+    auto status = GenericLoadParam(options, &param_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
+        return status;
+    }
 
     return RC_SUCCESS;
 }

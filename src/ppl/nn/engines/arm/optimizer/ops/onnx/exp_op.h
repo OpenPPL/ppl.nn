@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class ExpOp final : public ArmOptKernel {
 public:
-    ExpOp(const ir::Node* node) : ArmOptKernel(node) {}
+    ExpOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 };

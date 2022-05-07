@@ -23,7 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode ShapeOp::Init(const OptKernelOptions& options) {
+ShapeOp::ShapeOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         auto output_shape = info->GetOutput<TensorImpl>(0)->GetShape();
         output_shape->Reshape({info->GetInput<TensorImpl>(0)->GetShape()->GetRealDimCount()});
@@ -34,7 +34,9 @@ RetCode ShapeOp::Init(const OptKernelOptions& options) {
         auto output_shape = info->GetOutput<TensorImpl>(0)->GetShape();
         output_shape->SetDataType(DATATYPE_INT64);
     };
+}
 
+RetCode ShapeOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 

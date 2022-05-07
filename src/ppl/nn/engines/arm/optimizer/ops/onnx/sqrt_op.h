@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class SqrtOp final : public ArmOptKernel {
 public:
-    SqrtOp(const ir::Node* node) : ArmOptKernel(node) {}
+    SqrtOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 };

@@ -24,23 +24,24 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
+PadOp::PadOp(const ir::Node* node) : ArmOptKernel(node) {
+    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        auto ret = onnx::ReshapePad(info, param_.get());
+        if (ret != RC_SUCCESS) {
+            return ret;
+        }
+        return RC_SUCCESS;
+    };
+
+    infer_type_func_ = GenericInferType;
+}
+
 RetCode PadOp::Init(const OptKernelOptions& options) {
     auto status = GenericLoadParam(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
     }
-
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        auto ret = onnx::ReshapePad(info, param_.get());
-        if (ret != RC_SUCCESS) {
-            return ret;
-        }
-
-        return RC_SUCCESS;
-    };
-
-    infer_type_func_ = GenericInferType;
 
     return RC_SUCCESS;
 }

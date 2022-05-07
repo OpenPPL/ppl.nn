@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class ArgMaxOp final : public ArmOptKernel {
 public:
-    ArgMaxOp(const ir::Node* node) : ArmOptKernel(node) {}
+    ArgMaxOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     ppl::common::RetCode SelectDataType(const InputOutputInfo& info,
                                         std::vector<ppl::common::datatype_t>* selected_input_types,

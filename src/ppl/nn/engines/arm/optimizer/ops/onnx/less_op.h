@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class LessOp final : public ArmOptKernel {
 public:
-    LessOp(const ir::Node* node) : ArmOptKernel(node) {}
+    LessOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 };

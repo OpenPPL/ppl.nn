@@ -22,9 +22,12 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode LogOp::Init(const OptKernelOptions& options) {
+LogOp::LogOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = GenericInferDims;
     infer_type_func_ = GenericInferType;
+}
+
+RetCode LogOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 

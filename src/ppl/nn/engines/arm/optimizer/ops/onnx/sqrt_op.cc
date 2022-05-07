@@ -22,9 +22,12 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode SqrtOp::Init(const OptKernelOptions& options) {
+SqrtOp::SqrtOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = GenericInferDims;
     infer_type_func_ = GenericInferType;
+}
+
+RetCode SqrtOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 

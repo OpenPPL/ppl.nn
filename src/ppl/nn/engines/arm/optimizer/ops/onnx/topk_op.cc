@@ -24,13 +24,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode TopKOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam(options, &param_);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
+TopKOp::TopKOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeTopK(info, param_.get());
     };
@@ -40,6 +34,14 @@ RetCode TopKOp::Init(const OptKernelOptions& options) {
         auto out_shape = info->GetOutput<TensorImpl>(1)->GetShape();
         out_shape->SetDataType(DATATYPE_INT64);
     };
+}
+
+RetCode TopKOp::Init(const OptKernelOptions& options) {
+    auto status = GenericLoadParam(options, &param_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
+        return status;
+    }
 
     return RC_SUCCESS;
 }

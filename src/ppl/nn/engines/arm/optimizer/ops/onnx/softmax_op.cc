@@ -22,6 +22,11 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
+SoftmaxOp::SoftmaxOp(const ir::Node* node) : ArmOptKernel(node) {
+    infer_dims_func_ = GenericInferDims;
+    infer_type_func_ = GenericInferType;
+}
+
 RetCode SoftmaxOp::Init(const OptKernelOptions& options) {
     auto status = GenericLoadParam(options, &param_);
     if (status != RC_SUCCESS) {
@@ -29,8 +34,6 @@ RetCode SoftmaxOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_dims_func_ = GenericInferDims;
-    infer_type_func_ = GenericInferType;
     return RC_SUCCESS;
 }
 

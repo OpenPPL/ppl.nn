@@ -26,7 +26,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class SliceOp final : public ArmOptKernel {
 public:
-    SliceOp(const ir::Node* node) : ArmOptKernel(node) {}
+    SliceOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     ppl::common::RetCode SelectDataType(const InputOutputInfo& info,
                                         std::vector<ppl::common::datatype_t>* selected_input_types,

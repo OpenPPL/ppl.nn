@@ -25,12 +25,13 @@ namespace ppl { namespace nn { namespace arm {
 
 class ClipOp final : public ArmOptKernel {
 public:
-    ClipOp(const ir::Node* node) : ArmOptKernel(node) {}
+    ClipOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
                                       std::vector<ppl::common::dataformat_t>* selected_input_formats,
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
     KernelImpl* CreateKernelImpl() const override;
+
 private:
     std::shared_ptr<ppl::nn::onnx::ClipParam> param_;
 };
