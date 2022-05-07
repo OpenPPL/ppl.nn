@@ -579,7 +579,7 @@ printf("transa gemm: %d\n", e);}
     CUfunction function = module->GetKernelFunc();
 {cudaDeviceSynchronize();
 auto e = cudaGetLastError();
-printf("pre launch gemm: %d,(%d,%d,%d), %s\n", e, M, N, K, algo_param.algo_name);}
+printf("pre launch gemm: %d,(%d,%d,%d), %s\n", e, M, N, K, algo_param.algo_name.c_str());}
     CUDA_SAFE_CALL(cuLaunchKernel(function, grid_size.x, grid_size.y, grid_size.z, block_size.x, block_size.y, block_size.z, 0, stream, args, 0));
 {cudaDeviceSynchronize();
 auto e = cudaGetLastError();
