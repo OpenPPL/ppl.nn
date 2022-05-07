@@ -477,6 +477,9 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
             constexpr int cta_size = 256;
             int grid_size = DivUp(cvt_in_size_v4, cta_size);
 
+{cudaDeviceSynchronize();
+auto e = cudaGetLastError();
+printf("pre new nhwc2nhwkerc: %d, %d, %d, %d\n", e, grid_size, cvt_in_size_v4, kernel_u);}
             new_nhwc2nhw_ker_c<<<grid_size, cta_size, 0, stream>>>(
                             (int4 *)cvt_input, (const int4 *)input,
                             batch, in_h, in_w, in_c_v4,
@@ -517,7 +520,7 @@ printf("new nhwc2nhwkerc: %d\n", e);}
                     gemm_bias, &c_shape, gemm_output, gemm_param, gemm_buf, gemm_fuse_param, algo_param);
 {cudaDeviceSynchronize();
 auto e = cudaGetLastError();
-printf("new nhwc2nhwkerc: %d\n", e);}
+printf("gemmimp: %d\n", e);}
 
 
             //cvt gemm_output to nhwc
