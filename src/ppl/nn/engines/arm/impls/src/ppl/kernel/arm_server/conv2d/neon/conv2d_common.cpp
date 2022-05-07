@@ -41,7 +41,7 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 conv2d_offline_manager *conv2d_algo_selector::fast_gen_algo(
     const ppl::nn::TensorShape &shape,
-    const ppl::nn::ArmEngineOptions &options,
+    const ppl::nn::arm::EngineOptions &options,
     const ppl::common::isa_t isa_flags,
     const conv2d_param &param,
     ppl::common::Allocator *allocator)
@@ -164,13 +164,13 @@ conv2d_offline_manager *conv2d_algo_selector::fast_gen_algo(
         }
     }
 
-    const bool use_tuning = src_shape_inferred && (options.dynamic_tuning_level != ppl::nn::ARM_TUNING_OFF);
+    const bool use_tuning = src_shape_inferred && (options.dynamic_tuning_level != ppl::nn::arm::TUNING_OFF);
     if (use_tuning) {
         return gen_fast_algo(shape, options, isa_flags, param, allocator);
     }
 
     // check winograd
-    if (options.winograd_level != ppl::nn::ARM_WG_OFF &&
+    if (options.winograd_level != ppl::nn::arm::WG_OFF &&
         param.kernel_h == 3 &&
         param.kernel_w == 3 &&
         param.stride_h == 1 &&
@@ -180,17 +180,17 @@ conv2d_offline_manager *conv2d_algo_selector::fast_gen_algo(
         param.channels >= 32 &&
         param.num_output >= 32) {
         switch (options.winograd_level) {
-            case ppl::nn::ARM_WG_ON:
+            case ppl::nn::arm::WG_ON:
                 if (src_shape_inferred && src_h % 4 == 0 && src_w % 4 == 0) {
                     target_algo.algo_type = ppl::kernel::arm_server::neon::conv2d_algo::winograd_b4f3;
                 } else {
                     target_algo.algo_type = ppl::kernel::arm_server::neon::conv2d_algo::winograd_b2f3;
                 }
                 break;
-            case ppl::nn::ARM_WG_ON_B2:
+            case ppl::nn::arm::WG_ON_B2:
                 target_algo.algo_type = ppl::kernel::arm_server::neon::conv2d_algo::winograd_b2f3;
                 break;
-            case ppl::nn::ARM_WG_ON_B4:
+            case ppl::nn::arm::WG_ON_B4:
                 target_algo.algo_type = ppl::kernel::arm_server::neon::conv2d_algo::winograd_b4f3;
                 break;
             default:
@@ -353,7 +353,7 @@ static conv2d_offline_manager *get_conv2d_offline_manager_with_algo(
 
 conv2d_offline_manager *conv2d_algo_selector::gen_fast_algo(
     const ppl::nn::TensorShape &src_shape,
-    const ppl::nn::ArmEngineOptions &options,
+    const ppl::nn::arm::EngineOptions &options,
     const ppl::common::isa_t isa_flags,
     const conv2d_param &param,
     ppl::common::Allocator *allocator)
@@ -363,10 +363,10 @@ conv2d_offline_manager *conv2d_algo_selector::gen_fast_algo(
 
     const bool src_shape_inferred = src_shape.GetDimCount() >= 4;
 
-    const int64_t src_h      = src_shape_inferred ? src_shape.GetDim(2) : 224;
-    const int64_t src_w      = src_shape_inferred ? src_shape.GetDim(3) : 224;
-    const int64_t dst_h      = ((src_h + 2 * param.pad_h - param.dilation_h * (param.kernel_h - 1) - 1) / param.stride_h + 1);
-    const int64_t dst_w      = ((src_w + 2 * param.pad_w - param.dilation_w * (param.kernel_w - 1) - 1) / param.stride_w + 1);
+    const int64_t src_h = src_shape_inferred ? src_shape.GetDim(2) : 224;
+    const int64_t src_w = src_shape_inferred ? src_shape.GetDim(3) : 224;
+    const int64_t dst_h = ((src_h + 2 * param.pad_h - param.dilation_h * (param.kernel_h - 1) - 1) / param.stride_h + 1);
+    const int64_t dst_w = ((src_w + 2 * param.pad_w - param.dilation_w * (param.kernel_w - 1) - 1) / param.stride_w + 1);
     (void)dst_h;
     (void)dst_w;
 
@@ -396,8 +396,7 @@ conv2d_offline_manager *conv2d_algo_selector::gen_fast_algo(
             LOG(ERROR) << "need ndarray/n4cx for float32";
             return nullptr;
         }
-    }
-    else if (preferred_data_type == ppl::common::DATATYPE_FLOAT16) {
+    } else if (preferred_data_type == ppl::common::DATATYPE_FLOAT16) {
         if (!(isa_flags & ppl::common::ISA_ARMV8_2)) {
             LOG(ERROR) << "need armv8.2 for float16";
             return nullptr;
@@ -407,8 +406,7 @@ conv2d_offline_manager *conv2d_algo_selector::gen_fast_algo(
             LOG(ERROR) << "need ndarray/n8cx for float16";
             return nullptr;
         }
-    }
-    else {
+    } else {
         LOG(ERROR) << "unaccepted data type";
         return nullptr;
     }
@@ -499,7 +497,7 @@ conv2d_offline_manager *conv2d_algo_selector::gen_fast_algo(
     algo = ppl::kernel::arm_server::neon::conv2d_algo::tile_gemm;
     candidate_algo_list.push_back(algo);
 
-    const bool tune_blocksize                              = (options.dynamic_tuning_level == ppl::nn::ARM_TUNING_SELECT_BLK_SIZE);
+    const bool tune_blocksize                              = (options.dynamic_tuning_level == ppl::nn::arm::TUNING_SELECT_BLK_SIZE);
     double best_run_time                                   = std::numeric_limits<double>::max();
     ppl::kernel::arm_server::neon::conv2d_algo_t best_algo = ppl::kernel::arm_server::neon::conv2d_algo::unknown;
     conv2d_offline_manager *best_conv2d_mgr                = nullptr;

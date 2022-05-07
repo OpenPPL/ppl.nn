@@ -15,37 +15,37 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/arm/arm_engine_options.h"
+#include "ppl/nn/engines/arm/engine_options.h"
 #include "pybind11/pybind11.h"
 
 namespace ppl { namespace nn { namespace python {
 
 void RegisterArmEngineOptions(pybind11::module* m) {
-    pybind11::class_<ArmEngineOptions>(*m, "ArmEngineOptions")
+    pybind11::class_<arm::EngineOptions>(*m, "EngineOptions")
         .def(pybind11::init<>())
-        .def_readwrite("mm_policy", &ArmEngineOptions::mm_policy)
-        .def_readwrite("forward_precision", &ArmEngineOptions::forward_precision)
-        .def_readwrite("graph_optimization_level", &ArmEngineOptions::graph_optimization_level)
-        .def_readwrite("winograd_level", &ArmEngineOptions::winograd_level)
-        .def_readwrite("dynamic_tuning_level", &ArmEngineOptions::dynamic_tuning_level)
-        .def_readwrite("numa_node_id", &ArmEngineOptions::numa_node_id);
+        .def_readwrite("mm_policy", &arm::EngineOptions::mm_policy)
+        .def_readwrite("forward_precision", &arm::EngineOptions::forward_precision)
+        .def_readwrite("graph_optimization_level", &arm::EngineOptions::graph_optimization_level)
+        .def_readwrite("winograd_level", &arm::EngineOptions::winograd_level)
+        .def_readwrite("dynamic_tuning_level", &arm::EngineOptions::dynamic_tuning_level)
+        .def_readwrite("numa_node_id", &arm::EngineOptions::numa_node_id);
 
-    m->attr("ARM_MM_COMPACT") = (uint32_t)ARM_MM_COMPACT;
-    m->attr("ARM_MM_MRU") = (uint32_t)ARM_MM_MRU;
+    m->attr("MM_COMPACT") = (uint32_t)arm::MM_COMPACT;
+    m->attr("MM_MRU") = (uint32_t)arm::MM_MRU;
 
-    m->attr("ARM_OPT_DISABLE_ALL") = (uint32_t)ARM_OPT_DISABLE_ALL;
-    m->attr("ARM_OPT_ENABLE_BASIC") = (uint32_t)ARM_OPT_ENABLE_BASIC;
-    m->attr("ARM_OPT_ENABLE_EXTENDED") = (uint32_t)ARM_OPT_ENABLE_EXTENDED;
-    m->attr("ARM_OPT_ENABLE_ALL") = (uint32_t)ARM_OPT_ENABLE_ALL;
+    m->attr("OPT_DISABLE_ALL") = (uint32_t)arm::OPT_DISABLE_ALL;
+    m->attr("OPT_ENABLE_BASIC") = (uint32_t)arm::OPT_ENABLE_BASIC;
+    m->attr("OPT_ENABLE_EXTENDED") = (uint32_t)arm::OPT_ENABLE_EXTENDED;
+    m->attr("OPT_ENABLE_ALL") = (uint32_t)arm::OPT_ENABLE_ALL;
 
-    m->attr("ARM_WG_OFF") = (uint32_t)ARM_WG_OFF;
-    m->attr("ARM_WG_ON") = (uint32_t)ARM_WG_ON;
-    m->attr("ARM_WG_ON_B2") = (uint32_t)ARM_WG_ON_B2;
-    m->attr("ARM_WG_ON_B4") = (uint32_t)ARM_WG_ON_B4;
+    m->attr("WG_OFF") = (uint32_t)arm::WG_OFF;
+    m->attr("WG_ON") = (uint32_t)arm::WG_ON;
+    m->attr("WG_ON_B2") = (uint32_t)arm::WG_ON_B2;
+    m->attr("WG_ON_B4") = (uint32_t)arm::WG_ON_B4;
 
-    m->attr("ARM_TUNING_OFF") = (uint32_t)ARM_TUNING_OFF;
-    m->attr("ARM_TUNING_SELECT_ALGO") = (uint32_t)ARM_TUNING_SELECT_ALGO;
-    m->attr("ARM_TUNING_SELECT_BLK_SIZE") = (uint32_t)ARM_TUNING_SELECT_BLK_SIZE;
+    m->attr("TUNING_OFF") = (uint32_t)arm::TUNING_OFF;
+    m->attr("TUNING_SELECT_ALGO") = (uint32_t)arm::TUNING_SELECT_ALGO;
+    m->attr("TUNING_SELECT_BLK_SIZE") = (uint32_t)arm::TUNING_SELECT_BLK_SIZE;
 }
 
 }}} // namespace ppl::nn::python

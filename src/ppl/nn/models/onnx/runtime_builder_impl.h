@@ -23,12 +23,12 @@
 #include "ppl/nn/engines/engine_impl.h"
 #include "ppl/nn/utils/shared_resource.h"
 #include "ppl/nn/runtime/partial_runtime_creator.h"
-#include "ppl/nn/models/onnx/onnx_runtime_builder.h"
-#include "ppl/nn/models/onnx/onnx_runtime_builder_options.h"
+#include "ppl/nn/models/onnx/runtime_builder.h"
+#include "ppl/nn/models/onnx/runtime_builder_options.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
-class RuntimeBuilderImpl final : public OnnxRuntimeBuilder {
+class RuntimeBuilderImpl final : public RuntimeBuilder {
 public:
     RuntimeBuilderImpl();
     ~RuntimeBuilderImpl();

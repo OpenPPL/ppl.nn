@@ -26,12 +26,12 @@
 #include "ppl/nn/runtime/runtime_graph_info.h"
 #include "ppl/nn/runtime/runtime_aux_info.h"
 #include "ppl/nn/runtime/partial_runtime_creator.h"
-#include "ppl/nn/models/pmx/pmx_runtime_builder.h"
-#include "ppl/nn/models/pmx/pmx_runtime_builder_options.h"
+#include "ppl/nn/models/pmx/runtime_builder.h"
+#include "ppl/nn/models/pmx/runtime_builder_options.h"
 
 namespace ppl { namespace nn { namespace pmx {
 
-class RuntimeBuilderImpl final : public PmxRuntimeBuilder {
+class RuntimeBuilderImpl final : public RuntimeBuilder {
 public:
     RuntimeBuilderImpl();
     ~RuntimeBuilderImpl();

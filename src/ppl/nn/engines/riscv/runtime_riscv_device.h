@@ -19,7 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_RISCV_RUNTIME_RISCV_DEVICE_H_
 
 #include "ppl/nn/engines/riscv/riscv_device.h"
-#include "ppl/nn/engines/riscv/riscv_options.h"
+#include "ppl/nn/engines/riscv/options.h"
 #include "ppl/nn/utils/buffer_manager.h"
 #include "ppl/nn/common/logger.h"
 #include <memory>
@@ -54,7 +54,7 @@ public:
     // ----- configurations ----- //
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(RuntimeRiscvDevice*, va_list);
-    static ConfHandlerFunc conf_handlers_[RISCV_DEV_CONF_MAX];
+    static ConfHandlerFunc conf_handlers_[DEV_CONF_MAX];
 
     ppl::common::RetCode Configure(uint32_t, ...) override;
 

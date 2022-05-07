@@ -26,7 +26,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace python {
 
 void RegisterOnnxRuntimeBuilder(pybind11::module* m) {
-    pybind11::class_<PyOnnxRuntimeBuilder>(*m, "OnnxRuntimeBuilder")
+    pybind11::class_<PyOnnxRuntimeBuilder>(*m, "RuntimeBuilder")
         .def("__bool__",
              [](const PyOnnxRuntimeBuilder& builder) -> bool {
                  return (builder.ptr.get());

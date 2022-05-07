@@ -19,15 +19,15 @@
 #define _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_FACTORY_H_
 
 #include "ppl/nn/engines/engine.h"
-#include "ppl/nn/engines/cuda/cuda_engine_options.h"
+#include "ppl/nn/engines/cuda/engine_options.h"
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace cuda {
 
-class PPLNN_PUBLIC CudaEngineFactory final {
+class PPLNN_PUBLIC EngineFactory final {
 public:
-    static Engine* Create(const CudaEngineOptions& options);
+    static Engine* Create(const EngineOptions& options);
 };
 
-}} // namespace ppl::nn
+}}} // namespace ppl::nn::cuda
 
 #endif

@@ -19,7 +19,7 @@
 #define __ST_PPL_KERNEL_RISCV_FP32_CONV_TRANSPOSE_H_
 
 #include "ppl/kernel/riscv/common/general_include.h"
-#include "ppl/nn/engines/riscv/riscv_engine_options.h"
+#include "ppl/nn/engines/riscv/engine_options.h"
 #include "ppl/kernel/riscv/common/conv_transpose.h"
 #include "ppl/nn/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
@@ -31,7 +31,7 @@ namespace ppl { namespace kernel { namespace riscv {
 
 class conv_transpose_fp32_algo_selector {
 public:
-    static conv_transpose_common_algo_info select_algo(const ppl::nn::RiscvEngineOptions *engine_options);
+    static conv_transpose_common_algo_info select_algo(const ppl::nn::riscv::EngineOptions *engine_options);
 };
 
 int64_t conv_transpose_n4cx_get_buffer_bytes_fp32_vec128(

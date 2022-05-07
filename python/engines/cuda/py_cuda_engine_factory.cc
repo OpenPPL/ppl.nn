@@ -23,13 +23,13 @@ namespace ppl { namespace nn { namespace python {
 
 class PyCudaEngineFactory final {
 public:
-    static PyCudaEngine Create(const CudaEngineOptions& options) {
-        return PyCudaEngine(CudaEngineFactory::Create(options));
+    static PyCudaEngine Create(const cuda::EngineOptions& options) {
+        return PyCudaEngine(cuda::EngineFactory::Create(options));
     }
 };
 
 void RegisterCudaEngineFactory(pybind11::module* m) {
-    pybind11::class_<PyCudaEngineFactory>(*m, "CudaEngineFactory")
+    pybind11::class_<PyCudaEngineFactory>(*m, "EngineFactory")
         .def_static("Create", &PyCudaEngineFactory::Create);
 }
 

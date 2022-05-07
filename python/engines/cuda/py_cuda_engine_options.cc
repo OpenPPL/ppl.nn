@@ -15,19 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/cuda_engine_options.h"
+#include "ppl/nn/engines/cuda/engine_options.h"
 #include "pybind11/pybind11.h"
 
 namespace ppl { namespace nn { namespace python {
 
 void RegisterCudaEngineOptions(pybind11::module* m) {
-    pybind11::class_<CudaEngineOptions>(*m, "CudaEngineOptions")
+    pybind11::class_<cuda::EngineOptions>(*m, "EngineOptions")
         .def(pybind11::init<>())
-        .def_readwrite("device_id", &CudaEngineOptions::device_id)
-        .def_readwrite("mm_policy", &CudaEngineOptions::mm_policy);
+        .def_readwrite("device_id", &cuda::EngineOptions::device_id)
+        .def_readwrite("mm_policy", &cuda::EngineOptions::mm_policy);
 
-    m->attr("CUDA_MM_COMPACT") = (uint32_t)CUDA_MM_COMPACT;
-    m->attr("CUDA_MM_BEST_FIT") = (uint32_t)CUDA_MM_BEST_FIT;
+    m->attr("MM_COMPACT") = (uint32_t)cuda::MM_COMPACT;
+    m->attr("MM_BEST_FIT") = (uint32_t)cuda::MM_BEST_FIT;
 }
 
 }}} // namespace ppl::nn::python

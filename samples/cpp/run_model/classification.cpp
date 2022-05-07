@@ -23,10 +23,10 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "ppl/nn/models/onnx/onnx_runtime_builder_factory.h"
+#include "ppl/nn/models/onnx/runtime_builder_factory.h"
 #include "ppl/nn/engines/x86/engine_factory.h"
-#include "ppl/nn/engines/x86/x86_engine_options.h"
-#include "ppl/nn/engines/x86/x86_ops.h"
+#include "ppl/nn/engines/x86/engine_options.h"
+#include "ppl/nn/engines/x86/ops.h"
 
 #include "imagenet_labels.h"
 
@@ -114,8 +114,8 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
     printf("image preprocess succeed!\n");
 
     /************************ 2. create runtime builder from onnx model *************************/
-    ppl::nn::x86::RegisterBuiltinOpImpls();  // register Ops
-    auto x86_engine = X86EngineFactory::Create(X86EngineOptions()); // create x86 engine with default options
+    x86::RegisterBuiltinOpImpls(); // register Ops
+    auto x86_engine = x86::EngineFactory::Create(x86::EngineOptions()); // create x86 engine with default options
 
     // register all engines you want to use
     vector<unique_ptr<Engine>> engines;
@@ -124,7 +124,7 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
     engine_ptrs.emplace_back(engines[0].get());
 
     // create onnx runtime builder according to onnx model & engines registered before
-    auto builder = unique_ptr<OnnxRuntimeBuilder>(OnnxRuntimeBuilderFactory::Create());
+    auto builder = unique_ptr<onnx::RuntimeBuilder>(onnx::RuntimeBuilderFactory::Create());
     if (!builder) {
         fprintf(stderr, "create OnnxRuntimeBuilder from onnx model %s failed!\n", onnx_model_path);
         return -1;
@@ -145,8 +145,8 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
     printf("successfully create runtime builder!\n");
 
     /************************ 3. build runtime *************************/
-    // use runtime builder to build runtime, one builder can be used to build multiple runtimes sharing constant data & topo
-    // here we only build one runtime for easy to understand
+    // use runtime builder to build runtime, one builder can be used to build multiple runtimes sharing constant data &
+    // topo here we only build one runtime for easy to understand
     unique_ptr<Runtime> runtime;
     runtime.reset(builder->CreateRuntime());
     if (!runtime) {
@@ -161,19 +161,22 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
     auto input_tensor = runtime->GetInputTensor(0);
 
     const std::vector<int64_t> input_shape{1, channels, height, width};
-    input_tensor->GetShape()->Reshape(input_shape); // pplnn can reshape input dynamically even if onnx model has static input shape
-    status = input_tensor->ReallocBuffer();   // must do this after tensor's shape has changed
+    input_tensor->GetShape()->Reshape(
+        input_shape); // pplnn can reshape input dynamically even if onnx model has static input shape
+    status = input_tensor->ReallocBuffer(); // must do this after tensor's shape has changed
     if (status != RC_SUCCESS) {
         fprintf(stderr, "ReallocBuffer for tensor [%s] failed: %s\n", input_tensor->GetName(), GetRetCodeStr(status));
         return -1;
     }
 
     // set input data descriptor
-    TensorShape src_desc = *input_tensor->GetShape(); // description of your prepared data, not input tensor's description
+    TensorShape src_desc =
+        *input_tensor->GetShape(); // description of your prepared data, not input tensor's description
     src_desc.SetDataType(DATATYPE_FLOAT32);
     src_desc.SetDataFormat(DATAFORMAT_NDARRAY); // for 4-D Tensor, NDARRAY == NCHW
 
-    status = input_tensor->ConvertFromHost(in_data, src_desc); // convert data type & format from src_desc to input_tensor & fill data
+    status = input_tensor->ConvertFromHost(
+        in_data, src_desc); // convert data type & format from src_desc to input_tensor & fill data
     if (status != RC_SUCCESS) {
         fprintf(stderr, "set input data to tensor [%s] failed: %s\n", input_tensor->GetName(), GetRetCodeStr(status));
         return -1;
@@ -199,11 +202,13 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
     float* output_data = output_data_.data();
 
     // set output data descriptor
-    TensorShape dst_desc = *output_tensor->GetShape(); // description of your output data buffer, not output_tensor's description
+    TensorShape dst_desc =
+        *output_tensor->GetShape(); // description of your output data buffer, not output_tensor's description
     dst_desc.SetDataType(DATATYPE_FLOAT32);
     dst_desc.SetDataFormat(DATAFORMAT_NDARRAY); // output is 1-D Tensor, NDARRAY == vector
 
-    status = output_tensor->ConvertToHost(output_data, dst_desc); // convert data type & format from output_tensor to dst_desc
+    status = output_tensor->ConvertToHost(output_data,
+                                          dst_desc); // convert data type & format from output_tensor to dst_desc
     if (status != RC_SUCCESS) {
         fprintf(stderr, "get output data from tensor [%s] failed: %s\n", output_tensor->GetName(),
                 GetRetCodeStr(status));

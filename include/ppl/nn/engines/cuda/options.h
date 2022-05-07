@@ -15,10 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_OPTIONS_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_OPTIONS_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIONS_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIONS_H_
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace cuda {
 
 enum {
     /**
@@ -28,10 +28,10 @@ enum {
        @code{.cpp}
        vector<dataformat_t> output_formats;
        // fill output_formats
-       cuda_engine->Configure(CUDA_CONF_SET_OUTPUT_FORMAT, output_formats.data(), output_formats.size());
+       cuda_engine->Configure(ENGINE_CONF_SET_OUTPUT_FORMAT, output_formats.data(), output_formats.size());
        @endcode
     */
-    CUDA_CONF_SET_OUTPUT_FORMAT = 0,
+    ENGINE_CONF_SET_OUTPUT_FORMAT = 0,
 
     /**
        @brief set output data type
@@ -40,10 +40,10 @@ enum {
        @code{.cpp}
        vector<datatype_t> output_types;
        // fill output_types;
-       cuda_engine->Configure(CUDA_CONF_SET_OUTPUT_TYPE, output_types.data(), output_types.size());
+       cuda_engine->Configure(ENGINE_CONF_SET_OUTPUT_TYPE, output_types.data(), output_types.size());
        @endcode
     */
-    CUDA_CONF_SET_OUTPUT_TYPE,
+    ENGINE_CONF_SET_OUTPUT_TYPE,
 
     /**
        @brief set kernel type
@@ -51,10 +51,10 @@ enum {
        @note example:
        @code{.cpp}
        datatype_t kernel_type;
-       cuda_engine->Configure(CUDA_CONF_SET_KERNEL_TYPE, kernel_type);
+       cuda_engine->Configure(ENGINE_CONF_SET_KERNEL_TYPE, kernel_type);
        @endcode
     */
-    CUDA_CONF_SET_KERNEL_TYPE,
+    ENGINE_CONF_SET_KERNEL_TYPE,
 
     /**
        @brief set init input dims as a hint for graph optimization
@@ -63,64 +63,64 @@ enum {
        @code{.cpp}
        vector<utils::Array<int64_t>> dims;
        // fill dims of each input
-       engine->Configure(CUDA_CONF_SET_INPUT_DIMS, dims.data(), dims.size());
+       engine->Configure(ENGINE_CONF_SET_INPUT_DIMS, dims.data(), dims.size());
        @endcode
     */
-    CUDA_CONF_SET_INPUT_DIMS,
+    ENGINE_CONF_SET_INPUT_DIMS,
 
     /**
        @brief use default algorithms for conv and gemm
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_USE_DEFAULT_ALGORITHMS, true/false);
+       cuda_engine->Configure(ENGINE_CONF_USE_DEFAULT_ALGORITHMS, true/false);
        @endcode
     */
-    CUDA_CONF_USE_DEFAULT_ALGORITHMS,
+    ENGINE_CONF_USE_DEFAULT_ALGORITHMS,
 
     /**
        @param json_str a json string(const char*) containing quantization information
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_SET_QUANT_INFO, json_str);
+       cuda_engine->Configure(ENGINE_CONF_SET_QUANT_INFO, json_str);
        @endcode
     */
-    CUDA_CONF_SET_QUANT_INFO,
+    ENGINE_CONF_SET_QUANT_INFO,
 
     /**
        @param json_file a json file used to store selected algos' index information
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_EXPORT_ALGORITHMS, json_file);
+       cuda_engine->Configure(ENGINE_CONF_EXPORT_ALGORITHMS, json_file);
        @endcode
     */
-    CUDA_CONF_EXPORT_ALGORITHMS,
+    ENGINE_CONF_EXPORT_ALGORITHMS,
 
     /**
        @param json_file a json file containing selected algos' index information
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(CUDA_CONF_IMPORT_ALGORITHMS, json_file);
+       cuda_engine->Configure(ENGINE_CONF_IMPORT_ALGORITHMS, json_file);
        @endcode
     */
-    CUDA_CONF_IMPORT_ALGORITHMS,
+    ENGINE_CONF_IMPORT_ALGORITHMS,
 
     /** max value */
-    CUDA_CONF_MAX,
+    ENGINE_CONF_MAX,
 };
 
 /** @brief memory management policies */
 enum {
     /** less memory usage, does not support vGPU now */
-    CUDA_MM_COMPACT = 0,
+    MM_COMPACT = 0,
 
     /** best fit first, will use more memory */
-    CUDA_MM_BEST_FIT = 1,
+    MM_BEST_FIT = 1,
 };
 
-}} // namespace ppl::nn
+}}} // namespace ppl::nn::cuda
 
 #endif

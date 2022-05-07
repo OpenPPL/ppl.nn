@@ -155,25 +155,25 @@ def ParseInShapes(in_shapes_str):
 # ---------------------------------------------------------------------------- #
 
 def CreateX86Engine(args):
-    x86_options = pplnn.X86EngineOptions()
+    x86_options = pplnn.x86.EngineOptions()
     if args.mm_policy == "perf":
-        x86_options.mm_policy = pplnn.X86_MM_MRU
+        x86_options.mm_policy = pplnn.x86.MM_MRU
     elif args.mm_policy == "mem":
-        x86_options.mm_policy = pplnn.X86_MM_COMPACT
+        x86_options.mm_policy = pplnn.x86.MM_COMPACT
 
-    x86_engine = pplnn.X86EngineFactory.Create(x86_options)
+    x86_engine = pplnn.x86.EngineFactory.Create(x86_options)
     if not x86_engine:
         logging.error("create x86 engine failed.")
         sys.exit(-1)
 
     if args.disable_avx512:
-        status = x86_engine.Configure(pplnn.X86_CONF_DISABLE_AVX512)
+        status = x86_engine.Configure(pplnn.x86.ENGINE_CONF_DISABLE_AVX512)
         if status != pplcommon.RC_SUCCESS:
             logging.error("x86 engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
 
     if args.disable_avx_fma3:
-        status = x86_engine.Configure(pplnn.X86_CONF_DISABLE_AVX_FMA3)
+        status = x86_engine.Configure(pplnn.x86.ENGINE_CONF_DISABLE_AVX_FMA3)
         if status != pplcommon.RC_SUCCESS:
             logging.error("x86 engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
@@ -181,35 +181,35 @@ def CreateX86Engine(args):
     return x86_engine
 
 def CreateCudaEngine(args):
-    cuda_options = pplnn.CudaEngineOptions()
+    cuda_options = pplnn.cuda.EngineOptions()
     cuda_options.device_id = args.device_id
     if args.mm_policy == "perf":
-        cuda_options.mm_policy = pplnn.CUDA_MM_BEST_FIT
+        cuda_options.mm_policy = pplnn.cuda.MM_BEST_FIT
     elif args.mm_policy == "mem":
-        cuda_options.mm_policy = pplnn.CUDA_MM_COMPACT
+        cuda_options.mm_policy = pplnn.cuda.MM_COMPACT
 
-    cuda_engine = pplnn.CudaEngineFactory.Create(cuda_options)
+    cuda_engine = pplnn.cuda.EngineFactory.Create(cuda_options)
     if not cuda_engine:
         logging.error("create cuda engine failed.")
         sys.exit(-1)
 
     if args.quick_select:
-        status = cuda_engine.Configure(pplnn.CUDA_CONF_USE_DEFAULT_ALGORITHMS)
+        status = cuda_engine.Configure(pplnn.cuda.ENGINE_CONF_USE_DEFAULT_ALGORITHMS)
         if status != pplcommon.RC_SUCCESS:
-            logging.error("cuda engine Configure(CUDA_CONF_USE_DEFAULT_ALGORITHMS) failed: " + pplcommon.GetRetCodeStr(status))
+            logging.error("cuda engine Configure(ENGINE_CONF_USE_DEFAULT_ALGORITHMS) failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
 
     if args.in_shapes:
         shapes = ParseInShapes(args.in_shapes)
-        status = cuda_engine.Configure(pplnn.CUDA_CONF_SET_INPUT_DIMS, shapes)
+        status = cuda_engine.Configure(pplnn.cuda.ENGINE_CONF_SET_INPUT_DIMS, shapes)
         if status != pplcommon.RC_SUCCESS:
-            logging.error("cuda engine Configure(CUDA_CONF_SET_INPUT_DIMS) failed: " + pplcommon.GetRetCodeStr(status))
+            logging.error("cuda engine Configure(ENGINE_CONF_SET_INPUT_DIMS) failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
 
     if args.export_algo_file:
-        status = cuda_engine.Configure(pplnn.CUDA_CONF_EXPORT_ALGORITHMS, args.export_algo_file)
+        status = cuda_engine.Configure(pplnn.cuda.ENGINE_CONF_EXPORT_ALGORITHMS, args.export_algo_file)
         if status != pplcommon.RC_SUCCESS:
-            logging.error("cuda engine Configure(CUDA_CONF_EXPORT_ALGORITHMS) failed: " + pplcommon.GetRetCodeStr(status))
+            logging.error("cuda engine Configure(ENGINE_CONF_EXPORT_ALGORITHMS) failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
 
     if args.import_algo_file:
@@ -219,9 +219,9 @@ def CreateCudaEngine(args):
             f = open(args.export_algo_file, "a")
             f.close()
 
-        status = cuda_engine.Configure(pplnn.CUDA_CONF_IMPORT_ALGORITHMS, args.import_algo_file)
+        status = cuda_engine.Configure(pplnn.cuda.ENGINE_CONF_IMPORT_ALGORITHMS, args.import_algo_file)
         if status != pplcommon.RC_SUCCESS:
-            logging.error("cuda engine Configure(CUDA_CONF_IMPORT_ALGORITHMS) failed: " + pplcommon.GetRetCodeStr(status))
+            logging.error("cuda engine Configure(ENGINE_CONF_IMPORT_ALGORITHMS) failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
 
     if args.kernel_type:
@@ -232,25 +232,25 @@ def CreateCudaEngine(args):
                 kernel_type = i
                 break
         if kernel_type != pplcommon.DATATYPE_UNKNOWN:
-            cuda_engine.Configure(pplnn.CUDA_CONF_SET_KERNEL_TYPE, kernel_type)
+            cuda_engine.Configure(pplnn.cuda.ENGINE_CONF_SET_KERNEL_TYPE, kernel_type)
         else:
             logging.error("invalid kernel type[" + args.kernel_type + "]. valid types: int8/16/32/64, float16/32.")
             sys.exit(-1)
 
     if args.quant_file:
         with open(args.quant_file, 'r') as f:
-            cuda_engine.Configure(pplnn.CUDA_CONF_SET_QUANT_INFO, f.read())
+            cuda_engine.Configure(pplnn.cuda.ENGINE_CONF_SET_QUANT_INFO, f.read())
 
     return cuda_engine
 
 def CreateRiscvEngine(args):
-    riscv_options = pplnn.RiscvEngineOptions()
+    riscv_options = pplnn.riscv.EngineOptions()
     if args.use_fp16:
         riscv_options.forward_precision = pplcommon.DATATYPE_FLOAT16
     else:
         riscv_options.forward_precision = pplcommon.DATATYPE_FLOAT32
 
-    riscv_engine = pplnn.RiscvEngineFactory.Create(riscv_options)
+    riscv_engine = pplnn.riscv.EngineFactory.Create(riscv_options)
     if not riscv_engine:
         logging.error("create riscv engine failed.")
         sys.exit(-1)
@@ -258,24 +258,24 @@ def CreateRiscvEngine(args):
     return riscv_engine
 
 def CreateArmEngine(args):
-    arm_options = pplnn.ArmEngineOptions()
+    arm_options = pplnn.arm.EngineOptions()
 
     if args.mm_policy == "perf":
-        arm_options.mm_policy = pplnn.ARM_MM_MRU
+        arm_options.mm_policy = pplnn.arm.MM_MRU
     elif args.mm_policy == "mem":
-        arm_options.mm_policy = pplnn.ARM_MM_COMPACT
+        arm_options.mm_policy = pplnn.arm.MM_COMPACT
 
     if args.use_fp16:
         arm_options.forward_precision = pplcommon.DATATYPE_FLOAT16
     else:
         arm_options.forward_precision = pplcommon.DATATYPE_FLOAT32
 
-    arm_options.graph_optimization_level = pplnn.ARM_OPT_ENABLE_ALL
+    arm_options.graph_optimization_level = pplnn.arm.OPT_ENABLE_ALL
     arm_options.winograd_level = args.wg_level
     arm_options.dynamic_tuning_level = args.tuning_level
     arm_options.numa_node_id = args.numa_node_id
 
-    arm_engine = pplnn.ArmEngineFactory.Create(arm_options)
+    arm_engine = pplnn.arm.EngineFactory.Create(arm_options)
     if not arm_engine:
         logging.error("create arm engin failed.")
         sys.exit(-1)
@@ -528,7 +528,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     if HasMultipleModelOptions(args):
-        logging.error("multi --*-model options are specified.")
+        logging.error("multiple --*-model options are specified.")
         sys.exit(-1)
 
     engines = RegisterEngines(args)
@@ -537,19 +537,19 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     if args.onnx_model:
-        runtime_builder = pplnn.OnnxRuntimeBuilderFactory.Create()
+        runtime_builder = pplnn.onnx.RuntimeBuilderFactory.Create()
         if not runtime_builder:
-            logging.error("create OnnxRuntimeBuilder failed.")
+            logging.error("create onnx RuntimeBuilder failed.")
             sys.exit(-1)
 
         status = runtime_builder.InitFromFile(args.onnx_model, engines)
         if status != pplcommon.RC_SUCCESS:
-            logging.error("init OnnxRuntimeBuilder failed: " + pplcommon.GetRetCodeStr(status))
+            logging.error("init onnx RuntimeBuilder failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
 
         status = runtime_builder.Preprocess()
         if status != pplcommon.RC_SUCCESS:
-            logging.error("OnnxRuntimeBuilder preprocess failed: " + pplcommon.GetRetCodeStr(status))
+            logging.error("onnx RuntimeBuilder preprocess failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
 
         runtime = runtime_builder.CreateRuntime()
@@ -563,19 +563,19 @@ if __name__ == "__main__":
                 logging.error("serialize to pmx model failed: " + pplcommon.GetRetCodeStr(status))
                 sys.exit(-1)
     elif args.pmx_model:
-        runtime_builder = pplnn.PmxRuntimeBuilderFactory.Create()
+        runtime_builder = pplnn.pmx.RuntimeBuilderFactory.Create()
         if not runtime_builder:
             logging.error("create RuntimeBuilder failed.")
             sys.exit(-1)
 
         status = runtime_builder.InitFromFile(args.pmx_model, engines)
         if status != pplcommon.RC_SUCCESS:
-            logging.error("init PmxRuntimeBuilder failed: " + pplcommon.GetRetCodeStr(status))
+            logging.error("init pmx RuntimeBuilder failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
 
         status = runtime_builder.Preprocess()
         if status != pplcommon.RC_SUCCESS:
-            logging.error("PmxRuntimeBuilder preprocess failed: " + pplcommon.GetRetCodeStr(status))
+            logging.error("pmx RuntimeBuilder preprocess failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
 
         runtime = runtime_builder.CreateRuntime()

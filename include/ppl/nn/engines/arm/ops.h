@@ -15,19 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_PMX_PMX_RUNTIME_BUILDER_FACTORY_H_
-#define _ST_HPC_PPL_NN_MODELS_PMX_PMX_RUNTIME_BUILDER_FACTORY_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_ARM_OPS_H_
+#define _ST_HPC_PPL_NN_ENGINES_ARM_OPS_H_
 
-#include "ppl/nn/common/common.h"
-#include "ppl/nn/models/pmx/pmx_runtime_builder.h"
+namespace ppl { namespace nn { namespace arm {
 
-namespace ppl { namespace nn {
+void RegisterBuiltinOpImpls();
 
-class PPLNN_PUBLIC PmxRuntimeBuilderFactory final {
-public:
-    static PmxRuntimeBuilder* Create();
-};
-
-}} // namespace ppl::nn
+}}} // namespace ppl::nn::arm
 
 #endif

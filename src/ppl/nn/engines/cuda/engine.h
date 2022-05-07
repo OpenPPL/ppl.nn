@@ -23,8 +23,8 @@
 
 #include "ppl/common/types.h"
 #include "ppl/nn/engines/engine_impl.h"
-#include "ppl/nn/engines/cuda/cuda_engine_options.h"
-#include "ppl/nn/engines/cuda/cuda_options.h"
+#include "ppl/nn/engines/cuda/engine_options.h"
+#include "ppl/nn/engines/cuda/options.h"
 #include "ppl/nn/engines/cuda/cuda_common_param.h"
 #include "ppl/nn/engines/cuda/engine_context.h"
 #include "ppl/nn/quantization/quant_param_parser.h"
@@ -61,7 +61,7 @@ class CudaEngine final : public EngineImpl {
 public:
     CudaEngine();
     ~CudaEngine();
-    ppl::common::RetCode Init(const CudaEngineOptions& options);
+    ppl::common::RetCode Init(const EngineOptions& options);
     ppl::common::RetCode Configure(uint32_t, ...) override;
     EngineContext* CreateEngineContext() override;
     bool Supports(const ir::Node*) const override;
@@ -98,12 +98,12 @@ private:
     static ppl::common::RetCode ImportAlgorithms(CudaEngine*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(CudaEngine*, va_list);
-    static ConfHandlerFunc conf_handlers_[CUDA_CONF_MAX];
+    static ConfHandlerFunc conf_handlers_[ENGINE_CONF_MAX];
 
 private:
     BufferedCudaDevice device_;
     CudaArgs cuda_flags_;
-    CudaEngineOptions options_;
+    EngineOptions options_;
 #ifdef PPLNN_ENABLE_PMX_MODEL
     std::vector<BufferDesc> constant_buffers_;
 #endif

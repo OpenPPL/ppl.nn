@@ -21,13 +21,13 @@
 #include "pybind11/stl.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/utils/array.h"
-#include "ppl/nn/engines/riscv/riscv_options.h"
+#include "ppl/nn/engines/riscv/options.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace python {
 
 void RegisterRiscvEngine(pybind11::module* m) {
-    pybind11::class_<PyRiscvEngine, PyEngine>(*m, "RiscvEngine")
+    pybind11::class_<PyRiscvEngine, PyEngine>(*m, "Engine")
         .def("__bool__",
              [](const PyRiscvEngine& engine) -> bool {
                  return (engine.ptr.get());

@@ -15,18 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/x86/x86_engine_options.h"
+#include "ppl/nn/engines/x86/engine_options.h"
 #include "pybind11/pybind11.h"
 
 namespace ppl { namespace nn { namespace python {
 
 void RegisterX86EngineOptions(pybind11::module* m) {
-    pybind11::class_<X86EngineOptions>(*m, "X86EngineOptions")
+    pybind11::class_<x86::EngineOptions>(*m, "EngineOptions")
         .def(pybind11::init<>())
-        .def_readwrite("mm_policy", &X86EngineOptions::mm_policy);
+        .def_readwrite("mm_policy", &x86::EngineOptions::mm_policy);
 
-    m->attr("X86_MM_COMPACT") = (uint32_t)X86_MM_COMPACT;
-    m->attr("X86_MM_MRU") = (uint32_t)X86_MM_MRU;
+    m->attr("MM_COMPACT") = (uint32_t)x86::MM_COMPACT;
+    m->attr("MM_MRU") = (uint32_t)x86::MM_MRU;
 }
 
 }}} // namespace ppl::nn::python

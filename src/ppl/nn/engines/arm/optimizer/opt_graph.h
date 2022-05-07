@@ -20,7 +20,7 @@
 
 #include "ppl/nn/ir/graph.h"
 #include "ppl/nn/engines/arm/arm_device.h"
-#include "ppl/nn/engines/arm/arm_engine_options.h"
+#include "ppl/nn/engines/arm/engine_options.h"
 #include "ppl/nn/runtime/runtime_partition_info.h"
 #include "ppl/nn/engines/arm/optimizer/opt_kernel.h"
 #include <memory>
@@ -29,7 +29,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class OptGraph final {
 public:
-    ppl::common::RetCode Init(ir::Graph*, RuntimePartitionInfo*, ArmEngineOptions*);
+    ppl::common::RetCode Init(ir::Graph*, RuntimePartitionInfo*, EngineOptions*);
     ppl::common::RetCode DoOptimize(const utils::SharedResource&, ArmDevice*);
 
 private:
@@ -51,7 +51,7 @@ private:
     ir::Graph* graph_ = nullptr;
     RuntimePartitionInfo* info_ = nullptr;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>> tensor_impls_;
-    ArmEngineOptions* options_;
+    EngineOptions* options_;
     std::function<EdgeObject*(edgeid_t, uint32_t)> acquire_tensor_func_;
 };
 

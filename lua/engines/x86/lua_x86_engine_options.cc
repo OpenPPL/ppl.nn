@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/x86/x86_engine_options.h"
+#include "ppl/nn/engines/x86/engine_options.h"
 #include "luacpp/luacpp.h"
 #include <memory>
 using namespace std;
@@ -24,19 +24,19 @@ using namespace luacpp;
 namespace ppl { namespace nn { namespace lua {
 
 void RegisterX86EngineOptions(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
-    auto lclass = lstate->CreateClass<X86EngineOptions>()
+    auto lclass = lstate->CreateClass<x86::EngineOptions>()
         .DefConstructor()
         .DefMember<uint32_t>("mm_policy",
-                             [](const X86EngineOptions* options) -> uint32_t {
+                             [](const x86::EngineOptions* options) -> uint32_t {
                                  return options->mm_policy;
                              },
-                             [](X86EngineOptions* options, uint32_t v) -> void {
+                             [](x86::EngineOptions* options, uint32_t v) -> void {
                                  options->mm_policy = v;
                              });
-    lmodule->Set("X86EngineOptions", lclass);
+    lmodule->Set("EngineOptions", lclass);
 
-    lmodule->SetInteger("X86_MM_MRU", X86_MM_MRU);
-    lmodule->SetInteger("X86_MM_COMPACT", X86_MM_COMPACT);
+    lmodule->SetInteger("MM_MRU", x86::MM_MRU);
+    lmodule->SetInteger("MM_COMPACT", x86::MM_COMPACT);
 }
 
 }}}

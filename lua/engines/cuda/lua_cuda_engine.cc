@@ -16,7 +16,7 @@
 // under the License.
 
 #include "../lua_engine.h"
-#include "ppl/nn/engines/cuda/cuda_options.h"
+#include "ppl/nn/engines/cuda/options.h"
 #include "ppl/nn/common/logger.h"
 #include "luacpp/luacpp.h"
 #include <map>
@@ -33,7 +33,7 @@ static RetCode GenericSetOption(Engine* engine, uint32_t option, const LuaObject
 typedef RetCode (*ConfigFunc)(Engine*, uint32_t option, const LuaObject& args);
 
 static const map<uint32_t, ConfigFunc> g_opt2func = {
-    {CUDA_CONF_USE_DEFAULT_ALGORITHMS, GenericSetOption},
+    {cuda::ENGINE_CONF_USE_DEFAULT_ALGORITHMS, GenericSetOption},
 };
 
 void RegisterCudaEngine(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
@@ -49,9 +49,9 @@ void RegisterCudaEngine(const shared_ptr<LuaState>& lstate, const shared_ptr<Lua
             }
             return it->second(lengine->ptr.get(), option, args);
         });
-    lmodule->Set("CudaEngine", lclass);
+    lmodule->Set("Engine", lclass);
 
-    lmodule->SetInteger("CUDA_CONF_USE_DEFAULT_ALGORITHMS", CUDA_CONF_USE_DEFAULT_ALGORITHMS);
+    lmodule->SetInteger("ENGINE_CONF_USE_DEFAULT_ALGORITHMS", cuda::ENGINE_CONF_USE_DEFAULT_ALGORITHMS);
 }
 
 }}}

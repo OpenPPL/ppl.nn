@@ -15,74 +15,75 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_ARM_ARM_OPTIONS_H_
-#define _ST_HPC_PPL_NN_ENGINES_ARM_ARM_OPTIONS_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_ARM_OPTIONS_H_
+#define _ST_HPC_PPL_NN_ENGINES_ARM_OPTIONS_H_
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace arm {
 
 enum {
     /** max value */
-    ARM_CONF_MAX,
+    ENGINE_CONF_MAX,
 };
 
 /** @brief memory management policies */
 enum {
     /** less memory usage, may cause performance loss */
-    ARM_MM_COMPACT = 0,
+    MM_COMPACT = 0,
 
     /** most recently used first, will use more memory */
-    ARM_MM_MRU = 1,
+    MM_MRU = 1,
 };
 
 /** @brief graph optimization level */
 enum {
     /** disable all graph optimization */
-    ARM_OPT_DISABLE_ALL = 0,
+    OPT_DISABLE_ALL = 0,
 
     /** enable basic(level0) graph optimization */
-    ARM_OPT_ENABLE_BASIC = 1,
+    OPT_ENABLE_BASIC = 1,
 
     /** enable extended(level0 & level1) graph optimization */
-    ARM_OPT_ENABLE_EXTENDED = 2,
+    OPT_ENABLE_EXTENDED = 2,
 
     /** enable all(level0 ~ level2) graph optimization */
-    ARM_OPT_ENABLE_ALL = 3,
+    OPT_ENABLE_ALL = 3,
 };
 
 /** @brief winograd level */
 enum {
     /** turn off winograd */
-    ARM_WG_OFF = 0,
+    WG_OFF = 0,
 
     /** use winograd and select block size automatically */
-    ARM_WG_ON = 1,
+    WG_ON = 1,
 
     /** use winograd blk2 if possible */
-    ARM_WG_ON_B2 = 2,
+    WG_ON_B2 = 2,
 
     /** use wingorad blk4 if possible */
-    ARM_WG_ON_B4 = 3,
+    WG_ON_B4 = 3,
 };
 
 /** @brief dynamic tuning level */
 enum {
     /** turn off dynamic tuning */
-    ARM_TUNING_OFF = 0,
+    TUNING_OFF = 0,
 
     /** use dynamic tuning to select algorithm */
-    ARM_TUNING_SELECT_ALGO = 1,
+    TUNING_SELECT_ALGO = 1,
 
     /** use dynamic tuning to select algorithm with blocking size */
-    ARM_TUNING_SELECT_BLK_SIZE = 2,
+    TUNING_SELECT_BLK_SIZE = 2,
 };
 
 /** @brief options for arm::DeviceContext::Configure() */
 enum {
     /** @brief memory defragmentation. make sure that device is not used when performing defragmentations. */
-    ARM_DEV_CONF_MEM_DEFRAG = 0,
+    DEV_CONF_MEM_DEFRAG = 0,
 
-    ARM_DEV_CONF_MAX,
+    DEV_CONF_MAX,
 };
-}} // namespace ppl::nn
+
+}}} // namespace ppl::nn::arm
 
 #endif

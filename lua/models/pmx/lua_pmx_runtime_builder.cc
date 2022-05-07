@@ -25,7 +25,8 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace lua {
 
-void RegisterPmxRuntimeBuilder(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
+void RegisterPmxRuntimeBuilder(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule,
+                               const shared_ptr<LuaTable>& l_pmx_module) {
     auto runtime_class = LuaClass<LuaRuntime>(lmodule->Get("Runtime"));
     auto lclass = lstate->CreateClass<LuaPmxRuntimeBuilder>()
         .DefMember("InitFromFile",
@@ -60,7 +61,7 @@ void RegisterPmxRuntimeBuilder(const shared_ptr<LuaState>& lstate, const shared_
                    [](LuaPmxRuntimeBuilder* lbuilder, const char* output_file, const char* fmt) -> RetCode {
                        return lbuilder->ptr->Serialize(output_file, fmt);
                    });
-    lmodule->Set("PmxRuntimeBuilder", lclass);
+    l_pmx_module->Set("RuntimeBuilder", lclass);
 }
 
 }}}

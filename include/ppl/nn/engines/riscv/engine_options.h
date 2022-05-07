@@ -15,20 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_CUDA_ENGINE_OPTIONS_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_ENGINE_OPTIONS_H_
+#define _ST_HPC_PPL_NN_ENGINES_RISCV_ENGINE_OPTIONS_H_
 
 #include "ppl/nn/common/common.h"
-#include "ppl/nn/engines/cuda/cuda_options.h"
+#include "ppl/nn/engines/riscv/options.h"
 #include <stdint.h>
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace riscv {
 
-struct PPLNN_PUBLIC CudaEngineOptions final {
-    uint32_t device_id = 0;
-    uint32_t mm_policy = CUDA_MM_COMPACT;
+struct PPLNN_PUBLIC EngineOptions final {
+    uint32_t tune_param_flag = 0;
+    uint32_t forward_precision = 0;
+    uint32_t mm_policy = MM_COMPACT;
+    uint32_t dynamic_tuning_level = 0;
+    uint32_t winograd_level = WG_ON;
 };
 
-}} // namespace ppl::nn
+}}} // namespace ppl::nn::riscv
 
 #endif

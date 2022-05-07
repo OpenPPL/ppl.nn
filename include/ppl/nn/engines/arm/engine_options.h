@@ -15,15 +15,26 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/pmx/pmx_runtime_builder_factory.h"
-#include "ppl/nn/models/pmx/runtime_builder_impl.h"
-#include "ppl/nn/common/logger.h"
+#ifndef _ST_HPC_PPL_NN_ENGINES_ARM_ENGINE_OPTIONS_H_
+#define _ST_HPC_PPL_NN_ENGINES_ARM_ENGINE_OPTIONS_H_
 
-namespace ppl { namespace nn {
+#include "ppl/nn/common/common.h"
+#include "ppl/common/types.h"
+#include "ppl/nn/engines/arm/options.h"
+#include <stdint.h>
 
-PmxRuntimeBuilder* PmxRuntimeBuilderFactory::Create() {
-    LOG(WARNING) << "pmx format is under heavily developing and may change in the future. do not use it in production environment.";
-    return new pmx::RuntimeBuilderImpl();
-}
+namespace ppl { namespace nn { namespace arm {
 
-}} // namespace ppl::nn
+struct PPLNN_PUBLIC EngineOptions final {
+    uint32_t mm_policy = MM_COMPACT;
+    uint32_t forward_precision = ppl::common::DATATYPE_FLOAT32;
+    uint32_t graph_optimization_level = OPT_ENABLE_ALL;
+    uint32_t winograd_level = WG_ON;
+    uint32_t dynamic_tuning_level = TUNING_SELECT_ALGO;
+    // bind engine to speicified numa node, range [0, numa_max_node). other value will not bind.
+    int32_t numa_node_id = -1;
+};
+
+}}} // namespace ppl::nn::arm
+
+#endif

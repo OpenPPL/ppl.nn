@@ -15,26 +15,43 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_ONNX_RUNTIME_BUILDER_OPRIONS_H_
-#define _ST_HPC_PPL_NN_MODELS_ONNX_ONNX_RUNTIME_BUILDER_OPRIONS_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIONS_H_
+#define _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIONS_H_
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace riscv {
 
+/** @brief winograd level */
 enum {
-    /**
-       @brief mark a tensor as reserved in order to avoid reusing it duing inferencing
+    /** turn off winograd */
+    WG_OFF = 0,
 
-       @note example:
-       @code{.cpp}
-       const char* tensor_name;
-       runtime_builder->Configure(ORB_CONF_RESERVE_TENSOR, tensor_name);
-       @endcode
-    */
-    ORB_CONF_RESERVE_TENSOR = 0,
+    /** use winograd and select block size automatically */
+    WG_ON = 1,
 
-    ORB_CONF_MAX,
+    /** use winograd blk2 if possible */
+    WG_ON_B2 = 2,
+
+    /** use wingorad blk4 if possible */
+    WG_ON_B4 = 3,
+
+    /** use wingorad blk6 if possible */
+    WG_ON_B6 = 4,
 };
 
-}} // namespace ppl::nn
+/** @brief memory management policies */
+enum {
+    /** less memory usage, may cause performance loss */
+    MM_COMPACT = 0,
+
+    /** most recently used first, will use more memory */
+    MM_MRU = 1,
+};
+
+/** @brief options for riscv::DeviceContext::Configure() */
+enum {
+    DEV_CONF_MAX,
+};
+
+}}} // namespace ppl::nn::riscv
 
 #endif

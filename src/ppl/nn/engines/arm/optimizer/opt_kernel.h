@@ -27,7 +27,7 @@
 #include "ppl/nn/engines/arm/arm_device.h"
 #include "ppl/nn/engines/arm/arm_common_param.h"
 #include "ppl/nn/engines/arm/utils/macros.h"
-#include "ppl/nn/engines/arm/arm_engine_options.h"
+#include "ppl/nn/engines/arm/engine_options.h"
 
 namespace ppl { namespace nn { namespace utils {
 struct SharedResource;
@@ -42,7 +42,7 @@ struct OptKernelOptions final {
     ArmDevice* device = nullptr;
     RuntimePartitionInfo* info = nullptr;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors = nullptr;
-    ArmEngineOptions* engine_options = nullptr;
+    EngineOptions* engine_options = nullptr;
 };
 
 class ArmOptKernel : public OptKernel {

@@ -25,16 +25,16 @@ using namespace luacpp;
 namespace ppl { namespace nn { namespace lua {
 
 void RegisterRiscvEngineFactory(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
-    auto riscv_engine_class = LuaClass<LuaEngine>(lmodule->Get("RiscvEngine"));
-    auto lclass = lstate->CreateClass<RiscvEngineFactory>()
-        .DefStatic("Create", [riscv_engine_class, lstate](const RiscvEngineOptions* options) -> LuaObject {
-            auto engine = RiscvEngineFactory::Create(*options);
+    auto riscv_engine_class = LuaClass<LuaEngine>(lmodule->Get("Engine"));
+    auto lclass = lstate->CreateClass<riscv::EngineFactory>()
+        .DefStatic("Create", [riscv_engine_class, lstate](const riscv::EngineOptions* options) -> LuaObject {
+            auto engine = riscv::EngineFactory::Create(*options);
             if (!engine) {
                 return lstate->CreateNil();
             }
             return riscv_engine_class.CreateUserData(engine);
         });
-    lmodule->Set("RiscvEngineFactory", lclass);
+    lmodule->Set("EngineFactory", lclass);
 }
 
 }}}

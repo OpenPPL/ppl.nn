@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/riscv/runtime_riscv_device.h"
-#include "ppl/nn/engines/riscv/riscv_options.h"
+#include "ppl/nn/engines/riscv/options.h"
 #include "ppl/nn/engines/riscv/runtime_riscv_device.h"
 #include "ppl/nn/utils/stack_buffer_manager.h"
 #include "ppl/nn/utils/compact_buffer_manager.h"
@@ -32,11 +32,11 @@ static void DummyDeleter(ppl::common::Allocator*) {}
 
 RuntimeRiscvDevice::RuntimeRiscvDevice(uint64_t alignment, uint32_t mm_policy)
     : RiscvDevice(alignment), mm_policy_(mm_policy), tmp_buffer_size_(0) {
-    if (mm_policy == RISCV_MM_MRU) {
+    if (mm_policy == MM_MRU) {
         auto allocator_ptr = RiscvDevice::GetAllocator();
         allocator_ = std::shared_ptr<Allocator>(allocator_ptr, DummyDeleter);
         buffer_manager_.reset(new utils::StackBufferManager(allocator_ptr));
-    } else if (mm_policy == RISCV_MM_COMPACT) {
+    } else if (mm_policy == MM_COMPACT) {
         allocator_.reset(new utils::CpuBlockAllocator());
         buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment, 64u));
     }
@@ -52,7 +52,7 @@ RuntimeRiscvDevice::~RuntimeRiscvDevice() {
 }
 
 RetCode RuntimeRiscvDevice::AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
-    if (mm_policy_ == RISCV_MM_COMPACT) {
+    if (mm_policy_ == MM_COMPACT) {
         auto ret = buffer_manager_->Realloc(bytes, &shared_tmp_buffer_);
         if (RC_SUCCESS != ret) {
             return ret;
@@ -71,7 +71,7 @@ RetCode RuntimeRiscvDevice::AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
 }
 
 void RuntimeRiscvDevice::FreeTmpBuffer(BufferDesc* buffer) {
-    if (mm_policy_ == RISCV_MM_COMPACT) {
+    if (mm_policy_ == MM_COMPACT) {
         buffer_manager_->Free(&shared_tmp_buffer_);
     }
 }
@@ -79,8 +79,8 @@ void RuntimeRiscvDevice::FreeTmpBuffer(BufferDesc* buffer) {
 /* -------------------------------------------------------------------------- */
 
 RetCode RuntimeRiscvDevice::Configure(uint32_t option, ...) {
-    if (option >= RISCV_DEV_CONF_MAX) {
-        LOG(ERROR) << "invalid option[" << option << "] >= [" << RISCV_DEV_CONF_MAX << "]";
+    if (option >= DEV_CONF_MAX) {
+        LOG(ERROR) << "invalid option[" << option << "] >= [" << DEV_CONF_MAX << "]";
         return RC_INVALID_VALUE;
     }
 

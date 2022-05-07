@@ -16,7 +16,7 @@
 // under the License.
 
 #include "py_onnx_runtime_builder.h"
-#include "ppl/nn/models/onnx/onnx_runtime_builder_factory.h"
+#include "ppl/nn/models/onnx/runtime_builder_factory.h"
 #include "pybind11/pybind11.h"
 
 namespace ppl { namespace nn { namespace python {
@@ -24,12 +24,12 @@ namespace ppl { namespace nn { namespace python {
 class PyOnnxRuntimeBuilderFactory final {
 public:
     static PyOnnxRuntimeBuilder Create() {
-        return PyOnnxRuntimeBuilder(OnnxRuntimeBuilderFactory::Create());
+        return PyOnnxRuntimeBuilder(onnx::RuntimeBuilderFactory::Create());
     }
 };
 
 void RegisterOnnxRuntimeBuilderFactory(pybind11::module* m) {
-    pybind11::class_<PyOnnxRuntimeBuilderFactory>(*m, "OnnxRuntimeBuilderFactory")
+    pybind11::class_<PyOnnxRuntimeBuilderFactory>(*m, "RuntimeBuilderFactory")
         .def_static("Create", &PyOnnxRuntimeBuilderFactory::Create);
 }
 

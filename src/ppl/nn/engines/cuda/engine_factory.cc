@@ -20,9 +20,9 @@
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace cuda {
 
-Engine* CudaEngineFactory::Create(const CudaEngineOptions& options) {
+Engine* EngineFactory::Create(const EngineOptions& options) {
     auto engine = new cuda::CudaEngine();
     if (engine) {
         auto status = engine->Init(options);
@@ -35,4 +35,4 @@ Engine* CudaEngineFactory::Create(const CudaEngineOptions& options) {
     return engine;
 }
 
-}} // namespace ppl::nn
+}}} // namespace ppl::nn::cuda

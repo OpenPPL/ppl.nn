@@ -15,19 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_ENGINE_FACTORY_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_ENGINE_FACTORY_H_
+#ifndef _ST_HPC_PPL_NN_MODELS_PMX_RUNTIME_BUILDER_FACTORY_H_
+#define _ST_HPC_PPL_NN_MODELS_PMX_RUNTIME_BUILDER_FACTORY_H_
 
-#include "ppl/nn/engines/engine.h"
-#include "ppl/nn/engines/x86/engine_options.h"
+#include "ppl/nn/common/common.h"
+#include "ppl/nn/models/pmx/runtime_builder.h"
 
-namespace ppl { namespace nn { namespace x86 {
+namespace ppl { namespace nn { namespace pmx {
 
-class PPLNN_PUBLIC EngineFactory final {
+class PPLNN_PUBLIC RuntimeBuilderFactory final {
 public:
-    static Engine* Create(const EngineOptions&);
+    static RuntimeBuilder* Create();
 };
 
-}}} // namespace ppl::nn::x86
+}}} // namespace ppl::nn::pmx
 
 #endif

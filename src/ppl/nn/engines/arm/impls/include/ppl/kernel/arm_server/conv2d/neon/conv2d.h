@@ -24,7 +24,7 @@
 #include "ppl/common/allocator.h"
 #include "ppl/common/arm/sysinfo.h"
 #include "ppl/common/sys.h"
-#include "ppl/nn/engines/arm/arm_engine_options.h"
+#include "ppl/nn/engines/arm/engine_options.h"
 
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
@@ -96,10 +96,17 @@ public:
     static const conv2d_algo_t winograd_b4f3  = 7;
 };
 
-static inline const char* get_conv_algo_str(const conv2d_algo_t algo) {
-    static const char* algo_str[] = {
-        "unknown", "depthwise", "gemm", "tile_gemm",
-        "direct", "direct_ndarray", "winograd_b2f3", "winograd_b4f3",
+static inline const char *get_conv_algo_str(const conv2d_algo_t algo)
+{
+    static const char *algo_str[] = {
+        "unknown",
+        "depthwise",
+        "gemm",
+        "tile_gemm",
+        "direct",
+        "direct_ndarray",
+        "winograd_b2f3",
+        "winograd_b4f3",
     };
     return algo_str[algo];
 }
@@ -358,9 +365,9 @@ public:
 class conv2d_algo_selector {
 public:
     // algo selection is simple but fast. return the final algo manager.
-    static conv2d_offline_manager *fast_gen_algo(const ppl::nn::TensorShape &shape, const ppl::nn::ArmEngineOptions &options, const ppl::common::isa_t isa_flags, const conv2d_param &param, ppl::common::Allocator *allocator);
+    static conv2d_offline_manager *fast_gen_algo(const ppl::nn::TensorShape &shape, const ppl::nn::arm::EngineOptions &options, const ppl::common::isa_t isa_flags, const conv2d_param &param, ppl::common::Allocator *allocator);
     // run all possible algo & block size, select the best one and return the final algo manager.
-    static conv2d_offline_manager *gen_fast_algo(const ppl::nn::TensorShape &shape, const ppl::nn::ArmEngineOptions &options, const ppl::common::isa_t isa_flags, const conv2d_param &param, ppl::common::Allocator *allocator);
+    static conv2d_offline_manager *gen_fast_algo(const ppl::nn::TensorShape &shape, const ppl::nn::arm::EngineOptions &options, const ppl::common::isa_t isa_flags, const conv2d_param &param, ppl::common::Allocator *allocator);
 };
 
 }}}}; // namespace ppl::kernel::arm_server::neon

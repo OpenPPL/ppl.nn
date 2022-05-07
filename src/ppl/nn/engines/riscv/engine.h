@@ -18,7 +18,7 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_ENGINE_H_
 #define _ST_HPC_PPL_NN_ENGINES_RISCV_ENGINE_H_
 
-#include "ppl/nn/engines/riscv/riscv_engine_options.h"
+#include "ppl/nn/engines/riscv/engine_options.h"
 #include "ppl/nn/engines/engine_impl.h"
 #include "ppl/nn/utils/generic_cpu_device.h"
 #include "ppl/nn/engines/riscv/riscv_device.h"
@@ -31,7 +31,7 @@ namespace ppl { namespace nn { namespace riscv {
 class RiscvEngine final : public EngineImpl {
 public:
     RiscvEngine();
-    ppl::common::RetCode Init(const RiscvEngineOptions& options);
+    ppl::common::RetCode Init(const EngineOptions& options);
     ppl::common::RetCode Configure(uint32_t, ...) override;
     EngineContext* CreateEngineContext() override;
     bool Supports(const ir::Node*) const override;
@@ -56,7 +56,7 @@ private:
 
 private:
     RiscvDevice device_;
-    RiscvEngineOptions options_;
+    EngineOptions options_;
 };
 
 }}} // namespace ppl::nn::riscv

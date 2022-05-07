@@ -56,7 +56,7 @@ CudaEngine::~CudaEngine() {
 #endif
 }
 
-RetCode CudaEngine::Init(const CudaEngineOptions& options) {
+RetCode CudaEngine::Init(const EngineOptions& options) {
     options_ = options;
     return device_.Init(options);
 }
@@ -122,7 +122,7 @@ RetCode CudaEngine::ProcessGraph(const utils::SharedResource& resource, ir::Grap
 }
 
 EngineImpl* CudaEngine::Create() {
-    return static_cast<EngineImpl*>(CudaEngineFactory::Create(options_));
+    return static_cast<EngineImpl*>(EngineFactory::Create(options_));
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
@@ -335,19 +335,19 @@ RetCode CudaEngine::ImportAlgorithms(CudaEngine* engine, va_list args) {
 }
 
 CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
-    CudaEngine::SetOutputFormat, // CUDA_CONF_SET_OUTPUT_DATA_FORMAT
-    CudaEngine::SetOutputType, // CUDA_CONF_SET_OUTPUT_TYPE
-    CudaEngine::SetKernelType, // CUDA_CONF_USE_DEFAULT_KERNEL_TYPE
-    CudaEngine::SetInputDims, // CUDA_CONF_SET_INPUT_DIMS
-    CudaEngine::SetUseDefaultAlgorithms, // CUDA_CONF_USE_DEFAULT_ALGORITHMS
-    CudaEngine::SetQuantInfo, // CUDA_CONF_SET_QUANT_INFO
-    CudaEngine::ExportAlgorithms, // CUDA_CONF_EXPORT_ALGORITHMS
-    CudaEngine::ImportAlgorithms, // CUDA_CONF_IMPORT_ALGORITHMS
+    CudaEngine::SetOutputFormat, // ENGINE_CONF_SET_OUTPUT_DATA_FORMAT
+    CudaEngine::SetOutputType, // ENGINE_CONF_SET_OUTPUT_TYPE
+    CudaEngine::SetKernelType, // ENGINE_CONF_USE_DEFAULT_KERNEL_TYPE
+    CudaEngine::SetInputDims, // ENGINE_CONF_SET_INPUT_DIMS
+    CudaEngine::SetUseDefaultAlgorithms, // ENGINE_CONF_USE_DEFAULT_ALGORITHMS
+    CudaEngine::SetQuantInfo, // ENGINE_CONF_SET_QUANT_INFO
+    CudaEngine::ExportAlgorithms, // ENGINE_CONF_EXPORT_ALGORITHMS
+    CudaEngine::ImportAlgorithms, // ENGINE_CONF_IMPORT_ALGORITHMS
 };
 
 RetCode CudaEngine::Configure(uint32_t option, ...) {
-    if (option >= CUDA_CONF_MAX) {
-        LOG(ERROR) << "invalid option[" << option << "] >= [" << CUDA_CONF_MAX << "]";
+    if (option >= ENGINE_CONF_MAX) {
+        LOG(ERROR) << "invalid option[" << option << "] >= [" << ENGINE_CONF_MAX << "]";
         return RC_INVALID_VALUE;
     }
 

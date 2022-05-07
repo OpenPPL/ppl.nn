@@ -37,7 +37,7 @@ RiscvEngine::RiscvEngine() : EngineImpl("riscv"), device_(RISCV_DEFAULT_ALIGNMEN
     }
 }
 
-ppl::common::RetCode RiscvEngine::Init(const RiscvEngineOptions& options) {
+ppl::common::RetCode RiscvEngine::Init(const EngineOptions& options) {
     options_ = options;
     return ppl::common::RC_SUCCESS;
 };
@@ -134,7 +134,7 @@ RetCode RiscvEngine::ProcessGraph(const utils::SharedResource& resource, ir::Gra
 }
 
 EngineImpl* RiscvEngine::Create() {
-    return static_cast<EngineImpl*>(RiscvEngineFactory::Create(options_));
+    return static_cast<EngineImpl*>(EngineFactory::Create(options_));
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL

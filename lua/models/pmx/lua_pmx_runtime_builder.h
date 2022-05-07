@@ -18,14 +18,14 @@
 #ifndef _ST_HPC_PPL_NN_LUA_LUA_PMX_RUNTIME_BUILDER_H_
 #define _ST_HPC_PPL_NN_LUA_LUA_PMX_RUNTIME_BUILDER_H_
 
-#include "ppl/nn/models/pmx/pmx_runtime_builder.h"
+#include "ppl/nn/models/pmx/runtime_builder.h"
 #include <memory>
 
 namespace ppl { namespace nn { namespace lua {
 
 struct LuaPmxRuntimeBuilder final {
-    LuaPmxRuntimeBuilder(PmxRuntimeBuilder* b) : ptr(b) {}
-    std::unique_ptr<PmxRuntimeBuilder> ptr;
+    LuaPmxRuntimeBuilder(pmx::RuntimeBuilder* b) : ptr(b) {}
+    std::unique_ptr<pmx::RuntimeBuilder> ptr;
     std::vector<std::shared_ptr<Engine>> engines; // retian engines
 };
 

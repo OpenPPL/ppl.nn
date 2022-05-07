@@ -17,7 +17,7 @@
 
 #include "py_x86_engine.h"
 #include "ppl/common/retcode.h"
-#include "ppl/nn/engines/x86/x86_options.h"
+#include "ppl/nn/engines/x86/options.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 #include "ppl/nn/common/logger.h"
@@ -34,12 +34,12 @@ static RetCode GenericSetOption(Engine* engine, uint32_t option, const pybind11:
 typedef RetCode (*ConfigFunc)(Engine*, uint32_t option, const pybind11::args& args);
 
 static const map<uint32_t, ConfigFunc> g_opt2func = {
-    {X86_CONF_DISABLE_AVX512, GenericSetOption},
-    {X86_CONF_DISABLE_AVX_FMA3, GenericSetOption},
+    {x86::ENGINE_CONF_DISABLE_AVX512, GenericSetOption},
+    {x86::ENGINE_CONF_DISABLE_AVX_FMA3, GenericSetOption},
 };
 
 void RegisterX86Engine(pybind11::module* m) {
-    pybind11::class_<PyX86Engine, PyEngine>(*m, "X86Engine")
+    pybind11::class_<PyX86Engine, PyEngine>(*m, "Engine")
         .def("__bool__",
              [](const PyX86Engine& engine) -> bool {
                  return (engine.ptr.get());
@@ -54,8 +54,8 @@ void RegisterX86Engine(pybind11::module* m) {
                  return it->second(engine.ptr.get(), option, args);
              });
 
-    m->attr("X86_CONF_DISABLE_AVX512") = (uint32_t)X86_CONF_DISABLE_AVX512;
-    m->attr("X86_CONF_DISABLE_AVX_FMA3") = (uint32_t)X86_CONF_DISABLE_AVX_FMA3;
+    m->attr("ENGINE_CONF_DISABLE_AVX512") = (uint32_t)x86::ENGINE_CONF_DISABLE_AVX512;
+    m->attr("ENGINE_CONF_DISABLE_AVX_FMA3") = (uint32_t)x86::ENGINE_CONF_DISABLE_AVX_FMA3;
 }
 
 }}} // namespace ppl::nn::python

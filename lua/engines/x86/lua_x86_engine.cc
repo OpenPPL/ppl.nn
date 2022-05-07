@@ -16,7 +16,7 @@
 // under the License.
 
 #include "../lua_engine.h"
-#include "ppl/nn/engines/x86/x86_options.h"
+#include "ppl/nn/engines/x86/options.h"
 #include "ppl/nn/common/logger.h"
 #include "luacpp/luacpp.h"
 #include <map>
@@ -33,8 +33,8 @@ static RetCode GenericSetOption(Engine* engine, uint32_t option, const LuaObject
 typedef RetCode (*ConfigFunc)(Engine*, uint32_t option, const LuaObject& args);
 
 static const map<uint32_t, ConfigFunc> g_opt2func = {
-    {X86_CONF_DISABLE_AVX512, GenericSetOption},
-    {X86_CONF_DISABLE_AVX_FMA3, GenericSetOption},
+    {x86::ENGINE_CONF_DISABLE_AVX512, GenericSetOption},
+    {x86::ENGINE_CONF_DISABLE_AVX_FMA3, GenericSetOption},
 };
 
 void RegisterX86Engine(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
@@ -50,10 +50,10 @@ void RegisterX86Engine(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaT
             }
             return it->second(lengine->ptr.get(), option, args);
         });
-    lmodule->Set("X86Engine", lclass);
+    lmodule->Set("Engine", lclass);
 
-    lmodule->SetInteger("X86_CONF_DISABLE_AVX512", X86_CONF_DISABLE_AVX512);
-    lmodule->SetInteger("X86_CONF_DISABLE_AVX_FMA3", X86_CONF_DISABLE_AVX_FMA3);
+    lmodule->SetInteger("ENGINE_CONF_DISABLE_AVX512", x86::ENGINE_CONF_DISABLE_AVX512);
+    lmodule->SetInteger("ENGINE_CONF_DISABLE_AVX_FMA3", x86::ENGINE_CONF_DISABLE_AVX_FMA3);
 }
 
 }}}

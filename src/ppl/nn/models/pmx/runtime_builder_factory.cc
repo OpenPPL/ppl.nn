@@ -15,23 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_RISCV_ENGINE_OPTIONS_H_
-#define _ST_HPC_PPL_NN_ENGINES_RISCV_RISCV_ENGINE_OPTIONS_H_
+#include "ppl/nn/models/pmx/runtime_builder_factory.h"
+#include "ppl/nn/models/pmx/runtime_builder_impl.h"
+#include "ppl/nn/common/logger.h"
 
-#include "ppl/nn/common/common.h"
-#include "ppl/nn/engines/riscv/riscv_options.h"
-#include <stdint.h>
+namespace ppl { namespace nn { namespace pmx {
 
-namespace ppl { namespace nn {
+RuntimeBuilder* RuntimeBuilderFactory::Create() {
+    LOG(WARNING) << "pmx format is under heavily developing and may change in the future. do not use it in production "
+                    "environment.";
+    return new RuntimeBuilderImpl();
+}
 
-struct PPLNN_PUBLIC RiscvEngineOptions final {
-    uint32_t tune_param_flag = 0;
-    uint32_t forward_precision = 0;
-    uint32_t mm_policy = RISCV_MM_COMPACT;
-    uint32_t dynamic_tuning_level = 0;
-    uint32_t winograd_level = RISCV_WG_ON;
-};
-
-}} // namespace ppl::nn
-
-#endif
+}}} // namespace ppl::nn::pmx

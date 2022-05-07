@@ -36,11 +36,11 @@ using namespace std;
 #include "ppl/nn/runtime/runtime.h"
 
 #ifdef PPLNN_ENABLE_ONNX_MODEL
-#include "ppl/nn/models/onnx/onnx_runtime_builder_factory.h"
+#include "ppl/nn/models/onnx/runtime_builder_factory.h"
 #endif
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-#include "ppl/nn/models/pmx/pmx_runtime_builder_factory.h"
+#include "ppl/nn/models/pmx/runtime_builder_factory.h"
 #endif
 
 /* -------------------------------------------------------------------------- */
@@ -197,8 +197,8 @@ Define_string_opt("--import-algo-file", g_flag_import_algo_file, "",
 Define_string_opt("--quant-file", g_flag_quant_file, "", "a json file containing quantization information");
 
 #include "ppl/nn/engines/cuda/engine_factory.h"
-#include "ppl/nn/engines/cuda/cuda_options.h"
-#include "ppl/nn/engines/cuda/cuda_ops.h"
+#include "ppl/nn/engines/cuda/options.h"
+#include "ppl/nn/engines/cuda/ops.h"
 #include "ppl/nn/utils/array.h"
 
 static RetCode ReadFileContent(const char* fname, string* buf) {
@@ -219,22 +219,22 @@ static RetCode ReadFileContent(const char* fname, string* buf) {
 }
 
 static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
-    CudaEngineOptions options;
+    cuda::EngineOptions options;
     options.device_id = g_flag_device_id;
 
     if (g_flag_mm_policy == "perf") {
-        options.mm_policy = CUDA_MM_BEST_FIT;
+        options.mm_policy = cuda::MM_BEST_FIT;
     } else if (g_flag_mm_policy == "mem") {
-        options.mm_policy = CUDA_MM_COMPACT;
+        options.mm_policy = cuda::MM_COMPACT;
     }
 
-    ppl::nn::cuda::RegisterBuiltinOpImpls();
-    auto cuda_engine = CudaEngineFactory::Create(options);
+    cuda::RegisterBuiltinOpImpls();
+    auto cuda_engine = cuda::EngineFactory::Create(options);
     if (!cuda_engine) {
         return false;
     }
 
-    cuda_engine->Configure(ppl::nn::CUDA_CONF_USE_DEFAULT_ALGORITHMS, g_flag_quick_select);
+    cuda_engine->Configure(cuda::ENGINE_CONF_USE_DEFAULT_ALGORITHMS, g_flag_quick_select);
 
     if (!g_flag_kernel_type.empty()) {
         string kernel_type_str(g_flag_kernel_type);
@@ -249,7 +249,7 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
         }
 
         if (kernel_type != DATATYPE_UNKNOWN) {
-            cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_KERNEL_TYPE, kernel_type);
+            cuda_engine->Configure(cuda::ENGINE_CONF_SET_KERNEL_TYPE, kernel_type);
         } else {
             LOG(ERROR) << "invalid kernel type[" << g_flag_kernel_type << "]. valid values: int8/16/32/64,float16/32.";
         }
@@ -262,11 +262,11 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
             LOG(ERROR) << "read file[" << g_flag_quant_file << "] failed: " << GetRetCodeStr(status);
             return false;
         }
-        cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_QUANT_INFO, file_content.c_str());
+        cuda_engine->Configure(cuda::ENGINE_CONF_SET_QUANT_INFO, file_content.c_str());
     }
 
     if (!g_flag_export_algo_file.empty()) {
-        cuda_engine->Configure(ppl::nn::CUDA_CONF_EXPORT_ALGORITHMS, g_flag_export_algo_file.c_str());
+        cuda_engine->Configure(cuda::ENGINE_CONF_EXPORT_ALGORITHMS, g_flag_export_algo_file.c_str());
     }
 
     if (!g_flag_import_algo_file.empty()) {
@@ -281,7 +281,7 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
             ofs.close();
         }
 
-        cuda_engine->Configure(ppl::nn::CUDA_CONF_IMPORT_ALGORITHMS, g_flag_import_algo_file.c_str());
+        cuda_engine->Configure(cuda::ENGINE_CONF_IMPORT_ALGORITHMS, g_flag_import_algo_file.c_str());
     }
 
     // pass input shapes to cuda engine for further optimizations
@@ -298,7 +298,7 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
             arr.base = input_shapes[i].data();
             arr.size = input_shapes[i].size();
         }
-        cuda_engine->Configure(ppl::nn::CUDA_CONF_SET_INPUT_DIMS, dims.data(), dims.size());
+        cuda_engine->Configure(cuda::ENGINE_CONF_SET_INPUT_DIMS, dims.data(), dims.size());
     }
 
     engines->emplace_back(unique_ptr<Engine>(cuda_engine));
@@ -317,26 +317,26 @@ Define_bool_opt("--disable-avx-fma3", g_flag_disable_avx_fma3, false, "disable a
 Define_bool_opt("--core-binding", g_flag_core_binding, false, "core binding");
 
 #include "ppl/nn/engines/x86/engine_factory.h"
-#include "ppl/nn/engines/x86/x86_options.h"
-#include "ppl/nn/engines/x86/x86_ops.h"
+#include "ppl/nn/engines/x86/options.h"
+#include "ppl/nn/engines/x86/ops.h"
 #include "ppl/kernel/x86/common/threading_tools.h"
 
 static inline bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
-    X86EngineOptions options;
+    x86::EngineOptions options;
     if (g_flag_mm_policy == "perf") {
-        options.mm_policy = X86_MM_MRU;
+        options.mm_policy = x86::MM_MRU;
     } else if (g_flag_mm_policy == "mem") {
-        options.mm_policy = X86_MM_COMPACT;
+        options.mm_policy = x86::MM_COMPACT;
     }
 
-    ppl::nn::x86::RegisterBuiltinOpImpls();
-    auto x86_engine = X86EngineFactory::Create(options);
+    x86::RegisterBuiltinOpImpls();
+    auto x86_engine = x86::EngineFactory::Create(options);
 
     if (g_flag_disable_avx512) {
-        x86_engine->Configure(ppl::nn::X86_CONF_DISABLE_AVX512);
+        x86_engine->Configure(x86::ENGINE_CONF_DISABLE_AVX512);
     }
     if (g_flag_disable_avx_fma3) {
-        x86_engine->Configure(ppl::nn::X86_CONF_DISABLE_AVX_FMA3);
+        x86_engine->Configure(x86::ENGINE_CONF_DISABLE_AVX_FMA3);
     }
     if (g_flag_core_binding) {
         ppl::kernel::x86::set_omp_core_binding(nullptr, 0, 1);
@@ -360,18 +360,18 @@ Define_int32_opt(
 Define_int32_opt("--tuning-level", g_flag_tuning_level, 0, "select conv algo dynamic tuning level[0-1]. 0: off. 1: on");
 
 #include "ppl/nn/engines/riscv/engine_factory.h"
-#include "ppl/nn/engines/riscv/riscv_options.h"
-#include "ppl/nn/engines/riscv/riscv_ops.h"
-#include "ppl/nn/engines/riscv/riscv_engine_options.h"
+#include "ppl/nn/engines/riscv/options.h"
+#include "ppl/nn/engines/riscv/ops.h"
+#include "ppl/nn/engines/riscv/engine_options.h"
 
 static inline bool RegisterRiscvEngine(vector<unique_ptr<Engine>>* engines) {
-    RiscvEngineOptions options;
+    riscv::EngineOptions options;
     options.tune_param_flag = false;
 
     if (g_flag_mm_policy == "perf") {
-        options.mm_policy = RISCV_MM_MRU;
+        options.mm_policy = riscv::MM_MRU;
     } else if (g_flag_mm_policy == "mem") {
-        options.mm_policy = RISCV_MM_COMPACT;
+        options.mm_policy = riscv::MM_COMPACT;
     }
 
     if (g_flag_use_fp16) {
@@ -382,8 +382,8 @@ static inline bool RegisterRiscvEngine(vector<unique_ptr<Engine>>* engines) {
     options.dynamic_tuning_level = g_flag_tuning_level;
     options.winograd_level = g_flag_wg_level;
 
-    ppl::nn::riscv::RegisterBuiltinOpImpls();
-    auto riscv_engine = RiscvEngineFactory::Create(options);
+    riscv::RegisterBuiltinOpImpls();
+    auto riscv_engine = riscv::EngineFactory::Create(options);
     // configure engine
     engines->emplace_back(unique_ptr<Engine>(riscv_engine));
     LOG(INFO) << "***** register RiscvEngine *****";
@@ -404,28 +404,28 @@ Define_int32_opt("--numa-node-id", g_flag_numa_node_id, -1,
                  "bind arm engine to specified numa node, range [0, numa_max_node), -1 means not bind");
 
 #include "ppl/nn/engines/arm/engine_factory.h"
-#include "ppl/nn/engines/arm/arm_ops.h"
+#include "ppl/nn/engines/arm/ops.h"
 
 static inline bool RegisterArmEngine(vector<unique_ptr<Engine>>* engines) {
-    ArmEngineOptions options;
+    arm::EngineOptions options;
     if (g_flag_mm_policy == "perf") {
-        options.mm_policy = ARM_MM_MRU;
+        options.mm_policy = arm::MM_MRU;
     } else if (g_flag_mm_policy == "mem") {
-        options.mm_policy = ARM_MM_COMPACT;
+        options.mm_policy = arm::MM_COMPACT;
     }
 
     if (g_flag_use_fp16) {
-        options.forward_precision = ppl::common::DATATYPE_FLOAT16;
+        options.forward_precision = DATATYPE_FLOAT16;
     } else {
-        options.forward_precision = ppl::common::DATATYPE_FLOAT32;
+        options.forward_precision = DATATYPE_FLOAT32;
     }
-    options.graph_optimization_level = ARM_OPT_ENABLE_ALL;
+    options.graph_optimization_level = arm::OPT_ENABLE_ALL;
     options.winograd_level = g_flag_wg_level;
     options.dynamic_tuning_level = g_flag_tuning_level;
     options.numa_node_id = g_flag_numa_node_id;
 
-    ppl::nn::arm::RegisterBuiltinOpImpls();
-    auto arm_engine = ArmEngineFactory::Create(options);
+    arm::RegisterBuiltinOpImpls();
+    auto arm_engine = arm::EngineFactory::Create(options);
     // configure engine
     engines->emplace_back(unique_ptr<Engine>(arm_engine));
     LOG(INFO) << "***** register ArmEngine *****";
@@ -1110,7 +1110,7 @@ int main(int argc, char* argv[]) {
         for (uint32_t i = 0; i < engines.size(); ++i) {
             engine_ptrs[i] = engines[i].get();
         }
-        auto builder = unique_ptr<OnnxRuntimeBuilder>(OnnxRuntimeBuilderFactory::Create());
+        auto builder = unique_ptr<onnx::RuntimeBuilder>(onnx::RuntimeBuilderFactory::Create());
         if (!builder) {
             LOG(ERROR) << "create RuntimeBuilder failed.";
             return -1;
@@ -1148,7 +1148,7 @@ int main(int argc, char* argv[]) {
         for (uint32_t i = 0; i < engines.size(); ++i) {
             engine_ptrs[i] = engines[i].get();
         }
-        auto builder = unique_ptr<PmxRuntimeBuilder>(PmxRuntimeBuilderFactory::Create());
+        auto builder = unique_ptr<pmx::RuntimeBuilder>(pmx::RuntimeBuilderFactory::Create());
         if (!builder) {
             LOG(ERROR) << "create PmxRuntimeBuilder failed.";
             return -1;

@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/x86/x86_options.h"
+#include "ppl/nn/engines/x86/options.h"
 #include "ppl/nn/engines/x86/runtime_x86_device.h"
 #include "ppl/nn/utils/stack_buffer_manager.h"
 #include "ppl/nn/utils/compact_buffer_manager.h"
@@ -31,11 +31,11 @@ static void DummyDeleter(ppl::common::Allocator*) {}
 
 RuntimeX86Device::RuntimeX86Device(uint64_t alignment, isa_t isa, uint32_t mm_policy)
     : X86Device(alignment, isa), mm_policy_(mm_policy), tmp_buffer_size_(0) {
-    if (mm_policy_ == X86_MM_MRU) {
+    if (mm_policy_ == MM_MRU) {
         auto allocator_ptr = X86Device::GetAllocator();
         allocator_ = std::shared_ptr<Allocator>(allocator_ptr, DummyDeleter);
         buffer_manager_.reset(new utils::StackBufferManager(allocator_ptr));
-    } else if (mm_policy_ == X86_MM_COMPACT) {
+    } else if (mm_policy_ == MM_COMPACT) {
         allocator_.reset(new utils::CpuBlockAllocator());
         buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment, 64u));
     }
@@ -51,7 +51,7 @@ RuntimeX86Device::~RuntimeX86Device() {
 }
 
 RetCode RuntimeX86Device::AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
-    if (mm_policy_ == X86_MM_COMPACT) {
+    if (mm_policy_ == MM_COMPACT) {
         auto ret = buffer_manager_->Realloc(bytes, &shared_tmp_buffer_);
         if (RC_SUCCESS != ret) {
             return ret;
@@ -70,7 +70,7 @@ RetCode RuntimeX86Device::AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
 }
 
 void RuntimeX86Device::FreeTmpBuffer(BufferDesc* buffer) {
-    if (mm_policy_ == X86_MM_COMPACT) {
+    if (mm_policy_ == MM_COMPACT) {
         buffer_manager_->Free(&shared_tmp_buffer_);
     }
 }
@@ -82,12 +82,12 @@ RetCode RuntimeX86Device::DoMemDefrag(RuntimeX86Device* dev, va_list) {
 }
 
 RuntimeX86Device::ConfHandlerFunc RuntimeX86Device::conf_handlers_[] = {
-    DoMemDefrag, // X86_DEV_CONF_MEM_DEFRAG
+    DoMemDefrag, // DEV_CONF_MEM_DEFRAG
 };
 
 RetCode RuntimeX86Device::Configure(uint32_t option, ...) {
-    if (option >= X86_DEV_CONF_MAX) {
-        LOG(ERROR) << "invalid option[" << option << "] >= [" << X86_DEV_CONF_MAX << "]";
+    if (option >= DEV_CONF_MAX) {
+        LOG(ERROR) << "invalid option[" << option << "] >= [" << DEV_CONF_MAX << "]";
         return RC_INVALID_VALUE;
     }
 

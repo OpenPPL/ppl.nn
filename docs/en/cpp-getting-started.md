@@ -1,43 +1,45 @@
 This section shows how to use `PPLNN` step by step with an example [api_intro.cc](../../samples/cpp/api/api_intro.cc). Refer to [API Reference](cpp-api-reference.md) for more details.
 
+For brevity, we assume that `using namespace ppl::nn;` is always used in the following code snippets.
+
 ### Creating engines
 
-In `PPLNN`, an `Engine` is a collection of op implementations running on specified devices such as CPU or NVIDIA GPU. For example, we can use the built-in `X86EngineFactory`:
+In `PPLNN`, an `Engine` is a collection of op implementations running on specified devices such as CPU or NVIDIA GPU. For example, we can use the built-in `x86::EngineFactory`:
 
 ```c++
-Engine* X86EngineFactory::Create(const X86EngineOptions&);
+Engine* x86::EngineFactory::Create(const x86::EngineOptions&);
 ```
 
 to create an engine which runs on x86-compatible CPUs:
 
 ```c++
-X86EngineOptions x86_options;
-Engine* x86_engine = X86EngineFactory::Create(x86_options);
+x86::EngineOptions x86_options;
+Engine* x86_engine = x86::EngineFactory::Create(x86_options);
 ```
 
 Or use
 
 ```c++
-CudaEngineOptions cuda_options;
+cuda::EngineOptions cuda_options;
 // ... set options
-Engine* CudaEngineFactory::Create(cuda_options);
+Engine* cuda::EngineFactory::Create(cuda_options);
 ```
 
 to create an engine running on NVIDIA GPUs.
 
 ### Registering Built-in Op Implementations(optional)
 
-For example, use `ppl::nn::x86::RegisterBuiltinOpImpls()` to load built-in op implementations.
+For example, use `x86::RegisterBuiltinOpImpls()` to load built-in op implementations. You may also need to call `cuda::RegisterBuiltinOpImpls()` for cuda engine, etc.
 
-### Creating an OnnxRuntimeBuilder
+### Creating an ONNX RuntimeBuilder
 
-We can create an `OnnxRuntimeBuilder` with the following function:
+We can create an `onnx::RuntimeBuilder` with the following function:
 
 ```c++
-OnnxRuntimeBuilder* OnnxRuntimeBuilderFactory::Create();
+onnx::RuntimeBuilder* onnx::RuntimeBuilderFactory::Create();
 ```
 
-Then Initializes that `OnnxRuntimeBuilder` instance by one of
+Then Initializes that `onnx::RuntimeBuilder` instance by one of
 
 ```c++
 ppl::common::RetCode Init(const char* model_file, Engine** engine_ptrs, uint32_t engine_num);
@@ -56,8 +58,8 @@ Note that the caller **MUST** guarantee that elements of `engine_ptrs` are valid
 `PPLNN` also supports multiple engines running in the same model. For example:
 
 ```c++
-Engine* x86_engine = X86EngineFactory::Create(X86EngineOptions());
-Engine* cuda_engine = CudaEngineFactory::Create(CudaEngineOptions());
+Engine* x86_engine = x86::EngineFactory::Create(x86::EngineOptions());
+Engine* cuda_engine = cuda::EngineFactory::Create(cuda::EngineOptions());
 
 vector<unique_ptr<Engine>> engines;
 engines.emplace_back(unique_ptr<Engine>(x86_engine));
@@ -67,7 +69,7 @@ engines.emplace_back(unique_ptr<Engine>(cuda_engine));
 const char* model_file = "/path/to/onnx/model";
 // use x86 and cuda engines to run this model
 vector<Engine*> engine_ptrs = {x86_engine, cuda_engine};
-auto builder = OnnxRuntimeBuilderFactory::Create();
+auto builder = onnx::RuntimeBuilderFactory::Create();
 status = builder->Init(model_file, engine_ptrs.data(), engine_ptrs.size());
 ...
 ```

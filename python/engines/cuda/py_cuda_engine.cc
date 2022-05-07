@@ -22,7 +22,7 @@
 #include "pybind11/stl.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/utils/array.h"
-#include "ppl/nn/engines/cuda/cuda_options.h"
+#include "ppl/nn/engines/cuda/options.h"
 using namespace ppl::common;
 
 #include <map>
@@ -100,16 +100,16 @@ static RetCode SetQuantInfo(Engine* engine, uint32_t option, const pybind11::arg
 typedef RetCode (*ConfigFunc)(Engine*, uint32_t option, const pybind11::args& args);
 
 static const map<uint32_t, ConfigFunc> g_opt2func = {
-    {CUDA_CONF_USE_DEFAULT_ALGORITHMS, GenericSetOption},
-    {CUDA_CONF_SET_INPUT_DIMS, SetInputDims},
-    {CUDA_CONF_IMPORT_ALGORITHMS, ImportAlgorithms},
-    {CUDA_CONF_EXPORT_ALGORITHMS, ExportAlgorithms},
-    {CUDA_CONF_SET_KERNEL_TYPE, SetKernelType},
-    {CUDA_CONF_SET_QUANT_INFO, SetQuantInfo},
+    {cuda::ENGINE_CONF_USE_DEFAULT_ALGORITHMS, GenericSetOption},
+    {cuda::ENGINE_CONF_SET_INPUT_DIMS, SetInputDims},
+    {cuda::ENGINE_CONF_IMPORT_ALGORITHMS, ImportAlgorithms},
+    {cuda::ENGINE_CONF_EXPORT_ALGORITHMS, ExportAlgorithms},
+    {cuda::ENGINE_CONF_SET_KERNEL_TYPE, SetKernelType},
+    {cuda::ENGINE_CONF_SET_QUANT_INFO, SetQuantInfo},
 };
 
 void RegisterCudaEngine(pybind11::module* m) {
-    pybind11::class_<PyCudaEngine, PyEngine>(*m, "CudaEngine")
+    pybind11::class_<PyCudaEngine, PyEngine>(*m, "Engine")
         .def("__bool__",
              [](const PyCudaEngine& engine) -> bool {
                  return (engine.ptr.get());
@@ -124,12 +124,12 @@ void RegisterCudaEngine(pybind11::module* m) {
                  return it->second(engine.ptr.get(), option, args);
              });
 
-    m->attr("CUDA_CONF_USE_DEFAULT_ALGORITHMS") = (uint32_t)CUDA_CONF_USE_DEFAULT_ALGORITHMS;
-    m->attr("CUDA_CONF_SET_INPUT_DIMS") = (uint32_t)CUDA_CONF_SET_INPUT_DIMS;
-    m->attr("CUDA_CONF_IMPORT_ALGORITHMS") = (uint32_t)CUDA_CONF_IMPORT_ALGORITHMS;
-    m->attr("CUDA_CONF_EXPORT_ALGORITHMS") = (uint32_t)CUDA_CONF_EXPORT_ALGORITHMS;
-    m->attr("CUDA_CONF_SET_KERNEL_TYPE") = (uint32_t)CUDA_CONF_SET_KERNEL_TYPE;
-    m->attr("CUDA_CONF_SET_QUANT_INFO") = (uint32_t)CUDA_CONF_SET_QUANT_INFO;
+    m->attr("ENGINE_CONF_USE_DEFAULT_ALGORITHMS") = (uint32_t)cuda::ENGINE_CONF_USE_DEFAULT_ALGORITHMS;
+    m->attr("ENGINE_CONF_SET_INPUT_DIMS") = (uint32_t)cuda::ENGINE_CONF_SET_INPUT_DIMS;
+    m->attr("ENGINE_CONF_IMPORT_ALGORITHMS") = (uint32_t)cuda::ENGINE_CONF_IMPORT_ALGORITHMS;
+    m->attr("ENGINE_CONF_EXPORT_ALGORITHMS") = (uint32_t)cuda::ENGINE_CONF_EXPORT_ALGORITHMS;
+    m->attr("ENGINE_CONF_SET_KERNEL_TYPE") = (uint32_t)cuda::ENGINE_CONF_SET_KERNEL_TYPE;
+    m->attr("ENGINE_CONF_SET_QUANT_INFO") = (uint32_t)cuda::ENGINE_CONF_SET_QUANT_INFO;
 }
 
 }}} // namespace ppl::nn::python

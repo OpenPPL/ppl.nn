@@ -25,7 +25,8 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace lua {
 
-void RegisterOnnxRuntimeBuilder(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
+void RegisterOnnxRuntimeBuilder(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule,
+                                const shared_ptr<LuaTable>& l_onnx_module) {
     auto runtime_class = LuaClass<LuaRuntime>(lmodule->Get("Runtime"));
     auto lclass = lstate->CreateClass<LuaOnnxRuntimeBuilder>()
         .DefMember("InitFromFile",
@@ -60,7 +61,7 @@ void RegisterOnnxRuntimeBuilder(const shared_ptr<LuaState>& lstate, const shared
                    [](LuaOnnxRuntimeBuilder* lbuilder, const char* output_file, const char* fmt) -> RetCode {
                        return lbuilder->ptr->Serialize(output_file, fmt);
                    });
-    lmodule->Set("OnnxRuntimeBuilder", lclass);
+    l_onnx_module->Set("RuntimeBuilder", lclass);
 }
 
 }}}

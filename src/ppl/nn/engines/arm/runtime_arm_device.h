@@ -19,7 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_ARM_RUNTIME_ARM_DEVICE_H_
 
 #include "ppl/nn/engines/arm/arm_device.h"
-#include "ppl/nn/engines/arm/arm_options.h"
+#include "ppl/nn/engines/arm/options.h"
 #include "ppl/nn/utils/buffer_manager.h"
 #include "ppl/common/allocator.h"
 #include <memory>
@@ -60,7 +60,7 @@ public:
     static ppl::common::RetCode DoMemDefrag(RuntimeArmDevice*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(RuntimeArmDevice*, va_list);
-    static ConfHandlerFunc conf_handlers_[ARM_DEV_CONF_MAX];
+    static ConfHandlerFunc conf_handlers_[DEV_CONF_MAX];
 
     ppl::common::RetCode Configure(uint32_t, ...) override;
 

@@ -25,7 +25,7 @@
 #include <random>
 
 #include "ppl/nn/engines/cuda/data_converter.h"
-#include "ppl/nn/engines/cuda/cuda_engine_options.h"
+#include "ppl/nn/engines/cuda/engine_options.h"
 
 namespace ppl { namespace nn { namespace cuda {
 

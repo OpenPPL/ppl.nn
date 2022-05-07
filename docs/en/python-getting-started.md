@@ -9,18 +9,18 @@ from pyppl import common as pplcommon
 
 ### Creating Engines
 
-In `PPLNN`, an `Engine` is a collection of op implementations running on specified devices such as CPU or NVIDIA GPU. For example, we can use the built-in `X86EngineFactory`:
+In `PPLNN`, an `Engine` is a collection of op implementations running on specified devices such as CPU or NVIDIA GPU. For example, we can use the built-in `x86.EngineFactory`:
 
 ```python
-x86_options = pplnn.X86EngineOptions()
-x86_engine = pplnn.X86EngineFactory.Create(x86_options)
+x86_options = pplnn.x86.EngineOptions()
+x86_engine = pplnn.x86EngineFactory.Create(x86_options)
 ```
 
 to create an engine running on x86-compatible CPUs, or use
 
 ```python
-cuda_options = pplnn.CudaEngineOptions()
-cuda_engine = pplnn.CudaEngineFactory.Create(cuda_options)
+cuda_options = pplnn.cuda.EngineOptions()
+cuda_engine = pplnn.cuda.EngineFactory.Create(cuda_options)
 ```
 
 to create an engine running on NVIDIA GPUs.
@@ -30,10 +30,10 @@ to create an engine running on NVIDIA GPUs.
 Use
 
 ```python
-runtime_builder = pplnn.OnnxRuntimeBuilderFactory.Create()
+runtime_builder = pplnn.onnx.RuntimeBuilderFactory.Create()
 ```
 
-to create a `OnnxRuntimeBuilder`, which is used for creating `Runtime` instances.
+to create a `onnx.RuntimeBuilder`, which is used for creating `Runtime` instances.
 
 ### Creating a Runtime Instance
 
@@ -43,7 +43,7 @@ engines = [x86_engine] # or engines = [cuda_engine]
 status = runtime_builder.InitFromFile(onnx_model_file, engines)
 ```
 
-initializes the `OnnxRuntimeBuilder` instance.
+initializes the `onnx.RuntimeBuilder` instance.
 
 `PPLNN` also supports multiple engines running in the same model. For example:
 

@@ -19,15 +19,15 @@
 #define _ST_HPC_PPL_NN_PYTHON_PY_PMX_RUNTIME_BUILDER_H_
 
 #include "ppl/nn/engines/engine.h"
-#include "ppl/nn/models/pmx/pmx_runtime_builder.h"
+#include "ppl/nn/models/pmx/runtime_builder.h"
 #include <vector>
 #include <memory>
 
 namespace ppl { namespace nn { namespace python {
 
 struct PyPmxRuntimeBuilder final {
-    PyPmxRuntimeBuilder(PmxRuntimeBuilder* b) : ptr(b) {}
-    std::unique_ptr<PmxRuntimeBuilder> ptr;
+    PyPmxRuntimeBuilder(pmx::RuntimeBuilder* b) : ptr(b) {}
+    std::unique_ptr<pmx::RuntimeBuilder> ptr;
     std::vector<std::shared_ptr<Engine>> engines; // retain engines
 };
 

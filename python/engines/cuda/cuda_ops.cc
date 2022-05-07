@@ -15,12 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/cuda_ops.h"
+#include "ppl/nn/engines/cuda/ops.h"
 
 namespace ppl { namespace nn { namespace python {
 
 void RegisterCudaBuiltinOpImpls() {
-    ppl::nn::cuda::RegisterBuiltinOpImpls();
+    cuda::RegisterBuiltinOpImpls();
 }
 
 }}}

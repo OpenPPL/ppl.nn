@@ -15,12 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/x86/x86_ops.h"
+#include "ppl/nn/engines/x86/ops.h"
 
 namespace ppl { namespace nn { namespace lua {
 
 void RegisterX86BuiltinOpImpls() {
-    ppl::nn::x86::RegisterBuiltinOpImpls();
+    x86::RegisterBuiltinOpImpls();
 }
 
 }}}

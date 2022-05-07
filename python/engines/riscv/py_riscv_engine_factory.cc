@@ -23,13 +23,13 @@ namespace ppl { namespace nn { namespace python {
 
 class PyRiscvEngineFactory final {
 public:
-    static PyRiscvEngine Create(const RiscvEngineOptions& options) {
-        return PyRiscvEngine(RiscvEngineFactory::Create(options));
+    static PyRiscvEngine Create(const riscv::EngineOptions& options) {
+        return PyRiscvEngine(riscv::EngineFactory::Create(options));
     }
 };
 
 void RegisterRiscvEngineFactory(pybind11::module* m) {
-    pybind11::class_<PyRiscvEngineFactory>(*m, "RiscvEngineFactory")
+    pybind11::class_<PyRiscvEngineFactory>(*m, "EngineFactory")
         .def_static("Create", &PyRiscvEngineFactory::Create);
 }
 

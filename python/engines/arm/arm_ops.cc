@@ -15,12 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/arm/arm_ops.h"
+#include "ppl/nn/engines/arm/ops.h"
 
 namespace ppl { namespace nn { namespace python {
 
 void RegisterArmBuiltinOpImpls() {
-    ppl::nn::arm::RegisterBuiltinOpImpls();
+    arm::RegisterBuiltinOpImpls();
 }
 
 }}}

@@ -15,18 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_ONNX_RUNTIME_BUILDER_H_
-#define _ST_HPC_PPL_NN_MODELS_ONNX_ONNX_RUNTIME_BUILDER_H_
+#ifndef _ST_HPC_PPL_NN_MODELS_PMX_RUNTIME_BUILDER_H_
+#define _ST_HPC_PPL_NN_MODELS_PMX_RUNTIME_BUILDER_H_
 
 #include "ppl/nn/common/common.h"
 #include "ppl/nn/engines/engine.h"
 #include "ppl/nn/runtime/runtime.h"
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace pmx {
 
-class PPLNN_PUBLIC OnnxRuntimeBuilder {
+class PPLNN_PUBLIC RuntimeBuilder {
 public:
-    virtual ~OnnxRuntimeBuilder() {}
+    virtual ~RuntimeBuilder() {}
 
     /**
        @brief init from a model file
@@ -38,13 +38,12 @@ public:
     /**
        @brief init from a model buffer
        @param engines used to process this model
-       @param model_file_dir used to parse external data. can be nullptr if no external data.
        @note engines are managed by the caller
     */
-    virtual ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num,
-                                      const char* model_file_dir = nullptr) = 0;
+    virtual ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines,
+                                      uint32_t engine_num) = 0;
 
-    virtual ppl::common::RetCode Configure(uint32_t, ...) = 0;
+    virtual ppl::common::RetCode Configure(uint32_t option, ...) = 0;
 
     virtual ppl::common::RetCode Preprocess() = 0;
 
@@ -58,6 +57,6 @@ public:
     virtual ppl::common::RetCode Serialize(const char* output_file, const char* fmt) const = 0;
 };
 
-}} // namespace ppl::nn
+}}} // namespace ppl::nn::pmx
 
 #endif

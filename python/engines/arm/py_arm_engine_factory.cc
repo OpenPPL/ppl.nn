@@ -23,13 +23,13 @@ namespace ppl { namespace nn { namespace python {
 
 class PyArmEngineFactory final {
 public:
-    static PyArmEngine Create(const ArmEngineOptions& options) {
-        return PyArmEngine(ArmEngineFactory::Create(options));
+    static PyArmEngine Create(const arm::EngineOptions& options) {
+        return PyArmEngine(arm::EngineFactory::Create(options));
     }
 };
 
 void RegisterArmEngineFactory(pybind11::module* m) {
-    pybind11::class_<PyArmEngineFactory>(*m, "ArmEngineFactory")
+    pybind11::class_<PyArmEngineFactory>(*m, "EngineFactory")
         .def_static("Create", &PyArmEngineFactory::Create);
 }
 
