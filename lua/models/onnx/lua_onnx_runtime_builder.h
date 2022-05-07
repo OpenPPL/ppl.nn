@@ -18,14 +18,14 @@
 #ifndef _ST_HPC_PPL_NN_LUA_LUA_ONNX_RUNTIME_BUILDER_H_
 #define _ST_HPC_PPL_NN_LUA_LUA_ONNX_RUNTIME_BUILDER_H_
 
-#include "ppl/nn/models/onnx/onnx_runtime_builder.h"
+#include "ppl/nn/models/onnx/runtime_builder.h"
 #include <memory>
 
 namespace ppl { namespace nn { namespace lua {
 
 struct LuaOnnxRuntimeBuilder final {
-    LuaOnnxRuntimeBuilder(OnnxRuntimeBuilder* b) : ptr(b) {}
-    std::unique_ptr<OnnxRuntimeBuilder> ptr;
+    LuaOnnxRuntimeBuilder(onnx::RuntimeBuilder* b) : ptr(b) {}
+    std::unique_ptr<onnx::RuntimeBuilder> ptr;
     std::vector<std::shared_ptr<Engine>> engines; // retian engines
 };
 

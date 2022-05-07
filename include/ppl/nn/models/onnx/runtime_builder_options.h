@@ -15,25 +15,26 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_ARM_ARM_ENGINE_OPTIONS_H_
-#define _ST_HPC_PPL_NN_ENGINES_ARM_ARM_ENGINE_OPTIONS_H_
+#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_RUNTIME_BUILDER_OPRIONS_H_
+#define _ST_HPC_PPL_NN_MODELS_ONNX_RUNTIME_BUILDER_OPRIONS_H_
 
-#include "ppl/nn/common/common.h"
-#include "ppl/common/types.h"
-#include "ppl/nn/engines/arm/arm_options.h"
-#include <stdint.h>
+namespace ppl { namespace nn { namespace onnx {
 
-namespace ppl { namespace nn {
+enum {
+    /**
+       @brief mark a tensor as reserved in order to avoid reusing it duing inferencing
 
-struct PPLNN_PUBLIC ArmEngineOptions final {
-    uint32_t mm_policy = ARM_MM_COMPACT;
-    uint32_t forward_precision = ppl::common::DATATYPE_FLOAT32;
-    uint32_t graph_optimization_level = ARM_OPT_ENABLE_ALL;
-    uint32_t winograd_level = ARM_WG_ON;
-    uint32_t dynamic_tuning_level = ARM_TUNING_SELECT_ALGO;
-    int32_t  numa_node_id = -1; // bind engine to speicified numa node, range [0, numa_max_node). other value will not bind.
+       @note example:
+       @code{.cpp}
+       const char* tensor_name;
+       runtime_builder->Configure(ORB_CONF_RESERVE_TENSOR, tensor_name);
+       @endcode
+    */
+    ORB_CONF_RESERVE_TENSOR = 0,
+
+    ORB_CONF_MAX,
 };
 
-}} // namespace ppl::nn
+}}} // namespace ppl::nn::onnx
 
 #endif

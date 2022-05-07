@@ -78,21 +78,21 @@ Tensor::SetBfferPtr(addr)
 
 Sets the tensor buffer area to `addr` which is an integer and can be casted to `void*`. Note that `addr` can be read/written by internal `Device` class.
 
-### OnnxRuntimeBuilderFactory
+### onnx.RuntimeBuilderFactory
 
 ```python
-runtime_builder = OnnxRuntimeBuilderFactory.Create()
+runtime_builder = onnx.RuntimeBuilderFactory.Create()
 ```
 
-creates an `OnnxRuntimeBuilder` instance.
+creates an `onnx.RuntimeBuilder` instance.
 
-### OnnxRuntimeBuilder
+### onnx.RuntimeBuilder
 
 ```python
 status = runtime_builder.InitFromFile(onnx_model_file, engines)
 ```
 
-Initializes an `OnnxRuntimeBuilder` instance from an ONNX model. `engines` is a list of `Engine` instances that may be used to evaluate the model.
+Initializes an `onnx.RuntimeBuilder` instance from an ONNX model. `engines` is a list of `Engine` instances that may be used to evaluate the model.
 
 ```python
 status = runtime_builder.Preprocess()
@@ -152,13 +152,13 @@ Returns the `DeviceContext` at position `idx`. Note that `idx` should be less th
 
 ## Device Specific APIs in `pyppl.nn`
 
-### X86
+### x86
 
-#### X86EngineFactory
+#### EngineFactory
 
 ```python
-x86_options = X86EngineOptions()
-x86_engine = X86EngineFactory::Create(x86_options)
+x86_options = x86.EngineOptions()
+x86_engine = x86.EngineFactory.Create(x86_options)
 ```
 
 Creates an `Engine` instance running on x86-64 compatiable CPUs.
@@ -167,19 +167,19 @@ Creates an `Engine` instance running on x86-64 compatiable CPUs.
 ret_code = x86_engine.Configure(option, <optional parameters>)
 ```
 
-Configures `x86_engine`. Refer to [x86_options.h](../../include/ppl/nn/engines/x86/x86_options.h) for available options.
+Configures `x86_engine`. Refer to [options.h](../../include/ppl/nn/engines/x86/options.h) of X86 for available options.
 
 ### CUDA
 
-#### CudaEngineOptions
+#### EngineOptions
 
-Refer to [cuda_engine_options.h](../../include/ppl/nn/engines/cuda/cuda_engine_options.h) for more details.
+Refer to [engine_options.h](../../include/ppl/nn/engines/cuda/engine_options.h) of CUDA for more details.
 
 #### CudaEngineFactory
 
 ```python
-cuda_options = CudaEngineOptions()
-cuda_engine = CudaEngineFactory::Create(cuda_options)
+cuda_options = cuda.EngineOptions()
+cuda_engine = cuda.EngineFactory.Create(cuda_options)
 ```
 
 Creates an `Engine` instance running on NVIDIA GPUs.
@@ -188,7 +188,7 @@ Creates an `Engine` instance running on NVIDIA GPUs.
 ret_code = cuda_engine.Configure(option, <optional parameters>)
 ```
 
-Configures `cuda_engine`. Refer to [cuda_options.h](../../include/ppl/nn/engines/cuda/cuda_options.h) for available options(some options are not exported yet).
+Configures `cuda_engine`. Refer to [options.h](../../include/ppl/nn/engines/cuda/options.h) of CUDA for available options(some options are not exported yet).
 
 ## Other Utilities
 

@@ -15,26 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_PMX_PMX_RUNTIME_BUILDER_OPRIONS_H_
-#define _ST_HPC_PPL_NN_MODELS_PMX_PMX_RUNTIME_BUILDER_OPRIONS_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_OPTIONS_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_OPTIONS_H_
 
-namespace ppl { namespace nn {
+#include "ppl/nn/common/common.h"
+#include "ppl/nn/engines/cuda/options.h"
+#include <stdint.h>
 
-enum {
-    /**
-       @brief mark a tensor as reserved in order to avoid reusing it duing inferencing
+namespace ppl { namespace nn { namespace cuda {
 
-       @note example:
-       @code{.cpp}
-       const char* tensor_name;
-       runtime_builder->Configure(ORB_CONF_RESERVE_TENSOR, tensor_name);
-       @endcode
-    */
-    PRB_CONF_RESERVE_TENSOR = 0,
-
-    PRB_CONF_MAX,
+struct PPLNN_PUBLIC EngineOptions final {
+    uint32_t device_id = 0;
+    uint32_t mm_policy = MM_COMPACT;
 };
 
-}} // namespace ppl::nn
+}}} // namespace ppl::nn::cuda
 
 #endif

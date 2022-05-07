@@ -65,13 +65,13 @@ end
 function RegisterEngines(args)
     local engines = {}
     if args.use_x86 then
-        local x86_options = pplnn.X86EngineOptions()
-        local x86_engine = pplnn.X86EngineFactory:Create(x86_options)
+        local x86_options = pplnn.x86.EngineOptions()
+        local x86_engine = pplnn.x86.EngineFactory:Create(x86_options)
         table.insert(engines, x86_engine)
     end
     if args.use_cuda then
-        local cuda_options = pplnn.CudaEngineOptions()
-        local cuda_engine = pplnn.CudaEngineFactory:Create(cuda_options)
+        local cuda_options = pplnn.cuda.EngineOptions()
+        local cuda_engine = pplnn.cuda.EngineFactory:Create(cuda_options)
         table.insert(engines, cuda_engine)
     end
     return engines
@@ -245,7 +245,7 @@ if next(engines) == nil then
     os.exit(-1)
 end
 
-local runtime_builder = pplnn.OnnxRuntimeBuilderFactory:Create()
+local runtime_builder = pplnn.onnx.RuntimeBuilderFactory:Create()
 if runtime_builder == nil then
     logging.error("create OnnxRuntimeBuilder failed.")
     os.exit(-1)

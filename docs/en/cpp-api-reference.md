@@ -1,5 +1,7 @@
 This section introduces some public classes and functions of `PPLNN`.
 
+For brevity, we assume that `using namespace ppl::nn;` is always used in the following code snippets.
+
 ## Engine and Ops
 
 Defined in [include/ppl/nn/engines/engine.h](../../include/ppl/nn/engines/engine.h).
@@ -14,79 +16,79 @@ ppl::common::RetCode Configure(uint32_t option, ...);
 
 Sets various options for this engine. Parameters vary depending on the first parameter `option`.
 
-## X86EngineFactory
+## x86::EngineFactory
 
 A built-in engine factory that is used to create engines running on x86-compatible CPUs.
 
-If you want to use built-in op implementations, you should call `ppl::nn::x86::RegisterBuiltinOps()` manually.
+If you want to use built-in op implementations, you should call `x86::RegisterBuiltinOps()` manually.
 
 #### Functions
 
 ```c++
-Engine* X86EngineFactory::Create(const X86EngineOptions& options);
+Engine* x86::EngineFactory::Create(const x86::EngineOptions& options);
 ```
 
 Creates an X86 engine instance with the specified options.
 
-## CudaEngineFactory
+## cuda::EngineFactory
 
 A built-in engine factory that is used to create engines running on NVIDIA GPUs.
 
-If you want to use built-in op implementations, you should call `ppl::nn::cuda::RegisterBuiltinOps()` manually.
+If you want to use built-in op implementations, you should call `RegisterBuiltinOps()` manually.
 
 #### Functions
 
 ```c++
-Engine* CudaEngineFactory::Create(const CudaEngineOptions& options);
+Engine* cuda::EngineFactory::Create(const cuda::EngineOptions& options);
 ```
 
 Creates a CUDA engine instance with the specified options.
 
-## ArmEngineFactory
+## arm::EngineFactory
 
 A built-in engine factory that is used to create engines running on arm aarch64 CPUs.
 
-If you want to use built-in op implementations, you should call `ppl::nn::arm::RegisterBuiltinOps()` manually.
+If you want to use built-in op implementations, you should call `arm::RegisterBuiltinOps()` manually.
 
 #### Functions
 
 ```c++
-Engine* ArmEngineFactory::Create(const ArmEngineOptions& options);
+Engine* arm::EngineFactory::Create(const arm::EngineOptions& options);
 ```
 
 Creates a ARM engine instance with the specified options.
 
-## RiscvEngineFactory
+## riscv::EngineFactory
 
 A built-in engine factory that is used to create engines running on riscv64 CPUs.
 
-If you want to use built-in op implementations, you should call `ppl::nn::riscv::RegisterBuiltinOps()` manually.
+If you want to use built-in op implementations, you should call `riscv::RegisterBuiltinOps()` manually.
 
 #### Functions
 
 ```c++
-Engine* RiscvEngineFactory::Create(const RiscvEngineOptions& options);
+Engine* riscv::EngineFactory::Create(const riscv::EngineOptions& options);
 ```
 
 Creates an RISCV engine instance with the specified options.
 
-## OnnxRuntimeBuilderFactory
+## onnx::RuntimeBuilderFactory
 
-Defined in [include/ppl/nn/models/onnx/onnx_runtime_builder_factory.h](../../include/ppl/nn/models/onnx/onnx_runtime_builder_factory.h).
+Defined in [include/ppl/nn/models/onnx/runtime_builder_factory.h](../../include/ppl/nn/models/onnx/runtime_builder_factory.h).
 
 #### Functions
 
 ```c++
-OnnxRuntimeBuilder* Create();
+onnx::RuntimeBuilder* Create();
 ```
 
-Creates an `OnnxRuntimeBuilder` instance.
+Creates an `onnx::RuntimeBuilder` instance.
 
-## OnnxRuntimeBuilder
+## onnx::RuntimeBuilder
 
-Defined in [include/ppl/nn/models/onnx/onnx_runtime_builder.h](../../include/ppl/nn/models/onnx/runtime_builder.h).
+Defined in [include/ppl/nn/models/onnx/runtime_builder.h](../../include/ppl/nn/models/onnx/runtime_builder.h).
 
-`OnnxRuntimeBuilder` is used to create `Runtime` instances.
+`onnx::RuntimeBuilder` is used to create `Runtime` instances.
 
 #### Functions
 
@@ -95,7 +97,7 @@ ppl::common::RetCode Init(const char* model_file, Engine** engines, uint32_t eng
 ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num, const char* model_file_dir = nullptr);
 ```
 
-Initializes an `OnnxRuntimeBuilder` instance from an ONNX model file or buffer. The first parameter is the model file path, the second is engines that may be used to evaluate the compute graph. Note that callers should guarantee that `engines` is valid during inferencing. `model_file_dir` is used to parse external data and can be `nullptr` if there is no external data.
+Initializes an `onnx::RuntimeBuilder` instance from an ONNX model file or buffer. The first parameter is the model file path, the second is engines that may be used to evaluate the compute graph. Note that callers should guarantee that `engines` is valid during inferencing. `model_file_dir` is used to parse external data and can be `nullptr` if there is no external data.
 
 ```c++
 ppl::common::RetCode Preprocess();
@@ -110,23 +112,23 @@ Runtime* CreateRuntime();
 
 Creates a `Runtime` instance which is used to evaluate a compute graph.
 
-## PmxRuntimeBuilderFactory
+## pmx::RuntimeBuilderFactory
 
-Defined in [include/ppl/nn/models/pmx/pmx_runtime_builder_factory.h](../../include/ppl/nn/models/pmx/pmx_runtime_builder_factory.h).
+Defined in [include/ppl/nn/models/pmx/runtime_builder_factory.h](../../include/ppl/nn/models/pmx/runtime_builder_factory.h).
 
 #### Functions
 
 ```c++
-PmxRuntimeBuilder* Create();
+pmx::RuntimeBuilder* Create();
 ```
 
-Creates an `PmxRuntimeBuilder` instance.
+Creates an `pmx::RuntimeBuilder` instance.
 
-## PmxRuntimeBuilder
+## pmx::RuntimeBuilder
 
-Defined in [include/ppl/nn/models/pmx/pmx_runtime_builder.h](../../include/ppl/nn/models/pmx/pmx_runtime_builder.h).
+Defined in [include/ppl/nn/models/pmx/runtime_builder.h](../../include/ppl/nn/models/pmx/runtime_builder.h).
 
-`PmxRuntimeBuilder` is used to create `Runtime` instances.
+`pmx::RuntimeBuilder` is used to create `Runtime` instances.
 
 #### Functions
 
@@ -135,7 +137,7 @@ ppl::common::RetCode Init(const char* model_file, Engine** engines, uint32_t eng
 ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num);
 ```
 
-Initializes an `PmxRuntimeBuilder` instance from an PMX model file or buffer. The first parameter is the model file path, the second is engines that may be used to evaluate the compute graph. Note that callers should guarantee that `engines` is valid during inferencing.
+Initializes an `pmx::RuntimeBuilder` instance from an PMX model file or buffer. The first parameter is the model file path, the second is engines that may be used to evaluate the compute graph. Note that callers should guarantee that `engines` is valid during inferencing.
 
 ```c++
 ppl::common::RetCode Preprocess();

@@ -19,15 +19,15 @@
 #define _ST_HPC_PPL_NN_PYTHON_PY_ONNX_RUNTIME_BUILDER_H_
 
 #include "ppl/nn/engines/engine.h"
-#include "ppl/nn/models/onnx/onnx_runtime_builder.h"
+#include "ppl/nn/models/onnx/runtime_builder.h"
 #include <vector>
 #include <memory>
 
 namespace ppl { namespace nn { namespace python {
 
 struct PyOnnxRuntimeBuilder final {
-    PyOnnxRuntimeBuilder(OnnxRuntimeBuilder* b) : ptr(b) {}
-    std::unique_ptr<OnnxRuntimeBuilder> ptr;
+    PyOnnxRuntimeBuilder(onnx::RuntimeBuilder* b) : ptr(b) {}
+    std::unique_ptr<onnx::RuntimeBuilder> ptr;
     std::vector<std::shared_ptr<Engine>> engines; // retain engines
 };
 

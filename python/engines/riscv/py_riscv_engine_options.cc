@@ -15,15 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/riscv/riscv_engine_options.h"
+#include "ppl/nn/engines/riscv/engine_options.h"
 #include "pybind11/pybind11.h"
 
 namespace ppl { namespace nn { namespace python {
 
 void RegisterRiscvEngineOptions(pybind11::module* m) {
-    pybind11::class_<RiscvEngineOptions>(*m, "RiscvEngineOptions")
+    pybind11::class_<riscv::EngineOptions>(*m, "EngineOptions")
         .def(pybind11::init<>())
-        .def_readwrite("forward_precision", &RiscvEngineOptions::forward_precision);
+        .def_readwrite("forward_precision", &riscv::EngineOptions::forward_precision);
 }
 
 }}} // namespace ppl::nn::python

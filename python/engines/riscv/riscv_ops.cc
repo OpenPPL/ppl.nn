@@ -15,12 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/riscv/riscv_ops.h"
+#include "ppl/nn/engines/riscv/ops.h"
 
 namespace ppl { namespace nn { namespace python {
 
 void RegisterRiscvBuiltinOpImpls() {
-    ppl::nn::riscv::RegisterBuiltinOpImpls();
+    riscv::RegisterBuiltinOpImpls();
 }
 
 }}}

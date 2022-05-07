@@ -25,16 +25,16 @@ using namespace luacpp;
 namespace ppl { namespace nn { namespace lua {
 
 void RegisterCudaEngineFactory(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
-    auto cuda_engine_class = LuaClass<LuaEngine>(lmodule->Get("CudaEngine"));
-    auto lclass = lstate->CreateClass<CudaEngineFactory>()
-        .DefStatic("Create", [cuda_engine_class, lstate](const CudaEngineOptions* options) -> LuaObject {
-            auto engine = CudaEngineFactory::Create(*options);
+    auto cuda_engine_class = LuaClass<LuaEngine>(lmodule->Get("Engine"));
+    auto lclass = lstate->CreateClass<cuda::EngineFactory>()
+        .DefStatic("Create", [cuda_engine_class, lstate](const cuda::EngineOptions* options) -> LuaObject {
+            auto engine = cuda::EngineFactory::Create(*options);
             if (!engine) {
                 return lstate->CreateNil();
             }
             return cuda_engine_class.CreateUserData(engine);
         });
-    lmodule->Set("CudaEngineFactory", lclass);
+    lmodule->Set("EngineFactory", lclass);
 }
 
 }}}

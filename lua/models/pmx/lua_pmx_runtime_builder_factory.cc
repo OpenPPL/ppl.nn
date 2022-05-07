@@ -16,7 +16,7 @@
 // under the License.
 
 #include "../../engines/lua_engine.h"
-#include "ppl/nn/models/pmx/pmx_runtime_builder_factory.h"
+#include "ppl/nn/models/pmx/runtime_builder_factory.h"
 #include "lua_pmx_runtime_builder.h"
 #include "luacpp/luacpp.h"
 using namespace std;
@@ -25,18 +25,18 @@ using namespace luacpp;
 namespace ppl { namespace nn { namespace lua {
 
 void RegisterPmxRuntimeBuilderFactory(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
-    auto builder_class = LuaClass<LuaPmxRuntimeBuilder>(lmodule->Get("PmxRuntimeBuilder"));
+    auto builder_class = LuaClass<LuaPmxRuntimeBuilder>(lmodule->Get("RuntimeBuilder"));
 
-    auto lclass = lstate->CreateClass<PmxRuntimeBuilderFactory>()
+    auto lclass = lstate->CreateClass<pmx::RuntimeBuilderFactory>()
         .DefStatic("Create", [builder_class, lstate]() -> LuaObject {
-            auto builder = PmxRuntimeBuilderFactory::Create();
+            auto builder = pmx::RuntimeBuilderFactory::Create();
             if (!builder) {
                 return lstate->CreateNil();
             }
             return builder_class.CreateUserData(builder);
         });
 
-    lmodule->Set("PmxRuntimeBuilderFactory", lclass);
+    lmodule->Set("RuntimeBuilderFactory", lclass);
 }
 
 }}} // namespace ppl::nn::lua

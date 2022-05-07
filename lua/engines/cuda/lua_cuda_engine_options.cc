@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/cuda_engine_options.h"
+#include "ppl/nn/engines/cuda/engine_options.h"
 #include "luacpp/luacpp.h"
 #include <memory>
 using namespace std;
@@ -24,26 +24,26 @@ using namespace luacpp;
 namespace ppl { namespace nn { namespace lua {
 
 void RegisterCudaEngineOptions(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
-    auto lclass = lstate->CreateClass<CudaEngineOptions>()
+    auto lclass = lstate->CreateClass<cuda::EngineOptions>()
         .DefConstructor()
         .DefMember<uint32_t>("device_id",
-                             [](const CudaEngineOptions* options) -> uint32_t {
+                             [](const cuda::EngineOptions* options) -> uint32_t {
                                  return options->device_id;
                              },
-                             [](CudaEngineOptions* options, uint32_t v) -> void {
+                             [](cuda::EngineOptions* options, uint32_t v) -> void {
                                  options->device_id = v;
                              })
         .DefMember<uint32_t>("mm_policy",
-                             [](const CudaEngineOptions* options) -> uint32_t {
+                             [](const cuda::EngineOptions* options) -> uint32_t {
                                  return options->mm_policy;
                              },
-                             [](CudaEngineOptions* options, uint32_t v) -> void {
+                             [](cuda::EngineOptions* options, uint32_t v) -> void {
                                  options->mm_policy = v;
                              });
-    lmodule->Set("CudaEngineOptions", lclass);
+    lmodule->Set("EngineOptions", lclass);
 
-    lmodule->SetInteger("CUDA_MM_COMPACT", CUDA_MM_COMPACT);
-    lmodule->SetInteger("CUDA_MM_BEST_FIT", CUDA_MM_BEST_FIT);
+    lmodule->SetInteger("MM_COMPACT", cuda::MM_COMPACT);
+    lmodule->SetInteger("MM_BEST_FIT", cuda::MM_BEST_FIT);
 }
 
 }}}

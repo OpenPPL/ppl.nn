@@ -19,15 +19,15 @@
 #define _ST_HPC_PPL_NN_ENGINES_ARM_ENGINE_FACTORY_H_
 
 #include "ppl/nn/engines/engine.h"
-#include "ppl/nn/engines/arm/arm_engine_options.h"
+#include "ppl/nn/engines/arm/engine_options.h"
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace arm {
 
-class ArmEngineFactory final {
+class EngineFactory final {
 public:
-    static Engine* Create(const ArmEngineOptions&);
+    static Engine* Create(const EngineOptions&);
 };
 
-}} // namespace ppl::nn
+}}} // namespace ppl::nn::arm
 
 #endif

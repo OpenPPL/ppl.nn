@@ -23,7 +23,7 @@
 #include "ppl/nn/engines/riscv/riscv_device.h"
 #include "ppl/nn/engines/riscv/riscv_common_param.h"
 #include "ppl/nn/engines/riscv/utils/macros.h"
-#include "ppl/nn/engines/riscv/riscv_engine_options.h"
+#include "ppl/nn/engines/riscv/engine_options.h"
 #include "ppl/nn/runtime/runtime_partition_info.h"
 #include <functional>
 
@@ -40,7 +40,7 @@ struct OptKernelOptions final {
     RiscvDevice* device = nullptr;
     nn::RuntimePartitionInfo* info = nullptr;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors = nullptr;
-    RiscvEngineOptions* engine_options = nullptr;
+    EngineOptions* engine_options = nullptr;
 };
 
 class RiscvOptKernel : public OptKernel {

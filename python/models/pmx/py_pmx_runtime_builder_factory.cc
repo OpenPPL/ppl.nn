@@ -17,7 +17,7 @@
 
 #include "py_pmx_runtime_builder.h"
 #include "../../engines/py_engine.h"
-#include "ppl/nn/models/pmx/pmx_runtime_builder_factory.h"
+#include "ppl/nn/models/pmx/runtime_builder_factory.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 using namespace std;
@@ -27,12 +27,12 @@ namespace ppl { namespace nn { namespace python {
 class PyPmxRuntimeBuilderFactory final {
 public:
     static PyPmxRuntimeBuilder Create() {
-        return PyPmxRuntimeBuilder(PmxRuntimeBuilderFactory::Create());
+        return PyPmxRuntimeBuilder(pmx::RuntimeBuilderFactory::Create());
     }
 };
 
 void RegisterPmxRuntimeBuilderFactory(pybind11::module* m) {
-    pybind11::class_<PyPmxRuntimeBuilderFactory>(*m, "PmxRuntimeBuilderFactory")
+    pybind11::class_<PyPmxRuntimeBuilderFactory>(*m, "RuntimeBuilderFactory")
         .def_static("Create", &PyPmxRuntimeBuilderFactory::Create);
 }
 

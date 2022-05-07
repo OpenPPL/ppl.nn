@@ -22,7 +22,7 @@
 
 #include "ppl/nn/ir/graph.h"
 #include "ppl/nn/engines/riscv/riscv_device.h"
-#include "ppl/nn/engines/riscv/riscv_engine_options.h"
+#include "ppl/nn/engines/riscv/engine_options.h"
 #include "ppl/nn/runtime/runtime_partition_info.h"
 #include "ppl/nn/engines/riscv/optimizer/opt_kernel.h"
 
@@ -30,7 +30,7 @@ namespace ppl { namespace nn { namespace riscv {
 
 class OptGraph final {
 public:
-    ppl::common::RetCode Init(ir::Graph*, RuntimePartitionInfo*, RiscvEngineOptions* options);
+    ppl::common::RetCode Init(ir::Graph*, RuntimePartitionInfo*, EngineOptions* options);
     ppl::common::RetCode DoOptimize(const utils::SharedResource&, RiscvDevice*);
 
 private:
@@ -43,7 +43,7 @@ private:
     ir::Graph* graph_ = nullptr;
     nn::RuntimePartitionInfo* info_ = nullptr;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>> tensor_impls_;
-    RiscvEngineOptions* options_ = nullptr;
+    EngineOptions* options_ = nullptr;
     std::function<EdgeObject*(edgeid_t, uint32_t)> acquire_tensor_func_;
 };
 

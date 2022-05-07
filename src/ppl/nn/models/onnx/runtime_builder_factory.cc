@@ -15,12 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/onnx/onnx_runtime_builder_factory.h"
+#include "ppl/nn/models/onnx/runtime_builder_factory.h"
 #include "ppl/nn/models/onnx/runtime_builder_impl.h"
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace onnx {
 
-OnnxRuntimeBuilder* OnnxRuntimeBuilderFactory::Create() {
-    return new onnx::RuntimeBuilderImpl();
+RuntimeBuilder* RuntimeBuilderFactory::Create() {
+    return new RuntimeBuilderImpl();
 }
-}} // namespace ppl::nn
+
+}}} // namespace ppl::nn::onnx

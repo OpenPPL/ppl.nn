@@ -15,13 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_ARM_ARM_OPS_H_
-#define _ST_HPC_PPL_NN_ENGINES_ARM_ARM_OPS_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_OPS_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_OPS_H_
 
-namespace ppl { namespace nn { namespace arm {
+namespace ppl { namespace nn { namespace x86 {
 
 void RegisterBuiltinOpImpls();
 
-}}} // namespace ppl::nn::arm
+}}} // namespace ppl::nn::x86
 
 #endif

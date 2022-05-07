@@ -59,7 +59,7 @@ public:
     static ppl::common::RetCode DoMemDefrag(RuntimeX86Device*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(RuntimeX86Device*, va_list);
-    static ConfHandlerFunc conf_handlers_[X86_DEV_CONF_MAX];
+    static ConfHandlerFunc conf_handlers_[DEV_CONF_MAX];
 
     ppl::common::RetCode Configure(uint32_t, ...) override;
 

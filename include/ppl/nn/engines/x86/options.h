@@ -15,10 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_X86_OPTIONS_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_X86_OPTIONS_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_OPTIONS_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_OPTIONS_H_
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace x86 {
 
 /** @brief options for X86Engine::Configure() */
 enum {
@@ -27,42 +27,42 @@ enum {
 
        @note example:
        @code{.cpp}
-       x86_engine->Configure(X86_CONF_DISABLE_AVX512);
+       x86_engine->Configure(ENGINE_CONF_DISABLE_AVX512);
        @endcode
     */
-    X86_CONF_DISABLE_AVX512 = 0,
+    ENGINE_CONF_DISABLE_AVX512 = 0,
 
     /**
        @brief disable avx, fma3 and avx512 support
 
        @note example:
        @code{.cpp}
-       x86_engine->Configure(X86_CONF_DISABLE_AVX_FMA3);
+       x86_engine->Configure(ENGINE_CONF_DISABLE_AVX_FMA3);
        @endcode
     */
-    X86_CONF_DISABLE_AVX_FMA3 = 1,
+    ENGINE_CONF_DISABLE_AVX_FMA3 = 1,
 
     /** max value */
-    X86_CONF_MAX,
+    ENGINE_CONF_MAX,
 };
 
 /** @brief memory management policies */
 enum {
     /** less memory usage, may cause performance loss */
-    X86_MM_COMPACT = 0,
+    MM_COMPACT = 0,
 
     /** most recently used first, will use more memory */
-    X86_MM_MRU = 1,
+    MM_MRU = 1,
 };
 
 /** @brief options for x86::DeviceContext::Configure() */
 enum {
     /** @brief memory defragmentation. make sure that device is not used when performing defragmentations. */
-    X86_DEV_CONF_MEM_DEFRAG = 0,
+    DEV_CONF_MEM_DEFRAG = 0,
 
-    X86_DEV_CONF_MAX,
+    DEV_CONF_MAX,
 };
 
-}} // namespace ppl::nn
+}}} // namespace ppl::nn::x86
 
 #endif

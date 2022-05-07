@@ -26,7 +26,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace python {
 
 void RegisterPmxRuntimeBuilder(pybind11::module* m) {
-    pybind11::class_<PyPmxRuntimeBuilder>(*m, "PmxRuntimeBuilder")
+    pybind11::class_<PyPmxRuntimeBuilder>(*m, "RuntimeBuilder")
         .def("__bool__",
              [](const PyPmxRuntimeBuilder& builder) -> bool {
                  return (builder.ptr.get());

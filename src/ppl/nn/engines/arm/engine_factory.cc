@@ -20,9 +20,9 @@
 #include "ppl/common/sys.h"
 #include "ppl/nn/common/logger.h"
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace arm {
 
-Engine* ArmEngineFactory::Create(const ArmEngineOptions& options) {
+Engine* EngineFactory::Create(const EngineOptions& options) {
     auto engine = new arm::ArmEngine();
     if (engine) {
         auto status = engine->Init(options);
@@ -34,4 +34,5 @@ Engine* ArmEngineFactory::Create(const ArmEngineOptions& options) {
     }
     return engine;
 }
-}} // namespace ppl::nn
+
+}}} // namespace ppl::nn::arm

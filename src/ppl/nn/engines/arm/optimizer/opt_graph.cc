@@ -79,7 +79,7 @@ RetCode OptGraph::InitTensorImpls() {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::Init(ir::Graph* graph, RuntimePartitionInfo* info, ArmEngineOptions* options) {
+RetCode OptGraph::Init(ir::Graph* graph, RuntimePartitionInfo* info, EngineOptions* options) {
     graph_ = graph;
     info_ = info;
     options_ = options;

@@ -25,7 +25,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace kernel { namespace riscv {
 
-conv_transpose_common_algo_info conv_transpose_fp32_algo_selector::select_algo(const ppl::nn::RiscvEngineOptions* engine_options)
+conv_transpose_common_algo_info conv_transpose_fp32_algo_selector::select_algo(const ppl::nn::riscv::EngineOptions* engine_options)
 {
     return {DATAFORMAT_N4CX, DATAFORMAT_N4CX, DATATYPE_FLOAT32, DATATYPE_FLOAT32};
 }

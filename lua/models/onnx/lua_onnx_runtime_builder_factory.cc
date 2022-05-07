@@ -16,7 +16,7 @@
 // under the License.
 
 #include "../../engines/lua_engine.h"
-#include "ppl/nn/models/onnx/onnx_runtime_builder_factory.h"
+#include "ppl/nn/models/onnx/runtime_builder_factory.h"
 #include "lua_onnx_runtime_builder.h"
 #include "luacpp/luacpp.h"
 using namespace std;
@@ -25,18 +25,18 @@ using namespace luacpp;
 namespace ppl { namespace nn { namespace lua {
 
 void RegisterOnnxRuntimeBuilderFactory(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
-    auto builder_class = LuaClass<LuaOnnxRuntimeBuilder>(lmodule->Get("OnnxRuntimeBuilder"));
+    auto builder_class = LuaClass<LuaOnnxRuntimeBuilder>(lmodule->Get("RuntimeBuilder"));
 
-    auto lclass = lstate->CreateClass<OnnxRuntimeBuilderFactory>()
+    auto lclass = lstate->CreateClass<onnx::RuntimeBuilderFactory>()
         .DefStatic("Create", [builder_class, lstate]() -> LuaObject {
-            auto builder = OnnxRuntimeBuilderFactory::Create();
+            auto builder = onnx::RuntimeBuilderFactory::Create();
             if (!builder) {
                 return lstate->CreateNil();
             }
             return builder_class.CreateUserData(builder);
         });
 
-    lmodule->Set("OnnxRuntimeBuilderFactory", lclass);
+    lmodule->Set("RuntimeBuilderFactory", lclass);
 }
 
 }}}

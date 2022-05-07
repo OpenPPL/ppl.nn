@@ -21,14 +21,14 @@
 #include "ppl/nn/engines/engine_impl.h"
 #include "ppl/nn/engines/arm/arm_device.h"
 #include "ppl/common/arm/sysinfo.h"
-#include "ppl/nn/engines/arm/arm_engine_options.h"
+#include "ppl/nn/engines/arm/engine_options.h"
 
 namespace ppl { namespace nn { namespace arm {
 
 class ArmEngine final : public EngineImpl {
 public:
     ArmEngine();
-    ppl::common::RetCode Init(const ArmEngineOptions&);
+    ppl::common::RetCode Init(const EngineOptions&);
     ppl::common::RetCode BindNumaNode(int32_t numa_node_id) const;
     ppl::common::RetCode Configure(uint32_t, ...) override;
     EngineContext* CreateEngineContext() override;
@@ -51,11 +51,11 @@ private:
     ppl::common::RetCode DoOptimize(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(ArmEngine*, va_list);
-    static ConfHandlerFunc conf_handlers_[ARM_CONF_MAX];
+    static ConfHandlerFunc conf_handlers_[ENGINE_CONF_MAX];
 
 private:
     ArmDevice device_;
-    ArmEngineOptions options_;
+    EngineOptions options_;
 };
 
 }}} // namespace ppl::nn::arm

@@ -68,15 +68,15 @@ name_str = Engine:GetName()
 
 Returns engine's name.
 
-### OnnxRuntimeBuilderFactory
+### onnx.RuntimeBuilderFactory
 
 ```lua
-runtime_builder = OnnxRuntimeBuilderFactory:Create()
+runtime_builder = onnx.RuntimeBuilderFactory:Create()
 ```
 
-Creates an `OnnxRuntimeBuilder` instance.
+Creates an `onnx.RuntimeBuilder` instance.
 
-### OnnxRuntimeBuilder
+### onnx.RuntimeBuilder
 
 ```lua
 status = runtime_builder:InitFromFile(onnx_model_file, engines)
@@ -130,28 +130,32 @@ Returns the output tensor in position `idx`, which is in range [0, output_count)
 
 ## Device Specific APIs in `luappl.nn`
 
-### X86
+### x86
 
-#### X86EngineFactory
+#### EngineOptions
+
+Refer to [engine_options.h](../../include/ppl/nn/engines/x86/engine_options.h) for more details.
+
+#### EngineFactory
 
 ```lua
-x86_options = X86EngineOptions()
-x86_engine = X86EngineFactory:Create(x86_options)
+x86_options = x86.EngineOptions()
+x86_engine = x86.EngineFactory:Create(x86_options)
 ```
 
 Creates an `Engine` instance running on x86-64 compatiable CPUs.
 
 ### CUDA
 
-#### CudaEngineOptions
+#### EngineOptions
 
-Refer to [cuda_engine_options.h](../../include/ppl/nn/engines/cuda/cuda_engine_options.h) for more details.
+Refer to [engine_options.h](../../include/ppl/nn/engines/cuda/engine_options.h) for more details.
 
 #### CudaEngineFactory
 
 ```lua
-cuda_options = CudaEngineOptions()
-cuda_engine = CudaEngineFactory:Create(cuda_options)
+cuda_options = cuda.EngineOptions()
+cuda_engine = cuda.EngineFactory:Create(cuda_options)
 ```
 
 Creates an `Engine` instance running on NVIDIA GPUs.

@@ -23,13 +23,13 @@ namespace ppl { namespace nn { namespace python {
 
 class PyX86EngineFactory final {
 public:
-    static PyX86Engine Create(const X86EngineOptions& options) {
-        return PyX86Engine(X86EngineFactory::Create(options));
+    static PyX86Engine Create(const x86::EngineOptions& options) {
+        return PyX86Engine(x86::EngineFactory::Create(options));
     }
 };
 
 void RegisterX86EngineFactory(pybind11::module* m) {
-    pybind11::class_<PyX86EngineFactory>(*m, "X86EngineFactory").def_static("Create", &PyX86EngineFactory::Create);
+    pybind11::class_<PyX86EngineFactory>(*m, "EngineFactory").def_static("Create", &PyX86EngineFactory::Create);
 }
 
 }}} // namespace ppl::nn::python

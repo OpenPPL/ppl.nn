@@ -45,7 +45,7 @@ X86Engine::X86Engine() : EngineImpl("x86"), device_(X86_DEFAULT_ALIGNMENT, ppl::
     ppl::kernel::x86::set_denormals_zero(true);
 }
 
-RetCode X86Engine::Init(const X86EngineOptions& options) {
+RetCode X86Engine::Init(const EngineOptions& options) {
     options_ = options;
     return RC_SUCCESS;
 }
@@ -137,7 +137,7 @@ RetCode X86Engine::ProcessGraph(const utils::SharedResource& resource, ir::Graph
 }
 
 EngineImpl* X86Engine::Create() {
-    return static_cast<EngineImpl*>(X86EngineFactory::Create(options_));
+    return static_cast<EngineImpl*>(EngineFactory::Create(options_));
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
@@ -188,8 +188,8 @@ X86Engine::ConfHandlerFunc X86Engine::conf_handlers_[] = {
 };
 
 RetCode X86Engine::Configure(uint32_t option, ...) {
-    if (option >= X86_CONF_MAX) {
-        LOG(ERROR) << "invalid option[" << option << "] >= [" << X86_CONF_MAX << "]";
+    if (option >= ENGINE_CONF_MAX) {
+        LOG(ERROR) << "invalid option[" << option << "] >= [" << ENGINE_CONF_MAX << "]";
         return RC_INVALID_VALUE;
     }
 

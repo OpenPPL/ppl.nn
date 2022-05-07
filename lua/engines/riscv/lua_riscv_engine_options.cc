@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/riscv/riscv_engine_options.h"
+#include "ppl/nn/engines/riscv/engine_options.h"
 #include "luacpp/luacpp.h"
 #include <memory>
 using namespace std;
@@ -24,30 +24,30 @@ using namespace luacpp;
 namespace ppl { namespace nn { namespace lua {
 
 void RegisterRiscvEngineOptions(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
-    auto lclass = lstate->CreateClass<RiscvEngineOptions>()
+    auto lclass = lstate->CreateClass<riscv::EngineOptions>()
         .DefConstructor()
         .DefMember<uint32_t>("mm_policy",
-                             [](const RiscvEngineOptions* options) -> uint32_t {
+                             [](const riscv::EngineOptions* options) -> uint32_t {
                                  return options->mm_policy;
                              },
-                             [](RiscvEngineOptions* options, uint32_t v) -> void {
+                             [](riscv::EngineOptions* options, uint32_t v) -> void {
                                  options->mm_policy = v;
                              })
         .DefMember<uint32_t>("tuning_level",
-                             [](const RiscvEngineOptions* options) -> uint32_t {
+                             [](const riscv::EngineOptions* options) -> uint32_t {
                                  return options->dynamic_tuning_level;
                              },
-                             [](RiscvEngineOptions* options, uint32_t v) -> void {
+                             [](riscv::EngineOptions* options, uint32_t v) -> void {
                                  options->dynamic_tuning_level = v;
                              })
         .DefMember<uint32_t>("forward_precision",
-                             [](const RiscvEngineOptions* options) -> uint32_t {
+                             [](const riscv::EngineOptions* options) -> uint32_t {
                                  return options->forward_precision;
                              },
-                             [](RiscvEngineOptions* options, uint32_t v) -> void {
+                             [](riscv::EngineOptions* options, uint32_t v) -> void {
                                  options->forward_precision = v;
                              });
-    lmodule->Set("RiscvEngineOptions", lclass);
+    lmodule->Set("EngineOptions", lclass);
 }
 
 }}}

@@ -16,10 +16,9 @@
 // under the License.
 
 #include "../lua_engine.h"
-#include "ppl/nn/engines/riscv/riscv_options.h"
+#include "ppl/nn/engines/riscv/options.h"
 #include "ppl/nn/common/logger.h"
 #include "luacpp/luacpp.h"
-#include <map>
 using namespace std;
 using namespace luacpp;
 using namespace ppl::common;
@@ -31,7 +30,7 @@ void RegisterRiscvEngine(const shared_ptr<LuaState>& lstate, const shared_ptr<Lu
         .DefMember("GetName", [](const LuaEngine* engine) -> const char* {
             return engine->ptr->GetName();
         });
-    lmodule->Set("RiscvEngine", lclass);
+    lmodule->Set("Engine", lclass);
 }
 
 }}}

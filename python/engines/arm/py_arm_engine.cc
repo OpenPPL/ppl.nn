@@ -20,13 +20,13 @@
 #include "pybind11/pybind11.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/utils/array.h"
-#include "ppl/nn/engines/arm/arm_options.h"
+#include "ppl/nn/engines/arm/options.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace python {
 
 void RegisterArmEngine(pybind11::module* m) {
-    pybind11::class_<PyArmEngine, PyEngine>(*m, "ArmEngine")
+    pybind11::class_<PyArmEngine, PyEngine>(*m, "Engine")
         .def("__bool__",
              [](const PyArmEngine& engine) -> bool {
                  return (engine.ptr.get());

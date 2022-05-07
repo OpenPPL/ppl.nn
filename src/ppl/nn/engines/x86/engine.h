@@ -20,14 +20,14 @@
 
 #include "ppl/nn/engines/engine_impl.h"
 #include "ppl/nn/engines/x86/x86_device.h"
-#include "ppl/nn/engines/x86/x86_engine_options.h"
+#include "ppl/nn/engines/x86/engine_options.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
 class X86Engine final : public EngineImpl {
 public:
     X86Engine();
-    ppl::common::RetCode Init(const X86EngineOptions&);
+    ppl::common::RetCode Init(const EngineOptions&);
     ppl::common::RetCode Configure(uint32_t, ...) override;
     EngineContext* CreateEngineContext() override;
     bool Supports(const ir::Node*) const override;
@@ -59,11 +59,11 @@ private:
     static ppl::common::RetCode DisableAVXFMA3(X86Engine*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(X86Engine*, va_list);
-    static ConfHandlerFunc conf_handlers_[X86_CONF_MAX];
+    static ConfHandlerFunc conf_handlers_[ENGINE_CONF_MAX];
 
 private:
     X86Device device_;
-    X86EngineOptions options_;
+    EngineOptions options_;
 };
 
 }}} // namespace ppl::nn::x86

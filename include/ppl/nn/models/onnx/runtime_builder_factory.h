@@ -15,18 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_ONNX_RUNTIME_BUILDER_FACTORY_H_
-#define _ST_HPC_PPL_NN_MODELS_ONNX_ONNX_RUNTIME_BUILDER_FACTORY_H_
+#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_RUNTIME_BUILDER_FACTORY_H_
+#define _ST_HPC_PPL_NN_MODELS_ONNX_RUNTIME_BUILDER_FACTORY_H_
 
-#include "ppl/nn/models/onnx/onnx_runtime_builder.h"
+#include "ppl/nn/models/onnx/runtime_builder.h"
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace onnx {
 
-class PPLNN_PUBLIC OnnxRuntimeBuilderFactory final {
+class PPLNN_PUBLIC RuntimeBuilderFactory final {
 public:
-    static OnnxRuntimeBuilder* Create();
+    static RuntimeBuilder* Create();
 };
 
-}} // namespace ppl::nn
+}}} // namespace ppl::nn::onnx
 
 #endif

@@ -78,13 +78,15 @@ PYBIND11_MODULE(nn, m) {
     RegisterVersion(&m);
 
 #ifdef PPLNN_ENABLE_ONNX_MODEL
-    RegisterOnnxRuntimeBuilderFactory(&m);
-    RegisterOnnxRuntimeBuilder(&m);
+    pybind11::module onnx_module = m.def_submodule("onnx");
+    RegisterOnnxRuntimeBuilderFactory(&onnx_module);
+    RegisterOnnxRuntimeBuilder(&onnx_module);
 #endif
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    RegisterPmxRuntimeBuilderFactory(&m);
-    RegisterPmxRuntimeBuilder(&m);
+    pybind11::module pmx_module = m.def_submodule("pmx");
+    RegisterPmxRuntimeBuilderFactory(&pmx_module);
+    RegisterPmxRuntimeBuilder(&pmx_module);
 #endif
 
     auto mgr = PyTypeCreatorManager::Instance();
@@ -98,31 +100,35 @@ PYBIND11_MODULE(nn, m) {
     }
 
 #ifdef PPLNN_USE_CUDA
+    pybind11::module cuda_module = m.def_submodule("cuda");
     RegisterCudaBuiltinOpImpls();
-    RegisterCudaEngineFactory(&m);
-    RegisterCudaEngineOptions(&m);
-    RegisterCudaEngine(&m);
+    RegisterCudaEngineFactory(&cuda_module);
+    RegisterCudaEngineOptions(&cuda_module);
+    RegisterCudaEngine(&cuda_module);
 #endif
 
 #ifdef PPLNN_USE_X86
+    pybind11::module x86_module = m.def_submodule("x86");
     RegisterX86BuiltinOpImpls();
-    RegisterX86EngineFactory(&m);
-    RegisterX86EngineOptions(&m);
-    RegisterX86Engine(&m);
+    RegisterX86EngineFactory(&x86_module);
+    RegisterX86EngineOptions(&x86_module);
+    RegisterX86Engine(&x86_module);
 #endif
 
 #ifdef PPLNN_USE_RISCV
+    pybind11::module riscv_module = m.def_submodule("riscv");
     RegisterRiscvBuiltinOpImpls();
-    RegisterRiscvEngineFactory(&m);
-    RegisterRiscvEngineOptions(&m);
-    RegisterRiscvEngine(&m);
+    RegisterRiscvEngineFactory(&riscv_module);
+    RegisterRiscvEngineOptions(&riscv_module);
+    RegisterRiscvEngine(&riscv_module);
 #endif
 
 #ifdef PPLNN_USE_ARM
+    pybind11::module arm_module = m.def_submodule("arm");
     RegisterArmBuiltinOpImpls();
-    RegisterArmEngineFactory(&m);
-    RegisterArmEngineOptions(&m);
-    RegisterArmEngine(&m);
+    RegisterArmEngineFactory(&arm_module);
+    RegisterArmEngineOptions(&arm_module);
+    RegisterArmEngine(&arm_module);
 #endif
 }
 

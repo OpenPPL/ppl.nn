@@ -64,12 +64,12 @@ void RegisterTensor(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterRuntime(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 
 #ifdef PPLNN_ENABLE_ONNX_MODEL
-void RegisterOnnxRuntimeBuilder(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
+void RegisterOnnxRuntimeBuilder(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&, const shared_ptr<LuaTable>&);
 void RegisterOnnxRuntimeBuilderFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 #endif
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-void RegisterPmxRuntimeBuilder(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
+void RegisterPmxRuntimeBuilder(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&, const shared_ptr<LuaTable>&);
 void RegisterPmxRuntimeBuilderFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 #endif
 
@@ -93,31 +93,39 @@ extern "C" int PPLNN_PUBLIC luaopen_luappl_nn(lua_State* l) {
     // NOTE register classes in order
 
 #ifdef PPLNN_USE_CUDA
+    auto l_cuda_module = make_shared<LuaTable>(lstate->CreateTable());
     RegisterCudaBuiltinOpImpls();
-    RegisterCudaEngineOptions(lstate, lmodule);
-    RegisterCudaEngine(lstate, lmodule);
-    RegisterCudaEngineFactory(lstate, lmodule);
+    RegisterCudaEngineOptions(lstate, l_cuda_module);
+    RegisterCudaEngine(lstate, l_cuda_module);
+    RegisterCudaEngineFactory(lstate, l_cuda_module);
+    lmodule->Set("cuda", *l_cuda_module);
 #endif
 
 #ifdef PPLNN_USE_X86
+    auto l_x86_module = make_shared<LuaTable>(lstate->CreateTable());
     RegisterX86BuiltinOpImpls();
-    RegisterX86EngineOptions(lstate, lmodule);
-    RegisterX86Engine(lstate, lmodule);
-    RegisterX86EngineFactory(lstate, lmodule);
+    RegisterX86EngineOptions(lstate, l_x86_module);
+    RegisterX86Engine(lstate, l_x86_module);
+    RegisterX86EngineFactory(lstate, l_x86_module);
+    lmodule->Set("x86", *l_x86_module);
 #endif
 
 #ifdef PPLNN_USE_RISCV
+    auto l_riscv_module = make_shared<LuaTable>(lstate->CreateTable());
     RegisterRiscvBuiltinOpImpls();
-    RegisterRiscvEngineOptions(lstate, lmodule);
-    RegisterRiscvEngine(lstate, lmodule);
-    RegisterRiscvEngineFactory(lstate, lmodule);
+    RegisterRiscvEngineOptions(lstate, l_riscv_module);
+    RegisterRiscvEngine(lstate, l_riscv_module);
+    RegisterRiscvEngineFactory(lstate, l_riscv_module);
+    lmodule->Set("riscv", *l_riscv_module);
 #endif
 
 #ifdef PPLNN_USE_ARM
+    auto l_arm_module = make_shared<LuaTable>(lstate->CreateTable());
     RegisterArmBuiltinOpImpls();
-    RegisterArmEngineOptions(lstate, lmodule);
-    RegisterArmEngine(lstate, lmodule);
-    RegisterArmEngineFactory(lstate, lmodule);
+    RegisterArmEngineOptions(lstate, l_arm_module);
+    RegisterArmEngine(lstate, l_arm_module);
+    RegisterArmEngineFactory(lstate, l_arm_module);
+    lmodule->Set("arm", *l_arm_module);
 #endif
 
     RegisterVersion(lstate, lmodule);
@@ -126,13 +134,17 @@ extern "C" int PPLNN_PUBLIC luaopen_luappl_nn(lua_State* l) {
     RegisterRuntime(lstate, lmodule);
 
 #ifdef PPLNN_ENABLE_ONNX_MODEL
-    RegisterOnnxRuntimeBuilder(lstate, lmodule);
-    RegisterOnnxRuntimeBuilderFactory(lstate, lmodule);
+    auto l_onnx_module = make_shared<LuaTable>(lstate->CreateTable());
+    RegisterOnnxRuntimeBuilder(lstate, lmodule, l_onnx_module);
+    RegisterOnnxRuntimeBuilderFactory(lstate, l_onnx_module);
+    lmodule->Set("onnx", *l_onnx_module);
 #endif
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    RegisterPmxRuntimeBuilder(lstate, lmodule);
-    RegisterPmxRuntimeBuilderFactory(lstate, lmodule);
+    auto l_pmx_module = make_shared<LuaTable>(lstate->CreateTable());
+    RegisterPmxRuntimeBuilder(lstate, lmodule, l_pmx_module);
+    RegisterPmxRuntimeBuilderFactory(lstate, l_pmx_module);
+    lmodule->Set("pmx", *l_pmx_module);
 #endif
 
     lstate->Push(*lmodule);

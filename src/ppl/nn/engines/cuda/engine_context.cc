@@ -25,7 +25,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-RetCode CudaEngineContext::Init(const CudaEngineOptions& options) {
+RetCode CudaEngineContext::Init(const EngineOptions& options) {
     auto status = device_.Init(options);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init BufferedCudaDevice failed: " << GetRetCodeStr(status);

@@ -16,7 +16,7 @@
 // under the License.
 
 #include "../lua_engine.h"
-#include "ppl/nn/engines/arm/arm_options.h"
+#include "ppl/nn/engines/arm/options.h"
 #include "ppl/nn/common/logger.h"
 #include "luacpp/luacpp.h"
 #include <map>
@@ -31,7 +31,7 @@ void RegisterArmEngine(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaT
         .DefMember("GetName", [](const LuaEngine* engine) -> const char* {
             return engine->ptr->GetName();
         });
-    lmodule->Set("ArmEngine", lclass);
+    lmodule->Set("Engine", lclass);
 }
 
 }}}

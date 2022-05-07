@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/arm/runtime_arm_device.h"
-#include "ppl/nn/engines/arm/arm_options.h"
+#include "ppl/nn/engines/arm/options.h"
 #include "ppl/nn/utils/stack_buffer_manager.h"
 #include "ppl/nn/utils/compact_buffer_manager.h"
 #include "ppl/nn/utils/cpu_block_allocator.h"
@@ -32,11 +32,11 @@ static void DummyDeleter(ppl::common::Allocator*) {}
 RuntimeArmDevice::RuntimeArmDevice(uint64_t alignment, isa_t isa, uint32_t mm_policy)
     : ArmDevice(alignment, isa), tmp_buffer_size_(0) {
     can_defragement_ = false;
-    if (mm_policy == ARM_MM_MRU) {
+    if (mm_policy == MM_MRU) {
         auto allocator_ptr = ArmDevice::GetAllocator();
         allocator_ = std::shared_ptr<Allocator>(allocator_ptr, DummyDeleter);
         buffer_manager_.reset(new utils::StackBufferManager(allocator_ptr));
-    } else if (mm_policy == ARM_MM_COMPACT) {
+    } else if (mm_policy == MM_COMPACT) {
         can_defragement_ = true;
         allocator_.reset(new utils::CpuBlockAllocator());
         buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment, 64u));
@@ -92,12 +92,12 @@ RetCode RuntimeArmDevice::DoMemDefrag(RuntimeArmDevice* dev, va_list) {
 }
 
 RuntimeArmDevice::ConfHandlerFunc RuntimeArmDevice::conf_handlers_[] = {
-    DoMemDefrag, // ARM_DEV_CONF_MEM_DEFRAG
+    DoMemDefrag, // DEV_CONF_MEM_DEFRAG
 };
 
 RetCode RuntimeArmDevice::Configure(uint32_t option, ...) {
-    if (option >= ARM_DEV_CONF_MAX) {
-        LOG(ERROR) << "invalid option[" << option << "] >= [" << ARM_DEV_CONF_MAX << "]";
+    if (option >= DEV_CONF_MAX) {
+        LOG(ERROR) << "invalid option[" << option << "] >= [" << DEV_CONF_MAX << "]";
         return RC_INVALID_VALUE;
     }
 

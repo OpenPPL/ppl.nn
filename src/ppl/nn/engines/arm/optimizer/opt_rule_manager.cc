@@ -30,13 +30,13 @@ namespace ppl { namespace nn { namespace arm {
 
 OptRuleLevel OptRuleManager::GetMaxOptLevel(uint32_t graph_optimization_level) {
     switch (graph_optimization_level) {
-        case ARM_OPT_DISABLE_ALL:
+        case OPT_DISABLE_ALL:
             return OPT_RULE_NO_OPT;
-        case ARM_OPT_ENABLE_BASIC:
+        case OPT_ENABLE_BASIC:
             return OPT_RULE_LEVEL_0;
-        case ARM_OPT_ENABLE_EXTENDED:
+        case OPT_ENABLE_EXTENDED:
             return OPT_RULE_LEVEL_1;
-        case ARM_OPT_ENABLE_ALL:
+        case OPT_ENABLE_ALL:
             return OPT_RULE_LEVEL_2;
         default:
             break;

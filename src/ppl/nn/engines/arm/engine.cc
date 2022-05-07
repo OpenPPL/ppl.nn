@@ -40,7 +40,7 @@ ArmEngine::ArmEngine() : EngineImpl("arm"), device_(ARM_DEFAULT_ALIGNMENT, ppl::
     }
 }
 
-RetCode ArmEngine::Init(const ArmEngineOptions& options) {
+RetCode ArmEngine::Init(const EngineOptions& options) {
     options_ = options;
 
 #ifndef PPLNN_USE_ARMV8_2_FP16
@@ -128,7 +128,7 @@ RetCode ArmEngine::ProcessGraph(const utils::SharedResource& resource, ir::Graph
 }
 
 EngineImpl* ArmEngine::Create() {
-    return static_cast<EngineImpl*>(ArmEngineFactory::Create(options_));
+    return static_cast<EngineImpl*>(EngineFactory::Create(options_));
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
@@ -158,8 +158,8 @@ OptKernel* ArmEngine::CreateOptKernel(const ir::Node* node) const {
 ArmEngine::ConfHandlerFunc ArmEngine::conf_handlers_[] = {};
 
 RetCode ArmEngine::Configure(uint32_t option, ...) {
-    if (option >= ARM_CONF_MAX) {
-        LOG(ERROR) << "invalid option[" << option << "] >= [" << ARM_CONF_MAX << "]";
+    if (option >= ENGINE_CONF_MAX) {
+        LOG(ERROR) << "invalid option[" << option << "] >= [" << ENGINE_CONF_MAX << "]";
         return RC_INVALID_VALUE;
     }
 
