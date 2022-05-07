@@ -30,6 +30,11 @@ uint64_t ConvTransposeKernel::CalcTmpBufferSize(const KernelExecContext& ctx) co
 }
 
 ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
+{cudaDeviceSynchronize();
+auto e = cudaGetLastError();
+printf("0in ConvTransposeKernel: %d\n", e);
+e = cudaGetLastError();
+printf("in ConvTransposeKernel: %d\n", e);}
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_bytes = CalcTmpBufferSize(*ctx);
     auto status = GetCudaDevice()->AllocTmpBuffer(tmp_buffer_bytes, &tmp_buffer_desc);
@@ -55,7 +60,13 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
     }
     fuse_param_t temp_fuse_param;
     ConvertToForwardFuseParam(ctx, GetCudaDevice(), param_->extra_param.fuse_info, temp_fuse_param);
+{cudaDeviceSynchronize();
+auto e = cudaGetLastError();
+printf("pre GetCommonParam: %d\n", e);}
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
+{cudaDeviceSynchronize();
+auto e = cudaGetLastError();
+printf("pre PPLCUDAConvTransposeForward: %d\n", e);}
     status = PPLCUDAConvTransposeForward(
                     GetStream(), module, X->GetShape(), X->GetBufferPtr(), W->GetBufferPtr(), b_data,
                     Y->GetShape(), Y->GetBufferPtr(),
