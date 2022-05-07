@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class ConstantOfShapeOp final : public ArmOptKernel {
 public:
-    ConstantOfShapeOp(const ir::Node* node) : ArmOptKernel(node) {}
+    ConstantOfShapeOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 

@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class SubOp final : public ArmOptKernel {
 public:
-    SubOp(const ir::Node* node) : ArmOptKernel(node) {}
+    SubOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     ppl::common::RetCode SelectAlgorithm(const InputOutputInfo&, const OptKernelOptions&);
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,

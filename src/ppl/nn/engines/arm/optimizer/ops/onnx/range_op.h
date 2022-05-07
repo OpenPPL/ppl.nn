@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class RangeOp final : public ArmOptKernel {
 public:
-    RangeOp(const ir::Node* node) : ArmOptKernel(node) {}
+    RangeOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 };

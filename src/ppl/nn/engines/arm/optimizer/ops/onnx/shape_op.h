@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class ShapeOp final : public ArmOptKernel {
 public:
-    ShapeOp(const ir::Node* node) : ArmOptKernel(node) {}
+    ShapeOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     ppl::common::RetCode SelectDataType(const InputOutputInfo& info,
                                         std::vector<ppl::common::datatype_t>* selected_input_types,

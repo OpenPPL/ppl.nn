@@ -24,18 +24,20 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
+AvePoolOp::AvePoolOp(const ir::Node* node) : ArmOptKernel(node) {
+    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        return onnx::ReshapePooling(info, param_.get());
+    };
+
+    infer_type_func_ = GenericInferType;
+}
+
 RetCode AvePoolOp::Init(const OptKernelOptions& options) {
     auto status = GenericLoadParam(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
     }
-
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return onnx::ReshapePooling(info, param_.get());
-    };
-
-    infer_type_func_ = GenericInferType;
 
     return RC_SUCCESS;
 }

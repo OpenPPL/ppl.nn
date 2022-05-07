@@ -23,13 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam(options, &param_);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
+ChannelShuffleOp::ChannelShuffleOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_type_func_ = GenericInferType;
 
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
@@ -50,6 +44,14 @@ RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
 
         return RC_SUCCESS;
     };
+}
+
+RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
+    auto status = GenericLoadParam(options, &param_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
+        return status;
+    }
 
     return RC_SUCCESS;
 }

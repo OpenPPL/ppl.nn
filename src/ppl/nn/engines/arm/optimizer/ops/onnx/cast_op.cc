@@ -24,13 +24,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode CastOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam(options, &param_);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
+CastOp::CastOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeCast(info, param_.get());
     };
@@ -38,6 +32,14 @@ RetCode CastOp::Init(const OptKernelOptions& options) {
     infer_type_func_ = [this](InputOutputInfo* info) -> void {
         info->GetOutput<TensorImpl>(0)->GetShape()->SetDataType(this->param_->to);
     };
+}
+
+RetCode CastOp::Init(const OptKernelOptions& options) {
+    auto status = GenericLoadParam(options, &param_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
+        return status;
+    }
 
     return RC_SUCCESS;
 }

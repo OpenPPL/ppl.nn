@@ -26,7 +26,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class GemmOp final : public ArmOptKernel {
 public:
-    GemmOp(const ir::Node* node) : ArmOptKernel(node), fc_param_(nullptr) {}
+    GemmOp(const ir::Node* node);
     ~GemmOp();
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     ppl::common::RetCode SelectAlgorithm(const InputOutputInfo& info, const OptKernelOptions& options) override;

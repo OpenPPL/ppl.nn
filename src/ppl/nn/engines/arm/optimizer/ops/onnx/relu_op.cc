@@ -23,15 +23,16 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode ReluOp::Init(const OptKernelOptions& options) {
+ReluOp::ReluOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = GenericInferDims;
     infer_type_func_ = GenericInferType;
+}
 
+RetCode ReluOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
-RetCode ReluOp::SelectFormat(const InputOutputInfo& info,
-                             vector<dataformat_t>* selected_input_formats,
+RetCode ReluOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
                              vector<dataformat_t>* selected_output_formats) {
     // NOTE: No data format requirements since it is an elt-wise op.
     //       The format should be inferred from the previous op.

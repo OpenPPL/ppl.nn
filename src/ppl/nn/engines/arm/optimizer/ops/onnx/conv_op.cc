@@ -29,6 +29,14 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
+ConvOp::ConvOp(const ir::Node* node) : ArmOptKernel(node), conv2d_param_(nullptr) {
+    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        return onnx::ReshapeConv(info, param_.get());
+    };
+
+    infer_type_func_ = GenericInferType;
+}
+
 ConvOp::~ConvOp() {
     if (conv2d_param_ != nullptr) {
         if (conv2d_param_->mgr != nullptr) {
@@ -49,12 +57,6 @@ RetCode ConvOp::Init(const OptKernelOptions& options) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
     }
-
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return onnx::ReshapeConv(info, param_.get());
-    };
-
-    infer_type_func_ = GenericInferType;
 
     return RC_SUCCESS;
 }

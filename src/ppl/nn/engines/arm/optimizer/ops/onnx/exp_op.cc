@@ -22,9 +22,12 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode ExpOp::Init(const OptKernelOptions& options) {
+ExpOp::ExpOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = GenericInferDims;
     infer_type_func_ = GenericInferType;
+}
+
+RetCode ExpOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 

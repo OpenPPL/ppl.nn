@@ -23,13 +23,15 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode ScatterNDOp::Init(const OptKernelOptions& options) {
+ScatterNDOp::ScatterNDOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeScatterND(info, nullptr);
     };
 
     infer_type_func_ = GenericInferType;
+}
 
+RetCode ScatterNDOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 

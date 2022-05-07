@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class GatherOp final : public ArmOptKernel {
 public:
-    GatherOp(const ir::Node* node) : ArmOptKernel(node) {}
+    GatherOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     ppl::common::RetCode SelectAlgorithm(const InputOutputInfo&, const OptKernelOptions&);
     ppl::common::RetCode SelectDataType(const InputOutputInfo& info,

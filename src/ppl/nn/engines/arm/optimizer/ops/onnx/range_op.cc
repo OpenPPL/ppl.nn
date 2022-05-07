@@ -24,13 +24,15 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode RangeOp::Init(const OptKernelOptions& options) {
+RangeOp::RangeOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeRange(info, nullptr);
     };
 
     infer_type_func_ = GenericInferType;
+}
 
+RetCode RangeOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 

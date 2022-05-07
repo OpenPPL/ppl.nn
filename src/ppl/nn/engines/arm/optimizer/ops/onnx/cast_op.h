@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class CastOp final : public ArmOptKernel {
 public:
-    CastOp(const ir::Node* node) : ArmOptKernel(node) {}
+    CastOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     ppl::common::RetCode SelectDataType(const InputOutputInfo& info,
                                         std::vector<ppl::common::datatype_t>* selected_input_types,

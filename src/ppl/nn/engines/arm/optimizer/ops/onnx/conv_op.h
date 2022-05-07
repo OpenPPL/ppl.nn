@@ -26,8 +26,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class ConvOp final : public ArmOptKernel {
 public:
-    ConvOp(const ir::Node* node) : ArmOptKernel(node), conv2d_param_(nullptr) {}
-
+    ConvOp(const ir::Node* node);
     ~ConvOp();
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;

@@ -26,6 +26,14 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
+GemmOp::GemmOp(const ir::Node* node) : ArmOptKernel(node), fc_param_(nullptr) {
+    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        return onnx::ReshapeGemm(info, param_.get());
+    };
+
+    infer_type_func_ = GenericInferType;
+}
+
 GemmOp::~GemmOp() {
     if (fc_param_ != nullptr) {
         if (fc_param_->mgr != nullptr) {
@@ -43,11 +51,6 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return onnx::ReshapeGemm(info, param_.get());
-    };
-
-    infer_type_func_ = GenericInferType;
     return RC_SUCCESS;
 }
 

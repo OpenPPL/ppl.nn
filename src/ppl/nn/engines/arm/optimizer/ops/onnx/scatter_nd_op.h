@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class ScatterNDOp final : public ArmOptKernel {
 public:
-    ScatterNDOp(const ir::Node* node) : ArmOptKernel(node) {}
+    ScatterNDOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 };

@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class NotOp final : public ArmOptKernel {
 public:
-    NotOp(const ir::Node* node) : ArmOptKernel(node) {}
+    NotOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 };

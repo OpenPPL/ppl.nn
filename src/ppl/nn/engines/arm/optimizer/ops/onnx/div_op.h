@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class DivOp final : public ArmOptKernel {
 public:
-    DivOp(const ir::Node* node) : ArmOptKernel(node) {}
+    DivOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     ppl::common::RetCode SelectAlgorithm(const InputOutputInfo&, const OptKernelOptions&);
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,

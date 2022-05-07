@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class FlattenOp final : public ArmOptKernel {
 public:
-    FlattenOp(const ir::Node* node) : ArmOptKernel(node) {}
+    FlattenOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 

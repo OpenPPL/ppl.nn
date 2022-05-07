@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class ReshapeOp final : public ArmOptKernel {
 public:
-    ReshapeOp(const ir::Node* node) : ArmOptKernel(node) {}
+    ReshapeOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     ppl::common::RetCode SelectAlgorithm(const InputOutputInfo&, const OptKernelOptions&);
     ppl::common::RetCode SelectDataType(const InputOutputInfo& info,

@@ -23,13 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode ConstantOfShapeOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam(options, &param_);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
+ConstantOfShapeOp::ConstantOfShapeOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeConstantOfShape(info, param_.get());
     };
@@ -38,6 +32,14 @@ RetCode ConstantOfShapeOp::Init(const OptKernelOptions& options) {
         TensorShape* shape = info->GetOutput<TensorImpl>(0)->GetShape();
         shape->SetDataType(param_->data_type);
     };
+}
+
+RetCode ConstantOfShapeOp::Init(const OptKernelOptions& options) {
+    auto status = GenericLoadParam(options, &param_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
+        return status;
+    }
 
     return RC_SUCCESS;
 }

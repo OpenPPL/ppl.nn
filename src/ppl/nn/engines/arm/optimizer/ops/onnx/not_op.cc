@@ -23,9 +23,12 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode NotOp::Init(const OptKernelOptions& options) {
+NotOp::NotOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = GenericInferDims;
     infer_type_func_ = GenericInferType;
+}
+
+RetCode NotOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 

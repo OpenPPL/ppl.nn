@@ -24,11 +24,11 @@ namespace ppl { namespace nn { namespace arm {
 
 class ReluOp final : public ArmOptKernel {
 public:
-    ReluOp(const ir::Node* node) : ArmOptKernel(node) {}
+    ReluOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
-                                        std::vector<ppl::common::dataformat_t>* selected_input_formats,
-                                        std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
+                                      std::vector<ppl::common::dataformat_t>* selected_input_formats,
+                                      std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
     KernelImpl* CreateKernelImpl() const override;
 };
 

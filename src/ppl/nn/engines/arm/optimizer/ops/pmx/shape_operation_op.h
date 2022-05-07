@@ -26,7 +26,7 @@ namespace ppl { namespace nn { namespace arm {
 
 class ShapeOperationOp final : public ArmOptKernel {
 public:
-    ShapeOperationOp(const ir::Node* node) : ArmOptKernel(node), op_(node) {}
+    ShapeOperationOp(const ir::Node* node);
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
 
