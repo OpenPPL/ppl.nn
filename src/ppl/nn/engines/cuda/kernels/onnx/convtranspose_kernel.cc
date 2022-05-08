@@ -37,7 +37,7 @@ e = cudaGetLastError();
 printf("in ConvTransposeKernel: %d\n", e);}
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_bytes = CalcTmpBufferSize(*ctx);
-    auto status = GetCudaDevice()->AllocTmpBuffer(16*tmp_buffer_bytes, &tmp_buffer_desc);
+    auto status = GetCudaDevice()->AllocTmpBuffer(tmp_buffer_bytes, &tmp_buffer_desc);
     if (status != ppl::common::RC_SUCCESS) {
         LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_bytes << "] for kernel[" << GetName()
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
