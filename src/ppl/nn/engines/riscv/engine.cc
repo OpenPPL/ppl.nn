@@ -151,7 +151,7 @@ OptKernel* RiscvEngine::CreateOptKernel(const ir::Node* node) const {
         return nullptr;
     }
 
-    auto opt_kernel = creator(node);
+    auto opt_kernel = (*creator)(node);
     if (!opt_kernel) {
         LOG(ERROR) << "create kernel[" << node->GetName() << "] failed: oom.";
         return nullptr;
