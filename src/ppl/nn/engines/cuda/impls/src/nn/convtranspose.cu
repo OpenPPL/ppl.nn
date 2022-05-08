@@ -510,10 +510,8 @@ printf("pre new nhwc2nhwkerc: %d, %d, %d, %d\n", e, grid_size, cvt_in_size_v4, k
             b_shape.Reshape( {N_pad, K_pad} );
             c_shape.Reshape( {M,     N_pad} );
             const void *gemm_bias = NULL;
-            //void *gemm_buf = NULL;
-            //void *gemm_output = (int4*)temp_buffer + cvt_in_size_v4;
-            void *gemm_buf = temp_buffer;
-            void *gemm_output = (int4*)temp_buffer;
+            void *gemm_buf = NULL;
+            void *gemm_output = (int4*)temp_buffer + cvt_in_size_v4;
 
 {cudaDeviceSynchronize();
 auto e = cudaGetLastError();
