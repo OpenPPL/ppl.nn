@@ -581,7 +581,7 @@ printf("transa gemm: %d\n", e);}
 auto e = cudaGetLastError();
 printf("pre launch gemm: %d,(%d,%d,%d), grid:(%d,%d,%d) %d, %s\n", e, M, N, K, grid_size.x, grid_size.y, grid_size.z, block_size.x, algo_param.algo_name.c_str());}
     //CUDA_SAFE_CALL(cuLaunchKernel(function, grid_size.x, grid_size.y, grid_size.z, block_size.x, block_size.y, block_size.z, 0, stream, args, 0));
-    CUDA_SAFE_CALL(cuLaunchKernel(function, grid_size.x, grid_size.y, grid_size.z, block_size.x, block_size.y, block_size.z, 0, stream, args, 0));
+    CUDA_SAFE_CALL(cuLaunchKernel(function, 1, 1, 1, block_size.x, block_size.y, block_size.z, 0, stream, args, 0));
 {cudaDeviceSynchronize();
 auto e = cudaGetLastError();
 printf("post launch gemm: %d\n", e);}
