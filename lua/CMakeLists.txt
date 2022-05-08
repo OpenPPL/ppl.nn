@@ -1,10 +1,3 @@
-if(NOT LUA_INCLUDE_DIR OR NOT LUA_LIBRARIES)
-    find_package(Lua QUIET)
-    if (NOT Lua_FOUND)
-        message(FATAL_ERROR "lua dev lib is required. please install lua development files or specify `LUA_INCLUDE_DIR` and `LUA_LIBRARIES` manually.")
-    endif()
-endif()
-
 hpcc_populate_dep(luacpp)
 
 # --------------------------------------------------------------------------- #
@@ -46,12 +39,9 @@ if(PPLNN_ENABLE_PMX_MODEL)
 endif()
 
 add_library(luapplnn_shared SHARED ${PPLNN_LUA_API_SRC})
-target_compile_features(luapplnn_shared PRIVATE cxx_std_14)
-target_link_libraries(luapplnn_shared PUBLIC pplnn_static luacpp_static ${LUA_LIBRARIES})
+target_link_libraries(luapplnn_shared PUBLIC pplnn_static luacpp_static)
 target_include_directories(luapplnn_shared PUBLIC
-    ${PROJECT_SOURCE_DIR}/include
-    ${LUA_INCLUDE_DIR}
-    ${HPCC_DEPS_DIR}/luacpp)
+    ${PROJECT_SOURCE_DIR}/include)
 
 # --------------------------------------------------------------------------- #
 
