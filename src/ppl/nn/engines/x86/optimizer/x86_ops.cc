@@ -20,6 +20,7 @@ using namespace std;
 using namespace ppl::common;
 
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/conv_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/onnx/abs_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/add_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/and_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/argmax_op.h"
@@ -127,6 +128,7 @@ static void RegisterOptKernelCreator(const string& domain, const string& type, u
 void RegisterBuiltinOpImpls() {
     // onnx op's default domain is ""
     // A
+    RegisterOptKernelCreator<AbsOp>("", "Abs", 6, 16);
     RegisterOptKernelCreator<AddOp>("", "Add", 7, 16);
     RegisterOptKernelCreator<AndOp>("", "And", 7, 16);
     RegisterOptKernelCreator<ArgmaxOp>("", "ArgMax", 1, 11);

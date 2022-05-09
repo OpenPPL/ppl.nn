@@ -117,6 +117,7 @@ void DeleteParam(ir::Attr* ptr) {
 // NOTE: sorted in alphabet order
 ParamParserManager::ParamParserManager() {
     // A
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Abs", 6, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Add", 7, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "And", 7, 16);
     PPL_REGISTER_OP_WITH_PARAM("", "ArgMax", 1, 11, ppl::nn::onnx::ArgMaxParam, ParseArgMaxParam);

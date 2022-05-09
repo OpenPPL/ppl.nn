@@ -42,13 +42,11 @@ ppl::common::RetCode SoftmaxKernel::DoExecute(KernelExecContext* ctx) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
             if (GetNode()->GetType().version < 13) {
                 return ppl::kernel::x86::softmax_ndarray_fp32(
-                    GetX86Device()->GetISA(),
-                    input->GetShape(), input->GetBufferPtr<float>(),
+                    GetISA(), input->GetShape(), input->GetBufferPtr<float>(),
                     param_->axis, output->GetBufferPtr<float>());
             } else {
                 return ppl::kernel::x86::softmax13_ndarray_fp32(
-                    GetX86Device()->GetISA(),
-                    input->GetShape(), input->GetBufferPtr<float>(),
+                    GetISA(), input->GetShape(), input->GetBufferPtr<float>(),
                     param_->axis, output->GetBufferPtr<float>());
             }
         } else {
