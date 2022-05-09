@@ -195,6 +195,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Reshape", 5, 13);
     PPL_REGISTER_OP_WITH_PARAM("", "Resize", 11, 16, ppl::nn::onnx::ResizeParam, ParseResizeParam);
     PPL_REGISTER_OP_WITH_PARAM("", "RoiAlign", 10, 15, ppl::nn::onnx::RoiAlignParam, ParseRoiAlignParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Round", 11, 16);
     // S
     PPL_REGISTER_OP_WITH_PARAM("", "ScatterElements", 11, 15, ppl::nn::onnx::ScatterElementsParam,
                                ParseScatterElementsParam);
