@@ -30,6 +30,11 @@ ppl::common::RetCode softmax(
     void *dst,
     const int64_t axis);
 
+ppl::common::RetCode softmax_opset13(
+    const ppl::nn::TensorShape *src_shape,
+    const void *src,
+    void *dst,
+    const int64_t axis);
 
 }}}}; // namespace ppl::kernel::arm_server::neon
 

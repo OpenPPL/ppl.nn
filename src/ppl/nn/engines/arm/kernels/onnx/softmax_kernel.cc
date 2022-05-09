@@ -38,10 +38,13 @@ ppl::common::RetCode SoftmaxKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    return ppl::kernel::arm_server::neon::softmax(input->GetShape(),
-        input->GetBufferPtr<void>(),
-        output->GetBufferPtr<void>(),
-        param_->axis);
+    if (this->GetNode()->GetType().version >= 13) {
+        return ppl::kernel::arm_server::neon::softmax_opset13(input->GetShape(), input->GetBufferPtr<void>(),
+                                                              output->GetBufferPtr<void>(), param_->axis);
+    } else {
+        return ppl::kernel::arm_server::neon::softmax(input->GetShape(), input->GetBufferPtr<void>(),
+                                                      output->GetBufferPtr<void>(), param_->axis);
+    }
 }
 
 }}} // namespace ppl::nn::arm
