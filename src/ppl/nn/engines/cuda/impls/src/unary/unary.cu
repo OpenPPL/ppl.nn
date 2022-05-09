@@ -32,6 +32,7 @@ enum UnaryOpType {
     Unary_Erf,
     Unary_Sin,
     Unary_Cos,
+    Unary_Round,
     Unary_ForceWord = INT_MAX,
 };
 
@@ -245,6 +246,24 @@ __device__ __inline__ int8_t ppl_scalar_unary<Unary_Cos, int8_t>(const int8_t& i
     return int8_t(cos(float(in_val)));
 }
 
+template <>
+__device__ __inline__ float ppl_scalar_unary<Unary_Round, float>(const float& in_val)
+{
+    return roundf(in_val);
+}
+
+template <>
+__device__ __inline__ half ppl_scalar_unary<Unary_Round, half>(const half& in_val)
+{
+    return __float2half(roundf(__half2float(in_val)));
+}
+
+template <>
+__device__ __inline__ int8_t ppl_scalar_unary<Unary_Round, int8_t>(const int8_t& in_val)
+{
+    return int8_t(roundf(float(in_val)));
+}
+
 
 #endif
 
@@ -297,5 +316,6 @@ UNARY_INSTANT(Ceil);
 UNARY_INSTANT(Erf);
 UNARY_INSTANT(Sin);
 UNARY_INSTANT(Cos);
+UNARY_INSTANT(Round);
 
 #undef UNARY_INSTANT

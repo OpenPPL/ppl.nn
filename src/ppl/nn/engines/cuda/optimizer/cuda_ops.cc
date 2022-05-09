@@ -24,6 +24,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/cuda/optimizer/ops/pmx/shape_operation_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/pmx/reduce_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/conv_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/abs_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/add_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/and_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/argmax_op.h"
@@ -77,6 +78,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/relu_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/reshape_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/resize_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/round_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/scatter_elements_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/scatter_nd_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/sequence_at_op.h"
@@ -125,6 +127,7 @@ static void RegisterOptKernelCreator(const string& domain, const string& type, u
 void RegisterBuiltinOpImpls() {
     // onnx op's default domain is ""
     // A
+    RegisterOptKernelCreator<AbsOp>("", "Abs", 6, 16);
     RegisterOptKernelCreator<AddOp>("", "Add", 7, 12);
     RegisterOptKernelCreator<AndOp>("", "And", 7, 16);
     RegisterOptKernelCreator<ArgmaxOp>("", "ArgMax", 1, 11);
@@ -196,6 +199,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<ReshapeOp>("", "Reshape", 5, 12);
     RegisterOptKernelCreator<ResizeOp>("", "Resize", 11, 12);
     RegisterOptKernelCreator<ROIAlignOp>("", "RoiAlign", 10, 15);
+    RegisterOptKernelCreator<RoundOp>("", "Round", 11, 16);
     // S
     RegisterOptKernelCreator<ScatterElementsOp>("", "ScatterElements", 11, 12);
     RegisterOptKernelCreator<ScatterNDOp>("", "ScatterND", 11, 12);
