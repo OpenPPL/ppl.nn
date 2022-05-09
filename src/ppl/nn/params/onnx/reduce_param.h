@@ -32,7 +32,7 @@ struct ReduceParam final : public ir::TypedAttr<ReduceParam> {
         ReduceProd = 3,
         ReduceMean = 4,
         ReduceL2 = 5,
-        ReduceUnknown = 5,
+        ReduceUnknown = 6,
     } reduce_type_t;
 
     reduce_type_t type;

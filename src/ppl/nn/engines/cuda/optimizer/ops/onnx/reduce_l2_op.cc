@@ -36,6 +36,10 @@ RetCode ReduceL2Op::Init(const OptKernelOptions& options) {
 
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
+        TensorShape& in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
+        if (in_shape.GetDataType() == DATATYPE_FLOAT16) {
+            type = DATATYPE_FLOAT32;
+        }
         if (type == DATATYPE_UNKNOWN) {
             status = InferInheritedType(info);
         } else if (type == DATATYPE_INT8) {
