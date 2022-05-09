@@ -30,22 +30,23 @@ inline bool IsGraphOutput(const ir::Graph* graph, edgeid_t edge_id) {
     return false;
 }
 
-
 RetCode SkipDropoutOptimizer::Optimize(ir::Graph* graph) const {
-    for(auto it = graph->topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
+    for (auto it = graph->topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
         auto node = it->Get();
-        if(node->GetType().name == "Dropout") {
+        if (node->GetType().name == "Dropout") {
             auto input_edge = graph->topo->GetEdge(node->GetInput(0));
-            if(input_edge->CalcConsumerCount() != 1 || IsGraphOutput(graph, input_edge->GetId())) {
+            if (input_edge->CalcConsumerCount() != 1 || IsGraphOutput(graph, input_edge->GetId())) {
                 continue;
             }
             auto output_edge = graph->topo->GetEdge(node->GetOutput(0));
-            auto node_pre = graph->topo->GetNode(input_edge->GetProducer());	
+            auto node_pre = graph->topo->GetNode(input_edge->GetProducer());
             node_pre->ReplaceOutput(input_edge->GetId(), output_edge->GetId());
             output_edge->SetProducer(node_pre->GetId());
 
             graph->topo->DelEdge(input_edge->GetId());
-            graph->topo->DelEdge(node->GetOutput(1));
+            if (node->GetOutputCount() >= 2) {
+                graph->topo->DelEdge(node->GetOutput(1));
+            }
             graph->topo->DelNode(node->GetId());
         }
     }
@@ -53,5 +54,4 @@ RetCode SkipDropoutOptimizer::Optimize(ir::Graph* graph) const {
     return RC_SUCCESS;
 }
 
-
-}}
+}} // namespace ppl::nn
