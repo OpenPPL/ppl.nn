@@ -177,6 +177,7 @@ RetCode X86Engine::DisableAVXFMA3(X86Engine* engine, va_list) {
     auto isa = engine->device_.GetISA();
     isa &= (~ppl::common::ISA_X86_AVX512);
     isa &= (~ppl::common::ISA_X86_FMA);
+    isa &= (~ppl::common::ISA_X86_AVX2);
     isa &= (~ppl::common::ISA_X86_AVX);
     engine->device_.SetISA(isa);
     return RC_SUCCESS;

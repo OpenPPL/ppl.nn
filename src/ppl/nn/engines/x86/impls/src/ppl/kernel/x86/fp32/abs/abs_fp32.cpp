@@ -18,17 +18,18 @@
 #include <math.h>
 
 #include "ppl/kernel/x86/common/internal_include.h"
+#include "ppl/kernel/x86/fp32/abs.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
-ppl::common::RetCode ceil_fp32(
+ppl::common::RetCode abs_fp32_ref(
     const ppl::nn::TensorShape *x_shape,
     const float *x,
     float *y)
 {
 #define _OP_SS(Y, X) \
     do {             \
-        Y = ceilf(X); \
+        Y = fabsf(X); \
     } while (0)
 
     const int64_t n_elem      = x_shape->GetElementsIncludingPadding();
@@ -59,6 +60,21 @@ ppl::common::RetCode ceil_fp32(
     }
 
     return ppl::common::RC_SUCCESS;
+}
+
+ppl::common::RetCode abs_fp32(
+    const ppl::common::isa_t isa,
+    const ppl::nn::TensorShape *x_shape,
+    const float *x,
+    float *y)
+{
+    if (isa & ppl::common::ISA_X86_AVX) {
+        return abs_fp32_avx(x_shape, x, y);
+    }
+    if (isa & ppl::common::ISA_X86_SSE) {
+        return abs_fp32_sse(x_shape, x, y);
+    }
+    return abs_fp32_ref(x_shape, x, y);
 }
 
 }}}; // namespace ppl::kernel::x86
