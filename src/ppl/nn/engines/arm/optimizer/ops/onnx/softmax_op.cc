@@ -40,8 +40,7 @@ RetCode SoftmaxOp::Init(const OptKernelOptions& options) {
 RetCode SoftmaxOp::SelectFormat(const InputOutputInfo& info,
                                 std::vector<ppl::common::dataformat_t>* selected_input_formats,
                                 std::vector<ppl::common::dataformat_t>* selected_output_formats) {
-    selected_input_formats->at(0) = selected_output_formats->at(0) =
-        info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
+    selected_input_formats->at(0) = selected_output_formats->at(0) = DATAFORMAT_NDARRAY;
     return RC_SUCCESS;
 }
 

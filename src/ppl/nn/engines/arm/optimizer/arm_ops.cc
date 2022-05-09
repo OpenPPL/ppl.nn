@@ -146,7 +146,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<ShapeOp>("", "Shape", 1, 14);
     RegisterOptKernelCreator<SigmoidOp>("", "Sigmoid", 6, 16);
     RegisterOptKernelCreator<SliceOp>("", "Slice", 1, 16);
-    RegisterOptKernelCreator<SoftmaxOp>("", "Softmax", 1, 12);
+    RegisterOptKernelCreator<SoftmaxOp>("", "Softmax", 1, 16);
     RegisterOptKernelCreator<SplitOp>("", "Split", 2, 12);
     RegisterOptKernelCreator<SqrtOp>("", "Sqrt", 6, 16);
     RegisterOptKernelCreator<SqueezeOp>("", "Squeeze", 1, 12);
