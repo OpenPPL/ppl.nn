@@ -92,6 +92,7 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
         }
     }
 
+    bool copy_data = true;
     for (int it = 0; it < kernel_param.axes_num; ++it) {
         int64_t axis = kernel_param.axes[it];
         int64_t start_val = kernel_param.starts[it];
@@ -99,19 +100,19 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
         // int step_val = kernel_param.steps[it];
         kernel_param.axes[it] = (axis + dim_count) % dim_count;
         int cur_dim_size = in_shape0.GetDim((axis + dim_count) % dim_count);
-        if (start_val == INT_MIN) {
+        if (start_val == INT_MIN || start_val == LLONG_MIN) {
             start_val = 0;
         }
-        if (start_val == INT_MAX || start_val > cur_dim_size) {
+        if (start_val == INT_MAX || start_val == LLONG_MAX || start_val > cur_dim_size) {
             start_val = cur_dim_size;
         }
         if (start_val < 0) {
             start_val = cur_dim_size + start_val;
         }
-        if (end_val == INT_MIN) {
+        if (end_val == INT_MIN || LLONG_MIN) {
             end_val = 0;
         }
-        if (end_val == INT_MAX || end_val > cur_dim_size) {
+        if (end_val == INT_MAX || end_val == LLONG_MAX || end_val > cur_dim_size) {
             end_val = cur_dim_size;
         }
         if (end_val < 0) {
@@ -119,11 +120,15 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
         }
         kernel_param.starts[it] = start_val;
         kernel_param.ends[it] = end_val;
+        if (start_val != 0 || end_val != cur_dim_size) {
+            copy_data = false;
+        }
     }
 
     ppl::common::RetCode status = ppl::common::RC_SUCCESS;
     if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL &&
-        input->GetShape()->GetElementsIncludingPadding() == output->GetShape()->GetElementsIncludingPadding()) {
+        input->GetShape()->GetElementsIncludingPadding() == output->GetShape()->GetElementsIncludingPadding() &&
+        copy_data) {
         output->TransferBufferFrom(input);
     } else {
         status = PPLCUDASliceForwardImp(GetStream(), kernel_param, input->GetShape(), input->GetBufferPtr(),
