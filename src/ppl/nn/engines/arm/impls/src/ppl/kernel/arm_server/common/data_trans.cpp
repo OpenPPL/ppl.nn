@@ -884,4 +884,168 @@ ppl::common::RetCode Fp16ToFp32(const __fp16* src, const int64_t len, float* dst
     return ppl::common::RC_SUCCESS;
 }
 
+ppl::common::RetCode N4cxFp32ToN8cxFp16(const float* src, int64_t batch, int64_t channels, int64_t height, int64_t width, __fp16* dst)
+{
+    const int64_t simd_w_fp32 = 4;
+    const int64_t simd_w_fp16 = 8;
+    const int64_t c_blk_in    = 4;
+    const int64_t c_blk_out   = 8;
+    const int64_t pad_c_in    = round_up(channels, c_blk_in);
+    const int64_t pad_c_out   = round_up(channels, c_blk_out);
+    const int64_t inner_dims  = height * width;
+
+    std::vector<int64_t> iter_of_loop{batch * div_up(channels, c_blk_out), inner_dims};
+    const float omp_div_task_time_ratio  = 20.0f; // assume that omp create thread is 20x slower than element copy
+    single_parallel_loop_config_t config = select_single_parallel_loop(iter_of_loop, omp_div_task_time_ratio);
+
+    if (config.depth_of_loop == 0) { // divide by outer dims is better
+        PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)
+        for (int64_t n = 0; n < batch; n++) {
+            for (int64_t c = 0; c < pad_c_out; c += c_blk_out) {
+                const int64_t c_eff_in = min(pad_c_in - c, c_blk_out);
+                if (c_eff_in == c_blk_out) {
+                    const float* p_src_0 = src + (n * pad_c_in + c) * inner_dims;
+                    const float* p_src_1 = p_src_0 + c_blk_in * inner_dims;
+                    __fp16* p_dst        = dst + (n * pad_c_out + c) * inner_dims;
+                    for (int64_t hw = 0; hw < inner_dims; hw++) {
+                        const float32x4_t v_src_0 = vld1q_f32(p_src_0 + hw * c_blk_in);
+                        const float32x4_t v_src_1 = vld1q_f32(p_src_1 + hw * c_blk_in);
+                        const float16x8_t v_dst   = vcombine_f16(vcvt_f16_f32(v_src_0), vcvt_f16_f32(v_src_1));
+                        vst1q_f16(p_dst + hw * c_blk_out, v_dst);
+                    }
+                } else if (c_eff_in == c_blk_in) {
+                    const float* p_src       = src + (n * pad_c_in + c) * inner_dims;
+                    __fp16* p_dst            = dst + (n * pad_c_out + c) * inner_dims;
+                    const float16x4_t v_zero = vdup_n_f16(0);
+                    for (int64_t hw = 0; hw < inner_dims; hw++) {
+                        const float32x4_t v_src = vld1q_f32(p_src + hw * c_blk_in);
+                        const float16x8_t v_dst = vcombine_f16(vcvt_f16_f32(v_src), v_zero);
+                        vst1q_f16(p_dst + hw * c_blk_out, v_dst);
+                    }
+                }
+            }
+        }
+    } else { // divide by inner dims is better
+        const int64_t num_threads           = config.num_threads;
+        const int64_t inner_dims_per_thread = div_up(inner_dims, num_threads);
+        PRAGMA_OMP_PARALLEL_FOR()
+        for (int64_t thread_id = 0; thread_id < num_threads; thread_id++) {
+            const int64_t inner_dims_start = inner_dims_per_thread * thread_id;
+            const int64_t inner_dims_end   = min(inner_dims_start + inner_dims_per_thread, inner_dims);
+            for (int64_t n = 0; n < batch; n++) {
+                for (int64_t c = 0; c < pad_c_out; c += c_blk_out) {
+                    const int64_t c_eff_in = min(pad_c_in - c, c_blk_out);
+                    if (c_eff_in == c_blk_out) {
+                        const float* p_src_0 = src + (n * pad_c_in + c) * inner_dims;
+                        const float* p_src_1 = p_src_0 + c_blk_in * inner_dims;
+                        __fp16* p_dst        = dst + (n * pad_c_out + c) * inner_dims;
+                        for (int64_t hw = inner_dims_start; hw < inner_dims_end; hw++) {
+                            const float32x4_t v_src_0 = vld1q_f32(p_src_0 + hw * c_blk_in);
+                            const float32x4_t v_src_1 = vld1q_f32(p_src_1 + hw * c_blk_in);
+                            const float16x8_t v_dst   = vcombine_f16(vcvt_f16_f32(v_src_0), vcvt_f16_f32(v_src_1));
+                            vst1q_f16(p_dst + hw * c_blk_out, v_dst);
+                        }
+                    } else if (c_eff_in == c_blk_in) {
+                        const float* p_src       = src + (n * pad_c_in + c) * inner_dims;
+                        __fp16* p_dst            = dst + (n * pad_c_out + c) * inner_dims;
+                        const float16x4_t v_zero = vdup_n_f16(0);
+                        for (int64_t hw = inner_dims_start; hw < inner_dims_end; hw++) {
+                            const float32x4_t v_src = vld1q_f32(p_src + hw * c_blk_in);
+                            const float16x8_t v_dst = vcombine_f16(vcvt_f16_f32(v_src), v_zero);
+                            vst1q_f16(p_dst + hw * c_blk_out, v_dst);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    (void)simd_w_fp16;
+    (void)simd_w_fp32;
+
+    return ppl::common::RC_SUCCESS;
+}
+
+ppl::common::RetCode N8cxFp16ToN4cxFp32(const __fp16* src, int64_t batch, int64_t channels, int64_t height, int64_t width, float* dst)
+{
+    const int64_t simd_w_fp16 = 8;
+    const int64_t simd_w_fp32 = 4;
+    const int64_t c_blk_in    = 8;
+    const int64_t c_blk_out   = 4;
+    const int64_t pad_c_in    = round_up(channels, c_blk_in);
+    const int64_t pad_c_out   = round_up(channels, c_blk_out);
+    const int64_t inner_dims  = height * width;
+
+    std::vector<int64_t> iter_of_loop{batch * div_up(channels, c_blk_out), inner_dims};
+    const float omp_div_task_time_ratio  = 20.0f; // assume that omp create thread is 20x slower than element copy
+    single_parallel_loop_config_t config = select_single_parallel_loop(iter_of_loop, omp_div_task_time_ratio);
+
+    if (config.depth_of_loop == 0) { // divide by outer dims is better
+        PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)
+        for (int64_t n = 0; n < batch; n++) {
+            for (int64_t c = 0; c < pad_c_in; c += c_blk_in) {
+                const int64_t c_eff_out = min(pad_c_out - c, c_blk_in);
+                if (c_eff_out == c_blk_in) {
+                    const __fp16* p_src = src + (n * pad_c_in + c) * inner_dims;
+                    float* p_dst_0      = dst + (n * pad_c_out + c) * inner_dims;
+                    float* p_dst_1      = p_dst_0 + c_blk_out * inner_dims;
+                    for (int64_t hw = 0; hw < inner_dims; hw++) {
+                        const float16x8_t v_src   = vld1q_f16(p_src + hw * c_blk_in);
+                        const float32x4_t v_dst_0 = vcvt_f32_f16(vget_low_f16(v_src));
+                        const float32x4_t v_dst_1 = vcvt_f32_f16(vget_high_f16(v_src));
+                        vst1q_f32(p_dst_0 + hw * c_blk_out, v_dst_0);
+                        vst1q_f32(p_dst_1 + hw * c_blk_out, v_dst_1);
+                    }
+                } else if (c_eff_out == c_blk_out) {
+                    const __fp16* p_src = src + (n * pad_c_in + c) * inner_dims;
+                    float* p_dst        = dst + (n * pad_c_out + c) * inner_dims;
+                    for (int64_t hw = 0; hw < inner_dims; hw++) {
+                        const float16x8_t v_src = vld1q_f16(p_src + hw * c_blk_in);
+                        const float32x4_t v_dst = vcvt_f32_f16(vget_low_f16(v_src));
+                        vst1q_f32(p_dst + hw * c_blk_out, v_dst);
+                    }
+                }
+            }
+        }
+    } else { // divide by inner dims is better
+        const int64_t num_threads           = config.num_threads;
+        const int64_t inner_dims_per_thread = div_up(inner_dims, num_threads);
+        PRAGMA_OMP_PARALLEL_FOR()
+        for (int64_t thread_id = 0; thread_id < num_threads; thread_id++) {
+            const int64_t inner_dims_start = inner_dims_per_thread * thread_id;
+            const int64_t inner_dims_end   = min(inner_dims_start + inner_dims_per_thread, inner_dims);
+            for (int64_t n = 0; n < batch; n++) {
+                for (int64_t c = 0; c < pad_c_in; c += c_blk_in) {
+                    const int64_t c_eff_out = min(pad_c_out - c, c_blk_in);
+                    if (c_eff_out == c_blk_in) {
+                        const __fp16* p_src = src + (n * pad_c_in + c) * inner_dims;
+                        float* p_dst_0      = dst + (n * pad_c_out + c) * inner_dims;
+                        float* p_dst_1      = p_dst_0 + c_blk_out * inner_dims;
+                        for (int64_t hw = inner_dims_start; hw < inner_dims_end; hw++) {
+                            const float16x8_t v_src   = vld1q_f16(p_src + hw * c_blk_in);
+                            const float32x4_t v_dst_0 = vcvt_f32_f16(vget_low_f16(v_src));
+                            const float32x4_t v_dst_1 = vcvt_f32_f16(vget_high_f16(v_src));
+                            vst1q_f32(p_dst_0 + hw * c_blk_out, v_dst_0);
+                            vst1q_f32(p_dst_1 + hw * c_blk_out, v_dst_1);
+                        }
+                    } else if (c_eff_out == c_blk_out) {
+                        const __fp16* p_src = src + (n * pad_c_in + c) * inner_dims;
+                        float* p_dst        = dst + (n * pad_c_out + c) * inner_dims;
+                        for (int64_t hw = inner_dims_start; hw < inner_dims_end; hw++) {
+                            const float16x8_t v_src = vld1q_f16(p_src + hw * c_blk_in);
+                            const float32x4_t v_dst = vcvt_f32_f16(vget_low_f16(v_src));
+                            vst1q_f32(p_dst + hw * c_blk_out, v_dst);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    (void)simd_w_fp16;
+    (void)simd_w_fp32;
+
+    return ppl::common::RC_SUCCESS;
+}
+
 }}}; // namespace ppl::kernel::arm_server

@@ -38,6 +38,10 @@ ppl::common::RetCode Fp32ToFp16(const float* src, const int64_t len, __fp16* dst
 
 ppl::common::RetCode Fp16ToFp32(const __fp16* src, const int64_t len, float* dst);
 
+ppl::common::RetCode N4cxFp32ToN8cxFp16(const float* src, int64_t batch, int64_t channels, int64_t height, int64_t width, __fp16* dst);
+
+ppl::common::RetCode N8cxFp16ToN4cxFp32(const __fp16* src, int64_t batch, int64_t channels, int64_t height, int64_t width, float* dst);
+
 }}} // namespace ppl::kernel::arm_server
 
 #endif
