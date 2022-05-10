@@ -1033,7 +1033,7 @@ __global__ void ppl_cukernel_pooling_max_f2s2_half_NHWC(
     int out_off = b_idx * out_height * out_width * pad_channels + c_idx;
 
     int ox = hw_idx % out_width;
-    int oy = hw_idx / out_height;
+    int oy = hw_idx / out_width;
 
     // pooling
     T res;
