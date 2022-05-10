@@ -120,9 +120,9 @@ void Bfs(nodeid_t max_node_id, const function<void(const function<void(nodeid_t)
 
 void DfsDeeperFirst(const ir::GraphTopo* topo, const function<void(nodeid_t)>& process) {
     // get node levels for second stage
-    vector<uint32_t> nid2level(topo->GetMaxNodeId(), 0);
+    vector<uint32_t> nid2level(topo->GetCurrentNodeIdBound(), 0);
     Bfs(
-        topo->GetMaxNodeId(),
+        topo->GetCurrentNodeIdBound(),
         [topo](const function<void(nodeid_t)>& f) -> void {
             for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
                 f(it->Get()->GetId());
@@ -142,7 +142,7 @@ void DfsDeeperFirst(const ir::GraphTopo* topo, const function<void(nodeid_t)>& p
         });
 
     ReversedDfs(
-        topo->GetMaxNodeId(),
+        topo->GetCurrentNodeIdBound(),
         [topo](const function<void(nodeid_t)>& f) -> void {
             auto leaf_nodes = topo->FindLeafNodes();
             for (auto x = leaf_nodes.begin(); x != leaf_nodes.end(); ++x) {

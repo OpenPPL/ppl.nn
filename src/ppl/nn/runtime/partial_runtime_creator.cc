@@ -59,7 +59,7 @@ RetCode PartialRuntimeCreator::InitPartialRuntimeResource(const ir::GraphTopo* t
                                                           PartialRuntimeResource* resource) {
     vector<nodeid_t> sorted_nodes;
     utils::ReversedDfs(
-        topo->GetMaxNodeId(),
+        topo->GetCurrentNodeIdBound(),
         [&ops](const function<void(nodeid_t)>& f) -> void {
             for (auto x = ops.end.begin(); x != ops.end.end(); ++x) {
                 f(*x);

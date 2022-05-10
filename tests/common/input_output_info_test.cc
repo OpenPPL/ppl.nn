@@ -33,8 +33,8 @@ protected:
         builder_.Finalize();
 
         auto topo = builder_.GetGraph()->topo.get();
-        edge_objects_.reserve(topo->GetMaxEdgeId());
-        for (edgeid_t i = 0; i < topo->GetMaxEdgeId(); ++i) {
+        edge_objects_.reserve(topo->GetCurrentEdgeIdBound());
+        for (edgeid_t i = 0; i < topo->GetCurrentEdgeIdBound(); ++i) {
             auto edge = topo->GetEdge(i);
             if (!edge) {
                 continue;
