@@ -96,8 +96,8 @@ private:
 PartialGraphTopo::PartialGraphTopo(GraphTopo* parent, const vector<nodeid_t>& nodes) {
     parent_ = parent;
 
-    node_ptrs_.resize(parent->GetMaxNodeId(), nullptr);
-    edge_ptrs_.resize(parent->GetMaxEdgeId(), nullptr);
+    node_ptrs_.resize(parent->GetCurrentNodeIdBound(), nullptr);
+    edge_ptrs_.resize(parent->GetCurrentEdgeIdBound(), nullptr);
 
     // set valid node and edge ptrs from parent
     for (uint32_t i = 0; i < nodes.size(); ++i) {
@@ -176,7 +176,7 @@ pair<Node*, bool> PartialGraphTopo::AddNode(const string& name) {
     auto ret_pair = parent_->AddNode(name);
     auto node = ret_pair.first;
 
-    node_ptrs_.resize(parent_->GetMaxNodeId(), nullptr);
+    node_ptrs_.resize(parent_->GetCurrentNodeIdBound(), nullptr);
 
     if (ret_pair.second) {
         node_ptrs_[node->GetId()] = node;
@@ -209,7 +209,7 @@ pair<Edge*, bool> PartialGraphTopo::AddEdge(const string& name) {
     auto ret_pair = parent_->AddEdge(name);
     auto edge = ret_pair.first;
 
-    edge_ptrs_.resize(parent_->GetMaxEdgeId(), nullptr);
+    edge_ptrs_.resize(parent_->GetCurrentEdgeIdBound(), nullptr);
 
     if (ret_pair.second) {
         edge_ptrs_[edge->GetId()] = edge;

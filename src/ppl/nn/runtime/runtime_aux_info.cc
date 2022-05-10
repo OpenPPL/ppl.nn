@@ -25,7 +25,7 @@ namespace ppl { namespace nn {
 
 /** @brief calculate each edge's reference count in `topo`. */
 static vector<uint32_t> CalcEdgeRefcount(const ir::GraphTopo* topo, const set<edgeid_t>& reserved_edgeids) {
-    vector<uint32_t> edge_refcount(topo->GetMaxEdgeId(), 0);
+    vector<uint32_t> edge_refcount(topo->GetCurrentEdgeIdBound(), 0);
 
     for (auto it = topo->CreateEdgeIter(); it->IsValid(); it->Forward()) {
         auto edge = it->Get();
@@ -86,7 +86,7 @@ static vector<uint32_t> CalcEdgeRefcount(const ir::GraphTopo* topo, const set<ed
 
 static RetCode InitEdgeLastConsumer(const ir::GraphTopo* topo, const vector<nodeid_t>& sorted_nodes,
                                     const set<edgeid_t>& reserved_edgeids, vector<nodeid_t>* edge_last_consumer) {
-    edge_last_consumer->resize(topo->GetMaxEdgeId(), INVALID_NODEID);
+    edge_last_consumer->resize(topo->GetCurrentEdgeIdBound(), INVALID_NODEID);
 
     auto edge_refcount = CalcEdgeRefcount(topo, reserved_edgeids);
 

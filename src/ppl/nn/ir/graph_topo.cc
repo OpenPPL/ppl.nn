@@ -114,7 +114,7 @@ RetCode GraphTopo::ReplaceWithNode(const string& node_name, const Node::Type& no
         GetEdge(*it)->ClearConsumer();
     }
 
-    vector<bool> reserved_edges(GetMaxEdgeId(), false);
+    vector<bool> reserved_edges(GetCurrentEdgeIdBound(), false);
 
     for (auto it = inputs_.begin(); it != inputs_.end(); ++it) {
         auto edge = GetEdge(*it);
@@ -256,7 +256,7 @@ vector<nodeid_t> GraphTopo::FindLeafNodes() const {
 
 void GraphTopo::TopologicalSort(const function<void(nodeid_t)>& callback) const {
     utils::ReversedDfs(
-        GetMaxNodeId(),
+        GetCurrentNodeIdBound(),
         [this](const function<void(nodeid_t)>& f) -> void {
             auto leaf_nodes = FindLeafNodes();
             for (auto x = leaf_nodes.begin(); x != leaf_nodes.end(); ++x) {

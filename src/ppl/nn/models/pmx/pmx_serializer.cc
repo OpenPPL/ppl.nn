@@ -409,16 +409,16 @@ static RetCode CreateFbGraph(FlatBufferBuilder* builder, const SerializationCont
 }
 
 static void InitSerializationContext(const ir::GraphTopo* topo, SerializationContext* ctx) {
-    ctx->nid2seq.resize(topo->GetMaxNodeId(), INVALID_NODEID);
-    ctx->seq2nid.reserve(topo->GetMaxNodeId());
+    ctx->nid2seq.resize(topo->GetCurrentNodeIdBound(), INVALID_NODEID);
+    ctx->seq2nid.reserve(topo->GetCurrentNodeIdBound());
     for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
         auto node = it->Get();
         ctx->nid2seq[node->GetId()] = ctx->seq2nid.size();
         ctx->seq2nid.push_back(node->GetId());
     }
 
-    ctx->eid2seq.resize(topo->GetMaxEdgeId(), INVALID_EDGEID);
-    ctx->seq2eid.reserve(topo->GetMaxEdgeId());
+    ctx->eid2seq.resize(topo->GetCurrentEdgeIdBound(), INVALID_EDGEID);
+    ctx->seq2eid.reserve(topo->GetCurrentEdgeIdBound());
     for (auto it = topo->CreateEdgeIter(); it->IsValid(); it->Forward()) {
         auto edge = it->Get();
         ctx->eid2seq[edge->GetId()] = ctx->seq2eid.size();

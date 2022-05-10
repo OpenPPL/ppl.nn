@@ -320,7 +320,7 @@ RetCode OptGraph::AddBridgeKernels(const utils::SharedResource& resource) {
 
 RetCode OptGraph::InitQuantization() {
     auto topo = graph_->topo.get();
-    std::vector<CudaTensorQuant> graph_quants(topo->GetMaxEdgeId());
+    std::vector<CudaTensorQuant> graph_quants(topo->GetCurrentEdgeIdBound());
 
     // Load node quant to args_->node_type
     auto& node_params = args_->quant_info.node_params;

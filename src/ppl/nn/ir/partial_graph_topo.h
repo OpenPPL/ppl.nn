@@ -93,8 +93,8 @@ public:
         return std::make_shared<Iter<Node>>(&node_ptrs_);
     }
 
-    nodeid_t GetMaxNodeId() const override {
-        return parent_->GetMaxNodeId();
+    nodeid_t GetCurrentNodeIdBound() const override {
+        return parent_->GetCurrentNodeIdBound();
     }
     Node* GetNode(nodeid_t id) const override;
     void DelNode(nodeid_t id) override;
@@ -112,8 +112,8 @@ public:
         return std::make_shared<Iter<Edge>>(&edge_ptrs_);
     }
 
-    edgeid_t GetMaxEdgeId() const override {
-        return parent_->GetMaxEdgeId();
+    edgeid_t GetCurrentEdgeIdBound() const override {
+        return parent_->GetCurrentEdgeIdBound();
     }
     Edge* GetEdge(edgeid_t id) const override;
     void DelEdge(edgeid_t) override;

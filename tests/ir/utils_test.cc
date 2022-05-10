@@ -75,7 +75,7 @@ TEST_F(IrUtilsTest, Dfs) {
     vector<nodeid_t> sorted_nodes;
 
     utils::ReversedDfs(
-        topo->GetMaxNodeId(),
+        topo->GetCurrentNodeIdBound(),
         [topo](const function<void(nodeid_t)>& f) -> void {
             auto end_nodes = topo->FindLeafNodes();
             for (auto x = end_nodes.begin(); x != end_nodes.end(); ++x) {
@@ -102,7 +102,7 @@ TEST_F(IrUtilsTest, Bfs) {
     vector<nodeid_t> sorted_nodes;
 
     utils::Bfs(
-        topo->GetMaxNodeId(),
+        topo->GetCurrentNodeIdBound(),
         [topo](const function<void(nodeid_t)>& f) -> void {
             for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
                 f(it->Get()->GetId());
@@ -146,7 +146,7 @@ TEST_F(IrUtilsTest, ReversedDfs) {
 
     vector<nodeid_t> sorted_nodes;
     utils::ReversedDfs(
-        topo->GetMaxNodeId(),
+        topo->GetCurrentNodeIdBound(),
         [topo, &end_nodes](const function<void(nodeid_t)>& f) -> void {
             for (auto x = end_nodes.begin(); x != end_nodes.end(); ++x) {
                 f(topo->GetNode(*x)->GetId());

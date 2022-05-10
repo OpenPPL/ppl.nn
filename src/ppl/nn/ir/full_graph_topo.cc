@@ -131,7 +131,7 @@ pair<Edge*, bool> FullGraphTopo::AddEdge(const string& name) {
         return make_pair(edge, false);
     }
 
-    edge = new FullGraphEdge(GetMaxEdgeId());
+    edge = new FullGraphEdge(GetCurrentEdgeIdBound());
     edge->SetName(name);
     edges_.emplace_back(unique_ptr<Edge>(edge));
     return make_pair(edge, true);

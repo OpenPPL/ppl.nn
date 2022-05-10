@@ -53,7 +53,7 @@ TEST_F(FullGraphTopoTest, full_graph_topo_CreateNodeIter_Test) {
 
 TEST_F(FullGraphTopoTest, full_graph_topo_GetMaxNodeId_Test) {
     auto topo = graph_builder_.GetGraph()->topo.get();
-    auto res = topo->GetMaxNodeId();
+    auto res = topo->GetCurrentNodeIdBound();
     EXPECT_EQ(res, 3);
 }
 
@@ -91,7 +91,7 @@ TEST_F(FullGraphTopoTest, full_graph_topo_CreateEdgeIter_Test) {
 
 TEST_F(FullGraphTopoTest, full_graph_topo_GetMaxEdgeId_Test) {
     auto topo = graph_builder_.GetGraph()->topo.get();
-    auto id = topo->GetMaxEdgeId();
+    auto id = topo->GetCurrentEdgeIdBound();
     EXPECT_EQ(id, 4);
 }
 

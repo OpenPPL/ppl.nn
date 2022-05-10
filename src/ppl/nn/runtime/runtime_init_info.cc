@@ -22,14 +22,14 @@ using namespace ppl::common;
 namespace ppl { namespace nn {
 
 static void InitValidNodeFlags(const ir::GraphTopo* topo, vector<bool>* flags) {
-    flags->resize(topo->GetMaxNodeId(), false);
+    flags->resize(topo->GetCurrentNodeIdBound(), false);
     for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
         flags->at(it->Get()->GetId()) = true;
     }
 }
 
 static void InitValidEdgeFlags(const ir::GraphTopo* topo, vector<bool>* flags) {
-    flags->resize(topo->GetMaxEdgeId(), false);
+    flags->resize(topo->GetCurrentEdgeIdBound(), false);
     for (auto it = topo->CreateEdgeIter(); it->IsValid(); it->Forward()) {
         flags->at(it->Get()->GetId()) = true;
     }

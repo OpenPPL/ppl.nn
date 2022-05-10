@@ -200,7 +200,7 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
 
     options.tensors->insert(make_pair(quant_edge_id, unique_ptr<TensorImpl>(new TensorImpl(quant_edge, TENSORTYPE_NORMAL))));
     *options.tensors->find(quant_edge_id)->second->GetShape() = quant_shape;
-    options.quants->resize(topo->GetMaxEdgeId());
+    options.quants->resize(topo->GetCurrentEdgeIdBound());
     options.quants->at(quant_edge_id).format = quant_shape.GetDataFormat();
     options.quants->at(quant_edge_id).type = quant_shape.GetDataType();
 

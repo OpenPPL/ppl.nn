@@ -83,7 +83,7 @@ public:
     virtual std::shared_ptr<NodeIter> CreateNodeIter() const = 0;
 
     /** @brief return the max node id that is greater than any used node id. */
-    virtual nodeid_t GetMaxNodeId() const = 0;
+    virtual nodeid_t GetCurrentNodeIdBound() const = 0;
 
     virtual Node* GetNode(nodeid_t id) const = 0;
     virtual void DelNode(nodeid_t id) = 0;
@@ -104,7 +104,7 @@ public:
     virtual std::shared_ptr<EdgeIter> CreateEdgeIter() const = 0;
 
     /** @brief return the max edge id that is greater than any used edge id. */
-    virtual edgeid_t GetMaxEdgeId() const = 0;
+    virtual edgeid_t GetCurrentEdgeIdBound() const = 0;
 
     virtual Edge* GetEdge(edgeid_t) const = 0;
     virtual void DelEdge(edgeid_t) = 0;

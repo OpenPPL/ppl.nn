@@ -247,8 +247,8 @@ static void InitRuntimeGraphResourceReservedTensors(const ir::GraphTopo* topo, c
 static RetCode InitRuntimeGraphResource(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
                                         const RuntimeInitInfo& init_info, const set<edgeid_t>& reserved_edgeids,
                                         vector<unique_ptr<EngineContext>>* engctx, RuntimeGraphResource* graph) {
-    graph->nodeid2kernel.resize(topo->GetMaxNodeId());
-    graph->edgeid2object.resize(topo->GetMaxEdgeId());
+    graph->nodeid2kernel.resize(topo->GetCurrentNodeIdBound());
+    graph->edgeid2object.resize(topo->GetCurrentEdgeIdBound());
 
     auto status = InitRuntimeGraphResourceKernels(topo, info, init_info.valid_node_flags, engctx, graph);
     if (status != RC_SUCCESS) {
@@ -368,7 +368,7 @@ RetCode RuntimeImpl::SetProfilingFlag(RuntimeImpl* rt, va_list args) {
     rt->conf_.profiling_flag = profiling_flag;
 
     if (profiling_flag) {
-        rt->profiler_.StartProfiling(rt->topo_->GetMaxNodeId());
+        rt->profiler_.StartProfiling(rt->topo_->GetCurrentNodeIdBound());
     } else {
         rt->profiler_.StopProfiling();
     }

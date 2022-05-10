@@ -170,7 +170,7 @@ static ir::Node* AddConverterNodeAndOutputs(const vector<edgeid_t>& common_edges
 static RetCode InsertConverterNodesForPartitions(const vector<EngineImpl*>& node2engine, ir::Graph* graph,
                                                  vector<pair<nodeid_t, EngineImpl*>>* converter_nodes) {
     auto topo = graph->topo.get();
-    const nodeid_t max_node_id = topo->GetMaxNodeId();
+    const nodeid_t max_node_id = topo->GetCurrentNodeIdBound();
 
     // newly inserted converter nodes' ids start from max_node_id
     for (nodeid_t nid = 0; nid < max_node_id; ++nid) {
@@ -456,7 +456,7 @@ RetCode ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, Ru
     // the second parameter is the producer engine of converter node's outputs
     vector<pair<nodeid_t, EngineImpl*>> converter_nodes;
     if (partitions.size() > 1) {
-        auto node2engine = GenNode2Engine(partitions, graph->topo->GetMaxNodeId());
+        auto node2engine = GenNode2Engine(partitions, graph->topo->GetCurrentNodeIdBound());
 
         status = InsertConverterNodesForPartitions(node2engine, graph, &converter_nodes);
         if (status != RC_SUCCESS) {
