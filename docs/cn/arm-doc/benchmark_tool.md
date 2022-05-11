@@ -8,12 +8,12 @@ ARM架构性能测试使用pplnn工具。
 
 pplnn工具编译请参考[building-from-source.md](../../en/building-from-source.md)。
 
-ARM架构使用openmp作为线程池。若需要测试多线程性能，编译时请指定`-DHPCC_USE_OPENMP=ON`。  
+ARM架构使用openmp作为线程池。若需要测试多线程性能，编译时请指定`-DPPLNN_USE_OPENMP=ON`。
 
 如要测试 FP16 精度推理的性能，编译时需指定`-DPPLNN_USE_ARMV8_2=ON`（编译器需支持`armv8.2-a`指令集）。
 
 ```bash
-./build.sh -DHPCC_USE_AARCH64=ON -DHPCC_USE_OPENMP=ON -DPPLNN_USE_ARMV8_2=ON
+./build.sh -DPPLNN_USE_AARCH64=ON -DPPLNN_USE_OPENMP=ON -DPPLNN_USE_ARMV8_2=ON
 ```
 
 如果测试的机器有多个 NUMA 节点，建议编译时指定`-DPPLNN_USE_NUMA=ON`（需确保系统中已安装`libnuma`库）。
@@ -70,7 +70,7 @@ pplnn中，与ARM架构测速相关的运行选项有：
 
 #### 3.2. 环境变量设置
 
-当编译指定了`-DHPCC_USE_OPENMP=ON`时，可使用环境变量`OMP_NUM_THREADS`来指定线程数：
+当编译指定了`-DPPLNN_USE_OPENMP=ON`时，可使用环境变量`OMP_NUM_THREADS`来指定线程数：
 
 ```bash
 export OMP_NUM_THREADS=8    # 指定8线程
@@ -122,7 +122,7 @@ pplnn会自动根据模型输入的shape生成随机测试数据。
 所用编译命令：
 
 ```bash
-./build.sh -DHPCC_USE_AARCH64=ON -DCMAKE_BUILD_TYPE=Release -DHPCC_USE_OPENMP=ON -DPPLNN_USE_ARMV8_2=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON -DPPLNN_USE_NUMA=ON
+./build.sh -DPPLNN_USE_AARCH64=ON -DCMAKE_BUILD_TYPE=Release -DPPLNN_USE_OPENMP=ON -DPPLNN_USE_ARMV8_2=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON -DPPLNN_USE_NUMA=ON
 ```
 
 所用测试命令：
@@ -268,7 +268,7 @@ pplnn会自动根据模型输入的shape生成随机测试数据。
 所用编译命令：
 
 ```bash
-./build.sh -DHPCC_USE_AARCH64=ON -DCMAKE_BUILD_TYPE=Release -DHPCC_USE_OPENMP=ON -DPPLNN_USE_ARMV8_2=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON
+./build.sh -DPPLNN_USE_AARCH64=ON -DCMAKE_BUILD_TYPE=Release -DPPLNN_USE_OPENMP=ON -DPPLNN_USE_ARMV8_2=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON
 ```
 
 所用测试命令：
@@ -408,4 +408,3 @@ pplnn会自动根据模型输入的shape生成随机测试数据。
 | shufflenet_v2_x1_0 | 12.09 | 45.83 |
 | shufflenet_v2_x1_5 | 21.15 | 87.37 |
 | shufflenet_v2_x2_0 | 38.53 | 162.03 |
-

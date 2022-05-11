@@ -8,10 +8,10 @@ x86架构性能测试使用pplnn工具。
 
 pplnn工具编译请参考[building-from-source.md](../../en/building-from-source.md)。
 
-x86架构使用openmp作为线程池。若需要测试多线程性能，编译时请指定`-DHPCC_USE_OPENMP=ON`：
+x86架构使用openmp作为线程池。若需要测试多线程性能，编译时请指定`-DPPLNN_USE_OPENMP=ON`：
 
 ```bash
-./build.sh -DHPCC_USE_X86_64=ON -DHPCC_USE_OPENMP=ON
+./build.sh -DPPLNN_USE_X86_64=ON -DPPLNN_USE_OPENMP=ON
 ```
 
 编译后pplnn工具的生成路径为：./pplnn-build/tools/pplnn
@@ -62,7 +62,7 @@ pplnn中，与x86架构测速相关的运行选项有：
 
 #### 3.2. 环境变量设置
 
-当编译指定了`-DHPCC_USE_OPENMP=ON`时，可使用环境变量`OMP_NUM_THREADS`来指定线程数：
+当编译指定了`-DPPLNN_USE_OPENMP=ON`时，可使用环境变量`OMP_NUM_THREADS`来指定线程数：
 
 ```bash
 export OMP_NUM_THREADS=8    # 指定8线程

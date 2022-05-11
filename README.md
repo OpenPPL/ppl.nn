@@ -37,7 +37,7 @@ git clone https://github.com/openppl-public/ppl.nn.git
 
 ```bash
 cd ppl.nn
-./build.sh -DHPCC_USE_X86_64=ON -DPPLNN_ENABLE_PYTHON_API=ON
+./build.sh -DPPLNN_USE_X86_64=ON -DPPLNN_ENABLE_PYTHON_API=ON
 ```
 
 * Running python demo:
