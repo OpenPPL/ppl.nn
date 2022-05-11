@@ -13,7 +13,7 @@ In `PPLNN`, an `Engine` is a collection of op implementations running on specifi
 
 ```python
 x86_options = pplnn.x86.EngineOptions()
-x86_engine = pplnn.x86EngineFactory.Create(x86_options)
+x86_engine = pplnn.x86.EngineFactory.Create(x86_options)
 ```
 
 to create an engine running on x86-compatible CPUs, or use
