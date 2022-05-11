@@ -8,10 +8,10 @@ This chapter only introduces the method of using pplnn to benchmark x86 architec
 
 For compilation method of pplnn, please refer to: [building-from-source.md](../../en/building-from-source.md).
 
-X86 architecture uses openmp as the thread pool, so if you need to test multi-thread performance, please compile with `-DHPCC_USE_OPENMP=ON` option as below:
+X86 architecture uses openmp as the thread pool, so if you need to test multi-thread performance, please compile with `-DPPLNN_USE_OPENMP=ON` option as below:
 
 ```bash
-./build.sh -DHPCC_USE_X86_64=ON -DHPCC_USE_OPENMP=ON
+./build.sh -DPPLNN_USE_X86_64=ON -DPPLNN_USE_OPENMP=ON
 ```
 
 pplnn will be generated to: ./pplnn-build/tools/pplnn
@@ -62,7 +62,7 @@ pplnn's run options related to the x86 architecture benchmark are:
 
 #### 3.2. Environment Variable Settings
 
-When the compilation specifies `-DHPCC_USE_OPENMP=ON`, the environment variable `OMP_NUM_THREADS` can be used to specify the number of threads:
+When the compilation specifies `-DPPLNN_USE_OPENMP=ON`, the environment variable `OMP_NUM_THREADS` can be used to specify the number of threads:
 
 ```bash
 export OMP_NUM_THREADS=8    # use 8 threads

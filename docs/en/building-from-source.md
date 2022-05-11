@@ -19,15 +19,15 @@ git clone https://github.com/openppl-public/ppl.nn.git
 #### Linux
 
 ```bash
-./build.sh -DHPCC_USE_X86_64=ON
+./build.sh -DPPLNN_USE_X86_64=ON
 ```
 
 Headers and libraries are installed in `pplnn-build/install`.
 
-If you want to enable openmp, please specify `HPCC_USE_OPENMP` as following:
+If you want to enable openmp, please specify `PPLNN_USE_OPENMP` as following:
 
 ```bash
-./build.sh -DHPCC_USE_X86_64=ON -DHPCC_USE_OPENMP=ON
+./build.sh -DPPLNN_USE_X86_64=ON -DPPLNN_USE_OPENMP=ON
 ```
 
 #### MacOS (Darwin)
@@ -45,7 +45,7 @@ and follow the instructions for Linux above.
 Using vs2015 for example:
 
 ```
-build.bat -G "Visual Studio 14 2015 Win64" -DHPCC_USE_X86_64=ON
+build.bat -G "Visual Studio 14 2015 Win64" -DPPLNN_USE_X86_64=ON
 ```
 
 Headers and libraries are installed in `pplnn-build/install`.
@@ -55,13 +55,13 @@ Headers and libraries are installed in `pplnn-build/install`.
 #### Linux and MacOS(Darwin)
 
 ```bash
-./build.sh -DHPCC_USE_CUDA=ON
+./build.sh -DPPLNN_USE_CUDA=ON
 ```
 
-Note that if you want to build X86 engine along with CUDA engine, you should specify `-DHPCC_USE_X86_64=ON` explicitly like this:
+Note that if you want to build X86 engine along with CUDA engine, you should specify `-DPPLNN_USE_X86_64=ON` explicitly like this:
 
 ```bash
-./build.sh -DHPCC_USE_X86_64=ON -DHPCC_USE_CUDA=ON
+./build.sh -DPPLNN_USE_X86_64=ON -DPPLNN_USE_CUDA=ON
 ```
 
 Headers and libraries are installed in `pplnn-build/install`.
@@ -69,7 +69,7 @@ Headers and libraries are installed in `pplnn-build/install`.
 If you want to use specified CUDA toolkit version, please specify `CUDA_TOOLKIT_ROOT_DIR` as following:
 
 ```bash
-./build.sh -DHPCC_USE_CUDA=ON -DCUDA_TOOLKIT_ROOT_DIR=/path/to/cuda-toolkit-root-dir
+./build.sh -DPPLNN_USE_CUDA=ON -DCUDA_TOOLKIT_ROOT_DIR=/path/to/cuda-toolkit-root-dir
 ```
 
 
@@ -78,7 +78,7 @@ If you want to use specified CUDA toolkit version, please specify `CUDA_TOOLKIT_
 Using vs2015 for example:
 
 ```
-build.bat -G "Visual Studio 14 2015 Win64" -DHPCC_USE_CUDA=ON
+build.bat -G "Visual Studio 14 2015 Win64" -DPPLNN_USE_CUDA=ON
 ```
 
 Headers and libraries are installed in `pplnn-build/install`.
@@ -88,19 +88,19 @@ Headers and libraries are installed in `pplnn-build/install`.
 We use runtime-compiling version by default. If you want to use static version (build all kernels in advance), please specify `PPLNN_ENABLE_CUDA_JIT` as following:
 
 ```bash
-./build.sh -DHPCC_USE_CUDA=ON -DPPLNN_ENABLE_CUDA_JIT=OFF
+./build.sh -DPPLNN_USE_CUDA=ON -DPPLNN_ENABLE_CUDA_JIT=OFF
 ```
 
 If you want to run debug model, please specify `CMAKE_BUILD_TYPE` as following:
 
 ```bash
-./build.sh -DHPCC_USE_CUDA=ON -DCMAKE_BUILD_TYPE=Debug
+./build.sh -DPPLNN_USE_CUDA=ON -DCMAKE_BUILD_TYPE=Debug
 ```
 
 If you want to profile running time for each kernel, please specify `PPLNN_ENABLE_KERNEL_PROFILING` as following and add arg `--enable-profiling` during executing pplnn.
 
 ```bash
-./build.sh -DHPCC_USE_CUDA=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON
+./build.sh -DPPLNN_USE_CUDA=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON
 ```
 
 ### Building RISCV Engine
@@ -115,7 +115,7 @@ export RISCV_ROOT_PATH=/path/to/riscv64-linux-x86_64-20210512
 
 Build pplnn:
 ```bash
-./build.sh -DHPCC_TOOLCHAIN_DIR=$RISCV_ROOT_PATH -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/riscv64-linux-gnu.cmake -DHPCC_USE_RISCV=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON -DPPLNN_ENABLE_PYTHON_API=OFF -DPPLNN_ENABLE_LUA_API=OFF -DCMAKE_INSTALL_PREFIX=pplnn-build/install
+./build.sh -DPPLNN_TOOLCHAIN_DIR=$RISCV_ROOT_PATH -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/riscv64-linux-gnu.cmake -DPPLNN_USE_RISCV64=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON -DPPLNN_ENABLE_PYTHON_API=OFF -DPPLNN_ENABLE_LUA_API=OFF -DCMAKE_INSTALL_PREFIX=pplnn-build/install
 ```
 
 Headers and libraries are installed in `pplnn-build/install`.
@@ -125,33 +125,33 @@ Headers and libraries are installed in `pplnn-build/install`.
 #### Linux
 
 ```bash
-./build.sh -DHPCC_USE_AARCH64=ON
+./build.sh -DPPLNN_USE_AARCH64=ON
 ```
 
 Headers and libraries are installed in `pplnn-build/install`.
 
-If you want to enable openmp, please specify `HPCC_USE_OPENMP` as following:
+If you want to enable openmp, please specify `PPLNN_USE_OPENMP` as following:
 
 ```bash
-./build.sh -DHPCC_USE_AARCH64=ON -DHPCC_USE_OPENMP=ON
+./build.sh -DPPLNN_USE_AARCH64=ON -DPPLNN_USE_OPENMP=ON
 ```
 
 If you want to enable FP16 inference, please specify `PPLNN_USE_ARMV8_2` (your compiler must have `armv8.2-a` ISA support):
 
 ```bash
-./build.sh -DHPCC_USE_AARCH64=ON -DPPLNN_USE_ARMV8_2=ON
+./build.sh -DPPLNN_USE_AARCH64=ON -DPPLNN_USE_ARMV8_2=ON
 ```
 
 If your system has multiple NUMA nodes, it is recommended to build with `PPLNN_USE_NUMA` (please make sure `libnuma` has been installed in your system):
 
 ```bash
-./build.sh -DHPCC_USE_AARCH64=ON -DPPLNN_USE_NUMA=ON
+./build.sh -DPPLNN_USE_AARCH64=ON -DPPLNN_USE_NUMA=ON
 ```
 
 If you want to run on mobile platforms, please use the Android NDK package:
 
 ```bash
-./build.sh -DHPCC_USE_AARCH64=ON -DANDROID_PLATFORM=android-22 -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=ON -DCMAKE_TOOLCHAIN_FILE=<path_to_android_ndk_package>/android-ndk-r22b/build/cmake/android.toolchain.cmake
+./build.sh -DPPLNN_USE_AARCH64=ON -DANDROID_PLATFORM=android-22 -DANDROID_ABI=arm64-v8a -DANDROID_ARM_NEON=ON -DCMAKE_TOOLCHAIN_FILE=<path_to_android_ndk_package>/android-ndk-r22b/build/cmake/android.toolchain.cmake
 ```
 
 ### Buliding Python API support

@@ -22,6 +22,25 @@ option(PPLNN_HOLD_DEPS "don't update dependencies" OFF)
 
 option(PPLNN_ENABLE_SANITIZE_OPTIONS "use -fsanitize options to check memory errors. Note that this option is only available for GCC and Clang." OFF)
 
+option(PPLNN_USE_X86_64 "" OFF)
+option(PPLNN_USE_AARCH64 "" OFF)
+option(PPLNN_USE_RISCV64 "" OFF)
+option(PPLNN_USE_CUDA "" OFF)
+
+# deprecated options
+if(HPCC_USE_X86_64 AND NOT PPLNN_USE_X86_64)
+    message(FATAL_ERROR "`HPCC_USE_X86_64` is deprecated. use `PPLNN_USE_X86_64` instead.")
+endif()
+if(HPCC_USE_AARCH64 AND NOT PPLNN_USE_AARCH64)
+    message(FATAL_ERROR "`HPCC_USE_AARCH64` is deprecated. use `PPLNN_USE_AARCH64` instead.")
+endif()
+if(HPCC_USE_CUDA AND NOT PPLNN_USE_CUDA)
+    message(FATAL_ERROR "`HPCC_USE_CUDA` is deprecated. use `PPLNN_USE_CUDA` instead.")
+endif()
+if(HPCC_USE_RISCV AND NOT PPLNN_USE_RISCV64)
+    message(FATAL_ERROR "`HPCC_USE_RISCV` is deprecated. use `PPLNN_USE_RISCV64` instead.")
+endif()
+
 # --------------------------------------------------------------------------- #
 
 # variables
@@ -88,19 +107,19 @@ endif()
 
 # engines
 
-if(HPCC_USE_X86_64)
+if(PPLNN_USE_X86_64)
     include(cmake/x86.cmake)
 endif()
 
-if(HPCC_USE_CUDA)
+if(PPLNN_USE_CUDA)
     include(cmake/cuda.cmake)
 endif()
 
-if(HPCC_USE_RISCV)
+if(PPLNN_USE_RISCV64)
     include(cmake/riscv.cmake)
 endif()
 
-if(HPCC_USE_AARCH64)
+if(PPLNN_USE_AARCH64)
     include(cmake/arm.cmake)
 endif()
 
