@@ -29,6 +29,7 @@ struct ConvTransposeExtraParam {
 };
 
 struct CudaConvTransposeParam {
+    int32_t bias_term = 0;
     ppl::nn::onnx::ConvTransposeParam param;
     ConvTransposeExtraParam extra_param;
 };
