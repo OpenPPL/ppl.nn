@@ -23,31 +23,39 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace python {
 
 #ifdef PPLNN_USE_CUDA
-void RegisterCudaBuiltinOpImpls();
-void RegisterCudaEngineFactory(pybind11::module*);
-void RegisterCudaEngineOptions(pybind11::module*);
-void RegisterCudaEngine(pybind11::module*);
+namespace cuda {
+void RegisterBuiltinOpImpls();
+void RegisterEngineFactory(pybind11::module*);
+void RegisterEngineOptions(pybind11::module*);
+void RegisterEngine(pybind11::module*);
+} // namespace cuda
 #endif
 
 #ifdef PPLNN_USE_X86
-void RegisterX86BuiltinOpImpls();
-void RegisterX86EngineFactory(pybind11::module*);
-void RegisterX86EngineOptions(pybind11::module*);
-void RegisterX86Engine(pybind11::module*);
+namespace x86 {
+void RegisterBuiltinOpImpls();
+void RegisterEngineFactory(pybind11::module*);
+void RegisterEngineOptions(pybind11::module*);
+void RegisterEngine(pybind11::module*);
+} // namespace x86
 #endif
 
 #ifdef PPLNN_USE_RISCV
-void RegisterRiscvBuiltinOpImpls();
-void RegisterRiscvEngineFactory(pybind11::module*);
-void RegisterRiscvEngineOptions(pybind11::module*);
-void RegisterRiscvEngine(pybind11::module*);
+namespace riscv {
+void RegisterBuiltinOpImpls();
+void RegisterEngineFactory(pybind11::module*);
+void RegisterEngineOptions(pybind11::module*);
+void RegisterEngine(pybind11::module*);
+} // namespace riscv
 #endif
 
 #ifdef PPLNN_USE_ARM
-void RegisterArmBuiltinOpImpls();
-void RegisterArmEngineFactory(pybind11::module*);
-void RegisterArmEngineOptions(pybind11::module*);
-void RegisterArmEngine(pybind11::module*);
+namespace arm {
+void RegisterBuiltinOpImpls();
+void RegisterEngineFactory(pybind11::module*);
+void RegisterEngineOptions(pybind11::module*);
+void RegisterEngine(pybind11::module*);
+} // namespace arm
 #endif
 
 void RegisterTensorShape(pybind11::module*);
@@ -59,13 +67,19 @@ void RegisterRuntime(pybind11::module*);
 void RegisterVersion(pybind11::module*);
 
 #ifdef PPLNN_ENABLE_ONNX_MODEL
-void RegisterOnnxRuntimeBuilder(pybind11::module*);
-void RegisterOnnxRuntimeBuilderFactory(pybind11::module*);
+namespace onnx {
+void RegisterRuntimeBuilderResources(pybind11::module*);
+void RegisterRuntimeBuilder(pybind11::module*);
+void RegisterRuntimeBuilderFactory(pybind11::module*);
+} // namespace onnx
 #endif
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-void RegisterPmxRuntimeBuilder(pybind11::module*);
-void RegisterPmxRuntimeBuilderFactory(pybind11::module*);
+namespace pmx {
+void RegisterRuntimeBuilderResources(pybind11::module*);
+void RegisterRuntimeBuilder(pybind11::module*);
+void RegisterRuntimeBuilderFactory(pybind11::module*);
+} // namespace pmx
 #endif
 
 PYBIND11_MODULE(nn, m) {
@@ -79,14 +93,16 @@ PYBIND11_MODULE(nn, m) {
 
 #ifdef PPLNN_ENABLE_ONNX_MODEL
     pybind11::module onnx_module = m.def_submodule("onnx");
-    RegisterOnnxRuntimeBuilderFactory(&onnx_module);
-    RegisterOnnxRuntimeBuilder(&onnx_module);
+    onnx::RegisterRuntimeBuilderResources(&onnx_module);
+    onnx::RegisterRuntimeBuilderFactory(&onnx_module);
+    onnx::RegisterRuntimeBuilder(&onnx_module);
 #endif
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
     pybind11::module pmx_module = m.def_submodule("pmx");
-    RegisterPmxRuntimeBuilderFactory(&pmx_module);
-    RegisterPmxRuntimeBuilder(&pmx_module);
+    pmx::RegisterRuntimeBuilderResources(&pmx_module);
+    pmx::RegisterRuntimeBuilderFactory(&pmx_module);
+    pmx::RegisterRuntimeBuilder(&pmx_module);
 #endif
 
     auto mgr = PyTypeCreatorManager::Instance();
@@ -101,34 +117,34 @@ PYBIND11_MODULE(nn, m) {
 
 #ifdef PPLNN_USE_CUDA
     pybind11::module cuda_module = m.def_submodule("cuda");
-    RegisterCudaBuiltinOpImpls();
-    RegisterCudaEngineFactory(&cuda_module);
-    RegisterCudaEngineOptions(&cuda_module);
-    RegisterCudaEngine(&cuda_module);
+    cuda::RegisterBuiltinOpImpls();
+    cuda::RegisterEngineFactory(&cuda_module);
+    cuda::RegisterEngineOptions(&cuda_module);
+    cuda::RegisterEngine(&cuda_module);
 #endif
 
 #ifdef PPLNN_USE_X86
     pybind11::module x86_module = m.def_submodule("x86");
-    RegisterX86BuiltinOpImpls();
-    RegisterX86EngineFactory(&x86_module);
-    RegisterX86EngineOptions(&x86_module);
-    RegisterX86Engine(&x86_module);
+    x86::RegisterBuiltinOpImpls();
+    x86::RegisterEngineFactory(&x86_module);
+    x86::RegisterEngineOptions(&x86_module);
+    x86::RegisterEngine(&x86_module);
 #endif
 
 #ifdef PPLNN_USE_RISCV
     pybind11::module riscv_module = m.def_submodule("riscv");
-    RegisterRiscvBuiltinOpImpls();
-    RegisterRiscvEngineFactory(&riscv_module);
-    RegisterRiscvEngineOptions(&riscv_module);
-    RegisterRiscvEngine(&riscv_module);
+    riscv::RegisterBuiltinOpImpls();
+    riscv::RegisterEngineFactory(&riscv_module);
+    riscv::RegisterEngineOptions(&riscv_module);
+    riscv::RegisterEngine(&riscv_module);
 #endif
 
 #ifdef PPLNN_USE_ARM
     pybind11::module arm_module = m.def_submodule("arm");
-    RegisterArmBuiltinOpImpls();
-    RegisterArmEngineFactory(&arm_module);
-    RegisterArmEngineOptions(&arm_module);
-    RegisterArmEngine(&arm_module);
+    arm::RegisterBuiltinOpImpls();
+    arm::RegisterEngineFactory(&arm_module);
+    arm::RegisterEngineOptions(&arm_module);
+    arm::RegisterEngine(&arm_module);
 #endif
 }
 

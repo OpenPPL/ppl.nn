@@ -542,9 +542,16 @@ if __name__ == "__main__":
             logging.error("create onnx RuntimeBuilder failed.")
             sys.exit(-1)
 
-        status = runtime_builder.InitFromFile(args.onnx_model, engines)
+        status = runtime_builder.LoadModelFromFile(args.onnx_model)
         if status != pplcommon.RC_SUCCESS:
             logging.error("init onnx RuntimeBuilder failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+        resources = pplnn.onnx.RuntimeBuilderResources()
+        resources.engines = engines
+        status = runtime_builder.SetResources(resources)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("onnx RuntimeBuilder set resources failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
 
         status = runtime_builder.Preprocess()
@@ -568,9 +575,16 @@ if __name__ == "__main__":
             logging.error("create RuntimeBuilder failed.")
             sys.exit(-1)
 
-        status = runtime_builder.InitFromFile(args.pmx_model, engines)
+        status = runtime_builder.LoadModelFromFile(args.pmx_model)
         if status != pplcommon.RC_SUCCESS:
             logging.error("init pmx RuntimeBuilder failed: " + pplcommon.GetRetCodeStr(status))
+            sys.exit(-1)
+
+        resources = pplnn.pmx.RuntimeBuilderResources()
+        resources.engines = engines
+        status = runtime_builder.SetResources(resources)
+        if status != pplcommon.RC_SUCCESS:
+            logging.error("pmx RuntimeBuilder set resources failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
 
         status = runtime_builder.Preprocess()

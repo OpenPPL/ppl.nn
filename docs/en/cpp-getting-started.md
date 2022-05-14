@@ -39,21 +39,33 @@ We can create an `onnx::RuntimeBuilder` with the following function:
 onnx::RuntimeBuilder* onnx::RuntimeBuilderFactory::Create();
 ```
 
-Then Initializes that `onnx::RuntimeBuilder` instance by one of
+and load model from a file or a buffer:
 
 ```c++
-ppl::common::RetCode Init(const char* model_file, Engine** engine_ptrs, uint32_t engine_num);
-ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engine_ptrs, uint32_t engine_num, const char* model_file_dir);
+ppl::common::RetCode LoadModel(const char* model_file);
+ppl::common::RetCode LoadModel(const char* model_buf, uint64_t buf_len);
 ```
 
-where the parameter `engine_ptrs` is the `x86_engine` we created:
+Then we set the resources used for processing:
+
+```c++
+struct Resources final {
+    Engine** engines;
+    uint32_t engine_num;
+};
+
+ppl::common::RetCode SetResources(const Resources&)
+```
+
+where the field `engines` of `Resources` is the `x86_engine` we created:
 
 ```c++
 vector<Engine*> engine_ptrs;
 engines.push_back(x86_engine);
+resources.engines = engine_ptrs.data();
 ```
 
-Note that the caller **MUST** guarantee that elements of `engine_ptrs` are valid during the life cycle of the `Runtime` object.
+Note that the caller **MUST** guarantee that elements of `engines` are valid during the life cycle of the `Runtime` object.
 
 `PPLNN` also supports multiple engines running in the same model. For example:
 
@@ -66,11 +78,12 @@ engines.emplace_back(unique_ptr<Engine>(x86_engine));
 engines.emplace_back(unique_ptr<Engine>(cuda_engine));
 // TODO add other engines
 
-const char* model_file = "/path/to/onnx/model";
 // use x86 and cuda engines to run this model
 vector<Engine*> engine_ptrs = {x86_engine, cuda_engine};
-auto builder = onnx::RuntimeBuilderFactory::Create();
-status = builder->Init(model_file, engine_ptrs.data(), engine_ptrs.size());
+
+Resources resources;
+resources.engines = engine_ptrs.data();
+resources.engine_num = engine_ptrs.size();
 ...
 ```
 

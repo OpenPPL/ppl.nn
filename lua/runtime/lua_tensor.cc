@@ -34,8 +34,8 @@ void RegisterTensor(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTabl
         .DefMember("GetName", [](const LuaTensor* tensor) -> const char* {
             return tensor->ptr->GetName();
         })
-        .DefMember("GetShape", [tensor_shape_class](const LuaTensor* tensor) -> LuaUserData {
-            return tensor_shape_class.CreateUserData(tensor->ptr->GetShape());
+        .DefMember("GetShape", [tensor_shape_class](const LuaTensor* tensor) -> LuaObject {
+            return tensor_shape_class.CreateInstance(tensor->ptr->GetShape());
         })
         .DefMember("ConvertFromHost", [](LuaTensor* ltensor, const LuaStringRef& buf,
                                          const LuaTable& dims_table, datatype_t data_type) -> RetCode {

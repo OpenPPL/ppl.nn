@@ -116,12 +116,7 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
     /************************ 2. create runtime builder from onnx model *************************/
     x86::RegisterBuiltinOpImpls(); // register Ops
     auto x86_engine = x86::EngineFactory::Create(x86::EngineOptions()); // create x86 engine with default options
-
-    // register all engines you want to use
-    vector<unique_ptr<Engine>> engines;
-    vector<Engine*> engine_ptrs;
-    engines.emplace_back(unique_ptr<Engine>(x86_engine));
-    engine_ptrs.emplace_back(engines[0].get());
+    unique_ptr<Engine> x86_engine_guard(x86_engine);
 
     // create onnx runtime builder according to onnx model & engines registered before
     auto builder = unique_ptr<onnx::RuntimeBuilder>(onnx::RuntimeBuilderFactory::Create());
@@ -130,9 +125,21 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
         return -1;
     }
 
-    auto status = builder->Init(onnx_model_path, engine_ptrs.data(), engine_ptrs.size());
+    // load onnx model
+    auto status = builder->LoadModel(onnx_model_path);
     if (status != RC_SUCCESS) {
         fprintf(stderr, "init OnnxRuntimeBuilder failed: %s\n", GetRetCodeStr(status));
+        return -1;
+    }
+
+    // register engines you want to use
+    onnx::RuntimeBuilder::Resources resources;
+    resources.engines = &x86_engine;
+    resources.engine_num = 1;
+
+    status = builder->SetResources(resources);
+    if (status != RC_SUCCESS) {
+        cerr << "onnx RuntimeBuilder SetResources failed: " << GetRetCodeStr(status) << endl;
         return -1;
     }
 

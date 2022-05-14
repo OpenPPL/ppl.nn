@@ -1106,19 +1106,29 @@ int main(int argc, char* argv[]) {
 
 #ifdef PPLNN_ENABLE_ONNX_MODEL
     if (!g_flag_onnx_model.empty()) {
-        vector<Engine*> engine_ptrs(engines.size());
-        for (uint32_t i = 0; i < engines.size(); ++i) {
-            engine_ptrs[i] = engines[i].get();
-        }
         auto builder = unique_ptr<onnx::RuntimeBuilder>(onnx::RuntimeBuilderFactory::Create());
         if (!builder) {
             LOG(ERROR) << "create RuntimeBuilder failed.";
             return -1;
         }
 
-        status = builder->Init(g_flag_onnx_model.c_str(), engine_ptrs.data(), engine_ptrs.size());
+        status = builder->LoadModel(g_flag_onnx_model.c_str());
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "create OnnxRuntimeBuilder failed: " << GetRetCodeStr(status);
+            return -1;
+        }
+
+        vector<Engine*> engine_ptrs(engines.size());
+        for (uint32_t i = 0; i < engines.size(); ++i) {
+            engine_ptrs[i] = engines[i].get();
+        }
+        onnx::RuntimeBuilder::Resources resources;
+        resources.engines = engine_ptrs.data();
+        resources.engine_num = engine_ptrs.size();
+
+        status = builder->SetResources(resources);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "onnx RuntimeBuilder SetResources failed: " << GetRetCodeStr(status);
             return -1;
         }
 
@@ -1144,19 +1154,29 @@ int main(int argc, char* argv[]) {
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
     if (!g_flag_pmx_model.empty()) {
-        vector<Engine*> engine_ptrs(engines.size());
-        for (uint32_t i = 0; i < engines.size(); ++i) {
-            engine_ptrs[i] = engines[i].get();
-        }
         auto builder = unique_ptr<pmx::RuntimeBuilder>(pmx::RuntimeBuilderFactory::Create());
         if (!builder) {
             LOG(ERROR) << "create PmxRuntimeBuilder failed.";
             return -1;
         }
 
-        auto status = builder->Init(g_flag_pmx_model.c_str(), engine_ptrs.data(), engine_ptrs.size());
+        auto status = builder->LoadModel(g_flag_pmx_model.c_str());
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "init PmxRuntimeBuilder failed: " << GetRetCodeStr(status);
+            LOG(ERROR) << "PmxRuntimeBuilder LoadModel failed: " << GetRetCodeStr(status);
+            return -1;
+        }
+
+        vector<Engine*> engine_ptrs(engines.size());
+        for (uint32_t i = 0; i < engines.size(); ++i) {
+            engine_ptrs[i] = engines[i].get();
+        }
+        pmx::RuntimeBuilder::Resources resources;
+        resources.engines = engine_ptrs.data();
+        resources.engine_num = engine_ptrs.size();
+
+        status = builder->SetResources(resources);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "PmxRuntimeBuilder SetResources failed: " << GetRetCodeStr(status);
             return -1;
         }
 

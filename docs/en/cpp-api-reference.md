@@ -93,11 +93,23 @@ Defined in [include/ppl/nn/models/onnx/runtime_builder.h](../../include/ppl/nn/m
 #### Functions
 
 ```c++
-ppl::common::RetCode Init(const char* model_file, Engine** engines, uint32_t engine_num);
-ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num, const char* model_file_dir = nullptr);
+ppl::common::RetCode LoadModel(const char* model_file);
+ppl::common::RetCode LoadModel(const char* model_buf, uint64_t buf_len, const char* model_file_dir = nullptr);
 ```
 
-Initializes an `onnx::RuntimeBuilder` instance from an ONNX model file or buffer. The first parameter is the model file path, the second is engines that may be used to evaluate the compute graph. Note that callers should guarantee that `engines` is valid during inferencing. `model_file_dir` is used to parse external data and can be `nullptr` if there is no external data.
+Initializes an `onnx::RuntimeBuilder` instance from an ONNX model file or buffer. `model_file_dir` is used to parse external data and can be `nullptr` if there is no external data.
+
+```c++
+struct Resources final {
+    /** `engines` are used to evaluate the compute graph. Note that callers should guarantee that engines are valid during inferencing. */
+    Engine** engines;
+    uint32_t engine_num;
+};
+
+ppl::common::RetCode SetResources(const Resources&);
+```
+
+Sets the resources needed for preprocessing and evaluating models.
 
 ```c++
 ppl::common::RetCode Preprocess();
@@ -133,11 +145,23 @@ Defined in [include/ppl/nn/models/pmx/runtime_builder.h](../../include/ppl/nn/mo
 #### Functions
 
 ```c++
-ppl::common::RetCode Init(const char* model_file, Engine** engines, uint32_t engine_num);
-ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num);
+ppl::common::RetCode LoadModel(const char* model_file);
+ppl::common::RetCode LoadModel(const char* model_buf, uint64_t buf_len);
 ```
 
-Initializes an `pmx::RuntimeBuilder` instance from an PMX model file or buffer. The first parameter is the model file path, the second is engines that may be used to evaluate the compute graph. Note that callers should guarantee that `engines` is valid during inferencing.
+Initializes an `pmx::RuntimeBuilder` instance from an PMX model file or buffer.
+
+```c++
+struct Resources final {
+    /** `engines` are used to evaluate the compute graph. Note that callers should guarantee that engines are valid during inferencing. */
+    Engine** engines;
+    uint32_t engine_num;
+};
+
+ppl::common::RetCode SetResources(const Resources&);
+```
+
+Sets the resources needed for preprocessing and evaluating models.
 
 ```c++
 ppl::common::RetCode Preprocess();

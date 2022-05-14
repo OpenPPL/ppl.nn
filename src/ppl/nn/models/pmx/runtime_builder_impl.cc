@@ -71,14 +71,8 @@ static RetCode ParseEngines(const Vector<Offset<Engine>>* fb_engines, const vect
     return RC_SUCCESS;
 }
 
-RetCode RuntimeBuilderImpl::Init(const char* model_buf, uint64_t buf_len, ppl::nn::Engine** engines,
-                                 uint32_t engine_num) {
+RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len) {
     RetCode status;
-
-    resource_.engines.resize(engine_num);
-    for (uint32_t i = 0; i < engine_num; ++i) {
-        resource_.engines[i] = static_cast<EngineImpl*>(engines[i]);
-    }
 
     auto fb_model = pmx::GetModel(model_buf);
     if (!fb_model) {
@@ -106,14 +100,22 @@ RetCode RuntimeBuilderImpl::Init(const char* model_buf, uint64_t buf_len, ppl::n
     return RC_SUCCESS;
 }
 
-RetCode RuntimeBuilderImpl::Init(const char* model_file, ppl::nn::Engine** engines, uint32_t engine_num) {
+RetCode RuntimeBuilderImpl::LoadModel(const char* model_file) {
     FileMapping fm;
     auto status = fm.Init(model_file);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Init filemapping from file [" << model_file << "] faild: " << GetRetCodeStr(status);
         return status;
     }
-    return Init(fm.Data(), fm.Size(), engines, engine_num);
+    return LoadModel(fm.Data(), fm.Size());
+}
+
+RetCode RuntimeBuilderImpl::SetResources(const Resources& resource) {
+    resource_.engines.resize(resource.engine_num);
+    for (uint32_t i = 0; i < resource.engine_num; ++i) {
+        resource_.engines[i] = static_cast<EngineImpl*>(resource.engines[i]);
+    }
+    return RC_SUCCESS;
 }
 
 RetCode RuntimeBuilderImpl::Preprocess() {

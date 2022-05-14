@@ -239,21 +239,29 @@ print("PPLNN version: [" .. pplnn.PPLNN_VERSION_MAJOR .. "." .. pplnn.PPLNN_VERS
 
 local args = GenerateArgs()
 
-local engines = RegisterEngines(args)
-if next(engines) == nil then
-    logging.info("no engine is specified.")
-    os.exit(-1)
-end
-
 local runtime_builder = pplnn.onnx.RuntimeBuilderFactory:Create()
 if runtime_builder == nil then
     logging.error("create OnnxRuntimeBuilder failed.")
     os.exit(-1)
 end
 
-local status = runtime_builder:InitFromFile(args.onnx_model, engines)
+local status = runtime_builder:LoadModelFromFile(args.onnx_model)
 if status ~= pplcommon.RC_SUCCESS then
     logging.error("init OnnxRuntimeBuilder failed: " .. pplcommon.GetRetCodeStr(status))
+    os.exit(-1)
+end
+
+local engines = RegisterEngines(args)
+if next(engines) == nil then
+    logging.info("no engine is specified.")
+    os.exit(-1)
+end
+
+resources = pplnn.onnx.RuntimeBuilderResources()
+resources.engines = engines
+status = runtime_builder:SetResources(resources)
+if status ~= pplcommon.RC_SUCCESS then
+    logging.error("OnnxRuntimeBuilder set resources failed: " .. pplcommon.GetRetCodeStr(status))
     os.exit(-1)
 end
 

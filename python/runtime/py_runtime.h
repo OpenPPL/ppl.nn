@@ -18,20 +18,24 @@
 #ifndef _ST_HPC_PPL_NN_PYTHON_PY_RUNTIME_H_
 #define _ST_HPC_PPL_NN_PYTHON_PY_RUNTIME_H_
 
-#include "ppl/nn/engines/engine.h"
 #include "ppl/nn/runtime/runtime.h"
+#include "ppl/nn/engines/engine.h"
 #include <vector>
 #include <memory>
 
 namespace ppl { namespace nn { namespace python {
 
 struct PyRuntime final {
-    PyRuntime(const std::vector<std::shared_ptr<Engine>>& e, Runtime* r) : engines(e), ptr(r) {}
+    PyRuntime(const std::vector<std::shared_ptr<Engine>>& e, Runtime* r) : ptr(r), engines(e) {}
     PyRuntime(PyRuntime&&) = default;
     PyRuntime& operator=(PyRuntime&&) = default;
+    ~PyRuntime() {
+        ptr.reset();
+        engines.clear();
+    }
 
-    std::vector<std::shared_ptr<Engine>> engines; // retain engines
     std::unique_ptr<Runtime> ptr;
+    std::vector<std::shared_ptr<Engine>> engines; // retain engines
 };
 
 }}} // namespace ppl::nn::python

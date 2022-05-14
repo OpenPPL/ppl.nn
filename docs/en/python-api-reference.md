@@ -89,10 +89,18 @@ creates an `onnx.RuntimeBuilder` instance.
 ### onnx.RuntimeBuilder
 
 ```python
-status = runtime_builder.InitFromFile(onnx_model_file, engines)
+status = runtime_builder.LoadModelFromFile(onnx_model_file)
 ```
 
-Initializes an `onnx.RuntimeBuilder` instance from an ONNX model. `engines` is a list of `Engine` instances that may be used to evaluate the model.
+loads an ONNX model from the specified file.
+
+```python
+resources = RuntimeBuilderResources()
+resources.engines = engines
+status = runtime_builder.SetResources(resources)
+```
+
+where `engines` is a list of `Engine` instances that are used to preprocess and evaluate the model.
 
 ```python
 status = runtime_builder.Preprocess()
@@ -175,7 +183,7 @@ Configures `x86_engine`. Refer to [options.h](../../include/ppl/nn/engines/x86/o
 
 Refer to [engine_options.h](../../include/ppl/nn/engines/cuda/engine_options.h) of CUDA for more details.
 
-#### CudaEngineFactory
+#### EngineFactory
 
 ```python
 cuda_options = cuda.EngineOptions()
