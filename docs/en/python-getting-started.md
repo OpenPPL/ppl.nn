@@ -39,17 +39,22 @@ to create a `onnx.RuntimeBuilder`, which is used for creating `Runtime` instance
 
 ```python
 onnx_model_file = "/path/to/onnx_model_file"
-engines = [x86_engine] # or engines = [cuda_engine]
-status = runtime_builder.InitFromFile(onnx_model_file, engines)
+status = runtime_builder.LoadModelFromFile(onnx_model_file)
 ```
 
-initializes the `onnx.RuntimeBuilder` instance.
+loads an ONNX model from the specified file.
+
+```lua
+resources = RuntimeBuilderResources()
+resources.engines = [x86_engine] # or = [cuda_engine]
+runtime_builder.SetResources(resources)
+```
 
 `PPLNN` also supports multiple engines running in the same model. For example:
 
 ```python
-engines = [x86_engine, cuda_engine]
-status = runtime_builder.InitFromFile(onnx_model_file, engines)
+resources.engines = [x86_engine, cuda_engine]
+status = runtime_builder.SetResources(resources)
 ```
 
 The model will be partitioned into several parts and assign different ops to these engines automatically.

@@ -79,10 +79,18 @@ Creates an `onnx.RuntimeBuilder` instance.
 ### onnx.RuntimeBuilder
 
 ```lua
-status = runtime_builder:InitFromFile(onnx_model_file, engines)
+status = runtime_builder:LoadModelFromFile(onnx_model_file)
 ```
 
-initializes `runtime_builder` from an ONNX model. `engines` is a list of `Engine` instances that may be used to evaluate the model.
+loads an ONNX model from the specified file.
+
+```lua
+resources = RuntimeBuilderResources()
+resources.engines = engines
+status = runtime_builder:SetResources(resources)
+```
+
+where `engines` is a list of `Engine` instances that are used to preprocess and evaluate the model.
 
 ```lua
 status = runtime_builder:Preprocess()
@@ -151,7 +159,7 @@ Creates an `Engine` instance running on x86-64 compatiable CPUs.
 
 Refer to [engine_options.h](../../include/ppl/nn/engines/cuda/engine_options.h) for more details.
 
-#### CudaEngineFactory
+#### EngineFactory
 
 ```lua
 cuda_options = cuda.EngineOptions()

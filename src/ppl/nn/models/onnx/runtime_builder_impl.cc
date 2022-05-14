@@ -42,15 +42,7 @@ RuntimeBuilderImpl::~RuntimeBuilderImpl() {
     graph_info_.reset();
 }
 
-RetCode RuntimeBuilderImpl::Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num,
-                                 const char* model_file_dir) {
-    resource_.engines.resize(engine_num);
-    for (uint32_t i = 0; i < engine_num; ++i) {
-        resource_.engines[i] = static_cast<EngineImpl*>(engines[i]);
-    }
-
-    resource_.graph_partitioner = make_shared<EngineGraphPartitioner>();
-
+RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len, const char* model_file_dir) {
     auto status = ModelParser::Parse(model_buf, buf_len, model_file_dir, &graph_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse graph failed: " << GetRetCodeStr(status);
@@ -62,11 +54,11 @@ RetCode RuntimeBuilderImpl::Init(const char* model_buf, uint64_t buf_len, Engine
     return RC_SUCCESS;
 }
 
-RetCode RuntimeBuilderImpl::Init(const char* model_file, Engine** engines, uint32_t engine_num) {
+RetCode RuntimeBuilderImpl::LoadModel(const char* model_file) {
     FileMapping fm;
     auto status = fm.Init(model_file);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "Init filemapping from file [" << model_file << "] faild: " << GetRetCodeStr(status);
+        LOG(ERROR) << "init filemapping from file [" << model_file << "] faild: " << GetRetCodeStr(status);
         return status;
     }
 
@@ -78,7 +70,17 @@ RetCode RuntimeBuilderImpl::Init(const char* model_file, Engine** engines, uint3
         parent_dir.assign(model_file, pos);
     }
 
-    return Init(fm.Data(), fm.Size(), engines, engine_num, parent_dir.c_str());
+    return LoadModel(fm.Data(), fm.Size(), parent_dir.c_str());
+}
+
+RetCode RuntimeBuilderImpl::SetResources(const Resources& resource) {
+    resource_.engines.resize(resource.engine_num);
+    for (uint32_t i = 0; i < resource.engine_num; ++i) {
+        resource_.engines[i] = static_cast<EngineImpl*>(resource.engines[i]);
+    }
+
+    resource_.graph_partitioner = make_shared<EngineGraphPartitioner>();
+    return RC_SUCCESS;
 }
 
 RetCode RuntimeBuilderImpl::Preprocess() {

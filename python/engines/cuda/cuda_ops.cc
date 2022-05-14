@@ -17,10 +17,10 @@
 
 #include "ppl/nn/engines/cuda/ops.h"
 
-namespace ppl { namespace nn { namespace python {
+namespace ppl { namespace nn { namespace python { namespace cuda {
 
-void RegisterCudaBuiltinOpImpls() {
-    cuda::RegisterBuiltinOpImpls();
+void RegisterBuiltinOpImpls() {
+    ppl::nn::cuda::RegisterBuiltinOpImpls();
 }
 
-}}}
+}}}} // namespace ppl::nn::python::cuda

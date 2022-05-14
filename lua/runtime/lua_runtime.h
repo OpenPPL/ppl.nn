@@ -26,12 +26,15 @@
 namespace ppl { namespace nn { namespace lua {
 
 struct LuaRuntime final {
-    LuaRuntime(const std::vector<std::shared_ptr<Engine>>& englist, Runtime* r)
-        : engines(englist), ptr(r) {}
+    LuaRuntime(const std::vector<std::shared_ptr<Engine>>& englist, Runtime* r) : engines(englist), ptr(r) {}
+    ~LuaRuntime() {
+        ptr.reset();
+        engines.clear();
+    }
     std::vector<std::shared_ptr<Engine>> engines; // retain engines
     std::unique_ptr<Runtime> ptr;
 };
 
-}}}
+}}} // namespace ppl::nn::lua
 
 #endif

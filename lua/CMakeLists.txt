@@ -2,8 +2,9 @@ hpcc_populate_dep(luacpp)
 
 # --------------------------------------------------------------------------- #
 
-file(GLOB_RECURSE PPLNN_LUA_API_SRC
+file(GLOB PPLNN_LUA_API_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/common/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/engines/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/utils/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/lua_pplnn.cc)

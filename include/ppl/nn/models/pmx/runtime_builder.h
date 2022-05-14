@@ -26,25 +26,30 @@ namespace ppl { namespace nn { namespace pmx {
 
 class PPLNN_PUBLIC RuntimeBuilder {
 public:
+    struct Resources final {
+        /** engines are managed by the caller */
+        Engine** engines = nullptr;
+        uint32_t engine_num = 0;
+    };
+
+public:
     virtual ~RuntimeBuilder() {}
 
-    /**
-       @brief init from a model file
-       @param engines used to process this model
-       @note engines are managed by the caller
-    */
-    virtual ppl::common::RetCode Init(const char* model_file, Engine** engines, uint32_t engine_num) = 0;
+    /** @brief load model from a file */
+    virtual ppl::common::RetCode LoadModel(const char* model_file) = 0;
+
+    /** @brief load model from a buffer */
+    virtual ppl::common::RetCode LoadModel(const char* model_buf, uint64_t buf_len) = 0;
 
     /**
-       @brief init from a model buffer
-       @param engines used to process this model
-       @note engines are managed by the caller
+       @brief set resources for preprocessing and creating `Runtime`.
+       MUST be called before `Preprocess()` and `CreateRuntime()`.
     */
-    virtual ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines,
-                                      uint32_t engine_num) = 0;
+    virtual ppl::common::RetCode SetResources(const Resources&) = 0;
 
-    virtual ppl::common::RetCode Configure(uint32_t option, ...) = 0;
+    virtual ppl::common::RetCode Configure(uint32_t, ...) = 0;
 
+    /** @note MUST be called before `CreateRuntime()` */
     virtual ppl::common::RetCode Preprocess() = 0;
 
     /** @brief creates a `Runtime` instance */

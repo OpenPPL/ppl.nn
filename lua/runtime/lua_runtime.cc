@@ -35,7 +35,7 @@ void RegisterRuntime(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTab
             if (!tensor) {
                 return lstate->CreateNil();
             }
-            return tensor_class.CreateUserData(tensor);
+            return tensor_class.CreateInstance(tensor);
         })
         .DefMember("Run", [](LuaRuntime* lruntime) -> RetCode {
             return lruntime->ptr->Run();
@@ -48,7 +48,7 @@ void RegisterRuntime(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTab
             if (!tensor) {
                 return lstate->CreateNil();
             }
-            return tensor_class.CreateUserData(tensor);
+            return tensor_class.CreateInstance(tensor);
         });
 
     lmodule->Set("Runtime", lclass);

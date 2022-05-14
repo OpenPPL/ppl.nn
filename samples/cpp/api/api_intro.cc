@@ -107,27 +107,36 @@ int main(void) {
     vector<unique_ptr<Engine>> engines;
     engines.emplace_back(unique_ptr<Engine>(x86_engine));
 
-    vector<Engine*> engine_ptrs(engines.size());
-    for (uint32_t i = 0; i < engines.size(); ++i) {
-        engine_ptrs[i] = engines[i].get();
-    }
-
     auto builder = unique_ptr<onnx::RuntimeBuilder>(onnx::RuntimeBuilderFactory::Create());
     if (!builder) {
         cerr << "create RuntimeBuilder failed." << endl;
         return -1;
     }
 
-    auto status = builder->Init(model_file, engine_ptrs.data(), engine_ptrs.size());
+    auto status = builder->LoadModel(model_file);
     if (status != RC_SUCCESS) {
         cerr << "init OnnxRuntimeBuilder failed: " << GetRetCodeStr(status) << endl;
+        return -1;
+    }
+
+    vector<Engine*> engine_ptrs(engines.size());
+    for (uint32_t i = 0; i < engines.size(); ++i) {
+        engine_ptrs[i] = engines[i].get();
+    }
+    onnx::RuntimeBuilder::Resources resources;
+    resources.engines = engine_ptrs.data();
+    resources.engine_num = engine_ptrs.size();
+
+    status = builder->SetResources(resources);
+    if (status != RC_SUCCESS) {
+        cerr << "onnx RuntimeBuilder SetResources failed: " << GetRetCodeStr(status) << endl;
         return -1;
     }
 
     status = builder->Preprocess();
     if (status != RC_SUCCESS) {
         cerr << "builder preprocess failed: " << GetRetCodeStr(status) << endl;
-        return status;
+        return -1;
     }
 
     auto runtime = unique_ptr<Runtime>(builder->CreateRuntime());

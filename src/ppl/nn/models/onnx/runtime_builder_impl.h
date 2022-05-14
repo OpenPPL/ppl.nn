@@ -32,9 +32,10 @@ class RuntimeBuilderImpl final : public RuntimeBuilder {
 public:
     RuntimeBuilderImpl();
     ~RuntimeBuilderImpl();
-    ppl::common::RetCode Init(const char* model_file, Engine** engines, uint32_t engine_num) override;
-    ppl::common::RetCode Init(const char* model_buf, uint64_t buf_len, Engine** engines, uint32_t engine_num,
-                              const char* model_file_dir = nullptr) override;
+    ppl::common::RetCode LoadModel(const char* model_file) override;
+    ppl::common::RetCode LoadModel(const char* model_buf, uint64_t buf_len,
+                                   const char* model_file_dir = nullptr) override;
+    ppl::common::RetCode SetResources(const Resources&) override;
     ppl::common::RetCode Configure(uint32_t, ...) override;
     ppl::common::RetCode Preprocess() override;
     Runtime* CreateRuntime() override;
