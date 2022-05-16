@@ -132,7 +132,8 @@ void PPLCUDAConvolutionCvtFlt(
     const int cta_size = 512;
     dim3 grid;
     int in_size_per_grp  = flt_num / num_grp * flt_height * flt_width * num_chl_per_grp_pad;
-    int out_size_per_grp = num_flt_per_grp_pad * flt_height * flt_width * num_chl_per_grp_pad;
+    //int out_size_per_grp = num_flt_per_grp_pad * flt_height * flt_width * num_chl_per_grp_pad;
+    int out_size_per_grp = num_flt_per_grp* flt_height * flt_width * num_chl_per_grp_pad;
     grid.x               = DivUp(in_size_per_grp, cta_size);
     grid.y               = num_grp;
     grid.z               = 1;
