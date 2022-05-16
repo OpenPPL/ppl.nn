@@ -29,8 +29,8 @@ namespace ppl { namespace nn { namespace cuda {
 class DeformConvAlgorithm : public Algorithm {
 public:
     DeformConvAlgorithm() {
-        std::set<dataformat_t> nhwc8{DATAFORMAT_NHWC8};
-        conv_formats_.emplace(DATAFORMAT_NDARRAY, nhwc8);
+        std::set<dataformat_t> nhwcs{DATAFORMAT_NHWC8, DATAFORMAT_NDARRAY};
+        conv_formats_.emplace(DATAFORMAT_NDARRAY, nhwcs);
     }
 
     const std::map<dataformat_t, std::set<dataformat_t>> Getformats(const std::string& type_name) const override {
@@ -43,6 +43,8 @@ public:
     void DeleteAttrParam(void*& param) override {
         return;
     };
+    bool IsSupported(const ir::Node* node, const OptKernelOptions& options,
+                     ppl::common::dataformat_t input_format) const override;
 
 public:
     double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) override;
