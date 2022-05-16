@@ -88,9 +88,9 @@
                         warp_idx * TILE_N_PER_MMA +             \
                         tid_y;                                  \
                                                                 \
-        _flt_n_valid = _flt_n_id < num_flt_per_grp_pad;         \
+        _flt_n_valid = _flt_n_id < num_flt_per_grp;         \
                                                                 \
-        _dBv2_off = grp_id * flt_hwc_v4 * num_flt_per_grp_pad + \
+        _dBv2_off = grp_id * flt_hwc_v4 * num_flt_per_grp + \
                     _flt_n_id * flt_hwc_v4 +                    \
                     tid_x;                                      \
     }

@@ -107,9 +107,9 @@
                         _step_id * (TILE_N_PER_CTA / READ_dBv4_STEPS) +              \
                         ldg_idy;                                                     \
                                                                                      \
-        _flt_n_valid = _flt_n_id < num_flt_per_grp_pad;                              \
+        _flt_n_valid = _flt_n_id < num_flt_per_grp;                              \
                                                                                      \
-        _dBv4_off = grp_id * flt_hw * num_chl_per_grp_pad_v8 * num_flt_per_grp_pad + \
+        _dBv4_off = grp_id * flt_hw * num_chl_per_grp_pad_v8 * num_flt_per_grp + \
                     _flt_n_id * flt_hw * num_chl_per_grp_pad_v8 +                    \
                     flt_c_v8_id;                                                     \
     }
