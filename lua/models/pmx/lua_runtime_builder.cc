@@ -29,7 +29,7 @@ namespace ppl { namespace nn { namespace lua { namespace pmx {
 
 void RegisterRuntimeBuilder(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& l_pmx_module,
                             const shared_ptr<LuaTable>& lmodule) {
-    auto runtime_class = LuaClass<LuaRuntime>(lmodule->Get("Runtime"));
+    auto runtime_class = lmodule->GetClass<LuaRuntime>("Runtime");
     auto lclass = lstate->CreateClass<LuaRuntimeBuilder>()
         .DefMember("LoadModelFromFile",
                    [](LuaRuntimeBuilder* lbuilder, const char* model_file) -> RetCode {

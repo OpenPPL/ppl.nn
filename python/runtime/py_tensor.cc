@@ -39,7 +39,8 @@ static const map<string, datatype_t> g_format2datatype = {
     {"?", DATATYPE_BOOL}, //  -> unsigned char
 };
 
-RetCode PyTensor::ConvertFromHost(const pybind11::buffer& b) {
+static RetCode ConvertFromHost(const PyTensor& py_tensor, const pybind11::buffer& b) {
+    auto tensor = py_tensor.ptr;
     pybind11::buffer_info info = b.request();
 
     vector<int64_t> dims(info.ndim);
@@ -47,7 +48,7 @@ RetCode PyTensor::ConvertFromHost(const pybind11::buffer& b) {
         dims[i] = info.shape[i];
     }
 
-    auto shape = tensor_->GetShape();
+    auto shape = tensor->GetShape();
     shape->Reshape(dims);
 
     auto ref = g_format2datatype.find(info.format);
@@ -56,37 +57,39 @@ RetCode PyTensor::ConvertFromHost(const pybind11::buffer& b) {
         return RC_UNSUPPORTED;
     }
     auto data_type = ref->second;
-    LOG(DEBUG) << "data type of input for tensor[" << tensor_->GetName() << "] is [" << GetDataTypeStr(data_type)
+    LOG(DEBUG) << "data type of input for tensor[" << tensor->GetName() << "] is [" << GetDataTypeStr(data_type)
                << "].";
 
     TensorShape src_shape = *shape;
     src_shape.SetDataFormat(DATAFORMAT_NDARRAY);
     src_shape.SetDataType(data_type);
 
-    auto status = tensor_->ReallocBuffer();
+    auto status = tensor->ReallocBuffer();
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "realloc buffer of [" << shape->GetBytesIncludingPadding()
-                   << "] bytes failed when setting data for tensor[" << tensor_->GetName()
+                   << "] bytes failed when setting data for tensor[" << tensor->GetName()
                    << "]: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = tensor_->ConvertFromHost(info.ptr, src_shape);
+    status = tensor->ConvertFromHost(info.ptr, src_shape);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "copy data to tensor[" << tensor_->GetName() << "] failed: " << GetRetCodeStr(status);
+        LOG(ERROR) << "copy data to tensor[" << tensor->GetName() << "] failed: " << GetRetCodeStr(status);
         return status;
     }
 
     return RC_SUCCESS;
 }
 
-PyNdArray PyTensor::ConvertToHost(datatype_t data_type, dataformat_t data_format) const {
+// use original data type and format if `datatype` or `dataformat` are unknown
+static PyNdArray ConvertToHost(const PyTensor& py_tensor, datatype_t data_type, dataformat_t data_format) {
+    auto tensor = py_tensor.ptr;
     PyNdArray arr;
-    if (tensor_->GetShape()->GetBytesExcludingPadding() == 0) {
+    if (tensor->GetShape()->GetBytesExcludingPadding() == 0) {
         return arr;
     }
 
-    TensorShape dst_shape = *tensor_->GetShape();
+    TensorShape dst_shape = *tensor->GetShape();
     if (data_type != DATATYPE_UNKNOWN) {
         dst_shape.SetDataType(data_type);
     }
@@ -95,9 +98,9 @@ PyNdArray PyTensor::ConvertToHost(datatype_t data_type, dataformat_t data_format
     }
 
     arr.data.resize(dst_shape.GetBytesExcludingPadding());
-    auto status = tensor_->ConvertToHost(arr.data.data(), dst_shape);
+    auto status = tensor->ConvertToHost(arr.data.data(), dst_shape);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "copy data of tensor[" << tensor_->GetName() << "] to host failed: " << GetRetCodeStr(status);
+        LOG(ERROR) << "copy data of tensor[" << tensor->GetName() << "] to host failed: " << GetRetCodeStr(status);
         return arr;
     }
 
@@ -123,25 +126,32 @@ void RegisterTensor(pybind11::module* m) {
     pybind11::class_<PyTensor>(*m, "Tensor")
         .def("__bool__",
              [](const PyTensor& tensor) -> bool {
-                 return (tensor.GetPtr());
+                 return (tensor.ptr);
              })
         .def("GetBufferPtr",
              [](const PyTensor& tensor) -> uint64_t {
-                 return (uint64_t)(tensor.GetPtr()->GetBufferPtr());
+                 return (uint64_t)(tensor.ptr->GetBufferPtr());
              })
         .def("SetBufferPtr",
              [](PyTensor& tensor, uint64_t ptr) -> void {
-                 tensor.GetPtr()->SetBufferPtr((void*)ptr);
+                 tensor.ptr->SetBufferPtr((void*)ptr);
              })
         .def("GetDeviceContext",
              [](const PyTensor& tensor) -> PyDeviceContext {
-                 return PyDeviceContext(tensor.GetPtr()->GetDeviceContext());
+                 return PyDeviceContext(tensor.ptr->GetDeviceContext());
              })
-        .def("GetName", &PyTensor::GetName, pybind11::return_value_policy::reference)
-        .def("GetShape", &PyTensor::GetConstShape, pybind11::return_value_policy::reference)
-        .def("ConvertFromHost", &PyTensor::ConvertFromHost)
-        // use original data type and format if `datatype` or `dataformat` are unknown
-        .def("ConvertToHost", &PyTensor::ConvertToHost, pybind11::return_value_policy::move,
+        .def("GetName",
+             [](const PyTensor& tensor) -> const char* {
+                 return tensor.ptr->GetName();
+             },
+             pybind11::return_value_policy::reference)
+        .def("GetShape",
+             [](const PyTensor& tensor) -> const TensorShape& {
+                 return *tensor.ptr->GetShape();
+             },
+             pybind11::return_value_policy::reference)
+        .def("ConvertFromHost", &ConvertFromHost)
+        .def("ConvertToHost", &ConvertToHost, pybind11::return_value_policy::move,
              pybind11::arg("datatype") = (ppl::common::datatype_t)ppl::common::DATATYPE_UNKNOWN,
              pybind11::arg("dataformat") = (ppl::common::dataformat_t)ppl::common::DATAFORMAT_NDARRAY);
 }

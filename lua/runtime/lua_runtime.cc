@@ -25,7 +25,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace lua {
 
 void RegisterRuntime(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
-    auto tensor_class = LuaClass<LuaTensor>(lmodule->Get("Tensor"));
+    auto tensor_class = lmodule->GetClass<LuaTensor>("Tensor");
     auto lclass = lstate->CreateClass<LuaRuntime>()
         .DefMember("GetInputCount", [](const LuaRuntime* lruntime) -> uint32_t {
             return lruntime->ptr->GetInputCount();

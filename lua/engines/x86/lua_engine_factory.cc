@@ -26,7 +26,7 @@ using namespace ppl::nn::x86;
 namespace ppl { namespace nn { namespace lua { namespace x86 {
 
 void RegisterEngineFactory(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& l_x86_module) {
-    auto x86_engine_class = LuaClass<LuaEngine>(l_x86_module->Get("Engine"));
+    auto x86_engine_class = l_x86_module->GetClass<LuaEngine>("Engine");
     auto lclass = lstate->CreateClass<EngineFactory>()
         .DefStatic("Create",
                    [x86_engine_class, lstate](const EngineOptions* options) -> LuaObject {

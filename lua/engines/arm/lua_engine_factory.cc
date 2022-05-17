@@ -26,7 +26,7 @@ using namespace ppl::nn::arm;
 namespace ppl { namespace nn { namespace lua { namespace arm {
 
 void RegisterEngineFactory(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& l_arm_module) {
-    auto arm_engine_class = LuaClass<LuaEngine>(l_arm_module->Get("Engine"));
+    auto arm_engine_class = l_arm_module->GetClass<LuaEngine>("Engine");
     auto lclass = lstate->CreateClass<EngineFactory>()
         .DefStatic("Create",
                    [arm_engine_class, lstate](const EngineOptions* options) -> LuaObject {

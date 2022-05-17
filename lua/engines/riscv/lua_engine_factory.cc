@@ -26,7 +26,7 @@ using namespace ppl::nn::riscv;
 namespace ppl { namespace nn { namespace lua { namespace riscv {
 
 void RegisterEngineFactory(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& l_riscv_module) {
-    auto riscv_engine_class = LuaClass<LuaEngine>(l_riscv_module->Get("Engine"));
+    auto riscv_engine_class = l_riscv_module->GetClass<LuaEngine>("Engine");
     auto lclass = lstate->CreateClass<EngineFactory>()
         .DefStatic("Create",
                    [riscv_engine_class, lstate](const EngineOptions* options) -> LuaObject {

@@ -26,7 +26,7 @@ using namespace ppl::nn::cuda;
 namespace ppl { namespace nn { namespace lua { namespace cuda {
 
 void RegisterEngineFactory(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& l_cuda_module) {
-    auto cuda_engine_class = LuaClass<LuaEngine>(l_cuda_module->Get("Engine"));
+    auto cuda_engine_class = l_cuda_module->GetClass<LuaEngine>("Engine");
     auto lclass = lstate->CreateClass<EngineFactory>()
         .DefStatic("Create",
                    [cuda_engine_class, lstate](const EngineOptions* options) -> LuaObject {
