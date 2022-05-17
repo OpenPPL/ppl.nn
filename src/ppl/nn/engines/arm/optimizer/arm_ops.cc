@@ -20,6 +20,7 @@ using namespace std;
 using namespace ppl::common;
 
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/conv_op.h"
+#include "ppl/nn/engines/arm/optimizer/ops/onnx/abs_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/add_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/argmax_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/avepool_op.h"
@@ -102,6 +103,7 @@ void RegisterBuiltinOpImpls() {
 
     // onnx op default domain is ""
     // A
+    RegisterOptKernelCreator<AbsOp>("", "Abs", 1, 16);
     RegisterOptKernelCreator<AddOp>("", "Add", 7, 16);
     RegisterOptKernelCreator<ArgMaxOp>("", "ArgMax", 1, 11);
     RegisterOptKernelCreator<AvePoolOp>("", "AveragePool", 1, 16);
