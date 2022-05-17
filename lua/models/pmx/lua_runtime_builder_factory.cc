@@ -26,7 +26,7 @@ using namespace ppl::nn::pmx;
 namespace ppl { namespace nn { namespace lua { namespace pmx {
 
 void RegisterRuntimeBuilderFactory(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& l_pmx_module) {
-    auto builder_class = LuaClass<LuaRuntimeBuilder>(l_pmx_module->Get("RuntimeBuilder"));
+    auto builder_class = l_pmx_module->GetClass<LuaRuntimeBuilder>("RuntimeBuilder");
 
     auto lclass = lstate->CreateClass<RuntimeBuilderFactory>()
         .DefStatic("Create",

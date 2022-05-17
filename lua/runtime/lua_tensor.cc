@@ -28,7 +28,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace lua {
 
 void RegisterTensor(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& lmodule) {
-    auto tensor_shape_class = LuaClass<LuaTensorShape>(lmodule->Get("TensorShape"));
+    auto tensor_shape_class = lmodule->GetClass<LuaTensorShape>("TensorShape");
 
     auto lclass = lstate->CreateClass<LuaTensor>()
         .DefMember("GetName", [](const LuaTensor* tensor) -> const char* {

@@ -26,7 +26,7 @@ using namespace ppl::nn::onnx;
 namespace ppl { namespace nn { namespace lua { namespace onnx {
 
 void RegisterRuntimeBuilderFactory(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& l_onnx_module) {
-    auto builder_class = LuaClass<LuaRuntimeBuilder>(l_onnx_module->Get("RuntimeBuilder"));
+    auto builder_class = l_onnx_module->GetClass<LuaRuntimeBuilder>("RuntimeBuilder");
 
     auto lclass = lstate->CreateClass<RuntimeBuilderFactory>()
         .DefStatic("Create",
