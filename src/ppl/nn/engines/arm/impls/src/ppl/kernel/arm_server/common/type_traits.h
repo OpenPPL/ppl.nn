@@ -68,6 +68,9 @@ template <typename vecType>
 inline vecType vsqrt(const vecType& v0);
 
 template <typename vecType>
+inline vecType vabs(const vecType& v0);
+
+template <typename vecType>
 inline vecType operator+(const vecType& v0, const vecType& v1)
 {
     return vadd<vecType>(v0, v1);
@@ -170,6 +173,12 @@ inline float32x4_t vsqrt<float32x4_t>(const float32x4_t& v0)
     return vsqrtq_f32(v0);
 }
 
+template <>
+inline float32x4_t vabs<float32x4_t>(const float32x4_t& v0)
+{
+    return vabsq_f32(v0);
+}
+
 /********************** uint32 x 2 **********************/
 
 template <>
@@ -253,6 +262,12 @@ inline uint32x2_t vsqrt<uint32x2_t>(const uint32x2_t& v0)
     vset_lane_u32((uint32_t)sqrtf(vget_lane_u32(v0, 0)), v_dst, 0);
     vset_lane_u32((uint32_t)sqrtf(vget_lane_u32(v0, 1)), v_dst, 1);
     return v_dst;
+}
+
+template <>
+inline uint32x2_t vabs<uint32x2_t>(const uint32x2_t& v0)
+{
+    return v0;
 }
 
 /********************** uint32 x 4 **********************/
@@ -342,6 +357,12 @@ inline uint32x4_t vsqrt<uint32x4_t>(const uint32x4_t& v0)
     vsetq_lane_u32((uint32_t)sqrtf(vgetq_lane_u32(v0, 2)), v_dst, 2);
     vsetq_lane_u32((uint32_t)sqrtf(vgetq_lane_u32(v0, 3)), v_dst, 3);
     return v_dst;
+}
+
+template <>
+inline uint32x4_t vabs<uint32x4_t>(const uint32x4_t& v0)
+{
+    return v0;
 }
 
 /********************** int64 x 2 **********************/
@@ -436,6 +457,12 @@ inline int64x2_t vsqrt<int64x2_t>(const int64x2_t& v0)
     vsetq_lane_s64((int64_t)sqrtf(vgetq_lane_s64(v0, 0)), v_dst, 0);
     vsetq_lane_s64((int64_t)sqrtf(vgetq_lane_s64(v0, 1)), v_dst, 1);
     return v_dst;
+}
+
+template <>
+inline int64x2_t vabs<int64x2_t>(const int64x2_t& v0)
+{
+    return vabsq_s64(v0);
 }
 
 /********************** uint16 x 8 **********************/
@@ -535,6 +562,12 @@ inline uint16x8_t vsqrt(const uint16x8_t& v0)
     return v_dst;
 }
 
+template <>
+inline uint16x8_t vabs(const uint16x8_t& v0)
+{
+    return v0;
+}
+
 /********************** uint16 x 4 **********************/
 
 template <>
@@ -624,6 +657,12 @@ inline uint16x4_t vsqrt(const uint16x4_t& v0)
     return v_dst;
 }
 
+template <>
+inline uint16x4_t vabs(const uint16x4_t& v0)
+{
+    return v0;
+}
+
 /********************** fp16 x 8 **********************/
 
 #ifdef PPLNN_USE_ARMV8_2_FP16
@@ -702,6 +741,12 @@ template <>
 inline float16x8_t vsqrt<float16x8_t>(const float16x8_t& v0)
 {
     return vsqrtq_f16(v0);
+}
+
+template <>
+inline float16x8_t vabs<float16x8_t>(const float16x8_t& v0)
+{
+    return vabsq_f16(v0);
 }
 #endif
 
