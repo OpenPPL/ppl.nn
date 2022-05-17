@@ -94,6 +94,12 @@ static void RegisterOptKernelCreator(const string& domain, const string& type, u
 
 // NOTE: sorted in alphabet order
 void RegisterBuiltinOpImpls() {
+    static bool ops_are_registered = false;
+    if (ops_are_registered) {
+        return;
+    }
+    ops_are_registered = true;
+
     // onnx op default domain is ""
     // A
     RegisterOptKernelCreator<AddOp>("", "Add", 7, 16);
