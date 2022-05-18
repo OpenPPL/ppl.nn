@@ -184,15 +184,8 @@ PYTHONPATH=./pplnn-build/install/lib python3 ./tools/pplnn.py --use-x86 --use-cu
 There is a python packaging configuration in [python/package](../../python/package). You can install pyppl using `pip`:
 
 ```bash
-cd ppl.nn
-rm -rf /tmp/pyppl-package # remove old packages
-cp -r python/package /tmp/pyppl-package
-cp -r pplnn-build/install/lib/pyppl/* /tmp/pyppl-package/pyppl # Copy .so files. See WARNING below.
-cd /tmp/pyppl-package
-pip3 install .
+./setup.sh
 ```
-
-**WARNING**: `Pip3` will delete all of the installed pyppl .so files before installation. Make sure that you have put all the .so files needed in `package/pyppl` before executing `pip3 install .`.
 
 After installation, you can use `from pyppl import nn` directly without setting the `PYTHONPATH` env.
 
