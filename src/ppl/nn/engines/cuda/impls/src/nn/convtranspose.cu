@@ -276,6 +276,7 @@ __global__ void flt_krsc2pkuvc(int4 *cvt_flt, const int4 *flt,
    inw + (s-stride_w)
    uv = stride_h*stride_w = pattern num
 */
+template<int AlignInt4>
 __global__ void nhwuvc2nhwc(int4 *output, const int4 *gemm_output,
         const int batch, const int out_height, const int out_width,
         const int channel_v4, const int input_height, const int input_width,
@@ -318,11 +319,70 @@ __global__ void nhwuvc2nhwc(int4 *output, const int4 *gemm_output,
         //fuse
         if (has_relu){
             int *data_v1 = (int*)&data;
+#pragma unroll
             for(int i = 0; i < 4; i++){
                 data_v1[i] = __vmaxs2(data_v1[i], 0);
             }
         }
         output[out_off] = data;
+    }
+}
+
+//input aligned with int2
+//output aligned with int4
+template<>
+__global__ void nhwuvc2nhwc<0>(int4 *output, const int4 *gemm_output,
+        const int batch, const int out_height, const int out_width,
+        const int channel_v4, const int input_height, const int input_width,
+        const int flt_h, const int flt_w,
+        const int pad_h, const int pad_w,
+        const int stride_h, const int stride_w,
+        const int4 *bias, const int has_relu){
+    constexpr int channel_v2 = 1;
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    int c_id = tid % channel_v2;// ===0
+    const int &kernel_u = stride_h;
+    const int &kernel_v = stride_w;
+    int v_id  = tid / channel_v2 % kernel_v;
+    int u_id  = tid / channel_v2 / kernel_v % kernel_u;
+    int iw_id = tid / channel_v2 / kernel_v / kernel_u % input_width;
+    int ih_id = tid / channel_v2 / kernel_v / kernel_u / input_width;// % input_height;
+    int n_id  = blockIdx.y;
+    int in_off = n_id * input_height * out_width * channel_v2 +
+                 tid;
+    if (ih_id >= input_height)  return;
+    
+    int local_h = -u_id;
+    int local_w = -v_id;
+    int oh_id = ih_id * stride_h + local_h + pad_h;
+    int ow_id = iw_id * stride_w + local_w + pad_w;
+    int out_off = n_id * out_height * out_width * channel_v2 +
+                  oh_id * out_width * channel_v2 +
+                  ow_id * channel_v2 +
+                  c_id;
+    if(oh_id >= 0 && oh_id < out_height && ow_id < out_width && ow_id >= 0){
+        int2 data = ((int2*)gemm_output)[in_off];
+        __half2 *h2_data = (__half2*)&data;
+        if (bias){
+            int2 bias_data = ((int2*)bias)[c_id];
+            __half2 *h2_bias = (__half2*)&bias_data;
+#pragma unroll
+            for(int i = 0; i < 2; i++){
+                h2_data[i] = __hadd2(h2_data[i], h2_bias[i]);
+            }
+        }
+        //fuse
+        if (has_relu){
+            int *data_v1 = (int*)&data;
+#pragma unroll
+            for(int i = 0; i < 2; i++){
+                data_v1[i] = __vmaxs2(data_v1[i], 0);
+            }
+        }
+        int4 out_data{0,0,0,0};
+        out_data.x = data.x;
+        out_data.y = data.y;
+        output[out_off] = out_data;
     }
 }
 
@@ -410,7 +470,10 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
     int pattern_num = stride_h*stride_w;
     int cvt_cta_size = 128;
     dim3 cvt_grid;
-    cvt_grid.x = DivUp(conv_in_c*pattern_num*kernel_u*kernel_v*conv_out_c_v4, cvt_cta_size);
+    if (conv_in_c <= 4 && ((pattern_num&1)==0) ) {
+        conv_in_c_pad = 4; 
+    }
+    cvt_grid.x = DivUp(conv_in_c_pad*pattern_num*kernel_u*kernel_v*conv_out_c_v4, cvt_cta_size);
     cvt_grid.y = 1;//conv_in_c;
     cvt_grid.z = 1;
     flt_krsc2pkuvc<<<cvt_grid, cvt_cta_size, 0, stream>>>(
@@ -491,6 +554,9 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
             fuse_param_t gemm_fuse_param;
             int M     = batch*cvt_in_h*cvt_in_w;
             int K_pad = kernel_u*kernel_v*in_c_pad;
+            if (out_c <= 4 && ((pattern_num&1)==0)) {
+                out_c_pad = 4;
+            }
             int N_pad = out_c_pad*pattern_num;
 
             gemm_param.bias_term = 0;
@@ -513,7 +579,6 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
             PPLCUDAGemmForwardImp(stream, module, &a_shape, cvt_input, &b_shape, rev_flt, 
                     gemm_bias, &c_shape, gemm_output, gemm_param, gemm_buf, gemm_fuse_param, algo_param);
 
-
             //cvt gemm_output to nhwc
             int has_relu = fuse_param.has_activation;
             constexpr int cvt_cta_size = 256;
@@ -524,14 +589,29 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
 
             int pad_height = kernel_h-1 - DivUp(kernel_h-stride_h, stride_h)*stride_h - pad_h;
             int pad_width  = kernel_w-1 - DivUp(kernel_w-stride_w, stride_w)*stride_w - pad_w;
-            nhwuvc2nhwc<<<cvt_grid, cvt_cta_size, 0, stream>>>(
-                    (int4 *)output, (const int4 *)gemm_output,
-                    batch, out_h, out_w, out_c_v4,
-                    cvt_in_h, cvt_in_w,
-                    kernel_h, kernel_w,
-                    pad_height, pad_width,
-                    stride_h, stride_w,
-                    (const int4 *)bias, has_relu);
+            if (out_c_pad != 4) {
+                nhwuvc2nhwc<1><<<cvt_grid, cvt_cta_size, 0, stream>>>(
+                        (int4 *)output, (const int4 *)gemm_output,
+                        batch, out_h, out_w, out_c_v4,
+                        cvt_in_h, cvt_in_w,
+                        kernel_h, kernel_w,
+                        pad_height, pad_width,
+                        stride_h, stride_w,
+                        (const int4 *)bias, has_relu);
+            }
+            else {
+                const int out_c_v2 = 1;//DivUp(out_c, 4);
+                cvt_grid.x = DivUp(cvt_in_h*cvt_in_w*pattern_num*out_c_v2, cvt_cta_size);
+                nhwuvc2nhwc<0><<<cvt_grid, cvt_cta_size, 0, stream>>>(
+                        (int4 *)output, (const int4 *)gemm_output,
+                        batch, out_h, out_w, out_c_v2,
+                        cvt_in_h, cvt_in_w,
+                        kernel_h, kernel_w,
+                        pad_height, pad_width,
+                        stride_h, stride_w,
+                        (const int4 *)bias, has_relu);
+            }
+
         }
         else{
             cvt_input = (void*)input;
@@ -640,7 +720,10 @@ double PPLCUDAConvTransposeSelectKernel(
             //rsc2puvc
             int cvt_cta_size = 128;
             dim3 cvt_grid;
-            cvt_grid.x = DivUp(out_c*pattern_num*kernel_u*kernel_v*in_c_v4, cvt_cta_size);
+            if (out_c <= 4 && ((pattern_num&1)==0)) {
+                out_c_pad = 4; 
+            }
+            cvt_grid.x = DivUp(out_c_pad*pattern_num*kernel_u*kernel_v*in_c_v4, cvt_cta_size);
             cvt_grid.y = 1;//conv_in_c;
             cvt_grid.z = 1;
             int4 *cvt_flt = cvt_input + cvt_in_size_v4;
