@@ -9,9 +9,9 @@ if(NOT PYTHON3_INCLUDE_DIRS)
             message(FATAL_ERROR "python dev lib is required. please install python3 development files (python3-dev on Debian/Ubuntu or python3-devel on RetHat/CentOS) or specify `PYTHON3_INCLUDE_DIRS` manually.")
         endif()
     endif()
-    set(PYTHON3_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
 
-    if(MSVC)
+    set(PYTHON3_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
+    if(MSVC)  # cannot link static libraries built without -fPIC on linux
         set(PYTHON3_LIBRARIES ${Python3_LIBRARIES})
     endif()
 endif()
@@ -75,11 +75,20 @@ target_compile_features(pypplnn_shared PRIVATE cxx_std_11)
 set_target_properties(pypplnn_shared PROPERTIES PREFIX "")
 set_target_properties(pypplnn_shared PROPERTIES OUTPUT_NAME "nn")
 
-if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+if(Python3_SOABI) # provided by find_package(Python3) in cmake >= 3.17
+    set(__so_suffix__ ".${Python3_SOABI}")
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set_target_properties(pypplnn_shared PROPERTIES SUFFIX "${__so_suffix__}.so") # using .so instead of .dylib on macosx
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set_target_properties(pypplnn_shared PROPERTIES SUFFIX "${__so_suffix__}.pyd") # using .pyd instead of .dll
+endif()
+
+unset(__so_suffix__)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     target_link_options(pypplnn_shared PUBLIC "LINKER:-undefined,dynamic_lookup") # required by pybind11
-    set_target_properties(pypplnn_shared PROPERTIES SUFFIX ".so") # using .so instead of .dylib
-elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-    set_target_properties(pypplnn_shared PROPERTIES SUFFIX ".pyd") # using .pyd instead of .dll
 endif()
 
 if(PPLNN_INSTALL)
