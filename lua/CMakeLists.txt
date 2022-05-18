@@ -50,7 +50,7 @@ target_include_directories(luapplnn_shared PUBLIC
 set_target_properties(luapplnn_shared PROPERTIES PREFIX "")
 set_target_properties(luapplnn_shared PROPERTIES OUTPUT_NAME "nn")
 
-if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set_target_properties(luapplnn_shared PROPERTIES SUFFIX ".so") # using .so instead of .dylib
 endif()
 
