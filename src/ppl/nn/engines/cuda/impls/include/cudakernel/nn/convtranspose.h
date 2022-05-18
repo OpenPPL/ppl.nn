@@ -54,7 +54,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
     ppl::nn::cuda::CUDAModule* module,
     ppl::nn::TensorShape* input_shape,
     const void* input,
-    const void* trans_filter,
+    const void* rev_flt,
     const void* bias,
     ppl::nn::TensorShape* output_shape,
     void* output,

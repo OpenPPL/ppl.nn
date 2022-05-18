@@ -89,8 +89,8 @@ set(PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES ${PPLNN_SOURCE_DIR}/include ${PPLNN_SOUR
 add_library(sm75_cuda_kernels OBJECT ${SM75_SRC})
 add_library(sm80_cuda_kernels OBJECT ${SM80_SRC})
 
-set_target_properties(sm75_cuda_kernels PROPERTIES COMPILE_FLAGS "-gencode arch=compute_75,code=sm_75")
-set_target_properties(sm80_cuda_kernels PROPERTIES COMPILE_FLAGS "-gencode arch=compute_80,code=sm_80")
+set_target_properties(sm75_cuda_kernels PROPERTIES COMPILE_FLAGS "-gencode arch=compute_75,code=sm_75 -fno-var-tracking-assignments")
+set_target_properties(sm80_cuda_kernels PROPERTIES COMPILE_FLAGS "-gencode arch=compute_80,code=sm_80 -fno-var-tracking-assignments")
 
 target_include_directories(sm75_cuda_kernels PUBLIC
     include
@@ -123,10 +123,15 @@ file(GLOB_RECURSE CUDA_SRC ${CUDA_SRC} src/arithmetic/*.cu
 				                       src/unary/*.cu)
 file(GLOB CUDA_SRC ${CUDA_SRC} src/nn/*.cu)
 file(GLOB CUDA_SRC ${CUDA_SRC} src/nn/depthwise/*.cu)
+FOREACH (_SOURCE_FILE_ ${CUDA_SRC})
+    if(${_SOURCE_FILE_} MATCHES  .*[.]cu)
+        set_source_files_properties(${_SOURCE_FILE_} PROPERTIES COMPILE_FLAGS " -gencode arch=compute_75,code=sm_75 -gencode arch=compute_80,code=sm_80 ")
+    endif()
+ENDFOREACH()
+
 
 add_library(pplkernelcuda_static STATIC ${CUDA_SRC})
 target_compile_features(pplkernelcuda_static PRIVATE cxx_std_11)
-set_target_properties(pplkernelcuda_static PROPERTIES COMPILE_FLAGS "-gencode arch=compute_75,code=sm_75")
 
 target_include_directories(pplkernelcuda_static PUBLIC
     include
