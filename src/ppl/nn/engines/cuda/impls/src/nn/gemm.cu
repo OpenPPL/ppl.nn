@@ -87,11 +87,43 @@ bool is_g_kvec_set = false;
         fuse_param.has_concat, concat_offset_v8,                      \
         concat_stride_v8
 
+#define SWZL_GEMM_FUNC_PARAM                                          \
+        (int4 *)weight,                                               \
+        input0_tmp,                                                   \
+        final_out,                                                    \
+        kLoopNum,                                                     \
+        in_lut, 0,                                                    \
+        flt_lut, 0,                                                   \
+        in_hw, out_hw,                                                \
+        flt_hw, splitk,                                               \
+        in_height, in_width,                                          \
+        batch, num_grp,                                               \
+        num_chl_per_grp, num_chl_per_grp_pad,                         \
+        flt_height, flt_width,                                        \
+        num_flt_per_grp, num_flt_per_grp_pad,                         \
+        out_height, out_width,                                        \
+        stride_height, stride_width,                                  \
+        pad_height, pad_width,                                        \
+        hole_height, hole_width,                                      \
+        has_bias, (int4 *)bias,                                       \
+        fuse_param.has_activation, clip_min,                          \
+        fuse_param.has_clip, clip_max,                                \
+        fuse_param.has_prelu, (const void *)fuse_param.prelu,         \
+        fuse_param.has_elt, (const int4 *)fuse_param.pre_data,        \
+        fuse_param.has_elt_activation, elt_clip_min,                  \
+        fuse_param.has_elt_clip, elt_clip_max,                        \
+        fuse_param.has_elt_prelu, (const void *)fuse_param.elt_prelu, \
+        (__half)fuse_param.leaky, (__half)fuse_param.elt_leaky,       \
+        fuse_param.has_concat, concat_offset_v8,                      \
+        concat_stride_v8
+
+
 void init_f1_kvec(std::vector<kernel_info_t> &g_kvec, ppl::common::datatype_t type)
 {
 #ifndef PPLNN_ENABLE_CUDA_JIT
     if (type == ppl::common::DATATYPE_FLOAT16) {
         Initialize2spkConvF1KernelContainer(g_kvec);
+        InitializeSwzlConvF1KernelContainer(g_kvec);
     }
     is_g_kvec_set = true;
 #endif
@@ -430,12 +462,17 @@ double PPLCUDAGemmSelectKernel(
 
         cudaEventRecord(begin, stream);
         for (int i = 0; i < TIMES; i++) {
+            FAKE_CONV_PARAM
+            int kLoopNum = DivUp(K_pad, tile_k_per_cta);
+            lut_t in_lut, flt_lut;
             if (g_kvec[kid].ktype == CONV_2SPK_F1) {
-                FAKE_CONV_PARAM
-                int kLoopNum = DivUp(K_pad, tile_k_per_cta);
-                lut_t in_lut, flt_lut;
                 (g_kvec[kid].lut_kptr)<<<grid_size, block_size, 0, stream>>>(GEMM_FUNC_PARAM);
+            } else if (g_kvec[kid].ktype == CONV_SWZL_F1) {
+                grid_size.x = DivUp(M, tile_n_per_cta);
+                grid_size.y = DivUp(N_pad, tile_m_per_cta);
+                (g_kvec[kid].lut_kptr)<<<grid_size, block_size, 0, stream>>>(SWZL_GEMM_FUNC_PARAM);
             }
+
         }
         cudaEventRecord(end, stream);
         cudaEventSynchronize(end);
@@ -575,7 +612,13 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
     CUfunction function = module->GetKernelFunc();
     CUDA_SAFE_CALL(cuLaunchKernel(function, grid_size.x, grid_size.y, grid_size.z, block_size.x, block_size.y, block_size.z, 0, stream, args, 0));
 #else
-        (g_kvec[kid].lut_kptr)<<<grid_size, block_size, 0, stream>>>(GEMM_FUNC_PARAM);
+        if (g_kvec[kid].ktype == CONV_2SPK_F1) {
+            (g_kvec[kid].lut_kptr)<<<grid_size, block_size, 0, stream>>>(GEMM_FUNC_PARAM);
+        } else if (g_kvec[kid].ktype == CONV_SWZL_F1) {
+            grid_size.x = DivUp(M, tile_n_per_cta);
+            grid_size.y = DivUp(N_pad, tile_m_per_cta);
+            (g_kvec[kid].lut_kptr)<<<grid_size, block_size, 0, stream>>>(SWZL_GEMM_FUNC_PARAM);
+        }
 #endif
     return status;
 }
