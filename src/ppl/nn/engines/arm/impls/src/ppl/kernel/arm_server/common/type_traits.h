@@ -71,6 +71,12 @@ template <typename vecType>
 inline vecType vabs(const vecType& v0);
 
 template <typename vecType>
+inline void vmla(vecType& vacc, const vecType& v0, const vecType& v1)
+{
+    vacc = vadd(vacc, vmul(v0, v1));
+}
+
+template <typename vecType>
 inline vecType operator+(const vecType& v0, const vecType& v1)
 {
     return vadd<vecType>(v0, v1);
@@ -179,6 +185,12 @@ inline float32x4_t vabs<float32x4_t>(const float32x4_t& v0)
     return vabsq_f32(v0);
 }
 
+template <>
+inline void vmla<float32x4_t>(float32x4_t& vacc, const float32x4_t& v0, const float32x4_t& v1)
+{
+    vacc = vfmaq_f32(vacc, v0, v1);
+}
+
 /********************** uint32 x 2 **********************/
 
 template <>
@@ -268,6 +280,12 @@ template <>
 inline uint32x2_t vabs<uint32x2_t>(const uint32x2_t& v0)
 {
     return v0;
+}
+
+template <>
+inline void vmla<uint32x2_t>(uint32x2_t& vacc, const uint32x2_t& v0, const uint32x2_t& v1)
+{
+    vacc = vmla_u32(vacc, v0, v1);
 }
 
 /********************** uint32 x 4 **********************/
@@ -363,6 +381,12 @@ template <>
 inline uint32x4_t vabs<uint32x4_t>(const uint32x4_t& v0)
 {
     return v0;
+}
+
+template <>
+inline void vmla<uint32x4_t>(uint32x4_t& vacc, const uint32x4_t& v0, const uint32x4_t& v1)
+{
+    vacc = vmlaq_u32(vacc, v0, v1);
 }
 
 /********************** int64 x 2 **********************/
@@ -568,6 +592,12 @@ inline uint16x8_t vabs(const uint16x8_t& v0)
     return v0;
 }
 
+template <>
+inline void vmla<uint16x8_t>(uint16x8_t& vacc, const uint16x8_t& v0, const uint16x8_t& v1)
+{
+    vacc = vmlaq_u16(vacc, v0, v1);
+}
+
 /********************** uint16 x 4 **********************/
 
 template <>
@@ -663,6 +693,12 @@ inline uint16x4_t vabs(const uint16x4_t& v0)
     return v0;
 }
 
+template <>
+inline void vmla<uint16x4_t>(uint16x4_t& vacc, const uint16x4_t& v0, const uint16x4_t& v1)
+{
+    vacc = vmla_u16(vacc, v0, v1);
+}
+
 /********************** fp16 x 8 **********************/
 
 #ifdef PPLNN_USE_ARMV8_2_FP16
@@ -747,6 +783,12 @@ template <>
 inline float16x8_t vabs<float16x8_t>(const float16x8_t& v0)
 {
     return vabsq_f16(v0);
+}
+
+template <>
+inline void vmla<float16x8_t>(float16x8_t& vacc, const float16x8_t& v0, const float16x8_t& v1)
+{
+    vacc = vfmaq_f16(vacc, v0, v1);
 }
 #endif
 
