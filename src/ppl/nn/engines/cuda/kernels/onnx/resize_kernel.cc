@@ -74,7 +74,8 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
     auto output_quant = GetCommonParam()->cuda_tensor_info->at(output_id);
     auto status = PPLCUDAResizeForwardImp(
         GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(), output->GetBufferPtr(),
-        scale_pre_set, h_scale, w_scale, param_->coord_trans_mode, param_->mode, param_->cubic_coeff_a, input_quant.scale[0], output_quant.scale[0]);
+        scale_pre_set, h_scale, w_scale, param_->coord_trans_mode, param_->mode, param_->cubic_coeff_a,
+        param_->nearest_mode, input_quant.scale[0], output_quant.scale[0]);
     return status;
 }
 

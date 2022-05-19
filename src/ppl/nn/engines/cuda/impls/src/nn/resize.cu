@@ -29,33 +29,49 @@ struct half8_ {
     half w1;
 };
 
-static inline __device__ float cudaComputeSourceIndexCubic(
-    float scale,
-    int dstIndex)
-{
-    float srcIdx = scale * (dstIndex + 0.5) - 0.5;
-    return srcIdx;
-}
+// static inline __device__ float cudaComputeSourceIndexCubic(
+//     float scale,
+//     int dstIndex)
+// {
+//     float srcIdx = scale * (dstIndex + 0.5) - 0.5;
+//     return srcIdx;
+// }
+// 
+// static inline __device__ float cudaComputeSourceIndexNearest(
+//     float scale,
+//     int dstIndex,
+//     int transform_mode)
+// {
+//     float srcIdx = 0.f;
+//     if (transform_mode == 3) {
+//         srcIdx = scale * dstIndex;
+//     } else {
+//         srcIdx = scale * (dstIndex + 0.5) - 0.5;
+//     }
+//     return (srcIdx < 0) ? 0.f : srcIdx;
+// }
+// 
+// static inline __device__ float cudaComputeSourceIndexBilinear(
+//     float scale,
+//     int dstIndex)
+// {
+//     float srcIdx = scale * (dstIndex + 0.5) - 0.5;
+//     return (srcIdx < 0) ? 0.f : srcIdx;
+// }
 
-static inline __device__ float cudaComputeSourceIndexNearest(
+static inline __device__ float cudaComputeSourceIndex(
     float scale,
     int dstIndex,
     int transform_mode)
 {
     float srcIdx = 0.f;
-    if (transform_mode == 3) {
+    if (transform_mode == 0 || transform_mode == 1) {
+        srcIdx = scale * (dstIndex + 0.5) - 0.5;
+    } else if (transform_mode == 2 || transform_mode == 3) {
         srcIdx = scale * dstIndex;
     } else {
-        srcIdx = scale * (dstIndex + 0.5) - 0.5;
+        srcIdx = scale * (dstIndex + 0.5);
     }
-    return (srcIdx < 0) ? 0.f : srcIdx;
-}
-
-static inline __device__ float cudaComputeSourceIndexBilinear(
-    float scale,
-    int dstIndex)
-{
-    float srcIdx = scale * (dstIndex + 0.5) - 0.5;
     return (srcIdx < 0) ? 0.f : srcIdx;
 }
 
@@ -248,7 +264,8 @@ __global__ void ppl_cukernel_resize_bilinear_int8(
     int out_height,
     int out_width,
     float in_scale,
-    float out_scale)
+    float out_scale,
+    int transform_mode)
 {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     if (index < num_threads) {
@@ -269,7 +286,7 @@ __global__ void ppl_cukernel_resize_bilinear_int8(
         }
 
         //const float h1r = h_scale * h2;
-        const float h1r = cudaComputeSourceIndexBilinear(h_scale, h2);
+        const float h1r = cudaComputeSourceIndex(h_scale, h2, transform_mode);
 
         const int h1         = h1r;
         const int h1p        = (h1 < in_height - 1) ? 1 : 0;
@@ -277,7 +294,7 @@ __global__ void ppl_cukernel_resize_bilinear_int8(
         const float h0lambda = 1.f - h1lambda;
 
         //const float w1r = w_scale * w2;
-        const float w1r      = cudaComputeSourceIndexBilinear(w_scale, w2);
+        const float w1r      = cudaComputeSourceIndex(w_scale, w2, transform_mode);
         const int w1         = w1r;
         const int w1p        = (w1 < in_width - 1) ? 1 : 0;
         const float w1lambda = w1r - w1;
@@ -312,7 +329,8 @@ __global__ void ppl_cukernel_resize_bilinear(
     int in_width,
     T* output,
     int out_height,
-    int out_width)
+    int out_width,
+    int transform_mode)
 {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     if (index < num_threads) {
@@ -333,7 +351,7 @@ __global__ void ppl_cukernel_resize_bilinear(
         }
 
         //const float h1r = h_scale * h2;
-        const float h1r = cudaComputeSourceIndexBilinear(h_scale, h2);
+        const float h1r = cudaComputeSourceIndex(h_scale, h2, transform_mode);
 
         const int h1         = h1r;
         const int h1p        = (h1 < in_height - 1) ? 1 : 0;
@@ -341,7 +359,7 @@ __global__ void ppl_cukernel_resize_bilinear(
         const float h0lambda = 1.f - h1lambda;
 
         //const float w1r = w_scale * w2;
-        const float w1r      = cudaComputeSourceIndexBilinear(w_scale, w2);
+        const float w1r      = cudaComputeSourceIndex(w_scale, w2, transform_mode);
         const int w1         = w1r;
         const int w1p        = (w1 < in_width - 1) ? 1 : 0;
         const float w1lambda = w1r - w1;
@@ -373,9 +391,9 @@ __global__ void ppl_cukernel_resize_nearest_int8(
     T* output,
     int out_height,
     int out_width,
-    int transform_mode,
     float in_scale,
-    float out_scale)
+    float out_scale,
+    int transform_mode)
 {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     if (index < num_threads) {
@@ -396,11 +414,11 @@ __global__ void ppl_cukernel_resize_nearest_int8(
         }
 
         //const float h1r = h_scale * h2;
-        const float h1r = cudaComputeSourceIndexNearest(h_scale, h2, transform_mode);
+        const float h1r = cudaComputeSourceIndex(h_scale, h2, transform_mode);
         const int h1    = h1r;
 
         //const float w1r = w_scale * w2;
-        const float w1r = cudaComputeSourceIndexNearest(w_scale, w2, transform_mode);
+        const float w1r = cudaComputeSourceIndex(w_scale, w2, transform_mode);
         const int w1    = w1r;
 
         const T* pos1 = &input[h1 * in_width + w1];
@@ -449,11 +467,11 @@ __global__ void ppl_cukernel_resize_nearest(
         }
 
         //const float h1r = h_scale * h2;
-        const float h1r = cudaComputeSourceIndexNearest(h_scale, h2, transform_mode);
+        const float h1r = cudaComputeSourceIndex(h_scale, h2, transform_mode);
         const int h1    = h1r;
 
         //const float w1r = w_scale * w2;
-        const float w1r = cudaComputeSourceIndexNearest(w_scale, w2, transform_mode);
+        const float w1r = cudaComputeSourceIndex(w_scale, w2, transform_mode);
         const int w1    = w1r;
 
         const T* pos1 = &input[h1 * in_width + w1];
@@ -480,7 +498,8 @@ __global__ void ppl_cukernel_resize_cubic_int8(
     int out_width,
     float cubic_coeff,
     float in_scale,
-    float out_scale)
+    float out_scale,
+    int transform_mode)
 {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     if (index < num_threads) {
@@ -500,11 +519,11 @@ __global__ void ppl_cukernel_resize_cubic_int8(
             return;
         }
 
-        const float h1r      = cudaComputeSourceIndexCubic(h_scale, h2);
+        const float h1r      = cudaComputeSourceIndex(h_scale, h2, transform_mode);
         const int h1         = floorf(h1r);
         const float h1lambda = h1r - h1;
 
-        const float w1r      = cudaComputeSourceIndexCubic(w_scale, w2);
+        const float w1r      = cudaComputeSourceIndex(w_scale, w2, transform_mode);
         const int w1         = floorf(w1r);
         const float w1lambda = w1r - w1;
 
@@ -554,7 +573,8 @@ __global__ void ppl_cukernel_resize_cubic(
     T* output,
     int out_height,
     int out_width,
-    float cubic_coeff)
+    float cubic_coeff,
+    int transform_mode)
 {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     if (index < num_threads) {
@@ -574,11 +594,11 @@ __global__ void ppl_cukernel_resize_cubic(
             return;
         }
 
-        const float h1r      = cudaComputeSourceIndexCubic(h_scale, h2);
+        const float h1r      = cudaComputeSourceIndex(h_scale, h2, transform_mode);
         const int h1         = floorf(h1r);
         const float h1lambda = h1r - h1;
 
-        const float w1r      = cudaComputeSourceIndexCubic(w_scale, w2);
+        const float w1r      = cudaComputeSourceIndex(w_scale, w2, transform_mode);
         const int w1         = floorf(w1r);
         const float w1lambda = w1r - w1;
 
@@ -614,10 +634,12 @@ __global__ void ppl_cukernel_resize_cubic(
 
 static inline float hostComputeAreaScale(int input_size, int output_size, int mode)
 {
-    if (output_size > 1 || mode == 0 || mode == 3) {
-        return float(input_size) / output_size;
-    } else {
+    if (mode == 2) {
+        return float(input_size - 1) / (output_size - 1);
+    } else if (mode == 1 && output_size <= 1) {
         return 0.f;
+    } else {
+        return float(input_size) / output_size;
     }
 }
 // coordinate_transformation_mode definition
@@ -626,7 +648,7 @@ static inline float hostComputeAreaScale(int input_size, int output_size, int mo
 // interpolation mode
 // {"nearest", 0}, {"linear", 1}, {"cubic", 2}
 template <typename T>
-void ppl_resize_forward(
+ppl::common::RetCode ppl_resize_forward(
     cudaStream_t stream,
     const ppl::nn::TensorShape* input_shape,
     const T* input,
@@ -639,6 +661,7 @@ void ppl_resize_forward(
     int inter_mode,
     float cubic_coeff)
 {
+    if (transform_mode == 5) return ppl::common::RC_UNSUPPORTED;
     int dim_count  = output_shape->GetDimCount();
     int out_height = 1, out_width = 1;
     int in_height = 1, in_width = 1;
@@ -666,15 +689,16 @@ void ppl_resize_forward(
             num_threads, h_scale, w_scale, channels, input, in_height, in_width, output, out_height, out_width, transform_mode);
     } else if (inter_mode == 1) {
         ppl_cukernel_resize_bilinear<T><<<grid, block_size, 0, stream>>>(
-            num_threads, h_scale, w_scale, channels, input, in_height, in_width, output, out_height, out_width);
+            num_threads, h_scale, w_scale, channels, input, in_height, in_width, output, out_height, out_width, transform_mode);
     } else if (inter_mode == 2) {
         ppl_cukernel_resize_cubic<T><<<grid, block_size, 0, stream>>>(
-            num_threads, h_scale, w_scale, channels, input, in_height, in_width, output, out_height, out_width, cubic_coeff);
+            num_threads, h_scale, w_scale, channels, input, in_height, in_width, output, out_height, out_width, cubic_coeff, transform_mode);
     }
+    return ppl::common::RC_SUCCESS;
 }
 
 template <typename T>
-void ppl_resize_forward_int8(
+ppl::common::RetCode ppl_resize_forward_int8(
     cudaStream_t stream,
     const ppl::nn::TensorShape* input_shape,
     const T* input,
@@ -689,6 +713,7 @@ void ppl_resize_forward_int8(
     float in_scale,
     float out_scale)
 {
+    if (transform_mode == 5) return ppl::common::RC_UNSUPPORTED;
     int dim_count  = output_shape->GetDimCount();
     int out_height = 1, out_width = 1;
     int in_height = 1, in_width = 1;
@@ -713,14 +738,15 @@ void ppl_resize_forward_int8(
     int grid        = (num_threads + block_size - 1) / block_size;
     if (inter_mode == 0) {
         ppl_cukernel_resize_nearest_int8<T><<<grid, block_size, 0, stream>>>(
-            num_threads, h_scale, w_scale, channels, input, in_height, in_width, output, out_height, out_width, transform_mode, in_scale, out_scale);
+            num_threads, h_scale, w_scale, channels, input, in_height, in_width, output, out_height, out_width, in_scale, out_scale, transform_mode);
     } else if (inter_mode == 1) {
         ppl_cukernel_resize_bilinear_int8<T><<<grid, block_size, 0, stream>>>(
-            num_threads, h_scale, w_scale, channels, input, in_height, in_width, output, out_height, out_width, in_scale, out_scale);
+            num_threads, h_scale, w_scale, channels, input, in_height, in_width, output, out_height, out_width, in_scale, out_scale, transform_mode);
     } else if (inter_mode == 2) {
         ppl_cukernel_resize_cubic_int8<T><<<grid, block_size, 0, stream>>>(
-            num_threads, h_scale, w_scale, channels, input, in_height, in_width, output, out_height, out_width, cubic_coeff, in_scale, out_scale);
+            num_threads, h_scale, w_scale, channels, input, in_height, in_width, output, out_height, out_width, cubic_coeff, in_scale, out_scale, transform_mode);
     }
+    return ppl::common::RC_SUCCESS;
 }
 
 ppl::common::RetCode PPLCUDAResizeForwardImp(
@@ -735,20 +761,21 @@ ppl::common::RetCode PPLCUDAResizeForwardImp(
     int transform_mode,
     int inter_mode,
     float cubic_coeff,
+    int nearest_mode,
     float in_scale,
     float out_scale)
 {
+    // if (inter_mode == 0 && nearest_mode != 0 ) return ppl::common::RC_UNSUPPORTED; // nearest supports round only 
     if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
         if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
-            ppl_resize_forward<half>(stream, input_shape, (const half*)input, output_shape, (half*)output, scale_pre_set, h_scale, w_scale, transform_mode, inter_mode, cubic_coeff);
-            return ppl::common::RC_SUCCESS;
+            return ppl_resize_forward<half>(stream, input_shape, (const half*)input, output_shape, (half*)output, scale_pre_set, h_scale, w_scale, transform_mode, inter_mode, cubic_coeff);
         } else {
             return ppl::common::RC_UNSUPPORTED;
         }
     } else if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
-        ppl_resize_forward<float>(stream, input_shape, (const float*)input, output_shape, (float*)output, scale_pre_set, h_scale, w_scale, transform_mode, inter_mode, cubic_coeff);
+        return ppl_resize_forward<float>(stream, input_shape, (const float*)input, output_shape, (float*)output, scale_pre_set, h_scale, w_scale, transform_mode, inter_mode, cubic_coeff);
     } else if (output_shape->GetDataType() == ppl::common::DATATYPE_INT8) {
-        ppl_resize_forward_int8<int8_t>(stream, input_shape, (const int8_t*)input, output_shape, (int8_t*)output, scale_pre_set, h_scale, w_scale, transform_mode, inter_mode, cubic_coeff, in_scale, out_scale);
+        return ppl_resize_forward_int8<int8_t>(stream, input_shape, (const int8_t*)input, output_shape, (int8_t*)output, scale_pre_set, h_scale, w_scale, transform_mode, inter_mode, cubic_coeff, in_scale, out_scale);
     }else {
         return ppl::common::RC_UNSUPPORTED;
     }
