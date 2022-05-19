@@ -28,9 +28,26 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
+bool DeformConvAlgorithm::IsSupported(const ir::Node* node, const OptKernelOptions& options,
+                                    dataformat_t input_format) const {
+    const TensorShape& tensor0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
+    if (tensor0.GetDataType() != ppl::common::DATATYPE_FLOAT16) {
+        return false;
+    }
+
+    if (input_format != DATAFORMAT_NDARRAY) {
+        return false;
+    }
+    return true;
+}
+
 double DeformConvAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& options) {
     options.compile_set->emplace(node->GetId());
-    return 1e-5;
+    const TensorShape& shape_out = *options.tensors->find(node->GetOutput(0))->second->GetShape();
+    if (shape_out.GetDataFormat() == DATAFORMAT_NHWC8)
+        return 1e-5;
+    else
+        return 1;
 }
 
 RetCode DeformConvAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
