@@ -39,7 +39,7 @@ static inline void reduce_nbcx_lastdim_no_reduce_c_no_reduce_common(
     typedef typename DT<eT, eN>::vecDT vecType;
 
     for (int64_t i = 0; i < length; i++) {
-        vecType v_src = vld<eT, eN>(src + i * c_blk);
+        vecType v_src = reduce_first_process_kernel<vecType, op_type>(vld<eT, eN>(src + i * c_blk));
         vecType v_dst = vld<eT, eN>(dst + i * c_blk);
         vst<eT, eN>(dst + i * c_blk, reduce_vector_kernel<vecType, op_type>(v_src, v_dst));
     }
@@ -58,7 +58,7 @@ static inline void reduce_nbcx_lastdim_reduce_c_no_reduce_common(
     vecType v_reduced = vdup_n<eT, eN>(reduce_init_val<eT, op_type>());
 
     for (int64_t i = 0; i < length; i++) {
-        vecType v_src = vld<eT, eN>(src + i * c_blk);
+        vecType v_src = reduce_first_process_kernel<vecType, op_type>(vld<eT, eN>(src + i * c_blk));
         v_reduced     = reduce_vector_kernel<vecType, op_type>(v_src, v_reduced);
     }
 
@@ -78,14 +78,14 @@ static inline void reduce_nbcx_lastdim_no_reduce_c_reduce_common(
 
     if (remain_c >= c_blk) {
         for (int64_t i = 0; i < length; i++) {
-            vecType v_src  = vld<eT, eN>(src + i * c_blk);
+            vecType v_src  = reduce_first_process_kernel<vecType, op_type>(vld<eT, eN>(src + i * c_blk));
             dst[i * c_blk] = reduce_vector_to_scalar_kernel<eT, vecType, op_type>(v_src, dst[i * c_blk]);
         }
     } else {
         for (int64_t i = 0; i < length; i++) {
             eT s_reduced = reduce_init_val<eT, op_type>();
             for (int64_t c = 0; c < remain_c; c++) {
-                s_reduced = reduce_scalar_kernel<eT, op_type>(src[i * c_blk + c], s_reduced);
+                s_reduced = reduce_scalar_kernel<eT, op_type>(reduce_first_process_kernel<eT, op_type>(src[i * c_blk + c]), s_reduced);
             }
             dst[i * c_blk] = reduce_scalar_kernel<eT, op_type>(s_reduced, dst[i * c_blk]);
         }
@@ -106,7 +106,7 @@ static inline void reduce_nbcx_lastdim_reduce_c_reduce_common(
         eT s_reduced      = reduce_init_val<eT, op_type>();
         vecType v_reduced = vdup_n<eT, eN>(s_reduced);
         for (int64_t i = 0; i < length; i++) {
-            vecType v_src = vld<eT, eN>(src + i * c_blk);
+            vecType v_src = reduce_first_process_kernel<vecType, op_type>(vld<eT, eN>(src + i * c_blk));
             v_reduced     = reduce_vector_kernel<vecType, op_type>(v_src, v_reduced);
         }
         s_reduced = reduce_vector_to_scalar_kernel<eT, vecType, op_type>(v_reduced, s_reduced);
@@ -115,7 +115,7 @@ static inline void reduce_nbcx_lastdim_reduce_c_reduce_common(
         eT s_reduced = reduce_init_val<eT, op_type>();
         for (int64_t i = 0; i < length; i++) {
             for (int64_t c = 0; c < remain_c; c++) {
-                s_reduced = reduce_scalar_kernel<eT, op_type>(src[i * c_blk + c], s_reduced);
+                s_reduced = reduce_scalar_kernel<eT, op_type>(reduce_first_process_kernel<eT, op_type>(src[i * c_blk + c]), s_reduced);
             }
         }
         dst[0] = reduce_scalar_kernel<eT, op_type>(s_reduced, dst[0]);

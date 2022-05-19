@@ -41,10 +41,10 @@ inline void reduce_ndarray_lastdim_no_reduce_common(
     const int64_t unroll_body = round(length, unroll_len);
 
     for (int64_t i = 0; i < unroll_body; i += unroll_len) {
-        const vecType v_src_0 = vld<eT, eN>(src + i + simd_w * 0);
-        const vecType v_src_1 = vld<eT, eN>(src + i + simd_w * 1);
-        const vecType v_src_2 = vld<eT, eN>(src + i + simd_w * 2);
-        const vecType v_src_3 = vld<eT, eN>(src + i + simd_w * 3);
+        const vecType v_src_0 = reduce_first_process_kernel<vecType, op_type>(vld<eT, eN>(src + i + simd_w * 0));
+        const vecType v_src_1 = reduce_first_process_kernel<vecType, op_type>(vld<eT, eN>(src + i + simd_w * 1));
+        const vecType v_src_2 = reduce_first_process_kernel<vecType, op_type>(vld<eT, eN>(src + i + simd_w * 2));
+        const vecType v_src_3 = reduce_first_process_kernel<vecType, op_type>(vld<eT, eN>(src + i + simd_w * 3));
 
         const vecType v_dst_0 = vld<eT, eN>(dst + i + simd_w * 0);
         const vecType v_dst_1 = vld<eT, eN>(dst + i + simd_w * 1);
@@ -57,7 +57,7 @@ inline void reduce_ndarray_lastdim_no_reduce_common(
         vst<eT, eN>(dst + i + simd_w * 3, reduce_vector_kernel<vecType, op_type>(v_src_3, v_dst_3));
     }
     for (int64_t i = unroll_body; i < length; i++) {
-        dst[i] = reduce_scalar_kernel<eT, op_type>(src[i], dst[i]);
+        dst[i] = reduce_scalar_kernel<eT, op_type>(reduce_first_process_kernel<eT, op_type>(src[i]), dst[i]);
     }
 }
 
@@ -81,10 +81,10 @@ inline void reduce_ndarray_lastdim_reduce_common(
     vecType v_reduced_3 = v_reduced_0;
 
     for (int64_t i = 0; i < unroll_body; i += unroll_len) {
-        const vecType v_src_0 = vld<eT, eN>(src + i + simd_w * 0);
-        const vecType v_src_1 = vld<eT, eN>(src + i + simd_w * 1);
-        const vecType v_src_2 = vld<eT, eN>(src + i + simd_w * 2);
-        const vecType v_src_3 = vld<eT, eN>(src + i + simd_w * 3);
+        const vecType v_src_0 = reduce_first_process_kernel<vecType, op_type>(vld<eT, eN>(src + i + simd_w * 0));
+        const vecType v_src_1 = reduce_first_process_kernel<vecType, op_type>(vld<eT, eN>(src + i + simd_w * 1));
+        const vecType v_src_2 = reduce_first_process_kernel<vecType, op_type>(vld<eT, eN>(src + i + simd_w * 2));
+        const vecType v_src_3 = reduce_first_process_kernel<vecType, op_type>(vld<eT, eN>(src + i + simd_w * 3));
 
         v_reduced_0 = reduce_vector_kernel<vecType, op_type>(v_src_0, v_reduced_0);
         v_reduced_1 = reduce_vector_kernel<vecType, op_type>(v_src_1, v_reduced_1);
@@ -92,7 +92,7 @@ inline void reduce_ndarray_lastdim_reduce_common(
         v_reduced_3 = reduce_vector_kernel<vecType, op_type>(v_src_3, v_reduced_3);
     }
     for (int64_t i = unroll_body; i < length; i++) {
-        s_reduced = reduce_scalar_kernel<eT, op_type>(src[i], s_reduced);
+        s_reduced = reduce_scalar_kernel<eT, op_type>(reduce_first_process_kernel<eT, op_type>(src[i]), s_reduced);
     }
 
     if (length >= unroll_len) {

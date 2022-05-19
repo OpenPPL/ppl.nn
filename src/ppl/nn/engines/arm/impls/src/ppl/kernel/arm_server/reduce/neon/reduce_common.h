@@ -27,11 +27,13 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 enum reduce_op_type_t {
-    REDUCE_MAX  = 0,
-    REDUCE_MIN  = 1,
-    REDUCE_SUM  = 2,
-    REDUCE_MEAN = 3,
-    REDUCE_PROD = 4,
+    REDUCE_MAX        = 0,
+    REDUCE_MIN        = 1,
+    REDUCE_SUM        = 2,
+    REDUCE_MEAN       = 3,
+    REDUCE_PROD       = 4,
+    REDUCE_SUM_SQUARE = 5,
+    REDUCE_ABS_SUM    = 6,
 };
 
 template <typename eT, reduce_op_type_t op_type>
@@ -42,6 +44,12 @@ inline vT reduce_vector_kernel(const vT val, const vT reduced);
 
 template <typename eT, typename vT, reduce_op_type_t op_type>
 inline eT reduce_vector_to_scalar_kernel(const vT val, const eT reduced);
+
+template <typename eT, reduce_op_type_t op_type>
+inline eT reduce_first_process_kernel(const eT val)
+{
+    return val;
+}
 
 // TODO: partial specialization this
 template <typename eT, reduce_op_type_t op_type>
