@@ -62,6 +62,22 @@ ppl::common::RetCode reduce_prod(
     const int32_t num_axes,
     void *dst);
 
+ppl::common::RetCode reduce_sum_square(
+    const ppl::nn::TensorShape *src_shape,
+    const ppl::nn::TensorShape *dst_shape,
+    const void *src,
+    const int32_t *axes,
+    const int32_t num_axes,
+    void *dst);
+
+ppl::common::RetCode reduce_abs_sum(
+    const ppl::nn::TensorShape *src_shape,
+    const ppl::nn::TensorShape *dst_shape,
+    const void *src,
+    const int32_t *axes,
+    const int32_t num_axes,
+    void *dst);
+
 }}}}; // namespace ppl::kernel::arm_server::neon
 
 #endif // __ST_PPL_KERNEL_ARM_SERVER_REDUCE_NEON_REDUCE_H_

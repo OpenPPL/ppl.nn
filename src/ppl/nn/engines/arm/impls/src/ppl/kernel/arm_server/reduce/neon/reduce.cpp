@@ -151,4 +151,26 @@ ppl::common::RetCode reduce_prod(
     return reduce_wrapper<REDUCE_PROD>(src_shape, dst_shape, src, axes, num_axes, dst);
 }
 
+ppl::common::RetCode reduce_sum_square(
+    const ppl::nn::TensorShape *src_shape,
+    const ppl::nn::TensorShape *dst_shape,
+    const void *src,
+    const int32_t *axes,
+    const int32_t num_axes,
+    void *dst)
+{
+    return reduce_wrapper<REDUCE_SUM_SQUARE>(src_shape, dst_shape, src, axes, num_axes, dst);
+}
+
+ppl::common::RetCode reduce_abs_sum(
+    const ppl::nn::TensorShape *src_shape,
+    const ppl::nn::TensorShape *dst_shape,
+    const void *src,
+    const int32_t *axes,
+    const int32_t num_axes,
+    void *dst)
+{
+    return reduce_wrapper<REDUCE_ABS_SUM>(src_shape, dst_shape, src, axes, num_axes, dst);
+}
+
 }}}} // namespace ppl::kernel::arm_server::neon
