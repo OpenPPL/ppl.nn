@@ -33,6 +33,7 @@ ppl::common::RetCode PPLCUDAResizeForwardImp(
     int transform_mode,
     int inter_mode,
     float cubic_coeff,
+    int nearest_mode,
     float in_scale,
     float out_scale);
 
