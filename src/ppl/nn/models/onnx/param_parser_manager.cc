@@ -118,6 +118,7 @@ void DeleteParam(ir::Attr* ptr) {
 ParamParserManager::ParamParserManager() {
     // A
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Abs", 6, 16);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "AdaptiveMaxPool", 7, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Add", 7, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "And", 7, 16);
     PPL_REGISTER_OP_WITH_PARAM("", "ArgMax", 1, 11, ppl::nn::onnx::ArgMaxParam, ParseArgMaxParam);
@@ -234,6 +235,8 @@ ParamParserManager::ParamParserManager() {
     // ppl op param parser
     PPL_REGISTER_OP_WITH_PARAM("pmx", "ChannelShuffle", 1, 1, ppl::nn::pmx::ChannelShuffleParam,
                                ParseChannelShuffleParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "PODDeformconv2d", 1, 11, ppl::nn::mmcv::MMCVModulatedDeformConv2dParam,
+                               ParseMMCVModulatedDeformConv2dParam);
 }
 
 }}} // namespace ppl::nn::onnx
