@@ -97,6 +97,9 @@ public:
     CudaCommonParam* GetCommparam() {
         return &common_param_;
     }
+    const CudaCommonParam* GetCommparam() const {
+        return &common_param_;
+    }
 
     ppl::common::RetCode InferType(InputOutputInfo* info, std::vector<CudaTensorQuant>* quant,
                                    ppl::common::datatype_t type) const {

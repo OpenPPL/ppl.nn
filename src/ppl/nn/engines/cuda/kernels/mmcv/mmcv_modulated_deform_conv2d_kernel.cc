@@ -21,6 +21,18 @@
 
 namespace ppl { namespace nn { namespace cuda {
 
+bool MMCVModulatedDeformConv2dKernel::CanDoExecute(const KernelExecContext& ctx) const {
+    for (uint32_t i = 0; i < ctx.GetInputCount(); ++i) {
+        if (i == 2) continue;
+        auto tensor = ctx.GetInput<TensorImpl>(i);
+        if (!tensor || tensor->GetShape()->GetBytesIncludingPadding() == 0) {
+            LOG(WARNING) << "Cannot execute " << GetName();
+            return false;
+        }
+    }
+    return true;
+}
+
 ppl::common::RetCode MMCVModulatedDeformConv2dKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
