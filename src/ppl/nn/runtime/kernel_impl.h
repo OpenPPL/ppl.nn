@@ -23,6 +23,10 @@
 #include "ppl/nn/common/device.h"
 #include <string>
 
+#ifdef PPLNN_ENABLE_KERNEL_PROFILING
+#include "ppl/nn/runtime/internal_profiling_info.h"
+#endif
+
 namespace ppl { namespace nn {
 
 class KernelImpl {
@@ -65,10 +69,7 @@ public:
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
 public:
-    /** @brief get execution time in microseconds */
-    virtual uint64_t GetExecutionTime() const {
-        return 0;
-    }
+    virtual void GetProfilingInfo(InternalProfilingInfo*) const {}
 #endif
 
 private:

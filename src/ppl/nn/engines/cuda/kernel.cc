@@ -173,11 +173,11 @@ RetCode CudaKernel::Execute(KernelExecContext* ctx) {
 }
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-uint64_t CudaKernel::GetExecutionTime() const {
+void CudaKernel::GetProfilingInfo(InternalProfilingInfo* info) const {
     cudaEventSynchronize(exec_end_event_);
     float ms = 0.0;
     cudaEventElapsedTime(&ms, exec_begin_event_, exec_end_event_);
-    return static_cast<uint64_t>(ms * 1000);
+    info->exec_microseconds = static_cast<uint64_t>(ms * 1000);
 }
 #endif
 
