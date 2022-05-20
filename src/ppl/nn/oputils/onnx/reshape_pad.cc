@@ -21,13 +21,12 @@
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
 template <typename Tpad>
-RetCode ReshapePad(InputOutputInfo* info, const void* arg, const Tpad* start_pads, const Tpad* end_pads) {
-    auto param = (const PadParam*)arg;
+RetCode ReshapePad(InputOutputInfo* info, const ir::Attr* arg, const Tpad* start_pads, const Tpad* end_pads) {
+    auto param = static_cast<const PadParam*>(arg);
 
     const TensorShape& shape = *info->GetInput<TensorImpl>(0)->GetShape();
     uint32_t dim_count = shape.GetDimCount();
@@ -55,7 +54,7 @@ RetCode ReshapePad(InputOutputInfo* info, const void* arg, const Tpad* start_pad
     return RC_SUCCESS;
 }
 
-RetCode ReshapePad(InputOutputInfo* info, const void* arg) {
+RetCode ReshapePad(InputOutputInfo* info, const ir::Attr* arg) {
     const TensorShape& shape = *info->GetInput<TensorImpl>(0)->GetShape();
     uint32_t dim_count = shape.GetDimCount();
 

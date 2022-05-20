@@ -18,12 +18,11 @@
 #include "ppl/nn/oputils/onnx/reshape_lstm.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeLSTM(InputOutputInfo* info, const void* arg) {
-    auto param = (const LSTMParam*)arg;
+RetCode ReshapeLSTM(InputOutputInfo* info, const ir::Attr* arg) {
+    auto param = static_cast<const LSTMParam*>(arg);
     const TensorShape& in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
     const int64_t seq_len = in_shape.GetDim(0);
     const int64_t batch = in_shape.GetDim(1);

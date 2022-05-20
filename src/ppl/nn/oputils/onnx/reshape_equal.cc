@@ -23,7 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeEqual(InputOutputInfo* info, const void* arg) {
+RetCode ReshapeEqual(InputOutputInfo* info, const ir::Attr* arg) {
     if (info->GetInputCount() != 2) {
         return RC_INVALID_VALUE;
     }

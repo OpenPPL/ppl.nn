@@ -31,7 +31,7 @@ RetCode ReshapeRange(InputOutputInfo* info, double start, double limit, double d
     return RC_SUCCESS;
 }
 
-common::RetCode ReshapeRange(InputOutputInfo* info, const void*) {
+common::RetCode ReshapeRange(InputOutputInfo* info, const ir::Attr*) {
     if (info->GetInputCount() != 3 || info->GetOutputCount() != 1) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 3 or output count["
                    << info->GetOutputCount() << "] != 1.";

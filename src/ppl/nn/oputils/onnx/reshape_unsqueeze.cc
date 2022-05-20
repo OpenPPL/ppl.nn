@@ -20,12 +20,11 @@
 #include "ppl/nn/common/logger.h"
 #include <algorithm>
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeUnsqueeze(InputOutputInfo* info, const void* arg) {
-    auto param = (const UnsqueezeParam*)arg;
+RetCode ReshapeUnsqueeze(InputOutputInfo* info, const ir::Attr* arg) {
+    auto param = static_cast<const UnsqueezeParam*>(arg);
     std::vector<int32_t> axes(param->axes.size());
 
     const TensorShape& input = *info->GetInput<TensorImpl>(0)->GetShape();

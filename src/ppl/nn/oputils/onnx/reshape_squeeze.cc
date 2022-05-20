@@ -21,12 +21,11 @@
 #include <set>
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeSqueeze(InputOutputInfo* info, const void* arg) {
-    auto param = (const SqueezeParam*)arg;
+RetCode ReshapeSqueeze(InputOutputInfo* info, const ir::Attr* arg) {
+    auto param = static_cast<const SqueezeParam*>(arg);
     if (info->GetInputCount() > 2 || info->GetOutputCount() != 1) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] > 2 or output count["
                    << info->GetOutputCount() << "] != 1.";

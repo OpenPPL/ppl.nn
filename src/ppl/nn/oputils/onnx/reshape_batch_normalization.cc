@@ -19,11 +19,10 @@
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeBatchNormalization(InputOutputInfo* info, const void*) {
+RetCode ReshapeBatchNormalization(InputOutputInfo* info, const ir::Attr*) {
     if (info->GetInputCount() != 5) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 5.";
         return RC_INVALID_VALUE;

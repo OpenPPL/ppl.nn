@@ -22,7 +22,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeNonZero(InputOutputInfo* info, const void*) {
+RetCode ReshapeNonZero(InputOutputInfo* info, const ir::Attr*) {
     if (info->GetInputCount() != 1 || info->GetOutputCount() != 1) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 1 or output count["
                    << info->GetOutputCount() << "] != 1.";

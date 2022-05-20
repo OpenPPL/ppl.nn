@@ -23,7 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeTile(InputOutputInfo* info, const void*, const int64_t* repeats) {
+RetCode ReshapeTile(InputOutputInfo* info, const ir::Attr*, const int64_t* repeats) {
     if (info->GetInputCount() != 2 || info->GetOutputCount() != 1) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2 or output count["
                    << info->GetOutputCount() << "] != 1.";
@@ -60,7 +60,7 @@ RetCode ReshapeTile(InputOutputInfo* info, const void*, const int64_t* repeats) 
     return RC_SUCCESS;
 }
 
-RetCode ReshapeTile(InputOutputInfo* info, const void*) {
+RetCode ReshapeTile(InputOutputInfo* info, const ir::Attr*) {
     if (info->GetInputCount() != 2 || info->GetOutputCount() != 1) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2 or output count["
                    << info->GetOutputCount() << "] != 1.";

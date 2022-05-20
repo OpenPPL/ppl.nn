@@ -19,18 +19,17 @@
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeROIAlign(InputOutputInfo* info, const void* arg) {
+RetCode ReshapeROIAlign(InputOutputInfo* info, const ir::Attr* arg) {
     if (info->GetInputCount() != 3 || info->GetOutputCount() != 1) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 3 or output count["
                    << info->GetOutputCount() << "] != 1.";
         return RC_INVALID_VALUE;
     }
 
-    auto param = (const RoiAlignParam*)arg;
+    auto param = static_cast<const RoiAlignParam*>(arg);
     auto x = info->GetInput<TensorImpl>(0)->GetShape();
     auto rois = info->GetInput<TensorImpl>(1)->GetShape();
     auto batch_indices = info->GetInput<TensorImpl>(2)->GetShape();

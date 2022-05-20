@@ -23,7 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeGreater(InputOutputInfo* info, const void*) {
+RetCode ReshapeGreater(InputOutputInfo* info, const ir::Attr*) {
     if (info->GetInputCount() != 2) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] < 2.";
         return RC_INVALID_VALUE;

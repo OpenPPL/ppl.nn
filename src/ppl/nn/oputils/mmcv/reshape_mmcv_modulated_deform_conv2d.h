@@ -21,10 +21,11 @@
 #include "ppl/common/retcode.h"
 #include "ppl/nn/params/mmcv/mmcv_modulated_deform_conv2d_param.h"
 #include "ppl/nn/common/input_output_info.h"
+#include "ppl/nn/ir/attr.h"
 
 namespace ppl { namespace nn { namespace mmcv {
 
-ppl::common::RetCode ReshapeMMCVModulatedDeformConv2d(InputOutputInfo*, const void*);
+ppl::common::RetCode ReshapeMMCVModulatedDeformConv2d(InputOutputInfo*, const ir::Attr*);
 
 }}} // namespace ppl::nn::mmcv
 

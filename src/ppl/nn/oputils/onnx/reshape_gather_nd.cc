@@ -19,11 +19,10 @@
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeGatherND(InputOutputInfo* info, const void*) {
+RetCode ReshapeGatherND(InputOutputInfo* info, const ir::Attr*) {
     if (info->GetInputCount() != 2 || info->GetOutputCount() != 1) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2 or output count["
                    << info->GetOutputCount() << "] != 1.";
