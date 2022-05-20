@@ -51,7 +51,7 @@ public:
     void StopProfiling();
 
 private:
-    struct KernelExecInfo {
+    struct KernelExecInfo final {
         uint32_t exec_count = 0;
         uint64_t exec_microseconds = 0;
     };

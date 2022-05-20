@@ -56,7 +56,7 @@ public:
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
 public:
-    uint64_t GetExecutionTime() const override final;
+    void GetProfilingInfo(InternalProfilingInfo*) const override final;
 
 private:
     cudaEvent_t exec_begin_event_, exec_end_event_;

@@ -20,7 +20,7 @@
 
 namespace ppl { namespace nn {
 
-struct RuntimeInternalConf {
+struct RuntimeInternalConf final {
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
     bool profiling_flag = false;
 #endif

@@ -33,7 +33,9 @@ void Profiler::Init(const RuntimeInternalConf* conf, const RuntimeGraphResource*
 void Profiler::CollectStatistics(KernelImpl* kernel) {
     if (conf_->profiling_flag) {
         auto info = &nodeid2info_[kernel->GetNode()->GetId()];
-        info->exec_microseconds += kernel->GetExecutionTime();
+        InternalProfilingInfo intern_info;
+        kernel->GetProfilingInfo(&intern_info);
+        info->exec_microseconds += intern_info.exec_microseconds;
         ++info->exec_count;
     }
 }

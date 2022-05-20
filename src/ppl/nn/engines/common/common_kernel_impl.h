@@ -39,9 +39,9 @@ protected:
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
 public:
-    uint64_t GetExecutionTime() const override final {
+    void GetProfilingInfo(InternalProfilingInfo* info) const override final {
         auto diff = std::chrono::duration_cast<std::chrono::microseconds>(end_ts_ - begin_ts_);
-        return diff.count();
+        info->exec_microseconds = diff.count();
     }
 
 private:
