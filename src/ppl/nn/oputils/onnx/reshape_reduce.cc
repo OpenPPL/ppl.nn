@@ -19,12 +19,11 @@
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeReduce(InputOutputInfo* info, const void* arg) {
-    auto param = (const ReduceParam*)arg;
+RetCode ReshapeReduce(InputOutputInfo* info, const ir::Attr* arg) {
+    auto param = static_cast<const ReduceParam*>(arg);
     auto x = info->GetInput<TensorImpl>(0)->GetShape();
     auto y = info->GetOutput<TensorImpl>(0)->GetShape();
 

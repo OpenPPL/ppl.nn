@@ -23,7 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeReshape(InputOutputInfo* info, const void*, const int64_t* shape_data) {
+RetCode ReshapeReshape(InputOutputInfo* info, const ir::Attr*, const int64_t* shape_data) {
     auto data = info->GetInput<TensorImpl>(0)->GetShape();
     auto shape = info->GetInput<TensorImpl>(1)->GetShape();
     auto reshaped = info->GetOutput<TensorImpl>(0)->GetShape();
@@ -75,7 +75,7 @@ RetCode ReshapeReshape(InputOutputInfo* info, const void*, const int64_t* shape_
     return RC_SUCCESS;
 }
 
-RetCode ReshapeReshape(InputOutputInfo* info, const void* arg) {
+RetCode ReshapeReshape(InputOutputInfo* info, const ir::Attr* arg) {
     if (info->GetInputCount() != 2) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2.";
         return RC_INVALID_VALUE;

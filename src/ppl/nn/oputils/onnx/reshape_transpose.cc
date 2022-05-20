@@ -19,12 +19,11 @@
 #include "ppl/nn/params/onnx/transpose_param.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeTranspose(InputOutputInfo* info, const void* arg) {
-    auto param = (const TransposeParam*)arg;
+RetCode ReshapeTranspose(InputOutputInfo* info, const ir::Attr* arg) {
+    auto param = static_cast<const TransposeParam*>(arg);
     const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
 
     auto modified_perm = param->perm;

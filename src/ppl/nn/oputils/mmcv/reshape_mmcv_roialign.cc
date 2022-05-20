@@ -18,11 +18,10 @@
 #include "ppl/nn/oputils/mmcv/reshape_mmcv_roialign.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
-using namespace ppl::nn::mmcv;
 
 namespace ppl { namespace nn { namespace mmcv {
 
-RetCode ReshapeMMCVROIAlign(InputOutputInfo* info, const void* arg) {
+RetCode ReshapeMMCVROIAlign(InputOutputInfo* info, const ir::Attr* arg) {
     if (info->GetInputCount() != 2 || info->GetOutputCount() != 1) {
         return RC_INVALID_VALUE;
     }

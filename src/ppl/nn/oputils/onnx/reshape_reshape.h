@@ -20,11 +20,12 @@
 
 #include "ppl/common/retcode.h"
 #include "ppl/nn/common/input_output_info.h"
+#include "ppl/nn/ir/attr.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ReshapeReshape(InputOutputInfo*, const void*, const int64_t* shape_data);
-ppl::common::RetCode ReshapeReshape(InputOutputInfo*, const void*);
+ppl::common::RetCode ReshapeReshape(InputOutputInfo*, const ir::Attr*, const int64_t* shape_data);
+ppl::common::RetCode ReshapeReshape(InputOutputInfo*, const ir::Attr*);
 
 }}} // namespace ppl::nn::onnx
 

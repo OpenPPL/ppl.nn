@@ -20,12 +20,11 @@
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeTopK(InputOutputInfo* info, const void* arg, int64_t k) {
-    auto param = (const TopKParam*)arg;
+RetCode ReshapeTopK(InputOutputInfo* info, const ir::Attr* arg, int64_t k) {
+    auto param = static_cast<const TopKParam*>(arg);
 
     auto x = info->GetInput<TensorImpl>(0);
     auto values = info->GetOutput<TensorImpl>(0);
@@ -57,7 +56,7 @@ RetCode ReshapeTopK(InputOutputInfo* info, const void* arg, int64_t k) {
     return RC_SUCCESS;
 }
 
-RetCode ReshapeTopK(InputOutputInfo* info, const void* arg) {
+RetCode ReshapeTopK(InputOutputInfo* info, const ir::Attr* arg) {
     auto p = (const TopKParam*)arg;
     if ((p->k == -1 && info->GetInputCount() != 2) || info->GetOutputCount() != 2) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2 with k == -1 or output count["

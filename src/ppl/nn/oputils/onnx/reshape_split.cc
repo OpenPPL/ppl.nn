@@ -19,12 +19,11 @@
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeSplit(InputOutputInfo* info, const void* arg) {
-    auto param = (const SplitParam*)arg;
+RetCode ReshapeSplit(InputOutputInfo* info, const ir::Attr* arg) {
+    auto param = static_cast<const SplitParam*>(arg);
     const TensorShape& shape = *info->GetInput<TensorImpl>(0)->GetShape();
     int dim_count = shape.GetDimCount();
     uint32_t split_axis = param->axis >= 0 ? param->axis : param->axis + dim_count;

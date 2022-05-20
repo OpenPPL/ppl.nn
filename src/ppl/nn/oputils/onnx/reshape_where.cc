@@ -25,7 +25,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-common::RetCode ReshapeWhere(InputOutputInfo* info, const void* arg) {
+RetCode ReshapeWhere(InputOutputInfo* info, const ir::Attr* arg) {
     if (info->GetInputCount() != 3) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 3.";
         return RC_INVALID_VALUE;

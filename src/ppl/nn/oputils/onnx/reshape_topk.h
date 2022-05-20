@@ -21,11 +21,12 @@
 #include "ppl/common/retcode.h"
 #include "ppl/nn/params/onnx/topk_param.h"
 #include "ppl/nn/common/input_output_info.h"
+#include "ppl/nn/ir/attr.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ReshapeTopK(InputOutputInfo*, const void*, int64_t k);
-ppl::common::RetCode ReshapeTopK(InputOutputInfo*, const void*);
+ppl::common::RetCode ReshapeTopK(InputOutputInfo*, const ir::Attr*, int64_t k);
+ppl::common::RetCode ReshapeTopK(InputOutputInfo*, const ir::Attr*);
 
 }}} // namespace ppl::nn::onnx
 

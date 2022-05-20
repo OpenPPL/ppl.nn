@@ -18,11 +18,10 @@
 #include "ppl/nn/oputils/mmcv/reshape_mmcv_modulated_deform_conv2d.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
-using namespace ppl::nn::mmcv;
 
 namespace ppl { namespace nn { namespace mmcv {
 
-RetCode ReshapeMMCVModulatedDeformConv2d(InputOutputInfo* info, const void* arg) {
+RetCode ReshapeMMCVModulatedDeformConv2d(InputOutputInfo* info, const ir::Attr* arg) {
     auto param = (const MMCVModulatedDeformConv2dParam*)arg;
     auto input = info->GetInput<TensorImpl>(0)->GetShape();
     auto weight = info->GetInput<TensorImpl>(3)->GetShape();

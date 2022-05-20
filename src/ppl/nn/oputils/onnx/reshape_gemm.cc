@@ -19,17 +19,16 @@
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeGemm(InputOutputInfo* info, const void* arg) {
+RetCode ReshapeGemm(InputOutputInfo* info, const ir::Attr* arg) {
     if (info->GetInputCount() < 2) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] < 2.";
         return RC_INVALID_VALUE;
     }
 
-    auto param = (const GemmParam*)arg;
+    auto param = static_cast<const GemmParam*>(arg);
     auto A = info->GetInput<TensorImpl>(0)->GetShape();
     auto B = info->GetInput<TensorImpl>(1)->GetShape();
     auto Y = info->GetOutput<TensorImpl>(0)->GetShape();

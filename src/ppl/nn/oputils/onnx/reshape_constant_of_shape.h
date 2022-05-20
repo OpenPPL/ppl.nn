@@ -21,11 +21,12 @@
 #include "ppl/common/retcode.h"
 #include "ppl/nn/params/onnx/constant_of_shape_param.h"
 #include "ppl/nn/common/input_output_info.h"
+#include "ppl/nn/ir/attr.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ReshapeConstantOfShape(InputOutputInfo* info, const void* arg, const int64_t* input_host);
-ppl::common::RetCode ReshapeConstantOfShape(InputOutputInfo*, const void*);
+ppl::common::RetCode ReshapeConstantOfShape(InputOutputInfo* info, const ir::Attr* arg, const int64_t* input_host);
+ppl::common::RetCode ReshapeConstantOfShape(InputOutputInfo*, const ir::Attr*);
 
 }}} // namespace ppl::nn::onnx
 

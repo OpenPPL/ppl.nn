@@ -18,12 +18,11 @@
 #include "ppl/nn/oputils/onnx/reshape_argmax.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeArgMax(InputOutputInfo* info, const void* arg) {
-    auto param = (const ArgMaxParam*)arg;
+RetCode ReshapeArgMax(InputOutputInfo* info, const ir::Attr* arg) {
+    auto param = static_cast<const ArgMaxParam*>(arg);
     const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
     const uint32_t out_dim_count = in_shape0.GetDimCount();
     std::vector<int64_t> out_dims(out_dim_count);

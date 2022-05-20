@@ -19,12 +19,11 @@
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeFlatten(InputOutputInfo* info, const void* arg) {
-    auto param = (const FlattenParam*)arg;
+RetCode ReshapeFlatten(InputOutputInfo* info, const ir::Attr* arg) {
+    auto param = static_cast<const FlattenParam*>(arg);
     if (info->GetInputCount() != 1 || info->GetOutputCount() != 1) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 1 or output count["
                    << info->GetOutputCount() << "] != 1.";

@@ -19,18 +19,17 @@
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeCast(InputOutputInfo* info, const void* arg) {
+RetCode ReshapeCast(InputOutputInfo* info, const ir::Attr* arg) {
     if (info->GetInputCount() != 1 || info->GetOutputCount() != 1) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 1 or output count["
                    << info->GetOutputCount() << "] != 1.";
         return RC_INVALID_VALUE;
     }
 
-    auto param = (const CastParam*)arg;
+    auto param = static_cast<const CastParam*>(arg);
     if (param->to == DATATYPE_UNKNOWN) {
         LOG(DEBUG) << "ERROR: unknown data type.";
         return RC_UNSUPPORTED;

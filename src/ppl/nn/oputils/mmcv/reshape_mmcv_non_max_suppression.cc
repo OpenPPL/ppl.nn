@@ -21,7 +21,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace mmcv {
 
-RetCode ReshapeMMCVNonMaxSuppression(InputOutputInfo* info, const void*) {
+RetCode ReshapeMMCVNonMaxSuppression(InputOutputInfo* info, const ir::Attr*) {
     if (info->GetInputCount() != 2 || info->GetOutputCount() != 1) {
         return RC_INVALID_VALUE;
     }

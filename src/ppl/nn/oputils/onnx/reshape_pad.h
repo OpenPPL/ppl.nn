@@ -20,13 +20,14 @@
 
 #include "ppl/common/retcode.h"
 #include "ppl/nn/common/input_output_info.h"
+#include "ppl/nn/ir/attr.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
 template <typename Tpad>
-ppl::common::RetCode ReshapePad(InputOutputInfo* info, const void* arg, const Tpad* start_pads, const Tpad* end_pads);
+ppl::common::RetCode ReshapePad(InputOutputInfo* info, const ir::Attr* arg, const Tpad* start_pads, const Tpad* end_pads);
 
-ppl::common::RetCode ReshapePad(InputOutputInfo*, const void*);
+ppl::common::RetCode ReshapePad(InputOutputInfo*, const ir::Attr*);
 
 }}} // namespace ppl::nn::onnx
 

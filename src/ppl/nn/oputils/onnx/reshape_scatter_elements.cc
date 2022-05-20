@@ -22,7 +22,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeScatterElements(InputOutputInfo* info, const void* arg) {
+RetCode ReshapeScatterElements(InputOutputInfo* info, const ir::Attr* arg) {
     if (info->GetInputCount() != 3 || info->GetOutputCount() != 1) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 3 or output count["
                    << info->GetOutputCount() << "] != 1.";

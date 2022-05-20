@@ -19,12 +19,11 @@
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeConcat(InputOutputInfo* info, const void* arg) {
-    auto param = (const ConcatParam*)arg;
+RetCode ReshapeConcat(InputOutputInfo* info, const ir::Attr* arg) {
+    auto param = static_cast<const ConcatParam*>(arg);
     const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
     uint32_t fixed_axis =
         param->axis >= 0 ? param->axis : param->axis + info->GetInput<TensorImpl>(0)->GetShape()->GetDimCount();

@@ -21,13 +21,14 @@
 #include "ppl/common/retcode.h"
 #include "ppl/nn/params/onnx/resize_param.h"
 #include "ppl/nn/common/input_output_info.h"
+#include "ppl/nn/ir/attr.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ReshapeResize(InputOutputInfo*, const void*, const float* roi_data, const float* scales_data,
+ppl::common::RetCode ReshapeResize(InputOutputInfo*, const ir::Attr*, const float* roi_data, const float* scales_data,
                                    const int64_t* sizes_data);
 
-ppl::common::RetCode ReshapeResize(InputOutputInfo*, const void*);
+ppl::common::RetCode ReshapeResize(InputOutputInfo*, const ir::Attr*);
 
 }}} // namespace ppl::nn::onnx
 
