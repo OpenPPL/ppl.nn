@@ -17,6 +17,7 @@
 
 #include "ppl/nn/utils/cpu_block_allocator.h"
 #include "ppl/nn/common/logger.h"
+#include <errno.h>
 #include <utility> // make_pair
 using namespace std;
 
