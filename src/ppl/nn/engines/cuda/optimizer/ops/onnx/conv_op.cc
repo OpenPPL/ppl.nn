@@ -86,8 +86,9 @@ RetCode ConvOp::Init(const OptKernelOptions& options) {
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         auto inshape = info->GetInput<TensorImpl>(0)->GetShape();
-        if (inshape->GetDimCount() < 4) {
-            inshape->Reshape(info->GetInput<TensorImpl>(1)->GetShape()->GetDims(), 4);
+        if (inshape->GetDimCount() != 4) {
+            LOG(DEBUG) << "error input shape dims " << inshape->GetDimCount();
+            return ppl::common::RC_INVALID_VALUE;
         }
         auto status = onnx::ReshapeConv(info, &(param_.param));
         if (info->GetOutputCount() > 1 && param_.extra_param.fuse_info.channel_offset >= 0) {

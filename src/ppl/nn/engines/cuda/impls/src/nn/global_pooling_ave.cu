@@ -125,7 +125,7 @@ __global__ void ppl_cukernel_pooling_ave_global_shuffle_half(
 
     // store output
     if (threadIdx.x == 0)
-        output[bc] = __hdiv(res, __float2half(HW));
+        output[bc] = __half2float(res / HW);
 #endif
 }
 
