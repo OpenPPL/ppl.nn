@@ -675,6 +675,18 @@ double PPLCUDAConvolutionJitSelectKernelInt8(
     fuse_param_t &fuse_param,
     uint64_t workspace)
 {
+    size_t conv_shape_hash = GetConvShapeHashKey(conv_param);
+
+    std::unordered_map<size_t, algo_param_t>::const_iterator conv_shape_hash_iterator = g_conv_shape_hash.find(conv_shape_hash);
+
+    if(conv_shape_hash_iterator != g_conv_shape_hash.end()) {
+        algo_param.kid    = conv_shape_hash_iterator->second.kid;
+        algo_param.splitk = conv_shape_hash_iterator->second.splitk;
+        algo_param.splitf = conv_shape_hash_iterator->second.splitf;
+
+        return 0.0f;
+    }
+
     auto pre_algo_param     = algo_param;
     int pad_size            = GetPadSize(type);
     int num_chl_per_grp     = conv_param.num_chl / conv_param.num_grp;
@@ -795,6 +807,7 @@ double PPLCUDAConvolutionJitSelectKernelInt8(
     elapsed = AlgoForwardTimeInt8(stream, knames, total_source, index, compile_params, device_id, true, type, d_input, d_flt, d_output, bias, d_temp_buf, params, conv_param, quant_param, fuse_param, workspace);
 
     algo_param                         = params[index];
+    g_conv_shape_hash[conv_shape_hash] = algo_param;
     return elapsed;
 }
 

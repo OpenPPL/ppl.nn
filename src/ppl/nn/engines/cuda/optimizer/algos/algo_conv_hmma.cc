@@ -67,21 +67,6 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     attr_param_.extra_param.algo_info.algo_type = "TuringHMMAImpgemm";
     options.compile_set->emplace(node->GetId());
 
-    auto shape_in0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
-    auto shape_in1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
-    auto shape_in2 = TensorShape();
-    const TensorShape& shape_out = *options.tensors->find(node->GetOutput(0))->second->GetShape();
-    auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
-    conv_param_t temp_conv_param;
-    fuse_param_t temp_fuse_param;
-    ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_, temp_conv_param);
-
-    // input H or W is too small
-    if (shape_in0.GetDim(2) + 2 * temp_conv_param.pad_height < shape_in1.GetDim(2) ||
-        shape_in0.GetDim(3) + 2 * temp_conv_param.pad_width < shape_in1.GetDim(3)) {
-        shape_in0.SetDim(2, shape_in1.GetDim(2));
-        shape_in0.SetDim(3, shape_in1.GetDim(3));
-    }
     const std::string& key_str = node->GetName();
     auto algo_info = options.algos->find(key_str);
     if (algo_info != options.algos->end()) {
@@ -97,6 +82,26 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
         attr_param_.extra_param.algo_info.splitk = 1;
         attr_param_.extra_param.algo_info.splitf = 1;
         PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
+    }
+
+    auto shape_in0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
+    auto shape_in1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
+    auto shape_in2 = TensorShape();
+    const TensorShape& shape_out = *options.tensors->find(node->GetOutput(0))->second->GetShape();
+    auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
+    conv_param_t temp_conv_param;
+    fuse_param_t temp_fuse_param;
+    ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_, temp_conv_param);
+
+    // input shape is invalid
+    if (shape_in0.GetDimCount() != 4 || shape_in1.GetDimCount() != 4) {
+        return 0.0f;
+    }
+    // input H or W is too small
+    if (shape_in0.GetDim(2) + 2 * temp_conv_param.pad_height < shape_in1.GetDim(2) ||
+        shape_in0.GetDim(3) + 2 * temp_conv_param.pad_width < shape_in1.GetDim(3)) {
+        shape_in0.SetDim(2, shape_in1.GetDim(2));
+        shape_in0.SetDim(3, shape_in1.GetDim(3));
     }
 
     if (options.args->quick_select) {
