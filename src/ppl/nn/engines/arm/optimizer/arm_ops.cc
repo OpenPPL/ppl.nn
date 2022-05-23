@@ -64,6 +64,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/sqrt_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/squeeze_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/sub_op.h"
+#include "ppl/nn/engines/arm/optimizer/ops/onnx/tanh_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/tile_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/topk_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/transpose_op.h"
@@ -160,6 +161,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<SqueezeOp>("", "Squeeze", 1, 12);
     RegisterOptKernelCreator<SubOp>("", "Sub", 7, 16);
     // T
+    RegisterOptKernelCreator<TanHOp>("", "Tanh", 6, 16);
     RegisterOptKernelCreator<TileOp>("", "Tile", 6, 16);
     RegisterOptKernelCreator<TopKOp>("", "TopK", 1, 16);
     RegisterOptKernelCreator<TransposeOp>("", "Transpose", 1, 16);

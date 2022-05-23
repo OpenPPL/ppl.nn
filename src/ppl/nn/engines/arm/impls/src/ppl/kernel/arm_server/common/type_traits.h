@@ -76,6 +76,10 @@ inline void vmla(vecType& vacc, const vecType& v0, const vecType& v1)
     vacc = vadd(vacc, vmul(v0, v1));
 }
 
+// add all lanes up
+template <typename eT, int32_t eN>
+inline eT vaddv(const typename DT<eT, eN>::vecDT& v0);
+
 template <typename vecType>
 inline vecType operator+(const vecType& v0, const vecType& v1)
 {
@@ -191,6 +195,16 @@ inline void vmla<float32x4_t>(float32x4_t& vacc, const float32x4_t& v0, const fl
     vacc = vfmaq_f32(vacc, v0, v1);
 }
 
+template <>
+inline float vaddv<float, 4>(const float32x4_t& v0)
+{
+#ifdef __aarch64__
+    return vaddvq_f32(v0);
+#else
+    return vgetq_lane_f32(v0, 0) + vgetq_lane_f32(v0, 1) + vgetq_lane_f32(v0, 2) + vgetq_lane_f32(v0, 3);
+#endif
+}
+
 /********************** uint32 x 2 **********************/
 
 template <>
@@ -286,6 +300,16 @@ template <>
 inline void vmla<uint32x2_t>(uint32x2_t& vacc, const uint32x2_t& v0, const uint32x2_t& v1)
 {
     vacc = vmla_u32(vacc, v0, v1);
+}
+
+template <>
+inline uint32_t vaddv<uint32_t, 2>(const uint32x2_t& v0)
+{
+#ifdef __aarch64__
+    return vaddv_u32(v0);
+#else
+    return vgetq_lane_u32(v0, 0) + vgetq_lane_u32(v0, 1);
+#endif
 }
 
 /********************** uint32 x 4 **********************/
@@ -389,6 +413,16 @@ inline void vmla<uint32x4_t>(uint32x4_t& vacc, const uint32x4_t& v0, const uint3
     vacc = vmlaq_u32(vacc, v0, v1);
 }
 
+template <>
+inline uint32_t vaddv<uint32_t, 4>(const uint32x4_t& v0)
+{
+#ifdef __aarch64__
+    return vaddvq_u32(v0);
+#else
+    return vgetq_lane_u32(v0, 0) + vgetq_lane_u32(v0, 1) + vgetq_lane_u32(v0, 2) + vgetq_lane_u32(v0, 3);
+#endif
+}
+
 /********************** int64 x 2 **********************/
 
 template <>
@@ -487,6 +521,16 @@ template <>
 inline int64x2_t vabs<int64x2_t>(const int64x2_t& v0)
 {
     return vabsq_s64(v0);
+}
+
+template <>
+inline int64_t vaddv<int64_t, 2>(const int64x2_t& v0)
+{
+#ifdef __aarch64__
+    return vaddvq_s64(v0);
+#else
+    return vgetq_lane_s64(v0, 0) + vgetq_lane_s64(v0, 1);
+#endif
 }
 
 /********************** uint16 x 8 **********************/
@@ -598,6 +642,17 @@ inline void vmla<uint16x8_t>(uint16x8_t& vacc, const uint16x8_t& v0, const uint1
     vacc = vmlaq_u16(vacc, v0, v1);
 }
 
+template <>
+inline uint16_t vaddv<uint16_t, 8>(const uint16x8_t& v0)
+{
+#ifdef __aarch64__
+    return vaddvq_u16(v0);
+#else
+    uint16x8_t v_sum = vadd_u16(vget_low_u16(v0), vget_high_u16(v1));
+    return vget_lane_u16(v_sum, 0) + vget_lane_u16(v_sum, 1) + vget_lane_u16(v_sum, 2) + vget_lane_u16(v_sum, 3);
+#endif
+}
+
 /********************** uint16 x 4 **********************/
 
 template <>
@@ -699,6 +754,16 @@ inline void vmla<uint16x4_t>(uint16x4_t& vacc, const uint16x4_t& v0, const uint1
     vacc = vmla_u16(vacc, v0, v1);
 }
 
+template <>
+inline uint16_t vaddv<uint16_t, 4>(const uint16x4_t& v0)
+{
+#ifdef __aarch64__
+    return vaddv_u16(v0);
+#else
+    return vget_lane_u16(v0, 0) + vget_lane_u16(v0, 1) + vget_lane_u16(v0, 2) + vget_lane_u16(v0, 3);
+#endif
+}
+
 /********************** fp16 x 8 **********************/
 
 #ifdef PPLNN_USE_ARMV8_2_FP16
@@ -789,6 +854,13 @@ template <>
 inline void vmla<float16x8_t>(float16x8_t& vacc, const float16x8_t& v0, const float16x8_t& v1)
 {
     vacc = vfmaq_f16(vacc, v0, v1);
+}
+
+template <>
+inline __fp16 vaddv<__fp16, 8>(const float16x8_t& v0)
+{
+    float16x4_t v_sum = vadd_f16(vget_low_f16(v0), vget_high_f16(v0));
+    return vget_lane_f16(v_sum, 0) + vget_lane_f16(v_sum, 1) + vget_lane_f16(v_sum, 2) + vget_lane_f16(v_sum, 3);
 }
 #endif
 
