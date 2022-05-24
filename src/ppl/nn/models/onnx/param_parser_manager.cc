@@ -120,25 +120,25 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Abs", 6, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Add", 7, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "And", 7, 16);
-    PPL_REGISTER_OP_WITH_PARAM("", "ArgMax", 1, 11, ppl::nn::onnx::ArgMaxParam, ParseArgMaxParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "AveragePool", 1, 16, ppl::nn::onnx::PoolingParam, ParsePoolingParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ArgMax", 1, 11, ArgMaxParam, ParseArgMaxParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "AveragePool", 1, 16, PoolingParam, ParsePoolingParam);
     // B
-    PPL_REGISTER_OP_WITH_PARAM("", "BatchNormalization", 9, 13, ppl::nn::onnx::BatchNormalizationParam,
+    PPL_REGISTER_OP_WITH_PARAM("", "BatchNormalization", 9, 13, BatchNormalizationParam,
                                ParseBatchNormalizationParam);
     // C
-    PPL_REGISTER_OP_WITH_PARAM("", "Cast", 9, 16, ppl::nn::onnx::CastParam, ParseCastParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Cast", 9, 16, CastParam, ParseCastParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Ceil", 6, 16);
-    PPL_REGISTER_OP_WITH_PARAM("", "Clip", 6, 16, ppl::nn::onnx::ClipParam, ParseClipParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Concat", 4, 16, ppl::nn::onnx::ConcatParam, ParseConcatParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Constant", 9, 16, ppl::nn::onnx::ConstantParam, ParseConstantParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ConstantOfShape", 9, 16, ppl::nn::onnx::ConstantOfShapeParam,
+    PPL_REGISTER_OP_WITH_PARAM("", "Clip", 6, 16, ClipParam, ParseClipParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Concat", 4, 16, ConcatParam, ParseConcatParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Constant", 9, 16, ConstantParam, ParseConstantParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ConstantOfShape", 9, 16, ConstantOfShapeParam,
                                ParseConstantOfShapeParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Conv", 1, 16, ppl::nn::onnx::ConvParam, ParseConvParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ConvTranspose", 1, 16, ppl::nn::onnx::ConvTransposeParam, ParseConvTransposeParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Conv", 1, 16, ConvParam, ParseConvParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ConvTranspose", 1, 16, ConvTransposeParam, ParseConvTransposeParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Cos", 7, 16);
-    PPL_REGISTER_OP_WITH_PARAM("", "CumSum", 11, 16, ppl::nn::onnx::CumSumParam, ParseCumSumParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "CumSum", 11, 16, CumSumParam, ParseCumSumParam);
     // D
-    PPL_REGISTER_OP_WITH_PARAM("", "DepthToSpace", 1, 16, ppl::nn::onnx::DepthToSpaceParam, ParseDepthToSpaceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "DepthToSpace", 1, 16, DepthToSpaceParam, ParseDepthToSpaceParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Div", 7, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Dropout", 1, 16); // will be skip
     // E
@@ -147,79 +147,79 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Exp", 6, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Expand", 8, 16);
     // F
-    PPL_REGISTER_OP_WITH_PARAM("", "Flatten", 1, 16, ppl::nn::onnx::FlattenParam, ParseFlattenParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Flatten", 1, 16, FlattenParam, ParseFlattenParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Floor", 6, 16);
     // G
-    PPL_REGISTER_OP_WITH_PARAM("", "Gather", 1, 16, ppl::nn::onnx::GatherParam, ParseGatherParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "GatherND", 11, 16, ppl::nn::onnx::GatherNDParam, ParseGatherNDParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Gemm", 9, 16, ppl::nn::onnx::GemmParam, ParseGemmParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "GlobalAveragePool", 1, 16, ppl::nn::onnx::PoolingParam, ParsePoolingParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Gather", 1, 16, GatherParam, ParseGatherParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "GatherND", 11, 16, GatherNDParam, ParseGatherNDParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Gemm", 9, 16, GemmParam, ParseGemmParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "GlobalAveragePool", 1, 16, PoolingParam, ParsePoolingParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Greater", 7, 16);
     // I
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Identity", 1, 13);
-    PPL_REGISTER_OP_WITH_PARAM("", "If", 1, 12, ppl::nn::onnx::IfParam, ParseIfParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "InstanceNormalization", 6, 13, ppl::nn::onnx::InstanceNormalizationParam,
+    PPL_REGISTER_OP_WITH_PARAM("", "If", 1, 12, IfParam, ParseIfParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "InstanceNormalization", 6, 13, InstanceNormalizationParam,
                                ParseInstanceNormalizationParam);
     // L
-    PPL_REGISTER_OP_WITH_PARAM("", "LeakyRelu", 6, 16, ppl::nn::onnx::LeakyReluParam, ParseLeakyReluParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "LeakyRelu", 6, 16, LeakyReluParam, ParseLeakyReluParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Less", 7, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Log", 6, 16);
-    PPL_REGISTER_OP_WITH_PARAM("", "Loop", 1, 12, ppl::nn::onnx::LoopParam, ParseLoopParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "LRN", 1, 16, ppl::nn::onnx::LRNParam, ParseLRNParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "LSTM", 7, 13, ppl::nn::onnx::LSTMParam, ParseLSTMParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Loop", 1, 12, LoopParam, ParseLoopParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "LRN", 1, 16, LRNParam, ParseLRNParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "LSTM", 7, 13, LSTMParam, ParseLSTMParam);
     // M
     PPL_REGISTER_OP_WITHOUT_PARAM("", "MatMul", 1, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Max", 6, 16);
-    PPL_REGISTER_OP_WITH_PARAM("", "MaxPool", 1, 16, ppl::nn::onnx::PoolingParam, ParsePoolingParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "MaxUnpool", 9, 16, ppl::nn::onnx::MaxUnpoolParam, ParseMaxUnpoolParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "MaxPool", 1, 16, PoolingParam, ParsePoolingParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "MaxUnpool", 9, 16, MaxUnpoolParam, ParseMaxUnpoolParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Min", 6, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Mul", 7, 16);
     // N
-    PPL_REGISTER_OP_WITH_PARAM("", "NonMaxSuppression", 10, 16, ppl::nn::onnx::NonMaxSuppressionParam,
+    PPL_REGISTER_OP_WITH_PARAM("", "NonMaxSuppression", 10, 16, NonMaxSuppressionParam,
                                ParseNonMaxSuppressionParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "NonZero", 9, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Not", 1, 16);
     // P
-    PPL_REGISTER_OP_WITH_PARAM("", "Pad", 2, 16, ppl::nn::onnx::PadParam, ParsePadParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Pad", 2, 16, PadParam, ParsePadParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Pow", 7, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "PRelu", 6, 16);
     // R
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Range", 11, 16);
-    PPL_REGISTER_OP_WITH_PARAM("", "ReduceL2", 1, 16, ppl::nn::onnx::ReduceParam, ParseReduceParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMax", 1, 16, ppl::nn::onnx::ReduceParam, ParseReduceParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMean", 1, 16, ppl::nn::onnx::ReduceParam, ParseReduceParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMin", 1, 16, ppl::nn::onnx::ReduceParam, ParseReduceParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ReduceProd", 1, 16, ppl::nn::onnx::ReduceParam, ParseReduceParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ReduceSum", 1, 16, ppl::nn::onnx::ReduceParam, ParseReduceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceL2", 1, 16, ReduceParam, ParseReduceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMax", 1, 16, ReduceParam, ParseReduceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMean", 1, 16, ReduceParam, ParseReduceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceMin", 1, 16, ReduceParam, ParseReduceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceProd", 1, 16, ReduceParam, ParseReduceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ReduceSum", 1, 16, ReduceParam, ParseReduceParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Relu", 6, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Reshape", 5, 13);
-    PPL_REGISTER_OP_WITH_PARAM("", "Resize", 11, 16, ppl::nn::onnx::ResizeParam, ParseResizeParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "RoiAlign", 10, 15, ppl::nn::onnx::RoiAlignParam, ParseRoiAlignParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Resize", 11, 16, ResizeParam, ParseResizeParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "RoiAlign", 10, 15, RoiAlignParam, ParseRoiAlignParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Round", 11, 16);
     // S
-    PPL_REGISTER_OP_WITH_PARAM("", "ScatterElements", 11, 15, ppl::nn::onnx::ScatterElementsParam,
+    PPL_REGISTER_OP_WITH_PARAM("", "ScatterElements", 11, 15, ScatterElementsParam,
                                ParseScatterElementsParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "ScatterND", 11, 15);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "SequenceAt", 11, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Shape", 1, 14);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Sigmoid", 6, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Sin", 7, 16);
-    PPL_REGISTER_OP_WITH_PARAM("", "Slice", 1, 16, ppl::nn::onnx::SliceParam, ParseSliceParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Softmax", 1, 16, ppl::nn::onnx::SoftmaxParam, ParseSoftmaxParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Split", 2, 12, ppl::nn::onnx::SplitParam, ParseSplitParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "SplitToSequence", 11, 16, ppl::nn::onnx::SplitToSequenceParam,
+    PPL_REGISTER_OP_WITH_PARAM("", "Slice", 1, 16, SliceParam, ParseSliceParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Softmax", 1, 16, SoftmaxParam, ParseSoftmaxParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Split", 2, 12, SplitParam, ParseSplitParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "SplitToSequence", 11, 16, SplitToSequenceParam,
                                ParseSplitToSequenceParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Sqrt", 6, 16);
-    PPL_REGISTER_OP_WITH_PARAM("", "Squeeze", 1, 16, ppl::nn::onnx::SqueezeParam, ParseSqueezeParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Squeeze", 1, 16, SqueezeParam, ParseSqueezeParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Sub", 7, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Sum", 6, 16);
     // T
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Tanh", 6, 16);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Tile", 6, 16);
-    PPL_REGISTER_OP_WITH_PARAM("", "TopK", 1, 16, ppl::nn::onnx::TopKParam, ParseTopKParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "Transpose", 1, 16, ppl::nn::onnx::TransposeParam, ParseTransposeParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "TopK", 1, 16, TopKParam, ParseTopKParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Transpose", 1, 16, TransposeParam, ParseTransposeParam);
     // U
-    PPL_REGISTER_OP_WITH_PARAM("", "Unsqueeze", 1, 16, ppl::nn::onnx::UnsqueezeParam, ParseUnsqueezeParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Unsqueeze", 1, 16, UnsqueezeParam, ParseUnsqueezeParam);
     // W
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Where", 9, 16);
 
