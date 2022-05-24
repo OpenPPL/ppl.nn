@@ -18,13 +18,13 @@
 #include <stdio.h>
 
 #include "ppl/kernel/x86/common/internal_include.h"
-#include "ppl/kernel/x86/common/avx_tools.h"
+#include "ppl/kernel/x86/common/sse_tools.h"
 #include "ppl/kernel/x86/fp32/gemm.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
 template<int64_t u_n>
-void gemv_t_kernel_fp32_fma(
+void gemv_t_kernel_fp32_sse(
     const float *A,
     const float *B,
     const float *bias,
@@ -46,11 +46,11 @@ void gemv_t_kernel_fp32_fma(
     const float *lsum = sum;
     float *lC = C;
 
-    const int64_t K_REG_ELTS = 8;
+    const int64_t K_REG_ELTS = 4;
     const int64_t u_k = 2 * K_REG_ELTS;
     const bool apply_beta = beta != 0.0f;
     for (int64_t n = 0; n < N; n += u_n) {
-        __m256 ymm0, ymm1, ymm2, ymm3, ymm4, ymm5;
+        __m128 xmm0, xmm1, xmm2, xmm3, xmm4, xmm5;
         float r0, r1, r2, r3;
 
         r0 = 0.0f;
@@ -66,34 +66,34 @@ void gemv_t_kernel_fp32_fma(
 
         int64_t k = 0;
         if (K >= u_k) {
-            if (u_n > 0) ymm0 = _mm256_setzero_ps();
-            if (u_n > 1) ymm1 = _mm256_setzero_ps();
-            if (u_n > 2) ymm2 = _mm256_setzero_ps();
-            if (u_n > 3) ymm3 = _mm256_setzero_ps();
+            if (u_n > 0) xmm0 = _mm_setzero_ps();
+            if (u_n > 1) xmm1 = _mm_setzero_ps();
+            if (u_n > 2) xmm2 = _mm_setzero_ps();
+            if (u_n > 3) xmm3 = _mm_setzero_ps();
             for (; k <= K - u_k; k += u_k) {
-                ymm4 = _mm256_loadu_ps(rA + 0 * K_REG_ELTS);
-                ymm5 = _mm256_loadu_ps(rA + 1 * K_REG_ELTS);
-                if (u_n > 0) ymm0 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 0 * ldb + 0 * K_REG_ELTS), ymm4, ymm0);
-                if (u_n > 1) ymm1 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 1 * ldb + 0 * K_REG_ELTS), ymm4, ymm1);
-                if (u_n > 2) ymm2 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 0 * ldb + 0 * K_REG_ELTS), ymm4, ymm2);
-                if (u_n > 3) ymm3 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 1 * ldb + 0 * K_REG_ELTS), ymm4, ymm3);
-                if (u_n > 0) ymm0 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 0 * ldb + 1 * K_REG_ELTS), ymm5, ymm0);
-                if (u_n > 1) ymm1 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 1 * ldb + 1 * K_REG_ELTS), ymm5, ymm1);
-                if (u_n > 2) ymm2 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 0 * ldb + 1 * K_REG_ELTS), ymm5, ymm2);
-                if (u_n > 3) ymm3 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 1 * ldb + 1 * K_REG_ELTS), ymm5, ymm3);
+                xmm4 = _mm_loadu_ps(rA + 0 * K_REG_ELTS);
+                xmm5 = _mm_loadu_ps(rA + 1 * K_REG_ELTS);
+                if (u_n > 0) xmm0 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB0 + 0 * ldb + 0 * K_REG_ELTS), xmm4), xmm0);
+                if (u_n > 1) xmm1 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB0 + 1 * ldb + 0 * K_REG_ELTS), xmm4), xmm1);
+                if (u_n > 2) xmm2 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 0 * ldb + 0 * K_REG_ELTS), xmm4), xmm2);
+                if (u_n > 3) xmm3 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 1 * ldb + 0 * K_REG_ELTS), xmm4), xmm3);
+                if (u_n > 0) xmm0 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB0 + 0 * ldb + 1 * K_REG_ELTS), xmm5), xmm0);
+                if (u_n > 1) xmm1 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB0 + 1 * ldb + 1 * K_REG_ELTS), xmm5), xmm1);
+                if (u_n > 2) xmm2 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 0 * ldb + 1 * K_REG_ELTS), xmm5), xmm2);
+                if (u_n > 3) xmm3 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 1 * ldb + 1 * K_REG_ELTS), xmm5), xmm3);
                 rA += u_k;
                 if (u_n > 0) rB0 += u_k;
                 if (u_n > 2) rB2 += u_k;
             }
-#define _MM256_RSUM_PS(YMM, SREG) do {\
+#define _mm_RSUM_PS(xmm, SREG) do {\
     float v[K_REG_ELTS];\
-    _mm256_storeu_ps(v, (YMM));\
-    (SREG) = ((v[0] + v[1]) + (v[2] + v[3])) + ((v[4] + v[5]) + (v[6] + v[7]));\
+    _mm_storeu_ps(v, (xmm));\
+    (SREG) = ((v[0] + v[1]) + (v[2] + v[3]));\
 } while(0)
-            if (u_n > 0) _MM256_RSUM_PS(ymm0, r0);
-            if (u_n > 1) _MM256_RSUM_PS(ymm1, r1);
-            if (u_n > 2) _MM256_RSUM_PS(ymm2, r2);
-            if (u_n > 3) _MM256_RSUM_PS(ymm3, r3);
+            if (u_n > 0) _mm_RSUM_PS(xmm0, r0);
+            if (u_n > 1) _mm_RSUM_PS(xmm1, r1);
+            if (u_n > 2) _mm_RSUM_PS(xmm2, r2);
+            if (u_n > 3) _mm_RSUM_PS(xmm3, r3);
         }
         for (; k < K; ++k) {
             if (u_n > 0) r0 += rB0[0 * ldb] * rA[0];
@@ -160,7 +160,7 @@ void gemv_t_kernel_fp32_fma(
 
 
 template<int64_t u_k>
-void gemv_n_kernel_fp32_fma(
+void gemv_n_kernel_fp32_sse(
     const float *A,
     const float *B,
     const int64_t N,
@@ -172,14 +172,14 @@ void gemv_n_kernel_fp32_fma(
 {
     const float *lB = B;
     const float *lA = A;
-    __m256 ymm_v0 = _mm256_set1_ps(0.0f);
-    __m256 ymm_v6 = _mm256_set1_ps(6.0f);
+    __m128 xmm_v0 = _mm_set1_ps(0.0f);
+    __m128 xmm_v6 = _mm_set1_ps(6.0f);
 
-    const int64_t N_REG_ELTS = 8;
+    const int64_t N_REG_ELTS = 4;
     const int64_t u_n = N_REG_ELTS * 4;
     for (int64_t k = 0; k < K; k += u_k) {
-        __m256 ymm0, ymm1, ymm2, ymm3;
-        __m256 ymm4, ymm5, ymm6, ymm7;
+        __m128 xmm0, xmm1, xmm2, xmm3;
+        __m128 xmm4, xmm5, xmm6, xmm7;
 
         const bool do_relu_max = k + u_k >= K && (post == gemm_post::RELU || post == gemm_post::RELU6);
         const bool do_relu_min = k + u_k >= K && post == gemm_post::RELU6;
@@ -189,10 +189,10 @@ void gemv_n_kernel_fp32_fma(
         if (u_k > 1) a1 = lA[1] * alpha;
         if (u_k > 2) a2 = lA[2] * alpha;
         if (u_k > 3) a3 = lA[3] * alpha;
-        if (u_k > 0) ymm0 = _mm256_set1_ps(a0);
-        if (u_k > 1) ymm1 = _mm256_set1_ps(a1);
-        if (u_k > 2) ymm2 = _mm256_set1_ps(a2);
-        if (u_k > 3) ymm3 = _mm256_set1_ps(a3);
+        if (u_k > 0) xmm0 = _mm_set1_ps(a0);
+        if (u_k > 1) xmm1 = _mm_set1_ps(a1);
+        if (u_k > 2) xmm2 = _mm_set1_ps(a2);
+        if (u_k > 3) xmm3 = _mm_set1_ps(a3);
 
         float *rC = C;
         const float *rB0;
@@ -202,49 +202,49 @@ void gemv_n_kernel_fp32_fma(
         int64_t n = N;
         while (n >= u_n) {
             if (u_k > 0) {
-                ymm4 = _mm256_mul_ps(_mm256_loadu_ps(rB0 + 0 * ldb + 0 * N_REG_ELTS), ymm0);
-                ymm5 = _mm256_mul_ps(_mm256_loadu_ps(rB0 + 0 * ldb + 1 * N_REG_ELTS), ymm0);
-                ymm6 = _mm256_mul_ps(_mm256_loadu_ps(rB0 + 0 * ldb + 2 * N_REG_ELTS), ymm0);
-                ymm7 = _mm256_mul_ps(_mm256_loadu_ps(rB0 + 0 * ldb + 3 * N_REG_ELTS), ymm0);
+                xmm4 = _mm_mul_ps(_mm_loadu_ps(rB0 + 0 * ldb + 0 * N_REG_ELTS), xmm0);
+                xmm5 = _mm_mul_ps(_mm_loadu_ps(rB0 + 0 * ldb + 1 * N_REG_ELTS), xmm0);
+                xmm6 = _mm_mul_ps(_mm_loadu_ps(rB0 + 0 * ldb + 2 * N_REG_ELTS), xmm0);
+                xmm7 = _mm_mul_ps(_mm_loadu_ps(rB0 + 0 * ldb + 3 * N_REG_ELTS), xmm0);
             }
             if (u_k > 1) {
-                ymm4 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 1 * ldb + 0 * N_REG_ELTS), ymm1, ymm4);
-                ymm5 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 1 * ldb + 1 * N_REG_ELTS), ymm1, ymm5);
-                ymm6 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 1 * ldb + 2 * N_REG_ELTS), ymm1, ymm6);
-                ymm7 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 1 * ldb + 3 * N_REG_ELTS), ymm1, ymm7);
+                xmm4 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB0 + 1 * ldb + 0 * N_REG_ELTS), xmm1), xmm4);
+                xmm5 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB0 + 1 * ldb + 1 * N_REG_ELTS), xmm1), xmm5);
+                xmm6 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB0 + 1 * ldb + 2 * N_REG_ELTS), xmm1), xmm6);
+                xmm7 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB0 + 1 * ldb + 3 * N_REG_ELTS), xmm1), xmm7);
             }
             if (u_k > 2) {
-                ymm4 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 0 * ldb + 0 * N_REG_ELTS), ymm2, ymm4);
-                ymm5 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 0 * ldb + 1 * N_REG_ELTS), ymm2, ymm5);
-                ymm6 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 0 * ldb + 2 * N_REG_ELTS), ymm2, ymm6);
-                ymm7 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 0 * ldb + 3 * N_REG_ELTS), ymm2, ymm7);
+                xmm4 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 0 * ldb + 0 * N_REG_ELTS), xmm2), xmm4);
+                xmm5 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 0 * ldb + 1 * N_REG_ELTS), xmm2), xmm5);
+                xmm6 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 0 * ldb + 2 * N_REG_ELTS), xmm2), xmm6);
+                xmm7 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 0 * ldb + 3 * N_REG_ELTS), xmm2), xmm7);
             }
             if (u_k > 3) {
-                ymm4 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 1 * ldb + 0 * N_REG_ELTS), ymm3, ymm4);
-                ymm5 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 1 * ldb + 1 * N_REG_ELTS), ymm3, ymm5);
-                ymm6 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 1 * ldb + 2 * N_REG_ELTS), ymm3, ymm6);
-                ymm7 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 1 * ldb + 3 * N_REG_ELTS), ymm3, ymm7);
+                xmm4 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 1 * ldb + 0 * N_REG_ELTS), xmm3), xmm4);
+                xmm5 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 1 * ldb + 1 * N_REG_ELTS), xmm3), xmm5);
+                xmm6 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 1 * ldb + 2 * N_REG_ELTS), xmm3), xmm6);
+                xmm7 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 1 * ldb + 3 * N_REG_ELTS), xmm3), xmm7);
             }
-            ymm4 = _mm256_add_ps(_mm256_loadu_ps(rC + 0 * N_REG_ELTS), ymm4);
-            ymm5 = _mm256_add_ps(_mm256_loadu_ps(rC + 1 * N_REG_ELTS), ymm5);
-            ymm6 = _mm256_add_ps(_mm256_loadu_ps(rC + 2 * N_REG_ELTS), ymm6);
-            ymm7 = _mm256_add_ps(_mm256_loadu_ps(rC + 3 * N_REG_ELTS), ymm7);
+            xmm4 = _mm_add_ps(_mm_loadu_ps(rC + 0 * N_REG_ELTS), xmm4);
+            xmm5 = _mm_add_ps(_mm_loadu_ps(rC + 1 * N_REG_ELTS), xmm5);
+            xmm6 = _mm_add_ps(_mm_loadu_ps(rC + 2 * N_REG_ELTS), xmm6);
+            xmm7 = _mm_add_ps(_mm_loadu_ps(rC + 3 * N_REG_ELTS), xmm7);
             if (do_relu_max) {
-                ymm4 = _mm256_max_ps(ymm4, ymm_v0);
-                ymm5 = _mm256_max_ps(ymm5, ymm_v0);
-                ymm6 = _mm256_max_ps(ymm6, ymm_v0);
-                ymm7 = _mm256_max_ps(ymm7, ymm_v0);
+                xmm4 = _mm_max_ps(xmm4, xmm_v0);
+                xmm5 = _mm_max_ps(xmm5, xmm_v0);
+                xmm6 = _mm_max_ps(xmm6, xmm_v0);
+                xmm7 = _mm_max_ps(xmm7, xmm_v0);
             }
             if (do_relu_min) {
-                ymm4 = _mm256_min_ps(ymm4, ymm_v6);
-                ymm5 = _mm256_min_ps(ymm5, ymm_v6);
-                ymm6 = _mm256_min_ps(ymm6, ymm_v6);
-                ymm7 = _mm256_min_ps(ymm7, ymm_v6);
+                xmm4 = _mm_min_ps(xmm4, xmm_v6);
+                xmm5 = _mm_min_ps(xmm5, xmm_v6);
+                xmm6 = _mm_min_ps(xmm6, xmm_v6);
+                xmm7 = _mm_min_ps(xmm7, xmm_v6);
             }
-            _mm256_storeu_ps(rC + 0 * N_REG_ELTS, ymm4);
-            _mm256_storeu_ps(rC + 1 * N_REG_ELTS, ymm5);
-            _mm256_storeu_ps(rC + 2 * N_REG_ELTS, ymm6);
-            _mm256_storeu_ps(rC + 3 * N_REG_ELTS, ymm7);
+            _mm_storeu_ps(rC + 0 * N_REG_ELTS, xmm4);
+            _mm_storeu_ps(rC + 1 * N_REG_ELTS, xmm5);
+            _mm_storeu_ps(rC + 2 * N_REG_ELTS, xmm6);
+            _mm_storeu_ps(rC + 3 * N_REG_ELTS, xmm7);
             rC += u_n;
             if (u_k > 0) rB0 += u_n;
             if (u_k > 2) rB2 += u_n;
@@ -252,47 +252,47 @@ void gemv_n_kernel_fp32_fma(
         }
         if (n >= N_REG_ELTS * 2) {
             if (u_k > 0) {
-                ymm4 = _mm256_mul_ps(_mm256_loadu_ps(rB0 + 0 * ldb + 0 * N_REG_ELTS), ymm0);
-                ymm5 = _mm256_mul_ps(_mm256_loadu_ps(rB0 + 0 * ldb + 1 * N_REG_ELTS), ymm0);
+                xmm4 = _mm_mul_ps(_mm_loadu_ps(rB0 + 0 * ldb + 0 * N_REG_ELTS), xmm0);
+                xmm5 = _mm_mul_ps(_mm_loadu_ps(rB0 + 0 * ldb + 1 * N_REG_ELTS), xmm0);
             }
             if (u_k > 1) {
-                ymm4 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 1 * ldb + 0 * N_REG_ELTS), ymm1, ymm4);
-                ymm5 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 1 * ldb + 1 * N_REG_ELTS), ymm1, ymm5);
+                xmm4 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB0 + 1 * ldb + 0 * N_REG_ELTS), xmm1), xmm4);
+                xmm5 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB0 + 1 * ldb + 1 * N_REG_ELTS), xmm1), xmm5);
             }
             if (u_k > 2) {
-                ymm4 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 0 * ldb + 0 * N_REG_ELTS), ymm2, ymm4);
-                ymm5 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 0 * ldb + 1 * N_REG_ELTS), ymm2, ymm5);
+                xmm4 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 0 * ldb + 0 * N_REG_ELTS), xmm2), xmm4);
+                xmm5 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 0 * ldb + 1 * N_REG_ELTS), xmm2), xmm5);
             }
             if (u_k > 3) {
-                ymm4 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 1 * ldb + 0 * N_REG_ELTS), ymm3, ymm4);
-                ymm5 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 1 * ldb + 1 * N_REG_ELTS), ymm3, ymm5);
+                xmm4 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 1 * ldb + 0 * N_REG_ELTS), xmm3), xmm4);
+                xmm5 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 1 * ldb + 1 * N_REG_ELTS), xmm3), xmm5);
             }
-            ymm4 = _mm256_add_ps(_mm256_loadu_ps(rC + 0 * N_REG_ELTS), ymm4);
-            ymm5 = _mm256_add_ps(_mm256_loadu_ps(rC + 1 * N_REG_ELTS), ymm5);
+            xmm4 = _mm_add_ps(_mm_loadu_ps(rC + 0 * N_REG_ELTS), xmm4);
+            xmm5 = _mm_add_ps(_mm_loadu_ps(rC + 1 * N_REG_ELTS), xmm5);
             if (do_relu_max) {
-                ymm4 = _mm256_max_ps(ymm4, ymm_v0);
-                ymm5 = _mm256_max_ps(ymm5, ymm_v0);
+                xmm4 = _mm_max_ps(xmm4, xmm_v0);
+                xmm5 = _mm_max_ps(xmm5, xmm_v0);
             }
             if (do_relu_min) {
-                ymm4 = _mm256_min_ps(ymm4, ymm_v6);
-                ymm5 = _mm256_min_ps(ymm5, ymm_v6);
+                xmm4 = _mm_min_ps(xmm4, xmm_v6);
+                xmm5 = _mm_min_ps(xmm5, xmm_v6);
             }
-            _mm256_storeu_ps(rC + 0 * N_REG_ELTS, ymm4);
-            _mm256_storeu_ps(rC + 1 * N_REG_ELTS, ymm5);
+            _mm_storeu_ps(rC + 0 * N_REG_ELTS, xmm4);
+            _mm_storeu_ps(rC + 1 * N_REG_ELTS, xmm5);
             rC += N_REG_ELTS * 2;
             if (u_k > 0) rB0 += N_REG_ELTS * 2;
             if (u_k > 2) rB2 += N_REG_ELTS * 2;
             n -= N_REG_ELTS * 2;
         }
         if (n >= N_REG_ELTS) {
-            if (u_k > 0) ymm4 = _mm256_mul_ps(_mm256_loadu_ps(rB0 + 0 * ldb + 0 * N_REG_ELTS), ymm0);
-            if (u_k > 1) ymm4 = _mm256_fmadd_ps(_mm256_loadu_ps(rB0 + 1 * ldb + 0 * N_REG_ELTS), ymm1, ymm4);
-            if (u_k > 2) ymm4 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 0 * ldb + 0 * N_REG_ELTS), ymm2, ymm4);
-            if (u_k > 3) ymm4 = _mm256_fmadd_ps(_mm256_loadu_ps(rB2 + 1 * ldb + 0 * N_REG_ELTS), ymm3, ymm4);
-            ymm4 = _mm256_add_ps(_mm256_loadu_ps(rC + 0 * N_REG_ELTS), ymm4);
-            if (do_relu_max) ymm4 = _mm256_max_ps(ymm4, ymm_v0);
-            if (do_relu_min) ymm4 = _mm256_min_ps(ymm4, ymm_v6);
-            _mm256_storeu_ps(rC + 0 * N_REG_ELTS, ymm4);
+            if (u_k > 0) xmm4 = _mm_mul_ps(_mm_loadu_ps(rB0 + 0 * ldb + 0 * N_REG_ELTS), xmm0);
+            if (u_k > 1) xmm4 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB0 + 1 * ldb + 0 * N_REG_ELTS), xmm1), xmm4);
+            if (u_k > 2) xmm4 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 0 * ldb + 0 * N_REG_ELTS), xmm2), xmm4);
+            if (u_k > 3) xmm4 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(rB2 + 1 * ldb + 0 * N_REG_ELTS), xmm3), xmm4);
+            xmm4 = _mm_add_ps(_mm_loadu_ps(rC + 0 * N_REG_ELTS), xmm4);
+            if (do_relu_max) xmm4 = _mm_max_ps(xmm4, xmm_v0);
+            if (do_relu_min) xmm4 = _mm_min_ps(xmm4, xmm_v6);
+            _mm_storeu_ps(rC + 0 * N_REG_ELTS, xmm4);
             rC += N_REG_ELTS;
             if (u_k > 0) rB0 += N_REG_ELTS;
             if (u_k > 2) rB2 += N_REG_ELTS;
@@ -320,7 +320,7 @@ void gemv_n_kernel_fp32_fma(
 }
 
 template<gemm_v_type_t typesum, gemm_m_type_t typebias>
-void gemv_fp32_apply_beta_fma(
+void gemv_fp32_apply_beta_sse(
     const float *bias,
     const float *sum,
     const int64_t N,
@@ -330,21 +330,21 @@ void gemv_fp32_apply_beta_fma(
     float *C)
 {
     if (typesum == gemm_v_type::EMPTY && typebias == gemm_m_type::EMPTY && beta == 0.0f) {
-        memset32_avx(C, 0, N);
+        memset32_sse(C, 0, N);
         return;
     }
 
-    const int64_t N_REG_ELTS = 8;
+    const int64_t N_REG_ELTS = 4;
     const int64_t unroll_n = N_REG_ELTS * 2;
  
-    __m256 ymm_v, ymm_beta, ymm_beta_bias, ymm_beta_sum;;
-    ymm_beta = _mm256_set1_ps(beta);
-    ymm_beta_bias = _mm256_set1_ps(beta_bias);
-    ymm_beta_sum = _mm256_set1_ps(beta_sum);
+    __m128 xmm_v, xmm_beta, xmm_beta_bias, xmm_beta_sum;;
+    xmm_beta = _mm_set1_ps(beta);
+    xmm_beta_bias = _mm_set1_ps(beta_bias);
+    xmm_beta_sum = _mm_set1_ps(beta_sum);
 
     
     if (typebias == gemm_v_type::SCALAR || typebias == gemm_v_type::COL_VEC) {
-        ymm_v = _mm256_mul_ps(_mm256_set1_ps(bias[0]), ymm_beta_bias);
+        xmm_v = _mm_mul_ps(_mm_set1_ps(bias[0]), xmm_beta_bias);
     }
 
     bool apply_beta = beta != 0.0f;
@@ -354,30 +354,30 @@ void gemv_fp32_apply_beta_fma(
     float *lC = C;
     int64_t n = N;
     while (n >= unroll_n) {
-        __m256 ymm0, ymm1;
-        ymm0 = _mm256_setzero_ps();
-        ymm1 = _mm256_setzero_ps();
+        __m128 xmm0, xmm1;
+        xmm0 = _mm_setzero_ps();
+        xmm1 = _mm_setzero_ps();
         if (typebias != gemm_v_type::EMPTY) {
             if (typebias == gemm_v_type::ROW_VEC) {
-                ymm0 = _mm256_mul_ps(_mm256_loadu_ps(lbias + 0 * N_REG_ELTS), ymm_beta_bias);
-                ymm1 = _mm256_mul_ps(_mm256_loadu_ps(lbias + 1 * N_REG_ELTS), ymm_beta_bias);
+                xmm0 = _mm_mul_ps(_mm_loadu_ps(lbias + 0 * N_REG_ELTS), xmm_beta_bias);
+                xmm1 = _mm_mul_ps(_mm_loadu_ps(lbias + 1 * N_REG_ELTS), xmm_beta_bias);
                 lbias += unroll_n;
             } else {
-                ymm0 = ymm_v;
-                ymm1 = ymm_v;
+                xmm0 = xmm_v;
+                xmm1 = xmm_v;
             }
         }
         if (typesum == gemm_m_type::NOTRANS) {
-            ymm0 = _mm256_fmadd_ps(_mm256_loadu_ps(lsum + 0 * N_REG_ELTS), ymm_beta_sum, ymm0);
-            ymm1 = _mm256_fmadd_ps(_mm256_loadu_ps(lsum + 1 * N_REG_ELTS), ymm_beta_sum, ymm1);
+            xmm0 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(lsum + 0 * N_REG_ELTS), xmm_beta_sum), xmm0);
+            xmm1 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(lsum + 1 * N_REG_ELTS), xmm_beta_sum), xmm1);
             lsum += unroll_n;
         }
         if (apply_beta) {
-            ymm0 = _mm256_fmadd_ps(_mm256_loadu_ps(lC + 0 * N_REG_ELTS), ymm_beta, ymm0);
-            ymm1 = _mm256_fmadd_ps(_mm256_loadu_ps(lC + 1 * N_REG_ELTS), ymm_beta, ymm1);
+            xmm0 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(lC + 0 * N_REG_ELTS), xmm_beta), xmm0);
+            xmm1 = _mm_add_ps(_mm_mul_ps(_mm_loadu_ps(lC + 1 * N_REG_ELTS), xmm_beta), xmm1);
         }
-        _mm256_storeu_ps(lC + 0 * N_REG_ELTS, ymm0);
-        _mm256_storeu_ps(lC + 1 * N_REG_ELTS, ymm1);
+        _mm_storeu_ps(lC + 0 * N_REG_ELTS, xmm0);
+        _mm_storeu_ps(lC + 1 * N_REG_ELTS, xmm1);
         lC += unroll_n;
         n -= unroll_n;
     }
@@ -404,7 +404,7 @@ void gemv_fp32_apply_beta_fma(
     }
 }
 
-ppl::common::RetCode gemv_operation_fp32_fma(
+ppl::common::RetCode gemv_operation_fp32_sse(
     const float *A,
     const float *B,
     const float *bias,
@@ -435,7 +435,7 @@ ppl::common::RetCode gemv_operation_fp32_fma(
     const bool apply_betas = beta != 0.0f || (beta_bias != 0.0f && typebias != gemm_v_type::EMPTY) || (beta_sum != 0.0f && typesum != gemm_m_type::EMPTY);
 
     if (!apply_alpha && !apply_betas) {
-        memset32_avx(C, 0, N);
+        memset32_sse(C, 0, N);
         return ppl::common::RC_SUCCESS;
     }
 
@@ -448,7 +448,7 @@ ppl::common::RetCode gemv_operation_fp32_fma(
         const float *lbias = bias;
         const float *lsum = sum;
         float *lC = C;
-        if (n_body) gemv_t_kernel_fp32_fma<MAX_U_N>(A, lB, lbias, lsum, typebias, typesum, n_body, K, ldb, alpha, beta, beta_bias, beta_sum, post, lC);
+        if (n_body) gemv_t_kernel_fp32_sse<MAX_U_N>(A, lB, lbias, lsum, typebias, typesum, n_body, K, ldb, alpha, beta, beta_bias, beta_sum, post, lC);
         
         lB += n_body * ldb;
         lC += n_body;
@@ -460,21 +460,21 @@ ppl::common::RetCode gemv_operation_fp32_fma(
             lsum += n_body;
         }
         
-        if (n_tail == 3) gemv_t_kernel_fp32_fma<3>(A, lB, lbias, lsum, typebias, typesum, n_tail, K, ldb, alpha, beta, beta_bias, beta_sum, post, lC);
-        if (n_tail == 2) gemv_t_kernel_fp32_fma<2>(A, lB, lbias, lsum, typebias, typesum, n_tail, K, ldb, alpha, beta, beta_bias, beta_sum, post, lC);
-        if (n_tail == 1) gemv_t_kernel_fp32_fma<1>(A, lB, lbias, lsum, typebias, typesum, n_tail, K, ldb, alpha, beta, beta_bias, beta_sum, post, lC);
+        if (n_tail == 3) gemv_t_kernel_fp32_sse<3>(A, lB, lbias, lsum, typebias, typesum, n_tail, K, ldb, alpha, beta, beta_bias, beta_sum, post, lC);
+        if (n_tail == 2) gemv_t_kernel_fp32_sse<2>(A, lB, lbias, lsum, typebias, typesum, n_tail, K, ldb, alpha, beta, beta_bias, beta_sum, post, lC);
+        if (n_tail == 1) gemv_t_kernel_fp32_sse<1>(A, lB, lbias, lsum, typebias, typesum, n_tail, K, ldb, alpha, beta, beta_bias, beta_sum, post, lC);
     } else {
-        auto apply_beta_func = gemv_fp32_apply_beta_fma<gemm_m_type::EMPTY, gemm_v_type::EMPTY>;
+        auto apply_beta_func = gemv_fp32_apply_beta_sse<gemm_m_type::EMPTY, gemm_v_type::EMPTY>;
         if (typesum == gemm_m_type::NOTRANS) {
-            if (typebias == gemm_v_type::EMPTY) apply_beta_func = gemv_fp32_apply_beta_fma<gemm_m_type::NOTRANS, gemm_v_type::EMPTY>;
-            if (typebias == gemm_v_type::SCALAR) apply_beta_func = gemv_fp32_apply_beta_fma<gemm_m_type::NOTRANS, gemm_v_type::SCALAR>;
-            if (typebias == gemm_v_type::COL_VEC) apply_beta_func = gemv_fp32_apply_beta_fma<gemm_m_type::NOTRANS, gemm_v_type::COL_VEC>;
-            if (typebias == gemm_v_type::ROW_VEC) apply_beta_func = gemv_fp32_apply_beta_fma<gemm_m_type::NOTRANS, gemm_v_type::ROW_VEC>;
+            if (typebias == gemm_v_type::EMPTY) apply_beta_func = gemv_fp32_apply_beta_sse<gemm_m_type::NOTRANS, gemm_v_type::EMPTY>;
+            if (typebias == gemm_v_type::SCALAR) apply_beta_func = gemv_fp32_apply_beta_sse<gemm_m_type::NOTRANS, gemm_v_type::SCALAR>;
+            if (typebias == gemm_v_type::COL_VEC) apply_beta_func = gemv_fp32_apply_beta_sse<gemm_m_type::NOTRANS, gemm_v_type::COL_VEC>;
+            if (typebias == gemm_v_type::ROW_VEC) apply_beta_func = gemv_fp32_apply_beta_sse<gemm_m_type::NOTRANS, gemm_v_type::ROW_VEC>;
         } else {
-            if (typebias == gemm_v_type::EMPTY) apply_beta_func = gemv_fp32_apply_beta_fma<gemm_m_type::EMPTY, gemm_v_type::EMPTY>;
-            if (typebias == gemm_v_type::SCALAR) apply_beta_func = gemv_fp32_apply_beta_fma<gemm_m_type::EMPTY, gemm_v_type::SCALAR>;
-            if (typebias == gemm_v_type::COL_VEC) apply_beta_func = gemv_fp32_apply_beta_fma<gemm_m_type::EMPTY, gemm_v_type::COL_VEC>;
-            if (typebias == gemm_v_type::ROW_VEC) apply_beta_func = gemv_fp32_apply_beta_fma<gemm_m_type::EMPTY, gemm_v_type::ROW_VEC>;
+            if (typebias == gemm_v_type::EMPTY) apply_beta_func = gemv_fp32_apply_beta_sse<gemm_m_type::EMPTY, gemm_v_type::EMPTY>;
+            if (typebias == gemm_v_type::SCALAR) apply_beta_func = gemv_fp32_apply_beta_sse<gemm_m_type::EMPTY, gemm_v_type::SCALAR>;
+            if (typebias == gemm_v_type::COL_VEC) apply_beta_func = gemv_fp32_apply_beta_sse<gemm_m_type::EMPTY, gemm_v_type::COL_VEC>;
+            if (typebias == gemm_v_type::ROW_VEC) apply_beta_func = gemv_fp32_apply_beta_sse<gemm_m_type::EMPTY, gemm_v_type::ROW_VEC>;
         }
         apply_beta_func(bias, sum, N, beta, beta_bias, beta_sum, C);
 
@@ -488,22 +488,22 @@ ppl::common::RetCode gemv_operation_fp32_fma(
         gemm_post_t l_post = gemm_post::NONE;
         if (!k_tail) l_post = post;
 
-        if (k_body) gemv_n_kernel_fp32_fma<MAX_U_K>(lA, lB, N, k_body, ldb, alpha, l_post, C);
+        if (k_body) gemv_n_kernel_fp32_sse<MAX_U_K>(lA, lB, N, k_body, ldb, alpha, l_post, C);
 
         lA += k_body;
         lB += k_body * ldb;
 
         l_post = post;
 
-        if (k_tail == 3) gemv_n_kernel_fp32_fma<3>(lA, lB, N, k_tail, ldb, alpha, l_post, C);
-        if (k_tail == 2) gemv_n_kernel_fp32_fma<2>(lA, lB, N, k_tail, ldb, alpha, l_post, C);
-        if (k_tail == 1) gemv_n_kernel_fp32_fma<1>(lA, lB, N, k_tail, ldb, alpha, l_post, C);
+        if (k_tail == 3) gemv_n_kernel_fp32_sse<3>(lA, lB, N, k_tail, ldb, alpha, l_post, C);
+        if (k_tail == 2) gemv_n_kernel_fp32_sse<2>(lA, lB, N, k_tail, ldb, alpha, l_post, C);
+        if (k_tail == 1) gemv_n_kernel_fp32_sse<1>(lA, lB, N, k_tail, ldb, alpha, l_post, C);
     }
 
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode gemv_fp32_fma(
+ppl::common::RetCode gemv_fp32_sse(
     const float *A,
     const float *B,
     const float *bias,
@@ -533,7 +533,7 @@ ppl::common::RetCode gemv_fp32_fma(
     const int64_t num_threads = PPL_OMP_MAX_THREADS();
 
     if (num_threads == 1) {
-        return gemv_operation_fp32_fma(
+        return gemv_operation_fp32_sse(
             A, B, bias, sum,
             typeA, typeB, typebias, typesum,
             N, K, ldb,
@@ -568,7 +568,7 @@ ppl::common::RetCode gemv_fp32_fma(
 
         float *lC = C + nb;
 
-        auto ret = gemv_operation_fp32_fma(
+        auto ret = gemv_operation_fp32_sse(
             lA, lB, lbias, lsum,
             typeA, typeB, typebias, typesum,
             nb_eff, K, ldb,

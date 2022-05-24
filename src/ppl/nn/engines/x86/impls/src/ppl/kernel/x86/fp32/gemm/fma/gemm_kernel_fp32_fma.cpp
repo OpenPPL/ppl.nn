@@ -51,6 +51,7 @@ void gemm_m4n24_kernel_fp32_fma_core(int64_t *param) {
         ".equ MASK_IDX,         (16 * P_BYTES)\n"
 
         ".equ N_REG_ELTS, %c[N_REG_ELTS]\n"
+        ".equ MAX_N_REGS, %c[MAX_N_REGS]\n"
         ".equ NEED_MASK, %c[NEED_MASK]\n"
         ".equ U_M, %c[U_M]\n"
         ".equ U_N, %c[U_N]\n"
@@ -67,6 +68,7 @@ void gemm_m4n24_kernel_fp32_fma_core(int64_t *param) {
 
         ".equ PREFETCH_B_OFFSET, 768\n"
         ".equ PREFETCH_A_OFFSET, 384\n"
+        ".equ DO_PREFETCH_NEXT_B, (U_NR == MAX_N_REGS && !NEED_MASK)\n"
 
         "mov K_IDX(%[param]), %%rax\n"              // k
         "mov PRF_C_LDK_IDX(%[param]), %%r10\n"      // lead_k
@@ -75,7 +77,7 @@ void gemm_m4n24_kernel_fp32_fma_core(int64_t *param) {
         ".if U_NR > 0\n vmovups (0 * N_REG_ELTS * D_BYTES + 0 * U_N * D_BYTES)(%%rbx), %%ymm12\n .endif\n"
         ".if U_NR > 1\n vmovups (1 * N_REG_ELTS * D_BYTES + 0 * U_N * D_BYTES)(%%rbx), %%ymm13\n .endif\n"
         ".if U_NR > 2\n vmovups (2 * N_REG_ELTS * D_BYTES + 0 * U_N * D_BYTES)(%%rbx), %%ymm14\n .endif\n"
-        ".if U_NR > 2 && !NEED_MASK\n"
+        ".if DO_PREFETCH_NEXT_B\n"
         "mov NEXT_B_PTR_IDX(%[param]), %%r8\n"      // next_b_ptr for prefetching <= do not have register double buffer
         ".endif\n"
 
@@ -90,7 +92,7 @@ void gemm_m4n24_kernel_fp32_fma_core(int64_t *param) {
         ".endif\n" 
         "imul $U_M, %%r11, %%r9\n"                              // u_m * ldc
 
-        ".if U_NR > 2 && !NEED_MASK\n prefetcht2 (0 * CACHELINE_BYTES * D_BYTES)(%%r8)\n .endif\n"
+        ".if DO_PREFETCH_NEXT_B\n prefetcht2 (0 * CACHELINE_BYTES * D_BYTES)(%%r8)\n .endif\n"
         ".if U_M > 0\n"
         ".if U_NR > 0\n vxorps %%ymm0, %%ymm0, %%ymm0\n .endif\n"
         ".if U_NR > 1\n vxorps %%ymm1, %%ymm1, %%ymm1\n .endif\n"
@@ -287,7 +289,7 @@ void gemm_m4n24_kernel_fp32_fma_core(int64_t *param) {
 
 
 "30:\n" // label_prf_c
-        ".if U_NR > 2 && !NEED_MASK\n prefetcht2 (1 * CACHELINE_BYTES * D_BYTES)(%%r8)\n .endif\n"
+        ".if DO_PREFETCH_NEXT_B\n prefetcht2 (1 * CACHELINE_BYTES * D_BYTES)(%%r8)\n .endif\n"
         ".if U_M > 0\n"
         ".if U_NR > 0\n prefetcht0 (0 * CACHELINE_BYTES)(%%r14)\n .endif\n"
         ".if U_NR > 2\n prefetcht0 (1 * CACHELINE_BYTES)(%%r14)\n .endif\n"
@@ -583,13 +585,12 @@ void gemm_m4n24_kernel_fp32_fma_core(int64_t *param) {
 
 
 
-        ".if U_NR > 2 && !NEED_MASK\n prefetcht2 (2 * CACHELINE_BYTES * D_BYTES)(%%r8)\n .endif\n"
+        ".if DO_PREFETCH_NEXT_B\n prefetcht2 (2 * CACHELINE_BYTES * D_BYTES)(%%r8)\n .endif\n"
         "vbroadcastss ALPHA_IDX(%[param]), %%ymm12\n" // alpha
         "vbroadcastss BETA_IDX(%[param]), %%ymm13\n"  // beta
         ".if NEED_MASK\n vmovups MASK_IDX(%[param]), %%ymm15\n .endif\n"
         "mov B_PTR_IDX(%[param]), %%rbx\n"            // b_ptr
-        "mov PRF_C_LDK_IDX(%[param]), %%r10\n"        // lead_uk
-        "sar $U_K_LOG2, %%r10\n"
+
         // *= alpha
         ".if U_M > 0\n"
         ".if U_NR > 0\n vmulps %%ymm12, %%ymm0, %%ymm0\n .endif\n"
@@ -890,7 +891,7 @@ void gemm_m4n24_kernel_fp32_fma_core(int64_t *param) {
         ".if U_NR > 1\n vmovups (1 * N_REG_ELTS * D_BYTES + 0 * U_N * D_BYTES)(%%rbx), %%ymm13\n .endif\n"
         ".if U_NR > 2\n vmovups (2 * N_REG_ELTS * D_BYTES + 0 * U_N * D_BYTES)(%%rbx), %%ymm14\n .endif\n"
         "sub $U_M, %%r13\n" // m -= u_m
-        ".if U_NR > 2 && !NEED_MASK\n lea (U_N * D_BYTES)(%%r8), %%r8\n .endif\n"
+        ".if DO_PREFETCH_NEXT_B\n lea (3 * CACHELINE_BYTES * D_BYTES)(%%r8), %%r8\n .endif\n"
 
         ".if NEED_MASK\n"
         ".if U_M > 0\n"
@@ -952,7 +953,7 @@ void gemm_m4n24_kernel_fp32_fma_core(int64_t *param) {
         "lea (%%r12, %%r9), %%r12\n" // c_m2 += u_m * ldc
         ".endif\n" // need_mask
 
-        ".if U_NR > 2 && !NEED_MASK\n prefetcht2 (0 * CACHELINE_BYTES * D_BYTES)(%%r8)\n .endif\n"
+        ".if DO_PREFETCH_NEXT_B\n prefetcht2 (0 * CACHELINE_BYTES * D_BYTES)(%%r8)\n .endif\n"
         ".if U_M > 0\n"
         ".if U_NR > 0\n vxorps %%ymm0, %%ymm0, %%ymm0\n .endif\n"
         ".if U_NR > 1\n vxorps %%ymm1, %%ymm1, %%ymm1\n .endif\n"
@@ -983,6 +984,7 @@ void gemm_m4n24_kernel_fp32_fma_core(int64_t *param) {
         :
         [param]                         "r" (param),
         [N_REG_ELTS]                    "i" (gemm_kernel_fp32_fma::config::N_REG_ELTS),
+        [MAX_N_REGS]                    "i" (gemm_kernel_fp32_fma::config::MAX_N_REGS),
         [NEED_MASK]                     "i" (need_mask),
         [U_M]                           "i" (u_m),
         [U_N]                           "i" (u_n),
@@ -1020,6 +1022,7 @@ void gemm_m4n24_kernel_fp32_fma(int64_t *param)
     // reference intrinsic for windows, performance is not tested
     array_param_helper kp(param);
     const int64_t N_REG_ELTS = gemm_kernel_fp32_fma::config::N_REG_ELTS;
+    const int64_t MAX_N_REGS = gemm_kernel_fp32_fma::config::MAX_N_REGS;
     const int64_t u_nr = div_up(u_n, N_REG_ELTS);
     const int64_t u_k = 4;
     const int64_t u_k_log2 = 2;
@@ -1027,6 +1030,7 @@ void gemm_m4n24_kernel_fp32_fma(int64_t *param)
     const int64_t prefetch_b_offset = 768 / sizeof(float);
     const int64_t prefetch_a_offset = 384 / sizeof(float);
     const int64_t cacheline_elts = PPL_X86_CACHELINE_BYTES() / sizeof(float);
+    const bool do_prefetch_next_b = u_nr == MAX_N_REGS && !need_mask;
 
     __m256 ymm0, ymm1, ymm2, ymm3, ymm4, ymm5, ymm6, ymm7;
     __m256 ymm8, ymm9, ymm10, ymm11, ymm12, ymm13, ymm14, ymm15;
@@ -1038,7 +1042,7 @@ void gemm_m4n24_kernel_fp32_fma(int64_t *param)
     if (u_nr > 0) ymm12 = _mm256_loadu_ps(b_ptr + 0 * N_REG_ELTS + 0 * u_n);
     if (u_nr > 1) ymm13 = _mm256_loadu_ps(b_ptr + 1 * N_REG_ELTS + 0 * u_n);
     if (u_nr > 2) ymm14 = _mm256_loadu_ps(b_ptr + 2 * N_REG_ELTS + 0 * u_n);
-    auto next_b_ptr = (u_nr > 2 && !need_mask) ? kp.pick<const float*>(gemm_kernel_fp32_fma::param_def::NEXT_B_PTR_IDX) : nullptr;
+    auto next_b_ptr = do_prefetch_next_b ? kp.pick<const float*>(gemm_kernel_fp32_fma::param_def::NEXT_B_PTR_IDX) : nullptr;
 
     auto flags = kp.pick<const gemm_kernel_fp32_fma::flag_t>(gemm_kernel_fp32_fma::param_def::FLAGS_IDX);
     auto a_ptr = kp.pick<const float*>(gemm_kernel_fp32_fma::param_def::A_PTR_IDX);
@@ -1048,7 +1052,7 @@ void gemm_m4n24_kernel_fp32_fma(int64_t *param)
     auto c_m2_ptr = c_m0_ptr + 2 * ldc;
     auto m = kp.pick<int64_t>(gemm_kernel_fp32_fma::param_def::M_IDX);
 
-    if (u_nr > 2 && !need_mask) _mm_prefetch((const char*)(next_b_ptr + 0 * cacheline_elts), _MM_HINT_T2);
+    if (do_prefetch_next_b) _mm_prefetch((const char*)(next_b_ptr + 0 * cacheline_elts), _MM_HINT_T2);
     if (u_m > 0) {
         if (u_nr > 0) ymm0 = _mm256_setzero_ps();
         if (u_nr > 1) ymm1 = _mm256_setzero_ps();
@@ -1238,7 +1242,7 @@ void gemm_m4n24_kernel_fp32_fma(int64_t *param)
         kl += prf_c_lduk;
         if (kl > 0) {
             // prefetch c
-            if (u_nr > 2 && !need_mask) _mm_prefetch((const char*)(next_b_ptr + 1 * cacheline_elts), _MM_HINT_T2);
+            if (do_prefetch_next_b) _mm_prefetch((const char*)(next_b_ptr + 1 * cacheline_elts), _MM_HINT_T2);
             if (u_m > 0) {
                 if (u_nr > 0) _mm_prefetch((const char*)(c_m0_ptr + 0 * ldc + 0 * cacheline_elts), _MM_HINT_T0);
                 if (u_nr > 2) _mm_prefetch((const char*)(c_m0_ptr + 0 * ldc + 1 * cacheline_elts), _MM_HINT_T0);
@@ -1530,7 +1534,7 @@ void gemm_m4n24_kernel_fp32_fma(int64_t *param)
         }
         a_ptr += kl * u_m;
 
-        if (u_nr > 2 && !need_mask) _mm_prefetch((const char*)(next_b_ptr + 2 * cacheline_elts), _MM_HINT_T2);
+        if (do_prefetch_next_b) _mm_prefetch((const char*)(next_b_ptr + 2 * cacheline_elts), _MM_HINT_T2);
         ymm12 = _mm256_set1_ps(kp.pick<float>(gemm_kernel_fp32_fma::param_def::ALPHA_IDX));
         ymm13 = _mm256_set1_ps(kp.pick<float>(gemm_kernel_fp32_fma::param_def::BETA_IDX));
         if (need_mask) ymm15 = _mm256_loadu_ps(&kp.pick<float>(gemm_kernel_fp32_fma::param_def::MASK_IDX));
@@ -1825,7 +1829,7 @@ void gemm_m4n24_kernel_fp32_fma(int64_t *param)
         if (u_nr > 1) ymm13 = _mm256_loadu_ps(b_ptr + 1 * N_REG_ELTS + 0 * u_n);
         if (u_nr > 2) ymm14 = _mm256_loadu_ps(b_ptr + 2 * N_REG_ELTS + 0 * u_n);
         m -= u_m;
-        if (u_nr > 2 && !need_mask) next_b_ptr += u_n;
+        if (do_prefetch_next_b) next_b_ptr += 3 * cacheline_elts;
 
         if (need_mask) {
             if (u_m > 0) {
@@ -1887,7 +1891,7 @@ void gemm_m4n24_kernel_fp32_fma(int64_t *param)
             c_m2_ptr += ldcm;
         }
         
-        if (u_nr > 2 && !need_mask) _mm_prefetch((const char*)(next_b_ptr + 0 * cacheline_elts), _MM_HINT_T2);
+        if (do_prefetch_next_b) _mm_prefetch((const char*)(next_b_ptr + 0 * cacheline_elts), _MM_HINT_T2);
         if (u_m > 0) {
             if (u_nr > 0) ymm0 = _mm256_setzero_ps();
             if (u_nr > 1) ymm1 = _mm256_setzero_ps();

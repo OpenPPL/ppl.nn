@@ -265,7 +265,8 @@ ppl::common::RetCode gemm_operation_fp32_avx512(
             if (typebias == gemm_v_type::COL_VEC) apply_betas_func = gemm_fp32_apply_betas_avx<gemm_m_type::EMPTY, gemm_v_type::COL_VEC>;
             if (typebias == gemm_v_type::ROW_VEC) apply_betas_func = gemm_fp32_apply_betas_avx<gemm_m_type::EMPTY, gemm_v_type::ROW_VEC>;
         }
-        apply_betas_func(bias, sum, M, N, ldc, ldsum, beta, beta_bias, beta_sum, C);
+        apply_betas_func(bias, sum, M, N, ldc, ldsum, beta, beta_bias, beta_sum, post, C);
+        return ppl::common::RC_SUCCESS;
     }
 
     if (typeA == gemm_m_type::PACKED) {
@@ -639,7 +640,8 @@ ppl::common::RetCode gemm_shared_pack_b_threaded_operation_fp32_avx512(
             if (typebias == gemm_v_type::COL_VEC) apply_betas_func = gemm_fp32_apply_betas_avx<gemm_m_type::EMPTY, gemm_v_type::COL_VEC>;
             if (typebias == gemm_v_type::ROW_VEC) apply_betas_func = gemm_fp32_apply_betas_avx<gemm_m_type::EMPTY, gemm_v_type::ROW_VEC>;
         }
-        apply_betas_func(bias, sum, M, N, ldc, ldsum, beta, beta_bias, beta_sum, C);
+        apply_betas_func(bias, sum, M, N, ldc, ldsum, beta, beta_bias, beta_sum, post, C);
+        return ppl::common::RC_SUCCESS;
     }
 
     if (typeA == gemm_m_type::PACKED || typeB == gemm_m_type::PACKED) {
@@ -820,7 +822,7 @@ ppl::common::RetCode gemm_fp32_avx512_pack_b(
         const float *base_b = B + (is_trans_b ? nb * ldb + kb : kb * ldb + nb);
         float *base_p = packedB + kb * padded_nb_eff + nb * K;
 
-        if (n_regs == gemm_kernel_fp32_avx512::config::MAX_N_REGS) {
+        if (nb_eff == gemm_kernel_fp32_avx512::config::MAX_N_BLK) {
             pack_b_body_func[is_trans_b](base_b, nb_eff, kb_eff, ldb, base_p);
         } else {
             pack_b_tail_func[is_trans_b][n_regs](base_b, nb_eff, kb_eff, ldb, base_p);

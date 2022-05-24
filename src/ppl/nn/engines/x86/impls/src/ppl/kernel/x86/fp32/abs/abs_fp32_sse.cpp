@@ -44,9 +44,9 @@ ppl::common::RetCode abs_fp32_sse(
         __m128 dst2 = _mm_andnot_ps(src2, vsignbit);
         __m128 dst3 = _mm_andnot_ps(src3, vsignbit);
         _mm_storeu_ps(y + i + 0 * V_REG_ELTS, dst0);
-        _mm_storeu_ps(y + i + 1 * V_REG_ELTS, dst0);
-        _mm_storeu_ps(y + i + 2 * V_REG_ELTS, dst0);
-        _mm_storeu_ps(y + i + 3 * V_REG_ELTS, dst0);
+        _mm_storeu_ps(y + i + 1 * V_REG_ELTS, dst1);
+        _mm_storeu_ps(y + i + 2 * V_REG_ELTS, dst2);
+        _mm_storeu_ps(y + i + 3 * V_REG_ELTS, dst3);
     }
     for (int64_t i = unroll_body; i < n_elem; ++i) {
         y[i] = fabsf(x[i]);
