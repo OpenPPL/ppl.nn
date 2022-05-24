@@ -15,6 +15,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#ifndef PPLCUDA_IMPLS_REFORMAT_H_
+#define PPLCUDA_IMPLS_REFORMAT_H_
+
 #include "ppl/nn/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "ppl/nn/engines/cuda/cuda_common_param.h"
@@ -126,7 +129,11 @@ void PPLCUDACVTFormat(cudaStream_t stream, const void* input, void* output, ReFo
 void PPLCUDACVTTypePerTensor(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
 void PPLCUDACVTTypePerChannel(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
 
+void PPLCUDACVTFormatType(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
+
 ppl::common::RetCode SetReLayoutParam(ReFormatParam* param, const ppl::nn::TensorShape& input, const ppl::nn::TensorShape& output);
 ppl::common::RetCode SetReLayoutParam(ReFormatParam* param, const ppl::nn::TensorShape& input, const ppl::nn::cuda::CudaTensorQuant& input_quant, const ppl::nn::TensorShape& output, const ppl::nn::cuda::CudaTensorQuant& output_quant);
 
 void PPLCUDADataConvert(cudaStream_t stream, const void* input, void* output, void* tempBuf, ReFormatParam& param);
+
+#endif
