@@ -163,6 +163,9 @@ ppl::common::RetCode gemm_pack_b_fp32(
     if (isa & ppl::common::ISA_X86_FMA) {
         return gemm_fp32_fma_pack_b(B, typeB, N, K, ldb, packedB);
     }
+    if (isa & ppl::common::ISA_X86_SSE) {
+        return gemm_fp32_sse_pack_b(B, typeB, N, K, ldb, packedB);
+    }
     return gemm_fp32_ref_pack_b(B, typeB, N, K, ldb, packedB);
 }
 
@@ -202,6 +205,14 @@ ppl::common::RetCode gemm_fp32(
 #endif
     if (isa & ppl::common::ISA_X86_FMA) {
         return gemm_fp32_fma(
+            A, B, bias, sum,
+            typeA, typeB, typebias, typesum,
+            M, N, K, lda, ldb, ldc, ldsum,
+            alpha, beta, beta_bias, beta_sum,
+            post, C);
+    }
+    if (isa & ppl::common::ISA_X86_SSE) {
+        return gemm_fp32_sse(
             A, B, bias, sum,
             typeA, typeB, typebias, typesum,
             M, N, K, lda, ldb, ldc, ldsum,

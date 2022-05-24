@@ -23,6 +23,7 @@
 #include "ppl/kernel/x86/fp32/gemm.h"
 #include "ppl/common/generic_cpu_allocator.h"
 #include "ppl/kernel/x86/fp32/gemm/common/gemm_base_operation_fp32_avx.h"
+#include "ppl/kernel/x86/fp32/gemm/common/gemm_base_operation_fp32_sse.h"
 #include "ppl/kernel/x86/common/threading_tools.h"
 
 namespace ppl { namespace kernel { namespace x86 {
@@ -92,7 +93,7 @@ ppl::common::RetCode gemm_packed_b_operation_fp32_fma(
     uint8_t *temp_buffer = (uint8_t*)ppl::common::AlignedAlloc(packed_a_bytes, PPL_X86_CACHELINE_BYTES());
     float *packed_a = (float*)round_up((uintptr_t)(temp_buffer), PPL_X86_PAGE_BYTES());
 
-    const auto pack_a_func = is_trans_a ? gemm_pack_a_m4_operation_fp32_avx<gemm_m_type::TRANS> : gemm_pack_a_m4_operation_fp32_avx<gemm_m_type::NOTRANS>;
+    const auto pack_a_func = is_trans_a ? gemm_pack_a_m4_operation_fp32_sse<gemm_m_type::TRANS> : gemm_pack_a_m4_operation_fp32_sse<gemm_m_type::NOTRANS>;
 
     int64_t kernel_param[gemm_kernel_fp32_fma::param_def::LENGTH];
     array_param_helper ker_p(kernel_param);
@@ -270,7 +271,8 @@ ppl::common::RetCode gemm_operation_fp32_fma(
             if (typebias == gemm_v_type::COL_VEC) apply_betas_func = gemm_fp32_apply_betas_avx<gemm_m_type::EMPTY, gemm_v_type::COL_VEC>;
             if (typebias == gemm_v_type::ROW_VEC) apply_betas_func = gemm_fp32_apply_betas_avx<gemm_m_type::EMPTY, gemm_v_type::ROW_VEC>;
         }
-        apply_betas_func(bias, sum, M, N, ldc, ldsum, beta, beta_bias, beta_sum, C);
+        apply_betas_func(bias, sum, M, N, ldc, ldsum, beta, beta_bias, beta_sum, post, C);
+        return ppl::common::RC_SUCCESS;
     }
 
     if (typeA == gemm_m_type::PACKED) {
@@ -326,7 +328,7 @@ ppl::common::RetCode gemm_operation_fp32_fma(
         },
     };
 
-    const auto pack_a_func = is_trans_a ? gemm_pack_a_m4_operation_fp32_avx<gemm_m_type::TRANS> : gemm_pack_a_m4_operation_fp32_avx<gemm_m_type::NOTRANS>;
+    const auto pack_a_func = is_trans_a ? gemm_pack_a_m4_operation_fp32_sse<gemm_m_type::TRANS> : gemm_pack_a_m4_operation_fp32_sse<gemm_m_type::NOTRANS>;
 
     int64_t kernel_param[gemm_kernel_fp32_fma::param_def::LENGTH];
     array_param_helper ker_p(kernel_param);
@@ -485,7 +487,7 @@ ppl::common::RetCode gemm_shared_packed_b_operation_fp32_fma(
     uint8_t *temp_buffer = (uint8_t*)ppl::common::AlignedAlloc(packed_a_bytes, PPL_X86_CACHELINE_BYTES());
     float *packed_a = (float*)round_up((uintptr_t)temp_buffer, PPL_X86_PAGE_BYTES());
 
-    const auto pack_a_func = is_trans_a ? gemm_pack_a_m4_operation_fp32_avx<gemm_m_type::TRANS> : gemm_pack_a_m4_operation_fp32_avx<gemm_m_type::NOTRANS>;
+    const auto pack_a_func = is_trans_a ? gemm_pack_a_m4_operation_fp32_sse<gemm_m_type::TRANS> : gemm_pack_a_m4_operation_fp32_sse<gemm_m_type::NOTRANS>;
 
     int64_t kernel_param[gemm_kernel_fp32_fma::param_def::LENGTH];
     array_param_helper ker_p(kernel_param);
@@ -649,7 +651,8 @@ ppl::common::RetCode gemm_shared_pack_b_threaded_operation_fp32_fma(
             if (typebias == gemm_v_type::COL_VEC) apply_betas_func = gemm_fp32_apply_betas_avx<gemm_m_type::EMPTY, gemm_v_type::COL_VEC>;
             if (typebias == gemm_v_type::ROW_VEC) apply_betas_func = gemm_fp32_apply_betas_avx<gemm_m_type::EMPTY, gemm_v_type::ROW_VEC>;
         }
-        apply_betas_func(bias, sum, M, N, ldc, ldsum, beta, beta_bias, beta_sum, C);
+        apply_betas_func(bias, sum, M, N, ldc, ldsum, beta, beta_bias, beta_sum, post, C);
+        return ppl::common::RC_SUCCESS;
     }
 
     if (typeA == gemm_m_type::PACKED || typeB == gemm_m_type::PACKED) {
@@ -827,7 +830,7 @@ ppl::common::RetCode gemm_fp32_fma_pack_b(
         const float *base_b = B + (is_trans_b ? nb * ldb + kb : kb * ldb + nb);
         float *base_p = packedB + kb * padded_nb_eff + nb * K;
 
-        if (n_regs == gemm_kernel_fp32_fma::config::MAX_N_REGS) {
+        if (nb_eff == gemm_kernel_fp32_fma::config::MAX_N_BLK) {
             pack_b_body_func[is_trans_b](base_b, nb_eff, kb_eff, ldb, base_p);
         } else {
             pack_b_tail_func[is_trans_b][n_regs](base_b, nb_eff, kb_eff, ldb, base_p);

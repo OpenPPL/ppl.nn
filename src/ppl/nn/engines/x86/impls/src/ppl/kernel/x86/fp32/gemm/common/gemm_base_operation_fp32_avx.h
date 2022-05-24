@@ -23,12 +23,11 @@
 #include "ppl/kernel/x86/fp32/gemm.h"
 #include "ppl/kernel/x86/common/avx_tools.h"
 #include "ppl/kernel/x86/fp32/transpose/avx/transpose_fp32_avx.h"
-#include "ppl/kernel/x86/fp32/transpose/sse/transpose_fp32_sse.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
 template<gemm_m_type_t typeB, int64_t ldpacked_b, int64_t kN>
-void gemm_pack_b_operation_fp32_avx(
+static void gemm_pack_b_operation_fp32_avx(
     const float *B,
     const int64_t N,
     const int64_t K,
@@ -276,7 +275,7 @@ void gemm_pack_b_operation_fp32_avx(
 }
 
 template<gemm_m_type_t typeA>
-void gemm_pack_a_m8_operation_fp32_avx(
+static void gemm_pack_a_m8_operation_fp32_avx(
     const float *A,
     const int64_t M,
     const int64_t K,
@@ -530,208 +529,8 @@ void gemm_pack_a_m8_operation_fp32_avx(
     }
 }
 
-template<gemm_m_type_t typeA>
-void gemm_pack_a_m4_operation_fp32_avx(
-    const float *A,
-    const int64_t M,
-    const int64_t K,
-    const int64_t lda,
-    float *packedA)
-{
-    if (typeA == gemm_m_type::TRANS) { // A: (K, M) -> (M/4, K, 4)
-        const int64_t unroll_m = 4;
-        const int64_t unroll_k = 4;
-        int64_t k = K;
-        const float *src = A;
-        const int64_t m_body = round(M, unroll_m);
-        const int64_t m_tail = M - m_body;
-        float *dst_body = packedA;
-        float *dst_tail = packedA + K * m_body;
-        while (k >= unroll_k) {
-            k -= unroll_k;
-            if (m_body) {
-                const float *l_src = src;
-                float *l_dst = dst_body;
-                int64_t m = m_body;
-                while (m >= unroll_m) {
-                    m -= unroll_m;
-                    _mm_storeu_ps(l_dst + 0 * unroll_m, _mm_loadu_ps(l_src + 0 * lda));
-                    _mm_storeu_ps(l_dst + 1 * unroll_m, _mm_loadu_ps(l_src + 1 * lda));
-                    _mm_storeu_ps(l_dst + 2 * unroll_m, _mm_loadu_ps(l_src + 2 * lda));
-                    _mm_storeu_ps(l_dst + 3 * unroll_m, _mm_loadu_ps(l_src + 3 * lda));
-                    l_src += unroll_m;
-                    l_dst += K * unroll_m;
-                }
-            }
-#define M_TAIL_1(DST, SRC) do { *(DST) = *(SRC); } while (0)
-#define M_TAIL_2(DST, SRC) do { *(int64_t*)(DST) = *(const int64_t*)(SRC); } while (0)
-#define M_TAIL_3(DST, SRC) do { *(int64_t*)(DST) = *(const int64_t*)(SRC); *(DST + 2) = *(SRC + 2); } while (0)
-            if (m_tail) {
-                const float *l_src = src + m_body;
-                float *l_dst = dst_tail;
-                switch (m_tail) {
-                    case 3: {
-                        M_TAIL_3(l_dst + 0 * 3, l_src + 0 * lda);
-                        M_TAIL_3(l_dst + 1 * 3, l_src + 1 * lda);
-                        M_TAIL_3(l_dst + 2 * 3, l_src + 2 * lda);
-                        M_TAIL_3(l_dst + 3 * 3, l_src + 3 * lda);
-                        break;
-                    }
-                    case 2: {
-                        M_TAIL_2(l_dst + 0 * 2, l_src + 0 * lda);
-                        M_TAIL_2(l_dst + 1 * 2, l_src + 1 * lda);
-                        M_TAIL_2(l_dst + 2 * 2, l_src + 2 * lda);
-                        M_TAIL_2(l_dst + 3 * 2, l_src + 3 * lda);
-                        break;
-                    }
-                    case 1: {
-                        M_TAIL_1(l_dst + 0 * 1, l_src + 0 * lda);
-                        M_TAIL_1(l_dst + 1 * 1, l_src + 1 * lda);
-                        M_TAIL_1(l_dst + 2 * 1, l_src + 2 * lda);
-                        M_TAIL_1(l_dst + 3 * 1, l_src + 3 * lda);
-                        break;
-                    }
-                    default: break;
-                }
-            }
-#undef M_TAIL_1
-#undef M_TAIL_2
-#undef M_TAIL_3
-            src += unroll_k * lda;
-            dst_body += unroll_k * unroll_m;
-            dst_tail += unroll_k * m_tail;
-        }
-        while (k > 0) {
-            k -= 1;
-            if (m_body) {
-                const float *l_src = src;
-                float *l_dst = dst_body;
-                int64_t m = m_body;
-                while (m >= unroll_m * 2) {
-                    m -= unroll_m * 2;
-                    _mm_storeu_ps(l_dst + 0 * K * unroll_m, _mm_loadu_ps(l_src + 0 * unroll_m));
-                    _mm_storeu_ps(l_dst + 1 * K * unroll_m, _mm_loadu_ps(l_src + 1 * unroll_m));
-                    l_src += unroll_m * 2;
-                    l_dst += K * unroll_m * 2;
-                }
-                if (m > 0) {
-                    _mm_storeu_ps(l_dst + 0 * K * unroll_m, _mm_loadu_ps(l_src + 0 * unroll_m));
-                }
-            }
-            if (m_tail) {
-                const float *l_src = src + m_body;
-                float *l_dst = dst_tail;
-                if (m_tail & 2) {
-                    *(int64_t*)(l_dst) = *(int64_t*)(l_src);
-                    l_src += 2;
-                    l_dst += 2;
-                }
-                if (m_tail & 1) {
-                    *l_dst = *l_src;
-                }
-            }
-            src += lda;
-            dst_body += unroll_m;
-            dst_tail += m_tail;
-        }
-    } else { // A: (M, K) -> (M/4, K, 4)
-        const int64_t unroll_m = 4;
-        const int64_t unroll_k = 4;
-        int64_t m = M;
-        const float *src = A;
-        float *dst = packedA;
-        while (m >= unroll_m) {
-            m -= unroll_m;
-            int64_t k = K;
-            const float *l_src = src;
-            float *l_dst = dst;
-            while (k >= unroll_k * 2) {
-                k -= unroll_k * 2;
-                transpose_4x4_fp32_sse(l_src + 0 * unroll_k, lda, unroll_m, l_dst + 0 * unroll_k * unroll_m);
-                transpose_4x4_fp32_sse(l_src + 1 * unroll_k, lda, unroll_m, l_dst + 1 * unroll_k * unroll_m);
-                l_src += unroll_k * 2;
-                l_dst += unroll_k * 2 * unroll_m;
-            }
-            if (k & 4) {
-                transpose_4x4_fp32_sse(l_src + 0 * unroll_k, lda, unroll_m, l_dst + 0 * unroll_k * unroll_m);
-                l_src += unroll_k;
-                l_dst += unroll_k * unroll_m;
-            }
-// ========================================================================== //
-#define K_TRANS_A_STEP(K) do {\
-    l_dst[K * unroll_m + 0] = l_src[K + lda * 0];\
-    l_dst[K * unroll_m + 1] = l_src[K + lda * 1];\
-    l_dst[K * unroll_m + 2] = l_src[K + lda * 2];\
-    l_dst[K * unroll_m + 3] = l_src[K + lda * 3];\
-} while (0)
-// ========================================================================== //
-            if (k & 2) {
-                K_TRANS_A_STEP(0);
-                K_TRANS_A_STEP(1);
-                l_src += 2;
-                l_dst += 2 * unroll_m;
-            }
-            if (k & 1) {
-                K_TRANS_A_STEP(0);
-            }
-#undef K_TRANS_A_STEP
-            src += unroll_m * lda;
-            dst += unroll_m * K;
-        }
-        if (m > 0) {
-            int64_t k = K;
-// ========================================================================== //
-#define K_TRANS_A_STEP(K) do {\
-    const float *l_src = src;\
-    float *l_dst = dst;\
-    if (m & 2) {\
-        l_dst[K * m + 0] = l_src[K + lda * 0];\
-        l_dst[K * m + 1] = l_src[K + lda * 1];\
-        l_src += 2 * lda;\
-        l_dst += 2;\
-    }\
-    if (m & 1) {\
-        l_dst[K * m + 0] = l_src[K + lda * 0];\
-    }\
-} while (0)
-// ========================================================================== //
-            while (k >= unroll_k * 2) {
-                k -= unroll_k * 2;
-                K_TRANS_A_STEP(0);
-                K_TRANS_A_STEP(1);
-                K_TRANS_A_STEP(2);
-                K_TRANS_A_STEP(3);
-                K_TRANS_A_STEP(4);
-                K_TRANS_A_STEP(5);
-                K_TRANS_A_STEP(6);
-                K_TRANS_A_STEP(7);
-                src += unroll_k * 2;
-                dst += unroll_k * 2 * m;
-            }
-            if (k & 4) {
-                K_TRANS_A_STEP(0);
-                K_TRANS_A_STEP(1);
-                K_TRANS_A_STEP(2);
-                K_TRANS_A_STEP(3);
-                src += unroll_k;
-                dst += unroll_k * m;
-            }
-            if (k & 2) {
-                K_TRANS_A_STEP(0);
-                K_TRANS_A_STEP(1);
-                src += 2;
-                dst += 2 * m;
-            }
-            if (k & 1) {
-                K_TRANS_A_STEP(0);
-            }
-#undef K_TRANS_A_STEP
-        }
-    }
-}
-
 template<gemm_m_type_t typesum, gemm_v_type_t typebias>
-void gemm_fp32_apply_betas_avx(
+static void gemm_fp32_apply_betas_avx(
     const float *bias,
     const float *sum,
     const int64_t M,
@@ -741,17 +540,24 @@ void gemm_fp32_apply_betas_avx(
     const float beta,
     const float beta_bias,
     const float beta_sum,
+    const gemm_post_t post,
     float *C)
 {
     const int64_t VEC_REG_ELTS = 8;
     const int64_t unroll_n = VEC_REG_ELTS * 2;
     const bool has_beta = beta != 0.0f;
+    const bool do_relu_max = post == gemm_post::RELU || post == gemm_post::RELU6;
+    const bool do_relu_min = post == gemm_post::RELU6;
  
-    __m256 ymm_bias, ymm_beta, ymm_beta_bias, ymm_beta_sum;
+    __m256 ymm_bias, ymm_beta, ymm_beta_bias, ymm_beta_sum, ymm_zero, ymm_six;
     if (typebias == gemm_v_type::SCALAR) ymm_bias = _mm256_set1_ps(bias[0] * beta_bias);
     else if (typebias == gemm_v_type::ROW_VEC) ymm_beta_bias = _mm256_set1_ps(beta_bias);
     ymm_beta = _mm256_set1_ps(beta);
     ymm_beta_sum = _mm256_set1_ps(beta_sum);
+    if (post) {
+        ymm_zero = _mm256_setzero_ps();
+        ymm_six = _mm256_set1_ps(6.0f);
+    }
 
     for (int64_t m = 0; m < M; ++m) {
         const float *l_bias = nullptr;
@@ -787,6 +593,14 @@ void gemm_fp32_apply_betas_avx(
                 ymm0 = _mm256_add_ps(_mm256_mul_ps(_mm256_loadu_ps(l_c + 0 * VEC_REG_ELTS), ymm_beta), ymm0);
                 ymm1 = _mm256_add_ps(_mm256_mul_ps(_mm256_loadu_ps(l_c + 1 * VEC_REG_ELTS), ymm_beta), ymm1);
             }
+            if (do_relu_max) {
+                ymm0 = _mm256_max_ps(ymm_zero, ymm0);
+                ymm1 = _mm256_max_ps(ymm_zero, ymm1);
+            }
+            if (do_relu_min) {
+                ymm0 = _mm256_min_ps(ymm_six, ymm0);
+                ymm1 = _mm256_min_ps(ymm_six, ymm1);
+            }
             _mm256_storeu_ps(l_c + 0 * VEC_REG_ELTS, ymm0);
             _mm256_storeu_ps(l_c + 1 * VEC_REG_ELTS, ymm1);
             _mm_prefetch((const char*)(l_c + 4 * ldc), _MM_HINT_T0);
@@ -816,6 +630,8 @@ void gemm_fp32_apply_betas_avx(
                 }
             }
             if (has_beta) y += beta * l_c[0];
+            if (do_relu_max) y = max(0.0f, y);
+            if (do_relu_min) y = min(6.0f, y);
             l_c[0] = y;
             if (typebias == gemm_v_type::ROW_VEC) l_bias += 1;
             if (typesum == gemm_m_type::NOTRANS) l_sum += 1;

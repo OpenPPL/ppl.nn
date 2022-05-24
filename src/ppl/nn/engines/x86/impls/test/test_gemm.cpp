@@ -78,7 +78,7 @@ typedef decltype(ppl::kernel::x86::gemm_fp32_ref_get_packed_b_bytes)* ppl_x86_ge
 static std::map<std::string, ppl_x86_gemm_func_t> gemm_func_table =
 {
     {"noarch", ppl::kernel::x86::gemm_fp32_ref},
-    {"sse", nullptr},
+    {"sse", ppl::kernel::x86::gemm_fp32_sse},
     {"fma", ppl::kernel::x86::gemm_fp32_fma},
 #ifdef PPL_USE_X86_AVX512
     {"avx512", ppl::kernel::x86::gemm_fp32_avx512},
@@ -88,7 +88,7 @@ static std::map<std::string, ppl_x86_gemm_func_t> gemm_func_table =
 static std::map<std::string, ppl_x86_gemm_pack_b_func_t> gemm_pack_b_func_table =
 {
     {"noarch", ppl::kernel::x86::gemm_fp32_ref_pack_b},
-    {"sse", nullptr},
+    {"sse", ppl::kernel::x86::gemm_fp32_sse_pack_b},
     {"fma", ppl::kernel::x86::gemm_fp32_fma_pack_b},
 #ifdef PPL_USE_X86_AVX512
     {"avx512", ppl::kernel::x86::gemm_fp32_avx512_pack_b},
@@ -98,7 +98,7 @@ static std::map<std::string, ppl_x86_gemm_pack_b_func_t> gemm_pack_b_func_table 
 static std::map<std::string, ppl_x86_gemm_get_packed_b_bytes_func_t> gemm_get_packed_b_bytes_func_table =
 {
     {"noarch", ppl::kernel::x86::gemm_fp32_ref_get_packed_b_bytes},
-    {"sse", nullptr},
+    {"sse", ppl::kernel::x86::gemm_fp32_sse_get_packed_b_bytes},
     {"fma", ppl::kernel::x86::gemm_fp32_fma_get_packed_b_bytes},
 #ifdef PPL_USE_X86_AVX512
     {"avx512", ppl::kernel::x86::gemm_fp32_avx512_get_packed_b_bytes},
