@@ -806,12 +806,7 @@ void PPLCUDADataConvert(
     ReFormatParam& param)
 {
     if (param.in_format != param.out_format && (param.in_type != param.out_type || !param.same_scale)) {
-        if (param.per_channel) {
-            PPLCUDACVTTypePerChannel(stream, input, tempBuf, param);
-        } else {
-            PPLCUDACVTTypePerTensor(stream, input, tempBuf, param);
-        }
-        PPLCUDACVTFormat(stream, tempBuf, output, param);
+        PPLCUDACVTFormatType(stream, input, output, param);
         return;
     } else if (param.in_format != param.out_format && (param.in_type = param.out_type && param.same_scale)) {
         PPLCUDACVTFormat(stream, input, output, param);
