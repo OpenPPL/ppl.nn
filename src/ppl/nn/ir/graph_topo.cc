@@ -116,37 +116,53 @@ RetCode GraphTopo::ReplaceWithNode(const string& node_name, const Node::Type& no
 
     vector<bool> reserved_edges(GetCurrentEdgeIdBound(), false);
 
+    // normal inputs
     for (auto it = inputs_.begin(); it != inputs_.end(); ++it) {
-        auto edge = GetEdge(*it);
-        node->AddInput(*it);
-        edge->AddConsumer(node->GetId());
-        reserved_edges[*it] = true;
+        auto eid = *it;
+        if (!reserved_edges[eid]) {
+            auto edge = GetEdge(eid);
+            node->AddInput(eid);
+            edge->AddConsumer(node->GetId());
+            reserved_edges[eid] = true;
+        }
     }
+    // extra inputs are treated as normal inputs.
     for (auto it = extra_inputs_.begin(); it != extra_inputs_.end(); ++it) {
-        auto edge = GetEdge(*it);
-        node->AddInput(*it); // all extra inputs are treated as normal inputs
-        edge->AddConsumer(node->GetId());
-        reserved_edges[*it] = true;
+        auto eid = *it;
+        if (!reserved_edges[eid]) {
+            auto edge = GetEdge(eid);
+            node->AddInput(eid);
+            edge->AddConsumer(node->GetId());
+            reserved_edges[eid] = true;
+        }
     }
+    // constants are treated as normal inputs
     for (auto it = constants_.begin(); it != constants_.end(); ++it) {
-        auto edge = GetEdge(*it);
-        node->AddInput(*it); // all constants are treated as normal inputs
-        edge->AddConsumer(node->GetId());
-        reserved_edges[*it] = true;
-    }
-    for (auto it = outputs_.begin(); it != outputs_.end(); ++it) {
-        auto edge = GetEdge(*it);
-        node->AddOutput(*it);
-        edge->SetProducer(node->GetId());
-        reserved_edges[*it] = true;
+        auto eid = *it;
+        if (!reserved_edges[eid]) {
+            auto edge = GetEdge(eid);
+            node->AddInput(eid);
+            edge->AddConsumer(node->GetId());
+            reserved_edges[eid] = true;
+        }
     }
 
+    for (auto it = outputs_.begin(); it != outputs_.end(); ++it) {
+        auto eid = *it;
+        auto edge = GetEdge(eid);
+        node->AddOutput(eid);
+        edge->SetProducer(node->GetId());
+        reserved_edges[eid] = true;
+    }
+
+    // remove unused intermediate edges
     for (edgeid_t i = 0; i < reserved_edges.size(); ++i) {
         if (!reserved_edges[i]) {
             DelEdge(i);
         }
     }
 
+    // id of newly inserted node is the max value of all nodes
     for (nodeid_t i = 0; i < node->GetId(); ++i) {
         DelNode(i);
     }
