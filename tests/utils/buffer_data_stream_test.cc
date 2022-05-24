@@ -15,25 +15,24 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/utils/compact_buffer_manager.h"
-#include "ppl/common/generic_cpu_allocator.h"
+#include "ppl/nn/utils/buffer_data_stream.h"
 #include "gtest/gtest.h"
-using namespace ppl::nn;
+using namespace std;
+using namespace ppl::nn::utils;
 using namespace ppl::common;
 
-TEST(CompactBufferManagerTest, alloc_and_free) {
-    const uint64_t bytes_needed = 1000;
-    const uint64_t block_size = 1024;
-    const uint64_t alignment = 128;
+TEST(BufferDataStreamTest, all) {
+    BufferDataStream bds;
+    const string content("Hello, world!");
+    auto ret = bds.Write(content.data(), content.size());
+    EXPECT_EQ(RC_SUCCESS, ret);
+    EXPECT_EQ(content.size(), bds.Tell());
+    EXPECT_EQ(content.size(), bds.GetSize());
 
-    GenericCpuAllocator ar(alignment);
-    utils::CompactBufferManager mgr(&ar, alignment, block_size);
-    BufferDesc buffer;
-    auto status = mgr.Realloc(bytes_needed, &buffer);
-    EXPECT_EQ(RC_SUCCESS, status);
-    EXPECT_NE(nullptr, buffer.addr);
-    EXPECT_LE(bytes_needed, buffer.desc);
-    EXPECT_EQ(0, (uintptr_t)(buffer.addr) % alignment);
-    mgr.Free(&buffer);
-    EXPECT_EQ(block_size, mgr.GetAllocatedBytes());
+    EXPECT_EQ(RC_SUCCESS, bds.Seek(2));
+    EXPECT_EQ(2, bds.Tell());
+
+    auto data = static_cast<const char*>(bds.GetData());
+    EXPECT_EQ('H', data[0]);
+    EXPECT_EQ(',', data[5]);
 }
