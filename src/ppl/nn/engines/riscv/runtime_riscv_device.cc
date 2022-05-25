@@ -38,7 +38,7 @@ RuntimeRiscvDevice::RuntimeRiscvDevice(uint64_t alignment, uint32_t mm_policy)
         buffer_manager_.reset(new utils::StackBufferManager(allocator_ptr));
     } else if (mm_policy == MM_COMPACT) {
         allocator_.reset(new utils::CpuBlockAllocator());
-        buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment, 64u));
+        buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment));
     }
 }
 

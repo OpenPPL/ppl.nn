@@ -37,7 +37,7 @@ RuntimeX86Device::RuntimeX86Device(uint64_t alignment, isa_t isa, uint32_t mm_po
         buffer_manager_.reset(new utils::StackBufferManager(allocator_ptr));
     } else if (mm_policy_ == MM_COMPACT) {
         allocator_.reset(new utils::CpuBlockAllocator());
-        buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment, 64u));
+        buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment));
     }
 }
 
