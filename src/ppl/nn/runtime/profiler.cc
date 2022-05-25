@@ -22,22 +22,18 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn {
 
-void Profiler::Init(const RuntimeInternalConf* conf, const RuntimeGraphResource* graph,
-                    const RuntimeAuxInfo* aux_info) {
-    conf_ = conf;
+void Profiler::Init(const RuntimeGraphResource* graph, const RuntimeAuxInfo* aux_info) {
     graph_ = graph;
     aux_info_ = aux_info;
 }
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
 void Profiler::CollectStatistics(KernelImpl* kernel) {
-    if (conf_->profiling_flag) {
-        auto info = &nodeid2info_[kernel->GetNode()->GetId()];
-        InternalProfilingInfo intern_info;
-        kernel->GetProfilingInfo(&intern_info);
-        info->exec_microseconds += intern_info.exec_microseconds;
-        ++info->exec_count;
-    }
+    auto info = &nodeid2info_[kernel->GetNode()->GetId()];
+    InternalProfilingInfo intern_info;
+    kernel->GetProfilingInfo(&intern_info);
+    info->exec_microseconds += intern_info.exec_microseconds;
+    ++info->exec_count;
 }
 
 void Profiler::StartProfiling(nodeid_t max_node_id) {
@@ -45,11 +41,6 @@ void Profiler::StartProfiling(nodeid_t max_node_id) {
 }
 
 RetCode Profiler::GetProfilingStatistics(ProfilingStatistics* stat) const {
-    if (!conf_->profiling_flag) {
-        LOG(ERROR) << "RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG is not enabled.";
-        return RC_INVALID_VALUE;
-    }
-
     stat->prof_info.reserve(aux_info_->sorted_nodes.size());
     for (auto x = aux_info_->sorted_nodes.begin(); x != aux_info_->sorted_nodes.end(); ++x) {
         auto nid = *x;

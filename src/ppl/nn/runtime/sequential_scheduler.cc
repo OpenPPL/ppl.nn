@@ -93,7 +93,7 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
 
     KernelExecContext ctx;
     ctx.SetAcquireFunc(acquire_object_func);
-    ctx.SetProfilingFlag(profiler->IsProfilingEnabled());
+    ctx.SetProfilingFlag((profiler != nullptr));
     ctx.SetEdgeLastConsumerList(&aux_info_->edge_last_consumer);
 
     for (auto x = aux_info_->sorted_nodes.begin(); x != aux_info_->sorted_nodes.end(); ++x) {
