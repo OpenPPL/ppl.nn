@@ -17,7 +17,7 @@
 
 #include "ppl/nn/engines/x86/kernels/onnx/gemm_kernel.h"
 #include "ppl/nn/utils/destructor.h"
-#include "ppl/kernel/x86/fp32/gemm_v2.h"
+#include "ppl/kernel/x86/fp32/gemm.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -37,11 +37,19 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(C);
     }
 
-    PPLNN_X86_DEBUG_TRACE("trans_A: %d\n", param_->transA);
-    PPLNN_X86_DEBUG_TRACE("trans_B: %d\n", param_->transB);
+    auto M = A->GetShape()->GetDim(0 + param_->trans_a);
+    auto K = A->GetShape()->GetDim(1 - param_->trans_a);
+    auto N = B->GetShape()->GetDim(1 - param_->trans_b);
+    auto isa = GetISA();
+
+    PPLNN_X86_DEBUG_TRACE("trans_A: %d\n", param_->trans_a);
+    PPLNN_X86_DEBUG_TRACE("trans_B: %d\n", param_->trans_b);
     PPLNN_X86_DEBUG_TRACE("alpha: %f\n", param_->alpha);
     PPLNN_X86_DEBUG_TRACE("beta: %f\n", param_->beta);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+    PPLNN_X86_DEBUG_TRACE("post: %d\n", param_->post);
+    PPLNN_X86_DEBUG_TRACE("packed_b: %p\n", param_->packed_b);
+    PPLNN_X86_DEBUG_TRACE("M, N, K: %ld, %ld, %ld\n", M ,N, K);
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", isa);
 
     PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
     PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
@@ -53,88 +61,53 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    int32_t AMdim = 0;
-    int32_t AKdim = 1;
-    if (param_->transA) {
-        AMdim = 1;
-        AKdim = 0;
-    }
-    int32_t BNdim = 1;
-    if (param_->transB) {
-        BNdim = 0;
-    }
+    auto A_data = A->GetBufferPtr<const float>();
+    auto B_data = param_->packed_b ? param_->packed_b : B->GetBufferPtr<const float>();
+    auto Y_data = Y->GetBufferPtr<float>();
 
-    const int64_t M = A->GetShape()->GetDim(AMdim);
-    const int64_t K = A->GetShape()->GetDim(AKdim);
-    const int64_t N = param_->N == 0 ? B->GetShape()->GetDim(BNdim) : param_->N;
+    auto typeA = param_->trans_a ? ppl::kernel::x86::gemm_m_type::TRANS : ppl::kernel::x86::gemm_m_type::NOTRANS;
+    auto typeB = param_->trans_b ? ppl::kernel::x86::gemm_m_type::TRANS : ppl::kernel::x86::gemm_m_type::NOTRANS;
+    typeB = param_->packed_b ? ppl::kernel::x86::gemm_m_type::PACKED : typeB;
 
-    ppl::kernel::x86::gemm_v2_param_fp32 param;
-    param.src_A = A->GetBufferPtr<float>();
-    param.src_B = B->GetBufferPtr<float>();
-    param.dst_Y = Y->GetBufferPtr<float>();
-    param.M = M;
-    param.N = N;
-    param.K = K;
-    param.lda = param_->transA ? M : K;
-    param.ldb = param_->transB ? K : N;
-    param.ldy = N;
-    param.alpha = param_->alpha;
-    param.beta = param_->beta;
-    param.trans_A = param_->transA;
-    param.trans_B = param_->transB;
-    param.isa_flag = GetISA();
+    auto lda = A->GetShape()->GetDim(1);
+    auto ldb = B->GetShape()->GetDim(1);
+    auto ldy = Y->GetShape()->GetDim(1);
+    auto ldsum = ldy;
 
-    if (fuse_relu_) {
-        param.fuse_flag = ppl::kernel::x86::gemm_v2_fuse_flag::RELU;
-    } else {
-        param.fuse_flag = ppl::kernel::x86::gemm_v2_fuse_flag::NONE;
-    }
-
-    param.src_C = nullptr;
-    param.c_type = ppl::kernel::x86::gemm_v2_C_type::EMPTY;
-    param.ldc = 0;
-    if (C != nullptr && !C->GetShape()->IsEmpty()) {
-        param.src_C = C->GetBufferPtr<float>();
+    const float *C_data = nullptr;
+    const float *sum_data = nullptr;
+    const float *bias_data = nullptr;
+    ppl::kernel::x86::gemm_m_type_t typesum = ppl::kernel::x86::gemm_m_type::EMPTY;
+    ppl::kernel::x86::gemm_v_type_t typebias = ppl::kernel::x86::gemm_v_type::EMPTY;
+    if (C) {
+        C_data = C->GetBufferPtr<const float>();
         if (C->GetShape()->GetElementsExcludingPadding() == 1) {
-            param.c_type = ppl::kernel::x86::gemm_v2_C_type::SCALAR;
+            typebias = ppl::kernel::x86::gemm_v_type::SCALAR;
         } else if (C->GetShape()->GetDimCount() == 1) {
-            param.c_type = ppl::kernel::x86::gemm_v2_C_type::VECTOR_W;
+            typebias = ppl::kernel::x86::gemm_v_type::ROW_VEC;
         } else if (C->GetShape()->GetDimCount() == 2) {
             if (C->GetShape()->GetDim(0) == 1) {
-                param.c_type = ppl::kernel::x86::gemm_v2_C_type::VECTOR_W;
+                typebias = ppl::kernel::x86::gemm_v_type::ROW_VEC;
             } else if (C->GetShape()->GetDim(1) == 1) {
-                param.c_type = ppl::kernel::x86::gemm_v2_C_type::VECTOR_H;
+                typebias = ppl::kernel::x86::gemm_v_type::COL_VEC;
             } else {
-                param.c_type = ppl::kernel::x86::gemm_v2_C_type::MATRIX;
-                param.ldc = C->GetShape()->GetDim(1);
+                typesum = ppl::kernel::x86::gemm_m_type::NOTRANS;
             }
+        }
+        if (typesum) {
+            sum_data = C_data;
+            ldsum = C->GetShape()->GetDim(1);
+        }
+        if (typebias) {
+            bias_data = C_data;
         }
     }
 
-    auto executor =
-        std::unique_ptr<ppl::kernel::x86::gemm_v2_executor_fp32>(ppl::kernel::x86::create_gemm_v2_executor_fp32(param));
-    if (!executor) {
-        LOG(ERROR) << "cannot create executor.";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
-    BufferDesc tmp_buffer_desc;
-    uint64_t tmp_buffer_size = executor->get_buffer_bytes();
-    auto status = GetX86Device()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
-    if (status != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
-                   << "] failed: " << ppl::common::GetRetCodeStr(status);
-        return status;
-    }
-    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
-        GetX86Device()->FreeTmpBuffer(&tmp_buffer_desc);
-    });
-    auto tmp_buffer = tmp_buffer_desc.addr;
-    PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
-
-    executor->set_temp_buffer(tmp_buffer);
-
-    return executor->execute();
+    return ppl::kernel::x86::gemm_fp32(
+        isa, A_data, B_data, bias_data, sum_data,
+        typeA, typeB, typebias, typesum, M, N, K,
+        lda, ldb, ldy, ldsum, param_->alpha, 0.0f,
+        param_->beta, param_->beta, param_->post, Y_data);
 }
 
 }}} // namespace ppl::nn::x86

@@ -15,8 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <stdio.h>
-
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/kernel/x86/common/sse_tools.h"
 #include "ppl/kernel/x86/fp32/gemm.h"
