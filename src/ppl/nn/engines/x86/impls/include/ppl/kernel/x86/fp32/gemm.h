@@ -28,7 +28,7 @@ uint64_t gemm_fp32_get_packed_b_bytes(
     const int64_t N,
     const int64_t K);
 
-ppl::common::RetCode gemm_pack_b_fp32(
+ppl::common::RetCode gemm_fp32_pack_b(
     const ppl::common::isa_t isa,
     const float *B,
     const gemm_m_type_t typeB,

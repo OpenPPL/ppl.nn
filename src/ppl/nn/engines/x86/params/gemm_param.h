@@ -15,19 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_PARAMS_FC_PARAM_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_PARAMS_FC_PARAM_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_PARAMS_GEMM_PARAM_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_PARAMS_GEMM_PARAM_H_
 
-#include "ppl/kernel/x86/fp32/fc.h"
+#include "ppl/kernel/x86/fp32/gemm.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
-struct FCParam {
-    ppl::kernel::x86::fc_fp32_param param;
-    ppl::kernel::x86::fc_fp32_algo_info algo_info;
-    ppl::kernel::x86::fc_fp32_manager* mgr = nullptr;
-
-    ~FCParam() { if (mgr != nullptr) delete mgr; }
+struct GemmParam {
+    float alpha;
+    float beta;
+    int32_t trans_a;
+    int32_t trans_b;
+    ppl::kernel::x86::gemm_post_t post;
+    float *packed_b = nullptr;
 };
 
 }}}; // namespace ppl::nn::x86

@@ -25,8 +25,6 @@
 #include "ppl/kernel/x86/fp32/gemm/common/gemm_base_operation_fp32_sse.h"
 #include "ppl/kernel/x86/common/threading_tools.h"
 
-#include <stdio.h>
-
 namespace ppl { namespace kernel { namespace x86 {
 
 static const int64_t K_L2_BLK_MAX = 128;
@@ -712,7 +710,7 @@ uint64_t gemm_fp32_sse_get_packed_b_bytes(
     const int64_t N,
     const int64_t K)
 {
-    return sizeof(float) * K * round_up(N, gemm_kernel_fp32_sse::config::N_REGB_ELTS);
+    return sizeof(float) * (K * round_up(N, gemm_kernel_fp32_sse::config::N_REGB_ELTS) + gemm_kernel_fp32_sse::config::MAX_N_BLK);
 }
 
 ppl::common::RetCode gemm_fp32_sse_pack_b(

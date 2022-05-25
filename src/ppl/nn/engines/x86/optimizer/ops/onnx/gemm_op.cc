@@ -17,7 +17,6 @@
 
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/gemm_op.h"
 #include "ppl/nn/engines/x86/kernels/onnx/gemm_kernel.h"
-#include "ppl/nn/engines/x86/kernels/onnx/fc_kernel.h"
 #include "ppl/nn/oputils/onnx/reshape_gemm.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
@@ -26,12 +25,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace x86 {
 
 GemmOp::~GemmOp() {
-    if (fc_param_ != nullptr) {
-        if (fc_param_->mgr != nullptr) {
-            fc_param_->mgr->release_cvt_weights();
-        }
-        delete fc_param_;
-    }
+    if (aux_param_.packed_b) ppl::common::AlignedFree(aux_param_.packed_b);
 }
 
 RetCode GemmOp::Init(const OptKernelOptions& options) {
@@ -44,97 +38,63 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
     auto node = GetNode();
     auto graph_data = options.graph_data;
 
-    auto weight_data_it = graph_data->constants.find(node->GetInput(1));
-    const float* weight_data = nullptr;
-    if (weight_data_it != graph_data->constants.end()) {
-        weight_data = (const float*)weight_data_it->second.data.data();
-    }
-
-    const float* bias_data = nullptr;
-    if (node->GetInputCount() == 3) {
-        auto bias_data_it = graph_data->constants.find(node->GetInput(2));
-        if (bias_data_it != graph_data->constants.end()) {
-            bias_data = (const float*)bias_data_it->second.data.data();
-        }
-    }
-
-    param_->bias_term = (node->GetInputCount() == 3) ? true : false;
-
-    if (!param_->transA && param_->transB && weight_data != nullptr) {
-        if (!fc_param_) {
-            fc_param_ = new FCParam;
-        }
-        if (!fc_param_) {
-            return ppl::common::RC_OUT_OF_MEMORY;
-        }
-
-        const ir::Shape& weight_shape = graph_data->shapes.find(node->GetInput(1))->second;
-        fc_param_->param.num_output = weight_shape.dims[0];
-        fc_param_->param.channels = weight_shape.dims[1];
-        fc_param_->param.fuse_flag = 0;
-
-        fc_param_->algo_info = ppl::kernel::x86::fc_algo_selector::select_algo(
-            ppl::common::DATAFORMAT_NDARRAY, fc_param_->param, options.device->GetISA());
-        if (fc_param_->algo_info.algo_type == ppl::kernel::x86::fc_fp32_algo::UNKNOWN) {
-            LOG(INFO) << "FC select algorithm failed, use fallback kernel";
-        } else {
-            fc_param_->mgr = ppl::kernel::x86::fc_algo_selector::gen_algo(fc_param_->param, fc_param_->algo_info,
-                                                                          options.device->GetAllocator());
-
-            if (bias_data != nullptr) {
-                fc_param_->mgr->gen_cvt_weights(weight_data, bias_data);
-            } else {
-                std::vector<float> zero_bias(weight_shape.dims[0], 0.0f);
-                fc_param_->mgr->gen_cvt_weights(weight_data, zero_bias.data());
-            }
-        }
-    }
-
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeGemm(info, param_.get());
     };
 
     infer_type_func_ = GenericInferType;
 
+    auto b_data_it = graph_data->constants.find(node->GetInput(1));
+    const float* b_data = nullptr;
+    if (b_data_it != graph_data->constants.end()) {
+        b_data = (const float*)b_data_it->second.data.data();
+    }
+
+    aux_param_.trans_a = param_->transA;
+    aux_param_.trans_b = param_->transB;
+    aux_param_.alpha = param_->alpha;
+    aux_param_.beta = param_->beta;
+
+    if (b_data != nullptr) {
+        auto& b_shape = graph_data->shapes.find(node->GetInput(1))->second;
+        auto K = b_shape.dims[0 + aux_param_.trans_b];
+        auto N = b_shape.dims[1 - aux_param_.trans_b];
+
+        auto isa = options.device->GetISA();
+        auto type_b = aux_param_.trans_b ? ppl::kernel::x86::gemm_m_type::TRANS : ppl::kernel::x86::gemm_m_type::NOTRANS;
+
+        auto packed_b_bytes = ppl::kernel::x86::gemm_fp32_get_packed_b_bytes(isa, N, K);
+        aux_param_.packed_b = (float*)ppl::common::AlignedAlloc(packed_b_bytes, 64);
+        if (ppl::common::RC_SUCCESS != ppl::kernel::x86::gemm_fp32_pack_b(
+                isa, b_data, type_b, N, K, b_shape.dims[1], aux_param_.packed_b)) {
+            LOG(WARNING) << "\"" << node->GetName() << "\" gemm pack matrix-B failed, will use non-packed gemm.";
+            ppl::common::AlignedFree(aux_param_.packed_b);
+            aux_param_.packed_b = nullptr;
+            return RC_SUCCESS;
+        }
+    }
+
     return RC_SUCCESS;
 }
 
 RetCode GemmOp::OmitConstantsData(std::map<edgeid_t, int64_t>* constants_data_refcount) {
-    if (fc_param_ && fc_param_->algo_info.algo_type != ppl::kernel::x86::fc_fp32_algo::UNKNOWN) {
-        auto weight_id = GetNode()->GetInput(1);
-        auto it = constants_data_refcount->find(weight_id);
+    if (aux_param_.packed_b) {
+        auto b_id = GetNode()->GetInput(1);
+        auto it = constants_data_refcount->find(b_id);
         if (it != constants_data_refcount->end()) {
             it->second--;
-        }
-        if (param_->bias_term) {
-            auto bias_id = GetNode()->GetInput(2);
-            it = constants_data_refcount->find(bias_id);
-            if (it != constants_data_refcount->end()) {
-                it->second--;
-            }
         }
     }
     return RC_SUCCESS;
 }
 
 bool GemmOp::TryFuseReLU() {
-    fuse_relu_ = true;
-    if (fc_param_ && fc_param_->algo_info.algo_type != ppl::kernel::x86::fc_fp32_algo::UNKNOWN) {
-        ppl::kernel::x86::fc_fp32_param param = fc_param_->mgr->param();
-        param.fuse_flag |= ppl::kernel::x86::fc_fuse_flag::RELU;
-        fc_param_->mgr->set_param(param);
-    }
+    aux_param_.post = ppl::kernel::x86::gemm_post::RELU;
     return true;
 }
 
 KernelImpl* GemmOp::CreateKernelImpl() const {
-    if (fc_param_ && fc_param_->algo_info.algo_type != ppl::kernel::x86::fc_fp32_algo::UNKNOWN) {
-        return CreateKernelImplWithParam<FCKernel>(fc_param_);
-    } else {
-        auto kernel = CreateKernelImplWithParam<GemmKernel>(param_.get());
-        kernel->SetFuseReLU(fuse_relu_);
-        return kernel;
-    }
+    return CreateKernelImplWithParam<GemmKernel>(&aux_param_);
 }
 
 }}} // namespace ppl::nn::x86
