@@ -37,12 +37,10 @@ RetCode SubOp::Init(const OptKernelOptions& options) {
 
     infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
-        if (type == DATATYPE_UNKNOWN) {
-            status = InferHighestType(info, mask_);
-        } else if (type == DATATYPE_INT8) {
+        if (type == DATATYPE_INT8) {
             status = CopyQuantType(info, quant);
         } else {
-            status = InferDefaultType(info, type);
+            status = InferHighestType(info, type, mask_);
         }
         return status;
     };

@@ -237,15 +237,20 @@ protected:
             auto impl = info->GetInput<TensorImpl>(i);
             if (impl == nullptr)
                 continue;
-            auto in_shape = impl->GetShape();
-            in_shape->SetDataType(type);
+            auto in_shape  = impl->GetShape();
+            auto date_type = in_shape->GetDataType();
+            if (date_type == ppl::common::DATATYPE_UNKNOWN || date_type == ppl::common::DATATYPE_FLOAT32 || 
+                date_type == ppl::common::DATATYPE_FLOAT16 || date_type == ppl::common::DATATYPE_INT8) {
+                in_shape->SetDataType(type);
+            }
         }
+        auto input_type = info->GetInput<TensorImpl>(0)->GetShape()->GetDataType();
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
             auto impl = info->GetOutput<TensorImpl>(i);
             if (impl == nullptr)
                 continue;
             auto out_shape = impl->GetShape();
-            out_shape->SetDataType(type);
+            out_shape->SetDataType(input_type);
         }
         return ppl::common::RC_SUCCESS;
     }
@@ -265,8 +270,8 @@ protected:
         return ppl::common::RC_SUCCESS;
     }
 
-    static ppl::common::RetCode InferHighestType(InputOutputInfo* info, uint64_t mask = 0) {
-        ppl::common::datatype_t highest = ppl::common::DATATYPE_UNKNOWN;
+    static ppl::common::RetCode InferHighestType(InputOutputInfo* info, ppl::common::datatype_t type,uint64_t mask = 0) {
+        ppl::common::datatype_t highest = type;
         for (uint32_t i = 0; i < info->GetInputCount(); ++i) {
             if (i < 64 && mask & (1 << i)) {
                 continue;
@@ -275,9 +280,6 @@ protected:
             if (in_shape->GetDataType() > highest) {
                 highest = in_shape->GetDataType();
             }
-        }
-        if (highest == ppl::common::DATATYPE_INT8) {
-            highest = ppl::common::DATATYPE_FLOAT32;
         }
         for (uint32_t i = 0; i < info->GetInputCount(); ++i) {
             auto in_shape = info->GetInput<TensorImpl>(i)->GetShape();

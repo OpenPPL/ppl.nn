@@ -48,7 +48,10 @@ bool MatMulAlgorithm::IsSupported(const ir::Node* node, const OptKernelOptions& 
     if (quant0.type == DATATYPE_INT8 && input_format != DATAFORMAT_NHWC16) {
         return false;
     }
-    if (quant0.type == DATATYPE_INT16 && input_format != DATAFORMAT_NHWC8) {
+    if (quant0.type == DATATYPE_FLOAT16 && input_format != DATAFORMAT_NHWC8) {
+        return false;
+    }
+    if (quant0.type == DATATYPE_FLOAT32) {
         return false;
     }
     return true;
