@@ -292,7 +292,7 @@ RetCode RuntimeImpl::Init(const shared_ptr<ir::GraphTopo>& topo, const shared_pt
     aux_info_ = aux_info;
     topo_ = topo;
 
-    profiler_.Init(&conf_, &graph_, aux_info.get());
+    profiler_.Init(&graph_, aux_info.get());
 
     auto status = InitRuntimeGraphResource(topo.get(), *info, init_info, reserved_edgeids, &engctx_, &graph_);
     if (status != RC_SUCCESS) {
@@ -331,7 +331,13 @@ RetCode RuntimeImpl::Run() {
         }
     }
 
-    status = sched_->Run(&profiler_);
+#ifdef PPLNN_ENABLE_KERNEL_PROFILING
+    Profiler* profiler = (conf_.profiling_flag ? &profiler_ : nullptr);
+#else
+    Profiler* profiler = nullptr;
+#endif
+
+    status = sched_->Run(profiler);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Run() failed: " << GetRetCodeStr(status);
         return status;

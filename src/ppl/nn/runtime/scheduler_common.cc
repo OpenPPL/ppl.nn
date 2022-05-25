@@ -69,7 +69,9 @@ RetCode ExecuteKernel(KernelImpl* kernel, KernelExecContext* ctx,
     auto exec_status = kernel->Execute(ctx);
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-    profiler->CollectStatistics(kernel);
+    if (profiler) {
+        profiler->CollectStatistics(kernel);
+    }
 #endif
 
     auto status = AfterExecuteKernel(kernel, ctx, release_func);
