@@ -29,8 +29,8 @@ namespace ppl { namespace nn { namespace cuda {
 class MatMulAlgorithm : public Algorithm {
 public:
     MatMulAlgorithm() {
-        std::set<dataformat_t> nchw{DATAFORMAT_NDARRAY};
-        matmul_formats_.emplace(DATAFORMAT_NDARRAY, nchw);
+        std::set<dataformat_t> ndarray{DATAFORMAT_NDARRAY};
+        matmul_formats_.emplace(DATAFORMAT_NDARRAY, ndarray);
     }
 
     const std::map<dataformat_t, std::set<dataformat_t>> Getformats(const std::string& type_name) const override {
