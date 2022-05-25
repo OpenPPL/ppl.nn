@@ -32,7 +32,7 @@ namespace ppl { namespace kernel { namespace x86 {
 static const int64_t K_L2_BLK_MAX = 128;
 static const int64_t K_L1_BLK_MAX_SMALL_M = 2048;
 static const int64_t N_L3_BLK_MAX = 4128;
-static const int64_t N_THR_BLK_MIN = 256;
+static const int64_t N_THR_BLK_MIN = 288;
 static const int64_t M_L3_BLK_MAX = 96;
 
 typedef uint64_t opt_flag_t;
