@@ -39,7 +39,7 @@ RuntimeArmDevice::RuntimeArmDevice(uint64_t alignment, isa_t isa, uint32_t mm_po
     } else if (mm_policy == MM_COMPACT) {
         can_defragement_ = true;
         allocator_.reset(new utils::CpuBlockAllocator());
-        buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment, 64u));
+        buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment));
     }
 }
 

@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace utils {
 
 class CompactBufferManager final : public BufferManager {
 public:
-    CompactBufferManager(ppl::common::Allocator* ar, uint64_t alignment, uint64_t block_size = 1048576)
+    CompactBufferManager(ppl::common::Allocator* ar, uint64_t alignment, uint64_t block_size = 65536)
         : BufferManager("CompactBufferManager"), alignment_(alignment), mgr_(ar, block_size) {}
 
     /**
