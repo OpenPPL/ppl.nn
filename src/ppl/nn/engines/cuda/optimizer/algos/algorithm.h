@@ -45,6 +45,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 class Algorithm {
 public:
+    virtual ~Algorithm() {}
     virtual bool IsRepeatable(const OptKernelOptions& options) const {
         return true;
     }

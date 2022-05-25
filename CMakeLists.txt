@@ -137,13 +137,18 @@ endif()
 
 add_library(pplnn_static STATIC ${PPLNN_SOURCES} ${PPLNN_SOURCE_EXTERNAL_SOURCES})
 target_include_directories(pplnn_static PUBLIC ${PPLNN_INCLUDE_DIRECTORIES} ${PPLNN_SOURCE_EXTERNAL_INCLUDE_DIRECTORIES})
-target_link_directories(pplnn_static PUBLIC ${PPLNN_LINK_DIRECTORIES} ${PPLNN_SOURCE_EXTERNAL_LINK_DIRECTORIES})
-target_link_libraries(pplnn_static PUBLIC ${PPLNN_LINK_LIBRARIES} ${PPLNN_SOURCE_EXTERNAL_LINK_LIBRARIES})
 target_compile_definitions(pplnn_static PUBLIC ${PPLNN_COMPILE_DEFINITIONS} ${PPLNN_SOURCE_EXTERNAL_COMPILE_DEFINITIONS})
 target_compile_features(pplnn_static PRIVATE cxx_std_11)
+target_link_directories(pplnn_static PUBLIC ${PPLNN_LINK_DIRECTORIES} ${PPLNN_SOURCE_EXTERNAL_LINK_DIRECTORIES})
+target_link_libraries(pplnn_static PUBLIC ${PPLNN_LINK_LIBRARIES} ${PPLNN_SOURCE_EXTERNAL_LINK_LIBRARIES})
 
 target_include_directories(pplnn_static PRIVATE
     ${rapidjson_SOURCE_DIR}/include)
+
+if(CMAKE_COMPILER_IS_GNUCC)
+    # requires a virtual destructor when having virtual functions, though it is not necessary for all cases
+    target_compile_options(pplnn_static PRIVATE -Werror=non-virtual-dtor)
+endif()
 
 if(PPLNN_ENABLE_ONNX_MODEL)
     include(cmake/protobuf.cmake)

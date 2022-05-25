@@ -80,6 +80,11 @@ target_include_directories(pplkernelarmserver_static
 target_compile_options(pplkernelarmserver_static PRIVATE ${PPL_KERNEL_ARM_SERVER_COMPILE_OPTIONS})
 target_compile_definitions(pplkernelarmserver_static PRIVATE ${PPL_KERNEL_ARM_SERVER_COMPILE_DEFINITIONS})
 
+if(CMAKE_COMPILER_IS_GNUCC)
+    # requires a virtual destructor when having virtual functions, though it is not necessary for all cases
+    target_compile_options(pplkernelarmserver_static PRIVATE -Werror=non-virtual-dtor)
+endif()
+
 if(PPLNN_INSTALL)
     install(TARGETS pplkernelarmserver_static DESTINATION lib)
     install(FILES ${CMAKE_CURRENT_LIST_DIR}/pplkernelarmserver-config.cmake DESTINATION lib/cmake/ppl)

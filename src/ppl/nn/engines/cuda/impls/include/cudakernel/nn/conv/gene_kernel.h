@@ -27,6 +27,7 @@
 
 class CodeGeneFactor {
 public:
+    virtual ~CodeGeneFactor() {}
 	virtual ppl::common::RetCode GeneIdxnKernel(std::string& file_res, std::string& kname, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int s_size, int declare_times) const = 0;
 	virtual ppl::common::RetCode Gene2spkKernel(std::string& file_res, std::string& kname, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int s_size, int splitk, int splitf, int buf_size, int declare_times) const = 0;
 	virtual ppl::common::RetCode GeneSwzlKernel(std::string& file_res, std::string& kname, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int splitk, int buf_size, int declare_times) const = 0;

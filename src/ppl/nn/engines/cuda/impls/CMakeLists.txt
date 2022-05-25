@@ -36,8 +36,12 @@ endif()
 file(GLOB_RECURSE CUDA_SRC tools/*.cu)
 
 if(PPLNN_ENABLE_CUDA_JIT)
-    file(GLOB_RECURSE CUDA_SRC ${CUDA_SRC} ${CMAKE_CURRENT_BINARY_DIR}/gene_header.cc
-                                            src/nn/conv/gene_kernel.cc)
+    set(__gene_kernel_src__ ${CMAKE_CURRENT_BINARY_DIR}/gene_header.cc src/nn/conv/gene_kernel.cc)
+    if(CMAKE_COMPILER_IS_GNUCC)
+        set_source_files_properties(${__gene_kernel_src__} PROPERTIES COMPILE_FLAGS -Werror=non-virtual-dtor)
+    endif()
+    list(APPEND CUDA_SRC ${__gene_kernel_src__})
+    unset(__gene_kernel_src__)
 else()
     file(GLOB_RECURSE CUDA_SRC ${CUDA_SRC} ${CMAKE_CURRENT_BINARY_DIR}/conv/2spk/f*_kernels.cu
                                        ${CMAKE_CURRENT_BINARY_DIR}/conv/idxn/idxn_kernels*.cu
