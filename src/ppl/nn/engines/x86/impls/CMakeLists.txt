@@ -91,6 +91,11 @@ target_include_directories(pplkernelx86_static
 target_compile_definitions(pplkernelx86_static PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
 target_compile_options(pplkernelx86_static PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
 
+if(CMAKE_COMPILER_IS_GNUCC)
+    # requires a virtual destructor when having virtual functions, though it is not necessary for all cases
+    target_compile_options(pplkernelx86_static PRIVATE -Werror=non-virtual-dtor)
+endif()
+
 if(PPLNN_INSTALL)
     install(TARGETS pplkernelx86_static DESTINATION lib)
     install(FILES ${CMAKE_CURRENT_LIST_DIR}/pplkernelx86-config.cmake DESTINATION lib/cmake/ppl)

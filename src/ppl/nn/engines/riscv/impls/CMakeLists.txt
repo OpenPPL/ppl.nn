@@ -55,6 +55,11 @@ target_include_directories(pplkernelriscv_static
 target_compile_definitions(pplkernelriscv_static PRIVATE ${PPLKERNELRISCV_COMPILE_DEFINITIONS})
 target_compile_options(pplkernelriscv_static PRIVATE ${PPLKERNELRISCV_COMPILE_OPTIONS})
 
+if(CMAKE_COMPILER_IS_GNUCC)
+    # requires a virtual destructor when having virtual functions, though it is not necessary for all cases
+    target_compile_options(pplkernelriscv_static PRIVATE -Werror=non-virtual-dtor)
+endif()
+
 if(PPLNN_INSTALL)
     install(TARGETS pplkernelriscv_static DESTINATION lib)
     install(FILES ${CMAKE_CURRENT_LIST_DIR}/pplkernelriscv-config.cmake DESTINATION lib/cmake/ppl)
