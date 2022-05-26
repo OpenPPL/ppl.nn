@@ -22,38 +22,18 @@
 namespace ppl { namespace nn { namespace x86 {
 
 uint64_t Conv2dDynamicKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
-    auto x = ctx.GetInput<TensorImpl>(0);
-    auto w = ctx.GetInput<TensorImpl>(1);
-    auto y = ctx.GetOutput<TensorImpl>(0);
+    auto W = ctx.GetInput<TensorImpl>(1);
+    auto Y = ctx.GetOutput<TensorImpl>(0);
 
-    const int32_t batch = x->GetShape()->GetDim(0);
-    const int32_t num_output = w->GetShape()->GetDim(0);
-    const int32_t channels = w->GetShape()->GetDim(1) * param_->group;
-    const int32_t dst_h = y->GetShape()->GetDim(2);
-    const int32_t dst_w = y->GetShape()->GetDim(3);
+    const int32_t channels = W->GetShape()->GetDim(1) * param_->group;
+    const int32_t dst_h = Y->GetShape()->GetDim(2);
+    const int32_t dst_w = Y->GetShape()->GetDim(3);
 
-    if (false) {
-    }
-#ifdef PPL_USE_X86_AVX512
-    else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
-        return kernel::x86::conv2d_dynamic_ndarray_fp32_avx512_get_buffer_bytes(
-            batch, num_output, param_->group, dst_h, dst_w, channels / param_->group, param_->kernel_shape[0],
-            param_->kernel_shape[1], param_->strides[0], param_->strides[1], param_->pads[0], param_->pads[1]);
-    }
-#endif
-    else if (MayUseISA(ppl::common::ISA_X86_FMA)) {
-        return kernel::x86::conv2d_dynamic_ndarray_fp32_fma_get_buffer_bytes(
-            batch, num_output, param_->group, dst_h, dst_w, channels / param_->group, param_->kernel_shape[0],
-            param_->kernel_shape[1], param_->strides[0], param_->strides[1], param_->pads[0], param_->pads[1]);
-    } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-        return kernel::x86::conv2d_dynamic_ndarray_fp32_sse_get_buffer_bytes(
-            batch, num_output, param_->group, dst_h, dst_w, channels / param_->group, param_->kernel_shape[0],
-            param_->kernel_shape[1], param_->strides[0], param_->strides[1], param_->pads[0], param_->pads[1]);
-    } else {
-        LOG(ERROR) << "get unsupported isa " << GetISA();
-    }
-
-    return 0;
+    return ppl::kernel::x86::conv2d_dynamic_ndarray_fp32_get_buffer_bytes(
+        GetISA(), param_->group, dst_h, dst_w, channels,
+        param_->kernel_shape[0], param_->kernel_shape[1],
+        param_->strides[0], param_->strides[1],
+        param_->pads[0], param_->pads[1]);
 }
 
 ppl::common::RetCode Conv2dDynamicKernel::DoExecute(KernelExecContext* ctx) {
@@ -138,32 +118,15 @@ ppl::common::RetCode Conv2dDynamicKernel::DoExecute(KernelExecContext* ctx) {
 
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
-            if (false) {
-            }
-#ifdef PPL_USE_X86_AVX512
-            else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
-                return kernel::x86::conv2d_dynamic_ndarray_fp32_avx512(
-                    X->GetBufferPtr<float>(), W->GetBufferPtr<float>(), b_data, src_h, src_w, dst_h, dst_w, batch,
-                    param_->group, channels / param_->group, num_output / param_->group, param_->kernel_shape[0],
-                    param_->kernel_shape[1], param_->strides[0], param_->strides[1], param_->pads[0], param_->pads[1],
-                    param_->dilations[0], param_->dilations[1], (float*)tmp_buffer, Y->GetBufferPtr<float>());
-            }
-#endif
-            else if (MayUseISA(ppl::common::ISA_X86_FMA)) {
-                return kernel::x86::conv2d_dynamic_ndarray_fp32_fma(
-                    X->GetBufferPtr<float>(), W->GetBufferPtr<float>(), b_data, src_h, src_w, dst_h, dst_w, batch,
-                    param_->group, channels / param_->group, num_output / param_->group, param_->kernel_shape[0],
-                    param_->kernel_shape[1], param_->strides[0], param_->strides[1], param_->pads[0], param_->pads[1],
-                    param_->dilations[0], param_->dilations[1], (float*)tmp_buffer, Y->GetBufferPtr<float>());
-            } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-                return kernel::x86::conv2d_dynamic_ndarray_fp32_sse(
-                    X->GetBufferPtr<float>(), W->GetBufferPtr<float>(), b_data, src_h, src_w, dst_h, dst_w, batch,
-                    param_->group, channels / param_->group, num_output / param_->group, param_->kernel_shape[0],
-                    param_->kernel_shape[1], param_->strides[0], param_->strides[1], param_->pads[0], param_->pads[1],
-                    param_->dilations[0], param_->dilations[1], (float*)tmp_buffer, Y->GetBufferPtr<float>());
-            } else {
-                LOG(ERROR) << "get unsupported isa " << GetISA();
-            }
+            return kernel::x86::conv2d_dynamic_ndarray_fp32(
+                GetISA(), X->GetBufferPtr<float>(), W->GetBufferPtr<float>(), b_data,
+                src_h, src_w, dst_h, dst_w,
+                batch, param_->group, channels, num_output,
+                param_->kernel_shape[0], param_->kernel_shape[1],
+                param_->strides[0], param_->strides[1],
+                param_->pads[0], param_->pads[1],
+                param_->dilations[0], param_->dilations[1],
+                tmp_buffer, Y->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";
         }

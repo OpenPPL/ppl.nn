@@ -15,177 +15,94 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <immintrin.h>
-#include <string.h>
-#include <memory>
 #include "ppl/kernel/x86/common/internal_include.h"
-#include "ppl/kernel/x86/fp32/gemm_v2.h"
+#include "ppl/kernel/x86/fp32/gemm.h"
+#include "ppl/kernel/x86/fp32/conv_transpose/col2im2d_fp32_avx.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
-static void col2im_ndarray_fp32(
-    const float *col,
-    const int32_t col_h,
-    const int32_t col_w,
-    const int32_t num_output,
-    const int32_t img_h,
-    const int32_t img_w,
-    const int32_t kernel_h,
-    const int32_t kernel_w,
-    const int32_t pad_h,
-    const int32_t pad_w,
-    const int32_t stride_h,
-    const int32_t stride_w,
-    const int32_t hole_h,
-    const int32_t hole_w,
-    const float beta,
-    float *image)
+uint64_t conv_transpose_ndarray_fp32_avx512_get_buffer_bytes(
+    const int64_t group,
+    const int64_t src_h,
+    const int64_t src_w,
+    const int64_t num_output,
+    const int64_t kernel_h,
+    const int64_t kernel_w,
+    const int64_t stride_h,
+    const int64_t stride_w,
+    const int64_t pad_h,
+    const int64_t pad_w)
 {
-    PRAGMA_OMP_PARALLEL_FOR()
-    for (int64_t c_img = 0; c_img < num_output; ++c_img) {
-        if (beta == 0.0f) {
-            memset(image + c_img * img_h * img_w, 0.0f, img_h * img_w * sizeof(float));
-        } else {
-            for (int64_t hw = 0; hw < img_h * img_w; ++hw) {
-                image[c_img * img_h * img_w + hw] *= beta;
-            }
-        }
-        for (int64_t kh = 0; kh < kernel_h; ++kh) {
-            for (int64_t kw = 0; kw < kernel_w; ++kw) {
-                int64_t c_col    = c_img * kernel_h * kernel_w + kh * kernel_w + kw;
-                int64_t w_offset = kw * hole_w;
-                int64_t h_offset = kh * hole_h;
-                for (int64_t h = 0; h < col_h; ++h) {
-                    for (int64_t w = 0; w < col_w; ++w) {
-                        int64_t h_pad = h * stride_h - pad_h + h_offset;
-                        int64_t w_pad = w * stride_w - pad_w + w_offset;
-                        if (h_pad >= 0 && h_pad < img_h && w_pad >= 0 && w_pad < img_w) {
-                            image[(c_img * img_h + h_pad) * img_w + w_pad] += col[(c_col * col_h + h) * col_w + w];
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-int64_t conv_transpose_ndarray_fp32_avx512_get_buffer_bytes(
-    const int32_t batch,
-    const int32_t src_h,
-    const int32_t src_w,
-    const int32_t num_output,
-    const int32_t channels,
-    const int32_t kernel_h,
-    const int32_t kernel_w,
-    const int32_t stride_h,
-    const int32_t stride_w,
-    const int32_t pad_h,
-    const int32_t pad_w)
-{
+    const int64_t oc_per_grp = num_output / group;
     const bool do_col2im     = !(kernel_h == 1 && kernel_w == 1 && pad_h == 0 &&
-                             pad_w == 0 && stride_h == 1 && stride_w == 1);
-    const int64_t col2im_len = !do_col2im ? 0 : int64_t(num_output) * kernel_h * kernel_w * src_h * src_w;
-
-    gemm_v2_param_fp32 param;
-    param.M        = num_output * kernel_h * kernel_w;
-    param.N        = src_h * src_w;
-    param.K        = channels;
-    param.lda      = param.M;
-    param.ldb      = param.N;
-    param.ldy   = param.N;
-    param.isa_flag = common::ISA_X86_AVX512;
-    param.trans_A   = 1;
-    param.trans_B   = 0;
-    auto executor  = std::unique_ptr<gemm_v2_executor_fp32>(create_gemm_v2_executor_fp32(param));
-
-    const int64_t gemm_bytes = executor != nullptr ? executor->get_buffer_bytes() : 0;
-
-    return col2im_len * sizeof(float) + gemm_bytes;
+                                pad_w == 0 && stride_h == 1 && stride_w == 1);
+    const uint64_t col2im_len = !do_col2im ? 0 : uint64_t(oc_per_grp) * kernel_h * kernel_w * src_h * src_w;
+    return col2im_len * sizeof(float);
 }
 
 ppl::common::RetCode conv_transpose_ndarray_fp32_avx512(
     const float *input,
     const float *filter,
     const float *bias,
-    const int32_t src_h,
-    const int32_t src_w,
-    const int32_t dst_h,
-    const int32_t dst_w,
-    const int32_t batch,
-    const int32_t channels,
-    const int32_t num_output,
-    const int32_t kernel_h,
-    const int32_t kernel_w,
-    const int32_t stride_h,
-    const int32_t stride_w,
-    const int32_t pad_h,
-    const int32_t pad_w,
-    const int32_t hole_h,
-    const int32_t hole_w,
-    float *tmp_buffer,
+    const int64_t src_h,
+    const int64_t src_w,
+    const int64_t dst_h,
+    const int64_t dst_w,
+    const int64_t batch,
+    const int64_t group,
+    const int64_t channels,
+    const int64_t num_output,
+    const int64_t kernel_h,
+    const int64_t kernel_w,
+    const int64_t stride_h,
+    const int64_t stride_w,
+    const int64_t pad_h,
+    const int64_t pad_w,
+    const int64_t hole_h,
+    const int64_t hole_w,
+    void *tmp_buffer,
     float *output)
 {
-    int64_t M = num_output * kernel_h * kernel_w;
-    int64_t N = src_h * src_w;
-    int64_t K = channels;
+    const int64_t ic_per_grp = channels / group;
+    const int64_t oc_per_grp = num_output / group;
+    const int64_t M = oc_per_grp * kernel_h * kernel_w;
+    const int64_t N = src_h * src_w;
+    const int64_t K = ic_per_grp;
 
-    int64_t lda   = M;
-    int64_t ldb   = N;
-    int64_t ldout = N;
+    const int64_t lda   = M;
+    const int64_t ldb   = N;
+    const int64_t ldout = N;
 
-    gemm_v2_param_fp32 param;
-    param.M        = M;
-    param.N        = N;
-    param.K        = K;
-    param.lda      = lda;
-    param.ldb      = ldb;
-    param.ldy   = ldout;
-    param.isa_flag = common::ISA_X86_AVX512;
-    param.trans_A   = 1;
-    param.trans_B   = 0; // other param use default value
-    auto executor  = std::unique_ptr<gemm_v2_executor_fp32>(create_gemm_v2_executor_fp32(param));
-    if (!executor) {
-        return ppl::common::RC_UNSUPPORTED;
-    }
+    float *col2im_buffer = (float*)tmp_buffer;
+    const bool do_col2im = !(kernel_h == 1 && kernel_w == 1 && pad_h == 0 &&
+                            pad_w == 0 && stride_h == 1 && stride_w == 1);
+    const bool gemm_with_bias = !do_col2im && bias;
 
-    float *gemm_buffer = tmp_buffer;
-    executor->set_temp_buffer(gemm_buffer);
+    for (int64_t g = 0; g < group; ++g) {
+        const float *l_flt = filter + g * oc_per_grp * ic_per_grp * kernel_h * kernel_w;
+        const float *l_bias = bias ? bias + g * oc_per_grp : nullptr;
+        for (int64_t b = 0; b < batch; ++b) {  
+            const float *l_src = input + (b * channels + g * ic_per_grp) * src_h * src_w;
+            float *l_dst       = output + (b * num_output + g * oc_per_grp) * dst_h * dst_w;
+            float *l_col       = do_col2im ? col2im_buffer : l_dst;
 
-    float *col2im_buffer = tmp_buffer + (executor->get_buffer_bytes() / sizeof(float));
-    const bool do_col2im = !(kernel_h == 1 && kernel_w == 1 && pad_h == 0 && pad_w == 0 && stride_h == 1 && stride_w == 1);
+            auto ret = gemm_fp32_avx512(
+                l_flt, l_src, l_bias, nullptr,
+                gemm_m_type::TRANS, gemm_m_type::NOTRANS,
+                gemm_with_bias ? gemm_v_type::EMPTY : gemm_v_type::COL_VEC,
+                gemm_m_type::EMPTY,
+                M, N, K, lda, ldb, ldout, 0,
+                1.0, 0.0, 1.0, 0.0, gemm_post::NONE, l_col);
+            if (ppl::common::RC_SUCCESS != ret) {
+                return ret;
+            }
 
-    for (int64_t b = 0; b < batch; ++b) {
-        const float *src_d = input + b * channels * src_h * src_w;
-        float *dst_d       = output + b * num_output * dst_h * dst_w;
-        float *gemm_out;
-
-        if (do_col2im) {
-            gemm_out = col2im_buffer;
-        } else {
-            gemm_out = dst_d;
-        }
-
-        executor->get_param_mutable().src_A = filter;
-        executor->get_param_mutable().src_B = src_d;
-        executor->get_param_mutable().dst_Y = gemm_out;
-        executor->execute();
-        if (do_col2im) {
-            col2im_ndarray_fp32(col2im_buffer, src_h, src_w, num_output, dst_h, dst_w, kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, hole_h, hole_w, 0.0f, dst_d);
-        }
-
-        if (nullptr != bias) {
-            const int64_t simd_w = 16;
-            PRAGMA_OMP_PARALLEL_FOR()
-            for (int64_t oc = 0; oc < num_output; ++oc) {
-                __m512 vbias = _mm512_set1_ps(bias[oc]);
-                for (int64_t hw = 0; hw < round(dst_h * dst_w, simd_w); hw += simd_w) {
-                    __m512 vdst = _mm512_loadu_ps(dst_d + oc * dst_h * dst_w + hw);
-                    vdst        = _mm512_add_ps(vdst, vbias);
-                    _mm512_storeu_ps(dst_d + oc * dst_h * dst_w + hw, vdst);
-                }
-                for (int64_t hw = round(dst_h * dst_w, simd_w); hw < dst_h * dst_w; ++hw) {
-                    dst_d[oc * dst_h * dst_w + hw] += bias[oc];
-                }
+            if (do_col2im) {
+                col2im2d_ndarray_fp32_avx(
+                    l_col, l_bias, src_h, src_w, oc_per_grp,
+                    dst_h, dst_w, kernel_h, kernel_w,
+                    pad_h, pad_w, stride_h, stride_w,
+                    hole_h, hole_w, l_dst);
             }
         }
     }

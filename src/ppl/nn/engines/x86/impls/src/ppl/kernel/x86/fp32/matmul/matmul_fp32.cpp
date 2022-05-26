@@ -19,80 +19,44 @@
 #include <memory>
 
 #include "ppl/kernel/x86/common/internal_include.h"
-#include "ppl/kernel/x86/fp32/gemm_v2.h"
+#include "ppl/kernel/x86/fp32/gemm.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
-uint64_t matmul_ndarray_fp32_get_buffer_bytes(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::common::isa_t isa_flag)
-{
-    const int64_t max_dim_count = max(src0_shape->GetDimCount(), src1_shape->GetDimCount());
-    std::deque<int64_t> src0_dims(src0_shape->GetDims(), src0_shape->GetDims() + src0_shape->GetDimCount());
-    std::deque<int64_t> src1_dims(src1_shape->GetDims(), src1_shape->GetDims() + src1_shape->GetDimCount());
-
-    if (src0_dims.size() == 1) {
-        src0_dims.push_front(1);
-    }
-    if (src1_dims.size() == 1) {
-        src1_dims.push_back(1);
-    }
-
-    while ((int64_t)src0_dims.size() < max_dim_count) {
-        src0_dims.push_front(1);
-    }
-    while ((int64_t)src1_dims.size() < max_dim_count) {
-        src1_dims.push_front(1);
-    }
-
-    const int32_t m = src0_dims[max_dim_count - 2];
-    const int32_t k = src0_dims[max_dim_count - 1];
-    const int32_t n = src1_dims[max_dim_count - 1];
-
-    gemm_v2_param_fp32 param;
-    param.M        = m;
-    param.N        = n;
-    param.K        = k;
-    param.lda      = k;
-    param.ldb      = n;
-    param.ldy      = n;
-    param.isa_flag = isa_flag;
-
-    auto executor = std::unique_ptr<gemm_v2_executor_fp32>(create_gemm_v2_executor_fp32(param));
-    if (!executor) {
-        return 0;
-    }
-    return executor->get_buffer_bytes();
-}
-
-static ppl::common::RetCode matmul_ndarray_recursive_fp32(
-    const float *src0,
-    const float *src1,
-    gemm_v2_executor_fp32 *executor,
-    const int64_t *src0_strides,
-    const int64_t *src1_strides,
-    const int64_t *dst_strides,
-    const int64_t *dst_dims,
+static ppl::common::RetCode matmul_ndarray_fp32_recursive(
+    const ppl::common::isa_t isa,
+    const float *A,
+    const float *B,
+    const int64_t *A_strides,
+    const int64_t *B_strides,
+    const int64_t *Y_strides,
+    const int64_t *Y_dims,
     const int64_t dim_count,
     const int64_t dim_idx,
-    const int32_t m,
-    const int32_t n,
-    const int32_t k,
-    float *dst)
+    const int32_t M,
+    const int32_t N,
+    const int32_t K,
+    float *Y)
 {
     if (dim_idx >= dim_count - 2) {
-        executor->get_param_mutable().src_A = src0;
-        executor->get_param_mutable().src_B = src1;
-        executor->get_param_mutable().dst_Y = dst;
-        return executor->execute();
+        return gemm_fp32(
+            isa, A, B, nullptr, nullptr,
+            gemm_m_type::NOTRANS, gemm_m_type::NOTRANS,
+            gemm_v_type::EMPTY, gemm_m_type::EMPTY,
+            M, N, K, K, N, N, 0, 1.0f, 0.0f, 0.0f, 0.0f,
+            gemm_post::NONE, Y);
     } else {
-        const int64_t length = dst_dims[dim_idx];
+        const int64_t length = Y_dims[dim_idx];
         for (int64_t i = 0; i < length; i++) {
-            ppl::common::RetCode ret = matmul_ndarray_recursive_fp32(
-                src0 + i * src0_strides[dim_idx], src1 + i * src1_strides[dim_idx], executor,
-                src0_strides, src1_strides, dst_strides, dst_dims,
-                dim_count, dim_idx + 1, m, n, k, dst + i * dst_strides[dim_idx]);
+            auto ret = matmul_ndarray_fp32_recursive(
+                isa,
+                A + i * A_strides[dim_idx],
+                B + i * B_strides[dim_idx],
+                A_strides, B_strides,
+                Y_strides, Y_dims,
+                dim_count, dim_idx + 1,
+                M, N, K,
+                Y + i * Y_strides[dim_idx]);
             if (ret != ppl::common::RC_SUCCESS) {
                 return ret;
             }
@@ -103,95 +67,77 @@ static ppl::common::RetCode matmul_ndarray_recursive_fp32(
 }
 
 ppl::common::RetCode matmul_ndarray_fp32(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
-    const float *src0,
-    const float *src1,
-    const ppl::common::isa_t isa_flag,
-    void *temp_buffer,
-    float *dst)
+    const ppl::common::isa_t isa,
+    const ppl::nn::TensorShape *A_shape,
+    const ppl::nn::TensorShape *B_shape,
+    const ppl::nn::TensorShape *Y_shape,
+    const float *A,
+    const float *B,
+    float *Y)
 {
-    const int64_t max_dim_count = max(src0_shape->GetDimCount(), src1_shape->GetDimCount());
-    std::deque<int64_t> src0_dims(src0_shape->GetDims(), src0_shape->GetDims() + src0_shape->GetDimCount());
-    std::deque<int64_t> src1_dims(src1_shape->GetDims(), src1_shape->GetDims() + src1_shape->GetDimCount());
+    const int64_t max_dim_count = max(A_shape->GetDimCount(), B_shape->GetDimCount());
+    std::deque<int64_t> A_dims(A_shape->GetDims(), A_shape->GetDims() + A_shape->GetDimCount());
+    std::deque<int64_t> B_dims(B_shape->GetDims(), B_shape->GetDims() + B_shape->GetDimCount());
 
-    if (src0_dims.size() == 1) {
-        src0_dims.push_front(1);
-    }
-    if (src1_dims.size() == 1) {
-        src1_dims.push_back(1);
-    }
+    if (A_dims.size() == 1) A_dims.push_front(1);
+    if (B_dims.size() == 1) B_dims.push_back(1);
 
-    while ((int64_t)src0_dims.size() < max_dim_count) {
-        src0_dims.push_front(1);
-    }
-    while ((int64_t)src1_dims.size() < max_dim_count) {
-        src1_dims.push_front(1);
-    }
+    while ((int64_t)A_dims.size() < max_dim_count) A_dims.push_front(1);
+    while ((int64_t)B_dims.size() < max_dim_count) B_dims.push_front(1);
 
-    const int64_t k = src0_dims[max_dim_count - 1];
-    const int64_t n = src1_dims[max_dim_count - 1];
+    bool is_single_gemm = A_dims.size() == 2 && B_dims.size() == 2;
 
-    if (src1_shape->GetElementsExcludingPadding() / (n * k) == 1) {
+    const int64_t K = A_dims[max_dim_count - 1];
+    const int64_t N = B_dims[max_dim_count - 1];
+
+    if (B_shape->GetElementsExcludingPadding() / (N * K) == 1) {
         for (int64_t i = max_dim_count - 3; i >= 0; i--) {
-            src0_dims[max_dim_count - 2] *= src0_dims[i];
-            src0_dims[i] = 1;
+            A_dims[max_dim_count - 2] *= A_dims[i];
+            A_dims[i] = 1;
         }
+        is_single_gemm = true;
     }
 
-    const int64_t m = src0_dims[max_dim_count - 2];
+    const int64_t M = A_dims[max_dim_count - 2];
 
-    gemm_v2_param_fp32 param;
-    param.M        = m;
-    param.N        = n;
-    param.K        = k;
-    param.lda      = k;
-    param.ldb      = n;
-    param.ldy      = n;
-    param.isa_flag = isa_flag; // other param use default value
-
-    auto executor = std::unique_ptr<gemm_v2_executor_fp32>(create_gemm_v2_executor_fp32(param));
-    if (!executor) {
-        return ppl::common::RC_UNSUPPORTED;
-    }
-    executor->set_temp_buffer(temp_buffer);
-
-    if (src0_dims.size() == 2 && src1_dims.size() == 2) { // normal gemm
-        executor->get_param_mutable().src_A = src0;
-        executor->get_param_mutable().src_B = src1;
-        executor->get_param_mutable().dst_Y = dst;
-        return executor->execute();
+    if (is_single_gemm) {
+        return gemm_fp32(
+            isa, A, B, nullptr, nullptr,
+            gemm_m_type::NOTRANS, gemm_m_type::NOTRANS,
+            gemm_v_type::EMPTY, gemm_m_type::EMPTY,
+            M, N, K, K, N, N, 0, 1.0f, 0.0f, 0.0f, 0.0f,
+            gemm_post::NONE, Y);
     }
 
-    int64_t dst_dims[PPL_X86_TENSOR_MAX_DIMS()] = {0};
-    dst_dims[max_dim_count - 2] = m;
-    dst_dims[max_dim_count - 1] = n;
+    int64_t Y_dims[PPL_X86_TENSOR_MAX_DIMS()] = {0};
+    Y_dims[max_dim_count - 2] = M;
+    Y_dims[max_dim_count - 1] = N;
     for (int64_t i = 0; i < max_dim_count - 2; i++) {
-        dst_dims[i] = src0_dims[i] == src1_dims[i] ? src0_dims[i] : src0_dims[i] * src1_dims[i]; // assuming that can broadcast
+        Y_dims[i] = A_dims[i] == B_dims[i] ? A_dims[i] : A_dims[i] * B_dims[i]; // assuming that can broadcast
     }
 
-    int64_t src0_strides[PPL_X86_TENSOR_MAX_DIMS()] = {0};
-    int64_t src1_strides[PPL_X86_TENSOR_MAX_DIMS()] = {0};
-    int64_t dst_strides[PPL_X86_TENSOR_MAX_DIMS()] = {0};
-    src0_strides[max_dim_count - 1] = 1;
-    src1_strides[max_dim_count - 1] = 1;
-    dst_strides[max_dim_count - 1]  = 1;
+    int64_t A_strides[PPL_X86_TENSOR_MAX_DIMS()] = {0};
+    int64_t B_strides[PPL_X86_TENSOR_MAX_DIMS()] = {0};
+    int64_t Y_strides[PPL_X86_TENSOR_MAX_DIMS()] = {0};
+    A_strides[max_dim_count - 1] = 1;
+    B_strides[max_dim_count - 1] = 1;
+    Y_strides[max_dim_count - 1]  = 1;
     for (int64_t i = max_dim_count - 2; i >= 0; i--) {
-        src0_strides[i] = src0_strides[i + 1] * src0_dims[i + 1];
-        src1_strides[i] = src1_strides[i + 1] * src1_dims[i + 1];
-        dst_strides[i]  = dst_strides[i + 1] * dst_dims[i + 1];
+        A_strides[i] = A_strides[i + 1] * A_dims[i + 1];
+        B_strides[i] = B_strides[i + 1] * B_dims[i + 1];
+        Y_strides[i]  = Y_strides[i + 1] * Y_dims[i + 1];
     }
     for (int64_t i = 0; i < max_dim_count - 2; i++) {
-        src0_strides[i] = src0_dims[i] == 1 ? 0 : src0_strides[i];
-        src1_strides[i] = src1_dims[i] == 1 ? 0 : src1_strides[i];
+        A_strides[i] = A_dims[i] == 1 ? 0 : A_strides[i];
+        B_strides[i] = B_dims[i] == 1 ? 0 : B_strides[i];
     }
 
-    return matmul_ndarray_recursive_fp32(
-        src0, src1, executor.get(),
-        src0_strides, src1_strides,
-        dst_strides, dst_dims,
-        max_dim_count, 0, m, n, k, dst);
+    return matmul_ndarray_fp32_recursive(
+        isa, A, B,
+        A_strides, B_strides,
+        Y_strides, Y_dims,
+        max_dim_count, 0,
+        M, N, K, Y);
 }
 
 }}}; // namespace ppl::kernel::x86

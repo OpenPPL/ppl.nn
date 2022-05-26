@@ -27,7 +27,6 @@ public:
     MatMulKernel(const ir::Node* node) : X86Kernel(node) {}
 
 private:
-    uint64_t CalcTmpBufferSize(const KernelExecContext&) const override;
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 };
 

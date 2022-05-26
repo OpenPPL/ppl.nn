@@ -21,13 +21,6 @@
 
 namespace ppl { namespace nn { namespace x86 {
 
-uint64_t MatMulKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
-    const TensorShape* A = ctx.GetInput<TensorImpl>(0)->GetShape();
-    const TensorShape* B = ctx.GetInput<TensorImpl>(1)->GetShape();
-
-    return kernel::x86::matmul_ndarray_fp32_get_buffer_bytes(A, B, GetISA());
-}
-
 ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_REQUIRED_INPUT(A, 0);
     PPLNN_X86_REQUIRED_INPUT(B, 1);
@@ -45,27 +38,13 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
 
-    BufferDesc tmp_buffer_desc;
-    auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
-    auto status = GetX86Device()->AllocTmpBuffer(tmp_buffer_size, &tmp_buffer_desc);
-    if (status != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
-                   << "] failed: " << ppl::common::GetRetCodeStr(status);
-        return status;
-    }
-    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
-        GetX86Device()->FreeTmpBuffer(&tmp_buffer_desc);
-    });
-    auto tmp_buffer = tmp_buffer_desc.addr;
-    PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
-
     const auto data_type = A->GetShape()->GetDataType();
     const auto data_format = A->GetShape()->GetDataFormat();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32 && data_format == ppl::common::DATAFORMAT_NDARRAY) {
-        return kernel::x86::matmul_ndarray_fp32(A->GetShape(), B->GetShape(), Y->GetShape(),
-                                                A->GetBufferPtr<float>(), B->GetBufferPtr<float>(), GetISA(),
-                                                tmp_buffer, Y->GetBufferPtr<float>());
+        return kernel::x86::matmul_ndarray_fp32(
+            GetISA(), A->GetShape(), B->GetShape(), Y->GetShape(),
+            A->GetBufferPtr<float>(), B->GetBufferPtr<float>(), Y->GetBufferPtr<float>());
     } else {
         LOG(ERROR) << "only support fp32 ndarray now.";
     }
