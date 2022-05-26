@@ -366,11 +366,14 @@ def SetRandomInputs(in_shapes, runtime):
     def GenerateRandomDims(shape):
         dims = shape.GetDims()
         dim_count = len(dims)
-        for i in range(2, dim_count):
-            if dims[i] == 1:
-                dims[i] = random.randint(128, 641)
-                if dims[i] % 2 != 0:
-                    dims[i] = dims[i] + 1
+        if dim_count > 0:
+            if dims[0] == pplnn.INVALID_DIM_VALUE:
+                dims[0] = 1
+            for i in range(1, dim_count):
+                if dims[i] == pplnn.INVALID_DIM_VALUE:
+                    dims[i] = random.randint(128, 641)
+                    if dims[i] % 2 != 0:
+                        dims[i] = dims[i] + 1
         return dims
 
     rng = np.random.default_rng()

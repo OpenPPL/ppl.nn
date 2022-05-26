@@ -52,6 +52,8 @@ void RegisterTensorShape(const shared_ptr<LuaState>& lstate, const shared_ptr<Lu
             return lshape->ptr->IsScalar();
         });
     lmodule->Set("TensorShape", lclass);
+
+    lmodule->SetInteger("INVALID_DIM_VALUE", INVALID_DIM_VALUE);
 }
 
 }}}

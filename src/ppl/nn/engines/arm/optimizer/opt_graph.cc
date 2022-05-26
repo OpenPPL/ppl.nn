@@ -70,7 +70,21 @@ RetCode OptGraph::InitTensorImpls() {
                                                                                                   : TENSORTYPE_RESERVED;
         TensorImpl* tensor = new TensorImpl(edge, tensor_type);
         if (shapes.find(edge_id) != shapes.end()) {
-            utils::IrShape2TensorShape(shapes[edge_id], tensor->GetShape());
+            auto shape = tensor->GetShape();
+            utils::IrShape2TensorShape(shapes[edge_id], shape);
+
+            // replace dynamic dims to default values
+            auto dim_count = shape->GetRealDimCount();
+            if (dim_count > 0) {
+                if (shape->GetDim(0) == INVALID_DIM_VALUE) {
+                    shape->SetDim(0, 1);
+                }
+                for (uint32_t i = 1; i < dim_count; ++i) {
+                    if (shape->GetDim(i) == INVALID_DIM_VALUE) {
+                        shape->SetDim(i, 224);
+                    }
+                }
+            }
         } else {
             tensor->GetShape()->SetDataFormat(DATAFORMAT_NDARRAY);
         }

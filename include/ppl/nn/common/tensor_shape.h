@@ -24,6 +24,8 @@
 
 namespace ppl { namespace nn {
 
+static constexpr int64_t INVALID_DIM_VALUE = -1;
+
 class PPLNN_PUBLIC TensorShape final {
 private:
     static const uint32_t kAxisC = 1;
