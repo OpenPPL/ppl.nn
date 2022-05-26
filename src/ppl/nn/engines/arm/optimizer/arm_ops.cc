@@ -70,8 +70,9 @@ using namespace ppl::common;
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/transpose_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/unsqueeze_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/where_op.h"
-#include "ppl/nn/engines/arm/optimizer/ops/pmx/shape_operation_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/pmx/channel_shuffle_op.h"
+#include "ppl/nn/engines/arm/optimizer/ops/pmx/hsigmoid_op.h"
+#include "ppl/nn/engines/arm/optimizer/ops/pmx/hswish_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/pmx/reorder_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/pmx/shape_operation_op.h"
 
@@ -172,6 +173,8 @@ void RegisterBuiltinOpImpls() {
 
     // pmx
     RegisterOptKernelCreator<ChannelShuffleOp>("pmx", "ChannelShuffle", 1, 1);
+    RegisterOptKernelCreator<HSigmoidOp>("pmx", "HSigmoid", 1, 1);
+    RegisterOptKernelCreator<HSwishOp>("pmx", "HSwish", 1, 1);
     RegisterOptKernelCreator<ReorderOp>("pmx", "Reorder", 1, 1);
     RegisterOptKernelCreator<ShapeOperationOp>("pmx", "Shape", 1, 1);
 }
