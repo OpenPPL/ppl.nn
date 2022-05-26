@@ -15,20 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_IR_GRAPH_DATA_H_
-#define _ST_HPC_PPL_NN_IR_GRAPH_DATA_H_
+#ifndef _ST_HPC_PPL_NN_IR_SHAPE_H_
+#define _ST_HPC_PPL_NN_IR_SHAPE_H_
 
-#include "ppl/nn/ir/shape.h"
-#include "ppl/nn/ir/constant.h"
-#include "ppl/nn/ir/attr.h"
-#include <map>
+#include "ppl/common/types.h"
+#include <stdint.h>
+#include <vector>
 
 namespace ppl { namespace nn { namespace ir {
 
-struct GraphData final {
-    std::map<edgeid_t, Constant> constants;
-    std::map<edgeid_t, Shape> shapes;
-    std::map<nodeid_t, std::shared_ptr<Attr>> attrs; // attrs can be shared with cpu engines
+struct Shape final {
+    ppl::common::datatype_t data_type;
+    ppl::common::dataformat_t data_format;
+    std::vector<int64_t> dims;
 };
 
 }}} // namespace ppl::nn::ir
