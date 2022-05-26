@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "ppl/nn/common/tensor_shape.h"
 #include "ppl/nn/models/onnx/graph_parser.h"
 #include "ppl/nn/models/onnx/param_parser_manager.h"
 #include "ppl/nn/models/onnx/utils.h"
@@ -90,8 +91,7 @@ static RetCode ParseGraphInput(const ::onnx::GraphProto& pb_graph, ir::GraphTopo
                 auto dim_value = pb_tensor_shape.dim(j).dim_value();
                 shape.dims.push_back(dim_value);
             } else if (pb_dimension.value_case() == ::onnx::TensorShapeProto_Dimension::kDimParam) {
-                // TODO check dim param values
-                shape.dims.push_back(1);
+                shape.dims.push_back(INVALID_DIM_VALUE);
             } else {
                 LOG(ERROR) << "tensor[" << pb_input.name() << "] dim is not set";
                 return RC_NOT_FOUND;

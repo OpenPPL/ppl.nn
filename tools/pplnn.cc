@@ -89,8 +89,8 @@ Define_bool_opt("--perf-with-io", g_flag_perf_with_io, false, "profiling with io
 /* -------------------------------------------------------------------------- */
 
 static vector<int64_t> GenerateRandomDims(uint32_t dim_count) {
-    static const uint32_t max_dim = 640;
-    static const uint32_t min_dim = 128;
+    static constexpr uint32_t max_dim = 640;
+    static constexpr uint32_t min_dim = 128;
     srand(time(nullptr));
 
     vector<int64_t> dims(dim_count);
@@ -506,9 +506,17 @@ static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime
 
         if (input_shapes.empty()) {
             auto dim_count = shape->GetRealDimCount();
+            if (dim_count == 0) {
+                continue;
+            }
+
             auto dims = GenerateRandomDims(dim_count);
-            for (uint32_t j = 2; j < dim_count; ++j) {
-                if (shape->GetDim(j) == 1) {
+
+            if (shape->GetDim(0) == INVALID_DIM_VALUE) {
+                shape->SetDim(0, 1);
+            }
+            for (uint32_t j = 1; j < dim_count; ++j) {
+                if (shape->GetDim(j) == INVALID_DIM_VALUE) {
                     shape->SetDim(j, dims[j]);
                 }
             }

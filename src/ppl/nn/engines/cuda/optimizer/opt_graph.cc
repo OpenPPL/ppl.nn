@@ -124,14 +124,27 @@ RetCode OptGraph::UpdateDims(const utils::SharedResource& resource) {
             if (impl_pair.second) {
                 // default shape
                 TensorShape temp_tensor_shape;
-                temp_tensor_shape.Reshape({1, 3, 224, 224});
-                temp_tensor_shape.SetDataFormat(DATAFORMAT_NDARRAY);
-                temp_tensor_shape.SetDataType(DATATYPE_UNKNOWN);
 
                 // replace to model-given shape
                 auto ir_shape = data->shapes.find(edge_id);
                 if (ir_shape != data->shapes.end()) {
                     utils::IrShape2TensorShape(ir_shape->second, &temp_tensor_shape);
+                    auto dim_count = temp_tensor_shape.GetRealDimCount();
+                    if (dim_count > 0) {
+                        // replace dynamic dims to default values
+                        if (temp_tensor_shape.GetDim(0) == INVALID_DIM_VALUE) {
+                            temp_tensor_shape.SetDim(0, 1);
+                        }
+                        for (uint32_t k = 1; k < dim_count; ++k) {
+                            if (temp_tensor_shape.GetDim(k) == INVALID_DIM_VALUE) {
+                                temp_tensor_shape.SetDim(k, 224);
+                            }
+                        }
+                    }
+                } else {
+                    temp_tensor_shape.Reshape({1, 3, 224, 224});
+                    temp_tensor_shape.SetDataFormat(DATAFORMAT_NDARRAY);
+                    temp_tensor_shape.SetDataType(DATATYPE_UNKNOWN);
                 }
 
                 if (topo->GetInput(edge->GetName()) != INVALID_EDGEID &&

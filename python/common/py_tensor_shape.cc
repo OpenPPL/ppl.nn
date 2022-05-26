@@ -42,6 +42,8 @@ void RegisterTensorShape(pybind11::module* m) {
         .def("GetDataType", &TensorShape::GetDataType)
         .def("GetDataFormat", &TensorShape::GetDataFormat)
         .def("IsScalar", &TensorShape::IsScalar);
+
+    m->attr("INVALID_DIM_VALUE") = (int64_t)INVALID_DIM_VALUE;
 }
 
 }}} // namespace ppl::nn::python
