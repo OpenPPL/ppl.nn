@@ -22,20 +22,14 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-uint64_t matmul_ndarray_fp32_get_buffer_bytes(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const common::isa_t isa_flag);
-
-common::RetCode matmul_ndarray_fp32(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
-    const float *src0,
-    const float *src1,
-    const ppl::common::isa_t isa_flag,
-    void *temp_buffer,
-    float *dst);
+ppl::common::RetCode matmul_ndarray_fp32(
+    const ppl::common::isa_t isa,
+    const ppl::nn::TensorShape *A_shape,
+    const ppl::nn::TensorShape *B_shape,
+    const ppl::nn::TensorShape *Y_shape,
+    const float *A,
+    const float *B,
+    float *Y);
 
 }}}; // namespace ppl::kernel::x86
 
