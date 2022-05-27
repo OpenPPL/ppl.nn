@@ -64,6 +64,9 @@ public:
     void SetType(Type&& type) {
         type_ = std::move(type);
     }
+    Type& GetType() {
+        return type_;
+    }
     const Type& GetType() const {
         return type_;
     }
