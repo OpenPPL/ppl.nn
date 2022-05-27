@@ -1,5 +1,7 @@
 hpcc_populate_dep(pybind11)
 
+set(__python_soabi__ )
+
 if(NOT PYTHON3_INCLUDE_DIRS)
     find_package(Python3 COMPONENTS Development QUIET)
     if(NOT Python3_Development_FOUND)
@@ -9,6 +11,9 @@ if(NOT PYTHON3_INCLUDE_DIRS)
             message(FATAL_ERROR "python dev lib is required. please install python3 development files (python3-dev on Debian/Ubuntu or python3-devel on RetHat/CentOS) or specify `PYTHON3_INCLUDE_DIRS` manually.")
         endif()
     endif()
+
+    # `Python3_SOABI` is provided by find_package(Python3) in cmake >= 3.17
+    set(__python_soabi__ ${Python3_SOABI})
 
     set(PYTHON3_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
     if(MSVC)  # cannot link static libraries built without -fPIC on linux
@@ -75,8 +80,8 @@ target_compile_features(pypplnn_shared PRIVATE cxx_std_11)
 set_target_properties(pypplnn_shared PROPERTIES PREFIX "")
 set_target_properties(pypplnn_shared PROPERTIES OUTPUT_NAME "nn")
 
-if(Python3_SOABI) # provided by find_package(Python3) in cmake >= 3.17
-    set(__so_suffix__ ".${Python3_SOABI}")
+if(__python_soabi__)
+    set(__so_suffix__ ".${__python_soabi__}")
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -86,6 +91,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 unset(__so_suffix__)
+unset(__python_soabi__)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     target_link_options(pypplnn_shared PUBLIC "LINKER:-undefined,dynamic_lookup") # required by pybind11
