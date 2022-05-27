@@ -35,6 +35,8 @@ using namespace ppl::common;
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/expand_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/flatten_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/gather_op.h"
+#include "ppl/nn/engines/arm/optimizer/ops/onnx/hard_sigmoid_op.h"
+#include "ppl/nn/engines/arm/optimizer/ops/onnx/hard_swish_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/less_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/log_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/mul_op.h"
@@ -70,7 +72,6 @@ using namespace ppl::common;
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/transpose_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/unsqueeze_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/where_op.h"
-#include "ppl/nn/engines/arm/optimizer/ops/pmx/shape_operation_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/pmx/channel_shuffle_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/pmx/reorder_op.h"
 #include "ppl/nn/engines/arm/optimizer/ops/pmx/shape_operation_op.h"
@@ -129,6 +130,9 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<GemmOp>("", "Gemm", 9, 16);
     RegisterOptKernelCreator<AvePoolOp>("", "GlobalAveragePool", 1, 16);
     RegisterOptKernelCreator<MaxPoolOp>("", "GlobalMaxPool", 1, 16);
+    // H
+    RegisterOptKernelCreator<HardSigmoidOp>("", "HardSigmoid", 6, 16);
+    RegisterOptKernelCreator<HardSwishOp>("", "HardSwish", 14, 16);
     // L
     RegisterOptKernelCreator<LeakyReLUOp>("", "LeakyRelu", 6, 16);
     RegisterOptKernelCreator<LessOp>("", "Less", 7, 16);

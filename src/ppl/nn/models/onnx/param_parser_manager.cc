@@ -33,6 +33,7 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_gather_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_gather_nd_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_gemm_param.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_hard_sigmoid_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_if_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_instancenormalization_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_leaky_relu_param.h"
@@ -155,6 +156,9 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITH_PARAM("", "Gemm", 9, 16, GemmParam, ParseGemmParam);
     PPL_REGISTER_OP_WITH_PARAM("", "GlobalAveragePool", 1, 16, PoolingParam, ParsePoolingParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Greater", 7, 16);
+    // H
+    PPL_REGISTER_OP_WITH_PARAM("", "HardSigmoid", 6, 16, HardSigmoidParam, ParseHardSigmoidParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "HardSwish", 14, 16);
     // I
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Identity", 1, 13);
     PPL_REGISTER_OP_WITH_PARAM("", "If", 1, 12, IfParam, ParseIfParam);
