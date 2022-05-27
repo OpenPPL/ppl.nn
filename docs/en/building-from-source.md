@@ -181,10 +181,17 @@ cd ppl.nn
 PYTHONPATH=./pplnn-build/install/lib python3 ./tools/pplnn.py --use-x86 --use-cuda --onnx-model tests/testdata/conv.onnx
 ```
 
-There is a python packaging configuration in [python/package](../../python/package). You can install pyppl using `pip`:
+There is a python packaging configuration in [python/package](../../python/package). You can build a `.whl` package:
 
 ```bash
-./setup.sh
+./build.sh
+```
+
+and then install this package with `pip`:
+
+```bash
+cd /tmp/pyppl-package/dist
+pip3 install pyppl*.whl
 ```
 
 After installation, you can use `from pyppl import nn` directly without setting the `PYTHONPATH` env.
@@ -197,7 +204,13 @@ add `-DPPLNN_ENABLE_LUA_API=ON` to the build command if you want to use `PPLNN` 
 ./build.sh -DPPLNN_ENABLE_LUA_API=ON
 ```
 
-If you want to use a specified version of lua, you can pass `LUA_INCLUDE_DIR` and `LUA_LIBRARIES` to `build.sh`:
+If you want to use a specified version of lua, you can pass `LUA_SRC_DIR` to `build.sh`:
+
+```bash
+./build.sh -DPPLNN_ENABLE_LUA_API=ON -DLUA_SRC_DIR=/path/to/lua/src [other options]
+```
+
+or you already have a pre-compiled version, you can pass `LUA_INCLUDE_DIR` and `LUA_LIBRARIES` to `build.sh`:
 
 ```bash
 ./build.sh -DPPLNN_ENABLE_LUA_API=ON -DLUA_INCLUDE_DIR=/path/to/your/lua/include/dir -DLUA_LIBRARIES=/path/to/your/lua/lib [other options]
