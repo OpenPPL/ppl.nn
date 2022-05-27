@@ -60,130 +60,106 @@ static __device__ inline float _int4B2float(
 }
 
 template <CVTTypeMode mode>
-__device__ inline void cuda_kernel_cvt_per_elems(const void* input, int in_offset, void* output, int out_offset, int chl_idx, ReFormatParam param)
+__device__ inline void cuda_kernel_cvt_per_elems(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
 {
 }
 
 template <>
-__device__ inline void cuda_kernel_cvt_per_elems<INT8_FLOAT16>(const void* input, int in_offset, void* output, int out_offset, int chl_idx, ReFormatParam param)
+__device__ inline void cuda_kernel_cvt_per_elems<INT8_FLOAT16>(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
 {
-    float i_step = 1.f;
-    if (param.per_channel) i_step = param.i_step_ptr[chl_idx];
-    else                   i_step = param.i_step;
+    float i_step = param.i_step;
     ((__half*)output)[out_offset] = (__half)_int82float(((int8_t*)input)[in_offset], i_step, param.i_zero_point);
 }
 template <>
-__device__ inline void cuda_kernel_cvt_per_elems<FLOAT16_INT8>(const void* input, int in_offset, void* output, int out_offset, int chl_idx, ReFormatParam param)
+__device__ inline void cuda_kernel_cvt_per_elems<FLOAT16_INT8>(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
 {
-    float o_step = 1.f;
-    if (param.per_channel) o_step = param.o_step_ptr[chl_idx];
-    else                   o_step = param.o_step;
+    float o_step = param.o_step;
     *((int8_t*)output + out_offset) = _float2int8((float)*((__half*)input + in_offset), o_step, param.o_zero_point);
 }
 
 template <>
-__device__ inline void cuda_kernel_cvt_per_elems<INT8_FLOAT32>(const void* input, int in_offset, void* output, int out_offset, int chl_idx, ReFormatParam param)
+__device__ inline void cuda_kernel_cvt_per_elems<INT8_FLOAT32>(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
 {
-    float i_step = 1.f;
-    if (param.per_channel) i_step = param.i_step_ptr[chl_idx];
-    else                   i_step = param.i_step;
+    float i_step = param.i_step;
     ((float*)output)[out_offset] = _int82float(((int8_t*)input)[in_offset], i_step, param.i_zero_point);
 }
 
 template <>
-__device__ inline void cuda_kernel_cvt_per_elems<INT8_INT8>(const void* input, int in_offset, void* output, int out_offset, int chl_idx, ReFormatParam param)
+__device__ inline void cuda_kernel_cvt_per_elems<INT8_INT8>(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
 {
-    float i_step = 1.f, o_step = 1.f;
-    if (param.per_channel) {
-        i_step = param.i_step_ptr[chl_idx];
-        o_step = param.o_step_ptr[chl_idx];
-    } else {
-        i_step = param.i_step;
-        o_step = param.o_step;
-    }
+    float i_step = param.i_step;
+    float o_step = param.o_step;
     float tmp             = _int82float(((int8_t*)input)[in_offset], i_step, param.i_zero_point);
     ((int8_t*)output)[out_offset] = _float2int8(tmp, o_step, param.o_zero_point);
 }
 
 template <>
-__device__ inline void cuda_kernel_cvt_per_elems<FLOAT32_INT8>(const void* input, int in_offset, void* output, int out_offset, int chl_idx, ReFormatParam param)
+__device__ inline void cuda_kernel_cvt_per_elems<FLOAT32_INT8>(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
 {
-    float o_step = 1.f;
-    if (param.per_channel) o_step = param.o_step_ptr[chl_idx];
-    else                   o_step = param.o_step;
+    float o_step = param.o_step;
     *((int8_t*)output + out_offset) = _float2int8(*((float*)input + in_offset), o_step, param.o_zero_point);
 }
 template <>
-__device__ inline void cuda_kernel_cvt_per_elems<FLOAT32_INT4B>(const void* input, int in_offset, void* output, int out_offset, int chl_idx, ReFormatParam param)
+__device__ inline void cuda_kernel_cvt_per_elems<FLOAT32_INT4B>(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
 {
-    float o_step = 1.f;
-    if (param.per_channel) o_step = param.o_step_ptr[chl_idx];
-    else                   o_step = param.o_step;
+    float o_step = param.o_step;
     *((int8_t*)output + out_offset) = _float2int4B(*((float*)input + in_offset), o_step, param.o_zero_point);
 }
 template <>
-__device__ inline void cuda_kernel_cvt_per_elems<INT4B_FLOAT32>(const void* input, int in_offset, void* output, int out_offset, int chl_idx, ReFormatParam param)
+__device__ inline void cuda_kernel_cvt_per_elems<INT4B_FLOAT32>(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
 {
-    float i_step = 1.f;
-    if (param.per_channel) i_step = param.i_step_ptr[chl_idx];
-    else                   i_step = param.i_step;
+    float i_step = param.i_step;
     ((float*)output)[out_offset] = _int4B2float(((int8_t*)input)[in_offset], i_step, param.i_zero_point);
 }
 template <>
-__device__ inline void cuda_kernel_cvt_per_elems<INT4B_INT4B>(const void* input, int in_offset, void* output, int out_offset, int chl_idx, ReFormatParam param)
+__device__ inline void cuda_kernel_cvt_per_elems<INT4B_INT4B>(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
 {
-    float i_step = 1.f, o_step = 1.f;
-    if (param.per_channel) {
-        i_step = param.i_step_ptr[chl_idx];
-        o_step = param.o_step_ptr[chl_idx];
-    } else {
-        i_step = param.i_step;
-        o_step = param.o_step;
-    }
+    float i_step = param.i_step;
+    float o_step = param.o_step;
     float tmp             = _int4B2float(((int8_t*)input)[in_offset], i_step, param.i_zero_point);
     ((int8_t*)output)[out_offset] = _float2int4B(tmp, o_step, param.o_zero_point);
 }
 
 template <>
-__device__ inline void cuda_kernel_cvt_per_elems<FLOAT16_FLOAT32>(const void* input, int in_offset, void* output, int out_offset, int chl_idx, ReFormatParam param)
+__device__ inline void cuda_kernel_cvt_per_elems<FLOAT16_FLOAT32>(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
 {
     ((float*)output)[out_offset] = __half2float(((__half*)input)[in_offset]);
 }
 
 template <>
-__device__ inline void cuda_kernel_cvt_per_elems<FLOAT32_FLOAT16>(const void* input, int in_offset, void* output, int out_offset, int chl_idx, ReFormatParam param)
+__device__ inline void cuda_kernel_cvt_per_elems<FLOAT32_FLOAT16>(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
 {
     ((half*)output)[out_offset] = __float2half(((float*)input)[in_offset]);
 }
 
 template <>
-__device__ inline void cuda_kernel_cvt_per_elems<INT8_INT4B>(const void* input, int in_offset, void* output, int out_offset, int chl_idx, ReFormatParam param)
+__device__ inline void cuda_kernel_cvt_per_elems<INT8_INT4B>(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
 {
     signed char tmp     = ((signed char*)input)[in_offset];
     ((char*)output)[out_offset] = tmp > 7 ? 7 : tmp < -8 ? -8 : tmp;
 }
 
 template <>
-__device__ inline void cuda_kernel_cvt_per_elems<INT32_INT64>(const void* input, int in_offset, void* output, int out_offset, int chl_idx, ReFormatParam param)
+__device__ inline void cuda_kernel_cvt_per_elems<INT32_INT64>(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
 {
     ((int64_t*)output)[out_offset] = ((int32_t*)input)[in_offset];
 }
 
 template <>
-__device__ inline void cuda_kernel_cvt_per_elems<INT64_INT32>(const void* input, int in_offset, void* output, int out_offset, int chl_idx, ReFormatParam param)
+__device__ inline void cuda_kernel_cvt_per_elems<INT64_INT32>(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
 {
     ((int32_t*)output)[out_offset] = ((int64_t*)input)[in_offset];
 }
 
 
 template <>
-__device__ inline void cuda_kernel_cvt_per_elems<INT64_FLOAT32>(const void* input, int in_offset, void* output, int out_offset, int chl_idx, ReFormatParam param)
+__device__ inline void cuda_kernel_cvt_per_elems<INT64_FLOAT32>(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
 {
     ((float*)output)[out_offset] = ((int64_t*)input)[in_offset];
 }
 
 template <>
-__device__ inline void cuda_kernel_cvt_per_elems<FLOAT32_INT64>(const void* input, int in_offset, void* output, int out_offset, int chl_idx, ReFormatParam param)
+__device__ inline void cuda_kernel_cvt_per_elems<FLOAT32_INT64>(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
 {
     ((int64_t*)output)[out_offset] = ((float*)input)[in_offset];
 }
