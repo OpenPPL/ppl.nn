@@ -72,8 +72,7 @@ __global__ void cuda_kernel_cvtformat_type<type_mode, NHWC16_NHWC8>(            
         if (idx_w < param.dst_pad && idx_h < param.n_inner) {                                           \
             int64_t dst_offset = n * param.dst_pad * param.n_inner + idx_h * param.dst_pad + idx_w;     \
             int64_t src_offset = n * param.src_pad * param.n_inner + idx_h * param.src_pad + idx_w;     \
-            idx_w = idx_w < param.channel ? idx_w : param.channel - 1;                                  \
-            cuda_kernel_cvt_per_elems<type_mode>(input, src_offset, output, dst_offset, idx_w, param);  \
+            cuda_kernel_cvt_per_elems<type_mode>(input, src_offset, output, dst_offset, param);         \
         }                                                                                               \
     }                                                                                                   \
 }                                                                                                       
@@ -96,8 +95,7 @@ __global__ void cuda_kernel_cvtformat_type<type_mode, NHWC8_NHWC16>(            
             int64_t dst_offset = n * param.dst_pad * param.n_inner + idx_h * param.dst_pad + idx_w;     \
             int64_t src_offset = n * param.src_pad * param.n_inner + idx_h * param.src_pad + idx_w;     \
             if (idx_w < param.src_pad) {                                                                \
-              idx_w = idx_w < param.channel ? idx_w : param.channel - 1;                                \
-              cuda_kernel_cvt_per_elems<type_mode>(input, src_offset, output, dst_offset, idx_w, param);\
+              cuda_kernel_cvt_per_elems<type_mode>(input, src_offset, output, dst_offset, param);       \
             } else {                                                                                    \
               cuda_kernel_set_zero_per_elems<type_mode>(output, dst_offset);                            \
             }                                                                                           \
@@ -133,9 +131,8 @@ __global__ void cuda_kernel_cvtformat_type<type_mode, NDARRAY_NHWC>(            
                                                                                                         \
         if (idx_w < param.dst_pad && idx_h < param.n_inner) {                                           \
             int64_t offset = n * param.dst_pad * param.n_inner + idx_h * param.dst_pad + idx_w;         \
-            idx_w = idx_w < param.channel ? idx_w : param.channel - 1;                                  \
             int in_offset = threadIdx.x * (DIM + 1) + threadIdx.y;                                      \
-            cuda_kernel_cvt_per_elems<type_mode>((const void*)share_val, in_offset, output, offset, idx_w, param);  \
+            cuda_kernel_cvt_per_elems<type_mode>((const void*)share_val, in_offset, output, offset, param);  \
         }                                                                                               \
     }                                                                                                   \
 }
@@ -183,9 +180,8 @@ __global__ void cuda_kernel_cvtformat_type<type_mode, NHWC_NDARRAY>(            
                                                                                                         \
         if (idx_w < param.n_inner && idx_h < param.dst_pad) {                                           \
             int64_t offset = n * param.dst_pad * param.n_inner + idx_h * param.n_inner + idx_w;         \
-            idx_h = idx_h < param.channel ? idx_h : param.channel - 1;                                  \
             int in_offset = threadIdx.x * (DIM + 1) + threadIdx.y;                                      \
-            cuda_kernel_cvt_per_elems<type_mode>((const void*)share_val, in_offset, output, offset, idx_h, param);  \
+            cuda_kernel_cvt_per_elems<type_mode>((const void*)share_val, in_offset, output, offset, param);  \
         }                                                                                               \
         }\
     }                                                                                                   \
@@ -229,7 +225,7 @@ __global__ void cuda_kernel_cvtformat_type<type_mode, N4CX_NDARRAY>(            
         if (c_idx < numChannels) {                                                                                     \
             const uint64_t offset    = num_inner * padChannels * size + (c4_idx * size + inner_idx) * 4 + c_in_c4_idx; \
             const uint64_t outOffset = num_inner * numChannels * size + c_idx * size + inner_idx;                      \
-            cuda_kernel_cvt_per_elems<type_mode>(input, offset, output, outOffset, c_idx, param);                      \
+            cuda_kernel_cvt_per_elems<type_mode>(input, offset, output, outOffset, param);                             \
         }                                                                                                              \
     }                                                                                                                  \
 }
@@ -258,7 +254,7 @@ __global__ void cuda_kernel_cvtformat_type<type_mode, NDARRAY_N4CX>(            
         if (c_idx < numChannels) {                                                                                    \
             const uint64_t offset   = num_inner * padChannels * size + (c4_idx * size + inner_idx) * 4 + c_in_c4_idx; \
             const uint64_t inOffset = num_inner * numChannels * size + c_idx * size + inner_idx;                      \
-            cuda_kernel_cvt_per_elems<type_mode>(input, inOffset, output, offset, c_idx, param);                      \
+            cuda_kernel_cvt_per_elems<type_mode>(input, inOffset, output, offset, param);                             \
         }                                                                                                             \
     }                                                                                                                 \
 }
@@ -296,7 +292,7 @@ __global__ void cuda_kernel_small_channel_cvtformat_type<type_mode, NDARRAY_NHWC
     int outer_idx = inner_fast.div(num_inner);                                                          \
     int offset = outer_idx * param.src_pad * param.n_inner + c_idx * param.n_inner + inner_idx;         \
     if (c_idx < param.src_pad) {                                                                        \
-        cuda_kernel_cvt_per_elems<type_mode>(input, offset, output, tid, c_idx, param);                 \
+        cuda_kernel_cvt_per_elems<type_mode>(input, offset, output, tid, param);                        \
     } else {                                                                                            \
         cuda_kernel_set_zero_per_elems<type_mode>(output, tid);                                         \
     }                                                                                                   \
@@ -321,7 +317,7 @@ __global__ void cuda_kernel_small_channel_cvtformat_type<type_mode, NHWC_NDARRAY
     c_idx = dst_pad_fast.mod(num_inner);                                                                \
     int outer_idx = tid / (param.dst_pad * param.n_inner);                                              \
     int offset = outer_idx * param.src_pad * param.n_inner + c_idx + inner_idx * param.src_pad;         \
-    cuda_kernel_cvt_per_elems<type_mode>(input, offset, output, tid, c_idx, param);                     \
+    cuda_kernel_cvt_per_elems<type_mode>(input, offset, output, tid, param);                            \
 }
 cvtTYPEALL(cvtSMCHANNELNHWC8TONC)
 
@@ -349,7 +345,7 @@ __global__ void cuda_kernel_small_channel_cvtformat_type<type_mode, N4CX_NDARRAY
     const uint64_t numChannels = param.channel;                                                                  \
     const uint64_t offset      = num_inner * padChannels * size + (c4_idx * size + inner_idx) * 4 + c_in_c4_idx; \
     const uint64_t outOffset   = num_inner * numChannels * size + c_idx * size + inner_idx;                      \
-    cuda_kernel_cvt_per_elems<type_mode>(input, offset, output, outOffset, c_idx, param);                        \
+    cuda_kernel_cvt_per_elems<type_mode>(input, offset, output, outOffset, param);                               \
 }
 cvtTYPEALL(cvtSMCHANNELN4CXTONC)
 
@@ -377,7 +373,7 @@ __global__ void cuda_kernel_small_channel_cvtformat_type<type_mode, NDARRAY_N4CX
     const uint64_t numChannels = param.channel;                                                                  \
     const uint64_t offset      = num_inner * padChannels * size + (c4_idx * size + inner_idx) * 4 + c_in_c4_idx; \
     const uint64_t inOffset    = num_inner * numChannels * size + c_idx * size + inner_idx;                      \
-    cuda_kernel_cvt_per_elems<type_mode>(input, inOffset, output, offset, c_idx, param);                         \
+    cuda_kernel_cvt_per_elems<type_mode>(input, inOffset, output, offset, param);                                \
 }
 cvtTYPEALL(cvtSMCHANNELNCTON4CX)
 
@@ -459,7 +455,7 @@ __global__ void cuda_kernel_packed_cvtformat_type(
     inner_fast.divmod(tid, b, hw_idx);
     int offset = b * param.n_inner * param.src_pad + hw_idx;
     for (int i = 0; i < param.src_pad; i++) {
-        cuda_kernel_cvt_per_elems<mode>(input, offset, val, i, i, param);
+        cuda_kernel_cvt_per_elems<mode>(input, offset, val, i, param);
         offset += param.n_inner;
     }
     float4* dst = (float4*)val;
