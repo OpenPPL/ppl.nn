@@ -34,8 +34,10 @@ struct VersionRange final {
 };
 
 template <typename T>
-class OpInfoManager final {
+class OpInfoManager {
 public:
+    virtual ~OpInfoManager() {}
+
     static OpInfoManager* GetInstance() {
         static OpInfoManager mgr;
         return &mgr;
@@ -104,6 +106,9 @@ public:
             }
         }
     }
+
+protected:
+    OpInfoManager() {}
 
 private:
     std::map<std::string, std::map<std::string, std::vector<std::pair<VersionRange, T>>>> info_;

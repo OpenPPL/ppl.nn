@@ -26,30 +26,21 @@
 
 namespace ppl { namespace nn { namespace onnx {
 
-typedef ir::Attr* (*CreateParamFunc)();
+typedef std::shared_ptr<ir::Attr> (*CreateParamFunc)();
 typedef ppl::common::RetCode (*ParseParamFunc)(const ::onnx::NodeProto&, const ParamParserExtraArgs&, ir::Node*,
                                                ir::Attr*);
-typedef void (*DeleteParamFunc)(ir::Attr*);
 
 struct ParserInfo final {
     CreateParamFunc create_param;
     ParseParamFunc parse_param;
-    DeleteParamFunc destroy_param;
 };
 
-class ParamParserManager final {
+class ParamParserManager final : public utils::OpInfoManager<ParserInfo> {
 public:
-    static ParamParserManager* Instance() {
+    static ParamParserManager* GetInstance() {
         static ParamParserManager mgr;
         return &mgr;
     }
-
-    ppl::common::RetCode Register(const std::string& domain, const std::string& type, const utils::VersionRange&,
-                                  const ParserInfo&);
-    const ParserInfo* Find(const std::string& domain, const std::string& type, uint64_t version) const;
-
-private:
-    utils::OpInfoManager<ParserInfo> mgr_;
 
 private:
     ParamParserManager();

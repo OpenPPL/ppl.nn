@@ -69,23 +69,9 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParamParserManager::Register(const string& domain, const string& type, const utils::VersionRange& ver,
-                                     const ParserInfo& info) {
-    return mgr_.Register(domain, type, ver, info);
-}
-
-const ParserInfo* ParamParserManager::Find(const string& domain, const string& type, uint64_t version) const {
-    return mgr_.Find(domain, type, version);
-}
-
 template <typename T>
-ir::Attr* CreateParam() {
-    return new T();
-}
-
-template <typename T>
-void DeleteParam(ir::Attr* ptr) {
-    delete static_cast<T*>(ptr);
+shared_ptr<ir::Attr> CreateParam() {
+    return make_shared<T>();
 }
 
 #define PPL_REGISTER_OP_WITH_PARAM(domain, type, first_version, last_version, param_type, parse_param_func)    \
@@ -99,7 +85,6 @@ void DeleteParam(ir::Attr* ptr) {
         ParserInfo parse_info;                                                                                 \
         parse_info.create_param = CreateParam<param_type>;                                                     \
         parse_info.parse_param = parse_param_func;                                                             \
-        parse_info.destroy_param = DeleteParam<param_type>;                                                    \
         auto status = Register(domain, type, utils::VersionRange(first_version, last_version), parse_info);    \
         if (status != RC_SUCCESS) {                                                                            \
             exit(-1);                                                                                          \
@@ -111,7 +96,6 @@ void DeleteParam(ir::Attr* ptr) {
         ParserInfo parse_info;                                                                \
         parse_info.create_param = nullptr;                                                    \
         parse_info.parse_param = nullptr;                                                     \
-        parse_info.destroy_param = nullptr;                                                   \
         Register(domain, type, utils::VersionRange(first_version, last_version), parse_info); \
     } while (0)
 
