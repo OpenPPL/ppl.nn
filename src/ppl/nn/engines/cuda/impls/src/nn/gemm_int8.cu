@@ -761,7 +761,7 @@ __global__ void int8_gemv(void *output,
         }
     }
 
-    //FIXME ld can be placed in the begining
+    //FIXME ld can be placed in the beginning
     //dequant
     float *fc = (float*)c;
     for (int i = 0; i < THD_TILE_N; i++){

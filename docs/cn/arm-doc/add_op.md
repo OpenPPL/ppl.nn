@@ -288,7 +288,7 @@ ARM的kernel函数是最底层的计算函数，放在ppl.nn/src/ppl/nn/engines/
 
 #### 4.1. kernel函数声明
 
-kernel函数的接口声明统一放在ppl.nn/src/ppl/nn/engines/arm/impls/include/ppl/kernel/arm_server目录下。建议的的文件路径为ppl.nn/src/ppl/nn/engines/arm/impls/include/ppl/kernel/arm_server/\<opname\>/\<isa\>/\<opname\>.h
+kernel函数的接口声明统一放在ppl.nn/src/ppl/nn/engines/arm/impls/include/ppl/kernel/arm_server目录下。建议的文件路径为ppl.nn/src/ppl/nn/engines/arm/impls/include/ppl/kernel/arm_server/\<opname\>/\<isa\>/\<opname\>.h
 
 函数输入参数可根据需要自行定义，返回一个`ppl::common::RetCode`用于指示函数是否执行成功。
 

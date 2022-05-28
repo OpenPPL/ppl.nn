@@ -317,7 +317,7 @@ x86的kernel函数是最底层的计算函数，放在ppl.nn/src/ppl/nn/engines/
 
 #### 4.1. kernel函数声明
 
-kernel函数的接口声明统一放在ppl.nn/src/ppl/nn/engines/x86/impls/include/ppl/kernel/x86目录下，按照数据类型放在不同的子目录下。建议的的文件路径为ppl.nn/src/ppl/nn/engines/x86/impls/include/ppl/kernel/x86/\<data_type\>/\<opname\>.h
+kernel函数的接口声明统一放在ppl.nn/src/ppl/nn/engines/x86/impls/include/ppl/kernel/x86目录下，按照数据类型放在不同的子目录下。建议的文件路径为ppl.nn/src/ppl/nn/engines/x86/impls/include/ppl/kernel/x86/\<data_type\>/\<opname\>.h
 
 函数输入参数可根据需要自行定义，返回一个ppl::common::RetCode用于指示函数是否执行成功。
 

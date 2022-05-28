@@ -71,7 +71,7 @@ ppl::common::RetCode concat_ndarray(
     const int64_t dst_concat_dim = dst_offset[num_src - 1] + src_shape_list[num_src - 1]->GetDim(fixed_axis);
 
     int64_t num_threads = PPL_OMP_MAX_THREADS();
-    if (dst_concat_dim * inner_dim * sizeof(eT) < 16 && num_src >= num_threads) { // when has small inner dims(usually occured when fixed_axis == ndims - 1), use scalar code to replace memcpy & change index calculating method
+    if (dst_concat_dim * inner_dim * sizeof(eT) < 16 && num_src >= num_threads) { // when has small inner dims(usually occurred when fixed_axis == ndims - 1), use scalar code to replace memcpy & change index calculating method
         PRAGMA_OMP_PARALLEL_FOR()
         for (int64_t n = 0; n < num_src; n++) {
             eT *p_dst                    = dst + dst_offset[n] * inner_dim;
