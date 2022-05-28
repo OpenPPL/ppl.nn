@@ -72,7 +72,7 @@ Implement_Flags_Register(flag_doublelist);
 //!
 //! @brief is_true_key test wheather @code key can be treated as true
 //! @param key a pointer to a valid C-string
-//! @return if the the string pointed by @code key can be treated as true, it returns true or false.
+//! @return if the string pointed by @code key can be treated as true, it returns true or false.
 //! @note @code key must point to a valid C-string or the behavior is undefined.
 //! @see is_false_key
 inline bool is_true_key(const char* key) {
