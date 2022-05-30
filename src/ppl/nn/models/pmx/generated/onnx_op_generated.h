@@ -301,45 +301,6 @@ inline const char *EnumNamePadMode(PadMode e) {
   return EnumNamesPadMode()[index];
 }
 
-enum ReduceType : uint32_t {
-  ReduceType_REDUCE_SUM = 0,
-  ReduceType_REDUCE_MAX = 1,
-  ReduceType_REDUCE_MIN = 2,
-  ReduceType_REDUCE_PROD = 3,
-  ReduceType_REDUCE_MEAN = 4,
-  ReduceType_MIN = ReduceType_REDUCE_SUM,
-  ReduceType_MAX = ReduceType_REDUCE_MEAN
-};
-
-inline const ReduceType (&EnumValuesReduceType())[5] {
-  static const ReduceType values[] = {
-    ReduceType_REDUCE_SUM,
-    ReduceType_REDUCE_MAX,
-    ReduceType_REDUCE_MIN,
-    ReduceType_REDUCE_PROD,
-    ReduceType_REDUCE_MEAN
-  };
-  return values;
-}
-
-inline const char * const *EnumNamesReduceType() {
-  static const char * const names[6] = {
-    "REDUCE_SUM",
-    "REDUCE_MAX",
-    "REDUCE_MIN",
-    "REDUCE_PROD",
-    "REDUCE_MEAN",
-    nullptr
-  };
-  return names;
-}
-
-inline const char *EnumNameReduceType(ReduceType e) {
-  if (flatbuffers::IsOutRange(e, ReduceType_REDUCE_SUM, ReduceType_REDUCE_MEAN)) return "";
-  const size_t index = static_cast<size_t>(e);
-  return EnumNamesReduceType()[index];
-}
-
 enum ResizeCoordTransMode : uint32_t {
   ResizeCoordTransMode_HALF_PIXEL = 0,
   ResizeCoordTransMode_PYTORCH_HALF_PIXEL = 1,
@@ -2093,13 +2054,9 @@ inline flatbuffers::Offset<PoolingParam> CreatePoolingParamDirect(
 struct ReduceParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef ReduceParamBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_TYPE = 4,
-    VT_KEEPDIMS = 6,
-    VT_AXES = 8
+    VT_KEEPDIMS = 4,
+    VT_AXES = 6
   };
-  ppl::nn::pmx::onnx::ReduceType type() const {
-    return static_cast<ppl::nn::pmx::onnx::ReduceType>(GetField<uint32_t>(VT_TYPE, 0));
-  }
   int32_t keepdims() const {
     return GetField<int32_t>(VT_KEEPDIMS, 1);
   }
@@ -2108,7 +2065,6 @@ struct ReduceParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint32_t>(verifier, VT_TYPE) &&
            VerifyField<int32_t>(verifier, VT_KEEPDIMS) &&
            VerifyOffset(verifier, VT_AXES) &&
            verifier.VerifyVector(axes()) &&
@@ -2120,9 +2076,6 @@ struct ReduceParamBuilder {
   typedef ReduceParam Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_type(ppl::nn::pmx::onnx::ReduceType type) {
-    fbb_.AddElement<uint32_t>(ReduceParam::VT_TYPE, static_cast<uint32_t>(type), 0);
-  }
   void add_keepdims(int32_t keepdims) {
     fbb_.AddElement<int32_t>(ReduceParam::VT_KEEPDIMS, keepdims, 1);
   }
@@ -2142,25 +2095,21 @@ struct ReduceParamBuilder {
 
 inline flatbuffers::Offset<ReduceParam> CreateReduceParam(
     flatbuffers::FlatBufferBuilder &_fbb,
-    ppl::nn::pmx::onnx::ReduceType type = ppl::nn::pmx::onnx::ReduceType_REDUCE_SUM,
     int32_t keepdims = 1,
     flatbuffers::Offset<flatbuffers::Vector<int32_t>> axes = 0) {
   ReduceParamBuilder builder_(_fbb);
   builder_.add_axes(axes);
   builder_.add_keepdims(keepdims);
-  builder_.add_type(type);
   return builder_.Finish();
 }
 
 inline flatbuffers::Offset<ReduceParam> CreateReduceParamDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    ppl::nn::pmx::onnx::ReduceType type = ppl::nn::pmx::onnx::ReduceType_REDUCE_SUM,
     int32_t keepdims = 1,
     const std::vector<int32_t> *axes = nullptr) {
   auto axes__ = axes ? _fbb.CreateVector<int32_t>(*axes) : 0;
   return ppl::nn::pmx::onnx::CreateReduceParam(
       _fbb,
-      type,
       keepdims,
       axes__);
 }

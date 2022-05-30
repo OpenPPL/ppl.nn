@@ -159,16 +159,7 @@ table PoolingParam {
     strides: [int32];
 }
 
-enum ReduceType : uint32 {
-    REDUCE_SUM = 0,
-    REDUCE_MAX,
-    REDUCE_MIN,
-    REDUCE_PROD,
-    REDUCE_MEAN,
-}
-
 table ReduceParam {
-    type: ReduceType;
     keepdims: int32 = 1;
     axes: [int32];
 }
