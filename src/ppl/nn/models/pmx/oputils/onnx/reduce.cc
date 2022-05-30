@@ -23,11 +23,10 @@ namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
 Offset<ReduceParam> SerializeReduceParam(const ppl::nn::onnx::ReduceParam& param, FlatBufferBuilder* builder) {
     auto fb_axes = builder->CreateVector(param.axes);
-    return CreateReduceParam(*builder, static_cast<ReduceType>(param.type), param.keepdims, fb_axes);
+    return CreateReduceParam(*builder, param.keepdims, fb_axes);
 }
 
 void DeserializeReduceParam(const ReduceParam& fb_param, ppl::nn::onnx::ReduceParam* param) {
-    param->type = static_cast<ppl::nn::onnx::ReduceParam::reduce_type_t>(fb_param.type());
     param->keepdims = fb_param.keepdims();
     utils::Fbvec2Stdvec(fb_param.axes(), &param->axes);
 }
