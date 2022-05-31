@@ -56,7 +56,7 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len, c
 
 RetCode RuntimeBuilderImpl::LoadModel(const char* model_file) {
     FileMapping fm;
-    auto status = fm.Init(model_file);
+    auto status = fm.Init(model_file, FileMapping::READ);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init filemapping from file [" << model_file << "] faild: " << GetRetCodeStr(status);
         return status;
@@ -70,7 +70,7 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_file) {
         parent_dir.assign(model_file, pos);
     }
 
-    return LoadModel(fm.Data(), fm.Size(), parent_dir.c_str());
+    return LoadModel(fm.GetData(), fm.GetSize(), parent_dir.c_str());
 }
 
 RetCode RuntimeBuilderImpl::SetResources(const Resources& resource) {

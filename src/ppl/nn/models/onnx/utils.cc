@@ -186,14 +186,14 @@ static RetCode LoadExternalData(const ::onnx::TensorProto& pb_tensor, const char
 
     FileMapping fm;
     const string full_path = string(model_file_dir) + "/" + *location;
-    auto status = fm.Init(full_path.c_str(), offset, length);
+    auto status = fm.Init(full_path.c_str(), FileMapping::READ, offset, length);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "mapping file[" << *location << "] in dir[" << model_file_dir
                    << "] error: " << fm.GetErrorMessage();
         return status;
     }
 
-    data->assign(fm.Data(), fm.Size());
+    data->assign(fm.GetData(), fm.GetSize());
     return RC_SUCCESS;
 }
 
