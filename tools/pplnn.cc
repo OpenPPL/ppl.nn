@@ -556,13 +556,13 @@ static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime
 static bool SetInputsAllInOne(const string& input_file, const vector<vector<int64_t>>& input_shapes, Runtime* runtime,
                               vector<string>* input_data) {
     FileMapping fm;
-    auto status = fm.Init(input_file.c_str());
+    auto status = fm.Init(input_file.c_str(), FileMapping::READ);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "mapping file[" << input_file << "] failed: " << GetRetCodeStr(status);
         return false;
     }
 
-    auto data = fm.Data();
+    auto data = fm.GetData();
     for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
         auto t = runtime->GetInputTensor(c);
 
@@ -634,7 +634,7 @@ static bool SetInputsOneByOne(const string& input_files_str, const vector<vector
         const string& file_name = files[i];
 
         FileMapping fm;
-        auto status = fm.Init(file_name.c_str());
+        auto status = fm.Init(file_name.c_str(), FileMapping::READ);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "mapping file[" << file_name << "] failed: " << GetRetCodeStr(status);
             return false;
@@ -654,13 +654,13 @@ static bool SetInputsOneByOne(const string& input_files_str, const vector<vector
 
         TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-        status = t->ConvertFromHost(fm.Data(), src_desc);
+        status = t->ConvertFromHost(fm.GetData(), src_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "set input[" << t->GetName() << "] failed: " << GetRetCodeStr(status);
             return false;
         }
 
-        input_data->emplace_back(string(fm.Data(), fm.Size()));
+        input_data->emplace_back(string(fm.GetData(), fm.GetSize()));
     }
 
     return true;
@@ -741,7 +741,7 @@ static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* ru
         input_shape.Reshape(dims.data(), dims.size());
 
         FileMapping fm;
-        auto status = fm.Init(file_full_path.c_str());
+        auto status = fm.Init(file_full_path.c_str(), FileMapping::READ);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "mapping file[" << file_full_path << "] failed: " << GetRetCodeStr(status);
             return false;
@@ -758,13 +758,13 @@ static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* ru
 
         TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-        status = t->ConvertFromHost(fm.Data(), src_desc);
+        status = t->ConvertFromHost(fm.GetData(), src_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "set input[" << t->GetName() << "] failed: " << GetRetCodeStr(status);
             return false;
         }
 
-        input_data->emplace_back(string(fm.Data(), fm.Size()));
+        input_data->emplace_back(string(fm.GetData(), fm.GetSize()));
     }
 
     return true;
