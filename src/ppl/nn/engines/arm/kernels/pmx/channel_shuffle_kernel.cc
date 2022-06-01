@@ -41,19 +41,23 @@ ppl::common::RetCode ChannelShuffleKernel::DoExecute(KernelExecContext* ctx) {
     }
     PPLNN_ARM_DEBUG_TRACE("isa: %u\n", GetISA());
 
-    if (!X1) {
-        LOG(ERROR) << "arm channel shuffle only support fuse_concat now.";
-        return ppl::common::RC_UNSUPPORTED;
-    }
+    const bool fuse_concat = ctx->GetInputCount() >= 2;
+    const bool fuse_split = ctx->GetOutputCount() >= 2;
 
-    if (Y1) {
+    if (fuse_concat && fuse_split) {
         return ppl::kernel::arm_server::neon::channel_shuffle_concat_split(
             X->GetShape(), X1->GetShape(), Y->GetShape(), Y1->GetShape(), X->GetBufferPtr<void>(),
             X1->GetBufferPtr<void>(), param_->group, Y->GetBufferPtr<void>(), Y1->GetBufferPtr<void>());
-    } else {
+    } else if (fuse_concat && !fuse_split) {
         return ppl::kernel::arm_server::neon::channel_shuffle_concat(X->GetShape(), X1->GetShape(), Y->GetShape(),
                                                                      X->GetBufferPtr<void>(), X1->GetBufferPtr<void>(),
                                                                      param_->group, Y->GetBufferPtr<void>());
+    } else if (!fuse_concat && !fuse_split) {
+        return ppl::kernel::arm_server::neon::channel_shuffle(X->GetShape(), Y->GetShape(), X->GetBufferPtr<void>(),
+                                                              param_->group, Y->GetBufferPtr<void>());
+    } else {
+        LOG(ERROR) << "arm channel shuffle not support fuse_split & not fuse_concat case now.";
+        return ppl::common::RC_UNSUPPORTED;
     }
 }
 

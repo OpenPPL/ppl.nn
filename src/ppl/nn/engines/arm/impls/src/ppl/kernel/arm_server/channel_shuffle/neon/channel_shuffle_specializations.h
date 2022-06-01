@@ -96,10 +96,11 @@ static ppl::common::RetCode channel_shuffle_nbcx_concat_split_same2group_common(
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    const int64_t batch      = src0_shape->GetDim(0);
-    const int64_t height     = src0_shape->GetDim(2);
-    const int64_t width      = src0_shape->GetDim(3);
-    const int64_t inner_dims = height * width;
+    const int64_t batch = src0_shape->GetDim(0);
+    int64_t inner_dims  = 1;
+    for (int64_t i = 2; i < src0_shape->GetDimCount(); i++) {
+        inner_dims *= src0_shape->GetDim(i);
+    }
 
     const int64_t padded_channels_per_group = round_up(channels_per_group, c_blk);
 

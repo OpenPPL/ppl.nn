@@ -46,10 +46,11 @@ static ppl::common::RetCode channel_shuffle_ndarray_concat_split_common(
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    const int64_t batch      = src0_shape->GetDim(0);
-    const int64_t height     = src0_shape->GetDim(2);
-    const int64_t width      = src0_shape->GetDim(3);
-    const int64_t inner_dims = height * width;
+    const int64_t batch = src0_shape->GetDim(0);
+    int64_t inner_dims  = 1;
+    for (int64_t i = 2; i < src0_shape->GetDimCount(); i++) {
+        inner_dims *= src0_shape->GetDim(i);
+    }
 
     const int64_t channels_per_group = channels / group;
 
@@ -90,10 +91,11 @@ static ppl::common::RetCode channel_shuffle_ndarray_concat_common(
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    const int64_t batch      = src0_shape->GetDim(0);
-    const int64_t height     = src0_shape->GetDim(2);
-    const int64_t width      = src0_shape->GetDim(3);
-    const int64_t inner_dims = height * width;
+    const int64_t batch = src0_shape->GetDim(0);
+    int64_t inner_dims  = 1;
+    for (int64_t i = 2; i < src0_shape->GetDimCount(); i++) {
+        inner_dims *= src0_shape->GetDim(i);
+    }
 
     const int64_t channels_per_group = channels / group;
 
@@ -106,6 +108,45 @@ static ppl::common::RetCode channel_shuffle_ndarray_concat_common(
 
                 const eT *p_src = src_c_idx < src_c0 ? src0 + (n * src_c0 + src_c_idx) * inner_dims : src1 + (n * src_c1 + src_c_idx - src_c0) * inner_dims;
                 eT *p_dst       = dst + (n * dst_c + dst_c_idx) * inner_dims;
+
+                memcpy(p_dst, p_src, inner_dims * sizeof(eT));
+            }
+        }
+    }
+
+    return ppl::common::RC_SUCCESS;
+}
+
+template <typename eT>
+static ppl::common::RetCode channel_shuffle_ndarray_common(
+    const ppl::nn::TensorShape *src_shape,
+    const ppl::nn::TensorShape *dst_shape,
+    const eT *src,
+    const int32_t group,
+    eT *dst)
+{
+    const int64_t channels = src_shape->GetDim(1);
+    if (channels % group != 0 || channels != dst_shape->GetDim(1)) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
+
+    const int64_t batch = src_shape->GetDim(0);
+    int64_t inner_dims  = 1;
+    for (int64_t i = 2; i < src_shape->GetDimCount(); i++) {
+        inner_dims *= src_shape->GetDim(i);
+    }
+
+    const int64_t channels_per_group = channels / group;
+
+    PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(3)
+    for (int64_t n = 0; n < batch; n++) {
+        for (int64_t c = 0; c < channels_per_group; c++) {
+            for (int64_t g = 0; g < group; g++) {
+                const int64_t src_c_idx = g * channels_per_group + c;
+                const int64_t dst_c_idx = c * group + g;
+
+                const eT *p_src = src + (n * channels + src_c_idx) * inner_dims;
+                eT *p_dst       = dst + (n * channels + dst_c_idx) * inner_dims;
 
                 memcpy(p_dst, p_src, inner_dims * sizeof(eT));
             }
