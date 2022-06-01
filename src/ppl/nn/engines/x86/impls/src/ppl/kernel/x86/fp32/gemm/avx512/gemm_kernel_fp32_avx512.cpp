@@ -1699,9 +1699,9 @@ void gemm_m8n48_kernel_fp32_avx512(int64_t *param)
 
     // generate masks
     const __mmask16 k4 = static_cast<__mmask16>((1 << kp.pick<const int64_t>(gemm_kernel_fp32_avx512::param_def::MASK_IDX)) - 1);
-    const __mmask16 k1 = u_nr == 1 ? k4 : 0xffff;
-    const __mmask16 k2 = u_nr == 2 ? k4 : 0xffff;
-    const __mmask16 k3 = u_nr == 3 ? k4 : 0xffff;
+    const __mmask16 k1 = need_mask && u_nr == 1 ? k4 : 0xffff;
+    const __mmask16 k2 = need_mask && u_nr == 2 ? k4 : 0xffff;
+    const __mmask16 k3 = need_mask && u_nr == 3 ? k4 : 0xffff;
 
     __m512 zmm0, zmm1, zmm2, zmm3, zmm4, zmm5, zmm6, zmm7;
     __m512 zmm8, zmm9, zmm10, zmm11, zmm12, zmm13, zmm14, zmm15;
