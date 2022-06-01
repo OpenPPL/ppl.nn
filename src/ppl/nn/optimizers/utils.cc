@@ -453,6 +453,8 @@ RetCode ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, Ru
         return status;
     }
 
+    LOG(INFO) << "total partition(s) of graph[" << graph->topo->GetName() << "]: " << partitions.size() << ".";
+
     // the second parameter is the producer engine of converter node's outputs
     vector<pair<nodeid_t, EngineImpl*>> converter_nodes;
     if (partitions.size() > 1) {
@@ -494,8 +496,6 @@ RetCode ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, Ru
         par_info.ops.emplace_back(unique_ptr<OptKernel>(new pmx::ConverterOp(graph->topo->GetNode(x->first))));
         info->partitions.emplace_back(std::move(par_info)); // one converter is treated as a single partition
     }
-
-    LOG(INFO) << "total partition(s) of graph[" << graph->topo->GetName() << "]: " << info->partitions.size() << ".";
 
     // save necessary shapes for runtime
     auto topo = graph->topo.get();

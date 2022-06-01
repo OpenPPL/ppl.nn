@@ -147,13 +147,7 @@ RetCode OptGraph::UpdateDims(const utils::SharedResource& resource) {
                     temp_tensor_shape.SetDataType(DATATYPE_UNKNOWN);
                 }
 
-                if (topo->GetInput(edge->GetName()) != INVALID_EDGEID &&
-                    topo->GetConstant(edge->GetName()) == INVALID_EDGEID) { // input j is a graph input edge
-                    if (ir_shape == data->shapes.end()) {
-                        LOG(ERROR) << "cannot find input shape in data map.";
-                        return RC_INVALID_VALUE;
-                    }
-
+                if (topo->GetInput(edge->GetName()) != INVALID_EDGEID) { // input j is a graph input edge
                     if (j < args_->input_dims.size() && !args_->input_dims[j].empty()) { // args include input shape
                         const vector<int64_t>* dims = &args_->input_dims[j];
                         temp_tensor_shape.SetDimCount(dims->size());
