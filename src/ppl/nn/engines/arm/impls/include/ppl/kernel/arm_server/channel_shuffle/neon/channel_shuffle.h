@@ -42,6 +42,13 @@ ppl::common::RetCode channel_shuffle_concat(
     const int32_t group,
     void *dst);
 
+ppl::common::RetCode channel_shuffle(
+    const ppl::nn::TensorShape *src_shape,
+    const ppl::nn::TensorShape *dst_shape,
+    const void *src,
+    const int32_t group,
+    void *dst);
+
 }}}}; // namespace ppl::kernel::arm_server::neon
 
 #endif // __ST_PPL_KERNEL_ARM_SERVER_CHANNEL_SHUFFLE_NEON_CHANNEL_SHUFFLE_H_

@@ -134,4 +134,50 @@ ppl::common::RetCode channel_shuffle_concat(
     return ppl::common::RC_UNSUPPORTED;
 }
 
+template <typename eT>
+static ppl::common::RetCode channel_shuffle_wrapper(
+    const ppl::nn::TensorShape *src_shape,
+    const ppl::nn::TensorShape *dst_shape,
+    const void *src,
+    const int32_t group,
+    void *dst)
+{
+    const auto data_format = src_shape->GetDataFormat();
+    if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
+        return channel_shuffle_ndarray_common<eT>(src_shape, dst_shape, (const eT *)src, group, (eT *)dst);
+    }
+
+    // NBCX
+    if (sizeof(eT) == 4) {
+        if (data_format == ppl::common::DATAFORMAT_N4CX) { // fp32 n4cx
+            return channel_shuffle_nbcx_common<uint32_t, 4>(src_shape, dst_shape, (const uint32_t *)src, group, (uint32_t *)dst);
+        }
+    }
+    if (sizeof(eT) == 2) {
+        if (data_format == ppl::common::DATAFORMAT_N8CX) { // fp16 n8cx
+            return channel_shuffle_nbcx_common<uint16_t, 8>(src_shape, dst_shape, (const uint16_t *)src, group, (uint16_t *)dst);
+        }
+    }
+
+    return ppl::common::RC_UNSUPPORTED;
+}
+
+ppl::common::RetCode channel_shuffle(
+    const ppl::nn::TensorShape *src_shape,
+    const ppl::nn::TensorShape *dst_shape,
+    const void *src,
+    const int32_t group,
+    void *dst)
+{
+    const auto data_type = src_shape->GetDataType();
+    switch (ppl::common::GetSizeOfDataType(data_type)) {
+        case 1: return channel_shuffle_wrapper<uint8_t>(src_shape, dst_shape, src, group, dst);
+        case 2: return channel_shuffle_wrapper<uint16_t>(src_shape, dst_shape, src, group, dst);
+        case 4: return channel_shuffle_wrapper<uint32_t>(src_shape, dst_shape, src, group, dst);
+        case 8: return channel_shuffle_wrapper<uint64_t>(src_shape, dst_shape, src, group, dst);
+        default: break;
+    }
+    return ppl::common::RC_UNSUPPORTED;
+}
+
 }}}} // namespace ppl::kernel::arm_server::neon
