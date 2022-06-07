@@ -15,30 +15,11 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_X86_FP32_PRELU_H_
-#define __ST_PPL_KERNEL_X86_FP32_PRELU_H_
-
-#include "ppl/kernel/x86/common/general_include.h"
+#include "ppl/kernel/x86/common/internal_include.h"
+#include "ppl/kernel/x86/fp32/prelu.h"
+#include "ppl/kernel/x86/fp32/leaky_relu.h"
 
 namespace ppl { namespace kernel { namespace x86 {
-
-ppl::common::RetCode prelu_per_channel_ndarray_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
-    const float *src,
-    const float *slope,
-    float *dst);
-
-ppl::common::RetCode prelu_per_channel_n16cx_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
-    const float *src,
-    const float *slope,
-    float *dst);
-
-ppl::common::RetCode prelu_per_channel_ndarray_fp32_sse(
-    const ppl::nn::TensorShape *src_shape,
-    const float *src,
-    const float *slope,
-    float *dst);
 
 ppl::common::RetCode prelu_fp32(
     const ppl::common::isa_t isa,
@@ -46,8 +27,28 @@ ppl::common::RetCode prelu_fp32(
     const float *src,
     const float *slope,
     const bool channel_shared,
-    float *dst);
+    float *dst)
+{
+    if (channel_shared) {
+        if (isa & ppl::common::ISA_X86_AVX) {
+            return leaky_relu_fp32_avx(src_shape, src, *slope, dst);
+        }
+        return leaky_relu_fp32_sse(src_shape, src, *slope, dst);
+    }
+
+    if (src_shape->GetDataFormat() == ppl::common::DATAFORMAT_N16CX) {
+        if (isa & ppl::common::ISA_X86_AVX) {
+            return prelu_per_channel_n16cx_fp32_avx(src_shape, src, slope, dst);
+        }
+    }
+    if (src_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
+        if (isa & ppl::common::ISA_X86_AVX) {
+            return prelu_per_channel_ndarray_fp32_avx(src_shape, src, slope, dst);
+        }
+        return prelu_per_channel_ndarray_fp32_sse(src_shape, src, slope, dst);
+    }
+
+    return ppl::common::RC_UNSUPPORTED;
+}
 
 }}}; // namespace ppl::kernel::x86
-
-#endif

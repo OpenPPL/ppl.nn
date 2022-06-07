@@ -31,20 +31,26 @@ ppl::common::RetCode PReluKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Input [slope]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(slope);
 
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+    const auto isa = GetISA();
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", isa);
 
     PPLNN_X86_REALLOC_TENSOR_BUFFER(Y);
     PPLNN_X86_DEBUG_TRACE("Output [Y]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(Y);
 
     const auto data_type = X->GetShape()->GetDataType();
-    const auto data_format = X->GetShape()->GetDataFormat();
+    if (data_type != ppl::common::DATATYPE_FLOAT32)
+        LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";
 
-    if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
-        if (slope->GetShape()->GetDimCount() > X->GetShape()->GetDimCount()) {
-            LOG(ERROR) << "prelu slope dimcount is bigger than input dimcount.";
-            return ppl::common::RC_UNSUPPORTED;
-        }
+    if (slope->GetShape()->GetDimCount() > X->GetShape()->GetDimCount()) {
+        LOG(ERROR) << "prelu slope dimcount is bigger than input dimcount.";
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
+    bool channel_shared = false;
+    if (slope->GetShape()->GetElementsExcludingPadding() == 1) {
+        channel_shared = true;
+    } else {
         auto channels = X->GetShape()->GetDimCount() > 1 ? X->GetShape()->GetDim(1) : 1;
         if (slope->GetShape()->GetElementsExcludingPadding() != (uint64_t)channels) {
             LOG(ERROR) << "prelu only support channel broadcasting.";
@@ -64,26 +70,12 @@ ppl::common::RetCode PReluKernel::DoExecute(KernelExecContext* ctx) {
                 return ppl::common::RC_UNSUPPORTED;
             }
         }
-    } else {
-        LOG(ERROR) << "unsupported data format: " << ppl::common::GetDataFormatStr(data_format) << ".";
-        return ppl::common::RC_UNSUPPORTED;
     }
 
-    if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        if (MayUseISA(ppl::common::ISA_X86_AVX)) {
-            return kernel::x86::prelu_channel_shared_fp32_avx(X->GetShape(), X->GetBufferPtr<float>(),
-                                                              slope->GetBufferPtr<float>(), Y->GetBufferPtr<float>());
-        } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-            return kernel::x86::prelu_channel_shared_fp32_sse(X->GetShape(), X->GetBufferPtr<float>(),
-                                                              slope->GetBufferPtr<float>(), Y->GetBufferPtr<float>());
-        } else {
-            LOG(ERROR) << "get unsupported isa " << GetISA();
-        }
-    } else {
-        LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";
-    }
-
-    return ppl::common::RC_UNSUPPORTED;
+    return ppl::kernel::x86::prelu_fp32(
+        isa, X->GetShape(), X->GetBufferPtr<const float>(),
+        slope->GetBufferPtr<const float>(),
+        channel_shared, Y->GetBufferPtr<float>());
 }
 
 }}} // namespace ppl::nn::x86

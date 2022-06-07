@@ -261,6 +261,26 @@ ppl::common::RetCode gemm_operation_fp32_sse(
             M, N, K, lda, ldc, ldsum,
             alpha, beta, beta_bias, beta_sum,
             post, flags, C);
+    } else {
+        if ((typeA == gemm_m_type::NOTRANS || lda == 1) && M == 1) {
+            return gemv_operation_fp32_sse(
+                A, B, bias, sum,
+                gemm_v_type::ROW_VEC, typeB, typebias, typesum,
+                N, K, ldb,
+                alpha, beta, beta_bias, beta_sum, post, C);
+        }
+
+        if (N == 1 && ((typeB == gemm_m_type::NOTRANS && ldb == 1) || (typeB == gemm_m_type::TRANS && ldb == K)) && ldc == 1) {
+            auto l_typeA = typeA == gemm_m_type::NOTRANS ? gemm_m_type::TRANS : gemm_m_type::NOTRANS;
+            auto l_typebias = typebias;
+            if (typebias == gemm_v_type::ROW_VEC) l_typebias = gemm_v_type::COL_VEC;
+            if (typebias == gemm_v_type::COL_VEC) l_typebias = gemm_v_type::ROW_VEC;
+            return gemv_operation_fp32_sse(
+                B, A, bias, sum,
+                gemm_v_type::ROW_VEC, l_typeA, l_typebias, typesum,
+                M, K, lda,
+                alpha, beta, beta_bias, beta_sum, post, C);
+        }
     }
 
     const bool is_trans_a = typeA == gemm_m_type::TRANS;
