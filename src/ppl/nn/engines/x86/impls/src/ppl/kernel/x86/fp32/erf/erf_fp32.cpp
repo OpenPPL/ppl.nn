@@ -18,10 +18,11 @@
 #include <math.h>
 
 #include "ppl/kernel/x86/common/internal_include.h"
+#include "ppl/kernel/x86/fp32/erf.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
-ppl::common::RetCode erf_fp32(
+ppl::common::RetCode erf_fp32_ref(
     const ppl::nn::TensorShape *x_shape,
     const float *x,
     float *y)
@@ -57,8 +58,28 @@ ppl::common::RetCode erf_fp32(
     for (int64_t i = unroll_body; i < n_elem; ++i) {
         _OP_SS(y[i + 0], x[i + 0]);
     }
-
+#undef _OP_SS
     return ppl::common::RC_SUCCESS;
+}
+
+ppl::common::RetCode erf_fp32(
+    const ppl::common::isa_t isa,
+    const ppl::nn::TensorShape *x_shape,
+    const float *x,
+    float *y)
+{
+#ifdef PPL_USE_X86_AVX512
+    if (isa & ppl::common::ISA_X86_AVX512) {
+        return erf_fp32_avx512(x_shape, x, y);
+    }
+#endif
+    if (isa & ppl::common::ISA_X86_FMA) {
+        return erf_fp32_fma(x_shape, x, y);
+    }
+    if (isa & ppl::common::ISA_X86_SSE) {
+        return erf_fp32_sse(x_shape, x, y);
+    }
+    return erf_fp32_ref(x_shape, x, y);
 }
 
 }}}; // namespace ppl::kernel::x86

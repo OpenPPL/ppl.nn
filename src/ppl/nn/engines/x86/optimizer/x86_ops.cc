@@ -46,6 +46,8 @@ using namespace ppl::common;
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/gather_nd_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/gemm_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/greater_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/onnx/hard_sigmoid_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/onnx/hard_swish_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/identity_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/if_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/leaky_relu_op.h"
@@ -168,6 +170,9 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<GemmOp>("", "Gemm", 9, 16);
     RegisterOptKernelCreator<AveragePoolOp>("", "GlobalAveragePool", 1, 16);
     RegisterOptKernelCreator<GreaterOp>("", "Greater", 7, 16);
+    // H
+    RegisterOptKernelCreator<HardSigmoidOp>("", "HardSigmoid", 6, 16);
+    RegisterOptKernelCreator<HardSwishOp>("", "HardSwish", 14, 16);
     // I
     RegisterOptKernelCreator<IdentityOp>("", "Identity", 1, 13);
     RegisterOptKernelCreator<IfOp>("", "If", 1, 12);

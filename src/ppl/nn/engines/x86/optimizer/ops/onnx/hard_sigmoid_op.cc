@@ -15,15 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/x86/optimizer/ops/onnx/leaky_relu_op.h"
-#include "ppl/nn/engines/x86/kernels/onnx/leaky_relu_kernel.h"
+#include "ppl/nn/engines/x86/optimizer/ops/onnx/hard_sigmoid_op.h"
+#include "ppl/nn/engines/x86/kernels/onnx/hard_sigmoid_kernel.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode LeakyReluOp::Init(const OptKernelOptions& options) {
+RetCode HardSigmoidOp::Init(const OptKernelOptions& options) {
     auto status = GenericLoadParam(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
@@ -36,15 +36,15 @@ RetCode LeakyReluOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
-RetCode LeakyReluOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
+RetCode HardSigmoidOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
                                   vector<dataformat_t>* selected_output_formats) {
     selected_input_formats->at(0) = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
     selected_output_formats->at(0) = info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat();
     return RC_SUCCESS;
 }
 
-KernelImpl* LeakyReluOp::CreateKernelImpl() const {
-    return CreateKernelImplWithParam<LeakyReluKernel>(param_.get());
+KernelImpl* HardSigmoidOp::CreateKernelImpl() const {
+    return CreateKernelImplWithParam<HardSigmoidKernel>(param_.get());
 }
 
 }}} // namespace ppl::nn::x86
