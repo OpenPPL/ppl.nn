@@ -21,41 +21,34 @@
 namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode ErfKernel::DoExecute(KernelExecContext* ctx) {
-    PPLNN_X86_REQUIRED_INPUT(input, 0);
-    PPLNN_X86_REQUIRED_OUTPUT(output, 0);
+    PPLNN_X86_REQUIRED_INPUT(x, 0);
+    PPLNN_X86_REQUIRED_OUTPUT(y, 0);
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
 
-    PPLNN_X86_DEBUG_TRACE("Input [input]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(input);
+    PPLNN_X86_DEBUG_TRACE("Input [x]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(x);
 
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+    const auto isa = GetISA();
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", isa);
 
-    PPLNN_X86_REALLOC_TENSOR_BUFFER(output);
-    PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
+    auto lx = x;
+    if (ctx->IsLastConsumerOfInput(0) && x->GetType() == TENSORTYPE_NORMAL) {
+        y->TransferBufferFrom(x);
+        lx = y;
+    } else {
+        PPLNN_X86_REALLOC_TENSOR_BUFFER(y);
+    }
 
-    const auto data_type = input->GetShape()->GetDataType();
+    PPLNN_X86_DEBUG_TRACE("Output [y]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(y);
 
+    const auto data_type = lx->GetShape()->GetDataType();
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        if (false) {
-        }
-#ifdef PPL_USE_X86_AVX512
-        else if (MayUseISA(ppl::common::ISA_X86_AVX512)) {
-            return ppl::kernel::x86::erf_fp32_avx512(input->GetShape(), input->GetBufferPtr<float>(),
-                                                  output->GetBufferPtr<float>());
-        }
-#endif
-        else if (MayUseISA(ppl::common::ISA_X86_FMA)) {
-            return ppl::kernel::x86::erf_fp32_fma(input->GetShape(), input->GetBufferPtr<float>(),
-                                                  output->GetBufferPtr<float>());
-        } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-            return ppl::kernel::x86::erf_fp32_sse(input->GetShape(), input->GetBufferPtr<float>(),
-                                                  output->GetBufferPtr<float>());
-        } else {
-            return ppl::kernel::x86::erf_fp32(input->GetShape(), input->GetBufferPtr<float>(),
-                                              output->GetBufferPtr<float>());
-        }
+        return ppl::kernel::x86::erf_fp32(
+            isa, lx->GetShape(),
+            lx->GetBufferPtr<float>(),
+            y->GetBufferPtr<float>());
     } else {
         LOG(ERROR) << "unsupported datatype: " << ppl::common::GetDataTypeStr(data_type) << ".";
     }

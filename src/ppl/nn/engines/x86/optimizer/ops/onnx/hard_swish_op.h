@@ -15,32 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_X86_FP32_LEAKY_RELU_H_
-#define __ST_PPL_KERNEL_X86_FP32_LEAKY_RELU_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_HARD_SWISH_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_HARD_SWISH_OP_H_
 
-#include "ppl/kernel/x86/common/general_include.h"
+#include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
 
-namespace ppl { namespace kernel { namespace x86 {
+namespace ppl { namespace nn { namespace x86 {
 
-ppl::common::RetCode leaky_relu_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
-    const float *src,
-    const float alpha,
-    float *dst);
+class HardSwishOp final : public X86OptKernel {
+public:
+    HardSwishOp(const ir::Node* node) : X86OptKernel(node) {}
+    ppl::common::RetCode Init(const OptKernelOptions& options) override;
+    KernelImpl* CreateKernelImpl() const override;
+    ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
+                                      std::vector<ppl::common::dataformat_t>* selected_input_formats,
+                                      std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
+};
 
-ppl::common::RetCode leaky_relu_fp32_sse(
-    const ppl::nn::TensorShape *src_shape,
-    const float *src,
-    const float alpha,
-    float *dst);
-
-ppl::common::RetCode leaky_relu_fp32(
-    const ppl::common::isa_t isa,
-    const ppl::nn::TensorShape *src_shape,
-    const float *src,
-    const float alpha,
-    float *dst);
-
-}}}; // namespace ppl::kernel::x86
+}}} // namespace ppl::nn::x86
 
 #endif

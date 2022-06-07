@@ -15,32 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_X86_FP32_LEAKY_RELU_H_
-#define __ST_PPL_KERNEL_X86_FP32_LEAKY_RELU_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_ONNX_HARD_SWISH_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_ONNX_HARD_SWISH_KERNEL_H_
 
-#include "ppl/kernel/x86/common/general_include.h"
+#include "ppl/nn/engines/x86/kernel.h"
 
-namespace ppl { namespace kernel { namespace x86 {
+namespace ppl { namespace nn { namespace x86 {
 
-ppl::common::RetCode leaky_relu_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
-    const float *src,
-    const float alpha,
-    float *dst);
+class HardSwishKernel : public X86Kernel {
+public:
+    HardSwishKernel(const ir::Node* node) : X86Kernel(node) {}
 
-ppl::common::RetCode leaky_relu_fp32_sse(
-    const ppl::nn::TensorShape *src_shape,
-    const float *src,
-    const float alpha,
-    float *dst);
+private:
+    ppl::common::RetCode DoExecute(KernelExecContext*) override;
+};
 
-ppl::common::RetCode leaky_relu_fp32(
-    const ppl::common::isa_t isa,
-    const ppl::nn::TensorShape *src_shape,
-    const float *src,
-    const float alpha,
-    float *dst);
-
-}}}; // namespace ppl::kernel::x86
+}}} // namespace ppl::nn::x86
 
 #endif

@@ -15,41 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_X86_FP32_ERF_H_
-#define __ST_PPL_KERNEL_X86_FP32_ERF_H_
-
-#include "ppl/kernel/x86/common/general_include.h"
+#include "ppl/kernel/x86/common/internal_include.h"
+#include "ppl/kernel/x86/fp32/hard_sigmoid.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
-ppl::common::RetCode erf_fp32(
+ppl::common::RetCode hard_sigmoid_fp32(
     const ppl::common::isa_t isa,
-    const ppl::nn::TensorShape *x_shape,
-    const float *x,
-    float *y);
-
-ppl::common::RetCode erf_fp32_ref(
-    const ppl::nn::TensorShape *x_shape,
-    const float *x,
-    float *y);
-
-ppl::common::RetCode erf_fp32_sse(
-    const ppl::nn::TensorShape *x_shape,
-    const float *x,
-    float *y);
-
-ppl::common::RetCode erf_fp32_fma(
-    const ppl::nn::TensorShape *x_shape,
-    const float *x,
-    float *y);
-
-#ifdef PPL_USE_X86_AVX512
-ppl::common::RetCode erf_fp32_avx512(
-    const ppl::nn::TensorShape *x_shape,
-    const float *x,
-    float *y);
-#endif
+    const ppl::nn::TensorShape *src_shape,
+    const float *src,
+    const float alpha,
+    const float beta,
+    float *dst)
+{
+    if (isa & ppl::common::ISA_X86_AVX) {
+        return hard_sigmoid_fp32_avx(src_shape, src, alpha, beta, dst);
+    }
+    return hard_sigmoid_fp32_sse(src_shape, src, alpha, beta, dst);
+}
 
 }}}; // namespace ppl::kernel::x86
-
-#endif

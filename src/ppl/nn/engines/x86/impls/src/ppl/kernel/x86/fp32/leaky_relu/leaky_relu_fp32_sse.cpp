@@ -30,7 +30,7 @@ ppl::common::RetCode leaky_relu_fp32_sse(
     const uint64_t simd_w      = 4;
     const uint64_t unroll_len  = simd_w * 4;
     const uint64_t unroll_body = round(src_shape->GetElementsIncludingPadding(), unroll_len);
-    const __m128 v_alpha       = _mm_set_ps1(alpha);
+    const __m128 v_alpha       = _mm_set1_ps(alpha);
     const __m128 v_zero        = _mm_setzero_ps();
     PRAGMA_OMP_PARALLEL_FOR()
     for (uint64_t i = 0; i < unroll_body; i += unroll_len) {

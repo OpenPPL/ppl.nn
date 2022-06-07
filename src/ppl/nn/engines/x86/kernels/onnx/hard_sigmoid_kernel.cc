@@ -15,12 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/x86/kernels/onnx/leaky_relu_kernel.h"
-#include "ppl/kernel/x86/fp32/leaky_relu.h"
+#include "ppl/nn/engines/x86/kernels/onnx/hard_sigmoid_kernel.h"
+#include "ppl/kernel/x86/fp32/hard_sigmoid.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
-ppl::common::RetCode LeakyReluKernel::DoExecute(KernelExecContext* ctx) {
+ppl::common::RetCode HardSigmoidKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_REQUIRED_INPUT(x, 0);
     PPLNN_X86_REQUIRED_OUTPUT(y, 0);
 
@@ -29,6 +29,7 @@ ppl::common::RetCode LeakyReluKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(x);
 
     PPLNN_X86_DEBUG_TRACE("alpha: %f\n", param_->alpha);
+    PPLNN_X86_DEBUG_TRACE("beta: %f\n", param_->beta);
     const auto isa = GetISA();
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", isa);
 
@@ -46,9 +47,11 @@ ppl::common::RetCode LeakyReluKernel::DoExecute(KernelExecContext* ctx) {
     const auto data_type = lx->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        return kernel::x86::leaky_relu_fp32(
-            isa, lx->GetShape(), lx->GetBufferPtr<float>(),
-            param_->alpha, y->GetBufferPtr<float>());
+        return ppl::kernel::x86::hard_sigmoid_fp32(
+            isa, lx->GetShape(),
+            lx->GetBufferPtr<float>(),
+            param_->alpha, param_->beta,
+            y->GetBufferPtr<float>());
     } else {
         LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";
     }
