@@ -26,6 +26,25 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
+ppl::common::RetCode gemv_operation_fp32_sse(
+    const float *A,
+    const float *B,
+    const float *bias,
+    const float *sum,
+    const gemm_v_type_t typeA,
+    const gemm_m_type_t typeB,
+    const gemm_v_type_t typebias,
+    const gemm_m_type_t typesum,
+    const int64_t N,
+    const int64_t K,
+    const int64_t ldb,
+    const float alpha,
+    const float beta,
+    const float beta_bias,
+    const float beta_sum,
+    const gemm_post_t post,
+    float *C);
+
 template<gemm_m_type_t typeB, int64_t ldpacked_b, int64_t kN>
 static void gemm_pack_b_operation_fp32_sse(
     const float *B,

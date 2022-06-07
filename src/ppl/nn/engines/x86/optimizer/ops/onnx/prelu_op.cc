@@ -30,6 +30,15 @@ RetCode PReluOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
+RetCode PReluOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
+                                  vector<dataformat_t>* selected_output_formats) {
+    if (info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat() == DATAFORMAT_N16CX) {
+        selected_input_formats->at(0) = DATAFORMAT_N16CX;
+        selected_output_formats->at(0) = DATAFORMAT_N16CX;
+    }
+    return RC_SUCCESS;
+}
+
 KernelImpl* PReluOp::CreateKernelImpl() const {
     return CreateKernelImplWithoutParam<PReluKernel>();
 }
