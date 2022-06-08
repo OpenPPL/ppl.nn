@@ -129,20 +129,24 @@ static void maxpool2d_n8cx_f2s2p0_fp16(
 {
     PRAGMA_OMP_PARALLEL()
     {
+        const int64_t row_padding = ((dst_h * 2 - 1) < src_h) ? 0 : 1;
+        const int64_t oh_end      = dst_h - row_padding;
+
         const int64_t num_channel_ceil8 = CEIL8(num_channel);
         for (int64_t n = 0; n < num_batch; n++) {
             PRAGMA_OMP_FOR_NOWAIT()
             for (int64_t c = 0; c < num_channel; c += CVL()) {
                 const __fp16 *input_c_base = input + (n * num_channel_ceil8 + c) * src_h * src_w;
                 __fp16 *output_c_base      = output + (n * num_channel_ceil8 + c) * dst_h * dst_w;
-                for (int64_t oh = 0; oh < dst_h; oh++) {
+                for (int64_t oh = 0; oh < oh_end; oh++) {
                     const __fp16 *input_h_base = input_c_base + oh * 2 * src_w * CVL();
                     __fp16 *output_h_base      = output_c_base + oh * dst_w * CVL();
 
                     int64_t ow = 0;
-                    for (; ow <= dst_w - 4; ow += 4) {
+                    for (; ow <= (dst_w - 1) - 4; ow += 4) {
                         const __fp16 *input_base0 = input_h_base + ow * 2 * CVL();
                         const __fp16 *input_base1 = input_h_base + src_w * CVL() + ow * 2 * CVL();
+                        
                         __fp16 *output_base       = output_h_base + ow * CVL();
                         float16x8_t vin0[8];
                         float16x8_t vin1[8];
@@ -187,19 +191,69 @@ static void maxpool2d_n8cx_f2s2p0_fp16(
                         vst1q_f16(output_base + CVL() * 3, vout[3]);
                     }
                     for (; ow < dst_w; ow++) {
+                        const bool use_2cols = ((ow * 2 + 1) < src_w);
+
                         const __fp16 *input_base = input_h_base + ow * 2 * CVL();
                         float16x8_t vin[4];
                         float16x8_t vout;
 
                         vin[0] = vld1q_f16(input_base);
-                        vin[1] = vld1q_f16(input_base + CVL());
                         vin[2] = vld1q_f16(input_base + src_w * CVL());
-                        vin[3] = vld1q_f16(input_base + src_w * CVL() + CVL());
+                        vout = vmaxq_f16(vin[0], vin[2]);
 
-                        vout = vmaxq_f16(vin[0], vin[1]);
-                        vout = vmaxq_f16(vout, vin[2]);
-                        vout = vmaxq_f16(vout, vin[3]);
+                        if (use_2cols) {
+                            vin[1] = vld1q_f16(input_base + CVL());
+                            vin[3] = vld1q_f16(input_base + src_w * CVL() + CVL());
+                            vout = vmaxq_f16(vout, vin[1]);
+                            vout = vmaxq_f16(vout, vin[3]);
+                        }
 
+                        vst1q_f16(output_h_base + ow * CVL(), vout);
+                    }
+                }
+                if (oh_end < dst_h) {
+                    const int64_t oh = dst_h - 1;
+                    const __fp16 *input_h_base = input_c_base + oh * 2 * src_w * CVL();
+                    __fp16 *output_h_base      = output_c_base + oh * dst_w * CVL();
+
+                    int64_t ow = 0;
+                    for (; ow <= (dst_w - 1) - 4; ow += 4) {
+                        const __fp16 *input_base = input_h_base + ow * 2 * CVL();
+                        __fp16 *output_base      = output_h_base + ow * CVL();
+
+                        float16x8_t vin0[8];
+                        float16x8_t vout[4];
+
+                        vin0[0] = vld1q_f16(input_base);
+                        vin0[1] = vld1q_f16(input_base + CVL());
+                        vin0[2] = vld1q_f16(input_base + CVL() * 2);
+                        vin0[3] = vld1q_f16(input_base + CVL() * 3);
+                        vin0[4] = vld1q_f16(input_base + CVL() * 4);
+                        vin0[5] = vld1q_f16(input_base + CVL() * 5);
+                        vin0[6] = vld1q_f16(input_base + CVL() * 6);
+                        vin0[7] = vld1q_f16(input_base + CVL() * 7);
+
+                        vout[0] = vmaxq_f16(vin0[0], vin0[1]);
+                        vout[1] = vmaxq_f16(vin0[2], vin0[3]);
+                        vout[2] = vmaxq_f16(vin0[4], vin0[5]);
+                        vout[3] = vmaxq_f16(vin0[6], vin0[7]);
+
+                        vst1q_f16(output_base, vout[0]);
+                        vst1q_f16(output_base + CVL(), vout[1]);
+                        vst1q_f16(output_base + CVL() * 2, vout[2]);
+                        vst1q_f16(output_base + CVL() * 3, vout[3]);
+                    }
+                    for (; ow < dst_w; ow++) {
+                        const __fp16 *input_base = input_h_base + ow * 2 * CVL();
+                        const bool use_2cols = ((ow * 2 + 1) < src_w);
+
+                        float16x8_t vin1, vout;
+
+                        vout = vld1q_f16(input_base);
+                        if (use_2cols) {
+                            vin1 = vld1q_f16(input_base + CVL());
+                            vout = vmaxq_f16(vout, vin1);
+                        }
                         vst1q_f16(output_h_base + ow * CVL(), vout);
                     }
                 }

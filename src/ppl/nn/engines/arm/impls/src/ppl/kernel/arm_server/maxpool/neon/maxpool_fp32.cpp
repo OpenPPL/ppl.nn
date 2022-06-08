@@ -127,18 +127,21 @@ static void maxpool2d_n4cx_f2s2p0_fp32(
 {
     PRAGMA_OMP_PARALLEL()
     {
+        const int64_t row_padding = ((dst_h * 2 - 1) < src_h) ? 0 : 1;
+        const int64_t oh_end      = dst_h - row_padding;
+
         const int64_t num_channel_ceil4 = CEIL4(num_channel);
         for (int64_t n = 0; n < num_batch; n++) {
             PRAGMA_OMP_FOR_NOWAIT()
             for (int64_t c = 0; c < num_channel; c += CVL()) {
                 const float *input_c_base = input + (n * num_channel_ceil4 + c) * src_h * src_w;
                 float *output_c_base = output + (n * num_channel_ceil4 + c) * dst_h * dst_w;
-                for (int64_t oh = 0; oh < dst_h; oh++) {
+                for (int64_t oh = 0; oh < oh_end; oh++) {
                     const float *input_h_base = input_c_base + oh * 2 * src_w * CVL();
                     float *output_h_base = output_c_base + oh * dst_w * CVL();
 
                     int64_t ow = 0;
-                    for (; ow <= dst_w-7; ow+=7) {
+                    for (; ow <= dst_w - 1 - 7; ow += 7) {
                         const float *input_base0 = input_h_base + ow * 2 * CVL();
                         const float *input_base1 = input_h_base + src_w * CVL() + ow * 2 * CVL();
                         float *output_base = output_h_base + ow * CVL();
@@ -225,19 +228,85 @@ static void maxpool2d_n4cx_f2s2p0_fp32(
                         vst1q_f32(output_base + CVL() * 6, vout[6]);
                     }
                     for (; ow < dst_w; ow++) {
+                        const bool use_2cols = ((ow * 2 + 1) < src_w);
+
                         const float *input_base = input_h_base + ow * 2 * CVL();
+
                         float32x4_t vin[4];
                         float32x4_t vout;
 
                         vin[0] = vld1q_f32(input_base                      );
-                        vin[1] = vld1q_f32(input_base               + CVL());
                         vin[2] = vld1q_f32(input_base + src_w * CVL()        );
-                        vin[3] = vld1q_f32(input_base + src_w * CVL() + CVL());
+                        vout = vmaxq_f32(vin[0], vin[2]);
 
-                        vout = vmaxq_f32(vin[0], vin[1]);
-                        vout = vmaxq_f32(vout, vin[2]);
-                        vout = vmaxq_f32(vout, vin[3]);
+                        if (use_2cols) {
+                            vin[1] = vld1q_f32(input_base               + CVL());
+                            vin[3] = vld1q_f32(input_base + src_w * CVL() + CVL());
+                            vout = vmaxq_f32(vout, vin[1]);
+                            vout = vmaxq_f32(vout, vin[3]);
+                        }
                         
+                        vst1q_f32(output_h_base + ow * CVL(), vout);
+                    }
+                }
+                if (oh_end < dst_h) {
+                    const int64_t oh = dst_h - 1;
+                    const float *input_h_base = input_c_base + oh * 2 * src_w * CVL();
+                    float *output_h_base = output_c_base + oh * dst_w * CVL();
+
+                    int64_t ow = 0;
+                    for (; ow <= dst_w - 1 - 7; ow += 7) {
+                        const float *input_base0 = input_h_base + ow * 2 * CVL();
+                        float *output_base = output_h_base + ow * CVL();
+                        float32x4_t vin0[14];
+                        float32x4_t vout[7];
+
+                        vin0[0] = vld1q_f32(input_base0            );
+                        vin0[1] = vld1q_f32(input_base0 + CVL()    );
+                        vin0[2] = vld1q_f32(input_base0 + CVL() * 2);
+                        vin0[3] = vld1q_f32(input_base0 + CVL() * 3);
+
+                        vin0[4] = vld1q_f32(input_base0 + CVL() * 4);
+                        vin0[5] = vld1q_f32(input_base0 + CVL() * 5);
+                        vin0[6] = vld1q_f32(input_base0 + CVL() * 6);
+                        vin0[7] = vld1q_f32(input_base0 + CVL() * 7);
+
+                        vout[0] = vmaxq_f32(vin0[0], vin0[1]);
+                        vout[1] = vmaxq_f32(vin0[2], vin0[3]);
+                        vout[2] = vmaxq_f32(vin0[4], vin0[5]);
+                        vout[3] = vmaxq_f32(vin0[6], vin0[7]);
+
+                        vin0[8]  = vld1q_f32(input_base0 + CVL() * 8);
+                        vin0[9]  = vld1q_f32(input_base0 + CVL() * 9);
+                        vin0[10] = vld1q_f32(input_base0 + CVL() * 10);
+                        vin0[11] = vld1q_f32(input_base0 + CVL() * 11);
+                        vin0[12] = vld1q_f32(input_base0 + CVL() * 12);
+                        vin0[13] = vld1q_f32(input_base0 + CVL() * 13);
+
+                        vst1q_f32(output_base            , vout[0]);
+                        vst1q_f32(output_base + CVL()    , vout[1]);
+                        vst1q_f32(output_base + CVL() * 2, vout[2]);
+                        vst1q_f32(output_base + CVL() * 3, vout[3]);
+
+                        vout[4] = vmaxq_f32(vin0[8], vin0[9]);
+                        vout[5] = vmaxq_f32(vin0[10], vin0[11]);
+                        vout[6] = vmaxq_f32(vin0[12], vin0[13]);
+
+                        vst1q_f32(output_base + CVL() * 4, vout[4]);
+                        vst1q_f32(output_base + CVL() * 5, vout[5]);
+                        vst1q_f32(output_base + CVL() * 6, vout[6]);
+                    }
+                    for (; ow < dst_w; ow++) {
+                        const float *input_base = input_h_base + ow * 2 * CVL();
+                        const bool use_2cols = (ow * 2 + 1) < src_w;
+
+                        float32x4_t vin1, vout;
+
+                        vout = vld1q_f32(input_base);
+                        if (use_2cols) {
+                            vin1 = vld1q_f32(input_base + CVL());
+                            vout = vmaxq_f32(vout, vin1);
+                        }
                         vst1q_f32(output_h_base + ow * CVL(), vout);
                     }
                 }
