@@ -98,34 +98,47 @@ uint64_t PPLBgemmCUDAGetBufSize(
     return 0;
 }
 
-// block size: (32,32,1)
 template <typename T>
 __global__ void matrix_transpose(
     T *output,
     T *input,
-    const int in_row,
-    const int in_col,
-    const int out_row,
-    const int out_col)
+    const int in_height,
+    const int in_width,
+    const int out_height,
+    const int out_width)
 {
-    unsigned int out_x  = blockIdx.x * 32 + threadIdx.x;
-    unsigned int out_y  = blockIdx.y * 32 + threadIdx.y;
-    unsigned int in_x   = blockIdx.y * 32 + threadIdx.x;
-    unsigned int in_y   = blockIdx.x * 32 + threadIdx.y;
-    bool in_range      = (in_x < in_col) && (in_y < in_row);
-    bool out_range     = (out_x < out_col) && (out_y < out_row);
-    __shared__ T smem[32][33];
+    __shared__ T shared[32][33];
 
-    T value = in_range ? input[blockIdx.z*in_row*in_col + in_y * in_col + in_x] : (T)0;
-    smem[threadIdx.x][threadIdx.y] = value;
+    int tid = threadIdx.x;
+    int bx = blockIdx.x;
+    int by = blockIdx.y;
+    int bz = blockIdx.z;
 
+    int in_h = bx * 32;
+    int in_w = by * 32 + tid;
+    int out_h = by * 32;
+    int out_w = bx * 32 + tid;
+
+    int in_idx = bz * in_height * in_width + in_h * in_width + in_w;
+    int out_idx = bz * out_height * out_width + out_h * out_width + out_w;
+
+    if (in_w < in_width) {
+        for (int i = 0; i < 32; i++){
+            if (in_h + i < in_height)
+                shared[i][tid] = input[in_idx + i * in_width];
+        }
+    }
     __syncthreads();
-    value          = smem[threadIdx.y][threadIdx.x];
-    float fp_value = (float)value;
-    if (out_range)
-        output[blockIdx.z*out_row*out_col + out_y * out_col + out_x] = (__half)fp_value;
+    T reg_zero = 0;
+    if (out_w < out_width) {
+        for (int i = 0; i < 32; i++) {
+            if (out_h + i < out_height) {
+                output[out_idx + i * out_width] = (out_w < in_height && (out_h + i) < in_width) ?
+                                                shared[tid][i] : reg_zero;
+            }
+        }
+    }
 }
-
 
 ppl::common::RetCode PPLCUDABgemmModifyWeights(
     const cudaStream_t &stream,
@@ -152,7 +165,7 @@ ppl::common::RetCode PPLCUDABgemmModifyWeights(
     matrix_transpose<Type><<<grid, block, 0, stream>>>((Type *)tmp_weight, (Type *)weight, dim0, dim1, dim1, dim0_pad); \
 
         dim3 grid(DivUp(dim0_pad, 32), DivUp(dim1, 32), batch);
-        dim3 block(32, 32, 1);
+        dim3 block(32, 1, 1);
         switch (type) {
             case ppl::common::DATATYPE_FLOAT32: {
                 TRANSWEIGHT(float)
