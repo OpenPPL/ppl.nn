@@ -308,6 +308,43 @@ static void ppl_pad_tensor_shape(const ppl::nn::TensorShape *tensor_shape0,
     }
 }
 
+static void ppl_refine_tensor_shape(ppl::nn::TensorShape *input_shape0,
+                                    ppl::nn::TensorShape *input_shape1,
+                                    ppl::nn::TensorShape *output_shape) {
+    int dim_count = output_shape->GetDimCount();
+    int real_dim_count = dim_count;
+    int c_dim_idx = 1;
+    for (int i = dim_count - 1; i >= c_dim_idx + 1; i--) {
+        bool cur_dim_input0_need_broadcast =
+            input_shape0->GetDim(i) != input_shape1->GetDim(i) && input_shape0->GetDim(i) == 1;
+        bool cur_dim_input1_need_broadcast =
+            input_shape0->GetDim(i) != input_shape1->GetDim(i) && input_shape1->GetDim(i) == 1;
+        bool prev_dim_input0_need_broadcast =
+            input_shape0->GetDim(i - 1) != input_shape1->GetDim(i - 1) && input_shape0->GetDim(i - 1) == 1;
+        bool prev_dim_input1_need_broadcast =
+            input_shape0->GetDim(i - 1) != input_shape1->GetDim(i - 1) && input_shape1->GetDim(i - 1) == 1;
+
+        if (cur_dim_input0_need_broadcast == prev_dim_input0_need_broadcast && // can merge
+            cur_dim_input1_need_broadcast == prev_dim_input1_need_broadcast) {
+            input_shape0->SetDim(i - 1, input_shape0->GetDim(i) * input_shape0->GetDim(i - 1));
+            input_shape1->SetDim(i - 1, input_shape1->GetDim(i) * input_shape1->GetDim(i - 1));
+            output_shape->SetDim(i - 1, output_shape->GetDim(i) * output_shape->GetDim(i - 1));
+            real_dim_count--;
+        } else {
+            break;
+        }
+    }
+    int dim_diff = dim_count - real_dim_count;
+    for (int i = 0; i < dim_diff; ++i) {
+        input_shape0->SetDim(dim_count - 1 - i, 1);
+        input_shape1->SetDim(dim_count - 1 - i, 1);
+        output_shape->SetDim(dim_count - 1 - i, 1);
+    }
+    input_shape0->SetDimCount(real_dim_count);
+    input_shape1->SetDimCount(real_dim_count);
+    output_shape->SetDimCount(real_dim_count);
+}
+
 static int ppl_get_num_broadcast_dims(const ppl::nn::TensorShape *tensor_shape0,
                             const ppl::nn::TensorShape *tensor_shape1,
                             int &aixs, bool &bidirectional) {
@@ -865,15 +902,23 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImpInt8(
 #define INSTANT(OPTYPE) \
 ppl::common::RetCode PPLCUDAArithMetic##OPTYPE##ForwardImp( \
     cudaStream_t stream, \
-    const ppl::nn::TensorShape* input_shape0, \
+    const ppl::nn::TensorShape* input_shape0_ref, \
     const void *input0, \
-    const ppl::nn::TensorShape* input_shape1, \
+    const ppl::nn::TensorShape* input_shape1_ref, \
     const void *input1, \
-    const ppl::nn::TensorShape* output_shape, \
+    const ppl::nn::TensorShape* output_shape_ref, \
     void *output, \
     float in_scale0 = 0, \
     float in_scale1 = 0, \
     float out_scale = 0) { \
+    ppl::nn::TensorShape input_shape0_obj = *input_shape0_ref; \
+    ppl::nn::TensorShape input_shape1_obj = *input_shape1_ref; \
+    ppl::nn::TensorShape output_shape_obj = *output_shape_ref; \
+    ppl::nn::TensorShape* input_shape0 = &input_shape0_obj; \
+    ppl::nn::TensorShape* input_shape1 = &input_shape1_obj; \
+    ppl::nn::TensorShape* output_shape = &output_shape_obj; \
+    if (input_shape0->GetDimCount() == input_shape1->GetDimCount() && input_shape0->GetDimCount() > 3) { \
+        ppl_refine_tensor_shape(input_shape0, input_shape1, output_shape); } \
     if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) { \
         return PPLCUDAArithMeticForwardImp<Arithmetic_##OPTYPE, half>(stream, \
             input_shape0, (const half*)input0, input_shape1, \
@@ -902,15 +947,23 @@ ppl::common::RetCode PPLCUDAArithMetic##OPTYPE##ForwardImp( \
 #define INSTANT_LIMNHWC8(OPTYPE) \
 ppl::common::RetCode PPLCUDAArithMetic##OPTYPE##ForwardImp( \
     cudaStream_t stream, \
-    const ppl::nn::TensorShape* input_shape0, \
+    const ppl::nn::TensorShape* input_shape0_ref, \
     const void *input0, \
-    const ppl::nn::TensorShape* input_shape1, \
+    const ppl::nn::TensorShape* input_shape1_ref, \
     const void *input1, \
-    const ppl::nn::TensorShape* output_shape, \
+    const ppl::nn::TensorShape* output_shape_ref, \
     void *output, \
     float in_scale0 = 0, \
     float in_scale1 = 0, \
     float out_scale = 0) { \
+    ppl::nn::TensorShape input_shape0_obj = *input_shape0_ref; \
+    ppl::nn::TensorShape input_shape1_obj = *input_shape1_ref; \
+    ppl::nn::TensorShape output_shape_obj = *output_shape_ref; \
+    ppl::nn::TensorShape* input_shape0 = &input_shape0_obj; \
+    ppl::nn::TensorShape* input_shape1 = &input_shape1_obj; \
+    ppl::nn::TensorShape* output_shape = &output_shape_obj; \
+    if (input_shape0->GetDimCount() == input_shape1->GetDimCount() && input_shape0->GetDimCount() > 3) { \
+        ppl_refine_tensor_shape(input_shape0, input_shape1, output_shape); } \
     if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8) { \
         if (input_shape0->GetDimCount() >= 2 && (input_shape0->GetDim(1) & 0x7)) \
             return ppl::common::RC_UNSUPPORTED; \
