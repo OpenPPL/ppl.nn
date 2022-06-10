@@ -181,18 +181,26 @@ static RetCode ParseNodeInfo(const ::onnx::NodeProto& pb_node, const ParamParser
         return RC_UNSUPPORTED;
     }
 
-    if (!parser_info->create_param) {
-        return RC_SUCCESS;
-    }
+    if (parser_info->parse_param) {
+        shared_ptr<ir::Attr> param;
+        if (parser_info->create_param) {
+            param = parser_info->create_param();
+            if (!param) {
+                LOG(ERROR) << "create param failed for op[" << node->GetName() << "]";
+                return RC_OTHER_ERROR;
+            }
+        }
 
-    auto param = parser_info->create_param();
-    auto status = parser_info->parse_param(pb_node, args, node, param.get());
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "parse attr of node[" << node_name << "] failed: " << GetRetCodeStr(status);
-        return status;
-    }
+        auto status = parser_info->parse_param(pb_node, args, node, param.get());
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "parse attr of node[" << node_name << "] failed: " << GetRetCodeStr(status);
+            return status;
+        }
 
-    data->attrs.emplace(node->GetId(), std::move(param));
+        if (param) {
+            data->attrs.emplace(node->GetId(), std::move(param));
+        }
+    }
 
     return RC_SUCCESS;
 }
@@ -235,7 +243,7 @@ static RetCode ParseGraphOutput(const ::onnx::GraphProto& pb_graph, ir::GraphTop
 
             auto& pb_tensor_type = pb_output_type.tensor_type();
             shape.data_type = utils::ConvertOnnxDataTypeToPplDataType(pb_tensor_type.elem_type());
-            shape.data_format = DATAFORMAT_NDARRAY;
+            shape.data_format = DATAFORMAT_NDARRAY; // default data format in onnx
 
             auto& pb_tensor_shape = pb_tensor_type.shape();
             for (int j = 0; j < pb_tensor_shape.dim_size(); ++j) {

@@ -41,6 +41,11 @@ static vector<T> GetIntsByKey(const ::onnx::NodeProto& node, const char* key) {
 }
 
 template <>
+vector<int64_t> GetNodeAttrsByKey<int64_t>(const ::onnx::NodeProto& node, const char* key) {
+    return GetIntsByKey<int64_t>(node, key);
+}
+
+template <>
 vector<int32_t> GetNodeAttrsByKey<int32_t>(const ::onnx::NodeProto& node, const char* key) {
     return GetIntsByKey<int32_t>(node, key);
 }
@@ -252,6 +257,12 @@ static RetCode LoadInternalData(const ::onnx::TensorProto& pb_tensor, datatype_t
             *data = pb_tensor.raw_data();
         } else if (pb_tensor.int64_data().size() > 0) {
             data->assign((const char*)pb_tensor.int64_data().data(), pb_tensor.int64_data().size() * elem_size);
+        }
+    } else if (onnx_data_type == ::onnx::TensorProto_DataType_BOOL) {
+        if (!pb_tensor.raw_data().empty()) {
+            *data = pb_tensor.raw_data();
+        } else if (pb_tensor.int32_data().size() > 0) { // bool may be stored in int32_data
+            data->assign((const char*)pb_tensor.int32_data().data(), pb_tensor.int32_data().size() * sizeof(int32_t));
         }
     } else if (onnx_data_type == ::onnx::TensorProto_DataType_INT8 ||
                onnx_data_type == ::onnx::TensorProto_DataType_UINT8) {

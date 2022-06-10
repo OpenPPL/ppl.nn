@@ -18,7 +18,6 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_ARM_OPTIMIZER_OPS_ONNX_CLIP_OP_H_
 #define _ST_HPC_PPL_NN_ENGINES_ARM_OPTIMIZER_OPS_ONNX_CLIP_OP_H_
 
-#include "ppl/nn/params/onnx/clip_param.h"
 #include "ppl/nn/engines/arm/optimizer/opt_kernel.h"
 
 namespace ppl { namespace nn { namespace arm {
@@ -31,9 +30,6 @@ public:
                                       std::vector<ppl::common::dataformat_t>* selected_input_formats,
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
     KernelImpl* CreateKernelImpl() const override;
-
-private:
-    std::shared_ptr<ppl::nn::onnx::ClipParam> param_;
 };
 
 }}} // namespace ppl::nn::arm
