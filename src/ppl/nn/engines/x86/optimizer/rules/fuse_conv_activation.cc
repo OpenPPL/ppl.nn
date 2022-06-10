@@ -18,7 +18,6 @@
 #include "ppl/nn/engines/x86/optimizer/rules/fuse_conv_activation.h"
 #include "ppl/nn/engines/x86/optimizer/rules/utils.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/conv_op.h"
-#include "ppl/nn/params/onnx/clip_param.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -27,42 +26,32 @@ static bool IsReLU6(const ir::GraphData* graph_data, const ir::Node* clip_node) 
         return false;
     }
 
-    if (clip_node->GetInputCount() == 3) {
-        auto min_edge_id = clip_node->GetInput(1);
-        auto max_edge_id = clip_node->GetInput(2);
-        auto& constants = graph_data->constants;
-        auto min_edge_constant = constants.find(min_edge_id);
-        auto max_edge_constant = constants.find(max_edge_id);
-        if (min_edge_constant == constants.end() || max_edge_constant == constants.end()) {
-            return false;
-        }
-
-        auto& shapes = graph_data->shapes;
-        auto min_edge_shape = shapes.find(min_edge_id);
-        auto max_edge_shape = shapes.find(max_edge_id);
-        if (min_edge_shape == shapes.end() || max_edge_shape == shapes.end()) {
-            return false;
-        }
-        if (min_edge_shape->second.data_type != ppl::common::DATATYPE_FLOAT32 ||
-            max_edge_shape->second.data_type != ppl::common::DATATYPE_FLOAT32) {
-            return false;
-        }
-
-        float min_val = *((float*)min_edge_constant->second.data.data());
-        float max_val = *((float*)max_edge_constant->second.data.data());
-        if (min_val == 0.0f && max_val == 6.0f) {
-            return true;
-        }
-    } else {
-        auto it = graph_data->attrs.find(clip_node->GetId());
-        if (it == graph_data->attrs.end()) {
-            return false;
-        }
-        auto p = (const ppl::nn::onnx::ClipParam*)(it->second.get());
-        if (p->min_value == 0.0f && p->max_value == 6.0f) {
-            return true;
-        }
+    auto min_edge_id = clip_node->GetInput(1);
+    auto max_edge_id = clip_node->GetInput(2);
+    auto& constants = graph_data->constants;
+    auto min_edge_constant = constants.find(min_edge_id);
+    auto max_edge_constant = constants.find(max_edge_id);
+    if (min_edge_constant == constants.end() || max_edge_constant == constants.end()) {
+        return false;
     }
+
+    auto& shapes = graph_data->shapes;
+    auto min_edge_shape = shapes.find(min_edge_id);
+    auto max_edge_shape = shapes.find(max_edge_id);
+    if (min_edge_shape == shapes.end() || max_edge_shape == shapes.end()) {
+        return false;
+    }
+    if (min_edge_shape->second.data_type != ppl::common::DATATYPE_FLOAT32 ||
+        max_edge_shape->second.data_type != ppl::common::DATATYPE_FLOAT32) {
+        return false;
+    }
+
+    float min_val = *((float*)min_edge_constant->second.data.data());
+    float max_val = *((float*)max_edge_constant->second.data.data());
+    if (min_val == 0.0f && max_val == 6.0f) {
+        return true;
+    }
+
     return false;
 }
 

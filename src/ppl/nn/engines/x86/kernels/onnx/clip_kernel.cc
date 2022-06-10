@@ -42,8 +42,8 @@ ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    float min_val = param_->min_value;
-    float max_val = param_->max_value;
+    float min_val = -FLT_MAX;
+    float max_val = FLT_MAX;
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
 

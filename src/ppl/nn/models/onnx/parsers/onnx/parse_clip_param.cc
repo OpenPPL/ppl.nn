@@ -17,30 +17,43 @@
 
 #include "ppl/nn/models/onnx/parsers/onnx/parse_clip_param.h"
 #include "ppl/nn/models/onnx/utils.h"
+#include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseClipParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
-    auto param = static_cast<ClipParam*>(arg);
-    param->min_value = utils::GetNodeAttrByKey<float>(pb_node, "min", numeric_limits<float>::lowest());
-    param->max_value = utils::GetNodeAttrByKey<float>(pb_node, "max", numeric_limits<float>::max());
-    return RC_SUCCESS;
-}
+RetCode ParseClipParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node,
+                       ir::Attr* arg) {
+    auto& node_type = node->GetType();
 
-RetCode PackClipParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
-    auto param = static_cast<const ClipParam*>(arg);
-    utils::SetNodeAttr(pb_node, "min", param->min_value);
-    utils::SetNodeAttr(pb_node, "max", param->max_value);
-    return RC_SUCCESS;
-}
+    if (node_type.version >= 6 && node_type.version < 11) {
+        auto topo = args.topo;
+        auto data = args.data;
 
-RetCode PackClipParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
-    auto param = static_cast<const ClipParam*>(arg);
-    utils::SetNodeAttr(pb_node, "min", param->min_value);
-    utils::SetNodeAttr(pb_node, "max", param->max_value);
+        auto min_value = utils::GetNodeAttrByKey<float>(pb_node, "min", numeric_limits<float>::lowest());
+        auto max_value = utils::GetNodeAttrByKey<float>(pb_node, "max", numeric_limits<float>::max());
+
+        auto new_edge_name = node->GetName() + "_clip_min_" + std::to_string(topo->GetCurrentEdgeIdBound());
+        auto edge = utils::AddScalarInitializer(topo, data, new_edge_name, min_value, DATATYPE_FLOAT32);
+        if (!edge) {
+            LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
+            return RC_OTHER_ERROR;
+        }
+        node->AddInput(edge->GetId());
+
+        new_edge_name = node->GetName() + "_clip_max_" + std::to_string(topo->GetCurrentEdgeIdBound());
+        edge = utils::AddScalarInitializer(topo, data, new_edge_name, max_value, DATATYPE_FLOAT32);
+        if (!edge) {
+            LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
+            return RC_OTHER_ERROR;
+        }
+        node->AddInput(edge->GetId());
+
+        node_type.version = 11;
+    }
+
     return RC_SUCCESS;
 }
 

@@ -24,12 +24,6 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace x86 {
 
 RetCode ClipOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam(options, &param_);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
     infer_dims_func_ = GenericInferDims;
     infer_type_func_ = GenericInferType;
     return RC_SUCCESS;
@@ -43,7 +37,7 @@ RetCode ClipOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* 
 }
 
 KernelImpl* ClipOp::CreateKernelImpl() const {
-    return CreateKernelImplWithParam<ClipKernel>(param_.get());
+    return CreateKernelImplWithoutParam<ClipKernel>();
 }
 
 }}} // namespace ppl::nn::x86

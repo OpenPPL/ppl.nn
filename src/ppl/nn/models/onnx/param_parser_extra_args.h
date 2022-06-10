@@ -19,6 +19,7 @@
 #define _ST_HPC_PPL_NN_MODELS_ONNX_PARAM_PARSER_EXTRS_ARGS_H
 
 #include "ppl/nn/ir/graph_topo.h"
+#include "ppl/nn/ir/graph_data.h"
 #include <map>
 #include <string>
 
@@ -28,6 +29,7 @@ struct ParamParserExtraArgs final {
     const std::map<std::string, uint64_t>* op_set;
     const char* model_file_dir;
     ir::GraphTopo* topo;
+    ir::GraphData* data;
 };
 
 }}} // namespace ppl::nn::onnx
