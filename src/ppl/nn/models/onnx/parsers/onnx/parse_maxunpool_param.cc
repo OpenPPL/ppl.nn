@@ -34,4 +34,12 @@ RetCode ParseMaxUnpoolParam(const ::onnx::NodeProto& pb_node, const ParamParserE
     return RC_SUCCESS;
 }
 
+RetCode PackMaxUnpoolParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const MaxUnpoolParam*>(arg);
+    utils::SetNodeAttr(pb_node, "kernel_shape", param->kernel_shape);
+    utils::SetNodeAttr(pb_node, "strides", param->strides);
+    utils::SetNodeAttr(pb_node, "pads", param->pads);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

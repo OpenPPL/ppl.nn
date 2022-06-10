@@ -38,4 +38,10 @@ RetCode ParseConcatParam(const ::onnx::NodeProto& pb_node, const ParamParserExtr
     return RC_SUCCESS;
 }
 
+RetCode PackConcatParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const ConcatParam*>(arg);
+    utils::SetNodeAttr(pb_node, "axis", param->axis);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

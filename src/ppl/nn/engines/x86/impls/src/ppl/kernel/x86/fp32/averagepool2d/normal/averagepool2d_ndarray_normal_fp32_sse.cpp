@@ -343,7 +343,7 @@ static inline void averagepool2d_ndarray_border_fp32_sse_n4cx_impl(
     const int64_t ih_start,
     const int64_t ih_end,
     const int64_t padding_ih_len,
-    ppl::nn::onnx::PoolingParam::pooling_mode_t pooling_mode,
+    int32_t pooling_mode,
     bool ceil_mode,
     float *dst)
 {
@@ -386,7 +386,7 @@ static void averagepool2d_ndarray_1x4_kernel_fp32_sse_n4cx(
     const int64_t ih_start,
     const int64_t ih_end,
     const int64_t padding_ih_len,
-    ppl::nn::onnx::PoolingParam::pooling_mode_t pooling_mode,
+    int32_t pooling_mode,
     bool ceil_mode,
     float *dst)
 {
@@ -463,7 +463,7 @@ static void averagepool2d_ndarray_1x4_kernel_fp32_sse_n4cx(
     if (w_len >= 4) _mm_storeu_ps(p_dst + 3 * C_BLK(), _mm_mul_ps(zmm03, vave_coeff_3));
 }
 
-typedef void (*averagepool2d_ndarray_kernel_fp32_sse_n4cx_funct)(const float *, const averagepool2d_param *, const int64_t, const int64_t, const int64_t, const int64_t, ppl::nn::onnx::PoolingParam::pooling_mode_t, bool, float *);
+typedef void (*averagepool2d_ndarray_kernel_fp32_sse_n4cx_funct)(const float *, const averagepool2d_param *, const int64_t, const int64_t, const int64_t, const int64_t, int32_t, bool, float *);
 static const averagepool2d_ndarray_kernel_fp32_sse_n4cx_funct averagepool2d_ndarray_1x4_kernel_n4cx_func_table[3][5]{
     {
         averagepool2d_ndarray_1x4_kernel_fp32_sse_n4cx<0, 0>,
@@ -489,7 +489,7 @@ static const averagepool2d_ndarray_kernel_fp32_sse_n4cx_funct averagepool2d_ndar
 
 };
 
-template <ppl::nn::onnx::PoolingParam::pooling_mode_t pooling_mode, bool ceil_mode>
+template <int32_t pooling_mode, bool ceil_mode>
 static ppl::common::RetCode averagepool2d_ndarray_fp32_sse_n4cx_impl(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,

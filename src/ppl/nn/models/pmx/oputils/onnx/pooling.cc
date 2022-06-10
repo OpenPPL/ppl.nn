@@ -26,7 +26,7 @@ Offset<PoolingParam> SerializePoolingParam(const ppl::nn::onnx::PoolingParam& pa
     auto fb_kernel_shape = builder->CreateVector(param.kernel_shape);
     auto fb_pads = builder->CreateVector(param.pads);
     auto fb_strides = builder->CreateVector(param.strides);
-    return CreatePoolingParam(*builder, AutoPadType_NOSET, param.ceil_mode, 0, 0, fb_dilations, fb_kernel_shape,
+    return CreatePoolingParam(*builder, AutoPadType_NOTSET, param.ceil_mode, 0, 0, fb_dilations, fb_kernel_shape,
                               fb_pads, fb_strides);
 }
 

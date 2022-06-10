@@ -31,4 +31,11 @@ RetCode ParseSplitToSequenceParam(const ::onnx::NodeProto& pb_node, const ParamP
     return RC_SUCCESS;
 }
 
+RetCode PackSplitToSequenceParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const SplitToSequenceParam*>(arg);
+    utils::SetNodeAttr(pb_node, "axis", param->axis);
+    utils::SetNodeAttr(pb_node, "keepdims", param->keepdims);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

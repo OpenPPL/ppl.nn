@@ -25,14 +25,17 @@
 namespace ppl { namespace nn { namespace onnx {
 
 struct PoolingParam final : public ir::TypedAttr<PoolingParam> {
-    typedef enum { POOLING_MAX = 0, POOLING_AVERAGE_EXCLUDE = 1, POOLING_AVERAGE_INCLUDE = 2 } pooling_mode_t;
-
-    std::vector<int32_t> kernel_shape;
-    std::vector<int32_t> dilations;
-    std::vector<int32_t> strides;
-    std::vector<int32_t> pads;
-    int32_t mode;
+    int32_t auto_pad;
     int32_t ceil_mode;
+    int32_t storage_order = 0; // MaxPool
+    std::vector<int32_t> dilations;
+    std::vector<int32_t> kernel_shape;
+    std::vector<int32_t> pads;
+    std::vector<int32_t> strides;
+
+    enum { POOLING_MAX = 0, POOLING_AVERAGE_EXCLUDE = 1, POOLING_AVERAGE_INCLUDE = 2 };
+    int32_t mode; // AveragePool, corresponding to `count_include_pad`
+
     int32_t global_pooling;
 
     bool operator==(const PoolingParam& p) const {

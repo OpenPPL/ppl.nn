@@ -26,7 +26,7 @@
 namespace ppl { namespace nn { namespace onnx {
 
 struct ConvTransposeParam final : public ir::TypedAttr<ConvTransposeParam> {
-    std::string auto_pad;
+    uint32_t auto_pad;
     int64_t group;
     std::vector<int32_t> dilations;
     std::vector<int32_t> kernel_shape;

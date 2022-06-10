@@ -43,4 +43,24 @@ RetCode ParseRoiAlignParam(const ::onnx::NodeProto& pb_node, const ParamParserEx
     return RC_SUCCESS;
 }
 
+RetCode PackRoiAlignParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const RoiAlignParam*>(arg);
+
+    if (param->mode == RoiAlignParam::MAX) {
+        utils::SetNodeAttr(pb_node, "mode", "max");
+    } else if (param->mode == RoiAlignParam::AVG) {
+        utils::SetNodeAttr(pb_node, "mode", "avg");
+    } else {
+        LOG(ERROR) << "invalid mode[" << param->mode << "]";
+        return RC_INVALID_VALUE;
+    }
+
+    utils::SetNodeAttr(pb_node, "output_height", param->output_height);
+    utils::SetNodeAttr(pb_node, "output_width", param->output_width);
+    utils::SetNodeAttr(pb_node, "sampling_ratio", param->sampling_ratio);
+    utils::SetNodeAttr(pb_node, "spatial_scale", param->spatial_scale);
+
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

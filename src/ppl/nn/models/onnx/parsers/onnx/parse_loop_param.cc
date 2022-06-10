@@ -50,4 +50,8 @@ RetCode ParseLoopParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraA
     return RC_SUCCESS;
 }
 
+RetCode PackLoopParam(const ir::Node*, const ir::Attr*, ::onnx::NodeProto*) {
+    return RC_UNSUPPORTED;
+}
+
 }}} // namespace ppl::nn::onnx

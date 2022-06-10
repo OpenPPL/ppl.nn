@@ -113,17 +113,17 @@ struct OpParam;
 struct OpParamBuilder;
 
 enum AutoPadType : uint32_t {
-  AutoPadType_NOSET = 0,
+  AutoPadType_NOTSET = 0,
   AutoPadType_SAME_UPPER = 1,
   AutoPadType_SAME_LOWER = 2,
   AutoPadType_VALID = 3,
-  AutoPadType_MIN = AutoPadType_NOSET,
+  AutoPadType_MIN = AutoPadType_NOTSET,
   AutoPadType_MAX = AutoPadType_VALID
 };
 
 inline const AutoPadType (&EnumValuesAutoPadType())[4] {
   static const AutoPadType values[] = {
-    AutoPadType_NOSET,
+    AutoPadType_NOTSET,
     AutoPadType_SAME_UPPER,
     AutoPadType_SAME_LOWER,
     AutoPadType_VALID
@@ -133,7 +133,7 @@ inline const AutoPadType (&EnumValuesAutoPadType())[4] {
 
 inline const char * const *EnumNamesAutoPadType() {
   static const char * const names[5] = {
-    "NOSET",
+    "NOTSET",
     "SAME_UPPER",
     "SAME_LOWER",
     "VALID",
@@ -143,7 +143,7 @@ inline const char * const *EnumNamesAutoPadType() {
 }
 
 inline const char *EnumNameAutoPadType(AutoPadType e) {
-  if (flatbuffers::IsOutRange(e, AutoPadType_NOSET, AutoPadType_VALID)) return "";
+  if (flatbuffers::IsOutRange(e, AutoPadType_NOTSET, AutoPadType_VALID)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesAutoPadType()[index];
 }
@@ -956,7 +956,7 @@ struct ConvParamBuilder {
 
 inline flatbuffers::Offset<ConvParam> CreateConvParam(
     flatbuffers::FlatBufferBuilder &_fbb,
-    ppl::nn::pmx::onnx::AutoPadType auto_pad = ppl::nn::pmx::onnx::AutoPadType_NOSET,
+    ppl::nn::pmx::onnx::AutoPadType auto_pad = ppl::nn::pmx::onnx::AutoPadType_NOTSET,
     int32_t group = 0,
     flatbuffers::Offset<flatbuffers::Vector<int32_t>> dilations = 0,
     flatbuffers::Offset<flatbuffers::Vector<int32_t>> kernel_shape = 0,
@@ -974,7 +974,7 @@ inline flatbuffers::Offset<ConvParam> CreateConvParam(
 
 inline flatbuffers::Offset<ConvParam> CreateConvParamDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    ppl::nn::pmx::onnx::AutoPadType auto_pad = ppl::nn::pmx::onnx::AutoPadType_NOSET,
+    ppl::nn::pmx::onnx::AutoPadType auto_pad = ppl::nn::pmx::onnx::AutoPadType_NOTSET,
     int32_t group = 0,
     const std::vector<int32_t> *dilations = nullptr,
     const std::vector<int32_t> *kernel_shape = nullptr,
@@ -1091,7 +1091,7 @@ struct ConvTransposeParamBuilder {
 
 inline flatbuffers::Offset<ConvTransposeParam> CreateConvTransposeParam(
     flatbuffers::FlatBufferBuilder &_fbb,
-    ppl::nn::pmx::onnx::AutoPadType auto_pad = ppl::nn::pmx::onnx::AutoPadType_NOSET,
+    ppl::nn::pmx::onnx::AutoPadType auto_pad = ppl::nn::pmx::onnx::AutoPadType_NOTSET,
     int32_t group = 0,
     flatbuffers::Offset<flatbuffers::Vector<int32_t>> dilations = 0,
     flatbuffers::Offset<flatbuffers::Vector<int32_t>> kernel_shape = 0,
@@ -1113,7 +1113,7 @@ inline flatbuffers::Offset<ConvTransposeParam> CreateConvTransposeParam(
 
 inline flatbuffers::Offset<ConvTransposeParam> CreateConvTransposeParamDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    ppl::nn::pmx::onnx::AutoPadType auto_pad = ppl::nn::pmx::onnx::AutoPadType_NOSET,
+    ppl::nn::pmx::onnx::AutoPadType auto_pad = ppl::nn::pmx::onnx::AutoPadType_NOTSET,
     int32_t group = 0,
     const std::vector<int32_t> *dilations = nullptr,
     const std::vector<int32_t> *kernel_shape = nullptr,
@@ -2005,7 +2005,7 @@ struct PoolingParamBuilder {
 
 inline flatbuffers::Offset<PoolingParam> CreatePoolingParam(
     flatbuffers::FlatBufferBuilder &_fbb,
-    ppl::nn::pmx::onnx::AutoPadType auto_pad = ppl::nn::pmx::onnx::AutoPadType_NOSET,
+    ppl::nn::pmx::onnx::AutoPadType auto_pad = ppl::nn::pmx::onnx::AutoPadType_NOTSET,
     int32_t ceil_mode = 0,
     int32_t count_include_pad = 0,
     int32_t storage_order = 0,
@@ -2027,7 +2027,7 @@ inline flatbuffers::Offset<PoolingParam> CreatePoolingParam(
 
 inline flatbuffers::Offset<PoolingParam> CreatePoolingParamDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    ppl::nn::pmx::onnx::AutoPadType auto_pad = ppl::nn::pmx::onnx::AutoPadType_NOSET,
+    ppl::nn::pmx::onnx::AutoPadType auto_pad = ppl::nn::pmx::onnx::AutoPadType_NOTSET,
     int32_t ceil_mode = 0,
     int32_t count_include_pad = 0,
     int32_t storage_order = 0,

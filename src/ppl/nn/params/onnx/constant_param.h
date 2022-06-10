@@ -27,12 +27,11 @@ namespace ppl { namespace nn { namespace onnx {
 
 struct ConstantParam final : public ir::TypedAttr<ConstantParam> {
     ppl::common::datatype_t data_type;
-    ppl::common::dataformat_t data_format;
     std::vector<int64_t> dims;
     std::string data;
 
     bool operator==(const ConstantParam& p) const {
-        return (data_type == p.data_type && data_format == p.data_format && dims == p.dims && data == p.data);
+        return (data_type == p.data_type && dims == p.dims && data == p.data);
     }
 };
 

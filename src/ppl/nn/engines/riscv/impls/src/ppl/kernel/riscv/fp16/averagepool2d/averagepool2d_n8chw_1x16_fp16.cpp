@@ -25,7 +25,7 @@ namespace ppl { namespace kernel { namespace riscv {
 
 #define C_BLK() 8
 
-template <ppl::nn::onnx::PoolingParam::pooling_mode_t pooling_mode, int64_t w_len>
+template <int32_t pooling_mode, int64_t w_len>
 static void averagepool2d_n8chw_1x16_kernel_fp16(
     const __fp16* src,
     __fp16* dst,
@@ -245,7 +245,7 @@ static const averagepool2d_n8chw_kernel_fp16_func averagepool2d_n8chw_1x16_kerne
      averagepool2d_n8chw_1x16_kernel_fp16<ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE, 15>,
      averagepool2d_n8chw_1x16_kernel_fp16<ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE, 16>}};
 
-template <ppl::nn::onnx::PoolingParam::pooling_mode_t pooling_mode>
+template <int32_t pooling_mode>
 static inline void averagepool2d_n8chw_border_fp16(
     const __fp16* src,
     __fp16* dst,
@@ -294,7 +294,7 @@ static inline void averagepool2d_n8chw_border_fp16(
     vsev_float16xm1(dst_p, vfmulvf_float16xm1(vfave, ave_divider, vl), vl);
 }
 
-template <ppl::nn::onnx::PoolingParam::pooling_mode_t pooling_mode>
+template <int32_t pooling_mode>
 ppl::common::RetCode averagepool2d_n8chw_1x16_fp16_impl(
     const ppl::nn::TensorShape* src_shape,
     const ppl::nn::TensorShape* dst_shape,

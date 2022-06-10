@@ -31,4 +31,10 @@ RetCode ParseSqueezeParam(const ::onnx::NodeProto& pb_node, const ParamParserExt
     return RC_SUCCESS;
 }
 
+RetCode PackSqueezeParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const SqueezeParam*>(arg);
+    utils::SetNodeAttr(pb_node, "axes", param->axes);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

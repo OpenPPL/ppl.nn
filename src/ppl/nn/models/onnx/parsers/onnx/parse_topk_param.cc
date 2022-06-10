@@ -22,6 +22,7 @@ using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
+
 RetCode ParseTopKParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto it = args.op_set->find(pb_node.domain());
     if (it == args.op_set->end()) {
@@ -42,4 +43,13 @@ RetCode ParseTopKParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraA
 
     return RC_SUCCESS;
 }
+
+RetCode PackTopKParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const TopKParam*>(arg);
+    utils::SetNodeAttr(pb_node, "axis", param->axis);
+    utils::SetNodeAttr(pb_node, "largest", param->largest);
+    utils::SetNodeAttr(pb_node, "sorted", param->sorted);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

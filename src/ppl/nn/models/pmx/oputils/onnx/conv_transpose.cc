@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "ppl/nn/params/onnx/auto_pad_type.h"
 #include "ppl/nn/models/pmx/utils.h"
 #include "ppl/nn/models/pmx/oputils/onnx/conv_transpose.h"
 using namespace flatbuffers;
@@ -29,14 +30,12 @@ Offset<ConvTransposeParam> SerializeConvTransposeParam(const ppl::nn::onnx::Conv
     auto fb_strides = builder->CreateVector(param.strides);
     auto fb_output_padding = builder->CreateVector(param.output_padding);
     auto fb_output_shape = builder->CreateVector(param.output_shape);
-    AutoPadType tmp_auto_pad = AutoPadType_NOSET;
-    if (param.auto_pad == "NOSET") {
-        tmp_auto_pad = AutoPadType_NOSET;
-    } else if (param.auto_pad == "SAME_UPPER") {
+    AutoPadType tmp_auto_pad = AutoPadType_NOTSET;
+    if (param.auto_pad == ppl::nn::onnx::AUTO_PAD_SAME_UPPER) {
         tmp_auto_pad = AutoPadType_SAME_UPPER;
-    } else if (param.auto_pad == "SAME_LOWER") {
+    } else if (param.auto_pad == ppl::nn::onnx::AUTO_PAD_SAME_LOWER) {
         tmp_auto_pad = AutoPadType_SAME_LOWER;
-    } else if (param.auto_pad == "VALID") {
+    } else if (param.auto_pad == ppl::nn::onnx::AUTO_PAD_VALID) {
         tmp_auto_pad = AutoPadType_VALID;
     }
     return CreateConvTransposeParam(*builder, static_cast<AutoPadType>(tmp_auto_pad), param.group, fb_dilations,
@@ -45,17 +44,17 @@ Offset<ConvTransposeParam> SerializeConvTransposeParam(const ppl::nn::onnx::Conv
 
 void DeserializeConvTransposeParam(const ConvTransposeParam& fb_param, ppl::nn::onnx::ConvTransposeParam* param) {
     switch (fb_param.auto_pad()) {
-        case AutoPadType_NOSET:
-            param->auto_pad = "NOSET";
+        case AutoPadType_NOTSET:
+            param->auto_pad = ppl::nn::onnx::AUTO_PAD_NOTSET;
             break;
         case AutoPadType_SAME_UPPER:
-            param->auto_pad = "SAME_UPPER";
+            param->auto_pad = ppl::nn::onnx::AUTO_PAD_SAME_UPPER;
             break;
         case AutoPadType_SAME_LOWER:
-            param->auto_pad = "SAME_LOWER";
+            param->auto_pad = ppl::nn::onnx::AUTO_PAD_SAME_LOWER;
             break;
         case AutoPadType_VALID:
-            param->auto_pad = "VALID";
+            param->auto_pad = ppl::nn::onnx::AUTO_PAD_VALID;
             break;
         default:
             break;

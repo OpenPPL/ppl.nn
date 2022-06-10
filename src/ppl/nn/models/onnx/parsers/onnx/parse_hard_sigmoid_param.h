@@ -27,6 +27,8 @@ namespace ppl { namespace nn { namespace onnx {
 
 ppl::common::RetCode ParseHardSigmoidParam(const ::onnx::NodeProto&, const ParamParserExtraArgs&, ir::Node*, ir::Attr*);
 
+ppl::common::RetCode PackHardSigmoidParam(const ir::Node*, const ir::Attr*, ::onnx::NodeProto*);
+
 }}} // namespace ppl::nn::onnx
 
 #endif

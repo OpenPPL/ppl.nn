@@ -30,4 +30,10 @@ RetCode ParseLeakyReluParam(const ::onnx::NodeProto& pb_node, const ParamParserE
     return RC_SUCCESS;
 }
 
+RetCode PackLeakyReluParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const LeakyReluParam*>(arg);
+    utils::SetNodeAttr(pb_node, "alpha", param->alpha);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

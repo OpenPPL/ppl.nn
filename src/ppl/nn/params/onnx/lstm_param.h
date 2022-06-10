@@ -26,7 +26,7 @@
 namespace ppl { namespace nn { namespace onnx {
 
 struct LSTMParam final : public ir::TypedAttr<LSTMParam> {
-    typedef enum {
+    enum {
         ACT_RELU = 0,
         ACT_TANH,
         ACT_SIGMOID,
@@ -38,19 +38,19 @@ struct LSTMParam final : public ir::TypedAttr<LSTMParam> {
         ACT_ELU,
         ACT_SOFTSIGN,
         ACT_SOFTPLUS
-    } activation_t;
+    };
 
-    typedef enum {
+    enum {
         DIR_FORWARD = 0,
         DIR_REVERSE,
         DIR_BIDIRECTIONAL,
-    } direction_t;
+    };
 
     std::vector<float> activation_alpha;
     std::vector<float> activation_beta;
-    std::vector<activation_t> activations;
+    std::vector<int32_t> activations;
     float clip;
-    direction_t direction;
+    int32_t direction;
     int32_t hidden_size;
     int32_t input_forget;
 
