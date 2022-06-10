@@ -37,8 +37,8 @@ ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_ARM_OPTIONAL_INPUT(max_tensor, 2);
     PPLNN_ARM_REQUIRED_OUTPUT(output, 0);
 
-    const float pmin_val = param_->min_value;
-    const float pmax_val = param_->max_value;
+    float pmin_val = std::numeric_limits<float>::lowest();
+    float pmax_val = std::numeric_limits<float>::max();
 
     PPLNN_ARM_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_ARM_DEBUG_TRACE("Input [input]:\n");
@@ -65,8 +65,7 @@ ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
 
     return ppl::kernel::arm_server::neon::clip(
         input->GetShape(), input->GetBufferPtr<void>(), min_tensor ? min_tensor->GetBufferPtr<void>() : nullptr,
-        max_tensor ? max_tensor->GetBufferPtr<void>() : nullptr, pmin_val, pmax_val,
-        output->GetBufferPtr<void>());
+        max_tensor ? max_tensor->GetBufferPtr<void>() : nullptr, pmin_val, pmax_val, output->GetBufferPtr<void>());
 }
 
 }}} // namespace ppl::nn::arm

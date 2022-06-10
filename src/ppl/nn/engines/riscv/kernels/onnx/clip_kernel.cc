@@ -46,8 +46,8 @@ ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    __fp16 min_val = param_->min_value;
-    __fp16 max_val = param_->max_value;
+    __fp16 min_val = std::numeric_limits<float>::lowest();
+    __fp16 max_val = std::numeric_limits<float>::max();
     if (min_tensor) {
         min_val = (__fp16)(min_tensor->GetBufferPtr<float>())[0];
     }

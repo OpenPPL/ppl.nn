@@ -19,22 +19,16 @@
 #define _ST_HPC_PPL_NN_ENGINES_RISCV_KERNELS_ONNX_CLIP_KERNEL_H_
 
 #include "ppl/nn/engines/riscv/kernel.h"
-#include "ppl/nn/params/onnx/clip_param.h"
 
 namespace ppl { namespace nn { namespace riscv {
 
 class ClipKernel : public RiscvKernel {
 public:
     ClipKernel(const ir::Node* node) : RiscvKernel(node) {}
-    void SetParam(const ppl::nn::onnx::ClipParam* p) {
-        param_ = p;
-    }
 
 private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
     bool CanDoExecute(const KernelExecContext&) const override;
-
-    const ppl::nn::onnx::ClipParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::riscv
