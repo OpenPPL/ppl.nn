@@ -28,7 +28,14 @@ RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtra
     param->axes = utils::GetNodeAttrsByKey<int32_t>(pb_node, "axes");
     param->ends = utils::GetNodeAttrsByKey<int32_t>(pb_node, "ends");
     param->starts = utils::GetNodeAttrsByKey<int32_t>(pb_node, "starts");
+    return RC_SUCCESS;
+}
 
+RetCode PackSliceParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const SliceParam*>(arg);
+    utils::SetNodeAttr(pb_node, "axes", param->axes);
+    utils::SetNodeAttr(pb_node, "ends", param->ends);
+    utils::SetNodeAttr(pb_node, "starts", param->starts);
     return RC_SUCCESS;
 }
 

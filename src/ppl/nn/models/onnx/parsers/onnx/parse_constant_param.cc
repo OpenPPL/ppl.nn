@@ -34,7 +34,6 @@ static RetCode DoParseTensorProto(const ::onnx::TensorProto& pb_tensor, const ch
     }
 
     param->data_type = shape.data_type;
-    param->data_format = shape.data_format;
     param->dims = std::move(shape.dims);
 
     return RC_SUCCESS;
@@ -58,13 +57,11 @@ RetCode ParseConstantParam(const ::onnx::NodeProto& pb_node, const ParamParserEx
         } else if (attribute.name() == "value_int") {
             int64_t v = attribute.i();
             param->data_type = DATATYPE_INT64;
-            param->data_format = DATAFORMAT_NDARRAY;
             param->dims.push_back(1);
             param->data.assign((const char*)(&v), sizeof(v));
             return RC_SUCCESS;
         } else if (attribute.name() == "value_ints") {
             param->data_type = DATATYPE_INT64;
-            param->data_format = DATAFORMAT_NDARRAY;
             param->dims.push_back(attribute.ints_size());
             param->data.reserve(attribute.ints_size() * sizeof(int64_t));
             for (int x = 0; x < attribute.ints_size(); ++x) {
@@ -75,13 +72,11 @@ RetCode ParseConstantParam(const ::onnx::NodeProto& pb_node, const ParamParserEx
         } else if (attribute.name() == "value_float") {
             float v = attribute.f();
             param->data_type = DATATYPE_FLOAT32;
-            param->data_format = DATAFORMAT_NDARRAY;
             param->dims.push_back(1);
             param->data.assign((const char*)(&v), sizeof(v));
             return RC_SUCCESS;
         } else if (attribute.name() == "value_floats") {
             param->data_type = DATATYPE_FLOAT32;
-            param->data_format = DATAFORMAT_NDARRAY;
             param->dims.push_back(attribute.floats_size());
             param->data.reserve(attribute.floats_size() * sizeof(float));
             for (int x = 0; x < attribute.floats_size(); ++x) {
@@ -94,6 +89,15 @@ RetCode ParseConstantParam(const ::onnx::NodeProto& pb_node, const ParamParserEx
 
     LOG(ERROR) << "cannot find supported fields in Constant[" << pb_node.name() << "]";
     return RC_UNSUPPORTED;
+}
+
+RetCode PackConstantParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const ConstantParam*>(arg);
+    auto pb_attr = pb_node->add_attribute();
+    pb_attr->set_name("value");
+    pb_attr->set_type(::onnx::AttributeProto_AttributeType_TENSOR);
+    return utils::PackTensorProto(param->data.data(), param->data.size(), param->data_type, param->dims,
+                                  pb_attr->mutable_t());
 }
 
 }}} // namespace ppl::nn::onnx

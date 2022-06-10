@@ -1,4 +1,5 @@
 #include "pmx_utils.h"
+#include "ppl/nn/params/onnx/auto_pad_type.h"
 #include "ppl/nn/models/pmx/oputils/onnx/conv_transpose.h"
 
 using namespace std;
@@ -6,8 +7,8 @@ using namespace ppl::nn::onnx;
 using namespace ppl::nn::pmx::onnx;
 
 TEST_F(PmxTest, test_convtranspose) {
-    DEFINE_ARG(ConvTransposeParam, conv_trans)
-    conv_trans_param1.auto_pad = "SAME_UPPER";
+    DEFINE_ARG(ConvTransposeParam, conv_trans);
+    conv_trans_param1.auto_pad = AUTO_PAD_SAME_UPPER;
     conv_trans_param1.group = 3;
     conv_trans_param1.kernel_shape = {3};
     conv_trans_param1.dilations = {1};
@@ -16,7 +17,7 @@ TEST_F(PmxTest, test_convtranspose) {
     conv_trans_param1.output_padding = {0};
     conv_trans_param1.output_shape = {4};
     MAKE_BUFFER(ConvTransposeParam, conv_trans);
-    string auto_pad = conv_trans_param3.auto_pad;
+    auto auto_pad = conv_trans_param3.auto_pad;
     int64_t group = conv_trans_param3.group;
     std::vector<int32_t> kernel_shape = conv_trans_param3.kernel_shape;
     std::vector<int32_t> dilations = conv_trans_param3.dilations;
@@ -24,7 +25,7 @@ TEST_F(PmxTest, test_convtranspose) {
     std::vector<int32_t> pads = conv_trans_param3.pads;
     std::vector<int32_t> output_padding = conv_trans_param3.output_padding;
     std::vector<int32_t> output_shape = conv_trans_param3.output_shape;
-    EXPECT_STREQ("SAME_UPPER", auto_pad.c_str());
+    EXPECT_EQ(AUTO_PAD_SAME_UPPER, auto_pad);
     EXPECT_EQ(3, group);
     EXPECT_EQ(3, kernel_shape[0]);
     EXPECT_EQ(1, dilations[0]);

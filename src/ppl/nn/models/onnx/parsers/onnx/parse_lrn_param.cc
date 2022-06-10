@@ -39,4 +39,13 @@ RetCode ParseLRNParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraAr
     return RC_SUCCESS;
 }
 
+RetCode PackLRNParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const LRNParam*>(arg);
+    utils::SetNodeAttr(pb_node, "alpha", param->alpha);
+    utils::SetNodeAttr(pb_node, "beta", param->beta);
+    utils::SetNodeAttr(pb_node, "bias", param->bias);
+    utils::SetNodeAttr(pb_node, "size", param->size);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

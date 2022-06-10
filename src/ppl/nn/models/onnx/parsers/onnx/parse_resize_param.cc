@@ -24,63 +24,105 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
+static const vector<pair<string, int32_t>> g_coord_trans_modes = {
+    {"half_pixel", ResizeParam::RESIZE_COORD_TRANS_MODE_HALF_PIXEL},
+    {"pytorch_half_pixel", ResizeParam::RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL},
+    {"align_corners", ResizeParam::RESIZE_COORD_TRANS_MODE_ALIGN_CORNERS},
+    {"asymmetric", ResizeParam::RESIZE_COORD_TRANS_MODE_ASYMMETRIC},
+    {"tf_half_pixel_for_nn", ResizeParam::RESIZE_COORD_TRANS_MODE_TF_HALF_PIXEL_FOR_NN},
+    {"tf_crop_and_resize", ResizeParam::RESIZE_COORD_TRANS_MODE_TF_CROP_AND_RESIZE},
+};
+
+static const vector<pair<string, int32_t>> g_modes = {
+    {"nearest", ResizeParam::RESIZE_MODE_NEAREST},
+    {"linear", ResizeParam::RESIZE_MODE_LINEAR},
+    {"cubic", ResizeParam::RESIZE_MODE_CUBIC},
+};
+
+static const vector<pair<string, int32_t>> g_nearest_modes = {
+    {"", ResizeParam::RESIZE_NEAREST_MODE_ROUND_PREFER_FLOOR},
+    {"round_prefer_floor", ResizeParam::RESIZE_NEAREST_MODE_ROUND_PREFER_FLOOR},
+    {"round_prefer_ceil", ResizeParam::RESIZE_NEAREST_MODE_ROUND_PREFER_CEIL},
+    {"floor", ResizeParam::RESIZE_NEAREST_MODE_FLOOR},
+    {"ceil", ResizeParam::RESIZE_NEAREST_MODE_CEIL},
+};
+
 RetCode ParseResizeParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<ResizeParam*>(arg);
 
-    std::string coordinate_transformation_mode =
-        utils::GetNodeAttrByKey<std::string>(pb_node, "coordinate_transformation_mode", std::string());
-    if (coordinate_transformation_mode == "") {
-        param->coord_trans_mode = ResizeParam::RESIZE_COORD_TRANS_MODE_HALF_PIXEL;
-    } else if (coordinate_transformation_mode == "half_pixel") {
-        param->coord_trans_mode = ResizeParam::RESIZE_COORD_TRANS_MODE_HALF_PIXEL;
-    } else if (coordinate_transformation_mode == "pytorch_half_pixel") {
-        param->coord_trans_mode = ResizeParam::RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL;
-    } else if (coordinate_transformation_mode == "align_corners") {
-        param->coord_trans_mode = ResizeParam::RESIZE_COORD_TRANS_MODE_ALIGN_CORNERS;
-    } else if (coordinate_transformation_mode == "asymmetric") {
-        param->coord_trans_mode = ResizeParam::RESIZE_COORD_TRANS_MODE_ASYMMETRIC;
-    } else if (coordinate_transformation_mode == "tf_half_pixel_for_nn") {
-        param->coord_trans_mode = ResizeParam::RESIZE_COORD_TRANS_MODE_TF_HALF_PIXEL_FOR_NN;
-    } else if (coordinate_transformation_mode == "tf_crop_and_resize") {
-        param->coord_trans_mode = ResizeParam::RESIZE_COORD_TRANS_MODE_TF_CROP_AND_RESIZE;
-    } else {
-        LOG(ERROR) << "unexpected coordinate_transformation_mode: " << coordinate_transformation_mode;
+    auto coord_trans_mode_str = utils::GetNodeAttrByKey<std::string>(pb_node, "coordinate_transformation_mode", "half_pixel");
+    auto it = std::find_if(g_coord_trans_modes.begin(), g_coord_trans_modes.end(),
+                           [&coord_trans_mode_str](const pair<string, int32_t>& p) -> bool {
+                               return (coord_trans_mode_str == p.first);
+                           });
+    if (it == g_coord_trans_modes.end()) {
+        LOG(ERROR) << "unexpected coordinate_transformation_mode: " << coord_trans_mode_str;
         return RC_INVALID_VALUE;
     }
+    param->coord_trans_mode = it->second;
 
     param->cubic_coeff_a = utils::GetNodeAttrByKey(pb_node, "cubic_coeff_a", -0.75f);
     param->exclude_outside = utils::GetNodeAttrByKey(pb_node, "exclude_outside", 0);
     param->extrapolation_value = utils::GetNodeAttrByKey(pb_node, "extrapolation_value", 0.0f);
 
-    std::string mode = utils::GetNodeAttrByKey<std::string>(pb_node, "mode", std::string());
-    if (mode == "") {
-        param->mode = ResizeParam::RESIZE_MODE_NEAREST;
-    } else if (mode == "nearest") {
-        param->mode = ResizeParam::RESIZE_MODE_NEAREST;
-    } else if (mode == "linear") {
-        param->mode = ResizeParam::RESIZE_MODE_LINEAR;
-    } else if (mode == "cubic") {
-        param->mode = ResizeParam::RESIZE_MODE_CUBIC;
-    } else {
-        LOG(ERROR) << "unexpected mode: " << mode;
+    auto mode_str = utils::GetNodeAttrByKey<std::string>(pb_node, "mode", "");
+    it = std::find_if(g_modes.begin(), g_modes.end(), [&mode_str](const pair<string, int32_t>& p) -> bool {
+        return (mode_str == p.first);
+    });
+    if (it == g_modes.end()) {
+        LOG(ERROR) << "unexpected mode: " << mode_str;
         return RC_INVALID_VALUE;
     }
+    param->mode = it->second;
 
-    std::string nearest_mode = utils::GetNodeAttrByKey<std::string>(pb_node, "nearest_mode", std::string());
-    if (nearest_mode == "") {
-        param->nearest_mode = ResizeParam::RESIZE_NEAREST_MODE_ROUND_PREFER_FLOOR;
-    } else if (nearest_mode == "round_prefer_floor") {
-        param->nearest_mode = ResizeParam::RESIZE_NEAREST_MODE_ROUND_PREFER_FLOOR;
-    } else if (nearest_mode == "round_prefer_ceil") {
-        param->nearest_mode = ResizeParam::RESIZE_NEAREST_MODE_ROUND_PREFER_CEIL;
-    } else if (nearest_mode == "floor") {
-        param->nearest_mode = ResizeParam::RESIZE_NEAREST_MODE_FLOOR;
-    } else if (nearest_mode == "ceil") {
-        param->nearest_mode = ResizeParam::RESIZE_NEAREST_MODE_CEIL;
-    } else {
-        LOG(ERROR) << "unexpected nearest_mode: " << nearest_mode;
+    auto nearest_mode_str = utils::GetNodeAttrByKey<std::string>(pb_node, "nearest_mode", "nearest");
+    it = std::find_if(g_nearest_modes.begin(), g_nearest_modes.end(),
+                      [&nearest_mode_str](const pair<string, int32_t>& p) -> bool {
+                          return (nearest_mode_str == p.first);
+                      });
+    if (it == g_nearest_modes.end()) {
+        LOG(ERROR) << "unexpected nearest_mode: " << param->nearest_mode;
         return RC_INVALID_VALUE;
     }
+    param->nearest_mode = it->second;
+
+    return RC_SUCCESS;
+}
+
+RetCode PackResizeParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const ResizeParam*>(arg);
+
+    auto it = std::find_if(g_coord_trans_modes.begin(), g_coord_trans_modes.end(),
+                           [param](const pair<string, int32_t>& p) -> bool {
+                               return (param->coord_trans_mode == p.second);
+                           });
+    if (it == g_coord_trans_modes.end()) {
+        LOG(ERROR) << "unexpected coord trans mode[" << param->coord_trans_mode << "]";
+        return RC_INVALID_VALUE;
+    }
+    utils::SetNodeAttr(pb_node, "coordinate_transformation_mode", it->first);
+
+    utils::SetNodeAttr(pb_node, "cubic_coeff_a", param->cubic_coeff_a);
+    utils::SetNodeAttr(pb_node, "exclude_outside", param->exclude_outside);
+    utils::SetNodeAttr(pb_node, "extrapolation_value", param->extrapolation_value);
+
+    it = std::find_if(g_modes.begin(), g_modes.end(), [param](const pair<string, int32_t>& p) -> bool {
+        return (param->mode == p.second);
+    });
+    if (it == g_modes.end()) {
+        LOG(ERROR) << "unexpected mode[" << param->mode << "]";
+        return RC_INVALID_VALUE;
+    }
+    utils::SetNodeAttr(pb_node, "mode", it->first);
+
+    it = std::find_if(g_nearest_modes.begin(), g_nearest_modes.end(), [param](const pair<string, int32_t>& p) -> bool {
+        return (param->nearest_mode == p.second);
+    });
+    if (it == g_nearest_modes.end()) {
+        LOG(ERROR) << "unexpected nearest mode[" << param->nearest_mode << "]";
+        return RC_INVALID_VALUE;
+    }
+    utils::SetNodeAttr(pb_node, "nearest_mode", it->first);
 
     return RC_SUCCESS;
 }

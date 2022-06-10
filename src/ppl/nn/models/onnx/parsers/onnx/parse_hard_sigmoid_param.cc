@@ -31,4 +31,11 @@ RetCode ParseHardSigmoidParam(const ::onnx::NodeProto& pb_node, const ParamParse
     return RC_SUCCESS;
 }
 
+RetCode PackHardSigmoidParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const HardSigmoidParam*>(arg);
+    utils::SetNodeAttr(pb_node, "alpha", param->alpha);
+    utils::SetNodeAttr(pb_node, "beta", param->beta);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

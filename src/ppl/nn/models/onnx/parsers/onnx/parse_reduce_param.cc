@@ -48,4 +48,11 @@ RetCode ParseReduceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtr
     return RC_SUCCESS;
 }
 
+RetCode PackReduceParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const ReduceParam*>(arg);
+    utils::SetNodeAttr(pb_node, "axes", param->axes);
+    utils::SetNodeAttr(pb_node, "keepdims", param->keepdims);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

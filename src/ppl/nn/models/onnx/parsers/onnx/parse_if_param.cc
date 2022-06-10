@@ -108,4 +108,8 @@ RetCode ParseIfParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArg
     return RC_SUCCESS;
 }
 
+RetCode PackIfParam(const ir::Node*, const ir::Attr*, ::onnx::NodeProto*) {
+    return RC_UNSUPPORTED;
+}
+
 }}} // namespace ppl::nn::onnx

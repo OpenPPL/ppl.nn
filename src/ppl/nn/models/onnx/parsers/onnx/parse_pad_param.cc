@@ -44,4 +44,21 @@ RetCode ParsePadParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraAr
     return RC_SUCCESS;
 }
 
+RetCode PackPadParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const PadParam*>(arg);
+
+    if (param->mode == PadParam::PAD_MODE_CONSTANT) {
+        utils::SetNodeAttr(pb_node, "mode", "constant");
+    } else if (param->mode == PadParam::PAD_MODE_REFLECT) {
+        utils::SetNodeAttr(pb_node, "mode", "reflect");
+    } else if (param->mode == PadParam::PAD_MODE_EDGE) {
+        utils::SetNodeAttr(pb_node, "mode", "edge");
+    } else {
+        LOG(ERROR) << "invalid pad mode[" << param->mode << "]";
+        return RC_INVALID_VALUE;
+    }
+
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

@@ -57,7 +57,7 @@ ppl::common::RetCode ConstantNodeOptimizer::Optimize(ir::Graph* graph) const {
 
             auto shape_ret = shapes.insert(make_pair(edge_id, ir::Shape()));
             shape_ret.first->second.data_type = param->data_type;
-            shape_ret.first->second.data_format = param->data_format;
+            shape_ret.first->second.data_format = DATAFORMAT_NDARRAY;
             shape_ret.first->second.dims = param->dims;
 
             // delete constant node

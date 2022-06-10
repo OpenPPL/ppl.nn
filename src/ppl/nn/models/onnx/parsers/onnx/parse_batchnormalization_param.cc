@@ -31,4 +31,11 @@ RetCode ParseBatchNormalizationParam(const ::onnx::NodeProto& pb_node, const Par
     return RC_SUCCESS;
 }
 
+RetCode PackBatchNormalizationParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const BatchNormalizationParam*>(arg);
+    utils::SetNodeAttr(pb_node, "epsilon", param->epsilon);
+    utils::SetNodeAttr(pb_node, "momentum", param->momentum);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

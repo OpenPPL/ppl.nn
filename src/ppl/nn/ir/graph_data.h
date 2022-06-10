@@ -29,6 +29,9 @@ struct GraphData final {
     std::map<edgeid_t, Constant> constants;
     std::map<edgeid_t, Shape> shapes;
     std::map<nodeid_t, std::shared_ptr<Attr>> attrs; // attrs can be shared with cpu engines
+#ifdef PPLNN_ENABLE_ONNX_MODEL
+    std::map<std::pair<edgeid_t, uint32_t>, std::string> axis_symbols; // for serializing to onnx
+#endif
 };
 
 }}} // namespace ppl::nn::ir

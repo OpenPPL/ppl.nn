@@ -30,4 +30,11 @@ RetCode ParseClipParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraA
     return RC_SUCCESS;
 }
 
+RetCode PackClipParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const ClipParam*>(arg);
+    utils::SetNodeAttr(pb_node, "min", param->min_value);
+    utils::SetNodeAttr(pb_node, "max", param->max_value);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

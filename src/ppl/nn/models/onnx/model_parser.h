@@ -19,14 +19,14 @@
 #define _ST_HPC_PPL_NN_MODELS_ONNX_MODEL_PARSER_H_
 
 #include "ppl/common/retcode.h"
-#include "ppl/nn/ir/graph.h"
+#include "ppl/nn/models/onnx/model.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
 class ModelParser final {
 public:
     static ppl::common::RetCode Parse(const char* model_buf, uint64_t buf_len, const char* model_file_dir,
-                                      ir::Graph* graph);
+                                      Model* model);
 };
 
 }}} // namespace ppl::nn::onnx

@@ -16,4 +16,7 @@ if(PPLNN_ENABLE_ONNX_MODEL)
     target_link_libraries(add_all_tensors_to_output PRIVATE
         libprotobuf)
     target_compile_features(add_all_tensors_to_output PRIVATE cxx_std_11)
+
+    add_executable(onnx_serializer onnx_serializer.cc)
+    target_link_libraries(onnx_serializer PRIVATE pplnn_static)
 endif()

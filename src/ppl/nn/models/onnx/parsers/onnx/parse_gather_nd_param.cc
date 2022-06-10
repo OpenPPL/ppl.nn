@@ -30,4 +30,10 @@ RetCode ParseGatherNDParam(const ::onnx::NodeProto& pb_node, const ParamParserEx
     return RC_SUCCESS;
 }
 
+RetCode PackGatherNDParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const GatherNDParam*>(arg);
+    utils::SetNodeAttr(pb_node, "batch_dims", param->batch_dims);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

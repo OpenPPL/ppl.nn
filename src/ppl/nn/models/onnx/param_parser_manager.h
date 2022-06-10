@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARAM_PARSER_MANAGER_H
-#define _ST_HPC_PPL_NN_MODELS_ONNX_PARAM_PARSER_MANAGER_H
+#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARAM_PARSER_MANAGER_H_
+#define _ST_HPC_PPL_NN_MODELS_ONNX_PARAM_PARSER_MANAGER_H_
 
 #include "ppl/common/retcode.h"
 #include "ppl/nn/ir/attr.h"
@@ -29,13 +29,15 @@ namespace ppl { namespace nn { namespace onnx {
 typedef std::shared_ptr<ir::Attr> (*CreateParamFunc)();
 typedef ppl::common::RetCode (*ParseParamFunc)(const ::onnx::NodeProto&, const ParamParserExtraArgs&, ir::Node*,
                                                ir::Attr*);
+typedef ppl::common::RetCode (*PackParamFunc)(const ir::Node*, const ir::Attr*, ::onnx::NodeProto*);
 
 struct ParserInfo final {
     CreateParamFunc create_param;
     ParseParamFunc parse_param;
+    PackParamFunc pack_param;
 };
 
-class ParamParserManager final : public utils::OpInfoManager<ParserInfo> {
+class ParamParserManager final : public ppl::nn::utils::OpInfoManager<ParserInfo> {
 public:
     static ParamParserManager* GetInstance() {
         static ParamParserManager mgr;

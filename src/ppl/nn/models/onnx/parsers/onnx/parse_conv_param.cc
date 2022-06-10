@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "ppl/nn/params/onnx/auto_pad_type.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_conv_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 #include "ppl/nn/common/logger.h"
@@ -27,15 +28,15 @@ namespace ppl { namespace nn { namespace onnx {
 RetCode ParseConvParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<ConvParam*>(arg);
 
-    auto auto_pad_str = utils::GetNodeAttrByKey<string>(pb_node, "auto_pad", "NOSET");
-    if (auto_pad_str == "NOSET") {
-        param->auto_pad = ConvParam::NOSET;
+    auto auto_pad_str = utils::GetNodeAttrByKey<string>(pb_node, "auto_pad", "NOTSET");
+    if (auto_pad_str == "NOTSET") {
+        param->auto_pad = AUTO_PAD_NOTSET;
     } else if (auto_pad_str == "SAME_UPPER") {
-        param->auto_pad = ConvParam::SAME_UPPER;
+        param->auto_pad = AUTO_PAD_SAME_UPPER;
     } else if (auto_pad_str == "SAME_LOWER") {
-        param->auto_pad = ConvParam::SAME_LOWER;
+        param->auto_pad = AUTO_PAD_SAME_LOWER;
     } else if (auto_pad_str == "VALID") {
-        param->auto_pad = ConvParam::VALID;
+        param->auto_pad = AUTO_PAD_VALID;
     } else {
         LOG(ERROR) << "unsupported auto_pad type: " << auto_pad_str;
         return RC_UNSUPPORTED;
@@ -49,6 +50,7 @@ RetCode ParseConvParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraA
 
     uint32_t kernel_dims = param->kernel_shape.size();
     if (kernel_dims == 0) {
+        LOG(ERROR) << "`kernel_shape` is empty.";
         return RC_INVALID_VALUE;
     }
 
@@ -65,8 +67,34 @@ RetCode ParseConvParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraA
 
     if (param->dilations.size() != kernel_dims || param->strides.size() != kernel_dims ||
         param->pads.size() != kernel_dims * 2) {
+        LOG(ERROR) << "`pads`'s size[" << param->pads.size() << "] != kernel_shape's size[" << kernel_dims << "] * 2";
         return RC_INVALID_VALUE;
     }
+
+    return RC_SUCCESS;
+}
+
+RetCode PackConvParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const ConvParam*>(arg);
+
+    if (param->auto_pad == AUTO_PAD_NOTSET) {
+        utils::SetNodeAttr(pb_node, "auto_pad", "NOTSET");
+    } else if (param->auto_pad == AUTO_PAD_SAME_UPPER) {
+        utils::SetNodeAttr(pb_node, "auto_pad", "SAME_UPPER");
+    } else if (param->auto_pad == AUTO_PAD_SAME_LOWER) {
+        utils::SetNodeAttr(pb_node, "auto_pad", "SAME_LOWER");
+    } else if (param->auto_pad == AUTO_PAD_VALID) {
+        utils::SetNodeAttr(pb_node, "auto_pad", "VALID");
+    } else {
+        LOG(ERROR) << "unsupported auto_pad type: " << param->auto_pad;
+        return RC_UNSUPPORTED;
+    }
+
+    utils::SetNodeAttr(pb_node, "dilations", param->dilations);
+    utils::SetNodeAttr(pb_node, "group", param->group);
+    utils::SetNodeAttr(pb_node, "kernel_shape", param->kernel_shape);
+    utils::SetNodeAttr(pb_node, "pads", param->pads);
+    utils::SetNodeAttr(pb_node, "strides", param->strides);
 
     return RC_SUCCESS;
 }

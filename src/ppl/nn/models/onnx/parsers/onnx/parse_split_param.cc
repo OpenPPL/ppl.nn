@@ -30,4 +30,11 @@ RetCode ParseSplitParam(const ::onnx::NodeProto& pb_node, const ParamParserExtra
     return RC_SUCCESS;
 }
 
+RetCode PackSplitParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const SplitParam*>(arg);
+    utils::SetNodeAttr(pb_node, "axis", param->axis);
+    utils::SetNodeAttr(pb_node, "split", param->split_point);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

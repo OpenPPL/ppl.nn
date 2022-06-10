@@ -15,24 +15,22 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/onnx/parsers/onnx/parse_gather_param.h"
-#include "ppl/nn/models/onnx/utils.h"
-using namespace std;
-using namespace ppl::common;
-using namespace ppl::nn::onnx;
+#ifndef _ST_HPC_PPL_NN_MODELS_PMX_SERIALIZER_H_
+#define _ST_HPC_PPL_NN_MODELS_PMX_SERIALIZER_H_
 
-namespace ppl { namespace nn { namespace onnx {
+#include "ppl/common/retcode.h"
+#include "ppl/nn/ir/graph_topo.h"
+#include "ppl/nn/engines/engine_impl.h"
+#include "ppl/nn/runtime/runtime_graph_info.h"
 
-RetCode ParseGatherParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
-    auto param = static_cast<GatherParam*>(arg);
-    param->axis = utils::GetNodeAttrByKey<int32_t>(pb_node, "axis", 0);
-    return RC_SUCCESS;
-}
+namespace ppl { namespace nn { namespace pmx {
 
-RetCode PackGatherParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
-    auto param = static_cast<const GatherParam*>(arg);
-    utils::SetNodeAttr(pb_node, "axis", param->axis);
-    return RC_SUCCESS;
-}
+class Serializer final {
+public:
+    ppl::common::RetCode Serialize(const std::string& output_file, const ir::GraphTopo*,
+                                   const std::vector<EngineImpl*>&, const RuntimeGraphInfo&);
+};
 
-}}} // namespace ppl::nn::onnx
+}}} // namespace ppl::nn::pmx
+
+#endif

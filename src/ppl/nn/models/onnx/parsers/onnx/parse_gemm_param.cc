@@ -35,4 +35,13 @@ RetCode ParseGemmParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraA
     return RC_SUCCESS;
 }
 
+RetCode PackGemmParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const GemmParam*>(arg);
+    utils::SetNodeAttr(pb_node, "alpha", param->alpha);
+    utils::SetNodeAttr(pb_node, "beta", param->beta);
+    utils::SetNodeAttr(pb_node, "transA", param->transA);
+    utils::SetNodeAttr(pb_node, "transB", param->transB);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

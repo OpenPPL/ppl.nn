@@ -17,9 +17,9 @@ TEST_F(PmxTest, test_lstm) {
     MAKE_BUFFER(LSTMParam, lstm);
     std::vector<float> activation_alpha = lstm_param3.activation_alpha;
     std::vector<float> activation_beta = lstm_param3.activation_beta;
-    std::vector<ppl::nn::onnx::LSTMParam::activation_t> activations = lstm_param3.activations;
+    std::vector<int32_t> activations = lstm_param3.activations;
     float clip = lstm_param3.clip;
-    ppl::nn::onnx::LSTMParam::direction_t direction = lstm_param3.direction;
+    int32_t direction = lstm_param3.direction;
     int32_t hidden_size = lstm_param3.hidden_size;
     int32_t input_forget = lstm_param3.input_forget;
     EXPECT_FLOAT_EQ(0.23, activation_alpha[0]);

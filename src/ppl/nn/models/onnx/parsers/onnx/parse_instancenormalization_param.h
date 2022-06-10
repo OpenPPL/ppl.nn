@@ -28,6 +28,8 @@ namespace ppl { namespace nn { namespace onnx {
 ppl::common::RetCode ParseInstanceNormalizationParam(const ::onnx::NodeProto&, const ParamParserExtraArgs&, ir::Node*,
                                                      ir::Attr*);
 
+ppl::common::RetCode PackInstanceNormalizationParam(const ir::Node*, const ir::Attr*, ::onnx::NodeProto*);
+
 }}} // namespace ppl::nn::onnx
 
 #endif

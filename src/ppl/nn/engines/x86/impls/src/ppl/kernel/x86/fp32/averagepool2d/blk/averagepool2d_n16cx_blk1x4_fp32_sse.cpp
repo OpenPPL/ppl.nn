@@ -141,7 +141,7 @@ static const averagepool2d_n16cx_kernel_fp32_sse_func_t averagepool2d_n16cx_1x4_
     },
 };
 
-template <ppl::nn::onnx::PoolingParam::pooling_mode_t pooling_mode, bool ceil_mode>
+template <int32_t pooling_mode, bool ceil_mode>
 static inline void averagepool2d_n16cx_border_fp32_sse(
     const float *src,
     const averagepool2d_param *param,
@@ -209,7 +209,7 @@ static inline void averagepool2d_n16cx_border_fp32_sse(
     }
 }
 
-template <ppl::nn::onnx::PoolingParam::pooling_mode_t pooling_mode, bool ceil_mode>
+template <int32_t pooling_mode, bool ceil_mode>
 ppl::common::RetCode averagepool2d_n16cx_blk1x4_fp32_sse_impl(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
