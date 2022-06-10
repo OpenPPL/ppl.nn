@@ -15,24 +15,28 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/onnx/parsers/onnx/parse_gather_param.h"
-#include "ppl/nn/models/onnx/utils.h"
+#include "ppl/nn/models/onnx/model_parser.h"
+#include "ppl/nn/models/onnx/serializer.h"
+#include "ppl/common/file_mapping.h"
+#include "gtest/gtest.h"
 using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
-namespace ppl { namespace nn { namespace onnx {
+TEST(OnnxSerializerTest, serialize) {
+    const string model_file(PPLNN_TESTDATA_DIR + string("/conv.onnx"));
+    FileMapping fm;
+    auto status = fm.Init(model_file.c_str(), FileMapping::READ);
+    EXPECT_EQ(RC_SUCCESS, status);
 
-RetCode ParseGatherParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
-    auto param = static_cast<GatherParam*>(arg);
-    param->axis = utils::GetNodeAttrByKey<int32_t>(pb_node, "axis", 0);
-    return RC_SUCCESS;
+    Model model;
+    ModelParser model_parser;
+    status = model_parser.Parse(fm.GetData(), fm.GetSize(), nullptr, &model);
+    EXPECT_EQ(RC_SUCCESS, status);
+
+    Serializer serializer;
+    const string dst_model_file(PPLNN_TESTS_BUILD_DIR + string("/conv.onnx"));
+    status = serializer.Serialize(dst_model_file, model);
+    // remove(dst_model_file.c_str());
+    EXPECT_EQ(RC_SUCCESS, status);
 }
-
-RetCode PackGatherParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
-    auto param = static_cast<const GatherParam*>(arg);
-    utils::SetNodeAttr(pb_node, "axis", param->axis);
-    return RC_SUCCESS;
-}
-
-}}} // namespace ppl::nn::onnx

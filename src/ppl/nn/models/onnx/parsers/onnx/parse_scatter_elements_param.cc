@@ -30,4 +30,10 @@ RetCode ParseScatterElementsParam(const ::onnx::NodeProto& pb_node, const ParamP
     return RC_SUCCESS;
 }
 
+RetCode PackScatterElementsParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const ScatterElementsParam*>(arg);
+    utils::SetNodeAttr(pb_node, "axis", param->axis);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

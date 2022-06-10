@@ -118,7 +118,7 @@ const ::onnx::TensorProto* GetTensorProtoByKey(const ::onnx::NodeProto& node, co
 }
 
 datatype_t ConvertOnnxDataTypeToPplDataType(int32_t onnx_data_type) {
-    static datatype_t dt_map[] = {
+    static constexpr datatype_t dt_map[] = {
         DATATYPE_UNKNOWN, // unknown
         DATATYPE_FLOAT32, // float32
         DATATYPE_UINT8, // uint8
@@ -137,13 +137,42 @@ datatype_t ConvertOnnxDataTypeToPplDataType(int32_t onnx_data_type) {
         DATATYPE_COMPLEX128, // complex128
         DATATYPE_BFLOAT16, // bfloat16
     };
-    static const int32_t onnx_data_type_max = sizeof(dt_map) / sizeof(datatype_t);
+    static constexpr int32_t onnx_data_type_max = sizeof(dt_map) / sizeof(datatype_t);
 
     if (onnx_data_type >= onnx_data_type_max) {
         return DATATYPE_UNKNOWN;
     }
 
     return dt_map[onnx_data_type];
+}
+
+int32_t ConvertPplDataTypeToOnnxDataType(datatype_t dt) {
+    static constexpr int32_t dt_map[] = {
+        ::onnx::TensorProto_DataType_UNDEFINED, // DATATYPE_UNKNOWN
+        ::onnx::TensorProto_DataType_UINT8, // DATATYPE_UINT8
+        ::onnx::TensorProto_DataType_UINT16, // DATATYPE_UINT16
+        ::onnx::TensorProto_DataType_UINT32, // DATATYPE_UINT32
+        ::onnx::TensorProto_DataType_UINT64, // DATATYPE_UINT64
+        ::onnx::TensorProto_DataType_FLOAT16, // DATATYPE_FLOAT16
+        ::onnx::TensorProto_DataType_FLOAT, // DATATYPE_FLOAT32
+        ::onnx::TensorProto_DataType_UNDEFINED, // DATATYPE_FLOAT64
+        ::onnx::TensorProto_DataType_BFLOAT16, // DATATYPE_BFLOAT16
+        ::onnx::TensorProto_DataType_UNDEFINED, // DATATYPE_INT4B
+        ::onnx::TensorProto_DataType_INT8, // DATATYPE_INT8
+        ::onnx::TensorProto_DataType_INT16, // DATATYPE_INT16
+        ::onnx::TensorProto_DataType_INT32, // DATATYPE_INT32
+        ::onnx::TensorProto_DataType_INT64, // DATATYPE_INT64
+        ::onnx::TensorProto_DataType_BOOL, // DATATYPE_BOOL
+        ::onnx::TensorProto_DataType_COMPLEX64, // DATATYPE_COMPLEX64
+        ::onnx::TensorProto_DataType_COMPLEX128, // DATATYPE_COMPLEX128
+    };
+    static constexpr int32_t data_type_max = sizeof(dt_map) / sizeof(int32_t);
+
+    if (dt >= data_type_max) {
+        return ::onnx::TensorProto_DataType_UNDEFINED;
+    }
+
+    return dt_map[dt];
 }
 
 static RetCode LoadExternalData(const ::onnx::TensorProto& pb_tensor, const char* model_file_dir, string* data) {
@@ -224,15 +253,13 @@ static RetCode LoadInternalData(const ::onnx::TensorProto& pb_tensor, datatype_t
         } else if (pb_tensor.int64_data().size() > 0) {
             data->assign((const char*)pb_tensor.int64_data().data(), pb_tensor.int64_data().size() * elem_size);
         }
-    } else if (onnx_data_type == ::onnx::TensorProto_DataType_BOOL) {
-        if (!pb_tensor.raw_data().empty()) {
-            *data = pb_tensor.raw_data();
-        } else if (pb_tensor.int32_data().size() > 0) { // bool may be stored in int32_data
-            data->assign((const char*)pb_tensor.int32_data().data(), pb_tensor.int32_data().size() * sizeof(int32_t));
-        }
     } else if (onnx_data_type == ::onnx::TensorProto_DataType_INT8 ||
                onnx_data_type == ::onnx::TensorProto_DataType_UINT8) {
-        *data = pb_tensor.raw_data();
+        if (!pb_tensor.raw_data().empty()) {
+            *data = pb_tensor.raw_data();
+        } else if (pb_tensor.int32_data().size() > 0) { // int8/uint8 may be stored in `int32_data`
+            data->assign((const char*)pb_tensor.int32_data().data(), pb_tensor.int32_data().size());
+        }
     } else {
         auto onnx_pb_type = (::onnx::TensorProto_DataType)onnx_data_type;
         LOG(ERROR) << "unsupported onnx data type[" << ::onnx::TensorProto_DataType_Name(onnx_pb_type) << "] of tensor["
@@ -263,6 +290,40 @@ RetCode ParseTensorProto(const ::onnx::TensorProto& pb_tensor, const char* model
     }
 
     return status;
+}
+
+RetCode PackTensorProto(const void* data, uint64_t len, datatype_t data_type, const vector<int64_t>& dims,
+                        ::onnx::TensorProto* pb_tensor) {
+    pb_tensor->set_data_type(utils::ConvertPplDataTypeToOnnxDataType(data_type));
+
+    if (data_type == DATATYPE_FLOAT32) {
+        auto base = (const float*)data;
+        const uint32_t nr = len / GetSizeOfDataType(data_type);
+        for (uint32_t i = 0; i < nr; ++i) {
+            pb_tensor->add_float_data(base[i]);
+        }
+    } else if (data_type == DATATYPE_INT32) {
+        auto base = (const int32_t*)data;
+        const uint32_t nr = len / GetSizeOfDataType(data_type);
+        for (uint32_t i = 0; i < nr; ++i) {
+            pb_tensor->add_int32_data(base[i]);
+        }
+    } else if (data_type == DATATYPE_INT64) {
+        auto base = (const int64_t*)data;
+        const uint32_t nr = len / GetSizeOfDataType(data_type);
+        for (uint32_t i = 0; i < nr; ++i) {
+            pb_tensor->add_int64_data(base[i]);
+        }
+    } else {
+        LOG(ERROR) << "unsupported data type[" << GetDataTypeStr(data_type) << "]";
+        return RC_UNSUPPORTED;
+    }
+
+    for (auto x = dims.begin(); x != dims.end(); ++x) {
+        pb_tensor->add_dims(*x);
+    }
+
+    return RC_SUCCESS;
 }
 
 void ResolveExtraInputs(ir::GraphTopo* current, ir::Node* parent_node, ir::GraphTopo* parent_graph) {

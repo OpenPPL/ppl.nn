@@ -30,4 +30,11 @@ RetCode ParseArgMaxParam(const ::onnx::NodeProto& pb_node, const ParamParserExtr
     return RC_SUCCESS;
 }
 
+RetCode PackArgMaxParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const ArgMaxParam*>(arg);
+    utils::SetNodeAttr(pb_node, "axis", param->axis);
+    utils::SetNodeAttr(pb_node, "keepdims", param->keepdims);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

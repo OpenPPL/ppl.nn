@@ -43,4 +43,21 @@ RetCode ParseDepthToSpaceParam(const ::onnx::NodeProto& pb_node, const ParamPars
     return RC_SUCCESS;
 }
 
+RetCode PackDepthToSpaceParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const DepthToSpaceParam*>(arg);
+
+    if (param->mode == DepthToSpaceParam::DCR) {
+        utils::SetNodeAttr(pb_node, "mode", "DCR");
+    } else if (param->mode == DepthToSpaceParam::CRD) {
+        utils::SetNodeAttr(pb_node, "mode", "CRD");
+    } else {
+        LOG(ERROR) << "invalid DepthToSpace mode `" << param->mode << "`.";
+        return RC_INVALID_VALUE;
+    }
+
+    utils::SetNodeAttr(pb_node, "blocksize", param->blocksize);
+
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

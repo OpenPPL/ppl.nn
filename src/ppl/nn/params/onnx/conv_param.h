@@ -25,7 +25,6 @@
 namespace ppl { namespace nn { namespace onnx {
 
 struct ConvParam final : public ir::TypedAttr<ConvParam> {
-    enum { NOSET = 0, SAME_UPPER, SAME_LOWER, VALID };
     uint32_t auto_pad;
     int32_t group;
     std::vector<int32_t> kernel_shape;

@@ -30,4 +30,10 @@ RetCode ParseNonMaxSuppressionParam(const ::onnx::NodeProto& pb_node, const Para
     return RC_SUCCESS;
 }
 
+RetCode PackNonMaxSuppressionParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const NonMaxSuppressionParam*>(arg);
+    utils::SetNodeAttr(pb_node, "center_point_box", param->center_point_box);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

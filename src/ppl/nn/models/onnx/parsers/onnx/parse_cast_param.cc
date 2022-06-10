@@ -24,9 +24,15 @@ using namespace ppl::nn::onnx;
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseCastParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
-    auto cast_param = static_cast<CastParam*>(arg);
+    auto param = static_cast<CastParam*>(arg);
     int32_t to = utils::GetNodeAttrByKey<int32_t>(pb_node, "to", 1);
-    cast_param->to = utils::ConvertOnnxDataTypeToPplDataType(to);
+    param->to = utils::ConvertOnnxDataTypeToPplDataType(to);
+    return RC_SUCCESS;
+}
+
+RetCode PackCastParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const CastParam*>(arg);
+    utils::SetNodeAttr(pb_node, "to", utils::ConvertPplDataTypeToOnnxDataType(param->to));
     return RC_SUCCESS;
 }
 

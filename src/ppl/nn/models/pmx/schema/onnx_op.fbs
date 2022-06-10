@@ -21,7 +21,7 @@ table ConcatParam {
 }
 
 enum AutoPadType : uint32 {
-    NOSET = 0,
+    NOTSET = 0,
     SAME_UPPER,
     SAME_LOWER,
     VALID,
@@ -149,7 +149,7 @@ table PadParam {
 }
 
 table PoolingParam {
-    auto_pad: AutoPadType = NOSET;
+    auto_pad: AutoPadType = NOTSET;
     ceil_mode: int32 = 0;
     count_include_pad: int32 = 0;
     storage_order: int32;

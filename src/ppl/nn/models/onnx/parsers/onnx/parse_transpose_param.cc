@@ -31,4 +31,10 @@ RetCode ParseTransposeParam(const ::onnx::NodeProto& pb_node, const ParamParserE
     return RC_SUCCESS;
 }
 
+RetCode PackTransposeParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const TransposeParam*>(arg);
+    utils::SetNodeAttr(pb_node, "perm", param->perm);
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::onnx

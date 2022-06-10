@@ -79,19 +79,27 @@ static RetCode ParseGraphInput(const ::onnx::GraphProto& pb_graph, ir::GraphTopo
         }
         auto edge = ret_pair.first;
 
-        auto& pb_tensor_type = pb_input.type().tensor_type();
+        auto& pb_type = pb_input.type();
+        if (!pb_type.has_tensor_type()) {
+            LOG(ERROR) << "unsupported type[" << pb_type.value_case() << "] of input[" << edge->GetName()
+                       << "]. only tensor type is supported currently.";
+            return RC_UNSUPPORTED;
+        }
+
+        auto& pb_tensor_type = pb_type.tensor_type();
         ir::Shape shape;
         shape.data_type = utils::ConvertOnnxDataTypeToPplDataType(pb_tensor_type.elem_type());
         shape.data_format = DATAFORMAT_NDARRAY; // default data format in onnx
 
-        auto& pb_tensor_shape = pb_input.type().tensor_type().shape();
+        auto& pb_tensor_shape = pb_tensor_type.shape();
         for (int j = 0; j < pb_tensor_shape.dim_size(); ++j) {
             const ::onnx::TensorShapeProto::Dimension& pb_dimension = pb_tensor_shape.dim(j);
             if (pb_dimension.value_case() == ::onnx::TensorShapeProto_Dimension::kDimValue) {
-                auto dim_value = pb_tensor_shape.dim(j).dim_value();
+                auto dim_value = pb_dimension.dim_value();
                 shape.dims.push_back(dim_value);
             } else if (pb_dimension.value_case() == ::onnx::TensorShapeProto_Dimension::kDimParam) {
                 shape.dims.push_back(INVALID_DIM_VALUE);
+                data->axis_symbols.insert(make_pair(make_pair(edge->GetId(), j), pb_dimension.dim_param()));
             } else {
                 LOG(ERROR) << "tensor[" << pb_input.name() << "] dim is not set";
                 return RC_NOT_FOUND;

@@ -19,7 +19,7 @@
 #define _ST_HPC_PPL_NN_MODELS_ONNX_RUNTIME_BUILDER_IMPL_H_
 
 #include "ppl/common/retcode.h"
-#include "ppl/nn/ir/graph.h"
+#include "ppl/nn/models/onnx/model.h"
 #include "ppl/nn/engines/engine_impl.h"
 #include "ppl/nn/utils/shared_resource.h"
 #include "ppl/nn/runtime/partial_runtime_creator.h"
@@ -50,7 +50,7 @@ private:
     static ConfHandlerFunc conf_handlers_[ORB_CONF_MAX];
 
 private:
-    ir::Graph graph_;
+    Model model_;
     utils::SharedResource resource_;
     std::shared_ptr<RuntimeGraphInfo> graph_info_;
     std::shared_ptr<RuntimeAuxInfo> aux_info_;

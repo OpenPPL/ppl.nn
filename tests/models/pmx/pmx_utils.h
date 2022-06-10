@@ -5,7 +5,7 @@ class PmxTest : public testing::Test {};
 #define DEFINE_ARG(param_name, arg_name)         \
     ppl::nn::onnx::param_name arg_name##_param1; \
     ppl::nn::onnx::param_name arg_name##_param3; \
-    const ppl::nn::pmx::onnx::param_name* arg_name##_param2 = nullptr;
+    const ppl::nn::pmx::onnx::param_name* arg_name##_param2 = nullptr
 
 #define MAKE_BUFFER(param_name, arg_name)                                                            \
     flatbuffers::FlatBufferBuilder flatbuffer_builder;                                               \

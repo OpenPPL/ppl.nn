@@ -23,16 +23,17 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseSoftmaxParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
+RetCode ParseSoftmaxParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node,
                           ir::Attr* arg) {
-    auto it = args.op_set->find(pb_node.domain());
-    if (it == args.op_set->end()) {
-        return RC_INVALID_VALUE;
-    }
-    auto opset = it->second;
-
+    auto opset = node->GetType().version;
     auto param = static_cast<SoftmaxParam*>(arg);
     param->axis = utils::GetNodeAttrByKey(pb_node, "axis", opset >= 13 ? -1 : 1);
+    return RC_SUCCESS;
+}
+
+RetCode PackSoftmaxParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const SoftmaxParam*>(arg);
+    utils::SetNodeAttr(pb_node, "axis", param->axis);
     return RC_SUCCESS;
 }
 

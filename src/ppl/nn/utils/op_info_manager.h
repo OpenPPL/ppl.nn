@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_UTILS_OP_INFO_MANAGER_H
-#define _ST_HPC_PPL_NN_UTILS_OP_INFO_MANAGER_H
+#ifndef _ST_HPC_PPL_NN_UTILS_OP_INFO_MANAGER_H_
+#define _ST_HPC_PPL_NN_UTILS_OP_INFO_MANAGER_H_
 
 #include "ppl/common/retcode.h"
 #include "ppl/nn/common/logger.h"

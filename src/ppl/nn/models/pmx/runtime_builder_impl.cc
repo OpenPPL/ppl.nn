@@ -22,7 +22,7 @@
 #include "ppl/nn/ir/full_graph_topo.h"
 #include "ppl/nn/models/pmx/runtime_builder_impl.h"
 #include "ppl/nn/models/pmx/graph_parser.h"
-#include "ppl/nn/models/pmx/pmx_serializer.h"
+#include "ppl/nn/models/pmx/serializer.h"
 using namespace std;
 using namespace ppl::common;
 using namespace flatbuffers;
@@ -156,13 +156,13 @@ Runtime* RuntimeBuilderImpl::CreateRuntime(const char** begin_ops, uint32_t begi
 }
 
 RetCode RuntimeBuilderImpl::Serialize(const char* output_file, const char* fmt) const {
-    if (fmt != string("pmx")) {
-        LOG(ERROR) << "model format[" << fmt << "] is not supported.";
-        return RC_UNSUPPORTED;
+    if (fmt == string("pmx")) {
+        pmx::Serializer serializer;
+        return serializer.Serialize(output_file, topo_.get(), resource_.engines, *graph_info_);
     }
 
-    pmx::PmxSerializer serializer;
-    return serializer.Serialize(output_file, topo_.get(), resource_.engines, *graph_info_);
+    LOG(ERROR) << "model format[" << fmt << "] is not supported.";
+    return RC_UNSUPPORTED;
 }
 
 /* -------------------------------------------------------------------------- */

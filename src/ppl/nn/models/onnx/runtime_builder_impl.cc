@@ -27,7 +27,7 @@ using namespace std;
 using namespace ppl::common;
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-#include "ppl/nn/models/pmx/pmx_serializer.h"
+#include "ppl/nn/models/pmx/serializer.h"
 #endif
 
 namespace ppl { namespace nn { namespace onnx {
@@ -43,13 +43,13 @@ RuntimeBuilderImpl::~RuntimeBuilderImpl() {
 }
 
 RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len, const char* model_file_dir) {
-    auto status = ModelParser::Parse(model_buf, buf_len, model_file_dir, &graph_);
+    auto status = ModelParser::Parse(model_buf, buf_len, model_file_dir, &model_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse graph failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    partial_runtime_creator_.Init(graph_.topo.get(), graph_info_, &init_info_.name2nodeid);
+    partial_runtime_creator_.Init(model_.graph.topo.get(), graph_info_, &init_info_.name2nodeid);
 
     return RC_SUCCESS;
 }
@@ -84,19 +84,19 @@ RetCode RuntimeBuilderImpl::SetResources(const Resources& resource) {
 }
 
 RetCode RuntimeBuilderImpl::Preprocess() {
-    auto status = utils::ProcessGraph(resource_, &graph_, graph_info_.get());
+    auto status = utils::ProcessGraph(resource_, &model_.graph, graph_info_.get());
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "process graph failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = aux_info_->Init(graph_.topo.get(), resource_.reserved_edgeids);
+    status = aux_info_->Init(model_.graph.topo.get(), resource_.reserved_edgeids);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenerateRuntimeAuxInfo failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = init_info_.Init(graph_.topo.get());
+    status = init_info_.Init(model_.graph.topo.get());
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenerateRuntimeInitInfo failed: " << GetRetCodeStr(status);
         return status;
@@ -111,7 +111,7 @@ Runtime* RuntimeBuilderImpl::CreateRuntime() {
         return nullptr;
     }
 
-    auto status = runtime->Init(graph_.topo, graph_info_, aux_info_, init_info_, resource_.reserved_edgeids);
+    auto status = runtime->Init(model_.graph.topo, graph_info_, aux_info_, init_info_, resource_.reserved_edgeids);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init runtime failed: " << GetRetCodeStr(status);
         delete runtime;
@@ -128,17 +128,13 @@ Runtime* RuntimeBuilderImpl::CreateRuntime(const char** begin_ops, uint32_t begi
 
 RetCode RuntimeBuilderImpl::Serialize(const char* output_file, const char* fmt) const {
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    if (fmt != string("pmx")) {
-        LOG(ERROR) << "model format[" << fmt << "] is not supported.";
-        return RC_UNSUPPORTED;
+    if (fmt == string("pmx")) {
+        pmx::Serializer serializer;
+        return serializer.Serialize(output_file, model_.graph.topo.get(), resource_.engines, *graph_info_);
     }
-
-    pmx::PmxSerializer serializer;
-    return serializer.Serialize(output_file, graph_.topo.get(), resource_.engines, *graph_info_);
-#else
+#endif
     LOG(ERROR) << "model format[" << fmt << "] is not supported.";
     return RC_UNSUPPORTED;
-#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -146,7 +142,7 @@ RetCode RuntimeBuilderImpl::Serialize(const char* output_file, const char* fmt) 
 RetCode RuntimeBuilderImpl::ReserveTensor(RuntimeBuilderImpl* impl, va_list args) {
     auto tensor_name = va_arg(args, const char*);
 
-    auto edge = impl->graph_.topo->GetEdge(tensor_name);
+    auto edge = impl->model_.graph.topo->GetEdge(tensor_name);
     if (!edge) {
         LOG(ERROR) << "ReserveTensor: cannot find tensor named[" << tensor_name << "]";
         return RC_NOT_FOUND;

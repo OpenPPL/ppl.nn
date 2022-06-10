@@ -20,7 +20,7 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-template <ppl::nn::onnx::PoolingParam::pooling_mode_t pooling_mode, bool ceil_mode>
+template <int32_t pooling_mode, bool ceil_mode>
 static ppl::common::RetCode averagepool2d_ndarray_normal_fp32_impl(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,

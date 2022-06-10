@@ -15,22 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_PMX_PMX_SERIALIZER_H_
-#define _ST_HPC_PPL_NN_MODELS_PMX_PMX_SERIALIZER_H_
+#ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_AUTO_PAD_TYPE_H_
+#define _ST_HPC_PPL_NN_PARAMS_ONNX_AUTO_PAD_TYPE_H_
 
-#include "ppl/common/retcode.h"
-#include "ppl/nn/ir/graph_topo.h"
-#include "ppl/nn/engines/engine_impl.h"
-#include "ppl/nn/runtime/runtime_graph_info.h"
+namespace ppl { namespace nn { namespace onnx {
 
-namespace ppl { namespace nn { namespace pmx {
-
-class PmxSerializer final {
-public:
-    ppl::common::RetCode Serialize(const std::string& output_file, const ir::GraphTopo*,
-                                   const std::vector<EngineImpl*>&, const RuntimeGraphInfo&);
+enum {
+    AUTO_PAD_NOTSET = 0,
+    AUTO_PAD_SAME_UPPER,
+    AUTO_PAD_SAME_LOWER,
+    AUTO_PAD_VALID,
 };
 
-}}} // namespace ppl::nn::pmx
+}}} // namespace ppl::nn::onnx
 
 #endif

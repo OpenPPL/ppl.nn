@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/models/pmx/generated/pmx_generated.h"
-#include "ppl/nn/models/pmx/pmx_serializer.h"
+#include "ppl/nn/models/pmx/serializer.h"
 #include "ppl/nn/models/pmx/serialization_context.h"
 #include "ppl/nn/runtime/opt_kernel.h"
 #include "ppl/nn/engines/engine_impl.h"
@@ -462,8 +462,8 @@ static RetCode WriteModel(const FlatBufferBuilder& builder, const std::string& f
     return RC_SUCCESS;
 }
 
-RetCode PmxSerializer::Serialize(const string& output_file, const ir::GraphTopo* topo,
-                                 const vector<EngineImpl*>& engines, const RuntimeGraphInfo& info) {
+RetCode Serializer::Serialize(const string& output_file, const ir::GraphTopo* topo, const vector<EngineImpl*>& engines,
+                              const RuntimeGraphInfo& info) {
     LOG(WARNING) << "pmx format is under heavily developing and may change in the future. do not use it in production "
                     "environment.";
 

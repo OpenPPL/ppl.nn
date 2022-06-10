@@ -15,24 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/onnx/parsers/onnx/parse_gather_param.h"
-#include "ppl/nn/models/onnx/utils.h"
-using namespace std;
-using namespace ppl::common;
-using namespace ppl::nn::onnx;
+#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_SERIALIZER_H_
+#define _ST_HPC_PPL_NN_MODELS_ONNX_SERIALIZER_H_
+
+#include "ppl/common/retcode.h"
+#include "ppl/nn/models/onnx/model.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseGatherParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
-    auto param = static_cast<GatherParam*>(arg);
-    param->axis = utils::GetNodeAttrByKey<int32_t>(pb_node, "axis", 0);
-    return RC_SUCCESS;
-}
-
-RetCode PackGatherParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
-    auto param = static_cast<const GatherParam*>(arg);
-    utils::SetNodeAttr(pb_node, "axis", param->axis);
-    return RC_SUCCESS;
-}
+class Serializer final {
+public:
+    ppl::common::RetCode Serialize(const std::string& output_file, const Model&);
+};
 
 }}} // namespace ppl::nn::onnx
+
+#endif

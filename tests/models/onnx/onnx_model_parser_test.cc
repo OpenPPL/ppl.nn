@@ -26,10 +26,10 @@ using namespace ppl::common;
 class ModelParserTest : public testing::Test {};
 
 TEST_F(ModelParserTest, TestModelParser) {
-    ir::Graph graph;
+    onnx::Model model;
     const string onnx_file = PPLNN_TESTDATA_DIR + string("/conv.onnx");
     FileMapping fm;
     EXPECT_EQ(RC_SUCCESS, fm.Init(onnx_file.c_str(), FileMapping::READ));
-    auto res = onnx::ModelParser::Parse(fm.GetData(), fm.GetSize(), nullptr, &graph);
+    auto res = onnx::ModelParser::Parse(fm.GetData(), fm.GetSize(), nullptr, &model);
     EXPECT_EQ(RC_SUCCESS, res);
 }
