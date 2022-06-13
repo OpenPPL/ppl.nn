@@ -212,12 +212,6 @@ table ScatterElementsParam {
     axis: int32 = 0;
 }
 
-table SliceParam {
-    axes: [int32];
-    ends: [int32];
-    starts: [int32];
-}
-
 table SoftmaxParam {
     axis: int32 = 1;
 }

@@ -28,67 +28,47 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
     const TensorShape& in_shape0 = *ctx->GetInput<TensorImpl>(0)->GetShape();
     int dim_count = in_shape0.GetDimCount();
     int input_count = ctx->GetInputCount();
-    if (input_count == 1) { // For op version <= 9
-        auto axes_num = param_->starts.size();
-        kernel_param.axes_num = axes_num;
-        if (param_->starts.size() != axes_num || 
-            param_->ends.size() != axes_num ||
-            (param_->axes.size() != axes_num && param_->axes.size() != 0)) {
-            return ppl::common::RC_INVALID_VALUE;
-        }
 
-        for (uint32_t i = 0; i < axes_num; ++i) {
-            kernel_param.starts[i] = param_->starts[i];
-            kernel_param.ends[i] = param_->ends[i];
-            kernel_param.steps[i] = 1;
-            if (param_->axes.size() != 0) {
-                kernel_param.axes[i] = param_->axes[i];
-            } else {
-                kernel_param.axes[i] = i;
-            }
+    { // starts
+        auto input = ctx->GetInput<TensorImpl>(1);
+        auto status = input->CopyToHost(kernel_param.starts);
+        if (status != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "Copy starts failed: " << ppl::common::GetRetCodeStr(status);
+            return status;
         }
-    } else { // For op version >= 10
-        { // starts
-            auto input = ctx->GetInput<TensorImpl>(1);
-            auto status = input->CopyToHost(kernel_param.starts);
-            if (status != ppl::common::RC_SUCCESS) {
-                LOG(ERROR) << "Copy starts failed: " << ppl::common::GetRetCodeStr(status);
-                return status;
-            }
+    }
+    { // ends
+        auto input = ctx->GetInput<TensorImpl>(2);
+        auto status = input->CopyToHost(kernel_param.ends);
+        if (status != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "Copy ends failed: " << ppl::common::GetRetCodeStr(status);
+            return status;
         }
-        { // ends
-            auto input = ctx->GetInput<TensorImpl>(2);
-            auto status = input->CopyToHost(kernel_param.ends);
-            if (status != ppl::common::RC_SUCCESS) {
-                LOG(ERROR) << "Copy ends failed: " << ppl::common::GetRetCodeStr(status);
-                return status;
-            }
+    }
+    if (input_count >= 4) { // axes
+        auto input = ctx->GetInput<TensorImpl>(3);
+        auto status = input->CopyToHost(kernel_param.axes);
+        if (status != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "Copy axes failed: " << ppl::common::GetRetCodeStr(status);
+            return status;
         }
-        if (input_count >= 4) { // axes
-            auto input = ctx->GetInput<TensorImpl>(3);
-            auto status = input->CopyToHost(kernel_param.axes);
-            if (status != ppl::common::RC_SUCCESS) {
-                LOG(ERROR) << "Copy axes failed: " << ppl::common::GetRetCodeStr(status);
-                return status;
-            }
-            kernel_param.axes_num = input->GetShape()->GetElementsIncludingPadding();
-        } else {
-            for (int it = 0; it < dim_count; ++it) {
-                kernel_param.axes[it] = it;
-            }
-            kernel_param.axes_num = dim_count;
+        kernel_param.axes_num = input->GetShape()->GetElementsIncludingPadding();
+    } else {
+        for (int it = 0; it < dim_count; ++it) {
+            kernel_param.axes[it] = it;
         }
-        if (input_count >= 5) { // steps
-            auto input = ctx->GetInput<TensorImpl>(4);
-            auto status = input->CopyToHost(kernel_param.steps);
-            if (status != ppl::common::RC_SUCCESS) {
-                LOG(ERROR) << "Copy steps failed: " << ppl::common::GetRetCodeStr(status);
-                return status;
-            }
-        } else {
-            for (int it = 0; it < dim_count; ++it) {
-                kernel_param.steps[it] = 1;
-            }
+        kernel_param.axes_num = dim_count;
+    }
+    if (input_count >= 5) { // steps
+        auto input = ctx->GetInput<TensorImpl>(4);
+        auto status = input->CopyToHost(kernel_param.steps);
+        if (status != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "Copy steps failed: " << ppl::common::GetRetCodeStr(status);
+            return status;
+        }
+    } else {
+        for (int it = 0; it < dim_count; ++it) {
+            kernel_param.steps[it] = 1;
         }
     }
 
@@ -109,7 +89,7 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
         if (start_val < 0) {
             start_val = cur_dim_size + start_val;
         }
-        if (end_val == INT_MIN || LLONG_MIN) {
+        if (end_val == INT_MIN || end_val == LLONG_MIN) {
             end_val = 0;
         }
         if (end_val == INT_MAX || end_val == LLONG_MAX || end_val > cur_dim_size) {

@@ -17,25 +17,49 @@
 
 #include "ppl/nn/models/onnx/parsers/onnx/parse_slice_param.h"
 #include "ppl/nn/models/onnx/utils.h"
+#include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
-    auto param = static_cast<SliceParam*>(arg);
-    param->axes = utils::GetNodeAttrsByKey<int32_t>(pb_node, "axes");
-    param->ends = utils::GetNodeAttrsByKey<int32_t>(pb_node, "ends");
-    param->starts = utils::GetNodeAttrsByKey<int32_t>(pb_node, "starts");
-    return RC_SUCCESS;
-}
+RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node,
+                        ir::Attr* arg) {
+    auto& node_type = node->GetType();
 
-RetCode PackSliceParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
-    auto param = static_cast<const SliceParam*>(arg);
-    utils::SetNodeAttr(pb_node, "axes", param->axes);
-    utils::SetNodeAttr(pb_node, "ends", param->ends);
-    utils::SetNodeAttr(pb_node, "starts", param->starts);
+    if (node_type.version < 10) {
+        auto axes = utils::GetNodeAttrsByKey<int64_t>(pb_node, "axes");
+        auto ends = utils::GetNodeAttrsByKey<int64_t>(pb_node, "ends");
+        auto starts = utils::GetNodeAttrsByKey<int64_t>(pb_node, "starts");
+
+        auto new_edge_name = node->GetName() + "_slice_starts_" + std::to_string(args.topo->GetCurrentEdgeIdBound());
+        auto edge = utils::Add1DInitializer(args.topo, args.data, new_edge_name, starts, DATATYPE_INT64);
+        if (!edge) {
+            LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
+            return RC_OTHER_ERROR;
+        }
+        node->AddInput(edge->GetId());
+
+        new_edge_name = node->GetName() + "_slice_ends_" + std::to_string(args.topo->GetCurrentEdgeIdBound());
+        edge = utils::Add1DInitializer(args.topo, args.data, new_edge_name, ends, DATATYPE_INT64);
+        if (!edge) {
+            LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
+            return RC_OTHER_ERROR;
+        }
+        node->AddInput(edge->GetId());
+
+        new_edge_name = node->GetName() + "_slice_axes_" + std::to_string(args.topo->GetCurrentEdgeIdBound());
+        edge = utils::Add1DInitializer(args.topo, args.data, new_edge_name, axes, DATATYPE_INT64);
+        if (!edge) {
+            LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
+            return RC_OTHER_ERROR;
+        }
+        node->AddInput(edge->GetId());
+
+        node_type.version = 11;
+    }
+
     return RC_SUCCESS;
 }
 

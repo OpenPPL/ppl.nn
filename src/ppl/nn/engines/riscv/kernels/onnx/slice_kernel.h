@@ -19,21 +19,15 @@
 #define _ST_HPC_PPL_NN_ENGINES_RISCV_KERNELS_ONNX_SLICE_KERNEL_H_
 
 #include "ppl/nn/engines/riscv/kernel.h"
-#include "ppl/nn/engines/riscv/params/slice_param.h"
 
 namespace ppl { namespace nn { namespace riscv {
 
 class SliceKernel : public RiscvKernel {
 public:
     SliceKernel(const ir::Node* node) : RiscvKernel(node) {}
-    void SetParam(const ppl::nn::riscv::SliceParam* p) {
-        param_ = p;
-    }
 
 private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
-
-    const ppl::nn::riscv::SliceParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::riscv

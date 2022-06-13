@@ -24,8 +24,8 @@ namespace ppl { namespace nn { namespace x86 {
 
 ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_REQUIRED_INPUT(data, 0);
-    PPLNN_X86_OPTIONAL_INPUT(starts_tensor, 1);
-    PPLNN_X86_OPTIONAL_INPUT(ends_tensor, 2);
+    PPLNN_X86_REQUIRED_INPUT(starts_tensor, 1);
+    PPLNN_X86_REQUIRED_INPUT(ends_tensor, 2);
     PPLNN_X86_OPTIONAL_INPUT(axes_tensor, 3);
     PPLNN_X86_OPTIONAL_INPUT(steps_tensor, 4);
     PPLNN_X86_REQUIRED_OUTPUT(output, 0);
@@ -33,14 +33,10 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [data]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(data);
-    if (starts_tensor) {
-        PPLNN_X86_DEBUG_TRACE("Input [starts]:\n");
-        PPL_X86_TENSOR_PRINT_DEBUG_MSG(starts_tensor);
-    }
-    if (ends_tensor) {
-        PPLNN_X86_DEBUG_TRACE("Input [ends]:\n");
-        PPL_X86_TENSOR_PRINT_DEBUG_MSG(ends_tensor);
-    }
+    PPLNN_X86_DEBUG_TRACE("Input [starts]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(starts_tensor);
+    PPLNN_X86_DEBUG_TRACE("Input [ends]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(ends_tensor);
     if (axes_tensor) {
         PPLNN_X86_DEBUG_TRACE("Input [axes]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(axes_tensor);
@@ -50,48 +46,44 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(steps_tensor);
     }
 
-    const int64_t axes_num = param_->starts.size();
-
-    PPLNN_X86_DEBUG_TRACE("axes_num: %ld\n", axes_num);
-    PPLNN_X86_DEBUG_TRACE("starts: ");
-    for (int64_t i = 0; i < axes_num; ++i) {
-        PPLNN_X86_DEBUG_TRACE("%ld ", param_->starts[i]);
-    }
-    PPLNN_X86_DEBUG_TRACE("\n");
-    PPLNN_X86_DEBUG_TRACE("ends: ");
-    for (int64_t i = 0; i < axes_num; ++i) {
-        PPLNN_X86_DEBUG_TRACE("%ld ", param_->ends[i]);
-    }
-    PPLNN_X86_DEBUG_TRACE("\n");
-    PPLNN_X86_DEBUG_TRACE("axes: ");
-    for (int64_t i = 0; i < axes_num; ++i) {
-        PPLNN_X86_DEBUG_TRACE("%ld ", param_->axes[i]);
-    }
-    PPLNN_X86_DEBUG_TRACE("\n");
-    PPLNN_X86_DEBUG_TRACE("steps: ");
-    for (int64_t i = 0; i < axes_num; ++i) {
-        PPLNN_X86_DEBUG_TRACE("%ld ", param_->steps[i]);
-    }
-    PPLNN_X86_DEBUG_TRACE("\n");
-
-
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     PPLNN_X86_REALLOC_TENSOR_BUFFER(output);
     PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
 
+    // prepare starts, axes, steps
+    auto starts = starts_tensor->GetBufferPtr<int64_t>();
+    const int axes_num = ctx->GetInput<TensorImpl>(1)->GetShape()->GetDim(0);
+
+    const int64_t* axes = nullptr;
+    std::vector<int64_t> axes_vec;
+    if (axes_tensor) {
+        axes = axes_tensor->GetBufferPtr<int64_t>();
+    } else {
+        axes_vec.resize(axes_num);
+        for (int i = 0; i < axes_num; i++) {
+            axes_vec[i] = i;
+        }
+        axes = axes_vec.data();
+    }
+
+    std::vector<int64_t> steps_vec;
+    const int64_t* steps = nullptr;
+    if (steps_tensor) {
+        steps = steps_tensor->GetBufferPtr<int64_t>();
+    } else {
+        steps_vec.resize(axes_num, 1);
+        steps = steps_vec.data();
+    }
+
     const ppl::common::datatype_t data_type = data->GetShape()->GetDataType();
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        return kernel::x86::slice_ndarray_fp32(
-            data->GetShape(), output->GetShape(), data->GetBufferPtr<float>(),
-            param_->starts.data(), param_->steps.data(), param_->axes.data(),
-            axes_num, output->GetBufferPtr<float>());
+        return kernel::x86::slice_ndarray_fp32(data->GetShape(), output->GetShape(), data->GetBufferPtr<float>(),
+                                               starts, steps, axes, axes_num, output->GetBufferPtr<float>());
     } else if (data_type == ppl::common::DATATYPE_INT64) {
-        return kernel::x86::slice_ndarray_int64(
-            data->GetShape(), output->GetShape(), data->GetBufferPtr<int64_t>(),
-            param_->starts.data(), param_->steps.data(), param_->axes.data(),
-            axes_num, output->GetBufferPtr<int64_t>());
+        return kernel::x86::slice_ndarray_int64(data->GetShape(), output->GetShape(), data->GetBufferPtr<int64_t>(),
+                                                starts, steps, axes, axes_num, output->GetBufferPtr<int64_t>());
     }
 
     return ppl::common::RC_UNSUPPORTED;

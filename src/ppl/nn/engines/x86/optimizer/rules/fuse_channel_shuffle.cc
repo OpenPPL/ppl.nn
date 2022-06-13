@@ -24,7 +24,6 @@
 #include "ppl/nn/params/onnx/transpose_param.h"
 #include "ppl/nn/params/onnx/concat_param.h"
 #include "ppl/nn/params/onnx/split_param.h"
-#include "ppl/nn/params/onnx/slice_param.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -38,50 +37,38 @@ inline void GetSliceParam(const ir::Node* node, const ir::GraphTopo* graph_topo,
         return;
     }
 
-    if (node->GetType().version >= 10) {
-        const auto& constants = graph_data->constants;
+    const auto& constants = graph_data->constants;
 
-        auto starts_edge = graph_topo->GetEdge(node->GetInput(1));
-        if (starts_edge != nullptr && constants.find(starts_edge->GetId()) != constants.end()) {
-            auto it = constants.find(starts_edge->GetId());
-            const auto starts_data = it->second.data;
-            starts = std::vector<int64_t>((const int64_t*)starts_data.data(),
-                                          (const int64_t*)starts_data.data() + starts_data.size() / sizeof(int64_t));
-        }
+    auto starts_edge = graph_topo->GetEdge(node->GetInput(1));
+    if (starts_edge != nullptr && constants.find(starts_edge->GetId()) != constants.end()) {
+        auto it = constants.find(starts_edge->GetId());
+        const auto starts_data = it->second.data;
+        starts = std::vector<int64_t>((const int64_t*)starts_data.data(),
+                                      (const int64_t*)starts_data.data() + starts_data.size() / sizeof(int64_t));
+    }
 
-        auto ends_edge = graph_topo->GetEdge(node->GetInput(2));
-        if (ends_edge != nullptr && constants.find(ends_edge->GetId()) != constants.end()) {
-            auto it = constants.find(ends_edge->GetId());
-            const auto ends_data = it->second.data;
-            ends = std::vector<int64_t>((const int64_t*)ends_data.data(),
-                                        (const int64_t*)ends_data.data() + ends_data.size() / sizeof(int64_t));
-        }
+    auto ends_edge = graph_topo->GetEdge(node->GetInput(2));
+    if (ends_edge != nullptr && constants.find(ends_edge->GetId()) != constants.end()) {
+        auto it = constants.find(ends_edge->GetId());
+        const auto ends_data = it->second.data;
+        ends = std::vector<int64_t>((const int64_t*)ends_data.data(),
+                                    (const int64_t*)ends_data.data() + ends_data.size() / sizeof(int64_t));
+    }
 
-        auto axes_edge = node->GetInputCount() >= 4 ? graph_topo->GetEdge(node->GetInput(3)) : nullptr;
-        if (axes_edge != nullptr && constants.find(axes_edge->GetId()) != constants.end()) {
-            auto it = constants.find(axes_edge->GetId());
-            const auto axes_data = it->second.data;
-            axes = std::vector<int64_t>((const int64_t*)axes_data.data(),
-                                        (const int64_t*)axes_data.data() + axes_data.size() / sizeof(int64_t));
-        }
+    auto axes_edge = node->GetInputCount() >= 4 ? graph_topo->GetEdge(node->GetInput(3)) : nullptr;
+    if (axes_edge != nullptr && constants.find(axes_edge->GetId()) != constants.end()) {
+        auto it = constants.find(axes_edge->GetId());
+        const auto axes_data = it->second.data;
+        axes = std::vector<int64_t>((const int64_t*)axes_data.data(),
+                                    (const int64_t*)axes_data.data() + axes_data.size() / sizeof(int64_t));
+    }
 
-        auto steps_edge = node->GetInputCount() >= 5 ? graph_topo->GetEdge(node->GetInput(4)) : nullptr;
-        if (steps_edge != nullptr && constants.find(steps_edge->GetId()) != constants.end()) {
-            auto it = constants.find(steps_edge->GetId());
-            const auto steps_data = it->second.data;
-            steps = std::vector<int64_t>((const int64_t*)steps_data.data(),
-                                         (const int64_t*)steps_data.data() + steps_data.size() / sizeof(int64_t));
-        }
-    } else {
-        auto& attrs = graph_data->attrs;
-        auto node_attr = attrs.find(node->GetId());
-        if (node_attr == attrs.end()) {
-            return;
-        }
-        auto param = (ppl::nn::onnx::SliceParam*)node_attr->second.get();
-        axes.assign(param->axes.begin(), param->axes.end());
-        ends.assign(param->ends.begin(), param->ends.end());
-        starts.assign(param->starts.begin(), param->starts.end());
+    auto steps_edge = node->GetInputCount() >= 5 ? graph_topo->GetEdge(node->GetInput(4)) : nullptr;
+    if (steps_edge != nullptr && constants.find(steps_edge->GetId()) != constants.end()) {
+        auto it = constants.find(steps_edge->GetId());
+        const auto steps_data = it->second.data;
+        steps = std::vector<int64_t>((const int64_t*)steps_data.data(),
+                                     (const int64_t*)steps_data.data() + steps_data.size() / sizeof(int64_t));
     }
 }
 
