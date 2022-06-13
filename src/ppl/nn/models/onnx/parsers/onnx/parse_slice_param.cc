@@ -23,19 +23,16 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
-    auto param = static_cast<SliceParam*>(arg);
-    param->axes = utils::GetNodeAttrsByKey<int32_t>(pb_node, "axes");
-    param->ends = utils::GetNodeAttrsByKey<int32_t>(pb_node, "ends");
-    param->starts = utils::GetNodeAttrsByKey<int32_t>(pb_node, "starts");
-    return RC_SUCCESS;
-}
+RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node,
+                        ir::Attr* arg) {
+    auto& node_type = node->GetType();
 
-RetCode PackSliceParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
-    auto param = static_cast<const SliceParam*>(arg);
-    utils::SetNodeAttr(pb_node, "axes", param->axes);
-    utils::SetNodeAttr(pb_node, "ends", param->ends);
-    utils::SetNodeAttr(pb_node, "starts", param->starts);
+    if (node_type.version < 10) {
+        auto axes = utils::GetNodeAttrsByKey<int32_t>(pb_node, "axes");
+        auto ends = utils::GetNodeAttrsByKey<int32_t>(pb_node, "ends");
+        auto starts = utils::GetNodeAttrsByKey<int32_t>(pb_node, "starts");
+    }
+
     return RC_SUCCESS;
 }
 

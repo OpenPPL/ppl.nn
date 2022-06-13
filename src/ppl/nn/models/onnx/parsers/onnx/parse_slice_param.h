@@ -19,15 +19,12 @@
 #define _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PARSE_SLICE_PARAM_H_
 
 #include "ppl/common/retcode.h"
-#include "ppl/nn/params/onnx/slice_param.h"
 #include "ppl/nn/models/onnx/param_parser_extra_args.h"
 #include "ppl/nn/models/onnx/generated/onnx.pb.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
 ppl::common::RetCode ParseSliceParam(const ::onnx::NodeProto&, const ParamParserExtraArgs&, ir::Node*, ir::Attr*);
-
-ppl::common::RetCode PackSliceParam(const ir::Node*, const ir::Attr*, ::onnx::NodeProto*);
 
 }}} // namespace ppl::nn::onnx
 

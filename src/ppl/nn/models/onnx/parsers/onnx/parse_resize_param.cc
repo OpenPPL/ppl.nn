@@ -50,7 +50,8 @@ static const vector<pair<string, int32_t>> g_nearest_modes = {
 RetCode ParseResizeParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<ResizeParam*>(arg);
 
-    auto coord_trans_mode_str = utils::GetNodeAttrByKey<std::string>(pb_node, "coordinate_transformation_mode", "half_pixel");
+    auto coord_trans_mode_str =
+        utils::GetNodeAttrByKey<std::string>(pb_node, "coordinate_transformation_mode", "half_pixel");
     auto it = std::find_if(g_coord_trans_modes.begin(), g_coord_trans_modes.end(),
                            [&coord_trans_mode_str](const pair<string, int32_t>& p) -> bool {
                                return (coord_trans_mode_str == p.first);

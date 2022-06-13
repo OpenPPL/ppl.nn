@@ -143,6 +143,11 @@ int32_t ConvertPplDataTypeToOnnxDataType(ppl::common::datatype_t);
 
 /* -------------------------------------------------------------------------- */
 
+ir::Edge* AddNewInitializer(ir::GraphTopo*, ir::GraphData*, const std::string& key,
+                            const void* data, uint64_t datalen);
+
+/* -------------------------------------------------------------------------- */
+
 void ResolveExtraInputs(ir::GraphTopo* current, ir::Node* parent_node, ir::GraphTopo* parent_graph);
 
 }}}} // namespace ppl::nn::onnx::utils

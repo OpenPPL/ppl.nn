@@ -327,6 +327,28 @@ RetCode PackTensorProto(const void* data, uint64_t len, datatype_t data_type, co
     return RC_SUCCESS;
 }
 
+ir::Edge* AddNewInitializer(ir::GraphTopo* topo, ir::GraphData* data, const string& key, const void* value, uint64_t valuelen) {
+    auto edge_ret = topo->AddEdge(key);
+    if (!edge_ret.first) {
+        LOG(ERROR) << "add new initializer[" << key << "] failed.";
+        return nullptr;
+    }
+    auto edge = edge_ret.first;
+    auto eid = edge->GetId();
+
+    topo->MarkAsConstant(eid);
+
+    auto constant_ret = data->constants.insert(make_pair(eid, ir::Constant()));
+    constant_ret.first->second.data.assign((const char*)value, valuelen);
+
+    auto shape_ret = data->shapes.insert(make_pair(eid, ir::Shape()));
+    shape_ret.first->second.data_type = DATATYPE_FLOAT32;
+    shape_ret.first->second.data_format = DATAFORMAT_NDARRAY;
+    shape_ret.first->second.dims.push_back(1);
+
+    return edge;
+}
+
 void ResolveExtraInputs(ir::GraphTopo* current, ir::Node* parent_node, ir::GraphTopo* parent_graph) {
     for (uint32_t i = 0; i < current->GetExtraInputCount(); ++i) {
         auto edge = current->GetEdge(current->GetExtraInput(i));

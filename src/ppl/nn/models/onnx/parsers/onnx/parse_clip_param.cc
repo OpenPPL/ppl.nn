@@ -24,28 +24,6 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-static ir::Edge* AddNewInitializer(ir::GraphTopo* topo, ir::GraphData* data, const string& key, float value) {
-    auto edge_ret = topo->AddEdge(key);
-    if (!edge_ret.first) {
-        LOG(ERROR) << "add new initializer[" << key << "] failed.";
-        return nullptr;
-    }
-    auto edge = edge_ret.first;
-    auto eid = edge->GetId();
-
-    topo->MarkAsConstant(eid);
-
-    auto constant_ret = data->constants.insert(make_pair(eid, ir::Constant()));
-    constant_ret.first->second.data.assign((const char*)(&value), sizeof(value));
-
-    auto shape_ret = data->shapes.insert(make_pair(eid, ir::Shape()));
-    shape_ret.first->second.data_type = DATATYPE_FLOAT32;
-    shape_ret.first->second.data_format = DATAFORMAT_NDARRAY;
-    shape_ret.first->second.dims.push_back(1);
-
-    return edge;
-}
-
 RetCode ParseClipParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node,
                        ir::Attr* arg) {
     auto& node_type = node->GetType();
@@ -57,15 +35,16 @@ RetCode ParseClipParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraA
         auto min_value = utils::GetNodeAttrByKey<float>(pb_node, "min", numeric_limits<float>::lowest());
         auto max_value = utils::GetNodeAttrByKey<float>(pb_node, "max", numeric_limits<float>::max());
 
-        auto edge = AddNewInitializer(
-            topo, data, node->GetName() + "_clip_min_" + std::to_string(topo->GetCurrentEdgeIdBound()), min_value);
+        auto edge = utils::AddNewInitializer(
+            topo, data, node->GetName() + "_clip_min_" + std::to_string(topo->GetCurrentEdgeIdBound()),
+            &min_value, sizeof(min_value));
         if (!edge) {
             return RC_OTHER_ERROR;
         }
         node->AddInput(edge->GetId());
 
-        edge = AddNewInitializer(
-            topo, data, node->GetName() + "_clip_max_" + std::to_string(topo->GetCurrentEdgeIdBound()), max_value);
+        edge = utils::AddNewInitializer(
+            topo, data, node->GetName() + "_clip_max_" + std::to_string(topo->GetCurrentEdgeIdBound()), &max_value, sizeof(max_value));
         if (!edge) {
             return RC_OTHER_ERROR;
         }
