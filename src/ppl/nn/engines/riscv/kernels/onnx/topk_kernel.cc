@@ -44,7 +44,7 @@ ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_RISCV_REQUIRED_OUTPUT(Values, 0);
     PPLNN_RISCV_REQUIRED_OUTPUT(Indices, 1);
 
-    int64_t k_val = param_->k;
+    int64_t k_val = *K->GetBufferPtr<int64_t>();
 
     PPLNN_RISCV_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_RISCV_DEBUG_TRACE("Input [X]:\n");
@@ -88,14 +88,14 @@ ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
     auto data_type = X->GetShape()->GetDataType();
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
         return kernel::riscv::topk_ndarray_fp32(X->GetShape(), Values->GetShape(), Indices->GetShape(),
-                                              X->GetBufferPtr<const float>(), k_val, axis, param_->largest,
-                                              param_->sorted, tmp_buffer, Values->GetBufferPtr<float>(),
-                                              Indices->GetBufferPtr<int64_t>());
+                                                X->GetBufferPtr<const float>(), k_val, axis, param_->largest,
+                                                param_->sorted, tmp_buffer, Values->GetBufferPtr<float>(),
+                                                Indices->GetBufferPtr<int64_t>());
     } else if (data_type == ppl::common::DATATYPE_FLOAT16) {
         return kernel::riscv::topk_ndarray_fp16(X->GetShape(), Values->GetShape(), Indices->GetShape(),
-                                              X->GetBufferPtr<const __fp16>(), k_val, axis, param_->largest,
-                                              param_->sorted, tmp_buffer, Values->GetBufferPtr<__fp16>(),
-                                              Indices->GetBufferPtr<int64_t>());
+                                                X->GetBufferPtr<const __fp16>(), k_val, axis, param_->largest,
+                                                param_->sorted, tmp_buffer, Values->GetBufferPtr<__fp16>(),
+                                                Indices->GetBufferPtr<int64_t>());
 
     } else {
         LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";

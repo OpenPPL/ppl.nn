@@ -2535,8 +2535,7 @@ struct TopKParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_AXIS = 4,
     VT_LARGEST = 6,
-    VT_SORTED = 8,
-    VT_K = 10
+    VT_SORTED = 8
   };
   int32_t axis() const {
     return GetField<int32_t>(VT_AXIS, -1);
@@ -2547,15 +2546,11 @@ struct TopKParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   int32_t sorted() const {
     return GetField<int32_t>(VT_SORTED, 1);
   }
-  int32_t k() const {
-    return GetField<int32_t>(VT_K, -1);
-  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int32_t>(verifier, VT_AXIS) &&
            VerifyField<int32_t>(verifier, VT_LARGEST) &&
            VerifyField<int32_t>(verifier, VT_SORTED) &&
-           VerifyField<int32_t>(verifier, VT_K) &&
            verifier.EndTable();
   }
 };
@@ -2573,9 +2568,6 @@ struct TopKParamBuilder {
   void add_sorted(int32_t sorted) {
     fbb_.AddElement<int32_t>(TopKParam::VT_SORTED, sorted, 1);
   }
-  void add_k(int32_t k) {
-    fbb_.AddElement<int32_t>(TopKParam::VT_K, k, -1);
-  }
   explicit TopKParamBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -2591,10 +2583,8 @@ inline flatbuffers::Offset<TopKParam> CreateTopKParam(
     flatbuffers::FlatBufferBuilder &_fbb,
     int32_t axis = -1,
     int32_t largest = 1,
-    int32_t sorted = 1,
-    int32_t k = -1) {
+    int32_t sorted = 1) {
   TopKParamBuilder builder_(_fbb);
-  builder_.add_k(k);
   builder_.add_sorted(sorted);
   builder_.add_largest(largest);
   builder_.add_axis(axis);

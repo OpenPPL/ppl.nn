@@ -27,10 +27,9 @@ struct TopKParam final : public ir::TypedAttr<TopKParam> {
     int32_t axis;
     int32_t largest;
     int32_t sorted;
-    int32_t k;
 
     bool operator==(const TopKParam& p) const {
-        return this->axis == p.axis && this->largest == p.largest && this->sorted == p.sorted && this->k == p.k;
+        return this->axis == p.axis && this->largest == p.largest && this->sorted == p.sorted;
     }
 };
 

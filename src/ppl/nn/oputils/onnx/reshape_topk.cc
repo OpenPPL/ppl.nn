@@ -16,7 +16,6 @@
 // under the License.
 
 #include "ppl/nn/oputils/onnx/reshape_topk.h"
-#include "ppl/nn/params/onnx/topk_param.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
@@ -57,25 +56,19 @@ RetCode ReshapeTopK(InputOutputInfo* info, const ir::Attr* arg, int64_t k) {
 }
 
 RetCode ReshapeTopK(InputOutputInfo* info, const ir::Attr* arg) {
-    auto p = (const TopKParam*)arg;
-    if ((p->k == -1 && info->GetInputCount() != 2) || info->GetOutputCount() != 2) {
-        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2 with k == -1 or output count["
+    if (info->GetInputCount() != 2 || info->GetOutputCount() != 2) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2 or output count["
                    << info->GetOutputCount() << "] != 2.";
         return RC_INVALID_VALUE;
     }
 
-    int64_t k = p->k;
-
-    if (k == -1) {
-        auto k_ptr = info->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
-        if (!k_ptr) {
-            LOG(DEBUG) << "ERROR: input[1] is empty.";
-            return RC_NOT_FOUND;
-        }
-        k = *k_ptr;
+    auto k_ptr = info->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
+    if (!k_ptr) {
+        LOG(DEBUG) << "ERROR: input[1] is empty.";
+        return RC_NOT_FOUND;
     }
 
-    return ReshapeTopK(info, arg, k);
+    return ReshapeTopK(info, arg, *k_ptr);
 }
 
 }}} // namespace ppl::nn::onnx
