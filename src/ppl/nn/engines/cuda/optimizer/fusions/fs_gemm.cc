@@ -100,7 +100,7 @@ const RetCode GemmFusion::FuseNode(ir::Node* node, bool reliable, const OptKerne
                 next_kernel->CopyParam(temp_param);
                 param->extra_param.fuse_info.fuse_attrs.emplace_back(std::move(temp_param));
             } else {
-                auto clip_param = new onnx::ClipParam();
+                auto clip_param = new CudaClipParam();
                 auto min_iter = data->constants.find(nextnode->GetInput(1));
                 if (min_iter != data->constants.end()) {
                     clip_param->min_value = *(float*)(min_iter->second.data.data());
