@@ -79,8 +79,9 @@ const bool ConvFusion::FuseTest(ir::Node* node, const OptKernelOptions& options,
     if (canfuse(nextnode, options)) {
         LOG(DEBUG) << "Fuse node[" << node->GetName() << "] and nextnode[" << nextnode->GetName() << "]";
         // avoid conv+add+add case
-        for (auto &type : param->extra_param.fuse_info.types) {
-            if (type == nextnode->GetType().name) return false;
+        for (auto& type : param->extra_param.fuse_info.types) {
+            if (type == nextnode->GetType().name)
+                return false;
         }
         param->extra_param.fuse_info.types.emplace_back(nextnode->GetType().name);
         param->extra_param.fuse_info.input_ind.emplace_back(node->GetInputCount());
@@ -91,7 +92,7 @@ const bool ConvFusion::FuseTest(ir::Node* node, const OptKernelOptions& options,
             next_kernel->CopyParam(temp_param);
             param->extra_param.fuse_info.fuse_attrs.emplace_back(std::move(temp_param));
         } else {
-            auto clip_param = new onnx::ClipParam();
+            auto clip_param = new CudaClipParam();
             auto min_iter = data->constants.find(nextnode->GetInput(1));
             if (min_iter != data->constants.end()) {
                 clip_param->min_value = *(float*)(min_iter->second.data.data());
