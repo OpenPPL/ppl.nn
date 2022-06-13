@@ -27,7 +27,6 @@ uint64_t TopKKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     return ppl::kernel::arm_server::neon::topk_ndarray_get_buffer_bytes(ctx.GetInput<TensorImpl>(0)->GetShape(), axis);
 }
 
-
 ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
@@ -47,7 +46,7 @@ ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_ARM_REQUIRED_OUTPUT(values, 0);
     PPLNN_ARM_REQUIRED_OUTPUT(indices, 1);
 
-    int64_t k_val = param_->k;
+    int64_t k_val = *k->GetBufferPtr<int64_t>();
 
     PPLNN_ARM_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_ARM_DEBUG_TRACE("Input [x]:\n");
@@ -81,11 +80,9 @@ ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
 
     uint32_t axis = param_->axis < 0 ? param_->axis + x->GetShape()->GetDimCount() : param_->axis;
 
-    return ppl::kernel::arm_server::neon::topk(x->GetShape(), values->GetShape(), indices->GetShape(),
-                                            x->GetBufferPtr<void>(), k_val, axis, param_->largest,
-                                            param_->sorted, tmp_buffer, values->GetBufferPtr<void>(),
-                                            indices->GetBufferPtr<int64_t>());
-
+    return ppl::kernel::arm_server::neon::topk(
+        x->GetShape(), values->GetShape(), indices->GetShape(), x->GetBufferPtr<void>(), k_val, axis, param_->largest,
+        param_->sorted, tmp_buffer, values->GetBufferPtr<void>(), indices->GetBufferPtr<int64_t>());
 }
 
 }}} // namespace ppl::nn::arm

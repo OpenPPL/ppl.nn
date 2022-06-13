@@ -234,7 +234,6 @@ table TopKParam {
     axis: int32 = -1;
     largest: int32 = 1;
     sorted: int32 = 1;
-    k: int32 = -1;      // for opset < 10
 }
 
 table TransposeParam {

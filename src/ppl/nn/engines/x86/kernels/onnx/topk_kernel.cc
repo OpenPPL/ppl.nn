@@ -34,7 +34,7 @@ ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_REQUIRED_OUTPUT(Values, 0);
     PPLNN_X86_REQUIRED_OUTPUT(Indices, 1);
 
-    int64_t k_val = param_->k;
+    int64_t k_val = *K->GetBufferPtr<int64_t>();
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [X]:\n");

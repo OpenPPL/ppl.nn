@@ -17,28 +17,31 @@
 
 #include "ppl/nn/models/onnx/parsers/onnx/parse_topk_param.h"
 #include "ppl/nn/models/onnx/utils.h"
+#include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseTopKParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
-    auto it = args.op_set->find(pb_node.domain());
-    if (it == args.op_set->end()) {
-        return RC_INVALID_VALUE;
-    }
-    auto opset = it->second;
-
+RetCode ParseTopKParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node,
+                       ir::Attr* arg) {
     auto param = static_cast<TopKParam*>(arg);
-
     param->axis = utils::GetNodeAttrByKey<int32_t>(pb_node, "axis", -1);
     param->largest = utils::GetNodeAttrByKey<int32_t>(pb_node, "largest", 1);
     param->sorted = utils::GetNodeAttrByKey<int32_t>(pb_node, "sorted", 1);
-    param->k = utils::GetNodeAttrByKey<int32_t>(pb_node, "k", -1);
 
-    if (opset < 10 && param->k == -1) {
-        return RC_NOT_FOUND;
+    auto& node_type = node->GetType();
+    if (node_type.version < 10) {
+        auto k = utils::GetNodeAttrByKey<int64_t>(pb_node, "k", -1);
+        auto new_edge_name = node->GetName() + "_topk_k_" + std::to_string(args.topo->GetCurrentEdgeIdBound());
+        auto edge = utils::AddScalarInitializer(args.topo, args.data, new_edge_name, k, DATATYPE_INT64);
+        if (!edge) {
+            LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
+            return RC_OTHER_ERROR;
+        }
+        node->AddInput(edge->GetId());
+        node_type.version = 11;
     }
 
     return RC_SUCCESS;
