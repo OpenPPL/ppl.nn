@@ -19,8 +19,6 @@
 #define _ST_HPC_PPL_NN_ENGINES_RISCV_OPTIMIZER_OPS_ONNX_SLICE_OP_H_
 
 #include "ppl/nn/engines/riscv/optimizer/opt_kernel.h"
-#include "ppl/nn/engines/riscv/params/slice_param.h"
-#include "ppl/nn/params/onnx/slice_param.h"
 
 namespace ppl { namespace nn { namespace riscv {
 
@@ -32,10 +30,6 @@ public:
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
                                       std::vector<ppl::common::dataformat_t>* selected_input_formats,
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
-
-private:
-    ppl::nn::riscv::SliceParam aux_param_;
-    std::shared_ptr<ppl::nn::onnx::SliceParam> param_;
 };
 
 }}} // namespace ppl::nn::riscv

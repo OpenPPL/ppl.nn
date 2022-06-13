@@ -85,9 +85,6 @@ struct RoiAlignParamBuilder;
 struct ScatterElementsParam;
 struct ScatterElementsParamBuilder;
 
-struct SliceParam;
-struct SliceParamBuilder;
-
 struct SoftmaxParam;
 struct SoftmaxParamBuilder;
 
@@ -2325,85 +2322,6 @@ inline flatbuffers::Offset<ScatterElementsParam> CreateScatterElementsParam(
   ScatterElementsParamBuilder builder_(_fbb);
   builder_.add_axis(axis);
   return builder_.Finish();
-}
-
-struct SliceParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef SliceParamBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_AXES = 4,
-    VT_ENDS = 6,
-    VT_STARTS = 8
-  };
-  const flatbuffers::Vector<int32_t> *axes() const {
-    return GetPointer<const flatbuffers::Vector<int32_t> *>(VT_AXES);
-  }
-  const flatbuffers::Vector<int32_t> *ends() const {
-    return GetPointer<const flatbuffers::Vector<int32_t> *>(VT_ENDS);
-  }
-  const flatbuffers::Vector<int32_t> *starts() const {
-    return GetPointer<const flatbuffers::Vector<int32_t> *>(VT_STARTS);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_AXES) &&
-           verifier.VerifyVector(axes()) &&
-           VerifyOffset(verifier, VT_ENDS) &&
-           verifier.VerifyVector(ends()) &&
-           VerifyOffset(verifier, VT_STARTS) &&
-           verifier.VerifyVector(starts()) &&
-           verifier.EndTable();
-  }
-};
-
-struct SliceParamBuilder {
-  typedef SliceParam Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_axes(flatbuffers::Offset<flatbuffers::Vector<int32_t>> axes) {
-    fbb_.AddOffset(SliceParam::VT_AXES, axes);
-  }
-  void add_ends(flatbuffers::Offset<flatbuffers::Vector<int32_t>> ends) {
-    fbb_.AddOffset(SliceParam::VT_ENDS, ends);
-  }
-  void add_starts(flatbuffers::Offset<flatbuffers::Vector<int32_t>> starts) {
-    fbb_.AddOffset(SliceParam::VT_STARTS, starts);
-  }
-  explicit SliceParamBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  flatbuffers::Offset<SliceParam> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<SliceParam>(end);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<SliceParam> CreateSliceParam(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::Vector<int32_t>> axes = 0,
-    flatbuffers::Offset<flatbuffers::Vector<int32_t>> ends = 0,
-    flatbuffers::Offset<flatbuffers::Vector<int32_t>> starts = 0) {
-  SliceParamBuilder builder_(_fbb);
-  builder_.add_starts(starts);
-  builder_.add_ends(ends);
-  builder_.add_axes(axes);
-  return builder_.Finish();
-}
-
-inline flatbuffers::Offset<SliceParam> CreateSliceParamDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<int32_t> *axes = nullptr,
-    const std::vector<int32_t> *ends = nullptr,
-    const std::vector<int32_t> *starts = nullptr) {
-  auto axes__ = axes ? _fbb.CreateVector<int32_t>(*axes) : 0;
-  auto ends__ = ends ? _fbb.CreateVector<int32_t>(*ends) : 0;
-  auto starts__ = starts ? _fbb.CreateVector<int32_t>(*starts) : 0;
-  return ppl::nn::pmx::onnx::CreateSliceParam(
-      _fbb,
-      axes__,
-      ends__,
-      starts__);
 }
 
 struct SoftmaxParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {

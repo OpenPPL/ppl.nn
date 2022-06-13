@@ -197,7 +197,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Shape", 1, 14, nullptr);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Sigmoid", 6, 16, nullptr);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Sin", 7, 16, nullptr);
-    PPL_REGISTER_OP_WITH_PARAM("", "Slice", 1, 16, SliceParam, ParseSliceParam, PackSliceParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Slice", 1, 16, ParseSliceParam);
     PPL_REGISTER_OP_WITH_PARAM("", "Softmax", 1, 16, SoftmaxParam, ParseSoftmaxParam, PackSoftmaxParam);
     PPL_REGISTER_OP_WITH_PARAM("", "Split", 2, 12, SplitParam, ParseSplitParam, PackSplitParam);
     PPL_REGISTER_OP_WITH_PARAM("", "SplitToSequence", 11, 16, SplitToSequenceParam, ParseSplitToSequenceParam,
