@@ -34,8 +34,20 @@ bool ClipKernel::CanDoExecute(const KernelExecContext& ctx) const {
 ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
+    auto clip_min = ctx->GetInput<TensorImpl>(1);
+    auto clip_max = ctx->GetInput<TensorImpl>(2);
+    float min_val = std::numeric_limits<float>::lowest();
+    float max_val = std::numeric_limits<float>::max();
+
+    if (clip_min) {
+        min_val = (clip_min->GetBufferPtr<float>())[0];
+    }
+    if (clip_max) {
+        min_val = (clip_max->GetBufferPtr<float>())[0];
+    }
+
     ppl::common::RetCode status = PPLCUDAClipForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(),
-                                                        output->GetShape(), output->GetBufferPtr(), param_->min_value, param_->max_value);
+                                                        output->GetShape(), output->GetBufferPtr(), min_val, max_val);
     return status;
 }
 
