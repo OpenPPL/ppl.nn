@@ -27,12 +27,23 @@ namespace ppl { namespace nn { namespace cuda {
 ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
+    PadKernelParam kernel_param;
     
     void* pad_buffer; 
     BufferDesc tmp_buffer_desc;
     if (ctx->GetInputCount() > 1) {
         pad_buffer = ctx->GetInput<TensorImpl>(1)->GetBufferPtr();
+        // keep pads data on host for optimization
+        uint32_t num_elems = ctx->GetInput<TensorImpl>(1)->GetShape()->GetElementsIncludingPadding();
+        std::vector<int64_t> pads;
+        pads.resize(num_elems);
+        ctx->GetInput<TensorImpl>(1)->CopyToHost(pads.data());
+        kernel_param.pads.resize(num_elems);
+        for (uint32_t i = 0; i < num_elems; ++i) {
+            kernel_param.pads[i] = pads[i];
+        }
     } else {
+        kernel_param.pads = param_->pads;
         auto size = input->GetShape()->GetDimCount();
         auto status = GetCudaDevice()->AllocTmpBuffer(size * sizeof(int64_t), &tmp_buffer_desc);
         if (status != ppl::common::RC_SUCCESS) {
@@ -52,7 +63,6 @@ ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
         GetCudaDevice()->FreeTmpBuffer(&tmp_buffer_desc);
     });
 
-    PadKernelParam kernel_param;
     kernel_param.mode = param_->mode;
     if (ctx->GetInputCount() >= 3) {
         auto constant_data = ctx->GetInput<TensorImpl>(2);
