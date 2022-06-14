@@ -212,6 +212,7 @@ static RetCode ParseGraphNode(const ::onnx::GraphProto& pb_graph, const map<stri
     args.op_set = &op_set;
     args.model_file_dir = model_file_dir;
     args.topo = topo;
+    args.data = data;
 
     for (int i = 0; i < pb_graph.node_size(); ++i) {
         auto& pb_node = pb_graph.node(i);
