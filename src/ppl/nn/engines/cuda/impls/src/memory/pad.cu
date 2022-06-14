@@ -18,6 +18,7 @@
 #include "cudakernel/memory/pad.h"
 #include "cudakernel/common/divmod_fast.h"
 #include "cudakernel/common/memory_utils.h"
+#include "cudakernel/common/common.h"
 #include "ppl/nn/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_fp16.h>
@@ -76,7 +77,33 @@ __global__ void ppl_cukernel_pad(
     }
     output[index] = use_pad_value ? (T)param.constant_value : input[input_offset];
 }
+bool isFastPadSupported(const std::vector<int32_t>& pads, int32_t num_dims) {
+    if (num_dims < 3) return false;
+    int32_t diff_cnt = num_dims - 2;
+    for (int32_t i = 0; i < diff_cnt; ++i) {
+        if (pads[i] != 0) return false; // start
+        if (pads[num_dims + i] != 0) return false; //end
+    }
+    if (pads[num_dims - 1] != 0) return false;
+    if (pads[num_dims - 2] != 0) return false;
+    return true;
+}
 
+template <typename T>
+__global__ void ppl_cukernel_pad_fast(const T* input, int src_height, int src_width,
+    T* output, int dst_height, int dst_width) {
+    int dst_hgt = blockIdx.y * blockDim.y + threadIdx.y;
+    int dst_wdt = blockIdx.x * blockDim.x + threadIdx.x;
+    if (dst_hgt >= dst_height || dst_wdt >= dst_width) return;
+    int b_idx = blockIdx.z;
+    int dst_idx = b_idx * dst_height * dst_width + dst_hgt * dst_width + dst_wdt;
+    if (dst_hgt >= src_height || dst_wdt >= src_width) {
+        output[dst_idx] = T(0);
+    } else {
+        int src_idx = b_idx * src_height * src_width + dst_hgt * src_width + dst_wdt;
+        output[dst_idx] = input[src_idx];
+    }
+}
 ppl::common::RetCode PPLCUDAPadForwardImp(
     cudaStream_t stream,
     PadKernelParam param,
@@ -86,10 +113,34 @@ ppl::common::RetCode PPLCUDAPadForwardImp(
     ppl::nn::TensorShape* output_shape,
     void* output)
 {
+    int num_dims       = output_shape->GetDimCount();
+    if (isFastPadSupported(param.pads, num_dims)) {
+        int batch = input_shape->GetElementsToDimensionExcludingPadding(num_dims - 2);
+        int dst_height = output_shape->GetDim(num_dims - 2);
+        int dst_width  = output_shape->GetDim(num_dims - 1);
+        int src_height = input_shape->GetDim(num_dims - 2);
+        int src_width  = input_shape->GetDim(num_dims - 1);
+        dim3 block_size(16, 16, 1);
+        dim3 grid_size(DivUp(dst_width, 16), DivUp(dst_height, 16), batch);
+        switch (input_shape->GetDataType()) {
+            case ppl::common::DATATYPE_FLOAT16: {
+                ppl_cukernel_pad_fast<<<grid_size, block_size, 0, stream>>>(
+                    (const half*)input, src_height, src_width, (half*)output, dst_height, dst_width);
+                return ppl::common::RC_SUCCESS;
+            }
+            case ppl::common::DATATYPE_FLOAT32: {
+                ppl_cukernel_pad_fast<<<grid_size, block_size, 0, stream>>>(
+                    (const float*)input, src_height, src_width, (float*)output, dst_height, dst_width);
+                return ppl::common::RC_SUCCESS;
+            }
+            default:
+                return ppl::common::RC_UNSUPPORTED;
+        }
+        return ppl::common::RC_SUCCESS;
+    }
     int block_size     = 256;
     uint64_t num_elems = output_shape->GetElementsIncludingPadding();
     int grid_size      = (num_elems + block_size - 1) / block_size;
-    int num_dims       = output_shape->GetDimCount();
     GArray<int64_t> input_dims(num_dims);
     GArray<int64_t> input_strides(num_dims);
     GArray<DivModFast> output_strides_fast(num_dims);

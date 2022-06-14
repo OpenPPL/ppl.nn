@@ -18,6 +18,7 @@
 #include "cudakernel/memory/slice.h"
 #include "cudakernel/common/divmod_fast.h"
 #include "cudakernel/common/memory_utils.h"
+#include "cudakernel/common/common.h"
 #include "ppl/nn/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
@@ -64,6 +65,44 @@ __global__ void ppl_cukernel_slice(
     output[output_offset] = input[input_offset];
 }
 
+bool isFastSliceSupported(const SliceKernelParam& param, int32_t num_dims) {
+    if (num_dims != 4) return false;
+    if (param.axes_num > 2) return false;
+    for (int32_t i = 0; i < param.axes_num; ++i) {
+        int axis        = param.axes[i];
+        if (axis < (num_dims - 2)) return false;
+        if (param.steps[i] != 1) return false;
+        if (param.starts[i] != 0) return false;
+    }
+    return true;
+}
+
+template <typename T>
+__global__ void ppl_cukernel_slice_fast_ndarray(const T* input, int src_height, int src_width,
+    T* output, int dst_height, int dst_width) {
+    int dst_hgt = blockIdx.y * blockDim.y + threadIdx.y;
+    int dst_wdt = blockIdx.x * blockDim.x + threadIdx.x;
+    if (dst_hgt >= dst_height || dst_wdt >= dst_width) return;
+    int b_idx = blockIdx.z;
+    int dst_idx = b_idx * dst_height * dst_width + dst_hgt * dst_width + dst_wdt;
+    int src_idx = b_idx * src_height * src_width + dst_hgt * src_width + dst_wdt;
+    output[dst_idx] = input[src_idx];
+}
+
+template <typename T>
+__global__ void ppl_cukernel_slice_fast_nhwc(int channel, const T* input, int src_height, int src_width,
+    int src_pad_channel, T* output, int dst_height, int dst_width, int dst_pad_channel) {
+    int dst_hw_idx = blockIdx.y * blockDim.y + threadIdx.y;
+    int dst_hgt = dst_hw_idx / dst_width;
+    int dst_wdt = dst_hw_idx % dst_width;
+    int chl_idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (chl_idx >= channel || dst_hgt >= dst_height) return;
+    int b_idx = blockIdx.z;
+    int dst_idx = (b_idx * dst_height * dst_width + dst_hgt * dst_width + dst_wdt) * dst_pad_channel + chl_idx;
+    int src_idx = (b_idx * src_height * src_width + dst_hgt * src_width + dst_wdt) * src_pad_channel + chl_idx;
+    output[dst_idx] = input[src_idx];
+}
+
 ppl::common::RetCode PPLCUDASliceForwardImp(
     cudaStream_t stream,
     SliceKernelParam param,
@@ -74,10 +113,52 @@ ppl::common::RetCode PPLCUDASliceForwardImp(
 {
     if (output_shape->GetElementsIncludingPadding() == 0)
         return ppl::common::RC_SUCCESS;
+    int num_dims       = output_shape->GetDimCount();
+    if (isFastSliceSupported(param, num_dims)) {
+        #define SWITCH_CASE(TYPE) \
+        case sizeof(TYPE): { \
+            if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) { \
+                int batch = input_shape->GetElementsToDimensionExcludingPadding(num_dims - 2); \
+                int dst_height = output_shape->GetDim(num_dims - 2); \
+                int dst_width  = output_shape->GetDim(num_dims - 1); \
+                int src_height = input_shape->GetDim(num_dims - 2); \
+                int src_width  = input_shape->GetDim(num_dims - 1); \
+                dim3 block_size(16, 16, 1); \
+                dim3 grid_size(DivUp(dst_width, 16), DivUp(dst_height, 16), batch); \
+                ppl_cukernel_slice_fast_ndarray<<<grid_size, block_size, 0, stream>>>( \
+                    (const TYPE*)input, src_height, src_width, (TYPE*)output, dst_height, dst_width); \
+                return ppl::common::RC_SUCCESS; \
+            } else if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8 || \
+                        output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC16) { \
+                int batch = input_shape->GetDim(0); \
+                int channel = input_shape->GetDim(1); \
+                int src_pad_channel = input_shape->GetDim(1) + input_shape->GetPadding0(1) + input_shape->GetPadding1(1); \
+                int dst_pad_channel = output_shape->GetDim(1) + output_shape->GetPadding0(1) + output_shape->GetPadding1(1); \
+                int dst_height = output_shape->GetDim(num_dims - 2); \
+                int dst_width  = output_shape->GetDim(num_dims - 1); \
+                int src_height = input_shape->GetDim(num_dims - 2); \
+                int src_width  = input_shape->GetDim(num_dims - 1); \
+                dim3 block_size(16, 16, 1); \
+                dim3 grid_size(DivUp(channel, 16), DivUp(dst_height * dst_width, 16), batch); \
+                ppl_cukernel_slice_fast_nhwc<<<grid_size, block_size, 0, stream>>>(channel, \
+                    (const TYPE*)input, src_height, src_width, src_pad_channel, (TYPE*)output, dst_height, dst_width, dst_pad_channel); \
+                return ppl::common::RC_SUCCESS; \
+            } \
+        }
+
+        switch (ppl::common::GetSizeOfDataType(input_shape->GetDataType())) {
+            SWITCH_CASE(int8_t);
+            SWITCH_CASE(int16_t);
+            SWITCH_CASE(int32_t);
+            SWITCH_CASE(int64_t);
+            default:
+                return ppl::common::RC_UNSUPPORTED;
+        }
+        #undef SWITCH_CASE
+    }
     int block_size     = 256;
     uint64_t num_elems = output_shape->GetElementsExcludingPadding();
     int grid_size      = (num_elems + block_size - 1) / block_size;
-    int num_dims       = output_shape->GetDimCount();
     GArray<int64_t> input_strides(num_dims);
     GArray<int64_t> output_strides(num_dims);
     GArray<DivModFast> output_strides_fast(num_dims);

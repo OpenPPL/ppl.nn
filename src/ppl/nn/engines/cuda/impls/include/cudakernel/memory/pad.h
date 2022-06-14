@@ -31,6 +31,7 @@ struct PadKernelParam {
 
     float constant_value = 0.f;
     pad_mode_t mode      = PAD_MODE_CONSTANT;
+    std::vector<int32_t> pads;
 };
 
 ppl::common::RetCode PPLCUDAPadForwardImp(
