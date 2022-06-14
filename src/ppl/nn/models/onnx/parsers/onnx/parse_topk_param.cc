@@ -15,12 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "ppl/nn/models/utils.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_topk_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
@@ -35,7 +35,7 @@ RetCode ParseTopKParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraA
     if (node_type.version < 10) {
         auto k = utils::GetNodeAttrByKey<int64_t>(pb_node, "k", -1);
         auto new_edge_name = node->GetName() + "_topk_k_" + std::to_string(args.topo->GetCurrentEdgeIdBound());
-        auto edge = utils::AddScalarInitializer(args.topo, args.data, new_edge_name, k, DATATYPE_INT64);
+        auto edge = ppl::nn::utils::AddScalarInitializer(args.topo, args.data, new_edge_name, k, DATATYPE_INT64);
         if (!edge) {
             LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
             return RC_OTHER_ERROR;

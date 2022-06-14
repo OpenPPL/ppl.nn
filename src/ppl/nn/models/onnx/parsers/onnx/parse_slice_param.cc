@@ -15,12 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "ppl/nn/models/utils.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_slice_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
@@ -34,7 +34,7 @@ RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtra
         auto starts = utils::GetNodeAttrsByKey<int64_t>(pb_node, "starts");
 
         auto new_edge_name = node->GetName() + "_slice_starts_" + std::to_string(args.topo->GetCurrentEdgeIdBound());
-        auto edge = utils::Add1DInitializer(args.topo, args.data, new_edge_name, starts, DATATYPE_INT64);
+        auto edge = ppl::nn::utils::Add1DInitializer(args.topo, args.data, new_edge_name, starts, DATATYPE_INT64);
         if (!edge) {
             LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
             return RC_OTHER_ERROR;
@@ -42,7 +42,7 @@ RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtra
         node->AddInput(edge->GetId());
 
         new_edge_name = node->GetName() + "_slice_ends_" + std::to_string(args.topo->GetCurrentEdgeIdBound());
-        edge = utils::Add1DInitializer(args.topo, args.data, new_edge_name, ends, DATATYPE_INT64);
+        edge = ppl::nn::utils::Add1DInitializer(args.topo, args.data, new_edge_name, ends, DATATYPE_INT64);
         if (!edge) {
             LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
             return RC_OTHER_ERROR;
@@ -50,7 +50,7 @@ RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtra
         node->AddInput(edge->GetId());
 
         new_edge_name = node->GetName() + "_slice_axes_" + std::to_string(args.topo->GetCurrentEdgeIdBound());
-        edge = utils::Add1DInitializer(args.topo, args.data, new_edge_name, axes, DATATYPE_INT64);
+        edge = ppl::nn::utils::Add1DInitializer(args.topo, args.data, new_edge_name, axes, DATATYPE_INT64);
         if (!edge) {
             LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
             return RC_OTHER_ERROR;
