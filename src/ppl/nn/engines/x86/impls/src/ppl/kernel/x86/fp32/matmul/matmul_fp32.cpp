@@ -15,55 +15,44 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include <vector>
 #include <deque>
-#include <memory>
 
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/kernel/x86/fp32/gemm.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
-static ppl::common::RetCode matmul_ndarray_fp32_recursive(
-    const ppl::common::isa_t isa,
+static void matmul_ndarray_fp32_mat_list_construct(
     const float *A,
     const float *B,
+    float *Y,
+    const int64_t *Y_dims,
     const int64_t *A_strides,
     const int64_t *B_strides,
     const int64_t *Y_strides,
-    const int64_t *Y_dims,
+    const int64_t dim_index,
     const int64_t dim_count,
-    const int64_t dim_idx,
-    const int32_t M,
-    const int32_t N,
-    const int32_t K,
-    float *Y)
+    std::vector<const float *> &A_list,
+    std::vector<const float *> &B_list,
+    std::vector<float *> &Y_list)
 {
-    if (dim_idx >= dim_count - 2) {
-        return gemm_fp32(
-            isa, A, B, nullptr, nullptr,
-            gemm_m_type::NOTRANS, gemm_m_type::NOTRANS,
-            gemm_v_type::EMPTY, gemm_m_type::EMPTY,
-            M, N, K, K, N, N, 0, 1.0f, 0.0f, 0.0f, 0.0f,
-            gemm_post::NONE, Y);
+    if (dim_index >= dim_count - 2) {
+        A_list.push_back(A);
+        B_list.push_back(B);
+        Y_list.push_back(Y);
     } else {
-        const int64_t length = Y_dims[dim_idx];
+        const int64_t length = Y_dims[dim_index];
         for (int64_t i = 0; i < length; i++) {
-            auto ret = matmul_ndarray_fp32_recursive(
-                isa,
-                A + i * A_strides[dim_idx],
-                B + i * B_strides[dim_idx],
-                A_strides, B_strides,
-                Y_strides, Y_dims,
-                dim_count, dim_idx + 1,
-                M, N, K,
-                Y + i * Y_strides[dim_idx]);
-            if (ret != ppl::common::RC_SUCCESS) {
-                return ret;
-            }
+            matmul_ndarray_fp32_mat_list_construct(
+                A + i * A_strides[dim_index],
+                B + i * B_strides[dim_index],
+                Y + i * Y_strides[dim_index],
+                Y_dims, A_strides, B_strides,
+                Y_strides, dim_index + 1,
+                dim_count, A_list, B_list, Y_list);
         }
     }
-
-    return ppl::common::RC_SUCCESS;
 }
 
 ppl::common::RetCode matmul_ndarray_fp32(
@@ -75,30 +64,33 @@ ppl::common::RetCode matmul_ndarray_fp32(
     const float *B,
     float *Y)
 {
-    const int64_t max_dim_count = max(A_shape->GetDimCount(), B_shape->GetDimCount());
-    std::deque<int64_t> A_dims(A_shape->GetDims(), A_shape->GetDims() + A_shape->GetDimCount());
-    std::deque<int64_t> B_dims(B_shape->GetDims(), B_shape->GetDims() + B_shape->GetDimCount());
+    const int64_t dim_count = Y_shape->GetDimCount();
+    std::vector<int64_t> A_dims;
+    std::vector<int64_t> B_dims;
+    {
+        std::deque<int64_t> A_dims_for_arrange(A_shape->GetDims(), A_shape->GetDims() + A_shape->GetDimCount());
+        std::deque<int64_t> B_dims_for_arrange(B_shape->GetDims(), B_shape->GetDims() + B_shape->GetDimCount());
 
-    if (A_dims.size() == 1) A_dims.push_front(1);
-    if (B_dims.size() == 1) B_dims.push_back(1);
+        if (A_dims_for_arrange.size() == 1) A_dims_for_arrange.push_front(1);
+        if (B_dims_for_arrange.size() == 1) B_dims_for_arrange.push_back(1);
 
-    while ((int64_t)A_dims.size() < max_dim_count) A_dims.push_front(1);
-    while ((int64_t)B_dims.size() < max_dim_count) B_dims.push_front(1);
+        while ((int64_t)A_dims_for_arrange.size() < dim_count) A_dims_for_arrange.push_front(1);
+        while ((int64_t)B_dims_for_arrange.size() < dim_count) B_dims_for_arrange.push_front(1);
 
-    bool is_single_gemm = A_dims.size() == 2 && B_dims.size() == 2;
-
-    const int64_t K = A_dims[max_dim_count - 1];
-    const int64_t N = B_dims[max_dim_count - 1];
-
-    if (B_shape->GetElementsExcludingPadding() / (N * K) == 1) {
-        for (int64_t i = max_dim_count - 3; i >= 0; i--) {
-            A_dims[max_dim_count - 2] *= A_dims[i];
-            A_dims[i] = 1;
-        }
-        is_single_gemm = true;
+        A_dims.assign(A_dims_for_arrange.begin(), A_dims_for_arrange.end());
+        B_dims.assign(B_dims_for_arrange.begin(), B_dims_for_arrange.end());
     }
 
-    const int64_t M = A_dims[max_dim_count - 2];
+    const int64_t K = A_dims[dim_count - 1];
+    const int64_t N = B_dims[dim_count - 1];
+    const bool is_single_gemm = B_shape->GetElementsExcludingPadding() / (N * K) == 1;
+    if (is_single_gemm) {
+        for (int64_t i = dim_count - 3; i >= 0; i--) {
+            A_dims[dim_count - 2] *= A_dims[i];
+            A_dims[i] = 1;
+        }
+    }
+    const int64_t M = A_dims[dim_count - 2];
 
     if (is_single_gemm) {
         return gemm_fp32(
@@ -109,35 +101,53 @@ ppl::common::RetCode matmul_ndarray_fp32(
             gemm_post::NONE, Y);
     }
 
-    int64_t Y_dims[PPL_X86_TENSOR_MAX_DIMS()] = {0};
-    Y_dims[max_dim_count - 2] = M;
-    Y_dims[max_dim_count - 1] = N;
-    for (int64_t i = 0; i < max_dim_count - 2; i++) {
-        Y_dims[i] = A_dims[i] == B_dims[i] ? A_dims[i] : A_dims[i] * B_dims[i]; // assuming that can broadcast
+    int64_t batch_y = 1;
+    std::vector<int64_t> Y_dims(dim_count);
+    Y_dims[dim_count - 2] = M;
+    Y_dims[dim_count - 1] = N;
+    for (int64_t i = 0; i < dim_count - 2; ++i) {
+        Y_dims[i] = A_dims[i] == B_dims[i] ? A_dims[i] : A_dims[i] * B_dims[i];
+        batch_y *= Y_dims[i];
     }
 
-    int64_t A_strides[PPL_X86_TENSOR_MAX_DIMS()] = {0};
-    int64_t B_strides[PPL_X86_TENSOR_MAX_DIMS()] = {0};
-    int64_t Y_strides[PPL_X86_TENSOR_MAX_DIMS()] = {0};
-    A_strides[max_dim_count - 1] = 1;
-    B_strides[max_dim_count - 1] = 1;
-    Y_strides[max_dim_count - 1]  = 1;
-    for (int64_t i = max_dim_count - 2; i >= 0; i--) {
+    std::vector<int64_t> A_strides(dim_count, 0);
+    std::vector<int64_t> B_strides(dim_count, 0);
+    std::vector<int64_t> Y_strides(dim_count, 0);
+    A_strides[dim_count - 1] = 1;
+    B_strides[dim_count - 1] = 1;
+    Y_strides[dim_count - 1] = 1;
+    for (int64_t i = dim_count - 2; i >= 0; i--) {
         A_strides[i] = A_strides[i + 1] * A_dims[i + 1];
         B_strides[i] = B_strides[i + 1] * B_dims[i + 1];
-        Y_strides[i]  = Y_strides[i + 1] * Y_dims[i + 1];
+        Y_strides[i] = Y_strides[i + 1] * Y_dims[i + 1];
     }
-    for (int64_t i = 0; i < max_dim_count - 2; i++) {
+    for (int64_t i = 0; i < dim_count - 2; i++) {
         A_strides[i] = A_dims[i] == 1 ? 0 : A_strides[i];
         B_strides[i] = B_dims[i] == 1 ? 0 : B_strides[i];
     }
 
-    return matmul_ndarray_fp32_recursive(
-        isa, A, B,
-        A_strides, B_strides,
-        Y_strides, Y_dims,
-        max_dim_count, 0,
-        M, N, K, Y);
+    std::vector<const float*> A_list;
+    std::vector<const float*> B_list;
+    std::vector<float*>       Y_list;
+    A_list.reserve(batch_y);
+    B_list.reserve(batch_y);
+    Y_list.reserve(batch_y);
+
+    matmul_ndarray_fp32_mat_list_construct(
+        A, B, Y,
+        Y_dims.data(),
+        A_strides.data(),
+        B_strides.data(),
+        Y_strides.data(),
+        0, dim_count,
+        A_list, B_list, Y_list);
+
+    return batch_gemm_fp32(
+        isa, A_list.data(), B_list.data(), nullptr, nullptr,
+        gemm_m_type::NOTRANS, gemm_m_type::NOTRANS,
+        gemm_v_type::EMPTY, gemm_m_type::EMPTY,
+        batch_y, M, N, K, K, N, N, 0, 1.0f, 0.0f, 0.0f, 0.0f,
+        gemm_post::NONE, Y_list.data());
 }
 
 }}}; // namespace ppl::kernel::x86
