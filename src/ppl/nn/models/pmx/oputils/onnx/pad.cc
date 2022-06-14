@@ -22,13 +22,11 @@ using namespace flatbuffers;
 namespace ppl { namespace nn { namespace pmx { namespace onnx {
 
 Offset<PadParam> SerializePadParam(const ppl::nn::onnx::PadParam& param, FlatBufferBuilder* builder) {
-    return CreatePadParam(*builder, static_cast<PadMode>(param.mode), builder->CreateVector(param.pads), param.value);
+    return CreatePadParam(*builder, static_cast<PadMode>(param.mode));
 }
 
 void DeserializePadParam(const PadParam& fb_param, ppl::nn::onnx::PadParam* param) {
     param->mode = static_cast<uint32_t>(fb_param.mode());
-    param->value = fb_param.value();
-    utils::Fbvec2Stdvec(fb_param.pads(), &param->pads);
 }
 
 }}}} // namespace ppl::nn::pmx::onnx

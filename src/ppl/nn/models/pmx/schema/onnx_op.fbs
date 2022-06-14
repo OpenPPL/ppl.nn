@@ -144,8 +144,6 @@ enum PadMode : uint32 {
 
 table PadParam {
     mode: PadMode = CONSTANT;
-    pads: [int32];              // for opset < 11
-    value: float32 = 0.0;        // for opset < 11
 }
 
 table PoolingParam {

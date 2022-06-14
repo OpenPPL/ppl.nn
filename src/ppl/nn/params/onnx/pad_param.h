@@ -27,15 +27,11 @@ namespace ppl { namespace nn { namespace onnx {
 #define PAD_PARAM_MAX_DIM_SIZE 5
 
 struct PadParam final : public ir::TypedAttr<PadParam> {
-    typedef uint32_t pad_mode_t;
     enum { PAD_MODE_CONSTANT = 0, PAD_MODE_REFLECT = 1, PAD_MODE_EDGE = 2 };
-
-    pad_mode_t mode = PAD_MODE_CONSTANT;
-    std::vector<int32_t> pads;
-    float value;
+    int32_t mode = PAD_MODE_CONSTANT;
 
     bool operator==(const PadParam& p) const {
-        return this->mode == p.mode && this->value == p.value && this->pads == p.pads;
+        return this->mode == p.mode;
     }
 };
 

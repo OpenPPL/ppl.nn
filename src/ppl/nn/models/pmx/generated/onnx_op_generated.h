@@ -1835,25 +1835,14 @@ inline flatbuffers::Offset<NonMaxSuppressionParam> CreateNonMaxSuppressionParam(
 struct PadParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef PadParamBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_MODE = 4,
-    VT_PADS = 6,
-    VT_VALUE = 8
+    VT_MODE = 4
   };
   ppl::nn::pmx::onnx::PadMode mode() const {
     return static_cast<ppl::nn::pmx::onnx::PadMode>(GetField<uint32_t>(VT_MODE, 0));
   }
-  const flatbuffers::Vector<int32_t> *pads() const {
-    return GetPointer<const flatbuffers::Vector<int32_t> *>(VT_PADS);
-  }
-  float value() const {
-    return GetField<float>(VT_VALUE, 0.0f);
-  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_MODE) &&
-           VerifyOffset(verifier, VT_PADS) &&
-           verifier.VerifyVector(pads()) &&
-           VerifyField<float>(verifier, VT_VALUE) &&
            verifier.EndTable();
   }
 };
@@ -1864,12 +1853,6 @@ struct PadParamBuilder {
   flatbuffers::uoffset_t start_;
   void add_mode(ppl::nn::pmx::onnx::PadMode mode) {
     fbb_.AddElement<uint32_t>(PadParam::VT_MODE, static_cast<uint32_t>(mode), 0);
-  }
-  void add_pads(flatbuffers::Offset<flatbuffers::Vector<int32_t>> pads) {
-    fbb_.AddOffset(PadParam::VT_PADS, pads);
-  }
-  void add_value(float value) {
-    fbb_.AddElement<float>(PadParam::VT_VALUE, value, 0.0f);
   }
   explicit PadParamBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1884,27 +1867,10 @@ struct PadParamBuilder {
 
 inline flatbuffers::Offset<PadParam> CreatePadParam(
     flatbuffers::FlatBufferBuilder &_fbb,
-    ppl::nn::pmx::onnx::PadMode mode = ppl::nn::pmx::onnx::PadMode_CONSTANT,
-    flatbuffers::Offset<flatbuffers::Vector<int32_t>> pads = 0,
-    float value = 0.0f) {
+    ppl::nn::pmx::onnx::PadMode mode = ppl::nn::pmx::onnx::PadMode_CONSTANT) {
   PadParamBuilder builder_(_fbb);
-  builder_.add_value(value);
-  builder_.add_pads(pads);
   builder_.add_mode(mode);
   return builder_.Finish();
-}
-
-inline flatbuffers::Offset<PadParam> CreatePadParamDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    ppl::nn::pmx::onnx::PadMode mode = ppl::nn::pmx::onnx::PadMode_CONSTANT,
-    const std::vector<int32_t> *pads = nullptr,
-    float value = 0.0f) {
-  auto pads__ = pads ? _fbb.CreateVector<int32_t>(*pads) : 0;
-  return ppl::nn::pmx::onnx::CreatePadParam(
-      _fbb,
-      mode,
-      pads__,
-      value);
 }
 
 struct PoolingParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {

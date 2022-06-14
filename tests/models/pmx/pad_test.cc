@@ -9,6 +9,6 @@ TEST_F(PmxTest, test_pad) {
     DEFINE_ARG(PadParam, pad);
     pad_param1.mode = ppl::nn::onnx::PadParam::PAD_MODE_REFLECT;
     MAKE_BUFFER(PadParam, pad);
-    ppl::nn::onnx::PadParam::pad_mode_t mode = pad_param3.mode;
+    int32_t mode = pad_param3.mode;
     EXPECT_EQ(ppl::nn::onnx::PadParam::PAD_MODE_REFLECT, mode);
 }
