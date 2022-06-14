@@ -89,7 +89,7 @@ RetCode ConvertToForwardConvParam(const TensorShape& shape_in0, const TensorShap
     conv_param.pad_width = normal_param.pads[1];
     conv_param.hole_height = normal_param.dilations[0];
     conv_param.hole_width = normal_param.dilations[1];
-    conv_param.has_bias = cuda_param.bias_term;
+    conv_param.has_bias = cuda_param.extra_param.bias_term;
     return RC_SUCCESS;
 }
 #undef GetPadSize

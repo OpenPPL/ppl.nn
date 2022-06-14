@@ -559,12 +559,10 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
             }
             int N_pad = out_c_pad*pattern_num;
 
-            gemm_param.bias_term = 0;
             gemm_param.transA    = 0;
             gemm_param.transB    = 1;
             gemm_param.alpha     = 1.f;
             gemm_param.beta      = 0.f;
-            gemm_param.N         = N_pad;
             ppl::nn::TensorShape a_shape, b_shape, c_shape;
             a_shape.SetDataType(input_shape->GetDataType());
             b_shape.SetDataType(input_shape->GetDataType());

@@ -92,7 +92,7 @@ ppl::common::RetCode ConvDepthwiseKernel::DoExecute(KernelExecContext* ctx) {
 
     // convert filter only if the filter tensor is an output of another kernel
     BufferDesc weight_buffer;
-    if (!param_->extra_param.algo_info.is_initializer_weight) {
+    if (!param_->extra_param.is_initializer_weight) {
         auto newshape = shape_in1;
         newshape.SetDim(0, (newshape.GetDim(0) + 15) / 16 * 16);
 
@@ -113,9 +113,9 @@ ppl::common::RetCode ConvDepthwiseKernel::DoExecute(KernelExecContext* ctx) {
     auto stream = GetStream();
     PPLCUDADepthwiseForwardCudaImp(
         stream, param_->extra_param.algo_info.kid, ctx->GetInput<TensorImpl>(0)->GetBufferPtr(),
-        param_->extra_param.algo_info.is_initializer_weight ? ctx->GetInput<TensorImpl>(1)->GetBufferPtr()
+        param_->extra_param.is_initializer_weight ? ctx->GetInput<TensorImpl>(1)->GetBufferPtr()
                                                             : weight_buffer.addr,
-        param_->bias_term ? ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, temp_conv_param,
+        param_->extra_param.bias_term ? ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, temp_conv_param,
         temp_fuse_param, ctx->GetOutput<TensorImpl>(0)->GetBufferPtr(), shape_out.GetDataType(), input_quant0.scale[0], (float*)d_weight_scale, output_quant.scale[0]);
 
 
