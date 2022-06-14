@@ -15,12 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "ppl/nn/models/utils.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_clip_param.h"
 #include "ppl/nn/models/onnx/utils.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
@@ -36,7 +36,7 @@ RetCode ParseClipParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraA
         auto max_value = utils::GetNodeAttrByKey<float>(pb_node, "max", numeric_limits<float>::max());
 
         auto new_edge_name = node->GetName() + "_clip_min_" + std::to_string(topo->GetCurrentEdgeIdBound());
-        auto edge = utils::AddScalarInitializer(topo, data, new_edge_name, min_value, DATATYPE_FLOAT32);
+        auto edge = ppl::nn::utils::AddScalarInitializer(topo, data, new_edge_name, min_value, DATATYPE_FLOAT32);
         if (!edge) {
             LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
             return RC_OTHER_ERROR;
@@ -44,7 +44,7 @@ RetCode ParseClipParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraA
         node->AddInput(edge->GetId());
 
         new_edge_name = node->GetName() + "_clip_max_" + std::to_string(topo->GetCurrentEdgeIdBound());
-        edge = utils::AddScalarInitializer(topo, data, new_edge_name, max_value, DATATYPE_FLOAT32);
+        edge = ppl::nn::utils::AddScalarInitializer(topo, data, new_edge_name, max_value, DATATYPE_FLOAT32);
         if (!edge) {
             LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
             return RC_OTHER_ERROR;

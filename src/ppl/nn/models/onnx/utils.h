@@ -143,54 +143,6 @@ int32_t ConvertPplDataTypeToOnnxDataType(ppl::common::datatype_t);
 
 /* -------------------------------------------------------------------------- */
 
-template <typename T>
-ir::Edge* AddScalarInitializer(ir::GraphTopo* topo, ir::GraphData* data, const std::string& key, const T& value,
-                               ppl::common::datatype_t data_type) {
-    auto edge_ret = topo->AddEdge(key);
-    if (!edge_ret.first) {
-        return nullptr;
-    }
-    auto edge = edge_ret.first;
-    auto eid = edge->GetId();
-
-    topo->MarkAsConstant(eid);
-
-    auto constant_ret = data->constants.insert(std::make_pair(eid, ir::Constant()));
-    constant_ret.first->second.data.assign((const char*)&value, sizeof(value));
-
-    auto shape_ret = data->shapes.insert(std::make_pair(eid, ir::Shape()));
-    shape_ret.first->second.data_type = data_type;
-    shape_ret.first->second.data_format = ppl::common::DATAFORMAT_NDARRAY;
-    shape_ret.first->second.dims.push_back(1);
-
-    return edge;
-}
-
-template <typename T>
-ir::Edge* Add1DInitializer(ir::GraphTopo* topo, ir::GraphData* data, const std::string& key,
-                           const std::vector<T>& value, ppl::common::datatype_t data_type) {
-    auto edge_ret = topo->AddEdge(key);
-    if (!edge_ret.first) {
-        return nullptr;
-    }
-    auto edge = edge_ret.first;
-    auto eid = edge->GetId();
-
-    topo->MarkAsConstant(eid);
-
-    auto constant_ret = data->constants.insert(std::make_pair(eid, ir::Constant()));
-    constant_ret.first->second.data.assign((const char*)value.data(), value.size() * sizeof(T));
-
-    auto shape_ret = data->shapes.insert(std::make_pair(eid, ir::Shape()));
-    shape_ret.first->second.data_type = data_type;
-    shape_ret.first->second.data_format = ppl::common::DATAFORMAT_NDARRAY;
-    shape_ret.first->second.dims.push_back(value.size());
-
-    return edge;
-}
-
-/* -------------------------------------------------------------------------- */
-
 void ResolveExtraInputs(ir::GraphTopo* current, ir::Node* parent_node, ir::GraphTopo* parent_graph);
 
 }}}} // namespace ppl::nn::onnx::utils
