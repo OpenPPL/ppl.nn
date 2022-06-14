@@ -130,6 +130,84 @@ ppl::common::RetCode gemm_fp32_ref(
     return ppl::common::RC_SUCCESS;
 }
 
+ppl::common::RetCode batch_gemm_fp32_ref(
+    const float **A_list,
+    const float **B_list,
+    const float **bias_list,
+    const float **sum_list,
+    const gemm_m_type_t typeA,
+    const gemm_m_type_t typeB,
+    const gemm_v_type_t typebias,
+    const gemm_m_type_t typesum,
+    const int64_t batch,
+    const int64_t M,
+    const int64_t N,
+    const int64_t K,
+    const int64_t lda,
+    const int64_t ldb,
+    const int64_t ldc,
+    const int64_t ldsum,
+    const float alpha,
+    const float beta,
+    const float beta_bias,
+    const float beta_sum,
+    const gemm_post_t post,
+    float **C_list)
+{
+    if (typeA == gemm_m_type::PACKED) {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+    const bool trans_A = typeA == gemm_m_type::TRANS;
+    const bool trans_B = typeB == gemm_m_type::TRANS || typeB == gemm_m_type::PACKED;
+    const int64_t lldb = typeB == gemm_m_type::PACKED ? K : ldb;
+#ifdef PPL_USE_X86_OMP_COLLAPSE
+    PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(3)
+#endif
+    for (int64_t b = 0; b < batch; ++b) {
+        for (int64_t m = 0; m < M; ++m) {
+#ifndef PPL_USE_X86_OMP_COLLAPSE
+        PRAGMA_OMP_PARALLEL_FOR()
+#endif
+            for (int64_t n = 0; n < N; ++n) {
+                auto A = A_list[b];
+                auto B = B_list[b];
+                auto C = C_list[b];
+                auto sum = sum_list ? sum_list[b] : nullptr;
+                auto bias = bias_list ? bias_list[b] : nullptr;
+                float y = 0.0f;
+                if (alpha != 0.0f && typeA != gemm_m_type::EMPTY && typeB != gemm_m_type::EMPTY) {
+                    if (!trans_A && !trans_B) { // MK, KN; NN
+                        for (int64_t k = 0; k < K; ++k)
+                            y += A[m * lda + k] * B[k * lldb + n];
+                    }
+                    if (trans_A && !trans_B) { // KM, KN; TN
+                        for (int64_t k = 0; k < K; ++k)
+                            y += A[k * lda + m] * B[k * lldb + n];
+                    }
+                    if (trans_A && trans_B) { // KM, NK; TT
+                        for (int64_t k = 0; k < K; ++k)
+                            y += A[k * lda + m] * B[n * lldb + k];
+                    }
+                    if (!trans_A && trans_B) { // MK, NK; NT
+                        for (int64_t k = 0; k < K; ++k)
+                            y += A[m * lda + k] * B[n * lldb + k];
+                    }
+                    y *= alpha;
+                }
+                if (beta != 0.0f) y += beta * C[m * ldc + n];
+                if (typebias == gemm_v_type::ROW_VEC) y += beta_bias * bias[n];
+                if (typebias == gemm_v_type::COL_VEC) y += beta_bias * bias[m];
+                if (typebias == gemm_v_type::SCALAR) y += beta_bias * bias[0];
+                if (typesum == gemm_m_type::NOTRANS) y += beta_sum * sum[m * ldsum + n];
+                if (post & (gemm_post::RELU6 | gemm_post::RELU)) y = max(y, 0.0f);
+                if (post & gemm_post::RELU6) y = min(y, 6.0f);
+                C[m * ldc + n] = y;
+            }
+        }
+    }
+    return ppl::common::RC_SUCCESS;
+}
+
 uint64_t gemm_fp32_get_packed_b_bytes(
     const ppl::common::isa_t isa,
     const int64_t N,
@@ -228,6 +306,65 @@ ppl::common::RetCode gemm_fp32(
             M, N, K, lda, ldb, ldc, ldsum,
             alpha, beta, beta_bias, beta_sum,
             post, C);
+}
+
+ppl::common::RetCode batch_gemm_fp32(
+    const ppl::common::isa_t isa,
+    const float **A_list,
+    const float **B_list,
+    const float **bias_list,
+    const float **sum_list,
+    const gemm_m_type_t typeA,
+    const gemm_m_type_t typeB,
+    const gemm_v_type_t typebias,
+    const gemm_m_type_t typesum,
+    const int64_t batch,
+    const int64_t M,
+    const int64_t N,
+    const int64_t K,
+    const int64_t lda,
+    const int64_t ldb,
+    const int64_t ldc,
+    const int64_t ldsum,
+    const float alpha,
+    const float beta,
+    const float beta_bias,
+    const float beta_sum,
+    const gemm_post_t post,
+    float **C_list)
+{
+#ifdef PPL_USE_X86_AVX512
+    if (isa & ppl::common::ISA_X86_AVX512) {
+        return batch_gemm_fp32_avx512(
+            A_list, B_list, bias_list, sum_list,
+            typeA, typeB, typebias, typesum,
+            batch, M, N, K, lda, ldb, ldc, ldsum,
+            alpha, beta, beta_bias, beta_sum,
+            post, C_list);
+    }
+#endif
+    if (isa & ppl::common::ISA_X86_FMA) {
+        return batch_gemm_fp32_fma(
+            A_list, B_list, bias_list, sum_list,
+            typeA, typeB, typebias, typesum,
+            batch, M, N, K, lda, ldb, ldc, ldsum,
+            alpha, beta, beta_bias, beta_sum,
+            post, C_list);
+    }
+    if (isa & ppl::common::ISA_X86_SSE) {
+        return batch_gemm_fp32_sse(
+            A_list, B_list, bias_list, sum_list,
+            typeA, typeB, typebias, typesum,
+            batch, M, N, K, lda, ldb, ldc, ldsum,
+            alpha, beta, beta_bias, beta_sum,
+            post, C_list);
+    }
+    return batch_gemm_fp32_ref(
+            A_list, B_list, bias_list, sum_list,
+            typeA, typeB, typebias, typesum,
+            batch, M, N, K, lda, ldb, ldc, ldsum,
+            alpha, beta, beta_bias, beta_sum,
+            post, C_list);
 }
 
 }}}; // namespace ppl::kernel::x86

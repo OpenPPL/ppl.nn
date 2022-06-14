@@ -578,4 +578,100 @@ ppl::common::RetCode gemv_fp32_fma(
     return ppl::common::RC_SUCCESS;
 }
 
+ppl::common::RetCode batch_gemv_fp32_fma(
+    const float **A_list,
+    const float **B_list,
+    const float **bias_list,
+    const float **sum_list,
+    const gemm_v_type_t typeA,
+    const gemm_m_type_t typeB,
+    const gemm_v_type_t typebias,
+    const gemm_m_type_t typesum,
+    const int64_t batch,
+    const int64_t N,
+    const int64_t K,
+    const int64_t ldb,
+    const float alpha,
+    const float beta,
+    const float beta_bias,
+    const float beta_sum,
+    const gemm_post_t post,
+    float **C_list)
+{
+    if (batch == 1) {
+        return gemv_fp32_fma(
+            *A_list, *B_list, bias_list ? *bias_list : nullptr, sum_list ? *sum_list : nullptr,
+            typeA, typeB, typebias, typesum,
+            N, K, ldb,
+            alpha, beta, beta_bias, beta_sum, post, *C_list);
+    }
+
+    if (typeA == gemm_v_type::COL_VEC || typeB == gemm_m_type::PACKED) {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
+    if (typesum != gemm_m_type::EMPTY && typesum != gemm_m_type::NOTRANS) {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
+    const int64_t num_threads = PPL_OMP_MAX_THREADS();
+
+    if (num_threads == 1) {
+        for (int64_t b = 0; b < batch; ++b) {
+            auto ret = gemv_operation_fp32_fma(
+                A_list[b], B_list[b], bias_list ? bias_list[b] : nullptr, sum_list ? sum_list[b] : nullptr,
+                typeA, typeB, typebias, typesum,
+                N, K, ldb,
+                alpha, beta, beta_bias, beta_sum, post, C_list[b]);
+            if (ppl::common::RC_SUCCESS != ret) {
+                return ret;
+            }
+        }
+        return ppl::common::RC_SUCCESS;
+    }
+
+    const int64_t n_threads = div_up(num_threads, batch);
+
+    const int64_t n_task_blk = N / n_threads;
+    const int64_t n_task_tail = N % n_threads;
+
+    PRAGMA_OMP_PARALLEL_FOR()
+    for (int64_t t = 0; t < batch * n_threads; ++t) {
+        const int64_t b = t / n_threads;
+        const int64_t nt = t % n_threads;
+        const int64_t nb = nt * n_task_blk + (nt < n_task_tail ? nt : n_task_tail);
+        const int64_t nb_eff = n_task_blk + (nt < n_task_tail ? 1 : 0);
+
+        const float *lA = A_list[b];
+        const float *lB = B_list[b];
+        if (typeB == gemm_m_type::NOTRANS) {
+            lB += nb;
+        } else {
+            lB += nb * ldb;
+        }
+
+        const float *lbias = bias_list ? bias_list[b] : nullptr;
+        if (typebias == gemm_v_type::ROW_VEC) {
+            lbias += nb;
+        }
+
+        const float *lsum = sum_list ? sum_list[b] : nullptr;
+        if (typesum == gemm_m_type::NOTRANS) {
+            lsum += nb;
+        }
+
+        float *lC = C_list[b] + nb;
+
+        auto ret = gemv_operation_fp32_fma(
+            lA, lB, lbias, lsum,
+            typeA, typeB, typebias, typesum,
+            nb_eff, K, ldb,
+            alpha, beta, beta_bias, beta_sum, post, lC);
+
+        (void) ret;
+    }
+
+    return ppl::common::RC_SUCCESS;
+}
+
 }}}; // namespace ppl::kernel::x86

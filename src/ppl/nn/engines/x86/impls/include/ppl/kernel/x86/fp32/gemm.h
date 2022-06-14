@@ -61,6 +61,31 @@ ppl::common::RetCode gemm_fp32(
     const gemm_post_t post,
     float *C);
 
+ppl::common::RetCode batch_gemm_fp32(
+    const ppl::common::isa_t isa,
+    const float **A_list,
+    const float **B_list,
+    const float **bias_list,
+    const float **sum_list,
+    const gemm_m_type_t typeA,
+    const gemm_m_type_t typeB,
+    const gemm_v_type_t typebias,
+    const gemm_m_type_t typesum,
+    const int64_t batch,
+    const int64_t M,
+    const int64_t N,
+    const int64_t K,
+    const int64_t lda,
+    const int64_t ldb,
+    const int64_t ldc,
+    const int64_t ldsum,
+    const float alpha,
+    const float beta,
+    const float beta_bias,
+    const float beta_sum,
+    const gemm_post_t post,
+    float **C_list);
+
 uint64_t gemm_fp32_ref_get_packed_b_bytes(
     const int64_t N,
     const int64_t K);
@@ -95,6 +120,30 @@ ppl::common::RetCode gemm_fp32_ref(
     const float beta_sum,
     const gemm_post_t post,
     float *C);
+
+ppl::common::RetCode batch_gemm_fp32_ref(
+    const float **A_list,
+    const float **B_list,
+    const float **bias_list,
+    const float **sum_list,
+    const gemm_m_type_t typeA,
+    const gemm_m_type_t typeB,
+    const gemm_v_type_t typebias,
+    const gemm_m_type_t typesum,
+    const int64_t batch,
+    const int64_t M,
+    const int64_t N,
+    const int64_t K,
+    const int64_t lda,
+    const int64_t ldb,
+    const int64_t ldc,
+    const int64_t ldsum,
+    const float alpha,
+    const float beta,
+    const float beta_bias,
+    const float beta_sum,
+    const gemm_post_t post,
+    float **C_list);
 
 uint64_t gemm_fp32_sse_get_packed_b_bytes(
     const int64_t N,
@@ -131,6 +180,30 @@ ppl::common::RetCode gemm_fp32_sse(
     const gemm_post_t post,
     float *C);
 
+ppl::common::RetCode batch_gemm_fp32_sse(
+    const float **A_list,
+    const float **B_list,
+    const float **bias_list,
+    const float **sum_list,
+    const gemm_m_type_t typeA,
+    const gemm_m_type_t typeB,
+    const gemm_v_type_t typebias,
+    const gemm_m_type_t typesum,
+    const int64_t batch,
+    const int64_t M,
+    const int64_t N,
+    const int64_t K,
+    const int64_t lda,
+    const int64_t ldb,
+    const int64_t ldc,
+    const int64_t ldsum,
+    const float alpha,
+    const float beta,
+    const float beta_bias,
+    const float beta_sum,
+    const gemm_post_t post,
+    float **C_list);
+
 ppl::common::RetCode gemv_fp32_sse(
     const float *A,
     const float *B,
@@ -149,6 +222,26 @@ ppl::common::RetCode gemv_fp32_sse(
     const float beta_sum,
     const gemm_post_t post,
     float *C);
+
+ppl::common::RetCode batch_gemv_fp32_sse(
+    const float **A_list,
+    const float **B_list,
+    const float **bias_list,
+    const float **sum_list,
+    const gemm_v_type_t typeA,
+    const gemm_m_type_t typeB,
+    const gemm_v_type_t typebias,
+    const gemm_m_type_t typesum,
+    const int64_t batch,
+    const int64_t N,
+    const int64_t K,
+    const int64_t ldb,
+    const float alpha,
+    const float beta,
+    const float beta_bias,
+    const float beta_sum,
+    const gemm_post_t post,
+    float **C_list);
 
 uint64_t gemm_fp32_fma_get_packed_b_bytes(
     const int64_t N,
@@ -185,6 +278,30 @@ ppl::common::RetCode gemm_fp32_fma(
     const gemm_post_t post,
     float *C);
 
+ppl::common::RetCode batch_gemm_fp32_fma(
+    const float **A_list,
+    const float **B_list,
+    const float **bias_list,
+    const float **sum_list,
+    const gemm_m_type_t typeA,
+    const gemm_m_type_t typeB,
+    const gemm_v_type_t typebias,
+    const gemm_m_type_t typesum,
+    const int64_t batch,
+    const int64_t M,
+    const int64_t N,
+    const int64_t K,
+    const int64_t lda,
+    const int64_t ldb,
+    const int64_t ldc,
+    const int64_t ldsum,
+    const float alpha,
+    const float beta,
+    const float beta_bias,
+    const float beta_sum,
+    const gemm_post_t post,
+    float **C_list);
+
 ppl::common::RetCode gemv_fp32_fma(
     const float *A,
     const float *B,
@@ -203,6 +320,26 @@ ppl::common::RetCode gemv_fp32_fma(
     const float beta_sum,
     const gemm_post_t post,
     float *C);
+
+ppl::common::RetCode batch_gemv_fp32_fma(
+    const float **A_list,
+    const float **B_list,
+    const float **bias_list,
+    const float **sum_list,
+    const gemm_v_type_t typeA,
+    const gemm_m_type_t typeB,
+    const gemm_v_type_t typebias,
+    const gemm_m_type_t typesum,
+    const int64_t batch,
+    const int64_t N,
+    const int64_t K,
+    const int64_t ldb,
+    const float alpha,
+    const float beta,
+    const float beta_bias,
+    const float beta_sum,
+    const gemm_post_t post,
+    float **C_list);
 
 #ifdef PPL_USE_X86_AVX512
 uint64_t gemm_fp32_avx512_get_packed_b_bytes(
@@ -239,6 +376,30 @@ ppl::common::RetCode gemm_fp32_avx512(
     const float beta_sum,
     const gemm_post_t post,
     float *C);
+
+ppl::common::RetCode batch_gemm_fp32_avx512(
+    const float **A_list,
+    const float **B_list,
+    const float **bias_list,
+    const float **sum_list,
+    const gemm_m_type_t typeA,
+    const gemm_m_type_t typeB,
+    const gemm_v_type_t typebias,
+    const gemm_m_type_t typesum,
+    const int64_t batch,
+    const int64_t M,
+    const int64_t N,
+    const int64_t K,
+    const int64_t lda,
+    const int64_t ldb,
+    const int64_t ldc,
+    const int64_t ldsum,
+    const float alpha,
+    const float beta,
+    const float beta_bias,
+    const float beta_sum,
+    const gemm_post_t post,
+    float **C_list);
 #endif
 
 }}}; // namespace ppl::kernel::x86

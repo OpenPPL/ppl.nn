@@ -931,28 +931,27 @@ ppl::common::RetCode gemm_fp32_fma(
             n_threads = 1;
         } else {
             n_threads = min<int64_t>(div_up(N, N_THR_BLK_MIN * 2), 4);
-            m_threads = num_threads / n_threads;
             if (M < m_threads * M_L3_BLK_MAX / 2) { // small M
                 n_threads = min<int64_t>(max<int64_t>(N / N_THR_BLK_MIN, 1), 4);
             }
             if (M <= M_L3_BLK_MAX && N >= num_threads * N_THR_BLK_MIN && N < num_threads * N_L3_BLK_MAX) { // very small M
-                n_threads = min<int64_t>(max<int64_t>(N / N_THR_BLK_MIN, 1), num_threads);
+                n_threads = max<int64_t>(N / N_THR_BLK_MIN, 1);
             }
             if (M <= M_L3_BLK_MAX / 4 && N >= num_threads * N_THR_BLK_MIN) { // just stick!
-                n_threads = min<int64_t>(max<int64_t>(N / N_THR_BLK_MIN, 1), num_threads);
+                n_threads = max<int64_t>(N / N_THR_BLK_MIN, 1);
             }
             if (M <= num_threads * gemm_kernel_fp32_fma::config::MAX_M_BLK) {
-                n_threads = min<int64_t>(div_up(N, n_div), num_threads);
+                n_threads = div_up(N, n_div);
             }
-            m_threads = num_threads / n_threads;
-            m_threads = min(div_up(M, gemm_kernel_fp32_fma::config::MAX_M_BLK), m_threads);
+            n_threads = min(n_threads, num_threads);
+            m_threads = min(div_up(M, gemm_kernel_fp32_fma::config::MAX_M_BLK), num_threads / n_threads);
         }
     } else {
         if (N > M && // M too small and N is enough
             (M < num_threads * gemm_kernel_fp32_fma::config::MAX_M_BLK ||
             N >= num_threads * n_div)) {
             m_threads = 1;
-            n_threads = min<int64_t>(div_up(N, n_div), num_threads);
+            n_threads = min(div_up(N, n_div), num_threads);
         } else {
             m_threads = min(div_up(M, gemm_kernel_fp32_fma::config::MAX_M_BLK), num_threads);
             n_threads = 1;
@@ -1019,6 +1018,219 @@ ppl::common::RetCode gemm_fp32_fma(
         }
     }
     for (int64_t t = 0; t < m_threads * n_threads; ++t) {
+        if (thread_ret[t] != ppl::common::RC_SUCCESS) return thread_ret[t];
+    }
+
+    return ppl::common::RC_SUCCESS;
+}
+
+ppl::common::RetCode batch_gemm_fp32_fma(
+    const float **A_list,
+    const float **B_list,
+    const float **bias_list,
+    const float **sum_list,
+    const gemm_m_type_t typeA,
+    const gemm_m_type_t typeB,
+    const gemm_v_type_t typebias,
+    const gemm_m_type_t typesum,
+    const int64_t batch,
+    const int64_t M,
+    const int64_t N,
+    const int64_t K,
+    const int64_t lda,
+    const int64_t ldb,
+    const int64_t ldc,
+    const int64_t ldsum,
+    const float alpha,
+    const float beta,
+    const float beta_bias,
+    const float beta_sum,
+    const gemm_post_t post,
+    float **C_list)
+{
+    if (batch == 1) {
+        return gemm_fp32_fma(
+            *A_list, *B_list, bias_list ? *bias_list : nullptr, sum_list ? *sum_list : nullptr,
+            typeA, typeB, typebias, typesum,
+            M, N, K, lda, ldb ,ldc ,ldsum,
+            alpha, beta, beta_bias, beta_sum, post, *C_list);
+    }
+
+    if (M <= 0 || N <= 0 || K < 0) {
+        return ppl::common::RC_SUCCESS;
+    }
+
+    if (typeA == gemm_m_type::PACKED) {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
+    if (typesum != gemm_m_type::EMPTY && typesum != gemm_m_type::NOTRANS) {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
+    const bool is_packed_b = typeB == gemm_m_type::PACKED;
+    const int64_t n_div = is_packed_b ? gemm_kernel_fp32_fma::config::MAX_N_BLK : gemm_kernel_fp32_fma::config::N_REG_ELTS;
+    
+    if (!is_packed_b) {
+        if ((typeA == gemm_m_type::NOTRANS || lda == 1) && M == 1) {
+            return batch_gemv_fp32_fma(
+                A_list, B_list, bias_list, sum_list,
+                gemm_v_type::ROW_VEC, typeB, typebias, typesum,
+                batch, N, K, ldb,
+                alpha, beta, beta_bias, beta_sum, post, C_list);
+        }
+
+        if (N == 1 && ((typeB == gemm_m_type::NOTRANS && ldb == 1) || (typeB == gemm_m_type::TRANS && ldb == K)) && ldc == 1) {
+            auto l_typeA = typeA == gemm_m_type::NOTRANS ? gemm_m_type::TRANS : gemm_m_type::NOTRANS;
+            auto l_typebias = typebias;
+            if (typebias == gemm_v_type::ROW_VEC) l_typebias = gemm_v_type::COL_VEC;
+            if (typebias == gemm_v_type::COL_VEC) l_typebias = gemm_v_type::ROW_VEC;
+            return batch_gemv_fp32_fma(
+                B_list, A_list, bias_list, sum_list,
+                gemm_v_type::ROW_VEC, l_typeA, l_typebias, typesum,
+                batch, M, K, lda,
+                alpha, beta, beta_bias, beta_sum, post, C_list);
+        }
+    }
+
+    const int64_t num_threads = PPL_OMP_MAX_THREADS();
+    const uint64_t l3_size = ppl::common::GetCpuCacheL3() == 0 ? (num_threads * 2048 * 1024) : ppl::common::GetCpuCacheL3();
+    const uint64_t l2_size = ppl::common::GetCpuCacheL2() == 0 ? (256 * 1024) : ppl::common::GetCpuCacheL2();
+    opt_flag_t flags = 0;
+    if (l2_size >= 512 * 1024) flags |= opt_flag::large_l2;
+
+    if (num_threads == 1) {
+        if (M * N * sizeof(float) > l3_size * 2) flags |= opt_flag::large_c;
+        for (int64_t b = 0; b < batch; ++b) {
+            auto ret = gemm_operation_fp32_fma(
+                A_list[b], B_list[b], bias_list ? bias_list[b] : nullptr, sum_list ? sum_list[b] : nullptr,
+                typeA, typeB, typebias, typesum,
+                M, N, K, lda, ldb ,ldc ,ldsum,
+                alpha, beta, beta_bias, beta_sum, post, flags, C_list[b]);
+            if (ppl::common::RC_SUCCESS != ret) {
+                return ret;
+            }
+        }
+        return ppl::common::RC_SUCCESS;
+    } else {
+        if (batch * M * N * sizeof(float) > l3_size * 2) flags |= opt_flag::large_c;
+        flags |= opt_flag::multi_thread;
+    }
+
+    bool use_shared_packed_b = false;
+    if (N >= N_THR_BLK_MIN * 2) {
+        if (M >= num_threads * M_L3_BLK_MAX / 4) {
+            use_shared_packed_b = is_packed_b ? false : true;
+        }
+    }
+    if (use_shared_packed_b) { // shared_packed_b do not support and do not need multi batch threading
+        for (int64_t b = 0; b < batch; ++b) {
+            auto ret = gemm_fp32_fma(
+                A_list[b], B_list[b], bias_list ? bias_list[b] : nullptr, sum_list ? sum_list[b] : nullptr,
+                typeA, typeB, typebias, typesum,
+                M, N, K, lda, ldb ,ldc ,ldsum,
+                alpha, beta, beta_bias, beta_sum, post, C_list[b]);
+            if (ppl::common::RC_SUCCESS != ret) {
+                return ret;
+            }
+        }
+        return ppl::common::RC_SUCCESS;
+    }
+
+    int64_t g_threads = div_up(num_threads, batch);
+    int64_t m_threads = 0;
+    int64_t n_threads = 0;
+
+    // blocking
+    if (N >= N_THR_BLK_MIN * 2) {
+        if (M >= g_threads * M_L3_BLK_MAX / 4 && is_packed_b) {
+            m_threads = min(div_up(M, gemm_kernel_fp32_fma::config::MAX_M_BLK / 2), g_threads);
+            n_threads = 1;
+        } else {
+            n_threads = min<int64_t>(div_up(N, N_THR_BLK_MIN * 2), 4);
+            if (M < m_threads * M_L3_BLK_MAX / 2) { // small M
+                n_threads = min<int64_t>(max<int64_t>(N / N_THR_BLK_MIN, 1), 4);
+            }
+            if (M <= M_L3_BLK_MAX && N >= g_threads * N_THR_BLK_MIN && N < g_threads * N_L3_BLK_MAX) { // very small M
+                n_threads = max<int64_t>(N / N_THR_BLK_MIN, 1);
+            }
+            if (M <= M_L3_BLK_MAX / 4 && N >= g_threads * N_THR_BLK_MIN) { // just stick!
+                n_threads = max<int64_t>(N / N_THR_BLK_MIN, 1);
+            }
+            if (M <= g_threads * gemm_kernel_fp32_fma::config::MAX_M_BLK) {
+                n_threads = div_up(N, n_div);
+            }
+            n_threads = min(n_threads, g_threads);
+            m_threads = min(div_up(M, gemm_kernel_fp32_fma::config::MAX_M_BLK), g_threads / n_threads);
+        }
+    } else {
+        if (N > M && // M too small and N is enough
+            (M < g_threads * gemm_kernel_fp32_fma::config::MAX_M_BLK ||
+            N >= g_threads * n_div)) {
+            m_threads = 1;
+            n_threads = min(div_up(N, n_div), g_threads);
+        } else {
+            m_threads = min(div_up(M, gemm_kernel_fp32_fma::config::MAX_M_BLK), g_threads);
+            n_threads = 1;
+        }
+    }
+
+    std::vector<ppl::common::RetCode> thread_ret(num_threads, ppl::common::RC_SUCCESS);
+    PRAGMA_OMP_PARALLEL_FOR()
+    for (int64_t t = 0; t < batch * m_threads * n_threads; ++t) {
+        const int64_t b = t / (m_threads * n_threads);
+        const int64_t gt = t % (m_threads * n_threads);
+        const int64_t mt = gt % m_threads;
+        const int64_t nt = gt / m_threads;
+
+        int64_t mb, nb, mb_eff, nb_eff;
+        parallel_task_distribution_1d(mt, m_threads, M, &mb, &mb_eff);
+        parallel_task_distribution_1d(nt, n_threads, div_up(N, n_div), &nb, &nb_eff);
+        nb *= n_div;
+        nb_eff = max<int64_t>(min(nb_eff * n_div, N - nb), 0);
+
+        const float *lA = A_list[b];
+        if (typeA == gemm_m_type::NOTRANS) {
+            lA += mb * lda;
+        } else {
+            lA += mb;
+        }
+
+        const float *lB = B_list[b];
+        if (typeB == gemm_m_type::PACKED) {
+            lB += nb * K;
+        } else if (typeB == gemm_m_type::NOTRANS) {
+            lB += nb;
+        } else {
+            lB += nb * ldb;
+        }
+
+        const float *lbias = bias_list ? bias_list[b] : nullptr;
+        if (typebias == gemm_v_type::COL_VEC) {
+            lbias += mb;
+        } else if (typebias == gemm_v_type::ROW_VEC) {
+            lbias += nb;
+        }
+
+        const float *lsum = sum_list ? sum_list[b] : nullptr;
+        if (typesum == gemm_m_type::NOTRANS) {
+            lsum += mb * ldsum + nb;
+        }
+
+        float *lC = C_list[b] + mb * ldc + nb;
+
+
+        auto ret = gemm_operation_fp32_fma(
+            lA, lB, lbias, lsum,
+            typeA, typeB, typebias, typesum,
+            mb_eff, nb_eff, K, lda, ldb ,ldc, ldsum,
+            alpha, beta, beta_bias, beta_sum,
+            post, flags, lC);
+        if (ret != ppl::common::RC_SUCCESS) {
+            thread_ret[PPL_OMP_THREAD_ID()] = ret;
+        }
+    }
+    for (int64_t t = 0; t < num_threads; ++t) {
         if (thread_ret[t] != ppl::common::RC_SUCCESS) return thread_ret[t];
     }
 
