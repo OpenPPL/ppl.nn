@@ -42,7 +42,7 @@ RetCode ReshapeGemm(InputOutputInfo* info, const ir::Attr* arg) {
         BNdim = 0;
     }
 
-    Y->Reshape({A->GetDim(AMdim), param->N == 0 ? B->GetDim(BNdim) : param->N});
+    Y->Reshape({A->GetDim(AMdim), B->GetDim(BNdim)});
     return RC_SUCCESS;
 }
 
