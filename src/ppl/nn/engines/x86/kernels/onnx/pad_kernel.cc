@@ -27,8 +27,6 @@ ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_OPTIONAL_INPUT(constant, 2);
     PPLNN_X86_REQUIRED_OUTPUT(y, 0);
 
-    float constant_value = param_->value;
-
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [x]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(x);
@@ -43,12 +41,9 @@ ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
         for (uint32_t i = 0; i < 2 * dim_count; ++i) {
             pads_value[i] = pads_data[i];
         }
-    } else {
-        for (uint32_t i = 0; i < 2 * dim_count; ++i) {
-            pads_value[i] = (int64_t)param_->pads[i];
-        }
     }
 
+    float constant_value = 0.0;
     if (constant) {
         PPLNN_X86_DEBUG_TRACE("Input [constant]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(constant);
