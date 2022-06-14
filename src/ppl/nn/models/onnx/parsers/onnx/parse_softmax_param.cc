@@ -19,7 +19,6 @@
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
@@ -27,7 +26,7 @@ RetCode ParseSoftmaxParam(const ::onnx::NodeProto& pb_node, const ParamParserExt
                           ir::Attr* arg) {
     auto opset = node->GetType().version;
     auto param = static_cast<SoftmaxParam*>(arg);
-    param->axis = utils::GetNodeAttrByKey(pb_node, "axis", opset >= 13 ? -1 : 1);
+    utils::GetNodeAttr(pb_node, "axis", &param->axis, opset >= 13 ? -1 : 1);
     return RC_SUCCESS;
 }
 

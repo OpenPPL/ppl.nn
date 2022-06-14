@@ -19,13 +19,13 @@
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseCastParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<CastParam*>(arg);
-    int32_t to = utils::GetNodeAttrByKey<int32_t>(pb_node, "to", 1);
+    int32_t to = 1;
+    utils::GetNodeAttr(pb_node, "to", &to, 1);
     param->to = utils::ConvertOnnxDataTypeToPplDataType(to);
     return RC_SUCCESS;
 }

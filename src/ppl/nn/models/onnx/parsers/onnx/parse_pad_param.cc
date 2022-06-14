@@ -27,7 +27,9 @@ namespace ppl { namespace nn { namespace onnx {
 RetCode ParsePadParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node,
                       ir::Attr* arg) {
     auto param = static_cast<PadParam*>(arg);
-    std::string mode = utils::GetNodeAttrByKey<std::string>(pb_node, "mode", "constant");
+
+    string mode;
+    utils::GetNodeAttr(pb_node, "mode", &mode, "constant");
     if (mode == "constant") {
         param->mode = PadParam::PAD_MODE_CONSTANT;
     } else if (mode == "reflect") {
@@ -41,8 +43,8 @@ RetCode ParsePadParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraAr
 
     auto& node_type = node->GetType();
     if (node_type.version >= 2 && node_type.version < 11) {
-        auto pads = utils::GetNodeAttrsByKey<int64_t>(pb_node, "pads");
-        auto value = utils::GetNodeAttrByKey<float>(pb_node, "value", 0.0);
+        vector<int64_t> pads;
+        utils::GetNodeAttr(pb_node, "pads", &pads);
 
         auto new_edge_name = node->GetName() + "_pad_pads_" + std::to_string(args.topo->GetCurrentEdgeIdBound());
         auto edge = ppl::nn::utils::Add1DInitializer(args.topo, args.data, new_edge_name, pads, DATATYPE_INT64);
@@ -51,6 +53,9 @@ RetCode ParsePadParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraAr
             return RC_OTHER_ERROR;
         }
         node->AddInput(edge->GetId());
+
+        float value;
+        utils::GetNodeAttr(pb_node, "value", &value, 0.0);
 
         new_edge_name = node->GetName() + "_pad_value_" + std::to_string(args.topo->GetCurrentEdgeIdBound());
         edge = ppl::nn::utils::AddScalarInitializer(args.topo, args.data, new_edge_name, value, DATATYPE_FLOAT32);

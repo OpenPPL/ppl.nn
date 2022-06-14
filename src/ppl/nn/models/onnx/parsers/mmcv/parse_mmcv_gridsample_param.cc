@@ -27,9 +27,9 @@ RetCode ParseMMCVGridSampleParam(const ::onnx::NodeProto& pb_node, const ParamPa
                                  ir::Attr* arg) {
     auto param = static_cast<MMCVGridSampleParam*>(arg);
 
-    param->align_corners = utils::GetNodeAttrByKey<int64_t>(pb_node, "align_corners", 0);
-    param->interpolation_mode = utils::GetNodeAttrByKey<int64_t>(pb_node, "interpolation_mode", 0);
-    param->padding_mode = utils::GetNodeAttrByKey<int64_t>(pb_node, "padding_mode", 0);
+    utils::GetNodeAttr(pb_node, "align_corners", &param->align_corners, 0);
+    utils::GetNodeAttr(pb_node, "interpolation_mode", &param->interpolation_mode, 0);
+    utils::GetNodeAttr(pb_node, "padding_mode", &param->padding_mode, 0);
 
     return RC_SUCCESS;
 }

@@ -22,7 +22,6 @@
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
@@ -49,10 +48,11 @@ static const vector<pair<string, int32_t>> g_direction_values = {
 RetCode ParseLSTMParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<LSTMParam*>(arg);
 
-    param->activation_alpha = utils::GetNodeAttrsByKey<float>(pb_node, "activation_alpha");
-    param->activation_beta = utils::GetNodeAttrsByKey<float>(pb_node, "activation_beta");
+    utils::GetNodeAttr(pb_node, "activation_alpha", &param->activation_alpha);
+    utils::GetNodeAttr(pb_node, "activation_beta", &param->activation_beta);
 
-    auto activations = utils::GetNodeAttrsByKey<string>(pb_node, "activations");
+    vector<string> activations;
+    utils::GetNodeAttr(pb_node, "activations", &activations);
 
     param->activations.resize(activations.size());
     for (size_t i = 0; i < activations.size(); ++i) {
@@ -68,9 +68,10 @@ RetCode ParseLSTMParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraA
         param->activations[i] = it->second;
     }
 
-    param->clip = utils::GetNodeAttrByKey<float>(pb_node, "clip", FLT_MAX);
+    utils::GetNodeAttr(pb_node, "clip", &param->clip, FLT_MAX);
 
-    auto direction = utils::GetNodeAttrByKey<string>(pb_node, "direction", "forward");
+    string direction;
+    utils::GetNodeAttr(pb_node, "direction", &direction, "forward");
     {
         auto it = std::find_if(g_direction_values.begin(), g_direction_values.end(),
                                [&direction](const pair<string, int32_t>& p) -> bool {
@@ -83,13 +84,13 @@ RetCode ParseLSTMParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraA
         param->direction = it->second;
     }
 
-    param->hidden_size = utils::GetNodeAttrByKey<int32_t>(pb_node, "hidden_size", INT32_MIN);
+    utils::GetNodeAttr(pb_node, "hidden_size", &param->hidden_size, INT32_MIN);
     if (param->hidden_size == INT32_MIN) {
         LOG(ERROR) << "hidden_size is not set but required";
         return RC_INVALID_VALUE;
     }
 
-    param->input_forget = utils::GetNodeAttrByKey<int32_t>(pb_node, "input_forget", 0);
+    utils::GetNodeAttr(pb_node, "input_forget", &param->input_forget, 0);
 
     return RC_SUCCESS;
 }

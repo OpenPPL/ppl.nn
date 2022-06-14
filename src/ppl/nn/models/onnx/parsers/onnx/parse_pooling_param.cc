@@ -21,7 +21,6 @@
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
@@ -29,14 +28,15 @@ RetCode ParsePoolingParam(const ::onnx::NodeProto& pb_node, const ParamParserExt
                           ir::Attr* arg) {
     auto param = static_cast<PoolingParam*>(arg);
 
-    param->ceil_mode = utils::GetNodeAttrByKey<int32_t>(pb_node, "ceil_mode", 0);
-    param->dilations = utils::GetNodeAttrsByKey<int32_t>(pb_node, "dilations");
-    param->kernel_shape = utils::GetNodeAttrsByKey<int32_t>(pb_node, "kernel_shape");
-    param->pads = utils::GetNodeAttrsByKey<int32_t>(pb_node, "pads");
-    param->storage_order = utils::GetNodeAttrByKey<int32_t>(pb_node, "storage_order", 0);
-    param->strides = utils::GetNodeAttrsByKey<int32_t>(pb_node, "strides");
+    utils::GetNodeAttr(pb_node, "ceil_mode", &param->ceil_mode, 0);
+    utils::GetNodeAttr(pb_node, "dilations", &param->dilations);
+    utils::GetNodeAttr(pb_node, "kernel_shape", &param->kernel_shape);
+    utils::GetNodeAttr(pb_node, "pads", &param->pads);
+    utils::GetNodeAttr(pb_node, "storage_order", &param->storage_order, 0);
+    utils::GetNodeAttr(pb_node, "strides", &param->strides);
 
-    auto auto_pad_str = utils::GetNodeAttrByKey<std::string>(pb_node, "auto_pad", "NOTSET");
+    string auto_pad_str;
+    utils::GetNodeAttr(pb_node, "auto_pad", &auto_pad_str, "NOTSET");
     if (auto_pad_str == "NOTSET") {
         param->auto_pad = AUTO_PAD_NOTSET;
     } else if (auto_pad_str == "SAME_UPPER") {
@@ -61,7 +61,8 @@ RetCode ParsePoolingParam(const ::onnx::NodeProto& pb_node, const ParamParserExt
     if (pb_node.op_type() == "MaxPool") {
         param->mode = PoolingParam::POOLING_MAX;
     } else if (pb_node.op_type() == "AveragePool") {
-        int32_t count_include_pad = utils::GetNodeAttrByKey<int32_t>(pb_node, "count_include_pad", 0);
+        int32_t count_include_pad;
+        utils::GetNodeAttr(pb_node, "count_include_pad", &count_include_pad, 0);
         if (count_include_pad) {
             param->mode = PoolingParam::POOLING_AVERAGE_INCLUDE;
         } else {

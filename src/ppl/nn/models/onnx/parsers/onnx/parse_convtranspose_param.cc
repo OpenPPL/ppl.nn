@@ -21,7 +21,6 @@
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
@@ -29,7 +28,8 @@ RetCode ParseConvTransposeParam(const ::onnx::NodeProto& pb_node, const ParamPar
                                 ir::Attr* arg) {
     auto param = static_cast<ConvTransposeParam*>(arg);
 
-    auto auto_pad_str = utils::GetNodeAttrByKey<string>(pb_node, "auto_pad", "NOTSET");
+    string auto_pad_str;
+    utils::GetNodeAttr(pb_node, "auto_pad", &auto_pad_str, "NOTSET");
     if (auto_pad_str == "NOTSET") {
         param->auto_pad = AUTO_PAD_NOTSET;
     } else if (auto_pad_str == "SAME_UPPER") {
@@ -43,13 +43,13 @@ RetCode ParseConvTransposeParam(const ::onnx::NodeProto& pb_node, const ParamPar
         return RC_UNSUPPORTED;
     }
 
-    param->dilations = utils::GetNodeAttrsByKey<int32_t>(pb_node, "dilations");
-    param->kernel_shape = utils::GetNodeAttrsByKey<int32_t>(pb_node, "kernel_shape");
-    param->output_padding = utils::GetNodeAttrsByKey<int32_t>(pb_node, "output_padding");
-    param->output_shape = utils::GetNodeAttrsByKey<int32_t>(pb_node, "output_shape");
-    param->pads = utils::GetNodeAttrsByKey<int32_t>(pb_node, "pads");
-    param->strides = utils::GetNodeAttrsByKey<int32_t>(pb_node, "strides");
-    param->group = utils::GetNodeAttrByKey<int64_t>(pb_node, "group", 1);
+    utils::GetNodeAttr(pb_node, "dilations", &param->dilations);
+    utils::GetNodeAttr(pb_node, "kernel_shape", &param->kernel_shape);
+    utils::GetNodeAttr(pb_node, "output_padding", &param->output_padding);
+    utils::GetNodeAttr(pb_node, "output_shape", &param->output_shape);
+    utils::GetNodeAttr(pb_node, "pads", &param->pads);
+    utils::GetNodeAttr(pb_node, "strides", &param->strides);
+    utils::GetNodeAttr(pb_node, "group", &param->group, 1);
 
     return RC_SUCCESS;
 }

@@ -20,20 +20,17 @@
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseConcatParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<ConcatParam*>(arg);
 
-    int32_t axis = utils::GetNodeAttrByKey<int32_t>(pb_node, "axis", INT32_MAX);
-    if (axis == INT32_MAX) {
+    utils::GetNodeAttr(pb_node, "axis", &param->axis, INT32_MAX);
+    if (param->axis == INT32_MAX) {
         LOG(ERROR) << "axis is required.";
         return RC_INVALID_VALUE;
     }
-
-    param->axis = axis;
 
     return RC_SUCCESS;
 }

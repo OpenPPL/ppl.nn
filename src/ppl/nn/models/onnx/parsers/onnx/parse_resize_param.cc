@@ -20,7 +20,6 @@
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
@@ -40,7 +39,6 @@ static const vector<pair<string, int32_t>> g_modes = {
 };
 
 static const vector<pair<string, int32_t>> g_nearest_modes = {
-    {"", ResizeParam::RESIZE_NEAREST_MODE_ROUND_PREFER_FLOOR},
     {"round_prefer_floor", ResizeParam::RESIZE_NEAREST_MODE_ROUND_PREFER_FLOOR},
     {"round_prefer_ceil", ResizeParam::RESIZE_NEAREST_MODE_ROUND_PREFER_CEIL},
     {"floor", ResizeParam::RESIZE_NEAREST_MODE_FLOOR},
@@ -50,36 +48,36 @@ static const vector<pair<string, int32_t>> g_nearest_modes = {
 RetCode ParseResizeParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<ResizeParam*>(arg);
 
-    auto coord_trans_mode_str =
-        utils::GetNodeAttrByKey<std::string>(pb_node, "coordinate_transformation_mode", "half_pixel");
+    string str;
+    utils::GetNodeAttr(pb_node, "coordinate_transformation_mode", &str, "half_pixel");
     auto it = std::find_if(g_coord_trans_modes.begin(), g_coord_trans_modes.end(),
-                           [&coord_trans_mode_str](const pair<string, int32_t>& p) -> bool {
-                               return (coord_trans_mode_str == p.first);
+                           [&str](const pair<string, int32_t>& p) -> bool {
+                               return (str == p.first);
                            });
     if (it == g_coord_trans_modes.end()) {
-        LOG(ERROR) << "unexpected coordinate_transformation_mode: " << coord_trans_mode_str;
+        LOG(ERROR) << "unexpected coordinate_transformation_mode: " << str;
         return RC_INVALID_VALUE;
     }
     param->coord_trans_mode = it->second;
 
-    param->cubic_coeff_a = utils::GetNodeAttrByKey(pb_node, "cubic_coeff_a", -0.75f);
-    param->exclude_outside = utils::GetNodeAttrByKey(pb_node, "exclude_outside", 0);
-    param->extrapolation_value = utils::GetNodeAttrByKey(pb_node, "extrapolation_value", 0.0f);
+    utils::GetNodeAttr(pb_node, "cubic_coeff_a", &param->cubic_coeff_a, -0.75f);
+    utils::GetNodeAttr(pb_node, "exclude_outside", &param->exclude_outside, 0);
+    utils::GetNodeAttr(pb_node, "extrapolation_value", &param->extrapolation_value, 0.0f);
 
-    auto mode_str = utils::GetNodeAttrByKey<std::string>(pb_node, "mode", "");
-    it = std::find_if(g_modes.begin(), g_modes.end(), [&mode_str](const pair<string, int32_t>& p) -> bool {
-        return (mode_str == p.first);
+    utils::GetNodeAttr(pb_node, "mode", &str, "nearest");
+    it = std::find_if(g_modes.begin(), g_modes.end(), [&str](const pair<string, int32_t>& p) -> bool {
+        return (str == p.first);
     });
     if (it == g_modes.end()) {
-        LOG(ERROR) << "unexpected mode: " << mode_str;
+        LOG(ERROR) << "unexpected mode: " << str;
         return RC_INVALID_VALUE;
     }
     param->mode = it->second;
 
-    auto nearest_mode_str = utils::GetNodeAttrByKey<std::string>(pb_node, "nearest_mode", "nearest");
+    utils::GetNodeAttr(pb_node, "nearest_mode", &str, "round_prefer_floor");
     it = std::find_if(g_nearest_modes.begin(), g_nearest_modes.end(),
-                      [&nearest_mode_str](const pair<string, int32_t>& p) -> bool {
-                          return (nearest_mode_str == p.first);
+                      [&str](const pair<string, int32_t>& p) -> bool {
+                          return (str == p.first);
                       });
     if (it == g_nearest_modes.end()) {
         LOG(ERROR) << "unexpected nearest_mode: " << param->nearest_mode;

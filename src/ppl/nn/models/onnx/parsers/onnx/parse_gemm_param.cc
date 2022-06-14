@@ -19,17 +19,16 @@
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseGemmParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<GemmParam*>(arg);
 
-    param->alpha = utils::GetNodeAttrByKey<float>(pb_node, "alpha", 1.0f);
-    param->beta = utils::GetNodeAttrByKey<float>(pb_node, "beta", 1.0f);
-    param->transA = utils::GetNodeAttrByKey<int32_t>(pb_node, "transA", 0);
-    param->transB = utils::GetNodeAttrByKey<int32_t>(pb_node, "transB", 0);
+    utils::GetNodeAttr(pb_node, "alpha", &param->alpha, 1.0f);
+    utils::GetNodeAttr(pb_node, "beta", &param->beta, 1.0f);
+    utils::GetNodeAttr(pb_node, "transA", &param->transA, 0);
+    utils::GetNodeAttr(pb_node, "transB", &param->transB, 0);
 
     return RC_SUCCESS;
 }

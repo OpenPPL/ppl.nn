@@ -112,20 +112,94 @@ inline void SetNodeAttr(::onnx::NodeProto* pb_node, const std::string& key, cons
 /* -------------------------------------------------------------------------- */
 
 template <typename T>
-std::vector<T> GetNodeAttrsByKey(const ::onnx::NodeProto& node, const char* key);
+struct IntValueGetter final {
+    IntValueGetter(const ::onnx::AttributeProto& pb_attr, T* value) {
+        *value = pb_attr.i();
+    }
+};
 
 template <typename T>
-T GetAttrValue(const ::onnx::AttributeProto& attribute);
+struct FloatValueGetter final {
+    FloatValueGetter(const ::onnx::AttributeProto& pb_attr, T* value) {
+        *value = pb_attr.f();
+    }
+};
 
-template <typename T>
-T GetNodeAttrByKey(const ::onnx::NodeProto& node, const char* key, T default_value) {
-    for (int i = 0; i < node.attribute_size(); i++) {
-        const ::onnx::AttributeProto& attribute = node.attribute(i);
-        if (attribute.name() == key) {
-            return GetAttrValue<T>(attribute);
+template <typename T, typename TDefault>
+inline void GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, T* value, TDefault default_value) {
+    for (int i = 0; i < pb_node.attribute_size(); ++i) {
+        auto& pb_attr = pb_node.attribute(i);
+        if (pb_attr.name() == key) {
+            typename std::conditional<std::is_integral<T>::value, IntValueGetter<T>,
+                                      typename std::conditional<std::is_floating_point<T>::value, FloatValueGetter<T>,
+                                                                void>::type>::type getter(pb_attr, value);
+            return;
         }
     }
-    return default_value;
+    *value = default_value;
+}
+
+template <typename T>
+struct IntVecGetter final {
+    IntVecGetter(const ::onnx::AttributeProto& pb_attr, std::vector<T>* values) {
+        values->resize(pb_attr.ints_size());
+        for (int j = 0; j < pb_attr.ints_size(); ++j) {
+            values->at(j) = pb_attr.ints(j);
+        }
+    }
+};
+
+template <typename T>
+struct FloatVecGetter final {
+    FloatVecGetter(const ::onnx::AttributeProto& pb_attr, std::vector<T>* values) {
+        values->resize(pb_attr.floats_size());
+        for (int j = 0; j < pb_attr.floats_size(); ++j) {
+            values->at(j) = pb_attr.floats(j);
+        }
+    }
+};
+
+template <typename T>
+inline void GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::vector<T>* values) {
+    for (int i = 0; i < pb_node.attribute_size(); ++i) {
+        auto& pb_attr = pb_node.attribute(i);
+        if (pb_attr.name() == key) {
+            typename std::conditional<std::is_integral<T>::value, IntVecGetter<T>,
+                                      typename std::conditional<std::is_floating_point<T>::value, FloatVecGetter<T>,
+                                                                void>::type>::type getter(pb_attr, values);
+            return;
+        }
+    }
+}
+
+inline void GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::vector<std::string>* values) {
+    for (int i = 0; i < pb_node.attribute_size(); ++i) {
+        auto& pb_attr = pb_node.attribute(i);
+        if (pb_attr.name() == key) {
+            values->resize(pb_attr.strings_size());
+            for (int j = 0; i < pb_attr.strings_size(); ++i) {
+                values->at(j) = pb_attr.strings(j);
+            }
+            return;
+        }
+    }
+}
+
+inline void GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::string* value,
+                        const std::string& default_value) {
+    for (int i = 0; i < pb_node.attribute_size(); ++i) {
+        auto& pb_attr = pb_node.attribute(i);
+        if (pb_attr.name() == key) {
+            *value = pb_attr.s();
+            return;
+        }
+    }
+    *value = default_value;
+}
+
+inline void GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::string* value,
+                        const char* default_value) {
+    GetNodeAttr(pb_node, key, value, std::string(default_value));
 }
 
 /* -------------------------------------------------------------------------- */

@@ -32,8 +32,9 @@ RetCode ParseClipParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraA
         auto topo = args.topo;
         auto data = args.data;
 
-        auto min_value = utils::GetNodeAttrByKey<float>(pb_node, "min", numeric_limits<float>::lowest());
-        auto max_value = utils::GetNodeAttrByKey<float>(pb_node, "max", numeric_limits<float>::max());
+        float min_value, max_value;
+        utils::GetNodeAttr(pb_node, "min", &min_value, numeric_limits<float>::lowest());
+        utils::GetNodeAttr(pb_node, "max", &max_value, numeric_limits<float>::max());
 
         auto new_edge_name = node->GetName() + "_clip_min_" + std::to_string(topo->GetCurrentEdgeIdBound());
         auto edge = ppl::nn::utils::AddScalarInitializer(topo, data, new_edge_name, min_value, DATATYPE_FLOAT32);
