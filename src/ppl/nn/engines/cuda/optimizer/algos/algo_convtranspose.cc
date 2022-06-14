@@ -194,7 +194,7 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
         options.quants->at(preedge_id).format = postshape.GetDataFormat();
         options.quants->at(preedge_id).type = postshape.GetDataType();
     }
-    reinterpret_cast<CudaConvTransposeParam*>(options.param)->extra_param.algo_info.is_initializer_weight =
+    reinterpret_cast<CudaConvTransposeParam*>(options.param)->extra_param.is_initializer_weight =
         weight_iter != data->constants.end();
 
 

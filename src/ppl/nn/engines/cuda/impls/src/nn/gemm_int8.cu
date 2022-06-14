@@ -291,7 +291,7 @@ double PPLCUDAGemmSelectKernelInt8(
     int4 *final_out      = fuse_param.has_concat ? (int4 *)fuse_param.post_concat : (int4 *)output;
 
     // fuse configs
-    bool has_bias        = param.bias_term; // beta != 0.f;
+    bool has_bias        = bias; // beta != 0.f;
 
     float minTime = FLT_MAX;
     int best_kid  = -1;
@@ -449,7 +449,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
     int kLoopNum = DivUp(K_pad, tile_k_per_cta);
     lut_t in_lut, flt_lut;
 
-    bool has_bias    = param.bias_term; // beta != 0.f;
+    int has_bias    = (bias ? 1 : 0); // beta != 0.f;
     int4 *input0_tmp = (int4 *)input;
     if (transA == 1) {
         int K_pad_v4 = K_pad / 4;

@@ -254,7 +254,7 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
         options.quants->at(preedge_id).type = postshape.GetDataType();
     }
 
-    reinterpret_cast<CudaConvParam*>(options.param)->extra_param.algo_info.is_initializer_weight =
+    reinterpret_cast<CudaConvParam*>(options.param)->extra_param.is_initializer_weight =
         weight_iter != data->constants.end();
 
     return RC_SUCCESS;

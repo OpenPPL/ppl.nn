@@ -28,13 +28,10 @@ using namespace ppl::nn::onnx;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode MatMulOp::Init(const OptKernelOptions& options) {
-    param_.param.num_output = 1;
-    param_.param.bias_term = 0; // 0 or 1
     param_.param.alpha = 1;
     param_.param.beta = 1;
     param_.param.transA = 0;
     param_.param.transB = 0;
-    param_.param.N = 1; // for converted mat B
 
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         type = ppl::common::DATATYPE_FLOAT16;

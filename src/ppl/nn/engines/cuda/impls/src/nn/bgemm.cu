@@ -431,7 +431,7 @@ double PPLCUDABgemmSelectKernel(
     __half2 clip_max     = __float2half2_rn(fuse_param.clip_max);
     __half2 elt_clip_min = __float2half2_rn(fuse_param.elt_clip_min);
     __half2 elt_clip_max = __float2half2_rn(fuse_param.elt_clip_max);
-    bool has_bias        = param.bias_term; // beta != 0.f;
+    bool has_bias        = false; // beta != 0.f;
     half *bias = NULL;
     int4 *tmp_weight = reinterpret_cast<int4*>(weight);
 
@@ -587,7 +587,7 @@ ppl::common::RetCode PPLCUDABgemmForwardImp(
     int kLoopNum = DivUp(K_pad, tile_k_per_cta);
     lut_t in_lut, flt_lut;
 
-    bool has_bias    = param.bias_term; // beta != 0.f;
+    bool has_bias    = bias; // beta != 0.f;
     int4 *input0_tmp = (int4 *)input;
 
     FAKE_CONV_PARAM

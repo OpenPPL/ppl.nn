@@ -131,13 +131,13 @@ ppl::common::RetCode ConvImmaKernel::DoExecute(KernelExecContext* ctx) {
     PPLCUDAConvolutionForwardJitImpInt8(
         stream, module->GetKernelFunc(), shape_in0.GetDataType(), (int4*)input->GetBufferPtr(),
         (int4*)weight->GetBufferPtr(), (int4*)output->GetBufferPtr(),
-        param_->bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, (int4*)tmp_buffer,
+        param_->extra_param.bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, (int4*)tmp_buffer,
         algo_param, temp_conv_param, temp_quant_param, temp_fuse_param);
 #else
     PPLCUDAConvolutionForwardImpInt8(
         stream, shape_in0.GetDataType(), (int4*)input->GetBufferPtr(),
         (int4*)weight->GetBufferPtr(), (int4*)output->GetBufferPtr(),
-        param_->bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, (int4*)tmp_buffer,
+        param_->extra_param.bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, (int4*)tmp_buffer,
         algo_param, temp_conv_param, temp_quant_param, temp_fuse_param);
 #endif
     LOG(DEBUG) << "Excute IMMA conv with kernel id:" << param_->extra_param.algo_info.kid

@@ -259,7 +259,7 @@ ppl::common::RetCode PPLCUDAGemmModifyBias(
     void *bias,
     const ppl::nn::onnx::GemmParam *param)
 {
-    if (param->bias_term) {
+    if (bias) {
         auto type    = bias_shape->GetDataType();
         int pad_size = GetPadSize(infer_type);
         float beta   = param->beta;
@@ -420,7 +420,7 @@ double PPLCUDAGemmSelectKernel(
     __half2 clip_max     = __float2half2_rn(fuse_param.clip_max);
     __half2 elt_clip_min = __float2half2_rn(fuse_param.elt_clip_min);
     __half2 elt_clip_max = __float2half2_rn(fuse_param.elt_clip_max);
-    bool has_bias        = param.bias_term; // beta != 0.f;
+    bool has_bias        = bias; // beta != 0.f;
 
     float minTime = FLT_MAX;
     int best_kid  = -1;
@@ -584,7 +584,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
     int kLoopNum = DivUp(K_pad, tile_k_per_cta);
     lut_t in_lut, flt_lut;
 
-    int has_bias    = param.bias_term; // beta != 0.f;
+    int has_bias    = (bias ? 1 : 0); // beta != 0.f;
     int4 *input0_tmp = (int4 *)input;
     if (transA == 1) {
         dim3 grid(DivUp(K_pad, 32), DivUp(M, 32), 1);

@@ -42,10 +42,11 @@ struct CudaClipParam {
 struct ConvExtraParam {
     ConvAlgoInfo algo_info;
     ConvFusionInfo fuse_info;
+    bool is_initializer_weight = false;
+    bool bias_term = false;
 };
 
 struct CudaConvParam final {
-    int32_t bias_term = 0;
     ppl::nn::onnx::ConvParam param;
     ConvExtraParam extra_param;
 };

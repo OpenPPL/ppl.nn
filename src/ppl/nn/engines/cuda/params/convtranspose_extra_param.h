@@ -26,10 +26,11 @@ namespace ppl { namespace nn { namespace cuda {
 struct ConvTransposeExtraParam {
     ConvAlgoInfo algo_info;
     ConvFusionInfo fuse_info;
+    bool is_initializer_weight = false;
+    bool bias_term = false;
 };
 
 struct CudaConvTransposeParam {
-    int32_t bias_term = 0;
     ppl::nn::onnx::ConvTransposeParam param;
     ConvTransposeExtraParam extra_param;
 };
