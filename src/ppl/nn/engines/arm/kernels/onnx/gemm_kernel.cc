@@ -68,7 +68,7 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
 
     const int32_t M = A->GetShape()->GetDim(AMdim);
     const int32_t K = A->GetShape()->GetDim(AKdim);
-    const int32_t N = param_->N == 0 ? B->GetShape()->GetDim(BNdim) : param_->N;
+    const int32_t N = B->GetShape()->GetDim(BNdim);
 
     void* src_A = A->GetBufferPtr<void>();
     void* src_B = B->GetBufferPtr<void>();

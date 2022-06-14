@@ -30,7 +30,6 @@ RetCode ParseGemmParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraA
     param->beta = utils::GetNodeAttrByKey<float>(pb_node, "beta", 1.0f);
     param->transA = utils::GetNodeAttrByKey<int32_t>(pb_node, "transA", 0);
     param->transB = utils::GetNodeAttrByKey<int32_t>(pb_node, "transB", 0);
-    param->N = 0; // set by opcontext
 
     return RC_SUCCESS;
 }
