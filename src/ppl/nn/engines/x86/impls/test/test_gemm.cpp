@@ -67,21 +67,24 @@ Define_int32(type_a, 0, "(0) 0 for no_trans, 1 for trans");
 Define_int32(type_b, 0, "(0) 0 for no_trans, 1 for trans, 2 for packed");
 Define_int32(type_bias, 0, "(0) 0 for empty, 1 for scalar, 2 for col vector, 3 for row vector");
 Define_int32(type_sum, 0, "(0) 0 for empty, 1 for no_trans");
+Define_int32(batch_a, 1, "(1) batch size of A");
+Define_int32(batch_b, 1, "(1) batch size of B");
+Define_bool(optimize_bcast, false, "(false) optimize broadcast matmul");
 Define_int32(m, -1, "(-1) override M");
 Define_int32(n, -1, "(-1) override N");
 Define_int32(k, -1, "(-1) override K");
 
-typedef decltype(ppl::kernel::x86::gemm_fp32_ref)* ppl_x86_gemm_func_t;
+typedef decltype(ppl::kernel::x86::batch_gemm_fp32_ref)* ppl_x86_gemm_func_t;
 typedef decltype(ppl::kernel::x86::gemm_fp32_ref_pack_b)* ppl_x86_gemm_pack_b_func_t;
 typedef decltype(ppl::kernel::x86::gemm_fp32_ref_get_packed_b_bytes)* ppl_x86_gemm_get_packed_b_bytes_func_t;
 
 static std::map<std::string, ppl_x86_gemm_func_t> gemm_func_table =
 {
-    {"noarch", ppl::kernel::x86::gemm_fp32_ref},
-    {"sse", ppl::kernel::x86::gemm_fp32_sse},
-    {"fma", ppl::kernel::x86::gemm_fp32_fma},
+    {"noarch", ppl::kernel::x86::batch_gemm_fp32_ref},
+    {"sse", ppl::kernel::x86::batch_gemm_fp32_sse},
+    {"fma", ppl::kernel::x86::batch_gemm_fp32_fma},
 #ifdef PPL_USE_X86_AVX512
-    {"avx512", ppl::kernel::x86::gemm_fp32_avx512},
+    {"avx512", ppl::kernel::x86::batch_gemm_fp32_avx512},
 #endif
 };
 
@@ -161,8 +164,9 @@ int main(int argc, char **argv) {
     std::cerr << "==============================================================\n";
     fprintf(
         stderr,
-        "alpha=%f\nbeta=%f\nbeta_bias=%f\nbeta_sum=%f\nrelu=%d\ntype_a=%d\ntype_b=%d\ntype_bias=%d\ntype_sum=%d\nM=%d\nN=%d\nK=%d\n\n",
-        Flag_alpha, Flag_beta, Flag_beta_bias, Flag_beta_sum, Flag_relu, Flag_type_a, Flag_type_b, Flag_type_bias, Flag_type_sum, Flag_m, Flag_n, Flag_k
+        "alpha=%f\nbeta=%f\nbeta_bias=%f\nbeta_sum=%f\nrelu=%d\ntype_a=%d\ntype_b=%d\ntype_bias=%d\ntype_sum=%d\nM=%d\nN=%d\nK=%d\nbatch_a=%d\nbatch_b=%d\noptimize_bcast=%d\n\n",
+        Flag_alpha, Flag_beta, Flag_beta_bias, Flag_beta_sum, Flag_relu, Flag_type_a, Flag_type_b,
+        Flag_type_bias, Flag_type_sum, Flag_m, Flag_n, Flag_k, Flag_batch_a, Flag_batch_b, Flag_optimize_bcast
     );
     std::cerr << "==============================================================\n";
 
@@ -250,6 +254,14 @@ int main(int argc, char **argv) {
         }
     }
 
+    {
+        const int64_t max_batch = std::max(Flag_batch_a, Flag_batch_b);
+        if ((max_batch % Flag_batch_b) || (max_batch % Flag_batch_a)) {
+            std::cerr << "batch_a and batch_b must be aligned\n";
+            return -1;
+        }
+    }
+
     std::cerr << "begin tests\n";
     std::cerr << "line_no,case_string,min_ms,max_gflops,max_gbps,avg_ms,avg_gflops,avg_gbps\n";
 
@@ -287,19 +299,41 @@ int main(int argc, char **argv) {
             line_no, M, N, K, case_name
         );
 
+        int64_t batch_a = Flag_batch_a;
+        int64_t batch_b = Flag_batch_b;
+
+        // optimize broadcast
+        if (Flag_optimize_bcast) {
+            if (!is_trans_a && batch_b == 1) {
+                M *= batch_a;
+                batch_a = 1;
+            } else if (is_trans_b && batch_a == 1) {
+                N *= batch_b;
+                batch_b = 1;
+            }
+        }
+
+        const int64_t max_batch = std::max(batch_a, batch_b);
+        const int64_t bcast_a = max_batch / batch_a;
+        const int64_t bcast_b = max_batch / batch_b;
+
 DEBUG_TAG(A);
         const int64_t lda = is_trans_a ? M : K;
         const int64_t ldb = is_trans_b ? K : N;
         const int64_t ldsum = N;
         const int64_t ldc = N;
-        const int64_t A_num_elements = M * K;
-        const int64_t B_num_elements = K * N;
-        const int64_t C_num_elements = M * N;
-        const int64_t sum_num_elements = Flag_type_sum ? C_num_elements : 0;
+        const int64_t per_A_num_elements = M * K;
+        const int64_t per_B_num_elements = K * N;
+        const int64_t per_C_num_elements = M * N;
+        const int64_t per_sum_num_elements = Flag_type_sum ? per_C_num_elements : 0;
+        const int64_t A_num_elements = per_A_num_elements * batch_a;
+        const int64_t B_num_elements = per_B_num_elements * batch_b;
+        const int64_t C_num_elements = per_C_num_elements * max_batch;
+        const int64_t sum_num_elements = per_sum_num_elements * max_batch;
         const int64_t A_num_bytes = A_num_elements * sizeof(float);
         const int64_t B_num_bytes = B_num_elements * sizeof(float);
         const int64_t C_num_bytes = C_num_elements * sizeof(float);
-        const int64_t sum_num_bytes = Flag_type_sum ? C_num_bytes : 0;
+        const int64_t sum_num_bytes = sum_num_elements * sizeof(float);
 
         int64_t bias_num_elements;
         switch (Flag_type_bias) {
@@ -310,8 +344,13 @@ DEBUG_TAG(A);
         }
         const int64_t bias_num_bytes = bias_num_elements * sizeof(float);
 
-        const double gops = (double)M * N * K * 2 / 1e9;
-        const double gbs = (double)(A_num_bytes + B_num_bytes + C_num_bytes + bias_num_bytes + sum_num_bytes) / 1e9;
+        const double gops = (double)M * N * K * 2 * max_batch / 1e9;
+        const double gbs = (double)(
+            A_num_bytes / batch_a * max_batch +
+            B_num_bytes / batch_b * max_batch +
+            C_num_bytes +
+            bias_num_bytes * max_batch +
+            sum_num_bytes) / 1e9;
 DEBUG_TAG(B);
         ppl::common::GenericCpuAllocator allocator(PPL_X86_CACHELINE_BYTES());
 
@@ -359,14 +398,23 @@ DEBUG_TAG(C);
         }
 
         float *packedB = nullptr;
+        int64_t per_BB_num_elements = per_B_num_elements;
         float *BB = B;
         if (is_packed_b) {
-            packedB = (float*)allocator.Alloc(gemm_get_packed_b_bytes_func(N ,K));
-            auto ret = gemm_pack_b_func(B, typeB, N, K, ldb, packedB);
-            if (ret != ppl::common::RC_SUCCESS) {
-                std::cerr << "," << "pack B failed\n";
-                return -1;
+            const int64_t per_packedB_num_bytes = gemm_get_packed_b_bytes_func(N ,K);
+            const int64_t per_packedB_num_elements = per_packedB_num_bytes / sizeof(float);
+            packedB = (float*)allocator.Alloc(per_packedB_num_bytes * batch_b);
+            for (int64_t i = 0; i < batch_b; ++i) {
+                auto ret = gemm_pack_b_func(
+                    B + i * per_B_num_elements,
+                    typeB, N, K, ldb,
+                    packedB + i * per_packedB_num_elements);
+                if (ret != ppl::common::RC_SUCCESS) {
+                    std::cerr << "," << "pack B failed\n";
+                    return -1;
+                }
             }
+            per_BB_num_elements = per_packedB_num_elements;
             BB = packedB;
         }
 
@@ -379,16 +427,41 @@ DEBUG_TAG(C);
             }
             memcpy(C_ref, C, C_num_bytes);
         }
+
+        std::vector<const float*> A_list(max_batch, nullptr);
+        std::vector<const float*> BB_list(max_batch, nullptr);
+        std::vector<float*> C_list(max_batch, nullptr);
+        std::vector<const float*> sum_list(max_batch, nullptr);
+        std::vector<const float*> bias_list(max_batch, nullptr);
+        for (int64_t i = 0; i < bcast_a; ++i) {
+            for (int64_t j = 0; j < batch_a; ++j) {
+                A_list[i * batch_a + j] = A + j * per_A_num_elements;
+            }
+        }
+        for (int64_t i = 0; i < bcast_b; ++i) {
+            for (int64_t j = 0; j < batch_b; ++j) {
+                BB_list[i * batch_b + j] = BB + j * per_BB_num_elements;
+            }
+        }
+        for (int64_t i = 0; i < max_batch; ++i) {
+            C_list[i] = C + i * per_C_num_elements;
+        }
+        for (int64_t i = 0; i < max_batch; ++i) {
+            sum_list[i] = sum + i * per_sum_num_elements;
+        }
+        for (int64_t i = 0; i < max_batch; ++i) {
+            bias_list[i] = bias;
+        }
 DEBUG_TAG(D);
         for (int64_t w = 0; w < Flag_warm_up; ++w) {
             ppl::common::RetCode ret =
                 gemm_func(
-                    A, BB, bias, sum,
+                    A_list.data(), BB_list.data(), bias_list.data(), sum_list.data(),
                     typeA, typeBB, typebias, typesum,
-                    M, N, K,
+                    max_batch, M, N, K,
                     lda, ldb, ldc, ldsum,
                     Flag_alpha, Flag_beta, Flag_beta_bias, Flag_beta_sum,
-                    post_flag, C);
+                    post_flag, C_list.data());
             if (ret != ppl::common::RC_SUCCESS) {
                 fprintf(stderr, "execute failed!\n");
                 return -1;
@@ -406,12 +479,12 @@ DEBUG_TAG(G);
             start = std::chrono::high_resolution_clock::now();
             ppl::common::RetCode ret =
                 gemm_func(
-                    A, BB, bias, sum,
+                    A_list.data(), BB_list.data(), bias_list.data(), sum_list.data(),
                     typeA, typeBB, typebias, typesum,
-                    M, N, K,
+                    max_batch, M, N, K,
                     lda, ldb, ldc, ldsum,
                     Flag_alpha, Flag_beta, Flag_beta_bias, Flag_beta_sum,
-                    post_flag, C);
+                    post_flag, C_list.data());
             end = std::chrono::high_resolution_clock::now();
             if (ret != ppl::common::RC_SUCCESS) {
                 fprintf(stderr, "execute failed!\n");
@@ -435,13 +508,23 @@ DEBUG_TAG(G);
             avg_exe_us / 1e3, avg_gflops, avg_gbps);
 
         if (Flag_validate) {
-            if (ppl::common::RC_SUCCESS != ppl::kernel::x86::gemm_fp32_ref(
-                A, B, bias, sum,
+            std::vector<const float*> B_list(max_batch, nullptr);
+            std::vector<float*> C_ref_list(max_batch, nullptr);
+            for (int64_t i = 0; i < bcast_b; ++i) {
+                for (int64_t j = 0; j < batch_b; ++j) {
+                    B_list[i * batch_b + j] = B + j * per_B_num_elements;
+                }
+            }
+            for (int64_t i = 0; i < max_batch; ++i) {
+                C_ref_list[i] = C_ref + i * per_C_num_elements;
+            }
+            if (ppl::common::RC_SUCCESS != ppl::kernel::x86::batch_gemm_fp32_ref(
+                A_list.data(), B_list.data(), bias_list.data(), sum_list.data(),
                 typeA, typeB, typebias, typesum,
-                M, N, K,
+                max_batch, M, N, K,
                 lda, ldb, ldc, ldsum,
                 Flag_alpha, Flag_beta, Flag_beta_bias, Flag_beta_sum,
-                post_flag, C_ref)) {
+                post_flag, C_ref_list.data())) {
                 std::cerr << "," << "gemm_fp32_ref failed\n";
                 return -1;
             }
