@@ -566,10 +566,8 @@ ppl::common::RetCode PPLCUDAConvolutionPredictKernelInt8(
         algo_param.tiles.k_cta = 32;
     } else if (chl_per_grp < 200) {
         algo_param.tiles.k_cta = 64;
-    } else if (chl_per_grp < 1024) {
-        algo_param.tiles.k_cta = 128;
     } else {
-        algo_param.tiles.k_cta = 256;
+        algo_param.tiles.k_cta = 128;
     }
 
     algo_param.tiles.m_warp = algo_param.tiles.m_cta;
