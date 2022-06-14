@@ -29,9 +29,8 @@ RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtra
     auto& node_type = node->GetType();
 
     if (node_type.version < 10) {
-        auto axes = utils::GetNodeAttrsByKey<int64_t>(pb_node, "axes");
-        auto ends = utils::GetNodeAttrsByKey<int64_t>(pb_node, "ends");
-        auto starts = utils::GetNodeAttrsByKey<int64_t>(pb_node, "starts");
+        vector<int64_t> starts;
+        utils::GetNodeAttr(pb_node, "starts", &starts);
 
         auto new_edge_name = node->GetName() + "_slice_starts_" + std::to_string(args.topo->GetCurrentEdgeIdBound());
         auto edge = ppl::nn::utils::Add1DInitializer(args.topo, args.data, new_edge_name, starts, DATATYPE_INT64);
@@ -41,6 +40,9 @@ RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtra
         }
         node->AddInput(edge->GetId());
 
+        vector<int64_t> ends;
+        utils::GetNodeAttr(pb_node, "ends", &ends);
+
         new_edge_name = node->GetName() + "_slice_ends_" + std::to_string(args.topo->GetCurrentEdgeIdBound());
         edge = ppl::nn::utils::Add1DInitializer(args.topo, args.data, new_edge_name, ends, DATATYPE_INT64);
         if (!edge) {
@@ -48,6 +50,9 @@ RetCode ParseSliceParam(const ::onnx::NodeProto& pb_node, const ParamParserExtra
             return RC_OTHER_ERROR;
         }
         node->AddInput(edge->GetId());
+
+        vector<int64_t> axes;
+        utils::GetNodeAttr(pb_node, "axes", &axes);
 
         new_edge_name = node->GetName() + "_slice_axes_" + std::to_string(args.topo->GetCurrentEdgeIdBound());
         edge = ppl::nn::utils::Add1DInitializer(args.topo, args.data, new_edge_name, axes, DATATYPE_INT64);

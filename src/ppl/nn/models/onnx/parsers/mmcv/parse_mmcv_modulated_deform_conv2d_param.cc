@@ -27,15 +27,19 @@ RetCode ParseMMCVModulatedDeformConv2dParam(const ::onnx::NodeProto& pb_node, co
                                             ir::Node*, ir::Attr* arg) {
     auto param = static_cast<MMCVModulatedDeformConv2dParam*>(arg);
 
-    param->groups = utils::GetNodeAttrByKey(pb_node, "groups", 1);
-    param->deform_groups = utils::GetNodeAttrByKey(pb_node, "deform_groups", 1);
+    utils::GetNodeAttr(pb_node, "groups", &param->groups, 1);
+    utils::GetNodeAttr(pb_node, "deform_groups", &param->deform_groups, 1);
 
-    auto stride = utils::GetNodeAttrsByKey<int32_t>(pb_node, "stride");
-    auto padding = utils::GetNodeAttrsByKey<int32_t>(pb_node, "padding");
-    auto dilation = utils::GetNodeAttrsByKey<int32_t>(pb_node, "dilation");
+    vector<int64_t> stride;
+    utils::GetNodeAttr(pb_node, "stride", &stride);
 
-    size_t kernel_dims = 2;
+    vector<int64_t> padding;
+    utils::GetNodeAttr(pb_node, "padding", &padding);
 
+    vector<int64_t> dilation;
+    utils::GetNodeAttr(pb_node, "dilation", &dilation);
+
+    constexpr size_t kernel_dims = 2;
     if (dilation.size() != kernel_dims || stride.size() != kernel_dims || padding.size() != kernel_dims) {
         return RC_INVALID_VALUE;
     }

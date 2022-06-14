@@ -27,13 +27,14 @@ namespace ppl { namespace nn { namespace onnx {
 RetCode ParseTopKParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node,
                        ir::Attr* arg) {
     auto param = static_cast<TopKParam*>(arg);
-    param->axis = utils::GetNodeAttrByKey<int32_t>(pb_node, "axis", -1);
-    param->largest = utils::GetNodeAttrByKey<int32_t>(pb_node, "largest", 1);
-    param->sorted = utils::GetNodeAttrByKey<int32_t>(pb_node, "sorted", 1);
+    utils::GetNodeAttr(pb_node, "axis", &param->axis, -1);
+    utils::GetNodeAttr(pb_node, "largest", &param->largest, 1);
+    utils::GetNodeAttr(pb_node, "sorted", &param->sorted, 1);
 
     auto& node_type = node->GetType();
     if (node_type.version < 10) {
-        auto k = utils::GetNodeAttrByKey<int64_t>(pb_node, "k", -1);
+        int64_t k;
+        utils::GetNodeAttr(pb_node, "k", &k, -1);
         auto new_edge_name = node->GetName() + "_topk_k_" + std::to_string(args.topo->GetCurrentEdgeIdBound());
         auto edge = ppl::nn::utils::AddScalarInitializer(args.topo, args.data, new_edge_name, k, DATATYPE_INT64);
         if (!edge) {

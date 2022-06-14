@@ -20,22 +20,21 @@
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseLRNParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<LRNParam*>(arg);
-    int32_t size = utils::GetNodeAttrByKey<int32_t>(pb_node, "size", INT32_MAX);
-    if (size == INT32_MAX) {
+
+    utils::GetNodeAttr(pb_node, "size", &param->size, INT32_MAX);
+    if (param->size == INT32_MAX) {
         LOG(ERROR) << "size is required.";
         return RC_INVALID_VALUE;
     }
 
-    param->size = size;
-    param->alpha = utils::GetNodeAttrByKey<float>(pb_node, "alpha", 0.0001f);
-    param->beta = utils::GetNodeAttrByKey<float>(pb_node, "beta", 0.75f);
-    param->bias = utils::GetNodeAttrByKey<float>(pb_node, "bias", 1.0f);
+    utils::GetNodeAttr(pb_node, "alpha", &param->alpha, 0.0001f);
+    utils::GetNodeAttr(pb_node, "beta", &param->beta, 0.75f);
+    utils::GetNodeAttr(pb_node, "bias", &param->bias, 1.0f);
     return RC_SUCCESS;
 }
 

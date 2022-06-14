@@ -27,8 +27,8 @@ RetCode ParseMMCVNMSParam(const ::onnx::NodeProto& pb_node, const ParamParserExt
                           ir::Attr* arg) {
     auto param = static_cast<MMCVNMSParam*>(arg);
 
-    param->iou_threshold = utils::GetNodeAttrByKey<float>(pb_node, "iou_threshold", 0);
-    param->offset = utils::GetNodeAttrByKey<int32_t>(pb_node, "offset", 0);
+    utils::GetNodeAttr(pb_node, "iou_threshold", &param->iou_threshold, 0);
+    utils::GetNodeAttr(pb_node, "offset", &param->offset, 0);
 
     return RC_SUCCESS;
 }

@@ -26,7 +26,7 @@ namespace ppl { namespace nn { namespace onnx {
 RetCode ParseChannelShuffleParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
                                  ir::Attr* arg) {
     auto param = static_cast<ChannelShuffleParam*>(arg);
-    param->group = utils::GetNodeAttrByKey<int32_t>(pb_node, "group", 1);
+    utils::GetNodeAttr(pb_node, "group", &param->group, 1);
     return RC_SUCCESS;
 }
 

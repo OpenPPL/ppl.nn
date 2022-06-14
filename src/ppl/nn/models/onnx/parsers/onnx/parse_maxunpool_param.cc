@@ -19,7 +19,6 @@
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
@@ -27,9 +26,9 @@ RetCode ParseMaxUnpoolParam(const ::onnx::NodeProto& pb_node, const ParamParserE
                             ir::Attr* arg) {
     auto param = static_cast<MaxUnpoolParam*>(arg);
 
-    param->kernel_shape = utils::GetNodeAttrsByKey<int32_t>(pb_node, "kernel_shape");
-    param->strides = utils::GetNodeAttrsByKey<int32_t>(pb_node, "strides");
-    param->pads = utils::GetNodeAttrsByKey<int32_t>(pb_node, "pads");
+    utils::GetNodeAttr(pb_node, "kernel_shape", &param->kernel_shape);
+    utils::GetNodeAttr(pb_node, "strides", &param->strides);
+    utils::GetNodeAttr(pb_node, "pads", &param->pads);
 
     return RC_SUCCESS;
 }

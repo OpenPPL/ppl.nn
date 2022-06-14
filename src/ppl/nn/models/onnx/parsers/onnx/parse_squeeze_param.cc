@@ -20,14 +20,13 @@
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseSqueezeParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
                           ir::Attr* arg) {
     auto param = static_cast<SqueezeParam*>(arg);
-    param->axes = utils::GetNodeAttrsByKey<int32_t>(pb_node, "axes");
+    utils::GetNodeAttr(pb_node, "axes", &param->axes);
     return RC_SUCCESS;
 }
 

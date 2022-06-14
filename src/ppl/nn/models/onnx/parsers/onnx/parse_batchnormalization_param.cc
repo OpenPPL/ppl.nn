@@ -19,15 +19,14 @@
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseBatchNormalizationParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
                                      ir::Attr* arg) {
     auto param = static_cast<BatchNormalizationParam*>(arg);
-    param->epsilon = utils::GetNodeAttrByKey<float>(pb_node, "epsilon", 1e-5);
-    param->momentum = utils::GetNodeAttrByKey<float>(pb_node, "momentum", 0.9);
+    utils::GetNodeAttr(pb_node, "epsilon", &param->epsilon, 1e-5);
+    utils::GetNodeAttr(pb_node, "momentum", &param->momentum, 0.9);
     return RC_SUCCESS;
 }
 

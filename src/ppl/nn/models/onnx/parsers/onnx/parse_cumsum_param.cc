@@ -19,14 +19,13 @@
 #include "ppl/nn/models/onnx/utils.h"
 using namespace std;
 using namespace ppl::common;
-using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ParseCumSumParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
     auto param = static_cast<CumSumParam*>(arg);
-    param->exclusive = utils::GetNodeAttrByKey<int32_t>(pb_node, "exclusive", 0);
-    param->reverse = utils::GetNodeAttrByKey<int32_t>(pb_node, "reverse", 0);
+    utils::GetNodeAttr(pb_node, "exclusive", &param->exclusive, 0);
+    utils::GetNodeAttr(pb_node, "reverse", &param->reverse, 0);
     return RC_SUCCESS;
 }
 
