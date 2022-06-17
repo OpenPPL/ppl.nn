@@ -36,7 +36,11 @@ static void PackModelInfo(::onnx::ModelProto* pb_model, const map<string, uint64
     for (auto o = opset.begin(); o != opset.end(); ++o) {
         auto pb_opset = pb_model->add_opset_import();
         pb_opset->set_domain(o->first);
-        pb_opset->set_version(o->second);
+        if (o->first.empty() && o->second < 11) {
+            pb_opset->set_version(11); // will convert opset <=11 to 11
+        } else {
+            pb_opset->set_version(o->second);
+        }
     }
 }
 
