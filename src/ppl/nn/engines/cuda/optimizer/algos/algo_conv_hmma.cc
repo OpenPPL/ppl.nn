@@ -127,12 +127,12 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     uint64_t size = PPLCUDAConvolutionGetCompilationBufSize(shape_in0.GetDataType(), temp_conv_param);
     ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, size, ALGO_MAX_TIME)
 
-    auto stream = options.device->GetStream();
+    auto stream = options.opt_stage_device->GetStream();
 
 #ifdef PPLNN_ENABLE_CUDA_JIT
     // Do select
     LOG(INFO) << "Compiling " << node->GetName();
-    int device_id = options.device->GetDeviceId();
+    int device_id = options.opt_stage_device->GetDeviceId();
     PPLCUDAConvolutionPredictKernel(shape_in0.GetDataType(), attr_param_.extra_param.algo_info, temp_conv_param);
     auto timer = PPLCUDAConvolutionJitSelectKernel(device_id, stream, shape_in0.GetDataType(), (int4*)input_buffer.addr,
                                                    (int4*)weight_buffer.addr, (int4*)output_buffer.addr,
@@ -175,7 +175,7 @@ RetCode TuringHMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
     uint32_t k_per_grp_pad = (k_per_grp + align_size - 1) / align_size * align_size;
 
     // Split weight format to group padding
-    auto stream = options.device->GetStream();
+    auto stream = options.opt_stage_device->GetStream();
     auto weight_iter = data->constants.find(weight_node->GetInput(0));
     if (weight_iter != data->constants.end() && // is a constant tensor and has not be loaded
         options.info->constants.find(weight_node->GetInput(0)) == options.info->constants.end()) {
@@ -189,19 +189,19 @@ RetCode TuringHMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
         RuntimeConstantInfo weight_constat_info;
         {
             BufferDesc buffer;
-            status = options.device->Realloc(newshape, &buffer);
+            status = options.reserved_data_device->Realloc(newshape, &buffer);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
                 return status;
             }
 
             weight_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
-            weight_constat_info.SetBuffer(buffer, options.device, true);
+            weight_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
         }
 
         ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
-        status = options.device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
-                                                                     weight_iter->second.data.data(), preshape);
+        status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(
+            &temp_buffer, postshape, weight_iter->second.data.data(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << node->GetName() << " copy constant failed: " << GetRetCodeStr(status);
             return status;
@@ -237,19 +237,19 @@ RetCode TuringHMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
         RuntimeConstantInfo bias_constat_info;
         {
             BufferDesc buffer;
-            status = options.device->Realloc(newshape, &buffer);
+            status = options.reserved_data_device->Realloc(newshape, &buffer);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
                 return status;
             }
 
             bias_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
-            bias_constat_info.SetBuffer(buffer, options.device, true);
+            bias_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
         }
 
         ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
-        status = options.device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
-                                                                     bias_iter->second.data.data(), preshape);
+        status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
+                                                                               bias_iter->second.data.data(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
             return status;

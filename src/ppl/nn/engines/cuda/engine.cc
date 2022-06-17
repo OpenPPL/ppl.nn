@@ -24,12 +24,12 @@
 #include "ppl/nn/engines/utils.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_graph.h"
 #include "ppl/nn/engines/cuda/engine_factory.h"
-#include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/cuda/module/op_compile_manager.h"
 #include "ppl/nn/quantization/quant_param_parser.h"
 #include "ppl/nn/utils/array.h"
 #include "ppl/nn/utils/utils.h"
 #include "rapidjson/document.h"
+#include "ppl/nn/common/logger.h"
 #include "rapidjson/error/error.h"
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
@@ -50,15 +50,15 @@ CudaEngine::CudaEngine() : EngineImpl("cuda") {
 
 CudaEngine::~CudaEngine() {
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    for (auto b = constant_buffers_.begin(); b != constant_buffers_.end(); ++b) {
-        device_.Free(&(*b));
+    for (auto b = constant_buffer_blocks_.begin(); b != constant_buffer_blocks_.end(); ++b) {
+        reserved_data_device_.Free(&(*b));
     }
 #endif
 }
 
 RetCode CudaEngine::Init(const EngineOptions& options) {
     options_ = options;
-    return device_.Init(options);
+    return reserved_data_device_.Init(options.device_id, options.mm_policy);
 }
 
 EngineContext* CudaEngine::CreateEngineContext() {
@@ -77,25 +77,28 @@ bool CudaEngine::Supports(const ir::Node* node) const {
     return (OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version) != nullptr);
 }
 
-RetCode CudaEngine::DoOptimize(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
-    OptGraph opt_graph(graph, info, &cuda_flags_, &compile_set_);
-    auto status = opt_graph.DoOptimize(resource, &device_);
+RetCode CudaEngine::DoOptimize(const utils::SharedResource& resource, CudaDevice* opt_stage_device, ir::Graph* graph,
+                               RuntimePartitionInfo* info) {
+    CompileInfo compile_set;
+    OptGraph opt_graph(graph, info, &cuda_flags_, &compile_set);
+    auto status = opt_graph.DoOptimize(resource, opt_stage_device, &reserved_data_device_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "OptGraph DoOptimeize failed: " << GetRetCodeStr(status);
         return status;
     }
 
 #ifdef PPLNN_ENABLE_CUDA_JIT
-    status = CompileCudaModule(resource, graph, info);
+    status = CompileCudaModule(resource, compile_set, opt_stage_device, graph, info);
 #endif
 
     return RC_SUCCESS;
 }
 
-ppl::common::RetCode CudaEngine::CompileCudaModule(const utils::SharedResource& resource, ir::Graph* graph,
-                                                   RuntimePartitionInfo* info) {
+ppl::common::RetCode CudaEngine::CompileCudaModule(const utils::SharedResource& resource,
+                                                   const CompileInfo& compile_set, CudaDevice* opt_stage_device,
+                                                   ir::Graph* graph, RuntimePartitionInfo* info) {
     auto op_compiler_manager = OpCompilerManager::Instance();
-    for (auto it = compile_set_.begin(); it != compile_set_.end(); it++) {
+    for (auto it = compile_set.begin(); it != compile_set.end(); ++it) {
         auto node_id = *it;
         ir::Node* op = graph->topo.get()->GetNode(node_id);
         if (!op)
@@ -104,7 +107,8 @@ ppl::common::RetCode CudaEngine::CompileCudaModule(const utils::SharedResource& 
         if (op_compiler == nullptr)
             continue;
 
-        const OptKernelOptions options(graph, info, &resource, &device_, &cuda_manager_);
+        const OptKernelOptions options(graph, info, &resource, opt_stage_device, &reserved_data_device_,
+                                       &cuda_manager_);
         op_compiler->Compile(op, options);
     }
 
@@ -112,7 +116,14 @@ ppl::common::RetCode CudaEngine::CompileCudaModule(const utils::SharedResource& 
 }
 
 RetCode CudaEngine::ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
-    auto status = DoOptimize(resource, graph, info);
+    BufferedCudaDevice opt_stage_device;
+    auto status = opt_stage_device.Init(options_.device_id, options_.mm_policy);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "init device for optimization failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    status = DoOptimize(resource, &opt_stage_device, graph, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "DoOptimize failed: " << GetRetCodeStr(status);
         return status;
@@ -137,7 +148,7 @@ RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, 
     }
 
     BufferDesc block;
-    auto status = device_.Realloc(total_bytes, &block);
+    auto status = reserved_data_device_.Realloc(total_bytes, &block);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "alloc [" << total_bytes << "] bytes failed: " << GetRetCodeStr(status);
         return status;
@@ -146,7 +157,7 @@ RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, 
     uint64_t offset = 0;
     status = visitor.ForEach([this, eid2info, &block, &offset](const ir::Edge* edge, const void* data, uint64_t size,
                                                                const TensorShape& shape) -> RetCode {
-        auto dev = &device_;
+        auto dev = &reserved_data_device_;
 
         BufferDesc buf;
         buf.addr = (char*)block.addr + offset;
@@ -169,9 +180,9 @@ RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, 
     });
 
     if (status == RC_SUCCESS) {
-        constant_buffers_.push_back(block);
+        constant_buffer_blocks_.push_back(block);
     } else {
-        device_.Free(&block);
+        reserved_data_device_.Free(&block);
     }
 
     return status;

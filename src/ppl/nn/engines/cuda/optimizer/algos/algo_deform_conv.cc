@@ -29,7 +29,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 bool DeformConvAlgorithm::IsSupported(const ir::Node* node, const OptKernelOptions& options,
-                                    dataformat_t input_format) const {
+                                      dataformat_t input_format) const {
     const TensorShape& tensor0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
     if (tensor0.GetDataType() != ppl::common::DATATYPE_FLOAT16) {
         return false;
@@ -60,7 +60,7 @@ RetCode DeformConvAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& optio
     RetCode status;
 
     // Split weight format to group padding
-    auto stream = options.device->GetStream();
+    auto stream = options.opt_stage_device->GetStream();
     auto weight_iter = data->constants.find(weight_node->GetInput(0));
     if (weight_iter != data->constants.end() && // is a constant tensor and has not be loaded
         options.info->constants.find(weight_node->GetInput(0)) == options.info->constants.end()) {
@@ -74,19 +74,19 @@ RetCode DeformConvAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& optio
         RuntimeConstantInfo weight_constat_info;
         {
             BufferDesc buffer;
-            status = options.device->Realloc(postshape, &buffer);
+            status = options.reserved_data_device->Realloc(postshape, &buffer);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
                 return status;
             }
 
             weight_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
-            weight_constat_info.SetBuffer(buffer, options.device, true);
+            weight_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
         }
 
         ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
-        status = options.device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
-                                                                     weight_iter->second.data.data(), preshape);
+        status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(
+            &temp_buffer, postshape, weight_iter->second.data.data(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << node->GetName() << " copy constant failed: " << GetRetCodeStr(status);
             return status;

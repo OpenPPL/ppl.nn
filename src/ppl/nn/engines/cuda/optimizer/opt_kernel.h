@@ -42,8 +42,8 @@ struct SharedResource;
 namespace ppl { namespace nn { namespace cuda {
 
 struct OptKernelOptions final {
-    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* r,
-                     CudaArgs* args, CompileInfo* compile_set, CudaDevice* device,
+    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* r, CudaArgs* args,
+                     CompileInfo* compile_set, CudaDevice* opt_stage_dev, CudaDevice* reserved_data_dev,
                      std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors, std::vector<CudaTensorQuant>* quants,
                      std::map<std::string, CudaArgs::AlgoSelects>* algos)
         : graph(graph)
@@ -51,7 +51,8 @@ struct OptKernelOptions final {
         , resource(r)
         , args(args)
         , compile_set(compile_set)
-        , device(device)
+        , opt_stage_device(opt_stage_dev)
+        , reserved_data_device(reserved_data_dev)
         , tensors(tensors)
         , quants(quants)
         , algos(algos) {}
@@ -60,8 +61,13 @@ struct OptKernelOptions final {
                      std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors)
         : graph(graph), info(info), resource(r), tensors(tensors) {}
     OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* r,
-                     CudaDevice* device, CUDAModuleManager* manager)
-        : graph(graph), info(info), resource(r), device(device), cuda_module_manager(manager) {}
+                     CudaDevice* opt_stage_dev, CudaDevice* reserved_data_dev, CUDAModuleManager* manager)
+        : graph(graph)
+        , info(info)
+        , resource(r)
+        , opt_stage_device(opt_stage_dev)
+        , reserved_data_device(reserved_data_dev)
+        , cuda_module_manager(manager) {}
     OptKernelOptions(ir::Graph* graph, const utils::SharedResource* r) : graph(graph), resource(r) {}
 
     ir::Graph* graph;
@@ -69,7 +75,8 @@ struct OptKernelOptions final {
     const utils::SharedResource* resource;
     CudaArgs* args;
     CompileInfo* compile_set;
-    CudaDevice* device;
+    CudaDevice* opt_stage_device; // device for optimization stage. will be destroyed after Engine::ProcessGraph()
+    CudaDevice* reserved_data_device; // used to store data that are used in runtime stage
     std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors;
     std::vector<CudaTensorQuant>* quants;
     std::map<std::string, CudaArgs::AlgoSelects>* algos;
@@ -237,9 +244,9 @@ protected:
             auto impl = info->GetInput<TensorImpl>(i);
             if (impl == nullptr)
                 continue;
-            auto in_shape  = impl->GetShape();
+            auto in_shape = impl->GetShape();
             auto date_type = in_shape->GetDataType();
-            if (date_type == ppl::common::DATATYPE_UNKNOWN || date_type == ppl::common::DATATYPE_FLOAT32 || 
+            if (date_type == ppl::common::DATATYPE_UNKNOWN || date_type == ppl::common::DATATYPE_FLOAT32 ||
                 date_type == ppl::common::DATATYPE_FLOAT16 || date_type == ppl::common::DATATYPE_INT8) {
                 in_shape->SetDataType(type);
             }
@@ -270,7 +277,8 @@ protected:
         return ppl::common::RC_SUCCESS;
     }
 
-    static ppl::common::RetCode InferHighestType(InputOutputInfo* info, ppl::common::datatype_t type,uint64_t mask = 0) {
+    static ppl::common::RetCode InferHighestType(InputOutputInfo* info, ppl::common::datatype_t type,
+                                                 uint64_t mask = 0) {
         ppl::common::datatype_t highest = type;
         for (uint32_t i = 0; i < info->GetInputCount(); ++i) {
             if (i < 64 && mask & (1 << i)) {

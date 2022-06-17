@@ -36,7 +36,8 @@ public:
     OptGraph(ir::Graph* graph, RuntimePartitionInfo* info, CudaArgs* args, CompileInfo* compile_set);
     ~OptGraph();
 
-    ppl::common::RetCode DoOptimize(const utils::SharedResource&, CudaDevice*);
+    ppl::common::RetCode DoOptimize(const utils::SharedResource&, CudaDevice* opt_stage_dev,
+                                    CudaDevice* reserved_data_dev);
 
 private:
     ppl::common::RetCode InitKernels();
@@ -45,7 +46,7 @@ private:
     ppl::common::RetCode FuseOperator(const utils::SharedResource& resource);
     ppl::common::RetCode AddBridgeKernels(const utils::SharedResource& resource);
     ppl::common::RetCode UpdateType();
-    ppl::common::RetCode SelectAlgos(const utils::SharedResource&, CudaDevice*);
+    ppl::common::RetCode SelectAlgos(const utils::SharedResource&, CudaDevice*, CudaDevice*);
     ppl::common::RetCode LoadConstants(CudaDevice*);
     ppl::common::RetCode DeleteBridgeKernels();
     int32_t LastLegalNodeIndex();

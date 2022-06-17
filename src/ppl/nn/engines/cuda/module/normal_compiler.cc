@@ -43,8 +43,9 @@ const ppl::common::RetCode NormalCompiler::Compile(ir::Node* node, const OptKern
     std::string source = "";
     algo_param.UseDefaultF1Kernel();
     gene_factor->Gene2spkKernel(source, algo_param.algo_name, algo_param.tiles.m_cta, algo_param.tiles.n_cta,
-                       algo_param.tiles.m_warp, algo_param.tiles.n_warp, algo_param.tiles.k_cta,
-                       algo_param.tiles.k_per_set, algo_param.splitk, algo_param.splitf, algo_param.tiles.buf, 0);
+                                algo_param.tiles.m_warp, algo_param.tiles.n_warp, algo_param.tiles.k_cta,
+                                algo_param.tiles.k_per_set, algo_param.splitk, algo_param.splitf, algo_param.tiles.buf,
+                                0);
     gene_factor->ReplaceFusionFor2spk(source, fuse_info);
     std::string name = algo_param.algo_name;
     std::vector<std::string> compile_params;
@@ -55,10 +56,10 @@ const ppl::common::RetCode NormalCompiler::Compile(ir::Node* node, const OptKern
     CUDAModuleWrapper* wrapper = new CUDAModuleWrapper();
     CUDAModule* cuda_module = new CUDAModule();
     cuda_param->module = (void*)cuda_module;
-    auto ptx_code =
-        CUDANVRTCCompile(pair<string, string>(name, source), param_cstring, options.device->GetDeviceId(), true);
+    auto ptx_code = CUDANVRTCCompile(pair<string, string>(name, source), param_cstring,
+                                     options.opt_stage_device->GetDeviceId(), true);
     cuda_module->SetSourceCode(name, ptx_code);
-    wrapper->Init(cuda_module, name, options.device);
+    wrapper->Init(cuda_module, name, options.opt_stage_device->GetStream());
 
     ModuleMap* module_map = options.cuda_module_manager->GetModule();
     module_map->emplace(pair<nodeid_t, CUDAModuleWrapper*>(node_id, move(wrapper)));

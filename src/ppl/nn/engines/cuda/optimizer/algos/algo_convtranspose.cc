@@ -64,17 +64,17 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
     } else { // Give the default kernel
         auto stride_h = attr_param_.param.strides[0];
         auto stride_w = attr_param_.param.strides[1];
-        if (stride_h != 1 || stride_w != 1){
+        if (stride_h != 1 || stride_w != 1) {
             if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
-                attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";
+                attr_param_.extra_param.algo_info.algo_name =
+                    "nv2spkConv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";
             } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
                 attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_imma8816_nhwc_f1_b64x64_w64x32_k32_s16_buf1";
             } else {
                 return ALGO_MAX_TIME;
             }
             attr_param_.extra_param.algo_info.kid = 0;
-        }
-        else {
+        } else {
             attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_fn_b128x128_w64x64_k32_s32_buf1";
             attr_param_.extra_param.algo_info.kid = 5100;
         }
@@ -90,10 +90,10 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
     // Padding
     shape_in1.SetDim(0, (shape_in1.GetDim(0) + align_size - 1) / align_size * align_size);
     shape_in1.SetDim(1, (shape_in1.GetDim(1) + align_size - 1) / align_size * align_size);
-    //if (temp_conv_param.has_bias) {
+    // if (temp_conv_param.has_bias) {
     if (node->GetInputCount() > 2) {
         shape_in2 = *options.tensors->find(node->GetInput(2))->second->GetShape();
-        //for weight shape(K,C,R,S), C is the output channel
+        // for weight shape(K,C,R,S), C is the output channel
         shape_in2.SetDim(1, (shape_in2.GetDim(1) + align_size - 1) / align_size * align_size);
     }
 
@@ -106,18 +106,17 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
     uint64_t size = PPLConvTransposeGetCompilationBufSizeCuda(&shape_in0, &shape_out, &attr_param_.param);
     ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, size, ALGO_MAX_TIME)
 
-    auto stream = options.device->GetStream();
+    auto stream = options.opt_stage_device->GetStream();
 
-    int device_id = options.device->GetDeviceId();
+    int device_id = options.opt_stage_device->GetDeviceId();
 #ifdef PPLNN_ENABLE_CUDA_JIT
     // Do select
     LOG(INFO) << "Compiling " << node->GetName();
 #endif
     // Do Select
-    auto timer = PPLCUDAConvTransposeSelectKernel(device_id, stream, &shape_in0, input_buffer.addr,
-                            weight_buffer.addr, bias_buffer.addr, temp_buffer.addr,
-                            &shape_out, output_buffer.addr, &attr_param_.param,
-                            attr_param_.extra_param.algo_info);
+    auto timer = PPLCUDAConvTransposeSelectKernel(device_id, stream, &shape_in0, input_buffer.addr, weight_buffer.addr,
+                                                  bias_buffer.addr, temp_buffer.addr, &shape_out, output_buffer.addr,
+                                                  &attr_param_.param, attr_param_.extra_param.algo_info);
     CudaArgs::AlgoSelects algo_select;
     algo_select.kname = attr_param_.extra_param.algo_info.algo_name;
     algo_select.kid = attr_param_.extra_param.algo_info.kid;
@@ -140,46 +139,45 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
 
     RetCode status;
-    auto stream = options.device->GetStream();
+    auto stream = options.opt_stage_device->GetStream();
     auto weight_iter = data->constants.find(weight_node->GetInput(0));
     if (weight_iter != data->constants.end() && // is a constant tensor and has not be loaded
         options.info->constants.find(weight_node->GetInput(0)) == options.info->constants.end()) {
         auto preedge_id = weight_node->GetInput(0);
         auto postedge_id = node->GetInput(1);
         const TensorShape& preshape = *options.tensors->find(preedge_id)->second->GetShape();
-        //const TensorShape& postshape = *options.tensors->find(postedge_id)->second->GetShape();
+        // const TensorShape& postshape = *options.tensors->find(postedge_id)->second->GetShape();
         TensorShape postshape = *options.tensors->find(postedge_id)->second->GetShape();
         postshape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         auto newshape = postshape;
         int stride_h = attr_param_.param.strides[0];
         int stride_w = attr_param_.param.strides[1];
-        int kernel_u = (newshape.GetDim(2)+stride_h-1) / stride_h;
-        int kernel_v = (newshape.GetDim(3)+stride_w-1) / stride_w;
+        int kernel_u = (newshape.GetDim(2) + stride_h - 1) / stride_h;
+        int kernel_v = (newshape.GetDim(3) + stride_w - 1) / stride_w;
         int pattern_num = stride_h * stride_w;
         newshape.SetDim(0, (newshape.GetDim(0) + align_size - 1) / align_size * align_size);
         newshape.SetDim(1, (newshape.GetDim(1) + align_size - 1) / align_size * align_size);
         newshape.SetDim(2, pattern_num);
-        newshape.SetDim(3, kernel_u*kernel_v);
+        newshape.SetDim(3, kernel_u * kernel_v);
 
         RuntimeConstantInfo weight_constat_info;
         {
             BufferDesc buffer;
-            status = options.device->Realloc(newshape, &buffer);
+            status = options.reserved_data_device->Realloc(newshape, &buffer);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
                 return status;
             }
 
-
             weight_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
-            weight_constat_info.SetBuffer(buffer, options.device, true);
+            weight_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
         }
 
         auto size = PPLConvTransposeGetFilterBufSizeCudaFp16(&shape_in1);
         ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_temp_buffer, size, RC_OUT_OF_MEMORY)
         ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_input_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
-        status = options.device->GetDataConverter()->ConvertFromHost(&filter_input_buffer, postshape,
-                                                                     weight_iter->second.data.data(), preshape);
+        status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(
+            &filter_input_buffer, postshape, weight_iter->second.data.data(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << node->GetName() << " copy constant failed: " << GetRetCodeStr(status);
             return status;
@@ -197,7 +195,6 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
     reinterpret_cast<CudaConvTransposeParam*>(options.param)->extra_param.is_initializer_weight =
         weight_iter != data->constants.end();
 
-
     if (node->GetInputCount() <= 2) {
         return RC_SUCCESS;
     }
@@ -212,24 +209,24 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
         const TensorShape& preshape = *options.tensors->find(preedge_id)->second->GetShape();
         const TensorShape& postshape = *options.tensors->find(postedge_id)->second->GetShape();
         auto newshape = postshape;
-        int out_c_pad = (newshape.GetDim(0) + align_size-1)/align_size*align_size;
+        int out_c_pad = (newshape.GetDim(0) + align_size - 1) / align_size * align_size;
         newshape.SetDim(0, out_c_pad);
         RuntimeConstantInfo bias_constat_info;
         {
             BufferDesc buffer;
-            status = options.device->Realloc(newshape, &buffer);
+            status = options.reserved_data_device->Realloc(newshape, &buffer);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
                 return status;
             }
 
             bias_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
-            bias_constat_info.SetBuffer(buffer, options.device, true);
+            bias_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
         }
 
         ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
-        status = options.device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
-                                                                     bias_iter->second.data.data(), preshape);
+        status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
+                                                                               bias_iter->second.data.data(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
             return status;

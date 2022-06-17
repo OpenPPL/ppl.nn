@@ -148,7 +148,7 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
     uint64_t size = PPLGemmCUDAGetBufSize(&shape_in0, attr_param_.param.transA);
     ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, size, ALGO_MAX_TIME)
 
-    auto stream = options.device->GetStream();
+    auto stream = options.opt_stage_device->GetStream();
 
     ALLOC_BUFFERF_FOR_ALGO_SELECT(wegiht_quant, shape_in1.GetDim(1) * sizeof(float), ALGO_MAX_TIME)
     quant_param_t temp_quant_param;
@@ -160,7 +160,7 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
 #ifdef PPLNN_ENABLE_CUDA_JIT
     // Do select
     LOG(INFO) << "Compiling " << node->GetName();
-    int device_id = options.device->GetDeviceId();
+    int device_id = options.opt_stage_device->GetDeviceId();
     if (shape_in0.GetDataType() == ppl::common::DATATYPE_FLOAT16) {
         PPLCUDAConvolutionPredictKernel(shape_in0.GetDataType(), attr_param_.extra_param.algo_info, temp_conv_param);
         timer = PPLCUDAGemmJITSelectKernel(device_id, stream, shape_in0.GetDataType(), &shape_in0, input_buffer.addr,
@@ -237,14 +237,14 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
     RuntimeConstantInfo quant_constat_info;
     {
         BufferDesc buffer;
-        auto status = options.device->Realloc(quant_shape, &buffer);
+        auto status = options.reserved_data_device->Realloc(quant_shape, &buffer);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
             return status;
         }
 
         quant_constat_info.Reshape(quant_shape);
-        quant_constat_info.SetBuffer(buffer, options.device, true);
+        quant_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
     }
 
     auto ret_pair = topo->AddEdge("Quant_" + node->GetName());
@@ -260,11 +260,11 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
     options.quants->at(quant_edge_id).format = quant_shape.GetDataFormat();
     options.quants->at(quant_edge_id).type = quant_shape.GetDataType();
 
-    options.device->CopyFromHost(&quant_constat_info.GetBufferDesc(), scales.data(), quant_shape);
+    options.reserved_data_device->CopyFromHost(&quant_constat_info.GetBufferDesc(), scales.data(), quant_shape);
     options.info->constants.emplace(quant_edge_id, std::move(quant_constat_info));
 
     // Transpose weight if needed
-    auto stream = options.device->GetStream();
+    auto stream = options.opt_stage_device->GetStream();
     auto weight_iter = data->constants.find(weight_node->GetInput(0));
     if (weight_iter != data->constants.end() && // is a constant tensor and has not be loaded
         options.info->constants.find(weight_node->GetInput(0)) == options.info->constants.end()) {
@@ -287,32 +287,32 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
         RuntimeConstantInfo weight_constat_info;
         {
             BufferDesc buffer;
-            auto status = options.device->Realloc(newshape, &buffer);
+            auto status = options.reserved_data_device->Realloc(newshape, &buffer);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
                 return status;
             }
 
             weight_constat_info.Reshape(postshape);
-            weight_constat_info.SetBuffer(buffer, options.device, true);
+            weight_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
         }
 
         BufferDesc temp_weight_buffer;
-        auto status = options.device->Realloc(newshape, &temp_weight_buffer);
+        auto status = options.opt_stage_device->Realloc(newshape, &temp_weight_buffer);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
             return status;
         }
         utils::Destructor __device_src_guard__([&options, &temp_weight_buffer]() -> void {
-            options.device->Free(&temp_weight_buffer);
+            options.opt_stage_device->Free(&temp_weight_buffer);
         });
 
         if (shape_in0.GetDataType() == ppl::common::DATATYPE_FLOAT16) {
-            status = options.device->GetDataConverter()->ConvertFromHost(
+            status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(
                 &weight_constat_info.GetBufferDesc(), postshape, weight_iter->second.data.data(), preshape);
         } else if (shape_in0.GetDataType() == ppl::common::DATATYPE_INT8) {
             auto quants = options.quants;
-            status = ((CudaDataConverter*)options.device->GetDataConverter())
+            status = ((CudaDataConverter*)options.opt_stage_device->GetDataConverter())
                          ->ConvertFromHost(&weight_constat_info.GetBufferDesc(), postshape, (*quants)[postedge_id],
                                            weight_iter->second.data.data(), preshape, (*quants)[preedge_id]);
         }
@@ -361,18 +361,18 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
         RuntimeConstantInfo bias_constat_info;
         {
             BufferDesc buffer;
-            auto status = options.device->Realloc(newshape, &buffer);
+            auto status = options.reserved_data_device->Realloc(newshape, &buffer);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
                 return status;
             }
 
             bias_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
-            bias_constat_info.SetBuffer(buffer, options.device, true);
+            bias_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
         }
 
-        auto status = options.device->GetDataConverter()->ConvertFromHost(&bias_constat_info.GetBufferDesc(), postshape,
-                                                                          bias_iter->second.data.data(), preshape);
+        auto status = options.reserved_data_device->GetDataConverter()->ConvertFromHost(
+            &bias_constat_info.GetBufferDesc(), postshape, bias_iter->second.data.data(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
             return status;

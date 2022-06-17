@@ -30,7 +30,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 OptGraph::OptGraph(ir::Graph* graph, RuntimePartitionInfo* info, CudaArgs* args, CompileInfo* compile_set)
-        : graph_(graph), info_(info), args_(args), compile_set_(compile_set) {
+    : graph_(graph), info_(info), args_(args), compile_set_(compile_set) {
     acquire_tensor_func_ = [this](edgeid_t eid, uint32_t) -> EdgeObject* {
         auto it = tensor_impls_.find(eid);
         if (it == tensor_impls_.end()) {
@@ -268,7 +268,7 @@ RetCode OptGraph::AddBridgeKernels(const utils::SharedResource& resource) {
                 make_pair(postedge_id, unique_ptr<TensorImpl>(new TensorImpl(new_edge, TENSORTYPE_NORMAL))));
             auto pre_shape = tensor_impls_.find(preedge_id)->second.get();
             impl_pair.first->second->GetShape()->Reshape(pre_shape->GetShape()->GetDims(),
-                                                        pre_shape->GetShape()->GetRealDimCount());
+                                                         pre_shape->GetShape()->GetRealDimCount());
 
             bridge_kernel.get()->Init(options);
             info_->kernels.emplace(new_node->GetId(), std::move(bridge_kernel));
@@ -303,7 +303,7 @@ RetCode OptGraph::AddBridgeKernels(const utils::SharedResource& resource) {
                 auto post_shape = tensor_impls_.find(postedge_id)->second.get();
 
                 impl_pair.first->second->GetShape()->Reshape(post_shape->GetShape()->GetDims(),
-                                                            post_shape->GetShape()->GetRealDimCount());
+                                                             post_shape->GetShape()->GetRealDimCount());
 
                 if (j < args_->output_formats.size()) {
                     post_shape->GetShape()->SetDataFormat(args_->output_formats[j]);
@@ -369,7 +369,8 @@ RetCode OptGraph::InitQuantization() {
             for (uint32_t i = 0; i < size; ++i) {
                 auto tensor_max = *((double*)(max_str.content.data()) + i);
                 auto tensor_min = *((double*)(min_str.content.data()) + i);
-                temp_tensor_quant.scale[i] = (double)(tensor_max - tensor_min) / ((1 << temp_tensor_quant.bit_width) - 1);
+                temp_tensor_quant.scale[i] =
+                    (double)(tensor_max - tensor_min) / ((1 << temp_tensor_quant.bit_width) - 1);
                 temp_tensor_quant.zero_point[i] = tensor_max + tensor_min;
             }
         } else {
@@ -448,12 +449,14 @@ RetCode OptGraph::UpdateType() {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::SelectAlgos(const utils::SharedResource& resource, CudaDevice* device) {
+RetCode OptGraph::SelectAlgos(const utils::SharedResource& resource, CudaDevice* opt_stage_dev,
+                              CudaDevice* reserved_data_dev) {
     auto topo = graph_->topo.get();
     auto& graph_quants = args_->tensor_quants.find(topo->GetName())->second;
     auto& graph_algos = args_->alog_selects;
 
-    OptKernelOptions options(graph_, info_, &resource, args_, compile_set_, device, &tensor_impls_, &graph_quants, &graph_algos);
+    OptKernelOptions options(graph_, info_, &resource, args_, compile_set_, opt_stage_dev, reserved_data_dev,
+                             &tensor_impls_, &graph_quants, &graph_algos);
     UpdateTopologicalSort();
 
     AlgoGraph algo_graph(topo);
@@ -579,7 +582,8 @@ RetCode OptGraph::DeleteBridgeKernels() {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::DoOptimize(const utils::SharedResource& resource, CudaDevice* device) {
+RetCode OptGraph::DoOptimize(const utils::SharedResource& resource, CudaDevice* opt_stage_dev,
+                             CudaDevice* reserved_data_dev) {
     auto status = InitKernels();
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init kernels failed: " << GetRetCodeStr(status);
@@ -616,13 +620,13 @@ RetCode OptGraph::DoOptimize(const utils::SharedResource& resource, CudaDevice* 
         return status;
     }
 
-    status = SelectAlgos(resource, device);
+    status = SelectAlgos(resource, opt_stage_dev, reserved_data_dev);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Selec algos for each kernel failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = LoadConstants(device);
+    status = LoadConstants(reserved_data_dev);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Load constant tensors failed: " << GetRetCodeStr(status);
         return status;

@@ -121,7 +121,7 @@ double DepthwiseDirect::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     ALLOC_BUFFERF_FOR_ALGO_SELECT(quant_buffer, shape_in1.GetDim(0) * sizeof(float), ALGO_MAX_TIME)
 
     // Do select
-    auto stream = options.device->GetStream();
+    auto stream = options.opt_stage_device->GetStream();
     auto kernel_id =
         PPLCUDADepthwiseSelectKernel(stream, input_buffer.addr, weight_buffer.addr, bias_buffer.addr, 1,
                                      temp_conv_param, temp_fuse_param, output_buffer.addr, shape_out.GetDataType(),
@@ -166,30 +166,30 @@ RetCode DepthwiseDirect::ModifyParam(ir::Node* node, OptKernelOptions& options) 
         newshape.SetDim(0, (postshape.GetDim(0) + align_size - 1) / align_size * align_size);
 
         BufferDesc temp_buffer;
-        auto status = options.device->Realloc(postshape, &temp_buffer);
+        auto status = options.opt_stage_device->Realloc(postshape, &temp_buffer);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
             return status;
         }
         utils::Destructor __device_src_guard__([&options, &temp_buffer]() -> void {
-            options.device->Free(&temp_buffer);
+            options.opt_stage_device->Free(&temp_buffer);
         });
 
         RuntimeConstantInfo constant_info;
         {
             BufferDesc buffer;
-            status = options.device->Realloc(newshape, &buffer);
+            status = options.reserved_data_device->Realloc(newshape, &buffer);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
                 return status;
             }
 
             constant_info.Reshape(postshape); // give the init shape, but the actual shape is padded
-            constant_info.SetBuffer(buffer, options.device, true);
+            constant_info.SetBuffer(buffer, options.reserved_data_device, true);
         }
 
-        status = options.device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
-                                                                     weight_iter->second.data.data(), preshape);
+        status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(
+            &temp_buffer, postshape, weight_iter->second.data.data(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
             return status;
@@ -201,7 +201,7 @@ RetCode DepthwiseDirect::ModifyParam(ir::Node* node, OptKernelOptions& options) 
         const TensorShape& shape_out = *options.tensors->find(node->GetOutput(0))->second->GetShape();
 
         ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_, temp_conv_param);
-        auto stream = options.device->GetStream();
+        auto stream = options.opt_stage_device->GetStream();
         PPLCUDADepthwiseConvertFilter(stream, temp_buffer.addr, constant_info.GetBufferDesc().addr, temp_conv_param,
                                       shape_out.GetDataType());
 
