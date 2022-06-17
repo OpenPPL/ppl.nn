@@ -954,6 +954,8 @@ double PPLCUDAConvolutionJitSelectKernel(
     fuse_param_t &fuse_param,
     uint64_t workspace)
 {
+    float elapsed = 0.0f;
+#ifdef PPLNN_ENABLE_CUDA_JIT
     size_t conv_shape_hash = GetConvShapeHashKey(conv_param);
 
     std::unordered_map<size_t, algo_param_t>::const_iterator conv_shape_hash_iterator = g_conv_shape_hash.find(conv_shape_hash);
@@ -977,7 +979,6 @@ double PPLCUDAConvolutionJitSelectKernel(
     std::vector<algo_param_t> params;
     std::string total_source = "";
     int declare_times        = 0;
-    float elapsed;
 
     const int SPLITK_OPTIONS[] = {1, 2, 4, 8};
     for (unsigned int spf = 0; spf < 2; spf++) {
@@ -1110,6 +1111,7 @@ double PPLCUDAConvolutionJitSelectKernel(
 
     algo_param                         = params[index];
     g_conv_shape_hash[conv_shape_hash] = algo_param;
+#endif
     return elapsed;
 }
 
@@ -1126,6 +1128,7 @@ void PPLCUDAConvolutionForwardJitImp(
     conv_param_t &conv_param,
     fuse_param_t &fuse_param)
 {
+#ifdef PPLNN_ENABLE_CUDA_JIT
     unsigned int splitk = algo_param.splitk;
     unsigned int splitf = algo_param.splitf;
 
@@ -1273,4 +1276,5 @@ void PPLCUDAConvolutionForwardJitImp(
     if (is_out_grp_pad) {
         PPLCUDAConvolutionCvtOutput(stream, d_output, final_out, type, conv_param);
     }
+#endif
 }

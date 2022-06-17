@@ -183,6 +183,8 @@ double PPLCUDAGemmJITSelectKernelInt8(
    algo_param_t &algo_param,
    uint64_t workspace)
 {
+   float elapsed           = 0.0f;
+#ifdef PPLNN_ENABLE_CUDA_JIT
    auto pre_algo_param     = algo_param;
    int pad_size            = GetPadSize(type);
    int num_chl_per_grp     = conv_param.num_chl / conv_param.num_grp;
@@ -198,7 +200,6 @@ double PPLCUDAGemmJITSelectKernelInt8(
    std::vector<algo_param_t> params;
    std::string total_source = "";
    int declare_times        = 0;
-   float elapsed            = 0.0f;
 
    unsigned int splitk = 1;
    unsigned int splitf = 1;
@@ -253,6 +254,7 @@ double PPLCUDAGemmJITSelectKernelInt8(
    elapsed = AlgoForwardTimeInt8(stream, knames, total_source, index, compile_params, device_id, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, quant_param, fuse_param, workspace);
 
    algo_param = params[index];
+#endif
    return elapsed;
 }
 
