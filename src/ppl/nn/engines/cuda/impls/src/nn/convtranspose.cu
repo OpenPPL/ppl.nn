@@ -779,12 +779,10 @@ double PPLCUDAConvTransposeSelectKernel(
                                 (void*)gemm_buf, gemm_conv_param, gemm_fuse_param, algo_param);
 #else
             ppl::nn::onnx::GemmParam gemm_param;
-            gemm_param.bias_term = 0;
             gemm_param.transA    = 0;
             gemm_param.transB    = 1;
             gemm_param.alpha     = 1.f;
             gemm_param.beta      = 1.f;
-            gemm_param.N         = N_pad;
             min_time = PPLCUDAGemmSelectKernel(stream,
                                 &a_shape, cvt_input, &b_shape, rev_flt,
                                 gemm_bias, &c_shape, gemm_output,
