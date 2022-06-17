@@ -38,9 +38,6 @@ public:
     void Free(void* ptr) override;
 
 private:
-    ppl::common::RetCode InitCudaEnv(int device_id);
-
-private:
     CUmemAllocationProp prop_ = {};
     CUmemAccessDesc access_desc_ = {};
     CUdeviceptr addr_ = 0;
@@ -48,9 +45,6 @@ private:
     size_t bytes_allocated_ = 0;
     size_t total_bytes_ = 0;
     std::vector<CUmemGenericAllocationHandle> handle_list_;
-
-    CUcontext cu_context_;
-    CUdevice cu_device_;
 
 private:
     BufferedCudaAllocator(const BufferedCudaAllocator&) = delete;

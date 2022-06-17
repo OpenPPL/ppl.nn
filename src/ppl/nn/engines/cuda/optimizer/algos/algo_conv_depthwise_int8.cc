@@ -40,7 +40,8 @@ void DepthwiseDirectInt8::GetAttrParam(void*& param) const {
     return;
 }
 
-bool DepthwiseDirectInt8::IsSupported(const ir::Node* node, const OptKernelOptions& options, dataformat_t input_format) const {
+bool DepthwiseDirectInt8::IsSupported(const ir::Node* node, const OptKernelOptions& options,
+                                      dataformat_t input_format) const {
     uint32_t group = (reinterpret_cast<CudaConvParam*>(options.param))->param.group;
     // check if conv is depthwise
     const TensorShape& tensor1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
@@ -116,21 +117,23 @@ double DepthwiseDirectInt8::ExcuteTimer(const ir::Node* node, OptKernelOptions& 
     ALLOC_BUFFERF_FOR_ALGO_SELECT(quant_buffer, shape_in1.GetDim(0) * sizeof(float), ALGO_MAX_TIME)
 
     // Do select
-    auto stream = options.device->GetStream();
-    auto kernel_id = PPLCUDADepthwiseSelectKernel(stream, input_buffer.addr, weight_buffer.addr, bias_buffer.addr, 1,
-                                                  temp_conv_param, temp_fuse_param, output_buffer.addr, shape_out.GetDataType(), input_quant0.scale[0], (float*)quant_buffer.addr, output_quant.scale[0]);
+    auto stream = options.opt_stage_device->GetStream();
+    auto kernel_id =
+        PPLCUDADepthwiseSelectKernel(stream, input_buffer.addr, weight_buffer.addr, bias_buffer.addr, 1,
+                                     temp_conv_param, temp_fuse_param, output_buffer.addr, shape_out.GetDataType(),
+                                     input_quant0.scale[0], (float*)quant_buffer.addr, output_quant.scale[0]);
     attr_param_.extra_param.algo_info.kid = kernel_id;
 
     auto run_begin_ts = std::chrono::system_clock::now();
     PPLCUDADepthwiseForwardCudaImp(stream, kernel_id, input_buffer.addr, weight_buffer.addr, bias_buffer.addr,
-                                   temp_conv_param, temp_fuse_param, output_buffer.addr, shape_out.GetDataType(), input_quant0.scale[0], (float*)quant_buffer.addr, output_quant.scale[0]);
+                                   temp_conv_param, temp_fuse_param, output_buffer.addr, shape_out.GetDataType(),
+                                   input_quant0.scale[0], (float*)quant_buffer.addr, output_quant.scale[0]);
     auto run_end_ts = std::chrono::system_clock::now();
     auto diff = std::chrono::duration_cast<std::chrono::microseconds>(run_end_ts - run_begin_ts);
     double timer = (double)diff.count() / 1000;
 
-    LOG(DEBUG) << "Select DepthwiseDirectInt8 algorithm with kernel index "
-               << attr_param_.extra_param.algo_info.kid << " and excute timer " << timer << " for node["
-               << node->GetName() << "]";
+    LOG(DEBUG) << "Select DepthwiseDirectInt8 algorithm with kernel index " << attr_param_.extra_param.algo_info.kid
+               << " and excute timer " << timer << " for node[" << node->GetName() << "]";
 
     SelectionInfo temp_res(kernel_id, 1, 1, timer);
     selection_res_.emplace(node->GetId(), std::move(temp_res));
@@ -182,14 +185,14 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
     RuntimeConstantInfo quant_constat_info;
     {
         BufferDesc buffer;
-        status = options.device->Realloc(quant_shape, &buffer);
+        status = options.reserved_data_device->Realloc(quant_shape, &buffer);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
             return status;
         }
 
         quant_constat_info.Reshape(quant_shape);
-        quant_constat_info.SetBuffer(buffer, options.device, true);
+        quant_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
     }
 
     auto ret_pair = topo->AddEdge("Quant_" + node->GetName());
@@ -198,13 +201,14 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
     node->AddInput(quant_edge_id);
     quant_edge->AddConsumer(node->GetId());
 
-    options.tensors->insert(make_pair(quant_edge_id, unique_ptr<TensorImpl>(new TensorImpl(quant_edge, TENSORTYPE_NORMAL))));
+    options.tensors->insert(
+        make_pair(quant_edge_id, unique_ptr<TensorImpl>(new TensorImpl(quant_edge, TENSORTYPE_NORMAL))));
     *options.tensors->find(quant_edge_id)->second->GetShape() = quant_shape;
     options.quants->resize(topo->GetCurrentEdgeIdBound());
     options.quants->at(quant_edge_id).format = quant_shape.GetDataFormat();
     options.quants->at(quant_edge_id).type = quant_shape.GetDataType();
 
-    options.device->CopyFromHost(&quant_constat_info.GetBufferDesc(), scales.data(), quant_shape);
+    options.reserved_data_device->CopyFromHost(&quant_constat_info.GetBufferDesc(), scales.data(), quant_shape);
     options.info->constants.emplace(quant_edge_id, std::move(quant_constat_info));
 
     auto weight_iter = data->constants.find(preedge_id);
@@ -216,36 +220,38 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
         newshape.SetDim(0, (postshape.GetDim(0) + align_size - 1) / align_size * align_size);
 
         BufferDesc temp_buffer;
-        status = options.device->Realloc(postshape, &temp_buffer);
+        status = options.opt_stage_device->Realloc(postshape, &temp_buffer);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
             return status;
         }
         utils::Destructor __device_src_guard__([&options, &temp_buffer]() -> void {
-            options.device->Free(&temp_buffer);
+            options.opt_stage_device->Free(&temp_buffer);
         });
 
         RuntimeConstantInfo constant_info;
         {
             BufferDesc buffer;
-            status = options.device->Realloc(newshape, &buffer);
+            status = options.reserved_data_device->Realloc(newshape, &buffer);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
                 return status;
             }
 
             constant_info.Reshape(postshape); // give the init shape, but the actual shape is padded
-            constant_info.SetBuffer(buffer, options.device, true);
+            constant_info.SetBuffer(buffer, options.reserved_data_device, true);
         }
-        status = ((CudaDataConverter*)options.device->GetDataConverter())->ConvertFromHost(&temp_buffer, postshape, options.quants->at(postedge_id),
-                                                                     weight_iter->second.data.data(), preshape, options.quants->at(preedge_id));
+        status = ((CudaDataConverter*)options.opt_stage_device->GetDataConverter())
+                     ->ConvertFromHost(&temp_buffer, postshape, options.quants->at(postedge_id),
+                                       weight_iter->second.data.data(), preshape, options.quants->at(preedge_id));
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
             return status;
         }
 
-        auto stream = options.device->GetStream();
-        PPLCUDADepthwiseConvertFilter(stream, temp_buffer.addr, constant_info.GetBufferDesc().addr, temp_conv_param, shape_out.GetDataType());
+        auto stream = options.opt_stage_device->GetStream();
+        PPLCUDADepthwiseConvertFilter(stream, temp_buffer.addr, constant_info.GetBufferDesc().addr, temp_conv_param,
+                                      shape_out.GetDataType());
 
         options.info->constants.emplace(preedge_id, std::move(constant_info));
         *options.tensors->find(preedge_id)->second->GetShape() = postshape;
@@ -261,7 +267,7 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
 }
 
 void DepthwiseDirectInt8::ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
-                                     dataformat_t input_format, dataformat_t output_format) {
+                                         dataformat_t input_format, dataformat_t output_format) {
     for (uint32_t i = 0; i < node->GetInputCount(); ++i) { // only reset formats of input0 and fused nodes
         auto edge_id = node->GetInput(i);
         if (edge_id == INVALID_EDGEID)

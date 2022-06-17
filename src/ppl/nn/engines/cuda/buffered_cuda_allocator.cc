@@ -29,55 +29,33 @@ static inline uint64_t Align(uint64_t x, uint64_t n) {
 }
 
 BufferedCudaAllocator::~BufferedCudaAllocator() {
-    if (addr_) {
-        cuMemUnmap(addr_, addr_len_);
-        cuMemAddressFree(addr_, addr_len_);
+    if (!addr_) {
+        return;
+    }
+
+    const char* errmsg = nullptr;
+    auto rc = cuMemUnmap(addr_, bytes_allocated_);
+    if (rc != CUDA_SUCCESS) {
+        cuGetErrorString(rc, &errmsg);
+        LOG(ERROR) << "cuMemUnmap failed: " << errmsg;
     }
 
     for (auto x = handle_list_.begin(); x != handle_list_.end(); ++x) {
-        cuMemRelease(*x);
+        rc = cuMemRelease(*x);
+        if (rc != CUDA_SUCCESS) {
+            cuGetErrorString(rc, &errmsg);
+            LOG(ERROR) << "cuMemRelease failed: " << errmsg;
+        }
     }
 
-    cuDevicePrimaryCtxRelease(cu_device_);
-}
-
-RetCode BufferedCudaAllocator::InitCudaEnv(int device_id) {
-    CUresult status;
-    const char* errmsg = nullptr;
-
-    cu_device_ = device_id;
-
-    status = cuInit(0);
-    if (status != CUDA_SUCCESS) {
-        cuGetErrorString(status, &errmsg);
-        LOG(ERROR) << "cuInit failed: " << errmsg;
-        return RC_OTHER_ERROR;
+    rc = cuMemAddressFree(addr_, addr_len_);
+    if (rc != CUDA_SUCCESS) {
+        cuGetErrorString(rc, &errmsg);
+        LOG(ERROR) << "cuMemAddressFree failed: " << errmsg;
     }
-
-    status = cuDevicePrimaryCtxRetain(&cu_context_, device_id);
-    if (status != CUDA_SUCCESS) {
-        cuGetErrorString(status, &errmsg);
-        LOG(ERROR) << "cuDevicePrimaryCtxRetain failed: " << errmsg;
-        return RC_OTHER_ERROR;
-    }
-
-    status = cuCtxSetCurrent(cu_context_);
-    if (status != CUDA_SUCCESS) {
-        cuGetErrorString(status, &errmsg);
-        LOG(ERROR) << "cuCtxSetCurrent failed: " << errmsg;
-        return RC_OTHER_ERROR;
-    }
-
-    return RC_SUCCESS;
 }
 
 RetCode BufferedCudaAllocator::Init(int devid, uint64_t granularity) {
-    auto status = InitCudaEnv(devid);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "InitCudaEnv failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
     const char* errmsg = nullptr;
 
     auto rc = cuMemGetInfo(nullptr, &total_bytes_);

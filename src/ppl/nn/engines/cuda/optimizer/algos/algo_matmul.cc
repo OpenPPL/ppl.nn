@@ -42,7 +42,8 @@ void MatMulAlgorithm::GetAttrParam(void*& param) const {
     return;
 }
 
-bool MatMulAlgorithm::IsSupported(const ir::Node* node, const OptKernelOptions& options, dataformat_t input_format) const {
+bool MatMulAlgorithm::IsSupported(const ir::Node* node, const OptKernelOptions& options,
+                                  dataformat_t input_format) const {
     // check if matmul is fp32 type
     const TensorShape& tensor0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
     if (tensor0.GetDataType() != ppl::common::DATATYPE_FLOAT16) {
@@ -99,23 +100,27 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
 
     conv_param_t temp_conv_param;
     fuse_param_t temp_fuse_param;
-    temp_conv_param.in_num = attr_param_.param.transA ? shape_in0.GetDim(dim_count0-1) : shape_in0.GetDim(dim_count0-2);
+    temp_conv_param.in_num =
+        attr_param_.param.transA ? shape_in0.GetDim(dim_count0 - 1) : shape_in0.GetDim(dim_count0 - 2);
     int m_id = dim_count0 - 2;
-    if(temp_conv_param.in_num == 1){
-	int m_id = dim_count0 - 3;
-        while(m_id && shape_in0.GetDim(m_id)==1)    m_id--;
+    if (temp_conv_param.in_num == 1) {
+        int m_id = dim_count0 - 3;
+        while (m_id && shape_in0.GetDim(m_id) == 1)
+            m_id--;
         temp_conv_param.in_num = shape_in0.GetDim(m_id);
     }
     int batch = 1;
-    for(int i = 0; i < m_id; i++){
+    for (int i = 0; i < m_id; i++) {
         batch *= shape_in0.GetDim(i);
     }
-    if (dim_count1 == 2){
+    if (dim_count1 == 2) {
         temp_conv_param.in_num *= batch;
         batch = 1;
     }
-    temp_conv_param.num_chl = attr_param_.param.transB ? shape_in1.GetDim(dim_count1-1) : shape_in1.GetDim(dim_count1-2);
-    temp_conv_param.num_flt = attr_param_.param.transB ? shape_in1.GetDim(dim_count1-2) : shape_in1.GetDim(dim_count1-1);
+    temp_conv_param.num_chl =
+        attr_param_.param.transB ? shape_in1.GetDim(dim_count1 - 1) : shape_in1.GetDim(dim_count1 - 2);
+    temp_conv_param.num_flt =
+        attr_param_.param.transB ? shape_in1.GetDim(dim_count1 - 2) : shape_in1.GetDim(dim_count1 - 1);
     temp_conv_param.in_height = 1;
     temp_conv_param.in_width = 1;
     temp_conv_param.flt_height = 1;
@@ -139,7 +144,7 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
         attr_param_.extra_param.algo_info.splitk = algo_info->second.splitk;
         attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
         PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
-	    attr_param_.extra_param.algo_info.gemm_batch = batch;
+        attr_param_.extra_param.algo_info.gemm_batch = batch;
         return 0.0f;
     }
 
@@ -148,12 +153,12 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     }
 
     // Padding
-    auto K = shape_in0.GetDim(dim_count0-1);
-    auto N = shape_in1.GetDim(dim_count1-1);
+    auto K = shape_in0.GetDim(dim_count0 - 1);
+    auto N = shape_in1.GetDim(dim_count1 - 1);
 
-    shape_in0.SetDim(dim_count0-1, (K + align_size - 1) / align_size * align_size);
-    shape_in1.SetDim(dim_count1-2, (K + align_size - 1) / align_size * align_size);
-    shape_out.SetDim(out_dim_count-1, (N + align_size - 1) / align_size * align_size);
+    shape_in0.SetDim(dim_count0 - 1, (K + align_size - 1) / align_size * align_size);
+    shape_in1.SetDim(dim_count1 - 2, (K + align_size - 1) / align_size * align_size);
+    shape_out.SetDim(out_dim_count - 1, (N + align_size - 1) / align_size * align_size);
     if (attr_param_.extra_param.bias_term) {
         shape_in2 = *options.tensors->find(node->GetInput(2))->second->GetShape();
         shape_in2.SetDim(0, (shape_in2.GetDim(0) + align_size - 1) / align_size * align_size);
@@ -168,31 +173,31 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     uint64_t size = PPLBgemmCUDAGetBufSize(&shape_in0, attr_param_.param.transA);
     ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, size, ALGO_MAX_TIME)
 
-    auto stream = options.device->GetStream();
+    auto stream = options.opt_stage_device->GetStream();
 
     double timer = ALGO_MAX_TIME;
 #ifdef PPLNN_ENABLE_CUDA_JIT
     // Do select
     LOG(INFO) << "Compiling " << node->GetName();
-    int device_id = options.device->GetDeviceId();
-    if (shape_in0.GetDataType()==ppl::common::DATATYPE_FLOAT16) {
+    int device_id = options.opt_stage_device->GetDeviceId();
+    if (shape_in0.GetDataType() == ppl::common::DATATYPE_FLOAT16) {
         PPLCUDAConvolutionPredictKernel(shape_in0.GetDataType(), attr_param_.extra_param.algo_info, temp_conv_param);
-        timer = PPLCUDABgemmJITSelectKernel(device_id, stream, shape_in0.GetDataType(), &shape_in0, input_buffer.addr, &shape_in1,
-                                            weight_buffer.addr, bias_buffer.addr, &shape_out, output_buffer.addr,
-                                            temp_buffer.addr, temp_conv_param, temp_fuse_param,
+        timer = PPLCUDABgemmJITSelectKernel(device_id, stream, shape_in0.GetDataType(), &shape_in0, input_buffer.addr,
+                                            &shape_in1, weight_buffer.addr, bias_buffer.addr, &shape_out,
+                                            output_buffer.addr, temp_buffer.addr, temp_conv_param, temp_fuse_param,
                                             attr_param_.extra_param.algo_info);
     }
 #else
     // Do Select
-    if (shape_in0.GetDataType()==ppl::common::DATATYPE_FLOAT16) {
+    if (shape_in0.GetDataType() == ppl::common::DATATYPE_FLOAT16) {
         timer = PPLCUDABgemmSelectKernel(stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
-                                        &shape_out, output_buffer.addr, temp_buffer.addr,
-                                        attr_param_.param, temp_fuse_param, attr_param_.extra_param.algo_info);
+                                         &shape_out, output_buffer.addr, temp_buffer.addr, attr_param_.param,
+                                         temp_fuse_param, attr_param_.extra_param.algo_info);
     }
 #endif
     CudaArgs::AlgoSelects algo_select;
-    algo_select.kname  = attr_param_.extra_param.algo_info.algo_name;
-    algo_select.kid    = attr_param_.extra_param.algo_info.kid;
+    algo_select.kname = attr_param_.extra_param.algo_info.algo_name;
+    algo_select.kid = attr_param_.extra_param.algo_info.kid;
     algo_select.splitk = attr_param_.extra_param.algo_info.splitk;
     algo_select.splitf = attr_param_.extra_param.algo_info.splitf;
     options.algos->emplace(key_str, std::move(algo_select));
@@ -205,7 +210,7 @@ RetCode MatMulAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) 
 }
 
 void MatMulAlgorithm::ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,
-                                   dataformat_t input_format, dataformat_t output_format) {
+                                     dataformat_t input_format, dataformat_t output_format) {
     for (uint32_t i = 0; i < node->GetInputCount(); ++i) { // only reset formats of input0 and weight
         auto edge_id = node->GetInput(i);
         if (edge_id == INVALID_EDGEID) {

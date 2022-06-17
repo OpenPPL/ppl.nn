@@ -30,22 +30,22 @@ namespace ppl { namespace nn { namespace cuda {
 
 #define DEFAULT_BLOCK_SIZE 1048576
 
-RetCode BufferedCudaDevice::Init(const EngineOptions& options) {
-    CudaDevice::Init(options.device_id);
+RetCode BufferedCudaDevice::Init(uint32_t device_id, uint32_t mm_policy) {
+    CudaDevice::Init(device_id);
 
-    if (options.mm_policy == MM_BEST_FIT) {
+    if (mm_policy == MM_BEST_FIT) {
         allocator_.reset(new DefaultCudaAllocator());
         buffer_manager_.reset(new utils::StackBufferManager(allocator_.get(), true));
-    } else if (options.mm_policy == MM_COMPACT) {
+    } else if (mm_policy == MM_COMPACT) {
         size_t granularity = 0;
         CUmemAllocationProp prop = {};
         prop.type = CU_MEM_ALLOCATION_TYPE_PINNED;
         prop.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
-        prop.location.id = options.device_id;
+        prop.location.id = device_id;
         cuMemGetAllocationGranularity(&granularity, &prop, CU_MEM_ALLOC_GRANULARITY_MINIMUM);
 
         auto allocator = new BufferedCudaAllocator();
-        auto status = allocator->Init(options.device_id, granularity);
+        auto status = allocator->Init(device_id, granularity);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "init BufferedCudaAllocator failed: " << GetRetCodeStr(status);
             delete allocator;

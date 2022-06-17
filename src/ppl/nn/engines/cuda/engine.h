@@ -27,8 +27,8 @@
 #include "ppl/nn/engines/cuda/options.h"
 #include "ppl/nn/engines/cuda/cuda_common_param.h"
 #include "ppl/nn/engines/cuda/engine_context.h"
-#include "ppl/nn/quantization/quant_param_parser.h"
 #include "ppl/nn/engines/cuda/module/cuda_module.h"
+#include "ppl/nn/quantization/quant_param_parser.h"
 
 using namespace std;
 
@@ -67,7 +67,8 @@ public:
     bool Supports(const ir::Node*) const override;
     ppl::common::RetCode ProcessGraph(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*) override;
     EngineImpl* Create() override;
-    ppl::common::RetCode CompileCudaModule(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*);
+    ppl::common::RetCode CompileCudaModule(const utils::SharedResource&, const CompileInfo&, CudaDevice*, ir::Graph*,
+                                           RuntimePartitionInfo*);
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override;
@@ -81,7 +82,7 @@ public:
 #endif
 
 private:
-    ppl::common::RetCode DoOptimize(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*);
+    ppl::common::RetCode DoOptimize(const utils::SharedResource&, CudaDevice*, ir::Graph*, RuntimePartitionInfo*);
 
 private:
     /*
@@ -101,14 +102,13 @@ private:
     static ConfHandlerFunc conf_handlers_[ENGINE_CONF_MAX];
 
 private:
-    BufferedCudaDevice device_;
     CudaArgs cuda_flags_;
     EngineOptions options_;
-#ifdef PPLNN_ENABLE_PMX_MODEL
-    std::vector<BufferDesc> constant_buffers_;
-#endif
+    BufferedCudaDevice reserved_data_device_; // used to store data that are used in runtime stage
     CUDAModuleManager cuda_manager_;
-    CompileInfo compile_set_;
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    std::vector<BufferDesc> constant_buffer_blocks_;
+#endif
 };
 
 }}} // namespace ppl::nn::cuda

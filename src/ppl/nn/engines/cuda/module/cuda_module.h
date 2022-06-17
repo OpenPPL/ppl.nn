@@ -75,20 +75,19 @@ public:
         }
     }
     // Initilize the cuda func wrapper
-    void Init(CUDAModule* module, std::string func_name, CudaDevice* device) {
+    void Init(CUDAModule* module, const std::string& func_name, cudaStream_t stream) {
         module_ = module;
         func_name_ = func_name;
-        device_ = device;
+        stream_ = stream;
         std::fill(cuda_thread_config_.thread_config, cuda_thread_config_.thread_config + 6, 1);
         cuda_thread_config_.dyn_shmem_size = 0;
     }
     // Invoke the cuda kernel
     void Run(void** args) {
         CUfunction func = module_->GetKernelFunc();
-        cudaStream_t stream = device_->GetStream();
         cuLaunchKernel(func, cuda_thread_config_.GridDim(0), cuda_thread_config_.GridDim(1),
                        cuda_thread_config_.GridDim(2), cuda_thread_config_.BlockDim(0), cuda_thread_config_.BlockDim(1),
-                       cuda_thread_config_.BlockDim(2), cuda_thread_config_.dyn_shmem_size, stream, args, nullptr);
+                       cuda_thread_config_.BlockDim(2), cuda_thread_config_.dyn_shmem_size, stream_, args, nullptr);
     }
     // Get the kernel func from CUDAModule
     CUfunction GetKernelFunc();
@@ -100,8 +99,8 @@ private:
     std::string func_name_;
     // Kernel Luanch Parameters
     CUDAThreadConfig cuda_thread_config_;
-    // Device in PPL CUDA
-    CudaDevice* device_;
+    // Stream in PPL CUDA
+    cudaStream_t stream_;
 };
 
 using ModuleMap = std::map<nodeid_t, CUDAModuleWrapper*>;

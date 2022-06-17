@@ -135,31 +135,31 @@ double TuringIMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     temp_quant_param.d_flt_scale = wegiht_quant.addr;
     temp_quant_param.pre_scale = 0.0f;
 
-    auto stream = options.device->GetStream();
+    auto stream = options.opt_stage_device->GetStream();
 
 #ifdef PPLNN_ENABLE_CUDA_JIT
     // Do select
     LOG(INFO) << "Compiling " << node->GetName();
-    int device_id = options.device->GetDeviceId();
+    int device_id = options.opt_stage_device->GetDeviceId();
     PPLCUDAConvolutionPredictKernelInt8(shape_in0.GetDataType(), attr_param_.extra_param.algo_info, temp_conv_param);
     PPLCUDAConvolutionJitSelectKernelInt8(device_id, stream, shape_in0.GetDataType(), (int4*)input_buffer.addr,
-                                                      (int4*)weight_buffer.addr, (int4*)output_buffer.addr,
-                                                      (int4*)bias_buffer.addr, (int4*)temp_buffer.addr,
-                                                      attr_param_.extra_param.algo_info, temp_conv_param, temp_quant_param, temp_fuse_param);
-    auto timer = PPLCUDAConvolutionJitSelectKernelInt8(device_id, stream, shape_in0.GetDataType(), (int4*)input_buffer.addr,
-                                                      (int4*)weight_buffer.addr, (int4*)output_buffer.addr,
-                                                      (int4*)bias_buffer.addr, (int4*)temp_buffer.addr,
-                                                      attr_param_.extra_param.algo_info, temp_conv_param, temp_quant_param, temp_fuse_param);
+                                          (int4*)weight_buffer.addr, (int4*)output_buffer.addr, (int4*)bias_buffer.addr,
+                                          (int4*)temp_buffer.addr, attr_param_.extra_param.algo_info, temp_conv_param,
+                                          temp_quant_param, temp_fuse_param);
+    auto timer = PPLCUDAConvolutionJitSelectKernelInt8(
+        device_id, stream, shape_in0.GetDataType(), (int4*)input_buffer.addr, (int4*)weight_buffer.addr,
+        (int4*)output_buffer.addr, (int4*)bias_buffer.addr, (int4*)temp_buffer.addr, attr_param_.extra_param.algo_info,
+        temp_conv_param, temp_quant_param, temp_fuse_param);
 #else
     // Do select
-    auto timer = PPLCUDAConvolutionSelectKernelInt8(stream, shape_in0.GetDataType(), (int4*)input_buffer.addr,
-                                                   (int4*)weight_buffer.addr, (int4*)output_buffer.addr,
-                                                   (int4*)bias_buffer.addr, (int4*)temp_buffer.addr,
-                                                   attr_param_.extra_param.algo_info, temp_conv_param, temp_quant_param, temp_fuse_param);
+    auto timer = PPLCUDAConvolutionSelectKernelInt8(
+        stream, shape_in0.GetDataType(), (int4*)input_buffer.addr, (int4*)weight_buffer.addr, (int4*)output_buffer.addr,
+        (int4*)bias_buffer.addr, (int4*)temp_buffer.addr, attr_param_.extra_param.algo_info, temp_conv_param,
+        temp_quant_param, temp_fuse_param);
 #endif
     CudaArgs::AlgoSelects algo_select;
-    algo_select.kname  = attr_param_.extra_param.algo_info.algo_name;
-    algo_select.kid    = attr_param_.extra_param.algo_info.kid;
+    algo_select.kname = attr_param_.extra_param.algo_info.algo_name;
+    algo_select.kid = attr_param_.extra_param.algo_info.kid;
     algo_select.splitk = attr_param_.extra_param.algo_info.splitk;
     algo_select.splitf = attr_param_.extra_param.algo_info.splitf;
     options.algos->emplace(key_str, std::move(algo_select));
@@ -213,14 +213,14 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
     RuntimeConstantInfo quant_constat_info;
     {
         BufferDesc buffer;
-        status = options.device->Realloc(quant_shape, &buffer);
+        status = options.reserved_data_device->Realloc(quant_shape, &buffer);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
             return status;
         }
 
         quant_constat_info.Reshape(quant_shape);
-        quant_constat_info.SetBuffer(buffer, options.device, true);
+        quant_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
     }
 
     auto ret_pair = topo->AddEdge("Quant_" + node->GetName());
@@ -229,19 +229,20 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
     node->AddInput(quant_edge_id);
     quant_edge->AddConsumer(node->GetId());
 
-    options.tensors->insert(make_pair(quant_edge_id, unique_ptr<TensorImpl>(new TensorImpl(quant_edge, TENSORTYPE_NORMAL))));
+    options.tensors->insert(
+        make_pair(quant_edge_id, unique_ptr<TensorImpl>(new TensorImpl(quant_edge, TENSORTYPE_NORMAL))));
     *options.tensors->find(quant_edge_id)->second->GetShape() = quant_shape;
     options.quants->resize(topo->GetCurrentEdgeIdBound());
     options.quants->at(quant_edge_id).format = quant_shape.GetDataFormat();
     options.quants->at(quant_edge_id).type = quant_shape.GetDataType();
 
-    options.device->CopyFromHost(&quant_constat_info.GetBufferDesc(), scales.data(), quant_shape);
+    options.reserved_data_device->CopyFromHost(&quant_constat_info.GetBufferDesc(), scales.data(), quant_shape);
     options.info->constants.emplace(quant_edge_id, std::move(quant_constat_info));
 
     // Split weight format to group padding
     uint32_t k_per_grp = shape_in1.GetDim(0) / temp_conv_param.num_grp;
     uint32_t k_per_grp_pad = (k_per_grp + align_size - 1) / align_size * align_size;
-    auto stream = options.device->GetStream();
+    auto stream = options.opt_stage_device->GetStream();
     auto weight_iter = data->constants.find(weight_node->GetInput(0));
     if (weight_iter != data->constants.end() && // is a constant tensor and has not be loaded
         options.info->constants.find(weight_node->GetInput(0)) == options.info->constants.end()) {
@@ -255,24 +256,26 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
         RuntimeConstantInfo weight_constat_info;
         {
             BufferDesc buffer;
-            status = options.device->Realloc(newshape, &buffer);
+            status = options.reserved_data_device->Realloc(newshape, &buffer);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
                 return status;
             }
 
             weight_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
-            weight_constat_info.SetBuffer(buffer, options.device, true);
+            weight_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
         }
 
         ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
-        status = ((CudaDataConverter*)options.device->GetDataConverter())->ConvertFromHost(&temp_buffer, postshape, (*quants)[postedge_id],
-                                                                     weight_iter->second.data.data(), preshape, (*quants)[preedge_id]);
+        status = ((CudaDataConverter*)options.opt_stage_device->GetDataConverter())
+                     ->ConvertFromHost(&temp_buffer, postshape, (*quants)[postedge_id], weight_iter->second.data.data(),
+                                       preshape, (*quants)[preedge_id]);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << node->GetName() << " copy constant failed: " << GetRetCodeStr(status);
             return status;
         }
-        cudaMemcpy(weight_constat_info.GetBufferDesc().addr, temp_buffer.addr, shape_in1.GetElementsIncludingPadding()*sizeof(int8_t), cudaMemcpyDeviceToDevice);
+        cudaMemcpy(weight_constat_info.GetBufferDesc().addr, temp_buffer.addr,
+                   shape_in1.GetElementsIncludingPadding() * sizeof(int8_t), cudaMemcpyDeviceToDevice);
 
         options.info->constants.emplace(preedge_id, std::move(weight_constat_info));
         *options.tensors->find(preedge_id)->second->GetShape() = postshape;
@@ -303,19 +306,19 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
         RuntimeConstantInfo bias_constat_info;
         {
             BufferDesc buffer;
-            status = options.device->Realloc(newshape, &buffer);
+            status = options.reserved_data_device->Realloc(newshape, &buffer);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
                 return status;
             }
 
             bias_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
-            bias_constat_info.SetBuffer(buffer, options.device, true);
+            bias_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
         }
 
         ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
-        status = options.device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
-                                                                     bias_iter->second.data.data(), preshape);
+        status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
+                                                                               bias_iter->second.data.data(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
             return status;
