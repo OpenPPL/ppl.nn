@@ -40,6 +40,7 @@
 #include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/sse/conv2d_n8cx_direct_ndarray_fp32_sse.h"
 #include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/sse/conv2d_im2col_gemm_fp32_sse.h"
 #include "ppl/kernel/x86/fp32/conv2d/depthwise/sse/conv2d_depthwise_fp32_sse.h"
+#include "ppl/kernel/x86/fp32/conv2d/winograd/sse/conv2d_winograd_b6f3_fp32_sse.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
@@ -149,7 +150,6 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
         ppl::common::ISA_X86_SSE,
         ppl::common::DATAFORMAT_NDARRAY,
         ppl::common::DATAFORMAT_NDARRAY};
-
 
 #ifdef PPL_USE_X86_AVX512
     if (isa_flags & ppl::common::ISA_X86_AVX512) {
@@ -313,6 +313,22 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
             }
         }
 
+        if (!param.is_depthwise() &&
+            param.kernel_h == 3 && param.kernel_w == 3 &&
+            param.stride_h == 1 && param.stride_w == 1 &&
+            param.dilation_h == 1 && param.dilation_w == 1) {
+            auto wg_mgr    = new conv2d_winograd_b6f3_fp32_sse_manager(param, nullptr);
+            bool supported = wg_mgr->is_supported();
+            delete wg_mgr;
+            if (supported) {
+                return {
+                    conv2d_fp32_algo::WINOGRAD_B6F3,
+                    ppl::common::ISA_X86_SSE,
+                    ppl::common::DATAFORMAT_NDARRAY,
+                    ppl::common::DATAFORMAT_NDARRAY};
+            }
+        }
+
         return sse_fallback_info;
     }
 
@@ -424,6 +440,13 @@ conv2d_fp32_manager *conv2d_algo_selector::gen_algo(const conv2d_fp32_param &par
         algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
         algo_info.output_format == ppl::common::DATAFORMAT_NDARRAY) {
         return new conv2d_depthwise_fp32_sse_manager(param, allocator);
+    }
+
+    if (algo_info.algo_type == conv2d_fp32_algo::WINOGRAD_B6F3 &&
+        algo_info.isa == ppl::common::ISA_X86_SSE &&
+        algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
+        algo_info.output_format == ppl::common::DATAFORMAT_NDARRAY) {
+        return new conv2d_winograd_b6f3_fp32_sse_manager(param, allocator);
     }
 
     return nullptr;

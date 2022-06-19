@@ -256,6 +256,15 @@ static std::map<std::string, ppl::kernel::x86::conv2d_fp32_algo_info> algo_table
         })
     },
     {
+        "ndarray_winograd_b6f3_fp32_sse",
+        ppl::kernel::x86::conv2d_fp32_algo_info({
+            ppl::kernel::x86::conv2d_fp32_algo::WINOGRAD_B6F3,
+            ppl::common::ISA_X86_SSE,
+            ppl::common::DATAFORMAT_NDARRAY,
+            ppl::common::DATAFORMAT_NDARRAY
+        })
+    },
+    {
         "im2col_gemm_fp32_sse",
         ppl::kernel::x86::conv2d_fp32_algo_info({
             ppl::kernel::x86::conv2d_fp32_algo::IM2COL_GEMM,
