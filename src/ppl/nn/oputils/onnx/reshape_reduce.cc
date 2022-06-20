@@ -52,6 +52,10 @@ RetCode ReshapeReduce(InputOutputInfo* info, const ir::Attr* arg) {
         }
     }
 
+    if (x->GetRealDimCount() == 0) {
+        return RC_UNSUPPORTED;
+    }
+
     // reshape
     y->Reshape(x->GetDims(), x->GetDimCount());
     if (param->keepdims) {
