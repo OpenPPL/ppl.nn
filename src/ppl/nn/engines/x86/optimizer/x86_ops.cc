@@ -65,6 +65,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/non_zero_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/not_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/roialign_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/onnx/one_hot_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/pad_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/pow_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/prelu_op.h"
@@ -194,6 +195,8 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<NonMaxSupressionOp>("", "NonMaxSuppression", 10, 16);
     RegisterOptKernelCreator<NonZeroOp>("", "NonZero", 9, 12);
     RegisterOptKernelCreator<NotOp>("", "Not", 1, 16);
+    // O
+    RegisterOptKernelCreator<OneHotOp>("", "OneHot", 9, 11);
     // P
     RegisterOptKernelCreator<PadOp>("", "Pad", 2, 16);
     RegisterOptKernelCreator<PowOp>("", "Pow", 7, 16);

@@ -42,6 +42,7 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_lstm_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_maxunpool_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_non_max_suppression_param.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_one_hot_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_pad_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_pooling_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_reduce_param.h"
@@ -172,6 +173,8 @@ ParamParserManager::ParamParserManager() {
                                PackNonMaxSuppressionParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "NonZero", 9, 16, nullptr);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Not", 1, 16, nullptr);
+    // O
+    PPL_REGISTER_OP_WITH_PARAM("", "OneHot", 9, 11, OneHotParam, ParseOneHotParam, PackOneHotParam);
     // P
     PPL_REGISTER_OP_WITH_PARAM("", "Pad", 2, 16, PadParam, ParsePadParam, PackPadParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Pow", 7, 16, nullptr);
