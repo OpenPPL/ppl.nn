@@ -680,10 +680,7 @@ double PPLCUDAConvolutionJitSelectKernelInt8(
     std::unordered_map<size_t, algo_param_t>::const_iterator conv_shape_hash_iterator = g_conv_shape_hash.find(conv_shape_hash);
 
     if(conv_shape_hash_iterator != g_conv_shape_hash.end()) {
-        algo_param.kid    = conv_shape_hash_iterator->second.kid;
-        algo_param.splitk = conv_shape_hash_iterator->second.splitk;
-        algo_param.splitf = conv_shape_hash_iterator->second.splitf;
-
+        algo_param = conv_shape_hash_iterator->second;
         return 0.0f;
     }
 
