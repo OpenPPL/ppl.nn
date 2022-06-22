@@ -22,6 +22,10 @@ option(PPLNN_HOLD_DEPS "don't update dependencies" OFF)
 
 option(PPLNN_ENABLE_SANITIZE_OPTIONS "use -fsanitize options to check memory errors. Note that this option is only available for GCC and Clang." OFF)
 
+if(MSVC)
+    option(PPLNN_USE_MSVC_STATIC_RUNTIME "" OFF)
+endif()
+
 option(PPLNN_USE_X86_64 "" OFF)
 option(PPLNN_USE_AARCH64 "" OFF)
 option(PPLNN_USE_RISCV64 "" OFF)
@@ -50,6 +54,14 @@ set(PPLNN_INCLUDE_DIRECTORIES)
 set(PPLNN_COMPILE_DEFINITIONS)
 set(PPLNN_LINK_LIBRARIES)
 set(PPLNN_LINK_DIRECTORIES)
+
+# --------------------------------------------------------------------------- #
+
+# compiler related
+
+if(MSVC)
+    include(cmake/msvc.cmake)
+endif()
 
 # --------------------------------------------------------------------------- #
 
