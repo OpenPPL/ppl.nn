@@ -69,6 +69,16 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
         auto eid = object->GetEdge()->GetId();
         if (aux_info_->edge_last_consumer[eid] == user) {
             auto obj = graph_->edgeid2object[eid];
+
+            auto barrier = obj->GetBarrier();
+            if (barrier) {
+                auto status = barrier->Sync();
+                if (status != RC_SUCCESS) {
+                    LOG(ERROR) << "sync edge[" << obj->GetEdge()->GetName() << "] failed: " << GetRetCodeStr(status);
+                    return status;
+                }
+            }
+
             if (obj->GetObjectType() == EdgeObject::T_TENSOR) {
                 tensor_pool_.Free(static_cast<TensorImpl*>(obj));
             } else if (obj->GetObjectType() == EdgeObject::T_TENSOR_SEQUENCE) {
