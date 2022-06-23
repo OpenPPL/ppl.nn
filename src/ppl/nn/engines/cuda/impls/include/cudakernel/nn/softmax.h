@@ -32,17 +32,6 @@ ppl::common::RetCode PPLCUDASoftmaxForwardImp(
     void* temp_buffer,
     int axis);
 
-template<typename Tin, typename MaskT, typename Tout>
-ppl::common::RetCode PPLCUDAFastSoftmaxForwardImp(
-    cudaStream_t stream,
-    const Tin* input,
-    Tout* output,
-    const MaskT* key_padding_mask,
-    const int mask_type,
-    const int B,
-    const int H,
-    const int T);
-
 ppl::common::RetCode PPLCUDAFastSoftmax(
     cudaStream_t stream,
     const ppl::nn::TensorShape* input_shape,
