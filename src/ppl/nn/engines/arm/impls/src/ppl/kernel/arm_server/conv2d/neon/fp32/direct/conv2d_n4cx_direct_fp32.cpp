@@ -585,7 +585,14 @@ static inline int64_t ppl_arm_server_kernel_fp32_conv_direct_n4cx_get_converted_
     return CEIL128(group * oc_g_pck2 * ic_g_pck * ker_h * ker_w * sizeof(float)) + ker_w * 2 * OCBLK() * ICBLK() * sizeof(float)  + 128;
 }
 
-ppl::common::RetCode conv2d_n4cx_direct_fp32_offline_manager::pick_best_schedule_param(const ppl::nn::TensorShape &src_shape, double &run_time, bool tune_blocksize)
+ppl::common::RetCode conv2d_n4cx_direct_fp32_offline_manager::pick_best_schedule_param(
+    const ppl::nn::TensorShape &src_shape,
+    void *src,
+    void *cvt_bias,
+    const ppl::nn::TensorShape &dst_shape,
+    void *dst,
+    bool tune_sp,
+    double &run_time)
 {
     const int64_t num_output = param_.num_output;
     const int64_t channels   = param_.channels;
@@ -596,91 +603,68 @@ ppl::common::RetCode conv2d_n4cx_direct_fp32_offline_manager::pick_best_schedule
     if (src_shape.GetDimCount() < 4) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    const int64_t num_batch = src_shape.GetDim(0);
-    const int64_t src_h     = src_shape.GetDim(2);
-    const int64_t src_w     = src_shape.GetDim(3);
-    const int64_t dst_h     = ((src_h + 2 * param_.pad_h - param_.dilation_h * (param_.kernel_h - 1) - 1) / param_.stride_h + 1);
-    const int64_t dst_w     = ((src_w + 2 * param_.pad_w - param_.dilation_w * (param_.kernel_w - 1) - 1) / param_.stride_w + 1);
-    ppl::nn::TensorShape dst_shape;
-    dst_shape.Reshape({num_batch, num_output, dst_h, dst_w});
+
+    auto conv_exe = conv2d_n4cx_direct_fp32_runtime_executor(&param_, cvt_filter_, cvt_bias_, sched_param_);
+    conv_exe.set_src(src);
+    conv_exe.set_src_shape(&src_shape);
+    conv_exe.set_dst(dst);
+    conv_exe.set_dst_shape(&dst_shape);
+    conv_exe.set_cvt_bias(cvt_bias);
 
     uint64_t cvt_filter_size = ppl_arm_server_kernel_fp32_conv_direct_n4cx_get_converted_filter_size(
         group, channels, num_output, kernel_h, kernel_w);
-    uint64_t cvt_bias_size = CEIL4(num_output) * sizeof(float);
-    uint64_t src_size      = num_batch * CEIL4(channels) * src_h * src_w * sizeof(float);
-    uint64_t dst_size      = num_batch * CEIL4(num_output) * dst_h * dst_w * sizeof(float);
     float *cvt_filter      = (float *)allocator_->Alloc(cvt_filter_size);
-    float *cvt_bias        = (float *)allocator_->Alloc(cvt_bias_size);
-    float *src             = (float *)allocator_->Alloc(src_size);
-    float *dst             = (float *)allocator_->Alloc(dst_size);
-
-    for (uint64_t idx = 0; idx < cvt_filter_size / sizeof(float); idx++) {
-        cvt_filter[idx] = float(rand()) / float((RAND_MAX)) - 0.5;
-    }
-    for (uint64_t idx = 0; idx < cvt_bias_size / sizeof(float); idx++) {
-        cvt_bias[idx] = float(rand()) / float((RAND_MAX)) - 0.5;
-    }
-    for (uint64_t idx = 0; idx < src_size / sizeof(float); idx++) {
-        src[idx] = float(rand()) / float((RAND_MAX)) - 0.5;
-    }
-    for (uint64_t idx = 0; idx < dst_size / sizeof(float); idx++) {
-        dst[idx] = float(rand()) / float((RAND_MAX)) - 0.5;
-    }
+    conv_exe.set_cvt_filter(cvt_filter);
 
     std::vector<int64_t> candidate_ic_tile_list = {64};
-
-    if (tune_blocksize) {
+    if (tune_sp) {
         candidate_ic_tile_list = {32, 48, 64, 96, 112, 128};
     }
+
+    size_t tmp_buf_size = 0;
+    for (auto ic_tile : candidate_ic_tile_list) {
+        conv_exe.sched_param_.ic_tile = ic_tile;
+        conv_exe.adjust_schedule_param();
+
+        const size_t new_size = conv_exe.cal_temp_buffer_size();
+        if (new_size > tmp_buf_size) {
+            tmp_buf_size = new_size;
+        }
+    }
+    float *tmp_buffer     = (float *)allocator_->Alloc(tmp_buf_size);
+    conv_exe.set_temp_buffer(tmp_buffer);
 
     int64_t best_ic_tile  = 64;
     int64_t best_run_time = std::numeric_limits<int64_t>::max();
 
     const int num_warmup_iter    = 1;
-    const int num_benchmark_iter = 5;
+    const int num_benchmark_iter = 3;
     for (auto ic_tile : candidate_ic_tile_list) {
-        sched_param_.ic_tile = ic_tile;
-
-        auto conv_exe = gen_executor();
-        conv_exe->set_cvt_filter(cvt_filter);
-        conv_exe->set_cvt_bias(cvt_bias);
-        conv_exe->set_src(src);
-        conv_exe->set_src_shape(&src_shape);
-        conv_exe->set_dst(dst);
-        conv_exe->set_dst_shape(&dst_shape);
-        conv_exe->prepare();
-        uint64_t tmp_buf_size = conv_exe->cal_temp_buffer_size();
-        float *tmp_buffer     = (float *)allocator_->Alloc(tmp_buf_size);
-        conv_exe->set_temp_buffer(tmp_buffer);
+        conv_exe.sched_param_.ic_tile = ic_tile;
+        conv_exe.prepare();
 
         for (int i = 0; i < num_warmup_iter; i++) {
-            conv_exe->execute();
+            conv_exe.execute();
         }
 
         auto begin_ts = std::chrono::system_clock::now();
         for (int i = 0; i < num_benchmark_iter; i++) {
-            conv_exe->execute();
+            conv_exe.execute();
         }
         auto end_ts = std::chrono::system_clock::now();
 
         int64_t elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(end_ts - begin_ts).count();
         if (elapsed_time < best_run_time) {
-            best_ic_tile   = ic_tile;
+            best_ic_tile  = ic_tile;
             best_run_time = elapsed_time;
         }
 
-        allocator_->Free(tmp_buffer);
-        delete conv_exe;
 
         if (ic_tile >= channels / group) break;
     }
 
-    cvt_filter_ = nullptr;
-    cvt_bias_   = nullptr;
     allocator_->Free(cvt_filter);
-    allocator_->Free(cvt_bias);
-    allocator_->Free(src);
-    allocator_->Free(dst);
+    allocator_->Free(tmp_buffer);
 
     sched_param_.ic_tile = best_ic_tile;
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
@@ -755,6 +739,12 @@ static void ppl_arm_server_kernel_fp32_conv_direct_n4cx_convert_filter(
             }
         }
     }
+}
+
+ppl::common::RetCode conv2d_n4cx_direct_fp32_offline_manager::try_fuse(conv_fuse_flag_t fuse_type)
+{
+    return ((fuse_type | conv_fuse_flag::HSWISH) || (fuse_type | conv_fuse_flag::PRELU )) ?
+        ppl::common::RC_UNSUPPORTED : ppl::common::RC_SUCCESS;
 }
 
 ppl::common::RetCode conv2d_n4cx_direct_fp32_offline_manager::gen_cvt_weights(const void *filter, const void *bias)

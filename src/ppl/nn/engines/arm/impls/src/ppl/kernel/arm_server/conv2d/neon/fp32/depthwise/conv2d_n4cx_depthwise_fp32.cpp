@@ -2027,9 +2027,22 @@ ppl::common::RetCode conv2d_n4cx_depthwise_fp32_offline_manager::fast_init_sched
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode conv2d_n4cx_depthwise_fp32_offline_manager::pick_best_schedule_param(const ppl::nn::TensorShape &src_shape, double &run_time, bool tune_blocksize)
+ppl::common::RetCode conv2d_n4cx_depthwise_fp32_offline_manager::pick_best_schedule_param(
+    const ppl::nn::TensorShape &src_shape,
+    void *src,
+    void *cvt_bias,
+    const ppl::nn::TensorShape &dst_shape,
+    void *dst,
+    bool tune_sp,
+    double &run_time)
 {
     return ppl::common::RC_SUCCESS;
+}
+
+ppl::common::RetCode conv2d_n4cx_depthwise_fp32_offline_manager::try_fuse(conv_fuse_flag_t fuse_type)
+{
+    return ((fuse_type | conv_fuse_flag::HSWISH) || (fuse_type | conv_fuse_flag::PRELU )) ?
+        ppl::common::RC_UNSUPPORTED : ppl::common::RC_SUCCESS;
 }
 
 ppl::common::RetCode conv2d_n4cx_depthwise_fp32_offline_manager::gen_cvt_weights(const void *filter, const void *bias)

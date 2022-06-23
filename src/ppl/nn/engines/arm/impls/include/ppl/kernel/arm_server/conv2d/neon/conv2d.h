@@ -29,16 +29,29 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 typedef uint32_t conv_fuse_flag_t;
+typedef uint32_t conv_pad_type_t;
 
 class conv_fuse_flag {
 public:
     enum {
-        NONE  = 0,
-        RELU  = 1 << 0,
-        RELU6 = 1 << 1,
-        SUM   = 1 << 2,
+        NONE   = 0,
+        RELU   = 1 << 0,
+        RELU6  = 1 << 1,
+        SUM    = 1 << 2,
+        PRELU  = 1 << 3,
+        HSWISH = 1 << 4,
     };
 };
+
+class conv_pad_type {
+public:
+    enum {
+        ZERO  = 0,
+        RFLCT = 1,
+        SAME  = 2,
+    };
+};
+
 struct conv2d_param {
     int64_t kernel_h;
     int64_t kernel_w;
@@ -52,6 +65,7 @@ struct conv2d_param {
     int64_t num_output;
     int64_t group;
     conv_fuse_flag_t fuse_flag;
+    conv_pad_type_t pad_type;
 
     float sparse_level() const
     {
@@ -287,7 +301,7 @@ public:
     {
         param_ = param;
     }
-    const conv2d_param &param() const
+    const conv2d_param &get_param() const
     {
         return param_;
     };
@@ -296,7 +310,7 @@ public:
     {
         allocator_ = allocator;
     }
-    ppl::common::Allocator *allocator()
+    ppl::common::Allocator *get_allocator()
     {
         return allocator_;
     }
@@ -306,11 +320,11 @@ public:
         cvt_filter_      = const_cast<void *>(cvt_filter);
         cvt_filter_size_ = cvt_filter_size;
     }
-    const void *cvt_filter() const
+    const void *get_cvt_filter() const
     {
         return cvt_filter_;
     }
-    uint64_t cvt_filter_size() const
+    uint64_t get_cvt_filter_size() const
     {
         return cvt_filter_size_;
     }
@@ -320,11 +334,11 @@ public:
         cvt_bias_      = const_cast<void *>(cvt_bias);
         cvt_bias_size_ = cvt_bias_size;
     }
-    const void *cvt_bias() const
+    const void *get_cvt_bias() const
     {
         return cvt_bias_;
     }
-    uint64_t cvt_bias_size() const
+    uint64_t get_cvt_bias_size() const
     {
         return cvt_bias_size_;
     }
@@ -351,13 +365,20 @@ public:
     {
         algo_info_ = algo;
     };
+
+    virtual conv2d_algo_t get_algo_type()                                              = 0;
     // schedule param setting rule is simple but fast.
-    virtual ppl::common::RetCode fast_init_schedule_param()                                                                            = 0;
+    virtual ppl::common::RetCode fast_init_schedule_param()                            = 0;
     // run all possible schedule params and choose the best.
-    virtual ppl::common::RetCode pick_best_schedule_param(const ppl::nn::TensorShape &src_shape, double &runtime, bool tune_blocksize) = 0;
-    virtual bool is_supported()                                                                                                        = 0;
-    virtual ppl::common::RetCode gen_cvt_weights(const void *filter, const void *bias)                                                 = 0;
-    virtual conv2d_runtime_executor *gen_executor()                                                                                    = 0;
+    virtual ppl::common::RetCode pick_best_schedule_param(
+        const ppl::nn::TensorShape &src_shape, void *src, void *cvt_bias,
+        const ppl::nn::TensorShape &dst_shape, void *dst,
+        const bool tune_sp, double &runtime)                                           = 0;
+    virtual bool is_supported()                                                        = 0;
+    virtual ppl::common::RetCode try_fuse(conv_fuse_flag_t fuse_type)                  = 0;
+    virtual ppl::common::RetCode try_reflect_pad(const std::vector<int>& pads)         = 0;
+    virtual ppl::common::RetCode gen_cvt_weights(const void *filter, const void *bias) = 0;
+    virtual conv2d_runtime_executor *gen_executor()                                    = 0;
 
     virtual ~conv2d_offline_manager() {}
 };

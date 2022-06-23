@@ -339,14 +339,14 @@ ppl::common::RetCode conv2d_n8cx_im2col_fp16_runtime_executor::execute()
 
         const int64_t src_h      = src_shape_->GetDim(2);
         const int64_t src_w      = src_shape_->GetDim(3);
-        const int64_t channels      = src_shape_->GetDim(1);
-        const int64_t num_output     = cp.num_output;
-        const int64_t dst_h     = dst_shape_->GetDim(2);
-        const int64_t dst_w     = dst_shape_->GetDim(3);
-        const int64_t flt_h     = cp.kernel_h;
-        const int64_t flt_w     = cp.kernel_w;
-        const int64_t group = cp.group;
-        const int64_t num_batch = src_shape_->GetDim(0);
+        const int64_t channels   = src_shape_->GetDim(1);
+        const int64_t num_output = cp.num_output;
+        const int64_t dst_h      = dst_shape_->GetDim(2);
+        const int64_t dst_w      = dst_shape_->GetDim(3);
+        const int64_t flt_h      = cp.kernel_h;
+        const int64_t flt_w      = cp.kernel_w;
+        const int64_t group      = cp.group;
+        const int64_t num_batch  = src_shape_->GetDim(0);
 
         const int64_t group_block3 = sp.group_block3;
         const int64_t batch_block3 = sp.batch_block3;
@@ -570,7 +570,14 @@ ppl::common::RetCode conv2d_n8cx_im2col_fp16_offline_manager::fast_init_schedule
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode conv2d_n8cx_im2col_fp16_offline_manager::pick_best_schedule_param(const ppl::nn::TensorShape &src_shape, double &run_time, bool tune_blocksize)
+ppl::common::RetCode conv2d_n8cx_im2col_fp16_offline_manager::pick_best_schedule_param(
+    const ppl::nn::TensorShape &src_shape,
+    void *src,
+    void *cvt_bias,
+    const ppl::nn::TensorShape &dst_shape,
+    void *dst,
+    bool tune_sp,
+    double &run_time)
 {
     const int64_t num_output = param_.num_output;
     const int64_t channels   = param_.channels;
@@ -580,46 +587,49 @@ ppl::common::RetCode conv2d_n8cx_im2col_fp16_offline_manager::pick_best_schedule
     if (src_shape.GetDimCount() < 4) {
         return ppl::common::RC_INVALID_VALUE;
     }
-    const int64_t num_batch = src_shape.GetDim(0);
-    const int64_t src_h     = src_shape.GetDim(2);
-    const int64_t src_w     = src_shape.GetDim(3);
-    const int64_t dst_h     = ((src_h + 2 * param_.pad_h - param_.dilation_h * (param_.kernel_h - 1) - 1) / param_.stride_h + 1);
-    const int64_t dst_w     = ((src_w + 2 * param_.pad_w - param_.dilation_w * (param_.kernel_w - 1) - 1) / param_.stride_w + 1);
-    ppl::nn::TensorShape dst_shape;
-    dst_shape.Reshape({num_batch, num_output, dst_h, dst_w});
+    const int64_t dst_h     = dst_shape.GetDim(2);
+    const int64_t dst_w     = dst_shape.GetDim(3);
+
+    auto conv_exe = conv2d_n8cx_im2col_fp16_runtime_executor(&param_, cvt_filter_, cvt_bias_, sched_param_, ker_param_);
+    conv_exe.set_src(src);
+    conv_exe.set_src_shape(&src_shape);
+    conv_exe.set_dst(dst);
+    conv_exe.set_dst_shape(&dst_shape);
+    conv_exe.set_cvt_bias(cvt_bias);
 
     uint64_t cvt_filter_size = conv_n8cx_tile_im2col_get_converted_filter_size(
         num_output, channels, kernel_h, kernel_w, param_.group);
-    uint64_t cvt_bias_size = CEIL4(num_output) * sizeof(float);
-    uint64_t src_size      = num_batch * CEIL4(channels) * src_h * src_w * sizeof(float);
-    uint64_t dst_size      = num_batch * CEIL4(num_output) * dst_h * dst_w * sizeof(float);
-    float *cvt_filter      = (float *)allocator_->Alloc(cvt_filter_size);
-    float *cvt_bias        = (float *)allocator_->Alloc(cvt_bias_size);
-    float *src             = (float *)allocator_->Alloc(src_size);
-    float *dst             = (float *)allocator_->Alloc(dst_size);
-
-    for (uint64_t idx = 0; idx < cvt_filter_size / sizeof(float); idx++) {
-        cvt_filter[idx] = float(rand()) / float((RAND_MAX)) - 0.5;
-    }
-    for (uint64_t idx = 0; idx < cvt_bias_size / sizeof(float); idx++) {
-        cvt_bias[idx] = float(rand()) / float((RAND_MAX)) - 0.5;
-    }
-    for (uint64_t idx = 0; idx < src_size / sizeof(float); idx++) {
-        src[idx] = float(rand()) / float((RAND_MAX)) - 0.5;
-    }
-    for (uint64_t idx = 0; idx < dst_size / sizeof(float); idx++) {
-        dst[idx] = float(rand()) / float((RAND_MAX)) - 0.5;
-    }
+    float *cvt_filter = (float *)allocator_->Alloc(cvt_filter_size);
+    conv_exe.set_cvt_filter(cvt_filter);
 
     std::vector<int64_t> candidate_m_blk_list = {80};
     std::vector<int64_t> candidate_n_blk_list = {108};
     std::vector<int64_t> candidate_k_blk_list = {128};
-
-    if (tune_blocksize) {
+    if (tune_sp) {
         candidate_m_blk_list = {32, 48, 64, 96};
         candidate_n_blk_list = {48, 60, 72, 84, 96};
         candidate_k_blk_list = {64, 128, 192};
     }
+
+    size_t tmp_buf_size = 0;
+    for (auto m_blk : candidate_m_blk_list) {
+        for (auto n_blk : candidate_n_blk_list) {
+            for (auto k_blk : candidate_k_blk_list) {
+                conv_exe.sched_param_.hgemm_m_block1 = m_blk;
+                conv_exe.sched_param_.hgemm_n_block1 = n_blk;
+                conv_exe.sched_param_.hgemm_k_block1 = k_blk;
+                conv_exe.adjust_schedule_param();
+
+                const size_t new_size = conv_exe.cal_temp_buffer_size();
+                if (new_size > tmp_buf_size) {
+                    tmp_buf_size = new_size;
+                }
+            }
+        }
+    }
+    float *tmp_buffer = (float *)allocator_->Alloc(tmp_buf_size);
+    conv_exe.set_temp_buffer(tmp_buffer);
+
 
     int64_t best_m_blk    = 80;
     int64_t best_n_blk    = 108;
@@ -627,33 +637,22 @@ ppl::common::RetCode conv2d_n8cx_im2col_fp16_offline_manager::pick_best_schedule
     int64_t best_run_time = std::numeric_limits<int64_t>::max();
 
     const int num_warmup_iter    = 1;
-    const int num_benchmark_iter = 5;
+    const int num_benchmark_iter = 3;
     for (auto m_blk : candidate_m_blk_list) {
         for (auto n_blk : candidate_n_blk_list) {
             for (auto k_blk : candidate_k_blk_list) {
-                sched_param_.hgemm_m_block1 = m_blk;
-                sched_param_.hgemm_n_block1 = n_blk;
-                sched_param_.hgemm_k_block1 = k_blk;
-
-                auto conv_exe = gen_executor();
-                conv_exe->set_cvt_filter(cvt_filter);
-                conv_exe->set_cvt_bias(cvt_bias);
-                conv_exe->set_src(src);
-                conv_exe->set_src_shape(&src_shape);
-                conv_exe->set_dst(dst);
-                conv_exe->set_dst_shape(&dst_shape);
-                conv_exe->prepare();
-                uint64_t tmp_buf_size = conv_exe->cal_temp_buffer_size();
-                float *tmp_buffer     = (float *)allocator_->Alloc(tmp_buf_size);
-                conv_exe->set_temp_buffer(tmp_buffer);
+                conv_exe.sched_param_.hgemm_m_block1 = m_blk;
+                conv_exe.sched_param_.hgemm_n_block1 = n_blk;
+                conv_exe.sched_param_.hgemm_k_block1 = k_blk;
+                conv_exe.prepare();
 
                 for (int i = 0; i < num_warmup_iter; i++) {
-                    conv_exe->execute();
+                    conv_exe.execute();
                 }
 
                 auto begin_ts = std::chrono::system_clock::now();
                 for (int i = 0; i < num_benchmark_iter; i++) {
-                    conv_exe->execute();
+                    conv_exe.execute();
                 }
                 auto end_ts = std::chrono::system_clock::now();
 
@@ -665,8 +664,6 @@ ppl::common::RetCode conv2d_n8cx_im2col_fp16_offline_manager::pick_best_schedule
                     best_run_time = elapsed_time;
                 }
 
-                allocator_->Free(tmp_buffer);
-                delete conv_exe;
                 if (k_blk >= channels / param_.group) break;
             }
 
@@ -675,12 +672,8 @@ ppl::common::RetCode conv2d_n8cx_im2col_fp16_offline_manager::pick_best_schedule
         if (m_blk >= num_output / param_.group) break;
     }
 
-    cvt_filter_ = nullptr;
-    cvt_bias_   = nullptr;
     allocator_->Free(cvt_filter);
-    allocator_->Free(cvt_bias);
-    allocator_->Free(src);
-    allocator_->Free(dst);
+    allocator_->Free(tmp_buffer);
 
     sched_param_.hgemm_m_block1 = best_m_blk;
     sched_param_.hgemm_n_block1 = best_n_blk;
@@ -693,6 +686,12 @@ ppl::common::RetCode conv2d_n8cx_im2col_fp16_offline_manager::pick_best_schedule
 #endif
     run_time = (double)best_run_time / (double)num_benchmark_iter;
     return ppl::common::RC_SUCCESS;
+}
+
+ppl::common::RetCode conv2d_n8cx_im2col_fp16_offline_manager::try_fuse(conv_fuse_flag_t fuse_type)
+{
+    return ((fuse_type | conv_fuse_flag::HSWISH) || (fuse_type | conv_fuse_flag::PRELU )) ?
+        ppl::common::RC_UNSUPPORTED : ppl::common::RC_SUCCESS;
 }
 
 ppl::common::RetCode conv2d_n8cx_im2col_fp16_offline_manager::gen_cvt_weights(const void *filter, const void *bias)

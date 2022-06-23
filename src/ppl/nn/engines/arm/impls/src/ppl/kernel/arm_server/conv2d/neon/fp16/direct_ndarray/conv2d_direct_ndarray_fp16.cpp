@@ -250,9 +250,16 @@ ppl::common::RetCode conv2d_direct_ndarray_fp16_offline_manager::fast_init_sched
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode conv2d_direct_ndarray_fp16_offline_manager::pick_best_schedule_param(const ppl::nn::TensorShape &src_shape, double &run_time, bool tune_blocksize)
+ppl::common::RetCode conv2d_direct_ndarray_fp16_offline_manager::pick_best_schedule_param(
+    const ppl::nn::TensorShape &src_shape,
+    void *src,
+    void *cvt_bias,
+    const ppl::nn::TensorShape &dst_shape,
+    void *dst,
+    bool tune_sp,
+    double &run_time)
 {
-    return ppl::common::RC_SUCCESS;
+    return fast_init_schedule_param();
 }
 
 // NOTE: (oc, ic, kh, kw) -> (oc/8, ic, kh, kw, 8oc)
@@ -304,6 +311,12 @@ static void ppl_arm_server_kernel_fp16_conv_direct_n4cx_convert_filter(
             }
         }
     }
+}
+
+ppl::common::RetCode conv2d_direct_ndarray_fp16_offline_manager::try_fuse(conv_fuse_flag_t fuse_type)
+{
+    return ((fuse_type | conv_fuse_flag::HSWISH) || (fuse_type | conv_fuse_flag::PRELU )) ?
+        ppl::common::RC_UNSUPPORTED : ppl::common::RC_SUCCESS;
 }
 
 // should be called after init_schedule_param
