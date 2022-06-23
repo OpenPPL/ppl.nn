@@ -24,9 +24,10 @@ namespace ppl { namespace kernel { namespace arm_server {
 
 ppl::common::RetCode N4cxToNdarrayFp32(const float* src, int64_t batch, int64_t channels, int64_t height, int64_t width, float* dst);
 
-ppl::common::RetCode N8cxToNdarrayFp16(const __fp16* src, int64_t batch, int64_t channels, int64_t height, int64_t width, __fp16* dst);
-
 ppl::common::RetCode NdarrayToN4cxFp32(const float* src, int64_t batch, int64_t channels, int64_t height, int64_t width, float* dst);
+
+#ifdef PPLNN_USE_ARMV8_2_FP16
+ppl::common::RetCode N8cxToNdarrayFp16(const __fp16* src, int64_t batch, int64_t channels, int64_t height, int64_t width, __fp16* dst);
 
 ppl::common::RetCode NdarrayToN8cxFp16(const __fp16* src, int64_t batch, int64_t channels, int64_t height, int64_t width, __fp16* dst);
 
@@ -41,6 +42,7 @@ ppl::common::RetCode Fp16ToFp32(const __fp16* src, const int64_t len, float* dst
 ppl::common::RetCode N4cxFp32ToN8cxFp16(const float* src, int64_t batch, int64_t channels, int64_t height, int64_t width, __fp16* dst);
 
 ppl::common::RetCode N8cxFp16ToN4cxFp32(const __fp16* src, int64_t batch, int64_t channels, int64_t height, int64_t width, float* dst);
+#endif
 
 }}} // namespace ppl::kernel::arm_server
 

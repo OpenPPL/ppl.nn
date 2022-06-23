@@ -52,6 +52,7 @@ ppl::common::RetCode RangeKernel::DoExecute(KernelExecContext* ctx) {
         for (uint32_t i = 0; i < output->GetShape()->GetElementsExcludingPadding(); i++) {
             output_data[i] = start_val + i * delta_val;
         }
+#ifdef PPLNN_USE_ARMV8_2_FP16
     } else if (data_type == ppl::common::DATATYPE_FLOAT16) {
         const __fp16 start_val = start->GetBufferPtr<__fp16>()[0];
         const __fp16 delta_val = delta->GetBufferPtr<__fp16>()[0];
@@ -59,6 +60,7 @@ ppl::common::RetCode RangeKernel::DoExecute(KernelExecContext* ctx) {
         for (uint32_t i = 0; i < output->GetShape()->GetElementsExcludingPadding(); i++) {
             output_data[i] = start_val + i * delta_val;
         }
+#endif
     } else {
         LOG(ERROR) << "unsupported data type: " << common::GetDataTypeStr(data_type) << ".";
         return ppl::common::RC_UNSUPPORTED;

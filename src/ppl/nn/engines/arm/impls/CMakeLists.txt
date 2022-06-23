@@ -21,9 +21,7 @@ set(PPL_KERNEL_ARM_SERVER_LINK_LIBRARIES )
 if(PPL_USE_ARM_SERVER_OMP)
     find_package(Threads REQUIRED)
     find_package(OpenMP REQUIRED)
-    if(NOT PPLNN_USE_ANDROID_NDK)
-        list(APPEND PPL_KERNEL_ARM_SERVER_LINK_LIBRARIES OpenMP::OpenMP_CXX)
-    endif()
+    list(APPEND PPL_KERNEL_ARM_SERVER_LINK_LIBRARIES OpenMP::OpenMP_CXX)
 endif()
 
 list(APPEND PPL_KERNEL_ARM_SERVER_LINK_LIBRARIES pplcommon_static)
@@ -35,6 +33,20 @@ set(PPLNN_ARM_ENGINE_INCLUDE_DIRECTORIES ${PPLNN_SOURCE_DIR}/src/ ${PPLNN_SOURCE
 ### file globbing ######
 #### #### #### #### ####
 file(GLOB_RECURSE PPL_KERNEL_ARM_SERVER_SRC ${CMAKE_CURRENT_LIST_DIR}/src/*)
+if(PPLNN_USE_ARMV7)
+    foreach(file ${PPL_KERNEL_ARM_SERVER_SRC})
+        if(${file} MATCHES ".*ppl/kernel/arm_server/conv2d/neon/fp../.*")
+            LIST(REMOVE_ITEM PPL_KERNEL_ARM_SERVER_SRC ${file})
+        endif()
+        if(${file} MATCHES ".*ppl/kernel/arm_server/fc/neon/fp../.*")
+            LIST(REMOVE_ITEM PPL_KERNEL_ARM_SERVER_SRC ${file})
+        endif()
+        if(${file} MATCHES ".*ppl/kernel/arm_server/gemm/neon/.+/.*")
+            LIST(REMOVE_ITEM PPL_KERNEL_ARM_SERVER_SRC ${file})
+        endif()
+    endforeach()
+endif()
+
 list(APPEND PPL_KERNEL_ARM_SERVER_SOURCES ${PPL_KERNEL_ARM_SERVER_SRC})
 list(APPEND PPL_KERNEL_ARM_SERVER_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}/include)
 list(APPEND PPL_KERNEL_ARM_SERVER_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}/src)
@@ -44,6 +56,14 @@ list(APPEND PPL_KERNEL_ARM_SERVER_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}/
 #### #### #### #### ####
 if(PPL_USE_ARM_SERVER_OMP)
     list(APPEND PPL_KERNEL_ARM_SERVER_COMPILE_DEFINITIONS PPL_USE_ARM_SERVER_OMP)
+endif()
+
+if(PPLNN_USE_AARCH64)
+    list(APPEND PPL_KERNEL_ARM_SERVER_COMPILE_DEFINITIONS PPLNN_USE_AARCH64)
+endif()
+
+if(PPLNN_USE_ARMV7)
+    list(APPEND PPL_KERNEL_ARM_SERVER_COMPILE_DEFINITIONS PPLNN_USE_ARMV7)
 endif()
 
 if(PPLNN_USE_ARMV8_2_FP16)
@@ -69,9 +89,6 @@ endif()
 ### targets ############
 #### #### #### #### ####
 add_library(pplkernelarmserver_static STATIC ${PPL_KERNEL_ARM_SERVER_SOURCES})
-if(PPLNN_USE_ANDROID_NDK)
-    target_link_options(pplkernelarmserver_static PRIVATE "-static-openmp")
-endif()
 target_link_libraries(pplkernelarmserver_static PRIVATE ${PPL_KERNEL_ARM_SERVER_LINK_LIBRARIES})
 target_include_directories(pplkernelarmserver_static
     PUBLIC ${PPL_KERNEL_ARM_SERVER_INCLUDE_DIRECTORIES}

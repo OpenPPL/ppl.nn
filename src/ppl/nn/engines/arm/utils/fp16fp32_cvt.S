@@ -17,6 +17,7 @@
 
 #ifndef __LP64__
 .syntax unified
+.fpu neon-fp16
 
 .align 4
 

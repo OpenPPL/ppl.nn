@@ -302,6 +302,7 @@ public:
             return ppl::common::RC_PERMISSION_DENIED;
         }
 
+#ifdef PPLNN_USE_AARCH64
         const int64_t num_output = param_.num_output;
         const int64_t channels = param_.channels;
         if (dtype == ppl::common::DATATYPE_FLOAT32) {
@@ -332,6 +333,7 @@ public:
             return ppl::common::RC_SUCCESS;
         }
 #endif
+#endif
 
         return ppl::common::RC_UNSUPPORTED;
     };
@@ -347,6 +349,8 @@ class fc_algo_selector {
 public:
     static fc_algo_info select_algo(const ppl::common::dataformat_t &src_format, const fc_param &param, const ppl::common::datatype_t &dtype,  const ppl::common::isa_t &isa_flags) {
         fc_algo_info algo_info;
+        
+#ifdef PPLNN_USE_AARCH64
         if (!(dtype == ppl::common::DATATYPE_FLOAT16 && 
             (src_format == ppl::common::DATAFORMAT_N8CX || src_format == ppl::common::DATAFORMAT_NDARRAY)) &&
             !(dtype == ppl::common::DATATYPE_FLOAT32 && 
@@ -358,6 +362,10 @@ public:
         algo_info.algo_type = (src_format == ppl::common::DATAFORMAT_NDARRAY) ? fc_algo::standard : fc_algo::flatten_nbcx;
         algo_info.dtype = dtype;
         algo_info.isa = isa_flags;
+#else
+        algo_info.algo_type = fc_algo::unknown;
+#endif
+
         return algo_info;
     };
     static fc_manager *gen_algo(const fc_param &param, const fc_algo_info &algo_info, ppl::common::Allocator *allocator) {

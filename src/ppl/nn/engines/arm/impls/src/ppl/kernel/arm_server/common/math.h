@@ -125,6 +125,7 @@ inline long double numeric_min(void)
 
 // fp16 specialization
 
+#ifdef PPLNN_USE_ARMV8_2_FP16
 template <>
 inline __fp16 max(const __fp16 a, const __fp16 b)
 {
@@ -148,6 +149,8 @@ inline __fp16 numeric_min(void)
 {
     return -numeric_max<__fp16>();
 }
+
+#endif
 
 }}}; // namespace ppl::kernel::arm_server
 

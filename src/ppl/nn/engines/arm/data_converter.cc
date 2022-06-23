@@ -45,6 +45,7 @@ ppl::common::RetCode ArmDataConverter::Convert(BufferDesc* dst, const TensorShap
                                   src_desc.GetDim(3), (float*)(dst->addr));
                 return RC_SUCCESS;
             }
+#ifdef PPLNN_USE_ARMV8_2_FP16
         } else if (dst_desc.GetDataType() == DATATYPE_FLOAT16) {
             if (dst_desc.GetDataFormat() == DATAFORMAT_N8CX && src_desc.GetDataFormat() == DATAFORMAT_NDARRAY) {
                 NdarrayToN8cxFp16((__fp16*)(src.addr), src_desc.GetDim(0), src_desc.GetDim(1), src_desc.GetDim(2),
@@ -55,7 +56,9 @@ ppl::common::RetCode ArmDataConverter::Convert(BufferDesc* dst, const TensorShap
                                   src_desc.GetDim(3), (__fp16*)(dst->addr));
                 return RC_SUCCESS;
             }
+#endif
         }
+#ifdef PPLNN_USE_ARMV8_2_FP16
     } else if (dst_desc.GetDataFormat() != src_desc.GetDataFormat() &&
                dst_desc.GetDataType() != src_desc.GetDataType()) {
         if (dst_desc.GetDataType() == DATATYPE_FLOAT32 && dst_desc.GetDataFormat() == DATAFORMAT_NDARRAY &&
@@ -80,6 +83,7 @@ ppl::common::RetCode ArmDataConverter::Convert(BufferDesc* dst, const TensorShap
         } else {
             return ppl::kernel::arm_server::neon::cast(&src_desc, &dst_desc, src.addr, dst->addr);
         }
+#endif
     }
     LOG(ERROR) << "Invalid data type conversion";
     return RC_UNSUPPORTED;

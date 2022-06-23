@@ -18,10 +18,14 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_ARM_UTILS_DATA_TRANS_H_
 #define _ST_HPC_PPL_NN_ENGINES_ARM_UTILS_DATA_TRANS_H_
 
+#ifdef PPLNN_USE_ARMV8_2_FP16
+
 #include "ppl/nn/engines/arm/utils/fp16fp32_cvt.h"
 
 void Fp32ToFp16(const float* src, int len, __fp16* dst);
 
 void Fp16ToFp32(const __fp16* src, int len, float* dst);
+
+#endif
 
 #endif

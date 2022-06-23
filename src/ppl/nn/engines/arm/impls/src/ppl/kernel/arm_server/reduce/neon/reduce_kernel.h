@@ -20,6 +20,7 @@
 
 #include <arm_neon.h>
 
+#include "ppl/kernel/arm_server/common/type_traits.h"
 #include "ppl/kernel/arm_server/reduce/neon/reduce_common.h"
 
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
@@ -113,25 +114,25 @@ inline float32x4_t reduce_vector_kernel<float32x4_t, REDUCE_ABS_SUM>(const float
 template <>
 inline float reduce_vector_to_scalar_kernel<float, float32x4_t, REDUCE_MAX>(const float32x4_t val, const float reduced)
 {
-    return max(vmaxvq_f32(val), reduced);
+    return max(vmaxv<float, 4>(val), reduced);
 }
 
 template <>
 inline float reduce_vector_to_scalar_kernel<float, float32x4_t, REDUCE_MIN>(const float32x4_t val, const float reduced)
 {
-    return min(vminvq_f32(val), reduced);
+    return min(vminv<float, 4>(val), reduced);
 }
 
 template <>
 inline float reduce_vector_to_scalar_kernel<float, float32x4_t, REDUCE_SUM>(const float32x4_t val, const float reduced)
 {
-    return vaddvq_f32(val) + reduced;
+    return vaddv<float, 4>(val) + reduced;
 }
 
 template <>
 inline float reduce_vector_to_scalar_kernel<float, float32x4_t, REDUCE_MEAN>(const float32x4_t val, const float reduced)
 {
-    return vaddvq_f32(val) + reduced;
+    return vaddv<float, 4>(val) + reduced;
 }
 
 template <>
@@ -277,13 +278,13 @@ inline int64_t reduce_vector_to_scalar_kernel<int64_t, int64x2_t, REDUCE_MIN>(co
 template <>
 inline int64_t reduce_vector_to_scalar_kernel<int64_t, int64x2_t, REDUCE_SUM>(const int64x2_t val, const int64_t reduced)
 {
-    return reduced + vaddvq_s64(val);
+    return reduced + vaddv<int64_t, 2>(val);
 }
 
 template <>
 inline int64_t reduce_vector_to_scalar_kernel<int64_t, int64x2_t, REDUCE_MEAN>(const int64x2_t val, const int64_t reduced)
 {
-    return reduced + vaddvq_s64(val);
+    return reduced + vaddv<int64_t, 2>(val);
 }
 
 template <>

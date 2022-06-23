@@ -62,6 +62,7 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
                                   output->GetBufferPtr<float>());
                 return ppl::common::RC_SUCCESS;
             }
+#ifdef PPLNN_USE_ARMV8_2_FP16
         } else if (input_type == ppl::common::DATATYPE_FLOAT16 && output_type == input_type) {
             LOG(DEBUG) << "Reorder between fp16 ndarray and n8cx";
             if (output_format == ppl::common::DATAFORMAT_N8CX && input_format == ppl::common::DATAFORMAT_NDARRAY) {
@@ -90,7 +91,9 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
                                   input->GetShape()->GetDim(1), input->GetShape()->GetDim(2), input->GetShape()->GetDim(3),
                                   output->GetBufferPtr<__fp16>());
             return ppl::common::RC_SUCCESS;
+#endif
         }
+#ifdef PPLNN_USE_ARMV8_2_FP16
     } else {
         if (input_type == ppl::common::DATATYPE_FLOAT16 && output_type == ppl::common::DATATYPE_FLOAT32) {
             Fp16ToFp32(input->GetBufferPtr<__fp16>(), input->GetShape()->GetElementsIncludingPadding(),
@@ -104,6 +107,7 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
             return ppl::kernel::arm_server::neon::cast(input->GetShape(), output->GetShape(),
                                                        input->GetBufferPtr<void>(), output->GetBufferPtr<void>());
         }
+#endif
     }
     return ppl::common::RC_UNSUPPORTED;
 }

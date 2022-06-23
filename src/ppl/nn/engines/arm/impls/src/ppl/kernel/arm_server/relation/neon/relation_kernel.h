@@ -162,40 +162,58 @@ inline float32x4_t relation_vector_kernel<float32x4_t, RELATION_EQUAL>(const flo
 
 template <>
 inline float32x4_t relation_vector_kernel<float32x4_t, RELATION_NOT_EQUAL>(const float32x4_t v0, const float32x4_t v1){
+#ifdef __aarch64__
     return vcvtq_f32_u32(vceqzq_u32(vceqq_f32(v0, v1)));
+#else
+    uint32x4_t v_ceq = vceqq_f32(v0, v1);
+    uint32x4_t v_ceqz = {0};
+    vsetq_lane_u32((uint32_t)(vgetq_lane_u32(v_ceq, 0) == 0 ? std::numeric_limits<uint32_t>::max() : 0), v_ceqz, 0);
+    vsetq_lane_u32((uint32_t)(vgetq_lane_u32(v_ceq, 1) == 0 ? std::numeric_limits<uint32_t>::max() : 0), v_ceqz, 1);
+    vsetq_lane_u32((uint32_t)(vgetq_lane_u32(v_ceq, 2) == 0 ? std::numeric_limits<uint32_t>::max() : 0), v_ceqz, 2);
+    vsetq_lane_u32((uint32_t)(vgetq_lane_u32(v_ceq, 3) == 0 ? std::numeric_limits<uint32_t>::max() : 0), v_ceqz, 3);
+    return vcvtq_f32_u32(v_ceqz);
+#endif
 }
 
 template <>
 inline int64x2_t relation_vector_kernel<int64x2_t, RELATION_GREATER>(const int64x2_t v0, const int64x2_t v1){
-    return vreinterpretq_s64_u64(vcgtq_s64(v0, v1));
+    return vcgt<int64x2_t>(v0, v1);
 }
 
 template <>
 inline int64x2_t relation_vector_kernel<int64x2_t, RELATION_GREATER_OR_EQUAL>(const int64x2_t v0, const int64x2_t v1){
-    return vreinterpretq_s64_u64(vcgeq_s64(v0, v1));
+    return vcge<int64x2_t>(v0, v1);
 }
 
 
 template <>
 inline int64x2_t relation_vector_kernel<int64x2_t, RELATION_LESS>(const int64x2_t v0, const int64x2_t v1){
-    return vreinterpretq_s64_u64(vcltq_s64(v0, v1));
+    return vclt<int64x2_t>(v0, v1);
 }
 
 
 template <>
 inline int64x2_t relation_vector_kernel<int64x2_t, RELATION_LESS_OR_EQUAL>(const int64x2_t v0, const int64x2_t v1){
-    return vreinterpretq_s64_u64(vcleq_s64(v0, v1));
+    return vcle<int64x2_t>(v0, v1);
 }
 
 
 template <>
 inline int64x2_t relation_vector_kernel<int64x2_t, RELATION_EQUAL>(const int64x2_t v0, const int64x2_t v1){
-    return vreinterpretq_s64_u64(vceqq_s64(v0, v1));
+    return vceq<int64x2_t>(v0, v1);
 }
 
 template <>
 inline int64x2_t relation_vector_kernel<int64x2_t, RELATION_NOT_EQUAL>(const int64x2_t v0, const int64x2_t v1){
+#ifdef __aarch64__
     return vreinterpretq_s64_u64(vceqzq_u64(vceqq_s64(v0, v1)));
+#else
+    int64x2_t v_ceq = vceq(v0, v1);
+    uint64x2_t v_ceqz = {0};
+    vsetq_lane_u64((uint32_t)(vgetq_lane_s64(v_ceq, 0) == 0 ? std::numeric_limits<uint64_t>::max() : 0), v_ceqz, 0);
+    vsetq_lane_u64((uint32_t)(vgetq_lane_s64(v_ceq, 1) == 0 ? std::numeric_limits<uint64_t>::max() : 0), v_ceqz, 1);
+    return vreinterpretq_s64_u64(v_ceqz);
+#endif
 }
 
 #ifdef PPLNN_USE_ARMV8_2_FP16

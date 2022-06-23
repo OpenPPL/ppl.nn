@@ -120,6 +120,88 @@ ppl::common::RetCode N4cxToNdarrayFp32(const float* src, int64_t batch, int64_t 
     return ppl::common::RC_SUCCESS;
 }
 
+ppl::common::RetCode NdarrayToN4cxFp32(const float* src, int64_t batch, int64_t channels, int64_t height, int64_t width, float* dst)
+{
+    const int64_t c_blk      = 4;
+    const int64_t pad_c      = round_up(channels, c_blk);
+    const int64_t inner_dims = height * width;
+
+    std::vector<int64_t> iter_of_loop{batch * div_up(channels, c_blk), inner_dims};
+    const float omp_div_task_time_ratio  = 20.0f; // assume that omp create thread is 20x slower than element copy
+    single_parallel_loop_config_t config = select_single_parallel_loop(iter_of_loop, omp_div_task_time_ratio);
+
+    if (config.depth_of_loop == 0) { // divide by outer dims is better
+        PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)
+        for (int64_t n = 0; n < batch; n++) {
+            for (int64_t c = 0; c < pad_c; c += c_blk) {
+                const int64_t c_eff       = min(channels - c, c_blk);
+                const float* p_src[c_blk] = {
+                    src + (n * channels + c + 0) * inner_dims,
+                    src + (n * channels + c + 1) * inner_dims,
+                    src + (n * channels + c + 2) * inner_dims,
+                    src + (n * channels + c + 3) * inner_dims};
+                float* p_dst = dst + (n * pad_c + c) * inner_dims;
+                if (c_eff == c_blk) {
+                    for (int64_t k = 0; k < inner_dims; ++k) {
+                        p_dst[k * c_blk + 0] = p_src[0][k];
+                        p_dst[k * c_blk + 1] = p_src[1][k];
+                        p_dst[k * c_blk + 2] = p_src[2][k];
+                        p_dst[k * c_blk + 3] = p_src[3][k];
+                    }
+                } else {
+                    for (int64_t k = 0; k < inner_dims; ++k) {
+                        for (int64_t cc = 0; cc < c_eff; cc++) {
+                            p_dst[k * c_blk + cc] = p_src[cc][k];
+                        }
+                        for (int64_t cc = c_eff; cc < c_blk; cc++) { // pad channels to zero
+                            p_dst[k * c_blk + cc] = 0;
+                        }
+                    }
+                }
+            }
+        }
+    } else { // divide by inner dims is better
+        const int64_t num_threads           = config.num_threads;
+        const int64_t inner_dims_per_thread = div_up(inner_dims, num_threads);
+        PRAGMA_OMP_PARALLEL_FOR()
+        for (int64_t thread_id = 0; thread_id < num_threads; thread_id++) {
+            const int64_t inner_dims_start = inner_dims_per_thread * thread_id;
+            const int64_t inner_dims_end   = min(inner_dims_start + inner_dims_per_thread, inner_dims);
+            for (int64_t n = 0; n < batch; n++) {
+                for (int64_t c = 0; c < pad_c; c += c_blk) {
+                    const int64_t c_eff       = min(channels - c, c_blk);
+                    const float* p_src[c_blk] = {
+                        src + (n * channels + c + 0) * inner_dims,
+                        src + (n * channels + c + 1) * inner_dims,
+                        src + (n * channels + c + 2) * inner_dims,
+                        src + (n * channels + c + 3) * inner_dims};
+                    float* p_dst = dst + (n * pad_c + c) * inner_dims;
+                    if (c_eff == c_blk) {
+                        for (int64_t k = inner_dims_start; k < inner_dims_end; ++k) {
+                            p_dst[k * c_blk + 0] = p_src[0][k];
+                            p_dst[k * c_blk + 1] = p_src[1][k];
+                            p_dst[k * c_blk + 2] = p_src[2][k];
+                            p_dst[k * c_blk + 3] = p_src[3][k];
+                        }
+                    } else {
+                        for (int64_t k = inner_dims_start; k < inner_dims_end; ++k) {
+                            for (int64_t cc = 0; cc < c_eff; cc++) {
+                                p_dst[k * c_blk + cc] = p_src[cc][k];
+                            }
+                            for (int64_t cc = c_eff; cc < c_blk; cc++) { // pad channels to zero
+                                p_dst[k * c_blk + cc] = 0;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return ppl::common::RC_SUCCESS;
+}
+
+#ifdef PPLNN_USE_ARMV8_2_FP16
 ppl::common::RetCode N8cxToNdarrayFp16(const __fp16* src, int64_t batch, int64_t channels, int64_t height, int64_t width, __fp16* dst)
 {
     const int64_t simd_w     = 8;
@@ -258,87 +340,6 @@ ppl::common::RetCode N8cxToNdarrayFp16(const __fp16* src, int64_t batch, int64_t
                     for (; k < inner_dims_end; ++k) {
                         for (int64_t cc = 0; cc < c_eff; cc++) {
                             p_dst[cc][k] = p_src[k * c_blk + cc];
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    return ppl::common::RC_SUCCESS;
-}
-
-ppl::common::RetCode NdarrayToN4cxFp32(const float* src, int64_t batch, int64_t channels, int64_t height, int64_t width, float* dst)
-{
-    const int64_t c_blk      = 4;
-    const int64_t pad_c      = round_up(channels, c_blk);
-    const int64_t inner_dims = height * width;
-
-    std::vector<int64_t> iter_of_loop{batch * div_up(channels, c_blk), inner_dims};
-    const float omp_div_task_time_ratio  = 20.0f; // assume that omp create thread is 20x slower than element copy
-    single_parallel_loop_config_t config = select_single_parallel_loop(iter_of_loop, omp_div_task_time_ratio);
-
-    if (config.depth_of_loop == 0) { // divide by outer dims is better
-        PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)
-        for (int64_t n = 0; n < batch; n++) {
-            for (int64_t c = 0; c < pad_c; c += c_blk) {
-                const int64_t c_eff       = min(channels - c, c_blk);
-                const float* p_src[c_blk] = {
-                    src + (n * channels + c + 0) * inner_dims,
-                    src + (n * channels + c + 1) * inner_dims,
-                    src + (n * channels + c + 2) * inner_dims,
-                    src + (n * channels + c + 3) * inner_dims};
-                float* p_dst = dst + (n * pad_c + c) * inner_dims;
-                if (c_eff == c_blk) {
-                    for (int64_t k = 0; k < inner_dims; ++k) {
-                        p_dst[k * c_blk + 0] = p_src[0][k];
-                        p_dst[k * c_blk + 1] = p_src[1][k];
-                        p_dst[k * c_blk + 2] = p_src[2][k];
-                        p_dst[k * c_blk + 3] = p_src[3][k];
-                    }
-                } else {
-                    for (int64_t k = 0; k < inner_dims; ++k) {
-                        for (int64_t cc = 0; cc < c_eff; cc++) {
-                            p_dst[k * c_blk + cc] = p_src[cc][k];
-                        }
-                        for (int64_t cc = c_eff; cc < c_blk; cc++) { // pad channels to zero
-                            p_dst[k * c_blk + cc] = 0;
-                        }
-                    }
-                }
-            }
-        }
-    } else { // divide by inner dims is better
-        const int64_t num_threads           = config.num_threads;
-        const int64_t inner_dims_per_thread = div_up(inner_dims, num_threads);
-        PRAGMA_OMP_PARALLEL_FOR()
-        for (int64_t thread_id = 0; thread_id < num_threads; thread_id++) {
-            const int64_t inner_dims_start = inner_dims_per_thread * thread_id;
-            const int64_t inner_dims_end   = min(inner_dims_start + inner_dims_per_thread, inner_dims);
-            for (int64_t n = 0; n < batch; n++) {
-                for (int64_t c = 0; c < pad_c; c += c_blk) {
-                    const int64_t c_eff       = min(channels - c, c_blk);
-                    const float* p_src[c_blk] = {
-                        src + (n * channels + c + 0) * inner_dims,
-                        src + (n * channels + c + 1) * inner_dims,
-                        src + (n * channels + c + 2) * inner_dims,
-                        src + (n * channels + c + 3) * inner_dims};
-                    float* p_dst = dst + (n * pad_c + c) * inner_dims;
-                    if (c_eff == c_blk) {
-                        for (int64_t k = inner_dims_start; k < inner_dims_end; ++k) {
-                            p_dst[k * c_blk + 0] = p_src[0][k];
-                            p_dst[k * c_blk + 1] = p_src[1][k];
-                            p_dst[k * c_blk + 2] = p_src[2][k];
-                            p_dst[k * c_blk + 3] = p_src[3][k];
-                        }
-                    } else {
-                        for (int64_t k = inner_dims_start; k < inner_dims_end; ++k) {
-                            for (int64_t cc = 0; cc < c_eff; cc++) {
-                                p_dst[k * c_blk + cc] = p_src[cc][k];
-                            }
-                            for (int64_t cc = c_eff; cc < c_blk; cc++) { // pad channels to zero
-                                p_dst[k * c_blk + cc] = 0;
-                            }
                         }
                     }
                 }
@@ -1047,5 +1048,6 @@ ppl::common::RetCode N8cxFp16ToN4cxFp32(const __fp16* src, int64_t batch, int64_
 
     return ppl::common::RC_SUCCESS;
 }
+#endif
 
 }}}; // namespace ppl::kernel::arm_server

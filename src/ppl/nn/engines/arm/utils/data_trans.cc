@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#ifdef PPLNN_USE_ARMV8_2_FP16
+
 #include "ppl/nn/engines/arm/utils/data_trans.h"
 #include <arm_neon.h>
 #include <cstring>
@@ -38,3 +40,4 @@ void Fp16ToFp32(const __fp16* src, int len, float* dst) {
         dst[i] = src[i];
     }
 }
+#endif

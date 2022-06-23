@@ -110,6 +110,7 @@ inline void transpose_4x4_32bit(
     v3 = (float32x4_t)vtrn2q_f64((float64x2_t)v5, (float64x2_t)v7);
 }
 
+#ifdef PPLNN_USE_ARMV8_2_FP16
 inline void transpose_8x8_16bit(
     float16x8_t& v0,
     float16x8_t& v1,
@@ -147,6 +148,7 @@ inline void transpose_8x8_16bit(
     v3 = (float16x8_t)vtrn1q_f64((float64x2_t)v19, (float64x2_t)v23);
     v7 = (float16x8_t)vtrn2q_f64((float64x2_t)v19, (float64x2_t)v23);
 }
+#endif
 
 inline void prefetch_l1(const void* addr)
 {

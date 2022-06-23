@@ -24,6 +24,7 @@ option(PPLNN_ENABLE_SANITIZE_OPTIONS "use -fsanitize options to check memory err
 
 option(PPLNN_USE_X86_64 "" OFF)
 option(PPLNN_USE_AARCH64 "" OFF)
+option(PPLNN_USE_ARMV7 "" OFF)
 option(PPLNN_USE_RISCV64 "" OFF)
 option(PPLNN_USE_CUDA "" OFF)
 
@@ -119,7 +120,7 @@ if(PPLNN_USE_RISCV64)
     include(cmake/riscv.cmake)
 endif()
 
-if(PPLNN_USE_AARCH64)
+if(PPLNN_USE_AARCH64 OR PPLNN_USE_ARMV7)
     include(cmake/arm.cmake)
 endif()
 

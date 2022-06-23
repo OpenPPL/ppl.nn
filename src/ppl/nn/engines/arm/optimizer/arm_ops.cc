@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/arm/optimizer/opt_kernel_creator_manager.h"
+#include <cstdlib>
 using namespace std;
 using namespace ppl::common;
 

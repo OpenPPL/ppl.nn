@@ -27,7 +27,7 @@ class GatherOp final : public ArmOptKernel {
 public:
     GatherOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
-    ppl::common::RetCode SelectAlgorithm(const InputOutputInfo&, const OptKernelOptions&);
+    ppl::common::RetCode SelectAlgorithm(const InputOutputInfo&, const OptKernelOptions&) override;
     ppl::common::RetCode SelectDataType(const InputOutputInfo& info,
                                         std::vector<ppl::common::datatype_t>* selected_input_types,
                                         std::vector<ppl::common::datatype_t>* selected_output_types,

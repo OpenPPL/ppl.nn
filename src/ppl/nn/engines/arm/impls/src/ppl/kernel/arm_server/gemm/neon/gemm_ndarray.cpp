@@ -17,10 +17,13 @@
 
 #include "ppl/kernel/arm_server/gemm/neon/gemm.h"
 #include "ppl/kernel/arm_server/common/internal_include.h"
+#ifdef PPLNN_USE_AARCH64
 #include "ppl/kernel/arm_server/gemm/neon/outer/gemm_ndarray_outer.h"
+#endif
 
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
+#ifdef PPLNN_USE_AARCH64
 template <typename eT>
 static ppl::common::RetCode gemm_ndarray_common(
     const eT* A,
@@ -63,6 +66,7 @@ static ppl::common::RetCode gemm_ndarray_common(
 
     return gemm_ndarray_common_outer<eT>(A, B, C, M, N, K, lda, ldb, ldc, transA, transB, alpha, beta, ldy, c_type, Y);
 }
+#endif
 
 ppl::common::RetCode gemm_ndarray(
     const void* A,
@@ -83,6 +87,7 @@ ppl::common::RetCode gemm_ndarray(
     const gemm_C_type_t c_type,
     void* Y)
 {
+#ifdef PPLNN_USE_AARCH64
     switch (data_type) {
         case ppl::common::DATATYPE_FLOAT32: return gemm_ndarray_common<float>((const float*)A, (const float*)B, (const float*)C, M, N, K, lda, ldb, ldc, transA, transB, alpha, beta, ldy, c_type, (float*)Y);
 #ifdef PPLNN_USE_ARMV8_2_FP16
@@ -90,6 +95,7 @@ ppl::common::RetCode gemm_ndarray(
 #endif
         default: break;
     }
+#endif
 
     return ppl::common::RC_UNSUPPORTED;
 }
