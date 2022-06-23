@@ -45,7 +45,7 @@ if(NOT Git_FOUND)
     message(FATAL_ERROR "git is required.")
 endif()
 
-set(__HPCC_COMMIT__ 4fbf05b9f76d3c89245d086bae78c8b9e2841da4)
+set(__HPCC_COMMIT__ c042271a4438d6cd173eccb2f38d9057f5eafa92)
 
 if(PPLNN_DEP_HPCC_PKG)
     FetchContent_Declare(hpcc
@@ -87,7 +87,7 @@ set(PPLCOMMON_USE_X86_64 ${PPLNN_USE_X86_64})
 set(PPLCOMMON_USE_AARCH64 ${PPLNN_USE_AARCH64})
 set(PPLCOMMON_USE_CUDA ${PPLNN_USE_CUDA})
 
-set(__PPLCOMMON_COMMIT__ 99074ecb3cd053a3a65e28e0c0c7324d332d8d71)
+set(__PPLCOMMON_COMMIT__ 3c0ceaa58b6077a7ba342608db58be437ad8e835)
 
 if(PPLNN_DEP_PPLCOMMON_PKG)
     hpcc_declare_pkg_dep(pplcommon
@@ -129,7 +129,15 @@ unset(__FLATBUFFERS_TAG__)
 set(protobuf_BUILD_TESTS OFF CACHE BOOL "disable protobuf tests")
 set(protobuf_BUILD_PROTOC_BINARIES OFF CACHE BOOL "")
 
-set(__PROTOBUF_TAG__ v3.12.4)
+if(MSVC)
+    if(PPLNN_USE_MSVC_STATIC_RUNTIME)
+        set(protobuf_BUILD_SHARED_LIBS OFF CACHE BOOL "")
+    else()
+        set(protobuf_BUILD_SHARED_LIBS ON CACHE BOOL "")
+    endif()
+endif()
+
+set(__PROTOBUF_TAG__ v3.11.4)
 
 if(PPLNN_DEP_PROTOBUF_PKG)
     hpcc_declare_pkg_dep(protobuf
@@ -140,7 +148,7 @@ elseif(PPLNN_DEP_PROTOBUF_GIT)
         ${__PROTOBUF_TAG__})
 else()
     hpcc_declare_pkg_dep(protobuf
-        https://github.com/protocolbuffers/protobuf/releases/download/${__PROTOBUF_TAG__}/protobuf-cpp-3.12.4.zip)
+        https://github.com/protocolbuffers/protobuf/archive/refs/tags/${__PROTOBUF_TAG__}.zip)
 endif()
 
 unset(__PROTOBUF_TAG__)
@@ -195,7 +203,7 @@ unset(__PYBIND11_TAG__)
 set(LUACPP_INSTALL OFF CACHE BOOL "")
 set(LUACPP_BUILD_TESTS OFF CACHE BOOL "")
 
-set(__LUACPP_COMMIT__ 09070faa6de6cd5dbb3a247d66667d369f89f3c8)
+set(__LUACPP_COMMIT__ f381a4702017b61ee9662ae9fa7bceec8b5c7b32)
 
 if(PPLNN_DEP_LUACPP_PKG)
     hpcc_declare_pkg_dep(luacpp
@@ -215,7 +223,8 @@ unset(__LUACPP_COMMIT__)
 
 set(BUILD_GMOCK OFF CACHE BOOL "")
 set(INSTALL_GTEST OFF CACHE BOOL "")
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
+# Prevent overriding the parent project's compiler/linker settings on Windows
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 set(__GOOGLETEST_TAG__ release-1.10.0)
 
