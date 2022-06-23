@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include <string>
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/utils/commit.h"
 #include "ppl/common/file_mapping.h"
@@ -464,7 +465,7 @@ static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
     }
 #endif
 
-#ifdef PPLNN_USE_AARCH64
+#ifdef PPLNN_USE_ARM
     if (g_flag_use_arm) {
         bool ok = RegisterArmEngine(engines);
         if (!ok) {

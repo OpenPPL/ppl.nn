@@ -159,6 +159,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
                         conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data, zero_bias.data());
                 }
             }
+#ifdef PPLNN_USE_ARMV8_2_FP16
         } else if (selected_algo.data_type == ppl::common::DATATYPE_FLOAT16) {
             vector<__fp16> weight_data_fp16;
             weight_data_fp16.resize(weight_len * sizeof(__fp16));
@@ -184,6 +185,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
                         conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data_fp16.data(), zero_bias.data());
                 }
             }
+#endif
         } else {
             LOG(ERROR) << "Unsupported data type: " << selected_algo.data_type;
             return ppl::common::RC_UNSUPPORTED;

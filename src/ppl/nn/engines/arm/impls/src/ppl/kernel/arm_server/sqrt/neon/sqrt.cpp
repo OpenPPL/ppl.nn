@@ -39,10 +39,10 @@ ppl::common::RetCode sqrt_fp32(
         float32x4_t src2 = vld1q_f32(x + i + simd_w * 2);
         float32x4_t src3 = vld1q_f32(x + i + simd_w * 3);
 
-        const float32x4_t dst0 = vsqrtq_f32(src0);
-        const float32x4_t dst1 = vsqrtq_f32(src1);
-        const float32x4_t dst2 = vsqrtq_f32(src2);
-        const float32x4_t dst3 = vsqrtq_f32(src3);
+        const float32x4_t dst0 = vsqrt<float32x4_t>(src0);
+        const float32x4_t dst1 = vsqrt<float32x4_t>(src1);
+        const float32x4_t dst2 = vsqrt<float32x4_t>(src2);
+        const float32x4_t dst3 = vsqrt<float32x4_t>(src3);
 
         vst1q_f32(y + i + simd_w * 0, dst0);
         vst1q_f32(y + i + simd_w * 1, dst1);
@@ -74,10 +74,10 @@ ppl::common::RetCode sqrt_fp16(
         float32x4_t src2 = vcvt_f32_f16(vld1_f16(x + i + simd_w * 2));
         float32x4_t src3 = vcvt_f32_f16(vld1_f16(x + i + simd_w * 3));
 
-        const float32x4_t dst0 = vsqrtq_f32(src0);
-        const float32x4_t dst1 = vsqrtq_f32(src1);
-        const float32x4_t dst2 = vsqrtq_f32(src2);
-        const float32x4_t dst3 = vsqrtq_f32(src3);
+        const float32x4_t dst0 = vsqrt<float32x4_t>(src0);
+        const float32x4_t dst1 = vsqrt<float32x4_t>(src1);
+        const float32x4_t dst2 = vsqrt<float32x4_t>(src2);
+        const float32x4_t dst3 = vsqrt<float32x4_t>(src3);
 
         vst1_f16(y + i + simd_w * 0, vcvt_f16_f32(dst0));
         vst1_f16(y + i + simd_w * 1, vcvt_f16_f32(dst1));

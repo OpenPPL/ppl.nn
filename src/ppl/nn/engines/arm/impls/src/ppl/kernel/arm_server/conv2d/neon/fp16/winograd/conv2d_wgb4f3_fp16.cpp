@@ -803,70 +803,70 @@ static inline void conv2d_n8cx_wgb4f3_postp_output_block_fp16(
             switch (num_valid_ow) {
                 case 4:
                     vst1q_f16(output_block + dst_w * (3 * OCBLK()) + (3 * OCBLK()), vmid[9]);
-                    __attribute__((fallthrough));
+                    [[fallthrough]];
                 case 3:
                     vst1q_f16(output_block + dst_w * (3 * OCBLK()) + (2 * OCBLK()), vmid[8]);
-                    __attribute__((fallthrough));
+                    [[fallthrough]];
                 case 2:
                     vst1q_f16(output_block + dst_w * (3 * OCBLK()) + (1 * OCBLK()), vmid[7]);
-                    __attribute__((fallthrough));
+                    [[fallthrough]];
                 case 1:
                     vst1q_f16(output_block + dst_w * (3 * OCBLK()), vmid[6]);
-                    __attribute__((fallthrough));
+                    [[fallthrough]];
                 default:;
             }
-            __attribute__((fallthrough));
+            [[fallthrough]];
         case 3:
             switch (num_valid_ow) {
                 case 4:
                     vst1q_f16(output_block + dst_w * (2 * OCBLK()) + (3 * OCBLK()), vmid[5]);
-                    __attribute__((fallthrough));
+                    [[fallthrough]];
                 case 3:
                     vst1q_f16(output_block + dst_w * (2 * OCBLK()) + (2 * OCBLK()), vmid[4]);
-                    __attribute__((fallthrough));
+                    [[fallthrough]];
                 case 2:
                     vst1q_f16(output_block + dst_w * (2 * OCBLK()) + (1 * OCBLK()), vmid[3]);
-                    __attribute__((fallthrough));
+                    [[fallthrough]];
                 case 1:
                     vst1q_f16(output_block + dst_w * (2 * OCBLK()), vmid[2]);
-                    __attribute__((fallthrough));
+                    [[fallthrough]];
                 default:;
             }
-            __attribute__((fallthrough));
+            [[fallthrough]];
         case 2:
             switch (num_valid_ow) {
                 case 4:
                     vst1q_f16(output_block + dst_w * (OCBLK()) + (3 * OCBLK()), vmid[1]);
-                    __attribute__((fallthrough));
+                    [[fallthrough]];
                 case 3:
                     vst1q_f16(output_block + dst_w * (OCBLK()) + (2 * OCBLK()), vmid[0]);
-                    __attribute__((fallthrough));
+                    [[fallthrough]];
                 case 2:
                     vst1q_f16(output_block + dst_w * (OCBLK()) + (1 * OCBLK()), vio[5]);
-                    __attribute__((fallthrough));
+                    [[fallthrough]];
                 case 1:
                     vst1q_f16(output_block + dst_w * (OCBLK()), vio[4]);
-                    __attribute__((fallthrough));
+                    [[fallthrough]];
                 default:;
             }
-            __attribute__((fallthrough));
+            [[fallthrough]];
         case 1:
             switch (num_valid_ow) {
                 case 4:
                     vst1q_f16(output_block + (3 * OCBLK()), vio[3]);
-                    __attribute__((fallthrough));
+                    [[fallthrough]];
                 case 3:
                     vst1q_f16(output_block + (2 * OCBLK()), vio[2]);
-                    __attribute__((fallthrough));
+                    [[fallthrough]];
                 case 2:
                     vst1q_f16(output_block + (1 * OCBLK()), vio[1]);
-                    __attribute__((fallthrough));
+                    [[fallthrough]];
                 case 1:
                     vst1q_f16(output_block, vio[0]);
-                    __attribute__((fallthrough));
+                    [[fallthrough]];
                 default:;
             }
-            __attribute__((fallthrough));
+            [[fallthrough]];
         default:;
     }
 }

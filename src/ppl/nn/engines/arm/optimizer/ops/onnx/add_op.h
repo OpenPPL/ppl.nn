@@ -26,7 +26,7 @@ class AddOp final : public ArmOptKernel {
 public:
     AddOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
-    ppl::common::RetCode SelectAlgorithm(const InputOutputInfo&, const OptKernelOptions&);
+    ppl::common::RetCode SelectAlgorithm(const InputOutputInfo&, const OptKernelOptions&) override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
                                       std::vector<ppl::common::dataformat_t>* selected_input_formats,
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;

@@ -16,6 +16,8 @@
 // under the License.
 
 #include "ppl/kernel/arm_server/conv2d/neon/conv2d.h"
+
+#ifdef PPLNN_USE_AARCH64
 #include "ppl/kernel/arm_server/conv2d/neon/fp16/depthwise/conv2d_n8cx_depthwise_fp16.h"
 #include "ppl/kernel/arm_server/conv2d/neon/fp16/direct/conv2d_n8cx_direct_fp16.h"
 #include "ppl/kernel/arm_server/conv2d/neon/fp16/direct_ndarray/conv2d_direct_ndarray_fp16.h"
@@ -29,6 +31,7 @@
 #include "ppl/kernel/arm_server/conv2d/neon/fp32/im2col/conv2d_n4cx_im2col_fp32.h"
 #include "ppl/kernel/arm_server/conv2d/neon/fp32/winograd/conv2d_wgb2f3_fp32.h"
 #include "ppl/kernel/arm_server/conv2d/neon/fp32/winograd/conv2d_wgb4f3_fp32.h"
+#endif
 
 #include <chrono>
 #include <new>
@@ -46,6 +49,7 @@ conv2d_offline_manager *conv2d_algo_selector::fast_gen_algo(
     const conv2d_param &param,
     ppl::common::Allocator *allocator)
 {
+#ifdef PPLNN_USE_AARCH64
     ppl::common::datatype_t preferred_data_type = options.forward_precision;
     ppl::common::dataformat_t src_format        = shape.GetDataFormat();
 
@@ -292,6 +296,7 @@ conv2d_offline_manager *conv2d_algo_selector::fast_gen_algo(
             delete direct_mgr;
         }
     }
+#endif
 
     return nullptr;
 }
@@ -302,6 +307,7 @@ static conv2d_offline_manager *get_conv2d_offline_manager_with_algo(
     const conv2d_param &param,
     ppl::common::Allocator *allocator)
 {
+#ifdef PPLNN_USE_AARCH64
     switch (algo) {
         case ppl::kernel::arm_server::neon::conv2d_algo::direct:
             if (datatype == ppl::common::DATATYPE_FLOAT32) {
@@ -347,6 +353,7 @@ static conv2d_offline_manager *get_conv2d_offline_manager_with_algo(
 #endif
             break;
     }
+#endif
 
     return nullptr;
 }
@@ -358,6 +365,7 @@ conv2d_offline_manager *conv2d_algo_selector::gen_fast_algo(
     const conv2d_param &param,
     ppl::common::Allocator *allocator)
 {
+#ifdef PPLNN_USE_AARCH64
     ppl::common::datatype_t preferred_data_type = options.forward_precision;
     ppl::common::dataformat_t src_format        = src_shape.GetDataFormat();
 
@@ -531,6 +539,9 @@ conv2d_offline_manager *conv2d_algo_selector::gen_fast_algo(
 
     LOG(DEBUG) << "Selected conv2d algorithm: " << best_algo;
     return best_conv2d_mgr;
+#else
+    return nullptr;
+#endif
 }
 
 }}}}; // namespace ppl::kernel::arm_server::neon

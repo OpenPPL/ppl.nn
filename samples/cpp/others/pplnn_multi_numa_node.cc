@@ -187,7 +187,7 @@ static inline int32_t GetNumaNodeNum(void) {
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef PPLNN_USE_AARCH64
+#ifdef PPLNN_USE_ARM
 Define_bool_opt("--use-arm", g_flag_use_arm, false, "use arm engine");
 Define_bool_opt("--use-fp16", g_flag_use_fp16, false, "infer with armv8.2 fp16");
 Define_int32_opt("--wg-level", g_flag_wg_level, 1,
@@ -223,7 +223,7 @@ static inline bool RegisterArmEngine(vector<unique_ptr<Engine>>* engines, const 
 #endif
 
 static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines, const int32_t numa_node_id) {
-#ifdef PPLNN_USE_AARCH64
+#ifdef PPLNN_USE_ARM
     if (g_flag_use_arm) {
         bool ok = RegisterArmEngine(engines, numa_node_id);
         if (!ok) {

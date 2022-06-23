@@ -41,6 +41,7 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_ARM_DEBUG_TRACE("filter: %p\n", executor_->cvt_filter());
     PPLNN_ARM_DEBUG_TRACE("bias: %p\n", executor_->cvt_bias());
 
+#ifdef PPLNN_USE_AARCH64
     ppl::common::RetCode rc;
 
     const auto data_type = A->GetShape()->GetDataType();
@@ -155,6 +156,7 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
             return ppl::common::RC_UNSUPPORTED;
         }
     }
+#endif
 #endif
 
     return ppl::common::RC_UNSUPPORTED;
