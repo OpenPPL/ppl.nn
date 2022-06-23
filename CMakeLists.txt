@@ -22,6 +22,10 @@ option(PPLNN_HOLD_DEPS "don't update dependencies" OFF)
 
 option(PPLNN_ENABLE_SANITIZE_OPTIONS "use -fsanitize options to check memory errors. Note that this option is only available for GCC and Clang." OFF)
 
+if(MSVC)
+    option(PPLNN_USE_MSVC_STATIC_RUNTIME "" ON)
+endif()
+
 option(PPLNN_USE_X86_64 "" OFF)
 option(PPLNN_USE_AARCH64 "" OFF)
 option(PPLNN_USE_RISCV64 "" OFF)
@@ -56,12 +60,22 @@ set(PPLNN_LINK_DIRECTORIES)
 # dependencies
 
 include(cmake/deps.cmake)
-include(cmake/rapidjson.cmake)
+
+# --------------------------------------------------------------------------- #
+
+# compiler related
+
+if(PPLNN_USE_MSVC_STATIC_RUNTIME)
+    hpcc_use_msvc_static_runtime()
+else()
+    hpcc_use_msvc_dynamic_runtime()
+endif()
 
 # --------------------------------------------------------------------------- #
 
 # framework related
 
+include(cmake/rapidjson.cmake)
 include(cmake/version.cmake)
 
 set(PPLNN_MODELS_SRC)
@@ -177,10 +191,10 @@ if(PPLNN_BUILD_TOOLS)
     add_subdirectory(tools)
 endif()
 
-if(PPLNN_BUILD_TESTS)
-    add_subdirectory(tests)
-endif()
-
 if(PPLNN_BUILD_SAMPLES)
     add_subdirectory(samples/cpp)
+endif()
+
+if(PPLNN_BUILD_TESTS)
+    add_subdirectory(tests)
 endif()
