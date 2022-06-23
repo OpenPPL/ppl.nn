@@ -45,7 +45,7 @@ if(NOT Git_FOUND)
     message(FATAL_ERROR "git is required.")
 endif()
 
-set(__HPCC_COMMIT__ c042271a4438d6cd173eccb2f38d9057f5eafa92)
+set(__HPCC_COMMIT__ 800a280b41228df99a3d585d27b3fd962e780414)
 
 if(PPLNN_DEP_HPCC_PKG)
     FetchContent_Declare(hpcc

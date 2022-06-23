@@ -10,6 +10,10 @@ endif()
 
 # ----- #
 
+if(PPLNN_USE_MSVC_STATIC_RUNTIME)
+    hpcc_cuda_use_msvc_static_runtime()
+endif()
+
 file(GLOB_RECURSE PPLNN_CUDA_SRC src/ppl/nn/engines/cuda/*.cc)
 list(APPEND PPLNN_SOURCES ${PPLNN_CUDA_SRC})
 
