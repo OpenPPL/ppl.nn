@@ -226,7 +226,7 @@ bool ConvOp::TryFuseReLU(void) {
         conv2d_param_->mgr->algo_info().algo_type == ppl::kernel::arm_server::neon::conv2d_algo::unknown) {
         return false;
     }
-    ppl::kernel::arm_server::neon::conv2d_param param = conv2d_param_->mgr->param();
+    ppl::kernel::arm_server::neon::conv2d_param param = conv2d_param_->mgr->get_param();
     param.fuse_flag |= ppl::kernel::arm_server::neon::conv_fuse_flag::RELU;
     conv2d_param_->mgr->set_param(param);
     return true;
@@ -237,7 +237,7 @@ bool ConvOp::TryFuseReLU6(void) {
         conv2d_param_->mgr->algo_info().algo_type == ppl::kernel::arm_server::neon::conv2d_algo::unknown) {
         return false;
     }
-    ppl::kernel::arm_server::neon::conv2d_param param = conv2d_param_->mgr->param();
+    ppl::kernel::arm_server::neon::conv2d_param param = conv2d_param_->mgr->get_param();
     param.fuse_flag |= ppl::kernel::arm_server::neon::conv_fuse_flag::RELU;
     param.fuse_flag |= ppl::kernel::arm_server::neon::conv_fuse_flag::RELU6;
     conv2d_param_->mgr->set_param(param);
@@ -249,7 +249,7 @@ bool ConvOp::TryFuseSum(void) {
         conv2d_param_->mgr->algo_info().algo_type == ppl::kernel::arm_server::neon::conv2d_algo::unknown) {
         return false;
     }
-    ppl::kernel::arm_server::neon::conv2d_param param = conv2d_param_->mgr->param();
+    ppl::kernel::arm_server::neon::conv2d_param param = conv2d_param_->mgr->get_param();
     if (param.fuse_flag) { // already fused sum, relu or relu6
         return false;
     }
