@@ -43,7 +43,7 @@ const bool ChannelShuffleFusion::CanFuseFirstReshape(ir::Node* node, const OptKe
         if (dims.size() != 1 || dims[0] != 5) {
             return false;
         }
-        auto shape = (int64_t*)constants_pair->second.data.data();
+        auto shape = (int64_t*)constants_pair->second.data.GetData();
         if (shape[1] != 2) {
             return false;
         }

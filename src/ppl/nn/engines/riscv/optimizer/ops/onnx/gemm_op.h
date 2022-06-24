@@ -109,8 +109,8 @@ private:
         const float* weight_data = nullptr;
         std::vector<T> weight_cvt;
         if (weight_data_it != graph_data->constants.end()) {
-            weight_data = (const float*)weight_data_it->second.data.data();
-            int64_t weight_len = weight_data_it->second.data.size() / sizeof(float);
+            weight_data = (const float*)weight_data_it->second.data.GetData();
+            int64_t weight_len = weight_data_it->second.data.GetSize() / sizeof(float);
             gemm_op_graph_data_cvt<T>(weight_data, weight_cvt, weight_len);
         }
 
@@ -119,8 +119,8 @@ private:
         if (node->GetInputCount() == 3) {
             auto bias_data_it = graph_data->constants.find(node->GetInput(2));
             if (bias_data_it != graph_data->constants.end()) {
-                bias_data = (const float*)bias_data_it->second.data.data();
-                int64_t bias_len = bias_data_it->second.data.size() / sizeof(float);
+                bias_data = (const float*)bias_data_it->second.data.GetData();
+                int64_t bias_len = bias_data_it->second.data.GetSize() / sizeof(float);
                 gemm_op_graph_data_cvt<T>(bias_data, bias_cvt, bias_len);
             }
         }

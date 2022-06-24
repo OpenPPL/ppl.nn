@@ -71,8 +71,8 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
         return ppl::common::RC_SUCCESS;
     }
 
-    float* weight_data = (float*)weight_data_it->second.data.data();
-    int64_t weight_len = weight_data_it->second.data.size() / sizeof(float);
+    float* weight_data = (float*)weight_data_it->second.data.GetData();
+    int64_t weight_len = weight_data_it->second.data.GetSize() / sizeof(float);
 
     float* bias_data = nullptr;
     int64_t bias_len = 0;
@@ -82,8 +82,8 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
             LOG(INFO) << "ConvOp constant weight not found, will use conv runtime.";
             return ppl::common::RC_SUCCESS;
         }
-        bias_data = (float*)bias_data_it->second.data.data();
-        bias_len = bias_data_it->second.data.size() / sizeof(float);
+        bias_data = (float*)bias_data_it->second.data.GetData();
+        bias_len = bias_data_it->second.data.GetSize() / sizeof(float);
     }
 
     const ir::Shape& weight_shape = graph_data->shapes.find(node->GetInput(1))->second;

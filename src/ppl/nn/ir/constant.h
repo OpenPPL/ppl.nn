@@ -18,12 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_IR_CONSTANT_H_
 #define _ST_HPC_PPL_NN_IR_CONSTANT_H_
 
-#include <string>
+#include "ppl/nn/utils/buffer.h"
 
 namespace ppl { namespace nn { namespace ir {
 
 struct Constant final {
-    std::string data;
+    ppl::nn::utils::Buffer data;
 };
 
 }}} // namespace ppl::nn::ir

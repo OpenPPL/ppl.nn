@@ -67,8 +67,8 @@ RetCode ConvTransposeOp::Init(const OptKernelOptions& options) {
     auto weight_data_it = graph_data->constants.find(node->GetInput(1));
     const float* weight_data = nullptr;
     if (weight_data_it != graph_data->constants.end()) {
-        weight_data = (const float*)weight_data_it->second.data.data();
-        int64_t weight_len = weight_data_it->second.data.size() / sizeof(float);
+        weight_data = (const float*)weight_data_it->second.data.GetData();
+        int64_t weight_len = weight_data_it->second.data.GetSize() / sizeof(float);
 
         if (options.engine_options->forward_precision == DATATYPE_FLOAT32) {
             shared_ptr<void> weight_cvt(malloc(weight_len * sizeof(float)), free);
@@ -87,8 +87,8 @@ RetCode ConvTransposeOp::Init(const OptKernelOptions& options) {
     if (node->GetInputCount() == 3) {
         auto bias_data_it = graph_data->constants.find(node->GetInput(2));
         if (bias_data_it != graph_data->constants.end()) {
-            bias_data = (const float*)bias_data_it->second.data.data();
-            int64_t bias_len = bias_data_it->second.data.size() / sizeof(float);
+            bias_data = (const float*)bias_data_it->second.data.GetData();
+            int64_t bias_len = bias_data_it->second.data.GetSize() / sizeof(float);
             if (options.engine_options->forward_precision == DATATYPE_FLOAT32) {
                 shared_ptr<void> bias_cvt(malloc(bias_len * sizeof(float)), free);
                 CvtGraphData<float>(bias_data, (float*)bias_cvt.get(), bias_len);

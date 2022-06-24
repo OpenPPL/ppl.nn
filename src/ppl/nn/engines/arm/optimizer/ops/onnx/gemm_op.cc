@@ -59,10 +59,10 @@ ppl::common::RetCode GemmOp::SelectAlgorithm(const InputOutputInfo& info, const 
     auto graph_data = options.graph_data;
 
     auto weight_data_it = graph_data->constants.find(node->GetInput(1));
-    int64_t weight_len = weight_data_it->second.data.size() / sizeof(float);
+    int64_t weight_len = weight_data_it->second.data.GetSize() / sizeof(float);
     void* weight_data = nullptr;
     if (weight_data_it != graph_data->constants.end()) {
-        weight_data = (void*)weight_data_it->second.data.data();
+        weight_data = weight_data_it->second.data.GetData();
     }
 
     void* bias_data = nullptr;
@@ -70,8 +70,8 @@ ppl::common::RetCode GemmOp::SelectAlgorithm(const InputOutputInfo& info, const 
     if (node->GetInputCount() == 3) {
         auto bias_data_it = graph_data->constants.find(node->GetInput(2));
         if (bias_data_it != graph_data->constants.end()) {
-            bias_len = bias_data_it->second.data.size() / sizeof(float);
-            bias_data = (void*)bias_data_it->second.data.data();
+            bias_len = bias_data_it->second.data.GetSize() / sizeof(float);
+            bias_data = bias_data_it->second.data.GetData();
         }
     }
 

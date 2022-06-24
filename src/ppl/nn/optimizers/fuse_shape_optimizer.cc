@@ -92,7 +92,7 @@ RetCode UpdateMatrixForNextNode(ir::Node* node, vector<edgeid_t>* edge_array, Sh
                 }
                 matrix.Append(ith_matrix);
             } else if (constants.find(temp_edge_id) != constants.end()) {
-                auto concat_input = (const int64_t*)(constants.find(temp_edge_id)->second.data.data());
+                auto concat_input = (const int64_t*)(constants.find(temp_edge_id)->second.data.GetData());
                 auto concat_dims = shapes.find(temp_edge_id)->second.dims;
                 if (concat_dims.size() != 1 || concat_dims[0] != 1) {
                     return RC_UNSUPPORTED;
@@ -111,7 +111,7 @@ RetCode UpdateMatrixForNextNode(ir::Node* node, vector<edgeid_t>* edge_array, Sh
         if (pair == constants.end()) {
             return RC_UNSUPPORTED;
         }
-        auto gather_indices = (const int64_t*)(pair->second.data.data());
+        auto gather_indices = (const int64_t*)(pair->second.data.GetData());
         auto& gather_dims = shapes.find(indices_id)->second.dims;
         if (gather_dims.size() != 0 && (gather_dims.size() != 1 || gather_dims[0] != 1)) {
             return RC_UNSUPPORTED;
@@ -128,7 +128,7 @@ RetCode UpdateMatrixForNextNode(ir::Node* node, vector<edgeid_t>* edge_array, Sh
         if (start_pair == constants.end()) {
             return RC_UNSUPPORTED;
         }
-        auto start_input = (const int64_t*)(start_pair->second.data.data());
+        auto start_input = (const int64_t*)(start_pair->second.data.GetData());
         auto& start_dims = shapes.find(start_id)->second.dims;
         if (start_dims.size() != 0 && (start_dims.size() != 1 || start_dims[0] != 1)) {
             return RC_UNSUPPORTED;
@@ -139,7 +139,7 @@ RetCode UpdateMatrixForNextNode(ir::Node* node, vector<edgeid_t>* edge_array, Sh
         if (end_pair == constants.end()) {
             return RC_UNSUPPORTED;
         }
-        auto end_input = (const int64_t*)(end_pair->second.data.data());
+        auto end_input = (const int64_t*)(end_pair->second.data.GetData());
         auto& end_dims = shapes.find(end_id)->second.dims;
         if (end_dims.size() != 0 && (end_dims.size() != 1 || end_dims[0] != 1)) {
             return RC_UNSUPPORTED;
@@ -161,7 +161,7 @@ RetCode UpdateMatrixForNextNode(ir::Node* node, vector<edgeid_t>* edge_array, Sh
             auto& temp_matrix = shape_param->alpha.find(temp_edge_id)->second;
             matrix.Arithmetic(temp_matrix, node->GetType().name);
         } else if (constants.find(temp_edge_id) != constants.end()) {
-            auto arith_input = (const int64_t*)(constants.find(temp_edge_id)->second.data.data());
+            auto arith_input = (const int64_t*)(constants.find(temp_edge_id)->second.data.GetData());
             auto& arith_dims = shapes.find(temp_edge_id)->second.dims;
             if (arith_dims.size() != 0 && (arith_dims.size() != 1 || arith_dims[0] != 1)) {
                 return RC_UNSUPPORTED;

@@ -20,8 +20,7 @@
 
 #include "ppl/common/types.h"
 #include "ppl/nn/ir/attr.h"
-#include <string>
-#include <vector>
+#include "ppl/nn/utils/buffer.h"
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace onnx {
@@ -29,7 +28,7 @@ namespace ppl { namespace nn { namespace onnx {
 struct ConstantOfShapeParam final : public ir::TypedAttr<ConstantOfShapeParam> {
     ppl::common::datatype_t data_type;
     std::vector<int64_t> dims;
-    std::string data;
+    ppl::nn::utils::Buffer data;
 
     bool operator==(const ConstantOfShapeParam& p) const {
         return this->data_type == p.data_type && this->dims == p.dims && this->data == p.data;

@@ -86,7 +86,7 @@ RetCode DeformConvAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& optio
 
         ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
         status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(
-            &temp_buffer, postshape, weight_iter->second.data.data(), preshape);
+            &temp_buffer, postshape, weight_iter->second.data.GetData(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << node->GetName() << " copy constant failed: " << GetRetCodeStr(status);
             return status;

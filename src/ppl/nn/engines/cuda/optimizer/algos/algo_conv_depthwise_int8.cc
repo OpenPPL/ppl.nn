@@ -243,7 +243,7 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
         }
         status = ((CudaDataConverter*)options.opt_stage_device->GetDataConverter())
                      ->ConvertFromHost(&temp_buffer, postshape, options.quants->at(postedge_id),
-                                       weight_iter->second.data.data(), preshape, options.quants->at(preedge_id));
+                                       weight_iter->second.data.GetData(), preshape, options.quants->at(preedge_id));
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
             return status;

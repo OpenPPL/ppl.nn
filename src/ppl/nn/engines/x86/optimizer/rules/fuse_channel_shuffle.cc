@@ -43,32 +43,32 @@ inline void GetSliceParam(const ir::Node* node, const ir::GraphTopo* graph_topo,
     if (starts_edge != nullptr && constants.find(starts_edge->GetId()) != constants.end()) {
         auto it = constants.find(starts_edge->GetId());
         const auto starts_data = it->second.data;
-        starts = std::vector<int64_t>((const int64_t*)starts_data.data(),
-                                      (const int64_t*)starts_data.data() + starts_data.size() / sizeof(int64_t));
+        starts = std::vector<int64_t>((const int64_t*)starts_data.GetData(),
+                                      (const int64_t*)starts_data.GetData() + starts_data.GetSize() / sizeof(int64_t));
     }
 
     auto ends_edge = graph_topo->GetEdge(node->GetInput(2));
     if (ends_edge != nullptr && constants.find(ends_edge->GetId()) != constants.end()) {
         auto it = constants.find(ends_edge->GetId());
         const auto ends_data = it->second.data;
-        ends = std::vector<int64_t>((const int64_t*)ends_data.data(),
-                                    (const int64_t*)ends_data.data() + ends_data.size() / sizeof(int64_t));
+        ends = std::vector<int64_t>((const int64_t*)ends_data.GetData(),
+                                    (const int64_t*)ends_data.GetData() + ends_data.GetSize() / sizeof(int64_t));
     }
 
     auto axes_edge = node->GetInputCount() >= 4 ? graph_topo->GetEdge(node->GetInput(3)) : nullptr;
     if (axes_edge != nullptr && constants.find(axes_edge->GetId()) != constants.end()) {
         auto it = constants.find(axes_edge->GetId());
         const auto axes_data = it->second.data;
-        axes = std::vector<int64_t>((const int64_t*)axes_data.data(),
-                                    (const int64_t*)axes_data.data() + axes_data.size() / sizeof(int64_t));
+        axes = std::vector<int64_t>((const int64_t*)axes_data.GetData(),
+                                    (const int64_t*)axes_data.GetData() + axes_data.GetSize() / sizeof(int64_t));
     }
 
     auto steps_edge = node->GetInputCount() >= 5 ? graph_topo->GetEdge(node->GetInput(4)) : nullptr;
     if (steps_edge != nullptr && constants.find(steps_edge->GetId()) != constants.end()) {
         auto it = constants.find(steps_edge->GetId());
         const auto steps_data = it->second.data;
-        steps = std::vector<int64_t>((const int64_t*)steps_data.data(),
-                                     (const int64_t*)steps_data.data() + steps_data.size() / sizeof(int64_t));
+        steps = std::vector<int64_t>((const int64_t*)steps_data.GetData(),
+                                     (const int64_t*)steps_data.GetData() + steps_data.GetSize() / sizeof(int64_t));
     }
 }
 

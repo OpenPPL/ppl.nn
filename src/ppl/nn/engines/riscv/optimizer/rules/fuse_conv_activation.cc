@@ -49,8 +49,8 @@ static bool IsReLU6(const ir::GraphData* graph_data, const ir::Node* clip_node) 
         return false;
     }
 
-    float min_val = *((float*)min_edge_constant->second.data.data());
-    float max_val = *((float*)max_edge_constant->second.data.data());
+    float min_val = *((float*)min_edge_constant->second.data.GetData());
+    float max_val = *((float*)max_edge_constant->second.data.GetData());
     if (min_val == 0.0f && max_val == 6.0f) {
         return true;
     }
