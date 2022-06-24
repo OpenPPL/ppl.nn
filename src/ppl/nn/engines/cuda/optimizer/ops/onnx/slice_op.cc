@@ -82,7 +82,7 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
                 LOG(ERROR) << "Copy axes input failed: " << GetRetCodeStr(status);
                 return status;
             }
-            kernel_param.axes_num = input->GetShape()->GetElementsIncludingPadding();
+            kernel_param.axes_num = input->GetShape()->CalcElementsIncludingPadding();
         } else {
             for (int it = 0; it < dim_count; ++it) {
                 kernel_param.axes[it] = it;

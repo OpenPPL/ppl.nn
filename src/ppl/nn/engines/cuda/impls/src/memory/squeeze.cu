@@ -28,7 +28,7 @@ ppl::common::RetCode PPLCUDASqueezeForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output)
 {
-    int64_t num_elems_output = output_shape->GetElementsIncludingPadding();
+    int64_t num_elems_output = output_shape->CalcElementsIncludingPadding();
     cudaMemcpyAsync(output, input, ppl::common::GetSizeOfDataType(input_shape->GetDataType()) * num_elems_output, cudaMemcpyDeviceToDevice, stream);
     return ppl::common::RC_SUCCESS;
 }

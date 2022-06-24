@@ -40,7 +40,7 @@ ppl::common::RetCode PPLCUDAConstantOfShapeForwardImp(
     const ppl::nn::TensorShape *output_shape,
     void *output)
 {
-    int64_t num_elems = output_shape->GetElementsIncludingPadding();
+    int64_t num_elems = output_shape->CalcElementsIncludingPadding();
     int block_size    = 256;
     int grid_size     = (num_elems + block_size - 1) / block_size;
 

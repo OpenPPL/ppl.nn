@@ -240,7 +240,7 @@ ppl::common::RetCode PPLCUDACumsumForwardImp(
     const void* input,
     void* output)
 {
-  int num_elems = input_shape->GetElementsIncludingPadding();
+  int num_elems = input_shape->CalcElementsIncludingPadding();
   int num_dims = input_shape->GetDimCount();
   int row_size = input_shape->GetDim(axis);
 

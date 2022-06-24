@@ -171,7 +171,7 @@ public:
         is_scalar_ = (dc == 0);
     }
 
-    uint64_t GetElementsIncludingPadding() const {
+    uint64_t CalcElementsIncludingPadding() const {
         if (dims_.empty()) {
             return is_scalar_ ? 1 : 0;
         }
@@ -181,7 +181,7 @@ public:
         }
         return accu;
     }
-    uint64_t GetElementsExcludingPadding() const {
+    uint64_t CalcElementsExcludingPadding() const {
         if (dims_.empty()) {
             return is_scalar_ ? 1 : 0;
         }
@@ -191,13 +191,13 @@ public:
         }
         return accu;
     }
-    uint64_t GetBytesIncludingPadding() const {
-        return ppl::common::GetSizeOfDataType(data_type_) * GetElementsIncludingPadding();
+    uint64_t CalcBytesIncludingPadding() const {
+        return ppl::common::GetSizeOfDataType(data_type_) * CalcElementsIncludingPadding();
     }
-    uint64_t GetBytesExcludingPadding() const {
-        return ppl::common::GetSizeOfDataType(data_type_) * GetElementsExcludingPadding();
+    uint64_t CalcBytesExcludingPadding() const {
+        return ppl::common::GetSizeOfDataType(data_type_) * CalcElementsExcludingPadding();
     }
-    uint64_t GetElementsFromDimensionIncludingPadding(uint32_t which) const {
+    uint64_t CalcElementsFromDimensionIncludingPadding(uint32_t which) const {
         if (dims_.empty()) {
             return is_scalar_ ? 1 : 0;
         }
@@ -207,7 +207,7 @@ public:
         }
         return accu;
     }
-    uint64_t GetElementsToDimensionIncludingPadding(uint32_t which) const {
+    uint64_t CalcElementsToDimensionIncludingPadding(uint32_t which) const {
         if (dims_.empty()) {
             return is_scalar_ ? 1 : 0;
         }
@@ -217,7 +217,7 @@ public:
         }
         return accu;
     }
-    uint64_t GetElementsFromDimensionExcludingPadding(uint32_t which) const {
+    uint64_t CalcElementsFromDimensionExcludingPadding(uint32_t which) const {
         if (dims_.empty()) {
             return is_scalar_ ? 1 : 0;
         }
@@ -227,7 +227,7 @@ public:
         }
         return accu;
     }
-    uint64_t GetElementsToDimensionExcludingPadding(uint32_t which) const {
+    uint64_t CalcElementsToDimensionExcludingPadding(uint32_t which) const {
         if (dims_.empty()) {
             return is_scalar_ ? 1 : 0;
         }
@@ -237,17 +237,17 @@ public:
         }
         return accu;
     }
-    uint64_t GetBytesToDimesionIncludingPadding(uint32_t which) const {
-        return ppl::common::GetSizeOfDataType(data_type_) * GetElementsToDimensionIncludingPadding(which);
+    uint64_t CalcBytesToDimesionIncludingPadding(uint32_t which) const {
+        return ppl::common::GetSizeOfDataType(data_type_) * CalcElementsToDimensionIncludingPadding(which);
     }
-    uint64_t GetBytesToDimesionExcludingPadding(uint32_t which) const {
-        return ppl::common::GetSizeOfDataType(data_type_) * GetElementsToDimensionExcludingPadding(which);
+    uint64_t CalcBytesToDimesionExcludingPadding(uint32_t which) const {
+        return ppl::common::GetSizeOfDataType(data_type_) * CalcElementsToDimensionExcludingPadding(which);
     }
-    uint64_t GetBytesFromDimesionIncludingPadding(uint32_t which) const {
-        return ppl::common::GetSizeOfDataType(data_type_) * GetElementsFromDimensionIncludingPadding(which);
+    uint64_t CalcBytesFromDimesionIncludingPadding(uint32_t which) const {
+        return ppl::common::GetSizeOfDataType(data_type_) * CalcElementsFromDimensionIncludingPadding(which);
     }
-    uint64_t GetBytesFromDimesionExcludingPadding(uint32_t which) const {
-        return ppl::common::GetSizeOfDataType(data_type_) * GetElementsFromDimensionExcludingPadding(which);
+    uint64_t CalcBytesFromDimesionExcludingPadding(uint32_t which) const {
+        return ppl::common::GetSizeOfDataType(data_type_) * CalcElementsFromDimensionExcludingPadding(which);
     }
 
     void Clear() {

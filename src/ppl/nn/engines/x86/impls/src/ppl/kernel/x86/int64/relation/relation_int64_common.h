@@ -65,7 +65,7 @@ ppl::common::RetCode relation_eltwise_binary_op_int64(
     const int64_t *src1,
     uint8_t *dst)
 {
-    const uint64_t length = dst_shape->GetElementsIncludingPadding();
+    const uint64_t length = dst_shape->CalcElementsIncludingPadding();
     PRAGMA_OMP_PARALLEL_FOR()
     for (uint64_t i = 0; i < length; i++) {
         dst[i] = relation_scalar_kernel_int64<_op>(src0[i], src1[i]);

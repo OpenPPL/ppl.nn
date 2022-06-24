@@ -99,8 +99,8 @@ conv2d_common_algo_info conv2d_fp16_algo_selector::select_best_algo(const void* 
         auto ori_output_format                       = dst_shape.GetDataFormat();
         src_shape.SetDataFormat(algo_info.input_format);
         dst_shape.SetDataFormat(algo_info.output_format);
-        std::vector<__fp16> dst(dst_shape.GetElementsIncludingPadding(), 0.f);
-        std::vector<__fp16> src(src_shape.GetElementsIncludingPadding(), 0.f);
+        std::vector<__fp16> dst(dst_shape.CalcElementsIncludingPadding(), 0.f);
+        std::vector<__fp16> src(src_shape.CalcElementsIncludingPadding(), 0.f);
 
         if (conv_manager == nullptr) {
             return algo_info;

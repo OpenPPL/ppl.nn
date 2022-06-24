@@ -35,7 +35,7 @@ ppl::common::RetCode FlattenKernel::DoExecute(KernelExecContext* ctx) {
     if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL) {
         output->TransferBufferFrom(input);
     } else {
-        ppl::kernel::arm_server::memory_copy(input->GetBufferPtr(), input->GetShape()->GetBytesIncludingPadding(),
+        ppl::kernel::arm_server::memory_copy(input->GetBufferPtr(), input->GetShape()->CalcBytesIncludingPadding(),
                                              output->GetBufferPtr());
     }
 

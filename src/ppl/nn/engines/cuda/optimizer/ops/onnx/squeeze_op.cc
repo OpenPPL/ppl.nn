@@ -53,7 +53,7 @@ RetCode SqueezeOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         if (info->GetInputCount() > 1) {
             auto axes_input = info->GetInput<TensorImpl>(1);
-            auto size = axes_input->GetShape()->GetElementsExcludingPadding();
+            auto size = axes_input->GetShape()->CalcElementsExcludingPadding();
             this->param_.axes.resize(size);
             auto axes_data = (int64_t*)malloc(size * sizeof(int64_t));
             axes_input->CopyToHost(axes_data);

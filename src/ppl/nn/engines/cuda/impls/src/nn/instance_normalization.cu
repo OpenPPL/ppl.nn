@@ -154,7 +154,7 @@ ppl::common::RetCode PPLCUDAInstanceNormalizationForwardImp(
     int hw_count  = 1;
     for (int it = 2; it < dim_count; ++it)
         hw_count *= input_shape->GetDim(it);
-    int64_t num_elems = output_shape->GetElementsExcludingPadding();
+    int64_t num_elems = output_shape->CalcElementsExcludingPadding();
     int block_size    = GetBlockSize(hw_count);
     dim3 grid_size(channels, batch, 1);
 

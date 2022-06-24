@@ -351,7 +351,7 @@ ppl::common::RetCode PPLCUDAMMCVGridSampleForwardImp(
     int out_w         = output_shape->GetDim(3);
     int in_h          = input0_shape->GetDim(2);
     int in_w          = input0_shape->GetDim(3);
-    int64_t num_elems = output_shape->GetElementsIncludingPadding();
+    int64_t num_elems = output_shape->CalcElementsIncludingPadding();
     int grid_size     = DivUp(num_elems, block_size);
     if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
         if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {

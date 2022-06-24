@@ -755,7 +755,7 @@ ppl::common::RetCode SetReLayoutParam(
         return RC_INVALID_VALUE;
     param->n_outer = input.GetDim(0);
     param->channel = input.GetDimCount() > 1 ? input.GetDim(1) : 1;
-    param->n_inner = input.GetDimCount() > 2 ? input.GetElementsFromDimensionIncludingPadding(2) : 1;
+    param->n_inner = input.GetDimCount() > 2 ? input.CalcElementsFromDimensionIncludingPadding(2) : 1;
     param->in_format = input.GetDataFormat();
     param->out_format = output.GetDataFormat();
     param->in_type = input.GetDataType();
@@ -766,8 +766,8 @@ ppl::common::RetCode SetReLayoutParam(
     param->src_pad = Align(param->channel, AlignDataFormat(param->in_format));
     param->dst_pad = Align(param->channel, AlignDataFormat(param->out_format));
 
-    param->out_elems = output.GetElementsIncludingPadding();
-    param->in_elems = input.GetElementsIncludingPadding();
+    param->out_elems = output.CalcElementsIncludingPadding();
+    param->in_elems = input.CalcElementsIncludingPadding();
     return RC_SUCCESS;
 
 }

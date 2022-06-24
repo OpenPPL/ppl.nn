@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace cuda {
 bool GemmKernel::CanDoExecute(const KernelExecContext& ctx) const {
     const TensorShape& input = *ctx.GetInput<TensorImpl>(0)->GetShape();
     const TensorShape& weight = *ctx.GetInput<TensorImpl>(1)->GetShape();
-    if (input.GetBytesIncludingPadding() == 0) {
+    if (input.CalcBytesIncludingPadding() == 0) {
         return false;
     }
     if (input.GetDim(1) != weight.GetDim(1)) {

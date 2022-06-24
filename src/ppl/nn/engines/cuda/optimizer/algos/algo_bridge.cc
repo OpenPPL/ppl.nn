@@ -32,7 +32,7 @@ double BridgeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
             return timer = 0.0;
         }
 
-        return 1e-7 * preshape.GetElementsIncludingPadding();
+        return 1e-7 * preshape.CalcElementsIncludingPadding();
     }
     return timer;
 }

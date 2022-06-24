@@ -501,7 +501,7 @@ static ppl::common::RetCode arithmetic_broadcast_n4cx_fp32(
         stride_out *= real_dst_shape[i];
     }
 
-    const int64_t total_len = dst_shape->GetElementsIncludingPadding() / C_BLK();
+    const int64_t total_len = dst_shape->CalcElementsIncludingPadding() / C_BLK();
     parallel_block block;
     {
         int64_t start_idx = 0;

@@ -33,7 +33,7 @@ static ppl::common::RetCode hard_swish_common(
     typedef typename DT<eT, eN>::vecDT vecType;
 
     const int64_t simd_w    = sizeof(vecType) / sizeof(eT);
-    const int64_t length    = src_shape->GetElementsIncludingPadding();
+    const int64_t length    = src_shape->CalcElementsIncludingPadding();
     const int64_t simd_body = round(length, simd_w);
 
     eT r6 = 1.0f / 6.0f;

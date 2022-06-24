@@ -30,7 +30,7 @@ ppl::common::RetCode cast_kernel(
     dstT *dst)
 {
     const bool dst_bool  = dst_shape->GetDataType() == ppl::common::DATATYPE_BOOL;
-    const int64_t length = dst_shape->GetElementsIncludingPadding();
+    const int64_t length = dst_shape->CalcElementsIncludingPadding();
 
     if (dst_bool) {
         PRAGMA_OMP_PARALLEL_FOR()
@@ -59,7 +59,7 @@ ppl::common::RetCode cast(
     const auto odt = dst_shape->GetDataType();
 
     if (idt == odt) {
-        memcpy(dst, src, src_shape->GetBytesIncludingPadding());
+        memcpy(dst, src, src_shape->CalcBytesIncludingPadding());
         return ppl::common::RC_SUCCESS;
     }
 

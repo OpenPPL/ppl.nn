@@ -268,7 +268,7 @@ static ppl::common::RetCode arithmetic_broadcast_ndarray_fp32_avx(
     }
 
     const int64_t task_len = 16;
-    std::vector<int64_t> loop_iter(1, max<int64_t>(dst_shape->GetElementsIncludingPadding() / task_len, 1));
+    std::vector<int64_t> loop_iter(1, max<int64_t>(dst_shape->CalcElementsIncludingPadding() / task_len, 1));
     auto pc = select_single_parallel_loop(
         loop_iter,
         ppl::common::ISA_X86_AVX,
@@ -278,7 +278,7 @@ static ppl::common::RetCode arithmetic_broadcast_ndarray_fp32_avx(
         1);
     // split task for each thread
     const int64_t num_threads    = pc.num_threads;
-    const int64_t total_len      = dst_shape->GetElementsExcludingPadding();
+    const int64_t total_len      = dst_shape->CalcElementsExcludingPadding();
     const int64_t len_per_thread = div_up(total_len, num_threads);
 
     std::vector<parallel_block> blocks(num_threads);

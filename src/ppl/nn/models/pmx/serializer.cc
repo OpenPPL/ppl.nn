@@ -245,7 +245,7 @@ static RetCode CreateFbConstants(FlatBufferBuilder* builder, const Serialization
             return RC_NOT_FOUND;
         }
 
-        auto bytes = shape_ref->second.GetBytesIncludingPadding();
+        auto bytes = shape_ref->second.CalcBytesIncludingPadding();
         if (bytes == 0) {
             continue;
         }

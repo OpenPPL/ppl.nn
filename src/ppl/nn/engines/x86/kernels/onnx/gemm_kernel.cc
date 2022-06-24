@@ -81,7 +81,7 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     ppl::kernel::x86::gemm_v_type_t typebias = ppl::kernel::x86::gemm_v_type::EMPTY;
     if (C) {
         C_data = C->GetBufferPtr<const float>();
-        if (C->GetShape()->GetElementsExcludingPadding() == 1) {
+        if (C->GetShape()->CalcElementsExcludingPadding() == 1) {
             typebias = ppl::kernel::x86::gemm_v_type::SCALAR;
         } else if (C->GetShape()->GetDimCount() == 1) {
             typebias = ppl::kernel::x86::gemm_v_type::ROW_VEC;

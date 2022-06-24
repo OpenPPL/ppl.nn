@@ -30,7 +30,7 @@ bool ConcatKernel::CanDoExecute(const KernelExecContext& ctx) const {
         if (!tensor) {
             return false;
         }
-        if (tensor->GetShape()->GetBytesIncludingPadding() != 0) {
+        if (tensor->GetShape()->CalcBytesIncludingPadding() != 0) {
             all_empty = false;
         }
     }

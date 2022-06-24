@@ -53,7 +53,7 @@ RetCode ReshapeOp::Init(const OptKernelOptions& options) {
         }
 
         const TensorShape& dst_desc = *input->GetShape();
-        unique_ptr<int64_t[]> shape_data(new int64_t[dst_desc.GetElementsIncludingPadding()]);
+        unique_ptr<int64_t[]> shape_data(new int64_t[dst_desc.CalcElementsIncludingPadding()]);
         auto status = input->CopyToHost(shape_data.get());
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "Copy shape data failed: " << GetRetCodeStr(status);

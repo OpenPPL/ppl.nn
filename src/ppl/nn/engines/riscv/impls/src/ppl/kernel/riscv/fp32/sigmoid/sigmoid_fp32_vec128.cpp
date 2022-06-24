@@ -60,7 +60,7 @@ static inline float32xm1_t _vector128_sigmoid(const float32xm1_t var, const uint
 ppl::common::RetCode sigmoid_fp32_vec128(const ppl::nn::TensorShape* x_shape, const float* x, float* y)
 {
     const auto vl        = vsetvli(4, RVV_E32, RVV_M1);
-    const int64_t n_elem = x_shape->GetElementsIncludingPadding();
+    const int64_t n_elem = x_shape->CalcElementsIncludingPadding();
 
     int64_t i = 0;
     for (; i <= n_elem - 16; i += 16) {

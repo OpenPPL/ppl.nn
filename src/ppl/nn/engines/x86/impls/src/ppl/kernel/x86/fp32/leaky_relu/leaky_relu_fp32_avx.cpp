@@ -29,7 +29,7 @@ ppl::common::RetCode leaky_relu_fp32_avx(
 {
     const uint64_t simd_w      = 8;
     const uint64_t unroll_len  = simd_w * 4;
-    const uint64_t unroll_body = round(src_shape->GetElementsIncludingPadding(), unroll_len);
+    const uint64_t unroll_body = round(src_shape->CalcElementsIncludingPadding(), unroll_len);
     const __m256 v_alpha       = _mm256_set1_ps(alpha);
     const __m256 v_zero        = _mm256_setzero_ps();
     PRAGMA_OMP_PARALLEL_FOR()
@@ -54,7 +54,7 @@ ppl::common::RetCode leaky_relu_fp32_avx(
         _mm256_storeu_ps(dst + i + 2 * simd_w, _mm256_add_ps(v_ge2, v_le2));
         _mm256_storeu_ps(dst + i + 3 * simd_w, _mm256_add_ps(v_ge3, v_le3));
     }
-    for (uint64_t i = unroll_body; i < src_shape->GetElementsIncludingPadding(); i++) {
+    for (uint64_t i = unroll_body; i < src_shape->CalcElementsIncludingPadding(); i++) {
         dst[i] = src[i] >= 0 ? src[i] : alpha * src[i];
     }
     return ppl::common::RC_SUCCESS;

@@ -25,10 +25,10 @@ namespace ppl { namespace nn { namespace cuda {
 bool MatMulKernel::CanDoExecute(const KernelExecContext& ctx) const {
     const TensorShape& input0 = *ctx.GetInput<TensorImpl>(0)->GetShape();
     const TensorShape& input1 = *ctx.GetInput<TensorImpl>(1)->GetShape();
-    if (input0.GetBytesIncludingPadding() == 0) {
+    if (input0.CalcBytesIncludingPadding() == 0) {
         return false;
     }
-    if (input1.GetBytesIncludingPadding() == 0) {
+    if (input1.CalcBytesIncludingPadding() == 0) {
         return false;
     }
     // K must be the same

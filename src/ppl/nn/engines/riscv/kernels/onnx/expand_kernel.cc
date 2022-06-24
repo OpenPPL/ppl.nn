@@ -25,8 +25,8 @@ bool ExpandKernel::CanDoExecute(const KernelExecContext& ctx) const {
     auto input = ctx.GetInput<TensorImpl>(0);
     auto shape = ctx.GetInput<TensorImpl>(1);
     auto output = ctx.GetOutput<TensorImpl>(0);
-    if (input->GetShape()->GetBytesIncludingPadding() == 0 || shape->GetShape()->GetBytesIncludingPadding() == 0 ||
-        output->GetShape()->GetBytesIncludingPadding() == 0) {
+    if (input->GetShape()->CalcBytesIncludingPadding() == 0 || shape->GetShape()->CalcBytesIncludingPadding() == 0 ||
+        output->GetShape()->CalcBytesIncludingPadding() == 0) {
         return false;
     }
     return true;

@@ -306,8 +306,8 @@ ppl::common::RetCode pad_n16cx_fp32(
     const int64_t c_dim_idx = 1;
     if (start_pads[c_dim_idx] != 0 || end_pads[c_dim_idx] != 0) { // if pad on c, trans to n16cx to pad
         // if (true) {
-        std::vector<float> temp_in(src_shape->GetElementsExcludingPadding());
-        std::vector<float> temp_out(dst_shape->GetElementsExcludingPadding());
+        std::vector<float> temp_in(src_shape->CalcElementsExcludingPadding());
+        std::vector<float> temp_out(dst_shape->CalcElementsExcludingPadding());
         auto src_shape_ndarray = *src_shape;
         auto dst_shape_ndarray = *dst_shape;
         src_shape_ndarray.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);

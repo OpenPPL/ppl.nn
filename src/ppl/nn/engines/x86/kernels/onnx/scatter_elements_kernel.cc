@@ -23,7 +23,7 @@
 namespace ppl { namespace nn { namespace x86 {
 
 bool ScatterElementsKernel::CanDoExecute(const KernelExecContext& ctx) const {
-    return ctx.GetInput<TensorImpl>(0)->GetShape()->GetBytesIncludingPadding() != 0;
+    return ctx.GetInput<TensorImpl>(0)->GetShape()->CalcBytesIncludingPadding() != 0;
 }
 
 ppl::common::RetCode ScatterElementsKernel::DoExecute(KernelExecContext* ctx) {

@@ -43,9 +43,9 @@ ppl::common::RetCode WhereKernel::DoExecute(KernelExecContext* ctx) {
     PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(output);
 
     bool is_eltwise =
-        cond->GetShape()->GetElementsIncludingPadding() == output->GetShape()->GetElementsIncludingPadding() &&
-        x->GetShape()->GetElementsIncludingPadding() == output->GetShape()->GetElementsIncludingPadding() &&
-        y->GetShape()->GetElementsIncludingPadding() == output->GetShape()->GetElementsIncludingPadding();
+        cond->GetShape()->CalcElementsIncludingPadding() == output->GetShape()->CalcElementsIncludingPadding() &&
+        x->GetShape()->CalcElementsIncludingPadding() == output->GetShape()->CalcElementsIncludingPadding() &&
+        y->GetShape()->CalcElementsIncludingPadding() == output->GetShape()->CalcElementsIncludingPadding();
 
     if (output->GetShape()->GetDataType() == common::DATATYPE_FLOAT32) {
         if (is_eltwise) {

@@ -46,7 +46,7 @@ ppl::common::RetCode logical_eltwise_binary_op_bool(
     const uint8_t *src1,
     uint8_t *dst)
 {
-    const uint64_t length = dst_shape->GetElementsIncludingPadding();
+    const uint64_t length = dst_shape->CalcElementsIncludingPadding();
     PRAGMA_OMP_PARALLEL_FOR()
     for (uint64_t i = 0; i < length; i++) {
         dst[i] = logical_scalar_kernel_bool<_op>(src0[i], src1[i]);

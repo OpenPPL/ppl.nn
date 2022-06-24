@@ -301,7 +301,7 @@ ppl::common::RetCode arithmetic_binary_op_ndarray_fp32_avx(
     }
     if (eltwise) {
         int64_t zero_strides[5] = {0, 0, 0, 0, 0};
-        int64_t dst_dims[6]     = {1, 1, 1, 1, 1, (int64_t)lhs_shape->GetElementsIncludingPadding()};
+        int64_t dst_dims[6]     = {1, 1, 1, 1, 1, (int64_t)lhs_shape->CalcElementsIncludingPadding()};
         arithmetic_binary_op_ndarray_6d_eltwise_fp32_avx<_op>(
             zero_strides, zero_strides, zero_strides, dst_dims, lhs, rhs, dst);
         return ppl::common::RC_SUCCESS;

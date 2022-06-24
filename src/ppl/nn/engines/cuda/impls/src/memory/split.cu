@@ -141,7 +141,7 @@ ppl::common::RetCode PPLCUDASplitForwardImp(
         int num_dims = input_shape->GetDimCount();
         if (num_dims < 2)
             return ppl::common::RC_UNSUPPORTED;
-        int input_elems = input_shape->GetElementsExcludingPadding();
+        int input_elems = input_shape->CalcElementsExcludingPadding();
         if (num_outputs == 2 && split_axis == 1) {
             int align_size = NHWC8_ALIGNED_AXIS;
             if (input_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC16) {

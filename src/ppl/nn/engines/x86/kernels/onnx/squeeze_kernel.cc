@@ -38,7 +38,7 @@ ppl::common::RetCode SqueezeKernel::DoExecute(KernelExecContext* ctx) {
         PPLNN_X86_REALLOC_TENSOR_BUFFER(squeezed);
         PPLNN_X86_DEBUG_TRACE("Output [squeezed]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(squeezed);
-        return ppl::kernel::x86::memory_copy(data->GetBufferPtr(), data->GetShape()->GetBytesIncludingPadding(), squeezed->GetBufferPtr());
+        return ppl::kernel::x86::memory_copy(data->GetBufferPtr(), data->GetShape()->CalcBytesIncludingPadding(), squeezed->GetBufferPtr());
     }
 
     return ppl::common::RC_SUCCESS;

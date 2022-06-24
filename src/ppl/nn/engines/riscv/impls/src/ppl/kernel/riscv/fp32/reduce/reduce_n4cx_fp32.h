@@ -192,7 +192,7 @@ ppl::common::RetCode reduce_n4cx_fp32(
     }
     padded_dst_shape.CalcPadding();
 
-    reduce_preprocess_fp32<op>(dst, padded_dst_shape.GetElementsIncludingPadding());
+    reduce_preprocess_fp32<op>(dst, padded_dst_shape.CalcElementsIncludingPadding());
 
     int64_t dim_count                            = padded_dst_shape.GetDimCount();
     int64_t inc_src[PPL_RISCV_TENSOR_MAX_DIMS()] = {0};
@@ -230,7 +230,7 @@ ppl::common::RetCode reduce_n4cx_fp32(
         reduce_factor *= src_shape->GetDim(i) / padded_dst_shape.GetDim(i);
     }
 
-    reduce_postprocess_fp32<op>(dst, padded_dst_shape.GetElementsIncludingPadding(), reduce_factor);
+    reduce_postprocess_fp32<op>(dst, padded_dst_shape.CalcElementsIncludingPadding(), reduce_factor);
 
     delete &padded_dst_shape;
 

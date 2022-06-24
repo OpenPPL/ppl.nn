@@ -28,7 +28,7 @@ static RetCode ConcatOutputs(const vector<TensorBufferInfo>& outputs, BufferDesc
 
     for (auto it = outputs.begin(); it != outputs.end(); ++it) {
         auto device = it->GetDevice();
-        const uint32_t bytes = it->GetShape()->GetBytesIncludingPadding();
+        const uint32_t bytes = it->GetShape()->CalcBytesIncludingPadding();
         auto status = device->Copy(&buf_cursor, it->GetBufferDesc(), bytes);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy data failed: " << GetRetCodeStr(status);

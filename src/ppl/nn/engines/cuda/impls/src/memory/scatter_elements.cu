@@ -89,10 +89,10 @@ ppl::common::RetCode PPLCUDAScatterElementsForwardImp(
     void* output,
     int axis)
 {
-    int64_t num_elems = output_shape->GetElementsIncludingPadding();
+    int64_t num_elems = output_shape->CalcElementsIncludingPadding();
     cudaMemcpyAsync(output, input, ppl::common::GetSizeOfDataType(input_shape->GetDataType()) * num_elems, cudaMemcpyDeviceToDevice, stream);
 
-    int64_t num_updates = updates_shape->GetElementsIncludingPadding();
+    int64_t num_updates = updates_shape->CalcElementsIncludingPadding();
     int num_updates_dim = updates_shape->GetDimCount();
     GArray<DivModFast> updates_strides_fast(num_updates_dim);
     GArray<int64_t> input_strides(num_updates_dim);

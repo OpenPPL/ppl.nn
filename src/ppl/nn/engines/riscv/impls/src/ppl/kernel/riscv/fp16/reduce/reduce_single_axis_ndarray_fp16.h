@@ -190,7 +190,7 @@ ppl::common::RetCode reduce_single_axis_ndarray_fp16(
     }
 
     // postprocess
-    reduce_postprocess_fp16<op>(dst, dst_shape->GetElementsIncludingPadding(), reduce_dim);
+    reduce_postprocess_fp16<op>(dst, dst_shape->CalcElementsIncludingPadding(), reduce_dim);
 
     return ppl::common::RC_SUCCESS;
 }

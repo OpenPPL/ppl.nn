@@ -138,8 +138,8 @@ ppl::common::RetCode PPLCUDAExpandForwardImp(
     void *output)
 {
     int dim_count      = output_shape->GetDimCount();
-    uint64_t num_elems = output_shape->GetElementsIncludingPadding();
-    if (num_elems == input_shape->GetElementsIncludingPadding()) { // no expand, just copy, as reshape
+    uint64_t num_elems = output_shape->CalcElementsIncludingPadding();
+    if (num_elems == input_shape->CalcElementsIncludingPadding()) { // no expand, just copy, as reshape
         cudaMemcpyAsync(output, input, ppl::common::GetSizeOfDataType(input_shape->GetDataType()) * num_elems, cudaMemcpyDeviceToDevice, stream);
         return ppl::common::RC_SUCCESS;
     }
@@ -157,7 +157,7 @@ ppl::common::RetCode PPLCUDAExpandForwardImp(
     if (num_broadcast_dims == 1 && (axis == 0 || axis == dim_count - 1)) { // only one broadcast dim, normal case
         if (axis == 0) { // just for-copy
             int iters        = output_shape->GetDim(axis);
-            int input_size   = input_shape->GetElementsIncludingPadding() * ppl::common::GetSizeOfDataType(input_shape->GetDataType());
+            int input_size   = input_shape->CalcElementsIncludingPadding() * ppl::common::GetSizeOfDataType(input_shape->GetDataType());
             char *output_ptr = static_cast<char *>(output);
             for (int it = 0; it < iters; ++it) {
                 cudaMemcpyAsync(output_ptr + it * input_size, input, input_size, cudaMemcpyDeviceToDevice, stream);

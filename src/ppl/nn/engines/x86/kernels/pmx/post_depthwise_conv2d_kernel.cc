@@ -44,7 +44,7 @@ ppl::common::RetCode PostDepthwiseConv2dKernel::SeparateExecute(KernelExecContex
     BufferDesc inter_buffer_desc;
     auto status = GetX86Device()->Realloc(inter_shape, &inter_buffer_desc);
     if (status != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "alloc InterTensor size[" << inter_shape.GetBytesIncludingPadding() << "] for kernel[" << GetName()
+        LOG(ERROR) << "alloc InterTensor size[" << inter_shape.CalcBytesIncludingPadding() << "] for kernel[" << GetName()
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }

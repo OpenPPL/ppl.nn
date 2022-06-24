@@ -23,7 +23,7 @@
 namespace ppl { namespace nn { namespace x86 {
 
 bool ScatterNdKernel::CanDoExecute(const KernelExecContext& ctx) const {
-    return ctx.GetInput<TensorImpl>(0)->GetShape()->GetBytesIncludingPadding() != 0;
+    return ctx.GetInput<TensorImpl>(0)->GetShape()->CalcBytesIncludingPadding() != 0;
 }
 
 ppl::common::RetCode ScatterNdKernel::DoExecute(KernelExecContext* ctx) {
@@ -75,7 +75,7 @@ ppl::common::RetCode ScatterNdKernel::DoExecute(KernelExecContext* ctx) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
             return kernel::x86::scatter_nd_ndarray_fp32(x->GetBufferPtr<float>(), updates->GetBufferPtr<float>(),
                                                         indices->GetBufferPtr<int64_t>(), strides,
-                                                        x->GetShape()->GetElementsIncludingPadding(), inner_dim,
+                                                        x->GetShape()->CalcElementsIncludingPadding(), inner_dim,
                                                         num_indices, indices_dim, y->GetBufferPtr<float>());
         } else {
             LOG(ERROR) << "unsupported data type: " << ppl::common::GetDataTypeStr(data_type) << ".";

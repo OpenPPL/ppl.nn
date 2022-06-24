@@ -29,7 +29,7 @@ ppl::common::RetCode tanh_fp32_sse(
     float *y)
 {
     const int64_t simd_w      = 4;
-    const int64_t n_elem      = x_shape->GetElementsIncludingPadding();
+    const int64_t n_elem      = x_shape->CalcElementsIncludingPadding();
     const int64_t unroll_n    = 4 * simd_w;
     const int64_t unroll_body = round(n_elem, unroll_n);
 

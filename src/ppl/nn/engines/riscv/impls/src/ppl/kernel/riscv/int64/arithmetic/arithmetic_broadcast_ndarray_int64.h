@@ -196,7 +196,7 @@ static ppl::common::RetCode arithmetic_broadcast_ndarray_scalar_int64(const int6
         stride_out *= real_dst_shape[i];
     }
 
-    const int64_t total_len = dst_shape->GetElementsExcludingPadding();
+    const int64_t total_len = dst_shape->CalcElementsExcludingPadding();
     parallel_block block;
     {
         int64_t start_idx = 0;
@@ -637,7 +637,7 @@ static ppl::common::RetCode arithmetic_broadcast_ndarray_int64(const int64_t* sr
         stride_out *= real_dst_shape[i];
     }
 
-    const int64_t total_len = dst_shape->GetElementsExcludingPadding();
+    const int64_t total_len = dst_shape->CalcElementsExcludingPadding();
     parallel_block block;
     {
         int64_t start_idx = 0;

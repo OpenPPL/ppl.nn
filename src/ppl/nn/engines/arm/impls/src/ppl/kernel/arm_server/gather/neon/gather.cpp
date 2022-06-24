@@ -106,14 +106,14 @@ static ppl::common::RetCode gather_wrapper(
     int64_t indices_dim = indices_shape->GetDim(q - 1);
     int64_t outer_dim   = 1;
     int64_t inner_dim   = 1;
-    int64_t n           = indices_shape->GetElementsExcludingPadding();
+    int64_t n           = indices_shape->CalcElementsExcludingPadding();
 
     std::vector<int64_t> real_indices(n);
     if (q != 0) {
         for (uint32_t i = 0; i < q - 1; ++i) {
             num_indices *= indices_shape->GetDim(i);
         }
-        for (uint32_t i = 0; i < indices_shape->GetElementsExcludingPadding(); ++i) {
+        for (uint32_t i = 0; i < indices_shape->CalcElementsExcludingPadding(); ++i) {
             real_indices[i] = indices[i] >= 0 ? indices[i] : indices[i] + q;
         }
     }

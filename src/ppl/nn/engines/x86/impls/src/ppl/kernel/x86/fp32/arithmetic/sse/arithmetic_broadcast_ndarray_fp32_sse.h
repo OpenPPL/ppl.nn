@@ -293,7 +293,7 @@ static ppl::common::RetCode arithmetic_broadcast_ndarray_fp32_sse(
     }
 
     // split task for each thread
-    const int64_t total_len      = dst_shape->GetElementsExcludingPadding();
+    const int64_t total_len      = dst_shape->CalcElementsExcludingPadding();
     const int64_t len_per_thread = div_up(total_len, PPL_OMP_MAX_THREADS());
     const int64_t num_threads    = div_up(total_len, len_per_thread);
 

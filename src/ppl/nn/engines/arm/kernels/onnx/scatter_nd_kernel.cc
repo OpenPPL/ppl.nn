@@ -22,7 +22,7 @@
 namespace ppl { namespace nn { namespace arm {
 
 bool ScatterNdKernel::CanDoExecute(const KernelExecContext& ctx) const {
-    return ctx.GetInput<TensorImpl>(0)->GetShape()->GetBytesIncludingPadding() != 0;
+    return ctx.GetInput<TensorImpl>(0)->GetShape()->CalcBytesIncludingPadding() != 0;
 }
 
 ppl::common::RetCode ScatterNdKernel::DoExecute(KernelExecContext* ctx) {
@@ -67,7 +67,7 @@ ppl::common::RetCode ScatterNdKernel::DoExecute(KernelExecContext* ctx) {
 
     return ppl::kernel::arm_server::neon::scatter_nd_ndarray(x->GetShape(), x->GetBufferPtr<void>(),
                                                 updates->GetBufferPtr<void>(), indices->GetBufferPtr<int64_t>(),
-                                                strides, x->GetShape()->GetElementsIncludingPadding(), inner_dim,
+                                                strides, x->GetShape()->CalcElementsIncludingPadding(), inner_dim,
                                                 num_indices, indices_dim, y->GetBufferPtr<void>());
 }
 

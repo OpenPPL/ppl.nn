@@ -31,7 +31,7 @@ static ppl::common::RetCode arithmetic_eltwise_fp32_sse(
 {
     const int64_t simd_w      = 4;
     const int64_t unroll_len  = simd_w * 4;
-    const int64_t length      = dst_shape->GetElementsIncludingPadding();
+    const int64_t length      = dst_shape->CalcElementsIncludingPadding();
     const int64_t unroll_body = round(length, unroll_len);
 
     __m128 zero_vec = _mm_set1_ps(0.0f);

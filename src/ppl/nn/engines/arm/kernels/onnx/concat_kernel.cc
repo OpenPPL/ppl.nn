@@ -28,7 +28,7 @@ bool ConcatKernel::CanDoExecute(const KernelExecContext& ctx) const {
         if (!tensor) {
             return false;
         }
-        if (tensor->GetShape()->GetBytesIncludingPadding() != 0) {
+        if (tensor->GetShape()->CalcBytesIncludingPadding() != 0) {
             all_empty = false;
         }
     }
@@ -55,7 +55,7 @@ ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_ARM_DEBUG_TRACE("isa: %u\n", GetISA());
 
     if (ctx->GetInputCount() == 1) {
-        return ppl::kernel::arm_server::memory_copy(src_list_[0], src_shape_list_[0]->GetBytesIncludingPadding(),
+        return ppl::kernel::arm_server::memory_copy(src_list_[0], src_shape_list_[0]->CalcBytesIncludingPadding(),
                                                     concat_result->GetBufferPtr<void>());
     }
 

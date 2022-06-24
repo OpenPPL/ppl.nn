@@ -32,7 +32,7 @@ ppl::common::RetCode ArmDataConverter::Convert(BufferDesc* dst, const TensorShap
                << dst_desc.GetDataFormat();
     LOG(DEBUG) << "ARM Data Converter from data type " << src_desc.GetDataType() << " to " << dst_desc.GetDataType();
     if (dst_desc.GetDataFormat() == src_desc.GetDataFormat() && dst_desc.GetDataType() == src_desc.GetDataType()) {
-        return memory_copy(src.addr, src_desc.GetBytesIncludingPadding(), dst->addr);
+        return memory_copy(src.addr, src_desc.CalcBytesIncludingPadding(), dst->addr);
     } else if (dst_desc.GetDataFormat() != src_desc.GetDataFormat() &&
                dst_desc.GetDataType() == src_desc.GetDataType()) {
         if (dst_desc.GetDataType() == DATATYPE_FLOAT32) {
@@ -75,10 +75,10 @@ ppl::common::RetCode ArmDataConverter::Convert(BufferDesc* dst, const TensorShap
     } else if (dst_desc.GetDataFormat() == src_desc.GetDataFormat() &&
                dst_desc.GetDataType() != src_desc.GetDataType()) {
         if (dst_desc.GetDataType() == DATATYPE_FLOAT32 && src_desc.GetDataType() == DATATYPE_FLOAT16) {
-            Fp16ToFp32((__fp16*)src.addr, src_desc.GetElementsIncludingPadding(), (float*)dst->addr);
+            Fp16ToFp32((__fp16*)src.addr, src_desc.CalcElementsIncludingPadding(), (float*)dst->addr);
             return RC_SUCCESS;
         } else if (dst_desc.GetDataType() == DATATYPE_FLOAT16 && src_desc.GetDataType() == DATATYPE_FLOAT32) {
-            Fp32ToFp16((float*)src.addr, src_desc.GetElementsIncludingPadding(), (__fp16*)dst->addr);
+            Fp32ToFp16((float*)src.addr, src_desc.CalcElementsIncludingPadding(), (__fp16*)dst->addr);
             return RC_SUCCESS;
         } else {
             return ppl::kernel::arm_server::neon::cast(&src_desc, &dst_desc, src.addr, dst->addr);

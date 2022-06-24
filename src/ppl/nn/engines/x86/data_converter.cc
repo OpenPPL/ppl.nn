@@ -34,7 +34,7 @@ RetCode X86DataConverter::Convert(BufferDesc* dst_buf, const TensorShape& dst_de
     const auto dst_data_format = dst_desc.GetDataFormat();
 
     if (dst_data_format == src_data_format && dst_data_type == src_data_type) {
-        memcpy(dst_buf->addr, src_buf.addr, src_desc.GetBytesIncludingPadding());
+        memcpy(dst_buf->addr, src_buf.addr, src_desc.CalcBytesIncludingPadding());
         return RC_SUCCESS;
     } else if (dst_data_format == src_data_format && dst_data_type != src_data_type) {
         return ppl::kernel::x86::cast(&src_desc, &dst_desc, src_buf.addr, dst_buf->addr);
@@ -77,7 +77,7 @@ RetCode X86DataConverter::Convert(BufferDesc* dst_buf, const TensorShape& dst_de
             }
         }
     } else { // dst_data_format != src_data_format && dst_data_type != src_data_type
-        std::vector<uint8_t> temp_buf_vec(src_desc.GetBytesIncludingPadding());
+        std::vector<uint8_t> temp_buf_vec(src_desc.CalcBytesIncludingPadding());
         auto temp_desc = dst_desc;
         temp_desc.SetDataFormat(src_data_format);
         BufferDesc temp_buf(temp_buf_vec.data());

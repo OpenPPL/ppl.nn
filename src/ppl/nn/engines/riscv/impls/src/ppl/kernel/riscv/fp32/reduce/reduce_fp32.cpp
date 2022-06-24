@@ -33,8 +33,8 @@ ppl::common::RetCode reduce_fp32(
     const int32_t* axes,
     const int32_t num_axes)
 {
-    if (src_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding()) {
-        memcpy(dst, src, src_shape->GetBytesIncludingPadding());
+    if (src_shape->CalcElementsExcludingPadding() == dst_shape->CalcElementsExcludingPadding()) {
+        memcpy(dst, src, src_shape->CalcBytesIncludingPadding());
         return ppl::common::RC_SUCCESS;
     }
     if (src_shape->GetDimCount() > PPL_RISCV_TENSOR_MAX_DIMS()) {

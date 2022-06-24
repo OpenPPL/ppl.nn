@@ -53,7 +53,7 @@ ppl::common::RetCode GatherKernel::DoExecute(KernelExecContext* ctx) {
 
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
-    auto status = GetX86Device()->AllocTmpBuffer(indices->GetShape()->GetBytesExcludingPadding(), &tmp_buffer_desc);
+    auto status = GetX86Device()->AllocTmpBuffer(indices->GetShape()->CalcBytesExcludingPadding(), &tmp_buffer_desc);
     if (status != ppl::common::RC_SUCCESS) {
         LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
@@ -64,7 +64,7 @@ ppl::common::RetCode GatherKernel::DoExecute(KernelExecContext* ctx) {
     });
     auto real_indices = (int64_t*)tmp_buffer_desc.addr;
     auto indices_data = indices->GetBufferPtr<const int64_t>();
-    for (uint64_t i = 0; i < indices->GetShape()->GetElementsExcludingPadding(); ++i) {
+    for (uint64_t i = 0; i < indices->GetShape()->CalcElementsExcludingPadding(); ++i) {
         real_indices[i] = indices_data[i] >= 0 ? indices_data[i] : indices_data[i] + gather_dim;
     }
 

@@ -30,7 +30,7 @@ ppl::common::RetCode hard_sigmoid_fp32_sse(
 {
     const uint64_t V_REG_ELTS  = 4;
     const uint64_t unroll_len  = V_REG_ELTS * 4;
-    const uint64_t unroll_body = round(src_shape->GetElementsIncludingPadding(), unroll_len);
+    const uint64_t unroll_body = round(src_shape->CalcElementsIncludingPadding(), unroll_len);
     if (unroll_body) {
         const auto v_alpha = _mm_set1_ps(alpha);
         const auto v_beta  = _mm_set1_ps(beta);
@@ -69,7 +69,7 @@ ppl::common::RetCode hard_sigmoid_fp32_sse(
             _mm_storeu_ps(dst + i + 3 * V_REG_ELTS, v_src3);
         }
     }
-    for (uint64_t i = unroll_body; i < src_shape->GetElementsIncludingPadding(); i++) {
+    for (uint64_t i = unroll_body; i < src_shape->CalcElementsIncludingPadding(); i++) {
         dst[i] = max(0.0f, min(1.0f, alpha * src[i] + beta));
     }
     return ppl::common::RC_SUCCESS;

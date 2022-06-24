@@ -50,7 +50,7 @@ RetCode ConstantOfShapeOp::Init(const OptKernelOptions& options) {
             return RC_NOT_FOUND;
         }
 
-        std::unique_ptr<int64_t[]> input_host(new int64_t[input->GetShape()->GetElementsIncludingPadding()]);
+        std::unique_ptr<int64_t[]> input_host(new int64_t[input->GetShape()->CalcElementsIncludingPadding()]);
         auto status = input->CopyToHost(input_host.get());
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "Copy input host failed: " << GetRetCodeStr(status);

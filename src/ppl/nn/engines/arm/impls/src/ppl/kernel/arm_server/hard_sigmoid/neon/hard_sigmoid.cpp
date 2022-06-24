@@ -35,7 +35,7 @@ static ppl::common::RetCode hard_sigmoid_common(
     typedef typename DT<eT, eN>::vecDT vecType;
 
     const int64_t simd_w    = sizeof(vecType) / sizeof(eT);
-    const int64_t length    = src_shape->GetElementsIncludingPadding();
+    const int64_t length    = src_shape->CalcElementsIncludingPadding();
     const int64_t simd_body = round(length, simd_w);
 
     const vecType v_0     = vdup_n<eT, eN>(0);

@@ -45,7 +45,7 @@ ppl::common::RetCode non_zero_ndarray_common(
     int64_t *dst)
 {
     const int64_t dim_count  = src_shape->GetDimCount();
-    const int64_t stride_out = src_shape->GetElementsExcludingPadding();
+    const int64_t stride_out = src_shape->CalcElementsExcludingPadding();
     uint64_t idx[PPL_X86_TENSOR_MAX_DIMS()];
     uint64_t strides[PPL_X86_TENSOR_MAX_DIMS()];
     int64_t *temp_output = (int64_t*)temp_buffer;
@@ -56,7 +56,7 @@ ppl::common::RetCode non_zero_ndarray_common(
     }
 
     *non_zero_num = 0;
-    for (uint64_t i = 0; i < src_shape->GetElementsExcludingPadding(); i++) {
+    for (uint64_t i = 0; i < src_shape->CalcElementsExcludingPadding(); i++) {
         if (src[i] != 0) {
             calc_idx(strides, i, dim_count, idx);
             for (int64_t j = 0; j < dim_count; j++) {

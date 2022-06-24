@@ -22,7 +22,7 @@ namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode relu_fp16(const ppl::nn::TensorShape* shape, const __fp16* src, __fp16* dst)
 {
-    const int64_t total_len  = shape->GetElementsIncludingPadding();
+    const int64_t total_len  = shape->CalcElementsIncludingPadding();
     const int64_t parall_d   = 32;
     const int64_t unroll_len = parall_d * 8;
     const auto vl            = vsetvli(8, RVV_E16, RVV_M1);

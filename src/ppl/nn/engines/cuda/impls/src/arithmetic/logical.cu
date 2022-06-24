@@ -299,7 +299,7 @@ ppl::common::RetCode PPLCUDALogicalForwardImp(
 {
     LogicalParam param;
 
-    uint64_t num_elems = output_shape->GetElementsIncludingPadding();
+    uint64_t num_elems = output_shape->CalcElementsIncludingPadding();
     int dim_count      = output_shape->GetDimCount();
     int block_size     = 256;
 

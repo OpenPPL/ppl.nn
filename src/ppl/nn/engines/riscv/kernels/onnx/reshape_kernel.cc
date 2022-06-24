@@ -38,7 +38,7 @@ ppl::common::RetCode ReshapeKernel::DoExecute(KernelExecContext* ctx) {
     if (data->GetEdge()->CalcConsumerCount() == 1 && data->GetType() == TENSORTYPE_NORMAL) {
         reshaped->TransferBufferFrom(data);
     } else {
-        return ppl::kernel::riscv::memory_copy(data->GetBufferPtr(), data->GetShape()->GetBytesIncludingPadding(),
+        return ppl::kernel::riscv::memory_copy(data->GetBufferPtr(), data->GetShape()->CalcBytesIncludingPadding(),
                                                reshaped->GetBufferPtr());
     }
 

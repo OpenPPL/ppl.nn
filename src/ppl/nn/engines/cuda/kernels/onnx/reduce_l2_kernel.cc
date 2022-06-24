@@ -54,7 +54,7 @@ ppl::common::RetCode ReduceL2Kernel::DoExecute(KernelExecContext* ctx) {
 
     PPLReduceDimDes des(n_inner, n_reduce, n_outer);
     BufferDesc tmp_buffer_desc;
-    auto size = input->GetShape()->GetBytesIncludingPadding();
+    auto size = input->GetShape()->CalcBytesIncludingPadding();
     auto status = GetCudaDevice()->AllocTmpBuffer(size, &tmp_buffer_desc);
     if (status != ppl::common::RC_SUCCESS) {
         LOG(ERROR) << "alloc tmp buffer size[" << size << "] for kernel[" << GetName()

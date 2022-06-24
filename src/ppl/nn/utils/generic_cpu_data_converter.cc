@@ -35,20 +35,20 @@ RetCode GenericCpuDataConverter::Convert(BufferDesc* dst, const TensorShape& dst
     }
 
     if (dst_desc.GetDataType() == src_desc.GetDataType()) {
-        memcpy(dst->addr, src.addr, src_desc.GetBytesIncludingPadding());
+        memcpy(dst->addr, src.addr, src_desc.CalcBytesIncludingPadding());
         return RC_SUCCESS;
     }
 
     if (dst_desc.GetDataType() == DATATYPE_FLOAT32) {
         if (src_desc.GetDataType() == DATATYPE_INT64) {
             TypedConvert(static_cast<float*>(dst->addr), static_cast<const int64_t*>(src.addr),
-                         src_desc.GetElementsIncludingPadding());
+                         src_desc.CalcElementsIncludingPadding());
             return RC_SUCCESS;
         }
     } else if (dst_desc.GetDataType() == DATATYPE_INT64) {
         if (src_desc.GetDataType() == DATATYPE_FLOAT32) {
             TypedConvert(static_cast<int64_t*>(dst->addr), static_cast<const float*>(src.addr),
-                         src_desc.GetElementsIncludingPadding());
+                         src_desc.CalcElementsIncludingPadding());
             return RC_SUCCESS;
         }
     }

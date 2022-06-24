@@ -216,8 +216,8 @@ private:
                     dst_shape.SetDataFormat(algo_info.output_format);
 
                     std::vector<T> tunning_src, tunning_dst;
-                    tunning_src.resize(src_shape.GetElementsIncludingPadding());
-                    tunning_dst.resize(dst_shape.GetElementsIncludingPadding());
+                    tunning_src.resize(src_shape.CalcElementsIncludingPadding());
+                    tunning_dst.resize(dst_shape.CalcElementsIncludingPadding());
                     mgr->pick_best_tunning_param(tunning_src.data(), weight_data_cvt.data(), tunning_dst.data(),
                                                  src_shape, dst_shape);
 

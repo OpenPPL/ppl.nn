@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace arm {
 
 bool ResizeKernel::CanDoExecute(const KernelExecContext& ctx) const {
     auto& X_shape = *ctx.GetInput<TensorImpl>(0)->GetShape();
-    if (X_shape.GetBytesIncludingPadding() == 0) {
+    if (X_shape.CalcBytesIncludingPadding() == 0) {
         return false;
     }
 

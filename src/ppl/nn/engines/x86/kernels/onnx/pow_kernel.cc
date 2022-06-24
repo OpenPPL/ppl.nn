@@ -47,7 +47,7 @@ ppl::common::RetCode PowKernel::DoExecute(KernelExecContext* ctx) {
         if (B->GetShape()->IsScalar() && B->GetBufferPtr<float>()[0] == 1.0f) {
             return ppl::kernel::x86::memory_copy(
                 A->GetBufferPtr<float>(),
-                A->GetShape()->GetBytesIncludingPadding(),
+                A->GetShape()->CalcBytesIncludingPadding(),
                 C->GetBufferPtr<float>());
         }
 

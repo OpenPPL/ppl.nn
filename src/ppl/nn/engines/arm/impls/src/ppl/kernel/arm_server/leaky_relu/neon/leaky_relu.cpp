@@ -28,7 +28,7 @@ ppl::common::RetCode leaky_relu_fp32(
     const float alpha,
     float *dst)
 {
-    const int64_t n_elem      = src_shape->GetElementsIncludingPadding();
+    const int64_t n_elem      = src_shape->CalcElementsIncludingPadding();
     const int64_t simd_w      = 4;
     const int64_t unroll_n    = simd_w * 4;
     const int64_t unroll_body = round(n_elem, unroll_n);
@@ -72,7 +72,7 @@ ppl::common::RetCode leaky_relu_fp16(
     const float alpha,
     __fp16 *dst)
 {
-    const int64_t n_elem      = src_shape->GetElementsIncludingPadding();
+    const int64_t n_elem      = src_shape->CalcElementsIncludingPadding();
     const int64_t simd_w      = 4;
     const int64_t unroll_n    = simd_w * 4;
     const int64_t unroll_body = round(n_elem, unroll_n);

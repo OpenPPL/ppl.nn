@@ -28,7 +28,7 @@ ppl::common::RetCode sigmoid_fp32(
     const float *x,
     float *y)
 {
-    const int64_t n_elem      = x_shape->GetElementsIncludingPadding();
+    const int64_t n_elem      = x_shape->CalcElementsIncludingPadding();
     const int64_t simd_w      = 4;
     const int64_t unroll_n    = simd_w * 4;
     const int64_t unroll_body = round(n_elem, unroll_n);
@@ -65,7 +65,7 @@ ppl::common::RetCode sigmoid_fp16(
     const __fp16 *x,
     __fp16 *y)
 {
-    const int64_t n_elem      = x_shape->GetElementsIncludingPadding();
+    const int64_t n_elem      = x_shape->CalcElementsIncludingPadding();
     const int64_t simd_w      = 4;
     const int64_t unroll_n    = simd_w * 4;
     const int64_t unroll_body = round(n_elem, unroll_n);

@@ -106,7 +106,7 @@ ppl::common::RetCode PPLCUDASubpixelDownForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output)
 {
-    int64_t num_elems  = output_shape->GetElementsIncludingPadding();
+    int64_t num_elems  = output_shape->CalcElementsIncludingPadding();
     int num_output_dim = output_shape->GetDimCount();
     GArray<DivModFast> output_strides_fast(num_output_dim);
     GArray<int64_t> input_strides(num_output_dim);
@@ -154,7 +154,7 @@ ppl::common::RetCode PPLCUDASubpixelUpForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output)
 {
-    int64_t num_elems  = output_shape->GetElementsIncludingPadding();
+    int64_t num_elems  = output_shape->CalcElementsIncludingPadding();
     int num_output_dim = output_shape->GetDimCount();
     GArray<DivModFast> output_strides_fast(num_output_dim);
     GArray<int64_t> input_strides(num_output_dim);

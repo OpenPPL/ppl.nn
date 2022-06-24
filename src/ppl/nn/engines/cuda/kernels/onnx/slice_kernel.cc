@@ -52,7 +52,7 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
             LOG(ERROR) << "Copy axes failed: " << ppl::common::GetRetCodeStr(status);
             return status;
         }
-        kernel_param.axes_num = input->GetShape()->GetElementsIncludingPadding();
+        kernel_param.axes_num = input->GetShape()->CalcElementsIncludingPadding();
     } else {
         for (int it = 0; it < dim_count; ++it) {
             kernel_param.axes[it] = it;
@@ -107,7 +107,7 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
 
     ppl::common::RetCode status = ppl::common::RC_SUCCESS;
     if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL &&
-        input->GetShape()->GetElementsIncludingPadding() == output->GetShape()->GetElementsIncludingPadding() &&
+        input->GetShape()->CalcElementsIncludingPadding() == output->GetShape()->CalcElementsIncludingPadding() &&
         copy_data) {
         output->TransferBufferFrom(input);
     } else {

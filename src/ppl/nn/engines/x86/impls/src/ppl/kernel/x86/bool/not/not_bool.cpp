@@ -26,7 +26,7 @@ ppl::common::RetCode not_bool(
     const uint8_t *x,
     uint8_t *y)
 {
-    const int64_t n_elem = x_shape->GetElementsIncludingPadding();
+    const int64_t n_elem = x_shape->CalcElementsIncludingPadding();
 
     PRAGMA_OMP_PARALLEL_FOR()
     for (int64_t i = 0; i < n_elem; ++i) {

@@ -215,7 +215,7 @@ ppl::common::RetCode PPLCUDATransposeMiddleFastForwardImp(
 {
     const int block_size = 256;
     dim3 dim_block(block_size, 1, 1);
-    int64_t num_elems = output_shape->GetElementsIncludingPadding();
+    int64_t num_elems = output_shape->CalcElementsIncludingPadding();
     dim3 dim_grid(DivUp(num_elems, block_size), 1, 1);
 
 #define SWITCH_CASE(TYPE)                                             \
@@ -299,7 +299,7 @@ ppl::common::RetCode PPLCUDATransposeForwardImp(
         return PPLCUDATransposeMiddleFastForwardImp(stream, fast_param, input_shape, input, output_shape, output);
     }
     int num_dims      = output_shape->GetDimCount();
-    int64_t num_elems = output_shape->GetElementsExcludingPadding();
+    int64_t num_elems = output_shape->CalcElementsExcludingPadding();
 
     GArray<DivModFast> input_strides_fast(num_dims);
     GArray<int64_t> input_strides(num_dims);

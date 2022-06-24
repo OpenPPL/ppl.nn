@@ -88,7 +88,7 @@ TEST_F(TensorImplTest, setbuffer) {
 TEST_F(TensorImplTest, SetAndGetBufferPtr) {
     auto tensor = ConstructFp32TensorWithCpuDevice();
     auto shape = tensor.GetShape();
-    auto nr_element = shape->GetElementsIncludingPadding();
+    auto nr_element = shape->CalcElementsIncludingPadding();
 
     vector<float> buf(nr_element);
     buf[0] = 1.234;

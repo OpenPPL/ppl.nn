@@ -31,7 +31,7 @@ ppl::common::RetCode swish_fp32_sse(
     float *y)
 {
     const __m128 v_beta       = _mm_set1_ps(beta);
-    const int64_t n_elem      = x_shape->GetElementsIncludingPadding();
+    const int64_t n_elem      = x_shape->CalcElementsIncludingPadding();
     const int64_t unroll_n    = 16;
     const int64_t unroll_body = round(n_elem, unroll_n);
 

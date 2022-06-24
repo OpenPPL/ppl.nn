@@ -338,7 +338,7 @@ static ppl::common::RetCode transpose_ndarray_common(
     }
 
     if (merged_dim_count == 1) {
-        return memory_copy(src, src_shape->GetBytesIncludingPadding(), dst);
+        return memory_copy(src, src_shape->CalcBytesIncludingPadding(), dst);
     }
     if (merged_dim_count == 2) {
         return transpose2d_ndarray_common<eT>(merged_src_dims, src, dst);

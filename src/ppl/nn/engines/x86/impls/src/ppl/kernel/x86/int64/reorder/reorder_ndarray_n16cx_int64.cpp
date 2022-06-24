@@ -31,7 +31,7 @@ ppl::common::RetCode reorder_ndarray_n16cx_int64(
 
     const int64_t batch    = src_shape->GetDim(0);
     const int64_t channels = src_shape->GetDim(1);
-    const int64_t X        = src_shape->GetElementsExcludingPadding() / batch / channels;
+    const int64_t X        = src_shape->CalcElementsExcludingPadding() / batch / channels;
 
     const int64_t c_blk    = 16;
     const int64_t padded_c = round_up(channels, c_blk);

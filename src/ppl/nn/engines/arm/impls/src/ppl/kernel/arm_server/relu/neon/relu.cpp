@@ -27,7 +27,7 @@ ppl::common::RetCode relu_fp32(
     const float *input,
     float *output)
 {
-    int64_t num_elmt               = in_shape->GetElementsIncludingPadding();
+    int64_t num_elmt               = in_shape->CalcElementsIncludingPadding();
     const int64_t num_elmt_round16 = (num_elmt & (~15));
 
     if (num_elmt_round16 > 0) {
@@ -66,7 +66,7 @@ ppl::common::RetCode relu_fp16(
     const __fp16 *input,
     __fp16 *output)
 {
-    int64_t num_elmt               = in_shape->GetElementsIncludingPadding();
+    int64_t num_elmt               = in_shape->CalcElementsIncludingPadding();
     const int64_t num_elmt_round32 = (num_elmt & (~31));
 
     if (num_elmt_round32 > 0) {

@@ -42,7 +42,7 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
 
     if (ctx->GetOutputCount() == 1) {
         return ppl::kernel::arm_server::memory_copy(input->GetBufferPtr<void>(),
-                                                    input->GetShape()->GetBytesIncludingPadding(), dst_list[0]);
+                                                    input->GetShape()->CalcBytesIncludingPadding(), dst_list[0]);
     }
 
     const int64_t real_axis =

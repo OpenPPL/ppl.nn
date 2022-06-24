@@ -49,7 +49,7 @@ ppl::common::RetCode ArmKernel::BeforeExecute(KernelExecContext* ctx) {
 bool ArmKernel::CanDoExecute(const KernelExecContext& ctx) const {
     for (uint32_t i = 0; i < ctx.GetInputCount(); ++i) {
         auto tensor = ctx.GetInput<TensorImpl>(i);
-        if (!tensor || tensor->GetShape()->GetBytesIncludingPadding() == 0) {
+        if (!tensor || tensor->GetShape()->CalcBytesIncludingPadding() == 0) {
             return false;
         }
     }

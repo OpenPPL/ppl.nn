@@ -533,11 +533,11 @@ DEBUG_TAG(C);
         bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         bias_shape.Reshape({param.num_output});
 
-        const float mbs = ((float)src_shape.GetBytesExcludingPadding() +
-                          dst_shape.GetBytesExcludingPadding() +
-                          (Flag_sum ? dst_shape.GetBytesExcludingPadding() : 0) +
-                          filter_shape.GetBytesExcludingPadding() +
-                          bias_shape.GetBytesExcludingPadding()) / 1024 / 1024;
+        const float mbs = ((float)src_shape.CalcBytesExcludingPadding() +
+                          dst_shape.CalcBytesExcludingPadding() +
+                          (Flag_sum ? dst_shape.CalcBytesExcludingPadding() : 0) +
+                          filter_shape.CalcBytesExcludingPadding() +
+                          bias_shape.CalcBytesExcludingPadding()) / 1024 / 1024;
 
 DEBUG_TAG(D);
         float *src = nullptr;
@@ -550,27 +550,27 @@ DEBUG_TAG(D);
         float *filter = nullptr;
         float *bias = nullptr;
         void *temp_buffer = nullptr;
-        src = (float*)allocator.Alloc(src_shape.GetBytesIncludingPadding());
-        filter = (float*)allocator.Alloc(filter_shape.GetBytesIncludingPadding());
-        bias = (float*)allocator.Alloc(bias_shape.GetBytesIncludingPadding());
+        src = (float*)allocator.Alloc(src_shape.CalcBytesIncludingPadding());
+        filter = (float*)allocator.Alloc(filter_shape.CalcBytesIncludingPadding());
+        bias = (float*)allocator.Alloc(bias_shape.CalcBytesIncludingPadding());
         if (!src || !filter || !bias) {
             std::cerr << "," << "input tensors out of memory\n";
             return -1;
         }
 DEBUG_TAG(E);
-        for (uint64_t i = 0; i < filter_shape.GetElementsIncludingPadding(); ++i) {
+        for (uint64_t i = 0; i < filter_shape.CalcElementsIncludingPadding(); ++i) {
             filter[i] = (rand() % wei_mod + wei_shift) * wei_scale;
         }
-        for (uint64_t i = 0; i < bias_shape.GetElementsIncludingPadding(); ++i) {
+        for (uint64_t i = 0; i < bias_shape.CalcElementsIncludingPadding(); ++i) {
             bias[i] = (rand() % wei_mod + wei_shift) * wei_scale * 10.0f;
         }
-        for (uint64_t i = 0; i < src_shape.GetElementsIncludingPadding(); ++i) {
+        for (uint64_t i = 0; i < src_shape.CalcElementsIncludingPadding(); ++i) {
             src[i] = (rand() % src_mod + src_shift) * src_scale;
         }
 
 DEBUG_TAG(F);
         if (algoinfo.input_format != ppl::common::DATAFORMAT_NDARRAY) {
-            src_trans = (float*)allocator.Alloc(src_trans_shape.GetBytesIncludingPadding());
+            src_trans = (float*)allocator.Alloc(src_trans_shape.CalcBytesIncludingPadding());
             if (!src_trans) {
                 std::cerr << "," << "src_trans out of memory\n";
                 return -1;
@@ -589,42 +589,42 @@ DEBUG_TAG(F);
         }
 DEBUG_TAG(G);
         if (algoinfo.output_format == ppl::common::DATAFORMAT_NDARRAY || Flag_validate) {
-            dst = (float*)allocator.Alloc(dst_shape.GetBytesIncludingPadding());
+            dst = (float*)allocator.Alloc(dst_shape.CalcBytesIncludingPadding());
             if (!dst) {
                 std::cerr << "," << "dst out of memory\n";
                 return -1;
             }
-            memset(dst, 0, dst_shape.GetBytesIncludingPadding());
+            memset(dst, 0, dst_shape.CalcBytesIncludingPadding());
         }
 DEBUG_TAG(H);
         if (Flag_validate) {
-            dst_ref = (float*)allocator.Alloc(dst_shape.GetBytesIncludingPadding());
+            dst_ref = (float*)allocator.Alloc(dst_shape.CalcBytesIncludingPadding());
             if (!dst_ref) {
                 std::cerr << "," << "dst_ref out of memory\n";
                 return -1;
             }
-            memset(dst_ref, 0, dst_shape.GetBytesIncludingPadding());
+            memset(dst_ref, 0, dst_shape.CalcBytesIncludingPadding());
         }
 DEBUG_TAG(I);
         if (algoinfo.output_format != ppl::common::DATAFORMAT_NDARRAY) {
-            dst_trans = (float*)allocator.Alloc(dst_trans_shape.GetBytesIncludingPadding());
+            dst_trans = (float*)allocator.Alloc(dst_trans_shape.CalcBytesIncludingPadding());
             if (!dst_trans) {
                 std::cerr << "," << "dst_trans out of memory\n";
                 return -1;
             }
-            memset(dst_trans, 0, dst_trans_shape.GetBytesIncludingPadding());
+            memset(dst_trans, 0, dst_trans_shape.CalcBytesIncludingPadding());
         }
         if (Flag_sum) {
-            sum_src = (float*)allocator.Alloc(dst_shape.GetBytesIncludingPadding());
+            sum_src = (float*)allocator.Alloc(dst_shape.CalcBytesIncludingPadding());
             if (!sum_src) {
                 std::cerr << "," << "sum_src out of memory\n";
                 return -1;
             }
-            for (uint64_t i = 0; i < dst_shape.GetElementsIncludingPadding(); ++i) {
+            for (uint64_t i = 0; i < dst_shape.CalcElementsIncludingPadding(); ++i) {
                 sum_src[i] = (rand() % src_mod + src_shift) * src_scale;
             }
             if (algoinfo.output_format != ppl::common::DATAFORMAT_NDARRAY) {
-                sum_src_trans = (float*)allocator.Alloc(dst_trans_shape.GetBytesIncludingPadding());
+                sum_src_trans = (float*)allocator.Alloc(dst_trans_shape.CalcBytesIncludingPadding());
                 if (!sum_src_trans) {
                     std::cerr << "," << "sum_src_trans out of memory\n";
                     return -1;
@@ -768,7 +768,7 @@ DEBUG_TAG(O);
                 }
             }
             std::cerr << ",";
-            check_array_error(dst, dst_ref, dst_shape.GetElementsIncludingPadding(), Flag_eps);
+            check_array_error(dst, dst_ref, dst_shape.CalcElementsIncludingPadding(), Flag_eps);
         }
 
         if (Flag_profile && with_profiler) {

@@ -66,12 +66,12 @@ ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
     auto start_pads = pads_value.data();
     auto end_pads = pads_value.data() + dim_count;
 
-    if (x->GetShape()->GetElementsExcludingPadding() ==
-        y->GetShape()->GetElementsExcludingPadding()) { // no padding at all, just copy
+    if (x->GetShape()->CalcElementsExcludingPadding() ==
+        y->GetShape()->CalcElementsExcludingPadding()) { // no padding at all, just copy
         if (ctx->IsLastConsumerOfInput(0) && x->GetType() == TENSORTYPE_NORMAL) {
             y->TransferBufferFrom(x);
         } else {
-            return ppl::kernel::x86::memory_copy(x->GetBufferPtr(), x->GetShape()->GetBytesIncludingPadding(),
+            return ppl::kernel::x86::memory_copy(x->GetBufferPtr(), x->GetShape()->CalcBytesIncludingPadding(),
                                                  y->GetBufferPtr());
         }
         return ppl::common::RC_SUCCESS;

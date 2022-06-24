@@ -33,7 +33,7 @@ RetCode RiscvDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc
     LOG(DEBUG) << "RISCV Data Converter from data type " << GetDataTypeStr(src_desc.GetDataType()) << " to "
                << GetDataTypeStr(dst_desc.GetDataType());
     if (dst_desc.GetDataFormat() == src_desc.GetDataFormat() && dst_desc.GetDataType() == src_desc.GetDataType()) {
-        memcpy(dst->addr, src.addr, src_desc.GetBytesIncludingPadding());
+        memcpy(dst->addr, src.addr, src_desc.CalcBytesIncludingPadding());
         return RC_SUCCESS;
     } else if (dst_desc.GetDataFormat() != src_desc.GetDataFormat() &&
                dst_desc.GetDataType() == src_desc.GetDataType()) {
@@ -74,10 +74,10 @@ RetCode RiscvDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc
     } else if (dst_desc.GetDataFormat() == src_desc.GetDataFormat() &&
                dst_desc.GetDataType() != src_desc.GetDataType()) {
         if (dst_desc.GetDataType() == DATATYPE_FLOAT32 && src_desc.GetDataType() == DATATYPE_FLOAT16) {
-            CvtFp16ToFp32(src_desc.GetElementsIncludingPadding(), (__fp16*)(src.addr), (float*)(dst->addr));
+            CvtFp16ToFp32(src_desc.CalcElementsIncludingPadding(), (__fp16*)(src.addr), (float*)(dst->addr));
             return RC_SUCCESS;
         } else if (dst_desc.GetDataType() == DATATYPE_FLOAT16 && src_desc.GetDataType() == DATATYPE_FLOAT32) {
-            CvtFp32ToFp16(src_desc.GetElementsIncludingPadding(), (float*)(src.addr), (__fp16*)(dst->addr));
+            CvtFp32ToFp16(src_desc.CalcElementsIncludingPadding(), (float*)(src.addr), (__fp16*)(dst->addr));
             return RC_SUCCESS;
         }
     }

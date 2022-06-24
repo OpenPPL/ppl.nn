@@ -83,7 +83,7 @@ static RetCode GetSplitChunks(const TensorImpl* split, uint32_t orig_axis_dim, v
                 split_chunks->push_back(remaining);
             }
         } else {
-            auto nr_chunk = split->GetShape()->GetElementsExcludingPadding();
+            auto nr_chunk = split->GetShape()->CalcElementsExcludingPadding();
             if (split_data_type == DATATYPE_INT32) {
                 vector<int32_t> chunks(nr_chunk);
                 auto status = split->CopyToHost(chunks.data());
@@ -126,7 +126,7 @@ static RetCode InitNdarrayBufferInfo(const TensorShape& inshape, const BufferDes
 
     auto status = info->ReallocBuffer();
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "alloc [" << info->GetShape()->GetBytesIncludingPadding()
+        LOG(ERROR) << "alloc [" << info->GetShape()->CalcBytesIncludingPadding()
                    << "] bytes for tmp buffer failed: " << GetRetCodeStr(status);
         return status;
     }
@@ -192,9 +192,9 @@ RetCode SplitToSequenceKernel::DoExecute(KernelExecContext* ctx) {
         return status;
     }
 
-    const uint64_t dims_before_axis = src_shape->GetElementsToDimensionExcludingPadding(axis);
-    const uint64_t dims_from_axis = src_shape->GetElementsFromDimensionExcludingPadding(axis);
-    const uint64_t dims_after_axis = src_shape->GetElementsFromDimensionExcludingPadding(axis + 1);
+    const uint64_t dims_before_axis = src_shape->CalcElementsToDimensionExcludingPadding(axis);
+    const uint64_t dims_from_axis = src_shape->CalcElementsFromDimensionExcludingPadding(axis);
+    const uint64_t dims_after_axis = src_shape->CalcElementsFromDimensionExcludingPadding(axis + 1);
     const uint32_t element_size = GetSizeOfDataType(src_shape->GetDataType());
 
     auto input_buffer_cursor = *src_buffer;
@@ -208,7 +208,7 @@ RetCode SplitToSequenceKernel::DoExecute(KernelExecContext* ctx) {
         buffer_info.GetShape()->SetDim(axis, dims_of_chunk);
         status = buffer_info.ReallocBuffer();
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "alloc tensor buffer failed, bytes[" << buffer_info.GetShape()->GetBytesIncludingPadding()
+            LOG(ERROR) << "alloc tensor buffer failed, bytes[" << buffer_info.GetShape()->CalcBytesIncludingPadding()
                        << "]";
             return status;
         }

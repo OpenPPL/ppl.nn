@@ -28,7 +28,7 @@ uint64_t PPLSoftmaxGetTempBufferSize(
     const ppl::nn::TensorShape* input_shape,
     int axis)
 {
-    int N = input_shape->GetElementsIncludingPadding() / input_shape->GetDim(axis);
+    int N = input_shape->CalcElementsIncludingPadding() / input_shape->GetDim(axis);
     return N * ppl::common::GetSizeOfDataType(input_shape->GetDataType());
 }
 
@@ -41,9 +41,9 @@ ppl::common::RetCode PPLCUDASoftmaxForwardImp(
     void* temp_buffer,
     int axis)
 {
-    int N = input_shape->GetElementsToDimensionIncludingPadding(axis);
+    int N = input_shape->CalcElementsToDimensionIncludingPadding(axis);
     int R = input_shape->GetDim(axis);
-    int D = input_shape->GetElementsFromDimensionIncludingPadding(axis + 1);
+    int D = input_shape->CalcElementsFromDimensionIncludingPadding(axis + 1);
     // reduce max
     PPLReduceDimDes reduce_desc(D, R, N);
     ReduceParam reduce_max = ReduceMax;

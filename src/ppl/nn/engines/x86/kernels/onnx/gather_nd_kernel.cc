@@ -54,7 +54,7 @@ ppl::common::RetCode GatherNdKernel::DoExecute(KernelExecContext* ctx) {
 
     BufferDesc tmp_buffer_desc;
     auto tmp_buffer_size = CalcTmpBufferSize(*ctx);
-    auto status = GetX86Device()->AllocTmpBuffer(indices->GetShape()->GetBytesExcludingPadding(), &tmp_buffer_desc);
+    auto status = GetX86Device()->AllocTmpBuffer(indices->GetShape()->CalcBytesExcludingPadding(), &tmp_buffer_desc);
     if (status != ppl::common::RC_SUCCESS) {
         LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
                    << "] failed: " << ppl::common::GetRetCodeStr(status);

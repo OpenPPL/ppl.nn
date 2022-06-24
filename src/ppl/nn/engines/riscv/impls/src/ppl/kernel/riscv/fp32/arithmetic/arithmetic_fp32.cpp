@@ -30,8 +30,8 @@ static ppl::common::RetCode arithmetic_fp32(
     const float* src1,
     float* dst)
 {
-    bool is_eltwise = src0_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding() &&
-                      src1_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding();
+    bool is_eltwise = src0_shape->CalcElementsExcludingPadding() == dst_shape->CalcElementsExcludingPadding() &&
+                      src1_shape->CalcElementsExcludingPadding() == dst_shape->CalcElementsExcludingPadding();
     if (is_eltwise) {
         return arithmetic_eltwise_fp32<_op, fuse_relu>(dst_shape, src0, src1, dst);
     } else if (dst_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {

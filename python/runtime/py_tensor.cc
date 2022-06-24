@@ -66,7 +66,7 @@ static RetCode ConvertFromHost(const PyTensor& py_tensor, const pybind11::buffer
 
     auto status = tensor->ReallocBuffer();
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "realloc buffer of [" << shape->GetBytesIncludingPadding()
+        LOG(ERROR) << "realloc buffer of [" << shape->CalcBytesIncludingPadding()
                    << "] bytes failed when setting data for tensor[" << tensor->GetName()
                    << "]: " << GetRetCodeStr(status);
         return status;
@@ -85,7 +85,7 @@ static RetCode ConvertFromHost(const PyTensor& py_tensor, const pybind11::buffer
 static PyNdArray ConvertToHost(const PyTensor& py_tensor, datatype_t data_type, dataformat_t data_format) {
     auto tensor = py_tensor.ptr;
     PyNdArray arr;
-    if (tensor->GetShape()->GetBytesExcludingPadding() == 0) {
+    if (tensor->GetShape()->CalcBytesExcludingPadding() == 0) {
         return arr;
     }
 
@@ -97,7 +97,7 @@ static PyNdArray ConvertToHost(const PyTensor& py_tensor, datatype_t data_type, 
         dst_shape.SetDataFormat(data_format);
     }
 
-    arr.data.resize(dst_shape.GetBytesExcludingPadding());
+    arr.data.resize(dst_shape.CalcBytesExcludingPadding());
     auto status = tensor->ConvertToHost(arr.data.data(), dst_shape);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "copy data of tensor[" << tensor->GetName() << "] to host failed: " << GetRetCodeStr(status);
@@ -115,7 +115,7 @@ static PyNdArray ConvertToHost(const PyTensor& py_tensor, datatype_t data_type, 
 
     arr.strides.resize(dim_count);
     for (uint32_t i = 1; i < dim_count; ++i) {
-        arr.strides[i - 1] = dst_shape.GetBytesFromDimesionExcludingPadding(i);
+        arr.strides[i - 1] = dst_shape.CalcBytesFromDimesionExcludingPadding(i);
     }
     arr.strides[dim_count - 1] = GetSizeOfDataType(dst_shape.GetDataType());
 

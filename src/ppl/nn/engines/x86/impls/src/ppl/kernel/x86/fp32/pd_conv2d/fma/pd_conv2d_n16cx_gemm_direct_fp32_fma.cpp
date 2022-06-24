@@ -160,7 +160,7 @@ uint64_t pd_conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_temp_buffer_size()
     if (mode_ == pd_conv2d_fp32_mode::SEPARATE) {
         schedule_param_.gd_temp_buffer_size = round_up(conv2d_executor_->cal_temp_buffer_size(), PPL_X86_CACHELINE_BYTES());
         schedule_param_.dw_temp_buffer_size = round_up(depthwise_conv2d_executor_->cal_temp_buffer_size(), PPL_X86_CACHELINE_BYTES());
-        return schedule_param_.gd_temp_buffer_size + schedule_param_.dw_temp_buffer_size + inter_shape_.GetBytesIncludingPadding();
+        return schedule_param_.gd_temp_buffer_size + schedule_param_.dw_temp_buffer_size + inter_shape_.CalcBytesIncludingPadding();
     } else {
         const conv2d_fp32_param &dw_p = *depthwise_conv2d_executor_->conv_param();
         const uint64_t inter_buffer_size = (uint64_t)dw_p.kernel_h * (dw_p.pad_w * 2 + inter_shape_.GetDim(3)) * schedule_param_.oc_l2_blk * sizeof(float);

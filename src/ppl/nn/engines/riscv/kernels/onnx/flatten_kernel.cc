@@ -49,7 +49,7 @@ ppl::common::RetCode FlattenKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::kernel::riscv::flatten_n4cx_fp32(input->GetBufferPtr<float>(), output->GetBufferPtr<float>(),
                                                      input->GetShape(), output->GetShape());
     } else {
-        return ppl::kernel::riscv::memory_copy(input->GetBufferPtr(), input->GetShape()->GetBytesIncludingPadding(),
+        return ppl::kernel::riscv::memory_copy(input->GetBufferPtr(), input->GetShape()->CalcBytesIncludingPadding(),
                                                output->GetBufferPtr());
     }
 
