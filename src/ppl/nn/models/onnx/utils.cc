@@ -160,6 +160,7 @@ static RetCode LoadExternalData(const ::onnx::TensorProto& pb_tensor, const char
     return RC_SUCCESS;
 }
 
+// TODO handling different endian cases
 static RetCode LoadInternalData(const ::onnx::TensorProto& pb_tensor, datatype_t ppl_data_type,
                                 ppl::nn::utils::Buffer* data) {
     const int32_t onnx_data_type = pb_tensor.data_type();
@@ -182,24 +183,58 @@ static RetCode LoadInternalData(const ::onnx::TensorProto& pb_tensor, datatype_t
         } else if (pb_tensor.int32_data_size() > 0) {
             data->Assign((const char*)pb_tensor.int32_data().data(), pb_tensor.int32_data().size() * elem_size);
         }
+    } else if (onnx_data_type == ::onnx::TensorProto_DataType_UINT32) {
+        if (!pb_tensor.raw_data().empty()) {
+            data->Assign(pb_tensor.raw_data().data(), pb_tensor.raw_data().size());
+        } else if (pb_tensor.uint64_data_size() > 0) {
+            data->Resize(pb_tensor.uint64_data_size() * sizeof(uint32_t));
+            auto cur = static_cast<uint32_t*>(data->GetData());
+            for (int i = 0; i < pb_tensor.uint64_data_size(); ++i) {
+                *cur++ = static_cast<uint32_t>(pb_tensor.uint64_data(i));
+            }
+        }
     } else if (onnx_data_type == ::onnx::TensorProto_DataType_INT64) {
         if (!pb_tensor.raw_data().empty()) {
             data->Assign(pb_tensor.raw_data().data(), pb_tensor.raw_data().size());
         } else if (pb_tensor.int64_data().size() > 0) {
             data->Assign((const char*)pb_tensor.int64_data().data(), pb_tensor.int64_data().size() * elem_size);
         }
+    } else if (onnx_data_type == ::onnx::TensorProto_DataType_UINT64) {
+        if (!pb_tensor.raw_data().empty()) {
+            data->Assign(pb_tensor.raw_data().data(), pb_tensor.raw_data().size());
+        } else if (pb_tensor.uint64_data_size() > 0) {
+            data->Assign((const char*)pb_tensor.uint64_data().data(), pb_tensor.uint64_data().size() * elem_size);
+        }
+    } else if (onnx_data_type == ::onnx::TensorProto_DataType_FLOAT16) {
+        if (!pb_tensor.raw_data().empty()) {
+            data->Assign(pb_tensor.raw_data().data(), pb_tensor.raw_data().size());
+        } else if (pb_tensor.int32_data().size() > 0) {
+            data->Resize(pb_tensor.int32_data_size() * sizeof(uint16_t));
+            auto cur = static_cast<uint16_t*>(data->GetData());
+            for (int i = 0; i < pb_tensor.int32_data_size(); ++i) {
+                *cur++ = static_cast<uint16_t>(pb_tensor.int32_data(i));
+            }
+        }
     } else if (onnx_data_type == ::onnx::TensorProto_DataType_BOOL) {
         if (!pb_tensor.raw_data().empty()) {
             data->Assign(pb_tensor.raw_data().data(), pb_tensor.raw_data().size());
         } else if (pb_tensor.int32_data().size() > 0) { // bool may be stored in int32_data
-            data->Assign((const char*)pb_tensor.int32_data().data(), pb_tensor.int32_data().size() * sizeof(int32_t));
+            data->Resize(pb_tensor.int32_data_size() * sizeof(bool));
+            auto cur = static_cast<bool*>(data->GetData());
+            for (int i = 0; i < pb_tensor.int32_data_size(); ++i) {
+                *cur++ = static_cast<bool>(pb_tensor.int32_data(i));
+            }
         }
     } else if (onnx_data_type == ::onnx::TensorProto_DataType_INT8 ||
                onnx_data_type == ::onnx::TensorProto_DataType_UINT8) {
         if (!pb_tensor.raw_data().empty()) {
             data->Assign(pb_tensor.raw_data().data(), pb_tensor.raw_data().size());
         } else if (pb_tensor.int32_data().size() > 0) { // int8/uint8 may be stored in `int32_data`
-            data->Assign((const char*)pb_tensor.int32_data().data(), pb_tensor.int32_data().size());
+            data->Resize(pb_tensor.int32_data_size());
+            auto cur = static_cast<char*>(data->GetData());
+            for (int i = 0; i < pb_tensor.int32_data_size(); ++i) {
+                *cur++ = static_cast<char>(pb_tensor.int32_data(i));
+            }
         }
     } else {
         auto onnx_pb_type = (::onnx::TensorProto_DataType)onnx_data_type;
