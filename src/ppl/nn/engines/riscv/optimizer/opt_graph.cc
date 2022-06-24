@@ -204,7 +204,7 @@ RetCode OptGraph::DoOptimize(const utils::SharedResource& resource, RiscvDevice*
             tensor->SetDevice(device);
             tensor->ReallocBuffer();
             memcpy(tensor->GetBufferPtr<void>(), graph_->data->constants[edge_id].data.GetData(),
-                   tensor->GetShape()->GetBytesExcludingPadding());
+                   tensor->GetShape()->CalcBytesExcludingPadding());
         }
     }
 

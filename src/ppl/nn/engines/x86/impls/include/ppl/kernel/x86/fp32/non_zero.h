@@ -26,7 +26,7 @@ inline uint64_t non_zero_ndarray_fp32_get_buffer_bytes(
     const ppl::nn::TensorShape *src_shape)
 {
     const uint64_t input_dim_count = src_shape->GetDimCount();
-    const uint64_t max_output_num  = src_shape->GetElementsExcludingPadding();
+    const uint64_t max_output_num  = src_shape->CalcElementsExcludingPadding();
     return input_dim_count * max_output_num * sizeof(int64_t);
 }
 

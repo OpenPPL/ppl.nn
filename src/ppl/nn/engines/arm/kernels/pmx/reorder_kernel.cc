@@ -45,7 +45,7 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
     const ppl::common::dataformat_t output_format = output->GetShape()->GetDataFormat();
 
     if (output_format == input_format && input_type == output_type) {
-        return memory_copy(input->GetBufferPtr<char>(), input->GetShape()->GetBytesIncludingPadding(),
+        return memory_copy(input->GetBufferPtr<char>(), input->GetShape()->CalcBytesIncludingPadding(),
                            output->GetBufferPtr<char>());
     } else if (output_format != input_format) {
         if (input_type == ppl::common::DATATYPE_FLOAT32 && output_type == input_type) {
@@ -96,11 +96,11 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
 #ifdef PPLNN_USE_ARMV8_2_FP16
     } else {
         if (input_type == ppl::common::DATATYPE_FLOAT16 && output_type == ppl::common::DATATYPE_FLOAT32) {
-            Fp16ToFp32(input->GetBufferPtr<__fp16>(), input->GetShape()->GetElementsIncludingPadding(),
+            Fp16ToFp32(input->GetBufferPtr<__fp16>(), input->GetShape()->CalcElementsIncludingPadding(),
                        output->GetBufferPtr<float>());
             return ppl::common::RC_SUCCESS;
         } else if (input_type == ppl::common::DATATYPE_FLOAT32 && output_type == ppl::common::DATATYPE_FLOAT16) {
-            Fp32ToFp16(input->GetBufferPtr<float>(), input->GetShape()->GetElementsIncludingPadding(),
+            Fp32ToFp16(input->GetBufferPtr<float>(), input->GetShape()->CalcElementsIncludingPadding(),
                        output->GetBufferPtr<__fp16>());
             return ppl::common::RC_SUCCESS;
         } else {

@@ -275,7 +275,7 @@ static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime
             shape->Reshape(input_shapes[c]);
         }
 
-        auto nr_element = shape->GetBytesIncludingPadding() / sizeof(float);
+        auto nr_element = shape->CalcBytesIncludingPadding() / sizeof(float);
         vector<float> buffer(nr_element);
 
         std::default_random_engine eng;
@@ -335,7 +335,7 @@ static bool SetInputsAllInOne(const string& input_file, const vector<vector<int6
             return false;
         }
 
-        const uint64_t content_size = src_desc.GetBytesIncludingPadding();
+        const uint64_t content_size = src_desc.CalcBytesIncludingPadding();
         input_data->emplace_back(string(data, content_size));
         data += content_size;
     }
@@ -526,7 +526,7 @@ static bool SaveInputsOneByOne(const Runtime* runtime) {
         auto t = runtime->GetInputTensor(c);
         auto shape = t->GetShape();
 
-        auto bytes = shape->GetBytesIncludingPadding();
+        auto bytes = shape->CalcBytesIncludingPadding();
         vector<char> buffer(bytes);
 
         TensorShape src_desc = *t->GetShape();
@@ -569,7 +569,7 @@ static bool SaveInputsAllInOne(const Runtime* runtime) {
 
     for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
         auto t = runtime->GetInputTensor(c);
-        auto bytes = t->GetShape()->GetBytesIncludingPadding();
+        auto bytes = t->GetShape()->CalcBytesIncludingPadding();
         vector<char> buffer(bytes);
 
         TensorShape src_desc = *t->GetShape();
@@ -597,7 +597,7 @@ static bool SaveOutputsOneByOne(const Runtime* runtime) {
             dst_desc.SetDataType(DATATYPE_FLOAT32);
         }
 
-        auto bytes = dst_desc.GetBytesIncludingPadding();
+        auto bytes = dst_desc.CalcBytesIncludingPadding();
         vector<char> buffer(bytes);
         auto status = t->ConvertToHost(buffer.data(), dst_desc);
         if (status != RC_SUCCESS) {
@@ -634,8 +634,8 @@ static void PrintInputOutputInfo(const Runtime* runtime) {
 
         LOG(INFO) << "    DataType: " << GetDataTypeStr(shape->GetDataType());
         LOG(INFO) << "    DataFormat: " << GetDataFormatStr(shape->GetDataFormat());
-        LOG(INFO) << "    NumBytesIncludePadding: " << shape->GetBytesIncludingPadding();
-        LOG(INFO) << "    NumBytesExcludePadding: " << shape->GetBytesExcludingPadding();
+        LOG(INFO) << "    NumBytesIncludePadding: " << shape->CalcBytesIncludingPadding();
+        LOG(INFO) << "    NumBytesExcludePadding: " << shape->CalcBytesExcludingPadding();
     }
 
     LOG(INFO) << "----- output info -----";
@@ -653,8 +653,8 @@ static void PrintInputOutputInfo(const Runtime* runtime) {
 
         LOG(INFO) << "    DataType: " << GetDataTypeStr(shape->GetDataType());
         LOG(INFO) << "    DataFormat: " << GetDataFormatStr(shape->GetDataFormat());
-        LOG(INFO) << "    NumBytesIncludePadding: " << shape->GetBytesIncludingPadding();
-        LOG(INFO) << "    NumBytesExcludePadding: " << shape->GetBytesExcludingPadding();
+        LOG(INFO) << "    NumBytesIncludePadding: " << shape->CalcBytesIncludingPadding();
+        LOG(INFO) << "    NumBytesExcludePadding: " << shape->CalcBytesExcludingPadding();
     }
 
     LOG(INFO) << "----------------------";
@@ -752,7 +752,7 @@ static bool GetOutputs(const Runtime* runtime) {
         if (dst_desc.GetDataType() == DATATYPE_FLOAT16) {
             dst_desc.SetDataType(DATATYPE_FLOAT32);
         }
-        auto bytes = dst_desc.GetBytesIncludingPadding();
+        auto bytes = dst_desc.CalcBytesIncludingPadding();
         vector<char> buffer(bytes);
         auto status = t->ConvertToHost(buffer.data(), dst_desc);
         if (status != RC_SUCCESS) {
@@ -898,7 +898,7 @@ void RunOnNumaNode(int32_t numa_node_id, double& avg_run_dur) {
     for (uint32_t i = 0; i < runtime->GetInputCount(); ++i) {
         auto in = runtime->GetInputTensor(i);
         auto shape = in->GetShape();
-        if (shape->GetElementsIncludingPadding() == 0) {
+        if (shape->CalcElementsIncludingPadding() == 0) {
             LOG(ERROR) << "input tensor[" << in->GetName() << "] is empty.";
             return;
         }

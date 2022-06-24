@@ -31,7 +31,7 @@ static ppl::common::RetCode arithmetic_eltwise_fp32_avx(
 {
     const int64_t simd_w      = 8;
     const int64_t unroll_len  = simd_w * 4;
-    const int64_t length      = dst_shape->GetElementsIncludingPadding();
+    const int64_t length      = dst_shape->CalcElementsIncludingPadding();
     const int64_t unroll_body = round(length, unroll_len);
     const int64_t total_task  = unroll_body / unroll_len;
     std::vector<int64_t> loop_iter(1, max<int64_t>(total_task, 1));

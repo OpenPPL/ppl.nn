@@ -64,7 +64,7 @@ ppl::common::RetCode PPLCUDANotForwardImp(
     const ppl::nn::TensorShape *output_shape,
     bool *output)
 {
-    uint64_t num_elems = output_shape->GetElementsIncludingPadding();
+    uint64_t num_elems = output_shape->CalcElementsIncludingPadding();
     int block_size     = 256;
     if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
         if (!(num_elems & 0xf)) {

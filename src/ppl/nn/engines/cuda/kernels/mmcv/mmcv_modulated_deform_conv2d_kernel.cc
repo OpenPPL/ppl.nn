@@ -25,7 +25,7 @@ bool MMCVModulatedDeformConv2dKernel::CanDoExecute(const KernelExecContext& ctx)
     for (uint32_t i = 0; i < ctx.GetInputCount(); ++i) {
         if (i == 2) continue;
         auto tensor = ctx.GetInput<TensorImpl>(i);
-        if (!tensor || tensor->GetShape()->GetBytesIncludingPadding() == 0) {
+        if (!tensor || tensor->GetShape()->CalcBytesIncludingPadding() == 0) {
             LOG(WARNING) << "Cannot execute " << GetName();
             return false;
         }

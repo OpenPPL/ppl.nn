@@ -104,7 +104,7 @@ void NonZeroImp(
     int32_t* tempbuffer)
 {
     // step 1: count each block
-    int64_t max_elems = input_shape->GetElementsIncludingPadding();
+    int64_t max_elems = input_shape->CalcElementsIncludingPadding();
     int num_blocks    = (max_elems + NUM_THREADS_PER_BLOCK - 1) / NUM_THREADS_PER_BLOCK;
     count_nonzero_each_block<<<num_blocks, NUM_THREADS_PER_BLOCK, 0, stream>>>(max_elems,
                                                                                input,
@@ -163,7 +163,7 @@ ppl::common::RetCode PPLCUDANonZeroForwardImp(
 
 int64_t PPLNonZeroGetTempBufferSize(ppl::nn::TensorShape* input_shape)
 {
-    int64_t max_elems = input_shape->GetElementsIncludingPadding();
+    int64_t max_elems = input_shape->CalcElementsIncludingPadding();
     int num_blocks    = (max_elems + NUM_THREADS_PER_BLOCK - 1) / NUM_THREADS_PER_BLOCK;
     return num_blocks * sizeof(int32_t);
 }

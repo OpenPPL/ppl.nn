@@ -34,7 +34,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 RetCode CudaDataConverter::ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
                                          const TensorShape& src_desc) const {
-    if (src_desc.GetBytesExcludingPadding() == 0) {
+    if (src_desc.CalcBytesExcludingPadding() == 0) {
         // TODO release dst
         return RC_SUCCESS;
     }
@@ -66,7 +66,7 @@ RetCode CudaDataConverter::ConvertToHost(void* dst, const TensorShape& dst_desc,
 
 RetCode CudaDataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
                                            const TensorShape& src_desc) const {
-    if (src_desc.GetBytesExcludingPadding() == 0) {
+    if (src_desc.CalcBytesExcludingPadding() == 0) {
         device_->Free(dst);
         return RC_SUCCESS;
     }
@@ -98,7 +98,7 @@ RetCode CudaDataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& d
 
 RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
                                    const TensorShape& src_desc) const {
-    if (src_desc.GetBytesExcludingPadding() == 0) {
+    if (src_desc.CalcBytesExcludingPadding() == 0) {
         device_->Free(dst);
         return RC_SUCCESS;
     }
@@ -124,7 +124,7 @@ RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc,
     } else if (param.in_format == param.out_format || param.in_type == param.out_type) {
         PPLCUDADataConvert(device_->GetStream(), src.addr, dst->addr, nullptr, param);
     } else {
-        auto shape_size = src_desc.GetElementsIncludingPadding() * GetSizeOfDataType(dst_desc.GetDataType());
+        auto shape_size = src_desc.CalcElementsIncludingPadding() * GetSizeOfDataType(dst_desc.GetDataType());
 
         BufferDesc tmp_buffer_desc;
         status = device_->Realloc(shape_size, &tmp_buffer_desc);
@@ -145,7 +145,7 @@ RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc,
 RetCode CudaDataConverter::ConvertToHost(void* dst, const TensorShape& dst_desc, const CudaTensorQuant& dst_quant,
                                          const BufferDesc& src, const TensorShape& src_desc,
                                          const CudaTensorQuant& src_quant) const {
-    if (src_desc.GetBytesExcludingPadding() == 0) {
+    if (src_desc.CalcBytesExcludingPadding() == 0) {
         // TODO release dst
         return RC_SUCCESS;
     }
@@ -178,7 +178,7 @@ RetCode CudaDataConverter::ConvertToHost(void* dst, const TensorShape& dst_desc,
 RetCode CudaDataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc,
                                            const CudaTensorQuant& dst_quant, const void* src,
                                            const TensorShape& src_desc, const CudaTensorQuant& src_quant) const {
-    if (src_desc.GetBytesExcludingPadding() == 0) {
+    if (src_desc.CalcBytesExcludingPadding() == 0) {
         device_->Free(dst);
         return RC_SUCCESS;
     }
@@ -211,7 +211,7 @@ RetCode CudaDataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& d
 RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc, const CudaTensorQuant& dst_quant,
                                    const BufferDesc& src, const TensorShape& src_desc,
                                    const CudaTensorQuant& src_quant) const {
-    if (src_desc.GetBytesExcludingPadding() == 0) {
+    if (src_desc.CalcBytesExcludingPadding() == 0) {
         device_->Free(dst);
         return RC_SUCCESS;
     }
@@ -272,7 +272,7 @@ RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc,
     } else if ( !param.mix_format || !param.mix_type) {
         PPLCUDADataConvert(device_->GetStream(), src.addr, dst->addr, nullptr, param);
     } else {
-        auto shape_size = src_desc.GetElementsIncludingPadding() * GetSizeOfDataType(dst_desc.GetDataType());
+        auto shape_size = src_desc.CalcElementsIncludingPadding() * GetSizeOfDataType(dst_desc.GetDataType());
 
         BufferDesc tmp_buffer_desc;
         status = device_->Realloc(shape_size, &tmp_buffer_desc);

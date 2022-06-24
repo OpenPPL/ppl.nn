@@ -314,12 +314,12 @@ DEBUG_TAG(C);
         dw_bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         dw_bias_shape.Reshape({dw_param.group});
 
-        const float mbs = ((float)src_shape.GetBytesExcludingPadding() +
-                          dst_shape.GetBytesExcludingPadding() +
-                          cv_filter_shape.GetBytesExcludingPadding() +
-                          cv_bias_shape.GetBytesExcludingPadding() +
-                          dw_filter_shape.GetBytesExcludingPadding() +
-                          dw_bias_shape.GetBytesExcludingPadding()) / 1024 / 1024;
+        const float mbs = ((float)src_shape.CalcBytesExcludingPadding() +
+                          dst_shape.CalcBytesExcludingPadding() +
+                          cv_filter_shape.CalcBytesExcludingPadding() +
+                          cv_bias_shape.CalcBytesExcludingPadding() +
+                          dw_filter_shape.CalcBytesExcludingPadding() +
+                          dw_bias_shape.CalcBytesExcludingPadding()) / 1024 / 1024;
 
 DEBUG_TAG(D);
         float *src = nullptr;
@@ -333,47 +333,47 @@ DEBUG_TAG(D);
         void *pd_temp_buffer = nullptr;
         void *cv_temp_buffer = nullptr;
         void *dw_temp_buffer = nullptr;
-        src = (float*)allocator.Alloc(src_shape.GetBytesIncludingPadding());
-        cv_filter = (float*)allocator.Alloc(cv_filter_shape.GetBytesIncludingPadding());
-        cv_bias = (float*)allocator.Alloc(cv_bias_shape.GetBytesIncludingPadding());
-        dw_filter = (float*)allocator.Alloc(dw_filter_shape.GetBytesIncludingPadding());
-        dw_bias = (float*)allocator.Alloc(dw_bias_shape.GetBytesIncludingPadding());
+        src = (float*)allocator.Alloc(src_shape.CalcBytesIncludingPadding());
+        cv_filter = (float*)allocator.Alloc(cv_filter_shape.CalcBytesIncludingPadding());
+        cv_bias = (float*)allocator.Alloc(cv_bias_shape.CalcBytesIncludingPadding());
+        dw_filter = (float*)allocator.Alloc(dw_filter_shape.CalcBytesIncludingPadding());
+        dw_bias = (float*)allocator.Alloc(dw_bias_shape.CalcBytesIncludingPadding());
         if (!src || !cv_filter || !cv_bias || !dw_filter || !dw_bias) {
             std::cerr << "," << "input tensors out of memory\n";
             return -1;
         }
 DEBUG_TAG(E);
-        for (uint64_t i = 0; i < cv_filter_shape.GetElementsIncludingPadding(); ++i) {
+        for (uint64_t i = 0; i < cv_filter_shape.CalcElementsIncludingPadding(); ++i) {
             cv_filter[i] = (rand() % wei_mod + wei_shift) * wei_scale;
         }
-        for (uint64_t i = 0; i < cv_bias_shape.GetElementsIncludingPadding(); ++i) {
+        for (uint64_t i = 0; i < cv_bias_shape.CalcElementsIncludingPadding(); ++i) {
             cv_bias[i] = (rand() % wei_mod + wei_shift) * wei_scale * 10.0f;
         }
-        for (uint64_t i = 0; i < dw_filter_shape.GetElementsIncludingPadding(); ++i) {
+        for (uint64_t i = 0; i < dw_filter_shape.CalcElementsIncludingPadding(); ++i) {
             dw_filter[i] = (rand() % wei_mod + wei_shift) * wei_scale;
         }
-        for (uint64_t i = 0; i < dw_bias_shape.GetElementsIncludingPadding(); ++i) {
+        for (uint64_t i = 0; i < dw_bias_shape.CalcElementsIncludingPadding(); ++i) {
             dw_bias[i] = (rand() % wei_mod + wei_shift) * wei_scale * 10.0f;
         }
-        for (uint64_t i = 0; i < src_shape.GetElementsIncludingPadding(); ++i) {
+        for (uint64_t i = 0; i < src_shape.CalcElementsIncludingPadding(); ++i) {
             src[i] = (rand() % src_mod + src_shift) * src_scale;
         }
 DEBUG_TAG(G);
-        dst = (float*)allocator.Alloc(dst_shape.GetBytesIncludingPadding());
+        dst = (float*)allocator.Alloc(dst_shape.CalcBytesIncludingPadding());
         if (!dst) {
             std::cerr << "," << "dst out of memory\n";
                 return -1;
         }
-        memset(dst, 0, dst_shape.GetBytesIncludingPadding());
+        memset(dst, 0, dst_shape.CalcBytesIncludingPadding());
 DEBUG_TAG(H);
-        inter = (float*)allocator.Alloc(inter_shape.GetBytesIncludingPadding());
-        dst_ref = (float*)allocator.Alloc(dst_shape.GetBytesIncludingPadding());
+        inter = (float*)allocator.Alloc(inter_shape.CalcBytesIncludingPadding());
+        dst_ref = (float*)allocator.Alloc(dst_shape.CalcBytesIncludingPadding());
         if (!inter || !dst_ref) {
             std::cerr << "," << "inter/dst_ref out of memory\n";
             return -1;
         }
-        memset(inter, 0, inter_shape.GetBytesIncludingPadding());
-        memset(dst_ref, 0, dst_shape.GetBytesIncludingPadding());
+        memset(inter, 0, inter_shape.CalcBytesIncludingPadding());
+        memset(dst_ref, 0, dst_shape.CalcBytesIncludingPadding());
 
 DEBUG_TAG(J);
         if (ppl::common::RC_SUCCESS != pd_mgr->gen_cvt_weights(cv_filter, cv_bias, dw_filter, dw_bias)) {
@@ -516,7 +516,7 @@ DEBUG_TAG(N);
 DEBUG_TAG(O);
         if (Flag_validate) {
             std::cerr << ",";
-            check_array_error(dst, dst_ref, dst_shape.GetElementsIncludingPadding(), Flag_eps);
+            check_array_error(dst, dst_ref, dst_shape.CalcElementsIncludingPadding(), Flag_eps);
         }
 
 DEBUG_TAG(Y);

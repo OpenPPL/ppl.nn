@@ -57,16 +57,16 @@ TEST(TensorShapeTest, elements_and_bytes) {
     s.SetDataType(DATATYPE_FLOAT32);
     s.SetDataFormat(DATAFORMAT_NDARRAY);
 
-    ASSERT_EQ(209715200, s.GetElementsIncludingPadding());
-    ASSERT_EQ(209715200, s.GetElementsExcludingPadding());
-    ASSERT_EQ(838860800, s.GetBytesIncludingPadding());
-    ASSERT_EQ(838860800, s.GetBytesExcludingPadding());
+    ASSERT_EQ(209715200, s.CalcElementsIncludingPadding());
+    ASSERT_EQ(209715200, s.CalcElementsExcludingPadding());
+    ASSERT_EQ(838860800, s.CalcBytesIncludingPadding());
+    ASSERT_EQ(838860800, s.CalcBytesExcludingPadding());
 
     s.SetPadding0(1, 2);
     s.SetPadding1(1, 2);
 
-    ASSERT_EQ(218103808, s.GetElementsIncludingPadding());
-    ASSERT_EQ(209715200, s.GetElementsExcludingPadding());
-    ASSERT_EQ(872415232, s.GetBytesIncludingPadding());
-    ASSERT_EQ(838860800, s.GetBytesExcludingPadding());
+    ASSERT_EQ(218103808, s.CalcElementsIncludingPadding());
+    ASSERT_EQ(209715200, s.CalcElementsExcludingPadding());
+    ASSERT_EQ(872415232, s.CalcBytesIncludingPadding());
+    ASSERT_EQ(838860800, s.CalcBytesExcludingPadding());
 }

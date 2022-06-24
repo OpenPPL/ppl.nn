@@ -195,7 +195,7 @@ ppl::common::RetCode PPLCUDAConcatNoPaddingForwardImp(
     void* output,
     int mask)
 {
-    int64_t num_elems         = output_shape->GetElementsIncludingPadding() / output_shape->GetDim(axis);
+    int64_t num_elems         = output_shape->CalcElementsIncludingPadding() / output_shape->GetDim(axis);
     int64_t output_axis_width = output_shape->GetDim(axis);
     int64_t axis_offset       = 0;
     if (output_shape->GetDataType() == ppl::common::DATATYPE_INT8 && output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC16) {
@@ -271,7 +271,7 @@ ppl::common::RetCode PPLCUDAConcatForwardImp(
         return PPLCUDAConcatNoPaddingForwardImp(stream, axis, num_inputs, input_dims, input_padded_dims, inputs, output_shape, output, mask);
     }
     int num_dims     = output_shape->GetDimCount();
-    int output_elems = output_shape->GetElementsIncludingPadding();
+    int output_elems = output_shape->CalcElementsIncludingPadding();
     if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
         if (num_inputs == 2 && axis == (num_dims - 1) && input_dims[0][axis] == 1 && input_dims[1][axis] == 1) {
             int num_elems = 1;

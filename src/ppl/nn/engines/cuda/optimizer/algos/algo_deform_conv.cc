@@ -68,7 +68,7 @@ RetCode DeformConvAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& optio
         auto postedge_id = node->GetInput(3);
         const TensorShape& preshape = *options.tensors->find(preedge_id)->second->GetShape();
         const TensorShape& postshape = *options.tensors->find(postedge_id)->second->GetShape();
-        auto size = postshape.GetElementsIncludingPadding();
+        auto size = postshape.CalcElementsIncludingPadding();
         size = (size / postshape.GetDim(0) + 7) / 8 * 8 * postshape.GetDim(0);
 
         RuntimeConstantInfo weight_constat_info;
@@ -84,7 +84,7 @@ RetCode DeformConvAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& optio
             weight_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
         }
 
-        ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
+        ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.CalcBytesIncludingPadding(), RC_OUT_OF_MEMORY)
         status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(
             &temp_buffer, postshape, weight_iter->second.data.GetData(), preshape);
         if (status != RC_SUCCESS) {

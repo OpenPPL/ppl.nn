@@ -27,8 +27,8 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
     int32_t dim_count = input->GetShape()->GetDimCount();
     if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL &&
         ctx->GetOutputCount() == 1 &&
-        input->GetShape()->GetElementsIncludingPadding() ==
-            ctx->GetOutput<TensorImpl>(0)->GetShape()->GetElementsIncludingPadding()) {
+        input->GetShape()->CalcElementsIncludingPadding() ==
+            ctx->GetOutput<TensorImpl>(0)->GetShape()->CalcElementsIncludingPadding()) {
         auto output = ctx->GetOutput<TensorImpl>(0);
         output->TransferBufferFrom(input);
         return ppl::common::RC_SUCCESS;
@@ -41,8 +41,8 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
         auto output = ctx->GetOutput<TensorImpl>(i);
         dst_list_[i] = output->GetBufferPtr();
         const TensorShape& output_shape = *output->GetShape();
-        if(output_shape.GetElementsExcludingPadding() < output_shape.GetElementsIncludingPadding())
-            cudaMemset(dst_list_[i], 0, output_shape.GetBytesIncludingPadding());
+        if(output_shape.CalcElementsExcludingPadding() < output_shape.CalcElementsIncludingPadding())
+            cudaMemset(dst_list_[i], 0, output_shape.CalcBytesIncludingPadding());
         for (int32_t it = 0; it < dim_count; ++it) {
             dst_dims_[i].push_back(output->GetShape()->GetDim(it));
         }

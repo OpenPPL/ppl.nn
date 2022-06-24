@@ -107,7 +107,7 @@ private:
 bool CudaKernel::CanDoExecute(const KernelExecContext& ctx) const {
     for (uint32_t i = 0; i < ctx.GetInputCount(); ++i) {
         auto tensor = ctx.GetInput<TensorImpl>(i);
-        if (!tensor || tensor->GetShape()->GetBytesIncludingPadding() == 0) {
+        if (!tensor || tensor->GetShape()->CalcBytesIncludingPadding() == 0) {
             LOG(WARNING) << "Cannot execute " << GetName();
             return false;
         }
@@ -134,12 +134,12 @@ RetCode CudaKernel::Execute(KernelExecContext* ctx) {
         if (!tensor) {
             continue;
         }
-        auto tensor_size = tensor->GetShape()->GetBytesIncludingPadding();
+        auto tensor_size = tensor->GetShape()->CalcBytesIncludingPadding();
         total_size += tensor_size;
     }
     for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto tensor = ctx->GetOutput<TensorImpl>(i);
-        auto tensor_size = tensor->GetShape()->GetBytesIncludingPadding();
+        auto tensor_size = tensor->GetShape()->CalcBytesIncludingPadding();
         auto tensor_dim_count = tensor->GetShape()->GetDimCount();
         std::string tensor_dims = "";
         for (uint32_t j = 0; j < tensor_dim_count; ++j) {

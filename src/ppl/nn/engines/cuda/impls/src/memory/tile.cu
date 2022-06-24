@@ -56,7 +56,7 @@ ppl::common::RetCode PPLCUDATileForwardImp(
     void* output)
 {
     int block_size     = 256;
-    uint64_t num_elems = output_shape->GetElementsIncludingPadding();
+    uint64_t num_elems = output_shape->CalcElementsIncludingPadding();
     int grid_size      = (num_elems + block_size - 1) / block_size;
     int num_dims       = output_shape->GetDimCount();
     GArray<int64_t> input_strides(num_dims);

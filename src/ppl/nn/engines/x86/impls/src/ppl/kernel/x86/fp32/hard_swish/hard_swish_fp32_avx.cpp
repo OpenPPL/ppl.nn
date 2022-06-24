@@ -30,7 +30,7 @@ ppl::common::RetCode hard_swish_fp32_avx(
     const float beta = 0.5f;
     const uint64_t V_REG_ELTS  = 8;
     const uint64_t unroll_len  = V_REG_ELTS * 2;
-    const uint64_t unroll_body = round(src_shape->GetElementsIncludingPadding(), unroll_len);
+    const uint64_t unroll_body = round(src_shape->CalcElementsIncludingPadding(), unroll_len);
     if (unroll_body) {
         const auto v_alpha = _mm256_set1_ps(alpha);
         const auto v_beta  = _mm256_set1_ps(beta);
@@ -60,7 +60,7 @@ ppl::common::RetCode hard_swish_fp32_avx(
             _mm256_storeu_ps(dst + i + 1 * V_REG_ELTS, v_dst1);
         }
     }
-    for (uint64_t i = unroll_body; i < src_shape->GetElementsIncludingPadding(); i++) {
+    for (uint64_t i = unroll_body; i < src_shape->CalcElementsIncludingPadding(); i++) {
         dst[i] = src[i] * max(0.0f, min(1.0f, alpha * src[i] + beta));
     }
     return ppl::common::RC_SUCCESS;

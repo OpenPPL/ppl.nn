@@ -451,7 +451,7 @@ ppl::common::RetCode PPLCUDARelationForwardImpFp16(
 {
     RelationParam param;
 
-    uint64_t num_elems = output_shape->GetElementsIncludingPadding();
+    uint64_t num_elems = output_shape->CalcElementsIncludingPadding();
     int dim_count      = output_shape->GetDimCount();
     int block_size     = 256;
 
@@ -500,7 +500,7 @@ ppl::common::RetCode PPLCUDARelationForwardImp(
     bool *output)
 {
     RelationParam param;
-    uint64_t num_elems     = output_shape->GetElementsIncludingPadding();
+    uint64_t num_elems     = output_shape->CalcElementsIncludingPadding();
     int dim_count          = output_shape->GetDimCount();
     int block_size         = 256;
     int axis               = 0;
@@ -540,7 +540,7 @@ ppl::common::RetCode PPLCUDARelationForwardImp(
             input_shape0->GetDim(axis) < input_shape1->GetDim(axis)) {
             first_shorter = true;
         }
-        if (input_shape0->GetElementsExcludingPadding() < input_shape1->GetElementsExcludingPadding()) {
+        if (input_shape0->CalcElementsExcludingPadding() < input_shape1->CalcElementsExcludingPadding()) {
             first_shorter = true;
         }
         ppl_cukernel_relation_one_broadcast<op_type, T><<<grid_size,

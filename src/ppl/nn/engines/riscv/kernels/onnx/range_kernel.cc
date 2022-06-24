@@ -43,21 +43,21 @@ ppl::common::RetCode RangeKernel::DoExecute(KernelExecContext* ctx) {
         const int64_t start_val = start->GetBufferPtr<int64_t>()[0];
         const int64_t delta_val = delta->GetBufferPtr<int64_t>()[0];
         int64_t* output_data = output->GetBufferPtr<int64_t>();
-        for (uint32_t i = 0; i < output->GetShape()->GetElementsExcludingPadding(); i++) {
+        for (uint32_t i = 0; i < output->GetShape()->CalcElementsExcludingPadding(); i++) {
             output_data[i] = start_val + i * delta_val;
         }
     } else if (data_type == ppl::common::DATATYPE_FLOAT16) {
         const __fp16 start_val = start->GetBufferPtr<__fp16>()[0];
         const __fp16 delta_val = delta->GetBufferPtr<__fp16>()[0];
         __fp16* output_data = output->GetBufferPtr<__fp16>();
-        for (uint32_t i = 0; i < output->GetShape()->GetElementsExcludingPadding(); i++) {
+        for (uint32_t i = 0; i < output->GetShape()->CalcElementsExcludingPadding(); i++) {
             output_data[i] = start_val + i * delta_val;
         }
     } else if (data_type == ppl::common::DATATYPE_FLOAT32) {
         const float start_val = start->GetBufferPtr<float>()[0];
         const float delta_val = delta->GetBufferPtr<float>()[0];
         float* output_data = output->GetBufferPtr<float>();
-        for (uint32_t i = 0; i < output->GetShape()->GetElementsExcludingPadding(); i++) {
+        for (uint32_t i = 0; i < output->GetShape()->CalcElementsExcludingPadding(); i++) {
             output_data[i] = start_val + i * delta_val;
         }
     } else {

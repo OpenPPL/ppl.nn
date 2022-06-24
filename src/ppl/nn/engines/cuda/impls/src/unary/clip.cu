@@ -113,7 +113,7 @@ ppl::common::RetCode PPLCUDAClipForwardImp(
     float _min,
     float _max)
 {
-    uint64_t num_elems = output_shape->GetElementsIncludingPadding();
+    uint64_t num_elems = output_shape->CalcElementsIncludingPadding();
     int batch          = output_shape->GetDim(0);
     int channels       = output_shape->GetDim(1);
     int pad_channels   = output_shape->GetDim(1) + output_shape->GetPadding1(1);

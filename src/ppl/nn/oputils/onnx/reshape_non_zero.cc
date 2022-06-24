@@ -33,7 +33,7 @@ RetCode ReshapeNonZero(InputOutputInfo* info, const ir::Attr*) {
     auto y = info->GetOutput<TensorImpl>(0)->GetShape();
 
     const uint32_t input_dim_count = x->GetDimCount();
-    const uint32_t max_output_num = x->GetElementsExcludingPadding();
+    const uint32_t max_output_num = x->CalcElementsExcludingPadding();
     y->Reshape({input_dim_count, max_output_num});
 
     return RC_SUCCESS;

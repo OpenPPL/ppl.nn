@@ -22,7 +22,7 @@
 namespace ppl { namespace nn { namespace cuda {
 
 bool ScatterNdKernel::CanDoExecute(const KernelExecContext& ctx) const {
-    return ctx.GetInput<TensorImpl>(0)->GetShape()->GetBytesIncludingPadding() != 0;
+    return ctx.GetInput<TensorImpl>(0)->GetShape()->CalcBytesIncludingPadding() != 0;
 }
 
 uint64_t ScatterNdKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {

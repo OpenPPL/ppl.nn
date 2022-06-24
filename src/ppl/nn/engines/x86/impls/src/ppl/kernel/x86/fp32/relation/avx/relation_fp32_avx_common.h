@@ -113,7 +113,7 @@ ppl::common::RetCode relation_eltwise_binary_op_fp32_avx(
 {
     const uint64_t simd_w      = 8;
     const uint64_t unroll_len  = simd_w * 4;
-    const uint64_t length = dst_shape->GetElementsIncludingPadding();
+    const uint64_t length = dst_shape->CalcElementsIncludingPadding();
     const uint64_t unroll_body = round(length, unroll_len);
     PRAGMA_OMP_PARALLEL_FOR()
     for (uint64_t i = 0; i < unroll_body; i += unroll_len) {

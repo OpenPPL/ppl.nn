@@ -53,7 +53,7 @@ RetCode RiscvKernel::BeforeExecute(KernelExecContext* ctx) {
 bool RiscvKernel::CanDoExecute(const KernelExecContext& ctx) const {
     for (uint32_t i = 0; i < ctx.GetInputCount(); ++i) {
         auto tensor = ctx.GetInput<TensorImpl>(i);
-        if (!tensor || tensor->GetShape()->GetBytesIncludingPadding() == 0) {
+        if (!tensor || tensor->GetShape()->CalcBytesIncludingPadding() == 0) {
             return false;
         }
     }
@@ -78,8 +78,8 @@ RetCode RiscvKernel::Execute(KernelExecContext* ctx) {
         for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
             auto tensor = ctx->GetOutput<TensorImpl>(i);
             TensorShape& dst_shape = *(tensor->GetShape());
-            auto bytes = dst_shape.GetBytesIncludingPadding();
-            vector<char> buffer(dst_shape.GetElementsExcludingPadding());
+            auto bytes = dst_shape.CalcBytesIncludingPadding();
+            vector<char> buffer(dst_shape.CalcElementsExcludingPadding());
 
             string shape_out = "-";
             for (int64_t n = 0; n < dst_shape.GetDimCount(); n++) {

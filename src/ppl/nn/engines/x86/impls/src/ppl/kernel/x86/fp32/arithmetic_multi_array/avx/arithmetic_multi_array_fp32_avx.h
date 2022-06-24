@@ -133,7 +133,7 @@ ppl::common::RetCode arithmetic_multi_array_eltwise_fp32_avx(
 {
     const uint64_t simd_w      = 8;
     const uint64_t unroll_len  = simd_w * 4;
-    const uint64_t unroll_body = round(dst_shape->GetElementsIncludingPadding(), unroll_len);
+    const uint64_t unroll_body = round(dst_shape->CalcElementsIncludingPadding(), unroll_len);
 
     if (_binary) {
         PRAGMA_OMP_PARALLEL_FOR()
@@ -151,7 +151,7 @@ ppl::common::RetCode arithmetic_multi_array_eltwise_fp32_avx(
             _mm256_storeu_ps(dst + i + 2 * simd_w, v_dst_2);
             _mm256_storeu_ps(dst + i + 3 * simd_w, v_dst_3);
         }
-        for (uint64_t i = unroll_body; i < dst_shape->GetElementsIncludingPadding(); i++) {
+        for (uint64_t i = unroll_body; i < dst_shape->CalcElementsIncludingPadding(); i++) {
             dst[i] = arithmetic_binary_scalar_kernel_fp32<_op>(src_list[0][i], src_list[1][i]);
         }
     } else {
@@ -166,7 +166,7 @@ ppl::common::RetCode arithmetic_multi_array_eltwise_fp32_avx(
             _mm256_storeu_ps(dst + i + 2 * simd_w, v_dst_2);
             _mm256_storeu_ps(dst + i + 3 * simd_w, v_dst_3);
         }
-        for (uint64_t i = unroll_body; i < dst_shape->GetElementsIncludingPadding(); i++) {
+        for (uint64_t i = unroll_body; i < dst_shape->CalcElementsIncludingPadding(); i++) {
             dst[i] = arithmetic_multi_scalar_kernel_fp32<_op>(src_list, i, num_src);
         }
     }

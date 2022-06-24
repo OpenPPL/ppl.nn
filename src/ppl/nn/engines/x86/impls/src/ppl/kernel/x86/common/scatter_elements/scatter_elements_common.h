@@ -33,7 +33,7 @@ ppl::common::RetCode scatter_elements_ndarray_common(
     const int64_t axis,
     eT *dst)
 {
-    memory_copy(src, src_shape->GetBytesExcludingPadding(), dst);
+    memory_copy(src, src_shape->CalcBytesExcludingPadding(), dst);
 
     const int64_t dim_count    = src_shape->GetDimCount();
     const int64_t scatter_axis = axis < 0 ? axis + dim_count : axis;

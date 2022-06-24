@@ -173,7 +173,7 @@ ppl::common::RetCode PPLCUDAChannelShuffleForwardImp(
 {
     // num_dims must be equal to 4
     int num_dims      = output_shape->GetDimCount();
-    int64_t num_elems_pad = output_shape->GetElementsIncludingPadding();
+    int64_t num_elems_pad = output_shape->CalcElementsIncludingPadding();
 
     // for ndarray layout without padding
     int num_input_strides_dims = num_dims - 2;
@@ -439,7 +439,7 @@ ppl::common::RetCode PPLCUDAFuseChannelShuffleForwardImp(
 {
     // num_dims must be equal to 4
     int num_dims      = output_shape->GetDimCount();
-    int64_t num_elems_pad = output_shape->GetElementsIncludingPadding();
+    int64_t num_elems_pad = output_shape->CalcElementsIncludingPadding();
 
     // for ndarray layout without padding
     int num_input_strides_dims = num_dims - 2;

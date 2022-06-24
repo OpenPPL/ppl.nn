@@ -111,14 +111,14 @@ ppl::common::RetCode PPLCUDASliceForwardImp(
     ppl::nn::TensorShape* output_shape,
     void* output)
 {
-    if (output_shape->GetElementsIncludingPadding() == 0)
+    if (output_shape->CalcElementsIncludingPadding() == 0)
         return ppl::common::RC_SUCCESS;
     int num_dims       = output_shape->GetDimCount();
     if (isFastSliceSupported(param, num_dims)) {
         #define SWITCH_CASE(TYPE) \
         case sizeof(TYPE): { \
             if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) { \
-                int batch = input_shape->GetElementsToDimensionExcludingPadding(num_dims - 2); \
+                int batch = input_shape->CalcElementsToDimensionExcludingPadding(num_dims - 2); \
                 int dst_height = output_shape->GetDim(num_dims - 2); \
                 int dst_width  = output_shape->GetDim(num_dims - 1); \
                 int src_height = input_shape->GetDim(num_dims - 2); \
@@ -157,7 +157,7 @@ ppl::common::RetCode PPLCUDASliceForwardImp(
         #undef SWITCH_CASE
     }
     int block_size     = 256;
-    uint64_t num_elems = output_shape->GetElementsExcludingPadding();
+    uint64_t num_elems = output_shape->CalcElementsExcludingPadding();
     int grid_size      = (num_elems + block_size - 1) / block_size;
     GArray<int64_t> input_strides(num_dims);
     GArray<int64_t> output_strides(num_dims);

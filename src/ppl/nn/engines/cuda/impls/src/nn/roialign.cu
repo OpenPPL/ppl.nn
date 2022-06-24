@@ -204,7 +204,7 @@ ppl::common::RetCode PPLCUDAROIAlignForwardImp(
     int channels      = input_shape->GetDim(1);
     int height        = input_shape->GetDim(2);
     int width         = input_shape->GetDim(3);
-    int64_t num_elems = output_shape->GetElementsIncludingPadding();
+    int64_t num_elems = output_shape->CalcElementsIncludingPadding();
     int grid_size     = DivUp(num_elems, block_size);
     int32_t roi_cols  = rois_shape->GetDim(1);
     bool aligned      = false;

@@ -30,8 +30,8 @@ static ppl::common::RetCode arithmetic_int64(const ppl::nn::TensorShape* src0_sh
                                              const int64_t* src1,
                                              int64_t* dst)
 {
-    bool is_eltwise = src0_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding() &&
-                      src1_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding();
+    bool is_eltwise = src0_shape->CalcElementsExcludingPadding() == dst_shape->CalcElementsExcludingPadding() &&
+                      src1_shape->CalcElementsExcludingPadding() == dst_shape->CalcElementsExcludingPadding();
     if (is_eltwise) {
         return arithmetic_eltwise_int64<_op, fuse_relu>(dst_shape, src0, src1, dst);
     } else if (dst_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {

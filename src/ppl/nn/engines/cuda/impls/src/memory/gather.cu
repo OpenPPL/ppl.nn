@@ -85,23 +85,23 @@ ppl::common::RetCode PPLCUDAGatherForwardImp(
     int indices_element_size = ppl::common::GetSizeOfDataType(indices_shape->GetDataType());
     // special case, need further evaluement (performance is not usually better)
     if (axis == 0 && indices_shape->GetDimCount() == 1 && indices_shape->GetDim(0) == 1) {
-        int indices_data_size = indices_shape->GetBytesIncludingPadding();
+        int indices_data_size = indices_shape->CalcBytesIncludingPadding();
         std::unique_ptr<char[]> indices_data(new char[indices_data_size]);
         cudaMemcpy(indices_data.get(), indices, indices_data_size, cudaMemcpyDeviceToHost);
-        int inner_size   = input_shape->GetBytesIncludingPadding() / input_shape->GetDim(0);
+        int inner_size   = input_shape->CalcBytesIncludingPadding() / input_shape->GetDim(0);
         int input_offset = get_indices_val(indices_element_size, 0, indices_data.get());
         int input_axis_size = input_shape->GetDim(axis);
         input_offset        = input_offset < 0 ? input_offset + input_axis_size : input_offset;
-        cudaMemcpy(output, static_cast<const char*>(input) + input_offset * inner_size, output_shape->GetBytesIncludingPadding(), cudaMemcpyDeviceToDevice);
+        cudaMemcpy(output, static_cast<const char*>(input) + input_offset * inner_size, output_shape->CalcBytesIncludingPadding(), cudaMemcpyDeviceToDevice);
         return ppl::common::RC_SUCCESS;
     }
-    int64_t num_elems      = output_shape->GetElementsIncludingPadding();
+    int64_t num_elems      = output_shape->CalcElementsIncludingPadding();
     int block_size         = 256;
     int grid_size          = (num_elems + block_size - 1) / block_size;
     // output dimension can be partitioned as outer--indices--inner. (before axis, axis, after axis)
-    int output_inner_block = input_shape->GetElementsFromDimensionIncludingPadding(axis + 1);
+    int output_inner_block = input_shape->CalcElementsFromDimensionIncludingPadding(axis + 1);
     int input_axis_size    = input_shape->GetDim(axis);
-    int indices_block_size = indices_shape->GetElementsIncludingPadding();
+    int indices_block_size = indices_shape->CalcElementsIncludingPadding();
     int output_outer_block = indices_block_size * output_inner_block;
 
     DivModFast output_outer_block_fast(output_outer_block);

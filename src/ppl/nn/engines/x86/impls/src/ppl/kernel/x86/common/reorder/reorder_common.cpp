@@ -31,7 +31,7 @@ bool reorder_ndarray_n16cx_may_inplace(const ppl::nn::TensorShape *src_shape) {
     const int64_t l3_cap = (ppl::common::GetCpuCacheL3() == 0) ? (2048 * 1024 * PPL_OMP_MAX_THREADS()) : ppl::common::GetCpuCacheL3();
     const int64_t l2_cap = (ppl::common::GetCpuCacheL2() == 0) ? (256 * 1024) : ppl::common::GetCpuCacheL2();
 
-    const int64_t X_bytes  = src_shape->GetBytesExcludingPadding() / batch / channels;
+    const int64_t X_bytes  = src_shape->CalcBytesExcludingPadding() / batch / channels;
     const int64_t padded_c = round_up(channels, c_blk);
 
     const int64_t in_bytes = batch * X_bytes;
@@ -55,7 +55,7 @@ bool reorder_n16cx_ndarray_may_inplace(const ppl::nn::TensorShape *src_shape) {
     const int64_t l3_cap = (ppl::common::GetCpuCacheL3() == 0) ? (2048 * 1024 * PPL_OMP_MAX_THREADS()) : ppl::common::GetCpuCacheL3();
     const int64_t l2_cap = (ppl::common::GetCpuCacheL2() == 0) ? (256 * 1024) : ppl::common::GetCpuCacheL2();
 
-    const int64_t X_bytes  = src_shape->GetBytesExcludingPadding() / batch / channels;
+    const int64_t X_bytes  = src_shape->CalcBytesExcludingPadding() / batch / channels;
     const int64_t padded_c = round_up(channels, c_blk);
 
     const int64_t in_bytes = batch * X_bytes;

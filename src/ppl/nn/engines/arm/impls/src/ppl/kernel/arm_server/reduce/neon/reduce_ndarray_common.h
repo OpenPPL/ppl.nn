@@ -177,7 +177,7 @@ static ppl::common::RetCode reduce_ndarray_common(
     }
 
     // preprocess output data
-    reduce_preprocess_common<eT, op_type>(dst, dst_shape->GetElementsIncludingPadding());
+    reduce_preprocess_common<eT, op_type>(dst, dst_shape->CalcElementsIncludingPadding());
 
     // compress dims
     std::vector<int64_t> compressed_src_dims;
@@ -209,8 +209,8 @@ static ppl::common::RetCode reduce_ndarray_common(
         &loop_config,
         dst);
 
-    const int64_t reduce_factor = src_shape->GetElementsExcludingPadding() / dst_shape->GetElementsExcludingPadding();
-    reduce_postprocess_common<eT, op_type>(dst, dst_shape->GetElementsIncludingPadding(), reduce_factor);
+    const int64_t reduce_factor = src_shape->CalcElementsExcludingPadding() / dst_shape->CalcElementsExcludingPadding();
+    reduce_postprocess_common<eT, op_type>(dst, dst_shape->CalcElementsIncludingPadding(), reduce_factor);
 
     return ppl::common::RC_SUCCESS;
 }

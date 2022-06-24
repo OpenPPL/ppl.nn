@@ -216,7 +216,7 @@ static ppl::common::RetCode reduce_nbcx_common(
     std::vector<int64_t> padded_dst_dims(padded_dst_shape.GetDims(), padded_dst_shape.GetDims() + dim_count);
 
     // preprocess output data
-    reduce_preprocess_common<eT, op_type>(dst, dst_shape->GetElementsIncludingPadding());
+    reduce_preprocess_common<eT, op_type>(dst, dst_shape->CalcElementsIncludingPadding());
 
     // compress dims
     std::vector<int64_t> compressed_src_dims;
@@ -250,8 +250,8 @@ static ppl::common::RetCode reduce_nbcx_common(
         src_dims[c_dim_idx],
         dst);
 
-    const int64_t reduce_factor = src_shape->GetElementsExcludingPadding() / dst_shape->GetElementsExcludingPadding();
-    reduce_postprocess_common<eT, op_type>(dst, dst_shape->GetElementsIncludingPadding(), reduce_factor);
+    const int64_t reduce_factor = src_shape->CalcElementsExcludingPadding() / dst_shape->CalcElementsExcludingPadding();
+    reduce_postprocess_common<eT, op_type>(dst, dst_shape->CalcElementsIncludingPadding(), reduce_factor);
 
     return pad_channel_zero(&padded_dst_shape, dst);
 }

@@ -195,7 +195,7 @@ ppl::common::RetCode PPLCUDAMMCVROIAlignForwardImp(
     int channels      = input_shape->GetDim(1);
     int height        = input_shape->GetDim(2);
     int width         = input_shape->GetDim(3);
-    int64_t num_elems = output_shape->GetElementsIncludingPadding();
+    int64_t num_elems = output_shape->CalcElementsIncludingPadding();
     int grid_size     = DivUp(num_elems, block_size);
     bool is_mode_max  = param.pool_mode != "avg";
     if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {

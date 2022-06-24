@@ -71,8 +71,8 @@ ppl::common::RetCode MaxKernel::DoExecute(KernelExecContext* ctx) {
     bool is_eltwise = true;
     const uint32_t input_num = ctx->GetInputCount();
     for (uint32_t i = 0; i < input_num; i++) {
-        if (ctx->GetInput<TensorImpl>(i)->GetShape()->GetElementsIncludingPadding() !=
-            max->GetShape()->GetElementsIncludingPadding()) {
+        if (ctx->GetInput<TensorImpl>(i)->GetShape()->CalcElementsIncludingPadding() !=
+            max->GetShape()->CalcElementsIncludingPadding()) {
             is_eltwise = false;
             break;
         }

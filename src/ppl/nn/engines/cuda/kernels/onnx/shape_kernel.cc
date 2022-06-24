@@ -29,11 +29,11 @@ ppl::common::RetCode ShapeKernel::DoExecute(KernelExecContext* ctx) {
     auto data = ctx->GetInput<TensorImpl>(0);
     auto shape = ctx->GetOutput<TensorImpl>(0);
 
-    std::unique_ptr<int64_t[]> shape_host(new int64_t[shape->GetShape()->GetElementsIncludingPadding()]);
+    std::unique_ptr<int64_t[]> shape_host(new int64_t[shape->GetShape()->CalcElementsIncludingPadding()]);
     for (size_t i = 0; i < data->GetShape()->GetRealDimCount(); i++) {
         shape_host[i] = data->GetShape()->GetDim(i);
     }
-    cudaMemcpyAsync(shape->GetBufferPtr(), shape_host.get(), shape->GetShape()->GetBytesIncludingPadding(),
+    cudaMemcpyAsync(shape->GetBufferPtr(), shape_host.get(), shape->GetShape()->CalcBytesIncludingPadding(),
                     cudaMemcpyHostToDevice, GetStream());
 
     return ppl::common::RC_SUCCESS;

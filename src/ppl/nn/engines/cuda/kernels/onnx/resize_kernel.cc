@@ -23,18 +23,18 @@ namespace ppl { namespace nn { namespace cuda {
 
 bool ResizeKernel::CanDoExecute(const KernelExecContext& ctx) const {
     auto& X = *ctx.GetInput<TensorImpl>(0)->GetShape();
-    if (X.GetBytesIncludingPadding() == 0) {
+    if (X.CalcBytesIncludingPadding() == 0) {
         return false;
     }
 
     auto& scales = *ctx.GetInput<TensorImpl>(2)->GetShape();
-    if (ctx.GetInputCount() == 3 && scales.GetBytesIncludingPadding() == 0) {
+    if (ctx.GetInputCount() == 3 && scales.CalcBytesIncludingPadding() == 0) {
         return false;
     }
 
     if (ctx.GetInputCount() >= 4) {
         auto& sizes = *ctx.GetInput<TensorImpl>(3)->GetShape();
-        if (scales.GetBytesIncludingPadding() == 0 && sizes.GetBytesIncludingPadding() == 0) {
+        if (scales.CalcBytesIncludingPadding() == 0 && sizes.CalcBytesIncludingPadding() == 0) {
             return false;
         }
     }
@@ -59,7 +59,7 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
     if (!ctx->GetInput<TensorImpl>(2)->GetShape()->IsEmpty()) {
         scale_pre_set = true;
         const TensorShape& shape = *ctx->GetInput<TensorImpl>(2)->GetShape();
-        scales_data.resize(shape.GetElementsIncludingPadding());
+        scales_data.resize(shape.CalcElementsIncludingPadding());
         auto status = ctx->GetInput<TensorImpl>(2)->CopyToHost(scales_data.data());
         if (status != ppl::common::RC_SUCCESS) {
             LOG(ERROR) << "Copy scales data failed: " << ppl::common::GetRetCodeStr(status);

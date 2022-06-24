@@ -60,7 +60,7 @@ RetCode ResizeOp::Init(const OptKernelOptions& options) {
 
         if (!info->GetInput<TensorImpl>(1)->GetShape()->IsEmpty()) {
             const TensorShape& shape = *info->GetInput<TensorImpl>(1)->GetShape();
-            roi_data = (float*)malloc(shape.GetBytesIncludingPadding());
+            roi_data = (float*)malloc(shape.CalcBytesIncludingPadding());
             if (info->GetInput<TensorImpl>(1)->GetBufferPtr<void>() == nullptr)
                 return RC_INVALID_VALUE;
             auto status = info->GetInput<TensorImpl>(1)->CopyToHost(roi_data);
@@ -71,7 +71,7 @@ RetCode ResizeOp::Init(const OptKernelOptions& options) {
         }
         if (!info->GetInput<TensorImpl>(2)->GetShape()->IsEmpty()) {
             const TensorShape& shape = *info->GetInput<TensorImpl>(2)->GetShape();
-            scales_data = (float*)malloc(shape.GetBytesIncludingPadding());
+            scales_data = (float*)malloc(shape.CalcBytesIncludingPadding());
             if (info->GetInput<TensorImpl>(2)->GetBufferPtr<void>() == nullptr) {
                 return RC_INVALID_VALUE;
             }
@@ -84,7 +84,7 @@ RetCode ResizeOp::Init(const OptKernelOptions& options) {
         if (info->GetInputCount() == 4) {
             if (!info->GetInput<TensorImpl>(3)->GetShape()->IsEmpty()) {
                 const TensorShape& shape = *info->GetInput<TensorImpl>(3)->GetShape();
-                sizes_data = (int64_t*)malloc(shape.GetBytesIncludingPadding());
+                sizes_data = (int64_t*)malloc(shape.CalcBytesIncludingPadding());
                 if (info->GetInput<TensorImpl>(3)->GetBufferPtr<void>() == nullptr) {
                     return RC_INVALID_VALUE;
                 }

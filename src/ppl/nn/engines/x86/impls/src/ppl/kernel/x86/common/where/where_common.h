@@ -30,7 +30,7 @@ ppl::common::RetCode where_eltwise_common(
     const eT *src_y,
     eT *dst)
 {
-    const uint32_t length = dst_shape->GetElementsIncludingPadding();
+    const uint32_t length = dst_shape->CalcElementsIncludingPadding();
 
     PRAGMA_OMP_PARALLEL_FOR()
     for (uint32_t i = 0; i < length; i++) {

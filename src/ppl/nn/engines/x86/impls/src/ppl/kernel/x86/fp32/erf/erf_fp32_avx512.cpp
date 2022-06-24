@@ -28,7 +28,7 @@ ppl::common::RetCode erf_fp32_avx512(
     const float *x,
     float *y)
 {
-    const int64_t n_elem      = x_shape->GetElementsIncludingPadding();
+    const int64_t n_elem      = x_shape->CalcElementsIncludingPadding();
     const int64_t unroll_n    = 32;
     const int64_t unroll_body = round(n_elem, unroll_n);
 

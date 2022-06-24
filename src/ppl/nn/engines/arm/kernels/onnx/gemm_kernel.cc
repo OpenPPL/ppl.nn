@@ -87,7 +87,7 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     auto ldc = 0;
     if (C != nullptr && !C->GetShape()->IsEmpty()) {
         src_C = C->GetBufferPtr<void>();
-        if (C->GetShape()->GetElementsExcludingPadding() == 1) {
+        if (C->GetShape()->CalcElementsExcludingPadding() == 1) {
             c_type = ppl::kernel::arm_server::neon::gemm_C_type::SCALAR;
         } else if (C->GetShape()->GetDimCount() == 1) {
             c_type = ppl::kernel::arm_server::neon::gemm_C_type::VECTOR_W;

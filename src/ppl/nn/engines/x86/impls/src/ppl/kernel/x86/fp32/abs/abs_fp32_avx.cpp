@@ -27,7 +27,7 @@ ppl::common::RetCode abs_fp32_avx(
     float *y)
 {
     const int64_t V_REG_ELTS  = 8;
-    const int64_t n_elem      = x_shape->GetElementsIncludingPadding();
+    const int64_t n_elem      = x_shape->CalcElementsIncludingPadding();
     const int64_t unroll_n    = 2 * V_REG_ELTS;
     const int64_t unroll_body = round(n_elem, unroll_n);
 

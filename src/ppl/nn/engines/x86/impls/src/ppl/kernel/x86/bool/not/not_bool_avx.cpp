@@ -25,7 +25,7 @@ ppl::common::RetCode not_bool_avx(
     const uint8_t *x,
     uint8_t *y)
 {
-    const int64_t n_elem           = x_shape->GetElementsIncludingPadding();
+    const int64_t n_elem           = x_shape->CalcElementsIncludingPadding();
     const int64_t n_elem_fp32      = n_elem / 4;
     const int64_t simd_w_fp32      = 8;
     const int64_t unroll_len_fp32  = simd_w_fp32 * 4;

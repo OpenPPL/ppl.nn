@@ -81,7 +81,7 @@ ppl::common::RetCode PPLCUDACastForwardImp(
     void *output,
     int to_)
 {
-    uint64_t num_elems                  = output_shape->GetElementsIncludingPadding();
+    uint64_t num_elems                  = output_shape->CalcElementsIncludingPadding();
     int channels                        = output_shape->GetDim(1);
     int pad_channels                    = output_shape->GetDim(1) + output_shape->GetPadding1(1);
     int height                          = output_shape->GetDim(2);

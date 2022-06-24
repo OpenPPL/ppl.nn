@@ -397,7 +397,7 @@ ppl::common::RetCode PPLCUDANMSForwardImp(
         cudaMemset(temp_buffer, 0, temp_buffer_bytes);
         PPLCUDATopKForwardImp(stream,
                               &topk_shape,
-                              static_cast<const float *>(scores) + b * scores_shape->GetElementsFromDimensionIncludingPadding(1),
+                              static_cast<const float *>(scores) + b * scores_shape->CalcElementsFromDimensionIncludingPadding(1),
                               &topk_shape,
                               sorted_scores_tot,
                               &indices_shape,

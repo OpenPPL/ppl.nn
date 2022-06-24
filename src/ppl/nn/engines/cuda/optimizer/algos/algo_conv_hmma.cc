@@ -119,10 +119,10 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     }
 
     RetCode status;
-    ALLOC_BUFFERF_FOR_ALGO_SELECT(input_buffer, shape_in0.GetBytesIncludingPadding(), ALGO_MAX_TIME)
-    ALLOC_BUFFERF_FOR_ALGO_SELECT(weight_buffer, shape_in1.GetBytesIncludingPadding(), ALGO_MAX_TIME)
-    ALLOC_BUFFERF_FOR_ALGO_SELECT(bias_buffer, shape_in2.GetBytesIncludingPadding(), ALGO_MAX_TIME)
-    ALLOC_BUFFERF_FOR_ALGO_SELECT(output_buffer, shape_out.GetBytesIncludingPadding(), ALGO_MAX_TIME)
+    ALLOC_BUFFERF_FOR_ALGO_SELECT(input_buffer, shape_in0.CalcBytesIncludingPadding(), ALGO_MAX_TIME)
+    ALLOC_BUFFERF_FOR_ALGO_SELECT(weight_buffer, shape_in1.CalcBytesIncludingPadding(), ALGO_MAX_TIME)
+    ALLOC_BUFFERF_FOR_ALGO_SELECT(bias_buffer, shape_in2.CalcBytesIncludingPadding(), ALGO_MAX_TIME)
+    ALLOC_BUFFERF_FOR_ALGO_SELECT(output_buffer, shape_out.CalcBytesIncludingPadding(), ALGO_MAX_TIME)
 
     uint64_t size = PPLCUDAConvolutionGetCompilationBufSize(shape_in0.GetDataType(), temp_conv_param);
     ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, size, ALGO_MAX_TIME)
@@ -199,7 +199,7 @@ RetCode TuringHMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
             weight_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
         }
 
-        ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
+        ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.CalcBytesIncludingPadding(), RC_OUT_OF_MEMORY)
         status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(
             &temp_buffer, postshape, weight_iter->second.data.GetData(), preshape);
         if (status != RC_SUCCESS) {
@@ -247,7 +247,7 @@ RetCode TuringHMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
             bias_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
         }
 
-        ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
+        ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.CalcBytesIncludingPadding(), RC_OUT_OF_MEMORY)
         status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
                                                                                bias_iter->second.data.GetData(), preshape);
         if (status != RC_SUCCESS) {

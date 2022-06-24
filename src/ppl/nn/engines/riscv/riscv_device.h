@@ -68,7 +68,7 @@ public:
     }
 
     ppl::common::RetCode Realloc(const TensorShape& shape, BufferDesc* buffer) override final {
-        return Realloc(shape.GetBytesIncludingPadding(), buffer);
+        return Realloc(shape.CalcBytesIncludingPadding(), buffer);
     }
 
     ppl::common::RetCode CopyFromHost(BufferDesc* dst, const void* src, uint64_t bytes) const override final {
@@ -76,7 +76,7 @@ public:
         return ppl::common::RC_SUCCESS;
     }
     ppl::common::RetCode CopyFromHost(BufferDesc* dst, const void* src, const TensorShape& shape) const override final {
-        return CopyFromHost(dst, src, shape.GetBytesIncludingPadding());
+        return CopyFromHost(dst, src, shape.CalcBytesIncludingPadding());
     }
 
     ppl::common::RetCode CopyToHost(void* dst, const BufferDesc& src, uint64_t bytes) const override final {
@@ -84,7 +84,7 @@ public:
         return ppl::common::RC_SUCCESS;
     }
     ppl::common::RetCode CopyToHost(void* dst, const BufferDesc& src, const TensorShape& shape) const override final {
-        return CopyToHost(dst, src, shape.GetBytesIncludingPadding());
+        return CopyToHost(dst, src, shape.CalcBytesIncludingPadding());
     }
 
     ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, uint64_t bytes) const override final {
@@ -92,7 +92,7 @@ public:
         return ppl::common::RC_SUCCESS;
     }
     ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, const TensorShape& shape) const override final {
-        return Copy(dst, src, shape.GetBytesIncludingPadding());
+        return Copy(dst, src, shape.CalcBytesIncludingPadding());
     }
 
     const DataConverter* GetDataConverter() const override final {

@@ -63,18 +63,18 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
 
     if (output_format == input_format && input_type == output_type) {
         memcpy(output->GetBufferPtr<__fp16>(), input->GetBufferPtr<__fp16>(),
-               input->GetShape()->GetBytesIncludingPadding());
+               input->GetShape()->CalcBytesIncludingPadding());
         return ppl::common::RC_SUCCESS;
     } else {
         if (input_type == ppl::common::DATATYPE_FLOAT32 && output_type == ppl::common::DATATYPE_FLOAT16 &&
             output_format == input_format) {
-            int64_t data_cnt = input->GetShape()->GetElementsIncludingPadding();
+            int64_t data_cnt = input->GetShape()->CalcElementsIncludingPadding();
             CvtFp32ToFp16(data_cnt, input->GetBufferPtr<float>(), output->GetBufferPtr<__fp16>());
             return ppl::common::RC_SUCCESS;
 
         } else if (input_type == ppl::common::DATATYPE_FLOAT16 && output_type == ppl::common::DATATYPE_FLOAT32 &&
                    output_format == input_format) {
-            int64_t data_cnt = input->GetShape()->GetElementsIncludingPadding();
+            int64_t data_cnt = input->GetShape()->CalcElementsIncludingPadding();
             CvtFp16ToFp32(data_cnt, input->GetBufferPtr<__fp16>(), output->GetBufferPtr<float>());
             return ppl::common::RC_SUCCESS;
 

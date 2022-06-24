@@ -83,7 +83,7 @@ ppl::common::RetCode matmul_ndarray_fp32(
 
     const int64_t K = A_dims[dim_count - 1];
     const int64_t N = B_dims[dim_count - 1];
-    const bool is_single_gemm = B_shape->GetElementsExcludingPadding() / (N * K) == 1;
+    const bool is_single_gemm = B_shape->CalcElementsExcludingPadding() / (N * K) == 1;
     if (is_single_gemm) {
         for (int64_t i = dim_count - 3; i >= 0; i--) {
             A_dims[dim_count - 2] *= A_dims[i];

@@ -522,7 +522,7 @@ RetCode OptGraph::LoadConstants(CudaDevice* device) {
             constant_info.Reshape(postshape);
 
             auto status = constant_info.ReallocBuffer();
-            if (status != RC_SUCCESS && postshape.GetBytesIncludingPadding() > 0) {
+            if (status != RC_SUCCESS && postshape.CalcBytesIncludingPadding() > 0) {
                 LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
                 return status;
             }

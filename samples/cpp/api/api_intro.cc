@@ -30,7 +30,7 @@ static bool SetRandomInputs(Runtime* runtime) {
         auto t = runtime->GetInputTensor(c);
         auto& shape = *t->GetShape();
 
-        auto nr_element = shape.GetBytesIncludingPadding() / sizeof(float);
+        auto nr_element = shape.CalcBytesIncludingPadding() / sizeof(float);
         vector<float> buffer(nr_element);
 
         // fill random input data
@@ -75,8 +75,8 @@ static void PrintInputOutputInfo(const Runtime* runtime) {
         cout << "    dim(s):" << dims_str << endl
              << "    DataType: " << GetDataTypeStr(shape.GetDataType()) << endl
              << "    DataFormat: " << GetDataFormatStr(shape.GetDataFormat()) << endl
-             << "    BytesIncludePadding: " << shape.GetBytesIncludingPadding() << endl
-             << "    BytesExcludePadding: " << shape.GetBytesExcludingPadding() << endl;
+             << "    BytesIncludePadding: " << shape.CalcBytesIncludingPadding() << endl
+             << "    BytesExcludePadding: " << shape.CalcBytesExcludingPadding() << endl;
     }
 
     cout << "----- output info -----" << endl;
@@ -92,8 +92,8 @@ static void PrintInputOutputInfo(const Runtime* runtime) {
         cout << "    dim(s):" << dims_str << endl
              << "    DataType: " << GetDataTypeStr(shape.GetDataType()) << endl
              << "    DataFormat: " << GetDataFormatStr(shape.GetDataFormat()) << endl
-             << "    BytesIncludePadding: " << shape.GetBytesIncludingPadding() << endl
-             << "    BytesExcludePadding: " << shape.GetBytesExcludingPadding() << endl;
+             << "    BytesIncludePadding: " << shape.CalcBytesIncludingPadding() << endl
+             << "    BytesExcludePadding: " << shape.CalcBytesExcludingPadding() << endl;
     }
 
     cout << "----------------------" << endl;

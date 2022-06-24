@@ -30,7 +30,7 @@ ppl::common::RetCode exp_fp32(
         Y = expf(X); \
     } while (0)
 
-    const int64_t n_elem      = src_shape->GetElementsIncludingPadding();
+    const int64_t n_elem      = src_shape->CalcElementsIncludingPadding();
     const int64_t unroll_n    = 16;
     const int64_t unroll_body = round(n_elem, unroll_n);
 

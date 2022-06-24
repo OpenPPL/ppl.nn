@@ -53,7 +53,7 @@ RetCode TileOp::Init(const OptKernelOptions& options) {
             return RC_INVALID_VALUE;
         }
 
-        vector<int64_t> repeat_data(repeat->GetShape()->GetElementsIncludingPadding());
+        vector<int64_t> repeat_data(repeat->GetShape()->CalcElementsIncludingPadding());
         auto status = repeat->CopyToHost(repeat_data.data());
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "Copy repeat data failed: " << GetRetCodeStr(status);

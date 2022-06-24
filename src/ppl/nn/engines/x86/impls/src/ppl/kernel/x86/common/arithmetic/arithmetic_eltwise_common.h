@@ -30,7 +30,7 @@ static ppl::common::RetCode arithmetic_eltwise_common(
     eT *dst)
 {
     const int64_t unroll_len  = 8;
-    const int64_t length      = dst_shape->GetElementsIncludingPadding();
+    const int64_t length      = dst_shape->CalcElementsIncludingPadding();
     const int64_t unroll_body = round(length, unroll_len);
 
     PRAGMA_OMP_PARALLEL_FOR()

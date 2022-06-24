@@ -40,12 +40,12 @@ ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
     auto start_pads = pads_data;
     auto end_pads = pads_data + dim_count;
 
-    if (x->GetShape()->GetElementsExcludingPadding() ==
-        y->GetShape()->GetElementsExcludingPadding()) { // no padding at all, just copy
+    if (x->GetShape()->CalcElementsExcludingPadding() ==
+        y->GetShape()->CalcElementsExcludingPadding()) { // no padding at all, just copy
         if (x->GetEdge()->CalcConsumerCount() == 1 && x->GetType() == TENSORTYPE_NORMAL) {
             y->TransferBufferFrom(x);
         } else {
-            ppl::kernel::arm_server::memory_copy(x->GetBufferPtr(), x->GetShape()->GetBytesIncludingPadding(),
+            ppl::kernel::arm_server::memory_copy(x->GetBufferPtr(), x->GetShape()->CalcBytesIncludingPadding(),
                                                  y->GetBufferPtr());
         }
         return ppl::common::RC_SUCCESS;

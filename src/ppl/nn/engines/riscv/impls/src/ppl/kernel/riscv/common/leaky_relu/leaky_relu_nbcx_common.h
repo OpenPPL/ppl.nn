@@ -39,7 +39,7 @@ ppl::common::RetCode leaky_relu_nbcx_common(
     constexpr int32_t c_blk = v_len / (sizeof(T) * 8);
     vl                      = vsetvli<T, v_len>(c_blk);
 
-    const int64_t n_elem      = src_shape->GetElementsIncludingPadding();
+    const int64_t n_elem      = src_shape->CalcElementsIncludingPadding();
     const int64_t simd_w      = c_blk;
     const int64_t unroll_n    = simd_w * 4;
     const int64_t unroll_body = round(n_elem, unroll_n);

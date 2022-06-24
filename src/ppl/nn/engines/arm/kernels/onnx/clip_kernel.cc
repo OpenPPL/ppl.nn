@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace arm {
 
 bool ClipKernel::CanDoExecute(const KernelExecContext& ctx) const {
     auto tensor = ctx.GetInput<TensorImpl>(0);
-    if (!tensor || tensor->GetShape()->GetBytesIncludingPadding() == 0) {
+    if (!tensor || tensor->GetShape()->CalcBytesIncludingPadding() == 0) {
         return false;
     }
     return true;

@@ -29,7 +29,7 @@ ppl::common::RetCode clip_fp32(
     const float* src,
     float* dst)
 {
-    const int64_t total_len  = shape->GetElementsIncludingPadding();
+    const int64_t total_len  = shape->CalcElementsIncludingPadding();
     const int64_t parall_d   = 32;
     const int64_t unroll_len = parall_d * C_BLK();
     const auto vl            = vsetvli(C_BLK(), RVV_E32, RVV_M1);

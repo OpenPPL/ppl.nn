@@ -63,7 +63,7 @@ RetCode PadOp::Init(const OptKernelOptions& options) {
                 pad->GetShape()->GetDataType() != DATATYPE_INT64) {
                 return RC_INVALID_VALUE;
             }
-            int pad_elems = pad->GetShape()->GetElementsIncludingPadding();
+            int pad_elems = pad->GetShape()->CalcElementsIncludingPadding();
             unique_ptr<int64_t[]> pad_data(new int64_t[pad_elems]);
             for (int it = 0; it < pad_elems; pad_data[it] = 0, ++it)
                 ;

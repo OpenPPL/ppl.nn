@@ -32,7 +32,7 @@ static ppl::common::RetCode arithmetic_eltwise_fp32(
     const float* src1,
     float* dst)
 {
-    const int64_t total_len  = dst_shape->GetElementsIncludingPadding();
+    const int64_t total_len  = dst_shape->CalcElementsIncludingPadding();
     const int64_t parall_d   = 16;
     const int64_t unroll_len = parall_d * C_BLK();
     const auto vl            = vsetvli(C_BLK(), RVV_E32, RVV_M1);

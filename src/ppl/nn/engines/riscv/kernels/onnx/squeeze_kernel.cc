@@ -37,7 +37,7 @@ ppl::common::RetCode SqueezeKernel::DoExecute(KernelExecContext* ctx) {
         // PPLNN_RISCV_REALLOC_TENSOR_BUFFER(squeezed);
         PPLNN_RISCV_DEBUG_TRACE("Output [squeezed]:\n");
         PPL_RISCV_TENSOR_PRINT_DEBUG_MSG(squeezed);
-        return ppl::kernel::riscv::memory_copy(data->GetBufferPtr(), data->GetShape()->GetBytesIncludingPadding(),
+        return ppl::kernel::riscv::memory_copy(data->GetBufferPtr(), data->GetShape()->CalcBytesIncludingPadding(),
                                                squeezed->GetBufferPtr());
     }
 

@@ -58,8 +58,8 @@ RetCode ReshapeReshape(InputOutputInfo* info, const ir::Attr*, const int64_t* sh
     }
 
     if (axis_need_infer != -1) {
-        uint64_t data_nelem = data->GetElementsExcludingPadding();
-        uint64_t pre_reshaped_nelem = reshaped->GetElementsExcludingPadding();
+        uint64_t data_nelem = data->CalcElementsExcludingPadding();
+        uint64_t pre_reshaped_nelem = reshaped->CalcElementsExcludingPadding();
         if (pre_reshaped_nelem == 0) {
             reshaped->SetDim(axis_need_infer, 0);
         } else if (data_nelem % pre_reshaped_nelem != 0) {

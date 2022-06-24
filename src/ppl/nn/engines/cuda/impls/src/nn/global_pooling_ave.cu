@@ -296,7 +296,7 @@ ppl::common::RetCode PPLCUDAGlobalAvePoolingForwardImpFp16(
                 int hw_blocks =  (in_hw + dim_block.y - 1) / dim_block.y;
                 hw_blocks = hw_blocks_limit < hw_blocks ? hw_blocks_limit : hw_blocks;
                 dim3 dim_grid(channel_blocks, hw_blocks, batch);
-                cudaMemsetAsync(output, 0, output_shape->GetBytesIncludingPadding(), stream);
+                cudaMemsetAsync(output, 0, output_shape->CalcBytesIncludingPadding(), stream);
                 ppl_cukernel_pooling_ave_global_shuffle_half2_NHWC_atomic<<<dim_grid,
                                                                     dim_block,
                                                                     0,

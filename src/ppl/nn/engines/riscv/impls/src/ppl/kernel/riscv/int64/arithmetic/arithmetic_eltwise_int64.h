@@ -28,7 +28,7 @@ namespace ppl { namespace kernel { namespace riscv {
 template <arithmetic_op_type_t _op, bool fuse_relu>
 static ppl::common::RetCode arithmetic_eltwise_scalar_int64(const ppl::nn::TensorShape* dst_shape, const int64_t* src0, const int64_t* src1, int64_t* dst)
 {
-    const int64_t total_len = dst_shape->GetElementsIncludingPadding();
+    const int64_t total_len = dst_shape->CalcElementsIncludingPadding();
     for (int64_t i = 0; i < total_len; i += 1) {
         dst[i] = arithmetic_scalar_kernel_int64<_op>(src0[i], src1[i]);
         if (fuse_relu) {
@@ -42,7 +42,7 @@ static ppl::common::RetCode arithmetic_eltwise_scalar_int64(const ppl::nn::Tenso
 template <arithmetic_op_type_t _op, bool fuse_relu>
 static ppl::common::RetCode arithmetic_eltwise_int64(const ppl::nn::TensorShape* dst_shape, const int64_t* src0, const int64_t* src1, int64_t* dst)
 {
-    const int64_t total_len  = dst_shape->GetElementsIncludingPadding();
+    const int64_t total_len  = dst_shape->CalcElementsIncludingPadding();
     const int64_t parall_d   = 16;
     const int64_t unroll_len = parall_d * C_BLK();
     const auto vl            = vsetvli(C_BLK(), RVV_E64, RVV_M1);

@@ -41,7 +41,7 @@ ppl::common::RetCode UnsqueezeKernel::DoExecute(KernelExecContext* ctx) {
         PPLNN_X86_REALLOC_TENSOR_BUFFER(expanded);
         PPLNN_X86_DEBUG_TRACE("Output [expanded]:\n");
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(expanded);
-        return ppl::kernel::x86::memory_copy(data->GetBufferPtr(), data->GetShape()->GetBytesIncludingPadding(), expanded->GetBufferPtr());
+        return ppl::kernel::x86::memory_copy(data->GetBufferPtr(), data->GetShape()->CalcBytesIncludingPadding(), expanded->GetBufferPtr());
     }
 
     return ppl::common::RC_SUCCESS;

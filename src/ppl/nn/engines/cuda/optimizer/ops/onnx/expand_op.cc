@@ -49,7 +49,7 @@ RetCode ExpandOp::Init(const OptKernelOptions& options) {
             return RC_NOT_FOUND;
         }
 
-        vector<int64_t> shape_data(shape->GetShape()->GetElementsIncludingPadding());
+        vector<int64_t> shape_data(shape->GetShape()->CalcElementsIncludingPadding());
         auto status = shape->CopyToHost(shape_data.data());
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "Copy shape failed: " << GetRetCodeStr(status);

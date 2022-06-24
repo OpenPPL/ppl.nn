@@ -26,7 +26,7 @@ ppl::common::RetCode relu_fp32_sse(
     const float *x,
     float *y)
 {
-    const int64_t n_elem        = x_shape->GetElementsIncludingPadding();
+    const int64_t n_elem        = x_shape->CalcElementsIncludingPadding();
     const int64_t simd_w        = 4;
     const int64_t unroll_n      = 4 * simd_w;
     const int64_t unroll_n_body = round(n_elem, unroll_n);

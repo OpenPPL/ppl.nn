@@ -55,7 +55,7 @@ void RegisterTensor(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTabl
 
             auto status = tensor->ReallocBuffer();
             if (status != RC_SUCCESS) {
-                LOG(ERROR) << "realloc buffer of [" << shape.GetBytesIncludingPadding()
+                LOG(ERROR) << "realloc buffer of [" << shape.CalcBytesIncludingPadding()
                            << "] bytes failed when setting data for tensor[" << tensor->GetName()
                            << "]: " << GetRetCodeStr(status);
                 return status;
@@ -74,7 +74,7 @@ void RegisterTensor(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTabl
             TensorShape dst_shape = *tensor->GetShape();
             dst_shape.SetDataFormat(DATAFORMAT_NDARRAY);
 
-            vector<char> data(dst_shape.GetBytesExcludingPadding());
+            vector<char> data(dst_shape.CalcBytesExcludingPadding());
             auto status = tensor->ConvertToHost(data.data(), dst_shape);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "copy data of tensor[" << tensor->GetName() << "] to host failed: "

@@ -39,7 +39,7 @@ static ppl::common::RetCode clip_common(
     typedef typename DT<eT, eN>::vecDT vecType;
 
     const int64_t simd_w      = sizeof(vecType) / sizeof(eT);
-    const int64_t length      = src_shape->GetElementsIncludingPadding();
+    const int64_t length      = src_shape->CalcElementsIncludingPadding();
     const int64_t unroll_len  = simd_w * 4;
     const int64_t unroll_body = round(length, unroll_len);
 

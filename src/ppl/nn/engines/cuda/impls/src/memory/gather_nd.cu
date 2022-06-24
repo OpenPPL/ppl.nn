@@ -80,7 +80,7 @@ int64_t pplGatherNDGetTempBufferSize(
 {
     int num_input_dim   = input_shape->GetDimCount();
     int num_indices_dim = indices_shape->GetDimCount();
-    int num_pieces      = indices_shape->GetElementsToDimensionIncludingPadding(num_indices_dim - 1);
+    int num_pieces      = indices_shape->CalcElementsToDimensionIncludingPadding(num_indices_dim - 1);
     // pieces offsets and input strides and input_dims
     int64_t total_size  = (num_pieces + 2 * num_input_dim) * sizeof(int64_t);
     return total_size;
@@ -97,14 +97,14 @@ ppl::common::RetCode PPLCUDAGatherNDForwardImp(
     void* temp_buffer,
     int batch_dim)
 {
-    int num_batches           = input_shape->GetElementsToDimensionIncludingPadding(batch_dim);
-    int input_batch_stride    = input_shape->GetElementsFromDimensionIncludingPadding(batch_dim);
+    int num_batches           = input_shape->CalcElementsToDimensionIncludingPadding(batch_dim);
+    int input_batch_stride    = input_shape->CalcElementsFromDimensionIncludingPadding(batch_dim);
     int num_indices_dim       = indices_shape->GetDimCount();
     int num_input_dim         = input_shape->GetDimCount();
     int indices_last_dim_size = indices_shape->GetDim(num_indices_dim - 1);
-    int num_pieces            = indices_shape->GetElementsToDimensionIncludingPadding(num_indices_dim - 1);
+    int num_pieces            = indices_shape->CalcElementsToDimensionIncludingPadding(num_indices_dim - 1);
     DivModFast num_pieces_per_batch_fast(num_pieces / num_batches);
-    int piece_size = input_shape->GetElementsFromDimensionIncludingPadding(
+    int piece_size = input_shape->CalcElementsFromDimensionIncludingPadding(
         batch_dim + indices_last_dim_size);
     int block_size             = 256;
     // step 1: calcalute each piece's offset first
@@ -138,7 +138,7 @@ ppl::common::RetCode PPLCUDAGatherNDForwardImp(
     }
 
     // step2: begiin gather elements
-    int64_t num_elems    = output_shape->GetElementsIncludingPadding();
+    int64_t num_elems    = output_shape->CalcElementsIncludingPadding();
     int gather_grid_size = (num_elems + block_size - 1) / block_size;
     DivModFast piece_size_fast(piece_size);
 

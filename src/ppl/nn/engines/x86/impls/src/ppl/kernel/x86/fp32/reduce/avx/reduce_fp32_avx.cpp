@@ -32,8 +32,8 @@ ppl::common::RetCode reduce_fp32_avx(
     const int32_t num_axes,
     float *dst)
 {
-    if (src_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding()) { // no actual reduce happened, just copy
-        memcpy(dst, src, src_shape->GetBytesIncludingPadding());
+    if (src_shape->CalcElementsExcludingPadding() == dst_shape->CalcElementsExcludingPadding()) { // no actual reduce happened, just copy
+        memcpy(dst, src, src_shape->CalcBytesIncludingPadding());
         return ppl::common::RC_SUCCESS;
     }
     if (src_shape->GetDimCount() > PPL_X86_TENSOR_MAX_DIMS()) {

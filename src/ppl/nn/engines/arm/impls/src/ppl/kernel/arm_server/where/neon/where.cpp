@@ -31,8 +31,8 @@ ppl::common::RetCode where_common(
     const eT *src1,
     eT *dst)
 {
-    const bool is_eltwise = src0_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding() &&
-                            src1_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding();
+    const bool is_eltwise = src0_shape->CalcElementsExcludingPadding() == dst_shape->CalcElementsExcludingPadding() &&
+                            src1_shape->CalcElementsExcludingPadding() == dst_shape->CalcElementsExcludingPadding();
 
     if (is_eltwise) {
         return where_eltwise_common<eT>(dst_shape, cond, src0, src1, dst);

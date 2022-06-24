@@ -29,7 +29,7 @@ static ppl::common::RetCode relation_eltwise_scalar_common(
     const T *src1,
     uint8_t *dst)
 {
-    const int64_t length = dst_shape->GetElementsIncludingPadding();
+    const int64_t length = dst_shape->CalcElementsIncludingPadding();
     for (int64_t i = 0; i < length; i++) {
         dst[i] = relation_scalar_kernel<op, T>(src0[i], src1[i]);
     }
@@ -48,7 +48,7 @@ static ppl::common::RetCode relation_eltwise_common(
     uint64_t vl             = vsetvli<T, vlen>(c_blk);
 
     const int64_t simd_w      = c_blk;
-    const int64_t length      = dst_shape->GetElementsIncludingPadding();
+    const int64_t length      = dst_shape->CalcElementsIncludingPadding();
     const int64_t unroll_len  = simd_w * 4;
     const int64_t unroll_body = round(length, unroll_len);
 

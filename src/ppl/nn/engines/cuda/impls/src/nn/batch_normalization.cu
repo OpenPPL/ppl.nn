@@ -190,7 +190,7 @@ ppl::common::RetCode PPLCUDABatchNormalizationForwardImp(
     int hw_count  = 1;
     for (int it = 2; it < dim_count; ++it)
         hw_count *= input_shape->GetDim(it);
-    int64_t num_elems = output_shape->GetElementsExcludingPadding();
+    int64_t num_elems = output_shape->CalcElementsExcludingPadding();
     int block_size    = 256;
     int grid_size     = DivUp(num_elems, block_size);
 

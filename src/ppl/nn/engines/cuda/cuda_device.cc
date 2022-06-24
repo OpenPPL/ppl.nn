@@ -51,7 +51,7 @@ RetCode CudaDevice::CopyFromHost(BufferDesc* dst, const void* src, uint64_t byte
 }
 
 RetCode CudaDevice::CopyFromHost(BufferDesc* dst, const void* src, const TensorShape& shape) const {
-    return CopyFromHost(dst, src, shape.GetBytesIncludingPadding());
+    return CopyFromHost(dst, src, shape.CalcBytesIncludingPadding());
 }
 
 // Copy to host
@@ -69,7 +69,7 @@ RetCode CudaDevice::CopyToHost(void* dst, const BufferDesc& src, uint64_t bytes)
     return RC_SUCCESS;
 }
 RetCode CudaDevice::CopyToHost(void* dst, const BufferDesc& src, const TensorShape& shape) const {
-    return CopyToHost(dst, src, shape.GetBytesIncludingPadding());
+    return CopyToHost(dst, src, shape.CalcBytesIncludingPadding());
 }
 
 RetCode CudaDevice::Copy(BufferDesc* dst, const BufferDesc& src, uint64_t bytes) const {
@@ -82,7 +82,7 @@ RetCode CudaDevice::Copy(BufferDesc* dst, const BufferDesc& src, uint64_t bytes)
 }
 
 RetCode CudaDevice::Copy(BufferDesc* dst, const BufferDesc& src, const TensorShape& shape) const {
-    return Copy(dst, src, shape.GetBytesIncludingPadding());
+    return Copy(dst, src, shape.CalcBytesIncludingPadding());
 }
 
 }}} // namespace ppl::nn::cuda

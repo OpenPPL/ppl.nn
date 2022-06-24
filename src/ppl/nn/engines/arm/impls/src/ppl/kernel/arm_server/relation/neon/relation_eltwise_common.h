@@ -34,7 +34,7 @@ static ppl::common::RetCode relation_eltwise_common(
     typedef typename DT<eT, eN>::vecDT vecType;
     
     const int64_t simd_w      = sizeof(vecType) / sizeof(eT);
-    const int64_t length      = dst_shape->GetElementsIncludingPadding();
+    const int64_t length      = dst_shape->CalcElementsIncludingPadding();
     const int64_t unroll_len  = simd_w * 4;
     const int64_t unroll_body = round(length, unroll_len);
 

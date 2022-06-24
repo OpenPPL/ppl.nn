@@ -48,11 +48,11 @@ ppl::common::RetCode PReluKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     bool channel_shared = false;
-    if (slope->GetShape()->GetElementsExcludingPadding() == 1) {
+    if (slope->GetShape()->CalcElementsExcludingPadding() == 1) {
         channel_shared = true;
     } else {
         auto channels = X->GetShape()->GetDimCount() > 1 ? X->GetShape()->GetDim(1) : 1;
-        if (slope->GetShape()->GetElementsExcludingPadding() != (uint64_t)channels) {
+        if (slope->GetShape()->CalcElementsExcludingPadding() != (uint64_t)channels) {
             LOG(ERROR) << "prelu only support channel broadcasting.";
             return ppl::common::RC_UNSUPPORTED;
         }

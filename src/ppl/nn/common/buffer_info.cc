@@ -87,7 +87,7 @@ RetCode BufferInfo::ReallocBuffer(const TensorShape& shape) {
 
     auto status = device_->Realloc(shape, &buffer_);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "Realloc [" << shape.GetBytesIncludingPadding() << "] bytes failed: " << GetRetCodeStr(status);
+        LOG(ERROR) << "Realloc [" << shape.CalcBytesIncludingPadding() << "] bytes failed: " << GetRetCodeStr(status);
         return status;
     }
 

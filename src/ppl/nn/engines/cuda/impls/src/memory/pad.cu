@@ -115,7 +115,7 @@ ppl::common::RetCode PPLCUDAPadForwardImp(
 {
     int num_dims       = output_shape->GetDimCount();
     if (isFastPadSupported(param.pads, num_dims)) {
-        int batch = input_shape->GetElementsToDimensionExcludingPadding(num_dims - 2);
+        int batch = input_shape->CalcElementsToDimensionExcludingPadding(num_dims - 2);
         int dst_height = output_shape->GetDim(num_dims - 2);
         int dst_width  = output_shape->GetDim(num_dims - 1);
         int src_height = input_shape->GetDim(num_dims - 2);
@@ -139,7 +139,7 @@ ppl::common::RetCode PPLCUDAPadForwardImp(
         return ppl::common::RC_SUCCESS;
     }
     int block_size     = 256;
-    uint64_t num_elems = output_shape->GetElementsIncludingPadding();
+    uint64_t num_elems = output_shape->CalcElementsIncludingPadding();
     int grid_size      = (num_elems + block_size - 1) / block_size;
     GArray<int64_t> input_dims(num_dims);
     GArray<int64_t> input_strides(num_dims);

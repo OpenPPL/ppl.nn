@@ -272,7 +272,7 @@ Most operators use the implementation of the base class defined in ppl.nn/src/pp
 bool ArmKernel::CanDoExecute(const KernelExecContext& ctx) const {  // If there is an empty tensor in the input, return false, otherwise return true
     for (uint32_t i = 0; i < ctx.GetInputCount(); ++i) {
         auto tensor = ctx.GetInput<TensorImpl>(i);
-        if (!tensor || tensor->GetShape().GetBytesIncludingPadding() == 0) {
+        if (!tensor || tensor->GetShape().CalcBytesIncludingPadding() == 0) {
             return false;
         }
     }

@@ -31,8 +31,8 @@ static ppl::common::RetCode arithmetic_impl_common(
     eT *dst)
 {
     bool is_eltwise =
-        src0_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding() &&
-        src1_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding();
+        src0_shape->CalcElementsExcludingPadding() == dst_shape->CalcElementsExcludingPadding() &&
+        src1_shape->CalcElementsExcludingPadding() == dst_shape->CalcElementsExcludingPadding();
     if (is_eltwise) {
         return arithmetic_eltwise_common<eT, _op>(dst_shape, src0, src1, dst);
     } else if (dst_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {

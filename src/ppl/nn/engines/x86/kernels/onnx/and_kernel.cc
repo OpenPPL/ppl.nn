@@ -41,8 +41,8 @@ ppl::common::RetCode AndKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(C);
 
     const bool is_eltwise =
-        A->GetShape()->GetElementsExcludingPadding() == C->GetShape()->GetElementsExcludingPadding() &&
-        B->GetShape()->GetElementsExcludingPadding() == C->GetShape()->GetElementsExcludingPadding();
+        A->GetShape()->CalcElementsExcludingPadding() == C->GetShape()->CalcElementsExcludingPadding() &&
+        B->GetShape()->CalcElementsExcludingPadding() == C->GetShape()->CalcElementsExcludingPadding();
     const ppl::common::datatype_t data_type = A->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_BOOL) {

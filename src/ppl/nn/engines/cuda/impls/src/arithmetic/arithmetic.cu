@@ -719,7 +719,7 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImp(
     const T *input1,
     const ppl::nn::TensorShape* output_shape,
     T *output) {
-    uint64_t num_elems = output_shape->GetElementsIncludingPadding();
+    uint64_t num_elems = output_shape->CalcElementsIncludingPadding();
     int dim_count = output_shape->GetDimCount();
     int block_size = 256;
     uint64_t grid_size = (num_elems + block_size - 1) / block_size;
@@ -727,10 +727,10 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImp(
     int num_broadcast_dims = ppl_get_num_broadcast_dims(input_shape0, input_shape1, axis, bidirectional);
     if (!bidirectional && ((input_shape0->GetDimCount() < 2) || (input_shape1->GetDimCount() < 2))) {
         bool first_shorter = false;
-        if (input_shape0->GetElementsIncludingPadding() < input_shape1->GetElementsIncludingPadding()) {
+        if (input_shape0->CalcElementsIncludingPadding() < input_shape1->CalcElementsIncludingPadding()) {
             first_shorter = true;
         }
-        if (input_shape0->GetElementsIncludingPadding() == 1 || input_shape1->GetElementsIncludingPadding() == 1) {
+        if (input_shape0->CalcElementsIncludingPadding() == 1 || input_shape1->CalcElementsIncludingPadding() == 1) {
             ppl_cukernel_arithmetic_one_scalar<op_type, T><<<grid_size, block_size, 0,
                 stream>>>(num_elems, first_shorter, (const T*)input0, (const T*)input1, (T*)output);
         } else {
@@ -748,16 +748,16 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImp(
             if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
                 // one broadcast (or last dimensions broadcast)
                 if (ppl_feature_broadcast(input_shape0, input_shape1, &axis)) {
-                    int inner_dim = output_shape->GetElementsToDimensionIncludingPadding(axis) * 
-                                    output_shape->GetElementsFromDimensionIncludingPadding(axis - 1) / 
-                                    output_shape->GetElementsIncludingPadding();
-                    int outer_stride =  output_shape->GetElementsFromDimensionIncludingPadding(1);
+                    int inner_dim = output_shape->CalcElementsToDimensionIncludingPadding(axis) * 
+                                    output_shape->CalcElementsFromDimensionIncludingPadding(axis - 1) / 
+                                    output_shape->CalcElementsIncludingPadding();
+                    int outer_stride =  output_shape->CalcElementsFromDimensionIncludingPadding(1);
                     bool first_shorter = false;
                     if (input_shape0->GetRealDimCount() == input_shape1->GetRealDimCount() &&
                         input_shape0->GetDim(axis) < input_shape1->GetDim(axis)) {
                         first_shorter = true;
                     }
-                    if (input_shape0->GetElementsExcludingPadding() < input_shape1->GetElementsExcludingPadding())  {
+                    if (input_shape0->CalcElementsExcludingPadding() < input_shape1->CalcElementsExcludingPadding())  {
                         first_shorter = true;
                     }
                     ppl_cukernel_arithmetic_one_broadcast<op_type, half><<<grid_size, block_size, 0,
@@ -792,7 +792,7 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImp(
                     input_shape0->GetDim(axis) < input_shape1->GetDim(axis)) {
                     first_shorter = true;
                 }
-                if (input_shape0->GetElementsExcludingPadding() < input_shape1->GetElementsExcludingPadding())  {
+                if (input_shape0->CalcElementsExcludingPadding() < input_shape1->CalcElementsExcludingPadding())  {
                     first_shorter = true;
                 }
                 ppl_cukernel_arithmetic_one_broadcast<op_type, T><<<grid_size, block_size, 0,
@@ -823,7 +823,7 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImpInt8(
     float in_scale0 = 0,
     float in_scale1 = 0,
     float out_scale = 0) {
-    uint64_t num_elems = output_shape->GetElementsIncludingPadding();
+    uint64_t num_elems = output_shape->CalcElementsIncludingPadding();
     int dim_count = output_shape->GetDimCount();
     int block_size = 256;
     uint64_t grid_size = (num_elems + block_size - 1) / block_size;
@@ -831,10 +831,10 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImpInt8(
     int num_broadcast_dims = ppl_get_num_broadcast_dims(input_shape0, input_shape1, axis, bidirectional);
     if (!bidirectional && ((input_shape0->GetDimCount() < 2) || (input_shape1->GetDimCount() < 2))) {
         bool first_shorter = false;
-        if (input_shape0->GetElementsIncludingPadding() < input_shape1->GetElementsIncludingPadding()) {
+        if (input_shape0->CalcElementsIncludingPadding() < input_shape1->CalcElementsIncludingPadding()) {
             first_shorter = true;
         }
-        if (input_shape0->GetElementsIncludingPadding() == 1 || input_shape1->GetElementsIncludingPadding() == 1) {
+        if (input_shape0->CalcElementsIncludingPadding() == 1 || input_shape1->CalcElementsIncludingPadding() == 1) {
             ppl_cukernel_arithmetic_one_scalar_int8<op_type, T><<<grid_size, block_size, 0,
                 stream>>>(num_elems, first_shorter, (const T*)input0, (const T*)input1, (T*)output, in_scale0, in_scale1, out_scale);
         } else {
@@ -851,16 +851,16 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImpInt8(
         if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8 ||
             output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC16) {
                 if(ppl_feature_broadcast(input_shape0, input_shape1, &axis)) {
-                    int inner_dim = output_shape->GetElementsToDimensionIncludingPadding(axis) * 
-                                    output_shape->GetElementsFromDimensionIncludingPadding(axis - 1) / 
-                                    output_shape->GetElementsIncludingPadding();
-                    int outer_stride =  output_shape->GetElementsFromDimensionIncludingPadding(1);
+                    int inner_dim = output_shape->CalcElementsToDimensionIncludingPadding(axis) * 
+                                    output_shape->CalcElementsFromDimensionIncludingPadding(axis - 1) / 
+                                    output_shape->CalcElementsIncludingPadding();
+                    int outer_stride =  output_shape->CalcElementsFromDimensionIncludingPadding(1);
                     bool first_shorter = false;
                     if (input_shape0->GetRealDimCount() == input_shape1->GetRealDimCount() &&
                         input_shape0->GetDim(axis) < input_shape1->GetDim(axis)) {
                         first_shorter = true;
                     }
-                    if (input_shape0->GetElementsExcludingPadding() < input_shape1->GetElementsExcludingPadding())  {
+                    if (input_shape0->CalcElementsExcludingPadding() < input_shape1->CalcElementsExcludingPadding())  {
                         first_shorter = true;
                     }
                     ppl_cukernel_arithmetic_one_broadcast_int8<op_type, T><<<grid_size, block_size, 0,
@@ -880,7 +880,7 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImpInt8(
                     input_shape0->GetDim(axis) < input_shape1->GetDim(axis)) {
                     first_shorter = true;
                 }
-                if (input_shape0->GetElementsExcludingPadding() < input_shape1->GetElementsExcludingPadding())  {
+                if (input_shape0->CalcElementsExcludingPadding() < input_shape1->CalcElementsExcludingPadding())  {
                     first_shorter = true;
                 }
                 ppl_cukernel_arithmetic_one_broadcast_int8<op_type, T><<<grid_size, block_size, 0,

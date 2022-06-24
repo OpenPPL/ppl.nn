@@ -30,8 +30,8 @@ ppl::common::RetCode relation_fp32(
     const float *src1,
     uint8_t *dst)
 {
-    const bool is_eltwise = src0_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding() &&
-                            src1_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding();
+    const bool is_eltwise = src0_shape->CalcElementsExcludingPadding() == dst_shape->CalcElementsExcludingPadding() &&
+                            src1_shape->CalcElementsExcludingPadding() == dst_shape->CalcElementsExcludingPadding();
 
     if (is_eltwise) {
         return relation_eltwise_common<op, float, vlen>(dst_shape, src0, src1, dst);

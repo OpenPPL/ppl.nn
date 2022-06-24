@@ -30,7 +30,7 @@ static ppl::common::RetCode arithmetic_eltwise_fp16(
     const __fp16* src1,
     __fp16* dst)
 {
-    const int64_t total_len  = dst_shape->GetElementsIncludingPadding();
+    const int64_t total_len  = dst_shape->CalcElementsIncludingPadding();
     const int64_t parall_d   = 16;
     const int64_t unroll_len = parall_d * 8;
     const auto vl            = vsetvli(8, RVV_E16, RVV_M1);

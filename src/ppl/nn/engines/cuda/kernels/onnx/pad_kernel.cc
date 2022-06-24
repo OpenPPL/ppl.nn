@@ -31,7 +31,7 @@ ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
     
     void* pad_buffer = ctx->GetInput<TensorImpl>(1)->GetBufferPtr();
     // keep pads data on host for optimization
-    uint32_t num_elems = ctx->GetInput<TensorImpl>(1)->GetShape()->GetElementsIncludingPadding();
+    uint32_t num_elems = ctx->GetInput<TensorImpl>(1)->GetShape()->CalcElementsIncludingPadding();
     std::vector<int64_t> pads;
     pads.resize(num_elems);
     ctx->GetInput<TensorImpl>(1)->CopyToHost(pads.data());
@@ -50,7 +50,7 @@ ppl::common::RetCode PadKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL &&
-        input->GetShape()->GetElementsIncludingPadding() == output->GetShape()->GetElementsIncludingPadding()) {
+        input->GetShape()->CalcElementsIncludingPadding() == output->GetShape()->CalcElementsIncludingPadding()) {
         output->TransferBufferFrom(input);
     } else {
         status = PPLCUDAPadForwardImp(GetStream(), kernel_param, input->GetShape(), input->GetBufferPtr(),

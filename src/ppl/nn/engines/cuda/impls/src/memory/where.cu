@@ -76,7 +76,7 @@ ppl::common::RetCode WhereForwardImpNoBroadcast(
     const ppl::nn::TensorShape* output_shape,
     void* output)
 {
-    int64_t num_elems = output_shape->GetElementsIncludingPadding();
+    int64_t num_elems = output_shape->CalcElementsIncludingPadding();
 
     constexpr int num_vec_elems = 4;
     bool vectorize              = (num_elems % num_vec_elems == 0);
@@ -153,7 +153,7 @@ ppl::common::RetCode WhereForwardImpSimpleBroadcast(
     const ppl::nn::TensorShape* output_shape,
     void* output)
 {
-    int64_t num_elems = output_shape->GetElementsIncludingPadding();
+    int64_t num_elems = output_shape->CalcElementsIncludingPadding();
 
     int block_size = 256;
     int grid_size  = (num_elems + block_size - 1) / block_size;
@@ -227,7 +227,7 @@ ppl::common::RetCode WhereForwardImpComplexBroadcast(
     const ppl::nn::TensorShape* output_shape,
     void* output)
 {
-    int64_t num_elems = output_shape->GetElementsIncludingPadding();
+    int64_t num_elems = output_shape->CalcElementsIncludingPadding();
     int num_dims      = output_shape->GetDimCount();
 
     int block_size = 256;
@@ -274,10 +274,10 @@ ppl::common::RetCode PPLCUDAWhereForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output)
 {
-    int64_t num_condition_elems = condition_shape->GetElementsIncludingPadding();
-    int64_t num_input_x_elems   = input_x_shape->GetElementsIncludingPadding();
-    int64_t num_input_y_elems   = input_y_shape->GetElementsIncludingPadding();
-    int64_t num_elems           = output_shape->GetElementsIncludingPadding();
+    int64_t num_condition_elems = condition_shape->CalcElementsIncludingPadding();
+    int64_t num_input_x_elems   = input_x_shape->CalcElementsIncludingPadding();
+    int64_t num_input_y_elems   = input_y_shape->CalcElementsIncludingPadding();
+    int64_t num_elems           = output_shape->CalcElementsIncludingPadding();
     int64_t num_dims            = output_shape->GetDimCount();
 
     BroadcastType condition_btype = GetBroadcastType(num_condition_elems, num_elems);

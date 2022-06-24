@@ -121,7 +121,7 @@ for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
     auto t = runtime->GetInputTensor(c);
     auto shape = t->GetShape();
 
-    auto nr_element = shape->GetBytesIncludingPadding() / sizeof(float);
+    auto nr_element = shape->CalcBytesIncludingPadding() / sizeof(float);
     vector<float> buffer(nr_element);
 
     // fill random input data
@@ -166,7 +166,7 @@ for (uint32_t c = 0; c < runtime->GetOutputCount(); ++c) {
 
     const TensorShape* dst_desc = t->GetShape();
     dst_desc->SetDataFormat(DATAFORMAT_NDARRAY);
-    auto bytes = dst_desc->GetBytesIncludingPadding();
+    auto bytes = dst_desc->CalcBytesIncludingPadding();
     vector<char> buffer(bytes);
 
     auto status = t->ConvertToHost((void*)buffer.data(), *dst_desc);

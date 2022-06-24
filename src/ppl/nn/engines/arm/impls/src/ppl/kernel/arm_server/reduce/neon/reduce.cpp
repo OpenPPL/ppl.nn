@@ -37,8 +37,8 @@ static ppl::common::RetCode reduce(
     const int32_t num_axes,
     eT *dst)
 {
-    if (src_shape->GetElementsExcludingPadding() == dst_shape->GetElementsExcludingPadding()) { // no actual reduce happened, just copy
-        return memory_copy(src, src_shape->GetBytesIncludingPadding(), dst);
+    if (src_shape->CalcElementsExcludingPadding() == dst_shape->CalcElementsExcludingPadding()) { // no actual reduce happened, just copy
+        return memory_copy(src, src_shape->CalcBytesIncludingPadding(), dst);
     }
 
     std::vector<int32_t> real_axes(num_axes); // change negative axes to positive & sort axes

@@ -90,7 +90,7 @@ ppl::common::RetCode PPLCUDAUnaryLeakyReluForwardImp(
     float in_scale,
     float out_scale)
 {
-    uint64_t num_elems = output_shape->GetElementsIncludingPadding();
+    uint64_t num_elems = output_shape->CalcElementsIncludingPadding();
     int block_size     = 256;
     uint64_t grid_size = (num_elems + block_size - 1) / block_size;
     if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {

@@ -27,7 +27,7 @@ ppl::common::RetCode sqrt_fp32_sse(
     const float *in,
     float *out)
 {
-    const int64_t length     = in_shape->GetElementsIncludingPadding();
+    const int64_t length     = in_shape->CalcElementsIncludingPadding();
     const int64_t simd_w     = 4;
     const int64_t unroll_len = round(length, simd_w);
 

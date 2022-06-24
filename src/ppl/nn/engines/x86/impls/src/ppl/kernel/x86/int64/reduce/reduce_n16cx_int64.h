@@ -165,7 +165,7 @@ common::RetCode reduce_n16cx_int64(
     padded_dst_shape.CalcPadding();
 
     // pre process
-    reduce_preprocess_int64<_op>(dst, padded_dst_shape.GetElementsIncludingPadding());
+    reduce_preprocess_int64<_op>(dst, padded_dst_shape.CalcElementsIncludingPadding());
 
     // prepare incs
     const int64_t dim_count = padded_dst_shape.GetDimCount();
@@ -229,7 +229,7 @@ common::RetCode reduce_n16cx_int64(
     for (int64_t i = 0; i < dim_count; i++) {
         reduce_factor *= src_shape->GetDim(i) / padded_dst_shape.GetDim(i);
     }
-    reduce_postprocess_int64<_op>(dst, padded_dst_shape.GetElementsIncludingPadding(), reduce_factor);
+    reduce_postprocess_int64<_op>(dst, padded_dst_shape.CalcElementsIncludingPadding(), reduce_factor);
 
     return ppl::common::RC_SUCCESS;
 }

@@ -40,7 +40,7 @@ ppl::common::RetCode ConstantOfShapeKernel::DoExecute(KernelExecContext* ctx) {
 
     uint64_t output_datatype_size = ppl::common::GetSizeOfDataType(output->GetShape()->GetDataType());
     return kernel::x86::memory_init(param_->data.GetData(), output_datatype_size,
-                                      output->GetShape()->GetElementsIncludingPadding(), output->GetBufferPtr());
+                                      output->GetShape()->CalcElementsIncludingPadding(), output->GetBufferPtr());
 }
 
 }}} // namespace ppl::nn::x86

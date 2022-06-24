@@ -204,7 +204,7 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
     // prepare output data's buffer
     auto output_tensor = runtime->GetOutputTensor(0);
 
-    uint64_t output_size = output_tensor->GetShape()->GetElementsExcludingPadding();
+    uint64_t output_size = output_tensor->GetShape()->CalcElementsExcludingPadding();
     std::vector<float> output_data_(output_size);
     float* output_data = output_data_.data();
 

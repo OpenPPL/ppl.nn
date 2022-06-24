@@ -339,7 +339,7 @@ static ppl::common::RetCode arithmetic_broadcast_n16cx_fp32_avx(
     }
 
     const int64_t task_len = 16;
-    std::vector<int64_t> loop_iter(1, max<int64_t>(dst_shape->GetElementsIncludingPadding() / task_len, 1));
+    std::vector<int64_t> loop_iter(1, max<int64_t>(dst_shape->CalcElementsIncludingPadding() / task_len, 1));
     auto pc = select_single_parallel_loop(
         loop_iter,
         ppl::common::ISA_X86_AVX,
@@ -350,7 +350,7 @@ static ppl::common::RetCode arithmetic_broadcast_n16cx_fp32_avx(
 
     // split task for each thread
     const int64_t num_threads = pc.num_threads;
-    const int64_t total_len   = dst_shape->GetElementsIncludingPadding() /
+    const int64_t total_len   = dst_shape->CalcElementsIncludingPadding() /
                               16; // because C dim has been divided by 16, len should also div 16
     const int64_t len_per_thread = div_up(total_len, num_threads);
 

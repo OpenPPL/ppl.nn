@@ -37,7 +37,7 @@ ppl::common::RetCode UnsqueezeKernel::DoExecute(KernelExecContext* ctx) {
     if (data->GetEdge()->CalcConsumerCount() == 1 && data->GetType() == TENSORTYPE_NORMAL) {
         expanded->TransferBufferFrom(data);
     } else {
-        return ppl::kernel::arm_server::memory_copy(data->GetBufferPtr(), data->GetShape()->GetBytesIncludingPadding(),
+        return ppl::kernel::arm_server::memory_copy(data->GetBufferPtr(), data->GetShape()->CalcBytesIncludingPadding(),
                                                     expanded->GetBufferPtr());
     }
 
