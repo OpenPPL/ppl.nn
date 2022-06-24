@@ -39,7 +39,7 @@ ppl::common::RetCode ConstantOfShapeKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
 
     uint64_t output_datatype_size = ppl::common::GetSizeOfDataType(output->GetShape()->GetDataType());
-    return kernel::x86::memory_init(param_->data.data(), output_datatype_size,
+    return kernel::x86::memory_init(param_->data.GetData(), output_datatype_size,
                                       output->GetShape()->GetElementsIncludingPadding(), output->GetBufferPtr());
 }
 

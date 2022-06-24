@@ -32,7 +32,7 @@ RetCode ParseConstantOfShapeParam(const ::onnx::NodeProto& pb_node, const ParamP
         float f = 0.0;
         param->data_type = DATATYPE_FLOAT32;
         param->dims.push_back(1);
-        param->data.assign((const char*)&f, sizeof(f));
+        param->data.Assign((const char*)&f, sizeof(f));
     } else {
         ir::Shape shape;
         auto status = utils::ParseTensorProto(*value, args.model_file_dir, &param->data, &shape);
@@ -53,7 +53,7 @@ RetCode PackConstantOfShapeParam(const ir::Node*, const ir::Attr* arg, ::onnx::N
     auto pb_attr = pb_node->add_attribute();
     pb_attr->set_name("value");
     pb_attr->set_type(::onnx::AttributeProto_AttributeType_TENSOR);
-    return utils::PackTensorProto(param->data.data(), param->data.size(), param->data_type, param->dims,
+    return utils::PackTensorProto(param->data.GetData(), param->data.GetSize(), param->data_type, param->dims,
                                   pb_attr->mutable_t());
 }
 

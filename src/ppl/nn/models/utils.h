@@ -36,7 +36,7 @@ ir::Edge* AddScalarInitializer(ir::GraphTopo* topo, ir::GraphData* data, const s
     topo->MarkAsConstant(eid);
 
     auto constant_ret = data->constants.insert(std::make_pair(eid, ir::Constant()));
-    constant_ret.first->second.data.assign((const char*)&value, sizeof(value));
+    constant_ret.first->second.data.Assign((const char*)&value, sizeof(value));
 
     auto shape_ret = data->shapes.insert(std::make_pair(eid, ir::Shape()));
     shape_ret.first->second.data_type = data_type;
@@ -59,7 +59,7 @@ ir::Edge* Add1DInitializer(ir::GraphTopo* topo, ir::GraphData* data, const std::
     topo->MarkAsConstant(eid);
 
     auto constant_ret = data->constants.insert(std::make_pair(eid, ir::Constant()));
-    constant_ret.first->second.data.assign((const char*)value.data(), value.size() * sizeof(T));
+    constant_ret.first->second.data.Assign((const char*)value.data(), value.size() * sizeof(T));
 
     auto shape_ret = data->shapes.insert(std::make_pair(eid, ir::Shape()));
     shape_ret.first->second.data_type = data_type;

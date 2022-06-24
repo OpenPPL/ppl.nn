@@ -47,8 +47,8 @@ const bool AveragePoolFusion::CanFuse(ir::Node* node, ir::Node* prenode, const O
         return false;
     }
 
-    uint64_t* pads = (uint64_t*)(constants->second.data.data());
-    if (constants->second.data.length() != 64) {
+    uint64_t* pads = (uint64_t*)(constants->second.data.GetData());
+    if (constants->second.data.GetSize() != 64) {
         return false;
     }
 
@@ -133,7 +133,7 @@ const RetCode AveragePoolFusion::FuseNode(ir::Node* node, bool reliable, const O
 
         int index[4] = {2, 3, 6, 7};
         auto constants = data->constants.find(prenode->GetInput(1));
-        uint64_t* pads = (uint64_t*)(constants->second.data.data());
+        uint64_t* pads = (uint64_t*)(constants->second.data.GetData());
 
         auto kernel = options.info->kernels.find(node_id)->second.get();
         PoolingParam* param = (PoolingParam*)(((CudaOptKernel*)kernel)->GetParam());

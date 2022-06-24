@@ -206,7 +206,8 @@ inline void GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::
 
 const ::onnx::TensorProto* GetTensorProtoByKey(const ::onnx::NodeProto&, const char* key);
 
-ppl::common::RetCode ParseTensorProto(const ::onnx::TensorProto&, const char* model_file_dir, std::string*, ir::Shape*);
+ppl::common::RetCode ParseTensorProto(const ::onnx::TensorProto&, const char* model_file_dir, ppl::nn::utils::Buffer*,
+                                      ir::Shape*);
 ppl::common::RetCode PackTensorProto(const void* data, uint64_t len, ppl::common::datatype_t,
                                      const std::vector<int64_t>&, ::onnx::TensorProto*);
 

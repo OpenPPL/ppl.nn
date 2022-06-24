@@ -20,15 +20,14 @@
 
 #include "ppl/common/types.h"
 #include "ppl/nn/ir/attr.h"
-#include <string>
-#include <vector>
+#include "ppl/nn/utils/buffer.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
 struct ConstantParam final : public ir::TypedAttr<ConstantParam> {
     ppl::common::datatype_t data_type;
     std::vector<int64_t> dims;
-    std::string data;
+    ppl::nn::utils::Buffer data;
 
     bool operator==(const ConstantParam& p) const {
         return (data_type == p.data_type && dims == p.dims && data == p.data);

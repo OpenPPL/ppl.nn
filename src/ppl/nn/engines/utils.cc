@@ -170,7 +170,7 @@ RetCode LoadConstants(const ir::Graph& graph, Device* device, map<edgeid_t, Runt
         }
 
         RuntimeConstantInfo& constant_info = ret_pair.first->second;
-        auto status = GenericLoadConstant(constant_ref->second.data.data(), constant_ref->second.data.size(),
+        auto status = GenericLoadConstant(constant_ref->second.data.GetData(), constant_ref->second.data.GetSize(),
                                           tensor_shape, device, &constant_info, omit_data);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "load constant[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);

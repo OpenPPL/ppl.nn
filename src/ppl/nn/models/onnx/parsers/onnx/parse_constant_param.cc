@@ -57,30 +57,30 @@ RetCode ParseConstantParam(const ::onnx::NodeProto& pb_node, const ParamParserEx
             int64_t v = attribute.i();
             param->data_type = DATATYPE_INT64;
             param->dims.push_back(1);
-            param->data.assign((const char*)(&v), sizeof(v));
+            param->data.Assign((const char*)(&v), sizeof(v));
             return RC_SUCCESS;
         } else if (attribute.name() == "value_ints") {
             param->data_type = DATATYPE_INT64;
             param->dims.push_back(attribute.ints_size());
-            param->data.reserve(attribute.ints_size() * sizeof(int64_t));
+            param->data.Reserve(attribute.ints_size() * sizeof(int64_t));
             for (int x = 0; x < attribute.ints_size(); ++x) {
                 int64_t v = attribute.ints(x);
-                param->data.append((const char*)(&v), sizeof(v));
+                param->data.Append((const char*)(&v), sizeof(v));
             }
             return RC_SUCCESS;
         } else if (attribute.name() == "value_float") {
             float v = attribute.f();
             param->data_type = DATATYPE_FLOAT32;
             param->dims.push_back(1);
-            param->data.assign((const char*)(&v), sizeof(v));
+            param->data.Assign((const char*)(&v), sizeof(v));
             return RC_SUCCESS;
         } else if (attribute.name() == "value_floats") {
             param->data_type = DATATYPE_FLOAT32;
             param->dims.push_back(attribute.floats_size());
-            param->data.reserve(attribute.floats_size() * sizeof(float));
+            param->data.Reserve(attribute.floats_size() * sizeof(float));
             for (int x = 0; x < attribute.floats_size(); ++x) {
                 float v = attribute.floats(x);
-                param->data.append((const char*)(&v), sizeof(v));
+                param->data.Append((const char*)(&v), sizeof(v));
             }
             return RC_SUCCESS;
         }
@@ -95,7 +95,7 @@ RetCode PackConstantParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProt
     auto pb_attr = pb_node->add_attribute();
     pb_attr->set_name("value");
     pb_attr->set_type(::onnx::AttributeProto_AttributeType_TENSOR);
-    return utils::PackTensorProto(param->data.data(), param->data.size(), param->data_type, param->dims,
+    return utils::PackTensorProto(param->data.GetData(), param->data.GetSize(), param->data_type, param->dims,
                                   pb_attr->mutable_t());
 }
 

@@ -125,10 +125,10 @@ static bool FuseConvBatchNormalization(ir::Graph* graph) {
             }
 
             // all check passed, now fuse conv & bn
-            float* conv_filter_ptr = (float*)constants[conv_filter_edge->GetId()].data.data();
+            float* conv_filter_ptr = (float*)constants[conv_filter_edge->GetId()].data.GetData();
             float* conv_bias_ptr = nullptr;
             if (conv_bias_edge) {
-                conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.data();
+                conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.GetData();
             } else { // if conv node has no bias, add bias tensor
                 auto add_bias_edge_name = conv_node->GetName() + "_bias";
                 auto edge_ret_pair = graph->topo->AddEdge(add_bias_edge_name);
@@ -142,9 +142,9 @@ static bool FuseConvBatchNormalization(ir::Graph* graph) {
                 conv_bias_edge->AddConsumer(conv_node->GetId());
 
                 ir::Constant bias_constant;
-                bias_constant.data.resize(channels * sizeof(float), 0); // init bias to 0
+                bias_constant.data.Resize(channels * sizeof(float), 0); // init bias to 0
                 constants.emplace(conv_bias_edge->GetId(), bias_constant);
-                conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.data();
+                conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.GetData();
 
                 ir::Shape bias_shape;
                 bias_shape.data_type = DATATYPE_FLOAT32;
@@ -153,10 +153,10 @@ static bool FuseConvBatchNormalization(ir::Graph* graph) {
                 shapes.emplace(conv_bias_edge->GetId(), bias_shape);
             }
 
-            const float* bn_scale_ptr = (const float*)constants[bn_node->GetInput(1)].data.data();
-            const float* bn_bias_ptr = (const float*)constants[bn_node->GetInput(2)].data.data();
-            const float* bn_mean_ptr = (const float*)constants[bn_node->GetInput(3)].data.data();
-            const float* bn_var_ptr = (const float*)constants[bn_node->GetInput(4)].data.data();
+            const float* bn_scale_ptr = (const float*)constants[bn_node->GetInput(1)].data.GetData();
+            const float* bn_bias_ptr = (const float*)constants[bn_node->GetInput(2)].data.GetData();
+            const float* bn_mean_ptr = (const float*)constants[bn_node->GetInput(3)].data.GetData();
+            const float* bn_var_ptr = (const float*)constants[bn_node->GetInput(4)].data.GetData();
 
             float eps = 1e-5;
             if (attrs.find(bn_node->GetId()) != attrs.end()) {
@@ -295,7 +295,7 @@ static RetCode FuseConvMul(ir::Graph* graph) {
             for (uint32_t i = 0; i < scale_dims.size(); i++) {
                 scale_num_elements *= scale_dims[i];
             }
-            const float* scale_ori_data = (const float*)constants[scale_edge->GetId()].data.data();
+            const float* scale_ori_data = (const float*)constants[scale_edge->GetId()].data.GetData();
             if (scale_num_elements == channels) {
                 memcpy(scale_data.data(), scale_ori_data, scale_num_elements * sizeof(float));
             } else {
@@ -305,10 +305,10 @@ static RetCode FuseConvMul(ir::Graph* graph) {
             }
 
             // fuse conv & mul
-            float* conv_filter_ptr = (float*)constants[conv_filter_edge->GetId()].data.data();
+            float* conv_filter_ptr = (float*)constants[conv_filter_edge->GetId()].data.GetData();
             float* conv_bias_ptr = nullptr;
             if (conv_bias_edge) {
-                conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.data();
+                conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.GetData();
             }
 
             const int64_t chw = conv_filter_dims[1] * conv_filter_dims[2] * conv_filter_dims[3];
@@ -435,7 +435,7 @@ static RetCode FuseConvAdd(ir::Graph* graph) {
             for (uint32_t i = 0; i < shift_dims.size(); i++) {
                 shift_num_elements *= shift_dims[i];
             }
-            const float* shift_ori_data = (const float*)constants[shift_edge->GetId()].data.data();
+            const float* shift_ori_data = (const float*)constants[shift_edge->GetId()].data.GetData();
             if (shift_num_elements == channels) {
                 memcpy(shift_data.data(), shift_ori_data, shift_num_elements * sizeof(float));
             } else {
@@ -447,7 +447,7 @@ static RetCode FuseConvAdd(ir::Graph* graph) {
             // fuse conv & add
             float* conv_bias_ptr = nullptr;
             if (conv_bias_edge) {
-                conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.data();
+                conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.GetData();
             } else { // if conv node has no bias, add bias tensor
                 auto add_bias_edge_name = conv_node->GetName() + "_bias";
                 auto edge_ret_pair = graph->topo->AddEdge(add_bias_edge_name);
@@ -461,9 +461,9 @@ static RetCode FuseConvAdd(ir::Graph* graph) {
                 conv_bias_edge->AddConsumer(conv_node->GetId());
 
                 ir::Constant bias_constant;
-                bias_constant.data.resize(channels * sizeof(float), 0); // init bias to 0
+                bias_constant.data.Resize(channels * sizeof(float), 0); // init bias to 0
                 constants.emplace(conv_bias_edge->GetId(), bias_constant);
-                conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.data();
+                conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.GetData();
 
                 ir::Shape bias_shape;
                 bias_shape.data_type = DATATYPE_FLOAT32;

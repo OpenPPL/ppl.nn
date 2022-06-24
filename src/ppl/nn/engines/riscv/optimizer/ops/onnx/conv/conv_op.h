@@ -161,8 +161,8 @@ private:
                 return ppl::common::RC_SUCCESS;
             }
 
-            float* weight_data = (float*)weight_data_it->second.data.data();
-            int64_t weight_len = weight_data_it->second.data.size() / sizeof(float);
+            float* weight_data = (float*)weight_data_it->second.data.GetData();
+            int64_t weight_len = weight_data_it->second.data.GetSize() / sizeof(float);
             CvtGraphData<T>(weight_data, weight_data_cvt, weight_len);
 
             if (node->GetInputCount() == 3) {
@@ -171,8 +171,8 @@ private:
                     LOG(DEBUG) << "ConvOp constant weight not found, will use conv runtime.";
                     return ppl::common::RC_SUCCESS;
                 }
-                float* bias_data = (float*)bias_data_it->second.data.data();
-                int64_t bias_len = bias_data_it->second.data.size() / sizeof(float);
+                float* bias_data = (float*)bias_data_it->second.data.GetData();
+                int64_t bias_len = bias_data_it->second.data.GetSize() / sizeof(float);
                 if (bias_data != nullptr) {
                     CvtGraphData<T>(bias_data, bias_data_cvt, bias_len);
                 } else {

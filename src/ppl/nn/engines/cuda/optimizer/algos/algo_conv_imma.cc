@@ -268,7 +268,7 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
 
         ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
         status = ((CudaDataConverter*)options.opt_stage_device->GetDataConverter())
-                     ->ConvertFromHost(&temp_buffer, postshape, (*quants)[postedge_id], weight_iter->second.data.data(),
+                     ->ConvertFromHost(&temp_buffer, postshape, (*quants)[postedge_id], weight_iter->second.data.GetData(),
                                        preshape, (*quants)[preedge_id]);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << node->GetName() << " copy constant failed: " << GetRetCodeStr(status);
@@ -318,7 +318,7 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
 
         ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
         status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
-                                                                               bias_iter->second.data.data(), preshape);
+                                                                               bias_iter->second.data.GetData(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
             return status;

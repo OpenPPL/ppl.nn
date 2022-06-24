@@ -47,7 +47,7 @@ RetCode GemmOp::Init(const OptKernelOptions& options) {
     auto b_data_it = graph_data->constants.find(node->GetInput(1));
     const float* b_data = nullptr;
     if (b_data_it != graph_data->constants.end()) {
-        b_data = (const float*)b_data_it->second.data.data();
+        b_data = (const float*)b_data_it->second.data.GetData();
     }
 
     aux_param_.trans_a = param_->transA;

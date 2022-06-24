@@ -18,7 +18,6 @@
 #include "ppl/nn/engines/arm/kernels/onnx/constant_of_shape_kernel.h"
 #include "ppl/kernel/arm_server/common/memory.h"
 
-
 namespace ppl { namespace nn { namespace arm {
 
 ppl::common::RetCode ConstantOfShapeKernel::DoExecute(KernelExecContext* ctx) {
@@ -33,9 +32,8 @@ ppl::common::RetCode ConstantOfShapeKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_ARM_DEBUG_TRACE("isa: %u\n", GetISA());
 
     uint64_t output_datatype_size = ppl::common::GetSizeOfDataType(output->GetShape()->GetDataType());
-    return kernel::arm_server::memory_init(param_->data.data(), output_datatype_size,
-                                      output->GetShape()->GetElementsIncludingPadding(), output->GetBufferPtr());   
-
+    return kernel::arm_server::memory_init(param_->data.GetData(), output_datatype_size,
+                                           output->GetShape()->GetElementsIncludingPadding(), output->GetBufferPtr());
 }
 
 }}} // namespace ppl::nn::arm

@@ -117,7 +117,7 @@ static RetCode PackGraphInitializer(::onnx::GraphProto* pb_graph, const ir::Grap
         auto pb_tensor = pb_graph->add_initializer();
         pb_tensor->set_name(edge->GetName());
 
-        auto status = utils::PackTensorProto(constant_ref->second.data.data(), constant_ref->second.data.size(),
+        auto status = utils::PackTensorProto(constant_ref->second.data.GetData(), constant_ref->second.data.GetSize(),
                                              shape_ref->second.data_type, shape_ref->second.dims, pb_tensor);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "pack content of initializer[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);

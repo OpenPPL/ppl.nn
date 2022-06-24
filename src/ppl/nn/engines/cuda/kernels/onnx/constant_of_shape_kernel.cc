@@ -42,7 +42,7 @@ ppl::common::RetCode ConstantOfShapeKernel::DoExecute(KernelExecContext* ctx) {
     });
 
     auto output = ctx->GetOutput<TensorImpl>(0);
-    status = cuda_device->CopyFromHost(&tmp_buffer_desc, param_->data.data(), tmp_buffer_bytes);
+    status = cuda_device->CopyFromHost(&tmp_buffer_desc, param_->data.GetData(), tmp_buffer_bytes);
     if (status != ppl::common::RC_SUCCESS) {
         LOG(ERROR) << "copy data failed: " << ppl::common::GetRetCodeStr(status);
         return status;

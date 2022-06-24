@@ -294,8 +294,8 @@ bool IsReLU6(const ir::GraphTopo* graph_topo, const ir::GraphData* graph_data, c
         return false;
     }
 
-    float min_val = *((float*)min_constant_it->second.data.data());
-    float max_val = *((float*)max_constant_it->second.data.data());
+    float min_val = *((float*)min_constant_it->second.data.GetData());
+    float max_val = *((float*)max_constant_it->second.data.GetData());
     if (min_val != 0.0f && max_val != 6.0f) {
         return false;
     }

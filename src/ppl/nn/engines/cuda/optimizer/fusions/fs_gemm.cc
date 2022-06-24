@@ -103,11 +103,11 @@ const RetCode GemmFusion::FuseNode(ir::Node* node, bool reliable, const OptKerne
                 auto clip_param = new CudaClipParam();
                 auto min_iter = data->constants.find(nextnode->GetInput(1));
                 if (min_iter != data->constants.end()) {
-                    clip_param->min_value = *(float*)(min_iter->second.data.data());
+                    clip_param->min_value = *(float*)(min_iter->second.data.GetData());
                 }
                 auto max_iter = data->constants.find(nextnode->GetInput(2));
                 if (max_iter != data->constants.end()) {
-                    clip_param->max_value = *(float*)(max_iter->second.data.data());
+                    clip_param->max_value = *(float*)(max_iter->second.data.GetData());
                 }
                 param->extra_param.fuse_info.fuse_attrs.emplace_back((void*)clip_param);
             }

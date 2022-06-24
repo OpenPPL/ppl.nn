@@ -177,7 +177,7 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
         ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_temp_buffer, size, RC_OUT_OF_MEMORY)
         ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_input_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
         status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(
-            &filter_input_buffer, postshape, weight_iter->second.data.data(), preshape);
+            &filter_input_buffer, postshape, weight_iter->second.data.GetData(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << node->GetName() << " copy constant failed: " << GetRetCodeStr(status);
             return status;
@@ -226,7 +226,7 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
 
         ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.GetBytesIncludingPadding(), RC_OUT_OF_MEMORY)
         status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
-                                                                               bias_iter->second.data.data(), preshape);
+                                                                               bias_iter->second.data.GetData(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
             return status;
