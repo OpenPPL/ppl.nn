@@ -142,13 +142,22 @@ static inline uint64_t Align(uint64_t v, uint64_t alignment) {
 }
 
 RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, BufferInfo>* eid2info) {
-    uint64_t total_bytes = visitor.CalcTotalBytes(CUDA_DEFAULT_ALIGNMENT);
+    uint64_t total_bytes = 0;
+    auto status = visitor.ForEach([&total_bytes](const void*, uint64_t bytes) -> RetCode {
+        total_bytes += Align(bytes, CUDA_DEFAULT_ALIGNMENT);
+        return true;
+    });
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "calc total bytes of constant failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
     if (total_bytes == 0) {
         return RC_SUCCESS;
     }
 
     BufferDesc block;
-    auto status = reserved_data_device_.Realloc(total_bytes, &block);
+    status = reserved_data_device_.Realloc(total_bytes, &block);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "alloc [" << total_bytes << "] bytes failed: " << GetRetCodeStr(status);
         return status;

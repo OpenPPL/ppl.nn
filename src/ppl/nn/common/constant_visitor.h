@@ -27,8 +27,7 @@ namespace ppl { namespace nn {
 class ConstantVisitor {
 public:
     virtual ~ConstantVisitor() {}
-    /** @param alignment each constant should align to. MUST be power of 2 */
-    virtual uint64_t CalcTotalBytes(uint64_t alignment = 0) const = 0;
+    virtual ppl::common::RetCode ForEach(const std::function<ppl::common::RetCode(const void*, uint64_t)>&) const = 0;
     virtual ppl::common::RetCode ForEach(const std::function<ppl::common::RetCode(const ir::Edge*, const void*, uint64_t,
                                                                                   const TensorShape&)>&) const = 0;
 };

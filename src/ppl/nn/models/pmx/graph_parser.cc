@@ -141,23 +141,21 @@ static RetCode ParseGraphDataShapes(const GraphData* fb_data, map<edgeid_t, Tens
     return RC_SUCCESS;
 }
 
-static inline uint64_t Align(uint64_t v, uint64_t alignment) {
-    return (v + alignment - 1) & (~(alignment - 1));
-}
-
 class PmxConstantVisitor final : public ConstantVisitor {
 public:
     PmxConstantVisitor(const ir::GraphTopo* topo, const uint8_t* shared_data, const RuntimeGraphInfo* info,
                        const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Constant>>* fb_constants)
         : topo_(topo), shared_data_(shared_data), info_(info), fb_constants_(fb_constants) {}
 
-    uint64_t CalcTotalBytes(uint64_t alignment) const override {
-        uint64_t total_bytes = 0;
+    RetCode ForEach(const function<RetCode(const void*, uint64_t)>& f) const {
         for (auto y = fb_constants_->begin(); y != fb_constants_->end(); ++y) {
             auto fb_constant = *y;
-            total_bytes += Align(fb_constant->data_bytes(), alignment);
+            auto status = f(shared_data_ + fb_constant->data_offset(), fb_constant->data_bytes());
+            if (status != RC_SUCCESS) {
+                return status;
+            }
         }
-        return total_bytes;
+        return RC_SUCCESS;
     }
 
     RetCode ForEach(
