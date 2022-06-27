@@ -46,6 +46,7 @@ public:
                                     const std::string& tag_filter = "", const std::string& name_filter = "") const;
 
     ppl::common::RetCode Register(OptRule* rule);
+    ppl::common::RetCode Remove(const std::string& rule_name);
 
 private:
     std::vector<std::shared_ptr<OptRule>> rule_all_;
