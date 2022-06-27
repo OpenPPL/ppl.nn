@@ -101,6 +101,47 @@ CREATE_SOFTMAXSCORE_KERNEL_BOOL32(Mask2, blockIdx.x / (H * T) * T)
 CREATE_SOFTMAXSCORE_KERNEL_BOOL32(Mask3, blockIdx.x / (B * H) * T)
 
 
+#define CREATE_SOFTMAXSCORE_KERNEL_BOOL64(mask_type, buffer)                                            \
+    template <typename Tin, typename MaskT, typename Tout,                                              \
+                typename TCompute = float>                                                              \
+    __global__ void SoftmaxScoreKernel64##mask_type(                                                    \
+        const Tin* in, const MaskT* key_padding_mask, Tout* out,                                        \
+        const int B, const int H, const int T) {                                                        \
+            auto cur_in = in + blockIdx.x * T;                                                          \
+            auto cur_out = out + blockIdx.x * T;                                                        \
+            auto cur_mask = key_padding_mask + buffer;                                                  \
+            __shared__ TCompute sm[2];                                                                  \
+            TCompute log_sum = CudaLogZero<TCompute>();                                                 \
+            for (auto tid = threadIdx.x; tid < T; tid += blockDim.x) {                                  \
+                TCompute maskv = (TCompute) static_cast<float>(_Ldg(cur_mask + tid));                   \
+                log_sum =                                                                               \
+                        _LogAdd((TCompute)__ldg(cur_in + tid) * ((TCompute)1.0f - maskv) +              \
+                                CudaLogZero<TCompute>() * maskv, log_sum);                              \
+            }                                                                                           \
+            auto lane_id = threadIdx.x & 0x1f;                                                          \
+            auto wid = threadIdx.x >> 5;                                                                \
+            log_sum = WarpReduceLogAddSum(log_sum);                                                     \
+            if(lane_id == 0) {                                                                          \
+                sm[wid] = log_sum;                                                                      \
+            }                                                                                           \
+            __syncthreads();                                                                            \
+            if (lane_id == 0) {                                                                         \
+                log_sum = _LogAdd(sm[0], sm[1]);                                                        \
+            }                                                                                           \
+            __syncthreads();                                                                            \
+            log_sum = WARP_SHFL(log_sum, 0);                                                            \
+            for (auto tid = threadIdx.x; tid < T; tid += blockDim.x) {                                  \
+                TCompute maskv = (TCompute) static_cast<float>(_Ldg(cur_mask + tid));                   \
+                cur_out[tid] = (Tout)(_Exp((TCompute)__ldg(cur_in + tid) - log_sum) *                   \
+                                (TCompute)(1.0f - maskv));                                              \
+            }                                                                                           \
+        }
+CREATE_SOFTMAXSCORE_KERNEL_BOOL64(Mask0, blockIdx.x * T)
+CREATE_SOFTMAXSCORE_KERNEL_BOOL64(Mask1, blockIdx.x / H * T)
+CREATE_SOFTMAXSCORE_KERNEL_BOOL64(Mask2, blockIdx.x / (H * T) * T)
+CREATE_SOFTMAXSCORE_KERNEL_BOOL64(Mask3, blockIdx.x / (B * H) * T)
+
+
 
 
 template<typename Tin, typename Tout, typename TCompute = float>
@@ -118,6 +159,32 @@ __global__ void SoftmaxScoreKernel32(const Tin* in, Tout* out, const int T) {
     }
 }
 
+template<typename Tin, typename Tout, typename TCompute = float>
+__global__ void SoftmaxScoreKernel64(const Tin* in, Tout* out, const int T) {
+    auto cur_in = in + blockIdx.x * T;
+    auto cur_out = out + blockIdx.x * T;
+    __shared__ TCompute sm[2];
+    // reduce log sum
+    TCompute log_sum = CudaLogZero<TCompute>();
+    for(auto tid = threadIdx.x; tid < T; tid += blockDim.x) {
+        log_sum = _LogAdd((TCompute)__ldg(cur_in + tid), log_sum);
+    }
+    auto lane_id = threadIdx.x & 0x1f;
+    auto wid = threadIdx.x >> 5;
+    log_sum = WarpReduceLogAddSum(log_sum);
+    if(lane_id == 0) {
+        sm[wid] = log_sum;
+    }
+    __syncthreads();
+    if (lane_id == 0) {
+        log_sum = _LogAdd(sm[0], sm[1]);
+    }
+    __syncthreads();
+    log_sum = WARP_SHFL(log_sum, 0);
+    for(auto tid = threadIdx.x; tid < T; tid += blockDim.x) {
+        cur_out[tid] = _Exp((TCompute)__ldg(cur_in + tid) - log_sum);
+    }
+}
 
 /*
 par: 
@@ -137,24 +204,47 @@ ppl::common::RetCode PPLCUDAFastSoftmaxForwardImp(
 {
     dim3 grid(B * H * T, 1, 1);
     if (key_padding_mask != nullptr) {
-        dim3 block(32);
-        if(mask_type == 0) {
-            SoftmaxScoreKernel32Mask0<Tin, MaskT, Tout, float>
-                <<<grid, block, 0, stream>>>(input, key_padding_mask, output, B, H, T);
-        } else if(mask_type == 1) {
-            SoftmaxScoreKernel32Mask1<Tin, MaskT, Tout, float>
-                <<<grid, block, 0, stream>>>(input, key_padding_mask, output, B, H, T);
-        } else if(mask_type == 2) {
-            SoftmaxScoreKernel32Mask2<Tin, MaskT, Tout, float>
-                <<<grid, block, 0, stream>>>(input, key_padding_mask, output, B, H, T);
-        } else if(mask_type == 3) {
-            SoftmaxScoreKernel32Mask3<Tin, MaskT, Tout, float>
-                <<<grid, block, 0, stream>>>(input, key_padding_mask, output, B, H, T);
+        if(B * H * T < 512) {
+            dim3 block(32);
+            if(mask_type == 0) {
+                SoftmaxScoreKernel32Mask0<Tin, MaskT, Tout, float>
+                    <<<grid, block, 0, stream>>>(input, key_padding_mask, output, B, H, T);
+            } else if(mask_type == 1) {
+                SoftmaxScoreKernel32Mask1<Tin, MaskT, Tout, float>
+                    <<<grid, block, 0, stream>>>(input, key_padding_mask, output, B, H, T);
+            } else if(mask_type == 2) {
+                SoftmaxScoreKernel32Mask2<Tin, MaskT, Tout, float>
+                    <<<grid, block, 0, stream>>>(input, key_padding_mask, output, B, H, T);
+            } else if(mask_type == 3) {
+                SoftmaxScoreKernel32Mask3<Tin, MaskT, Tout, float>
+                    <<<grid, block, 0, stream>>>(input, key_padding_mask, output, B, H, T);
+            }
+        } else {
+            dim3 block(64);
+            if(mask_type == 0) {
+                SoftmaxScoreKernel64Mask0<Tin, MaskT, Tout, float>
+                    <<<grid, block, 0, stream>>>(input, key_padding_mask, output, B, H, T);
+            } else if(mask_type == 1) {
+                SoftmaxScoreKernel64Mask1<Tin, MaskT, Tout, float>
+                    <<<grid, block, 0, stream>>>(input, key_padding_mask, output, B, H, T);
+            } else if(mask_type == 2) {
+                SoftmaxScoreKernel64Mask2<Tin, MaskT, Tout, float>
+                    <<<grid, block, 0, stream>>>(input, key_padding_mask, output, B, H, T);
+            } else if(mask_type == 3) {
+                SoftmaxScoreKernel64Mask3<Tin, MaskT, Tout, float>
+                    <<<grid, block, 0, stream>>>(input, key_padding_mask, output, B, H, T);
+            }
         }
     } else {
-        dim3 block(32);
-        SoftmaxScoreKernel32<Tin, Tout, float>
-            <<<grid, block, 0, stream>>>(input, output, T);
+        if (B * H * T < 512) {
+            dim3 block(32);
+            SoftmaxScoreKernel32<Tin, Tout, float>
+                <<<grid, block, 0, stream>>>(input, output, T);
+        } else {
+            dim3 block(64);
+            SoftmaxScoreKernel64<Tin, Tout, float>
+                <<<grid, block, 0, stream>>>(input, output, T);
+        }
     }
     return ppl::common::RC_SUCCESS;
 }
@@ -177,9 +267,9 @@ ppl::common::RetCode PPLCUDAFastSoftmax(
     const void* key_padding_mask,
     const int mask_type) {
         if(output_shape->GetDataType() == 5)  {
-            return PPLCUDAFastSoftmaxForwardImp<half, bool, half>(stream, (const half*)input, (half*)output, (const bool*)key_padding_mask, mask_type, input_shape->GetDim(0), 1, input_shape->GetDim(1));
+            return PPLCUDAFastSoftmaxForwardImp<half, bool, half>(stream, (const half*)input, (half*)output, (const bool*)key_padding_mask, mask_type, input_shape->GetDim(0), input_shape->GetDim(1), input_shape->GetDim(2));
         } else if(output_shape->GetDataType() == 6) {
-            return PPLCUDAFastSoftmaxForwardImp<float, bool, float>(stream, (const float*)input, (float*)output, (const bool*)key_padding_mask, mask_type, input_shape->GetDim(0), 1, input_shape->GetDim(1));
+            return PPLCUDAFastSoftmaxForwardImp<float, bool, float>(stream, (const float*)input, (float*)output, (const bool*)key_padding_mask, mask_type, input_shape->GetDim(0), input_shape->GetDim(1), input_shape->GetDim(2));
         }
         return ppl::common::RC_UNSUPPORTED;
     }
