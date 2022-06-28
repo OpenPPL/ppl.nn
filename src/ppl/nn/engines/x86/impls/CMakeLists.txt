@@ -79,8 +79,8 @@ list(APPEND PPLKERNELX86_PUBLIC_INCLUDE_DIRECTORIES ${PROJECT_BINARY_DIR}/includ
 hpcc_populate_dep(pplcommon)
 list(APPEND PPLKERNELX86_LINK_LIBRARIES pplcommon_static)
 
-set(PPLNN_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../..)
-set(PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES ${PPLNN_SOURCE_DIR}/include ${PPLNN_SOURCE_DIR}/src)
+set(__PPLNN_SOURCE_DIR__ ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../..)
+set(PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES ${__PPLNN_SOURCE_DIR__}/include ${__PPLNN_SOURCE_DIR__}/src)
 
 add_library(pplkernelx86_static STATIC ${PPLKERNELX86_SRC})
 target_compile_features(pplkernelx86_static PRIVATE cxx_std_11)
@@ -103,7 +103,7 @@ endif()
 
 ################### Test ###################
 
-set(PPLNN_TOOLS_DIR ${PPLNN_SOURCE_DIR}/tools)
+set(PPLNN_TOOLS_DIR ${__PPLNN_SOURCE_DIR__}/tools)
 add_executable(test_conv2d test/test_conv2d.cpp ${PPLNN_TOOLS_DIR}/simple_flags.cc)
 target_include_directories(test_conv2d
     PUBLIC ${PPLKERNELX86_PUBLIC_INCLUDE_DIRECTORIES}
@@ -130,3 +130,5 @@ target_compile_options(test_pd_conv2d PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
 target_compile_definitions(test_pd_conv2d PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
 target_compile_features(test_pd_conv2d PRIVATE cxx_std_11)
 target_link_libraries(test_pd_conv2d PRIVATE pplkernelx86_static ${PPLKERNELX86_LINK_LIBRARIES})
+
+unset(__PPLNN_SOURCE_DIR__)

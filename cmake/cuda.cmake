@@ -20,5 +20,4 @@ list(APPEND PPLNN_SOURCES ${PPLNN_CUDA_SRC})
 add_subdirectory(src/ppl/nn/engines/cuda/impls)
 list(APPEND PPLNN_LINK_LIBRARIES pplkernelcuda_static)
 
-set(PPLNN_USE_CUDA ON)
 list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_USE_CUDA)

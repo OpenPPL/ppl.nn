@@ -78,8 +78,9 @@ file(GLOB CUDA_SRC ${CUDA_SRC} src/nn/depthwise/*.cu)
 add_library(pplkernelcuda_static STATIC ${CUDA_SRC})
 target_compile_features(pplkernelcuda_static PRIVATE cxx_std_11)
 
-set(PPLNN_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../..)
-set(PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES ${PPLNN_SOURCE_DIR}/include ${PPLNN_SOURCE_DIR}/src)
+set(__PPLNN_SOURCE_DIR__ ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../..)
+set(PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES ${__PPLNN_SOURCE_DIR__}/include ${__PPLNN_SOURCE_DIR__}/src)
+unset(__PPLNN_SOURCE_DIR__)
 
 target_include_directories(pplkernelcuda_static PUBLIC
     include
