@@ -26,8 +26,9 @@ endif()
 
 list(APPEND PPL_KERNEL_ARM_SERVER_LINK_LIBRARIES pplcommon_static)
 
-set(PPLNN_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../..)
-set(PPLNN_ARM_ENGINE_INCLUDE_DIRECTORIES ${PPLNN_SOURCE_DIR}/src/ ${PPLNN_SOURCE_DIR}/include/)
+set(__PPLNN_SOURCE_DIR__ ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../..)
+set(PPLNN_ARM_ENGINE_INCLUDE_DIRECTORIES ${__PPLNN_SOURCE_DIR__}/src/ ${__PPLNN_SOURCE_DIR__}/include/)
+unset(__PPLNN_SOURCE_DIR__)
 
 #### #### #### #### ####
 ### file globbing ######
