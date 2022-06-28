@@ -72,6 +72,21 @@ If you want to use specified CUDA toolkit version, please specify `CUDA_TOOLKIT_
 ./build.sh -DPPLNN_USE_CUDA=ON -DCUDA_TOOLKIT_ROOT_DIR=/path/to/cuda-toolkit-root-dir
 ```
 
+#### Cross Compiling for Arm on X86
+
+Using the following command:
+
+```bash
+CUDA_TOOLKIT_ROOT=/path/to/cuda/toolkit/root/dir ./build.sh -DPPLNN_USE_CUDA=ON -DPPLNN_TOOLCHAIN_DIR=/path/to/arm/toolchain/dir -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/aarch64-linux-gnu.cmake
+```
+
+Note that the `CUDA_TOOLKIT_ROOT` environment variable is required.
+
+You can also specify `CUDA_TOOLKIT_ROOT_DIR` without setting `CUDA_TOOLKIT_ROOT`, which will be set to `CUDA_TOOLKIT_ROOT_DIR` by ppl.nn:
+
+```bash
+./build.sh -DPPLNN_USE_CUDA=ON -DPPLNN_TOOLCHAIN_DIR=/path/to/arm/toolchain/dir -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/aarch64-linux-gnu.cmake -DCUDA_TOOLKIT_ROOT_DIR=/path/to/cuda/toolkit/root/dir
+```
 
 #### Windows
 
