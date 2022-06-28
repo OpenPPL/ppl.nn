@@ -45,7 +45,7 @@ if(NOT Git_FOUND)
     message(FATAL_ERROR "git is required.")
 endif()
 
-set(__HPCC_COMMIT__ 800a280b41228df99a3d585d27b3fd962e780414)
+set(__HPCC_COMMIT__ 635d33f4a911af2cac17f0542fe63318ab2e3dd1)
 
 if(PPLNN_DEP_HPCC_PKG)
     FetchContent_Declare(hpcc
@@ -88,7 +88,7 @@ set(PPLCOMMON_USE_AARCH64 ${PPLNN_USE_AARCH64})
 set(PPLCOMMON_USE_ARMV7 ${PPLNN_USE_ARMV7})
 set(PPLCOMMON_USE_CUDA ${PPLNN_USE_CUDA})
 
-set(__PPLCOMMON_COMMIT__ 3c0ceaa58b6077a7ba342608db58be437ad8e835)
+set(__PPLCOMMON_COMMIT__ f884749125b8870043b8c3c6bd4d038c7c657184)
 
 if(PPLNN_DEP_PPLCOMMON_PKG)
     hpcc_declare_pkg_dep(pplcommon
@@ -127,6 +127,7 @@ unset(__FLATBUFFERS_TAG__)
 
 # --------------------------------------------------------------------------- #
 
+set(protobuf_WITH_ZLIB OFF CACHE BOOL "")
 set(protobuf_BUILD_TESTS OFF CACHE BOOL "disable protobuf tests")
 set(protobuf_BUILD_PROTOC_BINARIES OFF CACHE BOOL "")
 
