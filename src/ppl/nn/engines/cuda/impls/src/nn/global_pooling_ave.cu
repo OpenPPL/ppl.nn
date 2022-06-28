@@ -88,8 +88,12 @@ __global__ void ppl_cukernel_pooling_ave_global_shuffle_int8(
     }
 
     // store output
-    if (threadIdx.x == 0)
-        output[bc] = round((float(res) / HW * in_scale) / out_scale);
+    if (threadIdx.x == 0) {
+        int64_t temp= round((float(res) / HW * in_scale) / out_scale);
+        if (temp > 127)         temp = 127;
+        else if (temp < -128)   temp = -128;
+        output[bc] = temp;
+    }
 }
 __global__ void ppl_cukernel_pooling_ave_global_shuffle_half(
     const half* input,
@@ -254,8 +258,13 @@ __global__ void ppl_cukernel_pooling_ave_global_shuffle_int8_NHWC(
         }
     }
     // store output
-    if (threadIdx.y == 0)
-        output[b_offset + c] = round((float(sum_buffer[threadIdx.y][threadIdx.x]) / HW * in_scale) / out_scale);
+    if (threadIdx.y == 0) {
+        int64_t temp = round((float(sum_buffer[threadIdx.y][threadIdx.x]) / HW * in_scale) / out_scale);
+        if (temp > 127)         temp = 127;
+        else if (temp < -128)   temp = -128;
+        output[b_offset + c] = temp;
+    }
+        
 #endif
 }
 
