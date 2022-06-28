@@ -82,6 +82,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/sequence_at_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/shape_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/sigmoid_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/onnx/sign_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/sin_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/slice_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/softmax_op.h"
@@ -214,6 +215,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<SequenceAtOp>("", "SequenceAt", 11, 16);
     RegisterOptKernelCreator<ShapeOp>("", "Shape", 1, 14);
     RegisterOptKernelCreator<SigmoidOp>("", "Sigmoid", 6, 16);
+    RegisterOptKernelCreator<SignOp>("", "Sign", 9, 16);
     RegisterOptKernelCreator<SinOp>("", "Sin", 7, 16);
     RegisterOptKernelCreator<SliceOp>("", "Slice", 1, 16);
     RegisterOptKernelCreator<SoftmaxOp>("", "Softmax", 1, 16);
