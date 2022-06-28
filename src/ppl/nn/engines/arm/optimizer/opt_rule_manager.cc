@@ -17,6 +17,7 @@
 
 #include "ppl/nn/engines/arm/optimizer/opt_rule_manager.h"
 
+#include <iterator>
 #include "ppl/nn/engines/arm/optimizer/rules/fuse_channel_shuffle.h"
 #include "ppl/nn/engines/arm/optimizer/rules/fuse_conv_activation.h"
 #include "ppl/nn/engines/arm/optimizer/rules/fuse_conv_eltwise.h"
@@ -86,15 +87,37 @@ ppl::common::RetCode OptRuleManager::ApplyRules(const OptKernelOptions& options,
 }
 
 ppl::common::RetCode OptRuleManager::Register(OptRule* rule) {
+    for (auto r : rule_all_) {
+        if (rule->GetName() == r->GetName()) {
+            LOG(ERROR) << "Failed to add OptRule " << rule->GetName() << ". Already existed.";
+            return RC_EXISTS;
+        }
+    }
     rule_all_.emplace_back(rule);
     return RC_SUCCESS;
 }
 
+ppl::common::RetCode OptRuleManager::Remove(const std::string& rule_name) {
+    bool is_found = false;
+    for (auto it = rule_all_.begin(); it != rule_all_.end(); std::advance(it, 1)) {
+        if ((*it)->GetName() == rule_name) {
+            rule_all_.erase(it);
+            is_found = true;
+            break;
+        }
+    }
+    if (!is_found) {
+        LOG(WARNING) << "Cannot find OptRule " << rule_name << ".";
+    }
+    return RC_SUCCESS;
+}
+
 OptRuleManager::OptRuleManager() {
-    rule_all_.emplace_back(new FuseChannelShuffleRule);
-    rule_all_.emplace_back(new FuseConvActivationRule);
-    rule_all_.emplace_back(new FuseConvEltwiseRule);
-    rule_all_.emplace_back(new FuseBatchNormalizationReLURule);
+    Register(new FuseChannelShuffleRule);
+    Register(new FuseConvActivationRule);
+    Register(new FuseConvEltwiseRule);
+    Register(new FuseArithmeticReLURule);
+    Register(new FuseBatchNormalizationReLURule);
 }
 
 OptRuleManager::~OptRuleManager() {}
