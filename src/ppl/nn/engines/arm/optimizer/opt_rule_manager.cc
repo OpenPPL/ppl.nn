@@ -97,10 +97,9 @@ ppl::common::RetCode OptRuleManager::Register(OptRule* rule) {
     return RC_SUCCESS;
 }
 
-ppl::common::RetCode OptRuleManager::Remove(const std::string &rule_name) {
+ppl::common::RetCode OptRuleManager::Remove(const std::string& rule_name) {
     bool is_found = false;
-    for (auto it = rule_all_.begin(); it != rule_all_.end(); std::advance(it, 1))
-    {
+    for (auto it = rule_all_.begin(); it != rule_all_.end(); std::advance(it, 1)) {
         if ((*it)->GetName() == rule_name) {
             rule_all_.erase(it);
             is_found = true;
