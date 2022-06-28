@@ -347,6 +347,14 @@ static inline __m128 _sse_sin_ps(const __m128 __x) {
     return y;
 }
 
+static inline __m128 _sse_sign_ps(__m128 value)
+{
+    const __m128 zero = _mm_setzero_ps();
+    __m128 positives = _mm_and_ps(_mm_cmpgt_ps(value, zero), _mm_set1_ps(1.0f));
+    __m128 negatives = _mm_and_ps(_mm_cmplt_ps(value, zero), _mm_set1_ps(-1.0f));
+    return _mm_or_ps(positives, negatives);
+}
+
 }}}; // namespace ppl::kernel::x86
 
 #endif
