@@ -66,7 +66,11 @@ if(PPLNN_ENABLE_PMX_MODEL)
     list(APPEND PPLNN_PYTHON_API_SRC ${PPLNN_PYTHON_PMX_SRC})
 endif()
 
-add_library(pypplnn_shared SHARED ${PPLNN_PYTHON_API_SRC})
+if(NOT PPLNN_PYTHON_API_EXTERNAL_SOURCES)
+    set(PPLNN_PYTHON_API_EXTERNAL_SOURCES py_dummy_load_resources.cc)
+endif()
+
+add_library(pypplnn_shared SHARED ${PPLNN_PYTHON_API_SRC} ${PPLNN_PYTHON_API_EXTERNAL_SOURCES})
 target_link_libraries(pypplnn_shared PUBLIC pplnn_static ${PYTHON3_LIBRARIES})
 target_include_directories(pypplnn_shared PUBLIC
     ${PROJECT_SOURCE_DIR}/include
