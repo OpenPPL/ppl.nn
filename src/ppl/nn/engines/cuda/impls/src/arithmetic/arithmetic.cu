@@ -478,6 +478,44 @@ void ppl_arithmetic_prepare_strides_nhwc(
     }
 }
 
+static void calculate_nhwc_stride(uint32_t *strides,
+    const ppl::nn::TensorShape *tensor_shape, int max_dim_count, int packed_channel) {
+    if (tensor_shape->IsScalar()) {
+        for(int i = 0; i < max_dim_count; ++i) strides[i] = 0;
+        return;
+    }
+    int dim_count = tensor_shape->GetDimCount();
+    if (dim_count == 1) {
+        for(int i = 0; i < max_dim_count; ++i) strides[i] = 0;
+        strides[max_dim_count - 1] = 1;
+        return;
+    }
+    int chl_dim = tensor_shape->GetDim(1);
+    strides[1] = 1; // chl stride
+    
+    int acc_stride = (chl_dim + packed_channel - 1) / packed_channel * packed_channel;
+    for(int i = max_dim_count - 1; i >= 0; --i) {
+        if (i == 1) continue;
+        strides[i] = acc_stride;
+        acc_stride *= tensor_shape->GetDim(i);
+    }
+}
+
+void ppl_arithmetic_prepare_strides_limit_nhwc(
+    const ppl::nn::TensorShape *tensor_shape0,
+    const ppl::nn::TensorShape *tensor_shape1,
+    const ppl::nn::TensorShape *tensor_shape_out,
+    const int packed_channel,
+    uint32_t *stride_in0,
+    uint32_t *stride_in1,
+    uint32_t *stride_out)
+{
+    int max_dim_count = tensor_shape_out->GetDimCount();
+    calculate_nhwc_stride(stride_in0, tensor_shape0, max_dim_count, packed_channel);
+    calculate_nhwc_stride(stride_in1, tensor_shape1, max_dim_count, packed_channel);
+    calculate_nhwc_stride(stride_out, tensor_shape_out, max_dim_count, packed_channel);
+}
+
 #define MAXDIMENSIONS 7
 
 struct ArithmeticParam {
@@ -547,6 +585,32 @@ __global__ void ppl_cukernel_arithmetic(
     }
     
     output[out_index] = ppl_arithmetic_scalar<op_type, T>(input0[offset0], input1[offset1]);
+}
+
+template<ArithmeticOpType op_type, typename T>
+__global__ void ppl_cukernel_arithmetic_limit_nhwc(
+    const uint64_t num_elems,
+    const int dim_count, 
+    ArithmeticParam param_ndarray,
+    ArithmeticParam param_nhwc,
+    const T *input0,
+    const T* input1,
+    T *output) {
+    uint64_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index >= num_elems) return;
+
+    uint64_t offset0 = 0;
+    uint64_t offset1 = 0;
+    uint64_t out_offset = 0;
+    for (int i = 0; i < dim_count; i++) {
+        uint64_t dim_off = index / param_ndarray.stride_out[i];
+        offset0 += dim_off * param_nhwc.stride_in0[i];
+        offset1 += dim_off * param_nhwc.stride_in1[i];
+        out_offset += dim_off * param_nhwc.stride_out[i];
+        index = index % param_ndarray.stride_out[i]; 
+    }
+    
+    output[out_offset] = ppl_arithmetic_scalar<op_type, T>(input0[offset0], input1[offset1]);
 }
 
 template<ArithmeticOpType op_type, typename T>
@@ -944,6 +1008,39 @@ ppl::common::RetCode PPLCUDAArithMetic##OPTYPE##ForwardImp( \
     } \
 }
 
+template<ArithmeticOpType op_type, typename T>
+ppl::common::RetCode PPLCUDAArithMeticForwardImpLimitNhwc(
+    cudaStream_t stream,
+    const ppl::nn::TensorShape* input_shape0,
+    const T *input0,
+    const ppl::nn::TensorShape* input_shape1,
+    const T *input1,
+    const ppl::nn::TensorShape* output_shape,
+    T *output) {
+    uint64_t num_elems = output_shape->CalcElementsExcludingPadding(); // only effective value calculated
+    int dim_count = output_shape->GetDimCount();
+    int block_size = 256;
+    uint64_t grid_size = (num_elems + block_size - 1) / block_size;
+    ArithmeticParam param_ndarray, param_nhwc;
+    int packed_channel = 1;
+    ppl_arithmetic_prepare_strides(input_shape0, input_shape1,
+        output_shape, packed_channel, param_ndarray.stride_in0, param_ndarray.stride_in1, param_ndarray.stride_out);
+    packed_channel = 8;
+    ppl_arithmetic_prepare_strides_limit_nhwc(input_shape0, input_shape1,
+        output_shape, packed_channel, param_nhwc.stride_in0, param_nhwc.stride_in1, param_nhwc.stride_out);
+    
+    int axis = 0; bool bidirectional = false;
+    int num_broadcast_dims = ppl_get_num_broadcast_dims(input_shape0, input_shape1, axis, bidirectional);
+    if (!bidirectional) {
+        ppl_cukernel_arithmetic_limit_nhwc<op_type, T><<<grid_size, block_size, 0,
+                stream>>>(num_elems, dim_count, param_ndarray, param_nhwc, (const T*)input0, (const T*)input1, (T*)output);
+    } else {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
+    return ppl::common::RC_SUCCESS;
+}
+
 #define INSTANT_LIMNHWC8(OPTYPE) \
 ppl::common::RetCode PPLCUDAArithMetic##OPTYPE##ForwardImp( \
     cudaStream_t stream, \
@@ -964,11 +1061,28 @@ ppl::common::RetCode PPLCUDAArithMetic##OPTYPE##ForwardImp( \
     ppl::nn::TensorShape* output_shape = &output_shape_obj; \
     if (input_shape0->GetDimCount() == input_shape1->GetDimCount() && input_shape0->GetDimCount() > 3) { \
         ppl_refine_tensor_shape(input_shape0, input_shape1, output_shape); } \
-    if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8) { \
-        if (input_shape0->GetDimCount() >= 2 && (input_shape0->GetDim(1) & 0x7)) \
+    if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8 && \
+        ((input_shape0->GetDimCount() >= 2 && (input_shape0->GetDim(1) & 0x7)) || \
+        (input_shape1->GetDimCount() >= 2 && (input_shape1->GetDim(1) & 0x7)))) { \
+        if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) { \
+            return PPLCUDAArithMeticForwardImpLimitNhwc<Arithmetic_##OPTYPE, half>(stream, \
+                input_shape0, (const half*)input0, input_shape1, \
+                (const half*)input1, output_shape, (half*)output); \
+        } else if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) { \
+            return PPLCUDAArithMeticForwardImpLimitNhwc<Arithmetic_##OPTYPE, float>(stream, \
+                input_shape0, (const float*)input0, input_shape1, \
+                (const float*)input1, output_shape, (float*)output); \
+        } else if (output_shape->GetDataType() == ppl::common::DATATYPE_INT64) { \
+            return PPLCUDAArithMeticForwardImpLimitNhwc<Arithmetic_##OPTYPE, int64_t>(stream, \
+                input_shape0, (const int64_t*)input0, input_shape1, \
+                (const int64_t*)input1, output_shape, (int64_t*)output); \
+        } else if(output_shape->GetDataType() == ppl::common::DATATYPE_INT32) { \
+            return PPLCUDAArithMeticForwardImpLimitNhwc<Arithmetic_##OPTYPE, int32_t>(stream, \
+                input_shape0, (const int32_t*)input0, input_shape1, \
+                (const int32_t*)input1, output_shape, (int32_t*)output); \
+        } else { \
             return ppl::common::RC_UNSUPPORTED; \
-        if (input_shape1->GetDimCount() >= 2 && (input_shape1->GetDim(1) & 0x7)) \
-            return ppl::common::RC_UNSUPPORTED; \
+        } \
     } \
     if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) { \
         return PPLCUDAArithMeticForwardImp<Arithmetic_##OPTYPE, half>(stream, \
