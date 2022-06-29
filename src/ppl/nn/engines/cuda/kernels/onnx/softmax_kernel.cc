@@ -49,6 +49,13 @@ ppl::common::RetCode SoftmaxKernel::DoExecute(KernelExecContext* ctx) {
             GetCudaDevice()->FreeTmpBuffer(&tmp_buffer_desc);
         });
         auto tmp_buffer = tmp_buffer_desc.addr;
+      //TODO: add softmax opset > 12
+        auto version =  GetNode()->GetType().version;
+
+        if (version > 12){
+          LOG(DEBUG) << "TOOD: add softmax opset >12" ;
+        }
+ 
         status = PPLCUDASoftmaxForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(),
                                         output->GetBufferPtr(), tmp_buffer, param_->axis);
         return status;
