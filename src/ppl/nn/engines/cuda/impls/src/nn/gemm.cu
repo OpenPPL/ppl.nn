@@ -376,11 +376,15 @@ double PPLCUDAGemmJITSelectKernel(
         params.push_back(algo_param);
     }
 
-    int index = 0;
-    std::vector<const char *> compile_params;
-    elapsed = AlgoForwardTime(stream, knames, total_source, index, compile_params, device_id, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, fuse_param, workspace);
+    if (params.size() > 0) {
+        int index = 0;
+        std::vector<const char *> compile_params;
+        elapsed = AlgoForwardTime(stream, knames, total_source, index, compile_params, device_id, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, fuse_param, workspace);
 
-    algo_param = params[index];
+        algo_param = params[index];
+    } else {
+        algo_param = pre_algo_param;
+    }
 #endif
     return elapsed;
 }
