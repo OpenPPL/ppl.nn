@@ -39,7 +39,11 @@ if(PPLNN_ENABLE_PMX_MODEL)
     list(APPEND PPLNN_LUA_API_SRC ${PPLNN_LUA_PMX_SRC})
 endif()
 
-add_library(luapplnn_shared SHARED ${PPLNN_LUA_API_SRC})
+if(NOT PPLNN_LUA_API_EXTERNAL_SOURCES)
+    set(PPLNN_LUA_API_EXTERNAL_SOURCES lua_dummy_load_resources.cc)
+endif()
+
+add_library(luapplnn_shared SHARED ${PPLNN_LUA_API_SRC} ${PPLNN_LUA_API_EXTERNAL_SOURCES})
 target_link_libraries(luapplnn_shared PUBLIC pplnn_static luacpp_static)
 target_include_directories(luapplnn_shared PUBLIC
     ${PROJECT_SOURCE_DIR}/include)
