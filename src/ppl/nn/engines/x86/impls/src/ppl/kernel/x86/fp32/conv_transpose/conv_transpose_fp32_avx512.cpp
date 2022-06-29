@@ -89,7 +89,7 @@ ppl::common::RetCode conv_transpose_ndarray_fp32_avx512(
             auto ret = gemm_fp32_avx512(
                 l_flt, l_src, l_bias, nullptr,
                 gemm_m_type::TRANS, gemm_m_type::NOTRANS,
-                gemm_with_bias ? gemm_v_type::EMPTY : gemm_v_type::COL_VEC,
+                gemm_with_bias ? gemm_v_type::COL_VEC : gemm_v_type::EMPTY,
                 gemm_m_type::EMPTY,
                 M, N, K, lda, ldb, ldout, 0,
                 1.0, 0.0, 1.0, 0.0, gemm_post::NONE, l_col);
