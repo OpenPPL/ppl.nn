@@ -293,7 +293,7 @@ __global__ void nhwuvc2nhwc(int4 *output, const int4 *gemm_output,
     int iw_id = tid / channel_v4 / kernel_v / kernel_u % input_width;
     int ih_id = tid / channel_v4 / kernel_v / kernel_u / input_width;// % input_height;
     int n_id  = blockIdx.y;
-    int in_off = n_id * input_height * out_width * channel_v4 +
+    int in_off = n_id * input_height * input_width * channel_v4 * stride_h * stride_w +
                  tid;
     if (ih_id >= input_height)  return;
     
@@ -348,7 +348,7 @@ __global__ void nhwuvc2nhwc<0>(int4 *output, const int4 *gemm_output,
     int iw_id = tid / channel_v2 / kernel_v / kernel_u % input_width;
     int ih_id = tid / channel_v2 / kernel_v / kernel_u / input_width;// % input_height;
     int n_id  = blockIdx.y;
-    int in_off = n_id * input_height * out_width * channel_v2 +
+    int in_off = n_id * input_height * input_width * channel_v4 * stride_h * stride_w +
                  tid;
     if (ih_id >= input_height)  return;
     
