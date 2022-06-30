@@ -108,6 +108,7 @@ bool FastTransposeSupport2(
         output_shape->GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY) {
         return false;
     }
+    fast_param->reset();
     int num_dims = input_shape->GetDimCount();
     for (int i = 0; i < num_dims; i++) {
         if (param.perm[i] == i) {
