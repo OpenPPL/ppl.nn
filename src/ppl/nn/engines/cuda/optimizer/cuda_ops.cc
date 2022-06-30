@@ -214,7 +214,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<SigmoidOp>("", "Sigmoid", 6, 12);
     RegisterOptKernelCreator<SinOp>("", "Sin", 1, 16);
     RegisterOptKernelCreator<SliceOp>("", "Slice", 1, 16);
-    RegisterOptKernelCreator<SoftmaxOp>("", "Softmax", 1, 12);
+    RegisterOptKernelCreator<SoftmaxOp>("", "Softmax", 1, 16);
     RegisterOptKernelCreator<SplitOp>("", "Split", 2, 12);
     RegisterOptKernelCreator<SplitToSequenceOp>("", "SplitToSequence", 11, 16);
     RegisterOptKernelCreator<SqrtOp>("", "Sqrt", 6, 12);
