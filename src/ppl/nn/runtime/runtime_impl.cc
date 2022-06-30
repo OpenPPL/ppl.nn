@@ -386,8 +386,13 @@ RetCode RuntimeImpl::SetProfilingFlag(RuntimeImpl* rt, va_list args) {
 #endif
 }
 
+RetCode RuntimeImpl::InferShapes(RuntimeImpl* rt, va_list) {
+    return rt->sched_->InferShapes();
+}
+
 RuntimeImpl::ConfHandlerFunc RuntimeImpl::conf_handlers_[] = {
     RuntimeImpl::SetProfilingFlag,
+    RuntimeImpl::InferShapes,
 };
 
 RetCode RuntimeImpl::Configure(uint32_t option, ...) {

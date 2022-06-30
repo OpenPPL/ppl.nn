@@ -61,6 +61,9 @@ public:
         return device_;
     }
 
+    /** @brief infer output shapes '*/
+    virtual ppl::common::RetCode Reshape(InputOutputInfo*) const = 0;
+
     /**
        @brief evaluate this op.
        @param ctx contexts needed during execution

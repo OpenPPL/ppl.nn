@@ -28,6 +28,9 @@ public:
     DemoKernel(const ir::Node* node) : KernelImpl(node) {}
     DemoKernel(DemoKernel&&) = default;
 
+    ppl::common::RetCode Reshape(InputOutputInfo*) const override {
+        return ppl::common::RC_UNSUPPORTED;
+    }
     ppl::common::RetCode Execute(KernelExecContext* ctx) override;
 };
 

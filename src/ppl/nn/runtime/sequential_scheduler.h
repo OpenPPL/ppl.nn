@@ -26,14 +26,19 @@ namespace ppl { namespace nn {
 
 class SequentialScheduler final : public Scheduler {
 public:
+    SequentialScheduler();
     ppl::common::RetCode Init(const ir::GraphTopo* topo, const RuntimeAuxInfo* aux_info,
                               RuntimeGraphResource* g) override;
+    ppl::common::RetCode InferShapes() override;
     ppl::common::RetCode Run(Profiler*) override;
 
 private:
     const ir::GraphTopo* topo_;
     const RuntimeAuxInfo* aux_info_;
     RuntimeGraphResource* graph_;
+
+    std::function<EdgeObject*(edgeid_t, uint32_t)> acquire_object_func_;
+    std::function<ppl::common::RetCode(EdgeObject*, nodeid_t)> release_object_func_;
 
     /** used to accelerlate tensor allocations */
     ppl::common::ObjectPool<TensorImpl> tensor_pool_;

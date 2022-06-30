@@ -28,6 +28,7 @@
 #include "ppl/nn/runtime/runtime_internal_conf.h"
 #include "ppl/nn/runtime/scheduler.h"
 #include "ppl/nn/runtime/profiler.h"
+#include "ppl/nn/runtime/options.h"
 
 namespace ppl { namespace nn {
 
@@ -116,6 +117,7 @@ private:
       defined as member functions can avoid exporting unnecessary APIs
     */
     static ppl::common::RetCode SetProfilingFlag(RuntimeImpl*, va_list);
+    static ppl::common::RetCode InferShapes(RuntimeImpl*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(RuntimeImpl*, va_list);
     static ConfHandlerFunc conf_handlers_[RUNTIME_CONF_MAX];

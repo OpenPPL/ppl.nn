@@ -38,8 +38,8 @@ public:
 
     ppl::common::RetCode Execute(KernelExecContext*) override final;
 
-    ppl::common::RetCode Reshape(KernelExecContext* ctx) const {
-        return reshape_func_(ctx);
+    ppl::common::RetCode Reshape(InputOutputInfo* info) const override final {
+        return reshape_func_(info);
     }
 
     void SetReshapeFunc(const std::function<ppl::common::RetCode(InputOutputInfo*)>& f) {
