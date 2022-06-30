@@ -15,21 +15,26 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_RUNTIME_SCHEDULER_H_
-#define _ST_HPC_PPL_NN_RUNTIME_SCHEDULER_H_
-
-#include "ppl/common/retcode.h"
-#include "ppl/nn/runtime/runtime_graph_resource.h"
-#include "ppl/nn/runtime/profiler.h"
+#ifndef _ST_HPC_PPL_NN_RUNTIME_OPTIONS_H_
+#define _ST_HPC_PPL_NN_RUNTIME_OPTIONS_H_
 
 namespace ppl { namespace nn {
 
-class Scheduler {
-public:
-    virtual ~Scheduler() {}
-    virtual ppl::common::RetCode Init(const ir::GraphTopo*, const RuntimeAuxInfo*, RuntimeGraphResource*) = 0;
-    virtual ppl::common::RetCode InferShapes() = 0;
-    virtual ppl::common::RetCode Run(Profiler*) = 0;
+/** options for Runtime::Configure() */
+enum {
+    /**
+       @brief args: true/false.
+       @note this option may cause performance loss
+    */
+    RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG = 0,
+
+    /**
+       @brief infer shapes before running
+       @note input shapes MUST be set first
+    */
+    RUNTIME_CONF_INFER_SHAPES,
+
+    RUNTIME_CONF_MAX,
 };
 
 }} // namespace ppl::nn

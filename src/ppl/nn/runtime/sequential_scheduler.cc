@@ -27,15 +27,8 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn {
 
-RetCode SequentialScheduler::Init(const ir::GraphTopo* topo, const RuntimeAuxInfo* aux_info, RuntimeGraphResource* g) {
-    graph_ = g;
-    topo_ = topo;
-    aux_info_ = aux_info;
-    return RC_SUCCESS;
-}
-
-RetCode SequentialScheduler::Run(Profiler* profiler) {
-    auto acquire_object_func = [this](edgeid_t eid, uint32_t etype) -> EdgeObject* {
+SequentialScheduler::SequentialScheduler() {
+    acquire_object_func_ = [this](edgeid_t eid, uint32_t etype) -> EdgeObject* {
         if (eid >= graph_->edgeid2object.size()) {
             return nullptr;
         }
@@ -65,7 +58,7 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
         return object;
     };
 
-    auto release_object_func = [this](EdgeObject* object, nodeid_t user) -> RetCode {
+    release_object_func_ = [this](EdgeObject* object, nodeid_t user) -> RetCode {
         auto eid = object->GetEdge()->GetId();
         if (aux_info_->edge_last_consumer[eid] == user) {
             auto obj = graph_->edgeid2object[eid];
@@ -91,7 +84,34 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
         }
         return RC_SUCCESS;
     };
+}
 
+RetCode SequentialScheduler::Init(const ir::GraphTopo* topo, const RuntimeAuxInfo* aux_info, RuntimeGraphResource* g) {
+    graph_ = g;
+    topo_ = topo;
+    aux_info_ = aux_info;
+    return RC_SUCCESS;
+}
+
+RetCode SequentialScheduler::InferShapes() {
+    InputOutputInfo info;
+    info.SetAcquireFunc(acquire_object_func_);
+
+    for (auto x = aux_info_->sorted_nodes.begin(); x != aux_info_->sorted_nodes.end(); ++x) {
+        auto kernel = graph_->nodeid2kernel[*x].get();
+        info.SetNode(kernel->GetNode());
+        auto status = kernel->Reshape(&info);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "infer output shapes of kernel[" << kernel->GetNode()->GetName()
+                       << "] failed: " << GetRetCodeStr(status);
+            return status;
+        }
+    }
+
+    return RC_SUCCESS;
+}
+
+RetCode SequentialScheduler::Run(Profiler* profiler) {
 #ifndef NDEBUG
     set<edgeid_t> edges_before;
     for (uint32_t i = 0; i < graph_->edgeid2object.size(); ++i) {
@@ -102,7 +122,7 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
 #endif
 
     KernelExecContext ctx;
-    ctx.SetAcquireFunc(acquire_object_func);
+    ctx.SetAcquireFunc(acquire_object_func_);
     ctx.SetProfilingFlag((profiler != nullptr));
     ctx.SetEdgeLastConsumerList(&aux_info_->edge_last_consumer);
 
@@ -110,7 +130,7 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
         auto kernel = graph_->nodeid2kernel[*x].get();
         ctx.SetNode(kernel->GetNode());
 
-        auto status = utils::ExecuteKernel(kernel, &ctx, release_object_func, profiler);
+        auto status = utils::ExecuteKernel(kernel, &ctx, release_object_func_, profiler);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "execute kernel[" << kernel->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;

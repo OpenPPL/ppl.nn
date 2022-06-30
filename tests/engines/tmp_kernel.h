@@ -23,6 +23,9 @@ namespace ppl { namespace nn { namespace test {
 class TmpKernelOne final : public KernelImpl {
 public:
     TmpKernelOne(const ir::Node* node) : KernelImpl(node) {}
+    ppl::common::RetCode Reshape(InputOutputInfo*) const override {
+        return ppl::common::RC_UNSUPPORTED;
+    }
     ppl::common::RetCode Execute(KernelExecContext*) override {
         return ppl::common::RC_SUCCESS;
     };
@@ -31,6 +34,9 @@ public:
 class TmpKernelTwo final : public KernelImpl {
 public:
     TmpKernelTwo(const ir::Node* node) : KernelImpl(node) {}
+    ppl::common::RetCode Reshape(InputOutputInfo*) const override {
+        return ppl::common::RC_UNSUPPORTED;
+    }
     ppl::common::RetCode Execute(KernelExecContext*) override {
         return ppl::common::RC_SUCCESS;
     };

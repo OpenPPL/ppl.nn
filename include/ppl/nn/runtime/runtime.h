@@ -26,17 +26,6 @@
 
 namespace ppl { namespace nn {
 
-/** options for Runtime::Configure() */
-enum {
-    /**
-       @brief args: true/false.
-       @note this option may cause performance loss
-    */
-    RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG = 0,
-
-    RUNTIME_CONF_MAX,
-};
-
 /**
    @class Runtime
    @brief runs a model
@@ -46,7 +35,7 @@ public:
     virtual ~Runtime() {}
 
     /**
-       @brief set various runtime options defined in `runtime_options.h`.
+       @brief set various runtime options defined in `options.h`.
        parameters vary depending on the first parameter `option`.
     */
     virtual ppl::common::RetCode Configure(uint32_t option, ...) = 0;
@@ -77,7 +66,7 @@ public:
     virtual Tensor* GetOutputTensor(uint32_t idx) const = 0;
 
     /**
-       @note the specified tensor(except for input/output/constant tensors) MUST be reserved first (usually by calling
+       @note the specified tensor(except for input/output tensors) MUST be reserved first (usually by calling
        RuntimeBuilder::Configure). returns nullptr otherwise.
     */
     virtual Tensor* GetTensorByName(const char*) const = 0;

@@ -34,6 +34,10 @@ public:
         return DoExecute(ctx);
     }
 
+    ppl::common::RetCode Reshape(InputOutputInfo*) const override final {
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
 protected:
     virtual ppl::common::RetCode DoExecute(KernelExecContext*) = 0;
 

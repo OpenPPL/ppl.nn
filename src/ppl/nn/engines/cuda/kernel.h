@@ -48,8 +48,8 @@ public:
         reshape_func_ = f;
     }
 
-    ppl::common::RetCode Reshape(KernelExecContext* ctx) const {
-        return reshape_func_(ctx);
+    ppl::common::RetCode Reshape(InputOutputInfo* info) const override final {
+        return reshape_func_(info);
     }
 
     ppl::common::RetCode Execute(KernelExecContext*) override final;
