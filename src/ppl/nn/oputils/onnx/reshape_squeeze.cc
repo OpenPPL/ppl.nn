@@ -51,7 +51,7 @@ RetCode ReshapeSqueeze(InputOutputInfo* info, const ir::Attr* arg) {
         }
         for (uint32_t i = 0; i < param->axes.size(); i++) {
             if (param->axes[i] >= (int32_t)input.GetDimCount() || param->axes[i] < -(int32_t)input.GetDimCount()) {
-                LOG(DEBUG) << "ERROR: axes[" << i << "] is out of range[" << -input.GetDimCount() << ", "
+                LOG(DEBUG) << "ERROR: axes[" << i << "] is out of range[" << -(int)input.GetDimCount() << ", "
                            << input.GetDimCount() << "].";
                 return RC_INVALID_VALUE;
             }

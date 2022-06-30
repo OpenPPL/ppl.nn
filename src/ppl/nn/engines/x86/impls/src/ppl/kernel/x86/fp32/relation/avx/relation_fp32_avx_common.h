@@ -111,12 +111,12 @@ ppl::common::RetCode relation_eltwise_binary_op_fp32_avx(
     const float *src1,
     uint8_t *dst)
 {
-    const uint64_t simd_w      = 8;
-    const uint64_t unroll_len  = simd_w * 4;
-    const uint64_t length = dst_shape->CalcElementsIncludingPadding();
-    const uint64_t unroll_body = round(length, unroll_len);
+    const int64_t simd_w      = 8;
+    const int64_t unroll_len  = simd_w * 4;
+    const int64_t length      = dst_shape->CalcElementsIncludingPadding();
+    const int64_t unroll_body = round(length, unroll_len);
     PRAGMA_OMP_PARALLEL_FOR()
-    for (uint64_t i = 0; i < unroll_body; i += unroll_len) {
+    for (int64_t i = 0; i < unroll_body; i += unroll_len) {
         __m256 mm0 = _mm256_loadu_ps(src0 + i + 0 * simd_w);
         __m256 mm1 = _mm256_loadu_ps(src0 + i + 1 * simd_w);
         __m256 mm2 = _mm256_loadu_ps(src0 + i + 2 * simd_w);
@@ -127,7 +127,7 @@ ppl::common::RetCode relation_eltwise_binary_op_fp32_avx(
         mm3        = relation_vector_kernel_fp32_avx<_op>(mm3, _mm256_loadu_ps(src1 + i + 3 * simd_w));
         PACK_4UINT32X8_TO_UINT32X32_AVX(mm0, mm1, mm2, mm3, dst + i);
     }
-    for (uint64_t i = unroll_body; i < length; i++) {
+    for (int64_t i = unroll_body; i < length; i++) {
         dst[i] = relation_scalar_kernel_fp32<_op>(src0[i], src1[i]);
     }
     return ppl::common::RC_SUCCESS;
@@ -148,13 +148,13 @@ ppl::common::RetCode relation_ndarray_binary_op_recursive_fp32_avx(
     uint8_t *dst)
 {
     if (dim == dst_shape->GetDimCount() - 1) { // last dim
-        const uint64_t simd_w      = 8;
-        const uint64_t unroll_len  = simd_w * 4;
-        const uint64_t unroll_body = round(dst_shape->GetDim(dim), unroll_len);
+        const int64_t simd_w      = 8;
+        const int64_t unroll_len  = simd_w * 4;
+        const int64_t unroll_body = round(dst_shape->GetDim(dim), unroll_len);
 
         if (dst_shape->GetDim(dim) > 1 && !has_paralleled) {
             PRAGMA_OMP_PARALLEL_FOR()
-            for (uint64_t i = 0; i < unroll_body; i += unroll_len) {
+            for (int64_t i = 0; i < unroll_body; i += unroll_len) {
                 __m256 mm0_0, mm0_1, mm0_2, mm0_3;
                 if (inc0[dim] == 0) {
                     mm0_0 = _mm256_set1_ps(src0[0]);
@@ -189,7 +189,7 @@ ppl::common::RetCode relation_ndarray_binary_op_recursive_fp32_avx(
                 dst[i] = relation_scalar_kernel_fp32<_op>(src0[i * inc0[dim]], src1[i * inc1[dim]]);
             }
         } else {
-            for (uint64_t i = 0; i < unroll_body; i += unroll_len) {
+            for (int64_t i = 0; i < unroll_body; i += unroll_len) {
                 __m256 mm0_0, mm0_1, mm0_2, mm0_3;
                 if (inc0[dim] == 0) {
                     mm0_0 = _mm256_set1_ps(src0[0]);

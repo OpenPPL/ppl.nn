@@ -44,7 +44,7 @@ RetCode ReshapeReduce(InputOutputInfo* info, const ir::Attr* arg) {
     for (uint32_t i = 0; i < fixed_axes.size(); i++) {
         if (fixed_axes[i] >= (int)dim_count || fixed_axes[i] < -(int)dim_count) {
             LOG(DEBUG) << "ERROR: fixed axes[" << i << "]'s value[" << fixed_axes[i] << "] is out of range["
-                       << -dim_count << ", " << dim_count << "].";
+                       << -(int)dim_count << ", " << dim_count << "].";
             return RC_INVALID_VALUE;
         }
         if (fixed_axes[i] < 0) { // turn negative axes to positive axes

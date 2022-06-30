@@ -28,16 +28,16 @@ ppl::common::RetCode cast_kernel(
     dstT *dst)
 {
     const bool out_bool   = dst_shape->GetDataType() == ppl::common::DATATYPE_BOOL;
-    const uint64_t length = src_shape->CalcElementsIncludingPadding();
+    const int64_t length = src_shape->CalcElementsIncludingPadding();
 
     if (out_bool) {
         PRAGMA_OMP_PARALLEL_FOR()
-        for (uint64_t i = 0; i < length; i++) {
+        for (int64_t i = 0; i < length; i++) {
             dst[i] = src[i] != 0 ? 1 : 0;
         }
     } else {
         PRAGMA_OMP_PARALLEL_FOR()
-        for (uint64_t i = 0; i < length; i++) {
+        for (int64_t i = 0; i < length; i++) {
             dst[i] = src[i];
         }
     }

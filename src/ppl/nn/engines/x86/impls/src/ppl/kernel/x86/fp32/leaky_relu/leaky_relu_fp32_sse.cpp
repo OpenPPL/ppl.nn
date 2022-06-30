@@ -27,13 +27,13 @@ ppl::common::RetCode leaky_relu_fp32_sse(
     const float alpha,
     float *dst)
 {
-    const uint64_t simd_w      = 4;
-    const uint64_t unroll_len  = simd_w * 4;
-    const uint64_t unroll_body = round(src_shape->CalcElementsIncludingPadding(), unroll_len);
+    const int64_t simd_w      = 4;
+    const int64_t unroll_len  = simd_w * 4;
+    const int64_t unroll_body = round(src_shape->CalcElementsIncludingPadding(), unroll_len);
     const __m128 v_alpha       = _mm_set1_ps(alpha);
     const __m128 v_zero        = _mm_setzero_ps();
     PRAGMA_OMP_PARALLEL_FOR()
-    for (uint64_t i = 0; i < unroll_body; i += unroll_len) {
+    for (int64_t i = 0; i < unroll_body; i += unroll_len) {
         __m128 v_src0 = _mm_loadu_ps(src + i + 0 * simd_w);
         __m128 v_src1 = _mm_loadu_ps(src + i + 1 * simd_w);
         __m128 v_src2 = _mm_loadu_ps(src + i + 2 * simd_w);

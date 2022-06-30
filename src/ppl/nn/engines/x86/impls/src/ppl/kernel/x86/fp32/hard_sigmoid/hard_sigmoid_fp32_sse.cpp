@@ -28,16 +28,16 @@ ppl::common::RetCode hard_sigmoid_fp32_sse(
     const float beta,
     float *dst)
 {
-    const uint64_t V_REG_ELTS  = 4;
-    const uint64_t unroll_len  = V_REG_ELTS * 4;
-    const uint64_t unroll_body = round(src_shape->CalcElementsIncludingPadding(), unroll_len);
+    const int64_t V_REG_ELTS  = 4;
+    const int64_t unroll_len  = V_REG_ELTS * 4;
+    const int64_t unroll_body = round(src_shape->CalcElementsIncludingPadding(), unroll_len);
     if (unroll_body) {
         const auto v_alpha = _mm_set1_ps(alpha);
         const auto v_beta  = _mm_set1_ps(beta);
         const auto v_one   = _mm_set1_ps(1.0f);
         const auto v_zero  = _mm_setzero_ps();
         PRAGMA_OMP_PARALLEL_FOR()
-        for (uint64_t i = 0; i < unroll_body; i += unroll_len) {
+        for (int64_t i = 0; i < unroll_body; i += unroll_len) {
             auto v_src0 = _mm_loadu_ps(src + i + 0 * V_REG_ELTS);
             auto v_src1 = _mm_loadu_ps(src + i + 1 * V_REG_ELTS);
             auto v_src2 = _mm_loadu_ps(src + i + 2 * V_REG_ELTS);

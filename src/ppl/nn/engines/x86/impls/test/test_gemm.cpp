@@ -263,7 +263,7 @@ int main(int argc, char **argv) {
     }
 
     std::cerr << "begin tests\n";
-    std::cerr << "line_no,case_string,min_ms,max_gflops,max_gbps,avg_ms,avg_gflops,avg_gbps\n";
+    std::cerr << "%line_no,%case_string,%min_ms,%max_gflops,%max_gbps,%avg_ms,%avg_gflops,%avg_gbps\n";
 
     const int32_t data_mod = 7;
     const int32_t data_shift = -3;

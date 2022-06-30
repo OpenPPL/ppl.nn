@@ -30,10 +30,10 @@ ppl::common::RetCode where_eltwise_common(
     const eT *src_y,
     eT *dst)
 {
-    const uint32_t length = dst_shape->CalcElementsIncludingPadding();
+    const int64_t length = dst_shape->CalcElementsIncludingPadding();
 
     PRAGMA_OMP_PARALLEL_FOR()
-    for (uint32_t i = 0; i < length; i++) {
+    for (int64_t i = 0; i < length; i++) {
         dst[i] = cond[i] != 0 ? src_x[i] : src_y[i];
     }
 
