@@ -11,7 +11,7 @@ table Edge {
 table NodeType {
     domain: string;
     name: string;
-    version: uint64;
+    version: uint32;
 }
 
 table Node {
@@ -74,7 +74,7 @@ table Engine {
 }
 
 table Model {
-    version: uint64;
+    version: uint32;
     engines: [Engine];
     graph: Graph;
 }

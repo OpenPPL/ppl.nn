@@ -446,7 +446,7 @@ static RetCode CreateFbModel(FlatBufferBuilder* builder, const ir::GraphTopo* to
         return status;
     }
 
-    auto fb_model = pmx::CreateModel(*builder, 1, fb_engines, fb_graph);
+    auto fb_model = pmx::CreateModel(*builder, 0, fb_engines, fb_graph);
     builder->Finish(fb_model);
     return RC_SUCCESS;
 }

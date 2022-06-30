@@ -112,8 +112,8 @@ struct NodeType FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::String *name() const {
     return GetPointer<const flatbuffers::String *>(VT_NAME);
   }
-  uint64_t version() const {
-    return GetField<uint64_t>(VT_VERSION, 0);
+  uint32_t version() const {
+    return GetField<uint32_t>(VT_VERSION, 0);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -121,7 +121,7 @@ struct NodeType FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyString(domain()) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
-           VerifyField<uint64_t>(verifier, VT_VERSION) &&
+           VerifyField<uint32_t>(verifier, VT_VERSION) &&
            verifier.EndTable();
   }
 };
@@ -136,8 +136,8 @@ struct NodeTypeBuilder {
   void add_name(flatbuffers::Offset<flatbuffers::String> name) {
     fbb_.AddOffset(NodeType::VT_NAME, name);
   }
-  void add_version(uint64_t version) {
-    fbb_.AddElement<uint64_t>(NodeType::VT_VERSION, version, 0);
+  void add_version(uint32_t version) {
+    fbb_.AddElement<uint32_t>(NodeType::VT_VERSION, version, 0);
   }
   explicit NodeTypeBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -154,7 +154,7 @@ inline flatbuffers::Offset<NodeType> CreateNodeType(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::String> domain = 0,
     flatbuffers::Offset<flatbuffers::String> name = 0,
-    uint64_t version = 0) {
+    uint32_t version = 0) {
   NodeTypeBuilder builder_(_fbb);
   builder_.add_version(version);
   builder_.add_name(name);
@@ -166,7 +166,7 @@ inline flatbuffers::Offset<NodeType> CreateNodeTypeDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const char *domain = nullptr,
     const char *name = nullptr,
-    uint64_t version = 0) {
+    uint32_t version = 0) {
   auto domain__ = domain ? _fbb.CreateString(domain) : 0;
   auto name__ = name ? _fbb.CreateString(name) : 0;
   return ppl::nn::pmx::CreateNodeType(
@@ -925,8 +925,8 @@ struct Model FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_ENGINES = 6,
     VT_GRAPH = 8
   };
-  uint64_t version() const {
-    return GetField<uint64_t>(VT_VERSION, 0);
+  uint32_t version() const {
+    return GetField<uint32_t>(VT_VERSION, 0);
   }
   const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Engine>> *engines() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Engine>> *>(VT_ENGINES);
@@ -936,7 +936,7 @@ struct Model FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint64_t>(verifier, VT_VERSION) &&
+           VerifyField<uint32_t>(verifier, VT_VERSION) &&
            VerifyOffset(verifier, VT_ENGINES) &&
            verifier.VerifyVector(engines()) &&
            verifier.VerifyVectorOfTables(engines()) &&
@@ -950,8 +950,8 @@ struct ModelBuilder {
   typedef Model Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_version(uint64_t version) {
-    fbb_.AddElement<uint64_t>(Model::VT_VERSION, version, 0);
+  void add_version(uint32_t version) {
+    fbb_.AddElement<uint32_t>(Model::VT_VERSION, version, 0);
   }
   void add_engines(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Engine>>> engines) {
     fbb_.AddOffset(Model::VT_ENGINES, engines);
@@ -972,19 +972,19 @@ struct ModelBuilder {
 
 inline flatbuffers::Offset<Model> CreateModel(
     flatbuffers::FlatBufferBuilder &_fbb,
-    uint64_t version = 0,
+    uint32_t version = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Engine>>> engines = 0,
     flatbuffers::Offset<ppl::nn::pmx::Graph> graph = 0) {
   ModelBuilder builder_(_fbb);
-  builder_.add_version(version);
   builder_.add_graph(graph);
   builder_.add_engines(engines);
+  builder_.add_version(version);
   return builder_.Finish();
 }
 
 inline flatbuffers::Offset<Model> CreateModelDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    uint64_t version = 0,
+    uint32_t version = 0,
     const std::vector<flatbuffers::Offset<ppl::nn::pmx::Engine>> *engines = nullptr,
     flatbuffers::Offset<ppl::nn::pmx::Graph> graph = 0) {
   auto engines__ = engines ? _fbb.CreateVector<flatbuffers::Offset<ppl::nn::pmx::Engine>>(*engines) : 0;

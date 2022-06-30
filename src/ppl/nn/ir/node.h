@@ -28,7 +28,7 @@ class Node final {
 public:
     struct Type final {
         Type() {}
-        Type(const std::string& d, const std::string& n, uint64_t v) : domain(d), name(n), version(v) {}
+        Type(const std::string& d, const std::string& n, uint32_t v) : domain(d), name(n), version(v) {}
         Type(Type&&) = default;
         Type(const Type&) = default;
 
@@ -41,7 +41,7 @@ public:
 
         std::string domain;
         std::string name;
-        uint64_t version;
+        uint32_t version;
     };
 
 public:
