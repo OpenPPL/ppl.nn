@@ -112,11 +112,11 @@ ppl::common::RetCode relation_eltwise_binary_op_fp32_sse(
     const float *src1,
     uint8_t *dst)
 {
-    const uint64_t simd_w      = 4;
-    const uint64_t unroll_len  = simd_w * 4;
-    const uint64_t unroll_body = round(dst_shape->CalcElementsIncludingPadding(), unroll_len);
+    const int64_t simd_w      = 4;
+    const int64_t unroll_len  = simd_w * 4;
+    const int64_t unroll_body = round(dst_shape->CalcElementsIncludingPadding(), unroll_len);
     PRAGMA_OMP_PARALLEL_FOR()
-    for (uint64_t i = 0; i < unroll_body; i += unroll_len) {
+    for (int64_t i = 0; i < unroll_body; i += unroll_len) {
         __m128 mm0 = _mm_loadu_ps(src0 + i + 0 * simd_w);
         __m128 mm1 = _mm_loadu_ps(src0 + i + 1 * simd_w);
         __m128 mm2 = _mm_loadu_ps(src0 + i + 2 * simd_w);
@@ -148,13 +148,13 @@ ppl::common::RetCode relation_ndarray_binary_op_recursive_fp32_sse(
     uint8_t *dst)
 {
     if (dim == dst_shape->GetDimCount() - 1) { // last dim
-        const uint64_t simd_w      = 4;
-        const uint64_t unroll_len  = simd_w * 4;
-        const uint64_t unroll_body = round(dst_shape->GetDim(dim), unroll_len);
+        const int64_t simd_w      = 4;
+        const int64_t unroll_len  = simd_w * 4;
+        const int64_t unroll_body = round(dst_shape->GetDim(dim), unroll_len);
 
         if (dst_shape->GetDim(dim) > 1 && !has_paralleled) {
             PRAGMA_OMP_PARALLEL_FOR()
-            for (uint64_t i = 0; i < unroll_body; i += unroll_len) {
+            for (int64_t i = 0; i < unroll_body; i += unroll_len) {
                 __m128 mm0_0, mm0_1, mm0_2, mm0_3;
                 if (inc0[dim] == 0) {
                     mm0_0 = _mm_set1_ps(src0[0]);
@@ -189,7 +189,7 @@ ppl::common::RetCode relation_ndarray_binary_op_recursive_fp32_sse(
                 dst[i] = relation_scalar_kernel_fp32<_op>(src0[i * inc0[dim]], src1[i * inc1[dim]]);
             }
         } else {
-            for (uint64_t i = 0; i < unroll_body; i += unroll_len) {
+            for (int64_t i = 0; i < unroll_body; i += unroll_len) {
                 __m128 mm0_0, mm0_1, mm0_2, mm0_3;
                 if (inc0[dim] == 0) {
                     mm0_0 = _mm_set1_ps(src0[0]);

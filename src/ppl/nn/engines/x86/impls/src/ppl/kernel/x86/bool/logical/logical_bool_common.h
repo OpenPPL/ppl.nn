@@ -46,9 +46,9 @@ ppl::common::RetCode logical_eltwise_binary_op_bool(
     const uint8_t *src1,
     uint8_t *dst)
 {
-    const uint64_t length = dst_shape->CalcElementsIncludingPadding();
+    const int64_t length = dst_shape->CalcElementsIncludingPadding();
     PRAGMA_OMP_PARALLEL_FOR()
-    for (uint64_t i = 0; i < length; i++) {
+    for (int64_t i = 0; i < length; i++) {
         dst[i] = logical_scalar_kernel_bool<_op>(src0[i], src1[i]);
     }
     return ppl::common::RC_SUCCESS;
@@ -68,15 +68,15 @@ ppl::common::RetCode logical_ndarray_binary_op_recursive_bool(
     const bool has_paralleled,
     uint8_t *dst)
 {
-    const uint64_t length = dst_shape->GetDim(dim);
+    const int64_t length = dst_shape->GetDim(dim);
     if (dim == dst_shape->GetDimCount() - 1) { // last dim
         if (dst_shape->GetDim(dim) > 1 && !has_paralleled) {
             PRAGMA_OMP_PARALLEL_FOR()
-            for (uint64_t i = 0; i < length; i++) {
+            for (int64_t i = 0; i < length; i++) {
                 dst[i] = logical_scalar_kernel_bool<_op>(src0[i * inc0[dim]], src1[i * inc1[dim]]);
             }
         } else {
-            for (uint64_t i = 0; i < length; i++) {
+            for (int64_t i = 0; i < length; i++) {
                 dst[i] = logical_scalar_kernel_bool<_op>(src0[i * inc0[dim]], src1[i * inc1[dim]]);
             }
         }

@@ -131,13 +131,13 @@ ppl::common::RetCode arithmetic_multi_array_eltwise_fp32_sse(
     const uint64_t num_src,
     float *dst)
 {
-    const uint64_t simd_w      = 4;
-    const uint64_t unroll_len  = simd_w * 4;
-    const uint64_t unroll_body = round(dst_shape->CalcElementsIncludingPadding(), unroll_len);
+    const int64_t simd_w      = 4;
+    const int64_t unroll_len  = simd_w * 4;
+    const int64_t unroll_body = round(dst_shape->CalcElementsIncludingPadding(), unroll_len);
 
     if (_binary) {
         PRAGMA_OMP_PARALLEL_FOR()
-        for (uint64_t i = 0; i < unroll_body; i += unroll_len) {
+        for (int64_t i = 0; i < unroll_body; i += unroll_len) {
             __m128 v_src_list0_0 = _mm_loadu_ps(src_list[0] + i + 0 * simd_w);
             __m128 v_src_list0_1 = _mm_loadu_ps(src_list[0] + i + 1 * simd_w);
             __m128 v_src_list0_2 = _mm_loadu_ps(src_list[0] + i + 2 * simd_w);
@@ -156,7 +156,7 @@ ppl::common::RetCode arithmetic_multi_array_eltwise_fp32_sse(
         }
     } else {
         PRAGMA_OMP_PARALLEL_FOR()
-        for (uint64_t i = 0; i < unroll_body; i += unroll_len) {
+        for (int64_t i = 0; i < unroll_body; i += unroll_len) {
             __m128 v_dst_0 = arithmetic_multi_vector_kernel_fp32_sse<_op>(src_list, i + 0 * simd_w, num_src);
             __m128 v_dst_1 = arithmetic_multi_vector_kernel_fp32_sse<_op>(src_list, i + 1 * simd_w, num_src);
             __m128 v_dst_2 = arithmetic_multi_vector_kernel_fp32_sse<_op>(src_list, i + 2 * simd_w, num_src);
@@ -184,20 +184,20 @@ void arithmetic_multi_array_ndarray_recursive_fp32_sse(
     const bool has_paralleled,
     float *dst)
 {
-    const uint64_t dim_count = dst_shape->GetDimCount();
-    const uint64_t length    = dst_shape->GetDim(dim_idx);
+    const int64_t dim_count = dst_shape->GetDimCount();
+    const int64_t length    = dst_shape->GetDim(dim_idx);
 
-    if (dim_idx == dim_count - 1) { // last dim
-        const uint64_t simd_w      = 4;
-        const uint64_t unroll_len  = simd_w * 4;
-        const uint64_t unroll_body = round(length, unroll_len);
+    if (int64_t(dim_idx) == dim_count - 1) { // last dim
+        const int64_t simd_w      = 4;
+        const int64_t unroll_len  = simd_w * 4;
+        const int64_t unroll_body = round(length, unroll_len);
 
         if (length > 1 && !has_paralleled) {
             if (_binary) {
                 const uint64_t inc_in0 = inc_in[0];
                 const uint64_t inc_in1 = inc_in[1];
                 PRAGMA_OMP_PARALLEL_FOR()
-                for (uint64_t i = 0; i < unroll_body; i += unroll_len) {
+                for (int64_t i = 0; i < unroll_body; i += unroll_len) {
                     __m128 v_src_list0_0, v_src_list0_1, v_src_list0_2, v_src_list0_3;
                     if (inc_in0 == 0) {
                         v_src_list0_0 = _mm_set1_ps(src_list[0][0]);
@@ -233,13 +233,13 @@ void arithmetic_multi_array_ndarray_recursive_fp32_sse(
                     _mm_storeu_ps(dst + i + 2 * simd_w, v_dst_2);
                     _mm_storeu_ps(dst + i + 3 * simd_w, v_dst_3);
                 }
-                for (uint64_t i = unroll_body; i < length; i++) {
+                for (int64_t i = unroll_body; i < length; i++) {
                     dst[i] = arithmetic_binary_scalar_kernel_fp32<_op>(src_list[0][i * inc_in0],
                                                                       src_list[1][i * inc_in1]);
                 }
             } else {
                 PRAGMA_OMP_PARALLEL_FOR()
-                for (uint64_t i = 0; i < unroll_body; i += unroll_len) {
+                for (int64_t i = 0; i < unroll_body; i += unroll_len) {
                     __m128 v_dst_0 = arithmetic_multi_vector_kernel_fp32_sse<_op>(src_list, inc_in, i + 0 * simd_w, num_src);
                     __m128 v_dst_1 = arithmetic_multi_vector_kernel_fp32_sse<_op>(src_list, inc_in, i + 1 * simd_w, num_src);
                     __m128 v_dst_2 = arithmetic_multi_vector_kernel_fp32_sse<_op>(src_list, inc_in, i + 2 * simd_w, num_src);
@@ -249,7 +249,7 @@ void arithmetic_multi_array_ndarray_recursive_fp32_sse(
                     _mm_storeu_ps(dst + i + 2 * simd_w, v_dst_2);
                     _mm_storeu_ps(dst + i + 3 * simd_w, v_dst_3);
                 }
-                for (uint64_t i = unroll_body; i < length; i++) {
+                for (int64_t i = unroll_body; i < length; i++) {
                     dst[i] = arithmetic_multi_scalar_kernel_fp32<_op>(src_list, inc_in, i, num_src);
                 }
             }
@@ -258,7 +258,7 @@ void arithmetic_multi_array_ndarray_recursive_fp32_sse(
                 const uint64_t inc_in0 = inc_in[0];
                 const uint64_t inc_in1 = inc_in[1];
 
-                for (uint64_t i = 0; i < unroll_body; i += unroll_len) {
+                for (int64_t i = 0; i < unroll_body; i += unroll_len) {
                     __m128 v_src_list0_0, v_src_list0_1, v_src_list0_2, v_src_list0_3;
                     if (inc_in0 == 0) {
                         v_src_list0_0 = _mm_set1_ps(src_list[0][0]);
@@ -294,12 +294,12 @@ void arithmetic_multi_array_ndarray_recursive_fp32_sse(
                     _mm_storeu_ps(dst + i + 2 * simd_w, v_dst_2);
                     _mm_storeu_ps(dst + i + 3 * simd_w, v_dst_3);
                 }
-                for (uint64_t i = unroll_body; i < length; i++) {
+                for (int64_t i = unroll_body; i < length; i++) {
                     dst[i] = arithmetic_binary_scalar_kernel_fp32<_op>(src_list[0][i * inc_in0],
                                                                       src_list[1][i * inc_in1]);
                 }
             } else {
-                for (uint64_t i = 0; i < unroll_body; i += unroll_len) {
+                for (int64_t i = 0; i < unroll_body; i += unroll_len) {
                     __m128 v_dst_0 = arithmetic_multi_vector_kernel_fp32_sse<_op>(src_list, inc_in, i + 0 * simd_w, num_src);
                     __m128 v_dst_1 = arithmetic_multi_vector_kernel_fp32_sse<_op>(src_list, inc_in, i + 1 * simd_w, num_src);
                     __m128 v_dst_2 = arithmetic_multi_vector_kernel_fp32_sse<_op>(src_list, inc_in, i + 2 * simd_w, num_src);
@@ -309,7 +309,7 @@ void arithmetic_multi_array_ndarray_recursive_fp32_sse(
                     _mm_storeu_ps(dst + i + 2 * simd_w, v_dst_2);
                     _mm_storeu_ps(dst + i + 3 * simd_w, v_dst_3);
                 }
-                for (uint64_t i = unroll_body; i < length; i++) {
+                for (int64_t i = unroll_body; i < length; i++) {
                     dst[i] = arithmetic_multi_scalar_kernel_fp32<_op>(src_list, inc_in, i, num_src);
                 }
             }
@@ -317,7 +317,7 @@ void arithmetic_multi_array_ndarray_recursive_fp32_sse(
     } else {
         if (length > 1 && !has_paralleled) {
             PRAGMA_OMP_PARALLEL_FOR()
-            for (uint64_t i = 0; i < length; i++) {
+            for (int64_t i = 0; i < length; i++) {
                 std::vector<const float*> p_src_list(num_src);
                 float *p_dst = dst + i * inc_out[dim_idx];
                 for (uint64_t j = 0; j < num_src; j++) {
@@ -334,7 +334,7 @@ void arithmetic_multi_array_ndarray_recursive_fp32_sse(
                     p_dst);
             }
         } else {
-            for (uint64_t i = 0; i < length; i++) {
+            for (int64_t i = 0; i < length; i++) {
                 std::vector<const float*> p_src_list(num_src);
                 float *p_dst = dst + i * inc_out[dim_idx];
                 for (uint64_t j = 0; j < num_src; j++) {

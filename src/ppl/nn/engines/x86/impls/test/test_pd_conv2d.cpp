@@ -144,7 +144,7 @@ for (int64_t lcfg = 0; lcfg < Flag_loop_cfg; ++lcfg) {
 
     std::cerr << "==============================================================\n";
     std::cerr << "begin tests\n";
-    std::cerr << "\%line_no,\%case_string,\%mops,\%mbs,\%min_ms,\%max_gflops,\%max_gbps,\%avg_ms,\%avg_gflops,\%avg_gbps,\%avg_scv_ms,\%avg_sdw_ms,\%acc\n";
+    std::cerr << "%line_no,%case_string,%mops,%mbs,%min_ms,%max_gflops,%max_gbps,%avg_ms,%avg_gflops,%avg_gbps,%avg_scv_ms,%avg_sdw_ms,%acc\n";
 
     char line[512];
     int line_no = 0;
