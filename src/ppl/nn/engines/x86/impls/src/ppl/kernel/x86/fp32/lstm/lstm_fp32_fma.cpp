@@ -138,7 +138,7 @@ ppl::common::RetCode lstm_fp32_fma(
             gemm_fp32_fma( // gate += h_0[nd]*R[nd]_{iofc}^T+Rb_{iofc}
                 Y_h_prev, nd_R, nd_Rb, nullptr,
                 gemm_m_type::NOTRANS, gemm_m_type::TRANS,
-                gemm_v_type::ROW_VEC, gemm_m_type::NOTRANS,
+                gemm_v_type::ROW_VEC, gemm_m_type::EMPTY,
                 batch, rnn_num_gate::LSTM * hidden_size, thisK,
                 hidden_size, hidden_size, rnn_num_gate::LSTM * hidden_size, rnn_num_gate::LSTM * hidden_size,
                 1.0f, 1.0f, 1.0f, 0.0f, gemm_post::NONE, gate_buf);
