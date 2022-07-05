@@ -33,7 +33,7 @@ public:
             if (type == DATATYPE_UNKNOWN) {
                 return InferInheritedType(info);
             } else if (type == DATATYPE_INT8) {
-                auto status = CopyQuantType(info, quant);
+                auto status = UnifyToOutputQuant(info, quant);
                 if (status != RC_SUCCESS) {
                     LOG(ERROR) << "Set sequence quantization failed.";
                     return RC_INVALID_VALUE;
