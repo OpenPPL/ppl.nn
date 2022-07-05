@@ -160,11 +160,6 @@ target_link_libraries(pplnn_static PUBLIC ${PPLNN_LINK_LIBRARIES} ${PPLNN_SOURCE
 target_include_directories(pplnn_static PRIVATE
     ${rapidjson_SOURCE_DIR}/include)
 
-if(CMAKE_COMPILER_IS_GNUCC)
-    # requires a virtual destructor when having virtual functions, though it is not necessary for all cases
-    target_compile_options(pplnn_static PRIVATE -Werror=non-virtual-dtor)
-endif()
-
 if(PPLNN_ENABLE_ONNX_MODEL)
     include(cmake/protobuf.cmake)
     target_link_libraries(pplnn_static PUBLIC libprotobuf-lite)
