@@ -4,17 +4,26 @@ if(TARGET "pplkernelcuda_static")
     return()
 endif()
 
-set(__PPLKERNELCUDA_PACKAGE_DIR__ "${CMAKE_CURRENT_LIST_DIR}/../../..")
-
 add_library(pplkernelcuda_static STATIC IMPORTED)
 
 if(NOT TARGET "pplcommon_static")
     include(${CMAKE_CURRENT_LIST_DIR}/pplcommon-config.cmake)
 endif()
 
-set_target_properties(pplkernelcuda_static PROPERTIES
-    INTERFACE_LINK_LIBRARIES "pplcommon_static")
+# set `PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES` to overwrite the default options, i.e. use static libraries instead.
+if(PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES)
+    set(__PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES__ ${PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES})
+else()
+    set(__PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES__ "@PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES@")
+    set(PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES "@PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES@")
+endif()
 
+set_target_properties(pplkernelcuda_static PROPERTIES
+    INTERFACE_LINK_LIBRARIES "pplcommon_static;${__PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES__}")
+
+unset(__PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES__)
+
+set(__PPLKERNELCUDA_PACKAGE_DIR__ "${CMAKE_CURRENT_LIST_DIR}/../../..")
 if(MSVC)
     set_target_properties(pplkernelcuda_static PROPERTIES
         IMPORTED_LOCATION "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/pplkernelcuda_static.lib"
@@ -26,5 +35,4 @@ else()
         IMPORTED_LOCATION_DEBUG "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/libpplkernelcuda_static.a"
         IMPORTED_LOCATION_RELEASE "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/libpplkernelcuda_static.a")
 endif()
-
 unset(__PPLKERNELCUDA_PACKAGE_DIR__)

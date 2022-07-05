@@ -84,22 +84,30 @@ unset(__PPLNN_SOURCE_DIR__)
 
 target_include_directories(pplkernelcuda_static PUBLIC
     include
-    ${CUDA_INCLUDE_DIRS}
+    ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
     ${CMAKE_CURRENT_BINARY_DIR}/conv
     ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv
     ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES})
 target_link_directories(pplkernelcuda_static PUBLIC ${CMAKE_CUDA_HOST_IMPLICIT_LINK_DIRECTORIES})
-target_link_libraries(pplkernelcuda_static PUBLIC cuda ${CUDA_LIBRARIES} ${CMAKE_CUDA_HOST_IMPLICIT_LINK_LIBRARIES})
 
+set(PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES cuda cudart)
 if(PPLNN_ENABLE_CUDA_JIT)
-    target_link_libraries(pplkernelcuda_static PUBLIC nvrtc)
+    list(APPEND PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES nvrtc)
 endif()
+
+target_link_libraries(pplkernelcuda_static PUBLIC ${PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES})
 
 hpcc_populate_dep(pplcommon)
 target_link_libraries(pplkernelcuda_static PUBLIC pplcommon_static)
+
 target_compile_definitions(pplkernelcuda_static PUBLIC ${PPLCUDA_COMPILE_DEFINITIONS})
 
 if(PPLNN_INSTALL)
     install(TARGETS pplkernelcuda_static DESTINATION lib)
-    install(FILES ${CMAKE_CURRENT_LIST_DIR}/pplkernelcuda-config.cmake DESTINATION lib/cmake/ppl)
+    # `PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES` is needed for generating pplkernecuda-config.cmake
+    configure_file(${CMAKE_CURRENT_LIST_DIR}/pplkernelcuda-config.cmake.in
+        ${CMAKE_INSTALL_PREFIX}/lib/cmake/ppl/pplkernelcuda-config.cmake
+        @ONLY)
 endif()
+
+unset(PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES)
