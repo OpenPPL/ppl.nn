@@ -34,6 +34,7 @@ using namespace ppl::nn;
 using namespace ppl::common;
 using namespace std;
 
+#include "ppl/nn/runtime/options.h"
 #include "ppl/nn/runtime/runtime.h"
 
 #ifdef PPLNN_ENABLE_ONNX_MODEL
