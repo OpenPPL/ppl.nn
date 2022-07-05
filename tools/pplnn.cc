@@ -1064,12 +1064,19 @@ static bool Profiling(const vector<string>& input_data, Runtime* runtime) {
     return true;
 }
 
-static inline bool HasMultipleModelOptions() {
-#if defined(PPLNN_ENABLE_PMX_MODEL) && defined(PPLNN_ENABLE_ONNX_MODEL)
-    return (!g_flag_onnx_model.empty() && !g_flag_pmx_model.empty());
-#else
-    return false;
+static inline uint32_t CalcModelNum() {
+    uint32_t counter = 0;
+#ifdef PPLNN_ENABLE_ONNX_MODEL
+    if (!g_flag_onnx_model.empty()) {
+        ++counter;
+    }
 #endif
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    if (!g_flag_pmx_model.empty()) {
+        ++counter;
+    }
+#endif
+    return counter;
 }
 
 int main(int argc, char* argv[]) {
@@ -1099,16 +1106,21 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
+    auto nr_model = CalcModelNum();
+    if (nr_model == 0) {
+        LOG(ERROR) << "please specify a model.";
+        return -1;
+    }
+    if (nr_model > 1) {
+        LOG(ERROR) << "multiple model options are specified.";
+        return -1;
+    }
+
     auto prepare_begin_ts = std::chrono::system_clock::now();
 
     vector<unique_ptr<Engine>> engines;
     if (!RegisterEngines(&engines)) {
         LOG(ERROR) << "RegisterEngines failed.";
-        return -1;
-    }
-
-    if (HasMultipleModelOptions()) {
-        LOG(ERROR) << "multiple model options are specified.";
         return -1;
     }
 
