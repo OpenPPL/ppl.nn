@@ -40,7 +40,6 @@ RetCode SplitOp::Init(const OptKernelOptions& options) {
             status = InferInheritedType(info);
         } else if (type == DATATYPE_INT8) {
             status = UnifyToOutputQuant(info, quant);
-            // status = CopyQuantType(info, quant);
         } else {
             status = InferDefaultType(info, type);
         }
