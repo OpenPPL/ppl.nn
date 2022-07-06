@@ -1,8 +1,11 @@
 install(TARGETS pplnn_static DESTINATION lib)
 
+set(__PPLNN_CMAKE_CONFIG_FILE__ ${CMAKE_CURRENT_BINARY_DIR}/generated/pplnn-config.cmake)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pplnn-config.cmake.in
-    ${CMAKE_INSTALL_PREFIX}/lib/cmake/ppl/pplnn-config.cmake
+    ${__PPLNN_CMAKE_CONFIG_FILE__}
     @ONLY)
+install(FILES ${__PPLNN_CMAKE_CONFIG_FILE__} DESTINATION lib/cmake/ppl)
+unset(__PPLNN_CMAKE_CONFIG_FILE__)
 
 install(DIRECTORY include/ppl/nn/common DESTINATION include/ppl/nn)
 install(DIRECTORY include/ppl/nn/runtime DESTINATION include/ppl/nn)
