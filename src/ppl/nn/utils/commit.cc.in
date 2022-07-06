@@ -1,7 +1,0 @@
-namespace ppl { namespace nn {
-
-const char* GetCommitString() {
-    return "@PPLNN_COMMIT_STR@";
-}
-
-}}

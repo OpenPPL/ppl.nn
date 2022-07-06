@@ -17,7 +17,6 @@
 
 #include <string>
 #include "ppl/nn/common/logger.h"
-#include "ppl/nn/utils/commit.h"
 #include "ppl/common/file_mapping.h"
 #include <string.h>
 #include <chrono>
@@ -1100,7 +1099,7 @@ int main(int argc, char* argv[]) {
     }
 
     cout << "ppl.nn version: [" << PPLNN_VERSION_MAJOR << "." << PPLNN_VERSION_MINOR << "." << PPLNN_VERSION_PATCH
-         << "], commit: [" << GetCommitString() << "]" << endl;
+         << "], commit: [" << PPLNN_COMMIT_STR << "]" << endl;
 
     if (g_flag_version) {
         return 0;
