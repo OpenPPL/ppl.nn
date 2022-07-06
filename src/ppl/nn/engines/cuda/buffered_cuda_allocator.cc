@@ -33,18 +33,22 @@ BufferedCudaAllocator::~BufferedCudaAllocator() {
         return;
     }
 
+    CUresult rc;
     const char* errmsg = nullptr;
-    auto rc = cuMemUnmap(addr_, bytes_allocated_);
-    if (rc != CUDA_SUCCESS) {
-        cuGetErrorString(rc, &errmsg);
-        LOG(ERROR) << "cuMemUnmap failed: " << errmsg;
-    }
 
-    for (auto x = handle_list_.begin(); x != handle_list_.end(); ++x) {
-        rc = cuMemRelease(*x);
+    if (!handle_list_.empty()) {
+        rc = cuMemUnmap(addr_, bytes_allocated_);
         if (rc != CUDA_SUCCESS) {
             cuGetErrorString(rc, &errmsg);
-            LOG(ERROR) << "cuMemRelease failed: " << errmsg;
+            LOG(ERROR) << "cuMemUnmap failed: " << errmsg;
+        }
+
+        for (auto x = handle_list_.begin(); x != handle_list_.end(); ++x) {
+            rc = cuMemRelease(*x);
+            if (rc != CUDA_SUCCESS) {
+                cuGetErrorString(rc, &errmsg);
+                LOG(ERROR) << "cuMemRelease failed: " << errmsg;
+            }
         }
     }
 
