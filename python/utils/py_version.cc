@@ -15,16 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/utils/commit.h"
 #include "pybind11/pybind11.h"
 
 namespace ppl { namespace nn { namespace python {
 
 void RegisterVersion(pybind11::module* m) {
-    m->def("GetCommitString", &GetCommitString);
     m->attr("PPLNN_VERSION_MAJOR") = (uint32_t)PPLNN_VERSION_MAJOR;
     m->attr("PPLNN_VERSION_MINOR") = (uint32_t)PPLNN_VERSION_MINOR;
     m->attr("PPLNN_VERSION_PATCH") = (uint32_t)PPLNN_VERSION_PATCH;
+    m->attr("PPLNN_COMMIT_STR") = PPLNN_COMMIT_STR;
 }
 
 }}} // namespace ppl::nn::python

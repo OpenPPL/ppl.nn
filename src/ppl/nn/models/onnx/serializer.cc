@@ -19,7 +19,6 @@
 #include "ppl/nn/models/onnx/serializer.h"
 #include "ppl/nn/models/onnx/utils.h"
 #include "ppl/nn/models/onnx/param_parser_manager.h"
-#include "ppl/nn/utils/commit.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/common/tensor_shape.h" // INVALID_DIM_VALUE
 #include <fstream>
@@ -31,7 +30,7 @@ namespace ppl { namespace nn { namespace onnx {
 static void PackModelInfo(::onnx::ModelProto* pb_model, const map<string, uint64_t>& opset) {
     pb_model->set_ir_version(::onnx::IR_VERSION);
     pb_model->set_producer_name("pplnn");
-    pb_model->set_producer_version(GetCommitString());
+    pb_model->set_producer_version(PPLNN_COMMIT_STR);
 
     for (auto o = opset.begin(); o != opset.end(); ++o) {
         auto pb_opset = pb_model->add_opset_import();

@@ -235,7 +235,7 @@ end
 ------------------------------------ main --------------------------------------
 
 print("PPLNN version: [" .. pplnn.PPLNN_VERSION_MAJOR .. "." .. pplnn.PPLNN_VERSION_MINOR .. "." ..
-      pplnn.PPLNN_VERSION_PATCH .. "], commit: [" .. pplnn.GetCommitString() .. "]")
+      pplnn.PPLNN_VERSION_PATCH .. "], commit: [" .. pplnn.PPLNN_COMMIT_STR .. "]")
 
 local args = GenerateArgs()
 
