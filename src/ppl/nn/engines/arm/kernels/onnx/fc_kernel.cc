@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/arm/kernels/onnx/fc_kernel.h"
-#include "ppl/nn/utils/destructor.h"
+#include "ppl/common/destructor.h"
 #include "ppl/kernel/arm_server/fc/neon/fc.h"
 
 namespace ppl { namespace nn { namespace arm {
@@ -72,7 +72,7 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
                         << "] failed: " << ppl::common::GetRetCodeStr(rc);
                 return rc;
             }
-            utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+            ppl::common::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
                 GetArmDevice()->FreeTmpBuffer(&tmp_buffer_desc);
             });
 
@@ -128,7 +128,7 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
                         << "] failed: " << ppl::common::GetRetCodeStr(rc);
                 return rc;
             }
-            utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+            ppl::common::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
                 GetArmDevice()->FreeTmpBuffer(&tmp_buffer_desc);
             });
 

@@ -49,7 +49,7 @@ bool DepthwiseDirect::IsSupported(const ir::Node* node, const OptKernelOptions& 
     if (group != tensor1.GetDim(0) || tensor1.GetDim(1) != 1 || group == 1) {
         return false;
     }
-    if (tensor0.GetDataType() != ppl::common::DATATYPE_FLOAT16) {
+    if (tensor0.GetDataType() != DATATYPE_FLOAT16) {
         return false;
     }
     // check if conv is quantization
@@ -171,7 +171,7 @@ RetCode DepthwiseDirect::ModifyParam(ir::Node* node, OptKernelOptions& options) 
             LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
             return status;
         }
-        utils::Destructor __device_src_guard__([&options, &temp_buffer]() -> void {
+        Destructor __device_src_guard__([&options, &temp_buffer]() -> void {
             options.opt_stage_device->Free(&temp_buffer);
         });
 

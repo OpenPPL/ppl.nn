@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/cuda/kernels/onnx/gemm_kernel.h"
-#include "ppl/nn/utils/destructor.h"
+#include "ppl/common/destructor.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
 #include "cudakernel/gemm/gemm.h"
 
@@ -49,7 +49,7 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+    ppl::common::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
         GetCudaDevice()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
@@ -74,7 +74,7 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
         PPLCUDAGemmModifyWeights(stream, &newshape, weight->GetBufferPtr(), weight_buffer.addr,
                                       &param_->param);
     }
-    utils::Destructor __tmp_buffer_guard__([this, &weight_buffer]() -> void{
+    ppl::common::Destructor __tmp_buffer_guard__([this, &weight_buffer]() -> void{
         GetCudaDevice()->Free(&weight_buffer);
     });
 

@@ -15,16 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/utils/destructor.h"
+#include "ppl/common/destructor.h"
 #include "gtest/gtest.h"
-using namespace ppl::nn;
+using namespace ppl::common;
 
 TEST(DestructorTest, misc) {
     const int original_value = 10;
     const int expected_value = 20;
     int a = original_value;
     {
-        utils::Destructor __a__([&a, &expected_value]() -> void {
+        Destructor __a__([&a, &expected_value]() -> void {
             a = expected_value;
         });
     }

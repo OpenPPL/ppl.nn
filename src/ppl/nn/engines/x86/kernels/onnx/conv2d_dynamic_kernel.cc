@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/x86/kernels/onnx/conv2d_dynamic_kernel.h"
-#include "ppl/nn/utils/destructor.h"
+#include "ppl/common/destructor.h"
 #include "ppl/kernel/x86/fp32/conv2d_dynamic.h"
 
 namespace ppl { namespace nn { namespace x86 {
@@ -100,7 +100,7 @@ ppl::common::RetCode Conv2dDynamicKernel::DoExecute(KernelExecContext* ctx) {
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+    ppl::common::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
         GetX86Device()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;

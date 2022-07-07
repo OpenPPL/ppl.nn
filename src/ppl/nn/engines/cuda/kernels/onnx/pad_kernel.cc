@@ -20,7 +20,7 @@
 #include <memory>
 
 #include "cudakernel/memory/pad.h"
-#include "ppl/nn/utils/destructor.h"
+#include "ppl/common/destructor.h"
 
 namespace ppl { namespace nn { namespace cuda {
 

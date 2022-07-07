@@ -161,13 +161,13 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
     // Do select
     LOG(INFO) << "Compiling " << node->GetName();
     int device_id = options.opt_stage_device->GetDeviceId();
-    if (shape_in0.GetDataType() == ppl::common::DATATYPE_FLOAT16) {
+    if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
         PPLCUDAConvolutionPredictKernel(shape_in0.GetDataType(), attr_param_.extra_param.algo_info, temp_conv_param);
         timer = PPLCUDAGemmJITSelectKernel(device_id, stream, shape_in0.GetDataType(), &shape_in0, input_buffer.addr,
                                            &shape_in1, weight_buffer.addr, bias_buffer.addr, &shape_out,
                                            output_buffer.addr, temp_buffer.addr, temp_conv_param, temp_fuse_param,
                                            attr_param_.extra_param.algo_info);
-    } else if (shape_in0.GetDataType() == ppl::common::DATATYPE_INT8) {
+    } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
         PPLCUDAConvolutionPredictKernelInt8(shape_in0.GetDataType(), attr_param_.extra_param.algo_info,
                                             temp_conv_param);
         timer = PPLCUDAGemmJITSelectKernelInt8(device_id, stream, shape_in0.GetDataType(), &shape_in0,
@@ -177,11 +177,11 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
     }
 #else
     // Do Select
-    if (shape_in0.GetDataType() == ppl::common::DATATYPE_FLOAT16) {
+    if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
         timer = PPLCUDAGemmSelectKernel(stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
                                         bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr,
                                         attr_param_.param, temp_fuse_param, attr_param_.extra_param.algo_info);
-    } else if (shape_in0.GetDataType() == ppl::common::DATATYPE_INT8) {
+    } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
         timer = PPLCUDAGemmSelectKernelInt8(stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
                                             bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr,
                                             attr_param_.param, temp_quant_param, temp_fuse_param,
@@ -303,14 +303,14 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
             LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
             return status;
         }
-        utils::Destructor __device_src_guard__([&options, &temp_weight_buffer]() -> void {
+        Destructor __device_src_guard__([&options, &temp_weight_buffer]() -> void {
             options.opt_stage_device->Free(&temp_weight_buffer);
         });
 
-        if (shape_in0.GetDataType() == ppl::common::DATATYPE_FLOAT16) {
+        if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
             status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(
                 &weight_constat_info.GetBufferDesc(), postshape, weight_iter->second.data.GetData(), preshape);
-        } else if (shape_in0.GetDataType() == ppl::common::DATATYPE_INT8) {
+        } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
             auto quants = options.quants;
             status = ((CudaDataConverter*)options.opt_stage_device->GetDataConverter())
                          ->ConvertFromHost(&weight_constat_info.GetBufferDesc(), postshape, (*quants)[postedge_id],
@@ -321,10 +321,10 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
             return status;
         }
 
-        if (shape_in0.GetDataType() == ppl::common::DATATYPE_FLOAT16) {
+        if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
             status = PPLCUDAGemmModifyWeights(stream, &newshape, weight_constat_info.GetBufferPtr(),
                                               temp_weight_buffer.addr, &attr_param_.param);
-        } else if (shape_in0.GetDataType() == ppl::common::DATATYPE_INT8) {
+        } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
             status = PPLCUDAGemmModifyWeightsInt8(stream, &newshape, weight_constat_info.GetBufferPtr(),
                                                   temp_weight_buffer.addr, &attr_param_.param);
         }
