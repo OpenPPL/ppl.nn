@@ -225,7 +225,7 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
             LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
             return status;
         }
-        utils::Destructor __device_src_guard__([&options, &temp_buffer]() -> void {
+        Destructor __device_src_guard__([&options, &temp_buffer]() -> void {
             options.opt_stage_device->Free(&temp_buffer);
         });
 

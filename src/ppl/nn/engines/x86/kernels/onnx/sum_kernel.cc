@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/x86/kernels/onnx/sum_kernel.h"
-#include "ppl/nn/utils/destructor.h"
+#include "ppl/common/destructor.h"
 #include "ppl/nn/common/logger.h"
 
 #include "ppl/kernel/x86/fp32/sum.h"
@@ -54,7 +54,7 @@ ppl::common::RetCode SumKernel::DoExecute(KernelExecContext* ctx) {
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+    ppl::common::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
         GetX86Device()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;

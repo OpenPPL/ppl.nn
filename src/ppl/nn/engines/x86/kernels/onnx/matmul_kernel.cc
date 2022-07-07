@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/x86/kernels/onnx/matmul_kernel.h"
-#include "ppl/nn/utils/destructor.h"
+#include "ppl/common/destructor.h"
 #include "ppl/kernel/x86/fp32/matmul.h"
 
 namespace ppl { namespace nn { namespace x86 {

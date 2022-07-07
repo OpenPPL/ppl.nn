@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/cuda/kernels/onnx/conv_depthwise_kernel.h"
-#include "ppl/nn/utils/destructor.h"
+#include "ppl/common/destructor.h"
 #include "ppl/common/cuda/cuda_types.h"
 
 #include <cuda_fp16.h>
@@ -105,7 +105,7 @@ ppl::common::RetCode ConvDepthwiseKernel::DoExecute(KernelExecContext* ctx) {
         PPLCUDADepthwiseConvertFilter(stream, ctx->GetInput<TensorImpl>(1)->GetBufferPtr(), weight_buffer.addr,
                                       temp_conv_param, shape_out.GetDataType());
     }
-    utils::Destructor __tmp_buffer_guard__([this, &weight_buffer]() -> void {
+    ppl::common::Destructor __tmp_buffer_guard__([this, &weight_buffer]() -> void {
         GetCudaDevice()->Free(&weight_buffer);
     });
 

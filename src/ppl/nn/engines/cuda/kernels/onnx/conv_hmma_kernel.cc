@@ -17,7 +17,7 @@
 
 #include "ppl/nn/engines/cuda/kernels/onnx/conv_hmma_kernel.h"
 #include "ppl/common/cuda/cuda_types.h"
-#include "ppl/nn/utils/destructor.h"
+#include "ppl/common/destructor.h"
 #include <cuda_fp16.h>
 
 namespace ppl { namespace nn { namespace cuda {
@@ -89,7 +89,7 @@ ppl::common::RetCode ConvHmmaKernel::DoExecute(KernelExecContext* ctx) {
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+    ppl::common::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
         GetCudaDevice()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;

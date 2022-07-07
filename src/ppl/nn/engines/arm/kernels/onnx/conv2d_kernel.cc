@@ -20,7 +20,7 @@
 #include "ppl/common/sys.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/arm/utils/macros.h"
-#include "ppl/nn/utils/destructor.h"
+#include "ppl/common/destructor.h"
 
 namespace ppl { namespace nn { namespace arm {
 
@@ -69,7 +69,7 @@ ppl::common::RetCode Conv2dKernel::DoExecute(KernelExecContext* ctx) {
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+    ppl::common::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
         GetArmDevice()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;

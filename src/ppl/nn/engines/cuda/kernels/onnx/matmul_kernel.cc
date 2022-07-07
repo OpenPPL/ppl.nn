@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/cuda/kernels/onnx/matmul_kernel.h"
-#include "ppl/nn/utils/destructor.h"
+#include "ppl/common/destructor.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
 #include "cudakernel/gemm/bgemm.h"
 
@@ -56,7 +56,7 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
                    << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+    ppl::common::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
         GetCudaDevice()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
@@ -82,7 +82,7 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
         PPLCUDABgemmModifyWeights(stream, weight->GetShape(), weight->GetBufferPtr(), weight_buffer.addr,
                                       &param_->param);
     }
-    utils::Destructor __tmp_buffer_guard__([this, &weight_buffer]() -> void {
+    ppl::common::Destructor __tmp_buffer_guard__([this, &weight_buffer]() -> void {
         GetCudaDevice()->Free(&weight_buffer);
     });
 
@@ -108,7 +108,7 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
     } else {
         bmm_input0 = input0->GetBufferPtr();
     }
-    utils::Destructor __input0_buffer_guard__([this, &input0_buffer]() -> void{
+    ppl::common::Destructor __input0_buffer_guard__([this, &input0_buffer]() -> void{
         GetCudaDevice()->Free(&input0_buffer);
     });
 
@@ -130,7 +130,7 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
     } else {
         bgemm_out = output->GetBufferPtr();
     }
-    utils::Destructor __output_buffer_guard__([this, &output_buffer]() -> void {
+    ppl::common::Destructor __output_buffer_guard__([this, &output_buffer]() -> void {
         GetCudaDevice()->Free(&output_buffer);
     });
 

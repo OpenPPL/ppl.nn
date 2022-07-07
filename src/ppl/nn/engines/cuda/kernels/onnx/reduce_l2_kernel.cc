@@ -21,7 +21,7 @@
 
 #include "cudakernel/reduce/reduce.h"
 #include "cudakernel/unary/unary.h"
-#include "ppl/nn/utils/destructor.h"
+#include "ppl/common/destructor.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -61,7 +61,7 @@ ppl::common::RetCode ReduceL2Kernel::DoExecute(KernelExecContext* ctx) {
                 << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
-    utils::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+    ppl::common::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
         GetCudaDevice()->FreeTmpBuffer(&tmp_buffer_desc);
     });
 
