@@ -88,24 +88,24 @@ ppl::common::RetCode ConvImmaKernel::DoExecute(KernelExecContext* ctx) {
     ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, *param_, temp_conv_param);
     ConvertToForwardFuseParam(ctx, GetCudaDevice(), param_->extra_param.fuse_info, temp_fuse_param);
 
-    temp_quant_param.in_scale    = input_scale;
-    temp_quant_param.out_scale   = 1 / output_scale;
+    temp_quant_param.in_scale = input_scale;
+    temp_quant_param.out_scale = 1 / output_scale;
     temp_quant_param.d_flt_scale = d_weight_scale;
     if (temp_fuse_param.has_elt) {
         auto tps = param_->extra_param.fuse_info.types;
         auto ret = std::find(tps.begin(), tps.end(), "Add");
         if (ret == tps.end())
-           LOG(ERROR) << "fuse_info types error: no add op";
-        int  id  =  ret - tps.begin();
+            LOG(ERROR) << "fuse_info types error: no add op";
+        int id = ret - tps.begin();
         auto elt_index = param_->extra_param.fuse_info.input_ind[id];
         auto elt = ctx->GetInput<TensorImpl>(elt_index);
         auto elt_quant = GetCommonParam()->cuda_tensor_info->at(elt->GetEdge()->GetId());
         temp_quant_param.pre_scale = elt_quant.scale[0];
     }
     if (param_->extra_param.fuse_info.channel_offset >= 0) {
-         temp_quant_param.out_scale = 1 / GetCommonParam()->cuda_tensor_info->at(param_->extra_param.fuse_info.concat_edge_id).scale[0];
+        temp_quant_param.out_scale =
+            1 / GetCommonParam()->cuda_tensor_info->at(param_->extra_param.fuse_info.concat_edge_id).scale[0];
     }
-
 
     struct algo_param_t algo_param = param_->extra_param.algo_info;
 
@@ -131,14 +131,14 @@ ppl::common::RetCode ConvImmaKernel::DoExecute(KernelExecContext* ctx) {
     PPLCUDAConvolutionForwardJitImpInt8(
         stream, module->GetKernelFunc(), shape_in0.GetDataType(), (int4*)input->GetBufferPtr(),
         (int4*)weight->GetBufferPtr(), (int4*)output->GetBufferPtr(),
-        param_->extra_param.bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, (int4*)tmp_buffer,
-        algo_param, temp_conv_param, temp_quant_param, temp_fuse_param);
+        param_->extra_param.bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr,
+        (int4*)tmp_buffer, algo_param, temp_conv_param, temp_quant_param, temp_fuse_param);
 #else
     PPLCUDAConvolutionForwardImpInt8(
-        stream, shape_in0.GetDataType(), (int4*)input->GetBufferPtr(),
-        (int4*)weight->GetBufferPtr(), (int4*)output->GetBufferPtr(),
-        param_->extra_param.bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, (int4*)tmp_buffer,
-        algo_param, temp_conv_param, temp_quant_param, temp_fuse_param);
+        stream, shape_in0.GetDataType(), (int4*)input->GetBufferPtr(), (int4*)weight->GetBufferPtr(),
+        (int4*)output->GetBufferPtr(),
+        param_->extra_param.bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr,
+        (int4*)tmp_buffer, algo_param, temp_conv_param, temp_quant_param, temp_fuse_param);
 #endif
     LOG(DEBUG) << "Excute IMMA conv with kernel id:" << param_->extra_param.algo_info.kid
                << " and temp buffer size: " << size;

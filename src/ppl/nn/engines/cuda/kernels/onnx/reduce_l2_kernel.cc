@@ -58,21 +58,23 @@ ppl::common::RetCode ReduceL2Kernel::DoExecute(KernelExecContext* ctx) {
     auto status = GetCudaDevice()->AllocTmpBuffer(size, &tmp_buffer_desc);
     if (status != ppl::common::RC_SUCCESS) {
         LOG(ERROR) << "alloc tmp buffer size[" << size << "] for kernel[" << GetName()
-                << "] failed: " << ppl::common::GetRetCodeStr(status);
+                   << "] failed: " << ppl::common::GetRetCodeStr(status);
         return status;
     }
     ppl::common::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
         GetCudaDevice()->FreeTmpBuffer(&tmp_buffer_desc);
     });
 
-    status = PPLCUDAUnarySquareForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(),
-                                                        input->GetShape(), tmp_buffer_desc.addr);
-    if (status != ppl::common::RC_SUCCESS) return status;
-    status = PPLCUDAReduceForwardImp(GetStream(), param, des, input->GetShape(), tmp_buffer_desc.addr, output->GetShape(),
-                                                        output->GetBufferPtr());
-    if (status != ppl::common::RC_SUCCESS) return status;
-    status = PPLCUDAUnarySqrtForwardImp(GetStream(), output->GetShape(), output->GetBufferPtr(),
-                                                        output->GetShape(), output->GetBufferPtr());
+    status = PPLCUDAUnarySquareForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), input->GetShape(),
+                                          tmp_buffer_desc.addr);
+    if (status != ppl::common::RC_SUCCESS)
+        return status;
+    status = PPLCUDAReduceForwardImp(GetStream(), param, des, input->GetShape(), tmp_buffer_desc.addr,
+                                     output->GetShape(), output->GetBufferPtr());
+    if (status != ppl::common::RC_SUCCESS)
+        return status;
+    status = PPLCUDAUnarySqrtForwardImp(GetStream(), output->GetShape(), output->GetBufferPtr(), output->GetShape(),
+                                        output->GetBufferPtr());
     return status;
 }
 
