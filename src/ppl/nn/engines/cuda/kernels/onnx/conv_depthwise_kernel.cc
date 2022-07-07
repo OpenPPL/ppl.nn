@@ -86,7 +86,6 @@ ppl::common::RetCode ConvDepthwiseKernel::DoExecute(KernelExecContext* ctx) {
     // cudaMalloc((void**)&d_weight_scale, paddingc*sizeof(float));
     // cudaMemcpy(d_weight_scale, input_quant1.scale.data(), paddingc*sizeof(float), cudaMemcpyHostToDevice);
 
-
     ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, *param_, temp_conv_param);
     ConvertToForwardFuseParam(ctx, GetCudaDevice(), param_->extra_param.fuse_info, temp_fuse_param);
 
@@ -109,15 +108,13 @@ ppl::common::RetCode ConvDepthwiseKernel::DoExecute(KernelExecContext* ctx) {
         GetCudaDevice()->Free(&weight_buffer);
     });
 
-
     auto stream = GetStream();
     PPLCUDADepthwiseForwardCudaImp(
         stream, param_->extra_param.algo_info.kid, ctx->GetInput<TensorImpl>(0)->GetBufferPtr(),
-        param_->extra_param.is_initializer_weight ? ctx->GetInput<TensorImpl>(1)->GetBufferPtr()
-                                                            : weight_buffer.addr,
+        param_->extra_param.is_initializer_weight ? ctx->GetInput<TensorImpl>(1)->GetBufferPtr() : weight_buffer.addr,
         param_->extra_param.bias_term ? ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr, temp_conv_param,
-        temp_fuse_param, ctx->GetOutput<TensorImpl>(0)->GetBufferPtr(), shape_out.GetDataType(), input_quant0.scale[0], (float*)d_weight_scale, output_quant.scale[0]);
-
+        temp_fuse_param, ctx->GetOutput<TensorImpl>(0)->GetBufferPtr(), shape_out.GetDataType(), input_quant0.scale[0],
+        (float*)d_weight_scale, output_quant.scale[0]);
 
     LOG(DEBUG) << "Excute Depthwise conv with kernel id:" << param_->extra_param.algo_info.kid;
     return ppl::common::RC_SUCCESS;

@@ -46,9 +46,8 @@ ppl::common::RetCode GatherNdKernel::DoExecute(KernelExecContext* ctx) {
     auto indices = ctx->GetInput<TensorImpl>(1);
     auto output = ctx->GetOutput<TensorImpl>(0);
 
-    status =
-        PPLCUDAGatherNDForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), indices->GetShape(),
-                                  indices->GetBufferPtr(), output->GetShape(), output->GetBufferPtr(), tmp_buffer);
+    status = PPLCUDAGatherNDForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), indices->GetShape(),
+                                       indices->GetBufferPtr(), output->GetShape(), output->GetBufferPtr(), tmp_buffer);
     return status;
 }
 

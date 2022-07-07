@@ -30,15 +30,15 @@
 
 #define ALGO_MAX_TIME (3.0e+10)
 
-#define ALLOC_BUFFERF_FOR_ALGO_SELECT(___buffer_name___, ___size___, ___ret___)                  \
-    BufferDesc ___buffer_name___;                                                                \
-    status = options.opt_stage_device->ReallocWithRandomValue(___size___, &___buffer_name___);   \
-    if (status != RC_SUCCESS) {                                                                  \
-        LOG(DEBUG) << "alloc " #___buffer_name___ " tensor failed";                              \
-        return ___ret___;                                                                        \
-    }                                                                                            \
+#define ALLOC_BUFFERF_FOR_ALGO_SELECT(___buffer_name___, ___size___, ___ret___)                        \
+    BufferDesc ___buffer_name___;                                                                      \
+    status = options.opt_stage_device->ReallocWithRandomValue(___size___, &___buffer_name___);         \
+    if (status != RC_SUCCESS) {                                                                        \
+        LOG(DEBUG) << "alloc " #___buffer_name___ " tensor failed";                                    \
+        return ___ret___;                                                                              \
+    }                                                                                                  \
     ppl::common::Destructor __##___buffer_name___##_guard__([&options, &___buffer_name___]() -> void { \
-        options.opt_stage_device->Free(&___buffer_name___);                                      \
+        options.opt_stage_device->Free(&___buffer_name___);                                            \
     });
 
 namespace ppl { namespace nn { namespace cuda {
