@@ -224,7 +224,7 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
             bias_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
         }
 
-        ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, postshape.CalcBytesIncludingPadding(), RC_OUT_OF_MEMORY)
+        ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, newshape.CalcBytesIncludingPadding(), RC_OUT_OF_MEMORY)
         status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
                                                                                bias_iter->second.data.GetData(), preshape);
         if (status != RC_SUCCESS) {
