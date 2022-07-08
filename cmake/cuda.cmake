@@ -4,8 +4,10 @@ option(PPLNN_ENABLE_CUDA_JIT "enable cuda JIT support" ON)
 
 include(${HPCC_DEPS_DIR}/hpcc/cmake/cuda-common.cmake)
 
-if(CUDA_VERSION VERSION_LESS "10.2")
-    message(FATAL_ERROR "cuda verson [${CUDA_VERSION}] < min required [10.2]")
+if(CUDA_VERSION VERSION_LESS "9.0")
+    message(FATAL_ERROR "cuda verson [${CUDA_VERSION}] < min required [9.0]")
+elseif(CUDA_VERSION VERSION_LESS "10.2")
+    message(WARNNING " strongly recommend cuda >= 10.2, now is [${CUDA_VERSION}]")
 endif()
 
 # ----- #
