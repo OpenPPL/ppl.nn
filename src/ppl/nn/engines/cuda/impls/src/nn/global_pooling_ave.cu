@@ -189,7 +189,7 @@ __global__ void ppl_cukernel_pooling_ave_global_shuffle_half2_NHWC_atomic(
     int pad_channels,
     int HW)
 {
-#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 10 // atomicAdd half2 supported on cuda10
     int c        = blockIdx.x * blockDim.x + threadIdx.x;
     int b_offset = blockIdx.z * pad_channels;
     if (c >= pad_channels)
