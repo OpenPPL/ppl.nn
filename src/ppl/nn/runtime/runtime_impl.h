@@ -25,7 +25,6 @@
 #include "ppl/nn/runtime/runtime_graph_info.h"
 #include "ppl/nn/runtime/runtime_aux_info.h"
 #include "ppl/nn/runtime/runtime_init_info.h"
-#include "ppl/nn/runtime/runtime_internal_conf.h"
 #include "ppl/nn/runtime/scheduler.h"
 #include "ppl/nn/runtime/profiler.h"
 #include "ppl/nn/runtime/options.h"
@@ -102,8 +101,10 @@ private:
     RuntimeGraphResource graph_;
     std::unique_ptr<Scheduler> sched_;
     std::vector<std::unique_ptr<EngineContext>> engctx_;
-    RuntimeInternalConf conf_;
-    Profiler profiler_;
+
+#ifdef PPLNN_ENABLE_KERNEL_PROFILING
+    std::shared_ptr<Profiler> profiler_;
+#endif
 
     // ----- shared data ----- //
 
