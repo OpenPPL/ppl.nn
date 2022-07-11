@@ -108,6 +108,17 @@ enum {
     */
     ENGINE_CONF_IMPORT_ALGORITHMS,
 
+    /**
+       @param json_buffer pointer to a json buffer containing selected algos' index information
+       @param buffer_size length of the buffer
+
+       @note example:
+       @code{.cpp}
+       cuda_engine->Configure(ENGINE_CONF_IMPORT_ALGORITHMS_FROM_BUFFER, json_buffer, buffer_size);
+       @endcode
+    */
+    ENGINE_CONF_IMPORT_ALGORITHMS_FROM_BUFFER,
+
     /** max value */
     ENGINE_CONF_MAX,
 };
