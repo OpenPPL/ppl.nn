@@ -76,11 +76,15 @@ static bool CanFuseAsOneNode(const ir::Graph* graph, const ir::Node* node_0, con
 
     auto param_it_0 = graph->data->attrs.find(node_0->GetId());
     auto param_it_1 = graph->data->attrs.find(node_1->GetId());
-    if (param_it_0 == graph->data->attrs.end() || param_it_1 == graph->data->attrs.end()) {
-        return false;
+    if (param_it_0 == graph->data->attrs.end() && param_it_1 == graph->data->attrs.end()) {
+        return true;
     }
 
-    return param_it_0->second->Equals(param_it_1->second.get());
+    if (param_it_0 != graph->data->attrs.end() && param_it_1 != graph->data->attrs.end()) {
+        return param_it_0->second->Equals(param_it_1->second.get());
+    }
+
+    return false;
 }
 
 struct SkippedNodeType final {
