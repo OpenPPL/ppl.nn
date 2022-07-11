@@ -273,6 +273,7 @@ double PPLCUDAGemmSelectKernelInt8(
     const fuse_param_t &fuse_param,
     algo_param_t &algo_param)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
     auto type = weight_shape->GetDataType();
     if (!is_g_int8_kvec_set)
         init_f1_int8_kvec(g_int8_kvec, type);
@@ -354,6 +355,9 @@ double PPLCUDAGemmSelectKernelInt8(
 
     algo_param.kid = best_kid;
     return minTime;
+#else
+    return 0.0;
+#endif
 }
 
 template <typename T>
@@ -388,6 +392,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
     fuse_param_t &fuse_param,
     const algo_param_t &algo_param)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020 
     auto type = weight_shape->GetDataType();
     float alpha  = param.alpha;
 #ifndef PPLNN_ENABLE_CUDA_JIT
@@ -479,6 +484,9 @@ ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
         (g_int8_kvec[kid].int8_lut_kptr)<<<grid_size, block_size, 0, stream>>>(INT8_GEMM_FUNC_PARAM);
 #endif
     return status;
+#else
+    return ppl::common::RC_UNSUPPORTED;
+#endif
 }
 
 template <typename T>

@@ -318,6 +318,7 @@ double PPLCUDAConvolutionSelectKernel(
     fuse_param_t &fuse_param,
     uint64_t workspace)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
     if (!is_g_kernel_container_initialized)
         InitializeKernelContainerInt8(g_kernel_container, type);
 
@@ -513,6 +514,9 @@ double PPLCUDAConvolutionSelectKernel(
 
     g_conv_shape_hash[conv_shape_hash] = algo_param;
     return minTime;
+#else
+    return 0.0;
+#endif
 }
 
 void PPLCUDAConvolutionForwardImp(
@@ -527,6 +531,7 @@ void PPLCUDAConvolutionForwardImp(
     conv_param_t &conv_param,
     fuse_param_t &fuse_param)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
     if (!is_g_kernel_container_initialized)
         InitializeKernelContainerInt8(g_kernel_container, type);
 
@@ -667,6 +672,7 @@ void PPLCUDAConvolutionForwardImp(
     if (is_out_grp_pad) {
         PPLCUDAConvolutionCvtOutput(stream, d_output, final_out, type, conv_param);
     }
+#endif
 }
 
 /* -----------------  JIT FP16 KERNEL ------------------ */
@@ -1125,6 +1131,7 @@ void PPLCUDAConvolutionForwardJitImp(
     conv_param_t &conv_param,
     fuse_param_t &fuse_param)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
 #ifdef PPLNN_ENABLE_CUDA_JIT
     unsigned int splitk = algo_param.splitk;
     unsigned int splitf = algo_param.splitf;
@@ -1273,5 +1280,6 @@ void PPLCUDAConvolutionForwardJitImp(
     if (is_out_grp_pad) {
         PPLCUDAConvolutionCvtOutput(stream, d_output, final_out, type, conv_param);
     }
+#endif
 #endif
 }
