@@ -397,6 +397,7 @@ double PPLCUDABgemmSelectKernel(
     const fuse_param_t &fuse_param,
     algo_param_t &algo_param)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
     auto type = weight_shape->GetDataType();
     if (!is_g_kvec_set)
         init_f1_kvec(g_kvec, type);
@@ -499,6 +500,9 @@ double PPLCUDABgemmSelectKernel(
 
     algo_param.kid = best_kid;
     return minTime;
+#else
+    return 0.0;
+#endif
 }
 
 // (B, M, K_pad) * ((B,)N, K_pad) = (B, M, N_pad)
@@ -516,6 +520,7 @@ ppl::common::RetCode PPLCUDABgemmForwardImp(
     fuse_param_t &fuse_param,
     const algo_param_t &algo_param)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
     auto type = weight_shape->GetDataType();
 #ifndef PPLNN_ENABLE_CUDA_JIT
     if (!is_g_kvec_set)
@@ -622,4 +627,7 @@ ppl::common::RetCode PPLCUDABgemmForwardImp(
     }
 #endif
     return status;
+#else
+    return ppl::common::RC_UNSUPPORTED;
+#endif
 }
