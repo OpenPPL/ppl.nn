@@ -19,7 +19,6 @@
 #include "ppl/nn/engines/engine_impl.h"
 #include "ppl/nn/runtime/runtime_impl.h"
 #include "ppl/nn/runtime/sequential_scheduler.h"
-#include "ppl/nn/runtime/runtime_internal_conf.h"
 #include "ppl/nn/utils/utils.h"
 #include <stdarg.h>
 using namespace std;
@@ -292,8 +291,6 @@ RetCode RuntimeImpl::Init(const shared_ptr<ir::GraphTopo>& topo, const shared_pt
     aux_info_ = aux_info;
     topo_ = topo;
 
-    profiler_.Init(&graph_, aux_info.get());
-
     auto status = InitRuntimeGraphResource(topo.get(), *info, init_info, reserved_edgeids, &engctx_, &graph_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResource failed: " << GetRetCodeStr(status);
@@ -332,9 +329,9 @@ RetCode RuntimeImpl::Run() {
     }
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-    Profiler* profiler = (conf_.profiling_flag ? &profiler_ : nullptr);
+    Profiler* profiler = profiler_.get();
 #else
-    Profiler* profiler = nullptr;
+    constexpr Profiler* profiler = nullptr;
 #endif
 
     status = sched_->Run(profiler);
@@ -348,7 +345,7 @@ RetCode RuntimeImpl::Run() {
 
 RetCode RuntimeImpl::GetProfilingStatistics(ProfilingStatistics* stat) const {
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-    return profiler_.GetProfilingStatistics(stat);
+    return profiler_->GetProfilingStatistics(stat);
 #else
     LOG(ERROR) << "this version does not support profiling.";
     return RC_UNSUPPORTED;
@@ -371,12 +368,18 @@ RetCode RuntimeImpl::SetProfilingFlag(RuntimeImpl* rt, va_list args) {
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
     auto flag = va_arg(args, uint32_t);
     bool profiling_flag = (flag > 0);
-    rt->conf_.profiling_flag = profiling_flag;
 
     if (profiling_flag) {
-        rt->profiler_.StartProfiling(rt->topo_->GetCurrentNodeIdBound());
+        if (!rt->profiler_) {
+            rt->profiler_ = make_shared<Profiler>();
+            rt->profiler_->Init(&rt->graph_, rt->aux_info_.get());
+            rt->profiler_->StartProfiling(rt->topo_->GetCurrentNodeIdBound());
+        }
     } else {
-        rt->profiler_.StopProfiling();
+        if (rt->profiler_) {
+            rt->profiler_->StopProfiling();
+            rt->profiler_.reset();
+        }
     }
 
     return RC_SUCCESS;
