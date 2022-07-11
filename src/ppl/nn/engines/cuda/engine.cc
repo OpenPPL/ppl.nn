@@ -312,8 +312,18 @@ RetCode CudaEngine::ImportAlgorithms(CudaEngine* engine, va_list args) {
         return RC_SUCCESS;
     }
 
+    return ImportAlgorithmsImpl(engine, json_buffer.c_str(), json_buffer.size());
+}
+
+ppl::common::RetCode CudaEngine::ImportAlgorithmsFromBuffer(CudaEngine* engine, va_list args) {
+    auto json_buffer = va_arg(args, const char*);
+    auto buffer_size = va_arg(args, size_t);
+    return ImportAlgorithmsImpl(engine, json_buffer, buffer_size);
+}
+
+RetCode CudaEngine::ImportAlgorithmsImpl(CudaEngine* engine, const char* json_buffer, size_t buffer_size) {
     rapidjson::Document d;
-    d.Parse(json_buffer.c_str());
+    d.Parse(json_buffer, buffer_size);
     if (d.HasParseError()) {
         LOG(ERROR) << "parse quant file failed: position[" << d.GetErrorOffset() << "], code[" << d.GetParseError()
                    << "]";
@@ -363,6 +373,7 @@ CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetQuantInfo, // ENGINE_CONF_SET_QUANT_INFO
     CudaEngine::ExportAlgorithms, // ENGINE_CONF_EXPORT_ALGORITHMS
     CudaEngine::ImportAlgorithms, // ENGINE_CONF_IMPORT_ALGORITHMS
+    CudaEngine::ImportAlgorithmsFromBuffer, // ENGINE_CONF_IMPORT_ALGORITHMS_FROM_BUFFER
 };
 
 RetCode CudaEngine::Configure(uint32_t option, ...) {
