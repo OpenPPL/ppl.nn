@@ -25,6 +25,14 @@
 #define PREDEFINEENDIF #endif
 #define PRAGMAUNROLL #pragma
 
+__device__ inline int __dp4a_ver_ctrl(int srcA, int srcB, int c) {
+#if __CUDA_ARCH__ >= 610 && __CUDACC_VER_MAJOR__ >= 9
+    return __dp4a(srcA, srcB, c);
+#else
+    return int(0);
+#endif
+}
+
 #define FUSE_PROCESS_FLOAT(out_val, fuse_params, TILE_H, TILE_W, base_offset) \
 { \
     if (fuse_params.has_activation){ \
@@ -76,57 +84,57 @@
     val.w = data & posW;
 
 #define COMPUTE_F3S1_POS0(C, pic_data, tmp_val) \
-    C[ 0] = __dp4a(pic_data[0], tmp_val.x, C[ 0]); \
-    C[ 1] = __dp4a(pic_data[0], tmp_val.y, C[ 1]); \
-    C[ 2] = __dp4a(pic_data[0], tmp_val.z, C[ 2]); \
-    C[ 3] = __dp4a(pic_data[0], tmp_val.w, C[ 3]); \
-    C[ 4] = __dp4a(pic_data[1], tmp_val.x, C[ 4]); \
-    C[ 5] = __dp4a(pic_data[1], tmp_val.y, C[ 5]); \
-    C[ 6] = __dp4a(pic_data[1], tmp_val.z, C[ 6]); \
-    C[ 7] = __dp4a(pic_data[1], tmp_val.w, C[ 7]); \
-    C[ 8] = __dp4a(pic_data[2], tmp_val.x, C[ 8]); \
-    C[ 9] = __dp4a(pic_data[2], tmp_val.y, C[ 9]); \
-    C[10] = __dp4a(pic_data[2], tmp_val.z, C[10]); \
-    C[11] = __dp4a(pic_data[2], tmp_val.w, C[11]); \
-    C[12] = __dp4a(pic_data[3], tmp_val.x, C[12]); \
-    C[13] = __dp4a(pic_data[3], tmp_val.y, C[13]); \
-    C[14] = __dp4a(pic_data[3], tmp_val.z, C[14]); \
-    C[15] = __dp4a(pic_data[3], tmp_val.w, C[15]);
+    C[ 0] = __dp4a_ver_ctrl(pic_data[0], tmp_val.x, C[ 0]); \
+    C[ 1] = __dp4a_ver_ctrl(pic_data[0], tmp_val.y, C[ 1]); \
+    C[ 2] = __dp4a_ver_ctrl(pic_data[0], tmp_val.z, C[ 2]); \
+    C[ 3] = __dp4a_ver_ctrl(pic_data[0], tmp_val.w, C[ 3]); \
+    C[ 4] = __dp4a_ver_ctrl(pic_data[1], tmp_val.x, C[ 4]); \
+    C[ 5] = __dp4a_ver_ctrl(pic_data[1], tmp_val.y, C[ 5]); \
+    C[ 6] = __dp4a_ver_ctrl(pic_data[1], tmp_val.z, C[ 6]); \
+    C[ 7] = __dp4a_ver_ctrl(pic_data[1], tmp_val.w, C[ 7]); \
+    C[ 8] = __dp4a_ver_ctrl(pic_data[2], tmp_val.x, C[ 8]); \
+    C[ 9] = __dp4a_ver_ctrl(pic_data[2], tmp_val.y, C[ 9]); \
+    C[10] = __dp4a_ver_ctrl(pic_data[2], tmp_val.z, C[10]); \
+    C[11] = __dp4a_ver_ctrl(pic_data[2], tmp_val.w, C[11]); \
+    C[12] = __dp4a_ver_ctrl(pic_data[3], tmp_val.x, C[12]); \
+    C[13] = __dp4a_ver_ctrl(pic_data[3], tmp_val.y, C[13]); \
+    C[14] = __dp4a_ver_ctrl(pic_data[3], tmp_val.z, C[14]); \
+    C[15] = __dp4a_ver_ctrl(pic_data[3], tmp_val.w, C[15]);
 #define COMPUTE_F3S1_POS1(C, pic_data, tmp_val) \
-    C[ 0] = __dp4a(pic_data[1], tmp_val.x, C[ 0]); \
-    C[ 1] = __dp4a(pic_data[1], tmp_val.y, C[ 1]); \
-    C[ 2] = __dp4a(pic_data[1], tmp_val.z, C[ 2]); \
-    C[ 3] = __dp4a(pic_data[1], tmp_val.w, C[ 3]); \
-    C[ 4] = __dp4a(pic_data[2], tmp_val.x, C[ 4]); \
-    C[ 5] = __dp4a(pic_data[2], tmp_val.y, C[ 5]); \
-    C[ 6] = __dp4a(pic_data[2], tmp_val.z, C[ 6]); \
-    C[ 7] = __dp4a(pic_data[2], tmp_val.w, C[ 7]); \
-    C[ 8] = __dp4a(pic_data[3], tmp_val.x, C[ 8]); \
-    C[ 9] = __dp4a(pic_data[3], tmp_val.y, C[ 9]); \
-    C[10] = __dp4a(pic_data[3], tmp_val.z, C[10]); \
-    C[11] = __dp4a(pic_data[3], tmp_val.w, C[11]); \
-    C[12] = __dp4a(pic_data[4], tmp_val.x, C[12]); \
-    C[13] = __dp4a(pic_data[4], tmp_val.y, C[13]); \
-    C[14] = __dp4a(pic_data[4], tmp_val.z, C[14]); \
-    C[15] = __dp4a(pic_data[4], tmp_val.w, C[15]); 
+    C[ 0] = __dp4a_ver_ctrl(pic_data[1], tmp_val.x, C[ 0]); \
+    C[ 1] = __dp4a_ver_ctrl(pic_data[1], tmp_val.y, C[ 1]); \
+    C[ 2] = __dp4a_ver_ctrl(pic_data[1], tmp_val.z, C[ 2]); \
+    C[ 3] = __dp4a_ver_ctrl(pic_data[1], tmp_val.w, C[ 3]); \
+    C[ 4] = __dp4a_ver_ctrl(pic_data[2], tmp_val.x, C[ 4]); \
+    C[ 5] = __dp4a_ver_ctrl(pic_data[2], tmp_val.y, C[ 5]); \
+    C[ 6] = __dp4a_ver_ctrl(pic_data[2], tmp_val.z, C[ 6]); \
+    C[ 7] = __dp4a_ver_ctrl(pic_data[2], tmp_val.w, C[ 7]); \
+    C[ 8] = __dp4a_ver_ctrl(pic_data[3], tmp_val.x, C[ 8]); \
+    C[ 9] = __dp4a_ver_ctrl(pic_data[3], tmp_val.y, C[ 9]); \
+    C[10] = __dp4a_ver_ctrl(pic_data[3], tmp_val.z, C[10]); \
+    C[11] = __dp4a_ver_ctrl(pic_data[3], tmp_val.w, C[11]); \
+    C[12] = __dp4a_ver_ctrl(pic_data[4], tmp_val.x, C[12]); \
+    C[13] = __dp4a_ver_ctrl(pic_data[4], tmp_val.y, C[13]); \
+    C[14] = __dp4a_ver_ctrl(pic_data[4], tmp_val.z, C[14]); \
+    C[15] = __dp4a_ver_ctrl(pic_data[4], tmp_val.w, C[15]); 
 
 #define COMPUTE_F3S1_POS2(C, pic_data, tmp_val) \
-    C[ 0] = __dp4a(pic_data[2], tmp_val.x, C[ 0]); \
-    C[ 1] = __dp4a(pic_data[2], tmp_val.y, C[ 1]); \
-    C[ 2] = __dp4a(pic_data[2], tmp_val.z, C[ 2]); \
-    C[ 3] = __dp4a(pic_data[2], tmp_val.w, C[ 3]); \
-    C[ 4] = __dp4a(pic_data[3], tmp_val.x, C[ 4]); \
-    C[ 5] = __dp4a(pic_data[3], tmp_val.y, C[ 5]); \
-    C[ 6] = __dp4a(pic_data[3], tmp_val.z, C[ 6]); \
-    C[ 7] = __dp4a(pic_data[3], tmp_val.w, C[ 7]); \
-    C[ 8] = __dp4a(pic_data[4], tmp_val.x, C[ 8]); \
-    C[ 9] = __dp4a(pic_data[4], tmp_val.y, C[ 9]); \
-    C[10] = __dp4a(pic_data[4], tmp_val.z, C[10]); \
-    C[11] = __dp4a(pic_data[4], tmp_val.w, C[11]); \
-    C[12] = __dp4a(pic_data[5], tmp_val.x, C[12]); \
-    C[13] = __dp4a(pic_data[5], tmp_val.y, C[13]); \
-    C[14] = __dp4a(pic_data[5], tmp_val.z, C[14]); \
-    C[15] = __dp4a(pic_data[5], tmp_val.w, C[15]); 
+    C[ 0] = __dp4a_ver_ctrl(pic_data[2], tmp_val.x, C[ 0]); \
+    C[ 1] = __dp4a_ver_ctrl(pic_data[2], tmp_val.y, C[ 1]); \
+    C[ 2] = __dp4a_ver_ctrl(pic_data[2], tmp_val.z, C[ 2]); \
+    C[ 3] = __dp4a_ver_ctrl(pic_data[2], tmp_val.w, C[ 3]); \
+    C[ 4] = __dp4a_ver_ctrl(pic_data[3], tmp_val.x, C[ 4]); \
+    C[ 5] = __dp4a_ver_ctrl(pic_data[3], tmp_val.y, C[ 5]); \
+    C[ 6] = __dp4a_ver_ctrl(pic_data[3], tmp_val.z, C[ 6]); \
+    C[ 7] = __dp4a_ver_ctrl(pic_data[3], tmp_val.w, C[ 7]); \
+    C[ 8] = __dp4a_ver_ctrl(pic_data[4], tmp_val.x, C[ 8]); \
+    C[ 9] = __dp4a_ver_ctrl(pic_data[4], tmp_val.y, C[ 9]); \
+    C[10] = __dp4a_ver_ctrl(pic_data[4], tmp_val.z, C[10]); \
+    C[11] = __dp4a_ver_ctrl(pic_data[4], tmp_val.w, C[11]); \
+    C[12] = __dp4a_ver_ctrl(pic_data[5], tmp_val.x, C[12]); \
+    C[13] = __dp4a_ver_ctrl(pic_data[5], tmp_val.y, C[13]); \
+    C[14] = __dp4a_ver_ctrl(pic_data[5], tmp_val.z, C[14]); \
+    C[15] = __dp4a_ver_ctrl(pic_data[5], tmp_val.w, C[15]); 
 
 #define FETCH_INPUT(pic_data, int_input) \
     pic_data[0] = pred[0] ? int_input[in_idx + 0*inh_stride] : 0;\
@@ -155,58 +163,58 @@
 
 
 #define COMPUTE_F3S2_POS0(C, pic_data, tmp_val) \
-    C[ 0] = __dp4a(pic_data[0], tmp_val.x, C[ 0]); \
-    C[ 1] = __dp4a(pic_data[0], tmp_val.y, C[ 1]); \
-    C[ 2] = __dp4a(pic_data[0], tmp_val.z, C[ 2]); \
-    C[ 3] = __dp4a(pic_data[0], tmp_val.w, C[ 3]); \
-    C[ 4] = __dp4a(pic_data[2], tmp_val.x, C[ 4]); \
-    C[ 5] = __dp4a(pic_data[2], tmp_val.y, C[ 5]); \
-    C[ 6] = __dp4a(pic_data[2], tmp_val.z, C[ 6]); \
-    C[ 7] = __dp4a(pic_data[2], tmp_val.w, C[ 7]); \
-    C[ 8] = __dp4a(pic_data[4], tmp_val.x, C[ 8]); \
-    C[ 9] = __dp4a(pic_data[4], tmp_val.y, C[ 9]); \
-    C[10] = __dp4a(pic_data[4], tmp_val.z, C[10]); \
-    C[11] = __dp4a(pic_data[4], tmp_val.w, C[11]); \
-    C[12] = __dp4a(pic_data[6], tmp_val.x, C[12]); \
-    C[13] = __dp4a(pic_data[6], tmp_val.y, C[13]); \
-    C[14] = __dp4a(pic_data[6], tmp_val.z, C[14]); \
-    C[15] = __dp4a(pic_data[6], tmp_val.w, C[15]); 
+    C[ 0] = __dp4a_ver_ctrl(pic_data[0], tmp_val.x, C[ 0]); \
+    C[ 1] = __dp4a_ver_ctrl(pic_data[0], tmp_val.y, C[ 1]); \
+    C[ 2] = __dp4a_ver_ctrl(pic_data[0], tmp_val.z, C[ 2]); \
+    C[ 3] = __dp4a_ver_ctrl(pic_data[0], tmp_val.w, C[ 3]); \
+    C[ 4] = __dp4a_ver_ctrl(pic_data[2], tmp_val.x, C[ 4]); \
+    C[ 5] = __dp4a_ver_ctrl(pic_data[2], tmp_val.y, C[ 5]); \
+    C[ 6] = __dp4a_ver_ctrl(pic_data[2], tmp_val.z, C[ 6]); \
+    C[ 7] = __dp4a_ver_ctrl(pic_data[2], tmp_val.w, C[ 7]); \
+    C[ 8] = __dp4a_ver_ctrl(pic_data[4], tmp_val.x, C[ 8]); \
+    C[ 9] = __dp4a_ver_ctrl(pic_data[4], tmp_val.y, C[ 9]); \
+    C[10] = __dp4a_ver_ctrl(pic_data[4], tmp_val.z, C[10]); \
+    C[11] = __dp4a_ver_ctrl(pic_data[4], tmp_val.w, C[11]); \
+    C[12] = __dp4a_ver_ctrl(pic_data[6], tmp_val.x, C[12]); \
+    C[13] = __dp4a_ver_ctrl(pic_data[6], tmp_val.y, C[13]); \
+    C[14] = __dp4a_ver_ctrl(pic_data[6], tmp_val.z, C[14]); \
+    C[15] = __dp4a_ver_ctrl(pic_data[6], tmp_val.w, C[15]); 
 
 #define COMPUTE_F3S2_POS1(C, pic_data, tmp_val) \
-    C[ 0] = __dp4a(pic_data[1], tmp_val.x, C[ 0]); \
-    C[ 1] = __dp4a(pic_data[1], tmp_val.y, C[ 1]); \
-    C[ 2] = __dp4a(pic_data[1], tmp_val.z, C[ 2]); \
-    C[ 3] = __dp4a(pic_data[1], tmp_val.w, C[ 3]); \
-    C[ 4] = __dp4a(pic_data[3], tmp_val.x, C[ 4]); \
-    C[ 5] = __dp4a(pic_data[3], tmp_val.y, C[ 5]); \
-    C[ 6] = __dp4a(pic_data[3], tmp_val.z, C[ 6]); \
-    C[ 7] = __dp4a(pic_data[3], tmp_val.w, C[ 7]); \
-    C[ 8] = __dp4a(pic_data[5], tmp_val.x, C[ 8]); \
-    C[ 9] = __dp4a(pic_data[5], tmp_val.y, C[ 9]); \
-    C[10] = __dp4a(pic_data[5], tmp_val.z, C[10]); \
-    C[11] = __dp4a(pic_data[5], tmp_val.w, C[11]); \
-    C[12] = __dp4a(pic_data[7], tmp_val.x, C[12]); \
-    C[13] = __dp4a(pic_data[7], tmp_val.y, C[13]); \
-    C[14] = __dp4a(pic_data[7], tmp_val.z, C[14]); \
-    C[15] = __dp4a(pic_data[7], tmp_val.w, C[15]); 
+    C[ 0] = __dp4a_ver_ctrl(pic_data[1], tmp_val.x, C[ 0]); \
+    C[ 1] = __dp4a_ver_ctrl(pic_data[1], tmp_val.y, C[ 1]); \
+    C[ 2] = __dp4a_ver_ctrl(pic_data[1], tmp_val.z, C[ 2]); \
+    C[ 3] = __dp4a_ver_ctrl(pic_data[1], tmp_val.w, C[ 3]); \
+    C[ 4] = __dp4a_ver_ctrl(pic_data[3], tmp_val.x, C[ 4]); \
+    C[ 5] = __dp4a_ver_ctrl(pic_data[3], tmp_val.y, C[ 5]); \
+    C[ 6] = __dp4a_ver_ctrl(pic_data[3], tmp_val.z, C[ 6]); \
+    C[ 7] = __dp4a_ver_ctrl(pic_data[3], tmp_val.w, C[ 7]); \
+    C[ 8] = __dp4a_ver_ctrl(pic_data[5], tmp_val.x, C[ 8]); \
+    C[ 9] = __dp4a_ver_ctrl(pic_data[5], tmp_val.y, C[ 9]); \
+    C[10] = __dp4a_ver_ctrl(pic_data[5], tmp_val.z, C[10]); \
+    C[11] = __dp4a_ver_ctrl(pic_data[5], tmp_val.w, C[11]); \
+    C[12] = __dp4a_ver_ctrl(pic_data[7], tmp_val.x, C[12]); \
+    C[13] = __dp4a_ver_ctrl(pic_data[7], tmp_val.y, C[13]); \
+    C[14] = __dp4a_ver_ctrl(pic_data[7], tmp_val.z, C[14]); \
+    C[15] = __dp4a_ver_ctrl(pic_data[7], tmp_val.w, C[15]); 
 
 #define COMPUTE_F3S2_POS2(C, pic_data, tmp_val) \
-    C[ 0] = __dp4a(pic_data[2], tmp_val.x, C[ 0]); \
-    C[ 1] = __dp4a(pic_data[2], tmp_val.y, C[ 1]); \
-    C[ 2] = __dp4a(pic_data[2], tmp_val.z, C[ 2]); \
-    C[ 3] = __dp4a(pic_data[2], tmp_val.w, C[ 3]); \
-    C[ 4] = __dp4a(pic_data[4], tmp_val.x, C[ 4]); \
-    C[ 5] = __dp4a(pic_data[4], tmp_val.y, C[ 5]); \
-    C[ 6] = __dp4a(pic_data[4], tmp_val.z, C[ 6]); \
-    C[ 7] = __dp4a(pic_data[4], tmp_val.w, C[ 7]); \
-    C[ 8] = __dp4a(pic_data[6], tmp_val.x, C[ 8]); \
-    C[ 9] = __dp4a(pic_data[6], tmp_val.y, C[ 9]); \
-    C[10] = __dp4a(pic_data[6], tmp_val.z, C[10]); \
-    C[11] = __dp4a(pic_data[6], tmp_val.w, C[11]); \
-    C[12] = __dp4a(pic_data[8], tmp_val.x, C[12]); \
-    C[13] = __dp4a(pic_data[8], tmp_val.y, C[13]); \
-    C[14] = __dp4a(pic_data[8], tmp_val.z, C[14]); \
-    C[15] = __dp4a(pic_data[8], tmp_val.w, C[15]); 
+    C[ 0] = __dp4a_ver_ctrl(pic_data[2], tmp_val.x, C[ 0]); \
+    C[ 1] = __dp4a_ver_ctrl(pic_data[2], tmp_val.y, C[ 1]); \
+    C[ 2] = __dp4a_ver_ctrl(pic_data[2], tmp_val.z, C[ 2]); \
+    C[ 3] = __dp4a_ver_ctrl(pic_data[2], tmp_val.w, C[ 3]); \
+    C[ 4] = __dp4a_ver_ctrl(pic_data[4], tmp_val.x, C[ 4]); \
+    C[ 5] = __dp4a_ver_ctrl(pic_data[4], tmp_val.y, C[ 5]); \
+    C[ 6] = __dp4a_ver_ctrl(pic_data[4], tmp_val.z, C[ 6]); \
+    C[ 7] = __dp4a_ver_ctrl(pic_data[4], tmp_val.w, C[ 7]); \
+    C[ 8] = __dp4a_ver_ctrl(pic_data[6], tmp_val.x, C[ 8]); \
+    C[ 9] = __dp4a_ver_ctrl(pic_data[6], tmp_val.y, C[ 9]); \
+    C[10] = __dp4a_ver_ctrl(pic_data[6], tmp_val.z, C[10]); \
+    C[11] = __dp4a_ver_ctrl(pic_data[6], tmp_val.w, C[11]); \
+    C[12] = __dp4a_ver_ctrl(pic_data[8], tmp_val.x, C[12]); \
+    C[13] = __dp4a_ver_ctrl(pic_data[8], tmp_val.y, C[13]); \
+    C[14] = __dp4a_ver_ctrl(pic_data[8], tmp_val.z, C[14]); \
+    C[15] = __dp4a_ver_ctrl(pic_data[8], tmp_val.w, C[15]); 
 
 
 template<int TILE_H, int TILE_W, int SRC_TILE_H, int SRC_TILE_W, int KERNEL_H, int KERNEL_W, int STRIRDE_H, int STRIRDE_W>
@@ -720,94 +728,94 @@ __global__ void ppl_cuda_depthwise_int8_nhwc_f3s2(
 }
 
 #define COMPUTE_F5S1_POS0(C, pic_data, tmp_val) \
-    C[ 0] = __dp4a(pic_data[0], tmp_val.x, C[ 0]); \
-    C[ 1] = __dp4a(pic_data[0], tmp_val.y, C[ 1]); \
-    C[ 2] = __dp4a(pic_data[0], tmp_val.z, C[ 2]); \
-    C[ 3] = __dp4a(pic_data[0], tmp_val.w, C[ 3]); \
-    C[ 4] = __dp4a(pic_data[1], tmp_val.x, C[ 4]); \
-    C[ 5] = __dp4a(pic_data[1], tmp_val.y, C[ 5]); \
-    C[ 6] = __dp4a(pic_data[1], tmp_val.z, C[ 6]); \
-    C[ 7] = __dp4a(pic_data[1], tmp_val.w, C[ 7]); \
-    C[ 8] = __dp4a(pic_data[2], tmp_val.x, C[ 8]); \
-    C[ 9] = __dp4a(pic_data[2], tmp_val.y, C[ 9]); \
-    C[10] = __dp4a(pic_data[2], tmp_val.z, C[10]); \
-    C[11] = __dp4a(pic_data[2], tmp_val.w, C[11]); \
-    C[12] = __dp4a(pic_data[3], tmp_val.x, C[12]); \
-    C[13] = __dp4a(pic_data[3], tmp_val.y, C[13]); \
-    C[14] = __dp4a(pic_data[3], tmp_val.z, C[14]); \
-    C[15] = __dp4a(pic_data[3], tmp_val.w, C[15]); 
+    C[ 0] = __dp4a_ver_ctrl(pic_data[0], tmp_val.x, C[ 0]); \
+    C[ 1] = __dp4a_ver_ctrl(pic_data[0], tmp_val.y, C[ 1]); \
+    C[ 2] = __dp4a_ver_ctrl(pic_data[0], tmp_val.z, C[ 2]); \
+    C[ 3] = __dp4a_ver_ctrl(pic_data[0], tmp_val.w, C[ 3]); \
+    C[ 4] = __dp4a_ver_ctrl(pic_data[1], tmp_val.x, C[ 4]); \
+    C[ 5] = __dp4a_ver_ctrl(pic_data[1], tmp_val.y, C[ 5]); \
+    C[ 6] = __dp4a_ver_ctrl(pic_data[1], tmp_val.z, C[ 6]); \
+    C[ 7] = __dp4a_ver_ctrl(pic_data[1], tmp_val.w, C[ 7]); \
+    C[ 8] = __dp4a_ver_ctrl(pic_data[2], tmp_val.x, C[ 8]); \
+    C[ 9] = __dp4a_ver_ctrl(pic_data[2], tmp_val.y, C[ 9]); \
+    C[10] = __dp4a_ver_ctrl(pic_data[2], tmp_val.z, C[10]); \
+    C[11] = __dp4a_ver_ctrl(pic_data[2], tmp_val.w, C[11]); \
+    C[12] = __dp4a_ver_ctrl(pic_data[3], tmp_val.x, C[12]); \
+    C[13] = __dp4a_ver_ctrl(pic_data[3], tmp_val.y, C[13]); \
+    C[14] = __dp4a_ver_ctrl(pic_data[3], tmp_val.z, C[14]); \
+    C[15] = __dp4a_ver_ctrl(pic_data[3], tmp_val.w, C[15]); 
 
 #define COMPUTE_F5S1_POS1(C, pic_data, tmp_val) \
-    C[ 0] = __dp4a(pic_data[1], tmp_val.x, C[ 0]); \
-    C[ 1] = __dp4a(pic_data[1], tmp_val.y, C[ 1]); \
-    C[ 2] = __dp4a(pic_data[1], tmp_val.z, C[ 2]); \
-    C[ 3] = __dp4a(pic_data[1], tmp_val.w, C[ 3]); \
-    C[ 4] = __dp4a(pic_data[2], tmp_val.x, C[ 4]); \
-    C[ 5] = __dp4a(pic_data[2], tmp_val.y, C[ 5]); \
-    C[ 6] = __dp4a(pic_data[2], tmp_val.z, C[ 6]); \
-    C[ 7] = __dp4a(pic_data[2], tmp_val.w, C[ 7]); \
-    C[ 8] = __dp4a(pic_data[3], tmp_val.x, C[ 8]); \
-    C[ 9] = __dp4a(pic_data[3], tmp_val.y, C[ 9]); \
-    C[10] = __dp4a(pic_data[3], tmp_val.z, C[10]); \
-    C[11] = __dp4a(pic_data[3], tmp_val.w, C[11]); \
-    C[12] = __dp4a(pic_data[4], tmp_val.x, C[12]); \
-    C[13] = __dp4a(pic_data[4], tmp_val.y, C[13]); \
-    C[14] = __dp4a(pic_data[4], tmp_val.z, C[14]); \
-    C[15] = __dp4a(pic_data[4], tmp_val.w, C[15]); 
+    C[ 0] = __dp4a_ver_ctrl(pic_data[1], tmp_val.x, C[ 0]); \
+    C[ 1] = __dp4a_ver_ctrl(pic_data[1], tmp_val.y, C[ 1]); \
+    C[ 2] = __dp4a_ver_ctrl(pic_data[1], tmp_val.z, C[ 2]); \
+    C[ 3] = __dp4a_ver_ctrl(pic_data[1], tmp_val.w, C[ 3]); \
+    C[ 4] = __dp4a_ver_ctrl(pic_data[2], tmp_val.x, C[ 4]); \
+    C[ 5] = __dp4a_ver_ctrl(pic_data[2], tmp_val.y, C[ 5]); \
+    C[ 6] = __dp4a_ver_ctrl(pic_data[2], tmp_val.z, C[ 6]); \
+    C[ 7] = __dp4a_ver_ctrl(pic_data[2], tmp_val.w, C[ 7]); \
+    C[ 8] = __dp4a_ver_ctrl(pic_data[3], tmp_val.x, C[ 8]); \
+    C[ 9] = __dp4a_ver_ctrl(pic_data[3], tmp_val.y, C[ 9]); \
+    C[10] = __dp4a_ver_ctrl(pic_data[3], tmp_val.z, C[10]); \
+    C[11] = __dp4a_ver_ctrl(pic_data[3], tmp_val.w, C[11]); \
+    C[12] = __dp4a_ver_ctrl(pic_data[4], tmp_val.x, C[12]); \
+    C[13] = __dp4a_ver_ctrl(pic_data[4], tmp_val.y, C[13]); \
+    C[14] = __dp4a_ver_ctrl(pic_data[4], tmp_val.z, C[14]); \
+    C[15] = __dp4a_ver_ctrl(pic_data[4], tmp_val.w, C[15]); 
 
 #define COMPUTE_F5S1_POS2(C, pic_data, tmp_val) \
-    C[ 0] = __dp4a(pic_data[2], tmp_val.x, C[ 0]); \
-    C[ 1] = __dp4a(pic_data[2], tmp_val.y, C[ 1]); \
-    C[ 2] = __dp4a(pic_data[2], tmp_val.z, C[ 2]); \
-    C[ 3] = __dp4a(pic_data[2], tmp_val.w, C[ 3]); \
-    C[ 4] = __dp4a(pic_data[3], tmp_val.x, C[ 4]); \
-    C[ 5] = __dp4a(pic_data[3], tmp_val.y, C[ 5]); \
-    C[ 6] = __dp4a(pic_data[3], tmp_val.z, C[ 6]); \
-    C[ 7] = __dp4a(pic_data[3], tmp_val.w, C[ 7]); \
-    C[ 8] = __dp4a(pic_data[4], tmp_val.x, C[ 8]); \
-    C[ 9] = __dp4a(pic_data[4], tmp_val.y, C[ 9]); \
-    C[10] = __dp4a(pic_data[4], tmp_val.z, C[10]); \
-    C[11] = __dp4a(pic_data[4], tmp_val.w, C[11]); \
-    C[12] = __dp4a(pic_data[5], tmp_val.x, C[12]); \
-    C[13] = __dp4a(pic_data[5], tmp_val.y, C[13]); \
-    C[14] = __dp4a(pic_data[5], tmp_val.z, C[14]); \
-    C[15] = __dp4a(pic_data[5], tmp_val.w, C[15]); 
+    C[ 0] = __dp4a_ver_ctrl(pic_data[2], tmp_val.x, C[ 0]); \
+    C[ 1] = __dp4a_ver_ctrl(pic_data[2], tmp_val.y, C[ 1]); \
+    C[ 2] = __dp4a_ver_ctrl(pic_data[2], tmp_val.z, C[ 2]); \
+    C[ 3] = __dp4a_ver_ctrl(pic_data[2], tmp_val.w, C[ 3]); \
+    C[ 4] = __dp4a_ver_ctrl(pic_data[3], tmp_val.x, C[ 4]); \
+    C[ 5] = __dp4a_ver_ctrl(pic_data[3], tmp_val.y, C[ 5]); \
+    C[ 6] = __dp4a_ver_ctrl(pic_data[3], tmp_val.z, C[ 6]); \
+    C[ 7] = __dp4a_ver_ctrl(pic_data[3], tmp_val.w, C[ 7]); \
+    C[ 8] = __dp4a_ver_ctrl(pic_data[4], tmp_val.x, C[ 8]); \
+    C[ 9] = __dp4a_ver_ctrl(pic_data[4], tmp_val.y, C[ 9]); \
+    C[10] = __dp4a_ver_ctrl(pic_data[4], tmp_val.z, C[10]); \
+    C[11] = __dp4a_ver_ctrl(pic_data[4], tmp_val.w, C[11]); \
+    C[12] = __dp4a_ver_ctrl(pic_data[5], tmp_val.x, C[12]); \
+    C[13] = __dp4a_ver_ctrl(pic_data[5], tmp_val.y, C[13]); \
+    C[14] = __dp4a_ver_ctrl(pic_data[5], tmp_val.z, C[14]); \
+    C[15] = __dp4a_ver_ctrl(pic_data[5], tmp_val.w, C[15]); 
 
 #define COMPUTE_F5S1_POS3(C, pic_data, tmp_val) \
-    C[ 0] = __dp4a(pic_data[3], tmp_val.x, C[ 0]); \
-    C[ 1] = __dp4a(pic_data[3], tmp_val.y, C[ 1]); \
-    C[ 2] = __dp4a(pic_data[3], tmp_val.z, C[ 2]); \
-    C[ 3] = __dp4a(pic_data[3], tmp_val.w, C[ 3]); \
-    C[ 4] = __dp4a(pic_data[4], tmp_val.x, C[ 4]); \
-    C[ 5] = __dp4a(pic_data[4], tmp_val.y, C[ 5]); \
-    C[ 6] = __dp4a(pic_data[4], tmp_val.z, C[ 6]); \
-    C[ 7] = __dp4a(pic_data[4], tmp_val.w, C[ 7]); \
-    C[ 8] = __dp4a(pic_data[5], tmp_val.x, C[ 8]); \
-    C[ 9] = __dp4a(pic_data[5], tmp_val.y, C[ 9]); \
-    C[10] = __dp4a(pic_data[5], tmp_val.z, C[10]); \
-    C[11] = __dp4a(pic_data[5], tmp_val.w, C[11]); \
-    C[12] = __dp4a(pic_data[6], tmp_val.x, C[12]); \
-    C[13] = __dp4a(pic_data[6], tmp_val.y, C[13]); \
-    C[14] = __dp4a(pic_data[6], tmp_val.z, C[14]); \
-    C[15] = __dp4a(pic_data[6], tmp_val.w, C[15]); 
+    C[ 0] = __dp4a_ver_ctrl(pic_data[3], tmp_val.x, C[ 0]); \
+    C[ 1] = __dp4a_ver_ctrl(pic_data[3], tmp_val.y, C[ 1]); \
+    C[ 2] = __dp4a_ver_ctrl(pic_data[3], tmp_val.z, C[ 2]); \
+    C[ 3] = __dp4a_ver_ctrl(pic_data[3], tmp_val.w, C[ 3]); \
+    C[ 4] = __dp4a_ver_ctrl(pic_data[4], tmp_val.x, C[ 4]); \
+    C[ 5] = __dp4a_ver_ctrl(pic_data[4], tmp_val.y, C[ 5]); \
+    C[ 6] = __dp4a_ver_ctrl(pic_data[4], tmp_val.z, C[ 6]); \
+    C[ 7] = __dp4a_ver_ctrl(pic_data[4], tmp_val.w, C[ 7]); \
+    C[ 8] = __dp4a_ver_ctrl(pic_data[5], tmp_val.x, C[ 8]); \
+    C[ 9] = __dp4a_ver_ctrl(pic_data[5], tmp_val.y, C[ 9]); \
+    C[10] = __dp4a_ver_ctrl(pic_data[5], tmp_val.z, C[10]); \
+    C[11] = __dp4a_ver_ctrl(pic_data[5], tmp_val.w, C[11]); \
+    C[12] = __dp4a_ver_ctrl(pic_data[6], tmp_val.x, C[12]); \
+    C[13] = __dp4a_ver_ctrl(pic_data[6], tmp_val.y, C[13]); \
+    C[14] = __dp4a_ver_ctrl(pic_data[6], tmp_val.z, C[14]); \
+    C[15] = __dp4a_ver_ctrl(pic_data[6], tmp_val.w, C[15]); 
 
 #define COMPUTE_F5S1_POS4(C, pic_data, tmp_val) \
-    C[ 0] = __dp4a(pic_data[4], tmp_val.x, C[ 0]); \
-    C[ 1] = __dp4a(pic_data[4], tmp_val.y, C[ 1]); \
-    C[ 2] = __dp4a(pic_data[4], tmp_val.z, C[ 2]); \
-    C[ 3] = __dp4a(pic_data[4], tmp_val.w, C[ 3]); \
-    C[ 4] = __dp4a(pic_data[5], tmp_val.x, C[ 4]); \
-    C[ 5] = __dp4a(pic_data[5], tmp_val.y, C[ 5]); \
-    C[ 6] = __dp4a(pic_data[5], tmp_val.z, C[ 6]); \
-    C[ 7] = __dp4a(pic_data[5], tmp_val.w, C[ 7]); \
-    C[ 8] = __dp4a(pic_data[6], tmp_val.x, C[ 8]); \
-    C[ 9] = __dp4a(pic_data[6], tmp_val.y, C[ 9]); \
-    C[10] = __dp4a(pic_data[6], tmp_val.z, C[10]); \
-    C[11] = __dp4a(pic_data[6], tmp_val.w, C[11]); \
-    C[12] = __dp4a(pic_data[7], tmp_val.x, C[12]); \
-    C[13] = __dp4a(pic_data[7], tmp_val.y, C[13]); \
-    C[14] = __dp4a(pic_data[7], tmp_val.z, C[14]); \
-    C[15] = __dp4a(pic_data[7], tmp_val.w, C[15]); 
+    C[ 0] = __dp4a_ver_ctrl(pic_data[4], tmp_val.x, C[ 0]); \
+    C[ 1] = __dp4a_ver_ctrl(pic_data[4], tmp_val.y, C[ 1]); \
+    C[ 2] = __dp4a_ver_ctrl(pic_data[4], tmp_val.z, C[ 2]); \
+    C[ 3] = __dp4a_ver_ctrl(pic_data[4], tmp_val.w, C[ 3]); \
+    C[ 4] = __dp4a_ver_ctrl(pic_data[5], tmp_val.x, C[ 4]); \
+    C[ 5] = __dp4a_ver_ctrl(pic_data[5], tmp_val.y, C[ 5]); \
+    C[ 6] = __dp4a_ver_ctrl(pic_data[5], tmp_val.z, C[ 6]); \
+    C[ 7] = __dp4a_ver_ctrl(pic_data[5], tmp_val.w, C[ 7]); \
+    C[ 8] = __dp4a_ver_ctrl(pic_data[6], tmp_val.x, C[ 8]); \
+    C[ 9] = __dp4a_ver_ctrl(pic_data[6], tmp_val.y, C[ 9]); \
+    C[10] = __dp4a_ver_ctrl(pic_data[6], tmp_val.z, C[10]); \
+    C[11] = __dp4a_ver_ctrl(pic_data[6], tmp_val.w, C[11]); \
+    C[12] = __dp4a_ver_ctrl(pic_data[7], tmp_val.x, C[12]); \
+    C[13] = __dp4a_ver_ctrl(pic_data[7], tmp_val.y, C[13]); \
+    C[14] = __dp4a_ver_ctrl(pic_data[7], tmp_val.z, C[14]); \
+    C[15] = __dp4a_ver_ctrl(pic_data[7], tmp_val.w, C[15]); 
 
 
 #define FETCH_INPUT_EIGHT(pic_data, int_input) \
@@ -842,94 +850,94 @@ __global__ void ppl_cuda_depthwise_int8_nhwc_f3s2(
 
 
 #define COMPUTE_F5S2_POS0(C, pic_data, tmp_val) \
-    C[ 0] = __dp4a(pic_data[0], tmp_val.x, C[ 0]); \
-    C[ 1] = __dp4a(pic_data[0], tmp_val.y, C[ 1]); \
-    C[ 2] = __dp4a(pic_data[0], tmp_val.z, C[ 2]); \
-    C[ 3] = __dp4a(pic_data[0], tmp_val.w, C[ 3]); \
-    C[ 4] = __dp4a(pic_data[2], tmp_val.x, C[ 4]); \
-    C[ 5] = __dp4a(pic_data[2], tmp_val.y, C[ 5]); \
-    C[ 6] = __dp4a(pic_data[2], tmp_val.z, C[ 6]); \
-    C[ 7] = __dp4a(pic_data[2], tmp_val.w, C[ 7]); \
-    C[ 8] = __dp4a(pic_data[4], tmp_val.x, C[ 8]); \
-    C[ 9] = __dp4a(pic_data[4], tmp_val.y, C[ 9]); \
-    C[10] = __dp4a(pic_data[4], tmp_val.z, C[10]); \
-    C[11] = __dp4a(pic_data[4], tmp_val.w, C[11]); \
-    C[12] = __dp4a(pic_data[6], tmp_val.x, C[12]); \
-    C[13] = __dp4a(pic_data[6], tmp_val.y, C[13]); \
-    C[14] = __dp4a(pic_data[6], tmp_val.z, C[14]); \
-    C[15] = __dp4a(pic_data[6], tmp_val.w, C[15]); 
+    C[ 0] = __dp4a_ver_ctrl(pic_data[0], tmp_val.x, C[ 0]); \
+    C[ 1] = __dp4a_ver_ctrl(pic_data[0], tmp_val.y, C[ 1]); \
+    C[ 2] = __dp4a_ver_ctrl(pic_data[0], tmp_val.z, C[ 2]); \
+    C[ 3] = __dp4a_ver_ctrl(pic_data[0], tmp_val.w, C[ 3]); \
+    C[ 4] = __dp4a_ver_ctrl(pic_data[2], tmp_val.x, C[ 4]); \
+    C[ 5] = __dp4a_ver_ctrl(pic_data[2], tmp_val.y, C[ 5]); \
+    C[ 6] = __dp4a_ver_ctrl(pic_data[2], tmp_val.z, C[ 6]); \
+    C[ 7] = __dp4a_ver_ctrl(pic_data[2], tmp_val.w, C[ 7]); \
+    C[ 8] = __dp4a_ver_ctrl(pic_data[4], tmp_val.x, C[ 8]); \
+    C[ 9] = __dp4a_ver_ctrl(pic_data[4], tmp_val.y, C[ 9]); \
+    C[10] = __dp4a_ver_ctrl(pic_data[4], tmp_val.z, C[10]); \
+    C[11] = __dp4a_ver_ctrl(pic_data[4], tmp_val.w, C[11]); \
+    C[12] = __dp4a_ver_ctrl(pic_data[6], tmp_val.x, C[12]); \
+    C[13] = __dp4a_ver_ctrl(pic_data[6], tmp_val.y, C[13]); \
+    C[14] = __dp4a_ver_ctrl(pic_data[6], tmp_val.z, C[14]); \
+    C[15] = __dp4a_ver_ctrl(pic_data[6], tmp_val.w, C[15]); 
 
 #define COMPUTE_F5S2_POS1(C, pic_data, tmp_val) \
-    C[ 0] = __dp4a(pic_data[1], tmp_val.x, C[ 0]); \
-    C[ 1] = __dp4a(pic_data[1], tmp_val.y, C[ 1]); \
-    C[ 2] = __dp4a(pic_data[1], tmp_val.z, C[ 2]); \
-    C[ 3] = __dp4a(pic_data[1], tmp_val.w, C[ 3]); \
-    C[ 4] = __dp4a(pic_data[3], tmp_val.x, C[ 4]); \
-    C[ 5] = __dp4a(pic_data[3], tmp_val.y, C[ 5]); \
-    C[ 6] = __dp4a(pic_data[3], tmp_val.z, C[ 6]); \
-    C[ 7] = __dp4a(pic_data[3], tmp_val.w, C[ 7]); \
-    C[ 8] = __dp4a(pic_data[5], tmp_val.x, C[ 8]); \
-    C[ 9] = __dp4a(pic_data[5], tmp_val.y, C[ 9]); \
-    C[10] = __dp4a(pic_data[5], tmp_val.z, C[10]); \
-    C[11] = __dp4a(pic_data[5], tmp_val.w, C[11]); \
-    C[12] = __dp4a(pic_data[7], tmp_val.x, C[12]); \
-    C[13] = __dp4a(pic_data[7], tmp_val.y, C[13]); \
-    C[14] = __dp4a(pic_data[7], tmp_val.z, C[14]); \
-    C[15] = __dp4a(pic_data[7], tmp_val.w, C[15]); 
+    C[ 0] = __dp4a_ver_ctrl(pic_data[1], tmp_val.x, C[ 0]); \
+    C[ 1] = __dp4a_ver_ctrl(pic_data[1], tmp_val.y, C[ 1]); \
+    C[ 2] = __dp4a_ver_ctrl(pic_data[1], tmp_val.z, C[ 2]); \
+    C[ 3] = __dp4a_ver_ctrl(pic_data[1], tmp_val.w, C[ 3]); \
+    C[ 4] = __dp4a_ver_ctrl(pic_data[3], tmp_val.x, C[ 4]); \
+    C[ 5] = __dp4a_ver_ctrl(pic_data[3], tmp_val.y, C[ 5]); \
+    C[ 6] = __dp4a_ver_ctrl(pic_data[3], tmp_val.z, C[ 6]); \
+    C[ 7] = __dp4a_ver_ctrl(pic_data[3], tmp_val.w, C[ 7]); \
+    C[ 8] = __dp4a_ver_ctrl(pic_data[5], tmp_val.x, C[ 8]); \
+    C[ 9] = __dp4a_ver_ctrl(pic_data[5], tmp_val.y, C[ 9]); \
+    C[10] = __dp4a_ver_ctrl(pic_data[5], tmp_val.z, C[10]); \
+    C[11] = __dp4a_ver_ctrl(pic_data[5], tmp_val.w, C[11]); \
+    C[12] = __dp4a_ver_ctrl(pic_data[7], tmp_val.x, C[12]); \
+    C[13] = __dp4a_ver_ctrl(pic_data[7], tmp_val.y, C[13]); \
+    C[14] = __dp4a_ver_ctrl(pic_data[7], tmp_val.z, C[14]); \
+    C[15] = __dp4a_ver_ctrl(pic_data[7], tmp_val.w, C[15]); 
 
 #define COMPUTE_F5S2_POS2(C, pic_data, tmp_val) \
-    C[ 0] = __dp4a(pic_data[2], tmp_val.x, C[ 0]); \
-    C[ 1] = __dp4a(pic_data[2], tmp_val.y, C[ 1]); \
-    C[ 2] = __dp4a(pic_data[2], tmp_val.z, C[ 2]); \
-    C[ 3] = __dp4a(pic_data[2], tmp_val.w, C[ 3]); \
-    C[ 4] = __dp4a(pic_data[4], tmp_val.x, C[ 4]); \
-    C[ 5] = __dp4a(pic_data[4], tmp_val.y, C[ 5]); \
-    C[ 6] = __dp4a(pic_data[4], tmp_val.z, C[ 6]); \
-    C[ 7] = __dp4a(pic_data[4], tmp_val.w, C[ 7]); \
-    C[ 8] = __dp4a(pic_data[6], tmp_val.x, C[ 8]); \
-    C[ 9] = __dp4a(pic_data[6], tmp_val.y, C[ 9]); \
-    C[10] = __dp4a(pic_data[6], tmp_val.z, C[10]); \
-    C[11] = __dp4a(pic_data[6], tmp_val.w, C[11]); \
-    C[12] = __dp4a(pic_data[8], tmp_val.x, C[12]); \
-    C[13] = __dp4a(pic_data[8], tmp_val.y, C[13]); \
-    C[14] = __dp4a(pic_data[8], tmp_val.z, C[14]); \
-    C[15] = __dp4a(pic_data[8], tmp_val.w, C[15]); 
+    C[ 0] = __dp4a_ver_ctrl(pic_data[2], tmp_val.x, C[ 0]); \
+    C[ 1] = __dp4a_ver_ctrl(pic_data[2], tmp_val.y, C[ 1]); \
+    C[ 2] = __dp4a_ver_ctrl(pic_data[2], tmp_val.z, C[ 2]); \
+    C[ 3] = __dp4a_ver_ctrl(pic_data[2], tmp_val.w, C[ 3]); \
+    C[ 4] = __dp4a_ver_ctrl(pic_data[4], tmp_val.x, C[ 4]); \
+    C[ 5] = __dp4a_ver_ctrl(pic_data[4], tmp_val.y, C[ 5]); \
+    C[ 6] = __dp4a_ver_ctrl(pic_data[4], tmp_val.z, C[ 6]); \
+    C[ 7] = __dp4a_ver_ctrl(pic_data[4], tmp_val.w, C[ 7]); \
+    C[ 8] = __dp4a_ver_ctrl(pic_data[6], tmp_val.x, C[ 8]); \
+    C[ 9] = __dp4a_ver_ctrl(pic_data[6], tmp_val.y, C[ 9]); \
+    C[10] = __dp4a_ver_ctrl(pic_data[6], tmp_val.z, C[10]); \
+    C[11] = __dp4a_ver_ctrl(pic_data[6], tmp_val.w, C[11]); \
+    C[12] = __dp4a_ver_ctrl(pic_data[8], tmp_val.x, C[12]); \
+    C[13] = __dp4a_ver_ctrl(pic_data[8], tmp_val.y, C[13]); \
+    C[14] = __dp4a_ver_ctrl(pic_data[8], tmp_val.z, C[14]); \
+    C[15] = __dp4a_ver_ctrl(pic_data[8], tmp_val.w, C[15]); 
 
 #define COMPUTE_F5S2_POS3(C, pic_data, tmp_val) \
-    C[ 0] = __dp4a(pic_data[3], tmp_val.x, C[ 0]); \
-    C[ 1] = __dp4a(pic_data[3], tmp_val.y, C[ 1]); \
-    C[ 2] = __dp4a(pic_data[3], tmp_val.z, C[ 2]); \
-    C[ 3] = __dp4a(pic_data[3], tmp_val.w, C[ 3]); \
-    C[ 4] = __dp4a(pic_data[5], tmp_val.x, C[ 4]); \
-    C[ 5] = __dp4a(pic_data[5], tmp_val.y, C[ 5]); \
-    C[ 6] = __dp4a(pic_data[5], tmp_val.z, C[ 6]); \
-    C[ 7] = __dp4a(pic_data[5], tmp_val.w, C[ 7]); \
-    C[ 8] = __dp4a(pic_data[7], tmp_val.x, C[ 8]); \
-    C[ 9] = __dp4a(pic_data[7], tmp_val.y, C[ 9]); \
-    C[10] = __dp4a(pic_data[7], tmp_val.z, C[10]); \
-    C[11] = __dp4a(pic_data[7], tmp_val.w, C[11]); \
-    C[12] = __dp4a(pic_data[9], tmp_val.x, C[12]); \
-    C[13] = __dp4a(pic_data[9], tmp_val.y, C[13]); \
-    C[14] = __dp4a(pic_data[9], tmp_val.z, C[14]); \
-    C[15] = __dp4a(pic_data[9], tmp_val.w, C[15]); 
+    C[ 0] = __dp4a_ver_ctrl(pic_data[3], tmp_val.x, C[ 0]); \
+    C[ 1] = __dp4a_ver_ctrl(pic_data[3], tmp_val.y, C[ 1]); \
+    C[ 2] = __dp4a_ver_ctrl(pic_data[3], tmp_val.z, C[ 2]); \
+    C[ 3] = __dp4a_ver_ctrl(pic_data[3], tmp_val.w, C[ 3]); \
+    C[ 4] = __dp4a_ver_ctrl(pic_data[5], tmp_val.x, C[ 4]); \
+    C[ 5] = __dp4a_ver_ctrl(pic_data[5], tmp_val.y, C[ 5]); \
+    C[ 6] = __dp4a_ver_ctrl(pic_data[5], tmp_val.z, C[ 6]); \
+    C[ 7] = __dp4a_ver_ctrl(pic_data[5], tmp_val.w, C[ 7]); \
+    C[ 8] = __dp4a_ver_ctrl(pic_data[7], tmp_val.x, C[ 8]); \
+    C[ 9] = __dp4a_ver_ctrl(pic_data[7], tmp_val.y, C[ 9]); \
+    C[10] = __dp4a_ver_ctrl(pic_data[7], tmp_val.z, C[10]); \
+    C[11] = __dp4a_ver_ctrl(pic_data[7], tmp_val.w, C[11]); \
+    C[12] = __dp4a_ver_ctrl(pic_data[9], tmp_val.x, C[12]); \
+    C[13] = __dp4a_ver_ctrl(pic_data[9], tmp_val.y, C[13]); \
+    C[14] = __dp4a_ver_ctrl(pic_data[9], tmp_val.z, C[14]); \
+    C[15] = __dp4a_ver_ctrl(pic_data[9], tmp_val.w, C[15]); 
 
 #define COMPUTE_F5S2_POS4(C, pic_data, tmp_val) \
-    C[ 0] = __dp4a(pic_data[4], tmp_val.x, C[ 0]); \
-    C[ 1] = __dp4a(pic_data[4], tmp_val.y, C[ 1]); \
-    C[ 2] = __dp4a(pic_data[4], tmp_val.z, C[ 2]); \
-    C[ 3] = __dp4a(pic_data[4], tmp_val.w, C[ 3]); \
-    C[ 4] = __dp4a(pic_data[6], tmp_val.x, C[ 4]); \
-    C[ 5] = __dp4a(pic_data[6], tmp_val.y, C[ 5]); \
-    C[ 6] = __dp4a(pic_data[6], tmp_val.z, C[ 6]); \
-    C[ 7] = __dp4a(pic_data[6], tmp_val.w, C[ 7]); \
-    C[ 8] = __dp4a(pic_data[8], tmp_val.x, C[ 8]); \
-    C[ 9] = __dp4a(pic_data[8], tmp_val.y, C[ 9]); \
-    C[10] = __dp4a(pic_data[8], tmp_val.z, C[10]); \
-    C[11] = __dp4a(pic_data[8], tmp_val.w, C[11]); \
-    C[12] = __dp4a(pic_data[10], tmp_val.x, C[12]); \
-    C[13] = __dp4a(pic_data[10], tmp_val.y, C[13]); \
-    C[14] = __dp4a(pic_data[10], tmp_val.z, C[14]); \
-    C[15] = __dp4a(pic_data[10], tmp_val.w, C[15]);
+    C[ 0] = __dp4a_ver_ctrl(pic_data[4], tmp_val.x, C[ 0]); \
+    C[ 1] = __dp4a_ver_ctrl(pic_data[4], tmp_val.y, C[ 1]); \
+    C[ 2] = __dp4a_ver_ctrl(pic_data[4], tmp_val.z, C[ 2]); \
+    C[ 3] = __dp4a_ver_ctrl(pic_data[4], tmp_val.w, C[ 3]); \
+    C[ 4] = __dp4a_ver_ctrl(pic_data[6], tmp_val.x, C[ 4]); \
+    C[ 5] = __dp4a_ver_ctrl(pic_data[6], tmp_val.y, C[ 5]); \
+    C[ 6] = __dp4a_ver_ctrl(pic_data[6], tmp_val.z, C[ 6]); \
+    C[ 7] = __dp4a_ver_ctrl(pic_data[6], tmp_val.w, C[ 7]); \
+    C[ 8] = __dp4a_ver_ctrl(pic_data[8], tmp_val.x, C[ 8]); \
+    C[ 9] = __dp4a_ver_ctrl(pic_data[8], tmp_val.y, C[ 9]); \
+    C[10] = __dp4a_ver_ctrl(pic_data[8], tmp_val.z, C[10]); \
+    C[11] = __dp4a_ver_ctrl(pic_data[8], tmp_val.w, C[11]); \
+    C[12] = __dp4a_ver_ctrl(pic_data[10], tmp_val.x, C[12]); \
+    C[13] = __dp4a_ver_ctrl(pic_data[10], tmp_val.y, C[13]); \
+    C[14] = __dp4a_ver_ctrl(pic_data[10], tmp_val.z, C[14]); \
+    C[15] = __dp4a_ver_ctrl(pic_data[10], tmp_val.w, C[15]);
 
 
 template<int TILE_H, int TILE_W, int SRC_TILE_H, int SRC_TILE_W, int KERNEL_H, int KERNEL_W, int STRIRDE_H, int STRIRDE_W>

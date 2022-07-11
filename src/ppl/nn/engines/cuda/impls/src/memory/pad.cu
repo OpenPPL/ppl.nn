@@ -136,7 +136,6 @@ ppl::common::RetCode PPLCUDAPadForwardImp(
             default:
                 return ppl::common::RC_UNSUPPORTED;
         }
-        return ppl::common::RC_SUCCESS;
     }
     int block_size     = 256;
     uint64_t num_elems = output_shape->CalcElementsIncludingPadding();

@@ -47,6 +47,7 @@ template<typename T, typename TPar>
 __global__ void ppl_cukernel_instancenorm(const T* in, const TPar* alpha,
                                 const TPar* beta, T* out, const int channels,
                                 const int HW, bool with_relu, const float eps = 1e-5) {
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
     int b_idx = blockIdx.y;
     int c_idx = blockIdx.x;
     auto cur_in = in + b_idx * channels * HW + c_idx * HW;
@@ -69,12 +70,14 @@ __global__ void ppl_cukernel_instancenorm(const T* in, const TPar* alpha,
         if (with_relu) out_val = out_val > 0.f ? out_val : 0.f;
         cur_out[tid] = T(out_val);
     }
+#endif
 }
 
 template<typename T, typename TPar>
 __global__ void ppl_cukernel_instancenorm_nhwc(const T* in, const TPar* alpha,
                                 const TPar* beta, T* out, const int pad_channels,
                                 const int HW, bool with_relu, const float eps = 1e-5) {
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
     int b_idx = blockIdx.y;
     int c_idx = blockIdx.x;
     auto cur_in = in + b_idx * pad_channels * HW + c_idx;
@@ -98,12 +101,14 @@ __global__ void ppl_cukernel_instancenorm_nhwc(const T* in, const TPar* alpha,
         if (with_relu) out_val = out_val > 0.f ? out_val : 0.f;
         cur_out[tid * pad_channels] = T(out_val);
     }
+#endif
 }
 
 __global__ void ppl_cukernel_instancenorm_nhwc_int8(const char* in, const float* alpha,
                                 const float* beta, char* out, const int pad_channels,
                                 const int HW, bool with_relu, float in_scale,
                                 float out_scale, const float eps = 1e-5) {
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
     int b_idx = blockIdx.y;
     int c_idx = blockIdx.x;
     auto cur_in = in + b_idx * pad_channels * HW + c_idx;
@@ -131,6 +136,7 @@ __global__ void ppl_cukernel_instancenorm_nhwc_int8(const char* in, const float*
         }
         cur_out[tid * pad_channels] = dst;
     }
+#endif
 }
 
 ppl::common::RetCode PPLCUDAInstanceNormalizationForwardImp(

@@ -284,6 +284,7 @@ __global__ void nhwuvc2nhwc(int4 *output, const int4 *gemm_output,
         const int pad_h, const int pad_w,
         const int stride_h, const int stride_w,
         const int4 *bias, const int has_relu){
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
     int c_id = tid % channel_v4;
     const int &kernel_u = stride_h;
@@ -326,6 +327,7 @@ __global__ void nhwuvc2nhwc(int4 *output, const int4 *gemm_output,
         }
         output[out_off] = data;
     }
+#endif
 }
 
 //input aligned with int2
@@ -338,6 +340,7 @@ __global__ void nhwuvc2nhwc<0>(int4 *output, const int4 *gemm_output,
         const int pad_h, const int pad_w,
         const int stride_h, const int stride_w,
         const int4 *bias, const int has_relu){
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
     constexpr int channel_v2 = 1;
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
     int c_id = tid % channel_v2;// ===0
@@ -384,6 +387,7 @@ __global__ void nhwuvc2nhwc<0>(int4 *output, const int4 *gemm_output,
         out_data.y = data.y;
         output[out_off] = out_data;
     }
+#endif
 }
 
 /*

@@ -19,6 +19,20 @@
 #include "cudakernel/reduce/reduce_kernel.h"
 
 template <typename T>
+__device__ bool __less_or_equal(T& lhs, T& rhs) {
+    return lhs <= rhs;
+}
+
+template<>
+__device__ bool __less_or_equal<half>(half& lhs, half& rhs) {
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
+    return __hle(lhs, rhs);
+#else
+    return false;
+#endif
+}
+
+template <typename T>
 __global__ void ppl_argmax(
     PPLReduceDimDes des,
     const T* input,
@@ -42,7 +56,7 @@ __global__ void ppl_argmax(
         for (int i = 1; i < n_reduce; i++) {
             T temp1 = input[offset + val * n_inner];
             T temp2 = input[offset + i * n_inner];
-            if (temp1 <= temp2)
+            if (__less_or_equal<T>(temp1, temp2))
                 val = i;
         }
         output[idx] = val;

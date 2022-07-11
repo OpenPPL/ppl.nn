@@ -17,6 +17,7 @@ template<typename T, typename TPar>
 __global__ void LayerNormKernel(const T* in, const TPar* alpha,
                                 const TPar* beta, T* out, const int B,
                                 const int N, const T eps = 1e-5) {
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
     auto cur_in = in + blockIdx.x * N;
     auto cur_out = out + blockIdx.x * N;
     float2 sum;
@@ -35,6 +36,7 @@ __global__ void LayerNormKernel(const T* in, const TPar* alpha,
         cur_out[tid] = T(((float)__ldg(cur_in + tid) - mean) * rstd * 
                             (float)__ldg(alpha + tid) + (float)__ldg(beta + tid));
     }
+#endif
 }
 
 template<typename T, typename TPar>
