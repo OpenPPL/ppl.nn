@@ -56,16 +56,16 @@ ppl::common::RetCode gather_ndarray_common(
                 const T* src_l           = src + o * gather_dim * inner_dim;
                 if (inner_dim == 2) {
                     for (int64_t i = 0; i < indices_dim; ++i) {
-                        dst_l[0] = src_l[indices_l[0] + 0];
-                        dst_l[1] = src_l[indices_l[0] + 1];
+                        dst_l[0] = src_l[indices_l[0] * 2 + 0];
+                        dst_l[1] = src_l[indices_l[0] * 2 + 1];
                         dst_l += inner_dim;
                         ++indices_l;
                     }
                 } else {
                     for (int64_t i = 0; i < indices_dim; ++i) {
-                        dst_l[0] = src_l[indices_l[0] + 0];
-                        dst_l[1] = src_l[indices_l[0] + 1];
-                        dst_l[2] = src_l[indices_l[0] + 2];
+                        dst_l[0] = src_l[indices_l[0] * 3 + 0];
+                        dst_l[1] = src_l[indices_l[0] * 3 + 1];
+                        dst_l[2] = src_l[indices_l[0] * 3 + 2];
                         dst_l += inner_dim;
                         ++indices_l;
                     }
