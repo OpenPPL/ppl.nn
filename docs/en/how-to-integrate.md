@@ -14,7 +14,9 @@ target_link_libraries(<target> PUBLIC ${PPLNN_LIBRARIES})
 
 Refer to `${CMAKE_INSTALL_PREFIX}/lib/cmake/ppl/pplnn-config.cmake` for other cmake variables like versions and supported devices. In this form you can only use public APIs defined in `${CMAKE_INSTALL_PREFIX}/include/ppl`.
 
-A simple example [integration](../../samples/cpp/integration) shows how to use `pplnn-config.cmake`.
+A simple example [integration](../../samples/cpp/integration) shows how to use `pplnn-config.cmake` to integrate x86 engine into an application.
+
+[integration-cuda](../../samples/cpp/integration-cuda) is a CUDA example.
 
 ## 2. Using `ppl.nn` as a Source Dependency
 
