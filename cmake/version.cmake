@@ -1,6 +1,6 @@
 # these variables can be set to the internal value when plugins are embedded into pplnn_static
 #   - PPLNN_VERSION_STR: <major>.<minor>.<patch>
-#   - PPLNN_COMMIT_HASH: a string
+#   - PPLNN_COMMIT_STR: a string
 
 if(NOT PPLNN_VERSION_STR)
     file(READ ${CMAKE_CURRENT_SOURCE_DIR}/VERSION PPLNN_VERSION_STR)
