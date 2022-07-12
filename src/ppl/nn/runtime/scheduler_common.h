@@ -18,15 +18,14 @@
 #ifndef _ST_HPC_PPL_NN_RUNTIME_SCHEDULER_COMMON_H_
 #define _ST_HPC_PPL_NN_RUNTIME_SCHEDULER_COMMON_H_
 
+#include "ppl/nn/runtime/kernel_impl.h"
 #include "ppl/nn/runtime/edge_object.h"
-#include "ppl/nn/runtime/profiler.h"
 #include <functional>
 
 namespace ppl { namespace nn { namespace utils {
 
-ppl::common::RetCode ExecuteKernel(KernelImpl*, KernelExecContext*,
-                                   const std::function<ppl::common::RetCode(EdgeObject*, nodeid_t)>& release_func,
-                                   Profiler*);
+ppl::common::RetCode ReleaseKernelInputOutput(KernelImpl*, InputOutputInfo*,
+                                              const std::function<ppl::common::RetCode(EdgeObject*, nodeid_t)>&);
 
 }}} // namespace ppl::nn::utils
 

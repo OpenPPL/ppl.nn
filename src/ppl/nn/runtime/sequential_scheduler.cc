@@ -106,6 +106,14 @@ RetCode SequentialScheduler::InferShapes() {
                        << "] failed: " << GetRetCodeStr(status);
             return status;
         }
+
+        status = utils::ReleaseKernelInputOutput(kernel, &info, release_object_func_);
+        if (status != RC_SUCCESS) {
+            auto& type = kernel->GetNode()->GetType();
+            LOG(ERROR) << "exec kernel[" << kernel->GetName() << "] of type[" << type.domain << ":" << type.name << ":"
+                       << type.version << "] failed: " << GetRetCodeStr(status);
+            return status;
+        }
     }
 
     return RC_SUCCESS;
@@ -130,7 +138,23 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
         auto kernel = graph_->nodeid2kernel[*x].get();
         ctx.SetNode(kernel->GetNode());
 
-        auto status = utils::ExecuteKernel(kernel, &ctx, release_object_func_, profiler);
+        auto exec_status = kernel->Execute(&ctx);
+
+#ifdef PPLNN_ENABLE_KERNEL_PROFILING
+        if (profiler) {
+            profiler->CollectStatistics(kernel);
+        }
+#endif
+
+        auto status = utils::ReleaseKernelInputOutput(kernel, &ctx, release_object_func_);
+
+        if (exec_status != RC_SUCCESS) {
+            auto& type = kernel->GetNode()->GetType();
+            LOG(ERROR) << "exec kernel[" << kernel->GetName() << "] of type[" << type.domain << ":" << type.name << ":"
+                       << type.version << "] failed: " << GetRetCodeStr(exec_status);
+            return exec_status;
+        }
+
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "execute kernel[" << kernel->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
