@@ -68,10 +68,10 @@ if(PPLNN_USE_RISCV)
 endif()
 
 if(PPLNN_ENABLE_ONNX_MODEL)
-    if(NOT TARGET "protobuf::libprotobuf-lite")
+    if(NOT TARGET "protobuf::libprotobuf")
         include(${__PPLNN_PACKAGE_ROOTDIR__}/lib/cmake/protobuf/protobuf-config.cmake)
     endif()
-    list(APPEND __PPLNN_LINK_LIBRARIES__ "protobuf::libprotobuf-lite")
+    list(APPEND __PPLNN_LINK_LIBRARIES__ "protobuf::libprotobuf")
 endif()
 
 # --------------------------------------------------------------------------- #

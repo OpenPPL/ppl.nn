@@ -162,7 +162,7 @@ target_include_directories(pplnn_static PRIVATE
 
 if(PPLNN_ENABLE_ONNX_MODEL)
     include(cmake/protobuf.cmake)
-    target_link_libraries(pplnn_static PUBLIC libprotobuf-lite)
+    target_link_libraries(pplnn_static PUBLIC libprotobuf)
     target_include_directories(pplnn_static PRIVATE ${protobuf_SOURCE_DIR}/src)
 endif()
 
