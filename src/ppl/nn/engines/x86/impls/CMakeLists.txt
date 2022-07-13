@@ -9,8 +9,10 @@ set(PPLKERNELX86_COMPILE_OPTIONS )
 else()
 set(PPLKERNELX86_COMPILE_OPTIONS "-Werror=return-type;-Wno-strict-aliasing")
 endif()
-# set(PPLKERNELX86_COMPILE_DEFINITIONS )
-# set(PPLKERNELX86_LINK_LIBRARIES )
+
+# `PPLKERNELX86_LINK_LIBRARIES` is needed for generating pplkernex86-config.cmake
+set(PPLKERNELX86_LINK_LIBRARIES )
+
 list(APPEND PPLKERNELX86_PUBLIC_INCLUDE_DIRECTORIES include)
 list(APPEND PPLKERNELX86_PRIVATE_INCLUDE_DIRECTORIES src)
 
@@ -76,7 +78,6 @@ endif()
 configure_file(include/ppl/kernel/x86/common/config.h.in ${PROJECT_BINARY_DIR}/include/ppl/kernel/x86/common/config.h @ONLY)
 list(APPEND PPLKERNELX86_PUBLIC_INCLUDE_DIRECTORIES ${PROJECT_BINARY_DIR}/include)
 
-hpcc_populate_dep(pplcommon)
 list(APPEND PPLKERNELX86_LINK_LIBRARIES pplcommon_static)
 
 set(__PPLNN_SOURCE_DIR__ ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../..)
@@ -98,7 +99,14 @@ endif()
 
 if(PPLNN_INSTALL)
     install(TARGETS pplkernelx86_static DESTINATION lib)
-    install(FILES ${CMAKE_CURRENT_LIST_DIR}/pplkernelx86-config.cmake DESTINATION lib/cmake/ppl)
+
+    # `PPLKERNELX86_LINK_LIBRARIES` is needed for generating pplkernex86-config.cmake
+    set(__PPLNN_CMAKE_CONFIG_FILE__ ${CMAKE_CURRENT_BINARY_DIR}/generated/pplkernelx86-config.cmake)
+    configure_file(${CMAKE_CURRENT_LIST_DIR}/pplkernelx86-config.cmake.in
+        ${__PPLNN_CMAKE_CONFIG_FILE__}
+        @ONLY)
+    install(FILES ${__PPLNN_CMAKE_CONFIG_FILE__} DESTINATION lib/cmake/ppl)
+    unset(__PPLNN_CMAKE_CONFIG_FILE__)
 endif()
 
 ################### Test ###################
