@@ -342,6 +342,17 @@ static inline void winograd_b6f3_dst_trans_fp32_sse(
     if (channel >= 1) TRANSPOSE_4X4_FP32_SSE_MACRO(xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7);
     if (channel >= 5) TRANSPOSE_4X4_FP32_SSE_MACRO(xmm8, xmm9, xmm10, xmm11, xmm12, xmm13, xmm14, xmm15);
 
+    if (fuse_flag & conv_fuse_flag::SUM) {
+        if (channel >= 1) xmm0 = _mm_add_ps(xmm0, _mm_loadu_ps(sum_src + 0 * sum_src_stride));
+        if (channel >= 2) xmm1 = _mm_add_ps(xmm1, _mm_loadu_ps(sum_src + 1 * sum_src_stride));
+        if (channel >= 3) xmm2 = _mm_add_ps(xmm2, _mm_loadu_ps(sum_src + 2 * sum_src_stride));
+        if (channel >= 4) xmm3 = _mm_add_ps(xmm3, _mm_loadu_ps(sum_src + 3 * sum_src_stride));
+        if (channel >= 5) xmm8 = _mm_add_ps(xmm8, _mm_loadu_ps(sum_src + 4 * sum_src_stride));
+        if (channel >= 6) xmm9 = _mm_add_ps(xmm9, _mm_loadu_ps(sum_src + 5 * sum_src_stride));
+        if (channel >= 7) xmm10 = _mm_add_ps(xmm10, _mm_loadu_ps(sum_src + 6 * sum_src_stride));
+        if (channel >= 8) xmm11 = _mm_add_ps(xmm11, _mm_loadu_ps(sum_src + 7 * sum_src_stride));
+    }
+
     if (fuse_flag & (conv_fuse_flag::RELU | conv_fuse_flag::RELU6)) {
         if (channel >= 1) xmm7 = _mm_setzero_ps();
         if (channel >= 1) xmm0 = _mm_max_ps(xmm0, xmm7);
@@ -366,17 +377,6 @@ static inline void winograd_b6f3_dst_trans_fp32_sse(
         if (channel >= 8) xmm11 = _mm_min_ps(xmm11, xmm6);
     }
 
-    if (fuse_flag & conv_fuse_flag::SUM) {
-        if (channel >= 1) xmm0 = _mm_add_ps(xmm0, _mm_loadu_ps(sum_src + 0 * sum_src_stride));
-        if (channel >= 2) xmm1 = _mm_add_ps(xmm1, _mm_loadu_ps(sum_src + 1 * sum_src_stride));
-        if (channel >= 3) xmm2 = _mm_add_ps(xmm2, _mm_loadu_ps(sum_src + 2 * sum_src_stride));
-        if (channel >= 4) xmm3 = _mm_add_ps(xmm3, _mm_loadu_ps(sum_src + 3 * sum_src_stride));
-        if (channel >= 5) xmm8 = _mm_add_ps(xmm8, _mm_loadu_ps(sum_src + 4 * sum_src_stride));
-        if (channel >= 6) xmm9 = _mm_add_ps(xmm9, _mm_loadu_ps(sum_src + 5 * sum_src_stride));
-        if (channel >= 7) xmm10 = _mm_add_ps(xmm10, _mm_loadu_ps(sum_src + 6 * sum_src_stride));
-        if (channel >= 8) xmm11 = _mm_add_ps(xmm11, _mm_loadu_ps(sum_src + 7 * sum_src_stride));
-    }
-
     if (channel >= 1) _mm_storeu_ps(dst + 0 * dst_stride, xmm0);
     if (channel >= 2) _mm_storeu_ps(dst + 1 * dst_stride, xmm1);
     if (channel >= 3) _mm_storeu_ps(dst + 2 * dst_stride, xmm2);
@@ -395,6 +395,17 @@ static inline void winograd_b6f3_dst_trans_fp32_sse(
 
     if (channel >= 1) TRANSPOSE_4X4_FP32_SSE_MACRO(xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7);
     if (channel >= 5) TRANSPOSE_4X4_FP32_SSE_MACRO(xmm8, xmm9, xmm10, xmm11, xmm12, xmm13, xmm14, xmm15);
+
+    if (fuse_flag & conv_fuse_flag::SUM) {
+        if (channel >= 1) xmm0 = _mm_add_ps(xmm0, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 0 * sum_src_stride + CH_RF_BLK())));
+        if (channel >= 2) xmm1 = _mm_add_ps(xmm1, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 1 * sum_src_stride + CH_RF_BLK())));
+        if (channel >= 3) xmm2 = _mm_add_ps(xmm2, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 2 * sum_src_stride + CH_RF_BLK())));
+        if (channel >= 4) xmm3 = _mm_add_ps(xmm3, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 3 * sum_src_stride + CH_RF_BLK())));
+        if (channel >= 5) xmm8 = _mm_add_ps(xmm8, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 4 * sum_src_stride + CH_RF_BLK())));
+        if (channel >= 6) xmm9 = _mm_add_ps(xmm9, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 5 * sum_src_stride + CH_RF_BLK())));
+        if (channel >= 7) xmm10 = _mm_add_ps(xmm10, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 6 * sum_src_stride + CH_RF_BLK())));
+        if (channel >= 8) xmm11 = _mm_add_ps(xmm11, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 7 * sum_src_stride + CH_RF_BLK())));
+    }
 
     if (fuse_flag & (conv_fuse_flag::RELU | conv_fuse_flag::RELU6)) {
         // xmm7 sets to zero in transpose
@@ -418,17 +429,6 @@ static inline void winograd_b6f3_dst_trans_fp32_sse(
         if (channel >= 6) xmm9 = _mm_min_ps(xmm9, xmm6);
         if (channel >= 7) xmm10 = _mm_min_ps(xmm10, xmm6);
         if (channel >= 8) xmm11 = _mm_min_ps(xmm11, xmm6);
-    }
-
-    if (fuse_flag & conv_fuse_flag::SUM) {
-        if (channel >= 1) xmm0 = _mm_add_ps(xmm0, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 0 * sum_src_stride + CH_RF_BLK())));
-        if (channel >= 2) xmm1 = _mm_add_ps(xmm1, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 1 * sum_src_stride + CH_RF_BLK())));
-        if (channel >= 3) xmm2 = _mm_add_ps(xmm2, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 2 * sum_src_stride + CH_RF_BLK())));
-        if (channel >= 4) xmm3 = _mm_add_ps(xmm3, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 3 * sum_src_stride + CH_RF_BLK())));
-        if (channel >= 5) xmm8 = _mm_add_ps(xmm8, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 4 * sum_src_stride + CH_RF_BLK())));
-        if (channel >= 6) xmm9 = _mm_add_ps(xmm9, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 5 * sum_src_stride + CH_RF_BLK())));
-        if (channel >= 7) xmm10 = _mm_add_ps(xmm10, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 6 * sum_src_stride + CH_RF_BLK())));
-        if (channel >= 8) xmm11 = _mm_add_ps(xmm11, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 7 * sum_src_stride + CH_RF_BLK())));
     }
 
     if (channel >= 1) _mm_storel_pi((__m64 *)(dst + 0 * dst_stride + CH_RF_BLK()), xmm0);
