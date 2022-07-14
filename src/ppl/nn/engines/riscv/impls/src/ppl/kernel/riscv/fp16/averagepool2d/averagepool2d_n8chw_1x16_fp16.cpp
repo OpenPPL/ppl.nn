@@ -402,10 +402,11 @@ ppl::common::RetCode averagepool2d_n8chw_global_fp16(
     for (int64_t nc = 0; nc < batch * padded_channels; nc += C_BLK()) {
         const __fp16* src_ = src + nc * src_h * src_w;
         __fp16* dst_       = dst + nc;
-
+        // step 1: accumulate from idx_hw:0 to idx_hw:src_h * src_w - 1
         float32xm2_t v_dst_fp32_l = vfmvvf_float32xm2(0.0f, vl32);
         float32xm2_t v_dst_fp32_h = vfmvvf_float32xm2(0.0f, vl32);
-        for (int64_t i = 0; i < src_h * src_w; i++) {
+        //      1.1 deal with idx_hw: 0 -> (src_h * src_w - 2)
+        for (int64_t i = 0; i < src_h * src_w - 1; i++) {
             // handle low 4 elements of float16
             float16xm1_t v_src_fp16_l = vlev_float16xm1(src_ + i * C_BLK() + 0 * 4, vl16);
             float32xm2_t v_src_fp32_l = vfwcvtffv_float32xm2_float16xm1(v_src_fp16_l, vl16);
@@ -415,12 +416,18 @@ ppl::common::RetCode averagepool2d_n8chw_global_fp16(
             float32xm2_t v_src_fp32_h = vfwcvtffv_float32xm2_float16xm1(v_src_fp16_h, vl16);
             v_dst_fp32_h              = vfaddvv_float32xm2(v_dst_fp32_h, v_src_fp32_h, vl32);
         }
-        v_dst_fp32_l              = vfmulvf_float32xm2(v_dst_fp32_l, recp_ave_divider, vl32);
-        v_dst_fp32_h              = vfmulvf_float32xm2(v_dst_fp32_h, recp_ave_divider, vl32);
-        float16xm1_t v_dst_fp16_l = vfncvtffv_float16xm1_float32xm2(v_dst_fp32_l, vl16);
-        float16xm1_t v_dst_fp16_h = vfncvtffv_float16xm1_float32xm2(v_dst_fp32_h, vl16);
-        vsev_float16xm1(dst_ + 0 * 4, v_dst_fp16_l, vl16);
-        vsev_float16xm1(dst_ + 1 * 4, v_dst_fp16_h, vl16);
+        float tmp[8];
+        vsev_float32xm2(tmp + 0 * 4, v_dst_fp32_l, vl32);
+        vsev_float32xm2(tmp + 1 * 4, v_dst_fp32_h, vl32);
+        //      1.2 deal with idx_hw: src_h * src_w - 1
+        for (int64_t i = 0; i < C_BLK(); i++) {
+            tmp[i] += (float)src_[(src_h * src_w - 1) * C_BLK() + i];
+        }
+        // step 2: divide (src_h * src_w) && store
+        for (int64_t i = 0; i < C_BLK(); i++) {
+            tmp[i] *= recp_ave_divider;
+            dst_[i] = (__fp16)tmp[i];
+        }
     }
 
     return ppl::common::RC_SUCCESS;
