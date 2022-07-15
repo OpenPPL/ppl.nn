@@ -44,7 +44,7 @@ ppl::common::RetCode TransposeKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_ARM_DEBUG_TRACE("Output [transposed]:\n");
     PPL_ARM_TENSOR_PRINT_DEBUG_MSG(transposed);
     for (uint32_t i = 0; i < data->GetShape()->GetDimCount(); ++i) {
-        PPLNN_ARM_DEBUG_TRACE("perm[%u]: %d\n", i, modified_perm[i]);
+        PPLNN_ARM_DEBUG_TRACE("perm[%u]: %ld\n", i, modified_perm[i]);
     }
     PPLNN_ARM_DEBUG_TRACE("isa: %u\n", GetISA());
 

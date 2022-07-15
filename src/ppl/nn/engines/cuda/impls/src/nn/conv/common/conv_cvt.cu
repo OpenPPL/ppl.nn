@@ -127,7 +127,6 @@ void PPLCUDAConvolutionCvtFlt(
     int num_chl_per_grp     = num_chl / num_grp;
     int num_chl_per_grp_pad = Align(num_chl_per_grp, align_size);
     int num_flt_per_grp     = flt_num / num_grp;
-    int num_flt_per_grp_pad = Align(num_flt_per_grp, align_size);
 
     const int cta_size = 512;
     dim3 grid;
@@ -162,9 +161,9 @@ void PPLCUDAConvolutionCvtInput(
     ppl::common::datatype_t type,
     conv_param_t &conv_param)
 {
-    const int in_num    = conv_param.in_num;   
-    const int num_chl   = conv_param.num_chl;   
-    const int num_chl_pad = conv_param.num_chl_pad;   
+    const int in_num    = conv_param.in_num;
+    const int num_chl   = conv_param.num_chl;
+    const int num_chl_pad = conv_param.num_chl_pad;
     const int in_height = conv_param.in_height;
     const int in_width  = conv_param.in_width;
     const int num_grp   = conv_param.num_grp;
@@ -258,13 +257,13 @@ void PPLCUDAConvolutionCvtBias(
 
     } else if (type == ppl::common::DATATYPE_FLOAT16) {
         group_padding<__half><<<grid, cta_size, 0, stream>>>(
-			(__half*)output, (__half*)input, 
-			out_size, num_grp, 
+			(__half*)output, (__half*)input,
+			out_size, num_grp,
 			num_flt_per_grp, conv_param.num_flt_pad, num_flt_per_grp_pad);
     } else if (type == ppl::common::DATATYPE_INT8) {
         group_padding<float><<<grid, cta_size, 0, stream>>>(
-			(float*)output, (float*)input, 
-			out_size, num_grp, 
+			(float*)output, (float*)input,
+			out_size, num_grp,
 			num_flt_per_grp, conv_param.num_flt_pad, num_flt_per_grp_pad);
     }
 }

@@ -26,7 +26,7 @@
 #include <stdio.h>
 #define PPLNN_ARM_DEBUG_TRACE(fmt, ...) \
     do { \
-        fprintf(stderr, "T [%s:%d] " fmt, ppl::common::stripfilename(__FILE__), __LINE__, ##__VA_ARGS__); \
+        fprintf(stderr, "T [%s:%u] " fmt, ppl::common::stripfilename(__FILE__), __LINE__, ##__VA_ARGS__); \
         fflush(stderr); \
     } while (0)
 #else
