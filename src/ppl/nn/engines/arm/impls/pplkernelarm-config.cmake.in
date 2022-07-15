@@ -10,7 +10,7 @@ if(NOT TARGET "pplcommon_static")
     include(${CMAKE_CURRENT_LIST_DIR}/pplcommon-config.cmake)
 endif()
 
-set(__PPLKERNELARMSERVER_PACKAGE_DIR__ "${CMAKE_CURRENT_LIST_DIR}/../../..")
+get_filename_component(__PPLKERNELARMSERVER_PACKAGE_DIR__ "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
 set_target_properties(pplkernelarmserver_static PROPERTIES
     INTERFACE_LINK_LIBRARIES "@PPLKERNELARMSERVER_LINK_LIBRARIES@"
     IMPORTED_LOCATION "${__PPLKERNELARMSERVER_PACKAGE_DIR__}/lib/libpplkernelarmserver_static.a"

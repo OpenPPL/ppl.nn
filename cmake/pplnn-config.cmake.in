@@ -8,7 +8,7 @@ add_library(pplnn_static STATIC IMPORTED)
 
 # --------------------------------------------------------------------------- #
 
-set(__PPLNN_PACKAGE_ROOTDIR__ "${CMAKE_CURRENT_LIST_DIR}/../../..")
+get_filename_component(__PPLNN_PACKAGE_ROOTDIR__ "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
 set(__PPLNN_LINK_LIBRARIES__ @PPLNN_BINARY_EXTERNAL_LINK_LIBRARIES@)
 set(__PPLNN_COMPILE_DEFINITIONS__ @PPLNN_BINARY_EXTERNAL_COMPILE_DEFINITIONS@)
 
