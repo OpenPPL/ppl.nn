@@ -15,13 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/default_cuda_allocator.h"
-
-#include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/cuda/buffered_cuda_device.h"
 #include "ppl/nn/engines/cuda/buffered_cuda_allocator.h"
+#include "ppl/nn/engines/cuda/default_cuda_allocator.h"
 #include "ppl/nn/utils/stack_buffer_manager.h"
 #include "ppl/nn/utils/compact_buffer_manager.h"
+#include "ppl/nn/common/logger.h"
 
 using namespace std;
 using namespace ppl::common;
@@ -30,8 +29,12 @@ namespace ppl { namespace nn { namespace cuda {
 
 #define DEFAULT_BLOCK_SIZE 1048576
 
-RetCode BufferedCudaDevice::Init(uint32_t device_id, uint32_t mm_policy) {
-    CudaDevice::Init(device_id);
+RetCode BufferedCudaDevice::Init(int device_id, uint32_t mm_policy) {
+    auto status = CudaDevice::Init(device_id);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "init cuda device failed: " << GetRetCodeStr(status);
+        return status;
+    }
 
     if (mm_policy == MM_BEST_FIT) {
         allocator_.reset(new DefaultCudaAllocator());
@@ -45,7 +48,7 @@ RetCode BufferedCudaDevice::Init(uint32_t device_id, uint32_t mm_policy) {
         cuMemGetAllocationGranularity(&granularity, &prop, CU_MEM_ALLOC_GRANULARITY_MINIMUM);
 
         auto allocator = new BufferedCudaAllocator();
-        auto status = allocator->Init(device_id, granularity);
+        status = allocator->Init(device_id, granularity);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "init BufferedCudaAllocator failed: " << GetRetCodeStr(status);
             delete allocator;
@@ -64,6 +67,8 @@ RetCode BufferedCudaDevice::Init(uint32_t device_id, uint32_t mm_policy) {
 }
 
 BufferedCudaDevice::~BufferedCudaDevice() {
+    SyncStream();
+
     if (buffer_manager_.get()) {
         LOG(DEBUG) << "buffer manager[" << buffer_manager_->GetName() << "] allocates ["
                    << buffer_manager_->GetAllocatedBytes() << "] bytes.";

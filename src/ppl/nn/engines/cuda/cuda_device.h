@@ -33,7 +33,7 @@ class CudaDevice : public Device {
 public:
     virtual ~CudaDevice();
 
-    void Init(uint32_t device_id);
+    ppl::common::RetCode Init(int device_id);
 
     virtual ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) override = 0;
 
@@ -84,6 +84,8 @@ public:
         Free(buffer);
     }
 
+    ppl::common::RetCode SyncStream();
+
     cudaStream_t GetStream() const {
         return stream_;
     }
@@ -96,7 +98,7 @@ public:
     }
 
 private:
-    int device_id_ = 0;
+    int device_id_ = INT_MAX;
     cudaStream_t stream_ = nullptr;
     CudaDataConverter data_converter_;
     std::map<edgeid_t, BufferDesc> edge2buffer_;

@@ -28,12 +28,12 @@ DefaultCudaDevice::DefaultCudaDevice() {
 }
 
 DefaultCudaDevice::~DefaultCudaDevice() {
+    SyncStream();
     allocator_.reset();
 }
 
 RetCode DefaultCudaDevice::Init(uint32_t device_id) {
-    CudaDevice::Init(device_id);
-    return RC_SUCCESS;
+    return CudaDevice::Init(device_id);
 }
 
 RetCode DefaultCudaDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {

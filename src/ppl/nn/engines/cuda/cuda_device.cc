@@ -16,28 +16,87 @@
 // under the License.
 
 #include "ppl/nn/engines/cuda/cuda_device.h"
-
-#include <stddef.h>
-#include <cuda_runtime.h>
-
 #include "ppl/nn/common/logger.h"
+#include <cuda.h>
 
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-CudaDevice::~CudaDevice() {
-    cudaStreamDestroy(stream_);
+static RetCode InitDriverEnv(int device_id) {
+    const char* errmsg = nullptr;
+    auto cu_status = cuInit(0);
+    if (cu_status != CUDA_SUCCESS) {
+        cuGetErrorString(cu_status, &errmsg);
+        LOG(ERROR) << "cuInit failed: " << errmsg;
+        return RC_OTHER_ERROR;
+    }
+
+    CUcontext cu_context;
+    cu_status = cuDevicePrimaryCtxRetain(&cu_context, device_id);
+    if (cu_status != CUDA_SUCCESS) {
+        cuGetErrorString(cu_status, &errmsg);
+        LOG(ERROR) << "cuDevicePrimaryCtxRetain failed: " << errmsg;
+        return RC_OTHER_ERROR;
+    }
+
+    cu_status = cuCtxSetCurrent(cu_context);
+    if (cu_status != CUDA_SUCCESS) {
+        cuGetErrorString(cu_status, &errmsg);
+        LOG(ERROR) << "cuCtxSetCurrent failed: " << errmsg;
+        return RC_OTHER_ERROR;
+    }
+
+    return RC_SUCCESS;
 }
 
-void CudaDevice::Init(uint32_t device_id) {
-    device_id_ = device_id;
-    cudaSetDevice(device_id);
+static RetCode DestroyDriverEnv(int device_id) {
+    auto rc = cuDevicePrimaryCtxRelease(device_id);
+    if (rc != CUDA_SUCCESS) {
+        const char* errmsg = nullptr;
+        cuGetErrorString(rc, &errmsg);
+        LOG(ERROR) << "cuDevicePrimaryCtxRelease failed: " << errmsg;
+        return RC_OTHER_ERROR;
+    }
+    return RC_SUCCESS;
+}
+
+CudaDevice::~CudaDevice() {
+    if (stream_) {
+        cudaStreamSynchronize(stream_);
+        cudaStreamDestroy(stream_);
+    }
+    if (device_id_ != INT_MAX) {
+        DestroyDriverEnv(device_id_);
+    }
+}
+
+RetCode CudaDevice::Init(int device_id) {
+    auto status = InitDriverEnv(device_id);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "InitDriverEnv failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
     if (!stream_) {
         cudaStreamCreate(&stream_);
     }
 
+    device_id_ = device_id;
     data_converter_.SetDevice(this);
+
+    return RC_SUCCESS;
+}
+
+RetCode CudaDevice::SyncStream() {
+    if (stream_) {
+        auto rc = cudaStreamSynchronize(stream_);
+        if (rc != cudaSuccess) {
+            LOG(ERROR) << "sync stream failed: " << cudaGetErrorString(rc);
+            return RC_OTHER_ERROR;
+        }
+    }
+    return RC_SUCCESS;
 }
 
 // Copy from host

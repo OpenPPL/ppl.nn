@@ -18,8 +18,6 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_BUFFERED_CUDA_DEVICE_H_
 #define _ST_HPC_PPL_NN_ENGINES_CUDA_BUFFERED_CUDA_DEVICE_H_
 
-#include <cuda.h>
-
 #include "ppl/nn/utils/buffer_manager.h"
 #include "ppl/nn/engines/cuda/cuda_device.h"
 #include <memory>
@@ -30,7 +28,7 @@ class BufferedCudaDevice final : public CudaDevice {
 public:
     ~BufferedCudaDevice();
 
-    ppl::common::RetCode Init(uint32_t device_id, uint32_t mm_policy);
+    ppl::common::RetCode Init(int device_id, uint32_t mm_policy);
 
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc*) override;
     void Free(BufferDesc*) override;
