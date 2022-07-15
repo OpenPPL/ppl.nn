@@ -26,7 +26,6 @@ namespace ppl { namespace nn { namespace cuda {
 class CudaEngineContext final : public EngineContext {
 public:
     ppl::common::RetCode Init(const EngineOptions& options);
-    ~CudaEngineContext();
 
     Device* GetDevice() override {
         return &device_;
@@ -36,7 +35,6 @@ public:
     }
 
 private:
-    CUdevice cu_device_;
     BufferedCudaDevice device_;
 };
 
