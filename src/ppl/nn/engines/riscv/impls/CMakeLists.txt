@@ -40,7 +40,7 @@ list(APPEND PPLKERNELRISCV_INCLUDE_DIRECTORIES ${PROJECT_BINARY_DIR}/include)
 hpcc_populate_dep(pplcommon)
 list(APPEND PPLKERNELRISCV_LINK_LIBRARIES pplcommon_static)
 
-set(__PPLNN_SOURCE_DIR__ ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../..)
+get_filename_component(__PPLNN_SOURCE_DIR__ "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../.." ABSOLUTE)
 set(PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES ${__PPLNN_SOURCE_DIR__}/include ${__PPLNN_SOURCE_DIR__}/src)
 unset(__PPLNN_SOURCE_DIR__)
 

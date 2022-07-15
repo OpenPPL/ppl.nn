@@ -27,7 +27,7 @@ endif()
 
 list(APPEND PPLKERNELARMSERVER_LINK_LIBRARIES pplcommon_static)
 
-set(__PPLNN_SOURCE_DIR__ ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../..)
+get_filename_component(__PPLNN_SOURCE_DIR__ "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../.." ABSOLUTE)
 set(PPLNN_ARM_ENGINE_INCLUDE_DIRECTORIES ${__PPLNN_SOURCE_DIR__}/src/ ${__PPLNN_SOURCE_DIR__}/include/)
 unset(__PPLNN_SOURCE_DIR__)
 

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(pplnn-integration)
 
-set(pplnn_DIR ${CMAKE_CURRENT_LIST_DIR}/../../../pplnn-build/install/lib/cmake/ppl)
+get_filename_component(pplnn_DIR "${CMAKE_CURRENT_LIST_DIR}/../../../pplnn-build/install/lib/cmake/ppl" ABSOLUTE)
 find_package(pplnn REQUIRED)
 
 add_executable(pplnn-integration main.cc)
