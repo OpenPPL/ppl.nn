@@ -24,7 +24,7 @@ namespace ppl { namespace nn {
 
 RetCode TensorImpl::ReallocBuffer() {
     if (!buffer_info_.IsBufferOwner() && buffer_info_.GetBufferPtr()) {
-        LOG(WARNING) << "tensor[" << GetName() << "] is not the buffer owner. ReallocBuffer() does nothing.";
+        LOG(DEBUG) << "tensor[" << GetName() << "] is not the buffer owner. ReallocBuffer() does nothing.";
         return RC_SUCCESS;
     }
 
