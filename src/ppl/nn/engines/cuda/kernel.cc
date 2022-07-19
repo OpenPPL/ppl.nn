@@ -75,7 +75,6 @@ RetCode CudaKernel::BeforeExecute(KernelExecContext* ctx) {
             LOG(ERROR) << "ReallocBuffer for tensor[" << tensor->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
         }
-        tensor->SetBarrier(&barrier_);
     }
 
     return RC_SUCCESS;
@@ -160,7 +159,6 @@ RetCode CudaKernel::Execute(KernelExecContext* ctx) {
     }
 
 #ifndef NDEBUG
-
     auto run_end_ts = std::chrono::system_clock::now();
     auto diff = std::chrono::duration_cast<std::chrono::microseconds>(run_end_ts - run_begin_ts);
     LOG(INFO) << "After execute kernel[" << GetName() << "] with running time " << (float)diff.count()
@@ -168,6 +166,13 @@ RetCode CudaKernel::Execute(KernelExecContext* ctx) {
 #endif
 
     barrier_.Update(GetCudaDevice()->GetStream());
+
+    for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
+        auto edge = ctx->GetOutput<EdgeObject>(i);
+        if (edge) {
+            edge->SetBarrier(&barrier_);
+        }
+    }
 
     return status;
 }
