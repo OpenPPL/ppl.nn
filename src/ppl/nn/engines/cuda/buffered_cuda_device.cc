@@ -40,6 +40,7 @@ RetCode BufferedCudaDevice::Init(int device_id, uint32_t mm_policy) {
         allocator_.reset(new DefaultCudaAllocator());
         buffer_manager_.reset(new utils::StackBufferManager(allocator_.get(), true));
     } else if (mm_policy == MM_COMPACT) {
+#if PPLNN_CUDACC_VER_MAJOR * 1000 + PPLNN_CUDACC_VER_MINOR * 10 >= 10020
         size_t granularity = 0;
         CUmemAllocationProp prop = {};
         prop.type = CU_MEM_ALLOCATION_TYPE_PINNED;
@@ -61,6 +62,11 @@ RetCode BufferedCudaDevice::Init(int device_id, uint32_t mm_policy) {
             block_size = granularity;
         }
         buffer_manager_.reset(new utils::CompactBufferManager(allocator, CUDA_DEFAULT_ALIGNMENT, block_size));
+#else
+        LOG(WARNING) << "Due to lower CUDA version, 'Compact Memory' is not supported, choose 'Perf Mode' instead."; 
+        allocator_.reset(new DefaultCudaAllocator());
+        buffer_manager_.reset(new utils::StackBufferManager(allocator_.get(), true));
+#endif
     }
 
     return RC_SUCCESS;
