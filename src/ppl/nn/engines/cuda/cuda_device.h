@@ -35,7 +35,7 @@ public:
 
     ppl::common::RetCode Init(int device_id);
 
-    virtual ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) override = 0;
+    virtual ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) = 0;
 
     ppl::common::RetCode Realloc(const TensorShape& shape, BufferDesc* buffer) override final {
         return Realloc(shape.CalcBytesIncludingPadding(), buffer);
