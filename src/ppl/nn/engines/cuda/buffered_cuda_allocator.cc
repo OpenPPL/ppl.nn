@@ -24,6 +24,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn {
 
+#if PPLNN_CUDACC_VER_MAJOR * 1000 + PPLNN_CUDACC_VER_MINOR * 10 >= 10020
 static inline uint64_t Align(uint64_t x, uint64_t n) {
     return (x + n - 1) & (~(n - 1));
 }
@@ -123,5 +124,6 @@ void* BufferedCudaAllocator::Alloc(uint64_t bytes) {
 void BufferedCudaAllocator::Free(void*) {
     // do nothing
 }
+#endif
 
 }} // namespace ppl::nn
