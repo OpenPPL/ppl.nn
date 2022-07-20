@@ -106,6 +106,11 @@ RetCode CudaDevice::CopyFromHost(BufferDesc* dst, const void* src, uint64_t byte
         LOG(ERROR) << "cudaMemcpyAsync " << err << ", " << cudaGetErrorString(err);
         return RC_OTHER_ERROR;
     }
+    err = cudaStreamSynchronize(stream_);
+    if (err != cudaSuccess) {
+        LOG(ERROR) << "cudaStreamSynchronize " << err << ", " << cudaGetErrorString(err);
+        return RC_OTHER_ERROR;
+    }
     return RC_SUCCESS;
 }
 
