@@ -30,6 +30,7 @@ public:
 
     ppl::common::RetCode Init(int device_id, uint32_t mm_policy);
 
+    using CudaDevice::Realloc;
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc*) override;
     void Free(BufferDesc*) override;
 
