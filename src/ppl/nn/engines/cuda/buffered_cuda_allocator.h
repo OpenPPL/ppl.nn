@@ -27,6 +27,7 @@
 
 namespace ppl { namespace nn {
 
+#if PPLNN_CUDACC_VER_MAJOR * 1000 + PPLNN_CUDACC_VER_MINOR * 10 >= 10020
 class BufferedCudaAllocator final : public ppl::common::Allocator {
 public:
     BufferedCudaAllocator() {}
@@ -50,6 +51,7 @@ private:
     BufferedCudaAllocator(const BufferedCudaAllocator&) = delete;
     BufferedCudaAllocator& operator=(const BufferedCudaAllocator&) = delete;
 };
+#endif
 
 }} // namespace ppl::nn
 
