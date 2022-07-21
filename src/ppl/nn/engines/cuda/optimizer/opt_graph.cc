@@ -449,14 +449,13 @@ RetCode OptGraph::UpdateType() {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::SelectAlgos(const utils::SharedResource& resource, CudaDevice* opt_stage_dev,
-                              CudaDevice* reserved_data_dev) {
+RetCode OptGraph::SelectAlgos(const utils::SharedResource& resource, CudaDevice* device) {
     auto topo = graph_->topo.get();
     auto& graph_quants = args_->tensor_quants.find(topo->GetName())->second;
     auto& graph_algos = args_->alog_selects;
 
-    OptKernelOptions options(graph_, info_, &resource, args_, compile_set_, opt_stage_dev, reserved_data_dev,
-                             &tensor_impls_, &graph_quants, &graph_algos);
+    OptKernelOptions options(graph_, info_, &resource, args_, compile_set_, device, &tensor_impls_, &graph_quants,
+                             &graph_algos);
     UpdateTopologicalSort();
 
     AlgoGraph algo_graph(topo);
@@ -528,8 +527,9 @@ RetCode OptGraph::LoadConstants(CudaDevice* device) {
             }
 
             auto converter = (CudaDataConverter*)device->GetDataConverter();
-            status = converter->ConvertFromHost(&constant_info.GetBufferDesc(), postshape, graph_quants[postedge_id],
-                                                constant_ref->second.data.GetData(), preshape, graph_quants[preedge_id]);
+            status =
+                converter->ConvertFromHost(&constant_info.GetBufferDesc(), postshape, graph_quants[postedge_id],
+                                           constant_ref->second.data.GetData(), preshape, graph_quants[preedge_id]);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
                 return status;
@@ -582,8 +582,7 @@ RetCode OptGraph::DeleteBridgeKernels() {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::DoOptimize(const utils::SharedResource& resource, CudaDevice* opt_stage_dev,
-                             CudaDevice* reserved_data_dev) {
+RetCode OptGraph::DoOptimize(const utils::SharedResource& resource, CudaDevice* dev) {
     auto status = InitKernels();
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init kernels failed: " << GetRetCodeStr(status);
@@ -620,13 +619,13 @@ RetCode OptGraph::DoOptimize(const utils::SharedResource& resource, CudaDevice* 
         return status;
     }
 
-    status = SelectAlgos(resource, opt_stage_dev, reserved_data_dev);
+    status = SelectAlgos(resource, dev);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Selec algos for each kernel failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = LoadConstants(reserved_data_dev);
+    status = LoadConstants(dev);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Load constant tensors failed: " << GetRetCodeStr(status);
         return status;
