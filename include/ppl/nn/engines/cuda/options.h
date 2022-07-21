@@ -130,6 +130,9 @@ enum {
 
     /** best fit first, will use more memory */
     MM_BEST_FIT = 1,
+
+    /** plain implementation */
+    MM_PLAIN = 2,
 };
 
 }}} // namespace ppl::nn::cuda

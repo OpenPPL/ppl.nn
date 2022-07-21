@@ -29,8 +29,7 @@ namespace ppl { namespace nn { namespace arm {
 
 static void DummyDeleter(ppl::common::Allocator*) {}
 
-RuntimeArmDevice::RuntimeArmDevice(uint64_t alignment, isa_t isa, uint32_t mm_policy)
-    : ArmDevice(alignment, isa), tmp_buffer_size_(0) {
+RetCode RuntimeArmDevice::Init(uint32_t mm_policy) {
     can_defragement_ = false;
     if (mm_policy == MM_MRU) {
         auto allocator_ptr = ArmDevice::GetAllocator();
@@ -39,8 +38,13 @@ RuntimeArmDevice::RuntimeArmDevice(uint64_t alignment, isa_t isa, uint32_t mm_po
     } else if (mm_policy == MM_COMPACT) {
         can_defragement_ = true;
         allocator_.reset(new utils::CpuBlockAllocator());
-        buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment));
+        buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment_));
+    } else {
+        LOG(ERROR) << "unknown mm policy: " << mm_policy;
+        return RC_INVALID_VALUE;
     }
+
+    return RC_SUCCESS;
 }
 
 RuntimeArmDevice::~RuntimeArmDevice() {

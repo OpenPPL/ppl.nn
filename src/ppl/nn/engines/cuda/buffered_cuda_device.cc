@@ -17,7 +17,7 @@
 
 #include "ppl/nn/engines/cuda/buffered_cuda_device.h"
 #include "ppl/nn/engines/cuda/buffered_cuda_allocator.h"
-#include "ppl/nn/engines/cuda/default_cuda_allocator.h"
+#include "ppl/nn/engines/cuda/plain_cuda_allocator.h"
 #include "ppl/nn/utils/stack_buffer_manager.h"
 #include "ppl/nn/utils/compact_buffer_manager.h"
 #include "ppl/nn/common/logger.h"
@@ -37,7 +37,7 @@ RetCode BufferedCudaDevice::Init(int device_id, uint32_t mm_policy) {
     }
 
     if (mm_policy == MM_BEST_FIT) {
-        allocator_.reset(new DefaultCudaAllocator());
+        allocator_.reset(new PlainCudaAllocator());
         buffer_manager_.reset(new utils::StackBufferManager(allocator_.get(), true));
     } else if (mm_policy == MM_COMPACT) {
 #if PPLNN_CUDACC_VER_MAJOR * 1000 + PPLNN_CUDACC_VER_MINOR * 10 >= 10020
@@ -63,7 +63,7 @@ RetCode BufferedCudaDevice::Init(int device_id, uint32_t mm_policy) {
         }
         buffer_manager_.reset(new utils::CompactBufferManager(allocator, CUDA_DEFAULT_ALIGNMENT, block_size));
 #else
-        LOG(WARNING) << "Due to lower CUDA version, 'Compact Memory' is not supported, choose 'Perf Mode' instead."; 
+        LOG(WARNING) << "Due to lower CUDA version, 'Compact Memory' is not supported, choose 'Perf Mode' instead.";
         allocator_.reset(new DefaultCudaAllocator());
         buffer_manager_.reset(new utils::StackBufferManager(allocator_.get(), true));
 #endif

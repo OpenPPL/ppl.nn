@@ -27,14 +27,11 @@
 namespace ppl { namespace nn { namespace riscv {
 
 class RuntimeRiscvDevice final : public RiscvDevice {
-private:
-    static inline uint64_t Align(uint64_t x, uint64_t n) {
-        return (x + n - 1) & (~(n - 1));
-    }
-
 public:
-    RuntimeRiscvDevice(uint64_t alignment, uint32_t mm_policy);
+    RuntimeRiscvDevice(uint64_t alignment) : RiscvDevice(alignment), alignment_(alignment) {}
     ~RuntimeRiscvDevice();
+
+    ppl::common::RetCode Init(uint32_t mm_policy);
 
     ppl::common::Allocator* GetAllocator() const override {
         return allocator_.get();
@@ -59,6 +56,7 @@ public:
     ppl::common::RetCode Configure(uint32_t, ...) override;
 
 private:
+    const uint64_t alignment_;
     uint32_t mm_policy_;
     std::unique_ptr<utils::BufferManager> buffer_manager_;
     BufferDesc shared_tmp_buffer_;

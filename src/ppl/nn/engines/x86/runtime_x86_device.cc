@@ -29,16 +29,20 @@ namespace ppl { namespace nn { namespace x86 {
 
 static void DummyDeleter(ppl::common::Allocator*) {}
 
-RuntimeX86Device::RuntimeX86Device(uint64_t alignment, isa_t isa, uint32_t mm_policy)
-    : X86Device(alignment, isa), mm_policy_(mm_policy), tmp_buffer_size_(0) {
+RetCode RuntimeX86Device::Init(uint32_t mm_policy) {
     if (mm_policy_ == MM_MRU) {
         auto allocator_ptr = X86Device::GetAllocator();
         allocator_ = std::shared_ptr<Allocator>(allocator_ptr, DummyDeleter);
         buffer_manager_.reset(new utils::StackBufferManager(allocator_ptr));
     } else if (mm_policy_ == MM_COMPACT) {
         allocator_.reset(new utils::CpuBlockAllocator());
-        buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment));
+        buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment_));
+    } else {
+        LOG(ERROR) << "unknown mm policy: " << mm_policy;
+        return RC_INVALID_VALUE;
     }
+
+    return RC_SUCCESS;
 }
 
 RuntimeX86Device::~RuntimeX86Device() {

@@ -87,7 +87,14 @@ RetCode ArmEngine::BindNumaNode(int32_t numa_node_id) const {
 }
 
 EngineContext* ArmEngine::CreateEngineContext() {
-    return new ArmEngineContext(device_.GetISA(), options_.mm_policy);
+    auto ctx = new ArmEngineContext();
+    auto rc = ctx->Init(device_.GetISA(), options_.mm_policy);
+    if (rc != RC_SUCCESS) {
+        LOG(ERROR) << "init arm engine context failed: " << GetRetCodeStr(rc);
+        delete ctx;
+        return nullptr;
+    }
+    return ctx;
 }
 
 bool ArmEngine::Supports(const ir::Node* node) const {

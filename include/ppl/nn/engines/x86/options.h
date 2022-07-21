@@ -53,6 +53,9 @@ enum {
 
     /** most recently used first, will use more memory */
     MM_MRU = 1,
+
+    /** plain implementation */
+    MM_PLAIN = 2,
 };
 
 /** @brief options for x86::DeviceContext::Configure() */

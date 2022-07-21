@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_DEFAULT_CUDA_ALLOCATOR_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_DEFAULT_CUDA_ALLOCATOR_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_PLAIN_CUDA_ALLOCATOR_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_PLAIN_CUDA_ALLOCATOR_H_
 
 #include <cuda_runtime.h>
 
@@ -26,7 +26,7 @@
 
 namespace ppl { namespace nn {
 
-class DefaultCudaAllocator final : public ppl::common::Allocator {
+class PlainCudaAllocator final : public ppl::common::Allocator {
 public:
     void* Alloc(uint64_t size) override {
         void* ptr = nullptr;

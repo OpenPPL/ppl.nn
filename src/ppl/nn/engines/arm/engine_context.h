@@ -24,18 +24,27 @@
 
 namespace ppl { namespace nn { namespace arm {
 
+#define ARM_DEFAULT_ALIGNMENT 64u
+
 class ArmEngineContext final : public EngineContext {
 public:
-    ArmEngineContext(ppl::common::isa_t isa, uint32_t mm_policy) : device_(ARM_DEFAULT_ALIGNMENT, isa, mm_policy) {}
+    ArmEngineContext() {}
+
+    ppl::common::RetCode Init(ppl::common::isa_t isa, uint32_t mm_policy);
+
     Device* GetDevice() override {
-        return &device_;
+        return device_.get();
     }
     const char* GetName() const override {
         return "arm";
     }
 
 private:
-    RuntimeArmDevice device_;
+    std::shared_ptr<ArmDevice> device_;
+
+private:
+    ArmEngineContext(const ArmEngineContext&) = delete;
+    ArmEngineContext& operator=(const ArmEngineContext&) = delete;
 };
 
 }}} // namespace ppl::nn::arm
