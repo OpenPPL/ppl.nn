@@ -57,9 +57,9 @@ const ppl::common::RetCode GemmCompiler::Compile(ir::Node* node, const OptKernel
     CUDAModule* cuda_module = new CUDAModule();
     cuda_param->module = (void*)cuda_module;
     auto ptx_code = CUDANVRTCCompile(pair<string, string>(name, source), param_cstring,
-                                     options.opt_stage_device->GetDeviceId(), true);
+                                     options.device->GetDeviceId(), true);
     cuda_module->SetSourceCode(name, ptx_code);
-    wrapper->Init(cuda_module, name, options.opt_stage_device->GetStream());
+    wrapper->Init(cuda_module, name, options.device->GetStream());
     ModuleMap* module_map = options.cuda_module_manager->GetModule();
     module_map->emplace(pair<nodeid_t, CUDAModuleWrapper*>(node_id, move(wrapper)));
 

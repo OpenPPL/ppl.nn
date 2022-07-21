@@ -39,14 +39,14 @@ typedef std::set<nodeid_t> CompileInfo;
 
 struct CudaArgs {
     struct AlgoSelects {
-        std::string kname = "";
+        std::string kname;
         int kid = 0;
         int splitk = 1;
         int splitf = 1;
     };
 
     bool quick_select = false;
-    std::string save_algo_path = "";
+    std::string save_algo_path;
     ppl::common::datatype_t default_kernel_type = 0;
     std::map<std::string, ppl::common::datatype_t> node_types;
     std::vector<ppl::common::dataformat_t> output_formats;
@@ -68,7 +68,7 @@ public:
     bool Supports(const ir::Node*) const override;
     ppl::common::RetCode ProcessGraph(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*) override;
     EngineImpl* Create() override;
-    ppl::common::RetCode CompileCudaModule(const utils::SharedResource&, const CompileInfo&, CudaDevice*, ir::Graph*,
+    ppl::common::RetCode CompileCudaModule(const utils::SharedResource&, const CompileInfo&, ir::Graph*,
                                            RuntimePartitionInfo*);
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
@@ -83,7 +83,7 @@ public:
 #endif
 
 private:
-    ppl::common::RetCode DoOptimize(const utils::SharedResource&, CudaDevice*, ir::Graph*, RuntimePartitionInfo*);
+    ppl::common::RetCode DoOptimize(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*);
 
 private:
     /*
@@ -108,7 +108,7 @@ private:
 private:
     CudaArgs cuda_flags_;
     EngineOptions options_;
-    PlainCudaDevice reserved_data_device_; // used to store data that are used in runtime stage
+    PlainCudaDevice device_;
     CUDAModuleManager cuda_manager_;
 #ifdef PPLNN_ENABLE_PMX_MODEL
     std::vector<BufferDesc> constant_buffer_blocks_;

@@ -106,9 +106,9 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
     uint64_t size = PPLConvTransposeGetCompilationBufSizeCuda(&shape_in0, &shape_out, &attr_param_.param);
     ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, size, ALGO_MAX_TIME)
 
-    auto stream = options.opt_stage_device->GetStream();
+    auto stream = options.device->GetStream();
 
-    int device_id = options.opt_stage_device->GetDeviceId();
+    int device_id = options.device->GetDeviceId();
 #ifdef PPLNN_ENABLE_CUDA_JIT
     // Do select
     LOG(INFO) << "Compiling " << node->GetName();
@@ -139,7 +139,7 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
     auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
 
     RetCode status;
-    auto stream = options.opt_stage_device->GetStream();
+    auto stream = options.device->GetStream();
     auto weight_iter = data->constants.find(weight_node->GetInput(0));
     if (weight_iter != data->constants.end() && // is a constant tensor and has not be loaded
         options.info->constants.find(weight_node->GetInput(0)) == options.info->constants.end()) {
@@ -163,21 +163,21 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
         RuntimeConstantInfo weight_constat_info;
         {
             BufferDesc buffer;
-            status = options.reserved_data_device->Realloc(newshape, &buffer);
+            status = options.device->Realloc(newshape, &buffer);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
                 return status;
             }
 
             weight_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
-            weight_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
+            weight_constat_info.SetBuffer(buffer, options.device, true);
         }
 
         auto size = PPLConvTransposeGetFilterBufSizeCudaFp16(&shape_in1);
         ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_temp_buffer, size, RC_OUT_OF_MEMORY)
         ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_input_buffer, postshape.CalcBytesIncludingPadding(), RC_OUT_OF_MEMORY)
-        status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(
-            &filter_input_buffer, postshape, weight_iter->second.data.GetData(), preshape);
+        status = options.device->GetDataConverter()->ConvertFromHost(&filter_input_buffer, postshape,
+                                                                     weight_iter->second.data.GetData(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << node->GetName() << " copy constant failed: " << GetRetCodeStr(status);
             return status;
@@ -214,19 +214,19 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
         RuntimeConstantInfo bias_constat_info;
         {
             BufferDesc buffer;
-            status = options.reserved_data_device->Realloc(newshape, &buffer);
+            status = options.device->Realloc(newshape, &buffer);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
                 return status;
             }
 
             bias_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
-            bias_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
+            bias_constat_info.SetBuffer(buffer, options.device, true);
         }
 
         ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, newshape.CalcBytesIncludingPadding(), RC_OUT_OF_MEMORY)
-        status = options.opt_stage_device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
-                                                                               bias_iter->second.data.GetData(), preshape);
+        status = options.device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
+                                                                     bias_iter->second.data.GetData(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
             return status;

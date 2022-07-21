@@ -43,7 +43,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 struct OptKernelOptions final {
     OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* r, CudaArgs* args,
-                     CompileInfo* compile_set, CudaDevice* opt_stage_dev, CudaDevice* reserved_data_dev,
+                     CompileInfo* compile_set, CudaDevice* dev,
                      std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors, std::vector<CudaTensorQuant>* quants,
                      std::map<std::string, CudaArgs::AlgoSelects>* algos)
         : graph(graph)
@@ -51,8 +51,7 @@ struct OptKernelOptions final {
         , resource(r)
         , args(args)
         , compile_set(compile_set)
-        , opt_stage_device(opt_stage_dev)
-        , reserved_data_device(reserved_data_dev)
+        , device(dev)
         , tensors(tensors)
         , quants(quants)
         , algos(algos) {}
@@ -60,14 +59,9 @@ struct OptKernelOptions final {
     OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* r,
                      std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors)
         : graph(graph), info(info), resource(r), tensors(tensors) {}
-    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* r,
-                     CudaDevice* opt_stage_dev, CudaDevice* reserved_data_dev, CUDAModuleManager* manager)
-        : graph(graph)
-        , info(info)
-        , resource(r)
-        , opt_stage_device(opt_stage_dev)
-        , reserved_data_device(reserved_data_dev)
-        , cuda_module_manager(manager) {}
+    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* r, CudaDevice* dev,
+                     CUDAModuleManager* manager)
+        : graph(graph), info(info), resource(r), device(dev), cuda_module_manager(manager) {}
     OptKernelOptions(ir::Graph* graph, const utils::SharedResource* r) : graph(graph), resource(r) {}
 
     ir::Graph* graph;
@@ -75,8 +69,7 @@ struct OptKernelOptions final {
     const utils::SharedResource* resource;
     CudaArgs* args;
     CompileInfo* compile_set;
-    CudaDevice* opt_stage_device; // device for optimization stage. will be destroyed after Engine::ProcessGraph()
-    CudaDevice* reserved_data_device; // used to store data that are used in runtime stage
+    CudaDevice* device;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors;
     std::vector<CudaTensorQuant>* quants;
     std::map<std::string, CudaArgs::AlgoSelects>* algos;

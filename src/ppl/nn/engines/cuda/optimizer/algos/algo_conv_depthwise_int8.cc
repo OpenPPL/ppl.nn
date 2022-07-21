@@ -117,7 +117,7 @@ double DepthwiseDirectInt8::ExcuteTimer(const ir::Node* node, OptKernelOptions& 
     ALLOC_BUFFERF_FOR_ALGO_SELECT(quant_buffer, shape_in1.GetDim(0) * sizeof(float), ALGO_MAX_TIME)
 
     // Do select
-    auto stream = options.opt_stage_device->GetStream();
+    auto stream = options.device->GetStream();
     auto kernel_id =
         PPLCUDADepthwiseSelectKernel(stream, input_buffer.addr, weight_buffer.addr, bias_buffer.addr, 1,
                                      temp_conv_param, temp_fuse_param, output_buffer.addr, shape_out.GetDataType(),
@@ -185,14 +185,14 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
     RuntimeConstantInfo quant_constat_info;
     {
         BufferDesc buffer;
-        status = options.reserved_data_device->Realloc(quant_shape, &buffer);
+        status = options.device->Realloc(quant_shape, &buffer);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
             return status;
         }
 
         quant_constat_info.Reshape(quant_shape);
-        quant_constat_info.SetBuffer(buffer, options.reserved_data_device, true);
+        quant_constat_info.SetBuffer(buffer, options.device, true);
     }
 
     auto ret_pair = topo->AddEdge("Quant_" + node->GetName());
@@ -208,7 +208,7 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
     options.quants->at(quant_edge_id).format = quant_shape.GetDataFormat();
     options.quants->at(quant_edge_id).type = quant_shape.GetDataType();
 
-    options.reserved_data_device->CopyFromHost(&quant_constat_info.GetBufferDesc(), scales.data(), quant_shape);
+    options.device->CopyFromHost(&quant_constat_info.GetBufferDesc(), scales.data(), quant_shape);
     options.info->constants.emplace(quant_edge_id, std::move(quant_constat_info));
 
     auto weight_iter = data->constants.find(preedge_id);
@@ -220,28 +220,28 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
         newshape.SetDim(0, (postshape.GetDim(0) + align_size - 1) / align_size * align_size);
 
         BufferDesc temp_buffer;
-        status = options.opt_stage_device->Realloc(postshape, &temp_buffer);
+        status = options.device->Realloc(postshape, &temp_buffer);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
             return status;
         }
         Destructor __device_src_guard__([&options, &temp_buffer]() -> void {
-            options.opt_stage_device->Free(&temp_buffer);
+            options.device->Free(&temp_buffer);
         });
 
         RuntimeConstantInfo constant_info;
         {
             BufferDesc buffer;
-            status = options.reserved_data_device->Realloc(newshape, &buffer);
+            status = options.device->Realloc(newshape, &buffer);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
                 return status;
             }
 
             constant_info.Reshape(postshape); // give the init shape, but the actual shape is padded
-            constant_info.SetBuffer(buffer, options.reserved_data_device, true);
+            constant_info.SetBuffer(buffer, options.device, true);
         }
-        status = ((CudaDataConverter*)options.opt_stage_device->GetDataConverter())
+        status = ((CudaDataConverter*)options.device->GetDataConverter())
                      ->ConvertFromHost(&temp_buffer, postshape, options.quants->at(postedge_id),
                                        weight_iter->second.data.GetData(), preshape, options.quants->at(preedge_id));
         if (status != RC_SUCCESS) {
@@ -249,7 +249,7 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
             return status;
         }
 
-        auto stream = options.opt_stage_device->GetStream();
+        auto stream = options.device->GetStream();
         PPLCUDADepthwiseConvertFilter(stream, temp_buffer.addr, constant_info.GetBufferDesc().addr, temp_conv_param,
                                       shape_out.GetDataType());
 
