@@ -28,6 +28,7 @@
 #include "ppl/nn/engines/cuda/cuda_common_param.h"
 #include "ppl/nn/engines/cuda/engine_context.h"
 #include "ppl/nn/engines/cuda/module/cuda_module.h"
+#include "ppl/nn/engines/cuda/plain_cuda_device.h"
 #include "ppl/nn/quantization/quant_param_parser.h"
 
 using namespace std;
@@ -107,7 +108,7 @@ private:
 private:
     CudaArgs cuda_flags_;
     EngineOptions options_;
-    BufferedCudaDevice reserved_data_device_; // used to store data that are used in runtime stage
+    PlainCudaDevice reserved_data_device_; // used to store data that are used in runtime stage
     CUDAModuleManager cuda_manager_;
 #ifdef PPLNN_ENABLE_PMX_MODEL
     std::vector<BufferDesc> constant_buffer_blocks_;

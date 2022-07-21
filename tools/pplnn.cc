@@ -60,8 +60,9 @@ Define_string_opt("--pmx-model", g_flag_pmx_model, "", "pmx model file");
 Define_string_opt("--save-pmx-model", g_flag_save_pmx_model, "", "dump model to <filename> in pmx format");
 #endif
 
-Define_string_opt("--mm-policy", g_flag_mm_policy, "mem",
-                  "\"perf\" => better performance, or \"mem\" => less memory usage");
+Define_string_opt(
+    "--mm-policy", g_flag_mm_policy, "mem",
+    "\"mem\"(default) => less memory usage; \"perf\" => better performance; \"plain\": plain implementation");
 
 Define_bool_opt("--enable-profiling", g_flag_enable_profiling, false, "enable profiling and print profiling info");
 Define_float_opt("--min-profiling-seconds", g_flag_min_profiling_seconds, 1.0f,
@@ -227,6 +228,11 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
         options.mm_policy = cuda::MM_BEST_FIT;
     } else if (g_flag_mm_policy == "mem") {
         options.mm_policy = cuda::MM_COMPACT;
+    } else if (g_flag_mm_policy == "plain") {
+        options.mm_policy = cuda::MM_PLAIN;
+    } else {
+        LOG(ERROR) << "unknown --mm-policy option: " << g_flag_mm_policy;
+        return false;
     }
 
     cuda::RegisterBuiltinOpImpls();
@@ -328,6 +334,11 @@ static inline bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
         options.mm_policy = x86::MM_MRU;
     } else if (g_flag_mm_policy == "mem") {
         options.mm_policy = x86::MM_COMPACT;
+    } else if (g_flag_mm_policy == "plain") {
+        options.mm_policy = x86::MM_PLAIN;
+    } else {
+        LOG(ERROR) << "unknown --mm-policy option: " << g_flag_mm_policy;
+        return false;
     }
 
     x86::RegisterBuiltinOpImpls();
@@ -373,6 +384,11 @@ static inline bool RegisterRiscvEngine(vector<unique_ptr<Engine>>* engines) {
         options.mm_policy = riscv::MM_MRU;
     } else if (g_flag_mm_policy == "mem") {
         options.mm_policy = riscv::MM_COMPACT;
+    } else if (g_flag_mm_policy == "plain") {
+        options.mm_policy = riscv::MM_PLAIN;
+    } else {
+        LOG(ERROR) << "unknown --mm-policy option: " << g_flag_mm_policy;
+        return false;
     }
 
     if (g_flag_use_fp16) {
@@ -413,6 +429,11 @@ static inline bool RegisterArmEngine(vector<unique_ptr<Engine>>* engines) {
         options.mm_policy = arm::MM_MRU;
     } else if (g_flag_mm_policy == "mem") {
         options.mm_policy = arm::MM_COMPACT;
+    } else if (g_flag_mm_policy == "plain") {
+        options.mm_policy = arm::MM_PLAIN;
+    } else {
+        LOG(ERROR) << "unknown --mm-policy option: " << g_flag_mm_policy;
+        return false;
     }
 
     if (g_flag_use_fp16) {

@@ -15,38 +15,30 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_ENGINE_CONTEXT_H_
-#define _ST_HPC_PPL_NN_ENGINES_RISCV_ENGINE_CONTEXT_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_PLAIN_CUDA_DEVICE_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_PLAIN_CUDA_DEVICE_H_
 
-#include "ppl/nn/engines/engine_context.h"
-#include "ppl/nn/engines/riscv/runtime_riscv_device.h"
+#include "ppl/common/allocator.h"
+#include "ppl/nn/engines/cuda/cuda_device.h"
+#include <memory>
 
-namespace ppl { namespace nn { namespace riscv {
+namespace ppl { namespace nn { namespace cuda {
 
-#define RISCV_DEFAULT_ALIGNMENT 64u
-
-class RiscvEngineContext final : public EngineContext {
+class PlainCudaDevice final : public CudaDevice {
 public:
-    RiscvEngineContext() {}
+    PlainCudaDevice();
+    virtual ~PlainCudaDevice();
 
-    ppl::common::RetCode Init(uint32_t mm_policy);
+    ppl::common::RetCode Init(uint32_t device_id);
 
-    Device* GetDevice() override {
-        return device_.get();
-    }
-
-    const char* GetName() const override {
-        return "riscv";
-    }
+    using CudaDevice::Realloc;
+    ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc*) override;
+    void Free(BufferDesc*) override;
 
 private:
-    std::shared_ptr<RiscvDevice> device_;
-
-private:
-    RiscvEngineContext(const RiscvEngineContext&) = delete;
-    RiscvEngineContext& operator=(const RiscvEngineContext&) = delete;
+    std::unique_ptr<ppl::common::Allocator> allocator_;
 };
 
-}}} // namespace ppl::nn::riscv
+}}} // namespace ppl::nn::cuda
 
 #endif

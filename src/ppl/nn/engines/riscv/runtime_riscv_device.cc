@@ -30,16 +30,20 @@ namespace ppl { namespace nn { namespace riscv {
 
 static void DummyDeleter(ppl::common::Allocator*) {}
 
-RuntimeRiscvDevice::RuntimeRiscvDevice(uint64_t alignment, uint32_t mm_policy)
-    : RiscvDevice(alignment), mm_policy_(mm_policy), tmp_buffer_size_(0) {
+RetCode RuntimeRiscvDevice::Init(uint32_t mm_policy) {
     if (mm_policy == MM_MRU) {
         auto allocator_ptr = RiscvDevice::GetAllocator();
         allocator_ = std::shared_ptr<Allocator>(allocator_ptr, DummyDeleter);
         buffer_manager_.reset(new utils::StackBufferManager(allocator_ptr));
     } else if (mm_policy == MM_COMPACT) {
         allocator_.reset(new utils::CpuBlockAllocator());
-        buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment));
+        buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment_));
+    } else {
+        LOG(ERROR) << "unknown mm policy: " << mm_policy;
+        return RC_INVALID_VALUE;
     }
+
+    return RC_SUCCESS;
 }
 
 RuntimeRiscvDevice::~RuntimeRiscvDevice() {

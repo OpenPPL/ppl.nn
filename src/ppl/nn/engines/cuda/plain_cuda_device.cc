@@ -15,28 +15,27 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/default_cuda_device.h"
-
-#include "ppl/nn/engines/cuda/default_cuda_allocator.h"
+#include "ppl/nn/engines/cuda/plain_cuda_device.h"
+#include "ppl/nn/engines/cuda/plain_cuda_allocator.h"
 
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-DefaultCudaDevice::DefaultCudaDevice() {
-    allocator_.reset(new DefaultCudaAllocator());
+PlainCudaDevice::PlainCudaDevice() {
+    allocator_.reset(new PlainCudaAllocator());
 }
 
-DefaultCudaDevice::~DefaultCudaDevice() {
+PlainCudaDevice::~PlainCudaDevice() {
     SyncStream();
     allocator_.reset();
 }
 
-RetCode DefaultCudaDevice::Init(uint32_t device_id) {
+RetCode PlainCudaDevice::Init(uint32_t device_id) {
     return CudaDevice::Init(device_id);
 }
 
-RetCode DefaultCudaDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {
+RetCode PlainCudaDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {
     if (buffer->addr) {
         allocator_->Free(buffer->addr);
     }
@@ -56,7 +55,7 @@ RetCode DefaultCudaDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {
     return RC_SUCCESS;
 }
 
-void DefaultCudaDevice::Free(BufferDesc* buffer) {
+void PlainCudaDevice::Free(BufferDesc* buffer) {
     if (buffer->addr) {
         allocator_->Free(buffer->addr);
         buffer->addr = nullptr;

@@ -25,6 +25,7 @@
 #include "ppl/nn/engines/cuda/optimizer/opt_graph.h"
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/engines/cuda/module/op_compile_manager.h"
+#include "ppl/nn/engines/cuda/buffered_cuda_device.h"
 #include "ppl/nn/quantization/quant_param_parser.h"
 #include "ppl/nn/utils/array.h"
 #include "ppl/nn/utils/utils.h"
@@ -58,7 +59,7 @@ CudaEngine::~CudaEngine() {
 
 RetCode CudaEngine::Init(const EngineOptions& options) {
     options_ = options;
-    return reserved_data_device_.Init(options.device_id, options.mm_policy);
+    return reserved_data_device_.Init(options.device_id);
 }
 
 EngineContext* CudaEngine::CreateEngineContext() {

@@ -15,30 +15,27 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_DEFAULT_CUDA_DEVICE_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_DEFAULT_CUDA_DEVICE_H_
+#include "ppl/nn/engines/riscv/engine_context.h"
+#include "ppl/nn/common/logger.h"
+using namespace std;
+using namespace ppl::common;
 
-#include "ppl/common/allocator.h"
-#include "ppl/nn/engines/cuda/cuda_device.h"
-#include <memory>
+namespace ppl { namespace nn { namespace riscv {
 
-namespace ppl { namespace nn { namespace cuda {
+RetCode RiscvEngineContext::Init(uint32_t mm_policy) {
+    if (mm_policy == MM_PLAIN) {
+        device_ = make_shared<RiscvDevice>(RISCV_DEFAULT_ALIGNMENT);
+    } else {
+        auto dev = make_shared<RuntimeRiscvDevice>(RISCV_DEFAULT_ALIGNMENT);
+        auto rc = dev->Init(mm_policy);
+        if (rc != RC_SUCCESS) {
+            LOG(ERROR) << "init RuntimeRiscvDevice failed: " << GetRetCodeStr(rc);
+            return rc;
+        }
+        device_ = dev;
+    }
 
-class DefaultCudaDevice final : public CudaDevice {
-public:
-    DefaultCudaDevice();
-    virtual ~DefaultCudaDevice();
+    return RC_SUCCESS;
+}
 
-    ppl::common::RetCode Init(uint32_t device_id);
-
-    using CudaDevice::Realloc;
-    ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc*) override;
-    void Free(BufferDesc*) override;
-
-private:
-    std::unique_ptr<ppl::common::Allocator> allocator_;
-};
-
-}}} // namespace ppl::nn::cuda
-
-#endif
+}}} // namespace ppl::nn::riscv

@@ -25,8 +25,6 @@
 
 namespace ppl { namespace nn { namespace arm {
 
-#define ARM_DEFAULT_ALIGNMENT 64u
-
 class ArmDevice : public Device {
 public:
     ArmDevice(uint64_t alignment, ppl::common::isa_t isa) : isa_(isa), allocator_(alignment), data_converter_(isa) {}

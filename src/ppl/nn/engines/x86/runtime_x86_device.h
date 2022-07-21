@@ -19,6 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_X86_RUNTIME_X86_DEVICE_H_
 
 #include "ppl/nn/engines/x86/x86_device.h"
+#include "ppl/nn/engines/x86/options.h"
 #include "ppl/nn/utils/buffer_manager.h"
 #include "ppl/common/allocator.h"
 #include <memory>
@@ -26,14 +27,11 @@
 namespace ppl { namespace nn { namespace x86 {
 
 class RuntimeX86Device final : public X86Device {
-private:
-    static inline uint64_t Align(uint64_t x, uint64_t n) {
-        return (x + n - 1) & (~(n - 1));
-    }
-
 public:
-    RuntimeX86Device(uint64_t alignment, ppl::common::isa_t isa, uint32_t mm_policy);
+    RuntimeX86Device(uint64_t alignment, ppl::common::isa_t isa) : X86Device(alignment, isa), alignment_(alignment) {}
     ~RuntimeX86Device();
+
+    ppl::common::RetCode Init(uint32_t mm_policy);
 
     ppl::common::Allocator* GetAllocator() const override {
         return allocator_.get();
@@ -64,11 +62,16 @@ public:
     ppl::common::RetCode Configure(uint32_t, ...) override;
 
 private:
-    uint32_t mm_policy_;
+    const uint64_t alignment_;
+    uint32_t mm_policy_ = 0;
     BufferDesc shared_tmp_buffer_;
-    uint64_t tmp_buffer_size_;
+    uint64_t tmp_buffer_size_ = 0;
     std::unique_ptr<utils::BufferManager> buffer_manager_;
     std::shared_ptr<ppl::common::Allocator> allocator_;
+
+private:
+    RuntimeX86Device(const RuntimeX86Device&) = delete;
+    RuntimeX86Device& operator=(const RuntimeX86Device&) = delete;
 };
 
 }}} // namespace ppl::nn::x86

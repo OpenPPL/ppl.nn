@@ -51,7 +51,14 @@ RetCode X86Engine::Init(const EngineOptions& options) {
 }
 
 EngineContext* X86Engine::CreateEngineContext() {
-    return new X86EngineContext(device_.GetISA(), options_.mm_policy);
+    auto ctx = new X86EngineContext();
+    auto rc = ctx->Init(device_.GetISA(), options_.mm_policy);
+    if (rc != RC_SUCCESS) {
+        LOG(ERROR) << "init x86 engine context failed: " << GetRetCodeStr(rc);
+        delete ctx;
+        return nullptr;
+    }
+    return ctx;
 }
 
 bool X86Engine::Supports(const ir::Node* node) const {

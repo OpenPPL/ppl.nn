@@ -15,35 +15,27 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_CONTEXT_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_CONTEXT_H_
+#include "ppl/nn/engines/arm/engine_context.h"
+#include "ppl/nn/common/logger.h"
+using namespace std;
+using namespace ppl::common;
 
-#include "ppl/nn/engines/engine_context.h"
-#include "ppl/nn/engines/cuda/cuda_device.h"
+namespace ppl { namespace nn { namespace arm {
 
-namespace ppl { namespace nn { namespace cuda {
-
-class CudaEngineContext final : public EngineContext {
-public:
-    CudaEngineContext() {}
-
-    ppl::common::RetCode Init(const EngineOptions& options);
-
-    Device* GetDevice() override {
-        return device_.get();
+RetCode ArmEngineContext::Init(isa_t isa, uint32_t mm_policy) {
+    if (mm_policy == MM_PLAIN) {
+        device_ = make_shared<ArmDevice>(ARM_DEFAULT_ALIGNMENT, isa);
+    } else {
+        auto dev = make_shared<RuntimeArmDevice>(ARM_DEFAULT_ALIGNMENT, isa);
+        auto rc = dev->Init(mm_policy);
+        if (rc != RC_SUCCESS) {
+            LOG(ERROR) << "init RuntimeArmDevice failed: " << GetRetCodeStr(rc);
+            return rc;
+        }
+        device_ = dev;
     }
-    const char* GetName() const override {
-        return "cuda";
-    }
 
-private:
-    std::shared_ptr<CudaDevice> device_;
+    return RC_SUCCESS;
+}
 
-private:
-    CudaEngineContext(const CudaEngineContext&) = delete;
-    CudaEngineContext& operator=(const CudaEngineContext&) = delete;
-};
-
-}}} // namespace ppl::nn::cuda
-
-#endif
+}}} // namespace ppl::nn::arm

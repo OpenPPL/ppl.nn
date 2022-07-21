@@ -43,7 +43,14 @@ ppl::common::RetCode RiscvEngine::Init(const EngineOptions& options) {
 };
 
 EngineContext* RiscvEngine::CreateEngineContext() {
-    return new RiscvEngineContext(options_.mm_policy);
+    auto ctx = new RiscvEngineContext();
+    auto rc = ctx->Init(options_.mm_policy);
+    if (rc != RC_SUCCESS) {
+        LOG(ERROR) << "init riscv engine context failed: " << GetRetCodeStr(rc);
+        delete ctx;
+        return nullptr;
+    }
+    return ctx;
 }
 
 ppl::common::RetCode RiscvEngine::Configure(uint32_t, ...) {

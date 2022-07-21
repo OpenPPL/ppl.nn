@@ -27,14 +27,11 @@
 namespace ppl { namespace nn { namespace arm {
 
 class RuntimeArmDevice final : public ArmDevice {
-private:
-    static inline uint64_t Align(uint64_t x, uint64_t n) {
-        return (x + n - 1) & (~(n - 1));
-    }
-
 public:
-    RuntimeArmDevice(uint64_t alignment, ppl::common::isa_t isa, uint32_t mm_policy);
+    RuntimeArmDevice(uint64_t alignment, ppl::common::isa_t isa) : ArmDevice(alignment, isa), alignment_(alignment) {}
     ~RuntimeArmDevice();
+
+    ppl::common::RetCode Init(uint32_t mm_policy);
 
     ppl::common::Allocator* GetAllocator() const override {
         return allocator_.get();
@@ -65,9 +62,10 @@ public:
     ppl::common::RetCode Configure(uint32_t, ...) override;
 
 private:
+    const uint64_t alignment_;
     bool can_defragement_;
     BufferDesc shared_tmp_buffer_;
-    uint64_t tmp_buffer_size_;
+    uint64_t tmp_buffer_size_ = 0;
     std::unique_ptr<utils::BufferManager> buffer_manager_;
     std::shared_ptr<ppl::common::Allocator> allocator_;
 };

@@ -27,10 +27,12 @@ namespace ppl { namespace nn { namespace x86 {
 
 class X86EngineContext final : public EngineContext {
 public:
-    X86EngineContext(ppl::common::isa_t isa, uint32_t mm_policy) : device_(X86_DEFAULT_ALIGNMENT, isa, mm_policy) {}
+    X86EngineContext() {}
+
+    ppl::common::RetCode Init(ppl::common::isa_t isa, uint32_t mm_policy);
 
     Device* GetDevice() override {
-        return &device_;
+        return device_.get();
     }
 
     const char* GetName() const override {
@@ -38,7 +40,11 @@ public:
     }
 
 private:
-    RuntimeX86Device device_;
+    std::shared_ptr<X86Device> device_;
+
+private:
+    X86EngineContext(const X86EngineContext&) = delete;
+    X86EngineContext& operator=(const X86EngineContext&) = delete;
 };
 
 }}} // namespace ppl::nn::x86
