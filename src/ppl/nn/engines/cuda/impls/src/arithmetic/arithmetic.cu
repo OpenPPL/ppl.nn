@@ -981,7 +981,8 @@ ppl::common::RetCode PPLCUDAArithMetic##OPTYPE##ForwardImp( \
     ppl::nn::TensorShape* input_shape0 = &input_shape0_obj; \
     ppl::nn::TensorShape* input_shape1 = &input_shape1_obj; \
     ppl::nn::TensorShape* output_shape = &output_shape_obj; \
-    if (input_shape0->GetDimCount() == input_shape1->GetDimCount() && input_shape0->GetDimCount() > 3) { \
+    if (input_shape0->GetDimCount() == input_shape1->GetDimCount() && input_shape0->GetDimCount() > 3 \
+        && (input_shape0->GetDataFormat() != ppl::common::DATAFORMAT_NHWC8)) { \
         ppl_refine_tensor_shape(input_shape0, input_shape1, output_shape); } \
     if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) { \
         return PPLCUDAArithMeticForwardImp<Arithmetic_##OPTYPE, half>(stream, \
@@ -1059,7 +1060,8 @@ ppl::common::RetCode PPLCUDAArithMetic##OPTYPE##ForwardImp( \
     ppl::nn::TensorShape* input_shape0 = &input_shape0_obj; \
     ppl::nn::TensorShape* input_shape1 = &input_shape1_obj; \
     ppl::nn::TensorShape* output_shape = &output_shape_obj; \
-    if (input_shape0->GetDimCount() == input_shape1->GetDimCount() && input_shape0->GetDimCount() > 3) { \
+    if (input_shape0->GetDimCount() == input_shape1->GetDimCount() && input_shape0->GetDimCount() > 3 \
+        && (input_shape0->GetDataFormat() != ppl::common::DATAFORMAT_NHWC8)) { \
         ppl_refine_tensor_shape(input_shape0, input_shape1, output_shape); } \
     if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8 && \
         ((input_shape0->GetDimCount() >= 2 && (input_shape0->GetDim(1) & 0x7)) || \
