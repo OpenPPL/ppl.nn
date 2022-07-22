@@ -45,7 +45,7 @@ if(NOT Git_FOUND)
     message(FATAL_ERROR "git is required.")
 endif()
 
-set(__HPCC_COMMIT__ 614c481aa9b8ff949ddfba70a3ae1aefa39ffd58)
+set(__HPCC_COMMIT__ e6e445437fba399cc86867536fdf4252bbefae61)
 
 if(PPLNN_DEP_HPCC_PKG)
     FetchContent_Declare(hpcc
@@ -53,16 +53,13 @@ if(PPLNN_DEP_HPCC_PKG)
         SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
         BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
         SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
-elseif(PPLNN_DEP_HPCC_GIT)
+else()
+    if(NOT PPLNN_DEP_HPCC_GIT)
+        set(PPLNN_DEP_HPCC_GIT "https://github.com/openppl-public/hpcc.git")
+    endif()
     FetchContent_Declare(hpcc
         GIT_REPOSITORY ${PPLNN_DEP_HPCC_GIT}
         GIT_TAG ${__HPCC_COMMIT__}
-        SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
-        BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
-        SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
-else()
-    FetchContent_Declare(hpcc
-        URL https://github.com/openppl-public/hpcc/archive/${__HPCC_COMMIT__}.zip
         SOURCE_DIR ${HPCC_DEPS_DIR}/hpcc
         BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/hpcc-build
         SUBBUILD_DIR ${HPCC_DEPS_DIR}/hpcc-subbuild)
@@ -88,18 +85,18 @@ set(PPLCOMMON_USE_AARCH64 ${PPLNN_USE_AARCH64})
 set(PPLCOMMON_USE_ARMV7 ${PPLNN_USE_ARMV7})
 set(PPLCOMMON_USE_CUDA ${PPLNN_USE_CUDA})
 
-set(__PPLCOMMON_COMMIT__ 400c03a006fb77b11b3218516035a74550ea1eb4)
+set(__PPLCOMMON_COMMIT__ af2d3683f3816895675dd8f347ac42ce53f3130b)
 
 if(PPLNN_DEP_PPLCOMMON_PKG)
     hpcc_declare_pkg_dep(pplcommon
         ${PPLNN_DEP_PPLCOMMON_PKG})
-elseif(PPLNN_DEP_PPLCOMMON_GIT)
+else()
+    if(NOT PPLNN_DEP_PPLCOMMON_GIT)
+        set(PPLNN_DEP_PPLCOMMON_GIT "https://github.com/openppl-public/ppl.common.git")
+    endif()
     hpcc_declare_git_dep(pplcommon
         ${PPLNN_DEP_PPLCOMMON_GIT}
         ${__PPLCOMMON_COMMIT__})
-else()
-    hpcc_declare_pkg_dep(pplcommon
-        https://github.com/openppl-public/ppl.common/archive/${__PPLCOMMON_COMMIT__}.zip)
 endif()
 
 unset(__PPLCOMMON_COMMIT__)
@@ -114,13 +111,13 @@ set(__FLATBUFFERS_TAG__ v2.0.0)
 if(PPLNN_DEP_FLATBUFFERS_PKG)
     hpcc_declare_pkg_dep(flatbuffers
         ${PPLNN_DEP_FLATBUFFERS_PKG})
-elseif(PPLNN_DEP_FLATBUFFERS_GIT)
+else()
+    if(NOT PPLNN_DEP_FLATBUFFERS_GIT)
+        set(PPLNN_DEP_FLATBUFFERS_GIT "https://github.com/google/flatbuffers.git")
+    endif()
     hpcc_declare_git_dep(flatbuffers
         ${PPLNN_DEP_FLATBUFFERS_GIT}
         ${__FLATBUFFERS_TAG__})
-else()
-    hpcc_declare_pkg_dep(flatbuffers
-        https://github.com/google/flatbuffers/archive/refs/tags/${__FLATBUFFERS_TAG__}.zip)
 endif()
 
 unset(__FLATBUFFERS_TAG__)
@@ -144,13 +141,13 @@ set(__PROTOBUF_TAG__ v3.11.4)
 if(PPLNN_DEP_PROTOBUF_PKG)
     hpcc_declare_pkg_dep(protobuf
         ${PPLNN_DEP_PROTOBUF_PKG})
-elseif(PPLNN_DEP_PROTOBUF_GIT)
+else()
+    if(NOT PPLNN_DEP_PROTOBUF_GIT)
+        set(PPLNN_DEP_PROTOBUF_GIT "https://github.com/protocolbuffers/protobuf.git")
+    endif()
     hpcc_declare_git_dep(protobuf
         ${PPLNN_DEP_PROTOBUF_GIT}
         ${__PROTOBUF_TAG__})
-else()
-    hpcc_declare_pkg_dep(protobuf
-        https://github.com/protocolbuffers/protobuf/archive/refs/tags/${__PROTOBUF_TAG__}.zip)
 endif()
 
 unset(__PROTOBUF_TAG__)
@@ -166,13 +163,13 @@ set(__RAPIDJSON_COMMIT__ 2e8f5d897d9d461a7273b4b812b0127f321b1dcf)
 if(PPLNN_DEP_RAPIDJSON_PKG)
     hpcc_declare_pkg_dep(rapidjson
         ${PPLNN_DEP_RAPIDJSON_PKG})
-elseif(PPLNN_DEP_RAPIDJSON_GIT)
+else()
+    if(NOT PPLNN_DEP_RAPIDJSON_GIT)
+        set(PPLNN_DEP_RAPIDJSON_GIT "https://github.com/Tencent/rapidjson.git")
+    endif()
     hpcc_declare_git_dep(rapidjson
         ${PPLNN_DEP_RAPIDJSON_GIT}
         ${__RAPIDJSON_COMMIT__})
-else()
-    hpcc_declare_pkg_dep(rapidjson
-        https://github.com/Tencent/rapidjson/archive/${__RAPIDJSON_COMMIT__}.zip)
 endif()
 
 unset(__RAPIDJSON_COMMIT__)
@@ -189,13 +186,13 @@ set(__PYBIND11_TAG__ v2.9.2)
 if(PPLNN_DEP_PYBIND11_PKG)
     hpcc_declare_pkg_dep(pybind11
         ${PPLNN_DEP_PYBIND11_PKG})
-elseif(PPLNN_DEP_PYBIND11_GIT)
+else()
+    if(NOT PPLNN_DEP_PYBIND11_GIT)
+        set(PPLNN_DEP_PYBIND11_GIT "https://github.com/pybind/pybind11.git")
+    endif()
     hpcc_declare_git_dep(pybind11
         ${PPLNN_DEP_PYBIND11_GIT}
         ${__PYBIND11_TAG__})
-else()
-    hpcc_declare_pkg_dep(pybind11
-        https://github.com/pybind/pybind11/archive/refs/tags/${__PYBIND11_TAG__}.zip)
 endif()
 
 unset(__PYBIND11_TAG__)
@@ -210,13 +207,13 @@ set(__LUACPP_COMMIT__ f381a4702017b61ee9662ae9fa7bceec8b5c7b32)
 if(PPLNN_DEP_LUACPP_PKG)
     hpcc_declare_pkg_dep(luacpp
         ${PPLNN_DEP_LUACPP_PKG})
-elseif(PPLNN_DEP_LUACPP_GIT)
+else()
+    if(NOT PPLNN_DEP_LUACPP_GIT)
+        set(PPLNN_DEP_LUACPP_GIT "https://github.com/ouonline/lua-cpp.git")
+    endif()
     hpcc_declare_git_dep(luacpp
         ${PPLNN_DEP_LUACPP_GIT}
         ${__LUACPP_COMMIT__})
-else()
-    hpcc_declare_pkg_dep(luacpp
-        https://github.com/ouonline/lua-cpp/archive/${__LUACPP_COMMIT__}.zip)
 endif()
 
 unset(__LUACPP_COMMIT__)
@@ -233,13 +230,13 @@ set(__GOOGLETEST_TAG__ release-1.10.0)
 if(PPLNN_DEP_GOOGLETEST_PKG)
     hpcc_declare_pkg_dep(googletest
         ${PPLNN_DEP_GOOGLETEST_PKG})
-elseif(PPLNN_DEP_GOOGLETEST_GIT)
+else()
+    if(NOT PPLNN_DEP_GOOGLETEST_GIT)
+        set(PPLNN_DEP_GOOGLETEST_GIT "https://github.com/google/googletest.git")
+    endif()
     hpcc_declare_git_dep(googletest
         ${PPLNN_DEP_GOOGLETEST_GIT}
         ${__GOOGLETEST_TAG__})
-else()
-    hpcc_declare_pkg_dep(googletest
-        https://github.com/google/googletest/archive/refs/tags/${__GOOGLETEST_TAG__}.zip)
 endif()
 
 unset(__GOOGLETEST_TAG__)
