@@ -15,19 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_X86_FP32_CONV_TRANSPOSE_H_
-#define __ST_PPL_KERNEL_X86_FP32_CONV_TRANSPOSE_H_
+#ifndef __ST_PPL_KERNEL_X86_FP32_CONV_H_
+#define __ST_PPL_KERNEL_X86_FP32_CONV_H_
 
 #include "ppl/kernel/x86/common/general_include.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
-uint64_t conv_transpose_ndarray_fp32_get_buffer_bytes(
+uint64_t conv_ndarray_fp32_get_buffer_bytes(
     const ppl::common::isa_t isa,
     const int64_t group,
-    const int64_t src_h,
-    const int64_t src_w,
-    const int64_t num_output,
+    const int64_t dst_h,
+    const int64_t dst_w,
+    const int64_t channels,
     const int64_t kernel_h,
     const int64_t kernel_w,
     const int64_t stride_h,
@@ -35,7 +35,7 @@ uint64_t conv_transpose_ndarray_fp32_get_buffer_bytes(
     const int64_t pad_h,
     const int64_t pad_w);
 
-ppl::common::RetCode conv_transpose_ndarray_fp32(
+ppl::common::RetCode conv_ndarray_fp32(
     const ppl::common::isa_t isa,
     const float *input,
     const float *filter,

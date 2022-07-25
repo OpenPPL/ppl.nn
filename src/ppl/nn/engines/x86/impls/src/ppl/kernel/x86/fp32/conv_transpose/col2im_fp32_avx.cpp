@@ -15,15 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_X86_FP32_CONV_TRANSPOSE_COL2IM2D_FP32_SSE_H_
-#define __ST_PPL_KERNEL_X86_FP32_CONV_TRANSPOSE_COL2IM2D_FP32_SSE_H_
-
 #include "ppl/kernel/x86/common/internal_include.h"
-#include "ppl/kernel/x86/common/sse_tools.h"
+#include "ppl/kernel/x86/common/avx_tools.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
-static void col2im2d_ndarray_fp32_sse(
+void col2im2d_ndarray_fp32_avx(
     const float *col,
     const float *bias,
     const int64_t col_h,
@@ -44,7 +41,7 @@ static void col2im2d_ndarray_fp32_sse(
     PRAGMA_OMP_PARALLEL_FOR()
     for (int64_t c_img = 0; c_img < num_output; ++c_img) {
         const int32_t bias_val = bias ? *(int32_t*)(&bias[c_img]) : 0;
-        memset32_sse(image + c_img * img_h * img_w, bias_val, img_h * img_w);
+        memset32_avx(image + c_img * img_h * img_w, bias_val, img_h * img_w);
         for (int64_t kh = 0; kh < kernel_h; ++kh) {
             for (int64_t kw = 0; kw < kernel_w; ++kw) {
                 int64_t c_col    = c_img * kernel_h * kernel_w + kh * kernel_w + kw;
@@ -69,5 +66,3 @@ static void col2im2d_ndarray_fp32_sse(
 }
 
 }}}; // namespace ppl::kernel::x86
-
-#endif

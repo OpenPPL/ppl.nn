@@ -15,17 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_ONNX_CONV2D_DYNAMIC_KERNEL_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_ONNX_CONV2D_DYNAMIC_KERNEL_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_ONNX_CONV_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_ONNX_CONV_KERNEL_H_
 
 #include "ppl/nn/engines/x86/kernel.h"
 #include "ppl/nn/params/onnx/conv_param.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
-class Conv2dDynamicKernel : public X86Kernel {
+class ConvKernel : public X86Kernel {
 public:
-    Conv2dDynamicKernel(const ir::Node* node) : X86Kernel(node) {}
+    ConvKernel(const ir::Node* node) : X86Kernel(node) {}
 
     void SetParam(const ppl::nn::onnx::ConvParam* p) {
         param_ = p;

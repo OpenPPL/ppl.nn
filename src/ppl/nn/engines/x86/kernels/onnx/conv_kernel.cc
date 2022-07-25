@@ -15,13 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/x86/kernels/onnx/conv2d_dynamic_kernel.h"
+#include "ppl/nn/engines/x86/kernels/onnx/conv_kernel.h"
 #include "ppl/common/destructor.h"
-#include "ppl/kernel/x86/fp32/conv2d_dynamic.h"
+#include "ppl/kernel/x86/fp32/conv.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
-uint64_t Conv2dDynamicKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
+uint64_t ConvKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     auto W = ctx.GetInput<TensorImpl>(1);
     auto Y = ctx.GetOutput<TensorImpl>(0);
 
@@ -29,14 +29,14 @@ uint64_t Conv2dDynamicKernel::CalcTmpBufferSize(const KernelExecContext& ctx) co
     const int32_t dst_h = Y->GetShape()->GetDim(2);
     const int32_t dst_w = Y->GetShape()->GetDim(3);
 
-    return ppl::kernel::x86::conv2d_dynamic_ndarray_fp32_get_buffer_bytes(
+    return ppl::kernel::x86::conv_ndarray_fp32_get_buffer_bytes(
         GetISA(), param_->group, dst_h, dst_w, channels,
         param_->kernel_shape[0], param_->kernel_shape[1],
         param_->strides[0], param_->strides[1],
         param_->pads[0], param_->pads[1]);
 }
 
-ppl::common::RetCode Conv2dDynamicKernel::DoExecute(KernelExecContext* ctx) {
+ppl::common::RetCode ConvKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_REQUIRED_INPUT(X, 0);
     PPLNN_X86_REQUIRED_INPUT(W, 1);
     PPLNN_X86_OPTIONAL_INPUT(B, 2);
@@ -118,7 +118,7 @@ ppl::common::RetCode Conv2dDynamicKernel::DoExecute(KernelExecContext* ctx) {
 
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (data_type == ppl::common::DATATYPE_FLOAT32) {
-            return kernel::x86::conv2d_dynamic_ndarray_fp32(
+            return kernel::x86::conv_ndarray_fp32(
                 GetISA(), X->GetBufferPtr<float>(), W->GetBufferPtr<float>(), b_data,
                 src_h, src_w, dst_h, dst_w,
                 batch, param_->group, channels, num_output,
