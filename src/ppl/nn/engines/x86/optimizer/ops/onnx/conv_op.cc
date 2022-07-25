@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/conv_op.h"
-#include "ppl/nn/engines/x86/kernels/onnx/conv2d_dynamic_kernel.h"
+#include "ppl/nn/engines/x86/kernels/onnx/conv_kernel.h"
 #include "ppl/nn/engines/x86/kernels/onnx/conv2d_kernel.h"
 #include "ppl/nn/oputils/onnx/reshape_conv.h"
 #include "ppl/nn/common/logger.h"
@@ -266,7 +266,7 @@ bool ConvOp::TryFuseSum() {
 
 KernelImpl* ConvOp::CreateKernelImpl() const {
     if (!conv2d_param_ || conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_fp32_algo::UNKNOWN) {
-        return CreateKernelImplWithParam<Conv2dDynamicKernel>(param_.get());
+        return CreateKernelImplWithParam<ConvKernel>(param_.get());
     }
     return CreateKernelImplWithParam<Conv2dKernel>(conv2d_param_);
 }

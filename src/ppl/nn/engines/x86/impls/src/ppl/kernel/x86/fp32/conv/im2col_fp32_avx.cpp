@@ -15,9 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef __ST_PPL_KERNEL_X86_FP32_CONV_TRANSPOSE_IM2COL2D_FP32_AVX_H_
-#define __ST_PPL_KERNEL_X86_FP32_CONV_TRANSPOSE_IM2COL2D_FP32_AVX_H_
-
 #include <math.h>
 #include <immintrin.h>
 
@@ -25,7 +22,7 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-static void im2col2d_ndarray_fp32_avx(
+void im2col2d_ndarray_fp32_avx(
     const float *img,
     const int64_t channels,
     const int64_t src_h,
@@ -114,5 +111,3 @@ static void im2col2d_ndarray_fp32_avx(
 }
 
 }}}; // namespace ppl::kernel::x86
-
-#endif
