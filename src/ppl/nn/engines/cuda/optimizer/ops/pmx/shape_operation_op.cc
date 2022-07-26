@@ -18,7 +18,7 @@
 #include "ppl/nn/engines/cuda/optimizer/ops/pmx/shape_operation_op.h"
 
 #include "ppl/nn/common/logger.h"
-#include "ppl/nn/engines/common/pmx/shape_operation_kernel.h"
+#include "ppl/nn/engines/cpu/pmx/shape_operation_kernel.h"
 
 using namespace std;
 using namespace ppl::common;
@@ -73,7 +73,7 @@ RetCode PPLShapeOperationOp::Finalize(const OptKernelOptions& options) {
 
 KernelImpl* PPLShapeOperationOp::CreateKernelImpl() const {
     auto kernel = op_.CreateKernelImpl();
-    ((ppl::nn::pmx::ShapeOperationKernel*)kernel)->SetParam(&param_);
+    ((cpu::pmx::ShapeOperationKernel*)kernel)->SetParam(&param_);
     return kernel;
 }
 

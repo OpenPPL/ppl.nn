@@ -20,7 +20,7 @@
 
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 
-#include "ppl/nn/engines/common/onnx/split_to_sequence_op.h"
+#include "ppl/nn/engines/cpu/onnx/split_to_sequence_op.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -35,7 +35,7 @@ public:
     }
 
 private:
-    onnx::SplitToSequenceOp op_;
+    cpu::onnx::SplitToSequenceOp op_;
 };
 
 }}} // namespace ppl::nn::cuda

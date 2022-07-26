@@ -92,7 +92,7 @@ if(PPLNN_ENABLE_PMX_MODEL)
 endif()
 
 file(GLOB_RECURSE PPLNN_BUILTIN_ENGINE_SRC
-    src/ppl/nn/engines/common/*.cc)
+    src/ppl/nn/engines/cpu/*.cc)
 file(GLOB_RECURSE PPLNN_OPUTILS_SRC
     src/ppl/nn/oputils/*.cc)
 file(GLOB PPLNN_FRAMEWORK_SRC

@@ -18,7 +18,7 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_SEQUENCE_AT_OP_H_
 #define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_SEQUENCE_AT_OP_H_
 
-#include "ppl/nn/engines/common/onnx/sequence_at_op.h"
+#include "ppl/nn/engines/cpu/onnx/sequence_at_op.h"
 
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 
@@ -62,7 +62,7 @@ public:
     }
 
 private:
-    onnx::SequenceAtOp op_;
+    cpu::onnx::SequenceAtOp op_;
 };
 
 }}} // namespace ppl::nn::cuda

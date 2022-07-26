@@ -18,7 +18,7 @@
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/if_op.h"
 
 #include "ppl/nn/common/logger.h"
-#include "ppl/nn/engines/common/onnx/if_kernel.h"
+#include "ppl/nn/engines/cpu/onnx/if_kernel.h"
 
 using namespace std;
 using namespace ppl::common;

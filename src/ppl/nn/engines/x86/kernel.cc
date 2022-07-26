@@ -20,7 +20,7 @@ using namespace std;
 using namespace ppl::common;
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-#include "ppl/nn/utils/cpu_timing_guard.h"
+#include "ppl/nn/engines/cpu/cpu_timing_guard.h"
 #endif
 
 namespace ppl { namespace nn { namespace x86 {
@@ -47,7 +47,7 @@ bool X86Kernel::CanDoExecute(const KernelExecContext& ctx) const {
 
 RetCode X86Kernel::Execute(KernelExecContext* ctx) {
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-    utils::CpuTimingGuard __timing_guard__(&begin_ts_, &end_ts_, ctx->IsProfilingEnabled());
+    cpu::CpuTimingGuard __timing_guard__(&begin_ts_, &end_ts_, ctx->IsProfilingEnabled());
 #endif
 
     auto status = BeforeExecute(ctx);

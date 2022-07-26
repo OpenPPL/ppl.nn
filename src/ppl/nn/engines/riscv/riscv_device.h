@@ -20,7 +20,7 @@
 
 #include <cstring>
 
-#include "ppl/nn/utils/generic_cpu_device.h"
+#include "ppl/nn/engines/cpu/generic_cpu_device.h"
 #include "ppl/nn/engines/riscv/data_converter.h"
 #include "ppl/common/log.h"
 

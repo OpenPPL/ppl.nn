@@ -18,7 +18,7 @@
 #include "ppl/nn/optimizers/utils.h"
 #include "ppl/nn/optimizers/engine_graph_partitioner.h"
 #include "ppl/nn/optimizers/graph_optimizer_manager.h"
-#include "ppl/nn/engines/common/pmx/converter_op.h"
+#include "ppl/nn/engines/cpu/pmx/converter_op.h"
 #include "ppl/nn/engines/utils.h"
 #include "ppl/nn/ir/partial_graph_topo.h"
 #include "ppl/nn/ir/utils.h"
@@ -493,7 +493,7 @@ RetCode ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, Ru
     for (auto x = converter_nodes.begin(); x != converter_nodes.end(); ++x) {
         RuntimeGraphInfo::Partition par_info;
         par_info.engine = x->second;
-        par_info.ops.emplace_back(unique_ptr<OptKernel>(new pmx::ConverterOp(graph->topo->GetNode(x->first))));
+        par_info.ops.emplace_back(unique_ptr<OptKernel>(new cpu::pmx::ConverterOp(graph->topo->GetNode(x->first))));
         info->partitions.emplace_back(std::move(par_info)); // one converter is treated as a single partition
     }
 

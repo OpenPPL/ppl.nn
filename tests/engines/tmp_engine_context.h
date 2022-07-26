@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/utils/generic_cpu_device.h"
+#include "ppl/nn/engines/cpu/generic_cpu_device.h"
 #include "ppl/nn/engines/engine_context.h"
 
 namespace ppl { namespace nn { namespace test {
@@ -30,7 +30,7 @@ public:
     }
 
 private:
-    utils::GenericCpuDevice device_;
+    cpu::GenericCpuDevice device_;
 };
 
 }}} // namespace ppl::nn::test

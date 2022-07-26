@@ -18,7 +18,7 @@
 #include "ppl/nn/engines/riscv/optimizer/ops/pmx/shape_operation_op.h"
 
 #include "ppl/nn/common/logger.h"
-#include "ppl/nn/engines/common/pmx/shape_operation_kernel.h"
+#include "ppl/nn/engines/cpu/pmx/shape_operation_kernel.h"
 
 using namespace std;
 using namespace ppl::common;
@@ -62,7 +62,7 @@ RetCode ShapeOperationOp::SelectDataType(const InputOutputInfo& info, ppl::commo
 
 KernelImpl* ShapeOperationOp::CreateKernelImpl() const {
     auto kernel = op_.CreateKernelImpl();
-    ((ppl::nn::pmx::ShapeOperationKernel*)kernel)->SetParam(param_.get());
+    ((cpu::pmx::ShapeOperationKernel*)kernel)->SetParam(param_.get());
     return kernel;
 }
 

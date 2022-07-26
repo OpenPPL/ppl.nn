@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/runtime/kernel_impl.h"
-#include "ppl/nn/utils/generic_cpu_device.h"
+#include "ppl/nn/engines/cpu/generic_cpu_device.h"
 #include "tests/ir/graph_builder.h"
 #include "tests/engines/echo_op.h"
 #include "gtest/gtest.h"
@@ -48,7 +48,7 @@ TEST_F(KernelImplTest, misc) {
     EXPECT_EQ("a", kernels.GetName());
     EXPECT_EQ(ir::Node::Type("test", "op1", 1), kernels.GetType());
 
-    utils::GenericCpuDevice device;
+    cpu::GenericCpuDevice device;
     kernels.SetDevice(&device);
     EXPECT_EQ(&device, kernels.GetDevice());
 }

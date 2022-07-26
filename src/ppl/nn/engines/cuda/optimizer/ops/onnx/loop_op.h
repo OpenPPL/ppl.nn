@@ -20,7 +20,7 @@
 
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 
-#include "ppl/nn/engines/common/onnx/loop_op.h"
+#include "ppl/nn/engines/cpu/onnx/loop_op.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -37,7 +37,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    onnx::LoopOp op_;
+    cpu::onnx::LoopOp op_;
 };
 
 }}} // namespace ppl::nn::cuda

@@ -27,7 +27,7 @@
 #include "ppl/nn/engines/cuda/engine.h"
 #include "ppl/nn/ir/graph.h"
 #include "ppl/nn/runtime/runtime_graph_info.h"
-#include "ppl/nn/utils/generic_cpu_device.h"
+#include "ppl/nn/engines/cpu/generic_cpu_device.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -57,7 +57,7 @@ private:
     CudaArgs* args_;
     CompileInfo* compile_set_;
     std::set<nodeid_t> illegal_dims_;
-    utils::GenericCpuDevice default_cpu_device_;
+    cpu::GenericCpuDevice default_cpu_device_;
     std::map<edgeid_t, std::unique_ptr<TensorImpl>> tensor_impls_;
     std::vector<nodeid_t> sorted_node_ids_;
     std::function<EdgeObject*(edgeid_t, uint32_t)> acquire_tensor_func_;

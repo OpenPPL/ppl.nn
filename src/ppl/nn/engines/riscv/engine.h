@@ -20,7 +20,7 @@
 
 #include "ppl/nn/engines/riscv/engine_options.h"
 #include "ppl/nn/engines/engine_impl.h"
-#include "ppl/nn/utils/generic_cpu_device.h"
+#include "ppl/nn/engines/cpu/generic_cpu_device.h"
 #include "ppl/nn/engines/riscv/riscv_device.h"
 #include "ppl/nn/common/logger.h"
 

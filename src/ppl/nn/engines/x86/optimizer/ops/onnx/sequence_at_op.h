@@ -19,7 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_SEQUENCE_AT_OP_H_
 
 #include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
-#include "ppl/nn/engines/common/onnx/sequence_at_op.h"
+#include "ppl/nn/engines/cpu/onnx/sequence_at_op.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -36,7 +36,7 @@ public:
     }
 
 private:
-    onnx::SequenceAtOp op_;
+    cpu::onnx::SequenceAtOp op_;
 };
 
 }}} // namespace ppl::nn::x86

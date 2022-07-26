@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/runtime/tensor_impl.h"
-#include "ppl/nn/utils/generic_cpu_device.h"
+#include "ppl/nn/engines/cpu/generic_cpu_device.h"
 #include "tests/ir/graph_builder.h"
 #include "gtest/gtest.h"
 #include <vector>
@@ -61,7 +61,7 @@ protected:
     }
 
 protected:
-    utils::GenericCpuDevice cpu_device_;
+    cpu::GenericCpuDevice cpu_device_;
     GraphBuilder builder_;
 };
 

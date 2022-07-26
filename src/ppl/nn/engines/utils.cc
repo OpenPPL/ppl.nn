@@ -17,7 +17,7 @@
 
 #include "ppl/common/destructor.h"
 #include "ppl/nn/engines/utils.h"
-#include "ppl/nn/utils/generic_cpu_device.h"
+#include "ppl/nn/engines/cpu/generic_cpu_device.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
@@ -51,7 +51,7 @@ RetCode CopyBuffer(const BufferDesc& src_buf, const TensorShape& src_shape, cons
             return status;
         }
     } else {
-        utils::GenericCpuDevice cpu_device;
+        cpu::GenericCpuDevice cpu_device;
         if (!tmp_cpu_device) {
             tmp_cpu_device = &cpu_device;
         }

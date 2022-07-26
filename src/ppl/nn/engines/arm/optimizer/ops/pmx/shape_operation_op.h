@@ -20,7 +20,7 @@
 
 #include "ppl/nn/engines/arm/optimizer/opt_kernel.h"
 
-#include "ppl/nn/engines/common/pmx/shape_operation_op.h"
+#include "ppl/nn/engines/cpu/pmx/shape_operation_op.h"
 
 namespace ppl { namespace nn { namespace arm {
 
@@ -32,7 +32,7 @@ public:
 
 private:
     std::shared_ptr<ppl::nn::pmx::ShapeOperationParam> param_;
-    ppl::nn::pmx::ShapeOperationOp op_;
+    cpu::pmx::ShapeOperationOp op_;
 };
 
 }}} // namespace ppl::nn::arm

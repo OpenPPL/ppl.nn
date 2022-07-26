@@ -18,7 +18,7 @@
 #include "ppl/nn/engines/riscv/kernel.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/common/logger.h"
-#include "ppl/nn/utils/cpu_timing_guard.h"
+#include "ppl/nn/engines/cpu/cpu_timing_guard.h"
 
 // #define RISCV_PERLAYER_DEBUG
 #ifdef RISCV_PERLAYER_DEBUG
@@ -62,7 +62,7 @@ bool RiscvKernel::CanDoExecute(const KernelExecContext& ctx) const {
 
 RetCode RiscvKernel::Execute(KernelExecContext* ctx) {
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-    utils::CpuTimingGuard __timing_guard__(&begin_ts_, &end_ts_, ctx->IsProfilingEnabled());
+    cpu::CpuTimingGuard __timing_guard__(&begin_ts_, &end_ts_, ctx->IsProfilingEnabled());
 #endif
 
     auto status = BeforeExecute(ctx);

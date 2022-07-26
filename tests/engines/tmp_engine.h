@@ -69,7 +69,7 @@ public:
 #endif
 
 private:
-    utils::GenericCpuDevice device_;
+    cpu::GenericCpuDevice device_;
     std::set<std::string> supported_types_;
 };
 
@@ -118,7 +118,7 @@ public:
 #endif
 
 private:
-    utils::GenericCpuDevice device_;
+    cpu::GenericCpuDevice device_;
 };
 
 class TmpEngine2 final : public EngineImpl {
@@ -166,7 +166,7 @@ public:
 #endif
 
 private:
-    utils::GenericCpuDevice device_;
+    cpu::GenericCpuDevice device_;
 };
 
 class TmpEngine3 final : public EngineImpl {
@@ -214,7 +214,7 @@ public:
 #endif
 
 private:
-    utils::GenericCpuDevice device_;
+    cpu::GenericCpuDevice device_;
 };
 
 }}} // namespace ppl::nn::test

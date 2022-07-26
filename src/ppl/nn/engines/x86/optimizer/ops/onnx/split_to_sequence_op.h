@@ -19,7 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_SPLIT_TO_SEQUENCE_OP_H_
 
 #include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
-#include "ppl/nn/engines/common/onnx/split_to_sequence_op.h"
+#include "ppl/nn/engines/cpu/onnx/split_to_sequence_op.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -30,7 +30,7 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 private:
-    onnx::SplitToSequenceOp op_;
+    cpu::onnx::SplitToSequenceOp op_;
 };
 
 }}} // namespace ppl::nn::x86

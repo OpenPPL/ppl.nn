@@ -16,14 +16,14 @@
 // under the License.
 
 #include "tensor_buffer_info_tools.h"
-#include "ppl/nn/utils/generic_cpu_device.h"
+#include "ppl/nn/engines/cpu/generic_cpu_device.h"
 #include "gtest/gtest.h"
 using namespace ppl::nn;
 using namespace ppl::common;
 using namespace ppl::nn::test;
 
 TEST(TensorBufferInfoTest, empty) {
-    utils::GenericCpuDevice device;
+    cpu::GenericCpuDevice device;
     TensorBufferInfo info;
     EXPECT_EQ(RC_SUCCESS, info.SetDevice(&device));
     EXPECT_EQ(&device, info.GetDevice());
@@ -32,7 +32,7 @@ TEST(TensorBufferInfoTest, empty) {
 }
 
 TEST(TensorBufferInfoTest, with_buffer) {
-    utils::GenericCpuDevice device;
+    cpu::GenericCpuDevice device;
     auto info = GenRandomTensorBufferInfo(&device);
     EXPECT_EQ(&device, info.GetDevice());
     EXPECT_EQ(RC_SUCCESS, info.SetDevice(&device)); // set device even if buffer is not empty
@@ -40,7 +40,7 @@ TEST(TensorBufferInfoTest, with_buffer) {
 }
 
 TEST(TensorBufferInfoTest, setbuffer) {
-    utils::GenericCpuDevice device;
+    cpu::GenericCpuDevice device;
     TensorBufferInfo info;
 
     BufferDesc buffer;

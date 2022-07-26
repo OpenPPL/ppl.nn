@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/if_op.h"
-#include "ppl/nn/engines/common/onnx/if_kernel.h"
+#include "ppl/nn/engines/cpu/onnx/if_kernel.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
