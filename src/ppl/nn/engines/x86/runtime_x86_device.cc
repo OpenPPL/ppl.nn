@@ -19,7 +19,7 @@
 #include "ppl/nn/engines/x86/runtime_x86_device.h"
 #include "ppl/nn/utils/stack_buffer_manager.h"
 #include "ppl/nn/utils/compact_buffer_manager.h"
-#include "ppl/nn/utils/cpu_block_allocator.h"
+#include "ppl/nn/utils/buffered_cpu_allocator.h"
 #include "ppl/nn/common/logger.h"
 #include <stdarg.h>
 using namespace std;
@@ -35,8 +35,16 @@ RetCode RuntimeX86Device::Init(uint32_t mm_policy) {
         allocator_ = std::shared_ptr<Allocator>(allocator_ptr, DummyDeleter);
         buffer_manager_.reset(new utils::StackBufferManager(allocator_ptr));
     } else if (mm_policy_ == MM_COMPACT) {
-        allocator_.reset(new utils::CpuBlockAllocator());
-        buffer_manager_.reset(new utils::CompactBufferManager(allocator_.get(), alignment_));
+        auto allocator = new utils::BufferedCpuAllocator();
+        auto rc = allocator->Init();
+        if (rc != RC_SUCCESS) {
+            LOG(ERROR) << "init allocator failed: " << GetRetCodeStr(rc);
+            delete allocator;
+            return rc;
+        }
+
+        allocator_.reset(allocator);
+        buffer_manager_.reset(new utils::CompactBufferManager(allocator, alignment_));
     } else {
         LOG(ERROR) << "unknown mm policy: " << mm_policy;
         return RC_INVALID_VALUE;

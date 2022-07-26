@@ -15,14 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/utils/cpu_block_allocator.h"
+#include "ppl/nn/utils/buffered_cpu_allocator.h"
 #include "gtest/gtest.h"
 using namespace ppl::nn::utils;
+using namespace ppl::common;
 
 constexpr uint32_t TEST_PAGE_SIZE = 4096;
 
-TEST(CpuBlockAllocatorTest, all) {
-    CpuBlockAllocator ar;
+TEST(BufferedCpuAllocatorTest, all) {
+    BufferedCpuAllocator ar;
+    EXPECT_EQ(RC_SUCCESS, ar.Init());
     auto ptr = ar.Alloc(TEST_PAGE_SIZE);
     EXPECT_NE(nullptr, ptr);
     ar.Free(ptr);
