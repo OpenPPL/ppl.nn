@@ -27,20 +27,20 @@
 
 class CodeGeneFactor {
 public:
-    virtual ~CodeGeneFactor() {}
-	virtual ppl::common::RetCode GeneIdxnKernel(std::string& file_res, std::string& kname, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int s_size, int declare_times) const = 0;
-	virtual ppl::common::RetCode Gene2spkKernel(std::string& file_res, std::string& kname, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int s_size, int splitk, int splitf, int buf_size, int declare_times) const = 0;
-	virtual ppl::common::RetCode GeneSwzlKernel(std::string& file_res, std::string& kname, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int splitk, int buf_size, int declare_times) const = 0;
+	virtual ppl::common::RetCode GeneIdxnKernel(std::string& file_res, std::string& kname, std::string& mma_shape, int flt_size, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int s_size, int declare_times) const = 0;
+	virtual ppl::common::RetCode Gene2spkKernel(std::string& file_res, std::string& kname, std::string& mma_shape, int flt_size, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int s_size, int splitk, int splitf, int buf_size, int declare_times) const = 0;
+	virtual ppl::common::RetCode GeneSwzlKernel(std::string& file_res, std::string& kname, std::string& mma_shape, int flt_size, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int splitk, int buf_size, int declare_times) const = 0;
 	virtual ppl::common::RetCode ReplaceFusionForIdxn(std::string& file_res, fuse_info_t fuse_info) const = 0;
 	virtual ppl::common::RetCode ReplaceFusionFor2spk(std::string& file_res, fuse_info_t fuse_info) const = 0;
 	virtual ppl::common::RetCode ReplaceFusionForSwzl(std::string& file_res, fuse_info_t fuse_info) const = 0;
+    virtual ~CodeGeneFactor() = default;
 };
 
 class Fp16CodeGeneFactor : public CodeGeneFactor {
 public:
-	ppl::common::RetCode GeneIdxnKernel(std::string& file_res, std::string& kname, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int s_size, int declare_times) const override;
-	ppl::common::RetCode Gene2spkKernel(std::string& file_res, std::string& kname, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int s_size, int splitk, int splitf, int buf_size, int declare_times) const override;
-	ppl::common::RetCode GeneSwzlKernel(std::string& file_res, std::string& kname, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int splitk, int buf_size, int declare_times) const override;
+	ppl::common::RetCode GeneIdxnKernel(std::string& file_res, std::string& kname, std::string& mma_shape, int flt_size, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int s_size, int declare_times) const override;
+	ppl::common::RetCode Gene2spkKernel(std::string& file_res, std::string& kname, std::string& mma_shape, int flt_size, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int s_size, int splitk, int splitf, int buf_size, int declare_times) const override;
+	ppl::common::RetCode GeneSwzlKernel(std::string& file_res, std::string& kname, std::string& mma_shape, int flt_size, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int splitk, int buf_size, int declare_times) const override;
 	ppl::common::RetCode ReplaceFusionForIdxn(std::string& file_res, fuse_info_t fuse_info) const override;
 	ppl::common::RetCode ReplaceFusionFor2spk(std::string& file_res, fuse_info_t fuse_info) const override;
 	ppl::common::RetCode ReplaceFusionForSwzl(std::string& file_res, fuse_info_t fuse_info) const override;
@@ -48,9 +48,9 @@ public:
 
 class Int8CodeGeneFactor : public CodeGeneFactor {
 public:
-	ppl::common::RetCode GeneIdxnKernel(std::string& file_res, std::string& kname, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int s_size, int declare_times) const override;
-	ppl::common::RetCode Gene2spkKernel(std::string& file_res, std::string& kname, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int s_size, int splitk, int splitf, int buf_size, int declare_times) const override;
-	ppl::common::RetCode GeneSwzlKernel(std::string& file_res, std::string& kname, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int splitk, int buf_size, int declare_times) const override;
+	ppl::common::RetCode GeneIdxnKernel(std::string& file_res, std::string& kname, std::string& mma_shape, int flt_size, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int s_size, int declare_times) const override;
+	ppl::common::RetCode Gene2spkKernel(std::string& file_res, std::string& kname, std::string& mma_shape, int flt_size, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int s_size, int splitk, int splitf, int buf_size, int declare_times) const override;
+	ppl::common::RetCode GeneSwzlKernel(std::string& file_res, std::string& kname, std::string& mma_shape, int flt_size, int cta_y, int cta_x, int warp_y, int warp_x, int k_size, int splitk, int buf_size, int declare_times) const override;
 	ppl::common::RetCode ReplaceFusionForIdxn(std::string& file_res, fuse_info_t fuse_info) const override;
 	ppl::common::RetCode ReplaceFusionFor2spk(std::string& file_res, fuse_info_t fuse_info) const override;
 	ppl::common::RetCode ReplaceFusionForSwzl(std::string& file_res, fuse_info_t fuse_info) const override;

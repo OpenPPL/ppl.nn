@@ -127,12 +127,14 @@ void PPLCUDAConvolutionCvtFlt(
     int num_chl_per_grp     = num_chl / num_grp;
     int num_chl_per_grp_pad = Align(num_chl_per_grp, align_size);
     int num_flt_per_grp     = flt_num / num_grp;
+    // num_flt_per_grp is not padded
+    // int num_flt_per_grp_pad = Align(num_flt_per_grp, align_size);
 
     const int cta_size = 512;
     dim3 grid;
     int in_size_per_grp  = flt_num / num_grp * flt_height * flt_width * num_chl_per_grp_pad;
     //int out_size_per_grp = num_flt_per_grp_pad * flt_height * flt_width * num_chl_per_grp_pad;
-    int out_size_per_grp = num_flt_per_grp* flt_height * flt_width * num_chl_per_grp_pad;
+    int out_size_per_grp = num_flt_per_grp * flt_height * flt_width * num_chl_per_grp_pad;
     grid.x               = DivUp(in_size_per_grp, cta_size);
     grid.y               = num_grp;
     grid.z               = 1;
@@ -145,8 +147,6 @@ void PPLCUDAConvolutionCvtFlt(
         flt_group_padding<__half><<<grid, cta_size, 0, stream>>>((__half*)output, (__half*)input, in_size_per_grp, num_grp, num_chl_per_grp_pad,
         out_size_per_grp);
     } else if (type == ppl::common::DATATYPE_INT8) {
-        //FIXME different from fp16: flt num not paded
-        out_size_per_grp = num_flt_per_grp * flt_height * flt_width * num_chl_per_grp_pad;
         cudaMemset(output, 0, sizeof(int8_t) * num_grp * out_size_per_grp);
         flt_group_padding<int8_t><<<grid, cta_size, 0, stream>>>((int8_t*)output, (int8_t*)input, in_size_per_grp, num_grp, num_chl_per_grp_pad,
         out_size_per_grp);

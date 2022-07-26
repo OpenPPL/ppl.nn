@@ -36,7 +36,7 @@ ppl::common::RetCode TransposeKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     ppl::common::RetCode status =
-        PPLCUDATransposeForwardImp(GetStream(), modified_param, input->GetShape(), input->GetBufferPtr(),
+        PPLCUDATransposeForwardImp(GetDeviceId(), GetStream(), modified_param, input->GetShape(), input->GetBufferPtr(),
                                    output->GetShape(), output->GetBufferPtr());
     return status;
 }
