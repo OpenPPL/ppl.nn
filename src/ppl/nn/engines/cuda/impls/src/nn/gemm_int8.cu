@@ -89,11 +89,22 @@ static bool is_g_int8_kvec_set = false;
         fuse_param.has_concat,         concat_offset_v8,                   \
         concat_stride_v8
 
-void init_f1_int8_kvec(std::vector<kernel_info_t> &g_int8_kvec, ppl::common::datatype_t type)
+void init_f1_int8_kvec(std::vector<kernel_info_t> &g_int8_kvec, int device_id, ppl::common::datatype_t type)
 {
+    cudaDeviceProp device_prop;
+    cudaGetDeviceProperties(&device_prop, device_id);
+
 #ifndef PPLNN_ENABLE_CUDA_JIT
-    if (type == ppl::common::DATATYPE_INT8) {
-        InitializeInt82spkConvF1KernelContainer(g_int8_kvec);
+    if(type == ppl::common::DATATYPE_INT8) {
+        if (device_prop.major == 7 && device_prop.minor == 5) {
+            Initialize2spkSM75Int8Imma8816ConvF1KernelContainer(g_int8_kvec);
+        } else if (device_prop.major > 8 || (device_prop.major == 8 && device_prop.minor >= 0)) {
+            Initialize2spkSM75Int8Imma8816ConvF1KernelContainer(g_int8_kvec);
+
+            Initialize2spkSM80Int8Imma8816ConvF1KernelContainer(g_int8_kvec);
+            Initialize2spkSM80Int8Imma16816ConvF1KernelContainer(g_int8_kvec);
+            Initialize2spkSM80Int8Imma16832ConvF1KernelContainer(g_int8_kvec);
+        }
     }
     is_g_int8_kvec_set = true;
 #endif
@@ -156,15 +167,6 @@ ppl::common::RetCode PPLCUDAGemmModifyWeightsInt8(
     return ppl::common::RC_SUCCESS;
 }
 
-#define MAX_KERNEL_SIZE (1 + 12 + 30)
-
-__inline__ std::string ToString(int v)
-{
-    std::stringstream ss;
-    ss << v;
-    return ss.str();
-}
-
 double PPLCUDAGemmJITSelectKernelInt8(
    int device_id,
    cudaStream_t &stream,
@@ -183,82 +185,25 @@ double PPLCUDAGemmJITSelectKernelInt8(
    algo_param_t &algo_param,
    uint64_t workspace)
 {
-   float elapsed           = 0.0f;
+   double elapsed = 0.0f;
 #ifdef PPLNN_ENABLE_CUDA_JIT
-   auto pre_algo_param     = algo_param;
-   int pad_size            = GetPadSize(type);
-   int num_chl_per_grp     = conv_param.num_chl / conv_param.num_grp;
-   int num_flt_per_grp     = conv_param.num_flt / conv_param.num_grp;
-   int num_flt_per_grp_pad = Align(num_flt_per_grp, pad_size);
-   int flt_hw              = conv_param.flt_height * conv_param.flt_width;
+    std::vector<std::string> knames;
+    std::vector<algo_param_t> params;
+    std::string sources = "";
 
-   int size_x    = DivUp(conv_param.in_num * conv_param.out_height * conv_param.out_width, algo_param.tiles.m_cta);
-   int size_y    = DivUp(num_flt_per_grp_pad, algo_param.tiles.n_cta);
-   int grid_size = size_x * size_y;
+    GetInt8ConvKernelNominees(device_id, type, conv_param, knames, params, sources);
 
-   std::vector<std::string> knames;
-   std::vector<algo_param_t> params;
-   std::string total_source = "";
-   int declare_times        = 0;
+    int index = 0;
+    std::vector<const char *> compile_params;
+    elapsed = AlgoForwardTimeInt8(device_id, stream, knames, sources, index, compile_params, device_id, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, quant_param, fuse_param, workspace);
 
-   unsigned int splitk = 1;
-   unsigned int splitf = 1;
-
-   for (unsigned int index = 0; index < MAX_KERNEL_SIZE; index++) {
-       conv_ktype_t ktype;
-       algo_param = pre_algo_param;
-       PPLCUDAConvolutionModifyAlgoParam(algo_param, index); // change algo_param
-       algo_param.splitk = splitk;
-       algo_param.splitf = splitf;
-
-       algo_param.tiles.cta_size_in_thd = (algo_param.tiles.m_cta / algo_param.tiles.m_warp) *
-                                          (algo_param.tiles.n_cta / algo_param.tiles.n_warp) *
-                                          (algo_param.tiles.k_cta / algo_param.tiles.k_per_set) *
-                                          WARP_SIZE;
-       ktype                     = CONV_2SPK_F1;
-       std::string f_size        = "f1";
-       algo_param.tiles.flt_size = 1;
-       algo_param.algo_name      = "nv2spkConv_imma8816_nhwc_" + f_size + "_b" + ToString(algo_param.tiles.m_cta) + "x" + ToString(algo_param.tiles.n_cta) +
-                              "_w" + ToString(algo_param.tiles.m_warp) + "x" + ToString(algo_param.tiles.n_warp) +
-                              "_k" + ToString(algo_param.tiles.k_cta) + "_s" + ToString(algo_param.tiles.k_per_set) + "_buf1";
-
-       kernel_info_t temp_kernel(-1, ktype, algo_param.algo_name.c_str());
-       if (!temp_kernel.CheckKernelTilesFeasible(type, device_id))
-           continue;
-       if (!temp_kernel.CheckKernelTypeFeasibleInt8(conv_param.flt_height, conv_param.flt_width, num_chl_per_grp, splitk))
-           continue;
-       if (!temp_kernel.CheckSplitkFeasible(num_chl_per_grp, splitk))
-           continue;
-       if (!temp_kernel.CheckSplitfFeasible(splitf, splitk))
-           continue;
-       if (!temp_kernel.CheckQuickSelectFeasible(algo_param, num_chl_per_grp, grid_size, flt_hw, splitk, splitf, device_id))
-           continue;
-
-       auto mgr = CodeGeneFactorManager::Instance();
-       auto gene_factor = mgr->FindKernel(type);
-       std::string source = "";
-       fuse_info_t empty_fuse_info;
-       gene_factor->Gene2spkKernel(source, algo_param.algo_name, algo_param.tiles.m_cta, algo_param.tiles.n_cta, algo_param.tiles.m_warp, algo_param.tiles.n_warp, algo_param.tiles.k_cta, algo_param.tiles.k_per_set, algo_param.splitk, algo_param.splitf, algo_param.tiles.buf, declare_times);
-       gene_factor->ReplaceFusionFor2spk(source, empty_fuse_info);
-       declare_times++;
-
-       if (std::find(knames.begin(), knames.end(), algo_param.algo_name) == knames.end()) {
-           total_source = total_source + source;
-       }
-       knames.push_back(algo_param.algo_name);
-       params.push_back(algo_param);
-   }
-
-   int index = 0;
-   std::vector<const char *> compile_params;
-   elapsed = AlgoForwardTimeInt8(stream, knames, total_source, index, compile_params, device_id, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, quant_param, fuse_param, workspace);
-
-   algo_param = params[index];
+    algo_param = params[index];
 #endif
-   return elapsed;
+    return elapsed;
 }
 
 double PPLCUDAGemmSelectKernelInt8(
+    int device_id,
     const cudaStream_t &stream,
     const ppl::nn::TensorShape *input_shape,
     const void *input,
@@ -274,9 +219,12 @@ double PPLCUDAGemmSelectKernelInt8(
     algo_param_t &algo_param)
 {
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
+    cudaDeviceProp device_prop;
+    cudaGetDeviceProperties(&device_prop, device_id);
+
     auto type = weight_shape->GetDataType();
     if (!is_g_int8_kvec_set)
-        init_f1_int8_kvec(g_int8_kvec, type);
+        init_f1_int8_kvec(g_int8_kvec, device_id, type);
 
     int pad_size = GetPadSize(type);
     int transA   = param.transA;
@@ -318,8 +266,17 @@ double PPLCUDAGemmSelectKernelInt8(
         int tile_m_per_cta = g_int8_kvec[kid].tile_m_per_cta;
         int tile_n_per_cta = g_int8_kvec[kid].tile_n_per_cta;
         int tile_k_per_cta = g_int8_kvec[kid].tile_k_per_cta;
-
         int cta_size_in_thd = g_int8_kvec[kid].cta_size_in_thd;
+        int smem_size = g_int8_kvec[kid].smem_size;
+
+        if (!g_int8_kvec[kid].CheckSMemSizeFeasible(device_prop))
+                continue;
+
+        if (!g_int8_kvec[kid].CheckGpuArchFeasible(device_prop))
+                continue;
+
+        g_int8_kvec[kid].AdaptInt8LutKernelSMemSize();
+
         dim3 block_size, grid_size;
         block_size.x = cta_size_in_thd;
         block_size.y = 1;
@@ -337,7 +294,7 @@ double PPLCUDAGemmSelectKernelInt8(
                 FAKE_INT8_CONV_PARAM
                 int kLoopNum = DivUp(K_pad, tile_k_per_cta);
                 lut_t in_lut, flt_lut;
-                (g_int8_kvec[kid].int8_lut_kptr)<<<grid_size, block_size, 0, stream>>>(INT8_GEMM_FUNC_PARAM);
+                (g_int8_kvec[kid].int8_lut_kptr)<<<grid_size, block_size, smem_size, stream>>>(INT8_GEMM_FUNC_PARAM);
             }
         }
         cudaEventRecord(end, stream);
@@ -377,6 +334,7 @@ ppl::common::RetCode PPLCUDAGemvForwardImpInt8(
     const fuse_param_t &fuse_param);
 
 ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
+    int device_id,
     const cudaStream_t &stream,
     ppl::nn::cuda::CUDAModule *module,
     const ppl::nn::TensorShape *input_shape,
@@ -397,7 +355,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
     float alpha  = param.alpha;
 #ifndef PPLNN_ENABLE_CUDA_JIT
     if (!is_g_int8_kvec_set)
-        init_f1_int8_kvec(g_int8_kvec, type);
+        init_f1_int8_kvec(g_int8_kvec, device_id, type);
 #endif
     int pad_size = GetPadSize(type);
     int transA   = param.transA;
@@ -416,7 +374,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
 
     // fuse configs
     ppl::common::RetCode status = ppl::common::RC_SUCCESS;
-    if (M == 1) {
+    if (M == 1) { // TODO, only work for A100, need to diff with T4
         status = PPLCUDAGemvForwardImpInt8<int8_t>(stream,
                                                M,
                                                N,
@@ -438,12 +396,14 @@ ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
     int tile_n_per_cta  = algo_param.tiles.n_cta;
     int tile_k_per_cta  = algo_param.tiles.k_cta;
     int cta_size_in_thd = algo_param.tiles.cta_size_in_thd;
+    int smem_size       = algo_param.tiles.smem_size;
 #else
     int kid             = algo_param.kid;
     int tile_m_per_cta  = g_int8_kvec[kid].tile_m_per_cta;
     int tile_n_per_cta  = g_int8_kvec[kid].tile_n_per_cta;
     int tile_k_per_cta  = g_int8_kvec[kid].tile_k_per_cta;
     int cta_size_in_thd = g_int8_kvec[kid].cta_size_in_thd;
+    int smem_size       = g_int8_kvec[kid].smem_size;
 #endif
     dim3 block_size, grid_size;
 
@@ -479,9 +439,14 @@ ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
 
     void *args[]        = {&input0_tmp, &weight, &final_out, &kLoopNum, &in_lut, &in_lut_size, &flt_lut, &flt_lut_size, &in_hw, &out_hw, &flt_hw, &splitk, &in_height, &in_width, &batch, &num_grp, &num_chl_per_grp, &num_chl_per_grp_pad, &flt_height, &flt_width, &num_flt_per_grp, &num_flt_per_grp_pad, &out_height, &out_width, &stride_height, &stride_width,  &pad_height, &pad_width, &hole_height, &hole_width, &has_bias, &bias, &(in_quant), &(flt_quant), &(out_quant), &(pre_quant), &fuse_param.has_activation, &fuse_param.clip_min, &fuse_param.has_clip, &fuse_param.clip_max, &fuse_param.has_prelu, &(prelu), &fuse_param.has_elt, &(pre_data), &fuse_param.has_elt_activation, &fuse_param.elt_clip_min, &fuse_param.has_elt_clip,  &fuse_param.elt_clip_max, &fuse_param.has_elt_prelu, &(elt_prelu), &fuse_param.leaky, &fuse_param.elt_leaky, &fuse_param.has_concat, &concat_offset_v8, &concat_stride_v8};
     CUfunction function = module->GetKernelFunc();
-    CUDA_SAFE_CALL(cuLaunchKernel(function, grid_size.x, grid_size.y, grid_size.z, block_size.x, block_size.y, block_size.z, 0, stream, args, 0));
+
+    if(smem_size > MAX_STATIC_SMEM_SIZE_PER_CTA)
+        cuFuncSetAttribute(function, CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES, smem_size);
+
+    CUDA_SAFE_CALL(cuLaunchKernel(function, grid_size.x, grid_size.y, grid_size.z, block_size.x, block_size.y, block_size.z, smem_size, stream, args, 0));
 #else
-        (g_int8_kvec[kid].int8_lut_kptr)<<<grid_size, block_size, 0, stream>>>(INT8_GEMM_FUNC_PARAM);
+        g_int8_kvec[kid].AdaptInt8LutKernelSMemSize();
+        (g_int8_kvec[kid].int8_lut_kptr)<<<grid_size, block_size, smem_size, stream>>>(INT8_GEMM_FUNC_PARAM);
 #endif
     return status;
 #else

@@ -285,6 +285,7 @@ __global__ void ppl_cukernel_transpose_nhwc(
 }
 
 ppl::common::RetCode PPLCUDATransposeForwardImp(
+    int device_id,
     cudaStream_t stream,
     ppl::nn::onnx::TransposeParam param,
     const ppl::nn::TensorShape *input_shape,
