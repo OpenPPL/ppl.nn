@@ -31,6 +31,7 @@ namespace ppl { namespace nn { namespace riscv {
 static void DummyDeleter(ppl::common::Allocator*) {}
 
 RetCode RuntimeRiscvDevice::Init(uint32_t mm_policy) {
+    mm_policy_ = mm_policy;
     if (mm_policy == MM_MRU) {
         auto allocator_ptr = RiscvDevice::GetAllocator();
         allocator_ = std::shared_ptr<Allocator>(allocator_ptr, DummyDeleter);

@@ -30,6 +30,7 @@ namespace ppl { namespace nn { namespace x86 {
 static void DummyDeleter(ppl::common::Allocator*) {}
 
 RetCode RuntimeX86Device::Init(uint32_t mm_policy) {
+    mm_policy_ = mm_policy;
     if (mm_policy_ == MM_MRU) {
         auto allocator_ptr = X86Device::GetAllocator();
         allocator_ = std::shared_ptr<Allocator>(allocator_ptr, DummyDeleter);
@@ -89,13 +90,7 @@ void RuntimeX86Device::FreeTmpBuffer(BufferDesc* buffer) {
 
 /* -------------------------------------------------------------------------- */
 
-RetCode RuntimeX86Device::DoMemDefrag(RuntimeX86Device* dev, va_list) {
-    return RC_SUCCESS;
-}
-
-RuntimeX86Device::ConfHandlerFunc RuntimeX86Device::conf_handlers_[] = {
-    DoMemDefrag, // DEV_CONF_MEM_DEFRAG
-};
+RuntimeX86Device::ConfHandlerFunc RuntimeX86Device::conf_handlers_[];
 
 RetCode RuntimeX86Device::Configure(uint32_t option, ...) {
     if (option >= DEV_CONF_MAX) {
