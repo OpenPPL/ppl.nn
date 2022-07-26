@@ -81,9 +81,6 @@ enum {
 
 /** @brief options for arm::DeviceContext::Configure() */
 enum {
-    /** @brief memory defragmentation. make sure that device is not used when performing defragmentations. */
-    DEV_CONF_MEM_DEFRAG = 0,
-
     DEV_CONF_MAX,
 };
 

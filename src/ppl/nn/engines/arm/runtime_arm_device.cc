@@ -30,7 +30,7 @@ namespace ppl { namespace nn { namespace arm {
 static void DummyDeleter(ppl::common::Allocator*) {}
 
 RetCode RuntimeArmDevice::Init(uint32_t mm_policy) {
-    can_defragement_ = false;
+    mm_policy_ = mm_policy;
     if (mm_policy == MM_MRU) {
         auto allocator_ptr = ArmDevice::GetAllocator();
         allocator_ = std::shared_ptr<Allocator>(allocator_ptr, DummyDeleter);
@@ -44,7 +44,6 @@ RetCode RuntimeArmDevice::Init(uint32_t mm_policy) {
             return rc;
         }
 
-        can_defragement_ = true;
         allocator_.reset(allocator);
         buffer_manager_.reset(new utils::CompactBufferManager(allocator, alignment_));
     } else {
@@ -65,7 +64,7 @@ RuntimeArmDevice::~RuntimeArmDevice() {
 }
 
 RetCode RuntimeArmDevice::AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
-    if (can_defragement_) {
+    if (mm_policy_ == MM_COMPACT) {
         auto ret = buffer_manager_->Realloc(bytes, &shared_tmp_buffer_);
         if (RC_SUCCESS != ret) {
             return ret;
@@ -84,28 +83,12 @@ RetCode RuntimeArmDevice::AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
 }
 
 void RuntimeArmDevice::FreeTmpBuffer(BufferDesc* buffer) {
-    if (can_defragement_) {
+    if (mm_policy_ == MM_COMPACT) {
         buffer_manager_->Free(&shared_tmp_buffer_);
     }
 }
 
-RetCode RuntimeArmDevice::DoMemDefrag(RuntimeArmDevice* dev, va_list) {
-    if (!dev->can_defragement_) {
-        return RC_UNSUPPORTED;
-    }
-
-    auto mgr = dynamic_cast<utils::CompactBufferManager*>(dev->buffer_manager_.get());
-    if (dev->tmp_buffer_size_ > 0) {
-        mgr->Free(&dev->shared_tmp_buffer_);
-        dev->shared_tmp_buffer_.addr = nullptr;
-        dev->tmp_buffer_size_ = 0;
-    }
-    return mgr->Defragment();
-}
-
-RuntimeArmDevice::ConfHandlerFunc RuntimeArmDevice::conf_handlers_[] = {
-    DoMemDefrag, // DEV_CONF_MEM_DEFRAG
-};
+/* -------------------------------------------------------------------------- */
 
 RetCode RuntimeArmDevice::Configure(uint32_t option, ...) {
     if (option >= DEV_CONF_MAX) {

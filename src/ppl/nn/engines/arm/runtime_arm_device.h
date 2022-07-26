@@ -50,12 +50,6 @@ public:
 
     // ----- configurations ----- //
 
-    /**
-       @brief replaces all blocks with a single block.
-       @note make sure that this device is not used when calling DoMemDefrag().
-    */
-    static ppl::common::RetCode DoMemDefrag(RuntimeArmDevice*, va_list);
-
     typedef ppl::common::RetCode (*ConfHandlerFunc)(RuntimeArmDevice*, va_list);
     static ConfHandlerFunc conf_handlers_[DEV_CONF_MAX];
 
@@ -63,7 +57,7 @@ public:
 
 private:
     const uint64_t alignment_;
-    bool can_defragement_;
+    uint32_t mm_policy_;
     BufferDesc shared_tmp_buffer_;
     uint64_t tmp_buffer_size_ = 0;
     std::unique_ptr<utils::BufferManager> buffer_manager_;
