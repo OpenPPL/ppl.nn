@@ -16,10 +16,12 @@
 // under the License.
 
 #define _4HALF2_        4
+#define _4INT_          4
 #define _8HALF_         8
 #define _INT4_TO_4INT_  4
 #define _INT4_TO_8HALF_ 8
 #define _INT4_TO_4FLOAT_  4
+#define MAX_SPLIT_SIZE  18
 
 #include <cuda_fp16.h>
 #include "cudakernel/common/macro.h"
@@ -62,7 +64,8 @@ __global__ void MergeConvSplitResults(
     const int4 ZEROv4 = {0, 0, 0, 0};
     bool is_in_range  = k_id < split_width_v8;
 
-    int4 merge_v4, split_v4, bias_v4;
+    int4 merge_v4, bias_v4;
+    int4 split_v4[MAX_SPLIT_SIZE];
 
     __half2 *h2_merge = (__half2 *)&merge_v4;
     __half2 *h2_split = (__half2 *)&split_v4;
@@ -70,12 +73,17 @@ __global__ void MergeConvSplitResults(
 
     merge_v4 = is_in_range ? input[off] : ZEROv4;
 
+#pragma unroll
     for (int i = 1; i < split; i++) {
-        split_v4 = is_in_range ? input[off + i * split_height_v1 * split_width_v8] : ZEROv4;
-
-        for (int j = 0; j < _4HALF2_; j++)
-            h2_merge[j] = __hadd2(h2_merge[j], h2_split[j]);
+        split_v4[i] = is_in_range ? input[off + i * split_height_v1 * split_width_v8] : ZEROv4;
     }
+
+#pragma unroll
+    for (int i = 1; i < split; i++) {
+        for (int j = 0; j < _4HALF2_; j++)
+            h2_merge[j] = __hadd2(h2_merge[j], h2_split[i * _4HALF2_ + j]);
+    }
+
     if (has_bias) {
         bias_v4 = is_in_range ? ((int4 *)bias)[k_id] : ZEROv4;
 
@@ -225,7 +233,8 @@ __global__ void MergeConvSplitResultsFp32(
     const int4 ZEROv4 = {0, 0, 0, 0};
     bool is_in_range = k_id < split_width_v8;
 
-    int4 merge_v4, split_v4, bias_v4;
+    int4 merge_v4, bias_v4;
+    int4 split_v4[MAX_SPLIT_SIZE];
 
     float * f_merge = (float *) &merge_v4;
     float * f_split = (float *) &split_v4;
@@ -233,13 +242,17 @@ __global__ void MergeConvSplitResultsFp32(
 
     merge_v4 = is_in_range ? input[off] : ZEROv4;
 
-    for(int i = 1; i < split; i++)
-    {
-        split_v4 = is_in_range ? input[off + i * split_height_v1 * split_width_v8] : ZEROv4;
-
-	    for(int j = 0; j < _INT4_TO_4FLOAT_; j++)
-	        f_merge[j] = f_merge[j] + f_split[j];
+#pragma unroll
+    for(int i = 1; i < split; i++) {
+        split_v4[i] = is_in_range ? input[off + i * split_height_v1 * split_width_v8] : ZEROv4;
     }
+
+#pragma unroll
+    for(int i = 1; i < split; i++) {
+	    for(int j = 0; j < _INT4_TO_4FLOAT_; j++)
+	        f_merge[j] = f_merge[j] + f_split[i * _4INT_ + j];
+    }
+
     if(has_bias)
     {
         bias_v4 = is_in_range ? ((int4 *) bias) [k_id] : ZEROv4;

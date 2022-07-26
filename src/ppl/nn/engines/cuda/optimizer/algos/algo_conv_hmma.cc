@@ -67,23 +67,6 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     attr_param_.extra_param.algo_info.algo_type = "TuringHMMAImpgemm";
     options.compile_set->emplace(node->GetId());
 
-    const std::string& key_str = node->GetName();
-    auto algo_info = options.algos->find(key_str);
-    if (algo_info != options.algos->end()) {
-        attr_param_.extra_param.algo_info.algo_name = algo_info->second.kname;
-        attr_param_.extra_param.algo_info.kid = algo_info->second.kid;
-        attr_param_.extra_param.algo_info.splitk = algo_info->second.splitk;
-        attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
-        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
-        return 0.0f;
-    } else { // Give the default kernel
-        attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_fn_b128x128_w64x64_k32_s32_buf1";
-        attr_param_.extra_param.algo_info.kid = 5100;
-        attr_param_.extra_param.algo_info.splitk = 1;
-        attr_param_.extra_param.algo_info.splitf = 1;
-        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
-    }
-
     auto shape_in0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
     auto shape_in1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
     auto shape_in2 = TensorShape();
@@ -93,15 +76,35 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     fuse_param_t temp_fuse_param;
     ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, attr_param_, temp_conv_param);
 
-    // input shape is invalid
-    if (shape_in0.GetDimCount() != 4 || shape_in1.GetDimCount() != 4) {
-        return 0.0f;
-    }
     // input H or W is too small
     if (shape_in0.GetDim(2) + 2 * temp_conv_param.pad_height < shape_in1.GetDim(2) ||
         shape_in0.GetDim(3) + 2 * temp_conv_param.pad_width < shape_in1.GetDim(3)) {
         shape_in0.SetDim(2, shape_in1.GetDim(2));
         shape_in0.SetDim(3, shape_in1.GetDim(3));
+    }
+    // const std::string& key_str = node->GetName();
+    const std::string& key_str = GetConvShapeString(temp_conv_param);
+    auto algo_info = options.algos->find(key_str);
+    if (algo_info != options.algos->end()) {
+        attr_param_.extra_param.algo_info.kid = algo_info->second.kid;
+        attr_param_.extra_param.algo_info.splitk = algo_info->second.splitk;
+        attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
+        attr_param_.extra_param.algo_info.algo_name = algo_info->second.kname;
+        if (algo_info->second.splitk > 1)
+            attr_param_.extra_param.algo_info.algo_name += "_spk" + std::to_string(algo_info->second.splitk);
+        attr_param_.extra_param.algo_info.ParseAlgoName();
+        return 0.0f;
+    } else { // Give the default kernel
+        attr_param_.extra_param.algo_info.algo_name = "nvSwzlSm75Fp16Conv_hmma1688_nhwc_fn_b256x32_w64x32_k64_buf2";
+        attr_param_.extra_param.algo_info.kid = 0; // TODO
+        attr_param_.extra_param.algo_info.splitk = 1;
+        attr_param_.extra_param.algo_info.splitf = 1;
+        attr_param_.extra_param.algo_info.ParseAlgoName();
+    }
+
+    // input shape is invalid
+    if (shape_in0.GetDimCount() != 4 || shape_in1.GetDimCount() != 4) {
+        return 0.0f;
     }
 
     if (options.args->quick_select) {
@@ -128,19 +131,19 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, size, ALGO_MAX_TIME)
 
     auto stream = options.device->GetStream();
+    int device_id = options.device->GetDeviceId();
 
 #ifdef PPLNN_ENABLE_CUDA_JIT
     // Do select
     LOG(INFO) << "Compiling " << node->GetName();
-    int device_id = options.device->GetDeviceId();
-    PPLCUDAConvolutionPredictKernel(shape_in0.GetDataType(), attr_param_.extra_param.algo_info, temp_conv_param);
     auto timer = PPLCUDAConvolutionJitSelectKernel(device_id, stream, shape_in0.GetDataType(), (int4*)input_buffer.addr,
                                                    (int4*)weight_buffer.addr, (int4*)output_buffer.addr,
                                                    (int4*)bias_buffer.addr, (int4*)temp_buffer.addr,
                                                    attr_param_.extra_param.algo_info, temp_conv_param, temp_fuse_param);
+    LOG(INFO) << "select kernel " << attr_param_.extra_param.algo_info.algo_name;
 #else
     // Do select
-    auto timer = PPLCUDAConvolutionSelectKernel(stream, shape_in0.GetDataType(), (int4*)input_buffer.addr,
+    auto timer = PPLCUDAConvolutionSelectKernel(device_id, stream, shape_in0.GetDataType(), (int4*)input_buffer.addr,
                                                 (int4*)weight_buffer.addr, (int4*)output_buffer.addr,
                                                 (int4*)bias_buffer.addr, (int4*)temp_buffer.addr,
                                                 attr_param_.extra_param.algo_info, temp_conv_param, temp_fuse_param);

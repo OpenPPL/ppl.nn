@@ -60,21 +60,30 @@ struct tiles_param_t {
     int flt_pad_size = -1; // for idxn conv
 
     int cta_size_in_thd = -1;
+    int smem_size       = 0;
     int buf             = 1;
 };
 
 struct algo_param_t {
     std::string algo_type = "";
     std::string algo_name = "";
+    std::string conv_type = "";
+    std::string mma_shape = "";
     tiles_param_t tiles;
     int kid                    = -1;
     unsigned int splitk        = 1;
     unsigned int splitf        = 1;
     unsigned int gemm_batch    = 1;
 
+    ppl::common::RetCode ParseAlgoName();
+    ppl::common::RetCode BuildAlgoName();
+
     void UseDefaultF1Kernel()
     {
-        algo_name             = "nv2spkConv_hmma1688_nhwc_f1_b16x8_w16x8_k8_s8_buf1";
+        algo_name             = "nv2spkSm75Fp16Conv_hmma1688_nhwc_f1_b16x8_w16x8_k8_s8_buf1";
+        algo_type             = "TuringIMMAImpgemm";
+        conv_type             = "2spk";
+        mma_shape             = "hmma1688";
         tiles.m_cta           = 16;
         tiles.n_cta           = 8;
         tiles.m_warp          = 16;
@@ -82,11 +91,85 @@ struct algo_param_t {
         tiles.k_cta           = 8;
         tiles.k_per_set       = 8;
         tiles.cta_size_in_thd = 32;
+        tiles.smem_size       = 384;
         tiles.flt_size        = 1;
         tiles.buf             = 1;
         kid                   = 0;
         gemm_batch            = 1;
     };
+
+    void SetIdxnKernelParam(int m_cta, int n_cta, int k_cta, int m_warp, int n_warp, int k_per_step, int flt_pad_size,
+            int cta_size_in_thd, int smem_size, int splitk, int splitf, std::string mma_shape)
+    {
+        this->tiles.m_cta = m_cta;
+        this->tiles.n_cta = n_cta;
+        this->tiles.k_cta = k_cta;
+
+        this->tiles.m_warp = m_warp;
+        this->tiles.n_warp = n_warp;
+
+        this->tiles.k_per_step = k_per_step;
+        this->tiles.flt_pad_size = flt_pad_size;
+
+        this->tiles.cta_size_in_thd = cta_size_in_thd;
+        this->tiles.smem_size = smem_size;
+
+        this->splitk = splitk;
+        this->splitf = splitf;
+
+        this->mma_shape = mma_shape;
+        this->conv_type = "idxn";
+        this->BuildAlgoName();
+    }
+
+    void Set2spkKernelParam(int m_cta, int n_cta, int k_cta, int m_warp, int n_warp, int k_per_set, int flt_size,
+            int buf_num, int cta_size_in_thd, int smem_size, int splitk, int splitf, std::string mma_shape)
+    {
+        this->tiles.m_cta = m_cta;
+        this->tiles.n_cta = n_cta;
+        this->tiles.k_cta = k_cta;
+
+        this->tiles.m_warp = m_warp;
+        this->tiles.n_warp = n_warp;
+
+        this->tiles.k_per_set = k_per_set;
+        this->tiles.flt_size = flt_size;
+        this->tiles.buf = buf_num;
+
+        this->tiles.cta_size_in_thd = cta_size_in_thd;
+        this->tiles.smem_size = smem_size;
+
+        this->splitk = splitk;
+        this->splitf = splitf;
+
+        this->mma_shape = mma_shape;
+        this->conv_type = "2spk";
+        this->BuildAlgoName();
+    }
+
+    void SetSwzlKernelParam(int m_cta, int n_cta, int k_cta, int m_warp, int n_warp, int flt_size,
+            int buf_num, int cta_size_in_thd, int smem_size, int splitk, int splitf, std::string mma_shape)
+    {
+        this->tiles.m_cta = m_cta;
+        this->tiles.n_cta = n_cta;
+        this->tiles.k_cta = k_cta;
+
+        this->tiles.m_warp = m_warp;
+        this->tiles.n_warp = n_warp;
+
+        this->tiles.flt_size = flt_size;
+        this->tiles.buf = buf_num;
+
+        this->tiles.cta_size_in_thd = cta_size_in_thd;
+        this->tiles.smem_size = smem_size;
+
+        this->splitk = splitk;
+        this->splitf = splitf;
+
+        this->mma_shape = mma_shape;
+        this->conv_type = "swzl";
+        this->BuildAlgoName();
+    }
 };
 
 struct quant_param_t {
@@ -130,8 +213,6 @@ struct fuse_info_t {
 
 std::string GetConvShapeString(const conv_param_t& conv_param);
 
-ppl::common::RetCode PPLCUDAConvolutionModifyAlgoParam(algo_param_t& algo_param, uint32_t index);
-
 uint64_t PPLCUDAConvolutionGetCompilationBufSize(
     ppl::common::datatype_t type,
     conv_param_t& conv_param,
@@ -144,20 +225,24 @@ uint64_t PPLCUDAConvolutionGetRuntimeBufSize(
     unsigned int splitf,
     uint64_t workspace = ((uint64_t)8) * 1024 * 1024 * 1024);
 
-ppl::common::RetCode PPLCUDAConvolutionLoadAlgoParam(
-    algo_param_t& algo_param);
-
-ppl::common::RetCode PPLCUDAConvolutionPredictKernel(
+ppl::common::RetCode GetInt8ConvKernelNominees(
+    int device_id,
     ppl::common::datatype_t type,
-    algo_param_t& algo_param,
-    conv_param_t& conv_param);
+    conv_param_t &conv_param,
+    std::vector<std::string> & knames,
+    std::vector<algo_param_t> & params,
+    std::string & sources);
 
-ppl::common::RetCode PPLCUDAConvolutionPredictKernelInt8(
+ppl::common::RetCode GetFp16ConvKernelNominees(
+    int device_id,
     ppl::common::datatype_t type,
-    algo_param_t &algo_param,
-    conv_param_t &conv_param);
+    conv_param_t &conv_param,
+    std::vector<std::string> & knames,
+    std::vector<algo_param_t> & params,
+    std::string & sources);
 
 double PPLCUDAConvolutionSelectKernel(
+    int device_id,
     cudaStream_t& stream,
     ppl::common::datatype_t type,
     int4* d_input,
@@ -185,6 +270,7 @@ double PPLCUDAConvolutionJitSelectKernel(
     uint64_t workspace = (uint64_t)8 * 1024 * 1024 * 1024);
 
 float AlgoForwardTime(
+    int device_id,
     cudaStream_t& stream,
     std::vector<std::string> name,
     std::string code,
@@ -204,6 +290,7 @@ float AlgoForwardTime(
     uint64_t workspace);
 
 void PPLCUDAConvolutionForwardImp(
+    int device_id,
     cudaStream_t& stream,
     ppl::common::datatype_t type,
     int4* d_input,
@@ -216,6 +303,7 @@ void PPLCUDAConvolutionForwardImp(
     fuse_param_t& fuse_param);
 
 void PPLCUDAConvolutionForwardJitImp(
+    int device_id,
     cudaStream_t& stream,
     CUfunction function,
     ppl::common::datatype_t type,
@@ -229,6 +317,7 @@ void PPLCUDAConvolutionForwardJitImp(
     fuse_param_t& fuse_param);
 
 double PPLCUDAConvolutionSelectKernelInt8(
+    int device_id,
     cudaStream_t &stream, 
     ppl::common::datatype_t type,
     int4* d_input,
@@ -243,6 +332,7 @@ double PPLCUDAConvolutionSelectKernelInt8(
     uint64_t workspace = (uint64_t)8*1024*1024*1024);
 
 void PPLCUDAConvolutionForwardImpInt8(
+    int device_id,
     cudaStream_t &stream, 
     ppl::common::datatype_t type,
     int4* d_input,
@@ -256,6 +346,7 @@ void PPLCUDAConvolutionForwardImpInt8(
     fuse_param_t &fuse_param);
 
 float AlgoForwardTimeInt8(
+    int device_id,
     cudaStream_t& stream,
     std::vector<std::string> name,
     std::string code,
@@ -291,6 +382,7 @@ double PPLCUDAConvolutionJitSelectKernelInt8(
     uint64_t workspace = (uint64_t)8*1024*1024*1024);
 
 void PPLCUDAConvolutionForwardJitImpInt8(
+    int device_id,
     cudaStream_t &stream,
     CUfunction function,
     ppl::common::datatype_t type,

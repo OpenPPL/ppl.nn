@@ -30,8 +30,8 @@
 
 #define TIMES 4
 
-std::vector<kernel_info_t> g_kvec;
-bool is_g_kvec_set = false;
+std::vector<kernel_info_t> g_fp16_kvec;
+bool is_g_fp16_kvec_set = false;
 
 #define FAKE_CONV_PARAM              \
     int in_hw               = 1;     \
@@ -87,63 +87,80 @@ bool is_g_kvec_set = false;
         fuse_param.has_concat, concat_offset_v8,                      \
         concat_stride_v8
 
-#define SWZL_GEMM_FUNC_PARAM                                          \
-        (int4 *)weight,                                               \
-        input0_tmp,                                                   \
-        final_out,                                                    \
-        kLoopNum,                                                     \
-        in_lut, 0,                                                    \
-        flt_lut, 0,                                                   \
-        in_hw, out_hw,                                                \
-        flt_hw, splitk,                                               \
-        in_height, in_width,                                          \
-        batch, num_grp,                                               \
-        num_chl_per_grp, num_chl_per_grp_pad,                         \
-        flt_height, flt_width,                                        \
-        num_flt_per_grp, num_flt_per_grp_pad,                         \
-        out_height, out_width,                                        \
-        stride_height, stride_width,                                  \
-        pad_height, pad_width,                                        \
-        hole_height, hole_width,                                      \
-        has_bias, (int4 *)bias,                                       \
-        fuse_param.has_activation, clip_min,                          \
-        fuse_param.has_clip, clip_max,                                \
-        fuse_param.has_prelu, (const void *)fuse_param.prelu,         \
-        fuse_param.has_elt, (const int4 *)fuse_param.pre_data,        \
-        fuse_param.has_elt_activation, elt_clip_min,                  \
-        fuse_param.has_elt_clip, elt_clip_max,                        \
-        fuse_param.has_elt_prelu, (const void *)fuse_param.elt_prelu, \
-        (__half)fuse_param.leaky, (__half)fuse_param.elt_leaky,       \
-        fuse_param.has_concat, concat_offset_v8,                      \
-        concat_stride_v8
-
-
-void init_f1_kvec(std::vector<kernel_info_t> &g_kvec, ppl::common::datatype_t type)
+void init_f1_kvec(std::vector<kernel_info_t> &g_fp16_kvec, int device_id, ppl::common::datatype_t type)
 {
+    cudaDeviceProp device_prop;
+    cudaGetDeviceProperties(&device_prop, device_id);
+
 #ifndef PPLNN_ENABLE_CUDA_JIT
     if (type == ppl::common::DATATYPE_FLOAT16) {
-        Initialize2spkConvF1KernelContainer(g_kvec);
-        InitializeSwzlConvF1KernelContainer(g_kvec);
+        if (device_prop.major == 7 && device_prop.minor == 5) {
+            Initialize2spkSM75FP16Hmma1688ConvF1KernelContainer(g_fp16_kvec);
+        } else if (device_prop.major > 8 || (device_prop.major == 8 && device_prop.minor >= 0)) {
+            Initialize2spkSM75FP16Hmma1688ConvF1KernelContainer(g_fp16_kvec);
+
+            Initialize2spkSM80FP16Hmma1688ConvF1KernelContainer(g_fp16_kvec);
+            Initialize2spkSM80FP16Hmma16816ConvF1KernelContainer(g_fp16_kvec);
+        }
     }
-    is_g_kvec_set = true;
+    is_g_fp16_kvec_set = true;
 #endif
 }
 
-uint64_t PPLGemmCUDAGetBufSize(
+uint64_t PPLGemmCUDAGetCompilationBufSize(
     const ppl::nn::TensorShape *input_shape,
+    conv_param_t& conv_param,
     int transA)
 {
     auto type     = input_shape->GetDataType();
-    int type_size = ppl::common::GetSizeOfDataType(type);
-
+    int pad_size = GetPadSize(type); // ldg 128 bytes
+                  
+    uint64_t cvt_input_size = 0;
     if (transA) {
-        int pad_size = GetPadSize(type); // ldg 128 bytes
         int K        = input_shape->GetDim(0);
         int M        = input_shape->GetDim(1);
         int K_pad    = Align(K, pad_size);
-        return M * K_pad * type_size;
+        uint64_t type_size = ppl::common::GetSizeOfDataType(type);
+        cvt_input_size = M * K_pad * type_size;
     }
-    return 0;
+
+    uint64_t num_flt_per_grp = conv_param.num_flt / conv_param.num_grp;
+    uint64_t num_flt_per_grp_pad = Align(num_flt_per_grp, pad_size);
+
+    uint64_t split_size = GetMaxSplitSize(type, conv_param, num_flt_per_grp_pad);
+
+    uint64_t total_size = cvt_input_size + split_size;
+    return total_size;
+}
+
+uint64_t PPLGemmCUDAGetRuntimeBufSize(
+    const ppl::nn::TensorShape *input_shape,
+    conv_param_t& conv_param,
+    int splitk,
+    int splitf,
+    int transA)
+{
+    auto type     = input_shape->GetDataType();
+    int pad_size = GetPadSize(type); // ldg 128 bytes
+                  
+    uint64_t cvt_input_size = 0;
+    if (transA) {
+        int K        = input_shape->GetDim(0);
+        int M        = input_shape->GetDim(1);
+        int K_pad    = Align(K, pad_size);
+        uint64_t type_size = ppl::common::GetSizeOfDataType(type);
+        cvt_input_size = M * K_pad * type_size;
+    }
+
+    uint64_t num_flt_per_grp = conv_param.num_flt / conv_param.num_grp;
+    uint64_t num_flt_per_grp_pad = Align(num_flt_per_grp, pad_size);
+
+    uint64_t split_size = 0;
+    if(splitk > 1 || splitf > 1)
+        split_size = GetSplitKFSize(type, conv_param, num_flt_per_grp_pad, splitk, splitf);
+
+    uint64_t total_size = cvt_input_size + split_size;
+    return total_size;
 }
 
 unsigned int PPLCUDAGemmGetBiasSize(
@@ -286,15 +303,6 @@ ppl::common::RetCode PPLCUDAGemmModifyBias(
     return ppl::common::RC_SUCCESS;
 }
 
-#define MAX_KERNEL_SIZE (1 + 12 + 30)
-
-__inline__ std::string ToString(int v)
-{
-    std::stringstream ss;
-    ss << v;
-    return ss.str();
-}
-
 double PPLCUDAGemmJITSelectKernel(
     int device_id,
     cudaStream_t &stream,
@@ -312,80 +320,29 @@ double PPLCUDAGemmJITSelectKernel(
     algo_param_t &algo_param,
     uint64_t workspace)
 {
-    float elapsed = 0.0f;
+    double elapsed = 0.0f;
 #ifdef PPLNN_ENABLE_CUDA_JIT
-    auto pre_algo_param     = algo_param;
-    int pad_size            = GetPadSize(type);
-    int num_chl_per_grp     = conv_param.num_chl / conv_param.num_grp;
-    int num_flt_per_grp     = conv_param.num_flt / conv_param.num_grp;
-    int num_flt_per_grp_pad = Align(num_flt_per_grp, pad_size);
-    int flt_hw              = conv_param.flt_height * conv_param.flt_width;
-
-    int size_x    = DivUp(conv_param.in_num * conv_param.out_height * conv_param.out_width, algo_param.tiles.m_cta);
-    int size_y    = DivUp(num_flt_per_grp_pad, algo_param.tiles.n_cta);
-    int grid_size = size_x * size_y;
-
     std::vector<std::string> knames;
     std::vector<algo_param_t> params;
-    std::string total_source = "";
-    int declare_times        = 0;
+    std::string sources = "";
 
-    unsigned int splitk = 1;
-    unsigned int splitf = 1;
-
-    for (unsigned int index = 0; index < MAX_KERNEL_SIZE; index++) {
-        conv_ktype_t ktype;
-        algo_param = pre_algo_param;
-        PPLCUDAConvolutionModifyAlgoParam(algo_param, index); // change algo_param
-        algo_param.splitk = splitk;
-        algo_param.splitf = splitf;
-
-        algo_param.tiles.cta_size_in_thd = (algo_param.tiles.m_cta / algo_param.tiles.m_warp) *
-                                           (algo_param.tiles.n_cta / algo_param.tiles.n_warp) *
-                                           (algo_param.tiles.k_cta / algo_param.tiles.k_per_set) *
-                                           WARP_SIZE;
-        ktype                     = CONV_2SPK_F1;
-        std::string f_size        = "f1";
-        algo_param.tiles.flt_size = 1;
-        algo_param.algo_name      = "nv2spkConv_hmma1688_nhwc_" + f_size + "_b" + ToString(algo_param.tiles.m_cta) + "x" + ToString(algo_param.tiles.n_cta) +
-                               "_w" + ToString(algo_param.tiles.m_warp) + "x" + ToString(algo_param.tiles.n_warp) +
-                               "_k" + ToString(algo_param.tiles.k_cta) + "_s" + ToString(algo_param.tiles.k_per_set) + "_buf1";
-
-        kernel_info_t temp_kernel(-1, ktype, algo_param.algo_name.c_str());
-        if (!temp_kernel.CheckKernelTilesFeasible(type, device_id))
-            continue;
-        if (!temp_kernel.CheckKernelTypeFeasible(conv_param.flt_height, conv_param.flt_width, num_chl_per_grp, splitk))
-            continue;
-        if (!temp_kernel.CheckSplitkFeasible(num_chl_per_grp, splitk))
-            continue;
-        if (!temp_kernel.CheckSplitfFeasible(splitf, splitk))
-            continue;
-        if (!temp_kernel.CheckQuickSelectFeasible(algo_param, num_chl_per_grp, grid_size, flt_hw, splitk, splitf, device_id))
-            continue;
-
-        auto mgr = CodeGeneFactorManager::Instance();
-        auto gene_factor = mgr->FindKernel(type);
-        std::string source = "";
-        gene_factor->Gene2spkKernel(source, algo_param.algo_name, algo_param.tiles.m_cta, algo_param.tiles.n_cta, algo_param.tiles.m_warp, algo_param.tiles.n_warp, algo_param.tiles.k_cta, algo_param.tiles.k_per_set, algo_param.splitk, algo_param.splitf, algo_param.tiles.buf, declare_times);
-        declare_times++;
-
-        if (std::find(knames.begin(), knames.end(), algo_param.algo_name) == knames.end()) {
-            total_source = total_source + source;
-        }
-        knames.push_back(algo_param.algo_name);
-        params.push_back(algo_param);
-    }
+    GetFp16ConvKernelNominees(device_id, type, conv_param, knames, params, sources);
 
     int index = 0;
     std::vector<const char *> compile_params;
-    elapsed = AlgoForwardTime(stream, knames, total_source, index, compile_params, device_id, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, fuse_param, workspace);
+    elapsed = AlgoForwardTime(device_id, stream, knames, sources, index, compile_params, device_id, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, fuse_param, workspace);
 
     algo_param = params[index];
+
+    // TODO: currently fix splitk=1, for gemm op has not prepared temp buffer routines
+    algo_param.splitk = 1;
+    algo_param.splitf = 1;
 #endif
     return elapsed;
 }
 
 double PPLCUDAGemmSelectKernel(
+    int device_id,
     const cudaStream_t &stream,
     const ppl::nn::TensorShape *input_shape,
     const void *input,
@@ -400,9 +357,12 @@ double PPLCUDAGemmSelectKernel(
     algo_param_t &algo_param)
 {
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
+    cudaDeviceProp device_prop;
+    cudaGetDeviceProperties(&device_prop, device_id);
+
     auto type = weight_shape->GetDataType();
-    if (!is_g_kvec_set)
-        init_f1_kvec(g_kvec, type);
+    if (!is_g_fp16_kvec_set)
+        init_f1_kvec(g_fp16_kvec, device_id, type);
 
     int pad_size = GetPadSize(type);
     int transA   = param.transA;
@@ -410,8 +370,9 @@ double PPLCUDAGemmSelectKernel(
 
     // FIXME use non-paded N in conv1x1 for input
     int N     = transB ? weight_shape->GetDim(0) : weight_shape->GetDim(1);
-    int N_pad = transB ? weight_shape->GetDim(0) : weight_shape->GetDim(1);
-    int K_pad = transB ? weight_shape->GetDim(1) : weight_shape->GetDim(0);
+    int K     = transB ? weight_shape->GetDim(1) : weight_shape->GetDim(0);
+    int N_pad = Align(N, pad_size);
+    int K_pad = Align(K, pad_size);
     int M     = transA ? input_shape->GetDim(1) : input_shape->GetDim(0);
 
     int concat_offset_v8 = fuse_param.concat_offset / pad_size;
@@ -448,12 +409,21 @@ double PPLCUDAGemmSelectKernel(
         input0_tmp = (int4 *)temp_buffer;
     }
 
-    for (unsigned int kid = 0; kid < g_kvec.size(); kid++) {
-        int tile_m_per_cta = g_kvec[kid].tile_m_per_cta;
-        int tile_n_per_cta = g_kvec[kid].tile_n_per_cta;
-        int tile_k_per_cta = g_kvec[kid].tile_k_per_cta;
+    for (unsigned int kid = 0; kid < g_fp16_kvec.size(); kid++) {
+        int tile_m_per_cta = g_fp16_kvec[kid].tile_m_per_cta;
+        int tile_n_per_cta = g_fp16_kvec[kid].tile_n_per_cta;
+        int tile_k_per_cta = g_fp16_kvec[kid].tile_k_per_cta;
+        int cta_size_in_thd = g_fp16_kvec[kid].cta_size_in_thd;
+        int smem_size = g_fp16_kvec[kid].smem_size;
 
-        int cta_size_in_thd = g_kvec[kid].cta_size_in_thd;
+        if (!g_fp16_kvec[kid].CheckSMemSizeFeasible(device_prop))
+                continue;
+
+        if (!g_fp16_kvec[kid].CheckGpuArchFeasible(device_prop))
+                continue;
+
+        g_fp16_kvec[kid].AdaptLutKernelSMemSize();
+
         dim3 block_size, grid_size;
         block_size.x = cta_size_in_thd;
         block_size.y = 1;
@@ -465,15 +435,11 @@ double PPLCUDAGemmSelectKernel(
 
         cudaEventRecord(begin, stream);
         for (int i = 0; i < TIMES; i++) {
-            FAKE_CONV_PARAM
-            int kLoopNum = DivUp(K_pad, tile_k_per_cta);
-            lut_t in_lut, flt_lut;
-            if (g_kvec[kid].ktype == CONV_2SPK_F1) {
-                (g_kvec[kid].lut_kptr)<<<grid_size, block_size, 0, stream>>>(GEMM_FUNC_PARAM);
-            } else if (g_kvec[kid].ktype == CONV_SWZL_F1) {
-                grid_size.x = DivUp(M, tile_n_per_cta);
-                grid_size.y = DivUp(N_pad, tile_m_per_cta);
-                (g_kvec[kid].lut_kptr)<<<grid_size, block_size, 0, stream>>>(SWZL_GEMM_FUNC_PARAM);
+            if (g_fp16_kvec[kid].ktype == CONV_2SPK_F1) {
+                FAKE_CONV_PARAM
+                int kLoopNum = DivUp(K_pad, tile_k_per_cta);
+                lut_t in_lut, flt_lut;
+                (g_fp16_kvec[kid].lut_kptr)<<<grid_size, block_size, smem_size, stream>>>(GEMM_FUNC_PARAM);
             }
 
         }
@@ -512,6 +478,7 @@ ppl::common::RetCode PPLCUDAGemvForwardImp(
     const fuse_param_t &fuse_param);
 
 ppl::common::RetCode PPLCUDAGemmForwardImp(
+    int device_id,
     const cudaStream_t &stream,
     ppl::nn::cuda::CUDAModule *module,
     const ppl::nn::TensorShape *input_shape,
@@ -529,8 +496,8 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
     auto type = weight_shape->GetDataType();
 #ifndef PPLNN_ENABLE_CUDA_JIT
-    if (!is_g_kvec_set)
-        init_f1_kvec(g_kvec, type);
+    if (!is_g_fp16_kvec_set)
+        init_f1_kvec(g_fp16_kvec, device_id, type);
 #endif
     int pad_size = GetPadSize(type);
     int transA   = param.transA;
@@ -553,7 +520,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
     __half2 elt_clip_min        = __float2half2_rn(fuse_param.elt_clip_min);
     __half2 elt_clip_max        = __float2half2_rn(fuse_param.elt_clip_max);
     ppl::common::RetCode status = ppl::common::RC_SUCCESS;
-    if (M == 1) {
+    if (M == 1) { // TODO, only work for A100, need to diff with T4
         status = PPLCUDAGemvForwardImp<__half>(stream,
                                                M,
                                                N_pad,
@@ -573,12 +540,14 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
     int tile_n_per_cta  = algo_param.tiles.n_cta;
     int tile_k_per_cta  = algo_param.tiles.k_cta;
     int cta_size_in_thd = algo_param.tiles.cta_size_in_thd;
+    int smem_size       = algo_param.tiles.smem_size;
 #else
     int kid             = algo_param.kid;
-    int tile_m_per_cta  = g_kvec[kid].tile_m_per_cta;
-    int tile_n_per_cta  = g_kvec[kid].tile_n_per_cta;
-    int tile_k_per_cta  = g_kvec[kid].tile_k_per_cta;
-    int cta_size_in_thd = g_kvec[kid].cta_size_in_thd;
+    int tile_m_per_cta  = g_fp16_kvec[kid].tile_m_per_cta;
+    int tile_n_per_cta  = g_fp16_kvec[kid].tile_n_per_cta;
+    int tile_k_per_cta  = g_fp16_kvec[kid].tile_k_per_cta;
+    int cta_size_in_thd = g_fp16_kvec[kid].cta_size_in_thd;
+    int smem_size       = g_fp16_kvec[kid].smem_size;
 #endif
     dim3 block_size, grid_size;
 
@@ -617,15 +586,14 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
 
     void *args[]        = {&input0_tmp, &weight, &final_out, &kLoopNum, &in_lut, &in_lut_size, &flt_lut, &flt_lut_size, &in_hw, &out_hw, &flt_hw, &splitk, &in_height, &in_width, &batch, &num_grp, &num_chl_per_grp, &num_chl_per_grp_pad, &flt_height, &flt_width, &num_flt_per_grp, &num_flt_per_grp_pad, &out_height, &out_width, &stride_height, &stride_width, &pad_height, &pad_width, &hole_height, &hole_width, &has_bias, &bias, &fuse_param.has_activation, &clip_min, &fuse_param.has_clip, &clip_max, &fuse_param.has_prelu, &prelu, &fuse_param.has_elt, &(pre_data), &fuse_param.has_elt_activation, &elt_clip_min, &fuse_param.has_elt_clip, &elt_clip_max, &fuse_param.has_elt_prelu, &(elt_prelu), &leaky, &elt_leaky, &fuse_param.has_concat, &concat_offset_v8, &concat_stride_v8};
     CUfunction function = module->GetKernelFunc();
-    CUDA_SAFE_CALL(cuLaunchKernel(function, grid_size.x, grid_size.y, grid_size.z, block_size.x, block_size.y, block_size.z, 0, stream, args, 0));
+
+    if(smem_size > MAX_STATIC_SMEM_SIZE_PER_CTA)
+        cuFuncSetAttribute(function, CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES, smem_size);
+
+    CUDA_SAFE_CALL(cuLaunchKernel(function, grid_size.x, grid_size.y, grid_size.z, block_size.x, block_size.y, block_size.z, smem_size, stream, args, 0));
 #else
-        if (g_kvec[kid].ktype == CONV_2SPK_F1) {
-            (g_kvec[kid].lut_kptr)<<<grid_size, block_size, 0, stream>>>(GEMM_FUNC_PARAM);
-        } else if (g_kvec[kid].ktype == CONV_SWZL_F1) {
-            grid_size.x = DivUp(M, tile_n_per_cta);
-            grid_size.y = DivUp(N_pad, tile_m_per_cta);
-            (g_kvec[kid].lut_kptr)<<<grid_size, block_size, 0, stream>>>(SWZL_GEMM_FUNC_PARAM);
-        }
+        g_fp16_kvec[kid].AdaptLutKernelSMemSize();
+        (g_fp16_kvec[kid].lut_kptr)<<<grid_size, block_size, smem_size, stream>>>(GEMM_FUNC_PARAM);
 #endif
     return status;
 #else

@@ -54,6 +54,7 @@ double PPLCUDABgemmJITSelectKernel(
     uint64_t workspace = (uint64_t)8 * 1024 * 1024 * 1024);
 
 double PPLCUDABgemmSelectKernel(
+    int device_id,
     const cudaStream_t& stream,
     const ppl::nn::TensorShape* input_shape,
     const void* input,
@@ -67,6 +68,7 @@ double PPLCUDABgemmSelectKernel(
     algo_param_t& algo_param);
 
 ppl::common::RetCode PPLCUDABgemmForwardImp(
+    int device_id,
     const cudaStream_t& stream,
     ppl::nn::cuda::CUDAModule* module,
     const ppl::nn::TensorShape* input_shape,

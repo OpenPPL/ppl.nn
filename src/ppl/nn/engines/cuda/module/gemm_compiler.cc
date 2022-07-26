@@ -41,10 +41,11 @@ const ppl::common::RetCode GemmCompiler::Compile(ir::Node* node, const OptKernel
     auto gene_factor = mgr->FindKernel(input_type);
 
     std::string source = "";
-    gene_factor->Gene2spkKernel(source, algo_param.algo_name, algo_param.tiles.m_cta, algo_param.tiles.n_cta,
-                                algo_param.tiles.m_warp, algo_param.tiles.n_warp, algo_param.tiles.k_cta,
-                                algo_param.tiles.k_per_set, algo_param.splitk, algo_param.splitf, algo_param.tiles.buf,
-                                0);
+    gene_factor->Gene2spkKernel(source, algo_param.algo_name, algo_param.mma_shape, algo_param.tiles.flt_size,
+                                algo_param.tiles.m_cta, algo_param.tiles.n_cta, algo_param.tiles.m_warp,
+                                algo_param.tiles.n_warp, algo_param.tiles.k_cta, algo_param.tiles.k_per_set,
+                                algo_param.splitk, algo_param.splitf, algo_param.tiles.buf, 0);
+
     gene_factor->ReplaceFusionFor2spk(source, gemm_param->extra_param.fuse_info);
     std::string name = algo_param.algo_name;
     std::vector<std::string> compile_params;
