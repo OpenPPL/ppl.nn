@@ -137,13 +137,15 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
     ConvertToForwardFuseParam(ctx, GetCudaDevice(), param_->extra_param.fuse_info, temp_fuse_param);
 
     auto stream = GetStream();
+    int device_id = GetDeviceId();
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
 
     const TensorShape& shape_in0 = *input0->GetShape();
+
     if (shape_in0.GetDataType() == ppl::common::DATATYPE_FLOAT16) {
-        status = PPLCUDABgemmForwardImp(stream, module, input0->GetShape(), bmm_input0, weight->GetShape(),
-                                        weight_buffer.addr, output->GetShape(), bgemm_out, param_->param, tmp_buffer,
-                                        temp_fuse_param, param_->extra_param.algo_info);
+        status = PPLCUDABgemmForwardImp(device_id, stream, module, input0->GetShape(), bmm_input0,
+                                        weight->GetShape(), weight_buffer.addr, output->GetShape(), bgemm_out,
+                                        param_->param, tmp_buffer, temp_fuse_param, param_->extra_param.algo_info);
     }
 
     if (is_output_pad) {
