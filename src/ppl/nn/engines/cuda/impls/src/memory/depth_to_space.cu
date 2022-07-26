@@ -23,6 +23,7 @@
 #include <cuda_runtime.h>
 
 ppl::common::RetCode PPLCUDADepthToSpaceForwardImp(
+    int device_id,
     cudaStream_t stream,
     ppl::nn::onnx::DepthToSpaceParam param,
     const ppl::nn::TensorShape* input_shape,
@@ -53,7 +54,8 @@ ppl::common::RetCode PPLCUDADepthToSpaceForwardImp(
         for (int it = 0; it < num_transpose_dim; ++it) {
             output_shape_trans.SetDim(it, input_shape_trans.GetDim(trans_param.perm[it]));
         }
-        return PPLCUDATransposeForwardImp(stream,
+        return PPLCUDATransposeForwardImp(device_id,
+                                          stream,
                                           trans_param,
                                           &input_shape_trans,
                                           input,

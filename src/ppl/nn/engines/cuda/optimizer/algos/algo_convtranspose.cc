@@ -55,32 +55,34 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
     const std::string& key_str = node->GetName();
     auto algo_info = options.algos->find(key_str);
     if (algo_info != options.algos->end()) {
-        attr_param_.extra_param.algo_info.algo_name = algo_info->second.kname;
         attr_param_.extra_param.algo_info.kid = algo_info->second.kid;
         attr_param_.extra_param.algo_info.splitk = algo_info->second.splitk;
         attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
-        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
+        attr_param_.extra_param.algo_info.algo_name = algo_info->second.kname;
+        if(algo_info->second.splitk > 1)
+            attr_param_.extra_param.algo_info.algo_name += "_spk" + std::to_string(algo_info->second.splitk);
+        attr_param_.extra_param.algo_info.ParseAlgoName();
         return 0.0f;
     } else { // Give the default kernel
         auto stride_h = attr_param_.param.strides[0];
         auto stride_w = attr_param_.param.strides[1];
         if (stride_h != 1 || stride_w != 1) {
             if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
-                attr_param_.extra_param.algo_info.algo_name =
-                    "nv2spkConv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";
+                attr_param_.extra_param.algo_info.algo_name = "nv2spkSm75Fp16Conv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";
             } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
-                attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_imma8816_nhwc_f1_b64x64_w64x32_k32_s16_buf1";
+                attr_param_.extra_param.algo_info.algo_name = "nv2spkSm75Int8Conv_imma8816_nhwc_f1_b64x64_w64x32_k32_s16_buf1";
             } else {
                 return ALGO_MAX_TIME;
             }
             attr_param_.extra_param.algo_info.kid = 0;
-        } else {
-            attr_param_.extra_param.algo_info.algo_name = "nv2spkConv_hmma1688_nhwc_fn_b128x128_w64x64_k32_s32_buf1";
-            attr_param_.extra_param.algo_info.kid = 5100;
+        }
+        else {
+            attr_param_.extra_param.algo_info.algo_name = "nv2spkSm75Fp16Conv_hmma1688_nhwc_fn_b128x128_w64x64_k32_s32_buf1";
+            attr_param_.extra_param.algo_info.kid = 0; // TODO
         }
         attr_param_.extra_param.algo_info.splitk = 1;
         attr_param_.extra_param.algo_info.splitf = 1;
-        PPLCUDAConvolutionLoadAlgoParam(attr_param_.extra_param.algo_info);
+        attr_param_.extra_param.algo_info.ParseAlgoName();
     }
 
     if (options.args->quick_select) {
@@ -183,7 +185,8 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
             return status;
         }
 
-        PPLCUDAConvTransposeCvt(stream, filter_input_buffer.addr, filter_temp_buffer.addr,
+    	int device_id = options.device->GetDeviceId();
+        PPLCUDAConvTransposeCvt(device_id, stream, filter_input_buffer.addr, filter_temp_buffer.addr,
                                 weight_constat_info.GetBufferDesc().addr, &shape_in1, &attr_param_.param);
         postshape.SetDataFormat(ppl::common::DATAFORMAT_NHWC8);
 

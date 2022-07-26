@@ -9,6 +9,7 @@ int64_t PPLCUDADeformConvGetBufSize(
     const ppl::nn::TensorShape *output_shape);
 
 ppl::common::RetCode PPLCUDADeformConvForward(
+    int device_id,
     const cudaStream_t &stream,
     ppl::nn::cuda::CUDAModule *module,
     const ppl::nn::TensorShape *output_shape,

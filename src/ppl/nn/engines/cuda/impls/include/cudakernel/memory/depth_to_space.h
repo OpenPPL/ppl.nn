@@ -23,6 +23,7 @@
 #include <cuda_runtime.h>
 
 ppl::common::RetCode PPLCUDADepthToSpaceForwardImp(
+    int device_id,
     cudaStream_t stream,
     ppl::nn::onnx::DepthToSpaceParam param,
     const ppl::nn::TensorShape* input_shape,

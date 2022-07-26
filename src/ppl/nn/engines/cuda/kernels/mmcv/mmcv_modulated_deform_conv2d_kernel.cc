@@ -64,13 +64,17 @@ ppl::common::RetCode MMCVModulatedDeformConv2dKernel::DoExecute(KernelExecContex
     const int64_t kernel_w = weight->GetShape()->GetDim(3);
 
     auto stream = GetStream();
+    int device_id = GetDeviceId();
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
-    status = PPLCUDADeformConvForward(stream, module, output->GetShape(), input->GetShape(), output->GetBufferPtr(),
-                                      input->GetBufferPtr(), weight->GetBufferPtr(), offset->GetBufferPtr(),
+
+    status = PPLCUDADeformConvForward(device_id, stream, module, output->GetShape(), input->GetShape(),
+                                      output->GetBufferPtr(), input->GetBufferPtr(), weight->GetBufferPtr(),
+                                      offset->GetBufferPtr(),
                                       mask ? mask->GetBufferPtr() : nullptr, bias ? bias->GetBufferPtr() : nullptr,
-                                      param_->groups, param_->deform_groups, channels, num_output, param_->stride[0],
-                                      param_->stride[1], kernel_h, kernel_w, param_->padding[0], param_->padding[1],
-                                      param_->dilation[0], param_->dilation[1], mask, tmp_buffer_desc.addr);
+                                      param_->groups, param_->deform_groups, channels, num_output,
+                                      param_->stride[0], param_->stride[1], kernel_h, kernel_w,
+                                      param_->padding[0], param_->padding[1], param_->dilation[0], param_->dilation[1],
+                                      mask, tmp_buffer_desc.addr);
 
     return status;
 }
