@@ -15,27 +15,29 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_UTILS_CPU_BLOCK_ALLOCATOR_H_
-#define _ST_HPC_PPL_NN_UTILS_CPU_BLOCK_ALLOCATOR_H_
+#ifndef _ST_HPC_PPL_NN_UTILS_BUFFERED_CPU_ALLOCATOR_H_
+#define _ST_HPC_PPL_NN_UTILS_BUFFERED_CPU_ALLOCATOR_H_
 
 #include "ppl/common/allocator.h"
-#include <map>
+#include "ppl/common/retcode.h"
 
 namespace ppl { namespace nn { namespace utils {
 
-class CpuBlockAllocator final : public ppl::common::Allocator {
+class BufferedCpuAllocator final : public ppl::common::Allocator {
 public:
-    CpuBlockAllocator() {}
-    ~CpuBlockAllocator();
+    BufferedCpuAllocator() {}
+    ~BufferedCpuAllocator();
+    ppl::common::RetCode Init();
     void* Alloc(uint64_t multi_page_size) override;
-    void Free(void*) override;
+    void Free(void*) override {}
 
 private:
-    std::map<void*, uint64_t> addr2size_;
+    void* base_ = nullptr;
+    void* cursor_ = nullptr;
 
 private:
-    CpuBlockAllocator(const CpuBlockAllocator&) = delete;
-    void operator=(const CpuBlockAllocator&) = delete;
+    BufferedCpuAllocator(const BufferedCpuAllocator&) = delete;
+    void operator=(const BufferedCpuAllocator&) = delete;
 };
 
 }}} // namespace ppl::nn::utils
