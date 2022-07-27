@@ -48,6 +48,12 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
+if(APPLE)
+    message(FATAL_ERROR "MacOS is not supported currently.")
+endif()
+
+# --------------------------------------------------------------------------- #
+
 # variables
 
 set(PPLNN_SOURCES)
