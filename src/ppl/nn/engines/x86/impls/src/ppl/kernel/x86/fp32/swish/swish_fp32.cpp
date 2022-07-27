@@ -15,52 +15,28 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <immintrin.h>
-#include <math.h>
-
 #include "ppl/kernel/x86/common/internal_include.h"
+#include "ppl/kernel/x86/fp32/swish.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode swish_fp32(
+    const ppl::common::isa_t isa,
     const ppl::nn::TensorShape *x_shape,
     const float *x,
     const float beta,
     float *y)
 {
-#define _OP_SS(Y, X, BETA)                \
-    do {                                  \
-        Y = X / (1.0f + expf(-BETA * X)); \
-    } while (0)
-
-    const int64_t n_elem      = x_shape->CalcElementsIncludingPadding();
-    const int64_t unroll_n    = 16;
-    const int64_t unroll_body = round(n_elem, unroll_n);
-
-    PRAGMA_OMP_PARALLEL_FOR()
-    for (int64_t i = 0; i < unroll_body; i += unroll_n) {
-        _OP_SS(y[i + 0], x[i + 0], beta);
-        _OP_SS(y[i + 8 + 0], x[i + 8 + 0], beta);
-        _OP_SS(y[i + 1], x[i + 1], beta);
-        _OP_SS(y[i + 8 + 1], x[i + 8 + 1], beta);
-        _OP_SS(y[i + 2], x[i + 2], beta);
-        _OP_SS(y[i + 8 + 2], x[i + 8 + 2], beta);
-        _OP_SS(y[i + 3], x[i + 3], beta);
-        _OP_SS(y[i + 8 + 3], x[i + 8 + 3], beta);
-        _OP_SS(y[i + 4], x[i + 4], beta);
-        _OP_SS(y[i + 8 + 4], x[i + 8 + 4], beta);
-        _OP_SS(y[i + 5], x[i + 5], beta);
-        _OP_SS(y[i + 8 + 5], x[i + 8 + 5], beta);
-        _OP_SS(y[i + 6], x[i + 6], beta);
-        _OP_SS(y[i + 8 + 6], x[i + 8 + 6], beta);
-        _OP_SS(y[i + 7], x[i + 7], beta);
-        _OP_SS(y[i + 8 + 7], x[i + 8 + 7], beta);
+#ifdef PPL_USE_X86_AVX512
+    if (isa & ppl::common::ISA_X86_AVX512) {
+        return swish_fp32_avx512(x_shape, x, beta, y);
     }
-    for (int64_t i = unroll_body; i < n_elem; ++i) {
-        _OP_SS(y[i + 0], x[i + 0], beta);
+#endif
+    if (isa & ppl::common::ISA_X86_FMA) {
+        return swish_fp32_fma(x_shape, x, beta, y);
     }
+    return swish_fp32_sse(x_shape, x, beta, y);
 
-    return ppl::common::RC_SUCCESS;
 }
 
 }}}; // namespace ppl::kernel::x86

@@ -50,26 +50,40 @@ ppl::common::RetCode transpose3d_ndarray(
     const eT *src,
     eT *dst)
 {
+    const int64_t dim_count = 3;
+
     const int64_t dim0    = src_shape->GetDim(0);
     const int64_t dim1    = src_shape->GetDim(1);
     const int64_t dim2    = src_shape->GetDim(2);
-    int64_t src_dims[3]   = {dim0, dim1, dim2};
-    int64_t src_stride[3] = {dim1 * dim2, dim2, 1};
-    int64_t dst_dims[3];
-    for (int64_t i = 0; i < 3; ++i) {
+    int64_t src_dims[dim_count]   = {dim0, dim1, dim2};
+    int64_t src_stride[dim_count] = {
+        dim1 * dim2,
+        dim2,
+        1
+    };
+    int64_t dst_dims[dim_count];
+    for (int64_t i = 0; i < dim_count; ++i) {
         dst_dims[i] = src_dims[perm[i]];
     }
-    int64_t dst_stride[3] = {dst_dims[1] * dst_dims[2], dst_dims[2], 1};
-    int64_t axis_stride[3];
-    for (int64_t i = 0; i < 3; ++i) {
+    int64_t dst_stride[dim_count] = {
+        dst_dims[1] * dst_dims[2],
+        dst_dims[2],
+        1
+    };
+    int64_t axis_stride[dim_count];
+    for (int64_t i = 0; i < dim_count; ++i) {
         axis_stride[perm[i]] = dst_stride[i];
     }
 
+#ifndef PPL_USE_X86_OMP_COLLAPSE
     PRAGMA_OMP_PARALLEL_FOR()
+#else
+    PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)
+#endif
     for (int32_t d0 = 0; d0 < dim0; ++d0) {
-        int64_t dim0_in_offset  = d0 * src_stride[0];
-        int64_t dim0_out_offset = d0 * axis_stride[0];
         for (int64_t d1 = 0; d1 < dim1; ++d1) {
+            int64_t dim0_in_offset  = d0 * src_stride[0];
+            int64_t dim0_out_offset = d0 * axis_stride[0];
             int64_t dim1_in_offset  = d1 * src_stride[1];
             int64_t dim1_out_offset = d1 * axis_stride[1];
             int64_t base_in_offset  = dim0_in_offset + dim1_in_offset;
@@ -90,40 +104,119 @@ ppl::common::RetCode transpose4d_ndarray(
     const eT *src,
     eT *dst)
 {
+    const int64_t dim_count = 4;
+
     const int64_t dim0    = src_shape->GetDim(0);
     const int64_t dim1    = src_shape->GetDim(1);
     const int64_t dim2    = src_shape->GetDim(2);
     const int64_t dim3    = src_shape->GetDim(3);
-    int64_t src_dims[4]   = {dim0, dim1, dim2, dim3};
-    int64_t src_stride[4] = {dim1 * dim2 * dim3, dim2 * dim3, dim3, 1};
-    int64_t dst_dims[4];
-    for (int64_t i = 0; i < 4; ++i) {
+    int64_t src_dims[dim_count]   = {dim0, dim1, dim2, dim3};
+    int64_t src_stride[dim_count] = {
+        dim1 * dim2 * dim3,
+        dim2 * dim3,
+        dim3,
+        1
+    };
+    int64_t dst_dims[dim_count];
+    for (int64_t i = 0; i < dim_count; ++i) {
         dst_dims[i] = src_dims[perm[i]];
     }
-    int64_t dst_stride[4] = {dst_dims[1] * dst_dims[2] * dst_dims[3], dst_dims[2] * dst_dims[3], dst_dims[3], 1};
-    int64_t axis_stride[4];
-    for (int64_t i = 0; i < 4; ++i) {
+    int64_t dst_stride[dim_count] = {
+        dst_dims[1] * dst_dims[2] * dst_dims[3],
+        dst_dims[2] * dst_dims[3],
+        dst_dims[3],
+        1
+    };
+    int64_t axis_stride[dim_count];
+    for (int64_t i = 0; i < dim_count; ++i) {
         axis_stride[perm[i]] = dst_stride[i];
     }
 
 #ifndef PPL_USE_X86_OMP_COLLAPSE
     PRAGMA_OMP_PARALLEL_FOR()
 #else
-    PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)
+    PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(3)
 #endif
     for (int64_t d0 = 0; d0 < dim0; ++d0) {
         for (int32_t d1 = 0; d1 < dim1; ++d1) {
-            int64_t dim0_in_offset  = d0 * src_stride[0];
-            int64_t dim0_out_offset = d0 * axis_stride[0];
-            int64_t dim1_in_offset  = d1 * src_stride[1];
-            int64_t dim1_out_offset = d1 * axis_stride[1];
             for (int64_t d2 = 0; d2 < dim2; ++d2) {
+                int64_t dim0_in_offset  = d0 * src_stride[0];
+                int64_t dim0_out_offset = d0 * axis_stride[0];
+                int64_t dim1_in_offset  = d1 * src_stride[1];
+                int64_t dim1_out_offset = d1 * axis_stride[1];
                 int64_t dim2_in_offset  = d2 * src_stride[2];
                 int64_t dim2_out_offset = d2 * axis_stride[2];
                 int64_t base_in_offset  = dim0_in_offset + dim1_in_offset + dim2_in_offset;
                 int64_t base_out_offset = dim0_out_offset + dim1_out_offset + dim2_out_offset;
                 for (int64_t d3 = 0; d3 < dim3; ++d3) {
                     dst[base_out_offset + d3 * axis_stride[3]] = src[base_in_offset + d3];
+                }
+            }
+        }
+    }
+    return ppl::common::RC_SUCCESS;
+}
+
+template <typename eT>
+ppl::common::RetCode transpose5d_ndarray(
+    const ppl::nn::TensorShape *src_shape,
+    const int32_t *perm,
+    const eT *src,
+    eT *dst)
+{
+    const int64_t dim_count = 5;
+
+    const int64_t dim0    = src_shape->GetDim(0);
+    const int64_t dim1    = src_shape->GetDim(1);
+    const int64_t dim2    = src_shape->GetDim(2);
+    const int64_t dim3    = src_shape->GetDim(3);
+    const int64_t dim4    = src_shape->GetDim(4);
+    int64_t src_dims[dim_count]   = {dim0, dim1, dim2, dim3, dim4};
+    int64_t src_stride[dim_count] = {
+        dim1 * dim2 * dim3 * dim4,
+        dim2 * dim3 * dim4,
+        dim3 * dim4,
+        dim4,
+        1
+    };
+    int64_t dst_dims[dim_count];
+    for (int64_t i = 0; i < dim_count; ++i) {
+        dst_dims[i] = src_dims[perm[i]];
+    }
+    int64_t dst_stride[dim_count] = {
+        dst_dims[1] * dst_dims[2] * dst_dims[3] * dst_dims[4],
+        dst_dims[2] * dst_dims[3] * dst_dims[4],
+        dst_dims[3] * dst_dims[4],
+        dst_dims[4],
+        1
+    };
+    int64_t axis_stride[dim_count];
+    for (int64_t i = 0; i < dim_count; ++i) {
+        axis_stride[perm[i]] = dst_stride[i];
+    }
+
+#ifndef PPL_USE_X86_OMP_COLLAPSE
+    PRAGMA_OMP_PARALLEL_FOR()
+#else
+    PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(4)
+#endif
+    for (int64_t d0 = 0; d0 < dim0; ++d0) {
+        for (int32_t d1 = 0; d1 < dim1; ++d1) {
+            for (int64_t d2 = 0; d2 < dim2; ++d2) {
+                for (int64_t d3 = 0; d3 < dim3; ++d3) {
+                    int64_t dim0_in_offset  = d0 * src_stride[0];
+                    int64_t dim0_out_offset = d0 * axis_stride[0];
+                    int64_t dim1_in_offset  = d1 * src_stride[1];
+                    int64_t dim1_out_offset = d1 * axis_stride[1];
+                    int64_t dim2_in_offset  = d2 * src_stride[2];
+                    int64_t dim2_out_offset = d2 * axis_stride[2];
+                    int64_t dim3_in_offset  = d3 * src_stride[3];
+                    int64_t dim3_out_offset = d3 * axis_stride[3];
+                    int64_t base_in_offset  = dim0_in_offset + dim1_in_offset + dim2_in_offset + dim3_in_offset;
+                    int64_t base_out_offset = dim0_out_offset + dim1_out_offset + dim2_out_offset + dim3_out_offset;
+                    for (int64_t d4 = 0; d4 < dim4; ++d4) {
+                        dst[base_out_offset + d4 * axis_stride[4]] = src[base_in_offset + d4];
+                    }
                 }
             }
         }
@@ -207,6 +300,10 @@ ppl::common::RetCode transpose_ndarray(
 
     if (dim_count == 4) {
         return transpose4d_ndarray(src_shape, perm, src, dst);
+    }
+
+    if (dim_count == 5) {
+        return transpose5d_ndarray(src_shape, perm, src, dst);
     }
 
     auto src_dims = src_shape->GetDims();
