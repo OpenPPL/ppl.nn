@@ -1,11 +1,11 @@
 ### Prerequisites
 
-* Linux or Windows or MacOS(Darwin) running on x86_64 compatible CPUs
+* Linux or Windows running on x86_64 or arm64 CPUs
 * GCC >= 4.9 or LLVM/Clang >= 6.0, or Visual Studio >= 2015
 * [CMake](https://cmake.org/download/) >= 3.14
 * [Git](https://git-scm.com/downloads) >= 2.7.0
-* [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit-archive) >= 10.2 (for CUDA)
-* [Python](https://www.python.org/downloads/) >= 3 (for CUDA and Python API support)
+* [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit-archive) >= 9.0 (for CUDA)
+* [Python](https://www.python.org/downloads/) >= 3.5 (for CUDA and Python API support)
 * [Lua](https://www.lua.org/download.html) >= 5.2.0 (optional, for Lua API support)
 
 ### Cloning Source Code
@@ -30,16 +30,6 @@ If you want to enable openmp, please specify `PPLNN_USE_OPENMP` as following:
 ./build.sh -DPPLNN_USE_X86_64=ON -DPPLNN_USE_OPENMP=ON
 ```
 
-#### MacOS (Darwin)
-
-Install `libomp` provided by [homebrew](https://brew.sh/) first:
-
-```bash
-brew install libomp
-```
-
-and follow the instructions for Linux above.
-
 #### Windows
 
 Using vs2015 for example:
@@ -52,7 +42,7 @@ Headers and libraries are installed in `pplnn-build/install`.
 
 ### Building CUDA Engine
 
-#### Linux and MacOS(Darwin)
+#### Linux
 
 ```bash
 ./build.sh -DPPLNN_USE_CUDA=ON
