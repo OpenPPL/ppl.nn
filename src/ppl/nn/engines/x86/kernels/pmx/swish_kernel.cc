@@ -32,7 +32,8 @@ ppl::common::RetCode SwishKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(input);
 
     PPLNN_X86_DEBUG_TRACE("beta: %f\n", param_->beta);
-    PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
+    auto isa = GetISA();
+    PPLNN_X86_DEBUG_TRACE("isa: %u\n", isa);
 
     PPLNN_X86_REALLOC_TENSOR_BUFFER(output);
     PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
@@ -41,16 +42,12 @@ ppl::common::RetCode SwishKernel::DoExecute(KernelExecContext* ctx) {
     const ppl::common::datatype_t data_type = input->GetShape()->GetDataType();
 
     if (data_type == ppl::common::DATATYPE_FLOAT32) {
-        if (MayUseISA(ppl::common::ISA_X86_FMA)) {
-            return ppl::kernel::x86::swish_fp32_fma(input->GetShape(), input->GetBufferPtr<float>(), param_->beta,
-                                                    output->GetBufferPtr<float>());
-        } else if (MayUseISA(ppl::common::ISA_X86_SSE)) {
-            return ppl::kernel::x86::swish_fp32_sse(input->GetShape(), input->GetBufferPtr<float>(), param_->beta,
-                                                    output->GetBufferPtr<float>());
-        } else {
-            return ppl::kernel::x86::swish_fp32(input->GetShape(), input->GetBufferPtr<float>(), param_->beta,
-                                                output->GetBufferPtr<float>());
-        }
+        return ppl::kernel::x86::swish_fp32(
+            isa,
+            input->GetShape(),
+            input->GetBufferPtr<float>(),
+            param_->beta,
+            output->GetBufferPtr<float>());
     } else {
         LOG(ERROR) << "unsupported data type " << ppl::common::GetDataTypeStr(data_type) << ".";
     }

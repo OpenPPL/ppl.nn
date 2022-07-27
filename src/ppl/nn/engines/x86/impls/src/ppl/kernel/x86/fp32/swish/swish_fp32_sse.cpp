@@ -30,25 +30,27 @@ ppl::common::RetCode swish_fp32_sse(
     const float beta,
     float *y)
 {
-    const __m128 v_beta       = _mm_set1_ps(beta);
+    const int64_t V_REG_ELTS = 4;
+
     const int64_t n_elem      = x_shape->CalcElementsIncludingPadding();
-    const int64_t unroll_n    = 16;
+    const int64_t unroll_n    = 4 * V_REG_ELTS;
     const int64_t unroll_body = round(n_elem, unroll_n);
+
+    const auto v_beta = _mm_set1_ps(beta);
 
     PRAGMA_OMP_PARALLEL_FOR()
     for (int64_t i = 0; i < unroll_body; i += unroll_n) {
-        __m128 src0 = _mm_loadu_ps(x + i + 0);
-        __m128 src1 = _mm_loadu_ps(x + i + 4);
-        __m128 src2 = _mm_loadu_ps(x + i + 8);
-        __m128 src3 = _mm_loadu_ps(x + i + 12);
-        _mm_storeu_ps(y + i + 0, src0 * _sse_sigmoid_ps(v_beta * src0));
-        _mm_storeu_ps(y + i + 4, src1 * _sse_sigmoid_ps(v_beta * src1));
-        _mm_storeu_ps(y + i + 8, src2 * _sse_sigmoid_ps(v_beta * src2));
-        _mm_storeu_ps(y + i + 12, src3 * _sse_sigmoid_ps(v_beta * src3));
+        auto src0 = _mm_loadu_ps(x + i + 0 * V_REG_ELTS);
+        auto src1 = _mm_loadu_ps(x + i + 1 * V_REG_ELTS);
+        auto src2 = _mm_loadu_ps(x + i + 2 * V_REG_ELTS);
+        auto src3 = _mm_loadu_ps(x + i + 3 * V_REG_ELTS);
+        _mm_storeu_ps(y + i + 0 * V_REG_ELTS, src0 * _sse_sigmoid_ps(v_beta * src0));
+        _mm_storeu_ps(y + i + 1 * V_REG_ELTS, src1 * _sse_sigmoid_ps(v_beta * src1));
+        _mm_storeu_ps(y + i + 2 * V_REG_ELTS, src2 * _sse_sigmoid_ps(v_beta * src2));
+        _mm_storeu_ps(y + i + 3 * V_REG_ELTS, src3 * _sse_sigmoid_ps(v_beta * src3));
     }
     for (int64_t i = unroll_body; i < n_elem; ++i) {
-        const float src_val = x[i];
-        y[i]                = src_val / (expf(-beta * src_val) + 1.0f);
+        y[i] = x[i] / (expf(-beta * x[i]) + 1.0f);
     }
 
     return ppl::common::RC_SUCCESS;
