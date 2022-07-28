@@ -105,6 +105,9 @@ def ParseCommandLineArgs():
     parser.add_argument("--use-fp16", dest = "use_fp16", action = "store_true",
                         default = False, required = False, help = "infer with fp16. avaliable for arm8.2 and riscv.")
 
+    parser.add_argument("--no-run", dest = "no_run", action = "store_true", default = False, required = False,
+                        help = "do not run")
+
     parser.add_argument("--onnx-model", type = str, default = "", required = False,
                         help = "onnx model file")
 
@@ -629,6 +632,9 @@ if __name__ == "__main__":
         SaveInputsAllInOne(args.save_data_dir, runtime)
     if args.save_inputs:
         SaveInputsOneByOne(args.save_data_dir, runtime)
+
+    if args.no_run:
+        sys.exit(0)
 
     status = runtime.Run()
     if status != pplcommon.RC_SUCCESS:
