@@ -63,12 +63,14 @@ Define_string_opt("--save-pmx-model", g_flag_save_pmx_model, "", "dump model to 
 Define_string_opt(
     "--mm-policy", g_flag_mm_policy, "mem",
     "\"mem\"(default) => less memory usage; \"perf\" => better performance; \"plain\": plain implementation");
+Define_bool_opt("--no-run", g_flag_no_run, false, "do not evaluate the model");
 
 Define_bool_opt("--enable-profiling", g_flag_enable_profiling, false, "enable profiling and print profiling info");
 Define_float_opt("--min-profiling-seconds", g_flag_min_profiling_seconds, 1.0f,
                  "min execute time by seconds for profiling");
 Define_uint32_opt("--min-profiling-iterations", g_flag_min_profiling_iterations, 1, "declare profiling iteration");
 Define_uint32_opt("--warmup-iterations", g_flag_warmup_iterations, 1, "declare profiling warmup iteration");
+Define_bool_opt("--perf-with-io", g_flag_perf_with_io, false, "profiling with io copy");
 
 Define_string_opt("--input", g_flag_input, "", "binary input file containing all tensors' data");
 Define_string_opt("--inputs", g_flag_inputs, "", "binary input files separated by comma");
@@ -86,7 +88,6 @@ Define_bool_opt("--save-inputs", g_flag_save_inputs, false, "save separated inpu
 Define_bool_opt("--save-outputs", g_flag_save_outputs, false, "save separated output tensors in NDARRAY format");
 Define_string_opt("--save-data-dir", g_flag_save_data_dir, ".",
                   "directory to save input/output data if '--save-*' options are enabled.");
-Define_bool_opt("--perf-with-io", g_flag_perf_with_io, false, "profiling with io copy");
 
 /* -------------------------------------------------------------------------- */
 
@@ -1056,11 +1057,13 @@ static bool Profiling(const vector<string>& input_data, Runtime* runtime) {
     uint32_t run_count = 0;
     while (run_dur < g_flag_min_profiling_seconds * 1000 || run_count < g_flag_min_profiling_iterations) {
         auto run_begin_ts = std::chrono::system_clock::now();
-        if (g_flag_perf_with_io)
+        if (g_flag_perf_with_io) {
             SetInputs(input_data, runtime);
+        }
         runtime->Run();
-        if (g_flag_perf_with_io)
+        if (g_flag_perf_with_io) {
             GetOutputs(runtime);
+        }
         auto run_end_ts = std::chrono::system_clock::now();
         auto diff = std::chrono::duration_cast<std::chrono::microseconds>(run_end_ts - run_begin_ts);
         run_dur += (double)diff.count() / 1000;
@@ -1298,6 +1301,10 @@ int main(int argc, char* argv[]) {
         if (!SaveInputsOneByOne(runtime.get())) {
             return -1;
         }
+    }
+
+    if (g_flag_no_run) {
+        return 0;
     }
 
     auto prepare_end_ts = std::chrono::system_clock::now();
