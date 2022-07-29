@@ -334,7 +334,11 @@ RetCode RuntimeImpl::Run() {
     constexpr Profiler* profiler = nullptr;
 #endif
 
-    status = sched_->Run(profiler);
+    status = sched_->Run(
+        [](KernelImpl* kernel, KernelExecContext* ctx) -> RetCode {
+            return kernel->Execute(ctx);
+        },
+        profiler);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Run() failed: " << GetRetCodeStr(status);
         return status;

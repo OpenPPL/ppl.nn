@@ -30,7 +30,8 @@ public:
     ppl::common::RetCode Init(const ir::GraphTopo* topo, const RuntimeAuxInfo* aux_info,
                               RuntimeGraphResource* g) override;
     ppl::common::RetCode InferShapes() override;
-    ppl::common::RetCode Run(Profiler*) override;
+    ppl::common::RetCode Run(const std::function<ppl::common::RetCode(KernelImpl*, KernelExecContext*)>&,
+                             Profiler*) override;
 
 private:
     const ir::GraphTopo* topo_;

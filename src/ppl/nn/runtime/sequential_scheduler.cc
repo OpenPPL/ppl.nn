@@ -94,32 +94,14 @@ RetCode SequentialScheduler::Init(const ir::GraphTopo* topo, const RuntimeAuxInf
 }
 
 RetCode SequentialScheduler::InferShapes() {
-    InputOutputInfo info;
-    info.SetAcquireFunc(acquire_object_func_);
-
-    for (auto x = aux_info_->sorted_nodes.begin(); x != aux_info_->sorted_nodes.end(); ++x) {
-        auto kernel = graph_->nodeid2kernel[*x].get();
-        info.SetNode(kernel->GetNode());
-        auto status = kernel->Reshape(&info);
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "infer output shapes of kernel[" << kernel->GetNode()->GetName()
-                       << "] failed: " << GetRetCodeStr(status);
-            return status;
-        }
-
-        status = utils::ReleaseKernelInputOutput(kernel, &info, release_object_func_);
-        if (status != RC_SUCCESS) {
-            auto& type = kernel->GetNode()->GetType();
-            LOG(ERROR) << "exec kernel[" << kernel->GetName() << "] of type[" << type.domain << ":" << type.name << ":"
-                       << type.version << "] failed: " << GetRetCodeStr(status);
-            return status;
-        }
-    }
-
-    return RC_SUCCESS;
+    return Run(
+        [](KernelImpl* kernel, KernelExecContext* ctx) -> RetCode {
+            return kernel->Reshape(ctx);
+        },
+        nullptr);
 }
 
-RetCode SequentialScheduler::Run(Profiler* profiler) {
+RetCode SequentialScheduler::Run(const function<RetCode(KernelImpl*, KernelExecContext*)>& exec, Profiler* profiler) {
 #ifndef NDEBUG
     set<edgeid_t> edges_before;
     for (uint32_t i = 0; i < graph_->edgeid2object.size(); ++i) {
@@ -138,7 +120,7 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
         auto kernel = graph_->nodeid2kernel[*x].get();
         ctx.SetNode(kernel->GetNode());
 
-        auto exec_status = kernel->Execute(&ctx);
+        auto exec_status = exec(kernel, &ctx);
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
         if (profiler) {
@@ -156,7 +138,7 @@ RetCode SequentialScheduler::Run(Profiler* profiler) {
         }
 
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "execute kernel[" << kernel->GetName() << "] failed: " << GetRetCodeStr(status);
+            LOG(ERROR) << "release resources of kernel[" << kernel->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
         }
     }
