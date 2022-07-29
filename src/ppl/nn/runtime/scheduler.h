@@ -29,7 +29,8 @@ public:
     virtual ~Scheduler() {}
     virtual ppl::common::RetCode Init(const ir::GraphTopo*, const RuntimeAuxInfo*, RuntimeGraphResource*) = 0;
     virtual ppl::common::RetCode InferShapes() = 0;
-    virtual ppl::common::RetCode Run(Profiler*) = 0;
+    virtual ppl::common::RetCode Run(const std::function<ppl::common::RetCode(KernelImpl*, KernelExecContext*)>&,
+                                     Profiler*) = 0;
 };
 
 }} // namespace ppl::nn
