@@ -16,8 +16,8 @@
 // under the License.
 
 #include "ppl/nn/quantization/quant_param_parser.h"
-#include "ppl/nn/utils/utils.h"
 #include "ppl/nn/common/logger.h"
+#include "ppl/common/file_mapping.h"
 using namespace std;
 using namespace ppl::common;
 
@@ -111,13 +111,14 @@ RetCode QuantParamParser::ParseBuffer(const char* buf, QuantParamInfo* info) {
 }
 
 RetCode QuantParamParser::ParseFile(const char* fname, QuantParamInfo* info) {
-    string buf;
-    auto status = utils::ReadFileContent(fname, &buf);
+    FileMapping fm;
+    auto status = fm.Init(fname, FileMapping::READ);
     if (status != RC_SUCCESS) {
+        LOG(ERROR) << "mapping file[" << fname << "] failed: " << fm.GetErrorMessage();
         return status;
     }
 
-    status = ParseBuffer(buf.c_str(), info);
+    status = ParseBuffer(fm.GetData(), info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse quant file[" << fname << "] failed: " << GetRetCodeStr(status);
     }

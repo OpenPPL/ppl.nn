@@ -204,23 +204,6 @@ Define_string_opt("--quant-file", g_flag_quant_file, "", "a json file containing
 #include "ppl/nn/engines/cuda/ops.h"
 #include "ppl/nn/utils/array.h"
 
-static RetCode ReadFileContent(const char* fname, string* buf) {
-    ifstream ifile;
-
-    ifile.open(fname, ios_base::in);
-    if (!ifile.is_open()) {
-        LOG(ERROR) << "open file[" << fname << "] failed.";
-        return RC_NOT_FOUND;
-    }
-
-    stringstream ss;
-    ss << ifile.rdbuf();
-    *buf = ss.str();
-
-    ifile.close();
-    return RC_SUCCESS;
-}
-
 static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     cuda::EngineOptions options;
     options.device_id = g_flag_device_id;
@@ -265,12 +248,14 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
 
     if (!g_flag_quant_file.empty()) {
         string file_content;
-        auto status = ReadFileContent(g_flag_quant_file.c_str(), &file_content);
+        FileMapping fm;
+        auto status = fm.Init(g_flag_quant_file.c_str(), FileMapping::READ);
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "read file[" << g_flag_quant_file << "] failed: " << GetRetCodeStr(status);
-            return false;
+            LOG(ERROR) << "mapping file[" << g_flag_quant_file << "] failed: " << fm.GetErrorMessage();
+            return status;
         }
-        cuda_engine->Configure(cuda::ENGINE_CONF_SET_QUANT_INFO, file_content.c_str());
+
+        cuda_engine->Configure(cuda::ENGINE_CONF_SET_QUANT_INFO, fm.GetData());
     }
 
     if (!g_flag_export_algo_file.empty()) {

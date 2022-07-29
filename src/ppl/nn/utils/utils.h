@@ -33,8 +33,6 @@ static inline ir::Node::Type MakePplConverterNodeType() {
     return ir::Node::Type("pmx", "Converter", 1);
 }
 
-ppl::common::RetCode ReadFileContent(const char* fname, std::string* buf);
-
 }}} // namespace ppl::nn::utils
 
 #endif

@@ -27,9 +27,9 @@
 #include "ppl/nn/engines/cuda/module/op_compile_manager.h"
 #include "ppl/nn/quantization/quant_param_parser.h"
 #include "ppl/nn/utils/array.h"
-#include "ppl/nn/utils/utils.h"
 #include "rapidjson/document.h"
 #include "ppl/nn/common/logger.h"
+#include "ppl/common/file_mapping.h"
 #include "rapidjson/error/error.h"
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
@@ -292,18 +292,19 @@ RetCode CudaEngine::ImportAlgorithms(CudaEngine* engine, va_list args) {
         return RC_SUCCESS;
     }
 
-    string json_buffer;
-    auto status = utils::ReadFileContent(json_file, &json_buffer);
+    FileMapping fm;
+    auto status = fm.Init(json_file, FileMapping::READ);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "read algo info from file[" << json_file << "] failed.";
-        return RC_INVALID_VALUE;
+        LOG(ERROR) << "mapping file [" << json_file << "] failed: " << fm.GetErrorMessage();
+        return status;
     }
-    if (json_buffer.empty()) {
+
+    if (fm.GetSize() == 0) {
         LOG(WARNING) << "empty quant info file[" << json_file << "]. do nothing.";
         return RC_SUCCESS;
     }
 
-    return ImportAlgorithmsImpl(engine, json_buffer.c_str(), json_buffer.size());
+    return ImportAlgorithmsImpl(engine, fm.GetData(), fm.GetSize());
 }
 
 ppl::common::RetCode CudaEngine::ImportAlgorithmsFromBuffer(CudaEngine* engine, va_list args) {
@@ -316,7 +317,7 @@ RetCode CudaEngine::ImportAlgorithmsImpl(CudaEngine* engine, const char* json_bu
     rapidjson::Document d;
     d.Parse(json_buffer, buffer_size);
     if (d.HasParseError()) {
-        LOG(ERROR) << "parse quant file failed: position[" << d.GetErrorOffset() << "], code[" << d.GetParseError()
+        LOG(ERROR) << "parse quant content failed: position[" << d.GetErrorOffset() << "], code[" << d.GetParseError()
                    << "]";
         return RC_INVALID_VALUE;
     }
