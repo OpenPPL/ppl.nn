@@ -48,7 +48,7 @@ static const int64_t OH_L2_BLK_MIN = 8;
 static const int64_t GD_KERNEL_BLK_MAX = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::MAX_S_BLK;
 static const int64_t GD_KERNEL_BLK_MIN = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::MAX_S_BLK - 2;
 
-int64_t pd_conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_ic_l2_blk(const conv2d_fp32_param &param)
+int64_t pd_conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_ic_l2_blk(const conv2d_param &param)
 {
     return conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_ic_l2_blk(param);
 }
@@ -76,8 +76,8 @@ void pd_conv2d_n16cx_gemm_direct_fp32_fma_executor::init_preproc_param()
 
 void pd_conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_tunning_param()
 {
-    const conv2d_fp32_param &gd_p = *conv2d_executor_->conv_param();
-    const conv2d_fp32_param &dw_p = *depthwise_conv2d_executor_->conv_param();
+    const conv2d_param &gd_p = *conv2d_executor_->conv_param();
+    const conv2d_param &dw_p = *depthwise_conv2d_executor_->conv_param();
     kernel_schedule_param &sp   = schedule_param_;
 
     const int64_t num_thread = PPL_OMP_MAX_THREADS();
@@ -162,7 +162,7 @@ uint64_t pd_conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_temp_buffer_size()
         schedule_param_.dw_temp_buffer_size = round_up(depthwise_conv2d_executor_->cal_temp_buffer_size(), PPL_X86_CACHELINE_BYTES());
         return schedule_param_.gd_temp_buffer_size + schedule_param_.dw_temp_buffer_size + inter_shape_.CalcBytesIncludingPadding();
     } else {
-        const conv2d_fp32_param &dw_p = *depthwise_conv2d_executor_->conv_param();
+        const conv2d_param &dw_p = *depthwise_conv2d_executor_->conv_param();
         const uint64_t inter_buffer_size = (uint64_t)dw_p.kernel_h * (dw_p.pad_w * 2 + inter_shape_.GetDim(3)) * schedule_param_.oc_l2_blk * sizeof(float);
         return inter_buffer_size * PPL_OMP_MAX_THREADS();
     }
@@ -236,8 +236,8 @@ ppl::common::RetCode pd_conv2d_n16cx_gemm_direct_fp32_fma_executor::fuse_execute
 
     auto gd_e = conv2d_executor_;
     auto dw_e = depthwise_conv2d_executor_;
-    const conv2d_fp32_param &gd_p   = *gd_e->conv_param();
-    const conv2d_fp32_param &dw_p   = *dw_e->conv_param();
+    const conv2d_param &gd_p   = *gd_e->conv_param();
+    const conv2d_param &dw_p   = *dw_e->conv_param();
     const kernel_schedule_param &sp = schedule_param_;
 
     const int64_t batch         = src_shape_->GetDim(0);

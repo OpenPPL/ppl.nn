@@ -45,7 +45,7 @@ static const int64_t S_L2_BLK_MAX = 12 * conv2d_n16cx_gemm_direct_kernel_fp32_fm
 static const int64_t S_KERNEL_BLK_MAX = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::MAX_S_REGS;
 static const int64_t S_KERNEL_BLK_MIN = conv2d_n16cx_gemm_direct_kernel_fp32_fma::config::MAX_S_REGS - 2;
 
-int64_t conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_ic_l2_blk(const conv2d_fp32_param &param)
+int64_t conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_ic_l2_blk(const conv2d_param &param)
 {
     const int64_t ic_per_grp = param.channels / param.group;
     const int64_t padded_ic = round_up(ic_per_grp, IC_DATA_BLK);
@@ -74,7 +74,7 @@ void conv2d_n16cx_gemm_direct_fp32_fma_executor::init_preproc_param()
 
 void conv2d_n16cx_gemm_direct_fp32_fma_executor::cal_kernel_tunning_param()
 {
-    const conv2d_fp32_param &cp = *conv_param_;
+    const conv2d_param &cp = *conv_param_;
     kernel_schedule_param &sp   = schedule_param_;
 
     const int64_t num_thread = PPL_OMP_MAX_THREADS();
@@ -150,7 +150,7 @@ ppl::common::RetCode conv2d_n16cx_gemm_direct_fp32_fma_executor::execute()
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    const conv2d_fp32_param &cp     = *conv_param_;
+    const conv2d_param &cp     = *conv_param_;
     const kernel_schedule_param &sp = schedule_param_;
 
     if (sp.down_sample && !temp_buffer_) {

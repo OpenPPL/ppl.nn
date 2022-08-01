@@ -45,7 +45,7 @@ void conv2d_n8cx_direct_ndarray_fp32_sse_executor::init_preproc_param()
 
 void conv2d_n8cx_direct_ndarray_fp32_sse_executor::cal_kernel_tunning_param()
 {
-    const conv2d_fp32_param &cp = *conv_param_;
+    const conv2d_param &cp = *conv_param_;
     kernel_schedule_param &sp   = schedule_param_;
 
     const int64_t num_thread = PPL_OMP_MAX_THREADS();
@@ -109,7 +109,7 @@ ppl::common::RetCode conv2d_n8cx_direct_ndarray_fp32_sse_executor::execute()
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    const conv2d_fp32_param &cp     = *conv_param_;
+    const conv2d_param &cp     = *conv_param_;
     const kernel_schedule_param &sp = schedule_param_;
 
     const int64_t batch = src_shape_->GetDim(0);

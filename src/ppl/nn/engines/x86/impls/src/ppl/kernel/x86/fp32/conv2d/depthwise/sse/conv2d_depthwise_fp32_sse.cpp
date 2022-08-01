@@ -613,7 +613,7 @@ ppl::common::RetCode conv2d_depthwise_fp32_sse_executor::execute()
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    const conv2d_fp32_param &cp     = *conv_param_;
+    const conv2d_param &cp     = *conv_param_;
     const kernel_schedule_param &sp = schedule_param_;
 
     const int64_t batch = src_shape_->GetDim(0);

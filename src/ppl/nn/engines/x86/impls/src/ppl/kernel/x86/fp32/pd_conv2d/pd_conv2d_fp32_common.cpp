@@ -34,16 +34,16 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 pd_conv2d_fp32_algo_info pd_conv2d_algo_selector::select_algo(
-    const conv2d_fp32_algo_info &algo,
-    const conv2d_fp32_algo_info &post_algo,
-    const conv2d_fp32_param &param,
-    const conv2d_fp32_param &post_param)
+    const conv2d_algo_info &algo,
+    const conv2d_algo_info &post_algo,
+    const conv2d_param &param,
+    const conv2d_param &post_param)
 {
     if (true // gemm_direct algo
-        && algo.algo_type == ppl::kernel::x86::conv2d_fp32_algo::GEMM_DIRECT
+        && algo.algo_type == ppl::kernel::x86::conv2d_algo::GEMM_DIRECT
         && algo.input_format == ppl::common::DATAFORMAT_N16CX
         && algo.output_format == ppl::common::DATAFORMAT_N16CX
-        && post_algo.algo_type == ppl::kernel::x86::conv2d_fp32_algo::DEPTHWISE
+        && post_algo.algo_type == ppl::kernel::x86::conv2d_algo::DEPTHWISE
         && post_algo.input_format == ppl::common::DATAFORMAT_N16CX
         && post_algo.output_format == ppl::common::DATAFORMAT_N16CX)
     {
@@ -85,10 +85,10 @@ pd_conv2d_fp32_algo_info pd_conv2d_algo_selector::select_algo(
     }
 
     if (true // direct_ndarray algo
-        && algo.algo_type == ppl::kernel::x86::conv2d_fp32_algo::DIRECT
+        && algo.algo_type == ppl::kernel::x86::conv2d_algo::DIRECT
         && algo.input_format == ppl::common::DATAFORMAT_NDARRAY
         && algo.output_format == ppl::common::DATAFORMAT_N16CX
-        && post_algo.algo_type == ppl::kernel::x86::conv2d_fp32_algo::DEPTHWISE
+        && post_algo.algo_type == ppl::kernel::x86::conv2d_algo::DEPTHWISE
         && post_algo.input_format == ppl::common::DATAFORMAT_N16CX
         && post_algo.output_format == ppl::common::DATAFORMAT_N16CX)
     {
@@ -133,8 +133,8 @@ pd_conv2d_fp32_algo_info pd_conv2d_algo_selector::select_algo(
 }
 
 pd_conv2d_fp32_manager *pd_conv2d_algo_selector::gen_algo(
-    const conv2d_fp32_param &param,
-    const conv2d_fp32_param &depthwise_param,
+    const conv2d_param &param,
+    const conv2d_param &depthwise_param,
     const pd_conv2d_fp32_algo_info &algo_info,
     ppl::common::Allocator *allocator)
 {

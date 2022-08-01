@@ -26,11 +26,11 @@
 namespace ppl { namespace nn { namespace x86 {
 
 struct Conv2dParam {
-    ppl::kernel::x86::conv2d_fp32_param param;
-    ppl::kernel::x86::conv2d_fp32_algo_info algo_info;
+    ppl::kernel::x86::conv2d_param param;
+    ppl::kernel::x86::conv2d_algo_info algo_info;
     ppl::kernel::x86::conv2d_fp32_manager *mgr = nullptr;
     ppl::kernel::x86::conv2d_fp32_manager *fallback_mgr = nullptr;
-    std::function<bool(const TensorImpl*, const TensorImpl*, const ppl::kernel::x86::conv2d_fp32_param*)>
+    std::function<bool(const TensorImpl*, const TensorImpl*, const ppl::kernel::x86::conv2d_param*)>
         infer_fallback_func;
     
     ~Conv2dParam() {

@@ -30,7 +30,7 @@ class conv2d_im2col_gemm_fp32_sse_manager;
 class conv2d_im2col_gemm_fp32_sse_executor final : public conv2d_fp32_executor {
 public:
     conv2d_im2col_gemm_fp32_sse_executor() {}
-    conv2d_im2col_gemm_fp32_sse_executor(const conv2d_fp32_param *conv_param, const float *cvt_filter, const float *bias)
+    conv2d_im2col_gemm_fp32_sse_executor(const conv2d_param *conv_param, const float *cvt_filter, const float *bias)
         : conv2d_fp32_executor(conv_param, cvt_filter, bias) {}
     uint64_t cal_temp_buffer_size() override;
     ppl::common::RetCode prepare() override;
@@ -60,7 +60,7 @@ private:
 class conv2d_im2col_gemm_fp32_sse_manager final : public conv2d_fp32_manager {
 public:
     conv2d_im2col_gemm_fp32_sse_manager() {}
-    conv2d_im2col_gemm_fp32_sse_manager(const conv2d_fp32_param &param, ppl::common::Allocator *allocator)
+    conv2d_im2col_gemm_fp32_sse_manager(const conv2d_param &param, ppl::common::Allocator *allocator)
         : conv2d_fp32_manager(param, allocator) {}
     bool is_supported() override;
     ppl::common::RetCode gen_cvt_weights(const float *filter, const float *bias) override;
