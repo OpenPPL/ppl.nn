@@ -15,7 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/common/file_mapping.h"
 #include "ppl/nn/utils/utils.h"
 #include "ppl/nn/models/onnx/utils.h"
 #include "ppl/nn/common/logger.h"
@@ -147,17 +146,8 @@ static RetCode LoadExternalData(const ::onnx::TensorProto& pb_tensor, const char
         LOG(WARNING) << "skip checksum checking.";
     }
 
-    FileMapping fm;
     const string full_path = string(model_file_dir) + "/" + *location;
-    auto status = fm.Init(full_path.c_str(), FileMapping::READ, offset, length);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "mapping file[" << *location << "] in dir[" << model_file_dir
-                   << "] error: " << fm.GetErrorMessage();
-        return status;
-    }
-
-    data->Assign(fm.GetData(), fm.GetSize());
-    return RC_SUCCESS;
+    return ReadFileContent(full_path.c_str(), data, offset, length);
 }
 
 // TODO handling different endian cases

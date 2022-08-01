@@ -292,18 +292,18 @@ RetCode CudaEngine::ImportAlgorithms(CudaEngine* engine, va_list args) {
         return RC_SUCCESS;
     }
 
-    string json_buffer;
+    utils::Buffer json_buffer;
     auto status = utils::ReadFileContent(json_file, &json_buffer);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "read algo info from file[" << json_file << "] failed.";
         return RC_INVALID_VALUE;
     }
-    if (json_buffer.empty()) {
+    if (json_buffer.GetSize() == 0) {
         LOG(WARNING) << "empty quant info file[" << json_file << "]. do nothing.";
         return RC_SUCCESS;
     }
 
-    return ImportAlgorithmsImpl(engine, json_buffer.c_str(), json_buffer.size());
+    return ImportAlgorithmsImpl(engine, (const char*)(json_buffer.GetData()), json_buffer.GetSize());
 }
 
 ppl::common::RetCode CudaEngine::ImportAlgorithmsFromBuffer(CudaEngine* engine, va_list args) {

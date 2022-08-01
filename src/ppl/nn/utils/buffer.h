@@ -52,6 +52,9 @@ public:
     void* GetData() {
         return data_.data();
     }
+    void Clear() {
+        data_.clear();
+    }
     bool operator==(const Buffer& rhs) const {
         return (data_ == rhs.data_);
     }
