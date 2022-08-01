@@ -111,13 +111,13 @@ RetCode QuantParamParser::ParseBuffer(const char* buf, QuantParamInfo* info) {
 }
 
 RetCode QuantParamParser::ParseFile(const char* fname, QuantParamInfo* info) {
-    string buf;
+    utils::Buffer buf;
     auto status = utils::ReadFileContent(fname, &buf);
     if (status != RC_SUCCESS) {
         return status;
     }
 
-    status = ParseBuffer(buf.c_str(), info);
+    status = ParseBuffer((const char*)(buf.GetData()), info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse quant file[" << fname << "] failed: " << GetRetCodeStr(status);
     }
