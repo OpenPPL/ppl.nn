@@ -28,9 +28,11 @@
 #include "ppl/nn/quantization/quant_param_parser.h"
 #include "ppl/nn/utils/array.h"
 #include "ppl/nn/utils/utils.h"
-#include "rapidjson/document.h"
 #include "ppl/nn/common/logger.h"
+
+#include "rapidjson/document.h"
 #include "rapidjson/error/error.h"
+#include "rapidjson/error/en.h"
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
 #include "ppl/nn/engines/cuda/macros.h"
@@ -262,13 +264,13 @@ RetCode CudaEngine::SetUseDefaultAlgorithms(CudaEngine* engine, va_list args) {
 
 RetCode CudaEngine::SetQuantInfo(CudaEngine* engine, va_list args) {
     const char* json_str = va_arg(args, const char*);
-    if (!json_str) {
+    uint64_t json_size = va_arg(args, uint64_t);
+    if (!json_str || json_size == 0) {
         LOG(ERROR) << "empty quantization info string.";
         return RC_INVALID_VALUE;
     }
 
-    QuantParamParser parser;
-    auto status = parser.ParseBuffer(json_str, &engine->cuda_flags_.quant_info);
+    auto status = QuantParamParser::ParseBuffer(json_str, json_size, &engine->cuda_flags_.quant_info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse quantization buffer failed: " << GetRetCodeStr(status);
         return status;
@@ -314,10 +316,10 @@ ppl::common::RetCode CudaEngine::ImportAlgorithmsFromBuffer(CudaEngine* engine, 
 
 RetCode CudaEngine::ImportAlgorithmsImpl(CudaEngine* engine, const char* json_buffer, size_t buffer_size) {
     rapidjson::Document d;
-    d.Parse(json_buffer, buffer_size);
-    if (d.HasParseError()) {
-        LOG(ERROR) << "parse quant file failed: position[" << d.GetErrorOffset() << "], code[" << d.GetParseError()
-                   << "]";
+    rapidjson::ParseResult ok = d.Parse(json_buffer, buffer_size);
+    if (!ok) {
+        LOG(ERROR) << "parse quant buffer failed: [" << rapidjson::GetParseError_En(ok.Code()) << "], offset["
+                   << ok.Offset() << "]";
         return RC_INVALID_VALUE;
     }
 

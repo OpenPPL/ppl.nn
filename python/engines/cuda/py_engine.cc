@@ -95,7 +95,7 @@ static RetCode SetQuantInfo(Engine* engine, uint32_t option, const pybind11::arg
     }
 
     auto json_str = args[0].cast<string>();
-    return engine->Configure(option, json_str.c_str());
+    return engine->Configure(option, json_str.data(), json_str.size());
 }
 
 typedef RetCode (*ConfigFunc)(Engine*, uint32_t option, const pybind11::args& args);

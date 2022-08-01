@@ -270,7 +270,7 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
             LOG(ERROR) << "read file[" << g_flag_quant_file << "] failed: " << GetRetCodeStr(status);
             return false;
         }
-        cuda_engine->Configure(cuda::ENGINE_CONF_SET_QUANT_INFO, file_content.c_str());
+        cuda_engine->Configure(cuda::ENGINE_CONF_SET_QUANT_INFO, file_content.data(), file_content.size());
     }
 
     if (!g_flag_export_algo_file.empty()) {

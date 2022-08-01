@@ -26,7 +26,10 @@ namespace ppl { namespace nn {
 class QuantParamParser final {
 public:
     static ppl::common::RetCode ParseFile(const char* json_file, QuantParamInfo*);
-    static ppl::common::RetCode ParseBuffer(const char* json_buf, QuantParamInfo*);
+    static ppl::common::RetCode ParseBuffer(const char* json_buf, uint64_t size, QuantParamInfo*);
+
+private:
+    QuantParamParser() = delete;
 };
 
 }} // namespace ppl::nn
