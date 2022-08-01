@@ -39,8 +39,16 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
+    string parent_dir;
+    auto pos = string(input_file).find_last_of("/\\");
+    if (pos == string::npos) {
+        parent_dir = ".";
+    } else {
+        parent_dir.assign(input_file.c_str(), pos);
+    }
+
     Model model;
-    status = ModelParser::Parse(fm.GetData(), fm.GetSize(), nullptr, &model);
+    status = ModelParser::Parse(fm.GetData(), fm.GetSize(), parent_dir.c_str(), &model);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse model[" << input_file << "] failed.";
         return -1;
