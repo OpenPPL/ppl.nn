@@ -22,10 +22,9 @@ using namespace ppl::nn;
 using namespace ppl::common;
 
 TEST(QuantParamParserTest, misc) {
-    QuantParamParser parser;
     QuantParamInfo info;
     const string test_conf = PPLNN_TESTDATA_DIR + string("/quant_test.json");
-    auto status = parser.ParseFile(test_conf.c_str(), &info);
+    auto status = QuantParamParser::ParseFile(test_conf.c_str(), &info);
     EXPECT_EQ(RC_SUCCESS, status);
 
     auto item_iter = info.tensor_params.find("input.1");
