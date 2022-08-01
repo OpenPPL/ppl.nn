@@ -53,7 +53,11 @@ static RetCode PackGraphNode(::onnx::GraphProto* pb_graph, const ir::Graph& grap
 
         for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
             auto edge = topo->GetEdge(node->GetInput(i));
-            pb_node->add_input(edge->GetName());
+            if (edge) {
+                pb_node->add_input(edge->GetName());
+            } else {
+                pb_node->add_input("");
+            }
         }
         for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
             auto edge = topo->GetEdge(node->GetOutput(i));
