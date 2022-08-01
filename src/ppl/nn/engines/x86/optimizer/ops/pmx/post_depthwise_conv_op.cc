@@ -76,7 +76,7 @@ PostDepthwiseConv2dParam* PostDepthwiseConvOp::TryMakePostDepthwiseConv2dParam(C
 
 RetCode PostDepthwiseConvOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        if (!pd_conv2d_param_ || pd_conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_fp32_algo::UNKNOWN) {
+        if (!pd_conv2d_param_ || pd_conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_algo::UNKNOWN) {
             return RC_INVALID_VALUE;
         }
 
@@ -114,7 +114,7 @@ RetCode PostDepthwiseConvOp::SelectFormat(
     const InputOutputInfo& info,
     vector<dataformat_t>* selected_input_formats,
     vector<dataformat_t>* selected_output_formats) {
-    if (pd_conv2d_param_ && pd_conv2d_param_->algo_info.algo_type != ppl::kernel::x86::conv2d_fp32_algo::UNKNOWN) {
+    if (pd_conv2d_param_ && pd_conv2d_param_->algo_info.algo_type != ppl::kernel::x86::conv2d_algo::UNKNOWN) {
         selected_input_formats->at(0) = pd_conv2d_param_->algo_info.input_format;
         selected_output_formats->at(0) = pd_conv2d_param_->algo_info.output_format;
         return RC_SUCCESS;
@@ -123,7 +123,7 @@ RetCode PostDepthwiseConvOp::SelectFormat(
 }
 
 KernelImpl* PostDepthwiseConvOp::CreateKernelImpl() const {
-    if (pd_conv2d_param_ && pd_conv2d_param_->algo_info.algo_type != ppl::kernel::x86::conv2d_fp32_algo::UNKNOWN) {
+    if (pd_conv2d_param_ && pd_conv2d_param_->algo_info.algo_type != ppl::kernel::x86::conv2d_algo::UNKNOWN) {
         return CreateKernelImplWithParam<PostDepthwiseConv2dKernel>(pd_conv2d_param_);
     }
     return nullptr;

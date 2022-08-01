@@ -118,7 +118,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
         const int32_t num_output = weight_shape.dims[0];
         const int32_t channels = weight_shape.dims[1] * param_->group;
 
-        ppl::kernel::x86::conv2d_fp32_param& conv2d_param = conv2d_param_->param;
+        ppl::kernel::x86::conv2d_param& conv2d_param = conv2d_param_->param;
         conv2d_param.kernel_h = conv_param.kernel_shape[0];
         conv2d_param.kernel_w = conv_param.kernel_shape[1];
         conv2d_param.stride_h = conv_param.strides[0];
@@ -132,22 +132,22 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
         conv2d_param.channels = channels;
         conv2d_param.fuse_flag = 0;
 
-        conv2d_param_->algo_info = ppl::kernel::x86::conv2d_algo_selector::select_algo(
+        conv2d_param_->algo_info = ppl::kernel::x86::conv2d_fp32_algo_selector::select_algo(
             info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat(), conv2d_param_->param, options.device->GetISA());
 
-        if (conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_fp32_algo::UNKNOWN) {
+        if (conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_algo::UNKNOWN) {
             LOG(INFO) << "Conv select algorithm failed, use fallback kernel";
         } else {
-            conv2d_param_->mgr = ppl::kernel::x86::conv2d_algo_selector::gen_algo(
+            conv2d_param_->mgr = ppl::kernel::x86::conv2d_fp32_algo_selector::gen_algo(
                 conv2d_param_->param, conv2d_param_->algo_info, options.device->GetAllocator());
 
             // winograd b4f3 avx512 may fallback to direct
-            if (conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_fp32_algo::WINOGRAD_B4F3) {
-                conv2d_param_->algo_info.algo_type = ppl::kernel::x86::conv2d_fp32_algo::DIRECT;
-                conv2d_param_->fallback_mgr = ppl::kernel::x86::conv2d_algo_selector::gen_algo(
+            if (conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_algo::WINOGRAD_B4F3) {
+                conv2d_param_->algo_info.algo_type = ppl::kernel::x86::conv2d_algo::DIRECT;
+                conv2d_param_->fallback_mgr = ppl::kernel::x86::conv2d_fp32_algo_selector::gen_algo(
                     conv2d_param_->param, conv2d_param_->algo_info, options.device->GetAllocator());
                 conv2d_param_->infer_fallback_func = [](const TensorImpl* X, const TensorImpl* Y,
-                                                        const ppl::kernel::x86::conv2d_fp32_param* param) -> bool {
+                                                        const ppl::kernel::x86::conv2d_param* param) -> bool {
                     const int64_t dst_h = Y->GetShape()->GetDim(2);
                     const int64_t dst_w = Y->GetShape()->GetDim(3);
                     const int64_t batch = X->GetShape()->GetDim(0);
@@ -167,7 +167,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
                     }
                     return num_tiles < (align_tiles ? 10 : 12);
                 };
-                conv2d_param_->algo_info.algo_type = ppl::kernel::x86::conv2d_fp32_algo::WINOGRAD_B4F3;
+                conv2d_param_->algo_info.algo_type = ppl::kernel::x86::conv2d_algo::WINOGRAD_B4F3;
             }
 
             if (bias_data != nullptr) {
@@ -193,7 +193,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
 
 RetCode ConvOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* selected_input_formats,
                              vector<dataformat_t>* selected_output_formats) {
-    if (conv2d_param_ && conv2d_param_->algo_info.algo_type != ppl::kernel::x86::conv2d_fp32_algo::UNKNOWN) {
+    if (conv2d_param_ && conv2d_param_->algo_info.algo_type != ppl::kernel::x86::conv2d_algo::UNKNOWN) {
         selected_input_formats->at(0) = conv2d_param_->algo_info.input_format;
         if (conv2d_param_->mgr->param().fuse_flag & ppl::kernel::x86::conv_fuse_flag::SUM) {
             selected_input_formats->at(info.GetInputCount() - 1) = conv2d_param_->algo_info.input_format;
@@ -204,7 +204,7 @@ RetCode ConvOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* 
 }
 
 RetCode ConvOp::OmitConstantsData(std::map<edgeid_t, int64_t>* constants_data_refcount) {
-    if (conv2d_param_ && conv2d_param_->algo_info.algo_type != ppl::kernel::x86::conv2d_fp32_algo::UNKNOWN) {
+    if (conv2d_param_ && conv2d_param_->algo_info.algo_type != ppl::kernel::x86::conv2d_algo::UNKNOWN) {
         auto weight_id = GetNode()->GetInput(1);
         auto it = constants_data_refcount->find(weight_id);
         if (it != constants_data_refcount->end()) {
@@ -222,10 +222,10 @@ RetCode ConvOp::OmitConstantsData(std::map<edgeid_t, int64_t>* constants_data_re
 }
 
 bool ConvOp::TryFuseReLU() {
-    if (!conv2d_param_ || conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_fp32_algo::UNKNOWN) {
+    if (!conv2d_param_ || conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_algo::UNKNOWN) {
         return false;
     }
-    ppl::kernel::x86::conv2d_fp32_param param = conv2d_param_->mgr->param();
+    ppl::kernel::x86::conv2d_param param = conv2d_param_->mgr->param();
     param.fuse_flag |= ppl::kernel::x86::conv_fuse_flag::RELU;
     conv2d_param_->mgr->set_param(param);
     if (conv2d_param_->fallback_mgr) {
@@ -235,10 +235,10 @@ bool ConvOp::TryFuseReLU() {
 }
 
 bool ConvOp::TryFuseReLU6() {
-    if (!conv2d_param_ || conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_fp32_algo::UNKNOWN) {
+    if (!conv2d_param_ || conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_algo::UNKNOWN) {
         return false;
     }
-    ppl::kernel::x86::conv2d_fp32_param param = conv2d_param_->mgr->param();
+    ppl::kernel::x86::conv2d_param param = conv2d_param_->mgr->param();
     param.fuse_flag |= ppl::kernel::x86::conv_fuse_flag::RELU6;
     conv2d_param_->mgr->set_param(param);
     if (conv2d_param_->fallback_mgr) {
@@ -248,10 +248,10 @@ bool ConvOp::TryFuseReLU6() {
 }
 
 bool ConvOp::TryFuseSum() {
-    if (!conv2d_param_ || conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_fp32_algo::UNKNOWN) {
+    if (!conv2d_param_ || conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_algo::UNKNOWN) {
         return false;
     }
-    ppl::kernel::x86::conv2d_fp32_param param = conv2d_param_->mgr->param();
+    ppl::kernel::x86::conv2d_param param = conv2d_param_->mgr->param();
     if ((param.fuse_flag & ppl::kernel::x86::conv_fuse_flag::RELU) || // sum cannot fuse behind activation
         (param.fuse_flag & ppl::kernel::x86::conv_fuse_flag::RELU6)) {
         return false;
@@ -265,7 +265,7 @@ bool ConvOp::TryFuseSum() {
 }
 
 KernelImpl* ConvOp::CreateKernelImpl() const {
-    if (!conv2d_param_ || conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_fp32_algo::UNKNOWN) {
+    if (!conv2d_param_ || conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_algo::UNKNOWN) {
         return CreateKernelImplWithParam<ConvKernel>(param_.get());
     }
     return CreateKernelImplWithParam<Conv2dKernel>(conv2d_param_);

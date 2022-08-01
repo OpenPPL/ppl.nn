@@ -61,7 +61,7 @@ private:
     ppl::common::RetCode fuse_execute();
     ppl::common::RetCode separate_execute();
 
-    static int64_t cal_ic_l2_blk(const conv2d_fp32_param &param);
+    static int64_t cal_ic_l2_blk(const conv2d_param &param);
 };
 
 class pd_conv2d_n16cx_gemm_direct_fp32_avx512_manager final : public pd_conv2d_fp32_manager {

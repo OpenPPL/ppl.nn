@@ -49,7 +49,7 @@ void conv2d_n16cx_direct_ndarray_fp32_fma_executor::init_preproc_param()
 
 void conv2d_n16cx_direct_ndarray_fp32_fma_executor::cal_kernel_tunning_param()
 {
-    const conv2d_fp32_param &cp = *conv_param_;
+    const conv2d_param &cp = *conv_param_;
     kernel_schedule_param &sp   = schedule_param_;
 
     const int64_t num_thread = PPL_OMP_MAX_THREADS();
@@ -126,7 +126,7 @@ ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_executor::execute()
 template <bool use_nt_store>
 ppl::common::RetCode conv2d_n16cx_direct_ndarray_fp32_fma_executor::execute_inner()
 {
-    const conv2d_fp32_param &cp     = *conv_param_;
+    const conv2d_param &cp     = *conv_param_;
     const kernel_schedule_param &sp = schedule_param_;
 
     const int64_t batch = src_shape_->GetDim(0);

@@ -160,8 +160,8 @@ for (int64_t lcfg = 0; lcfg < Flag_loop_cfg; ++lcfg) {
         }
 
         char case_name[100];
-        ppl::kernel::x86::conv2d_fp32_param cv_param;
-        ppl::kernel::x86::conv2d_fp32_param dw_param;
+        ppl::kernel::x86::conv2d_param cv_param;
+        ppl::kernel::x86::conv2d_param dw_param;
         int64_t batch;
         int64_t src_h;
         int64_t src_w;
@@ -249,8 +249,8 @@ DEBUG_TAG(A);
             isa &= ~(ppl::common::ISA_X86_AVX512);
         }
 
-        auto cv_algoinfo = ppl::kernel::x86::conv2d_algo_selector::select_algo(ppl::common::DATAFORMAT_NDARRAY, cv_param, isa);
-        auto dw_algoinfo = ppl::kernel::x86::conv2d_algo_selector::select_algo(ppl::common::DATAFORMAT_N16CX, dw_param, isa);
+        auto cv_algoinfo = ppl::kernel::x86::conv2d_fp32_algo_selector::select_algo(ppl::common::DATAFORMAT_NDARRAY, cv_param, isa);
+        auto dw_algoinfo = ppl::kernel::x86::conv2d_fp32_algo_selector::select_algo(ppl::common::DATAFORMAT_N16CX, dw_param, isa);
 
         auto pd_conv_algo_info = ppl::kernel::x86::pd_conv2d_algo_selector::select_algo(cv_algoinfo, dw_algoinfo, cv_param, dw_param);
         auto pd_mgr = ppl::kernel::x86::pd_conv2d_algo_selector::gen_algo(cv_param, dw_param, pd_conv_algo_info, &allocator);

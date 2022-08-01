@@ -157,7 +157,7 @@ static int64_t get_tiles_l2_blk(
 void conv2d_n16cx_winograd_b4f3_fp32_avx512_executor::init_preproc_param()
 {
     kernel_schedule_param &sp   = schedule_param_;
-    const conv2d_fp32_param &cp = *conv_param_;
+    const conv2d_param &cp = *conv_param_;
 
     const int64_t num_thread = PPL_OMP_MAX_THREADS();
 
@@ -601,7 +601,7 @@ ppl::common::RetCode conv2d_n16cx_winograd_b4f3_fp32_avx512_executor::execute()
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    const conv2d_fp32_param &cp     = *conv_param_;
+    const conv2d_param &cp     = *conv_param_;
     const kernel_schedule_param &sp = schedule_param_;
 
     const int64_t src_h = src_shape_->GetDim(2);

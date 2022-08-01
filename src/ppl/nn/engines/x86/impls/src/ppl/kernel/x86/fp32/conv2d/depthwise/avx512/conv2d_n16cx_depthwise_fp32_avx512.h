@@ -30,7 +30,7 @@ class conv2d_n16cx_depthwise_fp32_avx512_manager;
 class conv2d_n16cx_depthwise_fp32_avx512_executor final : public conv2d_fp32_executor {
 public:
     conv2d_n16cx_depthwise_fp32_avx512_executor() {}
-    conv2d_n16cx_depthwise_fp32_avx512_executor(const conv2d_fp32_param *conv_param, const float *cvt_filter, const float *bias)
+    conv2d_n16cx_depthwise_fp32_avx512_executor(const conv2d_param *conv_param, const float *cvt_filter, const float *bias)
         : conv2d_fp32_executor(conv_param, cvt_filter, bias) {}
     uint64_t cal_temp_buffer_size() override;
     ppl::common::RetCode prepare() override;
@@ -60,7 +60,7 @@ private:
 class conv2d_n16cx_depthwise_fp32_avx512_manager final : public conv2d_fp32_manager {
 public:
     conv2d_n16cx_depthwise_fp32_avx512_manager() {}
-    conv2d_n16cx_depthwise_fp32_avx512_manager(const conv2d_fp32_param &param, ppl::common::Allocator *allocator)
+    conv2d_n16cx_depthwise_fp32_avx512_manager(const conv2d_param &param, ppl::common::Allocator *allocator)
         : conv2d_fp32_manager(param, allocator) {}
     bool is_supported() override;
     ppl::common::RetCode gen_cvt_weights(const float *filter, const float *bias) override;

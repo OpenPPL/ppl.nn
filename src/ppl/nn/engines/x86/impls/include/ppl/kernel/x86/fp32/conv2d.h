@@ -26,49 +26,6 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-struct conv2d_fp32_param {
-    int64_t kernel_h;
-    int64_t kernel_w;
-    int64_t stride_h;
-    int64_t stride_w;
-    int64_t dilation_h;
-    int64_t dilation_w;
-    int64_t pad_h;
-    int64_t pad_w;
-    int64_t channels;
-    int64_t num_output;
-    int64_t group;
-    conv_fuse_flag_t fuse_flag;
-
-    float sparse_level() const
-    {
-        // TODO: are there any better index for sparse_level?
-        const int32_t sparse_h = stride_h * dilation_h;
-        const int32_t sparse_w = stride_w * dilation_w;
-        return float(sparse_h * sparse_w) / float(kernel_h * kernel_w);
-    }
-
-    bool is_depthwise() const
-    {
-        return true &&
-               group != 1 &&
-               group == channels &&
-               group == num_output;
-    }
-
-    bool is_pointwise() const
-    {
-        return true &&
-               kernel_h == 1 &&
-               kernel_w == 1 &&
-               pad_h == 0 &&
-               pad_w == 0 &&
-               dilation_h == 1 &&
-               dilation_w == 1 &&
-               !is_depthwise();
-    }
-};
-
 ppl::common::RetCode conv2d_fp32_ref(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *sum_src_shape,
@@ -77,36 +34,12 @@ ppl::common::RetCode conv2d_fp32_ref(
     const float *sum_src,
     const float *filter,
     const float *bias,
-    const conv2d_fp32_param &param,
+    const conv2d_param &param,
     float *dst);
-
-typedef uint32_t conv2d_fp32_algo_t;
-
-class conv2d_fp32_algo {
-public:
-    static const conv2d_fp32_algo_t UNKNOWN        = 0;
-    static const conv2d_fp32_algo_t IMPLICIT_GEMM  = 1;
-    static const conv2d_fp32_algo_t GEMM_DIRECT    = 2;
-    static const conv2d_fp32_algo_t DEPTHWISE      = 3;
-    static const conv2d_fp32_algo_t IM2COL_GEMM    = 4;
-    static const conv2d_fp32_algo_t DIRECT         = 5;
-    static const conv2d_fp32_algo_t WINOGRAD_B2F3  = 32;
-    static const conv2d_fp32_algo_t WINOGRAD_B4F3  = 33;
-    static const conv2d_fp32_algo_t WINOGRAD_B6F3  = 34;
-    static const conv2d_fp32_algo_t GEMM_DIRECT_V2 = 61;
-    static const conv2d_fp32_algo_t DIRECT_V2      = 62;
-};
-
-struct conv2d_fp32_algo_info {
-    conv2d_fp32_algo_t algo_type;
-    ppl::common::isa_t isa;
-    ppl::common::dataformat_t input_format;
-    ppl::common::dataformat_t output_format;
-};
 
 class conv2d_fp32_executor {
 protected:
-    const conv2d_fp32_param *conv_param_;
+    const conv2d_param *conv_param_;
     const float *cvt_filter_;
     const float *cvt_bias_;
 
@@ -133,7 +66,7 @@ public:
         , sum_src_shape_(nullptr)
         , temp_buffer_(nullptr) {}
 
-    conv2d_fp32_executor(const conv2d_fp32_param *conv_param, const float *cvt_filter, const float *cvt_bias)
+    conv2d_fp32_executor(const conv2d_param *conv_param, const float *cvt_filter, const float *cvt_bias)
         : conv_param_(conv_param)
         , cvt_filter_(cvt_filter)
         , cvt_bias_(cvt_bias)
@@ -160,11 +93,11 @@ public:
         return "";
     }
 
-    void set_conv_param(const conv2d_fp32_param *conv_param)
+    void set_conv_param(const conv2d_param *conv_param)
     {
         conv_param_ = conv_param;
     }
-    const conv2d_fp32_param *conv_param() const
+    const conv2d_param *conv_param() const
     {
         return conv_param_;
     }
@@ -253,7 +186,7 @@ public:
 
 class conv2d_fp32_manager {
 protected:
-    conv2d_fp32_param param_;
+    conv2d_param param_;
     ppl::common::Allocator *allocator_;
 
     float *cvt_filter_;
@@ -269,7 +202,7 @@ public:
         , cvt_filter_size_(0)
         , cvt_bias_size_(0) {}
 
-    conv2d_fp32_manager(const conv2d_fp32_param &param, ppl::common::Allocator *allocator)
+    conv2d_fp32_manager(const conv2d_param &param, ppl::common::Allocator *allocator)
         : allocator_(allocator)
         , cvt_filter_(nullptr)
         , cvt_bias_(nullptr)
@@ -279,11 +212,11 @@ public:
         param_ = param;
     }
 
-    void set_param(const conv2d_fp32_param &param)
+    void set_param(const conv2d_param &param)
     {
         param_ = param;
     }
-    const conv2d_fp32_param &param() const
+    const conv2d_param &param() const
     {
         return param_;
     }
@@ -345,10 +278,10 @@ public:
     virtual ~conv2d_fp32_manager() {}
 };
 
-class conv2d_algo_selector {
+class conv2d_fp32_algo_selector {
 public:
-    static conv2d_fp32_algo_info select_algo(const ppl::common::dataformat_t src_format, const conv2d_fp32_param &param, const ppl::common::isa_t isa_flags);
-    static conv2d_fp32_manager *gen_algo(const conv2d_fp32_param &param, const conv2d_fp32_algo_info &algo_info, ppl::common::Allocator *allocator);
+    static conv2d_algo_info select_algo(const ppl::common::dataformat_t src_format, const conv2d_param &param, const ppl::common::isa_t isa_flags);
+    static conv2d_fp32_manager *gen_algo(const conv2d_param &param, const conv2d_algo_info &algo_info, ppl::common::Allocator *allocator);
 };
 
 }}}; // namespace ppl::kernel::x86

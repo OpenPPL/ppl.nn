@@ -52,7 +52,7 @@ ppl::common::RetCode conv2d_fp32_ref(
     const float *sum_src,
     const float *filter,
     const float *bias,
-    const conv2d_fp32_param &param,
+    const conv2d_param &param,
     float *dst)
 {
     const int64_t batch      = src_shape->GetDim(0);
@@ -131,38 +131,45 @@ ppl::common::RetCode conv2d_fp32_ref(
     return ppl::common::RC_SUCCESS;
 }
 
-conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataformat_t src_format, const conv2d_fp32_param &param, const ppl::common::isa_t isa_flags)
+conv2d_algo_info conv2d_fp32_algo_selector::select_algo(const ppl::common::dataformat_t src_format, const conv2d_param &param, const ppl::common::isa_t isa_flags)
 {
-    static conv2d_fp32_algo_info unknown_info = {
-        conv2d_fp32_algo::UNKNOWN,
+    static conv2d_algo_info unknown_info = {
+        conv2d_algo::UNKNOWN,
         ppl::common::ISA_UNKNOWN,
         ppl::common::DATAFORMAT_UNKNOWN,
         ppl::common::DATAFORMAT_UNKNOWN};
 
-    static conv2d_fp32_algo_info fma_fallback_info = {
-        conv2d_fp32_algo::IM2COL_GEMM,
+    static conv2d_algo_info fma_fallback_info = {
+        conv2d_algo::IM2COL_GEMM,
         ppl::common::ISA_X86_FMA,
         ppl::common::DATAFORMAT_NDARRAY,
         ppl::common::DATAFORMAT_NDARRAY};
 
-    static conv2d_fp32_algo_info sse_fallback_info = {
-        conv2d_fp32_algo::IM2COL_GEMM,
+    static conv2d_algo_info sse_fallback_info = {
+        conv2d_algo::IM2COL_GEMM,
         ppl::common::ISA_X86_SSE,
         ppl::common::DATAFORMAT_NDARRAY,
         ppl::common::DATAFORMAT_NDARRAY};
 
+    conv2d_algo_info ret_info = {
+        conv2d_algo::UNKNOWN,
+        ppl::common::ISA_UNKNOWN,
+        ppl::common::DATAFORMAT_UNKNOWN,
+        ppl::common::DATAFORMAT_UNKNOWN};
+
 #ifdef PPL_USE_X86_AVX512
     if (isa_flags & ppl::common::ISA_X86_AVX512) {
+        ret_info.algo_type = conv2d_algo::DIRECT;
+        ret_info.isa = ppl::common::ISA_X86_AVX512;
+        ret_info.input_format = ppl::common::DATAFORMAT_N16CX;
+        ret_info.output_format = ppl::common::DATAFORMAT_N16CX;
         if (src_format == ppl::common::DATAFORMAT_NDARRAY) {
             auto direct_ndarray_mgr = new conv2d_n16cx_direct_ndarray_fp32_avx512_manager(param, nullptr);
             bool supported          = direct_ndarray_mgr->is_supported();
             delete direct_ndarray_mgr;
             if (supported) {
-                return {
-                    conv2d_fp32_algo::DIRECT,
-                    ppl::common::ISA_X86_AVX512,
-                    ppl::common::DATAFORMAT_NDARRAY,
-                    ppl::common::DATAFORMAT_N16CX};
+                ret_info.input_format = ppl::common::DATAFORMAT_NDARRAY;
+                return ret_info;
             }
         }
 
@@ -171,11 +178,8 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
             bool supported = dw_mgr->is_supported();
             delete dw_mgr;
             if (supported) {
-                return {
-                    conv2d_fp32_algo::DEPTHWISE,
-                    ppl::common::ISA_X86_AVX512,
-                    ppl::common::DATAFORMAT_N16CX,
-                    ppl::common::DATAFORMAT_N16CX};
+                ret_info.algo_type = conv2d_algo::DEPTHWISE;
+                return ret_info;
             }
         }
 
@@ -184,11 +188,8 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
             bool supported = gd_mgr->is_supported();
             delete gd_mgr;
             if (supported) {
-                return {
-                    conv2d_fp32_algo::GEMM_DIRECT,
-                    ppl::common::ISA_X86_AVX512,
-                    ppl::common::DATAFORMAT_N16CX,
-                    ppl::common::DATAFORMAT_N16CX};
+                ret_info.algo_type = conv2d_algo::GEMM_DIRECT;
+                return ret_info;
             }
         }
 
@@ -200,11 +201,8 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
             bool supported = wg_mgr->is_supported();
             delete wg_mgr;
             if (supported) {
-                return {
-                    conv2d_fp32_algo::WINOGRAD_B4F3,
-                    ppl::common::ISA_X86_AVX512,
-                    ppl::common::DATAFORMAT_N16CX,
-                    ppl::common::DATAFORMAT_N16CX};
+                ret_info.algo_type = conv2d_algo::WINOGRAD_B4F3;
+                return ret_info;
             }
         }
 
@@ -213,27 +211,24 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
             bool supported  = direct_mgr->is_supported();
             delete direct_mgr;
             if (supported) {
-                return {
-                    conv2d_fp32_algo::DIRECT,
-                    ppl::common::ISA_X86_AVX512,
-                    ppl::common::DATAFORMAT_N16CX,
-                    ppl::common::DATAFORMAT_N16CX};
+                return ret_info;
             }
         }
     }
 #endif
 
     if (isa_flags & ppl::common::ISA_X86_FMA) {
+        ret_info.algo_type = conv2d_algo::DIRECT;
+        ret_info.isa = ppl::common::ISA_X86_FMA;
+        ret_info.input_format = ppl::common::DATAFORMAT_N16CX;
+        ret_info.output_format = ppl::common::DATAFORMAT_N16CX;
         if (src_format == ppl::common::DATAFORMAT_NDARRAY) {
             auto direct_ndarray_mgr = new conv2d_n16cx_direct_ndarray_fp32_fma_manager(param, nullptr);
             bool supported          = direct_ndarray_mgr->is_supported();
             delete direct_ndarray_mgr;
             if (supported) {
-                return {
-                    conv2d_fp32_algo::DIRECT,
-                    ppl::common::ISA_X86_FMA,
-                    ppl::common::DATAFORMAT_NDARRAY,
-                    ppl::common::DATAFORMAT_N16CX};
+                ret_info.input_format = ppl::common::DATAFORMAT_NDARRAY;
+                return ret_info;
             }
         }
 
@@ -244,11 +239,8 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
             if (!supported) {
                 return fma_fallback_info;
             } else {
-                return {
-                    conv2d_fp32_algo::DEPTHWISE,
-                    ppl::common::ISA_X86_FMA,
-                    ppl::common::DATAFORMAT_N16CX,
-                    ppl::common::DATAFORMAT_N16CX};
+                ret_info.algo_type = conv2d_algo::DEPTHWISE;
+                return ret_info;
             }
         }
 
@@ -257,11 +249,8 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
             bool supported = gd_mgr->is_supported();
             delete gd_mgr;
             if (supported) {
-                return {
-                    conv2d_fp32_algo::GEMM_DIRECT,
-                    ppl::common::ISA_X86_FMA,
-                    ppl::common::DATAFORMAT_N16CX,
-                    ppl::common::DATAFORMAT_N16CX};
+                ret_info.algo_type = conv2d_algo::GEMM_DIRECT;
+                return ret_info;
             }
         }
 
@@ -273,11 +262,8 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
             bool supported = wg_mgr->is_supported();
             delete wg_mgr;
             if (supported) {
-                return {
-                    conv2d_fp32_algo::WINOGRAD_B4F3,
-                    ppl::common::ISA_X86_FMA,
-                    ppl::common::DATAFORMAT_N16CX,
-                    ppl::common::DATAFORMAT_N16CX};
+                ret_info.algo_type = conv2d_algo::WINOGRAD_B4F3;
+                return ret_info;
             }
         }
 
@@ -288,16 +274,15 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
             if (!supported) {
                 return fma_fallback_info;
             } else {
-                return {
-                    conv2d_fp32_algo::DIRECT,
-                    ppl::common::ISA_X86_FMA,
-                    ppl::common::DATAFORMAT_N16CX,
-                    ppl::common::DATAFORMAT_N16CX};
+                return ret_info;
             }
         }
     }
 
     if (isa_flags & ppl::common::ISA_X86_SSE) {
+        ret_info.isa = ppl::common::ISA_X86_SSE;
+        ret_info.input_format = ppl::common::DATAFORMAT_NDARRAY;
+        ret_info.output_format = ppl::common::DATAFORMAT_NDARRAY;
         if (param.is_depthwise()) {
             auto dw_mgr    = new conv2d_depthwise_fp32_sse_manager(param, nullptr);
             bool supported = dw_mgr->is_supported();
@@ -305,11 +290,8 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
             if (!supported) {
                 return sse_fallback_info;
             } else {
-                return {
-                    conv2d_fp32_algo::DEPTHWISE,
-                    ppl::common::ISA_X86_SSE,
-                    ppl::common::DATAFORMAT_NDARRAY,
-                    ppl::common::DATAFORMAT_NDARRAY};
+                ret_info.algo_type = conv2d_algo::DEPTHWISE;
+                return ret_info;
             }
         }
 
@@ -321,11 +303,8 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
             bool supported = wg_mgr->is_supported();
             delete wg_mgr;
             if (supported) {
-                return {
-                    conv2d_fp32_algo::WINOGRAD_B6F3,
-                    ppl::common::ISA_X86_SSE,
-                    ppl::common::DATAFORMAT_NDARRAY,
-                    ppl::common::DATAFORMAT_NDARRAY};
+                ret_info.algo_type = conv2d_algo::WINOGRAD_B6F3;
+                return ret_info;
             }
         }
 
@@ -335,118 +314,92 @@ conv2d_fp32_algo_info conv2d_algo_selector::select_algo(const ppl::common::dataf
     return unknown_info;
 }
 
-conv2d_fp32_manager *conv2d_algo_selector::gen_algo(const conv2d_fp32_param &param, const conv2d_fp32_algo_info &algo_info, ppl::common::Allocator *allocator)
+conv2d_fp32_manager *conv2d_fp32_algo_selector::gen_algo(const conv2d_param &param, const conv2d_algo_info &algo_info, ppl::common::Allocator *allocator)
 {
-    if (algo_info.algo_type == conv2d_fp32_algo::GEMM_DIRECT &&
-        algo_info.isa == ppl::common::ISA_X86_FMA &&
-        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
-        return new conv2d_n16cx_gemm_direct_fp32_fma_manager(param, allocator);
-    }
-    if (algo_info.algo_type == conv2d_fp32_algo::DEPTHWISE &&
-        algo_info.isa == ppl::common::ISA_X86_FMA &&
-        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
-        return new conv2d_n16cx_depthwise_fp32_fma_manager(param, allocator);
-    }
-    if (algo_info.algo_type == conv2d_fp32_algo::WINOGRAD_B4F3 &&
-        algo_info.isa == ppl::common::ISA_X86_FMA &&
-        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
-        return new conv2d_n16cx_winograd_b4f3_fp32_fma_manager(param, allocator);
-    }
-    if (algo_info.algo_type == conv2d_fp32_algo::DIRECT &&
-        algo_info.isa == ppl::common::ISA_X86_FMA &&
-        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
-        return new conv2d_n16cx_direct_fp32_fma_manager(param, allocator);
-    }
-    if (algo_info.algo_type == conv2d_fp32_algo::DIRECT &&
-        algo_info.isa == ppl::common::ISA_X86_FMA &&
-        algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
-        return new conv2d_n16cx_direct_ndarray_fp32_fma_manager(param, allocator);
-    }
-    if (algo_info.algo_type == conv2d_fp32_algo::IM2COL_GEMM &&
-        algo_info.isa == ppl::common::ISA_X86_FMA &&
-        algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
-        algo_info.output_format == ppl::common::DATAFORMAT_NDARRAY) {
-        return new conv2d_im2col_gemm_fp32_fma_manager(param, allocator);
+    if (algo_info.isa == ppl::common::ISA_X86_FMA) {
+        if (algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+            if (algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY) {
+                if (algo_info.algo_type == conv2d_algo::DIRECT) {
+                    return new conv2d_n16cx_direct_ndarray_fp32_fma_manager(param, allocator);
+                }
+            } else if (algo_info.input_format == ppl::common::DATAFORMAT_N16CX) {
+                if (algo_info.algo_type == conv2d_algo::GEMM_DIRECT) {
+                    return new conv2d_n16cx_gemm_direct_fp32_fma_manager(param, allocator);
+                }
+                if (algo_info.algo_type == conv2d_algo::DEPTHWISE) {
+                    return new conv2d_n16cx_depthwise_fp32_fma_manager(param, allocator);
+                }
+                if (algo_info.algo_type == conv2d_algo::WINOGRAD_B4F3) {
+                    return new conv2d_n16cx_winograd_b4f3_fp32_fma_manager(param, allocator);
+                }
+                if (algo_info.algo_type == conv2d_algo::DIRECT) {
+                    return new conv2d_n16cx_direct_fp32_fma_manager(param, allocator);
+                }
+            }
+        }
+        if (algo_info.output_format == ppl::common::DATAFORMAT_NDARRAY) {
+            if (algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY) {
+                if (algo_info.algo_type == conv2d_algo::IM2COL_GEMM) {
+                    return new conv2d_im2col_gemm_fp32_fma_manager(param, allocator);
+                }
+            }
+        }
     }
 #ifdef PPL_USE_X86_AVX512
-    if (algo_info.algo_type == conv2d_fp32_algo::WINOGRAD_B4F3 &&
-        algo_info.isa == ppl::common::ISA_X86_AVX512 &&
-        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
-        return new conv2d_n16cx_winograd_b4f3_fp32_avx512_manager(param, allocator);
-    }
-    if (algo_info.algo_type == conv2d_fp32_algo::DIRECT &&
-        algo_info.isa == ppl::common::ISA_X86_AVX512 &&
-        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
-        return new conv2d_n16cx_direct_fp32_avx512_manager(param, allocator);
-    }
-    if (algo_info.algo_type == conv2d_fp32_algo::DIRECT &&
-        algo_info.isa == ppl::common::ISA_X86_AVX512 &&
-        algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
-        return new conv2d_n16cx_direct_ndarray_fp32_avx512_manager(param, allocator);
-    }
-    if (algo_info.algo_type == conv2d_fp32_algo::GEMM_DIRECT &&
-        algo_info.isa == ppl::common::ISA_X86_AVX512 &&
-        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
-        return new conv2d_n16cx_gemm_direct_fp32_avx512_manager(param, allocator);
-    }
-    if (algo_info.algo_type == conv2d_fp32_algo::DEPTHWISE &&
-        algo_info.isa == ppl::common::ISA_X86_AVX512 &&
-        algo_info.input_format == ppl::common::DATAFORMAT_N16CX &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
-        return new conv2d_n16cx_depthwise_fp32_avx512_manager(param, allocator);
+    if (algo_info.isa == ppl::common::ISA_X86_AVX512) {
+        if (algo_info.output_format == ppl::common::DATAFORMAT_N16CX) {
+            if (algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY) {
+                if (algo_info.algo_type == conv2d_algo::DIRECT) {
+                    return new conv2d_n16cx_direct_ndarray_fp32_avx512_manager(param, allocator);
+                }
+            } else if (algo_info.input_format == ppl::common::DATAFORMAT_N16CX) {
+                if (algo_info.algo_type == conv2d_algo::GEMM_DIRECT) {
+                    return new conv2d_n16cx_gemm_direct_fp32_avx512_manager(param, allocator);
+                }
+                if (algo_info.algo_type == conv2d_algo::DEPTHWISE) {
+                    return new conv2d_n16cx_depthwise_fp32_fma_manager(param, allocator);
+                }
+                if (algo_info.algo_type == conv2d_algo::WINOGRAD_B4F3) {
+                    return new conv2d_n16cx_winograd_b4f3_fp32_avx512_manager(param, allocator);
+                }
+                if (algo_info.algo_type == conv2d_algo::DIRECT) {
+                    return new conv2d_n16cx_direct_fp32_avx512_manager(param, allocator);
+                }
+            }
+        }
     }
 #endif
-    if (algo_info.algo_type == conv2d_fp32_algo::DIRECT &&
-        algo_info.isa == ppl::common::ISA_X86_SSE &&
-        algo_info.input_format == ppl::common::DATAFORMAT_N8CX &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
-        return new conv2d_n8cx_direct_fp32_sse_manager(param, allocator);
-    }
-    if (algo_info.algo_type == conv2d_fp32_algo::GEMM_DIRECT &&
-        algo_info.isa == ppl::common::ISA_X86_SSE &&
-        algo_info.input_format == ppl::common::DATAFORMAT_N8CX &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
-        return new conv2d_n8cx_gemm_direct_fp32_sse_manager(param, allocator);
-    }
-    if (algo_info.algo_type == conv2d_fp32_algo::DEPTHWISE &&
-        algo_info.isa == ppl::common::ISA_X86_SSE &&
-        algo_info.input_format == ppl::common::DATAFORMAT_N8CX &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
-        return new conv2d_n8cx_depthwise_fp32_sse_manager(param, allocator);
-    }
-    if (algo_info.algo_type == conv2d_fp32_algo::DIRECT &&
-        algo_info.isa == ppl::common::ISA_X86_SSE &&
-        algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
-        algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
-        return new conv2d_n8cx_direct_ndarray_fp32_sse_manager(param, allocator);
-    }
-    if (algo_info.algo_type == conv2d_fp32_algo::IM2COL_GEMM &&
-        algo_info.isa == ppl::common::ISA_X86_SSE &&
-        algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
-        algo_info.output_format == ppl::common::DATAFORMAT_NDARRAY) {
-        return new conv2d_im2col_gemm_fp32_sse_manager(param, allocator);
-    }
-    if (algo_info.algo_type == conv2d_fp32_algo::DEPTHWISE &&
-        algo_info.isa == ppl::common::ISA_X86_SSE &&
-        algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
-        algo_info.output_format == ppl::common::DATAFORMAT_NDARRAY) {
-        return new conv2d_depthwise_fp32_sse_manager(param, allocator);
-    }
-
-    if (algo_info.algo_type == conv2d_fp32_algo::WINOGRAD_B6F3 &&
-        algo_info.isa == ppl::common::ISA_X86_SSE &&
-        algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY &&
-        algo_info.output_format == ppl::common::DATAFORMAT_NDARRAY) {
-        return new conv2d_winograd_b6f3_fp32_sse_manager(param, allocator);
+    if (algo_info.isa == ppl::common::ISA_X86_SSE) {
+        if (algo_info.output_format == ppl::common::DATAFORMAT_N8CX) {
+            if (algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY) {
+                if (algo_info.algo_type == conv2d_algo::DIRECT) {
+                    return new conv2d_n8cx_direct_ndarray_fp32_sse_manager(param, allocator);
+                }
+            } else if (algo_info.input_format == ppl::common::DATAFORMAT_N16CX) {
+                if (algo_info.algo_type == conv2d_algo::GEMM_DIRECT) {
+                    return new conv2d_n8cx_gemm_direct_fp32_sse_manager(param, allocator);
+                }
+                if (algo_info.algo_type == conv2d_algo::DEPTHWISE) {
+                    return new conv2d_n8cx_depthwise_fp32_sse_manager(param, allocator);
+                }
+                if (algo_info.algo_type == conv2d_algo::DIRECT) {
+                    return new conv2d_n8cx_direct_fp32_sse_manager(param, allocator);
+                }
+            }
+        }
+        if (algo_info.output_format == ppl::common::DATAFORMAT_NDARRAY) {
+            if (algo_info.input_format == ppl::common::DATAFORMAT_NDARRAY) {
+                if (algo_info.algo_type == conv2d_algo::IM2COL_GEMM) {
+                    return new conv2d_im2col_gemm_fp32_fma_manager(param, allocator);
+                }
+                if (algo_info.algo_type == conv2d_algo::DEPTHWISE) {
+                    return new conv2d_depthwise_fp32_sse_manager(param, allocator);
+                }
+                if (algo_info.algo_type == conv2d_algo::WINOGRAD_B6F3) {
+                    return new conv2d_winograd_b6f3_fp32_sse_manager(param, allocator);
+                }
+            }
+        }
     }
 
     return nullptr;

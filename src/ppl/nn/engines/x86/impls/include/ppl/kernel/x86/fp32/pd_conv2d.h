@@ -224,13 +224,13 @@ public:
 class pd_conv2d_algo_selector {
 public:
     static pd_conv2d_fp32_algo_info select_algo(
-        const conv2d_fp32_algo_info &algo,
-        const conv2d_fp32_algo_info &post_algo,
-        const conv2d_fp32_param &param,
-        const conv2d_fp32_param &post_param);
+        const conv2d_algo_info &algo,
+        const conv2d_algo_info &post_algo,
+        const conv2d_param &param,
+        const conv2d_param &post_param);
     static pd_conv2d_fp32_manager *gen_algo(
-        const conv2d_fp32_param &param,
-        const conv2d_fp32_param &depthwise_param,
+        const conv2d_param &param,
+        const conv2d_param &depthwise_param,
         const pd_conv2d_fp32_algo_info &algo_info,
         ppl::common::Allocator *allocator);
     static pd_conv2d_fp32_manager *gen_algo(
