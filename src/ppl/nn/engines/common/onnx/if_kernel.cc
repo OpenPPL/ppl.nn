@@ -90,7 +90,6 @@ static RetCode SetOutputs(RuntimeImpl* subgraph, KernelExecContext* ctx, Device*
         dst->SetDevice(kernel_dev);
         *dst->GetShape() = *src->GetShape();
 
-        // outputs are already synchronized by subgraph->Sync()
         auto status = utils::CopyTensorBuffer(*src, dst, tmp_cpu_device);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy from tensor[" << src->GetName() << "] to tensor[" << dst->GetName()
@@ -102,43 +101,9 @@ static RetCode SetOutputs(RuntimeImpl* subgraph, KernelExecContext* ctx, Device*
     return RC_SUCCESS;
 }
 
-static RetCode SyncAllInputs(KernelExecContext* ctx) {
-    for (uint32_t i = 0; i < ctx->GetInputCount(); ++i) {
-        auto e = ctx->GetInput<EdgeObject>(i);
-        auto barrier = e->GetBarrier();
-        if (barrier) {
-            auto status = barrier->Sync();
-            if (status != RC_SUCCESS) {
-                LOG(ERROR) << "sync EdgeObject[" << e->GetEdge()->GetName() << "] failed: " << GetRetCodeStr(status);
-                return status;
-            }
-        }
-    }
-
-    for (uint32_t i = 0; i < ctx->GetExtraInputCount(); ++i) {
-        auto e = ctx->GetExtraInput<EdgeObject>(i);
-        auto barrier = e->GetBarrier();
-        if (barrier) {
-            auto status = barrier->Sync();
-            if (status != RC_SUCCESS) {
-                LOG(ERROR) << "sync EdgeObject[" << e->GetEdge()->GetName() << "] failed: " << GetRetCodeStr(status);
-                return status;
-            }
-        }
-    }
-
-    return RC_SUCCESS;
-}
-
 RetCode IfKernel::DoExecute(KernelExecContext* ctx) {
-    auto status = SyncAllInputs(ctx);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "sync inputs of if kernel[" << GetName() << "] failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
     bool cond;
-    status = ctx->GetInput<TensorImpl>(0)->CopyToHost(&cond);
+    auto status = ctx->GetInput<TensorImpl>(0)->CopyToHost(&cond);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "If op[" << GetName() << "] get condition value failed: " << GetRetCodeStr(status);
         return status;

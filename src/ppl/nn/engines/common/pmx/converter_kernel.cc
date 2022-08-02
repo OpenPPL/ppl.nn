@@ -37,15 +37,6 @@ RetCode ConverterKernel::DoExecute(KernelExecContext* ctx) {
         auto dst = ctx->GetOutput<TensorImpl>(i);
 
         dst->SetDevice(kernel_device);
-        auto src_barrier = src->GetBarrier();
-        if (src_barrier) {
-            auto status = src_barrier->Sync();
-            if (status != RC_SUCCESS) {
-                LOG(ERROR) << "sync EdgeObject[" << src->GetName() << "] failed: " << GetRetCodeStr(status);
-                return status;
-            }
-        }
-
         *dst->GetShape() = *src->GetShape();
         dst->GetShape()->SetDataFormat(DATAFORMAT_NDARRAY);
 
