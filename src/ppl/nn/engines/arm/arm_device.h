@@ -107,6 +107,10 @@ public:
         return Copy(dst, src, shape.CalcBytesIncludingPadding());
     }
 
+    ppl::common::RetCode Sync() override final {
+        return ppl::common::RC_SUCCESS;
+    }
+
     const char* GetType() const override final {
         return "arm";
     }

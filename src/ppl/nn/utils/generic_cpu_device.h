@@ -40,6 +40,10 @@ public:
     ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, uint64_t bytes) const override;
     ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, const TensorShape&) const override;
 
+    ppl::common::RetCode Sync() override {
+        return ppl::common::RC_SUCCESS;
+    }
+
     const DataConverter* GetDataConverter() const override {
         return &data_converter_;
     }

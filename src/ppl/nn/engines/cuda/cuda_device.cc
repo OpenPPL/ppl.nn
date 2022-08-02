@@ -149,4 +149,13 @@ RetCode CudaDevice::Copy(BufferDesc* dst, const BufferDesc& src, const TensorSha
     return Copy(dst, src, shape.CalcBytesIncludingPadding());
 }
 
+RetCode CudaDevice::Sync() {
+    auto err = cudaStreamSynchronize(stream_);
+    if (err != cudaSuccess) {
+        LOG(ERROR) << "cudaStreamSynchronize " << err << ", " << cudaGetErrorString(err);
+        return RC_OTHER_ERROR;
+    }
+    return RC_SUCCESS;
+}
+
 }}} // namespace ppl::nn::cuda

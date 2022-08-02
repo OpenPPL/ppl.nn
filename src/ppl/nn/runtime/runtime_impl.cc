@@ -302,14 +302,13 @@ RetCode RuntimeImpl::Init(const shared_ptr<ir::GraphTopo>& topo, const shared_pt
 }
 
 RetCode RuntimeImpl::Sync() {
-    for (uint32_t i = 0; i < GetOutputCount(); ++i) {
-        auto output = GetOutputTensorImpl(i);
-        auto barrier = output->GetBarrier();
-        if (barrier) {
-            auto status = barrier->Sync();
-            if (status != RC_SUCCESS) {
-                LOG(ERROR) << "sync tensor[" << output->GetName() << "] failed: " << GetRetCodeStr(status);
-                return status;
+    for (auto e = engctx_.begin(); e != engctx_.end(); ++e) {
+        auto dev = e->get()->GetDevice();
+        if (dev) {
+            auto rc = dev->Sync();
+            if (rc != RC_SUCCESS) {
+                LOG(ERROR) << "sync device[" << e->get()->GetName() << "] failed: " << GetRetCodeStr(rc);
+                return rc;
             }
         }
     }

@@ -52,11 +52,6 @@ RetCode CudaKernel::Init() {
         return RC_OTHER_ERROR;
     }
 #endif
-    auto status = barrier_.Init();
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "create barrier for kernel[" << GetName() << "] failed: " << GetRetCodeStr(status);
-        return status;
-    }
 
     return RC_SUCCESS;
 }
@@ -164,15 +159,6 @@ RetCode CudaKernel::Execute(KernelExecContext* ctx) {
     LOG(INFO) << "After execute kernel[" << GetName() << "] with running time " << (float)diff.count()
               << " ms and memory cost " << total_size;
 #endif
-
-    barrier_.Update(GetCudaDevice()->GetStream());
-
-    for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
-        auto edge = ctx->GetOutput<EdgeObject>(i);
-        if (edge) {
-            edge->SetBarrier(&barrier_);
-        }
-    }
 
     return status;
 }
