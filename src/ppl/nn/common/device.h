@@ -93,6 +93,9 @@ public:
     */
     virtual ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, const TensorShape& shape) const = 0;
 
+    /** @brief synchronize all operations on this device */
+    virtual ppl::common::RetCode Sync() = 0;
+
     /** @brief get DataConverter that can process data on this device */
     virtual const DataConverter* GetDataConverter() const = 0;
 };

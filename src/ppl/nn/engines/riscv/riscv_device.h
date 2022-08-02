@@ -95,6 +95,10 @@ public:
         return Copy(dst, src, shape.CalcBytesIncludingPadding());
     }
 
+    ppl::common::RetCode Sync() override final {
+        return ppl::common::RC_SUCCESS;
+    }
+
     const DataConverter* GetDataConverter() const override final {
         return &data_converter_;
     }
