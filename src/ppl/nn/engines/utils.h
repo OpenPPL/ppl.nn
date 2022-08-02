@@ -27,17 +27,11 @@
 
 namespace ppl { namespace nn { namespace utils {
 
-/**
-   @brief copy buffer to tensor
-   @note `dst` MUST have the same dims as `src_shape` and `src_buf` is synchronized
-*/
+/** @brief copy buffer to tensor */
 ppl::common::RetCode CopyBuffer(const BufferDesc& src_buf, const TensorShape& src_shape, const Device* src_device,
                                 TensorImpl* dst, Device* tmp_cpu_device = nullptr);
 
-/**
-   @brief copy one tensor to another
-   @note `dst` MUST have the same dims as `src` and `src` is synchronized
-*/
+/** @brief copy one tensor to another */
 static inline ppl::common::RetCode CopyTensorBuffer(const TensorImpl& src, TensorImpl* dst,
                                                     Device* tmp_cpu_device = nullptr) {
     return CopyBuffer(src.GetBufferDesc(), *src.GetShape(), src.GetDevice(), dst, tmp_cpu_device);

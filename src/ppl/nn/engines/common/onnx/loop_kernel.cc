@@ -215,7 +215,6 @@ static RetCode InitSubgraphInputs(const KernelExecContext& ctx, bool keep_going,
         if (dst->GetDevice() == src->GetDevice()) {
             dst->SetBuffer(src->GetBufferDesc());
         } else {
-            // srcs are already synchronized by SyncAllInputs()
             status = utils::CopyTensorBuffer(*src, dst, tmp_cpu_device);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "copy tensor from [" << src->GetName() << "] to [" << dst->GetName()
@@ -281,7 +280,6 @@ static RetCode SetOutputsFromSubgraph(const LoopInfo& info, Device* kernel_dev, 
         dst->SetDevice(kernel_dev);
         *dst->GetShape() = *src->GetShape();
 
-        // srcs are already synchronized by subgraph->Sync()
         auto status = utils::CopyTensorBuffer(*src, dst, tmp_cpu_device);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy from tensor[" << src->GetName() << "] to tensor[" << dst->GetName()
@@ -322,46 +320,12 @@ static RetCode SetOutputsFromSubgraph(const LoopInfo& info, Device* kernel_dev, 
     return RC_SUCCESS;
 }
 
-static RetCode SyncAllInputs(KernelExecContext* ctx) {
-    for (uint32_t i = 0; i < ctx->GetInputCount(); ++i) {
-        auto e = ctx->GetInput<EdgeObject>(i);
-        auto barrier = e->GetBarrier();
-        if (barrier) {
-            auto status = barrier->Sync();
-            if (status != RC_SUCCESS) {
-                LOG(ERROR) << "sync EdgeObject[" << e->GetEdge()->GetName() << "] failed: " << GetRetCodeStr(status);
-                return status;
-            }
-        }
-    }
-
-    for (uint32_t i = 0; i < ctx->GetExtraInputCount(); ++i) {
-        auto e = ctx->GetExtraInput<EdgeObject>(i);
-        auto barrier = e->GetBarrier();
-        if (barrier) {
-            auto status = barrier->Sync();
-            if (status != RC_SUCCESS) {
-                LOG(ERROR) << "sync EdgeObject[" << e->GetEdge()->GetName() << "] failed: " << GetRetCodeStr(status);
-                return status;
-            }
-        }
-    }
-
-    return RC_SUCCESS;
-}
-
 RetCode LoopKernel::DoExecute(KernelExecContext* ctx) {
-    auto status = SyncAllInputs(ctx);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "sync inputs of loop kernel[" << GetName() << "] failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
     LoopInfo loop_info(*ctx);
     utils::GenericCpuDevice tmp_cpu_device;
 
     bool keep_going;
-    status = GetKeepGoing(*ctx, &keep_going);
+    auto status = GetKeepGoing(*ctx, &keep_going);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "get `keep_going` failed: " << GetRetCodeStr(status);
         return status;
