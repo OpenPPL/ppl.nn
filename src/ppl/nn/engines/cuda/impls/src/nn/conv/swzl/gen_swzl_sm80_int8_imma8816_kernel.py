@@ -58,8 +58,7 @@ class KernelInfo:
         self.MAX_REG_NUM_PER_THD = 255
         self.MAX_REG_NUM_PER_CTA = 65536
 
-        # TODO: fix here for T4 and A100
-        #self.MAX_SMEM_V4_PER_CTA = 48  * (1024 >> 4) # 48KB per cta
+        # 163KB for A100, 48KB for T4
         self.MAX_SMEM_V4_PER_CTA = 163 * (1024 >> 4) # 163KB per cta
 
         self.thd_y = self.warp_y // self.WARP_SIZE_Y

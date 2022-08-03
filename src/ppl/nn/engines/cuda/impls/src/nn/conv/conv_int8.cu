@@ -836,7 +836,6 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
         int flt_chl_per_grp_pad = Align(num_chl_per_grp, flt_pad_size);
         int k_conv = flt_hw * flt_chl_per_grp_pad;
 
-        // loop over idxn kernel space
         for(int k_num = 1; k_num <= 2; k_num *= 2)
             for(int m_warp = m_mma; m_warp <= m_mma_max; m_warp *= 2)
                 for(int n_warp = n_mma; n_warp <= n_mma_max; n_warp *= 2)
@@ -856,48 +855,39 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
                             int n_cta_num = DivUp(n_conv, n_cta);
                             int cta_num = m_cta_num * n_cta_num;
 
-                            // filter out cases with too large tiles
                             if( m_warp_num == 4 && n_warp_num == 4 ) continue;
                             if(m_warp == m_mma_max && n_warp == n_mma_max) continue;
 
-                            // filter out cases that kloop_time > 1
                             int kloop_time = DivUp(kloop_num * (k_cta / flt_pad_size), cta_size_in_thd);
                             if(kloop_time != 1) continue;
 
-                            // filter out cases with too much register usage
                             int regs_per_thd = GetIdxnRegsPerThread(type, m_cta, n_cta, m_warp, n_warp, k_per_step, m_mma, n_mma, k_mma, cta_size_in_thd);
                             int regs_per_cta = regs_per_thd * cta_size_in_thd;
                             if (regs_per_thd > max_regs_per_thd) continue;
                             if (regs_per_cta > max_regs_per_cta) continue; 
 
-                            // filter out cases with too much smem usage
                             int smem_per_cta = GetIdxnSmemUsage(m_cta, cta_size_in_thd);
                             if (smem_per_cta > max_smem_per_cta) continue;
 
-                            // filter out cases with too much padding
                             float eff_score = GetEfficiencyScore(m_cta, n_cta, k_cta, kloop_total, m_conv, n_conv, k_conv);
                             if(eff_score < 0.5) continue;
 
-                            // filter out cases with too low occupancy
                             float cta_launch_times = 0.f;
                             float occ_score = GetOccupancyScore(cta_size_in_thd, cta_size_in_warp, sm_num, cta_num, regs_per_cta, smem_per_cta, \
                                     max_ctas_per_sm, max_thds_per_sm, max_regs_per_sm, max_smem_per_sm, cta_launch_times);
                             if(occ_score < 0.5) continue;
 
-                            // get kernel pipeline score
                             float pip_score = GetIdxnPipelineScore(type_size, cta_launch_times, out_w, cta_size_in_thd, cta_size_in_warp, m_cta, n_cta, k_cta, m_warp, n_warp, \
                                     k_per_step, m_mma, n_mma, k_mma, cpi_mma, cpi_ldg32_l1d, cpi_ldg64_l1d, cpi_ldg128_l1d, cpi_ldg32_l2, \
                                     cpi_ldg64_l2, cpi_ldg128_l2, latency_mma, latency_l2_cache, latency_dram);
 
-                            // insert one nominee
                             float score = eff_score + occ_score + pip_score;
                             nominee.SetIdxnKernelParam(m_cta, n_cta, k_cta, m_warp, n_warp, k_per_step, flt_pad_size, cta_size_in_thd, smem_per_cta, splitk, splitf, mma_shape);
 
                             nominees.push_back(std::make_pair(nominee, score));
-                            // printf("insert nominee %s : eff %.2f occ %.2f pip %.2f launch %.2f\n", nominee.algo_name.c_str(), eff_score, occ_score, pip_score, cta_launch_times);
                         }
 
-        if(nominees.size() == 0) { // insert default kernel
+        if(nominees.size() == 0) {
             // nvIdxnConv_b128x128_w64x64
             nominee.SetIdxnKernelParam(128, 128, k_per_step, 64, 64, k_per_step, flt_pad_size, 128, 4096, 1, 1, mma_shape);
             nominees.push_back(std::make_pair(nominee, 0.f));
@@ -915,13 +905,12 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
         else
             flt_size = 0;
 
-        if(estimate_cta_num <= sm_num) { // choose 2spk kernel
+        if(estimate_cta_num <= sm_num) {
 
             Get2spkMmaInfo(device_arch, type, mma_shape, m_mma, n_mma, k_mma, m_mma_max, n_mma_max, k_mma_max, k_blk_mma, buf_num_max);
             
             const int SPLITK_OPTIONS[] = {1, 2, 4, 8};
 
-            // loop over 2spk kernel space
             for(int spf = 0; spf < 2; spf++)
                 for(int spk = 0; spk < 4; spk++)
                     for(int buf_num = 1; buf_num <= buf_num_max; buf_num++)
@@ -940,14 +929,11 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
                                                 int set_size_in_thd  = set_size_in_warp * WARP_SIZE;
                                                 int cta_size_in_thd  = cta_size_in_warp * WARP_SIZE;
 
-                                                // filter out kernels that is not aligned
                                                 if( n_conv >= 128 && n_cta < 128 ) continue;
 
-                                                // filter out splitk
                                                 splitk = SPLITK_OPTIONS[spk];
                                                 if( splitk > 1 && splitk * k_cta >= Align(num_chl_per_grp, k_cta) ) continue;
 
-                                                // filter out splitf
                                                 if(spf == 1) { splitf = flt_hw; flt_size = 11; }
                                                 if(spf == 1 && splitf == 1) continue;
                                                 if(splitk * splitf >= MAX_SPLIT_SIZE) continue;
@@ -960,10 +946,8 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
                                                 int kloop_total = flt_hw * DivUp(num_chl_per_grp_pad, k_cta);
                                                 int kloop_num = kloop_total / split;
 
-                                                // filter out too large and too small k_cta
                                                 if( k_cta != GetTileKSize(num_chl_per_grp_pad, kloop_num) ) continue;
 
-                                                // filter out cases with too large tiles
                                                 if( m_warp_num == 4 && n_warp_num == 4 ) continue;
                                                 if(m_warp == m_mma_max && n_warp == n_mma_max) continue;
                                                 if(cta_size_in_thd == 32 && k_cta == 128) continue;
@@ -971,50 +955,40 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
                                                 if(cta_size_in_thd <= 128 && k_cta == 512) continue;
                                                 if(buf_num > kloop_num) continue;
 
-                                                // filter out cases with too much register usage
                                                 int regs_per_thd = Get2spkRegsPerThread(type, type_size, m_cta, n_cta, k_cta, m_warp, n_warp, k_per_set, \
                                                         m_mma, n_mma, k_mma, k_blk_mma, buf_num, cta_size_in_thd, set_size_in_thd);
                                                 int regs_per_cta = regs_per_thd * cta_size_in_thd;
                                                 if (regs_per_thd > max_regs_per_thd) continue;
                                                 if (regs_per_cta > max_regs_per_cta) continue;
 
-                                                // filter out cases with too much smem usage
                                                 int smem_per_cta = Get2spkSmemUsage(type, type_size, m_cta, n_cta, k_cta, set_num, buf_num);
                                                 if (smem_per_cta > max_dyn_smem_per_cta) continue;
 
-                                                // filter out cases with too much padding
                                                 float eff_score = GetEfficiencyScore(m_cta, n_cta, k_cta, kloop_total, m_conv, n_conv, k_conv);
                                                 if(eff_score < 0.5) continue;
 
-                                                // filter out cases with too low occupancy
                                                 float cta_launch_times = 0.f;
                                                 float occ_score = GetOccupancyScore(cta_size_in_thd, cta_size_in_warp, \
                                                         sm_num, cta_num, regs_per_cta, smem_per_cta,  max_ctas_per_sm, \
                                                         max_thds_per_sm, max_regs_per_sm, max_smem_per_sm, cta_launch_times);
                                                 if(occ_score < 0.5) continue;
 
-                                                // filter out too much split and too small splits
                                                 if( cta_launch_times > 1 ) continue;
 
-                                                // get kernel pipeline score
                                                 float pip_score = Get2spkPipelineScore(type_size, cta_launch_times, m_conv, n_conv, k_conv, \
                                                         kloop_num, splitk, splitf, out_w, cta_size_in_thd, cta_size_in_warp, sm_num, m_cta, \
                                                         n_cta, k_cta, m_warp, n_warp, k_per_set, set_num, buf_num, m_mma, n_mma, k_mma, k_mma_max, \
                                                         cpi_mma, cpi_ldg128_l1d, cpi_ldg128_l2, cpi_lds128, cpi_sts32, latency_mma, \
                                                         latency_l2_cache, latency_dram);
 
-                                                // insert one nominee
                                                 float score = eff_score + occ_score + pip_score;
-                                                // float score = pip_score;
                                                 nominee.Set2spkKernelParam(m_cta, n_cta, k_cta, m_warp, n_warp, k_per_set, \
                                                         flt_size, buf_num, cta_size_in_thd, smem_per_cta, splitk, splitf, mma_shape);
 
                                                 nominees.push_back(std::make_pair(nominee, score));
-                                                // printf("insert 2spk nominee %s : eff %.2f occ %.2f pip %.2f launch %.2f cta_num %d warp_num %d\n",
-                                                //         nominee.algo_name.c_str(), eff_score, occ_score, pip_score, cta_launch_times, cta_num, cta_size_in_warp);
                                             }
 
-            if(nominees.size() == 0) { // insert default kernel
+            if(nominees.size() == 0) {
                 if(conv_param.flt_height == 1 && conv_param.flt_width == 1)
                     flt_size = 1;
                 else if(conv_param.flt_height == 3 && conv_param.flt_width == 3)
@@ -1027,13 +1001,11 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
                 nominees.push_back(std::make_pair(nominee, 0.f));
             }
 
-        } else { // choose swzl kernels
+        } else {
             GetSwzlMmaInfo(device_arch, type, mma_shape, m_mma, n_mma, k_mma, m_mma_max, n_mma_max, k_mma_max, k_blk_mma, buf_num_max);
 
-            // switch m_conv <=> n_conv
             int tmp = m_conv; m_conv = n_conv; n_conv = tmp;
             
-            // loop over swzl kernel space
             for(int buf_num = 1; buf_num <= buf_num_max; buf_num++)
                 for(int k_cta = k_mma; k_cta <= k_mma_max; k_cta *= 2)
                     for(int m_warp = m_mma; m_warp <= m_mma_max; m_warp *= 2)
@@ -1046,7 +1018,6 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
                                     int cta_size_in_warp = m_warp_num * n_warp_num;
                                     int cta_size_in_thd  = cta_size_in_warp * WARP_SIZE;
 
-                                    // filter out kernels that is not aligned
                                     if( m_conv >= 64 && m_cta < 64 ) continue;
 
                                     int m_cta_num = DivUp(m_conv, m_cta);
@@ -1056,58 +1027,47 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
                                     int kloop_total = flt_hw * DivUp(num_chl_per_grp_pad, k_cta);
                                     int kloop_num = kloop_total;
 
-                                    // filter out too large and too small k_cta
                                     if( k_cta != GetTileKSize(num_chl_per_grp_pad, kloop_num) ) continue;
 
-                                    // filter out cases with too large tiles
                                     if( m_warp == m_mma && n_warp == n_mma ) continue;
                                     if( m_warp == m_mma_max && n_warp == n_mma_max ) continue;
                                     if( m_warp_num == 4 && n_warp_num == 4 ) continue;
                                     if( m_warp_num == 1 && n_warp_num == 1 && k_cta == k_mma_max ) continue;
                                     if(buf_num > kloop_num) continue;
 
-                                    // filter out cases with too much register usage
                                     int regs_per_thd = GetSwzlRegsPerThread(type, type_size, m_cta, n_cta, k_cta, m_warp, n_warp, \
                                             m_mma, n_mma, k_mma, k_blk_mma, buf_num, cta_size_in_thd);
                                     int regs_per_cta = regs_per_thd * cta_size_in_thd;
                                     if (regs_per_thd > max_regs_per_thd) continue;
                                     if (regs_per_cta > max_regs_per_cta) continue;
 
-                                    // filter out cases with too much smem usage
                                     int smem_per_cta = GetSwzlSmemUsage(type, type_size, m_cta, n_cta, k_cta, m_warp, n_warp, \
                                             m_mma, n_mma, buf_num, cta_size_in_warp);
                                     if (smem_per_cta > max_dyn_smem_per_cta) continue;
 
-                                    // filter out cases with too much padding
                                     float eff_score = GetEfficiencyScore(m_cta, n_cta, k_cta, kloop_total, m_conv, n_conv, k_conv);
                                     if(eff_score < 0.5) continue;
 
-                                    // filter out cases with too low occupancy
                                     float cta_launch_times = 0.f;
                                     float occ_score = GetOccupancyScore(cta_size_in_thd, cta_size_in_warp, \
                                             sm_num, cta_num, regs_per_cta, smem_per_cta,  max_ctas_per_sm, \
                                             max_thds_per_sm, max_regs_per_sm, max_smem_per_sm, cta_launch_times);
                                     if(occ_score < 0.5) continue;
 
-                                    // get kernel pipeline score
                                     float pip_score = GetSwzlPipelineScore(type_size, cta_launch_times, m_conv, n_conv, k_conv, \
                                             kloop_num, out_w, cta_size_in_thd, cta_size_in_warp, sm_num, m_cta, \
                                             n_cta, k_cta, m_warp, n_warp, buf_num, m_mma, n_mma, k_mma, k_mma_max, \
                                             cpi_mma, cpi_ldg128_l1d, cpi_ldg128_l2, cpi_lds128, cpi_sts32, latency_mma, \
                                             latency_l2_cache, latency_dram);
 
-                                    // insert one nominee
                                     float score = eff_score + occ_score + pip_score;
-                                    // float score = pip_score;
                                     nominee.SetSwzlKernelParam(m_cta, n_cta, k_cta, m_warp, n_warp, flt_size, \
                                             buf_num, cta_size_in_thd, smem_per_cta, splitk, splitf, mma_shape);
 
                                     nominees.push_back(std::make_pair(nominee, score));
-                                    // printf("insert swzl nominee %s : eff %.2f occ %.2f pip %.2f launch %.2f cta_num %d warp_num %d\n",
-                                    //         nominee.algo_name.c_str(), eff_score, occ_score, pip_score, cta_launch_times, cta_num, cta_size_in_warp);
                                 }
 
-            if(nominees.size() == 0) { // insert default kernel
+            if(nominees.size() == 0) {
                 // nvswzlConv_b128x128_w64x64_k64_buf1
                 nominee.SetSwzlKernelParam(128, 128, 64, 64, 64, flt_size, 1, 128, 32768, 1, 1, mma_shape);
                 nominees.push_back(std::make_pair(nominee, 0.f));
@@ -1126,8 +1086,6 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
         std::string source = "";
         auto& nominee = nominees[i].first;
 
-        // printf("No.%d nominee %s : score %.2f \n", i, nominee.algo_name.c_str(), nominees[i].second);
-
         if (nominee.conv_type == "idxn") {
             gene_factor->GeneIdxnKernel(source, nominee.algo_name, nominee.mma_shape, nominee.tiles.flt_size, nominee.tiles.m_cta, nominee.tiles.n_cta, nominee.tiles.m_warp, nominee.tiles.n_warp, nominee.tiles.k_cta, nominee.tiles.k_per_step, declare_times);
             declare_times++;
@@ -1138,12 +1096,6 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
             gene_factor->GeneSwzlKernel(source, nominee.algo_name, nominee.mma_shape, nominee.tiles.flt_size, nominee.tiles.m_cta, nominee.tiles.n_cta, nominee.tiles.m_warp, nominee.tiles.n_warp, nominee.tiles.k_cta, nominee.splitk, nominee.tiles.buf, declare_times);
             declare_times++;
         }
-
-        // printf("source is %s\n", source.c_str());
-
-        // if (std::find(knames.begin(), knames.end(), algo_param.algo_name) == knames.end()) {
-        //     sources = sources + source;
-        // }
 
         sources = sources + source;
 

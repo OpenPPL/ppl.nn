@@ -97,7 +97,7 @@ double TuringIMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
         return 0.0f;
     } else { // Give the default kernel
         attr_param_.extra_param.algo_info.algo_name = "nvSwzlSm75Int8Conv_imma8816_nhwc_fn_b256x64_w64x64_k64_buf2";
-        attr_param_.extra_param.algo_info.kid = 4955;
+        attr_param_.extra_param.algo_info.kid = 3775;
         attr_param_.extra_param.algo_info.splitk = 1;
         attr_param_.extra_param.algo_info.splitf = 1;
         attr_param_.extra_param.algo_info.ParseAlgoName();
