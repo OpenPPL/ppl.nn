@@ -2,6 +2,9 @@ if(NOT HPCC_DEPS_DIR)
     set(HPCC_DEPS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps)
 endif()
 
+# forces to install libraries to `lib`, not `lib64` or others
+set(CMAKE_INSTALL_LIBDIR lib)
+
 # --------------------------------------------------------------------------- #
 
 if(CMAKE_COMPILER_IS_GNUCC)
