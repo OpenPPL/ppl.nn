@@ -64,7 +64,6 @@ const ppl::common::RetCode ConvCompiler::Compile(ir::Node* node, const OptKernel
     for (auto& string : compile_params) {
         param_cstring.push_back(string.c_str());
     }
-
     CUDAModuleWrapper* wrapper = new CUDAModuleWrapper();
     CUDAModule* cuda_module = new CUDAModule();
     cuda_param->module = (void*)cuda_module;
