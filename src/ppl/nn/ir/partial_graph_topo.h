@@ -76,10 +76,6 @@ public:
     */
     PartialGraphTopo(GraphTopo* parent, const std::vector<nodeid_t>& nodes);
 
-    bool IsComplete() const override {
-        return false;
-    }
-
     // ----- //
 
     /**

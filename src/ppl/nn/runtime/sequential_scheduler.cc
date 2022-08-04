@@ -86,19 +86,11 @@ SequentialScheduler::SequentialScheduler() {
     };
 }
 
-RetCode SequentialScheduler::Init(const ir::GraphTopo* topo, const RuntimeAuxInfo* aux_info, RuntimeGraphResource* g) {
-    graph_ = g;
-    topo_ = topo;
-    aux_info_ = aux_info;
+RetCode SequentialScheduler::Init(const Options& options) {
+    graph_ = options.graph_resource;
+    topo_ = options.topo;
+    aux_info_ = options.aux_info;
     return RC_SUCCESS;
-}
-
-RetCode SequentialScheduler::InferShapes() {
-    return Run(
-        [](KernelImpl* kernel, KernelExecContext* ctx) -> RetCode {
-            return kernel->Reshape(ctx);
-        },
-        nullptr);
 }
 
 RetCode SequentialScheduler::Run(const function<RetCode(KernelImpl*, KernelExecContext*)>& exec, Profiler* profiler) {

@@ -117,8 +117,9 @@ private:
       some of them may visit class members.
       defined as member functions can avoid exporting unnecessary APIs
     */
-    static ppl::common::RetCode SetProfilingFlag(RuntimeImpl*, va_list);
-    static ppl::common::RetCode InferShapes(RuntimeImpl*, va_list);
+    static ppl::common::RetCode ConfSetProfilingFlag(RuntimeImpl*, va_list);
+    static ppl::common::RetCode ConfInferShapes(RuntimeImpl*, va_list);
+    static ppl::common::RetCode ConfSetScheduler(RuntimeImpl*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(RuntimeImpl*, va_list);
     static ConfHandlerFunc conf_handlers_[RUNTIME_CONF_MAX];

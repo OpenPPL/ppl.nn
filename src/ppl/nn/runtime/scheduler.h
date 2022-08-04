@@ -26,9 +26,17 @@ namespace ppl { namespace nn {
 
 class Scheduler {
 public:
+    struct Options final {
+        Options(const ir::GraphTopo* t, const RuntimeAuxInfo* r, RuntimeGraphResource* g)
+            : topo(t), aux_info(r), graph_resource(g) {}
+        const ir::GraphTopo* topo;
+        const RuntimeAuxInfo* aux_info;
+        RuntimeGraphResource* graph_resource;
+    };
+
+public:
     virtual ~Scheduler() {}
-    virtual ppl::common::RetCode Init(const ir::GraphTopo*, const RuntimeAuxInfo*, RuntimeGraphResource*) = 0;
-    virtual ppl::common::RetCode InferShapes() = 0;
+    virtual ppl::common::RetCode Init(const Options&) = 0;
     virtual ppl::common::RetCode Run(const std::function<ppl::common::RetCode(KernelImpl*, KernelExecContext*)>&,
                                      Profiler*) = 0;
 };
