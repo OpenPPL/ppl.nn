@@ -27,9 +27,7 @@ namespace ppl { namespace nn {
 class SequentialScheduler final : public Scheduler {
 public:
     SequentialScheduler();
-    ppl::common::RetCode Init(const ir::GraphTopo* topo, const RuntimeAuxInfo* aux_info,
-                              RuntimeGraphResource* g) override;
-    ppl::common::RetCode InferShapes() override;
+    ppl::common::RetCode Init(const Options&) override;
     ppl::common::RetCode Run(const std::function<ppl::common::RetCode(KernelImpl*, KernelExecContext*)>&,
                              Profiler*) override;
 

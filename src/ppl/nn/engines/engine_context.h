@@ -38,11 +38,6 @@ public:
 
     /** @brief returns the `Device` instance used by this `Runtime` */
     virtual Device* GetDevice() = 0;
-
-    /** @brief prepare for run */
-    virtual ppl::common::RetCode Preprocess(const ir::GraphTopo*, const RuntimeAuxInfo*, RuntimeGraphResource*) {
-        return ppl::common::RC_SUCCESS;
-    }
 };
 
 }} // namespace ppl::nn

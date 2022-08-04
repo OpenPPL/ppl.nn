@@ -34,6 +34,16 @@ enum {
     */
     RUNTIME_CONF_INFER_SHAPES,
 
+    /**
+       @note example:
+       @code{.cpp}
+       auto sched = new MyScheduler(); // `MyScheduler` is a derived class of `Scheduler`
+       // note that `runtime` will take the ownership of `sched` and there is no need to delete `sched`
+       runtime->Configure(RUNTIME_CONF_SET_SCHEDULER, sched);
+       @endcode
+    */
+    RUNTIME_CONF_SET_SCHEDULER,
+
     RUNTIME_CONF_MAX,
 };
 

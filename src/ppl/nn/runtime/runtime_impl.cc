@@ -298,7 +298,7 @@ RetCode RuntimeImpl::Init(const shared_ptr<ir::GraphTopo>& topo, const shared_pt
     }
 
     sched_.reset(new SequentialScheduler());
-    return sched_->Init(topo.get(), aux_info.get(), &graph_);
+    return sched_->Init(Scheduler::Options(topo.get(), aux_info.get(), &graph_));
 }
 
 RetCode RuntimeImpl::Sync() {
@@ -316,24 +316,13 @@ RetCode RuntimeImpl::Sync() {
 }
 
 RetCode RuntimeImpl::Run() {
-    RetCode status;
-
-    for (auto x = engctx_.begin(); x != engctx_.end(); ++x) {
-        status = x->get()->Preprocess(topo_.get(), aux_info_.get(), &graph_);
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "BeforeRun() of EngineContext[" << x->get()->GetName()
-                       << "] failed: " << GetRetCodeStr(status);
-            return status;
-        }
-    }
-
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
     Profiler* profiler = profiler_.get();
 #else
     constexpr Profiler* profiler = nullptr;
 #endif
 
-    status = sched_->Run(
+    auto status = sched_->Run(
         [](KernelImpl* kernel, KernelExecContext* ctx) -> RetCode {
             return kernel->Execute(ctx);
         },
@@ -367,7 +356,7 @@ Tensor* RuntimeImpl::GetTensorByName(const char* name) const {
 
 /* -------------------------------------------------------------------------- */
 
-RetCode RuntimeImpl::SetProfilingFlag(RuntimeImpl* rt, va_list args) {
+RetCode RuntimeImpl::ConfSetProfilingFlag(RuntimeImpl* rt, va_list args) {
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
     auto flag = va_arg(args, uint32_t);
     bool profiling_flag = (flag > 0);
@@ -392,13 +381,30 @@ RetCode RuntimeImpl::SetProfilingFlag(RuntimeImpl* rt, va_list args) {
 #endif
 }
 
-RetCode RuntimeImpl::InferShapes(RuntimeImpl* rt, va_list) {
-    return rt->sched_->InferShapes();
+RetCode RuntimeImpl::ConfInferShapes(RuntimeImpl* rt, va_list) {
+    return rt->sched_->Run(
+        [](KernelImpl* kernel, KernelExecContext* ctx) -> RetCode {
+            return kernel->Reshape(ctx);
+        },
+        nullptr);
+}
+
+RetCode RuntimeImpl::ConfSetScheduler(RuntimeImpl* rt, va_list args) {
+    auto sched = va_arg(args, Scheduler*);
+    auto rc = sched->Init(Scheduler::Options(rt->topo_.get(), rt->aux_info_.get(), &rt->graph_));
+    if (rc != RC_SUCCESS) {
+        LOG(ERROR) << "init user's scheduler failed: " << GetRetCodeStr(rc);
+        return rc;
+    }
+
+    rt->sched_.reset(sched);
+    return RC_SUCCESS;
 }
 
 RuntimeImpl::ConfHandlerFunc RuntimeImpl::conf_handlers_[] = {
-    RuntimeImpl::SetProfilingFlag,
-    RuntimeImpl::InferShapes,
+    RuntimeImpl::ConfSetProfilingFlag,
+    RuntimeImpl::ConfInferShapes,
+    RuntimeImpl::ConfSetScheduler,
 };
 
 RetCode RuntimeImpl::Configure(uint32_t option, ...) {

@@ -73,10 +73,6 @@ public:
 public:
     FullGraphTopo() {}
 
-    bool IsComplete() const override {
-        return true;
-    }
-
     // ----- //
 
     /** @return {node, true} if insertion is successful, or {node, false} if `name` exists. */
