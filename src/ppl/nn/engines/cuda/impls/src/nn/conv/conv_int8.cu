@@ -776,7 +776,11 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
     int device_arch      = device_prop.major * 10 + device_prop.minor;
     int max_regs_per_thd = 255;
     int max_regs_per_sm  = device_prop.regsPerMultiprocessor;
+#if __CUDACC_VER_MAJOR__ >= 11
     int max_ctas_per_sm  = device_prop.maxBlocksPerMultiProcessor;
+#else
+    int max_ctas_per_sm = 32;
+#endif
     int max_thds_per_sm  = device_prop.maxThreadsPerMultiProcessor;
     int max_smem_per_sm  = device_prop.sharedMemPerMultiprocessor;
     int max_regs_per_cta = device_prop.regsPerBlock;
