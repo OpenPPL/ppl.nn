@@ -64,6 +64,25 @@ double TuringIMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
     attr_param_.extra_param.algo_info.algo_type = "TuringIMMAImpgemm";
     options.compile_set->emplace(node->GetId());
 
+    const std::string& key_str = node->GetName();
+    auto algo_info = options.algos->find(key_str);
+    if (algo_info != options.algos->end()) {
+        attr_param_.extra_param.algo_info.kid = algo_info->second.kid;
+        attr_param_.extra_param.algo_info.splitk = algo_info->second.splitk;
+        attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
+        attr_param_.extra_param.algo_info.algo_name = algo_info->second.kname;
+        if (algo_info->second.splitk > 1)
+            attr_param_.extra_param.algo_info.algo_name += "_spk" + std::to_string(algo_info->second.splitk);
+        attr_param_.extra_param.algo_info.ParseAlgoName();
+        return 0.0f;
+    } else { // Give the default kernel
+        attr_param_.extra_param.algo_info.algo_name = "nvSwzlSm75Int8Conv_imma8816_nhwc_fn_b256x64_w64x64_k64_buf2";
+        attr_param_.extra_param.algo_info.kid = 3775;
+        attr_param_.extra_param.algo_info.splitk = 1;
+        attr_param_.extra_param.algo_info.splitf = 1;
+        attr_param_.extra_param.algo_info.ParseAlgoName();
+    }
+
     auto shape_in0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
     auto shape_in1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
     auto shape_in2 = TensorShape();
@@ -82,25 +101,6 @@ double TuringIMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
         shape_in0.GetDim(3) + 2 * temp_conv_param.pad_width < shape_in1.GetDim(3)) {
         shape_in0.SetDim(2, shape_in1.GetDim(2));
         shape_in0.SetDim(3, shape_in1.GetDim(3));
-    }
-
-    const std::string& key_str = node->GetName();
-    auto algo_info = options.algos->find(key_str);
-    if (algo_info != options.algos->end()) {
-        attr_param_.extra_param.algo_info.kid = algo_info->second.kid;
-        attr_param_.extra_param.algo_info.splitk = algo_info->second.splitk;
-        attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
-        attr_param_.extra_param.algo_info.algo_name = algo_info->second.kname;
-        if (algo_info->second.splitk > 1)
-            attr_param_.extra_param.algo_info.algo_name += "_spk" + std::to_string(algo_info->second.splitk);
-        attr_param_.extra_param.algo_info.ParseAlgoName();
-        return 0.0f;
-    } else { // Give the default kernel
-        attr_param_.extra_param.algo_info.algo_name = "nvSwzlSm75Int8Conv_imma8816_nhwc_fn_b256x64_w64x64_k64_buf2";
-        attr_param_.extra_param.algo_info.kid = 3775;
-        attr_param_.extra_param.algo_info.splitk = 1;
-        attr_param_.extra_param.algo_info.splitf = 1;
-        attr_param_.extra_param.algo_info.ParseAlgoName();
     }
 
     if (options.args->quick_select) {
