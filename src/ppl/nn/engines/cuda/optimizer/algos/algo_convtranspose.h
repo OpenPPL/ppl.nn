@@ -29,8 +29,10 @@ namespace ppl { namespace nn { namespace cuda {
 class ConvTransposeAlgorithm : public Algorithm {
 public:
     ConvTransposeAlgorithm() {
-        std::set<dataformat_t> ndarray{DATAFORMAT_NHWC8};
-        conv_transpose_formats_.emplace(DATAFORMAT_NHWC8, ndarray);
+        std::set<dataformat_t> nhwc8{DATAFORMAT_NHWC8};
+        conv_transpose_formats_.emplace(DATAFORMAT_NHWC8, nhwc8);
+        std::set<dataformat_t> nchw{DATAFORMAT_NDARRAY};
+        conv_transpose_formats_.emplace(DATAFORMAT_NDARRAY, nchw);
     }
 
     const std::map<dataformat_t, std::set<dataformat_t>> Getformats(const std::string& type_name) const override {
@@ -40,6 +42,8 @@ public:
 public:
     void GetAttrParam(void*& param) const override;
     void DeleteAttrParam(void*& param) override;
+    bool IsSupported(const ir::Node* node, const OptKernelOptions& options,
+                     ppl::common::dataformat_t input_format) const override;
     double ExcuteTimer(const ir::Node* node, OptKernelOptions& options) override;
     RetCode ModifyParam(ir::Node* node, OptKernelOptions& options) override;
     void ReshapeOnEdges(const ir::Node* node, std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors,

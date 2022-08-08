@@ -42,6 +42,20 @@ void ConvTransposeAlgorithm::GetAttrParam(void*& param) const {
     return;
 }
 
+bool ConvTransposeAlgorithm::IsSupported(const ir::Node* node, const OptKernelOptions& options,
+                                    dataformat_t input_format) const {
+    uint32_t group = (reinterpret_cast<CudaConvTransposeParam*>(options.param))->param.group;
+    if (group != 1) return false;
+    const TensorShape& tensor0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
+    if (tensor0.GetDataType() != ppl::common::DATATYPE_FLOAT16) {
+        return false;
+    }
+    if (input_format != DATAFORMAT_NHWC8) {
+        return false;
+    }
+    return true;
+}
+
 double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& options) {
     this->attr_param_ = *(reinterpret_cast<CudaConvTransposeParam*>(options.param));
     options.compile_set->emplace(node->GetId());
