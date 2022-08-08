@@ -19,8 +19,8 @@
 #include <vector>
 
 #include "ppl/kernel/x86/common/avx_tools.h"
-#include "ppl/kernel/x86/fp32/conv2d/gemm_direct/fma/conv2d_n16cx_gemm_direct_fp32_fma.h"
-#include "ppl/kernel/x86/fp32/conv2d/gemm_direct/fma/conv2d_n16cx_gemm_direct_kernel_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/fma/conv2d_n16cx_gemm_direct_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/fma/conv2d_n16cx_gemm_direct_kernel_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/pd_conv2d/fma/pd_conv2d_n16cx_gemm_direct_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/pd_conv2d/fma/pd_conv2d_n16cx_depthwise_kernel_fp32_fma.h"
 #include "ppl/kernel/x86/common/array_param_helper.h"

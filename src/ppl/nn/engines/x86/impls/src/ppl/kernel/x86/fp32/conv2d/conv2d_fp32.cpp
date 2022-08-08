@@ -19,28 +19,28 @@
 
 #include "ppl/kernel/x86/fp32/conv2d.h"
 
-#include "ppl/kernel/x86/fp32/conv2d/gemm_direct/fma/conv2d_n16cx_gemm_direct_fp32_fma.h"
-#include "ppl/kernel/x86/fp32/conv2d/winograd/fma/conv2d_n16cx_winograd_b4f3_fp32_fma.h"
-#include "ppl/kernel/x86/fp32/conv2d/depthwise/fma/conv2d_n16cx_depthwise_fp32_fma.h"
-#include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/fma/conv2d_im2col_gemm_fp32_fma.h"
-#include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/fma/conv2d_n16cx_direct_ndarray_fp32_fma.h"
-#include "ppl/kernel/x86/fp32/conv2d/direct/fma/conv2d_n16cx_direct_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/fma/conv2d_n16cx_gemm_direct_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/fma/conv2d_n16cx_winograd_b4f3_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/fma/conv2d_n16cx_depthwise_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/fma/conv2d_im2col_gemm_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/fma/conv2d_n16cx_direct_ndarray_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/fma/conv2d_n16cx_direct_fp32_fma.h"
 
 #ifdef PPL_USE_X86_AVX512
-#include "ppl/kernel/x86/fp32/conv2d/direct/avx512/conv2d_n16cx_direct_fp32_avx512.h"
-#include "ppl/kernel/x86/fp32/conv2d/gemm_direct/avx512/conv2d_n16cx_gemm_direct_fp32_avx512.h"
-#include "ppl/kernel/x86/fp32/conv2d/depthwise/avx512/conv2d_n16cx_depthwise_fp32_avx512.h"
-#include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/avx512/conv2d_n16cx_direct_ndarray_fp32_avx512.h"
-#include "ppl/kernel/x86/fp32/conv2d/winograd/avx512/conv2d_n16cx_winograd_b4f3_fp32_avx512.h"
+#include "ppl/kernel/x86/fp32/conv2d/avx512/conv2d_n16cx_direct_fp32_avx512.h"
+#include "ppl/kernel/x86/fp32/conv2d/avx512/conv2d_n16cx_gemm_direct_fp32_avx512.h"
+#include "ppl/kernel/x86/fp32/conv2d/avx512/conv2d_n16cx_depthwise_fp32_avx512.h"
+#include "ppl/kernel/x86/fp32/conv2d/avx512/conv2d_n16cx_direct_ndarray_fp32_avx512.h"
+#include "ppl/kernel/x86/fp32/conv2d/avx512/conv2d_n16cx_winograd_b4f3_fp32_avx512.h"
 #endif
 
-#include "ppl/kernel/x86/fp32/conv2d/direct/sse/conv2d_n8cx_direct_fp32_sse.h"
-#include "ppl/kernel/x86/fp32/conv2d/gemm_direct/sse/conv2d_n8cx_gemm_direct_fp32_sse.h"
-#include "ppl/kernel/x86/fp32/conv2d/depthwise/sse/conv2d_n8cx_depthwise_fp32_sse.h"
-#include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/sse/conv2d_n8cx_direct_ndarray_fp32_sse.h"
-#include "ppl/kernel/x86/fp32/conv2d/im2col_gemm/sse/conv2d_im2col_gemm_fp32_sse.h"
-#include "ppl/kernel/x86/fp32/conv2d/depthwise/sse/conv2d_depthwise_fp32_sse.h"
-#include "ppl/kernel/x86/fp32/conv2d/winograd/sse/conv2d_winograd_b6f3_fp32_sse.h"
+#include "ppl/kernel/x86/fp32/conv2d/sse/conv2d_n8cx_direct_fp32_sse.h"
+#include "ppl/kernel/x86/fp32/conv2d/sse/conv2d_n8cx_gemm_direct_fp32_sse.h"
+#include "ppl/kernel/x86/fp32/conv2d/sse/conv2d_n8cx_depthwise_fp32_sse.h"
+#include "ppl/kernel/x86/fp32/conv2d/sse/conv2d_n8cx_direct_ndarray_fp32_sse.h"
+#include "ppl/kernel/x86/fp32/conv2d/sse/conv2d_im2col_gemm_fp32_sse.h"
+#include "ppl/kernel/x86/fp32/conv2d/sse/conv2d_depthwise_fp32_sse.h"
+#include "ppl/kernel/x86/fp32/conv2d/sse/conv2d_winograd_b6f3_fp32_sse.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 

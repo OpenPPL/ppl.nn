@@ -19,16 +19,16 @@
 
 #include "ppl/kernel/x86/fp32/pd_conv2d/fma/pd_conv2d_n16cx_gemm_direct_fp32_fma.h"
 #include "ppl/kernel/x86/fp32/pd_conv2d/fma/pd_conv2d_n16cx_direct_ndarray_fp32_fma.h"
-#include "ppl/kernel/x86/fp32/conv2d/gemm_direct/fma/conv2d_n16cx_gemm_direct_fp32_fma.h"
-#include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/fma/conv2d_n16cx_direct_ndarray_fp32_fma.h"
-#include "ppl/kernel/x86/fp32/conv2d/depthwise/fma/conv2d_n16cx_depthwise_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/fma/conv2d_n16cx_gemm_direct_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/fma/conv2d_n16cx_direct_ndarray_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/conv2d/fma/conv2d_n16cx_depthwise_fp32_fma.h"
 
 #ifdef PPL_USE_X86_AVX512
 #include "ppl/kernel/x86/fp32/pd_conv2d/avx512/pd_conv2d_n16cx_gemm_direct_fp32_avx512.h"
 #include "ppl/kernel/x86/fp32/pd_conv2d/avx512/pd_conv2d_n16cx_direct_ndarray_fp32_avx512.h"
-#include "ppl/kernel/x86/fp32/conv2d/gemm_direct/avx512/conv2d_n16cx_gemm_direct_fp32_avx512.h"
-#include "ppl/kernel/x86/fp32/conv2d/direct_ndarray/avx512/conv2d_n16cx_direct_ndarray_fp32_avx512.h"
-#include "ppl/kernel/x86/fp32/conv2d/depthwise/avx512/conv2d_n16cx_depthwise_fp32_avx512.h"
+#include "ppl/kernel/x86/fp32/conv2d/avx512/conv2d_n16cx_gemm_direct_fp32_avx512.h"
+#include "ppl/kernel/x86/fp32/conv2d/avx512/conv2d_n16cx_direct_ndarray_fp32_avx512.h"
+#include "ppl/kernel/x86/fp32/conv2d/avx512/conv2d_n16cx_depthwise_fp32_avx512.h"
 #endif
 
 namespace ppl { namespace kernel { namespace x86 {
