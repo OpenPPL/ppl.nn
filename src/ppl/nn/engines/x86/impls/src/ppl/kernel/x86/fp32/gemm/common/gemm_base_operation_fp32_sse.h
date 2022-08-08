@@ -22,7 +22,7 @@
 
 #include "ppl/kernel/x86/fp32/gemm.h"
 #include "ppl/kernel/x86/common/sse_tools.h"
-#include "ppl/kernel/x86/fp32/transpose/sse/transpose_fp32_sse.h"
+#include "ppl/kernel/x86/fp32/transpose/transpose_fp32_sse.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 

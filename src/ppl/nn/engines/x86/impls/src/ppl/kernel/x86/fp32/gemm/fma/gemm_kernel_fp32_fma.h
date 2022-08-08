@@ -53,11 +53,13 @@ public:
         static const int64_t MAX_N_REGS = 3;
         static const int64_t M_REG_ELTS = 1;
         static const int64_t N_REG_ELTS = 8;
+        static const int64_t K_REG_ELTS = 1;
         static const int64_t MAX_M_BLK = MAX_M_REGS * M_REG_ELTS;
         static const int64_t MAX_N_BLK = MAX_N_REGS * N_REG_ELTS;
+        static const int64_t UNROLL_K = 4 * K_REG_ELTS;
         static const int64_t NEED_MASK_OPT = 2;
-        static const int64_t PRF_C_LDK_MEM = 128;
-        static const int64_t PRF_C_LDK_L3  = 64;
+        static const int64_t PRF_C_LDK_MEM = 128 * K_REG_ELTS;
+        static const int64_t PRF_C_LDK_L3  = 64 * K_REG_ELTS;
     };
 
     typedef int64_t flag_t;
