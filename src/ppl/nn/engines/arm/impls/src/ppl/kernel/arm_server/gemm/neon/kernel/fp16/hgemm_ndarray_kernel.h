@@ -27,10 +27,10 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 typedef void (*hgemm_ndarray_kernel_func_t)(
     const __fp16* A,
     const __fp16* B,
-    const int K,
-    const int lda,
-    const int ldb,
-    const int ldc,
+    const int64_t K,
+    const int64_t lda,
+    const int64_t ldb,
+    const int64_t ldc,
     __fp16* C);
 
 extern const hgemm_ndarray_kernel_func_t hgemm_ndarray_kernel_tn_max8x24_func_table[2][2][2][8][3];

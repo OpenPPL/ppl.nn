@@ -25,10 +25,10 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 typedef void (*sgemm_ndarray_kernel_func_t)(
     const float* A, 
     const float* B, 
-    const int K, 
-    const int lda, 
-    const int ldb, 
-    const int ldc, 
+    const int64_t K, 
+    const int64_t lda, 
+    const int64_t ldb, 
+    const int64_t ldc, 
     float* C);
 
 extern const sgemm_ndarray_kernel_func_t sgemm_ndarray_kernel_tn_max8x12_func_table[2][2][2][8][3];
