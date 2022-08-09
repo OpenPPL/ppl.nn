@@ -254,18 +254,6 @@ ppl::common::TensorShape* GetShape() const;
 Returns the shape of this tensor.
 
 ```c++
-ppl::common::RetCode ReallocBuffer();
-```
-
-Reallocates a buffer according to its shape.
-
-```c++
-void FreeBuffer();
-```
-
-Frees the data buffer.
-
-```c++
 ppl::common::RetCode CopyToHost(void* dst) const;
 ```
 

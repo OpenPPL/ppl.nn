@@ -73,12 +73,6 @@ RetCode CopyBuffer(const BufferDesc& src_buf, const TensorShape& src_shape, cons
             return status;
         }
 
-        status = dst->ReallocBuffer();
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "ReallocBuffer for tensor[" << dst->GetName() << "] failed: " << GetRetCodeStr(status);
-            return status;
-        }
-
         status = dst->CopyFromHost(tmp_buffer);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy data from host failed: " << GetRetCodeStr(status);

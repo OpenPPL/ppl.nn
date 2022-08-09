@@ -167,23 +167,18 @@ int RunClassificationModel(const Mat& src_img, const char* onnx_model_path) {
     // reshape network's input tensor
     auto input_tensor = runtime->GetInputTensor(0);
 
+    // pplnn can reshape input dynamically even if onnx model has static input shape
     const std::vector<int64_t> input_shape{1, channels, height, width};
-    input_tensor->GetShape()->Reshape(
-        input_shape); // pplnn can reshape input dynamically even if onnx model has static input shape
-    status = input_tensor->ReallocBuffer(); // must do this after tensor's shape has changed
-    if (status != RC_SUCCESS) {
-        fprintf(stderr, "ReallocBuffer for tensor [%s] failed: %s\n", input_tensor->GetName(), GetRetCodeStr(status));
-        return -1;
-    }
+    input_tensor->GetShape()->Reshape(input_shape);
 
     // set input data descriptor
-    TensorShape src_desc =
-        *input_tensor->GetShape(); // description of your prepared data, not input tensor's description
+    // description of your prepared data, not input tensor's description
+    TensorShape src_desc = *input_tensor->GetShape();
     src_desc.SetDataType(DATATYPE_FLOAT32);
     src_desc.SetDataFormat(DATAFORMAT_NDARRAY); // for 4-D Tensor, NDARRAY == NCHW
 
-    status = input_tensor->ConvertFromHost(
-        in_data, src_desc); // convert data type & format from src_desc to input_tensor & fill data
+    // convert data type & format from src_desc to input_tensor & fill data
+    status = input_tensor->ConvertFromHost(in_data, src_desc);
     if (status != RC_SUCCESS) {
         fprintf(stderr, "set input data to tensor [%s] failed: %s\n", input_tensor->GetName(), GetRetCodeStr(status));
         return -1;

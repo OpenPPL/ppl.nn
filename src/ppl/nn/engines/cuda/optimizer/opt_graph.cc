@@ -162,13 +162,6 @@ RetCode OptGraph::UpdateDims(const utils::SharedResource& resource) {
                 if (constant_ref != graph_->data->constants.end()) { // constant tensor
                     auto tensor = impl_pair.first->second.get();
                     tensor->SetDevice(&default_cpu_device_);
-
-                    auto status = tensor->ReallocBuffer();
-                    if (status != RC_SUCCESS) {
-                        LOG(ERROR) << "realloc buffer failed: " << GetRetCodeStr(status);
-                        return status;
-                    }
-
                     status = tensor->CopyFromHost(constant_ref->second.data.GetData());
                     if (status != RC_SUCCESS) {
                         LOG(ERROR) << "copy constant [" << tensor->GetName() << "] failed: " << GetRetCodeStr(status);

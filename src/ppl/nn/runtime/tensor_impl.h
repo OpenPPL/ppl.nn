@@ -80,11 +80,11 @@ public:
         return buffer_info_.DetachBuffer();
     }
 
-    void FreeBuffer() override {
+    ppl::common::RetCode ReallocBuffer();
+
+    void FreeBuffer() {
         buffer_info_.FreeBuffer();
     }
-
-    ppl::common::RetCode ReallocBuffer() override;
 
     void SetBufferPtr(void* ptr) override {
         buffer_info_.SetBuffer(BufferDesc(ptr));
@@ -109,6 +109,8 @@ public:
     TensorShape* GetShape() const override {
         return buffer_info_.GetShape();
     }
+
+    ppl::common::RetCode CopyFromHostRaw(const void* src);
 
     ppl::common::RetCode CopyToHost(void* dst) const override;
     ppl::common::RetCode CopyFromHost(const void* src) override;
