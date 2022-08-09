@@ -22,9 +22,8 @@ if(PPLNN_ENABLE_CUDA_JIT)
     endif()
     list(APPEND __CUDA_CONV_SRC__ ${__gene_kernel_src__})
     unset(__gene_kernel_src__)
-
 else()
-    if(CUDA_VERSION VERSION_GREATER_EQUAL "10.0")
+    if(CUDA_VERSION VERSION_GREATER_EQUAL "10.2")
         execute_process(
             # sm75 kernels
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv/2spk/gen_2spk_sm75_fp16_hmma1688_kernel.py  ${CMAKE_CURRENT_BINARY_DIR}/conv/2spk/sm75/fp16/hmma1688
