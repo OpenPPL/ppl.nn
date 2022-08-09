@@ -556,15 +556,9 @@ static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime
             buffer[i] = dis(eng);
         }
 
-        auto status = t->ReallocBuffer();
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "ReallocBuffer for tensor[" << t->GetName() << "] failed: " << GetRetCodeStr(status);
-            return false;
-        }
-
         TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-        status = t->ConvertFromHost(buffer.data(), src_desc);
+        auto status = t->ConvertFromHost(buffer.data(), src_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "set tensor[" << t->GetName() << "] content failed: " << GetRetCodeStr(status);
             return false;
@@ -593,15 +587,9 @@ static bool SetInputsAllInOne(const string& input_file, const vector<vector<int6
             t->GetShape()->Reshape(input_shapes[c]);
         }
 
-        auto status = t->ReallocBuffer();
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "ReallocBuffer for tensor[" << t->GetName() << "] failed: " << GetRetCodeStr(status);
-            return false;
-        }
-
         TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-        status = t->ConvertFromHost(data, src_desc);
+        auto status = t->ConvertFromHost(data, src_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "convert tensor[" << t->GetName() << "] content failed: " << GetRetCodeStr(status);
             return false;
@@ -667,12 +655,6 @@ static bool SetInputsOneByOne(const string& input_files_str, const vector<vector
 
         if (!input_shapes.empty()) {
             t->GetShape()->Reshape(input_shapes[i]);
-        }
-
-        status = t->ReallocBuffer();
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "ReallocBuffer for tensor[" << t->GetName() << "] failed: " << GetRetCodeStr(status);
-            return false;
         }
 
         TensorShape src_desc = *t->GetShape();
@@ -772,12 +754,6 @@ static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* ru
 
         auto t = runtime->GetInputTensor(c);
         *t->GetShape() = input_shape;
-
-        status = t->ReallocBuffer();
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "ReallocBuffer for tensor[" << t->GetName() << "] failed: " << GetRetCodeStr(status);
-            return false;
-        }
 
         TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
@@ -997,15 +973,9 @@ static bool SetInputs(const vector<string>& input_data, Runtime* runtime) {
 
     for (uint32_t i = 0; i < runtime->GetInputCount(); ++i) {
         auto t = runtime->GetInputTensor(i);
-        auto status = t->ReallocBuffer();
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "realloc buffer for input[" << t->GetName() << "] failed: " << GetRetCodeStr(status);
-            return false;
-        }
-
         TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
-        status = t->ConvertFromHost(input_data[i].data(), src_desc);
+        auto status = t->ConvertFromHost(input_data[i].data(), src_desc);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "set input [" << t->GetName() << "] failed: " << GetRetCodeStr(status);
             return false;

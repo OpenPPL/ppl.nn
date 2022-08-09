@@ -17,6 +17,7 @@
 
 #include "ppl/nn/engines/common/pmx/shape_operation_kernel.h"
 #include "ppl/nn/runtime/tensor_impl.h"
+using namespace std;
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace pmx {
@@ -42,13 +43,8 @@ RetCode ShapeOperationKernel::DoExecute(KernelExecContext* ctx) {
         }
 
         shape->SetDevice(GetDevice());
-        auto status = shape->ReallocBuffer();
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "allocate memory for tensor[" << shape->GetName() << "] failed: " << GetRetCodeStr(status);
-            return status;
-        }
 
-        std::unique_ptr<int64_t[]> shape_host(new int64_t[dim_size]);
+        vector<int64_t> shape_host(dim_size);
         for (uint32_t j = 0; j < dim_size; ++j) {
             int64_t numer = matrix.numerator[j][ppl::nn::pmx::ShapeMatrix::MAXDIMSIZE];
             int64_t denom = matrix.denominator[j][ppl::nn::pmx::ShapeMatrix::MAXDIMSIZE];
@@ -61,7 +57,7 @@ RetCode ShapeOperationKernel::DoExecute(KernelExecContext* ctx) {
             }
             shape_host[j] = numer / denom;
         }
-        shape->CopyFromHost(shape_host.get());
+        shape->CopyFromHost(shape_host.data());
     }
     return RC_SUCCESS;
 }

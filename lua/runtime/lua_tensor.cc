@@ -53,15 +53,7 @@ void RegisterTensor(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTabl
             shape.SetDataFormat(DATAFORMAT_NDARRAY);
             shape.SetDataType(data_type);
 
-            auto status = tensor->ReallocBuffer();
-            if (status != RC_SUCCESS) {
-                LOG(ERROR) << "realloc buffer of [" << shape.CalcBytesIncludingPadding()
-                           << "] bytes failed when setting data for tensor[" << tensor->GetName()
-                           << "]: " << GetRetCodeStr(status);
-                return status;
-            }
-
-            status = tensor->ConvertFromHost(buf.base, src_shape);
+            auto status = tensor->ConvertFromHost(buf.base, src_shape);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "copy data to tensor[" << tensor->GetName() << "] failed: " << GetRetCodeStr(status);
                 return status;

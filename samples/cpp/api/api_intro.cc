@@ -40,18 +40,12 @@ static bool SetRandomInputs(Runtime* runtime) {
             buffer[i] = dis(eng);
         }
 
-        auto status = t->ReallocBuffer();
-        if (status != RC_SUCCESS) {
-            cerr << "ReallocBuffer for tensor[" << t->GetName() << "] failed: " << GetRetCodeStr(status) << endl;
-            return false;
-        }
-
         // our random data is treated as NDARRAY
         TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
 
         // input tensors may require different data format
-        status = t->ConvertFromHost(buffer.data(), src_desc);
+        auto status = t->ConvertFromHost(buffer.data(), src_desc);
         if (status != RC_SUCCESS) {
             cerr << "set tensor[" << t->GetName() << "] content failed: " << GetRetCodeStr(status) << endl;
             return false;

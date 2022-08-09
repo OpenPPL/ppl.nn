@@ -64,15 +64,7 @@ static RetCode ConvertFromHost(const PyTensor& py_tensor, const pybind11::buffer
     src_shape.SetDataFormat(DATAFORMAT_NDARRAY);
     src_shape.SetDataType(data_type);
 
-    auto status = tensor->ReallocBuffer();
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "realloc buffer of [" << shape->CalcBytesIncludingPadding()
-                   << "] bytes failed when setting data for tensor[" << tensor->GetName()
-                   << "]: " << GetRetCodeStr(status);
-        return status;
-    }
-
-    status = tensor->ConvertFromHost(info.ptr, src_shape);
+    auto status = tensor->ConvertFromHost(info.ptr, src_shape);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "copy data to tensor[" << tensor->GetName() << "] failed: " << GetRetCodeStr(status);
         return status;

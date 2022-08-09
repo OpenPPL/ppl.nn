@@ -35,28 +35,22 @@ public:
     /** @brief get tensor's shape */
     virtual TensorShape* GetShape() const = 0;
 
-    /** @brief rellocate a buffer according to its shape */
-    virtual ppl::common::RetCode ReallocBuffer() = 0;
-
-    /** @brief free data buffer */
-    virtual void FreeBuffer() = 0;
-
     /**
        @brief copy tensor's data to `dst`, which points to a host memory
        @note `dst` MUST have enough space.
     */
     virtual ppl::common::RetCode CopyToHost(void* dst) const = 0;
 
-    /**
-       @brief copy tensor's data from `dst`, which points to a host memory
-       @note `dst` MUST have enough space.
-    */
+    /** @brief copy tensor's data from `dst`, which points to a host memory */
     virtual ppl::common::RetCode CopyFromHost(const void* src) = 0;
 
-    /** @brief convert tensor's data to `dst` with shape `dst_desc` */
+    /**
+       @brief convert tensor's data to `dst` with shape `dst_desc`
+       @note `dst` MUST have enough space.
+    */
     virtual ppl::common::RetCode ConvertToHost(void* dst, const TensorShape& dst_desc) const = 0;
 
-    /** @brief convert tensor's data from `dst` with shape `dst_desc` */
+    /** @brief convert tensor's data from `src` with shape `src_desc` */
     virtual ppl::common::RetCode ConvertFromHost(const void* src, const TensorShape& src_desc) = 0;
 
     /** @brief get context of the underlying `Device` */
