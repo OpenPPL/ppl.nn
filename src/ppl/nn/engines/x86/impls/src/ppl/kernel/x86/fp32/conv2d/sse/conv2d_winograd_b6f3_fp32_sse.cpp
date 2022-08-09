@@ -18,7 +18,6 @@
 #include <float.h>
 #include <string.h>
 #include <nmmintrin.h>
-#include <string.h>
 
 #include "ppl/kernel/x86/common/sse_tools.h"
 #include "ppl/kernel/x86/fp32/transpose/transpose_fp32_sse.h"
@@ -28,6 +27,7 @@
 #define CH_DT_BLK()  8
 #define TILE_OC_RF() 6
 #define CH_RF_BLK()  4
+#define OW_RF_BLK()  4
 
 #define TILE_IN_H()  8
 #define TILE_IN_W()  8
@@ -40,7 +40,7 @@
 
 #define IC_L2_BLK_MAX_L()    (12 * CH_DT_BLK())
 #define IC_L2_BLK_MAX_L_LC() (16 * CH_DT_BLK())
-#define IC_L2_BLK_MAX_S()    (8  * CH_DT_BLK()) 
+#define IC_L2_BLK_MAX_S()    (8  * CH_DT_BLK())
 #define OC_L2_BLK_MAX()      (48 * CH_DT_BLK())
 #define OC_L2_BLK_MAX_L()    (64 * CH_DT_BLK())
 #define TILE_L2_BLK_MAX_L()  (18 * CH_DT_BLK())
@@ -323,11 +323,15 @@ template <int64_t channel>
 static inline void winograd_b6f3_dst_trans_fp32_sse(
     const float *src,
     const float *sum_src,
-    const uint64_t fuse_flag,
+    const ppl::kernel::x86::conv_fuse_flag_t fuse_flag,
+    const int64_t ow_len,
     const int64_t sum_src_stride,
-    const int64_t dst_stride, // dst_h * dst_w
+    const int64_t dst_stride,
     float *dst)
 {
+    float sum[CH_DT_BLK() * OW_RF_BLK()] = {0.0f};
+    const float* real_sum = sum_src;
+    int64_t sum_stride = sum_src_stride;
     __m128 xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7;
     __m128 xmm8, xmm9, xmm10, xmm11, xmm12, xmm13, xmm14, xmm15;
     if (channel >= 1) xmm0 = _mm_loadu_ps(src + 0 * CH_DT_BLK() + 0 * CH_RF_BLK());
@@ -343,14 +347,28 @@ static inline void winograd_b6f3_dst_trans_fp32_sse(
     if (channel >= 5) TRANSPOSE_4X4_FP32_SSE_MACRO(xmm8, xmm9, xmm10, xmm11, xmm12, xmm13, xmm14, xmm15);
 
     if (fuse_flag & conv_fuse_flag::SUM) {
-        if (channel >= 1) xmm0 = _mm_add_ps(xmm0, _mm_loadu_ps(sum_src + 0 * sum_src_stride));
-        if (channel >= 2) xmm1 = _mm_add_ps(xmm1, _mm_loadu_ps(sum_src + 1 * sum_src_stride));
-        if (channel >= 3) xmm2 = _mm_add_ps(xmm2, _mm_loadu_ps(sum_src + 2 * sum_src_stride));
-        if (channel >= 4) xmm3 = _mm_add_ps(xmm3, _mm_loadu_ps(sum_src + 3 * sum_src_stride));
-        if (channel >= 5) xmm8 = _mm_add_ps(xmm8, _mm_loadu_ps(sum_src + 4 * sum_src_stride));
-        if (channel >= 6) xmm9 = _mm_add_ps(xmm9, _mm_loadu_ps(sum_src + 5 * sum_src_stride));
-        if (channel >= 7) xmm10 = _mm_add_ps(xmm10, _mm_loadu_ps(sum_src + 6 * sum_src_stride));
-        if (channel >= 8) xmm11 = _mm_add_ps(xmm11, _mm_loadu_ps(sum_src + 7 * sum_src_stride));
+        if (ow_len < 4) {
+            for (int64_t w = 0; w < ow_len; ++w) {
+                if (channel >= 1) sum[0 * OW_RF_BLK() +  w] = sum_src[0 * sum_src_stride + w];
+                if (channel >= 2) sum[1 * OW_RF_BLK() +  w] = sum_src[1 * sum_src_stride + w];
+                if (channel >= 3) sum[2 * OW_RF_BLK() +  w] = sum_src[2 * sum_src_stride + w];
+                if (channel >= 4) sum[3 * OW_RF_BLK() +  w] = sum_src[3 * sum_src_stride + w];
+                if (channel >= 5) sum[4 * OW_RF_BLK() +  w] = sum_src[4 * sum_src_stride + w];
+                if (channel >= 6) sum[5 * OW_RF_BLK() +  w] = sum_src[5 * sum_src_stride + w];
+                if (channel >= 7) sum[6 * OW_RF_BLK() +  w] = sum_src[6 * sum_src_stride + w];
+                if (channel >= 8) sum[7 * OW_RF_BLK() +  w] = sum_src[7 * sum_src_stride + w];
+            }
+            real_sum = sum;
+            sum_stride = OW_RF_BLK();
+        }
+        if (channel >= 1) xmm0 = _mm_add_ps(xmm0, _mm_loadu_ps(real_sum + 0 * sum_stride));
+        if (channel >= 2) xmm1 = _mm_add_ps(xmm1, _mm_loadu_ps(real_sum + 1 * sum_stride));
+        if (channel >= 3) xmm2 = _mm_add_ps(xmm2, _mm_loadu_ps(real_sum + 2 * sum_stride));
+        if (channel >= 4) xmm3 = _mm_add_ps(xmm3, _mm_loadu_ps(real_sum + 3 * sum_stride));
+        if (channel >= 5) xmm8 = _mm_add_ps(xmm8, _mm_loadu_ps(real_sum + 4 * sum_stride));
+        if (channel >= 6) xmm9 = _mm_add_ps(xmm9, _mm_loadu_ps(real_sum + 5 * sum_stride));
+        if (channel >= 7) xmm10 = _mm_add_ps(xmm10, _mm_loadu_ps(real_sum + 6 * sum_stride));
+        if (channel >= 8) xmm11 = _mm_add_ps(xmm11, _mm_loadu_ps(real_sum + 7 * sum_stride));
     }
 
     if (fuse_flag & (conv_fuse_flag::RELU | conv_fuse_flag::RELU6)) {
@@ -396,15 +414,27 @@ static inline void winograd_b6f3_dst_trans_fp32_sse(
     if (channel >= 1) TRANSPOSE_4X4_FP32_SSE_MACRO(xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7);
     if (channel >= 5) TRANSPOSE_4X4_FP32_SSE_MACRO(xmm8, xmm9, xmm10, xmm11, xmm12, xmm13, xmm14, xmm15);
 
-    if (fuse_flag & conv_fuse_flag::SUM) {
-        if (channel >= 1) xmm0 = _mm_add_ps(xmm0, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 0 * sum_src_stride + CH_RF_BLK())));
-        if (channel >= 2) xmm1 = _mm_add_ps(xmm1, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 1 * sum_src_stride + CH_RF_BLK())));
-        if (channel >= 3) xmm2 = _mm_add_ps(xmm2, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 2 * sum_src_stride + CH_RF_BLK())));
-        if (channel >= 4) xmm3 = _mm_add_ps(xmm3, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 3 * sum_src_stride + CH_RF_BLK())));
-        if (channel >= 5) xmm8 = _mm_add_ps(xmm8, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 4 * sum_src_stride + CH_RF_BLK())));
-        if (channel >= 6) xmm9 = _mm_add_ps(xmm9, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 5 * sum_src_stride + CH_RF_BLK())));
-        if (channel >= 7) xmm10 = _mm_add_ps(xmm10, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 6 * sum_src_stride + CH_RF_BLK())));
-        if (channel >= 8) xmm11 = _mm_add_ps(xmm11, _mm_loadl_pi(xmm7, (__m64 *)(sum_src + 7 * sum_src_stride + CH_RF_BLK())));
+    if ((fuse_flag & conv_fuse_flag::SUM) && ow_len > OW_RF_BLK()) {
+        if (ow_len ==  OW_RF_BLK() + 1) {
+            if (channel >= 1) sum[0 * OW_RF_BLK()] = sum_src[0 * sum_src_stride + OW_RF_BLK()];
+            if (channel >= 2) sum[1 * OW_RF_BLK()] = sum_src[1 * sum_src_stride + OW_RF_BLK()];
+            if (channel >= 3) sum[2 * OW_RF_BLK()] = sum_src[2 * sum_src_stride + OW_RF_BLK()];
+            if (channel >= 4) sum[3 * OW_RF_BLK()] = sum_src[3 * sum_src_stride + OW_RF_BLK()];
+            if (channel >= 5) sum[4 * OW_RF_BLK()] = sum_src[4 * sum_src_stride + OW_RF_BLK()];
+            if (channel >= 6) sum[5 * OW_RF_BLK()] = sum_src[5 * sum_src_stride + OW_RF_BLK()];
+            if (channel >= 7) sum[6 * OW_RF_BLK()] = sum_src[6 * sum_src_stride + OW_RF_BLK()];
+            if (channel >= 8) sum[7 * OW_RF_BLK()] = sum_src[7 * sum_src_stride + OW_RF_BLK()];
+            real_sum = sum - OW_RF_BLK();
+            sum_stride = OW_RF_BLK();
+        }
+        if (channel >= 1) xmm0 = _mm_add_ps(xmm0, _mm_loadl_pi(xmm7, (__m64 *)(real_sum + 0 * sum_stride + OW_RF_BLK())));
+        if (channel >= 2) xmm1 = _mm_add_ps(xmm1, _mm_loadl_pi(xmm7, (__m64 *)(real_sum + 1 * sum_stride + OW_RF_BLK())));
+        if (channel >= 3) xmm2 = _mm_add_ps(xmm2, _mm_loadl_pi(xmm7, (__m64 *)(real_sum + 2 * sum_stride + OW_RF_BLK())));
+        if (channel >= 4) xmm3 = _mm_add_ps(xmm3, _mm_loadl_pi(xmm7, (__m64 *)(real_sum + 3 * sum_stride + OW_RF_BLK())));
+        if (channel >= 5) xmm8 = _mm_add_ps(xmm8, _mm_loadl_pi(xmm7, (__m64 *)(real_sum + 4 * sum_stride + OW_RF_BLK())));
+        if (channel >= 6) xmm9 = _mm_add_ps(xmm9, _mm_loadl_pi(xmm7, (__m64 *)(real_sum + 5 * sum_stride + OW_RF_BLK())));
+        if (channel >= 7) xmm10 = _mm_add_ps(xmm10, _mm_loadl_pi(xmm7, (__m64 *)(real_sum + 6 * sum_stride + OW_RF_BLK())));
+        if (channel >= 8) xmm11 = _mm_add_ps(xmm11, _mm_loadl_pi(xmm7, (__m64 *)(real_sum + 7 * sum_stride + OW_RF_BLK())));
     }
 
     if (fuse_flag & (conv_fuse_flag::RELU | conv_fuse_flag::RELU6)) {
@@ -431,14 +461,14 @@ static inline void winograd_b6f3_dst_trans_fp32_sse(
         if (channel >= 8) xmm11 = _mm_min_ps(xmm11, xmm6);
     }
 
-    if (channel >= 1) _mm_storel_pi((__m64 *)(dst + 0 * dst_stride + CH_RF_BLK()), xmm0);
-    if (channel >= 2) _mm_storel_pi((__m64 *)(dst + 1 * dst_stride + CH_RF_BLK()), xmm1);
-    if (channel >= 3) _mm_storel_pi((__m64 *)(dst + 2 * dst_stride + CH_RF_BLK()), xmm2);
-    if (channel >= 4) _mm_storel_pi((__m64 *)(dst + 3 * dst_stride + CH_RF_BLK()), xmm3);
-    if (channel >= 5) _mm_storel_pi((__m64 *)(dst + 4 * dst_stride + CH_RF_BLK()), xmm8);
-    if (channel >= 6) _mm_storel_pi((__m64 *)(dst + 5 * dst_stride + CH_RF_BLK()), xmm9);
-    if (channel >= 7) _mm_storel_pi((__m64 *)(dst + 6 * dst_stride + CH_RF_BLK()), xmm10);
-    if (channel >= 8) _mm_storel_pi((__m64 *)(dst + 7 * dst_stride + CH_RF_BLK()), xmm11);
+    if (channel >= 1) _mm_storel_pi((__m64 *)(dst + 0 * dst_stride + OW_RF_BLK()), xmm0);
+    if (channel >= 2) _mm_storel_pi((__m64 *)(dst + 1 * dst_stride + OW_RF_BLK()), xmm1);
+    if (channel >= 3) _mm_storel_pi((__m64 *)(dst + 2 * dst_stride + OW_RF_BLK()), xmm2);
+    if (channel >= 4) _mm_storel_pi((__m64 *)(dst + 3 * dst_stride + OW_RF_BLK()), xmm3);
+    if (channel >= 5) _mm_storel_pi((__m64 *)(dst + 4 * dst_stride + OW_RF_BLK()), xmm8);
+    if (channel >= 6) _mm_storel_pi((__m64 *)(dst + 5 * dst_stride + OW_RF_BLK()), xmm9);
+    if (channel >= 7) _mm_storel_pi((__m64 *)(dst + 6 * dst_stride + OW_RF_BLK()), xmm10);
+    if (channel >= 8) _mm_storel_pi((__m64 *)(dst + 7 * dst_stride + OW_RF_BLK()), xmm11);
 }
 
 template <int64_t channel>
@@ -825,16 +855,10 @@ static inline void winograd_b6f3_preprocess_fp32_sse(
 template <int64_t channel>
 static inline void winograd_b6f3_postprocess_fp32_sse(
     const float *dst_trans,
-    const float *sum_src,
     const float *bias,
     const int64_t dst_trans_ti_stride,
-    const int64_t dst_h_stride,
-    const int64_t dst_hw,
-    const uint64_t fuse_flag,
-    const bool flag,
     float *matmul_buffer,
-    float *dst_buf,
-    float *dst)
+    float *dst_buf)
 {
     int64_t matmul_h_stride = TILE_IN_W() * CH_DT_BLK();
 
@@ -1084,18 +1108,6 @@ static inline void winograd_b6f3_postprocess_fp32_sse(
         xmm8 = _mm_add_ps(xmm8, xmm2);
         _mm_storeu_ps(l_dst + 5 * CH_DT_BLK() + 1 * CH_RF_BLK(), xmm8);
     }
-
-    matmul_h_stride            = TILE_OUT_W() * CH_DT_BLK();
-    const int64_t tmp_h_stride = flag ? dst_h_stride : TILE_IN_W();
-    const int64_t tmp_hw       = flag ? dst_hw : TILE_IN_H() * TILE_IN_W();
-
-    // dst trans: trans data from matmul to dst
-    winograd_b6f3_dst_trans_fp32_sse<channel>(matmul_buffer + 0 * matmul_h_stride, sum_src + 0 * dst_h_stride, fuse_flag, dst_hw, tmp_hw, dst + 0 * tmp_h_stride);
-    winograd_b6f3_dst_trans_fp32_sse<channel>(matmul_buffer + 1 * matmul_h_stride, sum_src + 1 * dst_h_stride, fuse_flag, dst_hw, tmp_hw, dst + 1 * tmp_h_stride);
-    winograd_b6f3_dst_trans_fp32_sse<channel>(matmul_buffer + 2 * matmul_h_stride, sum_src + 2 * dst_h_stride, fuse_flag, dst_hw, tmp_hw, dst + 2 * tmp_h_stride);
-    winograd_b6f3_dst_trans_fp32_sse<channel>(matmul_buffer + 3 * matmul_h_stride, sum_src + 3 * dst_h_stride, fuse_flag, dst_hw, tmp_hw, dst + 3 * tmp_h_stride);
-    winograd_b6f3_dst_trans_fp32_sse<channel>(matmul_buffer + 4 * matmul_h_stride, sum_src + 4 * dst_h_stride, fuse_flag, dst_hw, tmp_hw, dst + 4 * tmp_h_stride);
-    winograd_b6f3_dst_trans_fp32_sse<channel>(matmul_buffer + 5 * matmul_h_stride, sum_src + 5 * dst_h_stride, fuse_flag, dst_hw, tmp_hw, dst + 5 * tmp_h_stride);
 }
 
 template <int64_t channel>
@@ -1135,7 +1147,7 @@ static const winograd_b6f3_preprocess_fp32_sse_func_t winograd_b6f3_preprocess_f
     winograd_b6f3_preprocess_fp32_sse<8>,
 };
 
-typedef void (*winograd_b6f3_postprocess_fp32_sse_func_t)(const float *, const float *, const float *, const int64_t, const int64_t, const int64_t, const uint64_t, const bool, float *, float *, float *);
+typedef void (*winograd_b6f3_postprocess_fp32_sse_func_t)(const float *, const float *, const int64_t, float *, float *);
 static const winograd_b6f3_postprocess_fp32_sse_func_t winograd_b6f3_postprocess_fp32_sse_func_table[CH_DT_BLK() + 1]
 {
     nullptr,
@@ -1147,6 +1159,20 @@ static const winograd_b6f3_postprocess_fp32_sse_func_t winograd_b6f3_postprocess
     winograd_b6f3_postprocess_fp32_sse<6>,
     winograd_b6f3_postprocess_fp32_sse<7>,
     winograd_b6f3_postprocess_fp32_sse<8>,
+};
+
+typedef void (*winograd_b6f3_dst_trans_fp32_sse_func_t)(const float *,const float *, const ppl::kernel::x86::conv_fuse_flag_t, const int64_t, const int64_t, const int64_t, float *);
+static const winograd_b6f3_dst_trans_fp32_sse_func_t winograd_b6f3_dst_trans_fp32_sse_func_table[CH_DT_BLK() + 1]
+{
+    nullptr,
+    winograd_b6f3_dst_trans_fp32_sse<1>,
+    winograd_b6f3_dst_trans_fp32_sse<2>,
+    winograd_b6f3_dst_trans_fp32_sse<3>,
+    winograd_b6f3_dst_trans_fp32_sse<4>,
+    winograd_b6f3_dst_trans_fp32_sse<5>,
+    winograd_b6f3_dst_trans_fp32_sse<6>,
+    winograd_b6f3_dst_trans_fp32_sse<7>,
+    winograd_b6f3_dst_trans_fp32_sse<8>,
 };
 
 typedef void (*winograd_b6f3_store_dst_fp32_sse_func_t)(const float *, const int64_t, const int64_t, const int64_t, const int64_t, float *);
@@ -1362,16 +1388,23 @@ ppl::common::RetCode conv2d_winograd_b6f3_fp32_sse_executor::execute()
                                 const int64_t channel = min<int64_t>(CH_DT_BLK(), sp.oc_per_gp - ocb);
                                 float *dst_buf        = postprocess_buf + sp.thread_matmul_out_len;
 
+                                winograd_b6f3_postprocess_fp32_sse_func_table[channel](
+                                        l_gemm_out, cvt_bias_ + g * bias_g_stride + ocb, 
+                                        gemm_out_ti_stride, postprocess_buf, dst_buf);
+
                                 if (oh_len == TILE_OUT_H() && ow_len == TILE_OUT_W()) {
-                                    winograd_b6f3_postprocess_fp32_sse_func_table[channel](
-                                        l_gemm_out, l_sum_src, cvt_bias_ + g * bias_g_stride + ocb, 
-                                        gemm_out_ti_stride, dst_w, dst_hw, cp.fuse_flag, true, postprocess_buf, dst_buf, l_dst);
 
+                                    winograd_b6f3_dst_trans_fp32_sse_func_table[channel](postprocess_buf + 0 * TILE_OUT_W() * CH_DT_BLK(), l_sum_src + 0 * dst_w, cp.fuse_flag, TILE_OUT_W(), dst_hw, dst_hw, l_dst + 0 * dst_w);
+                                    winograd_b6f3_dst_trans_fp32_sse_func_table[channel](postprocess_buf + 1 * TILE_OUT_W() * CH_DT_BLK(), l_sum_src + 1 * dst_w, cp.fuse_flag, TILE_OUT_W(), dst_hw, dst_hw, l_dst + 1 * dst_w);
+                                    winograd_b6f3_dst_trans_fp32_sse_func_table[channel](postprocess_buf + 2 * TILE_OUT_W() * CH_DT_BLK(), l_sum_src + 2 * dst_w, cp.fuse_flag, TILE_OUT_W(), dst_hw, dst_hw, l_dst + 2 * dst_w);
+                                    winograd_b6f3_dst_trans_fp32_sse_func_table[channel](postprocess_buf + 3 * TILE_OUT_W() * CH_DT_BLK(), l_sum_src + 3 * dst_w, cp.fuse_flag, TILE_OUT_W(), dst_hw, dst_hw, l_dst + 3 * dst_w);
+                                    winograd_b6f3_dst_trans_fp32_sse_func_table[channel](postprocess_buf + 4 * TILE_OUT_W() * CH_DT_BLK(), l_sum_src + 4 * dst_w, cp.fuse_flag, TILE_OUT_W(), dst_hw, dst_hw, l_dst + 4 * dst_w);
+                                    winograd_b6f3_dst_trans_fp32_sse_func_table[channel](postprocess_buf + 5 * TILE_OUT_W() * CH_DT_BLK(), l_sum_src + 5 * dst_w, cp.fuse_flag, TILE_OUT_W(), dst_hw, dst_hw, l_dst + 5 * dst_w);
                                 } else {
-                                    winograd_b6f3_postprocess_fp32_sse_func_table[channel](
-                                        l_gemm_out, l_sum_src, cvt_bias_ + g * bias_g_stride + ocb, 
-                                        gemm_out_ti_stride, dst_w, dst_hw, cp.fuse_flag, false, postprocess_buf, dst_buf, dst_buf);
-
+                                    
+                                    for (int64_t h = 0; h < oh_len; ++h) {
+                                        winograd_b6f3_dst_trans_fp32_sse_func_table[channel](postprocess_buf + h * TILE_OUT_W() * CH_DT_BLK(), l_sum_src + h * dst_w, cp.fuse_flag, ow_len, dst_hw, TILE_IN_H() * TILE_IN_W(), dst_buf + h * TILE_IN_W());
+                                    }
                                     winograd_b6f3_store_dst_fp32_sse_func_table[channel](
                                         dst_buf, oh_len, ow_len, dst_w, dst_hw, l_dst);
                                 }
