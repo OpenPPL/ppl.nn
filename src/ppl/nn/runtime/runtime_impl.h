@@ -99,7 +99,7 @@ private:
 
 private:
     RuntimeGraphResource graph_;
-    std::unique_ptr<Scheduler> sched_;
+    std::shared_ptr<Scheduler> sched_;
     std::vector<std::unique_ptr<EngineContext>> engctx_;
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
