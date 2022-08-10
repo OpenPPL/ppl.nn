@@ -104,8 +104,7 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
     temp_conv_param.hole_width = 1;
     temp_conv_param.num_grp = 1;
 
-    // const std::string& key_str = node->GetName();
-    const std::string& key_str = GetConvShapeString(temp_conv_param);
+    const std::string& key_str = node->GetName();
     auto algo_info = options.algos->find(key_str);
     if (algo_info != options.algos->end()) {
         attr_param_.extra_param.algo_info.kid = algo_info->second.kid;

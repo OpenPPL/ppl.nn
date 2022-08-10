@@ -21,6 +21,7 @@
 #include "ppl/nn/optimizers/constant_node_optimizer.h"
 #include "ppl/nn/optimizers/fuse_parallel_node_optimizer.h"
 #include "ppl/nn/optimizers/fuse_bn_optimizer.h"
+#include "ppl/nn/optimizers/fuse_constant_optimizer.h"
 #include "ppl/nn/optimizers/fuse_shape_optimizer.h"
 #include "ppl/nn/optimizers/skip_dropout_optimizer.h"
 
@@ -35,6 +36,7 @@ GraphOptimizerManager::GraphOptimizerManager() {
     REGISTER_OPTIMIZER("ConstantNodeOptimizer", ConstantNodeOptimizer);
     REGISTER_OPTIMIZER("FuseParallelNodeOptimizer", FuseParallelNodeOptimizer);
     REGISTER_OPTIMIZER("FuseBNOptimizer", FuseBNOptimizer);
+    REGISTER_OPTIMIZER("FuseConstantOptimizer", FuseConstantOptimizer);
     REGISTER_OPTIMIZER("FuseShapeOptimizer", FuseShapeOptimizer);
     REGISTER_OPTIMIZER("SkipDropoutOptimizer", SkipDropoutOptimizer);
 }
