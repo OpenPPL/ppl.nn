@@ -97,13 +97,19 @@ void init_f1_int8_kvec(std::vector<kernel_info_t> &g_int8_kvec, int device_id, p
 #ifndef PPLNN_ENABLE_CUDA_JIT
     if(type == ppl::common::DATATYPE_INT8) {
         if (device_prop.major == 7 && device_prop.minor == 5) {
+#if (__CUDA_ARCH__ >= 750) && (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
             Initialize2spkSM75Int8Imma8816ConvF1KernelContainer(g_int8_kvec);
+#endif
         } else if (device_prop.major > 8 || (device_prop.major == 8 && device_prop.minor >= 0)) {
+#if (__CUDA_ARCH__ >= 750) && (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
             Initialize2spkSM75Int8Imma8816ConvF1KernelContainer(g_int8_kvec);
+#endif
 
+#if (__CUDA_ARCH__ >= 800) && (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
             Initialize2spkSM80Int8Imma8816ConvF1KernelContainer(g_int8_kvec);
             Initialize2spkSM80Int8Imma16816ConvF1KernelContainer(g_int8_kvec);
             Initialize2spkSM80Int8Imma16832ConvF1KernelContainer(g_int8_kvec);
+#endif
         }
     }
     is_g_int8_kvec_set = true;

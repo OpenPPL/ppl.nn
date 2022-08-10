@@ -64,7 +64,7 @@ RetCode BufferedCudaDevice::Init(int device_id, uint32_t mm_policy) {
         buffer_manager_.reset(new utils::CompactBufferManager(allocator, CUDA_DEFAULT_ALIGNMENT, block_size));
 #else
         LOG(WARNING) << "Due to lower CUDA version, 'Compact Memory' is not supported, choose 'Perf Mode' instead.";
-        allocator_.reset(new DefaultCudaAllocator());
+        allocator_.reset(new PlainCudaAllocator());
         buffer_manager_.reset(new utils::StackBufferManager(allocator_.get(), true));
 #endif
     }
