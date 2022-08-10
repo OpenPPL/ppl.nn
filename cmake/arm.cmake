@@ -1,4 +1,6 @@
 option(PPLNN_USE_ARMV8_2 "Build arm kernel with armv8.2-a support." ON)
+option(PPLNN_USE_ARMV8_2_BF16 "Build arm kernel with armv8.2-a bf16 support. must enable PPLNN_USE_ARMV8_2 first." OFF)
+option(PPLNN_USE_ARMV8_2_I8MM "Build arm kernel with armv8.2-a i8mm support. must enable PPLNN_USE_ARMV8_2 first." OFF)
 option(PPLNN_USE_NUMA "build with libnuma" OFF)
 option(PPLNN_USE_ANDROID_NDK "build with android ndk" OFF)
 
@@ -14,9 +16,14 @@ endif()
 set(PPLCOMMON_USE_AARCH64 ${PPLNN_USE_AARCH64})
 set(PPLCOMMON_USE_ARMV8_2 ${PPLNN_USE_ARMV8_2})
 set(PPLCOMMON_USE_ARMV7   ${PPLNN_USE_ARMV7})
+set(PPLCOMMON_USE_ARMV8_2_BF16 ${PPLNN_USE_ARMV8_2_BF16})
+set(PPLCOMMON_USE_ARMV8_2_I8MM ${PPLNN_USE_ARMV8_2_I8MM})
 
 if (PPLNN_USE_ARMV8_2)
-    set(PPLNN_USE_ARMV8_2_FP16 ON)
+    set(PPLNN_USE_ARMV8_2_FP16 ON)  # default enable fp16
+else()
+    set(PPLNN_USE_ARMV8_2_BF16 OFF) # bf16 must enable armv8.2 first
+    set(PPLNN_USE_ARMV8_2_I8MM OFF) # i8mm must enable armv8.2 first
 endif()
 
 file(GLOB_RECURSE PPLNN_ARM_SRC
@@ -51,6 +58,12 @@ if (PPLNN_USE_ARMV7)
 endif()
 if (PPLNN_USE_ARMV8_2_FP16)
     list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_USE_ARMV8_2_FP16)
+endif()
+if (PPLNN_USE_ARMV8_2_BF16)
+    list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_USE_ARMV8_2_BF16)
+endif()
+if (PPLNN_USE_ARMV8_2_I8MM)
+    list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_USE_ARMV8_2_I8MM)
 endif()
 
 if (PPLNN_USE_NUMA)

@@ -21,14 +21,14 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 #ifdef PPLNN_USE_ARMV8_2_FP16
 
-template <int32_t prefetch_a, int32_t prefetch_b, int32_t init_t, int32_t m_block, int32_t n_block>
+template <int64_t prefetch_a, int64_t prefetch_b, int64_t init_t, int64_t m_block, int64_t n_block>
 void hgemm_ndarray_tn_max8x24_kernel_func(
     const __fp16* A, 
     const __fp16* B, 
-    const int32_t K, 
-    const int32_t lda, 
-    const int32_t ldb, 
-    const int32_t ldc, 
+    const int64_t K, 
+    const int64_t lda, 
+    const int64_t ldb, 
+    const int64_t ldc, 
     __fp16* C);
 
 #define PREFETCH_A()    0   // not prefetch A

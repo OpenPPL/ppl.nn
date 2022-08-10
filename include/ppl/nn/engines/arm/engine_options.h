@@ -33,6 +33,7 @@ struct PPLNN_PUBLIC EngineOptions final {
     uint32_t dynamic_tuning_level = TUNING_SELECT_ALGO;
     // bind engine to speicified numa node, range [0, numa_max_node). other value will not bind.
     int32_t numa_node_id = -1;
+    uint32_t enable_bf16 = 0;
 };
 
 }}} // namespace ppl::nn::arm

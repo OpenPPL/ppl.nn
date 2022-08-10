@@ -26,10 +26,10 @@ template<>
 void hgemm_ndarray_tn_max8x24_kernel_func<PREFETCH_A(), PREFETCH_B(), INIT_T(), M_BLOCK(), N_BLOCK()>(
     const __fp16* A, 
     const __fp16* B, 
-    const int32_t K, 
-    const int32_t lda, 
-    const int32_t ldb, 
-    const int32_t ldc, 
+    const int64_t K, 
+    const int64_t lda, 
+    const int64_t ldb, 
+    const int64_t ldc, 
     __fp16* C)
 {
 #define IF_M_GT(M, INSTRUCTION) ".if " PPL_ARM_SERVER_KERNEL_STR(M_BLOCK()) " > " #M "\n\t" INSTRUCTION ".endif\n\t"
@@ -53,11 +53,11 @@ void hgemm_ndarray_tn_max8x24_kernel_func<PREFETCH_A(), PREFETCH_B(), INIT_T(), 
     ".endif\n\t" \
     ".endif\n\t"
 
-    const int32_t head = K % 2;
-    const int32_t body = K - head;
+    const int64_t head = K % 2;
+    const int64_t body = K - head;
 
-    const int32_t prefetch_line_a = 8;
-    const int32_t prefetch_line_b = 8;
+    const int64_t prefetch_line_a = 8;
+    const int64_t prefetch_line_b = 8;
     const __fp16* prefetch_a_ptr = A + prefetch_line_a * lda;
     const __fp16* prefetch_b_ptr = B + prefetch_line_b * ldb;
 
