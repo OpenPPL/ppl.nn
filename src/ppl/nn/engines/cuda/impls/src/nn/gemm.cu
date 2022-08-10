@@ -95,12 +95,18 @@ void init_f1_kvec(std::vector<kernel_info_t> &g_fp16_kvec, int device_id, ppl::c
 #ifndef PPLNN_ENABLE_CUDA_JIT
     if (type == ppl::common::DATATYPE_FLOAT16) {
         if (device_prop.major == 7 && device_prop.minor == 5) {
+#if (__CUDA_ARCH__ >= 750) && (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
             Initialize2spkSM75FP16Hmma1688ConvF1KernelContainer(g_fp16_kvec);
+#endif
         } else if (device_prop.major > 8 || (device_prop.major == 8 && device_prop.minor >= 0)) {
+#if (__CUDA_ARCH__ >= 750) && (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
             Initialize2spkSM75FP16Hmma1688ConvF1KernelContainer(g_fp16_kvec);
+#endif
 
+#if (__CUDA_ARCH__ >= 800) && (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
             Initialize2spkSM80FP16Hmma1688ConvF1KernelContainer(g_fp16_kvec);
             Initialize2spkSM80FP16Hmma16816ConvF1KernelContainer(g_fp16_kvec);
+#endif
         }
     }
     is_g_fp16_kvec_set = true;
