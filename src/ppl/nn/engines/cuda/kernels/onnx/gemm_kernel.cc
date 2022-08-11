@@ -35,11 +35,6 @@ bool GemmKernel::CanDoExecute(const KernelExecContext& ctx) const {
     return true;
 }
 
-uint64_t GemmKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
-    return 0;
-}
-
-
 ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     conv_param_t temp_conv_param;
     fuse_param_t temp_fuse_param;
