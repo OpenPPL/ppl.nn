@@ -122,17 +122,18 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
     uint64_t size = PPLConvTransposeGetCompilationBufSizeCuda(&shape_in0, &shape_out, &attr_param_.param);
     ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, size, ALGO_MAX_TIME)
 
-    auto stream = options.device->GetStream();
-
-    int device_id = options.device->GetDeviceId();
 #ifdef PPLNN_ENABLE_CUDA_JIT
     // Do select
     LOG(INFO) << "Compiling " << node->GetName();
-#endif
+    auto timer= 1e-5;
+#else
     // Do Select
+    auto stream = options.device->GetStream();
+    int device_id = options.device->GetDeviceId();
     auto timer = PPLCUDAConvTransposeSelectKernel(device_id, stream, &shape_in0, input_buffer.addr, weight_buffer.addr,
                                                   bias_buffer.addr, temp_buffer.addr, &shape_out, output_buffer.addr,
                                                   &attr_param_.param, attr_param_.extra_param.algo_info);
+#endif
     CudaArgs::AlgoSelects algo_select;
     algo_select.kname = attr_param_.extra_param.algo_info.algo_name;
     algo_select.kid = attr_param_.extra_param.algo_info.kid;

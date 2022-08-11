@@ -339,10 +339,6 @@ double PPLCUDAGemmJITSelectKernel(
     elapsed = AlgoForwardTime(device_id, stream, knames, sources, index, compile_params, device_id, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, fuse_param, workspace);
 
     algo_param = params[index];
-
-    // TODO: currently fix splitk=1, for gemm op has not prepared temp buffer routines
-    algo_param.splitk = 1;
-    algo_param.splitf = 1;
 #endif
     return elapsed;
 }
