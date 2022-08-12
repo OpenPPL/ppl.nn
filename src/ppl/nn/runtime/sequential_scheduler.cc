@@ -29,11 +29,11 @@ namespace ppl { namespace nn {
 
 SequentialScheduler::SequentialScheduler() {
     acquire_object_func_ = [this](edgeid_t eid, uint32_t etype) -> EdgeObject* {
-        if (eid >= graph_->edgeid2object.size()) {
+        if (eid >= edgeid2object_->size()) {
             return nullptr;
         }
 
-        auto object = graph_->edgeid2object[eid];
+        auto object = edgeid2object_->at(eid);
         if (!object) {
             auto edge = topo_->GetEdge(eid);
 
@@ -53,15 +53,15 @@ SequentialScheduler::SequentialScheduler() {
                 LOG(ERROR) << "create output object[" << edge->GetName() << "] failed, oom";
                 return nullptr;
             }
-            graph_->edgeid2object[eid] = object;
+            edgeid2object_->at(eid) = object;
         }
         return object;
     };
 
     release_object_func_ = [this](EdgeObject* object, nodeid_t user) -> RetCode {
         auto eid = object->GetEdge()->GetId();
-        if (aux_info_->edge_last_consumer[eid] == user) {
-            auto obj = graph_->edgeid2object[eid];
+        if (edge_last_consumer_->at(eid) == user) {
+            auto obj = edgeid2object_->at(eid);
 
             auto barrier = obj->GetBarrier();
             if (barrier) {
@@ -80,24 +80,26 @@ SequentialScheduler::SequentialScheduler() {
                 LOG(ERROR) << "invalid edge object type[" << obj->GetObjectType() << "]";
                 return RC_INVALID_VALUE;
             }
-            graph_->edgeid2object[eid] = nullptr;
+            edgeid2object_->at(eid) = nullptr;
         }
         return RC_SUCCESS;
     };
 }
 
 RetCode SequentialScheduler::Init(const Options& options) {
-    graph_ = options.graph_resource;
     topo_ = options.topo;
-    aux_info_ = options.aux_info;
+    sorted_nodes_ = options.sorted_nodes;
+    edge_last_consumer_ = options.edge_last_consumer;
+    edgeid2object_ = options.edgeid2object;
+    nodeid2kernel_ = options.nodeid2kernel;
     return RC_SUCCESS;
 }
 
 RetCode SequentialScheduler::Run(const function<RetCode(KernelImpl*, KernelExecContext*)>& exec, Profiler* profiler) {
 #ifndef NDEBUG
     set<edgeid_t> edges_before;
-    for (uint32_t i = 0; i < graph_->edgeid2object.size(); ++i) {
-        if (graph_->edgeid2object[i]) {
+    for (uint32_t i = 0; i < edgeid2object_->size(); ++i) {
+        if (edgeid2object_->at(i)) {
             edges_before.insert(i);
         }
     }
@@ -106,10 +108,10 @@ RetCode SequentialScheduler::Run(const function<RetCode(KernelImpl*, KernelExecC
     KernelExecContext ctx;
     ctx.SetAcquireFunc(acquire_object_func_);
     ctx.SetProfilingFlag((profiler != nullptr));
-    ctx.SetEdgeLastConsumerList(&aux_info_->edge_last_consumer);
+    ctx.SetEdgeLastConsumerList(edge_last_consumer_);
 
-    for (auto x = aux_info_->sorted_nodes.begin(); x != aux_info_->sorted_nodes.end(); ++x) {
-        auto kernel = graph_->nodeid2kernel[*x].get();
+    for (auto x = sorted_nodes_->begin(); x != sorted_nodes_->end(); ++x) {
+        auto kernel = nodeid2kernel_->at(*x).get();
         ctx.SetNode(kernel->GetNode());
 
         auto exec_status = exec(kernel, &ctx);
@@ -137,8 +139,8 @@ RetCode SequentialScheduler::Run(const function<RetCode(KernelImpl*, KernelExecC
 
 #ifndef NDEBUG
     set<edgeid_t> edges_after;
-    for (uint32_t i = 0; i < graph_->edgeid2object.size(); ++i) {
-        if (graph_->edgeid2object[i]) {
+    for (uint32_t i = 0; i < edgeid2object_->size(); ++i) {
+        if (edgeid2object_->at(i)) {
             edges_after.insert(i);
         }
     }
