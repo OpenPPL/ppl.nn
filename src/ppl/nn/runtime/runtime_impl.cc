@@ -51,8 +51,7 @@ static EngineContext* FindOrCreateEngineContext(EngineImpl* engine, map<EngineIm
     return ctx;
 }
 
-static RetCode InitRuntimeGraphResourceKernels(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                               const vector<bool>& valid_node_flags,
+static RetCode InitRuntimeGraphResourceKernels(const RuntimeGraphInfo& info, const vector<bool>& valid_node_flags,
                                                vector<unique_ptr<EngineContext>>* engctx, RuntimeGraphResource* graph) {
     map<EngineImpl*, EngineContext*> eng2ctx;
     for (auto partition = info.partitions.begin(); partition != info.partitions.end(); ++partition) {
@@ -243,37 +242,56 @@ static void InitRuntimeGraphResourceReservedTensors(const ir::GraphTopo* topo, c
     }
 }
 
+static void InitValidNodeFlags(const ir::GraphTopo* topo, vector<bool>* flags) {
+    flags->resize(topo->GetCurrentNodeIdBound(), false);
+    for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
+        flags->at(it->Get()->GetId()) = true;
+    }
+}
+
+static void InitValidEdgeFlags(const ir::GraphTopo* topo, vector<bool>* flags) {
+    flags->resize(topo->GetCurrentEdgeIdBound(), false);
+    for (auto it = topo->CreateEdgeIter(); it->IsValid(); it->Forward()) {
+        flags->at(it->Get()->GetId()) = true;
+    }
+}
+
 static RetCode InitRuntimeGraphResource(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                        const RuntimeInitInfo& init_info, const set<edgeid_t>& reserved_edgeids,
+                                        const RuntimeAuxInfo& aux_info, const set<edgeid_t>& reserved_edgeids,
                                         vector<unique_ptr<EngineContext>>* engctx, RuntimeGraphResource* graph) {
+    vector<bool> valid_node_flags;
+    InitValidNodeFlags(topo, &valid_node_flags);
+    vector<bool> valid_edge_flags;
+    InitValidEdgeFlags(topo, &valid_edge_flags);
+
     graph->nodeid2kernel.resize(topo->GetCurrentNodeIdBound());
     graph->edgeid2object.resize(topo->GetCurrentEdgeIdBound());
 
-    auto status = InitRuntimeGraphResourceKernels(topo, info, init_info.valid_node_flags, engctx, graph);
+    auto status = InitRuntimeGraphResourceKernels(info, valid_node_flags, engctx, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResourceKernels failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = InitRuntimeGraphResourceConstants(topo, info, init_info.valid_edge_flags, graph);
+    status = InitRuntimeGraphResourceConstants(topo, info, valid_edge_flags, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResourceConstants failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = InitRuntimeGraphResourceInputs(topo, info, init_info.name2nodeid, graph);
+    status = InitRuntimeGraphResourceInputs(topo, info, aux_info.name2nodeid, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResourceInputs failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = InitRuntimeGraphResourceExtraInputs(topo, info, init_info.name2nodeid, graph);
+    status = InitRuntimeGraphResourceExtraInputs(topo, info, aux_info.name2nodeid, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResourceExtraInputs failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = InitRuntimeGraphResourceOutputs(topo, info, init_info.name2nodeid, graph);
+    status = InitRuntimeGraphResourceOutputs(topo, info, aux_info.name2nodeid, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResourceOutputs failed: " << GetRetCodeStr(status);
         return status;
@@ -285,13 +303,12 @@ static RetCode InitRuntimeGraphResource(const ir::GraphTopo* topo, const Runtime
 }
 
 RetCode RuntimeImpl::Init(const shared_ptr<ir::GraphTopo>& topo, const shared_ptr<const RuntimeGraphInfo>& info,
-                          const shared_ptr<const RuntimeAuxInfo>& aux_info, const RuntimeInitInfo& init_info,
-                          const set<edgeid_t>& reserved_edgeids) {
+                          const shared_ptr<const RuntimeAuxInfo>& aux_info, const set<edgeid_t>& reserved_edgeids) {
     graph_info_ = info;
     aux_info_ = aux_info;
     topo_ = topo;
 
-    auto status = InitRuntimeGraphResource(topo.get(), *info, init_info, reserved_edgeids, &engctx_, &graph_);
+    auto status = InitRuntimeGraphResource(topo.get(), *info, *aux_info, reserved_edgeids, &engctx_, &graph_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResource failed: " << GetRetCodeStr(status);
         return status;

@@ -94,12 +94,6 @@ RetCode PartialRuntimeCreator::InitPartialRuntimeResource(const ir::GraphTopo* t
         return status;
     }
 
-    status = resource->init_info.Init(resource->topo.get());
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "init RuntimeInitInfo failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
     return RC_SUCCESS;
 }
 
@@ -119,8 +113,7 @@ RuntimeImpl* PartialRuntimeCreator::Create(const char** begin_ops, uint32_t begi
     }
 
     auto runtime = new RuntimeImpl();
-    auto status =
-        runtime->Init(resource->topo, graph_info_, resource->aux_info, resource->init_info, resource->reserved_edgeids);
+    auto status = runtime->Init(resource->topo, graph_info_, resource->aux_info, resource->reserved_edgeids);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init runtime failed: " << GetRetCodeStr(status);
         delete runtime;

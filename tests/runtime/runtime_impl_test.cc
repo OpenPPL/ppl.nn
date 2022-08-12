@@ -36,11 +36,7 @@ static void CreateRuntimeImpl(vector<unique_ptr<EngineImpl>>* engines, RuntimeIm
     status = aux_info->Init(topo.get(), {});
     EXPECT_EQ(RC_SUCCESS, status);
 
-    RuntimeInitInfo init_info;
-    status = init_info.Init(topo.get());
-    EXPECT_EQ(RC_SUCCESS, status);
-
-    status = rt->Init(topo, graph_info, aux_info, init_info, {});
+    status = rt->Init(topo, graph_info, aux_info, {});
     EXPECT_EQ(RC_SUCCESS, status);
 }
 

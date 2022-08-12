@@ -56,7 +56,6 @@ private:
     std::shared_ptr<ir::GraphTopo> topo_;
     std::shared_ptr<RuntimeGraphInfo> graph_info_;
     std::shared_ptr<RuntimeAuxInfo> aux_info_;
-    RuntimeInitInfo init_info_;
     PartialRuntimeCreator partial_runtime_creator_;
 };
 
