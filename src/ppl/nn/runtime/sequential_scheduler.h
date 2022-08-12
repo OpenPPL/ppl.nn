@@ -33,8 +33,10 @@ public:
 
 private:
     const ir::GraphTopo* topo_;
-    const RuntimeAuxInfo* aux_info_;
-    RuntimeGraphResource* graph_;
+    const std::vector<nodeid_t>* sorted_nodes_;
+    const std::vector<nodeid_t>* edge_last_consumer_;
+    std::vector<EdgeObject*>* edgeid2object_;
+    std::vector<std::unique_ptr<KernelImpl>>* nodeid2kernel_;
 
     std::function<EdgeObject*(edgeid_t, uint32_t)> acquire_object_func_;
     std::function<ppl::common::RetCode(EdgeObject*, nodeid_t)> release_object_func_;

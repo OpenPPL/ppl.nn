@@ -259,6 +259,7 @@ static void InitValidEdgeFlags(const ir::GraphTopo* topo, vector<bool>* flags) {
 static RetCode InitRuntimeGraphResource(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
                                         const RuntimeAuxInfo& aux_info, const set<edgeid_t>& reserved_edgeids,
                                         vector<unique_ptr<EngineContext>>* engctx, RuntimeGraphResource* graph) {
+    /* this `Runtime` may be created by `PartialRuntimeCreator` and `topo` is part of the original model. */
     vector<bool> valid_node_flags;
     InitValidNodeFlags(topo, &valid_node_flags);
     vector<bool> valid_edge_flags;
@@ -315,7 +316,8 @@ RetCode RuntimeImpl::Init(const shared_ptr<ir::GraphTopo>& topo, const shared_pt
     }
 
     sched_.reset(new SequentialScheduler());
-    return sched_->Init(Scheduler::Options(topo.get(), aux_info.get(), &graph_));
+    return sched_->Init(Scheduler::Options(topo.get(), &aux_info->sorted_nodes, &aux_info->edge_last_consumer,
+                                           &graph_.edgeid2object, &graph_.nodeid2kernel));
 }
 
 RetCode RuntimeImpl::Sync() {
@@ -410,7 +412,9 @@ static void DummyDeleter(Scheduler*) {}
 
 RetCode RuntimeImpl::ConfSetScheduler(RuntimeImpl* rt, va_list args) {
     auto sched = va_arg(args, Scheduler*);
-    auto rc = sched->Init(Scheduler::Options(rt->topo_.get(), rt->aux_info_.get(), &rt->graph_));
+    auto rc = sched->Init(Scheduler::Options(rt->topo_.get(), &rt->aux_info_->sorted_nodes,
+                                             &rt->aux_info_->edge_last_consumer, &rt->graph_.edgeid2object,
+                                             &rt->graph_.nodeid2kernel));
     if (rc != RC_SUCCESS) {
         LOG(ERROR) << "init user's scheduler failed: " << GetRetCodeStr(rc);
         return rc;
