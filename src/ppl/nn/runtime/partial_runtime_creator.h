@@ -46,7 +46,6 @@ private:
     struct PartialRuntimeResource final {
         std::shared_ptr<ir::GraphTopo> topo;
         std::shared_ptr<RuntimeAuxInfo> aux_info;
-        RuntimeInitInfo init_info;
         std::set<nodeid_t> reserved_edgeids;
     };
 

@@ -147,6 +147,13 @@ static RetCode InitEdgeLastConsumer(const ir::GraphTopo* topo, const vector<node
     return RC_SUCCESS;
 }
 
+static void InitName2Nodeid(const ir::GraphTopo* topo, map<string, nodeid_t>* name2nodeid) {
+    for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
+        auto node = it->Get();
+        name2nodeid->insert(make_pair(node->GetName(), node->GetId()));
+    }
+}
+
 RetCode RuntimeAuxInfo::Init(const ir::GraphTopo* topo, const set<edgeid_t>& reserved_edgeids) {
     utils::DfsDeeperFirst(topo, [this](nodeid_t nid) -> void {
         this->sorted_nodes.push_back(nid);
@@ -157,6 +164,8 @@ RetCode RuntimeAuxInfo::Init(const ir::GraphTopo* topo, const set<edgeid_t>& res
         LOG(ERROR) << "InitEdgeLastConsumer failed: " << GetRetCodeStr(status);
         return status;
     }
+
+    InitName2Nodeid(topo, &name2nodeid);
 
     return RC_SUCCESS;
 }

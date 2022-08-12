@@ -58,12 +58,6 @@ RetCode LoopOp::Init(const utils::SharedResource& resource, ppl::nn::onnx::LoopP
         return status;
     }
 
-    status = init_info_.Init(loop_param->graph.topo.get());
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "GenerateRuntimeInitInfo failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
     topo_ = loop_param->graph.topo;
     concat_output_func_ = concat_output_func;
 
@@ -72,7 +66,7 @@ RetCode LoopOp::Init(const utils::SharedResource& resource, ppl::nn::onnx::LoopP
 
 KernelImpl* LoopOp::CreateKernelImpl() const {
     auto kernel = unique_ptr<LoopKernel>(new LoopKernel(node_));
-    auto status = kernel->SetExecutionInfo(topo_, &graph_info_, &aux_info_, &init_info_, concat_output_func_);
+    auto status = kernel->SetExecutionInfo(topo_, &graph_info_, &aux_info_, concat_output_func_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "SetExecutionInfo of kernel[" << kernel->GetName() << "] failed: " << GetRetCodeStr(status);
         return nullptr;

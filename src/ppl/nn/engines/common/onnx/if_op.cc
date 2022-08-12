@@ -76,13 +76,6 @@ RetCode IfOp::Init(const utils::SharedResource& resource, ppl::nn::onnx::IfParam
         return status;
     }
 
-    status = then_init_info_.Init(if_param->then_branch.topo.get());
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "GenerateRuntimeInitInfo for then_branch of kernel[" << node_->GetName()
-                   << "] failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
     utils::SharedResource new_else_resource;
     status = InitNewSharedResource(resource, &new_else_resource, &else_engines_);
     if (status != RC_SUCCESS) {
@@ -103,13 +96,6 @@ RetCode IfOp::Init(const utils::SharedResource& resource, ppl::nn::onnx::IfParam
         return status;
     }
 
-    status = else_init_info_.Init(if_param->else_branch.topo.get());
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "GenerateRuntimeInitInfo for else_branch of kernel[" << node_->GetName()
-                   << "] failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
     then_topo_ = if_param->then_branch.topo;
     else_topo_ = if_param->else_branch.topo;
 
@@ -118,9 +104,8 @@ RetCode IfOp::Init(const utils::SharedResource& resource, ppl::nn::onnx::IfParam
 
 KernelImpl* IfOp::CreateKernelImpl() const {
     auto kernel = unique_ptr<IfKernel>(new IfKernel(node_));
-    auto status = kernel->SetExecutionInfo(then_topo_, &then_info_, &then_aux_info_, &then_init_info_,
-                                           &extra_inputs_of_then_graph_, else_topo_, &else_info_, &else_aux_info_,
-                                           &else_init_info_, &extra_inputs_of_else_graph_);
+    auto status = kernel->SetExecutionInfo(then_topo_, &then_info_, &then_aux_info_, &extra_inputs_of_then_graph_,
+                                           else_topo_, &else_info_, &else_aux_info_, &extra_inputs_of_else_graph_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "SetExecutionInfo of kernel[" << kernel->GetName() << "] failed:" << GetRetCodeStr(status);
         return nullptr;
