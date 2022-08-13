@@ -18,7 +18,9 @@
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/engine_impl.h"
 #include "ppl/nn/runtime/runtime_impl.h"
+#include "ppl/nn/runtime/partition_runner_impl.h"
 #include "ppl/nn/runtime/sequential_scheduler.h"
+#include "ppl/nn/ir/utils.h"
 #include "ppl/nn/utils/utils.h"
 #include <stdarg.h>
 using namespace std;
@@ -51,8 +53,8 @@ static EngineContext* FindOrCreateEngineContext(EngineImpl* engine, map<EngineIm
     return ctx;
 }
 
-static RetCode InitRuntimeGraphResourceKernels(const RuntimeGraphInfo& info, const vector<bool>& valid_node_flags,
-                                               vector<unique_ptr<EngineContext>>* engctx, RuntimeGraphResource* graph) {
+static RetCode InitRuntimeGraphResourceKernels(const RuntimeGraphInfo& info, vector<unique_ptr<EngineContext>>* engctx,
+                                               RuntimeGraphResource* graph) {
     map<EngineImpl*, EngineContext*> eng2ctx;
     for (auto partition = info.partitions.begin(); partition != info.partitions.end(); ++partition) {
         auto ctx = FindOrCreateEngineContext(partition->engine, &eng2ctx, engctx);
@@ -62,10 +64,6 @@ static RetCode InitRuntimeGraphResourceKernels(const RuntimeGraphInfo& info, con
         }
 
         for (auto o = partition->ops.begin(); o != partition->ops.end(); ++o) {
-            if (!valid_node_flags[o->get()->GetNode()->GetId()]) {
-                continue;
-            }
-
             auto impl = (*o)->CreateKernelImpl();
             if (!impl) {
                 LOG(ERROR) << "create kernel[" << (*o)->GetNode()->GetName() << "] failed.";
@@ -198,16 +196,12 @@ RetCode InitRuntimeGraphResourceOutputs(const ir::GraphTopo* topo, const Runtime
 }
 
 static RetCode InitRuntimeGraphResourceConstants(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                                 const vector<bool>& valid_edge_flags, RuntimeGraphResource* graph) {
+                                                 RuntimeGraphResource* graph) {
     auto tensors = &graph->tensors;
 
     for (auto p = info.partitions.begin(); p != info.partitions.end(); ++p) {
         for (auto c = p->constants.begin(); c != p->constants.end(); ++c) {
             auto eid = c->first;
-            if (!valid_edge_flags[eid]) {
-                continue;
-            }
-
             auto edge = topo->GetEdge(eid);
             if (!edge) {
                 LOG(ERROR) << "cannot find edge info of constant[" << eid << "]";
@@ -242,39 +236,19 @@ static void InitRuntimeGraphResourceReservedTensors(const ir::GraphTopo* topo, c
     }
 }
 
-static void InitValidNodeFlags(const ir::GraphTopo* topo, vector<bool>* flags) {
-    flags->resize(topo->GetCurrentNodeIdBound(), false);
-    for (auto it = topo->CreateNodeIter(); it->IsValid(); it->Forward()) {
-        flags->at(it->Get()->GetId()) = true;
-    }
-}
-
-static void InitValidEdgeFlags(const ir::GraphTopo* topo, vector<bool>* flags) {
-    flags->resize(topo->GetCurrentEdgeIdBound(), false);
-    for (auto it = topo->CreateEdgeIter(); it->IsValid(); it->Forward()) {
-        flags->at(it->Get()->GetId()) = true;
-    }
-}
-
 static RetCode InitRuntimeGraphResource(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
                                         const RuntimeAuxInfo& aux_info, const set<edgeid_t>& reserved_edgeids,
                                         vector<unique_ptr<EngineContext>>* engctx, RuntimeGraphResource* graph) {
-    /* this `Runtime` may be created by `PartialRuntimeCreator` and `topo` is part of the original model. */
-    vector<bool> valid_node_flags;
-    InitValidNodeFlags(topo, &valid_node_flags);
-    vector<bool> valid_edge_flags;
-    InitValidEdgeFlags(topo, &valid_edge_flags);
-
     graph->nodeid2kernel.resize(topo->GetCurrentNodeIdBound());
     graph->edgeid2object.resize(topo->GetCurrentEdgeIdBound());
 
-    auto status = InitRuntimeGraphResourceKernels(info, valid_node_flags, engctx, graph);
+    auto status = InitRuntimeGraphResourceKernels(info, engctx, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResourceKernels failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = InitRuntimeGraphResourceConstants(topo, info, valid_edge_flags, graph);
+    status = InitRuntimeGraphResourceConstants(topo, info, graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitRuntimeGraphResourceConstants failed: " << GetRetCodeStr(status);
         return status;
@@ -371,6 +345,107 @@ Tensor* RuntimeImpl::GetTensorByName(const char* name) const {
         }
     }
     return nullptr;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static RetCode CollectPartitionEndNodeIds(const ir::GraphTopo* topo, const char** outputs, uint32_t nr_output,
+                                          set<nodeid_t>* res) {
+    for (uint32_t i = 0; i < nr_output; ++i) {
+        auto edge = topo->GetEdge(outputs[i]);
+        if (!edge) {
+            LOG(ERROR) << "cannot find output[" << outputs[i] << "]";
+            return RC_NOT_FOUND;
+        }
+
+        auto nid = edge->GetProducer();
+        if (nid != INVALID_NODEID) {
+            res->insert(nid);
+        }
+    }
+
+    return RC_SUCCESS;
+}
+
+static RetCode CollectPartitionInputConsumerIds(const ir::GraphTopo* topo, const char** inputs, uint32_t nr_input,
+                                                set<nodeid_t>* res) {
+    for (uint32_t i = 0; i < nr_input; ++i) {
+        auto edge = topo->GetEdge(inputs[i]);
+        if (!edge) {
+            LOG(ERROR) << "cannot find input[" << inputs[i] << "]";
+            return RC_NOT_FOUND;
+        }
+
+        for (auto iter = edge->CreateConsumerIter(); iter.IsValid(); iter.Forward()) {
+            auto nid = iter.Get();
+            if (nid != INVALID_NODEID) {
+                res->insert(nid);
+            }
+        }
+    }
+
+    return RC_SUCCESS;
+}
+
+static RetCode CollectPartitionNodes(const ir::GraphTopo* topo, const char** inputs, uint32_t nr_input,
+                                     const char** outputs, uint32_t nr_output, vector<nodeid_t>* nodes) {
+    set<nodeid_t> end_nids;
+    auto rc = CollectPartitionEndNodeIds(topo, outputs, nr_output, &end_nids);
+    if (rc != RC_SUCCESS) {
+        LOG(ERROR) << "CollectPartitionEndNodeIds failed: " << GetRetCodeStr(rc);
+        return rc;
+    }
+
+    set<nodeid_t> input_consumer_nids;
+    rc = CollectPartitionInputConsumerIds(topo, inputs, nr_input, &input_consumer_nids);
+    if (rc != RC_SUCCESS) {
+        LOG(ERROR) << "CollectPartitionInputConsumerIds failed: " << GetRetCodeStr(rc);
+        return rc;
+    }
+
+    utils::ReversedDfs(
+        topo->GetCurrentNodeIdBound(),
+        [&end_nids](const function<void(nodeid_t)>& f) -> void {
+            for (auto o = end_nids.begin(); o != end_nids.end(); ++o) {
+                f(*o);
+            }
+        },
+        [topo](nodeid_t nid, const function<void(nodeid_t)>& f) -> void {
+            auto prevs = topo->FindPredecessors(nid);
+            for (auto x = prevs.begin(); x != prevs.end(); ++x) {
+                f(*x);
+            }
+        },
+        [nodes](nodeid_t nid) -> void {
+            nodes->push_back(nid);
+        },
+        [&input_consumer_nids](nodeid_t current) -> bool {
+            return (input_consumer_nids.find(current) != input_consumer_nids.end());
+        });
+
+    return RC_SUCCESS;
+}
+
+PartitionRunner* RuntimeImpl::CreatePartitionRunner(const char** inputs, uint32_t nr_input, const char** outputs,
+                                                    uint32_t nr_output) {
+    vector<nodeid_t> nodes;
+    auto rc = CollectPartitionNodes(topo_.get(), inputs, nr_input, outputs, nr_output, &nodes);
+    if (rc != RC_SUCCESS) {
+        LOG(ERROR) << "CollectPartitionNodes failed: " << GetRetCodeStr(rc);
+        return nullptr;
+    }
+
+    auto runner = new PartitionRunnerImpl();
+    if (runner) {
+        auto rc = runner->Init(topo_, nodes, &engctx_, &graph_.edgeid2object, &graph_.nodeid2kernel);
+        if (rc != RC_SUCCESS) {
+            LOG(ERROR) << "init PartitionRunner failed: " << GetRetCodeStr(rc);
+            delete runner;
+            return nullptr;
+        }
+    }
+
+    return runner;
 }
 
 /* -------------------------------------------------------------------------- */

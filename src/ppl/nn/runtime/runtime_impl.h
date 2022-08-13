@@ -60,6 +60,9 @@ public:
 
     ppl::common::RetCode Configure(uint32_t, ...) override;
 
+    PartitionRunner* CreatePartitionRunner(const char** inputs, uint32_t nr_input, const char** outputs,
+                                           uint32_t nr_output) override;
+
     uint32_t GetInputCount() const override {
         return topo_->GetInputCount();
     }

@@ -51,7 +51,7 @@ public:
         return name_.c_str();
     }
 
-    /** @brief create a `Device` instance for `Runtime` instances */
+    /** @brief create an `EngineContext` instance for `Runtime` instances */
     virtual EngineContext* CreateEngineContext() = 0;
 
     /** @brief tells whether this engine implements `node`. */

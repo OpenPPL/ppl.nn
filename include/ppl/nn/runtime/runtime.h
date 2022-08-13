@@ -22,6 +22,7 @@
 #include "ppl/nn/common/common.h"
 #include "ppl/nn/common/device_context.h"
 #include "ppl/nn/runtime/tensor.h"
+#include "ppl/nn/runtime/partition_runner.h"
 #include "ppl/nn/runtime/profiling_statistics.h"
 
 namespace ppl { namespace nn {
@@ -79,6 +80,13 @@ public:
        @param idx should be less than `GetDeviceContextCount()`.
     */
     virtual DeviceContext* GetDeviceContext(uint32_t idx) const = 0;
+
+    /**
+       @brief creates a `PartitionRunner` that runs the specified partition of the model
+       @note `inputs` and `outputs` MUST be reserved in `RuntimeBuilder`(usually by calling RuntimeBuilder::Configure)
+    */
+    virtual PartitionRunner* CreatePartitionRunner(const char** inputs, uint32_t nr_input, const char** outputs,
+                                                   uint32_t nr_output) = 0;
 
     /**
        @brief get profiling statistics of each kernel.
