@@ -27,9 +27,9 @@ namespace ppl { namespace nn {
 class Scheduler {
 public:
     struct Options final {
-        Options(const ir::GraphTopo* t, const std::vector<nodeid_t>* sd, const std::vector<nodeid_t>* last_consumers,
+        Options(const ir::GraphTopo* t, const std::vector<nodeid_t>* sn, const std::vector<nodeid_t>* last_consumers,
                 std::vector<EdgeObject*>* e2o, std::vector<std::unique_ptr<KernelImpl>>* n2k)
-            : topo(t), sorted_nodes(sd), edge_last_consumer(last_consumers), edgeid2object(e2o), nodeid2kernel(n2k) {}
+            : topo(t), sorted_nodes(sn), edge_last_consumer(last_consumers), edgeid2object(e2o), nodeid2kernel(n2k) {}
         const ir::GraphTopo* topo;
         const std::vector<nodeid_t>* sorted_nodes;
         const std::vector<nodeid_t>* edge_last_consumer;
