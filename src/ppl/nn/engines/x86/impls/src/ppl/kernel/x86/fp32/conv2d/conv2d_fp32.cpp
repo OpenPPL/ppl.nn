@@ -32,6 +32,7 @@
 #include "ppl/kernel/x86/fp32/conv2d/avx512/conv2d_n16cx_depthwise_fp32_avx512.h"
 #include "ppl/kernel/x86/fp32/conv2d/avx512/conv2d_n16cx_direct_ndarray_fp32_avx512.h"
 #include "ppl/kernel/x86/fp32/conv2d/avx512/conv2d_n16cx_winograd_b4f3_fp32_avx512.h"
+#include "ppl/kernel/x86/fp32/conv2d/avx512/conv2d_n16cx_winograd_b2f5s2_fp32_avx512.h"
 #endif
 
 #include "ppl/kernel/x86/fp32/conv2d/sse/conv2d_n8cx_direct_fp32_sse.h"
@@ -361,6 +362,9 @@ conv2d_fp32_manager *conv2d_fp32_algo_selector::gen_algo(const conv2d_param &par
                 }
                 if (algo_info.algo_type == conv2d_algo::WINOGRAD_B4F3) {
                     return new conv2d_n16cx_winograd_b4f3_fp32_avx512_manager(param, allocator);
+                }
+                if (algo_info.algo_type == conv2d_algo::WINOGRAD_B2F5S2) {
+                    return new conv2d_n16cx_winograd_b2f5s2_fp32_avx512_manager(param, allocator);
                 }
                 if (algo_info.algo_type == conv2d_algo::DIRECT) {
                     return new conv2d_n16cx_direct_fp32_avx512_manager(param, allocator);
