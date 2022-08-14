@@ -201,6 +201,15 @@ static std::map<std::string, ppl::kernel::x86::conv2d_algo_info> algo_table =
         })
     },
     {
+        "n16cx_winograd_b2f5s2_fp32_avx512",
+        ppl::kernel::x86::conv2d_algo_info({
+            ppl::kernel::x86::conv2d_algo::WINOGRAD_B2F5S2,
+            ppl::common::ISA_X86_AVX512,
+            ppl::common::DATAFORMAT_N16CX,
+            ppl::common::DATAFORMAT_N16CX,
+        })
+    },
+    {
         "n16cx_direct_fp32_avx512",
         ppl::kernel::x86::conv2d_algo_info({
             ppl::kernel::x86::conv2d_algo::DIRECT,
