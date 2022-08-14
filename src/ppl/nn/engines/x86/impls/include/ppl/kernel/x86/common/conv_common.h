@@ -81,15 +81,16 @@ typedef uint32_t conv2d_algo_t;
 
 class conv2d_algo {
 public:
-    static const conv2d_algo_t UNKNOWN        = 0;
-    static const conv2d_algo_t IMPLICIT_GEMM  = 1;
-    static const conv2d_algo_t GEMM_DIRECT    = 2;
-    static const conv2d_algo_t DEPTHWISE      = 3;
-    static const conv2d_algo_t IM2COL_GEMM    = 4;
-    static const conv2d_algo_t DIRECT         = 5;
-    static const conv2d_algo_t WINOGRAD_B2F3  = 32;
-    static const conv2d_algo_t WINOGRAD_B4F3  = 33;
-    static const conv2d_algo_t WINOGRAD_B6F3  = 34;
+    static const conv2d_algo_t UNKNOWN         = 0;
+    static const conv2d_algo_t IMPLICIT_GEMM   = 1;
+    static const conv2d_algo_t GEMM_DIRECT     = 2;
+    static const conv2d_algo_t DEPTHWISE       = 3;
+    static const conv2d_algo_t IM2COL_GEMM     = 4;
+    static const conv2d_algo_t DIRECT          = 5;
+    static const conv2d_algo_t WINOGRAD_B2F3   = 32;
+    static const conv2d_algo_t WINOGRAD_B4F3   = 33;
+    static const conv2d_algo_t WINOGRAD_B6F3   = 34;
+    static const conv2d_algo_t WINOGRAD_B2F5S2 = 35;
 };
 
 struct conv2d_algo_info {

@@ -141,7 +141,6 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
             conv2d_param_->mgr = ppl::kernel::x86::conv2d_fp32_algo_selector::gen_algo(
                 conv2d_param_->param, conv2d_param_->algo_info, options.device->GetAllocator());
 
-            // winograd b4f3 avx512 may fallback to direct
             if (conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_algo::WINOGRAD_B4F3) {
                 conv2d_param_->algo_info.algo_type = ppl::kernel::x86::conv2d_algo::DIRECT;
                 conv2d_param_->fallback_mgr = ppl::kernel::x86::conv2d_fp32_algo_selector::gen_algo(
@@ -168,6 +167,29 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
                     return num_tiles < (align_tiles ? 10 : 12);
                 };
                 conv2d_param_->algo_info.algo_type = ppl::kernel::x86::conv2d_algo::WINOGRAD_B4F3;
+            }
+
+            if (conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_algo::WINOGRAD_B2F5S2) {
+                conv2d_param_->algo_info.algo_type = ppl::kernel::x86::conv2d_algo::DIRECT;
+                conv2d_param_->fallback_mgr = ppl::kernel::x86::conv2d_fp32_algo_selector::gen_algo(
+                    conv2d_param_->param, conv2d_param_->algo_info, options.device->GetAllocator());
+                conv2d_param_->infer_fallback_func = [](const TensorImpl* X, const TensorImpl* Y,
+                                                        const ppl::kernel::x86::conv2d_param* param) -> bool {
+                    const int64_t dst_h = Y->GetShape()->GetDim(2);
+                    const int64_t dst_w = Y->GetShape()->GetDim(3);
+                    const int64_t batch = X->GetShape()->GetDim(0);
+                    const int64_t num_tiles = batch * ((dst_h + 1) / 2) * ((dst_w + 1) / 2);
+                    const bool align_tiles = (dst_h % 2 == 0) && (dst_w % 2) == 0;
+
+                    const int64_t num_threads = ppl::kernel::x86::get_omp_max_threads();
+                    if (num_threads > 4) { // Maybe memory bound. Just maybe.
+                        if (param->group / num_threads > 1 && num_threads / batch <= 4) { // Many group but small batch
+                            return true;
+                        }
+                    }
+                    return num_tiles < (align_tiles ? 10 : 12);
+                };
+                conv2d_param_->algo_info.algo_type = ppl::kernel::x86::conv2d_algo::WINOGRAD_B2F5S2;
             }
 
             if (bias_data != nullptr) {
