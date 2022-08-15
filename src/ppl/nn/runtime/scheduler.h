@@ -19,7 +19,6 @@
 #define _ST_HPC_PPL_NN_RUNTIME_SCHEDULER_H_
 
 #include "ppl/common/retcode.h"
-#include "ppl/nn/runtime/runtime_graph_resource.h"
 #include "ppl/nn/runtime/profiler.h"
 
 namespace ppl { namespace nn {

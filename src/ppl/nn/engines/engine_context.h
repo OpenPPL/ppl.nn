@@ -20,7 +20,6 @@
 
 #include "ppl/nn/common/device.h"
 #include "ppl/nn/runtime/runtime_aux_info.h"
-#include "ppl/nn/runtime/runtime_graph_resource.h"
 
 namespace ppl { namespace nn {
 

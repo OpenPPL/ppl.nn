@@ -21,7 +21,7 @@
 #include "ppl/nn/ir/graph.h"
 #include "ppl/nn/engines/engine_context.h"
 #include "ppl/nn/runtime/runtime.h"
-#include "ppl/nn/runtime/runtime_graph_resource.h"
+#include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/runtime/runtime_graph_info.h"
 #include "ppl/nn/runtime/runtime_aux_info.h"
 #include "ppl/nn/runtime/scheduler.h"
@@ -41,11 +41,11 @@ public:
 
     TensorImpl* GetInputTensorImpl(uint32_t idx) const {
         auto eid = topo_->GetInput(idx);
-        return static_cast<TensorImpl*>(graph_.edgeid2object[eid]);
+        return static_cast<TensorImpl*>(edgeid2object_[eid]);
     }
     TensorImpl* GetOutputTensorImpl(uint32_t idx) const {
         auto eid = topo_->GetOutput(idx);
-        return static_cast<TensorImpl*>(graph_.edgeid2object[eid]);
+        return static_cast<TensorImpl*>(edgeid2object_[eid]);
     }
 
     uint32_t GetExtraInputCount() const {
@@ -53,7 +53,7 @@ public:
     }
     TensorImpl* GetExtraInputTensorImpl(uint32_t idx) const {
         auto eid = topo_->GetExtraInput(idx);
-        return static_cast<TensorImpl*>(graph_.edgeid2object[eid]);
+        return static_cast<TensorImpl*>(edgeid2object_[eid]);
     }
 
     // ----- //
@@ -68,7 +68,7 @@ public:
     }
     Tensor* GetInputTensor(uint32_t idx) const override {
         auto eid = topo_->GetInput(idx);
-        return static_cast<TensorImpl*>(graph_.edgeid2object[eid]);
+        return static_cast<TensorImpl*>(edgeid2object_[eid]);
     }
 
     uint32_t GetOutputCount() const override {
@@ -76,7 +76,7 @@ public:
     }
     Tensor* GetOutputTensor(uint32_t idx) const override {
         auto eid = topo_->GetOutput(idx);
-        return static_cast<TensorImpl*>(graph_.edgeid2object[eid]);
+        return static_cast<TensorImpl*>(edgeid2object_[eid]);
     }
 
     Tensor* GetTensorByName(const char* name) const override;
@@ -100,8 +100,18 @@ private:
     ppl::common::RetCode Sync();
 
 private:
-    RuntimeGraphResource graph_;
     std::shared_ptr<Scheduler> sched_;
+
+    /** union of inputs/extra_inputs/constants/outputs/reserved_edgeids */
+    std::map<edgeid_t, TensorImpl> reserved_tensors_;
+
+    /** kernels list where the subscriptor is KernelImpl::GetNode()::GetId() */
+    std::vector<std::unique_ptr<KernelImpl>> nodeid2kernel_;
+
+    /** objects that are used during Run() */
+    std::vector<EdgeObject*> edgeid2object_;
+
+    /** `EngineContext` instances of this runtime */
     std::vector<std::unique_ptr<EngineContext>> engctx_;
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING

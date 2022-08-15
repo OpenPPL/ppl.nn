@@ -19,7 +19,6 @@
 #define _ST_HPC_PPL_NN_RUNTIME_PROFILER_H_
 
 #include "ppl/nn/runtime/kernel_impl.h"
-#include "ppl/nn/runtime/runtime_graph_resource.h"
 #include "ppl/nn/runtime/runtime_aux_info.h"
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
@@ -31,7 +30,7 @@ namespace ppl { namespace nn {
 
 class Profiler final {
 public:
-    void Init(const RuntimeGraphResource* graph, const RuntimeAuxInfo* aux_info);
+    void Init(const std::vector<std::unique_ptr<KernelImpl>>* n2k, const RuntimeAuxInfo* aux_info);
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
     void CollectStatistics(KernelImpl*);
@@ -51,7 +50,7 @@ private:
 #endif
 
 private:
-    const RuntimeGraphResource* graph_;
+    const std::vector<std::unique_ptr<KernelImpl>>* nodeid2kernel_;
     const RuntimeAuxInfo* aux_info_;
 };
 

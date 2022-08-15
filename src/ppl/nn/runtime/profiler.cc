@@ -22,8 +22,8 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn {
 
-void Profiler::Init(const RuntimeGraphResource* graph, const RuntimeAuxInfo* aux_info) {
-    graph_ = graph;
+void Profiler::Init(const vector<unique_ptr<KernelImpl>>* n2k, const RuntimeAuxInfo* aux_info) {
+    nodeid2kernel_ = n2k;
     aux_info_ = aux_info;
 }
 
@@ -45,7 +45,7 @@ RetCode Profiler::GetProfilingStatistics(ProfilingStatistics* stat) const {
     for (auto x = aux_info_->sorted_nodes.begin(); x != aux_info_->sorted_nodes.end(); ++x) {
         auto nid = *x;
         auto& info = nodeid2info_[nid];
-        auto kernel = graph_->nodeid2kernel[nid].get();
+        auto kernel = nodeid2kernel_->at(nid).get();
 
         KernelProfilingInfo kernel_prof_info;
         kernel_prof_info.name = kernel->GetName();
