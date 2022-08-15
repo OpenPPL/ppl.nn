@@ -18,11 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_RUNTIME_PARTITION_RUNNER_H_
 #define _ST_HPC_PPL_NN_RUNTIME_PARTITION_RUNNER_H_
 
+#include "ppl/nn/common/common.h"
 #include "ppl/common/retcode.h"
 
 namespace ppl { namespace nn {
 
-class PartitionRunner {
+class PPLNN_PUBLIC PartitionRunner {
 public:
     virtual ~PartitionRunner() {}
     virtual ppl::common::RetCode Run() = 0;

@@ -26,7 +26,7 @@ namespace ppl { namespace nn { namespace onnx {
 
 class PPLNN_PUBLIC RuntimeBuilder {
 public:
-    struct Resources final {
+    struct PPLNN_PUBLIC Resources final {
         /** engines are managed by the caller */
         Engine** engines = nullptr;
         uint32_t engine_num = 0;

@@ -18,12 +18,13 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_ARM_ENGINE_FACTORY_H_
 #define _ST_HPC_PPL_NN_ENGINES_ARM_ENGINE_FACTORY_H_
 
+#include "ppl/nn/common/common.h"
 #include "ppl/nn/engines/engine.h"
 #include "ppl/nn/engines/arm/engine_options.h"
 
 namespace ppl { namespace nn { namespace arm {
 
-class EngineFactory final {
+class PPLNN_PUBLIC EngineFactory final {
 public:
     static Engine* Create(const EngineOptions&);
 };

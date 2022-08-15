@@ -18,6 +18,7 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_FACTORY_H_
 #define _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_FACTORY_H_
 
+#include "ppl/nn/common/common.h"
 #include "ppl/nn/engines/engine.h"
 #include "ppl/nn/engines/cuda/engine_options.h"
 
