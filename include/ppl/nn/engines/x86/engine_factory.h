@@ -18,6 +18,7 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_X86_ENGINE_FACTORY_H_
 #define _ST_HPC_PPL_NN_ENGINES_X86_ENGINE_FACTORY_H_
 
+#include "ppl/nn/common/common.h"
 #include "ppl/nn/engines/engine.h"
 #include "ppl/nn/engines/x86/engine_options.h"
 
