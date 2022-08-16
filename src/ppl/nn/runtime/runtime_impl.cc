@@ -81,11 +81,11 @@ static RetCode GenGraphKernels(const RuntimeGraphInfo& info, vector<unique_ptr<E
 static RetCode GenGraphInputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
                               const map<string, nodeid_t>& name2nodeid,
                               const vector<unique_ptr<KernelImpl>>& nodeid2kernel,
-                              map<edgeid_t, TensorImpl>* reserved_tensors) {
+                              map<string, TensorImpl>* reserved_tensors) {
     for (uint32_t i = 0; i < topo->GetInputCount(); ++i) {
         auto eid = topo->GetInput(i);
         auto edge = topo->GetEdge(eid);
-        auto ret_pair = reserved_tensors->insert(make_pair(eid, TensorImpl(edge, TENSORTYPE_RESERVED)));
+        auto ret_pair = reserved_tensors->insert(make_pair(edge->GetName(), TensorImpl(edge, TENSORTYPE_RESERVED)));
         auto tensor = &ret_pair.first->second;
 
         if (ret_pair.second) {
@@ -122,11 +122,11 @@ static RetCode GenGraphInputs(const ir::GraphTopo* topo, const RuntimeGraphInfo&
 static RetCode GenGraphExtraInputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
                                    const map<string, nodeid_t>& name2nodeid,
                                    const vector<unique_ptr<KernelImpl>>& nodeid2kernel,
-                                   map<edgeid_t, TensorImpl>* reserved_tensors) {
+                                   map<string, TensorImpl>* reserved_tensors) {
     for (uint32_t i = 0; i < topo->GetExtraInputCount(); ++i) {
         auto eid = topo->GetExtraInput(i);
         auto edge = topo->GetEdge(eid);
-        auto ret_pair = reserved_tensors->insert(make_pair(eid, TensorImpl(edge, TENSORTYPE_RESERVED)));
+        auto ret_pair = reserved_tensors->insert(make_pair(edge->GetName(), TensorImpl(edge, TENSORTYPE_RESERVED)));
         auto tensor = &ret_pair.first->second;
 
         if (ret_pair.second) {
@@ -161,12 +161,12 @@ static RetCode GenGraphExtraInputs(const ir::GraphTopo* topo, const RuntimeGraph
 
 RetCode GenGraphOutputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
                         const map<string, nodeid_t>& name2nodeid, const vector<unique_ptr<KernelImpl>>& nodeid2kernel,
-                        map<edgeid_t, TensorImpl>* reserved_tensors) {
+                        map<string, TensorImpl>* reserved_tensors) {
     for (uint32_t i = 0; i < topo->GetOutputCount(); ++i) {
         auto eid = topo->GetOutput(i);
         auto edge = topo->GetEdge(eid);
 
-        auto ret_pair = reserved_tensors->insert(make_pair(eid, TensorImpl(edge, TENSORTYPE_RESERVED)));
+        auto ret_pair = reserved_tensors->insert(make_pair(edge->GetName(), TensorImpl(edge, TENSORTYPE_RESERVED)));
         auto tensor = &ret_pair.first->second;
 
         if (ret_pair.second) {
@@ -194,8 +194,8 @@ RetCode GenGraphOutputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
     return RC_SUCCESS;
 }
 
-static RetCode InitGraphResourcesConstants(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
-                                           map<edgeid_t, TensorImpl>* reserved_tensors) {
+static RetCode GenGraphConstants(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
+                                 map<string, TensorImpl>* reserved_tensors) {
     for (auto p = info.partitions.begin(); p != info.partitions.end(); ++p) {
         for (auto c = p->constants.begin(); c != p->constants.end(); ++c) {
             auto eid = c->first;
@@ -205,7 +205,7 @@ static RetCode InitGraphResourcesConstants(const ir::GraphTopo* topo, const Runt
                 return RC_NOT_FOUND;
             }
 
-            auto ret_pair = reserved_tensors->insert(make_pair(eid, TensorImpl(edge, TENSORTYPE_RESERVED)));
+            auto ret_pair = reserved_tensors->insert(make_pair(edge->GetName(), TensorImpl(edge, TENSORTYPE_RESERVED)));
             if (ret_pair.second) {
                 auto shape_ref = info.shapes.find(eid);
                 if (shape_ref == info.shapes.end()) {
@@ -224,17 +224,16 @@ static RetCode InitGraphResourcesConstants(const ir::GraphTopo* topo, const Runt
 }
 
 static void GenReservedTensors(const ir::GraphTopo* topo, const set<edgeid_t>& reserved_edgeids,
-                               map<edgeid_t, TensorImpl>* reserved_tensors) {
+                               map<string, TensorImpl>* reserved_tensors) {
     for (auto x = reserved_edgeids.begin(); x != reserved_edgeids.end(); ++x) {
         auto edge = topo->GetEdge(*x);
-        reserved_tensors->insert(make_pair(*x, TensorImpl(edge, TENSORTYPE_RESERVED)));
+        reserved_tensors->insert(make_pair(edge->GetName(), TensorImpl(edge, TENSORTYPE_RESERVED)));
     }
 }
 
 static RetCode InitGraphResources(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
                                   const RuntimeAuxInfo& aux_info, const set<edgeid_t>& reserved_edgeids,
-                                  vector<unique_ptr<EngineContext>>* engctx,
-                                  map<edgeid_t, TensorImpl>* reserved_tensors,
+                                  vector<unique_ptr<EngineContext>>* engctx, map<string, TensorImpl>* reserved_tensors,
                                   vector<unique_ptr<KernelImpl>>* nodeid2kernel, vector<EdgeObject*>* edgeid2object) {
     nodeid2kernel->resize(topo->GetCurrentNodeIdBound());
     auto status = GenGraphKernels(info, engctx, nodeid2kernel);
@@ -243,9 +242,9 @@ static RetCode InitGraphResources(const ir::GraphTopo* topo, const RuntimeGraphI
         return status;
     }
 
-    status = InitGraphResourcesConstants(topo, info, reserved_tensors);
+    status = GenGraphConstants(topo, info, reserved_tensors);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "InitGraphResourcesConstants failed: " << GetRetCodeStr(status);
+        LOG(ERROR) << "GenGraphConstants failed: " << GetRetCodeStr(status);
         return status;
     }
 
@@ -271,7 +270,8 @@ static RetCode InitGraphResources(const ir::GraphTopo* topo, const RuntimeGraphI
 
     edgeid2object->resize(topo->GetCurrentEdgeIdBound(), nullptr);
     for (auto x = reserved_tensors->begin(); x != reserved_tensors->end(); ++x) {
-        edgeid2object->at(x->first) = &x->second;
+        auto eid = x->second.GetEdge()->GetId();
+        edgeid2object->at(eid) = &x->second;
     }
 
     return RC_SUCCESS;
@@ -340,10 +340,9 @@ RetCode RuntimeImpl::GetProfilingStatistics(ProfilingStatistics* stat) const {
 
 Tensor* RuntimeImpl::GetTensorByName(const char* name) const {
     const string name_s(name);
-    for (auto x = reserved_tensors_.begin(); x != reserved_tensors_.end(); ++x) {
-        if (x->second.GetName() == name_s) {
-            return const_cast<TensorImpl*>(&x->second);
-        }
+    auto ref = reserved_tensors_.find(name_s);
+    if (ref != reserved_tensors_.end()) {
+        return const_cast<TensorImpl*>(&ref->second);
     }
     return nullptr;
 }
