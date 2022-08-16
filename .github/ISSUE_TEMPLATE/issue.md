@@ -9,11 +9,13 @@ assignees: ''
 
 ## What are the problems?(screenshots or detailed error messages)
 
-## Which version(commit id or tag) of ppl.nn is used?
+## What are the types of GPU/CPU you are using?
 
 ## What's the operating system ppl.nn runs on?
 
 ## What's the compiler and its version?
+
+## Which version(commit id or tag) of ppl.nn is used?
 
 ## What are the commands used to build ppl.nn?
 
