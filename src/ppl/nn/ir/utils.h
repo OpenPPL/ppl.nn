@@ -39,6 +39,9 @@ void Bfs(nodeid_t max_node_id, const std::function<void(const std::function<void
 /** @brief depth-first topological sort. nodes in the longer path will be evaluated first. */
 void DfsDeeperFirst(const ir::GraphTopo* topo, const std::function<void(nodeid_t)>& process);
 
+/** @brief find inputs and extra inputs of the given nodes' group */
+std::vector<edgeid_t> FindInputsOfNodesGroup(const ir::GraphTopo*, const std::vector<nodeid_t>&);
+
 }}} // namespace ppl::nn::utils
 
 #endif

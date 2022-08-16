@@ -16,7 +16,6 @@
 // under the License.
 
 #include "ppl/nn/optimizers/utils.h"
-#include "ppl/nn/optimizers/engine_graph_partitioner.h"
 #include "ppl/nn/optimizers/graph_optimizer_manager.h"
 #include "ppl/nn/engines/common/pmx/converter_op.h"
 #include "ppl/nn/engines/utils.h"
@@ -35,187 +34,235 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace utils {
 
-static vector<EngineImpl*> GenNode2Engine(const vector<pair<EngineImpl*, vector<nodeid_t>>>& partitions,
-                                          uint32_t max_node_id) {
-    vector<EngineImpl*> node2engine(max_node_id, nullptr);
+static nodeid_t AddConverterNode(ir::GraphTopo* topo, const string& name_prefix) {
+    const string node_name = name_prefix + "_" + std::to_string(topo->GetCurrentNodeIdBound());
+    auto ret_pair = topo->AddNode(node_name);
+    ret_pair.first->SetType(utils::MakePplConverterNodeType());
+    return ret_pair.first->GetId();
+}
 
-    for (auto it = partitions.begin(); it != partitions.end(); ++it) {
-        for (auto x = it->second.begin(); x != it->second.end(); ++x) {
-            node2engine[*x] = it->first;
+struct ConverterNodeInfo final {
+    nodeid_t nid;
+    map<edgeid_t, set<nodeid_t>> affected_nodes;
+};
+
+static void HandlePartitionInputsWithProducers(uint32_t cur_partidx, const vector<uint32_t>& nid2partidx,
+                                               const vector<pair<EngineImpl*, vector<nodeid_t>>>& partitions,
+                                               ir::GraphTopo* topo, map<uint32_t, ConverterNodeInfo>* part_cvt_info) {
+    auto cur_engine = partitions[cur_partidx].first;
+
+    auto part_inputs = utils::FindInputsOfNodesGroup(topo, partitions[cur_partidx].second);
+    for (auto x = part_inputs.begin(); x != part_inputs.end(); ++x) {
+        auto eid = *x;
+        auto edge = topo->GetEdge(eid);
+
+        auto producer_nid = edge->GetProducer();
+        if (producer_nid == INVALID_NODEID) {
+            continue;
+        }
+
+        auto producer_part_idx = nid2partidx[producer_nid];
+        auto producer_engine = partitions[producer_part_idx].first;
+        if (producer_engine == cur_engine) {
+            continue;
+        }
+
+        /*
+          If the producer of `edge` is assigned to a different engine from its consumer(s), a converter is required.
+          For example, A and B are assigned to one engine and C is assigned to the same engine as the producer node:
+
+                    +----------+                              +----------+
+                    | producer |                              | producer |
+                    +----------+                              +----------+
+                          |                                         |
+                          |                                +--------+-------+
+                          |                                |                |
+                          |               ==>              v                |
+                          |                          +===========+          |
+                          |                          | converter |          |
+                          |                          +===========+          |
+                          |                                |                |
+                 +--------+--------+                  +----+---+            |
+                 |        |        |                  |        |            |
+                 v        v        v                  v        v            v
+               +===+    +===+    +---+              +===+    +===+        +---+
+               | A |    | B |    | C |              | A |    | B |        | C |
+               +===+    +===+    +---+              +===+    +===+        +---+
+
+           A and B are affected nodes associated with `edge` in current partition.
+        */
+
+        auto ret_pair = part_cvt_info->insert(make_pair(cur_partidx, ConverterNodeInfo()));
+        auto& info = ret_pair.first->second;
+        if (ret_pair.second) {
+            info.nid = AddConverterNode(topo, "__converter_of_partition_" + std::to_string(cur_partidx));
+        }
+
+        auto ret_pair2 = info.affected_nodes.insert(make_pair(eid, set<nodeid_t>()));
+        auto& nodes_set = ret_pair2.first->second;
+        for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
+            auto nid = it.Get();
+            if (nid2partidx[nid] == cur_partidx) {
+                nodes_set.insert(nid);
+            }
+        }
+    }
+}
+
+static void HandleGraphInputs(ir::GraphTopo* topo, const vector<uint32_t>& nid2partidx,
+                              const vector<pair<EngineImpl*, vector<nodeid_t>>>& partitions,
+                              map<uint32_t, ConverterNodeInfo>* part_cvt_info) {
+    set<nodeid_t> begin_nids;
+    for (uint32_t i = 0; i < topo->GetInputCount(); ++i) {
+        auto eid = topo->GetInput(i);
+        auto edge = topo->GetEdge(eid);
+        for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
+            begin_nids.insert(it.Get());
         }
     }
 
-    return node2engine;
+    map<edgeid_t, EngineImpl*> default_engine_of_graph_input;
+    for (auto x = begin_nids.begin(); x != begin_nids.end(); ++x) {
+        auto node = topo->GetNode(*x);
+        auto part_idx = nid2partidx[*x];
+        auto engine = partitions[part_idx].first;
+
+        for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
+            auto eid = node->GetInput(i);
+            auto edge = topo->GetEdge(eid);
+            if (edge->GetProducer() != INVALID_NODEID) {
+                continue;
+            }
+
+            auto ret_pair = default_engine_of_graph_input.insert(make_pair(eid, engine));
+            // different partitions that have the same engine as current input don't need a converter node
+            if (ret_pair.second || engine == ret_pair.first->second) {
+                continue;
+            }
+
+            auto info_ret_pair = part_cvt_info->insert(make_pair(part_idx, ConverterNodeInfo()));
+            auto& info = info_ret_pair.first->second;
+            if (info_ret_pair.second) {
+                info.nid = AddConverterNode(topo, "__converter_of_partition_" + std::to_string(part_idx));
+            }
+
+            auto ret_pair2 = info.affected_nodes.insert(make_pair(eid, set<nodeid_t>()));
+            auto& nodes_set = ret_pair2.first->second;
+            nodes_set.insert(node->GetId());
+        }
+    }
 }
 
-static ir::Edge* CreateEdge(const string& name_prefix, ir::GraphTopo* topo) {
-    uint32_t suffix_num = 0;
-    pair<ir::Edge*, bool> ret_pair = {nullptr, false};
-    do {
-        const string edge_name = name_prefix + "_" + std::to_string(suffix_num);
-        ++suffix_num;
-        if (suffix_num > 1000) {
-            LOG(ERROR) << "create edge[" << name_prefix << "] failed after trying 1000 times.";
-            return nullptr;
+static RetCode GenConverterNodes(const vector<pair<EngineImpl*, vector<nodeid_t>>>& partitions,
+                                 const vector<uint32_t>& nid2partidx, ir::GraphTopo* topo,
+                                 map<uint32_t, ConverterNodeInfo>* part_cvt_info) {
+    for (uint32_t cur = 0; cur < partitions.size(); ++cur) {
+        HandlePartitionInputsWithProducers(cur, nid2partidx, partitions, topo, part_cvt_info);
+    }
+
+    HandleGraphInputs(topo, nid2partidx, partitions, part_cvt_info);
+
+    for (auto p = part_cvt_info->begin(); p != part_cvt_info->end(); ++p) {
+        auto& info = p->second;
+        auto converter_nid = info.nid;
+        auto converter_node = topo->GetNode(info.nid);
+
+        for (auto x = info.affected_nodes.begin(); x != info.affected_nodes.end(); ++x) {
+            auto eid = x->first;
+            auto edge = topo->GetEdge(eid);
+
+            const string output_edge_name("converted_output_of_" + edge->GetName() + "_" +
+                                          std::to_string(topo->GetCurrentEdgeIdBound()));
+            auto ret_pair = topo->AddEdge(output_edge_name);
+            if (!ret_pair.second) {
+                LOG(ERROR) << "add edge[" << output_edge_name << "] failed: exists.";
+                return RC_EXISTS;
+            }
+
+            auto new_edge = ret_pair.first;
+            auto new_eid = new_edge->GetId();
+
+            converter_node->AddInput(eid);
+            converter_node->AddOutput(new_eid);
+
+            edge->AddConsumer(converter_nid);
+            new_edge->SetProducer(converter_nid);
+
+            for (auto n = x->second.begin(); n != x->second.end(); ++n) {
+                edge->DelConsumer(*n);
+                new_edge->AddConsumer(*n);
+
+                auto consumer = topo->GetNode(*n);
+                consumer->ReplaceInput(eid, new_eid);
+                consumer->ReplaceExtraInput(eid, new_eid);
+            }
         }
-
-        ret_pair = topo->AddEdge(edge_name);
-    } while (!ret_pair.second);
-
-    return ret_pair.first;
-}
-
-static ir::Node* CreateConverterNode(const string& name_prefix, ir::GraphTopo* topo) {
-    pair<ir::Node*, bool> ret_pair = {nullptr, false};
-
-    uint32_t suffix_num = 0;
-    do {
-        const string node_name = name_prefix + "_" + std::to_string(suffix_num);
-        ret_pair = topo->AddNode(node_name);
-        ++suffix_num;
-        if (suffix_num > 1000) {
-            LOG(ERROR) << "create node failed after trying 1000 times.";
-            return nullptr;
-        }
-    } while (!ret_pair.second);
-
-    auto converter_node = ret_pair.first;
-    converter_node->SetType(utils::MakePplConverterNodeType());
-    return converter_node;
-}
-
-static RetCode CreateNewOutputs(const vector<edgeid_t>& edges, ir::GraphTopo* topo, vector<edgeid_t>* new_outputs) {
-    for (auto x = edges.begin(); x != edges.end(); ++x) {
-        auto edge = topo->GetEdge(*x);
-        auto new_edge = CreateEdge("converted_output_for_" + edge->GetName(), topo);
-        if (!new_edge) {
-            LOG(ERROR) << "create converted input for edge[" << edge->GetName() << "] failed.";
-            return RC_OTHER_ERROR;
-        }
-
-        new_outputs->push_back(new_edge->GetId());
     }
 
     return RC_SUCCESS;
 }
 
-// an edge may appear in different input slots of a node
-static void CollectCommonEdges(const set<edgeid_t>& parent_outputs, const vector<nodeid_t>& successors,
-                               const ir::GraphTopo* topo, vector<edgeid_t>* common_edges) {
-    common_edges->reserve(parent_outputs.size());
-    for (auto x = successors.begin(); x != successors.end(); ++x) {
-        auto successor = topo->GetNode(*x);
-        for (uint32_t i = 0; i < successor->GetInputCount(); ++i) {
-            auto eid = successor->GetInput(i);
-            if (parent_outputs.find(eid) != parent_outputs.end()) {
-                utils::VectorAddUnique(*common_edges, eid);
-            }
-        }
-        for (uint32_t i = 0; i < successor->GetExtraInputCount(); ++i) {
-            auto eid = successor->GetExtraInput(i);
-            if (parent_outputs.find(eid) != parent_outputs.end()) {
-                utils::VectorAddUnique(*common_edges, eid);
-            }
-        }
-    }
-}
-
-/** add converter nodes to copy/convert outputs to target devices */
-static ir::Node* AddConverterNodeAndOutputs(const vector<edgeid_t>& common_edges, const vector<nodeid_t>& successors,
-                                            const string& name_prefix, ir::GraphTopo* topo) {
-    auto converter_node = CreateConverterNode(name_prefix, topo);
-    if (!converter_node) {
-        LOG(ERROR) << "create converter node [" << name_prefix << "] failed.";
-        return nullptr;
-    }
-
-    vector<edgeid_t> new_outputs;
-    auto status = CreateNewOutputs(common_edges, topo, &new_outputs);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "CreateNewOutputs of [" << name_prefix << "] failed.";
-        return nullptr;
-    }
-
-    // set converter node's inputs and outputs: copy/convert inputs to outputs
-    for (uint32_t i = 0; i < common_edges.size(); ++i) {
-        converter_node->AddInput(common_edges[i]);
-        converter_node->AddOutput(new_outputs[i]);
-
-        auto in_edge = topo->GetEdge(common_edges[i]);
-        in_edge->AddConsumer(converter_node->GetId());
-
-        auto out_edge = topo->GetEdge(new_outputs[i]);
-        out_edge->SetProducer(converter_node->GetId());
-    }
-
-    // replace old inputs of successors with converted edges
-    for (auto x = successors.begin(); x != successors.end(); ++x) {
-        auto successor = topo->GetNode(*x);
-
-        for (uint32_t i = 0; i < common_edges.size(); ++i) {
-            uint32_t count_a = successor->ReplaceInput(common_edges[i], new_outputs[i]);
-            uint32_t count_b = successor->ReplaceExtraInput(common_edges[i], new_outputs[i]);
-            if (count_a > 0 || count_b > 0) {
-                auto in_edge = topo->GetEdge(common_edges[i]);
-                in_edge->DelConsumer(*x);
-                auto out_edge = topo->GetEdge(new_outputs[i]);
-                out_edge->AddConsumer(*x);
-            }
-        }
-    }
-
-    return converter_node;
-}
-
-static RetCode InsertConverterNodesForPartitions(const vector<EngineImpl*>& node2engine, ir::Graph* graph,
-                                                 vector<pair<nodeid_t, EngineImpl*>>* converter_nodes) {
+// TODO optimize
+static RetCode CopyConstantsForDevices(const vector<pair<EngineImpl*, vector<nodeid_t>>>& partitions,
+                                       const vector<uint32_t>& nid2partidx, ir::Graph* graph) {
     auto topo = graph->topo.get();
-    const nodeid_t max_node_id = topo->GetCurrentNodeIdBound();
+    auto graph_data = graph->data.get();
 
-    // newly inserted converter nodes' ids start from max_node_id
-    for (nodeid_t nid = 0; nid < max_node_id; ++nid) {
-        auto parent = topo->GetNode(nid);
-        if (!parent) {
+    for (uint32_t i = 0; i < topo->GetConstantCount(); ++i) {
+        auto eid = topo->GetConstant(i);
+        auto edge = topo->GetEdge(eid);
+
+        if (edge->CalcConsumerCount() == 1) {
             continue;
         }
 
-        auto successor_ids = topo->FindSuccessors(nid);
-        if (successor_ids.empty()) {
-            continue;
-        }
-
-        auto producer_engine = node2engine[nid];
         map<EngineImpl*, vector<nodeid_t>> engine_node_groups;
-        for (auto x = successor_ids.begin(); x != successor_ids.end(); ++x) {
-            auto engine = node2engine[*x];
-            if (engine != producer_engine) {
-                auto ret_pair = engine_node_groups.insert(make_pair(engine, vector<nodeid_t>()));
-                ret_pair.first->second.push_back(*x);
-            }
+        for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
+            auto consumer_nid = it.Get();
+            auto part_idx = nid2partidx[consumer_nid];
+            auto engine = partitions[part_idx].first;
+            auto ret_pair = engine_node_groups.insert(make_pair(engine, vector<nodeid_t>()));
+            ret_pair.first->second.push_back(consumer_nid);
         }
-        if (engine_node_groups.empty()) {
+        if (engine_node_groups.size() <= 1) {
             continue;
         }
 
-        set<edgeid_t> parent_outputs;
-        for (uint32_t j = 0; j < parent->GetOutputCount(); ++j) {
-            parent_outputs.insert(parent->GetOutput(j));
+        auto constant_data_iter = graph_data->constants.find(eid);
+        if (constant_data_iter == graph_data->constants.end()) {
+            LOG(ERROR) << "cannot find constant[" << edge->GetName() << "].";
+            return RC_NOT_FOUND;
         }
 
-        for (auto x = engine_node_groups.begin(); x != engine_node_groups.end(); ++x) {
-            // common edges between parent and successors that are assigned to the same engine
-            vector<edgeid_t> common_edges;
-            CollectCommonEdges(parent_outputs, x->second, topo, &common_edges);
+        auto shape_iter = graph_data->shapes.find(eid);
+        if (shape_iter == graph_data->shapes.end()) {
+            LOG(ERROR) << "cannot find shape of constant[" << edge->GetName() << "].";
+            return RC_NOT_FOUND;
+        }
 
-            // copy/convert inputs(common_edges) to outputs and replace inputs of successors
-            auto converter_node =
-                AddConverterNodeAndOutputs(common_edges, x->second, "converter_of_" + parent->GetName(), topo);
-            if (!converter_node) {
-                LOG(ERROR) << "create converter node for [" << parent->GetName() << "] failed.";
-                return RC_OTHER_ERROR;
+        // original constant edge is assigned to one of those engines
+        engine_node_groups.erase(engine_node_groups.begin());
+
+        // create copies for other engines
+        for (auto it = engine_node_groups.begin(); it != engine_node_groups.end(); ++it) {
+            auto ret_pair =
+                topo->AddEdge("__copy_of_" + edge->GetName() + "_" + std::to_string(topo->GetCurrentEdgeIdBound()));
+            auto new_edge = ret_pair.first;
+            auto new_edge_id = new_edge->GetId();
+
+            topo->MarkAsConstant(new_edge_id);
+
+            graph_data->constants.insert(make_pair(new_edge_id, constant_data_iter->second));
+            graph_data->shapes.insert(make_pair(new_edge_id, shape_iter->second));
+
+            // replace inputs and extra inputs of consumers
+            for (auto nid = it->second.begin(); nid != it->second.end(); ++nid) {
+                auto node = topo->GetNode(*nid);
+                new_edge->AddConsumer(*nid);
+                edge->DelConsumer(*nid);
+                node->ReplaceInput(eid, new_edge_id);
+                node->ReplaceExtraInput(eid, new_edge_id);
             }
-
-            converter_nodes->push_back(make_pair(converter_node->GetId(), x->first));
         }
     }
 
@@ -294,148 +341,15 @@ static RetCode GenPartitionsInfoAndShapes(const vector<pair<EngineImpl*, vector<
     return RC_SUCCESS;
 }
 
-// TODO optimize
-static RetCode CopyConstantsForDevices(const vector<EngineImpl*>& node2engine, ir::Graph* graph) {
-    auto topo = graph->topo.get();
-    auto graph_data = graph->data.get();
-
-    for (uint32_t i = 0; i < topo->GetConstantCount(); ++i) {
-        auto eid = topo->GetConstant(i);
-        auto edge = topo->GetEdge(eid);
-
-        if (edge->CalcConsumerCount() == 1) {
-            continue;
-        }
-
-        map<EngineImpl*, vector<nodeid_t>> engine_node_groups;
-        for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
-            auto consumer_id = it.Get();
-            auto engine = node2engine[consumer_id];
-            auto ret_pair = engine_node_groups.insert(make_pair(engine, vector<nodeid_t>()));
-            ret_pair.first->second.push_back(consumer_id);
-        }
-        /*
-          engine_node_groups' size may be 0 because some constants may only be used
-          by the node itself. e.g. `cond` of Loop
-        */
-        if (engine_node_groups.size() <= 1) {
-            continue;
-        }
-
-        auto constant_data_iter = graph_data->constants.find(eid);
-        if (constant_data_iter == graph_data->constants.end()) {
-            LOG(ERROR) << "cannot find constant[" << edge->GetName() << "].";
-            return RC_NOT_FOUND;
-        }
-
-        auto shape_iter = graph_data->shapes.find(eid);
-        if (shape_iter == graph_data->shapes.end()) {
-            LOG(ERROR) << "cannot find shape of constant[" << edge->GetName() << "].";
-            return RC_NOT_FOUND;
-        }
-
-        // original constant edge is assigned to one of those engines
-        engine_node_groups.erase(engine_node_groups.begin());
-
-        // create copies for other engines
-        for (auto it = engine_node_groups.begin(); it != engine_node_groups.end(); ++it) {
-            auto new_edge = CreateEdge(string(it->first->GetName()) + "_" + edge->GetName(), topo);
-            if (!new_edge) {
-                LOG(ERROR) << "CreateEdge failed";
-                return RC_OTHER_ERROR;
-            }
-            auto new_edge_id = new_edge->GetId();
-
-            graph_data->constants.insert(make_pair(new_edge_id, constant_data_iter->second));
-            graph_data->shapes.insert(make_pair(new_edge_id, shape_iter->second));
-
-            // replace inputs and extra inputs of consumers
-            for (auto nid = it->second.begin(); nid != it->second.end(); ++nid) {
-                auto node = topo->GetNode(*nid);
-                new_edge->AddConsumer(*nid);
-                edge->DelConsumer(*nid);
-                node->ReplaceInput(eid, new_edge_id);
-                node->ReplaceExtraInput(eid, new_edge_id);
-            }
+static vector<uint32_t> GenNid2Partidx(nodeid_t maxid, const vector<pair<EngineImpl*, vector<nodeid_t>>>& partitions) {
+    vector<uint32_t> nid2partidx(maxid, UINT32_MAX);
+    for (uint32_t i = 0; i < partitions.size(); ++i) {
+        auto& vec = partitions[i].second;
+        for (uint32_t j = 0; j < vec.size(); ++j) {
+            nid2partidx[vec[j]] = i;
         }
     }
-
-    return RC_SUCCESS;
-}
-
-static RetCode InsertConverterNodesForInputs(ir::Graph* graph, const vector<EngineImpl*>& node2engine,
-                                             vector<pair<nodeid_t, EngineImpl*>>* converter_nodes) {
-    auto topo = graph->topo.get();
-    map<EngineImpl*, nodeid_t> engine_converter_nodes;
-
-    for (uint32_t i = 0; i < topo->GetInputCount(); ++i) {
-        auto eid = topo->GetInput(i);
-        auto edge = topo->GetEdge(eid);
-
-        if (edge->CalcConsumerCount() <= 1) {
-            continue;
-        }
-
-        map<EngineImpl*, vector<nodeid_t>> engine_node_groups;
-        for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
-            auto consumer_id = it.Get();
-            auto engine = node2engine[consumer_id];
-            auto ret_pair = engine_node_groups.insert(make_pair(engine, vector<nodeid_t>()));
-            ret_pair.first->second.push_back(consumer_id);
-        }
-        if (engine_node_groups.size() == 1) {
-            continue;
-        }
-
-        /*
-          choose one of those engines as the producer engine of this input.
-          this will be done when runtime is created.
-        */
-        engine_node_groups.erase(engine_node_groups.begin());
-
-        for (auto it = engine_node_groups.begin(); it != engine_node_groups.end(); ++it) {
-            auto engine = it->first;
-            ir::Node* converter_node = nullptr;
-
-            auto ret_pair = engine_converter_nodes.insert(make_pair(it->first, INVALID_NODEID));
-            if (ret_pair.second) {
-                const string name_prefix = "converter_of_" + string(engine->GetName());
-                converter_node = CreateConverterNode(name_prefix, topo);
-                if (!converter_node) {
-                    LOG(ERROR) << "create converter node [" << name_prefix << "] failed.";
-                    return RC_OTHER_ERROR;
-                }
-                ret_pair.first->second = converter_node->GetId();
-                converter_nodes->push_back(make_pair(converter_node->GetId(), engine));
-            } else {
-                converter_node = topo->GetNode(ret_pair.first->second);
-            }
-
-            auto new_output = CreateEdge("converted_output_of_" + edge->GetName(), topo);
-            if (!new_output) {
-                LOG(ERROR) << "create converted input for edge[" << edge->GetName() << "] failed.";
-                return RC_OTHER_ERROR;
-            }
-            auto new_output_id = new_output->GetId();
-
-            converter_node->AddInput(eid);
-            converter_node->AddOutput(new_output_id);
-
-            edge->AddConsumer(converter_node->GetId());
-            new_output->SetProducer(converter_node->GetId());
-
-            for (auto x = it->second.begin(); x != it->second.end(); ++x) {
-                edge->DelConsumer(*x);
-                new_output->AddConsumer(*x);
-
-                auto consumer = topo->GetNode(*x);
-                consumer->ReplaceInput(eid, new_output_id);
-                consumer->ReplaceExtraInput(eid, new_output_id);
-            }
-        }
-    }
-
-    return RC_SUCCESS;
+    return nid2partidx;
 }
 
 RetCode ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, RuntimeGraphInfo* info) {
@@ -455,26 +369,19 @@ RetCode ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, Ru
 
     LOG(INFO) << "total partition(s) of graph[" << graph->topo->GetName() << "]: " << partitions.size() << ".";
 
-    // the second parameter is the producer engine of converter node's outputs
-    vector<pair<nodeid_t, EngineImpl*>> converter_nodes;
+    map<uint32_t, ConverterNodeInfo> part_cvt_info;
     if (partitions.size() > 1) {
-        auto node2engine = GenNode2Engine(partitions, graph->topo->GetCurrentNodeIdBound());
+        const vector<uint32_t> nid2partidx = GenNid2Partidx(graph->topo->GetCurrentNodeIdBound(), partitions);
 
-        status = InsertConverterNodesForPartitions(node2engine, graph, &converter_nodes);
+        status = GenConverterNodes(partitions, nid2partidx, graph->topo.get(), &part_cvt_info);
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "insert converter node failed: " << GetRetCodeStr(status);
+            LOG(ERROR) << "GenConverterNodes failed: " << GetRetCodeStr(status);
             return status;
         }
 
-        status = CopyConstantsForDevices(node2engine, graph);
+        status = CopyConstantsForDevices(partitions, nid2partidx, graph);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "CopyConstantsForDevices failed: " << GetRetCodeStr(status);
-            return status;
-        }
-
-        status = InsertConverterNodesForInputs(graph, node2engine, &converter_nodes);
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "InsertConverterNodesForInputs failed: " << GetRetCodeStr(status);
             return status;
         }
     }
@@ -489,12 +396,10 @@ RetCode ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, Ru
         return status;
     }
 
-    // add converter optkernels
-    for (auto x = converter_nodes.begin(); x != converter_nodes.end(); ++x) {
-        RuntimeGraphInfo::Partition par_info;
-        par_info.engine = x->second;
-        par_info.ops.emplace_back(unique_ptr<OptKernel>(new pmx::ConverterOp(graph->topo->GetNode(x->first))));
-        info->partitions.emplace_back(std::move(par_info)); // one converter is treated as a single partition
+    // add converter ops to corresponding partitions
+    for (auto x = part_cvt_info.begin(); x != part_cvt_info.end(); ++x) {
+        info->partitions[x->first].ops.emplace_back(
+            unique_ptr<OptKernel>(new pmx::ConverterOp(graph->topo->GetNode(x->second.nid))));
     }
 
     // save necessary shapes for runtime
