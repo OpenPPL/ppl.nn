@@ -32,6 +32,7 @@ public:
     ppl::common::RetCode AddNode(const std::string& name, const ir::Node::Type& type,
                                  const std::vector<std::string>& inputs, const std::vector<std::string>& outputs,
                                  const std::vector<std::string>& extra_inputs = {});
+    void AddConstant(const std::string& name);
     ppl::common::RetCode Finalize();
     ir::Graph* GetGraph() const {
         return &graph_;

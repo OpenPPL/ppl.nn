@@ -66,6 +66,12 @@ RetCode GraphBuilder::AddNode(const string& name, const ir::Node::Type& type, co
     return RC_SUCCESS;
 }
 
+void GraphBuilder::AddConstant(const string& name) {
+    auto topo = graph_.topo.get();
+    auto ret_pair = topo->AddEdge(name);
+    topo->MarkAsConstant(ret_pair.first->GetId());
+}
+
 RetCode GraphBuilder::Finalize() {
     auto topo = graph_.topo.get();
 
@@ -83,11 +89,19 @@ RetCode GraphBuilder::Finalize() {
             node->AddExtraInput(edge->GetId());
         }
     }
+
+    set<edgeid_t> constants;
+    for (uint32_t i = 0; i < topo->GetConstantCount(); ++i) {
+        constants.insert(topo->GetConstant(i));
+    }
+
     for (auto it = topo->CreateEdgeIter(); it->IsValid(); it->Forward()) {
         auto edge = it->Get();
         if (edge->GetProducer() == INVALID_NODEID) {
             if (extra_input_ids.find(edge->GetId()) == extra_input_ids.end()) {
-                topo->MarkAsInput(edge->GetId());
+                if (constants.find(edge->GetId()) == constants.end()) {
+                    topo->MarkAsInput(edge->GetId());
+                }
             }
         }
         if (edge->CalcConsumerCount() == 0) {
