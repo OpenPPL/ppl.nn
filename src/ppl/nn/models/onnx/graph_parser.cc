@@ -152,10 +152,6 @@ static RetCode ParseNodeInfo(const ::onnx::NodeProto& pb_node, const ParamParser
 
         auto ret_pair = topo->AddEdge(input_name);
         auto edge = ret_pair.first;
-        if (ret_pair.second) {
-            topo->MarkAsExtraInput(edge->GetId());
-        }
-
         edge->AddConsumer(node->GetId());
         node->AddInput(edge->GetId());
     }
@@ -164,11 +160,13 @@ static RetCode ParseNodeInfo(const ::onnx::NodeProto& pb_node, const ParamParser
         const string& output_name = pb_node.output(i);
 
         auto ret_pair = topo->AddEdge(output_name);
-        if (!ret_pair.second) {
-            LOG(ERROR) << "output edge[" << output_name << "] of node[" << node_name << "] already exists.";
-            return RC_EXISTS;
-        }
         auto edge = ret_pair.first;
+        if (!ret_pair.second) {
+            if (edge->GetProducer() != INVALID_NODEID) {
+                LOG(ERROR) << "output edge[" << output_name << "] of node[" << node_name << "] already exists.";
+                return RC_EXISTS;
+            }
+        }
 
         edge->SetProducer(node->GetId());
         node->AddOutput(edge->GetId());
@@ -259,6 +257,26 @@ static RetCode ParseGraphOutput(const ::onnx::GraphProto& pb_graph, ir::GraphTop
     return RC_SUCCESS;
 }
 
+static void ParseGraphExtraInput(ir::GraphTopo* topo) {
+    set<edgeid_t> no_producer_edges;
+    for (uint32_t i = 0; i < topo->GetConstantCount(); ++i) {
+        no_producer_edges.insert(topo->GetConstant(i));
+    }
+    for (uint32_t i = 0; i < topo->GetInputCount(); ++i) {
+        no_producer_edges.insert(topo->GetInput(i));
+    }
+
+    for (auto it = topo->CreateEdgeIter(); it->IsValid(); it->Forward()) {
+        auto edge = it->Get();
+        if (edge->GetProducer() == INVALID_NODEID) {
+            auto ref = no_producer_edges.find(edge->GetId());
+            if (ref == no_producer_edges.end()) {
+                topo->MarkAsExtraInput(edge->GetId());
+            }
+        }
+    }
+}
+
 RetCode GraphParser::Parse(const ::onnx::GraphProto& pb_graph, const map<string, uint64_t>& op_set,
                            const char* model_file_dir, ir::Graph* graph) {
     graph->topo = make_shared<ir::FullGraphTopo>();
@@ -292,6 +310,8 @@ RetCode GraphParser::Parse(const ::onnx::GraphProto& pb_graph, const map<string,
         LOG(ERROR) << "ParseGraphOutput failed.";
         return status;
     }
+
+    ParseGraphExtraInput(topo);
 
     return RC_SUCCESS;
 }
