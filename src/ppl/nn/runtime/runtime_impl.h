@@ -103,7 +103,7 @@ private:
     std::shared_ptr<Scheduler> sched_;
 
     /** union of inputs/extra_inputs/constants/outputs/reserved_edgeids */
-    std::map<edgeid_t, TensorImpl> reserved_tensors_;
+    std::map<std::string, TensorImpl> reserved_tensors_;
 
     /** kernels list where the subscriptor is KernelImpl::GetNode()::GetId() */
     std::vector<std::unique_ptr<KernelImpl>> nodeid2kernel_;
