@@ -201,9 +201,11 @@ __inline__ void InitializeFP16ConvKernelContainer(std::vector<kernel_info_t> &g_
     cudaGetDeviceProperties(&device_prop, device_id);
 
     if (type == ppl::common::DATATYPE_FLOAT16) {
+
 #ifndef PPLNN_ENABLE_CUDA_JIT
+  
         if (device_prop.major == 7 && device_prop.minor == 5) {
-#if (__CUDA_ARCH__ >= 750) && (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
             // sm75 kernels
             Initialize2spkSM75FP16Hmma1688ConvF1KernelContainer(g_fp16_kvec);
             Initialize2spkSM75FP16Hmma1688ConvF3KernelContainer(g_fp16_kvec);
@@ -217,7 +219,7 @@ __inline__ void InitializeFP16ConvKernelContainer(std::vector<kernel_info_t> &g_
             InitializeSwzlSM75FP16Hmma1688ConvFNKernelContainer(g_fp16_kvec);
 #endif
         } else if (device_prop.major > 8 || (device_prop.major == 8 && device_prop.minor >= 0)) {
-#if (__CUDA_ARCH__ >= 750) && (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
             // sm75 kernels
             Initialize2spkSM75FP16Hmma1688ConvF1KernelContainer(g_fp16_kvec);
             Initialize2spkSM75FP16Hmma1688ConvF3KernelContainer(g_fp16_kvec);
@@ -231,7 +233,7 @@ __inline__ void InitializeFP16ConvKernelContainer(std::vector<kernel_info_t> &g_
             InitializeSwzlSM75FP16Hmma1688ConvFNKernelContainer(g_fp16_kvec);
 #endif
 
-#if (__CUDA_ARCH__ >= 800) && (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
             // sm80 kernels
             Initialize2spkSM80FP16Hmma1688ConvF1KernelContainer(g_fp16_kvec);
             Initialize2spkSM80FP16Hmma1688ConvF3KernelContainer(g_fp16_kvec);
