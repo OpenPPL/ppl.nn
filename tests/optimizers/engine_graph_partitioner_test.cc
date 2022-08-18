@@ -219,3 +219,112 @@ TEST_F(TestEngineGraphPartioner, partition_by_types) {
         }
     }
 }
+
+TEST_F(TestEngineGraphPartioner, partition_may_cycle) {
+    vector<unique_ptr<EngineImpl>> engines;
+    engines.emplace_back(unique_ptr<EngineImpl>(new TmpEngine1()));
+    engines.emplace_back(unique_ptr<EngineImpl>(new TmpEngine2()));
+
+    vector<EngineImpl*> engine_ptrs(engines.size());
+    for (uint32_t i = 0; i < engines.size(); ++i) {
+        engine_ptrs[i] = engines[i].get();
+    }
+
+    GraphBuilder builder;
+    builder.AddNode("a", ir::Node::Type("test", "op1", 1), {"in1"}, {"out1", "out2"});
+    builder.AddNode("b", ir::Node::Type("test", "op1", 1), {"out1"}, {"out3"});
+    builder.AddNode("c", ir::Node::Type("test", "op2", 1), {"out2"}, {"out4"});
+    builder.AddNode("d", ir::Node::Type("test", "op1", 1), {"out3", "out4"}, {"out5"});
+    builder.Finalize();
+    auto topo = builder.GetGraph()->topo.get();
+
+    EngineGraphPartitioner partitioner;
+    vector<pair<EngineImpl*, vector<nodeid_t>>> partitions;
+    auto status = partitioner.Partition(engine_ptrs, builder.GetGraph()->topo.get(), &partitions);
+    EXPECT_EQ(RC_SUCCESS, status);
+    EXPECT_EQ(3, partitions.size());
+
+    cout << utils::ToGraphviz(topo) << endl;
+
+    for (uint32_t i = 0; i < partitions.size(); ++i) {
+        cout << "partition[" << i << "] with engine[" << partitions[i].first->GetName() << "]: ";
+        for (auto x = partitions[i].second.begin(); x != partitions[i].second.end(); ++x) {
+            cout << topo->GetNode(*x)->GetName() << " ";
+        }
+        cout << endl;
+    }
+
+    vector<uint32_t> nid2partidx(topo->GetCurrentNodeIdBound(), UINT32_MAX);
+    for (uint32_t i = 0; i < partitions.size(); ++i) {
+        for (uint32_t j = 0; j < partitions[i].second.size(); ++j) {
+            nid2partidx[partitions[i].second[j]] = i;
+        }
+    }
+
+    auto node_a = topo->GetNode("a");
+    EXPECT_TRUE(node_a != nullptr);
+    auto node_b = topo->GetNode("b");
+    EXPECT_TRUE(node_b != nullptr);
+    EXPECT_EQ(nid2partidx[node_a->GetId()], nid2partidx[node_b->GetId()]);
+
+    auto node_c = topo->GetNode("c");
+    EXPECT_TRUE(node_c != nullptr);
+    EXPECT_NE(nid2partidx[node_a->GetId()], nid2partidx[node_c->GetId()]);
+
+    auto node_d = topo->GetNode("d");
+    EXPECT_TRUE(node_d != nullptr);
+    EXPECT_NE(nid2partidx[node_b->GetId()], nid2partidx[node_d->GetId()]);
+    EXPECT_NE(nid2partidx[node_c->GetId()], nid2partidx[node_d->GetId()]);
+}
+
+TEST_F(TestEngineGraphPartioner, partition_no_cycle) {
+    vector<unique_ptr<EngineImpl>> engines;
+    engines.emplace_back(unique_ptr<EngineImpl>(new TmpEngine1()));
+    engines.emplace_back(unique_ptr<EngineImpl>(new TmpEngine2()));
+
+    vector<EngineImpl*> engine_ptrs(engines.size());
+    for (uint32_t i = 0; i < engines.size(); ++i) {
+        engine_ptrs[i] = engines[i].get();
+    }
+
+    GraphBuilder builder;
+    builder.AddNode("a", ir::Node::Type("test", "op1", 1), {"in1"}, {"out1"});
+    builder.AddNode("b", ir::Node::Type("test", "op1", 1), {"out1"}, {"out2"});
+    builder.AddNode("c", ir::Node::Type("test", "op2", 1), {"in2"}, {"out3"});
+    builder.AddNode("d", ir::Node::Type("test", "op1", 1), {"out2", "out3"}, {"out4"});
+    builder.Finalize();
+    auto topo = builder.GetGraph()->topo.get();
+
+    EngineGraphPartitioner partitioner;
+    vector<pair<EngineImpl*, vector<nodeid_t>>> partitions;
+    auto status = partitioner.Partition(engine_ptrs, builder.GetGraph()->topo.get(), &partitions);
+    EXPECT_EQ(RC_SUCCESS, status);
+    EXPECT_EQ(2, partitions.size());
+
+    cout << utils::ToGraphviz(topo) << endl;
+
+    for (uint32_t i = 0; i < partitions.size(); ++i) {
+        cout << "partition[" << i << "] with engine[" << partitions[i].first->GetName() << "]: ";
+        for (auto x = partitions[i].second.begin(); x != partitions[i].second.end(); ++x) {
+            cout << topo->GetNode(*x)->GetName() << " ";
+        }
+        cout << endl;
+    }
+
+    vector<uint32_t> nid2partidx(topo->GetCurrentNodeIdBound(), UINT32_MAX);
+    for (uint32_t i = 0; i < partitions.size(); ++i) {
+        for (uint32_t j = 0; j < partitions[i].second.size(); ++j) {
+            nid2partidx[partitions[i].second[j]] = i;
+        }
+    }
+
+    auto node_b = topo->GetNode("b");
+    EXPECT_TRUE(node_b != nullptr);
+    auto node_d = topo->GetNode("d");
+    EXPECT_TRUE(node_d != nullptr);
+    EXPECT_EQ(nid2partidx[node_b->GetId()], nid2partidx[node_d->GetId()]);
+
+    auto node_c = topo->GetNode("c");
+    EXPECT_TRUE(node_c != nullptr);
+    EXPECT_NE(nid2partidx[node_b->GetId()], nid2partidx[node_c->GetId()]);
+}

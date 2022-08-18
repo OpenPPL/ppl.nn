@@ -42,6 +42,9 @@ void DfsDeeperFirst(const ir::GraphTopo* topo, const std::function<void(nodeid_t
 /** @brief find inputs and extra inputs of the given nodes' group */
 std::vector<edgeid_t> FindInputsOfNodesGroup(const ir::GraphTopo*, const std::vector<nodeid_t>&);
 
+/** @brief find outputs of the given nodes' group */
+std::vector<edgeid_t> FindOutputsOfNodesGroup(const ir::GraphTopo*, const std::vector<nodeid_t>&);
+
 }}} // namespace ppl::nn::utils
 
 #endif

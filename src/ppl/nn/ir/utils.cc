@@ -208,4 +208,37 @@ vector<edgeid_t> FindInputsOfNodesGroup(const ir::GraphTopo* topo, const vector<
     return input_eids;
 }
 
+vector<edgeid_t> FindOutputsOfNodesGroup(const ir::GraphTopo* topo, const vector<nodeid_t>& nodes) {
+    vector<bool> valid_node_flag(topo->GetCurrentNodeIdBound(), false);
+    vector<bool> valid_edge_flag(topo->GetCurrentEdgeIdBound(), false);
+
+    for (uint32_t i = 0; i < nodes.size(); ++i) {
+        auto node = topo->GetNode(nodes[i]);
+        valid_node_flag[nodes[i]] = true;
+
+        for (uint32_t j = 0; j < node->GetOutputCount(); ++j) {
+            auto eid = node->GetOutput(j);
+            valid_edge_flag[eid] = true;
+        }
+    }
+
+    vector<edgeid_t> output_eids;
+    for (uint32_t eid = 0; eid < valid_edge_flag.size(); ++eid) {
+        if (!valid_edge_flag[eid]) {
+            continue;
+        }
+
+        auto edge = topo->GetEdge(eid);
+        for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
+            auto consumer_nid = it.Get();
+            if (consumer_nid == INVALID_NODEID || !valid_node_flag[consumer_nid]) {
+                output_eids.push_back(eid);
+                break;
+            }
+        }
+    }
+
+    return output_eids;
+}
+
 }}} // namespace ppl::nn::utils
