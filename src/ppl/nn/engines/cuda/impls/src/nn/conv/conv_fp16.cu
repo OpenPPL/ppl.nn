@@ -385,6 +385,7 @@ double PPLCUDAConvolutionSelectKernel(
         algo_param.kid    = conv_shape_hash_iterator->second.kid;
         algo_param.splitk = conv_shape_hash_iterator->second.splitk;
         algo_param.splitf = conv_shape_hash_iterator->second.splitf;
+        algo_param.algo_name   = conv_shape_hash_iterator->second.algo_name;
 
         return ppl::common::RC_SUCCESS;
     }
@@ -563,6 +564,7 @@ double PPLCUDAConvolutionSelectKernel(
             cudaEventElapsedTime(&elapsed, begin, end);
 
             if (elapsed < minTime) {
+                algo_param.algo_name = g_fp16_kvec[kid].kname;
                 algo_param.kid    = kid;
                 algo_param.splitk = splitk;
                 algo_param.splitf = splitf;
