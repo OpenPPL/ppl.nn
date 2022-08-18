@@ -16,11 +16,9 @@
 // under the License.
 
 #include "ppl/nn/optimizers/engine_graph_partitioner.h"
-#include "ppl/nn/ir/partial_graph_topo.h"
 #include "ppl/nn/ir/utils.h"
 #include "ppl/nn/common/logger.h"
 #include <set>
-#include <queue>
 using namespace std;
 using namespace ppl::common;
 
@@ -59,22 +57,24 @@ static uint32_t PredecessorsInTheSamePartition(const vector<nodeid_t>& prev_ids,
     return par_idx;
 }
 
-static vector<nodeid_t> FindLowestCommonAncestors(nodeid_t a, nodeid_t b, const ir::GraphTopo* topo) {
+static set<nodeid_t> FindLowestCommonAncestors(nodeid_t a, nodeid_t b, const ir::GraphTopo* topo) {
     set<nodeid_t> ancestors_of_a = topo->FindAncestors(a);
     set<nodeid_t> ancestors_of_b = topo->FindAncestors(b);
     vector<nodeid_t> common_nodes(ancestors_of_a.size() + ancestors_of_b.size());
     auto end_iter = std::set_intersection(ancestors_of_a.begin(), ancestors_of_a.end(), ancestors_of_b.begin(),
                                           ancestors_of_b.end(), common_nodes.begin());
     common_nodes.resize(end_iter - common_nodes.begin());
-    ir::PartialGraphTopo sub_topo(const_cast<ir::GraphTopo*>(topo), common_nodes);
-    vector<nodeid_t> ret;
-    for (uint32_t i = 0; i < sub_topo.GetOutputCount(); ++i) {
-        ret.push_back(sub_topo.GetOutput(i));
+
+    set<nodeid_t> ret;
+    auto outputs = utils::FindOutputsOfNodesGroup(topo, common_nodes);
+    for (auto o = outputs.begin(); o != outputs.end(); ++o) {
+        auto edge = topo->GetEdge(*o);
+        ret.insert(edge->GetProducer());
     }
     return ret;
 }
 
-static bool IsInTheSamePartition(uint32_t par_idx, const vector<nodeid_t>& common_ancestors,
+static bool IsInTheSamePartition(uint32_t par_idx, const set<nodeid_t>& common_ancestors,
                                  const map<nodeid_t, uint32_t>& nid2par) {
     for (auto x = common_ancestors.begin(); x != common_ancestors.end(); ++x) {
         auto par_prev_idx_ref = nid2par.find(*x);
@@ -90,19 +90,29 @@ static nodeid_t WhichPrevToJoin(const ir::GraphTopo* topo, const EngineImpl* eng
                                 const vector<PartitionInfo>& par_infos, const map<nodeid_t, uint32_t>& nid2par) {
     vector<bool> can_be_merged_with(prev_ids.size(), true);
 
+    uint32_t nr_false = 0;
     for (uint32_t i = 0; i < prev_ids.size(); ++i) {
-        if (!can_be_merged_with[i]) {
-            continue;
+        if (nr_false == prev_ids.size()) {
+            return INVALID_NODEID;
         }
 
         uint32_t prev_par_idx = nid2par.find(prev_ids[i])->second;
-        auto& prev_par_info = par_infos[prev_par_idx];
-        if (engine != prev_par_info.engine) {
-            can_be_merged_with[i] = false;
-            continue;
+
+        if (can_be_merged_with[i]) {
+            auto& prev_par_info = par_infos[prev_par_idx];
+            // cannot be merged with prev[i] because they are assigned to different engines
+            if (engine != prev_par_info.engine) {
+                can_be_merged_with[i] = false;
+                ++nr_false;
+            }
         }
 
+        // need to check the rest of prevs to ensure that they would not form a cycle with prev[i]
         for (uint32_t j = i + 1; j < prev_ids.size(); ++j) {
+            if (!can_be_merged_with[i] && !can_be_merged_with[j]) {
+                continue;
+            }
+
             /*
               if `prev-1` is in the same partition as one of the common ancestors,
               merging current node into that partition will form circular dependencies with
@@ -129,15 +139,18 @@ static nodeid_t WhichPrevToJoin(const ir::GraphTopo* topo, const EngineImpl* eng
                                 +--------------+
             */
             auto common_ancestors = FindLowestCommonAncestors(prev_ids[i], prev_ids[j], topo);
-            if (IsInTheSamePartition(prev_par_idx, common_ancestors, nid2par)) {
-                can_be_merged_with[i] = false;
-                break;
+            if (can_be_merged_with[i]) {
+                if (IsInTheSamePartition(prev_par_idx, common_ancestors, nid2par)) {
+                    can_be_merged_with[i] = false;
+                    ++nr_false;
+                }
             }
-
-            auto prev2_par_idx = nid2par.find(prev_ids[j])->second;
-            if (IsInTheSamePartition(prev2_par_idx, common_ancestors, nid2par)) {
-                can_be_merged_with[j] = false;
-                break;
+            if (can_be_merged_with[j]) {
+                auto prev2_par_idx = nid2par.find(prev_ids[j])->second;
+                if (IsInTheSamePartition(prev2_par_idx, common_ancestors, nid2par)) {
+                    can_be_merged_with[j] = false;
+                    ++nr_false;
+                }
             }
         }
     }
@@ -147,6 +160,7 @@ static nodeid_t WhichPrevToJoin(const ir::GraphTopo* topo, const EngineImpl* eng
             return prev_ids[i];
         }
     }
+
     return INVALID_NODEID;
 }
 

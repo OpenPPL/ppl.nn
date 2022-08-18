@@ -202,73 +202,6 @@ static RetCode GenConverterNodes(const vector<pair<EngineImpl*, vector<nodeid_t>
     return RC_SUCCESS;
 }
 
-// TODO optimize
-static RetCode CopyConstantsForDevices(const vector<pair<EngineImpl*, vector<nodeid_t>>>& partitions,
-                                       const vector<uint32_t>& nid2partidx, ir::Graph* graph) {
-    auto topo = graph->topo.get();
-    auto graph_data = graph->data.get();
-
-    for (uint32_t i = 0; i < topo->GetConstantCount(); ++i) {
-        auto eid = topo->GetConstant(i);
-        auto edge = topo->GetEdge(eid);
-
-        if (edge->CalcConsumerCount() == 1) {
-            continue;
-        }
-
-        map<EngineImpl*, vector<nodeid_t>> engine_node_groups;
-        for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
-            auto consumer_nid = it.Get();
-            auto part_idx = nid2partidx[consumer_nid];
-            auto engine = partitions[part_idx].first;
-            auto ret_pair = engine_node_groups.insert(make_pair(engine, vector<nodeid_t>()));
-            ret_pair.first->second.push_back(consumer_nid);
-        }
-        if (engine_node_groups.size() <= 1) {
-            continue;
-        }
-
-        auto constant_data_iter = graph_data->constants.find(eid);
-        if (constant_data_iter == graph_data->constants.end()) {
-            LOG(ERROR) << "cannot find constant[" << edge->GetName() << "].";
-            return RC_NOT_FOUND;
-        }
-
-        auto shape_iter = graph_data->shapes.find(eid);
-        if (shape_iter == graph_data->shapes.end()) {
-            LOG(ERROR) << "cannot find shape of constant[" << edge->GetName() << "].";
-            return RC_NOT_FOUND;
-        }
-
-        // original constant edge is assigned to one of those engines
-        engine_node_groups.erase(engine_node_groups.begin());
-
-        // create copies for other engines
-        for (auto it = engine_node_groups.begin(); it != engine_node_groups.end(); ++it) {
-            auto ret_pair =
-                topo->AddEdge("__copy_of_" + edge->GetName() + "_" + std::to_string(topo->GetCurrentEdgeIdBound()));
-            auto new_edge = ret_pair.first;
-            auto new_edge_id = new_edge->GetId();
-
-            topo->MarkAsConstant(new_edge_id);
-
-            graph_data->constants.insert(make_pair(new_edge_id, constant_data_iter->second));
-            graph_data->shapes.insert(make_pair(new_edge_id, shape_iter->second));
-
-            // replace inputs and extra inputs of consumers
-            for (auto nid = it->second.begin(); nid != it->second.end(); ++nid) {
-                auto node = topo->GetNode(*nid);
-                new_edge->AddConsumer(*nid);
-                edge->DelConsumer(*nid);
-                node->ReplaceInput(eid, new_edge_id);
-                node->ReplaceExtraInput(eid, new_edge_id);
-            }
-        }
-    }
-
-    return RC_SUCCESS;
-}
-
 static RetCode CollectOps(const ir::GraphTopo* topo, map<nodeid_t, unique_ptr<OptKernel>>* nid2kernel,
                           vector<unique_ptr<OptKernel>>* ops) {
     vector<unique_ptr<OptKernel>> tmp_ops;
@@ -336,6 +269,73 @@ static RetCode GenPartitionsInfoAndShapes(const vector<pair<EngineImpl*, vector<
         }
 
         par_list->emplace_back(std::move(par_info));
+    }
+
+    return RC_SUCCESS;
+}
+
+// TODO optimize
+static RetCode CopyConstantsForDevices(const vector<pair<EngineImpl*, vector<nodeid_t>>>& partitions,
+                                       const vector<uint32_t>& nid2partidx, ir::Graph* graph) {
+    auto topo = graph->topo.get();
+    auto graph_data = graph->data.get();
+
+    for (uint32_t i = 0; i < topo->GetConstantCount(); ++i) {
+        auto eid = topo->GetConstant(i);
+        auto edge = topo->GetEdge(eid);
+
+        if (edge->CalcConsumerCount() == 1) {
+            continue;
+        }
+
+        map<EngineImpl*, vector<nodeid_t>> engine_node_groups;
+        for (auto it = edge->CreateConsumerIter(); it.IsValid(); it.Forward()) {
+            auto consumer_nid = it.Get();
+            auto part_idx = nid2partidx[consumer_nid];
+            auto engine = partitions[part_idx].first;
+            auto ret_pair = engine_node_groups.insert(make_pair(engine, vector<nodeid_t>()));
+            ret_pair.first->second.push_back(consumer_nid);
+        }
+        if (engine_node_groups.size() <= 1) {
+            continue;
+        }
+
+        auto constant_data_iter = graph_data->constants.find(eid);
+        if (constant_data_iter == graph_data->constants.end()) {
+            LOG(ERROR) << "cannot find constant[" << edge->GetName() << "].";
+            return RC_NOT_FOUND;
+        }
+
+        auto shape_iter = graph_data->shapes.find(eid);
+        if (shape_iter == graph_data->shapes.end()) {
+            LOG(ERROR) << "cannot find shape of constant[" << edge->GetName() << "].";
+            return RC_NOT_FOUND;
+        }
+
+        // original constant edge is assigned to one of those engines
+        engine_node_groups.erase(engine_node_groups.begin());
+
+        // create copies for other engines
+        for (auto it = engine_node_groups.begin(); it != engine_node_groups.end(); ++it) {
+            auto ret_pair =
+                topo->AddEdge("__copy_of_" + edge->GetName() + "_" + std::to_string(topo->GetCurrentEdgeIdBound()));
+            auto new_edge = ret_pair.first;
+            auto new_edge_id = new_edge->GetId();
+
+            topo->MarkAsConstant(new_edge_id);
+
+            graph_data->constants.insert(make_pair(new_edge_id, constant_data_iter->second));
+            graph_data->shapes.insert(make_pair(new_edge_id, shape_iter->second));
+
+            // replace inputs and extra inputs of consumers
+            for (auto nid = it->second.begin(); nid != it->second.end(); ++nid) {
+                auto node = topo->GetNode(*nid);
+                new_edge->AddConsumer(*nid);
+                edge->DelConsumer(*nid);
+                node->ReplaceInput(eid, new_edge_id);
+                node->ReplaceExtraInput(eid, new_edge_id);
+            }
+        }
     }
 
     return RC_SUCCESS;
