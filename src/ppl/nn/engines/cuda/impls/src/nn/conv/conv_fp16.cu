@@ -201,9 +201,11 @@ __inline__ void InitializeFP16ConvKernelContainer(std::vector<kernel_info_t> &g_
     cudaGetDeviceProperties(&device_prop, device_id);
 
     if (type == ppl::common::DATATYPE_FLOAT16) {
+
 #ifndef PPLNN_ENABLE_CUDA_JIT
+  
         if (device_prop.major == 7 && device_prop.minor == 5) {
-#if (__CUDA_ARCH__ >= 750) && (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
             // sm75 kernels
             Initialize2spkSM75FP16Hmma1688ConvF1KernelContainer(g_fp16_kvec);
             Initialize2spkSM75FP16Hmma1688ConvF3KernelContainer(g_fp16_kvec);
@@ -217,7 +219,7 @@ __inline__ void InitializeFP16ConvKernelContainer(std::vector<kernel_info_t> &g_
             InitializeSwzlSM75FP16Hmma1688ConvFNKernelContainer(g_fp16_kvec);
 #endif
         } else if (device_prop.major > 8 || (device_prop.major == 8 && device_prop.minor >= 0)) {
-#if (__CUDA_ARCH__ >= 750) && (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
             // sm75 kernels
             Initialize2spkSM75FP16Hmma1688ConvF1KernelContainer(g_fp16_kvec);
             Initialize2spkSM75FP16Hmma1688ConvF3KernelContainer(g_fp16_kvec);
@@ -231,7 +233,7 @@ __inline__ void InitializeFP16ConvKernelContainer(std::vector<kernel_info_t> &g_
             InitializeSwzlSM75FP16Hmma1688ConvFNKernelContainer(g_fp16_kvec);
 #endif
 
-#if (__CUDA_ARCH__ >= 800) && (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
             // sm80 kernels
             Initialize2spkSM80FP16Hmma1688ConvF1KernelContainer(g_fp16_kvec);
             Initialize2spkSM80FP16Hmma1688ConvF3KernelContainer(g_fp16_kvec);
@@ -367,8 +369,13 @@ double PPLCUDAConvolutionSelectKernel(
     cudaDeviceProp device_prop;
     cudaGetDeviceProperties(&device_prop, device_id);
 
-    if (!is_g_fp16_kvec_initialized)
+    if (!is_g_fp16_kvec_initialized) {
         InitializeFP16ConvKernelContainer(g_fp16_kvec, device_id, type);
+        if (g_fp16_kvec.empty()) {
+          LOG(ERROR) << "Fp16 kernel should be compiled on cuda >= 10.2 and run on architeture >= sm_75";
+          return ppl::common::RC_UNSUPPORTED;
+        }
+    }
 
     size_t conv_shape_hash = GetConvShapeHashKey(conv_param);
 
@@ -378,6 +385,7 @@ double PPLCUDAConvolutionSelectKernel(
         algo_param.kid    = conv_shape_hash_iterator->second.kid;
         algo_param.splitk = conv_shape_hash_iterator->second.splitk;
         algo_param.splitf = conv_shape_hash_iterator->second.splitf;
+        algo_param.algo_name   = conv_shape_hash_iterator->second.algo_name;
 
         return ppl::common::RC_SUCCESS;
     }
@@ -556,6 +564,7 @@ double PPLCUDAConvolutionSelectKernel(
             cudaEventElapsedTime(&elapsed, begin, end);
 
             if (elapsed < minTime) {
+                algo_param.algo_name = g_fp16_kvec[kid].kname;
                 algo_param.kid    = kid;
                 algo_param.splitk = splitk;
                 algo_param.splitf = splitf;
