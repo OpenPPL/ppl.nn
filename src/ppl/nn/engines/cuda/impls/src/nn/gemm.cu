@@ -360,8 +360,13 @@ double PPLCUDAGemmSelectKernel(
     cudaGetDeviceProperties(&device_prop, device_id);
 
     auto type = weight_shape->GetDataType();
-    if (!is_g_fp16_kvec_set)
-        init_f1_kvec(g_fp16_kvec, device_id, type);
+    if (!is_g_fp16_kvec_set) {
+      init_f1_kvec(g_fp16_kvec, device_id, type);
+      if (g_fp16_kvec.empty()) {
+        LOG(ERROR)<<"Fp16 kernel should be compiled on cuda >= 10.2 and run on architeture >= sm_75";
+        return ppl::common::RC_UNSUPPORTED;
+      }
+    }
 
     int pad_size = GetPadSize(type);
     int transA   = param.transA;
