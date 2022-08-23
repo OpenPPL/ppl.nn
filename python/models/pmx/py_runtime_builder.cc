@@ -19,6 +19,7 @@
 #include "../../runtime/py_runtime.h"
 #include "py_runtime_builder.h"
 #include "py_runtime_builder_resources.h"
+#include "ppl/nn/utils/file_data_stream.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 using namespace std;
@@ -65,7 +66,12 @@ void RegisterRuntimeBuilder(pybind11::module* m) {
              })
         .def("Serialize",
              [](const PyRuntimeBuilder& builder, const char* output_file, const char* fmt) -> RetCode {
-                 return builder.ptr->Serialize(output_file, fmt);
+                 utils::FileDataStream fds;
+                 auto rc = fds.Init(output_file);
+                 if (rc != RC_SUCCESS) {
+                     return rc;
+                 }
+                 return builder.ptr->Serialize(fmt, &fds);
              });
 }
 

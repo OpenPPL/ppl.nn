@@ -21,7 +21,6 @@
 #include "ppl/nn/models/onnx/param_parser_manager.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/common/tensor_shape.h" // INVALID_DIM_VALUE
-#include <fstream>
 using namespace std;
 using namespace ppl::common;
 
@@ -212,7 +211,7 @@ static RetCode PackGraph(::onnx::GraphProto* pb_graph, const ir::Graph& graph) {
     return RC_SUCCESS;
 }
 
-RetCode Serializer::Serialize(const string& output_file, const Model& model) {
+RetCode Serializer::Serialize(const Model& model, ppl::nn::utils::DataStream* ds) const {
     ::onnx::ModelProto pb_model;
     PackModelInfo(&pb_model, model.opset);
     auto status = PackGraph(pb_model.mutable_graph(), model.graph);
@@ -221,20 +220,14 @@ RetCode Serializer::Serialize(const string& output_file, const Model& model) {
         return status;
     }
 
-    ofstream ofs(output_file, ios_base::out | ios_base::binary | ios_base::trunc);
-    if (!ofs.is_open()) {
-        LOG(ERROR) << "open file[" << output_file << "] failed.";
-        return RC_OTHER_ERROR;
-    }
-
-    bool ok = pb_model.SerializeToOstream(&ofs);
+    string content;
+    bool ok = pb_model.SerializeToString(&content);
     if (!ok) {
-        LOG(ERROR) << "serialize to file failed.";
+        LOG(ERROR) << "serialize to string failed.";
         return RC_OTHER_ERROR;
     }
-    ofs.close();
 
-    return RC_SUCCESS;
+    return ds->Write(content.data(), content.size());
 }
 
 }}} // namespace ppl::nn::onnx

@@ -40,7 +40,7 @@ public:
     ppl::common::RetCode Configure(uint32_t, ...) override;
     ppl::common::RetCode Preprocess() override;
     Runtime* CreateRuntime() override;
-    ppl::common::RetCode Serialize(const char* output_file, const char* fmt) const override;
+    ppl::common::RetCode Serialize(const char* fmt, utils::DataStream*) const override;
 
 private:
     static ppl::common::RetCode ReserveTensor(RuntimeBuilderImpl*, va_list);

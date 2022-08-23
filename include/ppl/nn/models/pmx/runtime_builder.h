@@ -21,6 +21,7 @@
 #include "ppl/nn/common/common.h"
 #include "ppl/nn/engines/engine.h"
 #include "ppl/nn/runtime/runtime.h"
+#include "ppl/nn/utils/data_stream.h"
 
 namespace ppl { namespace nn { namespace pmx {
 
@@ -55,7 +56,7 @@ public:
     /** @brief creates a `Runtime` instance */
     virtual Runtime* CreateRuntime() = 0;
 
-    virtual ppl::common::RetCode Serialize(const char* output_file, const char* fmt) const = 0;
+    virtual ppl::common::RetCode Serialize(const char* fmt, ppl::nn::utils::DataStream*) const = 0;
 };
 
 }}} // namespace ppl::nn::pmx

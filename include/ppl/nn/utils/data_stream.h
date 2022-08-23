@@ -18,25 +18,17 @@
 #ifndef _ST_HPC_PPL_NN_UTILS_DATA_STREAM_H_
 #define _ST_HPC_PPL_NN_UTILS_DATA_STREAM_H_
 
+#include "ppl/nn/common/common.h"
 #include "ppl/common/retcode.h"
 
 namespace ppl { namespace nn { namespace utils {
 
-class DataStream {
+class PPLNN_PUBLIC DataStream {
 public:
     virtual ~DataStream() {}
 
-    /** @brief moves write point to `offset` */
-    virtual ppl::common::RetCode Seek(uint64_t offset) = 0;
-
     /** @brief write `bytes` bytes pointed by `base` */
     virtual ppl::common::RetCode Write(const void* base, uint64_t bytes) = 0;
-
-    /** @brief returns current offset */
-    virtual uint64_t Tell() const = 0;
-
-    /** @brief bytes written */
-    virtual uint64_t GetSize() const = 0;
 };
 
 }}} // namespace ppl::nn::utils

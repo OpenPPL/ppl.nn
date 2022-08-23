@@ -22,13 +22,14 @@
 #include "ppl/nn/ir/graph_topo.h"
 #include "ppl/nn/engines/engine_impl.h"
 #include "ppl/nn/runtime/runtime_graph_info.h"
+#include "ppl/nn/utils/data_stream.h"
 
 namespace ppl { namespace nn { namespace pmx {
 
 class Serializer final {
 public:
-    ppl::common::RetCode Serialize(const std::string& output_file, const ir::GraphTopo*,
-                                   const std::vector<EngineImpl*>&, const RuntimeGraphInfo&);
+    ppl::common::RetCode Serialize(const ir::GraphTopo*, const std::vector<EngineImpl*>&, const RuntimeGraphInfo&,
+                                   ppl::nn::utils::DataStream*) const;
 };
 
 }}} // namespace ppl::nn::pmx

@@ -16,8 +16,6 @@
 // under the License.
 
 #include <string>
-#include "ppl/nn/common/logger.h"
-#include "ppl/common/file_mapping.h"
 #include <string.h>
 #include <chrono>
 #include <string>
@@ -29,12 +27,16 @@
 #include <iostream>
 #include <functional>
 #include <algorithm>
-using namespace ppl::nn;
-using namespace ppl::common;
 using namespace std;
+
+#include "ppl/common/file_mapping.h"
+using namespace ppl::common;
 
 #include "ppl/nn/runtime/options.h"
 #include "ppl/nn/runtime/runtime.h"
+#include "ppl/nn/utils/file_data_stream.h"
+#include "ppl/nn/common/logger.h"
+using namespace ppl::nn;
 
 #ifdef PPLNN_ENABLE_ONNX_MODEL
 #include "ppl/nn/models/onnx/runtime_builder_factory.h"
@@ -204,24 +206,7 @@ Define_string_opt("--quant-file", g_flag_quant_file, "", "a json file containing
 #include "ppl/nn/engines/cuda/ops.h"
 #include "ppl/nn/utils/array.h"
 
-static RetCode ReadFileContent(const char* fname, string* buf) {
-    ifstream ifile;
-
-    ifile.open(fname, ios_base::in);
-    if (!ifile.is_open()) {
-        LOG(ERROR) << "open file[" << fname << "] failed.";
-        return RC_NOT_FOUND;
-    }
-
-    stringstream ss;
-    ss << ifile.rdbuf();
-    *buf = ss.str();
-
-    ifile.close();
-    return RC_SUCCESS;
-}
-
-static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
+static bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     cuda::EngineOptions options;
     options.device_id = g_flag_device_id;
 
@@ -264,13 +249,13 @@ static inline bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     }
 
     if (!g_flag_quant_file.empty()) {
-        string file_content;
-        auto status = ReadFileContent(g_flag_quant_file.c_str(), &file_content);
+        FileMapping fm;
+        auto status = fm.Init(g_flag_quant_file.c_str(), FileMapping::READ);
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "read file[" << g_flag_quant_file << "] failed: " << GetRetCodeStr(status);
+            LOG(ERROR) << "mapping file[" << g_flag_quant_file << "] failed: " << GetRetCodeStr(status);
             return false;
         }
-        cuda_engine->Configure(cuda::ENGINE_CONF_SET_QUANT_INFO, file_content.data(), file_content.size());
+        cuda_engine->Configure(cuda::ENGINE_CONF_SET_QUANT_INFO, fm.GetData(), fm.GetSize());
     }
 
     if (!g_flag_export_algo_file.empty()) {
@@ -329,7 +314,7 @@ Define_bool_opt("--core-binding", g_flag_core_binding, false, "core binding");
 #include "ppl/nn/engines/x86/ops.h"
 #include "ppl/kernel/x86/common/threading_tools.h"
 
-static inline bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
+static bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
     x86::EngineOptions options;
     if (g_flag_mm_policy == "perf") {
         options.mm_policy = x86::MM_MRU;
@@ -377,7 +362,7 @@ Define_int32_opt("--tuning-level", g_flag_tuning_level, 0, "select conv algo dyn
 #include "ppl/nn/engines/riscv/ops.h"
 #include "ppl/nn/engines/riscv/engine_options.h"
 
-static inline bool RegisterRiscvEngine(vector<unique_ptr<Engine>>* engines) {
+static bool RegisterRiscvEngine(vector<unique_ptr<Engine>>* engines) {
     riscv::EngineOptions options;
     options.tune_param_flag = false;
 
@@ -424,7 +409,7 @@ Define_int32_opt("--numa-node-id", g_flag_numa_node_id, -1,
 #include "ppl/nn/engines/arm/engine_factory.h"
 #include "ppl/nn/engines/arm/ops.h"
 
-static inline bool RegisterArmEngine(vector<unique_ptr<Engine>>* engines) {
+static bool RegisterArmEngine(vector<unique_ptr<Engine>>* engines) {
     arm::EngineOptions options;
     if (g_flag_mm_policy == "perf") {
         options.mm_policy = arm::MM_MRU;
@@ -456,7 +441,7 @@ static inline bool RegisterArmEngine(vector<unique_ptr<Engine>>* engines) {
 }
 #endif
 
-static inline bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
+static bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
 #ifdef PPLNN_USE_X86
     if (g_flag_use_x86) {
         bool ok = RegisterX86Engine(engines);
@@ -1057,7 +1042,7 @@ static bool Profiling(const vector<string>& input_data, Runtime* runtime) {
     return true;
 }
 
-static inline uint32_t CalcModelNum() {
+static uint32_t CalcModelNum() {
     uint32_t counter = 0;
 #ifdef PPLNN_ENABLE_ONNX_MODEL
     if (!g_flag_onnx_model.empty()) {
@@ -1155,7 +1140,13 @@ int main(int argc, char* argv[]) {
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
         if (!g_flag_save_pmx_model.empty()) {
-            auto status = builder->Serialize(g_flag_save_pmx_model.c_str(), "pmx");
+            utils::FileDataStream fds;
+            auto status = fds.Init(g_flag_save_pmx_model.c_str());
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "open pmx output file failed: " << GetRetCodeStr(status);
+                return -1;
+            }
+            status = builder->Serialize("pmx", &fds);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "save ppl model failed: " << GetRetCodeStr(status);
                 return -1;
@@ -1202,7 +1193,13 @@ int main(int argc, char* argv[]) {
         }
 
         if (!g_flag_save_pmx_model.empty()) {
-            auto status = builder->Serialize(g_flag_save_pmx_model.c_str(), "pmx");
+            utils::FileDataStream fds;
+            auto status = fds.Init(g_flag_save_pmx_model.c_str());
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "open pmx output file failed: " << GetRetCodeStr(status);
+                return -1;
+            }
+            status = builder->Serialize("pmx", &fds);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "save ppl model failed: " << GetRetCodeStr(status);
                 return -1;

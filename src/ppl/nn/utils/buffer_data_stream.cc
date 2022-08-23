@@ -40,12 +40,4 @@ RetCode BufferDataStream::Write(const void* base, uint64_t bytes) {
     return RC_SUCCESS;
 }
 
-uint64_t BufferDataStream::Tell() const {
-    return offset_;
-}
-
-uint64_t BufferDataStream::GetSize() const {
-    return data_.size();
-}
-
 }}} // namespace ppl::nn::utils
