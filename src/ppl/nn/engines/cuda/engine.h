@@ -100,8 +100,6 @@ private:
     static ppl::common::RetCode ImportAlgorithms(CudaEngine*, va_list);
     static ppl::common::RetCode ImportAlgorithmsFromBuffer(CudaEngine*, va_list);
 
-    static ppl::common::RetCode ImportAlgorithmsImpl(CudaEngine* engine, const char* json_buffer, size_t buffer_size);
-
     typedef ppl::common::RetCode (*ConfHandlerFunc)(CudaEngine*, va_list);
     static ConfHandlerFunc conf_handlers_[ENGINE_CONF_MAX];
 

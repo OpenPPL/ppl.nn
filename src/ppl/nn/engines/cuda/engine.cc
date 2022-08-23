@@ -287,34 +287,8 @@ RetCode CudaEngine::ExportAlgorithms(CudaEngine* engine, va_list args) {
     return RC_SUCCESS;
 }
 
-RetCode CudaEngine::ImportAlgorithms(CudaEngine* engine, va_list args) {
-    auto json_file = va_arg(args, const char*);
-    if (!json_file) {
-        LOG(WARNING) << "empty algorithm info filename. do nothing.";
-        return RC_SUCCESS;
-    }
-
-    utils::Buffer json_buffer;
-    auto status = utils::ReadFileContent(json_file, &json_buffer);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "read algo info from file[" << json_file << "] failed.";
-        return RC_INVALID_VALUE;
-    }
-    if (json_buffer.GetSize() == 0) {
-        LOG(WARNING) << "empty quant info file[" << json_file << "]. do nothing.";
-        return RC_SUCCESS;
-    }
-
-    return ImportAlgorithmsImpl(engine, (const char*)(json_buffer.GetData()), json_buffer.GetSize());
-}
-
-ppl::common::RetCode CudaEngine::ImportAlgorithmsFromBuffer(CudaEngine* engine, va_list args) {
-    auto json_buffer = va_arg(args, const char*);
-    auto buffer_size = va_arg(args, size_t);
-    return ImportAlgorithmsImpl(engine, json_buffer, buffer_size);
-}
-
-RetCode CudaEngine::ImportAlgorithmsImpl(CudaEngine* engine, const char* json_buffer, size_t buffer_size) {
+static RetCode ImportAlgorithmsImpl(const char* json_buffer, uint64_t buffer_size,
+                                    map<string, CudaArgs::AlgoSelects>* algo_selected) {
     rapidjson::Document d;
     rapidjson::ParseResult ok = d.Parse(json_buffer, buffer_size);
     if (!ok) {
@@ -351,10 +325,38 @@ RetCode CudaEngine::ImportAlgorithmsImpl(CudaEngine* engine, const char* json_bu
                 return RC_INVALID_VALUE;
             }
         }
-        engine->cuda_flags_.alog_selects.insert(make_pair(shape_name, algo_info));
+        algo_selected->insert(make_pair(shape_name, algo_info));
     }
-    LOG(DEBUG) << "Algo info size is " << engine->cuda_flags_.alog_selects.size();
+    LOG(DEBUG) << "Algo info size is " << algo_selected->size();
     return RC_SUCCESS;
+}
+
+RetCode CudaEngine::ImportAlgorithms(CudaEngine* engine, va_list args) {
+    auto json_file = va_arg(args, const char*);
+    if (!json_file) {
+        LOG(WARNING) << "empty algorithm info filename. do nothing.";
+        return RC_SUCCESS;
+    }
+
+    utils::Buffer json_buffer;
+    auto status = utils::ReadFileContent(json_file, &json_buffer);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "read algo info from file[" << json_file << "] failed.";
+        return RC_INVALID_VALUE;
+    }
+    if (json_buffer.GetSize() == 0) {
+        LOG(WARNING) << "empty quant info file[" << json_file << "]. do nothing.";
+        return RC_SUCCESS;
+    }
+
+    return ImportAlgorithmsImpl((const char*)(json_buffer.GetData()), json_buffer.GetSize(),
+                                &engine->cuda_flags_.alog_selects);
+}
+
+ppl::common::RetCode CudaEngine::ImportAlgorithmsFromBuffer(CudaEngine* engine, va_list args) {
+    auto json_buffer = va_arg(args, const char*);
+    auto buffer_size = va_arg(args, uint64_t);
+    return ImportAlgorithmsImpl(json_buffer, buffer_size, &engine->cuda_flags_.alog_selects);
 }
 
 CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
