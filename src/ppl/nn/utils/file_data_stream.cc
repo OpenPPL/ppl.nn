@@ -15,20 +15,35 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_SERIALIZER_H_
-#define _ST_HPC_PPL_NN_MODELS_ONNX_SERIALIZER_H_
+#include "ppl/nn/utils/file_data_stream.h"
+#include "ppl/nn/common/logger.h"
+using namespace std;
+using namespace ppl::common;
 
-#include "ppl/common/retcode.h"
-#include "ppl/nn/models/onnx/model.h"
-#include "ppl/nn/utils/data_stream.h"
+namespace ppl { namespace nn { namespace utils {
 
-namespace ppl { namespace nn { namespace onnx {
+FileDataStream::~FileDataStream() {
+    if (fp_) {
+        fclose(fp_);
+    }
+}
 
-class Serializer final {
-public:
-    ppl::common::RetCode Serialize(const Model&, ppl::nn::utils::DataStream*) const;
-};
+RetCode FileDataStream::Init(const char* fname) {
+    fp_ = fopen(fname, "w");
+    if (!fp_) {
+        LOG(ERROR) << "open file[" << fname << "] for writing failed.";
+        return RC_OTHER_ERROR;
+    }
+    return RC_SUCCESS;
+}
 
-}}} // namespace ppl::nn::onnx
+RetCode FileDataStream::Write(const void* base, uint64_t bytes) {
+    auto ret = fwrite(base, bytes, 1, fp_);
+    if (ret != 1) {
+        LOG(ERROR) << "write [" << bytes << "] failed.";
+        return RC_OTHER_ERROR;
+    }
+    return RC_SUCCESS;
+}
 
-#endif
+}}} // namespace ppl::nn::utils

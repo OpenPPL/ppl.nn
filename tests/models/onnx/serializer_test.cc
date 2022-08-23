@@ -17,6 +17,7 @@
 
 #include "ppl/nn/models/onnx/model_parser.h"
 #include "ppl/nn/models/onnx/serializer.h"
+#include "ppl/nn/utils/file_data_stream.h"
 #include "ppl/common/file_mapping.h"
 #include "gtest/gtest.h"
 using namespace std;
@@ -36,7 +37,12 @@ TEST(OnnxSerializerTest, serialize) {
 
     Serializer serializer;
     const string dst_model_file(PPLNN_TESTS_BUILD_DIR + string("/conv.onnx"));
-    status = serializer.Serialize(dst_model_file, model);
+
+    ppl::nn::utils::FileDataStream fds;
+    status = fds.Init(dst_model_file.c_str());
+    EXPECT_EQ(RC_SUCCESS, status);
+
+    status = serializer.Serialize(model, &fds);
     // remove(dst_model_file.c_str());
     EXPECT_EQ(RC_SUCCESS, status);
 }

@@ -142,10 +142,10 @@ Runtime* RuntimeBuilderImpl::CreateRuntime() {
     return runtime;
 }
 
-RetCode RuntimeBuilderImpl::Serialize(const char* output_file, const char* fmt) const {
+RetCode RuntimeBuilderImpl::Serialize(const char* fmt, utils::DataStream* ds) const {
     if (fmt == string("pmx")) {
         pmx::Serializer serializer;
-        return serializer.Serialize(output_file, topo_.get(), resource_.engines, *graph_info_);
+        return serializer.Serialize(topo_.get(), resource_.engines, *graph_info_, ds);
     }
 
     LOG(ERROR) << "model format[" << fmt << "] is not supported.";

@@ -15,20 +15,25 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_SERIALIZER_H_
-#define _ST_HPC_PPL_NN_MODELS_ONNX_SERIALIZER_H_
+#ifndef _ST_HPC_PPL_NN_UTILS_BUFFER_DATA_STREAM_H_
+#define _ST_HPC_PPL_NN_UTILS_BUFFER_DATA_STREAM_H_
 
-#include "ppl/common/retcode.h"
-#include "ppl/nn/models/onnx/model.h"
 #include "ppl/nn/utils/data_stream.h"
+#include <cstdio>
+#include <vector>
 
-namespace ppl { namespace nn { namespace onnx {
+namespace ppl { namespace nn { namespace utils {
 
-class Serializer final {
+class FileDataStream final : public DataStream {
 public:
-    ppl::common::RetCode Serialize(const Model&, ppl::nn::utils::DataStream*) const;
+    ~FileDataStream();
+    ppl::common::RetCode Init(const char* fname);
+    ppl::common::RetCode Write(const void* base, uint64_t bytes) override;
+
+private:
+    FILE* fp_ = nullptr;
 };
 
-}}} // namespace ppl::nn::onnx
+}}} // namespace ppl::nn::utils
 
 #endif

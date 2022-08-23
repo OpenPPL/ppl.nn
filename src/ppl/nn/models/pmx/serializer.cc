@@ -24,7 +24,6 @@
 #include "ppl/nn/utils/buffer_data_stream.h"
 #include <vector>
 #include <memory>
-#include <fstream>
 using namespace std;
 using namespace ppl::common;
 using namespace flatbuffers;
@@ -451,37 +450,19 @@ static RetCode CreateFbModel(FlatBufferBuilder* builder, const ir::GraphTopo* to
     return RC_SUCCESS;
 }
 
-static RetCode WriteModel(const FlatBufferBuilder& builder, const std::string& filename) {
-    ofstream ofs(filename, ios_base::out | ios_base::trunc);
-    if (!ofs.is_open()) {
-        LOG(ERROR) << "open output file [" << filename << "] failed.";
-        return RC_OTHER_ERROR;
-    }
-    ofs.write((const char*)builder.GetBufferPointer(), builder.GetSize());
-    ofs.close();
-    return RC_SUCCESS;
-}
-
-RetCode Serializer::Serialize(const string& output_file, const ir::GraphTopo* topo, const vector<EngineImpl*>& engines,
-                              const RuntimeGraphInfo& info) {
+RetCode Serializer::Serialize(const ir::GraphTopo* topo, const vector<EngineImpl*>& engines,
+                              const RuntimeGraphInfo& info, ppl::nn::utils::DataStream* ds) const {
     LOG(WARNING) << "pmx format is under heavily developing and may change in the future. do not use it in production "
                     "environment.";
 
     flatbuffers::FlatBufferBuilder builder;
-
     auto status = CreateFbModel(&builder, topo, engines, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "CreateFbModel failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = WriteModel(builder, output_file);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "WriteModel failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
-    return RC_SUCCESS;
+    return ds->Write((const char*)builder.GetBufferPointer(), builder.GetSize());
 }
 
 }}} // namespace ppl::nn::pmx

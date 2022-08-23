@@ -25,13 +25,20 @@ namespace ppl { namespace nn { namespace utils {
 
 class BufferDataStream final : public DataStream {
 public:
-    ppl::common::RetCode Seek(uint64_t offset) override;
     ppl::common::RetCode Write(const void* base, uint64_t bytes) override;
-    uint64_t Tell() const override;
-    uint64_t GetSize() const override;
+
+    ppl::common::RetCode Seek(uint64_t offset);
+
+    uint64_t Tell() const {
+        return offset_;
+    }
 
     const void* GetData() const {
         return data_.data();
+    }
+
+    uint64_t GetSize() const {
+        return data_.size();
     }
 
 private:
