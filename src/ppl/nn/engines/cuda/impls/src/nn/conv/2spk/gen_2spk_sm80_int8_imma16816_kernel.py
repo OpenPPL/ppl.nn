@@ -422,7 +422,7 @@ class HashFile:
     def Close(self):
         self.f.close()
 
-def GenAllKernels(parent_path):
+def GenAllKernels(parent_path, kernel_cut=False):
 
     for flt_size in ["f1", "f3", "fn", "fs"]:
         init_file = InitFile(parent_path, flt_size)
@@ -438,13 +438,30 @@ def GenAllKernels(parent_path):
         lut_source_file = LutSourceFile(parent_path, flt_size)
         spk_source_file = SpkSourceFile(parent_path, flt_size)
 
-        for buf_size in [1, 2, 3, 4, 5, 6]:
-            for s_size in [16, 32, 64]:
-                for k_num in [1, 2, 4]:
-                    for warp_y in [16, 32, 64, 128]:
-                        for warp_x in [8, 16, 32, 64]:
-                            for cta_y_num in [1, 2, 4]:
-                                for cta_x_num in [1, 2, 4]:
+        buf_size_l = [1, 2, 3, 4, 5, 6]
+        s_size_l = [16, 32, 64]
+        k_num_l = [1, 2, 4]
+        warp_y_l = [16, 32, 64, 128]
+        warp_x_l = [8, 16, 32, 64]
+        cta_y_num_l = [1, 2, 4]
+        cta_x_num_l = [1, 2, 4]
+
+        if kernel_cut:
+            buf_size_l = [2, 4]
+            s_size_l = [16, 32]
+            k_num_l = [1, 2, 4]
+            warp_y_l = [16, 32, 64]
+            warp_x_l = [8, 16, 32]
+            cta_y_num_l = [1, 4]
+            cta_x_num_l = [1, 4]
+
+        for buf_size in buf_size_l:
+            for s_size in s_size_l:
+                for k_num in k_num_l:
+                    for warp_y in warp_y_l:
+                        for warp_x in warp_x_l:
+                            for cta_y_num in cta_y_num_l:
+                                for cta_x_num in cta_x_num_l:
                                     if warp_y == 128 and warp_x == 64:
                                         continue
                                     if cta_y_num == 4 and cta_x_num == 4:
@@ -474,11 +491,12 @@ def GenAllKernels(parent_path):
         init_file.Close()
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         print(__doc__)
         sys.exit(1)
 
     path = sys.argv[1]
+    kernel_cut = True if sys.argv[2] == "ON" else False
 
     if not os.path.exists(path):
         os.makedirs(path)
@@ -487,7 +505,7 @@ if __name__ == '__main__':
 
     if not hash_file.CheckFileExist() or not hash_file.CompareWithPreviousHash():
 
-        GenAllKernels(path)
+        GenAllKernels(path, kernel_cut)
 
         hash_file.WriteCurrentHash()
 
