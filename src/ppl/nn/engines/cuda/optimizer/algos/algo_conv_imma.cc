@@ -76,8 +76,13 @@ double TuringIMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
         attr_param_.extra_param.algo_info.ParseAlgoName();
         return 0.0f;
     } else { // Give the default kernel
+#ifdef PPLNN_CUDA_ENABLE_KERNEL_CUT
+        attr_param_.extra_param.algo_info.algo_name = "nvSwzlSm75Int8Conv_imma8816_nhwc_fn_b64x128_w16x128_k16_buf2";
+        attr_param_.extra_param.algo_info.kid = 718;
+#else
         attr_param_.extra_param.algo_info.algo_name = "nvSwzlSm75Int8Conv_imma8816_nhwc_fn_b256x64_w64x64_k64_buf2";
         attr_param_.extra_param.algo_info.kid = 3775;
+#endif
         attr_param_.extra_param.algo_info.splitk = 1;
         attr_param_.extra_param.algo_info.splitf = 1;
         attr_param_.extra_param.algo_info.ParseAlgoName();
