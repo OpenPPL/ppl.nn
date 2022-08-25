@@ -206,6 +206,22 @@ Define_string_opt("--quant-file", g_flag_quant_file, "", "a json file containing
 #include "ppl/nn/engines/cuda/ops.h"
 #include "ppl/nn/utils/array.h"
 
+static void CudaSaveAlgoInfo(const char* data, uint64_t bytes, void* arg) {
+    auto fname = (const char*)arg;
+    auto fp = fopen(fname, "w");
+    if (!fp) {
+        LOG(ERROR) << "open [" << fname << "] for exporting algo info failed.";
+        return;
+    }
+
+    auto ret = fwrite(data, bytes, 1, fp);
+    if (ret != 1) {
+        LOG(ERROR) << "write algo info to [" << fname << "] failed.";
+    }
+
+    fclose(fp);
+}
+
 static bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     cuda::EngineOptions options;
     options.device_id = g_flag_device_id;
@@ -259,22 +275,19 @@ static bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     }
 
     if (!g_flag_export_algo_file.empty()) {
-        cuda_engine->Configure(cuda::ENGINE_CONF_EXPORT_ALGORITHMS, g_flag_export_algo_file.c_str());
+        cuda_engine->Configure(cuda::ENGINE_CONF_SET_EXPORT_ALGORITHMS_HANDLER, CudaSaveAlgoInfo,
+                               g_flag_export_algo_file.c_str());
     }
 
     if (!g_flag_import_algo_file.empty()) {
-        // import and export from the same file
-        if (g_flag_import_algo_file == g_flag_export_algo_file) {
-            // try to create this file first
-            ofstream ofs(g_flag_export_algo_file, ios_base::app);
-            if (!ofs.is_open()) {
-                LOG(ERROR) << "cannot create file[" << g_flag_export_algo_file << "] for exporting algorithms.";
-                return false;
-            }
-            ofs.close();
+        FileMapping fm;
+        auto rc = fm.Init(g_flag_import_algo_file.c_str(), FileMapping::READ);
+        if (rc != RC_SUCCESS) {
+            LOG(ERROR) << "mapping algo file[" << g_flag_import_algo_file << "] failed: " << GetRetCodeStr(rc);
+            return false;
         }
 
-        cuda_engine->Configure(cuda::ENGINE_CONF_IMPORT_ALGORITHMS, g_flag_import_algo_file.c_str());
+        cuda_engine->Configure(cuda::ENGINE_CONF_IMPORT_ALGORITHMS_FROM_BUFFER, fm.GetData(), fm.GetSize());
     }
 
     // pass input shapes to cuda engine for further optimizations

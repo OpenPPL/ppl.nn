@@ -137,8 +137,8 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     temp_conv_param.has_bias = 0;
 
     const std::string& key_str = node->GetName();
-    auto algo_info = options.algos->find(key_str);
-    if (algo_info != options.algos->end()) {
+    auto algo_info = options.args->alog_selects.find(key_str);
+    if (algo_info != options.args->alog_selects.end()) {
         attr_param_.extra_param.algo_info.kid = algo_info->second.kid;
         attr_param_.extra_param.algo_info.splitk = algo_info->second.splitk;
         attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
@@ -202,8 +202,7 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     algo_select.kid = attr_param_.extra_param.algo_info.kid;
     algo_select.splitk = attr_param_.extra_param.algo_info.splitk;
     algo_select.splitf = attr_param_.extra_param.algo_info.splitf;
-    options.algos->emplace(key_str, std::move(algo_select));
-    LoadAlgoInfo(options.args->save_algo_path, attr_param_.extra_param.algo_info, key_str);
+    options.args->alog_selects.emplace(key_str, std::move(algo_select));
     return timer;
 }
 

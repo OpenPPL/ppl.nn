@@ -58,8 +58,6 @@ ppl::common::RetCode ConvertToForwardConvParam(const TensorShape& shape_in0, con
 ppl::common::RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* devive,
                                                const ConvFusionInfo& fuse_info, fuse_param_t& fuse_param);
 
-void LoadAlgoInfo(const std::string& file_path, const algo_param_t& algo_param, const std::string& key_str);
-
 }}} // namespace ppl::nn::cuda
 
 #endif

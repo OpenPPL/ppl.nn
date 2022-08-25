@@ -46,7 +46,6 @@ struct CudaArgs {
     };
 
     bool quick_select = false;
-    std::string save_algo_path;
     ppl::common::datatype_t default_kernel_type = 0;
     std::map<std::string, ppl::common::datatype_t> node_types;
     std::vector<ppl::common::dataformat_t> output_formats;
@@ -96,8 +95,7 @@ private:
     static ppl::common::RetCode SetInputDims(CudaEngine*, va_list);
     static ppl::common::RetCode SetUseDefaultAlgorithms(CudaEngine*, va_list);
     static ppl::common::RetCode SetQuantInfo(CudaEngine*, va_list);
-    static ppl::common::RetCode ExportAlgorithms(CudaEngine*, va_list);
-    static ppl::common::RetCode ImportAlgorithms(CudaEngine*, va_list);
+    static ppl::common::RetCode SetExportAlgorithmsHandler(CudaEngine*, va_list);
     static ppl::common::RetCode ImportAlgorithmsFromBuffer(CudaEngine*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(CudaEngine*, va_list);
@@ -108,6 +106,8 @@ private:
     EngineOptions options_;
     PlainCudaDevice device_;
     CUDAModuleManager cuda_manager_;
+    void* export_algo_arg_ = nullptr;
+    void (*export_algo_func_)(const char*, uint64_t, void*) = nullptr;
 #ifdef PPLNN_ENABLE_PMX_MODEL
     std::vector<BufferDesc> constant_buffer_blocks_;
 #endif

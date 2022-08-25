@@ -24,6 +24,7 @@ namespace ppl { namespace nn { namespace python { namespace cuda {
 
 struct PyCudaEngine final : public PyEngine {
     PyCudaEngine(Engine* p) : PyEngine(p) {}
+    std::string export_algo_file;
 };
 
 }}}} // namespace ppl::nn::python::cuda

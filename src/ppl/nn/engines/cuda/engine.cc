@@ -19,6 +19,7 @@
 
 #include <stdarg.h>
 #include <algorithm>
+#include <fstream>
 
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/engines/utils.h"
@@ -27,12 +28,13 @@
 #include "ppl/nn/engines/cuda/module/op_compile_manager.h"
 #include "ppl/nn/quantization/quant_param_parser.h"
 #include "ppl/nn/utils/array.h"
-#include "ppl/nn/utils/utils.h"
 #include "ppl/nn/common/logger.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/error/error.h"
 #include "rapidjson/error/en.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
 #include "ppl/nn/engines/cuda/macros.h"
@@ -115,11 +117,40 @@ ppl::common::RetCode CudaEngine::CompileCudaModule(const utils::SharedResource& 
     return RC_SUCCESS;
 }
 
+static void ExportAlgorithmsInfo(const map<string, CudaArgs::AlgoSelects>& algos,
+                                 void (*func)(const char*, uint64_t, void*), void* arg) {
+    rapidjson::Document d;
+    rapidjson::Document::AllocatorType& allocator = d.GetAllocator();
+
+    d.SetObject();
+
+    for (auto s = algos.begin(); s != algos.end(); ++s) {
+        auto& item = s->second;
+        rapidjson::Value object(rapidjson::kObjectType);
+        object.AddMember("kname", rapidjson::StringRef(item.kname.data(), item.kname.size()), allocator);
+        object.AddMember("kid", item.kid, allocator);
+        object.AddMember("splitk", item.splitk, allocator);
+        object.AddMember("splitf", item.splitf, allocator);
+        rapidjson::Value key_info(s->first.data(), s->first.size(), allocator);
+        d.AddMember(key_info, object, allocator);
+    }
+
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    d.Accept(writer);
+
+    func(buffer.GetString(), buffer.GetSize(), arg);
+}
+
 RetCode CudaEngine::ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
     auto status = DoOptimize(resource, graph, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "DoOptimize failed: " << GetRetCodeStr(status);
         return status;
+    }
+
+    if (export_algo_func_) {
+        ExportAlgorithmsInfo(cuda_flags_.alog_selects, export_algo_func_, export_algo_arg_);
     }
 
     return RC_SUCCESS;
@@ -281,9 +312,10 @@ RetCode CudaEngine::SetQuantInfo(CudaEngine* engine, va_list args) {
     return RC_SUCCESS;
 }
 
-RetCode CudaEngine::ExportAlgorithms(CudaEngine* engine, va_list args) {
-    auto file_path = va_arg(args, const char*);
-    engine->cuda_flags_.save_algo_path = std::string(file_path);
+RetCode CudaEngine::SetExportAlgorithmsHandler(CudaEngine* engine, va_list args) {
+    typedef void (*callback_func_t)(const char*, uint64_t, void*);
+    engine->export_algo_func_ = va_arg(args, callback_func_t);
+    engine->export_algo_arg_ = va_arg(args, void*);
     return RC_SUCCESS;
 }
 
@@ -331,28 +363,6 @@ static RetCode ImportAlgorithmsImpl(const char* json_buffer, uint64_t buffer_siz
     return RC_SUCCESS;
 }
 
-RetCode CudaEngine::ImportAlgorithms(CudaEngine* engine, va_list args) {
-    auto json_file = va_arg(args, const char*);
-    if (!json_file) {
-        LOG(WARNING) << "empty algorithm info filename. do nothing.";
-        return RC_SUCCESS;
-    }
-
-    utils::Buffer json_buffer;
-    auto status = utils::ReadFileContent(json_file, &json_buffer);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "read algo info from file[" << json_file << "] failed.";
-        return RC_INVALID_VALUE;
-    }
-    if (json_buffer.GetSize() == 0) {
-        LOG(WARNING) << "empty quant info file[" << json_file << "]. do nothing.";
-        return RC_SUCCESS;
-    }
-
-    return ImportAlgorithmsImpl((const char*)(json_buffer.GetData()), json_buffer.GetSize(),
-                                &engine->cuda_flags_.alog_selects);
-}
-
 ppl::common::RetCode CudaEngine::ImportAlgorithmsFromBuffer(CudaEngine* engine, va_list args) {
     auto json_buffer = va_arg(args, const char*);
     auto buffer_size = va_arg(args, uint64_t);
@@ -366,8 +376,7 @@ CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetInputDims, // ENGINE_CONF_SET_INPUT_DIMS
     CudaEngine::SetUseDefaultAlgorithms, // ENGINE_CONF_USE_DEFAULT_ALGORITHMS
     CudaEngine::SetQuantInfo, // ENGINE_CONF_SET_QUANT_INFO
-    CudaEngine::ExportAlgorithms, // ENGINE_CONF_EXPORT_ALGORITHMS
-    CudaEngine::ImportAlgorithms, // ENGINE_CONF_IMPORT_ALGORITHMS
+    CudaEngine::SetExportAlgorithmsHandler, // ENGINE_CONF_SET_EXPORT_ALGORITHMS_HANDLER
     CudaEngine::ImportAlgorithmsFromBuffer, // ENGINE_CONF_IMPORT_ALGORITHMS_FROM_BUFFER
 };
 
