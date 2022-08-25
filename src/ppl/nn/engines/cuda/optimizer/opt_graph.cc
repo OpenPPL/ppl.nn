@@ -445,10 +445,8 @@ RetCode OptGraph::UpdateType() {
 RetCode OptGraph::SelectAlgos(const utils::SharedResource& resource, CudaDevice* device) {
     auto topo = graph_->topo.get();
     auto& graph_quants = args_->tensor_quants.find(topo->GetName())->second;
-    auto& graph_algos = args_->alog_selects;
 
-    OptKernelOptions options(graph_, info_, &resource, args_, compile_set_, device, &tensor_impls_, &graph_quants,
-                             &graph_algos);
+    OptKernelOptions options(graph_, info_, &resource, args_, compile_set_, device, &tensor_impls_, &graph_quants);
     UpdateTopologicalSort();
 
     AlgoGraph algo_graph(topo);

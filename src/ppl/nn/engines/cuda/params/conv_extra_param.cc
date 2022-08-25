@@ -19,12 +19,6 @@
 
 #include "ppl/nn/params/onnx/leaky_relu_param.h"
 #include "ppl/nn/common/logger.h"
-#include "rapidjson/document.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
-
-#include <fstream>
-#include <sstream>
 
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
@@ -217,50 +211,6 @@ RetCode ConvertToForwardFuseParam(InputOutputInfo* info, CudaDevice* device, con
     }
 
     return RC_SUCCESS;
-}
-
-void LoadAlgoInfo(const std::string& file_path, const algo_param_t& algo_param, const std::string& key_str) {
-    if (!file_path.empty()) {
-        rapidjson::Document oWriteDoc;
-        fstream ifile;
-        ifile.open(file_path, ios_base::in);
-        if (!ifile.is_open()) {
-            oWriteDoc.SetObject();
-        } else {
-            std::stringstream algo_info_json_buffer;
-            algo_info_json_buffer << ifile.rdbuf();
-            oWriteDoc.Parse(algo_info_json_buffer.str().c_str());
-            if (oWriteDoc.HasParseError()) {
-                oWriteDoc.SetObject();
-            }
-        }
-        ifile.close();
-
-        std::string kname_str = algo_param.algo_name;
-
-        rapidjson::Document::AllocatorType& allocator = oWriteDoc.GetAllocator();
-        rapidjson::Value object(rapidjson::kObjectType);
-        rapidjson::Value key_info(key_str.c_str(), key_str.size(), allocator);
-        rapidjson::Value kname_info(kname_str.c_str(), kname_str.size(), allocator);
-        object.AddMember("kid", algo_param.kid, allocator);
-        object.AddMember("kname", kname_info, allocator);
-        object.AddMember("splitk", algo_param.splitk, allocator);
-        object.AddMember("splitf", algo_param.splitf, allocator);
-        oWriteDoc.RemoveMember(key_info);
-        oWriteDoc.AddMember(key_info, object, allocator);
-        rapidjson::StringBuffer oBuffer;
-        rapidjson::Writer<rapidjson::StringBuffer> oWriter(oBuffer);
-        oWriteDoc.Accept(oWriter);
-
-        fstream ofile;
-        ofile.open(file_path, ios_base::out);
-        if (!ofile.is_open()) {
-            return;
-        }
-        ofile << oBuffer.GetString();
-        ofile.close();
-    }
-    return;
 }
 
 }}} // namespace ppl::nn::cuda

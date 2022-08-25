@@ -89,24 +89,25 @@ enum {
     ENGINE_CONF_SET_QUANT_INFO,
 
     /**
-       @param json_file a json file used to store selected algos' index information
+       @brief sets the callback function and arg for exporting algorithms info:
+       cuda_engine->Configure(ENGINE_CONF_SET_EXPORT_ALGORITHMS_HANDLER, callback, arg);
+
+       @note this call just sets the callback function and arg, it does not call the function immediately
+
+       @param callback a C-style callback function `void (*)(const char* data, uint64_t bytes, void* arg)`
+       @param arg a pointer that is passed to `callback`
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(ENGINE_CONF_EXPORT_ALGORITHMS, json_file);
+       static void SaveAlgoInfo(const char* data, uint64_t bytes, void* arg) {
+           auto content = (string*)arg;
+           content->assign(data, bytes);
+       }
+       string content;
+       cuda_engine->Configure(ENGINE_CONF_SET_EXPORT_ALGORITHMS_HANDLER, SaveAlgoInfo, &content);
        @endcode
     */
-    ENGINE_CONF_EXPORT_ALGORITHMS,
-
-    /**
-       @param json_file a json file containing selected algos' index information
-
-       @note example:
-       @code{.cpp}
-       cuda_engine->Configure(ENGINE_CONF_IMPORT_ALGORITHMS, json_file);
-       @endcode
-    */
-    ENGINE_CONF_IMPORT_ALGORITHMS,
+    ENGINE_CONF_SET_EXPORT_ALGORITHMS_HANDLER,
 
     /**
        @param json_buffer pointer to a json buffer containing selected algos' index information

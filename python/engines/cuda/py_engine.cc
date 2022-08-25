@@ -18,6 +18,7 @@
 #include "py_engine.h"
 #include "ppl/common/retcode.h"
 #include "ppl/common/types.h"
+#include "ppl/common/file_mapping.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 #include "ppl/nn/common/logger.h"
@@ -31,15 +32,15 @@ using namespace std;
 
 namespace ppl { namespace nn { namespace python { namespace cuda {
 
-static RetCode GenericSetOption(Engine* engine, uint32_t option, const pybind11::args&) {
-    return engine->Configure(option);
+static RetCode GenericSetOption(PyCudaEngine& engine, uint32_t option, const pybind11::args&) {
+    return engine.ptr->Configure(option);
 }
 
 /**
    @param args a list containing shapes of each input tensor.
    example: [[1, 3, 224, 224], [1, 3, 80, 80], ...]
 */
-static RetCode SetInputDims(Engine* engine, uint32_t option, const pybind11::args& args) {
+static RetCode SetInputDims(PyCudaEngine& engine, uint32_t option, const pybind11::args& args) {
     if (args.size() != 1) {
         LOG(ERROR) << "expected for 1 parameter but got [" << args.size() << "].";
         return RC_INVALID_VALUE;
@@ -53,58 +54,83 @@ static RetCode SetInputDims(Engine* engine, uint32_t option, const pybind11::arg
         arr.base = dims_vec[i].data();
         arr.size = dims_vec[i].size();
     }
-    return engine->Configure(option, input_dims.data(), input_dims.size());
+    return engine.ptr->Configure(option, input_dims.data(), input_dims.size());
 }
 
 /**
    @param args a json buffer
 */
-static RetCode ImportAlgorithms(Engine* engine, uint32_t option, const pybind11::args& args) {
-    if (args.size() != 1) {
-        LOG(ERROR) << "expected for 1 parameter but got [" << args.size() << "].";
-        return RC_INVALID_VALUE;
+static void CudaSaveAlgoInfo(const char* data, uint64_t bytes, void* arg) {
+    auto fname = (const char*)arg;
+    auto fp = fopen(fname, "w");
+    if (!fp) {
+        LOG(ERROR) << "open [" << fname << "] for exporting algo info failed.";
+        return;
     }
 
-    auto buffer = args[0].cast<string>();
-    return engine->Configure(option, buffer.c_str());
+    auto ret = fwrite(data, bytes, 1, fp);
+    if (ret != 1) {
+        LOG(ERROR) << "write algo info to [" << fname << "] failed.";
+    }
+
+    fclose(fp);
 }
 
-static RetCode ExportAlgorithms(Engine* engine, uint32_t option, const pybind11::args& args) {
+static RetCode ImportAlgorithmsFromBuffer(PyCudaEngine& engine, uint32_t option, const pybind11::args& args) {
     if (args.size() != 1) {
         LOG(ERROR) << "expected for 1 parameter but got [" << args.size() << "].";
         return RC_INVALID_VALUE;
     }
 
     auto fname = args[0].cast<string>();
-    return engine->Configure(option, fname.c_str());
+    FileMapping fm;
+    auto rc = fm.Init(fname.c_str(), FileMapping::READ);
+    if (rc != RC_SUCCESS) {
+        LOG(ERROR) << "mapping algorithms file[" << fname << "] failed: " << fm.GetErrorMessage();
+        return rc;
+    }
+
+    return engine.ptr->Configure(ENGINE_CONF_IMPORT_ALGORITHMS_FROM_BUFFER, fm.GetData(), fm.GetSize());
 }
 
-static RetCode SetKernelType(Engine* engine, uint32_t option, const pybind11::args& args) {
+static RetCode SetExportAlgorithmsHandler(PyCudaEngine& engine, uint32_t option, const pybind11::args& args) {
     if (args.size() != 1) {
         LOG(ERROR) << "expected for 1 parameter but got [" << args.size() << "].";
         return RC_INVALID_VALUE;
     }
 
-    return engine->Configure(option, args[0].cast<datatype_t>());
+    // save file name in PyCudaEngine
+    engine.export_algo_file = args[0].cast<string>();
+    return engine.ptr->Configure(ENGINE_CONF_SET_EXPORT_ALGORITHMS_HANDLER, CudaSaveAlgoInfo,
+                                 engine.export_algo_file.c_str());
 }
 
-static RetCode SetQuantInfo(Engine* engine, uint32_t option, const pybind11::args& args) {
+static RetCode SetKernelType(PyCudaEngine& engine, uint32_t option, const pybind11::args& args) {
+    if (args.size() != 1) {
+        LOG(ERROR) << "expected for 1 parameter but got [" << args.size() << "].";
+        return RC_INVALID_VALUE;
+    }
+
+    return engine.ptr->Configure(option, args[0].cast<datatype_t>());
+}
+
+static RetCode SetQuantInfo(PyCudaEngine& engine, uint32_t option, const pybind11::args& args) {
     if (args.size() != 1) {
         LOG(ERROR) << "expected for 1 parameter but got [" << args.size() << "].";
         return RC_INVALID_VALUE;
     }
 
     auto json_str = args[0].cast<string>();
-    return engine->Configure(option, json_str.data(), json_str.size());
+    return engine.ptr->Configure(option, json_str.data(), json_str.size());
 }
 
-typedef RetCode (*ConfigFunc)(Engine*, uint32_t option, const pybind11::args& args);
+typedef RetCode (*ConfigFunc)(PyCudaEngine&, uint32_t option, const pybind11::args& args);
 
 static const map<uint32_t, ConfigFunc> g_opt2func = {
     {ENGINE_CONF_USE_DEFAULT_ALGORITHMS, GenericSetOption},
     {ENGINE_CONF_SET_INPUT_DIMS, SetInputDims},
-    {ENGINE_CONF_IMPORT_ALGORITHMS, ImportAlgorithms},
-    {ENGINE_CONF_EXPORT_ALGORITHMS, ExportAlgorithms},
+    {ENGINE_CONF_IMPORT_ALGORITHMS_FROM_BUFFER, ImportAlgorithmsFromBuffer},
+    {ENGINE_CONF_SET_EXPORT_ALGORITHMS_HANDLER, SetExportAlgorithmsHandler},
     {ENGINE_CONF_SET_KERNEL_TYPE, SetKernelType},
     {ENGINE_CONF_SET_QUANT_INFO, SetQuantInfo},
 };
@@ -122,15 +148,23 @@ void RegisterEngine(pybind11::module* m) {
                      LOG(ERROR) << "unsupported option: " << option;
                      return RC_UNSUPPORTED;
                  }
-                 return it->second(engine.ptr.get(), option, args);
+                 return it->second(engine, option, args);
              });
 
     m->attr("ENGINE_CONF_USE_DEFAULT_ALGORITHMS") = (uint32_t)ENGINE_CONF_USE_DEFAULT_ALGORITHMS;
     m->attr("ENGINE_CONF_SET_INPUT_DIMS") = (uint32_t)ENGINE_CONF_SET_INPUT_DIMS;
-    m->attr("ENGINE_CONF_IMPORT_ALGORITHMS") = (uint32_t)ENGINE_CONF_IMPORT_ALGORITHMS;
-    m->attr("ENGINE_CONF_EXPORT_ALGORITHMS") = (uint32_t)ENGINE_CONF_EXPORT_ALGORITHMS;
     m->attr("ENGINE_CONF_SET_KERNEL_TYPE") = (uint32_t)ENGINE_CONF_SET_KERNEL_TYPE;
     m->attr("ENGINE_CONF_SET_QUANT_INFO") = (uint32_t)ENGINE_CONF_SET_QUANT_INFO;
+    /*
+      XXX NOTE use ENGINE_CONF_IMPORT_ALGORITHMS_FROM_BUFFER as ENGINE_CONF_IMPORT_ALGORITHMS to avoid
+      conflict values.
+    */
+    m->attr("ENGINE_CONF_IMPORT_ALGORITHMS") = (uint32_t)ENGINE_CONF_IMPORT_ALGORITHMS_FROM_BUFFER;
+    /*
+      XXX NOTE use ENGINE_CONF_SET_EXPORT_ALGORITHMS_HANDLER as ENGINE_CONF_EXPORT_ALGORITHMS to avoid
+      conflict values. It is impossible to set a callback function to C++ in Python.
+    */
+    m->attr("ENGINE_CONF_EXPORT_ALGORITHMS") = (uint32_t)ENGINE_CONF_SET_EXPORT_ALGORITHMS_HANDLER;
 }
 
 }}}} // namespace ppl::nn::python::cuda
