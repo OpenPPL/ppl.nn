@@ -22,30 +22,6 @@ namespace ppl { namespace nn { namespace cuda {
 
 enum {
     /**
-       @brief set output data format
-
-       @note example:
-       @code{.cpp}
-       vector<dataformat_t> output_formats;
-       // fill output_formats
-       cuda_engine->Configure(ENGINE_CONF_SET_OUTPUT_FORMAT, output_formats.data(), output_formats.size());
-       @endcode
-    */
-    ENGINE_CONF_SET_OUTPUT_FORMAT = 0,
-
-    /**
-       @brief set output data type
-
-       @note example:
-       @code{.cpp}
-       vector<datatype_t> output_types;
-       // fill output_types;
-       cuda_engine->Configure(ENGINE_CONF_SET_OUTPUT_TYPE, output_types.data(), output_types.size());
-       @endcode
-    */
-    ENGINE_CONF_SET_OUTPUT_TYPE,
-
-    /**
        @brief set kernel type
 
        @note example:

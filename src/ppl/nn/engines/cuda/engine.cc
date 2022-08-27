@@ -242,28 +242,6 @@ OptKernel* CudaEngine::CreateOptKernel(const ir::Node* node) const {
 
 /* -------------------------------------------------------------------------- */
 
-RetCode CudaEngine::SetOutputFormat(CudaEngine* engine, va_list args) {
-    auto base = va_arg(args, dataformat_t*);
-    auto size = va_arg(args, uint64_t);
-
-    engine->cuda_flags_.output_formats.resize(size);
-    for (uint64_t i = 0; i < size; ++i) {
-        engine->cuda_flags_.output_formats[i] = base[i];
-    }
-    return RC_SUCCESS;
-}
-
-RetCode CudaEngine::SetOutputType(CudaEngine* engine, va_list args) {
-    auto base = va_arg(args, datatype_t*);
-    auto size = va_arg(args, uint64_t);
-
-    engine->cuda_flags_.output_types.resize(size);
-    for (uint64_t i = 0; i < size; ++i) {
-        engine->cuda_flags_.output_types[i] = base[i];
-    }
-    return RC_SUCCESS;
-}
-
 RetCode CudaEngine::SetKernelType(CudaEngine* engine, va_list args) {
     engine->cuda_flags_.default_kernel_type = va_arg(args, datatype_t);
     return RC_SUCCESS;
@@ -342,23 +320,25 @@ static RetCode ImportAlgorithmsImpl(const char* json_buffer, uint64_t buffer_siz
         }
 
         CudaArgs::AlgoSelects algo_info;
-        for (auto iter = it->value.MemberBegin(); iter != it->value.MemberEnd(); ++iter) {
-            const string str_name(iter->name.GetString(), iter->name.GetStringLength());
-            if (str_name == "kid") {
-                algo_info.kid = iter->value.GetInt();
-            } else if (str_name == "splitk") {
-                algo_info.splitk = iter->value.GetInt();
-            } else if (str_name == "splitf") {
-                algo_info.splitf = iter->value.GetInt();
-            } else if (str_name == "kname") {
-                algo_info.kname.assign(iter->value.GetString(), iter->value.GetStringLength());
-            } else {
-                LOG(ERROR) << "name of object[" << str_name << "] is not meaningful.";
-                return RC_INVALID_VALUE;
-            }
+        auto ref = it->value.FindMember("kid");
+        if (ref != it->value.MemberEnd()) {
+            algo_info.kid = ref->value.GetInt();
+        }
+        ref = it->value.FindMember("splitk");
+        if (ref != it->value.MemberEnd()) {
+            algo_info.splitk = ref->value.GetInt();
+        }
+        ref = it->value.FindMember("splitf");
+        if (ref != it->value.MemberEnd()) {
+            algo_info.splitf = ref->value.GetInt();
+        }
+        ref = it->value.FindMember("kname");
+        if (ref != it->value.MemberEnd()) {
+            algo_info.kname.assign(ref->value.GetString(), ref->value.GetStringLength());
         }
         algo_selected->insert(make_pair(shape_name, algo_info));
     }
+
     LOG(DEBUG) << "Algo info size is " << algo_selected->size();
     return RC_SUCCESS;
 }
@@ -370,8 +350,6 @@ ppl::common::RetCode CudaEngine::ImportAlgorithmsFromBuffer(CudaEngine* engine, 
 }
 
 CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
-    CudaEngine::SetOutputFormat, // ENGINE_CONF_SET_OUTPUT_DATA_FORMAT
-    CudaEngine::SetOutputType, // ENGINE_CONF_SET_OUTPUT_TYPE
     CudaEngine::SetKernelType, // ENGINE_CONF_USE_DEFAULT_KERNEL_TYPE
     CudaEngine::SetInputDims, // ENGINE_CONF_SET_INPUT_DIMS
     CudaEngine::SetUseDefaultAlgorithms, // ENGINE_CONF_USE_DEFAULT_ALGORITHMS

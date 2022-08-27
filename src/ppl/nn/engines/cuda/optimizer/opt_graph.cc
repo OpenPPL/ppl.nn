@@ -297,12 +297,7 @@ RetCode OptGraph::AddBridgeKernels(const utils::SharedResource& resource) {
 
                 impl_pair.first->second->GetShape()->Reshape(post_shape->GetShape()->GetDims(),
                                                              post_shape->GetShape()->GetRealDimCount());
-
-                if (j < args_->output_formats.size()) {
-                    post_shape->GetShape()->SetDataFormat(args_->output_formats[j]);
-                } else {
-                    post_shape->GetShape()->SetDataFormat(DATAFORMAT_NDARRAY);
-                }
+                post_shape->GetShape()->SetDataFormat(DATAFORMAT_NDARRAY);
 
                 bridge_kernel.get()->Init(options);
                 info_->kernels.emplace(new_node->GetId(), std::move(bridge_kernel));
@@ -401,16 +396,16 @@ RetCode OptGraph::UpdateType() {
             kernel_type = conf_pair->second;
         }
         if (kernel_type == DATATYPE_INT8) {
-            for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
-                auto edge_id = node->GetInput(i);
+            for (uint32_t j = 0; j < node->GetInputCount(); ++j) {
+                auto edge_id = node->GetInput(j);
                 if (edge_id == INVALID_EDGEID) {
                     continue;
                 }
                 auto& input_quant = graph_quants.at(edge_id);
                 input_quant.type = kernel_type;
             }
-            for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
-                auto edge_id = node->GetOutput(i);
+            for (uint32_t j = 0; j < node->GetOutputCount(); ++j) {
+                auto edge_id = node->GetOutput(j);
                 if (edge_id == INVALID_EDGEID) {
                     continue;
                 }
@@ -422,20 +417,6 @@ RetCode OptGraph::UpdateType() {
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "Set type for node[" << node->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
-        }
-
-        // it is an output node
-        for (uint32_t j = 0; j < node->GetOutputCount(); ++j) {
-            auto edge = topo->GetEdge(node->GetOutput(j));
-            if (edge->CalcConsumerCount() == 0) {
-                auto out_shape = IOinfo.GetOutput<TensorImpl>(j)->GetShape();
-                if (out_shape->GetDataType() == DATATYPE_FLOAT16 || out_shape->GetDataType() == DATATYPE_INT8)
-                    out_shape->SetDataType(DATATYPE_FLOAT32);
-
-                if (j < args_->output_types.size()) {
-                    out_shape->SetDataType(args_->output_types[j]);
-                }
-            }
         }
     }
 
