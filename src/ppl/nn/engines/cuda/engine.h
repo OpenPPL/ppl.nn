@@ -48,8 +48,6 @@ struct CudaArgs {
     bool quick_select = false;
     ppl::common::datatype_t default_kernel_type = 0;
     std::map<std::string, ppl::common::datatype_t> node_types;
-    std::vector<ppl::common::dataformat_t> output_formats;
-    std::vector<ppl::common::datatype_t> output_types;
     std::vector<std::vector<int64_t>> input_dims;
     std::map<std::string, std::vector<CudaTensorQuant>> tensor_quants;
     std::map<std::string, AlgoSelects> alog_selects;
@@ -89,8 +87,6 @@ private:
       some of them may visit class members.
       defined as member functions can avoid exporting unnecessary APIs
     */
-    static ppl::common::RetCode SetOutputFormat(CudaEngine*, va_list);
-    static ppl::common::RetCode SetOutputType(CudaEngine*, va_list);
     static ppl::common::RetCode SetKernelType(CudaEngine*, va_list);
     static ppl::common::RetCode SetInputDims(CudaEngine*, va_list);
     static ppl::common::RetCode SetUseDefaultAlgorithms(CudaEngine*, va_list);
