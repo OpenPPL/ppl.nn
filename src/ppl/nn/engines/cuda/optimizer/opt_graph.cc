@@ -420,6 +420,28 @@ RetCode OptGraph::UpdateType() {
         }
     }
 
+    // update shapes of outputs
+    auto data = graph_->data.get();
+    for (uint32_t i = 0; i < topo->GetOutputCount(); ++i) {
+        auto eid = topo->GetOutput(i);
+        auto tensor_ref = tensor_impls_.find(eid);
+        if (tensor_ref == tensor_impls_.end()) {
+            auto edge = topo->GetEdge(eid);
+            LOG(ERROR) << "cannot find instance of edge[" << edge->GetName() << "]";
+            return RC_NOT_FOUND;
+        }
+        auto shape = tensor_ref->second->GetShape();
+
+        auto ir_shape_ref = data->shapes.find(eid);
+        if (ir_shape_ref != data->shapes.end()) {
+            shape->SetDataType(ir_shape_ref->second.data_type);
+        } else {
+            if (shape->GetDataType() == DATATYPE_FLOAT16 || shape->GetDataType() == DATATYPE_INT8) {
+                shape->SetDataType(DATATYPE_FLOAT32);
+            }
+        }
+    }
+
     return RC_SUCCESS;
 }
 
