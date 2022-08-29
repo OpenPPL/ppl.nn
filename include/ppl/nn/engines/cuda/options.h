@@ -55,11 +55,11 @@ enum {
     ENGINE_CONF_USE_DEFAULT_ALGORITHMS,
 
     /**
-       @param json_str a json string(const char*) containing quantization information
+       @param json_buf a json buffer containing quantization information
 
        @note example:
        @code{.cpp}
-       cuda_engine->Configure(ENGINE_CONF_SET_QUANT_INFO, json_str);
+       cuda_engine->Configure(ENGINE_CONF_SET_QUANT_INFO, json_buf, json_size);
        @endcode
     */
     ENGINE_CONF_SET_QUANT_INFO,
