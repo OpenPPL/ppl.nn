@@ -1365,8 +1365,7 @@ ppl::common::RetCode Int8CodeGeneFactor::ReplaceFusionForIdxn(std::string& file_
     int fuse_index = 0;
 
     auto begin = file_res.find("uint concat_v2_off0 = 0;");
-    auto inter = file_res.find("QUANT_V2(Cv2, fCv2, out_scale);", begin);
-    auto end   = file_res.find("#endif", inter);
+    auto end = file_res.find("QUANT_V2(Cv2, fCv2, out_scale);", begin);
 
     std::stringstream file_str;
     file_str << "uint concat_v2_off0 = dCv2_idy[0] * num_flt_v2;\n";

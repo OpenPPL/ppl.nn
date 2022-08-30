@@ -33,8 +33,11 @@ private:
                                                     const OptKernelOptions& options);
 
     static bool CanFuseRelu(ir::Node* nextnode, const OptKernelOptions& options) {
-        // std::set<std::string> relu_fuse_op{"Relu", "Clip", "PRelu", "LeakyRelu", "Sigmoid"};
+#ifdef PPLNN_ENABLE_CUDA_JIT
+        std::set<std::string> relu_fuse_op{"Relu", "Clip", "PRelu", "LeakyRelu", "Sigmoid"};
+#else
         std::set<std::string> relu_fuse_op{"Relu", "Clip"};
+#endif
         if (relu_fuse_op.find(nextnode->GetType().name) != relu_fuse_op.end()) {
             if (nextnode->GetType().name == "PRelu") { // extra check for PRelu
                 // slope must be an 1-d array or a scalar
