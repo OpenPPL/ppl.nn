@@ -74,9 +74,7 @@ public:
         return "cuda";
     }
 
-    ppl::common::RetCode Configure(uint32_t, ...) override {
-        return ppl::common::RC_UNSUPPORTED;
-    }
+    ppl::common::RetCode Configure(uint32_t, ...) override;
 
     virtual ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
         return Realloc(bytes, buffer);
@@ -103,6 +101,12 @@ private:
     cudaStream_t stream_ = nullptr;
     CudaDataConverter data_converter_;
     std::map<edgeid_t, BufferDesc> edge2buffer_;
+
+private:
+    static ppl::common::RetCode ConfGetDeviceId(CudaDevice*, va_list);
+
+    typedef ppl::common::RetCode (*ConfHandlerFunc)(CudaDevice*, va_list);
+    static ConfHandlerFunc conf_handlers_[DEVICE_CONF_MAX];
 };
 
 }}} // namespace ppl::nn::cuda

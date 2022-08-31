@@ -18,6 +18,7 @@
 #include "ppl/nn/engines/cuda/cuda_device.h"
 #include "ppl/nn/common/logger.h"
 #include <cuda.h>
+#include <stdarg.h>
 
 using namespace ppl::common;
 
@@ -156,6 +157,32 @@ RetCode CudaDevice::Sync() {
         return RC_OTHER_ERROR;
     }
     return RC_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+
+RetCode CudaDevice::ConfGetDeviceId(CudaDevice* dev, va_list args) {
+    auto did = va_arg(args, int*);
+    *did = dev->device_id_;
+    return RC_SUCCESS;
+}
+
+CudaDevice::ConfHandlerFunc CudaDevice::conf_handlers_[] = {
+    CudaDevice::ConfGetDeviceId,
+};
+
+RetCode CudaDevice::Configure(uint32_t option, ...) {
+    if (option >= DEVICE_CONF_MAX) {
+        LOG(ERROR) << "invalid option[" << option << "] >= [" << DEVICE_CONF_MAX << "]";
+        return RC_INVALID_VALUE;
+    }
+
+    va_list args;
+    va_start(args, option);
+    auto status = conf_handlers_[option](this, args);
+    va_end(args);
+
+    return status;
 }
 
 }}} // namespace ppl::nn::cuda

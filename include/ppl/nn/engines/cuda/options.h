@@ -112,6 +112,20 @@ enum {
     MM_PLAIN = 2,
 };
 
+/** @brief device configuration options */
+enum {
+    /**
+       @note example:
+       @code{.cpp}
+       int device_id = 0;
+       cuda_engine->Configure(DEVICE_CONF_GET_DEVICE_ID, &device_id);
+       @endcode
+    */
+    DEVICE_CONF_GET_DEVICE_ID,
+
+    DEVICE_CONF_MAX,
+};
+
 }}} // namespace ppl::nn::cuda
 
 #endif
