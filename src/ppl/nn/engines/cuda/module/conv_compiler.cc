@@ -45,19 +45,19 @@ const ppl::common::RetCode ConvCompiler::Compile(ir::Node* node, const OptKernel
         gene_factor->GeneIdxnKernel(source, algo_param.algo_name, algo_param.mma_shape, algo_param.tiles.flt_size,
                                     algo_param.tiles.m_cta, algo_param.tiles.n_cta, algo_param.tiles.m_warp, 
                                     algo_param.tiles.n_warp, algo_param.tiles.k_cta, algo_param.tiles.k_per_step, 0);
-        gene_factor->ReplaceFusionForIdxn(source, conv_param->extra_param.fuse_info);
+        gene_factor->ReplaceFusionForIdxn(source, conv_param->extra_param.fuse_info); // Must replace code in jit version
     } else if (algo_param.algo_name.find("2spk") != std::string::npos) {
         gene_factor->Gene2spkKernel(source, algo_param.algo_name, algo_param.mma_shape, algo_param.tiles.flt_size,
                                     algo_param.tiles.m_cta, algo_param.tiles.n_cta, algo_param.tiles.m_warp,
                                     algo_param.tiles.n_warp, algo_param.tiles.k_cta, algo_param.tiles.k_per_set,
                                     algo_param.splitk, algo_param.splitf, algo_param.tiles.buf, 0);
-        gene_factor->ReplaceFusionFor2spk(source, conv_param->extra_param.fuse_info);
+        gene_factor->ReplaceFusionFor2spk(source, conv_param->extra_param.fuse_info); // Must replace code in jit version
     } else if (algo_param.algo_name.find("Swzl") != std::string::npos) {
         gene_factor->GeneSwzlKernel(source, algo_param.algo_name, algo_param.mma_shape, algo_param.tiles.flt_size,
                                     algo_param.tiles.m_cta, algo_param.tiles.n_cta, algo_param.tiles.m_warp,
                                     algo_param.tiles.n_warp, algo_param.tiles.k_cta, algo_param.splitk,
                                     algo_param.tiles.buf, 0);
-        gene_factor->ReplaceFusionForSwzl(source, conv_param->extra_param.fuse_info);
+        gene_factor->ReplaceFusionForSwzl(source, conv_param->extra_param.fuse_info); // Must replace code in jit version
     }
     std::string name = algo_param.algo_name;
     std::vector<std::string> compile_params;

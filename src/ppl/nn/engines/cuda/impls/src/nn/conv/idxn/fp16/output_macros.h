@@ -148,6 +148,7 @@
 
 #define FUSE_PRELU_V1(_has_prelu, _prelu, _leaky) \
         { \
+            __half *hC = (__half *)C; \
 	        if( _has_prelu == 1) \
             { \
                 _Pragma("unroll") \
@@ -306,6 +307,7 @@
 
 #define JIT_FUSE_LEAKY_V1(_leaky) \
    { \
+       __half *hC = (__half *)C; \
        _Pragma("unroll") \
        for(int i = 0; i < NUM_N_STEPS; i++) \
        { \
@@ -323,6 +325,7 @@
 
 #define JIT_FUSE_PRELU_V1(_has_prelu, _prelu) \
     { \
+        __half *hC = (__half *)C; \
 	    if( _has_prelu == 2) \
         { \
             int _scale_v1[NUM_N_STEPS]; \
