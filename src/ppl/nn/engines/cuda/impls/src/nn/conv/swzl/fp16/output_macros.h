@@ -145,6 +145,7 @@
         if (_has_prelu && dCv4_y_valid) {                                                                                        \
             int4 _scale_v4[OUTPUT_BLKS_PER_STEP];                                                                                \
             __half *_hscale = (__half *)&_scale_v4;                                                                              \
+            __half *hR = (__half*)Rv4;                                                                                           \
                                                                                                                                  \
             _Pragma("unroll") for(int i = 0; i < OUTPUT_BLKS_PER_STEP; i++)                                                      \
             {                                                                                                                    \
@@ -271,8 +272,7 @@
 
 #define JIT_FUSE_LEAKY_V4(_leaky) \
     { \
-            int4 _scale_v4[OUTPUT_BLKS_PER_STEP];                                                                                \
-            __half *_hscale = (__half *)&_scale_v4;                                                                              \
+            __half *hR = (__half*)Rv4;                                                                                           \
                                                                                                                                  \
             _Pragma("unroll") for(int i = 0; i < OUTPUT_BLKS_PER_STEP; i++)                                                      \
             {                                                                                                                    \
@@ -288,6 +288,7 @@
     { \
             int4 _scale_v4[OUTPUT_BLKS_PER_STEP];                                                                                \
             __half *_hscale = (__half *)&_scale_v4;                                                                              \
+            __half *hR = (__half*)Rv4;                                                                                           \
                                                                                                                                  \
             _Pragma("unroll") for(int i = 0; i < OUTPUT_BLKS_PER_STEP; i++)                                                      \
             {                                                                                                                    \

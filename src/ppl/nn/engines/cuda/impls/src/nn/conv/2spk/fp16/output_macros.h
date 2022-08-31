@@ -183,6 +183,7 @@
 
 #define JIT_FUSE_LEAKY_V4(_leaky)                                   \
     {                                                               \
+        __half *hR = (__half*)Rv4;                                  \
         _Pragma("unroll") for (int i = 0; i < _INT4_TO_8HALF_; i++) \
         {                                                           \
             if (__hlt(hR[i], 0))                                    \
@@ -192,6 +193,7 @@
 
 #define JIT_FUSE_PRELU_V4(_has_prelu, _prelu)                                               \
     {                                                                                       \
+        __half *hR = (__half*)Rv4;                                                          \
         if (_has_prelu == 2) {                                                              \
             int4 _scale_v4  = ((int4 *)_prelu)[grp_id * num_flt_per_grp_pad_v8 + dCv4_idx]; \
             __half *_hscale = (__half *)&_scale_v4;                                         \
