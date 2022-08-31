@@ -32,7 +32,7 @@ void RegisterRuntimeBuilderResources(const shared_ptr<LuaState>& lstate, const s
         .DefMember<LuaTable>("engines",
                              nullptr,
                              [lstate](LuaRuntimeBuilderResources* resources, const LuaTable& ltable) -> void {
-                                 ltable.ForEach([resources](int, const LuaObject& l) -> bool {
+                                 ltable.ForEach([resources](uint32_t, const LuaObject& l) -> bool {
                                      resources->engines.push_back(static_cast<LuaEngine*>(l.ToPointer())->ptr);
                                      return true;
                                  });
