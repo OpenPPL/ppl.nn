@@ -216,6 +216,7 @@ TEST_F(OptimizerUtilsTest, converters_for_constants) {
     data->constants.insert(make_pair(in2_edge->GetId(), constant));
     ir::Shape shape;
     shape.data_type = DATATYPE_UINT32;
+    shape.data_format = DATAFORMAT_NDARRAY;
     data->shapes.insert(make_pair(in2_edge->GetId(), shape));
     builder.Finalize();
 
