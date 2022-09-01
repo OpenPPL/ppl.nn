@@ -24,12 +24,12 @@ namespace ppl { namespace nn { namespace cuda {
 
 class ConvTransposeFusion : public Fusion {
 public:
-    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
+    ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
 
 private:
-    const bool CanFuse(ir::Node* nextnode, const OptKernelOptions& options, uint32_t flag);
-    const ppl::common::RetCode FuseConvTransposeWithNextNode(ir::Node* node, ir::Node* nextnode,
-                                                    const OptKernelOptions& options);
+    bool CanFuse(ir::Node* nextnode, const OptKernelOptions& options, uint32_t flag);
+    ppl::common::RetCode FuseConvTransposeWithNextNode(ir::Node* node, ir::Node* nextnode,
+                                                       const OptKernelOptions& options);
 
 private:
     std::set<std::string> fuse_type{"Relu"};

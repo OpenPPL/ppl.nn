@@ -24,7 +24,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-const bool CastFusion::CanFuse(ir::Node* node, ir::Node* prenode) {
+bool CastFusion::CanFuse(ir::Node* node, ir::Node* prenode) {
     if (prenode->GetInputCount() == 1 && prenode->GetOutputCount() == 1 && node->GetType().name == "Cast" &&
         prenode->GetType().name == "Cast") {
         return true;
@@ -32,7 +32,7 @@ const bool CastFusion::CanFuse(ir::Node* node, ir::Node* prenode) {
     return false;
 }
 
-const RetCode CastFusion::FuseWithPreviousCast(ir::Node* node, ir::Node* prenode, const OptKernelOptions& options) {
+RetCode CastFusion::FuseWithPreviousCast(ir::Node* node, ir::Node* prenode, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto connect_edge_id = node->GetInput(0);
     auto connect_edge = topo->GetEdge(connect_edge_id);
@@ -52,7 +52,7 @@ const RetCode CastFusion::FuseWithPreviousCast(ir::Node* node, ir::Node* prenode
     return RC_SUCCESS;
 }
 
-const RetCode CastFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
+RetCode CastFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto node_id = node->GetId();
     auto edge_id = node->GetInput(0);

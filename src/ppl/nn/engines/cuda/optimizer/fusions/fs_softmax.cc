@@ -28,7 +28,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-const RetCode SoftmaxFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
+RetCode SoftmaxFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto pre_edge = topo->GetEdge(node->GetInput(0));
     auto post_edge = topo->GetEdge(node->GetOutput(0));

@@ -24,13 +24,12 @@ namespace ppl { namespace nn { namespace cuda {
 
 class ConvFusion : public Fusion {
 public:
-    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
+    ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
 
 private:
-    const bool FuseTest(ir::Node* node, const OptKernelOptions& options,
-                        std::function<ppl::common::RetCode(ir::Node*, const OptKernelOptions&)>);
-    const ppl::common::RetCode FuseConvWithNextNode(ir::Node* node, ir::Node* nextnode,
-                                                    const OptKernelOptions& options);
+    bool FuseTest(ir::Node* node, const OptKernelOptions& options,
+                  std::function<ppl::common::RetCode(ir::Node*, const OptKernelOptions&)>);
+    ppl::common::RetCode FuseConvWithNextNode(ir::Node* node, ir::Node* nextnode, const OptKernelOptions& options);
 
     static bool CanFuseRelu(ir::Node* nextnode, const OptKernelOptions& options) {
 #ifdef PPLNN_ENABLE_CUDA_JIT

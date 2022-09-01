@@ -24,16 +24,16 @@ namespace ppl { namespace nn { namespace cuda {
 
 class ChannelShuffleFusion : public Fusion {
 public:
-    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
+    ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
 
 private:
-    const bool CanFuse(ir::Node* node, const OptKernelOptions& options);
-    const bool CanFuseFirstReshape(ir::Node* node, const OptKernelOptions& options);
-    const bool CanFuseTranspose(ir::Node* node, const OptKernelOptions& options);
-    const bool CanFuseSecondReshape(ir::Node* node, const OptKernelOptions& options);
-    const bool CanFuseUpAndDown(ir::Node* node, const OptKernelOptions& options);
-    const ppl::common::RetCode FuseWithNextNodes(ir::Node* node, const OptKernelOptions& options);
-    const ppl::common::RetCode FuseWithLastNodes(ir::Node* next_node, const OptKernelOptions& options);
+    bool CanFuse(ir::Node* node, const OptKernelOptions& options);
+    bool CanFuseFirstReshape(ir::Node* node, const OptKernelOptions& options);
+    bool CanFuseTranspose(ir::Node* node, const OptKernelOptions& options);
+    bool CanFuseSecondReshape(ir::Node* node, const OptKernelOptions& options);
+    bool CanFuseUpAndDown(ir::Node* node, const OptKernelOptions& options);
+    ppl::common::RetCode FuseWithNextNodes(ir::Node* node, const OptKernelOptions& options);
+    ppl::common::RetCode FuseWithLastNodes(ir::Node* next_node, const OptKernelOptions& options);
 };
 
 }}} // namespace ppl::nn::cuda

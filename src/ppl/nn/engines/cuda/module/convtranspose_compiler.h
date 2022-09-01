@@ -32,7 +32,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 class ConvTransposeCompiler : public OpCompiler {
 public:
-    const ppl::common::RetCode Compile(ir::Node*, const OptKernelOptions&) override;
+    ppl::common::RetCode Compile(ir::Node*, const OptKernelOptions&) override;
 };
 
 }}} // namespace ppl::nn::cuda

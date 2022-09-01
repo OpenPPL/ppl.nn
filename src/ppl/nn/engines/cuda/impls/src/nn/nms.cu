@@ -459,27 +459,26 @@ ppl::common::RetCode PPLCUDANMSForwardImp(
                     return ppl::common::RC_UNSUPPORTED;
                 }
                 // step 3: mapping back to origin index on cpu
-                std::unique_ptr<int32_t[]> h_sorted_indices(new int32_t[num_boxes]);
+                std::vector<int32_t> h_sorted_indices(num_boxes);
                 std::unique_ptr<bool[]> h_result_mask(new bool[num_boxes]);
                 // construct output on cpu
-                std::unique_ptr<int64_t[]> h_constructed_indices(new int64_t[num_boxes * 3]);
-                cudaMemcpyAsync(h_sorted_indices.get(), sorted_indices, sizeof(int32_t) * num_boxes, cudaMemcpyDeviceToHost, stream);
+                std::vector<int64_t> h_constructed_indices(num_boxes * 3);
+                cudaMemcpyAsync(h_sorted_indices.data(), sorted_indices, sizeof(int32_t) * num_boxes, cudaMemcpyDeviceToHost, stream);
                 cudaMemcpyAsync(h_result_mask.get(), result_mask, sizeof(bool) * num_boxes, cudaMemcpyDeviceToHost, stream);
                 cudaStreamSynchronize(stream);
                 // int num_eval_boxes = std::min(num_filtered_boxes, max_output_boxes_per_class);
                 for (int it = 0; it < num_filtered_boxes; ++it) {
-                    if (h_result_mask.get()[it]) {
-                        h_constructed_indices.get()[num_selected_indices_per_class * 3 + 0] = b;
-                        h_constructed_indices.get()[num_selected_indices_per_class * 3 + 1] = c;
-                        h_constructed_indices.get()[num_selected_indices_per_class * 3 + 2] =
-                            h_sorted_indices.get()[it];
+                    if (h_result_mask[it]) {
+                        h_constructed_indices[num_selected_indices_per_class * 3 + 0] = b;
+                        h_constructed_indices[num_selected_indices_per_class * 3 + 1] = c;
+                        h_constructed_indices[num_selected_indices_per_class * 3 + 2] = h_sorted_indices[it];
                         ++num_selected_indices_per_class;
                         if (num_selected_indices_per_class >= max_output_boxes_per_class)
                             break;
                     }
                 }
                 // step 4: gather one class output to totals
-                cudaMemcpyAsync(output + num_selected_indices * 3, h_constructed_indices.get(),
+                cudaMemcpyAsync(output + num_selected_indices * 3, h_constructed_indices.data(),
                                 // 3 means [batch_index, class_index, box_index]
                                 sizeof(int64_t) * num_selected_indices_per_class * 3,
                                 cudaMemcpyHostToDevice,

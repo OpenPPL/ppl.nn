@@ -24,12 +24,11 @@ namespace ppl { namespace nn { namespace cuda {
 
 class InstanceNormalizationFusion : public Fusion {
 public:
-    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
+    ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
 
 private:
-    const bool CanFuse(ir::Node* nextnode);
-    const ppl::common::RetCode FuseInstanceWithNextNode(ir::Node* node, ir::Node* nextnode,
-                                                const OptKernelOptions& options);
+    bool CanFuse(ir::Node* nextnode);
+    ppl::common::RetCode FuseInstanceWithNextNode(ir::Node* node, ir::Node* nextnode, const OptKernelOptions& options);
 };
 
 }}} // namespace ppl::nn::cuda

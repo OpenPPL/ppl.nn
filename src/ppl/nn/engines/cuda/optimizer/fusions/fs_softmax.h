@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 class SoftmaxFusion : public Fusion {
 public:
-    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
+    ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
 };
 
 }}} // namespace ppl::nn::cuda

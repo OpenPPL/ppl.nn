@@ -27,7 +27,7 @@
 using namespace std;
 namespace ppl { namespace nn { namespace cuda {
 
-const ppl::common::RetCode NormalCompiler::Compile(ir::Node* node, const OptKernelOptions& options) {
+ppl::common::RetCode NormalCompiler::Compile(ir::Node* node, const OptKernelOptions& options) {
     auto node_id = node->GetId();
     auto opt_kerenl = options.info->kernels.find(node_id)->second.get();
     CudaOptKernel* cuda_kernel = static_cast<CudaOptKernel*>(opt_kerenl);

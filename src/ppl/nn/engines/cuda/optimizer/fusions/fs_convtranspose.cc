@@ -25,15 +25,15 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-const bool ConvTransposeFusion::CanFuse(ir::Node* nextnode, const OptKernelOptions& options, uint32_t flag) {
+bool ConvTransposeFusion::CanFuse(ir::Node* nextnode, const OptKernelOptions& options, uint32_t flag) {
     if (fuse_type.find(nextnode->GetType().name) != fuse_type.end()) {
         return true;
     }
     return false;
 }
 
-const RetCode ConvTransposeFusion::FuseConvTransposeWithNextNode(ir::Node* node, ir::Node* nextnode,
-                                                                 const OptKernelOptions& options) {
+RetCode ConvTransposeFusion::FuseConvTransposeWithNextNode(ir::Node* node, ir::Node* nextnode,
+                                                           const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto connect_edge_id = node->GetOutput(0);
 
@@ -64,7 +64,7 @@ const RetCode ConvTransposeFusion::FuseConvTransposeWithNextNode(ir::Node* node,
     return RC_SUCCESS;
 }
 
-const RetCode ConvTransposeFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
+RetCode ConvTransposeFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto data = options.graph->data.get();
     auto node_id = node->GetId();

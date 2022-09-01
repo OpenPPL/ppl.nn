@@ -25,14 +25,15 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-const bool InstanceNormalizationFusion::CanFuse(ir::Node* nextnode) {
+bool InstanceNormalizationFusion::CanFuse(ir::Node* nextnode) {
     if (nextnode->GetType().name == "Relu" || nextnode->GetType().name == "ReLU") {
         return true;
     }
     return false;
 }
 
-const RetCode InstanceNormalizationFusion::FuseInstanceWithNextNode(ir::Node* node, ir::Node* nextnode, const OptKernelOptions& options) {
+RetCode InstanceNormalizationFusion::FuseInstanceWithNextNode(ir::Node* node, ir::Node* nextnode,
+                                                              const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto connect_edge_id = node->GetOutput(0);
 
@@ -63,7 +64,7 @@ const RetCode InstanceNormalizationFusion::FuseInstanceWithNextNode(ir::Node* no
     return RC_SUCCESS;
 }
 
-const RetCode InstanceNormalizationFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
+RetCode InstanceNormalizationFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto node_id = node->GetId();
     auto opt_kernel = (CudaOptKernel*)(options.info->kernels[node_id].get());
