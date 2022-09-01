@@ -23,22 +23,6 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx { namespace utils {
 
-template <typename T>
-static vector<T> GetIntsByKey(const ::onnx::NodeProto& node, const char* key) {
-    vector<T> result;
-    for (int32_t i = 0; i < node.attribute_size(); i++) {
-        const ::onnx::AttributeProto& attribute = node.attribute(i);
-        if (attribute.name() == key) {
-            result.resize(attribute.ints_size());
-            for (int32_t j = 0; j < attribute.ints_size(); j++) {
-                result[j] = attribute.ints(j);
-            }
-            break;
-        }
-    }
-    return result;
-}
-
 const ::onnx::TensorProto* GetTensorProtoByKey(const ::onnx::NodeProto& node, const char* key) {
     for (int i = 0; i < node.attribute_size(); i++) {
         const ::onnx::AttributeProto& attribute = node.attribute(i);

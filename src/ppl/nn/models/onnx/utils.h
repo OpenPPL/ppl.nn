@@ -177,7 +177,7 @@ inline void GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::
         auto& pb_attr = pb_node.attribute(i);
         if (pb_attr.name() == key) {
             values->resize(pb_attr.strings_size());
-            for (int j = 0; i < pb_attr.strings_size(); ++i) {
+            for (int j = 0; j < pb_attr.strings_size(); ++j) {
                 values->at(j) = pb_attr.strings(j);
             }
             return;
