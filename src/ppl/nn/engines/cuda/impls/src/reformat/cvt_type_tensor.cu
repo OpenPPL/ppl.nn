@@ -182,10 +182,10 @@ static __device__ inline char4 _float42int8(
     tmp.z = data_in.z / step + zeroPoint;
     tmp.w = data_in.w / step + zeroPoint;
     char4 dst;
-    dst.x = tmp.x > 127 ? 127 : tmp.x < -128 ? -128 : (signed char)((tmp.x));
-    dst.y = tmp.y > 127 ? 127 : tmp.y < -128 ? -128 : (signed char)((tmp.y));
-    dst.z = tmp.z > 127 ? 127 : tmp.z < -128 ? -128 : (signed char)((tmp.z));
-    dst.w = tmp.w > 127 ? 127 : tmp.w < -128 ? -128 : (signed char)((tmp.w));
+    dst.x = tmp.x > 127 ? 127 : tmp.x < -128 ? -128 : (signed char)(__float2int_rn(tmp.x));
+    dst.y = tmp.y > 127 ? 127 : tmp.y < -128 ? -128 : (signed char)(__float2int_rn(tmp.y));
+    dst.z = tmp.z > 127 ? 127 : tmp.z < -128 ? -128 : (signed char)(__float2int_rn(tmp.z));
+    dst.w = tmp.w > 127 ? 127 : tmp.w < -128 ? -128 : (signed char)(__float2int_rn(tmp.w));
     return dst;
 }
 
