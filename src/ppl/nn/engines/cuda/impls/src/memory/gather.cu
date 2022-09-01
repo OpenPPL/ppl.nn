@@ -86,10 +86,10 @@ ppl::common::RetCode PPLCUDAGatherForwardImp(
     // special case, need further evaluement (performance is not usually better)
     if (axis == 0 && indices_shape->GetDimCount() == 1 && indices_shape->GetDim(0) == 1) {
         int indices_data_size = indices_shape->CalcBytesIncludingPadding();
-        std::unique_ptr<char[]> indices_data(new char[indices_data_size]);
-        cudaMemcpy(indices_data.get(), indices, indices_data_size, cudaMemcpyDeviceToHost);
+        std::vector<char> indices_data(indices_data_size);
+        cudaMemcpy(indices_data.data(), indices, indices_data_size, cudaMemcpyDeviceToHost);
         int inner_size   = input_shape->CalcBytesIncludingPadding() / input_shape->GetDim(0);
-        int input_offset = get_indices_val(indices_element_size, 0, indices_data.get());
+        int input_offset = get_indices_val(indices_element_size, 0, indices_data.data());
         int input_axis_size = input_shape->GetDim(axis);
         input_offset        = input_offset < 0 ? input_offset + input_axis_size : input_offset;
         cudaMemcpy(output, static_cast<const char*>(input) + input_offset * inner_size, output_shape->CalcBytesIncludingPadding(), cudaMemcpyDeviceToDevice);

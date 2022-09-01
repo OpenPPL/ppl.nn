@@ -109,15 +109,15 @@ void NonZeroImp(
     count_nonzero_each_block<<<num_blocks, NUM_THREADS_PER_BLOCK, 0, stream>>>(max_elems,
                                                                                input,
                                                                                tempbuffer);
-    std::unique_ptr<int32_t[]> host_count_each_block(new int32_t[num_blocks]);
-    cudaMemcpy(host_count_each_block.get(), tempbuffer, sizeof(int32_t) * num_blocks, cudaMemcpyDeviceToHost);
+    std::vector<int32_t> host_count_each_block(num_blocks);
+    cudaMemcpy(host_count_each_block.data(), tempbuffer, sizeof(int32_t) * num_blocks, cudaMemcpyDeviceToHost);
     int pre_count = 0, nonzero_elems = 0;
     for (int it = 0; it < num_blocks; ++it) {
         nonzero_elems += host_count_each_block[it];
         host_count_each_block[it] = pre_count;
         pre_count                 = nonzero_elems;
     }
-    cudaMemcpy(tempbuffer, host_count_each_block.get(), sizeof(int32_t) * num_blocks, cudaMemcpyHostToDevice);
+    cudaMemcpy(tempbuffer, host_count_each_block.data(), sizeof(int32_t) * num_blocks, cudaMemcpyHostToDevice);
     // step 2: calc result position
     int num_dims = input_shape->GetDimCount();
     GArray<DivModFast> input_strides_fast(num_dims);

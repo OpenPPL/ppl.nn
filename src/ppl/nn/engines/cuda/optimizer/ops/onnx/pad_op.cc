@@ -64,18 +64,18 @@ RetCode PadOp::Init(const OptKernelOptions& options) {
                 return RC_INVALID_VALUE;
             }
             int pad_elems = pad->GetShape()->CalcElementsIncludingPadding();
-            unique_ptr<int64_t[]> pad_data(new int64_t[pad_elems]);
+            vector<int64_t> pad_data(pad_elems);
             for (int it = 0; it < pad_elems; pad_data[it] = 0, ++it)
                 ;
             if (pad->GetBufferPtr() != nullptr) {
-                auto status = pad->CopyToHost(pad_data.get());
+                auto status = pad->CopyToHost(pad_data.data());
                 if (status != RC_SUCCESS) {
                     LOG(ERROR) << "Copy pad data failed: " << GetRetCodeStr(status);
                     return status;
                 }
             }
 
-            return onnx::ReshapePad(info, &param_, pad_data.get(), pad_data.get() + dim_count);
+            return onnx::ReshapePad(info, &param_, pad_data.data(), pad_data.data() + dim_count);
         }
     };
 

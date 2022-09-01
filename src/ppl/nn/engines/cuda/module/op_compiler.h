@@ -32,7 +32,7 @@ namespace ppl { namespace nn { namespace cuda {
 class OpCompiler {
 public:
     virtual ~OpCompiler() {}
-    virtual const ppl::common::RetCode Compile(ir::Node*, const OptKernelOptions&) = 0;
+    virtual ppl::common::RetCode Compile(ir::Node*, const OptKernelOptions&) = 0;
 };
 
 }}} // namespace ppl::nn::cuda

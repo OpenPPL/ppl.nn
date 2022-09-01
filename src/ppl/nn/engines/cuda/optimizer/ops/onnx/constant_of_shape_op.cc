@@ -50,14 +50,14 @@ RetCode ConstantOfShapeOp::Init(const OptKernelOptions& options) {
             return RC_NOT_FOUND;
         }
 
-        std::unique_ptr<int64_t[]> input_host(new int64_t[input->GetShape()->CalcElementsIncludingPadding()]);
-        auto status = input->CopyToHost(input_host.get());
+        std::vector<int64_t> input_host(input->GetShape()->CalcElementsIncludingPadding());
+        auto status = input->CopyToHost(input_host.data());
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "Copy input host failed: " << GetRetCodeStr(status);
             return status;
         }
 
-        return onnx::ReshapeConstantOfShape(info, &param_, input_host.get());
+        return onnx::ReshapeConstantOfShape(info, &param_, input_host.data());
     };
 
     return RC_SUCCESS;

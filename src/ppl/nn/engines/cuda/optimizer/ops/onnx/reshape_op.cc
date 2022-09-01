@@ -53,14 +53,14 @@ RetCode ReshapeOp::Init(const OptKernelOptions& options) {
         }
 
         const TensorShape& dst_desc = *input->GetShape();
-        unique_ptr<int64_t[]> shape_data(new int64_t[dst_desc.CalcElementsIncludingPadding()]);
-        auto status = input->CopyToHost(shape_data.get());
+        vector<int64_t> shape_data(dst_desc.CalcElementsIncludingPadding());
+        auto status = input->CopyToHost(shape_data.data());
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "Copy shape data failed: " << GetRetCodeStr(status);
             return status;
         }
 
-        return onnx::ReshapeReshape(info, nullptr, shape_data.get());
+        return onnx::ReshapeReshape(info, nullptr, shape_data.data());
     };
 
     return RC_SUCCESS;

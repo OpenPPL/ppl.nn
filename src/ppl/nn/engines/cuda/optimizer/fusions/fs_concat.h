@@ -24,10 +24,10 @@ namespace ppl { namespace nn { namespace cuda {
 
 class ConcatFusion : public Fusion {
 public:
-    const ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
+    ppl::common::RetCode FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) override;
 
 private:
-    const bool CanFuse(ir::Node* prenode, const OptKernelOptions& options, uint32_t sumc);
+    bool CanFuse(ir::Node* prenode, const OptKernelOptions& options, uint32_t sumc);
 };
 
 }}} // namespace ppl::nn::cuda

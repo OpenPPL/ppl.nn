@@ -29,7 +29,7 @@ using namespace ppl::nn::pmx;
 
 namespace ppl { namespace nn { namespace cuda {
 
-const bool ChannelShuffleFusion::CanFuseFirstReshape(ir::Node* node, const OptKernelOptions& options) {
+bool ChannelShuffleFusion::CanFuseFirstReshape(ir::Node* node, const OptKernelOptions& options) {
     if (node->GetType().name != "Reshape") {
         return false;
     }
@@ -68,7 +68,7 @@ const bool ChannelShuffleFusion::CanFuseFirstReshape(ir::Node* node, const OptKe
     return false;
 }
 
-const bool ChannelShuffleFusion::CanFuseTranspose(ir::Node* node, const OptKernelOptions& options) {
+bool ChannelShuffleFusion::CanFuseTranspose(ir::Node* node, const OptKernelOptions& options) {
     if (node->GetType().name != "Transpose") {
         return false;
     }
@@ -85,7 +85,7 @@ const bool ChannelShuffleFusion::CanFuseTranspose(ir::Node* node, const OptKerne
     return false;
 }
 
-const bool ChannelShuffleFusion::CanFuseSecondReshape(ir::Node* node, const OptKernelOptions& options) {
+bool ChannelShuffleFusion::CanFuseSecondReshape(ir::Node* node, const OptKernelOptions& options) {
     if (node->GetType().name != "Reshape") {
         return false;
     }
@@ -115,7 +115,7 @@ const bool ChannelShuffleFusion::CanFuseSecondReshape(ir::Node* node, const OptK
     return false;
 }
 
-const bool ChannelShuffleFusion::CanFuse(ir::Node* node, const OptKernelOptions& options) {
+bool ChannelShuffleFusion::CanFuse(ir::Node* node, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     for (uint32_t i = 0; i < 3; ++i) {
         switch (i) // TODO use function vector
@@ -151,7 +151,7 @@ const bool ChannelShuffleFusion::CanFuse(ir::Node* node, const OptKernelOptions&
     return true;
 }
 
-const bool ChannelShuffleFusion::CanFuseUpAndDown(ir::Node* node, const OptKernelOptions& options) {
+bool ChannelShuffleFusion::CanFuseUpAndDown(ir::Node* node, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto pre_edge = topo->GetEdge(node->GetInput(0));
     auto post_edge = topo->GetEdge(node->GetOutput(0));
@@ -174,7 +174,7 @@ const bool ChannelShuffleFusion::CanFuseUpAndDown(ir::Node* node, const OptKerne
     return true;
 }
 
-const RetCode ChannelShuffleFusion::FuseWithNextNodes(ir::Node* node, const OptKernelOptions& options) {
+RetCode ChannelShuffleFusion::FuseWithNextNodes(ir::Node* node, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto connect_edge_id = node->GetOutput(0);
     auto next_node_id = topo->GetEdge(connect_edge_id)->CreateConsumerIter().Get(); // Get Output(0)
@@ -208,7 +208,7 @@ const RetCode ChannelShuffleFusion::FuseWithNextNodes(ir::Node* node, const OptK
     return RC_SUCCESS;
 }
 
-const RetCode ChannelShuffleFusion::FuseWithLastNodes(ir::Node* next_node, const OptKernelOptions& options) {
+RetCode ChannelShuffleFusion::FuseWithLastNodes(ir::Node* next_node, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     auto next_node_id = next_node->GetId();
     auto connect_edge_id = next_node->GetInput(0);
@@ -241,7 +241,7 @@ const RetCode ChannelShuffleFusion::FuseWithLastNodes(ir::Node* next_node, const
     return RC_SUCCESS;
 }
 
-const RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
+RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptions& options) {
     auto topo = options.graph->topo.get();
     if (CanFuse(node, options)) {
         LOG(DEBUG) << "Fuse node[" << node->GetName() << "] into channel shuffle";

@@ -82,8 +82,8 @@ ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     typedef int32_t* pint;
-    std::unique_ptr<pint[]> input_dims(new pint[ctx->GetInputCount()]);
-    std::unique_ptr<pint[]> input_padded_dims(new pint[ctx->GetInputCount()]);
+    std::vector<pint> input_dims(ctx->GetInputCount());
+    std::vector<pint> input_padded_dims(ctx->GetInputCount());
     for (uint32_t it = 0; it < ctx->GetInputCount(); ++it) {
         input_dims[it] = src_dims[it].data();
         input_padded_dims[it] = src_padded_dims[it].data();
@@ -93,7 +93,7 @@ ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
     if (axis < 0)
         axis += dim_count;
     ppl::common::RetCode status = PPLCUDAConcatForwardImp(
-        GetStream(), axis, ctx->GetInputCount(), (int**)input_dims.get(), (int**)input_padded_dims.get(),
+        GetStream(), axis, ctx->GetInputCount(), (int**)input_dims.data(), (int**)input_padded_dims.data(),
         (const void**)src_list.data(), output->GetShape(), output->GetBufferPtr(), mask);
 
     return status;
