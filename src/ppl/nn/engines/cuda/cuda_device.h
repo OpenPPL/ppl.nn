@@ -106,7 +106,7 @@ private:
     static ppl::common::RetCode ConfGetDeviceId(CudaDevice*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(CudaDevice*, va_list);
-    static ConfHandlerFunc conf_handlers_[DEVICE_CONF_MAX];
+    static ConfHandlerFunc conf_handlers_[DEV_CONF_MAX];
 };
 
 }}} // namespace ppl::nn::cuda
