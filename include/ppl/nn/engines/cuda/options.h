@@ -118,12 +118,12 @@ enum {
        @note example:
        @code{.cpp}
        int device_id = 0;
-       cuda_engine->Configure(DEVICE_CONF_GET_DEVICE_ID, &device_id);
+       cuda_engine->Configure(DEV_CONF_GET_DEVICE_ID, &device_id);
        @endcode
     */
-    DEVICE_CONF_GET_DEVICE_ID,
+    DEV_CONF_GET_DEVICE_ID,
 
-    DEVICE_CONF_MAX,
+    DEV_CONF_MAX,
 };
 
 }}} // namespace ppl::nn::cuda

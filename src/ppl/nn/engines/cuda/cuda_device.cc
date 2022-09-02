@@ -172,8 +172,8 @@ CudaDevice::ConfHandlerFunc CudaDevice::conf_handlers_[] = {
 };
 
 RetCode CudaDevice::Configure(uint32_t option, ...) {
-    if (option >= DEVICE_CONF_MAX) {
-        LOG(ERROR) << "invalid option[" << option << "] >= [" << DEVICE_CONF_MAX << "]";
+    if (option >= DEV_CONF_MAX) {
+        LOG(ERROR) << "invalid option[" << option << "] >= [" << DEV_CONF_MAX << "]";
         return RC_INVALID_VALUE;
     }
 
