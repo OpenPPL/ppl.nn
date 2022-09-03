@@ -43,11 +43,11 @@ uint64_t LSTMKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     const bool has_Y_h = ctx.GetOutputCount() > 1 && ctx.GetOutput<TensorImpl>(1);
     const bool has_Y_c = ctx.GetOutputCount() > 2 && ctx.GetOutput<TensorImpl>(2);
     if (MayUseISA(ppl::common::ISA_X86_FMA)) {
-        return kernel::x86::lstm_fp32_fma_get_buffer_bytes(
-            X->GetShape(), direction_, param_->hidden_size, has_Y, has_Y_h, has_Y_c);
+        return kernel::x86::lstm_fp32_fma_get_buffer_bytes(X->GetShape(), direction_, param_->param->hidden_size, has_Y,
+                                                           has_Y_h, has_Y_c);
     } else {
-        return kernel::x86::lstm_fp32_ref_get_buffer_bytes(
-            X->GetShape(), direction_, param_->hidden_size, has_Y, has_Y_h, has_Y_c);
+        return kernel::x86::lstm_fp32_ref_get_buffer_bytes(X->GetShape(), direction_, param_->param->hidden_size, has_Y,
+                                                           has_Y_h, has_Y_c);
     }
 }
 
@@ -64,14 +64,14 @@ ppl::common::RetCode LSTMKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_OPTIONAL_OUTPUT(Y_h, 1);
     PPLNN_X86_OPTIONAL_OUTPUT(Y_c, 2);
 
-    const float *B_data = nullptr;
-    const int32_t *sequence_lens_data = nullptr;
-    const float *initial_h_data = nullptr;
-    const float *initial_c_data = nullptr;
-    const float *P_data = nullptr;
-    float *Y_data = nullptr;
-    float *Y_h_data = nullptr;
-    float *Y_c_data = nullptr;
+    const float* B_data = nullptr;
+    const int32_t* sequence_lens_data = nullptr;
+    const float* initial_h_data = nullptr;
+    const float* initial_c_data = nullptr;
+    const float* P_data = nullptr;
+    float* Y_data = nullptr;
+    float* Y_h_data = nullptr;
+    float* Y_c_data = nullptr;
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [X]:\n");
@@ -105,22 +105,22 @@ ppl::common::RetCode LSTMKernel::DoExecute(KernelExecContext* ctx) {
         PPL_X86_TENSOR_PRINT_DEBUG_MSG(P);
         P_data = P->GetBufferPtr<const float>();
     }
-    PPLNN_X86_DEBUG_TRACE("activation_alpha(%lu):\n", param_->activation_alpha.size());
-    for (size_t i = 0; i < param_->activation_alpha.size(); ++i) {
-        PPLNN_X86_DEBUG_TRACE("\t%f\n", param_->activation_alpha[i]);
+    PPLNN_X86_DEBUG_TRACE("activation_alpha(%lu):\n", param_->param->activation_alpha.size());
+    for (size_t i = 0; i < param_->param->activation_alpha.size(); ++i) {
+        PPLNN_X86_DEBUG_TRACE("\t%f\n", param_->param->activation_alpha[i]);
     }
-    PPLNN_X86_DEBUG_TRACE("activation_beta(%lu):\n", param_->activation_beta.size());
-    for (size_t i = 0; i < param_->activation_beta.size(); ++i) {
-        PPLNN_X86_DEBUG_TRACE("\t%f\n", param_->activation_beta[i]);
+    PPLNN_X86_DEBUG_TRACE("activation_beta(%lu):\n", param_->param->activation_beta.size());
+    for (size_t i = 0; i < param_->param->activation_beta.size(); ++i) {
+        PPLNN_X86_DEBUG_TRACE("\t%f\n", param_->param->activation_beta[i]);
     }
-    PPLNN_X86_DEBUG_TRACE("activations(%lu):\n", param_->activations.size());
-    for (size_t i = 0; i < param_->activations.size(); ++i) {
-        PPLNN_X86_DEBUG_TRACE("\t%d\n", param_->activations[i]);
+    PPLNN_X86_DEBUG_TRACE("activations(%lu):\n", param_->param->activations.size());
+    for (size_t i = 0; i < param_->param->activations.size(); ++i) {
+        PPLNN_X86_DEBUG_TRACE("\t%d\n", param_->param->activations[i]);
     }
-    PPLNN_X86_DEBUG_TRACE("clip: %f\n", param_->clip);
-    PPLNN_X86_DEBUG_TRACE("direction: %d\n", param_->direction);
-    PPLNN_X86_DEBUG_TRACE("hidden_size: %d\n", param_->hidden_size);
-    PPLNN_X86_DEBUG_TRACE("input_forget: %d\n", param_->input_forget);
+    PPLNN_X86_DEBUG_TRACE("clip: %f\n", param_->param->clip);
+    PPLNN_X86_DEBUG_TRACE("direction: %d\n", param_->param->direction);
+    PPLNN_X86_DEBUG_TRACE("hidden_size: %d\n", param_->param->hidden_size);
+    PPLNN_X86_DEBUG_TRACE("input_forget: %d\n", param_->param->input_forget);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     if (Y) {
@@ -159,19 +159,31 @@ ppl::common::RetCode LSTMKernel::DoExecute(KernelExecContext* ctx) {
     const auto data_type = X->GetShape()->GetDataType();
     const auto data_format = X->GetShape()->GetDataFormat();
 
+    const float* real_w[2] = {param_->packed_w[0], param_->packed_w[1]};
+    const float* real_r[2] = {param_->packed_r[0], param_->packed_r[1]};
+    bool has_packed_w = real_w[0] != nullptr;
+    bool has_packed_r = real_r[0] != nullptr;
+
+    if (!real_w[0])
+        real_w[0] = W->GetBufferPtr<const float>();
+    if (!real_w[1])
+        real_w[1] = W->GetBufferPtr<const float>() + W->GetShape()->GetDim(1) * W->GetShape()->GetDim(2);
+    if (!real_r[0])
+        real_r[0] = R->GetBufferPtr<const float>();
+    if (!real_r[1])
+        real_r[1] = R->GetBufferPtr<const float>() + R->GetShape()->GetDim(1) * R->GetShape()->GetDim(2);
+
     if (data_type == ppl::common::DATATYPE_FLOAT32 && data_format == ppl::common::DATAFORMAT_NDARRAY) {
         if (MayUseISA(ppl::common::ISA_X86_FMA)) {
-            return kernel::x86::lstm_fp32_fma(
-                X->GetShape(), X->GetBufferPtr<const float>(),
-                W->GetBufferPtr<const float>(), R->GetBufferPtr<const float>(),
-                P_data, B_data, sequence_lens_data, initial_h_data, initial_c_data,
-                direction_, param_->hidden_size, tmp_buffer, Y_data, Y_h_data, Y_c_data);
+            return kernel::x86::lstm_fp32_fma(X->GetShape(), X->GetBufferPtr<const float>(), real_w, real_r, P_data,
+                                              B_data, sequence_lens_data, initial_h_data, initial_c_data, direction_,
+                                              param_->param->hidden_size, has_packed_w, has_packed_r, tmp_buffer,
+                                              Y_data, Y_h_data, Y_c_data);
         } else {
-            return kernel::x86::lstm_fp32_ref(
-                X->GetShape(), X->GetBufferPtr<const float>(),
-                W->GetBufferPtr<const float>(), R->GetBufferPtr<const float>(),
-                P_data, B_data, sequence_lens_data, initial_h_data, initial_c_data,
-                direction_, param_->hidden_size, tmp_buffer, Y_data, Y_h_data, Y_c_data);
+            return kernel::x86::lstm_fp32_ref(X->GetShape(), X->GetBufferPtr<const float>(), real_w, real_r, P_data,
+                                              B_data, sequence_lens_data, initial_h_data, initial_c_data, direction_,
+                                              param_->param->hidden_size, has_packed_w, has_packed_r, tmp_buffer,
+                                              Y_data, Y_h_data, Y_c_data);
         }
     } else {
         LOG(ERROR) << "only support fp32 ndarray now.";

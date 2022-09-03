@@ -19,6 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_ONNX_LSTM_KERNEL_H_
 
 #include "ppl/nn/params/onnx/lstm_param.h"
+#include "ppl/nn/engines/x86/params/lstm_param.h"
 #include "ppl/nn/engines/x86/kernel.h"
 #include "ppl/kernel/x86/fp32/lstm.h"
 
@@ -29,15 +30,15 @@ public:
     LSTMKernel(const ir::Node* node) : X86Kernel(node) {}
     bool CanDoExecute(const KernelExecContext& ctx) const override;
 
-    void SetParam(const ppl::nn::onnx::LSTMParam* p) {
+    void SetParam(const LSTMParam* p) {
         param_ = p;
-        if (p->direction == ppl::nn::onnx::LSTMParam::DIR_FORWARD) {
+        if (p->param->direction == ppl::nn::onnx::LSTMParam::DIR_FORWARD) {
             direction_ = ppl::kernel::x86::rnn_direction::FORWARD;
         }
-        if (p->direction == ppl::nn::onnx::LSTMParam::DIR_REVERSE) {
+        if (p->param->direction == ppl::nn::onnx::LSTMParam::DIR_REVERSE) {
             direction_ = ppl::kernel::x86::rnn_direction::REVERSE;
         }
-        if (p->direction == ppl::nn::onnx::LSTMParam::DIR_BIDIRECTIONAL) {
+        if (p->param->direction == ppl::nn::onnx::LSTMParam::DIR_BIDIRECTIONAL) {
             direction_ = ppl::kernel::x86::rnn_direction::BIDIRECTIONAL;
         }
     }
@@ -46,7 +47,7 @@ private:
     uint64_t CalcTmpBufferSize(const KernelExecContext&) const override;
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
-    const ppl::nn::onnx::LSTMParam* param_ = nullptr;
+    const LSTMParam* param_ = nullptr;
     ppl::kernel::x86::rnn_direction_t direction_;
 };
 

@@ -15,27 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_LSTM_OP_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_LSTM_OP_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_PARAMS_LSTM_PARAM_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_PARAMS_LSTM_PARAM_H_
 
+#include "ppl/kernel/x86/fp32/gemm.h"
 #include "ppl/nn/params/onnx/lstm_param.h"
-#include "ppl/nn/engines/x86/params/lstm_param.h"
-#include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
-
 namespace ppl { namespace nn { namespace x86 {
 
-class LSTMOp final : public X86OptKernel {
-public:
-    LSTMOp(const ir::Node* node) : X86OptKernel(node) {}
-    ~LSTMOp();
-    ppl::common::RetCode Init(const OptKernelOptions& options) override;
-    KernelImpl* CreateKernelImpl() const override;
-
-private:
-    std::shared_ptr<ppl::nn::onnx::LSTMParam> param_;
-    LSTMParam aux_param_;
+struct LSTMParam {
+    ppl::nn::onnx::LSTMParam* param;
+    float* packed_w[2] = {nullptr, nullptr};
+    float* packed_r[2] = {nullptr, nullptr};
 };
 
-}}} // namespace ppl::nn::x86
+}}}; // namespace ppl::nn::x86
 
 #endif
