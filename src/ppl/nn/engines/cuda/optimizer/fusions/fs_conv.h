@@ -33,7 +33,7 @@ private:
 
     static bool CanFuseRelu(ir::Node* nextnode, const OptKernelOptions& options) {
 #ifdef PPLNN_ENABLE_CUDA_JIT
-        std::set<std::string> relu_fuse_op{"Relu", "Clip", "PRelu", "LeakyRelu", "Sigmoid"};
+        std::set<std::string> relu_fuse_op{"Relu", "Clip", "PRelu", "LeakyRelu"};
 #else
         std::set<std::string> relu_fuse_op{"Relu", "Clip"};
 #endif
