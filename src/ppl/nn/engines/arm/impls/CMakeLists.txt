@@ -1,25 +1,16 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(PPLKernelArmServer)
 
-option(PPL_USE_ARM_SERVER_OMP "Build arm server kernel with openmp support." ON)
-
 if(HPCC_USE_OPENMP AND NOT PPLNN_USE_OPENMP)
     message(FATAL_ERROR "`HPCC_USE_OPENMP` is deprecated. use `PPLNN_USE_OPENMP` instead.")
 endif()
 
-if(PPLNN_USE_OPENMP)
-    set(PPL_USE_ARM_SERVER_OMP ON)
-endif()
-
-set(PPLKERNELARMSERVER_COMPILE_OPTIONS )
-set(PPLKERNELARMSERVER_COMPILE_DEFINITIONS )
-# `PPLKERNELARMSERVER_LINK_LIBRARIES` is needed for generating pplkernex86-config.cmake
-set(PPLKERNELARMSERVER_LINK_LIBRARIES )
+# `PPLKERNELARMSERVER_COMPILE_OPTIONS`, `PPLKERNELARMSERVER_COMPILE_DEFINITIONS` and `PPLKERNELARMSERVER_LINK_LIBRARIES` are reserved
 
 #### #### #### #### ####
 ### dependencies #######
 #### #### #### #### ####
-if(PPL_USE_ARM_SERVER_OMP)
+if(PPLNN_USE_OPENMP)
     find_package(Threads REQUIRED)
     find_package(OpenMP REQUIRED)
     list(APPEND PPLKERNELARMSERVER_LINK_LIBRARIES OpenMP::OpenMP_CXX)
@@ -56,7 +47,7 @@ list(APPEND PPLKERNELARMSERVER_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}/src
 #### #### #### #### ####
 ### definitions ########
 #### #### #### #### ####
-if(PPL_USE_ARM_SERVER_OMP)
+if(PPLNN_USE_OPENMP)
     list(APPEND PPLKERNELARMSERVER_COMPILE_DEFINITIONS PPL_USE_ARM_SERVER_OMP)
 endif()
 
