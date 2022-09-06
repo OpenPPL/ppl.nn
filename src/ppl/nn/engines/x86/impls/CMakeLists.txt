@@ -5,12 +5,12 @@ option(PPL_USE_X86_OMP "Build x86 kernel with openmp support." OFF)
 option(PPL_USE_X86_AVX512 "Build x86 kernel with avx512 support." ON)
 
 if(MSVC)
-set(PPLKERNELX86_COMPILE_OPTIONS )
+    set(PPLKERNELX86_COMPILE_OPTIONS )
 else()
-set(PPLKERNELX86_COMPILE_OPTIONS "-Werror=return-type;-Wno-strict-aliasing")
+    set(PPLKERNELX86_COMPILE_OPTIONS "-Werror=return-type;-Wno-strict-aliasing")
 endif()
 
-# `PPLKERNELX86_LINK_LIBRARIES` is needed for generating pplkernex86-config.cmake
+# `PPLKERNELX86_LINK_LIBRARIES` is needed for generating pplkernelx86-config.cmake
 set(PPLKERNELX86_LINK_LIBRARIES )
 
 list(APPEND PPLKERNELX86_PUBLIC_INCLUDE_DIRECTORIES include)
@@ -102,9 +102,15 @@ if(PPLNN_INSTALL)
 
     # `PPLKERNELX86_LINK_LIBRARIES` is needed for generating pplkernex86-config.cmake
     set(__PPLNN_CMAKE_CONFIG_FILE__ ${CMAKE_CURRENT_BINARY_DIR}/generated/pplkernelx86-config.cmake)
+    if(MSVC)
+        set(__PPLKERNELX86_LIB_NAME__ "pplkernelx86_static.lib")
+    else()
+        set(__PPLKERNELX86_LIB_NAME__ "libpplkernelx86_static.a")
+    endif()
     configure_file(${CMAKE_CURRENT_LIST_DIR}/pplkernelx86-config.cmake.in
         ${__PPLNN_CMAKE_CONFIG_FILE__}
         @ONLY)
+    unset(__PPLKERNELX86_LIB_NAME__)
     install(FILES ${__PPLNN_CMAKE_CONFIG_FILE__} DESTINATION lib/cmake/ppl)
     unset(__PPLNN_CMAKE_CONFIG_FILE__)
 endif()

@@ -1,9 +1,15 @@
 install(TARGETS pplnn_static DESTINATION lib)
 
 set(__PPLNN_CMAKE_CONFIG_FILE__ ${CMAKE_CURRENT_BINARY_DIR}/generated/pplnn-config.cmake)
+if(MSVC)
+    set(__PPLNN_LIB_NAME__ "pplnn_static.lib")
+else()
+    set(__PPLNN_LIB_NAME__ "libpplnn_static.a")
+endif()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pplnn-config.cmake.in
     ${__PPLNN_CMAKE_CONFIG_FILE__}
     @ONLY)
+unset(__PPLNN_LIB_NAME__)
 install(FILES ${__PPLNN_CMAKE_CONFIG_FILE__} DESTINATION lib/cmake/ppl)
 unset(__PPLNN_CMAKE_CONFIG_FILE__)
 

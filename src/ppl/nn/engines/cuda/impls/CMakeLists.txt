@@ -204,9 +204,15 @@ if(PPLNN_INSTALL)
     install(TARGETS pplkernelcuda_static DESTINATION lib)
 
     set(__PPLNN_CMAKE_CONFIG_FILE__ ${CMAKE_CURRENT_BINARY_DIR}/generated/pplkernelcuda-config.cmake)
+    if(MSVC)
+        set(__PPLKERNELCUDA_LIB_NAME__ "pplkernelcuda_static.lib")
+    else()
+        set(__PPLKERNELCUDA_LIB_NAME__ "libpplkernelcuda_static.a")
+    endif()
     configure_file(${CMAKE_CURRENT_LIST_DIR}/pplkernelcuda-config.cmake.in
         ${__PPLNN_CMAKE_CONFIG_FILE__}
         @ONLY)
+    unset(__PPLKERNELCUDA_LIB_NAME__)
     install(FILES ${__PPLNN_CMAKE_CONFIG_FILE__} DESTINATION lib/cmake/ppl)
     unset(__PPLNN_CMAKE_CONFIG_FILE__)
 endif()

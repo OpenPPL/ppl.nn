@@ -15,7 +15,6 @@ if(PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES)
     set(__PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES__ ${PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES})
 else()
     set(__PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES__ "@PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES@")
-    set(PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES "@PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES@")
 endif()
 
 set_target_properties(pplkernelcuda_static PROPERTIES
@@ -24,15 +23,8 @@ set_target_properties(pplkernelcuda_static PROPERTIES
 unset(__PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES__)
 
 get_filename_component(__PPLKERNELCUDA_PACKAGE_DIR__ "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
-if(MSVC)
-    set_target_properties(pplkernelcuda_static PROPERTIES
-        IMPORTED_LOCATION "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/pplkernelcuda_static.lib"
-        IMPORTED_LOCATION_DEBUG "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/pplkernelcuda_static.lib"
-        IMPORTED_LOCATION_RELEASE "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/pplkernelcuda_static.lib")
-else()
-    set_target_properties(pplkernelcuda_static PROPERTIES
-        IMPORTED_LOCATION "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/libpplkernelcuda_static.a"
-        IMPORTED_LOCATION_DEBUG "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/libpplkernelcuda_static.a"
-        IMPORTED_LOCATION_RELEASE "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/libpplkernelcuda_static.a")
-endif()
+set_target_properties(pplkernelcuda_static PROPERTIES
+    IMPORTED_LOCATION "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/@__PPLKERNELCUDA_LIB_NAME__@"
+    IMPORTED_LOCATION_DEBUG "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/@__PPLKERNELCUDA_LIB_NAME__@"
+    IMPORTED_LOCATION_RELEASE "${__PPLKERNELCUDA_PACKAGE_DIR__}/lib/@__PPLKERNELCUDA_LIB_NAME__@")
 unset(__PPLKERNELCUDA_PACKAGE_DIR__)

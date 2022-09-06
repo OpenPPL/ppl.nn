@@ -76,28 +76,17 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
-set(__PPLNN_VERSION_DEFINITIONS__
+list(APPEND __PPLNN_COMPILE_DEFINITIONS__
     PPLNN_VERSION_MAJOR=${PPLNN_VERSION_MAJOR}
     PPLNN_VERSION_MINOR=${PPLNN_VERSION_MINOR}
     PPLNN_VERSION_PATCH=${PPLNN_VERSION_PATCH})
-list(APPEND __PPLNN_COMPILE_DEFINITIONS__ ${__PPLNN_VERSION_DEFINITIONS__})
-unset(__PPLNN_VERSION_DEFINITIONS__)
 
 set_target_properties(pplnn_static PROPERTIES
     INTERFACE_LINK_LIBRARIES "${__PPLNN_LINK_LIBRARIES__}"
-    INTERFACE_COMPILE_DEFINITIONS "${__PPLNN_COMPILE_DEFINITIONS__}")
-
-if(MSVC)
-    set_target_properties(pplnn_static PROPERTIES
-        IMPORTED_LOCATION "${__PPLNN_PACKAGE_ROOTDIR__}/lib/pplnn_static.lib"
-        IMPORTED_LOCATION_DEBUG "${__PPLNN_PACKAGE_ROOTDIR__}/lib/pplnn_static.lib"
-        IMPORTED_LOCATION_RELEASE "${__PPLNN_PACKAGE_ROOTDIR__}/lib/pplnn_static.lib")
-else()
-    set_target_properties(pplnn_static PROPERTIES
-        IMPORTED_LOCATION "${__PPLNN_PACKAGE_ROOTDIR__}/lib/libpplnn_static.a"
-        IMPORTED_LOCATION_DEBUG "${__PPLNN_PACKAGE_ROOTDIR__}/lib/libpplnn_static.a"
-        IMPORTED_LOCATION_RELEASE "${__PPLNN_PACKAGE_ROOTDIR__}/lib/libpplnn_static.a")
-endif()
+    INTERFACE_COMPILE_DEFINITIONS "${__PPLNN_COMPILE_DEFINITIONS__}"
+    IMPORTED_LOCATION "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@__PPLNN_LIB_NAME__@"
+    IMPORTED_LOCATION_DEBUG "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@__PPLNN_LIB_NAME__@"
+    IMPORTED_LOCATION_RELEASE "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@__PPLNN_LIB_NAME__@")
 
 # --------------------------------------------------------------------------- #
 
