@@ -81,7 +81,7 @@ static RetCode ParseGraphInput(const ::onnx::GraphProto& pb_graph, ir::GraphTopo
 
         auto& pb_type = pb_input.type();
         if (!pb_type.has_tensor_type()) {
-            LOG(ERROR) << "unsupported type[" << pb_type.value_case() << "] of input[" << edge->GetName()
+            LOG(ERROR) << "unsupported type[" << (int)pb_type.value_case() << "] of input[" << edge->GetName()
                        << "]. only tensor type is supported currently.";
             return RC_UNSUPPORTED;
         }

@@ -507,7 +507,7 @@ RuntimeImpl::ConfHandlerFunc RuntimeImpl::conf_handlers_[] = {
 
 RetCode RuntimeImpl::Configure(uint32_t option, ...) {
     if (option >= RUNTIME_CONF_MAX) {
-        LOG(ERROR) << "invalid option[" << option << "] >= [" << RUNTIME_CONF_MAX << "]";
+        LOG(ERROR) << "invalid option[" << option << "] >= [" << (uint32_t)RUNTIME_CONF_MAX << "]";
         return RC_INVALID_VALUE;
     }
 

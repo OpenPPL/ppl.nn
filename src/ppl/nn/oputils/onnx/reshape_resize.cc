@@ -27,7 +27,7 @@ namespace ppl { namespace nn { namespace onnx {
 RetCode ReshapeResize(InputOutputInfo* info, const ir::Attr* arg, const float* roi_data, const float* scales_data,
                       const int64_t* sizes_data) {
     if (scales_data != 0 && sizes_data != 0) {
-        LOG(DEBUG) << "ERROR: scales_data[" << scales_data << "] != 0 and sizes_data[" << sizes_data << "] != 0.";
+        LOG(DEBUG) << "ERROR: scales_data[" << *scales_data << "] != 0 and sizes_data[" << *sizes_data << "] != 0.";
         return RC_INVALID_VALUE;
     }
 

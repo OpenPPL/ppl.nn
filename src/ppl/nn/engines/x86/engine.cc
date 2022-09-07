@@ -197,7 +197,7 @@ X86Engine::ConfHandlerFunc X86Engine::conf_handlers_[] = {
 
 RetCode X86Engine::Configure(uint32_t option, ...) {
     if (option >= ENGINE_CONF_MAX) {
-        LOG(ERROR) << "invalid option[" << option << "] >= [" << ENGINE_CONF_MAX << "]";
+        LOG(ERROR) << "invalid option[" << option << "] >= [" << (uint32_t)ENGINE_CONF_MAX << "]";
         return RC_INVALID_VALUE;
     }
 

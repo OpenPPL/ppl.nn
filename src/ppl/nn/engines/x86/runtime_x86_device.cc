@@ -94,7 +94,7 @@ RuntimeX86Device::ConfHandlerFunc RuntimeX86Device::conf_handlers_[];
 
 RetCode RuntimeX86Device::Configure(uint32_t option, ...) {
     if (option >= DEV_CONF_MAX) {
-        LOG(ERROR) << "invalid option[" << option << "] >= [" << DEV_CONF_MAX << "]";
+        LOG(ERROR) << "invalid option[" << option << "] >= [" << (uint32_t)DEV_CONF_MAX << "]";
         return RC_INVALID_VALUE;
     }
 
