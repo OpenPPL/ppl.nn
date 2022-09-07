@@ -104,12 +104,12 @@ RetCode CudaDevice::SyncStream() {
 RetCode CudaDevice::CopyFromHost(BufferDesc* dst, const void* src, uint64_t bytes) const {
     cudaError_t err = cudaMemcpyAsync(dst->addr, src, bytes, cudaMemcpyHostToDevice, stream_);
     if (err != cudaSuccess) {
-        LOG(ERROR) << "cudaMemcpyAsync " << err << ", " << cudaGetErrorString(err);
+        LOG(ERROR) << "cudaMemcpyAsync " << (int)err << ", " << cudaGetErrorString(err);
         return RC_OTHER_ERROR;
     }
     err = cudaStreamSynchronize(stream_);
     if (err != cudaSuccess) {
-        LOG(ERROR) << "cudaStreamSynchronize " << err << ", " << cudaGetErrorString(err);
+        LOG(ERROR) << "cudaStreamSynchronize " << (int)err << ", " << cudaGetErrorString(err);
         return RC_OTHER_ERROR;
     }
     return RC_SUCCESS;
@@ -123,12 +123,12 @@ RetCode CudaDevice::CopyFromHost(BufferDesc* dst, const void* src, const TensorS
 RetCode CudaDevice::CopyToHost(void* dst, const BufferDesc& src, uint64_t bytes) const {
     cudaError_t err = cudaMemcpyAsync(dst, src.addr, bytes, cudaMemcpyDeviceToHost, stream_);
     if (err != cudaSuccess) {
-        LOG(ERROR) << "cudaMemcpyAsync " << err << ", " << cudaGetErrorString(err);
+        LOG(ERROR) << "cudaMemcpyAsync " << (int)err << ", " << cudaGetErrorString(err);
         return RC_OTHER_ERROR;
     }
     err = cudaStreamSynchronize(stream_);
     if (err != cudaSuccess) {
-        LOG(ERROR) << "cudaStreamSynchronize " << err << ", " << cudaGetErrorString(err);
+        LOG(ERROR) << "cudaStreamSynchronize " << (int)err << ", " << cudaGetErrorString(err);
         return RC_OTHER_ERROR;
     }
     return RC_SUCCESS;
@@ -140,7 +140,7 @@ RetCode CudaDevice::CopyToHost(void* dst, const BufferDesc& src, const TensorSha
 RetCode CudaDevice::Copy(BufferDesc* dst, const BufferDesc& src, uint64_t bytes) const {
     cudaError_t err = cudaMemcpyAsync(dst->addr, src.addr, bytes, cudaMemcpyDeviceToDevice, stream_);
     if (err != cudaSuccess) {
-        LOG(ERROR) << "cudaMemcpyAsync " << err << ", " << cudaGetErrorString(err);
+        LOG(ERROR) << "cudaMemcpyAsync " << (int)err << ", " << cudaGetErrorString(err);
         return RC_OTHER_ERROR;
     }
     return RC_SUCCESS;
@@ -153,7 +153,7 @@ RetCode CudaDevice::Copy(BufferDesc* dst, const BufferDesc& src, const TensorSha
 RetCode CudaDevice::Sync() {
     auto err = cudaStreamSynchronize(stream_);
     if (err != cudaSuccess) {
-        LOG(ERROR) << "cudaStreamSynchronize " << err << ", " << cudaGetErrorString(err);
+        LOG(ERROR) << "cudaStreamSynchronize " << (int)err << ", " << cudaGetErrorString(err);
         return RC_OTHER_ERROR;
     }
     return RC_SUCCESS;
@@ -173,7 +173,7 @@ CudaDevice::ConfHandlerFunc CudaDevice::conf_handlers_[] = {
 
 RetCode CudaDevice::Configure(uint32_t option, ...) {
     if (option >= DEV_CONF_MAX) {
-        LOG(ERROR) << "invalid option[" << option << "] >= [" << DEV_CONF_MAX << "]";
+        LOG(ERROR) << "invalid option[" << option << "] >= [" << (uint32_t)DEV_CONF_MAX << "]";
         return RC_INVALID_VALUE;
     }
 

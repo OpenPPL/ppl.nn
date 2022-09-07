@@ -33,7 +33,7 @@ public:
         if (size > 0) {
             cudaError_t err = cudaMalloc(&ptr, size);
             if (err != cudaSuccess) {
-                LOG(ERROR) << "call cudaMalloc failed with error code: " << err << ", " << cudaGetErrorString(err)
+                LOG(ERROR) << "call cudaMalloc failed with error code: " << (int)err << ", " << cudaGetErrorString(err)
                            << ", size is " << size;
                 return nullptr;
             }
@@ -45,7 +45,7 @@ public:
         if (ptr != nullptr) {
             cudaError_t err = cudaFree(ptr);
             if (err != cudaSuccess) {
-                LOG(ERROR) << "call cudaFree failed with error code: " << err << ", " << cudaGetErrorString(err);
+                LOG(ERROR) << "call cudaFree failed with error code: " << (int)err << ", " << cudaGetErrorString(err);
             }
         }
     }

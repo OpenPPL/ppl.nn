@@ -145,7 +145,7 @@ RuntimeBuilderImpl::ConfHandlerFunc RuntimeBuilderImpl::conf_handlers_[] = {
 
 RetCode RuntimeBuilderImpl::Configure(uint32_t option, ...) {
     if (option >= ORB_CONF_MAX) {
-        LOG(ERROR) << "invalid option[" << option << "] >= [" << ORB_CONF_MAX << "]";
+        LOG(ERROR) << "invalid option[" << option << "] >= [" << (uint32_t)ORB_CONF_MAX << "]";
         return RC_INVALID_VALUE;
     }
 

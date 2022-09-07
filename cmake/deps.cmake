@@ -48,7 +48,7 @@ if(NOT Git_FOUND)
     message(FATAL_ERROR "git is required.")
 endif()
 
-set(__HPCC_COMMIT__ e2c177a15d8d074b15aefc0e6dcf21ab612aa4df)
+set(__HPCC_COMMIT__ b31170dc9176c3ace8788db6601e967721ab8150)
 
 if(PPLNN_DEP_HPCC_PKG)
     FetchContent_Declare(hpcc
@@ -88,7 +88,7 @@ set(PPLCOMMON_USE_AARCH64 ${PPLNN_USE_AARCH64})
 set(PPLCOMMON_USE_ARMV7 ${PPLNN_USE_ARMV7})
 set(PPLCOMMON_USE_CUDA ${PPLNN_USE_CUDA})
 
-set(__PPLCOMMON_COMMIT__ 1f9dcfb29606029d11d4f772fb012b1debd1c8a0)
+set(__PPLCOMMON_COMMIT__ cd18ed6299d500ac379e29ba3d592beca9dd258d)
 
 if(PPLNN_DEP_PPLCOMMON_PKG)
     hpcc_declare_pkg_dep(pplcommon
