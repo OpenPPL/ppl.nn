@@ -149,6 +149,36 @@ ppl::common::RetCode concat_ndarray(
     return ppl::common::RC_SUCCESS;
 }
 
+template<typename eT, int32_t channels>
+inline void concat_n16cx_interleave_kernel(
+    const eT *src[16],
+    const int64_t &inner_start,
+    const int64_t &inner_end,
+    eT *dst)
+{
+    const int64_t c_blk = 16;
+    for (int64_t l = inner_start; l < inner_end; ++l) {
+        if (channels > 0 ) dst[l * c_blk + 0 ] = src[0 ][l * c_blk];
+        if (channels > 1 ) dst[l * c_blk + 1 ] = src[1 ][l * c_blk];
+        if (channels > 2 ) dst[l * c_blk + 2 ] = src[2 ][l * c_blk];
+        if (channels > 3 ) dst[l * c_blk + 3 ] = src[3 ][l * c_blk];
+
+        if (channels > 4 ) dst[l * c_blk + 4 ] = src[4 ][l * c_blk];
+        if (channels > 5 ) dst[l * c_blk + 5 ] = src[5 ][l * c_blk];
+        if (channels > 6 ) dst[l * c_blk + 6 ] = src[6 ][l * c_blk];
+        if (channels > 7 ) dst[l * c_blk + 7 ] = src[7 ][l * c_blk];
+
+        if (channels > 8 ) dst[l * c_blk + 8 ] = src[8 ][l * c_blk];
+        if (channels > 9 ) dst[l * c_blk + 9 ] = src[9 ][l * c_blk];
+        if (channels > 10) dst[l * c_blk + 10] = src[10][l * c_blk];
+        if (channels > 11) dst[l * c_blk + 11] = src[11][l * c_blk];
+
+        if (channels > 12) dst[l * c_blk + 12] = src[12][l * c_blk];
+        if (channels > 13) dst[l * c_blk + 13] = src[13][l * c_blk];
+        if (channels > 14) dst[l * c_blk + 14] = src[14][l * c_blk];
+        if (channels > 15) dst[l * c_blk + 15] = src[15][l * c_blk];
+    }
+}
 
 template <typename eT>
 ppl::common::RetCode concat_n16cx_interleave_channels(
@@ -169,54 +199,90 @@ ppl::common::RetCode concat_n16cx_interleave_channels(
         inner_dim *= src_shape_list[0]->GetDim(i);
     }
 
-    std::vector<int64_t> dst_offset(num_src);
-    dst_offset[0]       = 0;
-    for (int32_t i = 1; i < num_src; ++i) {
+    std::vector<int64_t> dst_offset(num_src + 1);
+    dst_offset[0] = 0;
+    for (int32_t i = 1; i <= num_src; ++i) {
         dst_offset[i] = dst_offset[i - 1] + src_shape_list[i - 1]->GetDim(c_dim_idx);
     }
 
-    const int64_t c_blk        = 16;
-    const int64_t dst_channels = dst_offset[num_src - 1] + src_shape_list[num_src - 1]->GetDim(c_dim_idx);
-    const int64_t padded_oc    = round_up(dst_channels, c_blk);
+    const int64_t c_blk              = 16;
+    const int64_t dst_channels       = dst_offset[num_src];
+    const int64_t padded_oc          = round_up(dst_channels, c_blk);
+    const int64_t INNER_PALL_BLK_LEN = inner_dim / (PPL_OMP_NUM_THREADS() / (outer_dim * padded_oc / c_blk) + 1) + 1;
 
-    const int64_t num_threads = min((int64_t)PPL_OMP_MAX_THREADS(), inner_dim);
+#ifndef PPL_USE_X86_OMP_COLLAPSE
     PRAGMA_OMP_PARALLEL_FOR()
-    for (int64_t thread_id = 0; thread_id < num_threads; thread_id++) {
-        const int64_t inner_dim_per_thread = div_up(inner_dim, num_threads);
-        const int64_t start_inner_dim      = inner_dim_per_thread * thread_id;
-        const int64_t end_inner_dim        = min(inner_dim_per_thread * (thread_id + 1), inner_dim);
-
-        if (start_inner_dim < end_inner_dim) {
-            for (int64_t i = 0; i < outer_dim; i++) {
-                for (int32_t n = 0; n < num_src; n++) {
-                    const int32_t src_channels = src_shape_list[n]->GetDim(c_dim_idx);
-                    const int32_t padded_ic    = round_up(src_channels, c_blk);
-                    for (int32_t ic = 0; ic < padded_ic; ic += c_blk) {
-                        const int32_t oc = dst_offset[n] + ic;
-                        const eT *p_src   = src_list[n] + i * padded_ic * inner_dim + ic * inner_dim;
-                        eT *p_dst         = dst + i * padded_oc * inner_dim + round(oc, c_blk) * inner_dim;
-                        if (oc % c_blk == 0) { // no interleave on this 16c
-                            memcpy(p_dst + start_inner_dim * c_blk, p_src + start_inner_dim * c_blk, (end_inner_dim - start_inner_dim) * c_blk * sizeof(eT));
-                        } else { // has interleave on this 16c
-                            const int32_t c_offset = c_blk - (oc % c_blk);
-                            const int32_t c_end    = min(src_channels - ic, (int32_t)c_blk);
-                            eT *p_dst_next_16c      = p_dst + c_blk * inner_dim;
-                            for (int64_t id = start_inner_dim; id < end_inner_dim; id++) {
-                                // interleave copy
-                                for (int32_t c = 0; c < c_offset; c++) {
-                                    p_dst[id * c_blk + c_blk - c_offset + c] = p_src[id * c_blk + c];
-                                }
-                                for (int32_t c = c_offset; c < c_end; c++) {
-                                    p_dst_next_16c[id * c_blk + c - c_offset] = p_src[id * c_blk + c];
-                                }
+#else
+    PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(3)
+#endif
+    for (int64_t i = 0; i < outer_dim; i++) {
+        for (int64_t oc = 0; oc < dst_channels; oc += c_blk) {
+            for (int64_t inner = 0; inner < inner_dim; inner += INNER_PALL_BLK_LEN) {
+                const int64_t inner_start = inner;
+                const int64_t inner_end   = min(inner + INNER_PALL_BLK_LEN, inner_dim);
+                const int64_t oc_len_eff  = min(dst_channels - oc, c_blk);
+                eT *base_dst              = dst + i * padded_oc * inner_dim + oc * inner_dim;
+                const eT *base_src[16]    = {0};
+                
+                int32_t ic_num   = 0;
+                int32_t pre_id   = -1;
+                int32_t first_ic = -1;
+                for (int64_t j = 0; j < oc_len_eff; j++) {
+                    int64_t ic_id = 0;
+                    int64_t ic    = 0;
+                    for (int64_t idx = 0; idx < num_src; idx++) {
+                        if (oc + j < dst_offset[idx + 1]) {
+                            ic_id = idx;
+                            ic    = oc + j - dst_offset[idx];
+                            if (ic_id != pre_id) {
+                                ic_num++;
+                                pre_id = ic_id;
                             }
+                            if (j == 0) {
+                                first_ic = ic;
+                            }
+                            break;
                         }
                     }
+                    const int32_t src_channels   = src_shape_list[ic_id]->GetDim(c_dim_idx);
+                    const int64_t padded_ic      = round_up(src_channels, c_blk);
+                    const int64_t padded_ic_down = round(ic, c_blk);
+                    base_src[j]                  = src_list[ic_id] + i * padded_ic * inner_dim + padded_ic_down * inner_dim + ic % c_blk;
                 }
+
+                if (base_src[0] + 15 == base_src[15]) {
+                    memcpy(base_dst + inner_start * c_blk, base_src[0] + inner_start * c_blk, (inner_end - inner_start) * c_blk * sizeof(eT));
+                    continue;
+                }
+
+                if (base_src[15] != 0 && ic_num == 1) {
+                    const int32_t c_offset = c_blk - (first_ic % c_blk);
+                    for (int64_t l = inner_start; l < inner_end; l++) {
+                        memcpy(base_dst + l * c_blk,            base_src[0]        + l * c_blk, c_offset * sizeof(eT));
+                        memcpy(base_dst + l * c_blk + c_offset, base_src[c_offset] + l * c_blk, (c_blk - c_offset) * sizeof(eT));
+                    }
+                    continue;
+                }
+
+                if      (oc_len_eff == 16) concat_n16cx_interleave_kernel<eT, 16>(base_src, inner_start, inner_end, base_dst);
+                else if (oc_len_eff == 15) concat_n16cx_interleave_kernel<eT, 15>(base_src, inner_start, inner_end, base_dst);
+                else if (oc_len_eff == 14) concat_n16cx_interleave_kernel<eT, 14>(base_src, inner_start, inner_end, base_dst);
+                else if (oc_len_eff == 13) concat_n16cx_interleave_kernel<eT, 13>(base_src, inner_start, inner_end, base_dst);
+                else if (oc_len_eff == 12) concat_n16cx_interleave_kernel<eT, 12>(base_src, inner_start, inner_end, base_dst);
+                else if (oc_len_eff == 11) concat_n16cx_interleave_kernel<eT, 11>(base_src, inner_start, inner_end, base_dst);
+                else if (oc_len_eff == 10) concat_n16cx_interleave_kernel<eT, 10>(base_src, inner_start, inner_end, base_dst);
+                else if (oc_len_eff == 9 ) concat_n16cx_interleave_kernel<eT, 9 >(base_src, inner_start, inner_end, base_dst);
+                else if (oc_len_eff == 8 ) concat_n16cx_interleave_kernel<eT, 8 >(base_src, inner_start, inner_end, base_dst);
+                else if (oc_len_eff == 7 ) concat_n16cx_interleave_kernel<eT, 7 >(base_src, inner_start, inner_end, base_dst);
+                else if (oc_len_eff == 6 ) concat_n16cx_interleave_kernel<eT, 6 >(base_src, inner_start, inner_end, base_dst);
+                else if (oc_len_eff == 5 ) concat_n16cx_interleave_kernel<eT, 5 >(base_src, inner_start, inner_end, base_dst);
+                else if (oc_len_eff == 4 ) concat_n16cx_interleave_kernel<eT, 4 >(base_src, inner_start, inner_end, base_dst);
+                else if (oc_len_eff == 3 ) concat_n16cx_interleave_kernel<eT, 3 >(base_src, inner_start, inner_end, base_dst);
+                else if (oc_len_eff == 2 ) concat_n16cx_interleave_kernel<eT, 2 >(base_src, inner_start, inner_end, base_dst);
+                else if (oc_len_eff == 1 ) concat_n16cx_interleave_kernel<eT, 1 >(base_src, inner_start, inner_end, base_dst);
             }
         }
     }
-
     return ppl::common::RC_SUCCESS;
 }
 
