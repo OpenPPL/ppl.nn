@@ -49,6 +49,10 @@ void RegisterRuntime(pybind11::module* m) {
              [](const PyRuntime& runtime, uint32_t idx) -> PyTensor {
                  return PyTensor(runtime.ptr->GetOutputTensor(idx));
              })
+        .def("GetTensor",
+             [](const PyRuntime& runtime, const char* name) -> PyTensor {
+                 return PyTensor(runtime.ptr->GetTensor(name));
+             })
         .def("GetDeviceContextCount",
              [](const PyRuntime& runtime) -> uint32_t {
                  return runtime.ptr->GetDeviceContextCount();

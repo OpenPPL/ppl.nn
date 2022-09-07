@@ -239,6 +239,12 @@ ppl::common::RetCode GetProfilingStatistics(ProfilingStatistics*) const;
 
 Returns profiling statistics of each kernel. Note that this function is available if `PPLNN_ENABLE_KERNEL_PROFILING` is enable.
 
+```c++
+Tensor* GetTensor(const char* name) const;
+```
+
+Returns the specified tensor with `name`, or nullptr if not found.
+
 ## Tensor
 
 Defined in [include/ppl/nn/runtime/tensor.h](../../include/ppl/nn/runtime/tensor.h).

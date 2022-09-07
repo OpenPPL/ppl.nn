@@ -45,3 +45,13 @@ TEST(RuntimeImplTest, init) {
     vector<unique_ptr<EngineImpl>> engines;
     CreateRuntimeImpl(&engines, &rt);
 }
+
+TEST(RuntimeImplTest, GetTensor) {
+    RuntimeImpl rt;
+    vector<unique_ptr<EngineImpl>> engines;
+    CreateRuntimeImpl(&engines, &rt);
+
+    auto tensor = rt.GetTensor("in1");
+    EXPECT_NE(nullptr, tensor);
+    EXPECT_EQ(string("in1"), string(tensor->GetName()));
+}

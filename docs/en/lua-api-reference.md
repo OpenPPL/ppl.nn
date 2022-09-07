@@ -136,6 +136,15 @@ output_tensor = Runtime:GetOutputTensor(idx)
 
 Returns the output tensor in position `idx`, which is in range [0, output_count).
 
+```lua
+tensor = Runtime:GetTensor(name)
+if tensor == nil then
+    -- do something
+end
+```
+
+Returns the specified tensor with `name`.
+
 ## Device Specific APIs in `luappl.nn`
 
 ### x86
