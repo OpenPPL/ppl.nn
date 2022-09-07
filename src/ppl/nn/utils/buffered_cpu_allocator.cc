@@ -24,8 +24,7 @@ using namespace ppl::common;
 #ifdef _MSC_VER
 #include <windows.h>
 #else
-#include <errno.h>
-#include <sys/sysinfo.h> // sysinfo
+#include <unistd.h> // sysconf
 #include <string.h> // strerror
 #include <sys/mman.h>
 #endif
@@ -71,16 +70,15 @@ RetCode BufferedCpuAllocator::Init() {
 
     LOG(DEBUG) << "reserved [" << status.ullTotalPhys << "] bytes of virtual address from [" << base_ << "].";
 #else
-    struct sysinfo s;
-    sysinfo(&s);
+    auto totalram = sysconf(_SC_PAGE_SIZE) * sysconf(_SC_PHYS_PAGES);
 
-    base_ = mmap(nullptr, s.totalram, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    base_ = mmap(nullptr, totalram, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (base_ == MAP_FAILED) {
-        LOG(ERROR) << "mmap reserve [" << s.totalram << "] bytes failed: " << strerror(errno);
+        LOG(ERROR) << "mmap reserve [" << totalram << "] bytes failed: " << strerror(errno);
         return RC_OTHER_ERROR;
     }
 
-    LOG(DEBUG) << "reserved [" << s.totalram << "] bytes of virtual address from [" << base_ << "].";
+    LOG(DEBUG) << "reserved [" << totalram << "] bytes of virtual address from [" << base_ << "].";
 #endif
 
     cursor_ = base_;
