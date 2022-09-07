@@ -79,7 +79,7 @@ public:
         return static_cast<TensorImpl*>(edgeid2object_[eid]);
     }
 
-    Tensor* GetTensorByName(const char* name) const override;
+    Tensor* GetTensor(const char* name) const override;
 
     ppl::common::RetCode Run() override;
 

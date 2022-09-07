@@ -70,7 +70,7 @@ public:
        @note the specified tensor(except for input/output tensors) MUST be reserved first (usually by calling
        RuntimeBuilder::Configure). returns nullptr otherwise.
     */
-    virtual Tensor* GetTensorByName(const char*) const = 0;
+    virtual Tensor* GetTensor(const char*) const = 0;
 
     /** @brief get the number of `DeviceContext` used by this `Runtime` instance */
     virtual uint32_t GetDeviceContextCount() const = 0;

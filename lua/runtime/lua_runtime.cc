@@ -49,6 +49,13 @@ void RegisterRuntime(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTab
                 return lstate->CreateNil();
             }
             return tensor_class.CreateInstance(tensor);
+        })
+        .DefMember("GetTensor", [tensor_class, lstate](const LuaRuntime* lruntime, const char* name) -> LuaObject {
+            auto tensor = lruntime->ptr->GetTensor(name);
+            if (!tensor) {
+                return lstate->CreateNil();
+            }
+            return tensor_class.CreateInstance(tensor);
         });
 
     lmodule->Set("Runtime", lclass);

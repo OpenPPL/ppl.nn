@@ -338,7 +338,7 @@ RetCode RuntimeImpl::GetProfilingStatistics(ProfilingStatistics* stat) const {
 #endif
 }
 
-Tensor* RuntimeImpl::GetTensorByName(const char* name) const {
+Tensor* RuntimeImpl::GetTensor(const char* name) const {
     const string name_s(name);
     auto ref = reserved_tensors_.find(name_s);
     if (ref != reserved_tensors_.end()) {

@@ -158,6 +158,14 @@ dev_ctx = Runtime::GetDeviceContext(idx)
 
 Returns the `DeviceContext` at position `idx`. Note that `idx` should be less than `GetDeviceContextCount()`.
 
+```python
+tensor = Runtime::GetTensor(name)
+if not tensor:
+   # do something
+```
+
+Returns the specified tensor with `name`.
+
 ## Device Specific APIs in `pyppl.nn`
 
 ### x86
