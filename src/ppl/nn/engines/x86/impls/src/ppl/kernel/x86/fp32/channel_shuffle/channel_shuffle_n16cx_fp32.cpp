@@ -85,7 +85,7 @@ ppl::common::RetCode channel_shuffle_n16cx_fp32(
             if      (oc_len_eff == 16) channel_shuffle_n16cx_kernel<16>(base_src, _2D, base_dst);
             else if (oc_len_eff == 15) channel_shuffle_n16cx_kernel<15>(base_src, _2D, base_dst);
             else if (oc_len_eff == 14) channel_shuffle_n16cx_kernel<14>(base_src, _2D, base_dst);
-            else if (oc_len_eff == 15) channel_shuffle_n16cx_kernel<13>(base_src, _2D, base_dst);
+            else if (oc_len_eff == 13) channel_shuffle_n16cx_kernel<13>(base_src, _2D, base_dst);
             else if (oc_len_eff == 12) channel_shuffle_n16cx_kernel<12>(base_src, _2D, base_dst);
             else if (oc_len_eff == 11) channel_shuffle_n16cx_kernel<11>(base_src, _2D, base_dst);
             else if (oc_len_eff == 10) channel_shuffle_n16cx_kernel<10>(base_src, _2D, base_dst);
