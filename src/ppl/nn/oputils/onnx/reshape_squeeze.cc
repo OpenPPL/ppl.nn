@@ -83,7 +83,7 @@ RetCode ReshapeSqueeze(InputOutputInfo* info, const ir::Attr* arg) {
             }
         }
         if (output_axes.empty()) {
-            output->Reshape({1});
+            output->ReshapeAsScalar();
         } else {
             output->Reshape(output_axes);
         }
