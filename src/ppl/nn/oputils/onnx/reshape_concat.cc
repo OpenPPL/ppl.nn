@@ -25,6 +25,14 @@ namespace ppl { namespace nn { namespace onnx {
 RetCode ReshapeConcat(InputOutputInfo* info, const ir::Attr* arg) {
     auto param = static_cast<const ConcatParam*>(arg);
     const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape();
+    for (uint32_t i = 1; i < info->GetInputCount(); i++) {
+        if (in_shape0.GetDimCount() != info->GetInput<TensorImpl>(i)->GetShape()->GetDimCount()) {
+            LOG(DEBUG) << "ERROR: input[" << 0 << "]'s dimCount's value:" << in_shape0.GetDimCount()
+                       << " != input[" << i << "]'s dimCound's value:" << info->GetInput<TensorImpl>(i)->GetShape()->GetDimCount();
+            return RC_INVALID_VALUE;
+        }
+    }
+
     uint32_t fixed_axis =
         param->axis >= 0 ? param->axis : param->axis + info->GetInput<TensorImpl>(0)->GetShape()->GetDimCount();
 
