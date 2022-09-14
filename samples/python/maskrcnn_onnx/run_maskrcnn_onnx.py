@@ -157,7 +157,7 @@ class PPLModel(object):
             logging.error("init OnnxRuntimeBuilder failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
 
-        resources = RuntimeBuilderResources()
+        resources = pplnn.onnx.RuntimeBuilderResources()
         resources.engines = self._engines
         status = runtime_builder.SetResources(resources)
         if status != pplcommon.RC_SUCCESS:
