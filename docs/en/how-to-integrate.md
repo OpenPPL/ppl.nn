@@ -41,7 +41,6 @@ Both public and internal APIs are avaliable in this form. **NOTE** internal APIs
 * `PPLNN_SOURCE_EXTERNAL_LINK_LIBRARIES`: extra link libraries when building your code
 * `PPLNN_SOURCE_EXTERNAL_COMPILE_DEFINITIONS`: extra compile definitions when building your code
 * `PPLNN_BINARY_EXTERNAL_LINK_LIBRARIES`: extra link libraries needed by your code when linking `ppl.nn`
-* `PPLNN_BINARY_EXTERNAL_COMPILE_DEFINITIONS`: extra compile definitions needed by your code when linking `ppl.nn`
 
 In this form you don't need to write extra configurations and `.o`s are packed into the `ppl.nn` libraries.
 
@@ -52,7 +51,6 @@ Example:
 ```cmake
 set(PPLNN_SOURCE_EXTERNAL_SOURCES foo.cc bar.cc)
 set(PPLNN_SOURCE_EXTERNAL_INCLUDE_DIRECTORIES /path/to/include)
-set(PPLNN_BINARY_EXTERNAL_LINK_LIBRARIES baz_static)
 
 set(PPLNN_VERSION_STR '1.0.0')
 set(PPLNN_COMMIT_STR '1e1065')
