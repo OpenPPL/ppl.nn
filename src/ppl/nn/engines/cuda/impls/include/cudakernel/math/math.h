@@ -474,4 +474,93 @@ struct Math<half8, half8, half8> {
         return res;
     }
 };
+
+template <>
+struct Math<int8_t, float, float> {
+    static inline __device__ float add(int8_t lhs, int8_t rhs)
+    {
+        return (float)(lhs) + (float)(rhs);
+    }
+    static inline __device__ float sub(int8_t lhs, int8_t rhs)
+    {
+        return (float)(lhs) - (float)(rhs);
+    }
+    static inline __device__ float mul(int8_t lhs, int8_t rhs)
+    {
+        return (float)(lhs) * (float)(rhs);
+    }
+    static inline __device__ float div(int8_t lhs, int8_t rhs)
+    {
+        return (float)(lhs) / (float)(rhs);
+    }
+
+    static inline __device__ float add(float lhs, int8_t rhs)
+    {
+        return (lhs + (float)(rhs));
+    }
+    static inline __device__ float sub(float lhs, int8_t rhs)
+    {
+        return (lhs - (float)(rhs));
+    }
+    static inline __device__ float mul(float lhs, int8_t rhs)
+    {
+        return (lhs * (float)(rhs));
+    }
+    static inline __device__ float div(float lhs, int8_t rhs)
+    {
+        return (lhs / (float)(rhs));
+    }
+
+    static inline __device__ float add(float lhs, float rhs)
+    {
+        return (lhs + (rhs));
+    }
+    static inline __device__ float sub(float lhs, float rhs)
+    {
+        return (lhs - (rhs));
+    }
+    static inline __device__ float mul(float lhs, float rhs)
+    {
+        return (lhs * (rhs));
+    }
+    static inline __device__ float div(float lhs, float rhs)
+    {
+        return (lhs / (rhs));
+    }
+
+    static inline __device__ int8_t neg(int8_t v)
+    {
+        return -v;
+    }
+    static inline __device__ float neg(float v)
+    {
+        return -v;
+    }
+
+    static inline __device__ bool lt(int8_t lhs, int8_t rhs)
+    {
+        return lhs < rhs;
+    }
+    static inline __device__ bool le(int8_t lhs, int8_t rhs)
+    {
+        return lhs <= rhs;
+    }
+    static inline __device__ bool gt(int8_t lhs, int8_t rhs)
+    {
+        return lhs > rhs;
+    }
+    static inline __device__ bool ge(int8_t lhs, int8_t rhs)
+    {
+        return lhs >= rhs;
+    }
+    static inline __device__ bool eq(int8_t lhs, int8_t rhs)
+    {
+        return lhs == rhs;
+    }
+    static inline __device__ float zero()
+    {
+        return (float)0;
+    }
+};
+
 #endif

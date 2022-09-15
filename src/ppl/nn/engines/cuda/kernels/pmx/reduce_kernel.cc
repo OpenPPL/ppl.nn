@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/cuda/kernels/pmx/reduce_kernel.h"
+#include "ppl/common/destructor.h"
 
 #include <numeric>
 
@@ -23,7 +24,29 @@
 
 namespace ppl { namespace nn { namespace cuda {
 
+uint64_t ReduceKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
+    auto y = ctx.GetOutput<TensorImpl>(0);
+    if (y->GetShape()->GetDataType() == ppl::common::DATATYPE_INT8) {
+        return sizeof(float) * y->GetShape()->CalcElementsExcludingPadding();
+    } else {
+        return 0;
+    }
+}
+
 ppl::common::RetCode ReduceKernel::DoExecute(KernelExecContext* ctx) {
+    BufferDesc tmp_buffer_desc;
+    auto tmp_buffer_bytes = CalcTmpBufferSize(*ctx);
+    auto status = GetCudaDevice()->AllocTmpBuffer(tmp_buffer_bytes, &tmp_buffer_desc);
+    if (status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_bytes << "] for kernel[" << GetName()
+                   << "] failed: " << ppl::common::GetRetCodeStr(status);
+        return status;
+    }
+    ppl::common::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+        GetCudaDevice()->FreeTmpBuffer(&tmp_buffer_desc);
+    });
+    auto tmp_buffer = tmp_buffer_desc.addr;
+
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
     ReduceParam param;
@@ -71,10 +94,13 @@ ppl::common::RetCode ReduceKernel::DoExecute(KernelExecContext* ctx) {
                              input_shape.GetDims() + dim_count, n_inner, std::multiplies<uint32_t>());
     }
 
+    auto input_quant = GetCommonParam()->cuda_tensor_info->at(input->GetEdge()->GetId());
+    auto output_quant = GetCommonParam()->cuda_tensor_info->at(output->GetEdge()->GetId());
+    QuantParamCuda qparam(input_quant.zero_point[0], output_quant.zero_point[0], input_quant.scale[0], output_quant.scale[0]);
     PPLReduceDimDes des(n_inner, n_reduce, n_outer);
-    ppl::common::RetCode status =
+    status =
         PPLCUDAReduceForwardImp(GetStream(), param, des, input->GetShape(), input->GetBufferPtr(), output->GetShape(),
-                                output->GetBufferPtr());
+                                output->GetBufferPtr(), tmp_buffer, &qparam);
     return status;
 }
 
