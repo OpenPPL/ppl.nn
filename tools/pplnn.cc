@@ -865,45 +865,49 @@ static bool SaveOutputsOneByOne(const Runtime* runtime) {
 }
 
 static void PrintInputOutputInfo(const Runtime* runtime) {
-    LOG(INFO) << "----- input info -----";
+    cout << "----- input info -----" << endl;
     for (uint32_t i = 0; i < runtime->GetInputCount(); ++i) {
         auto tensor = runtime->GetInputTensor(i);
-        LOG(INFO) << "input[" << i << "]:";
-        LOG(INFO) << "    name: " << tensor->GetName();
+        cout << "input[" << i << "]:" << endl;
+        cout << "    name: " << tensor->GetName() << endl;
 
         string dims_str;
         auto shape = tensor->GetShape();
         for (uint32_t j = 0; j < shape->GetDimCount(); ++j) {
             dims_str += " " + std::to_string(shape->GetDim(j));
         }
-        LOG(INFO) << "    dim(s):" << dims_str;
+        cout << "    dim(s):" << dims_str << endl;
 
-        LOG(INFO) << "    DataType: " << GetDataTypeStr(shape->GetDataType());
-        LOG(INFO) << "    DataFormat: " << GetDataFormatStr(shape->GetDataFormat());
-        LOG(INFO) << "    NumBytesIncludePadding: " << shape->CalcBytesIncludingPadding();
-        LOG(INFO) << "    NumBytesExcludePadding: " << shape->CalcBytesExcludingPadding();
+        cout << "    data type: " << GetDataTypeStr(shape->GetDataType()) << endl;
+        cout << "    data format: " << GetDataFormatStr(shape->GetDataFormat()) << endl;
+        cout << "    byte(s) excluding padding: " << shape->CalcBytesExcludingPadding() << endl;
     }
 
-    LOG(INFO) << "----- output info -----";
+    cout << "----- output info -----" << endl;
     for (uint32_t i = 0; i < runtime->GetOutputCount(); ++i) {
         auto tensor = runtime->GetOutputTensor(i);
-        LOG(INFO) << "output[" << i << "]:";
-        LOG(INFO) << "    name: " << tensor->GetName();
+        cout << "output[" << i << "]:" << endl;
+        cout << "    name: " << tensor->GetName() << endl;
 
         string dims_str;
         auto shape = tensor->GetShape();
         for (uint32_t j = 0; j < shape->GetDimCount(); ++j) {
             dims_str += " " + std::to_string(shape->GetDim(j));
         }
-        LOG(INFO) << "    dim(s):" << dims_str;
+        cout << "    dim(s):" << dims_str << endl;
 
-        LOG(INFO) << "    DataType: " << GetDataTypeStr(shape->GetDataType());
-        LOG(INFO) << "    DataFormat: " << GetDataFormatStr(shape->GetDataFormat());
-        LOG(INFO) << "    NumBytesIncludePadding: " << shape->CalcBytesIncludingPadding();
-        LOG(INFO) << "    NumBytesExcludePadding: " << shape->CalcBytesExcludingPadding();
+        cout << "    data type: " << GetDataTypeStr(shape->GetDataType()) << endl;
+        cout << "    data format: " << GetDataFormatStr(shape->GetDataFormat()) << endl;
+        cout << "    byte(s) excluding padding: " << shape->CalcBytesExcludingPadding() << endl;
+
+        datatype_t saved_data_type = shape->GetDataType();
+        if (saved_data_type == DATATYPE_FLOAT16) {
+            saved_data_type = DATATYPE_FLOAT32;
+        }
+        cout << "    saved data type: " << GetDataTypeStr(saved_data_type) << endl;
     }
 
-    LOG(INFO) << "----------------------";
+    cout << "----------------------" << endl;
 }
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING

@@ -491,30 +491,43 @@ def SaveOutputsOneByOne(save_data_dir, runtime):
 def CalcBytes(dims, item_size):
     return item_size * CalcElementCount(dims)
 
+def Dims2Str(dims):
+    ret = ""
+    for i in range(0, len(dims)):
+        ret += " " + str(dims[i])
+    return ret
+
 def PrintInputOutputInfo(runtime):
-    logging.info("----- input info -----")
+    print("----- input info -----")
     for i in range(runtime.GetInputCount()):
         tensor = runtime.GetInputTensor(i)
         shape = tensor.GetShape()
         dims = shape.GetDims()
-        logging.info("input[" + str(i) + "]")
-        logging.info("    name: " + tensor.GetName())
-        logging.info("    dim(s): " + str(dims))
-        logging.info("    type: " + pplcommon.GetDataTypeStr(shape.GetDataType()))
-        logging.info("    format: " + pplcommon.GetDataFormatStr(shape.GetDataFormat()))
-        logging.info("    byte(s) excluding padding: " + str(CalcBytes(dims, pplcommon.GetSizeOfDataType(shape.GetDataType()))))
+        print("input[" + str(i) + "]:")
+        print("    name: " + tensor.GetName())
+        print("    dim(s):" + Dims2Str(dims))
+        print("    data type: " + pplcommon.GetDataTypeStr(shape.GetDataType()))
+        print("    data format: " + pplcommon.GetDataFormatStr(shape.GetDataFormat()))
+        print("    byte(s) excluding padding: " + str(CalcBytes(dims, pplcommon.GetSizeOfDataType(shape.GetDataType()))))
 
-    logging.info("----- output info -----")
+    print("----- output info -----")
     for i in range(runtime.GetOutputCount()):
         tensor = runtime.GetOutputTensor(i)
         shape = tensor.GetShape()
         dims = shape.GetDims()
-        logging.info("output[" + str(i) + "]")
-        logging.info("    name: " + tensor.GetName())
-        logging.info("    dim(s): " + str(dims))
-        logging.info("    type: " + pplcommon.GetDataTypeStr(shape.GetDataType()))
-        logging.info("    format: " + pplcommon.GetDataFormatStr(shape.GetDataFormat()))
-        logging.info("    byte(s) excluding padding: " + str(CalcBytes(dims, pplcommon.GetSizeOfDataType(shape.GetDataType()))))
+        print("output[" + str(i) + "]:")
+        print("    name: " + tensor.GetName())
+        print("    dim(s):" + Dims2Str(dims))
+        print("    data type: " + pplcommon.GetDataTypeStr(shape.GetDataType()))
+        print("    data format: " + pplcommon.GetDataFormatStr(shape.GetDataFormat()))
+        print("    byte(s) excluding padding: " + str(CalcBytes(dims, pplcommon.GetSizeOfDataType(shape.GetDataType()))))
+
+        saved_data_type = shape.GetDataType()
+        if saved_data_type == pplcommon.DATATYPE_FLOAT16: # convert fp16 to fp32 when saving to file
+            saved_data_type = pplcommon.DATATYPE_FLOAT32
+        print("    saved data type: " + pplcommon.GetDataTypeStr(saved_data_type))
+
+    print("----------------------")
 
 # ---------------------------------------------------------------------------- #
 

@@ -192,44 +192,42 @@ end
 
 function PrintInputOutputInfo(runtime)
     function Dims2Str(dims)
-        if next(dims) == nil then
-            return "[]"
+        local ret = ""
+        for i = 1, #dims do
+            ret = ret .. " " .. tostring(dims[i])
         end
-
-        local content = "[" .. tostring(dims[1])
-        for i = 2, #dims do
-            content = content .. ", " .. tostring(dims[i])
-        end
-        return content .. "]"
+        return ret
     end
 
-    logging.info("----- input info -----")
+    print("----- input info -----")
     for i = 1, runtime:GetInputCount() do
         local tensor = runtime:GetInputTensor(i - 1)
         local shape = tensor:GetShape()
         local dims = shape:GetDims()
         local data_type = shape:GetDataType()
-        logging.info("input[" .. tostring(i - 1) .. "]")
-        logging.info("    name: " .. tensor:GetName())
-        logging.info("    dim(s): " .. Dims2Str(dims))
-        logging.info("    type: " .. pplcommon.GetDataTypeStr(data_type))
-        logging.info("    format: " .. pplcommon.GetDataFormatStr(shape:GetDataFormat()))
-        logging.info("    byte(s) excluding padding: " .. tostring(CalcBytes(dims, pplcommon.GetSizeOfDataType(data_type))))
+        print("input[" .. tostring(i - 1) .. "]")
+        print("    name: " .. tensor:GetName())
+        print("    dim(s):" .. Dims2Str(dims))
+        print("    data type: " .. pplcommon.GetDataTypeStr(data_type))
+        print("    data format: " .. pplcommon.GetDataFormatStr(shape:GetDataFormat()))
+        print("    byte(s) excluding padding: " .. tostring(CalcBytes(dims, pplcommon.GetSizeOfDataType(data_type))))
     end
 
-    logging.info("----- output info -----")
+    print("----- output info -----")
     for i = 1, runtime:GetOutputCount() do
         local tensor = runtime:GetOutputTensor(i - 1)
         local shape = tensor:GetShape()
         local dims = shape:GetDims()
         local data_type = shape:GetDataType()
-        logging.info("output[" .. tostring(i - 1) .. "]")
-        logging.info("    name: " .. tensor:GetName())
-        logging.info("    dim(s): " .. Dims2Str(dims))
-        logging.info("    type: " .. pplcommon.GetDataTypeStr(data_type))
-        logging.info("    format: " .. pplcommon.GetDataFormatStr(shape:GetDataFormat()))
-        logging.info("    byte(s) excluding padding: " .. tostring(CalcBytes(dims, pplcommon.GetSizeOfDataType(data_type))))
+        print("output[" .. tostring(i - 1) .. "]")
+        print("    name: " .. tensor:GetName())
+        print("    dim(s):" .. Dims2Str(dims))
+        print("    type: " .. pplcommon.GetDataTypeStr(data_type))
+        print("    format: " .. pplcommon.GetDataFormatStr(shape:GetDataFormat()))
+        print("    byte(s) excluding padding: " .. tostring(CalcBytes(dims, pplcommon.GetSizeOfDataType(data_type))))
     end
+
+    print("----------------------")
 end
 
 ------------------------------------ main --------------------------------------
