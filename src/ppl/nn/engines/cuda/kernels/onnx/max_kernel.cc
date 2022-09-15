@@ -39,9 +39,11 @@ ppl::common::RetCode MaxKernel::DoExecute(KernelExecContext* ctx) {
     if (input_count > 2) {
         for (int it = 2; it < input_count; ++it) {
             auto input = ctx->GetInput<TensorImpl>(it);
+            auto input_id_n = input->GetEdge()->GetId();
+            auto input_quant_n = GetCommonParam()->cuda_tensor_info->at(input_id_n);
             status = PPLCUDAArithMeticMaxForwardImp(GetStream(), output->GetShape(), output->GetBufferPtr(),
                                                     input->GetShape(), input->GetBufferPtr(), output->GetShape(),
-                                                    output->GetBufferPtr(), input_quant0.scale[0], input_quant1.scale[0], output_quant.scale[0]);
+                                                    output->GetBufferPtr(), output_quant.scale[0], input_quant_n.scale[0], output_quant.scale[0]);
         }
     }
     return status;
