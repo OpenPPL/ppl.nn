@@ -23,6 +23,8 @@
 #include "ppl/nn/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "cudakernel/common/common.cuh"
+#include "ppl/nn/engines/cuda/params/quant_param_cuda.h"
+#include "ppl/nn/engines/cuda/impls/src/reformat/cvt_int8_float.cuh"
 
 template <typename T>
 __device__ inline T __ldg_ver_ctrl(T* ptr) {
@@ -70,14 +72,74 @@ ppl::common::RetCode PPLCUDASoftmaxForwardImp(
     nd_shape.SetDim(0, N);
     nd_shape.SetDim(1, R);
     nd_shape.SetDim(2, D);
-    status = PPLCUDAArithMeticSubForwardImp(stream, &nd_shape, input, &max_sum_shape, max_sum_output, &nd_shape, output,1,1,1);
+    status = PPLCUDAArithMeticSubForwardImp(stream, &nd_shape, input, &max_sum_shape, max_sum_output, &nd_shape, output);
     // exp
     status                 = PPLCUDAExpForwardImp(stream, &nd_shape, output, &nd_shape, output);
     // reduce sum
     ReduceParam reduce_sum = ReduceSum;
     status = PPLCUDAReduceForwardImp(stream, reduce_sum, reduce_desc, &nd_shape, output, &max_sum_shape, max_sum_output);
     //div
-    status = PPLCUDAArithMeticDivForwardImp(stream, &nd_shape, output, &max_sum_shape, max_sum_output, &nd_shape, output,1,1,1);
+    status = PPLCUDAArithMeticDivForwardImp(stream, &nd_shape, output, &max_sum_shape, max_sum_output, &nd_shape, output);
+    return status;
+}
+
+__global__ void __launch_bounds__(256) ppl_cukernel_softmax_int8(
+    const int8_t* input, int8_t* output, int max_int8,
+    int outer, int axis_width, int inner,
+    ppl::nn::cuda::QuantParamCuda qparam) {
+    int tid = threadIdx.x;
+    int inner_idx = blockIdx.x;
+    int out_idx = blockIdx.y;
+    __shared__ float shared[256];
+    shared[tid] = 0.f;
+    float max_val = _int82float(max_int8, qparam.i_step, qparam.i_zero_point); 
+    for(int id = tid; tid < axis_width; tid += blockDim.x) {
+        if(id < axis_width) {
+            uint64_t in_index = out_idx * axis_width * inner +
+                id * inner + inner_idx;
+            float in_val  = _int82float(input[in_index], qparam.i_step, qparam.i_zero_point);
+            //calculate each c exp sum
+            shared[tid] += expf(in_val - max_val);
+            
+        }
+    }
+    //accumulate all c exp sum
+    __syncwarp();
+    float exp_sum = BlockReduceSum(shared[tid]);
+
+    for(int id = tid; tid < axis_width; tid += blockDim.x) {
+        if(id < axis_width) {
+            uint64_t in_index = out_idx * axis_width * inner +
+                id * inner + inner_idx;
+            //calculate output
+            float in_val  = _int82float(input[in_index], qparam.i_step, qparam.i_zero_point);
+            float out_val = expf(in_val - max_val) / exp_sum;
+            output[in_index] = _float2int8(out_val, qparam.o_step, qparam.o_zero_point);
+        }
+    }
+}
+
+ppl::common::RetCode PPLCUDASoftmaxForwardImpInt8(
+    cudaStream_t stream,
+    const ppl::nn::TensorShape* input_shape,
+    const void* input,
+    const ppl::nn::TensorShape* output_shape,
+    void* output,
+    void* temp_buffer,
+    int axis,
+    const ppl::nn::cuda::QuantParamCuda* qparam)
+{
+    ppl::common::RetCode status = ppl::common::RC_SUCCESS;
+    int outer = input_shape->CalcElementsToDimensionIncludingPadding(axis);
+    int axis_width = input_shape->GetDim(axis);
+    int inner = input_shape->CalcElementsFromDimensionIncludingPadding(axis + 1);
+    // for int8 case, use 127 as the max_val
+    int max_int8 = 127;
+    int block_size = 256;
+    dim3 grid_size(inner, outer, 1);
+    ppl_cukernel_softmax_int8<<<grid_size, block_size, 0, stream>>>((const int8_t*)input,
+            (int8_t*)output, max_int8, outer, axis_width, inner, *qparam);
+
     return status;
 }
 
