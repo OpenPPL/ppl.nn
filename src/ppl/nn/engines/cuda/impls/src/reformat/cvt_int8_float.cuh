@@ -15,17 +15,27 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef PPLCUDA_KERNEL_INCLUDE_ERF_ERF_H_
-#define PPLCUDA_KERNEL_INCLUDE_ERF_ERF_H_
-#include "ppl/nn/common/tensor_shape.h"
-#include "ppl/common/retcode.h"
+#ifndef PPLCUDA_CVT_INT8_FLOAT_CUH_
+#define PPLCUDA_CVT_INT8_FLOAT_CUH_
 
+static __device__ inline signed char _float2int8(
+    float data_in,
+    float step,
+    signed char zeroPoint)
+{
+    float tmp = (float)data_in / step + zeroPoint;
 
-ppl::common::RetCode PPLCUDAErfForwardImp(
-    cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
-    const void* input,
-    const ppl::nn::TensorShape* output_shape,
-    void* output);
+    return tmp > 127 ? 127 : tmp < -128 ? -128
+                                        : (signed char)(__float2int_rn(tmp)); //saturate
+}
 
-#endif // PPLCUDA_KERNEL_INCLUDE_ERF_ERF_H_
+static __device__ inline float _int82float(
+    signed char data_in,
+    float step,
+    signed char zeroPoint)
+{
+    float tmp = (float)(data_in - zeroPoint) * step;
+
+    return tmp;
+}
+#endif

@@ -25,8 +25,11 @@ ppl::common::RetCode SqrtKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
 
+    auto input_quant = GetCommonParam()->cuda_tensor_info->at(input->GetEdge()->GetId());
+    auto output_quant = GetCommonParam()->cuda_tensor_info->at(output->GetEdge()->GetId());
+    QuantParamCuda qparam(input_quant.zero_point[0], output_quant.zero_point[0], input_quant.scale[0], output_quant.scale[0]);
     ppl::common::RetCode status = PPLCUDAUnarySqrtForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(),
-                                                             output->GetShape(), output->GetBufferPtr());
+                                                             output->GetShape(), output->GetBufferPtr(), &qparam);
     return status;
 }
 

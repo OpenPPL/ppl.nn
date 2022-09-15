@@ -16,6 +16,7 @@
 // under the License.
 
 #include "cudakernel/unary/unary.h"
+#include "ppl/nn/engines/cuda/impls/src/reformat/cvt_int8_float.cuh"
 #include <cuda_fp16.h>
 
 enum UnaryOpType {
@@ -282,15 +283,34 @@ __global__ void ppl_cukernel_unary_any(
 #endif
 }
 
+template <UnaryOpType OpT, typename DataT>
+__global__ void ppl_cukernel_unary_any_int8(
+    const uint64_t num_elems,
+    const DataT* input,
+    DataT* output,
+    ppl::nn::cuda::QuantParamCuda qparam)
+{
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
+    uint64_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index >= num_elems)
+        return;
+    DataT in_val  = input[index];
+    float in_val_f = _int82float(in_val, qparam.i_step, qparam.i_zero_point);
+    float out_val_f = ppl_scalar_unary<OpT, float>(in_val_f);
+    output[index] = _float2int8(out_val_f, qparam.o_step, qparam.o_zero_point);
+#endif
+}
+
 #define UNARY_INSTANT(TYPE)                                                                                                                    \
     ppl::common::RetCode PPLCUDAUnary##TYPE##ForwardImp(                                                                                       \
         cudaStream_t stream,                                                                                                                   \
         const ppl::nn::TensorShape* input_shape,                                                                                               \
         const void* input,                                                                                                                     \
         const ppl::nn::TensorShape* output_shape,                                                                                              \
-        void* output)                                                                                                                          \
+        void* output,                                                                                                                          \
+        const ppl::nn::cuda::QuantParamCuda* qparam)                                                                                                 \
     {                                                                                                                                          \
-        uint64_t num_elems = output_shape->CalcElementsIncludingPadding();                                                                      \
+        uint64_t num_elems = output_shape->CalcElementsIncludingPadding();                                                                     \
         int block_size     = 256;                                                                                                              \
         uint64_t grid_size = (num_elems + block_size - 1) / block_size;                                                                        \
         if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {                                                                    \
@@ -298,7 +318,7 @@ __global__ void ppl_cukernel_unary_any(
         } else if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {                                                             \
             ppl_cukernel_unary_any<Unary_##TYPE, half><<<grid_size, block_size, 0, stream>>>(num_elems, (const half*)input, (half*)output);    \
         } else if (output_shape->GetDataType() == ppl::common::DATATYPE_INT8) {                                                                \
-            ppl_cukernel_unary_any<Unary_##TYPE, int8_t><<<grid_size, block_size, 0, stream>>>(num_elems, (const int8_t*)input, (int8_t*)output);    \
+            ppl_cukernel_unary_any_int8<Unary_##TYPE, int8_t><<<grid_size, block_size, 0, stream>>>(num_elems, (const int8_t*)input, (int8_t*)output, *qparam);    \
         } else {                                                                                                                               \
             return ppl::common::RC_UNSUPPORTED;                                                                                                \
         }                                                                                                                                      \
