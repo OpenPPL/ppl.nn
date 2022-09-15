@@ -15,17 +15,22 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef PPLCUDA_KERNEL_INCLUDE_COS_COS_H_
-#define PPLCUDA_KERNEL_INCLUDE_COS_COS_H_
-#include "ppl/nn/common/tensor_shape.h"
-#include "ppl/common/retcode.h"
+#ifndef _ST_HPC_PPL_NN_QUANTIZATION_QUANT_PARAM_CUDA_H_
+#define _ST_HPC_PPL_NN_QUANTIZATION_QUANT_PARAM_CUDA_H_
 
+#include <stdint.h>
 
-ppl::common::RetCode PPLCUDACosForwardImp(
-    cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
-    const void* input,
-    const ppl::nn::TensorShape* output_shape,
-    void* output);
+namespace ppl { namespace nn { namespace cuda {
 
-#endif // PPLCUDA_KERNEL_INCLUDE_COS_COS_H_
+struct QuantParamCuda {
+    QuantParamCuda(int i_z = 0, int o_z = 0, float i_s = 1.f, float o_s = 1.f) :
+        i_zero_point(i_z), o_zero_point(o_z), i_step(i_s), o_step(o_s) {}
+    int i_zero_point = 0;
+    int o_zero_point = 0;
+    float i_step = 1.0f;
+    float o_step = 1.0f;
+};
+
+}}} // namespace ppl::nn::cuda
+
+#endif
