@@ -123,6 +123,11 @@ ppl::common::RetCode PPLCUDAPadForwardImp(
         dim3 block_size(16, 16, 1);
         dim3 grid_size(DivUp(dst_width, 16), DivUp(dst_height, 16), batch);
         switch (input_shape->GetDataType()) {
+            case ppl::common::DATATYPE_INT8: {
+                ppl_cukernel_pad_fast<<<grid_size, block_size, 0, stream>>>(
+                    (const int8_t*)input, src_height, src_width, (int8_t*)output, dst_height, dst_width);
+                return ppl::common::RC_SUCCESS;
+            }
             case ppl::common::DATATYPE_FLOAT16: {
                 ppl_cukernel_pad_fast<<<grid_size, block_size, 0, stream>>>(
                     (const half*)input, src_height, src_width, (half*)output, dst_height, dst_width);
@@ -154,6 +159,11 @@ ppl::common::RetCode PPLCUDAPadForwardImp(
     }
 
     switch (input_shape->GetDataType()) {
+        case ppl::common::DATATYPE_INT8: {
+            ppl_cukernel_pad<<<grid_size, block_size, 0, stream>>>(
+                num_elems, num_dims, param, input_dims, input_strides, (const int8_t*)input, pads, output_strides_fast, (int8_t*)output);
+            return ppl::common::RC_SUCCESS;
+        }
         case ppl::common::DATATYPE_FLOAT16: {
             ppl_cukernel_pad<<<grid_size, block_size, 0, stream>>>(
                 num_elems, num_dims, param, input_dims, input_strides, (const half*)input, pads, output_strides_fast, (half*)output);
