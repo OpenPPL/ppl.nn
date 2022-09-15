@@ -17,6 +17,7 @@
 
 #include "cudakernel/reduce/reduce.h"
 #include "cudakernel/reduce/reduce_kernel.h"
+#include "ppl/nn/engines/cuda/impls/src/reformat/cvt_int8_float.cuh"
 
 __global__ void CudaSetInitVal(
     half* output,
@@ -73,6 +74,26 @@ void SetInitVal(
     dim3 gridDim(DivUp(32 * 32, size));
     CudaSetInitVal<<<gridDim, blockDim>>>((T *)output, initval, size);
     cudaDeviceSynchronize();
+}
+
+template <typename srcT>
+__global__ void rescale_from_int8_to_int8(int32_t num_elems,
+    const srcT* input, int8_t* output, ppl::nn::cuda::QuantParamCuda qparam) {
+    int tid = threadIdx.x + blockDim.x * blockIdx.x;
+    if (tid >= num_elems) return;
+    float inter_val = (float)(input[tid] - qparam.i_zero_point) * qparam.i_step;
+    output[tid] = _float2int8(inter_val, qparam.o_step, qparam.o_zero_point);
+}
+
+template <typename srcT>
+ppl::common::RetCode PPLRescaleInt82Int8(cudaStream_t stream, const ppl::nn::TensorShape* output_shape,
+    const srcT* input, int8_t* output, const ppl::nn::cuda::QuantParamCuda* qparam) {
+    int num_elems = output_shape->CalcElementsExcludingPadding();
+    int block_size = 256;
+    int grid_size = (num_elems + block_size - 1) / block_size;
+    rescale_from_int8_to_int8<srcT><<<grid_size, block_size, 0, stream>>>(num_elems,
+    input, output, *qparam);
+    return ppl::common::RC_SUCCESS;
 }
 
 std::pair<dim3, dim3> ComputeKernelConfigure(
@@ -140,7 +161,9 @@ ppl::common::RetCode PPLCUDAReduceForwardImp(
     const ppl::nn::TensorShape* input_shape,
     const void* input,
     const ppl::nn::TensorShape* output_shape,
-    void* output)
+    void* output,
+    void* tmp_buffer,
+    const ppl::nn::cuda::QuantParamCuda* qparam)
 {
 #define CASEFP16(Mode, OP, Tin, Tout, Tacc) \
     case Mode:                              \
@@ -156,7 +179,7 @@ ppl::common::RetCode PPLCUDAReduceForwardImp(
         return PPLCUDAReduceOPImp<OP<Tin, Tout, Tacc>>(stream, param, des, input_shape, input, output_shape, output);
 #define CASEINT8(Mode, OP, Tin, Tout, Tacc) \
     case Mode:                              \
-        return PPLCUDAReduceOPImp<OP<Tin, Tout, Tacc>>(stream, param, des, input_shape, input, output_shape, output);
+        status = PPLCUDAReduceOPImp<OP<Tin, Tout, Tacc>>(stream, param, des, input_shape, input, output_shape, tmp_buffer);
 
     if (input_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
         switch (param) {
@@ -199,15 +222,25 @@ ppl::common::RetCode PPLCUDAReduceForwardImp(
                 return ppl::common::RC_UNSUPPORTED;
         }
     } else if (input_shape->GetDataType() == ppl::common::DATATYPE_INT8) {
+        ppl::common::RetCode status = ppl::common::RC_SUCCESS;
         switch (param) {
-            CASEINT8(ReduceSum, SumOp, int8_t, int8_t, int8_t)
-            CASEINT8(ReduceProd, ProdOp, int8_t, int8_t, int8_t)
-            CASEINT8(ReduceMean, SumOp, int8_t, int8_t, int8_t)
+            CASEINT8(ReduceSum, SumOp, int8_t, float, float)
+            CASEINT8(ReduceProd, ProdOp, int8_t, float, float)
+            CASEINT8(ReduceMean, SumOp, int8_t, float, float)
             CASEINT8(ReduceMax, MaxOp, int8_t, int8_t, int8_t)
             CASEINT8(ReduceMin, MinOp, int8_t, int8_t, int8_t)
             default:
-                return ppl::common::RC_UNSUPPORTED;
+                status =  ppl::common::RC_UNSUPPORTED;
         }
+        // rescale from int8_t to int8_t
+        if (param == ReduceSum || param == ReduceProd || param == ReduceMean) {
+            status = PPLRescaleInt82Int8<float>(stream, output_shape, (const float*)tmp_buffer,
+                (int8_t*)output, qparam);
+        } else {
+            status = PPLRescaleInt82Int8<int8_t>(stream, output_shape, (const int8_t*)tmp_buffer,
+                (int8_t*)output, qparam);
+        }
+        return status;
     } else {
         return ppl::common::RC_UNSUPPORTED;
     }

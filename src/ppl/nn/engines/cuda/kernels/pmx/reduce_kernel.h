@@ -34,6 +34,7 @@ public:
 
 private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
+    uint64_t CalcTmpBufferSize(const KernelExecContext&) const override;
 
 private:
     const ppl::nn::onnx::ReduceParam* param_ = nullptr;
