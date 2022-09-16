@@ -48,7 +48,7 @@ if(NOT Git_FOUND)
     message(FATAL_ERROR "git is required.")
 endif()
 
-set(__HPCC_COMMIT__ b31170dc9176c3ace8788db6601e967721ab8150)
+set(__HPCC_COMMIT__ cfacf2038919236676432b0756ab32377231d9cf)
 
 if(PPLNN_DEP_HPCC_PKG)
     FetchContent_Declare(hpcc
@@ -88,7 +88,7 @@ set(PPLCOMMON_USE_AARCH64 ${PPLNN_USE_AARCH64})
 set(PPLCOMMON_USE_ARMV7 ${PPLNN_USE_ARMV7})
 set(PPLCOMMON_USE_CUDA ${PPLNN_USE_CUDA})
 
-set(__PPLCOMMON_COMMIT__ cd18ed6299d500ac379e29ba3d592beca9dd258d)
+set(__PPLCOMMON_COMMIT__ f0172607c7a0dce8dd0e5153cea4d09901636f8f)
 
 if(PPLNN_DEP_PPLCOMMON_PKG)
     hpcc_declare_pkg_dep(pplcommon
@@ -205,14 +205,14 @@ unset(__PYBIND11_TAG__)
 set(LUACPP_INSTALL OFF CACHE BOOL "")
 set(LUACPP_BUILD_TESTS OFF CACHE BOOL "")
 
-set(__LUACPP_COMMIT__ 4b2a9d55d1fdf459c2adf1ede038771aebef1b82)
+set(__LUACPP_COMMIT__ d4e60a321a19a05a34bd15d3d508647f394007f3)
 
 if(PPLNN_DEP_LUACPP_PKG)
     hpcc_declare_pkg_dep(luacpp
         ${PPLNN_DEP_LUACPP_PKG})
 else()
     if(NOT PPLNN_DEP_LUACPP_GIT)
-        set(PPLNN_DEP_LUACPP_GIT "https://github.com/ouonline/lua-cpp.git")
+        set(PPLNN_DEP_LUACPP_GIT "https://github.com/ouonline/luacpp.git")
     endif()
     hpcc_declare_git_dep(luacpp
         ${PPLNN_DEP_LUACPP_GIT}
