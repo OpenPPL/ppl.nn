@@ -1,0 +1,6 @@
+namespace ppl.nn.pmx.arm;
+
+table ArmEngineParam {
+}
+
+root_type ArmEngineParam;

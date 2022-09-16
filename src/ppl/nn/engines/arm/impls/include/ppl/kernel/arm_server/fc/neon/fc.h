@@ -306,7 +306,7 @@ public:
         const int64_t num_output = param_.num_output;
         const int64_t channels = param_.channels;
         if (dtype == ppl::common::DATATYPE_FLOAT32) {
-            cvt_bias_size_ = num_output;
+            cvt_bias_size_ = num_output * sizeof(float);
             cvt_bias_      = (float *)allocator_->Alloc(cvt_bias_size_ * sizeof(float));
             memcpy(cvt_bias_, bias, num_output * sizeof(float));
             
@@ -320,7 +320,7 @@ public:
         }
 #ifdef PPLNN_USE_ARMV8_2_FP16
         else if (dtype == ppl::common::DATATYPE_FLOAT16) {
-            cvt_bias_size_ = num_output;
+            cvt_bias_size_ = num_output * sizeof(__fp16);
             cvt_bias_      = (__fp16 *)allocator_->Alloc(cvt_bias_size_ * sizeof(__fp16));
             memcpy(cvt_bias_, bias, num_output * sizeof(__fp16));
             

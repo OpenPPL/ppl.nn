@@ -29,6 +29,12 @@
 #include "ppl/nn/engines/arm/utils/macros.h"
 #include "ppl/nn/engines/arm/engine_options.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/generated/onnx_op_generated.h"
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/arm/pmx/generated/arm_op_params_generated.h"
+#endif
+
 namespace ppl { namespace nn { namespace utils {
 struct SharedResource;
 }}} // namespace ppl::nn::utils
@@ -89,6 +95,8 @@ public:
     void SetOutputDataType(uint32_t idx, ppl::common::datatype_t type) {
         common_param_.output_types[idx] = type;
     }
+
+    virtual void SetAllocator(ppl::common::Allocator*) { }
 
 protected:
     template <typename T>
@@ -190,17 +198,63 @@ protected:
     }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override {
-        return ppl::common::RC_UNSUPPORTED;
+    virtual ppl::nn::pmx::onnx::OpParamType GetOptParamType(void) const {
+        return ppl::nn::pmx::onnx::OpParamType_NONE;
     }
-    ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void*, uint64_t) override {
-        return ppl::common::RC_UNSUPPORTED;
+
+    virtual flatbuffers::Offset<void> SerializeOptParam(flatbuffers::FlatBufferBuilder*) const {
+        return flatbuffers::Offset<void>();
+    }
+
+    virtual ppl::common::RetCode DeserializeOptParam(const ppl::nn::pmx::onnx::OpParam*) {
+        return ppl::common::RC_SUCCESS;
+    }
+
+    virtual ppl::nn::pmx::arm::PrivateDataType GetPrivateDataType(void) const {
+        return ppl::nn::pmx::arm::PrivateDataType_NONE;
+    }
+
+    virtual flatbuffers::Offset<void> SerializePrivateData(flatbuffers::FlatBufferBuilder*) const {
+        return flatbuffers::Offset<void>();
+    }
+    
+    virtual ppl::common::RetCode DeserializePrivateData(const ppl::nn::pmx::arm::OpData*) {
+        return ppl::common::RC_SUCCESS;
+    }
+
+
+    ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const override {
+        flatbuffers::FlatBufferBuilder arm_data_builder;
+        auto fp_output_info = ppl::nn::pmx::arm::CreateOutputInfoDirect(arm_data_builder, &common_param_.output_types, &common_param_.output_formats);
+        auto fb_arm_op_data = ppl::nn::pmx::arm::CreateOpData(arm_data_builder, fp_output_info, GetPrivateDataType(), SerializePrivateData(&arm_data_builder));
+        ppl::nn::pmx::arm::FinishOpDataBuffer(arm_data_builder, fb_arm_op_data);
+
+        flatbuffers::FlatBufferBuilder op_builder;
+        auto fb_data = op_builder.CreateVector(arm_data_builder.GetBufferPointer(), arm_data_builder.GetSize());
+        auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, GetOptParamType(), SerializeOptParam(&op_builder), fb_data);
+        ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
+
+        return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
+    }
+
+    ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t) override {
+        auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
+        auto status = DeserializeOptParam(fb_op_param);
+        if (status != ppl::common::RC_SUCCESS) {
+            return status;
+        }
+
+        auto arm_op_data = ppl::nn::pmx::arm::GetOpData(fb_op_param->data_()->data());
+        ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->output_info()->dtype(), &common_param_.output_types);
+        ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->output_info()->dformat(), &common_param_.output_formats);
+        return DeserializePrivateData(arm_op_data);
     }
 #endif
 
 protected:
     std::function<void(InputOutputInfo*)> infer_type_func_;
     std::function<ppl::common::RetCode(InputOutputInfo*)> infer_dims_func_;
+public:
     ArmCommonParam common_param_;
 };
 

@@ -21,6 +21,12 @@
 #include "ppl/nn/params/onnx/flatten_param.h"
 #include "ppl/nn/engines/arm/optimizer/opt_kernel.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/oputils/onnx/flatten.h"
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/arm/pmx/generated/arm_op_params_generated.h"
+#endif
+
 namespace ppl { namespace nn { namespace arm {
 
 class FlattenOp final : public ArmOptKernel {
@@ -28,6 +34,22 @@ public:
     FlattenOp(const ir::Node* node);
     ppl::common::RetCode Init(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    virtual ppl::nn::pmx::onnx::OpParamType GetOptParamType(void) const override {
+        return ppl::nn::pmx::onnx::OpParamType_FlattenParam;
+    }
+
+    virtual flatbuffers::Offset<void> SerializeOptParam(flatbuffers::FlatBufferBuilder* builder) const override {
+        return ppl::nn::pmx::onnx::SerializeFlattenParam(*param_.get(), builder).Union();
+    }
+
+    virtual ppl::common::RetCode DeserializeOptParam(const ppl::nn::pmx::onnx::OpParam* op_param) override {
+        param_ = std::make_shared<ppl::nn::onnx::FlattenParam>();
+        ppl::nn::pmx::onnx::DeserializeFlattenParam(*op_param->value_as_FlattenParam(), param_.get());
+        return ppl::common::RC_SUCCESS;
+    }
+#endif
 
 private:
     std::shared_ptr<ppl::nn::onnx::FlattenParam> param_;

@@ -1,0 +1,101 @@
+namespace ppl.nn.pmx.arm;
+
+table ConvAlgoInfo {
+    algo_type: uint;
+    dtype: uint;
+    isa: uint;
+    sched_param: [long];
+}
+
+table ConvExecInfo {
+    cvt_filter: [ubyte];
+    cvt_filter_size: uint64;
+    cvt_bias: [ubyte];
+    cvt_bias_size: uint64;
+}
+
+table ConvParamInfo{
+    num_output: int64;
+    channels: int64;
+    pad_type: uint32;
+    fuse_type: uint32;
+}
+
+table ConvData {
+    algo_info: ConvAlgoInfo;
+    exec_info: ConvExecInfo;
+    param_info: ConvParamInfo;
+}
+
+table FCAlgoInfo {
+    algo_type: uint;
+    dtype: uint;
+    isa: uint;
+}
+
+table FCExecInfo {
+    cvt_filter: [ubyte];
+    cvt_filter_size: uint64;
+    cvt_bias: [ubyte];
+    cvt_bias_size: uint64;
+}
+
+table FCParamInfo{
+    num_output: int64;
+    channels: int64;
+    fuse_flag: uint32;
+}
+
+table FullConnectData {
+    algo_info: FCAlgoInfo;
+    exec_info: FCExecInfo;
+    param_info: FCParamInfo;
+}
+
+table FusionData {
+    fuse_relu: byte;
+}
+
+table ChannelShuffleParam {
+    group: int32;
+}
+
+table ShapeMatrixP {
+    edge: uint32;
+    numerator: [int64];
+    denominator: [int64];
+    real_dim: int64;
+    scalar: byte;
+}
+
+table ShapeOperationParam {
+    shape_matrix: [ShapeMatrixP];
+}
+
+union PmxOpType {
+    ChannelShuffleParam,
+    ShapeOperationParam,
+}
+
+table PmxOpData {
+    value: PmxOpType;
+}
+
+union PrivateDataType {
+    ConvData,
+    FullConnectData,
+    FusionData,
+    PmxOpData,
+}
+
+table OutputInfo {
+    dtype: [uint];
+    dformat: [uint];
+}
+
+table OpData {
+    output_info: OutputInfo;
+    value: PrivateDataType;
+}
+
+root_type OpData;

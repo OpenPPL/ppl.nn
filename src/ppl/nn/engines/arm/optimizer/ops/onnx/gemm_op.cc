@@ -21,6 +21,13 @@
 #include "ppl/nn/engines/arm/utils/data_trans.h"
 #include "ppl/nn/oputils/onnx/reshape_gemm.h"
 #include "ppl/nn/common/logger.h"
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/oputils/onnx/gemm.h"
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/arm/pmx/generated/arm_op_params_generated.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 
@@ -166,6 +173,124 @@ bool GemmOp::TryFuseReLU() {
     }
     return true;
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+
+ppl::common::RetCode GemmOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    if (!fc_param_) { 
+        flatbuffers::FlatBufferBuilder builder;
+        auto fb_fuse_data = ppl::nn::pmx::arm::CreateFusionData(builder, (gemm_fuse_relu_ ? 1 : 0));
+        auto fp_output_info = ppl::nn::pmx::arm::CreateOutputInfoDirect(builder, &common_param_.output_types, &common_param_.output_formats);
+        auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(builder, fp_output_info, ppl::nn::pmx::arm::PrivateDataType_FusionData, fb_fuse_data.Union());
+        ppl::nn::pmx::arm::FinishOpDataBuffer(builder, fb_op_data);
+
+        flatbuffers::FlatBufferBuilder op_builder;
+        auto fb_param = ppl::nn::pmx::onnx::SerializeGemmParam(*param_.get(), &op_builder);
+        auto fb_data = op_builder.CreateVector(builder.GetBufferPointer(), builder.GetSize());
+        auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, ppl::nn::pmx::onnx::OpParamType_GemmParam, fb_param.Union(), fb_data);
+        ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
+        return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
+    }
+
+    flatbuffers::FlatBufferBuilder fc_internal_builder;
+    auto algo_info = fc_param_->algo_info;
+    auto fb_algo_info = ppl::nn::pmx::arm::CreateFCAlgoInfo(fc_internal_builder,
+                                                            algo_info.algo_type,
+                                                            algo_info.dtype,
+                                                            algo_info.isa);
+    auto mgr = fc_param_->mgr;
+    auto fb_exec_info = ppl::nn::pmx::arm::CreateFCExecInfo(fc_internal_builder,
+                                                            fc_internal_builder.CreateVector<uint8_t>((const uint8_t*)mgr->cvt_filter(), mgr->cvt_filter_size()),
+                                                            mgr->cvt_filter_size(),
+                                                            fc_internal_builder.CreateVector<uint8_t>((const uint8_t*)mgr->cvt_bias(), mgr->cvt_bias_size()),
+                                                            mgr->cvt_bias_size());
+    LOG(WARNING) << mgr->cvt_filter_size();
+    LOG(WARNING) << mgr->cvt_bias_size();
+    auto fb_param_info = ppl::nn::pmx::arm::CreateFCParamInfo(fc_internal_builder, 
+                                                              fc_param_->param.num_output, 
+                                                              fc_param_->param.channels, 
+                                                              fc_param_->param.fuse_flag);
+    auto fb_fc_data = ppl::nn::pmx::arm::CreateFullConnectData(fc_internal_builder, fb_algo_info, fb_exec_info, fb_param_info);
+    auto fp_output_info = ppl::nn::pmx::arm::CreateOutputInfoDirect(fc_internal_builder, &common_param_.output_types, &common_param_.output_formats);
+    auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(fc_internal_builder, fp_output_info, ppl::nn::pmx::arm::PrivateDataType_FullConnectData, fb_fc_data.Union());
+    ppl::nn::pmx::arm::FinishOpDataBuffer(fc_internal_builder, fb_op_data);
+
+    flatbuffers::FlatBufferBuilder op_builder;
+    auto fb_param = ppl::nn::pmx::onnx::SerializeGemmParam(*param_.get(), &op_builder);
+    auto fb_data = op_builder.CreateVector(fc_internal_builder.GetBufferPointer(), fc_internal_builder.GetSize());
+    auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, ppl::nn::pmx::onnx::OpParamType_GemmParam, fb_param.Union(), fb_data);
+    ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
+    return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
+}
+
+ppl::common::RetCode GemmOp::DeserializeData(const ::ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+
+    auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
+
+    auto fb_gemm_param = fb_op_param->value_as_GemmParam();
+    if (!fb_gemm_param) {
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    param_ = std::make_shared<ppl::nn::onnx::GemmParam>();
+    DeserializeGemmParam(*fb_gemm_param, param_.get());
+
+    auto arm_op_data = ppl::nn::pmx::arm::GetOpData(fb_op_param->data_()->data());
+    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->output_info()->dtype(), &common_param_.output_types);
+    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->output_info()->dformat(), &common_param_.output_formats);
+    
+    auto arm_fc_data = arm_op_data->value_as_FullConnectData();
+    if (arm_fc_data) {
+        if (fc_param_) {
+            delete fc_param_;
+        }
+        fc_param_ = new FCParam;
+        if (!fc_param_) {
+            return ppl::common::RC_OUT_OF_MEMORY;
+        }
+
+        auto algo_info = arm_fc_data->algo_info();
+        auto exec_info = arm_fc_data->exec_info();
+        auto param_info = arm_fc_data->param_info();
+
+
+        fc_param_->algo_info.algo_type = algo_info->algo_type();
+        fc_param_->algo_info.dtype = algo_info->dtype();
+        fc_param_->algo_info.isa = algo_info->isa();
+
+        fc_param_->param.channels = param_info->channels();
+        fc_param_->param.num_output = param_info->num_output();
+        fc_param_->param.fuse_flag = param_info->fuse_flag();
+
+        auto mgr = new ppl::kernel::arm_server::neon::fc_manager(fc_param_->param, allocator_);
+        uint64_t cvt_filter_size = exec_info->cvt_filter_size();
+        uint64_t cvt_bias_size = exec_info->cvt_bias_size();
+
+        void *cvt_filter_ptr = allocator_->Alloc(cvt_filter_size);
+        void *cvt_bias_ptr = allocator_->Alloc(cvt_bias_size);
+        memcpy(cvt_filter_ptr, exec_info->cvt_filter()->data(), cvt_filter_size);
+        memcpy(cvt_bias_ptr, exec_info->cvt_bias()->data(), cvt_bias_size);
+        mgr->set_cvt_filter(cvt_filter_ptr, cvt_filter_size);
+        mgr->set_cvt_bias(cvt_bias_ptr, cvt_bias_size);
+
+        LOG(WARNING) << cvt_filter_size;
+        LOG(WARNING) << cvt_bias_size;
+
+
+        fc_param_->mgr = mgr;
+        return RC_SUCCESS;
+    }
+    else {
+        auto arm_fuse_data = arm_op_data->value_as_FusionData();
+        if (arm_fuse_data) {
+            gemm_fuse_relu_ = (arm_fuse_data->fuse_relu() == 1);
+        }
+        return RC_SUCCESS;
+    }
+
+    return RC_INVALID_VALUE;
+}
+
+#endif
 
 KernelImpl* GemmOp::CreateKernelImpl() const {
     if (fc_param_ && fc_param_->algo_info.algo_type != ppl::kernel::arm_server::neon::fc_algo::unknown) {

@@ -51,15 +51,25 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
         if (input_type == ppl::common::DATATYPE_FLOAT32 && output_type == input_type) {
             LOG(DEBUG) << "Reorder between fp32 ndarray and n4cx";
             if (output_format == ppl::common::DATAFORMAT_N4CX && input_format == ppl::common::DATAFORMAT_NDARRAY) {
-                NdarrayToN4cxFp32((input->GetBufferPtr<float>()), input->GetShape()->GetDim(0),
-                                  input->GetShape()->GetDim(1), input->GetShape()->GetDim(2), input->GetShape()->GetDim(3),
-                                  output->GetBufferPtr<float>());
+                if (input->GetShape()->GetDim(2) == 1 && input->GetShape()->GetDim(3) == 1 &&
+                    input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL) {
+                    output->TransferBufferFrom(input);
+                } else {
+                    NdarrayToN4cxFp32((input->GetBufferPtr<float>()), input->GetShape()->GetDim(0),
+                                    input->GetShape()->GetDim(1), input->GetShape()->GetDim(2), input->GetShape()->GetDim(3),
+                                    output->GetBufferPtr<float>());
+                } 
                 return ppl::common::RC_SUCCESS;
             } else if (output_format == ppl::common::DATAFORMAT_NDARRAY &&
                        input_format == ppl::common::DATAFORMAT_N4CX) {
-                N4cxToNdarrayFp32((input->GetBufferPtr<float>()), input->GetShape()->GetDim(0),
-                                  input->GetShape()->GetDim(1), input->GetShape()->GetDim(2), input->GetShape()->GetDim(3),
-                                  output->GetBufferPtr<float>());
+                if (input->GetShape()->GetDim(2) == 1 && input->GetShape()->GetDim(3) == 1 &&
+                    input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL) {
+                    output->TransferBufferFrom(input);
+                } else {
+                    N4cxToNdarrayFp32((input->GetBufferPtr<float>()), input->GetShape()->GetDim(0),
+                                    input->GetShape()->GetDim(1), input->GetShape()->GetDim(2), input->GetShape()->GetDim(3),
+                                    output->GetBufferPtr<float>());
+                }
                 return ppl::common::RC_SUCCESS;
             }
 #ifdef PPLNN_USE_ARMV8_2_FP16

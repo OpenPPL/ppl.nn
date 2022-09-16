@@ -21,6 +21,12 @@
 #include "ppl/nn/params/onnx/cast_param.h"
 #include "ppl/nn/engines/arm/optimizer/opt_kernel.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/oputils/onnx/cast.h"
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/arm/pmx/generated/arm_op_params_generated.h"
+#endif
+
 namespace ppl { namespace nn { namespace arm {
 
 class CastOp final : public ArmOptKernel {
@@ -35,6 +41,22 @@ public:
                                       std::vector<ppl::common::dataformat_t>* selected_input_formats,
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
     KernelImpl* CreateKernelImpl() const override;
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    virtual ppl::nn::pmx::onnx::OpParamType GetOptParamType(void) const override {
+        return ppl::nn::pmx::onnx::OpParamType_CastParam;
+    }
+
+    virtual flatbuffers::Offset<void> SerializeOptParam(flatbuffers::FlatBufferBuilder* builder) const override {
+        return ppl::nn::pmx::onnx::SerializeCastParam(*param_.get(), builder).Union();
+    }
+
+    virtual ppl::common::RetCode DeserializeOptParam(const ppl::nn::pmx::onnx::OpParam* op_param) override {
+        param_ = std::make_shared<ppl::nn::onnx::CastParam>();
+        ppl::nn::pmx::onnx::DeserializeCastParam(*op_param->value_as_CastParam(), param_.get());
+        return ppl::common::RC_SUCCESS;
+    }
+#endif
 
 private:
     std::shared_ptr<ppl::nn::onnx::CastParam> param_;

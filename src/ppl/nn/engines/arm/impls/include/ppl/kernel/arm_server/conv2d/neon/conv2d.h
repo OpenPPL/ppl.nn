@@ -361,9 +361,19 @@ public:
         return algo_info_;
     };
 
-    void set_algo_info(conv2d_algo_info &algo)
+    void set_algo_info(const conv2d_algo_info &algo)
     {
         algo_info_ = algo;
+    };
+
+    virtual std::vector<int64_t> get_schedule_param() const 
+    { 
+        return std::vector<int64_t>();
+    };
+
+    virtual ppl::common::RetCode set_schedule_param(const std::vector<int64_t> &)
+    { 
+        return ppl::common::RC_SUCCESS; 
     };
 
     virtual conv2d_algo_t get_algo_type()                                              = 0;

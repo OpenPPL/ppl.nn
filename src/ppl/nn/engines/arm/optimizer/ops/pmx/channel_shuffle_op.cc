@@ -18,6 +18,12 @@
 #include "ppl/nn/engines/arm/optimizer/ops/pmx/channel_shuffle_op.h"
 #include "ppl/nn/engines/arm/kernels/pmx/channel_shuffle_kernel.h"
 #include "ppl/nn/common/logger.h"
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/arm/pmx/generated/arm_op_params_generated.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 
@@ -71,6 +77,41 @@ RetCode ChannelShuffleOp::SelectFormat(const InputOutputInfo& info, vector<dataf
 
     return RC_SUCCESS;
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+
+ppl::common::RetCode ChannelShuffleOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder chsh_param_builder;
+    auto fb_chsh_op_param = ppl::nn::pmx::arm::CreateChannelShuffleParam(chsh_param_builder, param_->group);
+    auto fp_pmx_op_data = ppl::nn::pmx::arm::CreatePmxOpData(chsh_param_builder, ppl::nn::pmx::arm::PmxOpType_ChannelShuffleParam, fb_chsh_op_param.Union());
+
+    auto fp_output_info = ppl::nn::pmx::arm::CreateOutputInfoDirect(chsh_param_builder, &common_param_.output_types, &common_param_.output_formats);
+    auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(chsh_param_builder, fp_output_info, ppl::nn::pmx::arm::PrivateDataType_PmxOpData, fp_pmx_op_data.Union());
+    ppl::nn::pmx::arm::FinishOpDataBuffer(chsh_param_builder, fb_op_data);
+
+    flatbuffers::FlatBufferBuilder op_builder;
+    auto fb_data = op_builder.CreateVector(chsh_param_builder.GetBufferPointer(), chsh_param_builder.GetSize());
+    auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, ppl::nn::pmx::onnx::OpParamType_NONE, 0, fb_data);
+    ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
+    return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
+    return 0;
+}
+
+ppl::common::RetCode ChannelShuffleOp::DeserializeData(const ::ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+
+    auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
+    param_ = std::make_shared<ppl::nn::pmx::ChannelShuffleParam>();
+
+    auto arm_op_data = ppl::nn::pmx::arm::GetOpData(fb_op_param->data_()->data());
+    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->output_info()->dtype(), &common_param_.output_types);
+    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->output_info()->dformat(), &common_param_.output_formats);
+
+    auto arm_shape_op_param = arm_op_data->value_as_PmxOpData()->value_as_ChannelShuffleParam();
+    param_->group = arm_shape_op_param->group();
+    return RC_SUCCESS;
+}
+
+#endif
 
 KernelImpl* ChannelShuffleOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<ChannelShuffleKernel>(param_.get());
