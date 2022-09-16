@@ -102,7 +102,7 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_file) {
     FileMapping fm;
     auto status = fm.Init(model_file, FileMapping::READ);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "Init filemapping from file [" << model_file << "] faild: " << GetRetCodeStr(status);
+        LOG(ERROR) << "mapping file [" << model_file << "] faild: " << fm.GetErrorMessage();
         return status;
     }
     return LoadModel(fm.GetData(), fm.GetSize());
