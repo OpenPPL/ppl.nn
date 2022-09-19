@@ -56,7 +56,6 @@ KernelImpl* AddOp::CreateKernelImpl() const {
     if (kernel) {
         kernel->SetFuseReLU(fuse_relu_);
     }
-    kernel->name = GetNode()->GetName();
     return kernel;
 }
 

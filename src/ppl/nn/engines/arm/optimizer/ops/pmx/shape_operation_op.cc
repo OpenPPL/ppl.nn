@@ -53,13 +53,7 @@ ppl::common::RetCode ShapeOperationOp::SerializeData(const ::ppl::nn::pmx::Seria
     std::vector<flatbuffers::Offset<ppl::nn::pmx::arm::ShapeMatrixP>> alpha;
     for (auto const & item : param_->alpha) {
         uint32_t edge_id = item.first < eid2seq.size() ? eid2seq[item.first] : -1;
-        LOG(ERROR) << item.first;
-        LOG(ERROR) << edge_id;
         const ppl::nn::pmx::ShapeMatrix & matrix = item.second;
-        LOG(ERROR) << "real_dim";
-        LOG(ERROR) << matrix.real_dim;
-        LOG(ERROR) << "scalar";
-        LOG(ERROR) << matrix.scalar;
 
         std::vector<int64_t> numerator(81);
         std::vector<int64_t> denominator(81);
@@ -105,11 +99,6 @@ ppl::common::RetCode ShapeOperationOp::DeserializeData(const ::ppl::nn::pmx::Des
         matrix.real_dim = fb_matrix->real_dim();
         matrix.scalar = (fb_matrix->scalar() == 1);
  
-        LOG(ERROR) << fb_matrix->edge();
-        LOG(ERROR) << "real_dim";
-        LOG(ERROR) << matrix.real_dim;
-        LOG(ERROR) << "scalar";
-        LOG(ERROR) << matrix.scalar;
         param_->alpha[fb_matrix->edge()] = matrix;
     }
 
