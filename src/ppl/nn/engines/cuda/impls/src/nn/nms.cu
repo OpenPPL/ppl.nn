@@ -20,6 +20,7 @@
 #include "cudakernel/math/math.h"
 #include "cudakernel/common/common.h"
 #include "ppl/nn/common/tensor_shape.h"
+#include "ppl/nn/engines/cuda/cuda_device.h"
 #include <cuda_fp16.h>
 #include <float.h>
 #include <memory>
@@ -343,6 +344,7 @@ int64_t PPLNMSGetTempBufferSize(const ppl::nn::TensorShape *scores_shape)
 }
 
 ppl::common::RetCode PPLCUDANMSForwardImp(
+    ppl::nn::cuda::CudaDevice* device,
     cudaStream_t stream,
     ppl::nn::TensorShape *boxes_shape,
     const void *boxes,
@@ -352,7 +354,6 @@ ppl::common::RetCode PPLCUDANMSForwardImp(
     int64_t *output,
     void *temp_buffer,
     int64_t temp_buffer_bytes,
-    int device_id,
     int center_point_box,
     int max_output_boxes_per_class,
     float iou_threshold,
@@ -364,9 +365,8 @@ ppl::common::RetCode PPLCUDANMSForwardImp(
     int num_class            = scores_shape->GetDim(1);
     // shape for top-k use
     int elem_size            = ppl::common::GetSizeOfDataType(scores_shape->GetDataType());
-    cudaDeviceProp gpu_prob;
-    cudaGetDeviceProperties(&gpu_prob, device_id);
-    int max_shared_mem = gpu_prob.sharedMemPerBlock;
+    auto& device_prob = device->GetDeviceProp();
+    int max_shared_mem = device_prob.sharedMemPerBlock;
 
     // temp buffer for sort & nms & construct
     ppl::nn::TensorShape topk_shape(*scores_shape);

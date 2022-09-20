@@ -44,10 +44,9 @@ ppl::common::RetCode MMCVNonMaxSuppressionKernel::DoExecute(KernelExecContext* c
     auto scores = ctx->GetInput<TensorImpl>(1);
     auto output = ctx->GetOutput<TensorImpl>(0);
 
-    int device_id = GetCudaDevice()->GetDeviceId();
-    status = PPLCUDAMMCVNMSForwardImp(GetStream(), boxes->GetShape(), boxes->GetBufferPtr(), scores->GetShape(),
+    status = PPLCUDAMMCVNMSForwardImp(GetCudaDevice(), GetStream(), boxes->GetShape(), boxes->GetBufferPtr(), scores->GetShape(),
                                       scores->GetBufferPtr(), output->GetShape(), output->GetBufferPtr<int64_t>(),
-                                      tmp_buffer, tmp_buffer_bytes, device_id, param_->iou_threshold, param_->offset);
+                                      tmp_buffer, tmp_buffer_bytes, param_->iou_threshold, param_->offset);
 
     return status;
 }

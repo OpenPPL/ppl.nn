@@ -209,13 +209,11 @@ static bool is_g_int8_kvec_initialized = false;
 
 static std::unordered_map<size_t, algo_param_t> g_conv_shape_hash;
 
-__inline__ void InitializeInt8ConvKernelContainer(std::vector<kernel_info_t> &g_int8_kvec, int device_id, ppl::common::datatype_t type)
+__inline__ void InitializeInt8ConvKernelContainer(std::vector<kernel_info_t> &g_int8_kvec, ppl::nn::cuda::CudaDevice* device, ppl::common::datatype_t type)
 {
-    cudaDeviceProp device_prop;
-    cudaGetDeviceProperties(&device_prop, device_id);
-
-    if(type == ppl::common::DATATYPE_INT8) {
 #ifndef PPLNN_ENABLE_CUDA_JIT
+    auto& device_prop = device->GetDeviceProp();
+    if(type == ppl::common::DATATYPE_INT8) {
         if (device_prop.major == 7 && device_prop.minor == 5) {
 #if (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
             // sm75 kernels
@@ -277,8 +275,8 @@ __inline__ void InitializeInt8ConvKernelContainer(std::vector<kernel_info_t> &g_
             InitializeSwzlSM80Int8Imma16832ConvFNKernelContainer(g_int8_kvec);
 #endif
         }
-#endif
     }
+#endif
 
     is_g_int8_kvec_initialized = true;
 }
@@ -291,7 +289,7 @@ __inline__ size_t GetConvShapeHashKey(conv_param_t &conv_param)
 /* -----------------  INT8 KERNEL ------------------ */
 
 double PPLCUDAConvolutionSelectKernelInt8(
-        int device_id,
+        ppl::nn::cuda::CudaDevice* device,
         cudaStream_t &stream, 
         ppl::common::datatype_t type,
         int4* d_input,
@@ -305,11 +303,10 @@ double PPLCUDAConvolutionSelectKernelInt8(
         fuse_param_t &fuse_param,
 	    uint64_t workspace)
 {
-    cudaDeviceProp device_prop;
-    cudaGetDeviceProperties(&device_prop, device_id);
+    auto& device_prop = device->GetDeviceProp();
 
     if(!is_g_int8_kvec_initialized)
-        InitializeInt8ConvKernelContainer(g_int8_kvec, device_id, type);
+        InitializeInt8ConvKernelContainer(g_int8_kvec, device, type);
 
     size_t conv_shape_hash = GetConvShapeHashKey(conv_param);
 
@@ -523,7 +520,7 @@ double PPLCUDAConvolutionSelectKernelInt8(
 }
 
 void PPLCUDAConvolutionForwardImpInt8(
-        int device_id,
+        ppl::nn::cuda::CudaDevice* device,
         cudaStream_t &stream, 
         ppl::common::datatype_t type,
         int4* d_input,
@@ -537,7 +534,7 @@ void PPLCUDAConvolutionForwardImpInt8(
         fuse_param_t &fuse_param)
 {
     if(!is_g_int8_kvec_initialized)
-        InitializeInt8ConvKernelContainer(g_int8_kvec, device_id, type);
+        InitializeInt8ConvKernelContainer(g_int8_kvec, device, type);
 
     unsigned int kid = algo_param.kid;
     unsigned int splitk = algo_param.splitk;
@@ -689,13 +686,12 @@ void PPLCUDAConvolutionForwardImpInt8(
 /* -----------------  JIT INT8 KERNEL ------------------ */
 
 float AlgoForwardTimeInt8(
-    int device_id,
+    ppl::nn::cuda::CudaDevice* device,
     cudaStream_t &stream,
     std::vector<string> name,
     string code,
     int &idx,
     std::vector<const char *> compile_params,
-    int device,
     bool include,
     ppl::common::datatype_t type,
     int4 *d_input,
@@ -712,8 +708,9 @@ float AlgoForwardTimeInt8(
     float elapsed = 0;
 
 #ifdef PPLNN_ENABLE_CUDA_JIT
+    auto device_id = device->GetDeviceId();
     std::string src_name                   = name[0];
-    string ptx                             = ppl::nn::cuda::CUDANVRTCCompile(pair<string, string>(src_name, code), compile_params, device, include);
+    string ptx                             = ppl::nn::cuda::CUDANVRTCCompile(pair<string, string>(src_name, code), compile_params, device_id, include);
     ppl::nn::cuda::CUDAModule *cuda_module = new ppl::nn::cuda::CUDAModule();
     cuda_module->SetSourceCode(src_name, ptx);
     float min_time = FLT_MAX;
@@ -728,7 +725,7 @@ float AlgoForwardTimeInt8(
         cudaEventRecord(begin, stream);
         for (int i = 0; i < times; i++) {
             PPLCUDAConvolutionForwardJitImpInt8(
-                device_id, stream, function, type, d_input, d_flt, d_output, bias, d_temp_buf, algo_param[n], conv_param, quant_param, fuse_param);
+                device, stream, function, type, d_input, d_flt, d_output, bias, d_temp_buf, algo_param[n], conv_param, quant_param, fuse_param);
         }
         cudaEventRecord(end, stream);
         cudaEventSynchronize(begin);
@@ -747,7 +744,7 @@ float AlgoForwardTimeInt8(
 }
 
 ppl::common::RetCode GetInt8ConvKernelNominees(
-    int device_id,
+    ppl::nn::cuda::CudaDevice* device,
     ppl::common::datatype_t type,
     conv_param_t &conv_param,
     std::vector<std::string> & knames,
@@ -772,8 +769,7 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
 
     int type_size = ppl::common::GetSizeOfDataType(type);
 
-    cudaDeviceProp device_prop;
-    cudaGetDeviceProperties(&device_prop, device_id);
+    auto& device_prop = device->GetDeviceProp();
 
     int m_conv = Align(batch * out_hw,  pad_size);
     int n_conv = Align(num_flt_per_grp, pad_size);
@@ -898,8 +894,8 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
                         }
 
         if(nominees.size() == 0) {
-            // nvIdxnConv_b128x128_w64x64
-            nominee.SetIdxnKernelParam(128, 128, k_per_step, 64, 64, k_per_step, flt_pad_size, 128, 4096, 1, 1, mma_shape);
+            // nvIdxnConv_b128x64_w64x32
+            nominee.SetIdxnKernelParam(128, 64, k_per_step, 64, 32, k_per_step, flt_pad_size, 128, 4096, 1, 1, mma_shape);
             nominees.push_back(std::make_pair(nominee, 0.f));
         }
 
@@ -1119,7 +1115,7 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
 }
 
 double PPLCUDAConvolutionJitSelectKernelInt8(
-    int device_id,
+    ppl::nn::cuda::CudaDevice* device,
     cudaStream_t &stream,
     ppl::common::datatype_t type,
     int4 *d_input,
@@ -1139,11 +1135,11 @@ double PPLCUDAConvolutionJitSelectKernelInt8(
     std::vector<algo_param_t> params;
     std::string sources = "";
 
-    GetInt8ConvKernelNominees(device_id, type, conv_param, knames, params, sources);
+    GetInt8ConvKernelNominees(device, type, conv_param, knames, params, sources);
 
     int index = 0;
     std::vector<const char *> compile_params;
-    elapsed = AlgoForwardTimeInt8(device_id, stream, knames, sources, index, compile_params, device_id, true, type, d_input, d_flt, d_output, bias, d_temp_buf, params, conv_param, quant_param, fuse_param, workspace);
+    elapsed = AlgoForwardTimeInt8(device, stream, knames, sources, index, compile_params, true, type, d_input, d_flt, d_output, bias, d_temp_buf, params, conv_param, quant_param, fuse_param, workspace);
 
     algo_param = params[index];
 #endif
@@ -1151,7 +1147,7 @@ double PPLCUDAConvolutionJitSelectKernelInt8(
 }
 
 void PPLCUDAConvolutionForwardJitImpInt8(
-    int device_id,
+    ppl::nn::cuda::CudaDevice* device,
     cudaStream_t &stream,
     CUfunction function,
     ppl::common::datatype_t type,

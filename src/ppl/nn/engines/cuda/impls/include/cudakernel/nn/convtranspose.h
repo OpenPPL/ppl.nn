@@ -40,7 +40,7 @@ uint64_t PPLConvTransposeGetBufSizeCuda(
     const ppl::nn::onnx::ConvTransposeParam* param);
 
 ppl::common::RetCode PPLCUDAConvTransposeCvt(
-    int device_id,
+    ppl::nn::cuda::CudaDevice* device,
     cudaStream_t stream,
     const void* in_filter,
     void* temp_buffer,
@@ -49,7 +49,7 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
     const ppl::nn::onnx::ConvTransposeParam* param);
 
 ppl::common::RetCode PPLCUDAConvTransposeForward(
-    int device_id,
+    ppl::nn::cuda::CudaDevice* device,
     cudaStream_t stream,
     ppl::nn::cuda::CUDAModule* module,
     ppl::nn::TensorShape* input_shape,
@@ -64,7 +64,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
     void* temp_buffer);
 
 double PPLCUDAConvTransposeSelectKernel(
-    int device_id,
+    ppl::nn::cuda::CudaDevice* device,
     cudaStream_t& stream,
     //ppl::nn::cuda::CUDAModule* module,
     ppl::nn::TensorShape* input_shape,

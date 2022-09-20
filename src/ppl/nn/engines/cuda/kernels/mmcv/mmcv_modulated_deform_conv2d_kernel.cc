@@ -64,10 +64,10 @@ ppl::common::RetCode MMCVModulatedDeformConv2dKernel::DoExecute(KernelExecContex
     const int64_t kernel_w = weight->GetShape()->GetDim(3);
 
     auto stream = GetStream();
-    int device_id = GetDeviceId();
+    CudaDevice* device = GetCudaDevice();
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
 
-    status = PPLCUDADeformConvForward(device_id, stream, module, output->GetShape(), input->GetShape(),
+    status = PPLCUDADeformConvForward(device, stream, module, output->GetShape(), input->GetShape(),
                                       output->GetBufferPtr(), input->GetBufferPtr(), weight->GetBufferPtr(),
                                       offset->GetBufferPtr(),
                                       mask ? mask->GetBufferPtr() : nullptr, bias ? bias->GetBufferPtr() : nullptr,
