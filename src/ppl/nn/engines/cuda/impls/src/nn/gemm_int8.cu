@@ -466,7 +466,7 @@ __device__ __inline__ void fma_v4(const int4 a, const int4 b, int4 &c);
 template <>
 __device__ __inline__ void fma_v4<int8_t>(const int4 a, const int4 b, int4 &c)
 {
-#if __CUDA_ARCH__ >= 600
+#if __CUDA_ARCH__ >= 610 && __CUDACC_VER_MAJOR__ >= 9
     ((int *)&c)[0] = __dp4a(((int *)&a)[0], ((int *)&b)[0], ((int *)&c)[0]);
     ((int *)&c)[1] = __dp4a(((int *)&a)[1], ((int *)&b)[1], ((int *)&c)[1]);
     ((int *)&c)[2] = __dp4a(((int *)&a)[2], ((int *)&b)[2], ((int *)&c)[2]);
@@ -477,7 +477,7 @@ __device__ __inline__ void fma_v4<int8_t>(const int4 a, const int4 b, int4 &c)
 template <>
 __device__ __inline__ void fma_v4<__half>(const int4 a, const int4 b, int4 &c)
 {
-#if __CUDA_ARCH__ >= 600
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
     ((__half2 *)&c)[0] = __hfma2(((__half2 *)&a)[0], ((__half2 *)&b)[0], ((__half2 *)&c)[0]);
     ((__half2 *)&c)[1] = __hfma2(((__half2 *)&a)[1], ((__half2 *)&b)[1], ((__half2 *)&c)[1]);
     ((__half2 *)&c)[2] = __hfma2(((__half2 *)&a)[2], ((__half2 *)&b)[2], ((__half2 *)&c)[2]);
@@ -501,7 +501,7 @@ template <>
 __device__ __inline__ int4 add_v4<__half>(const int4 a, const int4 b)
 {
     int4 res = {0, 0, 0, 0};
-#if __CUDA_ARCH__ >= 600
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
     ((__half2 *)&res)[0] = __hadd2(((__half2 *)&a)[0], ((__half2 *)&b)[0]);
     ((__half2 *)&res)[1] = __hadd2(((__half2 *)&a)[1], ((__half2 *)&b)[1]);
     ((__half2 *)&res)[2] = __hadd2(((__half2 *)&a)[2], ((__half2 *)&b)[2]);
