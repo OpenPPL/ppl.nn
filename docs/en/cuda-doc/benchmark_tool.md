@@ -1,6 +1,6 @@
 ## Cuda Benchmark Tool
 
-**Note: Openppl.cuda only supports Turing fp16 and int8. ONNX model does not need to convert manually, it will be done in inference process. **
+**Note: Openppl.cuda only supports Turing/Ampere fp16 and int8. ONNX model does not need to convert manually, it will be done in inference process. **
 
 ### Explanation of cuda private args
 
@@ -116,3 +116,50 @@ All tested model are dynamic model created by pytorch model zoo.
 | vgg19                    | 3.24230  | 2.81195  | 1.74979  | 1.768750  |
 | wide_resnet101_2         | 4.14432  | 3.95147  | 2.42690  | 3.070870  |
 | wide_resnet50_2          | 2.18955  | 2.01969  | 1.27713  | 1.475030  |
+
+## PPL and TRT Bechmark for single batch on A100:
+
+All tested model are dynamic model created by pytorch model zoo.
+
+```
+./pplnn --use-cuda --onnx-model model.onnx --inputs input.bin -–in-shapes 1_3_224_224 --warmup-iterations 400 --enable-profiling
+```
+
+| model name                  | PPL(fp16)  | TRT-8(fp16)  | PPL(int8)  | TRT-8(int8)  |
+|--------------------------|----------|----------|----------|-----------|
+| alexnet                  | 0.69166  | 0.75580  | 0.57939  | 0.58799   |
+| densenet121_opt          | 1.31893  | 1.47582  | 1.11157  | 1.13391   |
+| densenet161_opt          | 0.77013  | 0.61255  | 0.48386  | 0.44009   |
+| densenet169_opt          | 0.77038  | 0.61238  | 0.47408  | 0.43213   |
+| densenet201_opt          | 0.68839  | 0.53785  | 0.42359  | 0.38924   |
+| googlenet                | 0.68250  | 0.54045  | 0.42496  | 0.38812   |
+| inception_v3_opt         | 0.59749  | 0.47030  | 0.36946  | 0.33871   |
+| mnasnet0_5               | 0.59844  | 0.46495  | 0.37036  | 0.34008   |
+| mnasnet0_75              | 0.53366  | 0.42194  | 0.31743  | 0.30304   |
+| mnasnet1_0               | 0.53305  | 0.41373  | 0.31547  | 0.30280   |
+| mnasnet1_3               | 0.27181  | 0.21609  | 0.18845  | 0.19090   |
+| mobilenet_v2_opt         | 0.27216  | 0.24206  | 0.20574  | 0.21182   |
+| resnet101                | 0.51198  | 0.68966  | 0.44752  | 0.66234   |
+| resnet152                | 0.50150  | 0.65037  | 0.43025  | 0.60930   |
+| resnet18                 | 0.48689  | 0.63296  | 0.41215  | 0.60837   |
+| resnet34                 | 0.46391  | 0.47182  | 0.39389  | 0.47703   |
+| resnet50                 | 0.55127  | 0.52909  | 0.55861  | 0.44232   |
+| resnext101_32x8d         | 1.32752  | 1.16566  | 1.02201  | 0.91733   |
+| resnext50_32x4d          | 0.52467  | 0.60301  | 0.49741  | 0.47155   |
+| shufflenet_v2_x0_5_opt   | 0.42961  | 0.53858  | 0.41207  | 0.39974   |
+| shufflenet_v2_x1_0_opt   | 0.24522  | 0.29660  | 0.21845  | 0.21931   |
+| shufflenet_v2_x1_5_opt   | 1.40943  | 1.67678  | 1.38994  | 1.25584   |
+| shufflenet_v2_x2_0_opt   | 0.96760  | 1.13811  | 0.95007  | 0.86511   |
+| squeezenet1_0            | 0.37607  | 0.38720  | 0.36516  | 0.32030   |
+| squeezenet1_1            | 0.37983  | 0.47629  | 0.35943  | 0.36411   |
+| vgg11_bn                 | 0.36366  | 0.45259  | 0.33725  | 0.34626   |
+| vgg11                    | 0.35880  | 0.43913  | 0.35753  | 0.34363   |
+| vgg13_bn                 | 0.35656  | 0.42420  | 0.33973  | 0.32771   |
+| vgg13                    | 1.01372  | 0.94329  | 1.05876  | 0.75047   |
+| vgg16_bn                 | 0.54162  | 0.47882  | 0.45099  | 0.41977   |
+| vgg16                    | 7.91039  | 9.86797  | 8.06547  | 8.41490   |
+| vgg19_bn                 | 5.59416  | 6.54615  | 5.50678  | 5.57383   |
+| vgg19                    | 5.69565  | 6.28967  | 5.16531  | 6.08624   |
+| wide_resnet101_2         | 3.20323  | 3.51518  | 2.97470  | 2.96758   |
+| wide_resnet50_2          | 0.27644  | 0.24743  | 0.17007  | 0.20691   |
+
