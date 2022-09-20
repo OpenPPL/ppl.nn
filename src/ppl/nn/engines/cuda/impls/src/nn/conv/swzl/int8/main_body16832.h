@@ -485,11 +485,11 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
 #pragma unroll
     for (int i = 0; i < OUTPUT_BLKS_PER_STEP; i++) { concat_v4_off[i] = 0; }
 
+#endif
+
     float4 de_scale_v4;
     float* de_scale = (float *) &de_scale_v4;
     GET_DEQUANTSCALE(de_scale_v4, de_scale, d_flt_scale, in_scale);
-
-#endif
 
 #pragma unroll
     for(int s = 0; s < OUTPUT_STEPS; s++)
@@ -529,6 +529,9 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
 #if defined(ENABLE_FUSE)
         OUTPUT_BY_INT8_V4(R);
 #elif defined(ENABLE_SPLITK)
+        int* R = (int*)Rv4;
+        float* fR = (float*)Rv4;
+        DEQUANT_V4(fR, R, de_scale);
         OUTPUT_BY_INT4_V1(Rv4);
 #endif
     }

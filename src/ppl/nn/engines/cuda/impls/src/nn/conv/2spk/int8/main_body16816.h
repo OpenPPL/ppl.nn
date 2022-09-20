@@ -497,10 +497,11 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
                         dCv4_idy  * num_flt_per_grp_pad_v4 * num_grp +
                         dCv4_idx;
 
-#if defined(ENABLE_FUSE)
         float4 de_scale_v4;
         float* de_scale = (float *) &de_scale_v4;
         GET_DEQUANTSCALE(de_scale_v4, de_scale, d_flt_scale, in_scale);
+
+#if defined(ENABLE_FUSE)
         DEQUANT_V4(fR, R, de_scale);
 #endif
 
@@ -529,6 +530,9 @@ __global__ void __launch_bounds__(CTA_SIZE_IN_THD) KERNEL_NAME(TOTAL_KPARAM_LIST
         PACK_V4(R, 0);
         OUTPUT_BY_INT8_V4(R);
 #elif defined(ENABLE_SPLITK) || defined(ENABLE_SPLITF)
+        int* R = (int*)Rv4;
+        float* fR = (float*)Rv4;
+        DEQUANT_V4(fR, R, de_scale);
         OUTPUT_BY_INT4_V1(Rv4);
 #endif
 

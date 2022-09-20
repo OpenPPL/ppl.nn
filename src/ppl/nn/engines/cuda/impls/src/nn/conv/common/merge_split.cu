@@ -237,7 +237,7 @@ __global__ void MergeConvSplitResultsFp32(
     int4 split_v4[MAX_SPLIT_SIZE];
 
     float * f_merge = (float *) &merge_v4;
-    float * f_split = (float *) &split_v4;
+    float * f_split = (float *) split_v4;
     float * f_bias  = (float *) &bias_v4;
 
     merge_v4 = is_in_range ? input[off] : ZEROv4;
