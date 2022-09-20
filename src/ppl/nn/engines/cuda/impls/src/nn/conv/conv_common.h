@@ -364,7 +364,7 @@ struct kernel_info_t {
         }
     }
 
-    bool CheckSMemSizeFeasible(cudaDeviceProp& device_prop)
+    bool CheckSMemSizeFeasible(const cudaDeviceProp& device_prop)
     {
         if (device_prop.major == 7 && device_prop.minor == 5)
             return (smem_size <= SM75_MAX_DYN_SMEM_SIZE_PER_CTA);
@@ -381,7 +381,7 @@ struct kernel_info_t {
         return false;
     }
 
-    bool CheckGpuArchFeasible(cudaDeviceProp& device_prop)
+    bool CheckGpuArchFeasible(const cudaDeviceProp& device_prop)
     {
         return device_prop.major > karch_major || (device_prop.major == karch_major && device_prop.minor >= karch_minor);
     }

@@ -41,7 +41,7 @@ ppl::common::RetCode NormalCompiler::Compile(ir::Node* node, const OptKernelOpti
     auto gene_factor = mgr->FindKernel(input_type);
 
     std::string source = "";
-    algo_param.UseDefaultF1Kernel();
+    algo_param.UseDefaultF1Kernel(options.device);
     gene_factor->Gene2spkKernel(source, algo_param.algo_name, algo_param.mma_shape, algo_param.tiles.flt_size,
                                 algo_param.tiles.m_cta, algo_param.tiles.n_cta, algo_param.tiles.m_warp,
                                 algo_param.tiles.n_warp, algo_param.tiles.k_cta, algo_param.tiles.k_per_set, 

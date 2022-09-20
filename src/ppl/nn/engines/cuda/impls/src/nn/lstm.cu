@@ -112,7 +112,7 @@ y_h: (dir, batch, hidden_size)
 y_c: (dir, batch, hidden_size)
 */
 ppl::common::RetCode PPLCUDALstmForwardImp(
-    int device_id,
+    ppl::nn::cuda::CudaDevice* device,
     cudaStream_t stream,
     ppl::nn::cuda::CUDAModule *module,
     const ppl::nn::TensorShape *X_shape,
@@ -167,9 +167,9 @@ ppl::common::RetCode PPLCUDALstmForwardImp(
 
     __half *X_in = (__half *)temp_buffer;
     algo_param_t algo_param;
-    algo_param.UseDefaultF1Kernel();
+    algo_param.UseDefaultF1Kernel(device);
     PPLCUDAGemmForwardImp(
-        device_id, stream, module, &input_shape, X, &weight_shape, X_weight, NULL, &output_shape, X_in, gemm_param, tmp_buf, fuse_param, algo_param);
+        device, stream, module, &input_shape, X, &weight_shape, X_weight, NULL, &output_shape, X_in, gemm_param, tmp_buf, fuse_param, algo_param);
 
     __half *hidden_buf = (__half *)X_in + M * N;
     __half *ceil_buf   = hidden_buf + batch * 4 * hidden_size;
@@ -193,7 +193,7 @@ ppl::common::RetCode PPLCUDALstmForwardImp(
                 int N = 4 * hidden_size;
                 GET_GEMM_PARAM
                 PPLCUDAGemmForwardImp(
-                    device_id, stream, module, &input_shape, pre_hidden, &weight_shape, tR, NULL, &output_shape, post_hidden, gemm_param, tmp_buf, fuse_param, algo_param);
+                    device, stream, module, &input_shape, pre_hidden, &weight_shape, tR, NULL, &output_shape, post_hidden, gemm_param, tmp_buf, fuse_param, algo_param);
             } else {
                 cudaMemset(post_hidden, 0, 4 * hidden_size * sizeof(__half));
             }

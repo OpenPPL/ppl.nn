@@ -73,10 +73,9 @@ ppl::common::RetCode NonMaxSuppressionKernel::DoExecute(KernelExecContext* ctx) 
         }
     }
 
-    int device_id = GetCudaDevice()->GetDeviceId();
-    status = PPLCUDANMSForwardImp(GetStream(), boxes->GetShape(), boxes->GetBufferPtr(), scores->GetShape(),
+    status = PPLCUDANMSForwardImp(GetCudaDevice(), GetStream(), boxes->GetShape(), boxes->GetBufferPtr(), scores->GetShape(),
                                   scores->GetBufferPtr(), output->GetShape(), output->GetBufferPtr<int64_t>(),
-                                  tmp_buffer, tmp_buffer_bytes, device_id, param_->center_point_box,
+                                  tmp_buffer, tmp_buffer_bytes, param_->center_point_box,
                                   max_output_boxes_per_class, iou_threshold, score_threshold);
 
     return status;

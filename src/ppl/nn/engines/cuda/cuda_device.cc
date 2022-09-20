@@ -79,6 +79,12 @@ RetCode CudaDevice::Init(int device_id) {
         return status;
     }
 
+    auto err = cudaGetDeviceProperties(&device_prop_, device_id);
+    if (err != cudaSuccess) {
+        LOG(ERROR) << "get device properties failed: " << cudaGetErrorString(err);
+        return RC_UNSUPPORTED;
+    }
+
     if (!stream_) {
         cudaStreamCreate(&stream_);
     }

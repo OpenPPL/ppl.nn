@@ -89,12 +89,10 @@ static bool is_g_int8_kvec_set = false;
         fuse_param.has_concat,         concat_offset_v8,                   \
         concat_stride_v8
 
-void init_f1_int8_kvec(std::vector<kernel_info_t> &g_int8_kvec, int device_id, ppl::common::datatype_t type)
+void init_f1_int8_kvec(std::vector<kernel_info_t> &g_int8_kvec, ppl::nn::cuda::CudaDevice* device, ppl::common::datatype_t type)
 {
-    cudaDeviceProp device_prop;
-    cudaGetDeviceProperties(&device_prop, device_id);
-
 #ifndef PPLNN_ENABLE_CUDA_JIT
+    auto& device_prop = device->GetDeviceProp();
     if(type == ppl::common::DATATYPE_INT8) {
         if (device_prop.major == 7 && device_prop.minor == 5) {
 #if (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
@@ -174,7 +172,7 @@ ppl::common::RetCode PPLCUDAGemmModifyWeightsInt8(
 }
 
 double PPLCUDAGemmJITSelectKernelInt8(
-   int device_id,
+   ppl::nn::cuda::CudaDevice* device,
    cudaStream_t &stream,
    ppl::common::datatype_t type,
    ppl::nn::TensorShape *input_shape,
@@ -197,11 +195,11 @@ double PPLCUDAGemmJITSelectKernelInt8(
     std::vector<algo_param_t> params;
     std::string sources = "";
 
-    GetInt8ConvKernelNominees(device_id, type, conv_param, knames, params, sources);
+    GetInt8ConvKernelNominees(device, type, conv_param, knames, params, sources);
 
     int index = 0;
     std::vector<const char *> compile_params;
-    elapsed = AlgoForwardTimeInt8(device_id, stream, knames, sources, index, compile_params, device_id, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, quant_param, fuse_param, workspace);
+    elapsed = AlgoForwardTimeInt8(device, stream, knames, sources, index, compile_params, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, quant_param, fuse_param, workspace);
 
     algo_param = params[index];
 #endif
@@ -209,7 +207,7 @@ double PPLCUDAGemmJITSelectKernelInt8(
 }
 
 double PPLCUDAGemmSelectKernelInt8(
-    int device_id,
+    ppl::nn::cuda::CudaDevice* device,
     const cudaStream_t &stream,
     const ppl::nn::TensorShape *input_shape,
     const void *input,
@@ -225,12 +223,11 @@ double PPLCUDAGemmSelectKernelInt8(
     algo_param_t &algo_param)
 {
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
-    cudaDeviceProp device_prop;
-    cudaGetDeviceProperties(&device_prop, device_id);
+    auto& device_prop = device->GetDeviceProp();
 
     auto type = weight_shape->GetDataType();
     if (!is_g_int8_kvec_set)
-        init_f1_int8_kvec(g_int8_kvec, device_id, type);
+        init_f1_int8_kvec(g_int8_kvec, device, type);
 
     int pad_size = GetPadSize(type);
     int transA   = param.transA;
@@ -340,7 +337,7 @@ ppl::common::RetCode PPLCUDAGemvForwardImpInt8(
     const fuse_param_t &fuse_param);
 
 ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
-    int device_id,
+    ppl::nn::cuda::CudaDevice* device,
     const cudaStream_t &stream,
     ppl::nn::cuda::CUDAModule *module,
     const ppl::nn::TensorShape *input_shape,
@@ -361,7 +358,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
     float alpha  = param.alpha;
 #ifndef PPLNN_ENABLE_CUDA_JIT
     if (!is_g_int8_kvec_set)
-        init_f1_int8_kvec(g_int8_kvec, device_id, type);
+        init_f1_int8_kvec(g_int8_kvec, device, type);
 #endif
     int pad_size = GetPadSize(type);
     int transA   = param.transA;

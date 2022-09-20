@@ -159,17 +159,16 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
     temp_quant_param.d_flt_scale = wegiht_quant.addr;
     temp_quant_param.pre_scale = 0.0f;
     double timer = ALGO_MAX_TIME;
-    int device_id = options.device->GetDeviceId();
 #ifdef PPLNN_ENABLE_CUDA_JIT
     // Do select
     LOG(INFO) << "Compiling " << node->GetName();
     if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
-        timer = PPLCUDAGemmJITSelectKernel(device_id, stream, shape_in0.GetDataType(), &shape_in0, input_buffer.addr,
+        timer = PPLCUDAGemmJITSelectKernel(options.device, stream, shape_in0.GetDataType(), &shape_in0, input_buffer.addr,
                                            &shape_in1, weight_buffer.addr, bias_buffer.addr, &shape_out,
                                            output_buffer.addr, temp_buffer.addr, temp_conv_param, temp_fuse_param,
                                            attr_param_.extra_param.algo_info);
     } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
-        timer = PPLCUDAGemmJITSelectKernelInt8(device_id, stream, shape_in0.GetDataType(), &shape_in0,
+        timer = PPLCUDAGemmJITSelectKernelInt8(options.device, stream, shape_in0.GetDataType(), &shape_in0,
                                                input_buffer.addr, &shape_in1, weight_buffer.addr, bias_buffer.addr,
                                                &shape_out, output_buffer.addr, temp_buffer.addr, temp_conv_param,
                                                temp_quant_param, temp_fuse_param, attr_param_.extra_param.algo_info);
@@ -178,11 +177,11 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
 #else
     // Do Select
     if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
-        timer = PPLCUDAGemmSelectKernel(device_id, stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
+        timer = PPLCUDAGemmSelectKernel(options.device, stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
                                         bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr,
                                         attr_param_.param, temp_fuse_param, attr_param_.extra_param.algo_info);
     } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
-        timer = PPLCUDAGemmSelectKernelInt8(device_id, stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
+        timer = PPLCUDAGemmSelectKernelInt8(options.device, stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
                                             bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr,
                                             attr_param_.param, temp_quant_param, temp_fuse_param,
                                             attr_param_.extra_param.algo_info);

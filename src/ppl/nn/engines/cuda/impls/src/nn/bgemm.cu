@@ -89,7 +89,7 @@ extern bool is_g_fp16_kvec_set;
         fuse_param.has_concat, concat_offset_v8,                      \
         concat_stride_v8
 
-extern void init_f1_kvec(std::vector<kernel_info_t> &g_fp16_kvec, int device_id, ppl::common::datatype_t type);
+extern void init_f1_kvec(std::vector<kernel_info_t> &g_fp16_kvec, ppl::nn::cuda::CudaDevice* device, ppl::common::datatype_t type);
 
 uint64_t PPLBgemmCUDAGetBufSize(
     const ppl::nn::TensorShape *input_shape,
@@ -295,7 +295,7 @@ __inline__ std::string ToString(int v)
 }
 
 double PPLCUDABgemmJITSelectKernel(
-    int device_id,
+    ppl::nn::cuda::CudaDevice* device,
     cudaStream_t &stream,
     ppl::common::datatype_t type,
     ppl::nn::TensorShape *input_shape,
@@ -317,11 +317,11 @@ double PPLCUDABgemmJITSelectKernel(
     std::vector<algo_param_t> params;
     std::string sources = "";
 
-    GetFp16ConvKernelNominees(device_id, type, conv_param, knames, params, sources);
+    GetFp16ConvKernelNominees(device, type, conv_param, knames, params, sources);
 
     int index = 0;
     std::vector<const char *> compile_params;
-    elapsed = AlgoForwardTime(device_id, stream, knames, sources, index, compile_params, device_id, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, fuse_param, workspace);
+    elapsed = AlgoForwardTime(device, stream, knames, sources, index, compile_params, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, fuse_param, workspace);
 
     algo_param = params[index];
 #endif
@@ -329,7 +329,7 @@ double PPLCUDABgemmJITSelectKernel(
 }
 
 double PPLCUDABgemmSelectKernel(
-    int device_id,
+    ppl::nn::cuda::CudaDevice* device,
     const cudaStream_t &stream,
     const ppl::nn::TensorShape *input_shape,
     const void *input,
@@ -343,12 +343,11 @@ double PPLCUDABgemmSelectKernel(
     algo_param_t &algo_param)
 {
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
-    cudaDeviceProp device_prop;
-    cudaGetDeviceProperties(&device_prop, device_id);
+    auto& device_prop = device->GetDeviceProp();
 
     auto type = weight_shape->GetDataType();
     if (!is_g_fp16_kvec_set)
-        init_f1_kvec(g_fp16_kvec, device_id, type);
+        init_f1_kvec(g_fp16_kvec, device, type);
 
     int pad_size = GetPadSize(type);
 
@@ -465,7 +464,7 @@ double PPLCUDABgemmSelectKernel(
 
 // (B, M, K_pad) * ((B,)N, K_pad) = (B, M, N_pad)
 ppl::common::RetCode PPLCUDABgemmForwardImp(
-    int device_id,
+    ppl::nn::cuda::CudaDevice* device,
     const cudaStream_t &stream,
     ppl::nn::cuda::CUDAModule *module,
     const ppl::nn::TensorShape *input_shape,
@@ -483,7 +482,7 @@ ppl::common::RetCode PPLCUDABgemmForwardImp(
     auto type = weight_shape->GetDataType();
 #ifndef PPLNN_ENABLE_CUDA_JIT
     if (!is_g_fp16_kvec_set)
-        init_f1_kvec(g_fp16_kvec, device_id, type);
+        init_f1_kvec(g_fp16_kvec, device, type);
 #endif
     int pad_size = GetPadSize(type);
     //int transA   = param.transA;

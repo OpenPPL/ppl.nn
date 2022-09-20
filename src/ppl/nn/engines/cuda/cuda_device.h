@@ -85,6 +85,10 @@ public:
 
     ppl::common::RetCode SyncStream();
 
+    const cudaDeviceProp& GetDeviceProp() const {
+        return device_prop_;
+    }
+    
     cudaStream_t GetStream() const {
         return stream_;
     }
@@ -99,6 +103,7 @@ public:
 private:
     int device_id_ = INT_MAX;
     cudaStream_t stream_ = nullptr;
+    cudaDeviceProp device_prop_;
     CudaDataConverter data_converter_;
     std::map<edgeid_t, BufferDesc> edge2buffer_;
 
