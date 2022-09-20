@@ -100,6 +100,8 @@ void init_f1_kvec(std::vector<kernel_info_t> &g_fp16_kvec, ppl::nn::cuda::CudaDe
         } else if (device_prop.major > 8 || (device_prop.major == 8 && device_prop.minor >= 0)) {
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
             Initialize2spkSM75FP16Hmma1688ConvF1KernelContainer(g_fp16_kvec);
+#endif
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 11000
             Initialize2spkSM80FP16Hmma1688ConvF1KernelContainer(g_fp16_kvec);
             Initialize2spkSM80FP16Hmma16816ConvF1KernelContainer(g_fp16_kvec);
 #endif

@@ -103,7 +103,7 @@ void init_f1_int8_kvec(std::vector<kernel_info_t> &g_int8_kvec, ppl::nn::cuda::C
             Initialize2spkSM75Int8Imma8816ConvF1KernelContainer(g_int8_kvec);
 #endif
 
-#if (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
+#if (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 11000)
             Initialize2spkSM80Int8Imma8816ConvF1KernelContainer(g_int8_kvec);
             Initialize2spkSM80Int8Imma16816ConvF1KernelContainer(g_int8_kvec);
             Initialize2spkSM80Int8Imma16832ConvF1KernelContainer(g_int8_kvec);

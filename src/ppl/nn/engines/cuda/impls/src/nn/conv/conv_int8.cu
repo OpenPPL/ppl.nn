@@ -243,7 +243,7 @@ __inline__ void InitializeInt8ConvKernelContainer(std::vector<kernel_info_t> &g_
             InitializeSwzlSM75Int8Imma8816ConvFNKernelContainer(g_int8_kvec);
 #endif
 
-#if (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
+#if (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 11000)
             // sm80 kernels
             Initialize2spkSM80Int8Imma8816ConvF1KernelContainer(g_int8_kvec);
             Initialize2spkSM80Int8Imma8816ConvF3KernelContainer(g_int8_kvec);

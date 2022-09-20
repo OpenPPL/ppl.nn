@@ -229,7 +229,7 @@ __inline__ void InitializeFP16ConvKernelContainer(std::vector<kernel_info_t> &g_
             InitializeSwzlSM75FP16Hmma1688ConvFNKernelContainer(g_fp16_kvec);
 #endif
 
-#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 11000
             // sm80 kernels
             Initialize2spkSM80FP16Hmma1688ConvF1KernelContainer(g_fp16_kvec);
             Initialize2spkSM80FP16Hmma1688ConvF3KernelContainer(g_fp16_kvec);
