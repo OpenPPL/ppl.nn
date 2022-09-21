@@ -19,9 +19,6 @@
 #define _ST_HPC_PPL_NN_ENGINES_ARM_OPTIMIZER_OPS_ONNX_ADD_OP_H_
 
 #include "ppl/nn/engines/arm/optimizer/opt_kernel.h"
-#ifdef PPLNN_ENABLE_PMX_MODEL
-#include "ppl/nn/engines/arm/pmx/generated/arm_op_params_generated.h"
-#endif
 
 namespace ppl { namespace nn { namespace arm {
 
@@ -44,18 +41,8 @@ public:
     }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    virtual ppl::nn::pmx::arm::PrivateDataType GetPrivateDataType(void) const {
-        return ppl::nn::pmx::arm::PrivateDataType_FusionData;
-    }
-
-    virtual flatbuffers::Offset<void> SerializePrivateData(flatbuffers::FlatBufferBuilder* builder) const {
-        return ppl::nn::pmx::arm::CreateFusionData(*builder, (int8_t)(fuse_relu_ ? 1 : 0)).Union();
-    }
-    
-    virtual ppl::common::RetCode DeserializePrivateData(const ppl::nn::pmx::arm::OpData* op_data) {
-        fuse_relu_ = (op_data->value_as_FusionData()->fuse_relu() == (int8_t)1);
-        return ppl::common::RC_SUCCESS;
-    }
+    ppl::common::RetCode SerializeData(const ::ppl::nn::pmx::SerializationContext&, utils::DataStream*) const override;
+    ppl::common::RetCode DeserializeData(const ::ppl::nn::pmx::DeserializationContext&, const void*, uint64_t) override;
 #endif
 
 private:

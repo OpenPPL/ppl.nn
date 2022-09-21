@@ -27,7 +27,7 @@ Offset<PoolingParam> SerializePoolingParam(const ppl::nn::onnx::PoolingParam& pa
     auto fb_pads = builder->CreateVector(param.pads);
     auto fb_strides = builder->CreateVector(param.strides);
     return CreatePoolingParam(*builder, AutoPadType_NOTSET, param.ceil_mode, 0, 0, fb_dilations, fb_kernel_shape,
-                              fb_pads, fb_strides, param.global_pooling);
+                              fb_pads, fb_strides);
 }
 
 void DeserializePoolingParam(const PoolingParam& fb_param, ppl::nn::onnx::PoolingParam* param) {
@@ -36,7 +36,6 @@ void DeserializePoolingParam(const PoolingParam& fb_param, ppl::nn::onnx::Poolin
     utils::Fbvec2Stdvec(fb_param.kernel_shape(), &param->kernel_shape);
     utils::Fbvec2Stdvec(fb_param.pads(), &param->pads);
     utils::Fbvec2Stdvec(fb_param.strides(), &param->strides);
-    param->global_pooling = fb_param.global_pooling();
 }
 
 }}}} // namespace ppl::nn::pmx::onnx

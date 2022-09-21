@@ -42,9 +42,20 @@ public:
     bool TryFuseReLU6(void);
     bool TryFuseSum(void);
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode SerializeData(const ::ppl::nn::pmx::SerializationContext&, utils::DataStream*) const override;
+    ppl::common::RetCode DeserializeData(const ::ppl::nn::pmx::DeserializationContext&, const void*, uint64_t) override;
+#endif
+
+    virtual void SetAllocator(ppl::common::Allocator *allocator) override {
+        this->allocator_ = allocator;
+    }
+
 private:
     Convolution2DParam* conv2d_param_;
     std::shared_ptr<ppl::nn::onnx::ConvParam> param_;
+    
+    ppl::common::Allocator *allocator_;
 };
 
 }}} // namespace ppl::nn::arm

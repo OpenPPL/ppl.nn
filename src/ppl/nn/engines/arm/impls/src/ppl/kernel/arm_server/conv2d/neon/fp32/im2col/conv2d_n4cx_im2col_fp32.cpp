@@ -563,6 +563,23 @@ bool conv2d_n4cx_im2col_fp32_offline_manager::is_supported()
     return true;
 }
 
+std::vector<int64_t>  conv2d_n4cx_im2col_fp32_offline_manager::get_schedule_param() const
+{
+    std::vector<int64_t> sp = { sched_param_.sgemm_m_block1, sched_param_.sgemm_n_block1, sched_param_.sgemm_k_block1 };
+    return sp;
+}
+
+ppl::common::RetCode conv2d_n4cx_im2col_fp32_offline_manager::set_schedule_param(const std::vector<int64_t>& sp)
+{
+    if (sp.size() != 3) {
+        return fast_init_schedule_param();
+    }
+    sched_param_.sgemm_m_block1 = sp[0];
+    sched_param_.sgemm_n_block1 = sp[1];
+    sched_param_.sgemm_k_block1 = sp[2];
+    return ppl::common::RC_SUCCESS;
+}
+
 ppl::common::RetCode conv2d_n4cx_im2col_fp32_offline_manager::fast_init_schedule_param()
 {
     return ppl::common::RC_SUCCESS;

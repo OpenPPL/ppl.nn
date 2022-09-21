@@ -21,12 +21,6 @@
 #include "ppl/nn/params/onnx/transpose_param.h"
 #include "ppl/nn/engines/arm/optimizer/opt_kernel.h"
 
-#ifdef PPLNN_ENABLE_PMX_MODEL
-#include "ppl/nn/models/pmx/oputils/onnx/transpose.h"
-#include "ppl/nn/models/pmx/utils.h"
-#include "ppl/nn/engines/arm/pmx/generated/arm_op_params_generated.h"
-#endif
-
 namespace ppl { namespace nn { namespace arm {
 
 class TransposeOp final : public ArmOptKernel {
@@ -39,19 +33,8 @@ public:
     KernelImpl* CreateKernelImpl() const override;
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    virtual ppl::nn::pmx::onnx::OpParamType GetOptParamType(void) const override {
-        return ppl::nn::pmx::onnx::OpParamType_TransposeParam;
-    }
-
-    virtual flatbuffers::Offset<void> SerializeOptParam(flatbuffers::FlatBufferBuilder* builder) const override {
-        return ppl::nn::pmx::onnx::SerializeTransposeParam(*param_.get(), builder).Union();
-    }
-
-    virtual ppl::common::RetCode DeserializeOptParam(const ppl::nn::pmx::onnx::OpParam* op_param) override {
-        param_ = std::make_shared<ppl::nn::onnx::TransposeParam>();
-        ppl::nn::pmx::onnx::DeserializeTransposeParam(*op_param->value_as_TransposeParam(), param_.get());
-        return ppl::common::RC_SUCCESS;
-    }
+    ppl::common::RetCode SerializeData(const ::ppl::nn::pmx::SerializationContext&, utils::DataStream*) const override;
+    ppl::common::RetCode DeserializeData(const ::ppl::nn::pmx::DeserializationContext&, const void*, uint64_t) override;
 #endif
 
 private:

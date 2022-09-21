@@ -119,12 +119,21 @@ protected:
         kernel->SetParam(param);
         kernel->SetCommonParam(&common_param_);
         kernel->SetReshapeFunc([this](InputOutputInfo* info) -> ppl::common::RetCode {
+            auto input0_type = info->GetInput<TensorImpl>(0)->GetShape()->GetDataType();
             for (uint32_t i = 0; i < info->GetOutputCount(); i++) {
-                info->GetOutput<TensorImpl>(i)->GetShape()->SetDataType(common_param_.output_types[i]);
+                if (i < common_param_.output_types.size()) {
+                    info->GetOutput<TensorImpl>(i)->GetShape()->SetDataType(common_param_.output_types[i]);
+                } else {
+                    info->GetOutput<TensorImpl>(i)->GetShape()->SetDataType(input0_type);
+                }
             }
             infer_type_func_(info);
             for (uint32_t i = 0; i < info->GetOutputCount(); i++) {
-                info->GetOutput<TensorImpl>(i)->GetShape()->SetDataFormat(common_param_.output_formats[i]);
+                if (i < common_param_.output_types.size()) {
+                    info->GetOutput<TensorImpl>(i)->GetShape()->SetDataFormat(common_param_.output_formats[i]);
+                } else {
+                    info->GetOutput<TensorImpl>(i)->GetShape()->SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+                }
             }
             return infer_dims_func_(info);
         });
@@ -136,12 +145,21 @@ protected:
         auto kernel = new KernelType(GetNode());
         kernel->SetCommonParam(&common_param_);
         kernel->SetReshapeFunc([this](InputOutputInfo* info) -> ppl::common::RetCode {
+            auto input0_type = info->GetInput<TensorImpl>(0)->GetShape()->GetDataType();
             for (uint32_t i = 0; i < info->GetOutputCount(); i++) {
-                info->GetOutput<TensorImpl>(i)->GetShape()->SetDataType(common_param_.output_types[i]);
+                if (i < common_param_.output_types.size()) {
+                    info->GetOutput<TensorImpl>(i)->GetShape()->SetDataType(common_param_.output_types[i]);
+                } else {
+                    info->GetOutput<TensorImpl>(i)->GetShape()->SetDataType(input0_type);
+                }
             }
             infer_type_func_(info);
             for (uint32_t i = 0; i < info->GetOutputCount(); i++) {
-                info->GetOutput<TensorImpl>(i)->GetShape()->SetDataFormat(common_param_.output_formats[i]);
+                if (i < common_param_.output_types.size()) {
+                    info->GetOutput<TensorImpl>(i)->GetShape()->SetDataFormat(common_param_.output_formats[i]);
+                } else {
+                    info->GetOutput<TensorImpl>(i)->GetShape()->SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+                }
             }
             auto status = infer_dims_func_(info);
             return status;
@@ -198,56 +216,16 @@ protected:
     }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    virtual ppl::nn::pmx::onnx::OpParamType GetOptParamType(void) const {
-        return ppl::nn::pmx::onnx::OpParamType_NONE;
-    }
-
-    virtual flatbuffers::Offset<void> SerializeOptParam(flatbuffers::FlatBufferBuilder*) const {
-        return flatbuffers::Offset<void>();
-    }
-
-    virtual ppl::common::RetCode DeserializeOptParam(const ppl::nn::pmx::onnx::OpParam*) {
-        return ppl::common::RC_SUCCESS;
-    }
-
-    virtual ppl::nn::pmx::arm::PrivateDataType GetPrivateDataType(void) const {
-        return ppl::nn::pmx::arm::PrivateDataType_NONE;
-    }
-
-    virtual flatbuffers::Offset<void> SerializePrivateData(flatbuffers::FlatBufferBuilder*) const {
-        return flatbuffers::Offset<void>();
-    }
-    
-    virtual ppl::common::RetCode DeserializePrivateData(const ppl::nn::pmx::arm::OpData*) {
-        return ppl::common::RC_SUCCESS;
-    }
-
-
     ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const override {
-        flatbuffers::FlatBufferBuilder arm_data_builder;
-        auto fp_output_info = ppl::nn::pmx::arm::CreateOutputInfoDirect(arm_data_builder, &common_param_.output_types, &common_param_.output_formats);
-        auto fb_arm_op_data = ppl::nn::pmx::arm::CreateOpData(arm_data_builder, fp_output_info, GetPrivateDataType(), SerializePrivateData(&arm_data_builder));
-        ppl::nn::pmx::arm::FinishOpDataBuffer(arm_data_builder, fb_arm_op_data);
-
         flatbuffers::FlatBufferBuilder op_builder;
-        auto fb_data = op_builder.CreateVector(arm_data_builder.GetBufferPointer(), arm_data_builder.GetSize());
-        auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, GetOptParamType(), SerializeOptParam(&op_builder), fb_data);
+        auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, ppl::nn::pmx::onnx::OpParamType_NONE, 0, 0);
         ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
 
         return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
     }
 
     ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t) override {
-        auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
-        auto status = DeserializeOptParam(fb_op_param);
-        if (status != ppl::common::RC_SUCCESS) {
-            return status;
-        }
-
-        auto arm_op_data = ppl::nn::pmx::arm::GetOpData(fb_op_param->data_()->data());
-        ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->output_info()->dtype(), &common_param_.output_types);
-        ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->output_info()->dformat(), &common_param_.output_formats);
-        return DeserializePrivateData(arm_op_data);
+        return ppl::common::RC_SUCCESS;
     }
 #endif
 

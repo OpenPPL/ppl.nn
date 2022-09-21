@@ -20,11 +20,6 @@
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/common/pmx/shape_operation_kernel.h"
 
-#ifdef PPLNN_ENABLE_PMX_MODEL
-#include "ppl/nn/models/pmx/utils.h"
-#include "ppl/nn/engines/arm/pmx/generated/arm_op_params_generated.h"
-#endif
-
 using namespace std;
 using namespace ppl::common;
 
@@ -41,6 +36,15 @@ RetCode ShapeOperationOp::Init(const OptKernelOptions& options) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
     }
+    return RC_SUCCESS;
+}
+
+RetCode ShapeOperationOp::SelectDataType(const InputOutputInfo& info,
+                                 std::vector<ppl::common::datatype_t>* selected_input_types,
+                                 std::vector<ppl::common::datatype_t>* selected_output_types,
+                                 const ppl::common::datatype_t preferred_fp_datatype) {
+    GenericSelectDataType(info, selected_input_types, selected_output_types, preferred_fp_datatype);
+    selected_output_types->at(0) = DATATYPE_INT64;
     return RC_SUCCESS;
 }
 
@@ -64,10 +68,9 @@ ppl::common::RetCode ShapeOperationOp::SerializeData(const ::ppl::nn::pmx::Seria
         alpha.push_back(fb_shape_matrix);
     }
     auto fb_shape_op_param = ppl::nn::pmx::arm::CreateShapeOperationParamDirect(shape_op_param_builder, &alpha);
-    auto fp_pmx_op_data = ppl::nn::pmx::arm::CreatePmxOpData(shape_op_param_builder, ppl::nn::pmx::arm::PmxOpType_ShapeOperationParam, fb_shape_op_param.Union());
+    auto fb_pmx_op_data = ppl::nn::pmx::arm::CreatePmxOpDataDirect(shape_op_param_builder, &common_param_.output_types, &common_param_.output_formats, ppl::nn::pmx::arm::PmxOpType_ShapeOperationParam, fb_shape_op_param.Union());
 
-    auto fp_output_info = ppl::nn::pmx::arm::CreateOutputInfoDirect(shape_op_param_builder, &common_param_.output_types, &common_param_.output_formats);
-    auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(shape_op_param_builder, fp_output_info, ppl::nn::pmx::arm::PrivateDataType_PmxOpData, fp_pmx_op_data.Union());
+    auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(shape_op_param_builder, ppl::nn::pmx::arm::PrivateDataType_PmxOpData, fb_pmx_op_data.Union());
     ppl::nn::pmx::arm::FinishOpDataBuffer(shape_op_param_builder, fb_op_data);
 
     flatbuffers::FlatBufferBuilder op_builder;
@@ -79,15 +82,11 @@ ppl::common::RetCode ShapeOperationOp::SerializeData(const ::ppl::nn::pmx::Seria
 }
 
 ppl::common::RetCode ShapeOperationOp::DeserializeData(const ::ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
-    // std::vector<edgeid_t>& seq2eid = ctx.seq2eid;
-
     auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
     param_ = std::make_shared<ppl::nn::pmx::ShapeOperationParam>();
 
     auto arm_op_data = ppl::nn::pmx::arm::GetOpData(fb_op_param->data_()->data());
-    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->output_info()->dtype(), &common_param_.output_types);
-    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->output_info()->dformat(), &common_param_.output_formats);
-
+    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->value_as_PmxOpData()->dformat(), &common_param_.output_formats);
     auto arm_shape_op_param = arm_op_data->value_as_PmxOpData()->value_as_ShapeOperationParam();
     std::vector<flatbuffers::Offset<ppl::nn::pmx::arm::ShapeMatrixP>> alpha;
     auto fb_matrix_vec = arm_shape_op_param->shape_matrix();
@@ -101,6 +100,8 @@ ppl::common::RetCode ShapeOperationOp::DeserializeData(const ::ppl::nn::pmx::Des
  
         param_->alpha[fb_matrix->edge()] = matrix;
     }
+    common_param_.output_types.resize(1);
+    common_param_.output_types[0] = DATATYPE_INT64;
 
     op_ = ppl::nn::pmx::ShapeOperationOp(GetNode());
     return RC_SUCCESS;

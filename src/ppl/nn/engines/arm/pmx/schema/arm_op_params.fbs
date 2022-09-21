@@ -1,5 +1,16 @@
 namespace ppl.nn.pmx.arm;
 
+table OutputData {
+    dtype: [uint];
+    dformat: [uint];
+}
+
+table FusionData {
+    fuse_relu: byte;
+    dtype: [uint];
+    dformat: [uint];
+}
+
 table ConvAlgoInfo {
     algo_type: uint;
     dtype: uint;
@@ -30,6 +41,7 @@ table ConvData {
 table FCAlgoInfo {
     algo_type: uint;
     dtype: uint;
+    dformat: uint;
     isa: uint;
 }
 
@@ -50,10 +62,6 @@ table FullConnectData {
     algo_info: FCAlgoInfo;
     exec_info: FCExecInfo;
     param_info: FCParamInfo;
-}
-
-table FusionData {
-    fuse_relu: byte;
 }
 
 table ChannelShuffleParam {
@@ -78,23 +86,20 @@ union PmxOpType {
 }
 
 table PmxOpData {
+    dtype: [uint];
+    dformat: [uint];
     value: PmxOpType;
 }
 
 union PrivateDataType {
+    OutputData,
+    FusionData,
     ConvData,
     FullConnectData,
-    FusionData,
     PmxOpData,
 }
 
-table OutputInfo {
-    dtype: [uint];
-    dformat: [uint];
-}
-
 table OpData {
-    output_info: OutputInfo;
     value: PrivateDataType;
 }
 

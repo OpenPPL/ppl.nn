@@ -898,6 +898,23 @@ bool conv2d_wgb2f3_fp32_offline_manager::is_supported()
     return true;
 }
 
+std::vector<int64_t>  conv2d_wgb2f3_fp32_offline_manager::get_schedule_param() const
+{
+    std::vector<int64_t> sp = { sched_param_.ic_seg, sched_param_.oc_seg, sched_param_.tile_seg };
+    return sp;
+}
+
+ppl::common::RetCode conv2d_wgb2f3_fp32_offline_manager::set_schedule_param(const std::vector<int64_t>& sp)
+{
+    if (sp.size() != 3) {
+        return fast_init_schedule_param();
+    }
+    sched_param_.ic_seg = sp[0];
+    sched_param_.oc_seg = sp[1];
+    sched_param_.tile_seg = sp[2];
+    return ppl::common::RC_SUCCESS;
+}
+
 ppl::common::RetCode conv2d_wgb2f3_fp32_offline_manager::fast_init_schedule_param()
 {
     sched_param_.oc_seg   = 44;

@@ -68,7 +68,10 @@ public:
     conv2d_n4cx_direct_fp32_offline_manager(const conv2d_param &param, ppl::common::Allocator *allocator)
         : conv2d_offline_manager(param, allocator) {}
     bool is_supported() override;
-    conv2d_algo_t get_algo_type() override { return conv2d_algo::winograd_b4f3; }
+    conv2d_algo_t get_algo_type() override { return conv2d_algo::direct; }
+    
+    std::vector<int64_t> get_schedule_param() const override;
+    ppl::common::RetCode set_schedule_param(const std::vector<int64_t> &) override;
     
     // initialize scheduling params, e.g., block size, correspoding temp buffer size, etc.
     // for fast algo selection

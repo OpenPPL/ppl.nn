@@ -19,6 +19,11 @@
 #include "ppl/nn/engines/arm/kernels/onnx/unsqueeze_kernel.h"
 #include "ppl/nn/oputils/onnx/reshape_unsqueeze.h"
 #include "ppl/nn/common/logger.h"
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/oputils/onnx/unsqueeze.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 
@@ -48,6 +53,27 @@ RetCode UnsqueezeOp::SelectFormat(const InputOutputInfo& info,
     selected_input_formats->at(0) = selected_output_formats->at(0) = ppl::common::DATAFORMAT_NDARRAY;
     return RC_SUCCESS;
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+
+ppl::common::RetCode UnsqueezeOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder op_builder;
+    auto fb_param = ppl::nn::pmx::onnx::SerializeUnsqueezeParam(*param_.get(), &op_builder);
+    auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, ppl::nn::pmx::onnx::OpParamType_UnsqueezeParam, fb_param.Union(), 0);
+    ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
+    return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
+}
+
+ppl::common::RetCode UnsqueezeOp::DeserializeData(const ::ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+    auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
+
+    param_ = std::make_shared<ppl::nn::onnx::UnsqueezeParam>();
+    ppl::nn::pmx::onnx::DeserializeUnsqueezeParam(*fb_op_param->value_as_UnsqueezeParam(), param_.get());
+
+    return RC_SUCCESS;
+}
+
+#endif
 
 KernelImpl* UnsqueezeOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<UnsqueezeKernel>(param_.get());

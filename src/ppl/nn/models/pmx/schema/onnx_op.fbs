@@ -155,7 +155,6 @@ table PoolingParam {
     kernel_shape: [int32];
     pads: [int32];
     strides: [int32];
-    global_pooling: int32 = 0;
 }
 
 table ReduceParam {

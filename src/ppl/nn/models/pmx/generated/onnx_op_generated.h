@@ -1883,8 +1883,7 @@ struct PoolingParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_DILATIONS = 12,
     VT_KERNEL_SHAPE = 14,
     VT_PADS = 16,
-    VT_STRIDES = 18,
-    VT_GLOBAL_POOLING = 20
+    VT_STRIDES = 18
   };
   ppl::nn::pmx::onnx::AutoPadType auto_pad() const {
     return static_cast<ppl::nn::pmx::onnx::AutoPadType>(GetField<uint32_t>(VT_AUTO_PAD, 0));
@@ -1910,9 +1909,6 @@ struct PoolingParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::Vector<int32_t> *strides() const {
     return GetPointer<const flatbuffers::Vector<int32_t> *>(VT_STRIDES);
   }
-  int32_t global_pooling() const {
-    return GetField<int32_t>(VT_GLOBAL_POOLING, 0);
-  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_AUTO_PAD) &&
@@ -1927,7 +1923,6 @@ struct PoolingParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyVector(pads()) &&
            VerifyOffset(verifier, VT_STRIDES) &&
            verifier.VerifyVector(strides()) &&
-           VerifyField<int32_t>(verifier, VT_GLOBAL_POOLING) &&
            verifier.EndTable();
   }
 };
@@ -1960,9 +1955,6 @@ struct PoolingParamBuilder {
   void add_strides(flatbuffers::Offset<flatbuffers::Vector<int32_t>> strides) {
     fbb_.AddOffset(PoolingParam::VT_STRIDES, strides);
   }
-  void add_global_pooling(int32_t global_pooling) {
-    fbb_.AddElement<int32_t>(PoolingParam::VT_GLOBAL_POOLING, global_pooling, 0);
-  }
   explicit PoolingParamBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -1983,10 +1975,8 @@ inline flatbuffers::Offset<PoolingParam> CreatePoolingParam(
     flatbuffers::Offset<flatbuffers::Vector<int32_t>> dilations = 0,
     flatbuffers::Offset<flatbuffers::Vector<int32_t>> kernel_shape = 0,
     flatbuffers::Offset<flatbuffers::Vector<int32_t>> pads = 0,
-    flatbuffers::Offset<flatbuffers::Vector<int32_t>> strides = 0,
-    int32_t global_pooling = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<int32_t>> strides = 0) {
   PoolingParamBuilder builder_(_fbb);
-  builder_.add_global_pooling(global_pooling);
   builder_.add_strides(strides);
   builder_.add_pads(pads);
   builder_.add_kernel_shape(kernel_shape);
@@ -2007,8 +1997,7 @@ inline flatbuffers::Offset<PoolingParam> CreatePoolingParamDirect(
     const std::vector<int32_t> *dilations = nullptr,
     const std::vector<int32_t> *kernel_shape = nullptr,
     const std::vector<int32_t> *pads = nullptr,
-    const std::vector<int32_t> *strides = nullptr,
-    int32_t global_pooling = 0) {
+    const std::vector<int32_t> *strides = nullptr) {
   auto dilations__ = dilations ? _fbb.CreateVector<int32_t>(*dilations) : 0;
   auto kernel_shape__ = kernel_shape ? _fbb.CreateVector<int32_t>(*kernel_shape) : 0;
   auto pads__ = pads ? _fbb.CreateVector<int32_t>(*pads) : 0;
@@ -2022,8 +2011,7 @@ inline flatbuffers::Offset<PoolingParam> CreatePoolingParamDirect(
       dilations__,
       kernel_shape__,
       pads__,
-      strides__,
-      global_pooling);
+      strides__);
 }
 
 struct ReduceParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {

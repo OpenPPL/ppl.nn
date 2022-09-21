@@ -19,6 +19,11 @@
 #include "ppl/nn/engines/arm/kernels/onnx/argmax_kernel.h"
 #include "ppl/nn/oputils/onnx/reshape_argmax.h"
 #include "ppl/nn/common/logger.h"
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/oputils/onnx/argmax.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 
@@ -52,6 +57,28 @@ RetCode ArgMaxOp::SelectDataType(const InputOutputInfo& info,
     selected_output_types->at(0) = DATATYPE_INT64;
     return RC_SUCCESS;
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+
+ppl::common::RetCode ArgMaxOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder op_builder;
+    auto fb_param = ppl::nn::pmx::onnx::SerializeArgMaxParam(*param_.get(), &op_builder);
+    auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, ppl::nn::pmx::onnx::OpParamType_ArgMaxParam, fb_param.Union(), 0);
+    ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
+    return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
+}
+
+ppl::common::RetCode ArgMaxOp::DeserializeData(const ::ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+    auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
+
+    param_ = std::make_shared<ppl::nn::onnx::ArgMaxParam>();
+    ppl::nn::pmx::onnx::DeserializeArgMaxParam(*fb_op_param->value_as_ArgMaxParam(), param_.get());
+    common_param_.output_types[0] = DATATYPE_INT64;
+    common_param_.output_formats[0] = DATAFORMAT_NDARRAY;
+    return RC_SUCCESS;
+}
+
+#endif
 
 KernelImpl* ArgMaxOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<ArgMaxKernel>(param_.get());

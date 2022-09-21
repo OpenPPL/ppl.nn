@@ -240,6 +240,21 @@ bool conv2d_direct_ndarray_fp32_offline_manager::is_supported()
     return true;
 }
 
+std::vector<int64_t>  conv2d_direct_ndarray_fp32_offline_manager::get_schedule_param() const
+{
+    std::vector<int64_t> sp = { sched_param_.ic_tile };
+    return sp;
+}
+
+ppl::common::RetCode conv2d_direct_ndarray_fp32_offline_manager::set_schedule_param(const std::vector<int64_t>& sp)
+{
+    if (sp.size() != 1) {
+        return fast_init_schedule_param();
+    }
+    sched_param_.ic_tile = sp[0];
+    return ppl::common::RC_SUCCESS;
+}
+
 ppl::common::RetCode conv2d_direct_ndarray_fp32_offline_manager::fast_init_schedule_param()
 {
     sched_param_.ic_tile = 128;

@@ -97,6 +97,8 @@ struct conv2d_param {
 
 typedef uint32_t conv2d_algo_t;
 
+class conv2d_offline_manager;
+
 // ensure consistent with below algo str
 class conv2d_algo {
 public:
@@ -108,6 +110,12 @@ public:
     static const conv2d_algo_t direct_ndarray = 5;
     static const conv2d_algo_t winograd_b2f3  = 6;
     static const conv2d_algo_t winograd_b4f3  = 7;
+
+static ppl::kernel::arm_server::neon::conv2d_offline_manager *generate_conv_mgr(
+    const conv2d_algo_t type,
+    const ppl::common::datatype_t dtype,
+    const conv2d_param &param,
+    ppl::common::Allocator *allocator);
 };
 
 static inline const char *get_conv_algo_str(const conv2d_algo_t algo)

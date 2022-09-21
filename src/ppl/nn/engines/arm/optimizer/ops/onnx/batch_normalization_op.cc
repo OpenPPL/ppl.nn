@@ -19,6 +19,11 @@
 #include "ppl/nn/engines/arm/kernels/onnx/batch_normalization_kernel.h"
 #include "ppl/nn/oputils/onnx/reshape_batch_normalization.h"
 #include "ppl/nn/common/logger.h"
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/oputils/onnx/batch_normalization.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 
@@ -52,6 +57,37 @@ RetCode BatchNormalizationOp::SelectFormat(const InputOutputInfo& info,
     }
     return RC_SUCCESS;
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+
+ppl::common::RetCode BatchNormalizationOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder output_builder;
+    auto fb_output_data = ppl::nn::pmx::arm::CreateOutputDataDirect(output_builder, &common_param_.output_types, &common_param_.output_formats);
+    auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(output_builder, ppl::nn::pmx::arm::PrivateDataType_OutputData, fb_output_data.Union());
+    ppl::nn::pmx::arm::FinishOpDataBuffer(output_builder, fb_op_data);
+
+    flatbuffers::FlatBufferBuilder op_builder;
+    auto fb_param = ppl::nn::pmx::onnx::SerializeBatchNormalizationParam(*param_.get(), &op_builder);
+    auto fb_data = op_builder.CreateVector(output_builder.GetBufferPointer(), output_builder.GetSize());
+    auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, ppl::nn::pmx::onnx::OpParamType_BatchNormalizationParam, fb_param.Union(), fb_data);
+    ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
+    return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
+}
+
+ppl::common::RetCode BatchNormalizationOp::DeserializeData(const ::ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+    auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
+
+    param_ = std::make_shared<ppl::nn::onnx::BatchNormalizationParam>();
+    ppl::nn::pmx::onnx::DeserializeBatchNormalizationParam(*fb_op_param->value_as_BatchNormalizationParam(), param_.get());
+
+    auto arm_op_data = ppl::nn::pmx::arm::GetOpData(fb_op_param->data_()->data());
+    auto arm_output_data = arm_op_data->value_as_OutputData();
+    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_output_data->dtype(), &common_param_.output_types);
+    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_output_data->dformat(), &common_param_.output_formats);
+    return RC_SUCCESS;
+}
+
+#endif
 
 KernelImpl* BatchNormalizationOp::CreateKernelImpl() const {
     auto kernel = CreateKernelImplWithParam<BatchNormalizationKernel>(param_.get());

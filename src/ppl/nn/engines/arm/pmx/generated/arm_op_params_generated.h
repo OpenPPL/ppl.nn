@@ -11,6 +11,12 @@ namespace nn {
 namespace pmx {
 namespace arm {
 
+struct OutputData;
+struct OutputDataBuilder;
+
+struct FusionData;
+struct FusionDataBuilder;
+
 struct ConvAlgoInfo;
 struct ConvAlgoInfoBuilder;
 
@@ -35,9 +41,6 @@ struct FCParamInfoBuilder;
 struct FullConnectData;
 struct FullConnectDataBuilder;
 
-struct FusionData;
-struct FusionDataBuilder;
-
 struct ChannelShuffleParam;
 struct ChannelShuffleParamBuilder;
 
@@ -49,9 +52,6 @@ struct ShapeOperationParamBuilder;
 
 struct PmxOpData;
 struct PmxOpDataBuilder;
-
-struct OutputInfo;
-struct OutputInfoBuilder;
 
 struct OpData;
 struct OpDataBuilder;
@@ -106,31 +106,34 @@ bool VerifyPmxOpTypeVector(flatbuffers::Verifier &verifier, const flatbuffers::V
 
 enum PrivateDataType : uint8_t {
   PrivateDataType_NONE = 0,
-  PrivateDataType_ConvData = 1,
-  PrivateDataType_FullConnectData = 2,
-  PrivateDataType_FusionData = 3,
-  PrivateDataType_PmxOpData = 4,
+  PrivateDataType_OutputData = 1,
+  PrivateDataType_FusionData = 2,
+  PrivateDataType_ConvData = 3,
+  PrivateDataType_FullConnectData = 4,
+  PrivateDataType_PmxOpData = 5,
   PrivateDataType_MIN = PrivateDataType_NONE,
   PrivateDataType_MAX = PrivateDataType_PmxOpData
 };
 
-inline const PrivateDataType (&EnumValuesPrivateDataType())[5] {
+inline const PrivateDataType (&EnumValuesPrivateDataType())[6] {
   static const PrivateDataType values[] = {
     PrivateDataType_NONE,
+    PrivateDataType_OutputData,
+    PrivateDataType_FusionData,
     PrivateDataType_ConvData,
     PrivateDataType_FullConnectData,
-    PrivateDataType_FusionData,
     PrivateDataType_PmxOpData
   };
   return values;
 }
 
 inline const char * const *EnumNamesPrivateDataType() {
-  static const char * const names[6] = {
+  static const char * const names[7] = {
     "NONE",
+    "OutputData",
+    "FusionData",
     "ConvData",
     "FullConnectData",
-    "FusionData",
     "PmxOpData",
     nullptr
   };
@@ -147,6 +150,14 @@ template<typename T> struct PrivateDataTypeTraits {
   static const PrivateDataType enum_value = PrivateDataType_NONE;
 };
 
+template<> struct PrivateDataTypeTraits<ppl::nn::pmx::arm::OutputData> {
+  static const PrivateDataType enum_value = PrivateDataType_OutputData;
+};
+
+template<> struct PrivateDataTypeTraits<ppl::nn::pmx::arm::FusionData> {
+  static const PrivateDataType enum_value = PrivateDataType_FusionData;
+};
+
 template<> struct PrivateDataTypeTraits<ppl::nn::pmx::arm::ConvData> {
   static const PrivateDataType enum_value = PrivateDataType_ConvData;
 };
@@ -155,16 +166,154 @@ template<> struct PrivateDataTypeTraits<ppl::nn::pmx::arm::FullConnectData> {
   static const PrivateDataType enum_value = PrivateDataType_FullConnectData;
 };
 
-template<> struct PrivateDataTypeTraits<ppl::nn::pmx::arm::FusionData> {
-  static const PrivateDataType enum_value = PrivateDataType_FusionData;
-};
-
 template<> struct PrivateDataTypeTraits<ppl::nn::pmx::arm::PmxOpData> {
   static const PrivateDataType enum_value = PrivateDataType_PmxOpData;
 };
 
 bool VerifyPrivateDataType(flatbuffers::Verifier &verifier, const void *obj, PrivateDataType type);
 bool VerifyPrivateDataTypeVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<uint8_t> *types);
+
+struct OutputData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef OutputDataBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_DTYPE = 4,
+    VT_DFORMAT = 6
+  };
+  const flatbuffers::Vector<uint32_t> *dtype() const {
+    return GetPointer<const flatbuffers::Vector<uint32_t> *>(VT_DTYPE);
+  }
+  const flatbuffers::Vector<uint32_t> *dformat() const {
+    return GetPointer<const flatbuffers::Vector<uint32_t> *>(VT_DFORMAT);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_DTYPE) &&
+           verifier.VerifyVector(dtype()) &&
+           VerifyOffset(verifier, VT_DFORMAT) &&
+           verifier.VerifyVector(dformat()) &&
+           verifier.EndTable();
+  }
+};
+
+struct OutputDataBuilder {
+  typedef OutputData Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_dtype(flatbuffers::Offset<flatbuffers::Vector<uint32_t>> dtype) {
+    fbb_.AddOffset(OutputData::VT_DTYPE, dtype);
+  }
+  void add_dformat(flatbuffers::Offset<flatbuffers::Vector<uint32_t>> dformat) {
+    fbb_.AddOffset(OutputData::VT_DFORMAT, dformat);
+  }
+  explicit OutputDataBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<OutputData> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<OutputData>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<OutputData> CreateOutputData(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::Vector<uint32_t>> dtype = 0,
+    flatbuffers::Offset<flatbuffers::Vector<uint32_t>> dformat = 0) {
+  OutputDataBuilder builder_(_fbb);
+  builder_.add_dformat(dformat);
+  builder_.add_dtype(dtype);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<OutputData> CreateOutputDataDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const std::vector<uint32_t> *dtype = nullptr,
+    const std::vector<uint32_t> *dformat = nullptr) {
+  auto dtype__ = dtype ? _fbb.CreateVector<uint32_t>(*dtype) : 0;
+  auto dformat__ = dformat ? _fbb.CreateVector<uint32_t>(*dformat) : 0;
+  return ppl::nn::pmx::arm::CreateOutputData(
+      _fbb,
+      dtype__,
+      dformat__);
+}
+
+struct FusionData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef FusionDataBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_FUSE_RELU = 4,
+    VT_DTYPE = 6,
+    VT_DFORMAT = 8
+  };
+  int8_t fuse_relu() const {
+    return GetField<int8_t>(VT_FUSE_RELU, 0);
+  }
+  const flatbuffers::Vector<uint32_t> *dtype() const {
+    return GetPointer<const flatbuffers::Vector<uint32_t> *>(VT_DTYPE);
+  }
+  const flatbuffers::Vector<uint32_t> *dformat() const {
+    return GetPointer<const flatbuffers::Vector<uint32_t> *>(VT_DFORMAT);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int8_t>(verifier, VT_FUSE_RELU) &&
+           VerifyOffset(verifier, VT_DTYPE) &&
+           verifier.VerifyVector(dtype()) &&
+           VerifyOffset(verifier, VT_DFORMAT) &&
+           verifier.VerifyVector(dformat()) &&
+           verifier.EndTable();
+  }
+};
+
+struct FusionDataBuilder {
+  typedef FusionData Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_fuse_relu(int8_t fuse_relu) {
+    fbb_.AddElement<int8_t>(FusionData::VT_FUSE_RELU, fuse_relu, 0);
+  }
+  void add_dtype(flatbuffers::Offset<flatbuffers::Vector<uint32_t>> dtype) {
+    fbb_.AddOffset(FusionData::VT_DTYPE, dtype);
+  }
+  void add_dformat(flatbuffers::Offset<flatbuffers::Vector<uint32_t>> dformat) {
+    fbb_.AddOffset(FusionData::VT_DFORMAT, dformat);
+  }
+  explicit FusionDataBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<FusionData> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<FusionData>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<FusionData> CreateFusionData(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    int8_t fuse_relu = 0,
+    flatbuffers::Offset<flatbuffers::Vector<uint32_t>> dtype = 0,
+    flatbuffers::Offset<flatbuffers::Vector<uint32_t>> dformat = 0) {
+  FusionDataBuilder builder_(_fbb);
+  builder_.add_dformat(dformat);
+  builder_.add_dtype(dtype);
+  builder_.add_fuse_relu(fuse_relu);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<FusionData> CreateFusionDataDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    int8_t fuse_relu = 0,
+    const std::vector<uint32_t> *dtype = nullptr,
+    const std::vector<uint32_t> *dformat = nullptr) {
+  auto dtype__ = dtype ? _fbb.CreateVector<uint32_t>(*dtype) : 0;
+  auto dformat__ = dformat ? _fbb.CreateVector<uint32_t>(*dformat) : 0;
+  return ppl::nn::pmx::arm::CreateFusionData(
+      _fbb,
+      fuse_relu,
+      dtype__,
+      dformat__);
+}
 
 struct ConvAlgoInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef ConvAlgoInfoBuilder Builder;
@@ -482,13 +631,17 @@ struct FCAlgoInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ALGO_TYPE = 4,
     VT_DTYPE = 6,
-    VT_ISA = 8
+    VT_DFORMAT = 8,
+    VT_ISA = 10
   };
   uint32_t algo_type() const {
     return GetField<uint32_t>(VT_ALGO_TYPE, 0);
   }
   uint32_t dtype() const {
     return GetField<uint32_t>(VT_DTYPE, 0);
+  }
+  uint32_t dformat() const {
+    return GetField<uint32_t>(VT_DFORMAT, 0);
   }
   uint32_t isa() const {
     return GetField<uint32_t>(VT_ISA, 0);
@@ -497,6 +650,7 @@ struct FCAlgoInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_ALGO_TYPE) &&
            VerifyField<uint32_t>(verifier, VT_DTYPE) &&
+           VerifyField<uint32_t>(verifier, VT_DFORMAT) &&
            VerifyField<uint32_t>(verifier, VT_ISA) &&
            verifier.EndTable();
   }
@@ -511,6 +665,9 @@ struct FCAlgoInfoBuilder {
   }
   void add_dtype(uint32_t dtype) {
     fbb_.AddElement<uint32_t>(FCAlgoInfo::VT_DTYPE, dtype, 0);
+  }
+  void add_dformat(uint32_t dformat) {
+    fbb_.AddElement<uint32_t>(FCAlgoInfo::VT_DFORMAT, dformat, 0);
   }
   void add_isa(uint32_t isa) {
     fbb_.AddElement<uint32_t>(FCAlgoInfo::VT_ISA, isa, 0);
@@ -530,9 +687,11 @@ inline flatbuffers::Offset<FCAlgoInfo> CreateFCAlgoInfo(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t algo_type = 0,
     uint32_t dtype = 0,
+    uint32_t dformat = 0,
     uint32_t isa = 0) {
   FCAlgoInfoBuilder builder_(_fbb);
   builder_.add_isa(isa);
+  builder_.add_dformat(dformat);
   builder_.add_dtype(dtype);
   builder_.add_algo_type(algo_type);
   return builder_.Finish();
@@ -752,47 +911,6 @@ inline flatbuffers::Offset<FullConnectData> CreateFullConnectData(
   return builder_.Finish();
 }
 
-struct FusionData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef FusionDataBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_FUSE_RELU = 4
-  };
-  int8_t fuse_relu() const {
-    return GetField<int8_t>(VT_FUSE_RELU, 0);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyField<int8_t>(verifier, VT_FUSE_RELU) &&
-           verifier.EndTable();
-  }
-};
-
-struct FusionDataBuilder {
-  typedef FusionData Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_fuse_relu(int8_t fuse_relu) {
-    fbb_.AddElement<int8_t>(FusionData::VT_FUSE_RELU, fuse_relu, 0);
-  }
-  explicit FusionDataBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  flatbuffers::Offset<FusionData> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<FusionData>(end);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<FusionData> CreateFusionData(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    int8_t fuse_relu = 0) {
-  FusionDataBuilder builder_(_fbb);
-  builder_.add_fuse_relu(fuse_relu);
-  return builder_.Finish();
-}
-
 struct ChannelShuffleParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef ChannelShuffleParamBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -990,9 +1108,17 @@ inline flatbuffers::Offset<ShapeOperationParam> CreateShapeOperationParamDirect(
 struct PmxOpData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef PmxOpDataBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_VALUE_TYPE = 4,
-    VT_VALUE = 6
+    VT_DTYPE = 4,
+    VT_DFORMAT = 6,
+    VT_VALUE_TYPE = 8,
+    VT_VALUE = 10
   };
+  const flatbuffers::Vector<uint32_t> *dtype() const {
+    return GetPointer<const flatbuffers::Vector<uint32_t> *>(VT_DTYPE);
+  }
+  const flatbuffers::Vector<uint32_t> *dformat() const {
+    return GetPointer<const flatbuffers::Vector<uint32_t> *>(VT_DFORMAT);
+  }
   ppl::nn::pmx::arm::PmxOpType value_type() const {
     return static_cast<ppl::nn::pmx::arm::PmxOpType>(GetField<uint8_t>(VT_VALUE_TYPE, 0));
   }
@@ -1008,6 +1134,10 @@ struct PmxOpData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_DTYPE) &&
+           verifier.VerifyVector(dtype()) &&
+           VerifyOffset(verifier, VT_DFORMAT) &&
+           verifier.VerifyVector(dformat()) &&
            VerifyField<uint8_t>(verifier, VT_VALUE_TYPE) &&
            VerifyOffset(verifier, VT_VALUE) &&
            VerifyPmxOpType(verifier, value(), value_type()) &&
@@ -1027,6 +1157,12 @@ struct PmxOpDataBuilder {
   typedef PmxOpData Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
+  void add_dtype(flatbuffers::Offset<flatbuffers::Vector<uint32_t>> dtype) {
+    fbb_.AddOffset(PmxOpData::VT_DTYPE, dtype);
+  }
+  void add_dformat(flatbuffers::Offset<flatbuffers::Vector<uint32_t>> dformat) {
+    fbb_.AddOffset(PmxOpData::VT_DFORMAT, dformat);
+  }
   void add_value_type(ppl::nn::pmx::arm::PmxOpType value_type) {
     fbb_.AddElement<uint8_t>(PmxOpData::VT_VALUE_TYPE, static_cast<uint8_t>(value_type), 0);
   }
@@ -1046,89 +1182,40 @@ struct PmxOpDataBuilder {
 
 inline flatbuffers::Offset<PmxOpData> CreatePmxOpData(
     flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::Vector<uint32_t>> dtype = 0,
+    flatbuffers::Offset<flatbuffers::Vector<uint32_t>> dformat = 0,
     ppl::nn::pmx::arm::PmxOpType value_type = ppl::nn::pmx::arm::PmxOpType_NONE,
     flatbuffers::Offset<void> value = 0) {
   PmxOpDataBuilder builder_(_fbb);
   builder_.add_value(value);
+  builder_.add_dformat(dformat);
+  builder_.add_dtype(dtype);
   builder_.add_value_type(value_type);
   return builder_.Finish();
 }
 
-struct OutputInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef OutputInfoBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_DTYPE = 4,
-    VT_DFORMAT = 6
-  };
-  const flatbuffers::Vector<uint32_t> *dtype() const {
-    return GetPointer<const flatbuffers::Vector<uint32_t> *>(VT_DTYPE);
-  }
-  const flatbuffers::Vector<uint32_t> *dformat() const {
-    return GetPointer<const flatbuffers::Vector<uint32_t> *>(VT_DFORMAT);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_DTYPE) &&
-           verifier.VerifyVector(dtype()) &&
-           VerifyOffset(verifier, VT_DFORMAT) &&
-           verifier.VerifyVector(dformat()) &&
-           verifier.EndTable();
-  }
-};
-
-struct OutputInfoBuilder {
-  typedef OutputInfo Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_dtype(flatbuffers::Offset<flatbuffers::Vector<uint32_t>> dtype) {
-    fbb_.AddOffset(OutputInfo::VT_DTYPE, dtype);
-  }
-  void add_dformat(flatbuffers::Offset<flatbuffers::Vector<uint32_t>> dformat) {
-    fbb_.AddOffset(OutputInfo::VT_DFORMAT, dformat);
-  }
-  explicit OutputInfoBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  flatbuffers::Offset<OutputInfo> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<OutputInfo>(end);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<OutputInfo> CreateOutputInfo(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::Vector<uint32_t>> dtype = 0,
-    flatbuffers::Offset<flatbuffers::Vector<uint32_t>> dformat = 0) {
-  OutputInfoBuilder builder_(_fbb);
-  builder_.add_dformat(dformat);
-  builder_.add_dtype(dtype);
-  return builder_.Finish();
-}
-
-inline flatbuffers::Offset<OutputInfo> CreateOutputInfoDirect(
+inline flatbuffers::Offset<PmxOpData> CreatePmxOpDataDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const std::vector<uint32_t> *dtype = nullptr,
-    const std::vector<uint32_t> *dformat = nullptr) {
+    const std::vector<uint32_t> *dformat = nullptr,
+    ppl::nn::pmx::arm::PmxOpType value_type = ppl::nn::pmx::arm::PmxOpType_NONE,
+    flatbuffers::Offset<void> value = 0) {
   auto dtype__ = dtype ? _fbb.CreateVector<uint32_t>(*dtype) : 0;
   auto dformat__ = dformat ? _fbb.CreateVector<uint32_t>(*dformat) : 0;
-  return ppl::nn::pmx::arm::CreateOutputInfo(
+  return ppl::nn::pmx::arm::CreatePmxOpData(
       _fbb,
       dtype__,
-      dformat__);
+      dformat__,
+      value_type,
+      value);
 }
 
 struct OpData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef OpDataBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_OUTPUT_INFO = 4,
-    VT_VALUE_TYPE = 6,
-    VT_VALUE = 8
+    VT_VALUE_TYPE = 4,
+    VT_VALUE = 6
   };
-  const ppl::nn::pmx::arm::OutputInfo *output_info() const {
-    return GetPointer<const ppl::nn::pmx::arm::OutputInfo *>(VT_OUTPUT_INFO);
-  }
   ppl::nn::pmx::arm::PrivateDataType value_type() const {
     return static_cast<ppl::nn::pmx::arm::PrivateDataType>(GetField<uint8_t>(VT_VALUE_TYPE, 0));
   }
@@ -1136,22 +1223,23 @@ struct OpData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return GetPointer<const void *>(VT_VALUE);
   }
   template<typename T> const T *value_as() const;
+  const ppl::nn::pmx::arm::OutputData *value_as_OutputData() const {
+    return value_type() == ppl::nn::pmx::arm::PrivateDataType_OutputData ? static_cast<const ppl::nn::pmx::arm::OutputData *>(value()) : nullptr;
+  }
+  const ppl::nn::pmx::arm::FusionData *value_as_FusionData() const {
+    return value_type() == ppl::nn::pmx::arm::PrivateDataType_FusionData ? static_cast<const ppl::nn::pmx::arm::FusionData *>(value()) : nullptr;
+  }
   const ppl::nn::pmx::arm::ConvData *value_as_ConvData() const {
     return value_type() == ppl::nn::pmx::arm::PrivateDataType_ConvData ? static_cast<const ppl::nn::pmx::arm::ConvData *>(value()) : nullptr;
   }
   const ppl::nn::pmx::arm::FullConnectData *value_as_FullConnectData() const {
     return value_type() == ppl::nn::pmx::arm::PrivateDataType_FullConnectData ? static_cast<const ppl::nn::pmx::arm::FullConnectData *>(value()) : nullptr;
   }
-  const ppl::nn::pmx::arm::FusionData *value_as_FusionData() const {
-    return value_type() == ppl::nn::pmx::arm::PrivateDataType_FusionData ? static_cast<const ppl::nn::pmx::arm::FusionData *>(value()) : nullptr;
-  }
   const ppl::nn::pmx::arm::PmxOpData *value_as_PmxOpData() const {
     return value_type() == ppl::nn::pmx::arm::PrivateDataType_PmxOpData ? static_cast<const ppl::nn::pmx::arm::PmxOpData *>(value()) : nullptr;
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_OUTPUT_INFO) &&
-           verifier.VerifyTable(output_info()) &&
            VerifyField<uint8_t>(verifier, VT_VALUE_TYPE) &&
            VerifyOffset(verifier, VT_VALUE) &&
            VerifyPrivateDataType(verifier, value(), value_type()) &&
@@ -1159,16 +1247,20 @@ struct OpData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
 };
 
+template<> inline const ppl::nn::pmx::arm::OutputData *OpData::value_as<ppl::nn::pmx::arm::OutputData>() const {
+  return value_as_OutputData();
+}
+
+template<> inline const ppl::nn::pmx::arm::FusionData *OpData::value_as<ppl::nn::pmx::arm::FusionData>() const {
+  return value_as_FusionData();
+}
+
 template<> inline const ppl::nn::pmx::arm::ConvData *OpData::value_as<ppl::nn::pmx::arm::ConvData>() const {
   return value_as_ConvData();
 }
 
 template<> inline const ppl::nn::pmx::arm::FullConnectData *OpData::value_as<ppl::nn::pmx::arm::FullConnectData>() const {
   return value_as_FullConnectData();
-}
-
-template<> inline const ppl::nn::pmx::arm::FusionData *OpData::value_as<ppl::nn::pmx::arm::FusionData>() const {
-  return value_as_FusionData();
 }
 
 template<> inline const ppl::nn::pmx::arm::PmxOpData *OpData::value_as<ppl::nn::pmx::arm::PmxOpData>() const {
@@ -1179,9 +1271,6 @@ struct OpDataBuilder {
   typedef OpData Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_output_info(flatbuffers::Offset<ppl::nn::pmx::arm::OutputInfo> output_info) {
-    fbb_.AddOffset(OpData::VT_OUTPUT_INFO, output_info);
-  }
   void add_value_type(ppl::nn::pmx::arm::PrivateDataType value_type) {
     fbb_.AddElement<uint8_t>(OpData::VT_VALUE_TYPE, static_cast<uint8_t>(value_type), 0);
   }
@@ -1201,12 +1290,10 @@ struct OpDataBuilder {
 
 inline flatbuffers::Offset<OpData> CreateOpData(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<ppl::nn::pmx::arm::OutputInfo> output_info = 0,
     ppl::nn::pmx::arm::PrivateDataType value_type = ppl::nn::pmx::arm::PrivateDataType_NONE,
     flatbuffers::Offset<void> value = 0) {
   OpDataBuilder builder_(_fbb);
   builder_.add_value(value);
-  builder_.add_output_info(output_info);
   builder_.add_value_type(value_type);
   return builder_.Finish();
 }
@@ -1245,16 +1332,20 @@ inline bool VerifyPrivateDataType(flatbuffers::Verifier &verifier, const void *o
     case PrivateDataType_NONE: {
       return true;
     }
+    case PrivateDataType_OutputData: {
+      auto ptr = reinterpret_cast<const ppl::nn::pmx::arm::OutputData *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case PrivateDataType_FusionData: {
+      auto ptr = reinterpret_cast<const ppl::nn::pmx::arm::FusionData *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
     case PrivateDataType_ConvData: {
       auto ptr = reinterpret_cast<const ppl::nn::pmx::arm::ConvData *>(obj);
       return verifier.VerifyTable(ptr);
     }
     case PrivateDataType_FullConnectData: {
       auto ptr = reinterpret_cast<const ppl::nn::pmx::arm::FullConnectData *>(obj);
-      return verifier.VerifyTable(ptr);
-    }
-    case PrivateDataType_FusionData: {
-      auto ptr = reinterpret_cast<const ppl::nn::pmx::arm::FusionData *>(obj);
       return verifier.VerifyTable(ptr);
     }
     case PrivateDataType_PmxOpData: {

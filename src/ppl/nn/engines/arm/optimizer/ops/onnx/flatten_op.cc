@@ -18,8 +18,12 @@
 #include "ppl/nn/engines/arm/optimizer/ops/onnx/flatten_op.h"
 #include "ppl/nn/engines/arm/kernels/onnx/flatten_kernel.h"
 #include "ppl/nn/oputils/onnx/reshape_flatten.h"
-
 #include "ppl/nn/common/logger.h"
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/oputils/onnx/flatten.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 
@@ -42,6 +46,27 @@ RetCode FlattenOp::Init(const OptKernelOptions& options) {
 
     return RC_SUCCESS;
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+
+ppl::common::RetCode FlattenOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder op_builder;
+    auto fb_param = ppl::nn::pmx::onnx::SerializeFlattenParam(*param_.get(), &op_builder);
+    auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, ppl::nn::pmx::onnx::OpParamType_FlattenParam, fb_param.Union(), 0);
+    ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
+    return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
+}
+
+ppl::common::RetCode FlattenOp::DeserializeData(const ::ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+    auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
+
+    param_ = std::make_shared<ppl::nn::onnx::FlattenParam>();
+    ppl::nn::pmx::onnx::DeserializeFlattenParam(*fb_op_param->value_as_FlattenParam(), param_.get());
+
+    return RC_SUCCESS;
+}
+
+#endif
 
 KernelImpl* FlattenOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<FlattenKernel>(param_.get());

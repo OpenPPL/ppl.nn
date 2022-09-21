@@ -19,6 +19,11 @@
 #include "ppl/nn/engines/arm/kernels/onnx/transpose_kernel.h"
 #include "ppl/nn/oputils/onnx/reshape_transpose.h"
 #include "ppl/nn/common/logger.h"
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/oputils/onnx/transpose.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 
@@ -48,6 +53,27 @@ RetCode TransposeOp::SelectFormat(const InputOutputInfo& info,
     selected_input_formats->at(0) = selected_output_formats->at(0) = ppl::common::DATAFORMAT_NDARRAY;
     return RC_SUCCESS;
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+
+ppl::common::RetCode TransposeOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder op_builder;
+    auto fb_param = ppl::nn::pmx::onnx::SerializeTransposeParam(*param_.get(), &op_builder);
+    auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, ppl::nn::pmx::onnx::OpParamType_TransposeParam, fb_param.Union(), 0);
+    ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
+    return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
+}
+
+ppl::common::RetCode TransposeOp::DeserializeData(const ::ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+    auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
+
+    param_ = std::make_shared<ppl::nn::onnx::TransposeParam>();
+    ppl::nn::pmx::onnx::DeserializeTransposeParam(*fb_op_param->value_as_TransposeParam(), param_.get());
+
+    return RC_SUCCESS;
+}
+
+#endif
 
 KernelImpl* TransposeOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<TransposeKernel>(param_.get());

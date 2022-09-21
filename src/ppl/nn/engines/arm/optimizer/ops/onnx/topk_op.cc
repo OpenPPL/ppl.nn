@@ -19,6 +19,10 @@
 #include "ppl/nn/engines/arm/kernels/onnx/topk_kernel.h"
 #include "ppl/nn/oputils/onnx/reshape_topk.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/oputils/onnx/topk.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
 
@@ -45,6 +49,27 @@ RetCode TopKOp::Init(const OptKernelOptions& options) {
 
     return RC_SUCCESS;
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+
+ppl::common::RetCode TopKOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder op_builder;
+    auto fb_param = ppl::nn::pmx::onnx::SerializeTopKParam(*param_.get(), &op_builder);
+    auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, ppl::nn::pmx::onnx::OpParamType_TopKParam, fb_param.Union(), 0);
+    ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
+    return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
+}
+
+ppl::common::RetCode TopKOp::DeserializeData(const ::ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+    auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
+
+    param_ = std::make_shared<ppl::nn::onnx::TopKParam>();
+    ppl::nn::pmx::onnx::DeserializeTopKParam(*fb_op_param->value_as_TopKParam(), param_.get());
+
+    return RC_SUCCESS;
+}
+
+#endif
 
 KernelImpl* TopKOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<TopKKernel>(param_.get());

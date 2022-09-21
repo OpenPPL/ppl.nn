@@ -24,8 +24,6 @@
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
 #include "ppl/nn/models/pmx/oputils/onnx/gemm.h"
-#include "ppl/nn/models/pmx/utils.h"
-#include "ppl/nn/engines/arm/pmx/generated/arm_op_params_generated.h"
 #endif
 
 using namespace std;
@@ -179,9 +177,8 @@ bool GemmOp::TryFuseReLU() {
 ppl::common::RetCode GemmOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
     if (!fc_param_) { 
         flatbuffers::FlatBufferBuilder builder;
-        auto fb_fuse_data = ppl::nn::pmx::arm::CreateFusionData(builder, (gemm_fuse_relu_ ? 1 : 0));
-        auto fp_output_info = ppl::nn::pmx::arm::CreateOutputInfoDirect(builder, &common_param_.output_types, &common_param_.output_formats);
-        auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(builder, fp_output_info, ppl::nn::pmx::arm::PrivateDataType_FusionData, fb_fuse_data.Union());
+        auto fb_fusion_data = ppl::nn::pmx::arm::CreateFusionDataDirect(builder, (gemm_fuse_relu_ ? 1 : 0), &common_param_.output_types, &common_param_.output_formats);
+        auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(builder, ppl::nn::pmx::arm::PrivateDataType_FusionData, fb_fusion_data.Union());
         ppl::nn::pmx::arm::FinishOpDataBuffer(builder, fb_op_data);
 
         flatbuffers::FlatBufferBuilder op_builder;
@@ -197,6 +194,7 @@ ppl::common::RetCode GemmOp::SerializeData(const ::ppl::nn::pmx::SerializationCo
     auto fb_algo_info = ppl::nn::pmx::arm::CreateFCAlgoInfo(fc_internal_builder,
                                                             algo_info.algo_type,
                                                             algo_info.dtype,
+                                                            common_param_.output_formats[0],
                                                             algo_info.isa);
     auto mgr = fc_param_->mgr;
     auto fb_exec_info = ppl::nn::pmx::arm::CreateFCExecInfo(fc_internal_builder,
@@ -204,15 +202,12 @@ ppl::common::RetCode GemmOp::SerializeData(const ::ppl::nn::pmx::SerializationCo
                                                             mgr->cvt_filter_size(),
                                                             fc_internal_builder.CreateVector<uint8_t>((const uint8_t*)mgr->cvt_bias(), mgr->cvt_bias_size()),
                                                             mgr->cvt_bias_size());
-    LOG(WARNING) << mgr->cvt_filter_size();
-    LOG(WARNING) << mgr->cvt_bias_size();
     auto fb_param_info = ppl::nn::pmx::arm::CreateFCParamInfo(fc_internal_builder, 
                                                               fc_param_->param.num_output, 
                                                               fc_param_->param.channels, 
                                                               fc_param_->param.fuse_flag);
     auto fb_fc_data = ppl::nn::pmx::arm::CreateFullConnectData(fc_internal_builder, fb_algo_info, fb_exec_info, fb_param_info);
-    auto fp_output_info = ppl::nn::pmx::arm::CreateOutputInfoDirect(fc_internal_builder, &common_param_.output_types, &common_param_.output_formats);
-    auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(fc_internal_builder, fp_output_info, ppl::nn::pmx::arm::PrivateDataType_FullConnectData, fb_fc_data.Union());
+    auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(fc_internal_builder, ppl::nn::pmx::arm::PrivateDataType_FullConnectData, fb_fc_data.Union());
     ppl::nn::pmx::arm::FinishOpDataBuffer(fc_internal_builder, fb_op_data);
 
     flatbuffers::FlatBufferBuilder op_builder;
@@ -224,7 +219,6 @@ ppl::common::RetCode GemmOp::SerializeData(const ::ppl::nn::pmx::SerializationCo
 }
 
 ppl::common::RetCode GemmOp::DeserializeData(const ::ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
-
     auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
 
     auto fb_gemm_param = fb_op_param->value_as_GemmParam();
@@ -235,8 +229,6 @@ ppl::common::RetCode GemmOp::DeserializeData(const ::ppl::nn::pmx::Deserializati
     DeserializeGemmParam(*fb_gemm_param, param_.get());
 
     auto arm_op_data = ppl::nn::pmx::arm::GetOpData(fb_op_param->data_()->data());
-    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->output_info()->dtype(), &common_param_.output_types);
-    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->output_info()->dformat(), &common_param_.output_formats);
     
     auto arm_fc_data = arm_op_data->value_as_FullConnectData();
     if (arm_fc_data) {
@@ -252,10 +244,14 @@ ppl::common::RetCode GemmOp::DeserializeData(const ::ppl::nn::pmx::Deserializati
         auto exec_info = arm_fc_data->exec_info();
         auto param_info = arm_fc_data->param_info();
 
-
         fc_param_->algo_info.algo_type = algo_info->algo_type();
         fc_param_->algo_info.dtype = algo_info->dtype();
         fc_param_->algo_info.isa = algo_info->isa();
+
+        common_param_.output_types.resize(1);
+        common_param_.output_formats.resize(1);
+        common_param_.output_types[0] = algo_info->dtype();
+        common_param_.output_formats[0] = algo_info->dformat();
 
         fc_param_->param.channels = param_info->channels();
         fc_param_->param.num_output = param_info->num_output();
@@ -280,9 +276,11 @@ ppl::common::RetCode GemmOp::DeserializeData(const ::ppl::nn::pmx::Deserializati
         return RC_SUCCESS;
     }
     else {
-        auto arm_fuse_data = arm_op_data->value_as_FusionData();
-        if (arm_fuse_data) {
-            gemm_fuse_relu_ = (arm_fuse_data->fuse_relu() == 1);
+        auto arm_fusion_data = arm_op_data->value_as_FusionData();
+        if (arm_fusion_data) {
+            gemm_fuse_relu_ = (arm_fusion_data->fuse_relu() == 1);
+            ppl::nn::pmx::utils::Fbvec2Stdvec(arm_fusion_data->dtype(), &common_param_.output_types);
+            ppl::nn::pmx::utils::Fbvec2Stdvec(arm_fusion_data->dformat(), &common_param_.output_formats);
         }
         return RC_SUCCESS;
     }

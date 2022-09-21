@@ -24,8 +24,13 @@
 #include "ppl/nn/oputils/onnx/reshape_conv.h"
 #include "ppl/nn/common/logger.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/oputils/onnx/conv.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
+using namespace ppl::kernel::arm_server::neon;
 
 namespace ppl { namespace nn { namespace arm {
 
@@ -257,6 +262,111 @@ bool ConvOp::TryFuseSum(void) {
     conv2d_param_->mgr->set_param(param);
     return true;
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+
+ppl::common::RetCode ConvOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder conv_builder;
+    auto mgr = conv2d_param_->mgr;
+    std::vector<int64_t> algo_sp = mgr->get_schedule_param();
+
+    auto fb_algo_info = ppl::nn::pmx::arm::CreateConvAlgoInfo(conv_builder,
+                                                              mgr->get_algo_type(),
+                                                              mgr->algo_info().data_type,
+                                                              mgr->algo_info().isa,
+                                                              conv_builder.CreateVector<int64_t>(algo_sp));
+    auto fb_exec_info = ppl::nn::pmx::arm::CreateConvExecInfo(conv_builder,
+                                                              conv_builder.CreateVector<uint8_t>((const uint8_t*)mgr->get_cvt_filter(), mgr->get_cvt_filter_size()),
+                                                              mgr->get_cvt_filter_size(),
+                                                              conv_builder.CreateVector<uint8_t>((const uint8_t*)mgr->get_cvt_bias(), mgr->get_cvt_bias_size()),
+                                                              mgr->get_cvt_bias_size());
+    auto fb_param_info = ppl::nn::pmx::arm::CreateConvParamInfo(conv_builder, 
+                                                                conv2d_param_->param.num_output, 
+                                                                conv2d_param_->param.channels, 
+                                                                conv2d_param_->mgr->get_param().pad_type, 
+                                                                conv2d_param_->mgr->get_param().fuse_flag);
+    
+    auto fb_conv_data = ppl::nn::pmx::arm::CreateConvData(conv_builder, fb_algo_info, fb_exec_info, fb_param_info);
+    auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(conv_builder, ppl::nn::pmx::arm::PrivateDataType_ConvData, fb_conv_data.Union());
+    ppl::nn::pmx::arm::FinishOpDataBuffer(conv_builder, fb_op_data);
+
+    flatbuffers::FlatBufferBuilder op_builder;
+    auto fb_param = ppl::nn::pmx::onnx::SerializeConvParam(*param_.get(), &op_builder);
+    auto fb_data = op_builder.CreateVector(conv_builder.GetBufferPointer(), conv_builder.GetSize());
+    auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, ppl::nn::pmx::onnx::OpParamType_ConvParam, fb_param.Union(), fb_data);
+    ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
+    return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
+}
+
+ppl::common::RetCode ConvOp::DeserializeData(const ::ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+    if (conv2d_param_) {
+        delete conv2d_param_;
+    }
+    conv2d_param_ = new Convolution2DParam;
+    if (!conv2d_param_) {
+        return ppl::common::RC_OUT_OF_MEMORY;
+    }
+
+    auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
+    auto fb_conv_param = fb_op_param->value_as_ConvParam();
+
+    param_ = std::make_shared<ppl::nn::onnx::ConvParam>();
+    DeserializeConvParam(*fb_conv_param, param_.get());
+
+    auto arm_op_data = ppl::nn::pmx::arm::GetOpData(fb_op_param->data_()->data());
+
+    auto arm_conv_data = arm_op_data->value_as_ConvData();
+    auto algo_info = arm_conv_data->algo_info();
+    auto exec_info = arm_conv_data->exec_info();
+    auto param_info = arm_conv_data->param_info();
+
+    common_param_.output_types.resize(1);
+    common_param_.output_formats.resize(1);
+    common_param_.output_types[0] = algo_info->dtype();
+    common_param_.output_formats[0] = (algo_info->dtype() == DATATYPE_FLOAT32) ? DATAFORMAT_N4CX : DATAFORMAT_N8CX;
+    
+
+    conv2d_param &conv2d_kernel_param = conv2d_param_->param;
+    conv2d_kernel_param.kernel_h = param_->kernel_shape[0];
+    conv2d_kernel_param.kernel_w = param_->kernel_shape[1];
+    conv2d_kernel_param.stride_h = param_->strides[0];
+    conv2d_kernel_param.stride_w = param_->strides[1];
+    conv2d_kernel_param.dilation_h = param_->dilations[0];
+    conv2d_kernel_param.dilation_w = param_->dilations[1];
+    conv2d_kernel_param.pad_h = param_->pads[0];
+    conv2d_kernel_param.pad_w = param_->pads[1];
+    conv2d_kernel_param.channels = param_info->channels();
+    conv2d_kernel_param.num_output = param_info->num_output();
+    conv2d_kernel_param.group = param_->group;
+    conv2d_kernel_param.fuse_flag = param_info->fuse_type();
+    conv2d_kernel_param.pad_type = param_info->pad_type();
+
+    auto mgr = conv2d_algo::generate_conv_mgr(algo_info->algo_type(), algo_info->dtype(), conv2d_kernel_param, allocator_);
+    mgr->set_algo_info({ .algo_type = algo_info->algo_type(),
+                         .isa = algo_info->isa(),
+                         .data_type = algo_info->dtype()
+                       });
+    
+    uint64_t cvt_filter_size = exec_info->cvt_filter_size();
+    uint64_t cvt_bias_size = exec_info->cvt_bias_size();
+
+    void *cvt_filter_ptr = allocator_->Alloc(cvt_filter_size);
+    void *cvt_bias_ptr = allocator_->Alloc(cvt_bias_size);
+    memcpy(cvt_filter_ptr, exec_info->cvt_filter()->data(), cvt_filter_size);
+    memcpy(cvt_bias_ptr, exec_info->cvt_bias()->data(), cvt_bias_size);
+    mgr->set_cvt_filter(cvt_filter_ptr, cvt_filter_size);
+    mgr->set_cvt_bias(cvt_bias_ptr, cvt_bias_size);
+
+    std::vector<int64_t> sp;
+    ppl::nn::pmx::utils::Fbvec2Stdvec(algo_info->sched_param(), &sp);
+    mgr->set_schedule_param(sp);
+    conv2d_param_->mgr = mgr;
+    conv2d_param_->fallback_mgr = nullptr;
+
+    return RC_SUCCESS;
+}
+
+#endif
 
 KernelImpl* ConvOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<Conv2dKernel>(conv2d_param_);

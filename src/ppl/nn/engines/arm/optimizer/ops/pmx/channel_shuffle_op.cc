@@ -83,10 +83,8 @@ RetCode ChannelShuffleOp::SelectFormat(const InputOutputInfo& info, vector<dataf
 ppl::common::RetCode ChannelShuffleOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
     flatbuffers::FlatBufferBuilder chsh_param_builder;
     auto fb_chsh_op_param = ppl::nn::pmx::arm::CreateChannelShuffleParam(chsh_param_builder, param_->group);
-    auto fp_pmx_op_data = ppl::nn::pmx::arm::CreatePmxOpData(chsh_param_builder, ppl::nn::pmx::arm::PmxOpType_ChannelShuffleParam, fb_chsh_op_param.Union());
-
-    auto fp_output_info = ppl::nn::pmx::arm::CreateOutputInfoDirect(chsh_param_builder, &common_param_.output_types, &common_param_.output_formats);
-    auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(chsh_param_builder, fp_output_info, ppl::nn::pmx::arm::PrivateDataType_PmxOpData, fp_pmx_op_data.Union());
+    auto fb_pmx_op_data = ppl::nn::pmx::arm::CreatePmxOpDataDirect(chsh_param_builder, &common_param_.output_types, &common_param_.output_formats, ppl::nn::pmx::arm::PmxOpType_ChannelShuffleParam, fb_chsh_op_param.Union());
+    auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(chsh_param_builder, ppl::nn::pmx::arm::PrivateDataType_PmxOpData, fb_pmx_op_data.Union());
     ppl::nn::pmx::arm::FinishOpDataBuffer(chsh_param_builder, fb_op_data);
 
     flatbuffers::FlatBufferBuilder op_builder;
@@ -103,9 +101,9 @@ ppl::common::RetCode ChannelShuffleOp::DeserializeData(const ::ppl::nn::pmx::Des
     param_ = std::make_shared<ppl::nn::pmx::ChannelShuffleParam>();
 
     auto arm_op_data = ppl::nn::pmx::arm::GetOpData(fb_op_param->data_()->data());
-    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->output_info()->dtype(), &common_param_.output_types);
-    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->output_info()->dformat(), &common_param_.output_formats);
-
+    
+    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->value_as_PmxOpData()->dtype(), &common_param_.output_types);
+    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_op_data->value_as_PmxOpData()->dformat(), &common_param_.output_formats);
     auto arm_shape_op_param = arm_op_data->value_as_PmxOpData()->value_as_ChannelShuffleParam();
     param_->group = arm_shape_op_param->group();
     return RC_SUCCESS;
