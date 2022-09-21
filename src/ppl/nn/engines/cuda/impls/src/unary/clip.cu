@@ -70,6 +70,50 @@ __global__ void ppl_cukernel_clip_nhwc(
     output[index] = ppl_scalar_clip<T>(input[index], _min, _max);
 #endif
 }
+__global__ void ppl_cukernel_clip_ndarray_int8(
+    const uint64_t num_elems,
+    const char* input,
+    char* output,
+    float _min,
+    float _max,
+    float in_scale,
+    float out_scale)
+{
+    int64_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index >= num_elems)
+        return;
+
+    float tmp = (float)input[index] * in_scale;
+    float out_val = tmp < _min ? _min : tmp > _max ? _max : tmp;
+    int int_val = __float2int_rn(out_val * out_scale);
+    output[index] =  int_val < -128 ? -128 : int_val > 127 ? 127 : (char)int_val;
+}
+
+__global__ void ppl_cudakernel_clip_nhwc_int8(
+    const uint64_t num_elems,
+    int channels,
+    int pad_channels,
+    int chw,
+    int hw,
+    const char* input,
+    char* output,
+    float _min,
+    float _max,
+    float in_scale,
+    float out_scale)
+{
+    int chw_idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (chw_idx >= chw) return;
+    int c_idx = chw_idx % channels;
+    int hw_idx = chw_idx / channels;
+    int b_idx = blockIdx.z;
+    int64_t index = (b_idx * hw + hw_idx) * pad_channels + c_idx;
+
+    float tmp = (float)input[index] * in_scale;
+    float out_val = tmp < _min ? _min : tmp > _max ? _max : tmp;
+    int int_val = __float2int_rn(out_val * out_scale);
+    output[index] =  int_val < -128 ? -128 : int_val > 127 ? 127 : (char)int_val;
+}
 
 template <>
 __global__ void ppl_cukernel_clip_nhwc<float4>(
@@ -111,7 +155,9 @@ ppl::common::RetCode PPLCUDAClipForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output,
     float _min,
-    float _max)
+    float _max,
+    float in_scale,
+    float out_scale)
 {
     uint64_t num_elems = output_shape->CalcElementsIncludingPadding();
     int batch          = output_shape->GetDim(0);
@@ -137,7 +183,13 @@ ppl::common::RetCode PPLCUDAClipForwardImp(
                                                                                   _max);
 
         } else {
-            return ppl::common::RC_UNSUPPORTED;
+            ppl_cukernel_clip_ndarray_int8<<<grid_size, block_size, 0, stream>>>(num_elems,
+                                                                                  (const char*)input,
+                                                                                  (char*)output,
+                                                                                  _min,
+                                                                                  _max,
+                                                                                  in_scale,
+                                                                                  out_scale);
         }
     } else if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC8 ||
                output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NHWC16) {
@@ -159,8 +211,9 @@ ppl::common::RetCode PPLCUDAClipForwardImp(
                 ppl_cukernel_clip_nhwc<float4><<<grid_size, block_size, 0, stream>>>(
                     num_elems >> 3, channels, pad_channels >> 3, pad_chw >> 3, height * width, (const float4*)input, (float4*)output, _min, _max);
             }
-        } else {
-            return ppl::common::RC_UNSUPPORTED;
+        } else { // int8
+            ppl_cudakernel_clip_nhwc_int8<<<grid_size, block_size, 0, stream>>>(
+                num_elems, channels, pad_channels, channels * height * width, height * width, (const char*)input, (char*)output, _min, _max, in_scale, out_scale);
         }
     } else {
         return ppl::common::RC_UNSUPPORTED;

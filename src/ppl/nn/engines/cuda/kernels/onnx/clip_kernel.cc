@@ -39,6 +39,11 @@ ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
     float min_val = std::numeric_limits<float>::lowest();
     float max_val = std::numeric_limits<float>::max();
 
+    auto input_id = input->GetEdge()->GetId();
+    auto input_quant = GetCommonParam()->cuda_tensor_info->at(input_id);
+    auto output_id = output->GetEdge()->GetId();
+    auto output_quant = GetCommonParam()->cuda_tensor_info->at(output_id);
+
     if (clip_min) {
         auto status = clip_min->CopyToHost(&min_val);
         if (status != ppl::common::RC_SUCCESS) {
@@ -55,7 +60,7 @@ ppl::common::RetCode ClipKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     ppl::common::RetCode status = PPLCUDAClipForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(),
-                                                        output->GetShape(), output->GetBufferPtr(), min_val, max_val);
+                                                        output->GetShape(), output->GetBufferPtr(), min_val, max_val, input_quant.scale[0], 1.0f / output_quant.scale[0]);
     return status;
 }
 

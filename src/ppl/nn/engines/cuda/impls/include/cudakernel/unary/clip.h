@@ -27,6 +27,8 @@ ppl::common::RetCode PPLCUDAClipForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output,
     float _min,
-    float _max);
+    float _max,
+    float in_scale,
+    float out_scale);
 
 #endif // PPLCUDA_KERNEL_INCLUDE_CLIP_CLIP_H_
