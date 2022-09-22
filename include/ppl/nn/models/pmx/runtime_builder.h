@@ -37,16 +37,10 @@ public:
     virtual ~RuntimeBuilder() {}
 
     /** @brief load model from a file */
-    virtual ppl::common::RetCode LoadModel(const char* model_file) = 0;
+    virtual ppl::common::RetCode LoadModel(const char* model_file, const Resources&) = 0;
 
     /** @brief load model from a buffer */
-    virtual ppl::common::RetCode LoadModel(const char* model_buf, uint64_t buf_len) = 0;
-
-    /**
-       @brief set resources for preprocessing and creating `Runtime`.
-       MUST be called before `Preprocess()` and `CreateRuntime()`.
-    */
-    virtual ppl::common::RetCode SetResources(const Resources&) = 0;
+    virtual ppl::common::RetCode LoadModel(const char* model_buf, uint64_t buf_len, const Resources&) = 0;
 
     virtual ppl::common::RetCode Configure(uint32_t, ...) = 0;
 
