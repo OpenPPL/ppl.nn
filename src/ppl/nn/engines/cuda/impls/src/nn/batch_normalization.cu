@@ -124,7 +124,7 @@ __global__ void ppl_cukernel_batchnorm_withmeanvar_nhwc(
         dst_val = ppl_relu<T>(dst_val);
     }
     output[nhwc_index] = dst_val;
-    
+
 }
 
 __global__ void ppl_cukernel_batchnorm_withmeanvar_int8_nhwc(
@@ -142,7 +142,7 @@ __global__ void ppl_cukernel_batchnorm_withmeanvar_int8_nhwc(
     bool with_relu,
     char* output)
 {
-    typedef Math<char, char, char> OpMath;
+    typedef Math<float, float, float> OpMath;
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     if (index >= num_elems)
         return;
@@ -159,8 +159,9 @@ __global__ void ppl_cukernel_batchnorm_withmeanvar_int8_nhwc(
     int nhwc_index     = outer_offset * pad_channels + c_idx;
     float val = OpMath::add(OpMath::mul(OpMath::mul(OpMath::sub((float)input[nhwc_index] * in_scale, mean_val), std), scale_val), B_val);
     int int_val = __float2int_rn(val * out_scale);
-    char dst = int_val < -128 ? -128 : int_val > 127 ? 127 : (char)int_val; 
+    char dst = int_val < -128 ? -128 : int_val > 127 ? 127 : (char)int_val;
     if (with_relu) {
+        if(dst > 0)
         dst = dst > 0? dst:0;
     }
     output[nhwc_index] = dst;//OpMath::add(OpMath::mul(OpMath::mul(OpMath::sub(input[nhwc_index], mean_val), std), scale_val), B_val);
