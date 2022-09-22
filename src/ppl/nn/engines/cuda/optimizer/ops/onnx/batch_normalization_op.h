@@ -26,13 +26,17 @@ namespace ppl { namespace nn { namespace cuda {
 
 class BatchNormalizationOp final : public CudaOptKernel {
 public:
-    BatchNormalizationOp(const ir::Node* node) : CudaOptKernel(node) {}
+    BatchNormalizationOp(const ir::Node* node);
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
     void* GetParam() override {
         return (void*)&param_;
     };
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override;
+    ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void*, uint64_t) override;
+#endif
 
 private:
     CudaBatchNormalizationParam param_;
