@@ -84,7 +84,7 @@ bool ConvFusion::FuseTest(ir::Node* node, const OptKernelOptions& options,
                 return false;
         }
         param->extra_param.fuse_info.types.emplace_back(nextnode->GetType().name);
-        param->extra_param.fuse_info.input_ind.emplace_back(node->GetInputCount());
+        param->extra_param.fuse_info.input_inds.emplace_back(node->GetInputCount());
 
         if (nextnode->GetType().name != "Clip") {
             auto next_kernel = (CudaOptKernel*)(options.info->kernels[nextnode_id].get());
