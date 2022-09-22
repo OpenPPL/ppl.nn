@@ -192,13 +192,24 @@ static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::Grap
     auto fb_partitions = fb_data->partitions();
     info->partitions.reserve(fb_partitions->size());
 
+    DeserializationContext deser_ctx;
+    deser_ctx.shapes = &info->shapes;
+
     for (auto x = fb_partitions->begin(); x != fb_partitions->end(); ++x) {
         auto fb_partition = *x;
         auto engine = seq2engine[fb_partition->engine_id()];
 
         RuntimeGraphInfo::Partition partition;
         partition.engine = engine;
-        DeserializationContext dummy_ctx;
+
+        PmxConstantVisitor visitor(topo, fb_data->shared_data()->data(), info, fb_partition->constants());
+        auto status = engine->LoadConstants(visitor, &partition.constants);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "LoadConstants of engine[" << engine->GetName() << "] failed: " << GetRetCodeStr(status);
+            return status;
+        }
+
+        deser_ctx.constants = &partition.constants;
 
         for (auto y = fb_partition->nodes()->begin(); y != fb_partition->nodes()->end(); ++y) {
             auto fb_node = *y;
@@ -216,20 +227,13 @@ static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::Grap
                 return RC_NOT_FOUND;
             }
 
-            auto status = op->DeserializeData(dummy_ctx, fb_node->data()->data(), fb_node->data()->size());
+            status = op->DeserializeData(deser_ctx, fb_node->data()->data(), fb_node->data()->size());
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "deserialize of op[" << node->GetName() << "] failed: " << GetRetCodeStr(status);
                 return status;
             }
 
             partition.ops.emplace_back(std::move(op));
-        }
-
-        PmxConstantVisitor visitor(topo, fb_data->shared_data()->data(), info, fb_partition->constants());
-        auto status = engine->LoadConstants(visitor, &partition.constants);
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "LoadConstants of engine[" << engine->GetName() << "] failed: " << GetRetCodeStr(status);
-            return status;
         }
 
         info->partitions.emplace_back(std::move(partition));
