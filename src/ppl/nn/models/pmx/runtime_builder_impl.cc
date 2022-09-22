@@ -71,7 +71,14 @@ static RetCode ParseEngines(const Vector<Offset<Engine>>* fb_engines, const vect
     return RC_SUCCESS;
 }
 
-RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len) {
+static void SetResources(const RuntimeBuilder::Resources& src, utils::SharedResource* dst) {
+    dst->engines.resize(src.engine_num);
+    for (uint32_t i = 0; i < src.engine_num; ++i) {
+        dst->engines[i] = static_cast<EngineImpl*>(src.engines[i]);
+    }
+}
+
+RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len, const Resources& resources) {
     RetCode status;
 
     auto fb_model = pmx::GetModel(model_buf);
@@ -81,6 +88,8 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len) {
     }
 
     LOG(INFO) << "ppl model version: " << fb_model->version();
+
+    SetResources(resources, &resource_);
 
     vector<EngineImpl*> seq2engine;
     status = ParseEngines(fb_model->engines(), resource_.engines, &seq2engine);
@@ -98,22 +107,14 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len) {
     return RC_SUCCESS;
 }
 
-RetCode RuntimeBuilderImpl::LoadModel(const char* model_file) {
+RetCode RuntimeBuilderImpl::LoadModel(const char* model_file, const Resources& resources) {
     FileMapping fm;
     auto status = fm.Init(model_file, FileMapping::READ);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "mapping file [" << model_file << "] faild: " << fm.GetErrorMessage();
         return status;
     }
-    return LoadModel(fm.GetData(), fm.GetSize());
-}
-
-RetCode RuntimeBuilderImpl::SetResources(const Resources& resource) {
-    resource_.engines.resize(resource.engine_num);
-    for (uint32_t i = 0; i < resource.engine_num; ++i) {
-        resource_.engines[i] = static_cast<EngineImpl*>(resource.engines[i]);
-    }
-    return RC_SUCCESS;
+    return LoadModel(fm.GetData(), fm.GetSize(), resources);
 }
 
 RetCode RuntimeBuilderImpl::Preprocess() {

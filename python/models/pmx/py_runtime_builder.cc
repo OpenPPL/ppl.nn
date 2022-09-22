@@ -35,11 +35,8 @@ void RegisterRuntimeBuilder(pybind11::module* m) {
                  return (builder.ptr.get());
              })
         .def("LoadModelFromFile",
-             [](PyRuntimeBuilder& builder, const char* model_file) -> RetCode {
-                 return builder.ptr->LoadModel(model_file);
-             })
-        .def("SetResources",
-             [](PyRuntimeBuilder& builder, const PyRuntimeBuilderResources& resources) -> RetCode {
+             [](PyRuntimeBuilder& builder, const char* model_file,
+                const PyRuntimeBuilderResources& resources) -> RetCode {
                  vector<shared_ptr<Engine>> engines;
                  for (auto e = resources.engines.begin(); e != resources.engines.end(); ++e) {
                      engines.push_back(e->ptr);
@@ -53,8 +50,8 @@ void RegisterRuntimeBuilder(pybind11::module* m) {
                  r.engines = engine_ptrs.data();
                  r.engine_num = engine_ptrs.size();
 
-                 builder.engines = std::move(engines);
-                 return builder.ptr->SetResources(r);
+                 builder.engines = std::move(engines); // retain engines
+                 return builder.ptr->LoadModel(model_file, r);
              })
         .def("Preprocess",
              [](PyRuntimeBuilder& builder) -> RetCode {

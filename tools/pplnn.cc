@@ -1183,12 +1183,6 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
-        auto status = builder->LoadModel(g_flag_pmx_model.c_str());
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "PmxRuntimeBuilder LoadModel failed: " << GetRetCodeStr(status);
-            return -1;
-        }
-
         vector<Engine*> engine_ptrs(engines.size());
         for (uint32_t i = 0; i < engines.size(); ++i) {
             engine_ptrs[i] = engines[i].get();
@@ -1197,9 +1191,9 @@ int main(int argc, char* argv[]) {
         resources.engines = engine_ptrs.data();
         resources.engine_num = engine_ptrs.size();
 
-        status = builder->SetResources(resources);
+        auto status = builder->LoadModel(g_flag_pmx_model.c_str(), resources);
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "PmxRuntimeBuilder SetResources failed: " << GetRetCodeStr(status);
+            LOG(ERROR) << "PmxRuntimeBuilder LoadModel failed: " << GetRetCodeStr(status);
             return -1;
         }
 

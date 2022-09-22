@@ -33,11 +33,8 @@ void RegisterRuntimeBuilder(const shared_ptr<LuaState>& lstate, const shared_ptr
     auto runtime_class = lmodule->GetClass<LuaRuntime>("Runtime");
     auto lclass = lstate->CreateClass<LuaRuntimeBuilder>()
         .DefMember("LoadModelFromFile",
-                   [](LuaRuntimeBuilder* lbuilder, const char* model_file) -> RetCode {
-                       return lbuilder->ptr->LoadModel(model_file);
-                   })
-        .DefMember("SetResources",
-                   [](LuaRuntimeBuilder* lbuilder, const LuaRuntimeBuilderResources* resources) -> RetCode {
+                   [](LuaRuntimeBuilder* lbuilder, const char* model_file,
+                      const LuaRuntimeBuilderResources* resources) -> RetCode {
                        lbuilder->engines = resources->engines;
 
                        vector<Engine*> engine_ptrs(resources->engines.size());
@@ -48,7 +45,7 @@ void RegisterRuntimeBuilder(const shared_ptr<LuaState>& lstate, const shared_ptr
                        r.engines = engine_ptrs.data();
                        r.engine_num = engine_ptrs.size();
 
-                       return lbuilder->ptr->SetResources(r);
+                       return lbuilder->ptr->LoadModel(model_file, r);
                    })
         .DefMember("Preprocess",
                    [](LuaRuntimeBuilder* lbuilder) -> RetCode {
