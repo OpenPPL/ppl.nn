@@ -217,11 +217,7 @@ protected:
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const override {
-        flatbuffers::FlatBufferBuilder op_builder;
-        auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, ppl::nn::pmx::onnx::OpParamType_NONE, 0, 0);
-        ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
-
-        return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
+        return ppl::common::RC_SUCCESS;
     }
 
     ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t) override {

@@ -1,21 +1,21 @@
 namespace ppl.nn.pmx.arm;
 
 table OutputData {
-    dtype: [uint];
-    dformat: [uint];
+    dtype: [uint32];
+    dformat: [uint32];
 }
 
 table FusionData {
     fuse_relu: byte;
-    dtype: [uint];
-    dformat: [uint];
+    dtype: [uint32];
+    dformat: [uint32];
 }
 
 table ConvAlgoInfo {
-    algo_type: uint;
-    dtype: uint;
-    isa: uint;
-    sched_param: [long];
+    algo_type: uint32;
+    dtype: uint32;
+    isa: uint32;
+    sched_param: [int64];
 }
 
 table ConvExecInfo {
@@ -39,10 +39,10 @@ table ConvData {
 }
 
 table FCAlgoInfo {
-    algo_type: uint;
-    dtype: uint;
-    dformat: uint;
-    isa: uint;
+    algo_type: uint32;
+    dtype: uint32;
+    dformat: uint32;
+    isa: uint32;
 }
 
 table FCExecInfo {
@@ -86,8 +86,8 @@ union PmxOpType {
 }
 
 table PmxOpData {
-    dtype: [uint];
-    dformat: [uint];
+    dtype: [uint32];
+    dformat: [uint32];
     value: PmxOpType;
 }
 
