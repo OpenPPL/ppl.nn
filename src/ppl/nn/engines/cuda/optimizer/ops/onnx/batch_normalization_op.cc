@@ -37,6 +37,10 @@ RetCode BatchNormalizationOp::Init(const OptKernelOptions& options) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         auto& in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
         type = in_shape.GetDataType();
+        if (type==ppl::common::DATATYPE_INT8) {
+            LOG(WARNING) << "Run BN in int8 datatype will bring a dramatic loss of accuracy."
+                         << " Try to fuse BN or delete it in your model";
+        }
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
             status = InferInheritedType(info);
