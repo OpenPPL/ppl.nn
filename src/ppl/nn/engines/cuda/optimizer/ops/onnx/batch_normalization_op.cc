@@ -25,6 +25,12 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/onnx/batch_normalization.h"
+#include "ppl/nn/engines/cuda/pmx/generated/cuda_op_params_generated.h"
+#endif
+
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode BatchNormalizationOp::Init(const OptKernelOptions& options) {
@@ -33,7 +39,10 @@ RetCode BatchNormalizationOp::Init(const OptKernelOptions& options) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
     }
+    return RC_SUCCESS;
+}
 
+BatchNormalizationOp::BatchNormalizationOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         auto& in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
         type = in_shape.GetDataType();
@@ -61,8 +70,6 @@ RetCode BatchNormalizationOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeBatchNormalization(info, nullptr);
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode BatchNormalizationOp::Finalize(const OptKernelOptions& options) {
@@ -78,5 +85,53 @@ RetCode BatchNormalizationOp::Finalize(const OptKernelOptions& options) {
 KernelImpl* BatchNormalizationOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<BatchNormalizationKernel>(&param_);
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+static RetCode SerializePrivateData(const pmx::SerializationContext& ctx, const BatchNormalizationExtraParam& extra_param, flatbuffers::FlatBufferBuilder* builder) {
+    auto fb_batch_normalization_param = pmx::cuda::CreateBatchNormalizationParam(*builder, extra_param.has_relu);
+    auto fb_op_param = pmx::cuda::CreateOpParam(*builder, pmx::cuda::OpParamType_BatchNormalizationParam, fb_batch_normalization_param.Union());
+    pmx::cuda::FinishOpParamBuffer(*builder, fb_op_param);
+    return RC_SUCCESS;
+}
+
+static RetCode DeserializePrivateData(const void* fb_param, uint64_t size, BatchNormalizationExtraParam* extra_param) {
+    auto fb_op_param = pmx::cuda::GetOpParam(fb_param);
+    auto fb_batch_normalization_param = fb_op_param->value_as_BatchNormalizationParam();
+    extra_param->has_relu = fb_batch_normalization_param->has_relu();
+    return RC_SUCCESS;
+}
+
+RetCode BatchNormalizationOp::SerializeData(const pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder private_data_builder;
+    auto status = SerializePrivateData(ctx, param_.extra_param, &private_data_builder);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "SerializePrivateData of op[" << GetNode()->GetName() << "] failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    flatbuffers::FlatBufferBuilder builder;
+    auto fb_param = pmx::onnx::SerializeBatchNormalizationParam(param_.param, &builder);
+    auto fb_data = builder.CreateVector(private_data_builder.GetBufferPointer(), private_data_builder.GetSize());
+    auto fb_root = pmx::onnx::CreateOpParam(builder, pmx::onnx::OpParamType_BatchNormalizationParam, fb_param.Union(), fb_data);
+    pmx::onnx::FinishOpParamBuffer(builder, fb_root);
+    return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+}
+
+RetCode BatchNormalizationOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
+    auto fb_op_param = pmx::onnx::GetOpParam(base);
+    auto fb_batch_normalization_param = fb_op_param->value_as_BatchNormalizationParam();
+
+    pmx::onnx::DeserializeBatchNormalizationParam(*fb_batch_normalization_param, &param_.param);
+
+    auto fb_data = fb_op_param->data_();
+    auto status = DeserializePrivateData(fb_data->data(), fb_data->size(), &param_.extra_param);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "DeserializePrivateData of op[" << GetNode()->GetName() << "] failed: " << GetRetCodeStr(status);
+        return status;
+    }
+    
+    return RC_SUCCESS;
+}
+#endif
 
 }}} // namespace ppl::nn::cuda
