@@ -1,0 +1,58 @@
+namespace ppl.nn.pmx.cuda;
+
+struct FuseAttrs {
+    clip_min: float;
+    clip_max: float;
+    leaky_alpha: float;
+}
+
+table ConvAlgoInfo {
+    algo_type: string;
+    algo_name: string;
+    tiles: [int];
+    kid: int = 0;
+    splitk: int = 1;
+    splitf: int = 1;
+    is_initializer_weight: int = 1;
+    has_bias : int = 1;
+}
+
+table ConvFusionInfo{
+    types: [string]; // support fuse relu + add + relu right now
+    input_inds: [int]; // save fused kernel's input index
+    fuse_attrs: [FuseAttrs]; // save fused kernel's attributes
+    channel_size: int = -1; // save total channel size for concat
+    channel_offset: int = -1; // save output offset if we fuse concat
+    concat_edge_id: int = -1; // save concat output edge id
+}
+
+table ConvParam {
+    algo_info: ConvAlgoInfo;
+    fuse_info: ConvFusionInfo;
+    gene_code: [ubyte];
+}
+
+table ConcatParam {
+    mask: uint32;
+}
+
+table BatchNormalizationParam {
+    has_relu: int = 0;
+}
+
+table InstanceNormalizationParam {
+    has_relu: int = 0;
+}
+
+union OpParamType {
+    ConvParam,
+    ConcatParam,
+    BatchNormalizationParam,
+    InstanceNormalizationParam,
+}
+
+table OpParam {
+    value: OpParamType;
+}
+
+root_type OpParam;

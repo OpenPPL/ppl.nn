@@ -26,7 +26,8 @@ namespace ppl { namespace nn { namespace cuda {
 
 class ConvTransposeOp final : public CudaOptKernel {
 public:
-    ConvTransposeOp(const ir::Node* node) : CudaOptKernel(node) {}
+    ConvTransposeOp(const ir::Node* node);
+    ~ConvTransposeOp();
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
@@ -34,6 +35,10 @@ public:
         return (void*)&param_;
     };
     void CopyParam(void*& param) override;
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override;
+    ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void*, uint64_t) override;
+#endif
 
 private:
     CudaConvTransposeParam param_;

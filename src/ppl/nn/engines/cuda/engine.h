@@ -49,7 +49,7 @@ struct CudaArgs {
     ppl::common::datatype_t default_kernel_type = 0;
     std::map<std::string, ppl::common::datatype_t> node_types;
     std::vector<std::vector<int64_t>> input_dims;
-    std::map<std::string, std::vector<CudaTensorQuant>> tensor_quants;
+    std::vector<CudaTensorQuant> tensor_quants;
     std::map<std::string, AlgoSelects> alog_selects;
     QuantParamInfo quant_info;
     const std::vector<int64_t> default_dims{1, 3, 224, 224};
@@ -71,12 +71,8 @@ public:
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override;
     OptKernel* CreateOptKernel(const ir::Node*) const override;
-    ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override {
-        return ppl::common::RC_UNSUPPORTED;
-    }
-    ppl::common::RetCode DeserializeData(const void*, uint64_t) override {
-        return ppl::common::RC_UNSUPPORTED;
-    }
+    ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override;
+    ppl::common::RetCode DeserializeData(const void*, uint64_t) override;
 #endif
 
 private:

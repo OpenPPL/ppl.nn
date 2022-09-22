@@ -315,7 +315,9 @@ RetCode OptGraph::AddBridgeKernels(const utils::SharedResource& resource) {
 
 RetCode OptGraph::InitQuantization() {
     auto topo = graph_->topo.get();
-    std::vector<CudaTensorQuant> graph_quants(topo->GetCurrentEdgeIdBound());
+    auto& graph_quants = args_->tensor_quants;
+    graph_quants.resize(topo->GetCurrentEdgeIdBound());
+
 
     // Load node quant to args_->node_type
     auto& node_params = args_->quant_info.node_params;
@@ -372,13 +374,12 @@ RetCode OptGraph::InitQuantization() {
         }
     }
 
-    args_->tensor_quants.emplace(topo->GetName(), std::move(graph_quants));
     return RC_SUCCESS;
 }
 
 RetCode OptGraph::UpdateType() {
     auto topo = graph_->topo.get();
-    auto& graph_quants = args_->tensor_quants.find(topo->GetName())->second;
+    auto& graph_quants = args_->tensor_quants;
     UpdateTopologicalSort();
 
     InputOutputInfo IOinfo;
@@ -447,7 +448,7 @@ RetCode OptGraph::UpdateType() {
 
 RetCode OptGraph::SelectAlgos(const utils::SharedResource& resource, CudaDevice* device) {
     auto topo = graph_->topo.get();
-    auto& graph_quants = args_->tensor_quants.find(topo->GetName())->second;
+    auto& graph_quants = args_->tensor_quants;
 
     OptKernelOptions options(graph_, info_, &resource, args_, compile_set_, device, &tensor_impls_, &graph_quants);
     UpdateTopologicalSort();
@@ -494,7 +495,7 @@ RetCode OptGraph::SelectAlgos(const utils::SharedResource& resource, CudaDevice*
 RetCode OptGraph::LoadConstants(CudaDevice* device) {
     auto topo = graph_->topo.get();
     auto graph_data = graph_->data.get();
-    auto& graph_quants = args_->tensor_quants.find(topo->GetName())->second;
+    auto& graph_quants = args_->tensor_quants;
 
     for (auto iter = topo->CreateNodeIter(); iter->IsValid(); iter->Forward()) {
         auto node = iter->Get();
@@ -547,7 +548,7 @@ RetCode OptGraph::LoadConstants(CudaDevice* device) {
 
 RetCode OptGraph::DeleteBridgeKernels() {
     auto topo = graph_->topo.get();
-    auto& graph_quants = args_->tensor_quants.find(topo->GetName())->second;
+    auto& graph_quants = args_->tensor_quants;
     uint32_t count = 0;
 
     for (auto iter = topo->CreateNodeIter(); iter->IsValid(); iter->Forward()) {

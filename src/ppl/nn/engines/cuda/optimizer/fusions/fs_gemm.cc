@@ -93,7 +93,7 @@ RetCode GemmFusion::FuseNode(ir::Node* node, bool reliable, const OptKernelOptio
         if (CanFuse(nextnode, options, i)) {
             LOG(DEBUG) << "Fuse node[" << node->GetName() << "] and nextnode[" << nextnode->GetName() << "]";
             param->extra_param.fuse_info.types.emplace_back(nextnode->GetType().name);
-            param->extra_param.fuse_info.input_ind.emplace_back(node->GetInputCount());
+            param->extra_param.fuse_info.input_inds.emplace_back(node->GetInputCount());
             if (nextnode->GetType().name != "Clip") {
                 auto next_kernel = (CudaOptKernel*)(options.info->kernels[nextnode_id].get());
                 void* temp_param = nullptr;
