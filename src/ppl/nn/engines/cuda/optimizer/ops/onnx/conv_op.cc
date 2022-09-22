@@ -27,10 +27,22 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/cuda/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/onnx/conv.h"
+#include "ppl/nn/engines/cuda/pmx/generated/cuda_op_params_generated.h"
+#endif
+
 namespace ppl { namespace nn { namespace cuda {
 ConvOp::~ConvOp() {
     for (uint32_t i = 0; i < param_.extra_param.fuse_info.fuse_attrs.size(); ++i) {
         free(param_.extra_param.fuse_info.fuse_attrs[i]);
+    }
+    auto cuda_common_param = GetCommparam();
+    if (cuda_common_param->module) {
+        delete cuda_common_param->module;
+        cuda_common_param->module = nullptr;
     }
 }
 
@@ -42,14 +54,7 @@ void ConvOp::CopyParam(void*& param) {
     return;
 }
 
-RetCode ConvOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ConvParam>(options, &param_.param);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
-        return status;
-    }
-
-    param_.extra_param.bias_term = GetNode()->GetInputCount() > 2 ? true : false;
+ConvOp::ConvOp(const ir::Node* node) : CudaOptKernel(node) {
 
     infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         if (type == DATATYPE_INT8) {
@@ -99,6 +104,16 @@ RetCode ConvOp::Init(const OptKernelOptions& options) {
         }
         return status;
     };
+}
+
+RetCode ConvOp::Init(const OptKernelOptions& options) {
+    auto status = GenericLoadParam<ConvParam>(options, &param_.param);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    param_.extra_param.bias_term = GetNode()->GetInputCount() > 2 ? true : false;
 
     return RC_SUCCESS;
 }
@@ -127,5 +142,56 @@ KernelImpl* ConvOp::CreateKernelImpl() const {
     }
     return nullptr;
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+RetCode ConvOp::SerializeData(const pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+#ifdef PPLNN_ENABLE_CUDA_JIT
+    CUDAModule* module = static_cast<CUDAModule*>(GetCommparamModule());
+    auto ptx_code = module->GetSourceCode().second;
+#else
+    std::string ptx_code;
+#endif
+
+    flatbuffers::FlatBufferBuilder private_data_builder;
+    auto status = pmx::cuda::SerializePrivateData<ConvExtraParam>(ctx, param_.extra_param, ptx_code, &private_data_builder);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "SerializePrivateData of op[" << GetNode()->GetName() << "] failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    flatbuffers::FlatBufferBuilder builder;
+    auto fb_param = pmx::onnx::SerializeConvParam(param_.param, &builder);
+    auto fb_data = builder.CreateVector(private_data_builder.GetBufferPointer(), private_data_builder.GetSize());
+    auto fb_root = pmx::onnx::CreateOpParam(builder, pmx::onnx::OpParamType_ConvParam, fb_param.Union(), fb_data);
+    pmx::onnx::FinishOpParamBuffer(builder, fb_root);
+    return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+}
+
+RetCode ConvOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
+    auto fb_op_param = pmx::onnx::GetOpParam(base);
+    auto fb_conv_param = fb_op_param->value_as_ConvParam();
+
+    pmx::onnx::DeserializeConvParam(*fb_conv_param, &param_.param);
+
+    // CUDAModule* module = static_cast<CUDAModule*>(GetCommparamModule());
+    // auto ptx_code = module->GetSourceCode().second;
+    std::string ptx_code = "";
+    auto fb_data = fb_op_param->data_();
+    auto status = pmx::cuda::DeserializePrivateData<ConvExtraParam>(fb_data->data(), fb_data->size(), ptx_code, &param_.extra_param);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "DeserializePrivateData of op[" << GetNode()->GetName() << "] failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+#ifdef PPLNN_ENABLE_CUDA_JIT
+    CUDAModule* cuda_module = new CUDAModule(); // delete later
+    cuda_module->SetSourceCode(param_.extra_param.algo_info.algo_name, ptx_code);
+    auto cuda_common_param = GetCommparam();
+    if (cuda_common_param->module) delete cuda_common_param->module;
+    cuda_common_param->module = (void*)cuda_module;
+#endif
+    return RC_SUCCESS;
+}
+#endif
 
 }}} // namespace ppl::nn::cuda
