@@ -38,11 +38,16 @@ GemmOp::~GemmOp() {
     for (uint32_t i = 0; i < param_.extra_param.fuse_info.fuse_attrs.size(); ++i) {
         free(param_.extra_param.fuse_info.fuse_attrs[i]);
     }
-    auto cuda_common_param = GetCommparam();
-    if (cuda_common_param->module) {
-        delete cuda_common_param->module;
-        cuda_common_param->module = nullptr;
+#ifdef PPLNN_ENABLE_CUDA_JIT
+    if (pmx_module_created_) {
+        auto cuda_common_param = GetCommparam();
+        if (cuda_common_param->module) {
+            delete (CUDAModule*)cuda_common_param->module;
+            cuda_common_param->module = nullptr;
+        }
+        pmx_module_created_ = false;
     }
+#endif
 }
 
 RetCode GemmOp::Init(const OptKernelOptions& options) {
@@ -121,8 +126,12 @@ KernelImpl* GemmOp::CreateKernelImpl() const {
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
 RetCode GemmOp::SerializeData(const pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+#ifdef PPLNN_ENABLE_CUDA_JIT
     CUDAModule* module = static_cast<CUDAModule*>(GetCommparamModule());
     auto ptx_code = module->GetSourceCode().second;
+#else
+    std::string ptx_code;
+#endif
     
     flatbuffers::FlatBufferBuilder private_data_builder;
     auto status = pmx::cuda::SerializePrivateData<GemmExtraParam>(ctx, param_.extra_param, ptx_code, &private_data_builder);
@@ -155,11 +164,14 @@ RetCode GemmOp::DeserializeData(const pmx::DeserializationContext&, const void* 
         return status;
     }
 
+#ifdef PPLNN_ENABLE_CUDA_JIT
     CUDAModule* cuda_module = new CUDAModule(); // delete later
     cuda_module->SetSourceCode(param_.extra_param.algo_info.algo_name, ptx_code);
     auto cuda_common_param = GetCommparam();
-    if (cuda_common_param->module) delete cuda_common_param->module;
+    if (cuda_common_param->module) delete (CUDAModule*)cuda_common_param->module;
     cuda_common_param->module = (void*)cuda_module;
+    pmx_module_created_ = true;
+#endif
     return RC_SUCCESS;
 }
 #endif
