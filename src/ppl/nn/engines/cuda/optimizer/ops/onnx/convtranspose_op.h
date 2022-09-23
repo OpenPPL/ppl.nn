@@ -42,6 +42,9 @@ public:
 
 private:
     CudaConvTransposeParam param_;
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    bool pmx_module_created_ = false;
+#endif
 };
 
 }}} // namespace ppl::nn::cuda
