@@ -19,9 +19,9 @@ table ConvAlgoInfo {
 }
 
 table ConvExecInfo {
-    cvt_filter: [ubyte];
+    cvt_filter: uint32;
     cvt_filter_size: uint64;
-    cvt_bias: [ubyte];
+    cvt_bias: uint32;
     cvt_bias_size: uint64;
 }
 
@@ -46,9 +46,9 @@ table FCAlgoInfo {
 }
 
 table FCExecInfo {
-    cvt_filter: [ubyte];
+    cvt_filter: uint32;
     cvt_filter_size: uint64;
-    cvt_bias: [ubyte];
+    cvt_bias: uint32;
     cvt_bias_size: uint64;
 }
 

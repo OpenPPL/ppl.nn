@@ -333,7 +333,11 @@ static void ppl_arm_server_kernel_fp32_conv_direct_n4cx_convert_filter(
     }
 }
 
-ppl::common::RetCode conv2d_direct_ndarray_fp32_offline_manager::gen_cvt_weights(const void *filter, const void *bias)
+ppl::common::RetCode conv2d_direct_ndarray_fp32_offline_manager::generate_cvt_weights(
+    ppl::nn::TensorBufferInfo* new_filter,
+    ppl::nn::TensorBufferInfo* new_bias,
+    const void *filter,
+    const void *bias)
 {
     if (cvt_bias_ != nullptr || cvt_filter_ != nullptr) {
         return ppl::common::RC_PERMISSION_DENIED;
@@ -344,16 +348,37 @@ ppl::common::RetCode conv2d_direct_ndarray_fp32_offline_manager::gen_cvt_weights
     const int64_t kernel_h   = param_.kernel_h;
     const int64_t kernel_w   = param_.kernel_w;
 
-    cvt_bias_size_               = CEIL4(num_output) * sizeof(float);
-    cvt_bias_                    = allocator_->Alloc(cvt_bias_size_);
-    int64_t padding_offset_bytes = num_output * sizeof(float);
-    int64_t padding_bytes        = (CEIL4(num_output) - num_output) * sizeof(float);
-    memcpy(cvt_bias_, bias, num_output * sizeof(float));
-    memset((uint8_t *)cvt_bias_ + padding_offset_bytes, 0, padding_bytes);
+    cvt_bias_size_ = CEIL4(num_output) * sizeof(float);
+    ppl::nn::TensorShape bias_shape;
+    bias_shape.SetDimCount(1);
+    bias_shape.SetDim(0, cvt_bias_size_/sizeof(float));
+    bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+    bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
+    if (bias && new_bias) {
+        new_bias->Reshape(bias_shape);
+        new_bias->ReallocBuffer();
+        cvt_bias_ = new_bias->GetBufferPtr<float>();
+        int64_t padding_offset_bytes = num_output * sizeof(float);
+        int64_t padding_bytes        = (CEIL4(num_output) - num_output) * sizeof(float);
+        memcpy(cvt_bias_, bias, num_output * sizeof(float));
+        memset((uint8_t *)cvt_bias_ + padding_offset_bytes, 0, padding_bytes);
+    } else {
+        cvt_bias_ = allocator_->Alloc(cvt_bias_size_);
+        memset(cvt_bias_, 0, cvt_bias_size_);
+        is_bias_owner_ = true;
+    }
 
     cvt_filter_size_ = ppl_arm_server_kernel_fp32_conv_direct_n4cx_get_converted_filter_size(
         channels, num_output, kernel_h, kernel_w);
-    cvt_filter_ = allocator_->Alloc(cvt_filter_size_);
+    ppl::nn::TensorShape filter_shape;
+    filter_shape.SetDimCount(1);
+    filter_shape.SetDim(0, cvt_filter_size_/sizeof(float));
+    filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+    filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
+
+    new_filter->Reshape(filter_shape);
+    new_filter->ReallocBuffer();
+    cvt_filter_ = new_filter->GetBufferPtr<float>();
     ppl_arm_server_kernel_fp32_conv_direct_n4cx_convert_filter(
         (const float *)filter,
         (float *)cvt_filter_,
@@ -361,6 +386,7 @@ ppl::common::RetCode conv2d_direct_ndarray_fp32_offline_manager::gen_cvt_weights
         num_output,
         kernel_h,
         kernel_w);
+    
     return ppl::common::RC_SUCCESS;
 }
 

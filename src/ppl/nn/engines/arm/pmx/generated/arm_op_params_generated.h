@@ -410,25 +410,23 @@ struct ConvExecInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_CVT_BIAS = 8,
     VT_CVT_BIAS_SIZE = 10
   };
-  const flatbuffers::Vector<uint8_t> *cvt_filter() const {
-    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_CVT_FILTER);
+  uint32_t cvt_filter() const {
+    return GetField<uint32_t>(VT_CVT_FILTER, 0);
   }
   uint64_t cvt_filter_size() const {
     return GetField<uint64_t>(VT_CVT_FILTER_SIZE, 0);
   }
-  const flatbuffers::Vector<uint8_t> *cvt_bias() const {
-    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_CVT_BIAS);
+  uint32_t cvt_bias() const {
+    return GetField<uint32_t>(VT_CVT_BIAS, 0);
   }
   uint64_t cvt_bias_size() const {
     return GetField<uint64_t>(VT_CVT_BIAS_SIZE, 0);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_CVT_FILTER) &&
-           verifier.VerifyVector(cvt_filter()) &&
+           VerifyField<uint32_t>(verifier, VT_CVT_FILTER) &&
            VerifyField<uint64_t>(verifier, VT_CVT_FILTER_SIZE) &&
-           VerifyOffset(verifier, VT_CVT_BIAS) &&
-           verifier.VerifyVector(cvt_bias()) &&
+           VerifyField<uint32_t>(verifier, VT_CVT_BIAS) &&
            VerifyField<uint64_t>(verifier, VT_CVT_BIAS_SIZE) &&
            verifier.EndTable();
   }
@@ -438,14 +436,14 @@ struct ConvExecInfoBuilder {
   typedef ConvExecInfo Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_cvt_filter(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> cvt_filter) {
-    fbb_.AddOffset(ConvExecInfo::VT_CVT_FILTER, cvt_filter);
+  void add_cvt_filter(uint32_t cvt_filter) {
+    fbb_.AddElement<uint32_t>(ConvExecInfo::VT_CVT_FILTER, cvt_filter, 0);
   }
   void add_cvt_filter_size(uint64_t cvt_filter_size) {
     fbb_.AddElement<uint64_t>(ConvExecInfo::VT_CVT_FILTER_SIZE, cvt_filter_size, 0);
   }
-  void add_cvt_bias(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> cvt_bias) {
-    fbb_.AddOffset(ConvExecInfo::VT_CVT_BIAS, cvt_bias);
+  void add_cvt_bias(uint32_t cvt_bias) {
+    fbb_.AddElement<uint32_t>(ConvExecInfo::VT_CVT_BIAS, cvt_bias, 0);
   }
   void add_cvt_bias_size(uint64_t cvt_bias_size) {
     fbb_.AddElement<uint64_t>(ConvExecInfo::VT_CVT_BIAS_SIZE, cvt_bias_size, 0);
@@ -463,9 +461,9 @@ struct ConvExecInfoBuilder {
 
 inline flatbuffers::Offset<ConvExecInfo> CreateConvExecInfo(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> cvt_filter = 0,
+    uint32_t cvt_filter = 0,
     uint64_t cvt_filter_size = 0,
-    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> cvt_bias = 0,
+    uint32_t cvt_bias = 0,
     uint64_t cvt_bias_size = 0) {
   ConvExecInfoBuilder builder_(_fbb);
   builder_.add_cvt_bias_size(cvt_bias_size);
@@ -473,22 +471,6 @@ inline flatbuffers::Offset<ConvExecInfo> CreateConvExecInfo(
   builder_.add_cvt_bias(cvt_bias);
   builder_.add_cvt_filter(cvt_filter);
   return builder_.Finish();
-}
-
-inline flatbuffers::Offset<ConvExecInfo> CreateConvExecInfoDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<uint8_t> *cvt_filter = nullptr,
-    uint64_t cvt_filter_size = 0,
-    const std::vector<uint8_t> *cvt_bias = nullptr,
-    uint64_t cvt_bias_size = 0) {
-  auto cvt_filter__ = cvt_filter ? _fbb.CreateVector<uint8_t>(*cvt_filter) : 0;
-  auto cvt_bias__ = cvt_bias ? _fbb.CreateVector<uint8_t>(*cvt_bias) : 0;
-  return ppl::nn::pmx::arm::CreateConvExecInfo(
-      _fbb,
-      cvt_filter__,
-      cvt_filter_size,
-      cvt_bias__,
-      cvt_bias_size);
 }
 
 struct ConvParamInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -705,25 +687,23 @@ struct FCExecInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_CVT_BIAS = 8,
     VT_CVT_BIAS_SIZE = 10
   };
-  const flatbuffers::Vector<uint8_t> *cvt_filter() const {
-    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_CVT_FILTER);
+  uint32_t cvt_filter() const {
+    return GetField<uint32_t>(VT_CVT_FILTER, 0);
   }
   uint64_t cvt_filter_size() const {
     return GetField<uint64_t>(VT_CVT_FILTER_SIZE, 0);
   }
-  const flatbuffers::Vector<uint8_t> *cvt_bias() const {
-    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_CVT_BIAS);
+  uint32_t cvt_bias() const {
+    return GetField<uint32_t>(VT_CVT_BIAS, 0);
   }
   uint64_t cvt_bias_size() const {
     return GetField<uint64_t>(VT_CVT_BIAS_SIZE, 0);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_CVT_FILTER) &&
-           verifier.VerifyVector(cvt_filter()) &&
+           VerifyField<uint32_t>(verifier, VT_CVT_FILTER) &&
            VerifyField<uint64_t>(verifier, VT_CVT_FILTER_SIZE) &&
-           VerifyOffset(verifier, VT_CVT_BIAS) &&
-           verifier.VerifyVector(cvt_bias()) &&
+           VerifyField<uint32_t>(verifier, VT_CVT_BIAS) &&
            VerifyField<uint64_t>(verifier, VT_CVT_BIAS_SIZE) &&
            verifier.EndTable();
   }
@@ -733,14 +713,14 @@ struct FCExecInfoBuilder {
   typedef FCExecInfo Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_cvt_filter(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> cvt_filter) {
-    fbb_.AddOffset(FCExecInfo::VT_CVT_FILTER, cvt_filter);
+  void add_cvt_filter(uint32_t cvt_filter) {
+    fbb_.AddElement<uint32_t>(FCExecInfo::VT_CVT_FILTER, cvt_filter, 0);
   }
   void add_cvt_filter_size(uint64_t cvt_filter_size) {
     fbb_.AddElement<uint64_t>(FCExecInfo::VT_CVT_FILTER_SIZE, cvt_filter_size, 0);
   }
-  void add_cvt_bias(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> cvt_bias) {
-    fbb_.AddOffset(FCExecInfo::VT_CVT_BIAS, cvt_bias);
+  void add_cvt_bias(uint32_t cvt_bias) {
+    fbb_.AddElement<uint32_t>(FCExecInfo::VT_CVT_BIAS, cvt_bias, 0);
   }
   void add_cvt_bias_size(uint64_t cvt_bias_size) {
     fbb_.AddElement<uint64_t>(FCExecInfo::VT_CVT_BIAS_SIZE, cvt_bias_size, 0);
@@ -758,9 +738,9 @@ struct FCExecInfoBuilder {
 
 inline flatbuffers::Offset<FCExecInfo> CreateFCExecInfo(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> cvt_filter = 0,
+    uint32_t cvt_filter = 0,
     uint64_t cvt_filter_size = 0,
-    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> cvt_bias = 0,
+    uint32_t cvt_bias = 0,
     uint64_t cvt_bias_size = 0) {
   FCExecInfoBuilder builder_(_fbb);
   builder_.add_cvt_bias_size(cvt_bias_size);
@@ -768,22 +748,6 @@ inline flatbuffers::Offset<FCExecInfo> CreateFCExecInfo(
   builder_.add_cvt_bias(cvt_bias);
   builder_.add_cvt_filter(cvt_filter);
   return builder_.Finish();
-}
-
-inline flatbuffers::Offset<FCExecInfo> CreateFCExecInfoDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<uint8_t> *cvt_filter = nullptr,
-    uint64_t cvt_filter_size = 0,
-    const std::vector<uint8_t> *cvt_bias = nullptr,
-    uint64_t cvt_bias_size = 0) {
-  auto cvt_filter__ = cvt_filter ? _fbb.CreateVector<uint8_t>(*cvt_filter) : 0;
-  auto cvt_bias__ = cvt_bias ? _fbb.CreateVector<uint8_t>(*cvt_bias) : 0;
-  return ppl::nn::pmx::arm::CreateFCExecInfo(
-      _fbb,
-      cvt_filter__,
-      cvt_filter_size,
-      cvt_bias__,
-      cvt_bias_size);
 }
 
 struct FCParamInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {

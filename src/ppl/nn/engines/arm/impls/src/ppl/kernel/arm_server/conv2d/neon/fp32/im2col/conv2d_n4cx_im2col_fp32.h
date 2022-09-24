@@ -111,7 +111,9 @@ public:
     ppl::common::RetCode try_reflect_pad(const std::vector<int>& pads) override { return ppl::common::RC_UNSUPPORTED; }
     
     // convert filter according to scheduling params.
-    ppl::common::RetCode gen_cvt_weights(const void *filter, const void *bias) override;
+    ppl::common::RetCode generate_cvt_weights(
+        ppl::nn::TensorBufferInfo* new_filter, ppl::nn::TensorBufferInfo* new_bias,
+        const void *filter, const void *bias) override;
     // generate executor for runtime
     conv2d_runtime_executor *gen_executor() override;
 

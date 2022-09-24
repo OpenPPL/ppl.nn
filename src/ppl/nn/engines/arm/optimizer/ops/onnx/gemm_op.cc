@@ -33,7 +33,25 @@ namespace ppl { namespace nn { namespace arm {
 
 GemmOp::GemmOp(const ir::Node* node) : ArmOptKernel(node), fc_param_(nullptr) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return onnx::ReshapeGemm(info, param_.get());
+        if (fc_param_) {
+            if (info->GetInputCount() < 2) {
+                LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] < 2.";
+                return RC_INVALID_VALUE;
+            }
+
+            auto A = info->GetInput<TensorImpl>(0)->GetShape();
+            auto Y = info->GetOutput<TensorImpl>(0)->GetShape();
+
+            int32_t AMdim = 0;
+            if (param_->transA) {
+                AMdim = 1;
+            }
+
+            Y->Reshape({A->GetDim(AMdim), fc_param_->param.num_output});
+            return RC_SUCCESS;
+        } else {
+            return onnx::ReshapeGemm(info, param_.get());
+        }  
     };
 
     infer_type_func_ = GenericInferType;
@@ -105,9 +123,18 @@ ppl::common::RetCode GemmOp::SelectAlgorithm(const InputOutputInfo& info, const 
             fc_param_->mgr = ppl::kernel::arm_server::neon::fc_algo_selector::gen_algo(
                 fc_param_->param, fc_param_->algo_info, options.device->GetAllocator());
 
+            ppl::nn::TensorBufferInfo * new_filter = &options.info->constants[node->GetInput(1)];
+            new_filter->SetDevice(options.device);
+
+            ppl::nn::TensorBufferInfo * new_bias = nullptr;
+            if (bias_data != nullptr) {
+                new_bias = &options.info->constants[node->GetInput(2)];
+                new_bias->SetDevice(options.device);
+            }
+
             if (bias_data != nullptr) {
                 if (dtype == ppl::common::DATATYPE_FLOAT32) {
-                    fc_param_->mgr->gen_cvt_weights(weight_data, bias_data, dtype);
+                    fc_param_->mgr->generate_cvt_weights(new_filter, new_bias, weight_data, bias_data, dtype);
 #ifdef PPLNN_USE_ARMV8_2_FP16
                 } else if (dtype == ppl::common::DATATYPE_FLOAT16) {
                     vector<__fp16> weight_data_fp16;
@@ -115,24 +142,12 @@ ppl::common::RetCode GemmOp::SelectAlgorithm(const InputOutputInfo& info, const 
                     Fp32ToFp16((const float*)weight_data, weight_len, weight_data_fp16.data());
 
                     vector<__fp16> bias_data_fp16;
-                    bias_data_fp16.resize(bias_len * sizeof(__fp16));
-                    Fp32ToFp16((const float*)bias_data, bias_len, bias_data_fp16.data());
+                    if (bias_data != nullptr) {
+                        bias_data_fp16.resize(bias_len * sizeof(__fp16));
+                        Fp32ToFp16((const float*)bias_data, bias_len, bias_data_fp16.data());
+                    }
 
-                    fc_param_->mgr->gen_cvt_weights(weight_data_fp16.data(), bias_data_fp16.data(), dtype);
-#endif
-                }
-            } else {
-                if (dtype == ppl::common::DATATYPE_FLOAT32) {
-                    std::vector<float> zero_bias(fc_param_->param.num_output, 0.0f);
-                    fc_param_->mgr->gen_cvt_weights(weight_data, zero_bias.data(), dtype);
-#ifdef PPLNN_USE_ARMV8_2_FP16
-                } else if (dtype == ppl::common::DATATYPE_FLOAT16) {
-                    vector<__fp16> weight_data_fp16;
-                    weight_data_fp16.resize(weight_len * sizeof(__fp16));
-                    Fp32ToFp16((const float*)weight_data, weight_len, weight_data_fp16.data());
-
-                    std::vector<__fp16> zero_bias(fc_param_->param.num_output, 0.0f);
-                    fc_param_->mgr->gen_cvt_weights(weight_data_fp16.data(), zero_bias.data(), dtype);
+                    fc_param_->mgr->generate_cvt_weights(new_filter, new_bias, weight_data_fp16.data(), bias_data_fp16.data(), dtype);
 #endif
                 }
             }
@@ -189,6 +204,8 @@ ppl::common::RetCode GemmOp::SerializeData(const ::ppl::nn::pmx::SerializationCo
         return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
     }
 
+    const std::vector<edgeid_t>& eid2seq = ctx.eid2seq;
+
     flatbuffers::FlatBufferBuilder fc_internal_builder;
     auto algo_info = fc_param_->algo_info;
     auto fb_algo_info = ppl::nn::pmx::arm::CreateFCAlgoInfo(fc_internal_builder,
@@ -198,9 +215,9 @@ ppl::common::RetCode GemmOp::SerializeData(const ::ppl::nn::pmx::SerializationCo
                                                             algo_info.isa);
     auto mgr = fc_param_->mgr;
     auto fb_exec_info = ppl::nn::pmx::arm::CreateFCExecInfo(fc_internal_builder,
-                                                            fc_internal_builder.CreateVector<uint8_t>((const uint8_t*)mgr->cvt_filter(), mgr->cvt_filter_size()),
+                                                            eid2seq[GetNode()->GetInput(1)],
                                                             mgr->cvt_filter_size(),
-                                                            fc_internal_builder.CreateVector<uint8_t>((const uint8_t*)mgr->cvt_bias(), mgr->cvt_bias_size()),
+                                                            (mgr->cvt_bias()) ? eid2seq[GetNode()->GetInput(2)] : std::numeric_limits<uint32_t>::max(),
                                                             mgr->cvt_bias_size());
     auto fb_param_info = ppl::nn::pmx::arm::CreateFCParamInfo(fc_internal_builder, 
                                                               fc_param_->param.num_output, 
@@ -258,19 +275,25 @@ ppl::common::RetCode GemmOp::DeserializeData(const ::ppl::nn::pmx::Deserializati
         fc_param_->param.fuse_flag = param_info->fuse_flag();
 
         auto mgr = new ppl::kernel::arm_server::neon::fc_manager(fc_param_->param, allocator_);
+
+        const auto & shapes = *ctx.shapes; (void)shapes;
+        const auto & constants = *ctx.constants;
+        
         uint64_t cvt_filter_size = exec_info->cvt_filter_size();
-        uint64_t cvt_bias_size = exec_info->cvt_bias_size();
-
-        void *cvt_filter_ptr = allocator_->Alloc(cvt_filter_size);
-        void *cvt_bias_ptr = allocator_->Alloc(cvt_bias_size);
-        memcpy(cvt_filter_ptr, exec_info->cvt_filter()->data(), cvt_filter_size);
-        memcpy(cvt_bias_ptr, exec_info->cvt_bias()->data(), cvt_bias_size);
+        void *cvt_filter_ptr = constants.at(exec_info->cvt_filter()).GetBufferPtr<void>();
         mgr->set_cvt_filter(cvt_filter_ptr, cvt_filter_size);
-        mgr->set_cvt_bias(cvt_bias_ptr, cvt_bias_size);
 
-        LOG(WARNING) << cvt_filter_size;
-        LOG(WARNING) << cvt_bias_size;
-
+        uint32_t cvt_bias_id = exec_info->cvt_bias();
+        uint64_t cvt_bias_size = exec_info->cvt_bias_size();
+        void *cvt_bias_ptr;
+        if (cvt_bias_id != std::numeric_limits<uint32_t>::max()) {
+            cvt_bias_ptr = constants.at(cvt_bias_id).GetBufferPtr<void>();
+            mgr->set_cvt_bias(cvt_bias_ptr, cvt_bias_size);
+        } else {
+            cvt_bias_ptr = mgr->allocator()->Alloc(cvt_bias_size);
+            memset(cvt_bias_ptr, 0, cvt_bias_size);
+            mgr->set_cvt_bias(cvt_bias_ptr, cvt_bias_size);
+        }
 
         fc_param_->mgr = mgr;
         return RC_SUCCESS;

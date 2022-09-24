@@ -1197,12 +1197,6 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
-        auto status = builder->LoadModel(g_flag_pmx_model.c_str());
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "PmxRuntimeBuilder LoadModel failed: " << GetRetCodeStr(status);
-            return -1;
-        }
-
         status = builder->Preprocess();
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "pmx preprocess failed: " << GetRetCodeStr(status);

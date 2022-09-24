@@ -24,6 +24,7 @@
 #include "ppl/common/allocator.h"
 #include "ppl/common/arm/sysinfo.h"
 #include "ppl/common/sys.h"
+#include "ppl/nn/common/tensor_buffer_info.h"
 #include "ppl/nn/engines/arm/engine_options.h"
 
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
@@ -283,6 +284,7 @@ protected:
     void *cvt_bias_;
     uint64_t cvt_filter_size_;
     uint64_t cvt_bias_size_;
+    bool is_bias_owner_;
 
 private:
     conv2d_algo_info algo_info_;
@@ -293,7 +295,8 @@ public:
         , cvt_filter_(nullptr)
         , cvt_bias_(nullptr)
         , cvt_filter_size_(0)
-        , cvt_bias_size_(0) {}
+        , cvt_bias_size_(0)
+        , is_bias_owner_(false) {}
 
     conv2d_offline_manager(const conv2d_param &param, ppl::common::Allocator *allocator)
         : allocator_(allocator)
@@ -301,6 +304,7 @@ public:
         , cvt_bias_(nullptr)
         , cvt_filter_size_(0)
         , cvt_bias_size_(0)
+        , is_bias_owner_(false)
     {
         param_ = param;
     }
@@ -337,10 +341,11 @@ public:
         return cvt_filter_size_;
     }
 
-    void set_cvt_bias(const void *cvt_bias, const uint64_t cvt_bias_size)
+    void set_cvt_bias(const void *cvt_bias, const uint64_t cvt_bias_size, const bool is_bias_owner = false)
     {
         cvt_bias_      = const_cast<void *>(cvt_bias);
         cvt_bias_size_ = cvt_bias_size;
+        is_bias_owner_ = is_bias_owner;
     }
     const void *get_cvt_bias() const
     {
@@ -353,13 +358,12 @@ public:
 
     void release_cvt_weights()
     {
-        if (cvt_filter_) {
-            allocator_->Free(cvt_filter_);
-            cvt_filter_ = nullptr;
-        }
+        cvt_filter_ = nullptr;
 
         if (cvt_bias_) {
-            allocator_->Free(cvt_bias_);
+            if (is_bias_owner_) {
+                allocator_->Free(cvt_bias_);
+            }
             cvt_bias_ = nullptr;
         }
     }
@@ -395,7 +399,9 @@ public:
     virtual bool is_supported()                                                        = 0;
     virtual ppl::common::RetCode try_fuse(conv_fuse_flag_t fuse_type)                  = 0;
     virtual ppl::common::RetCode try_reflect_pad(const std::vector<int>& pads)         = 0;
-    virtual ppl::common::RetCode gen_cvt_weights(const void *filter, const void *bias) = 0;
+    virtual ppl::common::RetCode generate_cvt_weights(ppl::nn::TensorBufferInfo *,
+                                                      ppl::nn::TensorBufferInfo *,
+                                                      const void *, const void *)      = 0;
     virtual conv2d_runtime_executor *gen_executor()                                    = 0;
 
     virtual ~conv2d_offline_manager() {}

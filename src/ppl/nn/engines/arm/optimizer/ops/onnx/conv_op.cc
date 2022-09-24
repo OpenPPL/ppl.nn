@@ -36,7 +36,41 @@ namespace ppl { namespace nn { namespace arm {
 
 ConvOp::ConvOp(const ir::Node* node) : ArmOptKernel(node), conv2d_param_(nullptr) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return onnx::ReshapeConv(info, param_.get());
+        if (info->GetInput<TensorImpl>(1)->GetShape()->GetDimCount() == 1) {  // cvt filters
+            if (conv2d_param_ == nullptr) {
+                LOG(ERROR) << "Cannot infer dimensions for " << GetNode()->GetName() << " outputs: ";
+                LOG(ERROR) << "    missing filters dimensions";
+                return RC_INVALID_VALUE;
+            }
+            auto x = info->GetInput<TensorImpl>(0)->GetShape();
+            auto y = info->GetOutput<TensorImpl>(0)->GetShape();
+            auto num_output = conv2d_param_->param.num_output;
+
+            y->SetDimCount(x->GetDimCount());
+            y->SetDim(0, x->GetDim(0));
+            LOG(WARNING) << y->GetDim(0);
+            y->SetDim(1, num_output);
+            LOG(WARNING) << y->GetDim(1);
+
+            const int32_t kernel_dims = (int32_t)x->GetDimCount() - 2;
+            for (int32_t i = 0; i < kernel_dims; ++i) {
+                const int32_t j = i + 2;
+                const int32_t kernel_shape_eff = (param_->kernel_shape[i] - 1) * param_->dilations[i] + 1;
+                const int64_t out_dim =
+                    (x->GetDim(j) + param_->pads[i] + param_->pads[i + kernel_dims] - kernel_shape_eff) / param_->strides[i] + 1;
+                if (out_dim <= 0) {
+                    LOG(DEBUG) << "ERROR: output dim[" << out_dim << "] < 0.";
+                    return RC_INVALID_VALUE;
+                }
+                y->SetDim(j, out_dim);
+                LOG(WARNING) << y->GetDim(j);
+            }
+            y->CalcPadding();
+
+            return RC_SUCCESS;
+        } else {
+            return onnx::ReshapeConv(info, param_.get());
+        }
     };
 
     infer_type_func_ = GenericInferType;
@@ -131,6 +165,10 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
             *info.GetInput<TensorImpl>(0)->GetShape(), *options.engine_options, options.device->GetISA(),
             conv2d_param_->param, options.device->GetAllocator());
 
+        LOG(ERROR) << options.info->constants.size();
+        LOG(ERROR) << info.GetInputCount();
+        LOG(ERROR) << GetNode()->GetInput(1);
+        LOG(ERROR) << GetNode()->GetInput(2);
         if (conv2d_param_->mgr == nullptr) {
             LOG(ERROR) << "No algorithm selected.";
             return ppl::common::RC_UNSUPPORTED;
@@ -146,23 +184,25 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
                   << ppl::kernel::arm_server::neon::get_conv_algo_str(selected_algo.algo_type);
 #endif
 
+        ppl::nn::TensorBufferInfo * new_filter = &options.info->constants[node->GetInput(1)];
+        new_filter->SetDevice(options.device);
+
+        ppl::nn::TensorBufferInfo * new_bias = nullptr;
+        if (bias_data != nullptr) {
+            new_bias = &options.info->constants[node->GetInput(2)];
+            new_bias->SetDevice(options.device);
+        }
+
         ppl::common::RetCode normal_cvt_weights_ret = ppl::common::RC_SUCCESS;
         ppl::common::RetCode fallback_cvt_weights_ret = ppl::common::RC_SUCCESS;
         if (selected_algo.data_type == ppl::common::DATATYPE_FLOAT32) {
-            if (bias_data != nullptr) {
-                normal_cvt_weights_ret = conv2d_param_->mgr->gen_cvt_weights(weight_data, bias_data);
-
-                if (conv2d_param_->fallback_mgr) {
-                    fallback_cvt_weights_ret = conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data, bias_data);
-                }
-            } else {
-                std::vector<float> zero_bias(conv2d_kernel_param.num_output, 0.0f);
-                normal_cvt_weights_ret = conv2d_param_->mgr->gen_cvt_weights(weight_data, zero_bias.data());
-
-                if (conv2d_param_->fallback_mgr) {
-                    fallback_cvt_weights_ret =
-                        conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data, zero_bias.data());
-                }
+            normal_cvt_weights_ret = conv2d_param_->mgr->generate_cvt_weights(new_filter, new_bias, weight_data, bias_data);
+            if (normal_cvt_weights_ret != ppl::common::RC_SUCCESS) {
+                return normal_cvt_weights_ret;
+            }
+            if (conv2d_param_->fallback_mgr) {
+                fallback_cvt_weights_ret = conv2d_param_->fallback_mgr->generate_cvt_weights(new_filter, new_bias, weight_data, bias_data);
+                
             }
 #ifdef PPLNN_USE_ARMV8_2_FP16
         } else if (selected_algo.data_type == ppl::common::DATATYPE_FLOAT16) {
@@ -170,25 +210,18 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
             weight_data_fp16.resize(weight_len * sizeof(__fp16));
             Fp32ToFp16(weight_data, weight_len, weight_data_fp16.data());
 
+            vector<__fp16> bias_data_fp16;
             if (bias_data != nullptr) {
-                vector<__fp16> bias_data_fp16;
                 bias_data_fp16.resize(bias_len * sizeof(__fp16));
                 Fp32ToFp16(bias_data, bias_len, bias_data_fp16.data());
-                normal_cvt_weights_ret =
-                    conv2d_param_->mgr->gen_cvt_weights(weight_data_fp16.data(), bias_data_fp16.data());
+            }
 
-                if (conv2d_param_->fallback_mgr) {
-                    fallback_cvt_weights_ret =
-                        conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data_fp16.data(), bias_data_fp16.data());
-                }
-            } else {
-                std::vector<__fp16> zero_bias(conv2d_kernel_param.num_output, 0.0f);
-                normal_cvt_weights_ret = conv2d_param_->mgr->gen_cvt_weights(weight_data_fp16.data(), zero_bias.data());
-
-                if (conv2d_param_->fallback_mgr) {
-                    fallback_cvt_weights_ret =
-                        conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data_fp16.data(), zero_bias.data());
-                }
+            normal_cvt_weights_ret = conv2d_param_->mgr->generate_cvt_weights(new_filter, new_bias,weight_data_fp16.data(), bias_data_fp16.data());
+            if (normal_cvt_weights_ret != ppl::common::RC_SUCCESS) {
+                return normal_cvt_weights_ret;
+            }
+            if (conv2d_param_->fallback_mgr) {
+                fallback_cvt_weights_ret = conv2d_param_->fallback_mgr->generate_cvt_weights(new_filter, new_bias,weight_data_fp16.data(), bias_data_fp16.data());
             }
 #endif
         } else {
@@ -266,6 +299,8 @@ bool ConvOp::TryFuseSum(void) {
 #ifdef PPLNN_ENABLE_PMX_MODEL
 
 ppl::common::RetCode ConvOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    const std::vector<edgeid_t>& eid2seq = ctx.eid2seq;
+
     flatbuffers::FlatBufferBuilder conv_builder;
     auto mgr = conv2d_param_->mgr;
     std::vector<int64_t> algo_sp = mgr->get_schedule_param();
@@ -276,9 +311,9 @@ ppl::common::RetCode ConvOp::SerializeData(const ::ppl::nn::pmx::SerializationCo
                                                               mgr->algo_info().isa,
                                                               conv_builder.CreateVector<int64_t>(algo_sp));
     auto fb_exec_info = ppl::nn::pmx::arm::CreateConvExecInfo(conv_builder,
-                                                              conv_builder.CreateVector<uint8_t>((const uint8_t*)mgr->get_cvt_filter(), mgr->get_cvt_filter_size()),
+                                                              eid2seq[GetNode()->GetInput(1)],
                                                               mgr->get_cvt_filter_size(),
-                                                              conv_builder.CreateVector<uint8_t>((const uint8_t*)mgr->get_cvt_bias(), mgr->get_cvt_bias_size()),
+                                                              (mgr->get_cvt_bias()) ? eid2seq[GetNode()->GetInput(2)] : std::numeric_limits<uint32_t>::max(),
                                                               mgr->get_cvt_bias_size());
     auto fb_param_info = ppl::nn::pmx::arm::CreateConvParamInfo(conv_builder, 
                                                                 conv2d_param_->param.num_output, 
@@ -347,19 +382,30 @@ ppl::common::RetCode ConvOp::DeserializeData(const ::ppl::nn::pmx::Deserializati
                          .data_type = algo_info->dtype()
                        });
     
-    uint64_t cvt_filter_size = exec_info->cvt_filter_size();
-    uint64_t cvt_bias_size = exec_info->cvt_bias_size();
-
-    void *cvt_filter_ptr = allocator_->Alloc(cvt_filter_size);
-    void *cvt_bias_ptr = allocator_->Alloc(cvt_bias_size);
-    memcpy(cvt_filter_ptr, exec_info->cvt_filter()->data(), cvt_filter_size);
-    memcpy(cvt_bias_ptr, exec_info->cvt_bias()->data(), cvt_bias_size);
-    mgr->set_cvt_filter(cvt_filter_ptr, cvt_filter_size);
-    mgr->set_cvt_bias(cvt_bias_ptr, cvt_bias_size);
-
     std::vector<int64_t> sp;
     ppl::nn::pmx::utils::Fbvec2Stdvec(algo_info->sched_param(), &sp);
     mgr->set_schedule_param(sp);
+    
+    const auto & shapes = *ctx.shapes; (void)shapes;
+    const auto & constants = *ctx.constants;
+
+    uint32_t cvt_filter_id = exec_info->cvt_filter();
+    uint64_t cvt_filter_size = exec_info->cvt_filter_size();
+    void *cvt_filter_ptr = constants.at(cvt_filter_id).GetBufferPtr<void>();
+    mgr->set_cvt_filter(cvt_filter_ptr, cvt_filter_size);
+
+    uint32_t cvt_bias_id = exec_info->cvt_bias();
+    uint64_t cvt_bias_size = exec_info->cvt_bias_size();
+    void *cvt_bias_ptr;
+    if (cvt_bias_id != std::numeric_limits<uint32_t>::max()) {
+        cvt_bias_ptr = constants.at(cvt_bias_id).GetBufferPtr<void>();
+        mgr->set_cvt_bias(cvt_bias_ptr, cvt_bias_size);
+    } else {
+        cvt_bias_ptr = mgr->get_allocator()->Alloc(cvt_bias_size);
+        memset(cvt_bias_ptr, 0, cvt_bias_size);
+        mgr->set_cvt_bias(cvt_bias_ptr, cvt_bias_size, true);
+    }
+
     conv2d_param_->mgr = mgr;
     conv2d_param_->fallback_mgr = nullptr;
 
