@@ -99,6 +99,25 @@ __device__ __forceinline__ T WarpReduceLogAddSum(T val) {
     return val;
 }
 
+template <typename T>
+__forceinline__ __device__ T blockReduceSum(T val) {
+  static __shared__ T shared[32];
+  int lane = threadIdx.x & 0x1f;
+  int wid = threadIdx.x >> 5;
+
+  val = WarpReduceSum<T>(val);
+
+  if (lane == 0) shared[wid] = val;
+  __syncthreads();
+
+  if (wid == 0) {
+      val = (threadIdx.x < ((blockDim.x + 31) >> 5)) ? shared[lane] : (T)0.0f;
+      val = WarpReduceSum<T>(val);
+      return val;
+  }
+  return (T)0.0f;
+}
+
 
 template<typename T>
 __device__ __forceinline__ T BlockReduceSum(T val) {
