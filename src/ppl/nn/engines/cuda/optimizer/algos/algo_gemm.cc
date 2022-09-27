@@ -277,10 +277,8 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
             postshape.SetDim(1, newshape.GetDim(0));
         }
 
-        newshape.SetDim(0, (postshape.GetDim(0) + align_size - 1) / align_size * align_size);
-        newshape.SetDim(1, (postshape.GetDim(1) + align_size - 1) / align_size * align_size);
-        newshape.SetPadding0(0, 0);
-        newshape.SetPadding0(1, 0);
+        newshape.SetPadding1(0, (postshape.GetDim(0) + align_size - 1) / align_size * align_size - postshape.GetDim(0));
+        newshape.SetPadding1(1, (postshape.GetDim(1) + align_size - 1) / align_size * align_size - postshape.GetDim(1));
 
         RuntimeConstantInfo weight_constat_info;
         {
@@ -291,7 +289,7 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
                 return status;
             }
 
-            weight_constat_info.Reshape(postshape);
+            weight_constat_info.Reshape(newshape); // give the converted shape, but the dims are not changed
             weight_constat_info.SetBuffer(buffer, options.device, true);
         }
 
@@ -329,7 +327,8 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
 
         reinterpret_cast<CudaGemmParam*>(options.param)->param.transB = 1;
         options.info->constants.emplace(preedge_id, std::move(weight_constat_info));
-        *options.tensors->find(preedge_id)->second->GetShape() = postshape;
+        *options.tensors->find(preedge_id)->second->GetShape() = newshape;
+        *options.tensors->find(postedge_id)->second->GetShape() = newshape;
         options.quants->at(preedge_id) = options.quants->at(postedge_id);
         options.quants->at(preedge_id).format = postshape.GetDataFormat();
         options.quants->at(preedge_id).type = postshape.GetDataType();
@@ -365,7 +364,7 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
                 return status;
             }
 
-            bias_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
+            bias_constat_info.Reshape(newshape);
             bias_constat_info.SetBuffer(buffer, options.device, true);
         }
 
@@ -380,7 +379,8 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
                                        bias_constat_info.GetBufferDesc().addr, &attr_param_.param);
 
         options.info->constants.emplace(preedge_id, std::move(bias_constat_info));
-        *options.tensors->find(preedge_id)->second->GetShape() = postshape;
+        *options.tensors->find(preedge_id)->second->GetShape() = newshape;
+        *options.tensors->find(postedge_id)->second->GetShape() = newshape;
         options.quants->at(preedge_id) = options.quants->at(postedge_id);
         options.quants->at(preedge_id).format = postshape.GetDataFormat();
         options.quants->at(preedge_id).type = postshape.GetDataType();

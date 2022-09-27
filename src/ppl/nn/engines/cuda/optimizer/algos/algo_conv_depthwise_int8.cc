@@ -217,7 +217,7 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
         const TensorShape& preshape = *options.tensors->find(preedge_id)->second->GetShape();
         const TensorShape& postshape = *options.tensors->find(postedge_id)->second->GetShape();
         auto newshape = postshape;
-        newshape.SetDim(0, (postshape.GetDim(0) + align_size - 1) / align_size * align_size);
+        newshape.SetPadding1(0, (postshape.GetDim(0) + align_size - 1) / align_size * align_size - postshape.GetDim(0));
 
         BufferDesc temp_buffer;
         status = options.device->Realloc(postshape, &temp_buffer);
@@ -238,7 +238,7 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
                 return status;
             }
 
-            constant_info.Reshape(postshape); // give the init shape, but the actual shape is padded
+            constant_info.Reshape(newshape); // give the init shape, but the actual shape is padded
             constant_info.SetBuffer(buffer, options.device, true);
         }
         status = ((CudaDataConverter*)options.device->GetDataConverter())
@@ -254,7 +254,8 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
                                       shape_out.GetDataType());
 
         options.info->constants.emplace(preedge_id, std::move(constant_info));
-        *options.tensors->find(preedge_id)->second->GetShape() = postshape;
+        *options.tensors->find(preedge_id)->second->GetShape() = newshape;
+        *options.tensors->find(postedge_id)->second->GetShape() = newshape;
         options.quants->at(preedge_id) = options.quants->at(postedge_id);
         options.quants->at(preedge_id).format = postshape.GetDataFormat();
         options.quants->at(preedge_id).type = postshape.GetDataType();

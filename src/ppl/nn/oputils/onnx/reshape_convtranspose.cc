@@ -36,7 +36,7 @@ RetCode ReshapeConvTranspose(InputOutputInfo* info, const ir::Attr* arg) {
     const int32_t kernel_dims = (int32_t)x->GetDimCount() - 2;
     for (int32_t i = 0; i < kernel_dims; ++i) {
         const int32_t j = i + 2;
-        const int32_t kernel_shape_eff = (w->GetDim(j) - 1) * param->dilations[i] + 1;
+        const int32_t kernel_shape_eff = (param->kernel_shape[i] - 1) * param->dilations[i] + 1;
         const int64_t out_dim =
             param->strides[i] * (x->GetDim(j) - 1) + kernel_shape_eff - param->pads[i] - param->pads[i + kernel_dims];
         if (out_dim <= 0) {

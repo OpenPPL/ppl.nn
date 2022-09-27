@@ -149,8 +149,12 @@ ppl::common::RetCode PPLCUDAGemmModifyWeightsInt8(
     auto type    = weight_shape->GetDataType();
     int pad_size = GetPadSize(type);
 
-    const int dim0 = weight_shape->GetDim(0); // assume padded
-    const int dim1 = weight_shape->GetDim(1);
+    const int real_dim0 = weight_shape->GetDim(0); // assume padded
+    const int real_dim1 = weight_shape->GetDim(1);
+    const int padding0 = weight_shape->GetPadding1(0);
+    const int padding1 = weight_shape->GetPadding1(1);
+    const int dim0 = real_dim0 + padding0;
+    const int dim1 = real_dim1 + padding1;
 
     if (!transB) {
 #define TRANSWEIGHT                                                                                     \
@@ -159,8 +163,10 @@ ppl::common::RetCode PPLCUDAGemmModifyWeightsInt8(
 
         dim3 grid(DivUp(dim1, 32), DivUp(dim0, 32), 1);
         dim3 block(32, 32, 1);
-        weight_shape->SetDim(0, dim1);
-        weight_shape->SetDim(1, dim0);
+        weight_shape->SetDim(0, real_dim1);
+        weight_shape->SetDim(1, real_dim0);
+        weight_shape->SetPadding1(0, padding1);
+        weight_shape->SetPadding1(1, padding0);
         if (type == ppl::common::DATATYPE_INT8) {
             TRANSWEIGHT
         } else {

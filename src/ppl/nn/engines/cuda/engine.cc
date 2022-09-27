@@ -196,7 +196,7 @@ RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, 
 
         BufferDesc buf;
         buf.addr = (char*)block.addr + offset;
-        auto status = dev->CopyFromHost(&buf, data, shape);
+        auto status = dev->CopyFromHost(&buf, data, size);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy data of constant[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;

@@ -189,7 +189,7 @@ RetCode TuringHMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
         const TensorShape& preshape = *options.tensors->find(preedge_id)->second->GetShape();
         const TensorShape& postshape = *options.tensors->find(postedge_id)->second->GetShape();
         auto newshape = postshape;
-        newshape.SetDim(0, k_per_grp_pad * temp_conv_param.num_grp);
+        newshape.SetPadding1(0, k_per_grp_pad * temp_conv_param.num_grp - newshape.GetDim(0));
 
         RuntimeConstantInfo weight_constat_info;
         {
@@ -200,7 +200,7 @@ RetCode TuringHMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
                 return status;
             }
 
-            weight_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
+            weight_constat_info.Reshape(newshape); // give the converted shape, but the dims are not changed
             weight_constat_info.SetBuffer(buffer, options.device, true);
         }
 
@@ -216,7 +216,8 @@ RetCode TuringHMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
                                  shape_in0.GetDataType(), temp_conv_param);
 
         options.info->constants.emplace(preedge_id, std::move(weight_constat_info));
-        *options.tensors->find(preedge_id)->second->GetShape() = postshape;
+        *options.tensors->find(preedge_id)->second->GetShape() = newshape;
+        *options.tensors->find(postedge_id)->second->GetShape() = newshape;
         options.quants->at(preedge_id) = options.quants->at(postedge_id);
         options.quants->at(preedge_id).format = postshape.GetDataFormat();
         options.quants->at(preedge_id).type = postshape.GetDataType();
@@ -248,7 +249,7 @@ RetCode TuringHMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
                 return status;
             }
 
-            bias_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
+            bias_constat_info.Reshape(newshape);
             bias_constat_info.SetBuffer(buffer, options.device, true);
         }
 
@@ -263,7 +264,8 @@ RetCode TuringHMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
         PPLCUDAConvolutionCvtBias(stream, bias_constat_info.GetBufferDesc().addr, temp_buffer.addr,
                                   shape_in0.GetDataType(), temp_conv_param);
         options.info->constants.emplace(preedge_id, std::move(bias_constat_info));
-        *options.tensors->find(preedge_id)->second->GetShape() = postshape;
+        *options.tensors->find(preedge_id)->second->GetShape() = newshape;
+        *options.tensors->find(postedge_id)->second->GetShape() = newshape;
         options.quants->at(preedge_id) = options.quants->at(postedge_id);
         options.quants->at(preedge_id).format = postshape.GetDataFormat();
         options.quants->at(preedge_id).type = postshape.GetDataType();
