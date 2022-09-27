@@ -89,7 +89,7 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     auto newshape = *weight->GetShape();
     if (!param_->extra_param.is_initializer_weight) {
         auto align_size = 8;
-        newshape.SetDim(0, (newshape.GetDim(0) + align_size - 1) / align_size * align_size);
+        newshape.SetPadding1(0, (newshape.GetDim(0) + align_size - 1) / align_size * align_size - newshape.GetDim(0));
 
         auto status = GetCudaDevice()->Realloc(newshape, &weight_buffer);
         if (status != ppl::common::RC_SUCCESS) {

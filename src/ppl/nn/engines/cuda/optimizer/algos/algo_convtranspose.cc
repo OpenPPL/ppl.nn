@@ -171,7 +171,7 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
         int kernel_v = (newshape.GetDim(3) + stride_w - 1) / stride_w;
         int pattern_num = stride_h * stride_w;
         newshape.SetDim(0, (newshape.GetDim(0) + align_size - 1) / align_size * align_size);
-        newshape.SetDim(1, (newshape.GetDim(1) + align_size - 1) / align_size * align_size);
+        newshape.SetPadding1(1, (newshape.GetDim(1) + align_size - 1) / align_size * align_size - newshape.GetDim(1));
         newshape.SetDim(2, pattern_num);
         newshape.SetDim(3, kernel_u * kernel_v);
 
@@ -184,7 +184,7 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
                 return status;
             }
 
-            weight_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
+            weight_constat_info.Reshape(newshape); // // give the converted shape, but the channel-dim is not changed
             weight_constat_info.SetBuffer(buffer, options.device, true);
         }
 
@@ -203,7 +203,8 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
         postshape.SetDataFormat(ppl::common::DATAFORMAT_NHWC8);
 
         options.info->constants.emplace(preedge_id, std::move(weight_constat_info));
-        *options.tensors->find(preedge_id)->second->GetShape() = postshape;
+        *options.tensors->find(preedge_id)->second->GetShape() = newshape;
+        *options.tensors->find(postedge_id)->second->GetShape() = newshape;
         options.quants->at(preedge_id).format = postshape.GetDataFormat();
         options.quants->at(preedge_id).type = postshape.GetDataType();
     }
@@ -235,7 +236,7 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
                 return status;
             }
 
-            bias_constat_info.Reshape(postshape); // give the init shape, but the actual shape is padded
+            bias_constat_info.Reshape(newshape); // give the init shape, but the actual shape is padded
             bias_constat_info.SetBuffer(buffer, options.device, true);
         }
 
@@ -254,7 +255,8 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
         PPLCUDAConvolutionCvtBias(stream, bias_constat_info.GetBufferDesc().addr, temp_buffer.addr,
                                   shape_in0.GetDataType(), temp_conv_param);
         options.info->constants.emplace(preedge_id, std::move(bias_constat_info));
-        *options.tensors->find(preedge_id)->second->GetShape() = postshape;
+        *options.tensors->find(preedge_id)->second->GetShape() = newshape;
+        *options.tensors->find(postedge_id)->second->GetShape() = newshape;
         options.quants->at(preedge_id) = options.quants->at(postedge_id);
         options.quants->at(preedge_id).format = postshape.GetDataFormat();
         options.quants->at(preedge_id).type = postshape.GetDataType();
