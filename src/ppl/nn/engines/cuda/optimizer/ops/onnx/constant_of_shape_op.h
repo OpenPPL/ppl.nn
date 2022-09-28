@@ -30,6 +30,15 @@ public:
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
+// constant ops will be fused when graph optimization
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override {
+        return ppl::common::RC_UNSUPPORTED;
+    };
+    ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void*, uint64_t) override {
+        return ppl::common::RC_UNSUPPORTED;
+    };
+#endif
 
 private:
     ppl::nn::onnx::ConstantOfShapeParam param_;
