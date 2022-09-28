@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 class GlobalMaxPoolOp final : public CudaOptKernel {
 public:
-    GlobalMaxPoolOp(const ir::Node* node) : CudaOptKernel(node) {}
+    GlobalMaxPoolOp(const ir::Node* node);
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;

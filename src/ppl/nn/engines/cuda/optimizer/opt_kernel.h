@@ -113,10 +113,10 @@ public:
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override {
-        return ppl::common::RC_UNSUPPORTED;
+        return ppl::common::RC_SUCCESS;
     }
     ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void*, uint64_t) override {
-        return ppl::common::RC_UNSUPPORTED;
+        return ppl::common::RC_SUCCESS;
     }
 #endif
 

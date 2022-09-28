@@ -27,6 +27,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode ScatterNDOp::Init(const OptKernelOptions& options) {
+    return RC_SUCCESS;
+}
+
+ScatterNDOp::ScatterNDOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
@@ -45,7 +49,6 @@ RetCode ScatterNDOp::Init(const OptKernelOptions& options) {
         return onnx::ReshapeScatterND(info, nullptr);
     };
 
-    return RC_SUCCESS;
 }
 
 RetCode ScatterNDOp::Finalize(const OptKernelOptions& options) {

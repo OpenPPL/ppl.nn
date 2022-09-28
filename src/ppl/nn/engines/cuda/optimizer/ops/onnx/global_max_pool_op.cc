@@ -27,6 +27,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode GlobalMaxPoolOp::Init(const OptKernelOptions& options) {
+    return RC_SUCCESS;
+}
+
+GlobalMaxPoolOp::GlobalMaxPoolOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
@@ -46,8 +50,6 @@ RetCode GlobalMaxPoolOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeGlobalPooling(info);
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode GlobalMaxPoolOp::Finalize(const OptKernelOptions& options) {

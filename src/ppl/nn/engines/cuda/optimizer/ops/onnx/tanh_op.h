@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 class TanhOp final : public CudaOptKernel {
 public:
-    TanhOp(const ir::Node* node) : CudaOptKernel(node) {}
+    TanhOp(const ir::Node* node);
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;

@@ -26,6 +26,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode CeilOp::Init(const OptKernelOptions& options) {
+    return RC_SUCCESS;
+}
+
+CeilOp::CeilOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         type = DATATYPE_FLOAT32;
         ppl::common::RetCode status;
@@ -42,8 +46,6 @@ RetCode CeilOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeCeil(info, nullptr);
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode CeilOp::Finalize(const OptKernelOptions& options) {

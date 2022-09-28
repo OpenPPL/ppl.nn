@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 class AndOp final : public CudaOptKernel {
 public:
-    AndOp(const ir::Node* node) : CudaOptKernel(node) {}
+    AndOp(const ir::Node* node);
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;

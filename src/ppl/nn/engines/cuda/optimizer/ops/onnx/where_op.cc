@@ -27,6 +27,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode WhereOp::Init(const OptKernelOptions& options) {
+    return RC_SUCCESS;
+}
+
+WhereOp::WhereOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         auto shape = info->GetInput<TensorImpl>(0)->GetShape();
         shape->SetDataType(ppl::common::DATATYPE_BOOL);
@@ -45,7 +49,6 @@ RetCode WhereOp::Init(const OptKernelOptions& options) {
         return onnx::ReshapeWhere(info, nullptr);
     };
 
-    return RC_SUCCESS;
 }
 
 RetCode WhereOp::Finalize(const OptKernelOptions& options) {

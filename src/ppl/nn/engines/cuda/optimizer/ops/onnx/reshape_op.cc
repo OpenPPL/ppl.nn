@@ -27,6 +27,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode ReshapeOp::Init(const OptKernelOptions& options) {
+    return RC_SUCCESS;
+}
+
+ReshapeOp::ReshapeOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
@@ -63,7 +67,6 @@ RetCode ReshapeOp::Init(const OptKernelOptions& options) {
         return onnx::ReshapeReshape(info, nullptr, shape_data.data());
     };
 
-    return RC_SUCCESS;
 }
 
 RetCode ReshapeOp::Finalize(const OptKernelOptions& options) {

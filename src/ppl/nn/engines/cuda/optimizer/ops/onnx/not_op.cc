@@ -25,6 +25,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode NotOp::Init(const OptKernelOptions& options) {
+    return RC_SUCCESS;
+}
+
+NotOp::NotOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         auto in_shape = info->GetInput<TensorImpl>(0)->GetShape();
         in_shape->SetDataType(DATATYPE_BOOL);
@@ -34,7 +38,6 @@ RetCode NotOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = GenericInferDims;
-    return RC_SUCCESS;
 }
 
 RetCode NotOp::Finalize(const OptKernelOptions& options) {

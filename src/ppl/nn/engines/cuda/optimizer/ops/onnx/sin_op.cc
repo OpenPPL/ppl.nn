@@ -23,6 +23,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode SinOp::Init(const OptKernelOptions& options) {
+    return RC_SUCCESS;
+}
+
+SinOp::SinOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
@@ -36,7 +40,6 @@ RetCode SinOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = GenericInferDims;
-    return RC_SUCCESS;
 }
 
 RetCode SinOp::Finalize(const OptKernelOptions& options) {
