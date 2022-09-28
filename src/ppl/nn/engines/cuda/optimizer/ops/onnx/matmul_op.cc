@@ -37,7 +37,7 @@ MatMulOp::~MatMulOp() {
     for (uint32_t i = 0; i < param_.extra_param.fuse_info.fuse_attrs.size(); ++i) {
         free(param_.extra_param.fuse_info.fuse_attrs[i]);
     }
-#ifdef PPLNN_ENABLE_CUDA_JIT
+#ifdef PPLNN_ENABLE_PMX_MODEL
     if (pmx_module_created_) {
         auto cuda_common_param = GetCommparam();
         if (cuda_common_param->module) {
