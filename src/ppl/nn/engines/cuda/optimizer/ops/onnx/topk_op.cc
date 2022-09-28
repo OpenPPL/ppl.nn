@@ -25,6 +25,11 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/onnx/topk.h"
+#endif
+
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode TopKOp::Init(const OptKernelOptions& options) {
@@ -34,6 +39,10 @@ RetCode TopKOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
+    return RC_SUCCESS;
+}
+
+TopKOp::TopKOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         auto shape = info->GetOutput<TensorImpl>(1)->GetShape();
         shape->SetDataType(ppl::common::DATATYPE_INT32);
@@ -72,8 +81,6 @@ RetCode TopKOp::Init(const OptKernelOptions& options) {
         }
         return ppl::common::RC_SUCCESS;
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode TopKOp::Finalize(const OptKernelOptions& options) {
@@ -89,5 +96,21 @@ RetCode TopKOp::Finalize(const OptKernelOptions& options) {
 KernelImpl* TopKOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<TopKKernel>(&param_);
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode TopKOp::SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const {
+        flatbuffers::FlatBufferBuilder builder;
+        auto fb_param = pmx::onnx::SerializeTopKParam(param_, &builder);
+        auto fb_op_param = pmx::onnx::CreateOpParam(builder, pmx::onnx::OpParamType_TopKParam, fb_param.Union());
+        pmx::onnx::FinishOpParamBuffer(builder, fb_op_param);
+        return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+    }
+    ppl::common::RetCode TopKOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
+        auto fb_op_param = pmx::onnx::GetOpParam(base);
+        auto fb_argmax_param = fb_op_param->value_as_TopKParam();
+        pmx::onnx::DeserializeTopKParam(*fb_argmax_param, &param_);
+        return ppl::common::RC_SUCCESS;
+    }
+#endif
 
 }}} // namespace ppl::nn::cuda

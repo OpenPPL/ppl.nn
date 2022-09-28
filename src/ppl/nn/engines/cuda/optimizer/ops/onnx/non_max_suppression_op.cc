@@ -26,6 +26,11 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/onnx/non_max_suppression.h"
+#endif
+
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode NonMaxSupressionOp::Init(const OptKernelOptions& options) {
@@ -34,7 +39,10 @@ RetCode NonMaxSupressionOp::Init(const OptKernelOptions& options) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
     }
+    return RC_SUCCESS;
+}
 
+NonMaxSupressionOp::NonMaxSupressionOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         // prefer fp32 version for precision
         auto shape0 = info->GetInput<TensorImpl>(0)->GetShape();
@@ -72,8 +80,6 @@ RetCode NonMaxSupressionOp::Init(const OptKernelOptions& options) {
 
         return onnx::ReshapeNonMaxSuppression(info, max_output_boxes_per_class);
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode NonMaxSupressionOp::Finalize(const OptKernelOptions& options) {
@@ -89,5 +95,21 @@ RetCode NonMaxSupressionOp::Finalize(const OptKernelOptions& options) {
 KernelImpl* NonMaxSupressionOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<NonMaxSuppressionKernel>(&param_);
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode NonMaxSupressionOp::SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const {
+        flatbuffers::FlatBufferBuilder builder;
+        auto fb_param = pmx::onnx::SerializeNonMaxSuppressionParam(param_, &builder);
+        auto fb_op_param = pmx::onnx::CreateOpParam(builder, pmx::onnx::OpParamType_NonMaxSuppressionParam, fb_param.Union());
+        pmx::onnx::FinishOpParamBuffer(builder, fb_op_param);
+        return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+    }
+    ppl::common::RetCode NonMaxSupressionOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
+        auto fb_op_param = pmx::onnx::GetOpParam(base);
+        auto fb_argmax_param = fb_op_param->value_as_NonMaxSuppressionParam();
+        pmx::onnx::DeserializeNonMaxSuppressionParam(*fb_argmax_param, &param_);
+        return ppl::common::RC_SUCCESS;
+    }
+#endif
 
 }}} // namespace ppl::nn::cuda

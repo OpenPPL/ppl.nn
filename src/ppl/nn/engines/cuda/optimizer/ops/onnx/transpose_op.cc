@@ -25,6 +25,11 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/onnx/transpose.h"
+#endif
+
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode TransposeOp::Init(const OptKernelOptions& options) {
@@ -33,6 +38,11 @@ RetCode TransposeOp::Init(const OptKernelOptions& options) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
     }
+
+    return RC_SUCCESS;
+}
+
+TransposeOp::TransposeOp(const ir::Node* node) : CudaOptKernel(node) {
 
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
@@ -64,8 +74,6 @@ RetCode TransposeOp::Init(const OptKernelOptions& options) {
 
         return onnx::ReshapeTranspose(info, &modified_param);
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode TransposeOp::Finalize(const OptKernelOptions& options) {
@@ -81,5 +89,21 @@ RetCode TransposeOp::Finalize(const OptKernelOptions& options) {
 KernelImpl* TransposeOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<TransposeKernel>(&param_);
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode TransposeOp::SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const {
+        flatbuffers::FlatBufferBuilder builder;
+        auto fb_param = pmx::onnx::SerializeTransposeParam(param_, &builder);
+        auto fb_op_param = pmx::onnx::CreateOpParam(builder, pmx::onnx::OpParamType_TransposeParam, fb_param.Union());
+        pmx::onnx::FinishOpParamBuffer(builder, fb_op_param);
+        return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+    }
+    ppl::common::RetCode TransposeOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
+        auto fb_op_param = pmx::onnx::GetOpParam(base);
+        auto fb_argmax_param = fb_op_param->value_as_TransposeParam();
+        pmx::onnx::DeserializeTransposeParam(*fb_argmax_param, &param_);
+        return ppl::common::RC_SUCCESS;
+    }
+#endif
 
 }}} // namespace ppl::nn::cuda

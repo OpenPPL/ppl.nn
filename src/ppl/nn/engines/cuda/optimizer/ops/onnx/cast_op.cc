@@ -25,6 +25,11 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/onnx/cast.h"
+#endif
+
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode CastOp::Init(const OptKernelOptions& options) {
@@ -33,7 +38,10 @@ RetCode CastOp::Init(const OptKernelOptions& options) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
     }
+    return RC_SUCCESS;
+}
 
+CastOp::CastOp(const ir::Node* node) : CudaOptKernel(node)  {
     infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         auto output = info->GetOutput<TensorImpl>(0)->GetShape();
         output->SetDataType(param_.to);
@@ -43,8 +51,6 @@ RetCode CastOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeCast(info, &param_);
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode CastOp::Finalize(const OptKernelOptions& options) {
@@ -60,5 +66,21 @@ RetCode CastOp::Finalize(const OptKernelOptions& options) {
 KernelImpl* CastOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<CastKernel>(&param_);
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode CastOp::SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const {
+        flatbuffers::FlatBufferBuilder builder;
+        auto fb_param = pmx::onnx::SerializeCastParam(param_, &builder);
+        auto fb_op_param = pmx::onnx::CreateOpParam(builder, pmx::onnx::OpParamType_CastParam, fb_param.Union());
+        pmx::onnx::FinishOpParamBuffer(builder, fb_op_param);
+        return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+    }
+    ppl::common::RetCode CastOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
+        auto fb_op_param = pmx::onnx::GetOpParam(base);
+        auto fb_argmax_param = fb_op_param->value_as_CastParam();
+        pmx::onnx::DeserializeCastParam(*fb_argmax_param, &param_);
+        return ppl::common::RC_SUCCESS;
+    }
+#endif
 
 }}} // namespace ppl::nn::cuda

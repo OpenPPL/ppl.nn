@@ -25,6 +25,11 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/onnx/split.h"
+#endif
+
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode SplitOp::Init(const OptKernelOptions& options) {
@@ -34,6 +39,10 @@ RetCode SplitOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
+    return RC_SUCCESS;
+}
+
+SplitOp::SplitOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
@@ -49,8 +58,6 @@ RetCode SplitOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeSplit(info, &param_);
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode SplitOp::Finalize(const OptKernelOptions& options) {
@@ -66,5 +73,21 @@ RetCode SplitOp::Finalize(const OptKernelOptions& options) {
 KernelImpl* SplitOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<SplitKernel>(&param_);
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode SplitOp::SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const {
+        flatbuffers::FlatBufferBuilder builder;
+        auto fb_param = pmx::onnx::SerializeSplitParam(param_, &builder);
+        auto fb_op_param = pmx::onnx::CreateOpParam(builder, pmx::onnx::OpParamType_SplitParam, fb_param.Union());
+        pmx::onnx::FinishOpParamBuffer(builder, fb_op_param);
+        return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+    }
+    ppl::common::RetCode SplitOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
+        auto fb_op_param = pmx::onnx::GetOpParam(base);
+        auto fb_argmax_param = fb_op_param->value_as_SplitParam();
+        pmx::onnx::DeserializeSplitParam(*fb_argmax_param, &param_);
+        return ppl::common::RC_SUCCESS;
+    }
+#endif
 
 }}} // namespace ppl::nn::cuda

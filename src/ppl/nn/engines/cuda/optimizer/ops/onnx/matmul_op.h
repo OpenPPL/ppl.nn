@@ -26,7 +26,8 @@ namespace ppl { namespace nn { namespace cuda {
 
 class MatMulOp final : public CudaOptKernel {
 public:
-    MatMulOp(const ir::Node* node) : CudaOptKernel(node) {}
+    MatMulOp(const ir::Node* node);
+    ~MatMulOp();
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
@@ -34,9 +35,16 @@ public:
         return (void*)&param_;
     };
     void CopyParam(void*& param) override;
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override;
+    ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void*, uint64_t) override;
+#endif
 
 private:
     CudaGemmParam param_;
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    bool pmx_module_created_ = false;
+#endif
 };
 
 }}} // namespace ppl::nn::cuda

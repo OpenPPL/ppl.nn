@@ -25,11 +25,20 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::pmx;
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/pmx/channel_shuffle.h"
+#endif
+
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
     GenericLoadParam<ChannelShuffleParam>(options, &param_);
 
+    return RC_SUCCESS;
+}
+
+ChannelShuffleOp::ChannelShuffleOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
@@ -53,8 +62,6 @@ RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
         }
         return RC_SUCCESS;
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode ChannelShuffleOp::Finalize(const OptKernelOptions& options) {
@@ -70,5 +77,21 @@ RetCode ChannelShuffleOp::Finalize(const OptKernelOptions& options) {
 KernelImpl* ChannelShuffleOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<ChannelShuffleKernel>(&param_);
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode ChannelShuffleOp::SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const {
+        flatbuffers::FlatBufferBuilder builder;
+        auto fb_param = pmx::pmx::SerializeChannelShuffleParam(param_, &builder);
+        auto fb_op_param = pmx::pmx::CreateOpParam(builder, pmx::pmx::OpParamType_ChannelShuffleParam, fb_param.Union());
+        pmx::pmx::FinishOpParamBuffer(builder, fb_op_param);
+        return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+    }
+    ppl::common::RetCode ChannelShuffleOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
+        auto fb_op_param = pmx::pmx::GetOpParam(base);
+        auto fb_argmax_param = fb_op_param->value_as_ChannelShuffleParam();
+        pmx::pmx::DeserializeChannelShuffleParam(*fb_argmax_param, &param_);
+        return ppl::common::RC_SUCCESS;
+    }
+#endif
 
 }}} // namespace ppl::nn::cuda

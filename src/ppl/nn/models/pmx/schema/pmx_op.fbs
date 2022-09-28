@@ -1,0 +1,18 @@
+include "types.fbs";
+
+namespace ppl.nn.pmx.pmx;
+
+table ChannelShuffleParam {
+    group: int32;
+}
+
+union OpParamType {
+    ChannelShuffleParam,
+}
+
+table OpParam {
+    value: OpParamType;
+    data_: [ubyte]; // private data for different implementations or user-defined ops
+}
+
+root_type OpParam;
