@@ -64,7 +64,7 @@ ppl::common::RetCode PPLCUDASoftmaxForwardImp(
     max_sum_shape.SetDim(0, N);
     max_sum_shape.SetDim(1, 1);
     max_sum_shape.SetDim(2, D);
-    
+
     auto status = PPLCUDAReduceForwardImp(stream, reduce_max, reduce_desc, input_shape, input, &max_sum_shape, max_sum_output);
     // sub
     ppl::nn::TensorShape nd_shape(*input_shape);
@@ -92,22 +92,22 @@ __global__ void __launch_bounds__(256) ppl_cukernel_softmax_int8(
     int out_idx = blockIdx.y;
     __shared__ float shared[256];
     shared[tid] = 0.f;
-    float max_val = _int82float(max_int8, qparam.i_step, qparam.i_zero_point); 
-    for(int id = tid; tid < axis_width; tid += blockDim.x) {
+    float max_val = _int82float(max_int8, qparam.i_step, qparam.i_zero_point);
+    for(int id = tid; id < axis_width; id += blockDim.x) {
         if(id < axis_width) {
             uint64_t in_index = out_idx * axis_width * inner +
                 id * inner + inner_idx;
             float in_val  = _int82float(input[in_index], qparam.i_step, qparam.i_zero_point);
             //calculate each c exp sum
             shared[tid] += expf(in_val - max_val);
-            
+
         }
     }
     //accumulate all c exp sum
     __syncwarp();
     float exp_sum = BlockReduceSum(shared[tid]);
 
-    for(int id = tid; tid < axis_width; tid += blockDim.x) {
+    for(int id = tid; id < axis_width; id += blockDim.x) {
         if(id < axis_width) {
             uint64_t in_index = out_idx * axis_width * inner +
                 id * inner + inner_idx;
@@ -117,6 +117,7 @@ __global__ void __launch_bounds__(256) ppl_cukernel_softmax_int8(
             output[in_index] = _float2int8(out_val, qparam.o_step, qparam.o_zero_point);
         }
     }
+    __syncthreads();
 }
 
 ppl::common::RetCode PPLCUDASoftmaxForwardImpInt8(
@@ -258,7 +259,7 @@ __global__ void SoftmaxScoreKernel64(const Tin* in, Tout* out, const int T) {
 }
 
 /*
-par: 
+par:
     in & out : [BHTT]
     key_padding_mask : [B, H, T, T] or [B, 1, T, T] or [B, 1, 1, T], or [1, 1, T, T]
 */
