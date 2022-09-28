@@ -26,6 +26,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode SqrtOp::Init(const OptKernelOptions& options) {
+    return RC_SUCCESS;
+}
+
+SqrtOp::SqrtOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         TensorShape& in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
@@ -43,7 +47,6 @@ RetCode SqrtOp::Init(const OptKernelOptions& options) {
     };
 
     infer_dims_func_ = GenericInferDims;
-    return RC_SUCCESS;
 }
 
 RetCode SqrtOp::Finalize(const OptKernelOptions& options) {

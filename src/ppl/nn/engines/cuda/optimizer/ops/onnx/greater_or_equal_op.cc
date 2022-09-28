@@ -27,6 +27,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode GreaterOrEqualOp::Init(const OptKernelOptions& options) {
+    return RC_SUCCESS;
+}
+
+GreaterOrEqualOp::GreaterOrEqualOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         auto& in0_shape = *info->GetInput<TensorImpl>(0)->GetShape();
         auto& in1_shape = *info->GetInput<TensorImpl>(1)->GetShape();
@@ -55,8 +59,6 @@ RetCode GreaterOrEqualOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeGreater(info, nullptr);
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode GreaterOrEqualOp::Finalize(const OptKernelOptions& options) {

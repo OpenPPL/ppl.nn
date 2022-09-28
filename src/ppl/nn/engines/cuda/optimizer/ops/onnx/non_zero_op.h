@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 class NonZeroOp final : public CudaOptKernel {
 public:
-    NonZeroOp(const ir::Node* node) : CudaOptKernel(node) {}
+    NonZeroOp(const ir::Node* node);
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;

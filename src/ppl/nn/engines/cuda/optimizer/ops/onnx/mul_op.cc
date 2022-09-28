@@ -27,21 +27,22 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode MulOp::Init(const OptKernelOptions& options) {
-    auto node = GetNode();
-    auto data = options.graph->data.get();
-    for (uint32_t i = 0; i < 64 && i < node->GetInputCount(); ++i) {
-        auto edge_id = node->GetInput(i);
-        if (data->constants.find(edge_id) != data->constants.end()) {
-            mask_ |= 1 << i;
-        }
-    }
+    return RC_SUCCESS;
+}
 
+MulOp::MulOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [this](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
+        uint64_t mask = 0;
+        for (uint32_t i = 0; i < info->GetInputCount(); ++i) {        
+            auto in_tensor = info->GetInput<TensorImpl>(i);
+            if (in_tensor->GetType() == TENSORTYPE_RESERVED)
+                mask |= 1<<i;
+        }
         ppl::common::RetCode status;
         if (type == DATATYPE_INT8) {
             status = CopyQuantType(info, quant);
         } else {
-            status = InferHighestType(info, type, mask_);
+            status = InferHighestType(info, type, mask);
         }
         return status;
     };
@@ -50,7 +51,6 @@ RetCode MulOp::Init(const OptKernelOptions& options) {
         return onnx::ReshapeAdd(info, nullptr);
     };
 
-    return RC_SUCCESS;
 }
 
 RetCode MulOp::Finalize(const OptKernelOptions& options) {

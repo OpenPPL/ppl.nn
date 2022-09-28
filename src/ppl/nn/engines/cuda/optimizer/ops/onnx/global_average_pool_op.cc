@@ -27,6 +27,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode GlobalAveragePoolOp::Init(const OptKernelOptions& options) {
+    return RC_SUCCESS;
+}
+
+GlobalAveragePoolOp::GlobalAveragePoolOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
@@ -42,8 +46,6 @@ RetCode GlobalAveragePoolOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeGlobalPooling(info);
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode GlobalAveragePoolOp::Finalize(const OptKernelOptions& options) {

@@ -27,6 +27,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode TileOp::Init(const OptKernelOptions& options) {
+    return RC_SUCCESS;
+}
+
+TileOp::TileOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
@@ -63,7 +67,6 @@ RetCode TileOp::Init(const OptKernelOptions& options) {
         return onnx::ReshapeTile(info, nullptr, repeat_data.data());
     };
 
-    return RC_SUCCESS;
 }
 
 RetCode TileOp::Finalize(const OptKernelOptions& options) {

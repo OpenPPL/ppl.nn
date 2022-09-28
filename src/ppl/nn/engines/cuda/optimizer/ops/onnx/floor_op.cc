@@ -26,6 +26,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode FloorOp::Init(const OptKernelOptions& options) {
+    return RC_SUCCESS;
+}
+
+FloorOp::FloorOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         type = DATATYPE_FLOAT32;
         ppl::common::RetCode status;
@@ -42,8 +46,6 @@ RetCode FloorOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeFloor(info, nullptr);
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode FloorOp::Finalize(const OptKernelOptions& options) {

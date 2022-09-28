@@ -26,6 +26,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode SliceOp::Init(const OptKernelOptions& options) {
+    return RC_SUCCESS;
+}
+
+SliceOp::SliceOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
@@ -137,7 +141,6 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
                                   kernel_param.axes_num);
     };
 
-    return RC_SUCCESS;
 }
 
 RetCode SliceOp::Finalize(const OptKernelOptions& options) {

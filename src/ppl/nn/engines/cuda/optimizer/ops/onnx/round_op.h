@@ -24,7 +24,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 class RoundOp final : public CudaOptKernel {
 public:
-    RoundOp(const ir::Node* node) : CudaOptKernel(node) {}
+    RoundOp(const ir::Node* node);
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;

@@ -27,6 +27,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode LessOp::Init(const OptKernelOptions& options) {
+    return RC_SUCCESS;
+}
+
+LessOp::LessOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         auto& in0_shape = *info->GetInput<TensorImpl>(0)->GetShape();
         auto& in1_shape = *info->GetInput<TensorImpl>(1)->GetShape();
@@ -56,7 +60,6 @@ RetCode LessOp::Init(const OptKernelOptions& options) {
         return onnx::ReshapeLess(info, nullptr);
     };
 
-    return RC_SUCCESS;
 }
 
 RetCode LessOp::Finalize(const OptKernelOptions& options) {
