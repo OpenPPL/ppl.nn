@@ -1334,15 +1334,15 @@ __global__ void ppl_cukernel_pooling_max_intpacked_NHWC(
     int in_h = h_idx * stride_height - padding_height;
     int in_w = w_idx * stride_width - padding_width;
 
-    int in_off = b_idx * in_height * in_width * pad_channels + h_idx * in_width * pad_channels + w_idx * pad_channels + c_idx;
+    int in_off = b_idx * in_height * in_width * pad_channels + in_h * in_width * pad_channels + in_w * pad_channels + c_idx;
     char4 val = {-128, -128, -128, -128};
     char4 zero = {0, 0, 0, 0};
     char4 *int_input = (char4*)input;
+    int h = in_h + kernel_height -1;
+    int w = in_w + kernel_width -1;
+    bool pred = (w >= 0 && w < in_width) && (h >= 0 && h < in_height);
     for(int i = 0; i < kernel_height; i++) {
         for (int j = 0; j < kernel_width; j++) {
-            int h = in_h + kernel_height;
-            int w = in_w + kernel_width;
-            bool pred = (w >= 0 && w < in_width) && (h >= 0 && h < in_height);
             char4 src = pred ? int_input[in_off + i * in_width * pad_channels + j * pad_channels] : zero;
             val.x = src.x > val.x ? src.x : val.x;
             val.y = src.y > val.y ? src.y : val.y;
