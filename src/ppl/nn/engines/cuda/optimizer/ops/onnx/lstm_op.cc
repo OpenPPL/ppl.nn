@@ -34,6 +34,10 @@ RetCode LstmOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
+    return RC_SUCCESS;
+}
+
+LstmOp::LstmOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         type = ppl::common::DATATYPE_FLOAT16;
         return InferDefaultType(info, type);
@@ -42,8 +46,6 @@ RetCode LstmOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeLSTM(info, &param_);
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode LstmOp::Finalize(const OptKernelOptions& options) {
@@ -67,5 +69,21 @@ void LstmOp::CopyParam(void*& param) {
 KernelImpl* LstmOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<LstmKernel>(&param_);
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode LstmOp::SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const {
+        flatbuffers::FlatBufferBuilder builder;
+        auto fb_param = pmx::onnx::SerializeLSTMParam(param_, &builder);
+        auto fb_op_param = pmx::onnx::CreateOpParam(builder, pmx::onnx::OpParamType_LSTMParam, fb_param.Union());
+        pmx::onnx::FinishOpParamBuffer(builder, fb_op_param);
+        return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+    }
+    ppl::common::RetCode LstmOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
+        auto fb_op_param = pmx::onnx::GetOpParam(base);
+        auto fb_argmax_param = fb_op_param->value_as_LSTMParam();
+        pmx::onnx::DeserializeLSTMParam(*fb_argmax_param, &param_);
+        return ppl::common::RC_SUCCESS;
+    }
+#endif
 
 }}} // namespace ppl::nn::cuda

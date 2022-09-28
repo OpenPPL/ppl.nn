@@ -26,10 +26,14 @@ namespace ppl { namespace nn { namespace cuda {
 
 class MaxUnPoolOp final : public CudaOptKernel {
 public:
-    MaxUnPoolOp(const ir::Node* node) : CudaOptKernel(node) {}
+    MaxUnPoolOp(const ir::Node* node);
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override;
+    ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void*, uint64_t) override;
+#endif
 
 private:
     ppl::nn::onnx::MaxUnpoolParam param_;

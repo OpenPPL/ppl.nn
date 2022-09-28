@@ -25,6 +25,11 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/onnx/leaky_relu.h"
+#endif
+
 namespace ppl { namespace nn { namespace cuda {
 
 void LeakyReluOp::CopyParam(void*& param) {
@@ -41,7 +46,10 @@ RetCode LeakyReluOp::Init(const OptKernelOptions& options) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
     }
+    return RC_SUCCESS;
+}
 
+LeakyReluOp::LeakyReluOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
@@ -57,8 +65,6 @@ RetCode LeakyReluOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeLeakyReLU(info, nullptr);
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode LeakyReluOp::Finalize(const OptKernelOptions& options) {
@@ -74,5 +80,21 @@ RetCode LeakyReluOp::Finalize(const OptKernelOptions& options) {
 KernelImpl* LeakyReluOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<LeakyReluKernel>(&param_);
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode LeakyReluOp::SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const {
+        flatbuffers::FlatBufferBuilder builder;
+        auto fb_param = pmx::onnx::SerializeLeakyReluParam(param_, &builder);
+        auto fb_op_param = pmx::onnx::CreateOpParam(builder, pmx::onnx::OpParamType_LeakyReluParam, fb_param.Union());
+        pmx::onnx::FinishOpParamBuffer(builder, fb_op_param);
+        return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+    }
+    ppl::common::RetCode LeakyReluOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
+        auto fb_op_param = pmx::onnx::GetOpParam(base);
+        auto fb_argmax_param = fb_op_param->value_as_LeakyReluParam();
+        pmx::onnx::DeserializeLeakyReluParam(*fb_argmax_param, &param_);
+        return ppl::common::RC_SUCCESS;
+    }
+#endif
 
 }}} // namespace ppl::nn::cuda

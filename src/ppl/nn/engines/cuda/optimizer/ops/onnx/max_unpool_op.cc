@@ -25,6 +25,11 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/onnx/maxunpool.h"
+#endif
+
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode MaxUnPoolOp::Init(const OptKernelOptions& options) {
@@ -34,6 +39,10 @@ RetCode MaxUnPoolOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
+    return RC_SUCCESS;
+}
+
+MaxUnPoolOp::MaxUnPoolOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         type = ppl::common::DATATYPE_FLOAT16;
         ppl::common::RetCode status;
@@ -56,8 +65,6 @@ RetCode MaxUnPoolOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeMaxUnpool(info, &param_);
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode MaxUnPoolOp::Finalize(const OptKernelOptions& options) {
@@ -73,5 +80,21 @@ RetCode MaxUnPoolOp::Finalize(const OptKernelOptions& options) {
 KernelImpl* MaxUnPoolOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<MaxUnpoolKernel>(&param_);
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode MaxUnPoolOp::SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const {
+        flatbuffers::FlatBufferBuilder builder;
+        auto fb_param = pmx::onnx::SerializeMaxUnpoolParam(param_, &builder);
+        auto fb_op_param = pmx::onnx::CreateOpParam(builder, pmx::onnx::OpParamType_MaxUnpoolParam, fb_param.Union());
+        pmx::onnx::FinishOpParamBuffer(builder, fb_op_param);
+        return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+    }
+    ppl::common::RetCode MaxUnPoolOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
+        auto fb_op_param = pmx::onnx::GetOpParam(base);
+        auto fb_argmax_param = fb_op_param->value_as_MaxUnpoolParam();
+        pmx::onnx::DeserializeMaxUnpoolParam(*fb_argmax_param, &param_);
+        return ppl::common::RC_SUCCESS;
+    }
+#endif
 
 }}} // namespace ppl::nn::cuda

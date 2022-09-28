@@ -25,6 +25,11 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/onnx/depth_to_space.h"
+#endif
+
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode DepthToSpaceOp::Init(const OptKernelOptions& options) {
@@ -33,7 +38,10 @@ RetCode DepthToSpaceOp::Init(const OptKernelOptions& options) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
     }
+    return RC_SUCCESS;
+}
 
+DepthToSpaceOp::DepthToSpaceOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
         if (type == DATATYPE_UNKNOWN) {
@@ -49,8 +57,6 @@ RetCode DepthToSpaceOp::Init(const OptKernelOptions& options) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeDepthToSpace(info, &param_);
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode DepthToSpaceOp::Finalize(const OptKernelOptions& options) {
@@ -66,5 +72,21 @@ RetCode DepthToSpaceOp::Finalize(const OptKernelOptions& options) {
 KernelImpl* DepthToSpaceOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<DepthToSpaceKernel>(&param_);
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode DepthToSpaceOp::SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const {
+        flatbuffers::FlatBufferBuilder builder;
+        auto fb_param = pmx::onnx::SerializeDepthToSpaceParam(param_, &builder);
+        auto fb_op_param = pmx::onnx::CreateOpParam(builder, pmx::onnx::OpParamType_DepthToSpaceParam, fb_param.Union());
+        pmx::onnx::FinishOpParamBuffer(builder, fb_op_param);
+        return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+    }
+    ppl::common::RetCode DepthToSpaceOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
+        auto fb_op_param = pmx::onnx::GetOpParam(base);
+        auto fb_argmax_param = fb_op_param->value_as_DepthToSpaceParam();
+        pmx::onnx::DeserializeDepthToSpaceParam(*fb_argmax_param, &param_);
+        return ppl::common::RC_SUCCESS;
+    }
+#endif
 
 }}} // namespace ppl::nn::cuda

@@ -26,10 +26,14 @@ namespace ppl { namespace nn { namespace cuda {
 
 class TransposeOp final : public CudaOptKernel {
 public:
-    TransposeOp(const ir::Node* node) : CudaOptKernel(node) {}
+    TransposeOp(const ir::Node* node);
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override;
+    ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void*, uint64_t) override;
+#endif
 
     void* GetParam() override {
         return (void*)&param_;
