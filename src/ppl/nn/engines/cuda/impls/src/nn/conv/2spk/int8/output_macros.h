@@ -225,7 +225,7 @@
         { \
             if (_has_concat && dCv4_x_valid && dCv4_y_valid) \
             { \
-                dCv4_off = concat_offset_v4 + dCv4_idy * concat_stride_v4 + dCv4_base + dCv4_idx; \
+                dCv4_off = concat_offset_v4 * 4 + dCv4_idy * concat_stride_v4 * 4 + dCv4_base + dCv4_idx; \
             } \
         }
         
@@ -314,5 +314,8 @@
 
 #define JIT_SET_CONCAT_OFF_V4(_concat_v4_off) \
         { \
-            dCv4_off = concat_offset_v4 + dCv4_idy * concat_stride_v4 + dCv4_base + dCv4_idx; \
+            if (dCv4_x_valid && dCv4_y_valid) \
+            { \
+                dCv4_off = concat_offset_v4 * 4 + dCv4_idy * concat_stride_v4 * 4 + dCv4_base + dCv4_idx; \
+            } \
         }

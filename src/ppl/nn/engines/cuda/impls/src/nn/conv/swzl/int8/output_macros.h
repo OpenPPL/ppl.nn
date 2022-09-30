@@ -281,7 +281,7 @@
             _Pragma("unroll") \
             for(int i = 0; i < OUTPUT_BLKS_PER_STEP; i++) \
             { \
-	            _concat_v4_off[i] = (_has_concat) ? dCv4_idx[i] * concat_stride_v4 + concat_offset_v4 : dCv4_idx[i] * num_flt_per_grp_pad_v4 * num_grp; \
+	            _concat_v4_off[i] = (_has_concat) ? dCv4_idx[i] * concat_stride_v4 * 4 + concat_offset_v4 * 4 : dCv4_idx[i] * num_flt_per_grp_pad_v4 * num_grp; \
 	        } \
         }
         
@@ -397,6 +397,6 @@
             _Pragma("unroll") \
             for(int i = 0; i < OUTPUT_BLKS_PER_STEP; i++) \
             { \
-	            _concat_v4_off[i] = (_has_concat) ? dCv4_idx[i] * concat_stride_v4 + concat_offset_v4 : dCv4_idx[i] * num_flt_per_grp_pad_v4 * num_grp; \
+	            _concat_v4_off[i] = (_has_concat) ? dCv4_idx[i] * concat_stride_v4 * 4 + concat_offset_v4 * 4 : dCv4_idx[i] * num_flt_per_grp_pad_v4 * num_grp; \
 	        } \
         }
