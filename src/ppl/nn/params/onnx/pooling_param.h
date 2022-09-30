@@ -36,7 +36,7 @@ struct PoolingParam final : public ir::TypedAttr<PoolingParam> {
     enum { POOLING_MAX = 0, POOLING_AVERAGE_EXCLUDE = 1, POOLING_AVERAGE_INCLUDE = 2 };
     int32_t mode; // AveragePool, corresponding to `count_include_pad`
 
-    int32_t global_pooling;
+    int32_t global_pooling = false;;
 
     bool operator==(const PoolingParam& p) const {
         return this->kernel_shape == p.kernel_shape && this->dilations == p.dilations && this->strides == p.strides &&
