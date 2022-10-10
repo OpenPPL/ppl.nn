@@ -130,18 +130,26 @@ struct ConvAlgoInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ALGO_TYPE = 4,
     VT_ALGO_NAME = 6,
-    VT_TILES = 8,
-    VT_KID = 10,
-    VT_SPLITK = 12,
-    VT_SPLITF = 14,
-    VT_IS_INITIALIZER_WEIGHT = 16,
-    VT_HAS_BIAS = 18
+    VT_CONV_TYPE = 8,
+    VT_MMA_SHAPE = 10,
+    VT_TILES = 12,
+    VT_KID = 14,
+    VT_SPLITK = 16,
+    VT_SPLITF = 18,
+    VT_IS_INITIALIZER_WEIGHT = 20,
+    VT_HAS_BIAS = 22
   };
   const flatbuffers::String *algo_type() const {
     return GetPointer<const flatbuffers::String *>(VT_ALGO_TYPE);
   }
   const flatbuffers::String *algo_name() const {
     return GetPointer<const flatbuffers::String *>(VT_ALGO_NAME);
+  }
+  const flatbuffers::String *conv_type() const {
+    return GetPointer<const flatbuffers::String *>(VT_CONV_TYPE);
+  }
+  const flatbuffers::String *mma_shape() const {
+    return GetPointer<const flatbuffers::String *>(VT_MMA_SHAPE);
   }
   const flatbuffers::Vector<int32_t> *tiles() const {
     return GetPointer<const flatbuffers::Vector<int32_t> *>(VT_TILES);
@@ -167,6 +175,10 @@ struct ConvAlgoInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyString(algo_type()) &&
            VerifyOffset(verifier, VT_ALGO_NAME) &&
            verifier.VerifyString(algo_name()) &&
+           VerifyOffset(verifier, VT_CONV_TYPE) &&
+           verifier.VerifyString(conv_type()) &&
+           VerifyOffset(verifier, VT_MMA_SHAPE) &&
+           verifier.VerifyString(mma_shape()) &&
            VerifyOffset(verifier, VT_TILES) &&
            verifier.VerifyVector(tiles()) &&
            VerifyField<int32_t>(verifier, VT_KID) &&
@@ -187,6 +199,12 @@ struct ConvAlgoInfoBuilder {
   }
   void add_algo_name(flatbuffers::Offset<flatbuffers::String> algo_name) {
     fbb_.AddOffset(ConvAlgoInfo::VT_ALGO_NAME, algo_name);
+  }
+  void add_conv_type(flatbuffers::Offset<flatbuffers::String> conv_type) {
+    fbb_.AddOffset(ConvAlgoInfo::VT_CONV_TYPE, conv_type);
+  }
+  void add_mma_shape(flatbuffers::Offset<flatbuffers::String> mma_shape) {
+    fbb_.AddOffset(ConvAlgoInfo::VT_MMA_SHAPE, mma_shape);
   }
   void add_tiles(flatbuffers::Offset<flatbuffers::Vector<int32_t>> tiles) {
     fbb_.AddOffset(ConvAlgoInfo::VT_TILES, tiles);
@@ -221,6 +239,8 @@ inline flatbuffers::Offset<ConvAlgoInfo> CreateConvAlgoInfo(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::String> algo_type = 0,
     flatbuffers::Offset<flatbuffers::String> algo_name = 0,
+    flatbuffers::Offset<flatbuffers::String> conv_type = 0,
+    flatbuffers::Offset<flatbuffers::String> mma_shape = 0,
     flatbuffers::Offset<flatbuffers::Vector<int32_t>> tiles = 0,
     int32_t kid = 0,
     int32_t splitk = 1,
@@ -234,6 +254,8 @@ inline flatbuffers::Offset<ConvAlgoInfo> CreateConvAlgoInfo(
   builder_.add_splitk(splitk);
   builder_.add_kid(kid);
   builder_.add_tiles(tiles);
+  builder_.add_mma_shape(mma_shape);
+  builder_.add_conv_type(conv_type);
   builder_.add_algo_name(algo_name);
   builder_.add_algo_type(algo_type);
   return builder_.Finish();
@@ -243,6 +265,8 @@ inline flatbuffers::Offset<ConvAlgoInfo> CreateConvAlgoInfoDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const char *algo_type = nullptr,
     const char *algo_name = nullptr,
+    const char *conv_type = nullptr,
+    const char *mma_shape = nullptr,
     const std::vector<int32_t> *tiles = nullptr,
     int32_t kid = 0,
     int32_t splitk = 1,
@@ -251,11 +275,15 @@ inline flatbuffers::Offset<ConvAlgoInfo> CreateConvAlgoInfoDirect(
     int32_t has_bias = 1) {
   auto algo_type__ = algo_type ? _fbb.CreateString(algo_type) : 0;
   auto algo_name__ = algo_name ? _fbb.CreateString(algo_name) : 0;
+  auto conv_type__ = conv_type ? _fbb.CreateString(conv_type) : 0;
+  auto mma_shape__ = mma_shape ? _fbb.CreateString(mma_shape) : 0;
   auto tiles__ = tiles ? _fbb.CreateVector<int32_t>(*tiles) : 0;
   return ppl::nn::pmx::cuda::CreateConvAlgoInfo(
       _fbb,
       algo_type__,
       algo_name__,
+      conv_type__,
+      mma_shape__,
       tiles__,
       kid,
       splitk,
