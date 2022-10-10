@@ -20,7 +20,6 @@
 
 #include "ppl/nn/engines/cuda/cuda_device.h"
 #include "ppl/nn/oputils/onnx/reshape_conv.h"
-#include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 #include "ppl/nn/params/onnx/leaky_relu_param.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
 #include "cudakernel/nn/conv/depthwise.h"

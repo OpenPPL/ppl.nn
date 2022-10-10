@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 #include "ppl/nn/engines/cuda/params/conv_extra_param.h"
 
 #include "ppl/nn/params/onnx/leaky_relu_param.h"

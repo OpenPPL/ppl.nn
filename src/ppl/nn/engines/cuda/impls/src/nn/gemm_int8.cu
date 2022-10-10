@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
 #include "cudakernel/gemm/gemm.h"
 #include "cudakernel/math/math.h"
 #include "cudakernel/common/common.h"
@@ -32,6 +33,13 @@
 
 static std::vector<kernel_info_t> g_int8_kvec;
 static bool is_g_int8_kvec_set = false;
+#else
+#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/nn/params/onnx/gemm_param.h"
+#include "ppl/common/retcode.h"
+#include "cudakernel/nn/conv/conv_fp16.h"
+#include "ppl/nn/engines/cuda/module/cuda_module.h"
+#endif
 
 #define FAKE_INT8_CONV_PARAM              \
     int in_hw               = 1;     \
@@ -89,6 +97,7 @@ static bool is_g_int8_kvec_set = false;
         fuse_param.has_concat,         concat_offset_v8,                   \
         concat_stride_v8
 
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
 void init_f1_int8_kvec(std::vector<kernel_info_t> &g_int8_kvec, ppl::nn::cuda::CudaDevice* device, ppl::common::datatype_t type)
 {
 #ifndef PPLNN_ENABLE_CUDA_JIT
@@ -113,6 +122,7 @@ void init_f1_int8_kvec(std::vector<kernel_info_t> &g_int8_kvec, ppl::nn::cuda::C
     is_g_int8_kvec_set = true;
 #endif
 }
+#endif
 
 // block size: (32,32,1)
 __global__ void int8_matrix_transpose(
@@ -145,6 +155,7 @@ ppl::common::RetCode PPLCUDAGemmModifyWeightsInt8(
     void *tmp_weight, // if need transpose
     const ppl::nn::onnx::GemmParam *param)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     int transB   = param->transB;
     auto type    = weight_shape->GetDataType();
     int pad_size = GetPadSize(type);
@@ -174,6 +185,7 @@ ppl::common::RetCode PPLCUDAGemmModifyWeightsInt8(
         }
 #undef TRANSWEIGHT
     }
+#endif
     return ppl::common::RC_SUCCESS;
 }
 
@@ -196,6 +208,7 @@ double PPLCUDAGemmJITSelectKernelInt8(
    uint64_t workspace)
 {
    double elapsed = 0.0f;
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
 #ifdef PPLNN_ENABLE_CUDA_JIT
     std::vector<std::string> knames;
     std::vector<algo_param_t> params;
@@ -208,6 +221,7 @@ double PPLCUDAGemmJITSelectKernelInt8(
     elapsed = AlgoForwardTimeInt8(device, stream, knames, sources, index, compile_params, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, quant_param, fuse_param, workspace);
 
     algo_param = params[index];
+#endif
 #endif
     return elapsed;
 }
@@ -228,7 +242,7 @@ double PPLCUDAGemmSelectKernelInt8(
     const fuse_param_t &fuse_param,
     algo_param_t &algo_param)
 {
-#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     auto& device_prop = device->GetDeviceProp();
 
     auto type = weight_shape->GetDataType();
@@ -359,7 +373,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
     fuse_param_t &fuse_param,
     const algo_param_t &algo_param)
 {
-#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020 
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     auto type = weight_shape->GetDataType();
     float alpha  = param.alpha;
 #ifndef PPLNN_ENABLE_CUDA_JIT
@@ -463,6 +477,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
 #endif
 }
 
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
 template <typename T>
 __device__ __inline__ void fma_v4(const int4 a, const int4 b, int4 &c);
 
@@ -817,6 +832,7 @@ __global__ void int8_gemv(void *output,
         }
     }
 }
+#endif
 
 template <typename T>
 ppl::common::RetCode PPLCUDAGemvForwardImpInt8(
@@ -834,6 +850,7 @@ ppl::common::RetCode PPLCUDAGemvForwardImpInt8(
     const quant_param_t &quant_param,
     const fuse_param_t &fuse_param)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     if (!param.transB)
         return ppl::common::RC_UNSUPPORTED;
 
@@ -887,5 +904,6 @@ ppl::common::RetCode PPLCUDAGemvForwardImpInt8(
         CONFIG_KERNEL(blk_tile_n_v4);
     }
 
+#endif
     return ppl::common::RC_SUCCESS;
 }
