@@ -9,6 +9,8 @@ struct FuseAttrs {
 table ConvAlgoInfo {
     algo_type: string;
     algo_name: string;
+    conv_type: string;
+    mma_shape: string;
     tiles: [int];
     kid: int = 0;
     splitk: int = 1;

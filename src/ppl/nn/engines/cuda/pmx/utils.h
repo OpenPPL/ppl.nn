@@ -43,10 +43,13 @@ static RetCode SerializePrivateData(const pmx::SerializationContext& ctx, const 
                               tiles.flt_size,
                               tiles.flt_pad_size,
                               tiles.cta_size_in_thd,
+                              tiles.smem_size,
                               tiles.buf};
     auto fb_algo_info = pmx::cuda::CreateConvAlgoInfoDirect(*builder,
                                                             extra_param.algo_info.algo_type.c_str(),
                                                             extra_param.algo_info.algo_name.c_str(),
+                                                            extra_param.algo_info.conv_type.c_str(),
+                                                            extra_param.algo_info.mma_shape.c_str(),
                                                             &tiles_vec,
                                                             extra_param.algo_info.kid,
                                                             extra_param.algo_info.splitk,
@@ -103,6 +106,8 @@ static RetCode DeserializePrivateData(const void* fb_param, uint64_t size, std::
     auto fb_algo_info = fb_conv_param->algo_info();
     extra_param->algo_info.algo_type = fb_algo_info->algo_type()->c_str();
     extra_param->algo_info.algo_name = fb_algo_info->algo_name()->c_str();
+    extra_param->algo_info.conv_type = fb_algo_info->conv_type()->c_str();
+    extra_param->algo_info.mma_shape = fb_algo_info->mma_shape()->c_str();
     extra_param->algo_info.kid = fb_algo_info->kid();
     extra_param->algo_info.splitk = fb_algo_info->splitk();
     extra_param->algo_info.splitf = fb_algo_info->splitf();
@@ -121,7 +126,8 @@ static RetCode DeserializePrivateData(const void* fb_param, uint64_t size, std::
     tiles.flt_size = tiles_vec[7];
     tiles.flt_pad_size = tiles_vec[8];
     tiles.cta_size_in_thd = tiles_vec[9];
-    tiles.buf = tiles_vec[10];
+    tiles.smem_size = tiles_vec[10];
+    tiles.buf = tiles_vec[11];
 
     auto fb_fuse_info = fb_conv_param->fuse_info();
     auto fb_types = fb_fuse_info->types();
