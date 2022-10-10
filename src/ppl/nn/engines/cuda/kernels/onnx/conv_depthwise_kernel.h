@@ -21,6 +21,7 @@
 #include "ppl/nn/engines/cuda/kernel.h"
 
 #include "cudakernel/nn/conv/depthwise.h"
+#include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 #include "ppl/nn/engines/cuda/params/conv_extra_param.h"
 
 namespace ppl { namespace nn { namespace cuda {

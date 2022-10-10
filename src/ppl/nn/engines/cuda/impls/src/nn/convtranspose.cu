@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include <float.h>
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
 #include "cudakernel/nn/convtranspose.h"
 #include "cudakernel/math/math.h"
 #include "cudakernel/memory/transpose.h"
@@ -23,8 +25,14 @@
 #include "cudakernel/nn/conv/conv_fp16.h"
 #include "conv_common.h"
 #include "cudakernel/gemm/gemm.h"
-#include <float.h>
 #include <cuda_fp16.h>
+#else
+#include "ppl/nn/params/onnx/convtranspose_param.h"
+#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/retcode.h"
+#include "cudakernel/nn/conv/conv_fp16.h"
+#include "ppl/nn/engines/cuda/module/cuda_module.h"
+#endif
 
 #define CUDA_KERNEL_LOOP(i, n)                          \
     for (int i = blockIdx.x * blockDim.x + threadIdx.x; \
@@ -35,6 +43,7 @@
 uint64_t PPLConvTransposeGetFilterBufSizeCudaFp16(
     const ppl::nn::TensorShape* weight_shape)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     int M = weight_shape->GetDim(1);
     M *= weight_shape->GetDim(2);
     M *= weight_shape->GetDim(3);
@@ -45,6 +54,9 @@ uint64_t PPLConvTransposeGetFilterBufSizeCudaFp16(
 
     size_t dst = Align(padM * padK * sizeof(__half), 16);
     return dst * 2; // transpose buf
+#else
+    return 0;
+#endif
 }
 
 uint64_t PPLConvTransposeGetCompilationBufSizeCuda(
@@ -52,6 +64,8 @@ uint64_t PPLConvTransposeGetCompilationBufSizeCuda(
     ppl::nn::TensorShape* output_shape,
     const ppl::nn::onnx::ConvTransposeParam* param)
 {
+    uint64_t size = 0;
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     auto type     = input_shape->GetDataType();
     int pad_size = GetPadSize(type); // ldg 128 bytes
     int batch     = input_shape->GetDim(0);
@@ -69,7 +83,6 @@ uint64_t PPLConvTransposeGetCompilationBufSizeCuda(
     int stride_w  = param->strides[1];
     int hole_h    = param->dilations[0];
     int hole_w    = param->dilations[1];
-    uint64_t size = 0;
 
     if (type != ppl::common::DATATYPE_FLOAT16) {
         return 0;
@@ -110,6 +123,7 @@ uint64_t PPLConvTransposeGetCompilationBufSizeCuda(
         size += batch*cvt_in_h*cvt_in_w*stride_h*stride_w*out_c_pad*sizeof(__half);
         size += pattern_num*out_c_pad*kernel_u*kernel_v*in_c_pad*sizeof(__half);
     }
+#endif
     return size;
 }
 
@@ -119,6 +133,8 @@ uint64_t PPLConvTransposeGetBufSizeCuda(
     ppl::nn::TensorShape* output_shape,
     const ppl::nn::onnx::ConvTransposeParam* param)
 {
+    uint64_t size = 0;
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     auto type     = input_shape->GetDataType();
     int pad_size = GetPadSize(type); // ldg 128 bytes
     int batch     = input_shape->GetDim(0);
@@ -136,7 +152,6 @@ uint64_t PPLConvTransposeGetBufSizeCuda(
     int stride_w  = param->strides[1];
     int hole_h    = param->dilations[0];
     int hole_w    = param->dilations[1];
-    uint64_t size = 0;
 
     if (stride_h == 1 && stride_w == 1)
         return 0;
@@ -155,6 +170,7 @@ uint64_t PPLConvTransposeGetBufSizeCuda(
     } else {
         return 0;
     }
+#endif
     return size;
 }
 
@@ -338,7 +354,7 @@ __global__ void nhwuvc2nhwc<0>(int4 *output, const int4 *gemm_output,
         const int pad_h, const int pad_w,
         const int stride_h, const int stride_w,
         const int4 *bias, const int has_relu){
-#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     constexpr int channel_v2 = 1;
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
     int c_id = tid % channel_v2;// ===0
@@ -418,6 +434,7 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
     const ppl::nn::TensorShape* filter_shape,
     const ppl::nn::onnx::ConvTransposeParam* param)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     int conv_in_c  = filter_shape->GetDim(1);
     int conv_out_c = filter_shape->GetDim(0);
     int kernel_h = param->kernel_shape[0];
@@ -484,6 +501,7 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
             conv_in_c, conv_in_c_pad, conv_out_c_v4,
             kernel_h, kernel_w, stride_h, stride_w,
             kernel_u, kernel_v, pattern_num);
+#endif
     return ppl::common::RC_SUCCESS;
 }
 
@@ -506,6 +524,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
     fuse_param_t &fuse_param,
     void* temp_buffer)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     int batch    = input_shape->GetDim(0);
     int in_c     = input_shape->GetDim(1);
     int in_h     = input_shape->GetDim(2);
@@ -660,6 +679,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
     else{
         return ppl::common::RC_UNSUPPORTED;
     }
+#endif
     return ppl::common::RC_SUCCESS;
 }
 
@@ -677,6 +697,8 @@ double PPLCUDAConvTransposeSelectKernel(
     const ppl::nn::onnx::ConvTransposeParam* param,
     algo_param_t& algo_param)
 {
+    double min_time = FLT_MAX;
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     int batch    = input_shape->GetDim(0);
     int in_c     = input_shape->GetDim(1);
     int in_h     = input_shape->GetDim(2);
@@ -692,7 +714,6 @@ double PPLCUDAConvTransposeSelectKernel(
     int stride_w = param->strides[1];
     int hole_h   = param->dilations[0];
     int hole_w   = param->dilations[1];
-    double min_time = FLT_MAX;
     if (hole_h != 1 || hole_w != 1)
         return min_time;
 
@@ -840,6 +861,6 @@ double PPLCUDAConvTransposeSelectKernel(
 #endif
         }
     }
-
+#endif
     return min_time;
 }

@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
 #include "cudakernel/gemm/gemm.h"
 #include "cudakernel/math/math.h"
 #include "cudakernel/common/common.h"
@@ -32,6 +33,13 @@
 
 std::vector<kernel_info_t> g_fp16_kvec;
 bool is_g_fp16_kvec_set = false;
+#else
+#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/nn/params/onnx/gemm_param.h"
+#include "ppl/common/retcode.h"
+#include "cudakernel/nn/conv/conv_fp16.h"
+#include "ppl/nn/engines/cuda/module/cuda_module.h"
+#endif
 
 #define FAKE_CONV_PARAM              \
     int in_hw               = 1;     \
@@ -87,6 +95,7 @@ bool is_g_fp16_kvec_set = false;
         fuse_param.has_concat, concat_offset_v8,                      \
         concat_stride_v8
 
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
 void init_f1_kvec(std::vector<kernel_info_t> &g_fp16_kvec, ppl::nn::cuda::CudaDevice* device, ppl::common::datatype_t type)
 {
     auto& device_prop = device->GetDeviceProp();
@@ -110,12 +119,15 @@ void init_f1_kvec(std::vector<kernel_info_t> &g_fp16_kvec, ppl::nn::cuda::CudaDe
     is_g_fp16_kvec_set = true;
 #endif
 }
+#endif
 
 uint64_t PPLGemmCUDAGetCompilationBufSize(
     const ppl::nn::TensorShape *input_shape,
     conv_param_t& conv_param,
     int transA)
 {
+    uint64_t total_size = 0;
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     auto type     = input_shape->GetDataType();
     int pad_size = GetPadSize(type); // ldg 128 bytes
                   
@@ -133,7 +145,8 @@ uint64_t PPLGemmCUDAGetCompilationBufSize(
 
     uint64_t split_size = GetMaxSplitSize(type, conv_param, num_flt_per_grp_pad);
 
-    uint64_t total_size = cvt_input_size + split_size;
+    total_size = cvt_input_size + split_size;
+#endif
     return total_size;
 }
 
@@ -144,6 +157,8 @@ uint64_t PPLGemmCUDAGetRuntimeBufSize(
     int splitf,
     int transA)
 {
+    uint64_t total_size = 0;
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     auto type     = input_shape->GetDataType();
     int pad_size = GetPadSize(type); // ldg 128 bytes
                   
@@ -163,7 +178,8 @@ uint64_t PPLGemmCUDAGetRuntimeBufSize(
     if(splitk > 1 || splitf > 1)
         split_size = GetSplitKFSize(type, conv_param, num_flt_per_grp_pad, splitk, splitf);
 
-    uint64_t total_size = cvt_input_size + split_size;
+    total_size = cvt_input_size + split_size;
+#endif
     return total_size;
 }
 
@@ -173,14 +189,19 @@ unsigned int PPLCUDAGemmGetBiasSize(
     const int N,
     const bool is_scalar)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     if (!is_scalar)
         return 0;
     int pad_size  = GetPadSize(infer_type); // ldg 128 bytes
     int N_pad     = Align(N, pad_size);
     int type_size = ppl::common::GetSizeOfDataType(bias_type);
     return N_pad * type_size;
+#else
+    return 0;
+#endif
 }
 
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
 // block size: (32,32,1)
 template <typename T>
 __global__ void matrix_transpose(
@@ -219,6 +240,8 @@ __global__ void scale(T *input, float scale, unsigned int size)
     if (in_range)
         input[off] = (T)fp_value;
 }
+#endif
+
 ppl::common::RetCode PPLCUDAGemmModifyWeights(
     const cudaStream_t &stream,
     ppl::nn::TensorShape *weight_shape,
@@ -226,6 +249,7 @@ ppl::common::RetCode PPLCUDAGemmModifyWeights(
     void *tmp_weight, // if need transpose
     const ppl::nn::onnx::GemmParam *param)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     int transB   = param->transB;
     float alpha  = param->alpha;
     auto type    = weight_shape->GetDataType();
@@ -277,6 +301,7 @@ ppl::common::RetCode PPLCUDAGemmModifyWeights(
                 return ppl::common::RC_UNSUPPORTED;
         }
     }
+#endif
     return ppl::common::RC_SUCCESS;
 }
 ppl::common::RetCode PPLCUDAGemmModifyBias(
@@ -286,6 +311,7 @@ ppl::common::RetCode PPLCUDAGemmModifyBias(
     void *bias,
     const ppl::nn::onnx::GemmParam *param)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     if (bias) {
         auto type    = bias_shape->GetDataType();
         int pad_size = GetPadSize(infer_type);
@@ -310,6 +336,7 @@ ppl::common::RetCode PPLCUDAGemmModifyBias(
             return ppl::common::RC_UNSUPPORTED;
         }
     }
+#endif
     return ppl::common::RC_SUCCESS;
 }
 
@@ -331,6 +358,7 @@ double PPLCUDAGemmJITSelectKernel(
     uint64_t workspace)
 {
     double elapsed = 0.0f;
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
 #ifdef PPLNN_ENABLE_CUDA_JIT
     std::vector<std::string> knames;
     std::vector<algo_param_t> params;
@@ -343,6 +371,7 @@ double PPLCUDAGemmJITSelectKernel(
     elapsed = AlgoForwardTime(device, stream, knames, sources, index, compile_params, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, fuse_param, workspace);
 
     algo_param = params[index];
+#endif
 #endif
     return elapsed;
 }
@@ -362,7 +391,7 @@ double PPLCUDAGemmSelectKernel(
     const fuse_param_t &fuse_param,
     algo_param_t &algo_param)
 {
-#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     auto& device_prop = device->GetDeviceProp();
 
     auto type = weight_shape->GetDataType();
@@ -503,7 +532,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
     fuse_param_t &fuse_param,
     const algo_param_t &algo_param)
 {
-#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     auto type = weight_shape->GetDataType();
 #ifndef PPLNN_ENABLE_CUDA_JIT
     if (!is_g_fp16_kvec_set)
@@ -611,6 +640,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
 #endif
 }
 
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
 template <typename T>
 __device__ __inline__ void fma_v4(const int4 a, const int4 b, int4 &c);
 
@@ -906,6 +936,7 @@ __global__ void gemv(void *output,
         }
     }
 }
+#endif
 
 template <typename T>
 ppl::common::RetCode PPLCUDAGemvForwardImp(
@@ -921,6 +952,7 @@ ppl::common::RetCode PPLCUDAGemvForwardImp(
     void *temp_buffer,
     const fuse_param_t &fuse_param)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     if (!param.transB)
         return ppl::common::RC_UNSUPPORTED;
 
@@ -972,6 +1004,6 @@ ppl::common::RetCode PPLCUDAGemvForwardImp(
         constexpr int BLK_SIZE_X = 32;
         CONFIG_KERNEL(blk_tile_n_v4);
     }
-
+#endif
     return ppl::common::RC_SUCCESS;
 }

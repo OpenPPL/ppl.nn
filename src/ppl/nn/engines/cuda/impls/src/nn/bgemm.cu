@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
 #include "cudakernel/gemm/bgemm.h"
 #include "cudakernel/gemm/gemm.h"
 #include "cudakernel/math/math.h"
@@ -34,6 +35,14 @@
 // defined in gemm.cu
 extern std::vector<kernel_info_t> g_fp16_kvec;
 extern bool is_g_fp16_kvec_set;
+#else
+#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/nn/params/onnx/gemm_param.h"
+#include "ppl/common/retcode.h"
+#include "cudakernel/nn/conv/conv_fp16.h"
+#include "ppl/nn/engines/cuda/module/cuda_module.h"
+#endif
+
 
 #define FAKE_CONV_PARAM              \
     int in_hw               = 1;     \
@@ -89,7 +98,9 @@ extern bool is_g_fp16_kvec_set;
         fuse_param.has_concat, concat_offset_v8,                      \
         concat_stride_v8
 
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
 extern void init_f1_kvec(std::vector<kernel_info_t> &g_fp16_kvec, ppl::nn::cuda::CudaDevice* device, ppl::common::datatype_t type);
+#endif
 
 uint64_t PPLBgemmCUDAGetBufSize(
     const ppl::nn::TensorShape *input_shape,
@@ -147,6 +158,7 @@ ppl::common::RetCode PPLCUDABgemmModifyWeights(
     void *tmp_weight, // if need pad transpose
     const ppl::nn::onnx::GemmParam *param)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     //int transB   = param->transB;
     //float alpha  = param->alpha;
     auto type    = weight_shape->GetDataType();
@@ -181,6 +193,7 @@ ppl::common::RetCode PPLCUDABgemmModifyWeights(
         }
 #undef TRANSWEIGHT
 
+#endif
     return ppl::common::RC_SUCCESS;
 }
 
@@ -203,6 +216,7 @@ ppl::common::RetCode PPLCUDABgemmPadInput(
     void *tmp_input, // if need transpose
     const ppl::nn::onnx::GemmParam *param)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     auto type    = input_shape->GetDataType();
     int pad_size = GetPadSize(type);
 
@@ -233,6 +247,7 @@ ppl::common::RetCode PPLCUDABgemmPadInput(
         default:
                 return ppl::common::RC_UNSUPPORTED;
     }
+#endif
     return ppl::common::RC_SUCCESS;
 }
 template<typename T>
@@ -252,6 +267,7 @@ ppl::common::RetCode PPLCUDABgemmCvtOutput(
     void *output,
     void *tmp_output)
 {
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     auto type = output_shape->GetDataType();
     int pad_size = GetPadSize(type);
 
@@ -282,17 +298,20 @@ ppl::common::RetCode PPLCUDABgemmCvtOutput(
         default:
                 return ppl::common::RC_UNSUPPORTED;
     }
+#endif
     return ppl::common::RC_SUCCESS;
 }
 
 #define MAX_KERNEL_SIZE (1 + 12 + 30)
 
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
 __inline__ std::string ToString(int v)
 {
     std::stringstream ss;
     ss << v;
     return ss.str();
 }
+#endif
 
 double PPLCUDABgemmJITSelectKernel(
     ppl::nn::cuda::CudaDevice* device,
@@ -312,6 +331,7 @@ double PPLCUDABgemmJITSelectKernel(
     uint64_t workspace)
 {
     double elapsed = 0.0f;
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
 #ifdef PPLNN_ENABLE_CUDA_JIT
     std::vector<std::string> knames;
     std::vector<algo_param_t> params;
@@ -324,6 +344,7 @@ double PPLCUDABgemmJITSelectKernel(
     elapsed = AlgoForwardTime(device, stream, knames, sources, index, compile_params, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, fuse_param, workspace);
 
     algo_param = params[index];
+#endif
 #endif
     return elapsed;
 }
@@ -342,7 +363,7 @@ double PPLCUDABgemmSelectKernel(
     const fuse_param_t &fuse_param,
     algo_param_t &algo_param)
 {
-#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     auto& device_prop = device->GetDeviceProp();
 
     auto type = weight_shape->GetDataType();
@@ -478,7 +499,7 @@ ppl::common::RetCode PPLCUDABgemmForwardImp(
     fuse_param_t &fuse_param,
     const algo_param_t &algo_param)
 {
-#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
+#if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     auto type = weight_shape->GetDataType();
 #ifndef PPLNN_ENABLE_CUDA_JIT
     if (!is_g_fp16_kvec_set)
