@@ -182,8 +182,8 @@ target_include_directories(pplkernelcuda_static PUBLIC
     ${PPLNN_CUDA_EXTERNAL_INCLUDE_DIRECTORIES})
 target_link_directories(pplkernelcuda_static PUBLIC ${CMAKE_CUDA_HOST_IMPLICIT_LINK_DIRECTORIES} ${PPLNN_CUDA_EXTERNAL_LINK_DIRECTORIES})
 
-# `PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES` is needed for generating pplkernecuda-config.cmake
-set(PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES cuda cudart)
+# `PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES` is also needed for generating pplkernecuda-config.cmake
+set(PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES cuda cudart_static)
 if(PPLNN_ENABLE_CUDA_JIT)
     list(APPEND PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES nvrtc)
 endif()
