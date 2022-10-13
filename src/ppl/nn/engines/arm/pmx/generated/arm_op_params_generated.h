@@ -20,9 +20,6 @@ struct FusionDataBuilder;
 struct ConvAlgoInfo;
 struct ConvAlgoInfoBuilder;
 
-struct ConvExecInfo;
-struct ConvExecInfoBuilder;
-
 struct ConvParamInfo;
 struct ConvParamInfoBuilder;
 
@@ -31,9 +28,6 @@ struct ConvDataBuilder;
 
 struct FCAlgoInfo;
 struct FCAlgoInfoBuilder;
-
-struct FCExecInfo;
-struct FCExecInfoBuilder;
 
 struct FCParamInfo;
 struct FCParamInfoBuilder;
@@ -402,84 +396,14 @@ inline flatbuffers::Offset<ConvAlgoInfo> CreateConvAlgoInfoDirect(
       sched_param__);
 }
 
-struct ConvExecInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef ConvExecInfoBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_CVT_FILTER = 4,
-    VT_CVT_FILTER_SIZE = 6,
-    VT_CVT_BIAS = 8,
-    VT_CVT_BIAS_SIZE = 10
-  };
-  uint32_t cvt_filter() const {
-    return GetField<uint32_t>(VT_CVT_FILTER, 0);
-  }
-  uint64_t cvt_filter_size() const {
-    return GetField<uint64_t>(VT_CVT_FILTER_SIZE, 0);
-  }
-  uint32_t cvt_bias() const {
-    return GetField<uint32_t>(VT_CVT_BIAS, 0);
-  }
-  uint64_t cvt_bias_size() const {
-    return GetField<uint64_t>(VT_CVT_BIAS_SIZE, 0);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyField<uint32_t>(verifier, VT_CVT_FILTER) &&
-           VerifyField<uint64_t>(verifier, VT_CVT_FILTER_SIZE) &&
-           VerifyField<uint32_t>(verifier, VT_CVT_BIAS) &&
-           VerifyField<uint64_t>(verifier, VT_CVT_BIAS_SIZE) &&
-           verifier.EndTable();
-  }
-};
-
-struct ConvExecInfoBuilder {
-  typedef ConvExecInfo Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_cvt_filter(uint32_t cvt_filter) {
-    fbb_.AddElement<uint32_t>(ConvExecInfo::VT_CVT_FILTER, cvt_filter, 0);
-  }
-  void add_cvt_filter_size(uint64_t cvt_filter_size) {
-    fbb_.AddElement<uint64_t>(ConvExecInfo::VT_CVT_FILTER_SIZE, cvt_filter_size, 0);
-  }
-  void add_cvt_bias(uint32_t cvt_bias) {
-    fbb_.AddElement<uint32_t>(ConvExecInfo::VT_CVT_BIAS, cvt_bias, 0);
-  }
-  void add_cvt_bias_size(uint64_t cvt_bias_size) {
-    fbb_.AddElement<uint64_t>(ConvExecInfo::VT_CVT_BIAS_SIZE, cvt_bias_size, 0);
-  }
-  explicit ConvExecInfoBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  flatbuffers::Offset<ConvExecInfo> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<ConvExecInfo>(end);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<ConvExecInfo> CreateConvExecInfo(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    uint32_t cvt_filter = 0,
-    uint64_t cvt_filter_size = 0,
-    uint32_t cvt_bias = 0,
-    uint64_t cvt_bias_size = 0) {
-  ConvExecInfoBuilder builder_(_fbb);
-  builder_.add_cvt_bias_size(cvt_bias_size);
-  builder_.add_cvt_filter_size(cvt_filter_size);
-  builder_.add_cvt_bias(cvt_bias);
-  builder_.add_cvt_filter(cvt_filter);
-  return builder_.Finish();
-}
-
 struct ConvParamInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef ConvParamInfoBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_NUM_OUTPUT = 4,
     VT_CHANNELS = 6,
     VT_PAD_TYPE = 8,
-    VT_FUSE_TYPE = 10
+    VT_FUSE_TYPE = 10,
+    VT_HAS_BIAS = 12
   };
   int64_t num_output() const {
     return GetField<int64_t>(VT_NUM_OUTPUT, 0);
@@ -493,12 +417,16 @@ struct ConvParamInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   uint32_t fuse_type() const {
     return GetField<uint32_t>(VT_FUSE_TYPE, 0);
   }
+  int8_t has_bias() const {
+    return GetField<int8_t>(VT_HAS_BIAS, 0);
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int64_t>(verifier, VT_NUM_OUTPUT) &&
            VerifyField<int64_t>(verifier, VT_CHANNELS) &&
            VerifyField<uint32_t>(verifier, VT_PAD_TYPE) &&
            VerifyField<uint32_t>(verifier, VT_FUSE_TYPE) &&
+           VerifyField<int8_t>(verifier, VT_HAS_BIAS) &&
            verifier.EndTable();
   }
 };
@@ -519,6 +447,9 @@ struct ConvParamInfoBuilder {
   void add_fuse_type(uint32_t fuse_type) {
     fbb_.AddElement<uint32_t>(ConvParamInfo::VT_FUSE_TYPE, fuse_type, 0);
   }
+  void add_has_bias(int8_t has_bias) {
+    fbb_.AddElement<int8_t>(ConvParamInfo::VT_HAS_BIAS, has_bias, 0);
+  }
   explicit ConvParamInfoBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -535,12 +466,14 @@ inline flatbuffers::Offset<ConvParamInfo> CreateConvParamInfo(
     int64_t num_output = 0,
     int64_t channels = 0,
     uint32_t pad_type = 0,
-    uint32_t fuse_type = 0) {
+    uint32_t fuse_type = 0,
+    int8_t has_bias = 0) {
   ConvParamInfoBuilder builder_(_fbb);
   builder_.add_channels(channels);
   builder_.add_num_output(num_output);
   builder_.add_fuse_type(fuse_type);
   builder_.add_pad_type(pad_type);
+  builder_.add_has_bias(has_bias);
   return builder_.Finish();
 }
 
@@ -548,14 +481,10 @@ struct ConvData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef ConvDataBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ALGO_INFO = 4,
-    VT_EXEC_INFO = 6,
-    VT_PARAM_INFO = 8
+    VT_PARAM_INFO = 6
   };
   const ppl::nn::pmx::arm::ConvAlgoInfo *algo_info() const {
     return GetPointer<const ppl::nn::pmx::arm::ConvAlgoInfo *>(VT_ALGO_INFO);
-  }
-  const ppl::nn::pmx::arm::ConvExecInfo *exec_info() const {
-    return GetPointer<const ppl::nn::pmx::arm::ConvExecInfo *>(VT_EXEC_INFO);
   }
   const ppl::nn::pmx::arm::ConvParamInfo *param_info() const {
     return GetPointer<const ppl::nn::pmx::arm::ConvParamInfo *>(VT_PARAM_INFO);
@@ -564,8 +493,6 @@ struct ConvData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ALGO_INFO) &&
            verifier.VerifyTable(algo_info()) &&
-           VerifyOffset(verifier, VT_EXEC_INFO) &&
-           verifier.VerifyTable(exec_info()) &&
            VerifyOffset(verifier, VT_PARAM_INFO) &&
            verifier.VerifyTable(param_info()) &&
            verifier.EndTable();
@@ -578,9 +505,6 @@ struct ConvDataBuilder {
   flatbuffers::uoffset_t start_;
   void add_algo_info(flatbuffers::Offset<ppl::nn::pmx::arm::ConvAlgoInfo> algo_info) {
     fbb_.AddOffset(ConvData::VT_ALGO_INFO, algo_info);
-  }
-  void add_exec_info(flatbuffers::Offset<ppl::nn::pmx::arm::ConvExecInfo> exec_info) {
-    fbb_.AddOffset(ConvData::VT_EXEC_INFO, exec_info);
   }
   void add_param_info(flatbuffers::Offset<ppl::nn::pmx::arm::ConvParamInfo> param_info) {
     fbb_.AddOffset(ConvData::VT_PARAM_INFO, param_info);
@@ -599,11 +523,9 @@ struct ConvDataBuilder {
 inline flatbuffers::Offset<ConvData> CreateConvData(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<ppl::nn::pmx::arm::ConvAlgoInfo> algo_info = 0,
-    flatbuffers::Offset<ppl::nn::pmx::arm::ConvExecInfo> exec_info = 0,
     flatbuffers::Offset<ppl::nn::pmx::arm::ConvParamInfo> param_info = 0) {
   ConvDataBuilder builder_(_fbb);
   builder_.add_param_info(param_info);
-  builder_.add_exec_info(exec_info);
   builder_.add_algo_info(algo_info);
   return builder_.Finish();
 }
@@ -679,83 +601,13 @@ inline flatbuffers::Offset<FCAlgoInfo> CreateFCAlgoInfo(
   return builder_.Finish();
 }
 
-struct FCExecInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef FCExecInfoBuilder Builder;
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_CVT_FILTER = 4,
-    VT_CVT_FILTER_SIZE = 6,
-    VT_CVT_BIAS = 8,
-    VT_CVT_BIAS_SIZE = 10
-  };
-  uint32_t cvt_filter() const {
-    return GetField<uint32_t>(VT_CVT_FILTER, 0);
-  }
-  uint64_t cvt_filter_size() const {
-    return GetField<uint64_t>(VT_CVT_FILTER_SIZE, 0);
-  }
-  uint32_t cvt_bias() const {
-    return GetField<uint32_t>(VT_CVT_BIAS, 0);
-  }
-  uint64_t cvt_bias_size() const {
-    return GetField<uint64_t>(VT_CVT_BIAS_SIZE, 0);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyField<uint32_t>(verifier, VT_CVT_FILTER) &&
-           VerifyField<uint64_t>(verifier, VT_CVT_FILTER_SIZE) &&
-           VerifyField<uint32_t>(verifier, VT_CVT_BIAS) &&
-           VerifyField<uint64_t>(verifier, VT_CVT_BIAS_SIZE) &&
-           verifier.EndTable();
-  }
-};
-
-struct FCExecInfoBuilder {
-  typedef FCExecInfo Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_cvt_filter(uint32_t cvt_filter) {
-    fbb_.AddElement<uint32_t>(FCExecInfo::VT_CVT_FILTER, cvt_filter, 0);
-  }
-  void add_cvt_filter_size(uint64_t cvt_filter_size) {
-    fbb_.AddElement<uint64_t>(FCExecInfo::VT_CVT_FILTER_SIZE, cvt_filter_size, 0);
-  }
-  void add_cvt_bias(uint32_t cvt_bias) {
-    fbb_.AddElement<uint32_t>(FCExecInfo::VT_CVT_BIAS, cvt_bias, 0);
-  }
-  void add_cvt_bias_size(uint64_t cvt_bias_size) {
-    fbb_.AddElement<uint64_t>(FCExecInfo::VT_CVT_BIAS_SIZE, cvt_bias_size, 0);
-  }
-  explicit FCExecInfoBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  flatbuffers::Offset<FCExecInfo> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<FCExecInfo>(end);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<FCExecInfo> CreateFCExecInfo(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    uint32_t cvt_filter = 0,
-    uint64_t cvt_filter_size = 0,
-    uint32_t cvt_bias = 0,
-    uint64_t cvt_bias_size = 0) {
-  FCExecInfoBuilder builder_(_fbb);
-  builder_.add_cvt_bias_size(cvt_bias_size);
-  builder_.add_cvt_filter_size(cvt_filter_size);
-  builder_.add_cvt_bias(cvt_bias);
-  builder_.add_cvt_filter(cvt_filter);
-  return builder_.Finish();
-}
-
 struct FCParamInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef FCParamInfoBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_NUM_OUTPUT = 4,
     VT_CHANNELS = 6,
-    VT_FUSE_FLAG = 8
+    VT_FUSE_FLAG = 8,
+    VT_BIAS_TERM = 10
   };
   int64_t num_output() const {
     return GetField<int64_t>(VT_NUM_OUTPUT, 0);
@@ -766,11 +618,15 @@ struct FCParamInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   uint32_t fuse_flag() const {
     return GetField<uint32_t>(VT_FUSE_FLAG, 0);
   }
+  int8_t bias_term() const {
+    return GetField<int8_t>(VT_BIAS_TERM, 0);
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int64_t>(verifier, VT_NUM_OUTPUT) &&
            VerifyField<int64_t>(verifier, VT_CHANNELS) &&
            VerifyField<uint32_t>(verifier, VT_FUSE_FLAG) &&
+           VerifyField<int8_t>(verifier, VT_BIAS_TERM) &&
            verifier.EndTable();
   }
 };
@@ -788,6 +644,9 @@ struct FCParamInfoBuilder {
   void add_fuse_flag(uint32_t fuse_flag) {
     fbb_.AddElement<uint32_t>(FCParamInfo::VT_FUSE_FLAG, fuse_flag, 0);
   }
+  void add_bias_term(int8_t bias_term) {
+    fbb_.AddElement<int8_t>(FCParamInfo::VT_BIAS_TERM, bias_term, 0);
+  }
   explicit FCParamInfoBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -803,11 +662,13 @@ inline flatbuffers::Offset<FCParamInfo> CreateFCParamInfo(
     flatbuffers::FlatBufferBuilder &_fbb,
     int64_t num_output = 0,
     int64_t channels = 0,
-    uint32_t fuse_flag = 0) {
+    uint32_t fuse_flag = 0,
+    int8_t bias_term = 0) {
   FCParamInfoBuilder builder_(_fbb);
   builder_.add_channels(channels);
   builder_.add_num_output(num_output);
   builder_.add_fuse_flag(fuse_flag);
+  builder_.add_bias_term(bias_term);
   return builder_.Finish();
 }
 
@@ -815,14 +676,10 @@ struct FullConnectData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef FullConnectDataBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ALGO_INFO = 4,
-    VT_EXEC_INFO = 6,
-    VT_PARAM_INFO = 8
+    VT_PARAM_INFO = 6
   };
   const ppl::nn::pmx::arm::FCAlgoInfo *algo_info() const {
     return GetPointer<const ppl::nn::pmx::arm::FCAlgoInfo *>(VT_ALGO_INFO);
-  }
-  const ppl::nn::pmx::arm::FCExecInfo *exec_info() const {
-    return GetPointer<const ppl::nn::pmx::arm::FCExecInfo *>(VT_EXEC_INFO);
   }
   const ppl::nn::pmx::arm::FCParamInfo *param_info() const {
     return GetPointer<const ppl::nn::pmx::arm::FCParamInfo *>(VT_PARAM_INFO);
@@ -831,8 +688,6 @@ struct FullConnectData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_ALGO_INFO) &&
            verifier.VerifyTable(algo_info()) &&
-           VerifyOffset(verifier, VT_EXEC_INFO) &&
-           verifier.VerifyTable(exec_info()) &&
            VerifyOffset(verifier, VT_PARAM_INFO) &&
            verifier.VerifyTable(param_info()) &&
            verifier.EndTable();
@@ -845,9 +700,6 @@ struct FullConnectDataBuilder {
   flatbuffers::uoffset_t start_;
   void add_algo_info(flatbuffers::Offset<ppl::nn::pmx::arm::FCAlgoInfo> algo_info) {
     fbb_.AddOffset(FullConnectData::VT_ALGO_INFO, algo_info);
-  }
-  void add_exec_info(flatbuffers::Offset<ppl::nn::pmx::arm::FCExecInfo> exec_info) {
-    fbb_.AddOffset(FullConnectData::VT_EXEC_INFO, exec_info);
   }
   void add_param_info(flatbuffers::Offset<ppl::nn::pmx::arm::FCParamInfo> param_info) {
     fbb_.AddOffset(FullConnectData::VT_PARAM_INFO, param_info);
@@ -866,11 +718,9 @@ struct FullConnectDataBuilder {
 inline flatbuffers::Offset<FullConnectData> CreateFullConnectData(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<ppl::nn::pmx::arm::FCAlgoInfo> algo_info = 0,
-    flatbuffers::Offset<ppl::nn::pmx::arm::FCExecInfo> exec_info = 0,
     flatbuffers::Offset<ppl::nn::pmx::arm::FCParamInfo> param_info = 0) {
   FullConnectDataBuilder builder_(_fbb);
   builder_.add_param_info(param_info);
-  builder_.add_exec_info(exec_info);
   builder_.add_algo_info(algo_info);
   return builder_.Finish();
 }

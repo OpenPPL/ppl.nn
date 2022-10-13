@@ -642,10 +642,10 @@ ppl::common::RetCode conv2d_n8cx_direct_fp16_offline_manager::try_fuse(conv_fuse
 
 // should be called after init_schedule_param
 ppl::common::RetCode conv2d_n8cx_direct_fp16_offline_manager::generate_cvt_weights(
-    ppl::nn::TensorBufferInfo* new_filter,
-    ppl::nn::TensorBufferInfo* new_bias,
     const void *filter,
-    const void *bias)
+    const void *bias,
+    ppl::nn::TensorBufferInfo* new_filter,
+    ppl::nn::TensorBufferInfo* new_bias)
 {
     if (cvt_bias_ != nullptr || cvt_filter_ != nullptr) {
         return ppl::common::RC_PERMISSION_DENIED;

@@ -18,23 +18,16 @@ table ConvAlgoInfo {
     sched_param: [int64];
 }
 
-table ConvExecInfo {
-    cvt_filter: uint32;
-    cvt_filter_size: uint64;
-    cvt_bias: uint32;
-    cvt_bias_size: uint64;
-}
-
 table ConvParamInfo{
     num_output: int64;
     channels: int64;
     pad_type: uint32;
     fuse_type: uint32;
+    has_bias: byte;
 }
 
 table ConvData {
     algo_info: ConvAlgoInfo;
-    exec_info: ConvExecInfo;
     param_info: ConvParamInfo;
 }
 
@@ -45,22 +38,15 @@ table FCAlgoInfo {
     isa: uint32;
 }
 
-table FCExecInfo {
-    cvt_filter: uint32;
-    cvt_filter_size: uint64;
-    cvt_bias: uint32;
-    cvt_bias_size: uint64;
-}
-
 table FCParamInfo{
     num_output: int64;
     channels: int64;
     fuse_flag: uint32;
+    bias_term: byte;
 }
 
 table FullConnectData {
     algo_info: FCAlgoInfo;
-    exec_info: FCExecInfo;
     param_info: FCParamInfo;
 }
 

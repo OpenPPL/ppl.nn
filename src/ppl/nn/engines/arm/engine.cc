@@ -30,7 +30,6 @@
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
 #include "ppl/nn/models/pmx/utils.h"
-#include "ppl/nn/engines/arm/pmx/generated/arm_engine_generated.h"
 #endif
 
 using namespace std;
@@ -168,14 +167,10 @@ OptKernel* ArmEngine::CreateOptKernel(const ir::Node* node) const {
 }
 
 ppl::common::RetCode ArmEngine::SerializeData(const pmx::SerializationContext& ctx, utils::DataStream* ds) const {
-    flatbuffers::FlatBufferBuilder builder;
-    auto fb_arm_engine_param = pmx::arm::CreateArmEngineParam(builder);
-    pmx::arm::FinishArmEngineParamBuffer(builder, fb_arm_engine_param);
-    return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+    return RC_SUCCESS;
 }
 
 ppl::common::RetCode ArmEngine::DeserializeData(const void* base, uint64_t size) {
-    auto fb_arm_engine_param = pmx::arm::GetArmEngineParam(base);
     return ppl::common::RC_SUCCESS;
 }
 #endif

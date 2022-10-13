@@ -21,6 +21,8 @@
 #include <algorithm>
 #include <type_traits>
 #include <stdint.h>
+#include <limits.h>
+#include <limits>
 
 namespace ppl { namespace kernel { namespace arm_server {
 

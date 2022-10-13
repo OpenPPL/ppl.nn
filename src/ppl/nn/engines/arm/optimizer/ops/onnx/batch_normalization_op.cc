@@ -61,14 +61,14 @@ RetCode BatchNormalizationOp::SelectFormat(const InputOutputInfo& info,
 #ifdef PPLNN_ENABLE_PMX_MODEL
 
 ppl::common::RetCode BatchNormalizationOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
-    flatbuffers::FlatBufferBuilder output_builder;
-    auto fb_output_data = ppl::nn::pmx::arm::CreateOutputDataDirect(output_builder, &common_param_.output_types, &common_param_.output_formats);
-    auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(output_builder, ppl::nn::pmx::arm::PrivateDataType_OutputData, fb_output_data.Union());
-    ppl::nn::pmx::arm::FinishOpDataBuffer(output_builder, fb_op_data);
+    flatbuffers::FlatBufferBuilder fusion_builder;
+    auto fb_fusion_data = ppl::nn::pmx::arm::CreateFusionDataDirect(fusion_builder, (fuse_relu_ ? 1 : 0), &common_param_.output_types, &common_param_.output_formats);
+    auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(fusion_builder, ppl::nn::pmx::arm::PrivateDataType_FusionData, fb_fusion_data.Union());
+    ppl::nn::pmx::arm::FinishOpDataBuffer(fusion_builder, fb_op_data);
 
     flatbuffers::FlatBufferBuilder op_builder;
     auto fb_param = ppl::nn::pmx::onnx::SerializeBatchNormalizationParam(*param_.get(), &op_builder);
-    auto fb_data = op_builder.CreateVector(output_builder.GetBufferPointer(), output_builder.GetSize());
+    auto fb_data = op_builder.CreateVector(fusion_builder.GetBufferPointer(), fusion_builder.GetSize());
     auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, ppl::nn::pmx::onnx::OpParamType_BatchNormalizationParam, fb_param.Union(), fb_data);
     ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
     return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
@@ -81,9 +81,10 @@ ppl::common::RetCode BatchNormalizationOp::DeserializeData(const ::ppl::nn::pmx:
     ppl::nn::pmx::onnx::DeserializeBatchNormalizationParam(*fb_op_param->value_as_BatchNormalizationParam(), param_.get());
 
     auto arm_op_data = ppl::nn::pmx::arm::GetOpData(fb_op_param->data_()->data());
-    auto arm_output_data = arm_op_data->value_as_OutputData();
-    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_output_data->dtype(), &common_param_.output_types);
-    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_output_data->dformat(), &common_param_.output_formats);
+    auto arm_fusion_data = arm_op_data->value_as_FusionData();
+    fuse_relu_ = arm_fusion_data->fuse_relu();
+    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_fusion_data->dtype(), &common_param_.output_types);
+    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_fusion_data->dformat(), &common_param_.output_formats);
     return RC_SUCCESS;
 }
 

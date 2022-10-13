@@ -48,9 +48,7 @@ ConvOp::ConvOp(const ir::Node* node) : ArmOptKernel(node), conv2d_param_(nullptr
 
             y->SetDimCount(x->GetDimCount());
             y->SetDim(0, x->GetDim(0));
-            LOG(WARNING) << y->GetDim(0);
             y->SetDim(1, num_output);
-            LOG(WARNING) << y->GetDim(1);
 
             const int32_t kernel_dims = (int32_t)x->GetDimCount() - 2;
             for (int32_t i = 0; i < kernel_dims; ++i) {
@@ -63,7 +61,6 @@ ConvOp::ConvOp(const ir::Node* node) : ArmOptKernel(node), conv2d_param_(nullptr
                     return RC_INVALID_VALUE;
                 }
                 y->SetDim(j, out_dim);
-                LOG(WARNING) << y->GetDim(j);
             }
             y->CalcPadding();
 
@@ -165,10 +162,6 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
             *info.GetInput<TensorImpl>(0)->GetShape(), *options.engine_options, options.device->GetISA(),
             conv2d_param_->param, options.device->GetAllocator());
 
-        LOG(ERROR) << options.info->constants.size();
-        LOG(ERROR) << info.GetInputCount();
-        LOG(ERROR) << GetNode()->GetInput(1);
-        LOG(ERROR) << GetNode()->GetInput(2);
         if (conv2d_param_->mgr == nullptr) {
             LOG(ERROR) << "No algorithm selected.";
             return ppl::common::RC_UNSUPPORTED;
@@ -196,12 +189,12 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
         ppl::common::RetCode normal_cvt_weights_ret = ppl::common::RC_SUCCESS;
         ppl::common::RetCode fallback_cvt_weights_ret = ppl::common::RC_SUCCESS;
         if (selected_algo.data_type == ppl::common::DATATYPE_FLOAT32) {
-            normal_cvt_weights_ret = conv2d_param_->mgr->generate_cvt_weights(new_filter, new_bias, weight_data, bias_data);
+            normal_cvt_weights_ret = conv2d_param_->mgr->generate_cvt_weights(weight_data, bias_data, new_filter, new_bias);
             if (normal_cvt_weights_ret != ppl::common::RC_SUCCESS) {
                 return normal_cvt_weights_ret;
             }
             if (conv2d_param_->fallback_mgr) {
-                fallback_cvt_weights_ret = conv2d_param_->fallback_mgr->generate_cvt_weights(new_filter, new_bias, weight_data, bias_data);
+                fallback_cvt_weights_ret = conv2d_param_->fallback_mgr->generate_cvt_weights(weight_data, bias_data, new_filter, new_bias);
                 
             }
 #ifdef PPLNN_USE_ARMV8_2_FP16
@@ -216,12 +209,12 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
                 Fp32ToFp16(bias_data, bias_len, bias_data_fp16.data());
             }
 
-            normal_cvt_weights_ret = conv2d_param_->mgr->generate_cvt_weights(new_filter, new_bias,weight_data_fp16.data(), bias_data_fp16.data());
+            normal_cvt_weights_ret = conv2d_param_->mgr->generate_cvt_weights(weight_data_fp16.data(), bias_data_fp16.data(), new_filter, new_bias);
             if (normal_cvt_weights_ret != ppl::common::RC_SUCCESS) {
                 return normal_cvt_weights_ret;
             }
             if (conv2d_param_->fallback_mgr) {
-                fallback_cvt_weights_ret = conv2d_param_->fallback_mgr->generate_cvt_weights(new_filter, new_bias,weight_data_fp16.data(), bias_data_fp16.data());
+                fallback_cvt_weights_ret = conv2d_param_->fallback_mgr->generate_cvt_weights(weight_data_fp16.data(), bias_data_fp16.data(), new_filter, new_bias);
             }
 #endif
         } else {
@@ -299,8 +292,6 @@ bool ConvOp::TryFuseSum(void) {
 #ifdef PPLNN_ENABLE_PMX_MODEL
 
 ppl::common::RetCode ConvOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
-    const std::vector<edgeid_t>& eid2seq = ctx.eid2seq;
-
     flatbuffers::FlatBufferBuilder conv_builder;
     auto mgr = conv2d_param_->mgr;
     std::vector<int64_t> algo_sp = mgr->get_schedule_param();
@@ -310,18 +301,14 @@ ppl::common::RetCode ConvOp::SerializeData(const ::ppl::nn::pmx::SerializationCo
                                                               mgr->algo_info().data_type,
                                                               mgr->algo_info().isa,
                                                               conv_builder.CreateVector<int64_t>(algo_sp));
-    auto fb_exec_info = ppl::nn::pmx::arm::CreateConvExecInfo(conv_builder,
-                                                              eid2seq[GetNode()->GetInput(1)],
-                                                              mgr->get_cvt_filter_size(),
-                                                              (mgr->get_cvt_bias()) ? eid2seq[GetNode()->GetInput(2)] : std::numeric_limits<uint32_t>::max(),
-                                                              mgr->get_cvt_bias_size());
     auto fb_param_info = ppl::nn::pmx::arm::CreateConvParamInfo(conv_builder, 
                                                                 conv2d_param_->param.num_output, 
                                                                 conv2d_param_->param.channels, 
                                                                 conv2d_param_->mgr->get_param().pad_type, 
-                                                                conv2d_param_->mgr->get_param().fuse_flag);
+                                                                conv2d_param_->mgr->get_param().fuse_flag,
+                                                                (!mgr->is_zero_bias()) ? 1 : 0);
     
-    auto fb_conv_data = ppl::nn::pmx::arm::CreateConvData(conv_builder, fb_algo_info, fb_exec_info, fb_param_info);
+    auto fb_conv_data = ppl::nn::pmx::arm::CreateConvData(conv_builder, fb_algo_info, fb_param_info);
     auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(conv_builder, ppl::nn::pmx::arm::PrivateDataType_ConvData, fb_conv_data.Union());
     ppl::nn::pmx::arm::FinishOpDataBuffer(conv_builder, fb_op_data);
 
@@ -352,14 +339,12 @@ ppl::common::RetCode ConvOp::DeserializeData(const ::ppl::nn::pmx::Deserializati
 
     auto arm_conv_data = arm_op_data->value_as_ConvData();
     auto algo_info = arm_conv_data->algo_info();
-    auto exec_info = arm_conv_data->exec_info();
     auto param_info = arm_conv_data->param_info();
 
     common_param_.output_types.resize(1);
     common_param_.output_formats.resize(1);
     common_param_.output_types[0] = algo_info->dtype();
     common_param_.output_formats[0] = (algo_info->dtype() == DATATYPE_FLOAT32) ? DATAFORMAT_N4CX : DATAFORMAT_N8CX;
-    
 
     conv2d_param &conv2d_kernel_param = conv2d_param_->param;
     conv2d_kernel_param.kernel_h = param_->kernel_shape[0];
@@ -386,21 +371,24 @@ ppl::common::RetCode ConvOp::DeserializeData(const ::ppl::nn::pmx::Deserializati
     ppl::nn::pmx::utils::Fbvec2Stdvec(algo_info->sched_param(), &sp);
     mgr->set_schedule_param(sp);
     
-    const auto & shapes = *ctx.shapes; (void)shapes;
+    const auto & shapes = *ctx.shapes;
     const auto & constants = *ctx.constants;
 
-    uint32_t cvt_filter_id = exec_info->cvt_filter();
-    uint64_t cvt_filter_size = exec_info->cvt_filter_size();
+    uint32_t cvt_filter_id = GetNode()->GetInput(1);
+    uint64_t cvt_filter_size = shapes.at(cvt_filter_id).CalcBytesExcludingPadding();
     void *cvt_filter_ptr = constants.at(cvt_filter_id).GetBufferPtr<void>();
     mgr->set_cvt_filter(cvt_filter_ptr, cvt_filter_size);
 
-    uint32_t cvt_bias_id = exec_info->cvt_bias();
-    uint64_t cvt_bias_size = exec_info->cvt_bias_size();
+    bool has_bias = (param_info->has_bias() == 1);
     void *cvt_bias_ptr;
-    if (cvt_bias_id != std::numeric_limits<uint32_t>::max()) {
+    if (has_bias) {
+        uint32_t cvt_bias_id = GetNode()->GetInput(2);
+        uint64_t cvt_bias_size = shapes.at(cvt_bias_id).CalcBytesExcludingPadding();
         cvt_bias_ptr = constants.at(cvt_bias_id).GetBufferPtr<void>();
         mgr->set_cvt_bias(cvt_bias_ptr, cvt_bias_size);
     } else {
+        uint64_t cvt_bias_size = conv2d_kernel_param.num_output * ppl::common::GetSizeOfDataType(algo_info->dtype());
+        cvt_bias_size = (cvt_bias_size + 15) & (~15);
         cvt_bias_ptr = mgr->get_allocator()->Alloc(cvt_bias_size);
         memset(cvt_bias_ptr, 0, cvt_bias_size);
         mgr->set_cvt_bias(cvt_bias_ptr, cvt_bias_size, true);

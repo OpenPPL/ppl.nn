@@ -334,10 +334,10 @@ static void ppl_arm_server_kernel_fp32_conv_direct_n4cx_convert_filter(
 }
 
 ppl::common::RetCode conv2d_direct_ndarray_fp32_offline_manager::generate_cvt_weights(
-    ppl::nn::TensorBufferInfo* new_filter,
-    ppl::nn::TensorBufferInfo* new_bias,
     const void *filter,
-    const void *bias)
+    const void *bias,
+    ppl::nn::TensorBufferInfo* new_filter,
+    ppl::nn::TensorBufferInfo* new_bias)
 {
     if (cvt_bias_ != nullptr || cvt_filter_ != nullptr) {
         return ppl::common::RC_PERMISSION_DENIED;

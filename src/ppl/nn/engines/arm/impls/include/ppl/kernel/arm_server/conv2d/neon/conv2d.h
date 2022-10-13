@@ -355,6 +355,10 @@ public:
     {
         return cvt_bias_size_;
     }
+    bool is_zero_bias() const
+    {
+        return is_bias_owner_;
+    }
 
     void release_cvt_weights()
     {
@@ -399,9 +403,9 @@ public:
     virtual bool is_supported()                                                        = 0;
     virtual ppl::common::RetCode try_fuse(conv_fuse_flag_t fuse_type)                  = 0;
     virtual ppl::common::RetCode try_reflect_pad(const std::vector<int>& pads)         = 0;
-    virtual ppl::common::RetCode generate_cvt_weights(ppl::nn::TensorBufferInfo *,
+    virtual ppl::common::RetCode generate_cvt_weights(const void *, const void *,
                                                       ppl::nn::TensorBufferInfo *,
-                                                      const void *, const void *)      = 0;
+                                                      ppl::nn::TensorBufferInfo *)     = 0;
     virtual conv2d_runtime_executor *gen_executor()                                    = 0;
 
     virtual ~conv2d_offline_manager() {}

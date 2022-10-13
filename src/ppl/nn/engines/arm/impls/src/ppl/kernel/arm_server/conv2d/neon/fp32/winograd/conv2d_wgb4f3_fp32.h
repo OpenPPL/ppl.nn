@@ -82,8 +82,8 @@ public:
     ppl::common::RetCode try_reflect_pad(const std::vector<int>& pads) override { return ppl::common::RC_UNSUPPORTED; }
 
     ppl::common::RetCode generate_cvt_weights(
-        ppl::nn::TensorBufferInfo* new_filter, ppl::nn::TensorBufferInfo* new_bias,
-        const void *filter, const void *bias) override;
+        const void *filter, const void *bias,
+        ppl::nn::TensorBufferInfo* new_filter, ppl::nn::TensorBufferInfo* new_bias) override;
     // generate executor for runtime
     conv2d_runtime_executor *gen_executor() override;
 

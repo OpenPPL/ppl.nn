@@ -48,26 +48,28 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
         return memory_copy(input->GetBufferPtr<char>(), input->GetShape()->CalcBytesIncludingPadding(),
                            output->GetBufferPtr<char>());
     } else if (output_format != input_format) {
+        int64_t num_input_dims = input->GetShape()->GetDimCount();
+        int64_t input_dim2 = (num_input_dims <= 2) ? 1 : input->GetShape()->GetDim(2);
+        int64_t input_dim3 = (num_input_dims <= 3) ? 1 : input->GetShape()->GetDim(3);
+
         if (input_type == ppl::common::DATATYPE_FLOAT32 && output_type == input_type) {
             LOG(DEBUG) << "Reorder between fp32 ndarray and n4cx";
             if (output_format == ppl::common::DATAFORMAT_N4CX && input_format == ppl::common::DATAFORMAT_NDARRAY) {
-                if (input->GetShape()->GetDim(2) == 1 && input->GetShape()->GetDim(3) == 1 &&
-                    input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL) {
+                if (input_dim2 == 1 && input_dim3 == 1 && input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL) {
                     output->TransferBufferFrom(input);
                 } else {
                     NdarrayToN4cxFp32((input->GetBufferPtr<float>()), input->GetShape()->GetDim(0),
-                                    input->GetShape()->GetDim(1), input->GetShape()->GetDim(2), input->GetShape()->GetDim(3),
+                                    input->GetShape()->GetDim(1), input_dim2, input_dim3,
                                     output->GetBufferPtr<float>());
                 } 
                 return ppl::common::RC_SUCCESS;
             } else if (output_format == ppl::common::DATAFORMAT_NDARRAY &&
                        input_format == ppl::common::DATAFORMAT_N4CX) {
-                if (input->GetShape()->GetDim(2) == 1 && input->GetShape()->GetDim(3) == 1 &&
-                    input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL) {
+                if (input_dim2 == 1 && input_dim3 == 1 && input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL) {
                     output->TransferBufferFrom(input);
                 } else {
                     N4cxToNdarrayFp32((input->GetBufferPtr<float>()), input->GetShape()->GetDim(0),
-                                    input->GetShape()->GetDim(1), input->GetShape()->GetDim(2), input->GetShape()->GetDim(3),
+                                    input->GetShape()->GetDim(1), input_dim2, input_dim3,
                                     output->GetBufferPtr<float>());
                 }
                 return ppl::common::RC_SUCCESS;
@@ -76,29 +78,37 @@ ppl::common::RetCode ReorderKernel::DoExecute(KernelExecContext* ctx) {
         } else if (input_type == ppl::common::DATATYPE_FLOAT16 && output_type == input_type) {
             LOG(DEBUG) << "Reorder between fp16 ndarray and n8cx";
             if (output_format == ppl::common::DATAFORMAT_N8CX && input_format == ppl::common::DATAFORMAT_NDARRAY) {
-                NdarrayToN8cxFp16((input->GetBufferPtr<__fp16>()), input->GetShape()->GetDim(0),
-                                  input->GetShape()->GetDim(1), input->GetShape()->GetDim(2), input->GetShape()->GetDim(3),
-                                  output->GetBufferPtr<__fp16>());
+                if (input_dim2 == 1 && input_dim3 == 1 && input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL) {
+                    output->TransferBufferFrom(input);
+                } else {
+                    NdarrayToN8cxFp16((input->GetBufferPtr<__fp16>()), input->GetShape()->GetDim(0),
+                                    input->GetShape()->GetDim(1), input_dim2, input_dim3,
+                                    output->GetBufferPtr<__fp16>());
+                }
                 return ppl::common::RC_SUCCESS;
             } else if (output_format == ppl::common::DATAFORMAT_NDARRAY &&
                        input_format == ppl::common::DATAFORMAT_N8CX) {
-                N8cxToNdarrayFp16((input->GetBufferPtr<__fp16>()), input->GetShape()->GetDim(0),
-                                  input->GetShape()->GetDim(1), input->GetShape()->GetDim(2), input->GetShape()->GetDim(3),
-                                  output->GetBufferPtr<__fp16>());
+                if (input_dim2 == 1 && input_dim3 == 1 && input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL) {
+                    output->TransferBufferFrom(input);
+                } else {
+                    N8cxToNdarrayFp16((input->GetBufferPtr<__fp16>()), input->GetShape()->GetDim(0),
+                                    input->GetShape()->GetDim(1), input_dim2, input_dim3,
+                                    output->GetBufferPtr<__fp16>());
+                }
                 return ppl::common::RC_SUCCESS;
             }
         } else if (input_type == ppl::common::DATATYPE_FLOAT16 && output_type == ppl::common::DATATYPE_FLOAT32 &&
                    input_format == ppl::common::DATAFORMAT_N8CX && output_format == ppl::common::DATAFORMAT_NDARRAY) {
             LOG(DEBUG) << "Reorder fp16 n8cx to fp32 ndarray";
             N8cxFp16ToNdarrayFp32((input->GetBufferPtr<__fp16>()), input->GetShape()->GetDim(0),
-                                  input->GetShape()->GetDim(1), input->GetShape()->GetDim(2), input->GetShape()->GetDim(3),
+                                  input->GetShape()->GetDim(1), input_dim2, input_dim3,
                                   output->GetBufferPtr<float>());
             return ppl::common::RC_SUCCESS;
         } else if (input_type == ppl::common::DATATYPE_FLOAT32 && output_type == ppl::common::DATATYPE_FLOAT16 &&
                    input_format == ppl::common::DATAFORMAT_NDARRAY && output_format == ppl::common::DATAFORMAT_N8CX) {
             LOG(DEBUG) << "Reorder fp32 ndarray to fp16 n8cx";
             NdarrayFp32ToN8cxFp16((input->GetBufferPtr<float>()), input->GetShape()->GetDim(0),
-                                  input->GetShape()->GetDim(1), input->GetShape()->GetDim(2), input->GetShape()->GetDim(3),
+                                  input->GetShape()->GetDim(1), input_dim2, input_dim3,
                                   output->GetBufferPtr<__fp16>());
             return ppl::common::RC_SUCCESS;
 #endif

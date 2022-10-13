@@ -285,6 +285,11 @@ public:
     {
         return cvt_bias_size_;
     }
+    
+    bool has_bias_term() const
+    {
+        return !is_bias_owner_;
+    }
 
     void release_cvt_weights()
     {

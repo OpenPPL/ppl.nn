@@ -26,7 +26,11 @@ ReorderOp::ReorderOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         auto& input = *info->GetInput<TensorImpl>(0)->GetShape();
         auto& output = *info->GetOutput<TensorImpl>(0)->GetShape();
-        if (output.GetDataFormat() == DATAFORMAT_N8CX && input.GetDimCount() < 3) {
+        if ((output.GetDataFormat() == DATAFORMAT_N4CX || output.GetDataFormat() == DATAFORMAT_N8CX) 
+            && input.GetDimCount() == 2) {
+            int64_t new_dims[4] = {input.GetDim(0), input.GetDim(1), 1, 1};
+            output.Reshape(new_dims, 4);
+        } else if (output.GetDataFormat() == DATAFORMAT_N8CX && input.GetDimCount() < 3) {
             auto padded_output_shape = PadShapeTo3Dims(input);
             output.Reshape(padded_output_shape.GetDims(), padded_output_shape.GetDimCount());
         } else {

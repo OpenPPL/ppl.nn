@@ -2046,10 +2046,10 @@ ppl::common::RetCode conv2d_n4cx_depthwise_fp32_offline_manager::try_fuse(conv_f
 }
 
 ppl::common::RetCode conv2d_n4cx_depthwise_fp32_offline_manager::generate_cvt_weights(
-    ppl::nn::TensorBufferInfo* new_filter,
-    ppl::nn::TensorBufferInfo* new_bias,
     const void *filter,
-    const void *bias)
+    const void *bias,
+    ppl::nn::TensorBufferInfo* new_filter,
+    ppl::nn::TensorBufferInfo* new_bias)
 {
     if (cvt_bias_ != nullptr || cvt_filter_ != nullptr) {
         return ppl::common::RC_PERMISSION_DENIED;
