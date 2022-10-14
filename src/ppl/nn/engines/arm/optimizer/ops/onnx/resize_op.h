@@ -36,6 +36,11 @@ public:
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;
     KernelImpl* CreateKernelImpl() const override;
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode SerializeData(const ::ppl::nn::pmx::SerializationContext&, utils::DataStream*) const override;
+    ppl::common::RetCode DeserializeData(const ::ppl::nn::pmx::DeserializationContext&, const void*, uint64_t) override;
+#endif
+
 private:
     std::shared_ptr<ppl::nn::onnx::ResizeParam> param_;
 };

@@ -29,6 +29,12 @@
 #include "ppl/nn/engines/arm/utils/macros.h"
 #include "ppl/nn/engines/arm/engine_options.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/generated/onnx_op_generated.h"
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/engines/arm/pmx/generated/arm_op_params_generated.h"
+#endif
+
 namespace ppl { namespace nn { namespace utils {
 struct SharedResource;
 }}} // namespace ppl::nn::utils
@@ -90,6 +96,8 @@ public:
         common_param_.output_types[idx] = type;
     }
 
+    virtual void SetAllocator(ppl::common::Allocator*) { }
+
 protected:
     template <typename T>
     ppl::common::RetCode GenericLoadParam(const OptKernelOptions& options, std::shared_ptr<T>* param) const {
@@ -111,12 +119,21 @@ protected:
         kernel->SetParam(param);
         kernel->SetCommonParam(&common_param_);
         kernel->SetReshapeFunc([this](InputOutputInfo* info) -> ppl::common::RetCode {
+            auto input0_type = info->GetInput<TensorImpl>(0)->GetShape()->GetDataType();
             for (uint32_t i = 0; i < info->GetOutputCount(); i++) {
-                info->GetOutput<TensorImpl>(i)->GetShape()->SetDataType(common_param_.output_types[i]);
+                if (i < common_param_.output_types.size()) {
+                    info->GetOutput<TensorImpl>(i)->GetShape()->SetDataType(common_param_.output_types[i]);
+                } else {
+                    info->GetOutput<TensorImpl>(i)->GetShape()->SetDataType(input0_type);
+                }
             }
             infer_type_func_(info);
             for (uint32_t i = 0; i < info->GetOutputCount(); i++) {
-                info->GetOutput<TensorImpl>(i)->GetShape()->SetDataFormat(common_param_.output_formats[i]);
+                if (i < common_param_.output_types.size()) {
+                    info->GetOutput<TensorImpl>(i)->GetShape()->SetDataFormat(common_param_.output_formats[i]);
+                } else {
+                    info->GetOutput<TensorImpl>(i)->GetShape()->SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+                }
             }
             return infer_dims_func_(info);
         });
@@ -128,12 +145,21 @@ protected:
         auto kernel = new KernelType(GetNode());
         kernel->SetCommonParam(&common_param_);
         kernel->SetReshapeFunc([this](InputOutputInfo* info) -> ppl::common::RetCode {
+            auto input0_type = info->GetInput<TensorImpl>(0)->GetShape()->GetDataType();
             for (uint32_t i = 0; i < info->GetOutputCount(); i++) {
-                info->GetOutput<TensorImpl>(i)->GetShape()->SetDataType(common_param_.output_types[i]);
+                if (i < common_param_.output_types.size()) {
+                    info->GetOutput<TensorImpl>(i)->GetShape()->SetDataType(common_param_.output_types[i]);
+                } else {
+                    info->GetOutput<TensorImpl>(i)->GetShape()->SetDataType(input0_type);
+                }
             }
             infer_type_func_(info);
             for (uint32_t i = 0; i < info->GetOutputCount(); i++) {
-                info->GetOutput<TensorImpl>(i)->GetShape()->SetDataFormat(common_param_.output_formats[i]);
+                if (i < common_param_.output_types.size()) {
+                    info->GetOutput<TensorImpl>(i)->GetShape()->SetDataFormat(common_param_.output_formats[i]);
+                } else {
+                    info->GetOutput<TensorImpl>(i)->GetShape()->SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+                }
             }
             auto status = infer_dims_func_(info);
             return status;
@@ -190,17 +216,19 @@ protected:
     }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override {
-        return ppl::common::RC_UNSUPPORTED;
+    ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream* ds) const override {
+        return ppl::common::RC_SUCCESS;
     }
-    ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void*, uint64_t) override {
-        return ppl::common::RC_UNSUPPORTED;
+
+    ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t) override {
+        return ppl::common::RC_SUCCESS;
     }
 #endif
 
 protected:
     std::function<void(InputOutputInfo*)> infer_type_func_;
     std::function<ppl::common::RetCode(InputOutputInfo*)> infer_dims_func_;
+public:
     ArmCommonParam common_param_;
 };
 

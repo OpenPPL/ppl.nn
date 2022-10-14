@@ -39,12 +39,8 @@ public:
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override;
     OptKernel* CreateOptKernel(const ir::Node*) const override;
-    ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override {
-        return ppl::common::RC_UNSUPPORTED;
-    }
-    ppl::common::RetCode DeserializeData(const void*, uint64_t) override {
-        return ppl::common::RC_UNSUPPORTED;
-    }
+    ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override;
+    ppl::common::RetCode DeserializeData(const void*, uint64_t) override;
 #endif
 
 private:

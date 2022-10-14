@@ -24,7 +24,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
-RetCode SliceOp::Init(const OptKernelOptions& options) {
+SliceOp::SliceOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         // check parameters
         if (info->GetInputCount() < 3 || info->GetInputCount() > 5 || info->GetOutputCount() != 1) {
@@ -62,7 +62,9 @@ RetCode SliceOp::Init(const OptKernelOptions& options) {
     };
 
     infer_type_func_ = GenericInferType;
+}
 
+RetCode SliceOp::Init(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 

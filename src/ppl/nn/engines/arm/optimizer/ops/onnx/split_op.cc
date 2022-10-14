@@ -20,6 +20,10 @@
 #include "ppl/nn/oputils/onnx/reshape_split.h"
 #include "ppl/nn/common/logger.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/oputils/onnx/split.h"
+#endif
+
 #include <set>
 
 using namespace std;
@@ -57,6 +61,37 @@ RetCode SplitOp::SelectFormat(const InputOutputInfo& info,
 
     return RC_SUCCESS;
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+
+ppl::common::RetCode SplitOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder output_builder;
+    auto fb_output_data = ppl::nn::pmx::arm::CreateOutputDataDirect(output_builder, &common_param_.output_types, &common_param_.output_formats);
+    auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(output_builder, ppl::nn::pmx::arm::PrivateDataType_OutputData, fb_output_data.Union());
+    ppl::nn::pmx::arm::FinishOpDataBuffer(output_builder, fb_op_data);
+
+    flatbuffers::FlatBufferBuilder op_builder;
+    auto fb_param = ppl::nn::pmx::onnx::SerializeSplitParam(*param_.get(), &op_builder);
+    auto fb_data = op_builder.CreateVector(output_builder.GetBufferPointer(), output_builder.GetSize());
+    auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, ppl::nn::pmx::onnx::OpParamType_SplitParam, fb_param.Union(), fb_data);
+    ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
+    return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
+}
+
+ppl::common::RetCode SplitOp::DeserializeData(const ::ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+    auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
+
+    param_ = std::make_shared<ppl::nn::onnx::SplitParam>();
+    ppl::nn::pmx::onnx::DeserializeSplitParam(*fb_op_param->value_as_SplitParam(), param_.get());
+
+    auto arm_op_data = ppl::nn::pmx::arm::GetOpData(fb_op_param->data_()->data());
+    auto arm_output_data = arm_op_data->value_as_OutputData();
+    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_output_data->dtype(), &common_param_.output_types);
+    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_output_data->dformat(), &common_param_.output_formats);
+    return RC_SUCCESS;
+}
+
+#endif
 
 KernelImpl* SplitOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<SplitKernel>(param_.get());

@@ -1513,6 +1513,23 @@ bool conv2d_wgb4f3_fp32_offline_manager::is_supported()
     return true;
 }
 
+std::vector<int64_t>  conv2d_wgb4f3_fp32_offline_manager::get_schedule_param() const
+{
+    std::vector<int64_t> sp = { sched_param_.ic_seg, sched_param_.oc_seg, sched_param_.tile_seg };
+    return sp;
+}
+
+ppl::common::RetCode conv2d_wgb4f3_fp32_offline_manager::set_schedule_param(const std::vector<int64_t>& sp)
+{
+    if (sp.size() != 3) {
+        return fast_init_schedule_param();
+    }
+    sched_param_.ic_seg = sp[0];
+    sched_param_.oc_seg = sp[1];
+    sched_param_.tile_seg = sp[2];
+    return ppl::common::RC_SUCCESS;
+}
+
 ppl::common::RetCode conv2d_wgb4f3_fp32_offline_manager::fast_init_schedule_param()
 {
     sched_param_.oc_seg   = 128;
@@ -1653,39 +1670,66 @@ ppl::common::RetCode conv2d_wgb4f3_fp32_offline_manager::try_fuse(conv_fuse_flag
         ppl::common::RC_UNSUPPORTED : ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode conv2d_wgb4f3_fp32_offline_manager::gen_cvt_weights(const void *filter, const void *bias)
+ppl::common::RetCode conv2d_wgb4f3_fp32_offline_manager::generate_cvt_weights(
+    const void *filter,
+    const void *bias,
+    ppl::nn::TensorBufferInfo* new_filter,
+    ppl::nn::TensorBufferInfo* new_bias)
 {
     if (cvt_bias_ != nullptr || cvt_filter_ != nullptr) {
         return ppl::common::RC_PERMISSION_DENIED;
     }
 
-    cvt_bias_size_               = CEIL4(param_.num_output) * sizeof(float);
-    cvt_bias_                    = allocator_->Alloc(cvt_bias_size_);
-    int64_t padding_offset_bytes = param_.num_output * sizeof(float);
-    int64_t padding_bytes        = (CEIL4(param_.num_output) - param_.num_output) * sizeof(float);
-    memcpy(cvt_bias_, bias, padding_offset_bytes);
-    memset((uint8_t *)cvt_bias_ + padding_offset_bytes, 0, padding_bytes);
+    const int64_t num_output = param_.num_output;
+    const int64_t channels   = param_.channels;
+
+    cvt_bias_size_ = CEIL4(num_output) * sizeof(float);
+    ppl::nn::TensorShape bias_shape;
+    bias_shape.SetDimCount(1);
+    bias_shape.SetDim(0, cvt_bias_size_/sizeof(float));
+    bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+    bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
+    if (bias && new_bias) {
+        new_bias->Reshape(bias_shape);
+        new_bias->ReallocBuffer();
+        cvt_bias_ = new_bias->GetBufferPtr<float>();
+        int64_t padding_offset_bytes = num_output * sizeof(float);
+        int64_t padding_bytes        = (CEIL4(num_output) - num_output) * sizeof(float);
+        memcpy(cvt_bias_, bias, num_output * sizeof(float));
+        memset((uint8_t *)cvt_bias_ + padding_offset_bytes, 0, padding_bytes);
+    } else {
+        cvt_bias_ = allocator_->Alloc(cvt_bias_size_);
+        memset(cvt_bias_, 0, cvt_bias_size_);
+        is_bias_owner_ = true;
+    }
 
     cvt_filter_size_ = conv2d_n4cx_wgb4f3_get_converted_filter_size_fp32(
-        param_.channels, param_.num_output, param_.group);
-    cvt_filter_ = (float *)allocator_->Alloc(cvt_filter_size_);
+        channels, num_output, param_.group);
+    ppl::nn::TensorShape filter_shape;
+    filter_shape.SetDimCount(1);
+    filter_shape.SetDim(0, cvt_filter_size_/sizeof(float));
+    filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+    filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
 
-    const int64_t ic_group = param_.channels / param_.group;
-    const int64_t oc_group = param_.num_output / param_.group;
+    new_filter->Reshape(filter_shape);
+    new_filter->ReallocBuffer();
+    cvt_filter_ = new_filter->GetBufferPtr<float>();
+
+    const int64_t ic_group = channels / param_.group;
+    const int64_t oc_group = num_output / param_.group;
     size_t buffer_size     = WGB4F3_NSET() * CEIL4(ic_group) * CEIL4(oc_group) * sizeof(float);
     float *aux_buffer      = (float *)allocator_->Alloc(buffer_size);
-
     conv2d_n4cx_wgb4f3_convert_filter_fp32(
         (const float *)filter,
         (float *)cvt_filter_,
         aux_buffer,
-        param_.channels,
-        param_.num_output,
+        channels,
+        num_output,
         param_.group,
         sched_param_.ic_seg,
         sched_param_.oc_seg);
-
     allocator_->Free(aux_buffer);
+    
     return ppl::common::RC_SUCCESS;
 }
 

@@ -51,6 +51,34 @@ RetCode MulOp::SelectFormat(const InputOutputInfo& info, std::vector<ppl::common
     return RC_SUCCESS;
 }
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+
+ppl::common::RetCode MulOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder fusion_builder;
+    auto fb_fusion_data = ppl::nn::pmx::arm::CreateFusionDataDirect(fusion_builder, (fuse_relu_ ? 1 : 0), &common_param_.output_types, &common_param_.output_formats);
+    auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(fusion_builder, ppl::nn::pmx::arm::PrivateDataType_FusionData, fb_fusion_data.Union());
+    ppl::nn::pmx::arm::FinishOpDataBuffer(fusion_builder, fb_op_data);
+
+    flatbuffers::FlatBufferBuilder op_builder;
+    auto fb_data = op_builder.CreateVector(fusion_builder.GetBufferPointer(), fusion_builder.GetSize());
+    auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, ppl::nn::pmx::onnx::OpParamType_NONE, 0, fb_data);
+    ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
+    return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
+}
+
+ppl::common::RetCode MulOp::DeserializeData(const ::ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+    auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
+
+    auto arm_op_data = ppl::nn::pmx::arm::GetOpData(fb_op_param->data_()->data());
+    auto arm_fusion_data = arm_op_data->value_as_FusionData();
+    fuse_relu_ = (arm_fusion_data->fuse_relu() == 1);
+    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_fusion_data->dtype(), &common_param_.output_types);
+    ppl::nn::pmx::utils::Fbvec2Stdvec(arm_fusion_data->dformat(), &common_param_.output_formats);
+    return RC_SUCCESS;
+}
+
+#endif
+
 KernelImpl* MulOp::CreateKernelImpl() const {
     auto kernel = CreateKernelImplWithoutParam<MulKernel>();
     if (kernel) {

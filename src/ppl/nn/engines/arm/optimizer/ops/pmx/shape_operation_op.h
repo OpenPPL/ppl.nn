@@ -29,6 +29,15 @@ public:
     ShapeOperationOp(const ir::Node* node);
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
+    ppl::common::RetCode SelectDataType(const InputOutputInfo& info,
+                                        std::vector<ppl::common::datatype_t>* selected_input_types,
+                                        std::vector<ppl::common::datatype_t>* selected_output_types,
+                                        const ppl::common::datatype_t preferred_fp_datatype) override;
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode SerializeData(const ::ppl::nn::pmx::SerializationContext&, utils::DataStream*) const override;
+    ppl::common::RetCode DeserializeData(const ::ppl::nn::pmx::DeserializationContext&, const void*, uint64_t) override;
+#endif
 
 private:
     std::shared_ptr<ppl::nn::pmx::ShapeOperationParam> param_;

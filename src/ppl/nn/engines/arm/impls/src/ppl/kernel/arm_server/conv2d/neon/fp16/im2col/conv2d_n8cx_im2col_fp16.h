@@ -96,6 +96,9 @@ public:
     bool is_supported() override;
     conv2d_algo_t get_algo_type() override { return conv2d_algo::tile_gemm; }
     
+    std::vector<int64_t> get_schedule_param() const override;
+    ppl::common::RetCode set_schedule_param(const std::vector<int64_t> &) override;
+
     // initialize scheduling params, e.g., block size, correspoding temp buffer size, etc.
     // fast algo selection
     ppl::common::RetCode fast_init_schedule_param() override;
@@ -110,7 +113,9 @@ public:
     ppl::common::RetCode try_reflect_pad(const std::vector<int>& pads) override { return ppl::common::RC_UNSUPPORTED; }
 
     // convert filter according to scheduling params.
-    ppl::common::RetCode gen_cvt_weights(const void *filter, const void *bias) override;
+    ppl::common::RetCode generate_cvt_weights(
+        const void *filter, const void *bias,
+        ppl::nn::TensorBufferInfo* new_filter, ppl::nn::TensorBufferInfo* new_bias) override;
     // generate executor for runtime
     conv2d_runtime_executor *gen_executor() override;
 

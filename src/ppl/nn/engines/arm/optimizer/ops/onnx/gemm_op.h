@@ -40,10 +40,21 @@ public:
     KernelImpl* CreateKernelImpl() const override;
     bool TryFuseReLU();
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode SerializeData(const ::ppl::nn::pmx::SerializationContext&, utils::DataStream*) const override;
+    ppl::common::RetCode DeserializeData(const ::ppl::nn::pmx::DeserializationContext&, const void*, uint64_t) override;
+#endif
+
+    virtual void SetAllocator(ppl::common::Allocator *allocator) override {
+        this->allocator_ = allocator;
+    }
+
 private:
     ppl::nn::arm::FCParam* fc_param_;
     std::shared_ptr<ppl::nn::onnx::GemmParam> param_;
     bool gemm_fuse_relu_ = false;
+
+    ppl::common::Allocator *allocator_;
 };
 
 }}} // namespace ppl::nn::arm

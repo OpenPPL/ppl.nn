@@ -24,6 +24,7 @@
 #include "ppl/kernel/arm_server/common/general_include.h"
 #include "ppl/common/generic_cpu_allocator.h"
 #include "ppl/common/sys.h"
+#include "ppl/nn/common/tensor_buffer_info.h"
 
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
@@ -216,6 +217,7 @@ protected:
     void *cvt_bias_;
     uint64_t cvt_filter_size_;
     uint64_t cvt_bias_size_;
+    bool is_bias_owner_;
 
 public:
     fc_manager()
@@ -223,7 +225,8 @@ public:
         , cvt_filter_(nullptr)
         , cvt_bias_(nullptr)
         , cvt_filter_size_(0)
-        , cvt_bias_size_(0) {}
+        , cvt_bias_size_(0)
+        , is_bias_owner_(false) {}
 
     fc_manager(const fc_param &param, ppl::common::Allocator *allocator)
         : allocator_(allocator)
@@ -231,6 +234,7 @@ public:
         , cvt_bias_(nullptr)
         , cvt_filter_size_(0)
         , cvt_bias_size_(0)
+        , is_bias_owner_(false)
     {
         param_ = param;
     }
@@ -267,10 +271,11 @@ public:
         return cvt_filter_size_;
     }
 
-    void set_cvt_bias(void *cvt_bias, const uint64_t &cvt_bias_size)
+    void set_cvt_bias(void *cvt_bias, const uint64_t &cvt_bias_size, const bool is_bias_owner = false)
     {
         cvt_bias_      = cvt_bias;
         cvt_bias_size_ = cvt_bias_size;
+        is_bias_owner_ = is_bias_owner;
     }
     void *cvt_bias() const
     {
@@ -280,38 +285,70 @@ public:
     {
         return cvt_bias_size_;
     }
+    
+    bool has_bias_term() const
+    {
+        return !is_bias_owner_;
+    }
 
     void release_cvt_weights()
     {
-        if (cvt_filter_) {
-            allocator_->Free(cvt_filter_);
-            cvt_filter_ = nullptr;
-        }
+        cvt_filter_ = nullptr;
 
         if (cvt_bias_) {
-            allocator_->Free(cvt_bias_);
+            if (is_bias_owner_) {
+                allocator_->Free(cvt_bias_);
+            }
             cvt_bias_ = nullptr;
         }
     }
 
-    virtual ppl::common::RetCode gen_cvt_weights(
-        void *filter, 
-        void *bias, 
+    virtual ppl::common::RetCode generate_cvt_weights(
+        ppl::nn::TensorBufferInfo * new_filter,
+        ppl::nn::TensorBufferInfo * new_bias,
+        const void *filter, 
+        const void *bias, 
         ppl::common::datatype_t dtype) {
         if (cvt_bias_ != nullptr || cvt_filter_ != nullptr) {
             return ppl::common::RC_PERMISSION_DENIED;
         }
 
-#ifdef PPLNN_USE_AARCH64
         const int64_t num_output = param_.num_output;
         const int64_t channels = param_.channels;
+
+#ifdef PPLNN_USE_AARCH64
+        
         if (dtype == ppl::common::DATATYPE_FLOAT32) {
-            cvt_bias_size_ = num_output;
-            cvt_bias_      = (float *)allocator_->Alloc(cvt_bias_size_ * sizeof(float));
-            memcpy(cvt_bias_, bias, num_output * sizeof(float));
+            cvt_bias_size_ = ((num_output + 3) & (~3)) * sizeof(float);
+            ppl::nn::TensorShape bias_shape;
+            bias_shape.SetDimCount(1);
+            bias_shape.SetDim(0, cvt_bias_size_/sizeof(float));
+            bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+            bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
+            if (bias && new_bias) {
+                new_bias->Reshape(bias_shape);
+                new_bias->ReallocBuffer();
+                cvt_bias_ = new_bias->GetBufferPtr<float>();
+                int64_t padding_offset_bytes = num_output * sizeof(float);
+                int64_t padding_bytes        = cvt_bias_size_ - padding_offset_bytes;
+                memcpy(cvt_bias_, bias, padding_offset_bytes);
+                memset((uint8_t *)cvt_bias_ + padding_offset_bytes, 0, padding_bytes);
+            } else {
+                cvt_bias_ = allocator_->Alloc(cvt_bias_size_);
+                memset(cvt_bias_, 0, cvt_bias_size_);
+                is_bias_owner_ = true;
+            }
             
             cvt_filter_size_ = ppl_arm_server_kernel_fp32_fc_get_converted_filter_size(channels, num_output);
-            cvt_filter_      = (float *)allocator_->Alloc(cvt_filter_size_);
+            ppl::nn::TensorShape filter_shape;
+            filter_shape.SetDimCount(1);
+            filter_shape.SetDim(0, cvt_filter_size_/sizeof(float));
+            filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+            filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
+
+            new_filter->Reshape(filter_shape);
+            new_filter->ReallocBuffer();
+            cvt_filter_ = new_filter->GetBufferPtr<float>();
             ppl_arm_server_kernel_fp32_fc_convert_weights(
                 (float *)filter, (float *)cvt_filter_,
                 param_.channels, param_.num_output);
@@ -320,12 +357,36 @@ public:
         }
 #ifdef PPLNN_USE_ARMV8_2_FP16
         else if (dtype == ppl::common::DATATYPE_FLOAT16) {
-            cvt_bias_size_ = num_output;
-            cvt_bias_      = (__fp16 *)allocator_->Alloc(cvt_bias_size_ * sizeof(__fp16));
-            memcpy(cvt_bias_, bias, num_output * sizeof(__fp16));
+            cvt_bias_size_ = ((num_output + 7) & (~7)) * sizeof(__fp16);
+            ppl::nn::TensorShape bias_shape;
+            bias_shape.SetDimCount(1);
+            bias_shape.SetDim(0, cvt_bias_size_/sizeof(__fp16));
+            bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+            bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
+            if (bias && new_bias) {
+                new_bias->Reshape(bias_shape);
+                new_bias->ReallocBuffer();
+                cvt_bias_ = new_bias->GetBufferPtr<__fp16>();
+                int64_t padding_offset_bytes = num_output * sizeof(__fp16);
+                int64_t padding_bytes        = cvt_bias_size_ - padding_offset_bytes;
+                memcpy(cvt_bias_, bias, padding_offset_bytes);
+                memset((uint8_t *)cvt_bias_ + padding_offset_bytes, 0, padding_bytes);
+            } else {
+                cvt_bias_ = allocator_->Alloc(cvt_bias_size_);
+                memset(cvt_bias_, 0, cvt_bias_size_);
+                is_bias_owner_ = true;
+            }
             
             cvt_filter_size_ = ppl_arm_server_kernel_fp16_fc_get_converted_filter_size(channels, num_output);
-            cvt_filter_      = (__fp16 *)allocator_->Alloc(cvt_filter_size_);
+            ppl::nn::TensorShape filter_shape;
+            filter_shape.SetDimCount(1);
+            filter_shape.SetDim(0, cvt_filter_size_/sizeof(__fp16));
+            filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+            filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
+
+            new_filter->Reshape(filter_shape);
+            new_filter->ReallocBuffer();
+            cvt_filter_ = new_filter->GetBufferPtr<__fp16>();
             ppl_arm_server_kernel_fp16_fc_convert_weights(
                 (__fp16 *)filter, (__fp16 *)cvt_filter_,
                 param_.channels, param_.num_output);

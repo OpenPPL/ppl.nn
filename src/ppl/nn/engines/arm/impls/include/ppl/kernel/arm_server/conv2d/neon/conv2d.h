@@ -24,6 +24,7 @@
 #include "ppl/common/allocator.h"
 #include "ppl/common/arm/sysinfo.h"
 #include "ppl/common/sys.h"
+#include "ppl/nn/common/tensor_buffer_info.h"
 #include "ppl/nn/engines/arm/engine_options.h"
 
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
@@ -97,6 +98,8 @@ struct conv2d_param {
 
 typedef uint32_t conv2d_algo_t;
 
+class conv2d_offline_manager;
+
 // ensure consistent with below algo str
 class conv2d_algo {
 public:
@@ -108,6 +111,12 @@ public:
     static const conv2d_algo_t direct_ndarray = 5;
     static const conv2d_algo_t winograd_b2f3  = 6;
     static const conv2d_algo_t winograd_b4f3  = 7;
+
+static ppl::kernel::arm_server::neon::conv2d_offline_manager *generate_conv_mgr(
+    const conv2d_algo_t type,
+    const ppl::common::datatype_t dtype,
+    const conv2d_param &param,
+    ppl::common::Allocator *allocator);
 };
 
 static inline const char *get_conv_algo_str(const conv2d_algo_t algo)
@@ -275,6 +284,7 @@ protected:
     void *cvt_bias_;
     uint64_t cvt_filter_size_;
     uint64_t cvt_bias_size_;
+    bool is_bias_owner_;
 
 private:
     conv2d_algo_info algo_info_;
@@ -285,7 +295,8 @@ public:
         , cvt_filter_(nullptr)
         , cvt_bias_(nullptr)
         , cvt_filter_size_(0)
-        , cvt_bias_size_(0) {}
+        , cvt_bias_size_(0)
+        , is_bias_owner_(false) {}
 
     conv2d_offline_manager(const conv2d_param &param, ppl::common::Allocator *allocator)
         : allocator_(allocator)
@@ -293,6 +304,7 @@ public:
         , cvt_bias_(nullptr)
         , cvt_filter_size_(0)
         , cvt_bias_size_(0)
+        , is_bias_owner_(false)
     {
         param_ = param;
     }
@@ -329,10 +341,11 @@ public:
         return cvt_filter_size_;
     }
 
-    void set_cvt_bias(const void *cvt_bias, const uint64_t cvt_bias_size)
+    void set_cvt_bias(const void *cvt_bias, const uint64_t cvt_bias_size, const bool is_bias_owner = false)
     {
         cvt_bias_      = const_cast<void *>(cvt_bias);
         cvt_bias_size_ = cvt_bias_size;
+        is_bias_owner_ = is_bias_owner;
     }
     const void *get_cvt_bias() const
     {
@@ -342,16 +355,19 @@ public:
     {
         return cvt_bias_size_;
     }
+    bool is_zero_bias() const
+    {
+        return is_bias_owner_;
+    }
 
     void release_cvt_weights()
     {
-        if (cvt_filter_) {
-            allocator_->Free(cvt_filter_);
-            cvt_filter_ = nullptr;
-        }
+        cvt_filter_ = nullptr;
 
         if (cvt_bias_) {
-            allocator_->Free(cvt_bias_);
+            if (is_bias_owner_) {
+                allocator_->Free(cvt_bias_);
+            }
             cvt_bias_ = nullptr;
         }
     }
@@ -361,9 +377,19 @@ public:
         return algo_info_;
     };
 
-    void set_algo_info(conv2d_algo_info &algo)
+    void set_algo_info(const conv2d_algo_info &algo)
     {
         algo_info_ = algo;
+    };
+
+    virtual std::vector<int64_t> get_schedule_param() const 
+    { 
+        return std::vector<int64_t>();
+    };
+
+    virtual ppl::common::RetCode set_schedule_param(const std::vector<int64_t> &)
+    { 
+        return ppl::common::RC_SUCCESS; 
     };
 
     virtual conv2d_algo_t get_algo_type()                                              = 0;
@@ -377,7 +403,9 @@ public:
     virtual bool is_supported()                                                        = 0;
     virtual ppl::common::RetCode try_fuse(conv_fuse_flag_t fuse_type)                  = 0;
     virtual ppl::common::RetCode try_reflect_pad(const std::vector<int>& pads)         = 0;
-    virtual ppl::common::RetCode gen_cvt_weights(const void *filter, const void *bias) = 0;
+    virtual ppl::common::RetCode generate_cvt_weights(const void *, const void *,
+                                                      ppl::nn::TensorBufferInfo *,
+                                                      ppl::nn::TensorBufferInfo *)     = 0;
     virtual conv2d_runtime_executor *gen_executor()                                    = 0;
 
     virtual ~conv2d_offline_manager() {}

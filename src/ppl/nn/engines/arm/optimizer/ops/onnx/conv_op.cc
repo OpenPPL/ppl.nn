@@ -24,14 +24,50 @@
 #include "ppl/nn/oputils/onnx/reshape_conv.h"
 #include "ppl/nn/common/logger.h"
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/oputils/onnx/conv.h"
+#endif
+
 using namespace std;
 using namespace ppl::common;
+using namespace ppl::kernel::arm_server::neon;
 
 namespace ppl { namespace nn { namespace arm {
 
 ConvOp::ConvOp(const ir::Node* node) : ArmOptKernel(node), conv2d_param_(nullptr) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return onnx::ReshapeConv(info, param_.get());
+        if (info->GetInput<TensorImpl>(1)->GetShape()->GetDimCount() == 1) {  // cvt filters
+            if (conv2d_param_ == nullptr) {
+                LOG(ERROR) << "Cannot infer dimensions for " << GetNode()->GetName() << " outputs: ";
+                LOG(ERROR) << "    missing filters dimensions";
+                return RC_INVALID_VALUE;
+            }
+            auto x = info->GetInput<TensorImpl>(0)->GetShape();
+            auto y = info->GetOutput<TensorImpl>(0)->GetShape();
+            auto num_output = conv2d_param_->param.num_output;
+
+            y->SetDimCount(x->GetDimCount());
+            y->SetDim(0, x->GetDim(0));
+            y->SetDim(1, num_output);
+
+            const int32_t kernel_dims = (int32_t)x->GetDimCount() - 2;
+            for (int32_t i = 0; i < kernel_dims; ++i) {
+                const int32_t j = i + 2;
+                const int32_t kernel_shape_eff = (param_->kernel_shape[i] - 1) * param_->dilations[i] + 1;
+                const int64_t out_dim =
+                    (x->GetDim(j) + param_->pads[i] + param_->pads[i + kernel_dims] - kernel_shape_eff) / param_->strides[i] + 1;
+                if (out_dim <= 0) {
+                    LOG(DEBUG) << "ERROR: output dim[" << out_dim << "] < 0.";
+                    return RC_INVALID_VALUE;
+                }
+                y->SetDim(j, out_dim);
+            }
+            y->CalcPadding();
+
+            return RC_SUCCESS;
+        } else {
+            return onnx::ReshapeConv(info, param_.get());
+        }
     };
 
     infer_type_func_ = GenericInferType;
@@ -141,23 +177,25 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
                   << ppl::kernel::arm_server::neon::get_conv_algo_str(selected_algo.algo_type);
 #endif
 
+        ppl::nn::TensorBufferInfo * new_filter = &options.info->constants[node->GetInput(1)];
+        new_filter->SetDevice(options.device);
+
+        ppl::nn::TensorBufferInfo * new_bias = nullptr;
+        if (bias_data != nullptr) {
+            new_bias = &options.info->constants[node->GetInput(2)];
+            new_bias->SetDevice(options.device);
+        }
+
         ppl::common::RetCode normal_cvt_weights_ret = ppl::common::RC_SUCCESS;
         ppl::common::RetCode fallback_cvt_weights_ret = ppl::common::RC_SUCCESS;
         if (selected_algo.data_type == ppl::common::DATATYPE_FLOAT32) {
-            if (bias_data != nullptr) {
-                normal_cvt_weights_ret = conv2d_param_->mgr->gen_cvt_weights(weight_data, bias_data);
-
-                if (conv2d_param_->fallback_mgr) {
-                    fallback_cvt_weights_ret = conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data, bias_data);
-                }
-            } else {
-                std::vector<float> zero_bias(conv2d_kernel_param.num_output, 0.0f);
-                normal_cvt_weights_ret = conv2d_param_->mgr->gen_cvt_weights(weight_data, zero_bias.data());
-
-                if (conv2d_param_->fallback_mgr) {
-                    fallback_cvt_weights_ret =
-                        conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data, zero_bias.data());
-                }
+            normal_cvt_weights_ret = conv2d_param_->mgr->generate_cvt_weights(weight_data, bias_data, new_filter, new_bias);
+            if (normal_cvt_weights_ret != ppl::common::RC_SUCCESS) {
+                return normal_cvt_weights_ret;
+            }
+            if (conv2d_param_->fallback_mgr) {
+                fallback_cvt_weights_ret = conv2d_param_->fallback_mgr->generate_cvt_weights(weight_data, bias_data, new_filter, new_bias);
+                
             }
 #ifdef PPLNN_USE_ARMV8_2_FP16
         } else if (selected_algo.data_type == ppl::common::DATATYPE_FLOAT16) {
@@ -165,25 +203,18 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
             weight_data_fp16.resize(weight_len * sizeof(__fp16));
             Fp32ToFp16(weight_data, weight_len, weight_data_fp16.data());
 
+            vector<__fp16> bias_data_fp16;
             if (bias_data != nullptr) {
-                vector<__fp16> bias_data_fp16;
                 bias_data_fp16.resize(bias_len * sizeof(__fp16));
                 Fp32ToFp16(bias_data, bias_len, bias_data_fp16.data());
-                normal_cvt_weights_ret =
-                    conv2d_param_->mgr->gen_cvt_weights(weight_data_fp16.data(), bias_data_fp16.data());
+            }
 
-                if (conv2d_param_->fallback_mgr) {
-                    fallback_cvt_weights_ret =
-                        conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data_fp16.data(), bias_data_fp16.data());
-                }
-            } else {
-                std::vector<__fp16> zero_bias(conv2d_kernel_param.num_output, 0.0f);
-                normal_cvt_weights_ret = conv2d_param_->mgr->gen_cvt_weights(weight_data_fp16.data(), zero_bias.data());
-
-                if (conv2d_param_->fallback_mgr) {
-                    fallback_cvt_weights_ret =
-                        conv2d_param_->fallback_mgr->gen_cvt_weights(weight_data_fp16.data(), zero_bias.data());
-                }
+            normal_cvt_weights_ret = conv2d_param_->mgr->generate_cvt_weights(weight_data_fp16.data(), bias_data_fp16.data(), new_filter, new_bias);
+            if (normal_cvt_weights_ret != ppl::common::RC_SUCCESS) {
+                return normal_cvt_weights_ret;
+            }
+            if (conv2d_param_->fallback_mgr) {
+                fallback_cvt_weights_ret = conv2d_param_->fallback_mgr->generate_cvt_weights(weight_data_fp16.data(), bias_data_fp16.data(), new_filter, new_bias);
             }
 #endif
         } else {
@@ -257,6 +288,119 @@ bool ConvOp::TryFuseSum(void) {
     conv2d_param_->mgr->set_param(param);
     return true;
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+
+ppl::common::RetCode ConvOp::SerializeData(const ::ppl::nn::pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+    flatbuffers::FlatBufferBuilder conv_builder;
+    auto mgr = conv2d_param_->mgr;
+    std::vector<int64_t> algo_sp = mgr->get_schedule_param();
+
+    auto fb_algo_info = ppl::nn::pmx::arm::CreateConvAlgoInfo(conv_builder,
+                                                              mgr->get_algo_type(),
+                                                              mgr->algo_info().data_type,
+                                                              mgr->algo_info().isa,
+                                                              conv_builder.CreateVector<int64_t>(algo_sp));
+    auto fb_param_info = ppl::nn::pmx::arm::CreateConvParamInfo(conv_builder, 
+                                                                conv2d_param_->param.num_output, 
+                                                                conv2d_param_->param.channels, 
+                                                                conv2d_param_->mgr->get_param().pad_type, 
+                                                                conv2d_param_->mgr->get_param().fuse_flag,
+                                                                (!mgr->is_zero_bias()) ? 1 : 0);
+    
+    auto fb_conv_data = ppl::nn::pmx::arm::CreateConvData(conv_builder, fb_algo_info, fb_param_info);
+    auto fb_op_data = ppl::nn::pmx::arm::CreateOpData(conv_builder, ppl::nn::pmx::arm::PrivateDataType_ConvData, fb_conv_data.Union());
+    ppl::nn::pmx::arm::FinishOpDataBuffer(conv_builder, fb_op_data);
+
+    flatbuffers::FlatBufferBuilder op_builder;
+    auto fb_param = ppl::nn::pmx::onnx::SerializeConvParam(*param_.get(), &op_builder);
+    auto fb_data = op_builder.CreateVector(conv_builder.GetBufferPointer(), conv_builder.GetSize());
+    auto fb_root = ppl::nn::pmx::onnx::CreateOpParam(op_builder, ppl::nn::pmx::onnx::OpParamType_ConvParam, fb_param.Union(), fb_data);
+    ppl::nn::pmx::onnx::FinishOpParamBuffer(op_builder, fb_root);
+    return ds->Write(op_builder.GetBufferPointer(), op_builder.GetSize());
+}
+
+ppl::common::RetCode ConvOp::DeserializeData(const ::ppl::nn::pmx::DeserializationContext& ctx, const void* base, uint64_t size) {
+    if (conv2d_param_) {
+        delete conv2d_param_;
+    }
+    conv2d_param_ = new Convolution2DParam;
+    if (!conv2d_param_) {
+        return ppl::common::RC_OUT_OF_MEMORY;
+    }
+
+    auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
+    auto fb_conv_param = fb_op_param->value_as_ConvParam();
+
+    param_ = std::make_shared<ppl::nn::onnx::ConvParam>();
+    DeserializeConvParam(*fb_conv_param, param_.get());
+
+    auto arm_op_data = ppl::nn::pmx::arm::GetOpData(fb_op_param->data_()->data());
+
+    auto arm_conv_data = arm_op_data->value_as_ConvData();
+    auto algo_info = arm_conv_data->algo_info();
+    auto param_info = arm_conv_data->param_info();
+
+    common_param_.output_types.resize(1);
+    common_param_.output_formats.resize(1);
+    common_param_.output_types[0] = algo_info->dtype();
+    common_param_.output_formats[0] = (algo_info->dtype() == DATATYPE_FLOAT32) ? DATAFORMAT_N4CX : DATAFORMAT_N8CX;
+
+    conv2d_param &conv2d_kernel_param = conv2d_param_->param;
+    conv2d_kernel_param.kernel_h = param_->kernel_shape[0];
+    conv2d_kernel_param.kernel_w = param_->kernel_shape[1];
+    conv2d_kernel_param.stride_h = param_->strides[0];
+    conv2d_kernel_param.stride_w = param_->strides[1];
+    conv2d_kernel_param.dilation_h = param_->dilations[0];
+    conv2d_kernel_param.dilation_w = param_->dilations[1];
+    conv2d_kernel_param.pad_h = param_->pads[0];
+    conv2d_kernel_param.pad_w = param_->pads[1];
+    conv2d_kernel_param.channels = param_info->channels();
+    conv2d_kernel_param.num_output = param_info->num_output();
+    conv2d_kernel_param.group = param_->group;
+    conv2d_kernel_param.fuse_flag = param_info->fuse_type();
+    conv2d_kernel_param.pad_type = param_info->pad_type();
+
+    auto mgr = conv2d_algo::generate_conv_mgr(algo_info->algo_type(), algo_info->dtype(), conv2d_kernel_param, allocator_);
+    mgr->set_algo_info({ .algo_type = algo_info->algo_type(),
+                         .isa = algo_info->isa(),
+                         .data_type = algo_info->dtype()
+                       });
+    
+    std::vector<int64_t> sp;
+    ppl::nn::pmx::utils::Fbvec2Stdvec(algo_info->sched_param(), &sp);
+    mgr->set_schedule_param(sp);
+    
+    const auto & shapes = *ctx.shapes;
+    const auto & constants = *ctx.constants;
+
+    uint32_t cvt_filter_id = GetNode()->GetInput(1);
+    uint64_t cvt_filter_size = shapes.at(cvt_filter_id).CalcBytesExcludingPadding();
+    void *cvt_filter_ptr = constants.at(cvt_filter_id).GetBufferPtr<void>();
+    mgr->set_cvt_filter(cvt_filter_ptr, cvt_filter_size);
+
+    bool has_bias = (param_info->has_bias() == 1);
+    void *cvt_bias_ptr;
+    if (has_bias) {
+        uint32_t cvt_bias_id = GetNode()->GetInput(2);
+        uint64_t cvt_bias_size = shapes.at(cvt_bias_id).CalcBytesExcludingPadding();
+        cvt_bias_ptr = constants.at(cvt_bias_id).GetBufferPtr<void>();
+        mgr->set_cvt_bias(cvt_bias_ptr, cvt_bias_size);
+    } else {
+        uint64_t cvt_bias_size = conv2d_kernel_param.num_output * ppl::common::GetSizeOfDataType(algo_info->dtype());
+        cvt_bias_size = (cvt_bias_size + 15) & (~15);
+        cvt_bias_ptr = mgr->get_allocator()->Alloc(cvt_bias_size);
+        memset(cvt_bias_ptr, 0, cvt_bias_size);
+        mgr->set_cvt_bias(cvt_bias_ptr, cvt_bias_size, true);
+    }
+
+    conv2d_param_->mgr = mgr;
+    conv2d_param_->fallback_mgr = nullptr;
+
+    return RC_SUCCESS;
+}
+
+#endif
 
 KernelImpl* ConvOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<Conv2dKernel>(conv2d_param_);
