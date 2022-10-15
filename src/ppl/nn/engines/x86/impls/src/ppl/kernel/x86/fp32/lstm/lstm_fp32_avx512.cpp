@@ -16,11 +16,13 @@
 // under the License.
 
 #include <math.h>
-#include <string.h>
+#include <immintrin.h>
 
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/kernel/x86/fp32/lstm.h"
 #include "ppl/kernel/x86/fp32/gemm.h"
+#include "ppl/kernel/x86/common/avx512_tools.h"
+#include "ppl/kernel/x86/common/math_avx512.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
@@ -29,28 +31,7 @@ static inline float sigmoidf(const float x)
     return 1.0f / (1.0f + expf(-x));
 }
 
-uint64_t lstm_fp32_get_buffer_bytes(
-    const ppl::nn::TensorShape *X_shape,
-    const rnn_direction_t direction,
-    const int64_t hidden_size,
-    const bool has_Y,
-    const bool has_Y_h,
-    const bool has_Y_c)
-{
-    if (!has_Y && !has_Y_h && !has_Y_c)
-        return 64u;
-
-    const int64_t batch         = X_shape->GetDim(1);
-    const int64_t num_direction = direction == rnn_direction::BIDIRECTIONAL ? 2 : 1;
-
-    const uint64_t gate_buff_size = batch * rnn_num_gate::LSTM * hidden_size;
-    const uint64_t yh_size        = has_Y_h ? num_direction * batch * hidden_size : 0;
-    const uint64_t yc_size        = has_Y_c ? num_direction * batch * hidden_size : 0;
-
-    return (gate_buff_size + yh_size + yc_size) * sizeof(float);
-}
-
-ppl::common::RetCode lstm_fp32_ref(
+ppl::common::RetCode lstm_fp32_avx512(
     const ppl::nn::TensorShape *X_shape,
     const float *X,
     const float **X_weight,
@@ -72,6 +53,7 @@ ppl::common::RetCode lstm_fp32_ref(
     if (!Y && !Y_h && !Y_c) {
         return ppl::common::RC_SUCCESS;
     }
+    const int64_t simd_w = 16;
 
     const int64_t num_direction = direction == rnn_direction::BIDIRECTIONAL ? 2 : 1;
     const int64_t seq_len       = X_shape->GetDim(0);
@@ -100,8 +82,6 @@ ppl::common::RetCode lstm_fp32_ref(
         float *nd_Yc = Yc_buf + nd * batch * hidden_size;
         float *nd_Y  = Y + nd * batch * hidden_size;
 
-        // const float *nd_W = X_weight + nd * rnn_num_gate::LSTM * hidden_size * input_size;
-        // const float *nd_R = R_weight + nd * rnn_num_gate::LSTM * hidden_size * hidden_size;
         const float *nd_W = X_weight[nd];
         const float *nd_R = R_weight[nd];
 
@@ -128,7 +108,7 @@ ppl::common::RetCode lstm_fp32_ref(
             const float *Y_c_prev = is_first_seq ? nd_init_c : nd_Yc;
             float *sY             = nd_Y + mapped_seq_index * num_direction * batch * hidden_size;
 
-            gemm_fp32_ref( // X[s]*W[nd]_{iofc}^T+Wb_{iofc}
+            gemm_fp32_avx512( // gate = X[s]*W[nd]_{iofc}^T+Wb_{iofc}
                 sX,
                 nd_W,
                 nd_Wb,
@@ -151,8 +131,8 @@ ppl::common::RetCode lstm_fp32_ref(
                 gemm_post::NONE,
                 gate_buf);
 
-            const float alpha = !Y_h_prev ? 0.0f : 1.0f; // some hack, gemm will skip aAxB if alpha is 0
-            gemm_fp32_ref( // h_0[nd]*R[nd]_{iofc}^T+Rb_{iofc}
+            const float thisK = !Y_h_prev ? 0 : hidden_size; // some hack
+            gemm_fp32_avx512( // gate += h_0[nd]*R[nd]_{iofc}^T+Rb_{iofc}
                 Y_h_prev,
                 nd_R,
                 nd_Rb,
@@ -163,12 +143,12 @@ ppl::common::RetCode lstm_fp32_ref(
                 gemm_m_type::EMPTY,
                 batch,
                 rnn_num_gate::LSTM * hidden_size,
-                hidden_size,
+                thisK,
                 hidden_size,
                 hidden_size,
                 rnn_num_gate::LSTM * hidden_size,
                 rnn_num_gate::LSTM * hidden_size,
-                alpha,
+                1.0f,
                 1.0f,
                 1.0f,
                 0.0f,
@@ -177,11 +157,11 @@ ppl::common::RetCode lstm_fp32_ref(
 
             if (is_first_seq && !Y_h_prev) {
                 Y_h_prev = nd_Yh; // preprocess Y_h_prev
-                memset(nd_Yh, 0, batch * hidden_size * sizeof(float));
+                memset32_avx(nd_Yh, 0, batch * hidden_size);
             }
             if (is_first_seq && !Y_c_prev) {
                 Y_c_prev = nd_Yc; // preprocess Y_c_prev
-                memset(nd_Yc, 0, batch * hidden_size * sizeof(float));
+                memset32_avx(nd_Yc, 0, batch * hidden_size);
             }
 
             if (!P_weight) {
@@ -196,7 +176,18 @@ ppl::common::RetCode lstm_fp32_ref(
                         float *Ct          = nd_Yc + b * hidden_size;
                         float *Ht          = nd_Yh + b * hidden_size;
                         float *Yt          = sY + b * hidden_size;
-                        for (int64_t h = 0; h < hidden_size; ++h) {
+                        int64_t h          = 0;
+                        for (; h <= hidden_size - simd_w; h += simd_w) {
+                            const __m512 it = _avx512_sigmoid_ps(_mm512_loadu_ps(gI + h));
+                            const __m512 ft = _avx512_sigmoid_ps(_mm512_loadu_ps(gF + h));
+                            const __m512 ct = _avx512_tanh_ps(_mm512_loadu_ps(gC + h));
+                            const __m512 cn = ft * _mm512_loadu_ps(Cprev + h) + it * ct;
+                            const __m512 ot = _avx512_sigmoid_ps(_mm512_loadu_ps(gO + h));
+                            const __m512 hn = ot * _avx512_tanh_ps(cn);
+                            _mm512_storeu_ps(Ct + h, cn);
+                            _mm512_storeu_ps(Ht + h, hn);
+                        }
+                        for (; h < hidden_size; ++h) {
                             const float it = sigmoidf(gI[h]);
                             const float ft = sigmoidf(gF[h]);
                             const float ct = ::tanhf(gC[h]);
@@ -205,15 +196,15 @@ ppl::common::RetCode lstm_fp32_ref(
                             Ht[h]          = ot * ::tanhf(Ct[h]);
                         }
                         if (Y) {
-                            memcpy(Yt, Ht, hidden_size * sizeof(float));
+                            memcpy32_avx(Yt, Ht, hidden_size);
                         }
                     } else { // pass through the initial_h, initial_c
                         const float *Hprev = Y_h_prev + b * hidden_size;
                         const float *Cprev = Y_c_prev + b * hidden_size;
                         float *Ct          = nd_Yc + b * hidden_size;
                         float *Ht          = nd_Yh + b * hidden_size;
-                        memcpy(Ct, Cprev, hidden_size * sizeof(float));
-                        memcpy(Ht, Hprev, hidden_size * sizeof(float));
+                        memcpy32_avx(Ct, Cprev, hidden_size);
+                        memcpy32_avx(Ht, Hprev, hidden_size);
                     }
                 }
             } else {
@@ -231,7 +222,19 @@ ppl::common::RetCode lstm_fp32_ref(
                         float *Ct          = nd_Yc + b * hidden_size;
                         float *Ht          = nd_Yh + b * hidden_size;
                         float *Yt          = sY + b * hidden_size;
-                        for (int64_t h = 0; h < hidden_size; ++h) {
+                        int64_t h          = 0;
+                        for (; h <= hidden_size - simd_w; h += simd_w) {
+                            const __m512 cp = _mm512_loadu_ps(Cprev + h);
+                            const __m512 it = _avx512_sigmoid_ps(_mm512_loadu_ps(gI + h) + cp * _mm512_loadu_ps(pI + h));
+                            const __m512 ft = _avx512_sigmoid_ps(_mm512_loadu_ps(gF + h) + cp * _mm512_loadu_ps(pF + h));
+                            const __m512 ct = _avx512_tanh_ps(_mm512_loadu_ps(gC + h));
+                            const __m512 cn = ft * cp + it * ct;
+                            const __m512 ot = _avx512_sigmoid_ps(_mm512_loadu_ps(gO + h) + cn * _mm512_loadu_ps(pO + h));
+                            const __m512 hn = ot * _avx512_tanh_ps(cn);
+                            _mm512_storeu_ps(Ct + h, cn);
+                            _mm512_storeu_ps(Ht + h, hn);
+                        }
+                        for (; h < hidden_size; ++h) {
                             const float it = sigmoidf(gI[h] + pI[h] * Cprev[h]);
                             const float ft = sigmoidf(gF[h] + pF[h] * Cprev[h]);
                             const float ct = ::tanhf(gC[h]);
@@ -240,15 +243,15 @@ ppl::common::RetCode lstm_fp32_ref(
                             Ht[h]          = ot * ::tanhf(Ct[h]);
                         }
                         if (Y) {
-                            memcpy(Yt, Ht, hidden_size * sizeof(float));
+                            memcpy32_avx(Yt, Ht, hidden_size * sizeof(float));
                         }
                     } else { // pass through the initial_h, initial_c
                         const float *Hprev = Y_h_prev + b * hidden_size;
                         const float *Cprev = Y_c_prev + b * hidden_size;
                         float *Ct          = nd_Yc + b * hidden_size;
                         float *Ht          = nd_Yh + b * hidden_size;
-                        memcpy(Ct, Cprev, hidden_size * sizeof(float));
-                        memcpy(Ht, Hprev, hidden_size * sizeof(float));
+                        memcpy32_avx(Ct, Cprev, hidden_size);
+                        memcpy32_avx(Ht, Hprev, hidden_size);
                     }
                 }
             }
@@ -256,37 +259,6 @@ ppl::common::RetCode lstm_fp32_ref(
     }
 
     return ppl::common::RC_SUCCESS;
-}
-
-ppl::common::RetCode lstm_fp32(
-    const ppl::common::isa_t isa,
-    const ppl::nn::TensorShape *X_shape,
-    const float *X,
-    const float **X_weight,
-    const float **R_weight,
-    const float *P_weight,
-    const float *bias,
-    const int32_t *sequence_lens,
-    const float *initial_h,
-    const float *initial_c,
-    const rnn_direction_t direction,
-    const int64_t hidden_size,
-    bool has_packed_w,
-    bool has_packed_r,
-    void *temp_buffer,
-    float *Y,
-    float *Y_h,
-    float *Y_c)
-{
-#ifdef PPL_USE_X86_AVX512
-    if (isa & ppl::common::ISA_X86_AVX512) {
-        return kernel::x86::lstm_fp32_avx512(X_shape, X, X_weight, R_weight, P_weight, bias, sequence_lens, initial_h, initial_c, direction, hidden_size, has_packed_w, has_packed_r, temp_buffer, Y, Y_h, Y_c);
-    }
-#endif
-    if (isa & ppl::common::ISA_X86_FMA) {
-        return kernel::x86::lstm_fp32_fma(X_shape, X, X_weight, R_weight, P_weight, bias, sequence_lens, initial_h, initial_c, direction, hidden_size, has_packed_w, has_packed_r, temp_buffer, Y, Y_h, Y_c);
-    }
-    return kernel::x86::lstm_fp32_ref(X_shape, X, X_weight, R_weight, P_weight, bias, sequence_lens, initial_h, initial_c, direction, hidden_size, has_packed_w, has_packed_r, temp_buffer, Y, Y_h, Y_c);
 }
 
 }}}; // namespace ppl::kernel::x86

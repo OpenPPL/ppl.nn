@@ -42,13 +42,8 @@ uint64_t LSTMKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     const bool has_Y = ctx.GetOutputCount() > 0 && ctx.GetOutput<TensorImpl>(0);
     const bool has_Y_h = ctx.GetOutputCount() > 1 && ctx.GetOutput<TensorImpl>(1);
     const bool has_Y_c = ctx.GetOutputCount() > 2 && ctx.GetOutput<TensorImpl>(2);
-    if (MayUseISA(ppl::common::ISA_X86_FMA)) {
-        return kernel::x86::lstm_fp32_fma_get_buffer_bytes(X->GetShape(), direction_, param_->param->hidden_size, has_Y,
-                                                           has_Y_h, has_Y_c);
-    } else {
-        return kernel::x86::lstm_fp32_ref_get_buffer_bytes(X->GetShape(), direction_, param_->param->hidden_size, has_Y,
-                                                           has_Y_h, has_Y_c);
-    }
+    return kernel::x86::lstm_fp32_get_buffer_bytes(X->GetShape(), direction_, param_->param->hidden_size, has_Y,
+                                                   has_Y_h, has_Y_c);
 }
 
 ppl::common::RetCode LSTMKernel::DoExecute(KernelExecContext* ctx) {
@@ -174,17 +169,11 @@ ppl::common::RetCode LSTMKernel::DoExecute(KernelExecContext* ctx) {
         real_r[1] = R->GetBufferPtr<const float>() + R->GetShape()->GetDim(1) * R->GetShape()->GetDim(2);
 
     if (data_type == ppl::common::DATATYPE_FLOAT32 && data_format == ppl::common::DATAFORMAT_NDARRAY) {
-        if (MayUseISA(ppl::common::ISA_X86_FMA)) {
-            return kernel::x86::lstm_fp32_fma(X->GetShape(), X->GetBufferPtr<const float>(), real_w, real_r, P_data,
-                                              B_data, sequence_lens_data, initial_h_data, initial_c_data, direction_,
-                                              param_->param->hidden_size, has_packed_w, has_packed_r, tmp_buffer,
-                                              Y_data, Y_h_data, Y_c_data);
-        } else {
-            return kernel::x86::lstm_fp32_ref(X->GetShape(), X->GetBufferPtr<const float>(), real_w, real_r, P_data,
-                                              B_data, sequence_lens_data, initial_h_data, initial_c_data, direction_,
-                                              param_->param->hidden_size, has_packed_w, has_packed_r, tmp_buffer,
-                                              Y_data, Y_h_data, Y_c_data);
-        }
+        return kernel::x86::lstm_fp32(GetISA(), X->GetShape(), X->GetBufferPtr<const float>(), real_w, real_r, P_data,
+                                      B_data, sequence_lens_data, initial_h_data, initial_c_data, direction_,
+                                      param_->param->hidden_size, has_packed_w, has_packed_r, tmp_buffer, Y_data,
+                                      Y_h_data, Y_c_data);
+
     } else {
         LOG(ERROR) << "only support fp32 ndarray now.";
     }

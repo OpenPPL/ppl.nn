@@ -31,27 +31,6 @@ static inline float sigmoidf(const float x)
     return 1.0f / (1.0f + expf(-x));
 }
 
-uint64_t lstm_fp32_fma_get_buffer_bytes(
-    const ppl::nn::TensorShape *X_shape,
-    const rnn_direction_t direction,
-    const int64_t hidden_size,
-    const bool has_Y,
-    const bool has_Y_h,
-    const bool has_Y_c)
-{
-    if (!has_Y && !has_Y_h && !has_Y_c)
-        return 64u;
-
-    const int64_t batch         = X_shape->GetDim(1);
-    const int64_t num_direction = direction == rnn_direction::BIDIRECTIONAL ? 2 : 1;
-
-    const uint64_t gate_buff_size = batch * rnn_num_gate::LSTM * hidden_size;
-    const uint64_t yh_size        = has_Y_h ? num_direction * batch * hidden_size : 0;
-    const uint64_t yc_size        = has_Y_c ? num_direction * batch * hidden_size : 0;
-
-    return (gate_buff_size + yh_size + yc_size) * sizeof(float);
-}
-
 ppl::common::RetCode lstm_fp32_fma(
     const ppl::nn::TensorShape *X_shape,
     const float *X,
