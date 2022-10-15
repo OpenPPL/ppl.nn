@@ -23,7 +23,7 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-uint64_t lstm_fp32_ref_get_buffer_bytes(
+uint64_t lstm_fp32_get_buffer_bytes(
     const ppl::nn::TensorShape *X_shape,
     const rnn_direction_t direction,
     const int64_t hidden_size,
@@ -50,15 +50,48 @@ ppl::common::RetCode lstm_fp32_ref(
     float *Y_h,
     float *Y_c);
 
-uint64_t lstm_fp32_fma_get_buffer_bytes(
+ppl::common::RetCode lstm_fp32_fma(
     const ppl::nn::TensorShape *X_shape,
+    const float *X,
+    const float **X_weight,
+    const float **R_weight,
+    const float *P_weight,
+    const float *bias,
+    const int32_t *sequence_lens,
+    const float *initial_h,
+    const float *initial_c,
     const rnn_direction_t direction,
     const int64_t hidden_size,
-    const bool has_Y,
-    const bool has_Y_h,
-    const bool has_Y_c);
+    bool has_packed_w,
+    bool has_packed_r,
+    void *temp_buffer,
+    float *Y,
+    float *Y_h,
+    float *Y_c);
 
-ppl::common::RetCode lstm_fp32_fma(
+#ifdef PPL_USE_X86_AVX512
+ppl::common::RetCode lstm_fp32_avx512(
+    const ppl::nn::TensorShape *X_shape,
+    const float *X,
+    const float **X_weight,
+    const float **R_weight,
+    const float *P_weight,
+    const float *bias,
+    const int32_t *sequence_lens,
+    const float *initial_h,
+    const float *initial_c,
+    const rnn_direction_t direction,
+    const int64_t hidden_size,
+    bool has_packed_w,
+    bool has_packed_r,
+    void *temp_buffer,
+    float *Y,
+    float *Y_h,
+    float *Y_c);
+#endif
+
+ppl::common::RetCode lstm_fp32(
+    const ppl::common::isa_t isa,
     const ppl::nn::TensorShape *X_shape,
     const float *X,
     const float **X_weight,
