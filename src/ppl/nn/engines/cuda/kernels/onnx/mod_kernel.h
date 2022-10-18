@@ -15,26 +15,30 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
-#define PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
-#include "ppl/nn/common/tensor_shape.h"
-#include "ppl/common/retcode.h"
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_ONNX_MOD_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_ONNX_MOD_KERNEL_H_
 
-ppl::common::RetCode PPLCUDALogicalAndForwardImp(
-    cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
-    const bool* input0,
-    const ppl::nn::TensorShape* input_shape1,
-    const bool* input1,
-    const ppl::nn::TensorShape* output_shape,
-    bool* output);
-ppl::common::RetCode PPLCUDALogicalXorForwardImp(
-    cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
-    const bool* input0,
-    const ppl::nn::TensorShape* input_shape1,
-    const bool* input1,
-    const ppl::nn::TensorShape* output_shape,
-    bool* output);
+#include "ppl/nn/engines/cuda/kernel.h"
 
-#endif // PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
+#include "ppl/nn/params/onnx/mod_param.h"
+
+namespace ppl { namespace nn { namespace cuda {
+
+class ModKernel : public CudaKernel {
+public:
+    ModKernel(const ir::Node* node) : CudaKernel(node) {}
+
+    void SetParam(const ppl::nn::onnx::ModParam* p) {
+        param_ = p;
+    }
+
+private:
+    ppl::common::RetCode DoExecute(KernelExecContext*) override;
+
+private:
+    const ppl::nn::onnx::ModParam* param_ = nullptr;
+};
+
+}}} // namespace ppl::nn::cuda
+
+#endif

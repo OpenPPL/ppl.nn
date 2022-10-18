@@ -15,26 +15,22 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
-#define PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
-#include "ppl/nn/common/tensor_shape.h"
-#include "ppl/common/retcode.h"
+#ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_MOD_PARAM_H_
+#define _ST_HPC_PPL_NN_PARAMS_ONNX_MOD_PARAM_H_
 
-ppl::common::RetCode PPLCUDALogicalAndForwardImp(
-    cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
-    const bool* input0,
-    const ppl::nn::TensorShape* input_shape1,
-    const bool* input1,
-    const ppl::nn::TensorShape* output_shape,
-    bool* output);
-ppl::common::RetCode PPLCUDALogicalXorForwardImp(
-    cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
-    const bool* input0,
-    const ppl::nn::TensorShape* input_shape1,
-    const bool* input1,
-    const ppl::nn::TensorShape* output_shape,
-    bool* output);
+#include "ppl/nn/ir/graph.h"
+#include "ppl/nn/ir/attr.h"
 
-#endif // PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
+namespace ppl { namespace nn { namespace onnx {
+
+struct ModParam final : public ir::TypedAttr<ModParam> {
+    int32_t fmod;
+
+    bool operator==(const ModParam& p) const {
+        return this->fmod == p.fmod;
+    }
+};
+
+}}} // namespace ppl::nn::onnx
+
+#endif

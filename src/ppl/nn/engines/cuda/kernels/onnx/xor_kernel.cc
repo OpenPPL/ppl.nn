@@ -15,26 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
-#define PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
-#include "ppl/nn/common/tensor_shape.h"
-#include "ppl/common/retcode.h"
+#include "ppl/nn/engines/cuda/kernels/onnx/xor_kernel.h"
 
-ppl::common::RetCode PPLCUDALogicalAndForwardImp(
-    cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
-    const bool* input0,
-    const ppl::nn::TensorShape* input_shape1,
-    const bool* input1,
-    const ppl::nn::TensorShape* output_shape,
-    bool* output);
-ppl::common::RetCode PPLCUDALogicalXorForwardImp(
-    cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
-    const bool* input0,
-    const ppl::nn::TensorShape* input_shape1,
-    const bool* input1,
-    const ppl::nn::TensorShape* output_shape,
-    bool* output);
+#include "cudakernel/arithmetic/logical.h"
 
-#endif // PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
+namespace ppl { namespace nn { namespace cuda {
+
+ppl::common::RetCode XorKernel::DoExecute(KernelExecContext* ctx) {
+    auto input0 = ctx->GetInput<TensorImpl>(0);
+    auto input1 = ctx->GetInput<TensorImpl>(1);
+    auto output = ctx->GetOutput<TensorImpl>(0);
+
+    ppl::common::RetCode status =
+        PPLCUDALogicalXorForwardImp(GetStream(), input0->GetShape(), input0->GetBufferPtr<bool>(), input1->GetShape(),
+                                    input1->GetBufferPtr<bool>(), output->GetShape(), output->GetBufferPtr<bool>());
+    return status;
+}
+
+}}} // namespace ppl::nn::cuda

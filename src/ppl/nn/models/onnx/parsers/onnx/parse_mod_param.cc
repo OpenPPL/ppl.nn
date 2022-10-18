@@ -15,26 +15,25 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
-#define PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
-#include "ppl/nn/common/tensor_shape.h"
-#include "ppl/common/retcode.h"
+#include "ppl/nn/models/utils.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_mod_param.h"
+#include "ppl/nn/models/onnx/utils.h"
+#include "ppl/nn/common/logger.h"
+using namespace std;
+using namespace ppl::common;
 
-ppl::common::RetCode PPLCUDALogicalAndForwardImp(
-    cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
-    const bool* input0,
-    const ppl::nn::TensorShape* input_shape1,
-    const bool* input1,
-    const ppl::nn::TensorShape* output_shape,
-    bool* output);
-ppl::common::RetCode PPLCUDALogicalXorForwardImp(
-    cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
-    const bool* input0,
-    const ppl::nn::TensorShape* input_shape1,
-    const bool* input1,
-    const ppl::nn::TensorShape* output_shape,
-    bool* output);
+namespace ppl { namespace nn { namespace onnx {
 
-#endif // PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
+RetCode ParseModParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node,
+                        ir::Attr* arg) {
+    auto param = static_cast<ModParam*>(arg);
+    utils::GetNodeAttr(pb_node, "fmod", &param->fmod, 0);
+    return RC_SUCCESS;
+}
+RetCode PackModParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const ModParam*>(arg);
+    utils::SetNodeAttr(pb_node, "fmod", param->fmod);
+    return RC_SUCCESS;
+}
+
+}}} // namespace ppl::nn::onnx

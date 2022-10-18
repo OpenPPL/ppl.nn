@@ -21,6 +21,7 @@
 enum LogicalOpType {
     Logical_Unknown = 0,
     Logical_And,
+    Logical_Xor,
     Logical_OpNum,
     Logical_ForceWord = INT_MAX,
 };
@@ -43,6 +44,11 @@ template <>
 __device__ inline bool ppl_logical_scalar<Logical_And>(bool a, bool b)
 {
     return a && b;
+}
+template <>
+__device__ inline bool ppl_logical_scalar<Logical_Xor>(bool a, bool b)
+{
+    return a ^ b;
 }
 
 template <LogicalOpType op_type>
@@ -369,5 +375,5 @@ ppl::common::RetCode PPLCUDALogicalForwardImp(
     }
 
 INSTANT(And);
-
+INSTANT(Xor);
 #undef INSTANT

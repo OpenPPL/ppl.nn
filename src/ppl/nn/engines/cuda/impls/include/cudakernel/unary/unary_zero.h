@@ -53,5 +53,19 @@ ppl::common::RetCode PPLCUDAUnaryZeroSigmoidForwardImp(
     const ppl::nn::TensorShape* output_shape,
     void* output,
     const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+ppl::common::RetCode PPLCUDAUnaryZeroSoftplusForwardImp(
+    cudaStream_t stream,
+    const ppl::nn::TensorShape* input_shape,
+    const void* input,
+    const ppl::nn::TensorShape* output_shape,
+    void* output,
+    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+ppl::common::RetCode PPLCUDAUnaryZeroReciprocalForwardImp(
+    cudaStream_t stream,
+    const ppl::nn::TensorShape* input_shape,
+    const void* input,
+    const ppl::nn::TensorShape* output_shape,
+    void* output,
+    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
 
 #endif // PPLCUDA_KERNEL_INCLUDE_UNARYZERO_UNARYZERO_H_

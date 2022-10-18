@@ -116,4 +116,15 @@ ppl::common::RetCode PPLCUDAArithMeticPReluForwardImp(
     float in_scale0 = 1.f,
     float in_scale1 = 1.f,
     float out_scale = 1.f);
+ppl::common::RetCode PPLCUDAArithMeticModForwardImp(
+    cudaStream_t stream,
+    const ppl::nn::TensorShape* input_shape0,
+    const void* input0,
+    const ppl::nn::TensorShape* input_shape1,
+    const void* input1,
+    const ppl::nn::TensorShape* output_shape,
+    void* output,
+    float in_scale0 = 1.f,
+    float in_scale1 = 1.f,
+    float out_scale = 1.f);
 #endif //PPLCUDA_KERNEL_INCLUDE_ARITHMETIC_ARITHMETIC_H_
