@@ -15,26 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
-#define PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
-#include "ppl/nn/common/tensor_shape.h"
+#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PARSE_MOD_PARAM_H_
+#define _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PARSE_MOD_PARAM_H_
+
 #include "ppl/common/retcode.h"
+#include "ppl/nn/params/onnx/mod_param.h"
+#include "ppl/nn/models/onnx/generated/onnx.pb.h"
+#include "ppl/nn/models/onnx/param_parser_extra_args.h"
 
-ppl::common::RetCode PPLCUDALogicalAndForwardImp(
-    cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
-    const bool* input0,
-    const ppl::nn::TensorShape* input_shape1,
-    const bool* input1,
-    const ppl::nn::TensorShape* output_shape,
-    bool* output);
-ppl::common::RetCode PPLCUDALogicalXorForwardImp(
-    cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
-    const bool* input0,
-    const ppl::nn::TensorShape* input_shape1,
-    const bool* input1,
-    const ppl::nn::TensorShape* output_shape,
-    bool* output);
+namespace ppl { namespace nn { namespace onnx {
 
-#endif // PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
+ppl::common::RetCode ParseModParam(const ::onnx::NodeProto&, const ParamParserExtraArgs&, ir::Node*, ir::Attr*);
+
+ppl::common::RetCode PackModParam(const ir::Node*, const ir::Attr*, ::onnx::NodeProto*);
+
+}}} // namespace ppl::nn::onnx
+
+#endif

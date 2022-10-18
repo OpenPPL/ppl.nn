@@ -25,6 +25,8 @@ enum UnaryZeroOpType {
     UnaryZero_Exp,
     UnaryZero_Log,
     UnaryZero_Sigmoid,
+    UnaryZero_Softplus,
+    UnaryZero_Reciprocal,
     UnaryZero_ForceWord = INT_MAX,
 };
 
@@ -81,7 +83,30 @@ __device__ __inline__ half ppl_scalar_unary_zero<UnaryZero_Sigmoid, half>(const 
     float resf    = 1.f / (1.f + expf(-in_valf));
     return __float2half(resf);
 }
-
+template <>
+__device__ __inline__ float ppl_scalar_unary_zero<UnaryZero_Softplus, float>(const float& in_val)
+{
+    return log(1.f + exp(in_val));
+}
+template <>
+__device__ __inline__ half ppl_scalar_unary_zero<UnaryZero_Softplus, half>(const half& in_val)
+{
+    float in_valf = __half2float(in_val);
+    float resf    = log(1.f + expf(in_valf));
+    return __float2half(resf);
+}
+template <>
+__device__ __inline__ float ppl_scalar_unary_zero<UnaryZero_Reciprocal, float>(const float& in_val)
+{
+    return 1.f / in_val;
+}
+template <>
+__device__ __inline__ half ppl_scalar_unary_zero<UnaryZero_Reciprocal, half>(const half& in_val)
+{
+    float in_valf = __half2float(in_val);
+    float resf    = 1.f / in_valf;
+    return __float2half(resf);
+}
 #endif
 
 template <UnaryZeroOpType OpT, typename DataT>
@@ -229,5 +254,7 @@ UNARYZERO_INSTANT(Cos);
 UNARYZERO_INSTANT(Exp);
 UNARYZERO_INSTANT(Log);
 UNARYZERO_INSTANT(Sigmoid);
+UNARYZERO_INSTANT(Softplus);
+UNARYZERO_INSTANT(Reciprocal);
 
 #undef UNARYZERO_INSTANT

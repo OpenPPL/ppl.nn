@@ -43,6 +43,7 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_lrn_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_lstm_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_maxunpool_param.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_mod_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_non_max_suppression_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_one_hot_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_pad_param.h"
@@ -171,8 +172,10 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITH_PARAM("", "MaxPool", 1, 16, PoolingParam, ParsePoolingParam, PackPoolingParam);
     PPL_REGISTER_OP_WITH_PARAM("", "MaxUnpool", 9, 16, MaxUnpoolParam, ParseMaxUnpoolParam, PackMaxUnpoolParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Min", 6, 16, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("", "Mod", 10, 12, ModParam, ParseModParam, PackModParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Mul", 7, 16, nullptr);
     // N
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Neg", 1, 16, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("", "NonMaxSuppression", 10, 16, NonMaxSuppressionParam, ParseNonMaxSuppressionParam,
                                PackNonMaxSuppressionParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "NonZero", 9, 16, nullptr);
@@ -185,6 +188,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "PRelu", 6, 16, nullptr);
     // R
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Range", 11, 16, nullptr);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Reciprocal", 6, 16, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("", "ReduceL2", 1, 16, ReduceParam, ParseReduceParam, PackReduceParam);
     PPL_REGISTER_OP_WITH_PARAM("", "ReduceMax", 1, 16, ReduceParam, ParseReduceParam, PackReduceParam);
     PPL_REGISTER_OP_WITH_PARAM("", "ReduceMean", 1, 16, ReduceParam, ParseReduceParam, PackReduceParam);
@@ -207,6 +211,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Sin", 7, 16, nullptr);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Slice", 1, 16, ParseSliceParam);
     PPL_REGISTER_OP_WITH_PARAM("", "Softmax", 1, 16, SoftmaxParam, ParseSoftmaxParam, PackSoftmaxParam);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Softplus", 1, 16, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("", "Split", 2, 12, SplitParam, ParseSplitParam, PackSplitParam);
     PPL_REGISTER_OP_WITH_PARAM("", "SplitToSequence", 11, 16, SplitToSequenceParam, ParseSplitToSequenceParam,
                                PackSplitToSequenceParam);
@@ -223,6 +228,8 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITH_PARAM("", "Unsqueeze", 1, 16, UnsqueezeParam, ParseUnsqueezeParam, PackUnsqueezeParam);
     // W
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Where", 9, 16, nullptr);
+    // X
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Xor", 7, 16, nullptr);
 
     // mmcv op param parser
     PPL_REGISTER_OP_WITH_PARAM("mmcv", "grid_sampler", 1, 1, ppl::nn::mmcv::MMCVGridSampleParam,

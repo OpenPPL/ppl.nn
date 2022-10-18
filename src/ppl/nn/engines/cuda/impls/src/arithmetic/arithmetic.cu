@@ -29,6 +29,7 @@ enum ArithmeticOpType {
     Arithmetic_Min,
     Arithmetic_Pow,
     Arithmetic_PRelu, // similar to arithmetic
+    Arithmetic_Mod,
     Arithmetic_OpNum,
     Arithmetic_ForceWord = INT_MAX,
 };
@@ -74,6 +75,10 @@ template<> __device__ inline float ppl_arithmetic_scalar<Arithmetic_PRelu, float
     res = (a > 0) ? res : res * b;
     return res;
 }
+template<> __device__ inline float ppl_arithmetic_scalar<Arithmetic_Mod, float>(float a, float b) {
+    int64_t r = (int64_t)(a/b);
+    return a - r * b;
+}
 template<> __device__ inline int64_t ppl_arithmetic_scalar<Arithmetic_Add, int64_t>(int64_t a, int64_t b) {
     return a + b;
 }
@@ -95,11 +100,13 @@ template<> __device__ inline int64_t ppl_arithmetic_scalar<Arithmetic_Min, int64
 template<> __device__ inline int64_t ppl_arithmetic_scalar<Arithmetic_Pow, int64_t>(int64_t a, int64_t b) {
     return powf(a ,b);
 }
-
 template<> __device__ inline int64_t ppl_arithmetic_scalar<Arithmetic_PRelu, int64_t>(int64_t a, int64_t b) {
     int64_t res = a;
     res = (a > 0) ? res : res * b;
     return res;
+}
+template<> __device__ inline int64_t ppl_arithmetic_scalar<Arithmetic_Mod, int64_t>(int64_t a, int64_t b) {
+    return a % b ;
 }
 
 template<> __device__ inline int32_t ppl_arithmetic_scalar<Arithmetic_Add, int32_t>(int32_t a, int32_t b) {
@@ -128,6 +135,9 @@ template<> __device__ inline int32_t ppl_arithmetic_scalar<Arithmetic_PRelu, int
     int32_t res = a;
     res = (a > 0) ? res : res * b;
     return res;
+}
+template<> __device__ inline int32_t ppl_arithmetic_scalar<Arithmetic_Mod, int32_t>(int32_t a, int32_t b) {
+    return a % b;
 }
 
 template<ArithmeticOpType op_type, typename T>
@@ -177,6 +187,9 @@ template<> __device__ inline int8_t ppl_arithmetic_scalar_int8<Arithmetic_PRelu,
     if(res > 127) res = 127;
     else if(res < -128) res = -128;
     return res;
+}
+template<> __device__ inline int8_t ppl_arithmetic_scalar_int8<Arithmetic_Mod, int8_t>(int8_t a, int8_t b, float in_scale0, float in_scale1, float out_scale) {
+    return a % b;
 }
 
 
@@ -251,6 +264,17 @@ __device__ inline half ppl_arithmetic_scalar<Arithmetic_PRelu, half>(half a, hal
     half res = a;
     res      = __hgt(a, 0) ? res : __hmul(res, b);
     return res;
+#else
+    return 0;
+#endif
+}
+template<>
+__device__ inline half ppl_arithmetic_scalar<Arithmetic_Mod, half>(half a, half b)
+{
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
+    
+    int r = __half2int_rz(__hdiv(a, b));
+    return __hsub(a, __hmul(__int2half_rz(r), b));
 #else
     return 0;
 #endif
@@ -1192,5 +1216,6 @@ INSTANT_LIMNHWC(Max);
 INSTANT_LIMNHWC(Min);
 INSTANT_LIMNHWC(Pow);
 INSTANT_LIMNHWC(PRelu);
+INSTANT_LIMNHWC(Mod);
 
 #undef INSTANT

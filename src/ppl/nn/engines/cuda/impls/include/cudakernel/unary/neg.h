@@ -15,26 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
-#define PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
+#ifndef PPLCUDA_KERNEL_INCLUDE_UNARY_NEG_H_
+#define PPLCUDA_KERNEL_INCLUDE_UNARY_NEG_H_
 #include "ppl/nn/common/tensor_shape.h"
+#include "ppl/nn/engines/cuda/params/quant_param_cuda.h"
 #include "ppl/common/retcode.h"
 
-ppl::common::RetCode PPLCUDALogicalAndForwardImp(
+ppl::common::RetCode PPLCUDANegForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
-    const bool* input0,
-    const ppl::nn::TensorShape* input_shape1,
-    const bool* input1,
+    const ppl::nn::TensorShape* input_shape,
+    const void* input,
     const ppl::nn::TensorShape* output_shape,
-    bool* output);
-ppl::common::RetCode PPLCUDALogicalXorForwardImp(
-    cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
-    const bool* input0,
-    const ppl::nn::TensorShape* input_shape1,
-    const bool* input1,
-    const ppl::nn::TensorShape* output_shape,
-    bool* output);
-
-#endif // PPLCUDA_KERNEL_INCLUDE_LOGICAL_LOGICAL_H_
+    void* output,
+    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+#endif // PPLCUDA_KERNEL_INCLUDE_UNARY_NEG_H_

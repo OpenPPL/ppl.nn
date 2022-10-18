@@ -65,8 +65,10 @@ using namespace ppl::common;
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/max_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/max_pool_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/max_unpool_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/mod_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/min_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/mul_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/neg_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/non_max_suppression_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/non_zero_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/not_op.h"
@@ -75,6 +77,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/pow_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/prelu_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/range_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/reciprocal_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/reduce_l2_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/relu_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/reshape_op.h"
@@ -88,6 +91,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/sin_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/slice_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/softmax_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/softplus_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/split_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/split_to_sequence_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/sqrt_op.h"
@@ -99,6 +103,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/transpose_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/unsqueeze_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/where_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/xor_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/lstm_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/mmcv/mmcv_non_max_suppression_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/mmcv/mmcv_roialign_op.h"
@@ -185,9 +190,11 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<MaxOp>("", "Max", 8, 11);
     RegisterOptKernelCreator<MaxPoolOp>("", "MaxPool", 1, 16);
     RegisterOptKernelCreator<MaxUnPoolOp>("", "MaxUnpool", 9, 16);
+    RegisterOptKernelCreator<ModOp>("", "Mod", 10, 12);
     RegisterOptKernelCreator<MinOp>("", "Min", 8, 11);
     RegisterOptKernelCreator<MulOp>("", "Mul", 7, 12);
     // N
+    RegisterOptKernelCreator<NegOp>("", "Neg", 1, 16);
     RegisterOptKernelCreator<NonMaxSupressionOp>("", "NonMaxSuppression", 10, 16);
     RegisterOptKernelCreator<NonZeroOp>("", "NonZero", 9, 12);
     RegisterOptKernelCreator<NotOp>("", "Not", 1, 16);
@@ -197,6 +204,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<PReluOp>("", "PRelu", 6, 16);
     // R
     RegisterOptKernelCreator<RangeOp>("", "Range", 11, 16);
+    RegisterOptKernelCreator<ReciprocalOp>("", "Reciprocal", 6, 16);
     RegisterOptKernelCreator<ReduceL2Op>("", "ReduceL2", 1, 16);
     RegisterOptKernelCreator<ReduceOp>("", "ReduceMax", 1, 16);
     RegisterOptKernelCreator<ReduceOp>("", "ReduceMean", 1, 16);
@@ -217,6 +225,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<SinOp>("", "Sin", 1, 16);
     RegisterOptKernelCreator<SliceOp>("", "Slice", 1, 16);
     RegisterOptKernelCreator<SoftmaxOp>("", "Softmax", 1, 16);
+    RegisterOptKernelCreator<SoftplusOp>("", "Softplus", 1, 16);
     RegisterOptKernelCreator<SplitOp>("", "Split", 2, 12);
     RegisterOptKernelCreator<SplitToSequenceOp>("", "SplitToSequence", 11, 16);
     RegisterOptKernelCreator<SqrtOp>("", "Sqrt", 6, 12);
@@ -231,6 +240,8 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<UnsqueezeOp>("", "Unsqueeze", 1, 12);
     // W
     RegisterOptKernelCreator<WhereOp>("", "Where", 9, 15);
+    // X
+    RegisterOptKernelCreator<WhereOp>("", "Xor", 9, 15);
 
     // mmcv op domain is "mmcv"
     RegisterOptKernelCreator<MMCVGridSampleOp>("mmcv", "grid_sampler", 1, 1);
