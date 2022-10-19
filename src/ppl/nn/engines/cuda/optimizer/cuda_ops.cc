@@ -73,6 +73,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/roialign_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/pad_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/pow_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/prelu_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/range_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/reduce_l2_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/relu_op.h"
@@ -193,6 +194,7 @@ void RegisterBuiltinOpImpls() {
     // P
     RegisterOptKernelCreator<PadOp>("", "Pad", 2, 12);
     RegisterOptKernelCreator<PowOp>("", "Pow", 7, 11);
+    RegisterOptKernelCreator<PReluOp>("", "PRelu", 6, 16);
     // R
     RegisterOptKernelCreator<RangeOp>("", "Range", 11, 16);
     RegisterOptKernelCreator<ReduceL2Op>("", "ReduceL2", 1, 16);

@@ -73,7 +73,6 @@ private:
                                          "Div",
                                          "Sub",
                                          "Relu",
-                                         "PRelu",
                                          "Clip",
                                          "LeakyRelu",
                                          "Cast",
