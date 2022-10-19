@@ -15,18 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_ONE_HOT_H_
-#define _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_ONE_HOT_H_
-
+#ifndef PPLCUDA_KERNEL_INCLUDE_ONE_HOT_H_
+#define PPLCUDA_KERNEL_INCLUDE_ONE_HOT_H_
+#include "ppl/nn/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "ppl/nn/params/onnx/one_hot_param.h"
-#include "ppl/nn/common/input_output_info.h"
-#include "ppl/nn/ir/attr.h"
+#include <cuda_runtime.h>
 
-namespace ppl { namespace nn { namespace onnx {
-
-ppl::common::RetCode ReshapeOneHot(InputOutputInfo*, const ir::Attr*);
-    
-}}} // namespace ppl::nn::onnx
-
-#endif
+// TODO(@Adam)
+ppl::common::RetCode PPLCUDAOneHotForwardImp(
+    cudaStream_t stream,
+    ppl::nn::TensorShape* indices_shape,
+    const void* indices,
+    ppl::nn::TensorShape* depth_shape,
+    const void* depth,
+    ppl::nn::TensorShape* values_shape,
+    const void* values,
+    ppl::nn::TensorShape* output_shape,
+    void* output
+  );
+#endif // PPLCUDA_KERNEL_INCLUDE_ONE_HOT_H_

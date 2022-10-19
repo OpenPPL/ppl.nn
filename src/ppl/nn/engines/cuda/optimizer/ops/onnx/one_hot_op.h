@@ -15,18 +15,26 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_ONE_HOT_H_
-#define _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_ONE_HOT_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_ONE_HOT_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_ONE_HOT_OP_H_
 
-#include "ppl/common/retcode.h"
+#include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
+
 #include "ppl/nn/params/onnx/one_hot_param.h"
-#include "ppl/nn/common/input_output_info.h"
-#include "ppl/nn/ir/attr.h"
 
-namespace ppl { namespace nn { namespace onnx {
+namespace ppl{ namespace nn { namespace cuda {
 
-ppl::common::RetCode ReshapeOneHot(InputOutputInfo*, const ir::Attr*);
-    
-}}} // namespace ppl::nn::onnx
+class OneHotOp final : public CudaOptKernel {
+public:
+    OneHotOp(const ir::Node* node);
+    KernelImpl* CreateKernelImpl() const override;
+    ppl::common::RetCode Init(const OptKernelOptions&) override;
+    ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
+
+private:
+    ppl::nn::onnx::OneHotParam param_;
+};
+
+}}} // namespace ppl::nn::cuda
 
 #endif

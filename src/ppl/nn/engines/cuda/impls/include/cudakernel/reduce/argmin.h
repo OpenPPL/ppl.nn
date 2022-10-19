@@ -15,18 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_ONE_HOT_H_
-#define _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_ONE_HOT_H_
-
+#ifndef PPLCUDA_REDUCE_ARGMIN_H_
+#define PPLCUDA_REDUCE_ARGMIN_H_
+#include "cudakernel/reduce/reduce_helper.h"
 #include "ppl/common/retcode.h"
-#include "ppl/nn/params/onnx/one_hot_param.h"
-#include "ppl/nn/common/input_output_info.h"
-#include "ppl/nn/ir/attr.h"
+#include "ppl/nn/common/tensor_shape.h"
 
-namespace ppl { namespace nn { namespace onnx {
+ReduceMode GetReduceMode(PPLReduceDimDes des);
 
-ppl::common::RetCode ReshapeOneHot(InputOutputInfo*, const ir::Attr*);
-    
-}}} // namespace ppl::nn::onnx
-
+ppl::common::RetCode PPLCUDAArgMinForwardImp(
+    cudaStream_t stream,
+    PPLReduceDimDes des,
+    const ppl::nn::TensorShape* input_shape,
+    const void* input,
+    const ppl::nn::TensorShape* output_shape,
+    void* output);
 #endif

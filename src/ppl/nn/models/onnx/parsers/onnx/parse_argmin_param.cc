@@ -15,18 +15,25 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_ONE_HOT_H_
-#define _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_ONE_HOT_H_
-
-#include "ppl/common/retcode.h"
-#include "ppl/nn/params/onnx/one_hot_param.h"
-#include "ppl/nn/common/input_output_info.h"
-#include "ppl/nn/ir/attr.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_argmin_param.h"
+#include "ppl/nn/models/onnx/utils.h"
+using namespace std;
+using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ReshapeOneHot(InputOutputInfo*, const ir::Attr*);
-    
-}}} // namespace ppl::nn::onnx
+RetCode ParseArgMinParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
+    auto param = static_cast<ArgMinParam*>(arg);
+    utils::GetNodeAttr(pb_node, "axis", &param->axis, 0);
+    utils::GetNodeAttr(pb_node, "keepdims", &param->keepdims, 1);
+    return RC_SUCCESS;
+}
 
-#endif
+RetCode PackArgMinParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const ArgMinParam*>(arg);
+    utils::SetNodeAttr(pb_node, "axis", param->axis);
+    utils::SetNodeAttr(pb_node, "keepdims", param->keepdims);
+    return RC_SUCCESS;
+}
+
+}}} // namespace ppl::nn::onnx

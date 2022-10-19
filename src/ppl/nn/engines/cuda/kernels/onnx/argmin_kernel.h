@@ -15,18 +15,30 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_ONE_HOT_H_
-#define _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_ONE_HOT_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_ONNX_ARGMIN_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_ONNX_ARGMIN_KERNEL_H_
 
-#include "ppl/common/retcode.h"
-#include "ppl/nn/params/onnx/one_hot_param.h"
-#include "ppl/nn/common/input_output_info.h"
-#include "ppl/nn/ir/attr.h"
+#include "ppl/nn/engines/cuda/kernel.h"
 
-namespace ppl { namespace nn { namespace onnx {
+#include "ppl/nn/params/onnx/argmin_param.h"
 
-ppl::common::RetCode ReshapeOneHot(InputOutputInfo*, const ir::Attr*);
-    
-}}} // namespace ppl::nn::onnx
+namespace ppl { namespace nn { namespace cuda {
+
+class ArgMinKernel : public CudaKernel {
+public:
+    ArgMinKernel(const ir::Node* node) : CudaKernel(node) {}
+
+    void SetParam(const ppl::nn::onnx::ArgMinParam* p) {
+        param_ = p;
+    }
+
+private:
+    ppl::common::RetCode DoExecute(KernelExecContext*) override;
+
+private:
+    const ppl::nn::onnx::ArgMinParam* param_ = nullptr;
+};
+
+}}} // namespace ppl::nn::cuda
 
 #endif
