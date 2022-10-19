@@ -220,6 +220,18 @@ static RetCode GenGraphConstants(const ir::GraphTopo* topo, const RuntimeGraphIn
         }
     }
 
+    // some constants may be empty and are not in partition data
+    for (uint32_t i = 0; i < topo->GetConstantCount(); ++i) {
+        auto eid = topo->GetConstant(i);
+        auto edge = topo->GetEdge(eid);
+        if (!edge) {
+            LOG(ERROR) << "cannot find edge info of constant[" << eid << "]";
+            return RC_NOT_FOUND;
+        }
+
+        reserved_tensors->insert(make_pair(edge->GetName(), TensorImpl(edge, TENSORTYPE_RESERVED)));
+    }
+
     return RC_SUCCESS;
 }
 
