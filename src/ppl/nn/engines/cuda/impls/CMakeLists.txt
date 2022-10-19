@@ -45,7 +45,7 @@ else()
             ${CMAKE_CURRENT_BINARY_DIR}/conv/swzl/sm75/*/*/init*.cu)
 
         if(CUDA_VERSION VERSION_GREATER_EQUAL "11.0")
-            if(CUDA_VERSION VERSION_GREATER_EQUAL "11.7")
+            if(CUDA_VERSION VERSION_GREATER_EQUAL "11.4")
                 set_source_files_properties(${__SM75_CONV_SRC__} PROPERTIES COMPILE_FLAGS
                     "-gencode arch=compute_87,code=sm_87 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_80,code=sm_80 -gencode arch=compute_75,code=sm_75 -fno-var-tracking-assignments")
             elseif(CUDA_VERSION VERSION_GREATER_EQUAL "11.1")
@@ -94,7 +94,7 @@ else()
             ${CMAKE_CURRENT_BINARY_DIR}/conv/2spk/sm80/*/*/init*.cu
             ${CMAKE_CURRENT_BINARY_DIR}/conv/swzl/sm80/*/*/init*.cu)
 
-        if(CUDA_VERSION VERSION_GREATER_EQUAL "11.7")
+        if(CUDA_VERSION VERSION_GREATER_EQUAL "11.4")
             set_source_files_properties(${__SM80_CONV_SRC__} PROPERTIES COMPILE_FLAGS
                 "-gencode arch=compute_87,code=sm_87 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_80,code=sm_80 -fno-var-tracking-assignments")
         elseif(CUDA_VERSION VERSION_GREATER_EQUAL "11.1")
