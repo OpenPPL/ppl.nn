@@ -320,12 +320,15 @@ public:
         
         if (dtype == ppl::common::DATATYPE_FLOAT32) {
             cvt_bias_size_ = ((num_output + 3) & (~3)) * sizeof(float);
-            ppl::nn::TensorShape bias_shape;
-            bias_shape.SetDimCount(1);
-            bias_shape.SetDim(0, cvt_bias_size_/sizeof(float));
-            bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-            bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
-            if (bias && new_bias) {
+            if (new_bias && new_bias->IsBufferOwner() && new_bias->GetBufferPtr()) {
+                cvt_bias_ = new_bias->GetBufferPtr<float>();
+            } else if (bias && new_bias) {
+                ppl::nn::TensorShape bias_shape;
+                bias_shape.SetDimCount(1);
+                bias_shape.SetDim(0, cvt_bias_size_/sizeof(float));
+                bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+                bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
+
                 new_bias->Reshape(bias_shape);
                 new_bias->ReallocBuffer();
                 cvt_bias_ = new_bias->GetBufferPtr<float>();
@@ -340,14 +343,16 @@ public:
             }
             
             cvt_filter_size_ = ppl_arm_server_kernel_fp32_fc_get_converted_filter_size(channels, num_output);
-            ppl::nn::TensorShape filter_shape;
-            filter_shape.SetDimCount(1);
-            filter_shape.SetDim(0, cvt_filter_size_/sizeof(float));
-            filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-            filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
+            if (!new_filter->IsBufferOwner() || !new_filter->GetBufferPtr()) {
+                ppl::nn::TensorShape filter_shape;
+                filter_shape.SetDimCount(1);
+                filter_shape.SetDim(0, cvt_filter_size_/sizeof(float));
+                filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+                filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
 
-            new_filter->Reshape(filter_shape);
-            new_filter->ReallocBuffer();
+                new_filter->Reshape(filter_shape);
+                new_filter->ReallocBuffer();
+            }
             cvt_filter_ = new_filter->GetBufferPtr<float>();
             ppl_arm_server_kernel_fp32_fc_convert_weights(
                 (float *)filter, (float *)cvt_filter_,
@@ -358,12 +363,15 @@ public:
 #ifdef PPLNN_USE_ARMV8_2_FP16
         else if (dtype == ppl::common::DATATYPE_FLOAT16) {
             cvt_bias_size_ = ((num_output + 7) & (~7)) * sizeof(__fp16);
-            ppl::nn::TensorShape bias_shape;
-            bias_shape.SetDimCount(1);
-            bias_shape.SetDim(0, cvt_bias_size_/sizeof(__fp16));
-            bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-            bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
-            if (bias && new_bias) {
+            if (new_bias && new_bias->IsBufferOwner() && new_bias->GetBufferPtr()) {
+                cvt_bias_ = new_bias->GetBufferPtr<__fp16>();
+            } else if (bias && new_bias) {
+                ppl::nn::TensorShape bias_shape;
+                bias_shape.SetDimCount(1);
+                bias_shape.SetDim(0, cvt_bias_size_/sizeof(__fp16));
+                bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+                bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
+
                 new_bias->Reshape(bias_shape);
                 new_bias->ReallocBuffer();
                 cvt_bias_ = new_bias->GetBufferPtr<__fp16>();
@@ -378,14 +386,16 @@ public:
             }
             
             cvt_filter_size_ = ppl_arm_server_kernel_fp16_fc_get_converted_filter_size(channels, num_output);
-            ppl::nn::TensorShape filter_shape;
-            filter_shape.SetDimCount(1);
-            filter_shape.SetDim(0, cvt_filter_size_/sizeof(__fp16));
-            filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-            filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
+            if (!new_filter->IsBufferOwner() || !new_filter->GetBufferPtr()) {
+                ppl::nn::TensorShape filter_shape;
+                filter_shape.SetDimCount(1);
+                filter_shape.SetDim(0, cvt_filter_size_/sizeof(__fp16));
+                filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+                filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
 
-            new_filter->Reshape(filter_shape);
-            new_filter->ReallocBuffer();
+                new_filter->Reshape(filter_shape);
+                new_filter->ReallocBuffer();
+            }
             cvt_filter_ = new_filter->GetBufferPtr<__fp16>();
             ppl_arm_server_kernel_fp16_fc_convert_weights(
                 (__fp16 *)filter, (__fp16 *)cvt_filter_,

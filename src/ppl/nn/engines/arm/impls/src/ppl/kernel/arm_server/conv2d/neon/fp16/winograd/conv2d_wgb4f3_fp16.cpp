@@ -1698,12 +1698,15 @@ ppl::common::RetCode conv2d_wgb4f3_fp16_offline_manager::generate_cvt_weights(
     const int64_t channels   = param_.channels;
 
     cvt_bias_size_ = CEIL8(num_output) * sizeof(__fp16);
-    ppl::nn::TensorShape bias_shape;
-    bias_shape.SetDimCount(1);
-    bias_shape.SetDim(0, cvt_bias_size_/sizeof(__fp16));
-    bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-    bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
-    if (bias && new_bias) {
+    if (new_bias && new_bias->IsBufferOwner() && new_bias->GetBufferPtr()) {
+        cvt_bias_ = new_bias->GetBufferPtr<__fp16>();
+    } else if (bias && new_bias) {
+        ppl::nn::TensorShape bias_shape;
+        bias_shape.SetDimCount(1);
+        bias_shape.SetDim(0, cvt_bias_size_/sizeof(__fp16));
+        bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+        bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
+        
         new_bias->Reshape(bias_shape);
         new_bias->ReallocBuffer();
         cvt_bias_ = new_bias->GetBufferPtr<__fp16>();
