@@ -779,12 +779,15 @@ ppl::common::RetCode conv2d_n4cx_direct_fp32_offline_manager::generate_cvt_weigh
     const int64_t kernel_w   = param_.kernel_w;
 
     cvt_bias_size_  = CEIL4(num_output) * sizeof(float);
-    ppl::nn::TensorShape bias_shape;
-    bias_shape.SetDimCount(1);
-    bias_shape.SetDim(0, cvt_bias_size_/sizeof(float));
-    bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-    bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
-    if (bias) {
+    if (new_bias && new_bias->IsBufferOwner() && new_bias->GetBufferPtr()) {
+        cvt_bias_ = new_bias->GetBufferPtr<float>();
+    } else if (bias && new_bias) {
+        ppl::nn::TensorShape bias_shape;
+        bias_shape.SetDimCount(1);
+        bias_shape.SetDim(0, cvt_bias_size_/sizeof(float));
+        bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+        bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
+
         new_bias->Reshape(bias_shape);
         new_bias->ReallocBuffer();
         cvt_bias_ = new_bias->GetBufferPtr<float>();

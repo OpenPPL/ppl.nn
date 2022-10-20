@@ -19,6 +19,7 @@
 #include "ppl/nn/engines/arm/kernels/onnx/gemm_kernel.h"
 #include "ppl/nn/engines/arm/kernels/onnx/fc_kernel.h"
 #include "ppl/nn/engines/arm/utils/data_trans.h"
+#include "ppl/nn/engines/utils.h"
 #include "ppl/nn/oputils/onnx/reshape_gemm.h"
 #include "ppl/nn/common/logger.h"
 
@@ -123,9 +124,13 @@ ppl::common::RetCode GemmOp::SelectAlgorithm(const InputOutputInfo& info, const 
             fc_param_->mgr = ppl::kernel::arm_server::neon::fc_algo_selector::gen_algo(
                 fc_param_->param, fc_param_->algo_info, options.device->GetAllocator());
 
+            // Note: If the filter is reused, check it in generate_cvt_weights and simply reuse it as they are the same.
+            // CAVEAT: change this if new algorithms with different cvt_filter are added.
             ppl::nn::TensorBufferInfo * new_filter = &options.info->constants[node->GetInput(1)];
             new_filter->SetDevice(options.device);
 
+            // Note: If the bias is reused, check it in generate_cvt_weights and simply reuse it as they are the same.
+            // CAVEAT: change this if new algorithms with different cvt_bias are added.
             ppl::nn::TensorBufferInfo * new_bias = nullptr;
             if (bias_data != nullptr) {
                 new_bias = &options.info->constants[node->GetInput(2)];

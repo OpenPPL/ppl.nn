@@ -19,10 +19,11 @@
 
 #include <cstring>
 
+#include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/arm/kernels/onnx/conv2d_kernel.h"
 #include "ppl/nn/engines/arm/utils/data_trans.h"
+#include "ppl/nn/engines/utils.h"
 #include "ppl/nn/oputils/onnx/reshape_conv.h"
-#include "ppl/nn/common/logger.h"
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
 #include "ppl/nn/models/pmx/oputils/onnx/conv.h"
@@ -177,9 +178,23 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
                   << ppl::kernel::arm_server::neon::get_conv_algo_str(selected_algo.algo_type);
 #endif
 
+        // Note: If the filter is reused, generate a new input edge to hold cvt_filter which may differ due to different algo/sched_param.
         ppl::nn::TensorBufferInfo * new_filter = &options.info->constants[node->GetInput(1)];
+        if (new_filter && new_filter->IsBufferOwner() && new_filter->GetBufferPtr<void>()) {
+            auto edge = options.graph_topo->AddEdge(node->GetName() + "_Input_Cvt_Filter").first;
+            edge->AddConsumer(node->GetId());
+
+            TensorImpl* tensor = new TensorImpl(edge, TENSORTYPE_RESERVED);
+            utils::IrShape2TensorShape(options.graph_data->shapes[node->GetInput(1)], tensor->GetShape());
+            options.tensors->emplace(edge->GetId(), unique_ptr<TensorImpl>(tensor));
+
+            const_cast<ir::Node*>(node)->ReplaceInput(node->GetInput(1), edge->GetId());
+            new_filter = &options.info->constants[node->GetInput(1)];
+        }
         new_filter->SetDevice(options.device);
 
+        // Note: If the bias is reused, check it in generate_cvt_weights and simply reuse it as they are the same.
+        // CAVEAT: change this if new algorithms with different cvt_bias are added.
         ppl::nn::TensorBufferInfo * new_bias = nullptr;
         if (bias_data != nullptr) {
             new_bias = &options.info->constants[node->GetInput(2)];
