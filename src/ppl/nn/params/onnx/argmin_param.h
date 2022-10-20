@@ -15,18 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_ONE_HOT_H_
-#define _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_ONE_HOT_H_
+#ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_ARGMIN_PARAM_H_
+#define _ST_HPC_PPL_NN_PARAMS_ONNX_ARGMIN_PARAM_H_
 
-#include "ppl/common/retcode.h"
-#include "ppl/nn/params/onnx/one_hot_param.h"
-#include "ppl/nn/common/input_output_info.h"
+#include <stdint.h>
 #include "ppl/nn/ir/attr.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ReshapeOneHot(InputOutputInfo*, const ir::Attr*);
-    
+struct ArgMinParam final : public ir::TypedAttr<ArgMinParam> {
+    int32_t axis;
+    int32_t keepdims;
+
+    bool operator==(const ArgMinParam& p) const {
+        return this->axis == p.axis && this->keepdims == p.keepdims;
+    }
+};
+
 }}} // namespace ppl::nn::onnx
 
 #endif

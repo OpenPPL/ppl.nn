@@ -19,6 +19,7 @@
 
 // NOTE: sorted in alphabet order
 #include "ppl/nn/models/onnx/parsers/onnx/parse_argmax_param.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_argmin_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_batchnormalization_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_cast_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_clip_param.h"
@@ -111,6 +112,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Add", 7, 16, nullptr);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "And", 7, 16, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("", "ArgMax", 1, 11, ArgMaxParam, ParseArgMaxParam, PackArgMaxParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ArgMin", 1, 13, ArgMinParam, ParseArgMinParam, PackArgMinParam);
     PPL_REGISTER_OP_WITH_PARAM("", "AveragePool", 1, 16, PoolingParam, ParsePoolingParam, PackPoolingParam);
     // B
     PPL_REGISTER_OP_WITH_PARAM("", "BatchNormalization", 9, 13, BatchNormalizationParam, ParseBatchNormalizationParam,
