@@ -38,6 +38,7 @@ void RegisterEngineOptions(const shared_ptr<LuaState>& lstate, const shared_ptr<
 
     l_x86_module->SetInteger("MM_MRU", MM_MRU);
     l_x86_module->SetInteger("MM_COMPACT", MM_COMPACT);
+    l_x86_module->SetInteger("MM_PLAIN", MM_PLAIN);
 }
 
 }}}} // namespace ppl::nn::lua::x86

@@ -26,7 +26,7 @@ namespace ppl { namespace nn { namespace x86 {
 class IfOp final : public X86OptKernel {
 public:
     IfOp(const ir::Node* node) : X86OptKernel(node), op_(node) {}
-    ppl::common::RetCode Init(const OptKernelOptions& options) override;
+    ppl::common::RetCode DoInit(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 
 private:

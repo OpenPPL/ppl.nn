@@ -23,7 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode ChannelShuffleOp::Init(const OptKernelOptions& options) {
+RetCode ChannelShuffleOp::DoInit(const OptKernelOptions& options) {
     auto status = GenericLoadParam(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);

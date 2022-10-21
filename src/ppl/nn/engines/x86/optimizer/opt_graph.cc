@@ -191,9 +191,10 @@ RetCode OptGraph::TryToInferDims(X86Device* device) {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::DoOptimize(const utils::SharedResource& resource, X86Device* device) {
+RetCode OptGraph::DoOptimize(const utils::SharedResource& resource, const EngineConfig& config, X86Device* device) {
     OptKernelOptions options;
     options.resource = &resource;
+    options.config = &config;
     options.graph_data = graph_->data.get();
     options.graph_topo = graph_->topo.get();
     options.tensors = &tensor_impls_;
@@ -236,14 +237,18 @@ RetCode OptGraph::DoOptimize(const utils::SharedResource& resource, X86Device* d
 
     auto opt_rule_manager = OptRuleManager::Instance();
 
-    opt_rule_manager->ApplyByTag("BeforeLayoutOptimize", options);
+    if (config.enable_graph_fusion) {
+        opt_rule_manager->ApplyByTag("FusionBeforeLayoutOptimize", options);
+    }
 
     if (true != opt_rule_manager->Apply("", "LayoutOptimize", options)) {
         LOG(ERROR) << "LayoutOptimize failed";
         return ppl::common::RC_OTHER_ERROR;
     }
 
-    opt_rule_manager->ApplyByTag("AfterLayoutOptimize", options);
+    if (config.enable_graph_fusion) {
+        opt_rule_manager->ApplyByTag("FusionAfterLayoutOptimize", options);
+    }
 
 #ifdef SHOW_GRAPH_VIS
     std::string vis = utils::ToGraphviz(graph_->topo.get());

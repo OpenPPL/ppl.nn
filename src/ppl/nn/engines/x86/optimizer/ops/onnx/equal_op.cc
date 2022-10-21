@@ -23,7 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode EqualOp::Init(const OptKernelOptions& options) {
+RetCode EqualOp::DoInit(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeEqual(info, nullptr);
     };

@@ -23,7 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode GreaterOp::Init(const OptKernelOptions& options) {
+RetCode GreaterOp::DoInit(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeGreater(info, nullptr);
     };

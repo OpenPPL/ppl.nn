@@ -23,7 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode SplitToSequenceOp::Init(const OptKernelOptions& options) {
+RetCode SplitToSequenceOp::DoInit(const OptKernelOptions& options) {
     auto node = GetNode();
     auto graph_data = options.graph_data;
     auto attr_ref = graph_data->attrs.find(node->GetId());

@@ -30,7 +30,7 @@ public:
     ConvOp(const ir::Node* node) : X86OptKernel(node), conv2d_param_(nullptr) {}
 
     ~ConvOp();
-    ppl::common::RetCode Init(const OptKernelOptions& options) override;
+    ppl::common::RetCode DoInit(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
                                       std::vector<ppl::common::dataformat_t>* selected_input_formats,

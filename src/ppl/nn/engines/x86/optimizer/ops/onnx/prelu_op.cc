@@ -23,7 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode PReluOp::Init(const OptKernelOptions& options) {
+RetCode PReluOp::DoInit(const OptKernelOptions& options) {
     
     infer_dims_func_ = GenericInferDims;
     infer_type_func_ = GenericInferType;

@@ -28,7 +28,7 @@ class GRUOp final : public X86OptKernel {
 public:
     GRUOp(const ir::Node* node) : X86OptKernel(node) {}
     ~GRUOp();
-    ppl::common::RetCode Init(const OptKernelOptions& options) override;
+    ppl::common::RetCode DoInit(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 
 private:

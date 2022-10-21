@@ -36,7 +36,7 @@ LSTMOp::~LSTMOp() {
     if (aux_param_.packed_r[1])
         ppl::common::AlignedFree(aux_param_.packed_r[1]);
 }
-RetCode LSTMOp::Init(const OptKernelOptions& options) {
+RetCode LSTMOp::DoInit(const OptKernelOptions& options) {
     auto status = GenericLoadParam(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);

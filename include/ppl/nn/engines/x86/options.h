@@ -23,24 +23,34 @@ namespace ppl { namespace nn { namespace x86 {
 /** @brief options for X86Engine::Configure() */
 enum {
     /**
-       @brief disable avx512 support
+       @brief uint32_t, set graph kernel fusion on(1)/off(0), default is on
 
        @note example:
        @code{.cpp}
-       x86_engine->Configure(ENGINE_CONF_DISABLE_AVX512);
+       x86_engine->Configure(ENGINE_CONF_GRAPH_FUSION, int32_t);
        @endcode
     */
-    ENGINE_CONF_DISABLE_AVX512 = 0,
+    ENGINE_CONF_GRAPH_FUSION = 0,
 
     /**
-       @brief disable avx, fma3 and avx512 support
+       @brief uint32_t, set dump tensors' data on(1)/off(0), default is off
 
        @note example:
        @code{.cpp}
-       x86_engine->Configure(ENGINE_CONF_DISABLE_AVX_FMA3);
+       x86_engine->Configure(ENGINE_CONF_TENSOR_DEBUG, int32_t);
        @endcode
     */
-    ENGINE_CONF_DISABLE_AVX_FMA3 = 1,
+    ENGINE_CONF_TENSOR_DEBUG = 1,
+
+    /**
+       @brief const char*, directory to save dumped tensors' data, default is "."
+
+       @note example:
+       @code{.cpp}
+       x86_engine->Configure(ENGINE_CONF_DEBUG_DATA_DIR, const char*);
+       @endcode
+    */
+    ENGINE_CONF_DEBUG_DATA_DIR = 2,
 
     /** max value */
     ENGINE_CONF_MAX,

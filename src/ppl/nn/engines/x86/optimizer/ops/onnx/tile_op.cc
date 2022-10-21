@@ -24,7 +24,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode TileOp::Init(const OptKernelOptions& options) {
+RetCode TileOp::DoInit(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         auto ret = onnx::ReshapeTile(info, nullptr);
         if (ret != RC_SUCCESS) {

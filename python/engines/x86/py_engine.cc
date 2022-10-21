@@ -28,15 +28,20 @@ using namespace ppl::nn::x86;
 
 namespace ppl { namespace nn { namespace python { namespace x86 {
 
-static RetCode GenericSetOption(Engine* engine, uint32_t option, const pybind11::args&) {
-    return engine->Configure(option);
+static RetCode GenericSetOptionUint32(Engine* engine, uint32_t option, const pybind11::args& args) {
+    return engine->Configure(option, args[0].cast<uint32_t>());
+}
+
+static RetCode GenericSetOptionString(Engine* engine, uint32_t option, const pybind11::args& args) {
+    return engine->Configure(option, args[0].cast<string>().c_str());
 }
 
 typedef RetCode (*ConfigFunc)(Engine*, uint32_t option, const pybind11::args& args);
 
 static const map<uint32_t, ConfigFunc> g_opt2func = {
-    {ENGINE_CONF_DISABLE_AVX512, GenericSetOption},
-    {ENGINE_CONF_DISABLE_AVX_FMA3, GenericSetOption},
+    {ENGINE_CONF_GRAPH_FUSION, GenericSetOptionUint32},
+    {ENGINE_CONF_TENSOR_DEBUG, GenericSetOptionUint32},
+    {ENGINE_CONF_DEBUG_DATA_DIR, GenericSetOptionString},
 };
 
 void RegisterEngine(pybind11::module* m) {
@@ -55,8 +60,9 @@ void RegisterEngine(pybind11::module* m) {
                  return it->second(engine.ptr.get(), option, args);
              });
 
-    m->attr("ENGINE_CONF_DISABLE_AVX512") = (uint32_t)ENGINE_CONF_DISABLE_AVX512;
-    m->attr("ENGINE_CONF_DISABLE_AVX_FMA3") = (uint32_t)ENGINE_CONF_DISABLE_AVX_FMA3;
+    m->attr("ENGINE_CONF_GRAPH_FUSION") = (uint32_t)ENGINE_CONF_GRAPH_FUSION;
+    m->attr("ENGINE_CONF_TENSOR_DEBUG") = (uint32_t)ENGINE_CONF_TENSOR_DEBUG;
+    m->attr("ENGINE_CONF_DEBUG_DATA_DIR") = (uint32_t)ENGINE_CONF_DEBUG_DATA_DIR;
 }
 
 }}}} // namespace ppl::nn::python::x86

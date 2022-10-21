@@ -17,13 +17,24 @@
 
 #include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
 #include "ppl/common/sys.h"
+#include "ppl/common/log.h"
 using namespace std;
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-X86OptKernel::X86OptKernel(const ir::Node* node) : OptKernel(node) {
+X86OptKernel::X86OptKernel(const ir::Node* node) : OptKernel(node), engine_config_(nullptr) {
     common_param_.output_formats.resize(node->GetOutputCount(), DATAFORMAT_NDARRAY);
+}
+
+ppl::common::RetCode X86OptKernel::Init(const OptKernelOptions& options) {
+    if (options.config == nullptr) {
+        LOG(ERROR) << "EngineConfig must not be NULL.";
+        return RC_INVALID_VALUE;
+    }
+
+    engine_config_ = options.config;
+    return DoInit(options);
 }
 
 }}} // namespace ppl::nn::x86

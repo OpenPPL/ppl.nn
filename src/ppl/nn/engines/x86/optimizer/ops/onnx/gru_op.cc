@@ -43,7 +43,7 @@ GRUOp::~GRUOp() {
         ppl::common::AlignedFree(aux_param_.packed_Rh[1]);
 }
 
-RetCode GRUOp::Init(const OptKernelOptions& options) {
+RetCode GRUOp::DoInit(const OptKernelOptions& options) {
     auto status = GenericLoadParam(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);

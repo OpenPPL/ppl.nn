@@ -24,13 +24,14 @@
 #include "ppl/nn/engines/x86/x86_device.h"
 #include "ppl/nn/runtime/runtime_partition_info.h"
 #include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
+#include "ppl/nn/engines/x86/engine_config.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
 class OptGraph final {
 public:
     ppl::common::RetCode Init(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*);
-    ppl::common::RetCode DoOptimize(const utils::SharedResource&, X86Device*);
+    ppl::common::RetCode DoOptimize(const utils::SharedResource&, const EngineConfig&, X86Device*);
 
 private:
     ppl::common::RetCode InitKernels(const ir::Graph* graph);

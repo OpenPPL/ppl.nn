@@ -40,7 +40,7 @@ ConvOp::~ConvOp() {
     }
 }
 
-RetCode ConvOp::Init(const OptKernelOptions& options) {
+RetCode ConvOp::DoInit(const OptKernelOptions& options) {
     auto status = GenericLoadParam(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);

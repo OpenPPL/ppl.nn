@@ -21,6 +21,7 @@
 #include "ppl/nn/engines/engine_impl.h"
 #include "ppl/nn/engines/x86/x86_device.h"
 #include "ppl/nn/engines/x86/engine_options.h"
+#include "ppl/nn/engines/x86/engine_config.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -55,8 +56,9 @@ private:
      * some of them may visit class members.
      * defined as member functions can avoid exporting unnecessary APIs
      */
-    static ppl::common::RetCode DisableAVX512(X86Engine*, va_list);
-    static ppl::common::RetCode DisableAVXFMA3(X86Engine*, va_list);
+    static ppl::common::RetCode SetGraphFusion(X86Engine*, va_list);
+    static ppl::common::RetCode SetTenosrDebug(X86Engine*, va_list);
+    static ppl::common::RetCode SetDebugDataDir(X86Engine*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(X86Engine*, va_list);
     static ConfHandlerFunc conf_handlers_[ENGINE_CONF_MAX];
@@ -64,6 +66,7 @@ private:
 private:
     X86Device device_;
     EngineOptions options_;
+    EngineConfig config_;
 };
 
 }}} // namespace ppl::nn::x86

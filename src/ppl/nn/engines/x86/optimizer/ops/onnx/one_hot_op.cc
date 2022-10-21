@@ -24,7 +24,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode OneHotOp::Init(const OptKernelOptions& options) {
+RetCode OneHotOp::DoInit(const OptKernelOptions& options) {
     auto status = GenericLoadParam(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);

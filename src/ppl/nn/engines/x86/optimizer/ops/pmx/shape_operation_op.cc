@@ -25,7 +25,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode ShapeOperationOp::Init(const OptKernelOptions& options) {
+RetCode ShapeOperationOp::DoInit(const OptKernelOptions& options) {
     auto status = GenericLoadParam<ppl::nn::pmx::ShapeOperationParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);

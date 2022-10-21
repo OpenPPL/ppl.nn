@@ -28,7 +28,7 @@ class PostDepthwiseConvOp final : public X86OptKernel {
 public:
     PostDepthwiseConvOp(const ir::Node* node) : X86OptKernel(node) {}
     ~PostDepthwiseConvOp();
-    ppl::common::RetCode Init(const OptKernelOptions& options) override;
+    ppl::common::RetCode DoInit(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
                                       std::vector<ppl::common::dataformat_t>* selected_input_formats,

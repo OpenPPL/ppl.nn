@@ -47,6 +47,20 @@ X86Engine::X86Engine() : EngineImpl("x86"), device_(X86_DEFAULT_ALIGNMENT, ppl::
 
 RetCode X86Engine::Init(const EngineOptions& options) {
     options_ = options;
+
+    auto isa = device_.GetISA();
+#ifdef PPL_USE_X86_AVX512
+    if (options_.disable_avx512) {
+        isa &= ~ppl::common::ISA_X86_AVX512;
+    }
+#endif
+    if (options_.disable_avx_fma3) {
+        isa &= ~ppl::common::ISA_X86_AVX512;
+        isa &= ~ppl::common::ISA_X86_FMA;
+        isa &= ~ppl::common::ISA_X86_AVX2;
+        isa &= ~ppl::common::ISA_X86_AVX;
+    }
+    device_.SetISA(isa);
     return RC_SUCCESS;
 }
 
@@ -74,7 +88,7 @@ RetCode X86Engine::DoOptimize(const utils::SharedResource& resource, ir::Graph* 
         return status;
     }
 
-    status = opt_graph.DoOptimize(resource, &device_);
+    status = opt_graph.DoOptimize(resource, config_, &device_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "OptGraph DoOptimize failed: " << GetRetCodeStr(status);
         return status;
@@ -173,26 +187,26 @@ OptKernel* X86Engine::CreateOptKernel(const ir::Node* node) const {
 
 /* -------------------------------------------------------------------------- */
 
-RetCode X86Engine::DisableAVX512(X86Engine* engine, va_list) {
-    auto isa = engine->device_.GetISA();
-    isa &= (~ppl::common::ISA_X86_AVX512);
-    engine->device_.SetISA(isa);
+
+RetCode X86Engine::SetGraphFusion(X86Engine* engine, va_list args) {
+    engine->config_.enable_graph_fusion = va_arg(args, uint32_t) ? true : false;
     return RC_SUCCESS;
 }
 
-RetCode X86Engine::DisableAVXFMA3(X86Engine* engine, va_list) {
-    auto isa = engine->device_.GetISA();
-    isa &= (~ppl::common::ISA_X86_AVX512);
-    isa &= (~ppl::common::ISA_X86_FMA);
-    isa &= (~ppl::common::ISA_X86_AVX2);
-    isa &= (~ppl::common::ISA_X86_AVX);
-    engine->device_.SetISA(isa);
+RetCode X86Engine::SetTenosrDebug(X86Engine* engine, va_list args) {
+    engine->config_.enable_tensor_debug = va_arg(args, uint32_t) ? true : false;
+    return RC_SUCCESS;
+}
+
+RetCode X86Engine::SetDebugDataDir(X86Engine* engine, va_list args) {
+    engine->config_.debug_data_dir.assign(va_arg(args, const char*));
     return RC_SUCCESS;
 }
 
 X86Engine::ConfHandlerFunc X86Engine::conf_handlers_[] = {
-    X86Engine::DisableAVX512,
-    X86Engine::DisableAVXFMA3,
+    X86Engine::SetGraphFusion,
+    X86Engine::SetTenosrDebug,
+    X86Engine::SetDebugDataDir,
 };
 
 RetCode X86Engine::Configure(uint32_t option, ...) {

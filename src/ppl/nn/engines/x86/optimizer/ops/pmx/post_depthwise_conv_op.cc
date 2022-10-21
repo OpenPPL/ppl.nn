@@ -74,7 +74,7 @@ PostDepthwiseConv2dParam* PostDepthwiseConvOp::TryMakePostDepthwiseConv2dParam(C
     return pd_c2d_param;
 }
 
-RetCode PostDepthwiseConvOp::Init(const OptKernelOptions& options) {
+RetCode PostDepthwiseConvOp::DoInit(const OptKernelOptions& options) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         if (!pd_conv2d_param_ || pd_conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_algo::UNKNOWN) {
             return RC_INVALID_VALUE;
