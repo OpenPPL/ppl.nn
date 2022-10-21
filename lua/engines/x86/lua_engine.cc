@@ -27,10 +27,6 @@ using namespace ppl::nn::x86;
 
 namespace ppl { namespace nn { namespace lua { namespace x86 {
 
-// static RetCode GenericSetOption(Engine* engine, uint32_t option, const LuaObject&) {
-//     return engine->Configure(option);
-// }
-
 typedef RetCode (*ConfigFunc)(Engine*, uint32_t option, const LuaObject& args);
 
 static const map<uint32_t, ConfigFunc> g_opt2func = {
