@@ -15,8 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include <fstream>
+#include <cctype>
+
 #include "ppl/nn/engines/x86/kernel.h"
-using namespace std;
 using namespace ppl::common;
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
@@ -45,6 +47,69 @@ bool X86Kernel::CanDoExecute(const KernelExecContext& ctx) const {
     return true;
 }
 
+RetCode X86Kernel::DumpOutputTensors(KernelExecContext* ctx) {
+    auto get_dim_str = [](const TensorShape* shape) {
+        if (shape->IsScalar()) {
+            return std::string("scalar");
+        }
+
+        if (shape->GetRealDimCount() == 0) {
+            return std::string("none");
+        }
+
+        std::string res = std::to_string(shape->GetDim(0));
+        for (uint32_t i = 1; i < shape->GetDimCount(); ++i) {
+            res += "_" + std::to_string(shape->GetDim(i));
+        }
+
+        return res;
+    };
+
+    auto get_dt_str = [](const TensorShape* shape) {
+        std::string res = GetDataTypeStr(shape->GetDataType());
+        std::transform(res.begin(), res.end(), res.begin(),
+            [](const char c) { return std::tolower(c); });
+        return res;
+    };
+
+    for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
+        auto tensor = ctx->GetOutput<TensorImpl>(i);
+        auto shape = tensor->GetShape();
+        const std::string out_file_name = engine_config_->debug_data_dir
+                                + "/pplnn_dbg_tensor-" + tensor->GetName()
+                                + "-" + get_dim_str(shape)
+                                + "-" + get_dt_str(shape)
+                                + ".dat";
+        std::ofstream ofs(out_file_name, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+        if (!ofs.is_open()) {
+            LOG(ERROR) << "open output file[" << out_file_name << "] failed";
+            return RC_OTHER_ERROR;
+        }
+
+        std::vector<char> cvt_buffer;
+        auto output_buffer_ptr = tensor->GetBufferPtr<char>();
+        auto bytes = shape->CalcBytesExcludingPadding();
+
+        if (shape->GetDataFormat() != DATAFORMAT_NDARRAY) {
+            TensorShape dst_desc = *shape;
+            dst_desc.SetDataFormat(DATAFORMAT_NDARRAY);
+
+            cvt_buffer.resize(bytes);
+            auto status = tensor->ConvertToHost(cvt_buffer.data(), dst_desc);
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "convert data of tensor[" << tensor->GetName() << "] failed: " << GetRetCodeStr(status);
+                return status;
+            }
+                
+            output_buffer_ptr = cvt_buffer.data();
+        }
+
+        ofs.write(output_buffer_ptr, bytes);
+    }
+
+    return RC_SUCCESS;
+}
+
 RetCode X86Kernel::Execute(KernelExecContext* ctx) {
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
     utils::CpuTimingGuard __timing_guard__(&begin_ts_, &end_ts_, ctx->IsProfilingEnabled());
@@ -68,6 +133,14 @@ RetCode X86Kernel::Execute(KernelExecContext* ctx) {
                 LOG(ERROR) << "ReallocBuffer for tensor[" << tensor->GetName() << "] failed: " << GetRetCodeStr(status);
                 return status;
             }
+        }
+    }
+
+    if (engine_config_->enable_tensor_debug) {
+        status = DumpOutputTensors(ctx);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "DumpOutputTensors() of kernel[" << GetName() << "] failed: " << GetRetCodeStr(status);
+            return status;
         }
     }
 

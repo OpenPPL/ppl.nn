@@ -322,6 +322,10 @@ Define_bool_opt("--disable-avx512", g_flag_disable_avx512, false, "disable avx51
 Define_bool_opt("--disable-avx-fma3", g_flag_disable_avx_fma3, false, "disable avx, fma3 and avx512 feature");
 Define_bool_opt("--core-binding", g_flag_core_binding, false, "core binding");
 
+Define_bool_opt("--disable-graph-fusion", g_flag_disable_graph_fusion, false, "disable graph kernel fusion rules");
+Define_bool_opt("--enable-tensor-debug", g_flag_enable_tensor_debug, false, "dump tensors' data");
+Define_string_opt("--debug-data-dir", g_flag_debug_data_dir, ".", "directory to save dumped tensors' data");
+
 #include "ppl/nn/engines/x86/engine_factory.h"
 #include "ppl/nn/engines/x86/options.h"
 #include "ppl/nn/engines/x86/ops.h"
@@ -340,19 +344,30 @@ static bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
         return false;
     }
 
+    options.disable_avx512 = g_flag_disable_avx512;
+    options.disable_avx_fma3 = g_flag_disable_avx_fma3;
+
     x86::RegisterBuiltinOpImpls();
     auto x86_engine = x86::EngineFactory::Create(options);
 
-    if (g_flag_disable_avx512) {
-        x86_engine->Configure(x86::ENGINE_CONF_DISABLE_AVX512);
+    auto rc = x86_engine->Configure(x86::ENGINE_CONF_GRAPH_FUSION, g_flag_disable_graph_fusion ? 0 : 1);
+    if (RC_SUCCESS != rc) {
+        LOG(ERROR) << "x86_engine Configure ENGINE_CONF_GRAPH_FUSION failed: " << GetRetCodeStr(rc);
+        return false;
     }
-    if (g_flag_disable_avx_fma3) {
-        x86_engine->Configure(x86::ENGINE_CONF_DISABLE_AVX_FMA3);
+    rc = x86_engine->Configure(x86::ENGINE_CONF_TENSOR_DEBUG, g_flag_enable_tensor_debug ? 1 : 0);
+    if (RC_SUCCESS != rc) {
+        LOG(ERROR) << "x86_engine Configure ENGINE_CONF_TENSOR_DEBUG failed: " << GetRetCodeStr(rc);
+        return false;
     }
-    if (g_flag_core_binding) {
-        ppl::kernel::x86::set_omp_core_binding(nullptr, 0, 1);
+    rc = x86_engine->Configure(x86::ENGINE_CONF_DEBUG_DATA_DIR, g_flag_debug_data_dir.c_str());
+    if (RC_SUCCESS != rc) {
+        LOG(ERROR) << "x86_engine Configure ENGINE_CONF_DEBUG_DATA_DIR failed: " << GetRetCodeStr(rc);
+        return false;
     }
-    // configure engine
+    
+    if (g_flag_core_binding) ppl::kernel::x86::set_omp_core_binding(nullptr, 0, 1);
+
     engines->emplace_back(unique_ptr<Engine>(x86_engine));
     LOG(INFO) << "***** register X86Engine *****";
     return true;

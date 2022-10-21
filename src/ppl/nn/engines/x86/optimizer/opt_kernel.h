@@ -23,6 +23,7 @@
 #include "ppl/nn/engines/x86/x86_device.h"
 #include "ppl/nn/engines/x86/x86_common_param.h"
 #include "ppl/nn/runtime/runtime_partition_info.h"
+#include "ppl/nn/engines/x86/engine_config.h"
 #include <functional>
 
 namespace ppl { namespace nn { namespace utils {
@@ -33,6 +34,7 @@ namespace ppl { namespace nn { namespace x86 {
 
 struct OptKernelOptions final {
     const utils::SharedResource* resource = nullptr;
+    const EngineConfig *config = nullptr;
     ir::GraphData* graph_data = nullptr;
     ir::GraphTopo* graph_topo = nullptr;
     X86Device* device = nullptr;
@@ -45,7 +47,7 @@ public:
     X86OptKernel(const ir::Node* node);
     virtual ~X86OptKernel() {}
 
-    virtual ppl::common::RetCode Init(const OptKernelOptions&) = 0;
+    ppl::common::RetCode Init(const OptKernelOptions& options);
 
     void InferType(InputOutputInfo* info) const {
         if (infer_type_func_) {
@@ -88,6 +90,8 @@ public:
 #endif
 
 protected:
+    virtual ppl::common::RetCode DoInit(const OptKernelOptions&) = 0;
+
     template <typename T>
     ppl::common::RetCode GenericLoadParam(const OptKernelOptions& options, std::shared_ptr<T>* param) const {
         auto node = GetNode();
@@ -107,6 +111,7 @@ protected:
         auto kernel = new KernelType(GetNode());
         kernel->SetParam(param);
         kernel->SetCommonParam(&common_param_);
+        kernel->SetEngineConfig(engine_config_);
         kernel->SetReshapeFunc([this](InputOutputInfo* info) -> ppl::common::RetCode {
             infer_type_func_(info);
             for (uint32_t i = 0; i < info->GetOutputCount(); i++) {
@@ -121,6 +126,7 @@ protected:
     KernelType* CreateKernelImplWithoutParam() const {
         auto kernel = new KernelType(GetNode());
         kernel->SetCommonParam(&common_param_);
+        kernel->SetEngineConfig(engine_config_);
         kernel->SetReshapeFunc([this](InputOutputInfo* info) -> ppl::common::RetCode {
             infer_type_func_(info);
             for (uint32_t i = 0; i < info->GetOutputCount(); i++) {
@@ -156,6 +162,7 @@ protected:
     std::function<void(InputOutputInfo*)> infer_type_func_;
     std::function<ppl::common::RetCode(InputOutputInfo*)> infer_dims_func_;
     X86CommonParam common_param_;
+    const EngineConfig* engine_config_;
 };
 
 }}} // namespace ppl::nn::x86

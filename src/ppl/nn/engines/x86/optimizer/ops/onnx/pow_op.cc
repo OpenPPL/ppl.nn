@@ -23,7 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode PowOp::Init(const OptKernelOptions& options) {
+RetCode PowOp::DoInit(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         auto ret = onnx::ReshapeAdd(info, nullptr);
         if (ret != RC_SUCCESS) {

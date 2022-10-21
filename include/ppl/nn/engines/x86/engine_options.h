@@ -26,6 +26,8 @@ namespace ppl { namespace nn { namespace x86 {
 
 struct PPLNN_PUBLIC EngineOptions final {
     uint32_t mm_policy = MM_COMPACT;
+    bool disable_avx512 = false;
+    bool disable_avx_fma3 = false;
 };
 
 }}} // namespace ppl::nn::x86

@@ -28,7 +28,7 @@ class LSTMOp final : public X86OptKernel {
 public:
     LSTMOp(const ir::Node* node) : X86OptKernel(node) {}
     ~LSTMOp();
-    ppl::common::RetCode Init(const OptKernelOptions& options) override;
+    ppl::common::RetCode DoInit(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 
 private:

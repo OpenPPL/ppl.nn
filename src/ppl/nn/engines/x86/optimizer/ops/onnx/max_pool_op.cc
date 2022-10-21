@@ -24,7 +24,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode MaxPoolOp::Init(const OptKernelOptions& options) {
+RetCode MaxPoolOp::DoInit(const OptKernelOptions& options) {
     auto status = GenericLoadParam(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load outer_param failed: " << GetRetCodeStr(status);

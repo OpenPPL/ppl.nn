@@ -41,7 +41,7 @@ static RetCode ConcatOutputs(const vector<TensorBufferInfo>& outputs, BufferDesc
     return RC_SUCCESS;
 }
 
-RetCode LoopOp::Init(const OptKernelOptions& options) {
+RetCode LoopOp::DoInit(const OptKernelOptions& options) {
     auto node = GetNode();
     auto graph_data = options.graph_data;
     auto attr_ref = graph_data->attrs.find(node->GetId());

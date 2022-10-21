@@ -23,6 +23,7 @@
 #include "ppl/nn/engines/x86/macros.h"
 #include "ppl/nn/engines/x86/x86_device.h"
 #include "ppl/nn/engines/x86/x86_common_param.h"
+#include "ppl/nn/engines/x86/engine_config.h"
 #include "ppl/common/sys.h"
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
@@ -33,7 +34,11 @@ namespace ppl { namespace nn { namespace x86 {
 
 class X86Kernel : public KernelImpl {
 public:
-    X86Kernel(const ir::Node* node) : KernelImpl(node), common_param_(nullptr) {}
+    X86Kernel(const ir::Node* node)
+        : KernelImpl(node)
+        , common_param_(nullptr)
+        , engine_config_(nullptr) {}
+
     virtual ~X86Kernel() {}
 
     ppl::common::RetCode Execute(KernelExecContext*) override final;
@@ -48,6 +53,10 @@ public:
 
     void SetCommonParam(const X86CommonParam* p) {
         common_param_ = p;
+    }
+
+    void SetEngineConfig(const EngineConfig* ec) {
+        engine_config_ = ec;
     }
 
 protected:
@@ -86,9 +95,11 @@ private:
 
 private:
     ppl::common::RetCode BeforeExecute(KernelExecContext*);
+    ppl::common::RetCode DumpOutputTensors(KernelExecContext*);
 
 private:
-    const X86CommonParam* common_param_ = nullptr;
+    const X86CommonParam* common_param_;
+    const EngineConfig* engine_config_;
     std::function<ppl::common::RetCode(InputOutputInfo*)> reshape_func_;
 };
 

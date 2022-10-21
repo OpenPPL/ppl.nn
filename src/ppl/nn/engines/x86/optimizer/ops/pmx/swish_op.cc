@@ -23,7 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode SwishOp::Init(const OptKernelOptions& options) {
+RetCode SwishOp::DoInit(const OptKernelOptions& options) {
     param_ = make_shared<ppl::nn::pmx::SwishParam>();
     infer_type_func_ = GenericInferType;
     infer_dims_func_ = GenericInferDims;

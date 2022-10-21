@@ -25,7 +25,7 @@ namespace ppl { namespace nn { namespace x86 {
 class AndOp final : public X86OptKernel {
 public:
     AndOp(const ir::Node* node) : X86OptKernel(node) {}
-    ppl::common::RetCode Init(const OptKernelOptions& options) override;
+    ppl::common::RetCode DoInit(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
 };
 

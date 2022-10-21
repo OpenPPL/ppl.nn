@@ -23,7 +23,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode IfOp::Init(const OptKernelOptions& options) {
+RetCode IfOp::DoInit(const OptKernelOptions& options) {
     auto node = GetNode();
     auto graph_data = options.graph_data;
 

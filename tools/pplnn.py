@@ -79,6 +79,12 @@ def ParseCommandLineArgs():
                                 default = False, required = False)
             parser.add_argument("--disable-avx-fma3", dest = "disable_avx_fma3", action = "store_true",
                                 default = False, required = False)
+            parser.add_argument("--disable-graph-fusion", dest = "disable_graph_fusion", action = "store_true",
+                                default = False, required = False)
+            parser.add_argument("--enable-tensor-debug", dest = "enable_tensor_debug", action = "store_true",
+                                default = False, required = False)
+            parser.add_argument("--debug-data-dir", type = str, default = ".", required = False,
+                                help = "directory to save dumped tensors' data")
         elif dev == "cuda":
             parser.add_argument("--quick-select", dest = "quick_select", action = "store_true",
                                 default = False, required = False)
@@ -117,7 +123,7 @@ def ParseCommandLineArgs():
                         help = "dump model to <filename> in pmx format")
 
     parser.add_argument("--mm-policy", type = str, default = "perf", required = False,
-                        help = "\"perf\" => better performance, or \"mem\" => less memory usage")
+                        help = "\"perf\" => better performance, \"mem\" => less memory usage, \"plain\" => no optimize")
 
     parser.add_argument("--in-shapes", type = str, dest = "in_shapes",
                         default = "", required = False, help = "shapes of input tensors."
@@ -163,23 +169,31 @@ def CreateX86Engine(args):
         x86_options.mm_policy = pplnn.x86.MM_MRU
     elif args.mm_policy == "mem":
         x86_options.mm_policy = pplnn.x86.MM_COMPACT
+    elif args.mm_policy == "plain":
+        x86_options.mm_policy = pplnn.x86.MM_PLAIN
+
+    x86_options.disable_avx512 = args.disable_avx512
+    x86_options.disable_avx_fma3 = args.disable_avx_fma3
 
     x86_engine = pplnn.x86.EngineFactory.Create(x86_options)
     if not x86_engine:
         logging.error("create x86 engine failed.")
         sys.exit(-1)
 
-    if args.disable_avx512:
-        status = x86_engine.Configure(pplnn.x86.ENGINE_CONF_DISABLE_AVX512)
-        if status != pplcommon.RC_SUCCESS:
-            logging.error("x86 engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
-            sys.exit(-1)
+    status = x86_engine.Configure(pplnn.x86.ENGINE_CONF_GRAPH_FUSION, 0 if args.disable_graph_fusion else 1)
+    if status != pplcommon.RC_SUCCESS:
+        logging.error("x86 engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
+        sys.exit(-1)
 
-    if args.disable_avx_fma3:
-        status = x86_engine.Configure(pplnn.x86.ENGINE_CONF_DISABLE_AVX_FMA3)
-        if status != pplcommon.RC_SUCCESS:
-            logging.error("x86 engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
-            sys.exit(-1)
+    status = x86_engine.Configure(pplnn.x86.ENGINE_CONF_TENSOR_DEBUG, 1 if args.enable_tensor_debug else 0)
+    if status != pplcommon.RC_SUCCESS:
+        logging.error("x86 engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
+        sys.exit(-1)
+
+    status = x86_engine.Configure(pplnn.x86.ENGINE_CONF_DEBUG_DATA_DIR, args.debug_data_dir)
+    if status != pplcommon.RC_SUCCESS:
+        logging.error("x86 engine Configure() failed: " + pplcommon.GetRetCodeStr(status))
+        sys.exit(-1)
 
     return x86_engine
 

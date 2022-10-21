@@ -27,7 +27,7 @@ class SequenceAtOp final : public X86OptKernel {
 public:
     SequenceAtOp(const ir::Node* node) : X86OptKernel(node), op_(node) {}
 
-    ppl::common::RetCode Init(const OptKernelOptions&) override {
+    ppl::common::RetCode DoInit(const OptKernelOptions&) override {
         return ppl::common::RC_SUCCESS;
     }
 

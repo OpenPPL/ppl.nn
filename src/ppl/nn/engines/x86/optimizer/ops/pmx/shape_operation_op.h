@@ -28,7 +28,7 @@ class ShapeOperationOp final : public X86OptKernel {
 public:
     ShapeOperationOp(const ir::Node* node) : X86OptKernel(node), op_(node) {}
     KernelImpl* CreateKernelImpl() const override;
-    ppl::common::RetCode Init(const OptKernelOptions&) override;
+    ppl::common::RetCode DoInit(const OptKernelOptions&) override;
     ppl::common::RetCode SelectFormat(const InputOutputInfo& info,
                                       std::vector<ppl::common::dataformat_t>* selected_input_formats,
                                       std::vector<ppl::common::dataformat_t>* selected_output_formats) override;

@@ -28,7 +28,7 @@ GemmOp::~GemmOp() {
     if (aux_param_.packed_b) ppl::common::AlignedFree(aux_param_.packed_b);
 }
 
-RetCode GemmOp::Init(const OptKernelOptions& options) {
+RetCode GemmOp::DoInit(const OptKernelOptions& options) {
     auto status = GenericLoadParam(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);

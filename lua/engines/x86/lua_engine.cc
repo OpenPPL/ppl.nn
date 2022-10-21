@@ -27,15 +27,13 @@ using namespace ppl::nn::x86;
 
 namespace ppl { namespace nn { namespace lua { namespace x86 {
 
-static RetCode GenericSetOption(Engine* engine, uint32_t option, const LuaObject&) {
-    return engine->Configure(option);
-}
+// static RetCode GenericSetOption(Engine* engine, uint32_t option, const LuaObject&) {
+//     return engine->Configure(option);
+// }
 
 typedef RetCode (*ConfigFunc)(Engine*, uint32_t option, const LuaObject& args);
 
 static const map<uint32_t, ConfigFunc> g_opt2func = {
-    {ENGINE_CONF_DISABLE_AVX512, GenericSetOption},
-    {ENGINE_CONF_DISABLE_AVX_FMA3, GenericSetOption},
 };
 
 void RegisterEngine(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTable>& l_x86_module) {
@@ -55,9 +53,6 @@ void RegisterEngine(const shared_ptr<LuaState>& lstate, const shared_ptr<LuaTabl
                        return it->second(lengine->ptr.get(), option, args);
                    });
     l_x86_module->Set("Engine", lclass);
-
-    l_x86_module->SetInteger("ENGINE_CONF_DISABLE_AVX512", ENGINE_CONF_DISABLE_AVX512);
-    l_x86_module->SetInteger("ENGINE_CONF_DISABLE_AVX_FMA3", ENGINE_CONF_DISABLE_AVX_FMA3);
 }
 
 }}}} // namespace ppl::nn::lua::x86
