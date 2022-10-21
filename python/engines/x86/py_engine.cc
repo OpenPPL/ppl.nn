@@ -28,10 +28,6 @@ using namespace ppl::nn::x86;
 
 namespace ppl { namespace nn { namespace python { namespace x86 {
 
-// static RetCode GenericSetOption(Engine* engine, uint32_t option, const pybind11::args& args) {
-//     return engine->Configure(option);
-// }
-
 static RetCode GenericSetOptionUint32(Engine* engine, uint32_t option, const pybind11::args& args) {
     return engine->Configure(option, args[0].cast<uint32_t>());
 }
