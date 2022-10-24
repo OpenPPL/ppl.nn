@@ -200,7 +200,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<NotOp>("", "Not", 1, 16);
     // P
     RegisterOptKernelCreator<PadOp>("", "Pad", 2, 12);
-    RegisterOptKernelCreator<PowOp>("", "Pow", 7, 11);
+    RegisterOptKernelCreator<PowOp>("", "Pow", 7, 12);
     RegisterOptKernelCreator<PReluOp>("", "PRelu", 6, 16);
     // R
     RegisterOptKernelCreator<RangeOp>("", "Range", 11, 16);
