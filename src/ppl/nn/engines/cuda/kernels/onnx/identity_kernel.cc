@@ -20,6 +20,14 @@
 namespace ppl { namespace nn { namespace cuda {
 
 ppl::common::RetCode IdentityKernel::DoExecute(KernelExecContext* ctx) {
+    auto input = ctx->GetInput<TensorImpl>(0);
+    auto output = ctx->GetOutput<TensorImpl>(0);
+    auto input_shape = input->GetShape();
+    auto num_elems_output = input_shape->CalcElementsIncludingPadding();
+
+    cudaMemcpyAsync(output->GetBufferPtr(), input->GetBufferPtr(), 
+        ppl::common::GetSizeOfDataType(input_shape->GetDataType()) * num_elems_output, 
+        cudaMemcpyDeviceToDevice, GetStream());
     return ppl::common::RC_SUCCESS;
 }
 
