@@ -70,9 +70,10 @@ ppl::common::RetCode ScatterNdKernel::DoExecute(KernelExecContext* ctx) {
     }
     const auto data_type = x->GetShape()->GetDataType();
     const auto data_format = x->GetShape()->GetDataFormat();
+    const auto dt_size = ppl::common::GetSizeOfDataType(data_type);
 
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
-        if (data_type == ppl::common::DATATYPE_FLOAT32) {
+        if (dt_size == sizeof(float)) {
             return kernel::x86::scatter_nd_ndarray_fp32(x->GetBufferPtr<float>(), updates->GetBufferPtr<float>(),
                                                         indices->GetBufferPtr<int64_t>(), strides,
                                                         x->GetShape()->CalcElementsIncludingPadding(), inner_dim,

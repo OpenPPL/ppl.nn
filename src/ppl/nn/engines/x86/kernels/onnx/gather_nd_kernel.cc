@@ -81,9 +81,10 @@ ppl::common::RetCode GatherNdKernel::DoExecute(KernelExecContext* ctx) {
 
     const auto data_type = x->GetShape()->GetDataType();
     const auto data_format = x->GetShape()->GetDataFormat();
+    const auto dt_size = ppl::common::GetSizeOfDataType(data_type);
 
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
-        if (data_type == ppl::common::DATATYPE_FLOAT32) {
+        if (dt_size == sizeof(float)) {
             return kernel::x86::gather_nd_ndarray_fp32(x->GetBufferPtr<const float>(), real_indices,
                                                        strides_data, inner_dim, num_indices, k,
                                                        y->GetBufferPtr<float>());

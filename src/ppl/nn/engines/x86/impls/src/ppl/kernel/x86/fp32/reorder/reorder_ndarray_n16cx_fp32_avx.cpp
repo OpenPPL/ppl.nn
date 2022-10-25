@@ -98,6 +98,9 @@ ppl::common::RetCode reorder_ndarray_n16cx_inplace_fp32_avx(
     const int64_t padded_c = round_up(channels, c_blk);
 
     float *temp_buffer = (float*)ppl::common::AlignedAlloc(PPL_OMP_MAX_THREADS() * c_blk * X * sizeof(float), PPL_X86_CACHELINE_BYTES());
+    if (temp_buffer == nullptr) {
+        return ppl::common::RC_OUT_OF_MEMORY;
+    }
 
 #ifdef PPL_USE_X86_OMP_COLLAPSE
     PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(2)

@@ -78,10 +78,11 @@ ppl::common::RetCode SliceKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     const ppl::common::datatype_t data_type = data->GetShape()->GetDataType();
-    if (data_type == ppl::common::DATATYPE_FLOAT32) {
+    const auto dt_size = ppl::common::GetSizeOfDataType(data_type);
+    if (dt_size == sizeof(float)) {
         return kernel::x86::slice_ndarray_fp32(data->GetShape(), output->GetShape(), data->GetBufferPtr<float>(),
                                                starts, steps, axes, axes_num, output->GetBufferPtr<float>());
-    } else if (data_type == ppl::common::DATATYPE_INT64) {
+    } else if (dt_size == sizeof(int64_t)) {
         return kernel::x86::slice_ndarray_int64(data->GetShape(), output->GetShape(), data->GetBufferPtr<int64_t>(),
                                                 starts, steps, axes, axes_num, output->GetBufferPtr<int64_t>());
     }

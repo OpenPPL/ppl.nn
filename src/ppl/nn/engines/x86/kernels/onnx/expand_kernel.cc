@@ -52,10 +52,12 @@ ppl::common::RetCode ExpandKernel::DoExecute(KernelExecContext* ctx) {
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
 
     const ppl::common::datatype_t data_type = output->GetShape()->GetDataType();
-    if (data_type == ppl::common::DATATYPE_FLOAT32) {
+    const auto dt_size = ppl::common::GetSizeOfDataType(data_type);
+
+    if (dt_size == sizeof(float)) {
         return kernel::x86::expand_ndarray_fp32(input->GetShape(), output->GetShape(), input->GetBufferPtr<float>(),
                                                 output->GetBufferPtr<float>());
-    } else if (data_type == ppl::common::DATATYPE_INT64) {
+    } else if (dt_size == sizeof(int64_t)) {
         return kernel::x86::expand_ndarray_int64(input->GetShape(), output->GetShape(),
                                                  input->GetBufferPtr<int64_t>(), output->GetBufferPtr<int64_t>());
     } else {

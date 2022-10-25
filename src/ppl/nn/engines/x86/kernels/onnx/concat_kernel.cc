@@ -66,10 +66,11 @@ ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
 
     auto data_type = concat_result->GetShape()->GetDataType();
     auto data_format = concat_result->GetShape()->GetDataFormat();
+    const auto dt_size = ppl::common::GetSizeOfDataType(data_type);
     const int32_t real_axis =
         param_->axis < 0 ? param_->axis + ctx->GetInput<TensorImpl>(0)->GetShape()->GetDimCount() : param_->axis;
 
-    if (ppl::common::GetSizeOfDataType(data_type) == 4 && data_format == ppl::common::DATAFORMAT_N16CX &&
+    if (dt_size == sizeof(float) && data_format == ppl::common::DATAFORMAT_N16CX &&
         real_axis == 1 && MayUseISA(ppl::common::ISA_X86_AVX)) {
         bool interleave_channels = false;
         for (uint32_t i = 0; i < src_shape_list_.size() - 1; i++) {
@@ -85,7 +86,7 @@ ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
         }
     }
 
-    if (ppl::common::GetSizeOfDataType(data_type) == 4) {
+    if (dt_size == sizeof(float)) {
         if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
             return kernel::x86::concat_ndarray_fp32(src_shape_list_.data(), (const float**)src_list_.data(),
                                                     ctx->GetInputCount(), param_->axis,
@@ -97,7 +98,7 @@ ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
         } else {
             LOG(ERROR) << "unsupported data format: " << ppl::common::GetDataFormatStr(data_format);
         }
-    } else if (ppl::common::GetSizeOfDataType(data_type) == 8) {
+    } else if (dt_size == sizeof(int64_t)) {
         if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
             return kernel::x86::concat_ndarray_int64(src_shape_list_.data(), (const int64_t**)src_list_.data(),
                                                      ctx->GetInputCount(), param_->axis,
@@ -109,7 +110,7 @@ ppl::common::RetCode ConcatKernel::DoExecute(KernelExecContext* ctx) {
         } else {
             LOG(ERROR) << "unsupported data format: " << ppl::common::GetDataFormatStr(data_format);
         }
-    } else if (ppl::common::GetSizeOfDataType(data_type) == 1) {
+    } else if (dt_size == sizeof(uint8_t)) {
         if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
             return kernel::x86::concat_ndarray_bool(src_shape_list_.data(), (const uint8_t**)src_list_.data(),
                                                     ctx->GetInputCount(), param_->axis,

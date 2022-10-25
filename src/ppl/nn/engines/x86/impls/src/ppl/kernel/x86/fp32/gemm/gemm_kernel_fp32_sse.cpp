@@ -17,7 +17,7 @@
 
 #include <nmmintrin.h>
 
-#include "ppl/kernel/x86/fp32/gemm/sse/gemm_kernel_fp32_sse.h"
+#include "ppl/kernel/x86/fp32/gemm/gemm_kernel_fp32_sse.h"
 #include "ppl/kernel/x86/common/array_param_helper.h"
 
 namespace ppl { namespace kernel { namespace x86 {

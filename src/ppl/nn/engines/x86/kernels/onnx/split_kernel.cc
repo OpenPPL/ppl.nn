@@ -51,7 +51,9 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
 
     auto data_type = input->GetShape()->GetDataType();
     auto data_format = input->GetShape()->GetDataFormat();
-    if (ppl::common::GetSizeOfDataType(data_type) == 4 && data_format == ppl::common::DATAFORMAT_N16CX &&
+    auto dt_size = ppl::common::GetSizeOfDataType(data_type);
+
+    if (dt_size == sizeof(float) && data_format == ppl::common::DATAFORMAT_N16CX &&
         real_axis == 1 && MayUseISA(ppl::common::ISA_X86_AVX)) {
         bool interleave_channels = false;
         for (uint32_t i = 0; i < dst_shape_list.size() - 1; i++) {
@@ -67,7 +69,7 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
         }
     }
 
-    if (ppl::common::GetSizeOfDataType(data_type) == 4) {
+    if (dt_size == sizeof(float)) {
         if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
             return kernel::x86::split_ndarray_fp32(input->GetShape(), dst_shape_list.data(),
                                                    input->GetBufferPtr<float>(), param_->axis, ctx->GetOutputCount(),
@@ -79,7 +81,7 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
         } else {
             LOG(ERROR) << "unsupported data format: " << ppl::common::GetDataFormatStr(data_format);
         }
-    } else if (ppl::common::GetSizeOfDataType(data_type) == 8) {
+    } else if (dt_size == sizeof(int64_t)) {
         if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
             return kernel::x86::split_ndarray_int64(input->GetShape(), dst_shape_list.data(),
                                                     input->GetBufferPtr<int64_t>(), param_->axis, ctx->GetOutputCount(),
@@ -91,7 +93,7 @@ ppl::common::RetCode SplitKernel::DoExecute(KernelExecContext* ctx) {
         } else {
             LOG(ERROR) << "unsupported data format: " << ppl::common::GetDataFormatStr(data_format);
         }
-    } else if (ppl::common::GetSizeOfDataType(data_type) == 1) {
+    } else if (dt_size == sizeof(uint8_t)) {
         if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
             return kernel::x86::split_ndarray_bool(input->GetShape(), dst_shape_list.data(),
                                                    input->GetBufferPtr<uint8_t>(), param_->axis, ctx->GetOutputCount(),

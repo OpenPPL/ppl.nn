@@ -49,13 +49,14 @@ ppl::common::RetCode ScatterElementsKernel::DoExecute(KernelExecContext* ctx) {
 
     const auto data_type = x->GetShape()->GetDataType();
     const auto data_format = x->GetShape()->GetDataFormat();
+    const auto dt_size = ppl::common::GetSizeOfDataType(data_type);
 
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
-        if (data_type == ppl::common::DATATYPE_FLOAT32) {
+        if (dt_size == sizeof(float)) {
             return kernel::x86::scatter_elements_ndarray_fp32(
                 x->GetShape(), indices->GetShape(), x->GetBufferPtr<float>(), indices->GetBufferPtr<int64_t>(),
                 updates->GetBufferPtr<float>(), param_->axis, y->GetBufferPtr<float>());
-        } else if (data_type == ppl::common::DATATYPE_INT64) {
+        } else if (dt_size == sizeof(int64_t)) {
             return kernel::x86::scatter_elements_ndarray_int64(
                 x->GetShape(), indices->GetShape(), x->GetBufferPtr<int64_t>(), indices->GetBufferPtr<int64_t>(),
                 updates->GetBufferPtr<int64_t>(), param_->axis, y->GetBufferPtr<int64_t>());
