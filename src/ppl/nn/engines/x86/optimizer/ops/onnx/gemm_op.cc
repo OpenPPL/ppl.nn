@@ -65,6 +65,9 @@ RetCode GemmOp::DoInit(const OptKernelOptions& options) {
 
         auto packed_b_bytes = ppl::kernel::x86::gemm_fp32_get_packed_b_bytes(isa, N, K);
         aux_param_.packed_b = (float*)ppl::common::AlignedAlloc(packed_b_bytes, 64);
+        if (aux_param_.packed_b == nullptr) {
+            return ppl::common::RC_OUT_OF_MEMORY;
+        }
         if (ppl::common::RC_SUCCESS != ppl::kernel::x86::gemm_fp32_pack_b(
                 isa, b_data, type_b, N, K, b_shape.dims[1], aux_param_.packed_b)) {
             LOG(WARNING) << "\"" << node->GetName() << "\" gemm pack matrix-B failed, will use non-packed gemm.";

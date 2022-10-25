@@ -51,9 +51,10 @@ ppl::common::RetCode TransposeKernel::DoExecute(KernelExecContext* ctx) {
 
     const auto data_type = data->GetShape()->GetDataType();
     const auto data_format = data->GetShape()->GetDataFormat();
+    const auto dt_size = ppl::common::GetSizeOfDataType(data_type);
 
     if (data_format == ppl::common::DATAFORMAT_N16CX) {
-        if (data_type == ppl::common::DATATYPE_FLOAT32 &&
+        if (dt_size == sizeof(float) &&
             transposed->GetShape()->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY &&
             data->GetShape()->GetDimCount() == 4 &&
             modified_perm == std::vector<int32_t>{0, 2, 3, 1}) { // actually N16CHW -> NHWC
@@ -78,11 +79,11 @@ ppl::common::RetCode TransposeKernel::DoExecute(KernelExecContext* ctx) {
             }
         }
         if (transpose_dim.size() == 2 && transpose_dim[0] + 1 == transpose_dim[1] && transpose_dim[1] + 1 < dim_count) {
-            if (data_type == ppl::common::DATATYPE_FLOAT32) {
+            if (dt_size == sizeof(float)) {
                 return ppl::kernel::x86::transpose_ndarray_continous2d_fp32(
                     data->GetShape(), data->GetBufferPtr<float>(), transpose_dim[0], transpose_dim[1],
                     transposed->GetBufferPtr<float>());
-            } else if (data_type == ppl::common::DATATYPE_INT64) {
+            } else if (dt_size == sizeof(int64_t)) {
                 return ppl::kernel::x86::transpose_ndarray_continous2d_int64(
                     data->GetShape(), data->GetBufferPtr<int64_t>(), transpose_dim[0], transpose_dim[1],
                     transposed->GetBufferPtr<int64_t>());
@@ -90,11 +91,11 @@ ppl::common::RetCode TransposeKernel::DoExecute(KernelExecContext* ctx) {
         }
     }
 
-    if (data_type == ppl::common::DATATYPE_FLOAT32) {
+    if (dt_size == sizeof(float)) {
         return kernel::x86::transpose_ndarray_fp32(data->GetShape(), transposed->GetShape(),
                                                    data->GetBufferPtr<const float>(), modified_perm.data(),
                                                    transposed->GetBufferPtr<float>());
-    } else if (data_type == ppl::common::DATATYPE_INT64) {
+    } else if (dt_size == sizeof(int64_t)) {
         return kernel::x86::transpose_ndarray_int64(data->GetShape(), transposed->GetShape(),
                                                     data->GetBufferPtr<const int64_t>(), modified_perm.data(),
                                                     transposed->GetBufferPtr<int64_t>());

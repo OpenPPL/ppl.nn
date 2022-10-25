@@ -18,12 +18,12 @@
 #include <string.h>
 
 #include "ppl/kernel/x86/common/internal_include.h"
-#include "ppl/kernel/x86/fp32/gemm/fma/gemm_kernel_fp32_fma.h"
+#include "ppl/kernel/x86/fp32/gemm/gemm_kernel_fp32_fma.h"
 #include "ppl/kernel/x86/common/array_param_helper.h"
 #include "ppl/kernel/x86/fp32/gemm.h"
 #include "ppl/common/generic_cpu_allocator.h"
-#include "ppl/kernel/x86/fp32/gemm/common/gemm_base_operation_fp32_avx.h"
-#include "ppl/kernel/x86/fp32/gemm/common/gemm_base_operation_fp32_sse.h"
+#include "ppl/kernel/x86/fp32/gemm/gemm_base_operation_fp32_avx.h"
+#include "ppl/kernel/x86/fp32/gemm/gemm_base_operation_fp32_sse.h"
 #include "ppl/kernel/x86/common/threading_tools.h"
 
 namespace ppl { namespace kernel { namespace x86 {
@@ -91,6 +91,9 @@ ppl::common::RetCode gemm_packed_b_operation_fp32_fma(
 
     const int64_t packed_a_bytes = k_blk * m_blk * sizeof(float) + PPL_X86_PAGE_BYTES();
     uint8_t *temp_buffer = (uint8_t*)ppl::common::AlignedAlloc(packed_a_bytes, PPL_X86_CACHELINE_BYTES());
+    if (temp_buffer == nullptr) {
+        return ppl::common::RC_OUT_OF_MEMORY;
+    }
     float *packed_a = (float*)round_up((uintptr_t)(temp_buffer), PPL_X86_PAGE_BYTES());
 
     const auto pack_a_func = is_trans_a ? gemm_pack_a_m4_operation_fp32_sse<gemm_m_type::TRANS> : gemm_pack_a_m4_operation_fp32_sse<gemm_m_type::NOTRANS>;
@@ -305,6 +308,9 @@ ppl::common::RetCode gemm_operation_fp32_fma(
     const int64_t packed_a_bytes = k_blk * m_blk * sizeof(float) + PPL_X86_PAGE_BYTES();
     const int64_t packed_b_bytes = (k_blk * n_packed_b_blk + gemm_kernel_fp32_fma::config::MAX_N_BLK) * sizeof(float) + PPL_X86_PAGE_BYTES();
     uint8_t *temp_buffer = (uint8_t*)ppl::common::AlignedAlloc(packed_a_bytes + packed_b_bytes, PPL_X86_CACHELINE_BYTES());
+    if (temp_buffer == nullptr) {
+        return ppl::common::RC_OUT_OF_MEMORY;
+    }
     float *packed_b = (float*)round_up((uintptr_t)temp_buffer, PPL_X86_PAGE_BYTES());
     float *packed_a = (float*)round_up((uintptr_t)(temp_buffer + packed_b_bytes), PPL_X86_PAGE_BYTES());
 
@@ -485,6 +491,9 @@ ppl::common::RetCode gemm_shared_packed_b_operation_fp32_fma(
 
     const int64_t packed_a_bytes = K * m_blk * sizeof(float) + PPL_X86_PAGE_BYTES();
     uint8_t *temp_buffer = (uint8_t*)ppl::common::AlignedAlloc(packed_a_bytes, PPL_X86_CACHELINE_BYTES());
+    if (temp_buffer == nullptr) {
+        return ppl::common::RC_OUT_OF_MEMORY;
+    }
     float *packed_a = (float*)round_up((uintptr_t)temp_buffer, PPL_X86_PAGE_BYTES());
 
     const auto pack_a_func = is_trans_a ? gemm_pack_a_m4_operation_fp32_sse<gemm_m_type::TRANS> : gemm_pack_a_m4_operation_fp32_sse<gemm_m_type::NOTRANS>;
@@ -679,6 +688,9 @@ ppl::common::RetCode gemm_shared_pack_b_threaded_operation_fp32_fma(
     }
     PRAGMA_OMP_BARRIER() // wait for malloc
 
+    if (shared_packed_b == nullptr) {
+        return ppl::common::RC_OUT_OF_MEMORY;
+    }
     float *packed_b = (float*)round_up((uintptr_t)*shared_packed_b, PPL_X86_PAGE_BYTES());
 
 

@@ -126,13 +126,12 @@ inline void memcpy32_avx(void *dst, const void *src, const int64_t n32) {
         __src += 4;
     }
     if (__n32 & 2) {
-        __dst[0] = __src[0];
-        __dst[1] = __src[1];
+        *(int64_t*)__dst = *(const int64_t*)__src;
         __dst += 2;
         __src += 2;
     }
     if (__n32 & 1) {
-        __dst[0] = __src[0];
+        *__dst = *__src;
     }
 }
 

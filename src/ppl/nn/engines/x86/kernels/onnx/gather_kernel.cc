@@ -81,12 +81,14 @@ ppl::common::RetCode GatherKernel::DoExecute(KernelExecContext* ctx) {
 
     const ppl::common::datatype_t data_type = y->GetShape()->GetDataType();
     const auto data_format = x->GetShape()->GetDataFormat();
+    const auto dt_size = ppl::common::GetSizeOfDataType(data_type);
+
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
-        if (data_type == ppl::common::DATATYPE_FLOAT32) {
+        if (dt_size == sizeof(float)) {
             return kernel::x86::gather_ndarray_fp32(x->GetBufferPtr<const float>(), real_indices, outter_dim,
                                                     gather_dim, inner_dim, num_indices, indices_dim,
                                                     y->GetBufferPtr<float>());
-        } else if (data_type == ppl::common::DATATYPE_INT64) {
+        } else if (dt_size == sizeof(int64_t)) {
             return kernel::x86::gather_ndarray_int64(x->GetBufferPtr<const int64_t>(), real_indices, outter_dim,
                                                      gather_dim, inner_dim, num_indices, indices_dim,
                                                      y->GetBufferPtr<int64_t>());
