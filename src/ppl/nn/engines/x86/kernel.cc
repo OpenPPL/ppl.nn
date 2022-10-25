@@ -22,7 +22,8 @@
 using namespace ppl::common;
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-#include "ppl/nn/utils/cpu_timing_guard.h"
+#include "ppl/common/destructor.h"
+#include <chrono>
 #endif
 
 namespace ppl { namespace nn { namespace x86 {
@@ -100,7 +101,7 @@ RetCode X86Kernel::DumpOutputTensors(KernelExecContext* ctx) {
                 LOG(ERROR) << "convert data of tensor[" << tensor->GetName() << "] failed: " << GetRetCodeStr(status);
                 return status;
             }
-                
+
             output_buffer_ptr = cvt_buffer.data();
         }
 
@@ -112,7 +113,13 @@ RetCode X86Kernel::DumpOutputTensors(KernelExecContext* ctx) {
 
 RetCode X86Kernel::Execute(KernelExecContext* ctx) {
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-    utils::CpuTimingGuard __timing_guard__(&begin_ts_, &end_ts_, ctx->IsProfilingEnabled());
+    begin_ts_ = std::chrono::system_clock::now();
+    auto is_profiling_enabled = ctx->IsProfilingEnabled();
+    ppl::common::Destructor __timing_guard__([is_profiling_enabled, this]() -> void {
+        if (is_profiling_enabled) {
+            end_ts_ = std::chrono::system_clock::now();
+        }
+    });
 #endif
 
     auto status = BeforeExecute(ctx);

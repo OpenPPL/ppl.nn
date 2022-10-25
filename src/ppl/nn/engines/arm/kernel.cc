@@ -20,7 +20,8 @@
 #include "ppl/nn/runtime/tensor_impl.h"
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-#include "ppl/nn/utils/cpu_timing_guard.h"
+#include "ppl/common/destructor.h"
+#include <chrono>
 #endif
 
 namespace ppl { namespace nn { namespace arm {
@@ -58,7 +59,13 @@ bool ArmKernel::CanDoExecute(const KernelExecContext& ctx) const {
 
 ppl::common::RetCode ArmKernel::Execute(KernelExecContext* ctx) {
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-    utils::CpuTimingGuard __timing_guard__(&begin_ts_, &end_ts_, ctx->IsProfilingEnabled());
+    begin_ts_ = std::chrono::system_clock::now();
+    auto is_profiling_enabled = ctx->IsProfilingEnabled();
+    ppl::common::Destructor __timing_guard__([is_profiling_enabled, this]() -> void {
+        if (is_profiling_enabled) {
+            end_ts_ = std::chrono::system_clock::now();
+        }
+    });
 #endif
 
     auto status = BeforeExecute(ctx);
