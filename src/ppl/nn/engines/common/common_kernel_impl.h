@@ -19,7 +19,11 @@
 #define _ST_HPC_PPL_NN_ENGINES_COMMON_COMMON_KERNEL_IMPL_H_
 
 #include "ppl/nn/runtime/kernel_impl.h"
-#include "ppl/nn/utils/cpu_timing_guard.h"
+
+#ifdef PPLNN_ENABLE_KERNEL_PROFILING
+#include "ppl/common/destructor.h"
+#include <chrono>
+#endif
 
 namespace ppl { namespace nn { namespace common {
 
@@ -29,7 +33,13 @@ public:
 
     ppl::common::RetCode Execute(KernelExecContext* ctx) override final {
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-        utils::CpuTimingGuard __timing_guard__(&begin_ts_, &end_ts_, ctx->IsProfilingEnabled());
+    begin_ts_ = std::chrono::system_clock::now();
+    auto is_profiling_enabled = ctx->IsProfilingEnabled();
+    ppl::common::Destructor __timing_guard__([is_profiling_enabled, this]() -> void {
+        if (is_profiling_enabled) {
+            end_ts_ = std::chrono::system_clock::now();
+        }
+    });
 #endif
         return DoExecute(ctx);
     }
