@@ -24,11 +24,17 @@ namespace ppl { namespace nn { namespace onnx {
 
 RetCode ReshapeOneHot(InputOutputInfo* info, const ir::Attr* arg) {
     auto param = static_cast<const OneHotParam*>(arg);
-    const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape(); // indices
     const auto* depth_ptr = info->GetInput<TensorImpl>(1)->GetBufferPtr<const int64_t>(); // depth
     if (!depth_ptr)
         return RC_OTHER_ERROR; // no data is ok during graph preprocess but not inference.
     const int64_t depth = depth_ptr[0];
+
+    return ReshapeOneHot(info, param, depth);
+}
+
+RetCode ReshapeOneHot(InputOutputInfo* info, const ir::Attr* arg, int64_t depth) {
+    auto param = static_cast<const OneHotParam*>(arg);
+    const TensorShape& in_shape0 = *info->GetInput<TensorImpl>(0)->GetShape(); // indices
     uint32_t real_axis = // [-r-1, r]
         param->axis >= 0 ? param->axis : param->axis + in_shape0.GetDimCount() + 1;
     std::vector<int64_t> output_dim; // add one dimension in axis

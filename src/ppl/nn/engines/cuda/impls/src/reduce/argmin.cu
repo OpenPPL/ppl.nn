@@ -31,9 +31,22 @@ __device__ bool __greater_or_equal<half>(half& lhs, half& rhs) {
     return false;
 #endif
 }
+template <typename T>
+__device__ bool __greater(T& lhs, T& rhs) {
+    return lhs > rhs;
+}
+
+template<>
+__device__ bool __greater<half>(half& lhs, half& rhs) {
+#if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
+    return __hgt(lhs, rhs);
+#else
+    return false;
+#endif
+}
 
 template <typename T>
-__global__ void ppl_argmin(
+__global__ void ppl_argmin_select_last(
     PPLReduceDimDes des,
     const T* input,
     int64_t* output)
@@ -63,6 +76,37 @@ __global__ void ppl_argmin(
     }
     return;
 }
+template <typename T>
+__global__ void ppl_argmin_select_first(
+    PPLReduceDimDes des,
+    const T* input,
+    int64_t* output)
+{
+    int64_t n_outer  = des.n_outer;
+    int64_t n_reduce = des.n_reduce;
+    int64_t n_inner  = des.n_inner;
+
+    int64_t outer_stride = n_reduce * n_inner;
+    int64_t non_reduce   = n_outer * n_inner;
+    int64_t block_size   = blockDim.x * blockDim.y;
+    int64_t grid_stride  = block_size * gridDim.x;
+    int64_t tid          = blockIdx.x * block_size + threadIdx.y * blockDim.x + threadIdx.x;
+
+    for (int64_t idx = tid; idx < non_reduce; idx += grid_stride) {
+        int64_t out_idx = idx / n_inner;
+        int64_t in_idx  = idx % n_inner;
+        int64_t offset  = out_idx * outer_stride + in_idx;
+        int64_t val     = 0;
+        for (int i = 1; i < n_reduce; i++) {
+            T temp1 = input[offset + val * n_inner];
+            T temp2 = input[offset + i * n_inner];
+            if (__greater<T>(temp1, temp2))
+                val = i;
+        }
+        output[idx] = val;
+    }
+    return;
+}
 
 ppl::common::RetCode PPLCUDAArgMinForwardImp(
     cudaStream_t stream,
@@ -70,18 +114,29 @@ ppl::common::RetCode PPLCUDAArgMinForwardImp(
     const ppl::nn::TensorShape* input_shape,
     const void* input,
     const ppl::nn::TensorShape* output_shape,
-    void* output)
+    void* output,
+    int32_t select_last_index)
 {
     dim3 block_dim(32, BLOCKSIZE / 32);
     dim3 grid_dim(DivUp(BLOCKSIZE, des.n_outer * des.n_inner), 1);
 
     if (input_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {
-        ppl_argmin<half><<<grid_dim, block_dim, 0, stream>>>(des, (const half*)input, (int64_t*)output);
+        if(select_last_index==1)
+            ppl_argmin_select_last<half><<<grid_dim, block_dim, 0, stream>>>(des, (const half*)input, (int64_t*)output);
+        else
+            ppl_argmin_select_first<half><<<grid_dim, block_dim, 0, stream>>>(des, (const half*)input, (int64_t*)output);
+
     } else if (input_shape->GetDataType() == ppl::common::DATATYPE_FLOAT32) {
-        ppl_argmin<float><<<grid_dim, block_dim, 0, stream>>>(des, (const float*)input, (int64_t*)output);
+        if(select_last_index==1)
+            ppl_argmin_select_last<float><<<grid_dim, block_dim, 0, stream>>>(des, (const float*)input, (int64_t*)output);
+        else
+            ppl_argmin_select_first<float><<<grid_dim, block_dim, 0, stream>>>(des, (const float*)input, (int64_t*)output);
     }
     else if (input_shape->GetDataType() == ppl::common::DATATYPE_INT8) {
-        ppl_argmin<int8_t><<<grid_dim, block_dim, 0, stream>>>(des, (const int8_t*)input, (int64_t*)output);
+        if(select_last_index==1)
+            ppl_argmin_select_last<int8_t><<<grid_dim, block_dim, 0, stream>>>(des, (const int8_t*)input, (int64_t*)output);
+        else
+            ppl_argmin_select_first<int8_t><<<grid_dim, block_dim, 0, stream>>>(des, (const int8_t*)input, (int64_t*)output);
     }
     else {
         return ppl::common::RC_UNSUPPORTED;

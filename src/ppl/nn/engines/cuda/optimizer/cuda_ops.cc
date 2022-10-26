@@ -28,6 +28,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/add_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/and_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/argmax_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/argmin_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/average_pool_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/batch_normalization_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/cast_op.h"
@@ -73,6 +74,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/non_zero_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/not_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/roialign_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/one_hot_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/pad_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/pow_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/prelu_op.h"
@@ -143,6 +145,8 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<AddOp>("", "Add", 7, 12);
     RegisterOptKernelCreator<AndOp>("", "And", 7, 16);
     RegisterOptKernelCreator<ArgmaxOp>("", "ArgMax", 1, 11);
+    RegisterOptKernelCreator<ArgmaxOp>("", "ArgMin", 1, 16);
+
     RegisterOptKernelCreator<AveragePoolOp>("", "AveragePool", 1, 16);
     // B
     RegisterOptKernelCreator<BatchNormalizationOp>("", "BatchNormalization", 9, 13);
@@ -198,6 +202,9 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<NonMaxSupressionOp>("", "NonMaxSuppression", 10, 16);
     RegisterOptKernelCreator<NonZeroOp>("", "NonZero", 9, 12);
     RegisterOptKernelCreator<NotOp>("", "Not", 1, 16);
+    // O
+    RegisterOptKernelCreator<OneHotOp>("", "OneHot", 9, 16);
+
     // P
     RegisterOptKernelCreator<PadOp>("", "Pad", 2, 12);
     RegisterOptKernelCreator<PowOp>("", "Pow", 7, 12);

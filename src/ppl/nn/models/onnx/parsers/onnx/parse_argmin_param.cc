@@ -26,6 +26,7 @@ RetCode ParseArgMinParam(const ::onnx::NodeProto& pb_node, const ParamParserExtr
     auto param = static_cast<ArgMinParam*>(arg);
     utils::GetNodeAttr(pb_node, "axis", &param->axis, 0);
     utils::GetNodeAttr(pb_node, "keepdims", &param->keepdims, 1);
+    utils::GetNodeAttr(pb_node, "select_last_index", &param->select_last_index, 0); //opset version >= 12
     return RC_SUCCESS;
 }
 
@@ -33,6 +34,8 @@ RetCode PackArgMinParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto*
     auto param = static_cast<const ArgMinParam*>(arg);
     utils::SetNodeAttr(pb_node, "axis", param->axis);
     utils::SetNodeAttr(pb_node, "keepdims", param->keepdims);
+    utils::SetNodeAttr(pb_node, "select_last_index", param->select_last_index);
+
     return RC_SUCCESS;
 }
 

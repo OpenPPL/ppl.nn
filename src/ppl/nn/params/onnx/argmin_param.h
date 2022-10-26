@@ -26,9 +26,10 @@ namespace ppl { namespace nn { namespace onnx {
 struct ArgMinParam final : public ir::TypedAttr<ArgMinParam> {
     int32_t axis;
     int32_t keepdims;
+    int32_t select_last_index;
 
     bool operator==(const ArgMinParam& p) const {
-        return this->axis == p.axis && this->keepdims == p.keepdims;
+        return this->axis == p.axis && this->keepdims == p.keepdims && this->select_last_index == p.select_last_index;
     }
 };
 

@@ -25,13 +25,11 @@
 // TODO(@Adam)
 ppl::common::RetCode PPLCUDAOneHotForwardImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape* indices_shape,
     const void* indices,
-    ppl::nn::TensorShape* depth_shape,
-    const void* depth,
     ppl::nn::TensorShape* values_shape,
     const void* values,
     ppl::nn::TensorShape* output_shape,
-    void* output
+    void* output, 
+    uint32_t real_axis
   );
 #endif // PPLCUDA_KERNEL_INCLUDE_ONE_HOT_H_
