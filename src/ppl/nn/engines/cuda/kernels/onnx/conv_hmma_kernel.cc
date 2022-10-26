@@ -95,17 +95,40 @@ ppl::common::RetCode ConvHmmaKernel::DoExecute(KernelExecContext* ctx) {
     auto tmp_buffer = tmp_buffer_desc.addr;
     auto stream = GetStream();
 
+    // convert filter only if the filter tensor is an output of another kernel
+    BufferDesc weight_buffer;
+    auto newshape = shape_in1;
+    if (!param_->extra_param.is_initializer_weight) {
+        auto align_size = 8;
+        newshape.SetPadding1(0, (newshape.GetDim(0) + align_size - 1) / align_size * align_size - newshape.GetDim(0));
+
+        auto status = GetCudaDevice()->Realloc(newshape, &weight_buffer);
+        if (status != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
+            return status;
+        }
+        auto stream = GetStream();
+        conv_param_t temp_conv_param;
+        ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, *param_, temp_conv_param);
+        PPLCUDAConvolutionCvtFlt(stream, weight_buffer.addr, ctx->GetInput<TensorImpl>(1)->GetBufferPtr(), shape_in0.GetDataType(), temp_conv_param);
+    }
+    ppl::common::Destructor __tmp_buffer_guard__([this, &weight_buffer]() -> void {
+        GetCudaDevice()->Free(&weight_buffer);
+    });
+
 #ifdef PPLNN_ENABLE_CUDA_JIT
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
     PPLCUDAConvolutionForwardJitImp(
         GetCudaDevice(), stream, module->GetKernelFunc(), shape_in0.GetDataType(), (int4*)ctx->GetInput<TensorImpl>(0)->GetBufferPtr(),
-        (int4*)ctx->GetInput<TensorImpl>(1)->GetBufferPtr(), (int4*)ctx->GetOutput<TensorImpl>(0)->GetBufferPtr(),
+        param_->extra_param.is_initializer_weight ? (int4*)ctx->GetInput<TensorImpl>(1)->GetBufferPtr() : (int4*)weight_buffer.addr,
+        (int4*)ctx->GetOutput<TensorImpl>(0)->GetBufferPtr(),
         param_->extra_param.bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr,
         (int4*)tmp_buffer, algo_param, temp_conv_param, temp_fuse_param);
 #else
     PPLCUDAConvolutionForwardImp(
         GetCudaDevice(), stream, shape_in0.GetDataType(), (int4*)ctx->GetInput<TensorImpl>(0)->GetBufferPtr(),
-        (int4*)ctx->GetInput<TensorImpl>(1)->GetBufferPtr(), (int4*)ctx->GetOutput<TensorImpl>(0)->GetBufferPtr(),
+        param_->extra_param.is_initializer_weight ? (int4*)ctx->GetInput<TensorImpl>(1)->GetBufferPtr() : (int4*)weight_buffer.addr,
+        (int4*)ctx->GetOutput<TensorImpl>(0)->GetBufferPtr(),
         param_->extra_param.bias_term ? (int4*)ctx->GetInput<TensorImpl>(2)->GetBufferPtr() : nullptr,
         (int4*)tmp_buffer, algo_param, temp_conv_param, temp_fuse_param);
 #endif
