@@ -158,6 +158,7 @@ table PoolingParam {
 }
 
 table ReduceParam {
+    type: int32 = 0;
     keepdims: int32 = 1;
     axes: [int32];
 }
