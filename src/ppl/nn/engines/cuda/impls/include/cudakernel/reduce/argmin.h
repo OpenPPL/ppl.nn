@@ -29,5 +29,6 @@ ppl::common::RetCode PPLCUDAArgMinForwardImp(
     const ppl::nn::TensorShape* input_shape,
     const void* input,
     const ppl::nn::TensorShape* output_shape,
-    void* output);
+    void* output,
+    int32_t select_last_index);
 #endif

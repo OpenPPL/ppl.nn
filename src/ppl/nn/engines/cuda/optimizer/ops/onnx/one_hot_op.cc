@@ -52,7 +52,9 @@ OneHotOp::OneHotOp(const ir::Node* node) : CudaOptKernel(node) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return onnx::ReshapeOneHot(info, &param_);
+            int64_t depth;
+            info->GetInput<TensorImpl>(1)->CopyToHost(&depth);
+            return onnx::ReshapeOneHot(info, &param_, depth);
     };
 }
 

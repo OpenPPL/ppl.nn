@@ -39,7 +39,7 @@ ppl::common::RetCode ArgMinKernel::DoExecute(KernelExecContext* ctx) {
 
     PPLReduceDimDes des(n_inner, n_reduce, n_outer);
     ppl::common::RetCode status = PPLCUDAArgMinForwardImp(GetStream(), des, input->GetShape(), input->GetBufferPtr(),
-                                                          output->GetShape(), output->GetBufferPtr());
+                                                          output->GetShape(), output->GetBufferPtr(), param_->select_last_index);
     return status;
 }
 

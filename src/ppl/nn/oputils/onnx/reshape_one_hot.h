@@ -26,7 +26,8 @@
 namespace ppl { namespace nn { namespace onnx {
 
 ppl::common::RetCode ReshapeOneHot(InputOutputInfo*, const ir::Attr*);
-    
+ppl::common::RetCode ReshapeOneHot(InputOutputInfo*, const ir::Attr*, int64_t);
+
 }}} // namespace ppl::nn::onnx
 
 #endif

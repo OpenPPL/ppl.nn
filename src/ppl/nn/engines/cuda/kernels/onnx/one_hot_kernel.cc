@@ -24,11 +24,28 @@ namespace ppl { namespace nn { namespace cuda {
 ppl::common::RetCode OneHotKernel::DoExecute(KernelExecContext* ctx) {
     auto indices = ctx->GetInput<TensorImpl>(0);
     auto depth = ctx->GetInput<TensorImpl>(1);
-    auto values = ctx->GetInput<TensorImpl>(3);
+    auto values = ctx->GetInput<TensorImpl>(2);
+
     auto output = ctx->GetOutput<TensorImpl>(0);
-    // TODO(@Adam): Implement here
-    ppl::common::RetCode status = PPLCUDAOneHotForwardImp(GetStream(),  indices->GetShape(), indices->GetBufferPtr(), depth->GetShape(), depth->GetBufferPtr(), values->GetShape(), values->GetBufferPtr(),
-                                                          output->GetShape(), output->GetBufferPtr());
+
+    // param_->axis;
+    uint32_t real_axis = // [-r-1, r]
+        param_->axis >= 0 ? param_->axis : param_->axis + indices->GetShape()->GetDimCount() + 1;
+
+    // copy depth and values back to host
+    if (depth->GetShape()->GetDimCount() != 1){
+        LOG(ERROR)<<"depth of one_hot should be scalar.";
+        return ppl::common::RC_INVALID_VALUE;
+    }
+    if (values->GetShape()->CalcElementsExcludingPadding() != 2) {
+        LOG(ERROR) << "value tensor should be [off_value, on_value] ";
+        return ppl::common::RC_INVALID_VALUE;
+    }
+
+    ppl::common::RetCode status = PPLCUDAOneHotForwardImp(GetStream(), indices->GetBufferPtr(), 
+                                                        values->GetShape(), values->GetBufferPtr(), 
+                                                        output->GetShape(), output->GetBufferPtr(), real_axis);
+
     return status;
 }
 

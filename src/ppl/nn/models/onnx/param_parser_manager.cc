@@ -113,7 +113,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Add", 7, 16, nullptr);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "And", 7, 16, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("", "ArgMax", 1, 11, ArgMaxParam, ParseArgMaxParam, PackArgMaxParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "ArgMin", 1, 13, ArgMinParam, ParseArgMinParam, PackArgMinParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "ArgMin", 1, 16, ArgMinParam, ParseArgMinParam, PackArgMinParam);
     PPL_REGISTER_OP_WITH_PARAM("", "AveragePool", 1, 16, PoolingParam, ParsePoolingParam, PackPoolingParam);
     // B
     PPL_REGISTER_OP_WITH_PARAM("", "BatchNormalization", 9, 13, BatchNormalizationParam, ParseBatchNormalizationParam,
@@ -181,7 +181,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "NonZero", 9, 16, nullptr);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Not", 1, 16, nullptr);
     // O
-    PPL_REGISTER_OP_WITH_PARAM("", "OneHot", 9, 11, OneHotParam, ParseOneHotParam, PackOneHotParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "OneHot", 9, 16, OneHotParam, ParseOneHotParam, PackOneHotParam);
     // P
     PPL_REGISTER_OP_WITH_PARAM("", "Pad", 2, 16, PadParam, ParsePadParam, PackPadParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Pow", 7, 16, nullptr);
