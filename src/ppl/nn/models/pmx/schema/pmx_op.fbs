@@ -6,8 +6,17 @@ table ChannelShuffleParam {
     group: int32;
 }
 
+table ShapeOperationParam {
+    edge_ids: [int32];
+    numerator: [int32];
+    denominator: [int32];
+    real_dim: [int32];
+    scalar: [bool];
+}
+
 union OpParamType {
     ChannelShuffleParam,
+    ShapeOperationParam,
 }
 
 table OpParam {

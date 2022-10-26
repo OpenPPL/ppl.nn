@@ -24,6 +24,11 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::pmx;
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/utils.h"
+#include "ppl/nn/models/pmx/oputils/pmx/ppl_shape_operation.h"
+#endif
+
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
@@ -32,7 +37,10 @@ RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
     }
+    return RC_SUCCESS;
+}
 
+PPLShapeOperationOp::PPLShapeOperationOp(const ir::Node* node) : CudaOptKernel(node), op_(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
             auto shape = info->GetOutput<TensorImpl>(i)->GetShape();
@@ -57,8 +65,6 @@ RetCode PPLShapeOperationOp::Init(const OptKernelOptions& options) {
         }
         return RC_SUCCESS;
     };
-
-    return RC_SUCCESS;
 }
 
 RetCode PPLShapeOperationOp::Finalize(const OptKernelOptions& options) {
@@ -76,5 +82,21 @@ KernelImpl* PPLShapeOperationOp::CreateKernelImpl() const {
     ((ppl::nn::pmx::ShapeOperationKernel*)kernel)->SetParam(&param_);
     return kernel;
 }
+
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode PPLShapeOperationOp::SerializeData(const pmx::SerializationContext& ctx, utils::DataStream* ds) const {
+        flatbuffers::FlatBufferBuilder builder;
+        auto fb_param = pmx::pmx::SerializeShapeOperationParam(ctx.eid2seq, param_, &builder);
+        auto fb_op_param = pmx::pmx::CreateOpParam(builder, pmx::pmx::OpParamType_ShapeOperationParam, fb_param.Union());
+        pmx::pmx::FinishOpParamBuffer(builder, fb_op_param);
+        return ds->Write(builder.GetBufferPointer(), builder.GetSize());
+    }
+    ppl::common::RetCode PPLShapeOperationOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
+        auto fb_op_param = pmx::pmx::GetOpParam(base);
+        auto fb_pplshapeoperaion_param = fb_op_param->value_as_ShapeOperationParam();
+        pmx::pmx::DeserializeShapeOperationParam(*fb_pplshapeoperaion_param, &param_);
+        return ppl::common::RC_SUCCESS;
+    }
+#endif
 
 }}} // namespace ppl::nn::cuda
