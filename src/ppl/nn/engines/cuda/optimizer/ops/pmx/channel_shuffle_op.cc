@@ -88,8 +88,8 @@ KernelImpl* ChannelShuffleOp::CreateKernelImpl() const {
     }
     ppl::common::RetCode ChannelShuffleOp::DeserializeData(const pmx::DeserializationContext&, const void* base, uint64_t size) {
         auto fb_op_param = pmx::pmx::GetOpParam(base);
-        auto fb_argmax_param = fb_op_param->value_as_ChannelShuffleParam();
-        pmx::pmx::DeserializeChannelShuffleParam(*fb_argmax_param, &param_);
+        auto fb_channelshuffle_param = fb_op_param->value_as_ChannelShuffleParam();
+        pmx::pmx::DeserializeChannelShuffleParam(*fb_channelshuffle_param, &param_);
         return ppl::common::RC_SUCCESS;
     }
 #endif
