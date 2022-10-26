@@ -19,14 +19,14 @@
 #define __ST_PPL_KERNEL_X86_FP32_CONV_H_
 
 #include "ppl/kernel/x86/common/general_include.h"
+#include "ppl/kernel/x86/common/conv_common.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
 uint64_t conv_ndarray_fp32_get_buffer_bytes(
     const ppl::common::isa_t isa,
+    const ppl::nn::TensorShape *dst_shape,
     const int64_t group,
-    const int64_t dst_h,
-    const int64_t dst_w,
     const int64_t channels,
     const int64_t kernel_h,
     const int64_t kernel_w,
@@ -37,14 +37,13 @@ uint64_t conv_ndarray_fp32_get_buffer_bytes(
 
 ppl::common::RetCode conv_ndarray_fp32(
     const ppl::common::isa_t isa,
-    const float *input,
+    const ppl::nn::TensorShape *src_shape,
+    const ppl::nn::TensorShape *sum_src_shape,
+    const ppl::nn::TensorShape *dst_shape,
+    const float *src,
+    const float *sum_src,
     const float *filter,
     const float *bias,
-    const int64_t src_h,
-    const int64_t src_w,
-    const int64_t dst_h,
-    const int64_t dst_w,
-    const int64_t batch,
     const int64_t group,
     const int64_t channels,
     const int64_t num_output,
@@ -56,8 +55,9 @@ ppl::common::RetCode conv_ndarray_fp32(
     const int64_t pad_w,
     const int64_t hole_h,
     const int64_t hole_w,
-    void *tmp_buffer,
-    float *output);
+    const conv_fuse_flag_t fuse_flag,
+    void *temp_buffer,
+    float *dst);
 
 }}}; // namespace ppl::kernel::x86
 

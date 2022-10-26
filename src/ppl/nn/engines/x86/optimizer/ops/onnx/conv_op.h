@@ -18,7 +18,6 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_CONV_OP_H_
 #define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_CONV_OP_H_
 
-#include "ppl/nn/params/onnx/conv_param.h"
 #include "ppl/nn/engines/x86/params/conv_param.h"
 #include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
 
@@ -38,16 +37,16 @@ public:
     ppl::common::RetCode SelectAlgorithm(const InputOutputInfo& info, const OptKernelOptions& options) override;
     ppl::common::RetCode OmitConstantsData(std::map<edgeid_t, int64_t>* constants_data_refcount) override;
     bool GetBiasTerm() {
-        return bias_term_;
+        return aux_param_.bias_term;
     };
     bool TryFuseReLU();
     bool TryFuseReLU6();
     bool TryFuseSum();
 
 private:
-    int32_t bias_term_ = 0;
-    Conv2dParam* conv2d_param_;
     std::shared_ptr<ppl::nn::onnx::ConvParam> param_;
+    ConvParam aux_param_;
+    Conv2dParam* conv2d_param_;
 
     friend PostDepthwiseConvOp;
 };

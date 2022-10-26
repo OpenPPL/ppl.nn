@@ -91,14 +91,14 @@ OptRuleManager::OptRuleManager() {
     REGISTER_OPT_RULE("", "LayoutOptimize", LayoutOptimize);
 
     REGISTER_OPT_RULE("FusionBeforeLayoutOptimize", "FuseChannelShuffle", FuseChannelShuffle);
+    REGISTER_OPT_RULE("FusionBeforeLayoutOptimize", "FuseConvActivation", FuseConvActivation);
+    REGISTER_OPT_RULE("FusionBeforeLayoutOptimize", "FuseConvEltwise", FuseConvEltwise);
+    REGISTER_OPT_RULE("FusionBeforeLayoutOptimize", "FuseArithmeticReLU", FuseArithmeticReLU);
+    REGISTER_OPT_RULE("FusionBeforeLayoutOptimize", "FuseBatchNormalizationReLU", FuseBatchNormalizationReLU);
+    REGISTER_OPT_RULE("FusionBeforeLayoutOptimize", "FuseGemmActivation", FuseGemmActivation);
+    REGISTER_OPT_RULE("FusionBeforeLayoutOptimize", "FuseSwish", FuseSwish);
 
-    REGISTER_OPT_RULE("FusionAfterLayoutOptimize", "FuseConvActivation", FuseConvActivation);
-    REGISTER_OPT_RULE("FusionAfterLayoutOptimize", "FuseConvEltwise", FuseConvEltwise);
     REGISTER_OPT_RULE("FusionAfterLayoutOptimize", "FuseConvDepthwise", FuseConvDepthwise);
-    REGISTER_OPT_RULE("FusionAfterLayoutOptimize", "FuseArithmeticReLU", FuseArithmeticReLU);
-    REGISTER_OPT_RULE("FusionAfterLayoutOptimize", "FuseBatchNormalizationReLU", FuseBatchNormalizationReLU);
-    REGISTER_OPT_RULE("FusionAfterLayoutOptimize", "FuseGemmActivation", FuseGemmActivation);
-    REGISTER_OPT_RULE("FusionAfterLayoutOptimize", "FuseSwish", FuseSwish);
 }
 
 }}} // namespace ppl::nn::x86

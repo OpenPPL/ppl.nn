@@ -47,6 +47,8 @@ RetCode ConvOp::DoInit(const OptKernelOptions& options) {
         return status;
     }
 
+    aux_param_.param = param_.get();
+
     auto node = GetNode();
     auto graph_data = options.graph_data;
     const ir::Shape& weight_shape = graph_data->shapes.find(node->GetInput(1))->second;
@@ -66,6 +68,8 @@ RetCode ConvOp::DoInit(const OptKernelOptions& options) {
 
     infer_type_func_ = GenericInferType;
 
+    aux_param_.bias_term = (node->GetInputCount() == 3) ? 1 : 0;
+
     return RC_SUCCESS;
 }
 
@@ -82,7 +86,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
     const float* weight_data = (const float*)weight_data_it->second.data.GetData();
     const float* bias_data = nullptr;
 
-    if (node->GetInputCount() == 3) {
+    if (aux_param_.bias_term) {
         auto bias_data_it = graph_data->constants.find(node->GetInput(2));
         if (bias_data_it == graph_data->constants.end()) {
             LOG(INFO) << "ConvOp constant weight not found, will use conv runtime.";
@@ -92,8 +96,6 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
     }
 
     const ir::Shape& weight_shape = graph_data->shapes.find(node->GetInput(1))->second;
-
-    bias_term_ = (node->GetInputCount() == 3) ? 1 : 0;
 
     // Check Param
     const ppl::nn::onnx::ConvParam& conv_param = *param_;
@@ -130,7 +132,7 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
         conv2d_param.group = conv_param.group;
         conv2d_param.num_output = num_output;
         conv2d_param.channels = channels;
-        conv2d_param.fuse_flag = 0;
+        conv2d_param.fuse_flag = aux_param_.fuse_flag;
 
         conv2d_param_->algo_info = ppl::kernel::x86::conv2d_fp32_algo_selector::select_algo(
             info.GetInput<TensorImpl>(0)->GetShape()->GetDataFormat(), conv2d_param_->param, options.device->GetISA());
@@ -217,10 +219,10 @@ RetCode ConvOp::SelectFormat(const InputOutputInfo& info, vector<dataformat_t>* 
                              vector<dataformat_t>* selected_output_formats) {
     if (conv2d_param_ && conv2d_param_->algo_info.algo_type != ppl::kernel::x86::conv2d_algo::UNKNOWN) {
         selected_input_formats->at(0) = conv2d_param_->algo_info.input_format;
-        if (conv2d_param_->mgr->param().fuse_flag & ppl::kernel::x86::conv_fuse_flag::SUM) {
-            selected_input_formats->at(info.GetInputCount() - 1) = conv2d_param_->algo_info.input_format;
-        }
         selected_output_formats->at(0) = conv2d_param_->algo_info.output_format;
+        if (conv2d_param_->mgr->param().fuse_flag & ppl::kernel::x86::conv_fuse_flag::SUM) {
+            selected_input_formats->at(info.GetInputCount() - 1) = conv2d_param_->algo_info.output_format;
+        }
     }
     return RC_SUCCESS;
 }
@@ -232,7 +234,7 @@ RetCode ConvOp::OmitConstantsData(std::map<edgeid_t, int64_t>* constants_data_re
         if (it != constants_data_refcount->end()) {
             it->second--;
         }
-        if (bias_term_) {
+        if (aux_param_.bias_term) {
             auto bias_id = GetNode()->GetInput(2);
             it = constants_data_refcount->find(bias_id);
             if (it != constants_data_refcount->end()) {
@@ -244,53 +246,30 @@ RetCode ConvOp::OmitConstantsData(std::map<edgeid_t, int64_t>* constants_data_re
 }
 
 bool ConvOp::TryFuseReLU() {
-    if (!conv2d_param_ || conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_algo::UNKNOWN) {
-        return false;
-    }
-    ppl::kernel::x86::conv2d_param param = conv2d_param_->mgr->param();
-    param.fuse_flag |= ppl::kernel::x86::conv_fuse_flag::RELU;
-    conv2d_param_->mgr->set_param(param);
-    if (conv2d_param_->fallback_mgr) {
-        conv2d_param_->fallback_mgr->set_param(param);
-    }
+    aux_param_.fuse_flag |= ppl::kernel::x86::conv_fuse_flag::RELU;
     return true;
 }
 
 bool ConvOp::TryFuseReLU6() {
-    if (!conv2d_param_ || conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_algo::UNKNOWN) {
-        return false;
-    }
-    ppl::kernel::x86::conv2d_param param = conv2d_param_->mgr->param();
-    param.fuse_flag |= ppl::kernel::x86::conv_fuse_flag::RELU6;
-    conv2d_param_->mgr->set_param(param);
-    if (conv2d_param_->fallback_mgr) {
-        conv2d_param_->fallback_mgr->set_param(param);
-    }
+    aux_param_.fuse_flag |= ppl::kernel::x86::conv_fuse_flag::RELU6;
     return true;
 }
 
 bool ConvOp::TryFuseSum() {
-    if (!conv2d_param_ || conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_algo::UNKNOWN) {
+    if ((aux_param_.fuse_flag & ppl::kernel::x86::conv_fuse_flag::RELU) || // sum cannot fuse behind activation
+        (aux_param_.fuse_flag & ppl::kernel::x86::conv_fuse_flag::RELU6)) {
         return false;
     }
-    ppl::kernel::x86::conv2d_param param = conv2d_param_->mgr->param();
-    if ((param.fuse_flag & ppl::kernel::x86::conv_fuse_flag::RELU) || // sum cannot fuse behind activation
-        (param.fuse_flag & ppl::kernel::x86::conv_fuse_flag::RELU6)) {
-        return false;
-    }
-    param.fuse_flag |= ppl::kernel::x86::conv_fuse_flag::SUM;
-    conv2d_param_->mgr->set_param(param);
-    if (conv2d_param_->fallback_mgr) {
-        conv2d_param_->fallback_mgr->set_param(param);
-    }
+    aux_param_.fuse_flag |= ppl::kernel::x86::conv_fuse_flag::SUM;
     return true;
 }
 
 KernelImpl* ConvOp::CreateKernelImpl() const {
-    if (!conv2d_param_ || conv2d_param_->algo_info.algo_type == ppl::kernel::x86::conv2d_algo::UNKNOWN) {
-        return CreateKernelImplWithParam<ConvKernel>(param_.get());
+    if (conv2d_param_ && conv2d_param_->algo_info.algo_type != ppl::kernel::x86::conv2d_algo::UNKNOWN) {
+        return CreateKernelImplWithParam<Conv2dKernel>(conv2d_param_);
     }
-    return CreateKernelImplWithParam<Conv2dKernel>(conv2d_param_);
+
+    return CreateKernelImplWithParam<ConvKernel>(&aux_param_);
 }
 
 }}} // namespace ppl::nn::x86

@@ -57,15 +57,15 @@ bool FuseConvEltwise(const OptKernelOptions &options) {
 
             ir::Node* conv_node = nullptr;
             ir::Edge* src_sum_edge = nullptr;
-            auto add_op = (AddOp*)info->kernels[add_node->GetId()].get();
+            auto add_kernel = (AddOp*)info->kernels[add_node->GetId()].get();
             if (!conv_node && input_edge_0->GetProducer() != INVALID_NODEID && input_edge_0->CalcConsumerCount() == 1 &&
                 !IsReservedEdge(tensors, input_edge_0->GetId())) {
                 auto predecessor_node_0 = graph_topo->GetNode(input_edge_0->GetProducer());
                 if (predecessor_node_0->GetType().domain == "" && predecessor_node_0->GetType().name == "Conv") {
-                    auto conv_op = (ConvOp*)info->kernels[predecessor_node_0->GetId()].get();
-                    if (conv_op->TryFuseSum()) {
-                        if (add_op->HasFuseReLU()) { // becareful
-                            conv_op->TryFuseReLU();
+                    auto conv_kernel = (ConvOp*)info->kernels[predecessor_node_0->GetId()].get();
+                    if (conv_kernel->TryFuseSum()) {
+                        if (add_kernel->HasFuseReLU()) { // becareful
+                            conv_kernel->TryFuseReLU();
                         }
                         conv_node = predecessor_node_0;
                         src_sum_edge = input_edge_1;
@@ -77,10 +77,10 @@ bool FuseConvEltwise(const OptKernelOptions &options) {
                 !IsReservedEdge(tensors, input_edge_1->GetId())) {
                 auto predecessor_node_1 = graph_topo->GetNode(input_edge_1->GetProducer());
                 if (predecessor_node_1->GetType().domain == "" && predecessor_node_1->GetType().name == "Conv") {
-                    auto conv_op = (ConvOp*)info->kernels[predecessor_node_1->GetId()].get();
-                    if (conv_op->TryFuseSum()) {
-                        if (add_op->HasFuseReLU()) {
-                            conv_op->TryFuseReLU();
+                    auto conv_kernel = (ConvOp*)info->kernels[predecessor_node_1->GetId()].get();
+                    if (conv_kernel->TryFuseSum()) {
+                        if (add_kernel->HasFuseReLU()) {
+                            conv_kernel->TryFuseReLU();
                         }
                         conv_node = predecessor_node_1;
                         src_sum_edge = input_edge_0;
