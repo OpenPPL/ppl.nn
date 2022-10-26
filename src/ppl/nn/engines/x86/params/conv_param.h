@@ -22,6 +22,7 @@
 
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/kernel/x86/fp32/conv2d.h"
+#include "ppl/nn/params/onnx/conv_param.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -37,6 +38,12 @@ struct Conv2dParam {
         if (mgr != nullptr) delete mgr;
         if (fallback_mgr != nullptr) delete fallback_mgr;
     }
+};
+
+struct ConvParam {
+    ppl::nn::onnx::ConvParam *param;
+    ppl::kernel::x86::conv_fuse_flag_t fuse_flag = ppl::kernel::x86::conv_fuse_flag::NONE;
+    int32_t bias_term = 0;
 };
 
 }}}; // namespace ppl::nn::x86

@@ -21,7 +21,7 @@
 #include <string>
 
 #include "ppl/kernel/x86/common/general_include.h"
-#include "ppl/kernel/x86/common/conv_common.h"
+#include "ppl/kernel/x86/common/conv2d_common.h"
 #include "ppl/common/allocator.h"
 
 namespace ppl { namespace kernel { namespace x86 {
