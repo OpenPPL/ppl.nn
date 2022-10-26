@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_PMX_ARGMAX_H_
-#define _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_PMX_ARGMAX_H_
+#ifndef _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_PMX_CHANNEL_SHUFFLE_H_
+#define _ST_HPC_PPL_NN_MODELS_PMX_OPUTILS_PMX_CHANNEL_SHUFFLE_H_
 
 #include "ppl/nn/models/pmx/generated/pmx_op_generated.h"
 #include "ppl/nn/params/pmx/channel_shuffle_param.h"
