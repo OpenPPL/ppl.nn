@@ -16,35 +16,41 @@ namespace pmx {
 struct ChannelShuffleParam;
 struct ChannelShuffleParamBuilder;
 
+struct ShapeOperationParam;
+struct ShapeOperationParamBuilder;
+
 struct OpParam;
 struct OpParamBuilder;
 
 enum OpParamType : uint8_t {
   OpParamType_NONE = 0,
   OpParamType_ChannelShuffleParam = 1,
+  OpParamType_ShapeOperationParam = 2,
   OpParamType_MIN = OpParamType_NONE,
-  OpParamType_MAX = OpParamType_ChannelShuffleParam
+  OpParamType_MAX = OpParamType_ShapeOperationParam
 };
 
-inline const OpParamType (&EnumValuesOpParamType())[2] {
+inline const OpParamType (&EnumValuesOpParamType())[3] {
   static const OpParamType values[] = {
     OpParamType_NONE,
-    OpParamType_ChannelShuffleParam
+    OpParamType_ChannelShuffleParam,
+    OpParamType_ShapeOperationParam
   };
   return values;
 }
 
 inline const char * const *EnumNamesOpParamType() {
-  static const char * const names[3] = {
+  static const char * const names[4] = {
     "NONE",
     "ChannelShuffleParam",
+    "ShapeOperationParam",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameOpParamType(OpParamType e) {
-  if (flatbuffers::IsOutRange(e, OpParamType_NONE, OpParamType_ChannelShuffleParam)) return "";
+  if (flatbuffers::IsOutRange(e, OpParamType_NONE, OpParamType_ShapeOperationParam)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesOpParamType()[index];
 }
@@ -55,6 +61,10 @@ template<typename T> struct OpParamTypeTraits {
 
 template<> struct OpParamTypeTraits<ppl::nn::pmx::pmx::ChannelShuffleParam> {
   static const OpParamType enum_value = OpParamType_ChannelShuffleParam;
+};
+
+template<> struct OpParamTypeTraits<ppl::nn::pmx::pmx::ShapeOperationParam> {
+  static const OpParamType enum_value = OpParamType_ShapeOperationParam;
 };
 
 bool VerifyOpParamType(flatbuffers::Verifier &verifier, const void *obj, OpParamType type);
@@ -101,6 +111,113 @@ inline flatbuffers::Offset<ChannelShuffleParam> CreateChannelShuffleParam(
   return builder_.Finish();
 }
 
+struct ShapeOperationParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef ShapeOperationParamBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_EDGE_IDS = 4,
+    VT_NUMERATOR = 6,
+    VT_DENOMINATOR = 8,
+    VT_REAL_DIM = 10,
+    VT_SCALAR = 12
+  };
+  const flatbuffers::Vector<int32_t> *edge_ids() const {
+    return GetPointer<const flatbuffers::Vector<int32_t> *>(VT_EDGE_IDS);
+  }
+  const flatbuffers::Vector<int32_t> *numerator() const {
+    return GetPointer<const flatbuffers::Vector<int32_t> *>(VT_NUMERATOR);
+  }
+  const flatbuffers::Vector<int32_t> *denominator() const {
+    return GetPointer<const flatbuffers::Vector<int32_t> *>(VT_DENOMINATOR);
+  }
+  const flatbuffers::Vector<int32_t> *real_dim() const {
+    return GetPointer<const flatbuffers::Vector<int32_t> *>(VT_REAL_DIM);
+  }
+  const flatbuffers::Vector<uint8_t> *scalar() const {
+    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_SCALAR);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_EDGE_IDS) &&
+           verifier.VerifyVector(edge_ids()) &&
+           VerifyOffset(verifier, VT_NUMERATOR) &&
+           verifier.VerifyVector(numerator()) &&
+           VerifyOffset(verifier, VT_DENOMINATOR) &&
+           verifier.VerifyVector(denominator()) &&
+           VerifyOffset(verifier, VT_REAL_DIM) &&
+           verifier.VerifyVector(real_dim()) &&
+           VerifyOffset(verifier, VT_SCALAR) &&
+           verifier.VerifyVector(scalar()) &&
+           verifier.EndTable();
+  }
+};
+
+struct ShapeOperationParamBuilder {
+  typedef ShapeOperationParam Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_edge_ids(flatbuffers::Offset<flatbuffers::Vector<int32_t>> edge_ids) {
+    fbb_.AddOffset(ShapeOperationParam::VT_EDGE_IDS, edge_ids);
+  }
+  void add_numerator(flatbuffers::Offset<flatbuffers::Vector<int32_t>> numerator) {
+    fbb_.AddOffset(ShapeOperationParam::VT_NUMERATOR, numerator);
+  }
+  void add_denominator(flatbuffers::Offset<flatbuffers::Vector<int32_t>> denominator) {
+    fbb_.AddOffset(ShapeOperationParam::VT_DENOMINATOR, denominator);
+  }
+  void add_real_dim(flatbuffers::Offset<flatbuffers::Vector<int32_t>> real_dim) {
+    fbb_.AddOffset(ShapeOperationParam::VT_REAL_DIM, real_dim);
+  }
+  void add_scalar(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> scalar) {
+    fbb_.AddOffset(ShapeOperationParam::VT_SCALAR, scalar);
+  }
+  explicit ShapeOperationParamBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<ShapeOperationParam> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<ShapeOperationParam>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<ShapeOperationParam> CreateShapeOperationParam(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::Vector<int32_t>> edge_ids = 0,
+    flatbuffers::Offset<flatbuffers::Vector<int32_t>> numerator = 0,
+    flatbuffers::Offset<flatbuffers::Vector<int32_t>> denominator = 0,
+    flatbuffers::Offset<flatbuffers::Vector<int32_t>> real_dim = 0,
+    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> scalar = 0) {
+  ShapeOperationParamBuilder builder_(_fbb);
+  builder_.add_scalar(scalar);
+  builder_.add_real_dim(real_dim);
+  builder_.add_denominator(denominator);
+  builder_.add_numerator(numerator);
+  builder_.add_edge_ids(edge_ids);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<ShapeOperationParam> CreateShapeOperationParamDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const std::vector<int32_t> *edge_ids = nullptr,
+    const std::vector<int32_t> *numerator = nullptr,
+    const std::vector<int32_t> *denominator = nullptr,
+    const std::vector<int32_t> *real_dim = nullptr,
+    const std::vector<uint8_t> *scalar = nullptr) {
+  auto edge_ids__ = edge_ids ? _fbb.CreateVector<int32_t>(*edge_ids) : 0;
+  auto numerator__ = numerator ? _fbb.CreateVector<int32_t>(*numerator) : 0;
+  auto denominator__ = denominator ? _fbb.CreateVector<int32_t>(*denominator) : 0;
+  auto real_dim__ = real_dim ? _fbb.CreateVector<int32_t>(*real_dim) : 0;
+  auto scalar__ = scalar ? _fbb.CreateVector<uint8_t>(*scalar) : 0;
+  return ppl::nn::pmx::pmx::CreateShapeOperationParam(
+      _fbb,
+      edge_ids__,
+      numerator__,
+      denominator__,
+      real_dim__,
+      scalar__);
+}
+
 struct OpParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef OpParamBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -118,6 +235,9 @@ struct OpParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const ppl::nn::pmx::pmx::ChannelShuffleParam *value_as_ChannelShuffleParam() const {
     return value_type() == ppl::nn::pmx::pmx::OpParamType_ChannelShuffleParam ? static_cast<const ppl::nn::pmx::pmx::ChannelShuffleParam *>(value()) : nullptr;
   }
+  const ppl::nn::pmx::pmx::ShapeOperationParam *value_as_ShapeOperationParam() const {
+    return value_type() == ppl::nn::pmx::pmx::OpParamType_ShapeOperationParam ? static_cast<const ppl::nn::pmx::pmx::ShapeOperationParam *>(value()) : nullptr;
+  }
   const flatbuffers::Vector<uint8_t> *data_() const {
     return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_DATA_);
   }
@@ -134,6 +254,10 @@ struct OpParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
 
 template<> inline const ppl::nn::pmx::pmx::ChannelShuffleParam *OpParam::value_as<ppl::nn::pmx::pmx::ChannelShuffleParam>() const {
   return value_as_ChannelShuffleParam();
+}
+
+template<> inline const ppl::nn::pmx::pmx::ShapeOperationParam *OpParam::value_as<ppl::nn::pmx::pmx::ShapeOperationParam>() const {
+  return value_as_ShapeOperationParam();
 }
 
 struct OpParamBuilder {
@@ -192,6 +316,10 @@ inline bool VerifyOpParamType(flatbuffers::Verifier &verifier, const void *obj, 
     }
     case OpParamType_ChannelShuffleParam: {
       auto ptr = reinterpret_cast<const ppl::nn::pmx::pmx::ChannelShuffleParam *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case OpParamType_ShapeOperationParam: {
+      auto ptr = reinterpret_cast<const ppl::nn::pmx::pmx::ShapeOperationParam *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return true;
