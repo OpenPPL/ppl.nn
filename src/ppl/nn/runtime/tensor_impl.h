@@ -22,6 +22,7 @@
 #include "ppl/nn/runtime/edge_object.h"
 #include "ppl/nn/common/tensor_buffer_info.h"
 #include "ppl/nn/common/types.h"
+#include <memory>
 
 namespace ppl { namespace nn {
 
@@ -110,6 +111,15 @@ public:
         return buffer_info_.GetShape();
     }
 
+    template <typename T = void>
+    T* GetCustomInfo() const {
+        return static_cast<T*>(custom_info_.get());
+    }
+
+    void SetCustomInfo(const std::shared_ptr<void>& i) {
+        custom_info_ = i;
+    }
+
     ppl::common::RetCode CopyFromHostRaw(const void* src);
 
     ppl::common::RetCode CopyToHost(void* dst) const override;
@@ -121,6 +131,7 @@ public:
 private:
     tensortype_t type_;
     TensorBufferInfo buffer_info_;
+    std::shared_ptr<void> custom_info_;
 
 private:
     TensorImpl(const TensorImpl&) = delete;
