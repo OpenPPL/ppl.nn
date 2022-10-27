@@ -86,6 +86,19 @@ KernelImpl* ReduceOp::CreateKernelImpl() const {
         auto fb_op_param = ppl::nn::pmx::onnx::GetOpParam(base);
         auto fb_argmax_param = fb_op_param->value_as_ReduceParam();
         ppl::nn::pmx::onnx::DeserializeReduceParam(*fb_argmax_param, &param_);
+        if (GetNode()->GetType().name == "ReduceSum") {
+            param_.type = ReduceParam::ReduceSum;
+        } else if (GetNode()->GetType().name == "ReduceMax") {
+            param_.type = ReduceParam::ReduceMax;
+        } else if (GetNode()->GetType().name == "ReduceMin") {
+            param_.type = ReduceParam::ReduceMin;
+        } else if (GetNode()->GetType().name == "ReduceProd") {
+            param_.type = ReduceParam::ReduceProd;
+        } else if (GetNode()->GetType().name == "ReduceMean") {
+            param_.type = ReduceParam::ReduceMean;
+        } else {
+            param_.type = ReduceParam::ReduceUnknown;
+        }
         return ppl::common::RC_SUCCESS;
     }
 #endif
