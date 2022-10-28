@@ -25,7 +25,9 @@ You can also import `ppl.nn`'s source like this:
 ```cmake
 add_subdirectory(pplnn_source_dir)
 
-target_link_libraries(<target> PUBLIC pplnn_static)
+if(PPLNN_ENABLE_ONNX_MODEL)
+    target_link_libraries(<target> PUBLIC pplnn_onnx_static)
+endif()
 target_include_directories(<target> PUBLIC <pplnn_source_dir>/include <pplnn_source_dir>/src)
 ```
 
@@ -40,7 +42,11 @@ Both public and internal APIs are avaliable in this form. **NOTE** internal APIs
 * `PPLNN_SOURCE_EXTERNAL_LINK_DIRECTORIES`: extra link directories when building your code
 * `PPLNN_SOURCE_EXTERNAL_LINK_LIBRARIES`: extra link libraries when building your code
 * `PPLNN_SOURCE_EXTERNAL_COMPILE_DEFINITIONS`: extra compile definitions when building your code
-* `PPLNN_BINARY_EXTERNAL_LINK_LIBRARIES`: extra link libraries needed by your code when linking `ppl.nn`
+
+and the following for specific modules:
+
+* `PPLNN_SOURCE_EXTERNAL_ONNX_MODEL_SOURCES`: source files for onnx model
+* `PPLNN_SOURCE_EXTERNAL_PMX_MODEL_SOURCES`: source files for pmx model
 
 In this form you don't need to write extra configurations and `.o`s are packed into the `ppl.nn` libraries.
 

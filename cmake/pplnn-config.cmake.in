@@ -1,23 +1,22 @@
 cmake_minimum_required(VERSION 3.10)
 
-if(TARGET "pplnn_static")
+if(TARGET "pplnn_basic_static")
     return()
 endif()
 
-add_library(pplnn_static STATIC IMPORTED)
+add_library(pplnn_basic_static STATIC IMPORTED)
 
 # --------------------------------------------------------------------------- #
 
 get_filename_component(__PPLNN_PACKAGE_ROOTDIR__ "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
-set(__PPLNN_LINK_LIBRARIES__ @PPLNN_BINARY_EXTERNAL_LINK_LIBRARIES@)
 
 # --------------------------------------------------------------------------- #
 
 # exported definitions
 
-option(PPLNN_USE_X86 "" @PPLNN_USE_X86@)
-option(PPLNN_USE_ARM "" @PPLNN_USE_ARM@)
-option(PPLNN_USE_RISCV "" @PPLNN_USE_RISCV@)
+option(PPLNN_USE_X86_64 "" @PPLNN_USE_X86_64@)
+option(PPLNN_USE_AARCH64 "" @PPLNN_USE_AARCH64@)
+option(PPLNN_USE_RISCV64 "" @PPLNN_USE_RISCV64@)
 option(PPLNN_USE_CUDA "" @PPLNN_USE_CUDA@)
 
 option(PPLNN_ENABLE_ONNX_MODEL "" @PPLNN_ENABLE_ONNX_MODEL@)
@@ -30,59 +29,122 @@ set(PPLNN_COMMIT_STR "@PPLNN_COMMIT_STR@")
 
 set(PPLNN_INCLUDE_DIRS "${__PPLNN_PACKAGE_ROOTDIR__}/include")
 set(PPLNN_LINK_DIRS "${__PPLNN_PACKAGE_ROOTDIR__}/lib")
-set(PPLNN_LIBRARIES "pplnn_static")
+set(PPLNN_LIBRARIES "pplnn_basic_static")
 
 # --------------------------------------------------------------------------- #
 
 if(NOT TARGET "pplcommon_static")
     include(${CMAKE_CURRENT_LIST_DIR}/pplcommon-config.cmake)
 endif()
-list(APPEND __PPLNN_LINK_LIBRARIES__ "pplcommon_static")
 
-if(PPLNN_USE_X86)
+if(PPLNN_USE_X86_64)
     if(NOT TARGET "pplkernelx86_static")
         include(${CMAKE_CURRENT_LIST_DIR}/pplkernelx86-config.cmake)
     endif()
-    list(APPEND __PPLNN_LINK_LIBRARIES__ "pplkernelx86_static")
+
+    get_filename_component(__PPLNN_LIB_PATH__ "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@HPCC_STATIC_LIB_PREFIX@pplnn_x86_static@HPCC_STATIC_LIB_SUFFIX@" ABSOLUTE)
+    add_library(pplnn_x86_static STATIC IMPORTED)
+    set_target_properties(pplnn_x86_static PROPERTIES
+        INTERFACE_LINK_LIBRARIES "pplnn_basic_static;pplkernelx86_static"
+        IMPORTED_LOCATION "${__PPLNN_LIB_PATH__}"
+        IMPORTED_LOCATION_DEBUG "${__PPLNN_LIB_PATH__}"
+        IMPORTED_LOCATION_RELEASE "${__PPLNN_LIB_PATH__}")
+    unset(__PPLNN_LIB_PATH__)
+
+    list(APPEND PPLNN_LIBRARIES pplnn_x86_static)
 endif()
 
-if(PPLNN_USE_ARM)
-    if(NOT TARGET "pplkernelarmserver_static")
+if(PPLNN_USE_AARCH64)
+    if(NOT TARGET "pplkernelarm_static")
         include(${CMAKE_CURRENT_LIST_DIR}/pplkernelarm-config.cmake)
     endif()
-    list(APPEND __PPLNN_LINK_LIBRARIES__ "pplkernelarmserver_static")
+
+    get_filename_component(__PPLNN_LIB_PATH__ "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@HPCC_STATIC_LIB_PREFIX@pplnn_arm_static@HPCC_STATIC_LIB_SUFFIX@" ABSOLUTE)
+    add_library(pplnn_arm_static STATIC IMPORTED)
+    set_target_properties(pplnn_arm_static PROPERTIES
+        INTERFACE_LINK_LIBRARIES "pplnn_basic_static;pplkernelarm_static"
+        IMPORTED_LOCATION "${__PPLNN_LIB_PATH__}"
+        IMPORTED_LOCATION_DEBUG "${__PPLNN_LIB_PATH__}"
+        IMPORTED_LOCATION_RELEASE "${__PPLNN_LIB_PATH__}")
+    unset(__PPLNN_LIB_PATH__)
+
+    list(APPEND PPLNN_LIBRARIES pplnn_arm_static)
 endif()
 
 if(PPLNN_USE_CUDA)
     if(NOT TARGET "pplkernelcuda_static")
         include(${CMAKE_CURRENT_LIST_DIR}/pplkernelcuda-config.cmake)
     endif()
-    list(APPEND __PPLNN_LINK_LIBRARIES__ "pplkernelcuda_static")
+
+    get_filename_component(__PPLNN_LIB_PATH__ "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@HPCC_STATIC_LIB_PREFIX@pplnn_cuda_static@HPCC_STATIC_LIB_SUFFIX@" ABSOLUTE)
+    add_library(pplnn_cuda_static STATIC IMPORTED)
+    set_target_properties(pplnn_cuda_static PROPERTIES
+        INTERFACE_LINK_LIBRARIES "pplnn_basic_static;pplkernelcuda_static"
+        IMPORTED_LOCATION "${__PPLNN_LIB_PATH__}"
+        IMPORTED_LOCATION_DEBUG "${__PPLNN_LIB_PATH__}"
+        IMPORTED_LOCATION_RELEASE "${__PPLNN_LIB_PATH__}")
+    unset(__PPLNN_LIB_PATH__)
+
+    list(APPEND PPLNN_LIBRARIES pplnn_cuda_static)
 endif()
 
-if(PPLNN_USE_RISCV)
+if(PPLNN_USE_RISCV64)
     if(NOT TARGET "pplkernelriscv_static")
         include(${CMAKE_CURRENT_LIST_DIR}/pplkernelriscv-config.cmake)
     endif()
-    list(APPEND __PPLNN_LINK_LIBRARIES__ "pplkernelriscv_static")
+
+    get_filename_component(__PPLNN_LIB_PATH__ "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@HPCC_STATIC_LIB_PREFIX@pplnn_riscv_static@HPCC_STATIC_LIB_SUFFIX@" ABSOLUTE)
+    add_library(pplnn_riscv_static STATIC IMPORTED)
+    set_target_properties(pplnn_riscv_static PROPERTIES
+        INTERFACE_LINK_LIBRARIES "pplnn_basic_static;pplkernelriscv_static"
+        IMPORTED_LOCATION "${__PPLNN_LIB_PATH__}"
+        IMPORTED_LOCATION_DEBUG "${__PPLNN_LIB_PATH__}"
+        IMPORTED_LOCATION_RELEASE "${__PPLNN_LIB_PATH__}")
+    unset(__PPLNN_LIB_PATH__)
+
+    list(APPEND PPLNN_LIBRARIES pplnn_riscv_static)
 endif()
+
+get_filename_component(__PPLNN_LIB_PATH__ "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@HPCC_STATIC_LIB_PREFIX@pplnn_basic_static@HPCC_STATIC_LIB_SUFFIX@" ABSOLUTE)
+set_target_properties(pplnn_basic_static PROPERTIES
+    INTERFACE_LINK_LIBRARIES "pplcommon_static"
+    IMPORTED_LOCATION "${__PPLNN_LIB_PATH__}"
+    IMPORTED_LOCATION_DEBUG "${__PPLNN_LIB_PATH__}"
+    IMPORTED_LOCATION_RELEASE "${__PPLNN_LIB_PATH__}")
+unset(__PPLNN_LIB_PATH__)
+
+# --------------------------------------------------------------------------- #
 
 if(PPLNN_ENABLE_ONNX_MODEL)
     if(NOT TARGET "protobuf::libprotobuf")
         include(${__PPLNN_PACKAGE_ROOTDIR__}/lib/cmake/protobuf/protobuf-config.cmake)
     endif()
-    list(APPEND __PPLNN_LINK_LIBRARIES__ "protobuf::libprotobuf")
+
+    get_filename_component(__PPLNN_LIB_PATH__ "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@HPCC_STATIC_LIB_PREFIX@pplnn_onnx_static@HPCC_STATIC_LIB_SUFFIX@" ABSOLUTE)
+    add_library(pplnn_onnx_static STATIC IMPORTED)
+    set_target_properties(pplnn_onnx_static PROPERTIES
+        INTERFACE_LINK_LIBRARIES "pplnn_basic_static;protobuf::libprotobuf"
+        IMPORTED_LOCATION "${__PPLNN_LIB_PATH__}"
+        IMPORTED_LOCATION_DEBUG "${__PPLNN_LIB_PATH__}"
+        IMPORTED_LOCATION_RELEASE "${__PPLNN_LIB_PATH__}")
+    unset(__PPLNN_LIB_PATH__)
+
+    list(APPEND PPLNN_LIBRARIES pplnn_onnx_static)
+endif()
+
+if(PPLNN_ENABLE_PMX_MODEL)
+    get_filename_component(__PPLNN_LIB_PATH__ "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@HPCC_STATIC_LIB_PREFIX@pplnn_pmx_static@HPCC_STATIC_LIB_SUFFIX@" ABSOLUTE)
+    add_library(pplnn_pmx_static STATIC IMPORTED)
+    set_target_properties(pplnn_pmx_static PROPERTIES
+        INTERFACE_LINK_LIBRARIES "pplnn_basic_static"
+        IMPORTED_LOCATION "${__PPLNN_LIB_PATH__}"
+        IMPORTED_LOCATION_DEBUG "${__PPLNN_LIB_PATH__}"
+        IMPORTED_LOCATION_RELEASE "${__PPLNN_LIB_PATH__}")
+    unset(__PPLNN_LIB_PATH__)
+
+    list(APPEND PPLNN_LIBRARIES pplnn_pmx_static)
 endif()
 
 # --------------------------------------------------------------------------- #
 
-set_target_properties(pplnn_static PROPERTIES
-    INTERFACE_LINK_LIBRARIES "${__PPLNN_LINK_LIBRARIES__}"
-    IMPORTED_LOCATION "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@__PPLNN_LIB_NAME__@"
-    IMPORTED_LOCATION_DEBUG "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@__PPLNN_LIB_NAME__@"
-    IMPORTED_LOCATION_RELEASE "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@__PPLNN_LIB_NAME__@")
-
-# --------------------------------------------------------------------------- #
-
-unset(__PPLNN_LINK_LIBRARIES__)
 unset(__PPLNN_PACKAGE_ROOTDIR__)

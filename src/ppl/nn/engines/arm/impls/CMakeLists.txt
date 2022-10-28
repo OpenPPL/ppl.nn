@@ -94,22 +94,22 @@ endif()
 #### #### #### #### ####
 ### targets ############
 #### #### #### #### ####
-add_library(pplkernelarmserver_static STATIC ${PPLKERNELARMSERVER_SOURCES})
-target_link_libraries(pplkernelarmserver_static PRIVATE ${PPLKERNELARMSERVER_LINK_LIBRARIES})
-target_include_directories(pplkernelarmserver_static
+add_library(pplkernelarm_static STATIC ${PPLKERNELARMSERVER_SOURCES})
+target_link_libraries(pplkernelarm_static PRIVATE ${PPLKERNELARMSERVER_LINK_LIBRARIES})
+target_include_directories(pplkernelarm_static
     PUBLIC ${PPLKERNELARMSERVER_INCLUDE_DIRECTORIES}
     PRIVATE ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES}
     PRIVATE ${PPLNN_ARM_ENGINE_INCLUDE_DIRECTORIES})
-target_compile_options(pplkernelarmserver_static PRIVATE ${PPLKERNELARMSERVER_COMPILE_OPTIONS})
-target_compile_definitions(pplkernelarmserver_static PRIVATE ${PPLKERNELARMSERVER_COMPILE_DEFINITIONS})
+target_compile_options(pplkernelarm_static PRIVATE ${PPLKERNELARMSERVER_COMPILE_OPTIONS})
+target_compile_definitions(pplkernelarm_static PRIVATE ${PPLKERNELARMSERVER_COMPILE_DEFINITIONS})
 
 if(CMAKE_COMPILER_IS_GNUCC)
     # requires a virtual destructor when having virtual functions, though it is not necessary for all cases
-    target_compile_options(pplkernelarmserver_static PRIVATE -Werror=non-virtual-dtor)
+    target_compile_options(pplkernelarm_static PRIVATE -Werror=non-virtual-dtor)
 endif()
 
 if(PPLNN_INSTALL)
-    install(TARGETS pplkernelarmserver_static DESTINATION lib)
+    install(TARGETS pplkernelarm_static DESTINATION lib)
 
     # `PPLKERNELARMSERVER_LINK_LIBRARIES` is needed for generating pplkernearmserver-config.cmake
     set(__PPLNN_CMAKE_CONFIG_FILE__ ${CMAKE_CURRENT_BINARY_DIR}/generated/pplkernelarm-config.cmake)
