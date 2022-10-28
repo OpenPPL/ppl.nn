@@ -44,9 +44,33 @@ if(NOT PPLNN_LUA_API_EXTERNAL_SOURCES)
 endif()
 
 add_library(luapplnn_shared SHARED ${PPLNN_LUA_API_SRC} ${PPLNN_LUA_API_EXTERNAL_SOURCES})
-target_link_libraries(luapplnn_shared PUBLIC pplnn_static luacpp_static)
+target_link_libraries(luapplnn_shared PUBLIC pplnn_basic_static luacpp_static)
 target_include_directories(luapplnn_shared PUBLIC
     ${PROJECT_SOURCE_DIR}/include)
+
+if(PPLNN_USE_X86)
+    target_link_libraries(luapplnn_shared PRIVATE pplnn_x86_static)
+endif()
+
+if(PPLNN_USE_ARM)
+    target_link_libraries(luapplnn_shared PRIVATE pplnn_arm_static)
+endif()
+
+if(PPLNN_USE_CUDA)
+    target_link_libraries(luapplnn_shared PRIVATE pplnn_cuda_static)
+endif()
+
+if(PPLNN_USE_RISCV)
+    target_link_libraries(luapplnn_shared PRIVATE pplnn_riscv_static)
+endif()
+
+if(PPLNN_ENABLE_ONNX_MODEL)
+    target_link_libraries(luapplnn_shared PRIVATE pplnn_onnx_static)
+endif()
+
+if(PPLNN_ENABLE_PMX_MODEL)
+    target_link_libraries(luapplnn_shared PRIVATE pplnn_pmx_static)
+endif()
 
 # --------------------------------------------------------------------------- #
 

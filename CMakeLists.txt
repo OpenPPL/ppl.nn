@@ -33,16 +33,16 @@ option(PPLNN_USE_RISCV64 "" OFF)
 option(PPLNN_USE_CUDA "" OFF)
 
 # deprecated options
-if(HPCC_USE_X86_64 AND NOT PPLNN_USE_X86_64)
+if(HPCC_USE_X86_64)
     message(FATAL_ERROR "`HPCC_USE_X86_64` is deprecated. use `PPLNN_USE_X86_64` instead.")
 endif()
-if(HPCC_USE_AARCH64 AND NOT PPLNN_USE_AARCH64)
+if(HPCC_USE_AARCH64)
     message(FATAL_ERROR "`HPCC_USE_AARCH64` is deprecated. use `PPLNN_USE_AARCH64` instead.")
 endif()
-if(HPCC_USE_CUDA AND NOT PPLNN_USE_CUDA)
+if(HPCC_USE_CUDA)
     message(FATAL_ERROR "`HPCC_USE_CUDA` is deprecated. use `PPLNN_USE_CUDA` instead.")
 endif()
-if(HPCC_USE_RISCV AND NOT PPLNN_USE_RISCV64)
+if(HPCC_USE_RISCV)
     message(FATAL_ERROR "`HPCC_USE_RISCV` is deprecated. use `PPLNN_USE_RISCV64` instead.")
 endif()
 
@@ -54,19 +54,10 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
-# variables
-
-set(PPLNN_SOURCES)
-set(PPLNN_INCLUDE_DIRECTORIES)
-set(PPLNN_COMPILE_DEFINITIONS)
-set(PPLNN_LINK_LIBRARIES)
-set(PPLNN_LINK_DIRECTORIES)
-
-# --------------------------------------------------------------------------- #
-
 # dependencies
 
 include(cmake/deps.cmake)
+include(cmake/rapidjson.cmake)
 
 # --------------------------------------------------------------------------- #
 
@@ -76,52 +67,6 @@ if(PPLNN_USE_MSVC_STATIC_RUNTIME)
     hpcc_use_msvc_static_runtime()
 else()
     hpcc_use_msvc_dynamic_runtime()
-endif()
-
-# --------------------------------------------------------------------------- #
-
-# framework related
-
-include(cmake/rapidjson.cmake)
-include(cmake/version.cmake)
-
-set(PPLNN_MODELS_SRC)
-if(PPLNN_ENABLE_ONNX_MODEL)
-    list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_ENABLE_ONNX_MODEL)
-    file(GLOB_RECURSE PPLNN_MODEL_ONNX_SRC src/ppl/nn/models/onnx/*.cc)
-    list(APPEND PPLNN_MODELS_SRC ${PPLNN_MODEL_ONNX_SRC})
-endif()
-if(PPLNN_ENABLE_PMX_MODEL)
-    list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_ENABLE_PMX_MODEL)
-    file(GLOB_RECURSE PPLNN_MODEL_PMX_SRC src/ppl/nn/models/pmx/*.cc)
-    list(APPEND PPLNN_MODELS_SRC ${PPLNN_MODEL_PMX_SRC})
-endif()
-
-file(GLOB_RECURSE PPLNN_BUILTIN_ENGINE_SRC
-    src/ppl/nn/engines/common/*.cc)
-file(GLOB_RECURSE PPLNN_OPUTILS_SRC
-    src/ppl/nn/oputils/*.cc)
-file(GLOB PPLNN_FRAMEWORK_SRC
-    src/ppl/nn/common/*.cc
-    src/ppl/nn/engines/*.cc
-    src/ppl/nn/ir/*.cc
-    src/ppl/nn/optimizers/*.cc
-    src/ppl/nn/quantization/*.cc
-    src/ppl/nn/runtime/*.cc
-    src/ppl/nn/utils/*.cc
-    ${PPLNN_OPUTILS_SRC}
-    ${PPLNN_BUILTIN_ENGINE_SRC}
-    ${PPLNN_MODELS_SRC})
-list(APPEND PPLNN_SOURCES ${PPLNN_FRAMEWORK_SRC})
-
-list(APPEND PPLNN_INCLUDE_DIRECTORIES
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src)
-
-list(APPEND PPLNN_LINK_LIBRARIES pplcommon_static)
-
-if(PPLNN_ENABLE_KERNEL_PROFILING)
-    list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_ENABLE_KERNEL_PROFILING)
 endif()
 
 # --------------------------------------------------------------------------- #
@@ -144,9 +89,76 @@ if(PPLNN_USE_AARCH64 OR PPLNN_USE_ARMV7)
     include(cmake/arm.cmake)
 endif()
 
+# pplcommon MUST be placed after engines because engines may set pplcommon options
 hpcc_populate_dep(pplcommon)
 
 # --------------------------------------------------------------------------- #
+
+# model formats
+
+if(PPLNN_ENABLE_ONNX_MODEL)
+    include(cmake/onnx_model.cmake)
+endif()
+
+if(PPLNN_ENABLE_PMX_MODEL)
+    include(cmake/pmx_model.cmake)
+endif()
+
+# --------------------------------------------------------------------------- #
+
+# pplnn basic
+
+file(GLOB_RECURSE __PPLNN_BUILTIN_ENGINE_SRC__
+    src/ppl/nn/engines/common/*.cc)
+file(GLOB_RECURSE __PPLNN_OPUTILS_SRC__
+    src/ppl/nn/oputils/*.cc)
+file(GLOB __PPLNN_SOURCES__
+    src/ppl/nn/common/*.cc
+    src/ppl/nn/engines/*.cc
+    src/ppl/nn/ir/*.cc
+    src/ppl/nn/optimizers/*.cc
+    src/ppl/nn/quantization/*.cc
+    src/ppl/nn/runtime/*.cc
+    src/ppl/nn/utils/*.cc
+    ${__PPLNN_BUILTIN_ENGINE_SRC__}
+    ${__PPLNN_OPUTILS_SRC__})
+add_library(pplnn_basic_static STATIC
+    ${__PPLNN_SOURCES__}
+    ${PPLNN_SOURCE_EXTERNAL_SOURCES})
+unset(__PPLNN_SOURCES__)
+unset(__PPLNN_OPUTILS_SRC__)
+unset(__PPLNN_BUILTIN_ENGINE_SRC__)
+
+target_include_directories(pplnn_basic_static PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${PPLNN_SOURCE_EXTERNAL_INCLUDE_DIRECTORIES})
+target_compile_definitions(pplnn_basic_static PUBLIC
+    ${PPLNN_SOURCE_EXTERNAL_COMPILE_DEFINITIONS})
+target_compile_features(pplnn_basic_static PRIVATE cxx_std_11)
+target_link_directories(pplnn_basic_static PUBLIC
+    ${PPLNN_SOURCE_EXTERNAL_LINK_DIRECTORIES})
+target_link_libraries(pplnn_basic_static PUBLIC
+    pplcommon_static
+    ${PPLNN_SOURCE_EXTERNAL_LINK_LIBRARIES})
+
+target_include_directories(pplnn_basic_static PRIVATE
+    ${rapidjson_SOURCE_DIR}/include)
+
+include(cmake/version.cmake)
+target_compile_definitions(pplnn_basic_static PUBLIC
+    PPLNN_VERSION_MAJOR=${PPLNN_VERSION_MAJOR}
+    PPLNN_VERSION_MINOR=${PPLNN_VERSION_MINOR}
+    PPLNN_VERSION_PATCH=${PPLNN_VERSION_PATCH}
+    PPLNN_COMMIT_STR="${PPLNN_COMMIT_STR}")
+
+if(PPLNN_ENABLE_KERNEL_PROFILING)
+    target_compile_definitions(pplnn_basic_static PUBLIC PPLNN_ENABLE_KERNEL_PROFILING)
+endif()
+
+# --------------------------------------------------------------------------- #
+
+# language bindings
 
 if(PPLNN_ENABLE_PYTHON_API)
     add_subdirectory(python)
@@ -156,30 +168,9 @@ if(PPLNN_ENABLE_LUA_API)
     add_subdirectory(lua)
 endif()
 
-add_library(pplnn_static STATIC ${PPLNN_SOURCES} ${PPLNN_SOURCE_EXTERNAL_SOURCES})
-target_include_directories(pplnn_static PUBLIC ${PPLNN_INCLUDE_DIRECTORIES} ${PPLNN_SOURCE_EXTERNAL_INCLUDE_DIRECTORIES})
-target_compile_definitions(pplnn_static PUBLIC ${PPLNN_COMPILE_DEFINITIONS} ${PPLNN_SOURCE_EXTERNAL_COMPILE_DEFINITIONS})
-target_compile_features(pplnn_static PRIVATE cxx_std_11)
-target_link_directories(pplnn_static PUBLIC ${PPLNN_LINK_DIRECTORIES} ${PPLNN_SOURCE_EXTERNAL_LINK_DIRECTORIES})
-target_link_libraries(pplnn_static PUBLIC ${PPLNN_LINK_LIBRARIES} ${PPLNN_SOURCE_EXTERNAL_LINK_LIBRARIES})
-
-target_include_directories(pplnn_static PRIVATE
-    ${rapidjson_SOURCE_DIR}/include)
-
-if(PPLNN_ENABLE_ONNX_MODEL)
-    include(cmake/protobuf.cmake)
-    target_link_libraries(pplnn_static PUBLIC libprotobuf)
-    target_include_directories(pplnn_static PRIVATE ${protobuf_SOURCE_DIR}/src)
-endif()
-
-if(PPLNN_ENABLE_PMX_MODEL)
-    hpcc_populate_dep(flatbuffers)
-    target_include_directories(pplnn_static PRIVATE ${flatbuffers_SOURCE_DIR}/include)
-endif()
-
 # --------------------------------------------------------------------------- #
 
-# installation
+# installations
 
 if(PPLNN_INSTALL)
     include(cmake/install.cmake)

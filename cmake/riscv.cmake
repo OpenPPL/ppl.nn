@@ -1,11 +1,18 @@
+set(PPLNN_USE_RISCV ON)
+
 set(CMAKE_CXX_FLAGS "-march=rv64gcvxtheadc -mabi=lp64d -mtune=c906 -DRVV_SPEC_0_7 -D__riscv_zfh=1 -static")
 set(CMAKE_ASM_FLAGS "-march=rv64gcvxtheadc -mabi=lp64d -mtune=c906 -DRVV_SPEC_0_7 -D__riscv_zfh=1 -static")
 
-file(GLOB_RECURSE PPLNN_RISCV_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/riscv/*.cc)
-list(APPEND PPLNN_SOURCES ${PPLNN_RISCV_SRC})
+file(GLOB_RECURSE __PPLNN_RISCV_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/riscv/*.cc)
+add_library(pplnn_riscv_static STATIC ${__PPLNN_RISCV_SRC__})
+unset(__PPLNN_RISCV_SRC__)
 
 add_subdirectory(src/ppl/nn/engines/riscv/impls)
-list(APPEND PPLNN_LINK_LIBRARIES pplkernelriscv_static)
+target_link_libraries(pplnn_riscv_static PUBLIC pplnn_basic_static pplkernelriscv_static)
 
-set(PPLNN_USE_RISCV ON)
-list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_USE_RISCV)
+target_compile_definitions(pplnn_riscv_static PUBLIC PPLNN_USE_RISCV)
+
+if(PPLNN_INSTALL)
+    install(DIRECTORY include/ppl/nn/engines/riscv DESTINATION include/ppl/nn/engines)
+    install(TARGETS pplnn_riscv_static DESTINATION lib)
+endif()

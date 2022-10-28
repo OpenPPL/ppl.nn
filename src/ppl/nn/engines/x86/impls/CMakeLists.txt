@@ -16,7 +16,7 @@ set(PPLKERNELX86_LINK_LIBRARIES )
 list(APPEND PPLKERNELX86_PUBLIC_INCLUDE_DIRECTORIES include)
 list(APPEND PPLKERNELX86_PRIVATE_INCLUDE_DIRECTORIES src)
 
-if(HPCC_USE_OPENMP AND NOT PPLNN_USE_OPENMP)
+if(HPCC_USE_OPENMP)
     message(FATAL_ERROR "`HPCC_USE_OPENMP` is deprecated. use `PPLNN_USE_OPENMP` instead.")
 endif()
 
@@ -102,15 +102,9 @@ if(PPLNN_INSTALL)
 
     # `PPLKERNELX86_LINK_LIBRARIES` is needed for generating pplkernex86-config.cmake
     set(__PPLNN_CMAKE_CONFIG_FILE__ ${CMAKE_CURRENT_BINARY_DIR}/generated/pplkernelx86-config.cmake)
-    if(MSVC)
-        set(__PPLKERNELX86_LIB_NAME__ "pplkernelx86_static.lib")
-    else()
-        set(__PPLKERNELX86_LIB_NAME__ "libpplkernelx86_static.a")
-    endif()
     configure_file(${CMAKE_CURRENT_LIST_DIR}/pplkernelx86-config.cmake.in
         ${__PPLNN_CMAKE_CONFIG_FILE__}
         @ONLY)
-    unset(__PPLKERNELX86_LIB_NAME__)
     install(FILES ${__PPLNN_CMAKE_CONFIG_FILE__} DESTINATION lib/cmake/ppl)
     unset(__PPLNN_CMAKE_CONFIG_FILE__)
 endif()

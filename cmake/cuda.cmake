@@ -15,14 +15,20 @@ if(PPLNN_USE_MSVC_STATIC_RUNTIME)
 endif()
 
 file(GLOB_RECURSE __PPLNN_CUDA_SRC__ src/ppl/nn/engines/cuda/*.cc)
-list(APPEND PPLNN_SOURCES ${__PPLNN_CUDA_SRC__})
+add_library(pplnn_cuda_static STATIC ${PPLNN_SOURCE_EXTERNAL_CUDA_ENGINE_SOURCES} ${__PPLNN_CUDA_SRC__})
 unset(__PPLNN_CUDA_SRC__)
 
 add_subdirectory(src/ppl/nn/engines/cuda/impls)
-list(APPEND PPLNN_LINK_LIBRARIES pplkernelcuda_static)
-
-list(APPEND PPLNN_COMPILE_DEFINITIONS PPLNN_USE_CUDA)
-
-list(APPEND PPLNN_COMPILE_DEFINITIONS
+target_link_libraries(pplnn_cuda_static PUBLIC
+    pplnn_basic_static pplkernelcuda_static ${PPLNN_SOURCE_EXTERNAL_CUDA_LINK_LIBRARIES})
+target_include_directories(pplnn_cuda_static PRIVATE
+    ${rapidjson_SOURCE_DIR}/include)
+target_compile_definitions(pplnn_cuda_static PUBLIC
+    PPLNN_USE_CUDA
     PPLNN_CUDACC_VER_MAJOR=${CUDA_VERSION_MAJOR}
     PPLNN_CUDACC_VER_MINOR=${CUDA_VERSION_MINOR})
+
+if(PPLNN_INSTALL)
+    install(DIRECTORY include/ppl/nn/engines/cuda DESTINATION include/ppl/nn/engines)
+    install(TARGETS pplnn_cuda_static DESTINATION lib)
+endif()
