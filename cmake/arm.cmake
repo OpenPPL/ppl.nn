@@ -26,10 +26,20 @@ else()
     set(PPLNN_USE_ARMV8_2_I8MM OFF) # i8mm must enable armv8.2 first
 endif()
 
-file(GLOB_RECURSE PPLNN_ARM_SRC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/arm/*.cc
+file(GLOB __PPLNN_ARM_SRC__ src/ppl/nn/engines/arm/*.cc)
+file(GLOB_RECURSE __PPLNN_ARM_SRC_RECURSE__
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/arm/kernels/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/arm/optimizer/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/arm/params/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/arm/pmx/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/arm/utils/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/arm/*.S)
-add_library(pplnn_arm_static STATIC ${PPLNN_ARM_SRC})
+add_library(pplnn_arm_static STATIC
+    ${__PPLNN_ARM_SRC__}
+    ${__PPLNN_ARM_SRC_RECURSE__}
+    ${PPLNN_SOURCE_EXTERNAL_ARM_ENGINE_SOURCES})
+unset(__PPLNN_ARM_SRC_RECURSE__)
+unset(__PPLNN_ARM_SRC__)
 
 if ((DEFINED ANDROID_ABI) AND (EXISTS ${CMAKE_TOOLCHAIN_FILE}))
     set(PPLNN_USE_ANDROID_NDK ON)
@@ -49,6 +59,7 @@ endif()
 
 add_subdirectory(src/ppl/nn/engines/arm/impls)
 target_link_libraries(pplnn_arm_static PUBLIC pplnn_basic_static pplkernelarm_static)
+target_include_directories(pplnn_arm_static PUBLIC ${PPLNN_SOURCE_EXTERNAL_ARM_INCLUDE_DIRECTORIES})
 target_compile_definitions(pplnn_arm_static PUBLIC PPLNN_USE_ARM)
 
 if (PPLNN_USE_AARCH64)

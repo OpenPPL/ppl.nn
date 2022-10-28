@@ -3,8 +3,14 @@ set(PPLNN_USE_RISCV ON)
 set(CMAKE_CXX_FLAGS "-march=rv64gcvxtheadc -mabi=lp64d -mtune=c906 -DRVV_SPEC_0_7 -D__riscv_zfh=1 -static")
 set(CMAKE_ASM_FLAGS "-march=rv64gcvxtheadc -mabi=lp64d -mtune=c906 -DRVV_SPEC_0_7 -D__riscv_zfh=1 -static")
 
-file(GLOB_RECURSE __PPLNN_RISCV_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/riscv/*.cc)
-add_library(pplnn_riscv_static STATIC ${__PPLNN_RISCV_SRC__})
+file(GLOB __PPLNN_RISCV_SRC__ src/ppl/nn/engines/riscv/*.cc)
+file(GLOB_RECURSE __PPLNN_RISCV_SRC_RECURSE__
+    src/ppl/nn/engines/riscv/kernels/*.cc
+    src/ppl/nn/engines/riscv/optimizer/*.cc
+    src/ppl/nn/engines/riscv/params/*.cc
+    src/ppl/nn/engines/riscv/utils/*.cc)
+add_library(pplnn_riscv_static STATIC ${__PPLNN_RISCV_SRC__} ${__PPLNN_RISCV_SRC_RECURSE__})
+unset(__PPLNN_RISCV_SRC_RECURSE__)
 unset(__PPLNN_RISCV_SRC__)
 
 add_subdirectory(src/ppl/nn/engines/riscv/impls)
