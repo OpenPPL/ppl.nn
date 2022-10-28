@@ -1,7 +1,15 @@
 set(PPLNN_USE_X86 ON)
 
-file(GLOB_RECURSE __PPLNN_X86_SRC__ src/ppl/nn/engines/x86/*.cc)
-add_library(pplnn_x86_static STATIC ${PPLNN_SOURCE_EXTERNAL_X86_ENGINE_SOURCES} ${__PPLNN_X86_SRC__})
+file(GLOB __PPLNN_X86_SRC__ src/ppl/nn/engines/x86/*.cc)
+file(GLOB_RECURSE __PPLNN_X86_SRC_RECURSE__
+    src/ppl/nn/engines/x86/kernels/*.cc
+    src/ppl/nn/engines/x86/params/*.cc
+    src/ppl/nn/engines/x86/optimizer/*.cc)
+add_library(pplnn_x86_static STATIC
+    ${__PPLNN_X86_SRC__}
+    ${__PPLNN_X86_SRC_RECURSE__}
+    ${PPLNN_SOURCE_EXTERNAL_X86_ENGINE_SOURCES})
+unset(__PPLNN_X86_SRC_RECURSE__)
 unset(__PPLNN_X86_SRC__)
 
 add_subdirectory(src/ppl/nn/engines/x86/impls)

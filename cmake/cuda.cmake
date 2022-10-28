@@ -14,8 +14,18 @@ if(PPLNN_USE_MSVC_STATIC_RUNTIME)
     hpcc_cuda_use_msvc_static_runtime()
 endif()
 
-file(GLOB_RECURSE __PPLNN_CUDA_SRC__ src/ppl/nn/engines/cuda/*.cc)
-add_library(pplnn_cuda_static STATIC ${PPLNN_SOURCE_EXTERNAL_CUDA_ENGINE_SOURCES} ${__PPLNN_CUDA_SRC__})
+file(GLOB __PPLNN_CUDA_SRC__ src/ppl/nn/engines/cuda/*.cc)
+file(GLOB_RECURSE __PPLNN_CUDA_SRC_RECURSE__
+    src/ppl/nn/engines/cuda/kernels/*.cc
+    src/ppl/nn/engines/cuda/module/*.cc
+    src/ppl/nn/engines/cuda/optimizer/*.cc
+    src/ppl/nn/engines/cuda/params/*.cc
+    src/ppl/nn/engines/cuda/pmx/*.cc)
+add_library(pplnn_cuda_static STATIC
+    ${__PPLNN_CUDA_SRC__}
+    ${__PPLNN_CUDA_SRC_RECURSE__}
+    ${PPLNN_SOURCE_EXTERNAL_CUDA_ENGINE_SOURCES})
+unset(__PPLNN_CUDA_SRC_RECURSE__)
 unset(__PPLNN_CUDA_SRC__)
 
 add_subdirectory(src/ppl/nn/engines/cuda/impls)
