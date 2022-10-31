@@ -2,7 +2,7 @@ hpcc_populate_dep(luacpp)
 
 # --------------------------------------------------------------------------- #
 
-file(GLOB PPLNN_LUA_API_SRC
+file(GLOB __PPLNN_LUA_API_SRC__
     ${CMAKE_CURRENT_SOURCE_DIR}/common/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/engines/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime/*.cc
@@ -10,67 +10,54 @@ file(GLOB PPLNN_LUA_API_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/lua_pplnn.cc)
 
 if(PPLNN_USE_X86)
-    file(GLOB_RECURSE PPLNN_LUA_X86_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/x86/*.cc)
-    list(APPEND PPLNN_LUA_API_SRC ${PPLNN_LUA_X86_SRC})
+    file(GLOB_RECURSE __PPLNN_LUA_X86_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/engines/x86/*.cc)
+    list(APPEND __PPLNN_LUA_API_SRC__ ${__PPLNN_LUA_X86_SRC__})
+    unset(__PPLNN_LUA_X86_SRC__)
 endif()
 
 if(PPLNN_USE_CUDA)
-    file(GLOB_RECURSE PPLNN_LUA_CUDA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/cuda/*.cc)
-    list(APPEND PPLNN_LUA_API_SRC ${PPLNN_LUA_CUDA_SRC})
+    file(GLOB_RECURSE __PPLNN_LUA_CUDA_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/engines/cuda/*.cc)
+    list(APPEND __PPLNN_LUA_API_SRC__ ${__PPLNN_LUA_CUDA_SRC__})
+    unset(__PPLNN_LUA_CUDA_SRC__)
 endif()
 
 if(PPLNN_USE_RISCV)
-    file(GLOB_RECURSE PPLNN_LUA_RISCV_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/riscv/*.cc)
-    list(APPEND PPLNN_LUA_API_SRC ${PPLNN_LUA_RISCV_SRC})
+    file(GLOB_RECURSE __PPLNN_LUA_RISCV_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/engines/riscv/*.cc)
+    list(APPEND __PPLNN_LUA_API_SRC__ ${__PPLNN_LUA_RISCV_SRC__})
+    unset(__PPLNN_LUA_RISCV_SRC__)
 endif()
 
 if(PPLNN_USE_ARM)
-    file(GLOB_RECURSE PPLNN_LUA_ARM_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/arm/*.cc)
-    list(APPEND PPLNN_LUA_API_SRC ${PPLNN_LUA_ARM_SRC})
+    file(GLOB_RECURSE __PPLNN_LUA_ARM_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/engines/arm/*.cc)
+    list(APPEND __PPLNN_LUA_API_SRC__ ${__PPLNN_LUA_ARM_SRC__})
+    unset(__PPLNN_LUA_ARM_SRC__)
 endif()
 
 if(PPLNN_ENABLE_ONNX_MODEL)
-    file(GLOB_RECURSE PPLNN_LUA_ONNX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/models/onnx/*.cc)
-    list(APPEND PPLNN_LUA_API_SRC ${PPLNN_LUA_ONNX_SRC})
+    file(GLOB_RECURSE __PPLNN_LUA_ONNX_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/models/onnx/*.cc)
+    list(APPEND __PPLNN_LUA_API_SRC__ ${__PPLNN_LUA_ONNX_SRC__})
+    unset(__PPLNN_LUA_ONNX_SRC__)
 endif()
 
 if(PPLNN_ENABLE_PMX_MODEL)
-    file(GLOB_RECURSE PPLNN_LUA_PMX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/models/pmx/*.cc)
-    list(APPEND PPLNN_LUA_API_SRC ${PPLNN_LUA_PMX_SRC})
+    file(GLOB_RECURSE __PPLNN_LUA_PMX_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/models/pmx/*.cc)
+    list(APPEND __PPLNN_LUA_API_SRC__ ${__PPLNN_LUA_PMX_SRC__})
+    unset(__PPLNN_LUA_PMX_SRC__)
 endif()
 
-if(NOT PPLNN_LUA_API_EXTERNAL_SOURCES)
-    set(PPLNN_LUA_API_EXTERNAL_SOURCES lua_dummy_load_resources.cc)
+if(NOT PPLNN_SOURCE_EXTERNAL_LUA_SOURCES)
+    set(PPLNN_SOURCE_EXTERNAL_LUA_SOURCES lua_dummy_load_resources.cc)
 endif()
 
-add_library(luapplnn_shared SHARED ${PPLNN_LUA_API_SRC} ${PPLNN_LUA_API_EXTERNAL_SOURCES})
-target_link_libraries(luapplnn_shared PUBLIC pplnn_basic_static luacpp_static)
-target_include_directories(luapplnn_shared PUBLIC
-    ${PROJECT_SOURCE_DIR}/include)
+add_library(luapplnn_shared SHARED ${__PPLNN_LUA_API_SRC__} ${PPLNN_SOURCE_EXTERNAL_LUA_SOURCES})
+unset(__PPLNN_LUA_API_SRC__)
 
-if(PPLNN_USE_X86)
-    target_link_libraries(luapplnn_shared PRIVATE pplnn_x86_static)
-endif()
-
-if(PPLNN_USE_ARM)
-    target_link_libraries(luapplnn_shared PRIVATE pplnn_arm_static)
-endif()
-
-if(PPLNN_USE_CUDA)
-    target_link_libraries(luapplnn_shared PRIVATE pplnn_cuda_static)
-endif()
-
-if(PPLNN_USE_RISCV)
-    target_link_libraries(luapplnn_shared PRIVATE pplnn_riscv_static)
-endif()
-
-if(PPLNN_ENABLE_ONNX_MODEL)
-    target_link_libraries(luapplnn_shared PRIVATE pplnn_onnx_static)
-endif()
-
-if(PPLNN_ENABLE_PMX_MODEL)
-    target_link_libraries(luapplnn_shared PRIVATE pplnn_pmx_static)
-endif()
+target_link_libraries(luapplnn_shared PRIVATE
+    pplnn_static luacpp_static
+    ${PPLNN_SOURCE_EXTERNAL_LUA_LINK_LIBRARIES})
+target_include_directories(luapplnn_shared PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PPLNN_SOURCE_EXTERNAL_LUA_INCLUDE_DIRECTORIES})
 
 # --------------------------------------------------------------------------- #
 

@@ -28,34 +28,13 @@ file(GLOB_RECURSE PPLNN_TEST_SRC
 add_executable(pplnn_unittest ${PPLNN_TEST_SRC})
 
 hpcc_populate_dep(googletest)
-target_link_libraries(pplnn_unittest PRIVATE pplnn_basic_static gtest_main)
+target_link_libraries(pplnn_unittest PRIVATE pplnn_static gtest_main)
 
 target_include_directories(pplnn_unittest PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/..
     ${googletest_SOURCE_DIR}/include)
 
-if(PPLNN_USE_X86)
-    target_link_libraries(pplnn_unittest PRIVATE pplnn_x86_static)
-endif()
-
-if(PPLNN_USE_ARM)
-    target_link_libraries(pplnn_unittest PRIVATE pplnn_arm_static)
-endif()
-
-if(PPLNN_USE_CUDA)
-    target_link_libraries(pplnn_unittest PRIVATE pplnn_cuda_static)
-endif()
-
-if(PPLNN_USE_RISCV)
-    target_link_libraries(pplnn_unittest PRIVATE pplnn_riscv_static)
-endif()
-
-if(PPLNN_ENABLE_ONNX_MODEL)
-    target_link_libraries(pplnn_unittest PRIVATE pplnn_onnx_static)
-endif()
-
 if(PPLNN_ENABLE_PMX_MODEL)
-    target_link_libraries(pplnn_unittest PRIVATE pplnn_pmx_static)
     target_include_directories(pplnn_unittest PRIVATE
         ${flatbuffers_SOURCE_DIR}/include)
 endif()

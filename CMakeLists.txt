@@ -54,6 +54,12 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
+# interface lib. MUST be placed before any other modules
+
+add_library(pplnn_static INTERFACE)
+
+# --------------------------------------------------------------------------- #
+
 # dependencies
 
 include(cmake/deps.cmake)
@@ -155,6 +161,8 @@ target_compile_definitions(pplnn_basic_static PUBLIC
 if(PPLNN_ENABLE_KERNEL_PROFILING)
     target_compile_definitions(pplnn_basic_static PUBLIC PPLNN_ENABLE_KERNEL_PROFILING)
 endif()
+
+target_link_libraries(pplnn_static INTERFACE pplnn_basic_static)
 
 # --------------------------------------------------------------------------- #
 

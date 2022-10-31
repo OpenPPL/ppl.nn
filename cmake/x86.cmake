@@ -31,6 +31,8 @@ if(PPLNN_ENABLE_SANITIZE_OPTIONS)
     endif()
 endif()
 
+target_link_libraries(pplnn_static INTERFACE pplnn_x86_static)
+
 if(PPLNN_INSTALL)
     install(DIRECTORY include/ppl/nn/engines/x86 DESTINATION include/ppl/nn/engines)
     install(TARGETS pplnn_x86_static DESTINATION lib)
