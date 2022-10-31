@@ -18,6 +18,8 @@ target_link_libraries(pplnn_riscv_static PUBLIC pplnn_basic_static pplkernelrisc
 
 target_compile_definitions(pplnn_riscv_static PUBLIC PPLNN_USE_RISCV)
 
+target_link_libraries(pplnn_static INTERFACE pplnn_riscv_static)
+
 if(PPLNN_INSTALL)
     install(DIRECTORY include/ppl/nn/engines/riscv DESTINATION include/ppl/nn/engines)
     install(TARGETS pplnn_riscv_static DESTINATION lib)

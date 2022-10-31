@@ -38,6 +38,8 @@ target_compile_definitions(pplnn_cuda_static PUBLIC
     PPLNN_CUDACC_VER_MAJOR=${CUDA_VERSION_MAJOR}
     PPLNN_CUDACC_VER_MINOR=${CUDA_VERSION_MINOR})
 
+target_link_libraries(pplnn_static INTERFACE pplnn_cuda_static)
+
 if(PPLNN_INSTALL)
     install(DIRECTORY include/ppl/nn/engines/cuda DESTINATION include/ppl/nn/engines)
     install(TARGETS pplnn_cuda_static DESTINATION lib)

@@ -9,6 +9,8 @@ include(cmake/protobuf.cmake)
 target_link_libraries(pplnn_onnx_static PUBLIC libprotobuf)
 target_include_directories(pplnn_onnx_static PRIVATE ${protobuf_SOURCE_DIR}/src)
 
+target_link_libraries(pplnn_static INTERFACE pplnn_onnx_static)
+
 if(PPLNN_INSTALL)
     install(DIRECTORY include/ppl/nn/models/onnx DESTINATION include/ppl/nn/models)
     install(TARGETS pplnn_onnx_static DESTINATION lib)

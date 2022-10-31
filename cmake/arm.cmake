@@ -97,6 +97,8 @@ if(PPLNN_ENABLE_SANITIZE_OPTIONS)
     endif()
 endif()
 
+target_link_libraries(pplnn_static INTERFACE pplnn_arm_static)
+
 if(PPLNN_INSTALL)
     install(DIRECTORY include/ppl/nn/engines/arm DESTINATION include/ppl/nn/engines)
     install(TARGETS pplnn_arm_static DESTINATION lib)

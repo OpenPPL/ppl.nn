@@ -29,7 +29,7 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
-file(GLOB PPLNN_PYTHON_API_SRC
+file(GLOB __PPLNN_PYTHON_API_SRC__
     ${CMAKE_CURRENT_SOURCE_DIR}/common/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/utils/*.cc
@@ -37,72 +37,57 @@ file(GLOB PPLNN_PYTHON_API_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/engines/py_engine.cc)
 
 if(PPLNN_USE_X86)
-    file(GLOB_RECURSE PPLNN_PYTHON_X86_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/x86/*.cc)
-    list(APPEND PPLNN_PYTHON_API_SRC ${PPLNN_PYTHON_X86_SRC})
+    file(GLOB_RECURSE __PPLNN_PYTHON_X86_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/engines/x86/*.cc)
+    list(APPEND __PPLNN_PYTHON_API_SRC__ ${__PPLNN_PYTHON_X86_SRC__})
+    unset(__PPLNN_PYTHON_X86_SRC__)
 endif()
 
 if(PPLNN_USE_CUDA)
-    file(GLOB_RECURSE PPLNN_PYTHON_CUDA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/cuda/*.cc)
-    list(APPEND PPLNN_PYTHON_API_SRC ${PPLNN_PYTHON_CUDA_SRC})
+    file(GLOB_RECURSE __PPLNN_PYTHON_CUDA_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/engines/cuda/*.cc)
+    list(APPEND __PPLNN_PYTHON_API_SRC__ ${__PPLNN_PYTHON_CUDA_SRC__})
+    unset(__PPLNN_PYTHON_CUDA_SRC__)
 endif()
 
 if(PPLNN_USE_RISCV)
-    file(GLOB_RECURSE PPLNN_PYTHON_RISCV_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/riscv/*.cc)
-    list(APPEND PPLNN_PYTHON_API_SRC ${PPLNN_PYTHON_RISCV_SRC})
+    file(GLOB_RECURSE __PPLNN_PYTHON_RISCV_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/engines/riscv/*.cc)
+    list(APPEND __PPLNN_PYTHON_API_SRC__ ${__PPLNN_PYTHON_RISCV_SRC__})
+    unset(__PPLNN_PYTHON_RISCV_SRC__)
 endif()
 
 if(PPLNN_USE_ARM)
-    file(GLOB_RECURSE PPLNN_PYTHON_ARM_SRC ${CMAKE_CURRENT_SOURCE_DIR}/engines/arm/*.cc)
-    list(APPEND PPLNN_PYTHON_API_SRC ${PPLNN_PYTHON_ARM_SRC})
+    file(GLOB_RECURSE __PPLNN_PYTHON_ARM_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/engines/arm/*.cc)
+    list(APPEND __PPLNN_PYTHON_API_SRC__ ${__PPLNN_PYTHON_ARM_SRC__})
+    unset(__PPLNN_PYTHON_ARM_SRC__)
 endif()
 
 if(PPLNN_ENABLE_ONNX_MODEL)
-    file(GLOB_RECURSE PPLNN_PYTHON_ONNX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/models/onnx/*.cc)
-    list(APPEND PPLNN_PYTHON_API_SRC ${PPLNN_PYTHON_ONNX_SRC})
+    file(GLOB_RECURSE __PPLNN_PYTHON_ONNX_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/models/onnx/*.cc)
+    list(APPEND __PPLNN_PYTHON_API_SRC__ ${__PPLNN_PYTHON_ONNX_SRC__})
+    unset(__PPLNN_PYTHON_ONNX_SRC__)
 endif()
 
 if(PPLNN_ENABLE_PMX_MODEL)
-    file(GLOB_RECURSE PPLNN_PYTHON_PMX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/models/pmx/*.cc)
-    list(APPEND PPLNN_PYTHON_API_SRC ${PPLNN_PYTHON_PMX_SRC})
+    file(GLOB_RECURSE __PPLNN_PYTHON_PMX_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/models/pmx/*.cc)
+    list(APPEND __PPLNN_PYTHON_API_SRC__ ${__PPLNN_PYTHON_PMX_SRC__})
+    unset(__PPLNN_PYTHON_PMX_SRC__)
 endif()
 
-if(NOT PPLNN_PYTHON_API_EXTERNAL_SOURCES)
-    set(PPLNN_PYTHON_API_EXTERNAL_SOURCES py_dummy_load_resources.cc)
+if(NOT PPLNN_SOURCE_EXTERNAL_PYTHON_SOURCES)
+    set(PPLNN_SOURCE_EXTERNAL_PYTHON_SOURCES py_dummy_load_resources.cc)
 endif()
 
-add_library(pypplnn_shared SHARED ${PPLNN_PYTHON_API_SRC} ${PPLNN_PYTHON_API_EXTERNAL_SOURCES})
+add_library(pypplnn_shared SHARED ${__PPLNN_PYTHON_API_SRC__} ${PPLNN_SOURCE_EXTERNAL_PYTHON_SOURCES})
+unset(__PPLNN_PYTHON_API_SRC__)
+
 target_link_libraries(pypplnn_shared
     PUBLIC ${PYTHON3_LIBRARIES}
-    PRIVATE pplnn_basic_static)
+    PRIVATE pplnn_static ${PPLNN_SOURCE_EXTERNAL_PYTHON_LINK_LIBRARIES})
 target_include_directories(pypplnn_shared PRIVATE
     ${PROJECT_SOURCE_DIR}/include
     ${pybind11_SOURCE_DIR}/include
+    ${PPLNN_SOURCE_EXTERNAL_PYTHON_INCLUDE_DIRECTORIES}
     ${PYTHON3_INCLUDE_DIRS})
 target_compile_features(pypplnn_shared PRIVATE cxx_std_11)
-
-if(PPLNN_USE_X86)
-    target_link_libraries(pypplnn_shared PRIVATE pplnn_x86_static)
-endif()
-
-if(PPLNN_USE_ARM)
-    target_link_libraries(pypplnn_shared PRIVATE pplnn_arm_static)
-endif()
-
-if(PPLNN_USE_CUDA)
-    target_link_libraries(pypplnn_shared PRIVATE pplnn_cuda_static)
-endif()
-
-if(PPLNN_USE_RISCV)
-    target_link_libraries(pypplnn_shared PRIVATE pplnn_riscv_static)
-endif()
-
-if(PPLNN_ENABLE_ONNX_MODEL)
-    target_link_libraries(pypplnn_shared PRIVATE pplnn_onnx_static)
-endif()
-
-if(PPLNN_ENABLE_PMX_MODEL)
-    target_link_libraries(pypplnn_shared PRIVATE pplnn_pmx_static)
-endif()
 
 # --------------------------------------------------------------------------- #
 
