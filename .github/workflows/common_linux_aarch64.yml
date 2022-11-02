@@ -40,3 +40,8 @@ jobs:
       - name: Test
         run: |
           cd ../../ && ./test_pplnn.sh ${{ github.run_id }} aarch64
+
+      - name: cleanup
+        if: ${{ always() }}
+        run: |
+          cd ../../ && ./clean_pplnn.sh ${{ github.run_id }}
