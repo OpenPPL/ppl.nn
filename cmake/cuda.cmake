@@ -17,10 +17,17 @@ endif()
 file(GLOB __PPLNN_CUDA_SRC__ src/ppl/nn/engines/cuda/*.cc)
 file(GLOB_RECURSE __PPLNN_CUDA_SRC_RECURSE__
     src/ppl/nn/engines/cuda/kernels/*.cc
-    src/ppl/nn/engines/cuda/module/*.cc
     src/ppl/nn/engines/cuda/optimizer/*.cc
     src/ppl/nn/engines/cuda/params/*.cc
     src/ppl/nn/engines/cuda/pmx/*.cc)
+
+if(PPLNN_ENABLE_CUDA_JIT)
+file(GLOB_RECURSE __PPLNN_CUDA_MODULE_SRC_RECURSE__
+    src/ppl/nn/engines/cuda/module/*.cc)
+    list(APPEND __PPLNN_CUDA_SRC_RECURSE__ ${__PPLNN_CUDA_MODULE_SRC_RECURSE__})
+    unset(__PPLNN_CUDA_MODULE_SRC_RECURSE__)
+endif()
+
 add_library(pplnn_cuda_static STATIC
     ${__PPLNN_CUDA_SRC__}
     ${__PPLNN_CUDA_SRC_RECURSE__}

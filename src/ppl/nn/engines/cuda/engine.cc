@@ -99,6 +99,7 @@ RetCode CudaEngine::DoOptimize(const utils::SharedResource& resource, ir::Graph*
     return RC_SUCCESS;
 }
 
+#ifdef PPLNN_ENABLE_CUDA_JIT
 ppl::common::RetCode CudaEngine::CompileCudaModule(const utils::SharedResource& resource,
                                                    const CompileInfo& compile_set, ir::Graph* graph,
                                                    RuntimePartitionInfo* info) {
@@ -118,6 +119,7 @@ ppl::common::RetCode CudaEngine::CompileCudaModule(const utils::SharedResource& 
 
     return RC_SUCCESS;
 }
+#endif
 
 static void ExportAlgorithmsInfo(const map<string, CudaArgs::AlgoSelects>& algos,
                                  void (*func)(const char*, uint64_t, void*), void* arg) {
