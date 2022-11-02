@@ -353,8 +353,7 @@ static vector<uint32_t> GenNid2Partidx(nodeid_t maxid, const vector<pair<EngineI
 }
 
 RetCode ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, RuntimeGraphInfo* info) {
-    GraphOptimizerManager optimizer_mgr;
-    auto status = optimizer_mgr.Process(graph);
+    auto status = GraphOptimizerManager::GetInstance()->Process(graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "do optimization failed: " << GetRetCodeStr(status);
         return status;

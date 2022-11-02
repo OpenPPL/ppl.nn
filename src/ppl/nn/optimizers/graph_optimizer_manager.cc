@@ -30,7 +30,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn {
 
-#define REGISTER_OPTIMIZER(name, type) name2optimizer_.emplace(name, unique_ptr<GraphOptimizer>(new type()))
+#define REGISTER_OPTIMIZER(name, type) name2optimizer_.emplace(name, make_shared<type>())
 
 GraphOptimizerManager::GraphOptimizerManager() {
     REGISTER_OPTIMIZER("ConstantNodeOptimizer", ConstantNodeOptimizer);
@@ -39,6 +39,11 @@ GraphOptimizerManager::GraphOptimizerManager() {
     REGISTER_OPTIMIZER("FuseConstantOptimizer", FuseConstantOptimizer);
     REGISTER_OPTIMIZER("FuseShapeOptimizer", FuseShapeOptimizer);
     REGISTER_OPTIMIZER("SkipDropoutOptimizer", SkipDropoutOptimizer);
+}
+
+RetCode GraphOptimizerManager::RegisterOptimizer(const string& name, const shared_ptr<GraphOptimizer>& opt) {
+    auto ret_pair = name2optimizer_.insert(make_pair(name, opt));
+    return ret_pair.second ? RC_SUCCESS : RC_EXISTS;
 }
 
 RetCode GraphOptimizerManager::Process(ir::Graph* graph) const {
