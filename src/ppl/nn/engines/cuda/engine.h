@@ -65,8 +65,10 @@ public:
     bool Supports(const ir::Node*) const override;
     ppl::common::RetCode ProcessGraph(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*) override;
     EngineImpl* Create() override;
+#ifdef PPLNN_ENABLE_CUDA_JIT
     ppl::common::RetCode CompileCudaModule(const utils::SharedResource&, const CompileInfo&, ir::Graph*,
                                            RuntimePartitionInfo*);
+#endif
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override;
