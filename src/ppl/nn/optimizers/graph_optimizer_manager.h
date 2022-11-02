@@ -25,13 +25,21 @@ namespace ppl { namespace nn {
 
 class GraphOptimizerManager final {
 public:
-    GraphOptimizerManager();
+    static GraphOptimizerManager* GetInstance() {
+        static GraphOptimizerManager mgr;
+        return &mgr;
+    }
+
+    ppl::common::RetCode RegisterOptimizer(const std::string& name, const std::shared_ptr<GraphOptimizer>&);
 
     /** @brief perform optimizations */
     ppl::common::RetCode Process(ir::Graph*) const;
 
 private:
-    std::map<std::string, std::unique_ptr<GraphOptimizer>> name2optimizer_;
+    GraphOptimizerManager();
+
+private:
+    std::map<std::string, std::shared_ptr<GraphOptimizer>> name2optimizer_;
 };
 
 }} // namespace ppl::nn
