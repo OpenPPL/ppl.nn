@@ -452,9 +452,6 @@ static RetCode CreateFbModel(FlatBufferBuilder* builder, const ir::GraphTopo* to
 
 RetCode Serializer::Serialize(const ir::GraphTopo* topo, const vector<EngineImpl*>& engines,
                               const RuntimeGraphInfo& info, ppl::nn::utils::DataStream* ds) const {
-    LOG(WARNING) << "pmx format is under heavily developing and may change in the future. do not use it in production "
-                    "environment.";
-
     flatbuffers::FlatBufferBuilder builder;
     auto status = CreateFbModel(&builder, topo, engines, info);
     if (status != RC_SUCCESS) {

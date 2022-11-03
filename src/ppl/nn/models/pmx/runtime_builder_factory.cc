@@ -22,8 +22,6 @@
 namespace ppl { namespace nn { namespace pmx {
 
 RuntimeBuilder* RuntimeBuilderFactory::Create() {
-    LOG(WARNING) << "pmx format is under heavily developing and may change in the future. do not use it in production "
-                    "environment.";
     return new RuntimeBuilderImpl();
 }
 
