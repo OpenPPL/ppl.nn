@@ -48,7 +48,7 @@ void col2im2d_ndarray_fp32_sse(
                 int64_t w_offset = kw * hole_w;
                 int64_t h_offset = kh * hole_h;
                 int64_t w_start  = max<int64_t>(div_up(pad_w - w_offset, stride_w), 0);
-                int64_t w_end    = min<int64_t>((img_w + pad_w - kernel_w) / stride_w + 1, img_w);
+                int64_t w_end    = min<int64_t>(div_up(img_w + pad_w - w_offset, stride_w), col_w);
                 int64_t iw_start = w_start * stride_w - (pad_w - w_offset);
                 for (int64_t h = 0; h < col_h; ++h) {
                     int64_t ih = h * stride_h - pad_h + h_offset;
