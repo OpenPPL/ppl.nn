@@ -365,8 +365,10 @@ static bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
         LOG(ERROR) << "x86_engine Configure ENGINE_CONF_DEBUG_DATA_DIR failed: " << GetRetCodeStr(rc);
         return false;
     }
-    
-    if (g_flag_core_binding) ppl::kernel::x86::set_omp_core_binding(nullptr, 0, 1);
+
+    if (g_flag_core_binding) {
+        ppl::kernel::x86::set_omp_core_binding(nullptr, 0, 1);
+    }
 
     engines->emplace_back(unique_ptr<Engine>(x86_engine));
     LOG(INFO) << "***** register X86Engine *****";
@@ -800,7 +802,7 @@ static bool SaveInputsOneByOne(const Runtime* runtime) {
 
         const char* data_type_str = FindDataTypeStr(shape->GetDataType());
         if (!data_type_str) {
-            LOG(ERROR) << "unsupported data type[" << shape->GetDataType();
+            LOG(ERROR) << "unsupported data type[" << GetDataTypeStr(shape->GetDataType()) << "]";
             return false;
         }
 
@@ -1136,8 +1138,9 @@ int main(int argc, char* argv[]) {
 
     unique_ptr<Runtime> runtime;
 
+    if (false) {}
 #ifdef PPLNN_ENABLE_ONNX_MODEL
-    if (!g_flag_onnx_model.empty()) {
+    else if (!g_flag_onnx_model.empty()) {
         auto builder = unique_ptr<onnx::RuntimeBuilder>(onnx::RuntimeBuilderFactory::Create());
         if (!builder) {
             LOG(ERROR) << "create RuntimeBuilder failed.";
@@ -1154,6 +1157,7 @@ int main(int argc, char* argv[]) {
         for (uint32_t i = 0; i < engines.size(); ++i) {
             engine_ptrs[i] = engines[i].get();
         }
+
         onnx::RuntimeBuilder::Resources resources;
         resources.engines = engine_ptrs.data();
         resources.engine_num = engine_ptrs.size();
@@ -1189,19 +1193,19 @@ int main(int argc, char* argv[]) {
         runtime.reset(builder->CreateRuntime());
     }
 #endif
-
 #ifdef PPLNN_ENABLE_PMX_MODEL
-    if (!g_flag_pmx_model.empty()) {
+    else if (!g_flag_pmx_model.empty()) {
         auto builder = unique_ptr<pmx::RuntimeBuilder>(pmx::RuntimeBuilderFactory::Create());
         if (!builder) {
             LOG(ERROR) << "create PmxRuntimeBuilder failed.";
             return -1;
         }
-        
+
         vector<Engine*> engine_ptrs(engines.size());
         for (uint32_t i = 0; i < engines.size(); ++i) {
             engine_ptrs[i] = engines[i].get();
         }
+
         pmx::RuntimeBuilder::Resources resources;
         resources.engines = engine_ptrs.data();
         resources.engine_num = engine_ptrs.size();

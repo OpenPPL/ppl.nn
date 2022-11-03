@@ -21,7 +21,7 @@ option(PPLNN_USE_CUDA "" @PPLNN_USE_CUDA@)
 
 option(PPLNN_ENABLE_ONNX_MODEL "" @PPLNN_ENABLE_ONNX_MODEL@)
 
-# pmx is required by onnx model if enabled
+# pmx is integrated in pplnn_basic_static
 set(PPLNN_ENABLE_PMX_MODEL @PPLNN_ENABLE_PMX_MODEL@)
 
 set(PPLNN_VERSION_MAJOR @PPLNN_VERSION_MAJOR@)
@@ -117,19 +117,6 @@ unset(__PPLNN_LIB_PATH__)
 
 # --------------------------------------------------------------------------- #
 
-if(PPLNN_ENABLE_PMX_MODEL)
-    get_filename_component(__PPLNN_LIB_PATH__ "${__PPLNN_PACKAGE_ROOTDIR__}/lib/@HPCC_STATIC_LIB_PREFIX@pplnn_pmx_static@HPCC_STATIC_LIB_SUFFIX@" ABSOLUTE)
-    add_library(pplnn_pmx_static STATIC IMPORTED)
-    set_target_properties(pplnn_pmx_static PROPERTIES
-        INTERFACE_LINK_LIBRARIES "pplnn_basic_static"
-        IMPORTED_LOCATION "${__PPLNN_LIB_PATH__}"
-        IMPORTED_LOCATION_DEBUG "${__PPLNN_LIB_PATH__}"
-        IMPORTED_LOCATION_RELEASE "${__PPLNN_LIB_PATH__}")
-    unset(__PPLNN_LIB_PATH__)
-
-    list(APPEND PPLNN_LIBRARIES pplnn_pmx_static)
-endif()
-
 if(PPLNN_ENABLE_ONNX_MODEL)
     if(NOT TARGET "protobuf::libprotobuf")
         include(${__PPLNN_PACKAGE_ROOTDIR__}/lib/cmake/protobuf/protobuf-config.cmake)
@@ -143,11 +130,6 @@ if(PPLNN_ENABLE_ONNX_MODEL)
         IMPORTED_LOCATION_DEBUG "${__PPLNN_LIB_PATH__}"
         IMPORTED_LOCATION_RELEASE "${__PPLNN_LIB_PATH__}")
     unset(__PPLNN_LIB_PATH__)
-
-    if(PPLNN_ENABLE_PMX_MODEL)
-        target_link_libraries(pplnn_onnx_static INTERFACE pplnn_pmx_static)
-    endif()
-
     list(APPEND PPLNN_LIBRARIES pplnn_onnx_static)
 endif()
 
