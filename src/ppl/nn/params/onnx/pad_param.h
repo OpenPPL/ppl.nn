@@ -24,7 +24,6 @@
 
 namespace ppl { namespace nn { namespace onnx {
 
-#define PAD_PARAM_MAX_DIM_SIZE 5
 
 struct PadParam final : public ir::TypedAttr<PadParam> {
     enum { PAD_MODE_CONSTANT = 0, PAD_MODE_REFLECT = 1, PAD_MODE_EDGE = 2 };
