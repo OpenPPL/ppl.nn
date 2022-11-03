@@ -73,7 +73,8 @@ RetCode ModelParser::Parse(const char* buf, uint64_t buf_len, const char* model_
     ParseOpSets(pb_model, &model->opset);
 
     GraphParser graph_parser;
-    auto status = graph_parser.Parse(pb_model.graph(), model->opset, model_file_dir, &model->graph);
+    auto status =
+        graph_parser.Parse(pb_model.graph(), model->opset, model_file_dir, &model->graph, &model->axis_symbols);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse graph failed: " << GetRetCodeStr(status);
         return status;

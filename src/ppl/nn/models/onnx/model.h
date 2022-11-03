@@ -26,6 +26,8 @@ namespace ppl { namespace nn { namespace onnx {
 
 struct Model final {
     std::map<std::string, uint64_t> opset;
+    // for serializing to onnx: pair<edgeid, dim> => symbol
+    std::map<std::pair<edgeid_t, uint32_t>, std::string> axis_symbols;
     ir::Graph graph;
 };
 

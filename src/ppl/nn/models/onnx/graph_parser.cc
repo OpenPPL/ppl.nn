@@ -61,7 +61,8 @@ static void GetAllConstantNames(const ::onnx::GraphProto& pb_graph, set<string>*
     }
 }
 
-static RetCode ParseGraphInput(const ::onnx::GraphProto& pb_graph, ir::GraphTopo* topo, ir::GraphData* data) {
+static RetCode ParseGraphInput(const ::onnx::GraphProto& pb_graph, ir::GraphTopo* topo, ir::GraphData* data,
+                               map<pair<edgeid_t, uint32_t>, string>* axis_symbols) {
     set<string> constants;
     GetAllConstantNames(pb_graph, &constants);
 
@@ -99,7 +100,9 @@ static RetCode ParseGraphInput(const ::onnx::GraphProto& pb_graph, ir::GraphTopo
                 shape.dims.push_back(dim_value);
             } else if (pb_dimension.value_case() == ::onnx::TensorShapeProto_Dimension::kDimParam) {
                 shape.dims.push_back(INVALID_DIM_VALUE);
-                data->axis_symbols.insert(make_pair(make_pair(edge->GetId(), j), pb_dimension.dim_param()));
+                if (axis_symbols) {
+                    axis_symbols->insert(make_pair(make_pair(edge->GetId(), j), pb_dimension.dim_param()));
+                }
             } else {
                 LOG(ERROR) << "tensor[" << pb_input.name() << "] dim is not set";
                 return RC_NOT_FOUND;
@@ -278,7 +281,8 @@ static void ParseGraphExtraInput(ir::GraphTopo* topo) {
 }
 
 RetCode GraphParser::Parse(const ::onnx::GraphProto& pb_graph, const map<string, uint64_t>& op_set,
-                           const char* model_file_dir, ir::Graph* graph) {
+                           const char* model_file_dir, ir::Graph* graph,
+                           map<pair<edgeid_t, uint32_t>, string>* axis_symbols) {
     graph->topo = make_shared<ir::FullGraphTopo>();
     graph->data = make_shared<ir::GraphData>();
 
@@ -293,7 +297,7 @@ RetCode GraphParser::Parse(const ::onnx::GraphProto& pb_graph, const map<string,
         return status;
     }
 
-    status = ParseGraphInput(pb_graph, topo, data);
+    status = ParseGraphInput(pb_graph, topo, data, axis_symbols);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "ParseGraphInput failed.";
         return status;
