@@ -130,7 +130,8 @@ static RetCode PackGraphInitializer(::onnx::GraphProto* pb_graph, const ir::Grap
     return RC_SUCCESS;
 }
 
-static RetCode PackGraphInput(::onnx::GraphProto* pb_graph, const ir::Graph& graph) {
+static RetCode PackGraphInput(::onnx::GraphProto* pb_graph, const ir::Graph& graph,
+                              const map<pair<edgeid_t, uint32_t>, string>& axis_symbols) {
     auto topo = graph.topo.get();
     auto data = graph.data.get();
 
@@ -157,8 +158,8 @@ static RetCode PackGraphInput(::onnx::GraphProto* pb_graph, const ir::Graph& gra
             if (dim != INVALID_DIM_VALUE) {
                 pb_dim->set_dim_value(dim);
             } else {
-                auto symbol_ref = data->axis_symbols.find(make_pair(eid, i));
-                if (symbol_ref == data->axis_symbols.end()) {
+                auto symbol_ref = axis_symbols.find(make_pair(eid, i));
+                if (symbol_ref == axis_symbols.end()) {
                     LOG(ERROR) << "cannot find symbol of dim[" << i << "] of edge[" << edge->GetName() << "]";
                     return RC_NOT_FOUND;
                 }
@@ -181,7 +182,8 @@ static RetCode PackGraphOutput(::onnx::GraphProto* pb_graph, const ir::Graph& gr
     return RC_SUCCESS;
 }
 
-static RetCode PackGraph(::onnx::GraphProto* pb_graph, const ir::Graph& graph) {
+static RetCode PackGraph(::onnx::GraphProto* pb_graph, const ir::Graph& graph,
+                         const map<pair<edgeid_t, uint32_t>, string>& axis_symbols) {
     pb_graph->set_name(graph.topo->GetName());
 
     auto status = PackGraphNode(pb_graph, graph);
@@ -196,7 +198,7 @@ static RetCode PackGraph(::onnx::GraphProto* pb_graph, const ir::Graph& graph) {
         return status;
     }
 
-    status = PackGraphInput(pb_graph, graph);
+    status = PackGraphInput(pb_graph, graph, axis_symbols);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "PackGraphInput failed: " << GetRetCodeStr(status);
         return status;
@@ -214,7 +216,7 @@ static RetCode PackGraph(::onnx::GraphProto* pb_graph, const ir::Graph& graph) {
 RetCode Serializer::Serialize(const Model& model, ppl::nn::utils::DataStream* ds) const {
     ::onnx::ModelProto pb_model;
     PackModelInfo(&pb_model, model.opset);
-    auto status = PackGraph(pb_model.mutable_graph(), model.graph);
+    auto status = PackGraph(pb_model.mutable_graph(), model.graph, model.axis_symbols);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "PackGraph failed: " << GetRetCodeStr(status);
         return status;
