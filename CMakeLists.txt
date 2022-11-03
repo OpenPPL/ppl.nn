@@ -102,12 +102,13 @@ hpcc_populate_dep(pplcommon)
 
 # model formats
 
-if(PPLNN_ENABLE_ONNX_MODEL)
-    include(cmake/onnx_model.cmake)
-endif()
-
+# put pmx model first, because other model formats may use pmx serializer
 if(PPLNN_ENABLE_PMX_MODEL)
     include(cmake/pmx_model.cmake)
+endif()
+
+if(PPLNN_ENABLE_ONNX_MODEL)
+    include(cmake/onnx_model.cmake)
 endif()
 
 # --------------------------------------------------------------------------- #
