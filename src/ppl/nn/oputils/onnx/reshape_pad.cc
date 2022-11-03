@@ -30,7 +30,7 @@ RetCode ReshapePad(InputOutputInfo* info, const ir::Attr* arg, const Tpad* start
 
     const TensorShape& shape = *info->GetInput<TensorImpl>(0)->GetShape();
     uint32_t dim_count = shape.GetDimCount();
-    int64_t output_dim[PAD_PARAM_MAX_DIM_SIZE];
+    std::vector<int64_t> output_dim(dim_count, 0);
 
     for (uint32_t it = 0; it < dim_count; ++it) {
         Tpad start_pad = start_pads[it];
@@ -49,7 +49,7 @@ RetCode ReshapePad(InputOutputInfo* info, const ir::Attr* arg, const Tpad* start
         }
         output_dim[it] = cur_dim_size + start_pad + end_pad;
     }
-    info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(output_dim, dim_count);
+    info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(output_dim.data(), dim_count);
 
     return RC_SUCCESS;
 }

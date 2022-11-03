@@ -22,7 +22,6 @@
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 
-#define PAD_PARAM_MAX_DIM_SIZE 5
 struct PadKernelParam {
     typedef uint32_t pad_mode_t;
     enum { PAD_MODE_CONSTANT = 0,
