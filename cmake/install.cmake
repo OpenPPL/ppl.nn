@@ -12,3 +12,7 @@ install(DIRECTORY include/ppl/nn/runtime DESTINATION include/ppl/nn)
 install(DIRECTORY include/ppl/nn/utils DESTINATION include/ppl/nn)
 
 install(FILES include/ppl/nn/engines/engine.h DESTINATION include/ppl/nn/engines)
+
+if(PPLNN_ENABLE_PMX_MODEL)
+    install(DIRECTORY include/ppl/nn/models/pmx DESTINATION include/ppl/nn/models)
+endif()

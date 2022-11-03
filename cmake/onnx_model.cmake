@@ -5,10 +5,6 @@ unset(__PPLNN_MODEL_ONNX_SRC__)
 target_compile_definitions(pplnn_onnx_static PUBLIC PPLNN_ENABLE_ONNX_MODEL)
 target_link_libraries(pplnn_onnx_static PUBLIC pplnn_basic_static)
 
-if(PPLNN_ENABLE_PMX_MODEL)
-    target_link_libraries(pplnn_onnx_static PUBLIC pplnn_pmx_static)
-endif()
-
 include(cmake/protobuf.cmake)
 target_link_libraries(pplnn_onnx_static PUBLIC libprotobuf)
 target_include_directories(pplnn_onnx_static PRIVATE ${protobuf_SOURCE_DIR}/src)

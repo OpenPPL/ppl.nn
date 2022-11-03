@@ -100,20 +100,9 @@ hpcc_populate_dep(pplcommon)
 
 # --------------------------------------------------------------------------- #
 
-# model formats
-
-# put pmx model first, because other model formats may use pmx serializer
-if(PPLNN_ENABLE_PMX_MODEL)
-    include(cmake/pmx_model.cmake)
-endif()
-
-if(PPLNN_ENABLE_ONNX_MODEL)
-    include(cmake/onnx_model.cmake)
-endif()
-
-# --------------------------------------------------------------------------- #
-
 # pplnn basic
+
+# ----- sources begin ----- #
 
 file(GLOB_RECURSE __PPLNN_BUILTIN_ENGINE_SRC__
     src/ppl/nn/engines/common/*.cc)
@@ -129,12 +118,28 @@ file(GLOB __PPLNN_SOURCES__
     src/ppl/nn/utils/*.cc
     ${__PPLNN_BUILTIN_ENGINE_SRC__}
     ${__PPLNN_OPUTILS_SRC__})
+
+if(PPLNN_ENABLE_PMX_MODEL)
+    file(GLOB_RECURSE __PPLNN_MODEL_PMX_SRC__ src/ppl/nn/models/pmx/*.cc)
+    list(APPEND __PPLNN_SOURCES__ ${__PPLNN_MODEL_PMX_SRC__} ${PPLNN_SOURCE_EXTERNAL_PMX_MODEL_SOURCES})
+    unset(__PPLNN_MODEL_PMX_SRC__)
+endif()
+
 add_library(pplnn_basic_static STATIC
     ${__PPLNN_SOURCES__}
     ${PPLNN_SOURCE_EXTERNAL_SOURCES})
+
 unset(__PPLNN_SOURCES__)
 unset(__PPLNN_OPUTILS_SRC__)
 unset(__PPLNN_BUILTIN_ENGINE_SRC__)
+
+# ----- sources end ----- #
+
+if(PPLNN_ENABLE_PMX_MODEL)
+    hpcc_populate_dep(flatbuffers)
+    target_include_directories(pplnn_basic_static PRIVATE ${flatbuffers_SOURCE_DIR}/include)
+    target_compile_definitions(pplnn_basic_static PUBLIC PPLNN_ENABLE_PMX_MODEL)
+endif()
 
 target_include_directories(pplnn_basic_static PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -164,6 +169,14 @@ if(PPLNN_ENABLE_KERNEL_PROFILING)
 endif()
 
 target_link_libraries(pplnn_static INTERFACE pplnn_basic_static)
+
+# --------------------------------------------------------------------------- #
+
+# model formats
+
+if(PPLNN_ENABLE_ONNX_MODEL)
+    include(cmake/onnx_model.cmake)
+endif()
 
 # --------------------------------------------------------------------------- #
 
