@@ -137,7 +137,7 @@ unset(__PPLNN_BUILTIN_ENGINE_SRC__)
 
 if(PPLNN_ENABLE_PMX_MODEL)
     hpcc_populate_dep(flatbuffers)
-    target_include_directories(pplnn_basic_static PRIVATE ${flatbuffers_SOURCE_DIR}/include)
+    target_include_directories(pplnn_basic_static PUBLIC ${flatbuffers_SOURCE_DIR}/include)
     target_compile_definitions(pplnn_basic_static PUBLIC PPLNN_ENABLE_PMX_MODEL)
 endif()
 
