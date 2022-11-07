@@ -63,8 +63,7 @@ RetCode ParseIfParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArg
     for (int i = 0; i < pb_node.attribute_size(); ++i) {
         auto& attr = pb_node.attribute(i);
         if (attr.type() != ::onnx::AttributeProto_AttributeType_GRAPH) {
-            LOG(ERROR) << "unsupported attribute type[" << ::onnx::AttributeProto_AttributeType_Name(attr.type())
-                       << "]";
+            LOG(ERROR) << "unsupported attribute type[" << static_cast<uint32_t>(attr.type()) << "]";
             return RC_INVALID_VALUE;
         }
 

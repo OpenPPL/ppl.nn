@@ -33,7 +33,7 @@ RetCode ParseLoopParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraA
     }
     auto& attr = pb_node.attribute(0);
     if (attr.type() != ::onnx::AttributeProto_AttributeType_GRAPH) {
-        LOG(ERROR) << "unsupported attribute type[" << ::onnx::AttributeProto_AttributeType_Name(attr.type()) << "]";
+        LOG(ERROR) << "unsupported attribute type[" << static_cast<uint32_t>(attr.type()) << "]";
         return RC_INVALID_VALUE;
     }
 
