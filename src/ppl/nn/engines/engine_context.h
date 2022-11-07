@@ -36,7 +36,7 @@ public:
     virtual const char* GetName() const = 0;
 
     /** @brief returns the `Device` instance used by this `Runtime` */
-    virtual Device* GetDevice() = 0;
+    virtual Device* GetDevice() const = 0;
 };
 
 }} // namespace ppl::nn

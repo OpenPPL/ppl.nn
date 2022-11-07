@@ -317,7 +317,7 @@ RetCode LoopKernel::DoExecute(KernelExecContext* ctx) {
         return status;
     }
 
-    auto device = GetDevice();
+    auto device = GetEngineContext()->GetDevice();
 
     if (!keep_going) {
         return SetOutputsFromInputs(loop_info, GetName(), device, &tmp_cpu_device, &subgraph_, ctx);

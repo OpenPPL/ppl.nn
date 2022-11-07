@@ -31,7 +31,7 @@ public:
 
     ppl::common::RetCode Init(ppl::common::isa_t isa, uint32_t mm_policy);
 
-    Device* GetDevice() override {
+    Device* GetDevice() const override {
         return device_.get();
     }
 
