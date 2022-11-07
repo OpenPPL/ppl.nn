@@ -6,6 +6,13 @@
 
 #include "flatbuffers/flatbuffers.h"
 
+// Ensure the included flatbuffers.h is the same version as when this file was
+// generated, otherwise it may not be compatible.
+static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
+              FLATBUFFERS_VERSION_MINOR == 0 &&
+              FLATBUFFERS_VERSION_REVISION == 8,
+             "Non-compatible flatbuffers version included");
+
 namespace ppl {
 namespace nn {
 namespace pmx {
@@ -181,11 +188,11 @@ struct ConvAlgoInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyString(mma_shape()) &&
            VerifyOffset(verifier, VT_TILES) &&
            verifier.VerifyVector(tiles()) &&
-           VerifyField<int32_t>(verifier, VT_KID) &&
-           VerifyField<int32_t>(verifier, VT_SPLITK) &&
-           VerifyField<int32_t>(verifier, VT_SPLITF) &&
-           VerifyField<int32_t>(verifier, VT_IS_INITIALIZER_WEIGHT) &&
-           VerifyField<int32_t>(verifier, VT_HAS_BIAS) &&
+           VerifyField<int32_t>(verifier, VT_KID, 4) &&
+           VerifyField<int32_t>(verifier, VT_SPLITK, 4) &&
+           VerifyField<int32_t>(verifier, VT_SPLITF, 4) &&
+           VerifyField<int32_t>(verifier, VT_IS_INITIALIZER_WEIGHT, 4) &&
+           VerifyField<int32_t>(verifier, VT_HAS_BIAS, 4) &&
            verifier.EndTable();
   }
 };
@@ -329,9 +336,9 @@ struct ConvFusionInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyVector(input_inds()) &&
            VerifyOffset(verifier, VT_FUSE_ATTRS) &&
            verifier.VerifyVector(fuse_attrs()) &&
-           VerifyField<int32_t>(verifier, VT_CHANNEL_SIZE) &&
-           VerifyField<int32_t>(verifier, VT_CHANNEL_OFFSET) &&
-           VerifyField<int32_t>(verifier, VT_CONCAT_EDGE_ID) &&
+           VerifyField<int32_t>(verifier, VT_CHANNEL_SIZE, 4) &&
+           VerifyField<int32_t>(verifier, VT_CHANNEL_OFFSET, 4) &&
+           VerifyField<int32_t>(verifier, VT_CONCAT_EDGE_ID, 4) &&
            verifier.EndTable();
   }
 };
@@ -495,7 +502,7 @@ struct ConcatParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint32_t>(verifier, VT_MASK) &&
+           VerifyField<uint32_t>(verifier, VT_MASK, 4) &&
            verifier.EndTable();
   }
 };
@@ -536,7 +543,7 @@ struct BatchNormalizationParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Ta
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_HAS_RELU) &&
+           VerifyField<int32_t>(verifier, VT_HAS_RELU, 4) &&
            verifier.EndTable();
   }
 };
@@ -577,7 +584,7 @@ struct InstanceNormalizationParam FLATBUFFERS_FINAL_CLASS : private flatbuffers:
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_HAS_RELU) &&
+           VerifyField<int32_t>(verifier, VT_HAS_RELU, 4) &&
            verifier.EndTable();
   }
 };
@@ -635,7 +642,7 @@ struct OpParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint8_t>(verifier, VT_VALUE_TYPE) &&
+           VerifyField<uint8_t>(verifier, VT_VALUE_TYPE, 1) &&
            VerifyOffset(verifier, VT_VALUE) &&
            VerifyOpParamType(verifier, value(), value_type()) &&
            verifier.EndTable();

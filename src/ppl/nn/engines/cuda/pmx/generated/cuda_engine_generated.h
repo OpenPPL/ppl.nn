@@ -6,6 +6,13 @@
 
 #include "flatbuffers/flatbuffers.h"
 
+// Ensure the included flatbuffers.h is the same version as when this file was
+// generated, otherwise it may not be compatible.
+static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
+              FLATBUFFERS_VERSION_MINOR == 0 &&
+              FLATBUFFERS_VERSION_REVISION == 8,
+             "Non-compatible flatbuffers version included");
+
 namespace ppl {
 namespace nn {
 namespace pmx {
@@ -91,10 +98,10 @@ struct CudaTensorQuant FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_FORMAT) &&
-           VerifyField<int32_t>(verifier, VT_TYPE) &&
-           VerifyField<uint8_t>(verifier, VT_PER_CHANNEL) &&
-           VerifyField<int32_t>(verifier, VT_BIT_WIDTH) &&
+           VerifyField<int32_t>(verifier, VT_FORMAT, 4) &&
+           VerifyField<int32_t>(verifier, VT_TYPE, 4) &&
+           VerifyField<uint8_t>(verifier, VT_PER_CHANNEL, 1) &&
+           VerifyField<int32_t>(verifier, VT_BIT_WIDTH, 4) &&
            VerifyOffset(verifier, VT_SCALE) &&
            verifier.VerifyVector(scale()) &&
            VerifyOffset(verifier, VT_ZERO_POINT) &&
@@ -244,7 +251,7 @@ struct CudaEngineParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint8_t>(verifier, VT_VALUE_TYPE) &&
+           VerifyField<uint8_t>(verifier, VT_VALUE_TYPE, 1) &&
            VerifyOffset(verifier, VT_VALUE) &&
            VerifyCudaEngineParamType(verifier, value(), value_type()) &&
            verifier.EndTable();

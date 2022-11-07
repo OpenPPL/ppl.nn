@@ -6,6 +6,13 @@
 
 #include "flatbuffers/flatbuffers.h"
 
+// Ensure the included flatbuffers.h is the same version as when this file was
+// generated, otherwise it may not be compatible.
+static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
+              FLATBUFFERS_VERSION_MINOR == 0 &&
+              FLATBUFFERS_VERSION_REVISION == 8,
+             "Non-compatible flatbuffers version included");
+
 #include "types_generated.h"
 
 namespace ppl {
@@ -121,7 +128,7 @@ struct NodeType FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyString(domain()) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
-           VerifyField<uint32_t>(verifier, VT_VERSION) &&
+           VerifyField<uint32_t>(verifier, VT_VERSION, 4) &&
            verifier.EndTable();
   }
 };
@@ -433,7 +440,7 @@ struct NodeInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint32_t>(verifier, VT_NODE_ID) &&
+           VerifyField<uint32_t>(verifier, VT_NODE_ID, 4) &&
            VerifyOffset(verifier, VT_DATA) &&
            verifier.VerifyVector(data()) &&
            verifier.EndTable();
@@ -504,10 +511,10 @@ struct Constant FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint32_t>(verifier, VT_EDGE_ID) &&
-           VerifyField<uint32_t>(verifier, VT_FLAGS) &&
-           VerifyField<uint64_t>(verifier, VT_DATA_OFFSET) &&
-           VerifyField<uint64_t>(verifier, VT_DATA_BYTES) &&
+           VerifyField<uint32_t>(verifier, VT_EDGE_ID, 4) &&
+           VerifyField<uint32_t>(verifier, VT_FLAGS, 4) &&
+           VerifyField<uint64_t>(verifier, VT_DATA_OFFSET, 8) &&
+           VerifyField<uint64_t>(verifier, VT_DATA_BYTES, 8) &&
            verifier.EndTable();
   }
 };
@@ -575,9 +582,9 @@ struct Shape FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint32_t>(verifier, VT_EDGE_ID) &&
-           VerifyField<uint32_t>(verifier, VT_DATA_TYPE) &&
-           VerifyField<uint32_t>(verifier, VT_DATA_FORMAT) &&
+           VerifyField<uint32_t>(verifier, VT_EDGE_ID, 4) &&
+           VerifyField<uint32_t>(verifier, VT_DATA_TYPE, 4) &&
+           VerifyField<uint32_t>(verifier, VT_DATA_FORMAT, 4) &&
            VerifyOffset(verifier, VT_DIMS) &&
            verifier.VerifyVector(dims()) &&
            verifier.EndTable();
@@ -658,7 +665,7 @@ struct Partition FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint32_t>(verifier, VT_ENGINE_ID) &&
+           VerifyField<uint32_t>(verifier, VT_ENGINE_ID, 4) &&
            VerifyOffset(verifier, VT_NODES) &&
            verifier.VerifyVector(nodes()) &&
            verifier.VerifyVectorOfTables(nodes()) &&
@@ -936,7 +943,7 @@ struct Model FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint32_t>(verifier, VT_VERSION) &&
+           VerifyField<uint32_t>(verifier, VT_VERSION, 4) &&
            VerifyOffset(verifier, VT_ENGINES) &&
            verifier.VerifyVector(engines()) &&
            verifier.VerifyVectorOfTables(engines()) &&
@@ -1010,6 +1017,11 @@ inline const char *ModelIdentifier() {
 inline bool ModelBufferHasIdentifier(const void *buf) {
   return flatbuffers::BufferHasIdentifier(
       buf, ModelIdentifier());
+}
+
+inline bool SizePrefixedModelBufferHasIdentifier(const void *buf) {
+  return flatbuffers::BufferHasIdentifier(
+      buf, ModelIdentifier(), true);
 }
 
 inline bool VerifyModelBuffer(

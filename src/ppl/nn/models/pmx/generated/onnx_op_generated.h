@@ -6,6 +6,13 @@
 
 #include "flatbuffers/flatbuffers.h"
 
+// Ensure the included flatbuffers.h is the same version as when this file was
+// generated, otherwise it may not be compatible.
+static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
+              FLATBUFFERS_VERSION_MINOR == 0 &&
+              FLATBUFFERS_VERSION_REVISION == 8,
+             "Non-compatible flatbuffers version included");
+
 #include "types_generated.h"
 
 namespace ppl {
@@ -704,8 +711,8 @@ struct ArgMaxParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_AXIS) &&
-           VerifyField<int32_t>(verifier, VT_KEEPDIMS) &&
+           VerifyField<int32_t>(verifier, VT_AXIS, 4) &&
+           VerifyField<int32_t>(verifier, VT_KEEPDIMS, 4) &&
            verifier.EndTable();
   }
 };
@@ -755,8 +762,8 @@ struct BatchNormalizationParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Ta
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<float>(verifier, VT_EPSILON) &&
-           VerifyField<float>(verifier, VT_MOMENTUM) &&
+           VerifyField<float>(verifier, VT_EPSILON, 4) &&
+           VerifyField<float>(verifier, VT_MOMENTUM, 4) &&
            verifier.EndTable();
   }
 };
@@ -802,7 +809,7 @@ struct CastParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_TO) &&
+           VerifyField<int32_t>(verifier, VT_TO, 4) &&
            verifier.EndTable();
   }
 };
@@ -843,7 +850,7 @@ struct ConcatParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_AXIS) &&
+           VerifyField<int32_t>(verifier, VT_AXIS, 4) &&
            verifier.EndTable();
   }
 };
@@ -904,8 +911,8 @@ struct ConvParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint32_t>(verifier, VT_AUTO_PAD) &&
-           VerifyField<int32_t>(verifier, VT_GROUP) &&
+           VerifyField<uint32_t>(verifier, VT_AUTO_PAD, 4) &&
+           VerifyField<int32_t>(verifier, VT_GROUP, 4) &&
            VerifyOffset(verifier, VT_DILATIONS) &&
            verifier.VerifyVector(dilations()) &&
            VerifyOffset(verifier, VT_KERNEL_SHAPE) &&
@@ -1029,8 +1036,8 @@ struct ConvTransposeParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint32_t>(verifier, VT_AUTO_PAD) &&
-           VerifyField<int32_t>(verifier, VT_GROUP) &&
+           VerifyField<uint32_t>(verifier, VT_AUTO_PAD, 4) &&
+           VerifyField<int32_t>(verifier, VT_GROUP, 4) &&
            VerifyOffset(verifier, VT_DILATIONS) &&
            verifier.VerifyVector(dilations()) &&
            VerifyOffset(verifier, VT_KERNEL_SHAPE) &&
@@ -1150,8 +1157,8 @@ struct CumSumParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_EXCLUSIVE) &&
-           VerifyField<int32_t>(verifier, VT_REVERSE) &&
+           VerifyField<int32_t>(verifier, VT_EXCLUSIVE, 4) &&
+           VerifyField<int32_t>(verifier, VT_REVERSE, 4) &&
            verifier.EndTable();
   }
 };
@@ -1201,8 +1208,8 @@ struct DepthToSpaceParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_BLOCKSIZE) &&
-           VerifyField<uint32_t>(verifier, VT_MODE) &&
+           VerifyField<int32_t>(verifier, VT_BLOCKSIZE, 4) &&
+           VerifyField<uint32_t>(verifier, VT_MODE, 4) &&
            verifier.EndTable();
   }
 };
@@ -1248,7 +1255,7 @@ struct FlattenParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_AXIS) &&
+           VerifyField<int32_t>(verifier, VT_AXIS, 4) &&
            verifier.EndTable();
   }
 };
@@ -1289,7 +1296,7 @@ struct GatherNDParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_BATCH_DIMS) &&
+           VerifyField<int32_t>(verifier, VT_BATCH_DIMS, 4) &&
            verifier.EndTable();
   }
 };
@@ -1330,7 +1337,7 @@ struct GatherParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_AXIS) &&
+           VerifyField<int32_t>(verifier, VT_AXIS, 4) &&
            verifier.EndTable();
   }
 };
@@ -1383,10 +1390,10 @@ struct GemmParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<float>(verifier, VT_ALPHA) &&
-           VerifyField<float>(verifier, VT_BETA) &&
-           VerifyField<int32_t>(verifier, VT_TRANS_A) &&
-           VerifyField<int32_t>(verifier, VT_TRANS_B) &&
+           VerifyField<float>(verifier, VT_ALPHA, 4) &&
+           VerifyField<float>(verifier, VT_BETA, 4) &&
+           VerifyField<int32_t>(verifier, VT_TRANS_A, 4) &&
+           VerifyField<int32_t>(verifier, VT_TRANS_B, 4) &&
            verifier.EndTable();
   }
 };
@@ -1442,7 +1449,7 @@ struct InstanceNormalizationParam FLATBUFFERS_FINAL_CLASS : private flatbuffers:
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<float>(verifier, VT_EPSILON) &&
+           VerifyField<float>(verifier, VT_EPSILON, 4) &&
            verifier.EndTable();
   }
 };
@@ -1483,7 +1490,7 @@ struct LeakyReluParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<float>(verifier, VT_ALPHA) &&
+           VerifyField<float>(verifier, VT_ALPHA, 4) &&
            verifier.EndTable();
   }
 };
@@ -1536,10 +1543,10 @@ struct LRNParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<float>(verifier, VT_ALPHA) &&
-           VerifyField<float>(verifier, VT_BETA) &&
-           VerifyField<float>(verifier, VT_BIAS) &&
-           VerifyField<int32_t>(verifier, VT_SIZE) &&
+           VerifyField<float>(verifier, VT_ALPHA, 4) &&
+           VerifyField<float>(verifier, VT_BETA, 4) &&
+           VerifyField<float>(verifier, VT_BIAS, 4) &&
+           VerifyField<int32_t>(verifier, VT_SIZE, 4) &&
            verifier.EndTable();
   }
 };
@@ -1625,10 +1632,10 @@ struct LSTMParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyVector(activation_beta()) &&
            VerifyOffset(verifier, VT_ACTIVATIONS) &&
            verifier.VerifyVector(activations()) &&
-           VerifyField<float>(verifier, VT_CLIP) &&
-           VerifyField<uint32_t>(verifier, VT_DIRECTION) &&
-           VerifyField<int32_t>(verifier, VT_HIDDEN_SIZE) &&
-           VerifyField<int32_t>(verifier, VT_INPUT_FORGET) &&
+           VerifyField<float>(verifier, VT_CLIP, 4) &&
+           VerifyField<uint32_t>(verifier, VT_DIRECTION, 4) &&
+           VerifyField<int32_t>(verifier, VT_HIDDEN_SIZE, 4) &&
+           VerifyField<int32_t>(verifier, VT_INPUT_FORGET, 4) &&
            verifier.EndTable();
   }
 };
@@ -1801,7 +1808,7 @@ struct NonMaxSuppressionParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Tab
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_CENTER_POINT_BOX) &&
+           VerifyField<int32_t>(verifier, VT_CENTER_POINT_BOX, 4) &&
            verifier.EndTable();
   }
 };
@@ -1842,7 +1849,7 @@ struct PadParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint32_t>(verifier, VT_MODE) &&
+           VerifyField<uint32_t>(verifier, VT_MODE, 4) &&
            verifier.EndTable();
   }
 };
@@ -1911,10 +1918,10 @@ struct PoolingParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint32_t>(verifier, VT_AUTO_PAD) &&
-           VerifyField<int32_t>(verifier, VT_CEIL_MODE) &&
-           VerifyField<int32_t>(verifier, VT_COUNT_INCLUDE_PAD) &&
-           VerifyField<int32_t>(verifier, VT_STORAGE_ORDER) &&
+           VerifyField<uint32_t>(verifier, VT_AUTO_PAD, 4) &&
+           VerifyField<int32_t>(verifier, VT_CEIL_MODE, 4) &&
+           VerifyField<int32_t>(verifier, VT_COUNT_INCLUDE_PAD, 4) &&
+           VerifyField<int32_t>(verifier, VT_STORAGE_ORDER, 4) &&
            VerifyOffset(verifier, VT_DILATIONS) &&
            verifier.VerifyVector(dilations()) &&
            VerifyOffset(verifier, VT_KERNEL_SHAPE) &&
@@ -2028,7 +2035,7 @@ struct ReduceParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_KEEPDIMS) &&
+           VerifyField<int32_t>(verifier, VT_KEEPDIMS, 4) &&
            VerifyOffset(verifier, VT_AXES) &&
            verifier.VerifyVector(axes()) &&
            verifier.EndTable();
@@ -2107,12 +2114,12 @@ struct ResizeParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint32_t>(verifier, VT_COORD_TRANS_MODE) &&
-           VerifyField<float>(verifier, VT_CUBIC_COEFF_A) &&
-           VerifyField<int32_t>(verifier, VT_EXCLUDE_OUTSIDE) &&
-           VerifyField<float>(verifier, VT_EXTRAPOLATION_VALUE) &&
-           VerifyField<uint32_t>(verifier, VT_MODE) &&
-           VerifyField<uint32_t>(verifier, VT_NEAREST_MODE) &&
+           VerifyField<uint32_t>(verifier, VT_COORD_TRANS_MODE, 4) &&
+           VerifyField<float>(verifier, VT_CUBIC_COEFF_A, 4) &&
+           VerifyField<int32_t>(verifier, VT_EXCLUDE_OUTSIDE, 4) &&
+           VerifyField<float>(verifier, VT_EXTRAPOLATION_VALUE, 4) &&
+           VerifyField<uint32_t>(verifier, VT_MODE, 4) &&
+           VerifyField<uint32_t>(verifier, VT_NEAREST_MODE, 4) &&
            verifier.EndTable();
   }
 };
@@ -2194,11 +2201,11 @@ struct RoiAlignParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint32_t>(verifier, VT_MODE) &&
-           VerifyField<int32_t>(verifier, VT_OUTPUT_HEIGHT) &&
-           VerifyField<int32_t>(verifier, VT_OUTPUT_WIDTH) &&
-           VerifyField<int32_t>(verifier, VT_SAMPLING_RATIO) &&
-           VerifyField<float>(verifier, VT_SPATIAL_SCALE) &&
+           VerifyField<uint32_t>(verifier, VT_MODE, 4) &&
+           VerifyField<int32_t>(verifier, VT_OUTPUT_HEIGHT, 4) &&
+           VerifyField<int32_t>(verifier, VT_OUTPUT_WIDTH, 4) &&
+           VerifyField<int32_t>(verifier, VT_SAMPLING_RATIO, 4) &&
+           VerifyField<float>(verifier, VT_SPATIAL_SCALE, 4) &&
            verifier.EndTable();
   }
 };
@@ -2259,7 +2266,7 @@ struct ScatterElementsParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_AXIS) &&
+           VerifyField<int32_t>(verifier, VT_AXIS, 4) &&
            verifier.EndTable();
   }
 };
@@ -2300,7 +2307,7 @@ struct SoftmaxParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_AXIS) &&
+           VerifyField<int32_t>(verifier, VT_AXIS, 4) &&
            verifier.EndTable();
   }
 };
@@ -2345,7 +2352,7 @@ struct SplitParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_AXIS) &&
+           VerifyField<int32_t>(verifier, VT_AXIS, 4) &&
            VerifyOffset(verifier, VT_SPLIT_POINT) &&
            verifier.VerifyVector(split_point()) &&
            verifier.EndTable();
@@ -2408,8 +2415,8 @@ struct SplitToSequenceParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_AXIS) &&
-           VerifyField<int32_t>(verifier, VT_KEEPDIMS) &&
+           VerifyField<int32_t>(verifier, VT_AXIS, 4) &&
+           VerifyField<int32_t>(verifier, VT_KEEPDIMS, 4) &&
            verifier.EndTable();
   }
 };
@@ -2514,9 +2521,9 @@ struct TopKParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int32_t>(verifier, VT_AXIS) &&
-           VerifyField<int32_t>(verifier, VT_LARGEST) &&
-           VerifyField<int32_t>(verifier, VT_SORTED) &&
+           VerifyField<int32_t>(verifier, VT_AXIS, 4) &&
+           VerifyField<int32_t>(verifier, VT_LARGEST, 4) &&
+           VerifyField<int32_t>(verifier, VT_SORTED, 4) &&
            verifier.EndTable();
   }
 };
@@ -2771,7 +2778,7 @@ struct OpParam FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint8_t>(verifier, VT_VALUE_TYPE) &&
+           VerifyField<uint8_t>(verifier, VT_VALUE_TYPE, 1) &&
            VerifyOffset(verifier, VT_VALUE) &&
            VerifyOpParamType(verifier, value(), value_type()) &&
            VerifyOffset(verifier, VT_DATA_) &&
