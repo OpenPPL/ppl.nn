@@ -70,7 +70,7 @@ static RetCode GenGraphKernels(const RuntimeGraphInfo& info, vector<unique_ptr<E
                 LOG(ERROR) << "create kernel[" << (*o)->GetNode()->GetName() << "] failed.";
                 return RC_OTHER_ERROR;
             }
-            impl->SetDevice(ctx->GetDevice());
+            impl->SetEngineContext(ctx);
             n2k->at((*o)->GetNode()->GetId()).reset(impl);
         }
     }
@@ -104,7 +104,7 @@ static RetCode GenGraphInputs(const ir::GraphTopo* topo, const RuntimeGraphInfo&
 
                 // Consumers of an input are in the same engine. This is guranteed by optimizer.
                 auto kernel = nodeid2kernel[nid_ref->second].get();
-                tensor->SetDevice(kernel->GetDevice());
+                tensor->SetDevice(kernel->GetEngineContext()->GetDevice());
                 break;
             }
 
@@ -145,7 +145,7 @@ static RetCode GenGraphExtraInputs(const ir::GraphTopo* topo, const RuntimeGraph
 
                 // Consumers of an input are in the same engine. This is guranteed by optimizer.
                 auto kernel = nodeid2kernel[nid_ref->second].get();
-                tensor->SetDevice(kernel->GetDevice());
+                tensor->SetDevice(kernel->GetEngineContext()->GetDevice());
                 break;
             }
 
@@ -181,7 +181,7 @@ RetCode GenGraphOutputs(const ir::GraphTopo* topo, const RuntimeGraphInfo& info,
                 }
 
                 auto kernel = nodeid2kernel[nid_ref->second].get();
-                tensor->SetDevice(kernel->GetDevice());
+                tensor->SetDevice(kernel->GetEngineContext()->GetDevice());
             }
 
             auto shape_ref = info.shapes.find(edge->GetId());

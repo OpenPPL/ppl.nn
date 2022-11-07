@@ -19,6 +19,7 @@
 #include "ppl/nn/utils/generic_cpu_device.h"
 #include "tests/ir/graph_builder.h"
 #include "tests/engines/echo_op.h"
+#include "tests/engines/tmp_engine_context.h"
 #include "gtest/gtest.h"
 
 using namespace std;
@@ -48,7 +49,7 @@ TEST_F(KernelImplTest, misc) {
     EXPECT_EQ("a", kernels.GetName());
     EXPECT_EQ(ir::Node::Type("test", "op1", 1), kernels.GetType());
 
-    utils::GenericCpuDevice device;
-    kernels.SetDevice(&device);
-    EXPECT_EQ(&device, kernels.GetDevice());
+    TmpEngineContext ctx;
+    kernels.SetEngineContext(&ctx);
+    EXPECT_EQ(&ctx, kernels.GetEngineContext());
 }

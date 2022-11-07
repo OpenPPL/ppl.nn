@@ -42,7 +42,7 @@ RetCode ShapeOperationKernel::DoExecute(KernelExecContext* ctx) {
             shape->GetShape()->Reshape({dim_size});
         }
 
-        shape->SetDevice(GetDevice());
+        shape->SetDevice(GetEngineContext()->GetDevice());
 
         vector<int64_t> shape_host(dim_size);
         for (uint32_t j = 0; j < dim_size; ++j) {

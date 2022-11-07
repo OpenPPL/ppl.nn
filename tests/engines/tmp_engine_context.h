@@ -22,7 +22,7 @@ namespace ppl { namespace nn { namespace test {
 
 class TmpEngineContext final : public EngineContext {
 public:
-    Device* GetDevice() override {
+    Device* GetDevice() const override {
         return &device_;
     }
     const char* GetName() const override {
@@ -30,7 +30,7 @@ public:
     }
 
 private:
-    utils::GenericCpuDevice device_;
+    mutable utils::GenericCpuDevice device_;
 };
 
 }}} // namespace ppl::nn::test

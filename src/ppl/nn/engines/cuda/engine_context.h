@@ -29,9 +29,10 @@ public:
 
     ppl::common::RetCode Init(const EngineOptions& options);
 
-    Device* GetDevice() override {
+    Device* GetDevice() const override {
         return device_.get();
     }
+
     const char* GetName() const override {
         return "cuda";
     }

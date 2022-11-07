@@ -35,13 +35,11 @@ public:
     ppl::common::RetCode Init();
 
     cudaStream_t GetStream() const {
-        auto cuda_device = static_cast<const CudaDevice*>(GetDevice());
-        return cuda_device->GetStream();
+        return GetCudaDevice()->GetStream();
     }
 
     int GetDeviceId() const {
-        auto cuda_device = static_cast<const CudaDevice*>(GetDevice());
-        return cuda_device->GetDeviceId();
+        return GetCudaDevice()->GetDeviceId();
     }
 
     void SetCommonParam(const CudaCommonParam* p) {
@@ -75,8 +73,8 @@ protected:
         return 0;
     }
 
-    CudaDevice* GetCudaDevice() {
-        return reinterpret_cast<CudaDevice*>(GetDevice());
+    CudaDevice* GetCudaDevice() const {
+        return reinterpret_cast<CudaDevice*>(GetEngineContext()->GetDevice());
     }
 
     const CudaCommonParam* GetCommonParam() {

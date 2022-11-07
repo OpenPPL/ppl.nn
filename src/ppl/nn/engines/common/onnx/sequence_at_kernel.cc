@@ -67,7 +67,7 @@ RetCode SequenceAtKernel::DoExecute(KernelExecContext* ctx) {
     auto src = seq->GetElement(idx);
     auto dst = ctx->GetOutput<TensorImpl>(0);
 
-    dst->SetDevice(GetDevice());
+    dst->SetDevice(GetEngineContext()->GetDevice());
     *dst->GetShape() = *src->GetShape();
 
     auto status = utils::CopyBuffer(src->GetBufferDesc(), *src->GetShape(), src->GetDevice(), dst);
