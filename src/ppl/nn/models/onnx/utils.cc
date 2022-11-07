@@ -212,7 +212,7 @@ static RetCode LoadInternalData(const ::onnx::TensorProto& pb_tensor, datatype_t
         }
     } else {
         auto onnx_pb_type = (::onnx::TensorProto_DataType)onnx_data_type;
-        LOG(ERROR) << "unsupported onnx data type[" << ::onnx::TensorProto_DataType_Name(onnx_pb_type) << "] of tensor["
+        LOG(ERROR) << "unsupported onnx data type[" << static_cast<uint32_t>(onnx_pb_type) << "] of tensor["
                    << pb_tensor.name() << "]";
         return RC_UNSUPPORTED;
     }
