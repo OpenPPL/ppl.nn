@@ -109,7 +109,7 @@ unset(__PPLCOMMON_COMMIT__)
 set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "disable tests")
 set(FLATBUFFERS_INSTALL OFF CACHE BOOL "disable installation")
 
-set(__FLATBUFFERS_TAG__ v2.0.0)
+set(__FLATBUFFERS_TAG__ v2.0.8)
 
 if(PPLNN_DEP_FLATBUFFERS_PKG)
     hpcc_declare_pkg_dep(flatbuffers
