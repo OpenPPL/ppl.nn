@@ -25,6 +25,7 @@ static constexpr uint32_t g_max_msg_buf_size = 1024;
 #else
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/stat.h>
 #endif
 

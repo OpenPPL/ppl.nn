@@ -26,6 +26,7 @@ using namespace ppl::common;
 #else
 #include <unistd.h> // sysconf
 #include <string.h> // strerror
+#include <errno.h>
 #include <sys/mman.h>
 #endif
 

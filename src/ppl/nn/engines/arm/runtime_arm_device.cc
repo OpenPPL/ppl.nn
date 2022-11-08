@@ -90,6 +90,8 @@ void RuntimeArmDevice::FreeTmpBuffer(BufferDesc* buffer) {
 
 /* -------------------------------------------------------------------------- */
 
+RuntimeArmDevice::ConfHandlerFunc RuntimeArmDevice::conf_handlers_[];
+
 RetCode RuntimeArmDevice::Configure(uint32_t option, ...) {
     if (option >= DEV_CONF_MAX) {
         LOG(ERROR) << "invalid option[" << option << "] >= [" << (uint32_t)DEV_CONF_MAX << "]";
