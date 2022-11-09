@@ -29,6 +29,7 @@
 #include <algorithm>
 using namespace std;
 
+#include "ppl/common/str_utils.h"
 #include "ppl/common/file_mapping.h"
 using namespace ppl::common;
 
@@ -529,9 +530,9 @@ static string GetDimsStr(const Tensor* tensor) {
         return string();
     }
 
-    string res = std::to_string(shape->GetDim(0));
+    string res = ToString(shape->GetDim(0));
     for (uint32_t i = 1; i < shape->GetDimCount(); ++i) {
-        res += "_" + std::to_string(shape->GetDim(i));
+        res += "_" + ToString(shape->GetDim(i));
     }
 
     return res;
@@ -891,7 +892,7 @@ static void PrintInputOutputInfo(const Runtime* runtime) {
         string dims_str;
         auto shape = tensor->GetShape();
         for (uint32_t j = 0; j < shape->GetDimCount(); ++j) {
-            dims_str += " " + std::to_string(shape->GetDim(j));
+            dims_str += " " + ToString(shape->GetDim(j));
         }
         cout << "    dim(s):" << dims_str << endl;
 
@@ -909,7 +910,7 @@ static void PrintInputOutputInfo(const Runtime* runtime) {
         string dims_str;
         auto shape = tensor->GetShape();
         for (uint32_t j = 0; j < shape->GetDimCount(); ++j) {
-            dims_str += " " + std::to_string(shape->GetDim(j));
+            dims_str += " " + ToString(shape->GetDim(j));
         }
         cout << "    dim(s):" << dims_str << endl;
 

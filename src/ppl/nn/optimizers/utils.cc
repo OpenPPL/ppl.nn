@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "ppl/common/str_utils.h"
 #include "ppl/nn/optimizers/utils.h"
 #include "ppl/nn/optimizers/graph_optimizer_manager.h"
 #include "ppl/nn/engines/common/pmx/converter_op.h"
@@ -35,7 +36,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace utils {
 
 static nodeid_t AddConverterNode(ir::GraphTopo* topo, const string& name_prefix) {
-    const string node_name = name_prefix + "_" + std::to_string(topo->GetCurrentNodeIdBound());
+    const string node_name = name_prefix + "_" + ToString(topo->GetCurrentNodeIdBound());
     auto ret_pair = topo->AddNode(node_name);
     ret_pair.first->SetType(utils::MakePplConverterNodeType());
     return ret_pair.first->GetId();
@@ -95,7 +96,7 @@ static void HandlePartitionInputsWithProducers(uint32_t cur_partidx, const vecto
         auto ret_pair = part_cvt_info->insert(make_pair(cur_partidx, ConverterNodeInfo()));
         auto& info = ret_pair.first->second;
         if (ret_pair.second) {
-            info.nid = AddConverterNode(topo, "__converter_of_partition_" + std::to_string(cur_partidx));
+            info.nid = AddConverterNode(topo, "__converter_of_partition_" + ToString(cur_partidx));
         }
 
         auto ret_pair2 = info.affected_nodes.insert(make_pair(eid, set<nodeid_t>()));
@@ -143,7 +144,7 @@ static void HandleGraphInputs(ir::GraphTopo* topo, const vector<uint32_t>& nid2p
             auto info_ret_pair = part_cvt_info->insert(make_pair(part_idx, ConverterNodeInfo()));
             auto& info = info_ret_pair.first->second;
             if (info_ret_pair.second) {
-                info.nid = AddConverterNode(topo, "__converter_of_partition_" + std::to_string(part_idx));
+                info.nid = AddConverterNode(topo, "__converter_of_partition_" + ToString(part_idx));
             }
 
             auto ret_pair2 = info.affected_nodes.insert(make_pair(eid, set<nodeid_t>()));
@@ -172,7 +173,7 @@ static RetCode GenConverterNodes(const vector<pair<EngineImpl*, vector<nodeid_t>
             auto edge = topo->GetEdge(eid);
 
             const string output_edge_name("converted_output_of_" + edge->GetName() + "_" +
-                                          std::to_string(topo->GetCurrentEdgeIdBound()));
+                                          ToString(topo->GetCurrentEdgeIdBound()));
             auto ret_pair = topo->AddEdge(output_edge_name);
             if (!ret_pair.second) {
                 LOG(ERROR) << "add edge[" << output_edge_name << "] failed: exists.";
@@ -234,8 +235,7 @@ static RetCode GenPartitionsInfoAndShapes(const vector<pair<EngineImpl*, vector<
         } else {
             sub_graph.topo = make_shared<ir::PartialGraphTopo>(graph->topo.get(), partition.second);
             sub_graph.data = graph->data;
-            sub_graph.topo->SetName(graph->topo->GetName() + "." + partition.first->GetName() + "." +
-                                    std::to_string(p));
+            sub_graph.topo->SetName(graph->topo->GetName() + "." + partition.first->GetName() + "." + ToString(p));
         }
 
         auto engine = partition.first;
@@ -318,7 +318,7 @@ static RetCode CopyConstantsForDevices(const vector<pair<EngineImpl*, vector<nod
         // create copies for other engines
         for (auto it = engine_node_groups.begin(); it != engine_node_groups.end(); ++it) {
             auto ret_pair =
-                topo->AddEdge("__copy_of_" + edge->GetName() + "_" + std::to_string(topo->GetCurrentEdgeIdBound()));
+                topo->AddEdge("__copy_of_" + edge->GetName() + "_" + ToString(topo->GetCurrentEdgeIdBound()));
             auto new_edge = ret_pair.first;
             auto new_edge_id = new_edge->GetId();
 
