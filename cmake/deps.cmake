@@ -132,7 +132,6 @@ unset(__FLATBUFFERS_TAG__)
 
 set(protobuf_WITH_ZLIB OFF CACHE BOOL "")
 set(protobuf_BUILD_TESTS OFF CACHE BOOL "disable protobuf tests")
-set(protobuf_BUILD_PROTOC_BINARIES OFF CACHE BOOL "")
 
 if(MSVC)
     if(PPLNN_USE_MSVC_STATIC_RUNTIME)
