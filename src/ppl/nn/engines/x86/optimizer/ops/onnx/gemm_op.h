@@ -26,7 +26,7 @@ namespace ppl { namespace nn { namespace x86 {
 
 class GemmOp final : public X86OptKernel {
 public:
-    GemmOp(const ir::Node* node) : X86OptKernel(node) {}
+    GemmOp(const ir::Node* node) : X86OptKernel(node) { aux_param_.post = ppl::kernel::x86::gemm_post::NONE; }
     ~GemmOp();
     ppl::common::RetCode DoInit(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
