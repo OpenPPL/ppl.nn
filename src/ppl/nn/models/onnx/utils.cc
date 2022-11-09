@@ -107,9 +107,9 @@ static RetCode LoadExternalData(const ::onnx::TensorProto& pb_tensor, const char
         if (key == "location") {
             location = &value;
         } else if (key == "offset") {
-            offset = std::stoll(value);
+            offset = atoll(value.c_str());
         } else if (key == "length") {
-            length = std::stoll(value);
+            length = atoll(value.c_str());
         } else if (key == "checksum") {
             checksum = &value;
         } else {

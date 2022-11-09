@@ -18,15 +18,16 @@
 #ifndef _ST_HPC_PPL_NN_AUXTOOLS_TO_GRAPHVIZ_H_
 #define _ST_HPC_PPL_NN_AUXTOOLS_TO_GRAPHVIZ_H_
 
-#include <string>
+#include "ppl/common/str_utils.h"
 #include "ppl/nn/ir/graph_topo.h"
 using namespace std;
+using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace utils {
 
 static string GenNodeIdStr(const ir::Node* node) {
     auto& type = node->GetType();
-    return node->GetName() + "[" + type.domain + ":" + type.name + ":" + std::to_string(type.version) + "]";
+    return node->GetName() + "[" + type.domain + ":" + type.name + ":" + ToString(type.version) + "]";
 }
 
 static string ToGraphviz(const ir::GraphTopo* topo) {

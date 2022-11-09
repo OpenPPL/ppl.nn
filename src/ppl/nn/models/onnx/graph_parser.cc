@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "ppl/common/str_utils.h"
 #include "ppl/nn/common/tensor_shape.h"
 #include "ppl/nn/models/onnx/graph_parser.h"
 #include "ppl/nn/models/onnx/param_parser_manager.h"
@@ -117,7 +118,7 @@ static RetCode ParseGraphInput(const ::onnx::GraphProto& pb_graph, ir::GraphTopo
 }
 
 static inline string GenNodeName(uint32_t anonymous_node_count) {
-    return "ppl_anonymous_node_" + std::to_string(anonymous_node_count);
+    return "ppl_anonymous_node_" + ToString(anonymous_node_count);
 }
 
 static RetCode ParseNodeInfo(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::GraphData* data,
