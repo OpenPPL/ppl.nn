@@ -152,7 +152,10 @@ KernelImpl* ConvOp::CreateKernelImpl() const {
 RetCode ConvOp::SerializeData(const pmx::SerializationContext& ctx, utils::DataStream* ds) const {
 #ifdef PPLNN_ENABLE_CUDA_JIT
     CUDAModule* module = static_cast<CUDAModule*>(GetCommparamModule());
-    auto ptx_code = module->GetSourceCode().second;
+    std::string ptx_code;
+    if (module) { // for depthwise conv, no jit support
+        ptx_code = module->GetSourceCode().second;
+    }
 #else
     std::string ptx_code;
 #endif
@@ -189,12 +192,14 @@ RetCode ConvOp::DeserializeData(const pmx::DeserializationContext&, const void* 
     }
 
 #ifdef PPLNN_ENABLE_CUDA_JIT
-    CUDAModule* cuda_module = new CUDAModule(); // delete later
-    cuda_module->SetSourceCode(param_.extra_param.algo_info.algo_name, ptx_code);
-    auto cuda_common_param = GetCommparam();
-    if (cuda_common_param->module) delete (CUDAModule*)cuda_common_param->module;
-    cuda_common_param->module = (void*)cuda_module;
-    pmx_module_created_ = true;
+    if (!ptx_code.empty()) { // for depthwise conv, no jit support
+        CUDAModule* cuda_module = new CUDAModule(); // delete later
+        cuda_module->SetSourceCode(param_.extra_param.algo_info.algo_name, ptx_code);
+        auto cuda_common_param = GetCommparam();
+        if (cuda_common_param->module) delete (CUDAModule*)cuda_common_param->module;
+        cuda_common_param->module = (void*)cuda_module;
+        pmx_module_created_ = true;
+    }
 #endif
     return RC_SUCCESS;
 }
