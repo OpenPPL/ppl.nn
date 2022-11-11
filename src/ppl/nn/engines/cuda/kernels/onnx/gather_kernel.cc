@@ -30,7 +30,7 @@ ppl::common::RetCode GatherKernel::DoExecute(KernelExecContext* ctx) {
 
     ppl::common::RetCode status = ppl::common::RC_SUCCESS;
     if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL &&
-        input->GetShape()->GetDim(param_->axis) == 1 &&
+        input->GetShape()->GetDim(axis) == 1 &&
         input->GetShape()->CalcElementsIncludingPadding() == output->GetShape()->CalcElementsIncludingPadding()) {
         output->TransferBufferFrom(input);
     } else {

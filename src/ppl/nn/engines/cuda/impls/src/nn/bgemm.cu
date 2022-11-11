@@ -337,7 +337,7 @@ double PPLCUDABgemmJITSelectKernel(
     std::vector<algo_param_t> params;
     std::string sources = "";
 
-    GetFp16ConvKernelNominees(device, type, conv_param, knames, params, sources);
+    GetFp16ConvKernelNominees(device, type, conv_param, knames, params, sources, true);
 
     int index = 0;
     std::vector<const char *> compile_params;
@@ -555,6 +555,7 @@ ppl::common::RetCode PPLCUDABgemmForwardImp(
     int tile_n_per_cta  = algo_param.tiles.n_cta;
     int tile_k_per_cta  = algo_param.tiles.k_cta;
     int cta_size_in_thd = algo_param.tiles.cta_size_in_thd;
+    int smem_size       = algo_param.tiles.smem_size;
 #else
     int kid             = algo_param.kid;
     int tile_m_per_cta  = g_fp16_kvec[kid].tile_m_per_cta;
@@ -590,7 +591,9 @@ ppl::common::RetCode PPLCUDABgemmForwardImp(
     void *args[]        = {&input0_tmp, &weight, &final_out, &kLoopNum, &in_lut, &in_lut_size, &flt_lut, &flt_lut_size, &in_hw, &out_hw, &flt_hw, &splitk, &in_height, &in_width, &conv_batch, &num_grp, &num_chl_per_grp, &num_chl_per_grp_pad, &flt_height, &flt_width, &num_flt_per_grp, &num_flt_per_grp_pad, &out_height, &out_width, &stride_height, &stride_width, &pad_height, &pad_width, &hole_height, &hole_width, &has_bias, &bias, &fuse_param.has_activation, &clip_min, &fuse_param.has_clip, &clip_max, &fuse_param.has_prelu, &prelu, &fuse_param.has_elt, &(pre_data), &fuse_param.has_elt_activation, &elt_clip_min, &fuse_param.has_elt_clip, &elt_clip_max, &fuse_param.has_elt_prelu, &(elt_prelu), &leaky, &elt_leaky, &fuse_param.has_concat, &concat_offset_v8, &concat_stride_v8};
     CUfunction function = module->GetKernelFunc();
     grid_size.z = batch;
-    CUDA_SAFE_CALL(cuLaunchKernel(function, grid_size.x, grid_size.y, grid_size.z, block_size.x, block_size.y, block_size.z, 0, stream, args, 0));
+    if(smem_size > MAX_STATIC_SMEM_SIZE_PER_CTA)
+        cuFuncSetAttribute(function, CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES, smem_size);
+    CUDA_SAFE_CALL(cuLaunchKernel(function, grid_size.x, grid_size.y, grid_size.z, block_size.x, block_size.y, block_size.z, smem_size, stream, args, 0));
 #else
     int4 *tmp_weight = reinterpret_cast<int4*>(weight);
     while (batch > 65535) {
