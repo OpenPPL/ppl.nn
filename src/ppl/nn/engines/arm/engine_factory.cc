@@ -15,17 +15,27 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "ppl/common/retcode.h"
+#include "ppl/common/sys.h"
 #include "ppl/nn/engines/arm/engine_factory.h"
 #include "ppl/nn/engines/arm/engine.h"
-#include "ppl/common/sys.h"
 #include "ppl/nn/common/logger.h"
+using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace arm {
 
+RetCode RegisterResourcesOnce();
+
 Engine* EngineFactory::Create(const EngineOptions& options) {
+    auto status = RegisterResourcesOnce();
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "register arm resources failed: " << GetRetCodeStr(status);
+        return nullptr;
+    }
+
     auto engine = new arm::ArmEngine();
     if (engine) {
-        auto status = engine->Init(options);
+        status = engine->Init(options);
         if (status != ppl::common::RC_SUCCESS) {
             LOG(ERROR) << "Init arm engine failed: " << ppl::common::GetRetCodeStr(status);
             delete engine;

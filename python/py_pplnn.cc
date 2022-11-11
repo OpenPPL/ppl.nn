@@ -26,7 +26,6 @@ namespace ppl { namespace nn { namespace python {
 
 #ifdef PPLNN_USE_CUDA
 namespace cuda {
-void RegisterBuiltinOpImpls();
 void RegisterEngineFactory(pybind11::module*);
 void RegisterEngineOptions(pybind11::module*);
 void RegisterEngine(pybind11::module*);
@@ -35,7 +34,6 @@ void RegisterEngine(pybind11::module*);
 
 #ifdef PPLNN_USE_X86
 namespace x86 {
-void RegisterBuiltinOpImpls();
 void RegisterEngineFactory(pybind11::module*);
 void RegisterEngineOptions(pybind11::module*);
 void RegisterEngine(pybind11::module*);
@@ -44,7 +42,6 @@ void RegisterEngine(pybind11::module*);
 
 #ifdef PPLNN_USE_RISCV
 namespace riscv {
-void RegisterBuiltinOpImpls();
 void RegisterEngineFactory(pybind11::module*);
 void RegisterEngineOptions(pybind11::module*);
 void RegisterEngine(pybind11::module*);
@@ -53,7 +50,6 @@ void RegisterEngine(pybind11::module*);
 
 #ifdef PPLNN_USE_ARM
 namespace arm {
-void RegisterBuiltinOpImpls();
 void RegisterEngineFactory(pybind11::module*);
 void RegisterEngineOptions(pybind11::module*);
 void RegisterEngine(pybind11::module*);
@@ -120,7 +116,6 @@ PYBIND11_MODULE(nn, m) {
 #ifdef PPLNN_USE_CUDA
     pybind11::module cuda_module = m.def_submodule("cuda");
     name2module.insert(make_pair("cuda", &cuda_module));
-    cuda::RegisterBuiltinOpImpls();
     cuda::RegisterEngineFactory(&cuda_module);
     cuda::RegisterEngineOptions(&cuda_module);
     cuda::RegisterEngine(&cuda_module);
@@ -129,7 +124,6 @@ PYBIND11_MODULE(nn, m) {
 #ifdef PPLNN_USE_X86
     pybind11::module x86_module = m.def_submodule("x86");
     name2module.insert(make_pair("x86", &x86_module));
-    x86::RegisterBuiltinOpImpls();
     x86::RegisterEngineFactory(&x86_module);
     x86::RegisterEngineOptions(&x86_module);
     x86::RegisterEngine(&x86_module);
@@ -138,7 +132,6 @@ PYBIND11_MODULE(nn, m) {
 #ifdef PPLNN_USE_RISCV
     pybind11::module riscv_module = m.def_submodule("riscv");
     name2module.insert(make_pair("riscv", &riscv_module));
-    riscv::RegisterBuiltinOpImpls();
     riscv::RegisterEngineFactory(&riscv_module);
     riscv::RegisterEngineOptions(&riscv_module);
     riscv::RegisterEngine(&riscv_module);
@@ -147,7 +140,6 @@ PYBIND11_MODULE(nn, m) {
 #ifdef PPLNN_USE_ARM
     pybind11::module arm_module = m.def_submodule("arm");
     name2module.insert(make_pair("arm", &arm_module));
-    arm::RegisterBuiltinOpImpls();
     arm::RegisterEngineFactory(&arm_module);
     arm::RegisterEngineOptions(&arm_module);
     arm::RegisterEngine(&arm_module);

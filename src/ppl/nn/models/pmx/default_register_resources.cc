@@ -15,12 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/ops.h"
+#include "ppl/common/retcode.h"
+using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace python { namespace cuda {
+namespace ppl { namespace nn { namespace pmx {
 
-void RegisterBuiltinOpImpls() {
-    ppl::nn::cuda::RegisterBuiltinOpImpls();
+RetCode RegisterResourcesOnce() {
+    return RC_SUCCESS;
 }
 
-}}}} // namespace ppl::nn::python::cuda
+}}} // namespace ppl::nn::pmx

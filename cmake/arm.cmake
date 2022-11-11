@@ -27,6 +27,9 @@ else()
 endif()
 
 file(GLOB __PPLNN_ARM_SRC__ src/ppl/nn/engines/arm/*.cc)
+if(PPLNN_SOURCE_EXTERNAL_ARM_ENGINE_SOURCES)
+    list(REMOVE_ITEM __PPLNN_ARM_SRC__ src/ppl/nn/engines/arm/default_register_resources.cc)
+endif()
 file(GLOB_RECURSE __PPLNN_ARM_SRC_RECURSE__
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/arm/kernels/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/arm/optimizer/*.cc

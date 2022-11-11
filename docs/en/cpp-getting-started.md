@@ -27,10 +27,6 @@ Engine* cuda::EngineFactory::Create(cuda_options);
 
 to create an engine running on NVIDIA GPUs.
 
-### Registering Built-in Op Implementations(optional)
-
-For example, use `x86::RegisterBuiltinOpImpls()` to load built-in op implementations. You may also need to call `cuda::RegisterBuiltinOpImpls()` for cuda engine, etc.
-
 ### Creating an ONNX RuntimeBuilder
 
 We can create an `onnx::RuntimeBuilder` with the following function:

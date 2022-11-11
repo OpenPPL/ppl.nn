@@ -15,6 +15,10 @@ if(PPLNN_USE_MSVC_STATIC_RUNTIME)
 endif()
 
 file(GLOB __PPLNN_CUDA_SRC__ src/ppl/nn/engines/cuda/*.cc)
+if(PPLNN_SOURCE_EXTERNAL_CUDA_ENGINE_SOURCES)
+    list(REMOVE_ITEM __PPLNN_CUDA_SRC__ src/ppl/nn/engines/cuda/default_register_resources.cc)
+endif()
+
 file(GLOB_RECURSE __PPLNN_CUDA_SRC_RECURSE__
     src/ppl/nn/engines/cuda/kernels/*.cc
     src/ppl/nn/engines/cuda/optimizer/*.cc

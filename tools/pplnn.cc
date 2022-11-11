@@ -204,7 +204,6 @@ Define_string_opt("--quant-file", g_flag_quant_file, "", "a json file containing
 
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/engines/cuda/options.h"
-#include "ppl/nn/engines/cuda/ops.h"
 #include "ppl/nn/utils/array.h"
 
 static void CudaSaveAlgoInfo(const char* data, uint64_t bytes, void* arg) {
@@ -238,7 +237,6 @@ static bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
         return false;
     }
 
-    cuda::RegisterBuiltinOpImpls();
     auto cuda_engine = cuda::EngineFactory::Create(options);
     if (!cuda_engine) {
         return false;
@@ -329,7 +327,6 @@ Define_string_opt("--debug-data-dir", g_flag_debug_data_dir, ".", "directory to 
 
 #include "ppl/nn/engines/x86/engine_factory.h"
 #include "ppl/nn/engines/x86/options.h"
-#include "ppl/nn/engines/x86/ops.h"
 #include "ppl/kernel/x86/common/threading_tools.h"
 
 static bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
@@ -348,7 +345,6 @@ static bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
     options.disable_avx512 = g_flag_disable_avx512;
     options.disable_avx_fma3 = g_flag_disable_avx_fma3;
 
-    x86::RegisterBuiltinOpImpls();
     auto x86_engine = x86::EngineFactory::Create(options);
 
     auto rc = x86_engine->Configure(x86::ENGINE_CONF_GRAPH_FUSION, g_flag_disable_graph_fusion ? 0 : 1);
@@ -390,7 +386,6 @@ Define_int32_opt("--tuning-level", g_flag_tuning_level, 0, "select conv algo dyn
 
 #include "ppl/nn/engines/riscv/engine_factory.h"
 #include "ppl/nn/engines/riscv/options.h"
-#include "ppl/nn/engines/riscv/ops.h"
 #include "ppl/nn/engines/riscv/engine_options.h"
 
 static bool RegisterRiscvEngine(vector<unique_ptr<Engine>>* engines) {
@@ -416,7 +411,6 @@ static bool RegisterRiscvEngine(vector<unique_ptr<Engine>>* engines) {
     options.dynamic_tuning_level = g_flag_tuning_level;
     options.winograd_level = g_flag_wg_level;
 
-    riscv::RegisterBuiltinOpImpls();
     auto riscv_engine = riscv::EngineFactory::Create(options);
     // configure engine
     engines->emplace_back(unique_ptr<Engine>(riscv_engine));
@@ -438,7 +432,6 @@ Define_int32_opt("--numa-node-id", g_flag_numa_node_id, -1,
                  "bind arm engine to specified numa node, range [0, numa_max_node), -1 means not bind");
 
 #include "ppl/nn/engines/arm/engine_factory.h"
-#include "ppl/nn/engines/arm/ops.h"
 
 static bool RegisterArmEngine(vector<unique_ptr<Engine>>* engines) {
     arm::EngineOptions options;
@@ -463,7 +456,6 @@ static bool RegisterArmEngine(vector<unique_ptr<Engine>>* engines) {
     options.dynamic_tuning_level = g_flag_tuning_level;
     options.numa_node_id = g_flag_numa_node_id;
 
-    arm::RegisterBuiltinOpImpls();
     auto arm_engine = arm::EngineFactory::Create(options);
     // configure engine
     engines->emplace_back(unique_ptr<Engine>(arm_engine));

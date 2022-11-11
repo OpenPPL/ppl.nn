@@ -18,10 +18,19 @@
 #include "ppl/nn/models/pmx/runtime_builder_factory.h"
 #include "ppl/nn/models/pmx/runtime_builder_impl.h"
 #include "ppl/nn/common/logger.h"
+using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace pmx {
 
+RetCode RegisterResourcesOnce();
+
 RuntimeBuilder* RuntimeBuilderFactory::Create() {
+    auto rc = RegisterResourcesOnce();
+    if (rc != RC_SUCCESS) {
+        LOG(ERROR) << "register pmx resources failed: " << GetRetCodeStr(rc);
+        return nullptr;
+    }
+
     return new RuntimeBuilderImpl();
 }
 

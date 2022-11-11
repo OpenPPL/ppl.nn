@@ -17,7 +17,6 @@
 
 #include "ppl/nn/models/onnx/runtime_builder_factory.h"
 #include "ppl/nn/engines/x86/engine_factory.h"
-#include "ppl/nn/engines/x86/ops.h"
 #include <random>
 #include <iostream>
 #include <memory>
@@ -96,7 +95,6 @@ static void PrintInputOutputInfo(const Runtime* runtime) {
 int main(void) {
     const char* model_file = "tests/testdata/conv.onnx";
 
-    x86::RegisterBuiltinOpImpls();
     auto x86_engine = x86::EngineFactory::Create(x86::EngineOptions());
     vector<unique_ptr<Engine>> engines;
     engines.emplace_back(unique_ptr<Engine>(x86_engine));

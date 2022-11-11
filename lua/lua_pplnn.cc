@@ -31,7 +31,6 @@ namespace ppl { namespace nn { namespace lua {
 
 #ifdef PPLNN_USE_X86
 namespace x86 {
-void RegisterBuiltinOpImpls();
 void RegisterEngineOptions(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterEngine(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterEngineFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
@@ -40,7 +39,6 @@ void RegisterEngineFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTabl
 
 #ifdef PPLNN_USE_CUDA
 namespace cuda {
-void RegisterBuiltinOpImpls();
 void RegisterEngineOptions(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterEngine(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterEngineFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
@@ -49,7 +47,6 @@ void RegisterEngineFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTabl
 
 #ifdef PPLNN_USE_RISCV
 namespace riscv {
-void RegisterBuiltinOpImpls();
 void RegisterEngineOptions(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterEngine(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterEngineFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
@@ -58,7 +55,6 @@ void RegisterEngineFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTabl
 
 #ifdef PPLNN_USE_ARM
 namespace arm {
-void RegisterBuiltinOpImpls();
 void RegisterEngineOptions(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterEngine(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
 void RegisterEngineFactory(const shared_ptr<LuaState>&, const shared_ptr<LuaTable>&);
@@ -107,7 +103,6 @@ extern "C" int PPLNN_PUBLIC luaopen_luappl_nn(lua_State* l) {
 
 #ifdef PPLNN_USE_CUDA
     auto l_cuda_module = make_shared<LuaTable>(lstate->CreateTable());
-    cuda::RegisterBuiltinOpImpls();
     cuda::RegisterEngineOptions(lstate, l_cuda_module);
     cuda::RegisterEngine(lstate, l_cuda_module);
     cuda::RegisterEngineFactory(lstate, l_cuda_module);
@@ -117,7 +112,6 @@ extern "C" int PPLNN_PUBLIC luaopen_luappl_nn(lua_State* l) {
 
 #ifdef PPLNN_USE_X86
     auto l_x86_module = make_shared<LuaTable>(lstate->CreateTable());
-    x86::RegisterBuiltinOpImpls();
     x86::RegisterEngineOptions(lstate, l_x86_module);
     x86::RegisterEngine(lstate, l_x86_module);
     x86::RegisterEngineFactory(lstate, l_x86_module);
@@ -127,7 +121,6 @@ extern "C" int PPLNN_PUBLIC luaopen_luappl_nn(lua_State* l) {
 
 #ifdef PPLNN_USE_RISCV
     auto l_riscv_module = make_shared<LuaTable>(lstate->CreateTable());
-    riscv::RegisterBuiltinOpImpls();
     riscv::RegisterEngineOptions(lstate, l_riscv_module);
     riscv::RegisterEngine(lstate, l_riscv_module);
     riscv::RegisterEngineFactory(lstate, l_riscv_module);
@@ -137,7 +130,6 @@ extern "C" int PPLNN_PUBLIC luaopen_luappl_nn(lua_State* l) {
 
 #ifdef PPLNN_USE_ARM
     auto l_arm_module = make_shared<LuaTable>(lstate->CreateTable());
-    arm::RegisterBuiltinOpImpls();
     arm::RegisterEngineOptions(lstate, l_arm_module);
     arm::RegisterEngine(lstate, l_arm_module);
     arm::RegisterEngineFactory(lstate, l_arm_module);

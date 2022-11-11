@@ -15,12 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/riscv/ops.h"
+#include "ppl/common/retcode.h"
+using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace lua { namespace riscv {
+namespace ppl { namespace nn { namespace onnx {
 
-void RegisterBuiltinOpImpls() {
-    ppl::nn::riscv::RegisterBuiltinOpImpls();
+RetCode RegisterResourcesOnce() {
+    return RC_SUCCESS;
 }
 
-}}}} // namespace ppl::nn::lua::riscv
+}}} // namespace ppl::nn::onnx
