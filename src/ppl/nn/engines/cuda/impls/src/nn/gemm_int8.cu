@@ -214,7 +214,7 @@ double PPLCUDAGemmJITSelectKernelInt8(
     std::vector<algo_param_t> params;
     std::string sources = "";
 
-    GetInt8ConvKernelNominees(device, type, conv_param, knames, params, sources);
+    GetInt8ConvKernelNominees(device, type, conv_param, knames, params, sources, true);
 
     int index = 0;
     std::vector<const char *> compile_params;

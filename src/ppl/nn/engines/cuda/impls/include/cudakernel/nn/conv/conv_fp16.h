@@ -239,7 +239,8 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
     conv_param_t &conv_param,
     std::vector<std::string> & knames,
     std::vector<algo_param_t> & params,
-    std::string & sources);
+    std::string & sources,
+    bool spk_only); // gemm and matmul only support 2spk kernel
 
 ppl::common::RetCode GetFp16ConvKernelNominees(
     ppl::nn::cuda::CudaDevice* device,
@@ -247,7 +248,8 @@ ppl::common::RetCode GetFp16ConvKernelNominees(
     conv_param_t &conv_param,
     std::vector<std::string> & knames,
     std::vector<algo_param_t> & params,
-    std::string & sources);
+    std::string & sources,
+    bool spk_only); // gemm and matmul only support 2spk kernel
 
 double PPLCUDAConvolutionSelectKernel(
     ppl::nn::cuda::CudaDevice* device,

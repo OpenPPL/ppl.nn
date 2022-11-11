@@ -977,7 +977,8 @@ ppl::common::RetCode GetFp16ConvKernelNominees(
     conv_param_t &conv_param,
     std::vector<std::string> & knames,
     std::vector<algo_param_t> & params,
-    std::string & sources)
+    std::string & sources,
+    bool spk_only)
 {
 #ifdef PPLNN_ENABLE_CUDA_JIT
     int pad_size            = GetPadSize(type);
@@ -1054,7 +1055,7 @@ ppl::common::RetCode GetFp16ConvKernelNominees(
             cpi_ldg128_l1d, cpi_ldg32_l2, cpi_ldg64_l2, cpi_ldg128_l2, cpi_lds32, cpi_lds64, cpi_lds128, \
             cpi_sts32, cpi_sts64, cpi_sts128, latency_l2_cache, latency_dram, max_dyn_smem_per_cta);
 
-    if (num_chl_per_grp <= 32) {
+    if (num_chl_per_grp <= 32 && !spk_only) {
         int k_per_step = 0;
         if (num_chl_per_grp > 0 && num_chl_per_grp <= 2) {
             k_per_step = 8;
@@ -1139,7 +1140,7 @@ ppl::common::RetCode GetFp16ConvKernelNominees(
         else
             flt_size = 0;
 
-        if(estimate_cta_num <= sm_num) {
+        if(estimate_cta_num <= sm_num || spk_only) {
 
             Get2spkMmaInfo(device_arch, type, mma_shape, m_mma, n_mma, k_mma, m_mma_max, n_mma_max, k_mma_max, k_blk_mma, buf_num_max);
             
@@ -1362,7 +1363,7 @@ double PPLCUDAConvolutionJitSelectKernel(
     std::vector<algo_param_t> params;
     std::string sources = "";
 
-    GetFp16ConvKernelNominees(device, type, conv_param, knames, params, sources);
+    GetFp16ConvKernelNominees(device, type, conv_param, knames, params, sources, false);
 
     int index = 0;
     std::vector<const char *> compile_params;

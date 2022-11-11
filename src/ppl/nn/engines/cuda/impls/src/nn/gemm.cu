@@ -364,7 +364,7 @@ double PPLCUDAGemmJITSelectKernel(
     std::vector<algo_param_t> params;
     std::string sources = "";
 
-    GetFp16ConvKernelNominees(device, type, conv_param, knames, params, sources);
+    GetFp16ConvKernelNominees(device, type, conv_param, knames, params, sources, true);
 
     int index = 0;
     std::vector<const char *> compile_params;
