@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "ppl/common/retcode.h"
 #include "ppl/nn/engines/cuda/engine.h"
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/common/logger.h"
@@ -22,10 +23,18 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
+RetCode RegisterResourcesOnce();
+
 Engine* EngineFactory::Create(const EngineOptions& options) {
+    auto status = RegisterResourcesOnce();
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "register cuda resources failed: " << GetRetCodeStr(status);
+        return nullptr;
+    }
+
     auto engine = new cuda::CudaEngine();
     if (engine) {
-        auto status = engine->Init(options);
+        status = engine->Init(options);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "init cuda engine failed: " << GetRetCodeStr(status);
             delete engine;

@@ -121,6 +121,10 @@ file(GLOB __PPLNN_SOURCES__
 
 if(PPLNN_ENABLE_PMX_MODEL)
     file(GLOB_RECURSE __PPLNN_MODEL_PMX_SRC__ src/ppl/nn/models/pmx/*.cc)
+    # if external sources are set, remove `default_register_resources.cc`
+    if(PPLNN_SOURCE_EXTERNAL_PMX_MODEL_SOURCES)
+        list(REMOVE_ITEM __PPLNN_MODEL_PMX_SRC__ src/ppl/nn/models/pmx/default_register_resources.cc)
+    endif()
     list(APPEND __PPLNN_SOURCES__ ${__PPLNN_MODEL_PMX_SRC__} ${PPLNN_SOURCE_EXTERNAL_PMX_MODEL_SOURCES})
     unset(__PPLNN_MODEL_PMX_SRC__)
 endif()

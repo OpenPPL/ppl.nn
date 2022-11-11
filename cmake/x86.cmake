@@ -1,6 +1,10 @@
 set(PPLNN_USE_X86 ON)
 
 file(GLOB __PPLNN_X86_SRC__ src/ppl/nn/engines/x86/*.cc)
+if(PPLNN_SOURCE_EXTERNAL_X86_ENGINE_SOURCES)
+    list(REMOVE_ITEM __PPLNN_X86_SRC__ src/ppl/nn/engines/x86/default_register_resources.cc)
+endif()
+
 file(GLOB_RECURSE __PPLNN_X86_SRC_RECURSE__
     src/ppl/nn/engines/x86/kernels/*.cc
     src/ppl/nn/engines/x86/params/*.cc

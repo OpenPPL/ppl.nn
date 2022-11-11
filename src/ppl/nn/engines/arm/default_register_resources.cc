@@ -15,12 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/x86/ops.h"
+#include "ppl/common/retcode.h"
+using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace python { namespace x86 {
+namespace ppl { namespace nn { namespace arm {
 
-void RegisterBuiltinOpImpls() {
-    ppl::nn::x86::RegisterBuiltinOpImpls();
+void RegisterBuiltinOpImpls();
+
+RetCode RegisterResourcesOnce() {
+    RegisterBuiltinOpImpls();
+    return RC_SUCCESS;
 }
 
-}}}} // namespace ppl::nn::python::x86
+}}} // namespace ppl::nn::arm

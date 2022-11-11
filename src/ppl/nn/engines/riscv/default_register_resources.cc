@@ -15,13 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPS_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPS_H_
+#include "ppl/common/retcode.h"
+using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace cuda {
+namespace ppl { namespace nn { namespace riscv {
 
 void RegisterBuiltinOpImpls();
 
-}}} // namespace ppl::nn::cuda
+RetCode RegisterResourcesOnce() {
+    RegisterBuiltinOpImpls();
+    return RC_SUCCESS;
+}
 
-#endif
+}}} // namespace ppl::nn::riscv

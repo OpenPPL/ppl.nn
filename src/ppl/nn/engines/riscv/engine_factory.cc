@@ -15,18 +15,26 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "ppl/common/retcode.h"
 #include "ppl/nn/engines/riscv/engine_factory.h"
 #include "ppl/nn/engines/riscv/engine.h"
-#include "ppl/nn/engines/riscv/riscv_device.h"
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace riscv {
 
+RetCode RegisterResourcesOnce();
+
 Engine* EngineFactory::Create(const EngineOptions& options) {
+    auto status = RegisterResourcesOnce();
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "register riscv resources failed: " << GetRetCodeStr(status);
+        return nullptr;
+    }
+
     auto engine = new riscv::RiscvEngine();
     if (engine) {
-        auto status = engine->Init(options);
+        status = engine->Init(options);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "init riscv engine failed: " << GetRetCodeStr(status);
             delete engine;
