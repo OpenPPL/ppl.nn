@@ -34,10 +34,10 @@ inline float32x4_t v_exp_f32(const float32x4_t v_src)
     float32x4_t fx  = vfma<float32x4_t>(x, vdupq_n_f32(1.44269504088896341), vdupq_n_f32(0.5f));
 
 #if defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__)
-    vsetq_lane_f32((float)std::floor(vgetq_lane_f32(fx, 0)), tmp, 0);
-    vsetq_lane_f32((float)std::floor(vgetq_lane_f32(fx, 1)), tmp, 1);
-    vsetq_lane_f32((float)std::floor(vgetq_lane_f32(fx, 2)), tmp, 2);
-    vsetq_lane_f32((float)std::floor(vgetq_lane_f32(fx, 3)), tmp, 3);
+    tmp = vsetq_lane_f32((float)std::floor(vgetq_lane_f32(fx, 0)), tmp, 0);
+    tmp = vsetq_lane_f32((float)std::floor(vgetq_lane_f32(fx, 1)), tmp, 1);
+    tmp = vsetq_lane_f32((float)std::floor(vgetq_lane_f32(fx, 2)), tmp, 2);
+    tmp = vsetq_lane_f32((float)std::floor(vgetq_lane_f32(fx, 3)), tmp, 3);
 #else
     tmp             = vrndmq_f32(fx);
 #endif
