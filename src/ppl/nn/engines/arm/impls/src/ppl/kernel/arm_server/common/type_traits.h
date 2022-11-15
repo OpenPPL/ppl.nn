@@ -183,10 +183,10 @@ inline float32x4_t vdiv(const float32x4_t& v0, const float32x4_t& v1)
     return vdivq_f32(v0, v1);
 #else
     float32x4_t v_dst = {0};
-    vsetq_lane_f32(vgetq_lane_f32(v0, 0) / vgetq_lane_f32(v1, 0), v_dst, 0);
-    vsetq_lane_f32(vgetq_lane_f32(v0, 1) / vgetq_lane_f32(v1, 1), v_dst, 1);
-    vsetq_lane_f32(vgetq_lane_f32(v0, 2) / vgetq_lane_f32(v1, 2), v_dst, 2);
-    vsetq_lane_f32(vgetq_lane_f32(v0, 3) / vgetq_lane_f32(v1, 3), v_dst, 3);
+    v_dst = vsetq_lane_f32(vgetq_lane_f32(v0, 0) / vgetq_lane_f32(v1, 0), v_dst, 0);
+    v_dst = vsetq_lane_f32(vgetq_lane_f32(v0, 1) / vgetq_lane_f32(v1, 1), v_dst, 1);
+    v_dst = vsetq_lane_f32(vgetq_lane_f32(v0, 2) / vgetq_lane_f32(v1, 2), v_dst, 2);
+    v_dst = vsetq_lane_f32(vgetq_lane_f32(v0, 3) / vgetq_lane_f32(v1, 3), v_dst, 3);
     return v_dst;
 #endif
 }
@@ -228,10 +228,10 @@ inline float32x4_t vsqrt<float32x4_t>(const float32x4_t& v0)
 {
 #ifndef __aarch64__
     float32x4_t v_dst = {0};
-    vsetq_lane_f32(sqrtf(vgetq_lane_f32(v0, 0)), v_dst, 0);
-    vsetq_lane_f32(sqrtf(vgetq_lane_f32(v0, 1)), v_dst, 1);
-    vsetq_lane_f32(sqrtf(vgetq_lane_f32(v0, 2)), v_dst, 2);
-    vsetq_lane_f32(sqrtf(vgetq_lane_f32(v0, 3)), v_dst, 3);
+    v_dst = vsetq_lane_f32(sqrtf(vgetq_lane_f32(v0, 0)), v_dst, 0);
+    v_dst = vsetq_lane_f32(sqrtf(vgetq_lane_f32(v0, 1)), v_dst, 1);
+    v_dst = vsetq_lane_f32(sqrtf(vgetq_lane_f32(v0, 2)), v_dst, 2);
+    v_dst = vsetq_lane_f32(sqrtf(vgetq_lane_f32(v0, 3)), v_dst, 3);
     return v_dst;
 #else
     return vsqrtq_f32(v0);
