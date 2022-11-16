@@ -22,7 +22,7 @@
 #include "ppl/nn/runtime/edge_object.h"
 #include "ppl/nn/common/tensor_buffer_info.h"
 #include "ppl/nn/common/types.h"
-#include <memory>
+#include <functional>
 
 namespace ppl { namespace nn {
 
@@ -39,6 +39,12 @@ public:
 
     TensorImpl(TensorImpl&&) = default;
     TensorImpl& operator=(TensorImpl&&) = default;
+
+    ~TensorImpl() {
+        if (custom_info_deleter_ && custom_info_) {
+            custom_info_deleter_(custom_info_);
+        }
+    }
 
     const char* GetName() const override {
         return GetEdge()->GetName().c_str();
@@ -113,11 +119,15 @@ public:
 
     template <typename T = void>
     T* GetCustomInfo() const {
-        return static_cast<T*>(custom_info_.get());
+        return static_cast<T*>(custom_info_);
     }
 
-    void SetCustomInfo(const std::shared_ptr<void>& i) {
-        custom_info_ = i;
+    void SetCustomInfo(void* info) {
+        custom_info_ = info;
+    }
+
+    void SetCustomInfoDeleter(const std::function<void(void*)>& d) {
+        custom_info_deleter_ = d;
     }
 
     ppl::common::RetCode CopyFromHostRaw(const void* src);
@@ -131,7 +141,8 @@ public:
 private:
     tensortype_t type_;
     TensorBufferInfo buffer_info_;
-    std::shared_ptr<void> custom_info_;
+    void* custom_info_ = nullptr;
+    std::function<void(void*)> custom_info_deleter_;
 
 private:
     TensorImpl(const TensorImpl&) = delete;

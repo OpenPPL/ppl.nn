@@ -36,7 +36,8 @@ public:
        @param src_desc shape of `src`
     */
     virtual ppl::common::RetCode ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
-                                               const TensorShape& src_desc) const = 0;
+                                               const TensorShape& src_desc,
+                                               const void* src_custom_info = nullptr) const = 0;
 
     /**
        @brief convert data described by `src_desc` from `src` to `dst` described by `dst_desc`
@@ -46,7 +47,8 @@ public:
        @param src_desc shape of `src`
     */
     virtual ppl::common::RetCode ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
-                                                 const TensorShape& src_desc) const = 0;
+                                                 const TensorShape& src_desc,
+                                                 const void* dst_custom_info = nullptr) const = 0;
 
     /**
        @brief convert data described by `src_desc` from `src` to `dst` described by `dst_desc`
@@ -56,7 +58,8 @@ public:
        @param src_desc shape of `src`
     */
     virtual ppl::common::RetCode Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
-                                         const TensorShape& src_desc) const = 0;
+                                         const TensorShape& src_desc, const void* dst_custom_info = nullptr,
+                                         const void* src_custom_info = nullptr) const = 0;
 };
 
 }} // namespace ppl::nn

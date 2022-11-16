@@ -25,13 +25,16 @@ namespace ppl { namespace nn { namespace utils {
 class GenericCpuDataConverter final : public DataConverter {
 public:
     ppl::common::RetCode ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
-                                       const TensorShape& src_desc) const override;
+                                       const TensorShape& src_desc,
+                                       const void* src_custom_info = nullptr) const override;
 
     ppl::common::RetCode ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
-                                         const TensorShape& src_desc) const override;
+                                         const TensorShape& src_desc,
+                                         const void* dst_custom_info = nullptr) const override;
 
     ppl::common::RetCode Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
-                                 const TensorShape& src_desc) const override;
+                                 const TensorShape& src_desc, const void* dst_custom_info = nullptr,
+                                 const void* src_custom_info = nullptr) const override;
 };
 
 }}} // namespace ppl::nn::utils

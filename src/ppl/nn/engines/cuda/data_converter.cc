@@ -33,7 +33,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode CudaDataConverter::ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
-                                         const TensorShape& src_desc) const {
+                                         const TensorShape& src_desc, const void*) const {
     if (src_desc.CalcBytesExcludingPadding() == 0) {
         // TODO release dst
         return RC_SUCCESS;
@@ -65,7 +65,7 @@ RetCode CudaDataConverter::ConvertToHost(void* dst, const TensorShape& dst_desc,
 }
 
 RetCode CudaDataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
-                                           const TensorShape& src_desc) const {
+                                           const TensorShape& src_desc, const void*) const {
     if (src_desc.CalcBytesExcludingPadding() == 0) {
         device_->Free(dst);
         return RC_SUCCESS;
@@ -97,7 +97,7 @@ RetCode CudaDataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& d
 }
 
 RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
-                                   const TensorShape& src_desc) const {
+                                   const TensorShape& src_desc, const void*, const void*) const {
     if (src_desc.CalcBytesExcludingPadding() == 0) {
         device_->Free(dst);
         return RC_SUCCESS;

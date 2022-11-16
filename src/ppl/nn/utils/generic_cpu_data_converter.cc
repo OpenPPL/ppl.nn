@@ -29,7 +29,7 @@ static void TypedConvert(DstType* dst, const SrcType* src, uint32_t count) {
 }
 
 RetCode GenericCpuDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
-                                         const TensorShape& src_desc) const {
+                                         const TensorShape& src_desc, const void*, const void*) const {
     if (dst_desc.GetDataFormat() != DATAFORMAT_NDARRAY || src_desc.GetDataFormat() != DATAFORMAT_NDARRAY) {
         return RC_UNSUPPORTED;
     }
@@ -57,13 +57,13 @@ RetCode GenericCpuDataConverter::Convert(BufferDesc* dst, const TensorShape& dst
 }
 
 RetCode GenericCpuDataConverter::ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
-                                               const TensorShape& src_desc) const {
+                                               const TensorShape& src_desc, const void*) const {
     BufferDesc dst_wrapper(dst);
     return Convert(&dst_wrapper, dst_desc, src, src_desc);
 }
 
 RetCode GenericCpuDataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
-                                                 const TensorShape& src_desc) const {
+                                                 const TensorShape& src_desc, const void*) const {
     return Convert(dst, dst_desc, BufferDesc(const_cast<void*>(src)), src_desc);
 }
 
