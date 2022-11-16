@@ -27,7 +27,7 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace x86 {
 
 RetCode X86DataConverter::Convert(BufferDesc* dst_buf, const TensorShape& dst_desc, const BufferDesc& src_buf,
-                                  const TensorShape& src_desc) const {
+                                  const TensorShape& src_desc, const void*, const void*) const {
     const auto src_data_type = src_desc.GetDataType();
     const auto dst_data_type = dst_desc.GetDataType();
     const auto src_data_format = src_desc.GetDataFormat();
@@ -92,13 +92,13 @@ RetCode X86DataConverter::Convert(BufferDesc* dst_buf, const TensorShape& dst_de
 }
 
 RetCode X86DataConverter::ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
-                                        const TensorShape& src_desc) const {
+                                        const TensorShape& src_desc, const void*) const {
     BufferDesc dst_wrapper(dst);
     return Convert(&dst_wrapper, dst_desc, src, src_desc);
 }
 
 RetCode X86DataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
-                                          const TensorShape& src_desc) const {
+                                          const TensorShape& src_desc, const void*) const {
     return Convert(dst, dst_desc, BufferDesc(const_cast<void*>(src)), src_desc);
 }
 

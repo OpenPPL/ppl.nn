@@ -49,7 +49,8 @@ RetCode TensorImpl::CopyFromHost(const void* src) {
 
 RetCode TensorImpl::ConvertToHost(void* dst, const TensorShape& dst_desc) const {
     auto converter = buffer_info_.GetDevice()->GetDataConverter();
-    return converter->ConvertToHost(dst, dst_desc, buffer_info_.GetBufferDesc(), *buffer_info_.GetShape());
+    return converter->ConvertToHost(dst, dst_desc, buffer_info_.GetBufferDesc(), *buffer_info_.GetShape(),
+                                    custom_info_);
 }
 
 RetCode TensorImpl::ConvertFromHost(const void* src, const TensorShape& src_desc) {
@@ -58,7 +59,8 @@ RetCode TensorImpl::ConvertFromHost(const void* src, const TensorShape& src_desc
         return rc;
     }
     auto converter = buffer_info_.GetDevice()->GetDataConverter();
-    return converter->ConvertFromHost(&buffer_info_.GetBufferDesc(), *buffer_info_.GetShape(), src, src_desc);
+    return converter->ConvertFromHost(&buffer_info_.GetBufferDesc(), *buffer_info_.GetShape(), src, src_desc,
+                                      custom_info_);
 }
 
 }} // namespace ppl::nn
