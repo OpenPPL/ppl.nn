@@ -202,7 +202,7 @@ __global__ void ppl_cukernel_unary_zero_nhwc_int8(const uint64_t num_elems,
         int channels       = output_shape->GetDim(1);                                                                  \
         int pad_channels   = output_shape->GetDim(1) + output_shape->GetPadding1(1);                                   \
         int height         = output_shape->GetDim(2);                                                                  \
-        int width          = output_shape->GetDim(3);                                                                  \
+        int width          = output_shape->CalcElementsFromDimensionIncludingPadding(3);                                                                  \
         if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {                                        \
             int block_size = 256;                                                                                      \
             int grid_size  = (num_elems + block_size - 1) / block_size;                                                \
