@@ -16,7 +16,6 @@
 // under the License.
 
 #include "cudakernel/memory/subpixel.h"
-#include "cudakernel/common/divmod_fast.h"
 #include "cudakernel/common/memory_utils.h"
 #include "ppl/nn/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
@@ -27,7 +26,8 @@ __global__ void ppl_cukernel_subpixel_down(
     int64_t num_elems,
     int down_ratio,
     int num_output_dim,
-    GArray<DivModFast> output_strides_fast,
+    GArray<int64_t> output_strides,
+    int out_chl, int out_hgt, int out_width,
     GArray<int64_t> input_strides,
     const T* input,
     T* output)
@@ -36,12 +36,11 @@ __global__ void ppl_cukernel_subpixel_down(
     if (index >= num_elems)
         return;
 
-    int idx, remain = index;
-    int output_idx[4] = {1, 1, 1, 1};
-    for (int it = 0; it < num_output_dim; ++it) {
-        output_strides_fast[it].divmod(remain, idx, remain);
-        output_idx[it] = idx;
-    }
+    int output_idx[4] = {0, 0, 0, 0};
+    output_idx[0] = index / output_strides[0];
+    output_idx[1] = (index / output_strides[1]) % out_chl;
+    output_idx[2] = (index / output_strides[2]) % out_hgt;
+    output_idx[3] = index % out_width;
 
     int c_idx       = output_idx[1];
     int bottom_cidx = c_idx / (down_ratio * down_ratio);
@@ -64,7 +63,8 @@ __global__ void ppl_cukernel_subpixel_up(
     int64_t num_elems,
     int up_ratio,
     int num_output_dim,
-    GArray<DivModFast> output_strides_fast,
+    GArray<int64_t> output_strides,
+    int out_chl, int out_hgt, int out_width,
     GArray<int64_t> input_strides,
     const T* input,
     T* output)
@@ -73,12 +73,11 @@ __global__ void ppl_cukernel_subpixel_up(
     if (index >= num_elems)
         return;
 
-    int idx, remain = index;
-    int output_idx[4] = {1, 1, 1, 1};
-    for (int it = 0; it < num_output_dim; ++it) {
-        output_strides_fast[it].divmod(remain, idx, remain);
-        output_idx[it] = idx;
-    }
+    int output_idx[4] = {0, 0, 0, 0};
+    output_idx[0] = index / output_strides[0];
+    output_idx[1] = (index / output_strides[1]) % out_chl;
+    output_idx[2] = (index / output_strides[2]) % out_hgt;
+    output_idx[3] = index % out_width;
 
     int c_idx = output_idx[1];
     int h_idx = output_idx[2], w_idx = output_idx[3];
@@ -108,7 +107,7 @@ ppl::common::RetCode PPLCUDASubpixelDownForwardImp(
 {
     int64_t num_elems  = output_shape->CalcElementsIncludingPadding();
     int num_output_dim = output_shape->GetDimCount();
-    GArray<DivModFast> output_strides_fast(num_output_dim);
+    GArray<int64_t> output_strides(num_output_dim);
     GArray<int64_t> input_strides(num_output_dim);
 
     int64_t acc_output_stride = 1;
@@ -119,18 +118,22 @@ ppl::common::RetCode PPLCUDASubpixelDownForwardImp(
         } else {
             input_strides[it] = acc_input_stride;
         }
-        output_strides_fast[it] = DivModFast(acc_output_stride);
+        output_strides[it] = acc_output_stride;
         acc_input_stride *= input_shape->GetDim(it);
         acc_output_stride *= output_shape->GetDim(it);
     }
 
     int block_size = 256;
     int grid_size  = (num_elems + block_size - 1) / block_size;
+    int out_chl = output_shape->GetDim(1);
+    int out_hgt = output_shape->GetDim(2);
+    int out_width = output_shape->GetDim(3);
 
 #define SWITCH_CASE(TYPE)                                                                                                  \
     case sizeof(TYPE): {                                                                                                   \
         ppl_cukernel_subpixel_down<<<grid_size, block_size, 0, stream>>>(                                                  \
-            num_elems, down_ratio, num_output_dim, output_strides_fast, input_strides, (const TYPE*)input, (TYPE*)output); \
+            num_elems, down_ratio, num_output_dim, output_strides, out_chl, out_hgt,                                       \
+            out_width, input_strides, (const TYPE*)input, (TYPE*)output);                                                  \
         return ppl::common::RC_SUCCESS;                                                                                    \
     }
 
@@ -156,7 +159,7 @@ ppl::common::RetCode PPLCUDASubpixelUpForwardImp(
 {
     int64_t num_elems  = output_shape->CalcElementsIncludingPadding();
     int num_output_dim = output_shape->GetDimCount();
-    GArray<DivModFast> output_strides_fast(num_output_dim);
+    GArray<int64_t> output_strides(num_output_dim);
     GArray<int64_t> input_strides(num_output_dim);
 
     int64_t acc_output_stride = 1;
@@ -167,18 +170,22 @@ ppl::common::RetCode PPLCUDASubpixelUpForwardImp(
         } else {
             input_strides[it] = acc_input_stride;
         }
-        output_strides_fast[it] = DivModFast(acc_output_stride);
+        output_strides[it] = acc_output_stride;
         acc_input_stride *= input_shape->GetDim(it);
         acc_output_stride *= output_shape->GetDim(it);
     }
 
     int block_size = 256;
     int grid_size  = (num_elems + block_size - 1) / block_size;
+    int out_chl = output_shape->GetDim(1);
+    int out_hgt = output_shape->GetDim(2);
+    int out_width = output_shape->GetDim(3);
 
 #define SWITCH_CASE(TYPE)                                                                                                \
     case sizeof(TYPE): {                                                                                                 \
         ppl_cukernel_subpixel_up<<<grid_size, block_size, 0, stream>>>(                                                  \
-            num_elems, up_ratio, num_output_dim, output_strides_fast, input_strides, (const TYPE*)input, (TYPE*)output); \
+            num_elems, up_ratio, num_output_dim, output_strides, out_chl, out_hgt,                                       \
+            out_width, input_strides, (const TYPE*)input, (TYPE*)output);                                                \
         return ppl::common::RC_SUCCESS;                                                                                  \
     }
 
