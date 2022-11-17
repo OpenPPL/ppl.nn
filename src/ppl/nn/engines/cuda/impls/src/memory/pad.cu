@@ -23,7 +23,45 @@
 #include "ppl/common/retcode.h"
 #include <cuda_fp16.h>
 
-template <typename T>
+template <int MODE>
+__device__ int pad_calc_in_idx(int out_idx, int64_t start_pad_val, int64_t input_dim, bool& use_pad_value) {
+    int res = 0;
+    if (out_idx < start_pad_val || out_idx >= start_pad_val + input_dim)
+        use_pad_value = true;
+    else
+        res = out_idx - start_pad_val;
+    return res;
+}
+
+// PadKernelParam::PAD_MODE_REFLECT --> 1
+template <>
+__device__ int pad_calc_in_idx<PadKernelParam::PAD_MODE_REFLECT>(int out_idx, int64_t start_pad_val, int64_t input_dim, bool& use_pad_value) {
+    int res = 0;
+    if (out_idx < start_pad_val) {
+        res = start_pad_val - out_idx;
+    } else if (out_idx >= start_pad_val + input_dim) {
+        res = input_dim - 2 - (out_idx - (start_pad_val + input_dim));
+    } else {
+        res = out_idx - start_pad_val;
+    }
+    return res;
+}
+
+// PadKernelParam::PAD_MODE_EDGE --> 1
+template <>
+__device__ int pad_calc_in_idx<PadKernelParam::PAD_MODE_EDGE>(int out_idx, int64_t start_pad_val, int64_t input_dim, bool& use_pad_value) {
+    int res = 0;
+    if (out_idx < start_pad_val) {
+        res = 0;
+    } else if (out_idx >= start_pad_val + input_dim) {
+        res = input_dim - 1;
+    } else {
+        res = out_idx - start_pad_val;
+    }
+    return res;
+}
+
+template <typename T, int MODE>
 __global__ void ppl_cukernel_pad(
     int64_t num_elems,
     int num_dims,
@@ -45,34 +83,7 @@ __global__ void ppl_cukernel_pad(
         output_strides_fast[it].divmod(remain, out_idx, remain);
         int64_t start_pad_val = pads[it];
         int in_idx            = 0;
-        if (out_idx < start_pad_val) {
-            switch (param.mode) {
-                case 0: // constant
-                    use_pad_value = true;
-                    break;
-                case 1: // reflect
-                    in_idx = start_pad_val - out_idx;
-                    break;
-                case 2: // edge
-                    in_idx = 0;
-                    break;
-            }
-        } else if (out_idx >= start_pad_val + input_dims[it]) {
-            switch (param.mode) {
-                case 0: // constant
-                    use_pad_value = true;
-                    break;
-                case 1: // reflect
-                    in_idx = input_dims[it] - 2 -
-                             (out_idx - (start_pad_val + input_dims[it]));
-                    break;
-                case 2: // edge
-                    in_idx = input_dims[it] - 1;
-                    break;
-            }
-        } else {
-            in_idx = out_idx - start_pad_val;
-        }
+        in_idx = pad_calc_in_idx<MODE>(out_idx, start_pad_val, input_dims[it], use_pad_value);
         input_offset += in_idx * input_strides[it];
     }
     output[index] = use_pad_value ? (T)param.constant_value : input[input_offset];
@@ -104,6 +115,33 @@ __global__ void ppl_cukernel_pad_fast(const T* input, int src_height, int src_wi
         output[dst_idx] = input[src_idx];
     }
 }
+
+// last 2-dim padded
+bool isFastPadSupported2(const std::vector<int32_t>& pads, int32_t num_dims) {
+    if (num_dims < 3) return false;
+    int32_t diff_cnt = num_dims - 2;
+    for (int32_t i = 0; i < diff_cnt; ++i) {
+        if (pads[i] != 0) return false; // start
+        if (pads[num_dims + i] != 0) return false; //end
+    }
+    return true;
+}
+
+template <typename T, int MODE>
+__global__ void ppl_cukernel_pad_fast2(const T* input, int src_height, int src_width,
+    T* output, int dst_height, int dst_width, int num_dims, const int64_t* pads, PadKernelParam param) {
+    int dst_hgt = blockIdx.y * blockDim.y + threadIdx.y;
+    int dst_wdt = blockIdx.x * blockDim.x + threadIdx.x;
+    if (dst_hgt >= dst_height || dst_wdt >= dst_width) return;
+    int b_idx = blockIdx.z;
+    int dst_idx = b_idx * dst_height * dst_width + dst_hgt * dst_width + dst_wdt;
+    bool use_pad_value = false;
+    int in_hgt = pad_calc_in_idx<MODE>(dst_hgt, pads[num_dims - 2], src_height, use_pad_value);
+    int in_wdt = pad_calc_in_idx<MODE>(dst_wdt, pads[num_dims - 1], src_width, use_pad_value);
+    int src_idx = b_idx * src_height * src_width + in_hgt * src_width + in_wdt;
+    output[dst_idx] = use_pad_value ? (T)param.constant_value : input[src_idx];
+}
+
 ppl::common::RetCode PPLCUDAPadForwardImp(
     cudaStream_t stream,
     PadKernelParam param,
@@ -141,6 +179,57 @@ ppl::common::RetCode PPLCUDAPadForwardImp(
             default:
                 return ppl::common::RC_UNSUPPORTED;
         }
+    } else if (isFastPadSupported2(param.pads, num_dims)) {
+        int batch = input_shape->CalcElementsToDimensionExcludingPadding(num_dims - 2);
+        int dst_height = output_shape->GetDim(num_dims - 2);
+        int dst_width  = output_shape->GetDim(num_dims - 1);
+        int src_height = input_shape->GetDim(num_dims - 2);
+        int src_width  = input_shape->GetDim(num_dims - 1);
+        dim3 block_size(16, 16, 1);
+        dim3 grid_size(DivUp(dst_width, 16), DivUp(dst_height, 16), batch);
+#define PAD_EXEC_FAST2(TYPE, MODE) \
+    ppl_cukernel_pad_fast2<TYPE, MODE><<<grid_size, block_size, 0, stream>>>( \
+                    (const TYPE*)input, src_height, src_width, (TYPE*)output, dst_height, dst_width, \
+                    num_dims, pads, param); \
+    break;
+
+        switch (input_shape->GetDataType()) {
+            case ppl::common::DATATYPE_INT8: {
+                switch(param.mode) {
+                    case PadKernelParam::PAD_MODE_CONSTANT:
+                        PAD_EXEC_FAST2(int8_t, PadKernelParam::PAD_MODE_CONSTANT)
+                    case PadKernelParam::PAD_MODE_REFLECT:
+                        PAD_EXEC_FAST2(int8_t, PadKernelParam::PAD_MODE_REFLECT)
+                    case PadKernelParam::PAD_MODE_EDGE:
+                        PAD_EXEC_FAST2(int8_t, PadKernelParam::PAD_MODE_EDGE)
+                }
+                return ppl::common::RC_SUCCESS;
+            }
+            case ppl::common::DATATYPE_FLOAT16: {
+                switch(param.mode) {
+                    case PadKernelParam::PAD_MODE_CONSTANT:
+                        PAD_EXEC_FAST2(half, PadKernelParam::PAD_MODE_CONSTANT)
+                    case PadKernelParam::PAD_MODE_REFLECT:
+                        PAD_EXEC_FAST2(half, PadKernelParam::PAD_MODE_REFLECT)
+                    case PadKernelParam::PAD_MODE_EDGE:
+                        PAD_EXEC_FAST2(half, PadKernelParam::PAD_MODE_EDGE)
+                }
+                return ppl::common::RC_SUCCESS;
+            }
+            case ppl::common::DATATYPE_FLOAT32: {
+                switch(param.mode) {
+                    case PadKernelParam::PAD_MODE_CONSTANT:
+                        PAD_EXEC_FAST2(float, PadKernelParam::PAD_MODE_CONSTANT)
+                    case PadKernelParam::PAD_MODE_REFLECT:
+                        PAD_EXEC_FAST2(float, PadKernelParam::PAD_MODE_REFLECT)
+                    case PadKernelParam::PAD_MODE_EDGE:
+                        PAD_EXEC_FAST2(float, PadKernelParam::PAD_MODE_EDGE)
+                }
+                return ppl::common::RC_SUCCESS;
+            }
+            default:
+                return ppl::common::RC_UNSUPPORTED;
+            }
     }
     int block_size     = 256;
     uint64_t num_elems = output_shape->CalcElementsIncludingPadding();
@@ -158,20 +247,43 @@ ppl::common::RetCode PPLCUDAPadForwardImp(
         acc_output_stride *= output_shape->GetDim(it);
     }
 
+#define PAD_EXEC(TYPE, MODE) \
+    ppl_cukernel_pad<TYPE, MODE><<<grid_size, block_size, 0, stream>>>( \
+                num_elems, num_dims, param, input_dims, input_strides, (const TYPE*)input, pads, output_strides_fast, (TYPE*)output); \
+    break;
+
     switch (input_shape->GetDataType()) {
         case ppl::common::DATATYPE_INT8: {
-            ppl_cukernel_pad<<<grid_size, block_size, 0, stream>>>(
-                num_elems, num_dims, param, input_dims, input_strides, (const int8_t*)input, pads, output_strides_fast, (int8_t*)output);
+            switch(param.mode) {
+                case PadKernelParam::PAD_MODE_CONSTANT:
+                    PAD_EXEC(int8_t, PadKernelParam::PAD_MODE_CONSTANT)
+                case PadKernelParam::PAD_MODE_REFLECT:
+                    PAD_EXEC(int8_t, PadKernelParam::PAD_MODE_REFLECT)
+                case PadKernelParam::PAD_MODE_EDGE:
+                    PAD_EXEC(int8_t, PadKernelParam::PAD_MODE_EDGE)
+            }
             return ppl::common::RC_SUCCESS;
         }
         case ppl::common::DATATYPE_FLOAT16: {
-            ppl_cukernel_pad<<<grid_size, block_size, 0, stream>>>(
-                num_elems, num_dims, param, input_dims, input_strides, (const half*)input, pads, output_strides_fast, (half*)output);
+            switch(param.mode) {
+                case PadKernelParam::PAD_MODE_CONSTANT:
+                    PAD_EXEC(half, PadKernelParam::PAD_MODE_CONSTANT)
+                case PadKernelParam::PAD_MODE_REFLECT:
+                    PAD_EXEC(half, PadKernelParam::PAD_MODE_REFLECT)
+                case PadKernelParam::PAD_MODE_EDGE:
+                    PAD_EXEC(half, PadKernelParam::PAD_MODE_EDGE)
+            }
             return ppl::common::RC_SUCCESS;
         }
         case ppl::common::DATATYPE_FLOAT32: {
-            ppl_cukernel_pad<<<grid_size, block_size, 0, stream>>>(
-                num_elems, num_dims, param, input_dims, input_strides, (const float*)input, pads, output_strides_fast, (float*)output);
+            switch(param.mode) {
+                case PadKernelParam::PAD_MODE_CONSTANT:
+                    PAD_EXEC(float, PadKernelParam::PAD_MODE_CONSTANT)
+                case PadKernelParam::PAD_MODE_REFLECT:
+                    PAD_EXEC(float, PadKernelParam::PAD_MODE_REFLECT)
+                case PadKernelParam::PAD_MODE_EDGE:
+                    PAD_EXEC(float, PadKernelParam::PAD_MODE_EDGE)
+            }
             return ppl::common::RC_SUCCESS;
         }
         default:
