@@ -369,6 +369,34 @@ static void ppl_refine_tensor_shape(ppl::nn::TensorShape *input_shape0,
     output_shape->SetDimCount(real_dim_count);
 }
 
+static bool ppl_can_one_not_broadcast(const ppl::nn::TensorShape *input_shape0,
+                                  const ppl::nn::TensorShape *input_shape1, int& axis) {
+    bool first_shorter = false;
+    if (input_shape0->GetRealDimCount() != input_shape1->GetRealDimCount() ||
+        input_shape0->CalcElementsExcludingPadding() == input_shape1->CalcElementsExcludingPadding()) {
+        return false;
+    }
+    if (input_shape0->CalcElementsExcludingPadding() < input_shape1->CalcElementsExcludingPadding())  {
+        first_shorter = true;
+    }
+    int dim_count = input_shape0->GetDimCount();
+    int not_one_cnt = 0;
+    bool pre_not_one = false;
+    const ppl::nn::TensorShape* test_shape = first_shorter ? input_shape0 : input_shape1;
+    for (int i = 0; i < dim_count; ++i) {
+        if (test_shape->GetDim(i) != 1 && !pre_not_one) {
+            ++not_one_cnt;
+            axis = i;
+            pre_not_one = true;
+        } else if (test_shape->GetDim(i) != 1) {
+            axis = i;
+        } else if (test_shape->GetDim(i) == 1) {
+            pre_not_one = false;
+        }
+    }
+    return (not_one_cnt == 1);
+}
+
 static int ppl_get_num_broadcast_dims(const ppl::nn::TensorShape *tensor_shape0,
                             const ppl::nn::TensorShape *tensor_shape1,
                             int &aixs, bool &bidirectional) {
@@ -769,6 +797,23 @@ __global__ void ppl_cukernel_arithmetic_one_dimension(
 }
 
 template<ArithmeticOpType op_type, typename T>
+__global__ void ppl_cukernel_arithmetic_one_not_broadcast(
+    const uint64_t num_elems,
+    const int32_t axis_lgt,
+    const int32_t inner_dim,
+    const bool first_shorter, 
+    const T *input0,
+    const T* input1,
+    T *output) {
+    uint64_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index >= num_elems) return;
+    int calc_index = (index / inner_dim) % axis_lgt;
+    uint64_t offset0 = first_shorter ? calc_index : index;
+    uint64_t offset1 = first_shorter ? index : calc_index;
+    output[index] = ppl_arithmetic_scalar<op_type, T>(input0[offset0], input1[offset1]);
+}
+
+template<ArithmeticOpType op_type, typename T>
 __global__ void ppl_cukernel_arithmetic_one_dimension_int8(
     const uint64_t num_elems,
     const int32_t inner_dim,
@@ -902,20 +947,26 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImp(
             ppl_cukernel_arithmetic<op_type, T><<<grid_size, block_size, 0,
                 stream>>>(num_elems, dim_count, param, (const T*)input0, (const T*)input1, (T*)output);
          } else if (output_shape->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY) {
+            bool first_shorter = false;
+            if (input_shape0->GetRealDimCount() == input_shape1->GetRealDimCount() &&
+                input_shape0->GetDim(axis) < input_shape1->GetDim(axis)) {
+                first_shorter = true;
+            }
+            if (input_shape0->CalcElementsExcludingPadding() < input_shape1->CalcElementsExcludingPadding())  {
+                first_shorter = true;
+            }
             if (num_broadcast_dims == 1) {
                 int inner_dim = 1;
                 for(int it = axis + 1; it < dim_count; inner_dim *= output_shape->GetDim(it), ++it);
                 int outer_stride = inner_dim * output_shape->GetDim(axis);
-                bool first_shorter = false;
-                if (input_shape0->GetRealDimCount() == input_shape1->GetRealDimCount() &&
-                    input_shape0->GetDim(axis) < input_shape1->GetDim(axis)) {
-                    first_shorter = true;
-                }
-                if (input_shape0->CalcElementsExcludingPadding() < input_shape1->CalcElementsExcludingPadding())  {
-                    first_shorter = true;
-                }
                 ppl_cukernel_arithmetic_one_broadcast<op_type, T><<<grid_size, block_size, 0,
                     stream>>>(num_elems, outer_stride, inner_dim, first_shorter, (const T*)input0, (const T*)input1, (T*)output);
+                return ppl::common::RC_SUCCESS;
+            } else if (!bidirectional && ppl_can_one_not_broadcast(input_shape0, input_shape1, axis)) {
+                int axis_lgt = first_shorter ? input_shape0->CalcElementsExcludingPadding() : input_shape1->CalcElementsExcludingPadding();
+                int inner_dim = first_shorter ? input_shape1->CalcElementsFromDimensionIncludingPadding(axis + 1) : input_shape0->CalcElementsFromDimensionIncludingPadding(axis + 1);
+                ppl_cukernel_arithmetic_one_not_broadcast<op_type, T><<<grid_size, block_size, 0,
+                    stream>>>(num_elems, axis_lgt, inner_dim, first_shorter, (const T*)input0, (const T*)input1, (T*)output);
                 return ppl::common::RC_SUCCESS;
             }
             ppl_arithmetic_prepare_strides(input_shape0, input_shape1,
