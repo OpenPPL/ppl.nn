@@ -164,9 +164,28 @@ static nodeid_t WhichPrevToJoin(const ir::GraphTopo* topo, const EngineImpl* eng
     return INVALID_NODEID;
 }
 
+static void GenOnePartition(EngineImpl* engine, const ir::GraphTopo* topo,
+                            vector<pair<EngineImpl*, vector<nodeid_t>>>* partitions) {
+    partitions->resize(1);
+    partitions->at(0).first = engine;
+
+    vector<nodeid_t>* nids = &partitions->at(0).second;
+    for (uint32_t i = 0; i < topo->GetCurrentNodeIdBound(); ++i) {
+        auto node = topo->GetNode(i);
+        if (node) {
+            nids->push_back(node->GetId());
+        }
+    }
+}
+
 // TODO optimize: use an alternative engine of ops in FindEngine()
 RetCode EngineGraphPartitioner::Partition(const vector<EngineImpl*>& engines, const ir::GraphTopo* topo,
                                           vector<pair<EngineImpl*, vector<nodeid_t>>>* partitions) const {
+    if (engines.size() == 1 && special_types_.empty()) {
+        GenOnePartition(engines[0], topo, partitions);
+        return RC_SUCCESS;
+    }
+
     vector<PartitionInfo> par_infos;
     map<nodeid_t, uint32_t> nid2par; // nodeid => index of par_infos
 
