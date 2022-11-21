@@ -333,7 +333,7 @@ double PPLCUDAConvolutionSelectKernelInt8(
     int out_hw = conv_param.out_height * conv_param.out_width;
 
     int concat_offset_v8 = fuse_param.concat_offset / pad_size;
-    int concat_stride_v8 = fuse_param.concat_stride / pad_size;
+    int concat_stride_v8 = DivUp(fuse_param.concat_stride, pad_size); // should use divup
 
     bool  is_in_grp_pad = num_chl_per_grp_pad != num_chl_per_grp && conv_param.num_grp != 1;
     bool is_out_grp_pad = num_flt_per_grp_pad != num_flt_per_grp && conv_param.num_grp != 1;
