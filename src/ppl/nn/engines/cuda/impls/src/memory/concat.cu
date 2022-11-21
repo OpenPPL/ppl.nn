@@ -444,30 +444,30 @@ ppl::common::RetCode PPLCUDAConcatForwardImp(
 #define SWITCH_CASE(TYPE)                                                                                                                                                 \
     case sizeof(TYPE): {                                                                                                                                                  \
         for (int j = 0; j < num_inputs; ++j) {                                                                                                                            \
+            int nhwc_axis = (axis == 1) ? num_dims - 1 : axis - 1;                                                                                                    \
+            nhwc_axis     = (axis == 0) ? 0 : nhwc_axis;                                                                                                              \
+            std::vector<int32_t> nhwc_input_dims(num_dims);                                                                                                           \
+            std::vector<int32_t> nhwc_input_padded_dims(num_dims);                                                                                                    \
+            nhwc_input_dims[num_dims - 1]        = input_dims[j][1];                                                                                                  \
+            nhwc_input_padded_dims[num_dims - 1] = input_padded_dims[j][1];                                                                                           \
+            jump_step                            = 0;                                                                                                                 \
+            for (int it = 0; it < num_dims - 1; ++it) {                                                                                                               \
+                if (it == 1)                                                                                                                                          \
+                    jump_step = 1;                                                                                                                                    \
+                nhwc_input_dims[it]        = input_dims[j][it + jump_step];                                                                                           \
+                nhwc_input_padded_dims[it] = input_padded_dims[j][it + jump_step];                                                                                    \
+            }                                                                                                                                                         \
+            GArray<DivModFast> input_strides_fast(num_dims);                                                                                                          \
+            GArray<int64_t> input_padded_strides(num_dims);                                                                                                           \
+            int64_t acc_input_stride = 1, acc_input_padded_stride = 1;                                                                                                \
+            for (int it = num_dims - 1; it >= 0; --it) {                                                                                                              \
+                input_strides_fast[it]   = DivModFast(acc_input_stride);                                                                                              \
+                input_padded_strides[it] = acc_input_padded_stride;                                                                                                   \
+                acc_input_stride *= nhwc_input_dims[it];                                                                                                              \
+                acc_input_padded_stride *= nhwc_input_padded_dims[it];                                                                                                \
+            }                                                                                                                                                         \
+            int input_axis_width = nhwc_input_dims[nhwc_axis];                                                                                                        \
             if (!(mask & (1 << j))) {                                                                                                                                     \
-                int nhwc_axis = (axis == 1) ? num_dims - 1 : axis - 1;                                                                                                    \
-                nhwc_axis     = (axis == 0) ? 0 : nhwc_axis;                                                                                                              \
-                std::vector<int32_t> nhwc_input_dims(num_dims);                                                                                                           \
-                std::vector<int32_t> nhwc_input_padded_dims(num_dims);                                                                                                    \
-                nhwc_input_dims[num_dims - 1]        = input_dims[j][1];                                                                                                  \
-                nhwc_input_padded_dims[num_dims - 1] = input_padded_dims[j][1];                                                                                           \
-                jump_step                            = 0;                                                                                                                 \
-                for (int it = 0; it < num_dims - 1; ++it) {                                                                                                               \
-                    if (it == 1)                                                                                                                                          \
-                        jump_step = 1;                                                                                                                                    \
-                    nhwc_input_dims[it]        = input_dims[j][it + jump_step];                                                                                           \
-                    nhwc_input_padded_dims[it] = input_padded_dims[j][it + jump_step];                                                                                    \
-                }                                                                                                                                                         \
-                GArray<DivModFast> input_strides_fast(num_dims);                                                                                                          \
-                GArray<int64_t> input_padded_strides(num_dims);                                                                                                           \
-                int64_t acc_input_stride = 1, acc_input_padded_stride = 1;                                                                                                \
-                for (int it = num_dims - 1; it >= 0; --it) {                                                                                                              \
-                    input_strides_fast[it]   = DivModFast(acc_input_stride);                                                                                              \
-                    input_padded_strides[it] = acc_input_padded_stride;                                                                                                   \
-                    acc_input_stride *= nhwc_input_dims[it];                                                                                                              \
-                    acc_input_padded_stride *= nhwc_input_padded_dims[it];                                                                                                \
-                }                                                                                                                                                         \
-                int input_axis_width = nhwc_input_dims[nhwc_axis];                                                                                                        \
                 int64_t num_elems    = 1;                                                                                                                                 \
                 for (int it = 0; it < num_dims; ++it)                                                                                                                     \
                     num_elems *= nhwc_input_dims[it];                                                                                                                     \
@@ -475,8 +475,8 @@ ppl::common::RetCode PPLCUDAConcatForwardImp(
                 int grid_size  = (num_elems + block_size - 1) / block_size;                                                                                               \
                 ppl_cukernel_concat_nhwc<<<grid_size, block_size, 0, stream>>>(                                                                                           \
                     num_elems, num_dims, nhwc_axis, axis_offset, input_strides_fast, input_padded_strides, output_padded_strides, (const TYPE*)inputs[j], (TYPE*)output); \
-                axis_offset += input_axis_width;                                                                                                                          \
             }                                                                                                                                                             \
+            axis_offset += input_axis_width;                                                                                                                          \
         }                                                                                                                                                                 \
         return ppl::common::RC_SUCCESS;                                                                                                                                   \
     }
