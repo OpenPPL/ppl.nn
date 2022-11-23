@@ -23,6 +23,7 @@
 #include "ppl/nn/optimizers/fuse_bn_optimizer.h"
 #include "ppl/nn/optimizers/fuse_constant_optimizer.h"
 #include "ppl/nn/optimizers/fuse_shape_optimizer.h"
+#include "ppl/nn/optimizers/identity_node_optimizer.h"
 #include "ppl/nn/optimizers/skip_dropout_optimizer.h"
 
 using namespace std;
@@ -34,6 +35,7 @@ namespace ppl { namespace nn {
 
 GraphOptimizerManager::GraphOptimizerManager() {
     REGISTER_OPTIMIZER("ConstantNodeOptimizer", ConstantNodeOptimizer);
+    REGISTER_OPTIMIZER("FuseIdentityNodeOptimizer", IdentityNodeOptimizer);
     REGISTER_OPTIMIZER("FuseParallelNodeOptimizer", FuseParallelNodeOptimizer);
     REGISTER_OPTIMIZER("FuseBNOptimizer", FuseBNOptimizer);
     REGISTER_OPTIMIZER("FuseConstantOptimizer", FuseConstantOptimizer);

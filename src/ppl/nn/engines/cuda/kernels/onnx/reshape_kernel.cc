@@ -23,10 +23,18 @@ namespace ppl { namespace nn { namespace cuda {
 
 ppl::common::RetCode ReshapeKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
+    auto shape = ctx->GetInput<TensorImpl>(1);
     auto output = ctx->GetOutput<TensorImpl>(0);
+    bool can_trans = input->GetType() == TENSORTYPE_NORMAL;
     ppl::common::RetCode status = ppl::common::RC_SUCCESS;
 
-    if (input->GetEdge()->CalcConsumerCount() == 1 && input->GetType() == TENSORTYPE_NORMAL) {
+    for (auto iter = input->GetEdge()->CreateConsumerIter(); iter.IsValid(); iter.Forward()) {
+        auto node_id = iter.Get();
+        if (node_id != GetNode()->GetId() && node_id != shape->GetEdge()->GetProducer())
+            can_trans = false;
+    }
+
+    if (can_trans) {
         output->TransferBufferFrom(input);
     } else {
         status = PPLCUDAReshapeForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(),
