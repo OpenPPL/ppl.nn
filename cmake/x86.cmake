@@ -1,8 +1,8 @@
 set(PPLNN_USE_X86 ON)
 
-file(GLOB __PPLNN_X86_SRC__ src/ppl/nn/engines/x86/*.cc)
+file(GLOB __PPLNN_X86_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/x86/*.cc)
 if(PPLNN_SOURCE_EXTERNAL_X86_ENGINE_SOURCES)
-    list(REMOVE_ITEM __PPLNN_X86_SRC__ src/ppl/nn/engines/x86/default_register_resources.cc)
+    list(REMOVE_ITEM __PPLNN_X86_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/x86/default_register_resources.cc)
 endif()
 
 file(GLOB_RECURSE __PPLNN_X86_SRC_RECURSE__

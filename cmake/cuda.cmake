@@ -14,9 +14,9 @@ if(PPLNN_USE_MSVC_STATIC_RUNTIME)
     hpcc_cuda_use_msvc_static_runtime()
 endif()
 
-file(GLOB __PPLNN_CUDA_SRC__ src/ppl/nn/engines/cuda/*.cc)
+file(GLOB __PPLNN_CUDA_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/cuda/*.cc)
 if(PPLNN_SOURCE_EXTERNAL_CUDA_ENGINE_SOURCES)
-    list(REMOVE_ITEM __PPLNN_CUDA_SRC__ src/ppl/nn/engines/cuda/default_register_resources.cc)
+    list(REMOVE_ITEM __PPLNN_CUDA_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/src/ppl/nn/engines/cuda/default_register_resources.cc)
 endif()
 
 file(GLOB_RECURSE __PPLNN_CUDA_SRC_RECURSE__

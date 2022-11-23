@@ -23,7 +23,11 @@ namespace ppl { namespace nn { namespace cuda {
 void RegisterBuiltinOpImpls();
 
 RetCode RegisterResourcesOnce() {
-    RegisterBuiltinOpImpls();
+    static bool st_registered = false;
+    if (!st_registered) {
+        RegisterBuiltinOpImpls();
+        st_registered = true;
+    }
     return RC_SUCCESS;
 }
 
