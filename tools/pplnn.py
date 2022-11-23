@@ -128,7 +128,7 @@ def ParseCommandLineArgs():
     parser.add_argument("--in-shapes", type = str, dest = "in_shapes",
                         default = "", required = False, help = "shapes of input tensors."
                         " dims are separated by underline, inputs are separated by comma. example:"
-                        " 1_3_128_128,2_3_400_640,3_3_768_1024")
+                        " 1_3_128_128,2_3_400_640,3_3_768_1024. empty fields between commas are scalars.")
     parser.add_argument("--inputs", type = str, dest = "inputs",
                         default = "", required = False, help = "input files separated by comma.")
     parser.add_argument("--reshaped-inputs", type = str, dest = "reshaped_inputs",
@@ -155,9 +155,12 @@ def ParseCommandLineArgs():
 
 def ParseInShapes(in_shapes_str):
     ret = []
-    shape_strs = list(filter(None, in_shapes_str.split(",")))
+    shape_strs = in_shapes_str.split(",")
     for s in shape_strs:
-        dims = [int(d) for d in s.split("_")]
+        if len(s) > 0:
+            dims = [int(d) for d in s.split("_")]
+        else:
+            dims = []
         ret.append(dims)
     return ret
 
