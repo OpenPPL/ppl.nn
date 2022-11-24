@@ -26,12 +26,23 @@ uint64_t ConvKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     auto Y = ctx.GetOutput<TensorImpl>(0);
 
     const int32_t channels = W->GetShape()->GetDim(1) * param_->param->group;
+    const uint32_t kernel_dims = W->GetShape()->GetDimCount() - 2;
 
-    return ppl::kernel::x86::conv_ndarray_fp32_get_buffer_bytes(
-        GetISA(), Y->GetShape(), param_->param->group, channels,
-        param_->param->kernel_shape[0], param_->param->kernel_shape[1],
-        param_->param->strides[0], param_->param->strides[1],
-        param_->param->pads[0], param_->param->pads[1]);
+    if (kernel_dims == 1) {
+        return ppl::kernel::x86::conv1d_ndarray_fp32_get_buffer_bytes(
+            GetISA(), Y->GetShape(), param_->param->group, channels,
+            param_->param->kernel_shape[0],
+            param_->param->strides[0],
+            param_->param->pads[0]);
+    }
+    if (kernel_dims == 2) {
+        return ppl::kernel::x86::conv2d_ndarray_fp32_get_buffer_bytes(
+            GetISA(), Y->GetShape(), param_->param->group, channels,
+            param_->param->kernel_shape[0], param_->param->kernel_shape[1],
+            param_->param->strides[0], param_->param->strides[1],
+            param_->param->pads[0], param_->param->pads[1]);
+    }
+    return 0;
 }
 
 ppl::common::RetCode ConvKernel::DoExecute(KernelExecContext* ctx) {
@@ -52,11 +63,25 @@ ppl::common::RetCode ConvKernel::DoExecute(KernelExecContext* ctx) {
 
     const int32_t num_output = W->GetShape()->GetDim(0);
     const int32_t channels = W->GetShape()->GetDim(1) * param_->param->group;
+    const uint32_t kernel_dims = W->GetShape()->GetDimCount() - 2;
 
-    PPLNN_X86_DEBUG_TRACE("kernel_shape: %d %d\n", param_->param->kernel_shape[0], param_->param->kernel_shape[1]);
-    PPLNN_X86_DEBUG_TRACE("dilations: %d %d\n", param_->param->dilations[0], param_->param->dilations[1]);
-    PPLNN_X86_DEBUG_TRACE("strides: %d %d\n", param_->param->strides[0], param_->param->strides[1]);
-    PPLNN_X86_DEBUG_TRACE("pads: %d %d %d %d\n", param_->param->pads[0], param_->param->pads[1], param_->param->pads[2], param_->param->pads[3]);
+    if (kernel_dims > 2) {
+        LOG(ERROR) << "only support conv1d/conv2d now.";
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
+    if (kernel_dims == 1) {
+        PPLNN_X86_DEBUG_TRACE("kernel_shape: %d\n", param_->param->kernel_shape[0]);
+        PPLNN_X86_DEBUG_TRACE("dilations: %d\n", param_->param->dilations[0]);
+        PPLNN_X86_DEBUG_TRACE("strides: %d\n", param_->param->strides[0]);
+        PPLNN_X86_DEBUG_TRACE("pads: %d %d\n", param_->param->pads[0], param_->param->pads[1]);
+    }
+    if (kernel_dims == 2) {
+        PPLNN_X86_DEBUG_TRACE("kernel_shape: %d %d\n", param_->param->kernel_shape[0], param_->param->kernel_shape[1]);
+        PPLNN_X86_DEBUG_TRACE("dilations: %d %d\n", param_->param->dilations[0], param_->param->dilations[1]);
+        PPLNN_X86_DEBUG_TRACE("strides: %d %d\n", param_->param->strides[0], param_->param->strides[1]);
+        PPLNN_X86_DEBUG_TRACE("pads: %d %d %d %d\n", param_->param->pads[0], param_->param->pads[1], param_->param->pads[2], param_->param->pads[3]);
+    }
     PPLNN_X86_DEBUG_TRACE("group: %d\n", param_->param->group);
     PPLNN_X86_DEBUG_TRACE("num_output: %d\n", num_output);
     PPLNN_X86_DEBUG_TRACE("bias_term: %d\n", param_->bias_term);
@@ -89,7 +114,7 @@ ppl::common::RetCode ConvKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    for (int64_t i = 0; i < 2; ++i) {
+    for (uint32_t i = 0; i < kernel_dims; ++i) {
         if (param_->param->pads[i] != param_->param->pads[i + 2]) {
             LOG(ERROR) << "ConvOp only support symmetrical pads.";
             return ppl::common::RC_UNSUPPORTED;
@@ -114,15 +139,27 @@ ppl::common::RetCode ConvKernel::DoExecute(KernelExecContext* ctx) {
     auto tmp_buffer = tmp_buffer_desc.addr;
     PPLNN_X86_DEBUG_TRACE("buffer: %p\n", tmp_buffer);
 
-    return kernel::x86::conv_ndarray_fp32(
-        GetISA(), X->GetShape(), sum_src_shape, Y->GetShape(),
-        X->GetBufferPtr<float>(), W->GetBufferPtr<float>(),
-        sum_src_data, b_data, param_->param->group, channels, num_output,
-        param_->param->kernel_shape[0], param_->param->kernel_shape[1],
-        param_->param->strides[0], param_->param->strides[1],
-        param_->param->pads[0], param_->param->pads[1],
-        param_->param->dilations[0], param_->param->dilations[1],
-        param_->fuse_flag, tmp_buffer, Y->GetBufferPtr<float>());
+    if (kernel_dims == 1) {
+        return kernel::x86::conv1d_ndarray_fp32(
+            GetISA(), X->GetShape(), sum_src_shape, Y->GetShape(),
+            X->GetBufferPtr<float>(), W->GetBufferPtr<float>(),
+            sum_src_data, b_data, param_->param->group, channels, num_output,
+            param_->param->kernel_shape[0], param_->param->strides[0],
+            param_->param->pads[0], param_->param->dilations[0],
+            param_->fuse_flag, tmp_buffer, Y->GetBufferPtr<float>());
+    }
+    if (kernel_dims == 2) {
+        return kernel::x86::conv2d_ndarray_fp32(
+            GetISA(), X->GetShape(), sum_src_shape, Y->GetShape(),
+            X->GetBufferPtr<float>(), W->GetBufferPtr<float>(),
+            sum_src_data, b_data, param_->param->group, channels, num_output,
+            param_->param->kernel_shape[0], param_->param->kernel_shape[1],
+            param_->param->strides[0], param_->param->strides[1],
+            param_->param->pads[0], param_->param->pads[1],
+            param_->param->dilations[0], param_->param->dilations[1],
+            param_->fuse_flag, tmp_buffer, Y->GetBufferPtr<float>());
+    }
+    return ppl::common::RC_UNSUPPORTED;
 }
 
 }}} // namespace ppl::nn::x86

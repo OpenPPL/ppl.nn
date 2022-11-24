@@ -40,7 +40,7 @@ RetCode ReshapeConv(InputOutputInfo* info, const ir::Attr* arg) {
         const int64_t out_dim =
             (x->GetDim(j) + param->pads[i] + param->pads[i + kernel_dims] - kernel_shape_eff) / param->strides[i] + 1;
         if (out_dim <= 0) {
-            LOG(DEBUG) << "ERROR: output dim[" << out_dim << "] < 0.";
+            LOG(DEBUG) << "ERROR: output dim[" << i + 2 << "] <= 0: " << out_dim;
             return RC_INVALID_VALUE;
         }
         y->SetDim(j, out_dim);

@@ -22,6 +22,7 @@
 #include "ppl/kernel/x86/common/conv_common.h"
 
 namespace ppl { namespace kernel { namespace x86 {
+
 struct conv2d_param {
     int64_t kernel_h;
     int64_t kernel_w;

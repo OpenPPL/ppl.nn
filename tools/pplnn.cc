@@ -872,7 +872,7 @@ static bool SaveOutputsOneByOne(const Runtime* runtime) {
     return true;
 }
 
-static void PrintInputOutputInfo(const Runtime* runtime) {
+static void PrintInputInfo(const Runtime* runtime) {
     cout << "----- input info -----" << endl;
     for (uint32_t i = 0; i < runtime->GetInputCount(); ++i) {
         auto tensor = runtime->GetInputTensor(i);
@@ -891,6 +891,10 @@ static void PrintInputOutputInfo(const Runtime* runtime) {
         cout << "    byte(s) excluding padding: " << shape->CalcBytesExcludingPadding() << endl;
     }
 
+    cout << "----------------------" << endl;
+}
+
+static void PrintOutputInfo(const Runtime* runtime) {
     cout << "----- output info -----" << endl;
     for (uint32_t i = 0; i < runtime->GetOutputCount(); ++i) {
         auto tensor = runtime->GetOutputTensor(i);
@@ -1291,6 +1295,8 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    PrintInputInfo(runtime.get());
+
     if (g_flag_no_run) {
         return 0;
     }
@@ -1307,7 +1313,7 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    PrintInputOutputInfo(runtime.get());
+    PrintOutputInfo(runtime.get());
 
     auto diff = std::chrono::duration_cast<std::chrono::microseconds>(run_end_ts - run_begin_ts);
     LOG(INFO) << "Run() costs: " << (float)diff.count() / 1000 << " ms.";

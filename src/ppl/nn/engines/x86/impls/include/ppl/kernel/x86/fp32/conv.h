@@ -23,7 +23,7 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-uint64_t conv_ndarray_fp32_get_buffer_bytes(
+uint64_t conv2d_ndarray_fp32_get_buffer_bytes(
     const ppl::common::isa_t isa,
     const ppl::nn::TensorShape *dst_shape,
     const int64_t group,
@@ -35,7 +35,7 @@ uint64_t conv_ndarray_fp32_get_buffer_bytes(
     const int64_t pad_h,
     const int64_t pad_w);
 
-ppl::common::RetCode conv_ndarray_fp32(
+ppl::common::RetCode conv2d_ndarray_fp32(
     const ppl::common::isa_t isa,
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *sum_src_shape,
@@ -54,6 +54,35 @@ ppl::common::RetCode conv_ndarray_fp32(
     const int64_t pad_h,
     const int64_t pad_w,
     const int64_t hole_h,
+    const int64_t hole_w,
+    const conv_fuse_flag_t fuse_flag,
+    void *temp_buffer,
+    float *dst);
+
+uint64_t conv1d_ndarray_fp32_get_buffer_bytes(
+    const ppl::common::isa_t isa,
+    const ppl::nn::TensorShape *dst_shape,
+    const int64_t group,
+    const int64_t channels,
+    const int64_t kernel_w,
+    const int64_t stride_w,
+    const int64_t pad_w);
+
+ppl::common::RetCode conv1d_ndarray_fp32(
+    const ppl::common::isa_t isa,
+    const ppl::nn::TensorShape *src_shape,
+    const ppl::nn::TensorShape *sum_src_shape,
+    const ppl::nn::TensorShape *dst_shape,
+    const float *src,
+    const float *sum_src,
+    const float *filter,
+    const float *bias,
+    const int64_t group,
+    const int64_t channels,
+    const int64_t num_output,
+    const int64_t kernel_w,
+    const int64_t stride_w,
+    const int64_t pad_w,
     const int64_t hole_w,
     const conv_fuse_flag_t fuse_flag,
     void *temp_buffer,
