@@ -18,6 +18,7 @@
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/conv_op.h"
 #include "ppl/nn/engines/x86/kernels/onnx/conv_kernel.h"
 #include "ppl/nn/engines/x86/kernels/onnx/conv2d_kernel.h"
+#include "ppl/nn/engines/x86/kernels/onnx/conv1d_kernel.h"
 #include "ppl/nn/oputils/onnx/reshape_conv.h"
 #include "ppl/nn/common/logger.h"
 
@@ -53,11 +54,11 @@ RetCode ConvOp::DoInit(const OptKernelOptions& options) {
     auto graph_data = options.graph_data;
     const ir::Shape& weight_shape = graph_data->shapes.find(node->GetInput(1))->second;
 
-    const int64_t kernel_dims =
+    const uint64_t kernel_dims =
         param_->kernel_shape.size() == 0 ? (weight_shape.dims.size() - 2) : param_->kernel_shape.size();
 
-    if (kernel_dims != 2) {
-        LOG(ERROR) << "Only support Conv2d currently. Get unsupported kernel_dims=" << kernel_dims << ", which is Conv("
+    if (kernel_dims > 2) {
+        LOG(ERROR) << "Only support Conv2d/Conv1d currently. Get unsupported kernel_dims=" << kernel_dims << ", which is Conv("
                    << kernel_dims << "d)";
         return ppl::common::RC_UNSUPPORTED;
     }
@@ -99,17 +100,17 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
 
     // Check Param
     const ppl::nn::onnx::ConvParam& conv_param = *param_;
-    const int64_t kernel_dims =
+    const uint64_t kernel_dims =
         param_->kernel_shape.size() == 0 ? (weight_shape.dims.size() - 2) : param_->kernel_shape.size();
 
-    for (int64_t i = 0; i < kernel_dims; ++i) {
+    for (uint64_t i = 0; i < kernel_dims; ++i) {
         if (conv_param.pads[i] != conv_param.pads[i + kernel_dims]) {
             LOG(ERROR) << "only support symmetrical pads now.";
             return ppl::common::RC_UNSUPPORTED;
         }
     }
 
-    if (kernel_dims == 2) {
+    if (kernel_dims <= 2) {
         if (!conv2d_param_) {
             conv2d_param_ = new Conv2dParam;
         }
@@ -121,14 +122,27 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
         const int32_t channels = weight_shape.dims[1] * param_->group;
 
         ppl::kernel::x86::conv2d_param& conv2d_param = conv2d_param_->param;
-        conv2d_param.kernel_h = conv_param.kernel_shape[0];
-        conv2d_param.kernel_w = conv_param.kernel_shape[1];
-        conv2d_param.stride_h = conv_param.strides[0];
-        conv2d_param.stride_w = conv_param.strides[1];
-        conv2d_param.pad_h = conv_param.pads[0];
-        conv2d_param.pad_w = conv_param.pads[1];
-        conv2d_param.dilation_h = conv_param.dilations[0];
-        conv2d_param.dilation_w = conv_param.dilations[1];
+        if (kernel_dims == 1) {
+            conv1d_param_ = conv2d_param_; // use conv1d_param_ as a flag
+            conv2d_param.kernel_h = 1;
+            conv2d_param.kernel_w = conv_param.kernel_shape[0];
+            conv2d_param.stride_h = 1;
+            conv2d_param.stride_w = conv_param.strides[0];
+            conv2d_param.pad_h = 0;
+            conv2d_param.pad_w = conv_param.pads[0];
+            conv2d_param.dilation_h = 1;
+            conv2d_param.dilation_w = conv_param.dilations[0];
+        }
+        if (kernel_dims == 2) {
+            conv2d_param.kernel_h = conv_param.kernel_shape[0];
+            conv2d_param.kernel_w = conv_param.kernel_shape[1];
+            conv2d_param.stride_h = conv_param.strides[0];
+            conv2d_param.stride_w = conv_param.strides[1];
+            conv2d_param.pad_h = conv_param.pads[0];
+            conv2d_param.pad_w = conv_param.pads[1];
+            conv2d_param.dilation_h = conv_param.dilations[0];
+            conv2d_param.dilation_w = conv_param.dilations[1];
+        }
         conv2d_param.group = conv_param.group;
         conv2d_param.num_output = num_output;
         conv2d_param.channels = channels;
@@ -266,7 +280,8 @@ bool ConvOp::TryFuseSum() {
 
 KernelImpl* ConvOp::CreateKernelImpl() const {
     if (conv2d_param_ && conv2d_param_->algo_info.algo_type != ppl::kernel::x86::conv2d_algo::UNKNOWN) {
-        return CreateKernelImplWithParam<Conv2dKernel>(conv2d_param_);
+        if (conv1d_param_) return CreateKernelImplWithParam<Conv1dKernel>(conv2d_param_);
+        else return CreateKernelImplWithParam<Conv2dKernel>(conv2d_param_);
     }
 
     return CreateKernelImplWithParam<ConvKernel>(&aux_param_);

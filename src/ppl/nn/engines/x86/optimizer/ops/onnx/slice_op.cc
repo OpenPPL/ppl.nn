@@ -25,23 +25,6 @@ namespace ppl { namespace nn { namespace x86 {
 
 RetCode SliceOp::DoInit(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        // check parameters
-        if (info->GetInputCount() < 3 || info->GetInputCount() > 5 || info->GetOutputCount() != 1) {
-            return RC_INVALID_VALUE;
-        }
-        for (size_t i = 1; i < info->GetInputCount(); i++) {
-            if (info->GetInput<TensorImpl>(i)->GetShape()->GetDimCount() !=
-                1) { // starts, ends, axes, steps must be 1-D tensor
-                return RC_INVALID_VALUE;
-            }
-        }
-        const uint32_t axes_num = info->GetInput<TensorImpl>(1)->GetShape()->GetDim(0);
-        for (size_t i = 2; i < info->GetInputCount(); i++) {
-            if (info->GetInput<TensorImpl>(i)->GetShape()->GetDim(0) !=
-                axes_num) { // starts, end, axes, steps must have same length except for not defined
-                return RC_INVALID_VALUE;
-            }
-        }
         // check support
         if (info->GetInput<TensorImpl>(0)->GetShape()->GetDataType() != DATATYPE_FLOAT32 &&
             info->GetInput<TensorImpl>(0)->GetShape()->GetDataType() != DATATYPE_INT64) {

@@ -26,7 +26,7 @@ namespace ppl { namespace nn { namespace x86 {
 class PostDepthwiseConvOp;
 class ConvOp final : public X86OptKernel {
 public:
-    ConvOp(const ir::Node* node) : X86OptKernel(node), conv2d_param_(nullptr) {}
+    ConvOp(const ir::Node* node) : X86OptKernel(node), conv2d_param_(nullptr), conv1d_param_(nullptr) {}
 
     ~ConvOp();
     ppl::common::RetCode DoInit(const OptKernelOptions& options) override;
@@ -47,6 +47,7 @@ private:
     std::shared_ptr<ppl::nn::onnx::ConvParam> param_;
     ConvParam aux_param_;
     Conv2dParam* conv2d_param_;
+    Conv2dParam* conv1d_param_; // do not need alloc/free, map to conv2d_param_
 
     friend PostDepthwiseConvOp;
 };
