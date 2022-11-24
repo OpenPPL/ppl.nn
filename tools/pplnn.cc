@@ -505,7 +505,7 @@ static bool RegisterEngines(vector<unique_ptr<Engine>>* engines) {
 
     if (engines->empty()) {
         LOG(ERROR) << "no engine is registered. run `./pplnn --help` to see supported engines marked with '--use-*', "
-                      "or see documents listed in README.md for building instructions.";
+                   << "or see documents listed in README.md for building instructions.";
         return false;
     }
 
@@ -710,6 +710,8 @@ static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* ru
         SplitString(file_name.data(), file_name.size(), "-", 1, [&conponents](const char* s, unsigned int l) -> bool {
             if (l > 0) {
                 conponents.push_back(string(s, l));
+            } else {
+                conponents.push_back(string());
             }
             return true;
         });
@@ -728,17 +730,18 @@ static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* ru
                     });
 
         const string& dims_str = conponents[1];
-
         vector<int64_t> dims;
-        SplitString(dims_str.data(), dims_str.size(), "_", 1, [&dims](const char* s, unsigned int l) -> bool {
-            if (l > 0) {
-                int64_t dim = atol(string(s, l).c_str());
-                dims.push_back(dim);
-                return true;
-            }
-            LOG(ERROR) << "illegal dim format.";
-            return false;
-        });
+        if (!dims_str.empty()) {
+            SplitString(dims_str.data(), dims_str.size(), "_", 1, [&dims](const char* s, unsigned int l) -> bool {
+                if (l > 0) {
+                    int64_t dim = atol(string(s, l).c_str());
+                    dims.push_back(dim);
+                    return true;
+                }
+                LOG(ERROR) << "illegal dim format.";
+                return false;
+            });
+        }
 
         auto data_type = FindDataTypeByStr(data_type_str);
         if (data_type == DATATYPE_UNKNOWN) {
