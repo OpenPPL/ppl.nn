@@ -188,6 +188,10 @@ if(PPLNN_ENABLE_CUDA_JIT)
     list(APPEND PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES nvrtc)
 endif()
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    list(APPEND PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES dl rt) # required by cudart_static
+endif()
+
 target_link_libraries(pplkernelcuda_static PUBLIC ${PPLNN_CUDA_TOOLKIT_LINK_LIBRARIES} ${PPLNN_CUDA_EXTERNAL_LINK_LIBRARIES})
 
 hpcc_populate_dep(pplcommon)
