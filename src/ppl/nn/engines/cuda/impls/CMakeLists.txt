@@ -8,6 +8,7 @@ endif()
 
 # ---------------------------------------------------------------------------------------- #
 option(PPLNN_CUDA_ENABLE_KERNEL_CUT "" ON)
+
 set(__CUDA_CONV_SRC__)
 
 if(PPLNN_ENABLE_CUDA_JIT)
@@ -44,21 +45,26 @@ else()
             ${CMAKE_CURRENT_BINARY_DIR}/conv/2spk/sm75/*/*/init*.cu
             ${CMAKE_CURRENT_BINARY_DIR}/conv/swzl/sm75/*/*/init*.cu)
 
+        set(__NVCC_FLAGS__ )
         if(CUDA_VERSION VERSION_GREATER_EQUAL "11.0")
             if(CUDA_VERSION VERSION_GREATER_EQUAL "11.4")
-                set_source_files_properties(${__SM75_CONV_SRC__} PROPERTIES COMPILE_FLAGS
-                    "-gencode arch=compute_87,code=sm_87 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_80,code=sm_80 -gencode arch=compute_75,code=sm_75 -fno-var-tracking-assignments")
+                set(__NVCC_FLAGS__ "${__NVCC_FLAGS__} -gencode arch=compute_87,code=sm_87 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_80,code=sm_80 -gencode arch=compute_75,code=sm_75 -fno-var-tracking-assignments")
             elseif(CUDA_VERSION VERSION_GREATER_EQUAL "11.1")
-                set_source_files_properties(${__SM75_CONV_SRC__} PROPERTIES COMPILE_FLAGS
-                    "-gencode arch=compute_86,code=sm_86 -gencode arch=compute_80,code=sm_80 -gencode arch=compute_75,code=sm_75 -fno-var-tracking-assignments")
+                set(__NVCC_FLAGS__ "${__NVCC_FLAGS__} -gencode arch=compute_86,code=sm_86 -gencode arch=compute_80,code=sm_80 -gencode arch=compute_75,code=sm_75 -fno-var-tracking-assignments")
             else()
-                set_source_files_properties(${__SM75_CONV_SRC__} PROPERTIES COMPILE_FLAGS
-                    "-gencode arch=compute_80,code=sm_80 -gencode arch=compute_75,code=sm_75 -fno-var-tracking-assignments")
+                set(__NVCC_FLAGS__ "${__NVCC_FLAGS__} arch=compute_80,code=sm_80 -gencode arch=compute_75,code=sm_75 -fno-var-tracking-assignments")
             endif()
         else()
-            set_source_files_properties(${__SM75_CONV_SRC__} PROPERTIES COMPILE_FLAGS
-                "-gencode arch=compute_75,code=sm_75 -fno-var-tracking-assignments")
+            set(__NVCC_FLAGS__ "${__NVCC_FLAGS__} -gencode arch=compute_75,code=sm_75 -fno-var-tracking-assignments")
         endif()
+        if (PPLNN_CUDA_ARCHITECTURES)
+            set(__NVCC_FLAGS__ "-fno-var-tracking-assignments")
+            foreach(arch ${PPLNN_CUDA_ARCHITECTURES})
+                set(__NVCC_FLAGS__ "${__NVCC_FLAGS__} -gencode arch=compute_${arch},code=sm_${arch}")
+            endforeach()
+        endif()
+        set_source_files_properties(${__SM75_CONV_SRC__} PROPERTIES COMPILE_FLAGS ${__NVCC_FLAGS__})
+        unset(__NVCC_FLAGS__)
     endif()
 
     if(CUDA_VERSION VERSION_GREATER_EQUAL "11.0")
@@ -94,16 +100,22 @@ else()
             ${CMAKE_CURRENT_BINARY_DIR}/conv/2spk/sm80/*/*/init*.cu
             ${CMAKE_CURRENT_BINARY_DIR}/conv/swzl/sm80/*/*/init*.cu)
 
+        set(__NVCC_FLAGS__ )
         if(CUDA_VERSION VERSION_GREATER_EQUAL "11.4")
-            set_source_files_properties(${__SM80_CONV_SRC__} PROPERTIES COMPILE_FLAGS
-                "-gencode arch=compute_87,code=sm_87 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_80,code=sm_80 -fno-var-tracking-assignments")
+            set(__NVCC_FLAGS__ "${__NVCC_FLAGS__} -gencode arch=compute_87,code=sm_87 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_80,code=sm_80 -fno-var-tracking-assignments")
         elseif(CUDA_VERSION VERSION_GREATER_EQUAL "11.1")
-            set_source_files_properties(${__SM80_CONV_SRC__} PROPERTIES COMPILE_FLAGS
-                "-gencode arch=compute_86,code=sm_86 -gencode arch=compute_80,code=sm_80 -fno-var-tracking-assignments")
+            set(__NVCC_FLAGS__ "${__NVCC_FLAGS__} -gencode arch=compute_86,code=sm_86 -gencode arch=compute_80,code=sm_80 -fno-var-tracking-assignments")
         else()
-            set_source_files_properties(${__SM80_CONV_SRC__} PROPERTIES COMPILE_FLAGS
-                "-gencode arch=compute_80,code=sm_80 -fno-var-tracking-assignments")
+            set(__NVCC_FLAGS__ "${__NVCC_FLAGS__} arch=compute_80,code=sm_80 -fno-var-tracking-assignments")
         endif()
+        if (PPLNN_CUDA_ARCHITECTURES)
+            set(__NVCC_FLAGS__ "-fno-var-tracking-assignments")
+            foreach(arch ${PPLNN_CUDA_ARCHITECTURES})
+                set(__NVCC_FLAGS__ "${__NVCC_FLAGS__} -gencode arch=compute_${arch},code=sm_${arch}")
+            endforeach()
+        endif()
+        set_source_files_properties(${__SM80_CONV_SRC__} PROPERTIES COMPILE_FLAGS ${__NVCC_FLAGS__})
+        unset(__NVCC_FLAGS__)
     endif()
 
     list(APPEND __CUDA_CONV_SRC__ ${__SM80_CONV_SRC__} ${__SM75_CONV_SRC__})
