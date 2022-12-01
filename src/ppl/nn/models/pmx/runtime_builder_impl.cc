@@ -127,7 +127,7 @@ RetCode RuntimeBuilderImpl::Preprocess() {
     return RC_SUCCESS;
 }
 
-Runtime* RuntimeBuilderImpl::CreateRuntime() {
+Runtime* RuntimeBuilderImpl::CreateRuntime() const {
     auto runtime = new RuntimeImpl();
     if (!runtime) {
         return nullptr;

@@ -38,7 +38,7 @@ public:
     ppl::common::RetCode SetResources(const Resources&) override;
     ppl::common::RetCode Configure(uint32_t, ...) override;
     ppl::common::RetCode Preprocess() override;
-    Runtime* CreateRuntime() override;
+    Runtime* CreateRuntime() const override;
     ppl::common::RetCode Serialize(const char* fmt, utils::DataStream*) const override;
 
 private:
