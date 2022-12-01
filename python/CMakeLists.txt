@@ -3,7 +3,7 @@ hpcc_populate_dep(pybind11)
 set(__python_soabi__ )
 
 if(NOT PYTHON3_INCLUDE_DIRS)
-    find_package(Python3 COMPONENTS Development QUIET)
+    find_package(Python3 ${PPLNN_PYTHON3_VERSION} COMPONENTS Development QUIET)
     if(NOT Python3_Development_FOUND)
         if(MSVC)
             message(FATAL_ERROR "python dev lib is required. please install python3 development files or specify `PYTHON3_INCLUDE_DIRS` and `PYTHON3_LIBRARIES` manually.")
