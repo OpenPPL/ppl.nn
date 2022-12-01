@@ -35,8 +35,8 @@ ppl::common::RetCode averagepool2d_n16cx_blk1x16_fp32_avx512(
     const int64_t stride_w,
     const int64_t pad_h,
     const int64_t pad_w,
-    const int64_t pooling_mode,
-    const int64_t ceil_mode,
+    const bool exclusive_mode,
+    const bool ceil_mode,
     float *dst);
 #endif
 
@@ -50,8 +50,8 @@ ppl::common::RetCode averagepool2d_n16cx_blk1x8_fp32_avx(
     const int64_t stride_w,
     const int64_t pad_h,
     const int64_t pad_w,
-    const int64_t pooling_mode,
-    const int64_t ceil_mode,
+    const bool exclusive_mode,
+    const bool ceil_mode,
     float *dst);
 
 ppl::common::RetCode averagepool2d_n16cx_blk1x4_fp32_sse(
@@ -64,8 +64,8 @@ ppl::common::RetCode averagepool2d_n16cx_blk1x4_fp32_sse(
     const int64_t stride_w,
     const int64_t pad_h,
     const int64_t pad_w,
-    const int64_t pooling_mode,
-    const int64_t ceil_mode,
+    const bool exclusive_mode,
+    const bool ceil_mode,
     float *dst);
 
 // averagepool2d ndarray normal
@@ -80,8 +80,8 @@ ppl::common::RetCode averagepool2d_ndarray_normal_fp32(
     const int64_t stride_w,
     const int64_t pad_h,
     const int64_t pad_w,
-    const int64_t pooling_mode,
-    const int64_t ceil_mode,
+    const bool exclusive_mode,
+    const bool ceil_mode,
     float *dst);
 
 // maxpool2d n4cx blk
@@ -100,8 +100,8 @@ ppl::common::RetCode averagepool2d_ndarray_normal_fp32_sse(
     const int64_t stride_w,
     const int64_t pad_h,
     const int64_t pad_w,
-    const int64_t pooling_mode,
-    const int64_t ceil_mode,
+    const bool exclusive_mode,
+    const bool ceil_mode,
     void *temp_buffer,
     float *dst);
 
