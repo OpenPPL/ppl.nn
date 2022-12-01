@@ -18,7 +18,7 @@
 #include "cudakernel/memory/expand.h"
 #include "cudakernel/common/divmod_fast.h"
 #include "cudakernel/common/memory_utils.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 #include <algorithm>
@@ -79,10 +79,10 @@ __global__ void ppl_cukernel_expand_last_dim(
     output[out_index] = input[blk_idx];
 }
 
-static void ppl_pad_tensor_shape(const ppl::nn::TensorShape *tensor_shape0,
-                                 const ppl::nn::TensorShape *tensor_shape1,
-                                 ppl::nn::TensorShape *pad_tensor_shape0,
-                                 ppl::nn::TensorShape *pad_tensor_shape1)
+static void ppl_pad_tensor_shape(const ppl::common::TensorShape *tensor_shape0,
+                                 const ppl::common::TensorShape *tensor_shape1,
+                                 ppl::common::TensorShape *pad_tensor_shape0,
+                                 ppl::common::TensorShape *pad_tensor_shape1)
 {
     int max_dims = std::max(tensor_shape0->GetDimCount(), tensor_shape1->GetDimCount());
     if (pad_tensor_shape0->GetDimCount() < pad_tensor_shape1->GetDimCount()) {
@@ -108,12 +108,12 @@ static void ppl_pad_tensor_shape(const ppl::nn::TensorShape *tensor_shape0,
     }
 }
 
-static int ppl_get_num_broadcast_dims(const ppl::nn::TensorShape *tensor_shape0,
-                                      const ppl::nn::TensorShape *tensor_shape1,
+static int ppl_get_num_broadcast_dims(const ppl::common::TensorShape *tensor_shape0,
+                                      const ppl::common::TensorShape *tensor_shape1,
                                       int &aixs)
 {
-    ppl::nn::TensorShape pad_tensor_shape0 = *tensor_shape0;
-    ppl::nn::TensorShape pad_tensor_shape1 = *tensor_shape1;
+    ppl::common::TensorShape pad_tensor_shape0 = *tensor_shape0;
+    ppl::common::TensorShape pad_tensor_shape1 = *tensor_shape1;
     ppl_pad_tensor_shape(tensor_shape0, tensor_shape1, &pad_tensor_shape0, &pad_tensor_shape1);
     int dim_count          = pad_tensor_shape0.GetDimCount();
     int num_broadcast_dims = 0;
@@ -132,9 +132,9 @@ static int ppl_get_num_broadcast_dims(const ppl::nn::TensorShape *tensor_shape0,
 
 ppl::common::RetCode PPLCUDAExpandForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     const void *input,
-    const ppl::nn::TensorShape *output_shape,
+    const ppl::common::TensorShape *output_shape,
     void *output)
 {
     int dim_count      = output_shape->GetDimCount();
@@ -225,7 +225,7 @@ ppl::common::RetCode PPLCUDAExpandForwardImp(
         GArray<DivModFast> output_strides_fast(num_output_dim);
         GArray<int64_t> input_strides(num_output_dim);
 
-        ppl::nn::TensorShape pad_input_shape = *input_shape;
+        ppl::common::TensorShape pad_input_shape = *input_shape;
         if (pad_input_shape.GetDimCount() < num_output_dim) {
             pad_input_shape.SetDimCount(num_output_dim);
             // pad 1 to shape_min_pad's higher dim

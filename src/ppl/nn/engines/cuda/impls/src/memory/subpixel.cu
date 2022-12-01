@@ -17,7 +17,7 @@
 
 #include "cudakernel/memory/subpixel.h"
 #include "cudakernel/common/memory_utils.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 
@@ -100,9 +100,9 @@ __global__ void ppl_cukernel_subpixel_up(
 ppl::common::RetCode PPLCUDASubpixelDownForwardImp(
     cudaStream_t stream,
     int down_ratio,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output)
 {
     int64_t num_elems  = output_shape->CalcElementsIncludingPadding();
@@ -152,9 +152,9 @@ ppl::common::RetCode PPLCUDASubpixelDownForwardImp(
 ppl::common::RetCode PPLCUDASubpixelUpForwardImp(
     cudaStream_t stream,
     int up_ratio,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output)
 {
     int64_t num_elems  = output_shape->CalcElementsIncludingPadding();

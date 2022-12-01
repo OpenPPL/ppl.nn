@@ -34,7 +34,7 @@
 std::vector<kernel_info_t> g_fp16_kvec;
 bool is_g_fp16_kvec_set = false;
 #else
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/nn/params/onnx/gemm_param.h"
 #include "ppl/common/retcode.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
@@ -121,7 +121,7 @@ void init_f1_kvec(std::vector<kernel_info_t> &g_fp16_kvec, const cudaDeviceProp&
 #endif
 
 uint64_t PPLGemmCUDAGetCompilationBufSize(
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     conv_param_t& conv_param,
     int transA)
 {
@@ -150,7 +150,7 @@ uint64_t PPLGemmCUDAGetCompilationBufSize(
 }
 
 uint64_t PPLGemmCUDAGetRuntimeBufSize(
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     conv_param_t& conv_param,
     int splitk,
     int splitf,
@@ -243,7 +243,7 @@ __global__ void scale(T *input, float scale, unsigned int size)
 
 ppl::common::RetCode PPLCUDAGemmModifyWeights(
     const cudaStream_t &stream,
-    ppl::nn::TensorShape *weight_shape,
+    ppl::common::TensorShape *weight_shape,
     void *weight,
     void *tmp_weight, // if need transpose
     const ppl::nn::onnx::GemmParam *param)
@@ -306,7 +306,7 @@ ppl::common::RetCode PPLCUDAGemmModifyWeights(
 ppl::common::RetCode PPLCUDAGemmModifyBias(
     const cudaStream_t &stream,
     const ppl::common::datatype_t infer_type,
-    const ppl::nn::TensorShape *bias_shape,
+    const ppl::common::TensorShape *bias_shape,
     void *bias,
     const ppl::nn::onnx::GemmParam *param)
 {
@@ -343,12 +343,12 @@ double PPLCUDAGemmJITSelectKernel(
     const cudaDeviceProp& device_prop,
     cudaStream_t &stream,
     ppl::common::datatype_t type,
-    ppl::nn::TensorShape *input_shape,
+    ppl::common::TensorShape *input_shape,
     void *input,
-    ppl::nn::TensorShape *weight_shape,
+    ppl::common::TensorShape *weight_shape,
     void *weight,
     void *bias,
-    ppl::nn::TensorShape *output_shape,
+    ppl::common::TensorShape *output_shape,
     void *output,
     void *temp_buffer,
     conv_param_t &conv_param,
@@ -378,12 +378,12 @@ double PPLCUDAGemmJITSelectKernel(
 double PPLCUDAGemmSelectKernel(
     const cudaDeviceProp& device_prop,
     const cudaStream_t &stream,
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     const void *input,
-    const ppl::nn::TensorShape *weight_shape,
+    const ppl::common::TensorShape *weight_shape,
     const void *weight,
     const void *bias,
-    const ppl::nn::TensorShape *output_shape,
+    const ppl::common::TensorShape *output_shape,
     void *output,
     void *temp_buffer,
     const ppl::nn::onnx::GemmParam &param,
@@ -518,12 +518,12 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
     const cudaDeviceProp& device_prop,
     const cudaStream_t &stream,
     const CUfunction function,
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     const void *input,
-    const ppl::nn::TensorShape *weight_shape,
+    const ppl::common::TensorShape *weight_shape,
     const void *weight,
     const void *bias,
-    const ppl::nn::TensorShape *output_shape,
+    const ppl::common::TensorShape *output_shape,
     void *output,
     const ppl::nn::onnx::GemmParam &param,
     void *temp_buffer,

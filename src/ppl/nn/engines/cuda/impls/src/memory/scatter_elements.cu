@@ -18,7 +18,7 @@
 #include "cudakernel/memory/scatter_elements.h"
 #include "cudakernel/common/divmod_fast.h"
 #include "cudakernel/common/memory_utils.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 #include <assert.h>
@@ -79,13 +79,13 @@ __global__ void ppl_cukernel_scatter_elements(
 
 ppl::common::RetCode PPLCUDAScatterElementsForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* indices_shape,
+    const ppl::common::TensorShape* indices_shape,
     const void* indices,
-    const ppl::nn::TensorShape* updates_shape,
+    const ppl::common::TensorShape* updates_shape,
     const void* updates,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output,
     int axis)
 {

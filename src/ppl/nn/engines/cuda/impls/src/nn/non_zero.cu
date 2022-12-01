@@ -97,9 +97,9 @@ __global__ void determine_nonzero_position(
 template <typename srcT>
 void NonZeroImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const srcT* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     int64_t* output,
     int32_t* tempbuffer)
 {
@@ -140,9 +140,9 @@ void NonZeroImp(
 
 ppl::common::RetCode PPLCUDANonZeroForwardImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const void* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     int64_t* output,
     int32_t* tempbuffer)
 {
@@ -161,7 +161,7 @@ ppl::common::RetCode PPLCUDANonZeroForwardImp(
     }
 }
 
-int64_t PPLNonZeroGetTempBufferSize(ppl::nn::TensorShape* input_shape)
+int64_t PPLNonZeroGetTempBufferSize(ppl::common::TensorShape* input_shape)
 {
     int64_t max_elems = input_shape->CalcElementsIncludingPadding();
     int num_blocks    = (max_elems + NUM_THREADS_PER_BLOCK - 1) / NUM_THREADS_PER_BLOCK;

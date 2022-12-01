@@ -304,9 +304,9 @@ __global__ void ppl_cukernel_unary_any_int8(
 #define UNARY_INSTANT(TYPE)                                                                                                                    \
     ppl::common::RetCode PPLCUDAUnary##TYPE##ForwardImp(                                                                                       \
         cudaStream_t stream,                                                                                                                   \
-        const ppl::nn::TensorShape* input_shape,                                                                                               \
+        const ppl::common::TensorShape* input_shape,                                                                                               \
         const void* input,                                                                                                                     \
-        const ppl::nn::TensorShape* output_shape,                                                                                              \
+        const ppl::common::TensorShape* output_shape,                                                                                              \
         void* output,                                                                                                                          \
         const ppl::nn::cuda::QuantParamCuda* qparam)                                                                                                 \
     {                                                                                                                                          \

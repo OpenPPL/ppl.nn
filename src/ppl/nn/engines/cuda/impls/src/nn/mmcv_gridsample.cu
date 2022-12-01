@@ -18,7 +18,7 @@
 #include "cudakernel/nn/mmcv_gridsample.h"
 #include "cudakernel/math/math.h"
 #include "cudakernel/common/common.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include <cuda_fp16.h>
 #define MIN(a, b)                             (((a) < (b)) ? (a) : (b))
 #define MAX(a, b)                             (((a) > (b)) ? (a) : (b))
@@ -336,11 +336,11 @@ __global__ void ppl_cukernel_gridsample_fp16(
 
 ppl::common::RetCode PPLCUDAMMCVGridSampleForwardImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input0_shape,
+    ppl::common::TensorShape* input0_shape,
     const void* input0,
-    ppl::nn::TensorShape* input1_shape,
+    ppl::common::TensorShape* input1_shape,
     const void* input1,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output,
     ppl::nn::mmcv::MMCVGridSampleParam param)
 {

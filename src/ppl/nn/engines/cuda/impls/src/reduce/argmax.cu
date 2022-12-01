@@ -67,9 +67,9 @@ __global__ void ppl_argmax(
 ppl::common::RetCode PPLCUDAArgMaxForwardImp(
     cudaStream_t stream,
     PPLReduceDimDes des,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output)
 {
     dim3 block_dim(32, BLOCKSIZE / 32);

@@ -20,7 +20,7 @@
 #include "cudakernel/reduce/reduce.h"
 #include "cudakernel/arithmetic/arithmetic.h"
 #include "cudakernel/unary/exp.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "cudakernel/common/common.cuh"
 #include "ppl/nn/engines/cuda/params/quant_param_cuda.h"
@@ -36,7 +36,7 @@ __device__ inline T __ldg_ver_ctrl(T* ptr) {
 }
 
 uint64_t PPLSoftmaxGetTempBufferSize(
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     int axis)
 {
     int N = input_shape->CalcElementsIncludingPadding() / input_shape->GetDim(axis);
@@ -45,9 +45,9 @@ uint64_t PPLSoftmaxGetTempBufferSize(
 
 ppl::common::RetCode PPLCUDASoftmaxForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output,
     void* temp_buffer,
     int axis)
@@ -59,7 +59,7 @@ ppl::common::RetCode PPLCUDASoftmaxForwardImp(
     PPLReduceDimDes reduce_desc(D, R, N);
     ReduceParam reduce_max = ReduceMax;
     void* max_sum_output   = temp_buffer;
-    ppl::nn::TensorShape max_sum_shape(*input_shape);
+    ppl::common::TensorShape max_sum_shape(*input_shape);
     max_sum_shape.SetDimCount(3);
     max_sum_shape.SetDim(0, N);
     max_sum_shape.SetDim(1, 1);
@@ -67,7 +67,7 @@ ppl::common::RetCode PPLCUDASoftmaxForwardImp(
 
     auto status = PPLCUDAReduceForwardImp(stream, reduce_max, reduce_desc, input_shape, input, &max_sum_shape, max_sum_output);
     // sub
-    ppl::nn::TensorShape nd_shape(*input_shape);
+    ppl::common::TensorShape nd_shape(*input_shape);
     nd_shape.SetDimCount(3);
     nd_shape.SetDim(0, N);
     nd_shape.SetDim(1, R);
@@ -122,9 +122,9 @@ __global__ void __launch_bounds__(256) ppl_cukernel_softmax_int8(
 
 ppl::common::RetCode PPLCUDASoftmaxForwardImpInt8(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output,
     void* temp_buffer,
     int axis,
@@ -332,9 +332,9 @@ CREATE_SOFTMAXSCORE_FUN(half, bool, half)
 
 ppl::common::RetCode PPLCUDAFastSoftmax(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output,
     const void* key_padding_mask,
     const int mask_type) {

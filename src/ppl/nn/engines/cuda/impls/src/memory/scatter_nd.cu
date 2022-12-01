@@ -17,7 +17,7 @@
 
 #include "cudakernel/memory/scatter_nd.h"
 #include "cudakernel/common/divmod_fast.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 #include <assert.h>
@@ -66,9 +66,9 @@ __global__ void ppl_cukernel_scatter_nd_offset(
 }
 
 int64_t PPLScatterNDGetTempBufferSize(
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* indices_shape,
+    const ppl::common::TensorShape* indices_shape,
     const void* indices)
 {
     int num_input_dim   = input_shape->GetDimCount();
@@ -81,13 +81,13 @@ int64_t PPLScatterNDGetTempBufferSize(
 
 ppl::common::RetCode PPLCUDAScatterNDForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* indices_shape,
+    const ppl::common::TensorShape* indices_shape,
     const void* indices,
-    const ppl::nn::TensorShape* updates_shape,
+    const ppl::common::TensorShape* updates_shape,
     const void* updates,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output,
     void* temp_buffer)
 {

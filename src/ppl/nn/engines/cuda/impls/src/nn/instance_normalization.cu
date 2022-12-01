@@ -18,7 +18,7 @@
 #include "cudakernel/nn/instance_normalization.h"
 #include "cudakernel/common/common.cuh"
 #include "cudakernel/math/math.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include <cuda_fp16.h>
 
 template<typename T>
@@ -141,13 +141,13 @@ __global__ void ppl_cukernel_instancenorm_nhwc_int8(const char* in, const float*
 
 ppl::common::RetCode PPLCUDAInstanceNormalizationForwardImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const void* input,
-    ppl::nn::TensorShape* scale_shape,
+    ppl::common::TensorShape* scale_shape,
     const void* scale,
     // share scale shape
     const void* B,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output,
     float epsilon,
     float in_scale,

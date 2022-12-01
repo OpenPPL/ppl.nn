@@ -1280,9 +1280,9 @@ __global__ void ppl_cukernel_pooling_ave_common_NHWC_int8(
 
 ppl::common::RetCode PPLCUDAAvePoolingForwardImpFp16(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const half* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     half* output,
     int kernel_height,
     int kernel_width,
@@ -1358,9 +1358,9 @@ ppl::common::RetCode PPLCUDAAvePoolingForwardImpFp16(
 template<typename T>
 ppl::common::RetCode PPLCUDAAvePoolingForwardImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const T* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     T* output,
     int kernel_height,
     int kernel_width,
@@ -1442,9 +1442,9 @@ ppl::common::RetCode PPLCUDAAvePoolingForwardImp(
 
 ppl::common::RetCode PPLCUDAAvePoolingForwardImpInt8(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const int8_t* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     int8_t* output,
     int kernel_height,
     int kernel_width,
@@ -1528,9 +1528,9 @@ ppl::common::RetCode PPLCUDAAvePoolingForwardImpInt8(
 
 ppl::common::RetCode PPLCUDAAvePoolingForwardImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const void* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output,
     int kernel_height,
     int kernel_width,

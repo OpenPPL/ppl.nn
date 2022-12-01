@@ -111,9 +111,9 @@ __global__ void ppl_argmin_select_first(
 ppl::common::RetCode PPLCUDAArgMinForwardImp(
     cudaStream_t stream,
     PPLReduceDimDes des,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output,
     int32_t select_last_index)
 {

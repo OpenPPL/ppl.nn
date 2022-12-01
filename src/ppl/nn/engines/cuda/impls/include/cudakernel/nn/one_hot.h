@@ -17,7 +17,7 @@
 
 #ifndef PPLCUDA_KERNEL_INCLUDE_ONE_HOT_H_
 #define PPLCUDA_KERNEL_INCLUDE_ONE_HOT_H_
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "ppl/nn/params/onnx/one_hot_param.h"
 #include <cuda_runtime.h>
@@ -26,9 +26,9 @@
 ppl::common::RetCode PPLCUDAOneHotForwardImp(
     cudaStream_t stream,
     const void* indices,
-    ppl::nn::TensorShape* values_shape,
+    ppl::common::TensorShape* values_shape,
     const void* values,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output, 
     uint32_t real_axis
   );

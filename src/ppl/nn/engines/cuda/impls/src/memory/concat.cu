@@ -19,7 +19,7 @@
 #include "cudakernel/common/divmod_fast.h"
 #include "cudakernel/common/memory_utils.h"
 #include "cudakernel/common/common.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #define NHWC8_ALIGNED_AXIS (8)
 #define NHWC16_ALIGNED_AXIS (16)
@@ -172,7 +172,7 @@ bool IsConcatNoPadding(
     int num_inputs,
     int* input_dims[],
     int* input_padded_dims[],
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     int mask)
 {
     if ((output_shape->GetDataFormat() != ppl::common::DATAFORMAT_NHWC8 && output_shape->GetDataFormat() != ppl::common::DATAFORMAT_NHWC16) || axis != 1)
@@ -191,7 +191,7 @@ ppl::common::RetCode PPLCUDAConcatNoPaddingForwardImp(
     int* input_dims[],
     int* input_padded_dims[],
     const void* inputs[],
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output,
     int mask)
 {
@@ -263,7 +263,7 @@ ppl::common::RetCode PPLCUDAConcatForwardImp(
     int* input_dims[],
     int* input_padded_dims[],
     const void* inputs[],
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output,
     int mask)
 {

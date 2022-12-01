@@ -9,6 +9,23 @@ endif()
 # ---------------------------------------------------------------------------------------- #
 option(PPLNN_CUDA_ENABLE_KERNEL_CUT "" ON)
 
+# dependencies
+include(cmake/deps.cmake)
+hpcc_populate_dep(pplcommon)
+
+include(${HPCC_DEPS_DIR}/hpcc/cmake/cuda-common.cmake)
+
+if(CUDA_VERSION VERSION_LESS "9.0")
+    message(FATAL_ERROR "cuda verson [${CUDA_VERSION}] < min required [9.0]")
+elseif(CUDA_VERSION VERSION_LESS "10.2")
+    message(WARNNING " strongly recommend cuda >= 10.2, now is [${CUDA_VERSION}]")
+endif()
+
+# ----- #
+if(PPLKERNEL_CUDA_USE_MSVC_STATIC_RUNTIME)
+    hpcc_cuda_use_msvc_static_runtime()
+endif()
+
 set(__CUDA_CONV_SRC__)
 
 if(PPLNN_ENABLE_CUDA_JIT)
@@ -182,16 +199,12 @@ list(APPEND __CUDA_SRC__ src/nn/conv/common/init_lut.cc)
 add_library(pplkernelcuda_static STATIC ${__CUDA_SRC__} ${PPLNN_CUDA_EXTERNAL_SOURCES})
 target_compile_features(pplkernelcuda_static PRIVATE cxx_std_11)
 
-get_filename_component(__PPLNN_SOURCE_DIR__ "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../.." ABSOLUTE)
-set(PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES ${__PPLNN_SOURCE_DIR__}/include ${__PPLNN_SOURCE_DIR__}/src)
-unset(__PPLNN_SOURCE_DIR__)
-
 target_include_directories(pplkernelcuda_static PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/include
     ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
     ${CMAKE_CURRENT_BINARY_DIR}/conv
     ${CMAKE_CURRENT_SOURCE_DIR}/src/nn/conv
-    ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES}
+    ${PPLCOMMON_INCLUDES}
     ${PPLNN_CUDA_EXTERNAL_INCLUDE_DIRECTORIES})
 target_link_directories(pplkernelcuda_static PUBLIC ${CMAKE_CUDA_HOST_IMPLICIT_LINK_DIRECTORIES} ${PPLNN_CUDA_EXTERNAL_LINK_DIRECTORIES})
 

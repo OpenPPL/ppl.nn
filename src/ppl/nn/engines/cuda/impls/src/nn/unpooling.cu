@@ -128,9 +128,9 @@ __global__ void ppl_cukernel_max_unpool_nhwc(
 
 ppl::common::RetCode PPLCUDAMaxUnpoolForwardImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const void* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output,
     bool use_bottom_mask,
     const int64_t* bottom_mask,

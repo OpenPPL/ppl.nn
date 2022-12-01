@@ -4,7 +4,7 @@
 #include "ppl/nn/engines/cuda/module/cuda_module.h"
 
 int64_t PPLCUDALstmGetRuntimeBufSize(
-    const ppl::nn::TensorShape *X_shape,
+    const ppl::common::TensorShape *X_shape,
     const unsigned int direction,
     const int64_t hidden_size);
 
@@ -12,7 +12,7 @@ ppl::common::RetCode PPLCUDALstmForwardImp(
     const cudaDeviceProp& device_prop,
     cudaStream_t stream,
     const CUfunction function,
-    const ppl::nn::TensorShape *X_shape,
+    const ppl::common::TensorShape *X_shape,
     const void *X,
     const void *X_weight,
     const void *R_weight,

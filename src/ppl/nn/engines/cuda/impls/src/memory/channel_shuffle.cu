@@ -18,7 +18,7 @@
 #include "cudakernel/memory/channel_shuffle.h"
 #include "cudakernel/common/divmod_fast.h"
 #include "cudakernel/common/memory_utils.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "cudakernel/common/common.h"
 
@@ -164,9 +164,9 @@ __global__ void ppl_cukernel_channel_shuffle_nhwc_int8(
 ppl::common::RetCode PPLCUDAChannelShuffleForwardImp(
     cudaStream_t stream,
     int group,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output,
     float in_scale,
     float out_scale)
@@ -426,10 +426,10 @@ __global__ void ppl_cukernel_fuse_channel_shuffle_nhwc_int8(
 ppl::common::RetCode PPLCUDAFuseChannelShuffleForwardImp(
     cudaStream_t stream,
     int group,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input0,
     const void* input1,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output0,
     void* output1,
     float in_scale0,

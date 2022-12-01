@@ -1496,9 +1496,9 @@ __global__ void ppl_cukernel_pooling_max_f3s1_NHWC(
 
 ppl::common::RetCode PPLCUDAMaxPoolingForwardImpFp16(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const half* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     half* output,
     int kernel_height,
     int kernel_width,
@@ -1608,11 +1608,11 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImpFp16(
 
 ppl::common::RetCode PPLCUDAMaxPoolingForwardImpFp16(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const half* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     half* output,
-    ppl::nn::TensorShape* indices_shape,
+    ppl::common::TensorShape* indices_shape,
     int64_t* indices,
     int kernel_height,
     int kernel_width,
@@ -1649,9 +1649,9 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImpFp16(
 
 ppl::common::RetCode PPLCUDAMaxPoolingForwardImpFp32(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const float* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     float* output,
     int kernel_height,
     int kernel_width,
@@ -1706,11 +1706,11 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImpFp32(
 
 ppl::common::RetCode PPLCUDAMaxPoolingForwardImpFp32(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const float* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     float* output,
-    ppl::nn::TensorShape* indices_shape,
+    ppl::common::TensorShape* indices_shape,
     int64_t* indices,
     int kernel_height,
     int kernel_width,
@@ -1747,9 +1747,9 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImpFp32(
 
 ppl::common::RetCode PPLCUDAMaxPoolingForwardImpInt8(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const int8_t* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     int8_t* output,
     int kernel_height,
     int kernel_width,
@@ -1846,11 +1846,11 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImpInt8(
 
 ppl::common::RetCode PPLCUDAMaxPoolingForwardImpInt8(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const int8_t* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     int8_t* output,
-    ppl::nn::TensorShape* indices_shape,
+    ppl::common::TensorShape* indices_shape,
     int64_t* indices,
     int kernel_height,
     int kernel_width,
@@ -1903,9 +1903,9 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImpInt8(
 
 ppl::common::RetCode PPLCUDAMaxPoolingForwardImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const void* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output,
     int kernel_height,
     int kernel_width,
@@ -1939,11 +1939,11 @@ ppl::common::RetCode PPLCUDAMaxPoolingForwardImp(
 
 ppl::common::RetCode PPLCUDAMaxPoolingForwardImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const void* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output,
-    ppl::nn::TensorShape* indices_shape,
+    ppl::common::TensorShape* indices_shape,
     int64_t* indices,
     int kernel_height,
     int kernel_width,

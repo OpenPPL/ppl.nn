@@ -18,7 +18,7 @@
 #ifndef PPLCUDA_IMPLS_REFORMAT_H_
 #define PPLCUDA_IMPLS_REFORMAT_H_
 
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "ppl/nn/engines/cuda/cuda_common_param.h"
 
@@ -134,8 +134,8 @@ void PPLCUDACVTTypePerChannel(cudaStream_t stream, const void* input, void* outp
 void PPLCUDACVTFormatType(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
 void PPLCUDACVTFormatTypeNC(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
 
-ppl::common::RetCode SetReLayoutParam(ReFormatParam* param, const ppl::nn::TensorShape& input, const ppl::nn::TensorShape& output);
-ppl::common::RetCode SetReLayoutParam(ReFormatParam* param, const ppl::nn::TensorShape& input, const ppl::nn::cuda::CudaTensorQuant& input_quant, const ppl::nn::TensorShape& output, const ppl::nn::cuda::CudaTensorQuant& output_quant);
+ppl::common::RetCode SetReLayoutParam(ReFormatParam* param, const ppl::common::TensorShape& input, const ppl::common::TensorShape& output);
+ppl::common::RetCode SetReLayoutParam(ReFormatParam* param, const ppl::common::TensorShape& input, const ppl::nn::cuda::CudaTensorQuant& input_quant, const ppl::common::TensorShape& output, const ppl::nn::cuda::CudaTensorQuant& output_quant);
 
 void PPLCUDADataConvert(cudaStream_t stream, const void* input, void* output, void* tempBuf, ReFormatParam& param);
 

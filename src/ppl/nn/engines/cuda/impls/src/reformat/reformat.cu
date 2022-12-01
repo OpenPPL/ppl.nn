@@ -815,8 +815,8 @@ bool EqualQuant(const ppl::nn::cuda::CudaTensorQuant& quant_a, const ppl::nn::cu
 
 ppl::common::RetCode SetReLayoutParam(
     ReFormatParam *param,
-    const TensorShape& input,
-    const TensorShape& output)
+    const ppl::common::TensorShape& input,
+    const ppl::common::TensorShape& output)
 {
     if (input.GetDimCount() <= 1 &&
         ((input.GetDataFormat() == DATAFORMAT_NHWC8) ||
@@ -845,9 +845,9 @@ ppl::common::RetCode SetReLayoutParam(
 
 ppl::common::RetCode SetReLayoutParam(
     ReFormatParam *param,
-    const TensorShape& input,
+    const ppl::common::TensorShape& input,
     const ppl::nn::cuda::CudaTensorQuant& input_quant,
-    const TensorShape& output,
+    const ppl::common::TensorShape& output,
     const ppl::nn::cuda::CudaTensorQuant& output_quant)
 {
     SetReLayoutParam(param, input, output);
