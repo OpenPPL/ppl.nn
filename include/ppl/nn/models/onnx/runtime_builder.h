@@ -57,8 +57,8 @@ public:
     /** @note MUST be called before `CreateRuntime()` */
     virtual ppl::common::RetCode Preprocess() = 0;
 
-    /** @brief creates a `Runtime` instance */
-    virtual Runtime* CreateRuntime() = 0;
+    /** @brief creates a `Runtime` instance. This function is thread-safe. */
+    virtual Runtime* CreateRuntime() const = 0;
 
     virtual ppl::common::RetCode Serialize(const char* fmt, ppl::nn::utils::DataStream*) const = 0;
 };

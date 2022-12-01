@@ -119,10 +119,10 @@ prepare for creating `Runtime` instances.
 
 
 ```c++
-Runtime* CreateRuntime();
+Runtime* CreateRuntime() const;
 ```
 
-Creates a `Runtime` instance which is used to evaluate a compute graph.
+Creates a `Runtime` instance which is used to evaluate a compute graph. This function is thread-safe.
 
 ## pmx::RuntimeBuilderFactory
 
@@ -171,10 +171,10 @@ prepare for creating `Runtime` instances.
 
 
 ```c++
-Runtime* CreateRuntime();
+Runtime* CreateRuntime() const;
 ```
 
-Creates a `Runtime` instance which is used to evaluate a compute graph.
+Creates a `Runtime` instance which is used to evaluate a compute graph. This function is thread-safe.
 
 ## Runtime
 
