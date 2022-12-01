@@ -16,7 +16,7 @@
 // under the License.
 
 #include "conv_depthwise_kernel.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "cudakernel/nn/conv_fuse_type.h"
 
 #include "depthwise_info.h"

@@ -16,15 +16,15 @@
 // under the License.
 
 #include "cudakernel/memory/reshape.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 
 ppl::common::RetCode PPLCUDAReshapeForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output)
 {
     int64_t num_elems_output = output_shape->CalcElementsIncludingPadding();

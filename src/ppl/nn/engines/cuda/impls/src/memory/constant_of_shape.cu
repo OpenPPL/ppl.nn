@@ -16,7 +16,7 @@
 // under the License.
 
 #include "cudakernel/memory/constant_of_shape.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "ppl/common/types.h"
 #include <cuda_runtime.h>
@@ -37,7 +37,7 @@ __global__ void ppl_cukernel_constant_of_shape(
 ppl::common::RetCode PPLCUDAConstantOfShapeForwardImp(
     cudaStream_t stream,
     const void *pre_set_value,
-    const ppl::nn::TensorShape *output_shape,
+    const ppl::common::TensorShape *output_shape,
     void *output)
 {
     int64_t num_elems = output_shape->CalcElementsIncludingPadding();

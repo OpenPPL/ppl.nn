@@ -34,7 +34,7 @@
 static std::vector<kernel_info_t> g_int8_kvec;
 static bool is_g_int8_kvec_set = false;
 #else
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/nn/params/onnx/gemm_param.h"
 #include "ppl/common/retcode.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
@@ -149,7 +149,7 @@ __global__ void int8_matrix_transpose(
 
 ppl::common::RetCode PPLCUDAGemmModifyWeightsInt8(
     const cudaStream_t &stream,
-    ppl::nn::TensorShape *weight_shape,
+    ppl::common::TensorShape *weight_shape,
     void *weight,
     void *tmp_weight, // if need transpose
     const ppl::nn::onnx::GemmParam *param)
@@ -192,12 +192,12 @@ double PPLCUDAGemmJITSelectKernelInt8(
    const cudaDeviceProp& device_prop,
    cudaStream_t &stream,
    ppl::common::datatype_t type,
-   ppl::nn::TensorShape *input_shape,
+   ppl::common::TensorShape *input_shape,
    void *input,
-   ppl::nn::TensorShape *weight_shape,
+   ppl::common::TensorShape *weight_shape,
    void *weight,
    void *bias,
-   ppl::nn::TensorShape *output_shape,
+   ppl::common::TensorShape *output_shape,
    void *output,
    void *temp_buffer,
    conv_param_t &conv_param,
@@ -228,12 +228,12 @@ double PPLCUDAGemmJITSelectKernelInt8(
 double PPLCUDAGemmSelectKernelInt8(
     const cudaDeviceProp& device_prop,
     const cudaStream_t &stream,
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     const void *input,
-    const ppl::nn::TensorShape *weight_shape,
+    const ppl::common::TensorShape *weight_shape,
     const void *weight,
     const void *bias,
-    const ppl::nn::TensorShape *output_shape,
+    const ppl::common::TensorShape *output_shape,
     void *output,
     void *temp_buffer,
     const ppl::nn::onnx::GemmParam &param,
@@ -358,12 +358,12 @@ ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
     const cudaDeviceProp& device_prop,
     const cudaStream_t &stream,
     const CUfunction function,
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     const void *input,
-    const ppl::nn::TensorShape *weight_shape,
+    const ppl::common::TensorShape *weight_shape,
     const void *weight,
     const void *bias,
-    const ppl::nn::TensorShape *output_shape,
+    const ppl::common::TensorShape *output_shape,
     void *output,
     const ppl::nn::onnx::GemmParam &param,
     void *temp_buffer,

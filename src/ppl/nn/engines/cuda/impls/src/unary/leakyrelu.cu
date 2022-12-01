@@ -82,9 +82,9 @@ __global__ void ppl_cukernel_unary_leakyrelu(
 
 ppl::common::RetCode PPLCUDAUnaryLeakyReluForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output,
     float alpha,
     float in_scale,

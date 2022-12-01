@@ -86,7 +86,7 @@ __global__ void rescale_from_int8_to_int8(int32_t num_elems,
 }
 
 template <typename srcT>
-ppl::common::RetCode PPLRescaleInt82Int8(cudaStream_t stream, const ppl::nn::TensorShape* output_shape,
+ppl::common::RetCode PPLRescaleInt82Int8(cudaStream_t stream, const ppl::common::TensorShape* output_shape,
     const srcT* input, int8_t* output, const ppl::nn::cuda::QuantParamCuda* qparam) {
     int num_elems = output_shape->CalcElementsExcludingPadding();
     int block_size = 256;
@@ -120,9 +120,9 @@ ppl::common::RetCode PPLCUDAReduceOPImp(
     cudaStream_t stream,
     ReduceParam param,
     PPLReduceDimDes des,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output)
 {
     typedef typename Operator::acctype acc_type;
@@ -158,9 +158,9 @@ ppl::common::RetCode PPLCUDAReduceForwardImp(
     cudaStream_t stream,
     ReduceParam param,
     PPLReduceDimDes des,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output,
     void* tmp_buffer,
     const ppl::nn::cuda::QuantParamCuda* qparam)

@@ -148,9 +148,9 @@ __global__ void ppl_cudakernel_clip_nhwc_int8(
 
 ppl::common::RetCode PPLCUDAClipForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output,
     float _min,
     float _max,

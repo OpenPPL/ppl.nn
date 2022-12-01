@@ -18,7 +18,7 @@
 #include "cudakernel/nn/roialign.h"
 #include "cudakernel/math/math.h"
 #include "cudakernel/common/common.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include <cuda_fp16.h>
 
 template <typename T>
@@ -190,13 +190,13 @@ __global__ void roi_align_forward_cuda_kernel(
 // 3. in max_mode, onnx acquires max_val in interploting process
 ppl::common::RetCode PPLCUDAROIAlignForwardImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const void* input,
-    ppl::nn::TensorShape* rois_shape,
+    ppl::common::TensorShape* rois_shape,
     const void* rois,
-    ppl::nn::TensorShape* batch_indices_shape,
+    ppl::common::TensorShape* batch_indices_shape,
     const void* batch_indices,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output,
     ppl::nn::onnx::RoiAlignParam param)
 {

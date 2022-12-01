@@ -270,9 +270,9 @@ __global__ void ppl_cukernel_pooling_ave_global_shuffle_int8_NHWC(
 
 ppl::common::RetCode PPLCUDAGlobalAvePoolingForwardImpFp16(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const half* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     half* output)
 {
     int batch        = output_shape->GetDim(0);
@@ -331,9 +331,9 @@ ppl::common::RetCode PPLCUDAGlobalAvePoolingForwardImpFp16(
 
 ppl::common::RetCode PPLCUDAGlobalAvePoolingForwardImpFp32(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const float* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     float* output)
 {
     int batch        = output_shape->GetDim(0);
@@ -357,8 +357,8 @@ ppl::common::RetCode PPLCUDAGlobalAvePoolingForwardImpFp32(
 
 ppl::common::RetCode PPLCUDAGlobalAvePoolingForwardImpInt8(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape, const int8_t* input,
-    ppl::nn::TensorShape* output_shape, int8_t* output, float in_scale, float out_scale) {
+    ppl::common::TensorShape* input_shape, const int8_t* input,
+    ppl::common::TensorShape* output_shape, int8_t* output, float in_scale, float out_scale) {
     
     int batch = output_shape->GetDim(0);
     int pad_channels = output_shape->GetDim(1) + output_shape->GetPadding1(1);
@@ -388,9 +388,9 @@ ppl::common::RetCode PPLCUDAGlobalAvePoolingForwardImpInt8(
 
 ppl::common::RetCode PPLCUDAGlobalAvePoolingForwardImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const void* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output, float in_scale, float out_scale)
 {
     if (output_shape->GetDataType() == ppl::common::DATATYPE_FLOAT16) {

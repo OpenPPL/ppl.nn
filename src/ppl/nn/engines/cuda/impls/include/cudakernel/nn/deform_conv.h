@@ -1,19 +1,19 @@
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/nn/engines/cuda/module/cuda_module.h"
 
 #include "ppl/common/retcode.h"
 
 int64_t PPLCUDADeformConvGetBufSize(
-    const ppl::nn::TensorShape *input_shape,
-    const ppl::nn::TensorShape *flt_shape,
-    const ppl::nn::TensorShape *output_shape);
+    const ppl::common::TensorShape *input_shape,
+    const ppl::common::TensorShape *flt_shape,
+    const ppl::common::TensorShape *output_shape);
 
 ppl::common::RetCode PPLCUDADeformConvForward(
     const cudaDeviceProp& device_prop,
     const cudaStream_t &stream,
     const CUfunction function,
-    const ppl::nn::TensorShape *output_shape,
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *output_shape,
+    const ppl::common::TensorShape *input_shape,
     void *output,
     const void *input,
     const void *flt,
@@ -37,6 +37,6 @@ ppl::common::RetCode PPLCUDADeformConvForward(
 
 ppl::common::RetCode PPLCUDADeformConvModifyWeights(
     const cudaStream_t &stream,
-    const ppl::nn::TensorShape *flt_shape,
+    const ppl::common::TensorShape *flt_shape,
     const void *in_flt,
     void *out_flt);

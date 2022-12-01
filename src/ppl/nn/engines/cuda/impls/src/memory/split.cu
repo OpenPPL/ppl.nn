@@ -19,7 +19,7 @@
 #include "cudakernel/memory/slice.h"
 #include "cudakernel/common/divmod_fast.h"
 #include "cudakernel/common/common.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 
@@ -81,7 +81,7 @@ __global__ void __launch_bounds__(256) ppl_cukernel_split_ndarray(
 ppl::common::RetCode PPLCUDASplitForwardImp(
     cudaStream_t stream,
     int split_axis,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
     int num_outputs,
     const int64_t* out_dims[],
@@ -181,7 +181,7 @@ ppl::common::RetCode PPLCUDASplitForwardImp(
 #undef SWITCH_CASE
         }
 
-        ppl::nn::TensorShape output_shape(*input_shape);
+        ppl::common::TensorShape output_shape(*input_shape);
 
         SliceKernelParam param;
         param.axes_num  = 1;

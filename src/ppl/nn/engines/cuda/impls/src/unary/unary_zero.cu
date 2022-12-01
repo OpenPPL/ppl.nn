@@ -191,9 +191,9 @@ __global__ void ppl_cukernel_unary_zero_nhwc_int8(const uint64_t num_elems,
 #define UNARYZERO_INSTANT(TYPE)                                                                                        \
     ppl::common::RetCode PPLCUDAUnaryZero##TYPE##ForwardImp(                                                           \
         cudaStream_t stream,                                                                                           \
-        const ppl::nn::TensorShape* input_shape,                                                                       \
+        const ppl::common::TensorShape* input_shape,                                                                       \
         const void* input,                                                                                             \
-        const ppl::nn::TensorShape* output_shape,                                                                      \
+        const ppl::common::TensorShape* output_shape,                                                                      \
         void* output,                                                                                                  \
         const ppl::nn::cuda::QuantParamCuda* qparam)                                                                         \
     {                                                                                                                  \

@@ -19,7 +19,7 @@
 #include "cudakernel/common/divmod_fast.h"
 #include "cudakernel/common/memory_utils.h"
 #include "cudakernel/math/math.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_fp16.h>
 
@@ -54,7 +54,7 @@ ppl::common::RetCode PPLCUDARangeForwardImp(
     cudaStream_t stream,
     const void* start,
     const void* delta,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output)
 {
     int block_size     = 256;

@@ -302,7 +302,7 @@ __global__ void pad_kernel(const __half *input, __half *output, int h, int w, in
 
 ppl::common::RetCode PPLCUDADeformConvModifyWeights(
     const cudaStream_t &stream,
-    const ppl::nn::TensorShape *flt_shape,
+    const ppl::common::TensorShape *flt_shape,
     const void *in_flt,
     void *out_flt)
 {
@@ -324,9 +324,9 @@ ppl::common::RetCode PPLCUDADeformConvModifyWeights(
 }
 
 int64_t PPLCUDADeformConvGetBufSize(
-    const ppl::nn::TensorShape *input_shape,
-    const ppl::nn::TensorShape *flt_shape,
-    const ppl::nn::TensorShape *output_shape)
+    const ppl::common::TensorShape *input_shape,
+    const ppl::common::TensorShape *flt_shape,
+    const ppl::common::TensorShape *output_shape)
 {
     const int batch     = input_shape->GetDim(0);
     const int in_c      = input_shape->GetDim(1);
@@ -362,8 +362,8 @@ ppl::common::RetCode PPLCUDADeformConvForward(
     const cudaDeviceProp& device_prop,
     const cudaStream_t &stream,
     const CUfunction function,
-    const ppl::nn::TensorShape *output_shape,
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *output_shape,
+    const ppl::common::TensorShape *input_shape,
     void *output,
     const void *input,
     const void *flt,
@@ -413,7 +413,7 @@ ppl::common::RetCode PPLCUDADeformConvForward(
     int N = col_trans_out_h;
     int K = col_trans_out_w;
 #define FAKE_GEMM_PARAM                                 \
-    ppl::nn::TensorShape shape_a, shape_b, shape_c;     \
+    ppl::common::TensorShape shape_a, shape_b, shape_c;     \
     shape_a.SetDimCount(2);                             \
     shape_b.SetDimCount(2);                             \
     shape_c.SetDimCount(2);                             \

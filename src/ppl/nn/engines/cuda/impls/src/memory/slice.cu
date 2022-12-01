@@ -19,7 +19,7 @@
 #include "cudakernel/common/divmod_fast.h"
 #include "cudakernel/common/memory_utils.h"
 #include "cudakernel/common/common.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 
@@ -106,9 +106,9 @@ __global__ void ppl_cukernel_slice_fast_nhwc(int channel, const T* input, int sr
 ppl::common::RetCode PPLCUDASliceForwardImp(
     cudaStream_t stream,
     SliceKernelParam param,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output)
 {
     if (output_shape->CalcElementsIncludingPadding() == 0)

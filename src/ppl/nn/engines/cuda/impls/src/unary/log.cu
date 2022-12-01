@@ -71,9 +71,9 @@ __global__ void ppl_cukernel_log_nhwc(
 
 ppl::common::RetCode PPLCUDALogForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     const void *input,
-    const ppl::nn::TensorShape *output_shape,
+    const ppl::common::TensorShape *output_shape,
     void *output)
 {
     uint64_t num_elems = output_shape->CalcElementsIncludingPadding();

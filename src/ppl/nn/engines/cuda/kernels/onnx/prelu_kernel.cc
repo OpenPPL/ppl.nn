@@ -21,9 +21,9 @@
 
 namespace ppl { namespace nn { namespace cuda {
 
-static void ppl_pad_second_shape(const ppl::nn::TensorShape *tensor_shape0,
-                          const ppl::nn::TensorShape *tensor_shape1,
-                          ppl::nn::TensorShape *pad_tensor_shape) {
+static void ppl_pad_second_shape(const TensorShape *tensor_shape0,
+                          const TensorShape *tensor_shape1,
+                          TensorShape *pad_tensor_shape) {
     int max_dims = tensor_shape0->GetDimCount();
     pad_tensor_shape->SetDimCount(max_dims);
     // pad 1 to shape_min_pad's higher dim

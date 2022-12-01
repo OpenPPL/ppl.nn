@@ -81,7 +81,7 @@ __global__ void fuse_gate(
 }
 
 int64_t PPLCUDALstmGetRuntimeBufSize(
-    const ppl::nn::TensorShape *X_shape,
+    const ppl::common::TensorShape *X_shape,
     const unsigned int direction,
     const int64_t hidden_size)
 {
@@ -115,7 +115,7 @@ ppl::common::RetCode PPLCUDALstmForwardImp(
     const cudaDeviceProp& device_prop,
     cudaStream_t stream,
     const CUfunction function,
-    const ppl::nn::TensorShape *X_shape,
+    const ppl::common::TensorShape *X_shape,
     const void *X,
     const void *X_weight,
     const void *R_weight,
@@ -137,7 +137,7 @@ ppl::common::RetCode PPLCUDALstmForwardImp(
     int num_direction = direction == RnnDirection::bidirectional ? 2 : 1;
 
     //(seq, batch, dir, 4*hidden)
-    ppl::nn::TensorShape input_shape, weight_shape, output_shape;
+    ppl::common::TensorShape input_shape, weight_shape, output_shape;
     int M = seq_len * batch;
     int K = input_size;
     int N = num_direction * 4 * hidden_size;

@@ -22,9 +22,9 @@ __global__ void ppl_cukernel_unary_any(
 
 ppl::common::RetCode PPLCUDANegForwardImp(                                                                                       
     cudaStream_t stream,                                                                                                                   
-    const ppl::nn::TensorShape* input_shape,                                                                                               
+    const ppl::common::TensorShape* input_shape,                                                                                               
     const void* input,                                                                                                                     
-    const ppl::nn::TensorShape* output_shape,                                                                                              
+    const ppl::common::TensorShape* output_shape,                                                                                              
     void* output,                                                                                                                          
     const ppl::nn::cuda::QuantParamCuda* qparam)                                                                                           
 {                                                                                                                                          

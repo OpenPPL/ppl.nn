@@ -17,7 +17,7 @@
 
 #include "cudakernel/memory/gather.h"
 #include "cudakernel/common/divmod_fast.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 #include <memory>
@@ -74,11 +74,11 @@ __global__ void ppl_cukernel_gather(
 
 ppl::common::RetCode PPLCUDAGatherForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* indices_shape,
+    const ppl::common::TensorShape* indices_shape,
     const void* indices,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output,
     int axis)
 {

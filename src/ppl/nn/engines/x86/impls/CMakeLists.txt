@@ -40,6 +40,10 @@ if(NOT ((CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 
     endif()
 endif()
 
+# dependencies
+include(cmake/deps.cmake)
+hpcc_populate_dep(pplcommon)
+
 file(GLOB_RECURSE _I_PPLKERNELX86_SRC src/ppl/kernel/x86/*.cpp)
 file(GLOB_RECURSE _I_PPLKERNELX86_SSE_SRC src/ppl/kernel/x86/*_sse.cpp)
 file(GLOB_RECURSE _I_PPLKERNELX86_AVX_SRC src/ppl/kernel/x86/*_avx.cpp)
@@ -80,15 +84,12 @@ list(APPEND PPLKERNELX86_PUBLIC_INCLUDE_DIRECTORIES ${PROJECT_BINARY_DIR}/includ
 
 list(APPEND PPLKERNELX86_LINK_LIBRARIES pplcommon_static)
 
-get_filename_component(__PPLNN_SOURCE_DIR__ "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../.." ABSOLUTE)
-set(PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES ${__PPLNN_SOURCE_DIR__}/include ${__PPLNN_SOURCE_DIR__}/src)
-
 add_library(pplkernelx86_static STATIC ${PPLKERNELX86_SRC})
 target_compile_features(pplkernelx86_static PRIVATE cxx_std_11)
 target_link_libraries(pplkernelx86_static ${PPLKERNELX86_LINK_LIBRARIES})
 target_include_directories(pplkernelx86_static
     PUBLIC ${PPLKERNELX86_PUBLIC_INCLUDE_DIRECTORIES}
-    PRIVATE ${PPLKERNELX86_PRIVATE_INCLUDE_DIRECTORIES} ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES})
+    PRIVATE ${PPLKERNELX86_PRIVATE_INCLUDE_DIRECTORIES} ${PPLCOMMON_INCLUDES})
 target_compile_definitions(pplkernelx86_static PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
 target_compile_options(pplkernelx86_static PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
 
@@ -117,7 +118,7 @@ if(PPLNN_BUILD_TESTS)
     add_executable(test_conv2d test/test_conv2d.cpp ${__PPLNN_TOOLS_DIR__}/simple_flags.cc)
     target_include_directories(test_conv2d
         PUBLIC ${PPLKERNELX86_PUBLIC_INCLUDE_DIRECTORIES}
-        PRIVATE ${PPLKERNELX86_PRIVATE_INCLUDE_DIRECTORIES} ${__PPLNN_TOOLS_DIR__} ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES})
+        PRIVATE ${PPLKERNELX86_PRIVATE_INCLUDE_DIRECTORIES} ${__PPLNN_TOOLS_DIR__} ${PPLCOMMON_INCLUDES})
     target_compile_options(test_conv2d PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
     target_compile_definitions(test_conv2d PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
     target_compile_features(test_conv2d PRIVATE cxx_std_11)
@@ -126,7 +127,7 @@ if(PPLNN_BUILD_TESTS)
     add_executable(test_gemm test/test_gemm.cpp ${__PPLNN_TOOLS_DIR__}/simple_flags.cc)
     target_include_directories(test_gemm
         PUBLIC ${PPLKERNELX86_PUBLIC_INCLUDE_DIRECTORIES} ${PPLKERNELX86_INCLUDE_DIRECTORIES}
-        PRIVATE ${PPLKERNELX86_PRIVATE_INCLUDE_DIRECTORIES} ${__PPLNN_TOOLS_DIR__} ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES})
+        PRIVATE ${PPLKERNELX86_PRIVATE_INCLUDE_DIRECTORIES} ${__PPLNN_TOOLS_DIR__} ${PPLCOMMON_INCLUDES})
     target_compile_options(test_gemm PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
     target_compile_definitions(test_gemm PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
     target_compile_features(test_gemm PRIVATE cxx_std_11)
@@ -135,7 +136,7 @@ if(PPLNN_BUILD_TESTS)
     add_executable(test_pd_conv2d test/test_pd_conv2d.cpp ${__PPLNN_TOOLS_DIR__}/simple_flags.cc)
     target_include_directories(test_pd_conv2d
         PUBLIC ${PPLKERNELX86_PUBLIC_INCLUDE_DIRECTORIES} ${PPLKERNELX86_INCLUDE_DIRECTORIES}
-        PRIVATE ${PPLKERNELX86_PRIVATE_INCLUDE_DIRECTORIES} ${__PPLNN_TOOLS_DIR__} ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES})
+        PRIVATE ${PPLKERNELX86_PRIVATE_INCLUDE_DIRECTORIES} ${__PPLNN_TOOLS_DIR__} ${PPLCOMMON_INCLUDES})
     target_compile_options(test_pd_conv2d PRIVATE ${PPLKERNELX86_COMPILE_OPTIONS})
     target_compile_definitions(test_pd_conv2d PRIVATE ${PPLKERNELX86_COMPILE_DEFINITIONS})
     target_compile_features(test_pd_conv2d PRIVATE cxx_std_11)

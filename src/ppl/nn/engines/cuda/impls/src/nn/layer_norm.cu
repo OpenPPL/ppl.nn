@@ -92,9 +92,9 @@ __global__ void __launch_bounds__(64)
 template<typename TPar>
 ppl::common::RetCode PPLCUDALayernormForwardImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const void* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output,
     const TPar* alpha, 
     const TPar* beta,

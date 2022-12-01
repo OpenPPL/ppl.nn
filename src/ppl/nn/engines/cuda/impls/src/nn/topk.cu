@@ -19,7 +19,7 @@
 #include "cudakernel/math/math.h"
 #include "cudakernel/common/common.h"
 #include "ppl/common/types.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_fp16.h>
 #include <float.h>
@@ -39,7 +39,7 @@ struct TensorInfo {
     int strides[MAX_DIM];
     const void *data;
     int dims;
-    TensorInfo(ppl::nn::TensorShape *tensor_shape, const void *data_ptr)
+    TensorInfo(ppl::common::TensorShape *tensor_shape, const void *data_ptr)
     {
         for (unsigned int i = 0; i < tensor_shape->GetDimCount() && i < MAX_DIM; i++) {
             shape[i] = tensor_shape->GetDim(i);
@@ -1026,7 +1026,7 @@ void radix_sort(
 }
 
 int64_t PPLTopKGetTempBufferSize(
-    const ppl::nn::TensorShape *indices_shape,
+    const ppl::common::TensorShape *indices_shape,
     const int K,
     int dim_k,
     bool sorted)
@@ -1178,11 +1178,11 @@ void topKGpuImpl(
 
 ppl::common::RetCode PPLCUDATopKForwardImp(
     cudaStream_t stream,
-    ppl::nn::TensorShape *input_shape,
+    ppl::common::TensorShape *input_shape,
     const void *input,
-    ppl::nn::TensorShape *topk_shape,
+    ppl::common::TensorShape *topk_shape,
     void *topk,
-    ppl::nn::TensorShape *indices_shape,
+    ppl::common::TensorShape *indices_shape,
     int *indices,
     void *temp_buffer,
     int64_t temp_buffer_bytes,

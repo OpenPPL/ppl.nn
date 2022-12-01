@@ -18,7 +18,7 @@
 #include "cudakernel/memory/tile.h"
 #include "cudakernel/common/divmod_fast.h"
 #include "cudakernel/common/memory_utils.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 
@@ -50,9 +50,9 @@ __global__ void ppl_cukernel_tile(
 ppl::common::RetCode PPLCUDATileForwardImp(
     cudaStream_t stream,
     TileParam param,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const void* input,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output)
 {
     int block_size     = 256;

@@ -17,7 +17,7 @@
 
 #ifndef PPLCUDA_KERNEL_INCLUDE_PAD_PAD_H_
 #define PPLCUDA_KERNEL_INCLUDE_PAD_PAD_H_
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/nn/params/onnx/pad_param.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
@@ -36,10 +36,10 @@ struct PadKernelParam {
 ppl::common::RetCode PPLCUDAPadForwardImp(
     cudaStream_t stream,
     PadKernelParam param,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const void* input,
     const int64_t* pads,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output);
 
 #endif // PPLCUDA_KERNEL_INCLUDE_PAD_PAD_H_

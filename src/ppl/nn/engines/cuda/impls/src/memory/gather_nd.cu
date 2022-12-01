@@ -17,7 +17,7 @@
 
 #include "cudakernel/memory/gather_nd.h"
 #include "cudakernel/common/divmod_fast.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "ppl/common/types.h"
 #include <cuda_runtime.h>
@@ -73,9 +73,9 @@ __global__ void ppl_cukernel_gather_nd_offset(
 }
 
 int64_t pplGatherNDGetTempBufferSize(
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* indices_shape,
+    const ppl::common::TensorShape* indices_shape,
     const void* indices)
 {
     int num_input_dim   = input_shape->GetDimCount();
@@ -88,11 +88,11 @@ int64_t pplGatherNDGetTempBufferSize(
 
 ppl::common::RetCode PPLCUDAGatherNDForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* indices_shape,
+    const ppl::common::TensorShape* indices_shape,
     const void* indices,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output,
     void* temp_buffer,
     int batch_dim)

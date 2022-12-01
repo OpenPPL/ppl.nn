@@ -16,7 +16,7 @@
 // under the License.
 
 #include "cudakernel/nn/one_hot.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_fp16.h>
 
@@ -51,9 +51,9 @@ T  get_mask_value(const T* values, T* output, uint64_t nelem){
 ppl::common::RetCode PPLCUDAOneHotForwardImp(
     cudaStream_t stream,
     const void* indices,
-    ppl::nn::TensorShape* values_shape,
+    ppl::common::TensorShape* values_shape,
     const void* values,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output,
     uint32_t real_axis)
 {
