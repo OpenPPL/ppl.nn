@@ -12,8 +12,18 @@ if(NOT PYTHON3_INCLUDE_DIRS)
         endif()
     endif()
 
-    # `Python3_SOABI` is provided by find_package(Python3) in cmake >= 3.17
-    set(__python_soabi__ ${Python3_SOABI})
+    if(Python3_SOABI)
+        # `Python3_SOABI` is provided by find_package(Python3) in cmake >= 3.17
+        set(__python_soabi__ ${Python3_SOABI})
+    else()
+        find_package(Python3 ${PPLNN_PYTHON3_VERSION} COMPONENTS Interpreter QUIET)
+        if(Python3_Interpreter_FOUND)
+            execute_process(
+                COMMAND ${Python3_EXECUTABLE} -c "import sysconfig;print(sysconfig.get_config_var('SOABI'))"
+                OUTPUT_VARIABLE __python_soabi__
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+        endif()
+    endif()
 
     set(PYTHON3_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
     if(MSVC)  # cannot link static libraries built without -fPIC on linux
