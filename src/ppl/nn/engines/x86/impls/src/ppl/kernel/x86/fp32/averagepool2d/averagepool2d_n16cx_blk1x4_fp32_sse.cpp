@@ -20,7 +20,6 @@
 
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/kernel/x86/common/averagepool2d/averagepool2d_common.h"
-#include "ppl/nn/params/onnx/pooling_param.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
@@ -141,7 +140,7 @@ static const averagepool2d_n16cx_kernel_fp32_sse_func_t averagepool2d_n16cx_1x4_
     },
 };
 
-template <int32_t pooling_mode, bool ceil_mode>
+template <bool exclusive_mode, bool ceil_mode>
 static inline void averagepool2d_n16cx_border_fp32_sse(
     const float *src,
     const averagepool2d_param *param,
@@ -173,9 +172,9 @@ static inline void averagepool2d_n16cx_border_fp32_sse(
     const int64_t iwend   = min<int64_t>(padded_iwend, src_w);
 
     int64_t pool_len = 0;
-    if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE) {
+    if (exclusive_mode) {
         pool_len = (ihend - ihstart) * (iwend - iwstart);
-    } else if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_INCLUDE) {
+    } else {
         pool_len = (padded_ihend - padded_ihstart) * (padded_iwend - padded_iwstart);
     }
 
@@ -209,7 +208,7 @@ static inline void averagepool2d_n16cx_border_fp32_sse(
     }
 }
 
-template <int32_t pooling_mode, bool ceil_mode>
+template <bool exclusive_mode, bool ceil_mode>
 ppl::common::RetCode averagepool2d_n16cx_blk1x4_fp32_sse_impl(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
@@ -245,7 +244,7 @@ ppl::common::RetCode averagepool2d_n16cx_blk1x4_fp32_sse_impl(
             float *p_dst       = dst + bc * dst_h * dst_w;
             for (int64_t oh = 0; oh < dst_h; ++oh) {
                 for (int64_t ow = 0; ow < dst_w; ++ow) {
-                    averagepool2d_n16cx_border_fp32_sse<pooling_mode, ceil_mode>(p_src, &param, oh, ow, p_dst);
+                    averagepool2d_n16cx_border_fp32_sse<exclusive_mode, ceil_mode>(p_src, &param, oh, ow, p_dst);
                 }
             }
         }
@@ -273,12 +272,12 @@ ppl::common::RetCode averagepool2d_n16cx_blk1x4_fp32_sse_impl(
 
             int64_t ow = 0;
             for (; ow < dst_kernel_start_w; ++ow) {
-                averagepool2d_n16cx_border_fp32_sse<pooling_mode, ceil_mode>(p_src, &param, oh, ow, p_dst);
+                averagepool2d_n16cx_border_fp32_sse<exclusive_mode, ceil_mode>(p_src, &param, oh, ow, p_dst);
             }
             int64_t kernel_pool_len = 0;
-            if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE) {
+            if (exclusive_mode) {
                 kernel_pool_len = (ihend - ihstart) * kernel_w;
-            } else if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_INCLUDE) {
+            } else {
                 kernel_pool_len = (padded_ihend - padded_ihstart) * kernel_w;
             }
             for (; ow + POOLING_DST_W() <= dst_kernel_end_w; ow += POOLING_DST_W()) {
@@ -289,7 +288,7 @@ ppl::common::RetCode averagepool2d_n16cx_blk1x4_fp32_sse_impl(
                 ow = dst_kernel_end_w;
             }
             for (; ow < dst_w; ++ow) {
-                averagepool2d_n16cx_border_fp32_sse<pooling_mode, ceil_mode>(p_src, &param, oh, ow, p_dst);
+                averagepool2d_n16cx_border_fp32_sse<exclusive_mode, ceil_mode>(p_src, &param, oh, ow, p_dst);
             }
         }
     }
@@ -307,21 +306,21 @@ ppl::common::RetCode averagepool2d_n16cx_blk1x4_fp32_sse(
     const int64_t stride_w,
     const int64_t pad_h,
     const int64_t pad_w,
-    const int64_t pooling_mode,
-    const int64_t ceil_mode,
+    const bool exclusive_mode,
+    const bool ceil_mode,
     float *dst)
 {
-    if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE) {
+    if (exclusive_mode) {
         if (ceil_mode) {
-            return averagepool2d_n16cx_blk1x4_fp32_sse_impl<ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE, true>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, dst);
+            return averagepool2d_n16cx_blk1x4_fp32_sse_impl<true, true>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, dst);
         } else {
-            return averagepool2d_n16cx_blk1x4_fp32_sse_impl<ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE, false>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, dst);
+            return averagepool2d_n16cx_blk1x4_fp32_sse_impl<true, false>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, dst);
         }
-    } else if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_INCLUDE) {
+    } else {
         if (ceil_mode) {
-            return averagepool2d_n16cx_blk1x4_fp32_sse_impl<ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_INCLUDE, true>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, dst);
+            return averagepool2d_n16cx_blk1x4_fp32_sse_impl<false, true>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, dst);
         } else {
-            return averagepool2d_n16cx_blk1x4_fp32_sse_impl<ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_INCLUDE, false>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, dst);
+            return averagepool2d_n16cx_blk1x4_fp32_sse_impl<false, false>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, dst);
         }
     }
 

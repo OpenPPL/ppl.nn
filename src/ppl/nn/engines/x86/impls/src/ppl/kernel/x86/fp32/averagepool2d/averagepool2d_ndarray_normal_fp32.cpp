@@ -16,11 +16,10 @@
 // under the License.
 
 #include "ppl/kernel/x86/common/internal_include.h"
-#include "ppl/nn/params/onnx/pooling_param.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
-template <int32_t pooling_mode, bool ceil_mode>
+template <bool exclusive_mode, bool ceil_mode>
 static ppl::common::RetCode averagepool2d_ndarray_normal_fp32_impl(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
@@ -61,9 +60,9 @@ static ppl::common::RetCode averagepool2d_ndarray_normal_fp32_impl(
                 const int64_t iwend   = min<int64_t>(padded_iwend, src_w);
 
                 int64_t pool_len = 0;
-                if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE) {
+                if (exclusive_mode) {
                     pool_len = (ihend - ihstart) * (iwend - iwstart);
-                } else if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_INCLUDE) {
+                } else {
                     pool_len = (padded_ihend - padded_ihstart) * (padded_iwend - padded_iwstart);
                 }
 
@@ -95,21 +94,21 @@ ppl::common::RetCode averagepool2d_ndarray_normal_fp32(
     const int64_t stride_w,
     const int64_t pad_h,
     const int64_t pad_w,
-    const int64_t pooling_mode,
-    const int64_t ceil_mode,
+    const bool exclusive_mode,
+    const bool ceil_mode,
     float *dst)
 {
-    if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE) {
+    if (exclusive_mode) {
         if (ceil_mode) {
-            return averagepool2d_ndarray_normal_fp32_impl<ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE, true>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, dst);
+            return averagepool2d_ndarray_normal_fp32_impl<true, true>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, dst);
         } else {
-            return averagepool2d_ndarray_normal_fp32_impl<ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE, false>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, dst);
+            return averagepool2d_ndarray_normal_fp32_impl<true, false>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, dst);
         }
-    } else if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_INCLUDE) {
+    } else if (exclusive_mode) {
         if (ceil_mode) {
-            return averagepool2d_ndarray_normal_fp32_impl<ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_INCLUDE, true>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, dst);
+            return averagepool2d_ndarray_normal_fp32_impl<false, true>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, dst);
         } else {
-            return averagepool2d_ndarray_normal_fp32_impl<ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_INCLUDE, false>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, dst);
+            return averagepool2d_ndarray_normal_fp32_impl<false, false>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, dst);
         }
     }
 

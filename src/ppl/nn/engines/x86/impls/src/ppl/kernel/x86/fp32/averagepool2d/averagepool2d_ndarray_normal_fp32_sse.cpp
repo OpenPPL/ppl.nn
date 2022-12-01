@@ -20,7 +20,6 @@
 #include "ppl/kernel/x86/common/sse_tools.h"
 #include "ppl/kernel/x86/fp32/transpose/transpose_fp32_sse.h"
 #include "ppl/kernel/x86/common/internal_include.h"
-#include "ppl/nn/params/onnx/pooling_param.h"
 #include "ppl/kernel/x86/common/averagepool2d/averagepool2d_common.h"
 #include "ppl/kernel/x86/fp32/reduce/sse/reduce_ndarray_fp32_sse.h"
 
@@ -343,8 +342,8 @@ static inline void averagepool2d_ndarray_border_fp32_sse_n4cx_impl(
     const int64_t ih_start,
     const int64_t ih_end,
     const int64_t padding_ih_len,
-    int32_t pooling_mode,
-    bool ceil_mode,
+    const bool exclusive_mode,
+    const bool ceil_mode,
     float *dst)
 {
     const int64_t &kernel_w = param->kernel_w;
@@ -360,9 +359,9 @@ static inline void averagepool2d_ndarray_border_fp32_sse_n4cx_impl(
 
     int64_t pool_len = 0;
 
-    if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE) {
+    if (exclusive_mode) {
         pool_len = (ih_end - ih_start) * (iw_end - iw_start);
-    } else if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_INCLUDE) {
+    } else {
         pool_len = padding_ih_len * (padded_iwend - padded_iwstart);
     }
 
@@ -386,8 +385,8 @@ static void averagepool2d_ndarray_1x4_kernel_fp32_sse_n4cx(
     const int64_t ih_start,
     const int64_t ih_end,
     const int64_t padding_ih_len,
-    int32_t pooling_mode,
-    bool ceil_mode,
+    const bool exclusive_mode,
+    const bool ceil_mode,
     float *dst)
 {
     const int64_t &kernel_w = param->kernel_w;
@@ -425,12 +424,12 @@ static void averagepool2d_ndarray_1x4_kernel_fp32_sse_n4cx(
     int64_t pool_len_1 = 0;
     int64_t pool_len_2 = 0;
     int64_t pool_len_3 = 0;
-    if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE) {
+    if (exclusive_mode) {
         pool_len   = (ih_end - ih_start) * (iw_end - iw_start);
         pool_len_1 = (ih_end - ih_start) * (iw_end_1 - iw_start_1);
         pool_len_2 = (ih_end - ih_start) * (iw_end_2 - iw_start_2);
         pool_len_3 = (ih_end - ih_start) * (iw_end_3 - iw_start_3);
-    } else if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_INCLUDE) {
+    } else {
         pool_len   = padding_ih_len * (padded_iwend - padded_iwstart);
         pool_len_1 = padding_ih_len * (padded_iwend_1 - padded_iwstart_1);
         pool_len_2 = padding_ih_len * (padded_iwend_2 - padded_iwstart_2);
@@ -463,7 +462,7 @@ static void averagepool2d_ndarray_1x4_kernel_fp32_sse_n4cx(
     if (w_len >= 4) _mm_storeu_ps(p_dst + 3 * C_BLK(), _mm_mul_ps(zmm03, vave_coeff_3));
 }
 
-typedef void (*averagepool2d_ndarray_kernel_fp32_sse_n4cx_funct)(const float *, const averagepool2d_param *, const int64_t, const int64_t, const int64_t, const int64_t, int32_t, bool, float *);
+typedef void (*averagepool2d_ndarray_kernel_fp32_sse_n4cx_funct)(const float *, const averagepool2d_param *, const int64_t, const int64_t, const int64_t, const int64_t, const bool, const bool, float *);
 static const averagepool2d_ndarray_kernel_fp32_sse_n4cx_funct averagepool2d_ndarray_1x4_kernel_n4cx_func_table[3][5]{
     {
         averagepool2d_ndarray_1x4_kernel_fp32_sse_n4cx<0, 0>,
@@ -489,8 +488,7 @@ static const averagepool2d_ndarray_kernel_fp32_sse_n4cx_funct averagepool2d_ndar
 
 };
 
-template <int32_t pooling_mode, bool ceil_mode>
-static ppl::common::RetCode averagepool2d_ndarray_fp32_sse_n4cx_impl(
+ppl::common::RetCode averagepool2d_ndarray_normal_fp32_sse(
     const ppl::nn::TensorShape *src_shape,
     const ppl::nn::TensorShape *dst_shape,
     const float *src,
@@ -500,6 +498,8 @@ static ppl::common::RetCode averagepool2d_ndarray_fp32_sse_n4cx_impl(
     const int64_t stride_w,
     const int64_t pad_h,
     const int64_t pad_w,
+    const bool exclusive_mode,
+    const bool ceil_mode,
     void *temp_buffer,
     float *dst)
 {
@@ -547,22 +547,22 @@ static ppl::common::RetCode averagepool2d_ndarray_fp32_sse_n4cx_impl(
 
             if (dst_kernel_start_w >= dst_kernel_end_w) {
                 for (int64_t ow = 0; ow < dst_w; ow++) {
-                    averagepool2d_ndarray_border_fp32_sse_n4cx_impl(p_src_c, &param, ow, ih_start, ih_end, padded_ihend - padded_ihstart, pooling_mode, ceil_mode, p_dst_c);
+                    averagepool2d_ndarray_border_fp32_sse_n4cx_impl(p_src_c, &param, ow, ih_start, ih_end, padded_ihend - padded_ihstart, exclusive_mode, ceil_mode, p_dst_c);
                 }
             } else {
                 int64_t ow = 0;
                 for (; ow < dst_kernel_start_w; ow++) {
-                    averagepool2d_ndarray_border_fp32_sse_n4cx_impl(p_src_c, &param, ow, ih_start, ih_end, padded_ihend - padded_ihstart, pooling_mode, ceil_mode, p_dst_c);
+                    averagepool2d_ndarray_border_fp32_sse_n4cx_impl(p_src_c, &param, ow, ih_start, ih_end, padded_ihend - padded_ihstart, exclusive_mode, ceil_mode, p_dst_c);
                 }
                 for (; ow + C_BLK() <= dst_kernel_end_w; ow += C_BLK()) {
-                    averagepool2d_ndarray_1x4_kernel_n4cx_func_table[stride_w_select][C_BLK()](p_src_c, &param, ow, ih_start, ih_end, padded_ihend - padded_ihstart, pooling_mode, ceil_mode, p_dst_c);
+                    averagepool2d_ndarray_1x4_kernel_n4cx_func_table[stride_w_select][C_BLK()](p_src_c, &param, ow, ih_start, ih_end, padded_ihend - padded_ihstart, exclusive_mode, ceil_mode, p_dst_c);
                 }
                 if (ow < dst_kernel_end_w) {
-                    averagepool2d_ndarray_1x4_kernel_n4cx_func_table[stride_w_select][dst_kernel_end_w - ow](p_src_c, &param, ow, ih_start, ih_end, padded_ihend - padded_ihstart, pooling_mode, ceil_mode, p_dst_c);
+                    averagepool2d_ndarray_1x4_kernel_n4cx_func_table[stride_w_select][dst_kernel_end_w - ow](p_src_c, &param, ow, ih_start, ih_end, padded_ihend - padded_ihstart, exclusive_mode, ceil_mode, p_dst_c);
                     ow = dst_kernel_end_w;
                 }
                 for (; ow < dst_w; ow++) {
-                    averagepool2d_ndarray_border_fp32_sse_n4cx_impl(p_src_c, &param, ow, ih_start, ih_end, padded_ihend - padded_ihstart, pooling_mode, ceil_mode, p_dst_c);
+                    averagepool2d_ndarray_border_fp32_sse_n4cx_impl(p_src_c, &param, ow, ih_start, ih_end, padded_ihend - padded_ihstart, exclusive_mode, ceil_mode, p_dst_c);
                 }
             }
             pooling2d_fp32_sse_dst_trans(p_dst_c, dst_w, c_eff, dst_hw, base_dst);
@@ -570,38 +570,6 @@ static ppl::common::RetCode averagepool2d_ndarray_fp32_sse_n4cx_impl(
         }
     }
     return ppl::common::RC_SUCCESS;
-}
-
-ppl::common::RetCode averagepool2d_ndarray_normal_fp32_sse(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
-    const float *src,
-    const int64_t kernel_h,
-    const int64_t kernel_w,
-    const int64_t stride_h,
-    const int64_t stride_w,
-    const int64_t pad_h,
-    const int64_t pad_w,
-    const int64_t pooling_mode,
-    const int64_t ceil_mode,
-    void *temp_buffer,
-    float *dst)
-{
-    if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE) {
-        if (ceil_mode) {
-            return averagepool2d_ndarray_fp32_sse_n4cx_impl<ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE, true>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, temp_buffer, dst);
-        } else {
-            return averagepool2d_ndarray_fp32_sse_n4cx_impl<ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_EXCLUDE, false>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, temp_buffer, dst);
-        }
-    } else if (pooling_mode == ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_INCLUDE) {
-        if (ceil_mode) {
-            return averagepool2d_ndarray_fp32_sse_n4cx_impl<ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_INCLUDE, true>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, temp_buffer, dst);
-        } else {
-            return averagepool2d_ndarray_fp32_sse_n4cx_impl<ppl::nn::onnx::PoolingParam::POOLING_AVERAGE_INCLUDE, false>(src_shape, dst_shape, src, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w, temp_buffer, dst);
-        }
-    }
-
-    return ppl::common::RC_INVALID_VALUE;
 }
 
 }}}; // namespace ppl::kernel::x86
