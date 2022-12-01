@@ -304,10 +304,10 @@ static __device__ inline half8_ ppl_arithmetic_vector_fp16(half8_ a, half8_ b)
     return res;
 }
 
-static void ppl_pad_tensor_shape(const ppl::nn::TensorShape *tensor_shape0,
-                          const ppl::nn::TensorShape *tensor_shape1,
-                          ppl::nn::TensorShape *pad_tensor_shape0,
-                          ppl::nn::TensorShape *pad_tensor_shape1) {
+static void ppl_pad_tensor_shape(const ppl::common::TensorShape *tensor_shape0,
+                          const ppl::common::TensorShape *tensor_shape1,
+                          ppl::common::TensorShape *pad_tensor_shape0,
+                          ppl::common::TensorShape *pad_tensor_shape1) {
     int max_dims = std::max(tensor_shape0->GetDimCount(), tensor_shape1->GetDimCount());
     if (pad_tensor_shape0->GetDimCount() < pad_tensor_shape1->GetDimCount()) {
         pad_tensor_shape0->SetDimCount(max_dims);
@@ -332,9 +332,9 @@ static void ppl_pad_tensor_shape(const ppl::nn::TensorShape *tensor_shape0,
     }
 }
 
-static void ppl_refine_tensor_shape(ppl::nn::TensorShape *input_shape0,
-                                    ppl::nn::TensorShape *input_shape1,
-                                    ppl::nn::TensorShape *output_shape) {
+static void ppl_refine_tensor_shape(ppl::common::TensorShape *input_shape0,
+                                    ppl::common::TensorShape *input_shape1,
+                                    ppl::common::TensorShape *output_shape) {
     int dim_count = output_shape->GetDimCount();
     int real_dim_count = dim_count;
     int c_dim_idx = 1;
@@ -369,8 +369,8 @@ static void ppl_refine_tensor_shape(ppl::nn::TensorShape *input_shape0,
     output_shape->SetDimCount(real_dim_count);
 }
 
-static bool ppl_can_one_not_broadcast(const ppl::nn::TensorShape *input_shape0,
-                                  const ppl::nn::TensorShape *input_shape1, int& axis) {
+static bool ppl_can_one_not_broadcast(const ppl::common::TensorShape *input_shape0,
+                                  const ppl::common::TensorShape *input_shape1, int& axis) {
     bool first_shorter = false;
     if (input_shape0->GetRealDimCount() != input_shape1->GetRealDimCount() ||
         input_shape0->CalcElementsExcludingPadding() == input_shape1->CalcElementsExcludingPadding()) {
@@ -382,7 +382,7 @@ static bool ppl_can_one_not_broadcast(const ppl::nn::TensorShape *input_shape0,
     int dim_count = input_shape0->GetDimCount();
     int not_one_cnt = 0;
     bool pre_not_one = false;
-    const ppl::nn::TensorShape* test_shape = first_shorter ? input_shape0 : input_shape1;
+    const ppl::common::TensorShape* test_shape = first_shorter ? input_shape0 : input_shape1;
     for (int i = 0; i < dim_count; ++i) {
         if (test_shape->GetDim(i) != 1 && !pre_not_one) {
             ++not_one_cnt;
@@ -397,11 +397,11 @@ static bool ppl_can_one_not_broadcast(const ppl::nn::TensorShape *input_shape0,
     return (not_one_cnt == 1);
 }
 
-static int ppl_get_num_broadcast_dims(const ppl::nn::TensorShape *tensor_shape0,
-                            const ppl::nn::TensorShape *tensor_shape1,
+static int ppl_get_num_broadcast_dims(const ppl::common::TensorShape *tensor_shape0,
+                            const ppl::common::TensorShape *tensor_shape1,
                             int &aixs, bool &bidirectional) {
-    ppl::nn::TensorShape pad_tensor_shape0 = *tensor_shape0;
-    ppl::nn::TensorShape pad_tensor_shape1 = *tensor_shape1;
+    ppl::common::TensorShape pad_tensor_shape0 = *tensor_shape0;
+    ppl::common::TensorShape pad_tensor_shape1 = *tensor_shape1;
     ppl_pad_tensor_shape(tensor_shape0, tensor_shape1,
             &pad_tensor_shape0, &pad_tensor_shape1);
     int dim_count = pad_tensor_shape0.GetDimCount();
@@ -425,13 +425,13 @@ static int ppl_get_num_broadcast_dims(const ppl::nn::TensorShape *tensor_shape0,
 }
 
 bool ppl_feature_broadcast(
-    const ppl::nn::TensorShape *tensor_shape0,
-    const ppl::nn::TensorShape *tensor_shape1,
+    const ppl::common::TensorShape *tensor_shape0,
+    const ppl::common::TensorShape *tensor_shape1,
     int *axis) 
 {
     bool bidirectional = false;
-    ppl::nn::TensorShape pad_tensor_shape0 = *tensor_shape0;
-    ppl::nn::TensorShape pad_tensor_shape1 = *tensor_shape1;
+    ppl::common::TensorShape pad_tensor_shape0 = *tensor_shape0;
+    ppl::common::TensorShape pad_tensor_shape1 = *tensor_shape1;
     ppl_pad_tensor_shape(tensor_shape0, tensor_shape1,
             &pad_tensor_shape0, &pad_tensor_shape1);
     int dim_count = pad_tensor_shape0.GetDimCount();
@@ -455,16 +455,16 @@ bool ppl_feature_broadcast(
     return !bidirectional && (num_broadcast_dims == dim_count - *axis) && (dim_count > 2) && (*axis == 2);
 }
 void ppl_arithmetic_prepare_strides(
-    const ppl::nn::TensorShape *tensor_shape0,
-    const ppl::nn::TensorShape *tensor_shape1,
-    const ppl::nn::TensorShape *tensor_shape_out,
+    const ppl::common::TensorShape *tensor_shape0,
+    const ppl::common::TensorShape *tensor_shape1,
+    const ppl::common::TensorShape *tensor_shape_out,
     const int packed_channel,
     uint32_t *stride_in0,
     uint32_t *stride_in1,
     uint32_t *stride_out)
 {
-    ppl::nn::TensorShape pad_tensor_shape0 = *tensor_shape0;
-    ppl::nn::TensorShape pad_tensor_shape1 = *tensor_shape1;
+    ppl::common::TensorShape pad_tensor_shape0 = *tensor_shape0;
+    ppl::common::TensorShape pad_tensor_shape1 = *tensor_shape1;
     ppl_pad_tensor_shape(tensor_shape0, tensor_shape1,
             &pad_tensor_shape0, &pad_tensor_shape1);
 
@@ -490,9 +490,9 @@ void ppl_arithmetic_prepare_strides(
 }
 
 void ppl_arithmetic_prepare_strides_nhwc(
-    const ppl::nn::TensorShape *tensor_shape0,
-    const ppl::nn::TensorShape *tensor_shape1,
-    const ppl::nn::TensorShape *tensor_shape_out,
+    const ppl::common::TensorShape *tensor_shape0,
+    const ppl::common::TensorShape *tensor_shape1,
+    const ppl::common::TensorShape *tensor_shape_out,
     const int packed_channel,
     uint32_t *stride_in0,
     uint32_t *stride_in1,
@@ -500,8 +500,8 @@ void ppl_arithmetic_prepare_strides_nhwc(
     int suppled_channel = 1)
 {
     if (tensor_shape0->GetDimCount() < 2 || tensor_shape1->GetDimCount() < 2) return;
-    ppl::nn::TensorShape pad_tensor_shape0 = *tensor_shape0;
-    ppl::nn::TensorShape pad_tensor_shape1 = *tensor_shape1;
+    ppl::common::TensorShape pad_tensor_shape0 = *tensor_shape0;
+    ppl::common::TensorShape pad_tensor_shape1 = *tensor_shape1;
     ppl_pad_tensor_shape(tensor_shape0, tensor_shape1,
             &pad_tensor_shape0, &pad_tensor_shape1);
 
@@ -531,7 +531,7 @@ void ppl_arithmetic_prepare_strides_nhwc(
 }
 
 static void calculate_nhwc_stride(uint32_t *strides,
-    const ppl::nn::TensorShape *tensor_shape, int max_dim_count, int packed_channel) {
+    const ppl::common::TensorShape *tensor_shape, int max_dim_count, int packed_channel) {
     if (tensor_shape->IsScalar()) {
         for(int i = 0; i < max_dim_count; ++i) strides[i] = 0;
         return;
@@ -554,9 +554,9 @@ static void calculate_nhwc_stride(uint32_t *strides,
 }
 
 void ppl_arithmetic_prepare_strides_limit_nhwc(
-    const ppl::nn::TensorShape *tensor_shape0,
-    const ppl::nn::TensorShape *tensor_shape1,
-    const ppl::nn::TensorShape *tensor_shape_out,
+    const ppl::common::TensorShape *tensor_shape0,
+    const ppl::common::TensorShape *tensor_shape1,
+    const ppl::common::TensorShape *tensor_shape_out,
     const int packed_channel,
     uint32_t *stride_in0,
     uint32_t *stride_in1,
@@ -876,11 +876,11 @@ __global__ void ppl_cukernel_arithmetic_one_broadcast_int8(
 template<ArithmeticOpType op_type, typename T>
 ppl::common::RetCode PPLCUDAArithMeticForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
+    const ppl::common::TensorShape* input_shape0,
     const T *input0,
-    const ppl::nn::TensorShape* input_shape1,
+    const ppl::common::TensorShape* input_shape1,
     const T *input1,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     T *output) {
     uint64_t num_elems = output_shape->CalcElementsIncludingPadding();
     int dim_count = output_shape->GetDimCount();
@@ -984,11 +984,11 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImp(
 template<ArithmeticOpType op_type, typename T>
 ppl::common::RetCode PPLCUDAArithMeticForwardImpInt8(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
+    const ppl::common::TensorShape* input_shape0,
     const T *input0,
-    const ppl::nn::TensorShape* input_shape1,
+    const ppl::common::TensorShape* input_shape1,
     const T *input1,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     T *output,
     float in_scale0 = 0,
     float in_scale1 = 0,
@@ -1072,21 +1072,21 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImpInt8(
 #define INSTANT(OPTYPE) \
 ppl::common::RetCode PPLCUDAArithMetic##OPTYPE##ForwardImp( \
     cudaStream_t stream, \
-    const ppl::nn::TensorShape* input_shape0_ref, \
+    const ppl::common::TensorShape* input_shape0_ref, \
     const void *input0, \
-    const ppl::nn::TensorShape* input_shape1_ref, \
+    const ppl::common::TensorShape* input_shape1_ref, \
     const void *input1, \
-    const ppl::nn::TensorShape* output_shape_ref, \
+    const ppl::common::TensorShape* output_shape_ref, \
     void *output, \
     float in_scale0, \
     float in_scale1, \
     float out_scale) { \
-    ppl::nn::TensorShape input_shape0_obj = *input_shape0_ref; \
-    ppl::nn::TensorShape input_shape1_obj = *input_shape1_ref; \
-    ppl::nn::TensorShape output_shape_obj = *output_shape_ref; \
-    ppl::nn::TensorShape* input_shape0 = &input_shape0_obj; \
-    ppl::nn::TensorShape* input_shape1 = &input_shape1_obj; \
-    ppl::nn::TensorShape* output_shape = &output_shape_obj; \
+    ppl::common::TensorShape input_shape0_obj = *input_shape0_ref; \
+    ppl::common::TensorShape input_shape1_obj = *input_shape1_ref; \
+    ppl::common::TensorShape output_shape_obj = *output_shape_ref; \
+    ppl::common::TensorShape* input_shape0 = &input_shape0_obj; \
+    ppl::common::TensorShape* input_shape1 = &input_shape1_obj; \
+    ppl::common::TensorShape* output_shape = &output_shape_obj; \
     if (input_shape0->GetDimCount() == input_shape1->GetDimCount() && input_shape0->GetDimCount() > 3 \
         && (input_shape0->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY)) { \
         ppl_refine_tensor_shape(input_shape0, input_shape1, output_shape); } \
@@ -1118,11 +1118,11 @@ ppl::common::RetCode PPLCUDAArithMetic##OPTYPE##ForwardImp( \
 template<ArithmeticOpType op_type, typename T>
 ppl::common::RetCode PPLCUDAArithMeticForwardImpLimitNhwc(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
+    const ppl::common::TensorShape* input_shape0,
     const T *input0,
-    const ppl::nn::TensorShape* input_shape1,
+    const ppl::common::TensorShape* input_shape1,
     const T *input1,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     T *output) {
     uint64_t num_elems = output_shape->CalcElementsExcludingPadding(); // only effective value calculated
     int dim_count = output_shape->GetDimCount();
@@ -1151,11 +1151,11 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImpLimitNhwc(
 template<ArithmeticOpType op_type, typename T>
 ppl::common::RetCode PPLCUDAArithMeticForwardImpLimitNhwcInt8(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
+    const ppl::common::TensorShape* input_shape0,
     const T *input0,
-    const ppl::nn::TensorShape* input_shape1,
+    const ppl::common::TensorShape* input_shape1,
     const T *input1,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     T *output,
     float in_scale0,
     float in_scale1,
@@ -1189,21 +1189,21 @@ ppl::common::RetCode PPLCUDAArithMeticForwardImpLimitNhwcInt8(
 #define INSTANT_LIMNHWC(OPTYPE) \
 ppl::common::RetCode PPLCUDAArithMetic##OPTYPE##ForwardImp( \
     cudaStream_t stream, \
-    const ppl::nn::TensorShape* input_shape0_ref, \
+    const ppl::common::TensorShape* input_shape0_ref, \
     const void *input0, \
-    const ppl::nn::TensorShape* input_shape1_ref, \
+    const ppl::common::TensorShape* input_shape1_ref, \
     const void *input1, \
-    const ppl::nn::TensorShape* output_shape_ref, \
+    const ppl::common::TensorShape* output_shape_ref, \
     void *output, \
     float in_scale0, \
     float in_scale1, \
     float out_scale) { \
-    ppl::nn::TensorShape input_shape0_obj = *input_shape0_ref; \
-    ppl::nn::TensorShape input_shape1_obj = *input_shape1_ref; \
-    ppl::nn::TensorShape output_shape_obj = *output_shape_ref; \
-    ppl::nn::TensorShape* input_shape0 = &input_shape0_obj; \
-    ppl::nn::TensorShape* input_shape1 = &input_shape1_obj; \
-    ppl::nn::TensorShape* output_shape = &output_shape_obj; \
+    ppl::common::TensorShape input_shape0_obj = *input_shape0_ref; \
+    ppl::common::TensorShape input_shape1_obj = *input_shape1_ref; \
+    ppl::common::TensorShape output_shape_obj = *output_shape_ref; \
+    ppl::common::TensorShape* input_shape0 = &input_shape0_obj; \
+    ppl::common::TensorShape* input_shape1 = &input_shape1_obj; \
+    ppl::common::TensorShape* output_shape = &output_shape_obj; \
     if (input_shape0->GetDimCount() == input_shape1->GetDimCount() && input_shape0->GetDimCount() > 3 \
         && (input_shape0->GetDataFormat() == ppl::common::DATAFORMAT_NDARRAY)) { \
         ppl_refine_tensor_shape(input_shape0, input_shape1, output_shape); } \

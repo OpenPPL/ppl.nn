@@ -30,8 +30,8 @@ ppl::common::RetCode flatten_nbcx(
     const T* src,
     T* dst,
 
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape)
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape)
 {
     if (src_shape->GetDimCount() != 4) {
         return ppl::common::RC_UNSUPPORTED;

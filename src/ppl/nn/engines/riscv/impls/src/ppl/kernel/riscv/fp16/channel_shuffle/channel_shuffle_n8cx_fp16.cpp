@@ -54,7 +54,7 @@ inline void channel_shuffle_n8cx_kernel(
 }
 
 ppl::common::RetCode channel_shuffle_n8cx_fp16(
-    const ppl::nn::TensorShape* src_shape,
+    const ppl::common::TensorShape* src_shape,
     const __fp16* src,
     const int32_t group,
     __fp16* dst)
@@ -127,8 +127,8 @@ inline void channel_shuffle_n8cx_concat_split_kernel(
 }
 
 ppl::common::RetCode channel_shuffle_n8cx_concat_split_fp16(
-    const ppl::nn::TensorShape* src0_shape,
-    const ppl::nn::TensorShape* src1_shape,
+    const ppl::common::TensorShape* src0_shape,
+    const ppl::common::TensorShape* src1_shape,
     const __fp16* src0,
     const __fp16* src1,
     const int32_t group,

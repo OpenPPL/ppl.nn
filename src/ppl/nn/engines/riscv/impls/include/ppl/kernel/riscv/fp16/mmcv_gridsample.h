@@ -23,8 +23,8 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode mmcv_gridsample_bilinear_n8cx_fp16(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* grid_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* grid_shape,
     const __fp16* src,
     const float* grid,
     const bool align_corners,

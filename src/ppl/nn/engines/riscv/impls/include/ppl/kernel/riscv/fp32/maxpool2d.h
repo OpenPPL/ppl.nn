@@ -22,8 +22,8 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode maxpool2d_n4cx_1x16_fp32(const ppl::nn::TensorShape* src_shape,
-                                              const ppl::nn::TensorShape* dst_shape,
+ppl::common::RetCode maxpool2d_n4cx_1x16_fp32(const ppl::common::TensorShape* src_shape,
+                                              const ppl::common::TensorShape* dst_shape,
                                               const int32_t kernel_h,
                                               const int32_t kernel_w,
                                               const int32_t stride_h,
@@ -34,8 +34,8 @@ ppl::common::RetCode maxpool2d_n4cx_1x16_fp32(const ppl::nn::TensorShape* src_sh
                                               const float* src,
                                               float* dst);
 
-ppl::common::RetCode maxpool2d_nchw_normal_fp32(const ppl::nn::TensorShape* src_shape,
-                                                const ppl::nn::TensorShape* dst_shape,
+ppl::common::RetCode maxpool2d_nchw_normal_fp32(const ppl::common::TensorShape* src_shape,
+                                                const ppl::common::TensorShape* dst_shape,
                                                 const int32_t kernel_h,
                                                 const int32_t kernel_w,
                                                 const int32_t stride_h,

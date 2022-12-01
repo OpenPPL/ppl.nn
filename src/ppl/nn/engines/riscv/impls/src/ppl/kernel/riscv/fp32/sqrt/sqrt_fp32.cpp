@@ -22,7 +22,7 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode sqrt_fp32(
-    const ppl::nn::TensorShape* src_shape,
+    const ppl::common::TensorShape* src_shape,
     const float* src,
     float* dst)
 {

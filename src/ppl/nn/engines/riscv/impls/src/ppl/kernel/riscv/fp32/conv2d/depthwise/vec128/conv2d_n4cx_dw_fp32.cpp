@@ -403,7 +403,7 @@ ppl::common::RetCode conv2d_n4cx_dw_fp32_offline_manager::fast_init_tunning_para
     return ppl::common::RC_SUCCESS;
 }
 
-ppl::common::RetCode conv2d_n4cx_dw_fp32_offline_manager::pick_best_tunning_param(const float* src, const float* filter, float* dst, ppl::nn::TensorShape& src_shape, ppl::nn::TensorShape& dst_shape)
+ppl::common::RetCode conv2d_n4cx_dw_fp32_offline_manager::pick_best_tunning_param(const float* src, const float* filter, float* dst, ppl::common::TensorShape& src_shape, ppl::common::TensorShape& dst_shape)
 {
     return ppl::common::RC_SUCCESS;
 }

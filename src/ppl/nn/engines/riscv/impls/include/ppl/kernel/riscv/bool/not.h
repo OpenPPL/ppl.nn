@@ -23,7 +23,7 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode not_bool(
-    const ppl::nn::TensorShape* src_shape,
+    const ppl::common::TensorShape* src_shape,
     const uint8_t* src,
     uint8_t* dst);
 

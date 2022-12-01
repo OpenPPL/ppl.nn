@@ -490,8 +490,8 @@ ppl::common::RetCode conv2d_n4cx_gemm_fp32_offline_manager::pick_best_tunning_pa
     const float* src,
     const float* filter,
     float* dst,
-    ppl::nn::TensorShape& src_shape,
-    ppl::nn::TensorShape& dst_shape)
+    ppl::common::TensorShape& src_shape,
+    ppl::common::TensorShape& dst_shape)
 {
     return ppl::common::RC_SUCCESS;
 }

@@ -129,8 +129,8 @@ void reduce_n4cx_recursive_fp32(
     const float* src,
     float* dst,
 
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const int64_t dim_idx,
     const int64_t* inc_src,
     const int64_t* inc_dst,
@@ -176,8 +176,8 @@ ppl::common::RetCode reduce_n4cx_fp32(
     const float* src,
     float* dst,
 
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const int32_t* axes,
     const int32_t num_axes,
     const int64_t c_dim_idx)
@@ -186,7 +186,7 @@ ppl::common::RetCode reduce_n4cx_fp32(
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    ppl::nn::TensorShape& padded_dst_shape = *(new ppl::nn::TensorShape(*src_shape));
+    ppl::common::TensorShape& padded_dst_shape = *(new ppl::common::TensorShape(*src_shape));
     for (int64_t i = 0; i < num_axes; i++) {
         padded_dst_shape.SetDim(axes[i], 1);
     }

@@ -81,8 +81,8 @@ inline float32xm1_t vfaddvv<float32xm1_t, float>(float32xm1_t va, float32xm1_t v
 
 template <typename eT, typename T, int32_t c_blk>
 ppl::common::RetCode resize2d_nbcx_pytorch_linear_floor_common(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const T* src,
     const float scale_h,
     const float scale_w,
@@ -171,8 +171,8 @@ ppl::common::RetCode resize2d_nbcx_pytorch_linear_floor_common(
 
 template <typename eT, typename T, int32_t c_blk>
 ppl::common::RetCode resize2d_nbcx_asymmetric_nearest_floor_common(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const T* src,
     const float scale_h,
     const float scale_w,

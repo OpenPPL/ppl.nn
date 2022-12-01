@@ -64,7 +64,7 @@ public:
     bool is_supported() override;
     ppl::common::RetCode gen_cvt_weights(const __fp16* filter, const __fp16* bias) override;
     ppl::common::RetCode fast_init_tunning_param() override;
-    ppl::common::RetCode pick_best_tunning_param(const __fp16* src, const __fp16* filter, __fp16* dst, ppl::nn::TensorShape& src_shape, ppl::nn::TensorShape& dst_shape) override;
+    ppl::common::RetCode pick_best_tunning_param(const __fp16* src, const __fp16* filter, __fp16* dst, ppl::common::TensorShape& src_shape, ppl::common::TensorShape& dst_shape) override;
 
     conv2d_base_runtime_executor* gen_executor() override
     {

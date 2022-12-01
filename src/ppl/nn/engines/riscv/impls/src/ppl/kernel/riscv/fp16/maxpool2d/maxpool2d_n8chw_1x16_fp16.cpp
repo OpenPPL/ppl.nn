@@ -215,8 +215,8 @@ static inline void maxpool2d_n8chw_border_fp16(
 }
 
 ppl::common::RetCode maxpool2d_n8chw_1x16_fp16(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const int32_t kernel_h,
     const int32_t kernel_w,
     const int32_t stride_h,

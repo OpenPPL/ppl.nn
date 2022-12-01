@@ -26,8 +26,8 @@ namespace ppl { namespace kernel { namespace riscv {
 
 template <bool align_corners, grid_sample_padding padding_mode>
 ppl::common::RetCode mmcv_gridsample_bilinear_n4cx_fp32_kernel(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* grid_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* grid_shape,
     const float* src,
     const float* grid,
     float* dst)
@@ -90,8 +90,8 @@ ppl::common::RetCode mmcv_gridsample_bilinear_n4cx_fp32_kernel(
 }
 
 ppl::common::RetCode mmcv_gridsample_bilinear_n4cx_fp32(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* grid_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* grid_shape,
     const float* src,
     const float* grid,
     const bool align_corners,

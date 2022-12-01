@@ -421,9 +421,9 @@ static ppl::common::RetCode arithmetic_broadcast_n4cx_fp32(
     const float* src1,
     float* dst,
 
-    const ppl::nn::TensorShape* src0_shape,
-    const ppl::nn::TensorShape* src1_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src0_shape,
+    const ppl::common::TensorShape* src1_shape,
+    const ppl::common::TensorShape* dst_shape,
     const int64_t c_dim_dix)
 {
     // pad 1 to input's high dims

@@ -79,7 +79,7 @@ struct parallel_block {
     int64_t idx[PPL_RISCV_TENSOR_MAX_DIMS()];
 };
 
-inline void pad_shape(const ppl::nn::TensorShape* shape, const int64_t padded_dim_count, int64_t* padded_shape)
+inline void pad_shape(const ppl::common::TensorShape* shape, const int64_t padded_dim_count, int64_t* padded_shape)
 {
     const int64_t dim_diff = padded_dim_count - shape->GetRealDimCount();
     for (int64_t i = 0; i < dim_diff; i++) {

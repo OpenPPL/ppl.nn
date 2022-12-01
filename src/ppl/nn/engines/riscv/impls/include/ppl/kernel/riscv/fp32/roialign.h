@@ -23,9 +23,9 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode roialign_ndarray_fp32(
-    const ppl::nn::TensorShape *input_shape,
-    const ppl::nn::TensorShape *rois_shape,
-    const ppl::nn::TensorShape *batch_indices_shape,
+    const ppl::common::TensorShape *input_shape,
+    const ppl::common::TensorShape *rois_shape,
+    const ppl::common::TensorShape *batch_indices_shape,
     const float *input,
     const float *rois,
     const int64_t *batch_indices,

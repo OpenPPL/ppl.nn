@@ -23,7 +23,7 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode leaky_relu_n8cx_fp16(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const __fp16 *src,
     const float alpha,
     __fp16 *dst);

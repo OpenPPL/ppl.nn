@@ -19,7 +19,7 @@
 #include "cudakernel/nn/topk.h"
 #include "cudakernel/math/math.h"
 #include "cudakernel/common/common.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include <cuda_fp16.h>
 #include <float.h>
 #include <memory>
@@ -260,12 +260,12 @@ void MMCVNMSGpuImpl(
     }
 }
 
-int64_t PPLMMCVNMSGetTempBufferSize(const ppl::nn::TensorShape *boxes_shape)
+int64_t PPLMMCVNMSGetTempBufferSize(const ppl::common::TensorShape *boxes_shape)
 {
     int64_t total_size = 0;
     int elem_size      = ppl::common::GetSizeOfDataType(boxes_shape->GetDataType());
     int num_boxes      = boxes_shape->GetDim(0);
-    ppl::nn::TensorShape indices_shape;
+    ppl::common::TensorShape indices_shape;
     indices_shape.SetDataType(ppl::common::DATATYPE_INT64); // max int64
     indices_shape.Reshape({num_boxes});
     int axis = 0;
@@ -288,11 +288,11 @@ int64_t PPLMMCVNMSGetTempBufferSize(const ppl::nn::TensorShape *boxes_shape)
 ppl::common::RetCode PPLCUDAMMCVNMSForwardImp(
     const cudaDeviceProp& device_prop,
     cudaStream_t stream,
-    ppl::nn::TensorShape *boxes_shape,
+    ppl::common::TensorShape *boxes_shape,
     const void *boxes,
-    ppl::nn::TensorShape *scores_shape,
+    ppl::common::TensorShape *scores_shape,
     const void *scores,
-    ppl::nn::TensorShape *output_shape,
+    ppl::common::TensorShape *output_shape,
     int64_t *output,
     void *temp_buffer,
     int64_t temp_buffer_bytes,
@@ -306,10 +306,10 @@ ppl::common::RetCode PPLCUDAMMCVNMSForwardImp(
     int max_shared_mem = device_prop.sharedMemPerBlock;
 
     // temp buffer for sort & nms & construct
-    ppl::nn::TensorShape topk_shape;
+    ppl::common::TensorShape topk_shape;
     topk_shape.SetDataType(scores_shape->GetDataType());
     topk_shape.Reshape({num_boxes});
-    ppl::nn::TensorShape indices_shape;
+    ppl::common::TensorShape indices_shape;
     indices_shape.SetDataType(ppl::common::DATATYPE_INT32);
     indices_shape.Reshape({num_boxes});
     int axis                = 0;

@@ -18,7 +18,7 @@
 #include "cudakernel/memory/where.h"
 #include "cudakernel/common/memory_utils.h"
 #include "cudakernel/common/divmod_fast.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 
@@ -67,13 +67,13 @@ __global__ void ppl_cukernel_where_vec_no_broadcast(
 
 ppl::common::RetCode WhereForwardImpNoBroadcast(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* condition_shape,
+    const ppl::common::TensorShape* condition_shape,
     const bool* condition,
-    const ppl::nn::TensorShape* input_x_shape,
+    const ppl::common::TensorShape* input_x_shape,
     const void* input_x,
-    const ppl::nn::TensorShape* input_y_shape,
+    const ppl::common::TensorShape* input_y_shape,
     const void* input_y,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output)
 {
     int64_t num_elems = output_shape->CalcElementsIncludingPadding();
@@ -144,13 +144,13 @@ __global__ void ppl_cukernel_where_simple_broadcast(
 template <BroadcastType C_BType, BroadcastType X_BType, BroadcastType Y_BType>
 ppl::common::RetCode WhereForwardImpSimpleBroadcast(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* condition_shape,
+    const ppl::common::TensorShape* condition_shape,
     const bool* condition,
-    const ppl::nn::TensorShape* input_x_shape,
+    const ppl::common::TensorShape* input_x_shape,
     const void* input_x,
-    const ppl::nn::TensorShape* input_y_shape,
+    const ppl::common::TensorShape* input_y_shape,
     const void* input_y,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output)
 {
     int64_t num_elems = output_shape->CalcElementsIncludingPadding();
@@ -224,7 +224,7 @@ ppl::common::RetCode WhereForwardImpComplexBroadcast(
     GArray<int64_t> input_y_strides,
     const void* input_y,
     GArray<DivModFast> output_strides_fast,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output)
 {
     int64_t num_elems = output_shape->CalcElementsIncludingPadding();
@@ -265,13 +265,13 @@ BroadcastType GetBroadcastType(int64_t test_num, int64_t ref_num)
 
 ppl::common::RetCode PPLCUDAWhereForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* condition_shape,
+    const ppl::common::TensorShape* condition_shape,
     const bool* condition,
-    const ppl::nn::TensorShape* input_x_shape,
+    const ppl::common::TensorShape* input_x_shape,
     const void* input_x,
-    const ppl::nn::TensorShape* input_y_shape,
+    const ppl::common::TensorShape* input_y_shape,
     const void* input_y,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output)
 {
     int64_t num_condition_elems = condition_shape->CalcElementsIncludingPadding();
@@ -344,7 +344,7 @@ ppl::common::RetCode PPLCUDAWhereForwardImp(
         GArray<int64_t> input_x_strides(num_dims);
         GArray<int64_t> input_y_strides(num_dims);
 
-        ppl::nn::TensorShape temp_condition_shape = *condition_shape;
+        ppl::common::TensorShape temp_condition_shape = *condition_shape;
         if (temp_condition_shape.GetDimCount() < num_dims) {
             int old_dims = temp_condition_shape.GetDimCount();
             temp_condition_shape.SetDimCount(num_dims);
@@ -353,7 +353,7 @@ ppl::common::RetCode PPLCUDAWhereForwardImp(
             }
         }
 
-        ppl::nn::TensorShape temp_input_x_shape = *input_x_shape;
+        ppl::common::TensorShape temp_input_x_shape = *input_x_shape;
         if (temp_input_x_shape.GetDimCount() < num_dims) {
             int old_dims = temp_input_x_shape.GetDimCount();
             temp_input_x_shape.SetDimCount(num_dims);
@@ -362,7 +362,7 @@ ppl::common::RetCode PPLCUDAWhereForwardImp(
             }
         }
 
-        ppl::nn::TensorShape temp_input_y_shape = *input_y_shape;
+        ppl::common::TensorShape temp_input_y_shape = *input_y_shape;
         if (temp_input_x_shape.GetDimCount() < num_dims) {
             int old_dims = temp_input_y_shape.GetDimCount();
             temp_input_y_shape.SetDimCount(num_dims);

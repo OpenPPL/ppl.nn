@@ -26,7 +26,7 @@ namespace ppl { namespace kernel { namespace riscv {
 #define C_BLK() ((int64_t)2)
 
 template <arithmetic_op_type_t _op, bool fuse_relu>
-static ppl::common::RetCode arithmetic_eltwise_scalar_int64(const ppl::nn::TensorShape* dst_shape, const int64_t* src0, const int64_t* src1, int64_t* dst)
+static ppl::common::RetCode arithmetic_eltwise_scalar_int64(const ppl::common::TensorShape* dst_shape, const int64_t* src0, const int64_t* src1, int64_t* dst)
 {
     const int64_t total_len = dst_shape->CalcElementsIncludingPadding();
     for (int64_t i = 0; i < total_len; i += 1) {
@@ -40,7 +40,7 @@ static ppl::common::RetCode arithmetic_eltwise_scalar_int64(const ppl::nn::Tenso
 }
 
 template <arithmetic_op_type_t _op, bool fuse_relu>
-static ppl::common::RetCode arithmetic_eltwise_int64(const ppl::nn::TensorShape* dst_shape, const int64_t* src0, const int64_t* src1, int64_t* dst)
+static ppl::common::RetCode arithmetic_eltwise_int64(const ppl::common::TensorShape* dst_shape, const int64_t* src0, const int64_t* src1, int64_t* dst)
 {
     const int64_t total_len  = dst_shape->CalcElementsIncludingPadding();
     const int64_t parall_d   = 16;

@@ -24,7 +24,7 @@
 #include <cuda.h>
 #include "ppl/common/types.h"
 #include "ppl/common/retcode.h"
-#include "ppl/nn/engines/cuda/cuda_device.h"
+//#include "ppl/nn/engines/cuda/cuda_device.h"
 
 struct conv_param_t {
     int in_height;
@@ -89,7 +89,6 @@ struct algo_param_t {
             algo_name         = "nv2spkSm80Fp16Conv_hmma1688_nhwc_f1_b16x8_w16x8_k8_s8_buf1";
         }
         algo_type             = "TuringIMMAImpgemm";
-        conv_type             = "2spk";
         mma_shape             = "hmma1688";
         tiles.m_cta           = 16;
         tiles.n_cta           = 8;

@@ -466,8 +466,8 @@ ppl::common::RetCode conv2d_n8cx_gemm_fp16_offline_manager::pick_best_tunning_pa
     const __fp16* src,
     const __fp16* filter,
     __fp16* dst,
-    ppl::nn::TensorShape& src_shape,
-    ppl::nn::TensorShape& dst_shape)
+    ppl::common::TensorShape& src_shape,
+    ppl::common::TensorShape& dst_shape)
 {
     return ppl::common::RC_SUCCESS;
 }

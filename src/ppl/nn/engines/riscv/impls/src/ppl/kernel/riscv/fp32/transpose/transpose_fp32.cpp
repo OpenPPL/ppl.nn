@@ -24,8 +24,8 @@ ppl::common::RetCode transpose_ndarray_fp32(
     float* dst,
 
     const int32_t* perm,
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape)
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape)
 {
     return transpose_ndarray<float>(src, dst, perm, src_shape, dst_shape);
 }
@@ -34,7 +34,7 @@ ppl::common::RetCode transpose_ndarray_continous2d_fp32(
     const float* src,
     float* dst,
 
-    const ppl::nn::TensorShape* src_shape,
+    const ppl::common::TensorShape* src_shape,
     const uint32_t axis0,
     const uint32_t axis1)
 {

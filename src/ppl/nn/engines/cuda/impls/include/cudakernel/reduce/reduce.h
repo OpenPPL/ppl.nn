@@ -20,7 +20,7 @@
 #include "cudakernel/reduce/reduce_helper.h"
 #include "ppl/nn/engines/cuda/params/quant_param_cuda.h"
 #include "ppl/common/retcode.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 
 ReduceMode pplGetReduceMode(PPLReduceDimDes des);
 
@@ -28,9 +28,9 @@ ppl::common::RetCode PPLCUDAReduceForwardImp(
     cudaStream_t stream,
     ReduceParam param,
     PPLReduceDimDes des,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output,
     void* tmp_buffer = nullptr,
     const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);

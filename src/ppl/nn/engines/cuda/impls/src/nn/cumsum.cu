@@ -236,7 +236,7 @@ __global__ void ScanWithBaseSumSinglePass(const T* input,
 ppl::common::RetCode PPLCUDACumsumForwardImp(
     cudaStream_t stream,
     int axis,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
     void* output)
 {

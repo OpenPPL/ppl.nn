@@ -22,8 +22,8 @@ namespace ppl { namespace kernel { namespace riscv {
 
 template <typename srcT, typename dstT>
 ppl::common::RetCode cast_kernel(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const srcT* src,
     dstT* dst)
 {
@@ -44,8 +44,8 @@ ppl::common::RetCode cast_kernel(
 }
 
 ppl::common::RetCode cast(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const void* src,
     void* dst)
 {

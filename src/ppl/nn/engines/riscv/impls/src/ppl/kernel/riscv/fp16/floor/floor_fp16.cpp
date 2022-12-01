@@ -21,7 +21,7 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode floor_fp16(
-    const ppl::nn::TensorShape* src_shape,
+    const ppl::common::TensorShape* src_shape,
     const __fp16* src,
     __fp16* dst)
 {

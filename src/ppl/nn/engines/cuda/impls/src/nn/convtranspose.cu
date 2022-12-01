@@ -28,7 +28,7 @@
 #include <cuda_fp16.h>
 #else
 #include "ppl/nn/params/onnx/convtranspose_param.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
 #include "ppl/nn/engines/cuda/module/cuda_module.h"
@@ -41,7 +41,7 @@
 
 
 uint64_t PPLConvTransposeGetFilterBufSizeCudaFp16(
-    const ppl::nn::TensorShape* weight_shape)
+    const ppl::common::TensorShape* weight_shape)
 {
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     int M = weight_shape->GetDim(1);
@@ -60,8 +60,8 @@ uint64_t PPLConvTransposeGetFilterBufSizeCudaFp16(
 }
 
 uint64_t PPLConvTransposeGetCompilationBufSizeCuda(
-    ppl::nn::TensorShape* input_shape,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* input_shape,
+    ppl::common::TensorShape* output_shape,
     const ppl::nn::onnx::ConvTransposeParam* param)
 {
     uint64_t size = 0;
@@ -129,8 +129,8 @@ uint64_t PPLConvTransposeGetCompilationBufSizeCuda(
 
 
 uint64_t PPLConvTransposeGetBufSizeCuda(
-    ppl::nn::TensorShape* input_shape,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* input_shape,
+    ppl::common::TensorShape* output_shape,
     const ppl::nn::onnx::ConvTransposeParam* param)
 {
     uint64_t size = 0;
@@ -431,7 +431,7 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
     const void* in_filter,
     void* temp_buffer,
     void* out_filter,
-    const ppl::nn::TensorShape* filter_shape,
+    const ppl::common::TensorShape* filter_shape,
     const ppl::nn::onnx::ConvTransposeParam* param)
 {
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
@@ -455,7 +455,7 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
     trans_param.perm.push_back(1);
     trans_param.perm.push_back(0);
 
-    ppl::nn::TensorShape a_shape, out_a_shape;
+    ppl::common::TensorShape a_shape, out_a_shape;
     a_shape.SetDataType(filter_shape->GetDataType());
     out_a_shape.SetDataType(filter_shape->GetDataType());
     a_shape.Reshape({K, M});
@@ -513,11 +513,11 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
     const cudaDeviceProp& device_prop,
     cudaStream_t stream,
     const CUfunction function,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const void* input,
     const void* rev_flt,
     const void* bias,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output,
     const ppl::nn::onnx::ConvTransposeParam* param,
     algo_param_t algo_param,
@@ -586,7 +586,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
             gemm_param.transB    = 1;
             gemm_param.alpha     = 1.f;
             gemm_param.beta      = 0.f;
-            ppl::nn::TensorShape a_shape, b_shape, c_shape;
+            ppl::common::TensorShape a_shape, b_shape, c_shape;
             a_shape.SetDataType(input_shape->GetDataType());
             b_shape.SetDataType(input_shape->GetDataType());
             c_shape.SetDataType(output_shape->GetDataType());
@@ -687,12 +687,12 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
 double PPLCUDAConvTransposeSelectKernel(
     const cudaDeviceProp& device_prop,
     cudaStream_t& stream,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const void* input,
     const void* rev_flt,
     const void* bias,
     void* temp_buffer,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output,
     const ppl::nn::onnx::ConvTransposeParam* param,
     algo_param_t& algo_param)
@@ -763,7 +763,7 @@ double PPLCUDAConvTransposeSelectKernel(
             int M     = batch*cvt_in_h*cvt_in_w;
             int K_pad = kernel_u*kernel_v*in_c_pad;
             int N_pad = out_c_pad*pattern_num;
-            ppl::nn::TensorShape a_shape, b_shape, c_shape;
+            ppl::common::TensorShape a_shape, b_shape, c_shape;
             a_shape.SetDataType(input_shape->GetDataType());
             b_shape.SetDataType(input_shape->GetDataType());
             c_shape.SetDataType(output_shape->GetDataType());

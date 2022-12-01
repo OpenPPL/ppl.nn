@@ -18,7 +18,7 @@
 #ifndef __ST_PPL_KERNEL_RISCV_COMMON_MEMORY_H_
 #define __ST_PPL_KERNEL_RISCV_COMMON_MEMORY_H_
 
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 
 namespace ppl { namespace kernel { namespace riscv {

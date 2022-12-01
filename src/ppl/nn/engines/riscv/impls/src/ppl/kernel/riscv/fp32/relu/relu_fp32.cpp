@@ -23,7 +23,7 @@ namespace ppl { namespace kernel { namespace riscv {
 #define C_BLK() ((int64_t)4)
 
 ppl::common::RetCode relu_fp32(
-    const ppl::nn::TensorShape* shape,
+    const ppl::common::TensorShape* shape,
     const float* src,
     float* dst)
 {

@@ -23,7 +23,7 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode leaky_relu_n4cx_fp32(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     const float alpha,
     float *dst);

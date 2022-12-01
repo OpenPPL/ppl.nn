@@ -23,9 +23,9 @@ namespace ppl { namespace kernel { namespace riscv {
 
 template <arithmetic_op_type_t _op, bool fuse_relu>
 static ppl::common::RetCode arithmetic_scalar_int64(
-    const ppl::nn::TensorShape* src0_shape,
-    const ppl::nn::TensorShape* src1_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src0_shape,
+    const ppl::common::TensorShape* src1_shape,
+    const ppl::common::TensorShape* dst_shape,
     const int64_t* src0,
     const int64_t* src1,
     int64_t* dst)
@@ -41,7 +41,7 @@ static ppl::common::RetCode arithmetic_scalar_int64(
     return ppl::common::RC_UNSUPPORTED;
 }
 
-ppl::common::RetCode add_scalar_int64(const ppl::nn::TensorShape* src0_shape, const ppl::nn::TensorShape* src1_shape, const ppl::nn::TensorShape* dst_shape, const bool fuse_relu, const int64_t* src0, const int64_t* src1, int64_t* dst)
+ppl::common::RetCode add_scalar_int64(const ppl::common::TensorShape* src0_shape, const ppl::common::TensorShape* src1_shape, const ppl::common::TensorShape* dst_shape, const bool fuse_relu, const int64_t* src0, const int64_t* src1, int64_t* dst)
 {
     if (fuse_relu) {
         return arithmetic_scalar_int64<ARITHMETIC_ADD, true>(src0_shape, src1_shape, dst_shape, src0, src1, dst);
@@ -50,7 +50,7 @@ ppl::common::RetCode add_scalar_int64(const ppl::nn::TensorShape* src0_shape, co
     }
 }
 
-ppl::common::RetCode sub_scalar_int64(const ppl::nn::TensorShape* src0_shape, const ppl::nn::TensorShape* src1_shape, const ppl::nn::TensorShape* dst_shape, const bool fuse_relu, const int64_t* src0, const int64_t* src1, int64_t* dst)
+ppl::common::RetCode sub_scalar_int64(const ppl::common::TensorShape* src0_shape, const ppl::common::TensorShape* src1_shape, const ppl::common::TensorShape* dst_shape, const bool fuse_relu, const int64_t* src0, const int64_t* src1, int64_t* dst)
 {
     if (fuse_relu) {
         return arithmetic_scalar_int64<ARITHMETIC_SUB, true>(src0_shape, src1_shape, dst_shape, src0, src1, dst);
@@ -59,7 +59,7 @@ ppl::common::RetCode sub_scalar_int64(const ppl::nn::TensorShape* src0_shape, co
     }
 }
 
-ppl::common::RetCode mul_scalar_int64(const ppl::nn::TensorShape* src0_shape, const ppl::nn::TensorShape* src1_shape, const ppl::nn::TensorShape* dst_shape, const bool fuse_relu, const int64_t* src0, const int64_t* src1, int64_t* dst)
+ppl::common::RetCode mul_scalar_int64(const ppl::common::TensorShape* src0_shape, const ppl::common::TensorShape* src1_shape, const ppl::common::TensorShape* dst_shape, const bool fuse_relu, const int64_t* src0, const int64_t* src1, int64_t* dst)
 {
     if (fuse_relu) {
         return arithmetic_scalar_int64<ARITHMETIC_MUL, true>(src0_shape, src1_shape, dst_shape, src0, src1, dst);
@@ -68,7 +68,7 @@ ppl::common::RetCode mul_scalar_int64(const ppl::nn::TensorShape* src0_shape, co
     }
 }
 
-ppl::common::RetCode div_scalar_int64(const ppl::nn::TensorShape* src0_shape, const ppl::nn::TensorShape* src1_shape, const ppl::nn::TensorShape* dst_shape, const bool fuse_relu, const int64_t* src0, const int64_t* src1, int64_t* dst)
+ppl::common::RetCode div_scalar_int64(const ppl::common::TensorShape* src0_shape, const ppl::common::TensorShape* src1_shape, const ppl::common::TensorShape* dst_shape, const bool fuse_relu, const int64_t* src0, const int64_t* src1, int64_t* dst)
 {
     if (fuse_relu) {
         return arithmetic_scalar_int64<ARITHMETIC_DIV, true>(src0_shape, src1_shape, dst_shape, src0, src1, dst);

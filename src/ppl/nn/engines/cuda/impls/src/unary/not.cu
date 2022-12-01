@@ -59,9 +59,9 @@ __global__ void ppl_cukernel_not(
 
 ppl::common::RetCode PPLCUDANotForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     const bool *input,
-    const ppl::nn::TensorShape *output_shape,
+    const ppl::common::TensorShape *output_shape,
     bool *output)
 {
     uint64_t num_elems = output_shape->CalcElementsIncludingPadding();

@@ -34,7 +34,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace kernel { namespace riscv {
 
-conv2d_common_algo_info conv2d_fp16_algo_selector::select_best_algo(const void* filter, ppl::nn::TensorShape& src_shape, ppl::nn::TensorShape& dst_shape, const conv2d_common_param& param, Allocator* allocator, const ppl::nn::riscv::EngineOptions* engine_options)
+conv2d_common_algo_info conv2d_fp16_algo_selector::select_best_algo(const void* filter, ppl::common::TensorShape& src_shape, ppl::common::TensorShape& dst_shape, const conv2d_common_param& param, Allocator* allocator, const ppl::nn::riscv::EngineOptions* engine_options)
 {
     static conv2d_common_algo_info unknown_info =
         {conv2d_common_algo::unknown, DATAFORMAT_UNKNOWN, DATAFORMAT_UNKNOWN, DATATYPE_FLOAT16, DATATYPE_FLOAT16};
@@ -126,7 +126,7 @@ conv2d_common_algo_info conv2d_fp16_algo_selector::select_best_algo(const void* 
     return best_algo_info;
 }
 
-conv2d_common_algo_info conv2d_fp16_algo_selector::select_algo(const ppl::nn::TensorShape& input_shape,
+conv2d_common_algo_info conv2d_fp16_algo_selector::select_algo(const ppl::common::TensorShape& input_shape,
                                                                const conv2d_common_param& param,
                                                                const ppl::nn::riscv::EngineOptions* engine_options)
 {

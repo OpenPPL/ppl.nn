@@ -22,10 +22,10 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode split_n4cx_fp32(const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape** dst_shape_list, const float* src, const int32_t slice_axis, const int32_t num_dst, float** dst_list);
+ppl::common::RetCode split_n4cx_fp32(const ppl::common::TensorShape* src_shape, const ppl::common::TensorShape** dst_shape_list, const float* src, const int32_t slice_axis, const int32_t num_dst, float** dst_list);
 
-ppl::common::RetCode split_ndarray_fp32(const ppl::nn::TensorShape* src_shape,
-                                        const ppl::nn::TensorShape** dst_shape_list,
+ppl::common::RetCode split_ndarray_fp32(const ppl::common::TensorShape* src_shape,
+                                        const ppl::common::TensorShape** dst_shape_list,
                                         const float* src,
                                         const int32_t slice_axis,
                                         const int32_t num_dst,

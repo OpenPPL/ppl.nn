@@ -25,8 +25,8 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode resize2d_ndarray_pytorch_linear_floor_fp16(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const __fp16* src,
     const float scale_h,
     const float scale_w,
@@ -36,8 +36,8 @@ ppl::common::RetCode resize2d_ndarray_pytorch_linear_floor_fp16(
 }
 
 ppl::common::RetCode resize2d_ndarray_asymmetric_nearest_floor_fp16(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const __fp16* src,
     const float scale_h,
     const float scale_w,
@@ -47,8 +47,8 @@ ppl::common::RetCode resize2d_ndarray_asymmetric_nearest_floor_fp16(
 }
 
 ppl::common::RetCode resize2d_ndarray_pytorch_cubic_floor_fp16(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const __fp16* src,
     const float scale_h,
     const float scale_w,
@@ -59,8 +59,8 @@ ppl::common::RetCode resize2d_ndarray_pytorch_cubic_floor_fp16(
 }
 
 ppl::common::RetCode resize2d_nbcx_pytorch_linear_floor_fp16(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const __fp16* src,
     const float scale_h,
     const float scale_w,
@@ -70,8 +70,8 @@ ppl::common::RetCode resize2d_nbcx_pytorch_linear_floor_fp16(
 }
 
 ppl::common::RetCode resize2d_nbcx_asymmetric_nearest_floor_fp16(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const __fp16* src,
     const float scale_h,
     const float scale_w,

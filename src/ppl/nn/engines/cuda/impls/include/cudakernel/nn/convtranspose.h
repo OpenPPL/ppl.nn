@@ -18,7 +18,7 @@
 #ifndef PPLCUDA_KERNEL_INCLUDE_CONVTRANSPOSE_CONVTRANSPOSE_H_
 #define PPLCUDA_KERNEL_INCLUDE_CONVTRANSPOSE_CONVTRANSPOSE_H_
 #include "cudakernel/gemm/gemm.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "ppl/nn/params/onnx/convtranspose_param.h"
 #include "ppl/nn/engines/cuda/module/cuda_module.h"
@@ -27,16 +27,16 @@
 
 
 uint64_t PPLConvTransposeGetFilterBufSizeCudaFp16(
-    const ppl::nn::TensorShape* weight_shape);
+    const ppl::common::TensorShape* weight_shape);
 
 uint64_t PPLConvTransposeGetCompilationBufSizeCuda(
-    ppl::nn::TensorShape* input_shape,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* input_shape,
+    ppl::common::TensorShape* output_shape,
     const ppl::nn::onnx::ConvTransposeParam* param);
 
 uint64_t PPLConvTransposeGetBufSizeCuda(
-    ppl::nn::TensorShape* input_shape,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* input_shape,
+    ppl::common::TensorShape* output_shape,
     const ppl::nn::onnx::ConvTransposeParam* param);
 
 ppl::common::RetCode PPLCUDAConvTransposeCvt(
@@ -45,18 +45,18 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
     const void* in_filter,
     void* temp_buffer,
     void* out_filter,
-    const ppl::nn::TensorShape* filter_shape,
+    const ppl::common::TensorShape* filter_shape,
     const ppl::nn::onnx::ConvTransposeParam* param);
 
 ppl::common::RetCode PPLCUDAConvTransposeForward(
     const cudaDeviceProp& device_prop,
     cudaStream_t stream,
     const CUfunction function,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const void* input,
     const void* rev_flt,
     const void* bias,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output,
     const ppl::nn::onnx::ConvTransposeParam* param,
     algo_param_t algo_param,
@@ -67,12 +67,12 @@ double PPLCUDAConvTransposeSelectKernel(
     const cudaDeviceProp& device_prop,
     cudaStream_t& stream,
     //const CUfunction function,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const void* input,
     const void* rev_flt,
     const void* bias,
     void* temp_buffer,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output,
     const ppl::nn::onnx::ConvTransposeParam* param,
     algo_param_t& algo_param);

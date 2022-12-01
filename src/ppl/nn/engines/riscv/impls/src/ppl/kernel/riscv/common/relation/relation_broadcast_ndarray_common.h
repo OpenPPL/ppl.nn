@@ -106,9 +106,9 @@ static ppl::common::RetCode relation_broadcast_ndarray_recursive_scalar_common(
 
 template <relation_op_type_t op, typename T, int32_t vlen>
 static ppl::common::RetCode relation_broadcast_ndarray_scalar_common(
-    const ppl::nn::TensorShape* src0_shape,
-    const ppl::nn::TensorShape* src1_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src0_shape,
+    const ppl::common::TensorShape* src1_shape,
+    const ppl::common::TensorShape* dst_shape,
     const T* src0,
     const T* src1,
     uint8_t* dst)
@@ -322,9 +322,9 @@ static ppl::common::RetCode relation_broadcast_ndarray_recursive_common(
 
 template <relation_op_type_t op, typename T, int32_t vlen>
 static ppl::common::RetCode relation_broadcast_ndarray_common(
-    const ppl::nn::TensorShape* src0_shape,
-    const ppl::nn::TensorShape* src1_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src0_shape,
+    const ppl::common::TensorShape* src1_shape,
+    const ppl::common::TensorShape* dst_shape,
     const T* src0,
     const T* src1,
     uint8_t* dst)

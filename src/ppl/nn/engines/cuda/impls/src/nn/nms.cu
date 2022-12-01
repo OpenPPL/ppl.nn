@@ -19,7 +19,7 @@
 #include "cudakernel/nn/topk.h"
 #include "cudakernel/math/math.h"
 #include "cudakernel/common/common.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/nn/engines/cuda/cuda_device.h"
 #include <cuda_fp16.h>
 #include <float.h>
@@ -316,13 +316,13 @@ void NMSGpuImpl(
     }
 }
 
-int64_t PPLNMSGetTempBufferSize(const ppl::nn::TensorShape *scores_shape)
+int64_t PPLNMSGetTempBufferSize(const ppl::common::TensorShape *scores_shape)
 {
     int64_t total_size = 0;
     int elem_size      = ppl::common::GetSizeOfDataType(scores_shape->GetDataType());
     int num_class      = scores_shape->GetDim(1);
     int num_boxes      = scores_shape->GetDim(2);
-    ppl::nn::TensorShape indices_shape(*scores_shape);
+    ppl::common::TensorShape indices_shape(*scores_shape);
     indices_shape.Reshape({num_class, num_boxes});
     indices_shape.SetDataType(ppl::common::DATATYPE_INT64); // max int64
     int axis = 1;
@@ -346,11 +346,11 @@ int64_t PPLNMSGetTempBufferSize(const ppl::nn::TensorShape *scores_shape)
 ppl::common::RetCode PPLCUDANMSForwardImp(
     const cudaDeviceProp& device_prop,
     cudaStream_t stream,
-    ppl::nn::TensorShape *boxes_shape,
+    ppl::common::TensorShape *boxes_shape,
     const void *boxes,
-    ppl::nn::TensorShape *scores_shape,
+    ppl::common::TensorShape *scores_shape,
     const void *scores,
-    ppl::nn::TensorShape *output_shape,
+    ppl::common::TensorShape *output_shape,
     int64_t *output,
     void *temp_buffer,
     int64_t temp_buffer_bytes,
@@ -368,10 +368,10 @@ ppl::common::RetCode PPLCUDANMSForwardImp(
     int max_shared_mem = device_prop.sharedMemPerBlock;
 
     // temp buffer for sort & nms & construct
-    ppl::nn::TensorShape topk_shape(*scores_shape);
+    ppl::common::TensorShape topk_shape(*scores_shape);
     topk_shape.Reshape({num_class, num_boxes});
     topk_shape.SetDataType(scores_shape->GetDataType());
-    ppl::nn::TensorShape indices_shape(*scores_shape);
+    ppl::common::TensorShape indices_shape(*scores_shape);
     indices_shape.Reshape({num_class, num_boxes});
     indices_shape.SetDataType(ppl::common::DATATYPE_INT32);
     int axis                    = 1;

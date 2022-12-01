@@ -134,8 +134,8 @@ ppl::common::RetCode conv2d_n8cx_tile_gemm_cto8c_fp16_offline_manager::pick_best
     const __fp16* src,
     const __fp16* filter,
     __fp16* dst,
-    ppl::nn::TensorShape& src_shape,
-    ppl::nn::TensorShape& dst_shape)
+    ppl::common::TensorShape& src_shape,
+    ppl::common::TensorShape& dst_shape)
 {
     auto best_tunnig_param = tunning_param_;
     profile_tunning_param(src, filter, dst, src_shape, dst_shape);

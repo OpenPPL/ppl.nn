@@ -18,7 +18,7 @@
 #include "cudakernel/memory/transpose.h"
 #include "cudakernel/common/divmod_fast.h"
 #include "cudakernel/common/memory_utils.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "cudakernel/common/common.h"
 #define DIM     32
@@ -70,9 +70,9 @@ __global__ void cuda_kernel_fast_trans(
 
 bool FastTransposeSupport(
     FastTransposeParam *fast_param,
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     ppl::nn::onnx::TransposeParam param,
-    const ppl::nn::TensorShape *output_shape)
+    const ppl::common::TensorShape *output_shape)
 {
     if (input_shape->GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY ||
         output_shape->GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY) {
@@ -101,9 +101,9 @@ bool FastTransposeSupport(
 
 bool FastTransposeSupport2(
     FastTransposeParam *fast_param,
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     ppl::nn::onnx::TransposeParam param,
-    const ppl::nn::TensorShape *output_shape)
+    const ppl::common::TensorShape *output_shape)
 {
     if (input_shape->GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY ||
         output_shape->GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY) {
@@ -133,9 +133,9 @@ bool FastTransposeSupport2(
 ppl::common::RetCode PPLCUDATransposeFastForwardImp(
     cudaStream_t stream,
     FastTransposeParam param,
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     const void *input,
-    const ppl::nn::TensorShape *output_shape,
+    const ppl::common::TensorShape *output_shape,
     void *output)
 {
     dim3 dim_block(DIM, DIM, 1);
@@ -182,9 +182,9 @@ __global__ void cuda_kernel_middle_trans(
 
 bool MiddleFastTransposeSupport(
     FastTransposeParam *fast_param,
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     ppl::nn::onnx::TransposeParam param,
-    const ppl::nn::TensorShape *output_shape)
+    const ppl::common::TensorShape *output_shape)
 {
     if (input_shape->GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY ||
         output_shape->GetDataFormat() != ppl::common::DATAFORMAT_NDARRAY) {
@@ -210,9 +210,9 @@ bool MiddleFastTransposeSupport(
 ppl::common::RetCode PPLCUDATransposeMiddleFastForwardImp(
     cudaStream_t stream,
     FastTransposeParam param,
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     const void *input,
-    const ppl::nn::TensorShape *output_shape,
+    const ppl::common::TensorShape *output_shape,
     void *output)
 {
     const int block_size = 256;
@@ -287,9 +287,9 @@ __global__ void ppl_cukernel_transpose_nhwc(
 ppl::common::RetCode PPLCUDATransposeForwardImp(
     cudaStream_t stream,
     ppl::nn::onnx::TransposeParam param,
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     const void *input,
-    const ppl::nn::TensorShape *output_shape,
+    const ppl::common::TensorShape *output_shape,
     void *output)
 {
     FastTransposeParam fast_param;

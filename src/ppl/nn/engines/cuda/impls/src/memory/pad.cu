@@ -19,7 +19,7 @@
 #include "cudakernel/common/divmod_fast.h"
 #include "cudakernel/common/memory_utils.h"
 #include "cudakernel/common/common.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_fp16.h>
 
@@ -145,10 +145,10 @@ __global__ void ppl_cukernel_pad_fast2(const T* input, int src_height, int src_w
 ppl::common::RetCode PPLCUDAPadForwardImp(
     cudaStream_t stream,
     PadKernelParam param,
-    ppl::nn::TensorShape* input_shape,
+    ppl::common::TensorShape* input_shape,
     const void* input,
     const int64_t* pads,
-    ppl::nn::TensorShape* output_shape,
+    ppl::common::TensorShape* output_shape,
     void* output)
 {
     int num_dims       = output_shape->GetDimCount();

@@ -29,8 +29,8 @@ namespace ppl { namespace kernel { namespace riscv {
 
 template <typename eT>
 ppl::common::RetCode expand_ndarray_recursive(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     const int64_t *stride_src,
     const int64_t *stride_dst,
@@ -95,11 +95,11 @@ ppl::common::RetCode expand_ndarray_recursive(
     return ppl::common::RC_SUCCESS;
 }
 
-inline std::shared_ptr<ppl::nn::TensorShape> pad_shape(
-    const ppl::nn::TensorShape *shape,
+inline std::shared_ptr<ppl::common::TensorShape> pad_shape(
+    const ppl::common::TensorShape *shape,
     const int64_t padded_dim_count)
 {
-    auto padded_shape = std::make_shared<ppl::nn::TensorShape>(*shape);
+    auto padded_shape = std::make_shared<ppl::common::TensorShape>(*shape);
     padded_shape->SetDimCount(padded_dim_count);
     if (shape->IsScalar()) {
         for (int64_t i = 0; i < padded_dim_count; i++) {
@@ -119,8 +119,8 @@ inline std::shared_ptr<ppl::nn::TensorShape> pad_shape(
 
 template <typename eT>
 ppl::common::RetCode expand_ndarray_common(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     eT *dst)
 {

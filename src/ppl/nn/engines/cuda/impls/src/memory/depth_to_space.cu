@@ -18,16 +18,16 @@
 #include "cudakernel/memory/depth_to_space.h"
 #include "cudakernel/memory/transpose.h"
 #include "cudakernel/memory/subpixel.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 
 ppl::common::RetCode PPLCUDADepthToSpaceForwardImp(
     cudaStream_t stream,
     ppl::nn::onnx::DepthToSpaceParam param,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output)
 {
     // transpose case
@@ -40,8 +40,8 @@ ppl::common::RetCode PPLCUDADepthToSpaceForwardImp(
         trans_param.perm[3] = 1;
         trans_param.perm[4] = 5;
         trans_param.perm[5] = 2;
-        ppl::nn::TensorShape input_shape_trans(*input_shape);
-        ppl::nn::TensorShape output_shape_trans(*output_shape);
+        ppl::common::TensorShape input_shape_trans(*input_shape);
+        ppl::common::TensorShape output_shape_trans(*output_shape);
         input_shape_trans.SetDimCount(num_transpose_dim);
         output_shape_trans.SetDimCount(num_transpose_dim);
         input_shape_trans.SetDim(1, param.blocksize);

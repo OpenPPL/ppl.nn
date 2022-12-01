@@ -94,8 +94,8 @@ ppl::common::RetCode reduce_single_axis_ndarray_fp32(
     const float* src,
     float* dst,
 
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const int32_t* axes, // lists of dimensions which axes needs to be reduced
     const int32_t num_axes // number of axes that needs to be reduced
 )

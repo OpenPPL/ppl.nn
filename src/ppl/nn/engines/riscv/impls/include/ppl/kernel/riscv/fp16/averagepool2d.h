@@ -23,8 +23,8 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode averagepool2d_n8chw_1x16_fp16(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const int32_t kernel_h,
     const int32_t kernel_w,
     const int32_t stride_h,
@@ -37,8 +37,8 @@ ppl::common::RetCode averagepool2d_n8chw_1x16_fp16(
     __fp16* dst);
 
 ppl::common::RetCode averagepool2d_nchw_normal_fp16(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const int32_t kernel_h,
     const int32_t kernel_w,
     const int32_t stride_h,
@@ -51,8 +51,8 @@ ppl::common::RetCode averagepool2d_nchw_normal_fp16(
     __fp16* dst);
 
 ppl::common::RetCode averagepool2d_n8chw_global_fp16(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
 
     const __fp16* src,
     __fp16* dst);

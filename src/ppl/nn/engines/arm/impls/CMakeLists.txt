@@ -18,10 +18,6 @@ endif()
 
 list(APPEND PPLKERNELARMSERVER_LINK_LIBRARIES pplcommon_static)
 
-get_filename_component(__PPLNN_SOURCE_DIR__ "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../.." ABSOLUTE)
-set(PPLNN_ARM_ENGINE_INCLUDE_DIRECTORIES ${__PPLNN_SOURCE_DIR__}/src/ ${__PPLNN_SOURCE_DIR__}/include/)
-unset(__PPLNN_SOURCE_DIR__)
-
 #### #### #### #### ####
 ### file globbing ######
 #### #### #### #### ####
@@ -91,6 +87,10 @@ if(PPLNN_USE_ARMV8_2_FP16)
     list(APPEND PPLKERNELARMSERVER_COMPILE_OPTIONS ${PPL_KERNEL_ARMV8_2_MARCH})
 endif()
 
+# dependencies
+include(cmake/deps.cmake)
+hpcc_populate_dep(pplcommon)
+
 #### #### #### #### ####
 ### targets ############
 #### #### #### #### ####
@@ -98,8 +98,7 @@ add_library(pplkernelarm_static STATIC ${PPLKERNELARMSERVER_SOURCES})
 target_link_libraries(pplkernelarm_static PRIVATE ${PPLKERNELARMSERVER_LINK_LIBRARIES})
 target_include_directories(pplkernelarm_static
     PUBLIC ${PPLKERNELARMSERVER_INCLUDE_DIRECTORIES}
-    PRIVATE ${PPLNN_FRAMEWORK_INCLUDE_DIRECTORIES}
-    PRIVATE ${PPLNN_ARM_ENGINE_INCLUDE_DIRECTORIES})
+    PRIVATE ${PPLCOMMON_INCLUDES})
 target_compile_options(pplkernelarm_static PRIVATE ${PPLKERNELARMSERVER_COMPILE_OPTIONS})
 target_compile_definitions(pplkernelarm_static PRIVATE ${PPLKERNELARMSERVER_COMPILE_DEFINITIONS})
 

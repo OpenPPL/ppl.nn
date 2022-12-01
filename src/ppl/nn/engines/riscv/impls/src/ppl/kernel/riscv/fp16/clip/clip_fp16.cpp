@@ -21,7 +21,7 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode clip_fp16(
-    const ppl::nn::TensorShape* shape,
+    const ppl::common::TensorShape* shape,
     const __fp16 clip_max,
     const __fp16 clip_min,
     const __fp16* src,

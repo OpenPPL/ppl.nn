@@ -650,9 +650,9 @@ static inline float hostComputeAreaScale(int input_size, int output_size, int mo
 template <typename T>
 ppl::common::RetCode ppl_resize_forward(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const T* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     T* output,
     bool scale_pre_set,
     float h_scale_pre,
@@ -700,9 +700,9 @@ ppl::common::RetCode ppl_resize_forward(
 template <typename T>
 ppl::common::RetCode ppl_resize_forward_int8(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const T* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     T* output,
     bool scale_pre_set,
     float h_scale_pre,
@@ -751,9 +751,9 @@ ppl::common::RetCode ppl_resize_forward_int8(
 
 ppl::common::RetCode PPLCUDAResizeForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output,
     bool scale_pre_set,
     float h_scale,

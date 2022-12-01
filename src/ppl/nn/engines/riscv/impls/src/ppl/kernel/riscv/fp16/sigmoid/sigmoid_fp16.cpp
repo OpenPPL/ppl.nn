@@ -21,7 +21,7 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode sigmoid_fp16(const ppl::nn::TensorShape* x_shape, const __fp16* x, __fp16* y)
+ppl::common::RetCode sigmoid_fp16(const ppl::common::TensorShape* x_shape, const __fp16* x, __fp16* y)
 {
     const int64_t n_elem   = x_shape->CalcElementsIncludingPadding();
     const int64_t n_unroll = 8;

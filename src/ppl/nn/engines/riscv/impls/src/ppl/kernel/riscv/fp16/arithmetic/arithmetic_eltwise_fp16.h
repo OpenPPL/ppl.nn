@@ -25,7 +25,7 @@ namespace ppl { namespace kernel { namespace riscv {
 
 template <arithmetic_op_type_t _op, bool fuse_relu>
 static ppl::common::RetCode arithmetic_eltwise_fp16(
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* dst_shape,
     const __fp16* src0,
     const __fp16* src1,
     __fp16* dst)

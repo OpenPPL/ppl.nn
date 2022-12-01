@@ -75,16 +75,16 @@ static __device__ inline bool8_ ppl_logical_vector(bool8_ a, bool8_ b)
 }
 
 void ppl_logical_prepare_strides(
-    const ppl::nn::TensorShape* tensor_shape0,
-    const ppl::nn::TensorShape* tensor_shape1,
-    const ppl::nn::TensorShape* tensor_shape_out,
+    const ppl::common::TensorShape* tensor_shape0,
+    const ppl::common::TensorShape* tensor_shape1,
+    const ppl::common::TensorShape* tensor_shape_out,
     const int packed_channel,
     uint32_t* stride_in0,
     uint32_t* stride_in1,
     uint32_t* stride_out)
 {
-    ppl::nn::TensorShape pad_tensor_shape0 = *tensor_shape0;
-    ppl::nn::TensorShape pad_tensor_shape1 = *tensor_shape1;
+    ppl::common::TensorShape pad_tensor_shape0 = *tensor_shape0;
+    ppl::common::TensorShape pad_tensor_shape1 = *tensor_shape1;
     int max_dims                           = tensor_shape_out->GetDimCount();
     if (pad_tensor_shape0.GetDimCount() < pad_tensor_shape1.GetDimCount()) {
         pad_tensor_shape0.SetDimCount(max_dims);
@@ -130,9 +130,9 @@ void ppl_logical_prepare_strides(
 }
 
 void ppl_logical_prepare_strides_nhwc(
-    const ppl::nn::TensorShape* tensor_shape0,
-    const ppl::nn::TensorShape* tensor_shape1,
-    const ppl::nn::TensorShape* tensor_shape_out,
+    const ppl::common::TensorShape* tensor_shape0,
+    const ppl::common::TensorShape* tensor_shape1,
+    const ppl::common::TensorShape* tensor_shape_out,
     const int packed_channel,
     uint32_t* stride_in0,
     uint32_t* stride_in1,
@@ -140,8 +140,8 @@ void ppl_logical_prepare_strides_nhwc(
 {
     if (tensor_shape0->GetDimCount() < 2 || tensor_shape1->GetDimCount() < 2)
         return;
-    ppl::nn::TensorShape pad_tensor_shape0 = *tensor_shape0;
-    ppl::nn::TensorShape pad_tensor_shape1 = *tensor_shape1;
+    ppl::common::TensorShape pad_tensor_shape0 = *tensor_shape0;
+    ppl::common::TensorShape pad_tensor_shape1 = *tensor_shape1;
     int max_dims                           = tensor_shape_out->GetDimCount();
     if (pad_tensor_shape0.GetDimCount() < pad_tensor_shape1.GetDimCount()) {
         pad_tensor_shape0.SetDimCount(max_dims);
@@ -193,10 +193,10 @@ void ppl_logical_prepare_strides_nhwc(
     }
 }
 
-static void ppl_pad_tensor_shape(const ppl::nn::TensorShape* tensor_shape0,
-                                 const ppl::nn::TensorShape* tensor_shape1,
-                                 ppl::nn::TensorShape* pad_tensor_shape0,
-                                 ppl::nn::TensorShape* pad_tensor_shape1)
+static void ppl_pad_tensor_shape(const ppl::common::TensorShape* tensor_shape0,
+                                 const ppl::common::TensorShape* tensor_shape1,
+                                 ppl::common::TensorShape* pad_tensor_shape0,
+                                 ppl::common::TensorShape* pad_tensor_shape1)
 {
     int max_dims = std::max(tensor_shape0->GetDimCount(), tensor_shape1->GetDimCount());
     if (pad_tensor_shape0->GetDimCount() < pad_tensor_shape1->GetDimCount()) {
@@ -222,12 +222,12 @@ static void ppl_pad_tensor_shape(const ppl::nn::TensorShape* tensor_shape0,
     }
 }
 
-static int ppl_get_num_broadcast_dims(const ppl::nn::TensorShape* tensor_shape0,
-                                      const ppl::nn::TensorShape* tensor_shape1,
+static int ppl_get_num_broadcast_dims(const ppl::common::TensorShape* tensor_shape0,
+                                      const ppl::common::TensorShape* tensor_shape1,
                                       int& aixs)
 {
-    ppl::nn::TensorShape pad_tensor_shape0 = *tensor_shape0;
-    ppl::nn::TensorShape pad_tensor_shape1 = *tensor_shape1;
+    ppl::common::TensorShape pad_tensor_shape0 = *tensor_shape0;
+    ppl::common::TensorShape pad_tensor_shape1 = *tensor_shape1;
     ppl_pad_tensor_shape(tensor_shape0, tensor_shape1, &pad_tensor_shape0, &pad_tensor_shape1);
     int dim_count          = pad_tensor_shape0.GetDimCount();
     int num_broadcast_dims = 0;
@@ -296,11 +296,11 @@ __global__ void ppl_cukernel_logical_naive(
 template <LogicalOpType op_type>
 ppl::common::RetCode PPLCUDALogicalForwardImp(
     cudaStream_t stream,
-    const ppl::nn::TensorShape* input_shape0,
+    const ppl::common::TensorShape* input_shape0,
     const bool* input0,
-    const ppl::nn::TensorShape* input_shape1,
+    const ppl::common::TensorShape* input_shape1,
     const bool* input1,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     bool* output)
 {
     LogicalParam param;
@@ -354,11 +354,11 @@ ppl::common::RetCode PPLCUDALogicalForwardImp(
 #define INSTANT(OPTYPE)                                                            \
     ppl::common::RetCode PPLCUDALogical##OPTYPE##ForwardImp(                       \
         cudaStream_t stream,                                                       \
-        const ppl::nn::TensorShape* input_shape0,                                  \
+        const ppl::common::TensorShape* input_shape0,                                  \
         const bool* input0,                                                        \
-        const ppl::nn::TensorShape* input_shape1,                                  \
+        const ppl::common::TensorShape* input_shape1,                                  \
         const bool* input1,                                                        \
-        const ppl::nn::TensorShape* output_shape,                                  \
+        const ppl::common::TensorShape* output_shape,                                  \
         bool* output)                                                              \
     {                                                                              \
         if (input_shape0->GetDataType() == ppl::common::DATATYPE_BOOL) {           \

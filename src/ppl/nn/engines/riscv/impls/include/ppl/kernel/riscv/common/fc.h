@@ -18,7 +18,7 @@
 #ifndef __ST_PPL_KERNEL_RISCV_COMMON_FC_H_
 #define __ST_PPL_KERNEL_RISCV_COMMON_FC_H_
 
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/kernel/riscv/common/general_include.h"
 #include "ppl/kernel/riscv/common/fc_common.h"
@@ -80,9 +80,9 @@ protected:
     const T* cvt_bias_;
 
     const T* src_;
-    const ppl::nn::TensorShape* src_shape_;
+    const ppl::common::TensorShape* src_shape_;
     T* dst_;
-    const ppl::nn::TensorShape* dst_shape_;
+    const ppl::common::TensorShape* dst_shape_;
 
     void* temp_buffer_;
 
@@ -163,11 +163,11 @@ public:
         return src_;
     }
 
-    void set_src_shape(const ppl::nn::TensorShape* src_shape)
+    void set_src_shape(const ppl::common::TensorShape* src_shape)
     {
         src_shape_ = src_shape;
     }
-    const ppl::nn::TensorShape* src_shape() const
+    const ppl::common::TensorShape* src_shape() const
     {
         return src_shape_;
     };
@@ -181,11 +181,11 @@ public:
         return dst_;
     }
 
-    void set_dst_shape(const ppl::nn::TensorShape* dst_shape)
+    void set_dst_shape(const ppl::common::TensorShape* dst_shape)
     {
         dst_shape_ = dst_shape;
     }
-    const ppl::nn::TensorShape* dst_shape() const
+    const ppl::common::TensorShape* dst_shape() const
     {
         return dst_shape_;
     }

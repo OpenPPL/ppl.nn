@@ -23,7 +23,7 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode floor_fp32(
-    const ppl::nn::TensorShape* shape,
+    const ppl::common::TensorShape* shape,
     const float* src,
     float* dst);
 

@@ -27,8 +27,8 @@ ppl::common::RetCode reduce_fp16(
     const __fp16* src,
     __fp16* dst,
 
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const int32_t* axes,
     const int32_t num_axes)
 {
@@ -71,8 +71,8 @@ ppl::common::RetCode reduce_max_fp16(
     const __fp16* src,
     __fp16* dst,
 
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const int32_t* axes,
     const int32_t num_axes)
 {
@@ -83,8 +83,8 @@ ppl::common::RetCode reduce_min_fp16(
     const __fp16* src,
     __fp16* dst,
 
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const int32_t* axes,
     const int32_t num_axes)
 {
@@ -95,8 +95,8 @@ ppl::common::RetCode reduce_mean_fp16(
     const __fp16* src,
     __fp16* dst,
 
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const int32_t* axes,
     const int32_t num_axes)
 {
@@ -107,8 +107,8 @@ ppl::common::RetCode reduce_sum_fp16(
     const __fp16* src,
     __fp16* dst,
 
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const int32_t* axes,
     const int32_t num_axes)
 {

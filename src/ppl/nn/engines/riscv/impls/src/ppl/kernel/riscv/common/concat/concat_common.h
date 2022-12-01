@@ -30,7 +30,7 @@ ppl::common::RetCode concat_nbcx(
     const T** src_list,
     T* dst,
 
-    const ppl::nn::TensorShape** src_shape_list,
+    const ppl::common::TensorShape** src_shape_list,
     const int32_t num_src,
     const int32_t c_axis)
 {
@@ -96,7 +96,7 @@ ppl::common::RetCode concat_ndarray(
     const T** src_list,
     T* dst,
 
-    const ppl::nn::TensorShape** src_shape_list,
+    const ppl::common::TensorShape** src_shape_list,
     const int32_t num_src,
     const int32_t c_axis)
 {
@@ -135,7 +135,7 @@ ppl::common::RetCode concat_nbcx_interleave_channels(
     const T** src_list,
     T* dst,
 
-    const ppl::nn::TensorShape** src_shape_list,
+    const ppl::common::TensorShape** src_shape_list,
     const int32_t num_src,
     const int32_t axis,
     const int32_t c_dim_idx)

@@ -28,7 +28,7 @@ template <typename T>
 ppl::common::RetCode transpose2d_ndarray(
     const T* src,
     T* dst,
-    const ppl::nn::TensorShape* src_shape)
+    const ppl::common::TensorShape* src_shape)
 {
     const int32_t src_h = src_shape->GetDim(0);
     const int32_t src_w = src_shape->GetDim(1);
@@ -47,7 +47,7 @@ ppl::common::RetCode transpose3d_ndarray(
     T* dst,
 
     const int32_t* perm,
-    const ppl::nn::TensorShape* src_shape)
+    const ppl::common::TensorShape* src_shape)
 {
     const int32_t channels = src_shape->GetDim(0);
     const int32_t src_h    = src_shape->GetDim(1);
@@ -86,7 +86,7 @@ ppl::common::RetCode transpose4d_ndarray(
     T* dst,
 
     const int32_t* perm,
-    const ppl::nn::TensorShape* src_shape)
+    const ppl::common::TensorShape* src_shape)
 {
     const int32_t batch    = src_shape->GetDim(0);
     const int32_t channels = src_shape->GetDim(1);
@@ -168,8 +168,8 @@ ppl::common::RetCode transpose_ndarray(
     T* dst,
 
     const int32_t* perm,
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape)
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape)
 {
     const uint32_t dim_count = src_shape->GetDimCount();
 
@@ -216,7 +216,7 @@ ppl::common::RetCode transpose_ndarray_continous2d(
     const T* src,
     T* dst,
 
-    const ppl::nn::TensorShape* src_shape,
+    const ppl::common::TensorShape* src_shape,
     const uint32_t axis0,
     const uint32_t axis1)
 {

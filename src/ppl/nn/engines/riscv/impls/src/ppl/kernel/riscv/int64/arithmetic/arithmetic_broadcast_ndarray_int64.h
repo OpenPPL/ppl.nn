@@ -125,9 +125,9 @@ static ppl::common::RetCode arithmetic_broadcast_recursive_ndarray_scalar_int64(
 
 template <arithmetic_op_type_t op, bool fuse_relu>
 static ppl::common::RetCode arithmetic_broadcast_ndarray_scalar_int64(const int64_t* src0, const int64_t* src1, int64_t* dst,
-                                                                      const ppl::nn::TensorShape* src0_shape,
-                                                                      const ppl::nn::TensorShape* src1_shape,
-                                                                      const ppl::nn::TensorShape* dst_shape)
+                                                                      const ppl::common::TensorShape* src0_shape,
+                                                                      const ppl::common::TensorShape* src1_shape,
+                                                                      const ppl::common::TensorShape* dst_shape)
 {
     // pad 1 to input's high dims
     const int64_t dim_count = dst_shape->GetDimCount();
@@ -566,9 +566,9 @@ static ppl::common::RetCode arithmetic_broadcast_recursive_ndarray_int64(
 template <arithmetic_op_type_t op, bool fuse_relu>
 static ppl::common::RetCode arithmetic_broadcast_ndarray_int64(const int64_t* src0, const int64_t* src1, int64_t* dst,
 
-                                                               const ppl::nn::TensorShape* src0_shape,
-                                                               const ppl::nn::TensorShape* src1_shape,
-                                                               const ppl::nn::TensorShape* dst_shape)
+                                                               const ppl::common::TensorShape* src0_shape,
+                                                               const ppl::common::TensorShape* src1_shape,
+                                                               const ppl::common::TensorShape* dst_shape)
 {
     // pad 1 to input's high dims
     const int64_t dim_count = dst_shape->GetDimCount();

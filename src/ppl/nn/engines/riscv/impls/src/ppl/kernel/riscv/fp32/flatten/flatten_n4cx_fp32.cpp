@@ -23,8 +23,8 @@ ppl::common::RetCode flatten_n4cx_fp32(
     const float* src,
     float* dst,
 
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape)
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape)
 {
     return flatten_nbcx<float, 4>(src, dst, src_shape, dst_shape);
 }

@@ -21,7 +21,7 @@
 namespace ppl { namespace kernel { namespace riscv {
 
 ppl::common::RetCode where_eltwise_fp16(
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *dst_shape,
     const uint8_t *cond,
     const __fp16 *src_x,
     const __fp16 *src_y,
@@ -36,10 +36,10 @@ ppl::common::RetCode where_eltwise_fp16(
 }
 
 ppl::common::RetCode where_ndarray_fp16(
-    const ppl::nn::TensorShape *cond_shape,
-    const ppl::nn::TensorShape *src_x_shape,
-    const ppl::nn::TensorShape *src_y_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *cond_shape,
+    const ppl::common::TensorShape *src_x_shape,
+    const ppl::common::TensorShape *src_y_shape,
+    const ppl::common::TensorShape *dst_shape,
     const uint8_t *cond,
     const __fp16 *src_x,
     const __fp16 *src_y,

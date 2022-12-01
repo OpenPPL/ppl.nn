@@ -22,7 +22,7 @@
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode cast(const ppl::nn::TensorShape* src_shape, const ppl::nn::TensorShape* dst_shape, const void* src, void* dst);
+ppl::common::RetCode cast(const ppl::common::TensorShape* src_shape, const ppl::common::TensorShape* dst_shape, const void* src, void* dst);
 
 }}}; // namespace ppl::kernel::riscv
 

@@ -30,7 +30,7 @@ namespace ppl { namespace kernel { namespace riscv {
 
 template <typename T, int32_t v_len>
 ppl::common::RetCode leaky_relu_nbcx_common(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const T *src,
     const float alpha,
     T *dst)

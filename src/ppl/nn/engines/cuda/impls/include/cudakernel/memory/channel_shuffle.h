@@ -17,16 +17,16 @@
 
 #ifndef PPLCUDA_KERNEL_INCLUDE_CHANNELSHUFFLE_CHANNELSHUFFLE_H_
 #define PPLCUDA_KERNEL_INCLUDE_CHANNELSHUFFLE_CHANNELSHUFFLE_H_
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 
 ppl::common::RetCode PPLCUDAChannelShuffleForwardImp(
     cudaStream_t stream,
     int group,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output,
     float in_scale,
     float out_scale);
@@ -34,10 +34,10 @@ ppl::common::RetCode PPLCUDAChannelShuffleForwardImp(
 ppl::common::RetCode PPLCUDAFuseChannelShuffleForwardImp(
     cudaStream_t stream,
     int group,
-    const ppl::nn::TensorShape* input_shape,
+    const ppl::common::TensorShape* input_shape,
     const void* input1,
     const void* input2,
-    const ppl::nn::TensorShape* output_shape,
+    const ppl::common::TensorShape* output_shape,
     void* output1,
     void* output2,
     float in_scale0,

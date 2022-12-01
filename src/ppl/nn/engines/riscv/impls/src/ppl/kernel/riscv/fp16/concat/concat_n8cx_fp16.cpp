@@ -23,7 +23,7 @@ ppl::common::RetCode concat_n8cx_fp16(
     const __fp16** src_list,
     __fp16* dst,
 
-    const ppl::nn::TensorShape** src_shape_list,
+    const ppl::common::TensorShape** src_shape_list,
     const int32_t num_src,
     const int32_t c_axis)
 {

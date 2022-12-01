@@ -24,7 +24,7 @@
 #include "ppl/kernel/riscv/common/general_include.h"
 #include "ppl/nn/engines/riscv/engine_options.h"
 #include "ppl/kernel/riscv/common/conv_transpose.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "ppl/common/allocator.h"
 #include "ppl/common/sys.h"

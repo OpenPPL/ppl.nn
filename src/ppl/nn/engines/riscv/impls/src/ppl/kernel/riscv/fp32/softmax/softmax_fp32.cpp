@@ -25,7 +25,7 @@ namespace ppl { namespace kernel { namespace riscv {
 #define C_BLK() ((int64_t)4)
 
 ppl::common::RetCode softmax_ndarray_fp32(
-    const ppl::nn::TensorShape* shape,
+    const ppl::common::TensorShape* shape,
     const int64_t axis,
     const float* src,
     float* dst)

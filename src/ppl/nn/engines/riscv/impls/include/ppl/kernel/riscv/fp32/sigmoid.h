@@ -18,14 +18,14 @@
 #ifndef __ST_PPL_KERNEL_RISCV_FP32_SIGMOID_H_
 #define __ST_PPL_KERNEL_RISCV_FP32_SIGMOID_H_
 
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 
 namespace ppl { namespace kernel { namespace riscv {
 
-ppl::common::RetCode sigmoid_fp32(const ppl::nn::TensorShape* x_shape, const float* x, float* y);
+ppl::common::RetCode sigmoid_fp32(const ppl::common::TensorShape* x_shape, const float* x, float* y);
 
-ppl::common::RetCode sigmoid_fp32_vec128(const ppl::nn::TensorShape* x_shape, const float* x, float* y);
+ppl::common::RetCode sigmoid_fp32_vec128(const ppl::common::TensorShape* x_shape, const float* x, float* y);
 
 }}}; // namespace ppl::kernel::riscv
 

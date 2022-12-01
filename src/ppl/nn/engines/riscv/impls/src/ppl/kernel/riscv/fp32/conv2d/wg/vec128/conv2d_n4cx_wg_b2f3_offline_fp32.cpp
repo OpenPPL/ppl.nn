@@ -85,8 +85,8 @@ ppl::common::RetCode conv2d_n4cx_wg_b2f3_fp32_offline_manager::pick_best_tunning
     const float* src,
     const float* filter,
     float* dst,
-    ppl::nn::TensorShape& src_shape,
-    ppl::nn::TensorShape& dst_shape)
+    ppl::common::TensorShape& src_shape,
+    ppl::common::TensorShape& dst_shape)
 {
     LOG(DEBUG) << "n4cx wg b2f3: pick best tunning param";
 
