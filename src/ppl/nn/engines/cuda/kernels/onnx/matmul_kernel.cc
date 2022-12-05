@@ -142,7 +142,7 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
     const TensorShape& shape_in0 = *input0->GetShape();
 
     if (shape_in0.GetDataType() == ppl::common::DATATYPE_FLOAT16) {
-        status = PPLCUDABgemmForwardImp(GetCudaDevice(), stream, module, input0->GetShape(), bmm_input0,
+        status = PPLCUDABgemmForwardImp(GetCudaDevice()->GetDeviceProp(), stream, module, input0->GetShape(), bmm_input0,
                                         weight->GetShape(), weight_buffer.addr, output->GetShape(), bgemm_out,
                                         param_->param, tmp_buffer, temp_fuse_param, param_->extra_param.algo_info);
     }

@@ -9,7 +9,7 @@ int64_t PPLCUDADeformConvGetBufSize(
     const ppl::nn::TensorShape *output_shape);
 
 ppl::common::RetCode PPLCUDADeformConvForward(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     const cudaStream_t &stream,
     ppl::nn::cuda::CUDAModule *module,
     const ppl::nn::TensorShape *output_shape,

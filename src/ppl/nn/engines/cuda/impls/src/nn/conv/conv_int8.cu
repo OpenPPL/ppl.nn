@@ -209,10 +209,9 @@ static bool is_g_int8_kvec_initialized = false;
 
 static std::unordered_map<size_t, algo_param_t> g_conv_shape_hash;
 
-__inline__ void InitializeInt8ConvKernelContainer(std::vector<kernel_info_t> &g_int8_kvec, ppl::nn::cuda::CudaDevice* device, ppl::common::datatype_t type)
+__inline__ void InitializeInt8ConvKernelContainer(std::vector<kernel_info_t> &g_int8_kvec, const cudaDeviceProp& device_prop, ppl::common::datatype_t type)
 {
 #ifndef PPLNN_ENABLE_CUDA_JIT
-    auto& device_prop = device->GetDeviceProp();
     if(type == ppl::common::DATATYPE_INT8) {
         if (device_prop.major == 7 && device_prop.minor == 5) {
 #if (__CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020)
@@ -289,7 +288,7 @@ __inline__ size_t GetConvShapeHashKey(conv_param_t &conv_param)
 /* -----------------  INT8 KERNEL ------------------ */
 
 double PPLCUDAConvolutionSelectKernelInt8(
-        ppl::nn::cuda::CudaDevice* device,
+        const cudaDeviceProp& device_prop,
         cudaStream_t &stream, 
         ppl::common::datatype_t type,
         int4* d_input,
@@ -303,10 +302,8 @@ double PPLCUDAConvolutionSelectKernelInt8(
         fuse_param_t &fuse_param,
 	    uint64_t workspace)
 {
-    auto& device_prop = device->GetDeviceProp();
-
     if(!is_g_int8_kvec_initialized)
-        InitializeInt8ConvKernelContainer(g_int8_kvec, device, type);
+        InitializeInt8ConvKernelContainer(g_int8_kvec, device_prop, type);
 
     size_t conv_shape_hash = GetConvShapeHashKey(conv_param);
 
@@ -520,7 +517,7 @@ double PPLCUDAConvolutionSelectKernelInt8(
 }
 
 void PPLCUDAConvolutionForwardImpInt8(
-        ppl::nn::cuda::CudaDevice* device,
+        const cudaDeviceProp& device_prop,
         cudaStream_t &stream, 
         ppl::common::datatype_t type,
         int4* d_input,
@@ -534,7 +531,7 @@ void PPLCUDAConvolutionForwardImpInt8(
         fuse_param_t &fuse_param)
 {
     if(!is_g_int8_kvec_initialized)
-        InitializeInt8ConvKernelContainer(g_int8_kvec, device, type);
+        InitializeInt8ConvKernelContainer(g_int8_kvec, device_prop, type);
 
     unsigned int kid = algo_param.kid;
     unsigned int splitk = algo_param.splitk;
@@ -686,7 +683,7 @@ void PPLCUDAConvolutionForwardImpInt8(
 /* -----------------  JIT INT8 KERNEL ------------------ */
 
 float AlgoForwardTimeInt8(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     cudaStream_t &stream,
     std::vector<string> name,
     string code,
@@ -744,7 +741,7 @@ float AlgoForwardTimeInt8(
 }
 
 ppl::common::RetCode GetInt8ConvKernelNominees(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     ppl::common::datatype_t type,
     conv_param_t &conv_param,
     std::vector<std::string> & knames,
@@ -769,8 +766,6 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
     int out_hw              = conv_param.out_height * conv_param.out_width;
 
     int type_size = ppl::common::GetSizeOfDataType(type);
-
-    auto& device_prop = device->GetDeviceProp();
 
     int m_conv = Align(batch * out_hw,  pad_size);
     int n_conv = Align(num_flt_per_grp, pad_size);
@@ -1116,7 +1111,7 @@ ppl::common::RetCode GetInt8ConvKernelNominees(
 }
 
 double PPLCUDAConvolutionJitSelectKernelInt8(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     cudaStream_t &stream,
     ppl::common::datatype_t type,
     int4 *d_input,
@@ -1136,7 +1131,7 @@ double PPLCUDAConvolutionJitSelectKernelInt8(
     std::vector<algo_param_t> params;
     std::string sources = "";
 
-    GetInt8ConvKernelNominees(device, type, conv_param, knames, params, sources, false);
+    GetInt8ConvKernelNominees(device_prop, type, conv_param, knames, params, sources, false);
 
     int index = 0;
     std::vector<const char *> compile_params;
@@ -1148,7 +1143,7 @@ double PPLCUDAConvolutionJitSelectKernelInt8(
 }
 
 void PPLCUDAConvolutionForwardJitImpInt8(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     cudaStream_t &stream,
     CUfunction function,
     ppl::common::datatype_t type,

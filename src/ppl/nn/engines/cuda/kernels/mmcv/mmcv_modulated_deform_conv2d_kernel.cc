@@ -67,7 +67,7 @@ ppl::common::RetCode MMCVModulatedDeformConv2dKernel::DoExecute(KernelExecContex
     CudaDevice* device = GetCudaDevice();
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
 
-    status = PPLCUDADeformConvForward(device, stream, module, output->GetShape(), input->GetShape(),
+    status = PPLCUDADeformConvForward(device->GetDeviceProp(), stream, module, output->GetShape(), input->GetShape(),
                                       output->GetBufferPtr(), input->GetBufferPtr(), weight->GetBufferPtr(),
                                       offset->GetBufferPtr(),
                                       mask ? mask->GetBufferPtr() : nullptr, bias ? bias->GetBufferPtr() : nullptr,
