@@ -33,11 +33,9 @@
 #include "kernel_type.h"
 #include "conv_common.h"
 #include "conv_jit.h"
+#include "cuda_nvrtc.h"
 #include "common/init_lut.h"
 #include "common/merge_split.h"
-
-#include "ppl/nn/engines/cuda/module/cuda_compiler.h"
-#include "ppl/nn/engines/cuda/module/cuda_module.h"
 
 #include "float.h"
 
@@ -195,10 +193,9 @@ static bool is_g_fp16_kvec_initialized = false;
 
 static std::unordered_map<size_t, algo_param_t> g_conv_shape_hash;
 
-__inline__ void InitializeFP16ConvKernelContainer(std::vector<kernel_info_t> &g_fp16_kvec, ppl::nn::cuda::CudaDevice* device, ppl::common::datatype_t type)
+__inline__ void InitializeFP16ConvKernelContainer(std::vector<kernel_info_t> &g_fp16_kvec, const cudaDeviceProp& device_prop, ppl::common::datatype_t type)
 {
 #ifndef PPLNN_ENABLE_CUDA_JIT
-    auto& device_prop = device->GetDeviceProp();
     if (type == ppl::common::DATATYPE_FLOAT16) {
         if (device_prop.major == 7 && device_prop.minor == 5) {
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
@@ -349,7 +346,7 @@ uint64_t PPLCUDAConvolutionGetRuntimeBufSize(
 /* -----------------  FP16 KERNEL ------------------ */
 
 double PPLCUDAConvolutionSelectKernel(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     cudaStream_t &stream,
     ppl::common::datatype_t type,
     int4 *d_input,
@@ -363,10 +360,9 @@ double PPLCUDAConvolutionSelectKernel(
     uint64_t workspace)
 {
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
-    auto& device_prop = device->GetDeviceProp();
 
     if (!is_g_fp16_kvec_initialized) {
-        InitializeFP16ConvKernelContainer(g_fp16_kvec, device, type);
+        InitializeFP16ConvKernelContainer(g_fp16_kvec, device_prop, type);
         if (g_fp16_kvec.empty()) {
           LOG(ERROR) << "Fp16 kernel should be compiled on cuda >= 10.2 and run on architeture >= sm_75";
           return ppl::common::RC_UNSUPPORTED;
@@ -584,7 +580,7 @@ double PPLCUDAConvolutionSelectKernel(
 }
 
 void PPLCUDAConvolutionForwardImp(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     cudaStream_t &stream,
     ppl::common::datatype_t type,
     int4 *d_input,
@@ -598,7 +594,7 @@ void PPLCUDAConvolutionForwardImp(
 {
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 9020
     if (!is_g_fp16_kvec_initialized)
-        InitializeFP16ConvKernelContainer(g_fp16_kvec, device, type);
+        InitializeFP16ConvKernelContainer(g_fp16_kvec, device_prop, type);
 
     unsigned int kid    = algo_param.kid;
     unsigned int splitk = algo_param.splitk;
@@ -972,7 +968,7 @@ ppl::common::RetCode algo_param_t::ParseAlgoName()
 }
 
 ppl::common::RetCode GetFp16ConvKernelNominees(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     ppl::common::datatype_t type,
     conv_param_t &conv_param,
     std::vector<std::string> & knames,
@@ -997,8 +993,6 @@ ppl::common::RetCode GetFp16ConvKernelNominees(
     int out_hw              = conv_param.out_height * conv_param.out_width;
 
     int type_size = ppl::common::GetSizeOfDataType(type);
-
-    auto& device_prop = device->GetDeviceProp();
 
     int m_conv = Align(batch * out_hw,  pad_size);
     int n_conv = Align(num_flt_per_grp, pad_size);
@@ -1344,7 +1338,7 @@ ppl::common::RetCode GetFp16ConvKernelNominees(
 }
 
 double PPLCUDAConvolutionJitSelectKernel(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     cudaStream_t &stream,
     ppl::common::datatype_t type,
     int4 *d_input,
@@ -1363,11 +1357,11 @@ double PPLCUDAConvolutionJitSelectKernel(
     std::vector<algo_param_t> params;
     std::string sources = "";
 
-    GetFp16ConvKernelNominees(device, type, conv_param, knames, params, sources, false);
+    GetFp16ConvKernelNominees(device_prop, type, conv_param, knames, params, sources, false);
 
     int index = 0;
     std::vector<const char *> compile_params;
-    elapsed = AlgoForwardTime(device, stream, knames, sources, index, compile_params, true, type, d_input, d_flt, d_output, bias, d_temp_buf, params, conv_param, fuse_param, workspace);
+    elapsed = AlgoForwardTime(device_prop, stream, knames, sources, index, compile_params, true, type, d_input, d_flt, d_output, bias, d_temp_buf, params, conv_param, fuse_param, workspace);
 
     algo_param = params[index];
 #endif
@@ -1375,10 +1369,10 @@ double PPLCUDAConvolutionJitSelectKernel(
 }
 
 float AlgoForwardTime(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     cudaStream_t &stream,
-    std::vector<string> kname,
-    string code,
+    std::vector<std::string> kname,
+    std::string code,
     int &idx,
     std::vector<const char *> compile_params,
     bool include,
@@ -1396,11 +1390,10 @@ float AlgoForwardTime(
     float elapsed = 0;
 
 #ifdef PPLNN_ENABLE_CUDA_JIT
-    auto device_id = device->GetDeviceId();
-    std::string src_name                   = kname[0];
-    string ptx                             = ppl::nn::cuda::CUDANVRTCCompile(pair<string, string>(src_name, code), compile_params, device_id, include);
-    ppl::nn::cuda::CUDAModule *cuda_module = new ppl::nn::cuda::CUDAModule();
-    cuda_module->SetSourceCode(src_name, ptx);
+    std::string src_name = kname[0];
+    std::string ptx           = CUDANVRTCCompileImpl(std::pair<std::string, std::string>(src_name, code), compile_params, device_prop, include);
+    CUmodule module_ptr = nullptr;
+    GetKernelFuncImpl(module_ptr, ptx, kname[0]);
     float min_time = FLT_MAX;
     int times      = 1;
 
@@ -1409,11 +1402,11 @@ float AlgoForwardTime(
     cudaEventCreate(&end);
 
     for (size_t n = 0; n < kname.size(); n++) {
-        CUfunction function = cuda_module->GetKernelFunc(kname[n]);
+        CUfunction function = GetKernelFuncImpl(module_ptr, ptx, kname[n]);
         cudaEventRecord(begin, stream);
         for (int i = 0; i < times; i++) {
             PPLCUDAConvolutionForwardJitImp(
-                device, stream, function, type, d_input, d_flt, d_output, bias, d_temp_buf, algo_param[n], conv_param, fuse_param);
+                device_prop, stream, function, type, d_input, d_flt, d_output, bias, d_temp_buf, algo_param[n], conv_param, fuse_param);
         }
         cudaEventRecord(end, stream);
         cudaEventSynchronize(begin);
@@ -1426,14 +1419,14 @@ float AlgoForwardTime(
     }
     cudaEventDestroy(begin);
     cudaEventDestroy(end);
-    delete cuda_module;
+    if (module_ptr) cuModuleUnload(module_ptr);
 #endif
     return elapsed;
 }
 
 
 void PPLCUDAConvolutionForwardJitImp(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     cudaStream_t &stream,
     CUfunction function,
     ppl::common::datatype_t type,

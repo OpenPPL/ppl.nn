@@ -89,7 +89,7 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
         ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_input_buffer, W->GetShape()->CalcBytesIncludingPadding(), ALGO_MAX_TIME)
         auto filter_shape = *W->GetShape(); filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         GetCudaDevice()->GetDataConverter()->Convert(&filter_input_buffer, filter_shape, W->GetBufferDesc(), *W->GetShape());
-        PPLCUDAConvTransposeCvt(GetCudaDevice(), stream, filter_input_buffer.addr, filter_temp_buffer.addr,
+        PPLCUDAConvTransposeCvt(GetCudaDevice()->GetDeviceProp(), stream, filter_input_buffer.addr, filter_temp_buffer.addr,
                                 weight_buffer.addr, W->GetShape(), &param_->param);
     }
     ppl::common::Destructor __tmp_buffer_guard__([this, &weight_buffer]() -> void {
@@ -104,7 +104,7 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
     ConvertToForwardFuseParam(ctx, GetCudaDevice(), param_->extra_param.fuse_info, temp_fuse_param);
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
 
-    status = PPLCUDAConvTransposeForward(GetCudaDevice(), GetStream(), module, X->GetShape(), X->GetBufferPtr(),
+    status = PPLCUDAConvTransposeForward(GetCudaDevice()->GetDeviceProp(), GetStream(), module->GetKernelFunc(), X->GetShape(), X->GetBufferPtr(),
                                          param_->extra_param.is_initializer_weight ? (int4*)ctx->GetInput<TensorImpl>(1)->GetBufferPtr() : (int4*)weight_buffer.addr,
                                          b_data, Y->GetShape(), Y->GetBufferPtr(), &param_->param, param_->extra_param.algo_info,
                                          temp_fuse_param, tmp_buffer);

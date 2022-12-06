@@ -9,9 +9,9 @@ int64_t PPLCUDALstmGetRuntimeBufSize(
     const int64_t hidden_size);
 
 ppl::common::RetCode PPLCUDALstmForwardImp(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     cudaStream_t stream,
-    ppl::nn::cuda::CUDAModule *module,
+    const CUfunction function,
     const ppl::nn::TensorShape *X_shape,
     const void *X,
     const void *X_weight,

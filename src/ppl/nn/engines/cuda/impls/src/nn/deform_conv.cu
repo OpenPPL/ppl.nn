@@ -359,9 +359,9 @@ int64_t PPLCUDADeformConvGetBufSize(
 // output: (batch/n_parallel_imgs, out_c, n_parralel_imgs, out_h, out_w)
 
 ppl::common::RetCode PPLCUDADeformConvForward(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     const cudaStream_t &stream,
-    ppl::nn::cuda::CUDAModule *module,
+    const CUfunction function,
     const ppl::nn::TensorShape *output_shape,
     const ppl::nn::TensorShape *input_shape,
     void *output,
@@ -477,9 +477,9 @@ ppl::common::RetCode PPLCUDADeformConvForward(
 
             __half *tmp_bias = (__half *)bias + g * oc_per_grp;
             algo_param_t algo_param;
-            algo_param.UseDefaultF1Kernel(device);
+            algo_param.UseDefaultF1Kernel(device_prop);
             PPLCUDAGemmForwardImp(
-                device, stream, module, &shape_a, tmp_a, &shape_b, tmp_b, tmp_bias, &shape_c, tmp_output, gemm_param, temp_buffer, fuse_param, algo_param);
+                device_prop, stream, function, &shape_a, tmp_a, &shape_b, tmp_b, tmp_bias, &shape_c, tmp_output, gemm_param, temp_buffer, fuse_param, algo_param);
         }
     }
 

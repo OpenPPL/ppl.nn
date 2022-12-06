@@ -73,7 +73,7 @@ ppl::common::RetCode NonMaxSuppressionKernel::DoExecute(KernelExecContext* ctx) 
         }
     }
 
-    status = PPLCUDANMSForwardImp(GetCudaDevice(), GetStream(), boxes->GetShape(), boxes->GetBufferPtr(), scores->GetShape(),
+    status = PPLCUDANMSForwardImp(GetCudaDevice()->GetDeviceProp(), GetStream(), boxes->GetShape(), boxes->GetBufferPtr(), scores->GetShape(),
                                   scores->GetBufferPtr(), output->GetShape(), output->GetBufferPtr<int64_t>(),
                                   tmp_buffer, tmp_buffer_bytes, param_->center_point_box,
                                   max_output_boxes_per_class, iou_threshold, score_threshold);

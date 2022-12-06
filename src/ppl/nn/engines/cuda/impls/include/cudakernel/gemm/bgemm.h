@@ -37,7 +37,7 @@ unsigned int PPLCUDABgemmGetBiasSize(
     bool is_scalar);
 
 double PPLCUDABgemmJITSelectKernel(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     cudaStream_t& stream,
     ppl::common::datatype_t type,
     ppl::nn::TensorShape* input_shape,
@@ -54,7 +54,7 @@ double PPLCUDABgemmJITSelectKernel(
     uint64_t workspace = (uint64_t)8 * 1024 * 1024 * 1024);
 
 double PPLCUDABgemmSelectKernel(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     const cudaStream_t& stream,
     const ppl::nn::TensorShape* input_shape,
     const void* input,
@@ -68,9 +68,9 @@ double PPLCUDABgemmSelectKernel(
     algo_param_t& algo_param);
 
 ppl::common::RetCode PPLCUDABgemmForwardImp(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     const cudaStream_t& stream,
-    ppl::nn::cuda::CUDAModule* module,
+    const CUfunction function,
     const ppl::nn::TensorShape* input_shape,
     const void* input,
     const ppl::nn::TensorShape* weight_shape,

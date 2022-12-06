@@ -286,7 +286,7 @@ int64_t PPLMMCVNMSGetTempBufferSize(const ppl::nn::TensorShape *boxes_shape)
 }
 
 ppl::common::RetCode PPLCUDAMMCVNMSForwardImp(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     cudaStream_t stream,
     ppl::nn::TensorShape *boxes_shape,
     const void *boxes,
@@ -303,8 +303,7 @@ ppl::common::RetCode PPLCUDAMMCVNMSForwardImp(
     int num_boxes            = boxes_shape->GetDim(0);
     // shape for top-k use
     int elem_size            = ppl::common::GetSizeOfDataType(scores_shape->GetDataType());
-    auto& device_prob = device->GetDeviceProp();
-    int max_shared_mem = device_prob.sharedMemPerBlock;
+    int max_shared_mem = device_prop.sharedMemPerBlock;
 
     // temp buffer for sort & nms & construct
     ppl::nn::TensorShape topk_shape;

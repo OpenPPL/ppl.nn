@@ -96,9 +96,8 @@ bool is_g_fp16_kvec_set = false;
         concat_stride_v8
 
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
-void init_f1_kvec(std::vector<kernel_info_t> &g_fp16_kvec, ppl::nn::cuda::CudaDevice* device, ppl::common::datatype_t type)
+void init_f1_kvec(std::vector<kernel_info_t> &g_fp16_kvec, const cudaDeviceProp& device_prop, ppl::common::datatype_t type)
 {
-    auto& device_prop = device->GetDeviceProp();
 
 #ifndef PPLNN_ENABLE_CUDA_JIT
     if (type == ppl::common::DATATYPE_FLOAT16) {
@@ -341,7 +340,7 @@ ppl::common::RetCode PPLCUDAGemmModifyBias(
 }
 
 double PPLCUDAGemmJITSelectKernel(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     cudaStream_t &stream,
     ppl::common::datatype_t type,
     ppl::nn::TensorShape *input_shape,
@@ -364,11 +363,11 @@ double PPLCUDAGemmJITSelectKernel(
     std::vector<algo_param_t> params;
     std::string sources = "";
 
-    GetFp16ConvKernelNominees(device, type, conv_param, knames, params, sources, true);
+    GetFp16ConvKernelNominees(device_prop, type, conv_param, knames, params, sources, true);
 
     int index = 0;
     std::vector<const char *> compile_params;
-    elapsed = AlgoForwardTime(device, stream, knames, sources, index, compile_params, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, fuse_param, workspace);
+    elapsed = AlgoForwardTime(device_prop, stream, knames, sources, index, compile_params, true, type, (int4 *)input, (int4 *)weight, (int4 *)output, (int4 *)bias, (int4 *)temp_buffer, params, conv_param, fuse_param, workspace);
 
     algo_param = params[index];
 #endif
@@ -377,7 +376,7 @@ double PPLCUDAGemmJITSelectKernel(
 }
 
 double PPLCUDAGemmSelectKernel(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     const cudaStream_t &stream,
     const ppl::nn::TensorShape *input_shape,
     const void *input,
@@ -392,11 +391,10 @@ double PPLCUDAGemmSelectKernel(
     algo_param_t &algo_param)
 {
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
-    auto& device_prop = device->GetDeviceProp();
 
     auto type = weight_shape->GetDataType();
     if (!is_g_fp16_kvec_set) {
-      init_f1_kvec(g_fp16_kvec, device, type);
+      init_f1_kvec(g_fp16_kvec, device_prop, type);
       if (g_fp16_kvec.empty()) {
         LOG(ERROR)<<"Fp16 kernel should be compiled on cuda >= 10.2 and run on architeture >= sm_75";
         return ppl::common::RC_UNSUPPORTED;
@@ -517,9 +515,9 @@ ppl::common::RetCode PPLCUDAGemvForwardImp(
     const fuse_param_t &fuse_param);
 
 ppl::common::RetCode PPLCUDAGemmForwardImp(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     const cudaStream_t &stream,
-    ppl::nn::cuda::CUDAModule *module,
+    const CUfunction function,
     const ppl::nn::TensorShape *input_shape,
     const void *input,
     const ppl::nn::TensorShape *weight_shape,
@@ -536,7 +534,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
     auto type = weight_shape->GetDataType();
 #ifndef PPLNN_ENABLE_CUDA_JIT
     if (!is_g_fp16_kvec_set)
-        init_f1_kvec(g_fp16_kvec, device, type);
+        init_f1_kvec(g_fp16_kvec, device_prop, type);
 #endif
     int pad_size = GetPadSize(type);
     int transA   = param.transA;
@@ -624,7 +622,6 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
     half elt_leaky   = fuse_param.elt_leaky;
 
     void *args[]        = {&input0_tmp, &weight, &final_out, &kLoopNum, &in_lut, &in_lut_size, &flt_lut, &flt_lut_size, &in_hw, &out_hw, &flt_hw, &splitk, &in_height, &in_width, &batch, &num_grp, &num_chl_per_grp, &num_chl_per_grp_pad, &flt_height, &flt_width, &num_flt_per_grp, &num_flt_per_grp_pad, &out_height, &out_width, &stride_height, &stride_width, &pad_height, &pad_width, &hole_height, &hole_width, &has_bias, &bias, &fuse_param.has_activation, &clip_min, &fuse_param.has_clip, &clip_max, &fuse_param.has_prelu, &prelu, &fuse_param.has_elt, &(pre_data), &fuse_param.has_elt_activation, &elt_clip_min, &fuse_param.has_elt_clip, &elt_clip_max, &fuse_param.has_elt_prelu, &(elt_prelu), &leaky, &elt_leaky, &fuse_param.has_concat, &concat_offset_v8, &concat_stride_v8};
-    CUfunction function = module->GetKernelFunc();
 
     if(smem_size > MAX_STATIC_SMEM_SIZE_PER_CTA)
         cuFuncSetAttribute(function, CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES, smem_size);

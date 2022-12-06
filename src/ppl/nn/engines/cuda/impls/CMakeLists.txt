@@ -173,6 +173,7 @@ unset(__CUDA_OTHERS_SRC__)
 
 if(PPLNN_ENABLE_CUDA_JIT)
     list(APPEND __CUDA_SRC__ src/nn/conv/conv_jit.cc)
+    list(APPEND __CUDA_SRC__ src/nn/conv/cuda_nvrtc.cc)
 endif()
 list(APPEND __CUDA_SRC__ src/nn/conv/common/init_lut.cc)
 
