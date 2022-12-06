@@ -129,7 +129,7 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
 #else
     // Do Select
     auto stream = options.device->GetStream();
-    auto timer = PPLCUDAConvTransposeSelectKernel(options.device, stream, &shape_in0, input_buffer.addr, weight_buffer.addr,
+    auto timer = PPLCUDAConvTransposeSelectKernel(options.device->GetDeviceProp(), stream, &shape_in0, input_buffer.addr, weight_buffer.addr,
                                                   bias_buffer.addr, temp_buffer.addr, &shape_out, output_buffer.addr,
                                                   &attr_param_.param, attr_param_.extra_param.algo_info);
 #endif
@@ -198,7 +198,7 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
             return status;
         }
 
-        PPLCUDAConvTransposeCvt(options.device, stream, filter_input_buffer.addr, filter_temp_buffer.addr,
+        PPLCUDAConvTransposeCvt(options.device->GetDeviceProp(), stream, filter_input_buffer.addr, filter_temp_buffer.addr,
                                 weight_constat_info.GetBufferDesc().addr, &shape_in1, &attr_param_.param);
         postshape.SetDataFormat(ppl::common::DATAFORMAT_NHWC8);
 

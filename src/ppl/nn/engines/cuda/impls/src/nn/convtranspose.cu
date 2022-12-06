@@ -426,7 +426,7 @@ __global__ void reverse_flt(void *flt, void *rev_flt, const int C, const int R, 
 
 
 ppl::common::RetCode PPLCUDAConvTransposeCvt(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     cudaStream_t stream,
     const void* in_filter,
     void* temp_buffer,
@@ -510,9 +510,9 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
    input: nhwc_pad
 */
 ppl::common::RetCode PPLCUDAConvTransposeForward(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     cudaStream_t stream,
-    ppl::nn::cuda::CUDAModule* module,
+    const CUfunction function,
     ppl::nn::TensorShape* input_shape,
     const void* input,
     const void* rev_flt,
@@ -597,7 +597,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
             void *gemm_buf = NULL;
             void *gemm_output = (int4*)temp_buffer + cvt_in_size_v4;
 
-            PPLCUDAGemmForwardImp(device, stream, module, &a_shape, cvt_input, &b_shape, rev_flt, 
+            PPLCUDAGemmForwardImp(device_prop, stream, function, &a_shape, cvt_input, &b_shape, rev_flt, 
                     gemm_bias, &c_shape, gemm_output, gemm_param, gemm_buf, gemm_fuse_param, algo_param);
 
 
@@ -663,12 +663,12 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
             
 #ifdef PPLNN_ENABLE_CUDA_JIT
             PPLCUDAConvolutionForwardJitImp(
-                device, stream, module->GetKernelFunc(), input_shape->GetDataType(),
+                device_prop, stream, function, input_shape->GetDataType(),
                 (int4*)cvt_input, (int4*)rev_flt, (int4*)output, (int4*)bias,
                 (int4*)temp_buffer, algo_param, conv_param, fuse_param);
 #else
             PPLCUDAConvolutionForwardImp(
-                device, stream, ppl::common::DATATYPE_FLOAT16,
+                device_prop, stream, ppl::common::DATATYPE_FLOAT16,
                 (int4 *)cvt_input, (int4*)rev_flt, (int4*)output,
                 (int4*)bias, (int4*)temp_buffer,
                 algo_param, conv_param, fuse_param);
@@ -685,7 +685,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
 
 
 double PPLCUDAConvTransposeSelectKernel(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     cudaStream_t& stream,
     ppl::nn::TensorShape* input_shape,
     const void* input,
@@ -799,7 +799,7 @@ double PPLCUDAConvTransposeSelectKernel(
             gemm_conv_param.has_bias = false;
 
             min_time = PPLCUDAGemmJITSelectKernel(
-                                device, stream,
+                                device_prop, stream,
                                 input_shape->GetDataType(), &a_shape, (void*)cvt_input, &b_shape,
                                 (void*)rev_flt, (void*)gemm_bias, &c_shape, (void*)gemm_output,
                                 (void*)gemm_buf, gemm_conv_param, gemm_fuse_param, algo_param);
@@ -810,7 +810,7 @@ double PPLCUDAConvTransposeSelectKernel(
             gemm_param.alpha     = 1.f;
             gemm_param.beta      = 1.f;
 
-            min_time = PPLCUDAGemmSelectKernel(device, stream,
+            min_time = PPLCUDAGemmSelectKernel(device_prop, stream,
                                 &a_shape, cvt_input, &b_shape, rev_flt,
                                 gemm_bias, &c_shape, gemm_output,
                                 gemm_buf, gemm_param, gemm_fuse_param,
@@ -848,13 +848,13 @@ double PPLCUDAConvTransposeSelectKernel(
             void *d_temp_buf = temp_buffer;
 #ifdef PPLNN_ENABLE_CUDA_JIT
             min_time = PPLCUDAConvolutionJitSelectKernel(
-                            device, stream, input_shape->GetDataType(),
+                            device_prop, stream, input_shape->GetDataType(),
                             (int4*)cvt_input, (int4*)rev_flt, (int4*)output, (int4*)bias,
                             (int4*)d_temp_buf, algo_param, conv_param, fuse_param);
 #else
 
             min_time = PPLCUDAConvolutionSelectKernel(
-                            device, stream, input_shape->GetDataType(),
+                            device_prop, stream, input_shape->GetDataType(),
                             (int4 *)cvt_input, (int4*)rev_flt, (int4*)output,
                             (int4*)bias, (int4*)d_temp_buf,
                             algo_param, conv_param, fuse_param);

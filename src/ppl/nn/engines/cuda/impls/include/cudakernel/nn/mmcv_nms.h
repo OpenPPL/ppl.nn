@@ -26,7 +26,7 @@
 int64_t PPLMMCVNMSGetTempBufferSize(const ppl::nn::TensorShape* boxes_shape);
 
 ppl::common::RetCode PPLCUDAMMCVNMSForwardImp(
-    ppl::nn::cuda::CudaDevice* device,
+    const cudaDeviceProp& device_prop,
     cudaStream_t stream,
     ppl::nn::TensorShape* boxes_shape,
     const void* boxes,
