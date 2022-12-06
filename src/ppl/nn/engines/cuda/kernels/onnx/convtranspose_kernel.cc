@@ -102,9 +102,13 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
     }
     fuse_param_t temp_fuse_param;
     ConvertToForwardFuseParam(ctx, GetCudaDevice(), param_->extra_param.fuse_info, temp_fuse_param);
+    CUfunction module_func = nullptr;
+#ifdef PPLNN_ENABLE_CUDA_JIT
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
+    module_func = module->GetKernelFunc();
+#endif
 
-    status = PPLCUDAConvTransposeForward(GetCudaDevice()->GetDeviceProp(), GetStream(), module->GetKernelFunc(), X->GetShape(), X->GetBufferPtr(),
+    status = PPLCUDAConvTransposeForward(GetCudaDevice()->GetDeviceProp(), GetStream(), module_func, X->GetShape(), X->GetBufferPtr(),
                                          param_->extra_param.is_initializer_weight ? (int4*)ctx->GetInput<TensorImpl>(1)->GetBufferPtr() : (int4*)weight_buffer.addr,
                                          b_data, Y->GetShape(), Y->GetBufferPtr(), &param_->param, param_->extra_param.algo_info,
                                          temp_fuse_param, tmp_buffer);
