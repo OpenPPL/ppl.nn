@@ -111,10 +111,14 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     auto stream = GetStream();
+    CUfunction module_func = nullptr;
+#ifdef PPLNN_ENABLE_CUDA_JIT
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
+    module_func = module->GetKernelFunc();
+#endif
 
     if (shape_in0.GetDataType() == ppl::common::DATATYPE_FLOAT16) {
-        status = PPLCUDAGemmForwardImp(GetCudaDevice()->GetDeviceProp(), stream, module->GetKernelFunc(), input->GetShape(), input->GetBufferPtr(),
+        status = PPLCUDAGemmForwardImp(GetCudaDevice()->GetDeviceProp(), stream, module_func, input->GetShape(), input->GetBufferPtr(),
                                    weight->GetShape(), weight->GetBufferPtr(), bias,
                                    output->GetShape(), output->GetBufferPtr(),
                                    param_->param, tmp_buffer, temp_fuse_param, param_->extra_param.algo_info);
@@ -144,7 +148,7 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
                 1 / GetCommonParam()->cuda_tensor_info->at(param_->extra_param.fuse_info.concat_edge_id).scale[0];
         }
 
-        status = PPLCUDAGemmForwardImpInt8(GetCudaDevice()->GetDeviceProp(), stream, module->GetKernelFunc(), input->GetShape(), input->GetBufferPtr(),
+        status = PPLCUDAGemmForwardImpInt8(GetCudaDevice()->GetDeviceProp(), stream, module_func, input->GetShape(), input->GetBufferPtr(),
                                            weight->GetShape(), weight->GetBufferPtr(), bias,
                                            output->GetShape(), output->GetBufferPtr(),
                                            param_->param, tmp_buffer, temp_quant_param,

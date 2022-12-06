@@ -65,9 +65,13 @@ ppl::common::RetCode MMCVModulatedDeformConv2dKernel::DoExecute(KernelExecContex
 
     auto stream = GetStream();
     CudaDevice* device = GetCudaDevice();
+    CUfunction module_func = nullptr;
+#ifdef PPLNN_ENABLE_CUDA_JIT
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
+    module_func = module->GetKernelFunc();
+#endif
 
-    status = PPLCUDADeformConvForward(device->GetDeviceProp(), stream, module->GetKernelFunc(), output->GetShape(), input->GetShape(),
+    status = PPLCUDADeformConvForward(device->GetDeviceProp(), stream, module_func, output->GetShape(), input->GetShape(),
                                       output->GetBufferPtr(), input->GetBufferPtr(), weight->GetBufferPtr(),
                                       offset->GetBufferPtr(),
                                       mask ? mask->GetBufferPtr() : nullptr, bias ? bias->GetBufferPtr() : nullptr,
