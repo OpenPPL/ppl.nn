@@ -2,7 +2,7 @@ include "types.fbs";
 
 namespace ppl.nn.pmx;
 
-file_identifier "OPPL";
+file_identifier "OPMX";
 
 table Edge {
     name: string;
