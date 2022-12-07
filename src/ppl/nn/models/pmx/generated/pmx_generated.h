@@ -1011,7 +1011,7 @@ inline const ppl::nn::pmx::Model *GetSizePrefixedModel(const void *buf) {
 }
 
 inline const char *ModelIdentifier() {
-  return "OPPL";
+  return "OPMX";
 }
 
 inline bool ModelBufferHasIdentifier(const void *buf) {
