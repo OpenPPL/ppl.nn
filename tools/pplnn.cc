@@ -576,6 +576,17 @@ static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime
     return true;
 }
 
+static string GetBasename(const string& path) {
+    string last_entry;
+    SplitString(path.data(), path.size(), "/", 1, [&last_entry](const char* s, unsigned int l) -> bool {
+        if (l > 0) {
+            last_entry.assign(s, l);
+        }
+        return true;
+    });
+    return last_entry;
+}
+
 static bool SetInputsAllInOne(const string& input_file, const vector<vector<int64_t>>& input_shapes, Runtime* runtime,
                               vector<string>* input_data) {
     FileMapping fm;
@@ -586,12 +597,29 @@ static bool SetInputsAllInOne(const string& input_file, const vector<vector<int6
     }
 
     auto data = fm.GetData();
+    const string file_name = GetBasename(input_file);
+    uint64_t expect_input_size = 0;
     for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
         auto t = runtime->GetInputTensor(c);
 
         if (!input_shapes.empty()) {
             t->GetShape()->Reshape(input_shapes[c]);
         }
+
+        expect_input_size += t->GetShape()->CalcBytesExcludingPadding();
+    }
+    if (fm.GetSize() < expect_input_size) {
+        LOG(ERROR) << "input file[" << file_name << "] size(" << fm.GetSize()
+            << ") is less than expected size(" << expect_input_size << ")";
+        return false;
+    }
+    if (fm.GetSize() > expect_input_size) {
+        LOG(WARNING) << "input file[" << file_name << "] size(" << fm.GetSize()
+            << ") is bigger than expected size(" << expect_input_size << ")";
+    }
+
+    for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
+        auto t = runtime->GetInputTensor(c);
 
         TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
@@ -648,12 +676,13 @@ static bool SetInputsOneByOne(const string& input_files_str, const vector<vector
     }
 
     for (uint32_t i = 0; i < files.size(); ++i) {
-        const string& file_name = files[i];
+        const string& file_full_path = files[i];
+        const string file_name = GetBasename(file_full_path);
 
         FileMapping fm;
-        auto status = fm.Init(file_name.c_str(), FileMapping::READ);
+        auto status = fm.Init(file_full_path.c_str(), FileMapping::READ);
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "mapping file[" << file_name << "] failed: " << fm.GetErrorMessage();
+            LOG(ERROR) << "mapping file[" << file_full_path << "] failed: " << fm.GetErrorMessage();
             return false;
         }
 
@@ -685,17 +714,6 @@ static bool SetInputsOneByOne(const string& input_files_str, const vector<vector
     }
 
     return true;
-}
-
-static string GetBasename(const string& path) {
-    string last_entry;
-    SplitString(path.data(), path.size(), "/", 1, [&last_entry](const char* s, unsigned int l) -> bool {
-        if (l > 0) {
-            last_entry.assign(s, l);
-        }
-        return true;
-    });
-    return last_entry;
 }
 
 static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* runtime, vector<string>* input_data) {
@@ -775,6 +793,16 @@ static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* ru
         *t->GetShape() = input_shape;
 
         TensorShape src_desc = *t->GetShape();
+        auto tensor_size = src_desc.CalcBytesIncludingPadding();
+        if (fm.GetSize() < tensor_size) {
+            LOG(ERROR) << "input file[" << file_name << "] size(" << fm.GetSize()
+                << ") is less than tensor[" << t->GetName() << "] size(" << tensor_size << ")";
+            return false;
+        }
+        if (fm.GetSize() > tensor_size) {
+            LOG(WARNING) << "input file[" << file_name << "] size(" << fm.GetSize()
+                << ") is bigger than tensor[" << t->GetName() << "] size(" << tensor_size << ")";
+        }
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         status = t->ConvertFromHost(fm.GetData(), src_desc);
         if (status != RC_SUCCESS) {

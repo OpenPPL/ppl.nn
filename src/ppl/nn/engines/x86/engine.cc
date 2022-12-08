@@ -125,8 +125,15 @@ ppl::common::RetCode X86Engine::CalDataOmittedConstants(const ir::Graph& graph, 
         }
     }
 
+    std::set<edgeid_t> graph_output_set;
+    if (data_omitted_constants != nullptr) {
+        for (uint32_t i = 0; i < graph.topo->GetOutputCount(); ++i) {
+            graph_output_set.insert(graph.topo->GetOutput(i));
+        }
+    }
+
     for (auto it = constants_data_refcount.begin(); it != constants_data_refcount.end(); ++it) {
-        if (it->second <= 0) {
+        if (it->second <= 0 && (graph_output_set.find(it->first) == graph_output_set.end())) {
             data_omitted_constants->insert(it->first);
         }
     }
