@@ -24,6 +24,10 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
+MatMulOp::~MatMulOp() {
+    if (aux_param_.packed_b) ppl::common::AlignedFree(aux_param_.packed_b);
+}
+
 RetCode MatMulOp::DoInit(const OptKernelOptions& options) {
     infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
         return onnx::ReshapeMatMul(info, nullptr);
