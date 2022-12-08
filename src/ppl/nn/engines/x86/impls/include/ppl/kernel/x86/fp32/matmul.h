@@ -29,6 +29,7 @@ ppl::common::RetCode matmul_ndarray_fp32(
     const ppl::nn::TensorShape *Y_shape,
     const float *A,
     const float *B,
+    const bool packedB,
     float *Y);
 
 }}}; // namespace ppl::kernel::x86

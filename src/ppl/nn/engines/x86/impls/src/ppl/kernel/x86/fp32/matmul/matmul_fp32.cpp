@@ -62,6 +62,7 @@ ppl::common::RetCode matmul_ndarray_fp32(
     const ppl::nn::TensorShape *Y_shape,
     const float *A,
     const float *B,
+    const bool packedB,
     float *Y)
 {
     const int64_t dim_count = Y_shape->GetDimCount();
@@ -95,10 +96,14 @@ ppl::common::RetCode matmul_ndarray_fp32(
     if (is_single_gemm) {
         return gemm_fp32(
             isa, A, B, nullptr, nullptr,
-            gemm_m_type::NOTRANS, gemm_m_type::NOTRANS,
+            gemm_m_type::NOTRANS, packedB ? gemm_m_type::PACKED : gemm_m_type::NOTRANS,
             gemm_v_type::EMPTY, gemm_m_type::EMPTY,
             M, N, K, K, N, N, 0, 1.0f, 0.0f, 0.0f, 0.0f,
             gemm_post::NONE, Y);
+    }
+
+    if (packedB) {
+        return ppl::common::RC_UNSUPPORTED;
     }
 
     int64_t batch_y = 1;

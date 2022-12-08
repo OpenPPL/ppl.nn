@@ -44,7 +44,10 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
     if (data_type == ppl::common::DATATYPE_FLOAT32 && data_format == ppl::common::DATAFORMAT_NDARRAY) {
         return kernel::x86::matmul_ndarray_fp32(
             GetISA(), A->GetShape(), B->GetShape(), Y->GetShape(),
-            A->GetBufferPtr<float>(), B->GetBufferPtr<float>(), Y->GetBufferPtr<float>());
+            A->GetBufferPtr<float>(),
+            param_->packed_b ? param_->packed_b : B->GetBufferPtr<float>(),
+            param_->packed_b ? true : false,
+            Y->GetBufferPtr<float>());
     } else {
         LOG(ERROR) << "only support fp32 ndarray now.";
     }
