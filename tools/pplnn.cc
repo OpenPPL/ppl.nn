@@ -664,6 +664,16 @@ static bool SetInputsOneByOne(const string& input_files_str, const vector<vector
         }
 
         TensorShape src_desc = *t->GetShape();
+        auto tensor_size = src_desc.CalcBytesIncludingPadding();
+        if (fm.GetSize() < tensor_size) {
+            LOG(ERROR) << "input file[" << file_name << "] size(" << fm.GetSize()
+                << ") is less than tensor[" << t->GetName() << "] size(" << tensor_size << ")";
+            return false;
+        }
+        if (fm.GetSize() > tensor_size) {
+            LOG(WARNING) << "input file[" << file_name << "] size(" << fm.GetSize()
+                << ") is bigger than tensor[" << t->GetName() << "] size(" << tensor_size << ")";
+        }
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         status = t->ConvertFromHost(fm.GetData(), src_desc);
         if (status != RC_SUCCESS) {

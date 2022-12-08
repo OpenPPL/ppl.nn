@@ -15,29 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_ONNX_MATMUL_KERNEL_H_
-#define _ST_HPC_PPL_NN_ENGINES_X86_KERNELS_ONNX_MATMUL_KERNEL_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_X86_PARAMS_MATMUL_PARAM_H_
+#define _ST_HPC_PPL_NN_ENGINES_X86_PARAMS_MATMUL_PARAM_H_
 
-#include "ppl/nn/engines/x86/kernel.h"
-#include "ppl/nn/engines/x86/params/matmul_param.h"
+#include "ppl/kernel/x86/fp32/matmul.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
-class MatMulKernel : public X86Kernel {
-public:
-    MatMulKernel(const ir::Node* node) : X86Kernel(node) {}
-
-    void SetParam(const MatMulParam* p) {
-        param_ = p;
-    }
-
-private:
-    ppl::common::RetCode DoExecute(KernelExecContext*) override;
-
-private:
-    const MatMulParam* param_ = nullptr;
+struct MatMulParam {
+    float *packed_b = nullptr;
 };
 
-}}} // namespace ppl::nn::x86
+}}}; // namespace ppl::nn::x86
 
 #endif

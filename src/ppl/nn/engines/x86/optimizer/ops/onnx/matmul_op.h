@@ -19,6 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_MATMUL_OP_H_
 
 #include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
+#include "ppl/nn/engines/x86/params/matmul_param.h"
 
 namespace ppl { namespace nn { namespace x86 {
 
@@ -27,6 +28,10 @@ public:
     MatMulOp(const ir::Node* node) : X86OptKernel(node) {}
     ppl::common::RetCode DoInit(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
+    ppl::common::RetCode OmitConstantsData(std::map<edgeid_t, int64_t>* constants_data_refcount) override;
+
+private:
+    MatMulParam aux_param_;
 };
 
 }}} // namespace ppl::nn::x86
