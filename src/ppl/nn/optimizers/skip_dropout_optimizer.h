@@ -24,6 +24,7 @@ namespace ppl { namespace nn {
 
 class SkipDropoutOptimizer : public GraphOptimizer {
 public:
+    SkipDropoutOptimizer() : GraphOptimizer("SkipDropoutOptimizer") {}
     virtual ~SkipDropoutOptimizer() {}
     ppl::common::RetCode Optimize(ir::Graph*) const override;
 };

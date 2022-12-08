@@ -31,28 +31,25 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn {
 
-#define REGISTER_OPTIMIZER(name, type) name2optimizer_.emplace(name, make_shared<type>())
-
 GraphOptimizerManager::GraphOptimizerManager() {
-    REGISTER_OPTIMIZER("ConstantNodeOptimizer", ConstantNodeOptimizer);
-    REGISTER_OPTIMIZER("FuseIdentityNodeOptimizer", IdentityNodeOptimizer);
-    REGISTER_OPTIMIZER("FuseParallelNodeOptimizer", FuseParallelNodeOptimizer);
-    REGISTER_OPTIMIZER("FuseBNOptimizer", FuseBNOptimizer);
-    REGISTER_OPTIMIZER("FuseConstantOptimizer", FuseConstantOptimizer);
-    REGISTER_OPTIMIZER("FuseShapeOptimizer", FuseShapeOptimizer);
-    REGISTER_OPTIMIZER("SkipDropoutOptimizer", SkipDropoutOptimizer);
+    optimizer_list_.push_back(make_shared<ConstantNodeOptimizer>());
+    optimizer_list_.push_back(make_shared<IdentityNodeOptimizer>());
+    optimizer_list_.push_back(make_shared<FuseParallelNodeOptimizer>());
+    optimizer_list_.push_back(make_shared<FuseBNOptimizer>());
+    optimizer_list_.push_back(make_shared<FuseConstantOptimizer>());
+    optimizer_list_.push_back(make_shared<FuseShapeOptimizer>());
+    optimizer_list_.push_back(make_shared<SkipDropoutOptimizer>());
 }
 
-RetCode GraphOptimizerManager::RegisterOptimizer(const string& name, const shared_ptr<GraphOptimizer>& opt) {
-    auto ret_pair = name2optimizer_.insert(make_pair(name, opt));
-    return ret_pair.second ? RC_SUCCESS : RC_EXISTS;
+void GraphOptimizerManager::AppendOptimizer(const shared_ptr<GraphOptimizer>& opt) {
+    optimizer_list_.push_back(opt);
 }
 
 RetCode GraphOptimizerManager::Process(ir::Graph* graph) const {
-    for (auto x = name2optimizer_.begin(); x != name2optimizer_.end(); ++x) {
-        auto status = x->second->Optimize(graph);
+    for (auto x = optimizer_list_.begin(); x != optimizer_list_.end(); ++x) {
+        auto status = (*x)->Optimize(graph);
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "optimizer[" << x->first << "] failed: " << GetRetCodeStr(status);
+            LOG(ERROR) << "optimizer[" << (*x)->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
         }
     }

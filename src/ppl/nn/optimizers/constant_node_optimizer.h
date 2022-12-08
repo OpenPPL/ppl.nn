@@ -24,6 +24,7 @@ namespace ppl { namespace nn {
 
 class ConstantNodeOptimizer : public GraphOptimizer {
 public:
+    ConstantNodeOptimizer() : GraphOptimizer("ConstantNodeOptimizer") {}
     virtual ~ConstantNodeOptimizer() {}
     ppl::common::RetCode Optimize(ir::Graph*) const override;
 };

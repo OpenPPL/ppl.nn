@@ -25,8 +25,17 @@ namespace ppl { namespace nn {
 
 class GraphOptimizer {
 public:
+    GraphOptimizer(const std::string& name) : name_(name) {}
     virtual ~GraphOptimizer() {}
+
     virtual ppl::common::RetCode Optimize(ir::Graph*) const = 0;
+
+    const std::string& GetName() const {
+        return name_;
+    }
+
+private:
+    const std::string name_;
 };
 
 }} // namespace ppl::nn

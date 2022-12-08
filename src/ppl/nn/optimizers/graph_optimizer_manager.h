@@ -19,7 +19,7 @@
 #define _ST_HPC_PPL_NN_OPTIMIZERS_GRAPH_OPTIMIZER_MANAGER_H_
 
 #include "ppl/nn/optimizers/graph_optimizer.h"
-#include <map>
+#include <vector>
 
 namespace ppl { namespace nn {
 
@@ -30,7 +30,7 @@ public:
         return &mgr;
     }
 
-    ppl::common::RetCode RegisterOptimizer(const std::string& name, const std::shared_ptr<GraphOptimizer>&);
+    void AppendOptimizer(const std::shared_ptr<GraphOptimizer>&);
 
     /** @brief perform optimizations */
     ppl::common::RetCode Process(ir::Graph*) const;
@@ -39,7 +39,7 @@ private:
     GraphOptimizerManager();
 
 private:
-    std::map<std::string, std::shared_ptr<GraphOptimizer>> name2optimizer_;
+    std::vector<std::shared_ptr<GraphOptimizer>> optimizer_list_;
 };
 
 }} // namespace ppl::nn
