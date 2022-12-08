@@ -74,8 +74,7 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     auto shape_in1 = *options.tensors->find(node->GetInput(1))->second->GetShape();
     auto shape_in2 = TensorShape();
     auto shape_out = *options.tensors->find(node->GetOutput(0))->second->GetShape();
-    auto align_size = ppl::common::cuda::GetDataFormatChannelAlignment(shape_in0.GetDataFormat());
-
+    auto align_size = shape_in0.GetDataType() == DATATYPE_FLOAT16 ? 8 : 16;
     auto dim_count0 = shape_in0.GetDimCount();
     auto dim_count1 = shape_in1.GetDimCount();
     auto out_dim_count = shape_out.GetDimCount();
@@ -96,6 +95,18 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
 
     if (dim_count0 < 2 || dim_count1 < 2) {
         return 0.0f;
+    }
+
+    // Padding
+    auto K = shape_in0.GetDim(dim_count0 - 1);
+    auto N = shape_in1.GetDim(dim_count1 - 1);
+
+    shape_in0.SetDim(dim_count0 - 1, (K + align_size - 1) / align_size * align_size);
+    shape_in1.SetDim(dim_count1 - 2, (K + align_size - 1) / align_size * align_size);
+    shape_out.SetDim(out_dim_count - 1, (N + align_size - 1) / align_size * align_size);
+    if (attr_param_.extra_param.bias_term) {
+        shape_in2 = *options.tensors->find(node->GetInput(2))->second->GetShape();
+        shape_in2.SetDim(0, (shape_in2.GetDim(0) + align_size - 1) / align_size * align_size);
     }
 
     conv_param_t temp_conv_param;
@@ -152,18 +163,6 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
 
     if (options.args->quick_select) {
         return 0.0f;
-    }
-
-    // Padding
-    auto K = shape_in0.GetDim(dim_count0 - 1);
-    auto N = shape_in1.GetDim(dim_count1 - 1);
-
-    shape_in0.SetDim(dim_count0 - 1, (K + align_size - 1) / align_size * align_size);
-    shape_in1.SetDim(dim_count1 - 2, (K + align_size - 1) / align_size * align_size);
-    shape_out.SetDim(out_dim_count - 1, (N + align_size - 1) / align_size * align_size);
-    if (attr_param_.extra_param.bias_term) {
-        shape_in2 = *options.tensors->find(node->GetInput(2))->second->GetShape();
-        shape_in2.SetDim(0, (shape_in2.GetDim(0) + align_size - 1) / align_size * align_size);
     }
 
     RetCode status;
