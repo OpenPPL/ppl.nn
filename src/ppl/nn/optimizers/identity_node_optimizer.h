@@ -24,6 +24,7 @@ namespace ppl { namespace nn {
 
 class IdentityNodeOptimizer : public GraphOptimizer {
 public:
+    IdentityNodeOptimizer() : GraphOptimizer("IdentityNodeOptimizer") {}
     virtual ~IdentityNodeOptimizer() {}
     ppl::common::RetCode Optimize(ir::Graph*) const override;
 };

@@ -24,6 +24,7 @@ namespace ppl { namespace nn {
 
 class FuseConstantOptimizer : public GraphOptimizer {
 public:
+    FuseConstantOptimizer() : GraphOptimizer("FuseConstantOptimizer") {}
     virtual ~FuseConstantOptimizer() {}
     ppl::common::RetCode Optimize(ir::Graph*) const override;
 };

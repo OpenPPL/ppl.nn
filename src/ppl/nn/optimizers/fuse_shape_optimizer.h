@@ -7,6 +7,7 @@ namespace ppl { namespace nn {
 
 class FuseShapeOptimizer : public GraphOptimizer {
 public:
+    FuseShapeOptimizer() : GraphOptimizer("FuseShapeOptimizer") {}
     virtual ~FuseShapeOptimizer() {}
     ppl::common::RetCode Optimize(ir::Graph*) const override;
 };
