@@ -41,6 +41,15 @@ static __device__ inline float _int82float(
     return tmp;
 }
 
+static __device__ inline float _uint82float(
+    unsigned char data_in,
+    float step,
+    unsigned char zeroPoint)
+{
+    float tmp = ((float)data_in - (float)zeroPoint) * step;
+    return tmp;
+}
+
 static __device__ inline signed char _float2int4B(
     float data_in,
     float step,
@@ -90,6 +99,15 @@ __global__ void cuda_kernel_cvt<INT8_FLOAT32>(size_t num_elems, int channels, in
     int c_id = (id / stride) % channels;
     float i_step = param.i_step_ptr[c_id];
     ((float*)output)[id] = _int82float(((int8_t*)input)[id], i_step, param.i_zero_point);
+}
+
+template <>
+__global__ void cuda_kernel_cvt<UINT8_FLOAT32>(size_t num_elems, int channels, int stride, const void* input, ReFormatParam param, void* output)
+{
+    JUDGE(num_elems)
+    int c_id = (id / stride) % channels;
+    float i_step = param.i_step_ptr[c_id];
+    ((float*)output)[id] = _uint82float(((uint8_t*)input)[id], i_step, param.i_zero_point);
 }
 
 template <>
@@ -205,6 +223,9 @@ void PPLCUDACVTTypePerChannel(
             break;
         case INT8_FLOAT32:
             cuda_kernel_cvt<INT8_FLOAT32><<<grid_size, block_size, 0, stream>>>(num_elems, param.quant_dim_size, param.quant_stride, input, param, output);
+            break;
+        case UINT8_FLOAT32:
+            cuda_kernel_cvt<UINT8_FLOAT32><<<grid_size, block_size, 0, stream>>>(num_elems, param.quant_dim_size, param.quant_stride, input, param, output);
             break;
         case FLOAT32_FLOAT16:
             cuda_kernel_cvt<FLOAT32_FLOAT16><<<grid_size, block_size, 0, stream>>>(num_elems, param.quant_dim_size, param.quant_stride, input, param, output);
