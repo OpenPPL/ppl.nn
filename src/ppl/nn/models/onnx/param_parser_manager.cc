@@ -48,6 +48,7 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_one_hot_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_pad_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_pooling_param.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_random_uniform_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_reduce_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_resize_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_roialign_param.h"
@@ -187,6 +188,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Pow", 7, 16, nullptr);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "PRelu", 6, 16, nullptr);
     // R
+    PPL_REGISTER_OP_WITH_PARAM("", "RandomUniform", 1, 16, RandomUniformParam, ParseRandomUniformParam, PackRandomUniformParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Range", 11, 16, nullptr);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Reciprocal", 6, 16, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("", "ReduceL2", 1, 16, ReduceParam, ParseReduceParam, PackReduceParam);

@@ -70,6 +70,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/pad_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/pow_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/prelu_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/onnx/random_uniform_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/range_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/reduce_max_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/reduce_min_op.h"
@@ -204,6 +205,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<PowOp>("", "Pow", 7, 16);
     RegisterOptKernelCreator<PReluOp>("", "PRelu", 6, 16);
     // R
+    RegisterOptKernelCreator<RandomUniformOp>("", "RandomUniform", 1, 16);
     RegisterOptKernelCreator<RangeOp>("", "Range", 11, 16);
     RegisterOptKernelCreator<ReduceMaxOp>("", "ReduceMax", 1, 16);
     RegisterOptKernelCreator<ReduceMeanOp>("", "ReduceMean", 1, 16);

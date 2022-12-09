@@ -126,17 +126,18 @@ struct FloatValueGetter final {
 };
 
 template <typename T, typename TDefault>
-inline void GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, T* value, TDefault default_value) {
+inline bool GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, T* value, TDefault default_value) {
     for (int i = 0; i < pb_node.attribute_size(); ++i) {
         auto& pb_attr = pb_node.attribute(i);
         if (pb_attr.name() == key) {
             typename std::conditional<std::is_integral<T>::value, IntValueGetter<T>,
                                       typename std::conditional<std::is_floating_point<T>::value, FloatValueGetter<T>,
                                                                 void>::type>::type getter(pb_attr, value);
-            return;
+            return true;
         }
     }
     *value = default_value;
+    return false;
 }
 
 template <typename T>
@@ -160,19 +161,20 @@ struct FloatVecGetter final {
 };
 
 template <typename T>
-inline void GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::vector<T>* values) {
+inline bool GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::vector<T>* values) {
     for (int i = 0; i < pb_node.attribute_size(); ++i) {
         auto& pb_attr = pb_node.attribute(i);
         if (pb_attr.name() == key) {
             typename std::conditional<std::is_integral<T>::value, IntVecGetter<T>,
                                       typename std::conditional<std::is_floating_point<T>::value, FloatVecGetter<T>,
                                                                 void>::type>::type getter(pb_attr, values);
-            return;
+            return true;
         }
     }
+    return false;
 }
 
-inline void GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::vector<std::string>* values) {
+inline bool GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::vector<std::string>* values) {
     for (int i = 0; i < pb_node.attribute_size(); ++i) {
         auto& pb_attr = pb_node.attribute(i);
         if (pb_attr.name() == key) {
@@ -180,26 +182,28 @@ inline void GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::
             for (int j = 0; j < pb_attr.strings_size(); ++j) {
                 values->at(j) = pb_attr.strings(j);
             }
-            return;
+            return true;
         }
     }
+    return false;
 }
 
-inline void GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::string* value,
+inline bool GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::string* value,
                         const std::string& default_value) {
     for (int i = 0; i < pb_node.attribute_size(); ++i) {
         auto& pb_attr = pb_node.attribute(i);
         if (pb_attr.name() == key) {
             *value = pb_attr.s();
-            return;
+            return true;
         }
     }
     *value = default_value;
+    return false;
 }
 
-inline void GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::string* value,
+inline bool GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::string* value,
                         const char* default_value) {
-    GetNodeAttr(pb_node, key, value, std::string(default_value));
+    return GetNodeAttr(pb_node, key, value, std::string(default_value));
 }
 
 /* -------------------------------------------------------------------------- */
