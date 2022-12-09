@@ -18,7 +18,7 @@
 #include "cudakernel/reduce/reduce_helper.h"
 #include "cudakernel/reduce/reduce.h"
 
-ReduceMode GetReduceMode(PPLReduceDimDes des)
+ReduceMode pplGetReduceMode(PPLReduceDimDes des)
 {
     // if (des.n_reduce == 1) return ReduceNon;
     if (des.n_inner * des.n_outer == 1)
@@ -28,7 +28,7 @@ ReduceMode GetReduceMode(PPLReduceDimDes des)
     return ReduceCol;
 }
 
-void GetSplitNum(
+void pplGetSplitNum(
     int64_t bx,
     int64_t by,
     int64_t block_reduce,
@@ -59,7 +59,7 @@ std::pair<dim3, dim3> ComputeReduceRowConfigure(
     }
     grid_dim.x = des.n_outer;
     int64_t bx = des.n_outer, by = 1, split_num = 1, block_reduce = des.n_reduce;
-    GetSplitNum(bx, by, block_reduce, split_num, multi_block);
+    pplGetSplitNum(bx, by, block_reduce, split_num, multi_block);
     grid_dim.y       = split_num;
     des.num_elements = DivUp(split_num, des.n_reduce);
     return {block_dim, grid_dim};
@@ -75,7 +75,7 @@ std::pair<dim3, dim3> ComputeReduceAllConfigure(
     dim3 block_dim, grid_dim;
     int64_t bx = 1, by = 1, split_num = 1, block_reduce = des.n_reduce;
 
-    GetSplitNum(bx, by, block_reduce, split_num, multi_block);
+    pplGetSplitNum(bx, by, block_reduce, split_num, multi_block);
     block_dim.x      = BLOCKSIZE;
     grid_dim.x       = split_num;
     des.num_elements = DivUp(split_num, des.n_reduce);
@@ -95,14 +95,14 @@ std::pair<dim3, dim3> ComputeReduceColConfigure(
 
     int64_t bx = des.n_outer, by = 1, split_num = 1, block_reduce = des.n_reduce;
     if (des.n_inner < 32) {
-        // GetSplitNum(bx, by, block_reduce, split_num, multi_block);
+        // pplGetSplitNum(bx, by, block_reduce, split_num, multi_block);
         grid_dim.x = bx;
         grid_dim.y = split_num;
         return {block_dim, grid_dim};
     }
 
     bx = des.n_outer * DivUp(32, des.n_inner);
-    GetSplitNum(bx, by, block_reduce, split_num, multi_block);
+    pplGetSplitNum(bx, by, block_reduce, split_num, multi_block);
     grid_dim.x       = bx;
     grid_dim.y       = split_num;
     des.num_elements = DivUp(split_num, des.n_reduce);

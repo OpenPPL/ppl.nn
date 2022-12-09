@@ -60,7 +60,7 @@ inline constexpr int64_t DivUp(int64_t divisor, int64_t dividend)
 const int BLOCKSIZE     = 1024;
 const int LEASTBLOCKNUM = 128;
 
-void GetSplitNum(int64_t bx, int64_t by, int64_t block_reduce, int64_t &split_num, bool &multi_block);
+void pplGetSplitNum(int64_t bx, int64_t by, int64_t block_reduce, int64_t &split_num, bool &multi_block);
 
 std::pair<dim3, dim3> ComputeReduceRowConfigure(ReduceParam param, ReduceMode mode, int64_t &num_elements, bool &multi_block, PPLReduceDimDes &des);
 
