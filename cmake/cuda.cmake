@@ -1,5 +1,11 @@
 option(PPLNN_ENABLE_CUDA_JIT "enable cuda JIT support" ON)
 
+set(TMP_CMAKE_CUDA_FLAGS ${CMAKE_CUDA_FLAGS})
+set(CMAKE_CUDA_FLAGS "")
+if(CUDA_VERSION VERSION_GREATER_EQUAL "10.2")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -forward-unknown-to-host-compiler")
+endif()
+
 include(${HPCC_DEPS_DIR}/hpcc/cmake/cuda-common.cmake)
 
 if(CUDA_VERSION VERSION_LESS "9.0")
@@ -55,3 +61,5 @@ if(PPLNN_INSTALL)
     install(DIRECTORY include/ppl/nn/engines/cuda DESTINATION include/ppl/nn/engines)
     install(TARGETS pplnn_cuda_static DESTINATION lib)
 endif()
+
+set(CMAKE_CUDA_FLAGS ${TMP_CMAKE_CUDA_FLAGS})
