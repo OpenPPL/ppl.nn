@@ -21,7 +21,7 @@
 #include "ppl/common/retcode.h"
 #include "ppl/nn/common/tensor_shape.h"
 
-ReduceMode GetReduceMode(PPLReduceDimDes des);
+ReduceMode pplGetReduceMode(PPLReduceDimDes des);
 
 ppl::common::RetCode PPLCUDAArgMinForwardImp(
     cudaStream_t stream,

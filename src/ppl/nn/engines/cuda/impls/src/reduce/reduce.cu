@@ -129,7 +129,7 @@ ppl::common::RetCode PPLCUDAReduceOPImp(
     typedef typename Operator::srctype in_type;
     typedef typename Operator::dsttype dst_type;
     Operator op((in_type *)input, (dst_type *)output);
-    ReduceMode mode      = GetReduceMode(des);
+    ReduceMode mode      = pplGetReduceMode(des);
     bool multi_block     = false;
     int64_t num_elements = 1;
     auto configure       = ComputeKernelConfigure(param, mode, num_elements, multi_block, des);
