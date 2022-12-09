@@ -201,6 +201,7 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
         PPLCUDAConvTransposeCvt(options.device->GetDeviceProp(), stream, filter_input_buffer.addr, filter_temp_buffer.addr,
                                 weight_constat_info.GetBufferDesc().addr, &shape_in1, &attr_param_.param);
         postshape.SetDataFormat(ppl::common::DATAFORMAT_NHWC8);
+        newshape.SetDataFormat(ppl::common::DATAFORMAT_NHWC8);
 
         options.info->constants.emplace(preedge_id, std::move(weight_constat_info));
         *options.tensors->find(preedge_id)->second->GetShape() = newshape;
