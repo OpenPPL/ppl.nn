@@ -34,6 +34,7 @@ using namespace ppl::common;
 #define cvtTYPEALL(cvt_format)  \
     cvt_format(FLOAT32_INT8)    \
     cvt_format(INT8_FLOAT32)    \
+    cvt_format(UINT8_FLOAT32)    \
     cvt_format(FLOAT32_FLOAT16) \
     cvt_format(FLOAT16_FLOAT32) \
     cvt_format(FLOAT32_INT4B)   \
@@ -138,6 +139,7 @@ __global__ void cuda_kernel_cvtformat_type<type_mode, NDARRAY_NHWC>(            
 }
 cvtNCTONHWC(float, FLOAT32_INT8)
 cvtNCTONHWC(char, INT8_FLOAT32)
+cvtNCTONHWC(uint8_t, UINT8_FLOAT32)
 cvtNCTONHWC(float, FLOAT32_FLOAT16)
 cvtNCTONHWC(half, FLOAT16_FLOAT32)
 cvtNCTONHWC(float, FLOAT32_INT4B)
@@ -189,6 +191,7 @@ __global__ void cuda_kernel_cvtformat_type<type_mode, NHWC_NDARRAY>(            
 
 cvtNHWC8TONC(float, FLOAT32_INT8)
 cvtNHWC8TONC(char, INT8_FLOAT32)
+cvtNHWC8TONC(unsigned char, UINT8_FLOAT32)
 cvtNHWC8TONC(float, FLOAT32_FLOAT16)
 cvtNHWC8TONC(half, FLOAT16_FLOAT32)
 cvtNHWC8TONC(float, FLOAT32_INT4B)
@@ -508,6 +511,11 @@ void PPLCUDASmallChannelCVTFormatType(cudaStream_t stream, const void *input, vo
                     <<<grid_size, block_size, 0, stream>>>(input, num_elems, inner_fast,        \
                     src_pad_fast, dst_pad_fast, output, param);                                 \
                 break;                                                                          \
+            case UINT8_FLOAT32:                                                                 \
+                cuda_kernel_small_channel_cvtformat_type<UINT8_FLOAT32, mode>                   \
+                    <<<grid_size, block_size, 0, stream>>>(input, num_elems, inner_fast,        \
+                    src_pad_fast, dst_pad_fast, output, param);                                 \
+                break;                                                                          \
             case FLOAT32_FLOAT16:                                                               \
                 cuda_kernel_small_channel_cvtformat_type<FLOAT32_FLOAT16, mode>                 \
                     <<<grid_size, block_size, 0, stream>>>(input, num_elems, inner_fast,        \
@@ -602,6 +610,10 @@ void PPLCUDANormalCVTFormatType(cudaStream_t stream, const void *input, void *ou
                 break;                                                                          \
             case INT8_FLOAT32:                                                                  \
                 cuda_kernel_cvtformat_type<INT8_FLOAT32, mode>                                  \
+                    <<<grid_size, block_size, 0, stream>>>(input, output, param);               \
+                break;                                                                          \
+            case UINT8_FLOAT32:                                                                 \
+                cuda_kernel_cvtformat_type<UINT8_FLOAT32, mode>                                 \
                     <<<grid_size, block_size, 0, stream>>>(input, output, param);               \
                 break;                                                                          \
             case FLOAT32_FLOAT16:                                                               \

@@ -39,6 +39,15 @@ static __device__ inline float _int82float(
     return tmp;
 }
 
+static __device__ inline float _uint82float(
+    unsigned char data_in,
+    float step,
+    unsigned char zeroPoint)
+{
+    float tmp = ((float)data_in - (float)zeroPoint) * step;
+    return tmp;
+}
+
 static __device__ inline signed char _float2int4B(
     float data_in,
     float step,
@@ -82,6 +91,13 @@ __device__ inline void cuda_kernel_cvt_per_elems<INT8_FLOAT32>(const void* input
 {
     float i_step = param.i_step;
     ((float*)output)[out_offset] = _int82float(((int8_t*)input)[in_offset], i_step, param.i_zero_point);
+}
+
+template <>
+__device__ inline void cuda_kernel_cvt_per_elems<UINT8_FLOAT32>(const void* input, int in_offset, void* output, int out_offset, ReFormatParam param)
+{
+    float i_step = param.i_step;
+    ((float*)output)[out_offset] = _uint82float(((uint8_t*)input)[in_offset], i_step, param.i_zero_point);
 }
 
 template <>
@@ -197,6 +213,7 @@ __device__ inline void cuda_kernel_set_zero_per_elems<mode>(void* output, int ou
     ((float*)output)[out_offset] = 0.f;                                                     \
 }
 INST_DEST_FLOAT(INT8_FLOAT32)
+INST_DEST_FLOAT(UINT8_FLOAT32)
 INST_DEST_FLOAT(INT4B_FLOAT32)
 INST_DEST_FLOAT(FLOAT16_FLOAT32)
 INST_DEST_FLOAT(INT64_FLOAT32)

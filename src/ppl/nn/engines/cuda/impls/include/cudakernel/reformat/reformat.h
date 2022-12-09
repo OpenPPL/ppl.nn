@@ -117,6 +117,7 @@ enum CVTTypeMode {
     INT64_INT32     = 16,
     FLOAT32_INT64   = 17,
     INT64_FLOAT32   = 18,
+    UINT8_FLOAT32   = 19,
 };
 
 bool IsFloatEqual(const std::vector<float>& a, const std::vector<float>& b);

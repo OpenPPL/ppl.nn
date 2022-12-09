@@ -628,6 +628,13 @@ CVTFormatMode GetCVTFormatMode(ReFormatParam param)
             default:
                 return CVTFormatUnknown;
         }
+    } else if (param.in_format == DATAFORMAT_NHWC) {
+        switch (param.out_format) {
+            case DATAFORMAT_NDARRAY:
+                return NHWC_NDARRAY;
+            default:
+                return CVTFormatUnknown;
+        }
     } else if (param.in_format == DATAFORMAT_NHWC8) {
         switch (param.out_format) {
             case DATAFORMAT_NDARRAY:
@@ -687,6 +694,14 @@ CVTTypeMode GetCVTTypeMode(ReFormatParam param)
                 return INT8_INT4B;
             case DATATYPE_INT8:
                 return INT8_INT8;
+            default:
+                return CVTTypeUnknown;
+        }
+    }
+    if (param.in_type == DATATYPE_UINT8) {
+        switch (param.out_type) {
+            case DATATYPE_FLOAT32:
+                return UINT8_FLOAT32;
             default:
                 return CVTTypeUnknown;
         }
