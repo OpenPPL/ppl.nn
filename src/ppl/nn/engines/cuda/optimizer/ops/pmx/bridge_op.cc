@@ -126,12 +126,19 @@ RetCode BridgeOp::DeleteBridgeNode(ir::Node* node, ir::Graph* graph,
     auto nextnode_id = topo->GetEdge(postedge_id)->CreateConsumerIter().Get(); // consumer0
     auto prequant = quants->at(preedge_id);
     auto postquant = quants->at(postedge_id);
+    CudaTensorKernelQuant prequant_kernel, postquant_kernel;
+    prequant_kernel.format = prequant.format; prequant_kernel.type = prequant.type;
+    prequant_kernel.per_channel = prequant.per_channel; prequant_kernel.bit_width = prequant.bit_width;
+    prequant_kernel.scale = prequant.scale; prequant_kernel.zero_point = prequant.zero_point;
+    postquant_kernel.format = postquant.format; postquant_kernel.type = postquant.type;
+    postquant_kernel.per_channel = postquant.per_channel; postquant_kernel.bit_width = postquant.bit_width;
+    postquant_kernel.scale = postquant.scale; postquant_kernel.zero_point = postquant.zero_point;
 
     auto preedge = topo->GetEdge(preedge_id);
     auto nextnode = topo->GetNode(nextnode_id);
     if (prequant.format == postquant.format && // two edge has the same format
         prequant.type == postquant.type && // two edge has the same type
-        (prequant.type != DATATYPE_INT8 || EqualQuant(prequant, postquant)) && // two edge has the same quant
+        (prequant.type != DATATYPE_INT8 || EqualQuant(prequant_kernel, postquant_kernel)) && // two edge has the same quant
         topo->GetInput(topo->GetEdge(preedge_id)->GetName()) == INVALID_EDGEID && // and preedge is not graph input
         topo->GetExtraInput(topo->GetEdge(preedge_id)->GetName()) == INVALID_EDGEID && // and preedge is not graph extrainput
         topo->GetOutput(topo->GetEdge(postedge_id)->GetName()) == INVALID_EDGEID) { // and postedge is not graph output

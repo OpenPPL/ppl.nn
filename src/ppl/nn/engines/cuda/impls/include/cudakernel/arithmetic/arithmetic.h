@@ -18,7 +18,6 @@
 #ifndef PPLCUDA_KERNEL_INCLUDE_ARITHMETIC_ARITHMETIC_H_
 #define PPLCUDA_KERNEL_INCLUDE_ARITHMETIC_ARITHMETIC_H_
 #include "ppl/common/tensor_shape.h"
-#include "ppl/nn/engines/cuda/params/quant_param_cuda.h"
 #include "ppl/common/retcode.h"
 
 ppl::common::RetCode PPLCUDAArithMeticAddForwardImp(

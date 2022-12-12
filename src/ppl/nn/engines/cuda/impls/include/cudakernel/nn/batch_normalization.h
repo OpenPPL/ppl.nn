@@ -19,7 +19,6 @@
 #define PPLCUDA_KERNEL_INCLUDE_BATCH_NORMALIZATION_BATCH_NORMALIZATION_H_
 #include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
-#include "ppl/nn/params/onnx/batch_normalization_param.h"
 #include <cuda_runtime.h>
 
 ppl::common::RetCode PPLCUDABatchNormalizationForwardImp(

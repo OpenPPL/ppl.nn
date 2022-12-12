@@ -189,10 +189,15 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     LOG(INFO) << "select kernel " << attr_param_.extra_param.algo_info.algo_name;
 #else
     // Do Select
+    GemmKernelParam param_kernel_;
+    param_kernel_.alpha = attr_param_.param.alpha;
+    param_kernel_.beta = attr_param_.param.beta;
+    param_kernel_.transA = attr_param_.param.transA;
+    param_kernel_.transB = attr_param_.param.transB;
     if (shape_in0.GetDataType()==ppl::common::DATATYPE_FLOAT16) {
         timer = PPLCUDABgemmSelectKernel(options.device->GetDeviceProp(), stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
                                          &shape_out, output_buffer.addr, temp_buffer.addr,
-                                         attr_param_.param, temp_fuse_param, attr_param_.extra_param.algo_info);
+                                         param_kernel_, temp_fuse_param, attr_param_.extra_param.algo_info);
     }
 #endif
     CudaArgs::AlgoSelects algo_select;

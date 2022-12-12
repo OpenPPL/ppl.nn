@@ -198,7 +198,7 @@ ppl::common::RetCode PPLCUDAROIAlignForwardImp(
     const void* batch_indices,
     ppl::common::TensorShape* output_shape,
     void* output,
-    ppl::nn::onnx::RoiAlignParam param)
+    RoiAlignKernelParam param)
 {
     int block_size    = 256;
     int channels      = input_shape->GetDim(1);

@@ -25,7 +25,6 @@
 
 #include "cuda_fp16.h"
 using namespace PPLCUDA;
-using namespace ppl::nn;
 using namespace ppl::common;
 
 #define DIM 32

@@ -18,13 +18,17 @@
 #ifndef PPLCUDA_KERNEL_INCLUDE_GEMM_GEMM_H_
 #define PPLCUDA_KERNEL_INCLUDE_GEMM_GEMM_H_
 #include "ppl/common/tensor_shape.h"
-#include "ppl/nn/params/onnx/gemm_param.h"
 #include "ppl/common/retcode.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
 
-#include "ppl/nn/engines/cuda/module/cuda_module.h"
-
 #include "cuda.h"
+
+struct GemmKernelParam final {
+    float alpha;
+    float beta;
+    int32_t transA;
+    int32_t transB;
+};
 
 uint64_t PPLGemmCUDAGetCompilationBufSize(
     const ppl::common::TensorShape* input_shape,
@@ -72,7 +76,7 @@ double PPLCUDAGemmSelectKernel(
     const ppl::common::TensorShape* output_shape,
     void* output,
     void* temp_buffer,
-    const ppl::nn::onnx::GemmParam& param,
+    const GemmKernelParam& param,
     const fuse_param_t& fuse_param,
     algo_param_t& algo_param);
 
@@ -87,7 +91,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
     const void* bias,
     const ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::onnx::GemmParam& param,
+    const GemmKernelParam& param,
     void* temp_buffer,
     fuse_param_t& fuse_param,
     const algo_param_t& algo_param);
@@ -97,21 +101,21 @@ ppl::common::RetCode PPLCUDAGemmModifyWeights(
     ppl::common::TensorShape* weight_shape,
     void* weight,
     void* out_weight,
-    const ppl::nn::onnx::GemmParam* param);
+    const GemmKernelParam* param);
 
 ppl::common::RetCode PPLCUDAGemmModifyBias(
     const cudaStream_t& stream,
     const ppl::common::datatype_t infer_type,
     const ppl::common::TensorShape* bias_shape,
     void* bias,
-    const ppl::nn::onnx::GemmParam* param);
+    const GemmKernelParam* param);
 
 ppl::common::RetCode PPLCUDAGemmModifyWeightsInt8(
     const cudaStream_t &stream,
     ppl::common::TensorShape *weight_shape,
     void *weight,
     void *tmp_weight, // if need transpose
-    const ppl::nn::onnx::GemmParam *param);
+    const GemmKernelParam *param);
 
 double PPLCUDAGemmJITSelectKernelInt8(
     const cudaDeviceProp& device_prop,
@@ -142,7 +146,7 @@ double PPLCUDAGemmSelectKernelInt8(
     const ppl::common::TensorShape *output_shape,
     void *output,
     void *temp_buffer,
-    const ppl::nn::onnx::GemmParam &param,
+    const GemmKernelParam &param,
     const quant_param_t &quant_param,
     const fuse_param_t &fuse_param,
     algo_param_t &algo_param);
@@ -150,20 +154,15 @@ double PPLCUDAGemmSelectKernelInt8(
 ppl::common::RetCode PPLCUDAGemmForwardImpInt8(
     const cudaDeviceProp& device_prop,
     const cudaStream_t &stream,
-<<<<<<< HEAD
     const CUfunction function,
     const ppl::common::TensorShape *input_shape,
-=======
-    ppl::nn::cuda::CUDAModule *module,
-    const ppl::common::TensorShape *input_shape,
->>>>>>> 5b14454... reorg pplnn
     const void *input,
     const ppl::common::TensorShape *weight_shape,
     const void *weight,
     const void *bias,
     const ppl::common::TensorShape *output_shape,
     void *output,
-    const ppl::nn::onnx::GemmParam &param,
+    const GemmKernelParam &param,
     void *temp_buffer,
     const quant_param_t &quant_param,
     fuse_param_t &fuse_param,

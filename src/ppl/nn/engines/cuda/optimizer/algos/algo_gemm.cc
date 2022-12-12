@@ -176,14 +176,19 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
     LOG(INFO) << "select kernel " << attr_param_.extra_param.algo_info.algo_name;
 #else
     // Do Select
+    GemmKernelParam param_kernel_;
+    param_kernel_.alpha = attr_param_.param.alpha;
+    param_kernel_.beta = attr_param_.param.beta;
+    param_kernel_.transA = attr_param_.param.transA;
+    param_kernel_.transB = attr_param_.param.transB;
     if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
         timer = PPLCUDAGemmSelectKernel(options.device->GetDeviceProp(), stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
                                         bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr,
-                                        attr_param_.param, temp_fuse_param, attr_param_.extra_param.algo_info);
+                                        param_kernel_, temp_fuse_param, attr_param_.extra_param.algo_info);
     } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
         timer = PPLCUDAGemmSelectKernelInt8(options.device->GetDeviceProp(), stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
                                             bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr,
-                                            attr_param_.param, temp_quant_param, temp_fuse_param,
+                                            param_kernel_, temp_quant_param, temp_fuse_param,
                                             attr_param_.extra_param.algo_info);
     }
 #endif
@@ -260,6 +265,11 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
 
     options.device->CopyFromHost(&quant_constat_info.GetBufferDesc(), scales.data(), quant_shape);
     options.info->constants.emplace(quant_edge_id, std::move(quant_constat_info));
+    GemmKernelParam param_kernel_;
+    param_kernel_.alpha = attr_param_.param.alpha;
+    param_kernel_.beta = attr_param_.param.beta;
+    param_kernel_.transA = attr_param_.param.transA;
+    param_kernel_.transB = attr_param_.param.transB;
 
     // Transpose weight if needed
     auto stream = options.device->GetStream();
@@ -319,10 +329,10 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
 
         if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
             status = PPLCUDAGemmModifyWeights(stream, &newshape, weight_constat_info.GetBufferPtr(),
-                                              temp_weight_buffer.addr, &attr_param_.param);
+                                              temp_weight_buffer.addr, &param_kernel_);
         } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
             status = PPLCUDAGemmModifyWeightsInt8(stream, &newshape, weight_constat_info.GetBufferPtr(),
-                                                  temp_weight_buffer.addr, &attr_param_.param);
+                                                  temp_weight_buffer.addr, &param_kernel_);
         }
 
         reinterpret_cast<CudaGemmParam*>(options.param)->param.transB = 1;
@@ -376,7 +386,7 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
         }
 
         status = PPLCUDAGemmModifyBias(stream, shape_in0.GetDataType(), &newshape,
-                                       bias_constat_info.GetBufferDesc().addr, &attr_param_.param);
+                                       bias_constat_info.GetBufferDesc().addr, &param_kernel_);
 
         options.info->constants.emplace(preedge_id, std::move(bias_constat_info));
         *options.tensors->find(preedge_id)->second->GetShape() = newshape;

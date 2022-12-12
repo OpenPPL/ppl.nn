@@ -20,19 +20,17 @@
 #include "cudakernel/nn/convtranspose.h"
 #include "cudakernel/math/math.h"
 #include "cudakernel/memory/transpose.h"
-#include "cudakernel/common/common.h"
-#include "ppl/nn/params/onnx/transpose_param.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
 #include "conv_common.h"
 #include "cudakernel/gemm/gemm.h"
 #include <cuda_fp16.h>
 #else
-#include "ppl/nn/params/onnx/convtranspose_param.h"
+#include "cudakernel/nn/convtranspose.h"
 #include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
-#include "ppl/nn/engines/cuda/module/cuda_module.h"
 #endif
+#include "cudakernel/common/common.h"
 
 #define CUDA_KERNEL_LOOP(i, n)                          \
     for (int i = blockIdx.x * blockDim.x + threadIdx.x; \
@@ -62,7 +60,7 @@ uint64_t PPLConvTransposeGetFilterBufSizeCudaFp16(
 uint64_t PPLConvTransposeGetCompilationBufSizeCuda(
     ppl::common::TensorShape* input_shape,
     ppl::common::TensorShape* output_shape,
-    const ppl::nn::onnx::ConvTransposeParam* param)
+    const ConvTransposeKernelParam* param)
 {
     uint64_t size = 0;
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
@@ -131,7 +129,7 @@ uint64_t PPLConvTransposeGetCompilationBufSizeCuda(
 uint64_t PPLConvTransposeGetBufSizeCuda(
     ppl::common::TensorShape* input_shape,
     ppl::common::TensorShape* output_shape,
-    const ppl::nn::onnx::ConvTransposeParam* param)
+    const ConvTransposeKernelParam* param)
 {
     uint64_t size = 0;
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
@@ -432,7 +430,7 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
     void* temp_buffer,
     void* out_filter,
     const ppl::common::TensorShape* filter_shape,
-    const ppl::nn::onnx::ConvTransposeParam* param)
+    const ConvTransposeKernelParam* param)
 {
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     int conv_in_c  = filter_shape->GetDim(1);
@@ -451,7 +449,7 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
     int padM             = Align(M, 1);
     int padK             = Align(K, 8);
 
-    ppl::nn::onnx::TransposeParam trans_param;
+    TransposeKernelParam trans_param;
     trans_param.perm.push_back(1);
     trans_param.perm.push_back(0);
 
@@ -519,7 +517,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
     const void* bias,
     ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::onnx::ConvTransposeParam* param,
+    const ConvTransposeKernelParam* param,
     algo_param_t algo_param,
     fuse_param_t &fuse_param,
     void* temp_buffer)
@@ -573,7 +571,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
 
 
             //gemm
-            ppl::nn::onnx::GemmParam gemm_param;
+            GemmKernelParam gemm_param;
             fuse_param_t gemm_fuse_param;
             int M     = batch*cvt_in_h*cvt_in_w;
             int K_pad = kernel_u*kernel_v*in_c_pad;
@@ -694,7 +692,7 @@ double PPLCUDAConvTransposeSelectKernel(
     void* temp_buffer,
     ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::onnx::ConvTransposeParam* param,
+    const ConvTransposeKernelParam* param,
     algo_param_t& algo_param)
 {
     double min_time = FLT_MAX;
@@ -804,7 +802,7 @@ double PPLCUDAConvTransposeSelectKernel(
                                 (void*)rev_flt, (void*)gemm_bias, &c_shape, (void*)gemm_output,
                                 (void*)gemm_buf, gemm_conv_param, gemm_fuse_param, algo_param);
 #else
-            ppl::nn::onnx::GemmParam gemm_param;
+            GemmKernelParam gemm_param;
             gemm_param.transA    = 0;
             gemm_param.transB    = 1;
             gemm_param.alpha     = 1.f;

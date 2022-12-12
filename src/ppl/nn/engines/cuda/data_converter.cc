@@ -217,7 +217,14 @@ RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc,
     }
 
     ReFormatParam param;
-    auto status = SetReLayoutParam(&param, src_desc, src_quant, dst_desc, dst_quant);
+    CudaTensorKernelQuant src_quant_kernel, dst_quant_kernel;
+    src_quant_kernel.format = src_quant.format; src_quant_kernel.type = src_quant.type;
+    src_quant_kernel.per_channel = src_quant.per_channel; src_quant_kernel.bit_width = src_quant.bit_width;
+    src_quant_kernel.scale = src_quant.scale; src_quant_kernel.zero_point = src_quant.zero_point;
+    dst_quant_kernel.format = dst_quant.format; dst_quant_kernel.type = dst_quant.type;
+    dst_quant_kernel.per_channel = dst_quant.per_channel; dst_quant_kernel.bit_width = dst_quant.bit_width;
+    dst_quant_kernel.scale = dst_quant.scale; dst_quant_kernel.zero_point = dst_quant.zero_point;
+    auto status = SetReLayoutParam(&param, src_desc, src_quant_kernel, dst_desc, dst_quant_kernel);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "illegal convert layout condition.";
         return status;

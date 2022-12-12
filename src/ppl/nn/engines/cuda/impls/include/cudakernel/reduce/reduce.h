@@ -18,7 +18,7 @@
 #ifndef PPLCUDA_REDUCE_REDUCE_H_
 #define PPLCUDA_REDUCE_REDUCE_H_
 #include "cudakernel/reduce/reduce_helper.h"
-#include "ppl/nn/engines/cuda/params/quant_param_cuda.h"
+#include "cudakernel/common/common_param.h"
 #include "ppl/common/retcode.h"
 #include "ppl/common/tensor_shape.h"
 
@@ -33,5 +33,5 @@ ppl::common::RetCode PPLCUDAReduceForwardImp(
     const ppl::common::TensorShape* output_shape,
     void* output,
     void* tmp_buffer = nullptr,
-    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+    const QuantKernelParamCuda* qparam = nullptr);
 #endif

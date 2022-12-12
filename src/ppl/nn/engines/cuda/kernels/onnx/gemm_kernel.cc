@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/cuda/kernels/onnx/gemm_kernel.h"
+#include "ppl/nn/engines/cuda/module/cuda_module.h"
 #include "ppl/common/destructor.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
 #include "cudakernel/gemm/gemm.h"
@@ -83,6 +84,11 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
         GetCudaDevice()->FreeTmpBuffer(&tmp_buffer_desc);
     });
     auto tmp_buffer = tmp_buffer_desc.addr;
+    GemmKernelParam param_kernel_;
+    param_kernel_.alpha = param_->param.alpha;
+    param_kernel_.beta = param_->param.beta;
+    param_kernel_.transA = param_->param.transA;
+    param_kernel_.transB = param_->param.transB;
 
     // convert filter only if the filter tensor is an output of another kernel
     BufferDesc weight_buffer;
@@ -97,7 +103,7 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
             return status;
         }
         auto stream = GetStream();
-        PPLCUDAGemmModifyWeights(stream, &newshape, weight->GetBufferPtr(), weight_buffer.addr, &param_->param);
+        PPLCUDAGemmModifyWeights(stream, &newshape, weight->GetBufferPtr(), weight_buffer.addr, &param_kernel_);
     }
     ppl::common::Destructor __tmp_buffer_guard__([this, &weight_buffer]() -> void {
         GetCudaDevice()->Free(&weight_buffer);
@@ -116,12 +122,11 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
     CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
     module_func = module->GetKernelFunc();
 #endif
-
     if (shape_in0.GetDataType() == ppl::common::DATATYPE_FLOAT16) {
         status = PPLCUDAGemmForwardImp(GetCudaDevice()->GetDeviceProp(), stream, module_func, input->GetShape(), input->GetBufferPtr(),
                                    weight->GetShape(), weight->GetBufferPtr(), bias,
                                    output->GetShape(), output->GetBufferPtr(),
-                                   param_->param, tmp_buffer, temp_fuse_param, param_->extra_param.algo_info);
+                                   param_kernel_, tmp_buffer, temp_fuse_param, param_->extra_param.algo_info);
     } else if (shape_in0.GetDataType() == ppl::common::DATATYPE_INT8) {
         quant_param_t temp_quant_param;
         auto input_quant = GetCommonParam()->cuda_tensor_info->at(input->GetEdge()->GetId());
@@ -151,7 +156,7 @@ ppl::common::RetCode GemmKernel::DoExecute(KernelExecContext* ctx) {
         status = PPLCUDAGemmForwardImpInt8(GetCudaDevice()->GetDeviceProp(), stream, module_func, input->GetShape(), input->GetBufferPtr(),
                                            weight->GetShape(), weight->GetBufferPtr(), bias,
                                            output->GetShape(), output->GetBufferPtr(),
-                                           param_->param, tmp_buffer, temp_quant_param,
+                                           param_kernel_, tmp_buffer, temp_quant_param,
                                            temp_fuse_param, param_->extra_param.algo_info);
     }
 

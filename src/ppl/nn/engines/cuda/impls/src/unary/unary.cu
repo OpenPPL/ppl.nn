@@ -16,7 +16,8 @@
 // under the License.
 
 #include "cudakernel/unary/unary.h"
-#include "ppl/nn/engines/cuda/impls/src/reformat/cvt_int8_float.cuh"
+#include "../reformat/cvt_int8_float.cuh"
+#include "cudakernel/common/common.h"
 #include <cuda_fp16.h>
 
 enum UnaryOpType {
@@ -288,7 +289,7 @@ __global__ void ppl_cukernel_unary_any_int8(
     const uint64_t num_elems,
     const DataT* input,
     DataT* output,
-    ppl::nn::cuda::QuantParamCuda qparam)
+    QuantKernelParamCuda qparam)
 {
 #if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
     uint64_t index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -308,7 +309,7 @@ __global__ void ppl_cukernel_unary_any_int8(
         const void* input,                                                                                                                     \
         const ppl::common::TensorShape* output_shape,                                                                                              \
         void* output,                                                                                                                          \
-        const ppl::nn::cuda::QuantParamCuda* qparam)                                                                                                 \
+        const QuantKernelParamCuda* qparam)                                                                                                 \
     {                                                                                                                                          \
         uint64_t num_elems = output_shape->CalcElementsIncludingPadding();                                                                     \
         int block_size     = 256;                                                                                                              \

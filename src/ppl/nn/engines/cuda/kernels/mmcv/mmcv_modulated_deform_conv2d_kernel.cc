@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/cuda/kernels/mmcv/mmcv_modulated_deform_conv2d_kernel.h"
+#include "ppl/nn/engines/cuda/module/cuda_module.h"
 #include "ppl/common/destructor.h"
 #include "cudakernel/nn/deform_conv.h"
 

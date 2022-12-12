@@ -17,7 +17,6 @@
 
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
 #include "cudakernel/gemm/bgemm.h"
-#include "cudakernel/gemm/gemm.h"
 #include "cudakernel/math/math.h"
 #include "cudakernel/common/common.h"
 #include "cudakernel/common/cuda_check.h"
@@ -37,11 +36,10 @@ extern std::vector<kernel_info_t> g_fp16_kvec;
 extern bool is_g_fp16_kvec_set;
 #else
 #include "ppl/common/tensor_shape.h"
-#include "ppl/nn/params/onnx/gemm_param.h"
 #include "ppl/common/retcode.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
-#include "ppl/nn/engines/cuda/module/cuda_module.h"
 #endif
+#include "cudakernel/gemm/gemm.h"
 
 
 #define FAKE_CONV_PARAM              \
@@ -156,7 +154,7 @@ ppl::common::RetCode PPLCUDABgemmModifyWeights(
     ppl::common::TensorShape *weight_shape,
     void *weight,
     void *tmp_weight, // if need pad transpose
-    const ppl::nn::onnx::GemmParam *param)
+    const GemmKernelParam *param)
 {
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     //int transB   = param->transB;
@@ -214,7 +212,7 @@ ppl::common::RetCode PPLCUDABgemmPadInput(
     ppl::common::TensorShape *input_shape,
     void *input,
     void *tmp_input, // if need transpose
-    const ppl::nn::onnx::GemmParam *param)
+    const GemmKernelParam *param)
 {
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     auto type    = input_shape->GetDataType();
@@ -359,7 +357,7 @@ double PPLCUDABgemmSelectKernel(
     const ppl::common::TensorShape *output_shape,
     void *output,
     void *temp_buffer,
-    const ppl::nn::onnx::GemmParam &param,
+    const GemmKernelParam &param,
     const fuse_param_t &fuse_param,
     algo_param_t &algo_param)
 {
@@ -493,7 +491,7 @@ ppl::common::RetCode PPLCUDABgemmForwardImp(
     void *weight,
     const ppl::common::TensorShape *output_shape,
     void *output,
-    const ppl::nn::onnx::GemmParam &param,
+    const GemmKernelParam &param,
     void *temp_buffer,
     fuse_param_t &fuse_param,
     const algo_param_t &algo_param)

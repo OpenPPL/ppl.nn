@@ -17,7 +17,7 @@
 
 #include "cudakernel/nn/conv/gene_kernel.h"
 #include "gene_header.h"
-#include "ppl/nn/common/logger.h"
+#include "ppl/common/log.h"
 
 #include <fstream>
 #include <iostream>
