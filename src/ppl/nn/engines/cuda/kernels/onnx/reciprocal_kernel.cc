@@ -28,7 +28,7 @@ ppl::common::RetCode ReciprocalKernel::DoExecute(KernelExecContext* ctx) {
     auto input_quant = GetCommonParam()->cuda_tensor_info->at(input->GetEdge()->GetId());
     auto output_quant = GetCommonParam()->cuda_tensor_info->at(output->GetEdge()->GetId());
 
-    if(input->GetShape()->GetDataType() != ppl::common::DATATYPE_FLOAT32 || 
+    if(input->GetShape()->GetDataType() != ppl::common::DATATYPE_FLOAT32 && 
         input->GetShape()->GetDataType() != ppl::common::DATATYPE_FLOAT16){
         LOG(ERROR) << "Reciprocal op only support float16 and float32 for now.";
         return ppl::common::RC_INVALID_VALUE;
