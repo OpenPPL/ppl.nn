@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/cuda/kernels/onnx/matmul_kernel.h"
+#include "ppl/nn/engines/cuda/module/cuda_module.h"
 #include "ppl/common/destructor.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
 #include "cudakernel/gemm/bgemm.h"
@@ -64,6 +65,11 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
     auto input0 = ctx->GetInput<TensorImpl>(0);
     auto weight = ctx->GetInput<TensorImpl>(1);
     auto output = ctx->GetOutput<TensorImpl>(0);
+    GemmKernelParam param_kernel_;
+    param_kernel_.alpha = param_->param.alpha;
+    param_kernel_.beta = param_->param.beta;
+    param_kernel_.transA = param_->param.transA;
+    param_kernel_.transB = param_->param.transB;
 
     // convert filter only if the filter tensor is an output of another kernel
     BufferDesc weight_buffer;
@@ -80,7 +86,7 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
         }
         auto stream = GetStream();
         PPLCUDABgemmModifyWeights(stream, weight->GetShape(), weight->GetBufferPtr(), weight_buffer.addr,
-                                  &param_->param);
+                                  &param_kernel_);
     }
     ppl::common::Destructor __tmp_buffer_guard__([this, &weight_buffer]() -> void {
         GetCudaDevice()->Free(&weight_buffer);
@@ -102,7 +108,7 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
             return status;
         }
         auto stream = GetStream();
-        PPLCUDABgemmPadInput(stream, input0->GetShape(), input0->GetBufferPtr(), input0_buffer.addr, &param_->param);
+        PPLCUDABgemmPadInput(stream, input0->GetShape(), input0->GetBufferPtr(), input0_buffer.addr, &param_kernel_);
         bmm_input0 = input0_buffer.addr;
     } else {
         bmm_input0 = input0->GetBufferPtr();
@@ -148,7 +154,7 @@ ppl::common::RetCode MatMulKernel::DoExecute(KernelExecContext* ctx) {
     if (shape_in0.GetDataType() == ppl::common::DATATYPE_FLOAT16) {
         status = PPLCUDABgemmForwardImp(GetCudaDevice()->GetDeviceProp(), stream, module_func, input0->GetShape(), bmm_input0,
                                         weight->GetShape(), weight_buffer.addr, output->GetShape(), bgemm_out,
-                                        param_->param, tmp_buffer, temp_fuse_param, param_->extra_param.algo_info);
+                                        param_kernel_, tmp_buffer, temp_fuse_param, param_->extra_param.algo_info);
     }
 
     if (is_output_pad) {

@@ -25,8 +25,12 @@ ppl::common::RetCode DepthToSpaceKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
 
+    DepthToSpaceKernelParam param_kernel_;
+    param_kernel_.mode = param_->mode;
+    param_kernel_.blocksize = param_->blocksize;
+
     ppl::common::RetCode status = PPLCUDADepthToSpaceForwardImp(
-        GetStream(), *param_, input->GetShape(), input->GetBufferPtr(), output->GetShape(), output->GetBufferPtr());
+        GetStream(), param_kernel_, input->GetShape(), input->GetBufferPtr(), output->GetShape(), output->GetBufferPtr());
     return status;
 }
 

@@ -31,7 +31,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#include "ppl/nn/common/logger.h"
+#include "ppl/common/log.h"
 
 #define PPL_NVRTC_SAFE_CALL(x)                                                                        \
     do {                                                                                              \

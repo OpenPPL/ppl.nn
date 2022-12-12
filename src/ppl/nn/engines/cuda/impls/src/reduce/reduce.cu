@@ -17,7 +17,8 @@
 
 #include "cudakernel/reduce/reduce.h"
 #include "cudakernel/reduce/reduce_kernel.h"
-#include "ppl/nn/engines/cuda/impls/src/reformat/cvt_int8_float.cuh"
+#include "cudakernel/common/common.h"
+#include "../reformat/cvt_int8_float.cuh"
 
 __global__ void CudaSetInitVal(
     half* output,
@@ -78,7 +79,7 @@ void SetInitVal(
 
 template <typename srcT>
 __global__ void rescale_from_int8_to_int8(int32_t num_elems,
-    const srcT* input, int8_t* output, ppl::nn::cuda::QuantParamCuda qparam) {
+    const srcT* input, int8_t* output, QuantKernelParamCuda qparam) {
     int tid = threadIdx.x + blockDim.x * blockIdx.x;
     if (tid >= num_elems) return;
     float inter_val = (float)(input[tid] - qparam.i_zero_point) * qparam.i_step;
@@ -87,7 +88,7 @@ __global__ void rescale_from_int8_to_int8(int32_t num_elems,
 
 template <typename srcT>
 ppl::common::RetCode PPLRescaleInt82Int8(cudaStream_t stream, const ppl::common::TensorShape* output_shape,
-    const srcT* input, int8_t* output, const ppl::nn::cuda::QuantParamCuda* qparam) {
+    const srcT* input, int8_t* output, const QuantKernelParamCuda* qparam) {
     int num_elems = output_shape->CalcElementsExcludingPadding();
     int block_size = 256;
     int grid_size = (num_elems + block_size - 1) / block_size;
@@ -163,7 +164,7 @@ ppl::common::RetCode PPLCUDAReduceForwardImp(
     const ppl::common::TensorShape* output_shape,
     void* output,
     void* tmp_buffer,
-    const ppl::nn::cuda::QuantParamCuda* qparam)
+    const QuantKernelParamCuda* qparam)
 {
 #define CASEFP16(Mode, OP, Tin, Tout, Tacc) \
     case Mode:                              \

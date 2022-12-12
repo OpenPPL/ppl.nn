@@ -18,7 +18,6 @@
 #ifndef PPLCUDA_KERNEL_INCLUDE_PAD_PAD_H_
 #define PPLCUDA_KERNEL_INCLUDE_PAD_PAD_H_
 #include "ppl/common/tensor_shape.h"
-#include "ppl/nn/params/onnx/pad_param.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 

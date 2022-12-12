@@ -16,6 +16,7 @@
 // under the License.
 
 #include "cudakernel/reduce/argmax.h"
+#include "cudakernel/common/common.h"
 #include "cudakernel/reduce/reduce_kernel.h"
 
 template <typename T>

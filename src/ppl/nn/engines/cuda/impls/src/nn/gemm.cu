@@ -18,7 +18,6 @@
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
 #include "cudakernel/gemm/gemm.h"
 #include "cudakernel/math/math.h"
-#include "cudakernel/common/common.h"
 #include "cudakernel/common/cuda_check.h"
 
 #include <cuda_fp16.h>
@@ -35,11 +34,11 @@ std::vector<kernel_info_t> g_fp16_kvec;
 bool is_g_fp16_kvec_set = false;
 #else
 #include "ppl/common/tensor_shape.h"
-#include "ppl/nn/params/onnx/gemm_param.h"
 #include "ppl/common/retcode.h"
 #include "cudakernel/nn/conv/conv_fp16.h"
-#include "ppl/nn/engines/cuda/module/cuda_module.h"
 #endif
+#include "cudakernel/common/common.h"
+#include "ppl/common/log.h"
 
 #define FAKE_CONV_PARAM              \
     int in_hw               = 1;     \
@@ -246,7 +245,7 @@ ppl::common::RetCode PPLCUDAGemmModifyWeights(
     ppl::common::TensorShape *weight_shape,
     void *weight,
     void *tmp_weight, // if need transpose
-    const ppl::nn::onnx::GemmParam *param)
+    const GemmKernelParam *param)
 {
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     int transB   = param->transB;
@@ -308,7 +307,7 @@ ppl::common::RetCode PPLCUDAGemmModifyBias(
     const ppl::common::datatype_t infer_type,
     const ppl::common::TensorShape *bias_shape,
     void *bias,
-    const ppl::nn::onnx::GemmParam *param)
+    const GemmKernelParam *param)
 {
 #if __CUDACC_VER_MAJOR__ * 1000 + __CUDACC_VER_MINOR__ * 10 >= 10020
     if (bias) {
@@ -386,7 +385,7 @@ double PPLCUDAGemmSelectKernel(
     const ppl::common::TensorShape *output_shape,
     void *output,
     void *temp_buffer,
-    const ppl::nn::onnx::GemmParam &param,
+    const GemmKernelParam &param,
     const fuse_param_t &fuse_param,
     algo_param_t &algo_param)
 {
@@ -510,7 +509,7 @@ ppl::common::RetCode PPLCUDAGemvForwardImp(
     const void *weight,
     const void *bias,
     void *output,
-    const ppl::nn::onnx::GemmParam &param,
+    const GemmKernelParam &param,
     void *temp_buffer,
     const fuse_param_t &fuse_param);
 
@@ -525,7 +524,7 @@ ppl::common::RetCode PPLCUDAGemmForwardImp(
     const void *bias,
     const ppl::common::TensorShape *output_shape,
     void *output,
-    const ppl::nn::onnx::GemmParam &param,
+    const GemmKernelParam &param,
     void *temp_buffer,
     fuse_param_t &fuse_param,
     const algo_param_t &algo_param)
@@ -945,7 +944,7 @@ ppl::common::RetCode PPLCUDAGemvForwardImp(
     const void *weight,
     const void *bias,
     void *output,
-    const ppl::nn::onnx::GemmParam &param,
+    const GemmKernelParam &param,
     void *temp_buffer,
     const fuse_param_t &fuse_param)
 {

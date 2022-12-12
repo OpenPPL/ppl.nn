@@ -35,8 +35,10 @@ ppl::common::RetCode TransposeKernel::DoExecute(KernelExecContext* ctx) {
         }
     }
 
+    TransposeKernelParam param_kernel_;
+    param_kernel_.perm = modified_param.perm;
     ppl::common::RetCode status =
-        PPLCUDATransposeForwardImp(GetStream(), modified_param, input->GetShape(), input->GetBufferPtr(),
+        PPLCUDATransposeForwardImp(GetStream(), param_kernel_, input->GetShape(), input->GetBufferPtr(),
                                    output->GetShape(), output->GetBufferPtr());
     return status;
 }

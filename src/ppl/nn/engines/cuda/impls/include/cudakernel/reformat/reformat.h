@@ -20,7 +20,8 @@
 
 #include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
-#include "ppl/nn/engines/cuda/cuda_common_param.h"
+#include "cudakernel/common/common.h"
+#include "cudakernel/common/common_param.h"
 
 namespace PPLCUDA {
 
@@ -121,7 +122,7 @@ enum CVTTypeMode {
 };
 
 bool IsFloatEqual(const std::vector<float>& a, const std::vector<float>& b);
-bool EqualQuant(const ppl::nn::cuda::CudaTensorQuant& quant_a, const ppl::nn::cuda::CudaTensorQuant& quant_b);
+bool EqualQuant(const CudaTensorKernelQuant& quant_a, const CudaTensorKernelQuant& quant_b);
 
 CVTFormatMode GetCVTFormatMode(ReFormatParam param);
 CVTTypeMode GetCVTTypeMode(ReFormatParam param);
@@ -135,7 +136,7 @@ void PPLCUDACVTFormatType(cudaStream_t stream, const void* input, void* output, 
 void PPLCUDACVTFormatTypeNC(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
 
 ppl::common::RetCode SetReLayoutParam(ReFormatParam* param, const ppl::common::TensorShape& input, const ppl::common::TensorShape& output);
-ppl::common::RetCode SetReLayoutParam(ReFormatParam* param, const ppl::common::TensorShape& input, const ppl::nn::cuda::CudaTensorQuant& input_quant, const ppl::common::TensorShape& output, const ppl::nn::cuda::CudaTensorQuant& output_quant);
+ppl::common::RetCode SetReLayoutParam(ReFormatParam* param, const ppl::common::TensorShape& input, const CudaTensorKernelQuant& input_quant, const ppl::common::TensorShape& output, const CudaTensorKernelQuant& output_quant);
 
 void PPLCUDADataConvert(cudaStream_t stream, const void* input, void* output, void* tempBuf, ReFormatParam& param);
 

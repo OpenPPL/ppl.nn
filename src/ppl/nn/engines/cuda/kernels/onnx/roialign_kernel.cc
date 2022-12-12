@@ -27,10 +27,16 @@ ppl::common::RetCode ROIAlignKernel::DoExecute(KernelExecContext* ctx) {
     auto batch_indices = ctx->GetInput<TensorImpl>(2);
     auto output = ctx->GetOutput<TensorImpl>(0);
 
+    RoiAlignKernelParam param_kernel_;
+    param_kernel_.mode = param_->mode;
+    param_kernel_.output_height = param_->output_height;
+    param_kernel_.output_width = param_->output_width;
+    param_kernel_.sampling_ratio = param_->sampling_ratio;
+    param_kernel_.spatial_scale = param_->spatial_scale;
     ppl::common::RetCode status =
         PPLCUDAROIAlignForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), rois->GetShape(),
                                   rois->GetBufferPtr(), batch_indices->GetShape(), batch_indices->GetBufferPtr(),
-                                  output->GetShape(), output->GetBufferPtr(), *param_);
+                                  output->GetShape(), output->GetBufferPtr(), param_kernel_);
     return status;
 }
 

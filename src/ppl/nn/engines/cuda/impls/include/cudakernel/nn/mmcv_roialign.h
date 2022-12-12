@@ -19,9 +19,18 @@
 #define PPLCUDA_KERNEL_INCLUDE_MMCV_ROIALIGN_ROIALIGN_H_
 #include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
-#include "ppl/nn/params/mmcv/mmcv_roialign_param.h"
 #include <cuda_fp16.h>
 #include <float.h>
+#include <string>
+
+struct MMCVRoiAlignKernelParam final {
+    int64_t aligned;
+    int64_t aligned_height;
+    int64_t aligned_width;
+    std::string pool_mode;
+    int64_t sampling_ratio;
+    float spatial_scale;
+};
 
 ppl::common::RetCode PPLCUDAMMCVROIAlignForwardImp(
     cudaStream_t stream,
@@ -31,5 +40,5 @@ ppl::common::RetCode PPLCUDAMMCVROIAlignForwardImp(
     const void* rois,
     ppl::common::TensorShape* output_shape,
     void* output,
-    ppl::nn::mmcv::MMCVRoiAlignParam param);
+    MMCVRoiAlignKernelParam param);
 #endif // PPLCUDA_KERNEL_INCLUDE_MMCV_ROIALIGN_ROIALIGN_H_

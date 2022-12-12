@@ -26,9 +26,13 @@ ppl::common::RetCode MMCVGridSampleKernel::DoExecute(KernelExecContext* ctx) {
     auto input1 = ctx->GetInput<TensorImpl>(1);
     auto output = ctx->GetOutput<TensorImpl>(0);
 
+    MMCVGridSampleKernelParam param_kernel_;
+    param_kernel_.align_corners = param_->align_corners;
+    param_kernel_.interpolation_mode = param_->interpolation_mode;
+    param_kernel_.padding_mode = param_->padding_mode;
     ppl::common::RetCode status =
         PPLCUDAMMCVGridSampleForwardImp(GetStream(), input0->GetShape(), input0->GetBufferPtr(), input1->GetShape(),
-                                        input1->GetBufferPtr(), output->GetShape(), output->GetBufferPtr(), *param_);
+                                        input1->GetBufferPtr(), output->GetShape(), output->GetBufferPtr(), param_kernel_);
     return status;
 }
 

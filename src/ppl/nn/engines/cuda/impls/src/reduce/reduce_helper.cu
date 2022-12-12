@@ -16,6 +16,7 @@
 // under the License.
 
 #include "cudakernel/reduce/reduce_helper.h"
+#include "cudakernel/common/common.h"
 #include "cudakernel/reduce/reduce.h"
 
 ReduceMode pplGetReduceMode(PPLReduceDimDes des)

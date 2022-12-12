@@ -18,7 +18,7 @@
 #ifndef PPLCUDA_KERNEL_INCLUDE_UNARY_UNARY_H_
 #define PPLCUDA_KERNEL_INCLUDE_UNARY_UNARY_H_
 #include "ppl/common/tensor_shape.h"
-#include "ppl/nn/engines/cuda/params/quant_param_cuda.h"
+#include "cudakernel/common/common_param.h"
 #include "ppl/common/retcode.h"
 
 ppl::common::RetCode PPLCUDAUnaryAbsForwardImp(
@@ -27,7 +27,7 @@ ppl::common::RetCode PPLCUDAUnaryAbsForwardImp(
     const void* input,
     const ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+    const QuantKernelParamCuda* qparam = nullptr);
 
 ppl::common::RetCode PPLCUDAUnaryReluForwardImp(
     cudaStream_t stream,
@@ -35,7 +35,7 @@ ppl::common::RetCode PPLCUDAUnaryReluForwardImp(
     const void* input,
     const ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+    const QuantKernelParamCuda* qparam = nullptr);
 
 ppl::common::RetCode PPLCUDAUnarySigmoidForwardImp(
     cudaStream_t stream,
@@ -43,7 +43,7 @@ ppl::common::RetCode PPLCUDAUnarySigmoidForwardImp(
     const void* input,
     const ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+    const QuantKernelParamCuda* qparam = nullptr);
 
 ppl::common::RetCode PPLCUDAUnarySqrtForwardImp(
     cudaStream_t stream,
@@ -51,7 +51,7 @@ ppl::common::RetCode PPLCUDAUnarySqrtForwardImp(
     const void* input,
     const ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+    const QuantKernelParamCuda* qparam = nullptr);
 
 ppl::common::RetCode PPLCUDAUnarySquareForwardImp(
     cudaStream_t stream,
@@ -59,7 +59,7 @@ ppl::common::RetCode PPLCUDAUnarySquareForwardImp(
     const void* input,
     const ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+    const QuantKernelParamCuda* qparam = nullptr);
 
 ppl::common::RetCode PPLCUDAUnaryTanHForwardImp(
     cudaStream_t stream,
@@ -67,7 +67,7 @@ ppl::common::RetCode PPLCUDAUnaryTanHForwardImp(
     const void* input,
     const ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+    const QuantKernelParamCuda* qparam = nullptr);
 
 ppl::common::RetCode PPLCUDAUnaryFloorForwardImp(
     cudaStream_t stream,
@@ -75,7 +75,7 @@ ppl::common::RetCode PPLCUDAUnaryFloorForwardImp(
     const void* input,
     const ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+    const QuantKernelParamCuda* qparam = nullptr);
 
 ppl::common::RetCode PPLCUDAUnaryCeilForwardImp(
     cudaStream_t stream,
@@ -83,7 +83,7 @@ ppl::common::RetCode PPLCUDAUnaryCeilForwardImp(
     const void* input,
     const ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+    const QuantKernelParamCuda* qparam = nullptr);
 
 ppl::common::RetCode PPLCUDAUnaryErfForwardImp(
     cudaStream_t stream,
@@ -91,7 +91,7 @@ ppl::common::RetCode PPLCUDAUnaryErfForwardImp(
     const void* input,
     const ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+    const QuantKernelParamCuda* qparam = nullptr);
 
 ppl::common::RetCode PPLCUDAUnarySinForwardImp(
     cudaStream_t stream,
@@ -99,7 +99,7 @@ ppl::common::RetCode PPLCUDAUnarySinForwardImp(
     const void* input,
     const ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+    const QuantKernelParamCuda* qparam = nullptr);
 
 ppl::common::RetCode PPLCUDAUnaryCosForwardImp(
     cudaStream_t stream,
@@ -107,7 +107,7 @@ ppl::common::RetCode PPLCUDAUnaryCosForwardImp(
     const void* input,
     const ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+    const QuantKernelParamCuda* qparam = nullptr);
 
 ppl::common::RetCode PPLCUDAUnaryRoundForwardImp(
     cudaStream_t stream,
@@ -115,6 +115,6 @@ ppl::common::RetCode PPLCUDAUnaryRoundForwardImp(
     const void* input,
     const ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+    const QuantKernelParamCuda* qparam = nullptr);
 
 #endif // PPLCUDA_KERNEL_INCLUDE_UNARY_UNARY_H_

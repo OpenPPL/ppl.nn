@@ -24,16 +24,16 @@
 
 ppl::common::RetCode PPLCUDADepthToSpaceForwardImp(
     cudaStream_t stream,
-    ppl::nn::onnx::DepthToSpaceParam param,
+    DepthToSpaceKernelParam param,
     const ppl::common::TensorShape* input_shape,
     const void* input,
     const ppl::common::TensorShape* output_shape,
     void* output)
 {
     // transpose case
-    if (param.mode == ppl::nn::onnx::DepthToSpaceParam::DCR) {
+    if (param.mode == DepthToSpaceKernelParam::DCR) {
         int num_transpose_dim = 6; // from depth_to_space definition
-        ppl::nn::onnx::TransposeParam trans_param;
+        TransposeKernelParam trans_param;
         trans_param.perm[0] = 0;
         trans_param.perm[1] = 3;
         trans_param.perm[2] = 4;

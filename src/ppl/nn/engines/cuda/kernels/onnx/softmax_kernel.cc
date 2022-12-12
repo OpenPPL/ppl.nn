@@ -34,7 +34,7 @@ ppl::common::RetCode SoftmaxKernel::DoExecute(KernelExecContext* ctx) {
     auto input_quant = GetCommonParam()->cuda_tensor_info->at(input->GetEdge()->GetId());
     auto output_quant = GetCommonParam()->cuda_tensor_info->at(output->GetEdge()->GetId());
     if (input_shape->GetDataType() == ppl::common::DATATYPE_INT8) {
-        QuantParamCuda qparam(input_quant.zero_point[0], output_quant.zero_point[0], input_quant.scale[0], output_quant.scale[0]);
+        QuantKernelParamCuda qparam(input_quant.zero_point[0], output_quant.zero_point[0], input_quant.scale[0], output_quant.scale[0]);
         auto status = PPLCUDASoftmaxForwardImpInt8(GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(),
                                           output->GetBufferPtr(), nullptr, param_->axis, &qparam);
         return status;

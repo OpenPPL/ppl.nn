@@ -39,7 +39,17 @@ uint64_t ConvTransposeKernel::CalcTmpBufferSize(const KernelExecContext& ctx) co
     auto x = ctx.GetInput<TensorImpl>(0);
     auto y = ctx.GetOutput<TensorImpl>(0);
 
-    return PPLConvTransposeGetBufSizeCuda(x->GetShape(), y->GetShape(), &param_->param);
+    ConvTransposeKernelParam param_kernel_;
+    param_kernel_.auto_pad = param_->param.auto_pad;
+    param_kernel_.group = param_->param.group;
+    param_kernel_.dilations = param_->param.dilations;
+    param_kernel_.kernel_shape = param_->param.kernel_shape;
+    param_kernel_.pads = param_->param.pads;
+    param_kernel_.strides = param_->param.strides;
+    param_kernel_.output_padding = param_->param.output_padding;
+    param_kernel_.output_shape = param_->param.output_shape;
+
+    return PPLConvTransposeGetBufSizeCuda(x->GetShape(), y->GetShape(), &param_kernel_);
 }
 
 ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
@@ -61,6 +71,15 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
     TensorImpl* B = nullptr;
     TensorImpl* Y = ctx->GetOutput<TensorImpl>(0);
     const float* b_data = nullptr;
+    ConvTransposeKernelParam param_kernel_;
+    param_kernel_.auto_pad = param_->param.auto_pad;
+    param_kernel_.group = param_->param.group;
+    param_kernel_.dilations = param_->param.dilations;
+    param_kernel_.kernel_shape = param_->param.kernel_shape;
+    param_kernel_.pads = param_->param.pads;
+    param_kernel_.strides = param_->param.strides;
+    param_kernel_.output_padding = param_->param.output_padding;
+    param_kernel_.output_shape = param_->param.output_shape;
 
     // convert filter only if the filter tensor is an output of another kernel
     BufferDesc weight_buffer;
@@ -90,7 +109,7 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
         auto filter_shape = *W->GetShape(); filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         GetCudaDevice()->GetDataConverter()->Convert(&filter_input_buffer, filter_shape, W->GetBufferDesc(), *W->GetShape());
         PPLCUDAConvTransposeCvt(GetCudaDevice()->GetDeviceProp(), stream, filter_input_buffer.addr, filter_temp_buffer.addr,
-                                weight_buffer.addr, W->GetShape(), &param_->param);
+                                weight_buffer.addr, W->GetShape(), &param_kernel_);
     }
     ppl::common::Destructor __tmp_buffer_guard__([this, &weight_buffer]() -> void {
         GetCudaDevice()->Free(&weight_buffer);
@@ -110,7 +129,7 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
 
     status = PPLCUDAConvTransposeForward(GetCudaDevice()->GetDeviceProp(), GetStream(), module_func, X->GetShape(), X->GetBufferPtr(),
                                          param_->extra_param.is_initializer_weight ? (int4*)ctx->GetInput<TensorImpl>(1)->GetBufferPtr() : (int4*)weight_buffer.addr,
-                                         b_data, Y->GetShape(), Y->GetBufferPtr(), &param_->param, param_->extra_param.algo_info,
+                                         b_data, Y->GetShape(), Y->GetBufferPtr(), &param_kernel_, param_->extra_param.algo_info,
                                          temp_fuse_param, tmp_buffer);
 
     return status;

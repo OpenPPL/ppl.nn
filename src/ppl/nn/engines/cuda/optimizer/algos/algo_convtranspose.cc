@@ -119,7 +119,17 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
     ALLOC_BUFFERF_FOR_ALGO_SELECT(bias_buffer, shape_in2.CalcBytesIncludingPadding(), ALGO_MAX_TIME)
     ALLOC_BUFFERF_FOR_ALGO_SELECT(output_buffer, shape_out.CalcBytesIncludingPadding(), ALGO_MAX_TIME)
 
-    uint64_t size = PPLConvTransposeGetCompilationBufSizeCuda(&shape_in0, &shape_out, &attr_param_.param);
+    ConvTransposeKernelParam param_kernel_;
+    param_kernel_.auto_pad = attr_param_.param.auto_pad;
+    param_kernel_.group = attr_param_.param.group;
+    param_kernel_.dilations = attr_param_.param.dilations;
+    param_kernel_.kernel_shape = attr_param_.param.kernel_shape;
+    param_kernel_.pads = attr_param_.param.pads;
+    param_kernel_.strides = attr_param_.param.strides;
+    param_kernel_.output_padding = attr_param_.param.output_padding;
+    param_kernel_.output_shape = attr_param_.param.output_shape;
+
+    uint64_t size = PPLConvTransposeGetCompilationBufSizeCuda(&shape_in0, &shape_out, &param_kernel_);
     ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, size, ALGO_MAX_TIME)
 
 #ifdef PPLNN_ENABLE_CUDA_JIT
@@ -131,7 +141,7 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
     auto stream = options.device->GetStream();
     auto timer = PPLCUDAConvTransposeSelectKernel(options.device->GetDeviceProp(), stream, &shape_in0, input_buffer.addr, weight_buffer.addr,
                                                   bias_buffer.addr, temp_buffer.addr, &shape_out, output_buffer.addr,
-                                                  &attr_param_.param, attr_param_.extra_param.algo_info);
+                                                  &param_kernel_, attr_param_.extra_param.algo_info);
 #endif
     CudaArgs::AlgoSelects algo_select;
     algo_select.kname = attr_param_.extra_param.algo_info.algo_name;
@@ -198,8 +208,18 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
             return status;
         }
 
+        ConvTransposeKernelParam param_kernel_;
+        param_kernel_.auto_pad = attr_param_.param.auto_pad;
+        param_kernel_.group = attr_param_.param.group;
+        param_kernel_.dilations = attr_param_.param.dilations;
+        param_kernel_.kernel_shape = attr_param_.param.kernel_shape;
+        param_kernel_.pads = attr_param_.param.pads;
+        param_kernel_.strides = attr_param_.param.strides;
+        param_kernel_.output_padding = attr_param_.param.output_padding;
+        param_kernel_.output_shape = attr_param_.param.output_shape;
+
         PPLCUDAConvTransposeCvt(options.device->GetDeviceProp(), stream, filter_input_buffer.addr, filter_temp_buffer.addr,
-                                weight_constat_info.GetBufferDesc().addr, &shape_in1, &attr_param_.param);
+                                weight_constat_info.GetBufferDesc().addr, &shape_in1, &param_kernel_);
         postshape.SetDataFormat(ppl::common::DATAFORMAT_NHWC8);
         newshape.SetDataFormat(ppl::common::DATAFORMAT_NHWC8);
 

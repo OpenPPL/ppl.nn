@@ -18,13 +18,19 @@
 #ifndef PPLCUDA_KERNEL_INCLUDE_DEPTHTOSPACE_DEPTHTOSPACE_H_
 #define PPLCUDA_KERNEL_INCLUDE_DEPTHTOSPACE_DEPTHTOSPACE_H_
 #include "ppl/common/tensor_shape.h"
-#include "ppl/nn/params/onnx/depth_to_space_param.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 
+struct DepthToSpaceKernelParam final {
+    enum { DCR = 0, CRD = 1 };
+
+    uint32_t blocksize;
+    uint32_t mode;
+};
+
 ppl::common::RetCode PPLCUDADepthToSpaceForwardImp(
     cudaStream_t stream,
-    ppl::nn::onnx::DepthToSpaceParam param,
+    DepthToSpaceKernelParam param,
     const ppl::common::TensorShape* input_shape,
     const void* input,
     const ppl::common::TensorShape* output_shape,

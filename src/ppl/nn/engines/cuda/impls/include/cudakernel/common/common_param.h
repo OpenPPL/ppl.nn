@@ -15,20 +15,27 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_PMX_DESERIALIZATION_CONTEXT_H_
-#define _ST_HPC_PPL_NN_MODELS_PMX_DESERIALIZATION_CONTEXT_H_
+#ifndef PPLCUDA_COMMON_COMMON_PARAM_H_
+#define PPLCUDA_COMMON_COMMON_PARAM_H_
+#include <stdint.h>
+#include <vector>
+#include "ppl/common/types.h"
 
-#include "ppl/nn/common/tensor_shape.h"
-#include "ppl/nn/common/buffer_info.h"
-#include <map>
-
-namespace ppl { namespace nn { namespace pmx {
-
-struct DeserializationContext final {
-    const std::map<edgeid_t, ppl::common::TensorShape>* shapes;
-    const std::map<edgeid_t, BufferInfo>* constants;
+struct QuantKernelParamCuda {
+    QuantKernelParamCuda(int i_z = 0, int o_z = 0, float i_s = 1.f, float o_s = 1.f) :
+        i_zero_point(i_z), o_zero_point(o_z), i_step(i_s), o_step(o_s) {}
+    int i_zero_point = 0;
+    int o_zero_point = 0;
+    float i_step = 1.0f;
+    float o_step = 1.0f;
 };
 
-}}} // namespace ppl::nn::pmx
-
+struct CudaTensorKernelQuant {
+    ppl::common::dataformat_t format = ppl::common::DATAFORMAT_UNKNOWN;
+    ppl::common::datatype_t type = ppl::common::DATATYPE_UNKNOWN;
+    bool per_channel = false;
+    uint32_t bit_width = 0;
+    std::vector<float> scale{0.1f};
+    std::vector<float> zero_point{0.0f};
+};
 #endif

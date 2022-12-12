@@ -19,7 +19,6 @@
 #define PPLCUDA_KERNEL_INCLUDE_ONE_HOT_H_
 #include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
-#include "ppl/nn/params/onnx/one_hot_param.h"
 #include <cuda_runtime.h>
 
 // TODO(@Adam)

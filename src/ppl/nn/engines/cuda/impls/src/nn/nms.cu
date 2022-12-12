@@ -20,7 +20,6 @@
 #include "cudakernel/math/math.h"
 #include "cudakernel/common/common.h"
 #include "ppl/common/tensor_shape.h"
-#include "ppl/nn/engines/cuda/cuda_device.h"
 #include <cuda_fp16.h>
 #include <float.h>
 #include <memory>

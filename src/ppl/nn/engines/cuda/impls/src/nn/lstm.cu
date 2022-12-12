@@ -157,7 +157,7 @@ ppl::common::RetCode PPLCUDALstmForwardImp(
     weight_shape.SetDataType(ppl::common::DATATYPE_FLOAT16); \
     output_shape.SetDataType(ppl::common::DATATYPE_FLOAT16); \
     fuse_param_t fuse_param;                                 \
-    ppl::nn::onnx::GemmParam gemm_param;                     \
+    GemmKernelParam gemm_param;                     \
     gemm_param.transA    = 0;                                \
     gemm_param.transB    = 1;                                \
     gemm_param.alpha     = 1.f;                              \

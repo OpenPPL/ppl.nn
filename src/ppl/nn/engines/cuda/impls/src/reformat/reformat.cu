@@ -24,7 +24,6 @@
 
 #include "cuda_fp16.h"
 using namespace PPLCUDA;
-using namespace ppl::nn;
 using namespace ppl::common;
 
 #define DIM 32
@@ -807,7 +806,7 @@ bool IsFloatEqual(const std::vector<float>& a, const std::vector<float>& b) {
     return true;
 }
 
-bool EqualQuant(const ppl::nn::cuda::CudaTensorQuant& quant_a, const ppl::nn::cuda::CudaTensorQuant& quant_b) {
+bool EqualQuant(const CudaTensorKernelQuant& quant_a, const CudaTensorKernelQuant& quant_b) {
     return quant_a.bit_width == quant_b.bit_width &&
            IsFloatEqual(quant_a.scale, quant_b.scale) &&
            IsFloatEqual(quant_a.zero_point, quant_b.zero_point);
@@ -846,9 +845,9 @@ ppl::common::RetCode SetReLayoutParam(
 ppl::common::RetCode SetReLayoutParam(
     ReFormatParam *param,
     const ppl::common::TensorShape& input,
-    const ppl::nn::cuda::CudaTensorQuant& input_quant,
+    const CudaTensorKernelQuant& input_quant,
     const ppl::common::TensorShape& output,
-    const ppl::nn::cuda::CudaTensorQuant& output_quant)
+    const CudaTensorKernelQuant& output_quant)
 {
     SetReLayoutParam(param, input, output);
     param->same_scale = IsFloatEqual(input_quant.scale, output_quant.scale);

@@ -96,7 +96,7 @@ ppl::common::RetCode ReduceKernel::DoExecute(KernelExecContext* ctx) {
 
     auto input_quant = GetCommonParam()->cuda_tensor_info->at(input->GetEdge()->GetId());
     auto output_quant = GetCommonParam()->cuda_tensor_info->at(output->GetEdge()->GetId());
-    QuantParamCuda qparam(input_quant.zero_point[0], output_quant.zero_point[0], input_quant.scale[0], output_quant.scale[0]);
+    QuantKernelParamCuda qparam(input_quant.zero_point[0], output_quant.zero_point[0], input_quant.scale[0], output_quant.scale[0]);
     PPLReduceDimDes des(n_inner, n_reduce, n_outer);
     status =
         PPLCUDAReduceForwardImp(GetStream(), param, des, input->GetShape(), input->GetBufferPtr(), output->GetShape(),
