@@ -23,8 +23,8 @@
 #include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
 #include "cudakernel/common/common.cuh"
-#include "ppl/nn/engines/cuda/params/quant_param_cuda.h"
-#include "ppl/nn/engines/cuda/impls/src/reformat/cvt_int8_float.cuh"
+#include "cudakernel/common/common.h"
+#include "../reformat/cvt_int8_float.cuh"
 
 template <typename T>
 __device__ inline T __ldg_ver_ctrl(T* ptr) {
@@ -86,7 +86,7 @@ ppl::common::RetCode PPLCUDASoftmaxForwardImp(
 __global__ void __launch_bounds__(256) ppl_cukernel_softmax_int8(
     const int8_t* input, int8_t* output, int max_int8,
     int outer, int axis_width, int inner,
-    ppl::nn::cuda::QuantParamCuda qparam) {
+    QuantKernelParamCuda qparam) {
     int tid = threadIdx.x;
     int inner_idx = blockIdx.x;
     int out_idx = blockIdx.y;
@@ -128,7 +128,7 @@ ppl::common::RetCode PPLCUDASoftmaxForwardImpInt8(
     void* output,
     void* temp_buffer,
     int axis,
-    const ppl::nn::cuda::QuantParamCuda* qparam)
+    const QuantKernelParamCuda* qparam)
 {
     ppl::common::RetCode status = ppl::common::RC_SUCCESS;
     int outer = input_shape->CalcElementsToDimensionIncludingPadding(axis);

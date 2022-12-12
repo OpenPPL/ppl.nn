@@ -16,7 +16,8 @@
 // under the License.
 
 #include "cudakernel/unary/unary_zero.h"
-#include "ppl/nn/engines/cuda/impls/src/reformat/cvt_int8_float.cuh"
+#include "../reformat/cvt_int8_float.cuh"
+#include "cudakernel/common/common.h"
 #include <cuda_fp16.h>
 
 enum UnaryZeroOpType {
@@ -129,7 +130,7 @@ __global__ void ppl_cukernel_unary_zero_any_int8(
     const uint64_t num_elems,
     const DataT* input,
     DataT* output,
-    ppl::nn::cuda::QuantParamCuda qparam)
+    QuantKernelParamCuda qparam)
 {
 #if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
     uint64_t index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -172,7 +173,7 @@ __global__ void ppl_cukernel_unary_zero_nhwc_int8(const uint64_t num_elems,
                                       int hw,
                                       const int8_t *input,
                                       int8_t *output,
-                                      ppl::nn::cuda::QuantParamCuda qparam)
+                                      QuantKernelParamCuda qparam)
 {
 #if __CUDA_ARCH__ >= 600 && __CUDACC_VER_MAJOR__ >= 9
     int chw_idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -195,7 +196,7 @@ __global__ void ppl_cukernel_unary_zero_nhwc_int8(const uint64_t num_elems,
         const void* input,                                                                                             \
         const ppl::common::TensorShape* output_shape,                                                                      \
         void* output,                                                                                                  \
-        const ppl::nn::cuda::QuantParamCuda* qparam)                                                                         \
+        const QuantKernelParamCuda* qparam)                                                                         \
     {                                                                                                                  \
         uint64_t num_elems = output_shape->CalcElementsIncludingPadding();                                             \
         int batch          = output_shape->GetDim(0);                                                                  \

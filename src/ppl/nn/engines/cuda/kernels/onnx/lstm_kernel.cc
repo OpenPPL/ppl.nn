@@ -1,4 +1,5 @@
 #include "ppl/nn/engines/cuda/kernels/onnx/lstm_kernel.h"
+#include "ppl/nn/engines/cuda/module/cuda_module.h"
 #include "cudakernel/nn/lstm.h"
 
 namespace ppl { namespace nn { namespace cuda {

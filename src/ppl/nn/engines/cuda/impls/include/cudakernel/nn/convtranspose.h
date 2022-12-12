@@ -20,11 +20,19 @@
 #include "cudakernel/gemm/gemm.h"
 #include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
-#include "ppl/nn/params/onnx/convtranspose_param.h"
-#include "ppl/nn/engines/cuda/module/cuda_module.h"
 
 #include <cuda_runtime.h>
 
+struct ConvTransposeKernelParam final {
+    uint32_t auto_pad;
+    int64_t group;
+    std::vector<int32_t> dilations;
+    std::vector<int32_t> kernel_shape;
+    std::vector<int32_t> pads;
+    std::vector<int32_t> strides;
+    std::vector<int32_t> output_padding;
+    std::vector<int32_t> output_shape;
+};
 
 uint64_t PPLConvTransposeGetFilterBufSizeCudaFp16(
     const ppl::common::TensorShape* weight_shape);
@@ -32,12 +40,12 @@ uint64_t PPLConvTransposeGetFilterBufSizeCudaFp16(
 uint64_t PPLConvTransposeGetCompilationBufSizeCuda(
     ppl::common::TensorShape* input_shape,
     ppl::common::TensorShape* output_shape,
-    const ppl::nn::onnx::ConvTransposeParam* param);
+    const ConvTransposeKernelParam* param);
 
 uint64_t PPLConvTransposeGetBufSizeCuda(
     ppl::common::TensorShape* input_shape,
     ppl::common::TensorShape* output_shape,
-    const ppl::nn::onnx::ConvTransposeParam* param);
+    const ConvTransposeKernelParam* param);
 
 ppl::common::RetCode PPLCUDAConvTransposeCvt(
     const cudaDeviceProp& device_prop,
@@ -46,7 +54,7 @@ ppl::common::RetCode PPLCUDAConvTransposeCvt(
     void* temp_buffer,
     void* out_filter,
     const ppl::common::TensorShape* filter_shape,
-    const ppl::nn::onnx::ConvTransposeParam* param);
+    const ConvTransposeKernelParam* param);
 
 ppl::common::RetCode PPLCUDAConvTransposeForward(
     const cudaDeviceProp& device_prop,
@@ -58,7 +66,7 @@ ppl::common::RetCode PPLCUDAConvTransposeForward(
     const void* bias,
     ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::onnx::ConvTransposeParam* param,
+    const ConvTransposeKernelParam* param,
     algo_param_t algo_param,
     fuse_param_t &fuse_param,
     void* temp_buffer);
@@ -74,7 +82,7 @@ double PPLCUDAConvTransposeSelectKernel(
     void* temp_buffer,
     ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::onnx::ConvTransposeParam* param,
+    const ConvTransposeKernelParam* param,
     algo_param_t& algo_param);
 
 #endif // PPLCUDA_KERNEL_INCLUDE_CONVTRANSPOSE_CONVTRANSPOSE_H_

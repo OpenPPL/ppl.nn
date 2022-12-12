@@ -1,5 +1,4 @@
 #include "ppl/common/tensor_shape.h"
-#include "ppl/nn/engines/cuda/module/cuda_module.h"
 
 #include "ppl/common/retcode.h"
 

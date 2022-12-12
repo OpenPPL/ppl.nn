@@ -19,9 +19,14 @@
 #define PPLCUDA_KERNEL_INCLUDE_MMCV_GRIDSAMPLE_GRIDSAMPLE_H_
 #include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
-#include "ppl/nn/params/mmcv/mmcv_gridsample_param.h"
 #include <cuda_fp16.h>
 #include <float.h>
+
+struct MMCVGridSampleKernelParam final {
+    int64_t align_corners;
+    int64_t interpolation_mode;
+    int64_t padding_mode;
+};
 
 ppl::common::RetCode PPLCUDAMMCVGridSampleForwardImp(
     cudaStream_t stream,
@@ -31,5 +36,5 @@ ppl::common::RetCode PPLCUDAMMCVGridSampleForwardImp(
     const void* rois,
     ppl::common::TensorShape* output_shape,
     void* output,
-    ppl::nn::mmcv::MMCVGridSampleParam param);
+    MMCVGridSampleKernelParam param);
 #endif // PPLCUDA_KERNEL_INCLUDE_MMCV_GRIDSAMPLE_GRIDSAMPLE_H_

@@ -19,9 +19,18 @@
 #define PPLCUDA_KERNEL_INCLUDE_ROIALIGN_ROIALIGN_H_
 #include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
-#include "ppl/nn/params/onnx/roialign_param.h"
 #include <cuda_fp16.h>
 #include <float.h>
+
+struct RoiAlignKernelParam final {
+    enum { AVG = 0, MAX = 1 };
+
+    uint32_t mode;
+    uint32_t output_height;
+    uint32_t output_width;
+    uint32_t sampling_ratio;
+    float spatial_scale;
+};
 
 ppl::common::RetCode PPLCUDAROIAlignForwardImp(
     cudaStream_t stream,
@@ -33,5 +42,5 @@ ppl::common::RetCode PPLCUDAROIAlignForwardImp(
     const void* batch_indices,
     ppl::common::TensorShape* output_shape,
     void* output,
-    ppl::nn::onnx::RoiAlignParam param);
+    RoiAlignKernelParam param);
 #endif // PPLCUDA_KERNEL_INCLUDE_ONNX_ROIALIGN_ROIALIGN_H_

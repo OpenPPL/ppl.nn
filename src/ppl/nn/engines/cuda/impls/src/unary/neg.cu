@@ -1,5 +1,5 @@
 #include "cudakernel/unary/neg.h"
-#include "ppl/nn/engines/cuda/impls/src/reformat/cvt_int8_float.cuh"
+#include "../reformat/cvt_int8_float.cuh"
 #include <cuda_fp16.h>
 
 
@@ -26,7 +26,7 @@ ppl::common::RetCode PPLCUDANegForwardImp(
     const void* input,                                                                                                                     
     const ppl::common::TensorShape* output_shape,                                                                                              
     void* output,                                                                                                                          
-    const ppl::nn::cuda::QuantParamCuda* qparam)                                                                                           
+    const QuantKernelParamCuda* qparam)                                                                                           
 {                                                                                                                                          
     uint64_t num_elems = output_shape->CalcElementsIncludingPadding();                                                                     
     int block_size     = 256;                                                                                                              

@@ -18,7 +18,7 @@
 #ifndef PPLCUDA_KERNEL_INCLUDE_SOFTMAX_SOFTMAX_H_
 #define PPLCUDA_KERNEL_INCLUDE_SOFTMAX_SOFTMAX_H_
 #include "ppl/common/tensor_shape.h"
-#include "ppl/nn/engines/cuda/params/quant_param_cuda.h"
+#include "cudakernel/common/common_param.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 
@@ -61,6 +61,6 @@ ppl::common::RetCode PPLCUDASoftmaxForwardImpInt8(
     void* output,
     void* temp_buffer,
     int axis,
-    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+    const QuantKernelParamCuda* qparam = nullptr);
 
 #endif // PPLCUDA_KERNEL_INCLUDE_SOFTMAX_SOFTMAX_H_

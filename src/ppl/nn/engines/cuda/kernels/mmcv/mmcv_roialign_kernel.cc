@@ -26,9 +26,16 @@ ppl::common::RetCode MMCVROIAlignKernel::DoExecute(KernelExecContext* ctx) {
     auto rois = ctx->GetInput<TensorImpl>(1);
     auto output = ctx->GetOutput<TensorImpl>(0);
 
+    MMCVRoiAlignKernelParam param_kernel_;
+    param_kernel_.aligned = param_->aligned;
+    param_kernel_.aligned_height = param_->aligned_height;
+    param_kernel_.aligned_width = param_->aligned_width;
+    param_kernel_.pool_mode = param_->pool_mode;
+    param_kernel_.sampling_ratio = param_->sampling_ratio;
+    param_kernel_.spatial_scale = param_->spatial_scale;
     ppl::common::RetCode status =
         PPLCUDAMMCVROIAlignForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), rois->GetShape(),
-                                      rois->GetBufferPtr(), output->GetShape(), output->GetBufferPtr(), *param_);
+                                      rois->GetBufferPtr(), output->GetShape(), output->GetBufferPtr(), param_kernel_);
     return status;
 }
 

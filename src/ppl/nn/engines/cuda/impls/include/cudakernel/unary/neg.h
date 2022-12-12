@@ -18,7 +18,7 @@
 #ifndef PPLCUDA_KERNEL_INCLUDE_UNARY_NEG_H_
 #define PPLCUDA_KERNEL_INCLUDE_UNARY_NEG_H_
 #include "ppl/common/tensor_shape.h"
-#include "ppl/nn/engines/cuda/params/quant_param_cuda.h"
+#include "cudakernel/common/common_param.h"
 #include "ppl/common/retcode.h"
 
 ppl::common::RetCode PPLCUDANegForwardImp(
@@ -27,5 +27,5 @@ ppl::common::RetCode PPLCUDANegForwardImp(
     const void* input,
     const ppl::common::TensorShape* output_shape,
     void* output,
-    const ppl::nn::cuda::QuantParamCuda* qparam = nullptr);
+    const QuantKernelParamCuda* qparam = nullptr);
 #endif // PPLCUDA_KERNEL_INCLUDE_UNARY_NEG_H_

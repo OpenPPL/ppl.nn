@@ -19,7 +19,6 @@
 #define PPLCUDA_KERNEL_INCLUDE_NMS_NMS_H_
 #include "ppl/common/tensor_shape.h"
 #include "ppl/common/retcode.h"
-#include "ppl/nn/engines/cuda/cuda_device.h"
 #include <cuda_fp16.h>
 #include <float.h>
 

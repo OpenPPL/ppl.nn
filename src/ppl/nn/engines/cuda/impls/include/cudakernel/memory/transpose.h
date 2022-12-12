@@ -18,13 +18,16 @@
 #ifndef PPLCUDA_KERNEL_INCLUDE_TRANSPOSE_TRANSPOSE_H_
 #define PPLCUDA_KERNEL_INCLUDE_TRANSPOSE_TRANSPOSE_H_
 #include "ppl/common/tensor_shape.h"
-#include "ppl/nn/params/onnx/transpose_param.h"
 #include "ppl/common/retcode.h"
 #include <cuda_runtime.h>
 
+struct TransposeKernelParam final {
+    std::vector<int32_t> perm;
+};
+
 ppl::common::RetCode PPLCUDATransposeForwardImp(
     cudaStream_t stream,
-    ppl::nn::onnx::TransposeParam param,
+    TransposeKernelParam param,
     const ppl::common::TensorShape* input_shape,
     const void* input,
     const ppl::common::TensorShape* output_shape,

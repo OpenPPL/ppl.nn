@@ -24,7 +24,6 @@
 #include <cuda.h>
 #include "ppl/common/types.h"
 #include "ppl/common/retcode.h"
-//#include "ppl/nn/engines/cuda/cuda_device.h"
 
 struct conv_param_t {
     int in_height;

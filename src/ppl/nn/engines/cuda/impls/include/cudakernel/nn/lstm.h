@@ -1,8 +1,6 @@
 #include <cuda.h>
 #include "cudakernel/common/rnn_common.h"
 
-#include "ppl/nn/engines/cuda/module/cuda_module.h"
-
 int64_t PPLCUDALstmGetRuntimeBufSize(
     const ppl::common::TensorShape *X_shape,
     const unsigned int direction,
