@@ -39,11 +39,15 @@ bool LSTMKernel::CanDoExecute(const KernelExecContext& ctx) const {
 
 uint64_t LSTMKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     auto X = ctx.GetInput<TensorImpl>(0);
+    const bool has_sequence_lens = ctx.GetInputCount() > 4 && ctx.GetInput<TensorImpl>(4);
     const bool has_Y = ctx.GetOutputCount() > 0 && ctx.GetOutput<TensorImpl>(0);
     const bool has_Y_h = ctx.GetOutputCount() > 1 && ctx.GetOutput<TensorImpl>(1);
     const bool has_Y_c = ctx.GetOutputCount() > 2 && ctx.GetOutput<TensorImpl>(2);
-    return kernel::x86::lstm_fp32_get_buffer_bytes(X->GetShape(), direction_, param_->param->hidden_size, has_Y,
-                                                   has_Y_h, has_Y_c);
+    return kernel::x86::lstm_fp32_get_buffer_bytes(
+        X->GetShape(), direction_,
+        param_->param->hidden_size,
+        has_sequence_lens, has_Y,
+        has_Y_h, has_Y_c);
 }
 
 ppl::common::RetCode LSTMKernel::DoExecute(KernelExecContext* ctx) {
