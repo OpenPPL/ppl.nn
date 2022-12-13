@@ -109,14 +109,9 @@ ppl::common::RetCode ConvKernel::DoExecute(KernelExecContext* ctx) {
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    if (X->GetShape()->GetDimCount() != 4 || W->GetShape()->GetDimCount() != 4) {
-        LOG(ERROR) << "ConvOp only support 4-D Tensor for X & W";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
     for (uint32_t i = 0; i < kernel_dims; ++i) {
-        if (param_->param->pads[i] != param_->param->pads[i + 2]) {
-            LOG(ERROR) << "ConvOp only support symmetrical pads.";
+        if (param_->param->pads[i] != param_->param->pads[i + kernel_dims]) {
+            LOG(ERROR) << "only support symmetrical pads.";
             return ppl::common::RC_UNSUPPORTED;
         }
     }

@@ -38,8 +38,8 @@ RetCode ConvTransposeOp::DoInit(const OptKernelOptions& options) {
     const int64_t kernel_dims =
         param_->kernel_shape.size() == 0 ? (weight_shape.dims.size() - 2) : param_->kernel_shape.size();
 
-    if (kernel_dims != 2) {
-        LOG(ERROR) << "Only support ConvTranspose2d currently. Get unsupported kernel_dims=" << kernel_dims
+    if (kernel_dims > 2) {
+        LOG(ERROR) << "Only support ConvTranspose2d/1d currently. Get unsupported kernel_dims=" << kernel_dims
                    << ", which is ConvTranspose(" << kernel_dims << "d)";
         return ppl::common::RC_UNSUPPORTED;
     }

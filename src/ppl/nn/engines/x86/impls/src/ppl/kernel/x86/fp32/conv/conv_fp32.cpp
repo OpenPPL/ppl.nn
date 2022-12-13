@@ -110,9 +110,9 @@ ppl::common::RetCode conv2d_ndarray_fp32(
         auto l_bias = bias ? bias + g * oc_per_grp : nullptr;
         for (int64_t b = 0; b < batch; ++b) {  
             auto l_src = src + (b * src_c + g * ic_per_grp) * src_h * src_w;
-            auto l_dst       = dst + (b * dst_c + g * oc_per_grp) * dst_h * dst_w;
-            auto l_col       = do_im2col ? im2col_buffer : const_cast<float*>(l_src);
-            auto l_sum       = sum_src + (b * sum_src_c + g * oc_per_grp) * dst_h * dst_w;
+            auto l_dst = dst + (b * dst_c + g * oc_per_grp) * dst_h * dst_w;
+            auto l_col = do_im2col ? im2col_buffer : const_cast<float*>(l_src);
+            auto l_sum = sum_src + (b * sum_src_c + g * oc_per_grp) * dst_h * dst_w;
 
             if (do_im2col) {
                 im2col_func(
@@ -227,9 +227,9 @@ ppl::common::RetCode conv1d_ndarray_fp32(
         auto l_bias = bias ? bias + g * oc_per_grp : nullptr;
         for (int64_t b = 0; b < batch; ++b) {  
             auto l_src = src + (b * src_c + g * ic_per_grp) * src_h * src_w;
-            auto l_dst       = dst + (b * dst_c + g * oc_per_grp) * dst_h * dst_w;
-            auto l_col       = do_im2col ? im2col_buffer : const_cast<float*>(l_src);
-            auto l_sum       = sum_src + (b * sum_src_c + g * oc_per_grp) * dst_h * dst_w;
+            auto l_dst = dst + (b * dst_c + g * oc_per_grp) * dst_h * dst_w;
+            auto l_col = do_im2col ? im2col_buffer : const_cast<float*>(l_src);
+            auto l_sum = sum_src + (b * sum_src_c + g * oc_per_grp) * dst_h * dst_w;
 
             if (do_im2col) {
                 im2col_func(
