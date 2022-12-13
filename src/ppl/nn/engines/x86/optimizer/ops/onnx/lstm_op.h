@@ -30,6 +30,7 @@ public:
     ~LSTMOp();
     ppl::common::RetCode DoInit(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
+    ppl::common::RetCode OmitConstantsData(std::map<edgeid_t, int64_t>* constants_data_refcount) override;
 
 private:
     std::shared_ptr<ppl::nn::onnx::LSTMParam> param_;

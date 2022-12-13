@@ -56,12 +56,14 @@ ppl::common::RetCode lstm_fp32_fma(
     const int64_t simd_w = 8;
 
     const int64_t num_direction = direction == rnn_direction::BIDIRECTIONAL ? 2 : 1;
+    const bool    has_reverse   = direction == rnn_direction::BIDIRECTIONAL || direction == rnn_direction::REVERSE;
     const int64_t seq_len       = X_shape->GetDim(0);
     const int64_t batch         = X_shape->GetDim(1);
     const int64_t input_size    = X_shape->GetDim(2);
 
     float *Yh_buf = Y_h;
     float *Yc_buf = Y_c;
+    float *rX = nullptr;
 
     // set temp buffer
     float *temp_buffer_fp32 = reinterpret_cast<float *>(temp_buffer);
@@ -73,6 +75,11 @@ ppl::common::RetCode lstm_fp32_fma(
         Yc_buf = temp_buffer_fp32;
         temp_buffer_fp32 += num_direction * batch * hidden_size;
     }
+    if (sequence_lens && has_reverse) {
+        // need reverse X if seq_len of each batch is different
+        rX = temp_buffer_fp32;
+        temp_buffer_fp32 += seq_len * batch * input_size;
+    }
     float *gate_buf = temp_buffer_fp32;
 
     for (int64_t nd = 0; nd < num_direction; ++nd) {
@@ -82,6 +89,8 @@ ppl::common::RetCode lstm_fp32_fma(
         float *nd_Yc = Yc_buf + nd * batch * hidden_size;
         float *nd_Y  = Y + nd * batch * hidden_size;
 
+        // const float *nd_W = X_weight + nd * rnn_num_gate::LSTM * hidden_size * input_size;
+        // const float *nd_R = R_weight + nd * rnn_num_gate::LSTM * hidden_size * hidden_size;
         const float *nd_W = X_weight[nd];
         const float *nd_R = R_weight[nd];
 
@@ -92,47 +101,57 @@ ppl::common::RetCode lstm_fp32_fma(
         const float *nd_init_h = initial_h ? initial_h + nd * batch * hidden_size : nullptr;
         const float *nd_init_c = initial_c ? initial_c + nd * batch * hidden_size : nullptr;
 
-        for (int64_t seq_idx = 0; seq_idx < seq_len; ++seq_idx) {
-            const int64_t mapped_seq_index = is_reverse ? (seq_len - seq_idx - 1) : seq_idx;
-            const bool is_first_seq        = seq_idx == 0;
+        const float *nd_X = X;
+        if (sequence_lens && is_reverse) {
+            PRAGMA_OMP_PARALLEL_FOR()
+            for (int64_t work = 0; work < seq_len * batch; ++work) {
+                const int64_t seq_idx = work / batch;
+                const int64_t b       = work % batch;
+                const int64_t seq_end = sequence_lens[b];
+                auto src = X + ((seq_idx < seq_end) ? (seq_end - seq_idx - 1) : seq_idx) * batch * input_size + b * input_size;
+                auto dst = rX + seq_idx * batch * input_size + b * input_size;
+                memcpy32_avx(dst, src, input_size);
+            }
+            nd_X = rX;
+        }
 
+        gemm_fp32_fma( // X[nd]*W[nd]_{iofc}^T+Wb_{iofc}
+            nd_X,
+            nd_W,
+            nd_Wb,
+            nullptr,
+            gemm_m_type::NOTRANS,
+            has_packed_w ? gemm_m_type::PACKED : gemm_m_type::TRANS,
+            nd_Wb ? gemm_v_type::ROW_VEC : gemm_v_type::EMPTY,
+            gemm_m_type::EMPTY,
+            seq_len * batch,
+            rnn_num_gate::LSTM * hidden_size,
+            input_size,
+            input_size,
+            input_size,
+            rnn_num_gate::LSTM * hidden_size,
+            0,
+            1.0f,
+            0.0f,
+            1.0f,
+            0.0f,
+            gemm_post::NONE,
+            gate_buf);
+
+        for (int64_t seq_idx = 0; seq_idx < seq_len; ++seq_idx) {
             // X (seq_len, batch, input_size)
+            // gate_buf (seq_len, batch, 4xhidden_size)
             // h_0 (num_direction, batch, hidden_size)
             // c_0 (num_direction, batch, hidden_size)
             // Y (seq_len, num_direction, batch, hidden_size)
             // h_n (num_direction, batch, hidden_size)
             // c_n (num_direction, batch, hidden_size)
 
-            const float *sX       = X + mapped_seq_index * batch * input_size;
-            const float *Y_h_prev = is_first_seq ? nd_init_h : nd_Yh;
-            const float *Y_c_prev = is_first_seq ? nd_init_c : nd_Yc;
-            float *sY             = nd_Y + mapped_seq_index * num_direction * batch * hidden_size;
+            auto seq_gate = gate_buf + ((!sequence_lens && is_reverse) ? (seq_len - seq_idx - 1) : seq_idx) * batch * rnn_num_gate::LSTM * hidden_size;
+            auto Y_h_prev = seq_idx == 0 ? nd_init_h : nd_Yh;
+            auto Y_c_prev = seq_idx == 0 ? nd_init_c : nd_Yc;
 
-            gemm_fp32_fma( // gate = X[s]*W[nd]_{iofc}^T+Wb_{iofc}
-                sX,
-                nd_W,
-                nd_Wb,
-                nullptr,
-                gemm_m_type::NOTRANS,
-                has_packed_w ? gemm_m_type::PACKED : gemm_m_type::TRANS,
-                nd_Wb ? gemm_v_type::ROW_VEC : gemm_v_type::EMPTY,
-                gemm_m_type::EMPTY,
-                batch,
-                rnn_num_gate::LSTM * hidden_size,
-                input_size,
-                input_size,
-                input_size,
-                rnn_num_gate::LSTM * hidden_size,
-                0,
-                1.0f,
-                0.0f,
-                1.0f,
-                0.0f,
-                gemm_post::NONE,
-                gate_buf);
-
-            const float thisK = !Y_h_prev ? 0 : hidden_size; // some hack
-            gemm_fp32_fma( // gate += h_0[nd]*R[nd]_{iofc}^T+Rb_{iofc}
+            gemm_fp32_fma( // h[nd]_{t-1}*R[nd]_{iofc}^T+Rb_{iofc}
                 Y_h_prev,
                 nd_R,
                 nd_Rb,
@@ -143,23 +162,23 @@ ppl::common::RetCode lstm_fp32_fma(
                 gemm_m_type::EMPTY,
                 batch,
                 rnn_num_gate::LSTM * hidden_size,
-                thisK,
+                hidden_size,
                 hidden_size,
                 hidden_size,
                 rnn_num_gate::LSTM * hidden_size,
                 rnn_num_gate::LSTM * hidden_size,
-                1.0f,
+                !Y_h_prev ? 0.0f : 1.0f, // some hack, gemm will skip aAxB if alpha is 0
                 1.0f,
                 1.0f,
                 0.0f,
                 gemm_post::NONE,
-                gate_buf);
+                seq_gate);
 
-            if (is_first_seq && !Y_h_prev) {
+            if (seq_idx == 0 && !Y_h_prev) {
                 Y_h_prev = nd_Yh; // preprocess Y_h_prev
                 memset32_avx(nd_Yh, 0, batch * hidden_size);
             }
-            if (is_first_seq && !Y_c_prev) {
+            if (seq_idx == 0 && !Y_c_prev) {
                 Y_c_prev = nd_Yc; // preprocess Y_c_prev
                 memset32_avx(nd_Yc, 0, batch * hidden_size);
             }
@@ -167,23 +186,24 @@ ppl::common::RetCode lstm_fp32_fma(
             if (!P_weight) {
                 PRAGMA_OMP_PARALLEL_FOR()
                 for (int64_t b = 0; b < batch; ++b) {
-                    if (!sequence_lens || seq_idx < sequence_lens[b]) {
-                        const float *gI    = gate_buf + b * rnn_num_gate::LSTM * hidden_size;
+                    const int64_t seq_end = sequence_lens ? sequence_lens[b] : seq_len;
+                    if (seq_idx < seq_end) {
+                        const float *gI    = seq_gate + b * rnn_num_gate::LSTM * hidden_size;
                         const float *gO    = gI + hidden_size;
                         const float *gF    = gO + hidden_size;
                         const float *gC    = gF + hidden_size;
                         const float *Cprev = Y_c_prev + b * hidden_size;
                         float *Ct          = nd_Yc + b * hidden_size;
                         float *Ht          = nd_Yh + b * hidden_size;
-                        float *Yt          = sY + b * hidden_size;
+                        float *Yt          = nd_Y + (is_reverse ? (seq_end - seq_idx - 1) : seq_idx) * num_direction * batch * hidden_size + b * hidden_size;
                         int64_t h          = 0;
                         for (; h <= hidden_size - simd_w; h += simd_w) {
-                            const __m256 it = _fma_sigmoid_ps(_mm256_loadu_ps(gI + h));
-                            const __m256 ft = _fma_sigmoid_ps(_mm256_loadu_ps(gF + h));
-                            const __m256 ct = _fma_tanh_ps(_mm256_loadu_ps(gC + h));
-                            const __m256 cn = ft * _mm256_loadu_ps(Cprev + h) + it * ct;
-                            const __m256 ot = _fma_sigmoid_ps(_mm256_loadu_ps(gO + h));
-                            const __m256 hn = ot * _fma_tanh_ps(cn);
+                            auto it = _fma_sigmoid_ps(_mm256_loadu_ps(gI + h));
+                            auto ft = _fma_sigmoid_ps(_mm256_loadu_ps(gF + h));
+                            auto ct = _fma_tanh_ps(_mm256_loadu_ps(gC + h));
+                            auto cn = ft * _mm256_loadu_ps(Cprev + h) + it * ct;
+                            auto ot = _fma_sigmoid_ps(_mm256_loadu_ps(gO + h));
+                            auto hn = ot * _fma_tanh_ps(cn);
                             _mm256_storeu_ps(Ct + h, cn);
                             _mm256_storeu_ps(Ht + h, hn);
                         }
@@ -195,16 +215,16 @@ ppl::common::RetCode lstm_fp32_fma(
                             const float ot = sigmoidf(gO[h]);
                             Ht[h]          = ot * ::tanhf(Ct[h]);
                         }
-                        if (Y) {
-                            memcpy32_avx(Yt, Ht, hidden_size);
-                        }
+                        if (Y) memcpy32_avx(Yt, Ht, hidden_size);
                     } else { // pass through the initial_h, initial_c
                         const float *Hprev = Y_h_prev + b * hidden_size;
                         const float *Cprev = Y_c_prev + b * hidden_size;
                         float *Ct          = nd_Yc + b * hidden_size;
                         float *Ht          = nd_Yh + b * hidden_size;
-                        memcpy32_avx(Ct, Cprev, hidden_size);
-                        memcpy32_avx(Ht, Hprev, hidden_size);
+                        float *Yt          = nd_Y + seq_idx * num_direction * batch * hidden_size + b * hidden_size;
+                        if (Cprev != Ct) memcpy32_avx(Ct, Cprev, hidden_size);
+                        if (Hprev != Ht) memcpy32_avx(Ht, Hprev, hidden_size);
+                        if (Y) memset32_avx(Yt, 0, hidden_size);
                     }
                 }
             } else {
@@ -213,24 +233,25 @@ ppl::common::RetCode lstm_fp32_fma(
                 const float *pF = pO + hidden_size;
                 PRAGMA_OMP_PARALLEL_FOR()
                 for (int64_t b = 0; b < batch; ++b) {
-                    if (!sequence_lens || seq_idx < sequence_lens[b]) {
-                        const float *gI    = gate_buf + b * rnn_num_gate::LSTM * hidden_size;
+                    const int64_t seq_end = sequence_lens ? sequence_lens[b] : seq_len;
+                    if (seq_idx < seq_end) {
+                        const float *gI    = seq_gate + b * rnn_num_gate::LSTM * hidden_size;
                         const float *gO    = gI + hidden_size;
                         const float *gF    = gO + hidden_size;
                         const float *gC    = gF + hidden_size;
                         const float *Cprev = Y_c_prev + b * hidden_size;
                         float *Ct          = nd_Yc + b * hidden_size;
                         float *Ht          = nd_Yh + b * hidden_size;
-                        float *Yt          = sY + b * hidden_size;
+                        float *Yt          = nd_Y + (is_reverse ? (seq_end - seq_idx - 1) : seq_idx) * num_direction * batch * hidden_size + b * hidden_size;
                         int64_t h          = 0;
                         for (; h <= hidden_size - simd_w; h += simd_w) {
-                            const __m256 cp = _mm256_loadu_ps(Cprev + h);
-                            const __m256 it = _fma_sigmoid_ps(_mm256_loadu_ps(gI + h) + cp * _mm256_loadu_ps(pI + h));
-                            const __m256 ft = _fma_sigmoid_ps(_mm256_loadu_ps(gF + h) + cp * _mm256_loadu_ps(pF + h));
-                            const __m256 ct = _fma_tanh_ps(_mm256_loadu_ps(gC + h));
-                            const __m256 cn = ft * cp + it * ct;
-                            const __m256 ot = _fma_sigmoid_ps(_mm256_loadu_ps(gO + h) + cn * _mm256_loadu_ps(pO + h));
-                            const __m256 hn = ot * _fma_tanh_ps(cn);
+                            auto cp = _mm256_loadu_ps(Cprev + h);
+                            auto it = _fma_sigmoid_ps(_mm256_loadu_ps(gI + h) + cp * _mm256_loadu_ps(pI + h));
+                            auto ft = _fma_sigmoid_ps(_mm256_loadu_ps(gF + h) + cp * _mm256_loadu_ps(pF + h));
+                            auto ct = _fma_tanh_ps(_mm256_loadu_ps(gC + h));
+                            auto cn = ft * cp + it * ct;
+                            auto ot = _fma_sigmoid_ps(_mm256_loadu_ps(gO + h) + cn * _mm256_loadu_ps(pO + h));
+                            auto hn = ot * _fma_tanh_ps(cn);
                             _mm256_storeu_ps(Ct + h, cn);
                             _mm256_storeu_ps(Ht + h, hn);
                         }
@@ -242,16 +263,16 @@ ppl::common::RetCode lstm_fp32_fma(
                             const float ot = sigmoidf(gO[h] + pO[h] * Ct[h]);
                             Ht[h]          = ot * ::tanhf(Ct[h]);
                         }
-                        if (Y) {
-                            memcpy32_avx(Yt, Ht, hidden_size * sizeof(float));
-                        }
+                        if (Y) memcpy32_avx(Yt, Ht, hidden_size);
                     } else { // pass through the initial_h, initial_c
                         const float *Hprev = Y_h_prev + b * hidden_size;
                         const float *Cprev = Y_c_prev + b * hidden_size;
                         float *Ct          = nd_Yc + b * hidden_size;
                         float *Ht          = nd_Yh + b * hidden_size;
-                        memcpy32_avx(Ct, Cprev, hidden_size);
-                        memcpy32_avx(Ht, Hprev, hidden_size);
+                        float *Yt          = nd_Y + seq_idx * num_direction * batch * hidden_size + b * hidden_size;
+                        if (Cprev != Ct) memcpy32_avx(Ct, Cprev, hidden_size);
+                        if (Hprev != Ht) memcpy32_avx(Ht, Hprev, hidden_size);
+                        if (Y) memset32_avx(Yt, 0, hidden_size);
                     }
                 }
             }

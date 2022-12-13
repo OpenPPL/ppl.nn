@@ -130,6 +130,24 @@ RetCode LSTMOp::DoInit(const OptKernelOptions& options) {
     return RC_SUCCESS;
 }
 
+RetCode LSTMOp::OmitConstantsData(std::map<edgeid_t, int64_t>* constants_data_refcount) {
+    if (aux_param_.packed_w[0]) {
+        auto w_id = GetNode()->GetInput(1);
+        auto it = constants_data_refcount->find(w_id);
+        if (it != constants_data_refcount->end()) {
+            it->second--;
+        }
+    }
+    if (aux_param_.packed_r[0]) {
+        auto r_id = GetNode()->GetInput(2);
+        auto it = constants_data_refcount->find(r_id);
+        if (it != constants_data_refcount->end()) {
+            it->second--;
+        }
+    }
+    return RC_SUCCESS;
+}
+
 KernelImpl* LSTMOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<LSTMKernel>(&aux_param_);
 }

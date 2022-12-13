@@ -27,6 +27,7 @@ uint64_t lstm_fp32_get_buffer_bytes(
     const ppl::nn::TensorShape *X_shape,
     const rnn_direction_t direction,
     const int64_t hidden_size,
+    const bool has_sequence_lens,
     const bool has_Y,
     const bool has_Y_h,
     const bool has_Y_c);
