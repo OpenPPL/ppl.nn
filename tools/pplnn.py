@@ -119,8 +119,10 @@ def ParseCommandLineArgs():
 
     parser.add_argument("--pmx-model", type = str, default = "", required = False,
                         help = "pmx model file")
-    parser.add_argument("--save-pmx-model", type = str, default = "", required = False,
+    parser.add_argument("--export-pmx-model", type = str, default = "", required = False,
                         help = "dump model to <filename> in pmx format")
+    parser.add_argument("--save-pmx-model", type = str, default = "", required = False,
+                        help = "deprecated. use `--export-pmx-model` instead.")
 
     parser.add_argument("--mm-policy", type = str, default = "perf", required = False,
                         help = "\"perf\" => better performance, \"mem\" => less memory usage, \"plain\" => no optimize")
@@ -563,6 +565,10 @@ if __name__ == "__main__":
     if args.display_version:
         sys.exit(0)
 
+    if args.save_pmx_model:
+        logging.error("`--save-pmx-model` is deprecated. use `--export-pmx-model` instead.")
+        sys.exit(-1)
+
     if HasMultipleModelOptions(args):
         logging.error("multiple --*-model options are specified.")
         sys.exit(-1)
@@ -600,8 +606,8 @@ if __name__ == "__main__":
             logging.error("create Runtime instance failed.")
             sys.exit(-1)
 
-        if args.save_pmx_model:
-            status = runtime_builder.Serialize(args.save_pmx_model, "pmx")
+        if args.export_pmx_model:
+            status = runtime_builder.Serialize(args.export_pmx_model, "pmx")
             if status != pplcommon.RC_SUCCESS:
                 logging.error("serialize to pmx model failed: " + pplcommon.GetRetCodeStr(status))
                 sys.exit(-1)
@@ -629,8 +635,8 @@ if __name__ == "__main__":
             logging.error("create Runtime instance failed.")
             sys.exit(-1)
 
-        if args.save_pmx_model:
-            status = runtime_builder.Serialize(args.save_pmx_model, "pmx")
+        if args.export_pmx_model:
+            status = runtime_builder.Serialize(args.export_pmx_model, "pmx")
             if status != pplcommon.RC_SUCCESS:
                 logging.error("serialize to pmx model failed: " + pplcommon.GetRetCodeStr(status))
                 sys.exit(-1)

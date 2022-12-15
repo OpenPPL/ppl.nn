@@ -60,7 +60,8 @@ Define_string_opt("--onnx-model", g_flag_onnx_model, "", "onnx model file");
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
 Define_string_opt("--pmx-model", g_flag_pmx_model, "", "pmx model file");
-Define_string_opt("--save-pmx-model", g_flag_save_pmx_model, "", "dump model to <filename> in pmx format");
+Define_string_opt("--export-pmx-model", g_flag_export_pmx_model, "", "dump model to <filename> in pmx format");
+Define_string_opt("--save-pmx-model", g_flag_save_pmx_model, "", "deprecated. use `--export-pmx-model` instead.");
 #endif
 
 Define_string_opt(
@@ -1154,6 +1155,13 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    if (!g_flag_save_pmx_model.empty()) {
+        LOG(ERROR) << "`--save-pmx-model` is deprecated. use `--export-pmx-model` instead.";
+        return -1;
+    }
+#endif
+
     auto nr_model = CalcModelNum();
     if (nr_model == 0) {
         LOG(ERROR) << "please specify a model.";
@@ -1211,9 +1219,9 @@ int main(int argc, char* argv[]) {
         }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
-        if (!g_flag_save_pmx_model.empty()) {
+        if (!g_flag_export_pmx_model.empty()) {
             utils::FileDataStream fds;
-            auto status = fds.Init(g_flag_save_pmx_model.c_str());
+            auto status = fds.Init(g_flag_export_pmx_model.c_str());
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "open pmx output file failed: " << GetRetCodeStr(status);
                 return -1;
@@ -1258,9 +1266,9 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
-        if (!g_flag_save_pmx_model.empty()) {
+        if (!g_flag_export_pmx_model.empty()) {
             utils::FileDataStream fds;
-            auto status = fds.Init(g_flag_save_pmx_model.c_str());
+            auto status = fds.Init(g_flag_export_pmx_model.c_str());
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "open pmx output file failed: " << GetRetCodeStr(status);
                 return -1;
