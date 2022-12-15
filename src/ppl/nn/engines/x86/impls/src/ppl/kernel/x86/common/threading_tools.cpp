@@ -55,6 +55,12 @@ int32_t get_omp_max_threads()
 {
     return PPL_OMP_MAX_THREADS();
 }
+
+void set_omp_num_threads(int32_t n)
+{
+    PPL_OMP_SET_NUM_THREADS(n);
+}
+
 // A very naive version
 single_parallel_loop_config_t select_single_parallel_loop(
     const std::vector<int64_t> &iter_of_loop,
