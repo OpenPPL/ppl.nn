@@ -32,6 +32,7 @@ namespace ppl { namespace kernel { namespace x86 {
 void set_omp_core_binding(const int32_t *cores, const int32_t num_cores, const int32_t mode);
 
 int32_t get_omp_max_threads();
+void set_omp_num_threads(int32_t n);
 
 template<typename T1, typename T2>
 void parallel_task_distribution_1d(

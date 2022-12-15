@@ -318,6 +318,7 @@ Define_bool_opt("--use-x86", g_flag_use_x86, false, "use x86 engine");
 Define_bool_opt("--disable-avx512", g_flag_disable_avx512, false, "disable avx512 feature");
 Define_bool_opt("--disable-avx-fma3", g_flag_disable_avx_fma3, false, "disable avx, fma3 and avx512 feature");
 Define_bool_opt("--core-binding", g_flag_core_binding, false, "core binding");
+Define_int32_opt("--num-threads", g_flag_num_threads, 0, "override the environment variable OMP_NUM_THREADS");
 
 Define_bool_opt("--disable-graph-fusion", g_flag_disable_graph_fusion, false, "disable graph kernel fusion rules");
 Define_bool_opt("--enable-tensor-debug", g_flag_enable_tensor_debug, false, "dump tensors' data");
@@ -325,6 +326,7 @@ Define_string_opt("--debug-data-dir", g_flag_debug_data_dir, ".", "directory to 
 
 #include "ppl/nn/engines/x86/engine_factory.h"
 #include "ppl/nn/engines/x86/options.h"
+#include "ppl/nn/engines/x86/threading.h"
 #include "ppl/kernel/x86/common/threading_tools.h"
 
 static bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
@@ -359,6 +361,11 @@ static bool RegisterX86Engine(vector<unique_ptr<Engine>>* engines) {
     if (RC_SUCCESS != rc) {
         LOG(ERROR) << "x86_engine Configure ENGINE_CONF_DEBUG_DATA_DIR failed: " << GetRetCodeStr(rc);
         return false;
+    }
+
+    if (g_flag_num_threads) {
+        ppl::nn::x86::SetGlobalOmpNumThreads(g_flag_num_threads);
+        LOG(INFO) << "set omp_num_threads to: " << g_flag_num_threads;
     }
 
     if (g_flag_core_binding) {
