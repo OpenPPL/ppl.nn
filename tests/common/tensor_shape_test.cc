@@ -21,7 +21,7 @@ using namespace ppl::nn;
 using namespace ppl::common;
 
 TEST(TensorShapeTest, type_and_format) {
-    TensorShape s;
+    ppl::nn::TensorShape s;
     s.SetDataType(DATATYPE_FLOAT32);
     ASSERT_EQ(DATATYPE_FLOAT32, s.GetDataType());
     s.SetDataFormat(DATAFORMAT_NDARRAY);
@@ -29,7 +29,7 @@ TEST(TensorShapeTest, type_and_format) {
 }
 
 TEST(TensorShapeTest, dim_and_padding) {
-    TensorShape s;
+    ppl::nn::TensorShape s;
 
     s.SetDimCount(4);
     ASSERT_EQ(4, s.GetDimCount());
@@ -50,7 +50,7 @@ TEST(TensorShapeTest, dim_and_padding) {
 }
 
 TEST(TensorShapeTest, elements_and_bytes) {
-    TensorShape s;
+    ppl::nn::TensorShape s;
     int64_t dims[] = {1, 100, 1024, 2048};
     s.Reshape(dims, 4);
 
