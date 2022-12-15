@@ -19,6 +19,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 using namespace std;
+using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace python {
 

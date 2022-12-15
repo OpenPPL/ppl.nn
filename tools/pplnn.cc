@@ -563,7 +563,7 @@ static bool SetRandomInputs(const vector<vector<int64_t>>& input_shapes, Runtime
             buffer[i] = dis(eng);
         }
 
-        TensorShape src_desc = *t->GetShape();
+        ppl::nn::TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         auto status = t->ConvertFromHost(buffer.data(), src_desc);
         if (status != RC_SUCCESS) {
@@ -622,7 +622,7 @@ static bool SetInputsAllInOne(const string& input_file, const vector<vector<int6
     for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
         auto t = runtime->GetInputTensor(c);
 
-        TensorShape src_desc = *t->GetShape();
+        ppl::nn::TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         auto status = t->ConvertFromHost(data, src_desc);
         if (status != RC_SUCCESS) {
@@ -693,7 +693,7 @@ static bool SetInputsOneByOne(const string& input_files_str, const vector<vector
             t->GetShape()->Reshape(input_shapes[i]);
         }
 
-        TensorShape src_desc = *t->GetShape();
+        ppl::nn::TensorShape src_desc = *t->GetShape();
         auto tensor_size = src_desc.CalcBytesIncludingPadding();
         if (fm.GetSize() < tensor_size) {
             LOG(ERROR) << "input file[" << file_name << "] size(" << fm.GetSize()
@@ -778,7 +778,7 @@ static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* ru
             return false;
         }
 
-        TensorShape input_shape;
+        ppl::nn::TensorShape input_shape;
         input_shape.SetDataFormat(DATAFORMAT_NDARRAY);
         input_shape.SetDataType(data_type);
         input_shape.Reshape(dims.data(), dims.size());
@@ -793,7 +793,7 @@ static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* ru
         auto t = runtime->GetInputTensor(c);
         *t->GetShape() = input_shape;
 
-        TensorShape src_desc = *t->GetShape();
+        ppl::nn::TensorShape src_desc = *t->GetShape();
         auto tensor_size = src_desc.CalcBytesIncludingPadding();
         if (fm.GetSize() < tensor_size) {
             LOG(ERROR) << "input file[" << file_name << "] size(" << fm.GetSize()
@@ -825,7 +825,7 @@ static bool SaveInputsOneByOne(const Runtime* runtime) {
         auto bytes = shape->CalcBytesIncludingPadding();
         vector<char> buffer(bytes);
 
-        TensorShape src_desc = *t->GetShape();
+        ppl::nn::TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         auto status = t->ConvertToHost(buffer.data(), src_desc);
         if (status != RC_SUCCESS) {
@@ -868,7 +868,7 @@ static bool SaveInputsAllInOne(const Runtime* runtime) {
         auto bytes = t->GetShape()->CalcBytesIncludingPadding();
         vector<char> buffer(bytes);
 
-        TensorShape src_desc = *t->GetShape();
+        ppl::nn::TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         auto status = t->ConvertToHost((void*)buffer.data(), src_desc);
         if (status != RC_SUCCESS) {
@@ -886,7 +886,7 @@ static bool SaveOutputsOneByOne(const Runtime* runtime) {
     for (uint32_t c = 0; c < runtime->GetOutputCount(); ++c) {
         auto t = runtime->GetOutputTensor(c);
 
-        TensorShape dst_desc = *t->GetShape();
+        ppl::nn::TensorShape dst_desc = *t->GetShape();
         dst_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         // convert fp16 to fp32
         if (dst_desc.GetDataType() == DATATYPE_FLOAT16) {
@@ -1029,7 +1029,7 @@ static bool SetInputs(const vector<string>& input_data, Runtime* runtime) {
 
     for (uint32_t i = 0; i < runtime->GetInputCount(); ++i) {
         auto t = runtime->GetInputTensor(i);
-        TensorShape src_desc = *t->GetShape();
+        ppl::nn::TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         auto status = t->ConvertFromHost(input_data[i].data(), src_desc);
         if (status != RC_SUCCESS) {
@@ -1045,7 +1045,7 @@ static bool GetOutputs(const Runtime* runtime) {
     for (uint32_t c = 0; c < runtime->GetOutputCount(); ++c) {
         auto t = runtime->GetOutputTensor(c);
 
-        TensorShape dst_desc = *t->GetShape();
+        ppl::nn::TensorShape dst_desc = *t->GetShape();
         dst_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         if (dst_desc.GetDataType() == DATATYPE_FLOAT16) {
             dst_desc.SetDataType(DATATYPE_FLOAT32);

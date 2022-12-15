@@ -40,7 +40,7 @@ static bool SetRandomInputs(Runtime* runtime) {
         }
 
         // our random data is treated as NDARRAY
-        TensorShape src_desc = *t->GetShape();
+        ppl::nn::TensorShape src_desc = *t->GetShape();
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
 
         // input tensors may require different data format
