@@ -20,9 +20,9 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode add_int32(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const int32_t *src0,
     const int32_t *src1,
     int32_t *dst)
@@ -31,9 +31,9 @@ ppl::common::RetCode add_int32(
 }
 
 ppl::common::RetCode sub_int32(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const int32_t *src0,
     const int32_t *src1,
     int32_t *dst)
@@ -42,9 +42,9 @@ ppl::common::RetCode sub_int32(
 }
 
 ppl::common::RetCode mul_int32(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const int32_t *src0,
     const int32_t *src1,
     int32_t *dst)
@@ -53,9 +53,9 @@ ppl::common::RetCode mul_int32(
 }
 
 ppl::common::RetCode div_int32(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const int32_t *src0,
     const int32_t *src1,
     int32_t *dst)

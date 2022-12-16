@@ -33,7 +33,7 @@ static inline float sigmoidf(const float x)
 }
 
 ppl::common::RetCode gru_fp32_avx512(
-    const ppl::nn::TensorShape *X_shape,
+    const ppl::common::TensorShape *X_shape,
     const float *X,
     const float **W,
     const float **Rzr,

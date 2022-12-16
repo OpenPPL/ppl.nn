@@ -24,7 +24,7 @@ namespace ppl { namespace kernel { namespace x86 {
 
 template <typename eT>
 ppl::common::RetCode where_eltwise_common(
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *dst_shape,
     const uint8_t *cond,
     const eT *src_x,
     const eT *src_y,
@@ -42,7 +42,7 @@ ppl::common::RetCode where_eltwise_common(
 
 template <typename eT>
 ppl::common::RetCode where_ndarray_recursive(
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *dst_shape,
     const uint8_t *cond,
     const eT *src_x,
     const eT *src_y,
@@ -90,11 +90,11 @@ ppl::common::RetCode where_ndarray_recursive(
     return ppl::common::RC_SUCCESS;
 }
 
-inline ppl::nn::TensorShape pad_shape(
-    const ppl::nn::TensorShape *shape,
+inline ppl::common::TensorShape pad_shape(
+    const ppl::common::TensorShape *shape,
     const int64_t padded_dim_count)
 {
-    ppl::nn::TensorShape padded_shape(*shape);
+    ppl::common::TensorShape padded_shape(*shape);
     padded_shape.SetDimCount(padded_dim_count);
     if (shape->IsScalar()) {
         for (int64_t i = 0; i < padded_dim_count; i++) {
@@ -114,10 +114,10 @@ inline ppl::nn::TensorShape pad_shape(
 
 template <typename eT>
 ppl::common::RetCode where_ndarray_common(
-    const ppl::nn::TensorShape *cond_shape,
-    const ppl::nn::TensorShape *src_x_shape,
-    const ppl::nn::TensorShape *src_y_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *cond_shape,
+    const ppl::common::TensorShape *src_x_shape,
+    const ppl::common::TensorShape *src_y_shape,
+    const ppl::common::TensorShape *dst_shape,
     const uint8_t *cond,
     const eT *src_x,
     const eT *src_y,
@@ -129,9 +129,9 @@ ppl::common::RetCode where_ndarray_common(
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    ppl::nn::TensorShape padded_cond_shape = pad_shape(cond_shape, dim_count);
-    ppl::nn::TensorShape padded_x_shape    = pad_shape(src_x_shape, dim_count);
-    ppl::nn::TensorShape padded_y_shape    = pad_shape(src_y_shape, dim_count);
+    ppl::common::TensorShape padded_cond_shape = pad_shape(cond_shape, dim_count);
+    ppl::common::TensorShape padded_x_shape    = pad_shape(src_x_shape, dim_count);
+    ppl::common::TensorShape padded_y_shape    = pad_shape(src_y_shape, dim_count);
 
     // prepare incs
     int64_t inc_cond[PPL_X86_TENSOR_MAX_DIMS()] = {0};

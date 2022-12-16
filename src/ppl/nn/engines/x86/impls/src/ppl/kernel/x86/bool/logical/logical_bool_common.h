@@ -41,7 +41,7 @@ inline uint8_t logical_scalar_kernel_bool<LOGICAL_OR>(uint8_t a, uint8_t b)
 
 template <logical_op_type_t _op>
 ppl::common::RetCode logical_eltwise_binary_op_bool(
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *dst_shape,
     const uint8_t *src0,
     const uint8_t *src1,
     uint8_t *dst)
@@ -56,9 +56,9 @@ ppl::common::RetCode logical_eltwise_binary_op_bool(
 
 template <logical_op_type_t _op>
 ppl::common::RetCode logical_ndarray_binary_op_recursive_bool(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const uint8_t *src0,
     const uint8_t *src1,
     const uint64_t *inc0,
@@ -103,11 +103,11 @@ ppl::common::RetCode logical_ndarray_binary_op_recursive_bool(
     return ppl::common::RC_SUCCESS;
 }
 
-inline ppl::nn::TensorShape pad_shape(
-    const ppl::nn::TensorShape *shape,
+inline ppl::common::TensorShape pad_shape(
+    const ppl::common::TensorShape *shape,
     const int64_t padded_dim_count)
 {
-    ppl::nn::TensorShape padded_shape(*shape);
+    ppl::common::TensorShape padded_shape(*shape);
     padded_shape.SetDimCount(padded_dim_count);
     if (shape->IsScalar()) {
         for (int64_t i = 0; i < padded_dim_count; i++) {
@@ -127,9 +127,9 @@ inline ppl::nn::TensorShape pad_shape(
 
 template <logical_op_type_t _op>
 ppl::common::RetCode logical_ndarray_binary_op_bool(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const uint8_t *src0,
     const uint8_t *src1,
     uint8_t *dst)
@@ -140,8 +140,8 @@ ppl::common::RetCode logical_ndarray_binary_op_bool(
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    ppl::nn::TensorShape padded_tensor_shape0 = pad_shape(src0_shape, dim_count);
-    ppl::nn::TensorShape padded_tensor_shape1 = pad_shape(src1_shape, dim_count);
+    ppl::common::TensorShape padded_tensor_shape0 = pad_shape(src0_shape, dim_count);
+    ppl::common::TensorShape padded_tensor_shape1 = pad_shape(src1_shape, dim_count);
 
     // prepare incs
     uint64_t inc0[PPL_X86_TENSOR_MAX_DIMS()] = {0};

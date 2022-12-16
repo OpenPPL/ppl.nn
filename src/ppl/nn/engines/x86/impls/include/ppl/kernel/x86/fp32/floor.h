@@ -23,17 +23,17 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode floor_fp32(
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const float *x,
     float *y);
 
 ppl::common::RetCode floor_fp32_sse(
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const float *x,
     float *y);
 
 ppl::common::RetCode floor_fp32_avx(
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const float *x,
     float *y);
 

@@ -37,8 +37,8 @@ uint64_t deform_conv2d_fp32_ref_get_buffer_bytes(
 }
 
 ppl::common::RetCode deform_conv2d_fp32_ref(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const float *offset,
     const float *mask,

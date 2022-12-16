@@ -45,8 +45,8 @@ struct split_parallel_info {
 
 template <typename eT>
 ppl::common::RetCode split_ndarray(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape **dst_shape_list,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape **dst_shape_list,
     const eT *src,
     const int32_t slice_axis,
     const int32_t num_dst,
@@ -142,8 +142,8 @@ ppl::common::RetCode split_ndarray(
 
 template <typename eT>
 ppl::common::RetCode split_n16cx_interleave_channels(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape **dst_shape_list,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape **dst_shape_list,
     const eT *src,
     const int32_t slice_axis,
     const int32_t num_dst,
@@ -228,8 +228,8 @@ ppl::common::RetCode split_n16cx_interleave_channels(
 
 template <typename eT>
 ppl::common::RetCode split_n16cx(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape **dst_shape_list,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape **dst_shape_list,
     const eT *src,
     const int32_t slice_axis,
     const int32_t num_dst,

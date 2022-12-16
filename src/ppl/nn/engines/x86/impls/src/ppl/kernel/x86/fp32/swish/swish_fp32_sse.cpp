@@ -25,7 +25,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode swish_fp32_sse(
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const float *x,
     const float beta,
     float *y)

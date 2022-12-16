@@ -282,8 +282,8 @@ void arithmetic_binary_op_ndarray_6d_eltwise_fp32_sse(
 
 template <arithmetic_op_type_t _op>
 ppl::common::RetCode arithmetic_binary_op_ndarray_fp32_sse(
-    const ppl::nn::TensorShape *lhs_shape,
-    const ppl::nn::TensorShape *rhs_shape,
+    const ppl::common::TensorShape *lhs_shape,
+    const ppl::common::TensorShape *rhs_shape,
     const float *lhs,
     const float *rhs,
     float *dst)

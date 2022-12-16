@@ -26,8 +26,8 @@ namespace ppl { namespace kernel { namespace x86 {
 
 #ifdef PPL_USE_X86_AVX512
 ppl::common::RetCode maxpool2d_n16cx_blk1x16_fp32_avx512(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t kernel_h,
     const int64_t kernel_w,
@@ -39,8 +39,8 @@ ppl::common::RetCode maxpool2d_n16cx_blk1x16_fp32_avx512(
 #endif
 
 ppl::common::RetCode maxpool2d_n16cx_blk1x8_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t kernel_h,
     const int64_t kernel_w,
@@ -51,8 +51,8 @@ ppl::common::RetCode maxpool2d_n16cx_blk1x8_fp32_avx(
     float *dst);
 
 ppl::common::RetCode maxpool2d_n16cx_blk1x4_fp32_sse(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t kernel_h,
     const int64_t kernel_w,
@@ -65,8 +65,8 @@ ppl::common::RetCode maxpool2d_n16cx_blk1x4_fp32_sse(
 // maxpool2d ndarray normal
 
 ppl::common::RetCode maxpool2d_ndarray_normal_fp32(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t kernel_h,
     const int64_t kernel_w,
@@ -78,13 +78,13 @@ ppl::common::RetCode maxpool2d_ndarray_normal_fp32(
 
 // maxpool2d n4cx blk
 uint64_t maxpool2d_fp32_get_buffer_bytes(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const int64_t pad_w);
 
 ppl::common::RetCode maxpool2d_ndarray_normal_fp32_sse(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t kernel_h,
     const int64_t kernel_w,
@@ -98,8 +98,8 @@ ppl::common::RetCode maxpool2d_ndarray_normal_fp32_sse(
 // maxpool2d ndarray with indices
 
 ppl::common::RetCode maxpool2d_ndarray_with_indices_fp32(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t kernel_h,
     const int64_t kernel_w,

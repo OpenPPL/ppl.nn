@@ -20,8 +20,8 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode depth_to_space_ndarray_crd_fp32(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int32_t blocksize,
     float *dst)

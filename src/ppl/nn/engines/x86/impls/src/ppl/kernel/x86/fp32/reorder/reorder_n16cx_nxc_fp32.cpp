@@ -22,7 +22,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode reorder_n16cx_nxc_fp32(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     float *dst)
 {

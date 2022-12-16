@@ -318,8 +318,8 @@ void transpose_ndarray_recursive(
 
 template <typename eT>
 ppl::common::RetCode transpose_ndarray(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const int32_t *perm,
     const eT *src,
     eT *dst)
@@ -387,7 +387,7 @@ ppl::common::RetCode transpose_ndarray(
 
 template <typename eT>
 ppl::common::RetCode transpose_ndarray_continous2d(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const uint32_t axis0,
     const uint32_t axis1,
     const eT *src,

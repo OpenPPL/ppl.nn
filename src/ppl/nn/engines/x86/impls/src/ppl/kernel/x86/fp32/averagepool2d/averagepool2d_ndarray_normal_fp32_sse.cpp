@@ -28,8 +28,8 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 uint64_t averagepool_fp32_get_buffer_bytes(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const int64_t pad_w)
 {
     const int64_t src_h         = src_shape->GetDim(2);
@@ -489,8 +489,8 @@ static const averagepool2d_ndarray_kernel_fp32_sse_n4cx_funct averagepool2d_ndar
 };
 
 ppl::common::RetCode averagepool2d_ndarray_normal_fp32_sse(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t kernel_h,
     const int64_t kernel_w,

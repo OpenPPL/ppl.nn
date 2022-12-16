@@ -25,8 +25,8 @@ namespace ppl { namespace kernel { namespace x86 {
 
 template <reduce_op_type_t _op>
 ppl::common::RetCode reduce_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int32_t *axes,
     const int32_t num_axes,
@@ -69,8 +69,8 @@ ppl::common::RetCode reduce_fp32_avx(
 }
 
 ppl::common::RetCode reduce_max_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int32_t *axes,
     const int32_t num_axes,
@@ -80,8 +80,8 @@ ppl::common::RetCode reduce_max_fp32_avx(
 }
 
 ppl::common::RetCode reduce_min_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int32_t *axes,
     const int32_t num_axes,
@@ -91,8 +91,8 @@ ppl::common::RetCode reduce_min_fp32_avx(
 }
 
 ppl::common::RetCode reduce_mean_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int32_t *axes,
     const int32_t num_axes,
@@ -102,8 +102,8 @@ ppl::common::RetCode reduce_mean_fp32_avx(
 }
 
 ppl::common::RetCode reduce_sum_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int32_t *axes,
     const int32_t num_axes,

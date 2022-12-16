@@ -248,7 +248,7 @@ ppl::common::RetCode conv2d_n8cx_direct_ndarray_fp32_sse_manager::gen_cvt_weight
         memset(cvt_bias_ + g * padded_oc + oc_per_gp, 0, (padded_oc - oc_per_gp) * sizeof(float));
     }
 
-    ppl::nn::TensorShape filter_shape;
+    ppl::common::TensorShape filter_shape;
     filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
     filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
     filter_shape.Reshape({1, oc_per_gp, ic_per_gp * param_.kernel_h * param_.kernel_w , 1});

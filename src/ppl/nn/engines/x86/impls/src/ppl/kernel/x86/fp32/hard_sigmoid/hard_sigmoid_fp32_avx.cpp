@@ -22,7 +22,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode hard_sigmoid_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     const float alpha,
     const float beta,

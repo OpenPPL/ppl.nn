@@ -22,7 +22,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode reorder_n16cx_ndarray_fp32(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     float *dst)
 {
@@ -61,7 +61,7 @@ ppl::common::RetCode reorder_n16cx_ndarray_fp32(
 }
 
 ppl::common::RetCode reorder_n16cx_ndarray_inplace_fp32(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     float *data)
 {
     if (src_shape->GetDataFormat() != ppl::common::DATAFORMAT_N16CX ||

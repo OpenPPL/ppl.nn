@@ -31,7 +31,7 @@ static ppl::common::RetCode cast2int64_kernel(const eT *src, int64_t *&dst, cons
     return ppl::common::RC_SUCCESS;
 }
 
-static int64_t *cast2int64(const ppl::nn::TensorShape *src_shape, const void *src, int64_t depth_val)
+static int64_t *cast2int64(const ppl::common::TensorShape *src_shape, const void *src, int64_t depth_val)
 {
     auto src_type = src_shape->GetDataType();
     if (src_type == ppl::common::DATATYPE_INT64) return (int64_t *)src;
@@ -71,7 +71,7 @@ static int64_t *cast2int64(const ppl::nn::TensorShape *src_shape, const void *sr
     return dst;
 }
 
-static int64_t cast2int64(const ppl::nn::TensorShape *src_shape, const void *src)
+static int64_t cast2int64(const ppl::common::TensorShape *src_shape, const void *src)
 {
     auto src_type = src_shape->GetDataType();
     if (src_type == ppl::common::DATATYPE_INT64) return *((int64_t *)src);
@@ -100,9 +100,9 @@ static int64_t cast2int64(const ppl::nn::TensorShape *src_shape, const void *src
 
 template <typename eT>
 static ppl::common::RetCode one_hot_ndarray_common(
-    const ppl::nn::TensorShape *indices_shape,
-    const ppl::nn::TensorShape *depth_shape,
-    const ppl::nn::TensorShape *values_shape,
+    const ppl::common::TensorShape *indices_shape,
+    const ppl::common::TensorShape *depth_shape,
+    const ppl::common::TensorShape *values_shape,
     const void *indices,
     const void *depth,
     const eT *values,

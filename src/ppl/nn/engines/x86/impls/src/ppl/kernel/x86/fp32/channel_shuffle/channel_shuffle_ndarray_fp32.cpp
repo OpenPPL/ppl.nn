@@ -24,7 +24,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode channel_shuffle_ndarray_fp32(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     const int32_t group,
     float *dst)
@@ -37,15 +37,15 @@ ppl::common::RetCode channel_shuffle_ndarray_fp32(
     const int64_t mid_c2   = channels / group;
     int64_t mid_dims[5]   = {batch, mid_c1, mid_c2, src_h, src_w};
 
-    ppl::nn::TensorShape *mid_shape = new ppl::nn::TensorShape();
+    ppl::common::TensorShape *mid_shape = new ppl::common::TensorShape();
     mid_shape->Reshape(mid_dims, 5);
 
     return transpose_ndarray_continous2d_fp32(mid_shape, src, 1, 2, dst);
 }
 
 ppl::common::RetCode channel_shuffle_ndarray_concat_split_fp32(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
     const float *src0,
     const float *src1,
     const int32_t group,

@@ -224,8 +224,8 @@ inline void pad_n16cx_begin_end_fp32<PAD_MODE_EDGE>(
 
 template <pad_mode_type_t _mode>
 ppl::common::RetCode pad_n16cx_recursive_fp32(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t *start_pads,
     const int64_t *end_pads,
@@ -290,8 +290,8 @@ ppl::common::RetCode pad_n16cx_recursive_fp32(
 
 template <pad_mode_type_t _mode>
 ppl::common::RetCode pad_n16cx_fp32(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t *start_pads,
     const int64_t *end_pads,
@@ -363,8 +363,8 @@ ppl::common::RetCode pad_n16cx_fp32(
 }
 
 template ppl::common::RetCode pad_n16cx_fp32<PAD_MODE_CONSTANT>(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t *start_pads,
     const int64_t *end_pads,
@@ -372,8 +372,8 @@ template ppl::common::RetCode pad_n16cx_fp32<PAD_MODE_CONSTANT>(
     float *dst);
 
 template ppl::common::RetCode pad_n16cx_fp32<PAD_MODE_REFLECT>(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t *start_pads,
     const int64_t *end_pads,
@@ -381,8 +381,8 @@ template ppl::common::RetCode pad_n16cx_fp32<PAD_MODE_REFLECT>(
     float *dst);
 
 template ppl::common::RetCode pad_n16cx_fp32<PAD_MODE_EDGE>(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t *start_pads,
     const int64_t *end_pads,
@@ -390,8 +390,8 @@ template ppl::common::RetCode pad_n16cx_fp32<PAD_MODE_EDGE>(
     float *dst);
 
 ppl::common::RetCode pad_n16cx_constant_fp32(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t *start_pads,
     const int64_t *end_pads,
@@ -402,8 +402,8 @@ ppl::common::RetCode pad_n16cx_constant_fp32(
 }
 
 ppl::common::RetCode pad_n16cx_reflect_fp32(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t *start_pads,
     const int64_t *end_pads,
@@ -413,8 +413,8 @@ ppl::common::RetCode pad_n16cx_reflect_fp32(
 }
 
 ppl::common::RetCode pad_n16cx_edge_fp32(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t *start_pads,
     const int64_t *end_pads,

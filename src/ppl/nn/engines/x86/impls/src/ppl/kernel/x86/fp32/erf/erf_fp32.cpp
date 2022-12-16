@@ -23,7 +23,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode erf_fp32_ref(
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const float *x,
     float *y)
 {
@@ -64,7 +64,7 @@ ppl::common::RetCode erf_fp32_ref(
 
 ppl::common::RetCode erf_fp32(
     const ppl::common::isa_t isa,
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const float *x,
     float *y)
 {

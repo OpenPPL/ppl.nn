@@ -45,7 +45,7 @@ struct concat_parallel_info {
 
 template <typename eT>
 ppl::common::RetCode concat_ndarray(
-    const ppl::nn::TensorShape **src_shape_list,
+    const ppl::common::TensorShape **src_shape_list,
     const eT **src_list,
     const int32_t num_src,
     const int32_t axis,
@@ -182,7 +182,7 @@ inline void concat_n16cx_interleave_kernel(
 
 template <typename eT>
 ppl::common::RetCode concat_n16cx_interleave_channels(
-    const ppl::nn::TensorShape **src_shape_list,
+    const ppl::common::TensorShape **src_shape_list,
     const eT **src_list,
     const int32_t num_src,
     const int32_t axis,
@@ -288,7 +288,7 @@ ppl::common::RetCode concat_n16cx_interleave_channels(
 
 template <typename eT>
 ppl::common::RetCode concat_n16cx(
-    const ppl::nn::TensorShape **src_shape_list,
+    const ppl::common::TensorShape **src_shape_list,
     const eT **src_list,
     const int32_t num_src,
     const int32_t axis,

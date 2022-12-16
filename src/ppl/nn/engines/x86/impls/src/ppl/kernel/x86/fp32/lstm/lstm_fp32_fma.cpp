@@ -32,7 +32,7 @@ static inline float sigmoidf(const float x)
 }
 
 ppl::common::RetCode lstm_fp32_fma(
-    const ppl::nn::TensorShape *X_shape,
+    const ppl::common::TensorShape *X_shape,
     const float *X,
     const float **W,
     const float **R,

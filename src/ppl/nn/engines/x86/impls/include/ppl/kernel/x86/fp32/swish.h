@@ -24,26 +24,26 @@ namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode swish_fp32(
     const ppl::common::isa_t isa,
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const float *x,
     const float beta,
     float *y);
 
 ppl::common::RetCode swish_fp32_sse(
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const float *x,
     const float beta,
     float *y);
 
 ppl::common::RetCode swish_fp32_fma(
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const float *x,
     const float beta,
     float *y);
 
 #ifdef PPL_USE_X86_AVX512
 ppl::common::RetCode swish_fp32_avx512(
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const float *x,
     const float beta,
     float *y);

@@ -24,7 +24,7 @@ namespace ppl { namespace kernel { namespace x86 {
 
 template <arithmetic_op_type_t _op, bool fuse_relu>
 static ppl::common::RetCode arithmetic_eltwise_fp32_avx(
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src0,
     const float *src1,
     float *dst)

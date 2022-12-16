@@ -23,7 +23,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode batchnorm_ndarray_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     const float *mean,
     const float *variance,
@@ -34,7 +34,7 @@ ppl::common::RetCode batchnorm_ndarray_fp32_avx(
     float *dst);
 
 ppl::common::RetCode batchnorm_n16cx_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     const float *mean,
     const float *variance,
@@ -45,7 +45,7 @@ ppl::common::RetCode batchnorm_n16cx_fp32_avx(
     float *dst);
 
 ppl::common::RetCode batchnorm_ndarray_fp32_sse(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     const float *mean,
     const float *variance,
@@ -56,7 +56,7 @@ ppl::common::RetCode batchnorm_ndarray_fp32_sse(
     float *dst);
 
 ppl::common::RetCode batchnorm_n16cx_fp32_sse(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     const float *mean,
     const float *variance,

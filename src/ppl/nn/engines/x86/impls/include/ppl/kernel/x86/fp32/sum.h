@@ -29,28 +29,28 @@ uint64_t sum_fp32_sse_get_temp_buffer_bytes(
     const uint32_t num_src);
 
 ppl::common::RetCode sum_eltwise_fp32_avx(
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float **src_list,
     const uint32_t num_src,
     float *dst);
 
 ppl::common::RetCode sum_ndarray_fp32_avx(
-    const ppl::nn::TensorShape **src_shape_list,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape **src_shape_list,
+    const ppl::common::TensorShape *dst_shape,
     const float **src_list,
     const uint32_t num_src,
     void *temp_buffer,
     float *dst);
 
 ppl::common::RetCode sum_eltwise_fp32_sse(
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float **src_list,
     const uint32_t num_src,
     float *dst);
 
 ppl::common::RetCode sum_ndarray_fp32_sse(
-    const ppl::nn::TensorShape **src_shape_list,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape **src_shape_list,
+    const ppl::common::TensorShape *dst_shape,
     const float **src_list,
     const uint32_t num_src,
     void *temp_buffer,

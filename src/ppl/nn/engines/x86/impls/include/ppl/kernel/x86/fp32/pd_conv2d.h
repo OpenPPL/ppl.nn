@@ -52,12 +52,12 @@ protected:
     conv2d_fp32_executor *conv2d_executor_;
     conv2d_fp32_executor *depthwise_conv2d_executor_;
     pd_conv2d_fp32_mode_t mode_; // available after prepare()
-    ppl::nn::TensorShape inter_shape_; // available after prepare()
+    ppl::common::TensorShape inter_shape_; // available after prepare()
 
     const float *src_;
-    const ppl::nn::TensorShape *src_shape_;
+    const ppl::common::TensorShape *src_shape_;
     float *dst_;
-    const ppl::nn::TensorShape *dst_shape_;
+    const ppl::common::TensorShape *dst_shape_;
 
     void *temp_buffer_;
 
@@ -91,7 +91,7 @@ public:
         return mode_;
     }
 
-    const ppl::nn::TensorShape &inter_shape() const {
+    const ppl::common::TensorShape &inter_shape() const {
         return inter_shape_;
     }
 
@@ -119,11 +119,11 @@ public:
         return src_;
     }
 
-    void set_src_shape(const ppl::nn::TensorShape *src_shape)
+    void set_src_shape(const ppl::common::TensorShape *src_shape)
     {
         src_shape_ = src_shape;
     }
-    const ppl::nn::TensorShape *src_shape() const
+    const ppl::common::TensorShape *src_shape() const
     {
         return src_shape_;
     }
@@ -137,11 +137,11 @@ public:
         return dst_;
     }
 
-    void set_dst_shape(const ppl::nn::TensorShape *dst_shape)
+    void set_dst_shape(const ppl::common::TensorShape *dst_shape)
     {
         dst_shape_ = dst_shape;
     }
-    const ppl::nn::TensorShape *dst_shape() const
+    const ppl::common::TensorShape *dst_shape() const
     {
         return dst_shape_;
     }

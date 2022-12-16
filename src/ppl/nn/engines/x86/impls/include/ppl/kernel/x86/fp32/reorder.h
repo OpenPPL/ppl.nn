@@ -24,63 +24,63 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode reorder_ndarray_n16cx_inplace_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     float *data);
 
 ppl::common::RetCode reorder_ndarray_n16cx_inplace_fp32(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     float *data);
 
 ppl::common::RetCode reorder_ndarray_n16cx_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     float *dst);
 
 ppl::common::RetCode reorder_ndarray_n16cx_fp32(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     float *dst);
 
 ppl::common::RetCode reorder_n16cx_ndarray_inplace_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     float *data);
 
 ppl::common::RetCode reorder_n16cx_ndarray_inplace_fp32(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     float *data);
 
 ppl::common::RetCode reorder_n16cx_ndarray_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     float *dst);
 
 ppl::common::RetCode reorder_n16cx_ndarray_fp32(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     float *dst);
 
 ppl::common::RetCode reorder_n16cx_nxc_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     float *dst);
 
 ppl::common::RetCode reorder_n16cx_nxc_fp32(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     float *dst);
 
 ppl::common::RetCode reorder_ndarray_n8cx_fp32(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     float *dst);
 
 ppl::common::RetCode reorder_n8cx_ndarray_fp32(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     float *dst);
 
 ppl::common::RetCode reorder_ndarray_n4cx_fp32(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     float *dst);
 

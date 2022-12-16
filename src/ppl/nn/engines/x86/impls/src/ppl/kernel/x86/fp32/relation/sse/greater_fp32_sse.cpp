@@ -20,7 +20,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode greater_eltwise_fp32_sse(
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src0,
     const float *src1,
     uint8_t *dst)
@@ -29,9 +29,9 @@ ppl::common::RetCode greater_eltwise_fp32_sse(
 }
 
 ppl::common::RetCode greater_ndarray_fp32_sse(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src0,
     const float *src1,
     uint8_t *dst)

@@ -27,8 +27,8 @@ namespace ppl { namespace kernel { namespace x86 {
 template <typename eT>
 ppl::common::RetCode slice_ndarray_recursive(
     const single_parallel_loop_config_t &pc,
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     const int64_t *starts,
     const int64_t *steps,
@@ -83,8 +83,8 @@ ppl::common::RetCode slice_ndarray_recursive(
 
 template <typename eT>
 ppl::common::RetCode slice_ndarray_common(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     const int64_t *starts,
     const int64_t *steps,

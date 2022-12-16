@@ -20,8 +20,8 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode pow_ndarray_max6d_fp32_avx(
-    const ppl::nn::TensorShape *lhs_shape,
-    const ppl::nn::TensorShape *rhs_shape,
+    const ppl::common::TensorShape *lhs_shape,
+    const ppl::common::TensorShape *rhs_shape,
     const float *lhs,
     const float *rhs,
     float *dst)

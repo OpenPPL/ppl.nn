@@ -23,7 +23,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode random_uniform_fp32(
-    const ppl::nn::TensorShape *output_shape,
+    const ppl::common::TensorShape *output_shape,
     const float *seed,
     const float high,
     const float low,

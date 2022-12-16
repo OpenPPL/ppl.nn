@@ -23,9 +23,9 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode one_hot_ndarray_int64(
-    const ppl::nn::TensorShape *indices_shape,
-    const ppl::nn::TensorShape *depth_shape,
-    const ppl::nn::TensorShape *values_shape,
+    const ppl::common::TensorShape *indices_shape,
+    const ppl::common::TensorShape *depth_shape,
+    const ppl::common::TensorShape *values_shape,
     const void *indices,
     const void *depth,
     const int64_t *values,

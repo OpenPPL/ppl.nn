@@ -25,9 +25,9 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode mmcv_roialign_n16cx_fp32(
-    const ppl::nn::TensorShape *input_shape,
-    const ppl::nn::TensorShape *rois_shape,
-    const ppl::nn::TensorShape *output_shape,
+    const ppl::common::TensorShape *input_shape,
+    const ppl::common::TensorShape *rois_shape,
+    const ppl::common::TensorShape *output_shape,
     const float *input,
     const float *rois,
     const int64_t aligned,

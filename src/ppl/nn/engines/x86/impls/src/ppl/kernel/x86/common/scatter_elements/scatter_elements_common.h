@@ -25,8 +25,8 @@ namespace ppl { namespace kernel { namespace x86 {
 
 template <typename eT>
 ppl::common::RetCode scatter_elements_ndarray_common(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *indices_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *indices_shape,
     const eT *src,
     const int64_t *indices,
     const eT *updates,

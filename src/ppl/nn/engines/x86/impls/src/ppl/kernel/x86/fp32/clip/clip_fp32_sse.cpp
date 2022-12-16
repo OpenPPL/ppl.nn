@@ -21,7 +21,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode clip_fp32_sse(
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const float *x,
     const float clip_min,
     const float clip_max,
