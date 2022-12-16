@@ -24,7 +24,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 template <typename eT>
-static void clear_padc_n16cx_common(const ppl::nn::TensorShape *shape, eT *data, const int64_t c_dim_idx = 1)
+static void clear_padc_n16cx_common(const ppl::common::TensorShape *shape, eT *data, const int64_t c_dim_idx = 1)
 {
     if (shape->GetDataFormat() == ppl::common::DATAFORMAT_N16CX && shape->GetDim(c_dim_idx) % 16 != 0) { // clear padding channels to 0
         const int64_t c_blk = 16;

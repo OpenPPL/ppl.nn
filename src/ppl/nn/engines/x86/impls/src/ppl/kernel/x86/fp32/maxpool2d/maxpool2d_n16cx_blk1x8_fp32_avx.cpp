@@ -198,8 +198,8 @@ static inline void maxpool2d_n16cx_border_fp32_avx(
 }
 
 ppl::common::RetCode maxpool2d_n16cx_blk1x8_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t kernel_h,
     const int64_t kernel_w,

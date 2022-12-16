@@ -20,7 +20,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode reorder_ndarray_n16cx_int64(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const int64_t *src,
     int64_t *dst)
 {

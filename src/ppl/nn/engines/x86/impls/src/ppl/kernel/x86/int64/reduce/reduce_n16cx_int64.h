@@ -89,8 +89,8 @@ void reduce_n16cx_lastdim_reduce_cw_int64(
 
 template <reduce_op_type_t _op>
 void reduce_n16cx_recursive_int64(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const int64_t *src,
     const int64_t dim_idx,
     const int64_t *inc_src,
@@ -146,8 +146,8 @@ void reduce_n16cx_recursive_int64(
 template <reduce_op_type_t _op>
 common::RetCode reduce_n16cx_int64(
     const int64_t *src,
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const int32_t *axes,
     const int32_t num_axes,
     const int64_t c_dim_idx,
@@ -158,7 +158,7 @@ common::RetCode reduce_n16cx_int64(
     }
 
     // pad 1 to dst shape to keepdims
-    ppl::nn::TensorShape padded_dst_shape = *src_shape;
+    ppl::common::TensorShape padded_dst_shape = *src_shape;
     for (int64_t i = 0; i < num_axes; i++) {
         padded_dst_shape.SetDim(axes[i], 1);
     }

@@ -26,8 +26,8 @@ namespace ppl { namespace kernel { namespace x86 {
 
 template <typename eT>
 static ppl::common::RetCode tile_ndarray_recursive(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     const int64_t *repeats,
     const int64_t dim_idx,
@@ -82,8 +82,8 @@ static ppl::common::RetCode tile_ndarray_recursive(
 
 template <typename eT>
 static ppl::common::RetCode tile_ndarray(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     const int64_t *repeats,
     eT *dst)

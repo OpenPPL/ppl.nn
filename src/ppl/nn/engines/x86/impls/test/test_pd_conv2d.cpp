@@ -41,7 +41,7 @@
 #include "ppl/kernel/x86/common/math.h"
 #include "ppl/kernel/x86/common/macros.h"
 #include "ppl/common/generic_cpu_allocator.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "simple_flags.h"
 #include "utils/check.h"
 
@@ -279,37 +279,37 @@ DEBUG_TAG(B);
              dw_param.group * batch * dw_param.kernel_h * dw_param.kernel_w * dst_h * dst_w) * 2.0f / 1e9f;
 
 DEBUG_TAG(C);
-        ppl::nn::TensorShape src_shape;
+        ppl::common::TensorShape src_shape;
         src_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
         src_shape.SetDataFormat(ppl::common::DATAFORMAT_N16CX);
         src_shape.Reshape({batch, cv_param.channels, src_h, src_w});
 
-        ppl::nn::TensorShape inter_shape;
+        ppl::common::TensorShape inter_shape;
         inter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
         inter_shape.SetDataFormat(ppl::common::DATAFORMAT_N16CX);
         inter_shape.Reshape({batch, cv_param.num_output, assume_inter_h, assume_inter_w});
 
-        ppl::nn::TensorShape dst_shape;
+        ppl::common::TensorShape dst_shape;
         dst_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
         dst_shape.SetDataFormat(ppl::common::DATAFORMAT_N16CX);
         dst_shape.Reshape({batch, dw_param.group, dst_h, dst_w});
 
-        ppl::nn::TensorShape cv_filter_shape;
+        ppl::common::TensorShape cv_filter_shape;
         cv_filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
         cv_filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         cv_filter_shape.Reshape({cv_param.num_output, cv_param.channels / cv_param.group, cv_param.kernel_h, cv_param.kernel_w});
 
-        ppl::nn::TensorShape cv_bias_shape;
+        ppl::common::TensorShape cv_bias_shape;
         cv_bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
         cv_bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         cv_bias_shape.Reshape({cv_param.num_output});
 
-        ppl::nn::TensorShape dw_filter_shape;
+        ppl::common::TensorShape dw_filter_shape;
         dw_filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
         dw_filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         dw_filter_shape.Reshape({dw_param.group, 1, dw_param.kernel_h, dw_param.kernel_w});
 
-        ppl::nn::TensorShape dw_bias_shape;
+        ppl::common::TensorShape dw_bias_shape;
         dw_bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
         dw_bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         dw_bias_shape.Reshape({dw_param.group});

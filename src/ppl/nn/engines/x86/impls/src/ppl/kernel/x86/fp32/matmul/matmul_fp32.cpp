@@ -57,9 +57,9 @@ static void matmul_ndarray_fp32_mat_list_construct(
 
 ppl::common::RetCode matmul_ndarray_fp32(
     const ppl::common::isa_t isa,
-    const ppl::nn::TensorShape *A_shape,
-    const ppl::nn::TensorShape *B_shape,
-    const ppl::nn::TensorShape *Y_shape,
+    const ppl::common::TensorShape *A_shape,
+    const ppl::common::TensorShape *B_shape,
+    const ppl::common::TensorShape *Y_shape,
     const float *A,
     const float *B,
     const bool packedB,

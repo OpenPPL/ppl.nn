@@ -25,7 +25,7 @@ namespace ppl { namespace kernel { namespace x86 {
 
 template <typename eT>
 ppl::common::RetCode argmax_ndarray(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const eT *src,
     const int64_t axis,
     int64_t *dst)

@@ -105,8 +105,8 @@ static void reduce_ndarray_lastdim_reduce_fp32_avx(
 
 template <reduce_op_type_t _op>
 static void reduce_ndarray_recursive_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t dim_idx,
     const int64_t *inc_src,
@@ -146,8 +146,8 @@ static void reduce_ndarray_recursive_fp32_avx(
 
 template <reduce_op_type_t _op>
 ppl::common::RetCode reduce_ndarray_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int32_t *axes,
     const int32_t num_axes,
@@ -158,7 +158,7 @@ ppl::common::RetCode reduce_ndarray_fp32_avx(
     }
 
     // pad 1 to dst shape to keepdims
-    ppl::nn::TensorShape padded_dst_shape = *src_shape;
+    ppl::common::TensorShape padded_dst_shape = *src_shape;
     for (int64_t i = 0; i < num_axes; i++) {
         padded_dst_shape.SetDim(axes[i], 1);
     }

@@ -22,9 +22,9 @@
 
 namespace ppl { namespace kernel { namespace x86 {
 
-bool reorder_ndarray_n16cx_may_inplace(const ppl::nn::TensorShape *src_shape);
+bool reorder_ndarray_n16cx_may_inplace(const ppl::common::TensorShape *src_shape);
 
-bool reorder_n16cx_ndarray_may_inplace(const ppl::nn::TensorShape *src_shape);
+bool reorder_n16cx_ndarray_may_inplace(const ppl::common::TensorShape *src_shape);
 
 }}}; // namespace ppl::kernel::x86
 

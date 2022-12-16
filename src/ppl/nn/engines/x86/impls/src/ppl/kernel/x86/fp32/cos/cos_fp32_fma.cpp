@@ -24,7 +24,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode cos_fp32_fma(
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const float *x,
     float *y)
 {

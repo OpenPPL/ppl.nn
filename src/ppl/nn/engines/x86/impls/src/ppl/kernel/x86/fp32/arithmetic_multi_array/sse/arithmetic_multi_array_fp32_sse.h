@@ -126,7 +126,7 @@ inline __m128 arithmetic_multi_vector_kernel_fp32_sse(
 
 template <arithmetic_multi_array_type_t _op, bool _binary>
 ppl::common::RetCode arithmetic_multi_array_eltwise_fp32_sse(
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float **src_list,
     const uint64_t num_src,
     float *dst)
@@ -175,7 +175,7 @@ ppl::common::RetCode arithmetic_multi_array_eltwise_fp32_sse(
 
 template <arithmetic_multi_array_type_t _op, bool _binary>
 void arithmetic_multi_array_ndarray_recursive_fp32_sse(
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float **src_list,
     const uint64_t *inc_in,
     const uint64_t *inc_out,
@@ -354,11 +354,11 @@ void arithmetic_multi_array_ndarray_recursive_fp32_sse(
     }
 }
 
-inline ppl::nn::TensorShape pad_shape(
-    const ppl::nn::TensorShape *shape,
+inline ppl::common::TensorShape pad_shape(
+    const ppl::common::TensorShape *shape,
     const int64_t padded_dim_count)
 {
-    ppl::nn::TensorShape padded_shape(*shape);
+    ppl::common::TensorShape padded_shape(*shape);
     padded_shape.SetDimCount(padded_dim_count);
     if (shape->IsScalar()) {
         for (int64_t i = 0; i < padded_dim_count; i++) {
@@ -383,8 +383,8 @@ inline uint64_t arithmetic_multi_array_fp32_get_temp_buffer_bytes(const uint64_t
 
 template <arithmetic_multi_array_type_t _op, bool _binary>
 ppl::common::RetCode arithmetic_multi_array_ndarray_fp32_sse(
-    const ppl::nn::TensorShape **input_shape_list,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape **input_shape_list,
+    const ppl::common::TensorShape *dst_shape,
     const float **src_list,
     const uint64_t num_src,
     void *temp_buffer,
@@ -399,7 +399,7 @@ ppl::common::RetCode arithmetic_multi_array_ndarray_fp32_sse(
     uint64_t *inc_out        = (uint64_t*)temp_buffer + num_src * PPL_X86_TENSOR_MAX_DIMS();
 
     for (uint64_t i = 0; i < num_src; i++) {
-        ppl::nn::TensorShape padded_input_shape = pad_shape(input_shape_list[i], dim_count);
+        ppl::common::TensorShape padded_input_shape = pad_shape(input_shape_list[i], dim_count);
         uint64_t stride                             = 1;
         for (int64_t j = (int64_t)dim_count - 1; j >= 0; j--) {
             inc_in[j * num_src + i] = padded_input_shape.GetDim(j) == 1 ? 0 : stride;

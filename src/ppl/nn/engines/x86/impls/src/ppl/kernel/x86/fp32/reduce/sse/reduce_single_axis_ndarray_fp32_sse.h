@@ -64,8 +64,8 @@ namespace ppl { namespace kernel { namespace x86 {
 
 template <reduce_op_type_t _op>
 ppl::common::RetCode reduce_single_axis_ndarray_fp32_sse(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int32_t *axes,
     const int32_t num_axes,

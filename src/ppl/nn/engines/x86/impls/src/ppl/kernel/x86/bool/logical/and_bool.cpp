@@ -20,7 +20,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode and_eltwise_bool(
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *dst_shape,
     const uint8_t *src0,
     const uint8_t *src1,
     uint8_t *dst)
@@ -29,9 +29,9 @@ ppl::common::RetCode and_eltwise_bool(
 }
 
 ppl::common::RetCode and_ndarray_bool(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const uint8_t *src0,
     const uint8_t *src1,
     uint8_t *dst)

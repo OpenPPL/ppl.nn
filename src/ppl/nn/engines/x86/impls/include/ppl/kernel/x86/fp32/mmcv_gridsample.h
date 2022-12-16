@@ -23,8 +23,8 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode mmcv_gridsample_linear_ndarray_fp32(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *grid_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *grid_shape,
     const float *src,
     const float *grid,
     const bool align_corners,
@@ -33,8 +33,8 @@ ppl::common::RetCode mmcv_gridsample_linear_ndarray_fp32(
 
 #ifdef PPL_USE_X86_AVX512
 ppl::common::RetCode mmcv_gridsample_linear_ndarray_fp32_avx512(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *grid_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *grid_shape,
     const float *src,
     const float *grid,
     const bool align_corners,

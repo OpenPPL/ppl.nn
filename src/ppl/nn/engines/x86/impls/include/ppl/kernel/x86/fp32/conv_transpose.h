@@ -24,7 +24,7 @@ namespace ppl { namespace kernel { namespace x86 {
 
 uint64_t conv_transpose_2d_ndarray_fp32_get_buffer_bytes(
     const ppl::common::isa_t isa,
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const int64_t group,
     const int64_t num_output,
     const int64_t kernel_h,
@@ -36,8 +36,8 @@ uint64_t conv_transpose_2d_ndarray_fp32_get_buffer_bytes(
 
 ppl::common::RetCode conv_transpose_2d_ndarray_fp32(
     const ppl::common::isa_t isa,
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const float *filter,
     const float *bias,
@@ -57,7 +57,7 @@ ppl::common::RetCode conv_transpose_2d_ndarray_fp32(
 
 uint64_t conv_transpose_1d_ndarray_fp32_get_buffer_bytes(
     const ppl::common::isa_t isa,
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const int64_t group,
     const int64_t num_output,
     const int64_t kernel_w,
@@ -66,8 +66,8 @@ uint64_t conv_transpose_1d_ndarray_fp32_get_buffer_bytes(
 
 ppl::common::RetCode conv_transpose_1d_ndarray_fp32(
     const ppl::common::isa_t isa,
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const float *filter,
     const float *bias,

@@ -210,8 +210,8 @@ static inline void averagepool2d_n16cx_border_fp32_sse(
 
 template <bool exclusive_mode, bool ceil_mode>
 ppl::common::RetCode averagepool2d_n16cx_blk1x4_fp32_sse_impl(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t kernel_h,
     const int64_t kernel_w,
@@ -297,8 +297,8 @@ ppl::common::RetCode averagepool2d_n16cx_blk1x4_fp32_sse_impl(
 }
 
 ppl::common::RetCode averagepool2d_n16cx_blk1x4_fp32_sse(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t kernel_h,
     const int64_t kernel_w,

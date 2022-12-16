@@ -869,7 +869,7 @@ ppl::common::RetCode conv2d_depthwise_fp32_sse_manager::gen_cvt_weights(const fl
         return ppl::common::RC_OUT_OF_MEMORY;
     }
 
-    ppl::nn::TensorShape filter_shape;
+    ppl::common::TensorShape filter_shape;
     filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
     filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
     filter_shape.Reshape({1, channels, param_.kernel_h, param_.kernel_w});

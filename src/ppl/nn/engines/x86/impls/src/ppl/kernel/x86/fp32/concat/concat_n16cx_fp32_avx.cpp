@@ -22,7 +22,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode concat_n16cx_interleave_channels_fp32_avx(
-    const ppl::nn::TensorShape **src_shape_list,
+    const ppl::common::TensorShape **src_shape_list,
     const float **src_list,
     const int32_t num_src,
     const int32_t axis,

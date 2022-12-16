@@ -81,7 +81,7 @@ struct parallel_block {
 };
 
 inline void pad_shape(
-    const ppl::nn::TensorShape *shape,
+    const ppl::common::TensorShape *shape,
     const int64_t padded_dim_count,
     int64_t *padded_shape)
 {

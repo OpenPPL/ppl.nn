@@ -22,7 +22,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode not_bool_sse(
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const uint8_t *x,
     uint8_t *y)
 {

@@ -64,7 +64,7 @@ void cumsum_ndarray_impl(
 
 template<typename eT>
 ppl::common::RetCode cumsum_ndarray(
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const eT *x,
     const int64_t axis,
     const int64_t exclusive,

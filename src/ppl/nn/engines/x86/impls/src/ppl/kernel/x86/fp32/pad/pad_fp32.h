@@ -45,8 +45,8 @@ static inline int32_t get_reflect_idx(
 
 template <pad_mode_type_t _mode>
 ppl::common::RetCode pad_ndarray_fp32(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t *start_pads,
     const int64_t *end_pads,
@@ -55,8 +55,8 @@ ppl::common::RetCode pad_ndarray_fp32(
 
 template <pad_mode_type_t _mode>
 ppl::common::RetCode pad_n16cx_fp32(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t *start_pads,
     const int64_t *end_pads,

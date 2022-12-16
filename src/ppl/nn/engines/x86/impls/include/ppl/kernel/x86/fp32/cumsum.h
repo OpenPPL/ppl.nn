@@ -23,7 +23,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode cumsum_ndarray_fp32(
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const float *x,
     const int64_t axis,
     const int64_t exclusive,

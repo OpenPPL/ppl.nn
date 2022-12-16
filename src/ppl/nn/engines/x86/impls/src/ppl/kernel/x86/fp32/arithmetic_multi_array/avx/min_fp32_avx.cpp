@@ -26,7 +26,7 @@ uint64_t min_fp32_avx_get_temp_buffer_bytes(
 }
 
 ppl::common::RetCode min_eltwise_fp32_avx(
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float **src_list,
     const uint32_t num_src,
     float *dst)
@@ -39,8 +39,8 @@ ppl::common::RetCode min_eltwise_fp32_avx(
 }
 
 ppl::common::RetCode min_ndarray_fp32_avx(
-    const ppl::nn::TensorShape **src_shape_list,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape **src_shape_list,
+    const ppl::common::TensorShape *dst_shape,
     const float **src_list,
     const uint32_t num_src,
     void *temp_buffer,

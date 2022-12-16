@@ -46,9 +46,9 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode conv2d_fp32_ref(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *sum_src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *sum_src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const float *sum_src,
     const float *filter,

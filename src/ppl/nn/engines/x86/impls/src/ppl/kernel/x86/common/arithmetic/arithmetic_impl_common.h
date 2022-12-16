@@ -23,9 +23,9 @@ namespace ppl { namespace kernel { namespace x86 {
 
 template <typename eT, arithmetic_op_type_t _op>
 static ppl::common::RetCode arithmetic_impl_common(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src0,
     const eT *src1,
     eT *dst)

@@ -21,7 +21,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode concat_n16cx_int64(
-    const ppl::nn::TensorShape **src_shape_list,
+    const ppl::common::TensorShape **src_shape_list,
     const int64_t **src_list,
     const int32_t num_src,
     const int32_t axis,

@@ -23,18 +23,18 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode hard_swish_fp32_avx(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     float *dst);
 
 ppl::common::RetCode hard_swish_fp32_sse(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     float *dst);
 
 ppl::common::RetCode hard_swish_fp32(
     const ppl::common::isa_t isa,
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     float *dst);
 

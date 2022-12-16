@@ -40,7 +40,7 @@
 #include "ppl/kernel/x86/common/math.h"
 #include "ppl/kernel/x86/common/macros.h"
 #include "ppl/common/generic_cpu_allocator.h"
-#include "ppl/nn/common/tensor_shape.h"
+#include "ppl/common/tensor_shape.h"
 #include "simple_flags.h"
 #include "utils/check.h"
 
@@ -521,32 +521,32 @@ DEBUG_TAG(B);
         const float gops = param.group * batch * ic * oc * param.kernel_h * param.kernel_w * dst_h * dst_w * 2.0f / 1e9f;
 
 DEBUG_TAG(C);
-        ppl::nn::TensorShape src_shape;
+        ppl::common::TensorShape src_shape;
         src_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
         src_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         src_shape.Reshape({batch, param.channels, src_h, src_w});
 
-        ppl::nn::TensorShape src_trans_shape = src_shape;
+        ppl::common::TensorShape src_trans_shape = src_shape;
         if (algoinfo.input_format != ppl::common::DATAFORMAT_NDARRAY) {
             src_trans_shape.SetDataFormat(algoinfo.input_format);
         }
 
-        ppl::nn::TensorShape dst_shape;
+        ppl::common::TensorShape dst_shape;
         dst_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
         dst_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         dst_shape.Reshape({batch, param.num_output, dst_h, dst_w});
 
-        ppl::nn::TensorShape dst_trans_shape = dst_shape;
+        ppl::common::TensorShape dst_trans_shape = dst_shape;
         if (algoinfo.output_format != ppl::common::DATAFORMAT_NDARRAY) {
             dst_trans_shape.SetDataFormat(algoinfo.output_format);
         }
 
-        ppl::nn::TensorShape filter_shape;
+        ppl::common::TensorShape filter_shape;
         filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
         filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         filter_shape.Reshape({param.num_output, param.channels / param.group, param.kernel_h, param.kernel_w});
 
-        ppl::nn::TensorShape bias_shape;
+        ppl::common::TensorShape bias_shape;
         bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
         bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
         bias_shape.Reshape({param.num_output});

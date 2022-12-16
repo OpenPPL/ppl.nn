@@ -21,8 +21,8 @@ namespace ppl { namespace kernel { namespace x86 {
 
 template <bool exclusive_mode, bool ceil_mode>
 static ppl::common::RetCode averagepool2d_ndarray_normal_fp32_impl(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t kernel_h,
     const int64_t kernel_w,
@@ -85,8 +85,8 @@ static ppl::common::RetCode averagepool2d_ndarray_normal_fp32_impl(
 }
 
 ppl::common::RetCode averagepool2d_ndarray_normal_fp32(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const int64_t kernel_h,
     const int64_t kernel_w,

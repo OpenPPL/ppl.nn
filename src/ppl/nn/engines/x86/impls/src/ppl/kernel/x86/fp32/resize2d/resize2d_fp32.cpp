@@ -23,8 +23,8 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode reisze2d_ndarray_pytorch_linear_floor_fp32(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const float scale_h,
     const float scale_w,
@@ -86,8 +86,8 @@ ppl::common::RetCode reisze2d_ndarray_pytorch_linear_floor_fp32(
 }
 
 ppl::common::RetCode reisze2d_ndarray_asymmetric_nearest_floor_fp32(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const float scale_h,
     const float scale_w,
@@ -161,8 +161,8 @@ inline T get_value_bounded(
 #define SRC(h, w) (get_value_bounded(l_src, (h), (w), src_h, src_w))
 
 ppl::common::RetCode reisze2d_ndarray_pytorch_cubic_floor_fp32(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const float scale_h,
     const float scale_w,

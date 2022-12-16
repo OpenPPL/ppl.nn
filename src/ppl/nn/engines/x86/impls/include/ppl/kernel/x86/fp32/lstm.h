@@ -24,7 +24,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 uint64_t lstm_fp32_get_buffer_bytes(
-    const ppl::nn::TensorShape *X_shape,
+    const ppl::common::TensorShape *X_shape,
     const rnn_direction_t direction,
     const int64_t hidden_size,
     const bool has_sequence_lens,
@@ -33,7 +33,7 @@ uint64_t lstm_fp32_get_buffer_bytes(
     const bool has_Y_c);
 
 ppl::common::RetCode lstm_fp32_sse(
-    const ppl::nn::TensorShape *X_shape,
+    const ppl::common::TensorShape *X_shape,
     const float *X,
     const float **W,
     const float **R,
@@ -52,7 +52,7 @@ ppl::common::RetCode lstm_fp32_sse(
     float *Y_c);
 
 ppl::common::RetCode lstm_fp32_fma(
-    const ppl::nn::TensorShape *X_shape,
+    const ppl::common::TensorShape *X_shape,
     const float *X,
     const float **W,
     const float **R,
@@ -72,7 +72,7 @@ ppl::common::RetCode lstm_fp32_fma(
 
 #ifdef PPL_USE_X86_AVX512
 ppl::common::RetCode lstm_fp32_avx512(
-    const ppl::nn::TensorShape *X_shape,
+    const ppl::common::TensorShape *X_shape,
     const float *X,
     const float **W,
     const float **R,
@@ -93,7 +93,7 @@ ppl::common::RetCode lstm_fp32_avx512(
 
 ppl::common::RetCode lstm_fp32(
     const ppl::common::isa_t isa,
-    const ppl::nn::TensorShape *X_shape,
+    const ppl::common::TensorShape *X_shape,
     const float *X,
     const float **W,
     const float **R,

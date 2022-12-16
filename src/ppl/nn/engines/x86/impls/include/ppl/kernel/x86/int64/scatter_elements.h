@@ -23,8 +23,8 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode scatter_elements_ndarray_int64(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *indices_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *indices_shape,
     const int64_t *src,
     const int64_t *indices,
     const int64_t *updates,

@@ -23,8 +23,8 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode resize2d_n16cx_pytorch_2linear_floor_fp32_avx512(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const float scale_h,
     const float scale_w,
@@ -119,8 +119,8 @@ ppl::common::RetCode resize2d_n16cx_pytorch_2linear_floor_fp32_avx512(
 }
 
 ppl::common::RetCode reisze2d_n16cx_asymmetric_nearest_floor_fp32_avx512(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src,
     const float scale_h,
     const float scale_w,

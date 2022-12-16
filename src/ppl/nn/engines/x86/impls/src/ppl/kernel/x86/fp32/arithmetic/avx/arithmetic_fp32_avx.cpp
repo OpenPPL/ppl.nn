@@ -23,9 +23,9 @@ namespace ppl { namespace kernel { namespace x86 {
 
 template <arithmetic_op_type_t _op, bool fuse_relu>
 static ppl::common::RetCode arithmetic_fp32_avx(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src0,
     const float *src1,
     float *dst)
@@ -45,9 +45,9 @@ static ppl::common::RetCode arithmetic_fp32_avx(
 }
 
 ppl::common::RetCode add_fp32_avx(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src0,
     const float *src1,
     const bool fuse_relu,
@@ -62,9 +62,9 @@ ppl::common::RetCode add_fp32_avx(
 }
 
 ppl::common::RetCode sub_fp32_avx(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src0,
     const float *src1,
     const bool fuse_relu,
@@ -78,9 +78,9 @@ ppl::common::RetCode sub_fp32_avx(
 }
 
 ppl::common::RetCode mul_fp32_avx(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src0,
     const float *src1,
     const bool fuse_relu,
@@ -94,9 +94,9 @@ ppl::common::RetCode mul_fp32_avx(
 }
 
 ppl::common::RetCode div_fp32_avx(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src0,
     const float *src1,
     const bool fuse_relu,

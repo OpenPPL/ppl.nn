@@ -23,7 +23,7 @@
 namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode sqrt_fp32_sse(
-    const ppl::nn::TensorShape *in_shape,
+    const ppl::common::TensorShape *in_shape,
     const float *in,
     float *out);
 

@@ -220,9 +220,9 @@ static ppl::common::RetCode arithmetic_broadcast_recursive_ndarray_fp32_sse(
 
 template <arithmetic_op_type_t _op, bool fuse_relu>
 static ppl::common::RetCode arithmetic_broadcast_ndarray_fp32_sse(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const float *src0,
     const float *src1,
     float *dst)

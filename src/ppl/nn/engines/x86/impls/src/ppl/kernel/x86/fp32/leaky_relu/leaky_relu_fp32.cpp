@@ -22,7 +22,7 @@ namespace ppl { namespace kernel { namespace x86 {
 
 ppl::common::RetCode leaky_relu_fp32(
     const ppl::common::isa_t isa,
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     const float alpha,
     float *dst)
