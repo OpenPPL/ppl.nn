@@ -37,11 +37,13 @@ bool GRUKernel::CanDoExecute(const KernelExecContext& ctx) const {
 
 uint64_t GRUKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     auto X = ctx.GetInput<TensorImpl>(0);
+    const bool has_sequence_lens = ctx.GetInputCount() > 4 && ctx.GetInput<TensorImpl>(4);
     const bool has_Y = ctx.GetOutputCount() > 0 && ctx.GetOutput<TensorImpl>(0);
     const bool has_Y_h = ctx.GetOutputCount() > 1 && ctx.GetOutput<TensorImpl>(1);
 
-    return kernel::x86::gru_fp32_get_buffer_bytes(X->GetShape(), direction_, param_->param->hidden_size, has_Y,
-                                                  has_Y_h);
+    return kernel::x86::gru_fp32_get_buffer_bytes(
+        X->GetShape(), direction_, param_->param->hidden_size,
+        has_sequence_lens, has_Y, has_Y_h);
 }
 
 ppl::common::RetCode GRUKernel::DoExecute(KernelExecContext* ctx) {
@@ -133,25 +135,34 @@ ppl::common::RetCode GRUKernel::DoExecute(KernelExecContext* ctx) {
     const float* real_W[2] = {param_->packed_W[0], param_->packed_W[1]};
     const float* real_Rzr[2] = {param_->packed_Rzr[0], param_->packed_Rzr[1]};
     const float* real_Rh[2] = {param_->packed_Rh[0], param_->packed_Rh[1]};
+
     bool has_packed_W = real_W[0] != nullptr;
     bool has_packed_Rzr = real_Rzr[0] != nullptr;
     bool has_packed_Rh = real_Rh[0] != nullptr;
+
+    const int64_t input_size = X->GetShape()->GetDim(2);
+    const int64_t hidden_size = param_->param->hidden_size;
+
     if (!real_W[0])
         real_W[0] = W->GetBufferPtr<const float>();
     if (!real_W[1])
-        real_W[1] = W->GetBufferPtr<const float>() + W->GetShape()->GetDim(1) * W->GetShape()->GetDim(2);
+        real_W[1] = W->GetBufferPtr<const float>() + ppl::kernel::x86::rnn_num_gate::GRU * hidden_size * input_size;
+
     if (!real_Rzr[0])
         real_Rzr[0] = R->GetBufferPtr<const float>();
     if (!real_Rh[0])
-        real_Rh[0] = R->GetBufferPtr<const float>() + R->GetShape()->GetDim(1) / 3 * 2 * R->GetShape()->GetDim(2);
+        real_Rh[0] = R->GetBufferPtr<const float>() + (ppl::kernel::x86::rnn_num_gate::GRU - 1) * hidden_size * hidden_size;
+
     if (!real_Rzr[1])
-        real_Rzr[1] = R->GetBufferPtr<const float>() + R->GetShape()->GetDim(1) * R->GetShape()->GetDim(2);
+        real_Rzr[1] = R->GetBufferPtr<const float>() + ppl::kernel::x86::rnn_num_gate::GRU * hidden_size * hidden_size;
     if (!real_Rh[1])
-        real_Rh[1] = R->GetBufferPtr<const float>() + R->GetShape()->GetDim(1) / 3 * 5 * R->GetShape()->GetDim(2);
+        real_Rh[1] = R->GetBufferPtr<const float>() + (2 * ppl::kernel::x86::rnn_num_gate::GRU - 1) * hidden_size * hidden_size;
+
     if (data_type == ppl::common::DATATYPE_FLOAT32 && data_format == ppl::common::DATAFORMAT_NDARRAY) {
-        return kernel::x86::gru_fp32(GetISA(), X->GetShape(), X->GetBufferPtr<const float>(), real_W, real_Rzr, real_Rh,
-                                     B_data, sequence_lens_data, initial_h_data, direction_, param_->param->hidden_size,
-                                     has_packed_W, has_packed_Rzr, has_packed_Rh, tmp_buffer, Y_data, Y_h_data);
+        return kernel::x86::gru_fp32(
+            GetISA(), X->GetShape(), X->GetBufferPtr<const float>(), real_W, real_Rzr, real_Rh,
+            B_data, sequence_lens_data, initial_h_data, direction_, param_->param->hidden_size,
+            has_packed_W, has_packed_Rzr, has_packed_Rh, tmp_buffer, Y_data, Y_h_data);
     } else {
         LOG(ERROR) << "only support fp32 ndarray now.";
     }

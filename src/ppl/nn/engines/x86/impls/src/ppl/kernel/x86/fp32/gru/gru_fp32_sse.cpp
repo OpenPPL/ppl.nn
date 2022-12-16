@@ -16,14 +16,13 @@
 // under the License.
 
 #include <math.h>
-#include <string.h>
-#include <immintrin.h>
+#include <nmmintrin.h>
 
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/kernel/x86/fp32/gru.h"
 #include "ppl/kernel/x86/fp32/gemm.h"
-#include "ppl/kernel/x86/common/avx512_tools.h"
-#include "ppl/kernel/x86/common/math_avx512.h"
+#include "ppl/kernel/x86/common/sse_tools.h"
+#include "ppl/kernel/x86/common/math_sse.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
@@ -32,7 +31,7 @@ static inline float sigmoidf(const float x)
     return 1.0f / (1.0f + expf(-x));
 }
 
-ppl::common::RetCode gru_fp32_avx512(
+ppl::common::RetCode gru_fp32_sse(
     const ppl::nn::TensorShape *X_shape,
     const float *X,
     const float **W,
@@ -54,7 +53,7 @@ ppl::common::RetCode gru_fp32_avx512(
         return ppl::common::RC_SUCCESS;
     }
 
-    const int64_t simd_w = 16;
+    const int64_t simd_w = 4;
 
     const int64_t num_direction = direction == rnn_direction::BIDIRECTIONAL ? 2 : 1;
     const bool    has_reverse   = direction == rnn_direction::BIDIRECTIONAL || direction == rnn_direction::REVERSE;
@@ -105,12 +104,12 @@ ppl::common::RetCode gru_fp32_avx512(
                 const int64_t seq_end = sequence_lens[b];
                 auto src = X + ((seq_idx < seq_end) ? (seq_end - seq_idx - 1) : seq_idx) * batch * input_size + b * input_size;
                 auto dst = rX + seq_idx * batch * input_size + b * input_size;
-                memcpy32_avx(dst, src, input_size);
+                memcpy32_sse(dst, src, input_size);
             }
             nd_X = rX;
         }
 
-        gemm_fp32_avx512( // Xt*(Wz^T) + Wbz ; Xt*(Wr^T) + Wbr ; Xt*(Wh^T) + Wbh
+        gemm_fp32_sse( // Xt*(Wz^T) + Wbz ; Xt*(Wr^T) + Wbr ; Xt*(Wh^T) + Wbh
             nd_X, nd_W, nd_Wb, nullptr,
             gemm_m_type::NOTRANS, packed_W ? gemm_m_type::PACKED : gemm_m_type::TRANS,
             nd_Wb ? gemm_v_type::ROW_VEC : gemm_v_type::EMPTY, gemm_m_type::EMPTY,
@@ -122,7 +121,7 @@ ppl::common::RetCode gru_fp32_avx512(
             auto seq_gate = gate_buf + ((!sequence_lens && is_reverse) ? (seq_len - seq_idx - 1) : seq_idx) * batch * rnn_num_gate::GRU * hidden_size;
             auto Y_h_prev = seq_idx == 0 ? nd_init_h : nd_Yh;
 
-            gemm_fp32_avx512( // Ht-1*(Rz^T) + Rbz; Ht-1*(Rr^T) + Rbr
+            gemm_fp32_sse( // Ht-1*(Rz^T) + Rbz; Ht-1*(Rr^T) + Rbr
                 Y_h_prev, nd_Rzr, nd_Rbzr, nullptr,
                 gemm_m_type::NOTRANS, packed_Rzr ? gemm_m_type::PACKED : gemm_m_type::TRANS,
                 nd_Rbzr ? gemm_v_type::ROW_VEC : gemm_v_type::EMPTY, gemm_m_type::EMPTY,
@@ -130,7 +129,7 @@ ppl::common::RetCode gru_fp32_avx512(
                 hidden_size, hidden_size, rnn_num_gate::GRU * hidden_size, 0,
                 !Y_h_prev ? 0.0f : 1.0f, 1.0f, 1.0f, 0.0f, gemm_post::NONE, seq_gate);
 
-            gemm_fp32_avx512( //  (Ht-1*(Rh^T) + Rbh)
+            gemm_fp32_sse( //  (Ht-1*(Rh^T) + Rbh)
                 Y_h_prev, nd_Rh, nd_Rbh, nullptr,
                 gemm_m_type::NOTRANS, packed_Rh ? gemm_m_type::PACKED : gemm_m_type::TRANS,
                 nd_Rbh ? gemm_v_type::ROW_VEC : gemm_v_type::EMPTY, gemm_m_type::EMPTY,
@@ -149,7 +148,7 @@ ppl::common::RetCode gru_fp32_avx512(
                 const float *Hprev = Y_h_prev + b * hidden_size;
                 float *Ht          = nd_Yh + b * hidden_size;
 
-                if (reset_Ht) memset32_avx(Ht, 0, hidden_size);
+                if (reset_Ht) memset32_sse(Ht, 0, hidden_size);
 
                 const int64_t seq_end = sequence_lens ? sequence_lens[b] : seq_len;
                 if (seq_idx < seq_end) {
@@ -159,10 +158,10 @@ ppl::common::RetCode gru_fp32_avx512(
                     const float *gE = extra_gate + b * hidden_size;
                     int64_t h       = 0;
                     for (; h <= hidden_size - simd_w; h += simd_w) {
-                        auto zt = _avx512_sigmoid_ps(_mm512_loadu_ps(gZ + h));
-                        auto rt = _avx512_sigmoid_ps(_mm512_loadu_ps(gR + h));
-                        auto ht = _avx512_tanh_ps(rt * _mm512_loadu_ps(gE + h) + _mm512_loadu_ps(gH + h));
-                        _mm512_storeu_ps(Ht + h, ht - zt * ht + zt * _mm512_loadu_ps(Hprev + h));
+                        auto zt = _sse_sigmoid_ps(_mm_loadu_ps(gZ + h));
+                        auto rt = _sse_sigmoid_ps(_mm_loadu_ps(gR + h));
+                        auto ht = _sse_tanh_ps(rt * _mm_loadu_ps(gE + h) + _mm_loadu_ps(gH + h));
+                        _mm_storeu_ps(Ht + h, ht - zt * ht + zt * _mm_loadu_ps(Hprev + h));
                     }
                     for (; h < hidden_size; ++h) {
                         const float zt = sigmoidf(gZ[h]);
@@ -172,13 +171,13 @@ ppl::common::RetCode gru_fp32_avx512(
                     }
                     if (Y) {
                         float *Yt = nd_Y + (is_reverse ? (seq_end - seq_idx - 1) : seq_idx) * num_direction * batch * hidden_size + b * hidden_size;
-                        memcpy32_avx(Yt, Ht, hidden_size);
+                        memcpy32_sse(Yt, Ht, hidden_size);
                     }
                 } else { // pass through the initial_h, initial_c
-                    if (Hprev != Ht) memcpy32_avx(Ht, Hprev, hidden_size);
+                    if (Hprev != Ht) memcpy32_sse(Ht, Hprev, hidden_size);
                     if (Y) {
                         float *Yt = nd_Y + seq_idx * num_direction * batch * hidden_size + b * hidden_size;
-                        memset32_avx(Yt, 0, hidden_size);
+                        memset32_sse(Yt, 0, hidden_size);
                     }
                 }
             }

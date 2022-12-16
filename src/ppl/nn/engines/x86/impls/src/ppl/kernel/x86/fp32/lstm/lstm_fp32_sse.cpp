@@ -16,13 +16,13 @@
 // under the License.
 
 #include <math.h>
-#include <immintrin.h>
+#include <nmmintrin.h>
 
 #include "ppl/kernel/x86/common/internal_include.h"
 #include "ppl/kernel/x86/fp32/lstm.h"
 #include "ppl/kernel/x86/fp32/gemm.h"
-#include "ppl/kernel/x86/common/avx512_tools.h"
-#include "ppl/kernel/x86/common/math_avx512.h"
+#include "ppl/kernel/x86/common/sse_tools.h"
+#include "ppl/kernel/x86/common/math_sse.h"
 
 namespace ppl { namespace kernel { namespace x86 {
 
@@ -31,7 +31,7 @@ static inline float sigmoidf(const float x)
     return 1.0f / (1.0f + expf(-x));
 }
 
-ppl::common::RetCode lstm_fp32_avx512(
+ppl::common::RetCode lstm_fp32_sse(
     const ppl::nn::TensorShape *X_shape,
     const float *X,
     const float **W,
@@ -53,7 +53,7 @@ ppl::common::RetCode lstm_fp32_avx512(
     if (!Y && !Y_h && !Y_c) {
         return ppl::common::RC_SUCCESS;
     }
-    const int64_t simd_w = 16;
+    const int64_t simd_w = 4;
 
     const int64_t num_direction = direction == rnn_direction::BIDIRECTIONAL ? 2 : 1;
     const bool    has_reverse   = direction == rnn_direction::BIDIRECTIONAL || direction == rnn_direction::REVERSE;
@@ -110,12 +110,12 @@ ppl::common::RetCode lstm_fp32_avx512(
                 const int64_t seq_end = sequence_lens[b];
                 auto src = X + ((seq_idx < seq_end) ? (seq_end - seq_idx - 1) : seq_idx) * batch * input_size + b * input_size;
                 auto dst = rX + seq_idx * batch * input_size + b * input_size;
-                memcpy32_avx(dst, src, input_size);
+                memcpy32_sse(dst, src, input_size);
             }
             nd_X = rX;
         }
 
-        gemm_fp32_avx512( // X[nd]*W[nd]_{iofc}^T+Wb_{iofc}
+        gemm_fp32_sse( // X[nd]*W[nd]_{iofc}^T+Wb_{iofc}
             nd_X, nd_W, nd_Wb, nullptr,
             gemm_m_type::NOTRANS, packed_W ? gemm_m_type::PACKED : gemm_m_type::TRANS,
             nd_Wb ? gemm_v_type::ROW_VEC : gemm_v_type::EMPTY, gemm_m_type::EMPTY,
@@ -136,7 +136,7 @@ ppl::common::RetCode lstm_fp32_avx512(
             auto Y_h_prev = seq_idx == 0 ? nd_init_h : nd_Yh;
             auto Y_c_prev = seq_idx == 0 ? nd_init_c : nd_Yc;
 
-            gemm_fp32_avx512( // h[nd]_{t-1}*R[nd]_{iofc}^T+Rb_{iofc}
+            gemm_fp32_sse( // h[nd]_{t-1}*R[nd]_{iofc}^T+Rb_{iofc}
                 Y_h_prev, nd_R, nd_Rb, nullptr,
                 gemm_m_type::NOTRANS, packed_R ? gemm_m_type::PACKED : gemm_m_type::TRANS,
                 nd_Rb ? gemm_v_type::ROW_VEC : gemm_v_type::EMPTY, gemm_m_type::EMPTY,
@@ -162,8 +162,8 @@ ppl::common::RetCode lstm_fp32_avx512(
                 auto Ct    = nd_Yc + b * hidden_size;
                 auto Ht    = nd_Yh + b * hidden_size;
 
-                if (reset_Ht) memset32_avx(Ht, 0, hidden_size);
-                if (reset_Ct) memset32_avx(Ct, 0, hidden_size);
+                if (reset_Ht) memset32_sse(Ht, 0, hidden_size);
+                if (reset_Ct) memset32_sse(Ct, 0, hidden_size);
 
                 const int64_t seq_end = sequence_lens ? sequence_lens[b] : seq_len;
                 if (seq_idx < seq_end) {
@@ -177,15 +177,15 @@ ppl::common::RetCode lstm_fp32_avx512(
                         const float *pO = pI + hidden_size;
                         const float *pF = pO + hidden_size;
                         for (; h <= hidden_size - simd_w; h += simd_w) {
-                            auto cp = _mm512_loadu_ps(Cprev + h);
-                            auto it = _avx512_sigmoid_ps(_mm512_loadu_ps(gI + h) + cp * _mm512_loadu_ps(pI + h));
-                            auto ft = _avx512_sigmoid_ps(_mm512_loadu_ps(gF + h) + cp * _mm512_loadu_ps(pF + h));
-                            auto ct = _avx512_tanh_ps(_mm512_loadu_ps(gC + h));
+                            auto cp = _mm_loadu_ps(Cprev + h);
+                            auto it = _sse_sigmoid_ps(_mm_loadu_ps(gI + h) + cp * _mm_loadu_ps(pI + h));
+                            auto ft = _sse_sigmoid_ps(_mm_loadu_ps(gF + h) + cp * _mm_loadu_ps(pF + h));
+                            auto ct = _sse_tanh_ps(_mm_loadu_ps(gC + h));
                             auto cn = ft * cp + it * ct;
-                            auto ot = _avx512_sigmoid_ps(_mm512_loadu_ps(gO + h) + cn * _mm512_loadu_ps(pO + h));
-                            auto hn = ot * _avx512_tanh_ps(cn);
-                            _mm512_storeu_ps(Ct + h, cn);
-                            _mm512_storeu_ps(Ht + h, hn);
+                            auto ot = _sse_sigmoid_ps(_mm_loadu_ps(gO + h) + cn * _mm_loadu_ps(pO + h));
+                            auto hn = ot * _sse_tanh_ps(cn);
+                            _mm_storeu_ps(Ct + h, cn);
+                            _mm_storeu_ps(Ht + h, hn);
                         }
                         for (; h < hidden_size; ++h) {
                             const float it = sigmoidf(gI[h] + pI[h] * Cprev[h]);
@@ -197,14 +197,14 @@ ppl::common::RetCode lstm_fp32_avx512(
                         }
                     } else {
                         for (; h <= hidden_size - simd_w; h += simd_w) {
-                            auto it = _avx512_sigmoid_ps(_mm512_loadu_ps(gI + h));
-                            auto ft = _avx512_sigmoid_ps(_mm512_loadu_ps(gF + h));
-                            auto ct = _avx512_tanh_ps(_mm512_loadu_ps(gC + h));
-                            auto cn = ft * _mm512_loadu_ps(Cprev + h) + it * ct;
-                            auto ot = _avx512_sigmoid_ps(_mm512_loadu_ps(gO + h));
-                            auto hn = ot * _avx512_tanh_ps(cn);
-                            _mm512_storeu_ps(Ct + h, cn);
-                            _mm512_storeu_ps(Ht + h, hn);
+                            auto it = _sse_sigmoid_ps(_mm_loadu_ps(gI + h));
+                            auto ft = _sse_sigmoid_ps(_mm_loadu_ps(gF + h));
+                            auto ct = _sse_tanh_ps(_mm_loadu_ps(gC + h));
+                            auto cn = ft * _mm_loadu_ps(Cprev + h) + it * ct;
+                            auto ot = _sse_sigmoid_ps(_mm_loadu_ps(gO + h));
+                            auto hn = ot * _sse_tanh_ps(cn);
+                            _mm_storeu_ps(Ct + h, cn);
+                            _mm_storeu_ps(Ht + h, hn);
                         }
                         for (; h < hidden_size; ++h) {
                             const float it = sigmoidf(gI[h]);
@@ -217,14 +217,14 @@ ppl::common::RetCode lstm_fp32_avx512(
                     }
                     if (Y) {
                         float *Yt = nd_Y + (is_reverse ? (seq_end - seq_idx - 1) : seq_idx) * num_direction * batch * hidden_size + b * hidden_size;
-                        memcpy32_avx(Yt, Ht, hidden_size);
+                        memcpy32_sse(Yt, Ht, hidden_size);
                     }
                 } else { // pass through the initial_h, initial_c
-                    if (Cprev != Ct) memcpy32_avx(Ct, Cprev, hidden_size);
-                    if (Hprev != Ht) memcpy32_avx(Ht, Hprev, hidden_size);
+                    if (Cprev != Ct) memcpy32_sse(Ct, Cprev, hidden_size);
+                    if (Hprev != Ht) memcpy32_sse(Ht, Hprev, hidden_size);
                     if (Y) {
                         float *Yt = nd_Y + seq_idx * num_direction * batch * hidden_size + b * hidden_size;
-                        memset32_avx(Yt, 0, hidden_size);
+                        memset32_sse(Yt, 0, hidden_size);
                     }
                 }
             }
