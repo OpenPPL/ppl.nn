@@ -2,7 +2,7 @@ from setuptools import setup
 from setuptools.dist import Distribution
 
 def GetVersionString():
-    version_file = 'VERSION'
+    version_file = 'VERSION_STRING'
     return open(version_file, 'r').read()
 
 class BinaryDistribution(Distribution):
