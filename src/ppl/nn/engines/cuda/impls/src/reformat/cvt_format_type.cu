@@ -696,3 +696,106 @@ void PPLCUDACVTFormatType(
         PPLCUDANormalCVTFormatType(stream, input, output, param);
     }
 }
+
+template <CVTTypeMode type_mode>
+__global__ void cuda_kernel_cvtformat_type_nc(
+    const void* input,
+    void* output,
+    ReFormatParam param,
+    bool ndarray_nhwc)
+{
+    int64_t idx_chl = blockIdx.x * blockDim.x + threadIdx.x;
+    int64_t idx_outer = blockIdx.y * blockDim.y + threadIdx.y;
+    if (idx_chl >= param.dst_pad || idx_outer >= param.n_outer) return;
+    int64_t out_offset = idx_outer * param.dst_pad + idx_chl;
+    if (!ndarray_nhwc || idx_chl < param.src_pad) {
+        int64_t in_offset = idx_outer * param.src_pad + idx_chl;
+        cuda_kernel_cvt_per_elems<type_mode>(input, in_offset, output, out_offset, param);
+    } else {
+        cuda_kernel_set_zero_per_elems<type_mode>(output, out_offset);
+    }   
+}
+
+void PPLCUDACVTFormatTypeNC(
+    cudaStream_t stream,
+    const void* input,
+    void* output,
+    ReFormatParam param)
+{
+    // only for ndarray_nhwc or nhwc_ndarray when param.inner == 1, which means just padded
+    dim3 block_size, grid_size;
+    block_size.x = DIM;
+    block_size.y = DIM;
+    grid_size.x  = DivUp(param.dst_pad, DIM);
+    grid_size.y  = DivUp(param.n_outer, DIM);
+    bool ndarray_nhwc = (GetCVTFormatMode(param) == NDARRAY_NHWC);
+    switch (GetCVTTypeMode(param)) {
+        case FLOAT32_INT8:
+            cuda_kernel_cvtformat_type_nc<FLOAT32_INT8>
+                <<<grid_size, block_size, 0, stream>>>(input, output, param, ndarray_nhwc);
+            break;
+        case INT8_FLOAT32:
+            cuda_kernel_cvtformat_type_nc<INT8_FLOAT32>
+                <<<grid_size, block_size, 0, stream>>>(input, output, param, ndarray_nhwc);
+            break;
+        case UINT8_FLOAT32:
+            cuda_kernel_cvtformat_type_nc<UINT8_FLOAT32>
+                <<<grid_size, block_size, 0, stream>>>(input, output, param, ndarray_nhwc);
+            break;
+        case FLOAT32_FLOAT16:
+            cuda_kernel_cvtformat_type_nc<FLOAT32_FLOAT16>
+                <<<grid_size, block_size, 0, stream>>>(input, output, param, ndarray_nhwc);
+            break;
+        case FLOAT16_FLOAT32:
+            cuda_kernel_cvtformat_type_nc<FLOAT16_FLOAT32>
+                <<<grid_size, block_size, 0, stream>>>(input, output, param, ndarray_nhwc);
+            break;
+        case FLOAT32_INT4B:
+            cuda_kernel_cvtformat_type_nc<FLOAT32_INT4B>
+                <<<grid_size, block_size, 0, stream>>>(input, output, param, ndarray_nhwc);
+            break;
+        case INT4B_FLOAT32:
+            cuda_kernel_cvtformat_type_nc<INT4B_FLOAT32>
+                <<<grid_size, block_size, 0, stream>>>(input, output, param, ndarray_nhwc);
+            break;
+        case INT8_FLOAT16:
+            cuda_kernel_cvtformat_type_nc<INT8_FLOAT16>
+                <<<grid_size, block_size, 0, stream>>>(input, output, param, ndarray_nhwc);
+            break;
+        case FLOAT16_INT8:
+            cuda_kernel_cvtformat_type_nc<FLOAT16_INT8>
+                <<<grid_size, block_size, 0, stream>>>(input, output, param, ndarray_nhwc);
+            break;
+        case INT8_INT4B:
+            cuda_kernel_cvtformat_type_nc<INT8_INT4B>
+                <<<grid_size, block_size, 0, stream>>>(input, output, param, ndarray_nhwc);
+            break;
+        case INT8_INT8:
+            cuda_kernel_cvtformat_type_nc<INT8_INT8>
+                <<<grid_size, block_size, 0, stream>>>(input, output, param, ndarray_nhwc);
+            break;
+        case INT4B_INT4B:
+            cuda_kernel_cvtformat_type_nc<INT4B_INT4B>
+                <<<grid_size, block_size, 0, stream>>>(input, output, param, ndarray_nhwc);
+            break;
+        case INT32_INT64:
+            cuda_kernel_cvtformat_type_nc<INT32_INT64>
+                <<<grid_size, block_size, 0, stream>>>(input, output, param, ndarray_nhwc);
+            break;
+        case INT64_INT32:
+            cuda_kernel_cvtformat_type_nc<INT64_INT32>
+                <<<grid_size, block_size, 0, stream>>>(input, output, param, ndarray_nhwc);
+            break;
+        case INT64_FLOAT32:
+            cuda_kernel_cvtformat_type_nc<INT64_FLOAT32>
+                <<<grid_size, block_size, 0, stream>>>(input, output, param, ndarray_nhwc);
+            break;
+        case FLOAT32_INT64:
+            cuda_kernel_cvtformat_type_nc<FLOAT32_INT64>
+                <<<grid_size, block_size, 0, stream>>>(input, output, param, ndarray_nhwc);
+            break;
+        default:
+            break;
+    }
+    return;
+}

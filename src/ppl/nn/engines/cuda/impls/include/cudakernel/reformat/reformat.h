@@ -127,10 +127,12 @@ CVTFormatMode GetCVTFormatMode(ReFormatParam param);
 CVTTypeMode GetCVTTypeMode(ReFormatParam param);
 
 void PPLCUDACVTFormat(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
+void PPLCUDACVTFormatNC(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
 void PPLCUDACVTTypePerTensor(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
 void PPLCUDACVTTypePerChannel(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
 
 void PPLCUDACVTFormatType(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
+void PPLCUDACVTFormatTypeNC(cudaStream_t stream, const void* input, void* output, ReFormatParam param);
 
 ppl::common::RetCode SetReLayoutParam(ReFormatParam* param, const ppl::nn::TensorShape& input, const ppl::nn::TensorShape& output);
 ppl::common::RetCode SetReLayoutParam(ReFormatParam* param, const ppl::nn::TensorShape& input, const ppl::nn::cuda::CudaTensorQuant& input_quant, const ppl::nn::TensorShape& output, const ppl::nn::cuda::CudaTensorQuant& output_quant);

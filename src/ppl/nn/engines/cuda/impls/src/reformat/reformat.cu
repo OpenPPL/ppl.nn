@@ -608,6 +608,62 @@ void PPLCUDACVTFormat(
         PPLCUDANormalCVTFormat(stream, input, output, param);
     }
 }
+
+template <typename type>
+__global__ void cuda_kernel_cvtformat_nc(
+    type* input,
+    type* output,
+    ReFormatParam param,
+    bool ndarray_nhwc)
+{
+    int64_t idx_chl = blockIdx.x * blockDim.x + threadIdx.x;
+    int64_t idx_outer = blockIdx.y * blockDim.y + threadIdx.y;
+    if (idx_chl >= param.dst_pad || idx_outer >= param.n_outer) return;
+    int64_t out_offset = idx_outer * param.dst_pad + idx_chl;
+    if (!ndarray_nhwc || idx_chl < param.src_pad) {
+        int64_t in_offset = idx_outer * param.src_pad + idx_chl;
+        output[out_offset] = input[in_offset];
+    } else {
+        output[out_offset] = (type)0;
+    }
+}
+
+void PPLCUDACVTFormatNC(
+    cudaStream_t stream,
+    const void* input,
+    void* output,
+    ReFormatParam param)
+{
+    // only for ndarray_nhwc when param.inner == 1, which means just padded
+    dim3 dimBlock, dimGrid;
+    dimBlock.x = DIM;
+    dimBlock.y = DIM;
+    dimGrid.x  = DivUp(param.dst_pad, DIM);
+    dimGrid.y  = DivUp(param.n_outer, DIM);
+    bool ndarray_nhwc = (GetCVTFormatMode(param) == NDARRAY_NHWC);
+    switch (GetSizeOfDataType(param.out_type)) {
+        case 1:
+            cuda_kernel_cvtformat_nc<int8_t><<<dimGrid, dimBlock, 0, stream>>>(
+                (int8_t *)input, (int8_t *)output, param, ndarray_nhwc);
+            break;
+        case 2:
+            cuda_kernel_cvtformat_nc<half><<<dimGrid, dimBlock, 0, stream>>>(
+                (half *)input, (half *)output, param, ndarray_nhwc);
+            break;
+        case 4:
+            cuda_kernel_cvtformat_nc<float><<<dimGrid, dimBlock, 0, stream>>>(
+                (float *)input, (float *)output, param, ndarray_nhwc);
+            break;
+        case 8:
+            cuda_kernel_cvtformat_nc<double><<<dimGrid, dimBlock, 0, stream>>>(
+                (double *)input, (double *)output, param, ndarray_nhwc);
+            break;
+        default:
+            break;
+    }
+    return;
+}
+
 CVTFormatMode GetCVTFormatMode(ReFormatParam param)
 {
     if (param.in_format == DATAFORMAT_NDARRAY) {
@@ -820,18 +876,27 @@ void PPLCUDADataConvert(
     void* tempBuf,
     ReFormatParam& param)
 {
-    if (param.in_format != param.out_format && (param.in_type != param.out_type || !param.same_scale)) {
+    bool only_nc = param.n_inner == 1 && (GetCVTFormatMode(param) == NDARRAY_NHWC || GetCVTFormatMode(param) == NHWC_NDARRAY);
+    bool if_padded = param.dst_pad != param.src_pad;
+    if (param.in_format != param.out_format && (param.in_type != param.out_type || !param.same_scale)) { // mix-type and mix-format
         if (param.per_channel) {
             PPLCUDACVTTypePerChannel(stream, input, tempBuf, param);
             PPLCUDACVTFormat(stream, tempBuf, output, param);
+        } else if (only_nc) { // ndarray<->nhwc, in-shape is N*C, out-shape is N*C_pad
+            if (!if_padded) { PPLCUDACVTTypePerTensor(stream, input, output, param);
+            } else { PPLCUDACVTFormatTypeNC(stream, input, output, param); }
         } else {
             PPLCUDACVTFormatType(stream, input, output, param);
         }
         return;
-    } else if (param.in_format != param.out_format && (param.in_type = param.out_type && param.same_scale)) {
-        PPLCUDACVTFormat(stream, input, output, param);
+    } else if (param.in_format != param.out_format && (param.in_type = param.out_type && param.same_scale)) { // only mix-format
+        if (only_nc) { // ndarray<->nhwc, in-shape is N*C, out-shape is N*C_pad
+            PPLCUDACVTFormatNC(stream, input, output, param);
+        } else {
+            PPLCUDACVTFormat(stream, input, output, param);
+        }
         return;
-    } else if (param.in_type != param.out_type || !param.same_scale) {
+    } else if (param.in_type != param.out_type || !param.same_scale) { // only mix-type
         if (param.per_channel) {
             PPLCUDACVTTypePerChannel(stream, input, output, param);
         } else {
