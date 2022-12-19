@@ -291,9 +291,9 @@ inline void relation_ndarray_prepare_incs(
 
 template <typename eT, relation_op_type_t op_type>
 static ppl::common::RetCode relation_broadcast_ndarray_common(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src0,
     const eT *src1,
     uint8_t *dst)

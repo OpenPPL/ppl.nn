@@ -93,8 +93,8 @@ static ppl::common::RetCode gather_ndarray_common(
 
 template <typename eT>
 static ppl::common::RetCode gather_wrapper(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *indices_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *indices_shape,
     const void *src,
     const int64_t *indices,
     const int64_t axis,
@@ -135,8 +135,8 @@ static ppl::common::RetCode gather_wrapper(
 }
 
 ppl::common::RetCode gather(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *indices_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *indices_shape,
     const void *src,
     const int64_t *indices,
     const int64_t axis,

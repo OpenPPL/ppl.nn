@@ -161,8 +161,8 @@ static ppl::common::RetCode reduce_ndarray_recursive_common(
 
 template <typename eT, reduce_op_type_t op_type>
 static ppl::common::RetCode reduce_ndarray_common(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const eT* src,
     const int32_t* axes,
     const int32_t num_axes,

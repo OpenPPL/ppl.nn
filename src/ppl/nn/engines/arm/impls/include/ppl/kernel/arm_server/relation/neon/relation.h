@@ -23,17 +23,17 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 ppl::common::RetCode equal(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src0,
     const void *src1,
     uint8_t *dst);
 
 ppl::common::RetCode less(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src0,
     const void *src1,
     uint8_t *dst);

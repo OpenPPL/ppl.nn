@@ -21,6 +21,7 @@
 
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/arm/kernels/onnx/conv2d_kernel.h"
+#include "ppl/nn/engines/arm/optimizer/algos/conv2d_algo_selector.h"
 #include "ppl/nn/engines/arm/utils/data_trans.h"
 #include "ppl/nn/engines/utils.h"
 #include "ppl/nn/oputils/onnx/reshape_conv.h"
@@ -159,9 +160,10 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
         conv2d_kernel_param.channels = channels;
         conv2d_kernel_param.fuse_flag = 0;
 
-        conv2d_param_->mgr = ppl::kernel::arm_server::neon::conv2d_algo_selector::fast_gen_algo(
-            *info.GetInput<TensorImpl>(0)->GetShape(), *options.engine_options, options.device->GetISA(),
-            conv2d_param_->param, options.device->GetAllocator());
+        conv2d_param_->mgr = conv2d_algo_selector::fast_gen_algo(
+            *info.GetInput<TensorImpl>(0)->GetShape(), options.engine_options->forward_precision,
+            options.engine_options->dynamic_tuning_level, options.engine_options->winograd_level, 
+            options.device->GetISA(), conv2d_param_->param, options.device->GetAllocator());
 
         if (conv2d_param_->mgr == nullptr) {
             LOG(ERROR) << "No algorithm selected.";
@@ -202,41 +204,73 @@ ppl::common::RetCode ConvOp::SelectAlgorithm(const InputOutputInfo& info, const 
         }
 
         ppl::common::RetCode normal_cvt_weights_ret = ppl::common::RC_SUCCESS;
-        ppl::common::RetCode fallback_cvt_weights_ret = ppl::common::RC_SUCCESS;
         if (selected_algo.data_type == ppl::common::DATATYPE_FLOAT32) {
-            normal_cvt_weights_ret = conv2d_param_->mgr->generate_cvt_weights(weight_data, bias_data, new_filter, new_bias);
+            ppl::common::TensorShape cvt_filter_shape, cvt_bias_shape;
+            normal_cvt_weights_ret = conv2d_param_->mgr->generate_cvt_weights_shapes(cvt_filter_shape, cvt_bias_shape);
             if (normal_cvt_weights_ret != ppl::common::RC_SUCCESS) {
                 return normal_cvt_weights_ret;
             }
-            if (conv2d_param_->fallback_mgr) {
-                fallback_cvt_weights_ret = conv2d_param_->fallback_mgr->generate_cvt_weights(weight_data, bias_data, new_filter, new_bias);
-                
+            
+            if (new_bias && new_bias->IsBufferOwner() && new_bias->GetBufferPtr()) {
+                bias_data = nullptr;
+            } else if (bias_data && new_bias) {
+                new_bias->Reshape(cvt_bias_shape);
+                new_bias->ReallocBuffer();
+            }
+
+            new_filter->Reshape(cvt_filter_shape);
+            new_filter->ReallocBuffer();
+
+            void *cvt_filter_buffer = (new_filter) ? new_filter->GetBufferPtr() : nullptr;
+            void *cvt_bias_buffer   = (new_bias  ) ? new_bias->GetBufferPtr()   : nullptr;
+
+            normal_cvt_weights_ret = conv2d_param_->mgr->generate_cvt_weights(weight_data, bias_data, cvt_filter_buffer, cvt_bias_buffer);
+            if (normal_cvt_weights_ret != ppl::common::RC_SUCCESS) {
+                return normal_cvt_weights_ret;
             }
 #ifdef PPLNN_USE_ARMV8_2_FP16
         } else if (selected_algo.data_type == ppl::common::DATATYPE_FLOAT16) {
+            ppl::common::TensorShape cvt_filter_shape, cvt_bias_shape;
+            normal_cvt_weights_ret = conv2d_param_->mgr->generate_cvt_weights_shapes(cvt_filter_shape, cvt_bias_shape);
+            if (normal_cvt_weights_ret != ppl::common::RC_SUCCESS) {
+                return normal_cvt_weights_ret;
+            }
+
             vector<__fp16> weight_data_fp16;
             weight_data_fp16.resize(weight_len * sizeof(__fp16));
             Fp32ToFp16(weight_data, weight_len, weight_data_fp16.data());
 
             vector<__fp16> bias_data_fp16;
+            __fp16 * origin_bias_data_fp16 = nullptr;
             if (bias_data != nullptr) {
                 bias_data_fp16.resize(bias_len * sizeof(__fp16));
                 Fp32ToFp16(bias_data, bias_len, bias_data_fp16.data());
+                origin_bias_data_fp16 = bias_data_fp16.data();
             }
 
-            normal_cvt_weights_ret = conv2d_param_->mgr->generate_cvt_weights(weight_data_fp16.data(), bias_data_fp16.data(), new_filter, new_bias);
+            if (new_bias && new_bias->IsBufferOwner() && new_bias->GetBufferPtr()) {
+                origin_bias_data_fp16 = nullptr;
+            } else if (origin_bias_data_fp16 && new_bias) {
+                new_bias->Reshape(cvt_bias_shape);
+                new_bias->ReallocBuffer();
+            }
+
+            new_filter->Reshape(cvt_filter_shape);
+            new_filter->ReallocBuffer();
+
+            void *cvt_filter_buffer = (new_filter) ? new_filter->GetBufferPtr() : nullptr;
+            void *cvt_bias_buffer   = (new_bias  ) ? new_bias->GetBufferPtr()   : nullptr;
+
+            normal_cvt_weights_ret = conv2d_param_->mgr->generate_cvt_weights(weight_data_fp16.data(), origin_bias_data_fp16, cvt_filter_buffer, cvt_bias_buffer);
             if (normal_cvt_weights_ret != ppl::common::RC_SUCCESS) {
                 return normal_cvt_weights_ret;
-            }
-            if (conv2d_param_->fallback_mgr) {
-                fallback_cvt_weights_ret = conv2d_param_->fallback_mgr->generate_cvt_weights(weight_data_fp16.data(), bias_data_fp16.data(), new_filter, new_bias);
             }
 #endif
         } else {
             LOG(ERROR) << "Unsupported data type: " << selected_algo.data_type;
             return ppl::common::RC_UNSUPPORTED;
         }
-        if (ppl::common::RC_SUCCESS != normal_cvt_weights_ret || ppl::common::RC_SUCCESS != fallback_cvt_weights_ret) {
+        if (ppl::common::RC_SUCCESS != normal_cvt_weights_ret) {
             LOG(ERROR) << "algo " << selected_algo.algo_type << " cvt weights failed.";
         }
     } else {

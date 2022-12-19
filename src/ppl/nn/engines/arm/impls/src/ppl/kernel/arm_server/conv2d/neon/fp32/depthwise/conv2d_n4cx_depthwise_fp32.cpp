@@ -20,6 +20,7 @@
 #include <arm_neon.h>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
@@ -210,6 +211,8 @@ void conv_n4cx_depthwise_f3sx_h1w4<0, 1>(
                 float *output_c_base                 = output + b * output_batch_stride + c * dst_hW;
                 float *sum_c_base                    = sum + b * output_batch_stride + c * dst_hW;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
                 float32x4_t vflt[9];
                 vflt[0]           = vld1q_f32(converted_filter_c_base + 0 * CBLK());
                 vflt[1]           = vld1q_f32(converted_filter_c_base + 1 * CBLK());
@@ -382,6 +385,7 @@ void conv_n4cx_depthwise_f3sx_h1w4<0, 1>(
                         vst1q_f32(output_ptr, vout[0]);
                     }
                 }
+#pragma GCC diagnostic pop
             }
         }
     }
@@ -422,6 +426,8 @@ void conv_n4cx_depthwise_f3sx_h1w4<1, 1>(
 
         int64_t p_c = -1;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
         float32x4_t vflt[9];
         float32x4_t vbias;
 
@@ -926,6 +932,7 @@ void conv_n4cx_depthwise_f3sx_h1w4<1, 1>(
                 }
             }
         }
+#pragma GCC diagnostic pop
     }
 }
 
@@ -962,6 +969,8 @@ void conv_n4cx_depthwise_f3sx_h1w4<0, 2>(
                 float *output_c_base                 = output + b * output_batch_stride + c * dst_hW;
                 float *sum_c_base                    = sum + b * output_batch_stride + c * dst_hW;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
                 float32x4_t vflt[9];
                 vflt[0]           = vld1q_f32(converted_filter_c_base + 0 * CBLK());
                 vflt[1]           = vld1q_f32(converted_filter_c_base + 1 * CBLK());
@@ -1146,6 +1155,7 @@ void conv_n4cx_depthwise_f3sx_h1w4<0, 2>(
                         vst1q_f32(output_ptr, vout[0]);
                     }
                 }
+#pragma GCC diagnostic pop
             }
         }
     }
@@ -1186,6 +1196,8 @@ void conv_n4cx_depthwise_f3sx_h1w4<1, 2>(
 
         int p_c = -1;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
         float32x4_t vflt[9];
         float32x4_t vbias;
 
@@ -1708,6 +1720,7 @@ void conv_n4cx_depthwise_f3sx_h1w4<1, 2>(
                 }
             }
         }
+#pragma GCC diagnostic pop
     }
 }
 
@@ -2028,10 +2041,10 @@ ppl::common::RetCode conv2d_n4cx_depthwise_fp32_offline_manager::fast_init_sched
 }
 
 ppl::common::RetCode conv2d_n4cx_depthwise_fp32_offline_manager::pick_best_schedule_param(
-    const ppl::nn::TensorShape &src_shape,
+    const ppl::common::TensorShape &src_shape,
     void *src,
     void *cvt_bias,
-    const ppl::nn::TensorShape &dst_shape,
+    const ppl::common::TensorShape &dst_shape,
     void *dst,
     bool tune_sp,
     double &run_time)
@@ -2045,11 +2058,34 @@ ppl::common::RetCode conv2d_n4cx_depthwise_fp32_offline_manager::try_fuse(conv_f
         ppl::common::RC_UNSUPPORTED : ppl::common::RC_SUCCESS;
 }
 
+ppl::common::RetCode conv2d_n4cx_depthwise_fp32_offline_manager::generate_cvt_weights_shapes(
+    ppl::common::TensorShape &cvt_filter_shape,
+    ppl::common::TensorShape &cvt_bias_shape)
+{
+    const int64_t num_output = param_.num_output;
+    const int64_t kernel_h   = param_.kernel_h;
+    const int64_t kernel_w   = param_.kernel_w;
+
+    cvt_bias_size_ = CEIL4(num_output) * sizeof(float);
+    cvt_bias_shape.SetDimCount(1);
+    cvt_bias_shape.SetDim(0, cvt_bias_size_/sizeof(float));
+    cvt_bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+    cvt_bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
+
+    cvt_filter_size_ = conv_n4cx_depthwise_get_converted_filter_size(num_output, kernel_h, kernel_w);
+    cvt_filter_shape.SetDimCount(1);
+    cvt_filter_shape.SetDim(0, cvt_filter_size_/sizeof(float));
+    cvt_filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+    cvt_filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
+
+    return ppl::common::RC_SUCCESS;
+}
+
 ppl::common::RetCode conv2d_n4cx_depthwise_fp32_offline_manager::generate_cvt_weights(
     const void *filter,
     const void *bias,
-    ppl::nn::TensorBufferInfo* new_filter,
-    ppl::nn::TensorBufferInfo* new_bias)
+    void* new_filter,
+    void* new_bias)
 {
     if (cvt_bias_ != nullptr || cvt_filter_ != nullptr) {
         return ppl::common::RC_PERMISSION_DENIED;
@@ -2060,38 +2096,22 @@ ppl::common::RetCode conv2d_n4cx_depthwise_fp32_offline_manager::generate_cvt_we
     const int64_t kernel_w   = param_.kernel_w;
 
     cvt_bias_size_ = CEIL4(num_output) * sizeof(float);
-    if (new_bias && new_bias->IsBufferOwner() && new_bias->GetBufferPtr()) {
-        cvt_bias_ = new_bias->GetBufferPtr<float>();
+    if (!bias && new_bias) {
+        cvt_bias_ = new_bias;
     } else if (bias && new_bias) {
-        ppl::nn::TensorShape bias_shape;
-        bias_shape.SetDimCount(1);
-        bias_shape.SetDim(0, cvt_bias_size_/sizeof(float));
-        bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-        bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
-
-        new_bias->Reshape(bias_shape);
-        new_bias->ReallocBuffer();
-        cvt_bias_ = new_bias->GetBufferPtr<float>();
+        cvt_bias_ = new_bias;
         int64_t padding_offset_bytes = num_output * sizeof(float);
         int64_t padding_bytes        = (CEIL4(num_output) - num_output) * sizeof(float);
-        memcpy(cvt_bias_, bias, num_output * sizeof(float));
-        memset((uint8_t *)cvt_bias_ + padding_offset_bytes, 0, padding_bytes);
+        std::memcpy(cvt_bias_, bias, num_output * sizeof(float));
+        std::memset((uint8_t *)cvt_bias_ + padding_offset_bytes, 0, padding_bytes);
     } else {
         cvt_bias_ = allocator_->Alloc(cvt_bias_size_);
-        memset(cvt_bias_, 0, cvt_bias_size_);
+        std::memset(cvt_bias_, 0, cvt_bias_size_);
         is_bias_owner_ = true;
     }
 
     cvt_filter_size_ = conv_n4cx_depthwise_get_converted_filter_size(num_output, kernel_h, kernel_w);
-    ppl::nn::TensorShape filter_shape;
-    filter_shape.SetDimCount(1);
-    filter_shape.SetDim(0, cvt_filter_size_/sizeof(float));
-    filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-    filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
-
-    new_filter->Reshape(filter_shape);
-    new_filter->ReallocBuffer();
-    cvt_filter_ = new_filter->GetBufferPtr<float>();
+    cvt_filter_ = new_filter;
     conv_n4cx_depthwise_convert_filter(
         (const float *)filter, (float *)cvt_filter_, num_output, kernel_h, kernel_w);
     

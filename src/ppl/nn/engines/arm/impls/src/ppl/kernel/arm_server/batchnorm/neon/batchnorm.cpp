@@ -24,7 +24,7 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 template <typename eT, bool fuse_relu>
 static ppl::common::RetCode batchnorm_ndarray_common(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const eT *src,
     const eT *mean,
     const eT *variance,
@@ -89,7 +89,7 @@ static ppl::common::RetCode batchnorm_ndarray_common(
 
 template <typename eT, int32_t c_blk, bool fuse_relu>
 static ppl::common::RetCode batchnorm_nbcx_common(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const eT *src,
     const eT *mean,
     const eT *variance,
@@ -168,7 +168,7 @@ static ppl::common::RetCode batchnorm_nbcx_common(
 
 template <typename eT, bool fuse_relu>
 static ppl::common::RetCode batchnorm_wrapper(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const void *src,
     const void *mean,
     const void *variance,
@@ -200,7 +200,7 @@ static ppl::common::RetCode batchnorm_wrapper(
 }
 
 ppl::common::RetCode batchnorm(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const void *src,
     const void *mean,
     const void *variance,

@@ -15,8 +15,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/kernel/arm_server/conv2d/neon/conv2d.h"
+#include "conv2d_algo_selector.h"
 
+#include "ppl/common/allocator.h"
 #ifdef PPLNN_USE_AARCH64
 #include "ppl/kernel/arm_server/conv2d/neon/fp16/depthwise/conv2d_n8cx_depthwise_fp16.h"
 #include "ppl/kernel/arm_server/conv2d/neon/fp16/direct/conv2d_n8cx_direct_fp16.h"
@@ -32,107 +33,29 @@
 #include "ppl/kernel/arm_server/conv2d/neon/fp32/winograd/conv2d_wgb2f3_fp32.h"
 #include "ppl/kernel/arm_server/conv2d/neon/fp32/winograd/conv2d_wgb4f3_fp32.h"
 #endif
+#include "ppl/nn/common/logger.h"
+#include "ppl/nn/engines/arm/options.h"
 
 #include <chrono>
 #include <new>
 #include <limits>
 #include <vector>
 
-#include "ppl/nn/engines/arm/utils/macros.h"
+using namespace ppl::kernel::arm_server::neon;
 
-namespace ppl { namespace kernel { namespace arm_server { namespace neon {
-
-conv2d_offline_manager * conv2d_algo::generate_conv_mgr(
-    const ppl::kernel::arm_server::neon::conv2d_algo_t algo,
-    const ppl::common::datatype_t datatype,
-    const conv2d_param &param,
-    ppl::common::Allocator *allocator)
-{
-#ifdef PPLNN_USE_AARCH64
-    switch (algo) {
-        case ppl::kernel::arm_server::neon::conv2d_algo::depthwise:
-            if (datatype == ppl::common::DATATYPE_FLOAT32) {
-                return new conv2d_n4cx_depthwise_fp32_offline_manager(param, allocator);
-            }
-#ifdef PPLNN_USE_ARMV8_2_FP16
-            else if (datatype == ppl::common::DATATYPE_FLOAT16) {
-                return new conv2d_n8cx_depthwise_fp16_offline_manager(param, allocator);
-            }
-#endif
-            break;
-
-        case ppl::kernel::arm_server::neon::conv2d_algo::direct:
-            if (datatype == ppl::common::DATATYPE_FLOAT32) {
-                return new conv2d_n4cx_direct_fp32_offline_manager(param, allocator);
-            }
-#ifdef PPLNN_USE_ARMV8_2_FP16
-            else if (datatype == ppl::common::DATATYPE_FLOAT16) {
-                return new conv2d_n8cx_direct_fp16_offline_manager(param, allocator);
-            }
-#endif
-            break;
-        
-        case ppl::kernel::arm_server::neon::conv2d_algo::direct_ndarray:
-            if (datatype == ppl::common::DATATYPE_FLOAT32) {
-                return new conv2d_direct_ndarray_fp32_offline_manager(param, allocator);
-            }
-#ifdef PPLNN_USE_ARMV8_2_FP16
-            else if (datatype == ppl::common::DATATYPE_FLOAT16) {
-                return new conv2d_direct_ndarray_fp16_offline_manager(param, allocator);
-            }
-#endif
-            break;
-
-        case ppl::kernel::arm_server::neon::conv2d_algo::winograd_b2f3:
-            if (datatype == ppl::common::DATATYPE_FLOAT32) {
-                return new conv2d_wgb2f3_fp32_offline_manager(param, allocator);
-            }
-#ifdef PPLNN_USE_ARMV8_2_FP16
-            else if (datatype == ppl::common::DATATYPE_FLOAT16) {
-                return new conv2d_wgb2f3_fp16_offline_manager(param, allocator);
-            }
-#endif
-            break;
-
-        case ppl::kernel::arm_server::neon::conv2d_algo::winograd_b4f3:
-            if (datatype == ppl::common::DATATYPE_FLOAT32) {
-                return new conv2d_wgb4f3_fp32_offline_manager(param, allocator);
-            }
-#ifdef PPLNN_USE_ARMV8_2_FP16
-            else if (datatype == ppl::common::DATATYPE_FLOAT16) {
-                return new conv2d_wgb4f3_fp16_offline_manager(param, allocator);
-            }
-#endif
-            break;
-
-        case ppl::kernel::arm_server::neon::conv2d_algo::tile_gemm:
-            if (datatype == ppl::common::DATATYPE_FLOAT32) {
-                return new conv2d_n4cx_im2col_fp32_offline_manager(param, allocator);
-            }
-#ifdef PPLNN_USE_ARMV8_2_FP16
-            else if (datatype == ppl::common::DATATYPE_FLOAT16) {
-                return new conv2d_n8cx_im2col_fp16_offline_manager(param, allocator);
-            }
-#endif
-            break;
-
-        default:
-            return nullptr;
-    }
-#endif
-
-    return nullptr;
-}
+namespace ppl { namespace nn { namespace arm {
 
 conv2d_offline_manager *conv2d_algo_selector::fast_gen_algo(
-    const ppl::nn::TensorShape &shape,
-    const ppl::nn::arm::EngineOptions &options,
+    const ppl::common::TensorShape &shape,
+    const ppl::common::dataformat_t forward_precision, 
+    const int32_t dynamic_tuning_level, 
+    const int32_t winograd_level,
     const ppl::common::isa_t isa_flags,
     const conv2d_param &param,
     ppl::common::Allocator *allocator)
 {
 #ifdef PPLNN_USE_AARCH64
-    ppl::common::datatype_t preferred_data_type = options.forward_precision;
+    ppl::common::datatype_t preferred_data_type = forward_precision;
     ppl::common::dataformat_t src_format        = shape.GetDataFormat();
 
     const bool src_shape_inferred = shape.GetDimCount() >= 4;
@@ -250,13 +173,13 @@ conv2d_offline_manager *conv2d_algo_selector::fast_gen_algo(
         }
     }
 
-    const bool use_tuning = src_shape_inferred && (options.dynamic_tuning_level != ppl::nn::arm::TUNING_OFF);
+    const bool use_tuning = src_shape_inferred && (dynamic_tuning_level != ppl::nn::arm::TUNING_OFF);
     if (use_tuning) {
-        return gen_fast_algo(shape, options, isa_flags, param, allocator);
+        return gen_fast_algo(shape, forward_precision, dynamic_tuning_level, winograd_level, isa_flags, param, allocator);
     }
 
     // check winograd
-    if (options.winograd_level != ppl::nn::arm::WG_OFF &&
+    if (winograd_level != ppl::nn::arm::WG_OFF &&
         param.kernel_h == 3 &&
         param.kernel_w == 3 &&
         param.stride_h == 1 &&
@@ -265,7 +188,7 @@ conv2d_offline_manager *conv2d_algo_selector::fast_gen_algo(
         param.dilation_w == 1 &&
         param.channels >= 32 &&
         param.num_output >= 32) {
-        switch (options.winograd_level) {
+        switch (winograd_level) {
             case ppl::nn::arm::WG_ON:
                 if (src_shape_inferred && src_h % 4 == 0 && src_w % 4 == 0) {
                     target_algo.algo_type = ppl::kernel::arm_server::neon::conv2d_algo::winograd_b4f3;
@@ -384,14 +307,16 @@ conv2d_offline_manager *conv2d_algo_selector::fast_gen_algo(
 }
 
 conv2d_offline_manager *conv2d_algo_selector::gen_fast_algo(
-    const ppl::nn::TensorShape &src_shape,
-    const ppl::nn::arm::EngineOptions &options,
+    const ppl::common::TensorShape &src_shape,
+    const ppl::common::dataformat_t forward_precision, 
+    const int32_t dynamic_tuning_level, 
+    const int32_t winograd_level,
     const ppl::common::isa_t isa_flags,
     const conv2d_param &param,
     ppl::common::Allocator *allocator)
 {
 #ifdef PPLNN_USE_AARCH64
-    ppl::common::datatype_t preferred_data_type = options.forward_precision;
+    ppl::common::datatype_t preferred_data_type = forward_precision;
     ppl::common::dataformat_t src_format        = src_shape.GetDataFormat();
 
     const bool src_shape_inferred = src_shape.GetDimCount() >= 4;
@@ -537,7 +462,7 @@ conv2d_offline_manager *conv2d_algo_selector::gen_fast_algo(
     const uint32_t pad_num_outs = ((param.num_output + (num_lanes - 1)) / num_lanes) * num_lanes;
 
     const int64_t num_batch = src_shape.GetDim(0);
-    ppl::nn::TensorShape dst_shape;
+    ppl::common::TensorShape dst_shape;
     dst_shape.Reshape({num_batch, pad_num_outs, dst_h, dst_w});
 
     const size_t src_size  = num_batch * pad_channels * src_h * src_w * elem_size;
@@ -589,4 +514,4 @@ conv2d_offline_manager *conv2d_algo_selector::gen_fast_algo(
 #endif
 }
 
-}}}}; // namespace ppl::kernel::arm_server::neon
+}}}; // namespace ppl::nn::arm

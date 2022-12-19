@@ -24,12 +24,14 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 ppl::common::RetCode resize2d(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src,
     const float scale_h,
     const float scale_w,
-    const ppl::nn::onnx::ResizeParam *param,
+    const int32_t coord_trans_mode,
+    const int32_t mode,
+    const float cubic_coeff_a,
     void *dst);
 
 }}}}; // namespace ppl::kernel::arm_server::neon

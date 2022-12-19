@@ -42,8 +42,8 @@ struct split_parallel_info {
 
 template <typename eT>
 static ppl::common::RetCode split_ndarray(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape **dst_shape_list,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape **dst_shape_list,
     const eT *src,
     const int64_t slice_axis,
     const int64_t num_dst,
@@ -134,8 +134,8 @@ static ppl::common::RetCode split_ndarray(
 
 template <typename eT, int32_t c_blk>
 static ppl::common::RetCode split_nbcx_interleave_channels(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape **dst_shape_list,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape **dst_shape_list,
     const eT *src,
     const int64_t slice_axis,
     const int64_t num_dst,
@@ -222,8 +222,8 @@ static ppl::common::RetCode split_nbcx_interleave_channels(
 
 template <typename eT, int32_t c_blk>
 static ppl::common::RetCode split_nbcx(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape **dst_shape_list,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape **dst_shape_list,
     const eT *src,
     const int64_t slice_axis,
     const int64_t num_dst,
@@ -375,8 +375,8 @@ static ppl::common::RetCode split_nbcx(
 
 template <typename eT>
 static ppl::common::RetCode split_wrapper(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape **dst_shape_list,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape **dst_shape_list,
     const void *src,
     const int64_t slice_axis,
     const int64_t num_dst,
@@ -403,8 +403,8 @@ static ppl::common::RetCode split_wrapper(
 }
 
 ppl::common::RetCode split(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape **dst_shape_list,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape **dst_shape_list,
     const void *src,
     const int64_t slice_axis,
     const int64_t num_dst,

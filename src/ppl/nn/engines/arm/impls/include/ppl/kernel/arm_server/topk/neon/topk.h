@@ -23,14 +23,14 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 uint64_t topk_ndarray_get_buffer_bytes(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const int32_t axis);
 
 
 ppl::common::RetCode topk(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *value_shape,
-    const ppl::nn::TensorShape *indices_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *value_shape,
+    const ppl::common::TensorShape *indices_shape,
     const void *src,
     const int64_t k,
     const int32_t axis,

@@ -25,7 +25,7 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 template <typename eT>
 static ppl::common::RetCode hard_sigmoid_common(
-    const ppl::nn::TensorShape* src_shape,
+    const ppl::common::TensorShape* src_shape,
     const eT* src,
     const eT alpha,
     const eT beta,
@@ -63,7 +63,7 @@ static ppl::common::RetCode hard_sigmoid_common(
 }
 
 ppl::common::RetCode hard_sigmoid(
-    const ppl::nn::TensorShape* src_shape,
+    const ppl::common::TensorShape* src_shape,
     const void* src,
     const float alpha,
     const float beta,

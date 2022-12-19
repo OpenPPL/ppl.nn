@@ -23,9 +23,9 @@
 
 #include <arm_neon.h>
 #include <new>
-#include <string.h>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #if defined PPL_USE_ARM_SERVER_OMP
 #include <omp.h>
@@ -116,7 +116,7 @@ ppl::common::RetCode conv2d_direct_ndarray_fp16_runtime_executor::execute()
             const __fp16 *input_batch_base = input + batch_id * input_chw_num;
             for (int64_t ic_l1 = 0; ic_l1 < channels; ic_l1 += ic_tile) {
                 const int64_t ic_remain     = std::min(ic_tile, channels - ic_l1);
-                const uint32_t fuse_flag    = (ic_l1 + ic_tile >= channels) ? cp.fuse_flag : (const uint32_t)conv_fuse_flag::NONE;
+                const uint32_t fuse_flag    = (ic_l1 + ic_tile >= channels) ? cp.fuse_flag : static_cast<uint32_t>(conv_fuse_flag::NONE);
                 const __fp16 *input_ic_base = input_batch_base + ic_l1 * input_hw_num;
                 for (int64_t oc_l1 = 0; oc_l1 < num_output_pck; oc_l1 += ocblk2) {
                     const __fp16 *filter_cc_base     = cvt_filter + oc_l1 * flt_ichw_num + ic_l1 * flt_ic_stride;
@@ -266,10 +266,10 @@ ppl::common::RetCode conv2d_direct_ndarray_fp16_offline_manager::fast_init_sched
 }
 
 ppl::common::RetCode conv2d_direct_ndarray_fp16_offline_manager::pick_best_schedule_param(
-    const ppl::nn::TensorShape &src_shape,
+    const ppl::common::TensorShape &src_shape,
     void *src,
     void *cvt_bias,
-    const ppl::nn::TensorShape &dst_shape,
+    const ppl::common::TensorShape &dst_shape,
     void *dst,
     bool tune_sp,
     double &run_time)
@@ -278,7 +278,7 @@ ppl::common::RetCode conv2d_direct_ndarray_fp16_offline_manager::pick_best_sched
 }
 
 // NOTE: (oc, ic, kh, kw) -> (oc/8, ic, kh, kw, 8oc)
-static inline int64_t ppl_arm_server_kernel_fp16_conv_direct_n4cx_get_converted_filter_size(
+static inline int64_t ppl_arm_server_kernel_fp16_conv_direct_n8cx_get_converted_filter_size(
     const int64_t channels,
     const int64_t num_output,
     const int64_t flt_h,
@@ -288,7 +288,7 @@ static inline int64_t ppl_arm_server_kernel_fp16_conv_direct_n4cx_get_converted_
 }
 
 // NOTE: (oc, ic, kh, kw) -> (oc/16, ic, kh, kw, 16oc)
-static void ppl_arm_server_kernel_fp16_conv_direct_n4cx_convert_filter(
+static void ppl_arm_server_kernel_fp16_conv_direct_n8cx_convert_filter(
     const __fp16 *filter,
     __fp16 *converted_filter,
     const int64_t channels,
@@ -335,11 +335,36 @@ ppl::common::RetCode conv2d_direct_ndarray_fp16_offline_manager::try_fuse(conv_f
 }
 
 // should be called after init_schedule_param
+ppl::common::RetCode conv2d_direct_ndarray_fp16_offline_manager::generate_cvt_weights_shapes(
+    ppl::common::TensorShape &cvt_filter_shape,
+    ppl::common::TensorShape &cvt_bias_shape)
+{
+    const int64_t num_output = param_.num_output;
+    const int64_t channels   = param_.channels;
+    const int64_t kernel_h   = param_.kernel_h;
+    const int64_t kernel_w   = param_.kernel_w;
+
+    cvt_bias_size_ = CEIL8(num_output) * sizeof(__fp16);
+    cvt_bias_shape.SetDimCount(1);
+    cvt_bias_shape.SetDim(0, cvt_bias_size_/sizeof(__fp16));
+    cvt_bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+    cvt_bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
+
+    cvt_filter_size_ = ppl_arm_server_kernel_fp16_conv_direct_n8cx_get_converted_filter_size(
+        channels, num_output, kernel_h, kernel_w);
+    cvt_filter_shape.SetDimCount(1);
+    cvt_filter_shape.SetDim(0, cvt_filter_size_/sizeof(__fp16));
+    cvt_filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+    cvt_filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
+
+    return ppl::common::RC_SUCCESS;
+}
+
 ppl::common::RetCode conv2d_direct_ndarray_fp16_offline_manager::generate_cvt_weights(
     const void *filter,
     const void *bias,
-    ppl::nn::TensorBufferInfo* new_filter,
-    ppl::nn::TensorBufferInfo* new_bias)
+    void* new_filter,
+    void* new_bias)
 {
     if (cvt_bias_ != nullptr || cvt_filter_ != nullptr) {
         return ppl::common::RC_PERMISSION_DENIED;
@@ -350,19 +375,10 @@ ppl::common::RetCode conv2d_direct_ndarray_fp16_offline_manager::generate_cvt_we
     const int64_t kernel_h   = param_.kernel_h;
     const int64_t kernel_w   = param_.kernel_w;
 
-    cvt_bias_size_ = CEIL8(num_output) * sizeof(__fp16);
-    if (new_bias && new_bias->IsBufferOwner() && new_bias->GetBufferPtr()) {
-        cvt_bias_ = new_bias->GetBufferPtr<__fp16>();
+    if (!bias && new_bias) {
+        cvt_bias_ = new_bias;
     } else if (bias && new_bias) {
-        ppl::nn::TensorShape bias_shape;
-        bias_shape.SetDimCount(1);
-        bias_shape.SetDim(0, cvt_bias_size_/sizeof(__fp16));
-        bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-        bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
-
-        new_bias->Reshape(bias_shape);
-        new_bias->ReallocBuffer();
-        cvt_bias_ = new_bias->GetBufferPtr<__fp16>();
+        cvt_bias_ = new_bias;
         int64_t padding_offset_bytes = num_output * sizeof(__fp16);
         int64_t padding_bytes        = (CEIL8(num_output) - num_output) * sizeof(__fp16);
         memcpy(cvt_bias_, bias, num_output * sizeof(__fp16));
@@ -373,18 +389,8 @@ ppl::common::RetCode conv2d_direct_ndarray_fp16_offline_manager::generate_cvt_we
         is_bias_owner_ = true;
     }
 
-    cvt_filter_size_ = ppl_arm_server_kernel_fp16_conv_direct_n4cx_get_converted_filter_size(
-        channels, num_output, kernel_h, kernel_w);
-    ppl::nn::TensorShape filter_shape;
-    filter_shape.SetDimCount(1);
-    filter_shape.SetDim(0, cvt_filter_size_/sizeof(__fp16));
-    filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-    filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
-
-    new_filter->Reshape(filter_shape);
-    new_filter->ReallocBuffer();
-    cvt_filter_ = new_filter->GetBufferPtr<__fp16>();
-    ppl_arm_server_kernel_fp16_conv_direct_n4cx_convert_filter(
+    cvt_filter_ = new_filter;
+    ppl_arm_server_kernel_fp16_conv_direct_n8cx_convert_filter(
         (const __fp16 *)filter,
         (__fp16 *)cvt_filter_,
         channels,

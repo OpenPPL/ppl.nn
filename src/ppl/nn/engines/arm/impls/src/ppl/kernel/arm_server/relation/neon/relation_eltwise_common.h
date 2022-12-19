@@ -25,7 +25,7 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 template <typename eT, relation_op_type_t op_type>
 static ppl::common::RetCode relation_eltwise_common(
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src0,
     const eT *src1,
     uint8_t *dst)

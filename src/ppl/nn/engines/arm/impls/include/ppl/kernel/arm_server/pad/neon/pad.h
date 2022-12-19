@@ -23,8 +23,8 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 ppl::common::RetCode pad_constant(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src,
     const int64_t *start_pads,
     const int64_t *end_pads,
@@ -32,8 +32,8 @@ ppl::common::RetCode pad_constant(
     void *dst);
 
 ppl::common::RetCode pad_reflect(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src,
     const int64_t *start_pads,
     const int64_t *end_pads,
@@ -41,8 +41,8 @@ ppl::common::RetCode pad_reflect(
     void *dst);
 
 ppl::common::RetCode pad_edge(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src,
     const int64_t *start_pads,
     const int64_t *end_pads,

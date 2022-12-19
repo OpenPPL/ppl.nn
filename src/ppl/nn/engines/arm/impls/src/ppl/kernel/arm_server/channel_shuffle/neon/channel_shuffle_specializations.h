@@ -55,10 +55,10 @@ inline void channel_shuffle_nbcx_pad_channel_c_blk_half(
  */
 template <typename eT, int32_t c_blk>
 static ppl::common::RetCode channel_shuffle_nbcx_concat_split_same2group_common(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst0_shape,
-    const ppl::nn::TensorShape *dst1_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst0_shape,
+    const ppl::common::TensorShape *dst1_shape,
     const eT *src0,
     const eT *src1,
     const int32_t group,

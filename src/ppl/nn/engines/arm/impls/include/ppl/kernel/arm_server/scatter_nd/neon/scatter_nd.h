@@ -23,7 +23,7 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 ppl::common::RetCode scatter_nd_ndarray(
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     const void *src,
     const void *updates,
     const int64_t *indices,

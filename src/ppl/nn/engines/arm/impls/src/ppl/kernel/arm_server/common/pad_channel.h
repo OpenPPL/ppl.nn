@@ -23,7 +23,7 @@
 namespace ppl { namespace kernel { namespace arm_server {
 
 ppl::common::RetCode pad_channel_zero(
-    const ppl::nn::TensorShape* shape, 
+    const ppl::common::TensorShape* shape, 
     void* data);
 
 }}}; // namespace ppl::kernel::arm_server

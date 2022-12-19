@@ -25,13 +25,13 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 ppl::common::RetCode softmax(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const void *src,
     void *dst,
     const int64_t axis);
 
 ppl::common::RetCode softmax_opset13(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const void *src,
     void *dst,
     const int64_t axis);

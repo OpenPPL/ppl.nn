@@ -26,7 +26,7 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 template <typename eT, arithmetic_op_type_t op_type, bool fuse_relu>
 static ppl::common::RetCode arithmetic_eltwise_common(
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src0,
     const eT *src1,
     eT *dst)

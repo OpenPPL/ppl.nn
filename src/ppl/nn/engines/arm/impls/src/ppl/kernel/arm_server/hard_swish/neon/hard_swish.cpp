@@ -25,7 +25,7 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 template <typename eT>
 static ppl::common::RetCode hard_swish_common(
-    const ppl::nn::TensorShape* src_shape,
+    const ppl::common::TensorShape* src_shape,
     const eT* src,
     eT* dst)
 {
@@ -67,7 +67,7 @@ static ppl::common::RetCode hard_swish_common(
 }
 
 ppl::common::RetCode hard_swish(
-    const ppl::nn::TensorShape* src_shape,
+    const ppl::common::TensorShape* src_shape,
     const void* src,
     void* dst)
 {

@@ -43,7 +43,7 @@ struct concat_parallel_info {
 
 template <typename eT>
 static ppl::common::RetCode concat_ndarray(
-    const ppl::nn::TensorShape **src_shape_list,
+    const ppl::common::TensorShape **src_shape_list,
     const eT **src_list,
     const int64_t num_src,
     const int64_t axis,
@@ -143,7 +143,7 @@ static ppl::common::RetCode concat_ndarray(
 
 template <typename eT, int32_t c_blk>
 static ppl::common::RetCode concat_nbcx_interleave_channels(
-    const ppl::nn::TensorShape **src_shape_list,
+    const ppl::common::TensorShape **src_shape_list,
     const eT **src_list,
     const int64_t num_src,
     const int64_t axis,
@@ -236,7 +236,7 @@ static ppl::common::RetCode concat_nbcx_interleave_channels(
 
 template <typename eT, int32_t c_blk>
 static ppl::common::RetCode concat_nbcx(
-    const ppl::nn::TensorShape **src_shape_list,
+    const ppl::common::TensorShape **src_shape_list,
     const eT **src_list,
     const int64_t num_src,
     const int64_t axis,
@@ -392,7 +392,7 @@ static ppl::common::RetCode concat_nbcx(
 
 template <typename eT>
 static ppl::common::RetCode concat_wrapper(
-    const ppl::nn::TensorShape **src_shape_list,
+    const ppl::common::TensorShape **src_shape_list,
     const void **src_list,
     const int64_t num_src,
     const int64_t axis,
@@ -419,7 +419,7 @@ static ppl::common::RetCode concat_wrapper(
 }
 
 ppl::common::RetCode concat(
-    const ppl::nn::TensorShape **src_shape_list,
+    const ppl::common::TensorShape **src_shape_list,
     const void **src_list,
     const int64_t num_src,
     const int64_t axis,

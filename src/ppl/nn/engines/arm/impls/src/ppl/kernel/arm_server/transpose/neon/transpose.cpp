@@ -310,8 +310,8 @@ inline void merge_transpose_dims(
 
 template <typename eT>
 static ppl::common::RetCode transpose_ndarray_common(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const int64_t *perm,
     const eT *src,
     eT *dst)
@@ -385,8 +385,8 @@ static ppl::common::RetCode transpose_ndarray_common(
 }
 
 ppl::common::RetCode transpose(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const int64_t *perm,
     const void *src,
     void *dst)

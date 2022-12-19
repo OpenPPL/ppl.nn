@@ -137,24 +137,56 @@ ppl::common::RetCode GemmOp::SelectAlgorithm(const InputOutputInfo& info, const 
                 new_bias->SetDevice(options.device);
             }
 
-            if (bias_data != nullptr) {
-                if (dtype == ppl::common::DATATYPE_FLOAT32) {
-                    fc_param_->mgr->generate_cvt_weights(new_filter, new_bias, weight_data, bias_data, dtype);
-#ifdef PPLNN_USE_ARMV8_2_FP16
-                } else if (dtype == ppl::common::DATATYPE_FLOAT16) {
-                    vector<__fp16> weight_data_fp16;
-                    weight_data_fp16.resize(weight_len * sizeof(__fp16));
-                    Fp32ToFp16((const float*)weight_data, weight_len, weight_data_fp16.data());
+            if (dtype == ppl::common::DATATYPE_FLOAT32) {
+                ppl::common::TensorShape cvt_filter_shape, cvt_bias_shape;
+                fc_param_->mgr->generate_cvt_weights_shapes(cvt_filter_shape, cvt_bias_shape, dtype);
 
-                    vector<__fp16> bias_data_fp16;
-                    if (bias_data != nullptr) {
-                        bias_data_fp16.resize(bias_len * sizeof(__fp16));
-                        Fp32ToFp16((const float*)bias_data, bias_len, bias_data_fp16.data());
-                    }
-
-                    fc_param_->mgr->generate_cvt_weights(new_filter, new_bias, weight_data_fp16.data(), bias_data_fp16.data(), dtype);
-#endif
+                if (new_bias && new_bias->IsBufferOwner() && new_bias->GetBufferPtr()) {
+                    bias_data = nullptr;
+                } else if (bias_data && new_bias) {
+                    new_bias->Reshape(cvt_bias_shape);
+                    new_bias->ReallocBuffer();
                 }
+
+                new_filter->Reshape(cvt_filter_shape);
+                new_filter->ReallocBuffer();
+
+                void *cvt_filter_buffer = (new_filter) ? new_filter->GetBufferPtr() : nullptr;
+                void *cvt_bias_buffer   = (new_bias  ) ? new_bias->GetBufferPtr()   : nullptr;
+
+                fc_param_->mgr->generate_cvt_weights(cvt_filter_buffer, cvt_bias_buffer, weight_data, bias_data, dtype);
+#ifdef PPLNN_USE_ARMV8_2_FP16
+            } else if (dtype == ppl::common::DATATYPE_FLOAT16) {
+                ppl::common::TensorShape cvt_filter_shape, cvt_bias_shape;
+                fc_param_->mgr->generate_cvt_weights_shapes(cvt_filter_shape, cvt_bias_shape, dtype);
+
+                vector<__fp16> weight_data_fp16;
+                weight_data_fp16.resize(weight_len * sizeof(__fp16));
+                Fp32ToFp16((const float*)weight_data, weight_len, weight_data_fp16.data());
+
+                vector<__fp16> bias_data_fp16;
+                __fp16 * origin_bias_data_fp16 = nullptr;
+                if (bias_data != nullptr) {
+                    bias_data_fp16.resize(bias_len * sizeof(__fp16));
+                    Fp32ToFp16((const float*)bias_data, bias_len, bias_data_fp16.data());
+                    origin_bias_data_fp16 = bias_data_fp16.data();
+                }
+
+                if (new_bias && new_bias->IsBufferOwner() && new_bias->GetBufferPtr()) {
+                    origin_bias_data_fp16 = nullptr;
+                } else if (bias_data && new_bias) {
+                    new_bias->Reshape(cvt_bias_shape);
+                    new_bias->ReallocBuffer();
+                }
+
+                new_filter->Reshape(cvt_filter_shape);
+                new_filter->ReallocBuffer();
+
+                void *cvt_filter_buffer = (new_filter) ? new_filter->GetBufferPtr() : nullptr;
+                void *cvt_bias_buffer   = (new_bias  ) ? new_bias->GetBufferPtr()   : nullptr;
+
+                fc_param_->mgr->generate_cvt_weights(cvt_filter_buffer, cvt_bias_buffer, weight_data_fp16.data(), origin_bias_data_fp16, dtype);
+#endif
             }
         }
     } else {

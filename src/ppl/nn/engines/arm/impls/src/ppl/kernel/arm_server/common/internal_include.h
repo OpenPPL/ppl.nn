@@ -20,7 +20,6 @@
 
 #include "ppl/kernel/arm_server/common/math.h"
 #include "ppl/kernel/arm_server/common/general_include.h"
-#include "ppl/nn/engines/arm/utils/macros.h"
 
 #define CEIL2(val)   ((val + 1) & (~1))
 #define CEIL4(val)   ((val + 3) & (~3))

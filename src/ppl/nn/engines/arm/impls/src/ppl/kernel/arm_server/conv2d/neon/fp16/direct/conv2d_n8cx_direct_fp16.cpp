@@ -22,9 +22,9 @@
 #include <arm_neon.h>
 #include <chrono>
 #include <new>
-#include <string.h>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #if defined PPL_USE_ARM_SERVER_OMP
 #include <omp.h>
@@ -282,7 +282,7 @@ ppl::common::RetCode conv2d_n8cx_direct_fp16_runtime_executor::execute()
                 __fp16 *sum_bg_base_ptr            = sum + batch_id * single_batch_output_size + g * oc_group * dst_h * dst_w;
                 for (int64_t ic_l1 = 0; ic_l1 < ic_g_pck; ic_l1 += ic_tile) {
                     const int64_t ic_remain  = ppl::kernel::arm_server::min(ic_tile, ic_g_pck - ic_l1);
-                    const uint32_t fuse_flag = (ic_l1 + ic_tile >= ic_g_pck) ? kernel_fuse_type : (const uint32_t)conv_fuse_flag::NONE;
+                    const uint32_t fuse_flag = (ic_l1 + ic_tile >= ic_g_pck) ? kernel_fuse_type : static_cast<uint32_t>(conv_fuse_flag::NONE);
                     for (int64_t oc_l1 = 0; oc_l1 < oc_g_pck; oc_l1 += ocblk2) {
                         const __fp16 *const bias_ptr = (ic_l1 == 0) ? (bias_g_base + oc_l1) : nullptr;
                         const int64_t oc_remains     = ppl::kernel::arm_server::min(ocblk2, oc_g_pck - oc_l1);
@@ -291,7 +291,7 @@ ppl::common::RetCode conv2d_n8cx_direct_fp16_runtime_executor::execute()
                         for (int64_t oh = 0; oh < dst_h; oh += dst_tile_h) {
 #else
             for (int64_t ic_l1 = 0; ic_l1 < ic_g_pck; ic_l1 += ic_tile) {
-                const uint32_t fuse_flag = (ic_l1 + ic_tile >= ic_g_pck) ? kernel_fuse_type : (const uint32_t)conv_fuse_flag::NONE;
+                const uint32_t fuse_flag = (ic_l1 + ic_tile >= ic_g_pck) ? kernel_fuse_type : static_cast<uint32_t>(conv_fuse_flag::NONE);
                 PRAGMA_OMP_FOR_COLLAPSE(3)
                 for (int64_t batch_id = 0; batch_id < num_batch; batch_id++) {
                     for (int64_t oc_l1 = 0; oc_l1 < oc_g_pck; oc_l1 += ocblk2) {
@@ -478,10 +478,10 @@ static inline int64_t ppl_arm_server_kernel_fp16_conv_direct_n8cx_get_converted_
 }
 
 ppl::common::RetCode conv2d_n8cx_direct_fp16_offline_manager::pick_best_schedule_param(
-    const ppl::nn::TensorShape &src_shape,
+    const ppl::common::TensorShape &src_shape,
     void *src,
     void *cvt_bias,
-    const ppl::nn::TensorShape &dst_shape,
+    const ppl::common::TensorShape &dst_shape,
     void *dst,
     bool tune_sp,
     double &run_time)
@@ -641,11 +641,37 @@ ppl::common::RetCode conv2d_n8cx_direct_fp16_offline_manager::try_fuse(conv_fuse
 }
 
 // should be called after init_schedule_param
+ppl::common::RetCode conv2d_n8cx_direct_fp16_offline_manager::generate_cvt_weights_shapes(
+    ppl::common::TensorShape &cvt_filter_shape,
+    ppl::common::TensorShape &cvt_bias_shape)
+{
+    const int64_t group  = param_.group;
+    const int64_t num_output = param_.num_output;
+    const int64_t channels   = param_.channels;
+    const int64_t kernel_h   = param_.kernel_h;
+    const int64_t kernel_w   = param_.kernel_w;
+
+    cvt_bias_size_ = CEIL8(num_output) * sizeof(__fp16);
+    cvt_bias_shape.SetDimCount(1);
+    cvt_bias_shape.SetDim(0, cvt_bias_size_/sizeof(__fp16));
+    cvt_bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+    cvt_bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
+
+    cvt_filter_size_ = ppl_arm_server_kernel_fp16_conv_direct_n8cx_get_converted_filter_size(
+        group, channels, num_output, kernel_h, kernel_w);
+    cvt_filter_shape.SetDimCount(1);
+    cvt_filter_shape.SetDim(0, cvt_filter_size_/sizeof(__fp16));
+    cvt_filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+    cvt_filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
+
+    return ppl::common::RC_SUCCESS;
+}
+
 ppl::common::RetCode conv2d_n8cx_direct_fp16_offline_manager::generate_cvt_weights(
     const void *filter,
     const void *bias,
-    ppl::nn::TensorBufferInfo* new_filter,
-    ppl::nn::TensorBufferInfo* new_bias)
+    void* new_filter,
+    void* new_bias)
 {
     if (cvt_bias_ != nullptr || cvt_filter_ != nullptr) {
         return ppl::common::RC_PERMISSION_DENIED;
@@ -657,40 +683,21 @@ ppl::common::RetCode conv2d_n8cx_direct_fp16_offline_manager::generate_cvt_weigh
     const int64_t kernel_h   = param_.kernel_h;
     const int64_t kernel_w   = param_.kernel_w;
 
-    cvt_bias_size_ = CEIL8(num_output) * sizeof(__fp16);
-    if (new_bias && new_bias->IsBufferOwner() && new_bias->GetBufferPtr()) {
-        cvt_bias_ = new_bias->GetBufferPtr<__fp16>();
+    if (!bias && new_bias) {
+        cvt_bias_ = new_bias;
     } else if (bias && new_bias) {
-        ppl::nn::TensorShape bias_shape;
-        bias_shape.SetDimCount(1);
-        bias_shape.SetDim(0, cvt_bias_size_/sizeof(__fp16));
-        bias_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-        bias_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
-
-        new_bias->Reshape(bias_shape);
-        new_bias->ReallocBuffer();
-        cvt_bias_ = new_bias->GetBufferPtr<__fp16>();
+        cvt_bias_ = new_bias;
         int64_t padding_offset_bytes = num_output * sizeof(__fp16);
         int64_t padding_bytes        = (CEIL8(num_output) - num_output) * sizeof(__fp16);
-        memcpy(cvt_bias_, bias, num_output * sizeof(__fp16));
-        memset((uint8_t *)cvt_bias_ + padding_offset_bytes, 0, padding_bytes);
+        std::memcpy(cvt_bias_, bias, num_output * sizeof(__fp16));
+        std::memset((uint8_t *)cvt_bias_ + padding_offset_bytes, 0, padding_bytes);
     } else {
         cvt_bias_ = allocator_->Alloc(cvt_bias_size_);
-        memset(cvt_bias_, 0, cvt_bias_size_);
+        std::memset(cvt_bias_, 0, cvt_bias_size_);
         is_bias_owner_ = true;
     }
 
-    cvt_filter_size_ = ppl_arm_server_kernel_fp16_conv_direct_n8cx_get_converted_filter_size(
-        group, channels, num_output, kernel_h, kernel_w);
-    ppl::nn::TensorShape filter_shape;
-    filter_shape.SetDimCount(1);
-    filter_shape.SetDim(0, cvt_filter_size_/sizeof(__fp16));
-    filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-    filter_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
-
-    new_filter->Reshape(filter_shape);
-    new_filter->ReallocBuffer();
-    cvt_filter_ = new_filter->GetBufferPtr<__fp16>();
+    cvt_filter_ = new_filter;
     ppl_arm_server_kernel_fp16_conv_direct_n8cx_convert_filter(
         (const __fp16 *)filter,
         (__fp16 *)cvt_filter_,

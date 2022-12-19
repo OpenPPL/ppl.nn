@@ -30,8 +30,8 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 template <typename eT, reduce_op_type_t op_type>
 static ppl::common::RetCode reduce(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     const int32_t *axes,
     const int32_t num_axes,
@@ -77,8 +77,8 @@ static ppl::common::RetCode reduce(
 
 template <reduce_op_type_t op_type>
 static ppl::common::RetCode reduce_wrapper(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src,
     const int32_t *axes,
     const int32_t num_axes,
@@ -97,8 +97,8 @@ static ppl::common::RetCode reduce_wrapper(
 }
 
 ppl::common::RetCode reduce_max(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src,
     const int32_t *axes,
     const int32_t num_axes,
@@ -108,8 +108,8 @@ ppl::common::RetCode reduce_max(
 }
 
 ppl::common::RetCode reduce_min(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src,
     const int32_t *axes,
     const int32_t num_axes,
@@ -119,8 +119,8 @@ ppl::common::RetCode reduce_min(
 }
 
 ppl::common::RetCode reduce_sum(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src,
     const int32_t *axes,
     const int32_t num_axes,
@@ -130,8 +130,8 @@ ppl::common::RetCode reduce_sum(
 }
 
 ppl::common::RetCode reduce_mean(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src,
     const int32_t *axes,
     const int32_t num_axes,
@@ -141,8 +141,8 @@ ppl::common::RetCode reduce_mean(
 }
 
 ppl::common::RetCode reduce_prod(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src,
     const int32_t *axes,
     const int32_t num_axes,
@@ -152,8 +152,8 @@ ppl::common::RetCode reduce_prod(
 }
 
 ppl::common::RetCode reduce_sum_square(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src,
     const int32_t *axes,
     const int32_t num_axes,
@@ -163,8 +163,8 @@ ppl::common::RetCode reduce_sum_square(
 }
 
 ppl::common::RetCode reduce_abs_sum(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src,
     const int32_t *axes,
     const int32_t num_axes,

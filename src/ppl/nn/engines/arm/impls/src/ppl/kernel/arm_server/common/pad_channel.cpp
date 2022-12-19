@@ -114,7 +114,7 @@ inline ppl::common::RetCode pad_channel_zero_wrapper(
 }
 
 ppl::common::RetCode pad_channel_zero(
-    const ppl::nn::TensorShape* shape, 
+    const ppl::common::TensorShape* shape, 
     void* data) {
 
     const auto data_type = shape->GetDataType();

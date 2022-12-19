@@ -73,17 +73,18 @@ public:
     ppl::common::RetCode fast_init_schedule_param() override;
     // offline selecting best algo
     ppl::common::RetCode pick_best_schedule_param(
-        const ppl::nn::TensorShape &src_shape, void *src, void *cvt_bias,
-        const ppl::nn::TensorShape &dst_shape, void *dst, bool tune_sp, double &run_time) override;    // convert filter according to scheduling params.
+        const ppl::common::TensorShape &src_shape, void *src, void *cvt_bias,
+        const ppl::common::TensorShape &dst_shape, void *dst, bool tune_sp, double &run_time) override;    // convert filter according to scheduling params.
     
     // try to fuse the following activitor
     ppl::common::RetCode try_fuse(conv_fuse_flag_t fuse_type) override;
     // try to fuse the previous reflected padding 
     ppl::common::RetCode try_reflect_pad(const std::vector<int>& pads) override { return ppl::common::RC_UNSUPPORTED; }
 
+    ppl::common::RetCode generate_cvt_weights_shapes(
+        ppl::common::TensorShape&, ppl::common::TensorShape&) override;
     ppl::common::RetCode generate_cvt_weights(
-        const void *filter, const void *bias,
-        ppl::nn::TensorBufferInfo* new_filter, ppl::nn::TensorBufferInfo* new_bias) override;
+        const void *filter, const void *bias, void* new_filter, void* new_bias) override;
     // generate executor for runtime
     conv2d_runtime_executor *gen_executor() override;
 
