@@ -28,8 +28,8 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 template <typename eT>
 ppl::common::RetCode expand_ndarray_recursive(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     const int64_t *stride_src,
     const int64_t *stride_dst,
@@ -94,11 +94,11 @@ ppl::common::RetCode expand_ndarray_recursive(
     return ppl::common::RC_SUCCESS;
 }
 
-inline ppl::nn::TensorShape pad_shape(
-    const ppl::nn::TensorShape *shape,
+inline ppl::common::TensorShape pad_shape(
+    const ppl::common::TensorShape *shape,
     const int64_t padded_dim_count)
 {
-    ppl::nn::TensorShape padded_shape(*shape);
+    ppl::common::TensorShape padded_shape(*shape);
     padded_shape.SetDimCount(padded_dim_count);
     if (shape->IsScalar()) {
         for (int64_t i = 0; i < padded_dim_count; i++) {
@@ -118,14 +118,14 @@ inline ppl::nn::TensorShape pad_shape(
 
 template <typename eT>
 ppl::common::RetCode expand_ndarray_common(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     eT *dst)
 {
     const int64_t max_dim_count = dst_shape->GetDimCount();
 
-    ppl::nn::TensorShape padded_input_shape = pad_shape(src_shape, max_dim_count);
+    ppl::common::TensorShape padded_input_shape = pad_shape(src_shape, max_dim_count);
 
     // prepare incs
     std::vector<int64_t> stride_src(max_dim_count);

@@ -36,7 +36,7 @@ inline eT arithmetic_scalar_kernel(const eT s0, const eT s1);
 template <typename vT, arithmetic_op_type_t op_type>
 inline vT arithmetic_vector_kernel(const vT v0, const vT v1);
 
-inline void arithmetic_pad_shape(const ppl::nn::TensorShape* shape, const int64_t padded_dim_count, int64_t* padded_shape)
+inline void arithmetic_pad_shape(const ppl::common::TensorShape* shape, const int64_t padded_dim_count, int64_t* padded_shape)
 {
     const int64_t dim_diff = padded_dim_count - shape->GetRealDimCount();
     for (int64_t i = 0; i < dim_diff; i++) {

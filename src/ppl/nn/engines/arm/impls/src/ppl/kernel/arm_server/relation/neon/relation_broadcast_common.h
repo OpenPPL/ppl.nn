@@ -326,9 +326,9 @@ inline void relation_prepare_incs(
 
 template <typename eT, int64_t c_blk, relation_op_type_t op_type>
 static ppl::common::RetCode relation_broadcast_common(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src0,
     const eT *src1,
     uint8_t *dst)

@@ -24,7 +24,7 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 template <typename eT>
 static ppl::common::RetCode clip_common(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const eT *src,
     const eT *min_ptr,
     const eT *max_ptr,
@@ -71,7 +71,7 @@ static ppl::common::RetCode clip_common(
 }
 
 ppl::common::RetCode clip(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const void *src,
     const void *min_ptr,
     const void *max_ptr,

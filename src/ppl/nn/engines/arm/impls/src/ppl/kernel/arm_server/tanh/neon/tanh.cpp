@@ -24,7 +24,7 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 ppl::common::RetCode tanh_fp32(
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const float *x,
     float *y)
 {
@@ -61,7 +61,7 @@ ppl::common::RetCode tanh_fp32(
 
 #ifdef PPLNN_USE_ARMV8_2_FP16
 ppl::common::RetCode tanh_fp16(
-    const ppl::nn::TensorShape *x_shape,
+    const ppl::common::TensorShape *x_shape,
     const __fp16 *x,
     __fp16 *y)
 {

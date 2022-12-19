@@ -25,8 +25,8 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 template <typename eT>
 static ppl::common::RetCode slice_ndarray_recursive(
     const single_parallel_loop_config_t &pc,
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     const int64_t *starts,
     const int64_t *steps,
@@ -81,8 +81,8 @@ static ppl::common::RetCode slice_ndarray_recursive(
 
 template <typename eT>
 static ppl::common::RetCode slice_ndarray_common(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     const int64_t *starts,
     const int64_t *steps,
@@ -133,8 +133,8 @@ static ppl::common::RetCode slice_ndarray_common(
 
 template <typename eT>
 static ppl::common::RetCode slice_wrapper(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src,
     const int64_t *starts,
     const int64_t *steps,
@@ -150,8 +150,8 @@ static ppl::common::RetCode slice_wrapper(
 }
 
 ppl::common::RetCode slice(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src,
     const int64_t *starts,
     const int64_t *steps,

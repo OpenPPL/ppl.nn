@@ -72,7 +72,7 @@ ppl::common::RetCode scatter_nd_ndarray_commmon(
 
 
 ppl::common::RetCode scatter_nd_ndarray(
-    const ppl::nn::TensorShape *input_shape,
+    const ppl::common::TensorShape *input_shape,
     const void *src,
     const void *updates,
     const int64_t *indices,

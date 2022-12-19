@@ -27,9 +27,9 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 template <typename eT, arithmetic_op_type_t op_type, bool fuse_relu>
 ppl::common::RetCode arithmetic(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src0,
     const eT *src1,
     eT *dst)
@@ -64,9 +64,9 @@ ppl::common::RetCode arithmetic(
 
 template <arithmetic_op_type_t op_type>
 ppl::common::RetCode arithmetic_wrapper(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src0,
     const void *src1,
     const bool fuse_relu,
@@ -96,9 +96,9 @@ ppl::common::RetCode arithmetic_wrapper(
 }
 
 ppl::common::RetCode add(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src0,
     const void *src1,
     const bool fuse_relu,
@@ -108,9 +108,9 @@ ppl::common::RetCode add(
 }
 
 ppl::common::RetCode sub(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src0,
     const void *src1,
     const bool fuse_relu,
@@ -120,9 +120,9 @@ ppl::common::RetCode sub(
 }
 
 ppl::common::RetCode mul(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src0,
     const void *src1,
     const bool fuse_relu,
@@ -132,9 +132,9 @@ ppl::common::RetCode mul(
 }
 
 ppl::common::RetCode div(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src0,
     const void *src1,
     const bool fuse_relu,

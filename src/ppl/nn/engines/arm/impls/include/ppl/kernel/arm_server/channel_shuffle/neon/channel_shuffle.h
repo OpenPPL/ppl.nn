@@ -23,10 +23,10 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 ppl::common::RetCode channel_shuffle_concat_split(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst0_shape,
-    const ppl::nn::TensorShape *dst1_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst0_shape,
+    const ppl::common::TensorShape *dst1_shape,
     const void *src0,
     const void *src1,
     const int32_t group,
@@ -34,17 +34,17 @@ ppl::common::RetCode channel_shuffle_concat_split(
     void *dst1);
 
 ppl::common::RetCode channel_shuffle_concat(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src0,
     const void *src1,
     const int32_t group,
     void *dst);
 
 ppl::common::RetCode channel_shuffle(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src,
     const int32_t group,
     void *dst);

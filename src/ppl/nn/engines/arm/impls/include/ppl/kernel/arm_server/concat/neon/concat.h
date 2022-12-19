@@ -23,7 +23,7 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 ppl::common::RetCode concat(
-    const ppl::nn::TensorShape **src_shape_list,
+    const ppl::common::TensorShape **src_shape_list,
     const void **src_list,
     const int64_t num_src,
     const int64_t axis,

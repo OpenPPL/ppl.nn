@@ -24,7 +24,7 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 template <typename eT>
 ppl::common::RetCode where_eltwise_common(
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *dst_shape,
     const uint8_t *cond,
     const eT *src0,
     const eT *src1,
@@ -42,7 +42,7 @@ ppl::common::RetCode where_eltwise_common(
 
 template <typename eT>
 ppl::common::RetCode where_ndarray_recursive(
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *dst_shape,
     const uint8_t *cond,
     const eT *src0,
     const eT *src1,
@@ -91,7 +91,7 @@ ppl::common::RetCode where_ndarray_recursive(
 }
 
 inline void where_pad_shape(
-    const ppl::nn::TensorShape *shape,
+    const ppl::common::TensorShape *shape,
     const int64_t padded_dim_count,
     int64_t* padded_shape)
 {
@@ -106,10 +106,10 @@ inline void where_pad_shape(
 
 template <typename eT>
 ppl::common::RetCode where_ndarray_common(
-    const ppl::nn::TensorShape *cond_shape,
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *cond_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const uint8_t *cond,
     const eT *src0,
     const eT *src1,

@@ -121,8 +121,8 @@ inline void pad_ndarray_begin_end_common(
 
 template <typename eT, pad_mode_type_t _mode>
 ppl::common::RetCode pad_ndarray_recursive_common(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     const int64_t *start_pads,
     const int64_t *end_pads,
@@ -181,8 +181,8 @@ ppl::common::RetCode pad_ndarray_recursive_common(
 
 template <typename eT, pad_mode_type_t _mode>
 static ppl::common::RetCode pad_ndarray_common(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     const int64_t *start_pads,
     const int64_t *end_pads,

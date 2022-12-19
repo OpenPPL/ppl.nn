@@ -26,10 +26,10 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 template <typename eT>
 static ppl::common::RetCode channel_shuffle_ndarray_concat_split_common(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst0_shape,
-    const ppl::nn::TensorShape *dst1_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst0_shape,
+    const ppl::common::TensorShape *dst1_shape,
     const eT *src0,
     const eT *src1,
     const int32_t group,
@@ -74,9 +74,9 @@ static ppl::common::RetCode channel_shuffle_ndarray_concat_split_common(
 
 template <typename eT>
 static ppl::common::RetCode channel_shuffle_ndarray_concat_common(
-    const ppl::nn::TensorShape *src0_shape,
-    const ppl::nn::TensorShape *src1_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src0_shape,
+    const ppl::common::TensorShape *src1_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src0,
     const eT *src1,
     const int32_t group,
@@ -119,8 +119,8 @@ static ppl::common::RetCode channel_shuffle_ndarray_concat_common(
 
 template <typename eT>
 static ppl::common::RetCode channel_shuffle_ndarray_common(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     const int32_t group,
     eT *dst)

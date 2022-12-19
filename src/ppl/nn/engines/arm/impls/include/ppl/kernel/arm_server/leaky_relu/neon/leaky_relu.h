@@ -23,14 +23,14 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 ppl::common::RetCode leaky_relu_fp32(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const float *src,
     const float alpha,
     float *dst);
 
 #ifdef PPLNN_USE_ARMV8_2_FP16
 ppl::common::RetCode leaky_relu_fp16(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const __fp16 *src,
     const float alpha,
     __fp16 *dst);

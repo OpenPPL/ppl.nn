@@ -24,8 +24,7 @@
 #include "ppl/common/allocator.h"
 #include "ppl/common/arm/sysinfo.h"
 #include "ppl/common/sys.h"
-#include "ppl/nn/common/tensor_buffer_info.h"
-#include "ppl/nn/engines/arm/engine_options.h"
+#include "ppl/common/tensor_shape.h"
 
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
@@ -149,9 +148,9 @@ protected:
     const void *cvt_bias_;
 
     const void *src_;
-    const ppl::nn::TensorShape *src_shape_;
+    const ppl::common::TensorShape *src_shape_;
     void *dst_;
-    const ppl::nn::TensorShape *dst_shape_;
+    const ppl::common::TensorShape *dst_shape_;
     void *sum_;
     void *temp_buffer_;
 
@@ -229,11 +228,11 @@ public:
         return src_;
     }
 
-    void set_src_shape(const ppl::nn::TensorShape *src_shape)
+    void set_src_shape(const ppl::common::TensorShape *src_shape)
     {
         src_shape_ = src_shape;
     }
-    const ppl::nn::TensorShape *src_shape() const
+    const ppl::common::TensorShape *src_shape() const
     {
         return src_shape_;
     };
@@ -247,11 +246,11 @@ public:
         return dst_;
     }
 
-    void set_dst_shape(const ppl::nn::TensorShape *dst_shape)
+    void set_dst_shape(const ppl::common::TensorShape *dst_shape)
     {
         dst_shape_ = dst_shape;
     }
-    const ppl::nn::TensorShape *dst_shape() const
+    const ppl::common::TensorShape *dst_shape() const
     {
         return dst_shape_;
     }
@@ -397,26 +396,19 @@ public:
     virtual ppl::common::RetCode fast_init_schedule_param()                            = 0;
     // run all possible schedule params and choose the best.
     virtual ppl::common::RetCode pick_best_schedule_param(
-        const ppl::nn::TensorShape &src_shape, void *src, void *cvt_bias,
-        const ppl::nn::TensorShape &dst_shape, void *dst,
+        const ppl::common::TensorShape &src_shape, void *src, void *cvt_bias,
+        const ppl::common::TensorShape &dst_shape, void *dst,
         const bool tune_sp, double &runtime)                                           = 0;
     virtual bool is_supported()                                                        = 0;
     virtual ppl::common::RetCode try_fuse(conv_fuse_flag_t fuse_type)                  = 0;
     virtual ppl::common::RetCode try_reflect_pad(const std::vector<int>& pads)         = 0;
+    virtual ppl::common::RetCode generate_cvt_weights_shapes(ppl::common::TensorShape&,
+                                                             ppl::common::TensorShape&)= 0;
     virtual ppl::common::RetCode generate_cvt_weights(const void *, const void *,
-                                                      ppl::nn::TensorBufferInfo *,
-                                                      ppl::nn::TensorBufferInfo *)     = 0;
+                                                      void *, void*)                   = 0;
     virtual conv2d_runtime_executor *gen_executor()                                    = 0;
 
     virtual ~conv2d_offline_manager() {}
-};
-
-class conv2d_algo_selector {
-public:
-    // algo selection is simple but fast. return the final algo manager.
-    static conv2d_offline_manager *fast_gen_algo(const ppl::nn::TensorShape &shape, const ppl::nn::arm::EngineOptions &options, const ppl::common::isa_t isa_flags, const conv2d_param &param, ppl::common::Allocator *allocator);
-    // run all possible algo & block size, select the best one and return the final algo manager.
-    static conv2d_offline_manager *gen_fast_algo(const ppl::nn::TensorShape &shape, const ppl::nn::arm::EngineOptions &options, const ppl::common::isa_t isa_flags, const conv2d_param &param, ppl::common::Allocator *allocator);
 };
 
 }}}}; // namespace ppl::kernel::arm_server::neon

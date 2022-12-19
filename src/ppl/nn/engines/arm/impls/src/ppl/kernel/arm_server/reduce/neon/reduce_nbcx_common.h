@@ -197,8 +197,8 @@ static ppl::common::RetCode reduce_nbcx_recursive_common(
 
 template <typename eT, int32_t c_blk, reduce_op_type_t op_type>
 static ppl::common::RetCode reduce_nbcx_common(
-    const ppl::nn::TensorShape* src_shape,
-    const ppl::nn::TensorShape* dst_shape,
+    const ppl::common::TensorShape* src_shape,
+    const ppl::common::TensorShape* dst_shape,
     const eT* src,
     const int32_t* axes,
     const int32_t num_axes,
@@ -207,7 +207,7 @@ static ppl::common::RetCode reduce_nbcx_common(
     const int64_t c_dim_idx = 1;
 
     // pad 1 to dst shape to keepdims
-    ppl::nn::TensorShape padded_dst_shape = *src_shape;
+    ppl::common::TensorShape padded_dst_shape = *src_shape;
     for (int64_t i = 0; i < num_axes; i++) {
         padded_dst_shape.SetDim(axes[i], 1);
     }

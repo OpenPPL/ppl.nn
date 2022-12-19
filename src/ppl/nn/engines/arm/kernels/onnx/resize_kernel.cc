@@ -104,7 +104,7 @@ ppl::common::RetCode ResizeKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     return ppl::kernel::arm_server::neon::resize2d(X->GetShape(), Y->GetShape(), X->GetBufferPtr<void>(), scale_h,
-                                                   scale_w, param_, Y->GetBufferPtr<void>());
+                                                   scale_w, param_->coord_trans_mode, param_->mode, param_->cubic_coeff_a, Y->GetBufferPtr<void>());
 }
 
 }}} // namespace ppl::nn::arm

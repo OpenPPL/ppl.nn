@@ -28,8 +28,8 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 template <typename eT>
 static ppl::common::RetCode resize2d_ndarray_pytorch_linear_floor_common(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     const float scale_h,
     const float scale_w,
@@ -110,8 +110,8 @@ static ppl::common::RetCode resize2d_ndarray_pytorch_linear_floor_common(
 
 template <typename eT>
 static ppl::common::RetCode resize2d_ndarray_asymmetric_nearest_floor_common(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     const float scale_h,
     const float scale_w,
@@ -189,8 +189,8 @@ inline eT get_value_bounded(
 
 template <typename eT>
 static ppl::common::RetCode resize2d_ndarray_pytorch_cubic_floor_common(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     const float scale_h,
     const float scale_w,

@@ -22,7 +22,7 @@ namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 template <typename eT>
 static ppl::common::RetCode argmax_ndarray_common(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const eT *src,
     const int64_t axis,
     int64_t *dst)
@@ -63,7 +63,7 @@ static ppl::common::RetCode argmax_ndarray_common(
 }
 
 ppl::common::RetCode argmax(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const void *src,
     const int64_t axis,
     int64_t *dst)

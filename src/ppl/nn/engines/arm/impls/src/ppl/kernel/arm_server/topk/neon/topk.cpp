@@ -44,7 +44,7 @@ struct element_t {
 };
 
 uint64_t topk_ndarray_get_buffer_bytes(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const int32_t axis)
 {
     const uint64_t axis_dim         = src_shape->GetDim(axis);
@@ -54,9 +54,9 @@ uint64_t topk_ndarray_get_buffer_bytes(
 
 template <sort_order_t order, bool sorted, typename eT>
 ppl::common::RetCode topk_ndarray_kernel(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *value_shape,
-    const ppl::nn::TensorShape *indices_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *value_shape,
+    const ppl::common::TensorShape *indices_shape,
     const eT *src,
     const int64_t k,
     const int32_t axis,
@@ -109,9 +109,9 @@ ppl::common::RetCode topk_ndarray_kernel(
 
 template <typename eT>
 ppl::common::RetCode topk_ndarray(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *value_shape,
-    const ppl::nn::TensorShape *indices_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *value_shape,
+    const ppl::common::TensorShape *indices_shape,
     const eT *src,
     const int64_t k,
     const int32_t axis,
@@ -137,9 +137,9 @@ ppl::common::RetCode topk_ndarray(
 }
 
 ppl::common::RetCode topk(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *value_shape,
-    const ppl::nn::TensorShape *indices_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *value_shape,
+    const ppl::common::TensorShape *indices_shape,
     const void *src,
     const int64_t k,
     const int32_t axis,

@@ -24,7 +24,7 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 ppl::common::RetCode softmax_fp32(
-    const ppl::nn::TensorShape &input_shape,
+    const ppl::common::TensorShape &input_shape,
     const float *input,
     float *output,
     const uint32_t axis)
@@ -94,7 +94,7 @@ ppl::common::RetCode softmax_fp32(
 
 #ifdef PPLNN_USE_ARMV8_2_FP16
 ppl::common::RetCode softmax_fp16(
-    const ppl::nn::TensorShape &input_shape,
+    const ppl::common::TensorShape &input_shape,
     const __fp16 *input,
     __fp16 *output,
     const uint32_t axis)
@@ -172,7 +172,7 @@ ppl::common::RetCode softmax_fp16(
 #endif
 
 ppl::common::RetCode softmax(
-    const ppl::nn::TensorShape *src_shape,
+    const ppl::common::TensorShape *src_shape,
     const void *src,
     void *dst,
     const int64_t axis)

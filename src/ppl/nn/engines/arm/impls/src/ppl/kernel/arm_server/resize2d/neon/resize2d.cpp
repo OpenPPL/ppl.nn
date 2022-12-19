@@ -19,33 +19,33 @@
 #include "ppl/kernel/arm_server/resize2d/neon//resize2d_ndarray_common.h"
 #include "ppl/kernel/arm_server/resize2d/neon//resize2d_nbcx_common.h"
 
-#include "ppl/nn/params/onnx/resize_param.h"
-
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 template <typename eT>
 static ppl::common::RetCode resize2d_wrapper(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const eT *src,
     const float scale_h,
     const float scale_w,
-    const ppl::nn::onnx::ResizeParam *param,
+    const int32_t coord_trans_mode,
+    const int32_t mode,
+    const float cubic_coeff_a,
     eT *dst)
 {
     const auto data_format = src_shape->GetDataFormat();
 
     if (data_format == ppl::common::DATAFORMAT_NDARRAY) {
-        if (param->coord_trans_mode == param->RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL &&
-            param->mode == param->RESIZE_MODE_CUBIC) {
-            return resize2d_ndarray_pytorch_cubic_floor_common<eT>(src_shape, dst_shape, src, scale_h, scale_w, param->cubic_coeff_a, dst);
+        if (coord_trans_mode == 1 &&
+            mode == 2) {
+            return resize2d_ndarray_pytorch_cubic_floor_common<eT>(src_shape, dst_shape, src, scale_h, scale_w, cubic_coeff_a, dst);
         }
-        if (param->coord_trans_mode == param->RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL &&
-            param->mode == param->RESIZE_MODE_LINEAR) {
+        if (coord_trans_mode == 1 &&
+            mode == 1) {
             return resize2d_ndarray_pytorch_linear_floor_common<eT>(src_shape, dst_shape, src, scale_h, scale_w, dst);
         }
-        if (param->coord_trans_mode == param->RESIZE_COORD_TRANS_MODE_ASYMMETRIC &&
-            param->mode == param->RESIZE_MODE_NEAREST) {
+        if (coord_trans_mode == 3 &&
+            mode == 0) {
             return resize2d_ndarray_asymmetric_nearest_floor_common<eT>(src_shape, dst_shape, src, scale_h, scale_w, dst);
         }
     }
@@ -53,16 +53,16 @@ static ppl::common::RetCode resize2d_wrapper(
     // NBCX
     if (std::is_same<eT, float>::value) {
         if (data_format == ppl::common::DATAFORMAT_N4CX) {
-            if (param->coord_trans_mode == param->RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL &&
-                param->mode == param->RESIZE_MODE_CUBIC) {
-                return resize2d_nbcx_pytorch_cubic_floor_common<float, 4>(src_shape, dst_shape, (const float *)src, scale_h, scale_w, param->cubic_coeff_a, (float *)dst);
+            if (coord_trans_mode == 1 &&
+                mode == 2) {
+                return resize2d_nbcx_pytorch_cubic_floor_common<float, 4>(src_shape, dst_shape, (const float *)src, scale_h, scale_w, cubic_coeff_a, (float *)dst);
             }
-            if (param->coord_trans_mode == param->RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL &&
-                param->mode == param->RESIZE_MODE_LINEAR) {
+            if (coord_trans_mode == 1 &&
+                mode == 1) {
                 return resize2d_nbcx_pytorch_linear_floor_common<float, 4>(src_shape, dst_shape, (const float *)src, scale_h, scale_w, (float *)dst);
             }
-            if (param->coord_trans_mode == param->RESIZE_COORD_TRANS_MODE_ASYMMETRIC &&
-                param->mode == param->RESIZE_MODE_NEAREST) {
+            if (coord_trans_mode == 3 &&
+                mode == 0) {
                 return resize2d_nbcx_asymmetric_nearest_floor_common<float, 4>(src_shape, dst_shape, (const float *)src, scale_h, scale_w, (float *)dst);
             }
         }
@@ -70,16 +70,16 @@ static ppl::common::RetCode resize2d_wrapper(
 #ifdef PPLNN_USE_ARMV8_2_FP16
     if (std::is_same<eT, __fp16>::value) {
         if (data_format == ppl::common::DATAFORMAT_N8CX) {
-            if (param->coord_trans_mode == param->RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL &&
-                param->mode == param->RESIZE_MODE_CUBIC) {
-                return resize2d_nbcx_pytorch_cubic_floor_common<__fp16, 8>(src_shape, dst_shape, (const __fp16 *)src, scale_h, scale_w, param->cubic_coeff_a, (__fp16 *)dst);
+            if (coord_trans_mode == 1 &&
+                mode == 2) {
+                return resize2d_nbcx_pytorch_cubic_floor_common<__fp16, 8>(src_shape, dst_shape, (const __fp16 *)src, scale_h, scale_w, cubic_coeff_a, (__fp16 *)dst);
             }
-            if (param->coord_trans_mode == param->RESIZE_COORD_TRANS_MODE_PYTORCH_HALF_PIXEL &&
-                param->mode == param->RESIZE_MODE_LINEAR) {
+            if (coord_trans_mode == 1 &&
+                mode == 1) {
                 return resize2d_nbcx_pytorch_linear_floor_common<__fp16, 8>(src_shape, dst_shape, (const __fp16 *)src, scale_h, scale_w, (__fp16 *)dst);
             }
-            if (param->coord_trans_mode == param->RESIZE_COORD_TRANS_MODE_ASYMMETRIC &&
-                param->mode == param->RESIZE_MODE_NEAREST) {
+            if (coord_trans_mode == 3 &&
+                mode == 0) {
                 return resize2d_nbcx_asymmetric_nearest_floor_common<__fp16, 8>(src_shape, dst_shape, (const __fp16 *)src, scale_h, scale_w, (__fp16 *)dst);
             }
         }
@@ -90,19 +90,21 @@ static ppl::common::RetCode resize2d_wrapper(
 }
 
 ppl::common::RetCode resize2d(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *dst_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *dst_shape,
     const void *src,
     const float scale_h,
     const float scale_w,
-    const ppl::nn::onnx::ResizeParam *param,
+    const int32_t coord_trans_mode,
+    const int32_t mode,
+    const float cubic_coeff_a,
     void *dst)
 {
     const auto data_type = src_shape->GetDataType();
     switch (data_type) {
-        case ppl::common::DATATYPE_FLOAT32: return resize2d_wrapper<float>(src_shape, dst_shape, (const float *)src, scale_h, scale_w, param, (float *)dst);
+        case ppl::common::DATATYPE_FLOAT32: return resize2d_wrapper<float>(src_shape, dst_shape, (const float *)src, scale_h, scale_w, coord_trans_mode, mode, cubic_coeff_a, (float *)dst);
 #ifdef PPLNN_USE_ARMV8_2_FP16
-        case ppl::common::DATATYPE_FLOAT16: return resize2d_wrapper<__fp16>(src_shape, dst_shape, (const __fp16 *)src, scale_h, scale_w, param, (__fp16 *)dst);
+        case ppl::common::DATATYPE_FLOAT16: return resize2d_wrapper<__fp16>(src_shape, dst_shape, (const __fp16 *)src, scale_h, scale_w, coord_trans_mode, mode, cubic_coeff_a, (__fp16 *)dst);
 #endif
         default: break;
     }

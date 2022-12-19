@@ -23,8 +23,8 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 ppl::common::RetCode gather(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape *indices_shape,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape *indices_shape,
     const void *src,
     const int64_t *indices,
     const int64_t axis,

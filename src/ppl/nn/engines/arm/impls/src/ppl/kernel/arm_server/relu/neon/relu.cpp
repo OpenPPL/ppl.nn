@@ -23,7 +23,7 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 ppl::common::RetCode relu_fp32(
-    const ppl::nn::TensorShape *in_shape,
+    const ppl::common::TensorShape *in_shape,
     const float *input,
     float *output)
 {
@@ -62,7 +62,7 @@ ppl::common::RetCode relu_fp32(
 
 #ifdef PPLNN_USE_ARMV8_2_FP16
 ppl::common::RetCode relu_fp16(
-    const ppl::nn::TensorShape *in_shape,
+    const ppl::common::TensorShape *in_shape,
     const __fp16 *input,
     __fp16 *output)
 {

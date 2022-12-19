@@ -23,8 +23,8 @@
 namespace ppl { namespace kernel { namespace arm_server { namespace neon {
 
 ppl::common::RetCode split(
-    const ppl::nn::TensorShape *src_shape,
-    const ppl::nn::TensorShape **dst_shape_list,
+    const ppl::common::TensorShape *src_shape,
+    const ppl::common::TensorShape **dst_shape_list,
     const void *src,
     const int64_t slice_axis,
     const int64_t num_dst,
