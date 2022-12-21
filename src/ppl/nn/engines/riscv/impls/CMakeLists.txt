@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(PPLKernelRISCV)
 
+set(CMAKE_CXX_FLAGS "-march=rv64gcvxtheadc -mabi=lp64d -mtune=c906 -DRVV_SPEC_0_7 -D__riscv_zfh=1 -static")
+set(CMAKE_ASM_FLAGS "-march=rv64gcvxtheadc -mabi=lp64d -mtune=c906 -DRVV_SPEC_0_7 -D__riscv_zfh=1 -static")
+
+# dependencies
+include(cmake/deps.cmake)
+hpcc_populate_dep(pplcommon)
+
+file(GLOB __PPLNN_RISCV_SRC__ src/ppl/nn/engines/riscv/*.cc)
 # option(PPL_USE_RISCV_OMP "Build RISCV kernel with openmp support." OFF)
 
 set(PPLKERNELRISCV_COMPILE_DEFINITIONS )
