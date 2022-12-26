@@ -30,8 +30,8 @@ ppl::common::RetCode FCKernel::DoExecute(KernelExecContext* ctx) {
     TensorImpl* A = ctx->GetInput<TensorImpl>(0);
     TensorImpl* Y = ctx->GetOutput<TensorImpl>(0);
 
-    executor_->set_src_tensor(*A);
-    executor_->set_dst_tensor(*Y);
+    executor_->set_src_tensor(A->GetShape(), A->GetBufferPtr());
+    executor_->set_dst_tensor(Y->GetShape(), Y->GetBufferPtr());
 
     ppl::common::RetCode rc;
     rc = executor_->prepare();

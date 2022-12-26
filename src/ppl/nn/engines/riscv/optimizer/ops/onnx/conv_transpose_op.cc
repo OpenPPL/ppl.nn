@@ -54,10 +54,10 @@ RetCode ConvTransposeOp::Init(const OptKernelOptions& options) {
 
     if (options.engine_options->forward_precision == DATATYPE_FLOAT32) {
         conv_transpose_param_->algo_info =
-            ppl::kernel::riscv::conv_transpose_fp32_algo_selector::select_algo(options.engine_options);
+            ppl::kernel::riscv::conv_transpose_fp32_algo_selector::select_algo(options.engine_options->winograd_level);
     } else if (options.engine_options->forward_precision == DATATYPE_FLOAT16) {
         conv_transpose_param_->algo_info =
-            ppl::kernel::riscv::conv_transpose_fp16_algo_selector::select_algo(options.engine_options);
+            ppl::kernel::riscv::conv_transpose_fp16_algo_selector::select_algo(options.engine_options->winograd_level);
     } else {
         return RC_UNSUPPORTED;
     }

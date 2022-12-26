@@ -13,7 +13,7 @@ add_library(pplnn_riscv_static STATIC ${__PPLNN_RISCV_SRC__} ${__PPLNN_RISCV_SRC
 unset(__PPLNN_RISCV_SRC_RECURSE__)
 unset(__PPLNN_RISCV_SRC__)
 
-add_subdirectory(src/ppl/nn/engines/riscv/impls)
+hpcc_populate_dep(ppl.riskv.kernel)
 target_link_libraries(pplnn_riscv_static PUBLIC pplnn_basic_static pplkernelriscv_static)
 
 target_compile_definitions(pplnn_riscv_static PUBLIC PPLNN_USE_RISCV)
