@@ -21,9 +21,9 @@
 #include <cstring>
 #include <vector>
 
-#include "ppl/nn/engines/riscv/impls/include/ppl/kernel/riscv/common/conv2d.h"
-#include "ppl/nn/engines/riscv/impls/include/ppl/kernel/riscv/fp16/conv2d.h"
-#include "ppl/nn/engines/riscv/impls/include/ppl/kernel/riscv/fp32/conv2d.h"
+#include "ppl/kernel/riscv/common/conv2d.h"
+#include "ppl/kernel/riscv/fp16/conv2d.h"
+#include "ppl/kernel/riscv/fp32/conv2d.h"
 #include "ppl/nn/params/onnx/conv_param.h"
 #include "ppl/nn/engines/riscv/params/conv_param.h"
 #include "ppl/nn/engines/riscv/optimizer/opt_kernel.h"
@@ -82,11 +82,11 @@ private:
         const ppl::nn::TensorShape& input_shape, const ppl::kernel::riscv::conv2d_common_param& param,
         const EngineOptions* engine_options) {
         if (typeid(T) == typeid(__fp16)) {
-            return ppl::kernel::riscv::conv2d_fp16_algo_selector::select_algo(input_shape, param, engine_options);
+            return ppl::kernel::riscv::conv2d_fp16_algo_selector::select_algo(input_shape, param, engine_options->winograd_level);
         } else if (typeid(T) == typeid(float)) {
-            return ppl::kernel::riscv::conv2d_fp32_algo_selector::select_algo(input_shape, param, engine_options);
+            return ppl::kernel::riscv::conv2d_fp32_algo_selector::select_algo(input_shape, param, engine_options->winograd_level);
         } else {
-            return ppl::kernel::riscv::conv2d_fp32_algo_selector::select_algo(input_shape, param, engine_options);
+            return ppl::kernel::riscv::conv2d_fp32_algo_selector::select_algo(input_shape, param, engine_options->winograd_level);
         }
     }
 
@@ -97,13 +97,13 @@ private:
         const EngineOptions* engine_options) {
         if (typeid(T) == typeid(__fp16)) {
             return ppl::kernel::riscv::conv2d_fp16_algo_selector::select_best_algo(filter, src_shape, dst_shape, param,
-                                                                                   allocator, engine_options);
+                                                                                   allocator, engine_options->winograd_level);
         } else if (typeid(T) == typeid(float)) {
             return ppl::kernel::riscv::conv2d_fp32_algo_selector::select_best_algo(filter, src_shape, dst_shape, param,
-                                                                                   allocator, engine_options);
+                                                                                   allocator, engine_options->winograd_level);
         } else {
             return ppl::kernel::riscv::conv2d_fp32_algo_selector::select_best_algo(filter, src_shape, dst_shape, param,
-                                                                                   allocator, engine_options);
+                                                                                   allocator, engine_options->winograd_level);
         }
     }
 

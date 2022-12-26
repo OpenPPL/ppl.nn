@@ -245,3 +245,24 @@ else()
 endif()
 
 unset(__GOOGLETEST_TAG__)
+
+# --------------------------------------------------------------------------- #
+
+set(__PPLRISKVKERNEL_COMMIT__ ed618e32b6aec0b99d7b1e9e40b4f9d658da348e)
+
+if(PPLNN_USE_RISCV64)
+    if(PPLNN_DEP_PPLRISKVKERNEL_PKG)
+        hpcc_declare_pkg_dep(ppl.riskv.kernel
+        ${PPLNN_DEP_PPLRISKVKERNEL_PKG})
+    else()
+        if(NOT PPLNN_DEP_PPLRISKVKERNEL_GIT)
+            set(PPLNN_DEP_PPLRISKVKERNEL_GIT "https://github.com/openppl-public/ppl.kernel.riscv.git")
+        endif()
+        hpcc_declare_git_dep(ppl.riskv.kernel
+            ${PPLNN_DEP_PPLRISKVKERNEL_GIT}
+            ${__PPLRISKVKERNEL_COMMIT__})
+    endif()
+endif()
+
+unset(__PPLRISKVKERNEL_COMMIT__)
+

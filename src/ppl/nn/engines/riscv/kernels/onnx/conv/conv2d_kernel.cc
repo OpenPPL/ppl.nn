@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/riscv/impls/include/ppl/kernel/riscv/common/conv2d.h"
+#include "ppl/kernel/riscv/common/conv2d.h"
 #include "ppl/nn/engines/riscv/kernels/onnx/conv/conv2d_kernel.h"
 #include "ppl/nn/engines/riscv/utils/macros.h"
 #include "ppl/nn/runtime/tensor_impl.h"
@@ -35,8 +35,8 @@ ppl::common::RetCode Conv2dKernel::DoExecute(KernelExecContext* ctx) {
     TensorImpl* Y = ctx->GetOutput<TensorImpl>(0);
 
     auto cur_executor = executor_;
-    cur_executor->set_src_tensor(*X);
-    cur_executor->set_dst_tensor(*Y);
+    cur_executor->set_src_tensor(X->GetShape(), X->GetBufferPtr());
+    cur_executor->set_dst_tensor(Y->GetShape(), Y->GetBufferPtr());
 
     ppl::common::RetCode rc;
     rc = cur_executor->prepare();
