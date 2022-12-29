@@ -248,21 +248,40 @@ unset(__GOOGLETEST_TAG__)
 
 # --------------------------------------------------------------------------- #
 
-set(__PPLRISKVKERNEL_COMMIT__ ed618e32b6aec0b99d7b1e9e40b4f9d658da348e)
+set(__PPLCPUKERNEL_COMMIT__ bd535c3f59869b1a68a1de7f685d0fdf79f41ac3)
 
-if(PPLNN_USE_RISCV64)
-    if(PPLNN_DEP_PPLRISKVKERNEL_PKG)
-        hpcc_declare_pkg_dep(ppl.riskv.kernel
-        ${PPLNN_DEP_PPLRISKVKERNEL_PKG})
+if(PPLNN_USE_X86_64 OR PPLNN_USE_AARCH64 OR PPLNN_USE_ARMV7 OR PPLNN_USE_RISCV64)
+    if(PPLNN_DEP_PPLCPUKERNEL_PKG)
+        hpcc_declare_pkg_dep(ppl.kernel.cpu
+            ${PPLNN_DEP_PPLCPUKERNEL_PKG})
     else()
-        if(NOT PPLNN_DEP_PPLRISKVKERNEL_GIT)
-            set(PPLNN_DEP_PPLRISKVKERNEL_GIT "https://github.com/openppl-public/ppl.kernel.riscv.git")
+        if(NOT PPLNN_DEP_PPLCPUKERNEL_GIT)
+            set(PPLNN_DEP_PPLCPUKERNEL_GIT "https://github.com/openppl-public/ppl.kernel.cpu.git")
         endif()
-        hpcc_declare_git_dep(ppl.riskv.kernel
-            ${PPLNN_DEP_PPLRISKVKERNEL_GIT}
-            ${__PPLRISKVKERNEL_COMMIT__})
+        hpcc_declare_git_dep(ppl.kernel.cpu
+            ${PPLNN_DEP_PPLCPUKERNEL_GIT}
+            ${__PPLCPUKERNEL_COMMIT__})
     endif()
 endif()
 
-unset(__PPLRISKVKERNEL_COMMIT__)
+unset(__PPLCPUKERNEL_COMMIT__)
 
+# --------------------------------------------------------------------------- #
+
+set(__PPLCUDAKERNEL_COMMIT__ bf3f1607e5799e2f44cde0f6af2fd1a6ba89566f)
+
+if(PPLNN_USE_CUDA)
+    if(PPLNN_DEP_PPLCUDAKERNEL_PKG)
+        hpcc_declare_pkg_dep(ppl.kernel.cuda
+            ${PPLNN_DEP_PPLCUDAKERNEL_PKG})
+    else()
+        if(NOT PPLNN_DEP_PPLCUDAKERNEL_GIT)
+            set(PPLNN_DEP_PPLCUDAKERNEL_GIT "https://github.com/openppl-public/ppl.kernel.cuda.git")
+        endif()
+        hpcc_declare_git_dep(ppl.kernel.cuda
+            ${PPLNN_DEP_PPLCUDAKERNEL_GIT}
+            ${__PPLCUDAKERNEL_COMMIT__})
+    endif()
+endif()
+
+unset(__PPLCUDAKERNEL_COMMIT__)

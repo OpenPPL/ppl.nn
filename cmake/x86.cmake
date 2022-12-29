@@ -16,7 +16,7 @@ add_library(pplnn_x86_static STATIC
 unset(__PPLNN_X86_SRC_RECURSE__)
 unset(__PPLNN_X86_SRC__)
 
-add_subdirectory(src/ppl/nn/engines/x86/impls)
+hpcc_populate_dep(ppl.kernel.cpu)
 target_link_libraries(pplnn_x86_static PUBLIC pplnn_basic_static pplkernelx86_static)
 
 target_compile_definitions(pplnn_x86_static PUBLIC PPLNN_USE_X86)

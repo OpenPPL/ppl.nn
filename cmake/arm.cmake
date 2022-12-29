@@ -60,7 +60,7 @@ if(PPLNN_USE_ANDROID_NDK)
     set(PPLNN_USE_NUMA OFF)
 endif()
 
-add_subdirectory(src/ppl/nn/engines/arm/impls)
+hpcc_populate_dep(ppl.kernel.cpu)
 target_link_libraries(pplnn_arm_static PUBLIC pplnn_basic_static pplkernelarm_static)
 target_include_directories(pplnn_arm_static PUBLIC ${PPLNN_SOURCE_EXTERNAL_ARM_INCLUDE_DIRECTORIES})
 target_compile_definitions(pplnn_arm_static PUBLIC PPLNN_USE_ARM)
