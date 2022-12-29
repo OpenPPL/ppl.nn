@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/arm/kernels/onnx/equal_kernel.h"
-#include "ppl/nn/engines/arm/impls/include/ppl/kernel/arm_server/relation/neon/relation.h"
+#include "ppl/kernel/arm_server/relation/neon/relation.h"
 
 namespace ppl { namespace nn { namespace arm {
 
