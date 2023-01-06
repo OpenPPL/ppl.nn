@@ -37,10 +37,17 @@ ppl::common::RetCode Conv2dKernel::DoExecute(KernelExecContext* ctx) {
     cur_executor->set_dst_shape(Y->GetShape());
     cur_executor->set_dst(Y->GetBufferPtr<void>());
 
-    TensorImpl* S = nullptr;
+    TensorImpl* SUM = nullptr;
     if (cur_executor->conv_param()->fuse_flag & ppl::kernel::arm_server::neon::conv_fuse_flag::SUM) {
-        S = ctx->GetInput<TensorImpl>(ctx->GetInputCount() - 1);
-        cur_executor->set_sum(S->GetBufferPtr<void>());
+        SUM = ctx->GetInput<TensorImpl>(ctx->GetInputCount() - 1);
+        cur_executor->set_sum(SUM->GetBufferPtr<void>());
+    }
+
+    //add slope for prelu the same way as sum
+    TensorImpl* Slope = nullptr;
+    if (cur_executor->conv_param()->fuse_flag & ppl::kernel::arm_server::neon::conv_fuse_flag::PRELU) {
+        Slope = ctx->GetInput<TensorImpl>(ctx->GetInputCount() - 1);
+        cur_executor->set_slope(Slope->GetBufferPtr<void>());
     }
 
     ppl::common::RetCode rc;
@@ -79,9 +86,13 @@ ppl::common::RetCode Conv2dKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_ARM_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_ARM_DEBUG_TRACE("Input [X]:\n");
     PPL_ARM_TENSOR_PRINT_DEBUG_MSG(X);
-    if (S) {
-        PPLNN_ARM_DEBUG_TRACE("Input [S]:\n");
-        PPL_ARM_TENSOR_PRINT_DEBUG_MSG(S);
+    if (SUM) {
+        PPLNN_ARM_DEBUG_TRACE("Input [SUM]:\n");
+        PPL_ARM_TENSOR_PRINT_DEBUG_MSG(SUM);
+    }
+    if (Slope) {
+        PPLNN_ARM_DEBUG_TRACE("Input [Slope]:\n");
+        PPL_ARM_TENSOR_PRINT_DEBUG_MSG(Slope);
     }
     PPLNN_ARM_DEBUG_TRACE("Output [Y]:\n");
     PPL_ARM_TENSOR_PRINT_DEBUG_MSG(Y);
