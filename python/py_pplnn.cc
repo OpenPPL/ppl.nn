@@ -56,6 +56,7 @@ void RegisterEngine(pybind11::module*);
 } // namespace arm
 #endif
 
+void RegisterLogger(pybind11::module*);
 void RegisterTensorShape(pybind11::module*);
 void RegisterTensor(pybind11::module*);
 void RegisterNdArray(pybind11::module*);
@@ -84,6 +85,7 @@ void RegisterRuntimeBuilderFactory(pybind11::module*);
 void LoadResources(const map<string, pybind11::module*>&);
 
 PYBIND11_MODULE(nn, m) {
+    RegisterLogger(&m);
     RegisterTensorShape(&m);
     RegisterTensor(&m);
     RegisterNdArray(&m);
