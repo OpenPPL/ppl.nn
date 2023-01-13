@@ -208,11 +208,14 @@ Configures `cuda_engine`. Refer to [options.h](../../include/ppl/nn/engines/cuda
 
 ## Other Utilities
 
-```python
-version_str = pypplnn.GetVersionString()
-```
+version related variables:
 
-Returns the version string of current version.
+```python
+pyppl.nn.PPLNN_VERSION_MAJOR
+pyppl.nn.PPLNN_VERSION_MINOR
+pyppl.nn.PPLNN_VERSION_PATCH
+pyppl.nn.PPLNN_COMMIT_STR
+```
 
 ```python
 msg_str = pyppl.common.GetRetCodeStr(ret_code)
@@ -221,8 +224,16 @@ msg_str = pyppl.common.GetRetCodeStr(ret_code)
 Returns a human-readable message of `ret_code`.
 
 ```python
-pyppl.common.SetLoggingLevel(log_level)
-log_level = pyppl.common.GetLoggingLevel()
+pyppl.nn.SetLoggingLevel(log_level)
+log_level = pyppl.nn.GetLoggingLevel()
 ```
 
-Sets and gets the current logging level respectively. Logging levels are defined in `pyppl.common`.
+Sets and gets the current logging level respectively. Logging levels are defined in `pyppl.common`:
+
+```python
+pyppl.common.LOG_LEVEL_DEBUG
+pyppl.common.LOG_LEVEL_INFO
+pyppl.common.LOG_LEVEL_WARNING
+pyppl.common.LOG_LEVEL_ERROR
+pyppl.common.LOG_LEVEL_FATAL
+```
