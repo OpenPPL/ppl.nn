@@ -156,6 +156,9 @@ def ParseCommandLineArgs():
 # ---------------------------------------------------------------------------- #
 
 def ParseInShapes(in_shapes_str):
+    if not in_shapes_str:
+        return []
+
     ret = []
     shape_strs = in_shapes_str.split(",")
     for s in shape_strs:
