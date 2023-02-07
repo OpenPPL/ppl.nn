@@ -40,6 +40,15 @@ bool CanFuse(ir::Node* node, ShapeOperationParam* shape_param, ir::Graph* graph)
         }
     }
 
+    // all node's outputs can not be graph output
+    for (uint32_t i = 0; i < node->GetOutputCount(); ++i) {
+        auto edge_id = node->GetOutput(i);
+        auto edge = topo->GetEdge(edge_id);
+        if (edge_id == INVALID_EDGEID || topo->GetOutput(edge->GetName()) != INVALID_EDGEID) {
+            return false;
+        }
+    }
+
     // all node's inputs must be one of Shape op's output or Constant
     for (uint32_t i = 0; i < node->GetInputCount(); ++i) {
         auto edge_id = node->GetInput(i);
