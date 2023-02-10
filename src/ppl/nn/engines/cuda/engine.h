@@ -30,6 +30,7 @@
 #include "ppl/nn/engines/cuda/module/cuda_module.h"
 #include "ppl/nn/engines/cuda/plain_cuda_device.h"
 #include "ppl/nn/quantization/quant_param_parser.h"
+#include "ppl/nn/models/pmx/serialization_context.h"
 
 using namespace std;
 
@@ -73,7 +74,7 @@ public:
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override;
     OptKernel* CreateOptKernel(const ir::Node*) const override;
-    ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override;
+    ppl::common::RetCode SerializeData(const ppl::nn::pmx::SerializationContext&, utils::DataStream*) const override;
     ppl::common::RetCode DeserializeData(const void*, uint64_t) override;
 #endif
 

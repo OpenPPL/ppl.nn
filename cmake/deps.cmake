@@ -88,7 +88,7 @@ set(PPLCOMMON_USE_AARCH64 ${PPLNN_USE_AARCH64})
 set(PPLCOMMON_USE_ARMV7 ${PPLNN_USE_ARMV7})
 set(PPLCOMMON_USE_CUDA ${PPLNN_USE_CUDA})
 
-set(__PPLCOMMON_COMMIT__ 282dd26ac959abf89f49b481cd5b3cacce3ab459)
+set(__PPLCOMMON_COMMIT__ 711b74e285ae36445e50d04bffd2e1ca3c589a1c)
 
 if(PPLNN_DEP_PPLCOMMON_PKG)
     hpcc_declare_pkg_dep(pplcommon
@@ -268,7 +268,7 @@ unset(__PPLCPUKERNEL_COMMIT__)
 
 # --------------------------------------------------------------------------- #
 
-set(__PPLCUDAKERNEL_COMMIT__ bf3f1607e5799e2f44cde0f6af2fd1a6ba89566f)
+set(__PPLCUDAKERNEL_COMMIT__ 2f3670d4833c1f429ce7b6367c0c89e9a4c3cf96)
 
 if(PPLNN_USE_CUDA)
     if(PPLNN_DEP_PPLCUDAKERNEL_PKG)
