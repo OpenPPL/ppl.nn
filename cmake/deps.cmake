@@ -268,7 +268,7 @@ unset(__PPLCPUKERNEL_COMMIT__)
 
 # --------------------------------------------------------------------------- #
 
-set(__PPLCUDAKERNEL_COMMIT__ 2f3670d4833c1f429ce7b6367c0c89e9a4c3cf96)
+set(__PPLCUDAKERNEL_COMMIT__ 3c2ee6bb51cb35c6150fa001d2782fd2286db4e9)
 
 if(PPLNN_USE_CUDA)
     if(PPLNN_DEP_PPLCUDAKERNEL_PKG)
