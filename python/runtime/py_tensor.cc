@@ -106,10 +106,12 @@ static PyNdArray ConvertToHost(const PyTensor& py_tensor, datatype_t data_type, 
     }
 
     arr.strides.resize(dim_count);
-    for (uint32_t i = 1; i < dim_count; ++i) {
-        arr.strides[i - 1] = dst_shape.CalcBytesFromDimesionExcludingPadding(i);
+    if (dim_count > 0) {
+        for (uint32_t i = 1; i < dim_count; ++i) {
+            arr.strides[i - 1] = dst_shape.CalcBytesFromDimesionExcludingPadding(i);
+        }
+        arr.strides[dim_count - 1] = GetSizeOfDataType(dst_shape.GetDataType());
     }
-    arr.strides[dim_count - 1] = GetSizeOfDataType(dst_shape.GetDataType());
 
     return arr;
 }
