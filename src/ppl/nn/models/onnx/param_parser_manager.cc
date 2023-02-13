@@ -245,6 +245,7 @@ ParamParserManager::ParamParserManager() {
                                nullptr);
 
     // ppl op param parser
+    PPL_REGISTER_OP_WITHOUT_PARAM("pmx", "GELU", 1, 16, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("pmx", "ChannelShuffle", 1, 1, ppl::nn::pmx::ChannelShuffleParam,
                                ParseChannelShuffleParam, nullptr);
 
