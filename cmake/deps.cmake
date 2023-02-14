@@ -248,8 +248,6 @@ unset(__GOOGLETEST_TAG__)
 
 # --------------------------------------------------------------------------- #
 
-set(__PPLCPUKERNEL_COMMIT__ 25734314bd0d193f9399bd5d7c2b42c7ed83cf6d)
-
 if(PPLNN_USE_X86_64 OR PPLNN_USE_AARCH64 OR PPLNN_USE_ARMV7 OR PPLNN_USE_RISCV64)
     if(PPLNN_DEP_PPLCPUKERNEL_PKG)
         hpcc_declare_pkg_dep(ppl.kernel.cpu
@@ -260,15 +258,11 @@ if(PPLNN_USE_X86_64 OR PPLNN_USE_AARCH64 OR PPLNN_USE_ARMV7 OR PPLNN_USE_RISCV64
         endif()
         hpcc_declare_git_dep(ppl.kernel.cpu
             ${PPLNN_DEP_PPLCPUKERNEL_GIT}
-            ${__PPLCPUKERNEL_COMMIT__})
+            master)
     endif()
 endif()
 
-unset(__PPLCPUKERNEL_COMMIT__)
-
 # --------------------------------------------------------------------------- #
-
-set(__PPLCUDAKERNEL_COMMIT__ 3c2ee6bb51cb35c6150fa001d2782fd2286db4e9)
 
 if(PPLNN_USE_CUDA)
     if(PPLNN_DEP_PPLCUDAKERNEL_PKG)
@@ -280,8 +274,6 @@ if(PPLNN_USE_CUDA)
         endif()
         hpcc_declare_git_dep(ppl.kernel.cuda
             ${PPLNN_DEP_PPLCUDAKERNEL_GIT}
-            ${__PPLCUDAKERNEL_COMMIT__})
+            master)
     endif()
 endif()
-
-unset(__PPLCUDAKERNEL_COMMIT__)
