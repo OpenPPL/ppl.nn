@@ -84,7 +84,7 @@ ppl::common::RetCode ConvDepthwiseKernel::DoExecute(KernelExecContext* ctx) {
     auto d_weight_scale = ctx->GetInput<TensorImpl>(ctx->GetInputCount() - 1)->GetBufferPtr();
     // auto paddingc = (shape_in1.GetDim(0) + 15) / 16 * 16;
     // cudaMalloc((void**)&d_weight_scale, paddingc*sizeof(float));
-    // cudaMemcpy(d_weight_scale, input_quant1.scale.data(), paddingc*sizeof(float), cudaMemcpyHostToDevice);
+    // cudaMemcpyAsync(d_weight_scale, input_quant1.scale.data(), paddingc*sizeof(float), cudaMemcpyHostToDevice, GetStream());
 
     ConvertToForwardConvParam(shape_in0, shape_in1, shape_out, *param_, temp_conv_param);
     ConvertToForwardFuseParam(ctx, GetCudaDevice(), param_->extra_param.fuse_info, temp_fuse_param);

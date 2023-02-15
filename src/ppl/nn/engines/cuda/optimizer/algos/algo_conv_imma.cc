@@ -275,8 +275,8 @@ RetCode TuringIMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
             LOG(ERROR) << node->GetName() << " copy constant failed: " << GetRetCodeStr(status);
             return status;
         }
-        cudaMemcpy(weight_constat_info.GetBufferDesc().addr, temp_buffer.addr,
-                   shape_in1.CalcElementsIncludingPadding() * sizeof(int8_t), cudaMemcpyDeviceToDevice);
+        cudaMemcpyAsync(weight_constat_info.GetBufferDesc().addr, temp_buffer.addr,
+                   shape_in1.CalcElementsIncludingPadding() * sizeof(int8_t), cudaMemcpyDeviceToDevice,  options.device->GetStream());
 
         options.info->constants.emplace(preedge_id, std::move(weight_constat_info));
         *options.tensors->find(preedge_id)->second->GetShape() = newshape;
