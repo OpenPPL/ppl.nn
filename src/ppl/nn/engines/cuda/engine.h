@@ -28,7 +28,7 @@
 #include "ppl/nn/engines/cuda/cuda_common_param.h"
 #include "ppl/nn/engines/cuda/engine_context.h"
 #include "ppl/nn/engines/cuda/module/cuda_module.h"
-#include "ppl/nn/engines/cuda/plain_cuda_device.h"
+#include "ppl/nn/engines/cuda/buffered_cuda_device.h"
 #include "ppl/nn/quantization/quant_param_parser.h"
 #include "ppl/nn/models/pmx/serialization_context.h"
 
@@ -99,7 +99,8 @@ private:
 private:
     CudaArgs cuda_flags_;
     EngineOptions options_;
-    PlainCudaDevice device_;
+    // TODO(WJF): if plain cuda device is used, cuda-memcheck would report illegal errors, may bugs within kernels
+    BufferedCudaDevice device_;
     CUDAModuleManager cuda_manager_;
     void* export_algo_arg_ = nullptr;
     void (*export_algo_func_)(const char*, uint64_t, void*) = nullptr;

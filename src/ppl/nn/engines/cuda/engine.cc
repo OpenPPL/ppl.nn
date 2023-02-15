@@ -64,7 +64,7 @@ CudaEngine::~CudaEngine() {
 
 RetCode CudaEngine::Init(const EngineOptions& options) {
     options_ = options;
-    return device_.Init(options.device_id);
+    return device_.Init(options.device_id, options.mm_policy);
 }
 
 EngineContext* CudaEngine::CreateEngineContext() {
