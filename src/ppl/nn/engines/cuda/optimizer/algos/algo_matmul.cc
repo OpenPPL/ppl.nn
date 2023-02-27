@@ -114,12 +114,14 @@ double MatMulAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& opti
     temp_conv_param.in_num =
         attr_param_.param.transA ? shape_in0.GetDim(dim_count0 - 1) : shape_in0.GetDim(dim_count0 - 2);
     int m_id = dim_count0 - 2;
+#if 0
     if (temp_conv_param.in_num == 1) {
         int m_id = dim_count0 - 3;
         while (m_id && shape_in0.GetDim(m_id) == 1)
             m_id--;
         temp_conv_param.in_num = shape_in0.GetDim(m_id);
     }
+#endif
     int batch = 1;
     for (int i = 0; i < m_id; i++) {
         batch *= shape_in0.GetDim(i);
