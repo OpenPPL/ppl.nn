@@ -29,8 +29,12 @@ class SequentialScheduler final : public Scheduler {
 public:
     SequentialScheduler();
     ppl::common::RetCode Init(const Options&) override;
-    ppl::common::RetCode Run(const std::function<ppl::common::RetCode(KernelImpl*, KernelExecContext*)>&,
-                             Profiler*) override;
+    ppl::common::RetCode ForEach(const std::function<ppl::common::RetCode(KernelImpl*, KernelExecContext*)>&) override;
+    ppl::common::RetCode Run(Profiler*) override;
+
+private:
+    ppl::common::RetCode DoForEach(const std::function<ppl::common::RetCode(KernelImpl*, KernelExecContext*)>&,
+                                   Profiler*);
 
 private:
     const ir::GraphTopo* topo_;

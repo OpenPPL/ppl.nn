@@ -328,11 +328,7 @@ RetCode RuntimeImpl::Run() {
     constexpr Profiler* profiler = nullptr;
 #endif
 
-    auto status = sched_->Run(
-        [](KernelImpl* kernel, KernelExecContext* ctx) -> RetCode {
-            return kernel->Execute(ctx);
-        },
-        profiler);
+    auto status = sched_->Run(profiler);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Run() failed: " << GetRetCodeStr(status);
         return status;
@@ -488,11 +484,9 @@ RetCode RuntimeImpl::ConfSetProfilingFlag(RuntimeImpl* rt, va_list args) {
 }
 
 RetCode RuntimeImpl::ConfInferShapes(RuntimeImpl* rt, va_list) {
-    return rt->sched_->Run(
-        [](KernelImpl* kernel, KernelExecContext* ctx) -> RetCode {
-            return kernel->Reshape(ctx);
-        },
-        nullptr);
+    return rt->sched_->ForEach([](KernelImpl* kernel, KernelExecContext* ctx) -> RetCode {
+        return kernel->Reshape(ctx);
+    });
 }
 
 static void DummyDeleter(Scheduler*) {}

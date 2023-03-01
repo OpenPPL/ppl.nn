@@ -39,8 +39,9 @@ public:
 public:
     virtual ~Scheduler() {}
     virtual ppl::common::RetCode Init(const Options&) = 0;
-    virtual ppl::common::RetCode Run(const std::function<ppl::common::RetCode(KernelImpl*, KernelExecContext*)>&,
-                                     Profiler*) = 0;
+    virtual ppl::common::RetCode ForEach(
+        const std::function<ppl::common::RetCode(KernelImpl*, KernelExecContext*)>&) = 0;
+    virtual ppl::common::RetCode Run(Profiler*) = 0;
 };
 
 }} // namespace ppl::nn
