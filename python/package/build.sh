@@ -7,7 +7,7 @@ PACKAGE_DIR=/tmp/pyppl-package
 
 rm -rf ${PACKAGE_DIR} # remove old packages
 cp -r "${SCRIPT_DIR}" ${PACKAGE_DIR}
-cp ${PPLNN_DIR}/VERSION ${PACKAGE_DIR}
+cp ${PPLNN_DIR}/VERSION_STRING ${PACKAGE_DIR}
 cp -r ${PPLNN_DIR}/pplnn-build/install/lib/pyppl ${PACKAGE_DIR}
 cd ${PACKAGE_DIR}
 python3 setup.py bdist_wheel
