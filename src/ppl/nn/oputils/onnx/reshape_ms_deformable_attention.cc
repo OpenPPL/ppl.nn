@@ -29,7 +29,7 @@ RetCode ReshapeMSDeformAttn(InputOutputInfo* info, const ir::Attr* arg) {
 
     auto spatial_shapes = info->GetInput<TensorImpl>(1)->GetShape();
     auto sampling_loc = info->GetInput<TensorImpl>(3)->GetShape();
-    
+
     auto batch = input_data->GetDim(0);
 
     const int im2col_step_ = batch<param->im2col_step? batch: param->im2col_step;
@@ -43,10 +43,10 @@ RetCode ReshapeMSDeformAttn(InputOutputInfo* info, const ir::Attr* arg) {
     auto num_heads = input_data->GetDim(2);
     auto channels = input_data->GetDim(3);
 
-    auto num_levels = spatial_shapes->GetDim(0);
+    // auto num_levels = spatial_shapes->GetDim(0);
     auto num_query = sampling_loc->GetDim(1);
 
-    auto output = info->GetOutput<TensorImpl>(0)->GetShape();
+    // auto output = info->GetOutput<TensorImpl>(0)->GetShape();
 
     std::vector<int64_t> output_dim = {batch, num_query, num_heads*channels}; // add one dimension in axis
 

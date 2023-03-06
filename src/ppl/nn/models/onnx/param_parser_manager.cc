@@ -69,6 +69,7 @@
 
 #include "ppl/nn/models/onnx/parsers/pmx/parse_ppl_channel_shuffle_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_ms_deformable_attention_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_layer_norm_param.h"
 
 using namespace std;
 using namespace ppl::common;
@@ -251,6 +252,7 @@ ParamParserManager::ParamParserManager() {
                                ParseChannelShuffleParam, nullptr);
 
     PPL_REGISTER_OP_WITH_PARAM("mmdeploy", "MSDeformAttn", 1, 1, ppl::nn::pmx::MSDeformAttnParam, ParseMSDeformAttnParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "LayerNorm", 1, 1, ppl::nn::pmx::LayerNormParam, ParseLayerNormParam, nullptr);
 }
 
 }}} // namespace ppl::nn::onnx
