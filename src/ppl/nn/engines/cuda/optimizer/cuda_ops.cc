@@ -22,6 +22,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/cuda/optimizer/ops/pmx/bridge_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/pmx/channel_shuffle_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/pmx/ms_deformable_attention_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/pmx/layernorm_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/pmx/shape_operation_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/pmx/gelu_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/pmx/reduce_op.h"
@@ -264,6 +265,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<BridgeOp>("pmx", "Bridge", 1, 1);
     RegisterOptKernelCreator<ChannelShuffleOp>("pmx", "ChannelShuffle", 1, 1);
     RegisterOptKernelCreator<GeluOp>("pmx", "GELU", 1, 1);
+    RegisterOptKernelCreator<LayerNormOp>("pmx", "LayerNorm", 1, 1);
     RegisterOptKernelCreator<PPLShapeOperationOp>("pmx", "Shape", 1, 1);
     RegisterOptKernelCreator<MSDeformAttnOp>("mmdeploy", "MSDeformAttn", 1, 1);
 }
