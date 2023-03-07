@@ -44,6 +44,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/cumsum_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/depth_to_space_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/div_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/einsum_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/equal_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/erf_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/exp_op.h"
@@ -168,6 +169,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<DepthToSpaceOp>("", "DepthToSpace", 1, 16);
     RegisterOptKernelCreator<DivOp>("", "Div", 7, 16);
     // E
+    RegisterOptKernelCreator<EinSumOp>("", "Einsum", 12, 16);
     RegisterOptKernelCreator<EqualOp>("", "Equal", 7, 16);
     RegisterOptKernelCreator<ErfOp>("", "Erf", 9, 16);
     RegisterOptKernelCreator<ExpOp>("", "Exp", 6, 12);
