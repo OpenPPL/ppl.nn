@@ -46,6 +46,7 @@ RetCode MSDeformAttnOp::Init(const OptKernelOptions& options) {
 MSDeformAttnOp::MSDeformAttnOp(const ir::Node* node) : CudaOptKernel(node) {
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
         ppl::common::RetCode status;
+        type = ppl::common::DATATYPE_FLOAT32; // only support fp32 for now
         if (type == DATATYPE_UNKNOWN) {
             status = InferInheritedType(info);
         } else if (type == DATATYPE_INT8) {
