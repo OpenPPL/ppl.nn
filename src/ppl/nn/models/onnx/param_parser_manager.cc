@@ -148,6 +148,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Floor", 6, 16, nullptr);
     // G
     PPL_REGISTER_OP_WITH_PARAM("", "Gather", 1, 16, GatherParam, ParseGatherParam, PackGatherParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "GatherElements", 1, 16, GatherParam, ParseGatherParam, PackGatherParam);
     PPL_REGISTER_OP_WITH_PARAM("", "GatherND", 11, 16, GatherNDParam, ParseGatherNDParam, PackGatherNDParam);
     PPL_REGISTER_OP_WITH_PARAM("", "Gemm", 9, 16, GemmParam, ParseGemmParam, PackGemmParam);
     PPL_REGISTER_OP_WITH_PARAM("", "GlobalAveragePool", 1, 16, PoolingParam, ParsePoolingParam, PackPoolingParam);
