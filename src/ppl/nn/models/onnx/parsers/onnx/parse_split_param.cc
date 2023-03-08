@@ -15,17 +15,41 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "ppl/common/str_utils.h"
+#include "ppl/nn/models/utils.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_split_param.h"
 #include "ppl/nn/models/onnx/utils.h"
+#include "ppl/nn/common/logger.h"
 using namespace std;
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ParseSplitParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*, ir::Attr* arg) {
+RetCode ParseSplitParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node, ir::Attr* arg) {
     auto param = static_cast<SplitParam*>(arg);
     utils::GetNodeAttr(pb_node, "axis", &param->axis, 0);
-    utils::GetNodeAttr(pb_node, "split", &param->split_point);
+    
+    auto& node_type = node->GetType();
+
+    if (node_type.version < 13) {
+        auto topo = args.topo;
+        auto data = args.data;
+
+        std::vector<int64_t> split_point;
+        utils::GetNodeAttr(pb_node, "split", &split_point);
+
+        auto new_edge_name = node->GetName() + "_split_point_" + ToString(topo->GetCurrentEdgeIdBound());
+        auto edge = ppl::nn::utils::Add1DInitializer(topo, data, new_edge_name, split_point, DATATYPE_INT64);
+        if (!edge) {
+            LOG(ERROR) << "add initializer[" << new_edge_name << "] failed.";
+            return RC_OTHER_ERROR;
+        }
+        node->AddInput(edge->GetId());
+        edge->AddConsumer(node->GetId());
+
+        node_type.version = 13;
+    }
+    
     return RC_SUCCESS;
 }
 

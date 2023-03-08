@@ -28,9 +28,6 @@ ppl::common::RetCode UnsqueezeKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Input [data]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(data);
 
-    for (uint32_t i = 0; i < param_->axes.size(); ++i) {
-        PPLNN_X86_DEBUG_TRACE("axes[%u]: %d\n", i, param_->axes[i]);
-    }
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     if (ctx->IsLastConsumerOfInput(0) && data->GetType() == TENSORTYPE_NORMAL) {

@@ -70,7 +70,7 @@ RetCode OptGraph::InitKernels() {
         auto creator = OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version);
         if (!creator) {
             LOG(ERROR) << "cannot find creator for CudaOptKernel[" << node->GetName() << "] type[" << type.domain << ":"
-                       << type.name << "]";
+                       << type.name << "]" << type.version;
             return RC_NOT_FOUND;
         }
 
