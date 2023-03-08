@@ -26,6 +26,7 @@
 
 namespace ppl { namespace nn { namespace onnx {
 
+ppl::common::RetCode ReshapeSplit(InputOutputInfo*, const ir::Attr*, const int64_t*);
 ppl::common::RetCode ReshapeSplit(InputOutputInfo*, const ir::Attr*);
 
 }}} // namespace ppl::nn::onnx

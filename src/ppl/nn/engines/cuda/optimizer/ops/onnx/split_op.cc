@@ -56,7 +56,29 @@ SplitOp::SplitOp(const ir::Node* node) : CudaOptKernel(node) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return onnx::ReshapeSplit(info, &param_);
+        if (info->GetInputCount() != 2) {
+            LOG(ERROR) << "2 input required.";
+            return RC_INVALID_VALUE;
+        }
+
+        auto input = info->GetInput<TensorImpl>(1);
+        if (!input->GetBufferPtr()) {
+            return RC_NOT_FOUND;
+        }
+
+        const TensorShape& dst_desc = *input->GetShape();
+        if (dst_desc.CalcElementsIncludingPadding() == 0) {
+            return onnx::ReshapeSplit(info, &param_, nullptr);
+        }
+        
+        vector<int64_t> shape_data(dst_desc.CalcElementsIncludingPadding());
+        auto status = input->CopyToHost(shape_data.data());
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "Copy shape data failed: " << GetRetCodeStr(status);
+            return status;
+        }
+
+        return onnx::ReshapeSplit(info, &param_, shape_data.data());
     };
 }
 

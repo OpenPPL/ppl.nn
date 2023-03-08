@@ -23,30 +23,31 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeUnsqueeze(InputOutputInfo* info, const ir::Attr* arg) {
-    auto param = static_cast<const UnsqueezeParam*>(arg);
-    std::vector<int32_t> axes(param->axes.size());
+RetCode ReshapeUnsqueeze(InputOutputInfo* info, const ir::Attr* arg, const int64_t* axes) {
+    auto axes_size = info->GetInput<TensorImpl>(1)->GetShape()->GetDim(0);
+    std::vector<int32_t> vector_axes(axes_size);
+
 
     const TensorShape& input = *info->GetInput<TensorImpl>(0)->GetShape();
-    const int32_t out_dim_count = (int32_t)input.GetRealDimCount() + param->axes.size();
+    const int32_t out_dim_count = (int32_t)input.GetRealDimCount() + axes_size;
 
-    for (uint32_t i = 0; i < param->axes.size(); ++i) {
-        if (param->axes[i] < (int32_t)(-out_dim_count) || param->axes[i] >= (int32_t)out_dim_count) {
-            LOG(DEBUG) << "ERROR: axes[" << i << "]'s value[" << param->axes[i] << "] is out of range["
+    for (uint32_t i = 0; i < axes_size; ++i) {
+        if (axes[i] < (int32_t)(-out_dim_count) || axes[i] >= (int32_t)out_dim_count) {
+            LOG(DEBUG) << "ERROR: axes[" << i << "]'s value[" << axes[i] << "] is out of range["
                        << -out_dim_count << ", " << out_dim_count << "].";
             return RC_INVALID_VALUE;
         }
-        if (param->axes[i] < 0) {
-            axes[i] = out_dim_count + param->axes[i];
+        if (axes[i] < 0) {
+            vector_axes[i] = out_dim_count + axes[i];
         } else {
-            axes[i] = param->axes[i];
+            vector_axes[i] = axes[i];
         }
     }
 
-    std::sort(axes.begin(), axes.end());
+    std::sort(vector_axes.begin(), vector_axes.end());
     std::vector<int64_t> output_dim(out_dim_count);
     for (int32_t oid = 0, aid = 0, iid = 0; oid < out_dim_count; ++oid) {
-        if (aid < (int32_t)axes.size() && oid == axes[aid]) {
+        if (aid < (int32_t)vector_axes.size() && oid == vector_axes[aid]) {
             output_dim[oid] = 1;
             ++aid;
         } else {
@@ -58,6 +59,16 @@ RetCode ReshapeUnsqueeze(InputOutputInfo* info, const ir::Attr* arg) {
     info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(output_dim);
 
     return RC_SUCCESS;
+}
+
+RetCode ReshapeUnsqueeze(InputOutputInfo* info, const ir::Attr* arg) {
+    if (info->GetInputCount() != 2) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2.";
+        return RC_INVALID_VALUE;
+    }
+
+    auto axes = info->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
+    return ReshapeUnsqueeze(info, arg, axes);
 }
 
 }}} // namespace ppl::nn::onnx

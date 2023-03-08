@@ -24,8 +24,9 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeSqueeze(InputOutputInfo* info, const ir::Attr* arg) {
-    auto param = static_cast<const SqueezeParam*>(arg);
+RetCode ReshapeSqueeze(InputOutputInfo* info, const ir::Attr* arg, const int64_t* axes) {
+    auto axes_size = info->GetInput<TensorImpl>(1)->GetShape()->GetDim(0);
+
     if (info->GetInputCount() > 2 || info->GetOutputCount() != 1) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] > 2 or output count["
                    << info->GetOutputCount() << "] != 1.";
@@ -36,7 +37,7 @@ RetCode ReshapeSqueeze(InputOutputInfo* info, const ir::Attr* arg) {
     auto output = info->GetOutput<TensorImpl>(0)->GetShape();
 
     if (input.IsScalar()) {
-        if (param->axes.empty() || (param->axes.size() == 1 && (param->axes[0] == 0 || param->axes[0] == -1))) {
+        if (axes_size == 0 || (axes_size == 1 && (axes[0] == 0 || axes[0] == -1))) {
             output->ReshapeAsScalar();
         } else {
             LOG(DEBUG) << "ERROR: axes in parameter are invalid.";
@@ -44,13 +45,13 @@ RetCode ReshapeSqueeze(InputOutputInfo* info, const ir::Attr* arg) {
         }
     } else {
         // check parameters
-        if (param->axes.size() > input.GetDimCount()) {
-            LOG(DEBUG) << "ERROR: axes' size[" << param->axes.size() << "] != input[0]'s dim count["
+        if (axes_size > input.GetDimCount()) {
+            LOG(DEBUG) << "ERROR: axes' size[" << axes_size << "] != input[0]'s dim count["
                        << input.GetDimCount() << "].";
             return RC_INVALID_VALUE;
         }
-        for (uint32_t i = 0; i < param->axes.size(); i++) {
-            if (param->axes[i] >= (int32_t)input.GetDimCount() || param->axes[i] < -(int32_t)input.GetDimCount()) {
+        for (uint32_t i = 0; i < axes_size; i++) {
+            if (axes[i] >= (int32_t)input.GetDimCount() || axes[i] < -(int32_t)input.GetDimCount()) {
                 LOG(DEBUG) << "ERROR: axes[" << i << "] is out of range[" << -(int)input.GetDimCount() << ", "
                            << input.GetDimCount() << "].";
                 return RC_INVALID_VALUE;
@@ -58,15 +59,15 @@ RetCode ReshapeSqueeze(InputOutputInfo* info, const ir::Attr* arg) {
         }
         // calc real axes
         set<uint32_t> real_axes;
-        if (param->axes.empty()) { // squeeze axes is not set, default squeeze all 1 dims
+        if (axes_size == 0) { // squeeze axes is not set, default squeeze all 1 dims
             for (size_t i = 0; i < input.GetDimCount(); i++) {
                 if (input.GetDim(i) == 1) {
                     real_axes.insert(i);
                 }
             }
         } else {
-            for (uint32_t i = 0; i < param->axes.size(); i++) { // change negative dim to positive
-                real_axes.insert(param->axes[i] >= 0 ? param->axes[i] : param->axes[i] + input.GetDimCount());
+            for (uint32_t i = 0; i < axes_size; i++) { // change negative dim to positive
+                real_axes.insert(axes[i] >= 0 ? axes[i] : axes[i] + input.GetDimCount());
             }
             for (auto it = real_axes.begin(); it != real_axes.end(); ++it) { // check if all squeeze dims are 1
                 if (input.GetDim(*it) != 1) {
@@ -91,6 +92,16 @@ RetCode ReshapeSqueeze(InputOutputInfo* info, const ir::Attr* arg) {
     }
 
     return RC_SUCCESS;
+}
+
+RetCode ReshapeSqueeze(InputOutputInfo* info, const ir::Attr* arg) {
+    if (info->GetInputCount() != 2) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2.";
+        return RC_INVALID_VALUE;
+    }
+
+    auto axes = info->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
+    return ReshapeSqueeze(info, arg, axes);
 }
 
 }}} // namespace ppl::nn::onnx
