@@ -22,12 +22,13 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeSplit(InputOutputInfo* info, const ir::Attr* arg) {
+RetCode ReshapeSplit(InputOutputInfo* info, const ir::Attr* arg, const int64_t* split_point) {
     auto param = static_cast<const SplitParam*>(arg);
+    auto split_size = info->GetInput<TensorImpl>(1)->GetShape()->GetDim(0);
     const TensorShape& shape = *info->GetInput<TensorImpl>(0)->GetShape();
     int dim_count = shape.GetDimCount();
     uint32_t split_axis = param->axis >= 0 ? param->axis : param->axis + dim_count;
-    if (param->split_point.size() == 0) {
+    if (split_size == 0) {
         uint32_t in_dim = shape.GetDim(split_axis);
         uint32_t split_dim = in_dim / info->GetOutputCount();
         if (split_dim * info->GetOutputCount() != in_dim) {
@@ -46,15 +47,15 @@ RetCode ReshapeSplit(InputOutputInfo* info, const ir::Attr* arg) {
         }
         return RC_SUCCESS;
     }
-    if (info->GetOutputCount() != param->split_point.size()) {
+    if (info->GetOutputCount() != split_size) {
         LOG(DEBUG) << "ERROR: output_count[" << info->GetOutputCount() << "] != split point size["
-                   << param->split_point.size() << "]";
+                   << split_size << "]";
         return RC_INVALID_VALUE;
     }
 
     uint32_t sum_dim = 0;
-    for (uint32_t i = 0; i < param->split_point.size(); ++i) {
-        sum_dim += param->split_point[i];
+    for (uint32_t i = 0; i < split_size; ++i) {
+        sum_dim += split_point[i];
     }
     if (sum_dim != shape.GetDim(split_axis)) {
         LOG(DEBUG) << "ERROR: sum_dim[" << sum_dim << "] != dim[" << shape.GetDim(split_axis) << "] of axis["
@@ -63,15 +64,31 @@ RetCode ReshapeSplit(InputOutputInfo* info, const ir::Attr* arg) {
     }
 
     std::vector<int64_t> tmp_output_dim(dim_count);
-    for (uint32_t i = 0; i < param->split_point.size(); ++i) {
+    for (uint32_t i = 0; i < split_size; ++i) {
         for (int it = 0; it < dim_count; ++it) {
             tmp_output_dim[it] = shape.GetDim(it);
         }
-        tmp_output_dim[split_axis] = param->split_point[i];
+        tmp_output_dim[split_axis] = split_point[i];
         info->GetOutput<TensorImpl>(i)->GetShape()->Reshape(tmp_output_dim);
     }
 
     return RC_SUCCESS;
+}
+
+RetCode ReshapeSplit(InputOutputInfo* info, const ir::Attr* arg) {
+    if (info->GetInputCount() > 2) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2.";
+        return RC_INVALID_VALUE;
+    }
+
+    if (info->GetInputCount() == 1) {
+        auto in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
+        info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(in_shape.GetDims(), in_shape.GetRealDimCount());
+        return RC_SUCCESS;
+    }
+
+    auto shape_data = info->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
+    return ReshapeSplit(info, arg, shape_data);
 }
 
 }}} // namespace ppl::nn::onnx

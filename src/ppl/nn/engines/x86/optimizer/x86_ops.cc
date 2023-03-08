@@ -226,10 +226,10 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<SinOp>("", "Sin", 7, 16);
     RegisterOptKernelCreator<SliceOp>("", "Slice", 1, 16);
     RegisterOptKernelCreator<SoftmaxOp>("", "Softmax", 1, 16);
-    RegisterOptKernelCreator<SplitOp>("", "Split", 2, 12);
+    RegisterOptKernelCreator<SplitOp>("", "Split", 2, 16);
     RegisterOptKernelCreator<SplitToSequenceOp>("", "SplitToSequence", 11, 16);
     RegisterOptKernelCreator<SqrtOp>("", "Sqrt", 6, 16);
-    RegisterOptKernelCreator<SqueezeOp>("", "Squeeze", 1, 12);
+    RegisterOptKernelCreator<SqueezeOp>("", "Squeeze", 1, 16);
     RegisterOptKernelCreator<SubOp>("", "Sub", 7, 16);
     RegisterOptKernelCreator<SumOp>("", "Sum", 6, 16);
     // T
@@ -238,7 +238,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<TopKOp>("", "TopK", 1, 16);
     RegisterOptKernelCreator<TransposeOp>("", "Transpose", 1, 16);
     // U
-    RegisterOptKernelCreator<UnsqueezeOp>("", "Unsqueeze", 1, 12);
+    RegisterOptKernelCreator<UnsqueezeOp>("", "Unsqueeze", 1, 16);
     // W
     RegisterOptKernelCreator<WhereOp>("", "Where", 9, 16);
 
