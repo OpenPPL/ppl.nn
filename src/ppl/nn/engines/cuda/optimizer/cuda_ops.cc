@@ -50,6 +50,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/flatten_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/floor_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/gather_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/onnx/gather_elements_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/gather_nd_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/gemm_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/global_average_pool_op.h"
@@ -175,6 +176,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<FloorOp>("", "Floor", 6, 16);
     // G
     RegisterOptKernelCreator<GatherOp>("", "Gather", 1, 16);
+    RegisterOptKernelCreator<GatherElementsOp>("", "GatherElements", 1, 16);
     RegisterOptKernelCreator<GatherNDOp>("", "GatherND", 11, 11);
     RegisterOptKernelCreator<GemmOp>("", "Gemm", 11, 12);
     RegisterOptKernelCreator<GlobalAveragePoolOp>("", "GlobalAveragePool", 1, 16);
