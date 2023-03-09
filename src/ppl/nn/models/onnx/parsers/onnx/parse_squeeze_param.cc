@@ -43,6 +43,7 @@ RetCode ParseSqueezeParam(const ::onnx::NodeProto& pb_node, const ParamParserExt
             return RC_OTHER_ERROR;
         }
         node->AddInput(edge->GetId());
+        edge->AddConsumer(node->GetId());
 
         node_type.version = 13;
     }
