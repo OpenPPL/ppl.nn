@@ -76,9 +76,15 @@ RetCode ReshapeSplit(InputOutputInfo* info, const ir::Attr* arg, const int64_t* 
 }
 
 RetCode ReshapeSplit(InputOutputInfo* info, const ir::Attr* arg) {
-    if (info->GetInputCount() != 2) {
+    if (info->GetInputCount() > 2) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2.";
         return RC_INVALID_VALUE;
+    }
+
+    if (info->GetInputCount() == 1) {
+        auto in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
+        info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(in_shape.GetDims(), in_shape.GetRealDimCount());
+        return RC_SUCCESS;
     }
 
     auto shape_data = info->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();

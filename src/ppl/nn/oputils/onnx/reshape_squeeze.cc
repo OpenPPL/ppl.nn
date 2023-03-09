@@ -25,7 +25,10 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ReshapeSqueeze(InputOutputInfo* info, const ir::Attr* arg, const int64_t* axes) {
-    auto axes_size = info->GetInput<TensorImpl>(1)->GetShape()->GetDim(0);
+    uint32_t axes_size = 0;
+    if (axes) {
+        info->GetInput<TensorImpl>(1)->GetShape()->GetDim(0);
+    }
 
     if (info->GetInputCount() > 2 || info->GetOutputCount() != 1) {
         LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] > 2 or output count["
@@ -95,13 +98,16 @@ RetCode ReshapeSqueeze(InputOutputInfo* info, const ir::Attr* arg, const int64_t
 }
 
 RetCode ReshapeSqueeze(InputOutputInfo* info, const ir::Attr* arg) {
-    if (info->GetInputCount() != 2) {
-        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2.";
+    if (info->GetInputCount() > 2) {
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] > 2.";
         return RC_INVALID_VALUE;
     }
-
-    auto axes = info->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
-    return ReshapeSqueeze(info, arg, axes);
+    if (info->GetInputCount() == 1) {
+        return onnx::ReshapeSqueeze(info, arg, nullptr);
+    } else {
+        auto axes = info->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
+        return ReshapeSqueeze(info, arg, axes);
+    }
 }
 
 }}} // namespace ppl::nn::onnx

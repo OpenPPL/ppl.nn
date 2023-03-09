@@ -56,29 +56,35 @@ SplitOp::SplitOp(const ir::Node* node) : CudaOptKernel(node) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        if (info->GetInputCount() != 2) {
-            LOG(ERROR) << "2 input required.";
+        if (info->GetInputCount() > 2) {
+            LOG(ERROR) << "invalid input size.";
             return RC_INVALID_VALUE;
         }
 
-        auto input = info->GetInput<TensorImpl>(1);
-        if (!input->GetBufferPtr()) {
-            return RC_NOT_FOUND;
-        }
+        if (info->GetInputCount() == 1) {
+            auto in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
+            info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(in_shape.GetDims(), in_shape.GetRealDimCount());
+            return RC_SUCCESS;
+        } else {
+            auto input = info->GetInput<TensorImpl>(1);
+            if (!input->GetBufferPtr()) {
+                return RC_NOT_FOUND;
+            }
+            const TensorShape& dst_desc = *input->GetShape();
+            if (dst_desc.CalcElementsIncludingPadding() == 0) {
+                auto in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
+                info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(in_shape.GetDims(), in_shape.GetRealDimCount());
+                return RC_SUCCESS;
+            }
 
-        const TensorShape& dst_desc = *input->GetShape();
-        if (dst_desc.CalcElementsIncludingPadding() == 0) {
-            return onnx::ReshapeSplit(info, &param_, nullptr);
+            vector<int64_t> shape_data(dst_desc.CalcElementsIncludingPadding());
+            auto status = input->CopyToHost(shape_data.data());
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "Copy shape data failed: " << GetRetCodeStr(status);
+                return status;
+            }
+            return onnx::ReshapeSplit(info, &param_, shape_data.data());
         }
-        
-        vector<int64_t> shape_data(dst_desc.CalcElementsIncludingPadding());
-        auto status = input->CopyToHost(shape_data.data());
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "Copy shape data failed: " << GetRetCodeStr(status);
-            return status;
-        }
-
-        return onnx::ReshapeSplit(info, &param_, shape_data.data());
     };
 }
 
