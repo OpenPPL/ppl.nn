@@ -104,10 +104,10 @@ RetCode ReshapeSqueeze(InputOutputInfo* info, const ir::Attr* arg) {
     }
     if (info->GetInputCount() == 1) {
         return onnx::ReshapeSqueeze(info, arg, nullptr);
-    } else {
-        auto axes = info->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
-        return ReshapeSqueeze(info, arg, axes);
     }
+
+    auto axes = info->GetInput<TensorImpl>(1)->GetBufferPtr<int64_t>();
+    return ReshapeSqueeze(info, arg, axes);
 }
 
 }}} // namespace ppl::nn::onnx
