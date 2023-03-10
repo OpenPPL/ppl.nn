@@ -173,7 +173,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<EqualOp>("", "Equal", 7, 16);
     RegisterOptKernelCreator<ErfOp>("", "Erf", 9, 16);
     RegisterOptKernelCreator<ExpOp>("", "Exp", 6, 12);
-    RegisterOptKernelCreator<ExpandOp>("", "Expand", 8, 12);
+    RegisterOptKernelCreator<ExpandOp>("", "Expand", 8, 16);
     // F
     RegisterOptKernelCreator<FlattenOp>("", "Flatten", 1, 16);
     RegisterOptKernelCreator<FloorOp>("", "Floor", 6, 16);

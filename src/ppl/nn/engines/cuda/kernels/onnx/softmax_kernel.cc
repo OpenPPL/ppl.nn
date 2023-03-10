@@ -24,21 +24,27 @@ namespace ppl { namespace nn { namespace cuda {
 
 uint64_t SoftmaxKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
     auto input = ctx.GetInput<TensorImpl>(0);
-    return PPLSoftmaxGetTempBufferSize(input->GetShape(), param_->axis);
+    const int64_t real_axis =
+        param_->axis < 0 ? param_->axis + ctx.GetInput<TensorImpl>(0)->GetShape()->GetDimCount() : param_->axis;
+    return PPLSoftmaxGetTempBufferSize(input->GetShape(), real_axis);
 }
 
 ppl::common::RetCode SoftmaxKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
     auto input_shape = input->GetShape();
+
+    const int64_t real_axis =
+        param_->axis < 0 ? param_->axis + ctx->GetInput<TensorImpl>(0)->GetShape()->GetDimCount() : param_->axis;
+
     auto input_quant = GetCommonParam()->cuda_tensor_info->at(input->GetEdge()->GetId());
     auto output_quant = GetCommonParam()->cuda_tensor_info->at(output->GetEdge()->GetId());
     if (input_shape->GetDataType() == ppl::common::DATATYPE_INT8) {
         QuantKernelParamCuda qparam(input_quant.zero_point[0], output_quant.zero_point[0], input_quant.scale[0], output_quant.scale[0]);
         auto status = PPLCUDASoftmaxForwardImpInt8(GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(),
-                                          output->GetBufferPtr(), nullptr, param_->axis, &qparam);
+                                          output->GetBufferPtr(), nullptr, real_axis, &qparam);
         return status;
-    } else if (input_shape->GetDimCount() == 4 && param_->axis == 3 && input_shape->GetDim(2) == input_shape->GetDim(3)) {
+    } else if (input_shape->GetDimCount() == 4 && real_axis == 3 && input_shape->GetDim(2) == input_shape->GetDim(3)) {
         return PPLCUDAFastSoftmax(GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(),
                                   output->GetBufferPtr(), nullptr, 1);
     } else {
@@ -55,7 +61,7 @@ ppl::common::RetCode SoftmaxKernel::DoExecute(KernelExecContext* ctx) {
         });
         auto tmp_buffer = tmp_buffer_desc.addr;
         status = PPLCUDASoftmaxForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(),
-                                          output->GetBufferPtr(), tmp_buffer, param_->axis);
+                                          output->GetBufferPtr(), tmp_buffer, real_axis);
         return status;
     }
     return ppl::common::RC_SUCCESS;
