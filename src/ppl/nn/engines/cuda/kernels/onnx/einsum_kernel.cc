@@ -65,7 +65,7 @@ ppl::common::RetCode EinSumKernel::DoExecute(KernelExecContext* ctx) {
     } else if(ctx->GetInputCount()==2 && equation == "...abc,...adc->...bdc" 
         && input_shape0->GetDimCount()==4){ 
         status = PPLCUDAEinSum_nabc_nadc_nbdc_ForwardImp(GetStream(), input_shape0, input0, input_shape1, input1, output_shape, output, equation);
-    } else if (ctx->GetInputCount()==2 && equation == "i,j->ij" ){
+    } else if (ctx->GetInputCount()==2 && equation == "i , j -> i j" ){
         status = PPLCUDAEinSum_i_j_ij_ForwardImp(GetStream(), input_shape0, input0, input_shape1, input1, output_shape, output, equation);
     } else {
         LOG(INFO) << "Not support equation: "<< equation <<" with input count " << input_shape0->GetDimCount();

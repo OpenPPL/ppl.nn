@@ -6,10 +6,6 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::pmx;
 
-#ifdef PPLNN_ENABLE_PMX_MODEL
-#include "ppl/nn/models/pmx/utils.h"
-#include "ppl/nn/models/pmx/oputils/caffe/layernorm.h"
-#endif
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -67,21 +63,5 @@ RetCode LayerNormOp::Finalize(const OptKernelOptions& options) {
 KernelImpl* LayerNormOp::CreateKernelImpl() const {
     return CreateKernelImplWithParam<LayerNormKernel>(&param_);
 }
-
-#ifdef PPLNN_ENABLE_PMX_MODEL
-    ppl::common::RetCode LayerNormOp::SerializeData(const ppl::nn::pmx::SerializationContext&, utils::DataStream* ds) const {
-        flatbuffers::FlatBufferBuilder builder;
-        auto fb_param = ppl::nn::pmx::caffe::SerializeLayerNormParam(param_, &builder);
-        auto fb_op_param = ppl::nn::pmx::caffe::CreateOpParam(builder, ppl::nn::pmx::caffe::OpParamType_LayerNormParam, fb_param.Union());
-        ppl::nn::pmx::caffe::FinishOpParamBuffer(builder, fb_op_param);
-        return ds->Write(builder.GetBufferPointer(), builder.GetSize());
-    }
-    ppl::common::RetCode LayerNormOp::DeserializeData(const ppl::nn::pmx::DeserializationContext&, const void* base, uint64_t size) {
-        auto fb_op_param = ppl::nn::pmx::caffe::GetOpParam(base);
-        auto fb_argmax_param = fb_op_param->value_as_LayerNormParam();
-        ppl::nn::pmx::caffe::DeserializeLayerNormParam(*fb_argmax_param, &param_);
-        return ppl::common::RC_SUCCESS;
-    }
-#endif
 
 }}} // namespace ppl::nn::cuda
