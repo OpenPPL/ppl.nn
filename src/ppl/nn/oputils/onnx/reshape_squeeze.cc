@@ -27,7 +27,7 @@ namespace ppl { namespace nn { namespace onnx {
 RetCode ReshapeSqueeze(InputOutputInfo* info, const ir::Attr* arg, const int64_t* axes) {
     uint32_t axes_size = 0;
     if (axes) {
-        info->GetInput<TensorImpl>(1)->GetShape()->GetDim(0);
+        axes_size = info->GetInput<TensorImpl>(1)->GetShape()->GetDim(0);
     }
 
     if (info->GetInputCount() > 2 || info->GetOutputCount() != 1) {
