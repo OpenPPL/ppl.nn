@@ -19,6 +19,7 @@
 #define _ST_HPC_PPL_NN_PYTHON_CUDA_PY_ENGINE_H_
 
 #include "../py_engine.h"
+#include <string>
 
 namespace ppl { namespace nn { namespace python { namespace cuda {
 
