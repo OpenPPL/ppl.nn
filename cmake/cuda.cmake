@@ -47,7 +47,7 @@ unset(__PPLNN_CUDA_SRC__)
 
 hpcc_populate_dep(ppl.kernel.cuda)
 target_link_libraries(pplnn_cuda_static PUBLIC
-    pplnn_basic_static pplkernelcuda_static ${PPLNN_SOURCE_EXTERNAL_CUDA_LINK_LIBRARIES})
+    pplnn_basic_static pplkernelcuda_static cublasLt ${PPLNN_SOURCE_EXTERNAL_CUDA_LINK_LIBRARIES})
 target_include_directories(pplnn_cuda_static PRIVATE
     ${rapidjson_SOURCE_DIR}/include)
 target_compile_definitions(pplnn_cuda_static PUBLIC

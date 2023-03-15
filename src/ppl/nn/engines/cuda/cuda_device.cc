@@ -67,6 +67,9 @@ CudaDevice::~CudaDevice() {
         cudaStreamSynchronize(stream_);
         cudaStreamDestroy(stream_);
     }
+    if (cublas_handle_) {
+        cublasLtDestroy(cublas_handle_);
+    }
     if (device_id_ != INT_MAX) {
         DestroyDriverEnv(device_id_);
     }
@@ -87,6 +90,9 @@ RetCode CudaDevice::Init(int device_id) {
 
     if (!stream_) {
         cudaStreamCreate(&stream_);
+    }
+    if (!cublas_handle_) {
+        cublasLtCreate(&cublas_handle_);
     }
 
     device_id_ = device_id;
