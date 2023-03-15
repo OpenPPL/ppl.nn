@@ -38,6 +38,10 @@ public:
         return GetCudaDevice()->GetStream();
     }
 
+    cublasLtHandle_t GetCublasHandle() const {
+        return GetCudaDevice()->GetCublasHandle();
+    }
+
     int GetDeviceId() const {
         return GetCudaDevice()->GetDeviceId();
     }

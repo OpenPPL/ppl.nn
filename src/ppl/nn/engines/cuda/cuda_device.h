@@ -20,6 +20,7 @@
 
 #include "ppl/nn/common/device.h"
 #include <cuda_runtime.h>
+#include <cublasLt.h>
 
 #include <map>
 #include <random>
@@ -92,6 +93,11 @@ public:
     cudaStream_t GetStream() const {
         return stream_;
     }
+
+    cublasLtHandle_t GetCublasHandle() const {
+        return cublas_handle_;
+    }
+
     int GetDeviceId() const {
         return device_id_;
     }
@@ -103,6 +109,7 @@ public:
 private:
     int device_id_ = INT_MAX;
     cudaStream_t stream_ = nullptr;
+    cublasLtHandle_t cublas_handle_ = nullptr;
     cudaDeviceProp device_prop_;
     CudaDataConverter data_converter_;
     std::map<edgeid_t, BufferDesc> edge2buffer_;
