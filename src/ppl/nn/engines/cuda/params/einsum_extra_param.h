@@ -15,31 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_ONNX_EINSUM_KERNEL_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_ONNX_EINSUM_KERNEL_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_PARAMS_EINSUM_EXTRA_PARAM_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_PARAMS_EINSUM_EXTRA_PARAM_H_
 
-#include "ppl/nn/engines/cuda/kernel.h"
-
-#include "ppl/nn/engines/cuda/params/einsum_extra_param.h"
-#include "ppl/nn/params/onnx/transpose_param.h"
+#include "ppl/nn/engines/cuda/params/conv_extra_param.h"
+#include "ppl/nn/params/onnx/einsum_param.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-class EinSumKernel : public CudaKernel {
-public:
-    EinSumKernel(const ir::Node* node) : CudaKernel(node) {}
+struct EinSumExtraParam {
+    ConvAlgoInfo algo_info;
+};
 
-    void SetParam(const CudaEinSumParam* p) {
-        param_ = p;
-    }
-
-private:
-    ppl::common::RetCode TransposeImpl(KernelExecContext*, ppl::nn::onnx::TransposeParam&, int);
-    ppl::common::RetCode MatMulImpl(KernelExecContext*);
-    ppl::common::RetCode DoExecute(KernelExecContext*) override;
-
-private:
-    const CudaEinSumParam* param_ = nullptr;
+struct CudaEinSumParam {
+    ppl::nn::onnx::EinSumParam param;
+    EinSumExtraParam extra_param;
 };
 
 }}} // namespace ppl::nn::cuda

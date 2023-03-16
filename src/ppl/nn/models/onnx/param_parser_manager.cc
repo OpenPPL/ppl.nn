@@ -161,9 +161,9 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITH_PARAM("", "HardSigmoid", 6, 16, HardSigmoidParam, ParseHardSigmoidParam, PackHardSigmoidParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "HardSwish", 14, 16, nullptr);
     // I
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Identity", 1, 13, nullptr);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Identity", 1, 16, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("", "If", 1, 12, IfParam, ParseIfParam, PackIfParam);
-    PPL_REGISTER_OP_WITH_PARAM("", "InstanceNormalization", 6, 13, InstanceNormalizationParam,
+    PPL_REGISTER_OP_WITH_PARAM("", "InstanceNormalization", 6, 16, InstanceNormalizationParam,
                                ParseInstanceNormalizationParam, PackInstanceNormalizationParam);
     // L
     PPL_REGISTER_OP_WITH_PARAM("", "LeakyRelu", 6, 16, LeakyReluParam, ParseLeakyReluParam, PackLeakyReluParam);
@@ -203,7 +203,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITH_PARAM("", "ReduceProd", 1, 16, ReduceParam, ParseReduceParam, PackReduceParam);
     PPL_REGISTER_OP_WITH_PARAM("", "ReduceSum", 1, 16, ReduceParam, ParseReduceParam, PackReduceParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Relu", 6, 16, nullptr);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Reshape", 5, 13, nullptr);
+    PPL_REGISTER_OP_WITHOUT_PARAM("", "Reshape", 5, 16, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("", "Resize", 11, 16, ResizeParam, ParseResizeParam, PackResizeParam);
     PPL_REGISTER_OP_WITH_PARAM("", "RoiAlign", 10, 15, RoiAlignParam, ParseRoiAlignParam, PackRoiAlignParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Round", 11, 16, nullptr);

@@ -20,7 +20,7 @@
 
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 
-#include "ppl/nn/params/onnx/einsum_param.h"
+#include "ppl/nn/engines/cuda/params/einsum_extra_param.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -30,13 +30,17 @@ public:
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
+    void* GetParam() override {
+        return (void*)&param_;
+    };
+    void CopyParam(void*& param) override;
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode SerializeData(const pmx::SerializationContext&, utils::DataStream*) const override;
     ppl::common::RetCode DeserializeData(const pmx::DeserializationContext&, const void*, uint64_t) override;
 #endif
 
 private:
-    ppl::nn::onnx::EinSumParam param_;
+    CudaEinSumParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

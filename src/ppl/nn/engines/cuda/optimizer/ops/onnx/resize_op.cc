@@ -67,30 +67,34 @@ ResizeOp::ResizeOp(const ir::Node* node) : CudaOptKernel(node) {
         float* scales_data = nullptr;
         int64_t* sizes_data = nullptr;
 
-        if (!info->GetInput<TensorImpl>(1)->GetShape()->IsEmpty()) {
-            const TensorShape& shape = *info->GetInput<TensorImpl>(1)->GetShape();
-            roi_data = (float*)malloc(shape.CalcBytesIncludingPadding());
-            if (info->GetInput<TensorImpl>(1)->GetBufferPtr<void>() == nullptr)
-                return RC_INVALID_VALUE;
-            auto status = info->GetInput<TensorImpl>(1)->CopyToHost(roi_data);
-            if (status != RC_SUCCESS) {
-                LOG(ERROR) << "Copy input 1 failed: " << GetRetCodeStr(status);
-                return status;
+        if (info->GetInputCount() >= 2 && info->GetInput<TensorImpl>(1) != nullptr) {
+            if (!info->GetInput<TensorImpl>(1)->GetShape()->IsEmpty()) {
+                const TensorShape& shape = *info->GetInput<TensorImpl>(1)->GetShape();
+                roi_data = (float*)malloc(shape.CalcBytesIncludingPadding());
+                if (info->GetInput<TensorImpl>(1)->GetBufferPtr<void>() == nullptr)
+                    return RC_INVALID_VALUE;
+                auto status = info->GetInput<TensorImpl>(1)->CopyToHost(roi_data);
+                if (status != RC_SUCCESS) {
+                    LOG(ERROR) << "Copy input 1 failed: " << GetRetCodeStr(status);
+                    return status;
+                }
             }
         }
-        if (!info->GetInput<TensorImpl>(2)->GetShape()->IsEmpty()) {
-            const TensorShape& shape = *info->GetInput<TensorImpl>(2)->GetShape();
-            scales_data = (float*)malloc(shape.CalcBytesIncludingPadding());
-            if (info->GetInput<TensorImpl>(2)->GetBufferPtr<void>() == nullptr) {
-                return RC_INVALID_VALUE;
-            }
-            auto status = info->GetInput<TensorImpl>(2)->CopyToHost(scales_data);
-            if (status != RC_SUCCESS) {
-                LOG(ERROR) << "Copy input 2 failed: " << GetRetCodeStr(status);
-                return status;
+        if (info->GetInputCount() >= 3 && info->GetInput<TensorImpl>(2) != nullptr) {
+            if (!info->GetInput<TensorImpl>(2)->GetShape()->IsEmpty()) {
+                const TensorShape& shape = *info->GetInput<TensorImpl>(2)->GetShape();
+                scales_data = (float*)malloc(shape.CalcBytesIncludingPadding());
+                if (info->GetInput<TensorImpl>(2)->GetBufferPtr<void>() == nullptr) {
+                    return RC_INVALID_VALUE;
+                }
+                auto status = info->GetInput<TensorImpl>(2)->CopyToHost(scales_data);
+                if (status != RC_SUCCESS) {
+                    LOG(ERROR) << "Copy input 2 failed: " << GetRetCodeStr(status);
+                    return status;
+                }
             }
         }
-        if (info->GetInputCount() == 4) {
+        if (info->GetInputCount() >= 4 && info->GetInput<TensorImpl>(3) != nullptr) {
             if (!info->GetInput<TensorImpl>(3)->GetShape()->IsEmpty()) {
                 const TensorShape& shape = *info->GetInput<TensorImpl>(3)->GetShape();
                 sizes_data = (int64_t*)malloc(shape.CalcBytesIncludingPadding());
