@@ -181,15 +181,15 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<GatherOp>("", "Gather", 1, 16);
     RegisterOptKernelCreator<GatherElementsOp>("", "GatherElements", 1, 16);
     RegisterOptKernelCreator<GatherNDOp>("", "GatherND", 11, 11);
-    RegisterOptKernelCreator<GemmOp>("", "Gemm", 11, 13);
+    RegisterOptKernelCreator<GemmOp>("", "Gemm", 11, 16);
     RegisterOptKernelCreator<GlobalAveragePoolOp>("", "GlobalAveragePool", 1, 16);
     RegisterOptKernelCreator<GlobalMaxPoolOp>("", "GlobalMaxPool", 1, 16);
     RegisterOptKernelCreator<GreaterOp>("", "Greater", 9, 16);
     RegisterOptKernelCreator<GreaterOrEqualOp>("", "GreaterOrEqual", 9, 16);
     // I
-    RegisterOptKernelCreator<IdentityOp>("", "Identity", 1, 12);
+    RegisterOptKernelCreator<IdentityOp>("", "Identity", 1, 14);
     RegisterOptKernelCreator<IfOp>("", "If", 1, 12);
-    RegisterOptKernelCreator<InstanceNormalizationOp>("", "InstanceNormalization", 6, 13);
+    RegisterOptKernelCreator<InstanceNormalizationOp>("", "InstanceNormalization", 6, 16);
     // L
     RegisterOptKernelCreator<LeakyReluOp>("", "LeakyRelu", 6, 16);
     RegisterOptKernelCreator<LessOp>("", "Less", 9, 16);
@@ -197,7 +197,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<LoopOp>("", "Loop", 1, 12);
     RegisterOptKernelCreator<LstmOp>("", "LSTM", 7, 13);
     // M
-    RegisterOptKernelCreator<MatMulOp>("", "MatMul", 9, 13);
+    RegisterOptKernelCreator<MatMulOp>("", "MatMul", 9, 16);
     RegisterOptKernelCreator<MaxOp>("", "Max", 8, 11);
     RegisterOptKernelCreator<MaxPoolOp>("", "MaxPool", 1, 16);
     RegisterOptKernelCreator<MaxUnPoolOp>("", "MaxUnpool", 9, 16);
@@ -227,15 +227,15 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<ReduceOp>("", "ReduceSum", 1, 16);
     RegisterOptKernelCreator<ReluOp>("", "Relu", 6, 12);
     RegisterOptKernelCreator<ReshapeOp>("", "Reshape", 5, 16);
-    RegisterOptKernelCreator<ResizeOp>("", "Resize", 11, 12);
+    RegisterOptKernelCreator<ResizeOp>("", "Resize", 11, 16); // resize 13 input size from 1-4 not 3-4
     RegisterOptKernelCreator<ROIAlignOp>("", "RoiAlign", 10, 15);
     RegisterOptKernelCreator<RoundOp>("", "Round", 11, 16);
     // S
     RegisterOptKernelCreator<ScatterElementsOp>("", "ScatterElements", 11, 12);
     RegisterOptKernelCreator<ScatterNDOp>("", "ScatterND", 11, 12);
     RegisterOptKernelCreator<SequenceAtOp>("", "SequenceAt", 11, 16);
-    RegisterOptKernelCreator<ShapeOp>("", "Shape", 1, 12);
-    RegisterOptKernelCreator<SigmoidOp>("", "Sigmoid", 6, 12);
+    RegisterOptKernelCreator<ShapeOp>("", "Shape", 1, 16);
+    RegisterOptKernelCreator<SigmoidOp>("", "Sigmoid", 6, 16);
     RegisterOptKernelCreator<SinOp>("", "Sin", 1, 16);
     RegisterOptKernelCreator<SliceOp>("", "Slice", 1, 16);
     RegisterOptKernelCreator<SoftmaxOp>("", "Softmax", 1, 16);

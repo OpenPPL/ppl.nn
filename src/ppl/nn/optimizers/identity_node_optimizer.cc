@@ -45,8 +45,11 @@ ppl::common::RetCode IdentityNodeOptimizer::Optimize(ir::Graph* graph) const {
             // delete constant node
             in_edge->DelConsumer(identity_node->GetId());
             in_edge->AddConsumer(next_node_id);
+            out_edge->DelConsumer(next_node_id);
             graph->topo->DelNode(identity_node->GetId());
-            graph->topo->DelEdge(out_edge->GetId());
+            if (out_edge->CalcConsumerCount() == 0) {
+                graph->topo->DelEdge(out_edge->GetId());
+            }
         }
     }
 

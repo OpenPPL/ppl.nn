@@ -52,6 +52,7 @@ AlgoFilterManager::AlgoFilterManager() {
     REGISTER_ALGO_FILTER_INFO("PRelu", prelu_imp_);
     REGISTER_ALGO_FILTER_INFO("MMCVModulatedDeformConv2d", deform_conv_imp_);
     REGISTER_ALGO_FILTER_INFO("MatMul", matmul_imp_);
+    REGISTER_ALGO_FILTER_INFO("EinSum", einsum_imp_);
     REGISTER_ALGO_FILTER_INFO("Normal", normal_imp_);
 }
 

@@ -33,7 +33,7 @@ using namespace ppl::nn::onnx;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode EinSumOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<EinSumParam>(options, &param_);
+    auto status = GenericLoadParam<EinSumParam>(options, &param_.param);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
@@ -56,12 +56,14 @@ EinSumOp::EinSumOp(const ir::Node* node) : CudaOptKernel(node) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-         return onnx::ReshapeEinSum(info, &param_);
+         return onnx::ReshapeEinSum(info, &param_.param);
     };
 
 }
 
 RetCode EinSumOp::Finalize(const OptKernelOptions& options) {
+    param_ = *((CudaEinSumParam*)options.param);
+    
     auto status = SetCommonParam(options);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load common param failed: " << GetRetCodeStr(status);
@@ -69,6 +71,14 @@ RetCode EinSumOp::Finalize(const OptKernelOptions& options) {
     }
 
     return RC_SUCCESS;
+}
+
+void EinSumOp::CopyParam(void*& param) {
+    if (param == nullptr) {
+        param = new CudaEinSumParam();
+    }
+    *(CudaEinSumParam*)param = param_;
+    return;
 }
 
 KernelImpl* EinSumOp::CreateKernelImpl() const {

@@ -23,6 +23,7 @@
 #include "ppl/nn/engines/cuda/optimizer/algos/algo_concat.h"
 #include "ppl/nn/engines/cuda/optimizer/algos/algo_conv.h"
 #include "ppl/nn/engines/cuda/optimizer/algos/algo_convtranspose.h"
+#include "ppl/nn/engines/cuda/optimizer/algos/algo_einsum.h"
 #include "ppl/nn/engines/cuda/optimizer/algos/algo_gemm.h"
 #include "ppl/nn/engines/cuda/optimizer/algos/algo_matmul.h"
 #include "ppl/nn/engines/cuda/optimizer/algos/algo_lstm.h"
@@ -69,6 +70,7 @@ private:
     ConvTransposeAlgorithm convtranspose_imp_;
     DepthwiseDirect depthwise_direct_imp_;
     DepthwiseDirectInt8 depthwise_direct_imp_int8_;
+    EinSumAlgorithm einsum_imp_;
     GemmAlgorithm gemm_imp_;
     MatMulAlgorithm matmul_imp_;
     DeformConvAlgorithm deform_conv_imp_;

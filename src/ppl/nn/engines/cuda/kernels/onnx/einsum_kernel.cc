@@ -25,12 +25,10 @@
 
 #include "ppl/common/destructor.h"
 
-#include "ppl/nn/common/tensor_shape.h"
-#include "ppl/common/retcode.h"
-#include "cudakernel/common/common.h"
-#include "ppl/nn/common/logger.h"
-
-#include "ppl/nn/oputils/onnx/reshape_einsum.h"
+#include "ppl/nn/engines/cuda/module/cuda_module.h"
+#include "ppl/common/destructor.h"
+#include "cudakernel/nn/conv/conv_fp16.h"
+#include "cudakernel/gemm/bgemm.h"
 
 #include "ppl/common/types.h"
 // #include <cuda_fp16.h>
@@ -42,6 +40,151 @@
 using namespace std;
 
 namespace ppl { namespace nn { namespace cuda {
+
+ppl::common::RetCode EinSumKernel::TransposeImpl(KernelExecContext* ctx, ppl::nn::onnx::TransposeParam& trans_param, int index) {
+    auto input_tensor = ctx->GetInput<TensorImpl>(index);
+    auto input_shape = input_tensor->GetShape();
+    auto input_ptr = input_tensor->GetBufferPtr();
+
+    ppl::nn::TensorShape usq_shape = *input_shape;
+    ppl::nn::TensorShape perm_out_shape(usq_shape);
+
+    std::vector<int64_t> permed_dims(trans_param.perm.size());
+    for(uint64_t j=0; j< permed_dims.size();++j)
+        permed_dims[j] = usq_shape.GetDim(trans_param.perm[j]);
+    perm_out_shape.Reshape(permed_dims);
+
+    BufferDesc tmp_buffer_desc;
+    auto tmp_buffer_bytes = input_shape->CalcBytesIncludingPadding();
+    auto status = GetCudaDevice()->AllocTmpBuffer(tmp_buffer_bytes, &tmp_buffer_desc);
+
+    ppl::common::Destructor __tmp_buffer_guard1([this, &tmp_buffer_desc]() -> void {
+    GetCudaDevice()->FreeTmpBuffer(&tmp_buffer_desc);
+    });
+    auto tmp_buffer = tmp_buffer_desc.addr;
+    
+    TransposeKernelParam kernel_param;
+    kernel_param.perm = trans_param.perm;
+    status = PPLCUDATransposeForwardImp(GetStream(), kernel_param, &usq_shape, input_ptr, &perm_out_shape, tmp_buffer);
+    cudaMemcpyAsync(input_ptr, tmp_buffer, usq_shape.CalcBytesIncludingPadding(), cudaMemcpyDeviceToDevice, GetStream());
+    return status;
+}
+
+ppl::common::RetCode EinSumKernel::MatMulImpl(KernelExecContext* ctx) {
+    BufferDesc tmp_buffer_desc;
+    auto tmp_buffer_bytes = CalcTmpBufferSize(*ctx);
+    auto status = GetCudaDevice()->AllocTmpBuffer(tmp_buffer_bytes, &tmp_buffer_desc);
+    if (status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_bytes << "] for kernel[" << GetName()
+                   << "] failed: " << ppl::common::GetRetCodeStr(status);
+        return status;
+    }
+    ppl::common::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
+        GetCudaDevice()->FreeTmpBuffer(&tmp_buffer_desc);
+    });
+    auto tmp_buffer = tmp_buffer_desc.addr;
+
+    auto input0 = ctx->GetInput<TensorImpl>(0);
+    auto weight = ctx->GetInput<TensorImpl>(1);
+    auto output = ctx->GetOutput<TensorImpl>(0);
+    GemmKernelParam param_kernel_;
+    param_kernel_.alpha = 1;
+    param_kernel_.beta = 1;
+    param_kernel_.transA = 0;
+    param_kernel_.transB = 0;
+
+    // convert filter only if the filter tensor is an output of another kernel
+    BufferDesc weight_buffer;
+    auto newshape = *weight->GetShape();
+    {
+        auto align_size = 8;
+        auto dim_count = newshape.GetDimCount();
+        newshape.SetDim(dim_count - 2, (newshape.GetDim(dim_count - 2) + align_size - 1) / align_size * align_size);
+
+        auto status = GetCudaDevice()->Realloc(newshape, &weight_buffer);
+        if (status != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
+            return status;
+        }
+        auto stream = GetStream();
+        PPLCUDABgemmModifyWeights(stream, weight->GetShape(), weight->GetBufferPtr(), weight_buffer.addr,
+                                  &param_kernel_);
+    }
+    ppl::common::Destructor __tmp_buffer_guard__([this, &weight_buffer]() -> void {
+        GetCudaDevice()->Free(&weight_buffer);
+    });
+
+    BufferDesc input0_buffer;
+    auto newshape0 = *input0->GetShape();
+    auto dim_count = newshape0.GetDimCount();
+    auto K = newshape0.GetDim(dim_count - 1);
+    auto align_size = 8;
+    auto K_pad = (K + align_size - 1) / align_size * align_size;
+    bool is_input0_pad = K != K_pad;
+    void* bmm_input0;
+    if (is_input0_pad) {
+        newshape0.SetDim(dim_count - 1, K_pad);
+        auto status = GetCudaDevice()->Realloc(newshape0, &input0_buffer);
+        if (status != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
+            return status;
+        }
+        auto stream = GetStream();
+        PPLCUDABgemmPadInput(stream, input0->GetShape(), input0->GetBufferPtr(), input0_buffer.addr, &param_kernel_);
+        bmm_input0 = input0_buffer.addr;
+    } else {
+        bmm_input0 = input0->GetBufferPtr();
+    }
+    ppl::common::Destructor __input0_buffer_guard__([this, &input0_buffer]() -> void {
+        GetCudaDevice()->Free(&input0_buffer);
+    });
+
+    auto newshape_out = *output->GetShape();
+    auto out_dim_count = newshape_out.GetDimCount();
+    auto N = newshape_out.GetDim(out_dim_count - 1);
+    auto N_pad = (N + align_size - 1) / align_size * align_size;
+    BufferDesc output_buffer;
+    bool is_output_pad = N != N_pad;
+    void* bgemm_out;
+    if (is_output_pad) {
+        newshape_out.SetDim(out_dim_count - 1, N_pad);
+        auto status = GetCudaDevice()->Realloc(newshape_out, &output_buffer);
+        if (status != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "alloc buffer for constant failed: " << GetRetCodeStr(status);
+            return status;
+        }
+        bgemm_out = output_buffer.addr;
+    } else {
+        bgemm_out = output->GetBufferPtr();
+    }
+    ppl::common::Destructor __output_buffer_guard__([this, &output_buffer]() -> void {
+        GetCudaDevice()->Free(&output_buffer);
+    });
+
+    fuse_param_t temp_fuse_param;
+
+    auto stream = GetStream();
+    CUfunction module_func = nullptr;
+#ifdef PPLNN_ENABLE_CUDA_JIT
+    CUDAModule* module = static_cast<CUDAModule*>(this->GetCommonParam()->module);
+    module_func = module->GetKernelFunc();
+#endif
+
+    const TensorShape& shape_in0 = *input0->GetShape();
+    algo_param_t algo_info;
+    algo_info.UseDefaultF1Kernel(GetCudaDevice()->GetDeviceProp());
+    if (shape_in0.GetDataType() == ppl::common::DATATYPE_FLOAT16) {
+        status = PPLCUDABgemmForwardImp(GetCudaDevice()->GetDeviceProp(), stream, module_func, input0->GetShape(), bmm_input0,
+                                        weight->GetShape(), weight_buffer.addr, output->GetShape(), bgemm_out,
+                                        param_kernel_, tmp_buffer, temp_fuse_param, algo_info);
+    }
+
+    if (is_output_pad) {
+        PPLCUDABgemmCvtOutput(stream, output->GetShape(), output->GetBufferPtr(), bgemm_out);
+    }
+
+    return status;
+}
 
 ppl::common::RetCode EinSumKernel::DoExecute(KernelExecContext* ctx) {
     auto input_tensor0 = ctx->GetInput<TensorImpl>(0);
@@ -56,17 +199,23 @@ ppl::common::RetCode EinSumKernel::DoExecute(KernelExecContext* ctx) {
     auto input_shape1 = input_tensor1->GetShape();
     auto input1 = input_tensor1->GetBufferPtr();
 
-    ppl::common::RetCode status;
-    auto equation = param_->equation;
+    ppl::common::RetCode status = RC_SUCCESS;
+    auto equation = param_->param.equation;
     if(ctx->GetInputCount()==2 && equation == "...bac,...dae->...bdce" 
         && input_shape0->GetDimCount()==4){
-
         status = PPLCUDAEinSum_nbac_ndae_nbdce_2_ForwardImp(GetStream(), input_shape0, input0, input_shape1, input1, output_shape, output, equation);
     } else if(ctx->GetInputCount()==2 && equation == "...abc,...adc->...bdc" 
         && input_shape0->GetDimCount()==4){ 
         status = PPLCUDAEinSum_nabc_nadc_nbdc_ForwardImp(GetStream(), input_shape0, input0, input_shape1, input1, output_shape, output, equation);
     } else if (ctx->GetInputCount()==2 && equation == "i , j -> i j" ){
         status = PPLCUDAEinSum_i_j_ij_ForwardImp(GetStream(), input_shape0, input0, input_shape1, input1, output_shape, output, equation);
+    } else if (ctx->GetInputCount()==2 && equation == "b i j, b j d -> b i d") { // matmul
+        return MatMulImpl(ctx);
+    } else if (ctx->GetInputCount()==2 && equation == "b i d, b j d -> b i j") { // transpose + matmul
+        ppl::nn::onnx::TransposeParam trans_param;
+        trans_param.perm = {0, 2, 1};
+        TransposeImpl(ctx, trans_param, 1);
+        return MatMulImpl(ctx);
     } else {
         LOG(INFO) << "Not support equation: "<< equation <<" with input count " << input_shape0->GetDimCount();
         status =  ppl::common::RC_UNSUPPORTED;
