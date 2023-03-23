@@ -54,6 +54,12 @@ MSDeformAttnOp::MSDeformAttnOp(const ir::Node* node) : CudaOptKernel(node) {
         } else {
             status = InferDefaultType(info, type);
         }
+        for (uint32_t i = 1; i < 3; ++i) {
+            if (info->GetInputCount() > i) {
+                auto shape = info->GetInput<TensorImpl>(i)->GetShape();
+                shape->SetDataType(ppl::common::DATATYPE_INT64);
+            }
+        }
         return status;
     };
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
