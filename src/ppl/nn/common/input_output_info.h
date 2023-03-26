@@ -71,6 +71,10 @@ public:
         return static_cast<T*>(acquire_func_(eid, EdgeObjectType<T>::value));
     }
 
+    std::string GetNodeName() const {
+        return node_->GetName();
+    }
+
 protected:
     const ir::Node* node_ = nullptr;
     std::function<EdgeObject*(edgeid_t, uint32_t)> acquire_func_;
