@@ -44,12 +44,9 @@ ppl::common::RetCode SoftmaxKernel::DoExecute(KernelExecContext* ctx) {
         auto status = PPLCUDASoftmaxForwardImpInt8(GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(),
                                           output->GetBufferPtr(), nullptr, real_axis, &qparam);
         return status;
-    } else if (input_shape->GetDimCount() == 4 && real_axis == 3 && input_shape->GetDim(2) == input_shape->GetDim(3)) {
+    } else if (real_axis == input_shape->GetDimCount() - 1) {
         return PPLCUDAFastSoftmax(GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(),
-                                  output->GetBufferPtr(), nullptr, 1);
-    } else if (input_shape->GetDimCount() == 3 && real_axis == 2 && input_shape->GetDim(1) == input_shape->GetDim(2)) {
-        return PPLCUDAFastSoftmax(GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(),
-                                  output->GetBufferPtr(), nullptr, 1);
+                                  output->GetBufferPtr(), nullptr);
     } else {
         BufferDesc tmp_buffer_desc;
         auto tmp_buffer_bytes = CalcTmpBufferSize(*ctx);
