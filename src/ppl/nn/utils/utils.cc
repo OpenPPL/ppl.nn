@@ -92,6 +92,7 @@ RetCode ReadFileContent(const char* fname, Buffer* buf, uint64_t offset, uint64_
         FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM, nullptr, GetLastError(), 0, errmsg,
                       g_max_msg_buf_size, nullptr);
         LOG(ERROR) << "read file[" << fname << "] failed: " << errmsg;
+        buf->Clear();
         return RC_OTHER_ERROR;
     }
     if (bytes_read != length) {
@@ -142,17 +143,22 @@ RetCode ReadFileContent(const char* fname, Buffer* buf, uint64_t offset, uint64_
     }
 
     buf->Resize(length);
-    auto bytes_read = read(fd, buf->GetData(), length);
-    if (bytes_read < 0) {
-        LOG(ERROR) << "read file[" << fname << "] failed: " << strerror(errno);
-        buf->Clear();
-        return RC_OTHER_ERROR;
-    }
-    if ((uint64_t)bytes_read != length) {
-        LOG(ERROR) << "[" << bytes_read << "] bytes read != expected [" << length << "]";
-        buf->Clear();
-        return RC_OTHER_ERROR;
-    }
+    char* cursor = (char*)buf->GetData();
+    do {
+        auto bytes_read = read(fd, cursor, length);
+        if (bytes_read < 0) {
+            LOG(ERROR) << "read file[" << fname << "] failed: " << strerror(errno);
+            buf->Clear();
+            return RC_OTHER_ERROR;
+        }
+        if (bytes_read == 0) {
+            LOG(ERROR) << "unexpected end of file while reading.";
+            buf->Clear();
+            return RC_OTHER_ERROR;
+        }
+        length -= (uint64_t)bytes_read;
+        cursor += (uint64_t)bytes_read;
+     } while (length > 0);
 
     return RC_SUCCESS;
 }
