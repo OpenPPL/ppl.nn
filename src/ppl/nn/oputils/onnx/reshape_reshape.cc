@@ -23,10 +23,12 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-RetCode ReshapeReshape(InputOutputInfo* info, const ir::Attr*, const int64_t* shape_data) {
+RetCode ReshapeReshape(InputOutputInfo* info, const ir::Attr* arg, const int64_t* shape_data) {
     auto data = info->GetInput<TensorImpl>(0)->GetShape();
     auto shape = info->GetInput<TensorImpl>(1)->GetShape();
     auto reshaped = info->GetOutput<TensorImpl>(0)->GetShape();
+
+    auto param = static_cast<const ReshapeParam*>(arg);
 
     if (shape->GetDimCount() != 1) {
         LOG(DEBUG) << "ERROR: input[1]'s dim count[" << shape->GetDimCount() << "] != 1.";
@@ -44,7 +46,7 @@ RetCode ReshapeReshape(InputOutputInfo* info, const ir::Attr*, const int64_t* sh
                 LOG(DEBUG) << "ERROR: axis_need_infer[" << axis_need_infer << "] != -1.";
                 return RC_INVALID_VALUE;
             }
-        } else if (shape_data[i] == 0) {
+        } else if (shape_data[i] == 0 && !param->allowzero) {
             if (i < data->GetDimCount()) {
                 reshaped->SetDim(i, data->GetDim(i));
             } else {
@@ -86,7 +88,7 @@ RetCode ReshapeReshape(InputOutputInfo* info, const ir::Attr* arg) {
         LOG(DEBUG) << "ERROR: input[1]'s is empty.";
         return RC_NOT_FOUND;
     }
-    return ReshapeReshape(info, nullptr, shape_data);
+    return ReshapeReshape(info, arg, shape_data);
 }
 
 }}} // namespace ppl::nn::onnx

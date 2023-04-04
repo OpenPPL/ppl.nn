@@ -32,11 +32,10 @@ RetCode SplitOp::DoInit(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        auto ret = onnx::ReshapeSplit(info, param_.get());
-        if (ret != RC_SUCCESS) {
-            return ret;
-        }
-        return RC_SUCCESS;
+        const int64_t *data = nullptr;
+        if (info->GetInputCount() == 2)
+            data = info->GetInput<TensorImpl>(1)->GetBufferPtr<const int64_t>();
+        return onnx::ReshapeSplit(info, param_.get(), data);
     };
 
     infer_type_func_ = GenericInferType;

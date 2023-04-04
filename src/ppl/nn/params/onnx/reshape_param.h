@@ -15,18 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_RESHAPE_H_
-#define _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_RESHAPE_H_
+#ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_RESHAPE_PARAM_H_
+#define _ST_HPC_PPL_NN_PARAMS_ONNX_RESHAPE_PARAM_H_
 
-#include "ppl/common/retcode.h"
-#include "ppl/nn/common/input_output_info.h"
-#include "ppl/nn/params/onnx/reshape_param.h"
+#include <stdint.h>
 #include "ppl/nn/ir/attr.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ReshapeReshape(InputOutputInfo*, const ir::Attr*, const int64_t* shape_data);
-ppl::common::RetCode ReshapeReshape(InputOutputInfo*, const ir::Attr*);
+struct ReshapeParam final : public ir::TypedAttr<ReshapeParam> {
+    int32_t allowzero;
+
+    bool operator==(const ReshapeParam& p) const {
+        return this->allowzero == p.allowzero;
+    }
+};
 
 }}} // namespace ppl::nn::onnx
 

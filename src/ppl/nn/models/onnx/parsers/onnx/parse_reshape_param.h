@@ -15,18 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_RESHAPE_H_
-#define _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_RESHAPE_H_
+#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PARSE_RESHAPE_PARAM_H_
+#define _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PARSE_RESHAPE_PARAM_H_
 
 #include "ppl/common/retcode.h"
-#include "ppl/nn/common/input_output_info.h"
+#include "ppl/nn/models/onnx/param_parser_extra_args.h"
+#include "ppl/nn/models/onnx/generated/onnx.pb.h"
 #include "ppl/nn/params/onnx/reshape_param.h"
-#include "ppl/nn/ir/attr.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ReshapeReshape(InputOutputInfo*, const ir::Attr*, const int64_t* shape_data);
-ppl::common::RetCode ReshapeReshape(InputOutputInfo*, const ir::Attr*);
+ppl::common::RetCode ParseReshapeParam(const ::onnx::NodeProto&, const ParamParserExtraArgs&, ir::Node*, ir::Attr*);
+
+ppl::common::RetCode PackReshapeParam(const ir::Node*, const ir::Attr*, ::onnx::NodeProto*);
 
 }}} // namespace ppl::nn::onnx
 
