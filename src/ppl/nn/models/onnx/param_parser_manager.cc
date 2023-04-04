@@ -51,6 +51,7 @@
 #include "ppl/nn/models/onnx/parsers/onnx/parse_pooling_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_random_uniform_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_reduce_param.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_reshape_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_resize_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_roialign_param.h"
 #include "ppl/nn/models/onnx/parsers/onnx/parse_scatter_elements_param.h"
@@ -203,7 +204,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITH_PARAM("", "ReduceProd", 1, 16, ReduceParam, ParseReduceParam, PackReduceParam);
     PPL_REGISTER_OP_WITH_PARAM("", "ReduceSum", 1, 16, ReduceParam, ParseReduceParam, PackReduceParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Relu", 6, 16, nullptr);
-    PPL_REGISTER_OP_WITHOUT_PARAM("", "Reshape", 5, 16, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("", "Reshape", 5, 16, ReshapeParam, ParseReshapeParam, PackReshapeParam);
     PPL_REGISTER_OP_WITH_PARAM("", "Resize", 11, 16, ResizeParam, ParseResizeParam, PackResizeParam);
     PPL_REGISTER_OP_WITH_PARAM("", "RoiAlign", 10, 15, RoiAlignParam, ParseRoiAlignParam, PackRoiAlignParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Round", 11, 16, nullptr);
@@ -219,7 +220,7 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Slice", 1, 16, ParseSliceParam);
     PPL_REGISTER_OP_WITH_PARAM("", "Softmax", 1, 16, SoftmaxParam, ParseSoftmaxParam, PackSoftmaxParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Softplus", 1, 16, nullptr);
-    PPL_REGISTER_OP_WITH_PARAM("", "Split", 2, 16, SplitParam, ParseSplitParam, PackSplitParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "Split", 2, 17, SplitParam, ParseSplitParam, PackSplitParam);
     PPL_REGISTER_OP_WITH_PARAM("", "SplitToSequence", 11, 16, SplitToSequenceParam, ParseSplitToSequenceParam,
                                PackSplitToSequenceParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Sqrt", 6, 16, nullptr);

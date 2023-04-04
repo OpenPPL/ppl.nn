@@ -15,19 +15,29 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_RESHAPE_H_
-#define _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_RESHAPE_H_
-
-#include "ppl/common/retcode.h"
-#include "ppl/nn/common/input_output_info.h"
-#include "ppl/nn/params/onnx/reshape_param.h"
-#include "ppl/nn/ir/attr.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_reshape_param.h"
+#include "ppl/nn/models/onnx/utils.h"
+#include "ppl/nn/common/logger.h"
+using namespace std;
+using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ReshapeReshape(InputOutputInfo*, const ir::Attr*, const int64_t* shape_data);
-ppl::common::RetCode ReshapeReshape(InputOutputInfo*, const ir::Attr*);
+RetCode ParseReshapeParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node* node, ir::Attr* arg) {
+    auto param = static_cast<ReshapeParam*>(arg);
+
+    auto& node_type = node->GetType();
+    utils::GetNodeAttr(pb_node, "allowzero", &param->allowzero, 0);
+    if (node_type.version < 14 && param->allowzero) {
+        LOG(ERROR) << "opset < 14 does not support allowzero.";
+    }
+    return RC_SUCCESS;
+}
+
+RetCode PackReshapeParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const ReshapeParam*>(arg);
+    utils::SetNodeAttr(pb_node, "allowzero", param->allowzero);
+    return RC_SUCCESS;
+}
 
 }}} // namespace ppl::nn::onnx
-
-#endif

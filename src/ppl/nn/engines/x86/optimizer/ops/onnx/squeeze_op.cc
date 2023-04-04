@@ -32,7 +32,10 @@ RetCode SqueezeOp::DoInit(const OptKernelOptions& options) {
     }
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return onnx::ReshapeSqueeze(info, param_.get());
+        const int64_t *data = nullptr;
+        if (info->GetInputCount() == 2)
+            data = info->GetInput<TensorImpl>(1)->GetBufferPtr<const int64_t>();
+        return onnx::ReshapeSqueeze(info, param_.get(), data);
     };
 
     infer_type_func_ = GenericInferType;

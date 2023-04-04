@@ -30,20 +30,16 @@ uint64_t TopKKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const {
 
 ppl::common::RetCode TopKKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_REQUIRED_INPUT(X, 0);
-    PPLNN_X86_OPTIONAL_INPUT(K, 1);
+    PPLNN_X86_REQUIRED_INPUT(K, 1);
     PPLNN_X86_REQUIRED_OUTPUT(Values, 0);
     PPLNN_X86_REQUIRED_OUTPUT(Indices, 1);
-
-    int64_t k_val = *K->GetBufferPtr<int64_t>();
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [X]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(X);
-    if (K) {
-        PPLNN_X86_DEBUG_TRACE("Input [K]:\n");
-        PPL_X86_TENSOR_PRINT_DEBUG_MSG(K);
-        k_val = K->GetBufferPtr<const int64_t>()[0];
-    }
+    PPLNN_X86_DEBUG_TRACE("Input [K]:\n");
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(K);
+    const int64_t k_val = K->GetBufferPtr<const int64_t>()[0];
 
     PPLNN_X86_DEBUG_TRACE("k: %ld\n", k_val);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
