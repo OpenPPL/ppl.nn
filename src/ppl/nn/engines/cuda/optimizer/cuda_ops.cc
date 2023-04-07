@@ -225,7 +225,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<ReduceOp>("", "ReduceMin", 1, 16);
     RegisterOptKernelCreator<ReduceOp>("", "ReduceProd", 1, 16);
     RegisterOptKernelCreator<ReduceOp>("", "ReduceSum", 1, 16);
-    RegisterOptKernelCreator<ReluOp>("", "Relu", 6, 12);
+    RegisterOptKernelCreator<ReluOp>("", "Relu", 6, 14);
     RegisterOptKernelCreator<ReshapeOp>("", "Reshape", 5, 16);
     RegisterOptKernelCreator<ResizeOp>("", "Resize", 11, 16); // resize 13 input size from 1-4 not 3-4
     RegisterOptKernelCreator<ROIAlignOp>("", "RoiAlign", 10, 15);

@@ -59,32 +59,62 @@ RetCode ConvertToForwardConvParam(const TensorShape& shape_in0, const TensorShap
                                   conv_param_t& conv_param) {
     const ConvParam& normal_param = cuda_param.param;
 
-    conv_param.in_height = shape_in0.GetDim(2);
-    conv_param.in_width = shape_in0.GetDim(3);
-    conv_param.in_num = shape_in0.GetDim(0);
-    conv_param.num_grp = normal_param.group;
-    conv_param.num_chl = shape_in1.GetDim(1) * normal_param.group;
-    conv_param.num_flt = shape_in1.GetDim(0);
-    unsigned int in_pad_size;
-    unsigned int flt_pad_size;
-    GetPadSize(in_pad_size, shape_in0.GetDataType());
-    GetPadSize(flt_pad_size, shape_in1.GetDataType());
-    // conv_param.num_chl_pad = (conv_param.num_chl + 7) / 8 * 8;
-    // conv_param.num_flt_pad = (conv_param.num_flt + 7) / 8 * 8;
-    // std::cout << "in pad size: " << in_pad_size << " flt_pad_size: " << flt_pad_size << std::endl;
-    conv_param.num_chl_pad = Align(conv_param.num_chl, in_pad_size);
-    conv_param.num_flt_pad = Align(conv_param.num_flt, flt_pad_size);
-    conv_param.flt_height = shape_in1.GetDim(2);
-    conv_param.flt_width = shape_in1.GetDim(3);
-    conv_param.out_height = shape_out.GetDim(2);
-    conv_param.out_width = shape_out.GetDim(3);
-    conv_param.stride_height = normal_param.strides[0];
-    conv_param.stride_width = normal_param.strides[1];
-    conv_param.pad_height = normal_param.pads[0];
-    conv_param.pad_width = normal_param.pads[1];
-    conv_param.hole_height = normal_param.dilations[0];
-    conv_param.hole_width = normal_param.dilations[1];
-    conv_param.has_bias = cuda_param.extra_param.bias_term;
+    if (shape_in1.GetDimCount() == 3) { // 1d-conv case
+        conv_param.in_height = shape_in0.GetDim(2);
+        conv_param.in_width = 1;
+        conv_param.in_num = shape_in0.GetDim(0);
+        conv_param.num_grp = normal_param.group;
+        conv_param.num_chl = shape_in1.GetDim(1) * normal_param.group;
+        conv_param.num_flt = shape_in1.GetDim(0);
+        unsigned int in_pad_size;
+        unsigned int flt_pad_size;
+        GetPadSize(in_pad_size, shape_in0.GetDataType());
+        GetPadSize(flt_pad_size, shape_in1.GetDataType());
+        // conv_param.num_chl_pad = (conv_param.num_chl + 7) / 8 * 8;
+        // conv_param.num_flt_pad = (conv_param.num_flt + 7) / 8 * 8;
+        // std::cout << "in pad size: " << in_pad_size << " flt_pad_size: " << flt_pad_size << std::endl;
+        conv_param.num_chl_pad = Align(conv_param.num_chl, in_pad_size);
+        conv_param.num_flt_pad = Align(conv_param.num_flt, flt_pad_size);
+        conv_param.flt_height = shape_in1.GetDim(2);
+        conv_param.flt_width = 1;
+        conv_param.out_height = shape_out.GetDim(2);
+        conv_param.out_width = 1;
+        conv_param.stride_height = normal_param.strides[0];
+        conv_param.stride_width = 1;
+        conv_param.pad_height = normal_param.pads[0];
+        conv_param.pad_width = 0;
+        conv_param.hole_height = normal_param.dilations[0];
+        conv_param.hole_width = 1;
+        conv_param.has_bias = cuda_param.extra_param.bias_term;
+    } else { //2d-conv case
+        conv_param.in_height = shape_in0.GetDim(2);
+        conv_param.in_width = shape_in0.GetDim(3);
+        conv_param.in_num = shape_in0.GetDim(0);
+        conv_param.num_grp = normal_param.group;
+        conv_param.num_chl = shape_in1.GetDim(1) * normal_param.group;
+        conv_param.num_flt = shape_in1.GetDim(0);
+        unsigned int in_pad_size;
+        unsigned int flt_pad_size;
+        GetPadSize(in_pad_size, shape_in0.GetDataType());
+        GetPadSize(flt_pad_size, shape_in1.GetDataType());
+        // conv_param.num_chl_pad = (conv_param.num_chl + 7) / 8 * 8;
+        // conv_param.num_flt_pad = (conv_param.num_flt + 7) / 8 * 8;
+        // std::cout << "in pad size: " << in_pad_size << " flt_pad_size: " << flt_pad_size << std::endl;
+        conv_param.num_chl_pad = Align(conv_param.num_chl, in_pad_size);
+        conv_param.num_flt_pad = Align(conv_param.num_flt, flt_pad_size);
+        conv_param.flt_height = shape_in1.GetDim(2);
+        conv_param.flt_width = shape_in1.GetDim(3);
+        conv_param.out_height = shape_out.GetDim(2);
+        conv_param.out_width = shape_out.GetDim(3);
+        conv_param.stride_height = normal_param.strides[0];
+        conv_param.stride_width = normal_param.strides[1];
+        conv_param.pad_height = normal_param.pads[0];
+        conv_param.pad_width = normal_param.pads[1];
+        conv_param.hole_height = normal_param.dilations[0];
+        conv_param.hole_width = normal_param.dilations[1];
+        conv_param.has_bias = cuda_param.extra_param.bias_term;
+    }
+    
     return RC_SUCCESS;
 }
 #undef GetPadSize
