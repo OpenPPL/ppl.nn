@@ -285,7 +285,7 @@ RetCode ChannelShuffleFusion::FuseNode(ir::Node* node, bool reliable, const OptK
             return RC_NOT_FOUND;
         }
         param->group = 2;
-        opt_kernel->Init(options);
+        // opt_kernel->Init(options);
         options.info->kernels.emplace(node->GetId(), std::move(opt_kernel));
     }
     return RC_SUCCESS;
