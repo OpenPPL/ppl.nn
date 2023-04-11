@@ -30,6 +30,7 @@ RetCode ParseReshapeParam(const ::onnx::NodeProto& pb_node, const ParamParserExt
     utils::GetNodeAttr(pb_node, "allowzero", &param->allowzero, 0);
     if (node_type.version < 14 && param->allowzero) {
         LOG(ERROR) << "opset < 14 does not support allowzero.";
+        return RC_UNSUPPORTED;
     }
     return RC_SUCCESS;
 }

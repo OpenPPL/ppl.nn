@@ -24,8 +24,14 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace riscv {
 
 RetCode ReshapeOp::Init(const OptKernelOptions& options) {
-    infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
-        return onnx::ReshapeReshape(info, nullptr);
+    auto status = GenericLoadParam(options, &param_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        return onnx::ReshapeReshape(info, param_.get());
     };
 
     infer_type_func_ = GenericInferType;

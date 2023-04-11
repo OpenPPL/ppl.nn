@@ -18,6 +18,7 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_ARM_OPTIMIZER_OPS_ONNX_RESHAPE_OP_H_
 #define _ST_HPC_PPL_NN_ENGINES_ARM_OPTIMIZER_OPS_ONNX_RESHAPE_OP_H_
 
+#include "ppl/nn/params/onnx/reshape_param.h"
 #include "ppl/nn/engines/arm/optimizer/opt_kernel.h"
 
 namespace ppl { namespace nn { namespace arm {
@@ -37,6 +38,9 @@ public:
     ppl::common::RetCode SerializeData(const ::ppl::nn::pmx::SerializationContext&, utils::DataStream*) const override;
     ppl::common::RetCode DeserializeData(const ::ppl::nn::pmx::DeserializationContext&, const void*, uint64_t) override;
 #endif
+
+private:
+    std::shared_ptr<ppl::nn::onnx::ReshapeParam> param_;
 };
 
 }}} // namespace ppl::nn::arm

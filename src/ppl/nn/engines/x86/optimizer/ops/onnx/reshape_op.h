@@ -18,6 +18,7 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_RESHAPE_OP_H_
 #define _ST_HPC_PPL_NN_ENGINES_X86_OPTIMIZER_OPS_ONNX_RESHAPE_OP_H_
 
+#include "ppl/nn/params/onnx/reshape_param.h"
 #include "ppl/nn/engines/x86/optimizer/opt_kernel.h"
 
 namespace ppl { namespace nn { namespace x86 {
@@ -27,6 +28,9 @@ public:
     ReshapeOp(const ir::Node* node) : X86OptKernel(node) {}
     ppl::common::RetCode DoInit(const OptKernelOptions& options) override;
     KernelImpl* CreateKernelImpl() const override;
+
+private:
+    std::shared_ptr<ppl::nn::onnx::ReshapeParam> param_;
 };
 
 }}} // namespace ppl::nn::x86
