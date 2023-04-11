@@ -27,7 +27,7 @@ RetCode ReshapeMSDeformAttn(InputOutputInfo* info, const ir::Attr* arg) {
 
     auto input_data = info->GetInput<TensorImpl>(0)->GetShape();
 
-    auto spatial_shapes = info->GetInput<TensorImpl>(1)->GetShape();
+    // auto spatial_shapes = info->GetInput<TensorImpl>(1)->GetShape();
     auto sampling_loc = info->GetInput<TensorImpl>(3)->GetShape();
 
     auto batch = input_data->GetDim(0);

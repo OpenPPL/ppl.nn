@@ -67,7 +67,7 @@ common::RetCode ReshapeRange(InputOutputInfo* info, const ir::Attr*) {
     }
 
     auto output = info->GetOutput<TensorImpl>(0);
-    const uint32_t num_elements = std::max(std::ceil((limit - start) / delta), 0.0);
+    const int64_t num_elements = std::max(std::ceil((limit - start) / delta), 0.0);
     output->GetShape()->Reshape({num_elements});
 
     return RC_SUCCESS;
