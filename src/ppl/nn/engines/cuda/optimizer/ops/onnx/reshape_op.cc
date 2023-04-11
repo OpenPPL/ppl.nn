@@ -27,6 +27,12 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode ReshapeOp::Init(const OptKernelOptions& options) {
+    auto status = GenericLoadParam(options, &param_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
     return RC_SUCCESS;
 }
 
@@ -45,7 +51,7 @@ ReshapeOp::ReshapeOp(const ir::Node* node) : CudaOptKernel(node) {
         return status;
     };
 
-    infer_dims_func_ = [](InputOutputInfo* info) -> RetCode {
+    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
         if (info->GetInputCount() != 2) {
             LOG(ERROR) << "2 input required.";
             return RC_INVALID_VALUE;
@@ -64,7 +70,7 @@ ReshapeOp::ReshapeOp(const ir::Node* node) : CudaOptKernel(node) {
             return status;
         }
 
-        return onnx::ReshapeReshape(info, nullptr, shape_data.data());
+        return onnx::ReshapeReshape(info, &param_, shape_data.data());
     };
 
 }

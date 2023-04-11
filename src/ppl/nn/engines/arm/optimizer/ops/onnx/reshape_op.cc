@@ -26,13 +26,19 @@ namespace ppl { namespace nn { namespace arm {
 
 ReshapeOp::ReshapeOp(const ir::Node* node) : ArmOptKernel(node) {
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return onnx::ReshapeReshape(info, nullptr);
+        return onnx::ReshapeReshape(info, param_.get());
     };
 
     infer_type_func_ = GenericInferType;
 }
 
 RetCode ReshapeOp::Init(const OptKernelOptions& options) {
+    auto status = GenericLoadParam(options, &param_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
     return RC_SUCCESS;
 }
 
