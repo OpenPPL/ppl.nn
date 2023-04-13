@@ -36,6 +36,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/cumsum_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/depth_to_space_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/div_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/onnx/einsum_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/equal_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/erf_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/exp_op.h"
@@ -62,6 +63,7 @@ using namespace ppl::common;
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/max_unpool_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/min_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/mul_op.h"
+#include "ppl/nn/engines/x86/optimizer/ops/onnx/neg_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/non_max_suppression_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/non_zero_op.h"
 #include "ppl/nn/engines/x86/optimizer/ops/onnx/not_op.h"
@@ -161,6 +163,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<DepthToSpaceOp>("", "DepthToSpace", 1, 16);
     RegisterOptKernelCreator<DivOp>("", "Div", 7, 16);
     // E
+    RegisterOptKernelCreator<EinSumOp>("", "Einsum", 12, 18);
     RegisterOptKernelCreator<EqualOp>("", "Equal", 7, 16);
     RegisterOptKernelCreator<ErfOp>("", "Erf", 9, 16);
     RegisterOptKernelCreator<ExpOp>("", "Exp", 6, 16);
@@ -179,7 +182,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<HardSigmoidOp>("", "HardSigmoid", 6, 16);
     RegisterOptKernelCreator<HardSwishOp>("", "HardSwish", 14, 16);
     // I
-    RegisterOptKernelCreator<IdentityOp>("", "Identity", 1, 13);
+    RegisterOptKernelCreator<IdentityOp>("", "Identity", 1, 16);
     RegisterOptKernelCreator<IfOp>("", "If", 1, 12);
     // L
     RegisterOptKernelCreator<LeakyReluOp>("", "LeakyRelu", 6, 16);
@@ -195,6 +198,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<MinOp>("", "Min", 6, 16);
     RegisterOptKernelCreator<MulOp>("", "Mul", 7, 16);
     // N
+    RegisterOptKernelCreator<NegOp>("", "Neg", 1, 16);
     RegisterOptKernelCreator<NonMaxSupressionOp>("", "NonMaxSuppression", 10, 16);
     RegisterOptKernelCreator<NonZeroOp>("", "NonZero", 9, 12);
     RegisterOptKernelCreator<NotOp>("", "Not", 1, 16);

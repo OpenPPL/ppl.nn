@@ -80,8 +80,8 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
         PPLNN_X86_DEBUG_TRACE("strides: %d %d\n", param_->strides[0], param_->strides[1]);
         PPLNN_X86_DEBUG_TRACE("pads: %d %d %d %d\n", param_->pads[0], param_->pads[1], param_->pads[2], param_->pads[3]);
     }
-    PPLNN_X86_DEBUG_TRACE("group: %d\n", param_->group);
-    PPLNN_X86_DEBUG_TRACE("num_output: %d\n", num_output);
+    PPLNN_X86_DEBUG_TRACE("group: %ld\n", param_->group);
+    PPLNN_X86_DEBUG_TRACE("num_output: %ld\n", num_output);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     if (X->GetShape()->GetDataType() != ppl::common::DATATYPE_FLOAT32 ||

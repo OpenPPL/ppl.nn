@@ -30,7 +30,7 @@ ppl::common::RetCode WhereKernel::DoExecute(KernelExecContext* ctx) {
 
     PPLNN_X86_DEBUG_TRACE("Op: %s\n", GetName().c_str());
     PPLNN_X86_DEBUG_TRACE("Input [cond]:\n");
-    PPL_X86_TENSOR_PRINT_DEBUG_MSG(x);
+    PPL_X86_TENSOR_PRINT_DEBUG_MSG(cond);
     PPLNN_X86_DEBUG_TRACE("Input [x]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(x);
     PPLNN_X86_DEBUG_TRACE("Input [y]:\n");
