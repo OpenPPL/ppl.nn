@@ -1336,8 +1336,8 @@ int main(int argc, char* argv[]) {
         auto in = runtime->GetInputTensor(i);
         auto shape = in->GetShape();
         if (shape->CalcElementsIncludingPadding() == 0) {
-            LOG(ERROR) << "input tensor[" << in->GetName() << "] is empty.";
-            return -1;
+            // We should allow empty input
+            LOG(WARNING) << "input tensor[" << in->GetName() << "] is empty.";
         }
     }
 
