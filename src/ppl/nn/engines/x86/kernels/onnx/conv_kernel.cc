@@ -85,7 +85,7 @@ ppl::common::RetCode ConvKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("group: %d\n", param_->param->group);
     PPLNN_X86_DEBUG_TRACE("num_output: %d\n", num_output);
     PPLNN_X86_DEBUG_TRACE("bias_term: %d\n", param_->bias_term);
-    PPLNN_X86_DEBUG_TRACE("fuse_flag: %d\n", param_->fuse_flag);
+    PPLNN_X86_DEBUG_TRACE("fuse_flag: %lu\n", param_->fuse_flag);
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     if (param_->bias_term) {

@@ -34,13 +34,24 @@ ppl::common::RetCode RangeKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_X86_DEBUG_TRACE("Input [delta]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(delta);
 
+    const auto data_type = output->GetShape()->GetDataType();
+    if (data_type == ppl::common::DATATYPE_INT64) {
+        PPLNN_X86_DEBUG_TRACE("start: %ld\n", start->GetBufferPtr<int64_t>()[0]);
+        PPLNN_X86_DEBUG_TRACE("limit: %ld\n", limit->GetBufferPtr<int64_t>()[0]);
+        PPLNN_X86_DEBUG_TRACE("delta: %ld\n", delta->GetBufferPtr<int64_t>()[0]);
+    }
+    if (data_type == ppl::common::DATATYPE_FLOAT32) {
+        PPLNN_X86_DEBUG_TRACE("start: %f\n", start->GetBufferPtr<float>()[0]);
+        PPLNN_X86_DEBUG_TRACE("limit: %f\n", limit->GetBufferPtr<float>()[0]);
+        PPLNN_X86_DEBUG_TRACE("delta: %f\n", delta->GetBufferPtr<float>()[0]);
+    }
+
     PPLNN_X86_DEBUG_TRACE("isa: %u\n", GetISA());
 
     PPLNN_X86_REALLOC_TENSOR_BUFFER(output);
     PPLNN_X86_DEBUG_TRACE("Output [output]:\n");
     PPL_X86_TENSOR_PRINT_DEBUG_MSG(output);
 
-    const auto data_type = output->GetShape()->GetDataType();
     if (data_type == ppl::common::DATATYPE_INT64) {
         const int64_t start_val = start->GetBufferPtr<int64_t>()[0];
         const int64_t delta_val = delta->GetBufferPtr<int64_t>()[0];
