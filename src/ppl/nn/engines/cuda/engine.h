@@ -56,6 +56,14 @@ struct CudaArgs {
     const std::vector<int64_t> default_dims{1, 3, 224, 224};
 };
 
+struct RefitArgs {
+    // std::map<ppl::nn::edgeid_t, void*> edge2val;
+    std::map<std::string, edgeid_t> name2edgeid;
+    std::map<ppl::nn::edgeid_t, ppl::nn::BufferDesc> edge2buffer;
+    std::map<ppl::nn::edgeid_t, ppl::nn::TensorShape> edge2shape;
+    std::map<ppl::nn::edgeid_t, std::string> edge2node;
+};
+
 class CudaEngine final : public EngineImpl {
 public:
     CudaEngine();
@@ -80,6 +88,10 @@ public:
 
 private:
     ppl::common::RetCode DoOptimize(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*);
+    // refit constant tensors
+    ppl::common::RetCode FillRefitArgs(RuntimePartitionInfo* info);
+    ppl::common::RetCode RefitWeightsImpl(map<edgeid_t, void*>* edge2val);
+    ppl::common::RetCode ConvertTorchNameToEdge(const map<string, string>* torch2onnx, const map<string, void*>* name2val, map<edgeid_t, void*>* edge2val);
 
 private:
     /*
@@ -92,6 +104,7 @@ private:
     static ppl::common::RetCode SetQuantInfo(CudaEngine*, va_list);
     static ppl::common::RetCode SetExportAlgorithmsHandler(CudaEngine*, va_list);
     static ppl::common::RetCode ImportAlgorithmsFromBuffer(CudaEngine*, va_list);
+    static ppl::common::RetCode RefitConstantWeights(CudaEngine*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(CudaEngine*, va_list);
     static ConfHandlerFunc conf_handlers_[ENGINE_CONF_MAX];
@@ -102,6 +115,8 @@ private:
     // TODO(WJF): if plain cuda device is used, cuda-memcheck would report illegal errors, may bugs within kernels
     BufferedCudaDevice device_;
     CUDAModuleManager cuda_manager_;
+    // update nodes' weights
+    RefitArgs refit_args_;
     void* export_algo_arg_ = nullptr;
     void (*export_algo_func_)(const char*, uint64_t, void*) = nullptr;
 #ifdef PPLNN_ENABLE_PMX_MODEL

@@ -96,6 +96,17 @@ enum {
     */
     ENGINE_CONF_IMPORT_ALGORITHMS_FROM_BUFFER,
 
+      /**
+       @param torch2onnx torch_name --> onnx_name mapping
+       @param name2val torch_name --> data_ptr mapping
+
+       @note example:
+       @code{.cpp}
+       cuda_engine->Configure(ENGINE_CONF_REFIT_CONSTANT_WEIGHTS, torch2onnx, name2val);
+       @endcode
+    */
+    ENGINE_CONF_REFIT_CONSTANT_WEIGHTS,
+
     /** max value */
     ENGINE_CONF_MAX,
 };

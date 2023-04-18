@@ -28,6 +28,9 @@ namespace ppl { namespace nn {
 struct RuntimePartitionInfo final {
     std::map<edgeid_t, RuntimeConstantInfo> constants;
     std::map<nodeid_t, std::unique_ptr<OptKernel>> kernels;
+    // refit args needed
+    std::map<std::string, edgeid_t> name2edgeid;
+    std::map<ppl::nn::edgeid_t, std::string> edge2node;
 };
 
 }} // namespace ppl::nn

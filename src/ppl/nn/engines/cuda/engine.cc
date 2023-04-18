@@ -29,6 +29,9 @@
 #include "ppl/nn/quantization/quant_param_parser.h"
 #include "ppl/nn/utils/array.h"
 #include "ppl/nn/common/logger.h"
+// refit weights
+#include "cudakernel/nn/conv/group_padding.h"
+#include "ppl/common/destructor.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/error/error.h"
@@ -146,6 +149,25 @@ static void ExportAlgorithmsInfo(const map<string, CudaArgs::AlgoSelects>& algos
     func(buffer.GetString(), buffer.GetSize(), arg);
 }
 
+RetCode CudaEngine::FillRefitArgs(RuntimePartitionInfo* info) {
+    for (auto iter = info->name2edgeid.begin(); iter != info->name2edgeid.end(); ++iter) {
+        refit_args_.name2edgeid.insert(make_pair(iter->first, iter->second));
+    }
+    for (auto iter = info->edge2node.begin(); iter != info->edge2node.end(); ++iter) {
+        refit_args_.edge2node.insert(make_pair(iter->first, iter->second));
+    }
+
+    for (auto c = info->constants.begin(); c != info->constants.end(); ++c) {
+        auto& src = c->second;
+        refit_args_.edge2shape.insert(make_pair(c->first, *src.GetShape()));
+        auto ret_pair = refit_args_.edge2buffer.insert(make_pair(c->first, src.GetBufferDesc()));
+        if (!ret_pair.second) {
+            return RC_INVALID_VALUE;
+        }
+    }
+    return RC_SUCCESS;
+}
+
 RetCode CudaEngine::ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
     auto status = DoOptimize(resource, graph, info);
     if (status != RC_SUCCESS) {
@@ -156,7 +178,57 @@ RetCode CudaEngine::ProcessGraph(const utils::SharedResource& resource, ir::Grap
     if (export_algo_func_) {
         ExportAlgorithmsInfo(cuda_flags_.alog_selects, export_algo_func_, export_algo_arg_);
     }
+    
+    // fill refit args, only constant tensors will be recorded
+    FillRefitArgs(info);
 
+    return RC_SUCCESS;
+}
+
+ppl::common::RetCode CudaEngine::RefitWeightsImpl(map<edgeid_t, void*>* edge2val) {
+    // only one partition is used
+    auto dev = &device_;
+    for (auto iter = edge2val->begin(); iter != edge2val->end(); ++iter) {
+        auto edge_id = iter->first;
+        auto data_ptr = iter->second;
+        auto shape_ref = refit_args_.edge2shape.find(edge_id);
+        if (shape_ref == refit_args_.edge2shape.end()) { return RC_INVALID_VALUE; }
+        auto dst_shape = shape_ref->second;
+        auto src_shape(dst_shape);
+        src_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+        src_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
+        auto& buf_info = refit_args_.edge2buffer[edge_id];
+        if (refit_args_.edge2node[edge_id] == "Conv") { // conv
+            if (cuda_flags_.default_kernel_type == ppl::common::DATATYPE_FLOAT16) { // only support fp16 conv now
+                // allocate temp buffer to finish convert from host
+                BufferDesc tmp_buffer_desc;
+                auto status = dev->Realloc(dst_shape, &tmp_buffer_desc);
+                if (status != RC_SUCCESS) {
+                    LOG(ERROR) << "alloc tmp buffer for dst tensor failed";
+                    return status;
+                }
+                Destructor __tmp_buffer_guard__([dev, &tmp_buffer_desc]() -> void {
+                    dev->Free(&tmp_buffer_desc);
+                });
+                dev->GetDataConverter()->ConvertFromHost(&tmp_buffer_desc, dst_shape, data_ptr, src_shape);
+                // conv related convert
+                conv_param_t tmp_conv_param;
+                tmp_conv_param.num_flt = dst_shape.GetDim(0);
+                tmp_conv_param.num_chl = dst_shape.GetDim(1);
+                tmp_conv_param.flt_height = dst_shape.GetDim(2);
+                tmp_conv_param.flt_width = dst_shape.GetDim(3);
+                tmp_conv_param.num_grp = 1; // TODO(WJF): record related nodes' parameters
+                PPLCUDAConvolutionCvtFlt(dev->GetStream(), buf_info.addr, tmp_buffer_desc.addr,
+                        ppl::common::DATATYPE_FLOAT16, tmp_conv_param); 
+            } else {
+                return RC_UNSUPPORTED;
+            }
+        } else { // matmul just convert and copy
+            dev->GetDataConverter()->ConvertFromHost(&buf_info, dst_shape, data_ptr, src_shape);
+        }
+    }
+    dev->Sync();
+    // cudaDeviceSynchronize();
     return RC_SUCCESS;
 }
 
@@ -398,6 +470,45 @@ ppl::common::RetCode CudaEngine::ImportAlgorithmsFromBuffer(CudaEngine* engine, 
     return ImportAlgorithmsImpl(json_buffer, buffer_size, &engine->cuda_flags_.alog_selects);
 }
 
+ppl::common::RetCode CudaEngine::ConvertTorchNameToEdge(const map<string, string>* torch2onnx,
+    const map<string, void*>* name2val, map<edgeid_t, void*>* edge2val) {
+    for (auto iter = name2val->begin(); iter != name2val->end(); ++iter) {
+        auto torch_name = iter->first;
+        auto onnx_ref = torch2onnx->find(torch_name);
+        if (onnx_ref == torch2onnx->end()) {
+            LOG(ERROR) << "Missing torch name --> onnx name mapping!";
+            return RC_INVALID_VALUE;
+        }
+        auto onnx_name = onnx_ref->second;
+        auto edgeid_ref = refit_args_.name2edgeid.find(onnx_name);
+        if (edgeid_ref == refit_args_.name2edgeid.end()) {
+            LOG(ERROR) << "Unkown onnx tensor name!";
+            return RC_INVALID_VALUE;
+        } else {
+            auto edge_id = edgeid_ref->second;
+            auto data_ptr = iter->second;
+            auto ret_pair = edge2val->insert(make_pair(edge_id, data_ptr));
+            if (!ret_pair.second) {
+                LOG(ERROR) << "Record edge_id --> data_ptr failed!";
+                return RC_INVALID_VALUE;
+            }
+        }
+    }
+    return RC_SUCCESS;
+}
+
+typedef std::map<std::string, std::string> MapOfString;
+typedef std::map<std::string, void*> MapOfPointer;
+ppl::common::RetCode CudaEngine::RefitConstantWeights(CudaEngine* engine, va_list args) {
+    auto torch2onnx = va_arg(args, MapOfString*);
+    auto name2val = va_arg(args, MapOfPointer*);
+    map<edgeid_t, void*> edge2val;
+    auto status = engine->ConvertTorchNameToEdge(torch2onnx, name2val, &edge2val);
+    if (status != RC_SUCCESS) return RC_UNSUPPORTED;
+    status = engine->RefitWeightsImpl(&edge2val);
+    return status;
+}
+
 CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetKernelType, // ENGINE_CONF_USE_DEFAULT_KERNEL_TYPE
     CudaEngine::SetInputDims, // ENGINE_CONF_SET_INPUT_DIMS
@@ -405,6 +516,7 @@ CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetQuantInfo, // ENGINE_CONF_SET_QUANT_INFO
     CudaEngine::SetExportAlgorithmsHandler, // ENGINE_CONF_SET_EXPORT_ALGORITHMS_HANDLER
     CudaEngine::ImportAlgorithmsFromBuffer, // ENGINE_CONF_IMPORT_ALGORITHMS_FROM_BUFFER
+    CudaEngine::RefitConstantWeights, // ENGINE_CONF_REFIT_CONSTANT_WEIGHTS
 };
 
 RetCode CudaEngine::Configure(uint32_t option, ...) {
