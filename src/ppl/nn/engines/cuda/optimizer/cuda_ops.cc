@@ -232,7 +232,7 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<RoundOp>("", "Round", 11, 16);
     // S
     RegisterOptKernelCreator<ScatterElementsOp>("", "ScatterElements", 11, 12);
-    RegisterOptKernelCreator<ScatterNDOp>("", "ScatterND", 11, 12);
+    RegisterOptKernelCreator<ScatterNDOp>("", "ScatterND", 11, 13);
     RegisterOptKernelCreator<SequenceAtOp>("", "SequenceAt", 11, 16);
     RegisterOptKernelCreator<ShapeOp>("", "Shape", 1, 16);
     RegisterOptKernelCreator<SigmoidOp>("", "Sigmoid", 6, 16);
