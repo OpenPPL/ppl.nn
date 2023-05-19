@@ -24,8 +24,8 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace onnx {
 
 RetCode ReshapeMatMul(InputOutputInfo* info, const ir::Attr*) {
-    if (info->GetInputCount() != 2) {
-        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2.";
+    if (info->GetInputCount() != 2 && info->GetInputCount() != 3) { // matmul fuse add
+        LOG(DEBUG) << "ERROR: input count[" << info->GetInputCount() << "] != 2 or 3.";
         return RC_INVALID_VALUE;
     }
 
