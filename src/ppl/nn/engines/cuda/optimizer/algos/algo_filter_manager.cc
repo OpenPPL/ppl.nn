@@ -50,6 +50,7 @@ AlgoFilterManager::AlgoFilterManager() {
     REGISTER_ALGO_FILTER_INFO("Gemm", gemm_imp_);
     REGISTER_ALGO_FILTER_INFO("LSTM", lstm_imp_);
     REGISTER_ALGO_FILTER_INFO("PRelu", prelu_imp_);
+    REGISTER_ALGO_FILTER_INFO("Resize", prelu_imp_);
     REGISTER_ALGO_FILTER_INFO("MMCVModulatedDeformConv2d", deform_conv_imp_);
     REGISTER_ALGO_FILTER_INFO("MatMul", matmul_imp_);
     REGISTER_ALGO_FILTER_INFO("EinSum", einsum_imp_);
