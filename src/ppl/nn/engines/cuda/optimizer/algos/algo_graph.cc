@@ -131,7 +131,11 @@ RetCode AlgoGraph::UpdateNode(ir::Node* node, OptKernelOptions& options) {
 
                 for (auto it = temp_vect.begin(); it != temp_vect.end(); ++it) {
                     auto output_formats = pre_formats.find((*pre_it)->input_format)->second;
-                    if (output_formats.find((*it)->input_format) == output_formats.end()) {
+                    ppl::common::dataformat_t it_input_format = (*it)->input_format;
+                    if (i > 0 && prelu_like_ops_.count(node->GetType().name)) {
+                        it_input_format = ppl::common::DATAFORMAT_NDARRAY;
+                    }
+                    if (output_formats.find(it_input_format) == output_formats.end()) {
                         continue;
                     }
                     options.param = (*pre_it)->param;
@@ -142,7 +146,7 @@ RetCode AlgoGraph::UpdateNode(ir::Node* node, OptKernelOptions& options) {
                         }
                         at_least_one_algo = true;
                         temp_algo->ReshapeOnEdges(pre_node, options.tensors, (*pre_it)->input_format,
-                                                  (*it)->input_format);
+                                                  it_input_format);
                         auto timer = (temp_algo->ExcuteTimer(pre_node, options) + sum_time) / consumer_count;
 
                         if ((*it)->shortest_time[i] > timer) {

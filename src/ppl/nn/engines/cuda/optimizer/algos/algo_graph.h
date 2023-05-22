@@ -19,6 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_ALGOS_ALGO_GRAPH_H_
 
 #include <string>
+#include <set>
 
 #include "ppl/nn/engines/cuda/optimizer/algos/algorithm.h"
 
@@ -63,6 +64,7 @@ private:
     ir::GraphTopo* topo_;
     std::map<const ir::Node*, std::vector<AlgoNode*>> graph_;
     std::map<const ir::Node*, AlgoNode*> selected_algo_; // store the selected results
+    std::set<std::string> prelu_like_ops_{"Resize", "PReLU"};
 };
 
 }}} // namespace ppl::nn::cuda
