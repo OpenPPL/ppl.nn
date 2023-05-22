@@ -15,21 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_OPTIONS_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_OPTIONS_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_SET_SCHEDULER_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_SET_SCHEDULER_H_
 
-#include "ppl/nn/common/common.h"
-#include "ppl/nn/engines/cuda/options.h"
-#include <stdint.h>
+#include "ppl/common/retcode.h"
+#include "ppl/nn/engines/engine.h"
+#include "ppl/nn/runtime/runtime.h"
 
 namespace ppl { namespace nn { namespace cuda {
-
-struct PPLNN_PUBLIC EngineOptions final {
-    uint32_t device_id = 0;
-    uint32_t mm_policy = MM_COMPACT;
-    bool enable_cuda_graph = false;
-};
-
+ppl::common::RetCode SetGraphScheduler(Runtime*, Engine*);
 }}} // namespace ppl::nn::cuda
 
 #endif

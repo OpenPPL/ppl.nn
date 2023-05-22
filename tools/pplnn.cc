@@ -146,15 +146,14 @@ static void SplitString(const char* str, unsigned int len, const char* delim, un
 
 static bool ParseInputShapes(const string& shape_str, vector<vector<int64_t>>* input_shapes) {
     vector<string> input_shape_list;
-    SplitString(shape_str.data(), shape_str.size(), ",", 1,
-                [&input_shape_list](const char* s, unsigned int l) -> bool {
-                    if (l > 0) {
-                        input_shape_list.emplace_back(s, l);
-                    } else {
-                        input_shape_list.push_back(string());
-                    }
-                    return true;
-                });
+    SplitString(shape_str.data(), shape_str.size(), ",", 1, [&input_shape_list](const char* s, unsigned int l) -> bool {
+        if (l > 0) {
+            input_shape_list.emplace_back(s, l);
+        } else {
+            input_shape_list.push_back(string());
+        }
+        return true;
+    });
 
     for (auto x = input_shape_list.begin(); x != input_shape_list.end(); ++x) {
         vector<int64_t> shape;
@@ -201,8 +200,11 @@ Define_string_opt("--import-algo-file", g_flag_import_algo_file, "",
 
 Define_string_opt("--quant-file", g_flag_quant_file, "", "a json file containing quantization information");
 
+Define_bool_opt("--enable-cuda-graph", g_flag_enable_cuda_graph, false, "use cuda graph");
+
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/engines/cuda/options.h"
+#include "ppl/nn/engines/cuda/utils.h"
 #include "ppl/nn/utils/array.h"
 
 static void CudaSaveAlgoInfo(const char* data, uint64_t bytes, void* arg) {
@@ -234,6 +236,10 @@ static bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     } else {
         LOG(ERROR) << "unknown --mm-policy option: " << g_flag_mm_policy;
         return false;
+    }
+
+    if (g_flag_enable_cuda_graph) {
+        options.enable_cuda_graph = true;
     }
 
     auto cuda_engine = cuda::EngineFactory::Create(options);
@@ -617,13 +623,13 @@ static bool SetInputsAllInOne(const string& input_file, const vector<vector<int6
         expect_input_size += t->GetShape()->CalcBytesExcludingPadding();
     }
     if (fm.GetSize() < expect_input_size) {
-        LOG(ERROR) << "input file[" << file_name << "] size(" << fm.GetSize()
-            << ") is less than expected size(" << expect_input_size << ")";
+        LOG(ERROR) << "input file[" << file_name << "] size(" << fm.GetSize() << ") is less than expected size("
+                   << expect_input_size << ")";
         return false;
     }
     if (fm.GetSize() > expect_input_size) {
-        LOG(WARNING) << "input file[" << file_name << "] size(" << fm.GetSize()
-            << ") is bigger than expected size(" << expect_input_size << ")";
+        LOG(WARNING) << "input file[" << file_name << "] size(" << fm.GetSize() << ") is bigger than expected size("
+                     << expect_input_size << ")";
     }
 
     for (uint32_t c = 0; c < runtime->GetInputCount(); ++c) {
@@ -703,13 +709,13 @@ static bool SetInputsOneByOne(const string& input_files_str, const vector<vector
         ppl::nn::TensorShape src_desc = *t->GetShape();
         auto tensor_size = src_desc.CalcBytesIncludingPadding();
         if (fm.GetSize() < tensor_size) {
-            LOG(ERROR) << "input file[" << file_name << "] size(" << fm.GetSize()
-                << ") is less than tensor[" << t->GetName() << "] size(" << tensor_size << ")";
+            LOG(ERROR) << "input file[" << file_name << "] size(" << fm.GetSize() << ") is less than tensor["
+                       << t->GetName() << "] size(" << tensor_size << ")";
             return false;
         }
         if (fm.GetSize() > tensor_size) {
-            LOG(WARNING) << "input file[" << file_name << "] size(" << fm.GetSize()
-                << ") is bigger than tensor[" << t->GetName() << "] size(" << tensor_size << ")";
+            LOG(WARNING) << "input file[" << file_name << "] size(" << fm.GetSize() << ") is bigger than tensor["
+                         << t->GetName() << "] size(" << tensor_size << ")";
         }
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         status = t->ConvertFromHost(fm.GetData(), src_desc);
@@ -803,13 +809,13 @@ static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* ru
         ppl::nn::TensorShape src_desc = *t->GetShape();
         auto tensor_size = src_desc.CalcBytesIncludingPadding();
         if (fm.GetSize() < tensor_size) {
-            LOG(ERROR) << "input file[" << file_name << "] size(" << fm.GetSize()
-                << ") is less than tensor[" << t->GetName() << "] size(" << tensor_size << ")";
+            LOG(ERROR) << "input file[" << file_name << "] size(" << fm.GetSize() << ") is less than tensor["
+                       << t->GetName() << "] size(" << tensor_size << ")";
             return false;
         }
         if (fm.GetSize() > tensor_size) {
-            LOG(WARNING) << "input file[" << file_name << "] size(" << fm.GetSize()
-                << ") is bigger than tensor[" << t->GetName() << "] size(" << tensor_size << ")";
+            LOG(WARNING) << "input file[" << file_name << "] size(" << fm.GetSize() << ") is bigger than tensor["
+                         << t->GetName() << "] size(" << tensor_size << ")";
         }
         src_desc.SetDataFormat(DATAFORMAT_NDARRAY);
         status = t->ConvertFromHost(fm.GetData(), src_desc);
@@ -1189,7 +1195,8 @@ int main(int argc, char* argv[]) {
 
     unique_ptr<Runtime> runtime;
 
-    if (false) {}
+    if (false) {
+    }
 #ifdef PPLNN_ENABLE_ONNX_MODEL
     else if (!g_flag_onnx_model.empty()) {
         auto builder = unique_ptr<onnx::RuntimeBuilder>(onnx::RuntimeBuilderFactory::Create());
@@ -1295,6 +1302,23 @@ int main(int argc, char* argv[]) {
         LOG(ERROR) << "CreateRuntime failed.";
         return -1;
     }
+
+#if PPLNN_USE_CUDA
+    if (g_flag_enable_cuda_graph) {
+        Engine* cuda_engine;
+        for (auto& engine : engines) {
+            if (!strcmp(engine->GetName(), "cuda")) {
+                cuda_engine = engine.get();
+                break;
+            }
+        }
+        auto status = cuda::SetGraphScheduler(runtime.get(), cuda_engine);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "Set Graph Scheduler failed.";
+            return -1;
+        }
+    }
+#endif
 
     vector<vector<int64_t>> input_shapes;
     if (!g_flag_input_shapes.empty()) {

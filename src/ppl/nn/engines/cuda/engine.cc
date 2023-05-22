@@ -67,7 +67,7 @@ CudaEngine::~CudaEngine() {
 
 RetCode CudaEngine::Init(const EngineOptions& options) {
     options_ = options;
-    return device_.Init(options.device_id, options.mm_policy);
+    return device_.Init(options.device_id, options.mm_policy, options.enable_cuda_graph);
 }
 
 EngineContext* CudaEngine::CreateEngineContext() {
@@ -178,7 +178,7 @@ RetCode CudaEngine::ProcessGraph(const utils::SharedResource& resource, ir::Grap
     if (export_algo_func_) {
         ExportAlgorithmsInfo(cuda_flags_.alog_selects, export_algo_func_, export_algo_arg_);
     }
-    
+
     // fill refit args, only constant tensors will be recorded
     FillRefitArgs(info);
 
@@ -192,7 +192,9 @@ ppl::common::RetCode CudaEngine::RefitWeightsImpl(map<edgeid_t, const void*>* ed
         auto edge_id = iter->first;
         auto data_ptr = iter->second;
         auto shape_ref = refit_args_.edge2shape.find(edge_id);
-        if (shape_ref == refit_args_.edge2shape.end()) { return RC_INVALID_VALUE; }
+        if (shape_ref == refit_args_.edge2shape.end()) {
+            return RC_INVALID_VALUE;
+        }
         auto dst_shape = shape_ref->second;
         auto src_shape(dst_shape);
         src_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
@@ -219,7 +221,7 @@ ppl::common::RetCode CudaEngine::RefitWeightsImpl(map<edgeid_t, const void*>* ed
                 tmp_conv_param.flt_width = dst_shape.GetDim(3);
                 tmp_conv_param.num_grp = 1; // TODO(WJF): record related nodes' parameters
                 PPLCUDAConvolutionCvtFlt(dev->GetStream(), buf_info.addr, tmp_buffer_desc.addr,
-                        ppl::common::DATATYPE_FLOAT16, tmp_conv_param); 
+                                         ppl::common::DATATYPE_FLOAT16, tmp_conv_param);
             } else {
                 return RC_UNSUPPORTED;
             }
@@ -234,6 +236,10 @@ ppl::common::RetCode CudaEngine::RefitWeightsImpl(map<edgeid_t, const void*>* ed
 
 EngineImpl* CudaEngine::Create() {
     return static_cast<EngineImpl*>(EngineFactory::Create(options_));
+}
+
+CudaDevice* CudaEngine::GetDevice() {
+    return &device_;
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
@@ -328,17 +334,13 @@ ppl::common::RetCode CudaEngine::SerializeData(const pmx::SerializationContext& 
     for (uint32_t i = 0; i < ctx.seq2eid.size(); ++i) {
         auto original_eid = ctx.seq2eid[i];
         auto fb_tensor_quant = pmx::cuda::CreateCudaTensorQuantDirect(
-            builder,
-            quant[original_eid].format,
-            quant[original_eid].type,
-            quant[original_eid].per_channel,
-            quant[original_eid].bit_width,
-            &quant[original_eid].scale,
-            &quant[original_eid].zero_point);
+            builder, quant[original_eid].format, quant[original_eid].type, quant[original_eid].per_channel,
+            quant[original_eid].bit_width, &quant[original_eid].scale, &quant[original_eid].zero_point);
         quant_vec[i] = fb_tensor_quant;
     }
     auto fb_tensor_quants = pmx::cuda::CreateTensorQuantsDirect(builder, &quant_vec);
-    auto fb_cuda_engine_param = pmx::cuda::CreateCudaEngineParam(builder, pmx::cuda::CudaEngineParamType_TensorQuants, fb_tensor_quants.Union());
+    auto fb_cuda_engine_param = pmx::cuda::CreateCudaEngineParam(builder, pmx::cuda::CudaEngineParamType_TensorQuants,
+                                                                 fb_tensor_quants.Union());
     pmx::cuda::FinishCudaEngineParamBuffer(builder, fb_cuda_engine_param);
     return ds->Write(builder.GetBufferPointer(), builder.GetSize());
 }
@@ -471,7 +473,8 @@ ppl::common::RetCode CudaEngine::ImportAlgorithmsFromBuffer(CudaEngine* engine, 
 }
 
 ppl::common::RetCode CudaEngine::ConvertTorchNameToEdge(const map<string, string>* torch2onnx,
-    const map<string, const void*>* name2val, map<edgeid_t, const void*>* edge2val) {
+                                                        const map<string, const void*>* name2val,
+                                                        map<edgeid_t, const void*>* edge2val) {
     for (auto iter = name2val->begin(); iter != name2val->end(); ++iter) {
         auto torch_name = iter->first;
         auto onnx_ref = torch2onnx->find(torch_name);
@@ -504,7 +507,8 @@ ppl::common::RetCode CudaEngine::RefitConstantWeights(CudaEngine* engine, va_lis
     auto name2val = va_arg(args, MapOfPointer*);
     map<edgeid_t, const void*> edge2val;
     auto status = engine->ConvertTorchNameToEdge(torch2onnx, name2val, &edge2val);
-    if (status != RC_SUCCESS) return RC_UNSUPPORTED;
+    if (status != RC_SUCCESS)
+        return RC_UNSUPPORTED;
     status = engine->RefitWeightsImpl(&edge2val);
     return status;
 }

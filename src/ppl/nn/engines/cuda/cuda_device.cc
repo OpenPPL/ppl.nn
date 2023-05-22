@@ -75,7 +75,7 @@ CudaDevice::~CudaDevice() {
     }
 }
 
-RetCode CudaDevice::Init(int device_id) {
+RetCode CudaDevice::Init(int device_id, bool enable_cuda_graph) {
     auto status = InitDriverEnv(device_id);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitDriverEnv failed: " << GetRetCodeStr(status);
@@ -96,6 +96,7 @@ RetCode CudaDevice::Init(int device_id) {
     }
 
     device_id_ = device_id;
+    enable_cuda_graph_ = enable_cuda_graph;
     data_converter_.SetDevice(this);
 
     return RC_SUCCESS;
@@ -103,7 +104,7 @@ RetCode CudaDevice::Init(int device_id) {
 
 RetCode CudaDevice::SyncStream() {
     if (stream_) {
-        auto rc = cudaStreamSynchronize(stream_);
+        auto rc = CheckCaptureStreamSync(stream_);
         if (rc != cudaSuccess) {
             LOG(ERROR) << "sync stream failed: " << cudaGetErrorString(rc);
             return RC_OTHER_ERROR;
@@ -119,7 +120,7 @@ RetCode CudaDevice::CopyFromHost(BufferDesc* dst, const void* src, uint64_t byte
         LOG(ERROR) << "cudaMemcpyAsync " << (int)err << ", " << cudaGetErrorString(err);
         return RC_OTHER_ERROR;
     }
-    err = cudaStreamSynchronize(stream_);
+    err = CheckCaptureStreamSync(stream_);
     if (err != cudaSuccess) {
         LOG(ERROR) << "cudaStreamSynchronize " << (int)err << ", " << cudaGetErrorString(err);
         return RC_OTHER_ERROR;
@@ -138,7 +139,7 @@ RetCode CudaDevice::CopyToHost(void* dst, const BufferDesc& src, uint64_t bytes)
         LOG(ERROR) << "cudaMemcpyAsync " << (int)err << ", " << cudaGetErrorString(err);
         return RC_OTHER_ERROR;
     }
-    err = cudaStreamSynchronize(stream_);
+    err = CheckCaptureStreamSync(stream_);
     if (err != cudaSuccess) {
         LOG(ERROR) << "cudaStreamSynchronize " << (int)err << ", " << cudaGetErrorString(err);
         return RC_OTHER_ERROR;
@@ -163,7 +164,7 @@ RetCode CudaDevice::Copy(BufferDesc* dst, const BufferDesc& src, const TensorSha
 }
 
 RetCode CudaDevice::Sync() {
-    auto err = cudaStreamSynchronize(stream_);
+    auto err = CheckCaptureStreamSync(stream_);
     if (err != cudaSuccess) {
         LOG(ERROR) << "cudaStreamSynchronize " << (int)err << ", " << cudaGetErrorString(err);
         return RC_OTHER_ERROR;
@@ -197,4 +198,18 @@ RetCode CudaDevice::Configure(uint32_t option, ...) {
     return status;
 }
 
+cudaError_t CudaDevice::CheckCaptureStreamSync(cudaStream_t stream) const {
+    if (!enable_cuda_graph_) {
+        return cudaStreamSynchronize(stream);
+    }
+    cudaStreamCaptureStatus status;
+    auto err = cudaStreamIsCapturing(stream, &status);
+    if (err != cudaSuccess) {
+        return err;
+    }
+    if (status == cudaStreamCaptureStatusActive) {
+        return cudaSuccess;
+    }
+    return cudaStreamSynchronize(stream);
+}
 }}} // namespace ppl::nn::cuda
