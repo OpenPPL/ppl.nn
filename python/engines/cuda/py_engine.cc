@@ -124,6 +124,34 @@ static RetCode SetQuantInfo(PyCudaEngine& engine, uint32_t option, const pybind1
     return engine.ptr->Configure(option, json_str.data(), json_str.size());
 }
 
+typedef std::map<std::string, std::string> MapOfString;
+typedef std::map<std::string, const void*> MapOfPointer;
+static RetCode RefitConstantWeights(PyCudaEngine& engine, uint32_t option, const pybind11::args& args) {
+    if (pybind11::len(args) != 2) {
+        LOG(ERROR) << "expected for 2 parameter but got [" << pybind11::len(args) << "].";
+        return RC_INVALID_VALUE;
+    }
+
+    MapOfString torch2onnx;
+    auto py_torch2onnx = args[0].cast<pybind11::dict>();
+    for (std::pair<pybind11::handle, pybind11::handle> it : py_torch2onnx)
+    {
+        auto key = it.first.cast<std::string>();
+        auto value = it.second.cast<std::string>();
+        torch2onnx[key] = value;
+    }
+    MapOfPointer name2val;
+    auto py_name2val = args[1].cast<pybind11::dict>();
+    for (std::pair<pybind11::handle, pybind11::handle> it : py_name2val)
+    {
+        auto key = it.first.cast<std::string>();
+        auto value = it.second.cast<pybind11::buffer>();
+        name2val[key] = (const void*)value.request().ptr;
+    }
+
+    return engine.ptr->Configure(option, &torch2onnx, &name2val);
+}
+
 typedef RetCode (*ConfigFunc)(PyCudaEngine&, uint32_t option, const pybind11::args& args);
 
 static const map<uint32_t, ConfigFunc> g_opt2func = {
@@ -133,6 +161,7 @@ static const map<uint32_t, ConfigFunc> g_opt2func = {
     {ENGINE_CONF_SET_EXPORT_ALGORITHMS_HANDLER, SetExportAlgorithmsHandler},
     {ENGINE_CONF_SET_KERNEL_TYPE, SetKernelType},
     {ENGINE_CONF_SET_QUANT_INFO, SetQuantInfo},
+    {ENGINE_CONF_REFIT_CONSTANT_WEIGHTS, RefitConstantWeights},
 };
 
 void RegisterEngine(pybind11::module* m) {
@@ -165,6 +194,8 @@ void RegisterEngine(pybind11::module* m) {
       conflict values. It is impossible to set a callback function to C++ in Python.
     */
     m->attr("ENGINE_CONF_EXPORT_ALGORITHMS") = (uint32_t)ENGINE_CONF_SET_EXPORT_ALGORITHMS_HANDLER;
+
+    m->attr("ENGINE_CONF_REFIT_CONSTANT_WEIGHTS") = (uint32_t)ENGINE_CONF_REFIT_CONSTANT_WEIGHTS;
 }
 
 }}}} // namespace ppl::nn::python::cuda

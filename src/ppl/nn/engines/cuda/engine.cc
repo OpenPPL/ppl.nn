@@ -185,7 +185,7 @@ RetCode CudaEngine::ProcessGraph(const utils::SharedResource& resource, ir::Grap
     return RC_SUCCESS;
 }
 
-ppl::common::RetCode CudaEngine::RefitWeightsImpl(map<edgeid_t, void*>* edge2val) {
+ppl::common::RetCode CudaEngine::RefitWeightsImpl(map<edgeid_t, const void*>* edge2val) {
     // only one partition is used
     auto dev = &device_;
     for (auto iter = edge2val->begin(); iter != edge2val->end(); ++iter) {
@@ -471,7 +471,7 @@ ppl::common::RetCode CudaEngine::ImportAlgorithmsFromBuffer(CudaEngine* engine, 
 }
 
 ppl::common::RetCode CudaEngine::ConvertTorchNameToEdge(const map<string, string>* torch2onnx,
-    const map<string, void*>* name2val, map<edgeid_t, void*>* edge2val) {
+    const map<string, const void*>* name2val, map<edgeid_t, const void*>* edge2val) {
     for (auto iter = name2val->begin(); iter != name2val->end(); ++iter) {
         auto torch_name = iter->first;
         auto onnx_ref = torch2onnx->find(torch_name);
@@ -498,11 +498,11 @@ ppl::common::RetCode CudaEngine::ConvertTorchNameToEdge(const map<string, string
 }
 
 typedef std::map<std::string, std::string> MapOfString;
-typedef std::map<std::string, void*> MapOfPointer;
+typedef std::map<std::string, const void*> MapOfPointer;
 ppl::common::RetCode CudaEngine::RefitConstantWeights(CudaEngine* engine, va_list args) {
     auto torch2onnx = va_arg(args, MapOfString*);
     auto name2val = va_arg(args, MapOfPointer*);
-    map<edgeid_t, void*> edge2val;
+    map<edgeid_t, const void*> edge2val;
     auto status = engine->ConvertTorchNameToEdge(torch2onnx, name2val, &edge2val);
     if (status != RC_SUCCESS) return RC_UNSUPPORTED;
     status = engine->RefitWeightsImpl(&edge2val);

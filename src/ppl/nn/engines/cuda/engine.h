@@ -90,8 +90,8 @@ private:
     ppl::common::RetCode DoOptimize(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*);
     // refit constant tensors
     ppl::common::RetCode FillRefitArgs(RuntimePartitionInfo* info);
-    ppl::common::RetCode RefitWeightsImpl(map<edgeid_t, void*>* edge2val);
-    ppl::common::RetCode ConvertTorchNameToEdge(const map<string, string>* torch2onnx, const map<string, void*>* name2val, map<edgeid_t, void*>* edge2val);
+    ppl::common::RetCode RefitWeightsImpl(map<edgeid_t, const void*>* edge2val);
+    ppl::common::RetCode ConvertTorchNameToEdge(const map<string, string>* torch2onnx, const map<string, const void*>* name2val, map<edgeid_t, const void*>* edge2val);
 
 private:
     /*
