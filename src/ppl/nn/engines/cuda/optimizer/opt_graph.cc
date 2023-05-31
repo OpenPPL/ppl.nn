@@ -531,6 +531,8 @@ RetCode OptGraph::LoadConstants(CudaDevice* device) {
             }
 
             info_->constants[preedge_id] = std::move(constant_info);
+            info_->name2edgeid[topo->GetEdge(preedge_id)->GetName()] = preedge_id;
+            info_->edge2node[preedge_id] = node->GetType().name;
             *tensor_impls_.find(preedge_id)->second->GetShape() = postshape;
             graph_quants[preedge_id] = graph_quants[postedge_id];
         }

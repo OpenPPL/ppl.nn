@@ -44,6 +44,9 @@ public:
     void AppendAlgo(Algorithm* algo) {
         algo_vector_.push_back(algo);
     }
+    void ClearAlgo() {
+        algo_vector_.clear();
+    }
 
 private:
     std::vector<Algorithm*> algo_vector_;
@@ -59,6 +62,7 @@ public:
     const AlgoFilter* FindKernel(const std::string& kernel_type) const;
     template <typename T>
     void Register(const std::string& kernel_type, T& algo_type);
+    void Clear(const std::string& kernel_type) { type2algo_[kernel_type].ClearAlgo(); }
 
 private:
     AlgoFilterManager();
