@@ -38,9 +38,8 @@ enum {
        @note example:
        @code{.cpp}
        auto sched = new MyScheduler(); // `MyScheduler` is a derived class of `Scheduler`
-       runtime->Configure(RUNTIME_CONF_SET_SCHEDULER, sched);
-       // using runtime
-       delete sched; // delete scheduler after runtime is released
+       runtime->Configure(RUNTIME_CONF_SET_SCHEDULER, sched); // now `runtime` takes the ownership of `sched`
+       // no need to delete sched
        @endcode
     */
     RUNTIME_CONF_SET_SCHEDULER,
