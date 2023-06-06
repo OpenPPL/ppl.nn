@@ -489,8 +489,6 @@ RetCode RuntimeImpl::ConfInferShapes(RuntimeImpl* rt, va_list) {
     });
 }
 
-static void DummyDeleter(Scheduler*) {}
-
 RetCode RuntimeImpl::ConfSetScheduler(RuntimeImpl* rt, va_list args) {
     auto sched = va_arg(args, Scheduler*);
     auto rc =
@@ -501,7 +499,7 @@ RetCode RuntimeImpl::ConfSetScheduler(RuntimeImpl* rt, va_list args) {
         return rc;
     }
 
-    rt->sched_.reset(sched, DummyDeleter);
+    rt->sched_.reset(sched);
     return RC_SUCCESS;
 }
 
