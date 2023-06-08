@@ -15,19 +15,36 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_OPTIONS_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_OPTIONS_H_
+#ifndef _ST_HPC_PPL_NN_RUNTIME_CUDA_SCHEDULER_GRAPH_H_
+#define _ST_HPC_PPL_NN_RUNTIME_CUDA_SCHEDULER_GRAPH_H_
 
-#include "ppl/nn/common/common.h"
-#include "ppl/nn/engines/cuda/options.h"
-#include <stdint.h>
+#include "ppl/common/retcode.h"
+#include "ppl/nn/engines/cuda/cuda_device.h"
+#include <vector>
+#include <cuda_runtime.h>
 
 namespace ppl { namespace nn { namespace cuda {
+class CudaGraphRunner {
+public:
+    CudaGraphRunner();
+    ppl::common::RetCode ExecInit();
+    ppl::common::RetCode ExecEnd();
+    ppl::common::RetCode TrueExec();
+    inline bool IsGraphBuilt() {
+        return built_;
+    }
 
-struct PPLNN_PUBLIC EngineOptions final {
-    uint32_t device_id = 0;
-    uint32_t mm_policy = MM_COMPACT;
-    bool enable_cuda_graph = false;
+    void AddDevice(const CudaDevice* dev);
+    ~CudaGraphRunner();
+
+private:
+    ppl::common::RetCode GenStreamDepandency(cudaStream_t source, cudaStream_t destination);
+
+private:
+    bool built_;
+    std::vector<const CudaDevice*> depandency_devices_;
+    cudaGraphExec_t graph_exec_;
+    cudaStream_t stream_;
 };
 
 }}} // namespace ppl::nn::cuda

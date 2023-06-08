@@ -17,6 +17,7 @@
 
 #include "ppl/nn/engines/cuda/buffered_cuda_device.h"
 #include "ppl/nn/engines/cuda/buffered_cuda_allocator.h"
+#include "ppl/nn/engines/cuda/graph_cuda_allocator.h"
 #include "ppl/nn/engines/cuda/plain_cuda_allocator.h"
 #include "ppl/nn/utils/stack_buffer_manager.h"
 #include "ppl/nn/utils/compact_buffer_manager.h"
@@ -29,15 +30,19 @@ namespace ppl { namespace nn { namespace cuda {
 
 #define DEFAULT_BLOCK_SIZE 1048576
 
-RetCode BufferedCudaDevice::Init(int device_id, uint32_t mm_policy) {
-    auto status = CudaDevice::Init(device_id);
+RetCode BufferedCudaDevice::Init(int device_id, uint32_t mm_policy, bool enable_cuda_graph) {
+    auto status = CudaDevice::Init(device_id, enable_cuda_graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init cuda device failed: " << GetRetCodeStr(status);
         return status;
     }
 
     if (mm_policy == MM_BEST_FIT) {
-        allocator_.reset(new PlainCudaAllocator());
+        if (enable_cuda_graph) {
+            allocator_.reset(new GraphCudaAllocator(GetStream()));
+        } else {
+            allocator_.reset(new PlainCudaAllocator());
+        }
         buffer_manager_.reset(new utils::StackBufferManager(allocator_.get(), true));
     } else if (mm_policy == MM_COMPACT) {
 #if PPLNN_CUDACC_VER_MAJOR * 1000 + PPLNN_CUDACC_VER_MINOR * 10 >= 10020

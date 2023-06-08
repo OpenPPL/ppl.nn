@@ -36,7 +36,7 @@ RetCode CudaEngineContext::Init(const EngineOptions& options) {
         device_ = dev;
     } else {
         auto dev = make_shared<BufferedCudaDevice>();
-        auto rc = dev->Init(options.device_id, options.mm_policy);
+        auto rc = dev->Init(options.device_id, options.mm_policy, options.enable_cuda_graph);
         if (rc != RC_SUCCESS) {
             LOG(ERROR) << "init BufferedCudaDevice failed: " << GetRetCodeStr(rc);
             return rc;

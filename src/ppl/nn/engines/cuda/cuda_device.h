@@ -34,7 +34,7 @@ class CudaDevice : public Device {
 public:
     virtual ~CudaDevice();
 
-    ppl::common::RetCode Init(int device_id);
+    ppl::common::RetCode Init(int device_id, bool enable_cuda_graph = false);
 
     using Device::Realloc;
     ppl::common::RetCode Realloc(const TensorShape& shape, BufferDesc* buffer) override final {
@@ -89,7 +89,7 @@ public:
     const cudaDeviceProp& GetDeviceProp() const {
         return device_prop_;
     }
-    
+
     cudaStream_t GetStream() const {
         return stream_;
     }
@@ -108,6 +108,7 @@ public:
 
 private:
     int device_id_ = INT_MAX;
+    bool enable_cuda_graph_ = false;
     cudaStream_t stream_ = nullptr;
     cublasLtHandle_t cublas_handle_ = nullptr;
     cudaDeviceProp device_prop_;
@@ -119,6 +120,8 @@ private:
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(CudaDevice*, va_list);
     static ConfHandlerFunc conf_handlers_[DEV_CONF_MAX];
+
+    cudaError_t CheckCaptureStreamSync(cudaStream_t stream) const;
 };
 
 }}} // namespace ppl::nn::cuda

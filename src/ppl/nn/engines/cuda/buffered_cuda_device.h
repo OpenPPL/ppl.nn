@@ -28,7 +28,7 @@ class BufferedCudaDevice final : public CudaDevice {
 public:
     ~BufferedCudaDevice();
 
-    ppl::common::RetCode Init(int device_id, uint32_t mm_policy);
+    ppl::common::RetCode Init(int device_id, uint32_t mm_policy, bool enable_cuda_graph = false);
 
     using CudaDevice::Realloc;
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc*) override;

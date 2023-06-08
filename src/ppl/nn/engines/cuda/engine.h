@@ -78,6 +78,7 @@ public:
     ppl::common::RetCode CompileCudaModule(const utils::SharedResource&, const CompileInfo&, ir::Graph*,
                                            RuntimePartitionInfo*);
 #endif
+    const CudaDevice* GetDevice() const;
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override;
@@ -91,7 +92,9 @@ private:
     // refit constant tensors
     ppl::common::RetCode FillRefitArgs(RuntimePartitionInfo* info);
     ppl::common::RetCode RefitWeightsImpl(map<edgeid_t, const void*>* edge2val);
-    ppl::common::RetCode ConvertTorchNameToEdge(const map<string, string>* torch2onnx, const map<string, const void*>* name2val, map<edgeid_t, const void*>* edge2val);
+    ppl::common::RetCode ConvertTorchNameToEdge(const map<string, string>* torch2onnx,
+                                                const map<string, const void*>* name2val,
+                                                map<edgeid_t, const void*>* edge2val);
 
 private:
     /*
