@@ -238,7 +238,7 @@ EngineImpl* CudaEngine::Create() {
     return static_cast<EngineImpl*>(EngineFactory::Create(options_));
 }
 
-CudaDevice* CudaEngine::GetDevice() {
+const CudaDevice* CudaEngine::GetDevice() const {
     return &device_;
 }
 

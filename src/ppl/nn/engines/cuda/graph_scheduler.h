@@ -30,7 +30,7 @@ public:
     ppl::common::RetCode Init(const Options&) override;
     ppl::common::RetCode ForEach(const std::function<ppl::common::RetCode(KernelImpl*, KernelExecContext*)>&) override;
     ppl::common::RetCode Run(Profiler*) override;
-    void GraphRunnerAddDevice(CudaDevice* dev);
+    void GraphRunnerAddDevice(const CudaDevice* dev);
 
 private:
     ppl::common::RetCode ExecForEach(KernelExecContext&,

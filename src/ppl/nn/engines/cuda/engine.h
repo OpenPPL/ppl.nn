@@ -78,7 +78,7 @@ public:
     ppl::common::RetCode CompileCudaModule(const utils::SharedResource&, const CompileInfo&, ir::Graph*,
                                            RuntimePartitionInfo*);
 #endif
-    CudaDevice* GetDevice();
+    const CudaDevice* GetDevice() const;
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
     ppl::common::RetCode LoadConstants(const ConstantVisitor&, std::map<edgeid_t, BufferInfo>*) override;

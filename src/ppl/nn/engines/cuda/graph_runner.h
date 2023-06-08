@@ -30,11 +30,11 @@ public:
     ppl::common::RetCode ExecInit();
     ppl::common::RetCode ExecEnd();
     ppl::common::RetCode TrueExec();
-    bool NeedBuildGraph() {
-        return !built_;
+    inline bool IsGraphBuilt() {
+        return built_;
     }
 
-    void AddDevice(CudaDevice* dev);
+    void AddDevice(const CudaDevice* dev);
     ~CudaGraphRunner();
 
 private:
@@ -42,7 +42,7 @@ private:
 
 private:
     bool built_;
-    std::vector<CudaDevice*> depandency_devices_;
+    std::vector<const CudaDevice*> depandency_devices_;
     cudaGraphExec_t graph_exec_;
     cudaStream_t stream_;
 };

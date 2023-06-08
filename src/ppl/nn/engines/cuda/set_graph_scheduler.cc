@@ -27,7 +27,7 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 RetCode SetGraphScheduler(Runtime* runtime, Engine* engine) {
-    if (strcmp(engine->GetName(), "cuda")) {
+    if ((!engine) || strcmp(engine->GetName(), "cuda")) {
         return RC_INVALID_VALUE;
     }
     auto sched = new cuda::CudaGraphScheduler();

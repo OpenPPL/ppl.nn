@@ -56,7 +56,7 @@ RetCode CudaGraphRunner::GenStreamDepandency(cudaStream_t source, cudaStream_t d
 }
 
 RetCode CudaGraphRunner::ExecInit() {
-    if (graph_exec_) {
+    if (IsGraphBuilt()) {
         return RC_SUCCESS;
     }
 
@@ -77,7 +77,7 @@ RetCode CudaGraphRunner::ExecInit() {
 }
 
 RetCode CudaGraphRunner::ExecEnd() {
-    if (graph_exec_) {
+    if (IsGraphBuilt()) {
         return RC_SUCCESS;
     }
 
@@ -95,6 +95,10 @@ RetCode CudaGraphRunner::ExecEnd() {
         errmsg = cudaGetErrorString(err);
         LOG(ERROR) << "cuda stream end capture failed:" << errmsg;
         return RC_OTHER_ERROR;
+    }
+    // graph_exec is not null,means that exist old graph_exec
+    if (graph_exec_) {
+        cudaGraphExecDestroy(graph_exec_);
     }
 #if PPLNN_CUDACC_VER_MAJOR * 1000 + PPLNN_CUDACC_VER_MINOR * 10 >= 11040
     err = cudaGraphInstantiateWithFlags(&graph_exec_, graph, cudaGraphInstantiateFlagAutoFreeOnLaunch);
@@ -137,7 +141,7 @@ RetCode CudaGraphRunner::TrueExec() {
     return RC_SUCCESS;
 }
 
-void CudaGraphRunner::AddDevice(CudaDevice* dev) {
+void CudaGraphRunner::AddDevice(const CudaDevice* dev) {
     if (!stream_) {
         stream_ = dev->GetStream();
         return;
@@ -147,7 +151,7 @@ void CudaGraphRunner::AddDevice(CudaDevice* dev) {
 }
 
 CudaGraphRunner::~CudaGraphRunner() {
-    if (built_) {
+    if (IsGraphBuilt()) {
         cudaGraphExecDestroy(graph_exec_);
     }
 }

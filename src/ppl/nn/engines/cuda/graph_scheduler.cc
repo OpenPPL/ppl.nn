@@ -140,7 +140,7 @@ RetCode CudaGraphScheduler::DoForEach(const function<RetCode(KernelImpl*, Kernel
         return init_status;
     }
 
-    if (graph_runner_.NeedBuildGraph()) {
+    if (!graph_runner_.IsGraphBuilt()) {
         auto status = ExecForEach(ctx, exec, profiler);
         if (status != RC_SUCCESS) {
             return status;
@@ -173,7 +173,7 @@ RetCode CudaGraphScheduler::ForEach(const std::function<ppl::common::RetCode(Ker
     return DoForEach(f, nullptr);
 }
 
-void CudaGraphScheduler::GraphRunnerAddDevice(CudaDevice* dev) {
+void CudaGraphScheduler::GraphRunnerAddDevice(const CudaDevice* dev) {
     graph_runner_.AddDevice(dev);
     return;
 }
