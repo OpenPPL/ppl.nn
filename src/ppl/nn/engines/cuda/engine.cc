@@ -198,7 +198,7 @@ ppl::common::RetCode CudaEngine::RefitWeightsImpl(map<edgeid_t, const void*>* ed
         auto dst_shape = shape_ref->second;
         auto src_shape(dst_shape);
         src_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-        src_shape.SetDataType(ppl::common::DATATYPE_FLOAT32);
+        src_shape.SetDataType(ppl::common::DATATYPE_FLOAT16);
         auto& buf_info = refit_args_.edge2buffer[edge_id];
         if (refit_args_.edge2node[edge_id] == "Conv") { // conv
             if (cuda_flags_.default_kernel_type == ppl::common::DATATYPE_FLOAT16) { // only support fp16 conv now
@@ -213,18 +213,26 @@ ppl::common::RetCode CudaEngine::RefitWeightsImpl(map<edgeid_t, const void*>* ed
                     dev->Free(&tmp_buffer_desc);
                 });
                 dev->GetDataConverter()->ConvertFromHost(&tmp_buffer_desc, dst_shape, data_ptr, src_shape);
-                // conv related convert
                 conv_param_t tmp_conv_param;
                 tmp_conv_param.num_flt = dst_shape.GetDim(0);
                 tmp_conv_param.num_chl = dst_shape.GetDim(1);
                 tmp_conv_param.flt_height = dst_shape.GetDim(2);
                 tmp_conv_param.flt_width = dst_shape.GetDim(3);
                 tmp_conv_param.num_grp = 1; // TODO(WJF): record related nodes' parameters
-                PPLCUDAConvolutionCvtFlt(dev->GetStream(), buf_info.addr, tmp_buffer_desc.addr,
-                                         ppl::common::DATATYPE_FLOAT16, tmp_conv_param);
+                if (dst_shape.GetDimCount() > 1) { //weight
+                    // conv related convert
+                    PPLCUDAConvolutionCvtFlt(dev->GetStream(), buf_info.addr, tmp_buffer_desc.addr,
+                                            ppl::common::DATATYPE_FLOAT16, tmp_conv_param);
+                } else { // bias
+                    PPLCUDAConvolutionCvtBias(dev->GetStream(), buf_info.addr, tmp_buffer_desc.addr,
+                                            ppl::common::DATATYPE_FLOAT16, tmp_conv_param);
+                }
             } else {
                 return RC_UNSUPPORTED;
             }
+        } else if (refit_args_.edge2node[edge_id].find("Norm") != std::string::npos) { // norm
+            dst_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
+            dev->GetDataConverter()->ConvertFromHost(&buf_info, dst_shape, data_ptr, src_shape);
         } else { // matmul just convert and copy
             dev->GetDataConverter()->ConvertFromHost(&buf_info, dst_shape, data_ptr, src_shape);
         }
@@ -485,7 +493,7 @@ ppl::common::RetCode CudaEngine::ConvertTorchNameToEdge(const map<string, string
         auto onnx_name = onnx_ref->second;
         auto edgeid_ref = refit_args_.name2edgeid.find(onnx_name);
         if (edgeid_ref == refit_args_.name2edgeid.end()) {
-            LOG(ERROR) << "Unkown onnx tensor name!";
+            LOG(ERROR) << "Unkown onnx tensor name!" << onnx_name;
             return RC_INVALID_VALUE;
         } else {
             auto edge_id = edgeid_ref->second;
