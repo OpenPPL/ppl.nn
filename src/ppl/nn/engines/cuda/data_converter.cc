@@ -112,7 +112,7 @@ RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc,
 
     auto src_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(src_desc.GetDataFormat());
     auto dst_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(dst_desc.GetDataFormat());
-    if (src_desc.GetDimCount() == 2 && dst_desc.GetDimCount() == 2) {
+    if (src_desc.CalcElementsFromDimensionIncludingPadding(2) == 1 && dst_desc.CalcElementsFromDimensionIncludingPadding(2) == 1) {
         if (src_desc.GetDim(1) % src_align_size == 0 && dst_desc.GetDim(1) % dst_align_size == 0) {
             param.in_format = param.out_format;
             param.mix_format = 0;
