@@ -204,7 +204,7 @@ Define_bool_opt("--enable-cuda-graph", g_flag_enable_cuda_graph, false, "use cud
 
 #include "ppl/nn/engines/cuda/engine_factory.h"
 #include "ppl/nn/engines/cuda/options.h"
-#include "ppl/nn/engines/cuda/utils.h"
+#include "ppl/nn/engines/cuda/set_graph_sched.h"
 #include "ppl/nn/utils/array.h"
 
 static void CudaSaveAlgoInfo(const char* data, uint64_t bytes, void* arg) {

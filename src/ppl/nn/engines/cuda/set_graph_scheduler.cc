@@ -17,7 +17,7 @@
 
 #include "ppl/common/retcode.h"
 #include "ppl/common/log.h"
-#include "ppl/nn/engines/cuda/utils.h"
+#include "ppl/nn/engines/cuda/set_graph_sched.h"
 #include "ppl/nn/engines/cuda/graph_scheduler.h"
 #include "ppl/nn/engines/cuda/engine.h"
 #include "ppl/nn/runtime/scheduler.h"
