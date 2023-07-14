@@ -27,7 +27,7 @@ void RegisterDeviceContext(pybind11::module* m) {
                  return (ctx.ptr);
              })
         .def("GetType", [](const PyDeviceContext& ctx) -> const char* {
-            return ctx.ptr->GetType();
+            return ctx.ptr->GetType().str;
         });
 }
 

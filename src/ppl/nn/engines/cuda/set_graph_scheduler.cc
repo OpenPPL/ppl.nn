@@ -34,7 +34,7 @@ RetCode SetGraphScheduler(Runtime* runtime, Engine* engine) {
     auto num = runtime->GetDeviceContextCount();
     for (uint32_t i = 0; i < num; ++i) {
         auto device = runtime->GetDeviceContext(i);
-        if (strcmp(device->GetType(), "cuda")) {
+        if (strcmp(device->GetType().str, "cuda") != 0) {
             continue;
         }
         sched->GraphRunnerAddDevice(static_cast<cuda::CudaDevice*>(device));

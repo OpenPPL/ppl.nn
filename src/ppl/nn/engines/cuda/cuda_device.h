@@ -32,6 +32,13 @@ namespace ppl { namespace nn { namespace cuda {
 
 class CudaDevice : public Device {
 public:
+    CudaDevice() {
+        *(uint64_t*)(type_.str) = 0;
+        type_.str[0] = 'c';
+        type_.str[1] = 'u';
+        type_.str[2] = 'd';
+        type_.str[3] = 'a';
+    }
     virtual ~CudaDevice();
 
     ppl::common::RetCode Init(int device_id, bool enable_cuda_graph = false);
@@ -71,8 +78,8 @@ public:
         return &data_converter_;
     }
 
-    const char* GetType() const override final {
-        return "cuda";
+    Type GetType() const override final {
+        return type_;
     }
 
     ppl::common::RetCode Configure(uint32_t, ...) override;
@@ -107,6 +114,7 @@ public:
     }
 
 private:
+    Type type_;
     int device_id_ = INT_MAX;
     bool enable_cuda_graph_ = false;
     cudaStream_t stream_ = nullptr;
