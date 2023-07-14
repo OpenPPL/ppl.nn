@@ -57,6 +57,12 @@ public:
     virtual DeviceContext* GetDeviceContext() const = 0;
 
     /**
+       @brief set the device `DeviceContext` of this tensor to `ctx`
+       @note this tensor's buffer will be released before `ctx` is set.
+    */
+    virtual void SetDeviceContext(DeviceContext* ctx) = 0;
+
+    /**
        @brief set the underlying buffer ptr
        @param buf buffer ptr that can be read/written by the internal `Device` class.
     */

@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/utils/generic_cpu_data_converter.h"
+#include "ppl/nn/common/logger.h"
 #include <cstring> // memcpy
 using namespace ppl::common;
 
@@ -30,7 +31,13 @@ static void TypedConvert(DstType* dst, const SrcType* src, uint32_t count) {
 
 RetCode GenericCpuDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
                                          const TensorShape& src_desc, const void*, const void*) const {
-    if (dst_desc.GetDataFormat() != DATAFORMAT_NDARRAY || src_desc.GetDataFormat() != DATAFORMAT_NDARRAY) {
+    if (dst_desc.GetDataFormat() != DATAFORMAT_NDARRAY) {
+        LOG(ERROR) << "unsupported target format [" << GetDataFormatStr(dst_desc.GetDataFormat()) << "].";
+        return RC_UNSUPPORTED;
+    }
+
+    if (src_desc.GetDataFormat() != DATAFORMAT_NDARRAY) {
+        LOG(ERROR) << "unsupported target format [" << GetDataFormatStr(dst_desc.GetDataFormat()) << "].";
         return RC_UNSUPPORTED;
     }
 
@@ -53,6 +60,8 @@ RetCode GenericCpuDataConverter::Convert(BufferDesc* dst, const TensorShape& dst
         }
     }
 
+    LOG(ERROR) << "unsupported source data type [" << GetDataTypeStr(src_desc.GetDataType())
+               << "] to target data type [" << GetDataTypeStr(dst_desc.GetDataType()) << "].";
     return RC_UNSUPPORTED;
 }
 
