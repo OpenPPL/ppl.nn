@@ -234,6 +234,12 @@ DeviceContext* GetDeviceContext(uint32_t idx) const;
 Returns the `DeviceContext` at position `idx`. Note that `idx` should be less than `GetDeviceContextCount()`.
 
 ```c++
+DeviceContext* GetHostDeviceContext() const;
+```
+
+Returns a host `DeviceContext`.
+
+```c++
 ppl::common::RetCode GetProfilingStatistics(ProfilingStatistics*) const;
 ```
 
@@ -288,6 +294,12 @@ DeviceContext* GetDeviceContext() const;
 ```
 
 Returns context of the underlying `Device`.
+
+```c++
+void SetDeviceContext(DeviceContext* ctx);
+```
+
+Sets the device `DeviceContext` of this tensor to `ctx`. Note that this tensor's buffer will be released before `ctx` is set.
 
 ```c++
 void SetBufferPtr(void* buf);

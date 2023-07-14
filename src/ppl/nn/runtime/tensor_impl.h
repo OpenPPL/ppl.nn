@@ -54,6 +54,10 @@ public:
         return buffer_info_.GetDevice();
     }
 
+    void SetDeviceContext(DeviceContext* dev) override {
+        SetDevice(static_cast<Device*>(dev));
+    }
+
     tensortype_t GetType() const {
         return type_;
     }
@@ -63,6 +67,7 @@ public:
     }
 
     ppl::common::RetCode SetDevice(Device* dev) {
+        buffer_info_.FreeBuffer();
         return buffer_info_.SetDevice(dev);
     }
 
