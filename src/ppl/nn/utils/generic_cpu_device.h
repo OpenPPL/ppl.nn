@@ -26,7 +26,12 @@ namespace ppl { namespace nn { namespace utils {
 
 class GenericCpuDevice final : public Device {
 public:
-    GenericCpuDevice(uint64_t alignment = 64) : allocator_(alignment) {}
+    GenericCpuDevice(uint64_t alignment = 64) : allocator_(alignment) {
+        *(uint64_t*)(type_.str) = 0;
+        type_.str[0] = 'c';
+        type_.str[1] = 'p';
+        type_.str[2] = 'u';
+    }
 
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc*) override;
     ppl::common::RetCode Realloc(const TensorShape&, BufferDesc*) override final;
@@ -48,8 +53,8 @@ public:
         return &data_converter_;
     }
 
-    const char* GetType() const override {
-        return "cpu";
+    Type GetType() const override {
+        return type_;
     }
 
     ppl::common::RetCode Configure(uint32_t, ...) override {
@@ -57,6 +62,7 @@ public:
     }
 
 private:
+    Type type_;
     mutable ppl::common::GenericCpuAllocator allocator_;
     GenericCpuDataConverter data_converter_;
 };

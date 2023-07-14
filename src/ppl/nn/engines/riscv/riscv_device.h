@@ -28,7 +28,12 @@ namespace ppl { namespace nn { namespace riscv {
 
 class RiscvDevice : public Device {
 public:
-    RiscvDevice(uint64_t alignment) : data_converter_(), allocator_(alignment) {}
+    RiscvDevice(uint64_t alignment) : data_converter_(), allocator_(alignment) {
+        *(uint64_t*)(type_.str) = 0;
+        type_.str[0] = 'c';
+        type_.str[1] = 'p';
+        type_.str[2] = 'u';
+    }
 
     virtual ppl::common::RetCode AllocTmpBuffer(uint64_t bytes, BufferDesc* buffer) {
         return Realloc(bytes, buffer);
@@ -103,8 +108,8 @@ public:
         return &data_converter_;
     }
 
-    const char* GetType() const override final {
-        return "riscv";
+    Type GetType() const override final {
+        return type_;
     }
 
     ppl::common::RetCode Configure(uint32_t, ...) override {
@@ -112,6 +117,7 @@ public:
     }
 
 private:
+    Type type_;
     RiscvDataConverter data_converter_;
     mutable ppl::common::GenericCpuAllocator allocator_;
 };

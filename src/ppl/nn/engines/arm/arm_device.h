@@ -27,7 +27,12 @@ namespace ppl { namespace nn { namespace arm {
 
 class ArmDevice : public Device {
 public:
-    ArmDevice(uint64_t alignment, ppl::common::isa_t isa) : isa_(isa), allocator_(alignment), data_converter_(isa) {}
+    ArmDevice(uint64_t alignment, ppl::common::isa_t isa) : isa_(isa), allocator_(alignment), data_converter_(isa) {
+        *(uint64_t*)(type_.str) = 0;
+        type_.str[0] = 'c';
+        type_.str[1] = 'p';
+        type_.str[2] = 'u';
+    }
 
     void SetISA(ppl::common::isa_t isa) {
         isa_ = isa;
@@ -111,8 +116,8 @@ public:
         return ppl::common::RC_SUCCESS;
     }
 
-    const char* GetType() const override final {
-        return "arm";
+    Type GetType() const override final {
+        return type_;
     }
 
     ppl::common::RetCode Configure(uint32_t, ...) override {
@@ -120,6 +125,7 @@ public:
     }
 
 private:
+    Type type_;
     ppl::common::isa_t isa_;
     mutable ppl::common::GenericCpuAllocator allocator_;
     ArmDataConverter data_converter_;

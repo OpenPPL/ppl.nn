@@ -25,8 +25,13 @@ namespace ppl { namespace nn {
 
 class PPLNN_PUBLIC DeviceContext {
 public:
+    struct Type {
+        char str[8]; // a null-terminated string
+    };
+
+public:
     virtual ~DeviceContext() {}
-    virtual const char* GetType() const = 0;
+    virtual Type GetType() const = 0;
     virtual ppl::common::RetCode Configure(uint32_t, ...) = 0;
 };
 
