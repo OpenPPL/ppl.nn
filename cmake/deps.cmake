@@ -141,7 +141,11 @@ if(MSVC)
     endif()
 endif()
 
-set(__PROTOBUF_TAG__ v3.1.0)
+if(PPLNN_PROTOBUF_VERSION)
+    set(__PROTOBUF_TAG__ ${PPLNN_PROTOBUF_VERSION})
+else()
+    set(__PROTOBUF_TAG__ v3.1.0)
+endif()
 
 if(PPLNN_DEP_PROTOBUF_PKG)
     hpcc_declare_pkg_dep(protobuf

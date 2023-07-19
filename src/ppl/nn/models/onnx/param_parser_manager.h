@@ -22,7 +22,7 @@
 #include "ppl/nn/ir/attr.h"
 #include "ppl/nn/utils/op_info_manager.h"
 #include "ppl/nn/models/onnx/param_parser_extra_args.h"
-#include "ppl/nn/models/onnx/generated/onnx.pb.h"
+#include "onnx.pb.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
