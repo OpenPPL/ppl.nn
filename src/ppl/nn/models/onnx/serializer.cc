@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/onnx/generated/onnx.pb.h"
+#include "onnx.pb.h"
 #include "ppl/nn/models/onnx/serializer.h"
 #include "ppl/nn/models/onnx/utils.h"
 #include "ppl/nn/models/onnx/param_parser_manager.h"

@@ -42,7 +42,11 @@ static bool ParseFromBinaryBuffer(const char* buf, uint64_t buf_len, google::pro
     }
 
     google::protobuf::io::CodedInputStream cis((uint8_t*)buf, buf_len);
+#if GOOGLE_PROTOBUF_VERSION < 3011000
     cis.SetTotalBytesLimit(INT_MAX, INT_MAX);
+#else
+    cis.SetTotalBytesLimit(INT_MAX);
+#endif
     return pb_model->ParseFromCodedStream(&cis);
 }
 

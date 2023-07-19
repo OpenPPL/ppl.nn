@@ -21,12 +21,11 @@
 #include "ppl/common/retcode.h"
 #include "ppl/nn/params/pmx/layer_norm_param.h"
 #include "ppl/nn/models/onnx/param_parser_extra_args.h"
-#include "ppl/nn/models/onnx/generated/onnx.pb.h"
+#include "onnx.pb.h"
 
 namespace ppl { namespace nn { namespace onnx {
 
-ppl::common::RetCode ParseLayerNormParam(const ::onnx::NodeProto&, const ParamParserExtraArgs&, ir::Node*,
-                                               ir::Attr*);
+ppl::common::RetCode ParseLayerNormParam(const ::onnx::NodeProto&, const ParamParserExtraArgs&, ir::Node*, ir::Attr*);
 
 }}} // namespace ppl::nn::onnx
 

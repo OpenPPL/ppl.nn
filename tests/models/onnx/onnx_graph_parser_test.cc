@@ -39,7 +39,11 @@ TEST_F(GraphParserTest, Parse_Test) {
     int fd = fileno(fp);
     google::protobuf::io::FileInputStream fis(fd);
     google::protobuf::io::CodedInputStream cis(&fis);
+#if GOOGLE_PROTOBUF_VERSION < 3011000
     cis.SetTotalBytesLimit(INT_MAX, INT_MAX);
+#else
+    cis.SetTotalBytesLimit(INT_MAX);
+#endif
     ::onnx::ModelProto pb_model;
     if (!pb_model.ParseFromCodedStream(&cis)) {
         return;

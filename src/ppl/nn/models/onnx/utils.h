@@ -18,7 +18,7 @@
 #ifndef _ST_HPC_PPL_NN_MODELS_ONNX_UTILS_H
 #define _ST_HPC_PPL_NN_MODELS_ONNX_UTILS_H
 
-#include "ppl/nn/models/onnx/generated/onnx.pb.h"
+#include "onnx.pb.h"
 #include "ppl/nn/ir/graph.h"
 #include "ppl/common/types.h"
 
