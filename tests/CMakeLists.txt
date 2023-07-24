@@ -27,6 +27,12 @@ file(GLOB_RECURSE PPLNN_TEST_SRC
 
 add_executable(pplnn_unittest ${PPLNN_TEST_SRC})
 
+if(PPLNN_ENABLE_ONNX_MODEL)
+    if(NOT PPLNN_ONNX_GENERATED_LIBS)
+        target_include_directories(pplnn_unittest PRIVATE ${PROJECT_SOURCE_DIR}/src/ppl/nn/models/onnx/generated)
+    endif()
+endif()
+
 hpcc_populate_dep(googletest)
 target_link_libraries(pplnn_unittest PRIVATE pplnn_static gtest_main)
 
