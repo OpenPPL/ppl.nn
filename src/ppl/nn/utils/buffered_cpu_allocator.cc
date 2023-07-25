@@ -69,6 +69,7 @@ RetCode BufferedCpuAllocator::Init() {
         return RC_OTHER_ERROR;
     }
 
+    addr_len_ = status.ullTotalPhys;
     LOG(DEBUG) << "reserved [" << status.ullTotalPhys << "] bytes of virtual address from [" << base_ << "].";
 #else
     auto totalram = sysconf(_SC_PAGE_SIZE) * sysconf(_SC_PHYS_PAGES);
@@ -79,6 +80,7 @@ RetCode BufferedCpuAllocator::Init() {
         return RC_OTHER_ERROR;
     }
 
+    addr_len_ = totalram;
     LOG(DEBUG) << "reserved [" << totalram << "] bytes of virtual address from [" << base_ << "].";
 #endif
 
