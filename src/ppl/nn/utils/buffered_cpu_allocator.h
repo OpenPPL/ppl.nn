@@ -30,13 +30,17 @@ public:
     ppl::common::RetCode Init();
     void* Alloc(uint64_t multi_page_size) override;
     void Free(void*) override {}
-    void* GetBaseAddr() const {
+    void* GetReservedBaseAddr() const {
         return base_;
+    }
+    uint64_t GetReservedAddrLen() const {
+        return addr_len_;
     }
 
 private:
     void* base_ = nullptr;
     void* cursor_ = nullptr;
+    uint64_t addr_len_ = 0;
 
 private:
     BufferedCpuAllocator(const BufferedCpuAllocator&) = delete;
