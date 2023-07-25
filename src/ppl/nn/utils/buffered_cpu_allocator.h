@@ -30,6 +30,9 @@ public:
     ppl::common::RetCode Init();
     void* Alloc(uint64_t multi_page_size) override;
     void Free(void*) override {}
+    void* GetBaseAddr() const {
+        return base_;
+    }
 
 private:
     void* base_ = nullptr;
