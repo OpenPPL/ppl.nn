@@ -35,6 +35,10 @@ public:
 
     ppl::common::RetCode Init(int devid, uint64_t granularity);
 
+    void* GetBaseAddr() const {
+        return (void*)addr_;
+    }
+
     void* Alloc(uint64_t bytes) override;
     void Free(void* ptr) override;
 
