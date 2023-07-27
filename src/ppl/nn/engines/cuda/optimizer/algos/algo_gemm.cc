@@ -282,11 +282,6 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
         auto postshape = *options.tensors->find(postedge_id)->second->GetShape();
         auto newshape = postshape;
 
-        if (!attr_param_.param.transB) {
-            postshape.SetDim(0, newshape.GetDim(1));
-            postshape.SetDim(1, newshape.GetDim(0));
-        }
-
         newshape.SetPadding1(0, (postshape.GetDim(0) + align_size - 1) / align_size * align_size - postshape.GetDim(0));
         newshape.SetPadding1(1, (postshape.GetDim(1) + align_size - 1) / align_size * align_size - postshape.GetDim(1));
 
@@ -334,6 +329,7 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
             status = PPLCUDAGemmModifyWeightsInt8(stream, &newshape, weight_constat_info.GetBufferPtr(),
                                                   temp_weight_buffer.addr, &param_kernel_);
         }
+        weight_constat_info.Reshape(newshape); // 'PPLCUDAGemmModifyWeights' may transpose weights
 
         reinterpret_cast<CudaGemmParam*>(options.param)->param.transB = 1;
         options.info->constants.emplace(preedge_id, std::move(weight_constat_info));
