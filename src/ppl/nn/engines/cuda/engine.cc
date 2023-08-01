@@ -88,7 +88,7 @@ bool CudaEngine::Supports(const ir::Node* node) const {
 
 RetCode CudaEngine::DoOptimize(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
     CompileInfo compile_set;
-    OptGraph opt_graph(graph, info, &cuda_flags_, &compile_set);
+    OptGraph opt_graph(graph, info, &refit_info_, &cuda_flags_, &compile_set);
     auto status = opt_graph.DoOptimize(resource, &device_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "OptGraph DoOptimeize failed: " << GetRetCodeStr(status);
@@ -150,10 +150,10 @@ static void ExportAlgorithmsInfo(const map<string, CudaArgs::AlgoSelects>& algos
 }
 
 RetCode CudaEngine::FillRefitArgs(RuntimePartitionInfo* info) {
-    for (auto iter = info->name2edgeid.begin(); iter != info->name2edgeid.end(); ++iter) {
+    for (auto iter = refit_info_.name2edgeid.begin(); iter != refit_info_.name2edgeid.end(); ++iter) {
         refit_args_.name2edgeid.insert(make_pair(iter->first, iter->second));
     }
-    for (auto iter = info->edge2node.begin(); iter != info->edge2node.end(); ++iter) {
+    for (auto iter = refit_info_.edge2node.begin(); iter != refit_info_.edge2node.end(); ++iter) {
         refit_args_.edge2node.insert(make_pair(iter->first, iter->second));
     }
 

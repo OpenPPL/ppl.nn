@@ -42,11 +42,12 @@ struct SharedResource;
 namespace ppl { namespace nn { namespace cuda {
 
 struct OptKernelOptions final {
-    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, const utils::SharedResource* r, CudaArgs* args,
+    OptKernelOptions(ir::Graph* graph, RuntimePartitionInfo* info, RefitGraphInfo* refit_info, const utils::SharedResource* r, CudaArgs* args,
                      CompileInfo* compile_set, CudaDevice* dev,
                      std::map<edgeid_t, std::unique_ptr<TensorImpl>>* tensors, std::vector<CudaTensorQuant>* quants)
         : graph(graph)
         , info(info)
+        , refit_info(refit_info)
         , resource(r)
         , args(args)
         , compile_set(compile_set)
@@ -64,6 +65,7 @@ struct OptKernelOptions final {
 
     ir::Graph* graph;
     RuntimePartitionInfo* info;
+    RefitGraphInfo* refit_info;
     const utils::SharedResource* resource;
     CudaArgs* args;
     CompileInfo* compile_set;

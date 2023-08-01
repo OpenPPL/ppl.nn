@@ -145,8 +145,8 @@ static RetCode RefitConstantWeights(PyCudaEngine& engine, uint32_t option, const
     for (std::pair<pybind11::handle, pybind11::handle> it : py_name2val)
     {
         auto key = it.first.cast<std::string>();
-        auto value = it.second.cast<pybind11::buffer>();
-        name2val[key] = (const void*)value.request().ptr;
+        auto value = it.second.cast<int64_t>();
+        name2val[key] = (const void*)value;
     }
 
     return engine.ptr->Configure(option, &torch2onnx, &name2val);
