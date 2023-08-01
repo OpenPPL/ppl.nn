@@ -15,18 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PMX_PARSE_LAYERNORM_PARAM_H_
-#define _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PMX_PARSE_LAYERNORM_PARAM_H_
+#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PMX_PARSE_CHANNEL_SHUFFLE_PARAM_H_
+#define _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PMX_PARSE_CHANNEL_SHUFFLE_PARAM_H_
 
 #include "ppl/common/retcode.h"
-#include "ppl/nn/params/pmx/layer_norm_param.h"
+#include "ppl/nn/params/pmx/channel_shuffle_param.h"
 #include "ppl/nn/models/onnx/param_parser_extra_args.h"
 #include "onnx.pb.h"
 
 namespace ppl { namespace nn { namespace pmx {
 
-ppl::common::RetCode ParseLayerNormParam(const ::onnx::NodeProto&, const onnx::ParamParserExtraArgs&, ir::Node*,
-                                         ir::Attr*);
+ppl::common::RetCode ParseChannelShuffleParam(const ::onnx::NodeProto&, const onnx::ParamParserExtraArgs&, ir::Node*,
+                                              ir::Attr*);
 
 }}} // namespace ppl::nn::pmx
 

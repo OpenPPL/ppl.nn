@@ -15,18 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PMX_PARSE_LAYERNORM_PARAM_H_
-#define _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PMX_PARSE_LAYERNORM_PARAM_H_
+#ifndef _ST_HPC_PPL_NN_OPUTILS_MMDEPLOY_RESHAPE_REDUCE_H_
+#define _ST_HPC_PPL_NN_OPUTILS_MMDEPLOY_RESHAPE_REDUCE_H_
 
 #include "ppl/common/retcode.h"
-#include "ppl/nn/params/pmx/layer_norm_param.h"
-#include "ppl/nn/models/onnx/param_parser_extra_args.h"
-#include "onnx.pb.h"
+#include "ppl/nn/params/mmdeploy/ms_deformable_attention_param.h"
+#include "ppl/nn/common/input_output_info.h"
+#include "ppl/nn/ir/attr.h"
 
-namespace ppl { namespace nn { namespace pmx {
+namespace ppl { namespace nn { namespace mmdeploy {
 
-ppl::common::RetCode ParseLayerNormParam(const ::onnx::NodeProto&, const onnx::ParamParserExtraArgs&, ir::Node*,
-                                         ir::Attr*);
+ppl::common::RetCode ReshapeMSDeformAttn(InputOutputInfo*, const ir::Attr*);
 
 }}} // namespace ppl::nn::pmx
 

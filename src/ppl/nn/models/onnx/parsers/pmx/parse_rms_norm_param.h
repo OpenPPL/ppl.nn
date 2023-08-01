@@ -15,19 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PMX_PARSE_MS_DEFORMABLE_ATTENTION_H_
-#define _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PMX_PARSE_MS_DEFORMABLE_ATTENTION_H_
+#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PMX_PARSE_RMS_NORM_PARAM_H_
+#define _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PMX_PARSE_RMS_NORM_PARAM_H_
 
 #include "ppl/common/retcode.h"
-#include "ppl/nn/params/pmx/ms_deformable_attention_param.h"
+#include "ppl/nn/params/pmx/rms_norm_param.h"
 #include "ppl/nn/models/onnx/param_parser_extra_args.h"
 #include "onnx.pb.h"
 
-namespace ppl { namespace nn { namespace onnx {
+namespace ppl { namespace nn { namespace pmx {
 
-ppl::common::RetCode ParseMSDeformAttnParam(const ::onnx::NodeProto&, const onnx::ParamParserExtraArgs&, ir::Node*,
-                                              ir::Attr*);
+ppl::common::RetCode ParseRMSNormParam(const ::onnx::NodeProto&, const onnx::ParamParserExtraArgs&, ir::Node*,
+                                       ir::Attr*);
 
-}}} // namespace ppl::nn::onnx
+}}} // namespace ppl::nn::pmx
 
 #endif
