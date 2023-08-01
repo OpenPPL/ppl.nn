@@ -76,8 +76,13 @@ RetCode X86Kernel::DumpOutputTensors(KernelExecContext* ctx) {
     for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
         auto tensor = ctx->GetOutput<TensorImpl>(i);
         auto shape = tensor->GetShape();
+        std::string tensor_name = tensor->GetName();
+        for (size_t s = 0; s < tensor_name.length(); ++s) {
+            if (tensor_name[s] == '/')
+                tensor_name[s] = '.';
+        }
         const std::string out_file_name = engine_config_->debug_data_dir
-                                + "/pplnn_dbg_tensor-" + tensor->GetName()
+                                + "/pplnn_dbg_tensor-" + tensor_name
                                 + "-" + get_dim_str(shape)
                                 + "-" + get_dt_str(shape)
                                 + ".dat";
