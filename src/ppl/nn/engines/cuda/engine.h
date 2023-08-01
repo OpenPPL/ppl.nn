@@ -64,6 +64,12 @@ struct RefitArgs {
     std::map<ppl::nn::edgeid_t, std::string> edge2node;
 };
 
+struct RefitGraphInfo final {
+    // refit args needed
+    std::map<std::string, edgeid_t> name2edgeid;
+    std::map<ppl::nn::edgeid_t, std::string> edge2node;
+};
+
 class CudaEngine final : public EngineImpl {
 public:
     CudaEngine();
@@ -120,6 +126,7 @@ private:
     CUDAModuleManager cuda_manager_;
     // update nodes' weights
     RefitArgs refit_args_;
+    RefitGraphInfo refit_info_;
     void* export_algo_arg_ = nullptr;
     void (*export_algo_func_)(const char*, uint64_t, void*) = nullptr;
 #ifdef PPLNN_ENABLE_PMX_MODEL

@@ -217,8 +217,8 @@ RetCode TuringHMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
 
         options.info->constants.emplace(preedge_id, std::move(weight_constat_info));
         // record edgeid --> name mapping
-        options.info->name2edgeid[topo->GetEdge(preedge_id)->GetName()] = preedge_id;
-        options.info->edge2node[preedge_id] = node->GetType().name;
+        options.refit_info->name2edgeid[topo->GetEdge(preedge_id)->GetName()] = preedge_id;
+        options.refit_info->edge2node[preedge_id] = node->GetType().name;
 
         *options.tensors->find(preedge_id)->second->GetShape() = newshape;
         *options.tensors->find(postedge_id)->second->GetShape() = newshape;
@@ -269,8 +269,8 @@ RetCode TuringHMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
                                   shape_in0.GetDataType(), temp_conv_param);
         options.info->constants.emplace(preedge_id, std::move(bias_constat_info));
         // record edgeid --> name mapping
-        options.info->name2edgeid[topo->GetEdge(preedge_id)->GetName()] = preedge_id;
-        options.info->edge2node[preedge_id] = node->GetType().name;
+        options.refit_info->name2edgeid[topo->GetEdge(preedge_id)->GetName()] = preedge_id;
+        options.refit_info->edge2node[preedge_id] = node->GetType().name;
 
         *options.tensors->find(preedge_id)->second->GetShape() = newshape;
         *options.tensors->find(postedge_id)->second->GetShape() = newshape;

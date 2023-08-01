@@ -33,7 +33,7 @@ namespace ppl { namespace nn { namespace cuda {
 
 class OptGraph final {
 public:
-    OptGraph(ir::Graph* graph, RuntimePartitionInfo* info, CudaArgs* args, CompileInfo* compile_set);
+    OptGraph(ir::Graph* graph, RuntimePartitionInfo* info, RefitGraphInfo* refit_info, CudaArgs* args, CompileInfo* compile_set);
     ~OptGraph();
 
     ppl::common::RetCode DoOptimize(const utils::SharedResource&, CudaDevice*);
@@ -54,6 +54,7 @@ private:
 private:
     ir::Graph* graph_;
     RuntimePartitionInfo* info_;
+    RefitGraphInfo* refit_info_;
     CudaArgs* args_;
     CompileInfo* compile_set_;
     std::set<nodeid_t> illegal_dims_;

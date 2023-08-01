@@ -29,8 +29,8 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-OptGraph::OptGraph(ir::Graph* graph, RuntimePartitionInfo* info, CudaArgs* args, CompileInfo* compile_set)
-    : graph_(graph), info_(info), args_(args), compile_set_(compile_set) {
+OptGraph::OptGraph(ir::Graph* graph, RuntimePartitionInfo* info, RefitGraphInfo* refit_info, CudaArgs* args, CompileInfo* compile_set)
+    : graph_(graph), info_(info), refit_info_(refit_info), args_(args), compile_set_(compile_set) {
     acquire_tensor_func_ = [this](edgeid_t eid, uint32_t) -> EdgeObject* {
         auto it = tensor_impls_.find(eid);
         if (it == tensor_impls_.end()) {
@@ -450,7 +450,7 @@ RetCode OptGraph::SelectAlgos(const utils::SharedResource& resource, CudaDevice*
     auto topo = graph_->topo.get();
     auto& graph_quants = args_->tensor_quants;
 
-    OptKernelOptions options(graph_, info_, &resource, args_, compile_set_, device, &tensor_impls_, &graph_quants);
+    OptKernelOptions options(graph_, info_, refit_info_, &resource, args_, compile_set_, device, &tensor_impls_, &graph_quants);
     UpdateTopologicalSort();
 
     AlgoGraph algo_graph(topo);
@@ -531,8 +531,8 @@ RetCode OptGraph::LoadConstants(CudaDevice* device) {
             }
 
             info_->constants[preedge_id] = std::move(constant_info);
-            info_->name2edgeid[topo->GetEdge(preedge_id)->GetName()] = preedge_id;
-            info_->edge2node[preedge_id] = node->GetType().name;
+            refit_info_->name2edgeid[topo->GetEdge(preedge_id)->GetName()] = preedge_id;
+            refit_info_->edge2node[preedge_id] = node->GetType().name;
             *tensor_impls_.find(preedge_id)->second->GetShape() = postshape;
             graph_quants[preedge_id] = graph_quants[postedge_id];
         }
