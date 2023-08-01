@@ -19,13 +19,6 @@
 using namespace std;
 using namespace ppl::common;
 
-#include "ppl/nn/engines/cuda/optimizer/ops/pmx/bridge_op.h"
-#include "ppl/nn/engines/cuda/optimizer/ops/pmx/channel_shuffle_op.h"
-#include "ppl/nn/engines/cuda/optimizer/ops/pmx/ms_deformable_attention_op.h"
-#include "ppl/nn/engines/cuda/optimizer/ops/pmx/layernorm_op.h"
-#include "ppl/nn/engines/cuda/optimizer/ops/pmx/shape_operation_op.h"
-#include "ppl/nn/engines/cuda/optimizer/ops/pmx/gelu_op.h"
-#include "ppl/nn/engines/cuda/optimizer/ops/pmx/reduce_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/conv_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/abs_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/onnx/add_op.h"
@@ -116,6 +109,15 @@ using namespace ppl::common;
 #include "ppl/nn/engines/cuda/optimizer/ops/mmcv/mmcv_roialign_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/mmcv/mmcv_gridsample_op.h"
 #include "ppl/nn/engines/cuda/optimizer/ops/mmcv/mmcv_modulated_deform_conv2d_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/mmdeploy/ms_deformable_attention_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/pmx/bridge_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/pmx/channel_shuffle_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/pmx/gelu_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/pmx/layernorm_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/pmx/reduce_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/pmx/rms_norm_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/pmx/silu_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/pmx/shape_operation_op.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -263,13 +265,16 @@ void RegisterBuiltinOpImpls() {
     RegisterOptKernelCreator<MMCVModulatedDeformConv2dOp>("mmcv", "MMCVModulatedDeformConv2d", 1, 1);
     RegisterOptKernelCreator<MMCVNonMaxSupressionOp>("mmcv", "NonMaxSuppression", 1, 1);
 
+    RegisterOptKernelCreator<MSDeformAttnOp>("mmdeploy", "MSDeformAttn", 1, 1);
+
     // ppl customize op domain is "pmx"
     RegisterOptKernelCreator<BridgeOp>("pmx", "Bridge", 1, 1);
     RegisterOptKernelCreator<ChannelShuffleOp>("pmx", "ChannelShuffle", 1, 1);
     RegisterOptKernelCreator<GeluOp>("pmx", "GELU", 1, 1);
     RegisterOptKernelCreator<LayerNormOp>("pmx", "LayerNorm", 1, 1);
     RegisterOptKernelCreator<PPLShapeOperationOp>("pmx", "Shape", 1, 1);
-    RegisterOptKernelCreator<MSDeformAttnOp>("mmdeploy", "MSDeformAttn", 1, 1);
+    RegisterOptKernelCreator<RMSNormOp>("pmx", "RMSNorm", 1, 1);
+    RegisterOptKernelCreator<SiluOp>("pmx", "SiLU", 1, 1);
 }
 
 }}} // namespace ppl::nn::cuda

@@ -31,8 +31,8 @@ PlainCudaDevice::~PlainCudaDevice() {
     allocator_.reset();
 }
 
-RetCode PlainCudaDevice::Init(uint32_t device_id) {
-    return CudaDevice::Init(device_id);
+RetCode PlainCudaDevice::Init(uint32_t device_id, ppl::common::NcclParam* tp_nccl_param) {
+    return CudaDevice::Init(device_id, tp_nccl_param);
 }
 
 RetCode PlainCudaDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {

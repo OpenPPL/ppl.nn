@@ -3,7 +3,6 @@
 
 namespace ppl { namespace nn { namespace cuda {
 
-
 ppl::common::RetCode LayerNormKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto in_shape0 = input->GetShape();
@@ -16,8 +15,8 @@ ppl::common::RetCode LayerNormKernel::DoExecute(KernelExecContext* ctx) {
     }
 
     int axis = param_->axis;
-    int outer = 1;
-    int inner = 1;
+    int64_t outer = 1;
+    int64_t inner = 1;
 
     if (axis < 0) {
         axis += in_shape0->GetDimCount();
@@ -36,10 +35,12 @@ ppl::common::RetCode LayerNormKernel::DoExecute(KernelExecContext* ctx) {
     auto output_id = output->GetEdge()->GetId();
     auto output_quant = GetCommonParam()->cuda_tensor_info->at(output_id);
 
-    LOG(DEBUG) << "Run LayerNormKernel with datatype " << in_shape0->GetDataType() << " dataformat " << in_shape0->GetDataFormat();
+    LOG(DEBUG) << "Run LayerNormKernel with datatype " << in_shape0->GetDataType() << " dataformat "
+               << in_shape0->GetDataFormat();
 
     auto status = PPLCUDALayerNormForwardImp(GetStream(), in_shape0, input->GetBufferPtr(), scale_ptr, shift_ptr,
-                            output->GetBufferPtr(), outer, inner, param_->elementwise_affine, param_->eps, input_quant.scale[0], 1.0f / output_quant.scale[0]);
+                                             output->GetBufferPtr(), outer, inner, param_->elementwise_affine,
+                                             param_->eps, input_quant.scale[0], 1.0f / output_quant.scale[0]);
     return status;
 }
 

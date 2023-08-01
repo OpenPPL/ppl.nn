@@ -25,9 +25,13 @@ namespace ppl { namespace nn { namespace cuda {
 class ReshapeKernel : public CudaKernel {
 public:
     ReshapeKernel(const ir::Node* node) : CudaKernel(node) {}
+    ppl::common::RetCode BeforeExecute(KernelExecContext*) override;
 
 private:
     ppl::common::RetCode DoExecute(KernelExecContext*) override;
+
+private:
+    bool can_trans_ = false;
 };
 
 }}} // namespace ppl::nn::cuda

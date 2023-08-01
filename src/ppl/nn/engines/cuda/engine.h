@@ -114,6 +114,7 @@ private:
     static ppl::common::RetCode SetExportAlgorithmsHandler(CudaEngine*, va_list);
     static ppl::common::RetCode ImportAlgorithmsFromBuffer(CudaEngine*, va_list);
     static ppl::common::RetCode RefitConstantWeights(CudaEngine*, va_list);
+    static ppl::common::RetCode SetTpNcclComm(CudaEngine*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(CudaEngine*, va_list);
     static ConfHandlerFunc conf_handlers_[ENGINE_CONF_MAX];
@@ -127,6 +128,7 @@ private:
     // update nodes' weights
     RefitArgs refit_args_;
     RefitGraphInfo refit_info_;
+    ppl::common::NcclParam tp_nccl_param_;
     void* export_algo_arg_ = nullptr;
     void (*export_algo_func_)(const char*, uint64_t, void*) = nullptr;
 #ifdef PPLNN_ENABLE_PMX_MODEL

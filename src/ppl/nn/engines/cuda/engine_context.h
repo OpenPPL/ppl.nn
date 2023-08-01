@@ -20,6 +20,7 @@
 
 #include "ppl/nn/engines/engine_context.h"
 #include "ppl/nn/engines/cuda/cuda_device.h"
+#include "ppl/common/cuda/nccl_utils.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -27,7 +28,7 @@ class CudaEngineContext final : public EngineContext {
 public:
     CudaEngineContext() {}
 
-    ppl::common::RetCode Init(const EngineOptions& options);
+    ppl::common::RetCode Init(const EngineOptions& options, ppl::common::NcclParam* tp_nccl_param);
 
     Device* GetDevice() const override {
         return device_.get();
