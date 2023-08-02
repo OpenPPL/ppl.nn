@@ -25,13 +25,14 @@ namespace ppl { namespace nn { namespace cuda {
 
 class ReshapeOp final : public CudaOptKernel {
 public:
-    ReshapeOp(const ir::Node* node);
+    ReshapeOp(const ir::Node* node) : CudaOptKernel(node) {}
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
 private:
     ppl::nn::onnx::ReshapeParam param_;
+    std::vector<int64_t> constant_shape_data_;
 };
 
 }}} // namespace ppl::nn::cuda

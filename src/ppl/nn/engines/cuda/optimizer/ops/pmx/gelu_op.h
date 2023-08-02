@@ -20,6 +20,8 @@
 
 #include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 
+#include "ppl/nn/params/pmx/gelu_param.h"
+
 namespace ppl { namespace nn { namespace cuda {
 
 class GeluOp final : public CudaOptKernel {
@@ -28,9 +30,11 @@ public:
     KernelImpl* CreateKernelImpl() const override;
     ppl::common::RetCode Init(const OptKernelOptions&) override;
     ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
+
+private:
+    ppl::nn::pmx::GELUParam param_;
 };
 
 }}} // namespace ppl::nn::cuda
 
 #endif
-

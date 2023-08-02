@@ -96,7 +96,7 @@ enum {
     */
     ENGINE_CONF_IMPORT_ALGORITHMS_FROM_BUFFER,
 
-      /**
+    /**
        @param torch2onnx torch_name --> onnx_name mapping
        @param name2val torch_name --> data_ptr mapping
 
@@ -106,6 +106,16 @@ enum {
        @endcode
     */
     ENGINE_CONF_REFIT_CONSTANT_WEIGHTS,
+
+    /**
+       @param tp_nccl_comm (ncclComm_t) tensor parallel nccl comm handle
+
+       @note example:
+       @code{.cpp}
+       cuda_engine->Configure(ENGINE_CONF_SET_TP_NCCL_COMM, tp_nccl_comm);
+       @endcode
+    */
+    ENGINE_CONF_SET_TP_NCCL_COMM,
 
     /** max value */
     ENGINE_CONF_MAX,

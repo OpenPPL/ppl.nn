@@ -139,8 +139,8 @@ RetCode BridgeOp::DeleteBridgeNode(ir::Node* node, ir::Graph* graph,
     if (prequant.format == postquant.format && // two edge has the same format
         prequant.type == postquant.type && // two edge has the same type
         (prequant.type != DATATYPE_INT8 || EqualQuant(prequant_kernel, postquant_kernel)) && // two edge has the same quant
-        topo->GetInput(topo->GetEdge(preedge_id)->GetName()) == INVALID_EDGEID && // and preedge is not graph input
-        topo->GetExtraInput(topo->GetEdge(preedge_id)->GetName()) == INVALID_EDGEID && // and preedge is not graph extrainput
+        // topo->GetInput(topo->GetEdge(preedge_id)->GetName()) == INVALID_EDGEID && // and preedge is not graph input
+        // topo->GetExtraInput(topo->GetEdge(preedge_id)->GetName()) == INVALID_EDGEID && // and preedge is not graph extrainput
         topo->GetOutput(topo->GetEdge(postedge_id)->GetName()) == INVALID_EDGEID) { // and postedge is not graph output
 
         preedge->DelConsumer(node->GetId());

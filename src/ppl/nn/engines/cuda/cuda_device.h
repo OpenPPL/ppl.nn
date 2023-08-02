@@ -27,6 +27,7 @@
 
 #include "ppl/nn/engines/cuda/data_converter.h"
 #include "ppl/nn/engines/cuda/engine_options.h"
+#include "ppl/common/cuda/nccl_utils.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
@@ -41,7 +42,7 @@ public:
     }
     virtual ~CudaDevice();
 
-    ppl::common::RetCode Init(int device_id, bool enable_cuda_graph = false);
+    ppl::common::RetCode Init(int device_id, ppl::common::NcclParam* tp_nccl_param, bool enable_cuda_graph = false);
 
     using Device::Realloc;
     ppl::common::RetCode Realloc(const TensorShape& shape, BufferDesc* buffer) override final {
@@ -105,6 +106,10 @@ public:
         return cublas_handle_;
     }
 
+    ppl::common::NcclParam* GetTpNcclParam() const {
+        return tp_nccl_param_;
+    }
+
     int GetDeviceId() const {
         return device_id_;
     }
@@ -122,6 +127,7 @@ private:
     cudaDeviceProp device_prop_;
     CudaDataConverter data_converter_;
     std::map<edgeid_t, BufferDesc> edge2buffer_;
+    ppl::common::NcclParam* tp_nccl_param_ = nullptr;
 
 private:
     static ppl::common::RetCode ConfGetDeviceId(CudaDevice*, va_list);

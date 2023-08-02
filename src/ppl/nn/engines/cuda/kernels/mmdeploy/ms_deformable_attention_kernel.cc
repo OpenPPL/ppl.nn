@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/kernels/pmx/ms_deformable_attention_kernel.h"
+#include "ppl/nn/engines/cuda/kernels/mmdeploy/ms_deformable_attention_kernel.h"
 #include "ppl/common/destructor.h"
 
 #include <numeric>
@@ -24,17 +24,7 @@
 
 namespace ppl { namespace nn { namespace cuda {
 
-/* uint64_t MSDeformAttnKernel::CalcTmpBufferSize(const KernelExecContext& ctx) const { */
-    /* auto y = ctx.GetOutput<TensorImpl>(0); */
-    /* if (y->GetShape()->GetDataType() == ppl::common::DATATYPE_INT8) { */
-        /* return sizeof(float) * y->GetShape()->CalcElementsExcludingPadding(); */
-    /* } else { */
-        /* return 0; */
-    /* } */
-/* } */
-
 ppl::common::RetCode MSDeformAttnKernel::DoExecute(KernelExecContext* ctx) {
-
     auto data = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
 
@@ -72,16 +62,16 @@ ppl::common::RetCode MSDeformAttnKernel::DoExecute(KernelExecContext* ctx) {
                 level_start_index->GetBufferPtr(),
                 sampling_loc->GetBufferPtr(),
                 attn_weight->GetBufferPtr(),
-                output->GetBufferPtr(), 
+                output->GetBufferPtr(),
                 batch,
-                im2col_step_, 
-                spatial_size, 
-                num_heads, 
-                channels, 
-                num_levels, 
-                num_query, 
+                im2col_step_,
+                spatial_size,
+                num_heads,
+                channels,
+                num_levels,
+                num_query,
                 num_point);
-    
+
     return status;
 
 }

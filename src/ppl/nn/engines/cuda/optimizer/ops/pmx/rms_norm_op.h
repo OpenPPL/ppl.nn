@@ -15,28 +15,24 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_PMX_MS_DEFORMABLE_ATTENTION_KERNEL_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_PMX_MS_DEFORMABLE_ATTENTION_KERNEL_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_RMS_NORM_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_ONNX_RMS_NORM_OP_H_
 
-#include "ppl/nn/engines/cuda/kernel.h"
+#include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
 
-#include "ppl/nn/params/pmx/ms_deformable_attention_param.h"
+#include "ppl/nn/params/pmx/rms_norm_param.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-class MSDeformAttnKernel : public CudaKernel {
+class RMSNormOp final : public CudaOptKernel {
 public:
-    MSDeformAttnKernel(const ir::Node* node) : CudaKernel(node) {}
-
-    void SetParam(const ppl::nn::pmx::MSDeformAttnParam* p) {
-        param_ = p;
-    }
-
-private:
-    ppl::common::RetCode DoExecute(KernelExecContext*) override;
+    RMSNormOp(const ir::Node* node);
+    KernelImpl* CreateKernelImpl() const override;
+    ppl::common::RetCode Init(const OptKernelOptions&) override;
+    ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
 
 private:
-    const ppl::nn::pmx::MSDeformAttnParam* param_ = nullptr;
+    ppl::nn::pmx::RMSNormParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

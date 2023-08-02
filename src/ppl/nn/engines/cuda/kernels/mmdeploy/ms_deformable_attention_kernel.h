@@ -15,35 +15,28 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_CONTEXT_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_CONTEXT_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_MMDEPLOY_MS_DEFORMABLE_ATTENTION_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_KERNELS_MMDEPLOY_MS_DEFORMABLE_ATTENTION_KERNEL_H_
 
-#include "ppl/nn/engines/engine_context.h"
-#include "ppl/nn/engines/cuda/cuda_device.h"
-#include "ppl/common/cuda/nccl_utils.h"
+#include "ppl/nn/engines/cuda/kernel.h"
+
+#include "ppl/nn/params/mmdeploy/ms_deformable_attention_param.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-class CudaEngineContext final : public EngineContext {
+class MSDeformAttnKernel : public CudaKernel {
 public:
-    CudaEngineContext() {}
+    MSDeformAttnKernel(const ir::Node* node) : CudaKernel(node) {}
 
-    ppl::common::RetCode Init(const EngineOptions& options, ppl::common::NcclParam* tp_nccl_param);
-
-    Device* GetDevice() const override {
-        return device_.get();
-    }
-
-    const char* GetName() const override {
-        return "cuda";
+    void SetParam(const ppl::nn::mmdeploy::MSDeformAttnParam* p) {
+        param_ = p;
     }
 
 private:
-    std::shared_ptr<CudaDevice> device_;
+    ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
 private:
-    CudaEngineContext(const CudaEngineContext&) = delete;
-    CudaEngineContext& operator=(const CudaEngineContext&) = delete;
+    const ppl::nn::mmdeploy::MSDeformAttnParam* param_ = nullptr;
 };
 
 }}} // namespace ppl::nn::cuda
