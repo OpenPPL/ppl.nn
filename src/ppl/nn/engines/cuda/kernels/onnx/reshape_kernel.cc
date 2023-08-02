@@ -21,20 +21,37 @@
 
 namespace ppl { namespace nn { namespace cuda {
 
-ppl::common::RetCode ReshapeKernel::DoExecute(KernelExecContext* ctx) {
-    auto input = ctx->GetInput<TensorImpl>(0);
-    auto shape = ctx->GetInput<TensorImpl>(1);
-    auto output = ctx->GetOutput<TensorImpl>(0);
-    bool can_trans = input->GetType() == TENSORTYPE_NORMAL;
-    ppl::common::RetCode status = ppl::common::RC_SUCCESS;
-
-    for (auto iter = input->GetEdge()->CreateConsumerIter(); iter.IsValid(); iter.Forward()) {
-        auto node_id = iter.Get();
-        if (node_id != GetNode()->GetId() && node_id != shape->GetEdge()->GetProducer())
-            can_trans = false;
+ppl::common::RetCode ReshapeKernel::BeforeExecute(KernelExecContext* ctx) {
+    auto status = Reshape(ctx);
+    if (status != ppl::common::RC_SUCCESS) {
+        return status;
     }
 
-    if (can_trans) {
+    auto input = ctx->GetInput<TensorImpl>(0);
+    can_trans_ = ctx->IsLastConsumerOfInput(0) && input->GetType() == TENSORTYPE_NORMAL;
+
+    if (!can_trans_) {
+        for (uint32_t i = 0; i < ctx->GetOutputCount(); ++i) {
+            auto tensor = ctx->GetOutput<TensorImpl>(i);
+            tensor->SetDevice(GetCudaDevice());
+            status = tensor->ReallocBuffer();
+            if (status != ppl::common::RC_SUCCESS) {
+                LOG(ERROR) << "ReallocBuffer for tensor[" << tensor->GetName()
+                           << "] failed: " << ppl::common::GetRetCodeStr(status);
+                return status;
+            }
+        }
+    }
+
+    return ppl::common::RC_SUCCESS;
+}
+
+ppl::common::RetCode ReshapeKernel::DoExecute(KernelExecContext* ctx) {
+    auto input = ctx->GetInput<TensorImpl>(0);
+    auto output = ctx->GetOutput<TensorImpl>(0);
+    ppl::common::RetCode status = ppl::common::RC_SUCCESS;
+
+    if (can_trans_) {
         output->TransferBufferFrom(input);
     } else {
         status = PPLCUDAReshapeForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(), output->GetShape(),

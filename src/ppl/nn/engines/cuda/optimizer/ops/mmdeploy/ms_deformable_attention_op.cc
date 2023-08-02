@@ -15,11 +15,11 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/engines/cuda/optimizer/ops/pmx/ms_deformable_attention_op.h"
+#include "ppl/nn/engines/cuda/optimizer/ops/mmdeploy/ms_deformable_attention_op.h"
 
 #include "ppl/nn/common/logger.h"
-#include "ppl/nn/engines/cuda/kernels/pmx/ms_deformable_attention_kernel.h"
-#include "ppl/nn/oputils/onnx/reshape_ms_deformable_attention.h"
+#include "ppl/nn/engines/cuda/kernels/mmdeploy/ms_deformable_attention_kernel.h"
+#include "ppl/nn/oputils/mmdeploy/reshape_ms_deformable_attention.h"
 
 using namespace std;
 using namespace ppl::common;
@@ -34,7 +34,7 @@ using namespace ppl::nn::pmx;
 namespace ppl { namespace nn { namespace cuda {
 
 RetCode MSDeformAttnOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<MSDeformAttnParam>(options, &param_);
+    auto status = GenericLoadParam<mmdeploy::MSDeformAttnParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;
@@ -63,7 +63,7 @@ MSDeformAttnOp::MSDeformAttnOp(const ir::Node* node) : CudaOptKernel(node) {
         return status;
     };
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return ppl::nn::pmx::ReshapeMSDeformAttn(info, &param_);
+        return ppl::nn::mmdeploy::ReshapeMSDeformAttn(info, &param_);
     };
 
 }

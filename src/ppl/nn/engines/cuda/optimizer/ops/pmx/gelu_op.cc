@@ -7,6 +7,17 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 RetCode GeluOp::Init(const OptKernelOptions& options) {
+    auto status = GenericLoadParam<ppl::nn::pmx::GELUParam>(options, &param_);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    if (param_.approximate == true) {
+        LOG(ERROR) << "gelu tanh approximate is unsupported";
+        return RC_UNSUPPORTED;
+    }
+
     return RC_SUCCESS;
 }
 

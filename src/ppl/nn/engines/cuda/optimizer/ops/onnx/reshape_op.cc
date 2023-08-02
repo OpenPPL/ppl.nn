@@ -33,18 +33,37 @@ RetCode ReshapeOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
-    return RC_SUCCESS;
-}
+    auto node = GetNode();
+    auto graph_data = options.graph->data;
 
-ReshapeOp::ReshapeOp(const ir::Node* node) : CudaOptKernel(node) {
+    auto shape_data_it = graph_data->constants.find(node->GetInput(1));
+    const int64_t* shape_data = nullptr;
+    if (shape_data_it != graph_data->constants.end()) {
+        shape_data = (const int64_t*)shape_data_it->second.data.GetData();
+    }
+
+    if (shape_data != nullptr) {
+        auto shape_shape_it = graph_data->shapes.find(node->GetInput(1));
+        if (shape_shape_it != graph_data->shapes.end()) {
+            auto& shape_shape = shape_shape_it->second;
+            constant_shape_data_.assign(shape_data, shape_data + shape_shape.dims[0]);
+        }
+    }
+
     infer_type_func_ = [](InputOutputInfo* info, std::vector<CudaTensorQuant>* quant, datatype_t type) -> RetCode {
-        ppl::common::RetCode status;
-        if (type == DATATYPE_UNKNOWN) {
-            status = InferInheritedType(info);
-        } else if (type == DATATYPE_INT8) {
+        ppl::common::RetCode status = RC_SUCCESS;
+        if (type == DATATYPE_INT8) {
             status = UnifyToOutputQuant(info, quant);
         } else {
-            status = InferDefaultType(info, type);
+            TensorShape& in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
+            if (in_shape.GetDataType() == ppl::common::DATATYPE_UNKNOWN) {
+                LOG(ERROR) << "Input edge has unknown type.";
+                return RC_INVALID_VALUE;
+            }
+            for (uint32_t i = 0; i < info->GetOutputCount(); ++i) {
+                TensorShape& out_shape = *info->GetOutput<TensorImpl>(i)->GetShape();
+                out_shape.SetDataType(in_shape.GetDataType());
+            }
         }
         auto shape = info->GetInput<TensorImpl>(1)->GetShape();
         shape->SetDataType(DATATYPE_INT64);
@@ -52,27 +71,32 @@ ReshapeOp::ReshapeOp(const ir::Node* node) : CudaOptKernel(node) {
     };
 
     infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        if (info->GetInputCount() != 2) {
-            LOG(ERROR) << "2 input required.";
-            return RC_INVALID_VALUE;
-        }
+        if (constant_shape_data_.empty()) {
+            if (info->GetInputCount() != 2) {
+                LOG(ERROR) << "2 input required.";
+                return RC_INVALID_VALUE;
+            }
 
-        auto input = info->GetInput<TensorImpl>(1);
-        if (!input->GetBufferPtr()) {
-            return RC_NOT_FOUND;
-        }
+            auto input = info->GetInput<TensorImpl>(1);
+            if (!input->GetBufferPtr()) {
+                return RC_NOT_FOUND;
+            }
 
-        const TensorShape& dst_desc = *input->GetShape();
-        vector<int64_t> shape_data(dst_desc.CalcElementsIncludingPadding());
-        auto status = input->CopyToHost(shape_data.data());
-        if (status != RC_SUCCESS) {
-            LOG(ERROR) << "Copy shape data failed: " << GetRetCodeStr(status);
-            return status;
-        }
+            const TensorShape& dst_desc = *input->GetShape();
+            vector<int64_t> shape_data(dst_desc.CalcElementsIncludingPadding());
+            auto status = input->CopyToHost(shape_data.data());
+            if (status != RC_SUCCESS) {
+                LOG(ERROR) << "Copy shape data failed: " << GetRetCodeStr(status);
+                return status;
+            }
 
-        return onnx::ReshapeReshape(info, &param_, shape_data.data());
+            return onnx::ReshapeReshape(info, &param_, shape_data.data());
+        } else {
+            return onnx::ReshapeReshape(info, &param_, constant_shape_data_.data());
+        }
     };
 
+    return RC_SUCCESS;
 }
 
 RetCode ReshapeOp::Finalize(const OptKernelOptions& options) {

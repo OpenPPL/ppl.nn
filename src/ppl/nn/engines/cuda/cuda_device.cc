@@ -75,7 +75,7 @@ CudaDevice::~CudaDevice() {
     }
 }
 
-RetCode CudaDevice::Init(int device_id, bool enable_cuda_graph) {
+RetCode CudaDevice::Init(int device_id, ppl::common::NcclParam* tp_nccl_param, bool enable_cuda_graph) {
     auto status = InitDriverEnv(device_id);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "InitDriverEnv failed: " << GetRetCodeStr(status);
@@ -95,6 +95,7 @@ RetCode CudaDevice::Init(int device_id, bool enable_cuda_graph) {
         cublasLtCreate(&cublas_handle_);
     }
 
+    tp_nccl_param_ = tp_nccl_param;
     device_id_ = device_id;
     enable_cuda_graph_ = enable_cuda_graph;
     data_converter_.SetDevice(this);

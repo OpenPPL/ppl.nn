@@ -33,7 +33,8 @@ namespace ppl { namespace nn { namespace cuda {
 
 class OptGraph final {
 public:
-    OptGraph(ir::Graph* graph, RuntimePartitionInfo* info, RefitGraphInfo* refit_info, CudaArgs* args, CompileInfo* compile_set);
+    OptGraph(ir::Graph* graph, RuntimePartitionInfo* info, RefitGraphInfo* refit_info, CudaArgs* args,
+             CompileInfo* compile_set);
     ~OptGraph();
 
     ppl::common::RetCode DoOptimize(const utils::SharedResource&, CudaDevice*);
@@ -41,7 +42,7 @@ public:
 private:
     ppl::common::RetCode InitKernels();
     ppl::common::RetCode InitQuantization();
-    ppl::common::RetCode UpdateDims(const utils::SharedResource& resource);
+    ppl::common::RetCode UpdateDims(const utils::SharedResource& resource, CudaDevice* dev);
     ppl::common::RetCode FuseOperator(const utils::SharedResource& resource);
     ppl::common::RetCode AddBridgeKernels(const utils::SharedResource& resource);
     ppl::common::RetCode UpdateType();

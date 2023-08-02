@@ -30,8 +30,9 @@ namespace ppl { namespace nn { namespace cuda {
 
 #define DEFAULT_BLOCK_SIZE 1048576
 
-RetCode BufferedCudaDevice::Init(int device_id, uint32_t mm_policy, bool enable_cuda_graph) {
-    auto status = CudaDevice::Init(device_id, enable_cuda_graph);
+RetCode BufferedCudaDevice::Init(int device_id, uint32_t mm_policy, ppl::common::NcclParam* tp_nccl_param,
+                                 bool enable_cuda_graph) {
+    auto status = CudaDevice::Init(device_id, tp_nccl_param, enable_cuda_graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init cuda device failed: " << GetRetCodeStr(status);
         return status;
@@ -73,19 +74,18 @@ RetCode BufferedCudaDevice::Init(int device_id, uint32_t mm_policy, bool enable_
         buffer_manager_.reset(new utils::StackBufferManager(allocator_.get(), true));
 #endif
     }
-
     return RC_SUCCESS;
 }
 
 BufferedCudaDevice::~BufferedCudaDevice() {
     SyncStream();
 
-    if (buffer_manager_.get()) {
+    if (buffer_manager_) {
         LOG(DEBUG) << "buffer manager[" << buffer_manager_->GetName() << "] allocates ["
                    << buffer_manager_->GetAllocatedBytes() << "] bytes.";
         buffer_manager_->Free(&shared_tmp_buffer_);
+        buffer_manager_.reset();
     }
-    buffer_manager_.reset();
     allocator_.reset();
 }
 

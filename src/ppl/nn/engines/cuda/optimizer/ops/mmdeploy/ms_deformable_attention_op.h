@@ -15,35 +15,28 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_CONTEXT_H_
-#define _ST_HPC_PPL_NN_ENGINES_CUDA_ENGINE_CONTEXT_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_MMDEPLOY_MS_DEFORMABLE_ATTENTION_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_OPTIMIZER_OPS_MMDEPLOY_MS_DEFORMABLE_ATTENTION_OP_H_
 
-#include "ppl/nn/engines/engine_context.h"
-#include "ppl/nn/engines/cuda/cuda_device.h"
-#include "ppl/common/cuda/nccl_utils.h"
+#include "ppl/nn/engines/cuda/optimizer/opt_kernel.h"
+
+#include "ppl/nn/params/mmdeploy/ms_deformable_attention_param.h"
 
 namespace ppl { namespace nn { namespace cuda {
 
-class CudaEngineContext final : public EngineContext {
+class MSDeformAttnOp final : public CudaOptKernel {
 public:
-    CudaEngineContext() {}
-
-    ppl::common::RetCode Init(const EngineOptions& options, ppl::common::NcclParam* tp_nccl_param);
-
-    Device* GetDevice() const override {
-        return device_.get();
-    }
-
-    const char* GetName() const override {
-        return "cuda";
-    }
+    MSDeformAttnOp(const ir::Node* node);
+    KernelImpl* CreateKernelImpl() const override;
+    ppl::common::RetCode Init(const OptKernelOptions&) override;
+    ppl::common::RetCode Finalize(const OptKernelOptions& options) override;
+#ifdef PPLNN_ENABLE_PMX_MODEL
+    ppl::common::RetCode SerializeData(const ppl::nn::pmx::SerializationContext&, utils::DataStream*) const override;
+    ppl::common::RetCode DeserializeData(const ppl::nn::pmx::DeserializationContext&, const void*, uint64_t) override;
+#endif
 
 private:
-    std::shared_ptr<CudaDevice> device_;
-
-private:
-    CudaEngineContext(const CudaEngineContext&) = delete;
-    CudaEngineContext& operator=(const CudaEngineContext&) = delete;
+    ppl::nn::mmdeploy::MSDeformAttnParam param_;
 };
 
 }}} // namespace ppl::nn::cuda

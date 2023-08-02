@@ -25,10 +25,10 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-RetCode CudaEngineContext::Init(const EngineOptions& options) {
+RetCode CudaEngineContext::Init(const EngineOptions& options, ppl::common::NcclParam* tp_nccl_param) {
     if (options.mm_policy == MM_PLAIN) {
         auto dev = make_shared<PlainCudaDevice>();
-        auto rc = dev->Init(options.device_id);
+        auto rc = dev->Init(options.device_id, tp_nccl_param);
         if (rc != RC_SUCCESS) {
             LOG(ERROR) << "init DefaultCudaDevice failed: " << GetRetCodeStr(rc);
             return rc;
@@ -36,7 +36,7 @@ RetCode CudaEngineContext::Init(const EngineOptions& options) {
         device_ = dev;
     } else {
         auto dev = make_shared<BufferedCudaDevice>();
-        auto rc = dev->Init(options.device_id, options.mm_policy, options.enable_cuda_graph);
+        auto rc = dev->Init(options.device_id, options.mm_policy, tp_nccl_param, options.enable_cuda_graph);
         if (rc != RC_SUCCESS) {
             LOG(ERROR) << "init BufferedCudaDevice failed: " << GetRetCodeStr(rc);
             return rc;

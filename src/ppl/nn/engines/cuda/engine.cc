@@ -67,12 +67,12 @@ CudaEngine::~CudaEngine() {
 
 RetCode CudaEngine::Init(const EngineOptions& options) {
     options_ = options;
-    return device_.Init(options.device_id, options.mm_policy, options.enable_cuda_graph);
+    return device_.Init(options.device_id, options.mm_policy, &tp_nccl_param_, options.enable_cuda_graph);
 }
 
 EngineContext* CudaEngine::CreateEngineContext() {
     auto ctx = unique_ptr<CudaEngineContext>(new CudaEngineContext());
-    auto status = ctx->Init(options_);
+    auto status = ctx->Init(options_, &tp_nccl_param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "init CudaEngineContext failed: " << GetRetCodeStr(status);
         return nullptr;
@@ -219,13 +219,13 @@ ppl::common::RetCode CudaEngine::RefitWeightsImpl(map<edgeid_t, const void*>* ed
                 tmp_conv_param.flt_height = dst_shape.GetDim(2);
                 tmp_conv_param.flt_width = dst_shape.GetDim(3);
                 tmp_conv_param.num_grp = 1; // TODO(WJF): record related nodes' parameters
-                if (dst_shape.GetDimCount() > 1) { //weight
+                if (dst_shape.GetDimCount() > 1) { // weight
                     // conv related convert
                     PPLCUDAConvolutionCvtFlt(dev->GetStream(), buf_info.addr, tmp_buffer_desc.addr,
-                                            ppl::common::DATATYPE_FLOAT16, tmp_conv_param);
+                                             ppl::common::DATATYPE_FLOAT16, tmp_conv_param);
                 } else { // bias
                     PPLCUDAConvolutionCvtBias(dev->GetStream(), buf_info.addr, tmp_buffer_desc.addr,
-                                            ppl::common::DATATYPE_FLOAT16, tmp_conv_param);
+                                              ppl::common::DATATYPE_FLOAT16, tmp_conv_param);
                 }
             } else {
                 return RC_UNSUPPORTED;
@@ -521,6 +521,19 @@ ppl::common::RetCode CudaEngine::RefitConstantWeights(CudaEngine* engine, va_lis
     return status;
 }
 
+ppl::common::RetCode CudaEngine::SetTpNcclComm(CudaEngine* engine, va_list args) {
+#ifdef PPLNN_CUDA_ENABLE_NCCL
+    auto nccl_comm = va_arg(args, ncclComm_t);
+    engine->tp_nccl_param_.comm = nccl_comm;
+    NCCL_CHECK(ncclCommCount(nccl_comm, &engine->tp_nccl_param_.size), "ncclCommCount");
+    NCCL_CHECK(ncclCommUserRank(nccl_comm, &engine->tp_nccl_param_.rank), "ncclCommUserRank");
+    return RC_SUCCESS;
+#else
+    LOG(ERROR) << "Please recompile with NCCL support.";
+    return RC_INVALID_VALUE;
+#endif
+}
+
 CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetKernelType, // ENGINE_CONF_USE_DEFAULT_KERNEL_TYPE
     CudaEngine::SetInputDims, // ENGINE_CONF_SET_INPUT_DIMS
@@ -529,6 +542,7 @@ CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::SetExportAlgorithmsHandler, // ENGINE_CONF_SET_EXPORT_ALGORITHMS_HANDLER
     CudaEngine::ImportAlgorithmsFromBuffer, // ENGINE_CONF_IMPORT_ALGORITHMS_FROM_BUFFER
     CudaEngine::RefitConstantWeights, // ENGINE_CONF_REFIT_CONSTANT_WEIGHTS
+    CudaEngine::SetTpNcclComm, // ENGINE_CONF_SET_TP_NCCL_COMM
 };
 
 RetCode CudaEngine::Configure(uint32_t option, ...) {

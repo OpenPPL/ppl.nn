@@ -23,6 +23,7 @@
 #include "ppl/nn/engines/cuda/macros.h"
 #include "ppl/nn/engines/cuda/cuda_device.h"
 #include "ppl/nn/engines/cuda/cuda_common_param.h"
+#include "ppl/common/cuda/nccl_utils.h"
 #include "ppl/common/sys.h"
 
 namespace ppl { namespace nn { namespace cuda {
@@ -40,6 +41,10 @@ public:
 
     cublasLtHandle_t GetCublasHandle() const {
         return GetCudaDevice()->GetCublasHandle();
+    }
+
+    ppl::common::NcclParam* GetTpNcclParam() const {
+        return GetCudaDevice()->GetTpNcclParam();
     }
 
     int GetDeviceId() const {

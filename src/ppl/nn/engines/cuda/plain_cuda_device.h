@@ -29,7 +29,7 @@ public:
     PlainCudaDevice();
     virtual ~PlainCudaDevice();
 
-    ppl::common::RetCode Init(uint32_t device_id);
+    ppl::common::RetCode Init(uint32_t device_id, ppl::common::NcclParam* tp_nccl_param);
 
     using CudaDevice::Realloc;
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc*) override;

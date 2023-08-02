@@ -29,7 +29,8 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-OptGraph::OptGraph(ir::Graph* graph, RuntimePartitionInfo* info, RefitGraphInfo* refit_info, CudaArgs* args, CompileInfo* compile_set)
+OptGraph::OptGraph(ir::Graph* graph, RuntimePartitionInfo* info, RefitGraphInfo* refit_info, CudaArgs* args,
+                   CompileInfo* compile_set)
     : graph_(graph), info_(info), refit_info_(refit_info), args_(args), compile_set_(compile_set) {
     acquire_tensor_func_ = [this](edgeid_t eid, uint32_t) -> EdgeObject* {
         auto it = tensor_impls_.find(eid);
@@ -86,7 +87,7 @@ RetCode OptGraph::InitKernels() {
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::UpdateDims(const utils::SharedResource& resource) {
+RetCode OptGraph::UpdateDims(const utils::SharedResource& resource, CudaDevice* dev) {
     auto topo = graph_->topo.get();
     auto data = graph_->data.get();
 
@@ -96,6 +97,7 @@ RetCode OptGraph::UpdateDims(const utils::SharedResource& resource) {
     });
 
     OptKernelOptions options(graph_, &resource);
+    options.device = dev;
     UpdateTopologicalSort();
 
     InputOutputInfo IOinfo;
@@ -318,7 +320,6 @@ RetCode OptGraph::InitQuantization() {
     auto& graph_quants = args_->tensor_quants;
     graph_quants.resize(topo->GetCurrentEdgeIdBound());
 
-
     // Load node quant to args_->node_type
     auto& node_params = args_->quant_info.node_params;
     for (auto iter = topo->CreateNodeIter(); iter->IsValid(); iter->Forward()) {
@@ -339,6 +340,12 @@ RetCode OptGraph::InitQuantization() {
     auto& tensor_params = args_->quant_info.tensor_params;
     for (auto iter = topo->CreateEdgeIter(); iter->IsValid(); iter->Forward()) {
         auto edge = iter->Get();
+        if (edge->GetProducer() == INVALID_NODEID) {
+            auto& temp_tensor_quant = graph_quants[edge->GetId()];
+            auto post_shape = tensor_impls_.find(edge->GetId())->second->GetShape();
+            temp_tensor_quant.type = post_shape->GetDataType();
+            temp_tensor_quant.format = post_shape->GetDataFormat();
+        }
         auto pair = tensor_params.find(edge->GetName());
         // Can not find quant info. It means quant info is not exist.
         if (pair == tensor_params.end()) {
@@ -450,7 +457,8 @@ RetCode OptGraph::SelectAlgos(const utils::SharedResource& resource, CudaDevice*
     auto topo = graph_->topo.get();
     auto& graph_quants = args_->tensor_quants;
 
-    OptKernelOptions options(graph_, info_, refit_info_, &resource, args_, compile_set_, device, &tensor_impls_, &graph_quants);
+    OptKernelOptions options(graph_, info_, refit_info_, &resource, args_, compile_set_, device, &tensor_impls_,
+                             &graph_quants);
     UpdateTopologicalSort();
 
     AlgoGraph algo_graph(topo);
@@ -586,7 +594,7 @@ RetCode OptGraph::DoOptimize(const utils::SharedResource& resource, CudaDevice* 
         return status;
     }
 
-    status = UpdateDims(resource);
+    status = UpdateDims(resource, dev);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Update dims failed: " << GetRetCodeStr(status);
         return status;
