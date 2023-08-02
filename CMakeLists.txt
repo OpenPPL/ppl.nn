@@ -151,7 +151,6 @@ target_include_directories(pplnn_basic_static PUBLIC
     ${PPLNN_SOURCE_EXTERNAL_INCLUDE_DIRECTORIES})
 target_compile_definitions(pplnn_basic_static PUBLIC
     ${PPLNN_SOURCE_EXTERNAL_COMPILE_DEFINITIONS})
-target_compile_features(pplnn_basic_static PRIVATE cxx_std_11)
 target_link_directories(pplnn_basic_static PUBLIC
     ${PPLNN_SOURCE_EXTERNAL_LINK_DIRECTORIES})
 target_link_libraries(pplnn_basic_static PUBLIC
