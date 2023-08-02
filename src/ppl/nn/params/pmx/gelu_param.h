@@ -15,17 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_REDUCE_H_
-#define _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_REDUCE_H_
+#ifndef _ST_HPC_PPL_NN_PARAMS_PMX_GELU_PARAM_H_
+#define _ST_HPC_PPL_NN_PARAMS_PMX_GELU_PARAM_H_
 
-#include "ppl/common/retcode.h"
-#include "ppl/nn/params/pmx/ms_deformable_attention_param.h"
-#include "ppl/nn/common/input_output_info.h"
 #include "ppl/nn/ir/attr.h"
+#include <stdint.h>
 
 namespace ppl { namespace nn { namespace pmx {
 
-ppl::common::RetCode ReshapeMSDeformAttn(InputOutputInfo*, const ir::Attr*);
+struct GELUParam final : public ir::TypedAttr<GELUParam> {
+    bool approximate;
+
+    bool operator==(const GELUParam& p) const {
+        return this->approximate == p.approximate;
+    }
+};
 
 }}} // namespace ppl::nn::pmx
 

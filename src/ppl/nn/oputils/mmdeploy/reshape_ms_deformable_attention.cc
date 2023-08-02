@@ -15,12 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/oputils/onnx/reshape_ms_deformable_attention.h"
+#include "ppl/nn/oputils/mmdeploy/reshape_ms_deformable_attention.h"
 #include "ppl/nn/runtime/tensor_impl.h"
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 
-namespace ppl { namespace nn { namespace pmx {
+namespace ppl { namespace nn { namespace mmdeploy {
 
 RetCode ReshapeMSDeformAttn(InputOutputInfo* info, const ir::Attr* arg) {
     auto param = static_cast<const MSDeformAttnParam*>(arg);
@@ -54,4 +54,4 @@ RetCode ReshapeMSDeformAttn(InputOutputInfo* info, const ir::Attr* arg) {
     return RC_SUCCESS;
 }
 
-}}} // namespace ppl::nn::onnx
+}}} // namespace ppl::nn::mmdeploy

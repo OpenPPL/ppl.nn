@@ -15,21 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_PARAMS_PMX_MS_DEFORMABLE_ATTENTION_PARAM_H_
-#define _ST_HPC_PPL_NN_PARAMS_PMX_MS_DEFORMABLE_ATTENTION_PARAM_H_
+#ifndef _ST_HPC_PPL_NN_MODELS_PMX_PARSERS_PARSE_RESHAPE_PARAM_H_
+#define _ST_HPC_PPL_NN_MODELS_PMX_PARSERS_PARSE_RESHAPE_PARAM_H_
 
-#include "ppl/nn/ir/attr.h"
-#include <stdint.h>
+#include "ppl/common/retcode.h"
+#include "ppl/nn/models/onnx/param_parser_extra_args.h"
+#include "onnx.pb.h"
+#include "ppl/nn/params/onnx/reshape_param.h"
 
 namespace ppl { namespace nn { namespace pmx {
 
-struct MSDeformAttnParam final : public ir::TypedAttr<MSDeformAttnParam> {
-    int im2col_step;
+ppl::common::RetCode ParseReshapeParam(const ::onnx::NodeProto&, const onnx::ParamParserExtraArgs&, ir::Node*,
+                                       ir::Attr*);
 
-    bool operator==(const MSDeformAttnParam& p) const {
-        return this->im2col_step == p.im2col_step;
-    }
-};
+ppl::common::RetCode PackReshapeParam(const ir::Node*, const ir::Attr*, ::onnx::NodeProto*);
 
 }}} // namespace ppl::nn::pmx
 

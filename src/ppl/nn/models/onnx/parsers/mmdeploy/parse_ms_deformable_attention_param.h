@@ -15,19 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "ppl/nn/models/onnx/parsers/pmx/parse_ms_deformable_attention_param.h"
-#include "ppl/nn/models/onnx/utils.h"
-using namespace std;
-using namespace ppl::common;
-using namespace ppl::nn::pmx;
+#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_MMDEPLOY_PARSE_MS_DEFORMABLE_ATTENTION_H_
+#define _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_MMDEPLOY_PARSE_MS_DEFORMABLE_ATTENTION_H_
 
-namespace ppl { namespace nn { namespace onnx {
+#include "ppl/common/retcode.h"
+#include "ppl/nn/params/mmdeploy/ms_deformable_attention_param.h"
+#include "ppl/nn/models/onnx/param_parser_extra_args.h"
+#include "onnx.pb.h"
 
-RetCode ParseMSDeformAttnParam(const ::onnx::NodeProto& pb_node, const ParamParserExtraArgs& args, ir::Node*,
-                                 ir::Attr* arg) {
-    auto param = static_cast<MSDeformAttnParam*>(arg);
-    utils::GetNodeAttr(pb_node, "im2col_step", &param->im2col_step, 1);
-    return RC_SUCCESS;
-}
+namespace ppl { namespace nn { namespace mmdeploy {
 
-}}} // namespace ppl::nn::onnx
+ppl::common::RetCode ParseMSDeformAttnParam(const ::onnx::NodeProto&, const onnx::ParamParserExtraArgs&, ir::Node*,
+                                            ir::Attr*);
+
+}}} // namespace ppl::nn::mmdeploy
+
+#endif
