@@ -15,19 +15,29 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PMX_PARSE_LAYERNORM_PARAM_H_
-#define _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PMX_PARSE_LAYERNORM_PARAM_H_
-
-#include "ppl/common/retcode.h"
-#include "ppl/nn/params/pmx/layer_norm_param.h"
-#include "ppl/nn/models/onnx/param_parser_extra_args.h"
-#include "onnx.pb.h"
+#include "ppl/nn/models/onnx/parsers/onnx/parse_reshape_param.h"
+#include "ppl/nn/models/onnx/utils.h"
+#include "ppl/nn/common/logger.h"
+using namespace std;
+using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace pmx {
 
-ppl::common::RetCode ParseLayerNormParam(const ::onnx::NodeProto&, const onnx::ParamParserExtraArgs&, ir::Node*,
-                                         ir::Attr*);
+RetCode ParseReshapeParam(const ::onnx::NodeProto& pb_node, const onnx::ParamParserExtraArgs& args, ir::Node* node,
+                          ir::Attr* arg) {
+    auto param = static_cast<onnx::ReshapeParam*>(arg);
+
+    param->allowzero = 1;
+
+    node->SetType({"", "Reshape", 14});
+
+    return RC_SUCCESS;
+}
+
+RetCode PackReshapeParam(const ir::Node*, const ir::Attr* arg, ::onnx::NodeProto* pb_node) {
+    auto param = static_cast<const onnx::ReshapeParam*>(arg);
+    onnx::utils::SetNodeAttr(pb_node, "allowzero", param->allowzero);
+    return RC_SUCCESS;
+}
 
 }}} // namespace ppl::nn::pmx
-
-#endif

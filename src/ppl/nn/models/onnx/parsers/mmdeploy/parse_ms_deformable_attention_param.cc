@@ -15,19 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PMX_PARSE_CHANNEL_SHUFFLE_PARAM_H_
-#define _ST_HPC_PPL_NN_MODELS_ONNX_PARSERS_PMX_PARSE_CHANNEL_SHUFFLE_PARAM_H_
+#include "ppl/nn/models/onnx/parsers/mmdeploy/parse_ms_deformable_attention_param.h"
+#include "ppl/nn/models/onnx/utils.h"
+using namespace std;
+using namespace ppl::common;
 
-#include "ppl/common/retcode.h"
-#include "ppl/nn/params/pmx/channel_shuffle_param.h"
-#include "ppl/nn/models/onnx/param_parser_extra_args.h"
-#include "onnx.pb.h"
+namespace ppl { namespace nn { namespace mmdeploy {
 
-namespace ppl { namespace nn { namespace onnx {
+RetCode ParseMSDeformAttnParam(const ::onnx::NodeProto& pb_node, const onnx::ParamParserExtraArgs& args, ir::Node*,
+                               ir::Attr* arg) {
+    auto param = static_cast<MSDeformAttnParam*>(arg);
+    onnx::utils::GetNodeAttr(pb_node, "im2col_step", &param->im2col_step, 1);
+    return RC_SUCCESS;
+}
 
-ppl::common::RetCode ParseChannelShuffleParam(const ::onnx::NodeProto&, const onnx::ParamParserExtraArgs&, ir::Node*,
-                                              ir::Attr*);
-
-}}} // namespace ppl::nn::onnx
-
-#endif
+}}} // namespace ppl::nn::mmdeploy

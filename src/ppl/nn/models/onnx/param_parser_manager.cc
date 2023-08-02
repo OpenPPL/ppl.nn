@@ -69,9 +69,13 @@
 #include "ppl/nn/models/onnx/parsers/mmcv/parse_mmcv_nonmaxsupression_param.h"
 #include "ppl/nn/models/onnx/parsers/mmcv/parse_mmcv_roialign_param.h"
 
-#include "ppl/nn/models/onnx/parsers/pmx/parse_ppl_channel_shuffle_param.h"
-#include "ppl/nn/models/onnx/parsers/pmx/parse_ms_deformable_attention_param.h"
+#include "ppl/nn/models/onnx/parsers/mmdeploy/parse_ms_deformable_attention_param.h"
+
+#include "ppl/nn/models/onnx/parsers/pmx/parse_channel_shuffle_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_gelu_param.h"
 #include "ppl/nn/models/onnx/parsers/pmx/parse_layer_norm_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_reshape_param.h"
+#include "ppl/nn/models/onnx/parsers/pmx/parse_rms_norm_param.h"
 
 using namespace std;
 using namespace ppl::common;
@@ -194,7 +198,8 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Pow", 7, 16, nullptr);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "PRelu", 6, 16, nullptr);
     // R
-    PPL_REGISTER_OP_WITH_PARAM("", "RandomUniform", 1, 16, RandomUniformParam, ParseRandomUniformParam, PackRandomUniformParam);
+    PPL_REGISTER_OP_WITH_PARAM("", "RandomUniform", 1, 16, RandomUniformParam, ParseRandomUniformParam,
+                               PackRandomUniformParam);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Range", 11, 16, nullptr);
     PPL_REGISTER_OP_WITHOUT_PARAM("", "Reciprocal", 6, 16, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("", "ReduceL2", 1, 16, ReduceParam, ParseReduceParam, PackReduceParam);
@@ -249,13 +254,26 @@ ParamParserManager::ParamParserManager() {
     PPL_REGISTER_OP_WITH_PARAM("mmcv", "NonMaxSuppression", 1, 1, ppl::nn::mmcv::MMCVNMSParam, ParseMMCVNMSParam,
                                nullptr);
 
-    // ppl op param parser
-    PPL_REGISTER_OP_WITHOUT_PARAM("pmx", "GELU", 1, 16, nullptr);
-    PPL_REGISTER_OP_WITH_PARAM("pmx", "ChannelShuffle", 1, 1, ppl::nn::pmx::ChannelShuffleParam,
-                               ParseChannelShuffleParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("mmdeploy", "MSDeformAttn", 1, 1, ppl::nn::mmdeploy::MSDeformAttnParam,
+                               ppl::nn::mmdeploy::ParseMSDeformAttnParam, nullptr);
 
-    PPL_REGISTER_OP_WITH_PARAM("mmdeploy", "MSDeformAttn", 1, 1, ppl::nn::pmx::MSDeformAttnParam, ParseMSDeformAttnParam, nullptr);
-    PPL_REGISTER_OP_WITH_PARAM("pmx", "LayerNorm", 1, 1, ppl::nn::pmx::LayerNormParam, ParseLayerNormParam, nullptr);
+    // ----- ppl op param parser ----- //
+
+    // C
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "ChannelShuffle", 1, 1, ppl::nn::pmx::ChannelShuffleParam,
+                               ppl::nn::pmx::ParseChannelShuffleParam, nullptr);
+    // G
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "GELU", 1, 1, ppl::nn::pmx::GELUParam, ppl::nn::pmx::ParseGELUParam, nullptr);
+    // L
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "LayerNorm", 1, 1, ppl::nn::pmx::LayerNormParam,
+                               ppl::nn::pmx::ParseLayerNormParam, nullptr);
+    // R
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "Reshape", 1, 1, ppl::nn::onnx::ReshapeParam, ppl::nn::pmx::ParseReshapeParam,
+                               nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "RMSNorm", 1, 1, ppl::nn::pmx::RMSNormParam, ppl::nn::pmx::ParseRMSNormParam,
+                               nullptr);
+    // S
+    PPL_REGISTER_OP_WITHOUT_PARAM("pmx", "SiLU", 1, 1, nullptr);
 }
 
 }}} // namespace ppl::nn::onnx
