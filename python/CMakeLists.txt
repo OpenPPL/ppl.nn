@@ -97,7 +97,6 @@ target_include_directories(pypplnn_shared PRIVATE
     ${pybind11_SOURCE_DIR}/include
     ${PPLNN_SOURCE_EXTERNAL_PYTHON_INCLUDE_DIRECTORIES}
     ${PYTHON3_INCLUDE_DIRS})
-target_compile_features(pypplnn_shared PRIVATE cxx_std_11)
 
 # --------------------------------------------------------------------------- #
 

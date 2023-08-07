@@ -11,5 +11,4 @@ endif()
 
 add_executable(classification classification.cpp)
 target_include_directories(classification PRIVATE ${OpenCV_INCLUDE_DIRS})
-target_compile_features(classification PRIVATE cxx_std_11)
 target_link_libraries(classification PRIVATE pplnn_static ${OpenCV_LIBS})
