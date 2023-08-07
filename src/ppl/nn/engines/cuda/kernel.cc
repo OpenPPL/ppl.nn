@@ -19,17 +19,21 @@
 
 #include <chrono>
 #include <memory>
-#include <fstream>
 #include "ppl/common/allocator.h"
 #include "ppl/nn/common/logger.h"
+using namespace ppl::common;
+
+#ifndef NDEBUG
+#include <fstream>
+#endif
+
+#ifdef CUDA_DUMP_OUTPUT_TENSOR
 #include <string.h>
 #include <string>
 #include <functional>
 #include <algorithm>
-
 using namespace std;
-using namespace ppl::nn;
-using namespace ppl::common;
+#endif
 
 namespace ppl { namespace nn { namespace cuda {
 
