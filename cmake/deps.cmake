@@ -275,10 +275,10 @@ if(PPLNN_USE_CUDA)
             ${PPLNN_DEP_PPLCUDAKERNEL_PKG})
     else()
         if(NOT PPLNN_DEP_PPLCUDAKERNEL_GIT)
-            set(PPLNN_DEP_PPLCUDAKERNEL_GIT "https://github.com/openppl-public/ppl.kernel.cuda.git")
+            set(PPLNN_DEP_PPLCUDAKERNEL_GIT "https://github.com/Alcanderian/ppl.kernel.cuda.git")
         endif()
         hpcc_declare_git_dep(ppl.kernel.cuda
             ${PPLNN_DEP_PPLCUDAKERNEL_GIT}
-            master)
+            modify-cmake)
     endif()
 endif()
