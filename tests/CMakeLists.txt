@@ -48,4 +48,3 @@ endif()
 target_compile_definitions(pplnn_unittest PRIVATE
     PPLNN_TESTDATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/testdata"
     PPLNN_TESTS_BUILD_DIR="${CMAKE_CURRENT_BINARY_DIR}")
-target_compile_features(pplnn_unittest PRIVATE cxx_std_11)

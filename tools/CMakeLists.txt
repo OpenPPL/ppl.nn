@@ -4,4 +4,3 @@ file(GLOB PPLNN_TOOL_SRC
 
 add_executable(pplnn ${PPLNN_TOOL_SRC})
 target_link_libraries(pplnn PRIVATE pplnn_static)
-target_compile_features(pplnn PRIVATE cxx_std_11)
