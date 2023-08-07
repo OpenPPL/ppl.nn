@@ -29,7 +29,7 @@ public:
         char str[8]; // a null-terminated string
 
         bool operator==(const Type& t) const {
-            return (*(int64_t*)(&(this->str[0]))) == (*(int64_t*)(&(t.str[0])));
+            return ((*(int64_t*)(this->str)) == (*(int64_t*)(t.str)));
         }
     };
 
