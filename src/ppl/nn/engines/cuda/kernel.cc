@@ -23,11 +23,8 @@
 #include "ppl/nn/common/logger.h"
 using namespace ppl::common;
 
-#ifndef NDEBUG
-#include <fstream>
-#endif
-
 #ifdef CUDA_DUMP_OUTPUT_TENSOR
+#include <fstream>
 #include <string.h>
 #include <string>
 #include <functional>
