@@ -36,6 +36,10 @@ public:
         node_ = node;
     }
 
+    const ir::Node* GetNode() const {
+        return node_;
+    }
+
     /** @brief sets a getter function which accepts edgeid `eid` and `etype` and returns the corresponding object. */
     void SetAcquireFunc(const std::function<EdgeObject*(edgeid_t, uint32_t)>& f) {
         acquire_func_ = f;
