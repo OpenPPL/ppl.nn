@@ -15,30 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_COMMON_DEVICE_CONTEXT_H_
-#define _ST_HPC_PPL_NN_COMMON_DEVICE_CONTEXT_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_UTILS_INTERNAL_H_
+#define _ST_HPC_PPL_NN_ENGINES_CUDA_UTILS_INTERNAL_H_
 
-#include "ppl/common/retcode.h"
-#include "ppl/nn/common/common.h"
+#include "ppl/nn/engines/cuda/cuda_device.h"
 
-namespace ppl { namespace nn {
+namespace ppl { namespace nn { namespace cuda { namespace utils {
 
-class PPLNN_PUBLIC DeviceContext {
-public:
-    struct Type {
-        char str[8]; // a null-terminated string
+bool DeviceEqual(const Device *dev, const CudaDevice *cu_dev) {
+    if (dev->GetType() == cu_dev->GetType()) {
+        return reinterpret_cast<const CudaDevice*>(dev)->GetDeviceId() == cu_dev->GetDeviceId();
+    } else {
+        return false;
+    }
+}
 
-        bool operator==(const Type& t) const {
-            return (*(int64_t*)(&(this->str[0]))) == (*(int64_t*)(&(t.str[0])));
-        }
-    };
-
-public:
-    virtual ~DeviceContext() {}
-    virtual Type GetType() const = 0;
-    virtual ppl::common::RetCode Configure(uint32_t, ...) = 0;
-};
-
-}} // namespace ppl::nn
+}}}} // namespace ppl::nn::cuda
 
 #endif
