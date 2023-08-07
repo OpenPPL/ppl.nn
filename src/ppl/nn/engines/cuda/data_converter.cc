@@ -110,17 +110,23 @@ RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc,
         return status;
     }
 
-    auto src_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(src_desc.GetDataFormat());
-    auto dst_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(dst_desc.GetDataFormat());
-    if (src_desc.CalcElementsFromDimensionIncludingPadding(2) == 1 && dst_desc.CalcElementsFromDimensionIncludingPadding(2) == 1) {
-        if (src_desc.GetDim(1) % src_align_size == 0 && dst_desc.GetDim(1) % dst_align_size == 0) {
-            param.in_format = param.out_format;
-            param.mix_format = 0;
+    if (src_desc.GetDimCount() > 1 && dst_desc.GetDimCount() > 1) {
+        auto src_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(src_desc.GetDataFormat());
+        auto dst_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(dst_desc.GetDataFormat());
+        if (src_desc.CalcElementsFromDimensionIncludingPadding(2) == 1 && dst_desc.CalcElementsFromDimensionIncludingPadding(2) == 1) {
+            if (src_desc.GetDim(1) % src_align_size == 0 && dst_desc.GetDim(1) % dst_align_size == 0) {
+                param.in_format = param.out_format;
+                param.mix_format = 0;
+            }
         }
     }
 
     if (param.in_format == param.out_format && param.in_type == param.out_type) {
-        device_->Copy(dst, src, dst_desc);
+        status = device_->Copy(dst, src, dst_desc);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "copy from source to des failed";
+            return status;
+        }
     } else if (param.in_format == param.out_format || param.in_type == param.out_type) {
         PPLCUDADataConvert(device_->GetStream(), src.addr, dst->addr, nullptr, param);
     } else {
@@ -258,7 +264,11 @@ RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc,
                 in_scale.push_back(1.f);
             }
         }
-        device_->CopyFromHost(&in_scale_buf, &(in_scale[0]), ((int)param.quant_dim_size) * sizeof(float));
+        status = device_->CopyFromHost(&in_scale_buf, &(in_scale[0]), ((int)param.quant_dim_size) * sizeof(float));
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "CopyFromHost failed";
+            return status;
+        }
         param.i_step_ptr = (float*)in_scale_buf.addr;
 
         vector<float> out_scale(dst_quant.scale);
@@ -270,12 +280,20 @@ RetCode CudaDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc,
                 out_scale.push_back(1.f);
             }
         }
-        device_->CopyFromHost(&out_scale_buf, &(out_scale[0]), ((int)param.quant_dim_size) * sizeof(float));
+        status = device_->CopyFromHost(&out_scale_buf, &(out_scale[0]), ((int)param.quant_dim_size) * sizeof(float));
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "CopyFromHost failed";
+            return status;
+        }
         param.o_step_ptr = (float*)out_scale_buf.addr;
     }
 
     if (!param.mix_format && !param.mix_type) {
-        device_->Copy(dst, src, dst_desc);
+        status = device_->Copy(dst, src, dst_desc);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "Copy failed";
+            return status;
+        }
     } else if (!param.mix_format || !param.mix_type) {
         PPLCUDADataConvert(device_->GetStream(), src.addr, dst->addr, nullptr, param);
     } else {
