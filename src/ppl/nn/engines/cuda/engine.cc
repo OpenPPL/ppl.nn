@@ -55,6 +55,7 @@ CudaEngine::CudaEngine() : EngineImpl("cuda") {
         LOG(WARNING) << "Empty op implementation set. Did you forget to call `ppl::nn::cuda::RegisterBuiltinOpImpls()` "
                         "before creating cuda engines?";
     }
+
 }
 
 CudaEngine::~CudaEngine() {
