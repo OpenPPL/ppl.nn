@@ -87,21 +87,25 @@ RetCode BufferedCudaAllocator::Init(int devid, uint64_t granularity) {
         return RC_OTHER_ERROR;
     }
 
+    granularity_ = granularity;
+
     return RC_SUCCESS;
 }
 
-void* BufferedCudaAllocator::Alloc(uint64_t bytes) {
-    const char* errmsg = nullptr;
-    CUmemGenericAllocationHandle alloc_handle;
+uint64_t BufferedCudaAllocator::Extend(uint64_t bytes) {
+    bytes = Align(bytes, granularity_);
     if (bytes >= total_bytes_) {
         LOG(ERROR) << "bytes[" << bytes << "] is larger than max [" << total_bytes_ << "]";
-        return nullptr;
+        return 0;
     }
+
+    const char* errmsg = nullptr;
+    CUmemGenericAllocationHandle alloc_handle;
     auto rc = cuMemCreate(&alloc_handle, bytes, &prop_, 0);
     if (rc != CUDA_SUCCESS) {
         cuGetErrorString(rc, &errmsg);
         LOG(ERROR) << "cuMemCreate [" << bytes << "] bytes failed: " << errmsg;
-        return nullptr;
+        return 0;
     }
 
     auto start_addr = addr_ + bytes_allocated_;
@@ -110,7 +114,7 @@ void* BufferedCudaAllocator::Alloc(uint64_t bytes) {
     if (rc != CUDA_SUCCESS) {
         cuGetErrorString(rc, &errmsg);
         LOG(ERROR) << "cuMemMap [" << bytes << "] to addr [" << start_addr << "] failed: " << errmsg;
-        return nullptr;
+        return 0;
     }
 
     cuMemSetAccess(start_addr, bytes, &access_desc_, 1);
@@ -118,12 +122,9 @@ void* BufferedCudaAllocator::Alloc(uint64_t bytes) {
     handle_list_.push_back(alloc_handle);
     bytes_allocated_ += bytes;
 
-    return (void*)start_addr;
+    return bytes;
 }
 
-void BufferedCudaAllocator::Free(void*) {
-    // do nothing
-}
 #endif
 
 }} // namespace ppl::nn

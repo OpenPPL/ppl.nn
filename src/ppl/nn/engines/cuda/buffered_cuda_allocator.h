@@ -22,28 +22,30 @@
 #include <vector>
 
 #include "ppl/common/retcode.h"
-#include "ppl/common/allocator.h"
+#include "ppl/common/compact_memory_manager.h"
 #include "ppl/nn/engines/cuda/macros.h"
 
 namespace ppl { namespace nn {
 
 #if PPLNN_CUDACC_VER_MAJOR * 1000 + PPLNN_CUDACC_VER_MINOR * 10 >= 10020
-class BufferedCudaAllocator final : public ppl::common::Allocator {
+class BufferedCudaAllocator final : public ppl::common::CompactMemoryManager::VMAllocator {
 public:
     BufferedCudaAllocator() {}
     ~BufferedCudaAllocator();
 
     ppl::common::RetCode Init(int devid, uint64_t granularity);
 
-    void* GetReservedBaseAddr() const {
+    void* GetReservedBaseAddr() const override {
         return (void*)addr_;
+    }
+    uint64_t GetAllocatedBytes() const override {
+        return bytes_allocated_;
     }
     uint64_t GetReservedAddrLen() const {
         return addr_len_;
     }
 
-    void* Alloc(uint64_t bytes) override;
-    void Free(void* ptr) override;
+    uint64_t Extend(uint64_t bytes_needed) override;
 
 private:
     CUmemAllocationProp prop_ = {};
@@ -52,6 +54,7 @@ private:
     size_t addr_len_ = 0;
     size_t bytes_allocated_ = 0;
     size_t total_bytes_ = 0;
+    uint64_t granularity_ = 0;
     std::vector<CUmemGenericAllocationHandle> handle_list_;
 
 private:

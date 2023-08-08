@@ -61,13 +61,8 @@ RetCode BufferedCudaDevice::Init(int device_id, uint32_t mm_policy, ppl::common:
             delete allocator;
             return RC_OTHER_ERROR;
         }
-        allocator_.reset(allocator);
-
-        uint64_t block_size = DEFAULT_BLOCK_SIZE;
-        if (granularity > DEFAULT_BLOCK_SIZE) {
-            block_size = granularity;
-        }
-        buffer_manager_.reset(new utils::CompactBufferManager(allocator, CUDA_DEFAULT_ALIGNMENT, block_size));
+        vmr_.reset(allocator);
+        buffer_manager_.reset(new utils::CompactBufferManager(allocator, CUDA_DEFAULT_ALIGNMENT));
 #else
         LOG(WARNING) << "Due to lower CUDA version, 'Compact Memory' is not supported, choose 'Perf Mode' instead.";
         allocator_.reset(new PlainCudaAllocator());
@@ -87,6 +82,7 @@ BufferedCudaDevice::~BufferedCudaDevice() {
         buffer_manager_.reset();
     }
     allocator_.reset();
+    vmr_.reset();
 }
 
 RetCode BufferedCudaDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {

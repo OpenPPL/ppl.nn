@@ -28,6 +28,9 @@ public:
     CompactBufferManager(ppl::common::Allocator* ar, uint64_t alignment, uint64_t block_size = 65536)
         : BufferManager("CompactBufferManager"), alignment_(alignment), mgr_(ar, block_size) {}
 
+    CompactBufferManager(ppl::common::CompactMemoryManager::VMAllocator* vmr, uint64_t alignment)
+        : BufferManager("CompactBufferManager"), alignment_(alignment), mgr_(vmr) {}
+
     uint64_t GetAllocatedBytes() const override {
         return mgr_.GetAllocatedBytes();
     }
