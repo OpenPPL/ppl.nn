@@ -55,6 +55,11 @@ target_compile_definitions(pplnn_cuda_static PUBLIC
     PPLNN_CUDACC_VER_MAJOR=${CUDA_VERSION_MAJOR}
     PPLNN_CUDACC_VER_MINOR=${CUDA_VERSION_MINOR})
 
+if(PPLNN_CUDA_ENABLE_NCCL)
+    target_compile_definitions(pplnn_cuda_static PUBLIC
+        PPLNN_CUDA_ENABLE_NCCL)
+endif()
+
 target_link_libraries(pplnn_static INTERFACE pplnn_cuda_static)
 
 if(PPLNN_INSTALL)
