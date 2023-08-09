@@ -68,7 +68,14 @@ RetCode BufferedCudaDevice::Init(int device_id, uint32_t mm_policy, ppl::common:
         allocator_.reset(new PlainCudaAllocator());
         buffer_manager_.reset(new utils::StackBufferManager(allocator_.get(), true));
 #endif
+    } else if (mm_policy == MM_PLAIN) {
+        allocator_.reset(new PlainCudaAllocator());
+        buffer_manager_.reset(new utils::StackBufferManager(allocator_.get(), true));
+    } else {
+        LOG(ERROR) << "unknown mm policy type [" << mm_policy << "]";
+        return RC_INVALID_VALUE;
     }
+
     return RC_SUCCESS;
 }
 

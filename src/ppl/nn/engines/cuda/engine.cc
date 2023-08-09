@@ -25,6 +25,7 @@
 #include "ppl/nn/engines/utils.h"
 #include "ppl/nn/engines/cuda/optimizer/opt_graph.h"
 #include "ppl/nn/engines/cuda/engine_factory.h"
+#include "ppl/nn/engines/cuda/plain_cuda_device.h"
 #include "ppl/nn/engines/cuda/module/op_compile_manager.h"
 #include "ppl/nn/quantization/quant_param_parser.h"
 #include "ppl/nn/utils/array.h"
@@ -60,14 +61,27 @@ CudaEngine::CudaEngine() : EngineImpl("cuda") {
 CudaEngine::~CudaEngine() {
 #ifdef PPLNN_ENABLE_PMX_MODEL
     for (auto b = constant_buffer_blocks_.begin(); b != constant_buffer_blocks_.end(); ++b) {
-        device_.Free(&(*b));
+        device_->Free(&(*b));
     }
 #endif
 }
 
 RetCode CudaEngine::Init(const EngineOptions& options) {
     options_ = options;
-    return device_.Init(options.device_id, options.mm_policy, &tp_nccl_param_, options.enable_cuda_graph);
+    if (options.mm_policy == MM_PLAIN) {
+        auto dev = new PlainCudaDevice();
+        device_.reset(dev);
+        auto rc = dev->Init(options.device_id, &tp_nccl_param_);
+        if (rc != RC_SUCCESS) {
+            LOG(ERROR) << "init plain device failed: " << GetRetCodeStr(rc);
+            return rc;
+        }
+    }
+
+    // mm_policy == MM_COMPACT or MM_BEST_FIT
+    auto dev = new BufferedCudaDevice();
+    device_.reset(dev);
+    return dev->Init(options.device_id, options.mm_policy, &tp_nccl_param_, options.enable_cuda_graph);
 }
 
 EngineContext* CudaEngine::CreateEngineContext() {
@@ -89,7 +103,7 @@ bool CudaEngine::Supports(const ir::Node* node) const {
 RetCode CudaEngine::DoOptimize(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
     CompileInfo compile_set;
     OptGraph opt_graph(graph, info, &refit_info_, &cuda_flags_, &compile_set);
-    auto status = opt_graph.DoOptimize(resource, &device_);
+    auto status = opt_graph.DoOptimize(resource, device_.get());
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "OptGraph DoOptimeize failed: " << GetRetCodeStr(status);
         return status;
@@ -116,7 +130,7 @@ ppl::common::RetCode CudaEngine::CompileCudaModule(const utils::SharedResource& 
         if (op_compiler == nullptr)
             continue;
 
-        const OptKernelOptions options(graph, info, &resource, &device_, &cuda_manager_);
+        const OptKernelOptions options(graph, info, &resource, device_.get(), &cuda_manager_);
         op_compiler->Compile(op, options);
     }
 
@@ -187,7 +201,7 @@ RetCode CudaEngine::ProcessGraph(const utils::SharedResource& resource, ir::Grap
 
 ppl::common::RetCode CudaEngine::RefitWeightsImpl(map<edgeid_t, const void*>* edge2val) {
     // only one partition is used
-    auto dev = &device_;
+    auto dev = device_.get();
     for (auto iter = edge2val->begin(); iter != edge2val->end(); ++iter) {
         auto edge_id = iter->first;
         auto data_ptr = iter->second;
@@ -247,7 +261,7 @@ EngineImpl* CudaEngine::Create() {
 }
 
 const CudaDevice* CudaEngine::GetDevice() const {
-    return &device_;
+    return device_.get();
 }
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
@@ -271,7 +285,7 @@ RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, 
     }
 
     BufferDesc block;
-    status = device_.Realloc(total_bytes, &block);
+    status = device_->Realloc(total_bytes, &block);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "alloc [" << total_bytes << "] bytes failed: " << GetRetCodeStr(status);
         return status;
@@ -280,18 +294,16 @@ RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, 
     uint64_t offset = 0;
     status = visitor.ForEach([this, eid2info, &block, &offset](const ir::Edge* edge, const void* data, uint64_t size,
                                                                const TensorShape& shape) -> RetCode {
-        auto dev = &device_;
-
         BufferDesc buf;
         buf.addr = (char*)block.addr + offset;
-        auto status = dev->CopyFromHost(&buf, data, size);
+        auto status = device_->CopyFromHost(&buf, data, size);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy data of constant[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
         }
 
         BufferInfo info;
-        info.SetBuffer(buf, dev);
+        info.SetBuffer(buf, device_.get());
         auto ret_pair = eid2info->emplace(edge->GetId(), std::move(info));
         if (!ret_pair.second) {
             LOG(ERROR) << "constant[" << edge->GetName() << "] already exists.";
@@ -305,7 +317,7 @@ RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, 
     if (status == RC_SUCCESS) {
         constant_buffer_blocks_.push_back(block);
     } else {
-        device_.Free(&block);
+        device_->Free(&block);
     }
 
     return status;
