@@ -19,7 +19,6 @@
 #define _ST_HPC_PPL_NN_UTILS_OP_INFO_MANAGER_H_
 
 #include "ppl/common/retcode.h"
-#include "ppl/nn/common/logger.h"
 #include <map>
 #include <string>
 #include <vector>
@@ -61,12 +60,8 @@ public:
                     break;
                 }
 
-                LOG(ERROR) << "Register for [" << domain << ", " << type << "] failed: VersionRange[" << ver.first
-                           << ", " << ver.last << "] overlapped with [" << cur.first << ", " << cur.last << "]";
                 return ppl::common::RC_EXISTS;
             } else if (ver.first <= cur.last) {
-                LOG(ERROR) << "Register for [" << domain << ", " << type << "] failed: VersionRange[" << ver.first
-                           << ", " << ver.last << "] overlapped with [" << cur.first << ", " << cur.last << "]";
                 return ppl::common::RC_EXISTS;
             }
         }
