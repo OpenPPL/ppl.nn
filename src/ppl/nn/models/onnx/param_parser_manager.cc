@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/models/onnx/param_parser_manager.h"
+#include "ppl/nn/common/logger.h"
 
 // NOTE: sorted in alphabet order
 #include "ppl/nn/models/onnx/parsers/onnx/parse_argmax_param.h"
