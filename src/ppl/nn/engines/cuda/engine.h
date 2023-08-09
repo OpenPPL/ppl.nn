@@ -20,6 +20,7 @@
 
 #include <map>
 #include <set>
+#include <memory>
 
 #include "ppl/common/types.h"
 #include "ppl/nn/engines/engine_impl.h"
@@ -123,7 +124,7 @@ private:
     CudaArgs cuda_flags_;
     EngineOptions options_;
     // TODO(WJF): if plain cuda device is used, cuda-memcheck would report illegal errors, may bugs within kernels
-    BufferedCudaDevice device_;
+    std::unique_ptr<CudaDevice> device_;
     CUDAModuleManager cuda_manager_;
     // update nodes' weights
     RefitArgs refit_args_;
