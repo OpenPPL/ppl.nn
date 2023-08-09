@@ -39,6 +39,14 @@ RetCode CudaDataConverter::ConvertToHost(void* dst, const TensorShape& dst_desc,
         return RC_SUCCESS;
     }
 
+    if (dst_desc.GetDataFormat() == src_desc.GetDataFormat() && dst_desc.GetDataType() == src_desc.GetDataType()) {
+        auto status = device_->CopyToHost(dst, src, src_desc);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "copy dst data to Host failed: " << GetRetCodeStr(status);
+        }
+        return status;
+    }
+
     BufferDesc tmp_buffer_desc;
     auto status = device_->Realloc(dst_desc, &tmp_buffer_desc);
     if (status != RC_SUCCESS) {
@@ -69,6 +77,14 @@ RetCode CudaDataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& d
     if (src_desc.CalcBytesExcludingPadding() == 0) {
         device_->Free(dst);
         return RC_SUCCESS;
+    }
+
+    if (dst_desc.GetDataFormat() == src_desc.GetDataFormat() && dst_desc.GetDataType() == src_desc.GetDataType()) {
+        auto status = device_->CopyFromHost(dst, src, src_desc);
+        if (status != RC_SUCCESS) {
+            LOG(ERROR) << "copy src data from host failed: " << GetRetCodeStr(status);
+        }
+        return status;
     }
 
     BufferDesc tmp_buffer_desc;
