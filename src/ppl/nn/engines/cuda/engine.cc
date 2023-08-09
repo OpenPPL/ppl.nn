@@ -74,14 +74,18 @@ RetCode CudaEngine::Init(const EngineOptions& options) {
         auto rc = dev->Init(options.device_id, &tp_nccl_param_);
         if (rc != RC_SUCCESS) {
             LOG(ERROR) << "init plain device failed: " << GetRetCodeStr(rc);
-            return rc;
         }
+        return rc;
     }
 
     // mm_policy == MM_COMPACT or MM_BEST_FIT
     auto dev = new BufferedCudaDevice();
     device_.reset(dev);
-    return dev->Init(options.device_id, options.mm_policy, &tp_nccl_param_, options.enable_cuda_graph);
+    auto rc = dev->Init(options.device_id, options.mm_policy, &tp_nccl_param_, options.enable_cuda_graph);
+    if (rc != RC_SUCCESS) {
+        LOG(ERROR) << "init buffered device failed: " << GetRetCodeStr(rc);
+    }
+    return rc;
 }
 
 EngineContext* CudaEngine::CreateEngineContext() {
