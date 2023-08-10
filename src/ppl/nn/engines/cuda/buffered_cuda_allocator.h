@@ -18,12 +18,10 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_BUFFERED_CUDA_ALLOCATOR_H_
 #define _ST_HPC_PPL_NN_ENGINES_CUDA_BUFFERED_CUDA_ALLOCATOR_H_
 
-#include <cuda.h>
-#include <vector>
-
 #include "ppl/common/retcode.h"
 #include "ppl/common/compact_memory_manager.h"
-#include "ppl/nn/engines/cuda/macros.h"
+#include <cuda.h>
+#include <vector>
 
 namespace ppl { namespace nn {
 
@@ -31,9 +29,12 @@ namespace ppl { namespace nn {
 class BufferedCudaAllocator final : public ppl::common::CompactMemoryManager::VMAllocator {
 public:
     BufferedCudaAllocator() {}
-    ~BufferedCudaAllocator();
+    ~BufferedCudaAllocator() {
+        Destroy();
+    }
 
-    ppl::common::RetCode Init(int devid, uint64_t granularity);
+    ppl::common::RetCode Init(int devid);
+    void Destroy();
 
     void* GetReservedBaseAddr() const override {
         return (void*)addr_;

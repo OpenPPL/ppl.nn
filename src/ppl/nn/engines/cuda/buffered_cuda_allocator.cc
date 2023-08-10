@@ -16,9 +16,7 @@
 // under the License.
 
 #include "ppl/nn/engines/cuda/buffered_cuda_allocator.h"
-
 #include "ppl/nn/common/logger.h"
-
 using namespace std;
 using namespace ppl::common;
 
@@ -29,8 +27,8 @@ static inline uint64_t Align(uint64_t x, uint64_t n) {
     return (x + n - 1) & (~(n - 1));
 }
 
-BufferedCudaAllocator::~BufferedCudaAllocator() {
-    if (!addr_) {
+void BufferedCudaAllocator::Destroy() {
+    if (addr_ == 0) {
         return;
     }
 
@@ -51,6 +49,7 @@ BufferedCudaAllocator::~BufferedCudaAllocator() {
                 LOG(ERROR) << "cuMemRelease failed: " << errmsg;
             }
         }
+        handle_list_.clear();
     }
 
     rc = cuMemAddressFree(addr_, addr_len_);
@@ -58,9 +57,11 @@ BufferedCudaAllocator::~BufferedCudaAllocator() {
         cuGetErrorString(rc, &errmsg);
         LOG(ERROR) << "cuMemAddressFree failed: " << errmsg;
     }
+
+    addr_ = 0;
 }
 
-RetCode BufferedCudaAllocator::Init(int devid, uint64_t granularity) {
+RetCode BufferedCudaAllocator::Init(int devid) {
     const char* errmsg = nullptr;
 
     auto rc = cuMemGetInfo(nullptr, &total_bytes_);
@@ -74,11 +75,18 @@ RetCode BufferedCudaAllocator::Init(int devid, uint64_t granularity) {
     prop_.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
     prop_.location.id = devid;
 
+    rc = cuMemGetAllocationGranularity(&granularity_, &prop_, CU_MEM_ALLOC_GRANULARITY_MINIMUM);
+    if (rc != CUDA_SUCCESS) {
+        cuGetErrorString(rc, &errmsg);
+        LOG(ERROR) << "cuMemGetAllocationGranularity failed: " << errmsg;
+        return RC_OTHER_ERROR;
+    }
+
     access_desc_.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
     access_desc_.location.id = devid;
     access_desc_.flags = CU_MEM_ACCESS_FLAGS_PROT_READWRITE;
 
-    addr_len_ = Align(total_bytes_, granularity);
+    addr_len_ = Align(total_bytes_, granularity_);
     rc = cuMemAddressReserve(&addr_, addr_len_, 0, 0, 0);
     if (rc != CUDA_SUCCESS) {
         addr_ = 0;
@@ -86,8 +94,6 @@ RetCode BufferedCudaAllocator::Init(int devid, uint64_t granularity) {
         LOG(ERROR) << "cuMemAddressReserve failed: " << errmsg;
         return RC_OTHER_ERROR;
     }
-
-    granularity_ = granularity;
 
     return RC_SUCCESS;
 }
