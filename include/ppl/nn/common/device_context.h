@@ -35,7 +35,7 @@ public:
 
 public:
     virtual ~DeviceContext() {}
-    virtual Type GetType() const = 0;
+    virtual const Type& GetType() const = 0;
     virtual ppl::common::RetCode Configure(uint32_t, ...) = 0;
 };
 

@@ -116,7 +116,7 @@ public:
         return ppl::common::RC_SUCCESS;
     }
 
-    Type GetType() const override final {
+    const Type& GetType() const override final {
         return type_;
     }
 

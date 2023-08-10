@@ -116,7 +116,7 @@ public:
         return &data_converter_;
     }
 
-    Type GetType() const override final {
+    const Type& GetType() const override final {
         return type_;
     }
 

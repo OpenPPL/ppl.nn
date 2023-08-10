@@ -53,7 +53,7 @@ public:
         return &data_converter_;
     }
 
-    Type GetType() const override {
+    const Type& GetType() const override {
         return type_;
     }
 
