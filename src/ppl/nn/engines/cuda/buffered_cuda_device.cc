@@ -15,13 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "ppl/common/cuda/cuda_plain_allocator.h"
 #include "ppl/nn/engines/cuda/buffered_cuda_device.h"
-#include "ppl/nn/engines/cuda/buffered_cuda_allocator.h"
 #include "ppl/nn/engines/cuda/graph_cuda_allocator.h"
-#include "ppl/nn/engines/cuda/plain_cuda_allocator.h"
 #include "ppl/nn/utils/stack_buffer_manager.h"
 #include "ppl/nn/utils/compact_buffer_manager.h"
 #include "ppl/nn/common/logger.h"
+
+#if PPLNN_CUDACC_VER_MAJOR * 1000 + PPLNN_CUDACC_VER_MINOR * 10 >= 10020
+#include "ppl/common/cuda/cuda_buffered_allocator.h"
+#endif
 
 using namespace std;
 using namespace ppl::common;
@@ -40,15 +43,15 @@ RetCode BufferedCudaDevice::Init(int device_id, uint32_t mm_policy, ppl::common:
         if (enable_cuda_graph) {
             allocator_.reset(new GraphCudaAllocator(GetStream()));
         } else {
-            allocator_.reset(new PlainCudaAllocator());
+            allocator_.reset(new CudaPlainAllocator());
         }
         buffer_manager_.reset(new utils::StackBufferManager(allocator_.get(), true));
     } else if (mm_policy == MM_COMPACT) {
 #if PPLNN_CUDACC_VER_MAJOR * 1000 + PPLNN_CUDACC_VER_MINOR * 10 >= 10020
-        auto allocator = new BufferedCudaAllocator();
+        auto allocator = new CudaBufferedAllocator();
         status = allocator->Init(device_id);
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "init BufferedCudaAllocator failed: " << GetRetCodeStr(status);
+            LOG(ERROR) << "init CudaBufferedAllocator failed: " << GetRetCodeStr(status);
             delete allocator;
             return RC_OTHER_ERROR;
         }
@@ -56,11 +59,11 @@ RetCode BufferedCudaDevice::Init(int device_id, uint32_t mm_policy, ppl::common:
         buffer_manager_.reset(new utils::CompactBufferManager(allocator, CUDA_DEFAULT_ALIGNMENT));
 #else
         LOG(WARNING) << "Due to lower CUDA version, 'Compact Memory' is not supported, choose 'Perf Mode' instead.";
-        allocator_.reset(new PlainCudaAllocator());
+        allocator_.reset(new CudaPlainAllocator());
         buffer_manager_.reset(new utils::StackBufferManager(allocator_.get(), true));
 #endif
     } else if (mm_policy == MM_PLAIN) {
-        allocator_.reset(new PlainCudaAllocator());
+        allocator_.reset(new CudaPlainAllocator());
         buffer_manager_.reset(new utils::StackBufferManager(allocator_.get(), true));
     } else {
         LOG(ERROR) << "unknown mm policy type [" << mm_policy << "]";

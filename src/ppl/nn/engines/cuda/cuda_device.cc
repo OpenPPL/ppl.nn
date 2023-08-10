@@ -17,50 +17,12 @@
 
 #include "ppl/nn/engines/cuda/cuda_device.h"
 #include "ppl/nn/common/logger.h"
-#include <cuda.h>
+#include "ppl/common/cuda/cuda_env.h"
 #include <stdarg.h>
 
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
-
-static RetCode InitDriverEnv(int device_id) {
-    const char* errmsg = nullptr;
-    auto cu_status = cuInit(0);
-    if (cu_status != CUDA_SUCCESS) {
-        cuGetErrorString(cu_status, &errmsg);
-        LOG(ERROR) << "cuInit failed: " << errmsg;
-        return RC_OTHER_ERROR;
-    }
-
-    CUcontext cu_context;
-    cu_status = cuDevicePrimaryCtxRetain(&cu_context, device_id);
-    if (cu_status != CUDA_SUCCESS) {
-        cuGetErrorString(cu_status, &errmsg);
-        LOG(ERROR) << "cuDevicePrimaryCtxRetain failed: " << errmsg;
-        return RC_OTHER_ERROR;
-    }
-
-    cu_status = cuCtxSetCurrent(cu_context);
-    if (cu_status != CUDA_SUCCESS) {
-        cuGetErrorString(cu_status, &errmsg);
-        LOG(ERROR) << "cuCtxSetCurrent failed: " << errmsg;
-        return RC_OTHER_ERROR;
-    }
-
-    return RC_SUCCESS;
-}
-
-static RetCode DestroyDriverEnv(int device_id) {
-    auto rc = cuDevicePrimaryCtxRelease(device_id);
-    if (rc != CUDA_SUCCESS) {
-        const char* errmsg = nullptr;
-        cuGetErrorString(rc, &errmsg);
-        LOG(ERROR) << "cuDevicePrimaryCtxRelease failed: " << errmsg;
-        return RC_OTHER_ERROR;
-    }
-    return RC_SUCCESS;
-}
 
 CudaDevice::~CudaDevice() {
     if (stream_) {
@@ -71,14 +33,14 @@ CudaDevice::~CudaDevice() {
         cublasLtDestroy(cublas_handle_);
     }
     if (device_id_ != INT_MAX) {
-        DestroyDriverEnv(device_id_);
+        DestroyCudaEnv(device_id_);
     }
 }
 
 RetCode CudaDevice::Init(int device_id, ppl::common::NcclParam* tp_nccl_param, bool enable_cuda_graph) {
-    auto status = InitDriverEnv(device_id);
+    auto status = InitCudaEnv(device_id);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "InitDriverEnv failed: " << GetRetCodeStr(status);
+        LOG(ERROR) << "InitCudaEnv failed: " << GetRetCodeStr(status);
         return status;
     }
 

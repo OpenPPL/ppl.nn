@@ -16,14 +16,13 @@
 // under the License.
 
 #include "ppl/nn/engines/cuda/plain_cuda_device.h"
-#include "ppl/nn/engines/cuda/plain_cuda_allocator.h"
-
+#include "ppl/common/cuda/cuda_plain_allocator.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
 PlainCudaDevice::PlainCudaDevice() {
-    allocator_.reset(new PlainCudaAllocator());
+    allocator_.reset(new CudaPlainAllocator());
 }
 
 PlainCudaDevice::~PlainCudaDevice() {
