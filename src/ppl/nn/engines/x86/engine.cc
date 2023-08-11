@@ -17,6 +17,7 @@
 
 #include <stdarg.h>
 
+#include "ppl/nn/optimizers/nn_optimizer_manager.h"
 #include "ppl/nn/engines/x86/engine.h"
 #include "ppl/nn/engines/x86/engine_context.h"
 #include "ppl/nn/engines/x86/optimizer/opt_kernel_creator_manager.h"
@@ -142,7 +143,13 @@ ppl::common::RetCode X86Engine::CalDataOmittedConstants(const ir::Graph& graph, 
 }
 
 RetCode X86Engine::ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
-    auto status = DoOptimize(resource, graph, info);
+    auto status = NNOptimizerManager::GetInstance()->Process(graph);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "do optimization failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    status = DoOptimize(resource, graph, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "DoOptimize failed: " << GetRetCodeStr(status);
         return status;
