@@ -15,18 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_OPTIMIZERS_GRAPH_OPTIMIZER_MANAGER_H_
-#define _ST_HPC_PPL_NN_OPTIMIZERS_GRAPH_OPTIMIZER_MANAGER_H_
+#ifndef _ST_HPC_PPL_NN_OPTIMIZERS_GENERIC_OPTIMIZER_MANAGER_H_
+#define _ST_HPC_PPL_NN_OPTIMIZERS_GENERIC_OPTIMIZER_MANAGER_H_
 
 #include "ppl/nn/optimizers/graph_optimizer.h"
 #include <vector>
 
 namespace ppl { namespace nn {
 
-class GraphOptimizerManager final {
+class GenericOptimizerManager final {
 public:
-    static GraphOptimizerManager* GetInstance() {
-        static GraphOptimizerManager mgr;
+    static GenericOptimizerManager* GetInstance() {
+        static GenericOptimizerManager mgr;
         return &mgr;
     }
 
@@ -36,7 +36,7 @@ public:
     ppl::common::RetCode Process(ir::Graph*) const;
 
 private:
-    GraphOptimizerManager();
+    GenericOptimizerManager();
 
 private:
     std::vector<std::shared_ptr<GraphOptimizer>> optimizer_list_;

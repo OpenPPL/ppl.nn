@@ -23,6 +23,7 @@
 #include "ppl/nn/engines/riscv/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/engines/riscv/optimizer/opt_graph.h"
 #include "ppl/nn/runtime/runtime_partition_info.h"
+#include "ppl/nn/optimizers/nn_optimizer_manager.h"
 #include "ppl/nn/engines/utils.h"
 #include "ppl/nn/common/logger.h"
 using namespace std;
@@ -118,7 +119,13 @@ ppl::common::RetCode RiscvEngine::CalDataOmittedConstants(const ir::Graph& graph
 }
 
 RetCode RiscvEngine::ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
-    auto status = DoOptimize(resource, graph, info);
+    auto status = NNOptimizerManager::GetInstance()->Process(graph);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "do optimization failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    status = DoOptimize(resource, graph, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "DoOptimize failed: " << GetRetCodeStr(status);
         return status;

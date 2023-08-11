@@ -17,7 +17,7 @@
 
 #include "ppl/common/str_utils.h"
 #include "ppl/nn/optimizers/utils.h"
-#include "ppl/nn/optimizers/graph_optimizer_manager.h"
+#include "ppl/nn/optimizers/generic_optimizer_manager.h"
 #include "ppl/nn/engines/common/pmx/converter_op.h"
 #include "ppl/nn/engines/utils.h"
 #include "ppl/nn/ir/partial_graph_topo.h"
@@ -353,7 +353,7 @@ static vector<uint32_t> GenNid2Partidx(nodeid_t maxid, const vector<pair<EngineI
 }
 
 RetCode ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, RuntimeGraphInfo* info) {
-    auto status = GraphOptimizerManager::GetInstance()->Process(graph);
+    auto status = GenericOptimizerManager::GetInstance()->Process(graph);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "do optimization failed: " << GetRetCodeStr(status);
         return status;

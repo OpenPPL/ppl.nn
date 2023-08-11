@@ -15,14 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "ppl/nn/optimizers/nn_optimizer_manager.h"
 #include "ppl/nn/engines/arm/engine.h"
-#include <stdarg.h>
 #include "ppl/nn/engines/arm/engine_context.h"
 #include "ppl/nn/engines/arm/engine_factory.h"
 #include "ppl/nn/engines/arm/optimizer/opt_kernel_creator_manager.h"
 #include "ppl/nn/engines/arm/optimizer/opt_graph.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/utils.h"
+#include <stdarg.h>
 
 #if defined(__linux__) && defined(PPLNN_USE_NUMA)
 #include <numa.h>
@@ -123,7 +124,13 @@ RetCode ArmEngine::DoOptimize(const utils::SharedResource& resource, ir::Graph* 
 }
 
 RetCode ArmEngine::ProcessGraph(const utils::SharedResource& resource, ir::Graph* graph, RuntimePartitionInfo* info) {
-    auto status = DoOptimize(resource, graph, info);
+    auto status = NNOptimizerManager::GetInstance()->Process(graph);
+    if (status != RC_SUCCESS) {
+        LOG(ERROR) << "do optimization failed: " << GetRetCodeStr(status);
+        return status;
+    }
+
+    status = DoOptimize(resource, graph, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "DoOptimize failed: " << GetRetCodeStr(status);
         return status;
