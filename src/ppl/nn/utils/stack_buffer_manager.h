@@ -35,8 +35,8 @@ public:
 
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) override;
     void Free(BufferDesc* buffer) override;
-    uint64_t GetAllocatedBytes() const override {
-        return allocated_bytes_;
+    uint64_t GetBufferedBytes() const override {
+        return buffered_bytes_;
     }
 
 private:
@@ -49,7 +49,7 @@ private:
         managed_buffer->addr = allocator_->Alloc(bytes);
         if (managed_buffer->addr) {
             managed_buffer->size = bytes;
-            allocated_bytes_ += bytes;
+            buffered_bytes_ += bytes;
         } else {
             managed_buffer->size = 0;
         }
@@ -58,7 +58,7 @@ private:
     inline void ReallocManagedBuffer(uint64_t bytes, BufferAddrAndSize* managed_buffer) {
         if (bytes > managed_buffer->size) {
             allocator_->Free(managed_buffer->addr);
-            allocated_bytes_ -= managed_buffer->size;
+            buffered_bytes_ -= managed_buffer->size;
             AllocManagedBuffer(bytes, managed_buffer);
         }
     }
@@ -89,7 +89,7 @@ private:
 
 private:
     const bool use_bestfit_;
-    uint64_t allocated_bytes_ = 0;
+    uint64_t buffered_bytes_ = 0;
     ppl::common::Allocator* allocator_;
     std::vector<int64_t> buffer_stack_;
     std::vector<BufferAddrAndSize> buffer_list_;

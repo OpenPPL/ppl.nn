@@ -34,5 +34,5 @@ TEST(StackBufferManagerTest, all_and_free) {
     EXPECT_NE(nullptr, buffer.addr);
     mgr.Free(&buffer);
 
-    EXPECT_LE(bytes_needed, mgr.GetAllocatedBytes());
+    EXPECT_LE(bytes_needed, mgr.GetBufferedBytes());
 }
