@@ -31,8 +31,8 @@ public:
     CompactBufferManager(ppl::common::CompactMemoryManager::VMAllocator* vmr, uint64_t alignment)
         : BufferManager("CompactBufferManager"), alignment_(alignment), mgr_(vmr) {}
 
-    uint64_t GetAllocatedBytes() const override {
-        return mgr_.GetAllocatedBytes();
+    uint64_t GetBufferedBytes() const override {
+        return mgr_.GetBufferedBytes();
     }
 
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) override;

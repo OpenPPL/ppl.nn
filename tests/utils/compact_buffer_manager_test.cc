@@ -35,5 +35,5 @@ TEST(CompactBufferManagerTest, alloc_and_free) {
     EXPECT_LE(bytes_needed, buffer.desc);
     EXPECT_EQ(0, (uintptr_t)(buffer.addr) % alignment);
     mgr.Free(&buffer);
-    EXPECT_EQ(block_size, mgr.GetAllocatedBytes());
+    EXPECT_EQ(block_size, mgr.GetBufferedBytes());
 }

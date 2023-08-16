@@ -56,7 +56,7 @@ RetCode RuntimeX86Device::Init(uint32_t mm_policy) {
 
 RuntimeX86Device::~RuntimeX86Device() {
     LOG(DEBUG) << "buffer manager[" << buffer_manager_->GetName() << "] allocates ["
-               << buffer_manager_->GetAllocatedBytes() << "] bytes.";
+               << buffer_manager_->GetBufferedBytes() << "] bytes.";
     if (tmp_buffer_size_) {
         buffer_manager_->Free(&shared_tmp_buffer_);
     }

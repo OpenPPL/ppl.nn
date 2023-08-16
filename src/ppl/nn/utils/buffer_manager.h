@@ -34,7 +34,7 @@ public:
     }
     virtual ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) = 0;
     virtual void Free(BufferDesc* buffer) = 0;
-    virtual uint64_t GetAllocatedBytes() const = 0;
+    virtual uint64_t GetBufferedBytes() const = 0;
 
 private:
     const std::string name_;
