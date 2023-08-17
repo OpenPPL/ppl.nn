@@ -16,25 +16,29 @@
 // under the License.
 
 #include "ppl/nn/engines/cuda/plain_cuda_device.h"
-#include "ppl/common/cuda/cuda_plain_allocator.h"
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace cuda {
 
-PlainCudaDevice::PlainCudaDevice() {
-    allocator_.reset(new CudaPlainAllocator());
-}
-
 PlainCudaDevice::~PlainCudaDevice() {
     SyncStream();
-    allocator_.reset();
 }
 
 RetCode PlainCudaDevice::Init(uint32_t device_id, ppl::common::NcclParam* tp_nccl_param) {
+#if CUDA_VERSION < 11040
+    LOG(ERROR) << "PlainCudaDevice is not supported when CUDA < 11.4.";
+    return RC_UNSUPPORTED;
+#else
+    allocator_.Init(GetStream());
     return CudaDevice::Init(device_id, tp_nccl_param);
+#endif
 }
 
 RetCode PlainCudaDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {
+#if CUDA_VERSION < 11040
+    LOG(ERROR) << "PlainCudaDevice is not supported when CUDA < 11.4.";
+    return RC_UNSUPPORTED;
+#else
     if (buffer->addr) {
         allocator_->Free(buffer->addr);
     }
@@ -52,14 +56,19 @@ RetCode PlainCudaDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {
 
     buffer->desc = bytes;
     return RC_SUCCESS;
+#endif
 }
 
 void PlainCudaDevice::Free(BufferDesc* buffer) {
+#if CUDA_VERSION < 11040
+    LOG(ERROR) << "PlainCudaDevice is not supported when CUDA < 11.4.";
+#else
     if (buffer->addr) {
         allocator_->Free(buffer->addr);
         buffer->addr = nullptr;
         buffer->desc = 0;
     }
+#endif
 }
 
 }}} // namespace ppl::nn::cuda

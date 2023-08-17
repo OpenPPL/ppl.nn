@@ -18,15 +18,15 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_CUDA_PLAIN_CUDA_DEVICE_H_
 #define _ST_HPC_PPL_NN_ENGINES_CUDA_PLAIN_CUDA_DEVICE_H_
 
-#include "ppl/common/allocator.h"
 #include "ppl/nn/engines/cuda/cuda_device.h"
-#include <memory>
+#if CUDA_VERSION >= 11040
+#include "ppl/common/cuda/cuda_plain_async_allocator.h"
+#endif
 
 namespace ppl { namespace nn { namespace cuda {
 
 class PlainCudaDevice final : public CudaDevice {
 public:
-    PlainCudaDevice();
     virtual ~PlainCudaDevice();
 
     ppl::common::RetCode Init(uint32_t device_id, ppl::common::NcclParam* tp_nccl_param);
@@ -36,7 +36,9 @@ public:
     void Free(BufferDesc*) override;
 
 private:
-    std::unique_ptr<ppl::common::Allocator> allocator_;
+#if CUDA_VERSION >= 11040
+    ppl::common::CudaPlainAsyncAllocator allocator_;
+#endif
 };
 
 }}} // namespace ppl::nn::cuda

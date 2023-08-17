@@ -123,7 +123,6 @@ private:
 private:
     CudaArgs cuda_flags_;
     EngineOptions options_;
-    // TODO(WJF): if plain cuda device is used, cuda-memcheck would report illegal errors, may bugs within kernels
     std::unique_ptr<CudaDevice> device_;
     CUDAModuleManager cuda_manager_;
     // update nodes' weights
