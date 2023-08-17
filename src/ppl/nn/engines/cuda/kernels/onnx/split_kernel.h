@@ -37,7 +37,7 @@ private:
 
 private:
     const ppl::nn::onnx::SplitParam* param_ = nullptr;
-    mutable std::vector<std::vector<int64_t>> dst_dims_;
+    mutable std::vector<const int64_t*> dst_dims_;
     mutable std::vector<void*> dst_list_;
 };
 
