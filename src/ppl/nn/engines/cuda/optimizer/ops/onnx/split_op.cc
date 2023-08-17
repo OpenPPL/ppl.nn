@@ -79,8 +79,8 @@ SplitOp::SplitOp(const ir::Node* node) : CudaOptKernel(node) {
         }
 
         if (info->GetInputCount() == 1) {
-            auto in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
-            info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(in_shape.GetDims(), in_shape.GetRealDimCount());
+            auto in_shape = info->GetInput<TensorImpl>(0)->GetShape();
+            info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(in_shape->GetDims(), in_shape->GetRealDimCount());
             return RC_SUCCESS;
         } else {
             if (constant_split_data_.empty()) {
@@ -91,7 +91,7 @@ SplitOp::SplitOp(const ir::Node* node) : CudaOptKernel(node) {
                 const TensorShape& dst_desc = *input->GetShape();
                 if (dst_desc.CalcElementsIncludingPadding() == 0) {
                     auto in_shape = info->GetInput<TensorImpl>(0)->GetShape();
-                    info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(in_shape->GetDims(), in_shape.GetRealDimCount());
+                    info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(in_shape->GetDims(), in_shape->GetRealDimCount());
                     return RC_SUCCESS;
                 }
 
