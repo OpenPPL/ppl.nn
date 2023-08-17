@@ -39,6 +39,23 @@ RetCode SplitOp::Init(const OptKernelOptions& options) {
         return status;
     }
 
+    auto node = GetNode();
+    auto graph_data = options.graph->data;
+
+    auto split_data_it = graph_data->constants.find(node->GetInput(1));
+    const int64_t* split_data = nullptr;
+    if (split_data_it != graph_data->constants.end()) {
+        split_data = (const int64_t*)split_data_it->second.data.GetData();
+    }
+
+    if (split_data != nullptr) {
+        auto shape_shape_it = graph_data->shapes.find(node->GetInput(1));
+        if (shape_shape_it != graph_data->shapes.end()) {
+            auto& shape_shape = shape_shape_it->second;
+            constant_split_data_.assign(split_data, split_data + shape_shape.dims[0]);
+        }
+    }
+
     return RC_SUCCESS;
 }
 
@@ -62,28 +79,32 @@ SplitOp::SplitOp(const ir::Node* node) : CudaOptKernel(node) {
         }
 
         if (info->GetInputCount() == 1) {
-            auto in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
-            info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(in_shape.GetDims(), in_shape.GetRealDimCount());
+            auto in_shape = info->GetInput<TensorImpl>(0)->GetShape();
+            info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(in_shape->GetDims(), in_shape->GetRealDimCount());
             return RC_SUCCESS;
         } else {
-            auto input = info->GetInput<TensorImpl>(1);
-            if (!input->GetBufferPtr()) {
-                return RC_NOT_FOUND;
-            }
-            const TensorShape& dst_desc = *input->GetShape();
-            if (dst_desc.CalcElementsIncludingPadding() == 0) {
-                auto in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
-                info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(in_shape.GetDims(), in_shape.GetRealDimCount());
-                return RC_SUCCESS;
-            }
+            if (constant_split_data_.empty()) {
+                auto input = info->GetInput<TensorImpl>(1);
+                if (!input->GetBufferPtr()) {
+                    return RC_NOT_FOUND;
+                }
+                const TensorShape& dst_desc = *input->GetShape();
+                if (dst_desc.CalcElementsIncludingPadding() == 0) {
+                    auto in_shape = info->GetInput<TensorImpl>(0)->GetShape();
+                    info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(in_shape->GetDims(), in_shape->GetRealDimCount());
+                    return RC_SUCCESS;
+                }
 
-            vector<int64_t> shape_data(dst_desc.CalcElementsIncludingPadding());
-            auto status = input->CopyToHost(shape_data.data());
-            if (status != RC_SUCCESS) {
-                LOG(ERROR) << "Copy shape data failed: " << GetRetCodeStr(status);
-                return status;
+                vector<int64_t> split_data(dst_desc.CalcElementsIncludingPadding());
+                auto status = input->CopyToHost(split_data.data());
+                if (status != RC_SUCCESS) {
+                    LOG(ERROR) << "Copy shape data failed: " << GetRetCodeStr(status);
+                    return status;
+                }
+                return onnx::ReshapeSplit(info, &param_, split_data.data());
+            } else {
+                return onnx::ReshapeSplit(info, &param_, constant_split_data_.data());
             }
-            return onnx::ReshapeSplit(info, &param_, shape_data.data());
         }
     };
 }

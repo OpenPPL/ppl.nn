@@ -37,6 +37,7 @@ public:
 
 private:
     ppl::nn::onnx::SplitParam param_;
+    std::vector<int64_t> constant_split_data_;
 };
 
 }}} // namespace ppl::nn::cuda
