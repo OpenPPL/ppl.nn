@@ -30,7 +30,7 @@
 using namespace std;
 
 #include "ppl/common/str_utils.h"
-#include "ppl/common/file_mapping.h"
+#include "ppl/common/mmap.h"
 using namespace ppl::common;
 
 #include "ppl/nn/runtime/options.h"
@@ -269,8 +269,8 @@ static bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     }
 
     if (!g_flag_quant_file.empty()) {
-        FileMapping fm;
-        auto status = fm.Init(g_flag_quant_file.c_str(), FileMapping::READ);
+        Mmap fm;
+        auto status = fm.Init(g_flag_quant_file.c_str(), Mmap::READ);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "mapping file[" << g_flag_quant_file << "] failed: " << fm.GetErrorMessage();
             return false;
@@ -284,8 +284,8 @@ static bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
     }
 
     if (!g_flag_import_algo_file.empty()) {
-        FileMapping fm;
-        auto rc = fm.Init(g_flag_import_algo_file.c_str(), FileMapping::READ);
+        Mmap fm;
+        auto rc = fm.Init(g_flag_import_algo_file.c_str(), Mmap::READ);
         if (rc != RC_SUCCESS) {
             LOG(ERROR) << "mapping algo file[" << g_flag_import_algo_file << "] failed: " << fm.GetErrorMessage();
             return false;
@@ -603,8 +603,8 @@ static string GetBasename(const string& path) {
 
 static bool SetInputsAllInOne(const string& input_file, const vector<vector<int64_t>>& input_shapes, Runtime* runtime,
                               vector<string>* input_data) {
-    FileMapping fm;
-    auto status = fm.Init(input_file.c_str(), FileMapping::READ);
+    Mmap fm;
+    auto status = fm.Init(input_file.c_str(), Mmap::READ);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "mapping file[" << input_file << "] failed: " << fm.GetErrorMessage();
         return false;
@@ -693,8 +693,8 @@ static bool SetInputsOneByOne(const string& input_files_str, const vector<vector
         const string& file_full_path = files[i];
         const string file_name = GetBasename(file_full_path);
 
-        FileMapping fm;
-        auto status = fm.Init(file_full_path.c_str(), FileMapping::READ);
+        Mmap fm;
+        auto status = fm.Init(file_full_path.c_str(), Mmap::READ);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "mapping file[" << file_full_path << "] failed: " << fm.GetErrorMessage();
             return false;
@@ -796,8 +796,8 @@ static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* ru
         input_shape.SetDataType(data_type);
         input_shape.Reshape(dims.data(), dims.size());
 
-        FileMapping fm;
-        auto status = fm.Init(file_full_path.c_str(), FileMapping::READ);
+        Mmap fm;
+        auto status = fm.Init(file_full_path.c_str(), Mmap::READ);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "mapping file[" << file_full_path << "] failed: " << fm.GetErrorMessage();
             return false;

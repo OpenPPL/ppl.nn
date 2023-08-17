@@ -16,7 +16,7 @@
 // under the License.
 
 #include <stdarg.h>
-#include "ppl/common/file_mapping.h"
+#include "ppl/common/mmap.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/runtime/runtime_impl.h"
 #include "ppl/nn/ir/full_graph_topo.h"
@@ -108,8 +108,8 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len, c
 }
 
 RetCode RuntimeBuilderImpl::LoadModel(const char* model_file, const Resources& resources) {
-    FileMapping fm;
-    auto status = fm.Init(model_file, FileMapping::READ);
+    Mmap fm;
+    auto status = fm.Init(model_file, Mmap::READ);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "mapping file [" << model_file << "] faild: " << fm.GetErrorMessage();
         return status;

@@ -18,7 +18,7 @@
 #include "ppl/nn/models/onnx/model_parser.h"
 #include "ppl/nn/models/onnx/serializer.h"
 #include "ppl/nn/utils/file_data_stream.h"
-#include "ppl/common/file_mapping.h"
+#include "ppl/common/mmap.h"
 #include "gtest/gtest.h"
 using namespace std;
 using namespace ppl::common;
@@ -26,8 +26,8 @@ using namespace ppl::nn::onnx;
 
 TEST(OnnxSerializerTest, serialize) {
     const string model_file(PPLNN_TESTDATA_DIR + string("/conv.onnx"));
-    FileMapping fm;
-    auto status = fm.Init(model_file.c_str(), FileMapping::READ);
+    Mmap fm;
+    auto status = fm.Init(model_file.c_str(), Mmap::READ);
     EXPECT_EQ(RC_SUCCESS, status);
 
     Model model;

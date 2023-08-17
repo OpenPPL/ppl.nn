@@ -18,7 +18,6 @@
 #include "ppl/nn/models/onnx/model_parser.h"
 #include "ppl/nn/models/onnx/graph_parser.h"
 #include "ppl/nn/common/logger.h"
-#include "ppl/common/file_mapping.h"
 
 // large proto file support
 #include "google/protobuf/io/coded_stream.h"
