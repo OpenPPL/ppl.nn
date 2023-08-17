@@ -16,7 +16,7 @@
 // under the License.
 
 #include "ppl/nn/models/onnx/model_parser.h"
-#include "ppl/common/file_mapping.h"
+#include "ppl/common/mmap.h"
 #include "gtest/gtest.h"
 #include <string>
 using namespace std;
@@ -28,8 +28,8 @@ class ModelParserTest : public testing::Test {};
 TEST_F(ModelParserTest, TestModelParser) {
     onnx::Model model;
     const string onnx_file = PPLNN_TESTDATA_DIR + string("/conv.onnx");
-    FileMapping fm;
-    EXPECT_EQ(RC_SUCCESS, fm.Init(onnx_file.c_str(), FileMapping::READ));
+    Mmap fm;
+    EXPECT_EQ(RC_SUCCESS, fm.Init(onnx_file.c_str(), Mmap::READ));
     auto res = onnx::ModelParser::Parse(fm.GetData(), fm.GetSize(), nullptr, &model);
     EXPECT_EQ(RC_SUCCESS, res);
 }

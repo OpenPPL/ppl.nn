@@ -16,7 +16,7 @@
 // under the License.
 
 #include <stdarg.h>
-#include "ppl/common/file_mapping.h"
+#include "ppl/common/mmap.h"
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/optimizers/utils.h"
 #include "ppl/nn/optimizers/engine_graph_partitioner.h"
@@ -53,8 +53,8 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len, c
 }
 
 RetCode RuntimeBuilderImpl::LoadModel(const char* model_file) {
-    FileMapping fm;
-    auto status = fm.Init(model_file, FileMapping::READ);
+    Mmap fm;
+    auto status = fm.Init(model_file, Mmap::READ);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "mapping file [" << model_file << "] faild: " << fm.GetErrorMessage();
         return status;
