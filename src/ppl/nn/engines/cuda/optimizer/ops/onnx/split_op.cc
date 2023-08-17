@@ -90,8 +90,8 @@ SplitOp::SplitOp(const ir::Node* node) : CudaOptKernel(node) {
                 }
                 const TensorShape& dst_desc = *input->GetShape();
                 if (dst_desc.CalcElementsIncludingPadding() == 0) {
-                    auto in_shape = *info->GetInput<TensorImpl>(0)->GetShape();
-                    info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(in_shape.GetDims(), in_shape.GetRealDimCount());
+                    auto in_shape = info->GetInput<TensorImpl>(0)->GetShape();
+                    info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(in_shape->GetDims(), in_shape.GetRealDimCount());
                     return RC_SUCCESS;
                 }
 
