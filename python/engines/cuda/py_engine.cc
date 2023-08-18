@@ -18,7 +18,7 @@
 #include "py_engine.h"
 #include "ppl/common/retcode.h"
 #include "ppl/common/types.h"
-#include "ppl/common/file_mapping.h"
+#include "ppl/common/mmap.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 #include "ppl/nn/common/logger.h"
@@ -83,10 +83,10 @@ static RetCode ImportAlgorithmsFromBuffer(PyCudaEngine& engine, uint32_t option,
     }
 
     auto fname = args[0].cast<string>();
-    FileMapping fm;
-    auto rc = fm.Init(fname.c_str(), FileMapping::READ);
+    Mmap fm;
+    auto rc = fm.Init(fname.c_str(), Mmap::READ);
     if (rc != RC_SUCCESS) {
-        LOG(ERROR) << "mapping algorithms file[" << fname << "] failed: " << fm.GetErrorMessage();
+        LOG(ERROR) << "mapping algorithms file[" << fname << "] failed.";
         return rc;
     }
 

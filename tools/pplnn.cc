@@ -272,7 +272,7 @@ static bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
         Mmap fm;
         auto status = fm.Init(g_flag_quant_file.c_str(), Mmap::READ);
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "mapping file[" << g_flag_quant_file << "] failed: " << fm.GetErrorMessage();
+            LOG(ERROR) << "mapping file[" << g_flag_quant_file << "] failed.";
             return false;
         }
         cuda_engine->Configure(cuda::ENGINE_CONF_SET_QUANT_INFO, fm.GetData(), fm.GetSize());
@@ -287,7 +287,7 @@ static bool RegisterCudaEngine(vector<unique_ptr<Engine>>* engines) {
         Mmap fm;
         auto rc = fm.Init(g_flag_import_algo_file.c_str(), Mmap::READ);
         if (rc != RC_SUCCESS) {
-            LOG(ERROR) << "mapping algo file[" << g_flag_import_algo_file << "] failed: " << fm.GetErrorMessage();
+            LOG(ERROR) << "mapping algo file[" << g_flag_import_algo_file << "] failed.";
             return false;
         }
 
@@ -606,7 +606,7 @@ static bool SetInputsAllInOne(const string& input_file, const vector<vector<int6
     Mmap fm;
     auto status = fm.Init(input_file.c_str(), Mmap::READ);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "mapping file[" << input_file << "] failed: " << fm.GetErrorMessage();
+        LOG(ERROR) << "mapping file[" << input_file << "] failed.";
         return false;
     }
 
@@ -696,7 +696,7 @@ static bool SetInputsOneByOne(const string& input_files_str, const vector<vector
         Mmap fm;
         auto status = fm.Init(file_full_path.c_str(), Mmap::READ);
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "mapping file[" << file_full_path << "] failed: " << fm.GetErrorMessage();
+            LOG(ERROR) << "mapping file[" << file_full_path << "] failed.";
             return false;
         }
 
@@ -799,7 +799,7 @@ static bool SetReshapedInputsOneByOne(const string& input_files_str, Runtime* ru
         Mmap fm;
         auto status = fm.Init(file_full_path.c_str(), Mmap::READ);
         if (status != RC_SUCCESS) {
-            LOG(ERROR) << "mapping file[" << file_full_path << "] failed: " << fm.GetErrorMessage();
+            LOG(ERROR) << "mapping file[" << file_full_path << "] failed.";
             return false;
         }
 
