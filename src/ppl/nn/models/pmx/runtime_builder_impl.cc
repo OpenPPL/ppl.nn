@@ -111,7 +111,7 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_file, const Resources& r
     Mmap fm;
     auto status = fm.Init(model_file, Mmap::READ);
     if (status != RC_SUCCESS) {
-        LOG(ERROR) << "mapping file [" << model_file << "] faild: " << fm.GetErrorMessage();
+        LOG(ERROR) << "mapping file [" << model_file << "] faild.";
         return status;
     }
     return LoadModel(fm.GetData(), fm.GetSize(), resources);
