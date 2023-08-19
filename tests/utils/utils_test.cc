@@ -21,7 +21,7 @@ using namespace ppl::nn::utils;
 using namespace ppl::common;
 
 TEST(UtilsUtilsTest, ReadFileContent_normal) {
-    Buffer buf;
+    Mmap buf;
     auto rc = ReadFileContent(__FILE__, &buf);
     EXPECT_EQ(RC_SUCCESS, rc);
 
@@ -32,7 +32,7 @@ TEST(UtilsUtilsTest, ReadFileContent_normal) {
 }
 
 TEST(UtilsUtilsTest, ReadFileContent_offset) {
-    Buffer buf;
+    Mmap buf;
     auto rc = ReadFileContent(__FILE__, &buf, 5, 2);
     EXPECT_EQ(RC_SUCCESS, rc);
     EXPECT_EQ(2, buf.GetSize());
@@ -44,7 +44,7 @@ TEST(UtilsUtilsTest, ReadFileContent_offset) {
 }
 
 TEST(UtilsUtilsTest, ReadFileContent_error) {
-    Buffer buf;
+    Mmap buf;
     auto rc = ReadFileContent(__FILE__, &buf, 0xffffffff, 1);
     EXPECT_NE(RC_SUCCESS, rc);
 }

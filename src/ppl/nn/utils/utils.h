@@ -19,8 +19,8 @@
 #define _ST_HPC_PPL_NN_UTILS_UTILS_H_
 
 #include "ppl/common/retcode.h"
+#include "ppl/common/mmap.h"
 #include "ppl/nn/ir/node.h"
-#include "ppl/nn/utils/buffer.h"
 
 namespace ppl { namespace nn { namespace utils {
 
@@ -33,7 +33,8 @@ static inline ir::Node::Type MakePplConverterNodeType() {
     return ir::Node::Type("pmx", "Converter", 1);
 }
 
-ppl::common::RetCode ReadFileContent(const char* fname, Buffer* buf, uint64_t offset = 0, uint64_t length = UINT64_MAX);
+ppl::common::RetCode ReadFileContent(const char* fname, ppl::common::Mmap* buf, uint64_t offset = 0,
+                                     uint64_t length = UINT64_MAX);
 
 }}} // namespace ppl::nn::utils
 

@@ -18,12 +18,12 @@
 #ifndef _ST_HPC_PPL_NN_IR_CONSTANT_H_
 #define _ST_HPC_PPL_NN_IR_CONSTANT_H_
 
-#include "ppl/nn/utils/buffer.h"
+#include "ppl/common/mmap.h"
 
 namespace ppl { namespace nn { namespace ir {
 
 struct Constant final {
-    ppl::nn::utils::Buffer data;
+    ppl::common::Mmap data;
 };
 
 }}} // namespace ppl::nn::ir

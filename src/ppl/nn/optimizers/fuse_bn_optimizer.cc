@@ -142,8 +142,9 @@ static bool FuseConvBatchNormalization(ir::Graph* graph) {
                 conv_bias_edge->AddConsumer(conv_node->GetId());
 
                 ir::Constant bias_constant;
-                bias_constant.data.Resize(channels * sizeof(float), 0); // init bias to 0
-                constants.emplace(conv_bias_edge->GetId(), bias_constant);
+                bias_constant.data.Init(channels * sizeof(float));
+                memset(bias_constant.data.GetData(), 0, bias_constant.data.GetSize());
+                constants.emplace(conv_bias_edge->GetId(), std::move(bias_constant));
                 conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.GetData();
 
                 ir::Shape bias_shape;
@@ -254,8 +255,9 @@ static bool FuseConvTransposeBatchNormalization(ir::Graph* graph) {
 
             // check if convtranspose is convtranspose2d
             auto convtranspose_filter_edge = graph->topo->GetEdge(convtranspose_node->GetInput(1));
-            auto convtranspose_bias_edge =
-                convtranspose_node->GetInputCount() > 2 ? graph->topo->GetEdge(convtranspose_node->GetInput(2)) : nullptr;
+            auto convtranspose_bias_edge = convtranspose_node->GetInputCount() > 2
+                ? graph->topo->GetEdge(convtranspose_node->GetInput(2))
+                : nullptr;
             const auto& convtranspose_filter_dims = shapes[convtranspose_filter_edge->GetId()].dims;
             if (convtranspose_filter_dims.size() != 4) { // not convtranspose2d
                 continue;
@@ -297,8 +299,9 @@ static bool FuseConvTransposeBatchNormalization(ir::Graph* graph) {
                 convtranspose_bias_edge->AddConsumer(convtranspose_node->GetId());
 
                 ir::Constant bias_constant;
-                bias_constant.data.Resize(channels * sizeof(float), 0); // init bias to 0
-                constants.emplace(convtranspose_bias_edge->GetId(), bias_constant);
+                bias_constant.data.Init(channels * sizeof(float));
+                memset(bias_constant.data.GetData(), 0, bias_constant.data.GetSize());
+                constants.emplace(convtranspose_bias_edge->GetId(), std::move(bias_constant));
                 convtranspose_bias_ptr = (float*)constants[convtranspose_bias_edge->GetId()].data.GetData();
 
                 ir::Shape bias_shape;
@@ -320,8 +323,10 @@ static bool FuseConvTransposeBatchNormalization(ir::Graph* graph) {
                 eps = param->epsilon;
             }
 
-            const int64_t nhw = convtranspose_filter_dims[0] * convtranspose_filter_dims[2] * convtranspose_filter_dims[3];
-            const int64_t chw = convtranspose_filter_dims[1] * convtranspose_filter_dims[2] * convtranspose_filter_dims[3];
+            const int64_t nhw =
+                convtranspose_filter_dims[0] * convtranspose_filter_dims[2] * convtranspose_filter_dims[3];
+            const int64_t chw =
+                convtranspose_filter_dims[1] * convtranspose_filter_dims[2] * convtranspose_filter_dims[3];
             const int64_t hw = convtranspose_filter_dims[2] * convtranspose_filter_dims[3];
             for (uint32_t c = 0; c < channels; c++) {
                 // (x - mean) / sqrt(var + eps) * scale + bias -----> alpha * x + beta
@@ -331,7 +336,7 @@ static bool FuseConvTransposeBatchNormalization(ir::Graph* graph) {
                 // alpha * (SUM(filter * x) + bias) + beta -----> SUM(alpha * filter * x) + alpha * bias
                 // + beta
                 for (int64_t i = 0; i < nhw; i++) {
-                     convtranspose_filter_ptr[i / hw * chw + c * hw + i % hw] *= alpha;
+                    convtranspose_filter_ptr[i / hw * chw + c * hw + i % hw] *= alpha;
                 }
                 convtranspose_bias_ptr[c] = alpha * convtranspose_bias_ptr[c] + beta;
             }

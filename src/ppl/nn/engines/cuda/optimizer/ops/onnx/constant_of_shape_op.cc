@@ -27,8 +27,27 @@ using namespace ppl::nn::onnx;
 
 namespace ppl { namespace nn { namespace cuda {
 
+static RetCode LoadParam(const ir::Node* node, const OptKernelOptions& options, ConstantOfShapeParam* param) {
+    auto graph_data = options.graph->data.get();
+    auto param_ref = graph_data->attrs.find(node->GetId());
+    if (param_ref == graph_data->attrs.end()) {
+        return RC_NOT_FOUND;
+    }
+    auto src_param = static_cast<const ConstantOfShapeParam*>(param_ref->second.get());
+
+    auto rc = param->data.Init(src_param->data.GetSize());
+    if (rc != RC_SUCCESS) {
+        return rc;
+    }
+
+    memcpy(param->data.GetData(), src_param->data.GetData(), src_param->data.GetSize());
+    param->data_type = src_param->data_type;
+    param->dims = src_param->dims;
+    return RC_SUCCESS;
+}
+
 RetCode ConstantOfShapeOp::Init(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<ConstantOfShapeParam>(options, &param_);
+    auto status = LoadParam(GetNode(), options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "load param failed: " << GetRetCodeStr(status);
         return status;

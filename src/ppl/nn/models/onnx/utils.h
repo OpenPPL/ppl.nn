@@ -21,6 +21,7 @@
 #include "onnx.pb.h"
 #include "ppl/nn/ir/graph.h"
 #include "ppl/common/types.h"
+#include "ppl/common/mmap.h"
 
 namespace ppl { namespace nn { namespace onnx { namespace utils {
 
@@ -189,7 +190,7 @@ inline bool GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::
 }
 
 inline bool GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::string* value,
-                        const std::string& default_value="") {
+                        const std::string& default_value = "") {
     for (int i = 0; i < pb_node.attribute_size(); ++i) {
         auto& pb_attr = pb_node.attribute(i);
         if (pb_attr.name() == key) {
@@ -210,7 +211,7 @@ inline bool GetNodeAttr(const ::onnx::NodeProto& pb_node, const char* key, std::
 
 const ::onnx::TensorProto* GetTensorProtoByKey(const ::onnx::NodeProto&, const char* key);
 
-ppl::common::RetCode ParseTensorProto(const ::onnx::TensorProto&, const char* model_file_dir, ppl::nn::utils::Buffer*,
+ppl::common::RetCode ParseTensorProto(const ::onnx::TensorProto&, const char* model_file_dir, ppl::common::Mmap*,
                                       ir::Shape*);
 ppl::common::RetCode PackTensorProto(const void* data, uint64_t len, ppl::common::datatype_t,
                                      const std::vector<int64_t>&, ::onnx::TensorProto*);

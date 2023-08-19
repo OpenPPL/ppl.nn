@@ -1305,7 +1305,7 @@ int main(int argc, char* argv[]) {
 
 #if PPLNN_USE_CUDA
     if (g_flag_enable_cuda_graph) {
-        Engine* cuda_engine;
+        Engine* cuda_engine = nullptr;
         for (auto& engine : engines) {
             if (!strcmp(engine->GetName(), "cuda")) {
                 cuda_engine = engine.get();

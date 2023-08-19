@@ -20,6 +20,7 @@
 
 #include "ppl/nn/ir/graph.h"
 #include "ppl/common/types.h"
+#include <cstring> // memcpy()
 
 namespace ppl { namespace nn { namespace utils {
 
@@ -36,7 +37,8 @@ ir::Edge* AddScalarInitializer(ir::GraphTopo* topo, ir::GraphData* data, const s
     topo->MarkAsConstant(eid);
 
     auto constant_ret = data->constants.insert(std::make_pair(eid, ir::Constant()));
-    constant_ret.first->second.data.Assign((const char*)&value, sizeof(value));
+    constant_ret.first->second.data.Init(sizeof(value));
+    *(T*)(constant_ret.first->second.data.GetData()) = value;
 
     auto shape_ret = data->shapes.insert(std::make_pair(eid, ir::Shape()));
     shape_ret.first->second.data_type = data_type;
@@ -59,7 +61,11 @@ ir::Edge* Add1DInitializer(ir::GraphTopo* topo, ir::GraphData* data, const std::
     topo->MarkAsConstant(eid);
 
     auto constant_ret = data->constants.insert(std::make_pair(eid, ir::Constant()));
-    constant_ret.first->second.data.Assign((const char*)value.data(), value.size() * sizeof(T));
+    auto rc = constant_ret.first->second.data.Init(value.size() * sizeof(T));
+    if (rc != ppl::common::RC_SUCCESS) {
+        return nullptr;
+    }
+    memcpy(constant_ret.first->second.data.GetData(), value.data(), value.size() * sizeof(T));
 
     auto shape_ret = data->shapes.insert(std::make_pair(eid, ir::Shape()));
     shape_ret.first->second.data_type = data_type;

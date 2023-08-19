@@ -18,9 +18,11 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_CONSTANT_OF_SHAPE_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_CONSTANT_OF_SHAPE_PARAM_H_
 
-#include "ppl/common/types.h"
 #include "ppl/nn/ir/attr.h"
-#include "ppl/nn/utils/buffer.h"
+#include "ppl/common/types.h"
+#include "ppl/common/mmap.h"
+#include <vector>
+#include <cstring>
 #include <stdint.h>
 
 namespace ppl { namespace nn { namespace onnx {
@@ -28,10 +30,11 @@ namespace ppl { namespace nn { namespace onnx {
 struct ConstantOfShapeParam final : public ir::TypedAttr<ConstantOfShapeParam> {
     ppl::common::datatype_t data_type;
     std::vector<int64_t> dims;
-    ppl::nn::utils::Buffer data;
+    ppl::common::Mmap data;
 
     bool operator==(const ConstantOfShapeParam& p) const {
-        return this->data_type == p.data_type && this->dims == p.dims && this->data == p.data;
+        return (this->data_type == p.data_type && this->dims == p.dims &&
+                (data.GetSize() == p.data.GetSize() && memcmp(data.GetData(), p.data.GetData(), data.GetSize())));
     }
 };
 

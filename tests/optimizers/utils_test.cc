@@ -212,8 +212,9 @@ TEST_F(OptimizerUtilsTest, converters_for_constants) {
     auto in2_edge = topo->GetEdge("in2");
     ir::Constant constant;
     uint32_t value = 5;
-    constant.data.Append((const char*)&value, sizeof(value));
-    data->constants.insert(make_pair(in2_edge->GetId(), constant));
+    constant.data.Init(sizeof(value));
+    *(uint32_t*)(constant.data.GetData()) = value;
+    data->constants.emplace(in2_edge->GetId(), std::move(constant));
     ir::Shape shape;
     shape.data_type = DATATYPE_UINT32;
     shape.data_format = DATAFORMAT_NDARRAY;

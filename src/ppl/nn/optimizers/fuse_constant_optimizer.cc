@@ -45,7 +45,6 @@ inline bool IsInitializerAndFp32NDArray(const ir::Graph* graph, edgeid_t edge_id
     return true;
 }
 
-
 // fuse conv & mul
 static RetCode FuseConvMul(ir::Graph* graph) {
     bool graph_changed = false;
@@ -306,8 +305,9 @@ static RetCode FuseConvAdd(ir::Graph* graph) {
                 conv_bias_edge->AddConsumer(conv_node->GetId());
 
                 ir::Constant bias_constant;
-                bias_constant.data.Resize(channels * sizeof(float), 0); // init bias to 0
-                constants.emplace(conv_bias_edge->GetId(), bias_constant);
+                bias_constant.data.Init(channels * sizeof(float));
+                memset(bias_constant.data.GetData(), 0, bias_constant.data.GetSize());
+                constants.emplace(conv_bias_edge->GetId(), std::move(bias_constant));
                 conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.GetData();
 
                 ir::Shape bias_shape;

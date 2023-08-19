@@ -58,30 +58,38 @@ RetCode ParseConstantParam(const ::onnx::NodeProto& pb_node, const ParamParserEx
             int64_t v = attribute.i();
             param->data_type = DATATYPE_INT64;
             param->dims.push_back(1);
-            param->data.Assign((const char*)(&v), sizeof(v));
+            param->data.Init(sizeof(v));
+            *(int64_t*)(param->data.GetData()) = v;
             return RC_SUCCESS;
         } else if (attribute.name() == "value_ints") {
             param->data_type = DATATYPE_INT64;
             param->dims.push_back(attribute.ints_size());
-            param->data.Reserve(attribute.ints_size() * sizeof(int64_t));
+            auto rc = param->data.Init(attribute.ints_size() * sizeof(int64_t));
+            if (rc != RC_SUCCESS) {
+                return rc;
+            }
+            auto ints = (int64_t*)(param->data.GetData());
             for (int x = 0; x < attribute.ints_size(); ++x) {
-                int64_t v = attribute.ints(x);
-                param->data.Append((const char*)(&v), sizeof(v));
+                ints[x] = attribute.ints(x);
             }
             return RC_SUCCESS;
         } else if (attribute.name() == "value_float") {
             float v = attribute.f();
             param->data_type = DATATYPE_FLOAT32;
             param->dims.push_back(1);
-            param->data.Assign((const char*)(&v), sizeof(v));
+            param->data.Init(sizeof(v));
+            *(float*)(param->data.GetData()) = v;
             return RC_SUCCESS;
         } else if (attribute.name() == "value_floats") {
             param->data_type = DATATYPE_FLOAT32;
             param->dims.push_back(attribute.floats_size());
-            param->data.Reserve(attribute.floats_size() * sizeof(float));
+            auto rc = param->data.Init(attribute.floats_size() * sizeof(float));
+            if (rc != RC_SUCCESS) {
+                return rc;
+            }
+            auto flts = (float*)(param->data.GetData());
             for (int x = 0; x < attribute.floats_size(); ++x) {
-                float v = attribute.floats(x);
-                param->data.Append((const char*)(&v), sizeof(v));
+                flts[x] = attribute.floats(x);
             }
             return RC_SUCCESS;
         }

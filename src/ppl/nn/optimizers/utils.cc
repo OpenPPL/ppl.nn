@@ -26,6 +26,7 @@
 #include "ppl/nn/utils/utils.h"
 #include "ppl/nn/common/logger.h"
 #include <set>
+#include <cstring> // memcpy()
 using namespace std;
 using namespace ppl::common;
 
@@ -324,7 +325,17 @@ static RetCode CopyConstantsForDevices(const vector<pair<EngineImpl*, vector<nod
 
             topo->MarkAsConstant(new_edge_id);
 
-            graph_data->constants.insert(make_pair(new_edge_id, constant_data_iter->second));
+            {
+                ir::Constant constant;
+                auto rc = constant.data.Init(constant_data_iter->second.data.GetSize());
+                if (rc != RC_SUCCESS) {
+                    LOG(ERROR) << "allocate [" << constant_data_iter->second.data.GetSize()
+                               << "] failed: " << GetRetCodeStr(rc);
+                    return rc;
+                }
+                memcpy(constant.data.GetData(), constant_data_iter->second.data.GetData(), constant.data.GetSize());
+                graph_data->constants.emplace(new_edge_id, std::move(constant));
+            }
             graph_data->shapes.insert(make_pair(new_edge_id, shape_iter->second));
 
             // replace inputs and extra inputs of consumers
