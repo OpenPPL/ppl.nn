@@ -32,7 +32,8 @@ RetCode ParseConstantOfShapeParam(const ::onnx::NodeProto& pb_node, const ParamP
         float f = 0.0;
         param->data_type = DATATYPE_FLOAT32;
         param->dims.push_back(1);
-        param->data.Assign((const char*)&f, sizeof(f));
+        param->data.Init(sizeof(f));
+        *(float*)(param->data.GetData()) = f;
     } else {
         ir::Shape shape;
         auto status = utils::ParseTensorProto(*value, args.model_file_dir, &param->data, &shape);

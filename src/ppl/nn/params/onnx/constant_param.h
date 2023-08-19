@@ -18,19 +18,22 @@
 #ifndef _ST_HPC_PPL_NN_PARAMS_ONNX_CONSTANT_PARAM_H_
 #define _ST_HPC_PPL_NN_PARAMS_ONNX_CONSTANT_PARAM_H_
 
-#include "ppl/common/types.h"
 #include "ppl/nn/ir/attr.h"
-#include "ppl/nn/utils/buffer.h"
+#include "ppl/common/types.h"
+#include "ppl/common/mmap.h"
+#include <cstring>
+#include <vector>
 
 namespace ppl { namespace nn { namespace onnx {
 
 struct ConstantParam final : public ir::TypedAttr<ConstantParam> {
     ppl::common::datatype_t data_type;
     std::vector<int64_t> dims;
-    ppl::nn::utils::Buffer data;
+    ppl::common::Mmap data;
 
     bool operator==(const ConstantParam& p) const {
-        return (data_type == p.data_type && dims == p.dims && data == p.data);
+        return (data_type == p.data_type && dims == p.dims &&
+                (data.GetSize() == p.data.GetSize() && memcmp(data.GetData(), p.data.GetData(), data.GetSize())));
     }
 };
 

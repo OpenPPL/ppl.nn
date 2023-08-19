@@ -46,11 +46,11 @@ ppl::common::RetCode ConstantNodeOptimizer::Optimize(ir::Graph* graph) const {
                 graph->topo->DelEdge(edge_id);
                 return RC_NOT_FOUND;
             }
-            auto param = (const ConstantParam*)param_it->second.get();
+            auto param = (ConstantParam*)param_it->second.get();
 
             // copy constant info to graph
             auto constant_ret = constants.insert(make_pair(edge_id, ir::Constant()));
-            constant_ret.first->second.data = param->data;
+            constant_ret.first->second.data = std::move(param->data);
 
             graph->topo->MarkAsConstant(edge_id);
 
@@ -62,6 +62,7 @@ ppl::common::RetCode ConstantNodeOptimizer::Optimize(ir::Graph* graph) const {
             // delete constant node
             edge->SetProducer(INVALID_NODEID); // clear producer
             graph->topo->DelNode(node->GetId());
+            graph->data->attrs.erase(param_it);
         }
     }
 
