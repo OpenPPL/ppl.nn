@@ -18,7 +18,6 @@
 #include "ppl/nn/engines/arm/runtime_arm_device.h"
 #include "ppl/nn/engines/arm/options.h"
 #include "ppl/nn/utils/stack_buffer_manager.h"
-#include "ppl/nn/utils/compact_buffer_manager.h"
 #include "ppl/nn/utils/buffered_cpu_allocator.h"
 #include "ppl/nn/common/logger.h"
 #include <stdarg.h>
@@ -44,7 +43,7 @@ RetCode RuntimeArmDevice::Init(uint32_t mm_policy) {
             return rc;
         }
 
-        allocator_.reset(allocator);
+        vmr_.reset(allocator);
         buffer_manager_.reset(new utils::CompactBufferManager(allocator, alignment_));
     } else {
         LOG(ERROR) << "unknown mm policy: " << mm_policy;

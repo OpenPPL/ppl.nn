@@ -50,7 +50,7 @@ public:
         Free(buffer);
     }
 
-    virtual ppl::common::Allocator* GetAllocator() const {
+    ppl::common::Allocator* GetAllocator() const {
         return &allocator_;
     }
 

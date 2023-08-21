@@ -25,7 +25,6 @@ constexpr uint32_t TEST_PAGE_SIZE = 4096;
 TEST(BufferedCpuAllocatorTest, all) {
     BufferedCpuAllocator ar;
     EXPECT_EQ(RC_SUCCESS, ar.Init());
-    auto ptr = ar.Alloc(TEST_PAGE_SIZE);
-    EXPECT_NE(nullptr, ptr);
-    ar.Free(ptr);
+    auto size = ar.Extend(TEST_PAGE_SIZE);
+    EXPECT_LT(0, size);
 }

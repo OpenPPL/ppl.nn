@@ -20,7 +20,7 @@
 
 #include "ppl/nn/utils/buffer_manager.h"
 #include "ppl/nn/engines/cuda/cuda_device.h"
-#include "ppl/common/compact_memory_manager.h"
+#include "ppl/common/compact_addr_manager.h"
 #include <memory>
 
 namespace ppl { namespace nn { namespace cuda {
@@ -41,7 +41,7 @@ public:
 
 private:
     std::unique_ptr<ppl::common::Allocator> allocator_;
-    std::unique_ptr<ppl::common::CompactMemoryManager::VMAllocator> vmr_;
+    std::unique_ptr<ppl::common::CompactAddrManager::VMAllocator> vmr_;
     std::unique_ptr<utils::BufferManager> buffer_manager_;
     BufferDesc shared_tmp_buffer_;
     uint64_t tmp_buffer_size_ = 0;

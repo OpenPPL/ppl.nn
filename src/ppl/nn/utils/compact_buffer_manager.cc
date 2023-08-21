@@ -28,7 +28,7 @@ static inline uint64_t Align(uint64_t x, uint64_t n) {
 
 RetCode CompactBufferManager::Realloc(uint64_t bytes, BufferDesc* buffer) {
     if (buffer->addr) {
-        mgr_.Free(buffer->addr, buffer->desc);
+        mgr_.Free((uintptr_t)buffer->addr, buffer->desc);
     }
 
     if (bytes == 0) {
@@ -38,8 +38,8 @@ RetCode CompactBufferManager::Realloc(uint64_t bytes, BufferDesc* buffer) {
     }
 
     bytes = Align(bytes, alignment_);
-    buffer->addr = mgr_.Alloc(bytes);
-    if (!buffer->addr) {
+    buffer->addr = (void*)mgr_.Alloc(bytes);
+    if (buffer->addr == (void*)UINTPTR_MAX) {
         buffer->desc = 0;
         return RC_OUT_OF_MEMORY;
     }
@@ -50,7 +50,7 @@ RetCode CompactBufferManager::Realloc(uint64_t bytes, BufferDesc* buffer) {
 
 void CompactBufferManager::Free(BufferDesc* buffer) {
     if (buffer->addr) {
-        mgr_.Free(buffer->addr, buffer->desc);
+        mgr_.Free((uintptr_t)buffer->addr, buffer->desc);
         buffer->addr = nullptr;
     }
 }
