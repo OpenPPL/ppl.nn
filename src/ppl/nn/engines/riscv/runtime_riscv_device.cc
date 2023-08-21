@@ -45,7 +45,7 @@ RetCode RuntimeRiscvDevice::Init(uint32_t mm_policy) {
             return rc;
         }
 
-        allocator_.reset(allocator);
+        vmr_.reset(allocator);
         buffer_manager_.reset(new utils::CompactBufferManager(allocator, alignment_));
     } else {
         LOG(ERROR) << "unknown mm policy: " << mm_policy;

@@ -17,7 +17,6 @@
 
 #include "ppl/nn/utils/buffered_cpu_allocator.h"
 #include "ppl/nn/common/logger.h"
-#include <utility> // make_pair
 using namespace std;
 using namespace ppl::common;
 
@@ -88,7 +87,15 @@ RetCode BufferedCpuAllocator::Init() {
     return RC_SUCCESS;
 }
 
-void* BufferedCpuAllocator::Alloc(uint64_t bytes) {
+#define MIN_ALLOC_SIZE 65536
+
+static inline uint64_t Align(uint64_t x, uint64_t n) {
+    return (x + n - 1) & (~(n - 1));
+}
+
+uint64_t BufferedCpuAllocator::Extend(uint64_t bytes) {
+    bytes = Align(bytes, MIN_ALLOC_SIZE);
+
 #ifdef _MSC_VER
     auto new_addr = VirtualAlloc(cursor_, bytes, MEM_COMMIT, PAGE_READWRITE);
     if (!new_addr) {
@@ -96,18 +103,17 @@ void* BufferedCpuAllocator::Alloc(uint64_t bytes) {
         FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM, nullptr, GetLastError(), 0, errmsg,
                       g_max_msg_buf_size, nullptr);
         LOG(ERROR) << "VirtualAlloc [" << bytes << "] bytes failed: " << errmsg;
-        return nullptr;
+        return 0;
     }
 #else
-    auto new_addr = cursor_;
     if (mprotect(cursor_, bytes, PROT_READ | PROT_WRITE) != 0) {
         LOG(ERROR) << "mprotect [" << bytes << "] bytes failed: " << strerror(errno);
-        return nullptr;
+        return 0;
     }
 #endif
 
     cursor_ = (char*)cursor_ + bytes;
-    return new_addr;
+    return bytes;
 }
 
 }}} // namespace ppl::nn::utils

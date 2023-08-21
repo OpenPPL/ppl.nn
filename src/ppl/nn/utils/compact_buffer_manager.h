@@ -18,21 +18,30 @@
 #ifndef _ST_HPC_PPL_NN_UTILS_COMPACT_BUFFER_MANAGER_H_
 #define _ST_HPC_PPL_NN_UTILS_COMPACT_BUFFER_MANAGER_H_
 
-#include "ppl/common/compact_memory_manager.h"
+#include "ppl/common/compact_addr_manager.h"
 #include "ppl/nn/utils/buffer_manager.h"
+#include <functional>
 
 namespace ppl { namespace nn { namespace utils {
 
 class CompactBufferManager final : public BufferManager {
 public:
-    CompactBufferManager(ppl::common::Allocator* ar, uint64_t alignment, uint64_t block_size = 65536)
-        : BufferManager("CompactBufferManager"), alignment_(alignment), mgr_(ar, block_size) {}
+    CompactBufferManager(ppl::common::CompactAddrManager::Allocator* ar, uint64_t alignment)
+        : BufferManager("CompactBufferManager"), alignment_(alignment), mgr_(ar) {
+        get_buffered_bytes_ = [ar]() -> uint64_t {
+            return ar->GetAllocatedSize();
+        };
+    }
 
-    CompactBufferManager(ppl::common::CompactMemoryManager::VMAllocator* vmr, uint64_t alignment)
-        : BufferManager("CompactBufferManager"), alignment_(alignment), mgr_(vmr) {}
+    CompactBufferManager(ppl::common::CompactAddrManager::VMAllocator* vmr, uint64_t alignment)
+        : BufferManager("CompactBufferManager"), alignment_(alignment), mgr_(vmr) {
+        get_buffered_bytes_ = [vmr]() -> uint64_t {
+            return vmr->GetAllocatedSize();
+        };
+    }
 
     uint64_t GetBufferedBytes() const override {
-        return mgr_.GetBufferedBytes();
+        return get_buffered_bytes_();
     }
 
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) override;
@@ -40,7 +49,8 @@ public:
 
 private:
     uint64_t alignment_;
-    ppl::common::CompactMemoryManager mgr_;
+    ppl::common::CompactAddrManager mgr_;
+    std::function<uint64_t()> get_buffered_bytes_;
 };
 
 }}} // namespace ppl::nn::utils

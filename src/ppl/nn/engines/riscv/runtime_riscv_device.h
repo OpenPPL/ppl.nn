@@ -20,7 +20,7 @@
 
 #include "ppl/nn/engines/riscv/riscv_device.h"
 #include "ppl/nn/engines/riscv/options.h"
-#include "ppl/nn/utils/buffer_manager.h"
+#include "ppl/nn/utils/compact_buffer_manager.h"
 #include "ppl/nn/common/logger.h"
 #include <memory>
 
@@ -32,10 +32,6 @@ public:
     ~RuntimeRiscvDevice();
 
     ppl::common::RetCode Init(uint32_t mm_policy);
-
-    ppl::common::Allocator* GetAllocator() const override {
-        return allocator_.get();
-    }
 
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) override {
         return buffer_manager_->Realloc(bytes, buffer);
@@ -61,6 +57,7 @@ private:
     std::unique_ptr<utils::BufferManager> buffer_manager_;
     BufferDesc shared_tmp_buffer_;
     uint64_t tmp_buffer_size_ = 0;
+    std::shared_ptr<ppl::common::CompactAddrManager::VMAllocator> vmr_;
     std::shared_ptr<ppl::common::Allocator> allocator_;
 };
 

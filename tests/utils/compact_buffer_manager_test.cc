@@ -16,18 +16,37 @@
 // under the License.
 
 #include "ppl/nn/utils/compact_buffer_manager.h"
-#include "ppl/common/generic_cpu_allocator.h"
 #include "gtest/gtest.h"
+using namespace std;
 using namespace ppl::nn;
 using namespace ppl::common;
+
+class TestAllocator final : public CompactAddrManager::Allocator {
+public:
+    TestAllocator(uint64_t alignment) : alignment_(alignment) {}
+    pair<uintptr_t, uint64_t> Alloc(uint64_t size) {
+        auto ptr = aligned_alloc(size, alignment_);
+        if (!ptr) {
+            return make_pair(UINTPTR_MAX, 0);
+        }
+        allocated_size_ += size;
+        return make_pair((uintptr_t)ptr, size);
+    }
+    uint64_t GetAllocatedSize() const override {
+        return allocated_size_;
+    }
+private:
+    uint64_t allocated_size_ = 0;
+    const uint64_t alignment_;
+};
 
 TEST(CompactBufferManagerTest, alloc_and_free) {
     const uint64_t bytes_needed = 1000;
     const uint64_t block_size = 1024;
     const uint64_t alignment = 128;
 
-    GenericCpuAllocator ar(alignment);
-    utils::CompactBufferManager mgr(&ar, alignment, block_size);
+    TestAllocator ar(alignment);
+    utils::CompactBufferManager mgr(&ar, alignment);
     BufferDesc buffer;
     auto status = mgr.Realloc(bytes_needed, &buffer);
     EXPECT_EQ(RC_SUCCESS, status);

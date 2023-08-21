@@ -18,23 +18,22 @@
 #ifndef _ST_HPC_PPL_NN_UTILS_BUFFERED_CPU_ALLOCATOR_H_
 #define _ST_HPC_PPL_NN_UTILS_BUFFERED_CPU_ALLOCATOR_H_
 
-#include "ppl/common/allocator.h"
+#include "ppl/common/compact_addr_manager.h"
 #include "ppl/common/retcode.h"
 
 namespace ppl { namespace nn { namespace utils {
 
-class BufferedCpuAllocator final : public ppl::common::Allocator {
+class BufferedCpuAllocator final : public ppl::common::CompactAddrManager::VMAllocator {
 public:
     BufferedCpuAllocator() {}
     ~BufferedCpuAllocator();
     ppl::common::RetCode Init();
-    void* Alloc(uint64_t multi_page_size) override;
-    void Free(void*) override {}
-    void* GetReservedBaseAddr() const {
-        return base_;
+    uint64_t Extend(uint64_t bytes) override;
+    uintptr_t GetReservedBase() const override {
+        return (uintptr_t)base_;
     }
-    uint64_t GetReservedAddrLen() const {
-        return addr_len_;
+    uint64_t GetAllocatedSize() const override {
+        return (uintptr_t)cursor_ - (uintptr_t)base_;
     }
 
 private:
