@@ -22,7 +22,7 @@
 
 namespace ppl { namespace nn { namespace cuda { namespace utils {
 
-bool DeviceEqual(const Device *dev, const CudaDevice *cu_dev) {
+static inline bool DeviceEqual(const Device *dev, const CudaDevice *cu_dev) {
     if (dev->GetType() == cu_dev->GetType()) {
         return reinterpret_cast<const CudaDevice*>(dev)->GetDeviceId() == cu_dev->GetDeviceId();
     }
