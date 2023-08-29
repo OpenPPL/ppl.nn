@@ -30,7 +30,7 @@ class TensorImpl;
 
 template <>
 struct EdgeObjectType<TensorImpl> final {
-    static const uint32_t value = EdgeObject::T_TENSOR;
+    static constexpr uint32_t value = EdgeObject::T_TENSOR;
 };
 
 class TensorImpl final : public EdgeObject, public Tensor {

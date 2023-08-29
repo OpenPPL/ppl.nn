@@ -24,27 +24,27 @@ namespace ppl { namespace nn { namespace ir {
 
 class PartialGraphEdge final : public Edge {
 public:
-    PartialGraphEdge(Edge* parent_edge, const vector<Node*>* node_ptrs)
-        : parent_edge_(parent_edge), node_ptrs_(node_ptrs) {}
+    PartialGraphEdge(Edge* orig_edge, const vector<Node*>* node_ptrs)
+        : orig_edge_(orig_edge), node_ptrs_(node_ptrs) {}
 
     edgeid_t GetId() const override {
-        return parent_edge_->GetId();
+        return orig_edge_->GetId();
     }
 
     void SetName(const string& name) override {
-        parent_edge_->SetName(name);
+        orig_edge_->SetName(name);
     }
 
     const string& GetName() const override {
-        return parent_edge_->GetName();
+        return orig_edge_->GetName();
     }
 
     void SetProducer(nodeid_t p) override {
-        parent_edge_->SetProducer(p);
+        orig_edge_->SetProducer(p);
     }
 
     nodeid_t GetProducer() const override {
-        auto pid = parent_edge_->GetProducer();
+        auto pid = orig_edge_->GetProducer();
         if (pid < node_ptrs_->size() && node_ptrs_->at(pid)) {
             return pid;
         }
@@ -52,7 +52,7 @@ public:
     }
 
     Edge::ConsumerIter CreateConsumerIter() const override {
-        auto iter = parent_edge_->CreateConsumerIter();
+        auto iter = orig_edge_->CreateConsumerIter();
         iter.Reset([this](nodeid_t nid) -> bool {
             return (nid < node_ptrs_->size() && node_ptrs_->at(nid));
         });
@@ -68,12 +68,12 @@ public:
     }
 
     void AddConsumer(nodeid_t nid) override {
-        parent_edge_->AddConsumer(nid);
+        orig_edge_->AddConsumer(nid);
     }
 
     void DelConsumer(nodeid_t nid) override {
         if (nid < node_ptrs_->size() && node_ptrs_->at(nid)) {
-            parent_edge_->DelConsumer(nid);
+            orig_edge_->DelConsumer(nid);
         }
     }
 
@@ -84,12 +84,12 @@ public:
         }
 
         for (auto it = node_ids.begin(); it != node_ids.end(); ++it) {
-            parent_edge_->DelConsumer(*it);
+            orig_edge_->DelConsumer(*it);
         }
     }
 
 private:
-    Edge* parent_edge_;
+    Edge* orig_edge_;
     const vector<Node*>* node_ptrs_;
 };
 

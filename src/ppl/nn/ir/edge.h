@@ -34,7 +34,7 @@ public:
     /** @brief get the id of this edge */
     virtual edgeid_t GetId() const = 0;
 
-    virtual void SetName(const std::string& name) = 0;
+    virtual void SetName(const std::string&) = 0;
     virtual const std::string& GetName() const = 0;
 
     /**
@@ -44,7 +44,7 @@ public:
     virtual nodeid_t GetProducer() const = 0;
 
     /** @brief set this edge's producer to `nid` */
-    virtual void SetProducer(nodeid_t nid) = 0;
+    virtual void SetProducer(nodeid_t) = 0;
 
     /** @brief create an iterator for iterating all consumers */
     virtual ConsumerIter CreateConsumerIter() const = 0;
@@ -56,7 +56,7 @@ public:
     virtual void AddConsumer(nodeid_t) = 0;
 
     /** @brief remove consumer specified by `nid` */
-    virtual void DelConsumer(nodeid_t nid) = 0;
+    virtual void DelConsumer(nodeid_t) = 0;
 
     /** @brief remove all consumers */
     virtual void ClearConsumer() = 0;
