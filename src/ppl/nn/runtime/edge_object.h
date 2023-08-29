@@ -65,7 +65,7 @@ struct EdgeObjectType final {};
 
 template <>
 struct EdgeObjectType<EdgeObject> final {
-    static const uint32_t value = EdgeObject::T_EDGE_OBJECT;
+    static constexpr uint32_t value = EdgeObject::T_EDGE_OBJECT;
 };
 
 }} // namespace ppl::nn

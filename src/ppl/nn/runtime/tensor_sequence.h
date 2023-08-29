@@ -28,7 +28,7 @@ class TensorSequence;
 
 template <>
 struct EdgeObjectType<TensorSequence> final {
-    static const uint32_t value = EdgeObject::T_TENSOR_SEQUENCE;
+    static constexpr uint32_t value = EdgeObject::T_TENSOR_SEQUENCE;
 };
 
 class TensorSequence final : public EdgeObject {
