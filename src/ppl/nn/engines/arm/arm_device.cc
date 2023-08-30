@@ -15,38 +15,37 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <cstring> // memcpy
-#include <vector>
-
-#include "ppl/nn/engines/riscv/data_converter.h"
-#include "ppl/nn/engines/riscv/utils/data_trans.h"
-#include "ppl/nn/engines/riscv/utils/fp16fp32_cvt.h"
-#include "ppl/common/log.h"
+#include "ppl/nn/engines/arm/arm_device.h"
+#include "ppl/kernel/arm_server/common/data_trans.h"
+#include "ppl/kernel/arm_server/common/memory.h"
+#include "ppl/kernel/arm_server/cast/neon/cast.h"
+#include "ppl/nn/common/logger.h"
+#include <cstring>
 using namespace ppl::common;
+using namespace ppl::kernel::arm_server;
 
-namespace ppl { namespace nn { namespace riscv {
+namespace ppl { namespace nn { namespace arm {
 
-RetCode RiscvDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
-                                    const TensorShape& src_desc, const void*, const void*) const {
-    LOG(DEBUG) << "RISCV Data Converter from data format " << GetDataFormatStr(src_desc.GetDataFormat()) << " to "
-               << GetDataFormatStr(dst_desc.GetDataFormat());
-    LOG(DEBUG) << "RISCV Data Converter from data type " << GetDataTypeStr(src_desc.GetDataType()) << " to "
-               << GetDataTypeStr(dst_desc.GetDataType());
+RetCode ArmDevice::Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                           const TensorShape& src_desc, const void*, const void*) {
+    LOG(DEBUG) << "ARM Data Converter from data format " << src_desc.GetDataFormat() << " to "
+               << dst_desc.GetDataFormat();
+    LOG(DEBUG) << "ARM Data Converter from data type " << src_desc.GetDataType() << " to " << dst_desc.GetDataType();
     if (dst_desc.GetDataFormat() == src_desc.GetDataFormat() && dst_desc.GetDataType() == src_desc.GetDataType()) {
-        memcpy(dst->addr, src.addr, src_desc.CalcBytesIncludingPadding());
-        return RC_SUCCESS;
+        return memory_copy(src.addr, src_desc.CalcBytesIncludingPadding(), dst->addr);
     } else if (dst_desc.GetDataFormat() != src_desc.GetDataFormat() &&
                dst_desc.GetDataType() == src_desc.GetDataType()) {
         if (dst_desc.GetDataType() == DATATYPE_FLOAT32) {
-            if (dst_desc.GetDataFormat() == DATAFORMAT_N8CX && src_desc.GetDataFormat() == DATAFORMAT_NDARRAY) {
-                NdarrayToN8cxFp32((float*)(src.addr), src_desc.GetDim(0), src_desc.GetDim(1), src_desc.GetDim(2),
+            if (dst_desc.GetDataFormat() == DATAFORMAT_N4CX && src_desc.GetDataFormat() == DATAFORMAT_NDARRAY) {
+                NdarrayToN4cxFp32((float*)(src.addr), src_desc.GetDim(0), src_desc.GetDim(1), src_desc.GetDim(2),
                                   src_desc.GetDim(3), (float*)(dst->addr));
                 return RC_SUCCESS;
-            } else if (dst_desc.GetDataFormat() == DATAFORMAT_NDARRAY && src_desc.GetDataFormat() == DATAFORMAT_N8CX) {
-                N8cxToNdarrayFp32((float*)(src.addr), src_desc.GetDim(0), src_desc.GetDim(1), src_desc.GetDim(2),
+            } else if (dst_desc.GetDataFormat() == DATAFORMAT_NDARRAY && src_desc.GetDataFormat() == DATAFORMAT_N4CX) {
+                N4cxToNdarrayFp32((float*)(src.addr), src_desc.GetDim(0), src_desc.GetDim(1), src_desc.GetDim(2),
                                   src_desc.GetDim(3), (float*)(dst->addr));
                 return RC_SUCCESS;
             }
+#ifdef PPLNN_USE_ARMV8_2_FP16
         } else if (dst_desc.GetDataType() == DATATYPE_FLOAT16) {
             if (dst_desc.GetDataFormat() == DATAFORMAT_N8CX && src_desc.GetDataFormat() == DATAFORMAT_NDARRAY) {
                 NdarrayToN8cxFp16((__fp16*)(src.addr), src_desc.GetDim(0), src_desc.GetDim(1), src_desc.GetDim(2),
@@ -57,7 +56,9 @@ RetCode RiscvDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc
                                   src_desc.GetDim(3), (__fp16*)(dst->addr));
                 return RC_SUCCESS;
             }
+#endif
         }
+#ifdef PPLNN_USE_ARMV8_2_FP16
     } else if (dst_desc.GetDataFormat() != src_desc.GetDataFormat() &&
                dst_desc.GetDataType() != src_desc.GetDataType()) {
         if (dst_desc.GetDataType() == DATATYPE_FLOAT32 && dst_desc.GetDataFormat() == DATAFORMAT_NDARRAY &&
@@ -74,25 +75,39 @@ RetCode RiscvDataConverter::Convert(BufferDesc* dst, const TensorShape& dst_desc
     } else if (dst_desc.GetDataFormat() == src_desc.GetDataFormat() &&
                dst_desc.GetDataType() != src_desc.GetDataType()) {
         if (dst_desc.GetDataType() == DATATYPE_FLOAT32 && src_desc.GetDataType() == DATATYPE_FLOAT16) {
-            CvtFp16ToFp32(src_desc.CalcElementsIncludingPadding(), (__fp16*)(src.addr), (float*)(dst->addr));
+            Fp16ToFp32((__fp16*)src.addr, src_desc.CalcElementsIncludingPadding(), (float*)dst->addr);
             return RC_SUCCESS;
         } else if (dst_desc.GetDataType() == DATATYPE_FLOAT16 && src_desc.GetDataType() == DATATYPE_FLOAT32) {
-            CvtFp32ToFp16(src_desc.CalcElementsIncludingPadding(), (float*)(src.addr), (__fp16*)(dst->addr));
+            Fp32ToFp16((float*)src.addr, src_desc.CalcElementsIncludingPadding(), (__fp16*)dst->addr);
             return RC_SUCCESS;
+        } else {
+            return ppl::kernel::arm_server::neon::cast(&src_desc, &dst_desc, src.addr, dst->addr);
         }
+#endif
     }
+    LOG(ERROR) << "Invalid data type conversion";
     return RC_UNSUPPORTED;
 }
 
-RetCode RiscvDataConverter::ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
-                                          const TensorShape& src_desc, const void*) const {
+RetCode ArmDevice::ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                 const TensorShape& src_desc, const void*) {
     BufferDesc dst_wrapper(dst);
     return Convert(&dst_wrapper, dst_desc, src, src_desc);
 }
 
-RetCode RiscvDataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
-                                            const TensorShape& src_desc, const void*) const {
+RetCode ArmDevice::ConvertToHostAsync(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                      const TensorShape& src_desc, const void* dst_info) {
+    return ConvertToHost(dst, dst_desc, src, src_desc, dst_info);
+}
+
+RetCode ArmDevice::ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                   const TensorShape& src_desc, const void*) {
     return Convert(dst, dst_desc, BufferDesc(const_cast<void*>(src)), src_desc);
 }
 
-}}} // namespace ppl::nn::riscv
+RetCode ArmDevice::ConvertFromHostAsync(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                        const TensorShape& src_desc, const void* src_info) {
+    return ConvertFromHost(dst, dst_desc, src, src_desc, src_info);
+}
+
+}}} // namespace ppl::nn::arm

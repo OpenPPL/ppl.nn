@@ -35,6 +35,10 @@ RetCode TensorImpl::CopyToHost(void* dst) const {
     return buffer_info_.GetDevice()->CopyToHost(dst, buffer_info_.GetBufferDesc(), *buffer_info_.GetShape());
 }
 
+RetCode TensorImpl::CopyToHostAsync(void* dst) const {
+    return buffer_info_.GetDevice()->CopyToHostAsync(dst, buffer_info_.GetBufferDesc(), *buffer_info_.GetShape());
+}
+
 RetCode TensorImpl::CopyFromHostRaw(const void* src) {
     return buffer_info_.GetDevice()->CopyFromHost(&buffer_info_.GetBufferDesc(), src, *buffer_info_.GetShape());
 }
@@ -47,10 +51,22 @@ RetCode TensorImpl::CopyFromHost(const void* src) {
     return buffer_info_.GetDevice()->CopyFromHost(&buffer_info_.GetBufferDesc(), src, *buffer_info_.GetShape());
 }
 
+RetCode TensorImpl::CopyFromHostAsync(const void* src) {
+    auto rc = ReallocBuffer();
+    if (rc != RC_SUCCESS) {
+        return rc;
+    }
+    return buffer_info_.GetDevice()->CopyFromHostAsync(&buffer_info_.GetBufferDesc(), src, *buffer_info_.GetShape());
+}
+
 RetCode TensorImpl::ConvertToHost(void* dst, const TensorShape& dst_desc) const {
-    auto converter = buffer_info_.GetDevice()->GetDataConverter();
-    return converter->ConvertToHost(dst, dst_desc, buffer_info_.GetBufferDesc(), *buffer_info_.GetShape(),
-                                    custom_info_);
+    auto dev = buffer_info_.GetDevice();
+    return dev->ConvertToHost(dst, dst_desc, buffer_info_.GetBufferDesc(), *buffer_info_.GetShape(), custom_info_);
+}
+
+RetCode TensorImpl::ConvertToHostAsync(void* dst, const TensorShape& dst_desc) const {
+    auto dev = buffer_info_.GetDevice();
+    return dev->ConvertToHostAsync(dst, dst_desc, buffer_info_.GetBufferDesc(), *buffer_info_.GetShape(), custom_info_);
 }
 
 RetCode TensorImpl::ConvertFromHost(const void* src, const TensorShape& src_desc) {
@@ -58,9 +74,18 @@ RetCode TensorImpl::ConvertFromHost(const void* src, const TensorShape& src_desc
     if (rc != RC_SUCCESS) {
         return rc;
     }
-    auto converter = buffer_info_.GetDevice()->GetDataConverter();
-    return converter->ConvertFromHost(&buffer_info_.GetBufferDesc(), *buffer_info_.GetShape(), src, src_desc,
-                                      custom_info_);
+    auto dev = buffer_info_.GetDevice();
+    return dev->ConvertFromHost(&buffer_info_.GetBufferDesc(), *buffer_info_.GetShape(), src, src_desc, custom_info_);
+}
+
+RetCode TensorImpl::ConvertFromHostAsync(const void* src, const TensorShape& src_desc) {
+    auto rc = ReallocBuffer();
+    if (rc != RC_SUCCESS) {
+        return rc;
+    }
+    auto dev = buffer_info_.GetDevice();
+    return dev->ConvertFromHostAsync(&buffer_info_.GetBufferDesc(), *buffer_info_.GetShape(), src, src_desc,
+                                     custom_info_);
 }
 
 }} // namespace ppl::nn

@@ -16,6 +16,7 @@
 // under the License.
 
 #include "ppl/nn/utils/generic_cpu_device.h"
+#include "ppl/nn/common/logger.h"
 #include <cstring> // memcpy
 using namespace std;
 using namespace ppl::common;
@@ -57,8 +58,16 @@ RetCode GenericCpuDevice::CopyFromHost(BufferDesc* dst, const void* src, uint64_
     return RC_SUCCESS;
 }
 
+RetCode GenericCpuDevice::CopyFromHostAsync(BufferDesc* dst, const void* src, uint64_t bytes) const {
+    return CopyFromHost(dst, src, bytes);
+}
+
 RetCode GenericCpuDevice::CopyFromHost(BufferDesc* dst, const void* src, const TensorShape& shape) const {
     return CopyFromHost(dst, src, shape.CalcBytesIncludingPadding());
+}
+
+RetCode GenericCpuDevice::CopyFromHostAsync(BufferDesc* dst, const void* src, const TensorShape& shape) const {
+    return CopyFromHostAsync(dst, src, shape.CalcBytesIncludingPadding());
 }
 
 RetCode GenericCpuDevice::CopyToHost(void* dst, const BufferDesc& src, uint64_t bytes) const {
@@ -66,8 +75,16 @@ RetCode GenericCpuDevice::CopyToHost(void* dst, const BufferDesc& src, uint64_t 
     return RC_SUCCESS;
 }
 
+RetCode GenericCpuDevice::CopyToHostAsync(void* dst, const BufferDesc& src, uint64_t bytes) const {
+    return CopyToHost(dst, src.addr, bytes);
+}
+
 RetCode GenericCpuDevice::CopyToHost(void* dst, const BufferDesc& src, const TensorShape& shape) const {
     return CopyToHost(dst, src, shape.CalcBytesIncludingPadding());
+}
+
+RetCode GenericCpuDevice::CopyToHostAsync(void* dst, const BufferDesc& src, const TensorShape& shape) const {
+    return CopyToHostAsync(dst, src, shape.CalcBytesIncludingPadding());
 }
 
 RetCode GenericCpuDevice::Copy(BufferDesc* dst, const BufferDesc& src, uint64_t bytes) const {
@@ -77,6 +94,70 @@ RetCode GenericCpuDevice::Copy(BufferDesc* dst, const BufferDesc& src, uint64_t 
 
 RetCode GenericCpuDevice::Copy(BufferDesc* dst, const BufferDesc& src, const TensorShape& shape) const {
     return Copy(dst, src, shape.CalcBytesIncludingPadding());
+}
+
+template <typename SrcType, typename DstType>
+static void TypedConvert(DstType* dst, const SrcType* src, uint32_t count) {
+    for (uint32_t i = 0; i < count; ++i) {
+        dst[i] = src[i];
+    }
+}
+
+RetCode GenericCpuDevice::Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                  const TensorShape& src_desc, const void*, const void*) {
+    if (dst_desc.GetDataFormat() != DATAFORMAT_NDARRAY) {
+        LOG(ERROR) << "unsupported target format [" << GetDataFormatStr(dst_desc.GetDataFormat()) << "].";
+        return RC_UNSUPPORTED;
+    }
+
+    if (src_desc.GetDataFormat() != DATAFORMAT_NDARRAY) {
+        LOG(ERROR) << "unsupported target format [" << GetDataFormatStr(dst_desc.GetDataFormat()) << "].";
+        return RC_UNSUPPORTED;
+    }
+
+    if (dst_desc.GetDataType() == src_desc.GetDataType()) {
+        memcpy(dst->addr, src.addr, src_desc.CalcBytesIncludingPadding());
+        return RC_SUCCESS;
+    }
+
+    if (dst_desc.GetDataType() == DATATYPE_FLOAT32) {
+        if (src_desc.GetDataType() == DATATYPE_INT64) {
+            TypedConvert(static_cast<float*>(dst->addr), static_cast<const int64_t*>(src.addr),
+                         src_desc.CalcElementsIncludingPadding());
+            return RC_SUCCESS;
+        }
+    } else if (dst_desc.GetDataType() == DATATYPE_INT64) {
+        if (src_desc.GetDataType() == DATATYPE_FLOAT32) {
+            TypedConvert(static_cast<int64_t*>(dst->addr), static_cast<const float*>(src.addr),
+                         src_desc.CalcElementsIncludingPadding());
+            return RC_SUCCESS;
+        }
+    }
+
+    LOG(ERROR) << "unsupported source data type [" << GetDataTypeStr(src_desc.GetDataType())
+               << "] to target data type [" << GetDataTypeStr(dst_desc.GetDataType()) << "].";
+    return RC_UNSUPPORTED;
+}
+
+RetCode GenericCpuDevice::ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                        const TensorShape& src_desc, const void*) {
+    BufferDesc dst_wrapper(dst);
+    return Convert(&dst_wrapper, dst_desc, src, src_desc);
+}
+
+RetCode GenericCpuDevice::ConvertToHostAsync(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                             const TensorShape& src_desc, const void* src_info) {
+    return ConvertToHost(dst, dst_desc, src, src_desc, src_info);
+}
+
+RetCode GenericCpuDevice::ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                          const TensorShape& src_desc, const void*) {
+    return Convert(dst, dst_desc, BufferDesc(const_cast<void*>(src)), src_desc);
+}
+
+RetCode GenericCpuDevice::ConvertFromHostAsync(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                               const TensorShape& src_desc, const void* dst_info) {
+    return ConvertFromHost(dst, dst_desc, src, src_desc, dst_info);
 }
 
 }}} // namespace ppl::nn::utils

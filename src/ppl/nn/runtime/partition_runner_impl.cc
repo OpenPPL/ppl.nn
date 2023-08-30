@@ -64,7 +64,7 @@ RetCode PartitionRunnerImpl::Sync() {
     for (auto e = engctx_->begin(); e != engctx_->end(); ++e) {
         auto dev = e->get()->GetDevice();
         if (dev) {
-            auto rc = dev->Sync();
+            auto rc = dev->Synchronize();
             if (rc != RC_SUCCESS) {
                 LOG(ERROR) << "sync device[" << e->get()->GetName() << "] failed: " << GetRetCodeStr(rc);
                 return rc;

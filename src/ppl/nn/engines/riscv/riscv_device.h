@@ -18,17 +18,15 @@
 #ifndef _ST_HPC_PPL_NN_ENGINES_RISCV_RISCV_DEVICE_H_
 #define _ST_HPC_PPL_NN_ENGINES_RISCV_RISCV_DEVICE_H_
 
-#include <cstring>
-
 #include "ppl/nn/utils/generic_cpu_device.h"
-#include "ppl/nn/engines/riscv/data_converter.h"
 #include "ppl/common/log.h"
+#include <cstring>
 
 namespace ppl { namespace nn { namespace riscv {
 
 class RiscvDevice : public Device {
 public:
-    RiscvDevice(uint64_t alignment) : data_converter_(), allocator_(alignment) {
+    RiscvDevice(uint64_t alignment) : allocator_(alignment) {
         *(uint64_t*)(type_.str) = 0;
         type_.str[0] = 'c';
         type_.str[1] = 'p';
@@ -80,32 +78,63 @@ public:
         memcpy(dst->addr, src, bytes);
         return ppl::common::RC_SUCCESS;
     }
+    ppl::common::RetCode CopyFromHostAsync(BufferDesc* dst, const void* src, uint64_t bytes) const override final {
+        return CopyFromHost(dst, src, bytes);
+    }
+
     ppl::common::RetCode CopyFromHost(BufferDesc* dst, const void* src, const TensorShape& shape) const override final {
         return CopyFromHost(dst, src, shape.CalcBytesIncludingPadding());
+    }
+    ppl::common::RetCode CopyFromHostAsync(BufferDesc* dst, const void* src,
+                                           const TensorShape& shape) const override final {
+        return CopyFromHost(dst, src, shape);
     }
 
     ppl::common::RetCode CopyToHost(void* dst, const BufferDesc& src, uint64_t bytes) const override final {
         memcpy(dst, src.addr, bytes);
         return ppl::common::RC_SUCCESS;
     }
+    ppl::common::RetCode CopyToHostAsync(void* dst, const BufferDesc& src, uint64_t bytes) const override final {
+        return CopyToHost(dst, src, bytes);
+    }
+
     ppl::common::RetCode CopyToHost(void* dst, const BufferDesc& src, const TensorShape& shape) const override final {
         return CopyToHost(dst, src, shape.CalcBytesIncludingPadding());
+    }
+    ppl::common::RetCode CopyToHostAsync(void* dst, const BufferDesc& src,
+                                         const TensorShape& shape) const override final {
+        return CopyToHost(dst, src, shape);
     }
 
     ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, uint64_t bytes) const override final {
         memcpy(dst->addr, src.addr, bytes);
         return ppl::common::RC_SUCCESS;
     }
+
     ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, const TensorShape& shape) const override final {
         return Copy(dst, src, shape.CalcBytesIncludingPadding());
     }
 
-    ppl::common::RetCode Sync() override final {
-        return ppl::common::RC_SUCCESS;
-    }
+    ppl::common::RetCode ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                       const TensorShape& src_desc,
+                                       const void* src_custom_info = nullptr) override final;
+    ppl::common::RetCode ConvertToHostAsync(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                            const TensorShape& src_desc,
+                                            const void* src_custom_info = nullptr) override final;
 
-    const DataConverter* GetDataConverter() const override final {
-        return &data_converter_;
+    ppl::common::RetCode ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                         const TensorShape& src_desc,
+                                         const void* dst_custom_info = nullptr) override final;
+    ppl::common::RetCode ConvertFromHostAsync(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                              const TensorShape& src_desc,
+                                              const void* dst_custom_info = nullptr) override final;
+
+    ppl::common::RetCode Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                 const TensorShape& src_desc, const void* dst_custom_info = nullptr,
+                                 const void* src_custom_info = nullptr) override final;
+
+    ppl::common::RetCode Synchronize() override final {
+        return ppl::common::RC_SUCCESS;
     }
 
     const Type& GetType() const override final {
@@ -118,7 +147,6 @@ public:
 
 private:
     Type type_;
-    RiscvDataConverter data_converter_;
     mutable ppl::common::GenericCpuAllocator allocator_;
 };
 

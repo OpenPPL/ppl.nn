@@ -138,10 +138,16 @@ public:
     ppl::common::RetCode CopyFromHostRaw(const void* src);
 
     ppl::common::RetCode CopyToHost(void* dst) const override;
+    ppl::common::RetCode CopyToHostAsync(void* dst) const override;
+
     ppl::common::RetCode CopyFromHost(const void* src) override;
+    ppl::common::RetCode CopyFromHostAsync(const void* src) override;
 
     ppl::common::RetCode ConvertToHost(void* dst, const TensorShape& dst_desc) const override;
+    ppl::common::RetCode ConvertToHostAsync(void* dst, const TensorShape& dst_desc) const override;
+
     ppl::common::RetCode ConvertFromHost(const void* src, const TensorShape& src_desc) override;
+    ppl::common::RetCode ConvertFromHostAsync(const void* src, const TensorShape& src_desc) override;
 
 private:
     tensortype_t type_;

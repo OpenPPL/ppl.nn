@@ -28,7 +28,7 @@
 namespace ppl { namespace nn { namespace utils {
 
 /** @brief copy buffer to tensor */
-ppl::common::RetCode CopyBuffer(const BufferDesc& src_buf, const TensorShape& src_shape, const Device* src_device,
+ppl::common::RetCode CopyBuffer(const BufferDesc& src_buf, const TensorShape& src_shape, Device* src_device,
                                 TensorImpl* dst, Device* tmp_cpu_device = nullptr);
 
 /** @brief copy one tensor to another */

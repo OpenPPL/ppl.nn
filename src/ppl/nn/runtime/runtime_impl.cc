@@ -307,11 +307,11 @@ RetCode RuntimeImpl::Init(const shared_ptr<ir::GraphTopo>& topo, const shared_pt
                                            &edgeid2object_, &nodeid2kernel_));
 }
 
-RetCode RuntimeImpl::Sync() {
+RetCode RuntimeImpl::Synchronize() {
     for (auto e = engctx_.begin(); e != engctx_.end(); ++e) {
         auto dev = e->get()->GetDevice();
         if (dev) {
-            auto rc = dev->Sync();
+            auto rc = dev->Synchronize();
             if (rc != RC_SUCCESS) {
                 LOG(ERROR) << "sync device[" << e->get()->GetName() << "] failed: " << GetRetCodeStr(rc);
                 return rc;
@@ -321,7 +321,7 @@ RetCode RuntimeImpl::Sync() {
     return RC_SUCCESS;
 }
 
-RetCode RuntimeImpl::Run() {
+RetCode RuntimeImpl::RunAsync() {
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
     Profiler* profiler = profiler_.get();
 #else
@@ -331,10 +331,17 @@ RetCode RuntimeImpl::Run() {
     auto status = sched_->Run(profiler);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Run() failed: " << GetRetCodeStr(status);
+    }
+    return status;
+}
+
+RetCode RuntimeImpl::Run() {
+    auto status = RunAsync();
+    if (status != RC_SUCCESS) {
+        Synchronize();
         return status;
     }
-
-    return Sync();
+    return Synchronize();
 }
 
 RetCode RuntimeImpl::GetProfilingStatistics(ProfilingStatistics* stat) const {

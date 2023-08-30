@@ -20,14 +20,13 @@
 
 #include "ppl/common/generic_cpu_allocator.h"
 #include "ppl/nn/common/device.h"
-#include "ppl/nn/engines/arm/data_converter.h"
 #include <cstring>
 
 namespace ppl { namespace nn { namespace arm {
 
 class ArmDevice : public Device {
 public:
-    ArmDevice(uint64_t alignment, ppl::common::isa_t isa) : isa_(isa), allocator_(alignment), data_converter_(isa) {
+    ArmDevice(uint64_t alignment, ppl::common::isa_t isa) : isa_(isa), allocator_(alignment) {
         *(uint64_t*)(type_.str) = 0;
         type_.str[0] = 'c';
         type_.str[1] = 'p';
@@ -36,7 +35,6 @@ public:
 
     void SetISA(ppl::common::isa_t isa) {
         isa_ = isa;
-        data_converter_.SetISA(isa);
     }
     const ppl::common::isa_t GetISA() const {
         return isa_;
@@ -52,10 +50,6 @@ public:
 
     ppl::common::Allocator* GetAllocator() const {
         return &allocator_;
-    }
-
-    const DataConverter* GetDataConverter() const override final {
-        return &data_converter_;
     }
 
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) override {
@@ -92,27 +86,62 @@ public:
         memcpy(dst->addr, src, bytes);
         return ppl::common::RC_SUCCESS;
     }
+    ppl::common::RetCode CopyFromHostAsync(BufferDesc* dst, const void* src, uint64_t bytes) const override final {
+        return CopyFromHost(dst, src, bytes);
+    }
+
     ppl::common::RetCode CopyFromHost(BufferDesc* dst, const void* src, const TensorShape& shape) const override final {
         return CopyFromHost(dst, src, shape.CalcBytesIncludingPadding());
+    }
+    ppl::common::RetCode CopyFromHostAsync(BufferDesc* dst, const void* src,
+                                           const TensorShape& shape) const override final {
+        return CopyFromHost(dst, src, shape);
     }
 
     ppl::common::RetCode CopyToHost(void* dst, const BufferDesc& src, uint64_t bytes) const override final {
         memcpy(dst, src.addr, bytes);
         return ppl::common::RC_SUCCESS;
     }
+    ppl::common::RetCode CopyToHostAsync(void* dst, const BufferDesc& src, uint64_t bytes) const override final {
+        return CopyToHost(dst, src, bytes);
+    }
+
     ppl::common::RetCode CopyToHost(void* dst, const BufferDesc& src, const TensorShape& shape) const override final {
         return CopyToHost(dst, src, shape.CalcBytesIncludingPadding());
+    }
+    ppl::common::RetCode CopyToHostAsync(void* dst, const BufferDesc& src,
+                                         const TensorShape& shape) const override final {
+        return CopyToHost(dst, src, shape);
     }
 
     ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, uint64_t bytes) const override final {
         memcpy(dst->addr, src.addr, bytes);
         return ppl::common::RC_SUCCESS;
     }
+
     ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, const TensorShape& shape) const override final {
         return Copy(dst, src, shape.CalcBytesIncludingPadding());
     }
 
-    ppl::common::RetCode Sync() override final {
+    ppl::common::RetCode ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                       const TensorShape& src_desc,
+                                       const void* src_custom_info = nullptr) override final;
+    ppl::common::RetCode ConvertToHostAsync(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                            const TensorShape& src_desc,
+                                            const void* src_custom_info = nullptr) override final;
+
+    ppl::common::RetCode ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                         const TensorShape& src_desc,
+                                         const void* dst_custom_info = nullptr) override final;
+    ppl::common::RetCode ConvertFromHostAsync(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                              const TensorShape& src_desc,
+                                              const void* dst_custom_info = nullptr) override final;
+
+    ppl::common::RetCode Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                 const TensorShape& src_desc, const void* dst_custom_info = nullptr,
+                                 const void* src_custom_info = nullptr) override final;
+
+    ppl::common::RetCode Synchronize() override final {
         return ppl::common::RC_SUCCESS;
     }
 
@@ -125,10 +154,14 @@ public:
     }
 
 private:
+    bool MayUseISA(uint32_t flag) const {
+        return !!(isa_ & flag);
+    }
+
+private:
     Type type_;
     ppl::common::isa_t isa_;
     mutable ppl::common::GenericCpuAllocator allocator_;
-    ArmDataConverter data_converter_;
 };
 
 }}} // namespace ppl::nn::arm

@@ -19,7 +19,6 @@
 #define _ST_HPC_PPL_NN_ENGINES_X86_X86_DEVICE_H_
 
 #include "ppl/nn/common/device.h"
-#include "ppl/nn/engines/x86/data_converter.h"
 #include "ppl/common/generic_cpu_allocator.h"
 #include <cstring> // memcpy
 
@@ -27,7 +26,7 @@ namespace ppl { namespace nn { namespace x86 {
 
 class X86Device : public Device {
 public:
-    X86Device(uint64_t alignment, ppl::common::isa_t isa) : isa_(isa), data_converter_(isa), allocator_(alignment) {
+    X86Device(uint64_t alignment, ppl::common::isa_t isa) : isa_(isa), allocator_(alignment) {
         *(uint64_t*)(type_.str) = 0;
         type_.str[0] = 'c';
         type_.str[1] = 'p';
@@ -36,7 +35,6 @@ public:
 
     void SetISA(ppl::common::isa_t isa) {
         isa_ = isa;
-        data_converter_.SetISA(isa);
     }
     const ppl::common::isa_t GetISA() const {
         return isa_;
@@ -88,16 +86,30 @@ public:
         memcpy(dst->addr, src, bytes);
         return ppl::common::RC_SUCCESS;
     }
+    ppl::common::RetCode CopyFromHostAsync(BufferDesc* dst, const void* src, uint64_t bytes) const override final {
+        return CopyFromHost(dst, src, bytes);
+    }
     ppl::common::RetCode CopyFromHost(BufferDesc* dst, const void* src, const TensorShape& shape) const override final {
         return CopyFromHost(dst, src, shape.CalcBytesIncludingPadding());
+    }
+    ppl::common::RetCode CopyFromHostAsync(BufferDesc* dst, const void* src,
+                                           const TensorShape& shape) const override final {
+        return CopyFromHost(dst, src, shape);
     }
 
     ppl::common::RetCode CopyToHost(void* dst, const BufferDesc& src, uint64_t bytes) const override final {
         memcpy(dst, src.addr, bytes);
         return ppl::common::RC_SUCCESS;
     }
+    ppl::common::RetCode CopyToHostAsync(void* dst, const BufferDesc& src, uint64_t bytes) const override final {
+        return CopyToHost(dst, src, bytes);
+    }
     ppl::common::RetCode CopyToHost(void* dst, const BufferDesc& src, const TensorShape& shape) const override final {
         return CopyToHost(dst, src, shape.CalcBytesIncludingPadding());
+    }
+    ppl::common::RetCode CopyToHostAsync(void* dst, const BufferDesc& src,
+                                         const TensorShape& shape) const override final {
+        return CopyToHost(dst, src, shape);
     }
 
     ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, uint64_t bytes) const override final {
@@ -108,13 +120,27 @@ public:
         return Copy(dst, src, shape.CalcBytesIncludingPadding());
     }
 
-    ppl::common::RetCode Sync() override final {
+    ppl::common::RetCode Synchronize() override final {
         return ppl::common::RC_SUCCESS;
     }
 
-    const DataConverter* GetDataConverter() const override final {
-        return &data_converter_;
-    }
+    ppl::common::RetCode ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                       const TensorShape& src_desc,
+                                       const void* src_custom_info = nullptr) override final;
+    ppl::common::RetCode ConvertToHostAsync(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                            const TensorShape& src_desc,
+                                            const void* src_custom_info = nullptr) override final;
+
+    ppl::common::RetCode ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                         const TensorShape& src_desc,
+                                         const void* dst_custom_info = nullptr) override final;
+    ppl::common::RetCode ConvertFromHostAsync(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                              const TensorShape& src_desc,
+                                              const void* dst_custom_info = nullptr) override final;
+
+    ppl::common::RetCode Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                 const TensorShape& src_desc, const void* dst_custom_info = nullptr,
+                                 const void* src_custom_info = nullptr) override final;
 
     const Type& GetType() const override final {
         return type_;
@@ -125,9 +151,13 @@ public:
     }
 
 private:
+    bool MayUseISA(uint32_t flag) const {
+        return !!(isa_ & flag);
+    }
+
+private:
     Type type_;
     ppl::common::isa_t isa_;
-    X86DataConverter data_converter_;
     mutable ppl::common::GenericCpuAllocator allocator_;
 };
 

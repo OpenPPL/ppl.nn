@@ -237,7 +237,7 @@ ppl::common::RetCode CudaEngine::RefitWeightsImpl(map<edgeid_t, const void*>* ed
                 Destructor __tmp_buffer_guard__([dev, &tmp_buffer_desc]() -> void {
                     dev->Free(&tmp_buffer_desc);
                 });
-                dev->GetDataConverter()->ConvertFromHost(&tmp_buffer_desc, dst_shape, data_ptr, src_shape);
+                dev->ConvertFromHost(&tmp_buffer_desc, dst_shape, data_ptr, src_shape);
                 conv_param_t tmp_conv_param;
                 tmp_conv_param.num_flt = dst_shape.GetDim(0);
                 tmp_conv_param.num_chl = dst_shape.GetDim(1);
@@ -257,12 +257,12 @@ ppl::common::RetCode CudaEngine::RefitWeightsImpl(map<edgeid_t, const void*>* ed
             }
         } else if (refit_args_.edge2node[edge_id].find("Norm") != std::string::npos) { // norm
             dst_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-            dev->GetDataConverter()->ConvertFromHost(&buf_info, dst_shape, data_ptr, src_shape);
+            dev->ConvertFromHost(&buf_info, dst_shape, data_ptr, src_shape);
         } else { // matmul just convert and copy
-            dev->GetDataConverter()->ConvertFromHost(&buf_info, dst_shape, data_ptr, src_shape);
+            dev->ConvertFromHost(&buf_info, dst_shape, data_ptr, src_shape);
         }
     }
-    dev->Sync();
+    dev->Synchronize();
     // cudaDeviceSynchronize();
     return RC_SUCCESS;
 }

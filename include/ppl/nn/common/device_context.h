@@ -35,7 +35,12 @@ public:
 
 public:
     virtual ~DeviceContext() {}
+
     virtual const Type& GetType() const = 0;
+
+    /** @brief synchronize all operations on this device */
+    virtual ppl::common::RetCode Synchronize() = 0;
+
     virtual ppl::common::RetCode Configure(uint32_t, ...) = 0;
 };
 
