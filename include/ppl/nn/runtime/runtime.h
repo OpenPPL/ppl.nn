@@ -57,6 +57,16 @@ public:
     */
     virtual ppl::common::RetCode Run() = 0;
 
+    /**
+       @brief run the model with given inputs asynchronously.
+       @note input data must be filled via the returned value of `GetInputTensor()`
+       before calling this function.
+    */
+    virtual ppl::common::RetCode RunAsync() = 0;
+
+    /** @brief waits for all operations to complete. */
+    virtual ppl::common::RetCode Synchronize() = 0;
+
     /** @brief get the number of outputs of the associated graph. */
     virtual uint32_t GetOutputCount() const = 0;
 

@@ -29,29 +29,47 @@ class PPLNN_PUBLIC Tensor {
 public:
     virtual ~Tensor() {}
 
-    /** @brief get tensor's name */
+    /** @brief returns tensor's name */
     virtual const char* GetName() const = 0;
 
-    /** @brief get tensor's shape */
+    /** @brief returns tensor's shape */
     virtual TensorShape* GetShape() const = 0;
 
     /**
-       @brief copy tensor's data to `dst`, which points to a host memory
+       @brief copies tensor's data to `dst`, which points to a host memory.
        @note `dst` MUST have enough space.
     */
     virtual ppl::common::RetCode CopyToHost(void* dst) const = 0;
 
-    /** @brief copy tensor's data from `dst`, which points to a host memory */
+    /**
+       @brief asynchronously copies tensor's data to `dst`, which points to the host memory.
+       @note `dst` MUST have enough space.
+    */
+    virtual ppl::common::RetCode CopyToHostAsync(void* dst) const = 0;
+
+    /** @brief copies tensor's data from `src`, which points to the host memory. */
     virtual ppl::common::RetCode CopyFromHost(const void* src) = 0;
 
+    /** @brief asynchronously copy tensor's data from `src`, which points to a host memory. */
+    virtual ppl::common::RetCode CopyFromHostAsync(const void* src) = 0;
+
     /**
-       @brief convert tensor's data to `dst` with shape `dst_desc`
+       @brief converts tensor's data to `dst` with shape `dst_desc`.
        @note `dst` MUST have enough space.
     */
     virtual ppl::common::RetCode ConvertToHost(void* dst, const TensorShape& dst_desc) const = 0;
 
-    /** @brief convert tensor's data from `src` with shape `src_desc` */
+    /**
+       @brief converts tensor's data to `dst` with shape `dst_desc` asynchronously.
+       @note `dst` MUST have enough space.
+    */
+    virtual ppl::common::RetCode ConvertToHostAsync(void* dst, const TensorShape& dst_desc) const = 0;
+
+    /** @brief converts tensor's data from `src` with shape `src_desc`. */
     virtual ppl::common::RetCode ConvertFromHost(const void* src, const TensorShape& src_desc) = 0;
+
+    /** @brief converts tensor's data from `src` with shape `src_desc` asynchronously. */
+    virtual ppl::common::RetCode ConvertFromHostAsync(const void* src, const TensorShape& src_desc) = 0;
 
     /** @brief get context of the underlying `Device` */
     virtual DeviceContext* GetDeviceContext() const = 0;

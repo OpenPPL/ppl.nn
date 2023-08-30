@@ -34,23 +34,6 @@ public:
         return isa_;
     }
 
-    ppl::common::RetCode ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
-                                       const TensorShape& src_desc,
-                                       const void* src_custom_info = nullptr) const override;
-
-    ppl::common::RetCode ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
-                                         const TensorShape& src_desc,
-                                         const void* dst_custom_info = nullptr) const override;
-
-    ppl::common::RetCode Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
-                                 const TensorShape& src_desc, const void* dst_custom_info = nullptr,
-                                 const void* src_custom_info = nullptr) const override;
-
-private:
-    bool MayUseISA(uint32_t flag) const {
-        return !!(isa_ & flag);
-    }
-
     ppl::common::isa_t isa_;
 };
 

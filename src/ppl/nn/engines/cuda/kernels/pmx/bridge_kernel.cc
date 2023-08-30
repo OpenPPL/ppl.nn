@@ -23,22 +23,30 @@
 
 namespace ppl { namespace nn { namespace cuda {
 
-bool BridgeKernel::EqualTypeAndFormat(const TensorImpl* input, const TensorImpl* output, const CudaTensorQuant& in_quant, const CudaTensorQuant& out_quant) {
+bool BridgeKernel::EqualTypeAndFormat(const TensorImpl* input, const TensorImpl* output,
+                                      const CudaTensorQuant& in_quant, const CudaTensorQuant& out_quant) {
     auto src_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(input->GetShape()->GetDataFormat());
     auto dst_align_size = ppl::common::cuda::GetDataFormatChannelAlignment(output->GetShape()->GetDataFormat());
     CudaTensorKernelQuant in_quant_kernel, out_quant_kernel;
-    in_quant_kernel.format = in_quant.format; in_quant_kernel.type = in_quant.type;
-    in_quant_kernel.per_channel = in_quant.per_channel; in_quant_kernel.bit_width = in_quant.bit_width;
-    in_quant_kernel.scale = in_quant.scale; in_quant_kernel.zero_point = in_quant.zero_point;
-    out_quant_kernel.format = out_quant.format; out_quant_kernel.type = out_quant.type;
-    out_quant_kernel.per_channel = out_quant.per_channel; out_quant_kernel.bit_width = out_quant.bit_width;
-    out_quant_kernel.scale = out_quant.scale; out_quant_kernel.zero_point = out_quant.zero_point;
+    in_quant_kernel.format = in_quant.format;
+    in_quant_kernel.type = in_quant.type;
+    in_quant_kernel.per_channel = in_quant.per_channel;
+    in_quant_kernel.bit_width = in_quant.bit_width;
+    in_quant_kernel.scale = in_quant.scale;
+    in_quant_kernel.zero_point = in_quant.zero_point;
+    out_quant_kernel.format = out_quant.format;
+    out_quant_kernel.type = out_quant.type;
+    out_quant_kernel.per_channel = out_quant.per_channel;
+    out_quant_kernel.bit_width = out_quant.bit_width;
+    out_quant_kernel.scale = out_quant.scale;
+    out_quant_kernel.zero_point = out_quant.zero_point;
 
     if (input->GetShape()->GetDataType() != output->GetShape()->GetDataType()) {
         return false;
     }
 
-    if (input->GetShape()->GetDataType() == ppl::common::DATATYPE_INT8 && !EqualQuant(in_quant_kernel, out_quant_kernel)) {
+    if (input->GetShape()->GetDataType() == ppl::common::DATATYPE_INT8 &&
+        !EqualQuant(in_quant_kernel, out_quant_kernel)) {
         return false;
     }
 
@@ -70,7 +78,7 @@ ppl::common::RetCode BridgeKernel::DoExecute(KernelExecContext* ctx) {
     auto input = ctx->GetInput<TensorImpl>(0);
     auto output = ctx->GetOutput<TensorImpl>(0);
     ppl::common::RetCode status = ppl::common::RC_SUCCESS;
-    auto converter = output->GetDevice()->GetDataConverter();
+    auto dev = (CudaDevice*)output->GetDevice();
 
     auto input_id = input->GetEdge()->GetId();
     auto input_quant = GetCommonParam()->cuda_tensor_info->at(input_id);
@@ -85,9 +93,11 @@ ppl::common::RetCode BridgeKernel::DoExecute(KernelExecContext* ctx) {
 
     if (input->GetShape()->GetDataType() != ppl::common::DATATYPE_INT8 &&
         output->GetShape()->GetDataType() != ppl::common::DATATYPE_INT8) {
-        status = converter->Convert(&output->GetBufferDesc(), *output->GetShape(), input->GetBufferDesc(), *input->GetShape());
+        status =
+            dev->Convert(&output->GetBufferDesc(), *output->GetShape(), input->GetBufferDesc(), *input->GetShape());
     } else {
-        status = ((CudaDataConverter*)converter)->Convert(&output->GetBufferDesc(), *output->GetShape(), output_quant, input->GetBufferDesc(), *input->GetShape(), input_quant);
+        status = dev->Convert(&output->GetBufferDesc(), *output->GetShape(), output_quant, input->GetBufferDesc(),
+                              *input->GetShape(), input_quant);
     }
 
     return status;

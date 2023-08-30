@@ -241,9 +241,9 @@ RetCode DepthwiseDirectInt8::ModifyParam(ir::Node* node, OptKernelOptions& optio
             constant_info.Reshape(newshape); // give the init shape, but the actual shape is padded
             constant_info.SetBuffer(buffer, options.device, true);
         }
-        status = ((CudaDataConverter*)options.device->GetDataConverter())
-                     ->ConvertFromHost(&temp_buffer, postshape, options.quants->at(postedge_id),
-                                       weight_iter->second.data.GetData(), preshape, options.quants->at(preedge_id));
+        status = options.device->ConvertFromHost(&temp_buffer, postshape, options.quants->at(postedge_id),
+                                                 weight_iter->second.data.GetData(), preshape,
+                                                 options.quants->at(preedge_id));
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
             return status;

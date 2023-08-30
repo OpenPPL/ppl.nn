@@ -188,8 +188,7 @@ RetCode DepthwiseDirect::ModifyParam(ir::Node* node, OptKernelOptions& options) 
             constant_info.SetBuffer(buffer, options.device, true);
         }
 
-        status = options.device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
-                                                                     weight_iter->second.data.GetData(), preshape);
+        status = options.device->ConvertFromHost(&temp_buffer, postshape, weight_iter->second.data.GetData(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
             return status;

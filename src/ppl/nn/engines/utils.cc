@@ -32,20 +32,19 @@ void IrShape2TensorShape(const ir::Shape& ir_shape, TensorShape* tensor_shape) {
 
 /* -------------------------------------------------------------------------- */
 
-RetCode CopyBuffer(const BufferDesc& src_buf, const TensorShape& src_shape, const Device* src_dev, TensorImpl* dst,
+RetCode CopyBuffer(const BufferDesc& src_buf, const TensorShape& src_shape, Device* src_dev, TensorImpl* dst,
                    Device* tmp_cpu_device) {
     RetCode status;
     auto dst_dev = dst->GetDevice();
 
     if (dst_dev == src_dev) {
-        auto converter = dst_dev->GetDataConverter();
         status = dst->ReallocBuffer();
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "ReallocBuffer for tensor[" << dst->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
         }
 
-        status = converter->Convert(&dst->GetBufferDesc(), *dst->GetShape(), src_buf, src_shape);
+        status = dst_dev->Convert(&dst->GetBufferDesc(), *dst->GetShape(), src_buf, src_shape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "convert data to tensor[" << dst->GetName() << "] failed: " << GetRetCodeStr(status);
             return status;
@@ -66,8 +65,7 @@ RetCode CopyBuffer(const BufferDesc& src_buf, const TensorShape& src_shape, cons
         });
         auto tmp_buffer = tmp_buffer_desc.addr;
 
-        auto src_converter = src_dev->GetDataConverter();
-        status = src_converter->ConvertToHost(tmp_buffer, *dst->GetShape(), src_buf, src_shape);
+        status = src_dev->ConvertToHost(tmp_buffer, *dst->GetShape(), src_buf, src_shape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy data to host failed: " << GetRetCodeStr(status);
             return status;

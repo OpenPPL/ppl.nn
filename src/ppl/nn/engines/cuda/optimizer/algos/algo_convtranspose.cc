@@ -43,9 +43,10 @@ void ConvTransposeAlgorithm::GetAttrParam(void*& param) const {
 }
 
 bool ConvTransposeAlgorithm::IsSupported(const ir::Node* node, const OptKernelOptions& options,
-                                    dataformat_t input_format) const {
+                                         dataformat_t input_format) const {
     uint32_t group = (reinterpret_cast<CudaConvTransposeParam*>(options.param))->param.group;
-    if (group != 1) return false;
+    if (group != 1)
+        return false;
     const TensorShape& tensor0 = *options.tensors->find(node->GetInput(0))->second->GetShape();
     if (tensor0.GetDataType() != ppl::common::DATATYPE_FLOAT16) {
         return false;
@@ -73,7 +74,7 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
         attr_param_.extra_param.algo_info.splitk = algo_info->second.splitk;
         attr_param_.extra_param.algo_info.splitf = algo_info->second.splitf;
         attr_param_.extra_param.algo_info.algo_name = algo_info->second.kname;
-        if(algo_info->second.splitk > 1)
+        if (algo_info->second.splitk > 1)
             attr_param_.extra_param.algo_info.algo_name += "_spk" + std::to_string(algo_info->second.splitk);
         attr_param_.extra_param.algo_info.ParseAlgoName();
         return 0.0f;
@@ -82,16 +83,18 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
         auto stride_w = attr_param_.param.strides[1];
         if (stride_h != 1 || stride_w != 1) {
             if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
-                attr_param_.extra_param.algo_info.algo_name = "nv2spkSm75Fp16Conv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";
+                attr_param_.extra_param.algo_info.algo_name =
+                    "nv2spkSm75Fp16Conv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";
             } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
-                attr_param_.extra_param.algo_info.algo_name = "nv2spkSm75Int8Conv_imma8816_nhwc_f1_b64x64_w64x32_k32_s16_buf1";
+                attr_param_.extra_param.algo_info.algo_name =
+                    "nv2spkSm75Int8Conv_imma8816_nhwc_f1_b64x64_w64x32_k32_s16_buf1";
             } else {
                 return ALGO_MAX_TIME;
             }
             attr_param_.extra_param.algo_info.kid = 0;
-        }
-        else {
-            attr_param_.extra_param.algo_info.algo_name = "nv2spkSm75Fp16Conv_hmma1688_nhwc_fn_b128x128_w64x64_k32_s32_buf1";
+        } else {
+            attr_param_.extra_param.algo_info.algo_name =
+                "nv2spkSm75Fp16Conv_hmma1688_nhwc_fn_b128x128_w64x64_k32_s32_buf1";
             attr_param_.extra_param.algo_info.kid = 0; // TODO
         }
         attr_param_.extra_param.algo_info.splitk = 1;
@@ -135,13 +138,13 @@ double ConvTransposeAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOption
 #ifdef PPLNN_ENABLE_CUDA_JIT
     // Do select
     LOG(INFO) << "Compiling " << node->GetName();
-    auto timer= 1e-5;
+    auto timer = 1e-5;
 #else
     // Do Select
     auto stream = options.device->GetStream();
-    auto timer = PPLCUDAConvTransposeSelectKernel(options.device->GetDeviceProp(), stream, &shape_in0, input_buffer.addr, weight_buffer.addr,
-                                                  bias_buffer.addr, temp_buffer.addr, &shape_out, output_buffer.addr,
-                                                  &param_kernel_, attr_param_.extra_param.algo_info);
+    auto timer = PPLCUDAConvTransposeSelectKernel(
+        options.device->GetDeviceProp(), stream, &shape_in0, input_buffer.addr, weight_buffer.addr, bias_buffer.addr,
+        temp_buffer.addr, &shape_out, output_buffer.addr, &param_kernel_, attr_param_.extra_param.algo_info);
 #endif
     CudaArgs::AlgoSelects algo_select;
     algo_select.kname = attr_param_.extra_param.algo_info.algo_name;
@@ -201,8 +204,8 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
         auto size = PPLConvTransposeGetFilterBufSizeCudaFp16(&shape_in1);
         ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_temp_buffer, size, RC_OUT_OF_MEMORY)
         ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_input_buffer, postshape.CalcBytesIncludingPadding(), RC_OUT_OF_MEMORY)
-        status = options.device->GetDataConverter()->ConvertFromHost(&filter_input_buffer, postshape,
-                                                                     weight_iter->second.data.GetData(), preshape);
+        status = options.device->ConvertFromHost(&filter_input_buffer, postshape, weight_iter->second.data.GetData(),
+                                                 preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << node->GetName() << " copy constant failed: " << GetRetCodeStr(status);
             return status;
@@ -218,8 +221,9 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
         param_kernel_.output_padding = attr_param_.param.output_padding;
         param_kernel_.output_shape = attr_param_.param.output_shape;
 
-        PPLCUDAConvTransposeCvt(options.device->GetDeviceProp(), stream, filter_input_buffer.addr, filter_temp_buffer.addr,
-                                weight_constat_info.GetBufferDesc().addr, &shape_in1, &param_kernel_);
+        PPLCUDAConvTransposeCvt(options.device->GetDeviceProp(), stream, filter_input_buffer.addr,
+                                filter_temp_buffer.addr, weight_constat_info.GetBufferDesc().addr, &shape_in1,
+                                &param_kernel_);
         postshape.SetDataFormat(ppl::common::DATAFORMAT_NHWC8);
         newshape.SetDataFormat(ppl::common::DATAFORMAT_NHWC8);
 
@@ -262,8 +266,7 @@ RetCode ConvTransposeAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& op
         }
 
         ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, newshape.CalcBytesIncludingPadding(), RC_OUT_OF_MEMORY)
-        status = options.device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
-                                                                     bias_iter->second.data.GetData(), preshape);
+        status = options.device->ConvertFromHost(&temp_buffer, postshape, bias_iter->second.data.GetData(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
             return status;

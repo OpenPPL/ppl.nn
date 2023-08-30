@@ -139,17 +139,17 @@ double TuringHMMAImpgemm::ExcuteTimer(const ir::Node* node, OptKernelOptions& op
 #ifdef PPLNN_ENABLE_CUDA_JIT
     // Do select
     LOG(INFO) << "Compiling " << node->GetName();
-    auto timer = PPLCUDAConvolutionJitSelectKernel(options.device->GetDeviceProp(), stream, shape_in0.GetDataType(), (int4*)input_buffer.addr,
-                                                   (int4*)weight_buffer.addr, (int4*)output_buffer.addr,
-                                                   (int4*)bias_buffer.addr, (int4*)temp_buffer.addr,
-                                                   attr_param_.extra_param.algo_info, temp_conv_param, temp_fuse_param);
+    auto timer = PPLCUDAConvolutionJitSelectKernel(
+        options.device->GetDeviceProp(), stream, shape_in0.GetDataType(), (int4*)input_buffer.addr,
+        (int4*)weight_buffer.addr, (int4*)output_buffer.addr, (int4*)bias_buffer.addr, (int4*)temp_buffer.addr,
+        attr_param_.extra_param.algo_info, temp_conv_param, temp_fuse_param);
     LOG(INFO) << "select kernel " << attr_param_.extra_param.algo_info.algo_name;
 #else
     // Do select
-    auto timer = PPLCUDAConvolutionSelectKernel(options.device->GetDeviceProp(), stream, shape_in0.GetDataType(), (int4*)input_buffer.addr,
-                                                (int4*)weight_buffer.addr, (int4*)output_buffer.addr,
-                                                (int4*)bias_buffer.addr, (int4*)temp_buffer.addr,
-                                                attr_param_.extra_param.algo_info, temp_conv_param, temp_fuse_param);
+    auto timer = PPLCUDAConvolutionSelectKernel(
+        options.device->GetDeviceProp(), stream, shape_in0.GetDataType(), (int4*)input_buffer.addr,
+        (int4*)weight_buffer.addr, (int4*)output_buffer.addr, (int4*)bias_buffer.addr, (int4*)temp_buffer.addr,
+        attr_param_.extra_param.algo_info, temp_conv_param, temp_fuse_param);
 #endif
     CudaArgs::AlgoSelects algo_select;
     algo_select.kname = attr_param_.extra_param.algo_info.algo_name;
@@ -205,8 +205,7 @@ RetCode TuringHMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
         }
 
         ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, newshape.CalcBytesIncludingPadding(), RC_OUT_OF_MEMORY)
-        status = options.device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
-                                                                     weight_iter->second.data.GetData(), preshape);
+        status = options.device->ConvertFromHost(&temp_buffer, postshape, weight_iter->second.data.GetData(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << node->GetName() << " copy constant failed: " << GetRetCodeStr(status);
             return status;
@@ -258,8 +257,7 @@ RetCode TuringHMMAImpgemm::ModifyParam(ir::Node* node, OptKernelOptions& options
         }
 
         ALLOC_BUFFERF_FOR_ALGO_SELECT(temp_buffer, newshape.CalcBytesIncludingPadding(), RC_OUT_OF_MEMORY)
-        status = options.device->GetDataConverter()->ConvertFromHost(&temp_buffer, postshape,
-                                                                     bias_iter->second.data.GetData(), preshape);
+        status = options.device->ConvertFromHost(&temp_buffer, postshape, bias_iter->second.data.GetData(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
             return status;

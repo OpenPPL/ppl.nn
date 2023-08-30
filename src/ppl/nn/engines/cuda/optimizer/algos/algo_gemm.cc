@@ -117,9 +117,11 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
         return 0.0f;
     } else { // Give the default kernel
         if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
-            attr_param_.extra_param.algo_info.algo_name = "nv2spkSm75Fp16Conv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";
+            attr_param_.extra_param.algo_info.algo_name =
+                "nv2spkSm75Fp16Conv_hmma1688_nhwc_f1_b128x128_w64x64_k32_s32_buf1";
         } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
-            attr_param_.extra_param.algo_info.algo_name = "nv2spkSm75Int8Conv_imma8816_nhwc_f1_b64x64_w64x32_k32_s16_buf1";
+            attr_param_.extra_param.algo_info.algo_name =
+                "nv2spkSm75Int8Conv_imma8816_nhwc_f1_b64x64_w64x32_k32_s16_buf1";
         } else {
             return ALGO_MAX_TIME;
         }
@@ -163,15 +165,15 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
     // Do select
     LOG(INFO) << "Compiling " << node->GetName();
     if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
-        timer = PPLCUDAGemmJITSelectKernel(options.device->GetDeviceProp(), stream, shape_in0.GetDataType(), &shape_in0, input_buffer.addr,
-                                           &shape_in1, weight_buffer.addr, bias_buffer.addr, &shape_out,
-                                           output_buffer.addr, temp_buffer.addr, temp_conv_param, temp_fuse_param,
-                                           attr_param_.extra_param.algo_info);
+        timer = PPLCUDAGemmJITSelectKernel(options.device->GetDeviceProp(), stream, shape_in0.GetDataType(), &shape_in0,
+                                           input_buffer.addr, &shape_in1, weight_buffer.addr, bias_buffer.addr,
+                                           &shape_out, output_buffer.addr, temp_buffer.addr, temp_conv_param,
+                                           temp_fuse_param, attr_param_.extra_param.algo_info);
     } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
-        timer = PPLCUDAGemmJITSelectKernelInt8(options.device->GetDeviceProp(), stream, shape_in0.GetDataType(), &shape_in0,
-                                               input_buffer.addr, &shape_in1, weight_buffer.addr, bias_buffer.addr,
-                                               &shape_out, output_buffer.addr, temp_buffer.addr, temp_conv_param,
-                                               temp_quant_param, temp_fuse_param, attr_param_.extra_param.algo_info);
+        timer = PPLCUDAGemmJITSelectKernelInt8(
+            options.device->GetDeviceProp(), stream, shape_in0.GetDataType(), &shape_in0, input_buffer.addr, &shape_in1,
+            weight_buffer.addr, bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr, temp_conv_param,
+            temp_quant_param, temp_fuse_param, attr_param_.extra_param.algo_info);
     }
     LOG(INFO) << "select kernel " << attr_param_.extra_param.algo_info.algo_name;
 #else
@@ -182,14 +184,15 @@ double GemmAlgorithm::ExcuteTimer(const ir::Node* node, OptKernelOptions& option
     param_kernel_.transA = attr_param_.param.transA;
     param_kernel_.transB = attr_param_.param.transB;
     if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
-        timer = PPLCUDAGemmSelectKernel(options.device->GetDeviceProp(), stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
-                                        bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr,
-                                        param_kernel_, temp_fuse_param, attr_param_.extra_param.algo_info);
+        timer = PPLCUDAGemmSelectKernel(options.device->GetDeviceProp(), stream, &shape_in0, input_buffer.addr,
+                                        &shape_in1, weight_buffer.addr, bias_buffer.addr, &shape_out,
+                                        output_buffer.addr, temp_buffer.addr, param_kernel_, temp_fuse_param,
+                                        attr_param_.extra_param.algo_info);
     } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
-        timer = PPLCUDAGemmSelectKernelInt8(options.device->GetDeviceProp(), stream, &shape_in0, input_buffer.addr, &shape_in1, weight_buffer.addr,
-                                            bias_buffer.addr, &shape_out, output_buffer.addr, temp_buffer.addr,
-                                            param_kernel_, temp_quant_param, temp_fuse_param,
-                                            attr_param_.extra_param.algo_info);
+        timer = PPLCUDAGemmSelectKernelInt8(options.device->GetDeviceProp(), stream, &shape_in0, input_buffer.addr,
+                                            &shape_in1, weight_buffer.addr, bias_buffer.addr, &shape_out,
+                                            output_buffer.addr, temp_buffer.addr, param_kernel_, temp_quant_param,
+                                            temp_fuse_param, attr_param_.extra_param.algo_info);
     }
 #endif
     CudaArgs::AlgoSelects algo_select;
@@ -309,13 +312,13 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
         });
 
         if (shape_in0.GetDataType() == DATATYPE_FLOAT16) {
-            status = options.device->GetDataConverter()->ConvertFromHost(
-                &weight_constat_info.GetBufferDesc(), postshape, weight_iter->second.data.GetData(), preshape);
+            status = options.device->ConvertFromHost(&weight_constat_info.GetBufferDesc(), postshape,
+                                                     weight_iter->second.data.GetData(), preshape);
         } else if (shape_in0.GetDataType() == DATATYPE_INT8) {
             auto quants = options.quants;
-            status = ((CudaDataConverter*)options.device->GetDataConverter())
-                         ->ConvertFromHost(&weight_constat_info.GetBufferDesc(), postshape, (*quants)[postedge_id],
-                                           weight_iter->second.data.GetData(), preshape, (*quants)[preedge_id]);
+            status =
+                options.device->ConvertFromHost(&weight_constat_info.GetBufferDesc(), postshape, (*quants)[postedge_id],
+                                                weight_iter->second.data.GetData(), preshape, (*quants)[preedge_id]);
         }
         if (status != RC_SUCCESS) {
             LOG(ERROR) << node->GetName() << " copy constant failed: " << GetRetCodeStr(status);
@@ -374,8 +377,8 @@ RetCode GemmAlgorithm::ModifyParam(ir::Node* node, OptKernelOptions& options) {
             bias_constat_info.SetBuffer(buffer, options.device, true);
         }
 
-        auto status = options.device->GetDataConverter()->ConvertFromHost(&bias_constat_info.GetBufferDesc(), postshape,
-                                                                          bias_iter->second.data.GetData(), preshape);
+        auto status = options.device->ConvertFromHost(&bias_constat_info.GetBufferDesc(), postshape,
+                                                      bias_iter->second.data.GetData(), preshape);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "copy constant failed: " << GetRetCodeStr(status);
             return status;

@@ -131,7 +131,7 @@ static RetCode InitNdarrayBufferInfo(const TensorShape& inshape, const BufferDes
         return status;
     }
 
-    status = device->GetDataConverter()->Convert(&info->GetBufferDesc(), *info->GetShape(), inbuf, inshape);
+    status = device->Convert(&info->GetBufferDesc(), *info->GetShape(), inbuf, inshape);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "convert data format from [" << GetDataFormatStr(inshape.GetDataFormat())
                    << "] to [NDARRAY] failed: " << GetRetCodeStr(status);

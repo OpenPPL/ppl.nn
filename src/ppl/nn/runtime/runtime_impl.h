@@ -83,6 +83,9 @@ public:
     Tensor* GetTensor(const char* name) const override;
 
     ppl::common::RetCode Run() override;
+    ppl::common::RetCode RunAsync() override;
+
+    ppl::common::RetCode Synchronize() override;
 
     uint32_t GetDeviceContextCount() const override {
         return engctx_.size();
@@ -91,18 +94,11 @@ public:
         return engctx_[idx]->GetDevice();
     }
 
-    DeviceContext* GetHostDeviceContext() const {
+    DeviceContext* GetHostDeviceContext() const override {
         return &cpu_device_;
     }
 
     ppl::common::RetCode GetProfilingStatistics(ProfilingStatistics* stat) const override;
-
-private:
-    /**
-       @brief blocks until all operations finish.
-       @note MUST be called before getting outputs or profiling statistics in case some engine may run asynchronously.
-    */
-    ppl::common::RetCode Sync();
 
 private:
     std::shared_ptr<Scheduler> sched_;

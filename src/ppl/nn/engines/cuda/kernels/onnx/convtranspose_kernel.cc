@@ -107,7 +107,7 @@ ppl::common::RetCode ConvTransposeKernel::DoExecute(KernelExecContext* ctx) {
         ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_temp_buffer, size, ALGO_MAX_TIME)
         ALLOC_BUFFERF_FOR_ALGO_SELECT(filter_input_buffer, W->GetShape()->CalcBytesIncludingPadding(), ALGO_MAX_TIME)
         auto filter_shape = *W->GetShape(); filter_shape.SetDataFormat(ppl::common::DATAFORMAT_NDARRAY);
-        GetCudaDevice()->GetDataConverter()->Convert(&filter_input_buffer, filter_shape, W->GetBufferDesc(), *W->GetShape());
+        GetCudaDevice()->Convert(&filter_input_buffer, filter_shape, W->GetBufferDesc(), *W->GetShape());
         PPLCUDAConvTransposeCvt(GetCudaDevice()->GetDeviceProp(), stream, filter_input_buffer.addr, filter_temp_buffer.addr,
                                 weight_buffer.addr, W->GetShape(), &param_kernel_);
     }

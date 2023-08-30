@@ -23,7 +23,6 @@
 #include "ppl/nn/common/tensor_shape.h"
 #include "ppl/nn/common/buffer_desc.h"
 #include "ppl/nn/common/device_context.h"
-#include "ppl/nn/common/data_converter.h"
 #include "ppl/nn/common/types.h"
 
 namespace ppl { namespace nn {
@@ -57,6 +56,7 @@ public:
        @param src pointer to cpu memory
     */
     virtual ppl::common::RetCode CopyFromHost(BufferDesc* dst, const void* src, uint64_t bytes) const = 0;
+    virtual ppl::common::RetCode CopyFromHostAsync(BufferDesc* dst, const void* src, uint64_t bytes) const = 0;
 
     /**
        @brief copy data described by `shape` from `src` to `dst`
@@ -64,6 +64,8 @@ public:
        @param src points to cpu memory
     */
     virtual ppl::common::RetCode CopyFromHost(BufferDesc* dst, const void* src, const TensorShape& shape) const = 0;
+    virtual ppl::common::RetCode CopyFromHostAsync(BufferDesc* dst, const void* src,
+                                                   const TensorShape& shape) const = 0;
 
     /**
        @brief copy `bytes` bytes from `src` to `dst`
@@ -71,6 +73,7 @@ public:
        @param src points to data area on this device
     */
     virtual ppl::common::RetCode CopyToHost(void* dst, const BufferDesc& src, uint64_t bytes) const = 0;
+    virtual ppl::common::RetCode CopyToHostAsync(void* dst, const BufferDesc& src, uint64_t bytes) const = 0;
 
     /**
        @brief copy data described by `shape` from `src` to `dst`
@@ -78,6 +81,7 @@ public:
        @param src points to data area on this device
     */
     virtual ppl::common::RetCode CopyToHost(void* dst, const BufferDesc& src, const TensorShape& shape) const = 0;
+    virtual ppl::common::RetCode CopyToHostAsync(void* dst, const BufferDesc& src, const TensorShape& shape) const = 0;
 
     /**
        @brief copy `bytes` bytes from `src` to `dst`
@@ -93,11 +97,43 @@ public:
     */
     virtual ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, const TensorShape& shape) const = 0;
 
-    /** @brief synchronize all operations on this device */
-    virtual ppl::common::RetCode Sync() = 0;
+    /**
+       @brief convert data described by `src_desc` from `src` to `dst` described by `dst_desc`
+       @param dst points to cpu memory
+       @param dst_desc shape of `dst`
+       @param src points to data area of a device
+       @param src_desc shape of `src`
+    */
+    virtual ppl::common::RetCode ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                               const TensorShape& src_desc, const void* src_custom_info = nullptr) = 0;
+    virtual ppl::common::RetCode ConvertToHostAsync(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                                    const TensorShape& src_desc,
+                                                    const void* src_custom_info = nullptr) = 0;
 
-    /** @brief get DataConverter that can process data on this device */
-    virtual const DataConverter* GetDataConverter() const = 0;
+    /**
+       @brief convert data described by `src_desc` from `src` to `dst` described by `dst_desc`
+       @param dst points to data area of a device
+       @param dst_desc shape of `dst`
+       @param src points to cpu memory
+       @param src_desc shape of `src`
+    */
+    virtual ppl::common::RetCode ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                                 const TensorShape& src_desc,
+                                                 const void* dst_custom_info = nullptr) = 0;
+    virtual ppl::common::RetCode ConvertFromHostAsync(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                                      const TensorShape& src_desc,
+                                                      const void* dst_custom_info = nullptr) = 0;
+
+    /**
+       @brief convert data described by `src_desc` from `src` to `dst` described by `dst_desc`
+       @param dst pointer to data area of a device
+       @param dst_desc shape of `dst`
+       @param src pointer to data area of a device
+       @param src_desc shape of `src`
+    */
+    virtual ppl::common::RetCode Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                         const TensorShape& src_desc, const void* dst_custom_info = nullptr,
+                                         const void* src_custom_info = nullptr) = 0;
 };
 
 }} // namespace ppl::nn

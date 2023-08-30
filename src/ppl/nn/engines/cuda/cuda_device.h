@@ -24,9 +24,10 @@
 
 #include <map>
 #include <random>
+#include <functional>
 
-#include "ppl/nn/engines/cuda/data_converter.h"
 #include "ppl/nn/engines/cuda/engine_options.h"
+#include "ppl/nn/engines/cuda/cuda_common_param.h"
 #include "ppl/common/cuda/nccl_utils.h"
 
 namespace ppl { namespace nn { namespace cuda {
@@ -65,19 +66,50 @@ public:
     }
 
     ppl::common::RetCode CopyFromHost(BufferDesc* dst, const void* src, uint64_t bytes) const override final;
+    ppl::common::RetCode CopyFromHostAsync(BufferDesc* dst, const void* src, uint64_t bytes) const override final;
+
     ppl::common::RetCode CopyFromHost(BufferDesc* dst, const void* src, const TensorShape&) const override final;
+    ppl::common::RetCode CopyFromHostAsync(BufferDesc* dst, const void* src, const TensorShape&) const override final;
 
     ppl::common::RetCode CopyToHost(void* dst, const BufferDesc& src, uint64_t bytes) const override final;
+    ppl::common::RetCode CopyToHostAsync(void* dst, const BufferDesc& src, uint64_t bytes) const override final;
+
     ppl::common::RetCode CopyToHost(void* dst, const BufferDesc& src, const TensorShape&) const override final;
+    ppl::common::RetCode CopyToHostAsync(void* dst, const BufferDesc& src, const TensorShape&) const override final;
 
     ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, uint64_t bytes) const override final;
     ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, const TensorShape&) const override final;
 
-    ppl::common::RetCode Sync() override final;
+    ppl::common::RetCode ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                       const TensorShape& src_desc,
+                                       const void* src_custom_info = nullptr) override final;
+    ppl::common::RetCode ConvertToHostAsync(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                            const TensorShape& src_desc,
+                                            const void* src_custom_info = nullptr) override final;
 
-    const DataConverter* GetDataConverter() const override final {
-        return &data_converter_;
-    }
+    ppl::common::RetCode ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                         const TensorShape& src_desc,
+                                         const void* dst_custom_info = nullptr) override final;
+    ppl::common::RetCode ConvertFromHostAsync(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                              const TensorShape& src_desc,
+                                              const void* dst_custom_info = nullptr) override final;
+
+    ppl::common::RetCode Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                 const TensorShape& src_desc, const void* dst_custom_info = nullptr,
+                                 const void* src_custom_info = nullptr) override final;
+
+    ppl::common::RetCode ConvertToHost(void* dst, const TensorShape& dst_desc, const CudaTensorQuant& dst_quant,
+                                       const BufferDesc& src, const TensorShape& src_desc,
+                                       const CudaTensorQuant& src_quant);
+
+    ppl::common::RetCode ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const CudaTensorQuant& dst_quant,
+                                         const void* src, const TensorShape& src_desc,
+                                         const CudaTensorQuant& src_quant);
+
+    ppl::common::RetCode Convert(BufferDesc* dst, const TensorShape& dst_desc, const CudaTensorQuant& dst_quant,
+                                 const BufferDesc& src, const TensorShape& src_desc, const CudaTensorQuant& src_quant);
+
+    ppl::common::RetCode Synchronize() override final;
 
     const Type& GetType() const override final {
         return type_;
@@ -119,13 +151,22 @@ public:
     }
 
 private:
+    ppl::common::RetCode ConvertToHostCommon(
+        void* dst, const TensorShape& dst_desc, const BufferDesc& src, const TensorShape& src_desc,
+        const void* src_info,
+        const std::function<ppl::common::RetCode(void*, const BufferDesc&, const TensorShape&)>& copy_fn);
+    ppl::common::RetCode ConvertFromHostCommon(
+        BufferDesc* dst, const TensorShape& dst_desc, const void* src, const TensorShape& src_desc,
+        const void* dst_info,
+        const std::function<ppl::common::RetCode(BufferDesc*, const void*, const TensorShape&)>& copy_fn);
+
+private:
     Type type_;
     int device_id_ = INT_MAX;
     bool enable_cuda_graph_ = false;
     cudaStream_t stream_ = nullptr;
     cublasLtHandle_t cublas_handle_ = nullptr;
     cudaDeviceProp device_prop_;
-    CudaDataConverter data_converter_;
     std::map<edgeid_t, BufferDesc> edge2buffer_;
     ppl::common::NcclParam* tp_nccl_param_ = nullptr;
 

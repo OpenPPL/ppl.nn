@@ -19,7 +19,6 @@
 #define _ST_HPC_PPL_NN_UTILS_GENERIC_CPU_DEVICE_H_
 
 #include "ppl/nn/common/device.h"
-#include "ppl/nn/utils/generic_cpu_data_converter.h"
 #include "ppl/common/generic_cpu_allocator.h"
 
 namespace ppl { namespace nn { namespace utils {
@@ -38,23 +37,38 @@ public:
     void Free(BufferDesc*) override;
 
     ppl::common::RetCode CopyFromHost(BufferDesc* dst, const void* src, uint64_t bytes) const override;
+    ppl::common::RetCode CopyFromHostAsync(BufferDesc* dst, const void* src, uint64_t bytes) const override;
     ppl::common::RetCode CopyFromHost(BufferDesc* dst, const void* src, const TensorShape&) const override;
+    ppl::common::RetCode CopyFromHostAsync(BufferDesc* dst, const void* src, const TensorShape&) const override;
+
     ppl::common::RetCode CopyToHost(void* dst, const BufferDesc& src, uint64_t bytes) const override;
+    ppl::common::RetCode CopyToHostAsync(void* dst, const BufferDesc& src, uint64_t bytes) const override;
     ppl::common::RetCode CopyToHost(void* dst, const BufferDesc& src, const TensorShape&) const override;
+    ppl::common::RetCode CopyToHostAsync(void* dst, const BufferDesc& src, const TensorShape&) const override;
 
     ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, uint64_t bytes) const override;
     ppl::common::RetCode Copy(BufferDesc* dst, const BufferDesc& src, const TensorShape&) const override;
 
-    ppl::common::RetCode Sync() override {
-        return ppl::common::RC_SUCCESS;
-    }
-
-    const DataConverter* GetDataConverter() const override {
-        return &data_converter_;
-    }
+    ppl::common::RetCode ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                       const TensorShape& src_desc, const void* src_custom_info = nullptr) override;
+    ppl::common::RetCode ConvertToHostAsync(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                            const TensorShape& src_desc,
+                                            const void* src_custom_info = nullptr) override;
+    ppl::common::RetCode ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                         const TensorShape& src_desc, const void* dst_custom_info = nullptr) override;
+    ppl::common::RetCode ConvertFromHostAsync(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                              const TensorShape& src_desc,
+                                              const void* dst_custom_info = nullptr) override;
+    ppl::common::RetCode Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                 const TensorShape& src_desc, const void* dst_custom_info = nullptr,
+                                 const void* src_custom_info = nullptr) override;
 
     const Type& GetType() const override {
         return type_;
+    }
+
+    ppl::common::RetCode Synchronize() override {
+        return ppl::common::RC_SUCCESS;
     }
 
     ppl::common::RetCode Configure(uint32_t, ...) override {
@@ -64,7 +78,6 @@ public:
 private:
     Type type_;
     mutable ppl::common::GenericCpuAllocator allocator_;
-    GenericCpuDataConverter data_converter_;
 };
 
 }}} // namespace ppl::nn::utils

@@ -15,19 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <cstring> // memcpy
-#include <vector>
-
-#include "ppl/nn/engines/x86/data_converter.h"
+#include "ppl/nn/engines/x86/x86_device.h"
 #include "ppl/kernel/x86/common/cast.h"
 #include "ppl/kernel/x86/fp32/reorder.h"
 #include "ppl/kernel/x86/int64/reorder.h"
+#include <cstring> // memcpy
+#include <vector>
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace x86 {
 
-RetCode X86DataConverter::Convert(BufferDesc* dst_buf, const TensorShape& dst_desc, const BufferDesc& src_buf,
-                                  const TensorShape& src_desc, const void*, const void*) const {
+RetCode X86Device::Convert(BufferDesc* dst_buf, const TensorShape& dst_desc, const BufferDesc& src_buf,
+                           const TensorShape& src_desc, const void*, const void*) {
     const auto src_data_type = src_desc.GetDataType();
     const auto dst_data_type = dst_desc.GetDataType();
     const auto src_data_format = src_desc.GetDataFormat();
@@ -91,15 +90,25 @@ RetCode X86DataConverter::Convert(BufferDesc* dst_buf, const TensorShape& dst_de
     return RC_UNSUPPORTED;
 }
 
-RetCode X86DataConverter::ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
-                                        const TensorShape& src_desc, const void*) const {
+RetCode X86Device::ConvertToHost(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                 const TensorShape& src_desc, const void*) {
     BufferDesc dst_wrapper(dst);
     return Convert(&dst_wrapper, dst_desc, src, src_desc);
 }
 
-RetCode X86DataConverter::ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
-                                          const TensorShape& src_desc, const void*) const {
+RetCode X86Device::ConvertToHostAsync(void* dst, const TensorShape& dst_desc, const BufferDesc& src,
+                                      const TensorShape& src_desc, const void* src_info) {
+    return ConvertToHost(dst, dst_desc, src, src_desc, src_info);
+}
+
+RetCode X86Device::ConvertFromHost(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                   const TensorShape& src_desc, const void*) {
     return Convert(dst, dst_desc, BufferDesc(const_cast<void*>(src)), src_desc);
+}
+
+RetCode X86Device::ConvertFromHostAsync(BufferDesc* dst, const TensorShape& dst_desc, const void* src,
+                                        const TensorShape& src_desc, const void* dst_info) {
+    return ConvertFromHost(dst, dst_desc, src, src_desc, dst_info);
 }
 
 }}} // namespace ppl::nn::x86
