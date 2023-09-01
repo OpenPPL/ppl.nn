@@ -213,6 +213,7 @@ static void FinalizeMPI() {
 #endif
 
 /* -------------------------------------------------------------------------- */
+
 #ifdef PPLNN_USE_LLM_CUDA
 
 Define_bool_opt("--use-llm-cuda", g_flag_use_llm_cuda, false, "use llm cuda engine");
@@ -223,6 +224,8 @@ Define_string_opt("--in-devices", g_flag_in_devices, "",
                         "specify device of each input separated by comma, "
                         "only accept \"host\" and \"device\", "
                         "all tensor is set to \"device\" by default");
+
+#include <cuda_runtime.h>
 
 #ifdef PPLNN_CUDA_ENABLE_NCCL
 #include <nccl.h>
