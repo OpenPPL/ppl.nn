@@ -118,8 +118,6 @@ unset(__PPLNN_COMMIT__)
 
 # --------------------------------------------------------------------------- #
 
-# TODO XXX FIXME
-
 set(__LLM_KERNEL_CUDA_COMMIT__ master)
 
 if(PPLNN_DEP_PPL_LLM_KERNEL_CUDA_PKG)
