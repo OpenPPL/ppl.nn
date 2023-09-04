@@ -28,7 +28,7 @@ git clone https://github.com/openppl-public/ppl.nn.llm.git
 
 ```bash
 cd ppl.nn.llm
-./build.sh -DPPLNN_USE_LLM_CUDA=ON
+./build.sh -DPPLNN_USE_LLM_CUDA=ON -DPPLNN_CUDA_ENABLE_NCCL=ON -DPPLNN_ENABLE_CUDA_JIT=OFF -DPPLNN_CUDA_ARCHITECTURES="'80;86;87'" -DPPLCOMMON_CUDA_ARCHITECTURES="'80;86;87'"
 ```
 
 ## Documents
