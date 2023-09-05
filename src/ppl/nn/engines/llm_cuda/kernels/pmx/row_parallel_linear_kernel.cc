@@ -70,7 +70,9 @@ ppl::common::RetCode RowParallelLinearKernel::DoExecute(KernelExecContext* ctx) 
         input_shape, input->GetBufferPtr(), nullptr,
         weight_shape, weight->GetBufferPtr(),
         output_shape, output->GetBufferPtr(),
-        nullptr, nullptr, 1, nullptr, 0,
+        nullptr, nullptr, 1,
+        GetCudaDevice()->GetCubalsWorkspace(),
+        GetCudaDevice()->GetCublasWorkspaceSize(),
         false, param_->input_is_parallel, cublas_algo);
 
 }

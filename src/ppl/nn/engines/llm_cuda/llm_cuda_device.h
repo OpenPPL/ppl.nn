@@ -90,6 +90,14 @@ public:
         return cublas_handle_;
     }
 
+    void* GetCubalsWorkspace() {
+        return cublas_workspace_;
+    }
+
+    const int GetCublasWorkspaceSize() const {
+        return cublas_workspace_size_;
+    }
+
     ppl::common::NcclParam* GetTensorParallelNcclParam() const {
         return tensor_parallel_nccl_param_;
     }
@@ -142,6 +150,8 @@ protected:
     ppl::common::NcclParam* tensor_parallel_nccl_param_ = nullptr;
 
     cublasLtHandle_t cublas_handle_ = nullptr;
+    void* cublas_workspace_ = nullptr;
+    int cublas_workspace_size_ = 0;
 };
 
 }}}} // namespace ppl::nn::llm::cuda
