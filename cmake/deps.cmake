@@ -83,9 +83,6 @@ set(PPLCOMMON_BUILD_BENCHMARK OFF CACHE BOOL "disable pplcommon benchmark")
 if(PPLNN_ENABLE_PYTHON_API)
     set(PPLCOMMON_ENABLE_PYTHON_API ON)
 endif()
-if(PPLNN_ENABLE_LUA_API)
-    set(PPLCOMMON_ENABLE_LUA_API ON)
-endif()
 if(PPLNN_HOLD_DEPS)
     set(PPLCOMMON_HOLD_DEPS ON)
 endif()
@@ -221,27 +218,6 @@ else()
 endif()
 
 unset(__PYBIND11_TAG__)
-
-# --------------------------------------------------------------------------- #
-
-set(LUACPP_INSTALL OFF CACHE BOOL "")
-set(LUACPP_BUILD_TESTS OFF CACHE BOOL "")
-
-set(__LUACPP_COMMIT__ d4e60a321a19a05a34bd15d3d508647f394007f3)
-
-if(PPLNN_DEP_LUACPP_PKG)
-    hpcc_declare_pkg_dep(luacpp
-        ${PPLNN_DEP_LUACPP_PKG})
-elseif(PPLNN_DEP_LUACPP_GIT)
-    hpcc_declare_git_dep(luacpp
-        ${PPLNN_DEP_LUACPP_GIT}
-        ${__LUACPP_COMMIT__})
-else()
-    hpcc_declare_pkg_dep(luacpp
-        "https://github.com/ouonline/luacpp/archive/${__LUACPP_COMMIT__}.zip")
-endif()
-
-unset(__LUACPP_COMMIT__)
 
 # --------------------------------------------------------------------------- #
 

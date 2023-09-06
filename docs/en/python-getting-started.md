@@ -44,7 +44,7 @@ status = runtime_builder.LoadModelFromFile(onnx_model_file)
 
 loads an ONNX model from the specified file.
 
-```lua
+```python
 resources = RuntimeBuilderResources()
 resources.engines = [x86_engine] # or = [cuda_engine]
 runtime_builder.SetResources(resources)

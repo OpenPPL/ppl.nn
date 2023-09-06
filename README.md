@@ -59,9 +59,6 @@ Refer to [Documents](#documents) for more details.
   - Python
     - [Getting Started](docs/en/python-getting-started.md)
     - [API Reference](docs/en/python-api-reference.md)
-  - Lua
-    - [Getting Started](docs/en/lua-getting-started.md)
-    - [API Reference](docs/en/lua-api-reference.md)
 * Develop Guide
   - [Adding New Engines and Ops](docs/en/add-new-engines-and-ops.md)
   - X86

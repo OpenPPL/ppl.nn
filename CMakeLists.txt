@@ -16,7 +16,6 @@ option(PPLNN_ENABLE_ONNX_MODEL "enable onnx format support" ON)
 option(PPLNN_ENABLE_PMX_MODEL "enable pmx format support. pmx format is under heavily developing and should not be used in production environment." OFF)
 
 option(PPLNN_ENABLE_PYTHON_API "enable python api support" OFF)
-option(PPLNN_ENABLE_LUA_API "enable lua api support" OFF)
 
 option(PPLNN_HOLD_DEPS "don't update dependencies" OFF)
 
@@ -187,10 +186,6 @@ endif()
 
 if(PPLNN_ENABLE_PYTHON_API)
     add_subdirectory(python)
-endif()
-
-if(PPLNN_ENABLE_LUA_API)
-    add_subdirectory(lua)
 endif()
 
 # --------------------------------------------------------------------------- #
