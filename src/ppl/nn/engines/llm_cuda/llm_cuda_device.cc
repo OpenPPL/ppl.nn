@@ -74,6 +74,13 @@ RetCode LlmCudaDevice::Init(int device_id, bool init_stream, bool init_cublas, N
             return RC_INTERNAL_ERROR;
         }
 
+        /* refer to https://developer.nvidia.com/blog/new-cublas-12-0-features-and-matrix-multiplication-performance-on-nvidia-hopper-gpus/
+         NV said:
+            NVIDIA Hopper architecture workspace requirements
+            H100 native kernels have increased the need for workspace size. 
+            It is therefore highly recommended to provide at least 32 MiB (33554432 B)
+            of workspace for cuBLASLt calls or when using cublasSetWorkspace. 
+        */
         if (GetSMVersion() >= 90) {
             auto err = cudaMalloc(&cublas_workspace_, 32 * 1024 * 1024);
             if (err != cudaSuccess) {
