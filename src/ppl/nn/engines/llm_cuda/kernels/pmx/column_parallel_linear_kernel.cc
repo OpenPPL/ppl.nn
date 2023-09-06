@@ -84,14 +84,17 @@ ppl::common::RetCode ColumnParallelLinearKernel::DoExecute(KernelExecContext* ct
     });
     gather_buffer = tmp_buffer_desc.addr;
 
+    const int64_t M = input_shape->CalcElementsToDimensionExcludingPadding(input_shape->GetDimCount() - 1);
+    const bool use_workspace = M >= 64;
+
     return PPLCUDAColumnParallelLinearForwardImp(
         GetStream(), cublas_handle, gemm_param, nccl_param,
         input_shape, input->GetBufferPtr(),
         weight_shape, weight->GetBufferPtr(),
         output_shape, output->GetBufferPtr(),
         gather_buffer, nullptr, nullptr,
-        GetCudaDevice()->GetCubalsWorkspace(),
-        GetCudaDevice()->GetCublasWorkspaceSize(),
+        use_workspace ? GetCudaDevice()->GetCubalsWorkspace() : nullptr,
+        use_workspace ? GetCudaDevice()->GetCublasWorkspaceSize() : 0,
         false, param_->gather_output, cublas_algo);
 
 }

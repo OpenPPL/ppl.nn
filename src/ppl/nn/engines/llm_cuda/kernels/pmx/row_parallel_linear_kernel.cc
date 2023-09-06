@@ -65,14 +65,17 @@ ppl::common::RetCode RowParallelLinearKernel::DoExecute(KernelExecContext* ctx) 
         return ppl::common::RC_UNSUPPORTED;
     }
 
+    const int64_t M = input_shape->CalcElementsToDimensionExcludingPadding(input_shape->GetDimCount() - 1);
+    const bool use_workspace = M >= 64;
+
     return PPLCUDARowParallelLinearForwardImp(
         GetStream(), cublas_handle, gemm_param, nccl_param,
         input_shape, input->GetBufferPtr(), nullptr,
         weight_shape, weight->GetBufferPtr(),
         output_shape, output->GetBufferPtr(),
         nullptr, nullptr, 1,
-        GetCudaDevice()->GetCubalsWorkspace(),
-        GetCudaDevice()->GetCublasWorkspaceSize(),
+        use_workspace ? GetCudaDevice()->GetCubalsWorkspace() : nullptr,
+        use_workspace ? GetCudaDevice()->GetCublasWorkspaceSize() : 0,
         false, param_->input_is_parallel, cublas_algo);
 
 }

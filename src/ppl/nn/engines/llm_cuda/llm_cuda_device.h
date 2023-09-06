@@ -86,6 +86,10 @@ public:
         return device_prop_;
     }
 
+    const int GetSMVersion() const {
+        return device_prop_.major * 10 + device_prop_.minor;
+    }
+
     cublasLtHandle_t GetCublasHandle() const {
         return cublas_handle_;
     }
