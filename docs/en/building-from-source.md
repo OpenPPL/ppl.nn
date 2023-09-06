@@ -6,7 +6,6 @@
 * [Git](https://git-scm.com/downloads) >= 2.7.0
 * [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit-archive) >= 9.0 (for CUDA)
 * [Python](https://www.python.org/downloads/) >= 3.5 (for CUDA and Python API support)
-* [Lua](https://www.lua.org/download.html) >= 5.2.0 (optional, for Lua API support)
 
 ### Cloning Source Code
 
@@ -120,7 +119,7 @@ export RISCV_ROOT_PATH=/path/to/riscv64-linux-x86_64-20210512
 
 Build pplnn:
 ```bash
-./build.sh -DPPLNN_TOOLCHAIN_DIR=$RISCV_ROOT_PATH -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/riscv64-linux-gnu.cmake -DPPLNN_USE_RISCV64=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON -DPPLNN_ENABLE_PYTHON_API=OFF -DPPLNN_ENABLE_LUA_API=OFF -DCMAKE_INSTALL_PREFIX=pplnn-build/install
+./build.sh -DPPLNN_TOOLCHAIN_DIR=$RISCV_ROOT_PATH -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/riscv64-linux-gnu.cmake -DPPLNN_USE_RISCV64=ON -DPPLNN_ENABLE_KERNEL_PROFILING=ON -DPPLNN_ENABLE_PYTHON_API=OFF -DCMAKE_INSTALL_PREFIX=pplnn-build/install
 ```
 
 Headers and libraries are installed in `pplnn-build/install`.
@@ -200,35 +199,6 @@ pip3 install pyppl*.whl
 ```
 
 After installation, you can use `from pyppl import nn` directly without setting the `PYTHONPATH` env.
-
-### Buliding Lua API support
-
-add `-DPPLNN_ENABLE_LUA_API=ON` to the build command if you want to use `PPLNN` in lua:
-
-```bash
-./build.sh -DPPLNN_ENABLE_LUA_API=ON
-```
-
-If you want to use a specified version of lua, you can pass `LUA_SRC_DIR` to `build.sh`:
-
-```bash
-./build.sh -DPPLNN_ENABLE_LUA_API=ON -DLUA_SRC_DIR=/path/to/lua/src [other options]
-```
-
-or you already have a pre-compiled version, you can pass `LUA_INCLUDE_DIR` and `LUA_LIBRARIES` to `build.sh`:
-
-```bash
-./build.sh -DPPLNN_ENABLE_LUA_API=ON -DLUA_INCLUDE_DIR=/path/to/your/lua/include/dir -DLUA_LIBRARIES=/path/to/your/lua/lib [other options]
-```
-
-Run the lua demo with the following commands:
-
-```bash
-cd ppl.nn
-LUAPATH=./pplnn-build/install/lib /path/to/your/lua-interpreter ./tools/pplnn.lua
-```
-
-Note that your lua interpreter should be compiled with options `MYCFLAGS="-DLUA_USE_DLOPEN -fPIC" MYLIBS=-ldl` to enable loading .so plugins.
 
 ### Testing
 
