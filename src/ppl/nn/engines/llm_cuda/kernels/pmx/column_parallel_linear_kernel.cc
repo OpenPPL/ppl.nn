@@ -20,8 +20,7 @@
 #include "ppl/common/cuda/nccl_utils.h"
 #include "ppl/common/destructor.h"
 
-#include "cudakernel/llm/column_parallel_linear.h"
-#include "cudakernel/gemm/gemm.h"
+#include "ppl/kernel/llm/cuda/pmx/column_parallel_linear.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
@@ -31,12 +30,17 @@ ppl::common::RetCode ColumnParallelLinearKernel::DoExecute(KernelExecContext* ct
 
     PPLNN_LLM_CUDA_REQUIRED_INPUT(input, 0);
     PPLNN_LLM_CUDA_REQUIRED_INPUT(weight, 1);
+    PPLNN_LLM_CUDA_OPTIONAL_INPUT(bias, 2);
     PPLNN_LLM_CUDA_REQUIRED_OUTPUT(output, 0);
 
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [input]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(input);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [weight]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(weight);
+    if (bias) {
+        PPLNN_LLM_CUDA_DEBUG_TRACE("Input [bias]:\n");
+        PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(bias);
+    }
 
     PPLNN_LLM_CUDA_DEBUG_TRACE("in_features: %d\n", param_->in_features);
     PPLNN_LLM_CUDA_DEBUG_TRACE("out_features: %d\n", param_->out_features);
@@ -51,15 +55,24 @@ ppl::common::RetCode ColumnParallelLinearKernel::DoExecute(KernelExecContext* ct
     auto weight_shape = weight->GetShape();
     auto output_shape = output->GetShape();
 
+    TensorShape *bias_shape = nullptr;
+    void *bias_data = nullptr;
+    if (param_->bias_term) {
+        if (!bias) {
+            LOG(ERROR) << "bias_term == true but bias not found.";
+            return ppl::common::RC_NOT_FOUND;
+        }
+        bias_shape = bias->GetShape();
+        bias_data = bias->GetBufferPtr();
+    }
+
     if (ppl::common::DATATYPE_FLOAT16 != input_shape->GetDataType()) {
         LOG(ERROR) << "currently only support fp16";
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    GemmKernelParam gemm_param{1, 0, false, true};
     auto cublas_handle = GetCublasHandle();
     auto nccl_param = GetTensorParallelNcclParam();
-    cublasLtMatmulAlgo_t cublas_algo;
 
     if (param_->bias_term) {
         LOG(ERROR) << "bias_term unsupported";
@@ -87,16 +100,26 @@ ppl::common::RetCode ColumnParallelLinearKernel::DoExecute(KernelExecContext* ct
     const int64_t M = input_shape->CalcElementsToDimensionExcludingPadding(input_shape->GetDimCount() - 1);
     const bool use_workspace = M >= 64;
 
-    return PPLCUDAColumnParallelLinearForwardImp(
-        GetStream(), cublas_handle, gemm_param, nccl_param,
-        input_shape, input->GetBufferPtr(),
-        weight_shape, weight->GetBufferPtr(),
-        output_shape, output->GetBufferPtr(),
-        gather_buffer, nullptr, nullptr,
-        use_workspace ? GetCudaDevice()->GetCubalsWorkspace() : nullptr,
+    return ppl::kernel::llm::cuda::pmx::column_parallel_linear(
+        GetStream(),
+        cublas_handle,
+        nullptr,
+        input_shape,
+        input->GetBufferPtr(),
+        weight_shape,
+        weight->GetBufferPtr(),
+        bias_shape,
+        bias_data,
+        param_->in_features,
+        param_->out_features,
+        nccl_param,
+        param_->gather_output,
+        gather_buffer,
         use_workspace ? GetCudaDevice()->GetCublasWorkspaceSize() : 0,
-        false, param_->gather_output, cublas_algo);
-
+        use_workspace ? GetCudaDevice()->GetCubalsWorkspace() : nullptr,
+        output_shape,
+        output->GetBufferPtr()
+    );
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

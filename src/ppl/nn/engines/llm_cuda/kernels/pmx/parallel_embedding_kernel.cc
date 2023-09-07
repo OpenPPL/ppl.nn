@@ -20,20 +20,19 @@
 #include "ppl/common/cuda/nccl_utils.h"
 #include "ppl/common/destructor.h"
 
-#include "cudakernel/llm/parallel_embedding.h"
-#include "cudakernel/gemm/gemm.h"
+#include "ppl/kernel/llm/cuda/pmx/parallel_embedding.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
 ppl::common::RetCode ParallelEmbeddingKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_DEBUG_TRACE("Entry LlmCudaKernel: [%s]\n", GetName().c_str());
 
-    PPLNN_LLM_CUDA_REQUIRED_INPUT(input, 0);
+    PPLNN_LLM_CUDA_REQUIRED_INPUT(indices, 0);
     PPLNN_LLM_CUDA_REQUIRED_INPUT(weight, 1);
     PPLNN_LLM_CUDA_REQUIRED_OUTPUT(output, 0);
 
-    PPLNN_LLM_CUDA_DEBUG_TRACE("Input [input]:\n");
-    PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(input);
+    PPLNN_LLM_CUDA_DEBUG_TRACE("Input [indices]:\n");
+    PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(indices);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [weight]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(weight);
 
@@ -43,21 +42,11 @@ ppl::common::RetCode ParallelEmbeddingKernel::DoExecute(KernelExecContext* ctx) 
     PPLNN_LLM_CUDA_DEBUG_TRACE("norm_type: %f\n", param_->norm_type);
     PPLNN_LLM_CUDA_DEBUG_TRACE("padding_idx: %d\n", param_->padding_idx);
 
-    if (param_->max_norm != 0.0f) {
-        LOG(ERROR) << "currently do not support max_norm.";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
-    if (param_->padding_idx != -1) {
-        LOG(ERROR) << "currently do not support padding_idx.";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
     PPLNN_LLM_CUDA_REALLOC_TENSOR_BUFFER(output);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Output [output]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(output);
 
-    auto input_shape = input->GetShape();
+    auto indices_shape = indices->GetShape();
     auto weight_shape = weight->GetShape();
     auto output_shape = output->GetShape();
 
@@ -86,12 +75,22 @@ ppl::common::RetCode ParallelEmbeddingKernel::DoExecute(KernelExecContext* ctx) 
     });
     gather_buffer = tmp_buffer_desc.addr;
 
-    return PPLCUDAParallelEmbeddingForwardImp(
-        GetStream(), nccl_param,
-        input_shape, input->GetBufferPtr(),
-        weight_shape, weight->GetBufferPtr(),
-        output_shape, output->GetBufferPtr(),
-        param_->max_norm, param_->norm_type, gather_buffer);
+    return ppl::kernel::llm::cuda::pmx::parallel_embedding(
+        GetStream(),
+        indices_shape,
+        indices->GetBufferPtr(),
+        weight_shape,
+        weight->GetBufferPtr(),
+        param_->num_embeddings,
+        param_->embedding_dims,
+        param_->max_norm,
+        param_->norm_type,
+        param_->padding_idx,
+        nccl_param,
+        gather_buffer,
+        output_shape,
+        output->GetBufferPtr()
+    );
 
 }
 
