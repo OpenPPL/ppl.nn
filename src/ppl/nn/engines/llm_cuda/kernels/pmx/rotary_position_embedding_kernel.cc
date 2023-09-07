@@ -17,7 +17,7 @@
 
 #include "rotary_position_embedding_kernel.h"
 
-#include "cudakernel/llm/rotary_embed.h"
+#include "ppl/kernel/llm/cuda/pmx/rotary_position_embedding.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
@@ -66,6 +66,7 @@ ppl::common::RetCode RotaryPositionEmbeddingKernel::DoExecute(KernelExecContext*
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(rotated_key);
 
     auto query_shape = query->GetShape();
+    auto key_shape = key->GetShape();
 
     if (ppl::common::DATATYPE_FLOAT16 != query_shape->GetDataType()) {
         LOG(ERROR) << "currently only support fp16";
@@ -83,17 +84,29 @@ ppl::common::RetCode RotaryPositionEmbeddingKernel::DoExecute(KernelExecContext*
         cu_start_pos = nullptr;
     }
 
-    return PPLCUDARotaryEmbQKForwardImp(
+    int64_t head_dim = query_shape->GetDim(3);
+    int64_t rotary_dim = param_->rotary_dim == 0 ? head_dim : param_->rotary_dim;
+    int64_t num_heads = query_shape->GetDim(2);
+    int64_t num_key_heads = key_shape->GetDim(2);
+
+    return ppl::kernel::llm::cuda::pmx::rotary_position_embedding(
         GetStream(),
+        query_shape,
         query_data,
+        key_shape,
         key_data,
-        param_->theta,
         cu_start_pos,
         start_pos_val,
-        0, param_->bypass_key,
-        query_shape,
+        param_->theta,
+        param_->bypass_key,
+        rotary_dim,
+        num_heads,
+        num_key_heads,
+        rotated_query->GetShape(),
         rotated_query->GetBufferPtr(),
-        rotated_key->GetBufferPtr());
+        rotated_key->GetShape(),
+        rotated_key->GetBufferPtr()
+    );
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx
