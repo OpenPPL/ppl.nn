@@ -163,13 +163,19 @@ endif()
 if(PPLNN_DEP_PROTOBUF_PKG)
     hpcc_declare_pkg_dep(protobuf
         ${PPLNN_DEP_PROTOBUF_PKG})
-else()
-    if(NOT PPLNN_DEP_PROTOBUF_GIT)
-        set(PPLNN_DEP_PROTOBUF_GIT "https://github.com/protocolbuffers/protobuf.git")
-    endif()
+elseif(PPLNN_DEP_PROTOBUF_GIT)
     hpcc_declare_git_dep(protobuf
         ${PPLNN_DEP_PROTOBUF_GIT}
         ${__PROTOBUF_TAG__})
+else()
+    if(PPLNN_PROTOBUF_VERSION)
+        hpcc_declare_git_dep(protobuf
+            ${PPLNN_DEP_PROTOBUF_GIT}
+            ${__PROTOBUF_TAG__})
+    else()
+        hpcc_declare_pkg_dep(protobuf
+            "https://github.com/protocolbuffers/protobuf/archive/refs/tags/${__PROTOBUF_TAG__}.zip")
+    endif()
 endif()
 
 unset(__PROTOBUF_TAG__)
