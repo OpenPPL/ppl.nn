@@ -17,8 +17,6 @@
 
 #include "multi_head_attention_kernel.h"
 
-#include "cudakernel/llm/multi_head_attention.h"
-
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
 
@@ -67,21 +65,11 @@ ppl::common::RetCode MultiHeadAttentionKernel::DoExecute(KernelExecContext* ctx)
     PPLNN_LLM_CUDA_DEBUG_TRACE("Output [attn_output]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(attn_output);
 
-    void *attn_mask_data = nullptr;
-    TensorShape *attn_mask_shape = nullptr;
+    // void *attn_mask_data = nullptr;
+    // TensorShape *attn_mask_shape = nullptr;
 
-    return PPLCUDAMultiHeadAttentionForwardImp(
-        GetStream(),
-        GetCudaDevice()->GetDeviceProp(),
-        query->GetShape(),
-        query->GetBufferPtr(), 
-        key->GetShape(),
-        key->GetBufferPtr(),
-        value->GetBufferPtr(),
-        attn_mask_shape,
-        attn_mask_data,
-        attn_output->GetShape(),
-        attn_output->GetBufferPtr());
+    LOG(ERROR) << "currently do not support this op";
+    return ppl::common::RC_UNSUPPORTED;
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

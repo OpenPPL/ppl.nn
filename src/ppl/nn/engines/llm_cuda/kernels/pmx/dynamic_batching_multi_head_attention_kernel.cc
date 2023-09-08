@@ -17,8 +17,6 @@
 
 #include "dynamic_batching_multi_head_attention_kernel.h"
 
-#include "cudakernel/llm/multi_head_attention.h"
-
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
 
@@ -100,22 +98,8 @@ ppl::common::RetCode DynamicBatchingMultiHeadAttentionKernel::DoExecute(KernelEx
         return ppl::common::RC_DEVICE_MEMORY_ERROR;
     }
 
-    return PPLCUDAMultiHeadAttentionDBForwardImp(
-        GetStream(),
-        GetCudaDevice()->GetDeviceProp(),
-        query->GetShape(),
-        query->GetBufferPtr(), 
-        key->GetShape(),
-        key->GetBufferPtr(),
-        value->GetBufferPtr(),
-        seqstarts->GetShape(),
-        seqstarts->GetBufferPtr(),
-        kvstarts->GetBufferPtr(),
-        decodeing_batches_val,
-        max_seqlen_val,
-        max_kvlen_val,
-        attn_output->GetShape(),
-        attn_output->GetBufferPtr());
+    LOG(ERROR) << "currently do not support this op";
+    return ppl::common::RC_UNSUPPORTED;
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

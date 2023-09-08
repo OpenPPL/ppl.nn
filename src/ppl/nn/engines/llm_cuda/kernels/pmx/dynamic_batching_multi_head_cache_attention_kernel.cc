@@ -17,7 +17,7 @@
 
 #include "dynamic_batching_multi_head_cache_attention_kernel.h"
 
-#include "cudakernel/llm/multi_head_cache_attention.h"
+#include "ppl/kernel/llm/cuda/pmx/multi_head_cache_attention.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
@@ -85,11 +85,6 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
     PPLNN_LLM_CUDA_DEBUG_TRACE("cache_mode: %d\n", param_->cache_mode);
     PPLNN_LLM_CUDA_DEBUG_TRACE("cache_layout: %d\n", param_->cache_layout);
 
-    if (param_->is_causal == false) {
-        LOG(ERROR) << "currently only support is_causal == true";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
     if (param_->num_heads != param_->num_kv_heads) {
         LOG(ERROR) << "currently not support group query attention";
         return ppl::common::RC_UNSUPPORTED;
@@ -97,11 +92,6 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
 
     if (param_->quant_bit != 8 && param_->quant_group != 8) {
         LOG(ERROR) << "currently only support quant_bit == quant_group == 8";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
-    if (param_->cache_layout != 0) {
-        LOG(ERROR) << "currently only support cache_layout == 0";
         return ppl::common::RC_UNSUPPORTED;
     }
 
@@ -142,28 +132,68 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         return ppl::common::RC_DEVICE_MEMORY_ERROR;
     }
 
-    return PPLCUDAMultiHeadCacheAttentionForwardImp(
+    const int64_t batch = start_pos->GetShape()->GetDim(0);
+
+    int64_t cache_stride_s = 0;
+    int64_t cache_stride_l = 0;
+    int64_t cache_stride_h = 0;
+    int64_t cache_stride_kv = 0;
+
+    if (param_->cache_layout == 0) {
+        const int64_t max_tokens = cache->GetShape()->GetDim(0);
+        (void)max_tokens;
+        // (MaxT,L,2,H,Dh)
+        cache_stride_s = param_->num_layer * 2 * param_->num_kv_heads * param_->head_dim;
+        cache_stride_l = 2 * param_->num_kv_heads * param_->head_dim;
+        cache_stride_h = param_->head_dim;
+        cache_stride_kv = param_->num_kv_heads * param_->head_dim;
+    } else if (param_->cache_layout == 3) {
+        const int64_t max_tokens = cache->GetShape()->GetDim(3);
+        // (L,2,H,MaxT,Dh)
+        cache_stride_s = param_->head_dim;
+        cache_stride_l = 2 * param_->num_kv_heads * max_tokens * param_->head_dim;
+        cache_stride_h = max_tokens * param_->head_dim;
+        cache_stride_kv = param_->num_kv_heads * max_tokens * param_->head_dim;
+    } else {
+        LOG(ERROR) << "currently only support cache_layout == 0 or cache_layout == 3";
+        return ppl::common::RC_UNSUPPORTED;
+    }
+
+    return ppl::kernel::llm::cuda::pmx::dynamic_batch_multi_head_cache_attention(
         GetStream(),
         GetCudaDevice()->GetDeviceProp(),
         query->GetShape(),
-        query->GetBufferPtr(), 
+        query->GetBufferPtr(),
         current_key->GetShape(),
         current_key->GetBufferPtr(),
+        current_value->GetShape(),
         current_value->GetBufferPtr(),
-        seqstarts->GetShape(),
+        nullptr,
+        nullptr,
         seqstarts->GetBufferPtr(),
         kvstarts->GetBufferPtr(),
+        cachestarts->GetBufferPtr(),
         start_pos->GetBufferPtr(),
-        cache->GetBufferPtr(),
-        scale->GetBufferPtr(),
-        cachestarts->GetBufferPtr(), 
+        param_->is_causal,
+        batch,
         decodeing_batches_val,
         max_seqlen_val,
         max_kvlen_val,
         param_->layer_idx,
         param_->num_layer,
+        param_->num_heads,
+        param_->num_kv_heads,
+        param_->head_dim,
+        param_->cache_mode,
+        cache_stride_s,
+        cache_stride_l,
+        cache_stride_h,
+        cache_stride_kv,
+        cache->GetBufferPtr(),
+        scale->GetBufferPtr(),
         attn_output->GetShape(),
-        attn_output->GetBufferPtr());
+        attn_output->GetBufferPtr()
+    );
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

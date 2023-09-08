@@ -17,8 +17,6 @@
 
 #include "dynamic_batching_key_value_cache_kernel.h"
 
-#include "cudakernel/llm/key_value_cache.h"
-
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
 
@@ -109,22 +107,8 @@ ppl::common::RetCode DynamicBatchingKeyValueCacheKernel::DoExecute(KernelExecCon
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    return PPLCUDAKeyValueCacheDBForwardImp(
-        GetStream(),
-        current_key_shape,
-        current_key->GetBufferPtr(),
-        current_value->GetBufferPtr(),
-        seqstarts->GetBufferPtr(),
-        kvstarts->GetBufferPtr(),
-        cachestarts->GetBufferPtr(),
-        start_pos->GetShape(),
-        start_pos->GetBufferPtr(),
-        cache->GetBufferPtr(),
-        scale->GetBufferPtr(),
-        param_->layer_idx, param_->num_layer,
-        key->GetShape(),
-        key->GetBufferPtr(),
-        value->GetBufferPtr());
+    LOG(ERROR) << "currently do not support this op";
+    return ppl::common::RC_UNSUPPORTED;
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx

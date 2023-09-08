@@ -34,6 +34,9 @@ RetCode DynamicBatchingMultiHeadAttentionOp::DoInit(const OptKernelOptions& opti
         return status;
     }
 
+    LOG(ERROR) << "currently do not support this op";
+    return ppl::common::RC_UNSUPPORTED;
+
     infer_type_and_format_func_ = GenericInferTypeAndFormat;
     infer_dims_func_ = GenericInferDims;
 

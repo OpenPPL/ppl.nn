@@ -17,8 +17,6 @@
 
 #include "key_value_cache_kernel.h"
 
-#include "cudakernel/llm/key_value_cache.h"
-
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
 
@@ -83,7 +81,7 @@ ppl::common::RetCode KeyValueCacheKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(value);
 
     auto current_key_shape = current_key->GetShape();
-    auto cache_shape = cache->GetShape();
+    // auto cache_shape = cache->GetShape();
 
     if (ppl::common::DATATYPE_FLOAT16 != current_key_shape->GetDataType()) {
         LOG(ERROR) << "currently only support fp16";
@@ -97,12 +95,8 @@ ppl::common::RetCode KeyValueCacheKernel::DoExecute(KernelExecContext* ctx) {
         return status;
     }
 
-    return PPLCUDAKeyValueCacheForwardImp(
-        GetStream(),
-        current_key_shape, current_key->GetBufferPtr(), current_value->GetBufferPtr(),
-        start_pos_val, param_->num_layer, param_->layer_idx,
-        cache_shape, cache->GetBufferPtr(), scale->GetBufferPtr(),
-        key->GetBufferPtr(), value->GetBufferPtr());
+    LOG(ERROR) << "currently do not support this op";
+    return ppl::common::RC_UNSUPPORTED;
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx
