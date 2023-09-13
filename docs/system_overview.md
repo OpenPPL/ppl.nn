@@ -4,7 +4,7 @@
 
 `PPL.LLM` is a LLM(Large Language Mode) Inference System provided by OpenPPL.
 
-![SYSTEM_OVERVIEW](docs/system_overview.png)
+![SYSTEM_OVERVIEW](system_overview.png)
 
 The system consists of 4 parts:
 
