@@ -1,5 +1,11 @@
 # PPLNN for LLM
 
+`ppl.nn.llm` is a part of `PPL.LLM` system.
+
+![SYSTEM_OVERVIEW](docs/system_overview.png)
+
+**We recommend users who are new to this project to read the [Overview of system](docs/system_overview.md).**
+
 `ppl.nn.llm` is a collection of Large Language Models(LLM) inferencing engines based on [ppl.nn](https://github.com/openppl-public/ppl.nn).
 
 ## Prerequisites
@@ -38,8 +44,7 @@ cd ppl.nn.llm
 
 * Export a model(such as LLaMA) and dump some tensors for testing:
 
-Refer to [ppl.pmx/model_zoo/llama/facebook
-/README.md](https://github.com/openppl-public/ppl.pmx/blob/master/model_zoo/llama/facebook/README.md)
+Refer to [ppl.pmx/model_zoo/llama/facebook/README.md](https://github.com/openppl-public/ppl.pmx/blob/master/model_zoo/llama/facebook/README.md)
 
 * Build a bash script `benchmark.sh` for testing as below(this example is only for dynamic batching model):
 
