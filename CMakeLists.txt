@@ -124,4 +124,6 @@ endif()
 
 # --------------------------------------------------------------------------- #
 
-add_subdirectory(tools)
+if(PPLNN_BUILD_TOOLS)
+    add_subdirectory(tools)
+endif()
