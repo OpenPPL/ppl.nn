@@ -13,6 +13,12 @@ The system consists of 4 parts:
 - `ppl.nn.llm`：LLM inference engine, responsible for single step inference of LLMs.
 - `ppl.llm.kernel`: Providing optimized LLM operator primitive kernels.
 
+## Platform
+
+Currently tested platform
+ - NVIDIA Ampere
+ - NVIDIA Hopper
+
 ## Quick Start
 
 The tutorials introduced below are independent of each other, you only need to choose one of them to enter.
