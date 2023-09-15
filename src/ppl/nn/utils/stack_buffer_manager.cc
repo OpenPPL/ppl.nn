@@ -62,7 +62,7 @@ RetCode StackBufferManager::Realloc(uint64_t bytes, BufferDesc* buffer) {
             buffer_list_.push_back(managed_buffer);
         }
     } else {
-        if (buffer->desc > buffer_list_.size()) {
+        if (buffer->desc >= buffer_list_.size()) {
             return RC_INVALID_VALUE;
         }
         BufferAddrAndSize& managed_buffer = buffer_list_[buffer->desc];
@@ -78,7 +78,7 @@ RetCode StackBufferManager::Realloc(uint64_t bytes, BufferDesc* buffer) {
 }
 
 void StackBufferManager::Free(BufferDesc* buffer) {
-    if (buffer->addr == nullptr || buffer->desc > buffer_list_.size()) {
+    if (buffer->addr == nullptr || buffer->desc >= buffer_list_.size()) {
         return;
     }
     buffer_stack_.push_back(buffer->desc);
