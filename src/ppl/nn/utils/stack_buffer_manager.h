@@ -30,7 +30,7 @@ public:
         : BufferManager("StackBufferManager"), use_bestfit_(use_bestfit), allocator_(ar) {
         buffer_list_.reserve(32);
         buffer_stack_.reserve(32);
-    };
+    }
     ~StackBufferManager();
 
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buffer) override;
@@ -67,10 +67,10 @@ private:
     inline int FindBestEmptyBuffer(uint64_t bytes) {
         int buffer_stack_size = buffer_stack_.size();
         uint64_t diff = bytes;
-        uint64_t tmp_diff = diff;
         int res = buffer_stack_.back();
         int idx = buffer_stack_size - 1;
         for (int i = 0; i < buffer_stack_size; i++) {
+            uint64_t tmp_diff;
             if (buffer_list_[buffer_stack_[i]].size > bytes) {
                 tmp_diff = buffer_list_[buffer_stack_[i]].size - bytes;
             } else {
