@@ -30,7 +30,15 @@ ppl::common::RetCode PoolingMaxNormalKernel::DoExecute(KernelExecContext* ctx) {
     auto input_quant = GetCommonParam()->cuda_tensor_info->at(input_id);
     auto output_id = output->GetEdge()->GetId();
     auto output_quant = GetCommonParam()->cuda_tensor_info->at(output_id);
-    if (param_->global_pooling) {
+    bool global_pooling_like = false;
+    int kernel_dims = output->GetShape()->GetDimCount() - 2;
+    int in_kernel_dims = 1, out_kernel_dims = 1;
+    for (int i = 0; i < kernel_dims; ++i) {
+        in_kernel_dims *= input->GetShape()->GetDim(i + 2); 
+        out_kernel_dims *= output->GetShape()->GetDim(i + 2); 
+    }
+    global_pooling_like = (in_kernel_dims > out_kernel_dims) && (out_kernel_dims == 1);
+    if (param_->global_pooling || global_pooling_like) {
         status = PPLCUDAGlobalMaxPoolingForwardImp(GetStream(), input->GetShape(), input->GetBufferPtr(),
                                                    output->GetShape(), output->GetBufferPtr());
     } else {
