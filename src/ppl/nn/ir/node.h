@@ -85,6 +85,18 @@ public:
         inputs_.push_back(eid);
     }
 
+    /** @brief removes the specified input edge in `idx` and returns the removed edge id */
+    edgeid_t DelInput(uint32_t idx) {
+        edgeid_t ret = inputs_[idx];
+        inputs_.erase(inputs_.begin() + idx);
+        return ret;
+    }
+
+    /** @brief remove all inputs */
+    void ClearInputs() {
+        inputs_.clear();
+    }
+
     /** @brief insert `eid` in position `idx` */
     void InsertInput(uint32_t idx, edgeid_t eid) {
         inputs_.insert(inputs_.begin() + idx, eid);
@@ -108,6 +120,18 @@ public:
 
     /** @note outputs don't contain duplicated edges */
     void AddOutput(edgeid_t);
+
+    /** @brief removes the specified output edge in `idx` and returns the removed edge id */
+    edgeid_t DelOutput(uint32_t idx) {
+        edgeid_t ret = outputs_[idx];
+        outputs_.erase(outputs_.begin() + idx);
+        return ret;
+    }
+
+    /** @brief remove all outputs */
+    void ClearOutputs() {
+        outputs_.clear();
+    }
 
     /** @brief insert `eid` in position `idx` */
     void InsertOutput(uint32_t idx, edgeid_t eid);
