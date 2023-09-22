@@ -344,8 +344,16 @@ static bool FuseConvTransposeBatchNormalization(ir::Graph* graph) {
             // delete bn node's input & bn_node
             convtranspose_node->ReplaceOutput(bn_input_edge->GetId(), bn_output_edge->GetId());
             bn_output_edge->SetProducer(convtranspose_node->GetId());
+            // bn inputs direct to same tensor
+            std::set<int> bn_inputs;
             for (uint32_t i = 1; i < bn_node->GetInputCount(); i++) {
-                auto initializer_edge = graph->topo->GetEdge(bn_node->GetInput(i));
+                auto bn_input_id = bn_node->GetInput(i);
+                if (bn_inputs.count(bn_input_id) != 0) {
+                    continue;
+                } else {
+                    bn_inputs.insert(bn_input_id);
+                }
+                auto initializer_edge = graph->topo->GetEdge(bn_input_id);
                 initializer_edge->DelConsumer(bn_node->GetId());
                 if (initializer_edge->CalcConsumerCount() == 0 && !IsGraphOutput(graph, initializer_edge->GetId())) {
                     constants.erase(initializer_edge->GetId());
