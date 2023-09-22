@@ -20,3 +20,11 @@ if (PPLNN_ENABLE_MPI_TOOLS)
     target_compile_options(pplnn_llm PRIVATE ${MPI_CXX_COMPILE_OPTIONS})
     target_include_directories(pplnn_llm PRIVATE ${MPI_CXX_INCLUDE_DIRS})
 endif()
+
+find_package(OpenMP REQUIRED)
+
+add_executable(benchmark_llama 
+    ${CMAKE_CURRENT_SOURCE_DIR}/benchmark_llama.cc sampler.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/simple_flags.cc)
+target_link_libraries(benchmark_llama pplnn_static OpenMP::OpenMP_CXX)
+target_include_directories(benchmark_llama PRIVATE ${HPCC_DEPS_DIR}/rapidjson/include)
