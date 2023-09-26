@@ -44,6 +44,15 @@ enum {
     MM_COMPACT,
 };
 
+/** @brief quantization method */
+enum {
+    /** no quantize */
+    QUANT_METHOD_NONE,
+
+    /** online quantization, int8 tensor and int8 weight */
+    QUANT_METHOD_ONLINE_I8I8,
+};
+
 /** @brief device configuration options */
 enum {
     /**

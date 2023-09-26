@@ -15,9 +15,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "dynamic_batching_key_value_cache_op.h"
+#include "key_value_cache_op.h"
 
-#include "ppl/nn/engines/llm_cuda/kernels/pmx/dynamic_batching_key_value_cache_kernel.h"
+#include "ppl/nn/engines/llm_cuda/kernels/pmx/dynamic_batching/key_value_cache_kernel.h"
 #include "ppl/nn/oputils/pmx/reshape_dynamic_batching_key_value_cache.h"
 #include "ppl/nn/common/logger.h"
 

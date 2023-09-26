@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "dynamic_batching_multi_head_cache_attention_kernel.h"
+#include "multi_head_cache_attention_kernel.h"
 
 #include "ppl/kernel/llm/cuda/pmx/multi_head_cache_attention.h"
 

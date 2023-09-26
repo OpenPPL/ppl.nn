@@ -15,28 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPT_GRAPH_H_
-#define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPT_GRAPH_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPS_PMX_I8I8_ONLINE_QUANTIZE_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPS_PMX_I8I8_ONLINE_QUANTIZE_OP_H_
 
-#include "llm_cuda_device.h"
+#include "ppl/nn/engines/llm_cuda/opt_kernel.h"
 
-#include "ppl/nn/ir/graph.h"
-#include "ppl/nn/runtime/runtime_partition_info.h"
-#include "ppl/nn/utils/shared_resource.h"
-#include "ppl/nn/engines/llm_cuda/engine_options.h"
+namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
-namespace ppl { namespace nn { namespace llm { namespace cuda {
-
-class OptGraph final {
+class I8I8OnlineQuantizeOp final : public LlmCudaOptKernel {
 public:
-    ppl::common::RetCode Init(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*);
-    ppl::common::RetCode Optimize(const utils::SharedResource&, const EngineOptions&, LlmCudaDevice*);
+    I8I8OnlineQuantizeOp(const ir::Node* node) : LlmCudaOptKernel(node) {}
 
-private:
-    ir::Graph* graph_ = nullptr;
-    RuntimePartitionInfo* partition_info_ = nullptr;
+    KernelImpl* CreateKernelImpl() const override;
+    ppl::common::RetCode DoInit(const OptKernelOptions&) override;
 };
 
-}}}}
+}}}}} // namespace ppl::nn::llm::cuda::pmx
 
 #endif

@@ -27,6 +27,7 @@ namespace ppl { namespace nn { namespace llm { namespace cuda {
 struct PPLNN_PUBLIC EngineOptions final {
     uint32_t device_id = 0;
     uint32_t mm_policy = MM_COMPACT;
+    uint32_t quant_method = QUANT_METHOD_NONE;
 };
 
 }}}} // namespace ppl::nn::llm::cuda

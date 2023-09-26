@@ -15,28 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPT_GRAPH_H_
-#define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPT_GRAPH_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_PASSES_I8I8_FUSE_RMS_NORM_PASS_H_
+#define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_PASSES_I8I8_FUSE_RMS_NORM_PASS_H_
 
-#include "llm_cuda_device.h"
+#include "ppl/nn/engines/llm_cuda/opt_pass.h"
 
-#include "ppl/nn/ir/graph.h"
-#include "ppl/nn/runtime/runtime_partition_info.h"
-#include "ppl/nn/utils/shared_resource.h"
-#include "ppl/nn/engines/llm_cuda/engine_options.h"
+namespace ppl { namespace nn { namespace llm { namespace cuda { namespace i8i8 {
 
-namespace ppl { namespace nn { namespace llm { namespace cuda {
+OptPassStatus FuseRMSNormPass(const OptKernelOptions& options);
 
-class OptGraph final {
-public:
-    ppl::common::RetCode Init(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*);
-    ppl::common::RetCode Optimize(const utils::SharedResource&, const EngineOptions&, LlmCudaDevice*);
-
-private:
-    ir::Graph* graph_ = nullptr;
-    RuntimePartitionInfo* partition_info_ = nullptr;
-};
-
-}}}}
+}}}}}
 
 #endif

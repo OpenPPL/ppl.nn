@@ -15,9 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "dynamic_batching_multi_head_attention_op.h"
+#include "column_parallel_linear_op.h"
 
-#include "ppl/nn/engines/llm_cuda/kernels/pmx/dynamic_batching_multi_head_attention_kernel.h"
+#include "ppl/nn/engines/llm_cuda/kernels/pmx/i8i8/column_parallel_linear_kernel.h"
+#include "ppl/nn/oputils/pmx/reshape_column_parallel_linear.h"
 #include "ppl/nn/common/logger.h"
 
 using namespace std;
@@ -27,24 +28,35 @@ using namespace ppl::nn::pmx;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
-RetCode DynamicBatchingMultiHeadAttentionOp::DoInit(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<MultiHeadAttentionParam>(options, &param_);
+RetCode I8I8ColumnParallelLinearOp::DoInit(const OptKernelOptions& options) {
+    auto status = GenericLoadParam<ColumnParallelLinearParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    LOG(ERROR) << "currently do not support this op";
-    return ppl::common::RC_UNSUPPORTED;
+    nccl_param_ = options.device->GetTensorParallelNcclParam();
 
-    infer_type_and_format_func_ = GenericInferTypeAndFormat;
-    infer_dims_func_ = GenericInferDims;
+    infer_type_and_format_func_ = [this](InputOutputInfo* info) -> RetCode {
+        auto output_shape = info->GetOutput<TensorImpl>(0)->GetShape();
+        if (param_->gather_output) {
+            output_shape->SetDataFormat(DATAFORMAT_NDARRAY);
+            output_shape->SetDataType(DATATYPE_FLOAT16);
+        } else {
+            output_shape->SetDataFormat(DATAFORMAT_NDARRAY);
+            output_shape->SetDataType(DATATYPE_INT32);
+        }
+        return RC_SUCCESS;
+    };
+    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
+        return nn::pmx::ReshapeColumnParallelLinear(info, param_.get(), nccl_param_->size);
+    };
 
     return RC_SUCCESS;
 }
 
-KernelImpl* DynamicBatchingMultiHeadAttentionOp::CreateKernelImpl() const {
-    return CreateKernelImplWithParam<DynamicBatchingMultiHeadAttentionKernel>(param_.get());
+KernelImpl* I8I8ColumnParallelLinearOp::CreateKernelImpl() const {
+    return CreateKernelImplWithParam<I8I8ColumnParallelLinearKernel>(param_.get());
 }
 
 

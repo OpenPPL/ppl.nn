@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "dynamic_batching_multi_head_attention_kernel.h"
+#include "multi_head_attention_kernel.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 

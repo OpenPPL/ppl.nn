@@ -63,7 +63,7 @@ RetCode LlmCudaEngine::ProcessGraph(const utils::SharedResource& resource, ir::G
         return status;
     }
 
-    status = opt_graph.Optimize(resource, device_.get());
+    status = opt_graph.Optimize(resource, options_, device_.get());
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "OptGraph Optimize failed: " << GetRetCodeStr(status);
         return status;

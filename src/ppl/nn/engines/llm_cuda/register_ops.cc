@@ -35,10 +35,10 @@
 #include "ppl/nn/engines/llm_cuda/ops/pmx/row_parallel_linear_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/silu_op.h"
 
-#include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching_key_value_cache_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching_multi_head_attention_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching_multi_head_cache_attention_op.h"
-#include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching_rotary_position_embedding_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/key_value_cache_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/multi_head_attention_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/multi_head_cache_attention_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/rotary_position_embedding_op.h"
 
 using namespace std;
 using namespace ppl::common;

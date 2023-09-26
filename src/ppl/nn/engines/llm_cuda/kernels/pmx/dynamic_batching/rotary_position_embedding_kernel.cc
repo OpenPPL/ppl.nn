@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "dynamic_batching_rotary_position_embedding_kernel.h"
+#include "rotary_position_embedding_kernel.h"
 
 #include "ppl/kernel/llm/cuda/pmx/rotary_position_embedding.h"
 

@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "dynamic_batching_key_value_cache_kernel.h"
+#include "key_value_cache_kernel.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 

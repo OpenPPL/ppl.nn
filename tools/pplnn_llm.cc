@@ -225,6 +225,11 @@ Define_string_opt("--in-devices", g_flag_in_devices, "",
                         "only accept \"host\" and \"device\", "
                         "all tensor is set to \"device\" by default");
 
+Define_string_opt("--quant-method", g_flag_quant_method, "none",
+                        "llm cuda quantization mehtod, only accept "
+                        "\"none\" and \"online_i8i8\", "
+                        "default: \"none\"");
+
 #include <cuda_runtime.h>
 
 #ifdef PPLNN_CUDA_ENABLE_NCCL
@@ -296,6 +301,15 @@ static bool RegisterLlmCudaEngine(vector<unique_ptr<Engine>>* engines) {
         options.mm_policy = llm::cuda::MM_COMPACT;
     } else {
         LOG(ERROR) << "unknown/unsupported --mm-policy option: " << g_flag_mm_policy;
+        return false;
+    }
+
+    if (g_flag_quant_method == "none") {
+        options.quant_method = llm::cuda::QUANT_METHOD_NONE;
+    } else if (g_flag_quant_method == "online_i8i8") {
+        options.quant_method = llm::cuda::QUANT_METHOD_ONLINE_I8I8;
+    } else {
+        LOG(ERROR) << "unknown/unsupported --quant-method option: " << g_flag_quant_method;
         return false;
     }
 

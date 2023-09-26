@@ -15,28 +15,29 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPT_GRAPH_H_
-#define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPT_GRAPH_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_KERNELS_PMX_I8I8_COLUMN_PARALLEL_LINEAR_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_KERNELS_PMX_I8I8_COLUMN_PARALLEL_LINEAR_KERNEL_H_
 
-#include "llm_cuda_device.h"
+#include "ppl/nn/engines/llm_cuda/kernel.h"
+#include "ppl/nn/params/pmx/column_parallel_linear_param.h"
 
-#include "ppl/nn/ir/graph.h"
-#include "ppl/nn/runtime/runtime_partition_info.h"
-#include "ppl/nn/utils/shared_resource.h"
-#include "ppl/nn/engines/llm_cuda/engine_options.h"
+namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
-namespace ppl { namespace nn { namespace llm { namespace cuda {
-
-class OptGraph final {
+class I8I8ColumnParallelLinearKernel : public LlmCudaKernel {
 public:
-    ppl::common::RetCode Init(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*);
-    ppl::common::RetCode Optimize(const utils::SharedResource&, const EngineOptions&, LlmCudaDevice*);
+    I8I8ColumnParallelLinearKernel(const ir::Node* node) : LlmCudaKernel(node) {}
+
+    void SetParam(const ppl::nn::pmx::ColumnParallelLinearParam* p) {
+        param_ = p;
+    }
 
 private:
-    ir::Graph* graph_ = nullptr;
-    RuntimePartitionInfo* partition_info_ = nullptr;
+    ppl::common::RetCode DoExecute(KernelExecContext*) override;
+
+private:
+    const ppl::nn::pmx::ColumnParallelLinearParam* param_ = nullptr;
 };
 
-}}}}
+}}}}} // namespace ppl::nn::llm::cuda::pmx
 
 #endif

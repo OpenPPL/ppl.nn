@@ -18,6 +18,7 @@
 #include "kernel.h"
 #include "opt_graph.h"
 #include "opt_kernel_creator_manager.h"
+#include "opt_pass_manager.h"
 
 #include "ppl/nn/engines/utils.h" // LoadConstants()
 #include "ppl/nn/common/logger.h"
@@ -78,7 +79,11 @@ static RetCode InitOps(std::map<nodeid_t, std::unique_ptr<OptKernel>>& kernels, 
     return RC_SUCCESS;
 }
 
-RetCode OptGraph::Optimize(const utils::SharedResource& resource, LlmCudaDevice* device) {
+RetCode OptGraph::Optimize(
+    const utils::SharedResource& resource,
+    const EngineOptions& engine_options,
+    LlmCudaDevice* device)
+{
     OptKernelOptions options;
     options.resource = &resource;
     options.graph = graph_;
@@ -91,6 +96,23 @@ RetCode OptGraph::Optimize(const utils::SharedResource& resource, LlmCudaDevice*
     if (rc != RC_SUCCESS) {
         LOG(ERROR) << "InitOps failed: " << GetRetCodeStr(rc);
         return rc;
+    }
+
+    if (engine_options.quant_method == QUANT_METHOD_ONLINE_I8I8) {
+        LOG(INFO) << "Processing I8I8Quantization...";
+        auto prc = OptPassManager::GetInstance()->Apply("", "I8I8Quantization", options);
+        if (prc.retcode != RC_SUCCESS) {
+            LOG(ERROR) << "I8I8Quantization failed: " << GetRetCodeStr(prc.retcode);
+            return prc.retcode;
+        }
+        if (!prc.graph_modified) {
+            LOG(INFO) << "I8I8Quantization: nothing has been changed.";
+        }
+        rc = OptPassManager::GetInstance()->ApplyByDomain("i8i8.fuse", options);
+        if (rc != RC_SUCCESS) {
+            LOG(ERROR) << "I8I8Fuse failed: " << GetRetCodeStr(rc);
+            return rc;
+        }
     }
 
     rc = utils::LoadConstants(*graph_, device, &partition_info_->constants);

@@ -26,7 +26,9 @@
 #include <stdio.h>
 #define PPLNN_LLM_CUDA_DEBUG_TRACE(fmt, ...) \
     do { \
-        fprintf(stderr, "[TRACE][%s:%d] " fmt, ppl::common::stripfilename(__FILE__), __LINE__, ##__VA_ARGS__); \
+        std::string __filename(__FILE__); \
+        auto __beg = __filename.rfind("kernels/") + 8; \
+        fprintf(stderr, "[LLMCUDA][%s:%d] " fmt, __filename.substr(__beg, std::string::npos).c_str(), __LINE__, ##__VA_ARGS__); \
         fflush(stderr); \
     } while (0)
 #else

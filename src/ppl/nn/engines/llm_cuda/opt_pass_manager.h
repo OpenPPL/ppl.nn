@@ -15,28 +15,33 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPT_GRAPH_H_
-#define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPT_GRAPH_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPT_PASS_MANAGER_H_
+#define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPT_PASS_MANAGER_H_
 
-#include "llm_cuda_device.h"
-
-#include "ppl/nn/ir/graph.h"
-#include "ppl/nn/runtime/runtime_partition_info.h"
-#include "ppl/nn/utils/shared_resource.h"
-#include "ppl/nn/engines/llm_cuda/engine_options.h"
+#include  "opt_pass.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda {
 
-class OptGraph final {
+class OptPassManager {
 public:
-    ppl::common::RetCode Init(const utils::SharedResource&, ir::Graph*, RuntimePartitionInfo*);
-    ppl::common::RetCode Optimize(const utils::SharedResource&, const EngineOptions&, LlmCudaDevice*);
+    static OptPassManager* GetInstance() {
+        static OptPassManager mgr;
+        return &mgr;
+    }
+    ~OptPassManager();
+
+    ppl::common::RetCode Register(const std::string& domain, const std::string& name, const OptPass& pass);
+    OptPassStatus Apply(const std::string& domain, const std::string& name, const OptKernelOptions& options);
+    ppl::common::RetCode ApplyByDomain(const std::string& domain, const OptKernelOptions& options);
 
 private:
-    ir::Graph* graph_ = nullptr;
-    RuntimePartitionInfo* partition_info_ = nullptr;
+    std::unordered_map<std::string, std::unordered_map<std::string, OptPass>> pass_all_;
+
+private:
+    OptPassManager();
 };
 
-}}}}
+
+}}}} // namespace ppl::nn::llm::cuda
 
 #endif

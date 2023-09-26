@@ -15,35 +15,26 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "dynamic_batching_multi_head_cache_attention_op.h"
+#ifndef _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPS_PMX_I8I8_ROW_PARALLEL_LINEAR_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPS_PMX_I8I8_ROW_PARALLEL_LINEAR_OP_H_
 
-#include "ppl/nn/engines/llm_cuda/kernels/pmx/dynamic_batching_multi_head_cache_attention_kernel.h"
-#include "ppl/nn/common/logger.h"
-
-using namespace std;
-using namespace ppl::common;
-using namespace ppl::nn::pmx;
-
+#include "ppl/nn/engines/llm_cuda/opt_kernel.h"
+#include "ppl/nn/params/pmx/row_parallel_linear_param.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
-RetCode DynamicBatchingMultiHeadCacheAttentionOp::DoInit(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<MultiHeadCacheAttentionParam>(options, &param_);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
-        return status;
-    }
+class I8I8RowParallelLinearOp final : public LlmCudaOptKernel {
+public:
+    I8I8RowParallelLinearOp(const ir::Node* node) : LlmCudaOptKernel(node) {}
 
-    infer_type_and_format_func_ = GenericInferTypeAndFormat;
-    infer_dims_func_ = GenericInferDims;
+    KernelImpl* CreateKernelImpl() const override;
+    ppl::common::RetCode DoInit(const OptKernelOptions&) override;
 
-    return RC_SUCCESS;
-}
-
-KernelImpl* DynamicBatchingMultiHeadCacheAttentionOp::CreateKernelImpl() const {
-    return CreateKernelImplWithParam<DynamicBatchingMultiHeadCacheAttentionKernel>(param_.get());
-}
-
-
+private:
+    std::shared_ptr<ppl::nn::pmx::RowParallelLinearParam> param_;
+    ppl::common::NcclParam *nccl_param_ = nullptr;
+};
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx
+
+#endif

@@ -15,35 +15,22 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "dynamic_batching_rotary_position_embedding_op.h"
+#ifndef _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_KERNELS_PMX_I8I8_ONLINE_QUANTIZE_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_KERNELS_PMX_I8I8_ONLINE_QUANTIZE_KERNEL_H_
 
-#include "ppl/nn/engines/llm_cuda/kernels/pmx/dynamic_batching_rotary_position_embedding_kernel.h"
-#include "ppl/nn/common/logger.h"
-
-using namespace std;
-using namespace ppl::common;
-using namespace ppl::nn::pmx;
-
+#include "ppl/nn/engines/llm_cuda/kernel.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
-RetCode DynamicBatchingRotaryPositionEmbeddingOp::DoInit(const OptKernelOptions& options) {
-    auto status = GenericLoadParam<RotaryPositionEmbeddingParam>(options, &param_);
-    if (status != RC_SUCCESS) {
-        LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
-        return status;
-    }
+class I8I8OnlineQuantizeKernel : public LlmCudaKernel {
+public:
+    I8I8OnlineQuantizeKernel(const ir::Node* node) : LlmCudaKernel(node) {}
 
-    infer_type_and_format_func_ = GenericInferTypeAndFormat;
-    infer_dims_func_ = GenericInferDims;
+private:
+    ppl::common::RetCode DoExecute(KernelExecContext*) override;
 
-    return RC_SUCCESS;
-}
-
-KernelImpl* DynamicBatchingRotaryPositionEmbeddingOp::CreateKernelImpl() const {
-    return CreateKernelImplWithParam<DynamicBatchingRotaryPositionEmbeddingKernel>(param_.get());
-}
-
-
+};
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx
+
+#endif
