@@ -70,7 +70,8 @@ public:
         return ppl::common::RC_SUCCESS;
     }
 
-    const T* Find(const std::string& domain, const std::string& type, uint64_t version) const {
+    const T* Find(const std::string& domain, const std::string& type, uint64_t version,
+                  VersionRange* supported_versions = nullptr) const {
         auto domain_iter = info_.find(domain);
         if (domain_iter == info_.end()) {
             return nullptr;
@@ -79,6 +80,10 @@ public:
         auto type_iter = domain_iter->second.find(type);
         if (type_iter == domain_iter->second.end()) {
             return nullptr;
+        }
+
+        if (supported_versions) {
+            *supported_versions = type_iter->second.back().first;
         }
 
         for (auto ver_iter = type_iter->second.begin(); ver_iter != type_iter->second.end(); ++ver_iter) {

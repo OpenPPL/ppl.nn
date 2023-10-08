@@ -176,10 +176,17 @@ static RetCode ParseNodeInfo(const ::onnx::NodeProto& pb_node, const ParamParser
         node->AddOutput(edge->GetId());
     }
 
-    auto parser_info = ParamParserManager::GetInstance()->Find(pb_node.domain(), pb_node.op_type(), op_set_ref->second);
+    ppl::nn::utils::VersionRange supported_versions;
+    auto parser_info = ParamParserManager::GetInstance()->Find(pb_node.domain(), pb_node.op_type(), op_set_ref->second,
+                                                               &supported_versions);
     if (!parser_info) {
-        LOG(ERROR) << "unsupported op: domain[" << pb_node.domain() << "], type[" << pb_node.op_type() << "], version["
-                   << op_set_ref->second << "]";
+        if (supported_versions.first == 0 && supported_versions.last == 0) {
+            LOG(ERROR) << "unsupported op: domain[" << pb_node.domain() << "], type[" << pb_node.op_type() << "].";
+        } else {
+            LOG(ERROR) << "unsupported version [" << op_set_ref->second << "] of op: domain[" << pb_node.domain()
+                       << "], type[" << pb_node.op_type() << "]. latest supported version(s): ["
+                       << supported_versions.first << ", " << supported_versions.last << "].";
+        }
         return RC_UNSUPPORTED;
     }
 
