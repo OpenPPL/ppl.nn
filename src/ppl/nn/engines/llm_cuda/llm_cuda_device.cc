@@ -34,6 +34,8 @@ LlmCudaDevice::LlmCudaDevice() {
 }
 
 LlmCudaDevice::~LlmCudaDevice() {
+    DoDestroy();
+
     if (stream_) {
         cudaStreamSynchronize(stream_);
         cudaStreamDestroy(stream_);
@@ -46,8 +48,6 @@ LlmCudaDevice::~LlmCudaDevice() {
     if (cublas_workspace_) {
         cudaFree(cublas_workspace_);
     }
-
-    DoDestroy();
 
     if (device_id_ != -1) {
         DestroyCudaEnv(device_id_);
@@ -77,9 +77,9 @@ RetCode LlmCudaDevice::Init(int device_id, bool init_stream, bool init_cublas, N
         /* refer to https://developer.nvidia.com/blog/new-cublas-12-0-features-and-matrix-multiplication-performance-on-nvidia-hopper-gpus/
          NV said:
             NVIDIA Hopper architecture workspace requirements
-            H100 native kernels have increased the need for workspace size. 
+            H100 native kernels have increased the need for workspace size.
             It is therefore highly recommended to provide at least 32 MiB (33554432 B)
-            of workspace for cuBLASLt calls or when using cublasSetWorkspace. 
+            of workspace for cuBLASLt calls or when using cublasSetWorkspace.
         */
         if (GetSMVersion() >= 90) {
             auto err = cudaMalloc(&cublas_workspace_, 32 * 1024 * 1024);
@@ -264,8 +264,8 @@ RetCode LlmCudaDevice::ConvertFromHostAsync(BufferDesc* dst, const TensorShape& 
 }
 
 RetCode LlmCudaDevice::Convert(BufferDesc* dst, const TensorShape& dst_desc, const BufferDesc& src,
-                                      const TensorShape& src_desc, const void* dst_custom_info,
-                                      const void* src_custom_info) {
+                               const TensorShape& src_desc, const void* dst_custom_info,
+                               const void* src_custom_info) {
     LOG(ERROR) << "do not support custom convert";
     return RC_UNSUPPORTED;
 }
