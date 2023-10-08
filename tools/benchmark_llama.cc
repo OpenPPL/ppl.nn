@@ -40,7 +40,6 @@ struct Profiler {
     }
 };
 
-const static float MAX_TOKEN_SCALE = 0.9;
 static Profiler profiling;
 
 Define_string_opt("--model_type", g_flag_model_type, "", "model type");
@@ -55,6 +54,10 @@ Define_uint32_opt("--warmup_loops", g_flag_warmup_loops, 2, "warm loops");
 Define_uint32_opt("--benchmark_loops", g_flag_benchmark_loops, 4, "benchmark loops");
 Define_string_opt("--input_file", g_flag_input_file, "", "input file of token ids");
 Define_uint32_opt("--batch_size", g_flag_batch_size, UINT32_MAX, "batch size");
+Define_string_opt("--quant-method", g_flag_quant_method, "none",
+                        "llm cuda quantization mehtod, only accept "
+                        "\"none\" and \"online_i8i8\", "
+                        "default: \"none\"");
 
 template <class T>
 static void PrintVector(vector<T> vec) {
@@ -94,6 +97,8 @@ struct Config {
 
     int benchmark_loops = 0;
     std::string input_file;
+
+    std::string quant_method;
 };
 
 struct ModelConfig final {
@@ -176,6 +181,15 @@ static Engine* CreateCudaEngine(ncclComm_t nccl_comm, int device_id) {
     ppl::nn::llm::cuda::EngineOptions options;
     options.device_id = device_id;
     options.mm_policy = ppl::nn::llm::cuda::MM_COMPACT;
+
+    if (g_flag_quant_method == "none") {
+        options.quant_method = llm::cuda::QUANT_METHOD_NONE;
+    } else if (g_flag_quant_method == "online_i8i8") {
+        options.quant_method = llm::cuda::QUANT_METHOD_ONLINE_I8I8;
+    } else {
+        LOG(ERROR) << "unknown/unsupported --quant-method option: " << g_flag_quant_method;
+        return nullptr;
+    }
 
     auto engine = unique_ptr<Engine>(ppl::nn::llm::cuda::EngineFactory::Create(options));
     if (!engine) {
@@ -635,6 +649,7 @@ static void ParseConfig(Config* config) {
     config->generation_len = g_flag_generation_len;
     config->benchmark_loops = g_flag_benchmark_loops;
     config->input_file = g_flag_input_file;
+    config->quant_method = g_flag_quant_method;
 
     LOG(INFO) << "config.model_type: " << config->model_type;
     LOG(INFO) << "config.model_dir: " << config->model_dir;
@@ -649,6 +664,8 @@ static void ParseConfig(Config* config) {
 
     LOG(INFO) << "config.benchmark_loops: " << config->benchmark_loops;
     LOG(INFO) << "config.input_file: " << config->input_file;
+
+    LOG(INFO) << "config.quant_method: " << config->quant_method;
 }
 
 bool ParseModelConfig(const std::string& model_param_path, ModelConfig* model_config) {
