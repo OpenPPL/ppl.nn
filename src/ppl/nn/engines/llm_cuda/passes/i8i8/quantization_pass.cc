@@ -117,19 +117,30 @@ static QuantizeWeightResult QuantizeWeight(
     weight_buffer.Reshape(*quantized_weight_buffer.GetShape());
     weight_buffer.GetShape()->SetDataType(weight_shape->data_type);
     weight_buffer.SetDevice(options.device);
-    rc = weight_buffer.ReallocBuffer();
-    if (ppl::common::RC_SUCCESS != rc) {
-        LOG(ERROR) << "realloc buffer for weight[" << weight_edge->GetName() << "] failed: " << ppl::common::GetRetCodeStr(rc);
+
+    // use zero copy to reduce GPU memory fragmentation
+    void* weight_pinned_host_buffer = nullptr;
+    auto cuda_err = cudaMallocHost(&weight_pinned_host_buffer, weight_buffer.GetShape()->CalcBytesIncludingPadding(), cudaHostAllocMapped);
+    if (cudaSuccess != cuda_err) {
+        LOG(ERROR) << "realloc pinned buffer for weight[" << weight_edge->GetName() << "] failed: " << cudaGetErrorString(cuda_err);
         return {ppl::common::RC_OUT_OF_MEMORY, nullptr};
     }
-
-    // copy fp16 data to GPU for quantize
-    auto weight_host = &constants->at(weight_edge->GetId());
-    rc = options.device->CopyFromHost(&weight_buffer.GetBufferDesc(), weight_host->data.GetData(), weight_host->data.GetSize());
-    if (ppl::common::RC_SUCCESS != rc) {
-        LOG(ERROR) << "copy weight[" << weight_edge->GetName() << "] data from host failed: " << ppl::common::GetRetCodeStr(rc);
+    void *weight_pinned_dev_buffer = nullptr;
+    cuda_err = cudaHostGetDevicePointer(&weight_pinned_dev_buffer, weight_pinned_host_buffer, 0);
+    if (cudaSuccess != cuda_err) {
+        LOG(ERROR) << "get device pinned buffer for weight[" << weight_edge->GetName() << "] failed: " << cudaGetErrorString(cuda_err);
         return {ppl::common::RC_DEVICE_MEMORY_ERROR, nullptr};
     }
+    weight_buffer.SetBuffer(weight_pinned_dev_buffer);
+
+    // copy fp16 data to pinned memory for quantize
+    auto weight_host = &constants->at(weight_edge->GetId());
+    memcpy(weight_pinned_host_buffer, weight_host->data.GetData(), weight_host->data.GetSize());
+    // rc = options.device->CopyFromHost(&weight_buffer.GetBufferDesc(), weight_host->data.GetData(), weight_host->data.GetSize());
+    // if (ppl::common::RC_SUCCESS != rc) {
+    //     LOG(ERROR) << "copy weight[" << weight_edge->GetName() << "] data from host failed: " << ppl::common::GetRetCodeStr(rc);
+    //     return {ppl::common::RC_DEVICE_MEMORY_ERROR, nullptr};
+    // }
 
     // call quantize kernel here
     rc = ppl::kernel::llm::cuda::pmx::i8i8::minmax_quantize_fp16(
@@ -180,7 +191,11 @@ static QuantizeWeightResult QuantizeWeight(
     loaded_constants->emplace(weight_edge->GetId(), std::move(quantized_weight_buffer));
     loaded_constants->emplace(scale_edge->GetId(), std::move(scale_buffer));
 
-    weight_buffer.FreeBuffer();
+    cuda_err = cudaFreeHost(weight_pinned_host_buffer);
+    if (cudaSuccess != cuda_err) {
+        LOG(ERROR) << "free pinned buffer for weight[" << weight_edge->GetName() << "] failed: " << cudaGetErrorString(cuda_err);
+        return {ppl::common::RC_DEVICE_MEMORY_ERROR, nullptr};
+    }
 
     return {ppl::common::RC_SUCCESS, scale_edge};
 }
