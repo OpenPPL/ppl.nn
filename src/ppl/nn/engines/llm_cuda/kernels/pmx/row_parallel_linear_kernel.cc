@@ -73,11 +73,6 @@ ppl::common::RetCode RowParallelLinearKernel::DoExecute(KernelExecContext* ctx) 
     auto cublas_handle = GetCublasHandle();
     auto nccl_param = GetTensorParallelNcclParam();
 
-    if (param_->bias_term) {
-        LOG(ERROR) << "bias_term unsupported";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
     const int64_t M = input_shape->CalcElementsToDimensionExcludingPadding(input_shape->GetDimCount() - 1);
     const bool use_workspace = M >= 64;
 

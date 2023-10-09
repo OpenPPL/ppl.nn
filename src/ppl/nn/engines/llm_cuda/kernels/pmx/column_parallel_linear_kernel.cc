@@ -74,11 +74,6 @@ ppl::common::RetCode ColumnParallelLinearKernel::DoExecute(KernelExecContext* ct
     auto cublas_handle = GetCublasHandle();
     auto nccl_param = GetTensorParallelNcclParam();
 
-    if (param_->bias_term) {
-        LOG(ERROR) << "bias_term unsupported";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
     uint64_t gather_buffer_size = 0;
     void *gather_buffer = nullptr;
     if (param_->gather_output && nccl_param->size > 1) {
