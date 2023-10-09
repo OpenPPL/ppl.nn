@@ -9,29 +9,31 @@ TOP_K=1
 TEMPERATURE=1.0
 WARMUP_LOOPS=2
 BENCHMARK_LOOPS=2
-INPUT_FILE_BASE="/home/shengyunrui/ppl.nn.llm/tools/tokens_input"
-
+INPUT_FILE_BASE="${HOME}/ppl.nn.llm/tools/tokens_input"
 
 INPUT_LEN=8
 GENERATION_LEN=256
 BATCH_SIZE_LIST=(1 2 4 8 16 32 64 128 256)
 
+QUANT_METHOD="online_i8i8"
+
 for BATCH_SIZE in ${BATCH_SIZE_LIST[@]}; do
     INPUT_FILE=${INPUT_FILE_BASE}_${INPUT_LEN}
 
     ~/ppl.nn.llm/pplnn-build/tools/benchmark_llama \
-        --model_type $MODEL_TYPE \
-        --model_dir $MODEL_DIR \
-        --model_param_path $MODEL_PARAM_PATH \
-        --tensor_parallel_size $TENSOR_PARALLEL_SIZE \
-        --top_p $TOP_P \
-        --top_k $TOP_K \
+        --model-type $MODEL_TYPE \
+        --model-dir $MODEL_DIR \
+        --model-param-path $MODEL_PARAM_PATH \
+        --tensor-parallel-size $TENSOR_PARALLEL_SIZE \
+        --top-p $TOP_P \
+        --top-k $TOP_K \
         --temperature $TEMPERATURE \
-        --warmup_loops $WARMUP_LOOPS \
-        --generation_len $GENERATION_LEN \
-        --benchmark_loops $BENCHMARK_LOOPS \
-        --input_file $INPUT_FILE \
-        --batch_size $BATCH_SIZE
+        --warmup-loops $WARMUP_LOOPS \
+        --generation-len $GENERATION_LEN \
+        --benchmark-loops $BENCHMARK_LOOPS \
+        --input-file $INPUT_FILE \
+        --batch-size $BATCH_SIZE \
+        --quant-method $QUANT_METHOD
 
 done
 

@@ -42,18 +42,18 @@ struct Profiler {
 
 static Profiler profiling;
 
-Define_string_opt("--model_type", g_flag_model_type, "", "model type");
-Define_string_opt("--model_dir", g_flag_model_dir, "", "model directory");
-Define_string_opt("--model_param_path", g_flag_model_param_path, "", "path of model params");
-Define_uint32_opt("--tensor_parallel_size", g_flag_tensor_parallel_size, 1, "tensor parallel size");
-Define_float_opt("--top_p", g_flag_top_p, 0.0, "top p");
-Define_uint32_opt("--top_k", g_flag_top_k, 1, "top k");
+Define_string_opt("--model-type", g_flag_model_type, "", "model type");
+Define_string_opt("--model-dir", g_flag_model_dir, "", "model directory");
+Define_string_opt("--model-param-path", g_flag_model_param_path, "", "path of model params");
+Define_uint32_opt("--tensor-parallel-size", g_flag_tensor_parallel_size, 1, "tensor parallel size");
+Define_float_opt("--top-p", g_flag_top_p, 0.0, "top p");
+Define_uint32_opt("--top-k", g_flag_top_k, 1, "top k");
 Define_float_opt("--temperature", g_flag_temperature, 1.0, "temperature");
-Define_uint32_opt("--generation_len", g_flag_generation_len, 32, "generation length");
-Define_uint32_opt("--warmup_loops", g_flag_warmup_loops, 2, "warm loops");
-Define_uint32_opt("--benchmark_loops", g_flag_benchmark_loops, 4, "benchmark loops");
-Define_string_opt("--input_file", g_flag_input_file, "", "input file of token ids");
-Define_uint32_opt("--batch_size", g_flag_batch_size, UINT32_MAX, "batch size");
+Define_uint32_opt("--generation-len", g_flag_generation_len, 32, "generation length");
+Define_uint32_opt("--warmup-loops", g_flag_warmup_loops, 2, "warm loops");
+Define_uint32_opt("--benchmark-loops", g_flag_benchmark_loops, 4, "benchmark loops");
+Define_string_opt("--input-file", g_flag_input_file, "", "input file of token ids");
+Define_uint32_opt("--batch-size", g_flag_batch_size, UINT32_MAX, "batch size");
 Define_string_opt("--quant-method", g_flag_quant_method, "none",
                         "llm cuda quantization mehtod, only accept "
                         "\"none\" and \"online_i8i8\", "
@@ -835,7 +835,11 @@ int main(int argc, char* argv[]) {
     }
 
     ModelInput raw_model_input;
-    ParseInput(config.input_file, &raw_model_input);
+    if (!ParseInput(config.input_file, &raw_model_input)) {
+        LOG(ERROR) << "ParseInput failed, input file: " << config.input_file; 
+        return -1;
+    }
+
     LOG(INFO) << "batch size: " << raw_model_input.first_fill_len.size();
     int bs = raw_model_input.first_fill_len.size();
     int input_token_len = raw_model_input.token_ids.size() / bs;
@@ -846,11 +850,13 @@ int main(int argc, char* argv[]) {
     bool ret = llm.Init(model_config, config.model_dir);
     if (!ret) {
         LOG(ERROR) << "llm init failed";
+        return -1;
     }
 
     ret = llm.PrepareInput(bs, input_token_len);
     if (!ret) {
         LOG(ERROR) << "llm prepare input failed";
+        return -1;
     }
     LOG(INFO) << "llm prepare input success";
 
@@ -876,14 +882,6 @@ int main(int argc, char* argv[]) {
     cudaMemGetInfo(&avail_bytes, &total);
     profiling.mem_usage = double((total - avail_bytes) >> 20) / 1024;
 
-    // // get result
-    // LOG(INFO) << "output: ";
-    // for (int i = 0; i < bs; ++i) {
-    //     for (int j = 0; j < config.generation_len; ++j) {
-    //         std::cout << output_tokens[j][i] << ", ";
-    //     }
-    //     std::cout <<" --------------------------------- " << std::endl;
-    // }
 
     // profiling 结果
     double avg_prefill_latency = 0;

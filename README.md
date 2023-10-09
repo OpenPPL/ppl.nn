@@ -104,6 +104,54 @@ mpirun -np <MP> benchmark.sh <STEP>
 
 The `MP` value for LLaMA can be found [Here](https://github.com/openppl-public/ppl.pmx/tree/master/model_zoo/llama/facebook#export).
 
+
+## Benchmark LLaMA
+
+Building a benchmark test for LLaMA model with full generation steps. The difference with previous benchmark, is that previous one benchmark with one step, while here benchmark for whole generation steps. Refer to [tools/benchmark.sh](tools/benchmark.sh) for more detail.
+```
+~/ppl.nn.llm/pplnn-build/tools/benchmark_llama \
+    --model_type $MODEL_TYPE \
+    --model_dir $MODEL_DIR \
+    --model_param_path $MODEL_PARAM_PATH \
+    --tensor_parallel_size $TENSOR_PARALLEL_SIZE \
+    --top_p $TOP_P \
+    --top_k $TOP_K \
+    --temperature $TEMPERATURE \
+    --warmup_loops $WARMUP_LOOPS \
+    --generation_len $GENERATION_LEN \
+    --benchmark_loops $BENCHMARK_LOOPS \
+    --input_file $INPUT_FILE \
+    --batch_size $BATCH_SIZE \
+    --quant-method $QUANT_METHOD
+
+```
+Input parameter explains: 
+- `model-type`: basic type of model, including diffenent weight. For example, model type `llama` including llama-7b, llama-13b, llama-30b and llama-65b. For other llm model, we will support soon.
+
+- `model-dir`: path to the model. 
+
+- `model-param-path`: path to model params.
+
+- `tensor-parallel-size`: size of tensor parallel. For llama_7b, the value is 1. 
+
+- `top-p`:  select enough tokens to "cover" a certain amount of probability defined by the parameter p (refer to [Token selection strategies: Top-K, Top-p, and Temperature](https://peterchng.com/blog/2023/05/02/token-selection-strategies-top-k-top-p-and-temperature/) for more detail). The value range from 0~1.
+
+- `top-k`: select the first top k tokens to create new distribution (refer to [Token selection strategies: Top-K, Top-p, and Temperature](https://peterchng.com/blog/2023/05/02/token-selection-strategies-top-k-top-p-and-temperature/) for more detail). This value does not matter on current version. 
+
+- `temperature`: Temperature affects how “random” the model’s output is (refer to [Token selection strategies: Top-K, Top-p, and Temperature](https://peterchng.com/blog/2023/05/02/token-selection-strategies-top-k-top-p-and-temperature/) for more detail). 
+
+- `warmup-loops`: loops to warm up GPU for accurate performance. 
+
+- `generation-len`: length of generated tokens.
+
+- `benchmark-loops`: benchmark loops.
+
+- `input-file`: file of input tokens.
+
+- `batch-size`: batch size. 
+
+- `quant-method`: only accept two value: {`none`, `online_i8i8`}. `none` means not quantize, and `online_i8i8` (also called `w8a8`) means weight and tensor are both quantized with int8. 
+
 ## Documents
 
 Refer to [ppl.pmx](https://github.com/openppl-public/ppl.pmx) for how to export onnx models. Refer to APIs in [documents](https://github.com/openppl-public/ppl.nn#documents) of ppl.nn.
