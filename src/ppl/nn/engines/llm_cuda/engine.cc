@@ -33,7 +33,7 @@ namespace ppl { namespace nn { namespace llm { namespace cuda {
 
 RetCode LlmCudaEngine::Init(const EngineOptions& options) {
     options_ = options;
-    device_.reset(new PlainDevice());
+    device_.reset(new PlainDevice(false));
     auto rc = device_->Init(options.device_id, false, false, &tensor_parallel_nccl_param_);
     if (rc != RC_SUCCESS) {
         LOG(ERROR) << "init device failed: " << GetRetCodeStr(rc);

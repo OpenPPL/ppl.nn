@@ -20,25 +20,24 @@
 
 #include "llm_cuda_device.h"
 
-#include "ppl/common/cuda/cuda_plain_async_allocator.h"
+#include "ppl/common/allocator.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda {
 
 class PlainDevice final : public LlmCudaDevice {
 public:
+    PlainDevice(bool async) : async_(async) {}
     using LlmCudaDevice::Realloc;
     ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc*) override;
     void Free(BufferDesc*) override;
 
 protected:
-    ppl::common::RetCode DoInit() override {
-        allocator_.Init(stream_);
-        return ppl::common::RC_SUCCESS;
-    }
-    void DoDestroy() override {}
+    ppl::common::RetCode DoInit() override;
+    void DoDestroy() override;
 
 private:
-    ppl::common::CudaPlainAsyncAllocator allocator_;
+    bool async_;
+    ppl::common::Allocator* allocator_ = nullptr;
 };
 
 }}}} // namespace ppl::nn::llm::cuda

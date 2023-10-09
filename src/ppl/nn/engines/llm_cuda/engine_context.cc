@@ -26,7 +26,7 @@ namespace ppl { namespace nn { namespace llm { namespace cuda {
 
 RetCode LlmCudaEngineContext::Init(const EngineOptions& options, NcclParam* tensor_parallel_nccl_param) {
     if (options.mm_policy == MM_PLAIN) {
-        device_.reset(new PlainDevice());
+        device_.reset(new PlainDevice(true));
     } else if (options.mm_policy == MM_COMPACT) {
         device_.reset(new BufferedDevice());
     } else {

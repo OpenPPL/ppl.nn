@@ -17,13 +17,31 @@
 
 #include "plain_device.h"
 
+#include "ppl/common/cuda/cuda_plain_allocator.h"
+#include "ppl/common/cuda/cuda_plain_async_allocator.h"
+
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda {
 
+RetCode PlainDevice::DoInit() {
+    if (async_) {
+        auto ar = new CudaPlainAsyncAllocator();
+        ar->Init(stream_);
+        allocator_ = ar;
+    } else {
+        allocator_ = new CudaPlainAllocator();
+    }
+    return RC_SUCCESS;
+}
+
+void PlainDevice::DoDestroy() {
+    delete allocator_;
+}
+
 RetCode PlainDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {
     if (buffer->addr) {
-        allocator_.Free(buffer->addr);
+        allocator_->Free(buffer->addr);
     }
 
     if (bytes == 0) {
@@ -32,7 +50,7 @@ RetCode PlainDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {
         return RC_SUCCESS;
     }
 
-    buffer->addr = allocator_.Alloc(bytes);
+    buffer->addr = allocator_->Alloc(bytes);
     if (!buffer->addr) {
         return RC_OUT_OF_MEMORY;
     }
@@ -43,7 +61,7 @@ RetCode PlainDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {
 
 void PlainDevice::Free(BufferDesc* buffer) {
     if (buffer->addr) {
-        allocator_.Free(buffer->addr);
+        allocator_->Free(buffer->addr);
         buffer->addr = nullptr;
         buffer->desc = 0;
     }
