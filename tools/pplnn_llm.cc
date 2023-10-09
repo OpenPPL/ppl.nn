@@ -964,6 +964,21 @@ int main(int argc, char* argv[]) {
     auto prepare_diff = std::chrono::duration_cast<std::chrono::microseconds>(prepare_end_ts - prepare_begin_ts);
     LOG(INFO) << "RegisterEngines costs: " << (float)prepare_diff.count() / 1000 << " ms.";
 
+#ifdef PPLNN_USE_LLM_CUDA
+    {
+        size_t free_bytes, total_bytes;
+        auto err = cudaMemGetInfo(&free_bytes, &total_bytes);
+        if (err != cudaSuccess) {
+            LOG(ERROR) << "cudaMemGetInfo failed: " << cudaGetErrorString(err);
+        } else {
+            double free  = free_bytes / 1024.0 / 1024.0;
+            double total = total_bytes / 1024.0 / 1024.0;
+            double used  = total - free;
+            LOG(INFO) << "Init Engine GPU Mem Usage: " << used / 1024.0 << " GiB";
+        }
+    }
+#endif
+
     unique_ptr<Runtime> runtime;
 
     if (false) {
@@ -1016,6 +1031,21 @@ int main(int argc, char* argv[]) {
         prepare_end_ts = std::chrono::high_resolution_clock::now();
         prepare_diff = std::chrono::duration_cast<std::chrono::microseconds>(prepare_end_ts - prepare_begin_ts);
         LOG(INFO) << "RuntimeBuilder CreateRuntime costs: " << (float)prepare_diff.count() / 1000 << " ms.";
+    }
+#endif
+
+#ifdef PPLNN_USE_LLM_CUDA
+    {
+        size_t free_bytes, total_bytes;
+        auto err = cudaMemGetInfo(&free_bytes, &total_bytes);
+        if (err != cudaSuccess) {
+            LOG(ERROR) << "cudaMemGetInfo failed: " << cudaGetErrorString(err);
+        } else {
+            double free  = free_bytes / 1024.0 / 1024.0;
+            double total = total_bytes / 1024.0 / 1024.0;
+            double used  = total - free;
+            LOG(INFO) << "Load Model GPU Mem Usage: " << used / 1024.0 << " GiB";
+        }
     }
 #endif
 
@@ -1127,15 +1157,17 @@ int main(int argc, char* argv[]) {
     }
 
 #ifdef PPLNN_USE_LLM_CUDA
-    size_t free_bytes, total_bytes;
-    auto err = cudaMemGetInfo(&free_bytes, &total_bytes);
-    if (err != cudaSuccess) {
-        LOG(ERROR) << "cudaMemGetInfo failed: " << cudaGetErrorString(err);
-    } else {
-        double free  = free_bytes / 1024.0 / 1024.0;
-        double total = total_bytes / 1024.0 / 1024.0;
-        double used  = total - free;
-        LOG(INFO) << "GPU Mem Usage: " << used / 1024.0 << " GiB";
+    {
+        size_t free_bytes, total_bytes;
+        auto err = cudaMemGetInfo(&free_bytes, &total_bytes);
+        if (err != cudaSuccess) {
+            LOG(ERROR) << "cudaMemGetInfo failed: " << cudaGetErrorString(err);
+        } else {
+            double free  = free_bytes / 1024.0 / 1024.0;
+            double total = total_bytes / 1024.0 / 1024.0;
+            double used  = total - free;
+            LOG(INFO) << "Run Model GPU Mem Usage: " << used / 1024.0 << " GiB";
+        }
     }
 #endif
 

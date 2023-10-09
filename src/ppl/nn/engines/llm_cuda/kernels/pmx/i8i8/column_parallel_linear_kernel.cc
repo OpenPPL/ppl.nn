@@ -64,6 +64,11 @@ ppl::common::RetCode I8I8ColumnParallelLinearKernel::DoExecute(KernelExecContext
     TensorShape *bias_shape = nullptr;
     void *bias_data = nullptr;
     if (param_->bias_term) {
+        if (!param_->gather_output) {
+            LOG(ERROR) << "currently only support bias_term == true with gather_output == true";
+            return ppl::common::RC_UNSUPPORTED;
+        }
+
         if (!bias) {
             LOG(ERROR) << "bias_term == true but bias not found.";
             return ppl::common::RC_NOT_FOUND;
@@ -80,14 +85,11 @@ ppl::common::RetCode I8I8ColumnParallelLinearKernel::DoExecute(KernelExecContext
     auto cublas_handle = GetCublasHandle();
     auto nccl_param = GetTensorParallelNcclParam();
 
-    if (param_->bias_term) {
-        LOG(ERROR) << "bias_term unsupported";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
     if (param_->gather_output) {
-        LOG(ERROR) << "gather_output unsupported";
-        return ppl::common::RC_UNSUPPORTED;
+        if (output_shape->GetDataType() != ppl::common::DATATYPE_FLOAT16) {
+            LOG(ERROR) << "output datatype must be fp16 when gather_output == true";
+            return ppl::common::RC_UNSUPPORTED;
+        }
     }
 
     uint64_t gather_buffer_size = 0;
@@ -96,8 +98,14 @@ ppl::common::RetCode I8I8ColumnParallelLinearKernel::DoExecute(KernelExecContext
         gather_buffer_size = output_shape->CalcBytesExcludingPadding();
     }
 
+    uint64_t quant_buffer_size = 0;
+    void *quant_buffer = nullptr;
+    if (param_->gather_output) {
+        quant_buffer_size = output_shape->CalcElementsIncludingPadding() * sizeof(int32_t);
+    }
+
     BufferDesc tmp_buffer_desc;
-    auto status = GetCudaDevice()->AllocTmpBuffer(gather_buffer_size, &tmp_buffer_desc);
+    auto status = GetCudaDevice()->AllocTmpBuffer(gather_buffer_size + quant_buffer_size, &tmp_buffer_desc);
     if (status != ppl::common::RC_SUCCESS) {
         LOG(ERROR) << "alloc tmp buffer size[" << gather_buffer_size << "] for kernel[" << GetName()
                 << "] failed: " << ppl::common::GetRetCodeStr(status);
@@ -106,7 +114,8 @@ ppl::common::RetCode I8I8ColumnParallelLinearKernel::DoExecute(KernelExecContext
     ppl::common::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
         GetCudaDevice()->FreeTmpBuffer(&tmp_buffer_desc);
     });
-    gather_buffer = tmp_buffer_desc.addr;
+    quant_buffer = tmp_buffer_desc.addr;
+    gather_buffer = (char*)tmp_buffer_desc.addr + quant_buffer_size;
 
     const int64_t M = input_shape->CalcElementsToDimensionExcludingPadding(input_shape->GetDimCount() - 1);
     const bool use_workspace = M >= 64;
@@ -121,12 +130,17 @@ ppl::common::RetCode I8I8ColumnParallelLinearKernel::DoExecute(KernelExecContext
         weight->GetBufferPtr(),
         bias_shape,
         bias_data,
+        input_scale->GetBufferPtr(),
+        weight_scale->GetBufferPtr(),
+        ppl::kernel::llm::cuda::pmx::i8i8::token_down_scale,
+        ppl::kernel::llm::cuda::pmx::i8i8::hidden_down_scale,
         param_->in_features,
         param_->out_features,
         true,
         nccl_param,
         param_->gather_output,
         gather_buffer,
+        quant_buffer,
         use_workspace ? GetCudaDevice()->GetCublasWorkspaceSize() : 0,
         use_workspace ? GetCudaDevice()->GetCubalsWorkspace() : nullptr,
         GetCudaDevice()->GetCublasAlgoCache(),

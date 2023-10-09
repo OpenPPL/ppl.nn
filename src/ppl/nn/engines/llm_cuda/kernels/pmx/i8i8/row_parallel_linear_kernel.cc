@@ -69,6 +69,11 @@ ppl::common::RetCode I8I8RowParallelLinearKernel::DoExecute(KernelExecContext* c
         }
         bias_shape = bias->GetShape();
         bias_data = bias->GetBufferPtr();
+
+        if (bias_shape->GetDataType() != ppl::common::DATATYPE_FLOAT16) {
+            LOG(ERROR) << "currently only support fp16 bias";
+            return ppl::common::RC_UNSUPPORTED;
+        }
     }
 
     if (ppl::common::DATATYPE_INT8 != input_shape->GetDataType()) {
@@ -78,11 +83,6 @@ ppl::common::RetCode I8I8RowParallelLinearKernel::DoExecute(KernelExecContext* c
 
     auto cublas_handle = GetCublasHandle();
     auto nccl_param = GetTensorParallelNcclParam();
-
-    if (param_->bias_term) {
-        LOG(ERROR) << "bias_term unsupported";
-        return ppl::common::RC_UNSUPPORTED;
-    }
 
     uint64_t quant_buffer_size = output_shape->CalcElementsIncludingPadding() * sizeof(int32_t);
     void *quant_buffer = nullptr;

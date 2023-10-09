@@ -64,10 +64,6 @@ ppl::common::RetCode I8I8OnlineDequantizeKernel::DoExecute(KernelExecContext* ct
     TensorShape *bias_shape = nullptr;
     void *bias_data = nullptr;
     if (param_->bias_term) {
-        // TODO: support dequant with bias
-        LOG(ERROR) << "currently only do not support bias";
-        return ppl::common::RC_UNSUPPORTED;
-
         if (!bias) {
             LOG(ERROR) << "bias_term == true but bias not found.";
             return ppl::common::RC_NOT_FOUND;
@@ -94,10 +90,10 @@ ppl::common::RetCode I8I8OnlineDequantizeKernel::DoExecute(KernelExecContext* ct
         return ppl::common::RC_INVALID_VALUE;
     }
 
-    (void) bias_data;
     return ppl::kernel::llm::cuda::pmx::i8i8::minmax_dequantize_fp16(
         GetStream(),
         input->GetBufferPtr(),
+        bias_data,
         scale_outer->GetBufferPtr(),
         scale_inner->GetBufferPtr(),
         batch,
