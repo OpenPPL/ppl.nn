@@ -289,10 +289,7 @@ static RetCode FuseConvAdd(ir::Graph* graph) {
             }
 
             // fuse conv & add
-            float* conv_bias_ptr = nullptr;
-            if (conv_bias_edge) {
-                conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.GetData();
-            } else { // if conv node has no bias, add bias tensor
+            if (!conv_bias_edge) { // if conv node has no bias, add bias tensor
                 auto add_bias_edge_name = conv_node->GetName() + "_bias";
                 auto edge_ret_pair = graph->topo->AddEdge(add_bias_edge_name);
                 if (!edge_ret_pair.second) {
@@ -305,10 +302,13 @@ static RetCode FuseConvAdd(ir::Graph* graph) {
                 conv_bias_edge->AddConsumer(conv_node->GetId());
 
                 ir::Constant bias_constant;
-                bias_constant.data.Init(channels * sizeof(float));
+                auto rc = bias_constant.data.Init(channels * sizeof(float));
+                if (rc != RC_SUCCESS) {
+                    LOG(ERROR) << "allocate " << channels * sizeof(float) << " bytes failed.";
+                    continue;
+                }
                 memset(bias_constant.data.GetData(), 0, bias_constant.data.GetSize());
                 constants.emplace(conv_bias_edge->GetId(), std::move(bias_constant));
-                conv_bias_ptr = (float*)constants[conv_bias_edge->GetId()].data.GetData();
 
                 ir::Shape bias_shape;
                 bias_shape.data_type = DATATYPE_FLOAT32;
@@ -317,9 +317,28 @@ static RetCode FuseConvAdd(ir::Graph* graph) {
                 shapes.emplace(conv_bias_edge->GetId(), bias_shape);
             }
 
-            for (uint32_t c = 0; c < channels; c++) {
-                // SUM(filter * x) + bias + shift
-                conv_bias_ptr[c] = conv_bias_ptr[c] + shift_data[c];
+            auto conv_bias_ref = constants.find(conv_bias_edge->GetId());
+            if (conv_bias_ref->second.data.GetPermission() & Mmap::WRITE) {
+                auto conv_bias_ptr = (float*)conv_bias_ref->second.data.GetData();
+                for (uint32_t c = 0; c < channels; c++) {
+                    // SUM(filter * x) + bias + shift
+                    conv_bias_ptr[c] = conv_bias_ptr[c] + shift_data[c];
+                }
+            } else {
+                Mmap new_data;
+                auto rc = new_data.Init(channels * sizeof(float));
+                if (rc != RC_SUCCESS) {
+                    LOG(ERROR) << "allocate " << channels * sizeof(float) << " bytes failed.";
+                    continue;
+                }
+
+                auto new_ptr = (float*)new_data.GetData();
+                auto conv_bias_ptr = (float*)conv_bias_ref->second.data.GetData();
+                for (uint32_t c = 0; c < channels; c++) {
+                    // SUM(filter * x) + bias + shift
+                    new_ptr[c] = conv_bias_ptr[c] + shift_data[c];
+                }
+                conv_bias_ref->second.data = std::move(new_data);
             }
 
             // delete add node and related edge
