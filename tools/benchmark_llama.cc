@@ -3,7 +3,6 @@
 
 #include "rapidjson/document.h"
 #include "rapidjson/istreamwrapper.h"
-#include "nccl.h"
 #include "ppl/common/log.h"
 using namespace ppl::common;
 
@@ -24,6 +23,12 @@ using namespace ppl::nn;
 #include <cuda_runtime.h>
 #include <omp.h>
 using namespace std;
+
+#ifdef PPLNN_CUDA_ENABLE_NCCL
+#include <nccl.h>
+#else
+typedef void* ncclComm_t;
+#endif
 
 struct Profiler {
     double prefill_latency = 0;
@@ -158,6 +163,7 @@ struct WorkerThreadArg final {
     ppl::nn::Tensor* logits;
 };
 
+#ifdef PPLNN_CUDA_ENABLE_NCCL
 #define NCCL_CHECK(cmd, emsg)                                                \
     do {                                                                     \
         ncclResult_t e = (cmd);                                              \
@@ -176,6 +182,7 @@ static RetCode InitNccl(uint32_t tensor_parallel_size, std::vector<ncclComm_t>* 
     NCCL_CHECK(ncclCommInitAll(nccl_comm_list->data(), tensor_parallel_size, dev_list.data()), "ncclCommInitAll");
     return RC_SUCCESS;
 }
+#endif
 
 static Engine* CreateCudaEngine(ncclComm_t nccl_comm, int device_id) {
     ppl::nn::llm::cuda::EngineOptions options;
@@ -197,11 +204,13 @@ static Engine* CreateCudaEngine(ncclComm_t nccl_comm, int device_id) {
         return nullptr;
     }
 
+#ifdef PPLNN_CUDA_ENABLE_NCCL
     auto rc = engine->Configure(ppl::nn::llm::cuda::ENGINE_CONF_SET_TP_NCCL_COMM, nccl_comm);
     if (rc != RC_SUCCESS) {
         LOG(ERROR) << "engine configure failed";
         return nullptr;
     }
+#endif
 
     return engine.release();
 }
@@ -378,7 +387,7 @@ public:
         }
 
         engine_list_.clear();
-
+#ifdef PPLNN_CUDA_ENABLE_NCCL
         for (int i = 0; i < tensor_parallel_size_; ++i) {
             auto e = ncclCommDestroy(nccl_comm_list_[i]);
             if (e != ncclSuccess) {
@@ -386,6 +395,7 @@ public:
                            << "(ncclCommDestroy)";
             }
         }
+#endif
     }
 
     bool Init(const ModelConfig& model_config, const std::string& model_dir) {
@@ -395,12 +405,14 @@ public:
         kv_scale_block_bytes_ = model_config.num_layers * 2 * model_config.num_kv_heads / tensor_parallel_size_ *
             model_config.hidden_dim / model_config.num_heads / model_config.cache_quant_group * sizeof(float16_t);
 
+#ifdef PPLNN_CUDA_ENABLE_NCCL
         auto rc = InitNccl(tensor_parallel_size_, &nccl_comm_list_);
         if (rc != RC_SUCCESS) {
             LOG(ERROR) << "NCCL init failed.";
             exit(-1);
         }
         LOG(INFO) << "Init Nccl successed";
+#endif
 
 #pragma omp parallel num_threads(tensor_parallel_size_)
         {
