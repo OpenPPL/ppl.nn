@@ -136,11 +136,7 @@ static QuantizeWeightResult QuantizeWeight(
     // copy fp16 data to pinned memory for quantize
     auto weight_host = &constants->at(weight_edge->GetId());
     memcpy(weight_pinned_host_buffer, weight_host->data.GetData(), weight_host->data.GetSize());
-    // rc = options.device->CopyFromHost(&weight_buffer.GetBufferDesc(), weight_host->data.GetData(), weight_host->data.GetSize());
-    // if (ppl::common::RC_SUCCESS != rc) {
-    //     LOG(ERROR) << "copy weight[" << weight_edge->GetName() << "] data from host failed: " << ppl::common::GetRetCodeStr(rc);
-    //     return {ppl::common::RC_DEVICE_MEMORY_ERROR, nullptr};
-    // }
+    constants->erase(weight_edge->GetId());
 
     // call quantize kernel here
     rc = ppl::kernel::llm::cuda::pmx::i8i8::minmax_quantize_fp16(
@@ -164,28 +160,14 @@ static QuantizeWeightResult QuantizeWeight(
         return {ppl::common::RC_DEVICE_RUNTIME_ERROR, nullptr};
     }
 
-    // copy quanitzed weight to host for backup and validation
-    weight_shape->data_type = ppl::common::DATATYPE_INT8;
-    weight_host->data.Init(quantized_weight_buffer.GetShape()->CalcBytesIncludingPadding());
-    rc = options.device->CopyToHost(weight_host->data.GetData(), quantized_weight_buffer.GetBufferPtr(), weight_host->data.GetSize());
-    if (ppl::common::RC_SUCCESS != rc) {
-        LOG(ERROR) << "copy weight[" << weight_edge->GetName() << "] data from host failed: " << ppl::common::GetRetCodeStr(rc);
-        return {ppl::common::RC_DEVICE_MEMORY_ERROR, nullptr};
-    }
-
-    // fill constant scale shape and copy scale data to host for backup and validation
+    // fill constant scale shape
     auto scale_shape = &shapes->emplace(scale_edge->GetId(), std::move(ir::Shape())).first->second;
     scale_shape->data_type = weight_shape->data_type;
     scale_shape->data_format = ppl::common::DATAFORMAT_NDARRAY;
     scale_shape->dims = {out_features};
 
-    auto scale_host = &constants->emplace(scale_edge->GetId(), std::move(ir::Constant())).first->second;
-    scale_host->data.Init(scale_buffer.GetShape()->CalcBytesIncludingPadding());
-    rc = options.device->CopyToHost(scale_host->data.GetData(), scale_buffer.GetBufferPtr(), scale_host->data.GetSize());
-    if (ppl::common::RC_SUCCESS != rc) {
-        LOG(ERROR) << "copy scale[" << scale_edge->GetName() << "] data from host failed: " << ppl::common::GetRetCodeStr(rc);
-        return {ppl::common::RC_DEVICE_MEMORY_ERROR, nullptr};
-    }
+    // change weight datatype
+    weight_shape->data_type = ppl::common::DATATYPE_INT8;
 
     // emplace GPU buffer to runtime constants
     loaded_constants->emplace(weight_edge->GetId(), std::move(quantized_weight_buffer));
