@@ -118,8 +118,7 @@ static bool ValidateConstants(const ir::Graph& graph) {
     auto data = graph.data.get();
 
     if (topo->GetConstantCount() > data->constants.size()) {
-        LOG(ERROR) << "number of constants in GraphTopo > GraphData";
-        return false;
+        LOG(WARNING) << "number of constants in GraphTopo > GraphData";
     }
 
     for (uint32_t i = 0; i < topo->GetConstantCount(); ++i) {
