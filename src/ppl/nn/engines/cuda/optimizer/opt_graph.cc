@@ -150,8 +150,9 @@ RetCode OptGraph::UpdateDims(const utils::SharedResource& resource, CudaDevice* 
                 }
 
                 if (topo->GetInput(edge->GetName()) != INVALID_EDGEID) { // input j is a graph input edge
-                    if (j < args_->input_dims.size() && !args_->input_dims[j].empty()) { // args include input shape
-                        const vector<int64_t>* dims = &args_->input_dims[j];
+                    uint32_t edge_input_idx = topo->GetInputIdx(edge->GetName());
+                    if (edge_input_idx < args_->input_dims.size() && !args_->input_dims[edge_input_idx].empty()) { // args include input shape
+                        const vector<int64_t>* dims = &args_->input_dims[edge_input_idx];
                         temp_tensor_shape.SetDimCount(dims->size());
                         for (uint32_t k = 0; k < dims->size(); ++k) {
                             temp_tensor_shape.SetDim(k, dims->at(k));

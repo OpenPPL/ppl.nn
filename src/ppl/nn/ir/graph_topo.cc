@@ -49,6 +49,17 @@ static edgeid_t FindEdgeId(const string& name, const vector<edgeid_t>& edge_ids,
     return INVALID_EDGEID;
 }
 
+static edgeid_t FindEdgeIdIdx(const string& name, const vector<edgeid_t>& edge_ids, const GraphTopo* topo) {
+    for (uint32_t i = 0; i < edge_ids.size(); ++i) {
+        auto eid = edge_ids[i];
+        auto edge = topo->GetEdge(eid);
+        if (edge && edge->GetName() == name) {
+            return i;
+        }
+    }
+    return INVALID_EDGEID;
+}
+
 Edge* GraphTopo::GetEdge(const std::string& name) const {
     for (auto it = CreateEdgeIter(); it->IsValid(); it->Forward()) {
         auto edge = it->Get();
@@ -61,6 +72,10 @@ Edge* GraphTopo::GetEdge(const std::string& name) const {
 
 edgeid_t GraphTopo::GetInput(const string& name) const {
     return FindEdgeId(name, inputs_, this);
+}
+
+edgeid_t GraphTopo::GetInputIdx(const string& name) const {
+    return FindEdgeIdIdx(name, inputs_, this);
 }
 
 edgeid_t GraphTopo::GetConstant(const string& name) const {

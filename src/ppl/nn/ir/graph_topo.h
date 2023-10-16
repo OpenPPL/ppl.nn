@@ -120,6 +120,7 @@ public:
         return inputs_[idx];
     }
     edgeid_t GetInput(const std::string& name) const;
+    edgeid_t GetInputIdx(const std::string& name) const;
 
     // ----- //
 
