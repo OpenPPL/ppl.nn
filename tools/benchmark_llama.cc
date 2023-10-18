@@ -19,6 +19,7 @@ using namespace ppl::nn;
 #include <memory>
 #include <chrono>
 #include <algorithm>
+#include <cfloat>
 #include <unistd.h>
 #include <cuda_runtime.h>
 #include <omp.h>
@@ -124,6 +125,8 @@ struct ModelConfig final {
 
     bool dynamic_batching;
     bool auto_causal;
+
+    std::string quant_method;
 };
 
 struct ModelInput {
@@ -169,32 +172,32 @@ struct WorkerThreadArg final {
         ncclResult_t e = (cmd);                                              \
         if (e != ncclSuccess) {                                              \
             LOG(ERROR) << "NCCL error(code:" << (int)e << ") on " << (emsg); \
-            return RC_OTHER_ERROR;                                           \
+            return false;                                           \
         }                                                                    \
     } while (0);
 
-static RetCode InitNccl(uint32_t tensor_parallel_size, std::vector<ncclComm_t>* nccl_comm_list) {
+static bool InitNccl(uint32_t tensor_parallel_size, std::vector<ncclComm_t>* nccl_comm_list) {
     nccl_comm_list->resize(tensor_parallel_size);
     std::vector<int> dev_list(tensor_parallel_size);
     for (size_t i = 0; i < tensor_parallel_size; ++i) {
         dev_list[i] = i;
     }
     NCCL_CHECK(ncclCommInitAll(nccl_comm_list->data(), tensor_parallel_size, dev_list.data()), "ncclCommInitAll");
-    return RC_SUCCESS;
+    return true;
 }
 #endif
 
-static Engine* CreateCudaEngine(ncclComm_t nccl_comm, int device_id) {
+static Engine* CreateCudaEngine(ncclComm_t nccl_comm, int device_id, const std::string& quant_method) {
     ppl::nn::llm::cuda::EngineOptions options;
     options.device_id = device_id;
     options.mm_policy = ppl::nn::llm::cuda::MM_COMPACT;
 
-    if (g_flag_quant_method == "none") {
+    if (quant_method == "none") {
         options.quant_method = llm::cuda::QUANT_METHOD_NONE;
-    } else if (g_flag_quant_method == "online_i8i8") {
+    } else if (quant_method == "online_i8i8") {
         options.quant_method = llm::cuda::QUANT_METHOD_ONLINE_I8I8;
     } else {
-        LOG(ERROR) << "unknown/unsupported --quant-method option: " << g_flag_quant_method;
+        LOG(ERROR) << "unknown/unsupported --quant-method option: " << quant_method;
         return nullptr;
     }
 
@@ -364,6 +367,40 @@ static void PrintInputInfo(const Runtime* runtime) {
     LOG(INFO) << "----------------------";
 }
 
+static bool CheckParameters(const ModelConfig& model_config) {
+    if (model_config.auto_causal != true) {
+        LOG(ERROR) << "only support auto_causal == true";
+        return false;
+    }
+
+    if (model_config.cache_mode != 0) {
+        LOG(ERROR) << "only support cache_mode == 0";
+        return false;
+    }
+
+    if (model_config.cache_layout != 0 && model_config.cache_layout != 3) {
+        LOG(ERROR) << "only support cache_layout == 0 || cache_layout == 3";
+        return false;
+    }
+
+    if (model_config.cache_quant_bit != 8 && model_config.cache_quant_group != 8) {
+        LOG(ERROR) << "only support cache_quant_bit == 8 and cache_quant_group == 8";
+        return false;
+    }
+
+    if (model_config.dynamic_batching != true) {
+        LOG(ERROR) << "only support dynamic_batching == true";
+        return false;
+    }
+
+    if (model_config.quant_method != "none" && model_config.quant_method != "online_i8i8") {
+        LOG(ERROR) << "only support quant_method == none || quant_method == online_i8i8";
+    }
+
+    return true;
+}
+
+
 class LLM {
 public:
     LLM(const Config& config)
@@ -399,6 +436,12 @@ public:
     }
 
     bool Init(const ModelConfig& model_config, const std::string& model_dir) {
+        bool rc = CheckParameters(model_config);
+        if (!rc) {
+            LOG(ERROR) << "CheckParameters failed.";
+            return false;
+        }
+
         vocab_size_ = model_config.vocab_size;
         kv_cache_block_bytes_ = model_config.num_layers * 2 * model_config.num_kv_heads / tensor_parallel_size_ *
             model_config.hidden_dim / model_config.num_heads * sizeof(int8_t);
@@ -406,10 +449,10 @@ public:
             model_config.hidden_dim / model_config.num_heads / model_config.cache_quant_group * sizeof(float16_t);
 
 #ifdef PPLNN_CUDA_ENABLE_NCCL
-        auto rc = InitNccl(tensor_parallel_size_, &nccl_comm_list_);
-        if (rc != RC_SUCCESS) {
+        rc = InitNccl(tensor_parallel_size_, &nccl_comm_list_);
+        if (!rc) {
             LOG(ERROR) << "NCCL init failed.";
-            exit(-1);
+            return false;
         }
         LOG(INFO) << "Init Nccl successed";
 #endif
@@ -417,7 +460,7 @@ public:
 #pragma omp parallel num_threads(tensor_parallel_size_)
         {
             int id = omp_get_thread_num();
-            engine_list_[id] = unique_ptr<Engine>(CreateCudaEngine(nccl_comm_list_[id], id));
+            engine_list_[id] = unique_ptr<Engine>(CreateCudaEngine(nccl_comm_list_[id], id, model_config.quant_method));
             if (!engine_list_[id]) {
                 LOG(ERROR) << "create cuda engine failed.";
                 exit(-1);
@@ -443,7 +486,7 @@ public:
         return true;
     }
 
-    bool PrepareInput(int bs, int input_token_len) {
+    bool PrepareInput(int bs, int input_token_len, const ModelConfig& model_config) {
         temperature_list_.resize(bs);
         for (size_t i = 0; i < temperature_list_.size(); ++i) {
             temperature_list_[i] = temperature_;
@@ -494,6 +537,32 @@ public:
             arg->kv_cache->SetBufferPtr(arg->kv_cache_mem);
             arg->kv_scale->SetBufferPtr(arg->kv_scale_mem);
         }
+
+        // set kv cache, kv scale shape
+        for (int i = 0; i < tensor_parallel_size_; ++i) {
+            auto arg = &worker_thread_args_[i];
+            if (model_config.cache_layout == 0) {
+                arg->kv_cache->GetShape()->Reshape({(int64_t)kv_cache_tokens, model_config.num_layers, 2,
+                                                    model_config.num_kv_heads / tensor_parallel_size_,
+                                                    model_config.hidden_dim / model_config.num_heads});
+                arg->kv_scale->GetShape()->Reshape(
+                    {(int64_t)kv_cache_tokens, model_config.num_layers, 2,
+                    model_config.num_kv_heads / tensor_parallel_size_,
+                    model_config.hidden_dim / model_config.num_heads / model_config.cache_quant_group});
+            } else if (model_config.cache_layout == 3) {
+                arg->kv_cache->GetShape()->Reshape(
+                    {model_config.num_layers, 2, model_config.num_kv_heads / tensor_parallel_size_,
+                    (int64_t)kv_cache_tokens, model_config.hidden_dim / model_config.num_heads});
+                arg->kv_scale->GetShape()->Reshape(
+                    {model_config.num_layers, 2, model_config.num_kv_heads / tensor_parallel_size_,
+                    (int64_t)kv_cache_tokens,
+                    model_config.hidden_dim / model_config.num_heads / model_config.cache_quant_group});
+            } else {
+                LOG(ERROR) << "impossible status: cache_layout = [" << model_config.cache_layout << "]";
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -680,7 +749,7 @@ static void ParseConfig(Config* config) {
     LOG(INFO) << "config.quant_method: " << config->quant_method;
 }
 
-bool ParseModelConfig(const std::string& model_param_path, ModelConfig* model_config) {
+static bool ParseModelConfig(const std::string& model_param_path, ModelConfig* model_config) {
     std::ifstream ifs(model_param_path);
     rapidjson::IStreamWrapper isw(ifs);
     rapidjson::Document document;
@@ -845,6 +914,7 @@ int main(int argc, char* argv[]) {
         LOG(ERROR) << "PaseModelConfig failed, model_param_path: " << config.model_param_path;
         return -1;
     }
+    model_config.quant_method = config.quant_method;
 
     ModelInput raw_model_input;
     if (!ParseInput(config.input_file, &raw_model_input)) {
@@ -865,7 +935,7 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    ret = llm.PrepareInput(bs, input_token_len);
+    ret = llm.PrepareInput(bs, input_token_len, model_config);
     if (!ret) {
         LOG(ERROR) << "llm prepare input failed";
         return -1;
@@ -898,7 +968,7 @@ int main(int argc, char* argv[]) {
     // profiling 结果
     double avg_prefill_latency = 0;
     double max_decode_latency = 0;
-    double min_decode_latency = 100000;
+    double min_decode_latency = DBL_MAX;
     double avg_decode_latency = 0;
     double avg_step_latency = 0;
     for (size_t step = 0; step < profiling.step_latency.size(); ++step) {
