@@ -93,7 +93,7 @@ ppl::common::RetCode ColumnParallelLinearKernel::DoExecute(KernelExecContext* ct
     gather_buffer = tmp_buffer_desc.addr;
 
     const int64_t M = input_shape->CalcElementsToDimensionExcludingPadding(input_shape->GetDimCount() - 1);
-    const bool use_workspace = M >= 64;
+    const bool use_workspace = GetCudaDevice()->GetSMVersion() >= 90 && M >= 64;
 
     return ppl::kernel::llm::cuda::pmx::column_parallel_linear(
         GetStream(),
@@ -111,7 +111,7 @@ ppl::common::RetCode ColumnParallelLinearKernel::DoExecute(KernelExecContext* ct
         param_->gather_output,
         gather_buffer,
         use_workspace ? GetCudaDevice()->GetCublasWorkspaceSize() : 0,
-        use_workspace ? GetCudaDevice()->GetCubalsWorkspace() : nullptr,
+        use_workspace ? GetCudaDevice()->GetCublasWorkspace() : nullptr,
         output_shape,
         output->GetBufferPtr()
     );

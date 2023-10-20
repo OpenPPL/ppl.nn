@@ -54,7 +54,7 @@ ppl::common::RetCode I8I8OnlineQuantizeKernel::DoExecute(KernelExecContext* ctx)
         batch,
         quant_dim,
         ppl::kernel::llm::cuda::pmx::i8i8::token_up_scale,
-        ppl::kernel::llm::cuda::MATRIX_LAYOUT_COL32,
+        ppl::kernel::llm::cuda::MATRIX_LAYOUT_ROW_MAJOR,
         output->GetBufferPtr(),
         scale->GetBufferPtr()
     );

@@ -74,7 +74,7 @@ ppl::common::RetCode RowParallelLinearKernel::DoExecute(KernelExecContext* ctx) 
     auto nccl_param = GetTensorParallelNcclParam();
 
     const int64_t M = input_shape->CalcElementsToDimensionExcludingPadding(input_shape->GetDimCount() - 1);
-    const bool use_workspace = M >= 64;
+    const bool use_workspace = GetCudaDevice()->GetSMVersion() >= 90 && M >= 64;
 
     return ppl::kernel::llm::cuda::pmx::row_parallel_linear(
         GetStream(),
@@ -92,7 +92,7 @@ ppl::common::RetCode RowParallelLinearKernel::DoExecute(KernelExecContext* ctx) 
         param_->input_is_parallel,
         nullptr,
         use_workspace ? GetCudaDevice()->GetCublasWorkspaceSize() : 0,
-        use_workspace ? GetCudaDevice()->GetCubalsWorkspace() : nullptr,
+        use_workspace ? GetCudaDevice()->GetCublasWorkspace() : nullptr,
         output_shape,
         output->GetBufferPtr()
     );

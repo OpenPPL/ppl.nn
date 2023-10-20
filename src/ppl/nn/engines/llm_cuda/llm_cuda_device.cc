@@ -81,14 +81,12 @@ RetCode LlmCudaDevice::Init(int device_id, bool init_stream, bool init_cublas, N
             It is therefore highly recommended to provide at least 32 MiB (33554432 B)
             of workspace for cuBLASLt calls or when using cublasSetWorkspace.
         */
-        if (GetSMVersion() >= 90) {
-            auto err = cudaMalloc(&cublas_workspace_, 32 * 1024 * 1024);
-            if (err != cudaSuccess) {
-                LOG(ERROR) << "cudaMalloc cublas_workspace for 32MiB failed: " << cudaGetErrorString(err);
-                return RC_OUT_OF_MEMORY;
-            }
-            cublas_workspace_size_ = 32 * 1024 * 1024;
+        auto err = cudaMalloc(&cublas_workspace_, 32 * 1024 * 1024);
+        if (err != cudaSuccess) {
+            LOG(ERROR) << "cudaMalloc cublas_workspace for 32MiB failed: " << cudaGetErrorString(err);
+            return RC_OUT_OF_MEMORY;
         }
+        cublas_workspace_size_ = 32 * 1024 * 1024;
     }
 
     if (!stream_ && init_stream) {

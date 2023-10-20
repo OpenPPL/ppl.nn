@@ -8,7 +8,7 @@ if [ -z "$PPL_BUILD_THREAD_NUM" ]; then
 fi
 
 build_type='Release'
-options="$*"
+options="-DCMAKE_BUILD_TYPE=${build_type} -DCMAKE_INSTALL_PREFIX=install $*"
 
 ppl_build_dir="${workdir}/pplnn-build"
 mkdir ${ppl_build_dir}

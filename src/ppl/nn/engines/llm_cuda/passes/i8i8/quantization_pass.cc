@@ -145,7 +145,7 @@ static QuantizeWeightResult QuantizeWeight(
         out_features,
         in_features,
         ppl::kernel::llm::cuda::pmx::i8i8::hidden_up_scale,
-        ppl::kernel::llm::cuda::MATRIX_LAYOUT_COL32_2R_4R4,
+        ppl::kernel::llm::cuda::MATRIX_LAYOUT_ROW_MAJOR,
         quantized_weight_buffer.GetBufferPtr(),
         scale_buffer.GetBufferPtr());
     if (ppl::common::RC_SUCCESS != rc) {
@@ -486,7 +486,7 @@ static OptPassStatus QuantizeColunmParallelLinear(ir::Node* linear_node, const O
         return status;
     }
 
-    if (out_features_per_part >= 7680) {
+    {
         LOG(DEBUG) << "processing i8i8 for ColumnParallelLinear[" << linear_node->GetName() << "]";
         status.graph_modified = true;
         if (param->gather_output == false) {
@@ -533,7 +533,7 @@ static OptPassStatus QuantizeRowParallelLinear(ir::Node* linear_node, const OptK
         return status;
     }
 
-    if (out_features >= 10240) {
+    {
         LOG(DEBUG) << "processing i8i8 for RowParallelLinear[" << linear_node->GetName() << "]";
         status.graph_modified = true;
         status.retcode = QuantizeLinearSelfDequant(linear_node, options, in_features_per_part, out_features);

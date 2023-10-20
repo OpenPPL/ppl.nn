@@ -118,7 +118,7 @@ ppl::common::RetCode I8I8ColumnParallelLinearKernel::DoExecute(KernelExecContext
     gather_buffer = (char*)tmp_buffer_desc.addr + quant_buffer_size;
 
     const int64_t M = input_shape->CalcElementsToDimensionExcludingPadding(input_shape->GetDimCount() - 1);
-    const bool use_workspace = M >= 64;
+    const bool use_workspace = GetCudaDevice()->GetSMVersion() >= 90 && M >= 64;
 
     return ppl::kernel::llm::cuda::pmx::i8i8::column_parallel_linear(
         GetStream(),
@@ -136,13 +136,13 @@ ppl::common::RetCode I8I8ColumnParallelLinearKernel::DoExecute(KernelExecContext
         ppl::kernel::llm::cuda::pmx::i8i8::hidden_down_scale,
         param_->in_features,
         param_->out_features,
-        true,
+        ppl::kernel::llm::cuda::MATRIX_LAYOUT_ROW_MAJOR,
         nccl_param,
         param_->gather_output,
         gather_buffer,
         quant_buffer,
         use_workspace ? GetCudaDevice()->GetCublasWorkspaceSize() : 0,
-        use_workspace ? GetCudaDevice()->GetCubalsWorkspace() : nullptr,
+        use_workspace ? GetCudaDevice()->GetCublasWorkspace() : nullptr,
         GetCudaDevice()->GetCublasAlgoCache(),
         output_shape,
         output->GetBufferPtr()

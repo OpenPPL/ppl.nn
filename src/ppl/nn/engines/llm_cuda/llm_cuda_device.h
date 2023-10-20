@@ -96,7 +96,7 @@ public:
         return cublas_handle_;
     }
 
-    void* GetCubalsWorkspace() {
+    void* GetCublasWorkspace() {
         return cublas_workspace_;
     }
 
