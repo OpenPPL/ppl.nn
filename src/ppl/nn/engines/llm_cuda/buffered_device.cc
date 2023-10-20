@@ -29,6 +29,8 @@ static inline uint64_t Align(uint64_t x, uint64_t n) {
 }
 
 RetCode BufferedDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {
+    bytes = Align(bytes, CUDA_DEFAULT_ALIGNMENT);
+
     if (buffer->addr && bytes == buffer->desc)
         return RC_SUCCESS;
 
@@ -42,7 +44,6 @@ RetCode BufferedDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {
         return RC_SUCCESS;
     }
 
-    bytes = Align(bytes, CUDA_DEFAULT_ALIGNMENT);
     buffer->addr = (void*)mgr_.Alloc(bytes);
     if (!buffer->addr) {
         buffer->desc = 0;

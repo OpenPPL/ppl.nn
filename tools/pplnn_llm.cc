@@ -299,6 +299,8 @@ static bool RegisterLlmCudaEngine(vector<unique_ptr<Engine>>* engines) {
 
     if (g_flag_mm_policy == "mem") {
         options.mm_policy = llm::cuda::MM_COMPACT;
+    } else if (g_flag_mm_policy == "plain") {
+        options.mm_policy = llm::cuda::MM_PLAIN;
     } else {
         LOG(ERROR) << "unknown/unsupported --mm-policy option: " << g_flag_mm_policy;
         return false;
