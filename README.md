@@ -79,6 +79,7 @@ Refer to [Documents](#documents) for more details.
 * Models
   - [Converting ONNX Opset](docs/en/onnx-model-opset-convert-guide.md)
   - [Generating ONNX models from OpenMMLab](docs/en/model-convert-guide.md)
+* [实现细节](docs/cn/details.md)
 
 ### Contact Us
 
