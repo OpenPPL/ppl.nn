@@ -19,6 +19,7 @@
 #define NO_MINMAX
 #define WIN32_LEAN_AND_MEAN
 #define NOGDI
+#include <cstddef>
 #include <windows.h>
 #include <stdint.h>
 static constexpr uint32_t g_max_msg_buf_size = 1024;

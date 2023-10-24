@@ -17,10 +17,9 @@
 
 #include "ppl/nn/utils/buffered_cpu_allocator.h"
 #include "ppl/nn/common/logger.h"
-using namespace std;
-using namespace ppl::common;
 
 #ifdef _MSC_VER
+#include <cstddef>
 #include <windows.h>
 #else
 #include <unistd.h> // sysconf
@@ -28,6 +27,9 @@ using namespace ppl::common;
 #include <errno.h>
 #include <sys/mman.h>
 #endif
+
+using namespace std;
+using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace utils {
 
