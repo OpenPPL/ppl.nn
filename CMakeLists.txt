@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
 project(ppl.nn.llm)
 
-option(PPLNN_USE_LLM_CUDA "" ON)
+option(PPLNN_USE_LLM_CUDA "" OFF)
 
 # refer to ppl.nn for more available options
 option(PPLNN_ENABLE_ONNX_MODEL "" ON)
