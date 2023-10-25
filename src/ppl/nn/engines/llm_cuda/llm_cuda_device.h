@@ -104,11 +104,11 @@ public:
         return cublas_workspace_size_;
     }
 
-    ppl::kernel::llm::cuda::cublas::cublaslt_algo_cache_t* GetCublasAlgoCache() {
+    ppl::kernel::llm::cuda::cublas::AlgoCache* GetCublasAlgoCache() {
         return &cublas_algo_cache_;
     }
 
-    const ppl::kernel::llm::cuda::cublas::cublaslt_algo_cache_t* GetCublasAlgoCache() const {
+    const ppl::kernel::llm::cuda::cublas::AlgoCache* GetCublasAlgoCache() const {
         return &cublas_algo_cache_;
     }
 
@@ -166,7 +166,7 @@ protected:
     cublasLtHandle_t cublas_handle_ = nullptr;
     void* cublas_workspace_ = nullptr;
     int cublas_workspace_size_ = 0;
-    ppl::kernel::llm::cuda::cublas::cublaslt_algo_cache_t cublas_algo_cache_;
+    ppl::kernel::llm::cuda::cublas::AlgoCache cublas_algo_cache_;
 };
 
 }}}} // namespace ppl::nn::llm::cuda
