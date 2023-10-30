@@ -425,6 +425,12 @@ RetCode CudaEngine::SetUseDefaultAlgorithms(CudaEngine* engine, va_list args) {
     return RC_SUCCESS;
 }
 
+RetCode CudaEngine::SetUseDefaultGemmAlgorithms(CudaEngine* engine, va_list args) {
+    auto flag = va_arg(args, uint32_t);
+    engine->cuda_flags_.quick_select_gemm = (flag > 0);
+    return RC_SUCCESS;
+}
+
 RetCode CudaEngine::SetQuantInfo(CudaEngine* engine, va_list args) {
     const char* json_str = va_arg(args, const char*);
     uint64_t json_size = va_arg(args, uint64_t);
@@ -566,6 +572,7 @@ CudaEngine::ConfHandlerFunc CudaEngine::conf_handlers_[] = {
     CudaEngine::ImportAlgorithmsFromBuffer, // ENGINE_CONF_IMPORT_ALGORITHMS_FROM_BUFFER
     CudaEngine::RefitConstantWeights, // ENGINE_CONF_REFIT_CONSTANT_WEIGHTS
     CudaEngine::SetTpNcclComm, // ENGINE_CONF_SET_TP_NCCL_COMM
+    CudaEngine::SetUseDefaultGemmAlgorithms, // ENGINE_CONF_USE_DEFAULT_GEMM_ALGORITHMS
 };
 
 RetCode CudaEngine::Configure(uint32_t option, ...) {

@@ -48,6 +48,7 @@ struct CudaArgs {
     };
 
     bool quick_select = false;
+    bool quick_select_gemm = false;
     ppl::common::datatype_t default_kernel_type = 0;
     std::map<std::string, ppl::common::datatype_t> node_types;
     std::vector<std::vector<int64_t>> input_dims;
@@ -116,6 +117,7 @@ private:
     static ppl::common::RetCode ImportAlgorithmsFromBuffer(CudaEngine*, va_list);
     static ppl::common::RetCode RefitConstantWeights(CudaEngine*, va_list);
     static ppl::common::RetCode SetTpNcclComm(CudaEngine*, va_list);
+    static ppl::common::RetCode SetUseDefaultGemmAlgorithms(CudaEngine*, va_list);
 
     typedef ppl::common::RetCode (*ConfHandlerFunc)(CudaEngine*, va_list);
     static ConfHandlerFunc conf_handlers_[ENGINE_CONF_MAX];
