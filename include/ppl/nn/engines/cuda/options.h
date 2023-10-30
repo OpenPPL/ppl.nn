@@ -117,6 +117,16 @@ enum {
     */
     ENGINE_CONF_SET_TP_NCCL_COMM,
 
+    /**
+       @brief use default algorithms for gemm
+
+       @note example:
+       @code{.cpp}
+       cuda_engine->Configure(ENGINE_CONF_USE_DEFAULT_GEMM_ALGORITHMS, true/false);
+       @endcode
+    */
+    ENGINE_CONF_USE_DEFAULT_GEMM_ALGORITHMS,
+
     /** max value */
     ENGINE_CONF_MAX,
 };
