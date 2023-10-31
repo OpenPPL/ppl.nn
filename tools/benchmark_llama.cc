@@ -48,6 +48,7 @@ struct Profiler {
 
 static Profiler profiling;
 
+Define_bool_opt("--help", g_flag_help, false, "show these help information");
 Define_string_opt("--model-type", g_flag_model_type, "", "model type");
 Define_string_opt("--model-dir", g_flag_model_dir, "", "model directory");
 Define_string_opt("--model-param-path", g_flag_model_param_path, "", "path of model params");
@@ -76,16 +77,16 @@ static void PrintVector(vector<T> vec) {
 class TimingGuard final {
 public:
     TimingGuard(double* res) {
-        diff_microsec_ = res;
+        diff_millisec_ = res;
         begin_ = std::chrono::high_resolution_clock::now();
     }
     ~TimingGuard() {
         auto end = std::chrono::high_resolution_clock::now();
-        *diff_microsec_ = double(std::chrono::duration_cast<std::chrono::microseconds>(end - begin_).count()) / 1000.0;
+        *diff_millisec_ = double(std::chrono::duration_cast<std::chrono::microseconds>(end - begin_).count()) / 1000.0;
     }
 
 private:
-    double* diff_microsec_;
+    double* diff_millisec_;
     std::chrono::time_point<std::chrono::high_resolution_clock> begin_;
 };
 
@@ -251,21 +252,21 @@ static Runtime* CreatePPLRuntime(Engine* cuda_engine, const string& model_file) 
 }
 
 static void UpdateInputPrefill(int gen_len, ModelInput* model_input) {
-    int bs = model_input->first_fill_len.size();
+    int batch_size = model_input->first_fill_len.size();
     model_input->decoding_batches = 0;
 
-    model_input->seq_starts.reserve(bs + 1);
+    model_input->seq_starts.reserve(batch_size + 1);
     model_input->seq_starts.push_back(0);
 
-    model_input->kv_starts.reserve(bs + 1);
+    model_input->kv_starts.reserve(batch_size + 1);
     model_input->kv_starts.push_back(0);
 
-    model_input->start_pos.reserve(bs);
+    model_input->start_pos.reserve(batch_size);
 
-    model_input->cache_indices.reserve(bs);
+    model_input->cache_indices.reserve(batch_size);
     model_input->cache_indices.push_back(0);
 
-    for (int i = 0; i < bs; ++i) {
+    for (int i = 0; i < batch_size; ++i) {
         model_input->start_pos.push_back(0);
         model_input->seq_starts.push_back(model_input->seq_starts[i] + model_input->first_fill_len[i]);
         model_input->kv_starts.push_back(model_input->kv_starts[i] + model_input->first_fill_len[i]);
@@ -280,14 +281,14 @@ static void UpdateInputPrefill(int gen_len, ModelInput* model_input) {
 }
 
 static void UpdateInputDecode(int step, const std::vector<int32_t>& gen_tokens, ModelInput* model_input) {
-    int bs = model_input->first_fill_len.size();
-    model_input->decoding_batches = bs;
+    int batch_size = model_input->first_fill_len.size();
+    model_input->decoding_batches = batch_size;
     model_input->max_seq_len = 1;
     model_input->max_kv_len = model_input->max_kv_len + 1;
 
-    model_input->token_ids.resize(bs);
+    model_input->token_ids.resize(batch_size);
 
-    for (int i = 0; i < bs; ++i) {
+    for (int i = 0; i < batch_size; ++i) {
         model_input->token_ids[i] = gen_tokens.at(i);
         model_input->seq_starts[i + 1] = model_input->seq_starts[i] + 1;
         model_input->kv_starts[i + 1] = model_input->kv_starts[i] + model_input->first_fill_len[i] + step;
@@ -328,43 +329,6 @@ static std::shared_ptr<ppl::llm::cuda::Sampler> CreateCudaSampler(Runtime* runti
     }
 
     return std::make_shared<ppl::llm::cuda::Sampler>(stream);
-}
-
-static void PrintInputInfo(const Runtime* runtime) {
-    LOG(INFO) << "----- input info -----";
-    for (uint32_t i = 0; i < runtime->GetInputCount(); ++i) {
-        auto tensor = runtime->GetInputTensor(i);
-        LOG(INFO) << "input[" << i << "]:";
-        LOG(INFO) << "    name: " << tensor->GetName();
-
-        string dims_str;
-        auto shape = tensor->GetShape();
-        for (uint32_t j = 0; j < shape->GetDimCount(); ++j) {
-            dims_str += " " + ToString(shape->GetDim(j));
-        }
-        LOG(INFO) << "    dim(s):" << dims_str;
-
-        LOG(INFO) << "    data type: " << GetDataTypeStr(shape->GetDataType());
-        LOG(INFO) << "    data format: " << GetDataFormatStr(shape->GetDataFormat());
-        LOG(INFO) << "    byte(s) excluding padding: " << shape->CalcBytesExcludingPadding();
-        LOG(INFO) << "    buffer address: " << tensor->GetBufferPtr();
-
-        const int64_t elem_count = tensor->GetShape()->CalcElementsExcludingPadding();
-        if (tensor->GetShape()->GetDataType() == ppl::common::DATATYPE_INT64 && elem_count <= 16) {
-            std::vector<int64_t> vals(elem_count, 0);
-            if (ppl::common::RC_SUCCESS != tensor->CopyToHost(vals.data())) {
-                LOG(ERROR) << "[" << tensor->GetName() << "] CopyToHost FAILED";
-            } else {
-                std::string val_str = "";
-                for (uint32_t j = 0; j < elem_count; ++j) {
-                    val_str += std::to_string(vals[j]) + " ";
-                }
-                LOG(INFO) << "    value(s): " << val_str;
-            }
-        }
-    }
-
-    LOG(INFO) << "----------------------";
 }
 
 static bool CheckParameters(const ModelConfig& model_config) {
@@ -481,19 +445,16 @@ public:
             LOG(ERROR) << "CreateCudaSampler failed";
             return false;
         }
-        LOG(INFO) << "create cuda sampler success";
+        LOG(INFO) << "Create cuda sampler success";
 
         return true;
     }
 
-    bool PrepareInput(int bs, int input_token_len, const ModelConfig& model_config) {
-        temperature_list_.resize(bs);
+    bool PrepareInput(int batch_size, int kv_cache_tokens, const ModelConfig& model_config) {
+        temperature_list_.resize(batch_size);
         for (size_t i = 0; i < temperature_list_.size(); ++i) {
             temperature_list_[i] = temperature_;
         }
-
-        uint64_t kv_cache_tokens = bs * (input_token_len + generation_len_ - 1);
-        LOG(INFO) << "kv_cache_tokens: " << kv_cache_tokens;
 
 #pragma omp parallel num_threads(tensor_parallel_size_)
         {
@@ -655,7 +616,7 @@ public:
     }
 
     void Generate(ModelInput* model_input, std::vector<std::vector<int32_t>>* output_tokens) {
-        int bs = model_input->first_fill_len.size();
+        int batch_size = model_input->first_fill_len.size();
 
         double step_latency = 0;
         for (int step = 0; step < generation_len_; ++step) {
@@ -687,7 +648,7 @@ public:
                 }
 
                 auto logits = worker_thread_args_[0].logits;
-                auto rc = sampler_->SampleTopPTopK((float*)logits->GetBufferPtr(), temperature_list_.data(), bs,
+                auto rc = sampler_->SampleTopPTopK((float*)logits->GetBufferPtr(), temperature_list_.data(), batch_size,
                                                    vocab_size_, top_p_, top_k_, output_tokens->at(step).data());
 
                 if (rc != RC_SUCCESS) {
@@ -888,8 +849,13 @@ static bool ParseInput(const std::string& token_file, ModelInput* model_input) {
 }
 
 int main(int argc, char* argv[]) {
-    ppl::common::GetCurrentLogger()->SetLogLevel(ppl::common::LOG_LEVEL_ERROR);
     simple_flags::parse_args(argc, argv);
+
+    if (g_flag_help) {
+        simple_flags::print_args_info();
+        return 0;
+    }
+
     if (!simple_flags::get_unknown_flags().empty()) {
         string content;
         for (auto it : simple_flags::get_unknown_flags()) {
@@ -898,13 +864,12 @@ int main(int argc, char* argv[]) {
         content.resize(content.size() - 2); // remove last ', '
         content.append(".");
         LOG(ERROR) << "unknown option(s): " << content.c_str();
+        simple_flags::print_args_info();
         return -1;
     }
 
     LOG(INFO) << "ppl.nn version: [" << PPLNN_VERSION_MAJOR << "." << PPLNN_VERSION_MINOR << "." << PPLNN_VERSION_PATCH
               << "], commit: [" << PPLNN_COMMIT_STR << "]";
-
-    LOG(INFO) << "g_flag_batch_size: " << g_flag_batch_size;
 
     Config config;
     ParseConfig(&config);
@@ -921,37 +886,51 @@ int main(int argc, char* argv[]) {
         LOG(ERROR) << "ParseInput failed, input file: " << config.input_file; 
         return -1;
     }
-
-    LOG(INFO) << "batch size: " << raw_model_input.first_fill_len.size();
-    int bs = raw_model_input.first_fill_len.size();
-    int input_token_len = raw_model_input.token_ids.size() / bs;
+    int64_t batch_size = raw_model_input.first_fill_len.size();
+    int64_t total_input_length = 0;
+    int64_t kv_cache_length = 0;
+    for (auto input_length :  raw_model_input.first_fill_len) {
+        total_input_length += input_length;
+        kv_cache_length += input_length + config.generation_len - 1;
+    }
 
     profiling.step_latency.resize(config.generation_len);
 
     LLM llm(config);
     bool ret = llm.Init(model_config, config.model_dir);
     if (!ret) {
-        LOG(ERROR) << "llm init failed";
+        LOG(ERROR) << "Init failed";
         return -1;
     }
 
-    ret = llm.PrepareInput(bs, input_token_len, model_config);
+    ret = llm.PrepareInput(batch_size, kv_cache_length, model_config);
     if (!ret) {
-        LOG(ERROR) << "llm prepare input failed";
+        LOG(ERROR) << "PrepareInput failed";
         return -1;
     }
-    LOG(INFO) << "llm prepare input success";
+    LOG(INFO) << "PrepareInput success";
 
-    std::vector<std::vector<int32_t>> output_tokens(config.generation_len, std::vector<int32_t>(bs));
+    std::vector<std::vector<int32_t>> output_tokens(config.generation_len, std::vector<int32_t>(batch_size));
+
+    LOG(INFO) << "Request batch: " << batch_size;
+    LOG(INFO) << "Total input length: " << total_input_length;
+    LOG(INFO) << "KV cache length: " << kv_cache_length;
 
     // warmup
     for (uint32_t i = 0; i < g_flag_warmup_loops; ++i) {
+        LOG(INFO) << "Warmup " << i;
         ModelInput model_input = raw_model_input;
-        llm.Generate(&model_input, &output_tokens);
+        double latency = 0;
+        {
+            TimingGuard __timeing__(&latency);
+            llm.Generate(&model_input, &output_tokens);
+        }
+        LOG(INFO) << "Time " << latency << " ms";
     }
 
     profiling.Reset();
     for (int i = 0; i < config.benchmark_loops; ++i) {
+        LOG(INFO) << "Benchmark " << i;
         ModelInput model_input = raw_model_input;
         double latency = 0;
         {
@@ -959,10 +938,11 @@ int main(int argc, char* argv[]) {
             llm.Generate(&model_input, &output_tokens);
         }
         profiling.total_latency += latency;
+        LOG(INFO) << "Time " << latency << " ms";
     }
     size_t avail_bytes = 0, total = 0;
     cudaMemGetInfo(&avail_bytes, &total);
-    profiling.mem_usage = double((total - avail_bytes) >> 20) / 1024;
+    profiling.mem_usage = double(total - avail_bytes) / 1024 / 1024 / 1024;
 
 
     // profiling 结果
@@ -990,28 +970,22 @@ int main(int argc, char* argv[]) {
     min_decode_latency = min_decode_latency / config.benchmark_loops;
     max_decode_latency = max_decode_latency / config.benchmark_loops;
     avg_step_latency = avg_step_latency / (config.benchmark_loops * config.generation_len);
+    double tokens_per_second = 1000 / avg_step_latency * batch_size;
 
-    fprintf(stderr,
-            "[INFO] |- Request batch size: %d, Generation len: %d, Input tokens: %d, top_p: %.2f, top_k: %.2f, "
-            "temperature: %.2f, warmup_loops: %d, benchmark_loops: %d\n",
-            bs, config.generation_len, input_token_len, config.top_p, config.top_k, config.temperature,
-            g_flag_warmup_loops, config.benchmark_loops);
+    LOG(INFO) << "Memory usage(GB): " << profiling.mem_usage;
+    LOG(INFO) << "Prefill latency(ms): " << avg_prefill_latency;
+    LOG(INFO) << "Min decode latency(ms)[" << min_latency_step << "]: " << min_decode_latency;
+    LOG(INFO) << "Max decode latency(ms)[" << max_latency_step << "]: " << max_decode_latency;
+    LOG(INFO) << "Avg decode latency(ms): " << avg_decode_latency;
+    LOG(INFO) << "Avg step latency(ms): " << avg_step_latency;
+    LOG(INFO) << "Tokens per second: " << tokens_per_second;
 
-    fprintf(stderr, "[PERF] |- GPU Memory usage: %.2f GB\n", profiling.mem_usage);
+    LOG(INFO) << "CSV format header:prefill(ms),decode(ms),avg(ms),tps(ms),mem(gib)";
+    LOG(INFO) << "CSV format output:" << avg_prefill_latency << ","
+        << avg_decode_latency << ","
+        << avg_step_latency << ","
+        << tokens_per_second << ","
+        << profiling.mem_usage;
 
-    // fprintf(stderr, "[PERF] |- SetInput Latency   | avg step: %.2f ms | total: %.2f ms\n",
-    // profiling.set_intput_latency / (config.benchmark_loops * config.generation_len), profiling.set_intput_latency);
-
-    fprintf(stderr,
-            "[PERF] |- Prefill latency: %.2f ms |  min decode latency: %.2f ms at step [%d] | max decode latency: %.2f "
-            "ms at step [%d] | avg decode latency: %.2f ms, avg step latency: %.2f ms\n",
-            avg_prefill_latency, min_decode_latency, min_latency_step, max_decode_latency, max_latency_step,
-            avg_decode_latency, avg_step_latency);
-
-    // fprintf(stderr, "[PERF] |- Total Latency            | avg step: %.2f ms | avg generation : %.2f ms | total: %.2f
-    // ms\n",
-    //         profiling.total_latency / (config.benchmark_loops * config.generation_len), profiling.total_latency /
-    //         config.benchmark_loops, profiling.total_latency);
-    fprintf(stderr, "=======================================================================\n");
     return 0;
 }
