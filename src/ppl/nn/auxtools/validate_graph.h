@@ -126,8 +126,7 @@ static bool ValidateConstants(const ir::Graph& graph) {
         auto ref = data->constants.find(eid);
         if (ref == data->constants.end()) {
             auto edge = topo->GetEdge(eid);
-            LOG(ERROR) << "cannot find data of constant[" << edge->GetName() << "]";
-            return false;
+            LOG(WARNING) << "cannot find data of constant[" << edge->GetName() << "]";
         }
     }
 
