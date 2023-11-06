@@ -6,6 +6,7 @@
 #include "ppl/common/log.h"
 using namespace ppl::common;
 
+#include "ppl/nn/runtime/options.h"
 #include "ppl/nn/runtime/runtime.h"
 #include "ppl/nn/engines/engine.h"
 #include "ppl/nn/engines/llm_cuda/engine_factory.h"
@@ -13,6 +14,7 @@ using namespace ppl::common;
 using namespace ppl::nn;
 
 #include <vector>
+#include <map>
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -65,6 +67,62 @@ Define_string_opt("--quant-method", g_flag_quant_method, "none",
                         "llm cuda quantization mehtod, only accept "
                         "\"none\" and \"online_i8i8\", "
                         "default: \"none\"");
+
+Define_bool_opt("--kernel-profiling", g_flag_kernel_profiling, true, "enable kernel profiling and print profiling info");
+
+#ifdef PPLNN_ENABLE_KERNEL_PROFILING
+
+static ProfilingStatistics prefill_kernel_stat;
+static ProfilingStatistics decode_kernel_stat;
+
+static void PrintProfilingStatistics(const ProfilingStatistics& stat, int32_t run_count) {
+    std::map<std::string, std::pair<double, double>> type_stat;
+    std::map<std::string, int> type_count;
+    char float_buf_0[128];
+    char float_buf_1[128];
+    // LOG(INFO) << "----- Op statistics by Node -----";
+    for (auto x = stat.prof_info.begin(); x != stat.prof_info.end(); ++x) {
+        auto ext_type = (x->domain == "" ? "" : x->domain + ".") + x->type;
+        double time = (double)x->exec_microseconds / 1000;
+        double avg_time = time / x->exec_count;
+        if (type_stat.find(ext_type) == type_stat.end()) {
+            type_stat[ext_type] = std::make_pair(avg_time, time);
+            type_count[ext_type] = 1;
+        } else {
+            std::pair<double, double>& time_pair = type_stat[ext_type];
+            time_pair.first += avg_time;
+            time_pair.second += time;
+            type_count[ext_type]++;
+        }
+        // sprintf(float_buf_0, "%8.4f", avg_time);
+        // string temp = x->name;
+        // temp.insert(temp.length(), temp.length() > 50 ? 0 : 50 - temp.length(), ' ');
+        // LOG(INFO) << "Name: [" << temp << "], "
+        //           << "Avg time: [" << float_buf_0 << "], "
+        //           << "Exec count: [" << x->exec_count << "]";
+    }
+    // LOG(INFO) << "----- Op statistics by OpType -----";
+    double tot_kernel_time = 0;
+    for (auto it = type_stat.begin(); it != type_stat.end(); ++it) {
+        tot_kernel_time += it->second.second;
+    }
+    for (auto it = type_stat.begin(); it != type_stat.end(); ++it) {
+        sprintf(float_buf_0, "%8.4f", it->second.first);
+        sprintf(float_buf_1, "%8.4f", it->second.second / tot_kernel_time * 100);
+        string temp = it->first;
+        temp.insert(temp.length(), temp.length() > 20 ? 0 : 20 - temp.length(), ' ');
+        LOG(INFO) << "Type: [" << temp << "], Avg time: [" << float_buf_0 << "], Percentage: [" << float_buf_1
+                  << "], Exec count [" << type_count[it->first] << "]";
+    }
+
+    // LOG(INFO) << "----- Total statistics -----";
+    sprintf(float_buf_0, "%8.4f", tot_kernel_time / run_count);
+    LOG(INFO) << "Run count: [" << run_count << "]";
+    LOG(INFO) << "Avg kernel time: [" << float_buf_0 << "]";
+    sprintf(float_buf_0, "%8.4f", tot_kernel_time);
+    LOG(INFO) << "Total kernel time: [" << float_buf_0 << "]";
+}
+#endif
 
 template <class T>
 static void PrintVector(vector<T> vec) {
@@ -399,6 +457,12 @@ public:
 #endif
     }
 
+#ifdef PPLNN_ENABLE_KERNEL_PROFILING
+    void SetKernelProfiling(bool flag) {
+        kernel_profiling_ = flag;
+    }
+#endif
+
     bool Init(const ModelConfig& model_config, const std::string& model_dir) {
         bool rc = CheckParameters(model_config);
         if (!rc) {
@@ -628,6 +692,15 @@ public:
                     UpdateInputDecode(step, output_tokens->at(step - 1), model_input);
                 }
 
+#ifdef PPLNN_ENABLE_KERNEL_PROFILING
+                if (kernel_profiling_ && (step == 0 || step == 1)) {
+                    auto rc = worker_thread_args_[0].runtime->Configure(RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG, true);
+                    if (rc != RC_SUCCESS) {
+                        LOG(WARNING) << "enable kernel profiling failed: " << GetRetCodeStr(rc);
+                    }
+                }
+#endif
+
                 {
 
                     #pragma omp parallel num_threads(tensor_parallel_size_)
@@ -646,6 +719,26 @@ public:
                         }
                     }
                 }
+
+#ifdef PPLNN_ENABLE_KERNEL_PROFILING
+                if (kernel_profiling_ && (step == 0 || step == generation_len_ - 1)) {
+                    if (step == 0) {
+                        auto rc = worker_thread_args_[0].runtime->GetProfilingStatistics(&prefill_kernel_stat);
+                        if (rc != RC_SUCCESS) {
+                            LOG(WARNING) << "get prefill kernel profiling stats failed: " << GetRetCodeStr(rc);
+                        }
+                    } else {
+                        auto rc = worker_thread_args_[0].runtime->GetProfilingStatistics(&decode_kernel_stat);
+                        if (rc != RC_SUCCESS) {
+                            LOG(WARNING) << "get decode kernel profiling stats failed: " << GetRetCodeStr(rc);
+                        }
+                    }
+                    auto rc = worker_thread_args_[0].runtime->Configure(RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG, false);
+                    if (rc != RC_SUCCESS) {
+                        LOG(WARNING) << "enable profiling failed: " << GetRetCodeStr(rc);
+                    }
+                }
+#endif
 
                 auto logits = worker_thread_args_[0].logits;
                 auto rc = sampler_->SampleTopPTopK((float*)logits->GetBufferPtr(), temperature_list_.data(), batch_size,
@@ -678,6 +771,10 @@ private:
     int vocab_size_ = 0;
     uint64_t kv_cache_block_bytes_ = 0;
     uint64_t kv_scale_block_bytes_ = 0;
+
+#ifdef PPLNN_ENABLE_KERNEL_PROFILING
+    bool kernel_profiling_ = false;
+#endif
 };
 
 static void ParseConfig(Config* config) {
@@ -986,6 +1083,24 @@ int main(int argc, char* argv[]) {
         << avg_step_latency << ","
         << tokens_per_second << ","
         << profiling.mem_usage;
+
+#ifdef PPLNN_ENABLE_KERNEL_PROFILING
+    if (g_flag_kernel_profiling) {
+        LOG(INFO) << "Kernel profiling";
+        ModelInput model_input = raw_model_input;
+        llm.SetKernelProfiling(true);
+        double latency = 0;
+        {
+            TimingGuard __timeing__(&latency);
+            llm.Generate(&model_input, &output_tokens);
+        }
+        LOG(INFO) << "Time " << latency << " ms";
+        LOG(INFO) << "----- Prefill statistics -----";
+        PrintProfilingStatistics(prefill_kernel_stat, 1);
+        LOG(INFO) << "----- Decode statistics -----";
+        PrintProfilingStatistics(decode_kernel_stat, config.generation_len - 1);
+    }
+#endif
 
     return 0;
 }
