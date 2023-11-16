@@ -42,6 +42,9 @@ enum {
 
     /** less memory usage, vGPU not supported now */
     MM_COMPACT,
+
+    /** bestfit among free chunks */
+    MM_BESTFIT,
 };
 
 /** @brief quantization method */

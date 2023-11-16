@@ -15,35 +15,41 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "engine_context.h"
-#include "plain_device.h"
-#include "buffered_device.h"
-#include "bestfit_buffered_device.h"
+#ifndef _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_BESTFIT_BUFFERED_DEVICE_H_
+#define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_BESTFIT_BUFFERED_DEVICE_H_
 
-using namespace std;
-using namespace ppl::common;
+#include "llm_cuda_device.h"
+
+#include "ppl/common/cuda/cuda_plain_async_allocator.h"
+#include "ppl/nn/utils/stack_buffer_manager.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda {
 
-RetCode LlmCudaEngineContext::Init(const EngineOptions& options, NcclParam* tensor_parallel_nccl_param) {
-    if (options.mm_policy == MM_PLAIN) {
-        device_.reset(new PlainDevice(true));
-    } else if (options.mm_policy == MM_BESTFIT) {
-        device_.reset(new BestFitBufferedDevice());
-    } else if (options.mm_policy == MM_COMPACT) {
-        device_.reset(new BufferedDevice());
-    } else {
-        LOG(ERROR) << "unsupported mm policy [" << options.mm_policy << "]";
-        return RC_INVALID_VALUE;
+class BestFitBufferedDevice final : public LlmCudaDevice {
+public:
+    BestFitBufferedDevice() : mgr_(&ar_, true) {}
+
+    using LlmCudaDevice::Realloc;
+    ppl::common::RetCode Realloc(uint64_t bytes, BufferDesc* buf) override {
+        return mgr_.Realloc(bytes, buf);
+    }
+    void Free(BufferDesc* buf) override {
+        mgr_.Free(buf);
     }
 
-    auto rc = device_->Init(options.device_id, true, true, tensor_parallel_nccl_param);
-    if (rc != RC_SUCCESS) {
-        LOG(ERROR) << "init device failed: " << GetRetCodeStr(rc);
-        return rc;
+protected:
+    ppl::common::RetCode DoInit() override {
+        ar_.Init(stream_);
+        return ppl::common::RC_SUCCESS;
     }
 
-    return RC_SUCCESS;
-}
+    void DoDestroy() override {}
+
+private:
+    ppl::common::CudaPlainAsyncAllocator ar_;
+    ppl::nn::utils::StackBufferManager mgr_;
+};
 
 }}}} // namespace ppl::nn::llm::cuda
+
+#endif
