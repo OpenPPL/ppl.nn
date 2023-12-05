@@ -17,6 +17,8 @@
 
 #include "multi_head_cache_attention_kernel.h"
 
+#include "ppl/common/destructor.h"
+
 #include "ppl/kernel/llm/cuda/pmx/multi_head_cache_attention.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
@@ -159,6 +161,71 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         return ppl::common::RC_UNSUPPORTED;
     }
 
+
+    // It will be slower unexpectedly if these multi block temp buffers are allocated as one part and seperated by offset later.
+    void *multi_block_counter = nullptr;
+    void *multi_block_max = nullptr;
+    void *multi_block_sum = nullptr;
+    void *multi_block_out = nullptr;
+
+    const uint64_t multi_block_size = ppl::kernel::llm::cuda::pmx::CalcMultiBlockSize(decodeing_batches_val * param_->num_heads, max_kvlen_val, param_->head_dim);
+
+    if (multi_block_size > 1) {
+        uint64_t tmp_buffer_size = decodeing_batches_val * param_->num_heads * sizeof(int32_t);
+
+        BufferDesc multi_block_counter_desc;
+        auto status = GetCudaDevice()->AllocTmpBuffer(tmp_buffer_size, &multi_block_counter_desc);
+        if (status != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
+                    << "] failed: " << ppl::common::GetRetCodeStr(status);
+            return status;
+        }
+        ppl::common::Destructor multi_block_counter_guard([this, &multi_block_counter_desc]() -> void {
+            GetCudaDevice()->FreeTmpBuffer(&multi_block_counter_desc);
+        });
+        multi_block_counter = multi_block_counter_desc.addr;
+
+        tmp_buffer_size *= multi_block_size;
+
+        BufferDesc multi_block_max_desc;
+        status = GetCudaDevice()->AllocTmpBuffer(tmp_buffer_size, &multi_block_max_desc);
+        if (status != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
+                    << "] failed: " << ppl::common::GetRetCodeStr(status);
+            return status;
+        }
+        ppl::common::Destructor multi_block_max_guard([this, &multi_block_max_desc]() -> void {
+            GetCudaDevice()->FreeTmpBuffer(&multi_block_max_desc);
+        });
+        multi_block_max = multi_block_max_desc.addr;
+
+        BufferDesc multi_block_sum_desc;
+        status = GetCudaDevice()->AllocTmpBuffer(tmp_buffer_size, &multi_block_sum_desc);
+        if (status != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
+                    << "] failed: " << ppl::common::GetRetCodeStr(status);
+            return status;
+        }
+        ppl::common::Destructor multi_block_sum_guard([this, &multi_block_sum_desc]() -> void {
+            GetCudaDevice()->FreeTmpBuffer(&multi_block_sum_desc);
+        });
+        multi_block_sum = multi_block_sum_desc.addr;
+
+        tmp_buffer_size *= param_->head_dim / sizeof(half);
+
+        BufferDesc multi_block_out_desc;
+        status = GetCudaDevice()->AllocTmpBuffer(tmp_buffer_size, &multi_block_out_desc);
+        if (status != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "alloc tmp buffer size[" << tmp_buffer_size << "] for kernel[" << GetName()
+                    << "] failed: " << ppl::common::GetRetCodeStr(status);
+            return status;
+        }
+        ppl::common::Destructor multi_block_out_guard([this, &multi_block_out_desc]() -> void {
+            GetCudaDevice()->FreeTmpBuffer(&multi_block_out_desc);
+        });
+        multi_block_out = multi_block_out_desc.addr;
+    }
+
     return ppl::kernel::llm::cuda::pmx::dynamic_batch_multi_head_cache_attention(
         GetStream(),
         GetCudaDevice()->GetDeviceProp(),
@@ -189,6 +256,10 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         cache_stride_l,
         cache_stride_h,
         cache_stride_kv,
+        multi_block_counter,
+        multi_block_max,
+        multi_block_sum,
+        multi_block_out,
         cache->GetBufferPtr(),
         scale->GetBufferPtr(),
         attn_output->GetShape(),
