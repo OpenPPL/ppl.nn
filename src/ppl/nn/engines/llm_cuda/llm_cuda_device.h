@@ -104,6 +104,10 @@ public:
         return cublas_workspace_size_;
     }
 
+    void* GetI4F16GemmHandle() const {
+        return i4f16_gemm_handle_;
+    }
+
     ppl::kernel::llm::cuda::cublas::AlgoCache* GetCublasAlgoCache() {
         return &cublas_algo_cache_;
     }
@@ -167,6 +171,8 @@ protected:
     void* cublas_workspace_ = nullptr;
     int cublas_workspace_size_ = 0;
     ppl::kernel::llm::cuda::cublas::AlgoCache cublas_algo_cache_;
+
+    void* i4f16_gemm_handle_ = nullptr;
 };
 
 }}}} // namespace ppl::nn::llm::cuda

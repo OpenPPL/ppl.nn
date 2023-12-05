@@ -93,50 +93,29 @@ ppl::common::RetCode I8I8OnlineQuantizeRMSNormKernel::DoExecute(KernelExecContex
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    uint64_t quant_buffer_size = input_shape->CalcBytesIncludingPadding();
-    void *quant_buffer = nullptr;
-
-    BufferDesc tmp_buffer_desc;
-    auto status = GetCudaDevice()->AllocTmpBuffer(quant_buffer_size, &tmp_buffer_desc);
-    if (status != ppl::common::RC_SUCCESS) {
-        LOG(ERROR) << "alloc tmp buffer size[" << quant_buffer_size << "] for kernel[" << GetName()
-                << "] failed: " << ppl::common::GetRetCodeStr(status);
-        return status;
-    }
-    ppl::common::Destructor __tmp_buffer_guard([this, &tmp_buffer_desc]() -> void {
-        GetCudaDevice()->FreeTmpBuffer(&tmp_buffer_desc);
-    });
-    quant_buffer = tmp_buffer_desc.addr;
-
-    auto rc = PPLCUDARmsNormForwardImp(
-        GetStream(),
-        input->GetBufferPtr(),
-        skip_in_data,
-        weight->GetBufferPtr(),
-        param_->eps,
-        input_shape,
-        quant_buffer,
-        skip_out->GetBufferPtr());
-
-    if (ppl::common::RC_SUCCESS != rc) {
-        return rc;
-    }
-
     const int64_t dim_count = input_shape->GetDimCount();
     const int64_t real_axis = param_->axis > 0 ? param_->axis : (param_->axis + dim_count);
 
     const int64_t batch = input_shape->CalcElementsToDimensionIncludingPadding(real_axis);
     const int64_t quant_dim = input_shape->CalcElementsFromDimensionIncludingPadding(real_axis);
 
-    return ppl::kernel::llm::cuda::pmx::i8i8::minmax_quantize_fp16(
+    auto to_layout = GetEngineOptions().cublas_layout_hint == CUBLAS_LAYOUT_AMPERE
+        ? ppl::kernel::llm::cuda::MATRIX_LAYOUT_COL32
+        : ppl::kernel::llm::cuda::MATRIX_LAYOUT_ROW_MAJOR;
+
+    return ppl::kernel::llm::cuda::pmx::i8i8::skip_rmsnorm_minmax_quantize_fp16(
         GetStream(),
-        quant_buffer,
+        input->GetBufferPtr(),
+        weight->GetBufferPtr(),
+        skip_in_data,
+        param_->eps,
         batch,
         quant_dim,
         ppl::kernel::llm::cuda::pmx::i8i8::token_up_scale,
-        ppl::kernel::llm::cuda::MATRIX_LAYOUT_ROW_MAJOR,
-        output->GetBufferPtr(),
-        scale->GetBufferPtr()
+        to_layout,
+        skip_out->GetBufferPtr(),
+        scale->GetBufferPtr(),
+        output->GetBufferPtr()
     );
 }
 

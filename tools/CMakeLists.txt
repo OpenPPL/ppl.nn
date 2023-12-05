@@ -22,11 +22,15 @@ if (PPLNN_ENABLE_MPI_TOOLS)
 endif()
 
 if(PPLNN_USE_LLM_CUDA)
-    find_package(OpenMP REQUIRED)
-
     add_executable(benchmark_llama
         ${CMAKE_CURRENT_SOURCE_DIR}/benchmark_llama.cc sampler.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/simple_flags.cc)
-    target_link_libraries(benchmark_llama pplnn_static OpenMP::OpenMP_CXX)
+        target_link_libraries(benchmark_llama pplnn_static)
     target_include_directories(benchmark_llama PRIVATE ${HPCC_DEPS_DIR}/rapidjson/include)
+
+    if(PPLNN_CUDA_ENABLE_NCCL)
+        find_package(OpenMP REQUIRED)
+        add_executable(test_nccl ${CMAKE_CURRENT_SOURCE_DIR}/test_nccl.cc)
+        target_link_libraries(test_nccl pplcommon_static OpenMP::OpenMP_CXX)
+    endif()
 endif()

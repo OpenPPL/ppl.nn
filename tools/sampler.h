@@ -32,7 +32,7 @@ public:
     }
 
     ppl::common::RetCode SampleTopPTopK(const float* logits_device, const float* temperatures_host, int32_t batch,
-                                        int32_t vocab_size, float top_p, float top_k, int32_t* output_host);
+                                        int32_t vocab_size, int32_t batch_stride, float top_p, float top_k, int32_t* output_host);
 
 private:
     void Clear();

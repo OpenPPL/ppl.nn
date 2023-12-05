@@ -24,6 +24,7 @@
 #include "ppl/nn/runtime/runtime_partition_info.h"
 #include "ppl/nn/runtime/opt_kernel.h"
 #include "ppl/nn/utils/shared_resource.h"
+#include "ppl/nn/engines/llm_cuda/engine_options.h"
 
 namespace ppl { namespace nn { namespace llm { namespace cuda {
 
@@ -32,6 +33,7 @@ struct OptKernelOptions final {
     ir::Graph* graph = nullptr;
     LlmCudaDevice* device = nullptr;
     RuntimePartitionInfo* partition_info = nullptr;
+    const EngineOptions* engine_options = nullptr;
 };
 
 class LlmCudaOptKernel : public OptKernel {
@@ -57,7 +59,7 @@ protected:
     }
 
     template <typename KernelType, typename ParamType>
-    KernelType* CreateKernelImplWithParam(const ParamType* param) const {
+    KernelType* CreateKernelImplWithParam(const ParamType param) const {
         auto kernel = new KernelType(GetNode());
         auto status = kernel->Init();
         if (status != ppl::common::RC_SUCCESS) {

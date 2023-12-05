@@ -25,7 +25,9 @@
 
 namespace ppl { namespace nn { namespace pmx {
 
-ppl::common::RetCode ReshapeRowParallelLinear(InputOutputInfo*, const ir::Attr*, int64_t world_size);
+ppl::common::RetCode ReshapeRowParallelLinear(
+    InputOutputInfo*, const ir::Attr*, int64_t world_size,
+    int64_t in_features_pack_size = 1, int64_t out_features_pack_size = 1);
 
 }}} // namespace ppl::nn::pmx
 

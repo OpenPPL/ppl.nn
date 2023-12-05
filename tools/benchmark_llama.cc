@@ -4,14 +4,14 @@
 #include "rapidjson/document.h"
 #include "rapidjson/istreamwrapper.h"
 #include "ppl/common/log.h"
-using namespace ppl::common;
+#include "ppl/common/cuda/cuda_env.h"
+#include "ppl/common/threadpool.h"
 
 #include "ppl/nn/runtime/options.h"
 #include "ppl/nn/runtime/runtime.h"
 #include "ppl/nn/engines/engine.h"
 #include "ppl/nn/engines/llm_cuda/engine_factory.h"
 #include "ppl/nn/models/onnx/runtime_builder_factory.h"
-using namespace ppl::nn;
 
 #include <vector>
 #include <map>
@@ -24,8 +24,6 @@ using namespace ppl::nn;
 #include <cfloat>
 #include <unistd.h>
 #include <cuda_runtime.h>
-#include <omp.h>
-using namespace std;
 
 #ifdef PPLNN_CUDA_ENABLE_NCCL
 #include <nccl.h>
@@ -50,6 +48,8 @@ struct Profiler {
 
 static Profiler profiling;
 
+static ppl::common::StaticThreadPool gpu_thread_pool;
+
 Define_bool_opt("--help", g_flag_help, false, "show these help information");
 Define_string_opt("--model-type", g_flag_model_type, "", "model type");
 Define_string_opt("--model-dir", g_flag_model_dir, "", "model directory");
@@ -61,21 +61,26 @@ Define_float_opt("--temperature", g_flag_temperature, 1.0, "temperature");
 Define_uint32_opt("--generation-len", g_flag_generation_len, 32, "generation length");
 Define_uint32_opt("--warmup-loops", g_flag_warmup_loops, 2, "warm loops");
 Define_uint32_opt("--benchmark-loops", g_flag_benchmark_loops, 4, "benchmark loops");
-Define_string_opt("--input-file", g_flag_input_file, "", "input file of token ids");
+Define_string_opt("--input-file", g_flag_input_file, "", "input file of request's token ids. no effect if --input-length is non-zero");
+Define_uint32_opt("--input-len", g_flag_input_len, 0, "input length of request. default: 0(get length from input file)");
 Define_uint32_opt("--batch-size", g_flag_batch_size, UINT32_MAX, "batch size");
 Define_string_opt("--quant-method", g_flag_quant_method, "none",
                         "llm cuda quantization mehtod, only accept "
-                        "\"none\" and \"online_i8i8\", "
+                        "\"none\", \"online_i8i8\" and \"online_i4f16\", "
                         "default: \"none\"");
+Define_string_opt("--cublas-layout-hint", g_cublas_layout_hint, "default",
+                        "matrix layout hint for cublas(currently only effect int8 gemm), only accept "
+                        "\"default\", \"ampere\". "
+                        "default: \"default\"");
 
 Define_bool_opt("--kernel-profiling", g_flag_kernel_profiling, true, "enable kernel profiling and print profiling info");
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
 
-static ProfilingStatistics prefill_kernel_stat;
-static ProfilingStatistics decode_kernel_stat;
+static ppl::nn::ProfilingStatistics prefill_kernel_stat;
+static ppl::nn::ProfilingStatistics decode_kernel_stat;
 
-static void PrintProfilingStatistics(const ProfilingStatistics& stat, int32_t run_count) {
+static void PrintProfilingStatistics(const ppl::nn::ProfilingStatistics& stat, int32_t run_count) {
     std::map<std::string, std::pair<double, double>> type_stat;
     std::map<std::string, int> type_count;
     char float_buf_0[128];
@@ -109,7 +114,7 @@ static void PrintProfilingStatistics(const ProfilingStatistics& stat, int32_t ru
     for (auto it = type_stat.begin(); it != type_stat.end(); ++it) {
         sprintf(float_buf_0, "%8.4f", it->second.first);
         sprintf(float_buf_1, "%8.4f", it->second.second / tot_kernel_time * 100);
-        string temp = it->first;
+        std::string temp = it->first;
         temp.insert(temp.length(), temp.length() > 20 ? 0 : 20 - temp.length(), ' ');
         LOG(INFO) << "Type: [" << temp << "], Avg time: [" << float_buf_0 << "], Percentage: [" << float_buf_1
                   << "], Exec count [" << type_count[it->first] << "]";
@@ -123,14 +128,6 @@ static void PrintProfilingStatistics(const ProfilingStatistics& stat, int32_t ru
     LOG(INFO) << "Total kernel time: [" << float_buf_0 << "]";
 }
 #endif
-
-template <class T>
-static void PrintVector(vector<T> vec) {
-    for (auto& ele : vec) {
-        std::cout << ele << ", ";
-    }
-    std::cout << std::endl;
-}
 
 class TimingGuard final {
 public:
@@ -161,7 +158,6 @@ struct Config {
     int generation_len = 0;
 
     int benchmark_loops = 0;
-    std::string input_file;
 
     std::string quant_method;
 };
@@ -205,7 +201,7 @@ struct ModelInput {
 };
 
 struct WorkerThreadArg final {
-    std::unique_ptr<Runtime> runtime;
+    std::unique_ptr<ppl::nn::Runtime> runtime;
 
     void* kv_cache_mem = nullptr;
     void* kv_scale_mem = nullptr;
@@ -225,42 +221,85 @@ struct WorkerThreadArg final {
     ppl::nn::Tensor* logits;
 };
 
+static void InitCudaThread() {
+    gpu_thread_pool.Run([&](uint32_t nthr, uint32_t tid) {
+        auto cu_ret = cudaSetDevice(tid);
+        if (cu_ret != cudaSuccess) {
+            LOG(ERROR) << "cudaSetDevice(" << tid << ") failed: " << cudaGetErrorString(cu_ret);
+            exit(-1);
+        }
+        auto rc = ppl::common::InitCudaEnv(tid);
+        if (rc != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "InitCudaEnv(" << tid << ") failed: " << ppl::common::GetRetCodeStr(rc);
+            exit(-1);
+        }
+    });
+}
+
+static void FinalizeCudaThread() {
+    gpu_thread_pool.Run([&](uint32_t nthr, uint32_t tid) {
+        auto rc = ppl::common::DestroyCudaEnv(tid);
+        if (rc != ppl::common::RC_SUCCESS) {
+            LOG(ERROR) << "InitCudaEnv(" << tid << ") failed: " << ppl::common::GetRetCodeStr(rc);
+            exit(-1);
+        }
+    });
+}
+
 #ifdef PPLNN_CUDA_ENABLE_NCCL
 #define NCCL_CHECK(cmd, emsg)                                                \
     do {                                                                     \
         ncclResult_t e = (cmd);                                              \
         if (e != ncclSuccess) {                                              \
             LOG(ERROR) << "NCCL error(code:" << (int)e << ") on " << (emsg); \
-            return false;                                           \
+            exit(-1);                                                        \
         }                                                                    \
     } while (0);
 
 static bool InitNccl(uint32_t tensor_parallel_size, std::vector<ncclComm_t>* nccl_comm_list) {
     nccl_comm_list->resize(tensor_parallel_size);
-    std::vector<int> dev_list(tensor_parallel_size);
-    for (size_t i = 0; i < tensor_parallel_size; ++i) {
-        dev_list[i] = i;
-    }
-    NCCL_CHECK(ncclCommInitAll(nccl_comm_list->data(), tensor_parallel_size, dev_list.data()), "ncclCommInitAll");
+    ncclUniqueId uuid;
+    ncclGetUniqueId(&uuid);
+    gpu_thread_pool.Run([&](uint32_t nthr, uint32_t tid) {
+        NCCL_CHECK(ncclCommInitRank(&nccl_comm_list->at(tid), tensor_parallel_size, uuid, tid), "ncclCommInitRank");
+    });
     return true;
 }
+
+static void FinalizeNccl(uint32_t tensor_parallel_size, const std::vector<ncclComm_t>& nccl_comm_list) {
+    gpu_thread_pool.Run([&](uint32_t nthr, uint32_t tid) {
+        NCCL_CHECK(ncclCommDestroy(nccl_comm_list[tid]), "ncclCommDestroy");
+    });
+}
+
 #endif
 
-static Engine* CreateCudaEngine(ncclComm_t nccl_comm, int device_id, const std::string& quant_method) {
+static ppl::nn::Engine* CreateCudaEngine(ncclComm_t nccl_comm, int device_id, const std::string& quant_method) {
     ppl::nn::llm::cuda::EngineOptions options;
     options.device_id = device_id;
     options.mm_policy = ppl::nn::llm::cuda::MM_COMPACT;
 
     if (quant_method == "none") {
-        options.quant_method = llm::cuda::QUANT_METHOD_NONE;
+        options.quant_method = ppl::nn::llm::cuda::QUANT_METHOD_NONE;
     } else if (quant_method == "online_i8i8") {
-        options.quant_method = llm::cuda::QUANT_METHOD_ONLINE_I8I8;
+        options.quant_method = ppl::nn::llm::cuda::QUANT_METHOD_ONLINE_I8I8;
+    } else if (quant_method == "online_i4f16") {
+        options.quant_method = ppl::nn::llm::cuda::QUANT_METHOD_ONLINE_I4F16;
     } else {
         LOG(ERROR) << "unknown/unsupported --quant-method option: " << quant_method;
         return nullptr;
     }
 
-    auto engine = unique_ptr<Engine>(ppl::nn::llm::cuda::EngineFactory::Create(options));
+    if (g_cublas_layout_hint == "default") {
+        options.cublas_layout_hint = ppl::nn::llm::cuda::CUBLAS_LAYOUT_DEFAULT;
+    } else if (g_cublas_layout_hint == "ampere") {
+        options.cublas_layout_hint = ppl::nn::llm::cuda::CUBLAS_LAYOUT_AMPERE;
+    } else {
+        LOG(ERROR) << "unknown/unsupported --cublas-layout-hint option: " << g_cublas_layout_hint;
+        return nullptr;
+    }
+
+    auto engine = std::unique_ptr<ppl::nn::Engine>(ppl::nn::llm::cuda::EngineFactory::Create(options));
     if (!engine) {
         LOG(ERROR) << "create cuda engine failed.";
         return nullptr;
@@ -268,7 +307,7 @@ static Engine* CreateCudaEngine(ncclComm_t nccl_comm, int device_id, const std::
 
 #ifdef PPLNN_CUDA_ENABLE_NCCL
     auto rc = engine->Configure(ppl::nn::llm::cuda::ENGINE_CONF_SET_TP_NCCL_COMM, nccl_comm);
-    if (rc != RC_SUCCESS) {
+    if (rc != ppl::common::RC_SUCCESS) {
         LOG(ERROR) << "engine configure failed";
         return nullptr;
     }
@@ -277,32 +316,32 @@ static Engine* CreateCudaEngine(ncclComm_t nccl_comm, int device_id, const std::
     return engine.release();
 }
 
-static Runtime* CreatePPLRuntime(Engine* cuda_engine, const string& model_file) {
-    auto builder = unique_ptr<onnx::RuntimeBuilder>(onnx::RuntimeBuilderFactory::Create());
+static ppl::nn::Runtime* CreatePPLRuntime(ppl::nn::Engine* cuda_engine, const std::string& model_file) {
+    auto builder = std::unique_ptr<ppl::nn::onnx::RuntimeBuilder>(ppl::nn::onnx::RuntimeBuilderFactory::Create());
     if (!builder) {
         LOG(ERROR) << "create onnx builder failed.";
         return nullptr;
     }
 
     auto rc = builder->LoadModel(model_file.c_str());
-    if (rc != RC_SUCCESS) {
-        LOG(ERROR) << "load model [" << model_file << "] failed: " << GetRetCodeStr(rc);
+    if (rc != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "load model [" << model_file << "] failed: " << ppl::common::GetRetCodeStr(rc);
         return nullptr;
     }
 
-    onnx::RuntimeBuilder::Resources resources;
+    ppl::nn::onnx::RuntimeBuilder::Resources resources;
     resources.engines = &cuda_engine;
     resources.engine_num = 1;
 
     rc = builder->SetResources(resources);
-    if (rc != RC_SUCCESS) {
-        LOG(ERROR) << "set resources for builder failed: " << GetRetCodeStr(rc);
+    if (rc != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "set resources for builder failed: " << ppl::common::GetRetCodeStr(rc);
         return nullptr;
     }
 
     rc = builder->Preprocess();
-    if (rc != RC_SUCCESS) {
-        LOG(ERROR) << "builder preprocess failed: " << GetRetCodeStr(rc);
+    if (rc != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "builder preprocess failed: " << ppl::common::GetRetCodeStr(rc);
         return nullptr;
     }
 
@@ -358,15 +397,15 @@ static void UpdateInputDecode(int step, const std::vector<int32_t>& gen_tokens, 
     }
 }
 
-static std::shared_ptr<ppl::llm::cuda::Sampler> CreateCudaSampler(Runtime* runtime) {
-    DeviceContext::Type needed_type;
+static std::shared_ptr<ppl::llm::cuda::Sampler> CreateCudaSampler(ppl::nn::Runtime* runtime) {
+    ppl::nn::DeviceContext::Type needed_type;
     *((int64_t*)needed_type.str) = 0;
     needed_type.str[0] = 'c';
     needed_type.str[1] = 'u';
     needed_type.str[2] = 'd';
     needed_type.str[3] = 'a';
 
-    DeviceContext* dev = nullptr;
+    ppl::nn::DeviceContext* dev = nullptr;
     for (uint32_t i = 0; i < runtime->GetDeviceContextCount(); ++i) {
         if (runtime->GetDeviceContext(i)->GetType() == needed_type) {
             dev = runtime->GetDeviceContext(i);
@@ -381,8 +420,8 @@ static std::shared_ptr<ppl::llm::cuda::Sampler> CreateCudaSampler(Runtime* runti
 
     cudaStream_t stream;
     auto rc = dev->Configure(ppl::nn::llm::cuda::DEV_CONF_GET_STREAM, &stream);
-    if (rc != RC_SUCCESS) {
-        LOG(ERROR) << "Configure ppl::nn::llm::cuda::DEV_CONF_GET_STREAM failed: " << GetRetCodeStr(rc);
+    if (rc != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "Configure ppl::nn::llm::cuda::DEV_CONF_GET_STREAM failed: " << ppl::common::GetRetCodeStr(rc);
         return std::shared_ptr<ppl::llm::cuda::Sampler>();
     }
 
@@ -415,10 +454,6 @@ static bool CheckParameters(const ModelConfig& model_config) {
         return false;
     }
 
-    if (model_config.quant_method != "none" && model_config.quant_method != "online_i8i8") {
-        LOG(ERROR) << "only support quant_method == none || quant_method == online_i8i8";
-    }
-
     return true;
 }
 
@@ -435,33 +470,26 @@ public:
         , engine_list_(config.tensor_parallel_size)
         , worker_thread_args_(config.tensor_parallel_size) {}
 
-    ~LLM() {
-        sampler_.reset();
-
-        for (int i = 0; i < tensor_parallel_size_; ++i) {
-            cudaFree(worker_thread_args_[i].kv_cache_mem);
-            cudaFree(worker_thread_args_[i].kv_scale_mem);
-
-            worker_thread_args_[i].runtime.reset();
-        }
-
-        engine_list_.clear();
-#ifdef PPLNN_CUDA_ENABLE_NCCL
-        for (int i = 0; i < tensor_parallel_size_; ++i) {
-            auto e = ncclCommDestroy(nccl_comm_list_[i]);
-            if (e != ncclSuccess) {
-                LOG(ERROR) << "NCCL error(code:" << (int)e << ") on "
-                           << "(ncclCommDestroy)";
-            }
-        }
-#endif
-    }
+    ~LLM() {}
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
     void SetKernelProfiling(bool flag) {
         kernel_profiling_ = flag;
     }
 #endif
+
+    void Finalize() {
+        gpu_thread_pool.Run([&](uint32_t nthr, uint32_t tid) {
+            sampler_.reset();
+            worker_thread_args_[tid].runtime.reset();
+            engine_list_[tid].reset();
+            cudaFree(worker_thread_args_[tid].kv_cache_mem);
+            cudaFree(worker_thread_args_[tid].kv_scale_mem);
+        });
+#ifdef PPLNN_CUDA_ENABLE_NCCL
+        FinalizeNccl(tensor_parallel_size_, nccl_comm_list_);
+#endif
+    }
 
     bool Init(const ModelConfig& model_config, const std::string& model_dir) {
         bool rc = CheckParameters(model_config);
@@ -474,7 +502,7 @@ public:
         kv_cache_block_bytes_ = model_config.num_layers * 2 * model_config.num_kv_heads / tensor_parallel_size_ *
             model_config.hidden_dim / model_config.num_heads * sizeof(int8_t);
         kv_scale_block_bytes_ = model_config.num_layers * 2 * model_config.num_kv_heads / tensor_parallel_size_ *
-            model_config.hidden_dim / model_config.num_heads / model_config.cache_quant_group * sizeof(float16_t);
+            model_config.hidden_dim / model_config.num_heads / model_config.cache_quant_group * sizeof(int16_t);
 
 #ifdef PPLNN_CUDA_ENABLE_NCCL
         rc = InitNccl(tensor_parallel_size_, &nccl_comm_list_);
@@ -485,31 +513,31 @@ public:
         LOG(INFO) << "Init Nccl successed";
 #endif
 
-#pragma omp parallel num_threads(tensor_parallel_size_)
-        {
-            int id = omp_get_thread_num();
-            engine_list_[id] = unique_ptr<Engine>(CreateCudaEngine(nccl_comm_list_[id], id, model_config.quant_method));
-            if (!engine_list_[id]) {
-                LOG(ERROR) << "create cuda engine failed.";
+        gpu_thread_pool.Run([&](uint32_t nthr, uint32_t tid) {
+            engine_list_[tid] = std::unique_ptr<ppl::nn::Engine>(CreateCudaEngine(nccl_comm_list_[tid], tid, model_config.quant_method));
+            if (!engine_list_[tid]) {
+                LOG(ERROR) << "create cuda engine [" << tid << "] failed.";
                 exit(-1);
             }
-            LOG(INFO) << "Create cuda engine success";
+            LOG(INFO) << "Create cuda engine [" << tid << "] success";
 
-            const std::string model_path = model_dir + "/model_slice_" + std::to_string(id) + "/model.onnx";
-            worker_thread_args_[id].runtime = unique_ptr<Runtime>(CreatePPLRuntime(engine_list_[id].get(), model_path));
-            if (!worker_thread_args_[id].runtime) {
-                LOG(ERROR) << "create runtime failed.";
+            const std::string model_path = model_dir + "/model_slice_" + std::to_string(tid) + "/model.onnx";
+            worker_thread_args_[tid].runtime = std::unique_ptr<ppl::nn::Runtime>(CreatePPLRuntime(engine_list_[tid].get(), model_path));
+            if (!worker_thread_args_[tid].runtime) {
+                LOG(ERROR) << "create runtime [" << tid << "] failed.";
                 exit(-1);
             }
-            LOG(INFO) << "Create runtime success";
-        }
+            LOG(INFO) << "Create runtime [" << tid << "] success";
 
-        sampler_ = CreateCudaSampler(worker_thread_args_[0].runtime.get());
-        if (!sampler_) {
-            LOG(ERROR) << "CreateCudaSampler failed";
-            return false;
-        }
-        LOG(INFO) << "Create cuda sampler success";
+            if (tid == 0) {
+                sampler_ = CreateCudaSampler(worker_thread_args_[0].runtime.get());
+                if (!sampler_) {
+                    LOG(ERROR) << "CreateCudaSampler failed";
+                    exit(-1);
+                }
+                LOG(INFO) << "Create cuda sampler success";
+            }
+        });
 
         return true;
     }
@@ -520,27 +548,23 @@ public:
             temperature_list_[i] = temperature_;
         }
 
-#pragma omp parallel num_threads(tensor_parallel_size_)
-        {
-            int id = omp_get_thread_num();
-            auto cu_ret = cudaMalloc(&worker_thread_args_[id].kv_cache_mem, kv_cache_tokens * kv_cache_block_bytes_);
+        gpu_thread_pool.Run([&](uint32_t nthr, uint32_t tid) {
+            auto cu_ret = cudaMalloc(&worker_thread_args_[tid].kv_cache_mem, kv_cache_tokens * kv_cache_block_bytes_);
             if (cu_ret != cudaSuccess) {
                 LOG(ERROR) << "alloc kv cache [" << kv_cache_tokens * kv_cache_block_bytes_
                            << "] failed: " << cudaGetErrorString(cu_ret);
                 exit(-1);
             }
-            cu_ret = cudaMalloc(&worker_thread_args_[id].kv_scale_mem, kv_cache_tokens * kv_scale_block_bytes_);
+            cu_ret = cudaMalloc(&worker_thread_args_[tid].kv_scale_mem, kv_cache_tokens * kv_scale_block_bytes_);
             if (cu_ret != cudaSuccess) {
-                cudaFree(worker_thread_args_[id].kv_cache_mem);
+                cudaFree(worker_thread_args_[tid].kv_cache_mem);
                 LOG(ERROR) << "alloc kv scale [" << kv_cache_tokens * kv_scale_block_bytes_
                            << "] failed: " << cudaGetErrorString(cu_ret);
                 exit(-1);
             }
-        }
 
-        // init tensor
-        for (int i = 0; i < tensor_parallel_size_; ++i) {
-            auto* arg = &worker_thread_args_[i];
+            // init tensor
+            auto* arg = &worker_thread_args_[tid];
             arg->token_ids = arg->runtime->GetInputTensor(0);
             arg->attn_mask = arg->runtime->GetInputTensor(1);
             arg->seq_starts = arg->runtime->GetInputTensor(2);
@@ -561,11 +585,8 @@ public:
 
             arg->kv_cache->SetBufferPtr(arg->kv_cache_mem);
             arg->kv_scale->SetBufferPtr(arg->kv_scale_mem);
-        }
 
-        // set kv cache, kv scale shape
-        for (int i = 0; i < tensor_parallel_size_; ++i) {
-            auto arg = &worker_thread_args_[i];
+            // set kv cache, kv scale shape
             if (model_config.cache_layout == 0) {
                 arg->kv_cache->GetShape()->Reshape({(int64_t)kv_cache_tokens, model_config.num_layers, 2,
                                                     model_config.num_kv_heads / tensor_parallel_size_,
@@ -584,22 +605,22 @@ public:
                     model_config.hidden_dim / model_config.num_heads / model_config.cache_quant_group});
             } else {
                 LOG(ERROR) << "impossible status: cache_layout = [" << model_config.cache_layout << "]";
-                return false;
+                exit(-1);
             }
-        }
+        });
 
         return true;
     }
 
     bool SetInputTensor(const ModelInput& model_input, int id, int step) {
-        RetCode rc;
+        ppl::common::RetCode rc;
         // token ids
         // if (step < 2) {
         worker_thread_args_[id].token_ids->GetShape()->Reshape({int64_t(model_input.token_ids.size())});
         rc = worker_thread_args_[id].token_ids->CopyFromHostAsync(model_input.token_ids.data());
-        if (rc != RC_SUCCESS) {
+        if (rc != ppl::common::RC_SUCCESS) {
             LOG(ERROR) << "set token_ids [" << worker_thread_args_[id].token_ids->GetName()
-                       << "] failed: " << GetRetCodeStr(rc);
+                       << "] failed: " << ppl::common::GetRetCodeStr(rc);
             return false;
         }
         // }
@@ -607,26 +628,26 @@ public:
         // kv_starts
         worker_thread_args_[id].kv_starts->GetShape()->Reshape({int64_t(model_input.kv_starts.size())});
         rc = worker_thread_args_[id].kv_starts->CopyFromHostAsync(model_input.kv_starts.data());
-        if (rc != RC_SUCCESS) {
+        if (rc != ppl::common::RC_SUCCESS) {
             LOG(ERROR) << "set kv_starts " << worker_thread_args_[id].kv_starts->GetName()
-                       << " failed: " << GetRetCodeStr(rc);
+                       << " failed: " << ppl::common::GetRetCodeStr(rc);
             return false;
         }
 
         // start_pos
         worker_thread_args_[id].start_pos->GetShape()->Reshape({int64_t(model_input.start_pos.size())});
         rc = worker_thread_args_[id].start_pos->CopyFromHostAsync(model_input.start_pos.data());
-        if (rc != RC_SUCCESS) {
+        if (rc != ppl::common::RC_SUCCESS) {
             LOG(ERROR) << "set start_pos [" << worker_thread_args_[id].start_pos->GetName()
-                       << "] failed: " << GetRetCodeStr(rc);
+                       << "] failed: " << ppl::common::GetRetCodeStr(rc);
             return false;
         }
 
         // max_kv_len
         rc = worker_thread_args_[id].max_kv_len->CopyFromHostAsync(&model_input.max_kv_len);
-        if (rc != RC_SUCCESS) {
+        if (rc != ppl::common::RC_SUCCESS) {
             LOG(ERROR) << "set max_kv_len [" << worker_thread_args_[id].max_kv_len->GetName()
-                       << "] failed: " << GetRetCodeStr(rc);
+                       << "] failed: " << ppl::common::GetRetCodeStr(rc);
             return false;
         }
 
@@ -635,9 +656,9 @@ public:
             // cache_indices
             worker_thread_args_[id].cache_indices->GetShape()->Reshape({int64_t(model_input.cache_indices.size())});
             rc = worker_thread_args_[id].cache_indices->CopyFromHostAsync(model_input.cache_indices.data());
-            if (rc != RC_SUCCESS) {
+            if (rc != ppl::common::RC_SUCCESS) {
                 LOG(ERROR) << "set cache_indices [" << worker_thread_args_[id].cache_indices->GetName()
-                           << "] failed: " << GetRetCodeStr(rc);
+                           << "] failed: " << ppl::common::GetRetCodeStr(rc);
                 return false;
             }
         }
@@ -648,31 +669,31 @@ public:
             // PrintVector(model_input.seq_starts);
             worker_thread_args_[id].seq_starts->GetShape()->Reshape({int64_t(model_input.seq_starts.size())});
             rc = worker_thread_args_[id].seq_starts->CopyFromHostAsync(model_input.seq_starts.data());
-            if (rc != RC_SUCCESS) {
+            if (rc != ppl::common::RC_SUCCESS) {
                 LOG(ERROR) << "set seq_starts [" << worker_thread_args_[id].seq_starts->GetName()
-                           << "] failed: " << GetRetCodeStr(rc);
+                           << "] failed: " << ppl::common::GetRetCodeStr(rc);
                 return false;
             }
 
             // decoding batches
             rc = worker_thread_args_[id].decoding_batches->CopyFromHostAsync(&model_input.decoding_batches);
-            if (rc != RC_SUCCESS) {
+            if (rc != ppl::common::RC_SUCCESS) {
                 LOG(ERROR) << "set decoding_batches [" << worker_thread_args_[id].decoding_batches->GetName()
-                           << "] failed: " << GetRetCodeStr(rc);
+                           << "] failed: " << ppl::common::GetRetCodeStr(rc);
                 return false;
             }
 
             // max_seq_len
             rc = worker_thread_args_[id].max_seq_len->CopyFromHostAsync(&model_input.max_seq_len);
-            if (rc != RC_SUCCESS) {
+            if (rc != ppl::common::RC_SUCCESS) {
                 LOG(ERROR) << "set max_seq_len [" << worker_thread_args_[id].max_seq_len->GetName()
-                           << "] failed: " << GetRetCodeStr(rc);
+                           << "] failed: " << ppl::common::GetRetCodeStr(rc);
                 return false;
             }
         }
 
         // rc = worker_thread_args_[id].runtime->Synchronize();
-        // if (rc != RC_SUCCESS) {
+        // if (rc != ppl::common::RC_SUCCESS) {
         //     LOG(ERROR) << "set input tensor synchronize fail";
         //     return false;
         // }
@@ -692,62 +713,57 @@ public:
                     UpdateInputDecode(step, output_tokens->at(step - 1), model_input);
                 }
 
+                gpu_thread_pool.Run([&](uint32_t nthr, uint32_t tid) {
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-                if (kernel_profiling_ && (step == 0 || step == 1)) {
-                    auto rc = worker_thread_args_[0].runtime->Configure(RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG, true);
-                    if (rc != RC_SUCCESS) {
-                        LOG(WARNING) << "enable kernel profiling failed: " << GetRetCodeStr(rc);
+                    if (tid == 0 && kernel_profiling_ && (step == 0 || step == 1)) {
+                        auto rc = worker_thread_args_[tid].runtime->Configure(ppl::nn::RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG, true);
+                        if (rc != ppl::common::RC_SUCCESS) {
+                            LOG(WARNING) << "enable kernel profiling failed: " << ppl::common::GetRetCodeStr(rc);
+                        }
                     }
-                }
 #endif
-
-                {
-
-                    #pragma omp parallel num_threads(tensor_parallel_size_)
-                    {
-                        int id = omp_get_thread_num();
-                        bool ret = SetInputTensor(*model_input, id, step);
-                        if (!ret) {
-                            LOG(ERROR) << "SetInputTensor failed";
-                            exit(-1);
-                        }
-
-                        auto rc = worker_thread_args_[id].runtime->Run();
-                        if (rc != RC_SUCCESS) {
-                            LOG(ERROR) << "model run failed";
-                            exit(-1);
-                        }
+                    bool ret = SetInputTensor(*model_input, tid, step);
+                    if (!ret) {
+                        LOG(ERROR) << "SetInputTensor failed";
+                        exit(-1);
                     }
-                }
+
+                    auto rc = worker_thread_args_[tid].runtime->Run();
+                    if (rc != ppl::common::RC_SUCCESS) {
+                        LOG(ERROR) << "model run failed";
+                        exit(-1);
+                    }
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
-                if (kernel_profiling_ && (step == 0 || step == generation_len_ - 1)) {
-                    if (step == 0) {
-                        auto rc = worker_thread_args_[0].runtime->GetProfilingStatistics(&prefill_kernel_stat);
-                        if (rc != RC_SUCCESS) {
-                            LOG(WARNING) << "get prefill kernel profiling stats failed: " << GetRetCodeStr(rc);
+                    if (tid == 0 && kernel_profiling_ && (step == 0 || step == generation_len_ - 1)) {
+                        if (step == 0) {
+                            auto rc = worker_thread_args_[tid].runtime->GetProfilingStatistics(&prefill_kernel_stat);
+                            if (rc != ppl::common::RC_SUCCESS) {
+                                LOG(WARNING) << "get prefill kernel profiling stats failed: " << ppl::common::GetRetCodeStr(rc);
+                            }
+                        } else {
+                            auto rc = worker_thread_args_[tid].runtime->GetProfilingStatistics(&decode_kernel_stat);
+                            if (rc != ppl::common::RC_SUCCESS) {
+                                LOG(WARNING) << "get decode kernel profiling stats failed: " << ppl::common::GetRetCodeStr(rc);
+                            }
                         }
-                    } else {
-                        auto rc = worker_thread_args_[0].runtime->GetProfilingStatistics(&decode_kernel_stat);
-                        if (rc != RC_SUCCESS) {
-                            LOG(WARNING) << "get decode kernel profiling stats failed: " << GetRetCodeStr(rc);
+                        auto rc = worker_thread_args_[tid].runtime->Configure(ppl::nn::RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG, false);
+                        if (rc != ppl::common::RC_SUCCESS) {
+                            LOG(WARNING) << "enable profiling failed: " << ppl::common::GetRetCodeStr(rc);
                         }
                     }
-                    auto rc = worker_thread_args_[0].runtime->Configure(RUNTIME_CONF_SET_KERNEL_PROFILING_FLAG, false);
-                    if (rc != RC_SUCCESS) {
-                        LOG(WARNING) << "enable profiling failed: " << GetRetCodeStr(rc);
-                    }
-                }
 #endif
+                    if (tid == 0) {
+                        auto logits = worker_thread_args_[tid].logits;
+                        auto rc = sampler_->SampleTopPTopK((float*)logits->GetBufferPtr(), temperature_list_.data(), batch_size,
+                                                        vocab_size_, logits->GetShape()->GetDim(1), top_p_, top_k_, output_tokens->at(step).data());
 
-                auto logits = worker_thread_args_[0].logits;
-                auto rc = sampler_->SampleTopPTopK((float*)logits->GetBufferPtr(), temperature_list_.data(), batch_size,
-                                                   vocab_size_, top_p_, top_k_, output_tokens->at(step).data());
-
-                if (rc != RC_SUCCESS) {
-                    LOG(ERROR) << "SampleTopPTopK failed: " << GetRetCodeStr(rc);
-                    break;
-                }
+                        if (rc != ppl::common::RC_SUCCESS) {
+                            LOG(ERROR) << "SampleTopPTopK failed: " << ppl::common::GetRetCodeStr(rc);
+                            exit(-1);
+                        }
+                    }
+                });
             }
 
             profiling.step_latency[step] += step_latency;
@@ -787,7 +803,6 @@ static void ParseConfig(Config* config) {
     config->temperature = g_flag_temperature;
     config->generation_len = g_flag_generation_len;
     config->benchmark_loops = g_flag_benchmark_loops;
-    config->input_file = g_flag_input_file;
     config->quant_method = g_flag_quant_method;
 
     LOG(INFO) << "config.model_type: " << config->model_type;
@@ -802,7 +817,6 @@ static void ParseConfig(Config* config) {
     LOG(INFO) << "config.generation_len: " << config->generation_len;
 
     LOG(INFO) << "config.benchmark_loops: " << config->benchmark_loops;
-    LOG(INFO) << "config.input_file: " << config->input_file;
 
     LOG(INFO) << "config.quant_method: " << config->quant_method;
 }
@@ -945,6 +959,11 @@ static bool ParseInput(const std::string& token_file, ModelInput* model_input) {
     return true;
 }
 
+static void GenInput(ModelInput* model_input) {
+    model_input->first_fill_len.assign(g_flag_batch_size, g_flag_input_len);
+    model_input->token_ids.assign((int64_t)g_flag_batch_size * g_flag_input_len, 1);
+}
+
 int main(int argc, char* argv[]) {
     simple_flags::parse_args(argc, argv);
 
@@ -954,7 +973,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (!simple_flags::get_unknown_flags().empty()) {
-        string content;
+        std::string content;
         for (auto it : simple_flags::get_unknown_flags()) {
             content += "'" + it + "', ";
         }
@@ -978,10 +997,21 @@ int main(int argc, char* argv[]) {
     }
     model_config.quant_method = config.quant_method;
 
+    gpu_thread_pool.Init(config.tensor_parallel_size);
+    InitCudaThread();
+
+    LOG(INFO) << "input_file: " << g_flag_input_file;
+    LOG(INFO) << "input_length: " << g_flag_input_len;
+    LOG(INFO) << "batch_size: " << g_flag_batch_size;
+
     ModelInput raw_model_input;
-    if (!ParseInput(config.input_file, &raw_model_input)) {
-        LOG(ERROR) << "ParseInput failed, input file: " << config.input_file; 
-        return -1;
+    if (g_flag_input_len == 0) {
+        if (!ParseInput(g_flag_input_file, &raw_model_input)) {
+            LOG(ERROR) << "ParseInput failed, input file: " << g_flag_input_file; 
+            return -1;
+        }
+    } else {
+        GenInput(&raw_model_input);
     }
     int64_t batch_size = raw_model_input.first_fill_len.size();
     int64_t total_input_length = 0;
@@ -1009,7 +1039,7 @@ int main(int argc, char* argv[]) {
 
     std::vector<std::vector<int32_t>> output_tokens(config.generation_len, std::vector<int32_t>(batch_size));
 
-    LOG(INFO) << "Request batch: " << batch_size;
+    LOG(INFO) << "Request batch size: " << batch_size;
     LOG(INFO) << "Total input length: " << total_input_length;
     LOG(INFO) << "KV cache length: " << kv_cache_length;
 
@@ -1038,7 +1068,10 @@ int main(int argc, char* argv[]) {
         LOG(INFO) << "Time " << latency << " ms";
     }
     size_t avail_bytes = 0, total = 0;
-    cudaMemGetInfo(&avail_bytes, &total);
+    gpu_thread_pool.Run([&](uint32_t nthr, uint32_t tid) {
+        if (tid == 0)
+            cudaMemGetInfo(&avail_bytes, &total);
+    });
     profiling.mem_usage = double(total - avail_bytes) / 1024 / 1024 / 1024;
 
 
@@ -1101,6 +1134,10 @@ int main(int argc, char* argv[]) {
         PrintProfilingStatistics(decode_kernel_stat, config.generation_len - 1);
     }
 #endif
+
+    llm.Finalize();
+
+    FinalizeCudaThread();
 
     return 0;
 }

@@ -20,6 +20,8 @@
 #include <stdarg.h>
 #include <cuda.h>
 
+#include "ppl/kernel/llm/cuda/pmx/i4f16/gemm.h"
+
 using namespace std;
 using namespace ppl::common;
 
@@ -47,6 +49,10 @@ LlmCudaDevice::~LlmCudaDevice() {
 
     if (cublas_workspace_) {
         cudaFree(cublas_workspace_);
+    }
+
+    if (i4f16_gemm_handle_) {
+        ppl::kernel::llm::cuda::pmx::i4f16::destory_gemm_handle(i4f16_gemm_handle_);
     }
 
     if (device_id_ != -1) {
@@ -99,7 +105,6 @@ RetCode LlmCudaDevice::Init(int device_id, bool init_stream, bool init_cublas, N
 
     device_id_ = device_id;
     tensor_parallel_nccl_param_ = tensor_parallel_nccl_param;
-
 
     return DoInit();
 }

@@ -54,6 +54,22 @@ enum {
 
     /** online quantization, int8 tensor and int8 weight */
     QUANT_METHOD_ONLINE_I8I8,
+
+    /** online quantization, fp16 tensor and int4 weight */
+    QUANT_METHOD_ONLINE_I4F16,
+};
+
+/** @brief cublas layout hint, currently for selecting matrix layout for int8 gemm */
+enum {
+    /** use default matrix layout */
+    CUBLAS_LAYOUT_DEFAULT,
+
+    /** use ampere specify matrix layout
+     * NOTE: It may improve performance on some device(orin),
+     *       but also may lost performance on some device(A100).
+     *       The actual performance is subject to testing.
+     */
+    CUBLAS_LAYOUT_AMPERE,
 };
 
 /** @brief device configuration options */

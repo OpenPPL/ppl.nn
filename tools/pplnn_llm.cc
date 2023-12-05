@@ -227,8 +227,13 @@ Define_string_opt("--in-devices", g_flag_in_devices, "",
 
 Define_string_opt("--quant-method", g_flag_quant_method, "none",
                         "llm cuda quantization mehtod, only accept "
-                        "\"none\" and \"online_i8i8\", "
+                        "\"none\", \"online_i8i8\" and \"online_i4f16\", "
                         "default: \"none\"");
+
+Define_string_opt("--cublas-layout-hint", g_cublas_layout_hint, "default",
+                        "matrix layout hint for cublas(currently only effect int8 gemm), only accept "
+                        "\"default\", \"ampere\". "
+                        "default: \"default\"");
 
 #include <cuda_runtime.h>
 
@@ -310,8 +315,19 @@ static bool RegisterLlmCudaEngine(vector<unique_ptr<Engine>>* engines) {
         options.quant_method = llm::cuda::QUANT_METHOD_NONE;
     } else if (g_flag_quant_method == "online_i8i8") {
         options.quant_method = llm::cuda::QUANT_METHOD_ONLINE_I8I8;
-    } else {
+    } else if (g_flag_quant_method == "online_i4f16") {
+        options.quant_method = llm::cuda::QUANT_METHOD_ONLINE_I4F16;
+    } else  {
         LOG(ERROR) << "unknown/unsupported --quant-method option: " << g_flag_quant_method;
+        return false;
+    }
+
+    if (g_cublas_layout_hint == "default") {
+        options.cublas_layout_hint = llm::cuda::CUBLAS_LAYOUT_DEFAULT;
+    } else if (g_cublas_layout_hint == "ampere") {
+        options.cublas_layout_hint = llm::cuda::CUBLAS_LAYOUT_AMPERE;
+    } else {
+        LOG(ERROR) << "unknown/unsupported --cublas-layout-hint option: " << g_cublas_layout_hint;
         return false;
     }
 

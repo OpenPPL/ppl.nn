@@ -22,7 +22,9 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace pmx {
 
-RetCode ReshapeColumnParallelLinear(InputOutputInfo* info, const ir::Attr* arg, int64_t world_size) {
+RetCode ReshapeColumnParallelLinear(
+    InputOutputInfo* info, const ir::Attr* arg, int64_t world_size,
+    int64_t in_features_pack_size, int64_t out_features_pack_size) {
     auto param = static_cast<const ColumnParallelLinearParam*>(arg);
     const TensorShape& input_shape = *info->GetInput<TensorImpl>(0)->GetShape();
     const TensorShape& weight_shape = *info->GetInput<TensorImpl>(1)->GetShape();
@@ -42,11 +44,11 @@ RetCode ReshapeColumnParallelLinear(InputOutputInfo* info, const ir::Attr* arg, 
     }
 
     auto out_features_per_part = param->out_features / world_size;
-    if(weight_shape.GetDim(0) != out_features_per_part) {
+    if(weight_shape.GetDim(0) * out_features_pack_size != out_features_per_part) {
         LOG(ERROR) << info->GetNode()->GetName() <<
                 " out_features_per_part(" << out_features_per_part <<
                 ") not equal to weight's out feature dim(" <<
-                weight_shape.GetDim(0) << "), " <<
+                weight_shape.GetDim(0) * out_features_pack_size << "), " <<
                 "world_size = " << world_size;
         return RC_INVALID_VALUE;
     }

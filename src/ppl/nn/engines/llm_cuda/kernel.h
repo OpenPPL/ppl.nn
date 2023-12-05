@@ -19,6 +19,7 @@
 #define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_KERNEL_H_
 
 #include "llm_cuda_device.h"
+#include "engine_context.h"
 
 #include "ppl/nn/runtime/kernel_impl.h"
 #include "ppl/nn/runtime/tensor_impl.h"
@@ -78,6 +79,10 @@ private:
 protected:
     LlmCudaDevice* GetCudaDevice() const {
         return dynamic_cast<LlmCudaDevice*>(GetEngineContext()->GetDevice());
+    }
+
+    const EngineOptions& GetEngineOptions() const {
+        return reinterpret_cast<LlmCudaEngineContext*>(GetEngineContext())->GetEngineOptions();
     }
 
     virtual ppl::common::RetCode DoExecute(KernelExecContext*) = 0;

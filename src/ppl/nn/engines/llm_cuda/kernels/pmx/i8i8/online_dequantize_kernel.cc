@@ -90,6 +90,10 @@ ppl::common::RetCode I8I8OnlineDequantizeKernel::DoExecute(KernelExecContext* ct
         return ppl::common::RC_INVALID_VALUE;
     }
 
+    auto from_layout = GetEngineOptions().cublas_layout_hint == CUBLAS_LAYOUT_AMPERE
+        ? ppl::kernel::llm::cuda::MATRIX_LAYOUT_COL32
+        : ppl::kernel::llm::cuda::MATRIX_LAYOUT_ROW_MAJOR;
+
     return ppl::kernel::llm::cuda::pmx::i8i8::minmax_dequantize_fp16(
         GetStream(),
         input->GetBufferPtr(),
@@ -100,7 +104,7 @@ ppl::common::RetCode I8I8OnlineDequantizeKernel::DoExecute(KernelExecContext* ct
         quant_dim,
         ppl::kernel::llm::cuda::pmx::i8i8::token_down_scale,
         ppl::kernel::llm::cuda::pmx::i8i8::hidden_down_scale,
-        ppl::kernel::llm::cuda::MATRIX_LAYOUT_ROW_MAJOR,
+        from_layout,
         output->GetBufferPtr()
     );
 }

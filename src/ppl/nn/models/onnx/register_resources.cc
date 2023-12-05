@@ -1,16 +1,17 @@
 #include "ppl/common/retcode.h"
 using namespace ppl::common;
 
+#include <mutex>
+
 namespace ppl { namespace nn { namespace onnx {
 
 void RegisterParsers();
 
 RetCode RegisterResourcesOnce() {
-    static bool st_registered = false;
-    if (!st_registered) {
+    static std::once_flag st_registered;
+    std::call_once(st_registered, []() {
         RegisterParsers();
-        st_registered = true;
-    }
+    });
     return RC_SUCCESS;
 }
 

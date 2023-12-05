@@ -36,6 +36,7 @@ OptPassStatus FuseRMSNormPass(const OptKernelOptions& options)
             auto q_node = topo->GetNode(output_edge->CreateConsumerIter().Get());
 
             if (output_edge->CalcConsumerCount() == 1
+                && q_node
                 && q_node->GetType().domain == "pmx.i8i8"
                 && q_node->GetType().name == "OnlineQuantize")
             {

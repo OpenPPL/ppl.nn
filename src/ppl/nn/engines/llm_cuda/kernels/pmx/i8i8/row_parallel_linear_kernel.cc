@@ -102,6 +102,10 @@ ppl::common::RetCode I8I8RowParallelLinearKernel::DoExecute(KernelExecContext* c
     const int64_t M = input_shape->CalcElementsToDimensionExcludingPadding(input_shape->GetDimCount() - 1);
     const bool use_workspace = GetCudaDevice()->GetSMVersion() >= 90 && M >= 64;
 
+    auto weight_layout = GetEngineOptions().cublas_layout_hint == CUBLAS_LAYOUT_AMPERE
+        ? ppl::kernel::llm::cuda::MATRIX_LAYOUT_COL32_2R_4R4
+        : ppl::kernel::llm::cuda::MATRIX_LAYOUT_ROW_MAJOR;
+
     return ppl::kernel::llm::cuda::pmx::i8i8::row_parallel_linear(
         GetStream(),
         cublas_handle,
@@ -118,7 +122,7 @@ ppl::common::RetCode I8I8RowParallelLinearKernel::DoExecute(KernelExecContext* c
         ppl::kernel::llm::cuda::pmx::i8i8::hidden_down_scale,
         param_->in_features,
         param_->out_features,
-        ppl::kernel::llm::cuda::MATRIX_LAYOUT_ROW_MAJOR,
+        weight_layout,
         nccl_param,
         param_->input_is_parallel,
         nullptr,

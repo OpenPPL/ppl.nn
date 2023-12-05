@@ -40,7 +40,7 @@ void Sampler::Clear() {
 }
 
 RetCode Sampler::SampleTopPTopK(const float* logits_device, const float* temperatures_host, int32_t batch,
-                                int32_t vocab_size, float top_p, float top_k, int32_t* output_host) {
+                                int32_t vocab_size, int32_t batch_stride, float top_p, float top_k, int32_t* output_host) {
     const int64_t output_size = batch * sizeof(int32_t);
     int32_t pad_vocab_size = 0;
     int32_t output_offset = 0;
@@ -78,7 +78,7 @@ RetCode Sampler::SampleTopPTopK(const float* logits_device, const float* tempera
 
     RetCode rc;
     if (top_p == 0.0) {
-        rc = ppl::kernel::llm::cuda::pmx::sample_argmax(stream_, logits_device, batch, vocab_size, cu_output_);
+        rc = ppl::kernel::llm::cuda::pmx::sample_argmax(stream_, logits_device, batch, vocab_size, batch_stride, cu_output_);
     } else {
         float* sorted_value = (float*)cu_output_;
         int32_t* sorted_index = (int32_t*)sorted_value + (int64_t)batch * pad_vocab_size;
@@ -91,7 +91,7 @@ RetCode Sampler::SampleTopPTopK(const float* logits_device, const float* tempera
         }
 
         // TODO: currently it has some bug
-        rc = ppl::kernel::llm::cuda::pmx::flash_sample_top_p(stream_, logits_device, batch, vocab_size,
+        rc = ppl::kernel::llm::cuda::pmx::flash_sample_top_p(stream_, logits_device, batch, vocab_size, batch_stride,
                                                              temperatures_device, top_p, sorted_value, sorted_index,
                                                              cu_output_ + output_offset);
     }

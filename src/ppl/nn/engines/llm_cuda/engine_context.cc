@@ -26,6 +26,8 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace llm { namespace cuda {
 
 RetCode LlmCudaEngineContext::Init(const EngineOptions& options, NcclParam* tensor_parallel_nccl_param) {
+    engine_options_ = options;
+
     if (options.mm_policy == MM_PLAIN) {
         device_.reset(new PlainDevice(true));
     } else if (options.mm_policy == MM_BESTFIT) {

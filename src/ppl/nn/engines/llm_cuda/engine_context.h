@@ -37,9 +37,13 @@ public:
     const char* GetName() const override {
         return "llm_cuda";
     }
+    const EngineOptions& GetEngineOptions() const {
+        return engine_options_;
+    }
 
 private:
     std::unique_ptr<LlmCudaDevice> device_;
+    EngineOptions engine_options_;
 
 private:
     LlmCudaEngineContext(const LlmCudaEngineContext&) = delete;

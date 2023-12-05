@@ -35,7 +35,7 @@ static RetCode CreateOps(const ir::GraphTopo* topo, map<nodeid_t, unique_ptr<Opt
         auto creator = OptKernelCreatorManager::GetInstance()->Find(type.domain, type.name, type.version);
         if (!creator) {
             LOG(ERROR) << "cannot find creator for [" << node->GetName() << "] of type [" << type.domain
-                       << ":" << type.name << "].";
+                       << ":" << type.name << ":" << type.version << "].";
             return RC_NOT_FOUND;
         }
 
@@ -89,6 +89,7 @@ RetCode OptGraph::Optimize(
     options.graph = graph_;
     options.device = device;
     options.partition_info = partition_info_;
+    options.engine_options = &engine_options;
 
     RetCode rc;
 
@@ -113,6 +114,11 @@ RetCode OptGraph::Optimize(
             LOG(ERROR) << "I8I8Fuse failed: " << GetRetCodeStr(rc);
             return rc;
         }
+    }
+
+    if (engine_options.quant_method == QUANT_METHOD_ONLINE_I4F16) {
+        LOG(INFO) << "I4F16Quantization has not been implemented";
+        return ppl::common::RC_UNSUPPORTED;
     }
 
     rc = utils::LoadConstants(*graph_, device, &partition_info_->constants);

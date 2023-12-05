@@ -62,6 +62,20 @@ static QuantizeWeightResult QuantizeWeight(
     auto loaded_constants = &options.partition_info->constants;
     auto scale_name = GetScaleName(weight_edge->GetName());
 
+    std::set<std::string> consumer_white_list = {
+        "ColumnParallelLinear",
+        "RowParallelLinear",
+    };
+
+    for (auto iter = weight_edge->CreateConsumerIter(); iter.IsValid(); iter.Forward()) {
+        auto &consumer_type = topo->GetNode(iter.Get())->GetType();
+        if (consumer_white_list.find(consumer_type.name) == consumer_white_list.end()) {
+            LOG(WARNING) << "failed to i4f16 quantize weight[" << weight_edge->GetName() << "], "
+                << "met unsupported consumer type [" << consumer_type.domain << ":" << consumer_type.name << "]";
+            return {ppl::common::RC_SUCCESS, nullptr};
+        }
+    }
+
     // check wether this weight has been processed
     if (loaded_constants->find(weight_edge->GetId()) != loaded_constants->end()) {
         auto scale_edge = topo->GetEdge(scale_name);
@@ -139,13 +153,16 @@ static QuantizeWeightResult QuantizeWeight(
     constants->erase(weight_edge->GetId());
 
     // call quantize kernel here
+    auto weight_layout = options.engine_options->cublas_layout_hint == CUBLAS_LAYOUT_AMPERE
+        ? ppl::kernel::llm::cuda::MATRIX_LAYOUT_COL32_2R_4R4
+        : ppl::kernel::llm::cuda::MATRIX_LAYOUT_ROW_MAJOR;
     rc = ppl::kernel::llm::cuda::pmx::i8i8::minmax_quantize_fp16(
         options.device->GetStream(),
         weight_buffer.GetBufferPtr(),
         out_features,
         in_features,
         ppl::kernel::llm::cuda::pmx::i8i8::hidden_up_scale,
-        ppl::kernel::llm::cuda::MATRIX_LAYOUT_ROW_MAJOR,
+        weight_layout,
         quantized_weight_buffer.GetBufferPtr(),
         scale_buffer.GetBufferPtr());
     if (ppl::common::RC_SUCCESS != rc) {

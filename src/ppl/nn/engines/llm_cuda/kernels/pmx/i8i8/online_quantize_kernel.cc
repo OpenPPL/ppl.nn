@@ -48,13 +48,17 @@ ppl::common::RetCode I8I8OnlineQuantizeKernel::DoExecute(KernelExecContext* ctx)
     const int64_t quant_dim = input->GetShape()->GetDim(dim_count - 1);
     const int64_t batch = input->GetShape()->CalcElementsToDimensionIncludingPadding(dim_count - 1);
 
+    auto to_layout = GetEngineOptions().cublas_layout_hint == CUBLAS_LAYOUT_AMPERE
+        ? ppl::kernel::llm::cuda::MATRIX_LAYOUT_COL32
+        : ppl::kernel::llm::cuda::MATRIX_LAYOUT_ROW_MAJOR;
+
     return ppl::kernel::llm::cuda::pmx::i8i8::minmax_quantize_fp16(
         GetStream(),
         input->GetBufferPtr(),
         batch,
         quant_dim,
         ppl::kernel::llm::cuda::pmx::i8i8::token_up_scale,
-        ppl::kernel::llm::cuda::MATRIX_LAYOUT_ROW_MAJOR,
+        to_layout,
         output->GetBufferPtr(),
         scale->GetBufferPtr()
     );
