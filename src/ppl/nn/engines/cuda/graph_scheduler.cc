@@ -127,8 +127,8 @@ RetCode CudaGraphScheduler::ExecForEach(KernelExecContext& ctx,
     return RC_SUCCESS;
 }
 
-RetCode CudaGraphScheduler::DoForEach(const function<RetCode(KernelImpl*, KernelExecContext*)>& exec,
-                                      Profiler* profiler) {
+RetCode CudaGraphScheduler::ForEach(const function<RetCode(KernelImpl*, KernelExecContext*)>& exec,
+                                    Profiler* profiler) {
     KernelExecContext ctx;
     ctx.SetAcquireFunc(acquire_object_func_);
     ctx.SetProfilingFlag((profiler != nullptr));
@@ -159,18 +159,6 @@ RetCode CudaGraphScheduler::DoForEach(const function<RetCode(KernelImpl*, Kernel
     }
 
     return RC_SUCCESS;
-}
-
-RetCode CudaGraphScheduler::Run(Profiler* profiler) {
-    return DoForEach(
-        [](KernelImpl* kernel, KernelExecContext* ctx) -> RetCode {
-            return kernel->Execute(ctx);
-        },
-        profiler);
-}
-
-RetCode CudaGraphScheduler::ForEach(const std::function<ppl::common::RetCode(KernelImpl*, KernelExecContext*)>& f) {
-    return DoForEach(f, nullptr);
 }
 
 void CudaGraphScheduler::GraphRunnerAddDevice(const CudaDevice* dev) {

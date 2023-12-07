@@ -328,7 +328,11 @@ RetCode RuntimeImpl::RunAsync() {
     constexpr Profiler* profiler = nullptr;
 #endif
 
-    auto status = sched_->Run(profiler);
+    auto status = sched_->ForEach(
+        [](KernelImpl* kernel, KernelExecContext* ctx) -> RetCode {
+            return kernel->Execute(ctx);
+        },
+        profiler);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "Run() failed: " << GetRetCodeStr(status);
     }
@@ -491,9 +495,11 @@ RetCode RuntimeImpl::ConfSetProfilingFlag(RuntimeImpl* rt, va_list args) {
 }
 
 RetCode RuntimeImpl::ConfInferShapes(RuntimeImpl* rt, va_list) {
-    return rt->sched_->ForEach([](KernelImpl* kernel, KernelExecContext* ctx) -> RetCode {
-        return kernel->Reshape(ctx);
-    });
+    return rt->sched_->ForEach(
+        [](KernelImpl* kernel, KernelExecContext* ctx) -> RetCode {
+            return kernel->Reshape(ctx);
+        },
+        nullptr);
 }
 
 RetCode RuntimeImpl::ConfSetScheduler(RuntimeImpl* rt, va_list args) {
