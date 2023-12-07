@@ -28,8 +28,8 @@ class CudaGraphScheduler final : public Scheduler {
 public:
     CudaGraphScheduler();
     ppl::common::RetCode Init(const Options&) override;
-    ppl::common::RetCode ForEach(const std::function<ppl::common::RetCode(KernelImpl*, KernelExecContext*)>&) override;
-    ppl::common::RetCode Run(Profiler*) override;
+    ppl::common::RetCode ForEach(const std::function<ppl::common::RetCode(KernelImpl*, KernelExecContext*)>&,
+                                 Profiler*) override;
     void GraphRunnerAddDevice(const CudaDevice* dev);
 
 private:

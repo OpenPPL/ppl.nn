@@ -75,7 +75,11 @@ RetCode PartitionRunnerImpl::Sync() {
 }
 
 RetCode PartitionRunnerImpl::Run() {
-    auto rc = sched_->Run(nullptr);
+    auto rc = sched_->ForEach(
+        [](KernelImpl* kernel, KernelExecContext* ctx) -> RetCode {
+            return kernel->Execute(ctx);
+        },
+        nullptr);
     if (rc != RC_SUCCESS) {
         LOG(ERROR) << "PartitionRunner Run() failed: " << GetRetCodeStr(rc);
         return rc;

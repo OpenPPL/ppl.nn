@@ -95,8 +95,8 @@ RetCode SequentialScheduler::Init(const Options& options) {
     return RC_SUCCESS;
 }
 
-RetCode SequentialScheduler::DoForEach(const function<RetCode(KernelImpl*, KernelExecContext*)>& exec,
-                                       Profiler* profiler) {
+RetCode SequentialScheduler::ForEach(const function<RetCode(KernelImpl*, KernelExecContext*)>& exec,
+                                     Profiler* profiler) {
 #ifndef NDEBUG
     set<edgeid_t> edges_before;
     for (uint32_t i = 0; i < edgeid2object_->size(); ++i) {
@@ -176,18 +176,6 @@ RetCode SequentialScheduler::DoForEach(const function<RetCode(KernelImpl*, Kerne
 #endif
 
     return RC_SUCCESS;
-}
-
-RetCode SequentialScheduler::Run(Profiler* profiler) {
-    return DoForEach(
-        [](KernelImpl* kernel, KernelExecContext* ctx) -> RetCode {
-            return kernel->Execute(ctx);
-        },
-        profiler);
-}
-
-RetCode SequentialScheduler::ForEach(const std::function<ppl::common::RetCode(KernelImpl*, KernelExecContext*)>& f) {
-    return DoForEach(f, nullptr);
 }
 
 }} // namespace ppl::nn
