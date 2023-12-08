@@ -87,7 +87,8 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len, c
         return RC_OTHER_ERROR;
     }
 
-    LOG(INFO) << "ppl model version: " << fb_model->version();
+    LOG(INFO) << "ppl model version [" << fb_model->version() << "] created by [" << fb_model->producer()->c_str()
+              << "]";
 
     SetResources(resources, &resource_);
 

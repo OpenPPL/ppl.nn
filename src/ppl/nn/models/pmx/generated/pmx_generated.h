@@ -930,7 +930,8 @@ struct Model FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_VERSION = 4,
     VT_ENGINES = 6,
-    VT_GRAPH = 8
+    VT_GRAPH = 8,
+    VT_PRODUCER = 10
   };
   uint32_t version() const {
     return GetField<uint32_t>(VT_VERSION, 0);
@@ -941,6 +942,9 @@ struct Model FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const ppl::nn::pmx::Graph *graph() const {
     return GetPointer<const ppl::nn::pmx::Graph *>(VT_GRAPH);
   }
+  const flatbuffers::String *producer() const {
+    return GetPointer<const flatbuffers::String *>(VT_PRODUCER);
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_VERSION, 4) &&
@@ -949,6 +953,8 @@ struct Model FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyVectorOfTables(engines()) &&
            VerifyOffset(verifier, VT_GRAPH) &&
            verifier.VerifyTable(graph()) &&
+           VerifyOffset(verifier, VT_PRODUCER) &&
+           verifier.VerifyString(producer()) &&
            verifier.EndTable();
   }
 };
@@ -966,6 +972,9 @@ struct ModelBuilder {
   void add_graph(flatbuffers::Offset<ppl::nn::pmx::Graph> graph) {
     fbb_.AddOffset(Model::VT_GRAPH, graph);
   }
+  void add_producer(flatbuffers::Offset<flatbuffers::String> producer) {
+    fbb_.AddOffset(Model::VT_PRODUCER, producer);
+  }
   explicit ModelBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -981,8 +990,10 @@ inline flatbuffers::Offset<Model> CreateModel(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t version = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Engine>>> engines = 0,
-    flatbuffers::Offset<ppl::nn::pmx::Graph> graph = 0) {
+    flatbuffers::Offset<ppl::nn::pmx::Graph> graph = 0,
+    flatbuffers::Offset<flatbuffers::String> producer = 0) {
   ModelBuilder builder_(_fbb);
+  builder_.add_producer(producer);
   builder_.add_graph(graph);
   builder_.add_engines(engines);
   builder_.add_version(version);
@@ -993,13 +1004,16 @@ inline flatbuffers::Offset<Model> CreateModelDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t version = 0,
     const std::vector<flatbuffers::Offset<ppl::nn::pmx::Engine>> *engines = nullptr,
-    flatbuffers::Offset<ppl::nn::pmx::Graph> graph = 0) {
+    flatbuffers::Offset<ppl::nn::pmx::Graph> graph = 0,
+    const char *producer = nullptr) {
   auto engines__ = engines ? _fbb.CreateVector<flatbuffers::Offset<ppl::nn::pmx::Engine>>(*engines) : 0;
+  auto producer__ = producer ? _fbb.CreateString(producer) : 0;
   return ppl::nn::pmx::CreateModel(
       _fbb,
       version,
       engines__,
-      graph);
+      graph,
+      producer__);
 }
 
 inline const ppl::nn::pmx::Model *GetModel(const void *buf) {
