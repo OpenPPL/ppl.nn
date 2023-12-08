@@ -48,7 +48,31 @@ struct Profiler {
 
 static Profiler profiling;
 
-static ppl::common::StaticThreadPool gpu_thread_pool;
+class ThreadPool {
+private:
+    ppl::common::StaticThreadPool pool_;
+    std::vector<ppl::common::RetCode> retcode_;
+
+public:
+    void Init(int nthr) {
+        pool_.Init(nthr);
+        retcode_.resize(nthr);
+    }
+
+    void Run(const std::function<ppl::common::RetCode(uint32_t nr_threads, uint32_t thread_idx)>& f) {
+        pool_.Run([&] (uint32_t nthr, uint32_t tid) {
+            retcode_[tid] = f(nthr, tid);
+        });
+        for (auto ret : retcode_) {
+            if (ret != ppl::common::RC_SUCCESS) {
+                LOG(ERROR) << "exit with thread error";
+                exit(-1);
+            }
+        }
+    }
+};
+
+static ThreadPool gpu_thread_pool;
 
 Define_bool_opt("--help", g_flag_help, false, "show these help information");
 Define_string_opt("--model-type", g_flag_model_type, "", "model type");
@@ -226,13 +250,14 @@ static void InitCudaThread() {
         auto cu_ret = cudaSetDevice(tid);
         if (cu_ret != cudaSuccess) {
             LOG(ERROR) << "cudaSetDevice(" << tid << ") failed: " << cudaGetErrorString(cu_ret);
-            exit(-1);
+            return ppl::common::RC_OTHER_ERROR;
         }
         auto rc = ppl::common::InitCudaEnv(tid);
         if (rc != ppl::common::RC_SUCCESS) {
             LOG(ERROR) << "InitCudaEnv(" << tid << ") failed: " << ppl::common::GetRetCodeStr(rc);
-            exit(-1);
+            return ppl::common::RC_OTHER_ERROR;
         }
+        return ppl::common::RC_SUCCESS;
     });
 }
 
@@ -241,8 +266,9 @@ static void FinalizeCudaThread() {
         auto rc = ppl::common::DestroyCudaEnv(tid);
         if (rc != ppl::common::RC_SUCCESS) {
             LOG(ERROR) << "InitCudaEnv(" << tid << ") failed: " << ppl::common::GetRetCodeStr(rc);
-            exit(-1);
+            return ppl::common::RC_OTHER_ERROR;
         }
+        return ppl::common::RC_SUCCESS;
     });
 }
 
@@ -252,7 +278,7 @@ static void FinalizeCudaThread() {
         ncclResult_t e = (cmd);                                              \
         if (e != ncclSuccess) {                                              \
             LOG(ERROR) << "NCCL error(code:" << (int)e << ") on " << (emsg); \
-            exit(-1);                                                        \
+            return ppl::common::RC_OTHER_ERROR;                              \
         }                                                                    \
     } while (0);
 
@@ -262,6 +288,7 @@ static bool InitNccl(uint32_t tensor_parallel_size, std::vector<ncclComm_t>* ncc
     ncclGetUniqueId(&uuid);
     gpu_thread_pool.Run([&](uint32_t nthr, uint32_t tid) {
         NCCL_CHECK(ncclCommInitRank(&nccl_comm_list->at(tid), tensor_parallel_size, uuid, tid), "ncclCommInitRank");
+        return ppl::common::RC_SUCCESS;
     });
     return true;
 }
@@ -269,6 +296,7 @@ static bool InitNccl(uint32_t tensor_parallel_size, std::vector<ncclComm_t>* ncc
 static void FinalizeNccl(uint32_t tensor_parallel_size, const std::vector<ncclComm_t>& nccl_comm_list) {
     gpu_thread_pool.Run([&](uint32_t nthr, uint32_t tid) {
         NCCL_CHECK(ncclCommDestroy(nccl_comm_list[tid]), "ncclCommDestroy");
+        return ppl::common::RC_SUCCESS;
     });
 }
 
@@ -485,6 +513,7 @@ public:
             engine_list_[tid].reset();
             cudaFree(worker_thread_args_[tid].kv_cache_mem);
             cudaFree(worker_thread_args_[tid].kv_scale_mem);
+            return ppl::common::RC_SUCCESS;
         });
 #ifdef PPLNN_CUDA_ENABLE_NCCL
         FinalizeNccl(tensor_parallel_size_, nccl_comm_list_);
@@ -517,7 +546,7 @@ public:
             engine_list_[tid] = std::unique_ptr<ppl::nn::Engine>(CreateCudaEngine(nccl_comm_list_[tid], tid, model_config.quant_method));
             if (!engine_list_[tid]) {
                 LOG(ERROR) << "create cuda engine [" << tid << "] failed.";
-                exit(-1);
+                return ppl::common::RC_OTHER_ERROR;
             }
             LOG(INFO) << "Create cuda engine [" << tid << "] success";
 
@@ -525,7 +554,7 @@ public:
             worker_thread_args_[tid].runtime = std::unique_ptr<ppl::nn::Runtime>(CreatePPLRuntime(engine_list_[tid].get(), model_path));
             if (!worker_thread_args_[tid].runtime) {
                 LOG(ERROR) << "create runtime [" << tid << "] failed.";
-                exit(-1);
+                return ppl::common::RC_OTHER_ERROR;
             }
             LOG(INFO) << "Create runtime [" << tid << "] success";
 
@@ -533,10 +562,12 @@ public:
                 sampler_ = CreateCudaSampler(worker_thread_args_[0].runtime.get());
                 if (!sampler_) {
                     LOG(ERROR) << "CreateCudaSampler failed";
-                    exit(-1);
+                    return ppl::common::RC_OTHER_ERROR;
                 }
                 LOG(INFO) << "Create cuda sampler success";
             }
+
+            return ppl::common::RC_SUCCESS;
         });
 
         return true;
@@ -553,14 +584,14 @@ public:
             if (cu_ret != cudaSuccess) {
                 LOG(ERROR) << "alloc kv cache [" << kv_cache_tokens * kv_cache_block_bytes_
                            << "] failed: " << cudaGetErrorString(cu_ret);
-                exit(-1);
+                return ppl::common::RC_OTHER_ERROR;
             }
             cu_ret = cudaMalloc(&worker_thread_args_[tid].kv_scale_mem, kv_cache_tokens * kv_scale_block_bytes_);
             if (cu_ret != cudaSuccess) {
                 cudaFree(worker_thread_args_[tid].kv_cache_mem);
                 LOG(ERROR) << "alloc kv scale [" << kv_cache_tokens * kv_scale_block_bytes_
                            << "] failed: " << cudaGetErrorString(cu_ret);
-                exit(-1);
+                return ppl::common::RC_OTHER_ERROR;
             }
 
             // init tensor
@@ -605,8 +636,9 @@ public:
                     model_config.hidden_dim / model_config.num_heads / model_config.cache_quant_group});
             } else {
                 LOG(ERROR) << "impossible status: cache_layout = [" << model_config.cache_layout << "]";
-                exit(-1);
+                return ppl::common::RC_OTHER_ERROR;
             }
+            return ppl::common::RC_SUCCESS;
         });
 
         return true;
@@ -725,13 +757,13 @@ public:
                     bool ret = SetInputTensor(*model_input, tid, step);
                     if (!ret) {
                         LOG(ERROR) << "SetInputTensor failed";
-                        exit(-1);
+                        return ppl::common::RC_OTHER_ERROR;
                     }
 
                     auto rc = worker_thread_args_[tid].runtime->Run();
                     if (rc != ppl::common::RC_SUCCESS) {
                         LOG(ERROR) << "model run failed";
-                        exit(-1);
+                        return ppl::common::RC_OTHER_ERROR;
                     }
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
@@ -760,9 +792,10 @@ public:
 
                         if (rc != ppl::common::RC_SUCCESS) {
                             LOG(ERROR) << "SampleTopPTopK failed: " << ppl::common::GetRetCodeStr(rc);
-                            exit(-1);
+                            return ppl::common::RC_OTHER_ERROR;
                         }
                     }
+                    return ppl::common::RC_SUCCESS;
                 });
             }
 
@@ -1071,6 +1104,7 @@ int main(int argc, char* argv[]) {
     gpu_thread_pool.Run([&](uint32_t nthr, uint32_t tid) {
         if (tid == 0)
             cudaMemGetInfo(&avail_bytes, &total);
+        return ppl::common::RC_SUCCESS;
     });
     profiling.mem_usage = double(total - avail_bytes) / 1024 / 1024 / 1024;
 
