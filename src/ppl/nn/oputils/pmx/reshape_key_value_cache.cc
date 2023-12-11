@@ -49,4 +49,4 @@ RetCode ReshapeKeyValueCache(InputOutputInfo* info, const ir::Attr* arg) {
     return ReshapeKeyValueCache(info, arg, start_pos_data);
 }
 
-}}} // namespace ppl::nn::onnx
+}}} // namespace ppl::nn::pmx

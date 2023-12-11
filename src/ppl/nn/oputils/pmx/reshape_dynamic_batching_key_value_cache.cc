@@ -52,4 +52,4 @@ RetCode ReshapeDynamicBatchingKeyValueCache(InputOutputInfo* info, const ir::Att
     return ReshapeDynamicBatchingKeyValueCache(info, arg, kvstarts_data[kvstarts_shape.GetDim(0) - 1]);
 }
 
-}}} // namespace ppl::nn::onnx
+}}} // namespace ppl::nn::pmx

@@ -21,17 +21,21 @@
 
 #include "ppl/nn/engines/llm_cuda/ops/onnx/cast_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/onnx/gather_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/onnx/mul_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/onnx/reshape_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/onnx/slice_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/onnx/split_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/onnx/sub_op.h"
 
 #include "ppl/nn/engines/llm_cuda/ops/pmx/column_parallel_linear_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/gelu_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/key_value_cache_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/layer_norm_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/multi_head_attention_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/parallel_embedding_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/rms_norm_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/rotary_position_embedding_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/rotary_2d_position_embedding_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/row_parallel_linear_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/silu_op.h"
 
@@ -39,6 +43,7 @@
 #include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/multi_head_attention_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/multi_head_cache_attention_op.h"
 #include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/rotary_position_embedding_op.h"
+#include "ppl/nn/engines/llm_cuda/ops/pmx/dynamic_batching/rotary_2d_position_embedding_op.h"
 
 using namespace std;
 using namespace ppl::common;
@@ -87,6 +92,8 @@ void RegisterBuiltinOpImpls() {
     // K
     // L
     // M
+    RegisterOptKernelCreator<onnx::MulOp>("", "Mul", 1, 16);
+
     // N
     // O
     // P
@@ -116,12 +123,14 @@ void RegisterBuiltinOpImpls() {
     // E
     // F
     // G
+    RegisterOptKernelCreator<pmx::GELUOp>("pmx", "GELU", 1, 1);
     // H
     // I
     // J
     // K
     RegisterOptKernelCreator<pmx::KeyValueCacheOp>("pmx", "KeyValueCache", 1, 1);
     // L
+    RegisterOptKernelCreator<pmx::LayerNormOp>("pmx", "LayerNorm", 1, 1);
     // M
     // N
     RegisterOptKernelCreator<pmx::MultiHeadAttentionOp>("pmx", "MultiHeadAttention", 1, 1);
@@ -132,6 +141,7 @@ void RegisterBuiltinOpImpls() {
     // R
     RegisterOptKernelCreator<pmx::RMSNormOp>("pmx", "RMSNorm", 1, 1);
     RegisterOptKernelCreator<pmx::RotaryPositionEmbeddingOp>("pmx", "RotaryPositionEmbedding", 1, 1);
+    RegisterOptKernelCreator<pmx::Rotary2DPositionEmbeddingOp>("pmx", "Rotary2DPositionEmbedding", 1, 1);
     RegisterOptKernelCreator<pmx::RowParallelLinearOp>("pmx", "RowParallelLinear", 1, 1);
     // S
     RegisterOptKernelCreator<pmx::SiLUOp>("pmx", "SiLU", 1, 1);
@@ -168,6 +178,8 @@ void RegisterBuiltinOpImpls() {
     // Q
     // R
     RegisterOptKernelCreator<pmx::DynamicBatchingRotaryPositionEmbeddingOp>("pmx.dynamic_batching", "RotaryPositionEmbedding", 1, 1);
+    RegisterOptKernelCreator<pmx::DynamicBatchingRotary2DPositionEmbeddingOp>("pmx.dynamic_batching", "Rotary2DPositionEmbedding", 1, 1);
+
     // S
     // T
     // U

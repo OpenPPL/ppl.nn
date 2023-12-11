@@ -28,6 +28,6 @@ namespace ppl { namespace nn { namespace pmx {
 ppl::common::RetCode ReshapeKeyValueCache(InputOutputInfo*, const ir::Attr*, const int64_t* start_pos_data);
 ppl::common::RetCode ReshapeKeyValueCache(InputOutputInfo*, const ir::Attr*);
 
-}}} // namespace ppl::nn::onnx
+}}} // namespace ppl::nn::pmx
 
 #endif

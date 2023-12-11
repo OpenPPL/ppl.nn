@@ -15,20 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "rotary_position_embedding_kernel.h"
+#include "rotary_2d_position_embedding_kernel.h"
 
-#include "ppl/kernel/llm/cuda/pmx/rotary_position_embedding.h"
+#include "ppl/kernel/llm/cuda/pmx/rotary_2d_position_embedding.h"
+
+#include <iostream>
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
-ppl::common::RetCode DynamicBatchingRotaryPositionEmbeddingKernel::DoExecute(KernelExecContext* ctx) {
+
+ppl::common::RetCode Rotary2DPositionEmbeddingKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_DEBUG_TRACE("Entry LlmCudaKernel: [%s]\n", GetName().c_str());
 
     PPLNN_LLM_CUDA_REQUIRED_INPUT(query, 0);
     PPLNN_LLM_CUDA_REQUIRED_INPUT(key, 1);
-    PPLNN_LLM_CUDA_REQUIRED_INPUT(seqstarts, 2);
-    PPLNN_LLM_CUDA_REQUIRED_INPUT(start_pos, 3);
-    PPLNN_LLM_CUDA_REQUIRED_INPUT(max_seqlen, 4);
+    PPLNN_LLM_CUDA_REQUIRED_INPUT(start_pos, 2);
+    PPLNN_LLM_CUDA_REQUIRED_INPUT(first_seqlen, 3);
+    PPLNN_LLM_CUDA_REQUIRED_INPUT(pad_len, 4);
 
     PPLNN_LLM_CUDA_REQUIRED_OUTPUT(rotated_query, 0);
     PPLNN_LLM_CUDA_REQUIRED_OUTPUT(rotated_key, 1);
@@ -37,15 +40,15 @@ ppl::common::RetCode DynamicBatchingRotaryPositionEmbeddingKernel::DoExecute(Ker
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(query);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [key]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(key);
-    PPLNN_LLM_CUDA_DEBUG_TRACE("Input [seqstarts]:\n");
-    PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(seqstarts);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [start_pos]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(start_pos);
-    PPLNN_LLM_CUDA_DEBUG_TRACE("Input [max_seqlen]:\n");
-    PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(max_seqlen);
+    PPLNN_LLM_CUDA_DEBUG_TRACE("Input [first_seqlen]:\n");
+    PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(first_seqlen);
+    PPLNN_LLM_CUDA_DEBUG_TRACE("Input [pad_len]:\n");
+    PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(pad_len);
+
 
     PPLNN_LLM_CUDA_DEBUG_TRACE("theta: %f\n", param_->theta);
-    PPLNN_LLM_CUDA_DEBUG_TRACE("rotary_dim: %d\n", param_->rotary_dim);
     PPLNN_LLM_CUDA_DEBUG_TRACE("bypass_key: %d\n", param_->bypass_key);
 
     bool can_trans_query = ctx->IsLastConsumerOfInput(0) && query->GetType() == TENSORTYPE_NORMAL;
@@ -78,33 +81,37 @@ ppl::common::RetCode DynamicBatchingRotaryPositionEmbeddingKernel::DoExecute(Ker
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    int64_t max_seqlen_val = 0;
-    if (ppl::common::RC_SUCCESS != max_seqlen->CopyToHost(&max_seqlen_val)) {
-        LOG(ERROR) << "max_seqlen->CopyToHost() failed";
-        return ppl::common::RC_DEVICE_MEMORY_ERROR;
+    int64_t start_pos_val = 0;
+    void *cu_start_pos = start_pos->GetBufferPtr();
+
+    if (!this->GetCudaDevice()->Equal(start_pos->GetDevice())) {
+        if (ppl::common::RC_SUCCESS != start_pos->CopyToHost(&start_pos_val)) {
+            LOG(ERROR) << "start_pos->CopyToHost() FAILED";
+            return ppl::common::RC_DEVICE_MEMORY_ERROR;
+        }
+        cu_start_pos = nullptr;
     }
 
-    int64_t batch = start_pos->GetShape()->GetDim(0);
-    int64_t head_dim = query_shape->GetDim(2);
-    int64_t rotary_dim = param_->rotary_dim == 0 ? head_dim : param_->rotary_dim;
-    int64_t num_heads = query_shape->GetDim(1);
-    int64_t num_key_heads = key_shape->GetDim(1);
+    int64_t num_heads = query_shape->GetDim(2);
+    int64_t num_key_heads = key_shape->GetDim(2);
 
-    return ppl::kernel::llm::cuda::pmx::dynamic_batching_rotary_position_embedding(
+
+    std::cerr << "pmx::rotary_2d_position_embedding " << std::endl;
+    return ppl::common::RC_SUCCESS;
+    return ppl::kernel::llm::cuda::pmx::rotary_2d_position_embedding(
         GetStream(),
         query_shape,
         query_data,
         key_shape,
         key_data,
-        start_pos->GetBufferPtr(),
-        seqstarts->GetBufferPtr(),
+        cu_start_pos,
+        first_seqlen->GetBufferPtr(),
+        pad_len->GetBufferPtr(),
+        start_pos_val,
         param_->theta,
         param_->bypass_key,
-        rotary_dim,
-        batch,
         num_heads,
         num_key_heads,
-        max_seqlen_val,
         rotated_query->GetShape(),
         rotated_query->GetBufferPtr(),
         rotated_key->GetShape(),

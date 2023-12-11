@@ -15,19 +15,22 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_DB_KVCACHE_H_
-#define _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_DB_KVCACHE_H_
+#include "ppl/nn/oputils/pmx/reshape_rotary_position_embedding.h"
+#include "ppl/nn/runtime/tensor_impl.h"
+#include "ppl/nn/common/logger.h"
 
-#include "ppl/common/retcode.h"
-#include "ppl/nn/common/input_output_info.h"
-#include "ppl/nn/params/pmx/key_value_cache_param.h"
-#include "ppl/nn/ir/attr.h"
+using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace pmx {
 
-ppl::common::RetCode ReshapeDynamicBatchingKeyValueCache(InputOutputInfo*, const ir::Attr*, const int64_t kvlen);
-ppl::common::RetCode ReshapeDynamicBatchingKeyValueCache(InputOutputInfo*, const ir::Attr*);
+RetCode ReshapeRotaryPositionEmbedding(InputOutputInfo* info, const ir::Attr* arg) {
+    auto& query_shape = *info->GetInput<TensorImpl>(0)->GetShape();
+    auto& key_shape = *info->GetInput<TensorImpl>(1)->GetShape();
+
+    info->GetOutput<TensorImpl>(0)->GetShape()->Reshape(query_shape.GetDims(), query_shape.GetDimCount());
+    info->GetOutput<TensorImpl>(1)->GetShape()->Reshape(key_shape.GetDims(), key_shape.GetDimCount());
+
+    return RC_SUCCESS;
+}
 
 }}} // namespace ppl::nn::pmx
-
-#endif

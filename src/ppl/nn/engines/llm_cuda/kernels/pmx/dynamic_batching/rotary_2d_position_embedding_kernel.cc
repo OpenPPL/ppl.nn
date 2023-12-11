@@ -15,13 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "rotary_position_embedding_kernel.h"
+#include "rotary_2d_position_embedding_kernel.h"
 
-#include "ppl/kernel/llm/cuda/pmx/rotary_position_embedding.h"
+#include "ppl/kernel/llm/cuda/pmx/rotary_2d_position_embedding.h"
+
+#include <iostream>
 
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
-ppl::common::RetCode DynamicBatchingRotaryPositionEmbeddingKernel::DoExecute(KernelExecContext* ctx) {
+ppl::common::RetCode DynamicBatchingRotary2DPositionEmbeddingKernel::DoExecute(KernelExecContext* ctx) {
     PPLNN_LLM_CUDA_DEBUG_TRACE("Entry LlmCudaKernel: [%s]\n", GetName().c_str());
 
     PPLNN_LLM_CUDA_REQUIRED_INPUT(query, 0);
@@ -29,6 +31,7 @@ ppl::common::RetCode DynamicBatchingRotaryPositionEmbeddingKernel::DoExecute(Ker
     PPLNN_LLM_CUDA_REQUIRED_INPUT(seqstarts, 2);
     PPLNN_LLM_CUDA_REQUIRED_INPUT(start_pos, 3);
     PPLNN_LLM_CUDA_REQUIRED_INPUT(max_seqlen, 4);
+    PPLNN_LLM_CUDA_REQUIRED_INPUT(first_seqlen, 5);
 
     PPLNN_LLM_CUDA_REQUIRED_OUTPUT(rotated_query, 0);
     PPLNN_LLM_CUDA_REQUIRED_OUTPUT(rotated_key, 1);
@@ -43,9 +46,11 @@ ppl::common::RetCode DynamicBatchingRotaryPositionEmbeddingKernel::DoExecute(Ker
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(start_pos);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [max_seqlen]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(max_seqlen);
+    PPLNN_LLM_CUDA_DEBUG_TRACE("Input [first_seqlen]:\n");
+    PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(first_seqlen);
+
 
     PPLNN_LLM_CUDA_DEBUG_TRACE("theta: %f\n", param_->theta);
-    PPLNN_LLM_CUDA_DEBUG_TRACE("rotary_dim: %d\n", param_->rotary_dim);
     PPLNN_LLM_CUDA_DEBUG_TRACE("bypass_key: %d\n", param_->bypass_key);
 
     bool can_trans_query = ctx->IsLastConsumerOfInput(0) && query->GetType() == TENSORTYPE_NORMAL;
@@ -85,12 +90,10 @@ ppl::common::RetCode DynamicBatchingRotaryPositionEmbeddingKernel::DoExecute(Ker
     }
 
     int64_t batch = start_pos->GetShape()->GetDim(0);
-    int64_t head_dim = query_shape->GetDim(2);
-    int64_t rotary_dim = param_->rotary_dim == 0 ? head_dim : param_->rotary_dim;
     int64_t num_heads = query_shape->GetDim(1);
     int64_t num_key_heads = key_shape->GetDim(1);
 
-    return ppl::kernel::llm::cuda::pmx::dynamic_batching_rotary_position_embedding(
+    return ppl::kernel::llm::cuda::pmx::dynamic_batching_rotary_2d_position_embedding(
         GetStream(),
         query_shape,
         query_data,
@@ -98,9 +101,9 @@ ppl::common::RetCode DynamicBatchingRotaryPositionEmbeddingKernel::DoExecute(Ker
         key_data,
         start_pos->GetBufferPtr(),
         seqstarts->GetBufferPtr(),
+        first_seqlen->GetBufferPtr(),
         param_->theta,
         param_->bypass_key,
-        rotary_dim,
         batch,
         num_heads,
         num_key_heads,
@@ -110,6 +113,7 @@ ppl::common::RetCode DynamicBatchingRotaryPositionEmbeddingKernel::DoExecute(Ker
         rotated_key->GetShape(),
         rotated_key->GetBufferPtr()
     );
+    // return ppl::common::RC_SUCCESS;
 }
 
-}}}}} // namespace ppl::nn::llm::cuda::pmx
+}}}}}

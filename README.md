@@ -152,6 +152,11 @@ Input parameter explains:
 
 - `quant-method`: only accept two value: {`none`, `online_i8i8`}. `none` means not quantize, and `online_i8i8` (also called `w8a8`) means weight and tensor are both quantized with int8. 
 
+Notice: we found that nsys profiler do not trace cuda kernel statisic in nccl multi-thread communication mode. If you want to profile with nsys, pleace compile with `PPLNN_CUDA_ENABLE_NCCL=OFF`, and it could only trace the performance in one card model.
+```bash
+./build.sh -DPPLNN_USE_LLM_CUDA=ON -DPPLNN_CUDA_ENABLE_NCCL=OFF -DPPLNN_ENABLE_CUDA_JIT=OFF -DPPLNN_CUDA_ARCHITECTURES="'80;86;87'" -DPPLCOMMON_CUDA_ARCHITECTURES="'80;86;87'"
+```
+
 ## Documents
 
 Refer to [ppl.pmx](https://github.com/openppl-public/ppl.pmx) for how to export onnx models. Refer to APIs in [documents](https://github.com/openppl-public/ppl.nn#documents) of ppl.nn.

@@ -15,20 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "rotary_position_embedding_op.h"
+#include "rotary_2d_position_embedding_op.h"
 
-#include "ppl/nn/engines/llm_cuda/kernels/pmx/dynamic_batching/rotary_position_embedding_kernel.h"
-#include "ppl/nn/oputils/pmx/reshape_rotary_position_embedding.h"
+#include "ppl/nn/engines/llm_cuda/kernels/pmx/dynamic_batching/rotary_2d_position_embedding_kernel.h"
 #include "ppl/nn/common/logger.h"
 
 using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::pmx;
 
-
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
-RetCode DynamicBatchingRotaryPositionEmbeddingOp::DoInit(const OptKernelOptions& options) {
+RetCode DynamicBatchingRotary2DPositionEmbeddingOp::DoInit(const OptKernelOptions& options) {
     auto status = GenericLoadParam<RotaryPositionEmbeddingParam>(options, &param_);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "GenericLoadParam failed: " << GetRetCodeStr(status);
@@ -36,15 +34,13 @@ RetCode DynamicBatchingRotaryPositionEmbeddingOp::DoInit(const OptKernelOptions&
     }
 
     infer_type_and_format_func_ = GenericInferTypeAndFormat;
-    infer_dims_func_ = [this](InputOutputInfo* info) -> RetCode {
-        return ppl::nn::pmx::ReshapeRotaryPositionEmbedding(info, param_.get());
-    };
+    infer_dims_func_ = GenericInferDims;
 
     return RC_SUCCESS;
 }
 
-KernelImpl* DynamicBatchingRotaryPositionEmbeddingOp::CreateKernelImpl() const {
-    return CreateKernelImplWithParam<DynamicBatchingRotaryPositionEmbeddingKernel>(param_.get());
+KernelImpl* DynamicBatchingRotary2DPositionEmbeddingOp::CreateKernelImpl() const {
+    return CreateKernelImplWithParam<DynamicBatchingRotary2DPositionEmbeddingKernel>(param_.get());
 }
 
 

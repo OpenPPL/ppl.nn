@@ -67,6 +67,8 @@ void RegisterParsers() {
                                ppl::nn::pmx::ParseParallelEmbeddingParam, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("pmx", "RotaryPositionEmbedding", 1, 1, ppl::nn::pmx::RotaryPositionEmbeddingParam,
                                ppl::nn::pmx::ParseRotaryPositionEmbeddingParam, nullptr);
+    PPL_REGISTER_OP_WITH_PARAM("pmx", "Rotary2DPositionEmbedding", 1, 1, ppl::nn::pmx::RotaryPositionEmbeddingParam,
+                               ppl::nn::pmx::ParseRotaryPositionEmbeddingParam, nullptr);
     PPL_REGISTER_OP_WITH_PARAM("pmx", "RowParallelLinear", 1, 1, ppl::nn::pmx::RowParallelLinearParam,
                                ppl::nn::pmx::ParseRowParallelLinearParam, nullptr);
 
@@ -80,6 +82,9 @@ void RegisterParsers() {
                                ppl::nn::pmx::MultiHeadCacheAttentionParam, ppl::nn::pmx::ParseMultiHeadCacheAttentionParam,
                                nullptr);
     PPL_REGISTER_OP_WITH_PARAM("pmx.dynamic_batching", "RotaryPositionEmbedding", 1, 1, ppl::nn::pmx::RotaryPositionEmbeddingParam,
+                               ppl::nn::pmx::ParseRotaryPositionEmbeddingParam, nullptr);
+
+    PPL_REGISTER_OP_WITH_PARAM("pmx.dynamic_batching", "Rotary2DPositionEmbedding", 1, 1, ppl::nn::pmx::RotaryPositionEmbeddingParam,
                                ppl::nn::pmx::ParseRotaryPositionEmbeddingParam, nullptr);
 }
 

@@ -15,19 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_DB_KVCACHE_H_
-#define _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_DB_KVCACHE_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_KERNELS_ONNX_MUL_KERNEL_H_
+#define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_KERNELS_ONNX_MUL_KERNEL_H_
 
-#include "ppl/common/retcode.h"
-#include "ppl/nn/common/input_output_info.h"
-#include "ppl/nn/params/pmx/key_value_cache_param.h"
-#include "ppl/nn/ir/attr.h"
 
-namespace ppl { namespace nn { namespace pmx {
+#include "ppl/nn/engines/llm_cuda/kernel.h"
 
-ppl::common::RetCode ReshapeDynamicBatchingKeyValueCache(InputOutputInfo*, const ir::Attr*, const int64_t kvlen);
-ppl::common::RetCode ReshapeDynamicBatchingKeyValueCache(InputOutputInfo*, const ir::Attr*);
+namespace ppl { namespace nn { namespace llm { namespace cuda { namespace onnx {
 
-}}} // namespace ppl::nn::pmx
+class MulKernel : public LlmCudaKernel {
+public:
+    MulKernel(const ir::Node* node) : LlmCudaKernel(node) {}
+
+private:
+    ppl::common::RetCode DoExecute(KernelExecContext*) override;
+};
+
+
+}}}}} // namespace ppl::nn::llm::cuda::pmx
 
 #endif

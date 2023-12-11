@@ -15,19 +15,25 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_DB_KVCACHE_H_
-#define _ST_HPC_PPL_NN_OPUTILS_ONNX_RESHAPE_DB_KVCACHE_H_
+#ifndef _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPS_PMX_GELU_OP_H_
+#define _ST_HPC_PPL_NN_ENGINES_LLM_CUDA_OPS_PMX_GELU_OP_H_
 
-#include "ppl/common/retcode.h"
-#include "ppl/nn/common/input_output_info.h"
-#include "ppl/nn/params/pmx/key_value_cache_param.h"
-#include "ppl/nn/ir/attr.h"
+#include "ppl/nn/engines/llm_cuda/opt_kernel.h"
+#include "ppl/nn/params/pmx/gelu_param.h"
 
-namespace ppl { namespace nn { namespace pmx {
+namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
-ppl::common::RetCode ReshapeDynamicBatchingKeyValueCache(InputOutputInfo*, const ir::Attr*, const int64_t kvlen);
-ppl::common::RetCode ReshapeDynamicBatchingKeyValueCache(InputOutputInfo*, const ir::Attr*);
+class GELUOp final : public LlmCudaOptKernel {
+public:
+    GELUOp(const ir::Node* node) : LlmCudaOptKernel(node) {}
 
-}}} // namespace ppl::nn::pmx
+    KernelImpl* CreateKernelImpl() const override;
+    ppl::common::RetCode DoInit(const OptKernelOptions&) override;
+
+private:
+    std::shared_ptr<ppl::nn::pmx::GELUParam> param_;
+};
+
+}}}}} // namespace ppl::nn::llm::cuda::pmx
 
 #endif
