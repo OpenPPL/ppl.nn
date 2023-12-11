@@ -87,10 +87,6 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
     PPLNN_LLM_CUDA_DEBUG_TRACE("cache_mode: %d\n", param_->cache_mode);
     PPLNN_LLM_CUDA_DEBUG_TRACE("cache_layout: %d\n", param_->cache_layout);
 
-    if (param_->num_heads != param_->num_kv_heads) {
-        LOG(ERROR) << "currently not support group query attention";
-        return ppl::common::RC_UNSUPPORTED;
-    }
 
     if (param_->quant_bit != 8 && param_->quant_group != 8) {
         LOG(ERROR) << "currently only support quant_bit == quant_group == 8";
@@ -107,9 +103,11 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         return ppl::common::RC_UNSUPPORTED;
     }
 
+    TensorShape* attn_mask_shape = nullptr;
+    void* attn_mask_data = nullptr;
     if (attn_mask && attn_mask->GetShape()->CalcElementsExcludingPadding() > 0) {
-        LOG(ERROR) << "currently do not support attn_mask";
-        return ppl::common::RC_UNSUPPORTED;
+        attn_mask_shape = attn_mask->GetShape();
+        attn_mask_data = attn_mask->GetBufferPtr();
     }
 
     PPLNN_LLM_CUDA_REALLOC_TENSOR_BUFFER(attn_output);
@@ -170,8 +168,8 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         current_key->GetBufferPtr(),
         current_value->GetShape(),
         current_value->GetBufferPtr(),
-        attn_mask->GetShape(),
-        attn_mask->GetBufferPtr(),
+        attn_mask_shape,
+        attn_mask_data,
         seqstarts->GetBufferPtr(),
         kvstarts->GetBufferPtr(),
         cachestarts->GetBufferPtr(),
