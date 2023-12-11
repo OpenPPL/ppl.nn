@@ -161,10 +161,7 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         return ppl::common::RC_UNSUPPORTED;
     }
 
-    int64_t multi_block_buffer_size;
-    ppl::kernel::llm::cuda::pmx::dynamic_batch_multi_head_cache_attention_config config;
-
-    auto status = dynamic_batch_multi_head_cache_attention_prepare(
+    auto p_ret = ppl::kernel::llm::cuda::pmx::dynamic_batch_multi_head_cache_attention_prepare(
         GetStream(),
         GetCudaDevice()->GetDeviceProp(),
         query->GetShape(),
@@ -173,8 +170,8 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         current_key->GetBufferPtr(),
         current_value->GetShape(),
         current_value->GetBufferPtr(),
-        nullptr,
-        nullptr,
+        attn_mask->GetShape(),
+        attn_mask->GetBufferPtr(),
         seqstarts->GetBufferPtr(),
         kvstarts->GetBufferPtr(),
         cachestarts->GetBufferPtr(),
@@ -197,32 +194,30 @@ ppl::common::RetCode DynamicBatchingMultiHeadCacheAttentionKernel::DoExecute(Ker
         cache->GetBufferPtr(),
         scale->GetBufferPtr(),
         attn_output->GetShape(),
-        attn_output->GetBufferPtr(),
-        &multi_block_buffer_size,
-        &config
+        attn_output->GetBufferPtr()
     );
-    if (status != ppl::common::RC_SUCCESS) {
-        return status;
+
+    if (p_ret.first != ppl::common::RC_SUCCESS) {
+        return p_ret.first;
     }
 
-    BufferDesc multi_block_tmpbuffer_desc;
-    if (config.multi_block_size > 1) {
-        auto status = GetCudaDevice()->AllocTmpBuffer(multi_block_buffer_size, &multi_block_tmpbuffer_desc);
-        if (status != ppl::common::RC_SUCCESS) {
-            LOG(ERROR) << "alloc tmp buffer size[" << multi_block_buffer_size << "] for kernel[" << GetName()
-                    << "] failed: " << ppl::common::GetRetCodeStr(status);
-            return status;
-        }
-        config.multi_block_tmpbuffer = multi_block_tmpbuffer_desc.addr;
+    auto &cfg = p_ret.second;
+
+    BufferDesc tmpbuffer_desc;
+    auto status = GetCudaDevice()->AllocTmpBuffer(cfg.temp_buffer_size, &tmpbuffer_desc);
+    if (status != ppl::common::RC_SUCCESS) {
+        LOG(ERROR) << "alloc tmp buffer size[" << cfg.temp_buffer_size << "] for kernel[" << GetName()
+                << "] failed: " << ppl::common::GetRetCodeStr(status);
+        return status;
     }
-    ppl::common::Destructor multi_block_tmpbuffer_guard([this, &multi_block_tmpbuffer_desc]() -> void {
-        GetCudaDevice()->FreeTmpBuffer(&multi_block_tmpbuffer_desc);
+    ppl::common::Destructor multi_block_tmpbuffer_guard([this, &tmpbuffer_desc]() -> void {
+        GetCudaDevice()->FreeTmpBuffer(&tmpbuffer_desc);
     });
+    cfg.temp_buffer = tmpbuffer_desc.addr;
 
     return ppl::kernel::llm::cuda::pmx::dynamic_batch_multi_head_cache_attention(
         GetStream(),
-        GetCudaDevice()->GetDeviceProp(),
-        config
+        cfg
     );
 }
 
