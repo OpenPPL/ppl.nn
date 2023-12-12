@@ -19,8 +19,6 @@
 
 #include "ppl/kernel/llm/cuda/pmx/rotary_2d_position_embedding.h"
 
-#include <iostream>
-
 namespace ppl { namespace nn { namespace llm { namespace cuda { namespace pmx {
 
 
@@ -46,7 +44,6 @@ ppl::common::RetCode Rotary2DPositionEmbeddingKernel::DoExecute(KernelExecContex
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(first_seqlen);
     PPLNN_LLM_CUDA_DEBUG_TRACE("Input [pad_len]:\n");
     PPLNN_LLM_CUDA_TENSOR_PRINT_DEBUG_MSG(pad_len);
-
 
     PPLNN_LLM_CUDA_DEBUG_TRACE("theta: %f\n", param_->theta);
     PPLNN_LLM_CUDA_DEBUG_TRACE("bypass_key: %d\n", param_->bypass_key);
@@ -95,9 +92,6 @@ ppl::common::RetCode Rotary2DPositionEmbeddingKernel::DoExecute(KernelExecContex
     int64_t num_heads = query_shape->GetDim(2);
     int64_t num_key_heads = key_shape->GetDim(2);
 
-
-    std::cerr << "pmx::rotary_2d_position_embedding " << std::endl;
-    return ppl::common::RC_SUCCESS;
     return ppl::kernel::llm::cuda::pmx::rotary_2d_position_embedding(
         GetStream(),
         query_shape,

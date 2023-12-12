@@ -113,7 +113,6 @@ ppl::common::RetCode DynamicBatchingRotary2DPositionEmbeddingKernel::DoExecute(K
         rotated_key->GetShape(),
         rotated_key->GetBufferPtr()
     );
-    // return ppl::common::RC_SUCCESS;
 }
 
 }}}}}

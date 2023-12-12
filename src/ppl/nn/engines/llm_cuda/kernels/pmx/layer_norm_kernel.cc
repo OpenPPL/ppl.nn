@@ -59,11 +59,6 @@ ppl::common::RetCode LayerNormKernel::DoExecute(KernelExecContext* ctx) {
 
     auto input_shape = input->GetShape();
 
-    if (param_->axis != -1 && param_->axis != input_shape->GetDim(input_shape->GetDimCount() - 1)) {
-        LOG(ERROR) << "currently only support axis == -1 or input's last dim.";
-        return ppl::common::RC_UNSUPPORTED;
-    }
-
     bool can_trans_input = ctx->IsLastConsumerOfInput(0) && input->GetType() == TENSORTYPE_NORMAL;
     bool can_trans_skip_in = skip_in && ctx->IsLastConsumerOfInput(1) && skip_in->GetType() == TENSORTYPE_NORMAL;
 
@@ -96,8 +91,6 @@ ppl::common::RetCode LayerNormKernel::DoExecute(KernelExecContext* ctx) {
         LOG(ERROR) << "currently only support fp16";
         return ppl::common::RC_UNSUPPORTED;
     }
-
-    const int64_t normalize_shape = input_shape->GetDim(input_shape->GetDimCount() - 1);
     
     return ppl::kernel::llm::cuda::pmx::layer_norm(
         GetStream(),
@@ -106,16 +99,13 @@ ppl::common::RetCode LayerNormKernel::DoExecute(KernelExecContext* ctx) {
         weight->GetBufferPtr(),
         bias->GetBufferPtr(),
         skip_in_data,
-        output->GetBufferPtr(),
-        skip_out->GetBufferPtr(),
-        normalize_shape,
+        param_->axis,
         param_->elementwise_affine,
         param_->eps,
-        param_->skip_term);
-
-
-
-
+        param_->skip_term,
+        output->GetBufferPtr(),
+        skip_out->GetBufferPtr()
+    );
 }
 
 }}}}} // namespace ppl::nn::llm::cuda::pmx
