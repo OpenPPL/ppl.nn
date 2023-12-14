@@ -51,7 +51,7 @@ struct QuantizeWeightResult final {
 
 // return scale edge
 static QuantizeWeightResult QuantizeWeight(
-    ir::Edge* weight_edge,
+    ir::Node* linear_node,
     const OptKernelOptions& options,
     const int64_t in_features,
     const int64_t out_features)
@@ -60,6 +60,8 @@ static QuantizeWeightResult QuantizeWeight(
     auto constants = &options.graph->data->constants;
     auto shapes = &options.graph->data->shapes;
     auto loaded_constants = &options.partition_info->constants;
+
+    auto weight_edge = topo->GetEdge(linear_node->GetInput(1));
     auto scale_name = GetScaleName(weight_edge->GetName());
 
     std::set<std::string> consumer_white_list = {
@@ -210,14 +212,11 @@ static ppl::common::RetCode QuantizeLinear(
     auto kernels = &options.partition_info->kernels;
 
     auto weight_edge = topo->GetEdge(linear_node->GetInput(1));
-
-    auto quantize_ret = QuantizeWeight(weight_edge, options, in_features, out_features);
-    if (quantize_ret.retcode != ppl::common::RC_SUCCESS) {
-        return quantize_ret.retcode;
+    auto weight_scale_edge = topo->GetEdge(GetScaleName(weight_edge->GetName()));
+    if (weight_scale_edge == nullptr) {
+        LOG(ERROR) << "scale edge[" << GetScaleName(weight_edge->GetName()) << "] not found";
+        return ppl::common::RC_NOT_FOUND;
     }
-    auto weight_scale_edge = quantize_ret.scale_edge;
-    if (weight_scale_edge == nullptr)
-        return ppl::common::RC_SUCCESS;
 
     auto input_edge = topo->GetEdge(linear_node->GetInput(0));
     auto output_edge = topo->GetEdge(linear_node->GetOutput(0));
@@ -380,14 +379,11 @@ static ppl::common::RetCode QuantizeLinearSelfDequant(
     auto kernels = &options.partition_info->kernels;
 
     auto weight_edge = topo->GetEdge(linear_node->GetInput(1));
-
-    auto quantize_ret = QuantizeWeight(weight_edge, options, in_features, out_features);
-    if (quantize_ret.retcode != ppl::common::RC_SUCCESS) {
-        return quantize_ret.retcode;
+    auto weight_scale_edge = topo->GetEdge(GetScaleName(weight_edge->GetName()));
+    if (weight_scale_edge == nullptr) {
+        LOG(ERROR) << "scale edge[" << GetScaleName(weight_edge->GetName()) << "] not found";
+        return ppl::common::RC_NOT_FOUND;
     }
-    auto weight_scale_edge = quantize_ret.scale_edge;
-    if (weight_scale_edge == nullptr)
-        return ppl::common::RC_SUCCESS;
 
     auto input_edge = topo->GetEdge(linear_node->GetInput(0));
 
@@ -505,6 +501,16 @@ static OptPassStatus QuantizeColunmParallelLinear(ir::Node* linear_node, const O
 
     {
         LOG(DEBUG) << "processing i8i8 for ColumnParallelLinear[" << linear_node->GetName() << "]";
+        auto quantize_ret = QuantizeWeight(linear_node, options, in_features, out_features_per_part);
+        if (quantize_ret.retcode != ppl::common::RC_SUCCESS) {
+            status.retcode = quantize_ret.retcode;
+            status.graph_modified = true;
+            return status;
+        }
+        if (quantize_ret.scale_edge == nullptr) {
+            return status;
+        }
+
         status.graph_modified = true;
         if (param->gather_output == false) {
             status.retcode = QuantizeLinear(linear_node, options, in_features, out_features_per_part, param->bias_term);
@@ -552,6 +558,16 @@ static OptPassStatus QuantizeRowParallelLinear(ir::Node* linear_node, const OptK
 
     {
         LOG(DEBUG) << "processing i8i8 for RowParallelLinear[" << linear_node->GetName() << "]";
+        auto quantize_ret = QuantizeWeight(linear_node, options, in_features_per_part, out_features);
+        if (quantize_ret.retcode != ppl::common::RC_SUCCESS) {
+            status.retcode = quantize_ret.retcode;
+            status.graph_modified = true;
+            return status;
+        }
+        if (quantize_ret.scale_edge == nullptr) {
+            return status;
+        }
+
         status.graph_modified = true;
         status.retcode = QuantizeLinearSelfDequant(linear_node, options, in_features_per_part, out_features);
         if (ppl::common::RC_SUCCESS != status.retcode) {
