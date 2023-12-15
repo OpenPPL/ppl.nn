@@ -85,9 +85,10 @@ Define_float_opt("--temperature", g_flag_temperature, 1.0, "temperature");
 Define_uint32_opt("--generation-len", g_flag_generation_len, 32, "generation length");
 Define_uint32_opt("--warmup-loops", g_flag_warmup_loops, 2, "warm loops");
 Define_uint32_opt("--benchmark-loops", g_flag_benchmark_loops, 4, "benchmark loops");
-Define_string_opt("--input-file", g_flag_input_file, "", "input file of request's token ids. no effect if --input-length is non-zero");
+Define_string_opt("--input-file", g_flag_input_file, "", "input file of request's token ids. no effect if --input-len is non-zero");
 Define_uint32_opt("--input-len", g_flag_input_len, 0, "input length of request. default: 0(get length from input file)");
 Define_uint32_opt("--batch-size", g_flag_batch_size, UINT32_MAX, "batch size");
+Define_string_opt("--output-file", g_flag_output_file, "", "output file of output token ids.")
 Define_string_opt("--quant-method", g_flag_quant_method, "none",
                         "llm cuda quantization mehtod, only accept "
                         "\"none\", \"online_i8i8\" and \"online_i4f16\", "
@@ -966,6 +967,24 @@ static bool ParseModelConfig(const std::string& model_param_path, ModelConfig* m
     return true;
 }
 
+static bool WriteOutput(const std::string& token_file, const std::vector<std::vector<int32_t>> &output_tokens) {
+    std::ofstream fout(token_file, std::ios::out);
+    if (!fout.is_open()) {
+        LOG(ERROR) << "Error Openning " << token_file;
+        return false;
+    }
+
+    for (size_t b = 0; b < output_tokens[0].size(); ++b) {
+        for (size_t l = 0; l < output_tokens.size(); ++l) {
+            fout << output_tokens[l][b];
+            if (l + 1 < output_tokens.size())
+                fout << ", ";
+        }
+        fout << std::endl;
+    }
+    return true;
+}
+
 static bool ParseInput(const std::string& token_file, ModelInput* model_input) {
     std::ifstream fin(token_file, std::ios::in);
     if (!fin.is_open()) {
@@ -1168,6 +1187,10 @@ int main(int argc, char* argv[]) {
         PrintProfilingStatistics(decode_kernel_stat, config.generation_len - 1);
     }
 #endif
+
+    if (!g_flag_output_file.empty()) {
+        WriteOutput(g_flag_output_file, output_tokens);
+    }
 
     llm.Finalize();
 
