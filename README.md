@@ -10,7 +10,14 @@
 
 ## Features
 
-> TBC
+- Flash Attention
+- Split-k Attention(Similar with Flash Decoding)
+- Group-query Attention
+- Dynamic Batching(Also called Continous Batching or In-flight Batching)
+- Tensor Parallelism
+- Graph Optimization
+- INT8 groupwise KV Cache(Numerical accuracy is very close to FP16🚀)
+- INT8 per token per channel Quantization(W8A8)
 
 ## News
 
@@ -26,7 +33,7 @@
 
 ## Known Issues
 
-> TBC
+ - NCCL issue on some Device: Currently reported that L40S and H800 may encounter illegal memory access on NCCL AllReduce. We suggest trying to turn NCCL protocol `Simple` off by setting environment `NCCL_PROTO=^Simple` to fix this issue.
 
 ## Prerequisites
 
@@ -181,7 +188,26 @@ Notice: we found that nsys profiler do not trace cuda kernel statisic in nccl mu
 
 ## Performance
 
-> TBC
+### A100 40G(FP16, INT8 KV Cache)
+
+> Tested under base clock in 12/2023
+
+| Model      | Batch | TP | Input Length | Output Length | Throughput (out tok/s) |
+| :--------- | :---- | :- | :----------- | :------------ | ---------------------: |
+| LLaMA 7B   | 1     | 1  | 8            | 256           | 85.5                   |
+| LLaMA 7B   | 256   | 1  | 8            | 256           | 8933.3                 |
+| LLaMA 7B   | 1     | 1  | 1024         | 1024          | 82.4                   |
+| LLaMA 7B   | 32    | 1  | 1024         | 1024          | 1247.9                 |
+|            |       |    |              |               |                        |
+| LLaMA 13B  | 1     | 2  | 8            | 256           | 76.1                   |
+| LLaMA 13B  | 384   | 2  | 8            | 256           | 8393.0                 |
+| LLaMA 13B  | 1     | 2  | 1024         | 1024          | 73.8                   |
+| LLaMA 13B  | 32    | 2  | 1024         | 1024          | 1199.7                 |
+|            |       |    |              |               |                        |
+| LLaMA 70B  | 1     | 8  | 8            | 256           | 42.5                   |
+| LLaMA 70B  | 1024  | 8  | 8            | 256           | 6872.7                 |
+| LLaMA 70B  | 1     | 8  | 1024         | 1024          | 41.3                   |
+| LLaMA 70B  | 128   | 8  | 1024         | 1024          | 1930.7                 |
 
 ## Documents
 
