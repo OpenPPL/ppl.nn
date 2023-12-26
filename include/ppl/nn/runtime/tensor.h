@@ -81,6 +81,12 @@ public:
     virtual void SetDeviceContext(DeviceContext* ctx) = 0;
 
     /**
+       @brief returns buffer to the underlying device.
+       @note if buffer is set via `SetBufferPtr()`, this function just sets the buffer ptr to nullptr.
+    */
+    virtual void FreeBuffer() = 0;
+
+    /**
        @brief set the underlying buffer ptr
        @param buf buffer ptr that can be read/written by the internal `Device` class.
     */

@@ -94,7 +94,7 @@ public:
 
     ppl::common::RetCode ReallocBuffer();
 
-    void FreeBuffer() {
+    void FreeBuffer() override {
         buffer_info_.FreeBuffer();
     }
 
