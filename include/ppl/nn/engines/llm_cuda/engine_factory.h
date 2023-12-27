@@ -21,12 +21,23 @@
 #include "engine_options.h"
 #include "ppl/nn/common/common.h"
 #include "ppl/nn/engines/engine.h"
+#include <cuda_runtime.h>
 
 namespace ppl { namespace nn { namespace llm { namespace cuda {
+
+struct PPLNN_PUBLIC DeviceOptions final {
+    int device_id = 0;
+    uint32_t mm_policy = MM_COMPACT;
+    cudaStream_t stream = 0;
+};
+
+struct HostDeviceOptions final {};
 
 class PPLNN_PUBLIC EngineFactory final {
 public:
     static Engine* Create(const EngineOptions& options);
+    static DeviceContext* CreateDeviceContext(const DeviceOptions&);
+    static DeviceContext* CreateHostDeviceContext(const HostDeviceOptions&);
 };
 
 }}}} // namespace ppl::nn::llm::cuda

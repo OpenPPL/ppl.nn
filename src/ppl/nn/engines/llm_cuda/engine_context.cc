@@ -25,8 +25,15 @@ using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda {
 
+static void DummyDeleter(LlmCudaDevice*) {}
+
 RetCode LlmCudaEngineContext::Init(const EngineOptions& options, NcclParam* tensor_parallel_nccl_param) {
     engine_options_ = options;
+
+    if (options.runtime_device) {
+        device_ = shared_ptr<LlmCudaDevice>((LlmCudaDevice*)options.runtime_device, DummyDeleter);
+        return RC_SUCCESS;
+    }
 
     if (options.mm_policy == MM_PLAIN) {
         device_.reset(new PlainDevice(true));
@@ -39,10 +46,19 @@ RetCode LlmCudaEngineContext::Init(const EngineOptions& options, NcclParam* tens
         return RC_INVALID_VALUE;
     }
 
-    auto rc = device_->Init(options.device_id, true, true, tensor_parallel_nccl_param);
-    if (rc != RC_SUCCESS) {
-        LOG(ERROR) << "init device failed: " << GetRetCodeStr(rc);
-        return rc;
+    if (options.runtime_stream) {
+        auto rc = device_->Init(options.device_id, true, tensor_parallel_nccl_param, DeviceStreamFlag::SHARE,
+                                options.runtime_stream);
+        if (rc != RC_SUCCESS) {
+            LOG(ERROR) << "init device failed: " << GetRetCodeStr(rc);
+            return rc;
+        }
+    } else {
+        auto rc = device_->Init(options.device_id, true, tensor_parallel_nccl_param, DeviceStreamFlag::NEW);
+        if (rc != RC_SUCCESS) {
+            LOG(ERROR) << "init device failed: " << GetRetCodeStr(rc);
+            return rc;
+        }
     }
 
     return RC_SUCCESS;

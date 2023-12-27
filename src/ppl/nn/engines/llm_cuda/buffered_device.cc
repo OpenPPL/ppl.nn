@@ -46,6 +46,7 @@ RetCode BufferedDevice::Realloc(uint64_t bytes, BufferDesc* buffer) {
 
     buffer->addr = (void*)mgr_.Alloc(bytes);
     if ((uintptr_t)buffer->addr == UINTPTR_MAX) {
+        buffer->addr = nullptr;
         buffer->desc = 0;
         return RC_OUT_OF_MEMORY;
     }

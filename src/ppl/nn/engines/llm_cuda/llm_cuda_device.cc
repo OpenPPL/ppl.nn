@@ -38,7 +38,7 @@ LlmCudaDevice::LlmCudaDevice() {
 LlmCudaDevice::~LlmCudaDevice() {
     DoDestroy();
 
-    if (stream_) {
+    if (own_stream_ && stream_) {
         cudaStreamSynchronize(stream_);
         cudaStreamDestroy(stream_);
     }
@@ -60,7 +60,8 @@ LlmCudaDevice::~LlmCudaDevice() {
     }
 }
 
-RetCode LlmCudaDevice::Init(int device_id, bool init_stream, bool init_cublas, NcclParam* tensor_parallel_nccl_param) {
+RetCode LlmCudaDevice::Init(int device_id, bool init_cublas, NcclParam* tensor_parallel_nccl_param,
+                            DeviceStreamFlag flag, cudaStream_t stream) {
     auto rc = InitCudaEnv(device_id);
     if (rc != RC_SUCCESS) {
         LOG(ERROR) << "init cuda env failed: " << GetRetCodeStr(rc);
@@ -95,11 +96,16 @@ RetCode LlmCudaDevice::Init(int device_id, bool init_stream, bool init_cublas, N
         cublas_workspace_size_ = 32 * 1024 * 1024;
     }
 
-    if (!stream_ && init_stream) {
-        auto cu_status = cudaStreamCreate(&stream_);
-        if (cu_status != cudaSuccess) {
-            LOG(ERROR) << "cudaStreamCreate failed: " << cudaGetErrorString(cu_status);;
-            return RC_INTERNAL_ERROR;
+    if (!stream_) {
+        if (flag == NEW) {
+            auto cu_status = cudaStreamCreate(&stream_);
+            if (cu_status != cudaSuccess) {
+                LOG(ERROR) << "cudaStreamCreate failed: " << cudaGetErrorString(cu_status);
+                return RC_INTERNAL_ERROR;
+            }
+            own_stream_ = true;
+        } else if (flag == SHARE) {
+            stream_ = stream;
         }
     }
 
@@ -277,7 +283,7 @@ RetCode LlmCudaDevice::Synchronize() {
     auto cu_ret = cudaStreamSynchronize(stream_);
     if (cu_ret != cudaSuccess) {
         LOG(ERROR) << "cudaStreamSynchronize failed: " << (int)cu_ret << ", " << cudaGetErrorString(cu_ret);
-        return RC_INTERNAL_ERROR;
+        return RC_DEVICE_RUNTIME_ERROR;
     }
     return RC_SUCCESS;
 }

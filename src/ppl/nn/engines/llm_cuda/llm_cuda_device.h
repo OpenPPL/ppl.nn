@@ -31,12 +31,19 @@
 
 namespace ppl { namespace nn { namespace llm { namespace cuda {
 
+enum DeviceStreamFlag {
+    NONE, // do not use stream
+    NEW, // create a new stream for this device
+    SHARE, // use the specified stream
+};
+
 class LlmCudaDevice : public Device {
 public:
     LlmCudaDevice();
     virtual ~LlmCudaDevice();
 
-    ppl::common::RetCode Init(int device_id, bool init_stream, bool init_cublas, ppl::common::NcclParam* tensor_parallel_nccl_param);
+    ppl::common::RetCode Init(int device_id, bool init_cublas, ppl::common::NcclParam* tensor_parallel_nccl_param,
+                              DeviceStreamFlag flag, cudaStream_t stream = 0);
 
     using Device::Realloc;
     ppl::common::RetCode Realloc(const TensorShape& shape, BufferDesc* buffer) override final {
@@ -164,6 +171,7 @@ protected:
 
     int device_id_ = -1;
     cudaStream_t stream_ = nullptr;
+    bool own_stream_ = false;
     cudaDeviceProp device_prop_;
     ppl::common::NcclParam* tensor_parallel_nccl_param_ = nullptr;
 

@@ -21,14 +21,25 @@
 #include "options.h"
 #include "ppl/nn/common/common.h"
 #include <stdint.h>
+#include <cuda_runtime.h>
 
 namespace ppl { namespace nn { namespace llm { namespace cuda {
 
 struct PPLNN_PUBLIC EngineOptions final {
     uint32_t device_id = 0;
-    uint32_t mm_policy = MM_COMPACT;
     uint32_t quant_method = QUANT_METHOD_NONE;
     uint32_t cublas_layout_hint = CUBLAS_LAYOUT_DEFAULT;
+
+    uint32_t mm_policy = MM_COMPACT;
+
+    /** used by runtime if != 0 */
+    cudaStream_t runtime_stream = 0;
+
+    /**
+       if `runtime_device` is not nullptr, Runtime will use this device for memory management,
+       `mm_policy` and `runtime_stream` are ignored.
+    */
+    DeviceContext* runtime_device = nullptr;
 };
 
 }}}} // namespace ppl::nn::llm::cuda

@@ -16,11 +16,16 @@
 // under the License.
 
 #include "engine.h"
+#include "plain_device.h"
+#include "buffered_device.h"
+#include "bestfit_buffered_device.h"
 
 #include "ppl/nn/common/logger.h"
 #include "ppl/nn/engines/llm_cuda/engine_factory.h"
+#include "ppl/nn/utils/generic_cpu_device.h"
 #include "ppl/common/retcode.h"
 
+using namespace std;
 using namespace ppl::common;
 
 namespace ppl { namespace nn { namespace llm { namespace cuda {
@@ -45,6 +50,40 @@ Engine* EngineFactory::Create(const EngineOptions& options) {
     }
 
     return engine;
+}
+
+DeviceContext* EngineFactory::CreateDeviceContext(const DeviceOptions& options) {
+    unique_ptr<LlmCudaDevice> dev;
+    if (options.mm_policy == MM_PLAIN) {
+        dev.reset(new PlainDevice(true));
+    } else if (options.mm_policy == MM_BESTFIT) {
+        dev.reset(new BestFitBufferedDevice());
+    } else if (options.mm_policy == MM_COMPACT) {
+        dev.reset(new BufferedDevice());
+    } else {
+        LOG(ERROR) << "unsupported mm policy [" << options.mm_policy << "]";
+        return nullptr;
+    }
+
+    if (options.stream) {
+        auto rc = dev->Init(options.device_id, true, nullptr, DeviceStreamFlag::SHARE, options.stream);
+        if (rc != RC_SUCCESS) {
+            LOG(ERROR) << "init device failed: " << GetRetCodeStr(rc);
+            return nullptr;
+        }
+    } else {
+        auto rc = dev->Init(options.device_id, true, nullptr, DeviceStreamFlag::NEW);
+        if (rc != RC_SUCCESS) {
+            LOG(ERROR) << "init device failed: " << GetRetCodeStr(rc);
+            return nullptr;
+        }
+    }
+
+    return dev.release();
+}
+
+DeviceContext* EngineFactory::CreateHostDeviceContext(const HostDeviceOptions&) {
+    return new ppl::nn::utils::GenericCpuDevice();
 }
 
 }}}} // namespace ppl::nn::llm::cuda

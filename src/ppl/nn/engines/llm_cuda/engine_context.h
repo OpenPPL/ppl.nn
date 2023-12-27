@@ -42,7 +42,7 @@ public:
     }
 
 private:
-    std::unique_ptr<LlmCudaDevice> device_;
+    std::shared_ptr<LlmCudaDevice> device_;
     EngineOptions engine_options_;
 
 private:
