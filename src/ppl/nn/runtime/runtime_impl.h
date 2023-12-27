@@ -27,7 +27,6 @@
 #include "ppl/nn/runtime/scheduler.h"
 #include "ppl/nn/runtime/profiler.h"
 #include "ppl/nn/runtime/options.h"
-#include "ppl/nn/utils/generic_cpu_device.h"
 
 namespace ppl { namespace nn {
 
@@ -94,10 +93,6 @@ public:
         return engctx_[idx]->GetDevice();
     }
 
-    DeviceContext* GetHostDeviceContext() const override {
-        return &cpu_device_;
-    }
-
     ppl::common::RetCode GetProfilingStatistics(ProfilingStatistics* stat) const override;
 
 private:
@@ -114,8 +109,6 @@ private:
 
     /** `EngineContext` instances of this runtime */
     std::vector<std::unique_ptr<EngineContext>> engctx_;
-
-    mutable ppl::nn::utils::GenericCpuDevice cpu_device_;
 
 #ifdef PPLNN_ENABLE_KERNEL_PROFILING
     std::shared_ptr<Profiler> profiler_;

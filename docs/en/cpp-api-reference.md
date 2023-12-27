@@ -234,12 +234,6 @@ DeviceContext* GetDeviceContext(uint32_t idx) const;
 Returns the `DeviceContext` at position `idx`. Note that `idx` should be less than `GetDeviceContextCount()`.
 
 ```c++
-DeviceContext* GetHostDeviceContext() const;
-```
-
-Returns a host `DeviceContext`.
-
-```c++
 ppl::common::RetCode GetProfilingStatistics(ProfilingStatistics*) const;
 ```
 

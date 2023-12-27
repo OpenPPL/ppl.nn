@@ -91,9 +91,6 @@ public:
     */
     virtual DeviceContext* GetDeviceContext(uint32_t idx) const = 0;
 
-    /** @brief returns a host `DeviceContext` */
-    virtual DeviceContext* GetHostDeviceContext() const = 0;
-
     /**
        @brief creates a `PartitionRunner` that runs the specified partition of the model
        @note `inputs` and `outputs` MUST be reserved in `RuntimeBuilder`(usually by calling RuntimeBuilder::Configure)
