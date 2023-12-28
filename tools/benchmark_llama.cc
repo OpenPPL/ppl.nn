@@ -226,6 +226,7 @@ struct ModelInput {
 };
 
 struct WorkerThreadArg final {
+    std::unique_ptr<ppl::nn::DeviceContext> host_device;
     std::unique_ptr<ppl::nn::Runtime> runtime;
 
     void* kv_cache_mem = nullptr;
@@ -552,6 +553,8 @@ public:
             LOG(INFO) << "Create cuda engine [" << tid << "] success";
 
             const std::string model_path = model_dir + "/model_slice_" + std::to_string(tid) + "/model.onnx";
+            worker_thread_args_[tid].host_device.reset(ppl::nn::llm::cuda::EngineFactory::CreateHostDeviceContext(
+                                                           ppl::nn::llm::cuda::HostDeviceOptions()));
             worker_thread_args_[tid].runtime = std::unique_ptr<ppl::nn::Runtime>(CreatePPLRuntime(engine_list_[tid].get(), model_path));
             if (!worker_thread_args_[tid].runtime) {
                 LOG(ERROR) << "create runtime [" << tid << "] failed.";
@@ -611,9 +614,9 @@ public:
 
             arg->logits = arg->runtime->GetOutputTensor(0);
 
-            arg->decoding_batches->SetDeviceContext(arg->runtime->GetHostDeviceContext());
-            arg->max_seq_len->SetDeviceContext(arg->runtime->GetHostDeviceContext());
-            arg->max_kv_len->SetDeviceContext(arg->runtime->GetHostDeviceContext());
+            arg->decoding_batches->SetDeviceContext(arg->host_device.get());
+            arg->max_seq_len->SetDeviceContext(arg->host_device.get());
+            arg->max_kv_len->SetDeviceContext(arg->host_device.get());
 
             arg->kv_cache->SetBufferPtr(arg->kv_cache_mem);
             arg->kv_scale->SetBufferPtr(arg->kv_scale_mem);
@@ -1059,7 +1062,7 @@ int main(int argc, char* argv[]) {
     ModelInput raw_model_input;
     if (g_flag_input_len == 0) {
         if (!ParseInput(g_flag_input_file, &raw_model_input)) {
-            LOG(ERROR) << "ParseInput failed, input file: " << g_flag_input_file; 
+            LOG(ERROR) << "ParseInput failed, input file: " << g_flag_input_file;
             return -1;
         }
     } else {

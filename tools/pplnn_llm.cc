@@ -352,7 +352,7 @@ static bool RegisterLlmCudaEngine(vector<unique_ptr<Engine>>* engines) {
     return true;
 }
 
-static bool SetInputDeviceOneByOne(const string& input_device_str, Runtime* runtime) {
+static bool SetInputDeviceOneByOne(const string& input_device_str, DeviceContext* host_device, Runtime* runtime) {
     vector<string> devices;
     SplitString(input_device_str.data(), input_device_str.size(), ",", 1,
                 [&devices](const char* s, unsigned int l) -> bool {
@@ -370,7 +370,7 @@ static bool SetInputDeviceOneByOne(const string& input_device_str, Runtime* runt
         auto t = runtime->GetInputTensor(i);
         if (devices[i] == "host") {
             LOG(INFO) << "Set [" << t->GetName() << "] to Host";
-            t->SetDeviceContext(runtime->GetHostDeviceContext());
+            t->SetDeviceContext(host_device);
         } else if (devices[i] == "device") {
             LOG(INFO) << "Keep [" << t->GetName() << "] on Device";
         } else {
@@ -998,6 +998,12 @@ int main(int argc, char* argv[]) {
 #endif
 
     unique_ptr<Runtime> runtime;
+    unique_ptr<DeviceContext> host_device;
+
+#ifdef PPLNN_USE_LLM_CUDA
+    host_device.reset(ppl::nn::llm::cuda::EngineFactory::CreateHostDeviceContext(
+                          ppl::nn::llm::cuda::HostDeviceOptions()));
+#endif
 
     if (false) {
     }
@@ -1074,7 +1080,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef PPLNN_USE_LLM_CUDA
     if (!g_flag_in_devices.empty()) {
-        if(!SetInputDeviceOneByOne(g_flag_in_devices, runtime.get())) {
+        if(!SetInputDeviceOneByOne(g_flag_in_devices, host_device.get(), runtime.get())) {
             LOG(ERROR) << "SetInputDeviceOneByOne failed.";
             return -1;
         }
