@@ -27,7 +27,7 @@ namespace ppl { namespace nn {
 class ConstantVisitor {
 public:
     virtual ~ConstantVisitor() {}
-    virtual ppl::common::RetCode ForEach(const std::function<ppl::common::RetCode(const void*, uint64_t)>&) const = 0;
+    virtual ppl::common::RetCode ForEach(const std::function<ppl::common::RetCode(edgeid_t, uint64_t bytes)>&) const = 0;
     virtual ppl::common::RetCode ForEach(const std::function<ppl::common::RetCode(const ir::Edge*, const void*, uint64_t,
                                                                                   const TensorShape&)>&) const = 0;
 };

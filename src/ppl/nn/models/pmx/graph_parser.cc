@@ -147,10 +147,9 @@ public:
                        const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Constant>>* fb_constants)
         : topo_(topo), shared_data_(shared_data), info_(info), fb_constants_(fb_constants) {}
 
-    RetCode ForEach(const function<RetCode(const void*, uint64_t)>& f) const override {
-        for (auto y = fb_constants_->begin(); y != fb_constants_->end(); ++y) {
-            auto fb_constant = *y;
-            auto status = f(shared_data_ + fb_constant->data_offset(), fb_constant->data_bytes());
+    RetCode ForEach(const function<RetCode(edgeid_t, uint64_t)>& f) const override {
+        for (auto fb_constant = fb_constants_->begin(); fb_constant != fb_constants_->end(); ++fb_constant) {
+            auto status = f(fb_constant->edge_id(), fb_constant->data_bytes());
             if (status != RC_SUCCESS) {
                 return status;
             }

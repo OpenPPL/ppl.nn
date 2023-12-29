@@ -282,7 +282,7 @@ static inline uint64_t Align(uint64_t v, uint64_t alignment) {
 
 RetCode CudaEngine::LoadConstants(const ConstantVisitor& visitor, map<edgeid_t, BufferInfo>* eid2info) {
     uint64_t total_bytes = 0;
-    auto status = visitor.ForEach([&total_bytes](const void*, uint64_t bytes) -> RetCode {
+    auto status = visitor.ForEach([&total_bytes](edgeid_t, uint64_t bytes) -> RetCode {
         total_bytes += Align(bytes, CUDA_DEFAULT_ALIGNMENT);
         return RC_SUCCESS;
     });
