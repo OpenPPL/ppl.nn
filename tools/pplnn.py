@@ -610,7 +610,7 @@ if __name__ == "__main__":
             sys.exit(-1)
 
         if args.export_pmx_model:
-            status = runtime_builder.Serialize(args.export_pmx_model, "pmx")
+            status = runtime_builder.Serialize(args.export_pmx_model, "pmx", pplnn.pmx.ModelOptions())
             if status != pplcommon.RC_SUCCESS:
                 logging.error("serialize to pmx model failed: " + pplcommon.GetRetCodeStr(status))
                 sys.exit(-1)
@@ -639,7 +639,7 @@ if __name__ == "__main__":
             sys.exit(-1)
 
         if args.export_pmx_model:
-            status = runtime_builder.Serialize(args.export_pmx_model, "pmx")
+            status = runtime_builder.Serialize(args.export_pmx_model, "pmx", pplnn.pmx.ModelOptions())
             if status != pplcommon.RC_SUCCESS:
                 logging.error("serialize to pmx model failed: " + pplcommon.GetRetCodeStr(status))
                 sys.exit(-1)
