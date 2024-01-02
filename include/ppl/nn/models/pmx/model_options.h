@@ -15,21 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_PMX_GRAPH_PARSER_H_
-#define _ST_HPC_PPL_NN_MODELS_PMX_GRAPH_PARSER_H_
-
-#include "ppl/common/retcode.h"
-#include "ppl/nn/ir/graph_topo.h"
-#include "ppl/nn/runtime/runtime_graph_info.h"
-#include "ppl/nn/models/pmx/model_options.h"
-#include "ppl/nn/models/pmx/generated/pmx_generated.h"
+#ifndef _ST_HPC_PPL_NN_MODELS_PMX_MODEL_OPTIONS_H_
+#define _ST_HPC_PPL_NN_MODELS_PMX_MODEL_OPTIONS_H_
 
 namespace ppl { namespace nn { namespace pmx {
 
-class GraphParser final {
-public:
-    static ppl::common::RetCode Parse(const Graph*, const std::vector<EngineImpl*>&, const ModelOptions&,
-                                      ir::GraphTopo*, RuntimeGraphInfo*);
+#include "ppl/nn/common/common.h"
+
+struct PPLNN_PUBLIC ModelOptions final {
+    /** save constants to external files if not null. one file per constant. */
+    const char* external_data_dir = nullptr;
 };
 
 }}} // namespace ppl::nn::pmx
