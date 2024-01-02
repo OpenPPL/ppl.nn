@@ -214,7 +214,7 @@ struct ModelInput {
     std::vector<int64_t> seq_starts;
     std::vector<int64_t> kv_starts;
     std::vector<int64_t> cache_indices;
-    int decoding_batches = 0;
+    int64_t decoding_batches = 0;
     std::vector<int64_t> start_pos;
     int64_t max_seq_len = 0;
     int64_t max_kv_len = 0;
