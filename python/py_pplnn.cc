@@ -78,6 +78,7 @@ namespace pmx {
 void RegisterRuntimeBuilderResources(pybind11::module*);
 void RegisterRuntimeBuilder(pybind11::module*);
 void RegisterRuntimeBuilderFactory(pybind11::module*);
+void RegisterModelOptions(pybind11::module*);
 } // namespace pmx
 #endif
 
@@ -113,6 +114,7 @@ PYBIND11_MODULE(nn, m) {
     pmx::RegisterRuntimeBuilderResources(&pmx_module);
     pmx::RegisterRuntimeBuilderFactory(&pmx_module);
     pmx::RegisterRuntimeBuilder(&pmx_module);
+    pmx::RegisterModelOptions(&pmx_module);
 #endif
 
 #ifdef PPLNN_USE_CUDA

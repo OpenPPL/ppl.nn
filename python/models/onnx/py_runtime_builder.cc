@@ -26,6 +26,12 @@ using namespace std;
 using namespace ppl::common;
 using namespace ppl::nn::onnx;
 
+#ifdef PPLNN_ENABLE_PMX_MODEL
+#include "ppl/nn/models/pmx/model_options.h"
+#include "../pmx/py_model_options.h"
+using namespace ppl::nn;
+#endif
+
 namespace ppl { namespace nn { namespace python { namespace onnx {
 
 void RegisterRuntimeBuilder(pybind11::module* m) {
@@ -65,13 +71,22 @@ void RegisterRuntimeBuilder(pybind11::module* m) {
                  return PyRuntime(builder.engines, builder.ptr->CreateRuntime());
              })
         .def("Serialize",
-             [](const PyRuntimeBuilder& builder, const char* output_file, const char* fmt) -> RetCode {
+             [](const PyRuntimeBuilder& builder, const char* output_file, const char* fmt,
+                const PyModelOptionsBase& opt_base) -> RetCode {
                  utils::FileDataStream fds;
                  auto rc = fds.Init(output_file);
                  if (rc != RC_SUCCESS) {
                      return rc;
                  }
-                 return builder.ptr->Serialize(fmt, &fds);
+#ifdef PPLNN_ENABLE_PMX_MODEL
+                 if (string(fmt) == string("pmx")) {
+                     auto& opt_arg = static_cast<const pmx::PyModelOptions&>(opt_base);
+                     ppl::nn::pmx::ModelOptions opt;
+                     opt.external_data_dir = opt_arg.external_data_dir.c_str();
+                     return builder.ptr->Serialize(fmt, &opt, &fds);
+                 }
+#endif
+                 return builder.ptr->Serialize(fmt, nullptr, &fds);
              });
 }
 
