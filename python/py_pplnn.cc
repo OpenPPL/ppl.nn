@@ -65,6 +65,8 @@ void RegisterDeviceContext(pybind11::module*);
 void RegisterRuntime(pybind11::module*);
 void RegisterVersion(pybind11::module*);
 
+void RegisterModelOptionsBase(pybind11::module*);
+
 #ifdef PPLNN_ENABLE_ONNX_MODEL
 namespace onnx {
 void RegisterRuntimeBuilderResources(pybind11::module*);
@@ -78,6 +80,7 @@ namespace pmx {
 void RegisterRuntimeBuilderResources(pybind11::module*);
 void RegisterRuntimeBuilder(pybind11::module*);
 void RegisterRuntimeBuilderFactory(pybind11::module*);
+void RegisterModelOptions(pybind11::module*);
 } // namespace pmx
 #endif
 
@@ -93,6 +96,7 @@ PYBIND11_MODULE(nn, m) {
     RegisterDeviceContext(&m);
     RegisterRuntime(&m);
     RegisterVersion(&m);
+    RegisterModelOptionsBase(&m);
 
     map<string, pybind11::module*> name2module;
 
@@ -113,6 +117,7 @@ PYBIND11_MODULE(nn, m) {
     pmx::RegisterRuntimeBuilderResources(&pmx_module);
     pmx::RegisterRuntimeBuilderFactory(&pmx_module);
     pmx::RegisterRuntimeBuilder(&pmx_module);
+    pmx::RegisterModelOptions(&pmx_module);
 #endif
 
 #ifdef PPLNN_USE_CUDA

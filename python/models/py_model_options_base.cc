@@ -15,23 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef _ST_HPC_PPL_NN_MODELS_PMX_GRAPH_PARSER_H_
-#define _ST_HPC_PPL_NN_MODELS_PMX_GRAPH_PARSER_H_
+#include "py_model_options_base.h"
+#include "pybind11/pybind11.h"
 
-#include "ppl/common/retcode.h"
-#include "ppl/nn/ir/graph_topo.h"
-#include "ppl/nn/runtime/runtime_graph_info.h"
-#include "ppl/nn/models/pmx/model_options.h"
-#include "ppl/nn/models/pmx/generated/pmx_generated.h"
+namespace ppl { namespace nn { namespace python {
 
-namespace ppl { namespace nn { namespace pmx {
+void RegisterModelOptionsBase(pybind11::module* m) {
+    pybind11::class_<PyModelOptionsBase>(*m, "ModelOptions");
+}
 
-class GraphParser final {
-public:
-    static ppl::common::RetCode Parse(const Graph*, const std::vector<EngineImpl*>&, const ModelOptions&,
-                                      ir::GraphTopo*, RuntimeGraphInfo*);
-};
-
-}}} // namespace ppl::nn::pmx
-
-#endif
+}}}

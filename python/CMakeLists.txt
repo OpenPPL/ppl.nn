@@ -43,8 +43,9 @@ file(GLOB __PPLNN_PYTHON_API_SRC__
     ${CMAKE_CURRENT_SOURCE_DIR}/common/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/utils/*.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/py_pplnn.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/engines/py_engine.cc)
+    ${CMAKE_CURRENT_SOURCE_DIR}/models/py_model_options_base.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/engines/py_engine.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/py_pplnn.cc)
 
 if(PPLNN_USE_X86)
     file(GLOB_RECURSE __PPLNN_PYTHON_X86_SRC__ ${CMAKE_CURRENT_SOURCE_DIR}/engines/x86/*.cc)

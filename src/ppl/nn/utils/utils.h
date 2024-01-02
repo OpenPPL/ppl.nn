@@ -36,6 +36,8 @@ static inline ir::Node::Type MakePplConverterNodeType() {
 ppl::common::RetCode ReadFileContent(const char* fname, ppl::common::Mmap* buf, uint64_t offset = 0,
                                      uint64_t length = UINT64_MAX);
 
+ppl::common::RetCode GetFileSize(const char* fname, uint64_t* size);
+
 }}} // namespace ppl::nn::utils
 
 #endif

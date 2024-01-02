@@ -60,7 +60,7 @@ public:
     /** @brief creates a `Runtime` instance. This function is thread-safe. */
     virtual Runtime* CreateRuntime() const = 0;
 
-    virtual ppl::common::RetCode Serialize(const char* fmt, ppl::nn::utils::DataStream*) const = 0;
+    virtual ppl::common::RetCode Serialize(const char* fmt, const void* options, ppl::nn::utils::DataStream*) const = 0;
 };
 
 }}} // namespace ppl::nn::onnx

@@ -78,7 +78,8 @@ static void SetResources(const RuntimeBuilder::Resources& src, utils::SharedReso
     }
 }
 
-RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len, const Resources& resources) {
+RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len, const Resources& resources,
+                                      const ModelOptions& opt) {
     RetCode status;
 
     auto fb_model = pmx::GetModel(model_buf);
@@ -99,7 +100,7 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len, c
         return status;
     }
 
-    status = GraphParser::Parse(fb_model->graph(), seq2engine, topo_.get(), graph_info_.get());
+    status = GraphParser::Parse(fb_model->graph(), seq2engine, opt, topo_.get(), graph_info_.get());
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "parse graph failed: " << GetRetCodeStr(status);
         return status;
@@ -108,14 +109,15 @@ RetCode RuntimeBuilderImpl::LoadModel(const char* model_buf, uint64_t buf_len, c
     return RC_SUCCESS;
 }
 
-RetCode RuntimeBuilderImpl::LoadModel(const char* model_file, const Resources& resources) {
+RetCode RuntimeBuilderImpl::LoadModel(const char* model_file, const Resources& resources, const ModelOptions& opt) {
     Mmap fm;
     auto status = fm.Init(model_file, Mmap::READ);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "mapping file [" << model_file << "] faild.";
         return status;
     }
-    return LoadModel(fm.GetData(), fm.GetSize(), resources);
+
+    return LoadModel(fm.GetData(), fm.GetSize(), resources, opt);
 }
 
 RetCode RuntimeBuilderImpl::Preprocess() {
@@ -144,10 +146,18 @@ Runtime* RuntimeBuilderImpl::CreateRuntime() const {
     return runtime;
 }
 
-RetCode RuntimeBuilderImpl::Serialize(const char* fmt, utils::DataStream* ds) const {
+RetCode RuntimeBuilderImpl::Serialize(const char* fmt, const void* options, utils::DataStream* ds) const {
     if (fmt == string("pmx")) {
+        const pmx::ModelOptions default_opt;
+        const pmx::ModelOptions* opt;
+        if (options) {
+            opt = (const pmx::ModelOptions*)options;
+        } else {
+            opt = &default_opt;
+        }
+
         pmx::Serializer serializer;
-        return serializer.Serialize(topo_.get(), resource_.engines, *graph_info_, ds);
+        return serializer.Serialize(*opt, topo_.get(), resource_.engines, *graph_info_, ds);
     }
 
     LOG(ERROR) << "model format[" << fmt << "] is not supported.";

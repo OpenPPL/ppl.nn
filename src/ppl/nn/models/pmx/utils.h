@@ -30,6 +30,17 @@ static void Fbvec2Stdvec(const flatbuffers::Vector<T1>* src, std::vector<T2>* ds
     }
 }
 
+inline std::string GenOutputFileName(const std::string& s) {
+    std::string ret = s;
+    for (uint32_t i = 0; i < ret.size(); ++i) {
+        if (ret[i] == '/' || ret[i] == '\\' || ret[i] == ':' || ret[i] == '*' || ret[i] == '?' || ret[i] == '"' ||
+            ret[i] == '<' || ret[i] == '>' || ret[i] == '|') {
+            ret[i] = '_';
+        }
+    }
+    return ret;
+}
+
 }}}} // namespace ppl::nn::pmx::utils
 
 #endif

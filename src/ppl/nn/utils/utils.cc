@@ -40,6 +40,20 @@ using namespace ppl::common;
 namespace ppl { namespace nn { namespace utils {
 
 #ifdef _MSC_VER
+RetCode GetFileSize(const char* fname, uint64_t* size) {
+    WIN32_FILE_ATTRIBUTE_DATA attr;
+    auto ok = GetFileAttributesExA(fname, GetFileExInfoStandard, &attr);
+    if (!ok) {
+        char errmsg[g_max_msg_buf_size];
+        FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM, nullptr, GetLastError(), 0, errmsg,
+                      g_max_msg_buf_size, nullptr);
+        return RC_OTHER_ERROR;
+    }
+
+    *size = (attr.nFileSizeHigh << 32) + attr.nFileSizeLow;
+    return RC_SUCCESS;
+}
+
 RetCode ReadFileContent(const char* fname, Mmap* buf, uint64_t offset, uint64_t length) {
     if (length == 0) {
         return RC_SUCCESS;
@@ -59,7 +73,7 @@ RetCode ReadFileContent(const char* fname, Mmap* buf, uint64_t offset, uint64_t 
     });
 
     DWORD file_size_high = 0;
-    DWORD file_size_low = GetFileSize(handle, &file_size_high);
+    DWORD file_size_low = ::GetFileSize(handle, &file_size_high);
     const uint64_t file_size = ((uint64_t)file_size_high << 32) + file_size_low;
     if (file_size == 0) {
         return RC_SUCCESS;
@@ -108,6 +122,17 @@ RetCode ReadFileContent(const char* fname, Mmap* buf, uint64_t offset, uint64_t 
     return RC_SUCCESS;
 }
 #else
+RetCode GetFileSize(const char* fname, uint64_t* size) {
+    struct stat st;
+    if (stat(fname, &st) != 0) {
+        LOG(ERROR) << "get size of file[" << fname << "] failed: " << strerror(errno);
+        return RC_OTHER_ERROR;
+    }
+
+    *size = st.st_size;
+    return RC_SUCCESS;
+}
+
 RetCode ReadFileContent(const char* fname, Mmap* buf, uint64_t offset, uint64_t length) {
     if (length == 0) {
         return RC_SUCCESS;

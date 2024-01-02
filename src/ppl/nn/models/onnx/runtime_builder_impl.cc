@@ -113,11 +113,18 @@ Runtime* RuntimeBuilderImpl::CreateRuntime() const {
     return runtime;
 }
 
-RetCode RuntimeBuilderImpl::Serialize(const char* fmt, utils::DataStream* ds) const {
+RetCode RuntimeBuilderImpl::Serialize(const char* fmt, const void* options, utils::DataStream* ds) const {
 #ifdef PPLNN_ENABLE_PMX_MODEL
     if (fmt == string("pmx")) {
+        const pmx::ModelOptions default_opt;
+        const pmx::ModelOptions* opt;
+        if (options) {
+            opt = (const pmx::ModelOptions*)options;
+        } else {
+            opt = &default_opt;
+        }
         pmx::Serializer serializer;
-        return serializer.Serialize(model_.graph.topo.get(), resource_.engines, *graph_info_, ds);
+        return serializer.Serialize(*opt, model_.graph.topo.get(), resource_.engines, *graph_info_, ds);
     }
 #endif
     LOG(ERROR) << "model format[" << fmt << "] is not supported.";
