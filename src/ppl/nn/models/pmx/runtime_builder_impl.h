@@ -34,12 +34,13 @@ class RuntimeBuilderImpl final : public RuntimeBuilder {
 public:
     RuntimeBuilderImpl();
     ~RuntimeBuilderImpl();
-    ppl::common::RetCode LoadModel(const char* model_file, const Resources&) override;
-    ppl::common::RetCode LoadModel(const char* model_buf, uint64_t buf_len, const Resources&) override;
+    ppl::common::RetCode LoadModel(const char* model_file, const Resources&, const ModelOptions&) override;
+    ppl::common::RetCode LoadModel(const char* model_buf, uint64_t buf_len, const Resources&,
+                                   const ModelOptions&) override;
     ppl::common::RetCode Configure(uint32_t, ...) override;
     ppl::common::RetCode Preprocess() override;
     Runtime* CreateRuntime() const override;
-    ppl::common::RetCode Serialize(const char* fmt, utils::DataStream*) const override;
+    ppl::common::RetCode Serialize(const char* fmt, const void* options, utils::DataStream*) const override;
 
 private:
     static ppl::common::RetCode ReserveTensor(RuntimeBuilderImpl*, va_list);

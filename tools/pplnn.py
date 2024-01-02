@@ -123,6 +123,8 @@ def ParseCommandLineArgs():
                         help = "dump model to <filename> in pmx format")
     parser.add_argument("--save-pmx-model", type = str, default = "", required = False,
                         help = "deprecated. use `--export-pmx-model` instead.")
+    parser.add_argument("--pmx-external-data-dir", type = str, default = "", required = False,
+                        help = "dir that contains external data")
 
     parser.add_argument("--mm-policy", type = str, default = "perf", required = False,
                         help = "\"perf\" => better performance, \"mem\" => less memory usage, \"plain\" => no optimize")
@@ -610,7 +612,9 @@ if __name__ == "__main__":
             sys.exit(-1)
 
         if args.export_pmx_model:
-            status = runtime_builder.Serialize(args.export_pmx_model, "pmx")
+            options = pplnn.pmx.ModelOptions()
+            options.external_data_dir = args.pmx_external_data_dir
+            status = runtime_builder.Serialize(args.export_pmx_model, "pmx", options)
             if status != pplcommon.RC_SUCCESS:
                 logging.error("serialize to pmx model failed: " + pplcommon.GetRetCodeStr(status))
                 sys.exit(-1)
@@ -623,7 +627,9 @@ if __name__ == "__main__":
         resources = pplnn.pmx.RuntimeBuilderResources()
         resources.engines = engines
 
-        status = runtime_builder.LoadModelFromFile(args.pmx_model, resources)
+        options = pplnn.pmx.ModelOptions()
+        options.external_data_dir = args.pmx_external_data_dir
+        status = runtime_builder.LoadModelFromFile(args.pmx_model, resources, options)
         if status != pplcommon.RC_SUCCESS:
             logging.error("init pmx RuntimeBuilder failed: " + pplcommon.GetRetCodeStr(status))
             sys.exit(-1)
@@ -639,7 +645,9 @@ if __name__ == "__main__":
             sys.exit(-1)
 
         if args.export_pmx_model:
-            status = runtime_builder.Serialize(args.export_pmx_model, "pmx")
+            options = pplnn.pmx.ModelOptions()
+            options.external_data_dir = args.pmx_external_data_dir
+            status = runtime_builder.Serialize(args.export_pmx_model, "pmx", options)
             if status != pplcommon.RC_SUCCESS:
                 logging.error("serialize to pmx model failed: " + pplcommon.GetRetCodeStr(status))
                 sys.exit(-1)

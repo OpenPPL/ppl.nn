@@ -16,8 +16,10 @@
 // under the License.
 
 #include "ppl/nn/models/pmx/graph_parser.h"
+#include "ppl/nn/models/pmx/utils.h"
 #include "ppl/nn/engines/engine_impl.h"
 #include "ppl/nn/common/logger.h"
+#include "ppl/nn/utils/utils.h"
 using namespace std;
 using namespace ppl::common;
 using namespace flatbuffers;
@@ -120,9 +122,7 @@ static const dataformat_t g_format_fb2ppl[] = {
 };
 
 static RetCode ParseGraphDataShapes(const GraphData* fb_data, map<edgeid_t, TensorShape>* shapes) {
-    for (auto x = fb_data->shapes()->begin(); x != fb_data->shapes()->end(); ++x) {
-        auto fb_shape = *x;
-
+    for (auto fb_shape = fb_data->shapes()->begin(); fb_shape != fb_data->shapes()->end(); ++fb_shape) {
         auto ret_pair = shapes->insert(make_pair(fb_shape->edge_id(), TensorShape()));
         if (!ret_pair.second) {
             LOG(ERROR) << "duplicated shape of edgeid[" << fb_shape->edge_id() << "]";
@@ -144,14 +144,41 @@ static RetCode ParseGraphDataShapes(const GraphData* fb_data, map<edgeid_t, Tens
 class PmxConstantVisitor final : public ConstantVisitor {
 public:
     PmxConstantVisitor(const ir::GraphTopo* topo, const uint8_t* shared_data, const RuntimeGraphInfo* info,
-                       const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Constant>>* fb_constants)
-        : topo_(topo), shared_data_(shared_data), info_(info), fb_constants_(fb_constants) {}
+                       const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Constant>>* fb_constants,
+                       const string& external_data_dir)
+        : topo_(topo)
+        , shared_data_(shared_data)
+        , info_(info)
+        , fb_constants_(fb_constants)
+        , external_data_dir_(external_data_dir) {}
 
     RetCode ForEach(const function<RetCode(edgeid_t, uint64_t)>& f) const override {
         for (auto fb_constant = fb_constants_->begin(); fb_constant != fb_constants_->end(); ++fb_constant) {
-            auto status = f(fb_constant->edge_id(), fb_constant->data_bytes());
-            if (status != RC_SUCCESS) {
-                return status;
+            uint32_t flags = fb_constant->flags();
+            if (flags & ConstantFlag_EXTERNAL_DATA) {
+                if (fb_constant->data_offset() == UINT64_MAX) {
+                    auto status = f(fb_constant->edge_id(), fb_constant->data_bytes());
+                    if (status != RC_SUCCESS) {
+                        return status;
+                    }
+                } else {
+                    uint64_t fsize = 0;
+                    const string path = external_data_dir_ + "/" +
+                        string((const char*)shared_data_ + fb_constant->data_offset(), fb_constant->data_bytes());
+                    auto rc = ppl::nn::utils::GetFileSize(path.c_str(), &fsize);
+                    if (rc != RC_SUCCESS) {
+                        return rc;
+                    }
+                    rc = f(fb_constant->edge_id(), fsize);
+                    if (rc != RC_SUCCESS) {
+                        return rc;
+                    }
+                }
+            } else {
+                auto rc = f(fb_constant->edge_id(), fb_constant->data_bytes());
+                if (rc != RC_SUCCESS) {
+                    return rc;
+                }
             }
         }
         return RC_SUCCESS;
@@ -159,8 +186,7 @@ public:
 
     RetCode ForEach(
         const function<RetCode(const ir::Edge*, const void*, uint64_t, const TensorShape&)>& f) const override {
-        for (auto y = fb_constants_->begin(); y != fb_constants_->end(); ++y) {
-            auto fb_constant = *y;
+        for (auto fb_constant = fb_constants_->begin(); fb_constant != fb_constants_->end(); ++fb_constant) {
             auto edge = topo_->GetEdge(fb_constant->edge_id());
 
             auto shape_ref = info_->shapes.find(fb_constant->edge_id());
@@ -169,11 +195,35 @@ public:
                 return RC_NOT_FOUND;
             }
 
-            auto status =
-                f(edge, shared_data_ + fb_constant->data_offset(), fb_constant->data_bytes(), shape_ref->second);
-            if (status != RC_SUCCESS) {
-                LOG(ERROR) << "exec callback for constant[" << edge->GetName() << "] failed: " << GetRetCodeStr(status);
-                return status;
+            uint32_t flags = fb_constant->flags();
+            if (flags & ConstantFlag_EXTERNAL_DATA) {
+                string path;
+                if (fb_constant->data_offset() == UINT64_MAX) {
+                    path = external_data_dir_ + "/" +
+                        utils::GenOutputFileName(topo_->GetEdge(fb_constant->edge_id())->GetName());
+                } else {
+                    path = external_data_dir_ + "/" +
+                        string((const char*)shared_data_ + fb_constant->data_offset(), fb_constant->data_bytes());
+                }
+
+                Mmap fm;
+                auto rc = fm.Init(path.c_str(), Mmap::READ);
+                if (rc != RC_SUCCESS) {
+                    LOG(ERROR) << "open external data file [" << path << "] failed.";
+                    return rc;
+                }
+                rc = f(edge, fm.GetData(), fm.GetSize(), shape_ref->second);
+                if (rc != RC_SUCCESS) {
+                    LOG(ERROR) << "load constant from [" << path << "] failed.";
+                    return rc;
+                }
+            } else {
+                auto rc =
+                    f(edge, shared_data_ + fb_constant->data_offset(), fb_constant->data_bytes(), shape_ref->second);
+                if (rc != RC_SUCCESS) {
+                    LOG(ERROR) << "exec callback for constant[" << edge->GetName() << "] failed: " << GetRetCodeStr(rc);
+                    return rc;
+                }
             }
         }
         return RC_SUCCESS;
@@ -184,24 +234,34 @@ private:
     const uint8_t* shared_data_;
     const RuntimeGraphInfo* info_;
     const flatbuffers::Vector<flatbuffers::Offset<ppl::nn::pmx::Constant>>* fb_constants_;
+    const string& external_data_dir_;
 };
 
 static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::GraphTopo* topo,
-                                        const vector<EngineImpl*>& seq2engine, RuntimeGraphInfo* info) {
+                                        const vector<EngineImpl*>& seq2engine, const ModelOptions& opt,
+                                        RuntimeGraphInfo* info) {
     auto fb_partitions = fb_data->partitions();
     info->partitions.reserve(fb_partitions->size());
 
     DeserializationContext deser_ctx;
     deser_ctx.shapes = &info->shapes;
 
-    for (auto x = fb_partitions->begin(); x != fb_partitions->end(); ++x) {
-        auto fb_partition = *x;
+    const string external_data_dir(opt.external_data_dir);
+    for (auto fb_partition = fb_partitions->begin(); fb_partition != fb_partitions->end(); ++fb_partition) {
         auto engine = seq2engine[fb_partition->engine_id()];
 
         RuntimeGraphInfo::Partition partition;
         partition.engine = engine;
 
-        PmxConstantVisitor visitor(topo, fb_data->shared_data()->data(), info, fb_partition->constants());
+        string external_data_dir;
+        if (opt.external_data_dir) {
+            external_data_dir = opt.external_data_dir;
+        } else {
+            external_data_dir = ".";
+        }
+
+        PmxConstantVisitor visitor(topo, fb_data->shared_data()->data(), info, fb_partition->constants(),
+                                   external_data_dir);
         auto status = engine->LoadConstants(visitor, &partition.constants);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "LoadConstants of engine[" << engine->GetName() << "] failed: " << GetRetCodeStr(status);
@@ -210,9 +270,7 @@ static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::Grap
 
         deser_ctx.constants = &partition.constants;
 
-        for (auto y = fb_partition->nodes()->begin(); y != fb_partition->nodes()->end(); ++y) {
-            auto fb_node = *y;
-
+        for (auto fb_node = fb_partition->nodes()->begin(); fb_node != fb_partition->nodes()->end(); ++fb_node) {
             auto node = topo->GetNode(fb_node->node_id());
             if (!node) {
                 LOG(ERROR) << "cannot find node of id[" << fb_node->node_id() << "] in partition of engine["
@@ -242,14 +300,14 @@ static RetCode ParseGraphDataPartitions(const GraphData* fb_data, const ir::Grap
 }
 
 static RetCode ParseGraphData(const GraphData* fb_data, const ir::GraphTopo* topo,
-                              const vector<EngineImpl*>& seq2engine, RuntimeGraphInfo* info) {
+                              const vector<EngineImpl*>& seq2engine, const ModelOptions& opt, RuntimeGraphInfo* info) {
     auto status = ParseGraphDataShapes(fb_data, &info->shapes);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "ParseGraphDataShapes failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = ParseGraphDataPartitions(fb_data, topo, seq2engine, info);
+    status = ParseGraphDataPartitions(fb_data, topo, seq2engine, opt, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "ParseGraphDataPartitions failed: " << GetRetCodeStr(status);
         return status;
@@ -258,15 +316,15 @@ static RetCode ParseGraphData(const GraphData* fb_data, const ir::GraphTopo* top
     return RC_SUCCESS;
 }
 
-RetCode GraphParser::Parse(const Graph* fb_graph, const vector<EngineImpl*>& seq2engine, ir::GraphTopo* topo,
-                           RuntimeGraphInfo* info) {
+RetCode GraphParser::Parse(const Graph* fb_graph, const vector<EngineImpl*>& seq2engine, const ModelOptions& opt,
+                           ir::GraphTopo* topo, RuntimeGraphInfo* info) {
     auto status = ParseGraphTopo(fb_graph->topo(), topo);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "ParseGraphTopo failed: " << GetRetCodeStr(status);
         return status;
     }
 
-    status = ParseGraphData(fb_graph->data(), topo, seq2engine, info);
+    status = ParseGraphData(fb_graph->data(), topo, seq2engine, opt, info);
     if (status != RC_SUCCESS) {
         LOG(ERROR) << "ParseGraphData failed: " << GetRetCodeStr(status);
         return status;

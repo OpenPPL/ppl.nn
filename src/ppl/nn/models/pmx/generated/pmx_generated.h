@@ -55,6 +55,33 @@ struct EngineBuilder;
 struct Model;
 struct ModelBuilder;
 
+enum ConstantFlag : uint32_t {
+  ConstantFlag_EXTERNAL_DATA = 1,
+  ConstantFlag_MIN = ConstantFlag_EXTERNAL_DATA,
+  ConstantFlag_MAX = ConstantFlag_EXTERNAL_DATA
+};
+
+inline const ConstantFlag (&EnumValuesConstantFlag())[1] {
+  static const ConstantFlag values[] = {
+    ConstantFlag_EXTERNAL_DATA
+  };
+  return values;
+}
+
+inline const char * const *EnumNamesConstantFlag() {
+  static const char * const names[2] = {
+    "EXTERNAL_DATA",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNameConstantFlag(ConstantFlag e) {
+  if (flatbuffers::IsOutRange(e, ConstantFlag_EXTERNAL_DATA, ConstantFlag_EXTERNAL_DATA)) return "";
+  const size_t index = static_cast<size_t>(e) - static_cast<size_t>(ConstantFlag_EXTERNAL_DATA);
+  return EnumNamesConstantFlag()[index];
+}
+
 struct Edge FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef EdgeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {

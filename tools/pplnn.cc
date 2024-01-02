@@ -45,6 +45,7 @@ using namespace ppl::nn;
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
 #include "ppl/nn/models/pmx/runtime_builder_factory.h"
+#include "ppl/nn/models/pmx/model_options.h"
 #endif
 
 /* -------------------------------------------------------------------------- */
@@ -60,6 +61,7 @@ Define_string_opt("--onnx-model", g_flag_onnx_model, "", "onnx model file");
 
 #ifdef PPLNN_ENABLE_PMX_MODEL
 Define_string_opt("--pmx-model", g_flag_pmx_model, "", "pmx model file");
+Define_string_opt("--pmx-external-data-dir", g_flag_pmx_external_data_dir, "", "dir that contains external data");
 Define_string_opt("--export-pmx-model", g_flag_export_pmx_model, "", "dump model to <filename> in pmx format");
 Define_string_opt("--save-pmx-model", g_flag_save_pmx_model, "", "deprecated. use `--export-pmx-model` instead.");
 #endif
@@ -1240,7 +1242,11 @@ int main(int argc, char* argv[]) {
                 LOG(ERROR) << "open pmx output file failed: " << GetRetCodeStr(status);
                 return -1;
             }
-            status = builder->Serialize("pmx", &fds);
+            pmx::ModelOptions opt;
+            if (!g_flag_pmx_external_data_dir.empty()) {
+                opt.external_data_dir = g_flag_pmx_external_data_dir.c_str();
+            }
+            status = builder->Serialize("pmx", &opt, &fds);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "save ppl model failed: " << GetRetCodeStr(status);
                 return -1;
@@ -1268,7 +1274,12 @@ int main(int argc, char* argv[]) {
         resources.engines = engine_ptrs.data();
         resources.engine_num = engine_ptrs.size();
 
-        auto status = builder->LoadModel(g_flag_pmx_model.c_str(), resources);
+        pmx::ModelOptions opt;
+        if (!g_flag_pmx_external_data_dir.empty()) {
+            opt.external_data_dir = g_flag_pmx_external_data_dir.c_str();
+        }
+
+        auto status = builder->LoadModel(g_flag_pmx_model.c_str(), resources, opt);
         if (status != RC_SUCCESS) {
             LOG(ERROR) << "PmxRuntimeBuilder LoadModel failed: " << GetRetCodeStr(status);
             return -1;
@@ -1287,7 +1298,13 @@ int main(int argc, char* argv[]) {
                 LOG(ERROR) << "open pmx output file failed: " << GetRetCodeStr(status);
                 return -1;
             }
-            status = builder->Serialize("pmx", &fds);
+
+            pmx::ModelOptions opt;
+            if (!g_flag_pmx_external_data_dir.empty()) {
+                opt.external_data_dir = g_flag_pmx_external_data_dir.c_str();
+            }
+
+            status = builder->Serialize("pmx", &opt, &fds);
             if (status != RC_SUCCESS) {
                 LOG(ERROR) << "save ppl model failed: " << GetRetCodeStr(status);
                 return -1;

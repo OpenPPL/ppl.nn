@@ -19,6 +19,7 @@
 #include "../../runtime/py_runtime.h"
 #include "py_runtime_builder.h"
 #include "py_runtime_builder_resources.h"
+#include "py_model_options.h"
 #include "ppl/nn/utils/file_data_stream.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
@@ -35,8 +36,8 @@ void RegisterRuntimeBuilder(pybind11::module* m) {
                  return (builder.ptr.get());
              })
         .def("LoadModelFromFile",
-             [](PyRuntimeBuilder& builder, const char* model_file,
-                const PyRuntimeBuilderResources& resources) -> RetCode {
+             [](PyRuntimeBuilder& builder, const char* model_file, const PyRuntimeBuilderResources& resources,
+                const PyModelOptions& py_opt) -> RetCode {
                  vector<shared_ptr<Engine>> engines;
                  for (auto e = resources.engines.begin(); e != resources.engines.end(); ++e) {
                      engines.push_back(e->ptr);
@@ -51,7 +52,10 @@ void RegisterRuntimeBuilder(pybind11::module* m) {
                  r.engine_num = engine_ptrs.size();
 
                  builder.engines = std::move(engines); // retain engines
-                 return builder.ptr->LoadModel(model_file, r);
+
+                 ModelOptions opt;
+                 opt.external_data_dir = py_opt.external_data_dir.c_str();
+                 return builder.ptr->LoadModel(model_file, r, opt);
              })
         .def("Preprocess",
              [](PyRuntimeBuilder& builder) -> RetCode {
@@ -62,13 +66,17 @@ void RegisterRuntimeBuilder(pybind11::module* m) {
                  return PyRuntime(builder.engines, builder.ptr->CreateRuntime());
              })
         .def("Serialize",
-             [](const PyRuntimeBuilder& builder, const char* output_file, const char* fmt) -> RetCode {
+             [](const PyRuntimeBuilder& builder, const char* output_file, const char* fmt,
+                const PyModelOptions& py_opt) -> RetCode {
                  utils::FileDataStream fds;
                  auto rc = fds.Init(output_file);
                  if (rc != RC_SUCCESS) {
                      return rc;
                  }
-                 return builder.ptr->Serialize(fmt, &fds);
+
+                 ModelOptions opt;
+                 opt.external_data_dir = py_opt.external_data_dir.c_str();
+                 return builder.ptr->Serialize(fmt, &opt, &fds);
              });
 }
 
