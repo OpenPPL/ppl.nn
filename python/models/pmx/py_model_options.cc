@@ -23,7 +23,7 @@ namespace ppl { namespace nn { namespace python { namespace pmx {
 void RegisterModelOptions(pybind11::module* m) {
     pybind11::class_<PyModelOptions, PyModelOptionsBase>(*m, "ModelOptions")
         .def(pybind11::init<>())
-        .def_readwrite("external_data_dir", &ModelOptions::external_data_dir);
+        .def_readwrite("external_data_dir", &PyModelOptions::external_data_dir);
 }
 
 }}}} // namespace ppl::nn::python::pmx
