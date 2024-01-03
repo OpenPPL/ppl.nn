@@ -515,6 +515,7 @@ public:
             engine_list_[tid].reset();
             cudaFree(worker_thread_args_[tid].kv_cache_mem);
             cudaFree(worker_thread_args_[tid].kv_scale_mem);
+            worker_thread_args_[tid].host_device.reset();
             return ppl::common::RC_SUCCESS;
         });
 #ifdef PPLNN_CUDA_ENABLE_NCCL
