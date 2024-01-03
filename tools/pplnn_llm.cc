@@ -997,8 +997,8 @@ int main(int argc, char* argv[]) {
     }
 #endif
 
-    unique_ptr<Runtime> runtime;
     unique_ptr<DeviceContext> host_device;
+    unique_ptr<Runtime> runtime;
 
 #ifdef PPLNN_USE_LLM_CUDA
     host_device.reset(ppl::nn::llm::cuda::EngineFactory::CreateHostDeviceContext(
